@@ -17,8 +17,7 @@
 #include "nsSMILKeySpline.h"
 #include "nsStyleStruct.h"
 #include "mozilla/Attributes.h"
-#include "nsCSSPseudoElements.h"
- 
+
 class nsPresContext;
 class nsIFrame;
 
@@ -71,81 +70,9 @@ protected:
   virtual void ElementDataRemoved() = 0;
   void RemoveAllElementData();
 
-  // Update the style on aElement from the transition stored in this manager and
-  // the new parent style - aParentStyle. aElement must be transitioning or
-  // animated. Returns the updated style.
-  nsStyleContext* UpdateThrottledStyle(mozilla::dom::Element* aElement,
-                                       nsStyleContext* aParentStyle,
-                                       nsStyleChangeList &aChangeList);
-  // Reparent the style of aContent and any :before and :after pseudo-elements.
-  already_AddRefed<nsStyleContext> ReparentContent(nsIContent* aContent,
-                                                  nsStyleContext* aParentStyle);
-  // reparent :before and :after pseudo elements of aElement
-  static void ReparentBeforeAndAfter(dom::Element* aElement,
-                                     nsIFrame* aPrimaryFrame,
-                                     nsStyleContext* aNewStyle,
-                                     nsStyleSet* aStyleSet);
-
   PRCList mElementData;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
 };
-
-// The internals of UpdateAllThrottledStyles, used by nsAnimationManager and
-// nsTransitionManager, see the comments in the declaration of the latter.
-#define IMPL_UPDATE_ALL_THROTTLED_STYLES_INTERNAL(class_, animations_getter_)  \
-void                                                                           \
-class_::UpdateAllThrottledStylesInternal()                                     \
-{                                                                              \
-  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();          \
-                                                                               \
-  nsStyleChangeList changeList;                                                \
-                                                                               \
-  /* update each transitioning element by finding its root-most ancestor
-     with a transition, and flushing the style on that ancestor and all
-     its descendants*/                                                         \
-  PRCList *next = PR_LIST_HEAD(&mElementData);                                 \
-  while (next != &mElementData) {                                              \
-    CommonElementAnimationData* ea =                                           \
-      static_cast<CommonElementAnimationData*>(next);                          \
-    next = PR_NEXT_LINK(next);                                                 \
-                                                                               \
-    if (ea->mFlushGeneration == now) {                                         \
-      /* this element has been ticked already */                               \
-      continue;                                                                \
-    }                                                                          \
-                                                                               \
-    /* element is initialised to the starting element (i.e., one we know has
-       an animation) and ends up with the root-most animated ancestor,
-       that is, the element where we begin updates. */                         \
-    dom::Element* element = ea->mElement;                                      \
-    /* make a list of ancestors */                                             \
-    nsTArray<dom::Element*> ancestors;                                         \
-    do {                                                                       \
-      ancestors.AppendElement(element);                                        \
-    } while ((element = element->GetParentElement()));                         \
-                                                                               \
-    /* walk down the ancestors until we find one with a throttled transition */\
-    for (int32_t i = ancestors.Length() - 1; i >= 0; --i) {                    \
-      if (animations_getter_(ancestors[i],                                     \
-                            nsCSSPseudoElements::ePseudo_NotPseudoElement,     \
-                            false)) {                                          \
-        element = ancestors[i];                                                \
-        break;                                                                 \
-      }                                                                        \
-    }                                                                          \
-                                                                               \
-    nsIFrame* primaryFrame;                                                    \
-    if (element &&                                                             \
-        (primaryFrame = nsLayoutUtils::GetStyleFrame(element))) {              \
-      UpdateThrottledStylesForSubtree(element,                                 \
-        primaryFrame->StyleContext()->GetParent(), changeList);                \
-    }                                                                          \
-  }                                                                            \
-                                                                               \
-  RestyleManager* restyleManager = mPresContext->RestyleManager();             \
-  restyleManager->ProcessRestyledFrames(changeList);                           \
-  restyleManager->FlushOverflowChangedTracker();                               \
-}
 
 /**
  * A style rule that maps property-nsStyleAnimation::Value pairs.
@@ -205,12 +132,11 @@ private:
 struct CommonElementAnimationData : public PRCList
 {
   CommonElementAnimationData(dom::Element *aElement, nsIAtom *aElementProperty,
-                             CommonAnimationManager *aManager, TimeStamp aNow)
+                             CommonAnimationManager *aManager)
     : mElement(aElement)
     , mElementProperty(aElementProperty)
     , mManager(aManager)
     , mAnimationGeneration(0)
-    , mFlushGeneration(aNow)
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
 #endif
@@ -289,11 +215,6 @@ struct CommonElementAnimationData : public PRCList
 
   // The refresh time associated with mStyleRule.
   TimeStamp mStyleRuleRefreshTime;
-
-  // Generation counter for flushes of throttled animations.
-  // Used to prevent updating the styles twice for a given element during
-  // UpdateAllThrottledStyles.
-  TimeStamp mFlushGeneration;
 
 #ifdef DEBUG
   bool mCalledPropertyDtor;
