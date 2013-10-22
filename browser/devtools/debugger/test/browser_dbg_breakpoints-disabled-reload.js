@@ -40,7 +40,7 @@ function test() {
     function verifyView({ disabled, visible }) {
       return Task.spawn(function() {
         // It takes a tick for the checkbox in the SideMenuWidget and the
-        // gutter in the SourceEditor to get updated.
+        // gutter in the editor to get updated.
         yield waitForTick();
 
         let breakpointItem = gSources.getBreakpoint(gBreakpointLocation);
