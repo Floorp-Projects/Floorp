@@ -36,14 +36,6 @@ DEFINES += -DMOZ_BLUETOOTH_DBUS
 endif
 endif
 
-ifdef MOZ_B2G_BT_BLUEZ
-DEFINES += -DMOZ_B2G_BT_BLUEZ
-endif
-
-ifdef MOZ_B2G_BT_BLUEDROID
-DEFINES += -DMOZ_B2G_BT_BLUEDROID
-endif
-
 # Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
 # subdirectory.
 LOCAL_INCLUDES += $(VPATH:%=-I%)
