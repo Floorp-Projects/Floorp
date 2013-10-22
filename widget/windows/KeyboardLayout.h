@@ -11,7 +11,7 @@
 #include "nsString.h"
 #include "nsWindowBase.h"
 #include "nsWindowDefs.h"
-#include "mozilla/EventForwards.h"
+#include "mozilla/BasicEvents.h"
 #include <windows.h>
 
 #define NS_NUM_OF_KEYS          70
