@@ -5,7 +5,7 @@
 // Test basic pretty printing functionality. Would be an xpcshell test, except
 // for bug 921252.
 
-let gTab, gDebuggee, gPanel, gClient, gThreadClient;
+let gTab, gDebuggee, gPanel, gClient, gThreadClient, gSource;
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print-2.html";
 
@@ -26,21 +26,31 @@ function findSource() {
     ok(!error);
     sources = sources.filter(s => s.url.contains('code_ugly-2.js'));
     is(sources.length, 1);
-    prettyPrintSource(sources[0]);
+    gSource = sources[0];
+    prettyPrintSource();
   });
 }
 
-function prettyPrintSource(source) {
-  gThreadClient.source(source).prettyPrint(4, testPrettyPrinted);
+function prettyPrintSource() {
+  gThreadClient.source(gSource).prettyPrint(4, testPrettyPrinted);
 }
 
-function testPrettyPrinted({ error, source}) {
+function testPrettyPrinted({ error, source }) {
   ok(!error);
   ok(source.contains("\n    "));
+  disablePrettyPrint();
+}
 
+function disablePrettyPrint() {
+  gThreadClient.source(gSource).disablePrettyPrint(testUgly);
+}
+
+function testUgly({ error, source }) {
+  ok(!error);
+  ok(!source.contains("\n    "));
   closeDebuggerAndFinish(gPanel);
 }
 
 registerCleanupFunction(function() {
-  gTab = gDebuggee = gPanel = gClient = gThreadClient = null;
+  gTab = gDebuggee = gPanel = gClient = gThreadClient = gSource = null;
 });
