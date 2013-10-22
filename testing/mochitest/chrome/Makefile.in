@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include $(topsrcdir)/config/rules.mk
+INSTALL_TARGETS += _STATIC _STATIC_DIR
 
 _STATIC_FILES = test_sample.xul \
 		test_sanityChromeUtils.xul \
@@ -11,8 +11,9 @@ _STATIC_FILES = test_sample.xul \
 		test_sanityException.xul \
 		test_sanityException2.xul \
 		test_chromeGetTestFile.xul \
-		test-dir/ \
 		$(NULL)
 
-libs:: $(_STATIC_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)
+_STATIC_DEST := $(DEPTH)/_tests/$(relativesrcdir)
+
+_STATIC_DIR_FILES := test-dir/test-file
+_STATIC_DIR_DEST := $(DEPTH)/_tests/$(relativesrcdir)/test-dir

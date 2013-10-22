@@ -136,31 +136,31 @@ PrintBacktrace()
 #  define JS_OOM_POSSIBLY_FAIL_REPORT(cx) do {} while(0)
 # endif /* DEBUG */
 
-static JS_INLINE void* js_malloc(size_t bytes)
+static inline void* js_malloc(size_t bytes)
 {
     JS_OOM_POSSIBLY_FAIL();
     return malloc(bytes);
 }
 
-static JS_INLINE void* js_calloc(size_t bytes)
+static inline void* js_calloc(size_t bytes)
 {
     JS_OOM_POSSIBLY_FAIL();
     return calloc(bytes, 1);
 }
 
-static JS_INLINE void* js_calloc(size_t nmemb, size_t size)
+static inline void* js_calloc(size_t nmemb, size_t size)
 {
     JS_OOM_POSSIBLY_FAIL();
     return calloc(nmemb, size);
 }
 
-static JS_INLINE void* js_realloc(void* p, size_t bytes)
+static inline void* js_realloc(void* p, size_t bytes)
 {
     JS_OOM_POSSIBLY_FAIL();
     return realloc(p, bytes);
 }
 
-static JS_INLINE void js_free(void* p)
+static inline void js_free(void* p)
 {
     free(p);
 }

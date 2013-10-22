@@ -14,3 +14,5 @@ EXTRA_COMPONENTS += [
     'WorkerTest.js',
     'WorkerTest.manifest',
 ]
+
+XPI_NAME = 'worker'

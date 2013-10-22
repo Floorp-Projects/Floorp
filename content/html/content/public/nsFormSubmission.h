@@ -6,7 +6,6 @@
 #define nsIFormSubmission_h___
 
 #include "mozilla/Attributes.h"
-#include "nsISupports.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
