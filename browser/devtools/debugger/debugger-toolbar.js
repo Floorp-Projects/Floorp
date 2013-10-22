@@ -38,10 +38,10 @@ ToolbarView.prototype = {
     this._stepOutButton = document.getElementById("step-out");
     this._chromeGlobals = document.getElementById("chrome-globals");
 
-    let resumeKey = DevtoolsHelpers.prettyKey(document.getElementById("resumeKey"), true);
-    let stepOverKey = DevtoolsHelpers.prettyKey(document.getElementById("stepOverKey"), true);
-    let stepInKey = DevtoolsHelpers.prettyKey(document.getElementById("stepInKey"), true);
-    let stepOutKey = DevtoolsHelpers.prettyKey(document.getElementById("stepOutKey"), true);
+    let resumeKey = ShortcutUtils.prettifyShortcut(document.getElementById("resumeKey"));
+    let stepOverKey = ShortcutUtils.prettifyShortcut(document.getElementById("stepOverKey"));
+    let stepInKey = ShortcutUtils.prettifyShortcut(document.getElementById("stepInKey"));
+    let stepOutKey = ShortcutUtils.prettifyShortcut(document.getElementById("stepOutKey"));
     this._resumeTooltip = L10N.getFormatStr("resumeButtonTooltip", resumeKey);
     this._pauseTooltip = L10N.getFormatStr("pauseButtonTooltip", resumeKey);
     this._stepOverTooltip = L10N.getFormatStr("stepOverTooltip", stepOverKey);
@@ -696,12 +696,12 @@ FilterView.prototype = {
     this._variableOperatorButton = document.getElementById("variable-operator-button");
     this._variableOperatorLabel = document.getElementById("variable-operator-label");
 
-    this._fileSearchKey = DevtoolsHelpers.prettyKey(document.getElementById("fileSearchKey"), true);
-    this._globalSearchKey = DevtoolsHelpers.prettyKey(document.getElementById("globalSearchKey"), true);
-    this._filteredFunctionsKey = DevtoolsHelpers.prettyKey(document.getElementById("functionSearchKey"), true);
-    this._tokenSearchKey = DevtoolsHelpers.prettyKey(document.getElementById("tokenSearchKey"), true);
-    this._lineSearchKey = DevtoolsHelpers.prettyKey(document.getElementById("lineSearchKey"), true);
-    this._variableSearchKey = DevtoolsHelpers.prettyKey(document.getElementById("variableSearchKey"), true);
+    this._fileSearchKey = ShortcutUtils.prettifyShortcut(document.getElementById("fileSearchKey"));
+    this._globalSearchKey = ShortcutUtils.prettifyShortcut(document.getElementById("globalSearchKey"));
+    this._filteredFunctionsKey = ShortcutUtils.prettifyShortcut(document.getElementById("functionSearchKey"));
+    this._tokenSearchKey = ShortcutUtils.prettifyShortcut(document.getElementById("tokenSearchKey"));
+    this._lineSearchKey = ShortcutUtils.prettifyShortcut(document.getElementById("lineSearchKey"));
+    this._variableSearchKey = ShortcutUtils.prettifyShortcut(document.getElementById("variableSearchKey"));
 
     this._searchbox.addEventListener("click", this._onClick, false);
     this._searchbox.addEventListener("select", this._onInput, false);

@@ -33,7 +33,7 @@
 
   <commandset id="debuggerCommands">
     <command id="prettyPrintCommand"
-             oncommand="DebuggerView.Sources.prettyPrint()"/>
+             oncommand="DebuggerView.Sources.togglePrettyPrint()"/>
     <command id="unBlackBoxButton"
              oncommand="DebuggerView.Sources._onStopBlackBoxing()"/>
     <command id="nextSourceCommand"

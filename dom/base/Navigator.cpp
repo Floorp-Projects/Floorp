@@ -37,9 +37,10 @@
 #include "nsDOMEvent.h"
 #include "nsGlobalWindow.h"
 #ifdef MOZ_B2G_RIL
-#include "IccManager.h"
+#include "mozilla/dom/IccManager.h"
 #include "MobileConnection.h"
 #include "mozilla/dom/CellBroadcast.h"
+#include "mozilla/dom/Telephony.h"
 #include "mozilla/dom/Voicemail.h"
 #endif
 #include "nsIIdleObserver.h"
@@ -52,9 +53,6 @@
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
-#endif
-#ifdef MOZ_B2G_RIL
-#include "mozilla/dom/Telephony.h"
 #endif
 #ifdef MOZ_B2G_BT
 #include "BluetoothManager.h"
@@ -140,15 +138,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileMessageManager)
-#ifdef MOZ_B2G_RIL
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVoicemail)
-#endif
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
 #ifdef MOZ_B2G_RIL
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileConnection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCellBroadcast)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVoicemail)
 #endif
 #ifdef MOZ_B2G_BT
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBluetooth)
@@ -213,16 +209,6 @@ Navigator::Invalidate()
     mMobileMessageManager = nullptr;
   }
 
-#ifdef MOZ_B2G_RIL
-  if (mTelephony) {
-    mTelephony = nullptr;
-  }
-
-  if (mVoicemail) {
-    mVoicemail = nullptr;
-  }
-#endif
-
   if (mConnection) {
     mConnection->Shutdown();
     mConnection = nullptr;
@@ -241,6 +227,14 @@ Navigator::Invalidate()
   if (mIccManager) {
     mIccManager->Shutdown();
     mIccManager = nullptr;
+  }
+
+  if (mTelephony) {
+    mTelephony = nullptr;
+  }
+
+  if (mVoicemail) {
+    mVoicemail = nullptr;
   }
 #endif
 
@@ -1229,7 +1223,7 @@ Navigator::GetMozIccManager(ErrorResult& aRv)
     }
     NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
-    mIccManager = new icc::IccManager();
+    mIccManager = new IccManager();
     mIccManager->Init(mWindow);
   }
 
