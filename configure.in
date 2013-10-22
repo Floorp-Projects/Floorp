@@ -5491,8 +5491,21 @@ if test -n "$MOZ_CUBEB"; then
     AC_DEFINE(MOZ_CUBEB)
 fi
 
+if test -n "$MOZ_OPUS" -a -z "$MOZ_OGG"; then
+    AC_MSG_ERROR([MOZ_OPUS requires MOZ_OGG which is disabled.])
+fi
+
+if test -n "$MOZ_VORBIS" -a -z "$MOZ_OGG"; then
+    AC_MSG_ERROR([MOZ_VORBIS requires MOZ_OGG which is disabled.
+Note that you need vorbis support for WebM playback.])
+fi
+
 if test -n "$MOZ_VORBIS" -a -n "$MOZ_TREMOR"; then
     AC_MSG_ERROR([MOZ_VORBIS and MOZ_TREMOR are mutually exclusive!  The build system should not allow them both to be set, but they are.  Please file a bug at https://bugzilla.mozilla.org/])
+fi
+
+if test -n "$MOZ_WEBRTC" -a -z "$MOZ_OPUS"; then
+    AC_MSG_ERROR([MOZ_WEBRTC requires MOZ_OPUS which is disabled.])
 fi
 
 if test -n "$MOZ_VORBIS"; then
