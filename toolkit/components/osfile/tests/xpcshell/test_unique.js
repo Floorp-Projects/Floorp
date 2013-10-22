@@ -4,23 +4,21 @@ Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 
 function run_test() {
+  do_get_profile();
   run_next_test();
 }
 
 function testFiles(filename) {
   return Task.spawn(function() {
     const MAX_TRIES = 10;
-    let currentDir = yield OS.File.getCurrentDirectory();
-    let path = OS.Path.join(currentDir, filename);
-    let exists = yield OS.File.exists(path);
-    // Check a file with the same name doesn't exist already
-    do_check_false(exists);
+    let profileDir = OS.Constants.Path.profileDir;
+    let path = OS.Path.join(profileDir, filename);
 
     // Ensure that openUnique() uses the file name if there is no file with that name already.
     let openedFile = yield OS.File.openUnique(path);
     do_print("\nCreate new file: " + openedFile.path);
     yield openedFile.file.close();
-    exists = yield OS.File.exists(openedFile.path);
+    let exists = yield OS.File.exists(openedFile.path);
     do_check_true(exists);
     do_check_eq(path, openedFile.path);
     let fileInfo = yield OS.File.stat(openedFile.path);
