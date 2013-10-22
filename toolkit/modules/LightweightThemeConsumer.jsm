@@ -41,9 +41,23 @@ LightweightThemeConsumer.prototype = {
   _lastData: null,
   _lastScreenWidth: null,
   _lastScreenHeight: null,
+  _enabled: true,
 #ifdef XP_MACOSX
   _chromemarginDefault: undefined,
 #endif
+
+  enable: function() {
+    this._enabled = true;
+    this._update(this._lastData);
+  },
+
+  disable: function() {
+    // Dance to keep the data, but reset the applied styles:
+    let lastData = this._lastData
+    this._update(null);
+    this._enabled = false;
+    this._lastData = lastData;
+  },
 
   observe: function (aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update")
@@ -83,6 +97,8 @@ LightweightThemeConsumer.prototype = {
       this._lastData = aData;
       aData = LightweightThemeImageOptimizer.optimize(aData, this._win.screen);
     }
+    if (!this._enabled)
+      return;
 
     var root = this._doc.documentElement;
     var active = !!aData.headerURL;
