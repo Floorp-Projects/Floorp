@@ -175,13 +175,6 @@
 @BINPATH@/components/dom_apps.xpt
 @BINPATH@/components/dom_base.xpt
 @BINPATH@/components/dom_system.xpt
-#ifdef MOZ_B2G_RIL
-@BINPATH@/components/dom_voicemail.xpt
-@BINPATH@/components/dom_wifi.xpt
-@BINPATH@/components/dom_system_gonk.xpt
-@BINPATH@/components/dom_icc.xpt
-@BINPATH@/components/dom_wappush.xpt
-#endif
 #ifdef MOZ_B2G_BT
 @BINPATH@/components/dom_bluetooth.xpt
 #endif
@@ -446,19 +439,6 @@
 @BINPATH@/components/contentSecurityPolicy.js
 @BINPATH@/components/contentAreaDropListener.manifest
 @BINPATH@/components/contentAreaDropListener.js
-#ifdef MOZ_B2G_RIL
-@BINPATH@/components/RadioInterfaceLayer.manifest
-@BINPATH@/components/RadioInterfaceLayer.js
-@BINPATH@/components/MmsService.manifest
-@BINPATH@/components/MmsService.js
-@BINPATH@/components/RILContentHelper.js
-@BINPATH@/components/MobileMessageDatabaseService.manifest
-@BINPATH@/components/MobileMessageDatabaseService.js
-@BINPATH@/components/WifiWorker.js
-@BINPATH@/components/WifiWorker.manifest
-@BINPATH@/components/DOMWifiManager.js
-@BINPATH@/components/DOMWifiManager.manifest
-#endif
 @BINPATH@/browser/components/BrowserProfileMigrators.manifest
 @BINPATH@/browser/components/ProfileMigrator.js
 @BINPATH@/browser/components/ChromeProfileMigrator.js
