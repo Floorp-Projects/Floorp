@@ -6137,11 +6137,10 @@ nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
         return NS_ERROR_INVALID_ARG;
     }
 
-    WidgetMouseEvent* mouse_event = static_cast<WidgetMouseEvent*>(aEvent);
-
     GdkWindow *gdk_window;
     gint button, screenX, screenY;
-    if (!GetDragInfo(mouse_event, &gdk_window, &button, &screenX, &screenY)) {
+    if (!GetDragInfo(aEvent->AsMouseEvent(), &gdk_window, &button,
+                     &screenX, &screenY)) {
         return NS_ERROR_FAILURE;
     }
 

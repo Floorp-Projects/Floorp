@@ -584,13 +584,14 @@ protected:
     nsDelayedMouseEvent(mozilla::WidgetMouseEvent* aEvent) :
       nsDelayedInputEvent()
     {
-      mEvent = new mozilla::WidgetMouseEvent(aEvent->mFlags.mIsTrusted,
-                                             aEvent->message,
-                                             aEvent->widget,
-                                             aEvent->reason,
-                                             aEvent->context);
-      static_cast<mozilla::WidgetMouseEvent*>(mEvent)->
-        AssignMouseEventData(*aEvent, false);
+      mozilla::WidgetMouseEvent* mouseEvent =
+        new mozilla::WidgetMouseEvent(aEvent->mFlags.mIsTrusted,
+                                      aEvent->message,
+                                      aEvent->widget,
+                                      aEvent->reason,
+                                      aEvent->context);
+      mouseEvent->AssignMouseEventData(*aEvent, false);
+      mEvent = mouseEvent;
     }
   };
 

@@ -3172,8 +3172,7 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   }
   if (IsSingleLineTextControl(false) &&
       aVisitor.mEvent->message == NS_MOUSE_CLICK &&
-      aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+      aVisitor.mEvent->AsMouseEvent()->button ==
         WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
@@ -3674,11 +3673,9 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         {
           // cancel all of these events for buttons
           //XXXsmaug Why?
-          if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-              (static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-                 WidgetMouseEvent::eMiddleButton ||
-               static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-                 WidgetMouseEvent::eRightButton)) {
+          WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+          if (mouseEvent->button == WidgetMouseEvent::eMiddleButton ||
+              mouseEvent->button == WidgetMouseEvent::eRightButton) {
             if (mType == NS_FORM_INPUT_BUTTON ||
                 mType == NS_FORM_INPUT_RESET ||
                 mType == NS_FORM_INPUT_SUBMIT) {
@@ -3797,9 +3794,8 @@ HTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor
         break; // ignore
       }
       if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_DOWN) {
-        WidgetMouseEvent* mouseEvent =
-          static_cast<WidgetMouseEvent*>(aVisitor.mEvent);
-        if (mouseEvent->buttons == WidgetMouseEvent::eLeftButtonFlag) {
+        if (aVisitor.mEvent->AsMouseEvent()->buttons ==
+              WidgetMouseEvent::eLeftButtonFlag) {
           StartRangeThumbDrag(inputEvent);
         } else if (mIsDraggingRange) {
           CancelRangeThumbDrag();

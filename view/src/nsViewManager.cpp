@@ -704,8 +704,7 @@ nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
 
   if ((aEvent->HasMouseEventMessage() &&
        // Ignore mouse events that we synthesize.
-       static_cast<WidgetMouseEvent*>(aEvent)->reason ==
-         WidgetMouseEvent::eReal &&
+       aEvent->AsMouseEvent()->reason == WidgetMouseEvent::eReal &&
        // Ignore mouse exit and enter (we'll get moves if the user
        // is really moving the mouse) since we get them when we
        // create and destroy widgets.
