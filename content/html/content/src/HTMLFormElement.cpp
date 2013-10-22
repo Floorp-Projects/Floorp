@@ -807,9 +807,9 @@ HTMLFormElement::SubmitSubmission(nsFormSubmission* aFormSubmission)
   {
     nsAutoPopupStatePusher popupStatePusher(mSubmitPopupState);
 
-    nsAutoHandlingUserInputStatePusher userInpStatePusher(
-                                         mSubmitInitiatedFromUserInput,
-                                         nullptr, doc);
+    AutoHandlingUserInputStatePusher userInpStatePusher(
+                                       mSubmitInitiatedFromUserInput,
+                                       nullptr, doc);
 
     nsCOMPtr<nsIInputStream> postDataStream;
     rv = aFormSubmission->GetEncodedSubmission(actionURI,
