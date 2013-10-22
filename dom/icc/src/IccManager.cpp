@@ -2,17 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/IccManager.h"
+
+#include "GeneratedEvents.h"
+#include "mozilla/dom/StkCommandEvent.h"
 #include "mozilla/Services.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMIccInfo.h"
-#include "GeneratedEvents.h"
-#include "IccManager.h"
 #include "SimToolKit.h"
-#include "StkCommandEvent.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
-using namespace mozilla::dom::icc;
+using namespace mozilla::dom;
 
 class IccManager::Listener : public nsIIccListener
 {
@@ -38,7 +39,7 @@ public:
 
 NS_IMPL_ISUPPORTS1(IccManager::Listener, nsIIccListener)
 
-DOMCI_DATA(MozIccManager, mozilla::dom::icc::IccManager)
+DOMCI_DATA(MozIccManager, IccManager)
 
 NS_INTERFACE_MAP_BEGIN(IccManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozIccManager)

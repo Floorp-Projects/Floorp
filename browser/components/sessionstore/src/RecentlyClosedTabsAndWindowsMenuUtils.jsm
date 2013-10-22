@@ -65,10 +65,8 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
       fragment.appendChild(doc.createElementNS(kNSXUL, "menuseparator"));
       let restoreAllTabs = fragment.appendChild(doc.createElementNS(kNSXUL, aTagName));
       restoreAllTabs.setAttribute("label", navigatorBundle.GetStringFromName("menuRestoreAllTabs.label"));
-      restoreAllTabs.addEventListener("command", function() {
-        for (var i = 0; i < closedTabs.length; i++)
-          undoCloseTab(0);
-      }, false);
+      restoreAllTabs.setAttribute("oncommand",
+              "for (var i = 0; i < " + closedTabs.length + "; i++) undoCloseTab(0);");
     }
     return fragment;
   },
@@ -127,6 +125,21 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
         "for (var i = 0; i < " + closedWindowData.length + "; i++) undoCloseWindow();");
     }
     return fragment;
+  },
+
+
+  /**
+    * Re-open a closed tab and put it to the end of the tab strip.
+    * Used for a middle click.
+    * @param aEvent
+    *        The event when the user clicks the menu item
+    */
+  _undoCloseMiddleClick: function(aEvent) {
+    if (aEvent.button != 1)
+      return;
+
+    aEvent.view.undoCloseTab(aEvent.originalTarget.value);
+    aEvent.view.gBrowser.moveTabToEnd();
   },
 };
 

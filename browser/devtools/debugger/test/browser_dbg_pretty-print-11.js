@@ -2,12 +2,13 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Make sure that we have the correct line selected after pretty printing.
+ * Make sure that pretty printing is maintained across refreshes.
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
 
 let gTab, gDebuggee, gPanel, gDebugger;
+let gEditor, gSources;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
@@ -15,33 +16,38 @@ function test() {
     gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
+    gEditor = gDebugger.DebuggerView.editor;
+    gSources = gDebugger.DebuggerView.Sources;
 
     waitForSourceShown(gPanel, "code_ugly.js")
-      .then(runCodeAndPause)
+      .then(testSourceIsUgly)
       .then(() => {
-        const sourceShown = waitForSourceShown(gPanel, "code_ugly.js");
-        const caretUpdated = waitForCaretUpdated(gPanel, 7);
-        const finished = promise.all([sourceShown, caretUpdated]);
+        const finished = waitForSourceShown(gPanel, "code_ugly.js");
         clickPrettyPrintButton();
         return finished;
       })
-      .then(resumeDebuggerThenCloseAndFinish.bind(null, gPanel))
+      .then(testSourceIsPretty)
+      .then(reloadActiveTab.bind(null, gPanel, gDebugger.EVENTS.SOURCE_SHOWN))
+      .then(testSourceIsPretty)
+      .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
       });
   });
 }
 
-function runCodeAndPause() {
-  const deferred = promise.defer();
-  once(gDebugger.gThreadClient, "paused").then(deferred.resolve);
-  // Have to executeSoon so that we don't pause before this function returns.
-  executeSoon(gDebuggee.foo);
-  return deferred.promise;
+function testSourceIsUgly() {
+  ok(!gEditor.getText().contains("\n    "),
+     "The source shouldn't be pretty printed yet.");
 }
 
 function clickPrettyPrintButton() {
   gDebugger.document.getElementById("pretty-print").click();
+}
+
+function testSourceIsPretty() {
+  ok(gEditor.getText().contains("\n    "),
+     "The source should be pretty printed.")
 }
 
 registerCleanupFunction(function() {
@@ -49,4 +55,6 @@ registerCleanupFunction(function() {
   gDebuggee = null;
   gPanel = null;
   gDebugger = null;
+  gEditor = null;
+  gSources = null;
 });
