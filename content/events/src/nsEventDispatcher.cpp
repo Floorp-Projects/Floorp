@@ -718,7 +718,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                        aEvent->AsMouseScrollEvent());
     case NS_WHEEL_EVENT:
       return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<WidgetWheelEvent*>(aEvent));
+                                 aEvent->AsWheelEvent());
     case NS_DRAG_EVENT:
       return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
                                 aEvent->AsDragEvent());

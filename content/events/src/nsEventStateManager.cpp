@@ -1188,7 +1188,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         break;
       }
 
-      WidgetWheelEvent* wheelEvent = static_cast<WidgetWheelEvent*>(aEvent);
+      WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
       WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(wheelEvent);
 
       // If we won't dispatch a DOM event for this event, nothing to do anymore.
@@ -1599,8 +1599,7 @@ nsEventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     return remote->SendRealKeyEvent(*aEvent->AsKeyboardEvent());
   }
   case NS_WHEEL_EVENT: {
-    WidgetWheelEvent* wheelEvent = static_cast<WidgetWheelEvent*>(aEvent);
-    return remote->SendMouseWheelEvent(*wheelEvent);
+    return remote->SendMouseWheelEvent(*aEvent->AsWheelEvent());
   }
   case NS_TOUCH_EVENT: {
     // Let the child process synthesize a mouse event if needed, and
@@ -3391,7 +3390,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         break;
       }
 
-      WidgetWheelEvent* wheelEvent = static_cast<WidgetWheelEvent*>(aEvent);
+      WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
       switch (WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent)) {
         case WheelPrefs::ACTION_SCROLL: {
           // For scrolling of default action, we should honor the mouse wheel
