@@ -2354,8 +2354,8 @@ nsXULMenuCommandEvent::Run()
     if (mCloseMenuMode != CloseMenuMode_None)
       menuFrame->SelectMenu(false);
 
-    nsAutoHandlingUserInputStatePusher userInpStatePusher(mUserInput, nullptr,
-                                                          shell->GetDocument());
+    AutoHandlingUserInputStatePusher userInpStatePusher(mUserInput, nullptr,
+                                                        shell->GetDocument());
     nsContentUtils::DispatchXULCommand(mMenu, mIsTrusted, nullptr, shell,
                                        mControl, mAlt, mShift, mMeta);
   }
