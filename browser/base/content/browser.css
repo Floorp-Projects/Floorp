@@ -197,18 +197,18 @@ toolbar[customizing] > .overflow-button {
 
 #bookmarks-toolbar-placeholder,
 toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
-#personal-bookmarks[customizableui-areatype="menu-panel"] > #PlacesToolbar,
-#personal-bookmarks[customizableui-areatype="toolbar"].overflowedItem > #PlacesToolbar {
+#personal-bookmarks[cui-areatype="menu-panel"] > #PlacesToolbar,
+#personal-bookmarks[cui-areatype="toolbar"].overflowedItem > #PlacesToolbar {
   display: none;
 }
 
 toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
-#personal-bookmarks[customizableui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder,
-#personal-bookmarks[customizableui-areatype="toolbar"].overflowedItem > #bookmarks-toolbar-placeholder {
+#personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder,
+#personal-bookmarks[cui-areatype="toolbar"].overflowedItem > #bookmarks-toolbar-placeholder {
   display: -moz-box;
 }
 
-#zoom-controls[customizableui-areatype="toolbar"]:not(.overflowedItem) > #zoom-reset-button > .toolbarbutton-text {
+#zoom-controls[cui-areatype="toolbar"]:not(.overflowedItem) > #zoom-reset-button > .toolbarbutton-text {
   display: -moz-box;
 }
 

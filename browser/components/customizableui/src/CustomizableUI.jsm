@@ -688,16 +688,16 @@ let CustomizableUIInternal = {
                       "associated with it.");
     }
 
-    aNode.setAttribute("customizableui-areatype", props.get("type") || "");
+    aNode.setAttribute("cui-areatype", props.get("type") || "");
     let anchor = props.get("anchor");
     if (anchor) {
-      aNode.setAttribute("customizableui-anchorid", anchor);
+      aNode.setAttribute("cui-anchorid", anchor);
     }
   },
 
   removeLocationAttributes: function(aNode) {
-    aNode.removeAttribute("customizableui-areatype");
-    aNode.removeAttribute("customizableui-anchorid");
+    aNode.removeAttribute("cui-areatype");
+    aNode.removeAttribute("cui-anchorid");
   },
 
   insertNode: function(aWidgetId, aArea, aPosition, isNew) {
@@ -2194,7 +2194,7 @@ function WidgetSingleWrapper(aWidget, aNode) {
       anchorId = gAreas.get(placement.area).get("anchor");
     }
     if (!anchorId) {
-      anchorId = aNode.getAttribute("customizableui-anchorid");
+      anchorId = aNode.getAttribute("cui-anchorid");
     }
 
     return anchorId ? aNode.ownerDocument.getElementById(anchorId)
@@ -2283,7 +2283,7 @@ function XULWidgetSingleWrapper(aWidgetId, aNode) {
       anchorId = gAreas.get(placement.area).get("anchor");
     }
     if (!anchorId) {
-      anchorId = aNode.getAttribute("customizableui-anchorid");
+      anchorId = aNode.getAttribute("cui-anchorid");
     }
 
     return anchorId ? aNode.ownerDocument.getElementById(anchorId)
@@ -2422,7 +2422,7 @@ OverflowableToolbar.prototype = {
       if (child.getAttribute("overflows") != "false") {
         this._collapsed.set(child.id, this._target.clientWidth);
         child.classList.add("overflowedItem");
-        child.setAttribute("customizableui-anchorid", this._chevron.id);
+        child.setAttribute("cui-anchorid", this._chevron.id);
 
         this._list.insertBefore(child, this._list.firstChild);
         if (!this._toolbar.hasAttribute("overflowing")) {
@@ -2477,7 +2477,7 @@ OverflowableToolbar.prototype = {
       if (!inserted) {
         this._target.appendChild(child);
       }
-      child.removeAttribute("customizableui-anchorid");
+      child.removeAttribute("cui-anchorid");
       child.classList.remove("overflowedItem");
     }
 
@@ -2551,7 +2551,7 @@ OverflowableToolbar.prototype = {
         let prevId = aNode.previousSibling.id;
         let minSize = this._collapsed.get(prevId);
         this._collapsed.set(aNode.id, minSize);
-        aNode.setAttribute("customizableui-anchorid", this._chevron.id);
+        aNode.setAttribute("cui-anchorid", this._chevron.id);
         aNode.classList.add("overflowedItem");
       }
       // If it is not overflowed and not in the toolbar, and was not overflowed
@@ -2568,7 +2568,7 @@ OverflowableToolbar.prototype = {
       // ... and isn't anymore, let's remove our bookkeeping:
       if (!nowOverflowed) {
         this._collapsed.delete(aNode.id);
-        aNode.removeAttribute("customizableui-anchorid");
+        aNode.removeAttribute("cui-anchorid");
         aNode.classList.remove("overflowedItem");
 
         if (!this._collapsed.size) {

@@ -19,12 +19,12 @@
 
 /*** Main indicator icon ***/
 
-#downloads-button[customizableui-areatype="toolbar"] > #downloads-indicator-anchor > #downloads-indicator-icon {
+#downloads-button[cui-areatype="toolbar"] > #downloads-indicator-anchor > #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
                               0, 198, 18, 180) center no-repeat;
 }
 
-#downloads-button[customizableui-areatype="toolbar"][attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+#downloads-button[cui-areatype="toolbar"][attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
   background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
