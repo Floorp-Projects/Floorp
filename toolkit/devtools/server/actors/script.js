@@ -2365,11 +2365,25 @@ function SourceActor({ url, thread, sourceMap, generatedSource, text,
   this.onSource = this.onSource.bind(this);
   this._invertSourceMap = this._invertSourceMap.bind(this);
   this._saveMap = this._saveMap.bind(this);
+  this._getSourceText = this._getSourceText.bind(this);
+
+  if (this.threadActor.sources.isPrettyPrinted(this.url)) {
+    this._init = this.onPrettyPrint({
+      indent: this.threadActor.sources.prettyPrintIndent(this.url)
+    }).then(null, error => {
+      DevToolsUtils.reportException("SourceActor", error);
+    });
+  } else {
+    this._init = null;
+  }
 }
 
 SourceActor.prototype = {
   constructor: SourceActor,
   actorPrefix: "source",
+
+  _oldSourceMap: null,
+  _init: null,
 
   get threadActor() this._threadActor,
   get url() this._url,
@@ -2382,7 +2396,8 @@ SourceActor.prototype = {
     return {
       actor: this.actorID,
       url: this._url,
-      isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url)
+      isBlackBoxed: this.threadActor.sources.isBlackBoxed(this.url),
+      isPrettyPrinted: this.threadActor.sources.isPrettyPrinted(this.url)
       // TODO bug 637572: introductionScript
     };
   },
@@ -2417,8 +2432,9 @@ SourceActor.prototype = {
   /**
    * Handler for the "source" packet.
    */
-  onSource: function SA_onSource(aRequest) {
-    return this._getSourceText()
+  onSource: function SA_onSource() {
+    return resolve(this._init)
+      .then(this._getSourceText)
       .then(({ content, contentType }) => {
         return {
           from: this.actorID,
@@ -2427,7 +2443,7 @@ SourceActor.prototype = {
           contentType: contentType
         };
       })
-      .then(null, (aError) => {
+      .then(null, aError => {
         reportError(aError, "Got an exception during SA_onSource: ");
         return {
           "from": this.actorID,
@@ -2442,17 +2458,27 @@ SourceActor.prototype = {
    * Handler for the "prettyPrint" packet.
    */
   onPrettyPrint: function ({ indent }) {
+    this.threadActor.sources.prettyPrint(this._url, indent);
     return this._getSourceText()
       .then(this._parseAST)
       .then(this._sendToPrettyPrintWorker(indent))
       .then(this._invertSourceMap)
       .then(this._saveMap)
+      .then(() => {
+        // We need to reset `_init` now because we have already done the work of
+        // pretty printing, and don't want onSource to wait forever for
+        // initialization to complete.
+        this._init = null;
+      })
       .then(this.onSource)
-      .then(null, error => ({
-        from: this.actorID,
-        error: "prettyPrintError",
-        message: DevToolsUtils.safeErrorString(error)
-      }));
+      .then(null, error => {
+        this.onDisablePrettyPrint();
+        return {
+          from: this.actorID,
+          error: "prettyPrintError",
+          message: DevToolsUtils.safeErrorString(error)
+        };
+      });
   },
 
   /**
@@ -2572,6 +2598,7 @@ SourceActor.prototype = {
   _saveMap: function SA__saveMap({ map }) {
     if (this._sourceMap) {
       // Compose the source maps
+      this._oldSourceMap = this._sourceMap;
       this._sourceMap = SourceMapGenerator.fromSourceMap(this._sourceMap);
       this._sourceMap.applySourceMap(map, this._url);
       this._sourceMap = SourceMapConsumer.fromSourceMap(this._sourceMap);
@@ -2581,6 +2608,17 @@ SourceActor.prototype = {
       this._sourceMap = map;
       this._threadActor.sources.saveSourceMap(this._sourceMap, this._url);
     }
+  },
+
+  /**
+   * Handler for the "disablePrettyPrint" packet.
+   */
+  onDisablePrettyPrint: function SA_onDisablePrettyPrint() {
+    this._sourceMap = this._oldSourceMap;
+    this.threadActor.sources.saveSourceMap(this._sourceMap,
+                                           this._generatedSource || this._url);
+    this.threadActor.sources.disablePrettyPrint(this._url);
+    return this.onSource();
   },
 
   /**
@@ -2614,7 +2652,8 @@ SourceActor.prototype.requestTypes = {
   "source": SourceActor.prototype.onSource,
   "blackbox": SourceActor.prototype.onBlackBox,
   "unblackbox": SourceActor.prototype.onUnblackBox,
-  "prettyPrint": SourceActor.prototype.onPrettyPrint
+  "prettyPrint": SourceActor.prototype.onPrettyPrint,
+  "disablePrettyPrint": SourceActor.prototype.onDisablePrettyPrint
 };
 
 
@@ -3718,6 +3757,7 @@ function ThreadSources(aThreadActor, aUseSourceMaps, aAllowPredicate,
  * the breakpoint store.
  */
 ThreadSources._blackBoxedSources = new Set();
+ThreadSources._prettyPrintedSources = new Map();
 
 ThreadSources.prototype = {
   /**
@@ -3847,6 +3887,10 @@ ThreadSources.prototype = {
    * down the line.
    */
   saveSourceMap: function TS_saveSourceMap(aSourceMap, aGeneratedSource) {
+    if (!aSourceMap) {
+      delete this._sourceMapsByGeneratedSource[aGeneratedSource];
+      return null;
+    }
     this._sourceMapsByGeneratedSource[aGeneratedSource] = resolve(aSourceMap);
     for (let s of aSourceMap.sources) {
       this._generatedUrlsByOriginalUrl[s] = aGeneratedSource;
@@ -3969,9 +4013,7 @@ ThreadSources.prototype = {
   },
 
   /**
-   * Add the given source URL to the set of sources that are black boxed. If the
-   * thread is currently paused and we are black boxing the yougest frame's
-   * source, this will force a step.
+   * Add the given source URL to the set of sources that are black boxed.
    *
    * @param aURL String
    *        The URL of the source which we are black boxing.
@@ -3988,6 +4030,43 @@ ThreadSources.prototype = {
    */
   unblackBox: function TS_unblackBox(aURL) {
     ThreadSources._blackBoxedSources.delete(aURL);
+  },
+
+  /**
+   * Returns true if the given URL is pretty printed.
+   *
+   * @param aURL String
+   *        The URL of the source that might be pretty printed.
+   */
+  isPrettyPrinted: function TS_isPrettyPrinted(aURL) {
+    return ThreadSources._prettyPrintedSources.has(aURL);
+  },
+
+  /**
+   * Add the given URL to the set of sources that are pretty printed.
+   *
+   * @param aURL String
+   *        The URL of the source to be pretty printed.
+   */
+  prettyPrint: function TS_prettyPrint(aURL, aIndent) {
+    ThreadSources._prettyPrintedSources.set(aURL, aIndent);
+  },
+
+  /**
+   * Return the indent the given URL was pretty printed by.
+   */
+  prettyPrintIndent: function TS_prettyPrintIndent(aURL) {
+    return ThreadSources._prettyPrintedSources.get(aURL);
+  },
+
+  /**
+   * Remove the given URL from the set of sources that are pretty printed.
+   *
+   * @param aURL String
+   *        The URL of the source that is no longer pretty printed.
+   */
+  disablePrettyPrint: function TS_disablePrettyPrint(aURL) {
+    ThreadSources._prettyPrintedSources.delete(aURL);
   },
 
   /**

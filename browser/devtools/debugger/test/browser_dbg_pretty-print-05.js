@@ -37,7 +37,7 @@ function test() {
 
       let { source } = gSources.selectedItem.attachment;
       try {
-        yield gControllerSources.prettyPrint(source);
+        yield gControllerSources.togglePrettyPrint(source);
         ok(false, "The promise for a prettified source should be rejected!");
       } catch ([source, error]) {
         is(error, "Can't prettify non-javascript files.",
@@ -58,9 +58,7 @@ function test() {
 }
 
 function clickPrettyPrintButton() {
-  EventUtils.sendMouseEvent({ type: "click" },
-    gDebugger.document.getElementById("pretty-print"),
-    gDebugger);
+  gDebugger.document.getElementById("pretty-print").click();
 }
 
 function prepareDebugger(aPanel) {
