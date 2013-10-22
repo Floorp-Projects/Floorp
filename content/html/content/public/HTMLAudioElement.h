@@ -7,10 +7,11 @@
 #define mozilla_dom_HTMLAudioElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsITimer.h"
 #include "nsIDOMHTMLAudioElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/TypedArray.h"
+
+class nsITimer;
 
 typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;

@@ -896,7 +896,7 @@ AccessibleWrap::accNavigate(
     return CO_E_OBJNOTCONNECTED;
 
   Accessible* navAccessible = nullptr;
-  int32_t xpRelation = -1;
+  Maybe<RelationType> xpRelation;
 
   switch(navDir) {
     case NAVDIR_FIRSTCHILD:
@@ -921,55 +921,55 @@ AccessibleWrap::accNavigate(
 
     // MSAA relationship extensions to accNavigate
     case NAVRELATION_CONTROLLED_BY:
-      xpRelation = static_cast<int32_t>(RelationType::CONTROLLED_BY);
+      xpRelation.construct(RelationType::CONTROLLED_BY);
       break;
     case NAVRELATION_CONTROLLER_FOR:
-      xpRelation = static_cast<int32_t>(RelationType::CONTROLLER_FOR);
+      xpRelation.construct(RelationType::CONTROLLER_FOR);
       break;
     case NAVRELATION_LABEL_FOR:
-      xpRelation = static_cast<int32_t>(RelationType::LABEL_FOR);
+      xpRelation.construct(RelationType::LABEL_FOR);
       break;
     case NAVRELATION_LABELLED_BY:
-      xpRelation = static_cast<int32_t>(RelationType::LABELLED_BY);
+      xpRelation.construct(RelationType::LABELLED_BY);
       break;
     case NAVRELATION_MEMBER_OF:
-      xpRelation = static_cast<int32_t>(RelationType::MEMBER_OF);
+      xpRelation.construct(RelationType::MEMBER_OF);
       break;
     case NAVRELATION_NODE_CHILD_OF:
-      xpRelation = static_cast<int32_t>(RelationType::NODE_CHILD_OF);
+      xpRelation.construct(RelationType::NODE_CHILD_OF);
       break;
     case NAVRELATION_FLOWS_TO:
-      xpRelation = static_cast<int32_t>(RelationType::FLOWS_TO);
+      xpRelation.construct(RelationType::FLOWS_TO);
       break;
     case NAVRELATION_FLOWS_FROM:
-      xpRelation = static_cast<int32_t>(RelationType::FLOWS_FROM);
+      xpRelation.construct(RelationType::FLOWS_FROM);
       break;
     case NAVRELATION_SUBWINDOW_OF:
-      xpRelation = static_cast<int32_t>(RelationType::SUBWINDOW_OF);
+      xpRelation.construct(RelationType::SUBWINDOW_OF);
       break;
     case NAVRELATION_EMBEDS:
-      xpRelation = static_cast<int32_t>(RelationType::EMBEDS);
+      xpRelation.construct(RelationType::EMBEDS);
       break;
     case NAVRELATION_EMBEDDED_BY:
-      xpRelation = static_cast<int32_t>(RelationType::EMBEDDED_BY);
+      xpRelation.construct(RelationType::EMBEDDED_BY);
       break;
     case NAVRELATION_POPUP_FOR:
-      xpRelation = static_cast<int32_t>(RelationType::POPUP_FOR);
+      xpRelation.construct(RelationType::POPUP_FOR);
       break;
     case NAVRELATION_PARENT_WINDOW_OF:
-      xpRelation = static_cast<int32_t>(RelationType::PARENT_WINDOW_OF);
+      xpRelation.construct(RelationType::PARENT_WINDOW_OF);
       break;
     case NAVRELATION_DEFAULT_BUTTON:
-      xpRelation = static_cast<int32_t>(RelationType::DEFAULT_BUTTON);
+      xpRelation.construct(RelationType::DEFAULT_BUTTON);
       break;
     case NAVRELATION_DESCRIBED_BY:
-      xpRelation = static_cast<int32_t>(RelationType::DESCRIBED_BY);
+      xpRelation.construct(RelationType::DESCRIBED_BY);
       break;
     case NAVRELATION_DESCRIPTION_FOR:
-      xpRelation = static_cast<int32_t>(RelationType::DESCRIPTION_FOR);
+      xpRelation.construct(RelationType::DESCRIPTION_FOR);
       break;
     case NAVRELATION_NODE_PARENT_OF:
-      xpRelation = static_cast<int32_t>(RelationType::NODE_PARENT_OF);
+      xpRelation.construct(RelationType::NODE_PARENT_OF);
       break;
 
     default:
@@ -978,8 +978,8 @@ AccessibleWrap::accNavigate(
 
   pvarEndUpAt->vt = VT_EMPTY;
 
-  if (xpRelation >= 0) {
-    Relation rel = RelationByType(static_cast<RelationType>(xpRelation));
+  if (!xpRelation.empty()) {
+    Relation rel = RelationByType(xpRelation.ref());
     navAccessible = rel.Next();
   }
 

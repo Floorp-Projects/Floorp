@@ -12,3 +12,4 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'minidump_file_writer_s'
 
+XPI_NAME = 'crashreporter'

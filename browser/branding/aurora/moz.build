@@ -6,3 +6,5 @@
 
 DIRS += ['content', 'locales']
 
+DIST_SUBDIR = 'browser'
+export('DIST_SUBDIR')
