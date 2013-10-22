@@ -697,7 +697,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
     case NS_SCROLLPORT_EVENT:
     case NS_UI_EVENT:
       return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
-                              static_cast<WidgetGUIEvent*>(aEvent));
+                              aEvent->AsGUIEvent());
     case NS_SCROLLAREA_EVENT:
       return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext,
                                       aEvent->AsScrollAreaEvent());
@@ -718,7 +718,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                        aEvent->AsMouseScrollEvent());
     case NS_WHEEL_EVENT:
       return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<WidgetWheelEvent*>(aEvent));
+                                 aEvent->AsWheelEvent());
     case NS_DRAG_EVENT:
       return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
                                 aEvent->AsDragEvent());
@@ -730,7 +730,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                      aEvent->AsClipboardEvent());
     case NS_SVGZOOM_EVENT:
       return NS_NewDOMSVGZoomEvent(aDOMEvent, aOwner, aPresContext,
-                                   static_cast<WidgetGUIEvent*>(aEvent));
+                                   aEvent->AsGUIEvent());
     case NS_SMIL_TIME_EVENT:
       return NS_NewDOMTimeEvent(aDOMEvent, aOwner, aPresContext, aEvent);
 

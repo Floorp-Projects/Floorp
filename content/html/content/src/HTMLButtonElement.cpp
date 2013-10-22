@@ -281,30 +281,25 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
       case NS_MOUSE_BUTTON_DOWN:
         {
-          if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
-            if (static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-                  WidgetMouseEvent::eLeftButton) {
-              if (aVisitor.mEvent->mFlags.mIsTrusted) {
-                nsEventStateManager* esm =
-                  aVisitor.mPresContext->EventStateManager();
-                nsEventStateManager::SetActiveManager(
-                  static_cast<nsEventStateManager*>(esm), this);
-              }
-              nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-              if (fm)
-                fm->SetFocus(this, nsIFocusManager::FLAG_BYMOUSE |
-                                   nsIFocusManager::FLAG_NOSCROLL);
-              aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
-            } else if (
-              static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-                WidgetMouseEvent::eMiddleButton ||
-              static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-                WidgetMouseEvent::eRightButton) {
-              // cancel all of these events for buttons
-              //XXXsmaug What to do with these events? Why these should be cancelled?
-              if (aVisitor.mDOMEvent) {
-                aVisitor.mDOMEvent->StopPropagation();
-              }
+          WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+          if (mouseEvent->button == WidgetMouseEvent::eLeftButton) {
+            if (mouseEvent->mFlags.mIsTrusted) {
+              nsEventStateManager* esm =
+                aVisitor.mPresContext->EventStateManager();
+              nsEventStateManager::SetActiveManager(
+                static_cast<nsEventStateManager*>(esm), this);
+            }
+            nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+            if (fm)
+              fm->SetFocus(this, nsIFocusManager::FLAG_BYMOUSE |
+                                 nsIFocusManager::FLAG_NOSCROLL);
+            mouseEvent->mFlags.mMultipleActionsPrevented = true;
+          } else if (mouseEvent->button == WidgetMouseEvent::eMiddleButton ||
+                     mouseEvent->button == WidgetMouseEvent::eRightButton) {
+            // cancel all of these events for buttons
+            //XXXsmaug What to do with these events? Why these should be cancelled?
+            if (aVisitor.mDOMEvent) {
+              aVisitor.mDOMEvent->StopPropagation();
             }
           }
         }
@@ -315,12 +310,10 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       case NS_MOUSE_BUTTON_UP:
       case NS_MOUSE_DOUBLECLICK:
         {
-          if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-              aVisitor.mDOMEvent &&
-              (static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-                 WidgetMouseEvent::eMiddleButton ||
-               static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-                 WidgetMouseEvent::eRightButton)) {
+          WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+          if (aVisitor.mDOMEvent &&
+              (mouseEvent->button == WidgetMouseEvent::eMiddleButton ||
+               mouseEvent->button == WidgetMouseEvent::eRightButton)) {
             aVisitor.mDOMEvent->StopPropagation();
           }
         }

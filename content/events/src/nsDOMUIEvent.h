@@ -50,8 +50,7 @@ public:
       return nsIntPoint(0, 0);
     }
 
-    mozilla::WidgetGUIEvent* event =
-      static_cast<mozilla::WidgetGUIEvent*>(aEvent);
+    mozilla::WidgetGUIEvent* event = aEvent->AsGUIEvent();
     if (!event->widget) {
       return mozilla::LayoutDeviceIntPoint::ToUntyped(aEvent->refPoint);
     }
@@ -74,7 +73,7 @@ public:
          aEvent->eventStructType != NS_DRAG_EVENT &&
          aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
         !aPresContext ||
-        !static_cast<mozilla::WidgetGUIEvent*>(aEvent)->widget) {
+        !aEvent->AsGUIEvent()->widget) {
       return aDefaultClientPoint
              ? *aDefaultClientPoint
              : CSSIntPoint(0, 0);

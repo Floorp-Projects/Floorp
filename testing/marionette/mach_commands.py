@@ -115,5 +115,6 @@ class MachCommands(MachCommandBase):
                                          self.mozconfig['path']))
             return 1
 
+        bin = self.get_binary_path('app')
         return run_marionette(tests, bin=bin, testtype=testtype,
             topsrcdir=self.topsrcdir, address=address)
