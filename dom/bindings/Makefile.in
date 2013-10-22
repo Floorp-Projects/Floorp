@@ -95,12 +95,6 @@ LOCAL_INCLUDES += \
   $(NULL)
 endif
 
-ifdef MOZ_B2G_RIL
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/dom/icc/src \
-  $(NULL)
-endif
-
 ABS_DIST := $(abspath $(DIST))
 
 EXTRA_EXPORT_MDDEPEND_FILES := $(addsuffix .pp,$(binding_dependency_trackers))

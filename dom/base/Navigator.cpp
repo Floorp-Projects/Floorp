@@ -37,7 +37,7 @@
 #include "nsDOMEvent.h"
 #include "nsGlobalWindow.h"
 #ifdef MOZ_B2G_RIL
-#include "IccManager.h"
+#include "mozilla/dom/IccManager.h"
 #include "MobileConnection.h"
 #include "mozilla/dom/CellBroadcast.h"
 #include "mozilla/dom/Voicemail.h"
@@ -1229,7 +1229,7 @@ Navigator::GetMozIccManager(ErrorResult& aRv)
     }
     NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
-    mIccManager = new icc::IccManager();
+    mIccManager = new IccManager();
     mIccManager->Init(mWindow);
   }
 
