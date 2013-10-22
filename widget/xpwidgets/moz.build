@@ -29,6 +29,7 @@ CPP_SOURCES += [
     'nsFilePickerProxy.cpp',
     'nsHTMLFormatConverter.cpp',
     'nsIdleService.cpp',
+    'nsIWidgetListener.cpp',
     'nsPrimitiveHelpers.cpp',
     'nsPrintOptionsImpl.cpp',
     'nsPrintSession.cpp',

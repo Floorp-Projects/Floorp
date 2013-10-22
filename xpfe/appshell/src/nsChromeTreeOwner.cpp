@@ -19,6 +19,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIWebProgress.h"
+#include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMNode.h"
