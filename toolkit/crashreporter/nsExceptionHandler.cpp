@@ -222,6 +222,11 @@ static const char kIsGarbageCollectingParameter[] = "IsGarbageCollecting=";
 static const int kIsGarbageCollectingParameterLen =
   sizeof(kIsGarbageCollectingParameter)-1;
 
+#ifdef XP_WIN
+static const char kBlockedDllsParameter[] = "BlockedDllList=";
+static const int kBlockedDllsParameterLen = sizeof(kBlockedDllsParameter) - 1;
+#endif
+
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
 static Mutex* notesFieldLock;
@@ -540,6 +545,9 @@ bool MinidumpCallback(
         WriteFile(hFile, isGarbageCollecting ? "1" : "0", 1, &nBytes, nullptr);
         WriteFile(hFile, "\n", 1, &nBytes, nullptr);
       }
+      WriteFile(hFile, kBlockedDllsParameter, kBlockedDllsParameterLen, &nBytes, nullptr);
+      WriteBlockedDlls(hFile);
+      WriteFile(hFile, "\n", 1, &nBytes, nullptr);
 
       // Try to get some information about memory.
       MEMORYSTATUSEX statex;

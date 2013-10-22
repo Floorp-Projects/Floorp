@@ -20,10 +20,11 @@
 
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/WindowsVersion.h"
+#include "nsWindowsHelpers.h"
 
 using namespace mozilla;
 
-#if defined(MOZ_CRASHREPORTER) && !defined(NO_BLOCKLIST_CRASHREPORTER)
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
 
@@ -138,6 +139,10 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // bug 925459, bitguard crashes
   { "bitguard.dll", MAKE_VERSION(2, 6, 1694, 24) },
 
+  // bug 812683 - crashes in Windows library when Asus Gamer OSD is installed
+  // Software is discontinued/unsupported
+  { "atkdx11disp.dll", ALL_VERSIONS },
+
   { nullptr, 0 }
 };
 
@@ -220,6 +225,10 @@ CheckASLR(const wchar_t* path)
   return retval;
 }
 
+// This lock protects both the reentrancy sentinel and the crash reporter
+// data structures.
+static CRITICAL_SECTION sLock;
+
 /**
  * Some versions of Windows call LoadLibraryEx to get the version information
  * for a DLL, which causes our patched LdrLoadDll implementation to re-enter
@@ -236,22 +245,20 @@ public:
   explicit ReentrancySentinel(const char* dllName)
   {
     DWORD currentThreadId = GetCurrentThreadId();
-    EnterCriticalSection(&sLock);
+    AutoCriticalSection lock(&sLock);
     mPreviousDllName = (*sThreadMap)[currentThreadId];
 
     // If there is a DLL currently being loaded and it has the same name
     // as the current attempt, we're re-entering.
     mReentered = mPreviousDllName && !stricmp(mPreviousDllName, dllName);
     (*sThreadMap)[currentThreadId] = dllName;
-    LeaveCriticalSection(&sLock);
   }
     
   ~ReentrancySentinel()
   {
     DWORD currentThreadId = GetCurrentThreadId();
-    EnterCriticalSection(&sLock);
+    AutoCriticalSection lock(&sLock);
     (*sThreadMap)[currentThreadId] = mPreviousDllName;
-    LeaveCriticalSection(&sLock);
   }
 
   bool BailOut() const
@@ -266,15 +273,93 @@ public:
   }
 
 private:
-  static CRITICAL_SECTION sLock;
   static std::map<DWORD, const char*>* sThreadMap;
 
   const char* mPreviousDllName;
   bool mReentered;
 };
 
-CRITICAL_SECTION ReentrancySentinel::sLock;
 std::map<DWORD, const char*>* ReentrancySentinel::sThreadMap;
+
+/**
+ * This is a linked list of DLLs that have been blocked. It doesn't use
+ * mozilla::LinkedList because this is an append-only list and doesn't need
+ * to be doubly linked.
+ */
+class DllBlockSet
+{
+public:
+  static void Add(const char* name, unsigned long long version);
+
+  // Write the list of blocked DLLs to a file HANDLE. This method is run after
+  // a crash occurs and must therefore not use the heap, etc.
+  static void Write(HANDLE file);
+
+private:
+  DllBlockSet(const char* name, unsigned long long version)
+    : mName(name)
+    , mVersion(version)
+    , mNext(nullptr)
+  {
+  }
+
+  const char* mName; // points into the sWindowsDllBlocklist string
+  unsigned long long mVersion;
+  DllBlockSet* mNext;
+
+  static DllBlockSet* gFirst;
+};
+
+DllBlockSet* DllBlockSet::gFirst;
+
+void
+DllBlockSet::Add(const char* name, unsigned long long version)
+{
+  AutoCriticalSection lock(&sLock);
+  for (DllBlockSet* b = gFirst; b; b = b->mNext) {
+    if (0 == strcmp(b->mName, name) && b->mVersion == version) {
+      return;
+    }
+  }
+  // Not already present
+  DllBlockSet* n = new DllBlockSet(name, version);
+  n->mNext = gFirst;
+  gFirst = n;
+}
+
+void
+DllBlockSet::Write(HANDLE file)
+{
+  AutoCriticalSection lock(&sLock);
+  DWORD nBytes;
+
+  // Because this method is called after a crash occurs, and uses heap memory,
+  // protect this entire block with a structured exception handler.
+  __try {
+    for (DllBlockSet* b = gFirst; b; b = b->mNext) {
+      // write name[,v.v.v.v];
+      WriteFile(file, b->mName, strlen(b->mName), &nBytes, nullptr);
+      if (b->mVersion != -1) {
+        WriteFile(file, ",", 1, &nBytes, nullptr);
+        uint16_t parts[4];
+        parts[0] = b->mVersion >> 48;
+        parts[1] = (b->mVersion >> 32) & 0xFFFF;
+        parts[2] = (b->mVersion >> 16) & 0xFFFF;
+        parts[3] = b->mVersion & 0xFFFF;
+        for (int p = 0; p < 4; ++p) {
+          char buf[32];
+          ltoa(parts[p], buf, 10);
+          WriteFile(file, buf, strlen(buf), &nBytes, nullptr);
+          if (p != 3) {
+            WriteFile(file, ".", 1, &nBytes, nullptr);
+          }
+        }
+      }
+      WriteFile(file, ";", 1, &nBytes, nullptr);
+    }
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) { }
+}
 
 static
 wchar_t* getFullPath (PWCHAR filePath, wchar_t* fname)
@@ -304,6 +389,17 @@ wchar_t* getFullPath (PWCHAR filePath, wchar_t* fname)
   return full_fname;
 }
 
+// No builtin function to find the last character matching a set
+static wchar_t* lastslash(wchar_t* s, int len)
+{
+  for (wchar_t* c = s + len - 1; c >= s; --c) {
+    if (*c == L'\\' || *c == L'/') {
+      return c;
+    }
+  }
+  return nullptr;
+}
+
 static NTSTATUS NTAPI
 patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle)
 {
@@ -330,7 +426,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
     goto continue_loading;
   }
 
-  dll_part = wcsrchr(fname, L'\\');
+  dll_part = lastslash(fname, len);
   if (dll_part) {
     dll_part = dll_part + 1;
     len -= dll_part - fname;
@@ -396,6 +492,8 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
       goto continue_loading;
     }
 
+    unsigned long long fVersion = ALL_VERSIONS;
+
     if (info->maxVersion != ALL_VERSIONS) {
       ReentrancySentinel sentinel(dllName);
       if (sentinel.BailOut()) {
@@ -422,7 +520,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
         if (GetFileVersionInfoW(full_fname, 0, infoSize, infoData) &&
             VerQueryValueW(infoData, L"\\", (LPVOID*) &vInfo, &vInfoLen))
         {
-          unsigned long long fVersion =
+          fVersion =
             ((unsigned long long)vInfo->dwFileVersionMS) << 32 |
             ((unsigned long long)vInfo->dwFileVersionLS);
 
@@ -436,6 +534,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 
     if (!load_ok) {
       printf_stderr("LdrLoadDll: Blocking load of '%s' -- see http://www.mozilla.com/en-US/blocklist/\n", dllName);
+      DllBlockSet::Add(info->name, fVersion);
       return STATUS_DLL_NOT_FOUND;
     }
   }
@@ -481,9 +580,17 @@ XRE_SetupDllBlocklist()
     printf_stderr ("LdrLoadDll hook failed, no dll blocklisting active\n");
 #endif
 
-#if defined(MOZ_CRASHREPORTER) && !defined(NO_BLOCKLIST_CRASHREPORTER)
+#ifdef MOZ_CRASHREPORTER
   if (!ok) {
     CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DllBlockList Failed\n"));
   }
 #endif
 }
+
+#ifdef MOZ_CRASHREPORTER
+void
+CrashReporter::WriteBlockedDlls(HANDLE file)
+{
+  DllBlockSet::Write(file);
+}
+#endif

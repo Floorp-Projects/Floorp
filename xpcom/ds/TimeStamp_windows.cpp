@@ -14,6 +14,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
+#include "nsWindowsHelpers.h"
 #include <windows.h>
 
 #include "nsCRT.h"
@@ -184,26 +185,6 @@ namespace mozilla {
 
 typedef ULONGLONG (WINAPI* GetTickCount64_t)();
 static GetTickCount64_t sGetTickCount64 = nullptr;
-
-// ----------------------------------------------------------------------------
-// Critical Section helper class
-// ----------------------------------------------------------------------------
-
-class AutoCriticalSection
-{
-public:
-  AutoCriticalSection(LPCRITICAL_SECTION section)
-    : mSection(section)
-  {
-    ::EnterCriticalSection(mSection);
-  }
-  ~AutoCriticalSection()
-  {
-    ::LeaveCriticalSection(mSection);
-  }
-private:
-  LPCRITICAL_SECTION mSection;
-};
 
 // Function protecting GetTickCount result from rolling over,
 // result is in [ms]
