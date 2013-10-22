@@ -963,6 +963,7 @@ class RecursiveMakeBackend(CommonBackend):
         self._install_manifests['dist_include'].add_optional_exists(header)
 
     def _process_test_manifest(self, obj, backend_file):
+        # Much of the logic in this function could be moved to CommonBackend.
         self.backend_input_files.add(os.path.join(obj.topsrcdir,
             obj.manifest_relpath))
 
