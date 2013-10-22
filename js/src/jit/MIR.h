@@ -2111,6 +2111,9 @@ class MCompare
         Compare_DoubleMaybeCoerceLHS,
         Compare_DoubleMaybeCoerceRHS,
 
+        // Float compared to Float
+        Compare_Float32,
+
         // String compared to String
         Compare_String,
 
@@ -2166,6 +2169,9 @@ class MCompare
                compareType() == Compare_DoubleMaybeCoerceLHS ||
                compareType() == Compare_DoubleMaybeCoerceRHS;
     }
+    bool isFloat32Comparison() const {
+        return compareType() == Compare_Float32;
+    }
     void setCompareType(CompareType type) {
         compareType_ = type;
     }
@@ -2194,6 +2200,15 @@ class MCompare
     }
 
     void printOpcode(FILE *fp) const;
+
+    void trySpecializeFloat32();
+    bool isFloat32Commutative() const { return true; }
+
+# ifdef DEBUG
+    bool isConsistentFloat32Use() const {
+        return compareType_ == Compare_Float32;
+    }
+# endif
 
   protected:
     bool congruentTo(MDefinition *ins) const {

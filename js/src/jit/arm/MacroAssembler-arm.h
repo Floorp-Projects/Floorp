@@ -326,6 +326,7 @@ class MacroAssemblerARM : public Assembler
     void ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc = Always);
     void ma_vcmp_f32(FloatRegister src1, FloatRegister src2, Condition cc = Always);
     void ma_vcmpz(FloatRegister src1, Condition cc = Always);
+    void ma_vcmpz_f32(FloatRegister src1, Condition cc = Always);
 
     void ma_vadd_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);
     void ma_vsub_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);

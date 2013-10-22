@@ -666,7 +666,7 @@ MCompare *
 MCompare::NewAsmJS(MDefinition *left, MDefinition *right, JSOp op, CompareType compareType)
 {
     JS_ASSERT(compareType == Compare_Int32 || compareType == Compare_UInt32 ||
-              compareType == Compare_Double);
+              compareType == Compare_Double || compareType == Compare_Float32);
     MCompare *comp = new MCompare(left, right, op);
     comp->compareType_ = compareType;
     comp->operandMightEmulateUndefined_ = false;
@@ -1680,6 +1680,8 @@ MCompare::inputType()
       case Compare_DoubleMaybeCoerceLHS:
       case Compare_DoubleMaybeCoerceRHS:
         return MIRType_Double;
+      case Compare_Float32:
+        return MIRType_Float32;
       case Compare_String:
       case Compare_StrictString:
         return MIRType_String;
@@ -2206,6 +2208,7 @@ MCompare::tryFold(bool *result)
             /* FALL THROUGH */
           case MIRType_Int32:
           case MIRType_Double:
+          case MIRType_Float32:
           case MIRType_String:
           case MIRType_Boolean:
             *result = (op == JSOP_NE || op == JSOP_STRICTNE);
@@ -2224,6 +2227,7 @@ MCompare::tryFold(bool *result)
             return false;
           case MIRType_Int32:
           case MIRType_Double:
+          case MIRType_Float32:
           case MIRType_String:
           case MIRType_Object:
           case MIRType_Null:
@@ -2248,6 +2252,7 @@ MCompare::tryFold(bool *result)
           case MIRType_Boolean:
           case MIRType_Int32:
           case MIRType_Double:
+          case MIRType_Float32:
           case MIRType_Object:
           case MIRType_Null:
           case MIRType_Undefined:
@@ -2390,6 +2395,25 @@ MCompare::foldsTo(bool useValueNumbers)
     }
 
     return this;
+}
+
+void
+MCompare::trySpecializeFloat32()
+{
+    MDefinition *lhs = getOperand(0);
+    MDefinition *rhs = getOperand(1);
+
+    if (compareType_ == Compare_Float32)
+        return;
+
+    if (lhs->canProduceFloat32() && rhs->canProduceFloat32() && compareType_ == Compare_Double) {
+        compareType_ = Compare_Float32;
+    } else {
+        if (lhs->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(lhs, this);
+        if (rhs->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<1>(rhs, this);
+    }
 }
 
 void
