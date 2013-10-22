@@ -5131,6 +5131,14 @@ class MNot
     TypePolicy *typePolicy() {
         return this;
     }
+
+    void trySpecializeFloat32();
+    bool isFloat32Commutative() const { return true; }
+#ifdef DEBUG
+    bool isConsistentFloat32Use() const {
+        return true;
+    }
+#endif
 };
 
 // Bailout if index + minimum < 0 or index + maximum >= length. The length used

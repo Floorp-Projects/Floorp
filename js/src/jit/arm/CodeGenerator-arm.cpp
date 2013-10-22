@@ -1609,6 +1609,44 @@ CodeGeneratorARM::visitNotD(LNotD *ins)
 
     // Do the compare
     masm.ma_vcmpz(opd);
+    // TODO There are three variations here to compare performance-wise.
+    bool nocond = true;
+    if (nocond) {
+        // Load the value into the dest register
+        masm.as_vmrs(dest);
+        masm.ma_lsr(Imm32(28), dest, dest);
+        masm.ma_alu(dest, lsr(dest, 2), dest, op_orr); // 28 + 2 = 30
+        masm.ma_and(Imm32(1), dest);
+    } else {
+        masm.as_vmrs(pc);
+        masm.ma_mov(Imm32(0), dest);
+        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::Equal);
+        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::Overflow);
+#if 0
+        masm.as_vmrs(ToRegister(dest));
+        // Mask out just the two bits we care about.  If neither bit is set,
+        // the dest is already zero
+        masm.ma_and(Imm32(0x50000000), dest, dest, Assembler::SetCond);
+        // If it is non-zero, then force it to be 1.
+        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::NotEqual);
+#endif
+    }
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitNotF(LNotF *ins)
+{
+    // Since this operation is not, we want to set a bit if
+    // the double is falsey, which means 0.0, -0.0 or NaN.
+    // when comparing with 0, an input of 0 will set the Z bit (30)
+    // and NaN will set the V bit (28) of the APSR.
+    FloatRegister opd = ToFloatRegister(ins->input());
+    Register dest = ToRegister(ins->output());
+
+    // Do the compare
+    masm.ma_vcmpz_f32(opd);
+    // TODO There are three variations here to compare performance-wise.
     bool nocond = true;
     if (nocond) {
         // Load the value into the dest register
