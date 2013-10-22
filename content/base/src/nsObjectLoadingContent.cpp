@@ -78,7 +78,6 @@
 
 #include "nsWidgetsCID.h"
 #include "nsContentCID.h"
-#include "mozilla/BasicEvents.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Telemetry.h"
 

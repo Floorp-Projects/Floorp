@@ -26,7 +26,6 @@
 
 #include "nsIDOMXULElement.h"
 
-#include "nsWidgetInitData.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
 #include "nsIWidgetListener.h"

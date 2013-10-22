@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/TextRange.h"
+#include "mozilla/TextEvents.h"
 
 class nsIWidget;
 class nsPIDOMWindow;

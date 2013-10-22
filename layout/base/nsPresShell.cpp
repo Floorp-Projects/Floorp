@@ -6106,7 +6106,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     if (aEvent->message == NS_KEY_DOWN) {
       mNoDelayedKeyEvents = true;
     } else if (!mNoDelayedKeyEvents) {
-      DelayedEvent* event = new DelayedKeyEvent(aEvent->AsKeyboardEvent());
+      nsDelayedEvent* event =
+        new nsDelayedKeyEvent(aEvent->AsKeyboardEvent());
       if (!mDelayedEvents.AppendElement(event)) {
         delete event;
       }
@@ -6334,7 +6335,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       if (aEvent->message == NS_MOUSE_BUTTON_DOWN) {
         mNoDelayedMouseEvents = true;
       } else if (!mNoDelayedMouseEvents && aEvent->message == NS_MOUSE_BUTTON_UP) {
-        DelayedEvent* event = new DelayedMouseEvent(aEvent->AsMouseEvent());
+        nsDelayedEvent* event = new nsDelayedMouseEvent(aEvent->AsMouseEvent());
         if (!mDelayedEvents.AppendElement(event)) {
           delete event;
         }
@@ -6867,8 +6868,8 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
       }
     }
 
-    AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
-                                                        aEvent, mDocument);
+    nsAutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
+                                                          aEvent, mDocument);
 
     if (aEvent->mFlags.mIsTrusted && aEvent->message == NS_MOUSE_MOVE) {
       nsIPresShell::AllowMouseCapture(
@@ -7627,9 +7628,9 @@ PresShell::FireOrClearDelayedEvents(bool aFireEvents)
     nsCOMPtr<nsIDocument> doc = mDocument;
     while (!mIsDestroying && mDelayedEvents.Length() &&
            !doc->EventHandlingSuppressed()) {
-      nsAutoPtr<DelayedEvent> ev(mDelayedEvents[0].forget());
+      nsAutoPtr<nsDelayedEvent> ev(mDelayedEvents[0].forget());
       mDelayedEvents.RemoveElementAt(0);
-      ev->Dispatch();
+      ev->Dispatch(this);
     }
     if (!doc->EventHandlingSuppressed()) {
       mDelayedEvents.Clear();
@@ -8339,56 +8340,6 @@ nsIPresShell::RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver)
 //------------------------------------------------------
 // End of protected and private methods on the PresShell
 //------------------------------------------------------
-
-//------------------------------------------------------------------
-//-- Delayed event Classes Impls
-//------------------------------------------------------------------
-
-PresShell::DelayedInputEvent::DelayedInputEvent() :
-  DelayedEvent(),
-  mEvent(nullptr)
-{
-}
-
-PresShell::DelayedInputEvent::~DelayedInputEvent()
-{
-  delete mEvent;
-}
-
-void
-PresShell::DelayedInputEvent::Dispatch()
-{
-  if (!mEvent || !mEvent->widget) {
-    return;
-  }
-  nsCOMPtr<nsIWidget> widget = mEvent->widget;
-  nsEventStatus status;
-  widget->DispatchEvent(mEvent, status);
-}
-
-PresShell::DelayedMouseEvent::DelayedMouseEvent(WidgetMouseEvent* aEvent) :
-  DelayedInputEvent()
-{
-  WidgetMouseEvent* mouseEvent =
-    new WidgetMouseEvent(aEvent->mFlags.mIsTrusted,
-                         aEvent->message,
-                         aEvent->widget,
-                         aEvent->reason,
-                         aEvent->context);
-  mouseEvent->AssignMouseEventData(*aEvent, false);
-  mEvent = mouseEvent;
-}
-
-PresShell::DelayedKeyEvent::DelayedKeyEvent(WidgetKeyboardEvent* aEvent) :
-  DelayedInputEvent()
-{
-  WidgetKeyboardEvent* keyEvent =
-    new WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
-                            aEvent->message,
-                            aEvent->widget);
-  keyEvent->AssignKeyEventData(*aEvent, false);
-  mEvent = keyEvent;
-}
 
 // Start of DEBUG only code
 

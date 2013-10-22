@@ -5,15 +5,13 @@
 #ifndef nsIWidgetListener_h__
 #define nsIWidgetListener_h__
 
-#include <stdint.h>
-
-#include "mozilla/EventForwards.h"
+#include "nscore.h"
+#include "nsIXULWindow.h"
+#include "nsRegion.h"
+#include "mozilla/BasicEvents.h"
 
 class nsView;
-class nsIntRegion;
 class nsIPresShell;
-class nsIWidget;
-class nsIXULWindow;
 
 /**
  * sizemode is an adjunct to widget size
@@ -45,35 +43,34 @@ public:
    * this is likely a listener for a view, which can be determined using
    * GetView. If both methods return null, this will be an nsWebBrowser.
    */
-  virtual nsIXULWindow* GetXULWindow();
+  virtual nsIXULWindow* GetXULWindow() { return nullptr; }
 
   /**
    * If this listener is for an nsView, return it.
    */
-  virtual nsView* GetView();
+  virtual nsView* GetView() { return nullptr; }
 
   /**
    * Return the presshell for this widget listener.
    */
-  virtual nsIPresShell* GetPresShell();
+  virtual nsIPresShell* GetPresShell() { return nullptr; }
 
   /**
    * Called when a window is moved to location (x, y). Returns true if the
    * notification was handled. Coordinates are outer window screen coordinates.
    */
-  virtual bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY);
+  virtual bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY) { return false; }
 
   /**
    * Called when a window is resized to (width, height). Returns true if the
    * notification was handled. Coordinates are outer window screen coordinates.
    */
-  virtual bool WindowResized(nsIWidget* aWidget,
-                             int32_t aWidth, int32_t aHeight);
+  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) { return false; }
 
   /**
    * Called when the size mode (minimized, maximized, fullscreen) is changed.
    */
-  virtual void SizeModeChanged(nsSizeMode aSizeMode);
+  virtual void SizeModeChanged(nsSizeMode sizeMode) { }
 
   /**
    * Called when the z-order of the window is changed. Returns true if the
@@ -82,37 +79,36 @@ public:
    * window to place below. On return, aActualBelow will be set to the
    * window actually behind. This generally only applies to Windows.
    */
-  virtual bool ZLevelChanged(bool aImmediate, nsWindowZ* aPlacement,
-                             nsIWidget* aRequestBelow,
-                             nsIWidget** aActualBelow);
+  virtual bool ZLevelChanged(bool aImmediate, nsWindowZ *aPlacement,
+                             nsIWidget* aRequestBelow, nsIWidget** aActualBelow) { return false; }
 
   /**
    * Called when the window is activated and focused.
    */
-  virtual void WindowActivated();
+  virtual void WindowActivated() { }
 
   /**
    * Called when the window is deactivated and no longer focused.
    */
-  virtual void WindowDeactivated();
+  virtual void WindowDeactivated() { }
 
   /**
    * Called when the show/hide toolbar button on the Mac titlebar is pressed.
    */
-  virtual void OSToolbarButtonPressed();
+  virtual void OSToolbarButtonPressed() { }
 
   /**
    * Called when a request is made to close the window. Returns true if the
    * notification was handled. Returns true if the notification was handled.
    */
-  virtual bool RequestWindowClose(nsIWidget* aWidget);
+  virtual bool RequestWindowClose(nsIWidget* aWidget) { return false; }
 
   /*
    * Indicate that a paint is about to occur on this window. This is called
    * at a time when it's OK to change the geometry of this widget or of
    * other widgets. Must be called before every call to PaintWindow.
    */
-  virtual void WillPaintWindow(nsIWidget* aWidget);
+  virtual void WillPaintWindow(nsIWidget* aWidget) { }
 
   /**
    * Paint the specified region of the window. Returns true if the
@@ -120,7 +116,7 @@ public:
    * This is called at a time when it is not OK to change the geometry of
    * this widget or of other widgets.
    */
-  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion);
+  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) { return false; }
 
   /**
    * Indicates that a paint occurred.
@@ -128,18 +124,21 @@ public:
    * this widget or of other widgets.
    * Must be called after every call to PaintWindow.
    */
-  virtual void DidPaintWindow();
+  virtual void DidPaintWindow() { }
 
   /**
    * Request that layout schedules a repaint on the next refresh driver tick.
    */
-  virtual void RequestRepaint();
+  virtual void RequestRepaint() { }
 
   /**
    * Handle an event.
    */
   virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
-                                    bool aUseAttachedEvents);
+                                    bool aUseAttachedEvents)
+  {
+    return nsEventStatus_eIgnore;
+  }
 };
 
 #endif

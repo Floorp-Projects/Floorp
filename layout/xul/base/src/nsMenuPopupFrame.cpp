@@ -19,7 +19,6 @@
 #include "nsPopupSetFrame.h"
 #include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMScreen.h"
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
@@ -1651,7 +1650,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   aKeyEvent->GetTimeStamp(&keyTime);
 
   if (charCode == 0) {
-    if (keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
+    if (keyCode == NS_VK_BACK) {
       if (!isMenu && !mIncrementalString.IsEmpty()) {
         mIncrementalString.SetLength(mIncrementalString.Length() - 1);
         return nullptr;
