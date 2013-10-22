@@ -1167,6 +1167,7 @@ bool
 LIRGenerator::visitAbs(MAbs *ins)
 {
     MDefinition *num = ins->num();
+    JS_ASSERT(IsNumberType(num->type()));
 
     if (num->type() == MIRType_Int32) {
         LAbsI *lir = new LAbsI(useRegisterAtStart(num));
@@ -1175,8 +1176,11 @@ LIRGenerator::visitAbs(MAbs *ins)
             return false;
         return defineReuseInput(lir, ins, 0);
     }
+    if (num->type() == MIRType_Float32) {
+        LAbsF *lir = new LAbsF(useRegisterAtStart(num));
+        return defineReuseInput(lir, ins, 0);
+    }
 
-    JS_ASSERT(num->type() == MIRType_Double);
     LAbsD *lir = new LAbsD(useRegisterAtStart(num));
     return defineReuseInput(lir, ins, 0);
 }
