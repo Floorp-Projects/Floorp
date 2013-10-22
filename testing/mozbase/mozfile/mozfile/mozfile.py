@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -17,6 +19,7 @@ __all__ = ['extract_tarball',
            'is_url',
            'load',
            'rmtree',
+           'tree',
            'NamedTemporaryFile',
            'TemporaryDirectory']
 
@@ -107,6 +110,8 @@ def extract(src, dest=None):
     return top_level_files
 
 
+### utilities for directory trees
+
 def rmtree(dir):
     """Removes the specified directory tree
 
@@ -155,6 +160,97 @@ def rmtree(dir):
             os.remove(full_name)
     os.rmdir(dir)
 
+
+def depth(directory):
+    """returns the integer depth of a directory or path relative to '/' """
+
+    directory = os.path.abspath(directory)
+    level = 0
+    while True:
+        directory, remainder = os.path.split(directory)
+        level += 1
+        if not remainder:
+            break
+    return level
+
+# ASCII delimeters
+ascii_delimeters = {
+    'vertical_line' : '|',
+    'item_marker'   : '+',
+    'last_child'    : '\\'
+    }
+
+# unicode delimiters
+unicode_delimeters = {
+    'vertical_line' : '│',
+    'item_marker'   : '├',
+    'last_child'    : '└'
+    }
+
+def tree(directory,
+         item_marker=unicode_delimeters['item_marker'],
+         vertical_line=unicode_delimeters['vertical_line'],
+         last_child=unicode_delimeters['last_child'],
+         sort_key=lambda x: x.lower()):
+    """
+    display tree directory structure for `directory`
+    """
+
+    retval = []
+    indent = []
+    last = {}
+    top = depth(directory)
+
+    for dirpath, dirnames, filenames in os.walk(directory, topdown=True):
+
+        abspath = os.path.abspath(dirpath)
+        basename = os.path.basename(abspath)
+        parent = os.path.dirname(abspath)
+        level = depth(abspath) - top
+
+        # sort articles of interest
+        for resource in (dirnames, filenames):
+            resource[:] = sorted(resource, key=sort_key)
+
+        files_end =  item_marker
+        dirpath_marker = item_marker
+
+        if level > len(indent):
+            indent.append(vertical_line)
+        indent = indent[:level]
+
+        if dirnames:
+            files_end = item_marker
+            last[abspath] = dirnames[-1]
+        else:
+            files_end = last_child
+
+        if last.get(parent) == os.path.basename(abspath):
+            # last directory of parent
+            dirpath_mark = last_child
+            indent[-1] = ' '
+        elif not indent:
+            dirpath_mark = ''
+        else:
+            dirpath_mark = item_marker
+
+        # append the directory and piece of tree structure
+        # if the top-level entry directory, print as passed
+        retval.append('%s%s%s'% (''.join(indent[:-1]),
+                                 dirpath_mark,
+                                 basename if retval else directory))
+        # add the files
+        if filenames:
+            last_file = filenames[-1]
+            retval.extend([('%s%s%s' % (''.join(indent),
+                                        files_end if filename == last_file else item_marker,
+                                        filename))
+                                        for index, filename in enumerate(filenames)])
+
+    return '\n'.join(retval)
+
+
+### utilities for temporary resources
 
 class NamedTemporaryFile(object):
     """
@@ -209,6 +305,23 @@ class NamedTemporaryFile(object):
             os.unlink(self.__dict__['_path'])
 
 
+@contextmanager
+def TemporaryDirectory():
+    """
+    create a temporary directory using tempfile.mkdtemp, and then clean it up.
+
+    Example usage:
+    with TemporaryDirectory() as tmp:
+       open(os.path.join(tmp, "a_temp_file"), "w").write("data")
+
+    """
+    tempdir = tempfile.mkdtemp()
+    try:
+        yield tempdir
+    finally:
+        shutil.rmtree(tempdir)
+
+
 ### utilities dealing with URLs
 
 def is_url(thing):
@@ -239,18 +352,3 @@ def load(resource):
 
     return urllib2.urlopen(resource)
 
-@contextmanager
-def TemporaryDirectory():
-    """
-    create a temporary directory using tempfile.mkdtemp, and then clean it up.
-
-    Example usage:
-    with TemporaryDirectory() as tmp:
-       open(os.path.join(tmp, "a_temp_file"), "w").write("data")
-
-    """
-    tempdir = tempfile.mkdtemp()
-    try:
-        yield tempdir
-    finally:
-        shutil.rmtree(tempdir)

@@ -4,14 +4,10 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.6'
+PACKAGE_VERSION = '0.7'
 
 # dependencies
-deps = ['mozfile >= 0.6']
-try:
-    import json
-except ImportError:
-    deps = ['simplejson']
+deps = ['mozfile >= 0.12']
 
 setup(name='mozinfo',
       version=PACKAGE_VERSION,
