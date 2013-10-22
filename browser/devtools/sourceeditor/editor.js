@@ -24,7 +24,8 @@ const L10N = Services.strings.createBundle(L10N_BUNDLE);
 
 const CM_STYLES   = [
   "chrome://browser/content/devtools/codemirror/codemirror.css",
-  "chrome://browser/content/devtools/codemirror/dialog.css"
+  "chrome://browser/content/devtools/codemirror/dialog.css",
+  "chrome://browser/content/devtools/codemirror/mozilla.css"
 ];
 
 const CM_SCRIPTS  = [
@@ -33,7 +34,12 @@ const CM_SCRIPTS  = [
   "chrome://browser/content/devtools/codemirror/searchcursor.js",
   "chrome://browser/content/devtools/codemirror/search.js",
   "chrome://browser/content/devtools/codemirror/matchbrackets.js",
-  "chrome://browser/content/devtools/codemirror/comment.js"
+  "chrome://browser/content/devtools/codemirror/comment.js",
+  "chrome://browser/content/devtools/codemirror/javascript.js",
+  "chrome://browser/content/devtools/codemirror/xml.js",
+  "chrome://browser/content/devtools/codemirror/css.js",
+  "chrome://browser/content/devtools/codemirror/htmlmixed.js",
+  "chrome://browser/content/devtools/codemirror/activeline.js"
 ];
 
 const CM_IFRAME   =
@@ -62,8 +68,9 @@ const CM_MAPPING = [
   "undo",
   "redo",
   "clearHistory",
-  "posFromIndex",
-  "openDialog"
+  "openDialog",
+  "cursorCoords",
+  "lineCount"
 ];
 
 const CM_JUMP_DIALOG = [
@@ -75,7 +82,9 @@ const editors = new WeakMap();
 
 Editor.modes = {
   text: { name: "text" },
-  js:   { name: "javascript", url: "chrome://browser/content/devtools/codemirror/javascript.js" }
+  js:   { name: "javascript" },
+  html: { name: "htmlmixed" },
+  css:  { name: "css" }
 };
 
 function ctrl(k) {
@@ -109,14 +118,15 @@ function Editor(config) {
 
   this.version = null;
   this.config = {
-    value:          "",
-    mode:           Editor.modes.text,
-    indentUnit:     tabSize,
-    tabSize:        tabSize,
-    contextMenu:    null,
-    matchBrackets:  true,
-    extraKeys:      {},
-    indentWithTabs: useTabs,
+    value:           "",
+    mode:            Editor.modes.text,
+    indentUnit:      tabSize,
+    tabSize:         tabSize,
+    contextMenu:     null,
+    matchBrackets:   true,
+    extraKeys:       {},
+    indentWithTabs:  useTabs,
+    styleActiveLine: true
   };
 
   // Overwrite default config with user-provided, if needed.
@@ -151,8 +161,9 @@ function Editor(config) {
 }
 
 Editor.prototype = {
+  container: null,
   version: null,
-  config:  null,
+  config: null,
 
   /**
    * Appends the current Editor instance to the element specified by
@@ -174,16 +185,12 @@ Editor.prototype = {
     let onLoad = () => {
       // Once the iframe is loaded, we can inject CodeMirror
       // and its dependencies into its DOM.
+
       env.removeEventListener("load", onLoad, true);
       let win = env.contentWindow.wrappedJSObject;
 
       CM_SCRIPTS.forEach((url) =>
         Services.scriptloader.loadSubScript(url, win, "utf8"));
-
-      // Plain text mode doesn't need any additional files,
-      // all other modes (js, html, etc.) do.
-      if (this.config.mode.name !== "text")
-        Services.scriptloader.loadSubScript(this.config.mode.url, win, "utf8");
 
       // Create a CodeMirror instance add support for context menus and
       // overwrite the default controller (otherwise items in the top and
@@ -192,12 +199,17 @@ Editor.prototype = {
       cm = win.CodeMirror(win.document.body, this.config);
       cm.getWrapperElement().addEventListener("contextmenu", (ev) => {
         ev.preventDefault();
+        this.emit("contextMenu");
         this.showContextMenu(doc, ev.screenX, ev.screenY);
       }, false);
 
       cm.on("change", () => this.emit("change"));
+      cm.on("gutterClick", (cm, line) => this.emit("gutterClick", line));
+      cm.on("cursorActivity", (cm) => this.emit("cursorActivity"));
+
       doc.defaultView.controllers.insertControllerAt(0, controller(this, doc.defaultView));
 
+      this.container = env;
       editors.set(this, cm);
       def.resolve();
     };
@@ -252,11 +264,13 @@ Editor.prototype = {
   },
 
   /**
-   * Returns text from the text area.
+   * Returns text from the text area. If line argument is provided
+   * the method returns only that line.
    */
-  getText: function () {
+  getText: function (line) {
     let cm = editors.get(this);
-    return cm.getValue();
+    return line == null ?
+      cm.getValue() : (cm.lineInfo(line) ? cm.lineInfo(line).text : "");
   },
 
   /**
@@ -266,6 +280,32 @@ Editor.prototype = {
   setText: function (value) {
     let cm = editors.get(this);
     cm.setValue(value);
+  },
+
+  /**
+   * Changes the value of a currently used highlighting mode.
+   * See Editor.modes for the list of all suppoert modes.
+   */
+  setMode: function (value) {
+    let cm = editors.get(this);
+    cm.setOption("mode", value);
+  },
+
+  /**
+   * Returns the currently active highlighting mode.
+   * See Editor.modes for the list of all suppoert modes.
+   */
+  getMode: function () {
+    let cm = editors.get(this);
+    return cm.getOption("mode");
+  },
+
+  /**
+   * True if the editor is in the read-only mode, false otherwise.
+   */
+  isReadOnly: function () {
+    let cm = editors.get(this);
+    return cm.getOption("readOnly");
   },
 
   /**
@@ -340,8 +380,59 @@ Editor.prototype = {
       this.setCursor({ line: line - 1, ch: 0 }));
   },
 
+  /**
+   * Returns a {line, ch} object that corresponds to the
+   * left, top coordinates.
+   */
+  getPositionFromCoords: function (left, top) {
+    let cm = editors.get(this);
+    return cm.coordsChar({ left: left, top: top });
+  },
+
+  /**
+   * Extends the current selection to the position specified
+   * by the provided {line, ch} object.
+   */
+  extendSelection: function (pos) {
+    let cm = editors.get(this);
+    let cursor = cm.indexFromPos(cm.getCursor());
+    let anchor = cm.posFromIndex(cursor + pos.start);
+    let head   = cm.posFromIndex(cursor + pos.start + pos.length);
+    cm.setSelection(anchor, head);
+  },
+
+  /**
+   * Extends an instance of the Editor object with additional
+   * functions. Each function will be called with context as
+   * the first argument. Context is a {ed, cm} object where
+   * 'ed' is an instance of the Editor object and 'cm' is an
+   * instance of the CodeMirror object. Example:
+   *
+   * function hello(ctx, name) {
+   *   let { cm, ed } = ctx;
+   *   cm;   // CodeMirror instance
+   *   ed;   // Editor instance
+   *   name; // 'Mozilla'
+   * }
+   *
+   * editor.extend({ hello: hello });
+   * editor.hello('Mozilla');
+   */
+  extend: function (funcs) {
+    Object.keys(funcs).forEach((name) => {
+      let cm  = editors.get(this);
+      let ctx = { ed: this, cm: cm };
+
+      if (name === "initialize")
+        return void funcs[name](ctx);
+
+      this[name] = funcs[name].bind(null, ctx);
+    });
+  },
+
   destroy: function () {
-    this.config  = null;
+    this.container = null;
+    this.config = null;
     this.version = null;
     this.emit("destroy");
   }
@@ -365,8 +456,6 @@ CM_MAPPING.forEach(function (name) {
 function controller(ed, view) {
   return {
     supportsCommand: function (cmd) {
-      let cm = editors.get(ed);
-
       switch (cmd) {
         case "cmd_find":
         case "cmd_findAgain":
