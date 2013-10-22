@@ -11,7 +11,7 @@
 function SourcesView() {
   dumpn("SourcesView was instantiated");
 
-  this.prettyPrint = this.prettyPrint.bind(this);
+  this.togglePrettyPrint = this.togglePrettyPrint.bind(this);
   this._onEditorLoad = this._onEditorLoad.bind(this);
   this._onEditorUnload = this._onEditorUnload.bind(this);
   this._onEditorSelection = this._onEditorSelection.bind(this);
@@ -28,6 +28,7 @@ function SourcesView() {
   this._onConditionalPopupHiding = this._onConditionalPopupHiding.bind(this);
   this._onConditionalTextboxInput = this._onConditionalTextboxInput.bind(this);
   this._onConditionalTextboxKeyPress = this._onConditionalTextboxKeyPress.bind(this);
+  this._updatePrettyPrintButtonState = this._updatePrettyPrintButtonState.bind(this);
 }
 
 SourcesView.prototype = Heritage.extend(WidgetMethods, {
@@ -63,7 +64,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.addEventListener("click", this._onSourceClick, false);
     this.widget.addEventListener("check", this._onSourceCheck, false);
     this._stopBlackBoxButton.addEventListener("click", this._onStopBlackBoxing, false);
-    this._prettyPrintButton.addEventListener("click", this.prettyPrint, false);
     this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.addEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -88,7 +88,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.removeEventListener("click", this._onSourceClick, false);
     this.widget.removeEventListener("check", this._onSourceCheck, false);
     this._stopBlackBoxButton.removeEventListener("click", this._onStopBlackBoxing, false);
-    this._prettyPrintButton.removeEventListener("click", this.prettyPrint, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -379,9 +378,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Pretty print the selected source.
+   * Toggle the pretty printing of the selected source.
    */
-  prettyPrint: function() {
+  togglePrettyPrint: function() {
     if (this._prettyPrintButton.hasAttribute("disabled")) {
       return;
     }
@@ -392,17 +391,21 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
         DebuggerView.setEditorLocation(url, 0, { force: true });
       }
     };
+
     const printError = ([{ url }, error]) => {
-      let err = DevToolsUtils.safeErrorString(error);
-      let msg = "Couldn't prettify source: " + url + "\n" + err;
-      Cu.reportError(msg);
-      dumpn(msg);
-      return;
-    }
+      DevToolsUtils.reportException("togglePrettyPrint", error);
+    };
 
     DebuggerView.showProgressBar();
     const { source } = this.selectedItem.attachment;
-    DebuggerController.SourceScripts.prettyPrint(source)
+
+    if (gThreadClient.source(source).isPrettyPrinted) {
+      this._prettyPrintButton.removeAttribute("checked");
+    } else {
+      this._prettyPrintButton.setAttribute("checked", true);
+    }
+
+    DebuggerController.SourceScripts.togglePrettyPrint(source)
       .then(resetEditor, printError)
       .then(DebuggerView.showEditor);
   },
@@ -701,14 +704,23 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
   /**
    * Enable or disable the pretty print button depending on whether the selected
-   * source is black boxed or not.
+   * source is black boxed or not and check or uncheck it depending on if the
+   * selected source is already pretty printed or not.
    */
   _updatePrettyPrintButtonState: function() {
     const { source } = this.selectedItem.attachment;
-    if (gThreadClient.source(source).isBlackBoxed) {
+    const sourceClient = gThreadClient.source(source);
+
+    if (sourceClient.isBlackBoxed) {
       this._prettyPrintButton.setAttribute("disabled", true);
     } else {
       this._prettyPrintButton.removeAttribute("disabled");
+    }
+
+    if (sourceClient.isPrettyPrinted) {
+      this._prettyPrintButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("checked");
     }
   },
 
