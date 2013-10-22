@@ -26,12 +26,12 @@ let ShortcutUtils = {
     *
     * @param Node aElemKey
     *        The key element to get the modifiers from.
-    * @param boolean aAllowCloverleaf
-    *        Pass true to use the cloverleaf symbol instead of a descriptive string. (OS X only)
+    * @param boolean aNoCloverLeaf
+    *        Pass true to use a descriptive string instead of the cloverleaf symbol. (OS X only)
     * @return string
     *         A prettified and properly separated modifier keys string.
     */
-  prettifyShortcut: function(aElemKey, aAllowCloverleaf) {
+  prettifyShortcut: function(aElemKey, aNoCloverLeaf) {
     let elemString = "";
     let elemMod = aElemKey.getAttribute("modifiers");
 
@@ -39,7 +39,7 @@ let ShortcutUtils = {
       if (Services.appinfo.OS == "Darwin") {
         // XXX bug 779642 Use "Cmd-" literal vs. cloverleaf meta-key until
         // Orion adds variable height lines.
-        if (!aAllowCloverleaf) {
+        if (aNoCloverLeaf) {
           elemString += "Cmd-";
         } else {
           elemString += PlatformKeys.GetStringFromName("VK_META") +
