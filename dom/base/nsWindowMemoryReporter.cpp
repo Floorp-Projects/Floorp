@@ -8,6 +8,7 @@
 #include "nsWindowMemoryReporter.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
+#include "nsIDOMWindowCollection.h"
 #include "nsIEffectiveTLDService.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
@@ -31,14 +32,70 @@ nsWindowMemoryReporter::nsWindowMemoryReporter()
 NS_IMPL_ISUPPORTS3(nsWindowMemoryReporter, nsIMemoryReporter, nsIObserver,
                    nsSupportsWeakReference)
 
-/* static */
-void
+static nsresult
+AddNonJSSizeOfWindowAndItsDescendents(nsGlobalWindow* aWindow,
+                                      nsTabSizes* aSizes)
+{
+  // Measure the window.
+  nsWindowSizes windowSizes(moz_malloc_size_of);
+  aWindow->AddSizeOfIncludingThis(&windowSizes);
+  windowSizes.addToTabSizes(aSizes);
+
+  // Measure the inner window, if there is one.
+  nsWindowSizes innerWindowSizes(moz_malloc_size_of);
+  nsGlobalWindow* inner = aWindow->GetCurrentInnerWindowInternal();
+  if (inner) {
+    inner->AddSizeOfIncludingThis(&innerWindowSizes);
+    innerWindowSizes.addToTabSizes(aSizes);
+  }
+
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  nsresult rv = aWindow->GetFrames(getter_AddRefs(frames));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t length;
+  rv = frames->GetLength(&length);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Measure this window's descendents.
+  for (uint32_t i = 0; i < length; i++) {
+      nsCOMPtr<nsIDOMWindow> child;
+      rv = frames->Item(i, getter_AddRefs(child));
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_STATE(child);
+
+      nsGlobalWindow* childWin =
+        static_cast<nsGlobalWindow*>(static_cast<nsIDOMWindow *>(child.get()));
+
+      rv = AddNonJSSizeOfWindowAndItsDescendents(childWin, aSizes);
+      NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+static nsresult
+NonJSSizeOfTab(nsPIDOMWindow* aWindow, size_t* aDomSize, size_t* aStyleSize, size_t* aOtherSize)
+{
+  nsGlobalWindow* window = static_cast<nsGlobalWindow*>(aWindow);
+
+  nsTabSizes sizes;
+  nsresult rv = AddNonJSSizeOfWindowAndItsDescendents(window, &sizes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aDomSize   = sizes.mDom;
+  *aStyleSize = sizes.mStyle;
+  *aOtherSize = sizes.mOther;
+  return NS_OK;
+}
+
+/* static */ void
 nsWindowMemoryReporter::Init()
 {
   MOZ_ASSERT(!sWindowReporter);
   sWindowReporter = new nsWindowMemoryReporter();
   ClearOnShutdown(&sWindowReporter);
   NS_RegisterMemoryReporter(sWindowReporter);
+  RegisterNonJSSizeOfTab(NonJSSizeOfTab);
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
