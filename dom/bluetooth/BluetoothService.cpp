@@ -44,9 +44,7 @@
 
 #if defined(MOZ_B2G_BT)
 # if defined(MOZ_BLUETOOTH_GONK)
-#ifndef MOZ_B2G_BT_BLUEDROID
-#include "BluetoothGonkService.h"
-#endif
+#  include "BluetoothGonkService.h"
 # elif defined(MOZ_BLUETOOTH_DBUS)
 #  include "BluetoothDBusService.h"
 # else
@@ -306,13 +304,9 @@ BluetoothService::Create()
 #endif
 
 #if defined(MOZ_BLUETOOTH_GONK)
-#ifndef MOZ_B2G_BT_BLUEDROID
   return new BluetoothGonkService();
-#endif
 #elif defined(MOZ_BLUETOOTH_DBUS)
-#ifdef MOZ_B2G_BT_BLUEZ
   return new BluetoothDBusService();
-#endif
 #endif
   BT_WARNING("No platform support for bluetooth!");
   return nullptr;

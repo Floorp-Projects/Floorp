@@ -89,7 +89,7 @@ ifdef MOZ_B2G_RIL #{
 STATIC_LIBS += mozril_s
 endif #}
 
-ifdef MOZ_B2G_BT_BLUEZ #{
+ifdef MOZ_B2G_BT #{
 STATIC_LIBS += mozdbus_s
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 OS_LIBS += -ldbus
