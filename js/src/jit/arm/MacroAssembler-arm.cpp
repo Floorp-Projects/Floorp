@@ -1525,6 +1525,11 @@ MacroAssemblerARM::ma_vcmpz(FloatRegister src1, Condition cc)
 {
     as_vcmpz(VFPRegister(src1), cc);
 }
+void
+MacroAssemblerARM::ma_vcmpz_f32(FloatRegister src1, Condition cc)
+{
+    as_vcmpz(VFPRegister(src1).singleOverlay(), cc);
+}
 
 void
 MacroAssemblerARM::ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest, Condition cc)

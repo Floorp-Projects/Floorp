@@ -89,8 +89,11 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitCompare(LCompare *comp);
     virtual bool visitCompareAndBranch(LCompareAndBranch *comp);
     virtual bool visitTestDAndBranch(LTestDAndBranch *test);
+    virtual bool visitTestFAndBranch(LTestFAndBranch *test);
     virtual bool visitCompareD(LCompareD *comp);
+    virtual bool visitCompareF(LCompareF *comp);
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
+    virtual bool visitCompareFAndBranch(LCompareFAndBranch *comp);
     virtual bool visitCompareB(LCompareB *lir);
     virtual bool visitCompareBAndBranch(LCompareBAndBranch *lir);
     virtual bool visitCompareV(LCompareV *lir);
