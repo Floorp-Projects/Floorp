@@ -38,6 +38,7 @@
        } else {
          declareFFI = SysAll.declareFFI;
        }
+       let declareLazyFFI = SharedAll.declareLazyFFI;
 
        // Initialize types that require additional OS-specific
        // support - either finalization or matching against
@@ -50,7 +51,7 @@
         */
        Type.fd = Type.int.withName("fd");
        Type.fd.importFromC = function importFromC(fd_int) {
-         return ctypes.CDataFinalizer(fd_int, _close);
+         return ctypes.CDataFinalizer(fd_int, SysFile._close);
        };
 
 
@@ -64,7 +65,7 @@
            if (fd_int == -1) {
              return -1;
            }
-           return ctypes.CDataFinalizer(fd_int, _close);
+           return ctypes.CDataFinalizer(fd_int, SysFile._close);
          };
 
        /**
@@ -196,14 +197,14 @@
          if (dir == null || dir.isNull()) {
            return null;
          }
-         return ctypes.CDataFinalizer(dir, _close_dir);
+         return ctypes.CDataFinalizer(dir, SysFile._close_dir);
        };
 
        // Declare libc functions as functions of |OS.Unix.File|
 
        // Finalizer-related functions
-       let _close = SysFile._close =
-         libc.declare("close", ctypes.default_abi,
+       SharedAll.declareLazy(SysFile, "_close", libc,
+           "close", ctypes.default_abi,
                         /*return */ctypes.int,
                         /*fd*/     ctypes.int);
 
@@ -212,8 +213,8 @@
          return fd.dispose();
        };
 
-       let _close_dir =
-         libc.declare("closedir", ctypes.default_abi,
+       SharedAll.declareLazy(SysFile, "_close_dir", libc,
+                             "closedir", ctypes.default_abi,
                         /*return */ctypes.int,
                         /*dirp*/   Type.DIR.in_ptr.implementation);
 
@@ -232,8 +233,8 @@
            // correct implementation free().
            default_lib = ctypes.open("a.out");
 
-           SysFile.free =
-             default_lib.declare("free", ctypes.default_abi,
+           SharedAll.declareLazy(SysFile, "free", default_lib,
+             "free", ctypes.default_abi,
              /*return*/ ctypes.void_t,
              /*ptr*/    ctypes.voidptr_t);
 
@@ -241,8 +242,8 @@
            // We don't have an a.out library or a.out doesn't contain free.
            // Either way, use the ordinary libc free.
 
-           SysFile.free =
-             libc.declare("free", ctypes.default_abi,
+           SharedAll.declareLazy(SysFile, "free", libc,
+             "free", ctypes.default_abi,
              /*return*/ ctypes.void_t,
              /*ptr*/    ctypes.voidptr_t);
          }
@@ -250,40 +251,34 @@
 
 
        // Other functions
-       SysFile.access =
-         declareFFI("access", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "access", libc, "access", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*path*/   Type.path,
                     /*mode*/   Type.int);
 
-       SysFile.chdir =
-         declareFFI("chdir", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "chdir", libc, "chdir", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*path*/   Type.path);
 
-       SysFile.chmod =
-         declareFFI("chmod", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "chmod", libc, "chmod", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*path*/   Type.path,
                     /*mode*/   Type.mode_t);
 
-       SysFile.chown =
-         declareFFI("chown", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "chown", libc, "chown", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*path*/   Type.path,
                     /*uid*/    Type.uid_t,
                     /*gid*/    Type.gid_t);
 
-       SysFile.copyfile =
-         declareFFI("copyfile", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "copyfile", libc, "copyfile", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*source*/ Type.path,
                     /*dest*/   Type.path,
                     /*state*/  Type.void_t.in_ptr, // Ignored atm
                     /*flags*/  Type.uint32_t);
 
-       SysFile.dup =
-         declareFFI("dup", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "dup", libc, "dup", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_fd,
                     /*fd*/     Type.fd);
 
@@ -295,42 +290,35 @@
            };
        } else {
          // On platforms for which |dirfd| is a function
-         SysFile.dirfd =
-           declareFFI("dirfd", ctypes.default_abi,
+         declareLazyFFI(SysFile,  "dirfd", libc, "dirfd", ctypes.default_abi,
                       /*return*/ Type.negativeone_or_fd,
                       /*dir*/    Type.DIR.in_ptr);
        }
 
-       SysFile.chdir =
-         declareFFI("chdir", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "chdir", libc, "chdir", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*path*/   Type.path);
 
-       SysFile.fchdir =
-         declareFFI("fchdir", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "fchdir", libc, "fchdir", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*fd*/     Type.fd);
 
-       SysFile.fchown =
-         declareFFI("fchown", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "fchown", libc, "fchown", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*fd*/     Type.fd,
                     /*uid_t*/  Type.uid_t,
                     /*gid_t*/  Type.gid_t);
 
-       SysFile.fsync =
-         declareFFI("fsync", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "fsync", libc, "fsync", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*fd*/     Type.fd);
 
-       SysFile.getcwd =
-         declareFFI("getcwd", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "getcwd", libc, "getcwd", ctypes.default_abi,
                     /*return*/ Type.out_path,
                     /*buf*/    Type.out_path,
                     /*size*/   Type.size_t);
 
-       SysFile.getwd =
-         declareFFI("getwd", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "getwd", libc, "getwd", ctypes.default_abi,
                     /*return*/ Type.out_path,
                     /*buf*/    Type.out_path);
 
@@ -338,111 +326,85 @@
        // dynamically.
 
        // Linux/Android version
-       SysFile.get_current_dir_name =
-         declareFFI("get_current_dir_name", ctypes.default_abi,
-                    /*return*/ Type.out_path.releaseWith(SysFile.free));
+       declareLazyFFI(SysFile,  "get_current_dir_name", libc,
+                      "get_current_dir_name", ctypes.default_abi,
+                      /*return*/ Type.out_path.releaseWith(SysFile.free));
 
        // MacOS/BSD version (will return NULL on Linux/Android)
-       SysFile.getwd_auto =
-         declareFFI("getwd", ctypes.default_abi,
-                    /*return*/ Type.out_path.releaseWith(SysFile.free),
-                    /*buf*/    Type.void_t.out_ptr);
+       declareLazyFFI(SysFile,  "getwd_auto", libc,
+                      "getwd", ctypes.default_abi,
+                      /*return*/ Type.out_path.releaseWith(SysFile.free),
+                      /*buf*/    Type.void_t.out_ptr);
 
-       SysFile.fdatasync =
-         declareFFI("fdatasync", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "fdatasync", libc,
+                      "fdatasync", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*fd*/     Type.fd); // Note: MacOS/BSD-specific
 
-       SysFile.ftruncate =
-         declareFFI("ftruncate", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "ftruncate", libc,
+                      "ftruncate", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*fd*/     Type.fd,
                     /*length*/ Type.off_t);
 
-       if (Const._DARWIN_FEATURE_64_BIT_INODE) {
-         SysFile.fstat =
-           declareFFI("fstat$INODE64", ctypes.default_abi,
-                      /*return*/ Type.negativeone_or_nothing,
-                      /*path*/   Type.fd,
-                      /*buf*/    Type.stat.out_ptr
-                     );
-       } else {
-         SysFile.fstat =
-           declareFFI("fstat", ctypes.default_abi,
-                      /*return*/ Type.negativeone_or_nothing,
-                      /*path*/   Type.fd,
-                      /*buf*/    Type.stat.out_ptr
-                     );
-       }
 
-       SysFile.lchown =
-         declareFFI("lchown", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "lchown", libc, "lchown", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*path*/   Type.path,
                     /*uid_t*/  Type.uid_t,
                     /*gid_t*/  Type.gid_t);
 
-       SysFile.link =
-         declareFFI("link", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "link", libc, "link", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*source*/ Type.path,
                     /*dest*/   Type.path);
 
-       SysFile.lseek =
-         declareFFI("lseek", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "lseek", libc, "lseek", ctypes.default_abi,
                     /*return*/ Type.off_t,
                     /*fd*/     Type.fd,
                     /*offset*/ Type.off_t,
                     /*whence*/ Type.int);
 
-       SysFile.mkdir =
-         declareFFI("mkdir", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "mkdir", libc, "mkdir", ctypes.default_abi,
                     /*return*/ Type.int,
                     /*path*/ Type.path,
                     /*mode*/ Type.int);
 
-       SysFile.mkstemp =
-         declareFFI("mkstemp", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "mkstemp", libc, "mkstemp", ctypes.default_abi,
                     /*return*/ Type.fd,
                     /*template*/Type.out_path);
 
-       SysFile.open =
-         declareFFI("open", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "open", libc, "open", ctypes.default_abi,
                     /*return*/Type.negativeone_or_fd,
                     /*path*/  Type.path,
                     /*oflags*/Type.int,
                     /*mode*/  Type.int);
 
-       SysFile.opendir =
-         declareFFI("opendir", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "opendir", libc, "opendir", ctypes.default_abi,
                     /*return*/ Type.null_or_DIR_ptr,
                     /*path*/   Type.path);
 
-       SysFile.pread =
-         declareFFI("pread", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "pread", libc, "pread", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_ssize_t,
                     /*fd*/     Type.fd,
                     /*buf*/    Type.void_t.out_ptr,
                     /*nbytes*/ Type.size_t,
                     /*offset*/ Type.off_t);
 
-       SysFile.pwrite =
-         declareFFI("pwrite", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "pwrite", libc, "pwrite", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_ssize_t,
                     /*fd*/     Type.fd,
                     /*buf*/    Type.void_t.in_ptr,
                     /*nbytes*/ Type.size_t,
                     /*offset*/ Type.off_t);
 
-       SysFile.read =
-         declareFFI("read", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "read", libc, "read", ctypes.default_abi,
                     /*return*/Type.negativeone_or_ssize_t,
                     /*fd*/    Type.fd,
                     /*buf*/   Type.void_t.out_ptr,
                     /*nbytes*/Type.size_t);
 
-       SysFile.posix_fadvise =
-         declareFFI("posix_fadvise", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "posix_fadvise", libc, "posix_fadvise", ctypes.default_abi,
                     /*return*/ Type.int,
                     /*fd*/     Type.fd,
                     /*offset*/ Type.off_t,
@@ -454,30 +416,25 @@
          // Symbol name "readdir" still exists but is used for a
          // deprecated function that does not match the
          // constants of |Const|.
-         SysFile.readdir =
-           declareFFI("readdir$INODE64", ctypes.default_abi,
+         declareLazyFFI(SysFile,  "readdir", libc, "readdir$INODE64", ctypes.default_abi,
                      /*return*/Type.null_or_dirent_ptr,
                       /*dir*/   Type.DIR.in_ptr); // For MacOS X
        } else {
-         SysFile.readdir =
-           declareFFI("readdir", ctypes.default_abi,
+         declareLazyFFI(SysFile,  "readdir", libc, "readdir", ctypes.default_abi,
                       /*return*/Type.null_or_dirent_ptr,
                       /*dir*/   Type.DIR.in_ptr); // Other Unices
        }
 
-       SysFile.rename =
-         declareFFI("rename", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "rename", libc, "rename", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*old*/    Type.path,
                     /*new*/    Type.path);
 
-       SysFile.rmdir =
-         declareFFI("rmdir", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "rmdir", libc, "rmdir", ctypes.default_abi,
                     /*return*/ Type.int,
                     /*path*/   Type.path);
 
-       SysFile.splice =
-         declareFFI("splice", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "splice", libc, "splice", ctypes.default_abi,
                     /*return*/ Type.long,
                     /*fd_in*/  Type.fd,
                     /*off_in*/ Type.off_t.in_ptr,
@@ -486,25 +443,21 @@
                     /*len*/    Type.size_t,
                     /*flags*/  Type.unsigned_int); // Linux/Android-specific
 
-       SysFile.symlink =
-         declareFFI("symlink", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "symlink", libc, "symlink", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*source*/ Type.path,
                     /*dest*/   Type.path);
 
-       SysFile.truncate =
-         declareFFI("truncate", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "truncate", libc, "truncate", ctypes.default_abi,
                     /*return*/Type.negativeone_or_nothing,
                     /*path*/  Type.path,
                     /*length*/ Type.off_t);
 
-       SysFile.unlink =
-         declareFFI("unlink", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "unlink", libc, "unlink", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_nothing,
                     /*path*/ Type.path);
 
-       SysFile.write =
-         declareFFI("write", ctypes.default_abi,
+       declareLazyFFI(SysFile,  "write", libc, "write", ctypes.default_abi,
                     /*return*/ Type.negativeone_or_ssize_t,
                     /*fd*/     Type.fd,
                     /*buf*/    Type.void_t.in_ptr,
@@ -516,20 +469,17 @@
        // 32-bits and 64-bits versions of |stat|, |lstat|, |fstat|.
        if (Const._DARWIN_FEATURE_64_BIT_INODE) {
          // MacOS X 64-bits
-         SysFile.stat =
-           declareFFI("stat$INODE64", ctypes.default_abi,
+         declareLazyFFI(SysFile,  "stat", libc, "stat$INODE64", ctypes.default_abi,
                       /*return*/ Type.negativeone_or_nothing,
                       /*path*/   Type.path,
                       /*buf*/    Type.stat.out_ptr
                      );
-         SysFile.lstat =
-           declareFFI("lstat$INODE64", ctypes.default_abi,
+         declareLazyFFI(SysFile,  "lstat", libc, "lstat$INODE64", ctypes.default_abi,
                       /*return*/ Type.negativeone_or_nothing,
                       /*path*/   Type.path,
                       /*buf*/    Type.stat.out_ptr
                      );
-         SysFile.fstat =
-           declareFFI("fstat$INODE64", ctypes.default_abi,
+         declareLazyFFI(SysFile,  "fstat", libc, "fstat$INODE64", ctypes.default_abi,
                       /*return*/ Type.negativeone_or_nothing,
                       /*path*/   Type.fd,
                       /*buf*/    Type.stat.out_ptr
@@ -549,50 +499,49 @@
            fxstat_name = "__fxstat";
          }
 
-         let xstat =
-           declareFFI(xstat_name, ctypes.default_abi,
+         let Stat = {};
+         declareLazyFFI(Stat,  "xstat", libc, xstat_name, ctypes.default_abi,
                       /*return*/    Type.negativeone_or_nothing,
                       /*_stat_ver*/ Type.int,
                       /*path*/      Type.path,
                       /*buf*/       Type.stat.out_ptr);
-         let lxstat =
-           declareFFI(lxstat_name, ctypes.default_abi,
+         declareLazyFFI(Stat,  "lxstat", libc, lxstat_name, ctypes.default_abi,
                       /*return*/    Type.negativeone_or_nothing,
                       /*_stat_ver*/ Type.int,
                       /*path*/      Type.path,
                       /*buf*/       Type.stat.out_ptr);
-         let fxstat =
-           declareFFI(fxstat_name, ctypes.default_abi,
+         declareLazyFFI(Stat, "fxstat", libc,
+           fxstat_name, ctypes.default_abi,
                       /*return*/    Type.negativeone_or_nothing,
                       /*_stat_ver*/ Type.int,
                       /*fd*/        Type.fd,
                       /*buf*/       Type.stat.out_ptr);
 
+         
          SysFile.stat = function stat(path, buf) {
-           return xstat(ver, path, buf);
+           return Stat.xstat(ver, path, buf);
          };
-         SysFile.lstat = function stat(path, buf) {
-           return lxstat(ver, path, buf);
+
+         SysFile.lstat = function lstat(path, buf) {
+           return Stat.lxstat(ver, path, buf);
          };
-         SysFile.fstat = function stat(fd, buf) {
-           return fxstat(ver, fd, buf);
+
+         SysFile.fstat = function fstat(fd, buf) {
+           return Stat.fxstat(ver, fd, buf);
          };
        } else {
          // Mac OS X 32-bits, other Unix
-         SysFile.stat =
-           declareFFI("stat", ctypes.default_abi,
+         declareLazyFFI(SysFile,  "stat", libc, "stat", ctypes.default_abi,
                       /*return*/ Type.negativeone_or_nothing,
                       /*path*/   Type.path,
                       /*buf*/    Type.stat.out_ptr
                      );
-         SysFile.lstat =
-           declareFFI("lstat", ctypes.default_abi,
+         declareLazyFFI(SysFile,  "lstat", libc, "lstat", ctypes.default_abi,
                       /*return*/ Type.negativeone_or_nothing,
                       /*path*/   Type.path,
                       /*buf*/    Type.stat.out_ptr
                      );
-         SysFile.fstat =
-           declareFFI("fstat", ctypes.default_abi,
+         declareLazyFFI(SysFile,  "fstat", libc, "fstat", ctypes.default_abi,
                       /*return*/ Type.negativeone_or_nothing,
                       /*fd*/     Type.fd,
                       /*buf*/    Type.stat.out_ptr
@@ -602,22 +551,23 @@
        // We cannot make a C array of CDataFinalizer, so
        // pipe cannot be directly defined as a C function.
 
-       let _pipe =
-         declareFFI("pipe", ctypes.default_abi,
-           /*return*/ Type.negativeone_or_nothing,
-           /*fds*/    new SharedAll.Type("two file descriptors",
+       let Pipe = {};
+       declareLazyFFI(Pipe, "_pipe", libc,
+         "pipe", ctypes.default_abi,
+         /*return*/ Type.negativeone_or_nothing,
+         /*fds*/    new SharedAll.Type("two file descriptors",
              ctypes.ArrayType(ctypes.int, 2)));
 
        // A shared per-thread buffer used to communicate with |pipe|
        let _pipebuf = new (ctypes.ArrayType(ctypes.int, 2))();
 
        SysFile.pipe = function pipe(array) {
-         let result = _pipe(_pipebuf);
+         let result = Pipe._pipe(_pipebuf);
          if (result == -1) {
            return result;
          }
-         array[0] = ctypes.CDataFinalizer(_pipebuf[0], _close);
-         array[1] = ctypes.CDataFinalizer(_pipebuf[1], _close);
+         array[0] = ctypes.CDataFinalizer(_pipebuf[0], SysFile._close);
+         array[1] = ctypes.CDataFinalizer(_pipebuf[1], SysFile._close);
          return result;
        };
      };
