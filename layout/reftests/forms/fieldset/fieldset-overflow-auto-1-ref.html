@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 261037</title>
+    <style type="text/css">
+fieldset, div { 
+  background:pink;
+  overflow:auto;
+  height:100px;
+  margin:0; padding:0; border:0;
+}
+p {
+  background:blue;
+  height:100px;
+  margin:0; padding:0;
+}
+.overflow {
+  height:110px;
+}
+.abs {
+  position:absolute;
+  width:100px;
+  top:250px;
+}
+p.abs {
+  top:0;left:0;
+}
+.b { border:10px solid black; }
+.p { padding: 7px 0; }
+.p p { height:114px; }
+    </style>
+</head>
+<body>
+
+<div><p></p></div>
+<br>
+<div><p class="overflow"></p></div>
+<br>
+<div class="abs"><p class="abs"></p></div>
+<br>
+<div class="abs" style="left:120px"><p class="abs overflow"></p></div>
+<br>
+<div class="abs b" style="left:240px"><p class="abs"></p></div>
+<br>
+<div class="abs b" style="left:370px"><p class="abs overflow"></p></div>
+<br>
+<div class="abs b p" style="left:510px"><p class="abs"></p></div>
+<br>
+<div class="abs b p" style="left:640px"><p class="abs overflow"></p></div>
+
+</body>
+</html>
