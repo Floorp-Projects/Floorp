@@ -96,11 +96,7 @@ SVGEllipseElement::ConstructPath(gfxContext *aCtx)
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
 
   if (rx > 0.0f && ry > 0.0f) {
-    aCtx->Save();
-    aCtx->Translate(gfxPoint(x, y));
-    aCtx->Scale(rx, ry);
-    aCtx->Arc(gfxPoint(0, 0), 1, 0, 2 * M_PI);
-    aCtx->Restore();
+    aCtx->Ellipse(gfxPoint(x, y), gfxSize(2.0*rx, 2.0*ry));
   }
 }
 
