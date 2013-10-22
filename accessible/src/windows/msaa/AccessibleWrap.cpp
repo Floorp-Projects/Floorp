@@ -898,6 +898,11 @@ AccessibleWrap::accNavigate(
   Accessible* navAccessible = nullptr;
   Maybe<RelationType> xpRelation;
 
+#define RELATIONTYPE(geckoType, stringType, atkType, msaaType, ia2Type) \
+  case msaaType: \
+    xpRelation.construct(RelationType::geckoType); \
+    break;
+
   switch(navDir) {
     case NAVDIR_FIRSTCHILD:
       if (!nsAccUtils::MustPrune(accessible))
@@ -920,61 +925,13 @@ AccessibleWrap::accNavigate(
       return E_NOTIMPL;
 
     // MSAA relationship extensions to accNavigate
-    case NAVRELATION_CONTROLLED_BY:
-      xpRelation.construct(RelationType::CONTROLLED_BY);
-      break;
-    case NAVRELATION_CONTROLLER_FOR:
-      xpRelation.construct(RelationType::CONTROLLER_FOR);
-      break;
-    case NAVRELATION_LABEL_FOR:
-      xpRelation.construct(RelationType::LABEL_FOR);
-      break;
-    case NAVRELATION_LABELLED_BY:
-      xpRelation.construct(RelationType::LABELLED_BY);
-      break;
-    case NAVRELATION_MEMBER_OF:
-      xpRelation.construct(RelationType::MEMBER_OF);
-      break;
-    case NAVRELATION_NODE_CHILD_OF:
-      xpRelation.construct(RelationType::NODE_CHILD_OF);
-      break;
-    case NAVRELATION_FLOWS_TO:
-      xpRelation.construct(RelationType::FLOWS_TO);
-      break;
-    case NAVRELATION_FLOWS_FROM:
-      xpRelation.construct(RelationType::FLOWS_FROM);
-      break;
-    case NAVRELATION_SUBWINDOW_OF:
-      xpRelation.construct(RelationType::SUBWINDOW_OF);
-      break;
-    case NAVRELATION_EMBEDS:
-      xpRelation.construct(RelationType::EMBEDS);
-      break;
-    case NAVRELATION_EMBEDDED_BY:
-      xpRelation.construct(RelationType::EMBEDDED_BY);
-      break;
-    case NAVRELATION_POPUP_FOR:
-      xpRelation.construct(RelationType::POPUP_FOR);
-      break;
-    case NAVRELATION_PARENT_WINDOW_OF:
-      xpRelation.construct(RelationType::PARENT_WINDOW_OF);
-      break;
-    case NAVRELATION_DEFAULT_BUTTON:
-      xpRelation.construct(RelationType::DEFAULT_BUTTON);
-      break;
-    case NAVRELATION_DESCRIBED_BY:
-      xpRelation.construct(RelationType::DESCRIBED_BY);
-      break;
-    case NAVRELATION_DESCRIPTION_FOR:
-      xpRelation.construct(RelationType::DESCRIPTION_FOR);
-      break;
-    case NAVRELATION_NODE_PARENT_OF:
-      xpRelation.construct(RelationType::NODE_PARENT_OF);
-      break;
+#include "RelationTypeMap.h"
 
     default:
       return E_INVALIDARG;
   }
+
+#undef RELATIONTYPE
 
   pvarEndUpAt->vt = VT_EMPTY;
 
