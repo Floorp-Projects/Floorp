@@ -32,6 +32,8 @@ public:
   NS_DECL_NSIGEOLOCATIONPROVIDER
 
   CoreLocationLocationProvider();
+  static bool IsCoreLocationAvailable();
+
 private:
   virtual ~CoreLocationLocationProvider() {};
 

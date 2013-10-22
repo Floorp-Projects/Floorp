@@ -127,9 +127,7 @@ struct BytecodeEmitter
     bool            lazyRunOnceLambda:1; /* true while lazily emitting a script for
                                           * a lambda which is only expected to run once. */
 
-    bool isRunOnceLambda() {
-        return (parent && parent->emittingRunOnceLambda) || lazyRunOnceLambda;
-    }
+    bool isRunOnceLambda();
 
     bool            insideEval:1;       /* True if compiling an eval-expression or a function
                                            nested inside an eval. */
