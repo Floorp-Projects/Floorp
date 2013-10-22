@@ -13,6 +13,8 @@
       <stylesheet src="chrome://global/skin/toolbar.css"/>
     </resources>
     <implementation implements="nsIAccessibleProvider">
+      <field name="overflowedDuringConstruction">null</field>
+
       <property name="accessibleType" readonly="true">
         <getter>
           return Components.interfaces.nsIAccessibleProvider.XULToolbar;
@@ -20,6 +22,15 @@
       </property>
 
       <constructor><![CDATA[
+          let scope = {};
+          Cu.import("resource:///modules/CustomizableUI.jsm", scope);
+          // Add an early overflow event listener that will mark if the
+          // toolbar overflowed during construction.
+          if (scope.CustomizableUI.isAreaOverflowable(this.id)) {
+            this.addEventListener("overflow", this);
+            this.addEventListener("underflow", this);
+          }
+
           if (document.readyState == "complete") {
             this._init();
           } else {
@@ -58,6 +69,21 @@
           let children = [node.id for (node of this.childNodes)
                           if (node.getAttribute("skipintoolbarset") != "true" && node.id)];
           CustomizableUI.registerToolbarNode(this, children);
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "overflow" && aEvent.detail > 0) {
+            if (this.overflowable && this.overflowable.initialized) {
+              this.overflowable.onOverflow(aEvent);
+            } else {
+              this.overflowedDuringConstruction = aEvent;
+            }
+          } else if (aEvent.type == "underflow" && aEvent.detail > 0) {
+            this.overflowedDuringConstruction = null;
+          }
         ]]></body>
       </method>
 
