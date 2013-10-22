@@ -3,12 +3,8 @@
 // Send these sites a custom user-agent. Bugs to remove each override after
 // evangelism are included.
 {
-  // bug 802981, maps.google.com
-  "maps.google.com": "\\(Mobile#(Android; Mobile",
   // bug 826330, uol.com.br
   "uol.com.br": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
-  // bug 826332, live.com
-  "live.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 826335, globo.com
   "globo.com": "\\(Mobile#(Android; Mobile",
   // bug 826338, yahoo.com
@@ -41,8 +37,6 @@
   "noticias.uol.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826720, olx.com.br
   "olx.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 826736, bancobrasil.com.br
-  "bancobrasil.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826845, techtudo.com.br
   "techtudo.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826958, ebay.com
@@ -95,8 +89,6 @@
   "money.pl": "\\(Mobile#(Android; Mobile",
   // bug 828371, ingbank.pl
   "ingbank.pl": "\\(Mobile#(Android; Mobile",
-  // bug 828376, plotek.pl
-  "plotek.pl": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 828378, wyborcza.pl
   "wyborcza.pl": "\\(Mobile#(Android; Mobile",
   // bug 828380, deser.pl
@@ -131,10 +123,6 @@
   "bumeran.com.ve": "\\(Mobile#(Android; Mobile",
   // bug 828448, petardas.com
   "petardas.com": "\\(Mobile#(Android; Mobile",
-  // bug 827869, mail.google.com
-  "mail.google.com": "\\(Mobile#(Android; Mobile",
-  // bug 843109, enfemenino.com
-  "enfemenino.com": "\\(Mobile#(Android; Mobile",
   // bug 843112, movil.bankinter.es
   "movil.bankinter.es": "\\(Mobile#(Android; Mobile",
   // bug 843114, einforma.com
@@ -155,18 +143,12 @@
   "iphonejuegosgratis.com": "\\(Mobile#(Android; Mobile",
   // bug 843132, comunio.es
   "comunio.es": "\\(Mobile#(Android; Mobile",
-  // bug 843134, news.google.com
-  "news.google.com": "\\(Mobile#(Android; Mobile",
   // bug 843136, deviantart.com
   "deviantart.com": "\\(Mobile#(Android; Mobile",
-  // bug 843137, nytimes.com
-  "nytimes.com": "\\(Mobile#(Android; Mobile",
   // bug 843139, consumersearch.com
   "consumersearch.com": "\\(Mobile#(Android; Mobile",
   // bug 843141, foodily.com
   "foodily.com": "\\(Mobile#(Android; Mobile",
-  // bug 843197, icanhas.cheezburger.com
-  "icanhas.cheezburger.com": "\\(Mobile#(Android; Mobile",
   // bug 843151, citibank.com
   "citibank.com": "\\(Mobile#(Android; Mobile",
   // bug 843153, games.com
@@ -225,8 +207,6 @@
   "vatera.hu": "\\(Mobile#(Android; Mobile",
   // bug 878255, 24sata.hr
   "24sata.hr": "\\(Mobile#(Android; Mobile",
-  // bug 878256, bet365.com
-  "bet365.com": "\\(Mobile#(Android; Mobile",
   // bug 878258, blackhatteam.com
   "blackhatteam.com": "\\(Mobile#(Android; Mobile",
   // bug 878260, cdm.me
@@ -255,8 +235,6 @@
   "banorte.com": "\\(Mobile#(Android; Mobile",
   // bug 878634, buenastareas.com
   "buenastareas.com": "\\(Mobile#(Android; Mobile",
-  // bug 878635, cnn.com
-  "cnn.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 878637, eluniversal.com.mx
   "eluniversal.com.mx": "\\(Mobile#(Android; Mobile",
   // bug 878640, hootsuite.com

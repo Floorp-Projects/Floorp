@@ -70,12 +70,6 @@ class NavigatorUserMediaErrorCallback;
 class MozGetUserMediaDevicesSuccessCallback;
 #endif // MOZ_MEDIA_NAVIGATOR
 
-namespace icc {
-#ifdef MOZ_B2G_RIL
-class IccManager;
-#endif
-}
-
 namespace network {
 class Connection;
 #ifdef MOZ_B2G_RIL
@@ -91,6 +85,7 @@ class BluetoothManager;
 
 #ifdef MOZ_B2G_RIL
 class CellBroadcast;
+class IccManager;
 class Telephony;
 class Voicemail;
 #endif
@@ -331,15 +326,13 @@ private:
 #endif
   nsRefPtr<PowerManager> mPowerManager;
   nsRefPtr<MobileMessageManager> mMobileMessageManager;
-#ifdef MOZ_B2G_RIL
-  nsRefPtr<Telephony> mTelephony;
-  nsRefPtr<Voicemail> mVoicemail;
-#endif
   nsRefPtr<network::Connection> mConnection;
 #ifdef MOZ_B2G_RIL
   nsRefPtr<network::MobileConnection> mMobileConnection;
   nsRefPtr<CellBroadcast> mCellBroadcast;
-  nsRefPtr<icc::IccManager> mIccManager;
+  nsRefPtr<IccManager> mIccManager;
+  nsRefPtr<Telephony> mTelephony;
+  nsRefPtr<Voicemail> mVoicemail;
 #endif
 #ifdef MOZ_B2G_BT
   nsCOMPtr<bluetooth::BluetoothManager> mBluetooth;
