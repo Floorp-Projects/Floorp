@@ -22,7 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIStorage",
 
 for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
                   "ConsoleAPIListener", "ConsoleProgressListener",
-                  "JSTermHelpers", "JSPropertyProvider", "NetworkMonitor"]) {
+                  "JSTermHelpers", "JSPropertyProvider", "NetworkMonitor",
+                  "ConsoleReflowListener"]) {
   Object.defineProperty(this, name, {
     get: function(prop) {
       if (prop == "WebConsoleUtils") {
@@ -153,6 +154,11 @@ WebConsoleActor.prototype =
   consoleProgressListener: null,
 
   /**
+   * The ConsoleReflowListener instance.
+   */
+  consoleReflowListener: null,
+
+  /**
    * Getter for the NetworkMonitor.saveRequestAndResponseBodies preference.
    * @type boolean
    */
@@ -193,6 +199,10 @@ WebConsoleActor.prototype =
     if (this.consoleProgressListener) {
       this.consoleProgressListener.destroy();
       this.consoleProgressListener = null;
+    }
+    if (this.consoleReflowListener) {
+      this.consoleReflowListener.destroy();
+      this.consoleReflowListener = null;
     }
     this.conn.removeActorPool(this._actorPool);
     if (this.parentActor.isRootActor) {
@@ -399,6 +409,13 @@ WebConsoleActor.prototype =
                                                     MONITOR_FILE_ACTIVITY);
           startedListeners.push(listener);
           break;
+        case "ReflowActivity":
+          if (!this.consoleReflowListener) {
+            this.consoleReflowListener =
+              new ConsoleReflowListener(this.window, this);
+          }
+          startedListeners.push(listener);
+          break;
       }
     }
     return {
@@ -455,6 +472,13 @@ WebConsoleActor.prototype =
             this.consoleProgressListener.stopMonitor(this.consoleProgressListener.
                                                      MONITOR_FILE_ACTIVITY);
             this.consoleProgressListener = null;
+          }
+          stoppedListeners.push(listener);
+          break;
+        case "ReflowActivity":
+          if (this.consoleReflowListener) {
+            this.consoleReflowListener.destroy();
+            this.consoleReflowListener = null;
           }
           stoppedListeners.push(listener);
           break;
@@ -1065,6 +1089,29 @@ WebConsoleActor.prototype =
       type: "fileActivity",
       uri: aFileURI,
     };
+    this.conn.send(packet);
+  },
+
+  /**
+   * Handler for reflow activity. This method forwards reflow events to the
+   * remote Web Console client.
+   *
+   * @see ConsoleReflowListener
+   * @param Object aReflowInfo
+   */
+  onReflowActivity: function WCA_onReflowActivity(aReflowInfo)
+  {
+    let packet = {
+      from: this.actorID,
+      type: "reflowActivity",
+      interruptible: aReflowInfo.interruptible,
+      start: aReflowInfo.start,
+      end: aReflowInfo.end,
+      sourceURL: aReflowInfo.sourceURL,
+      sourceLine: aReflowInfo.sourceLine,
+      functionName: aReflowInfo.functionName
+    };
+
     this.conn.send(packet);
   },
 
