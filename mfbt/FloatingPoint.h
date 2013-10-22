@@ -12,6 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
+#include "mozilla/Types.h"
 
 #include <stdint.h>
 
@@ -268,6 +269,18 @@ SpecificFloatNaN(int signbit, uint32_t significand)
   MOZ_ASSERT(IsFloatNaN(f));
   return f;
 }
+
+/**
+ * Returns true if the given value can be losslessly represented as an IEEE-754
+ * single format number, false otherwise.  All NaN values are considered
+ * representable (notwithstanding that the exact bit pattern of a double format
+ * NaN value can't be exactly represented in single format).
+ *
+ * This function isn't inlined to avoid buggy optimizations by MSVC.
+ */
+MOZ_WARN_UNUSED_RESULT
+extern MFBT_API bool
+IsFloat32Representable(double x);
 
 } /* namespace mozilla */
 
