@@ -253,3 +253,24 @@ function getTargetForApp(client, webappsActor, manifestURL) {
 }
 exports.getTargetForApp = getTargetForApp;
 
+function reloadApp(client, webappsActor, manifestURL) {
+  let deferred = promise.defer();
+  getTargetForApp(client,
+                  webappsActor,
+                  manifestURL).
+    then((target) => {
+      // Request the ContentAppActor to reload the app
+      let request = {
+        to: target.form.actor,
+        type: "reload",
+        manifestURL: manifestURL
+      };
+      client.request(request, (res) => {
+        deferred.resolve();
+      });
+    }, () => {
+     deferred.reject("Not running");
+    });
+  return deferred.promise;
+}
+exports.reloadApp = reloadApp;
