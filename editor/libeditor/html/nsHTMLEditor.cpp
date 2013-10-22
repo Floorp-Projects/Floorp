@@ -70,6 +70,7 @@
 #include "nsIParserService.h"
 #include "mozilla/Selection.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsTextFragment.h"
 
@@ -5218,14 +5219,14 @@ nsHTMLEditor::GetActiveEditingHost()
   return content->GetEditingHost();
 }
 
-already_AddRefed<nsIDOMEventTarget>
+already_AddRefed<mozilla::dom::EventTarget>
 nsHTMLEditor::GetDOMEventTarget()
 {
   // Don't use getDocument here, because we have no way of knowing
   // whether Init() was ever called.  So we need to get the document
   // ourselves, if it exists.
   NS_PRECONDITION(mDocWeak, "This editor has not been initialized yet");
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryReferent(mDocWeak.get());
+  nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryReferent(mDocWeak);
   return target.forget();
 }
 
