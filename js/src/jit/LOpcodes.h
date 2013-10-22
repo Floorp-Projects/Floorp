@@ -112,6 +112,7 @@
     _(MathFunctionF)                \
     _(NotI)                         \
     _(NotD)                         \
+    _(NotF)                         \
     _(NotO)                         \
     _(NotV)                         \
     _(AddI)                         \

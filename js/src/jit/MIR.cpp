@@ -2463,6 +2463,14 @@ MNot::foldsTo(bool useValueNumbers)
 }
 
 void
+MNot::trySpecializeFloat32()
+{
+    MDefinition *in = input();
+    if (!in->canProduceFloat32() && in->type() == MIRType_Float32)
+        ConvertDefinitionToDouble<0>(in, this);
+}
+
+void
 MBeta::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);

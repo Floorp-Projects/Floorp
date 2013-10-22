@@ -2020,6 +2020,17 @@ class LNotD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Not operation on a float32.
+class LNotF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(NotF)
+
+    LNotF(const LAllocation &input) {
+        setOperand(0, input);
+    }
+};
+
 // Boolean complement operation on an object.
 class LNotO : public LInstructionHelper<1, 1, 0>
 {

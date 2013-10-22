@@ -110,6 +110,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitBitAndAndBranch(LBitAndAndBranch *baab);
     virtual bool visitNotI(LNotI *comp);
     virtual bool visitNotD(LNotD *comp);
+    virtual bool visitNotF(LNotF *comp);
     virtual bool visitMathD(LMathD *math);
     virtual bool visitMathF(LMathF *math);
     virtual bool visitFloor(LFloor *lir);

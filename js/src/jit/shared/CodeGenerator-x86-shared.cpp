@@ -233,6 +233,17 @@ CodeGeneratorX86Shared::visitNotD(LNotD *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitNotF(LNotF *ins)
+{
+    FloatRegister opd = ToFloatRegister(ins->input());
+
+    masm.xorps(ScratchFloatReg, ScratchFloatReg);
+    masm.compareFloat(Assembler::DoubleEqualOrUnordered, opd, ScratchFloatReg);
+    masm.emitSet(Assembler::Equal, ToRegister(ins->output()), Assembler::NaN_IsTrue);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitCompareDAndBranch(LCompareDAndBranch *comp)
 {
     FloatRegister lhs = ToFloatRegister(comp->left());
