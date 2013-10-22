@@ -1,24 +1,21 @@
-
-div.input-color {
-  display: inline-block;
+button.input-color {
+  /* For now, input[type="color"] is styled like a textfield, because it takes
+     the default 'input' styles in forms.css. Once we're ready to enable it by
+     default, that will change (and so should these styles here). */ 
   -moz-appearance: textfield;
   padding: 1px 0px 1px 0px;
-  color: ButtonText;
-  text-align: center;
-  text-shadow: none;
-  line-height: normal;
-  font: -moz-button;
+}
+button.input-color::-moz-focus-inner {
+ padding: 0;
+ border: 0;
 }
 
 div.input-color-swatch {
-  border-width: 0px;
+  /* This should match the styling for ::-moz-color-swatch in forms.css. */
   width: 100%;
   height: 100%;
   min-width: 50px;
   min-height: 1em;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
   display: block;
   background-color:#000000; /* default color for input type color */
 }
