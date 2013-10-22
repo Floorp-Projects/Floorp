@@ -65,9 +65,6 @@ public:
                 int64_t aEndTime,
                 int64_t aCurrentTime) MOZ_OVERRIDE;
 
-  nsresult GetBuffered(mozilla::dom::TimeRanges* aBuffered,
-                       int64_t aStartTime) MOZ_OVERRIDE;
-
   void OnDecodeThreadStart() MOZ_OVERRIDE;
   void OnDecodeThreadFinish() MOZ_OVERRIDE;
 

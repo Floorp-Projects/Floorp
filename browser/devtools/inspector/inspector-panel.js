@@ -26,6 +26,33 @@ const LAYOUT_CHANGE_TIMER = 250;
  * The inspector controls the highlighter, the breadcrumbs,
  * the markup view, and the sidebar (computed view, rule view
  * and layout view).
+ *
+ * Events:
+ * - ready
+ *      Fired when the inspector panel is opened for the first time and ready to
+ *      use
+ * - new-root
+ *      Fired after a new root (navigation to a new page) event was fired by
+ *      the walker, and taken into account by the inspector (after the markup
+ *      view has been reloaded)
+ * - markuploaded
+ *      Fired when the markup-view frame has loaded
+ * - layout-change
+ *      Fired when the layout of the inspector changes
+ * - breadcrumbs-updated
+ *      Fired when the breadcrumb widget updates to a new node
+ * - layoutview-updated
+ *      Fired when the layoutview (box model) updates to a new node
+ * - markupmutation
+ *      Fired after markup mutations have been processed by the markup-view
+ * - computed-view-refreshed
+ *      Fired when the computed rules view updates to a new node
+ * - computed-view-property-expanded
+ *      Fired when a property is expanded in the computed rules view
+ * - computed-view-property-collapsed
+ *      Fired when a property is collapsed in the computed rules view
+ * - rule-view-refreshed
+ *      Fired when the rule view updates to a new node
  */
 function InspectorPanel(iframeWindow, toolbox) {
   this._toolbox = toolbox;
@@ -320,6 +347,7 @@ InspectorPanel.prototype = {
       this.once("markuploaded", () => {
         this.markup.expandNode(this.selection.nodeFront);
         this.setupSearchBox();
+        this.emit("new-root");
       });
     });
   },
