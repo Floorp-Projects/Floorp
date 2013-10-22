@@ -50,6 +50,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'android/AndroidSensor.cpp',
         'fallback/FallbackPower.cpp',
         'fallback/FallbackAlarm.cpp',
+        'linux/LinuxMemory.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     CPP_SOURCES += [
@@ -60,6 +61,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'gonk/GonkSwitch.cpp',
         'gonk/UeventPoller.cpp',
         'linux/LinuxPower.cpp',
+        'linux/LinuxMemory.cpp',
     ]
 elif CONFIG['OS_TARGET'] == 'Linux':
     CPP_SOURCES += [
@@ -68,6 +70,7 @@ elif CONFIG['OS_TARGET'] == 'Linux':
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
         'linux/LinuxPower.cpp',
+        'linux/LinuxMemory.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
         CPP_SOURCES += [
@@ -85,6 +88,7 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
         'fallback/FallbackVibration.cpp',
         'windows/WindowsBattery.cpp',
         'windows/WindowsSensor.cpp',
+        'fallback/FallbackMemory.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CPP_SOURCES += [
@@ -93,6 +97,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'fallback/FallbackPower.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackVibration.cpp',
+        'fallback/FallbackMemory.cpp',
     ]
 elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
     CPP_SOURCES += [
@@ -101,6 +106,7 @@ elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
+        'fallback/FallbackMemory.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
         CPP_SOURCES += [
@@ -118,6 +124,7 @@ else:
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
+        'fallback/FallbackMemory.cpp',
     ]
 
 # Fallbacks for backends implemented on Gonk only.
