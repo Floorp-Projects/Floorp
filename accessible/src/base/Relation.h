@@ -56,13 +56,6 @@ public:
     return *this;
   }
 
-  Relation& operator = (Relation& aRelation)
-  {
-    mFirstIter = aRelation.mFirstIter;
-    mLastIter = aRelation.mLastIter;
-    return *this;
-  }
-
   operator RelationCopyHelper()
   {
     return RelationCopyHelper(mFirstIter.forget(), mLastIter);
