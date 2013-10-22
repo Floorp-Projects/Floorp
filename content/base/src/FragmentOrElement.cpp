@@ -694,8 +694,7 @@ nsIContent::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
       ((this == aVisitor.mEvent->originalTarget &&
         !ChromeOnlyAccess()) || isAnonForEvents)) {
      nsCOMPtr<nsIContent> relatedTarget =
-       do_QueryInterface(
-         static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->relatedTarget);
+       do_QueryInterface(aVisitor.mEvent->AsMouseEvent()->relatedTarget);
     if (relatedTarget &&
         relatedTarget->OwnerDoc() == OwnerDoc()) {
 

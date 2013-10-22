@@ -389,14 +389,15 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
     // of 1.5, it may have a range like [0,2] and the max_exponent may be zero.
     // When intersecting such a range with an integer range, the fractional part
     // of the range is dropped, but the max exponent of 0 remains valid.
-    if (lhs->canHaveFractionalPart_ != rhs->canHaveFractionalPart_ &&
-        newExponent < MaxInt32Exponent)
-    {
-        // pow(2, newExponent+1)-1 to compute the maximum value for newExponent.
-        int32_t limit = (uint32_t(1) << (newExponent + 1)) - 1;
-        if (limit != INT32_MIN) {
-            newUpper = Min(newUpper, limit);
-            newLower = Max(newLower, -limit);
+    if (lhs->canHaveFractionalPart_ != rhs->canHaveFractionalPart_) {
+        refineInt32BoundsByExponent(newExponent, &newLower, &newUpper);
+
+        // If we're intersecting two ranges that don't overlap, this could also
+        // push the bounds past each other, since the actual intersection is
+        // the empty set.
+        if (newLower > newUpper) {
+            *emptyRange = true;
+            return nullptr;
         }
     }
 
@@ -1941,10 +1942,17 @@ Range::clampToInt32()
 void
 Range::wrapAroundToInt32()
 {
-    if (!hasInt32Bounds())
+    if (!hasInt32Bounds()) {
         setInt32(JSVAL_INT_MIN, JSVAL_INT_MAX);
-    else if (canHaveFractionalPart())
+    } else if (canHaveFractionalPart()) {
         canHaveFractionalPart_ = false;
+
+        // Clearing the fractional field may provide an opportunity to refine
+        // lower_ or upper_.
+        refineInt32BoundsByExponent(max_exponent_, &lower_, &upper_);
+
+        assertInvariants();
+    }
 }
 
 void

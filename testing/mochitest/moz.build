@@ -15,3 +15,5 @@ DIRS += [
 
 if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
     DIRS += ['roboextender']
+
+XPI_NAME = 'mochijar'
