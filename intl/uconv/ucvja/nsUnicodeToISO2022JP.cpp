@@ -49,8 +49,8 @@ static const uint16_t g_ufAsciiMapping [] = {
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
 };
 
-#define SIZE_OF_TABLES 5
-static const uint16_t * g_ufMappingTables[SIZE_OF_TABLES] = {
+#define SIZE_OF_ISO2022JP_TABLES 5
+static const uint16_t * g_ufMappingTables[SIZE_OF_ISO2022JP_TABLES] = {
   g_ufAsciiMapping,             // ASCII           ISOREG 6
   g_uf0201GLMapping,            // JIS X 0201-1976 ISOREG 14
   g_uf0208Mapping,              // JIS X 0208-1983 ISOREG 87
@@ -58,7 +58,7 @@ static const uint16_t * g_ufMappingTables[SIZE_OF_TABLES] = {
   g_uf0208Mapping,              // JIS X 0208-1978 ISOREG 42
 };
 
-static const uScanClassID g_ufScanClassIDs[SIZE_OF_TABLES] = {
+static const uScanClassID g_ufScanClassIDs[SIZE_OF_ISO2022JP_TABLES] = {
   u1ByteCharset,                // ASCII           ISOREG 6
   u1ByteCharset,                // JIS X 0201-1976 ISOREG 14
   u2BytesCharset,               // JIS X 0208-1983 ISOREG 87
@@ -211,7 +211,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
   int32_t i;
 
   while (src < srcEnd) {
-    for (i=0; i< SIZE_OF_TABLES ; i++) {
+    for (i=0; i< SIZE_OF_ISO2022JP_TABLES ; i++) {
       bcr = 1;
       bcw = destEnd - dest;
       res = nsUnicodeEncodeHelper::ConvertByTable(src, &bcr, dest, &bcw, 
@@ -220,7 +220,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
       if (res != NS_ERROR_UENC_NOMAPPING) break;
     }
 
-    if ( i>=  SIZE_OF_TABLES) {
+    if ( i>=  SIZE_OF_ISO2022JP_TABLES) {
       if (IS_HANKAKU(*src)) {
         bcr = srcEnd - src;
         bcw = destEnd - dest;
