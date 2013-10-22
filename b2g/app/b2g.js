@@ -744,7 +744,7 @@ pref("memory_info_dumper.watch_fifo.directory", "/data/local");
 pref("general.useragent.enable_overrides", true);
 // See ua-update.json.in for the packaged UA override list
 pref("general.useragent.updates.enabled", true);
-pref("general.useragent.updates.url", "");
+pref("general.useragent.updates.url", "https://dynamicua.cdn.mozilla.net/0/%APP_ID%");
 pref("general.useragent.updates.interval", 604800); // 1 week
 pref("general.useragent.updates.retry", 86400); // 1 day
 
