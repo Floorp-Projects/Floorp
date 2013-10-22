@@ -27,6 +27,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::DoublesAreIdentical;
+using mozilla::IsFloat32Representable;
 using mozilla::Maybe;
 
 void
@@ -491,15 +492,6 @@ MConstant::printOpcode(FILE *fp) const
       default:
         MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
-}
-
-// Needs a static function to avoid overzealous optimizations by certain compilers (MSVC).
-static bool
-IsFloat32Representable(double x)
-{
-    float asFloat = static_cast<float>(x);
-    double floatAsDouble = static_cast<double>(asFloat);
-    return floatAsDouble == x;
 }
 
 bool
