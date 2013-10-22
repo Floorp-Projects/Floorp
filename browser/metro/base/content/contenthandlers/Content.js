@@ -184,6 +184,12 @@ let Content = {
         break;
 
       case "click":
+        // Workaround for bug 925457: we sometimes don't recognize the
+        // correct tap target or are unable to identify if it's editable.
+        // Instead always save tap co-ordinates for the keyboard to look for
+        // when it is up.
+        SelectionHandler.onClickCoords(aEvent.clientX, aEvent.clientY);
+
         if (aEvent.eventPhase == aEvent.BUBBLING_PHASE)
           this._onClickBubble(aEvent);
         else
