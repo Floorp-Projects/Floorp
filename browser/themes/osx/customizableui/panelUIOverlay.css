@@ -60,7 +60,7 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
   padding-right: 12px;
 }
 
-.panel-wide-item[customizableui-areatype="menu-panel"] > toolbarbutton,
-toolbarbutton[customizableui-areatype="menu-panel"] {
+.panel-wide-item[cui-areatype="menu-panel"] > toolbarbutton,
+toolbarbutton[cui-areatype="menu-panel"] {
   margin: 0;
 }
