@@ -93,43 +93,56 @@ CustomizeMode.prototype = {
       return;
     }
 
-    // Disable lightweight themes while in customization mode since
-    // they don't have large enough images to pad the full browser window.
-    LightweightThemeManager.temporarilyToggleTheme(false);
-
-    this.dispatchToolboxEvent("beforecustomization");
-
-    let window = this.window;
-    let document = this.document;
-
-    CustomizableUI.addListener(this);
-
-    // Add a keypress listener and mousedown listener to the tab-view-deck so that
-    // we can quickly exit customization mode when pressing ESC or clicking on
-    // the blueprint outside the customization container.
-    let deck = document.getElementById("tab-view-deck");
-    deck.addEventListener("keypress", this);
-    deck.addEventListener("mousedown", this);
-
-    // Same goes for the menu button - if we're customizing, a mousedown to the
-    // menu button means a quick exit from customization mode.
-    window.PanelUI.hide();
-    window.PanelUI.menuButton.addEventListener("mousedown", this);
-    window.PanelUI.menuButton.open = true;
-    window.PanelUI.beginBatchUpdate();
-
-    // Move the mainView in the panel to the holder so that we can see it
-    // while customizing.
-    let panelHolder = document.getElementById("customization-panelHolder");
-    panelHolder.appendChild(window.PanelUI.mainView);
-
-    this._transitioning = true;
-
-    let customizer = document.getElementById("customization-container");
-    customizer.parentNode.selectedPanel = customizer;
-    customizer.hidden = false;
-
     Task.spawn(function() {
+      // We shouldn't start customize mode until after browser-delayed-startup has finished:
+      if (!this.window.gBrowserInit.delayedStartupFinished) {
+        let delayedStartupDeferred = Promise.defer();
+        let delayedStartupObserver = function(aSubject) {
+          if (aSubject == this.window) {
+            Services.obs.removeObserver(delayedStartupObserver, "browser-delayed-startup-finished");
+            delayedStartupDeferred.resolve();
+          }
+        }.bind(this);
+        Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
+        yield delayedStartupDeferred.promise;
+      }
+
+      // Disable lightweight themes while in customization mode since
+      // they don't have large enough images to pad the full browser window.
+      LightweightThemeManager.temporarilyToggleTheme(false);
+
+      this.dispatchToolboxEvent("beforecustomization");
+
+      let window = this.window;
+      let document = this.document;
+
+      CustomizableUI.addListener(this);
+
+      // Add a keypress listener and mousedown listener to the tab-view-deck so that
+      // we can quickly exit customization mode when pressing ESC or clicking on
+      // the blueprint outside the customization container.
+      let deck = document.getElementById("tab-view-deck");
+      deck.addEventListener("keypress", this);
+      deck.addEventListener("mousedown", this);
+
+      // Same goes for the menu button - if we're customizing, a mousedown to the
+      // menu button means a quick exit from customization mode.
+      window.PanelUI.hide();
+      window.PanelUI.menuButton.addEventListener("mousedown", this);
+      window.PanelUI.menuButton.open = true;
+      window.PanelUI.beginBatchUpdate();
+
+      // Move the mainView in the panel to the holder so that we can see it
+      // while customizing.
+      let panelHolder = document.getElementById("customization-panelHolder");
+      panelHolder.appendChild(window.PanelUI.mainView);
+
+      this._transitioning = true;
+
+      let customizer = document.getElementById("customization-container");
+      customizer.parentNode.selectedPanel = customizer;
+      customizer.hidden = false;
+
       yield this._doTransition(true);
 
       // Let everybody in this window know that we're about to customize.
