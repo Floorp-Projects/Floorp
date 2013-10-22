@@ -7,38 +7,37 @@ __all__ = ['Profile',
            'MetroFirefoxProfile',
            'ThunderbirdProfile']
 
+import json
 import os
 import time
 import tempfile
 import types
 import uuid
+
 from addons import AddonManager
+from mozfile import tree
 from permissions import Permissions
 from prefs import Preferences
 from shutil import copytree, rmtree
 from webapps import WebappCollection
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
 
 class Profile(object):
     """Handles all operations regarding profile. Created new profiles, installs extensions,
-    sets preferences and handles cleanup."""
+    sets preferences and handles cleanup.
+
+    :param profile: Path to the profile
+    :param addons: String of one or list of addons to install
+    :param addon_manifests: Manifest for addons, see http://ahal.ca/blog/2011/bulk-installing-fx-addons/
+    :param apps: Dictionary or class of webapps to install
+    :param preferences: Dictionary or class of preferences
+    :param locations: ServerLocations object
+    :param proxy: setup a proxy
+    :param restore: If true remove all added addons and preferences when cleaning up
+    """
 
     def __init__(self, profile=None, addons=None, addon_manifests=None, apps=None,
                  preferences=None, locations=None, proxy=None, restore=True):
-        """
-        :param profile: Path to the profile
-        :param addons: String of one or list of addons to install
-        :param addon_manifests: Manifest for addons, see http://ahal.ca/blog/2011/bulk-installing-fx-addons/
-        :param apps: Dictionary or class of webapps to install
-        :param preferences: Dictionary or class of preferences
-        :param locations: locations to proxy
-        :param proxy: setup a proxy - dict of server-loc,server-port,ssl-port
-        :param restore: If true remove all installed addons preferences when cleaning up
-        """
 
         # if true, remove installed addons/prefs afterwards
         self.restore = restore
@@ -86,7 +85,7 @@ class Profile(object):
         self.set_preferences(user_js)
 
         # handle addon installation
-        self.addon_manager = AddonManager(self.profile)
+        self.addon_manager = AddonManager(self.profile, restore=self.restore)
         self.addon_manager.install_addons(addons, addon_manifests)
 
         # handle webapps
@@ -173,7 +172,9 @@ class Profile(object):
         returns True if popped
         """
 
-        lines = file(os.path.join(self.profile, filename)).read().splitlines()
+        path = os.path.join(self.profile, filename)
+        with file(path) as f:
+            lines = f.read().splitlines()
         def last_index(_list, value):
             """
             returns the last index of an item;
@@ -197,9 +198,8 @@ class Profile(object):
 
         # write the prefs
         cleaned_prefs = '\n'.join(lines[:s] + lines[e+1:])
-        f = file(os.path.join(self.profile, 'user.js'), 'w')
-        f.write(cleaned_prefs)
-        f.close()
+        with file(path, 'w') as f:
+            f.write(cleaned_prefs)
         return True
 
     def clean_preferences(self):
@@ -255,6 +255,80 @@ class Profile(object):
 
     __del__ = cleanup
 
+    ### methods for introspection
+
+    def summary(self, return_parts=False):
+        """
+        returns string summarizing profile information.
+        if return_parts is true, return the (Part_name, value) list
+        of tuples instead of the assembled string
+        """
+
+        parts = [('Path', self.profile)] # profile path
+
+        # directory tree
+        parts.append(('Files', '\n%s' % tree(self.profile)))
+
+        # preferences
+        for prefs_file in ('user.js', 'prefs.js'):
+            path = os.path.join(self.profile, prefs_file)
+            if os.path.exists(path):
+
+                # prefs that get their own section
+                # This is currently only 'network.proxy.autoconfig_url'
+                # but could be expanded to include others
+                section_prefs = ['network.proxy.autoconfig_url']
+                line_length = 80
+                line_length_buffer = 10 # buffer for 80 character display: length = 80 - len(key) - len(': ') - line_length_buffer
+                line_length_buffer += len(': ')
+                def format_value(key, value):
+                    if key not in section_prefs:
+                        return value
+                    max_length = line_length - len(key) - line_length_buffer
+                    if len(value) > max_length:
+                        value = '%s...' % value[:max_length]
+                    return value
+
+                prefs = Preferences.read_prefs(path)
+                if prefs:
+                    prefs = dict(prefs)
+                    parts.append((prefs_file,
+                    '\n%s' %('\n'.join(['%s: %s' % (key, format_value(key, prefs[key]))
+                                        for key in sorted(prefs.keys())
+                                        ]))))
+
+                    # Currently hardcorded to 'network.proxy.autoconfig_url'
+                    # but could be generalized, possibly with a generalized (simple)
+                    # JS-parser
+                    network_proxy_autoconfig = prefs.get('network.proxy.autoconfig_url')
+                    if network_proxy_autoconfig and network_proxy_autoconfig.strip():
+                        network_proxy_autoconfig = network_proxy_autoconfig.strip()
+                        lines = network_proxy_autoconfig.replace(';', ';\n').splitlines()
+                        lines = [line.strip() for line in lines]
+                        origins_string = 'var origins = ['
+                        origins_end = '];'
+                        if origins_string in lines[0]:
+                            start = lines[0].find(origins_string)
+                            end = lines[0].find(origins_end, start);
+                            splitline = [lines[0][:start],
+                                         lines[0][start:start+len(origins_string)-1],
+                                         ]
+                            splitline.extend(lines[0][start+len(origins_string):end].replace(',', ',\n').splitlines())
+                            splitline.append(lines[0][end:])
+                            lines[0:1] = [i.strip() for i in splitline]
+                        parts.append(('Network Proxy Autoconfig, %s' % (prefs_file),
+                                      '\n%s' % '\n'.join(lines)))
+
+        if return_parts:
+            return parts
+
+        retval = '%s\n' % ('\n\n'.join(['[%s]: %s' % (key, value)
+                                        for key, value in parts]))
+        return retval
+
+    __str__ = summary
+
+
 class FirefoxProfile(Profile):
     """Specialized Profile subclass for Firefox"""
 
@@ -285,6 +359,8 @@ class FirefoxProfile(Profile):
                    'extensions.update.notifyUser' : False,
                    # Enable test mode to run multiple tests in parallel
                    'focusmanager.testmode' : True,
+                   # Enable test mode to not raise an OS level dialog for location sharing
+                   'geo.provider.testing' : True,
                    # Suppress delay for main action in popup notifications
                    'security.notification_enable_delay' : 0,
                    # Suppress automatic safe mode after crashes
