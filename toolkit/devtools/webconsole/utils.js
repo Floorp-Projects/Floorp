@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci, Cu, components} = require("chrome");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -2586,6 +2586,98 @@ ConsoleProgressListener.prototype = {
     this._webProgress = null;
     this.window = null;
     this.owner = null;
+  },
+};
+
+
+/**
+ * A ReflowObserver that listens for reflow events from the page.
+ * Implements nsIReflowObserver.
+ *
+ * @constructor
+ * @param object aWindow
+ *        The window for which we need to track reflow.
+ * @param object aOwner
+ *        The listener owner which needs to implement:
+ *        - onReflowActivity(aReflowInfo)
+ */
+
+function ConsoleReflowListener(aWindow, aListener)
+{
+  this.docshell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShell);
+  this.listener = aListener;
+  this.docshell.addWeakReflowObserver(this);
+}
+
+exports.ConsoleReflowListener = ConsoleReflowListener;
+
+ConsoleReflowListener.prototype =
+{
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
+                                         Ci.nsISupportsWeakReference]),
+  docshell: null,
+  listener: null,
+
+  /**
+   * Forward reflow event to listener.
+   *
+   * @param DOMHighResTimeStamp aStart
+   * @param DOMHighResTimeStamp aEnd
+   * @param boolean aInterruptible
+   */
+  sendReflow: function CRL_sendReflow(aStart, aEnd, aInterruptible)
+  {
+    let frame = components.stack.caller.caller;
+
+    let filename = frame.filename;
+
+    if (filename) {
+      // Because filename could be of the form "xxx.js -> xxx.js -> xxx.js",
+      // we only take the last part.
+      filename = filename.split(" ").pop();
+    }
+
+    this.listener.onReflowActivity({
+      interruptible: aInterruptible,
+      start: aStart,
+      end: aEnd,
+      sourceURL: filename,
+      sourceLine: frame.lineNumber,
+      functionName: frame.name
+    });
+  },
+
+  /**
+   * On uninterruptible reflow
+   *
+   * @param DOMHighResTimeStamp aStart
+   * @param DOMHighResTimeStamp aEnd
+   */
+  reflow: function CRL_reflow(aStart, aEnd)
+  {
+    this.sendReflow(aStart, aEnd, false);
+  },
+
+  /**
+   * On interruptible reflow
+   *
+   * @param DOMHighResTimeStamp aStart
+   * @param DOMHighResTimeStamp aEnd
+   */
+  reflowInterruptible: function CRL_reflowInterruptible(aStart, aEnd)
+  {
+    this.sendReflow(aStart, aEnd, true);
+  },
+
+  /**
+   * Unregister listener.
+   */
+  destroy: function CRL_destroy()
+  {
+    this.docshell.removeWeakReflowObserver(this);
+    this.listener = this.docshell = null;
   },
 };
 
