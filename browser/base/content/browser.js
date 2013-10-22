@@ -736,6 +736,8 @@ const gFormSubmitObserver = {
 };
 
 var gBrowserInit = {
+  delayedStartupFinished: false,
+
   onLoad: function() {
     gMultiProcessBrowser = gPrefService.getBoolPref("browser.tabs.remote");
 
@@ -1185,6 +1187,7 @@ var gBrowserInit = {
 
       setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
     });
+    this.delayedStartupFinished = true;
 
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
     TelemetryTimestamps.add("delayedStartupFinished");
