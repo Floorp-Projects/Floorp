@@ -1399,6 +1399,27 @@ class LTestDAndBranch : public LControlInstructionHelper<2, 1, 0>
     }
 };
 
+// Takes in either an integer or boolean input and tests it for truthiness.
+class LTestFAndBranch : public LControlInstructionHelper<2, 1, 0>
+{
+  public:
+    LIR_HEADER(TestFAndBranch)
+
+    LTestFAndBranch(const LAllocation &in, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    {
+        setOperand(0, in);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock *ifFalse() const {
+        return getSuccessor(1);
+    }
+};
+
 // Takes an object and tests it for truthiness.  An object is falsy iff it
 // emulates |undefined|; see js::EmulatesUndefined.
 class LTestOAndBranch : public LControlInstructionHelper<2, 1, 1>
@@ -1611,11 +1632,61 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
     }
 };
 
+class LCompareF : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(CompareF)
+    LCompareF(const LAllocation &left, const LAllocation &right) {
+        setOperand(0, left);
+        setOperand(1, right);
+    }
+
+    const LAllocation *left() {
+        return getOperand(0);
+    }
+    const LAllocation *right() {
+        return getOperand(1);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
 class LCompareDAndBranch : public LControlInstructionHelper<2, 2, 0>
 {
   public:
     LIR_HEADER(CompareDAndBranch)
     LCompareDAndBranch(const LAllocation &left, const LAllocation &right,
+                       MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    {
+        setOperand(0, left);
+        setOperand(1, right);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock *ifFalse() const {
+        return getSuccessor(1);
+    }
+    const LAllocation *left() {
+        return getOperand(0);
+    }
+    const LAllocation *right() {
+        return getOperand(1);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
+class LCompareFAndBranch : public LControlInstructionHelper<2, 2, 0>
+{
+  public:
+    LIR_HEADER(CompareFAndBranch)
+    LCompareFAndBranch(const LAllocation &left, const LAllocation &right,
                        MBasicBlock *ifTrue, MBasicBlock *ifFalse)
     {
         setOperand(0, left);

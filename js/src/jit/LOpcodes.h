@@ -71,6 +71,7 @@
     _(Phi)                          \
     _(TestIAndBranch)               \
     _(TestDAndBranch)               \
+    _(TestFAndBranch)               \
     _(TestVAndBranch)               \
     _(TestOAndBranch)               \
     _(FunctionDispatch)             \
@@ -79,6 +80,8 @@
     _(CompareAndBranch)             \
     _(CompareD)                     \
     _(CompareDAndBranch)            \
+    _(CompareF)                     \
+    _(CompareFAndBranch)            \
     _(CompareS)                     \
     _(CompareStrictS)               \
     _(CompareB)                     \
