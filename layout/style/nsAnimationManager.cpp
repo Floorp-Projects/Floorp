@@ -402,7 +402,8 @@ ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
       const AnimationProperty& prop = anim.mProperties[propIdx];
       if (!CanAnimatePropertyOnCompositor(mElement,
                                           prop.mProperty,
-                                          aFlags)) {
+                                          aFlags) ||
+          IsCompositorAnimationDisabledForFrame(frame)) {
         return false;
       }
       if (prop.mProperty == eCSSProperty_opacity) {

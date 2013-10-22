@@ -19,6 +19,7 @@
 #include "mozilla/Attributes.h"
 
 class nsPresContext;
+class nsIFrame;
 
 
 namespace mozilla {
@@ -174,6 +175,8 @@ struct CommonElementAnimationData : public PRCList
   CanAnimatePropertyOnCompositor(const dom::Element *aElement,
                                  nsCSSProperty aProperty,
                                  CanAnimateFlags aFlags);
+
+  static bool IsCompositorAnimationDisabledForFrame(nsIFrame* aFrame);
 
   // True if this animation can be performed on the compositor thread.
   // Do not pass CanAnimate_AllowPartial to make sure that all properties of this
