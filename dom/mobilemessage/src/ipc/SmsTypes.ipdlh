@@ -45,20 +45,26 @@ struct MmsAttachmentData
   PBlob content;
 };
 
+struct MmsDeliveryInfoData
+{
+  nsString        receiver;
+  DeliveryStatus  deliveryStatus;
+};
+
 struct MmsMessageData
 {
-  int32_t             id;
-  uint64_t            threadId;
-  DeliveryState       delivery;
-  DeliveryStatus[]    deliveryStatus;
-  nsString            sender;
-  nsString[]          receivers;
-  uint64_t            timestamp;
-  bool                read;
-  nsString            subject;
-  nsString            smil;
-  MmsAttachmentData[] attachments;
-  uint64_t            expiryDate;
+  int32_t               id;
+  uint64_t              threadId;
+  DeliveryState         delivery;
+  MmsDeliveryInfoData[] deliveryInfo;
+  nsString              sender;
+  nsString[]            receivers;
+  uint64_t              timestamp;
+  bool                  read;
+  nsString              subject;
+  nsString              smil;
+  MmsAttachmentData[]   attachments;
+  uint64_t              expiryDate;
 };
 
 union MobileMessageData

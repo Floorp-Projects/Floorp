@@ -24,7 +24,7 @@ const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 
 const DB_NAME = "sms";
-const DB_VERSION = 12;
+const DB_VERSION = 13;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -218,6 +218,10 @@ MobileMessageDatabaseService.prototype = {
             self.upgradeSchema11(event.target.transaction, next);
             break;
           case 12:
+            if (DEBUG) debug("Upgrade to version 13. Replaced deliveryStatus by deliveryInfo.");
+            self.upgradeSchema12(event.target.transaction, next);
+            break;
+          case 13:
             // This will need to be moved for each new version
             if (DEBUG) debug("Upgrade finished.");
             break;
@@ -322,8 +326,8 @@ MobileMessageDatabaseService.prototype = {
           messageRecord.deliveryStatus = DELIVERY_STATUS_ERROR;
         } else {
           // Set delivery status to error.
-          for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
-            messageRecord.deliveryStatus[i] = DELIVERY_STATUS_ERROR;
+          for (let i = 0; i < messageRecord.deliveryInfo.length; i++) {
+            messageRecord.deliveryInfo[i].deliveryStatus = DELIVERY_STATUS_ERROR;
           }
         }
 
@@ -350,9 +354,10 @@ MobileMessageDatabaseService.prototype = {
         }
 
         // Set delivery status to error.
-        if (messageRecord.deliveryStatus.length == 1 &&
-            messageRecord.deliveryStatus[0] == DELIVERY_STATUS_PENDING) {
-          messageRecord.deliveryStatus = [DELIVERY_STATUS_ERROR];
+        let deliveryInfo = messageRecord.deliveryInfo;
+        if (deliveryInfo.length == 1 &&
+            deliveryInfo[0].deliveryStatus == DELIVERY_STATUS_PENDING) {
+          deliveryInfo[0].deliveryStatus = DELIVERY_STATUS_ERROR;
         }
 
         messageCursor.update(messageRecord);
@@ -793,6 +798,43 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
+  /**
+   * Replace deliveryStatus by deliveryInfo.
+   */
+  upgradeSchema12: function upgradeSchema12(transaction, next) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        next();
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      if (messageRecord.type == "mms") {
+        messageRecord.deliveryInfo = [];
+
+        if (messageRecord.deliveryStatus.length == 1 &&
+            (messageRecord.delivery == DELIVERY_NOT_DOWNLOADED ||
+             messageRecord.delivery == DELIVERY_RECEIVED)) {
+          messageRecord.deliveryInfo.push({
+            receiver: null,
+            deliveryStatus: messageRecord.deliveryStatus[0] });
+        } else {
+          for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
+            messageRecord.deliveryInfo.push({
+              receiver: messageRecord.receivers[i],
+              deliveryStatus: messageRecord.deliveryStatus[i] });
+          }
+        }
+        delete messageRecord.deliveryStatus;
+        cursor.update(messageRecord);
+      }
+      cursor.continue();
+    };
+  },
+
   createDomMessageFromRecord: function createDomMessageFromRecord(aMessageRecord) {
     if (DEBUG) {
       debug("createDomMessageFromRecord: " + JSON.stringify(aMessageRecord));
@@ -855,7 +897,7 @@ MobileMessageDatabaseService.prototype = {
       return gMobileMessageService.createMmsMessage(aMessageRecord.id,
                                                     aMessageRecord.threadId,
                                                     aMessageRecord.delivery,
-                                                    aMessageRecord.deliveryStatus,
+                                                    aMessageRecord.deliveryInfo,
                                                     aMessageRecord.sender,
                                                     aMessageRecord.receivers,
                                                     aMessageRecord.timestamp,
@@ -1246,9 +1288,10 @@ MobileMessageDatabaseService.prototype = {
             }
           } else if (messageRecord.type == "mms") {
             if (!receiver) {
-              for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
-                if (messageRecord.deliveryStatus[i] != deliveryStatus) {
-                  messageRecord.deliveryStatus[i] = deliveryStatus;
+              let deliveryInfo = messageRecord.deliveryInfo;
+              for (let i = 0; i < deliveryInfo.length; i++) {
+                if (deliveryInfo[i].deliveryStatus != deliveryStatus) {
+                  deliveryInfo[i].deliveryStatus = deliveryStatus;
                   isRecordUpdated = true;
                 }
               }
@@ -1296,9 +1339,15 @@ MobileMessageDatabaseService.prototype = {
                 }
 
                 found = true;
-                if (messageRecord.deliveryStatus[i] != deliveryStatus) {
-                  messageRecord.deliveryStatus[i] = deliveryStatus;
-                  isRecordUpdated = true;
+                let deliveryInfo = messageRecord.deliveryInfo;
+                for (let j = 0; j < deliveryInfo.length; j++) {
+                  if (deliveryInfo[j].receiver != storedReceiver) {
+                    continue;
+                  }
+                  if (deliveryInfo[j].deliveryStatus != deliveryStatus) {
+                    deliveryInfo[j].deliveryStatus = deliveryStatus;
+                    isRecordUpdated = true;
+                  }
                 }
               }
 
@@ -1345,7 +1394,7 @@ MobileMessageDatabaseService.prototype = {
         (aMessage.type == "sms" && aMessage.messageClass == undefined) ||
         (aMessage.type == "mms" && (aMessage.delivery == undefined ||
                                     aMessage.transactionId == undefined ||
-                                    !Array.isArray(aMessage.deliveryStatus) ||
+                                    !Array.isArray(aMessage.deliveryInfo) ||
                                     !Array.isArray(aMessage.receivers))) ||
         aMessage.sender == undefined ||
         aMessage.timestamp == undefined) {
@@ -1443,9 +1492,10 @@ MobileMessageDatabaseService.prototype = {
         }
         return;
       }
-      aMessage.deliveryStatus = [];
+      aMessage.deliveryInfo = [];
       for (let i = 0; i < receivers.length; i++) {
-        aMessage.deliveryStatus.push(deliveryStatus);
+        aMessage.deliveryInfo.push({
+          receiver: receivers[i], deliveryStatus: deliveryStatus });
       }
     }
 
