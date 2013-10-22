@@ -22,6 +22,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include "nsCRT.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/Services.h"
 
 #include "gfxASurface.h"
