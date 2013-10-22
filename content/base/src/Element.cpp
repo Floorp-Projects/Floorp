@@ -3119,7 +3119,6 @@ Element::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
 
   nsAutoString contentType;
   doc->GetContentType(contentType);
-  bool tryToCacheEncoder = !aIncludeSelf;
 
   nsCOMPtr<nsIDocumentEncoder> docEncoder = doc->GetCachedEncoder();
   if (!docEncoder) {
@@ -3134,9 +3133,6 @@ Element::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
     // again as XML
     contentType.AssignLiteral("application/xml");
     docEncoder = do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "application/xml");
-    // Don't try to cache the encoder since it would point to a different
-    // contentType once it has been reinitialized.
-    tryToCacheEncoder = false;
   }
 
   NS_ENSURE_TRUE_VOID(docEncoder);
@@ -3167,7 +3163,7 @@ Element::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
   }
   rv = docEncoder->EncodeToString(aMarkup);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  if (tryToCacheEncoder) {
+  if (!aIncludeSelf) {
     doc->SetCachedEncoder(docEncoder.forget());
   }
 }
