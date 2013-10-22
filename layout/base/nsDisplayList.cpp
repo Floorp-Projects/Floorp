@@ -3249,9 +3249,14 @@ already_AddRefed<Layer>
 nsDisplayBlendContainer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                     LayerManager* aManager,
                                     const ContainerParameters& aContainerParameters) {
+  // turn off anti-aliasing in the parent stacking context because it changes
+  // how the group is initialized.
+  ContainerParameters newContainerParameters = aContainerParameters;
+  newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
+
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
   BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
-                         aContainerParameters, nullptr);
+                         newContainerParameters, nullptr);
   if (!container) {
     return nullptr;
   }
