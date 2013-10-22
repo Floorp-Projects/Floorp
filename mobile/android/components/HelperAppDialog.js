@@ -34,6 +34,7 @@ HelperAppLauncherDialog.prototype = {
     // Add a fake intent for save to disk at the top of the list
     apps.unshift({
       name: bundle.GetStringFromName("helperapps.saveToDisk"),
+      packageName: "org.mozilla.gecko.Download",
       iconUri: "drawable://icon",
       launch: function() {
         // Reset the preferredAction here
@@ -43,23 +44,82 @@ HelperAppLauncherDialog.prototype = {
       }
     });
 
-    let app = apps[0];
-    if (apps.length > 1) {
-      app = HelperApps.prompt(apps, {
-        title: bundle.GetStringFromName("helperapps.pick")
+    // See if the user already marked something as the default for this mimetype,
+    // and if that app is still installed.
+    let preferredApp = this._getPreferredApp(aLauncher);
+    if (preferredApp) {
+      let pref = apps.filter(function(app) {
+        return app.packageName === preferredApp;
       });
-    }
 
-    if (app) {
-      aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
-      if (!app.launch(aLauncher.source)) {
-        aLauncher.cancel();
+      if (pref.length > 0) {
+        pref[0].launch(aLauncher.source);
+        return;
       }
-    } else {
-      // Something weird happened. Log an error
-      Services.console.logStringMessage("Unexpected selection from grid: " + app);
     }
 
+    let callback = function(app) {
+      aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
+      app.launch(aLauncher.source);
+      if (!app.launch(aLauncher.source)) {
+        aLauncher.cancel(Cr.NS_BINDING_ABORTED);
+      }
+    }
+
+    if (apps.length > 1) {
+      HelperApps.prompt(apps, {
+        title: bundle.GetStringFromName("helperapps.pick"),
+        buttons: [
+          bundle.GetStringFromName("helperapps.alwaysUse"),
+          bundle.GetStringFromName("helperapps.useJustOnce")
+        ]
+      }, (data) => {
+        if (data.button < 0)
+          return;
+
+        callback(apps[data.icongrid0]);
+
+        if (data.button == 0)
+          this._setPreferredApp(aLauncher, apps[data.icongrid0]);
+      });
+    } else {
+      callback(apps[0]);
+    }
+  },
+
+  _getPrefName: function getPrefName(mimetype) {
+    return "browser.download.preferred." + mimetype.replace("\\", ".");
+  },
+
+  _getMimeTypeFromLauncher: function getMimeTypeFromLauncher(launcher) {
+    let mime = launcher.MIMEInfo.MIMEType;
+    if (!mime)
+      mime = ContentAreaUtils.getMIMETypeForURI(launcher.source) || "";
+    return mime;
+  },
+
+  _getPreferredApp: function getPreferredApp(launcher) {
+    let mime = this._getMimeTypeFromLauncher(launcher);
+    if (!mime)
+      return;
+
+    try {
+      return Services.prefs.getCharPref(this._getPrefName(mime));
+    } catch(ex) {
+      Services.console.logStringMessage("Error getting pref for " + mime + " " + ex);
+    }
+    return null;
+  },
+
+  _setPreferredApp: function setPreferredApp(launcher, app) {
+    let mime = this._getMimeTypeFromLauncher(launcher);
+    if (!mime)
+      return;
+
+    if (app)
+      Services.prefs.setCharPref(this._getPrefName(mime), app.packageName);
+    else
+      Services.prefs.clearUserPref(this._getPrefName(mime));
   },
 
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
