@@ -11796,12 +11796,10 @@ nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElemen
   }
 
   NS_ENSURE_TRUE(aMouseDownEvent, NS_ERROR_FAILURE);
-  WidgetEvent* internalEvent = aMouseDownEvent->GetInternalNSEvent();
-  NS_ENSURE_TRUE(internalEvent &&
-                 internalEvent->eventStructType == NS_MOUSE_EVENT,
+  WidgetMouseEvent* mouseEvent =
+    aMouseDownEvent->GetInternalNSEvent()->AsMouseEvent();
+  NS_ENSURE_TRUE(mouseEvent && mouseEvent->eventStructType == NS_MOUSE_EVENT,
                  NS_ERROR_FAILURE);
-  WidgetMouseEvent* mouseEvent = static_cast<WidgetMouseEvent*>(internalEvent);
-
   return widget->BeginMoveDrag(mouseEvent);
 }
 

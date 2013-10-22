@@ -477,8 +477,7 @@ HTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   }
   if (aVisitor.mEvent->message == NS_MOUSE_CLICK &&
-      aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+      aVisitor.mEvent->AsMouseEvent()->button ==
         WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }

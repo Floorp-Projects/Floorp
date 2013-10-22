@@ -425,10 +425,8 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
     }
 #endif
   }
-  else if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-           aEvent->message == NS_MOUSE_BUTTON_DOWN &&
-           static_cast<WidgetMouseEvent*>(aEvent)->button ==
-             WidgetMouseEvent::eLeftButton &&
+  else if (aEvent->message == NS_MOUSE_BUTTON_DOWN &&
+           aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton &&
            !IsDisabled() && IsMenu()) {
     // The menu item was selected. Bring up the menu.
     // We have children.
@@ -445,14 +443,12 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   }
   else if (
 #ifndef NSCONTEXTMENUISMOUSEUP
-           (aEvent->eventStructType == NS_MOUSE_EVENT &&
-            aEvent->message == NS_MOUSE_BUTTON_UP &&
-            static_cast<WidgetMouseEvent*>(aEvent)->button ==
-              WidgetMouseEvent::eRightButton) &&
+           (aEvent->message == NS_MOUSE_BUTTON_UP &&
+            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eRightButton) &&
 #else
-            aEvent->message == NS_CONTEXTMENU &&
+           aEvent->message == NS_CONTEXTMENU &&
 #endif
-            onmenu && !IsMenu() && !IsDisabled()) {
+           onmenu && !IsMenu() && !IsDisabled()) {
     // if this menu is a context menu it accepts right-clicks...fire away!
     // Make sure we cancel default processing of the context menu event so
     // that it doesn't bubble and get seen again by the popuplistener and show
@@ -468,10 +464,8 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
       Execute(aEvent);
     }
   }
-  else if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-           aEvent->message == NS_MOUSE_BUTTON_UP &&
-           static_cast<WidgetMouseEvent*>(aEvent)->button ==
-             WidgetMouseEvent::eLeftButton &&
+  else if (aEvent->message == NS_MOUSE_BUTTON_UP &&
+           aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton &&
            !IsMenu() && !IsDisabled()) {
     // Execute the execute event handler.
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
