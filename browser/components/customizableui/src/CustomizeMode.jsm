@@ -21,7 +21,6 @@ const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
-Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -109,7 +108,7 @@ CustomizeMode.prototype = {
 
       // Disable lightweight themes while in customization mode since
       // they don't have large enough images to pad the full browser window.
-      LightweightThemeManager.temporarilyToggleTheme(false);
+      this.document.documentElement._lightweightTheme.disable();
 
       this.dispatchToolboxEvent("beforecustomization");
 
@@ -280,7 +279,7 @@ CustomizeMode.prototype = {
         }
       }
 
-      LightweightThemeManager.temporarilyToggleTheme(true);
+      this.document.documentElement._lightweightTheme.enable();
 
       let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true])");
       for (let toolbar of customizableToolbars)
