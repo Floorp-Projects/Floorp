@@ -1143,13 +1143,12 @@ CustomizeMode.prototype = {
         aPlaceholder.style.removeProperty("width");
       }
 
-      let placeholders = Array.slice(panelContents.getElementsByClassName(
-        kPlaceholderClass));
+      let placeholders = Array.slice(panelContents.getElementsByClassName(kPlaceholderClass));
 
-      let toContract = placeholders.shift();
-      if (isPlaceholderAtEnd(toContract))
-        toContract = null;
       let toExpand = placeholders.shift();
+      let toContract = placeholders.shift();
+      if (toContract && isPlaceholderAtEnd(toContract))
+        toContract = null;
       // Seek to find hidden placeholders first to use for the expand transition.
       while (toExpand.getAttribute("hidden") != "true" && placeholders.length)
         toExpand = placeholders.shift();
@@ -1297,14 +1296,25 @@ CustomizeMode.prototype = {
     this._removePanelCustomizationPlaceholders();
     let doc = this.document;
     let contents = this.panelUIContents;
-    let visibleWideItems = contents.querySelectorAll("toolbarpaletteitem:not([hidden]) > .panel-wide-item");
+    const kWidePanelItemClass = "panel-wide-item";
+    let visibleWideItems = contents.querySelectorAll("toolbarpaletteitem:not([hidden]) > ." + kWidePanelItemClass);
     let visibleChildren = contents.querySelectorAll("toolbarpaletteitem:not([hidden])");
     // TODO(bug 885578): Still doesn't handle a hole when there is a wide
     //                   widget located at the bottom of the panel.
-    let hangingItems = (visibleChildren.length - visibleWideItems.length) % kColumnsInMenuPanel;
-    let newPlaceholders = kColumnsInMenuPanel;
-    let visiblePlaceholders = kColumnsInMenuPanel - hangingItems;
-    while (newPlaceholders--) {
+    let narrowItemsAfterWideItem = 0;
+    let node = contents.lastChild;
+    while (node && !node.classList.contains(kWidePanelItemClass) &&
+           (!node.firstChild || !node.firstChild.classList.contains(kWidePanelItemClass))) {
+      if (!node.hidden) {
+        narrowItemsAfterWideItem++;
+      }
+      node = node.previousSibling;
+    }
+
+    let orphanedItems = narrowItemsAfterWideItem % kColumnsInMenuPanel;
+    let placeholders = kColumnsInMenuPanel - orphanedItems;
+
+    while (placeholders--) {
       let placeholder = doc.createElement("toolbarpaletteitem");
       placeholder.classList.add(kPlaceholderClass);
       //XXXjaws The toolbarbutton child here is only necessary to get
@@ -1312,8 +1322,6 @@ CustomizeMode.prototype = {
       let placeholderChild = doc.createElement("toolbarbutton");
       placeholderChild.classList.add(kPlaceholderClass + "-child");
       placeholder.appendChild(placeholderChild);
-      // Always have at least 1 placeholder visible.
-      placeholder.setAttribute("hidden", --visiblePlaceholders < 0);
       contents.appendChild(placeholder);
     }
   },
