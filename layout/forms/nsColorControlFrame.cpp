@@ -15,7 +15,7 @@
 #include "nsStyleSet.h"
 
 nsColorControlFrame::nsColorControlFrame(nsStyleContext* aContext):
-  nsBlockFrame(aContext)
+  nsColorControlFrameSuper(aContext)
 {
 }
 
@@ -29,14 +29,14 @@ NS_IMPL_FRAMEARENA_HELPERS(nsColorControlFrame)
 
 NS_QUERYFRAME_HEAD(nsColorControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsColorControlFrameSuper)
 
 
 void nsColorControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
   nsContentUtils::DestroyAnonymousContent(&mColorContent);
-  nsBlockFrame::DestroyFrom(aDestructRoot);
+  nsColorControlFrameSuper::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom*
@@ -121,19 +121,12 @@ nsColorControlFrame::AttributeChanged(int32_t  aNameSpaceID,
   if (aNameSpaceID == kNameSpaceID_None && nsGkAtoms::value == aAttribute) {
     UpdateColor();
   }
-  return nsBlockFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+  return nsColorControlFrameSuper::AttributeChanged(aNameSpaceID, aAttribute,
+                                                    aModType);
 }
 
 nsIFrame*
 nsColorControlFrame::GetContentInsertionFrame()
 {
   return this;
-}
-
-void
-nsColorControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                      const nsRect&           aDirtyRect,
-                                      const nsDisplayListSet& aLists)
-{
-  BuildDisplayListForInline(aBuilder, aDirtyRect, aLists);
 }
