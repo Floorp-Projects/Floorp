@@ -900,6 +900,11 @@ private:
 class gfxContextMatrixAutoSaveRestore
 {
 public:
+    gfxContextMatrixAutoSaveRestore() :
+        mContext(nullptr)
+    {
+    }
+
     gfxContextMatrixAutoSaveRestore(gfxContext *aContext) :
         mContext(aContext), mMatrix(aContext->CurrentMatrix())
     {
@@ -907,11 +912,28 @@ public:
 
     ~gfxContextMatrixAutoSaveRestore()
     {
-        mContext->SetMatrix(mMatrix);
+        if (mContext) {
+            mContext->SetMatrix(mMatrix);
+        }
+    }
+
+    void SetContext(gfxContext *aContext)
+    {
+        NS_ASSERTION(!mContext, "Not going to restore the matrix on some context!");
+        mContext = aContext;
+        mMatrix = aContext->CurrentMatrix();
+    }
+
+    void Restore()
+    {
+        if (mContext) {
+            mContext->SetMatrix(mMatrix);
+        }
     }
 
     const gfxMatrix& Matrix()
     {
+        MOZ_ASSERT(mContext, "mMatrix doesn't contain a useful matrix");
         return mMatrix;
     }
 
