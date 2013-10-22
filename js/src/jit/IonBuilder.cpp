@@ -66,6 +66,8 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
 {
     script_.init(info->script());
     pc = info->startPC();
+
+    JS_ASSERT(script()->hasBaselineScript());
 }
 
 void
@@ -279,7 +281,7 @@ IonBuilder::canInlineTarget(JSFunction *target, bool constructing)
     // Allow constructing lazy scripts when performing the definite properties
     // analysis, as baseline has not been used to warm the caller up yet.
     if (target->isInterpretedLazy() && info().executionMode() == DefinitePropertiesAnalysis) {
-        if (!target->getOrCreateScript(cx))
+        if (!target->getOrCreateScript(context()))
             return false;
     }
 
@@ -301,8 +303,8 @@ IonBuilder::canInlineTarget(JSFunction *target, bool constructing)
         return false;
     }
 
-    // Don't inline functions which don't have baseline scripts compiled for them.
-    if (executionMode == SequentialExecution && !inlineScript->hasBaselineScript()) {
+    // Don't inline functions which don't have baseline scripts.
+    if (!inlineScript->hasBaselineScript()) {
         IonSpew(IonSpew_Inlining, "%s:%d Cannot inline target with no baseline jitcode",
                                   inlineScript->filename(), inlineScript->lineno);
         return false;
@@ -513,16 +515,13 @@ IonBuilder::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBlock *e
 bool
 IonBuilder::init()
 {
-    if (!script()->ensureHasBytecodeTypeMap(cx))
-        return false;
-
     if (!types::TypeScript::FreezeTypeSets(constraints(), script(),
                                            &thisTypes, &argTypes, &typeArray))
     {
         return false;
     }
 
-    if (!analysis().init(cx))
+    if (!analysis().init(gsn))
         return false;
 
     return true;
@@ -3753,7 +3752,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     current->push(callInfo.fun());
 
     JSScript *calleeScript = target->nonLazyScript();
-    BaselineInspector inspector(cx, calleeScript);
+    BaselineInspector inspector(calleeScript);
 
     // Improve type information of |this| when not set.
     if (callInfo.constructing() &&

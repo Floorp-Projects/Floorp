@@ -47,7 +47,7 @@ class BytecodeAnalysis
   public:
     explicit BytecodeAnalysis(JSScript *script);
 
-    bool init(JSContext *cx);
+    bool init(GSNCache &gsn);
 
     BytecodeInfo &info(jsbytecode *pc) {
         JS_ASSERT(infos_[pc - script_->code].initialized);
