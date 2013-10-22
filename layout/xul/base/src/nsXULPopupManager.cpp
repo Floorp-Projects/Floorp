@@ -498,7 +498,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
           if ((event->eventStructType == NS_MOUSE_EVENT || 
                event->eventStructType == NS_MOUSE_SCROLL_EVENT ||
                event->eventStructType == NS_WHEEL_EVENT) &&
-               !(static_cast<WidgetGUIEvent*>(event))->widget) {
+               !event->AsGUIEvent()->widget) {
             // no widget, so just use the client point if available
             nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
             nsIntPoint clientPt;
@@ -1769,14 +1769,6 @@ nsXULPopupManager::CancelMenuTimer(nsMenuParent* aMenuParent)
   }
 }
 
-static WidgetGUIEvent*
-DOMKeyEventToGUIEvent(nsIDOMEvent* aEvent)
-{
-  WidgetEvent* evt = aEvent ? aEvent->GetInternalNSEvent() : nullptr;
-  return evt && evt->eventStructType == NS_KEY_EVENT ?
-         static_cast<WidgetGUIEvent*>(evt) : nullptr;
-}
-
 bool
 nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
                                             nsMenuPopupFrame* aFrame)
@@ -1791,7 +1783,7 @@ nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
     if (result) {
       aFrame->ChangeMenuItem(result, false);
       if (action) {
-        WidgetGUIEvent* evt = DOMKeyEventToGUIEvent(aKeyEvent);
+        WidgetGUIEvent* evt = aKeyEvent->GetInternalNSEvent()->AsGUIEvent();
         nsMenuFrame* menuToOpen = result->Enter(evt);
         if (menuToOpen) {
           nsCOMPtr<nsIContent> content = menuToOpen->GetContent();
@@ -2024,7 +2016,7 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
       // Otherwise, tell the active menubar, if any, to activate the menu. The
       // Enter method will return a menu if one needs to be opened as a result.
       nsMenuFrame* menuToOpen = nullptr;
-      WidgetGUIEvent* GUIEvent = DOMKeyEventToGUIEvent(aKeyEvent);
+      WidgetGUIEvent* GUIEvent = aKeyEvent->GetInternalNSEvent()->AsGUIEvent();
       if (aTopVisibleMenuItem) {
         menuToOpen = aTopVisibleMenuItem->Frame()->Enter(GUIEvent);
       } else if (mActiveMenuBar) {

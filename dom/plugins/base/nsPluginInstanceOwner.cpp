@@ -1830,9 +1830,10 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 #endif
 
   if (mInstance) {
-    WidgetEvent* event = aKeyEvent->GetInternalNSEvent();
-    if (event && event->eventStructType == NS_KEY_EVENT) {
-      nsEventStatus rv = ProcessEvent(*static_cast<WidgetGUIEvent*>(event));
+    WidgetKeyboardEvent* keyEvent =
+      aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+    if (keyEvent && keyEvent->eventStructType == NS_KEY_EVENT) {
+      nsEventStatus rv = ProcessEvent(*keyEvent);
       if (nsEventStatus_eConsumeNoDefault == rv) {
         aKeyEvent->PreventDefault();
         aKeyEvent->StopPropagation();
@@ -1888,14 +1889,15 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
   if (!mWidgetVisible)
     return NS_OK;
 
-  WidgetEvent* event = aMouseEvent->GetInternalNSEvent();
-  if (event && event->eventStructType == NS_MOUSE_EVENT) {
-    nsEventStatus rv = ProcessEvent(*static_cast<WidgetGUIEvent*>(event));
+  WidgetMouseEvent* mouseEvent =
+    aMouseEvent->GetInternalNSEvent()->AsMouseEvent();
+  if (mouseEvent && mouseEvent->eventStructType == NS_MOUSE_EVENT) {
+    nsEventStatus rv = ProcessEvent(*mouseEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
       aMouseEvent->PreventDefault();
       aMouseEvent->StopPropagation();
     }
-    if (event->message == NS_MOUSE_BUTTON_UP) {
+    if (mouseEvent->message == NS_MOUSE_BUTTON_UP) {
       mLastMouseDownButtonType = -1;
     }
   }
