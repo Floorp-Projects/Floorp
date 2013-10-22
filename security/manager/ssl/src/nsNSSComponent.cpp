@@ -891,7 +891,7 @@ setNonPkixOcspEnabled(int32_t ocspEnabled, nsIPrefBranch * pref)
 #define MISSING_CERT_DOWNLOAD_DEFAULT false
 #define FIRST_REVO_METHOD_DEFAULT "ocsp"
 #define USE_NSS_LIBPKIX_DEFAULT false
-#define OCSP_STAPLING_ENABLED_DEFAULT true
+#define OCSP_STAPLING_ENABLED_DEFAULT false
 
 // Caller must hold a lock on nsNSSComponent::mutex when calling this function
 void nsNSSComponent::setValidationOptions(nsIPrefBranch * pref)
