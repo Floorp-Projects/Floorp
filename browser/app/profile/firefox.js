@@ -1297,8 +1297,10 @@ pref("pdfjs.firstRun", true);
 pref("pdfjs.previousHandler.preferredAction", 0);
 pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 
+#ifdef NIGHTLY_BUILD
 // Shumway component (SWF player) is disabled by default. Also see bug 904346.
 pref("shumway.disabled", true);
+#endif
 
 // The maximum amount of decoded image data we'll willingly keep around (we
 // might keep around more than this, but we'll try to get down to this value).
