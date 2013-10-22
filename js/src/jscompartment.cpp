@@ -138,6 +138,8 @@ JSRuntime::createIonRuntime(JSContext *cx)
         js_delete(ionRuntime_);
         ionRuntime_ = nullptr;
 
+        AutoLockForExclusiveAccess atomsLock(cx);
+
         JSCompartment *comp = cx->runtime()->atomsCompartment();
         if (comp->ionCompartment_) {
             js_delete(comp->ionCompartment_);

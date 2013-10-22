@@ -146,13 +146,18 @@ struct BaselineScript
     uint32_t pcMappingOffset_;
     uint32_t pcMappingSize_;
 
+    // List mapping indexes of bytecode type sets to the offset of the opcode
+    // they correspond to, for use by TypeScript::BytecodeTypes.
+    uint32_t bytecodeTypeMapOffset_;
+
   public:
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
     BaselineScript(uint32_t prologueOffset, uint32_t spsPushToggleOffset);
 
     static BaselineScript *New(JSContext *cx, uint32_t prologueOffset,
                                uint32_t spsPushToggleOffset, size_t icEntries,
-                               size_t pcMappingIndexEntries, size_t pcMappingSize);
+                               size_t pcMappingIndexEntries, size_t pcMappingSize,
+                               size_t bytecodeTypeMapEntries);
     static void Trace(JSTracer *trc, BaselineScript *script);
     static void Destroy(FreeOp *fop, BaselineScript *script);
 
@@ -269,6 +274,11 @@ struct BaselineScript
     }
 
     static void writeBarrierPre(Zone *zone, BaselineScript *script);
+
+    uint32_t *bytecodeTypeMap() {
+        JS_ASSERT(bytecodeTypeMapOffset_);
+        return reinterpret_cast<uint32_t *>(reinterpret_cast<uint8_t *>(this) + bytecodeTypeMapOffset_);
+    }
 };
 
 inline bool
@@ -347,6 +357,9 @@ BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIterato
 // during GC.
 void
 MarkActiveBaselineScripts(Zone *zone);
+
+MethodStatus
+BaselineCompile(JSContext *cx, HandleScript script);
 
 } // namespace jit
 } // namespace js

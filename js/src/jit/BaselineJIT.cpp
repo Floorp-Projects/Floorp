@@ -211,8 +211,8 @@ jit::EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc)
     return IonExec_Ok;
 }
 
-static MethodStatus
-BaselineCompile(JSContext *cx, HandleScript script)
+MethodStatus
+jit::BaselineCompile(JSContext *cx, HandleScript script)
 {
     JS_ASSERT(!script->hasBaselineScript());
     JS_ASSERT(script->canBaselineCompile());
@@ -361,21 +361,25 @@ static const unsigned DataAlignment = sizeof(uintptr_t);
 BaselineScript *
 BaselineScript::New(JSContext *cx, uint32_t prologueOffset,
                     uint32_t spsPushToggleOffset, size_t icEntries,
-                    size_t pcMappingIndexEntries, size_t pcMappingSize)
+                    size_t pcMappingIndexEntries, size_t pcMappingSize,
+                    size_t bytecodeTypeMapEntries)
 {
     size_t paddedBaselineScriptSize = AlignBytes(sizeof(BaselineScript), DataAlignment);
 
     size_t icEntriesSize = icEntries * sizeof(ICEntry);
     size_t pcMappingIndexEntriesSize = pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
+    size_t bytecodeTypeMapSize = bytecodeTypeMapEntries * sizeof(uint32_t);
 
     size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
     size_t paddedPCMappingIndexEntriesSize = AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
     size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
+    size_t paddedBytecodeTypesMapSize = AlignBytes(bytecodeTypeMapSize, DataAlignment);
 
     size_t allocBytes = paddedBaselineScriptSize +
         paddedICEntriesSize +
         paddedPCMappingIndexEntriesSize +
-        paddedPCMappingSize;
+        paddedPCMappingSize +
+        paddedBytecodeTypesMapSize;
 
     uint8_t *buffer = (uint8_t *)cx->malloc_(allocBytes);
     if (!buffer)
@@ -397,6 +401,8 @@ BaselineScript::New(JSContext *cx, uint32_t prologueOffset,
     script->pcMappingOffset_ = offsetCursor;
     script->pcMappingSize_ = pcMappingSize;
     offsetCursor += paddedPCMappingSize;
+
+    script->bytecodeTypeMapOffset_ = bytecodeTypeMapEntries ? offsetCursor : 0;
 
     return script;
 }
