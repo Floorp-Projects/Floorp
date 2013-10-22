@@ -81,8 +81,8 @@ class LocalRunner(Runner):
     def __init__(self, profile, binary, cmdargs=None, env=None,
                  kp_kwargs=None, clean_profile=None, process_class=None):
 
-        super(LocalRunner, self).__init__(profile, clean_profile=clean_profile, kp_kwargs=None,
-                                               process_class=process_class, env=None)
+        super(LocalRunner, self).__init__(profile, clean_profile=clean_profile, kp_kwargs=kp_kwargs,
+                                               process_class=process_class, env=env)
 
         # find the binary
         self.binary = binary
@@ -106,9 +106,12 @@ class LocalRunner(Runner):
                     if i != '-foreground']
         if len(_cmdargs) != len(self.cmdargs):
             # foreground should be last; see
-            # - https://bugzilla.mozilla.org/show_bug.cgi?id=625614
-            # - https://bugzilla.mozilla.org/show_bug.cgi?id=626826
+            # https://bugzilla.mozilla.org/show_bug.cgi?id=625614
             self.cmdargs = _cmdargs
+            self.cmdargs.append('-foreground')
+        if mozinfo.isMac and '-foreground' not in self.cmdargs:
+            # runner should specify '-foreground' on Mac; see
+            # https://bugzilla.mozilla.org/show_bug.cgi?id=916512
             self.cmdargs.append('-foreground')
 
         # process environment
