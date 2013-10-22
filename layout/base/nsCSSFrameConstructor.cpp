@@ -3383,7 +3383,9 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
     SIMPLE_INT_CREATE(NS_FORM_INPUT_URL, NS_NewTextControlFrame),
     SIMPLE_INT_CREATE(NS_FORM_INPUT_RANGE, NS_NewRangeFrame),
     SIMPLE_INT_CREATE(NS_FORM_INPUT_PASSWORD, NS_NewTextControlFrame),
-    SIMPLE_INT_CREATE(NS_FORM_INPUT_COLOR, NS_NewColorControlFrame),
+    { NS_FORM_INPUT_COLOR,
+      FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewColorControlFrame,
+                                 nsCSSAnonBoxes::buttonContent) },
     // TODO: this is temporary until a frame is written: bug 635240.
     SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewTextControlFrame),
     // TODO: this is temporary until a frame is written: bug 773205.
