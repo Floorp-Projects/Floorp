@@ -22,10 +22,8 @@ XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
 });
-XPCOMUtils.defineLazyGetter(this, "gPlatformKeys", function() {
-  const kUrl = "chrome://global-platform/locale/platformKeys.properties";
-  return Services.strings.createBundle(kUrl);
-});
+XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
+  "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gELS",
   "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService");
 
@@ -931,7 +929,7 @@ let CustomizableUIInternal = {
       if (aWidget.shortcutId) {
         let keyEl = aDocument.getElementById(aWidget.shortcutId);
         if (keyEl) {
-          additionalTooltipArguments.push(this.createShortcutString(keyEl));
+          additionalTooltipArguments.push(ShortcutUtils.prettifyShortcut(keyEl));
         } else {
           ERROR("Key element with id '" + aWidget.shortcutId + "' for widget '" + aWidget.id +
                 "' not found!");
@@ -1014,51 +1012,6 @@ let CustomizableUIInternal = {
       }
     }
     return def;
-  },
-
-  // From devtools/shared/helpers.js:
-  createShortcutString: function(aElemKey) {
-    let elemString = "";
-    let elemMod = aElemKey.getAttribute("modifiers");
-
-    if (elemMod.match("accel")) {
-      if (Services.appinfo.OS == "Darwin") {
-        elemString += gPlatformKeys.GetStringFromName("VK_META") +
-          gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
-      } else {
-        elemString += gPlatformKeys.GetStringFromName("VK_CONTROL") +
-          gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
-      }
-    }
-    if (elemMod.match("access")) {
-      if (Services.appinfo.OS == "Darwin") {
-        elemString += gPlatformKeys.GetStringFromName("VK_CONTROL") +
-          gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
-      } else {
-        elemString += gPlatformKeys.GetStringFromName("VK_ALT") +
-          gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
-      }
-    }
-    if (elemMod.match("shift")) {
-      elemString += gPlatformKeys.GetStringFromName("VK_SHIFT") +
-        gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
-    }
-    if (elemMod.match("alt")) {
-      elemString += gPlatformKeys.GetStringFromName("VK_ALT") +
-        gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
-    }
-    if (elemMod.match("ctrl") || elemMod.match("control")) {
-      elemString += gPlatformKeys.GetStringFromName("VK_CONTROL") +
-        gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
-    }
-    if (elemMod.match("meta")) {
-      elemString += gPlatformKeys.GetStringFromName("VK_META") +
-        gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
-    }
-
-    return elemString +
-      (aElemKey.getAttribute("keycode").replace(/^.*VK_/, "") ||
-       aElemKey.getAttribute("key")).toUpperCase();
   },
 
   handleWidgetCommand: function(aWidget, aNode, aEvent) {
