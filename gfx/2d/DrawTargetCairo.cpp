@@ -635,8 +635,6 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
       (!IsOperatorBoundByMask(aOptions.mCompositionOp) && !aPathBoundsClip)) {
     cairo_push_group_with_content(mContext, CAIRO_CONTENT_COLOR_ALPHA);
 
-    ClearSurfaceForUnboundedSource(aOptions.mCompositionOp);
-
     // Don't want operators to be applied twice
     cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
 
@@ -653,7 +651,6 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
     cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
     cairo_paint_with_alpha(mContext, aOptions.mAlpha);
   } else {
-    ClearSurfaceForUnboundedSource(aOptions.mCompositionOp);
     cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
 
     if (aDrawType == DRAW_STROKE) {
