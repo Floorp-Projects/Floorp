@@ -976,7 +976,8 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   // Initialise refresh tick counters for OMTA
   mLastStyleUpdateForAllAnimations =
-    mLastUpdateThrottledStyle = mRefreshDriver->MostRecentRefresh();
+    mLastUpdateThrottledAnimationStyle =
+    mLastUpdateThrottledTransitionStyle = mRefreshDriver->MostRecentRefresh();
 
   mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
 
@@ -1491,15 +1492,29 @@ nsPresContext::GetContainerExternal() const
 }
 
 bool
-nsPresContext::ThrottledStyleIsUpToDate() const
+nsPresContext::ThrottledTransitionStyleIsUpToDate() const
 {
-  return mLastUpdateThrottledStyle == mRefreshDriver->MostRecentRefresh();
+  return
+    mLastUpdateThrottledTransitionStyle == mRefreshDriver->MostRecentRefresh();
 }
 
 void
-nsPresContext::TickLastUpdateThrottledStyle()
+nsPresContext::TickLastUpdateThrottledTransitionStyle()
 {
-  mLastUpdateThrottledStyle = mRefreshDriver->MostRecentRefresh();
+  mLastUpdateThrottledTransitionStyle = mRefreshDriver->MostRecentRefresh();
+}
+
+bool
+nsPresContext::ThrottledAnimationStyleIsUpToDate() const
+{
+  return
+    mLastUpdateThrottledAnimationStyle == mRefreshDriver->MostRecentRefresh();
+}
+
+void
+nsPresContext::TickLastUpdateThrottledAnimationStyle()
+{
+  mLastUpdateThrottledAnimationStyle = mRefreshDriver->MostRecentRefresh();
 }
 
 bool
