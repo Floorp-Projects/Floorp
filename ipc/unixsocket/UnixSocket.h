@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <netinet/in.h>
-#ifdef MOZ_B2G_BT_BLUEZ
+#ifdef MOZ_B2G_BT
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/sco.h>
 #include <bluetooth/l2cap.h>
@@ -31,7 +31,7 @@ union sockaddr_any {
   sockaddr_un un;
   sockaddr_in in;
   sockaddr_in6 in6;
-#ifdef MOZ_B2G_BT_BLUEZ
+#ifdef MOZ_B2G_BT
   sockaddr_sco sco;
   sockaddr_rc rc;
   sockaddr_l2 l2;

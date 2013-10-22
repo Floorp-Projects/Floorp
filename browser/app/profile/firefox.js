@@ -675,8 +675,6 @@ pref("plugins.update.notifyUser", false);
 
 pref("plugins.click_to_play", true);
 
-pref("plugins.clickToActivateInfo.url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/clicktoplay");
-
 // let all plugins except Flash default to click-to-play
 pref("plugin.default.state", 1);
 pref("plugin.state.flash", 2);

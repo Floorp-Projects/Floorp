@@ -68,7 +68,15 @@ Volume::Volume(const nsCSubstring& aName)
 void
 Volume::SetIsSharing(bool aIsSharing)
 {
+  if (aIsSharing == mIsSharing) {
+    return;
+  }
   mIsSharing = aIsSharing;
+  LOG("Volume %s: IsSharing set to %d state %s",
+      NameStr(), (int)mIsSharing, StateStr(mState));
+  if (mIsSharing) {
+    mEventObserverList.Broadcast(this);
+  }
 }
 
 void
