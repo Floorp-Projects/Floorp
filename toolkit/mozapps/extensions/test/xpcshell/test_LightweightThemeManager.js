@@ -19,25 +19,17 @@ function dummy(id) {
   };
 }
 
-function getLTM() {
-  var temp = {};
-  Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
-  do_check_eq(typeof temp.LightweightThemeManager, "object");
-
-  return temp.LightweightThemeManager;
-}
-
 function run_test() {
-  run_next_test();
-}
-
-add_test(function test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   startupManager();
 
   Services.prefs.setIntPref("lightweightThemes.maxUsedThemes", 8);
 
-  var ltm = getLTM();
+  var temp = {};
+  Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", temp);
+  do_check_eq(typeof temp.LightweightThemeManager, "object");
+
+  var ltm = temp.LightweightThemeManager;
 
   do_check_eq(typeof ltm.usedThemes, "object");
   do_check_eq(ltm.usedThemes.length, 0);
@@ -519,41 +511,4 @@ add_test(function test() {
   Services.prefs.clearUserPref("lightweightThemes.maxUsedThemes");
 
   do_check_eq(ltm.usedThemes.length, 30);
-  run_next_test();
-});
-
-var usedThemeId;
-add_test(function test_temporaryDisableTheme() {
-  var ltm = getLTM();
-  usedThemeId = ltm.currentTheme && ltm.currentTheme.id;
-  var observerService = Cc["@mozilla.org/observer-service;1"]
-                          .getService(Ci.nsIObserverService);
-  var observerTopic = "lightweight-theme-styling-update";
-  var observer = {
-    observe: function(aSubject, aTopic, aData) {
-      observerService.removeObserver(observer, observerTopic);
-      do_check_eq(aTopic, observerTopic);
-      do_check_eq(aData, "null");
-      run_next_test();
-    }
-  };
-  observerService.addObserver(observer, observerTopic, false);
-  ltm.temporarilyToggleTheme(false);
-});
-
-add_test(function test_temporaryEnableTheme() {
-  var ltm = getLTM();
-  var observerService = Cc["@mozilla.org/observer-service;1"]
-                          .getService(Ci.nsIObserverService);
-  var observerTopic = "lightweight-theme-styling-update";
-  var observer = {
-    observe: function(aSubject, aTopic, aData) {
-      observerService.removeObserver(observer, observerTopic);
-      do_check_eq(aTopic, observerTopic);
-      do_check_eq(aData && JSON.parse(aData).id, usedThemeId);
-      run_next_test();
-    }
-  };
-  observerService.addObserver(observer, observerTopic, false);
-  ltm.temporarilyToggleTheme(true);
-});
+}
