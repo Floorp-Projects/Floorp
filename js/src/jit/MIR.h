@@ -3418,7 +3418,7 @@ class MAbs
       : MUnaryInstruction(num),
         implicitTruncate_(false)
     {
-        JS_ASSERT(type == MIRType_Double || type == MIRType_Int32);
+        JS_ASSERT(IsNumberType(type));
         setResultType(type);
         setMovable();
         specialization_ = type;
@@ -3450,6 +3450,8 @@ class MAbs
         return AliasSet::None();
     }
     void computeRange();
+    bool isFloat32Commutative() const { return true; }
+    void trySpecializeFloat32();
 };
 
 // Inline implementation of Math.sqrt().

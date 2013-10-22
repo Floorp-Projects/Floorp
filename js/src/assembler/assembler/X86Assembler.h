@@ -2899,6 +2899,13 @@ public:
         m_formatter.twoByteOp(OP2_ANDPD_VpdWpd, (RegisterID)dst, (RegisterID)src);
     }
 
+    void andps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("andps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ANDPD_VpdWpd, (RegisterID)dst, (RegisterID)src);
+    }
+
     void sqrtsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
         spew("sqrtsd     %s, %s",
