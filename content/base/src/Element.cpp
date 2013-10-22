@@ -502,8 +502,8 @@ Element::GetScrollFrame(nsIFrame **aStyledFrame, bool aFlushLayout)
 
   // menu frames implement GetScrollTargetFrame but we don't want
   // to use it here.  Similar for comboboxes.
-  if (frame->GetType() != nsGkAtoms::menuFrame &&
-      frame->GetType() != nsGkAtoms::comboboxControlFrame) {
+  nsIAtom* type = frame->GetType();
+  if (type != nsGkAtoms::menuFrame && type != nsGkAtoms::comboboxControlFrame) {
     nsIScrollableFrame *scrollFrame = frame->GetScrollTargetFrame();
     if (scrollFrame)
       return scrollFrame;
