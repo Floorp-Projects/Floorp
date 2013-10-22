@@ -1217,7 +1217,7 @@ CustomizeMode.prototype = {
     aDragOverNode.parentNode.insertBefore(aDraggedItem, aDragOverNode);
     // Update the node's areaType.
     let areaType = CustomizableUI.getAreaType(targetArea.id);
-    const kAreaType = "customizableui-areatype";
+    const kAreaType = "cui-areatype";
     let currentType = aDraggedItem.hasAttribute(kAreaType) &&
                       aDraggedItem.getAttribute(kAreaType);
     if (areaType)

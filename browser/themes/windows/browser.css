@@ -272,7 +272,7 @@
 /* ::::: bookmark buttons ::::: */
 
 toolbarbutton.bookmark-item,
-#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder {
+#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder {
   margin: 0;
   padding: 2px 3px;
 }
@@ -286,14 +286,14 @@ toolbarbutton.bookmark-item[open="true"] {
 }
 
 .bookmark-item > .toolbarbutton-icon,
-#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
+#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
 }
 
 /* Force the display of the label for bookmarks */
 .bookmark-item > .toolbarbutton-text,
-#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
+#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
   display: -moz-box !important;
 }
 
@@ -1361,7 +1361,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-margin-start: 5px;
 }
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+#bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   padding-top: 2px;
   padding-bottom: 2px;
 }

@@ -21,87 +21,87 @@
   transform: scaleX(-1);
 }
 
-#home-button[customizableui-areatype="toolbar"] {
+#home-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 126px, 18px, 108px);
 }
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"] {
+#bookmarks-menu-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 144px, 18px, 126px);
 }
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"][starred] {
+#bookmarks-menu-button[cui-areatype="toolbar"][starred] {
   -moz-image-region: rect(0, 162px, 18px, 144px);
 }
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+#bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   -moz-image-region: rect(0, 630px, 18px, 612px);
 }
 
-#history-panelmenu[customizableui-areatype="toolbar"] {
+#history-panelmenu[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 180px, 18px, 162px);
 }
 
-#downloads-button[customizableui-areatype="toolbar"] {
+#downloads-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 198px, 18px, 180px);
 }
 
-#add-ons-button[customizableui-areatype="toolbar"] {
+#add-ons-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 216px, 18px, 198px);
 }
 
-#open-file-button[customizableui-areatype="toolbar"] {
+#open-file-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 234px, 18px, 216px);
 }
 
-#save-page-button[customizableui-areatype="toolbar"] {
+#save-page-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 252px, 18px, 234px);
 }
 
-#sync-button[customizableui-areatype="toolbar"] {
+#sync-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 270px, 18px, 252px);
 }
 
-#feed-button[customizableui-areatype="toolbar"] {
+#feed-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 288px, 18px, 270px);
 }
 
-#social-share-button[customizableui-areatype="toolbar"] {
+#social-share-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0px, 306px, 18px, 288px);
 }
 
-#characterencoding-button[customizableui-areatype="toolbar"]{
+#characterencoding-button[cui-areatype="toolbar"]{
   -moz-image-region: rect(0, 324px, 18px, 306px);
 }
 
-#new-window-button[customizableui-areatype="toolbar"] {
+#new-window-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 342px, 18px, 324px);
 }
 
-#new-tab-button[customizableui-areatype="toolbar"] {
+#new-tab-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 360px, 18px, 342px);
 }
 
-#privatebrowsing-button[customizableui-areatype="toolbar"] {
+#privatebrowsing-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 378px, 18px, 360px);
 }
 
-#find-button[customizableui-areatype="toolbar"] {
+#find-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 396px, 18px, 378px);
 }
 
-#print-button[customizableui-areatype="toolbar"] {
+#print-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 414px, 18px, 396px);
 }
 
-#fullscreen-button[customizableui-areatype="toolbar"] {
+#fullscreen-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 432px, 18px, 414px);
 }
 
-#developer-button[customizableui-areatype="toolbar"] {
+#developer-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 450px, 18px, 432px);
 }
 
-#preferences-button[customizableui-areatype="toolbar"] {
+#preferences-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 468px, 18px, 450px);
 }
 

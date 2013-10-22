@@ -72,7 +72,7 @@
 
 /* Places toolbar */
 toolbarbutton.bookmark-item,
-#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder {
+#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder {
   margin: 0;
   padding: 2px 3px;
 }
@@ -86,14 +86,14 @@ toolbarbutton.bookmark-item[open="true"] {
 }
 
 .bookmark-item > .toolbarbutton-icon,
-#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
+#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
 }
 
 /* Force the display of the label for bookmarks */
 .bookmark-item > .toolbarbutton-text,
-#personal-bookmarks[customizableui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
+#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
   display: -moz-box !important;
 }
 
@@ -1252,15 +1252,15 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* bookmarks menu-button */
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker {
+#bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none !important;
 }
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+#bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   padding: 9px 3px;
 }
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
+#bookmarks-menu-button[cui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 #bookmarks-menu-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar-small.png");
 }
@@ -1273,15 +1273,15 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: rect(16px 144px 32px 128px);
 }
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+#bookmarks-menu-button[cui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   -moz-image-region: rect(0px 160px 16px 144px);
 }
 
-#bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-icon,
-#bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-menu-dropmarker,
-#bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker,
-#bookmarks-menu-button[disabled][customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
+#bookmarks-menu-button[disabled][cui-areatype="toolbar"] > .toolbarbutton-icon,
+#bookmarks-menu-button[disabled][cui-areatype="toolbar"] > .toolbarbutton-menu-dropmarker,
+#bookmarks-menu-button[disabled][cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker,
+#bookmarks-menu-button[disabled][cui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+#bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
   opacity: .4;
 }
 
