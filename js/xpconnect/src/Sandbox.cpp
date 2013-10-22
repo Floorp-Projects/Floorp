@@ -1253,13 +1253,16 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
  * Helper that tries to get a property form the options object.
  */
 bool
-OptionsBase::ParseValue(const char *name, MutableHandleValue prop, bool *found)
+OptionsBase::ParseValue(const char *name, MutableHandleValue prop, bool *aFound)
 {
-    MOZ_ASSERT(found);
-    bool ok = JS_HasProperty(mCx, mObject, name, found);
+    bool found;
+    bool ok = JS_HasProperty(mCx, mObject, name, &found);
     NS_ENSURE_TRUE(ok, false);
 
-    if (!*found)
+    if (aFound)
+        *aFound = found;
+
+    if (!found)
         return true;
 
     return JS_GetProperty(mCx, mObject, name, prop);
@@ -1337,6 +1340,23 @@ OptionsBase::ParseString(const char *name, nsCString &prop)
 }
 
 /*
+ * Helper that tries to get jsid property form the options object.
+ */
+bool
+OptionsBase::ParseId(const char *name, MutableHandleId prop)
+{
+    RootedValue value(mCx);
+    bool found;
+    bool ok = ParseValue(name, &value, &found);
+    NS_ENSURE_TRUE(ok, false);
+
+    if (!found)
+        return true;
+
+    return JS_ValueToId(mCx, value, prop.address());
+}
+
+/*
  * Helper that tries to get a list of DOM constructors and other helpers from the options object.
  */
 bool
@@ -1369,7 +1389,6 @@ SandboxOptions::ParseGlobalProperties()
 bool
 SandboxOptions::Parse()
 {
-    bool found;
     return ParseObject("sandboxPrototype", &proto) &&
            ParseBoolean("wantXrays", &wantXrays) &&
            ParseBoolean("wantComponents", &wantComponents) &&
@@ -1377,7 +1396,7 @@ SandboxOptions::Parse()
            ParseString("sandboxName", sandboxName) &&
            ParseObject("sameZoneAs", &sameZoneAs) &&
            ParseGlobalProperties() &&
-           ParseValue("metadata", &metadata, &found);
+           ParseValue("metadata", &metadata);
 }
 
 static nsresult
