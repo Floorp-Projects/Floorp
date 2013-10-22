@@ -5242,8 +5242,7 @@ nsFrame::UpdateOverflow()
   nsRect rect(nsPoint(0, 0), GetSize());
   nsOverflowAreas overflowAreas(rect, rect);
 
-  bool isBox = IsBoxFrame() || IsBoxWrapped();
-  if (!isBox || (!IsCollapsed() && !DoesClipChildren())) {
+  if (!DoesClipChildren() && !IsCollapsed()) {
     nsLayoutUtils::UnionChildOverflow(this, overflowAreas);
   }
 
