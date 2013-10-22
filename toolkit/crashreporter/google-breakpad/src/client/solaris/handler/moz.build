@@ -14,3 +14,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'exception_handler_s'
 
+XPI_NAME = 'crashreporter'
+

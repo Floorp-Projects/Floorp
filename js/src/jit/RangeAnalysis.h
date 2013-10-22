@@ -254,6 +254,24 @@ class Range : public TempObject {
          return result;
     }
 
+    // When converting a range which contains fractional values to a range
+    // containing only integers, the old max_exponent_ value may imply a better
+    // lower and/or upper bound than was previously available, because they no
+    // longer need to be conservative about fractional offsets and the ends of
+    // the range.
+    //
+    // Given an exponent value and pointers to the lower and upper bound values,
+    // this function refines the lower and upper bound values to the tighest
+    // bound for integer values implied by the exponent.
+    static void refineInt32BoundsByExponent(uint16_t e, int32_t *l, int32_t *h) {
+       if (e < MaxInt32Exponent) {
+           // pow(2, max_exponent_+1)-1 to compute a maximum absolute value.
+           int32_t limit = (uint32_t(1) << (e + 1)) - 1;
+           *h = Min(*h, limit);
+           *l = Max(*l, -limit);
+       }
+    }
+
     // If the value of any of the fields implies a stronger possible value for
     // any other field, update that field to the stronger value. The range must
     // be completely valid before and it is guaranteed to be kept valid.

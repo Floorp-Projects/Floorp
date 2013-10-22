@@ -24,6 +24,18 @@ from mozbuild.util import (
 )
 
 
+def compute_final_target(variables):
+    """Convert the default value for FINAL_TARGET"""
+    basedir = 'dist/'
+    if variables['XPI_NAME']:
+        basedir += 'xpi-stage/' + variables['XPI_NAME']
+    else:
+        basedir += 'bin'
+    if variables['DIST_SUBDIR']:
+        basedir += '/' + variables['DIST_SUBDIR']
+    return basedir
+ 
+ 
 # This defines the set of mutable global variables.
 #
 # Each variable is a tuple of:
@@ -498,6 +510,32 @@ VARIABLES = {
     'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining xpcshell tests.
         """, None),
+
+    # The following variables are used to control the target of installed files.
+    'XPI_NAME': (unicode, unicode, "",
+        """The name of an extension XPI to generate.
+
+        When this variable is present, the results of this directory will end up
+        being packaged into an extension instead of the main dist/bin results.
+        """, 'libs'),
+
+    'DIST_SUBDIR': (unicode, unicode, "",
+        """The name of an alternate directory to install files to.
+
+        When this variable is present, the results of this directory will end up
+        being placed in the $(DIST_SUBDIR) subdirectory of where it would
+        otherwise be placed.
+        """, 'libs'),
+
+    'FINAL_TARGET': (unicode, unicode, compute_final_target,
+        """The name of the directory to install targets to.
+
+        The directory is relative to the top of the object directory. The
+        default value is dependent on the values of XPI_NAME and DIST_SUBDIR. If
+        neither are present, the result is dist/bin. If XPI_NAME is present, the
+        result is dist/xpi-stage/$(XPI_NAME). If DIST_SUBDIR is present, then
+        the $(DIST_SUBDIR) directory of the otherwise default value is used.
+        """, 'libs'),
 }
 
 # The set of functions exposed to the sandbox.
@@ -573,6 +611,34 @@ FUNCTIONS = {
         content, but traversed with export, libs, and tools subtiers::
 
            add_tier_dir('base', 'bar', external=True)
+        """),
+
+    'export': ('_export', (str,),
+        """Make the specified variable available to all child directories.
+
+        The variable specified by the argument string is added to the
+        environment of all directories specified in the DIRS, PARALLEL_DIRS,
+        TOOL_DIRS, TEST_DIRS, and TEST_TOOL_DIRS variables. If those directories
+        themselves have child directories, the variable will be exported to all
+        of them.
+
+        The value used for the variable is the final value at the end of the
+        moz.build file, so it is possible (but not recommended style) to place
+        the export before the definition of the variable.
+
+        This function is limited to the upper-case variables that have special
+        meaning in moz.build files.
+
+        NOTE: Please consult with a build peer before adding a new use of this
+        function.
+
+        Example usage
+        ^^^^^^^^^^^^^
+
+        To make all children directories install as the given extension::
+
+          XPI_NAME = 'cool-extension'
+          export('XPI_NAME')
         """),
 
     'warning': ('_warning', (str,),
