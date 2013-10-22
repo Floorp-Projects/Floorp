@@ -2075,7 +2075,12 @@ this.CustomizableUI = {
   },
   onWidgetDrag: function(aWidgetId, aArea) {
     CustomizableUIInternal.notifyListeners("onWidgetDrag", aWidgetId, aArea);
-  }
+  },
+  isAreaOverflowable: function(aAreaId) {
+    let area = gAreas.get(aAreaId);
+    return area ? area.get("type") == this.TYPE_TOOLBAR && area.get("overflowable")
+                : false;
+  },
 };
 Object.freeze(this.CustomizableUI);
 
@@ -2299,13 +2304,12 @@ function OverflowableToolbar(aToolbarNode) {
   this._collapsed = new Map();
   this._enabled = true;
 
-  this._toolbar.customizationTarget.addEventListener("overflow", this);
   this._toolbar.setAttribute("overflowable", "true");
   Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
 }
 
 OverflowableToolbar.prototype = {
-  _initialized: false,
+  initialized: false,
   _forceOnOverflow: false,
 
   observe: function(aSubject, aTopic, aData) {
@@ -2338,19 +2342,21 @@ OverflowableToolbar.prototype = {
 
     CustomizableUI.addListener(this);
 
-    this._initialized = true;
-
     // The 'overflow' event may have been fired before init was called.
-    if (this._forceOnOverflow) {
-      this._onOverflow();
+    if (this._toolbar.overflowedDuringConstruction) {
+      this.onOverflow(this._toolbar.overflowedDuringConstruction);
+      this._toolbar.overflowedDuringConstruction = null;
     }
+
+    this.initialized = true;
   },
 
   uninit: function() {
-    this._toolbar.customizationTarget.removeEventListener("overflow", this);
+    this._toolbar.removeEventListener("overflow", this._toolbar);
+    this._toolbar.removeEventListener("underflow", this._toolbar);
     this._toolbar.removeAttribute("overflowable");
 
-    if (!this._initialized) {
+    if (!this.initialized) {
       Services.obs.removeObserver(this, "browser-delayed-startup-finished");
       return;
     }
@@ -2369,16 +2375,6 @@ OverflowableToolbar.prototype = {
 
   handleEvent: function(aEvent) {
     switch(aEvent.type) {
-      case "overflow":
-        // Ignore vertical overflow:
-        if (aEvent.detail > 0) {
-          if (this._initialized) {
-            this._onOverflow();
-          } else {
-            this._forceOnOverflow = true;
-          }
-        }
-        break;
       case "resize":
         this._onResize(aEvent);
         break;
@@ -2413,13 +2409,14 @@ OverflowableToolbar.prototype = {
     this._chevron.open = false;
   },
 
-  _onOverflow: function() {
-    if (!this._enabled)
+  onOverflow: function(aEvent) {
+    if (!this._enabled ||
+        (aEvent && aEvent.target != this._toolbar.customizationTarget))
       return;
 
     let child = this._target.lastChild;
 
-    while (child && this._target.clientWidth < this._target.scrollWidth) {
+    while (child && this._target.scrollLeftMax > 0) {
       let prevChild = child.previousSibling;
 
       if (child.getAttribute("overflows") != "false") {
@@ -2510,7 +2507,7 @@ OverflowableToolbar.prototype = {
 
   _enable: function() {
     this._enabled = true;
-    this._onOverflow();
+    this.onOverflow();
   },
 
   onWidgetBeforeDOMChange: function(aNode, aNextNode, aContainer) {
