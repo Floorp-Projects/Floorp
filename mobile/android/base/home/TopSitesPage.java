@@ -48,11 +48,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.EnumSet;
@@ -87,9 +84,6 @@ public class TopSitesPage extends HomeFragment {
 
     // Grid of top sites
     private TopSitesGridView mGrid;
-
-    // Reference to the View to display when there are no results.
-    private View mEmptyView;
 
     // Banner to show snippets.
     private HomeBanner mBanner;
@@ -228,7 +222,6 @@ public class TopSitesPage extends HomeFragment {
         super.onDestroyView();
         mList = null;
         mGrid = null;
-        mEmptyView = null;
         mListAdapter = null;
         mGridAdapter = null;
     }
@@ -490,20 +483,6 @@ public class TopSitesPage extends HomeFragment {
 
         if (c != null && c.getCount() > 0) {
             return;
-        }
-
-        if (mEmptyView == null) {
-            // Set empty page view. We delay this so that the empty view won't flash.
-            ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);
-            mEmptyView = emptyViewStub.inflate();
-
-            final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
-            emptyIcon.setImageResource(R.drawable.icon_most_visited_empty);
-
-            final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
-            emptyText.setText(R.string.home_most_visited_empty);
-
-            mList.setEmptyView(mEmptyView);
         }
     }
 
