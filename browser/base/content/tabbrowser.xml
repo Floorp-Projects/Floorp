@@ -3383,6 +3383,14 @@
       <field name="_afterHoveredTab">null</field>
       <field name="_hoveredTab">null</field>
 
+      <property name="_isCustomizing" readonly="true">
+        <getter>
+          let root = document.documentElement;
+          return root.getAttribute("customizing") == "true" ||
+                 root.getAttribute("customize-exiting") == "true";
+        </getter>
+      </property>
+
       <method name="_setPositionalAttributes">
         <body><![CDATA[
           let visibleTabs = this.tabbrowser.visibleTabs;
@@ -4273,7 +4281,7 @@
 
       <handler event="dragstart"><![CDATA[
         var tab = this._getDragTargetTab(event);
-        if (!tab)
+        if (!tab || this._isCustomizing)
           return;
 
         let dt = event.dataTransfer;
@@ -4517,7 +4525,7 @@
 
         var dt = event.dataTransfer;
         var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
-        if (dt.mozUserCancelled || dt.dropEffect != "none") {
+        if (dt.mozUserCancelled || dt.dropEffect != "none" || this._isCustomizing) {
           delete draggedTab._dragData;
           return;
         }
