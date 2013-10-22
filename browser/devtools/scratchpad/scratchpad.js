@@ -1250,9 +1250,9 @@ var Scratchpad = {
 
     let initialText = this.strings.formatStringFromName(
       "scratchpadIntro1",
-      [ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-run")),
-       ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-inspect")),
-       ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-display"))],
+      [ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-run"), true),
+       ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-inspect"), true),
+       ShortcutUtils.prettifyShortcut(document.getElementById("sp-key-display"), true)],
       3);
 
     let args = window.arguments;
