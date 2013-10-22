@@ -278,17 +278,28 @@ class TreeMetadataEmitter(LoggingMixin):
 
             finder = FileFinder(base=manifest_dir, find_executables=False)
 
+            # "head" and "tail" lists.
+            # All manifests support support-files.
+            #
+            # Keep a set of already seen support file patterns, because
+            # repeatedly processing the patterns from the default section
+            # for every test is quite costly (see bug 922517).
+            extras = (('head', set()),
+                      ('tail', set()),
+                      ('support-files', set()))
+
             for test in filtered:
                 obj.tests.append(test)
 
                 obj.installs[mozpath.normpath(test['path'])] = \
                     mozpath.join(out_dir, test['relpath'])
 
-                # xpcshell defines extra files to install in the
-                # "head" and "tail" lists.
-                # All manifests support support-files.
-                for thing in ('head', 'tail', 'support-files'):
-                    for pattern in test.get(thing, '').split():
+                for thing, seen in extras:
+                    value = test.get(thing, '')
+                    if value in seen:
+                        continue
+                    seen.add(value)
+                    for pattern in value.split():
                         # We only support globbing on support-files because
                         # the harness doesn't support * for head and tail.
                         #
