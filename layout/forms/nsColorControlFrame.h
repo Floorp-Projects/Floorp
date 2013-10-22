@@ -6,13 +6,15 @@
 #ifndef nsColorControlFrame_h___
 #define nsColorControlFrame_h___
 
-#include "nsBlockFrame.h"
 #include "nsCOMPtr.h"
+#include "nsHTMLButtonControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
+
+typedef nsHTMLButtonControlFrame nsColorControlFrameSuper;
 
 // Class which implements the input type=color
 
-class nsColorControlFrame MOZ_FINAL : public nsBlockFrame,
+class nsColorControlFrame MOZ_FINAL : public nsColorControlFrameSuper,
                                       public nsIAnonymousContentCreator
 {
 public:
@@ -27,7 +29,7 @@ public:
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
   // nsIAnonymousContentCreator
@@ -41,16 +43,6 @@ public:
                               int32_t  aModType) MOZ_OVERRIDE;
   virtual bool IsLeaf() const MOZ_OVERRIDE { return true; }
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
-
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
-
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
-  {
-    return nsBlockFrame::IsFrameOfType(aFlags &
-      ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
-  }
 
 private:
   nsColorControlFrame(nsStyleContext* aContext);
