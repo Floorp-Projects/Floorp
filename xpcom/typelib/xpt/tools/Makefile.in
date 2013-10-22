@@ -5,15 +5,11 @@
 
 INTERNAL_TOOLS	= 1
 
-SDK_BINARY = \
-  xpt.py \
-  $(NULL)
+XPT_TOOL_FILES := xpt.py
+# SDK_BIN_DIR is declared in config.mk, so this needs to be a deferred
+# assignment.
+XPT_TOOL_DEST = $(SDK_BIN_DIR)
+XPT_TOOL_TARGET := export
+INSTALL_TARGETS += XPT_TOOL
 
-include $(topsrcdir)/config/rules.mk
-
-# Install xpt.py in SDK early
-export::
-	@$(MAKE) libs
-
-check::
-	$(PYTHON) $(srcdir)/runtests.py
+PYTHON_UNIT_TESTS := runtests.py

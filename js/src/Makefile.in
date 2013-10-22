@@ -603,15 +603,10 @@ ifneq (,$(IMPORT_LIBRARY))
 endif
 	$(MAKE) -C shell install
 
-# Extra dependencies and rules for auto-generated headers
-host_jskwgen.$(OBJ_SUFFIX): jsversion.h vm/Keywords.h
-
 # Use CURDIR to avoid finding a jsautokw.h in the source tree (from a
 # previous build?) via VPATH when we're building in a separate tree.
 $(CURDIR)/jsautokw.h: host_jskwgen$(HOST_BIN_SUFFIX)
 	./host_jskwgen$(HOST_BIN_SUFFIX) $@
-
-host_jsoplengen.$(OBJ_SUFFIX): jsopcode.tbl
 
 # Use CURDIR to avoid finding a jsautooplen.h in the source tree (from
 # a previous build?) via VPATH when we're building in a separate tree.

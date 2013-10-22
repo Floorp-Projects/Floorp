@@ -20,5 +20,5 @@ function a(){b()}function b(){debugger}
 //      file: "abc.js"
 //    });
 //
-//    result.code + "\n//# sourceMappingURL=data:application/json;base64," + btoa(JSON.stringify(result.map));
+//    result.code + "\n//# " + "sourceMappingURL=data:application/json;base64," + btoa(JSON.stringify(result.map));
 

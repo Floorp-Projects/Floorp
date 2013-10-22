@@ -24,6 +24,7 @@
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "ProfilerMarkers.h"
+#include "nsXULAppAPI.h"
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   #include "AndroidBridge.h"
@@ -64,6 +65,13 @@ TableTicker* Sampler::sActiveSampler;
 
 static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
                                                             sInterposeObserver;
+
+// The name that identifies the gecko thread for calls to
+// profiler_register_thread. For all platform except metro
+// the thread that calls mozilla_sampler_init is considered
+// the gecko thread.  With metro the gecko thread is
+// registered later based on this thread name.
+static const char * gGeckoThreadName = "GeckoMain";
 
 void Sampler::Startup() {
   sRegisteredThreads = new std::vector<ThreadInfo*>();
@@ -367,6 +375,13 @@ void set_tls_stack_top(void* stackTop)
   tlsStackTop.set((void*)stackTopR);
 }
 
+bool is_main_thread_name(const char* aName) {
+  if (aName) {
+    return false;
+  }
+  return strcmp(aName, gGeckoThreadName) == 0;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // BEGIN externally visible functions
 
@@ -389,7 +404,14 @@ void mozilla_sampler_init(void* stackTop)
   PseudoStack *stack = new PseudoStack();
   tlsPseudoStack.set(stack);
 
-  Sampler::RegisterCurrentThread("GeckoMain", stack, true, stackTop);
+  bool isMainThread = true;
+#ifdef XP_WIN
+  // For metrofx, we'll register the main thread once it's created.
+  isMainThread = !(XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro);
+#endif
+  Sampler::RegisterCurrentThread(isMainThread ?
+                                   gGeckoThreadName : "Application Thread",
+                                 stack, isMainThread, stackTop);
 
   // Read mode settings from MOZ_PROFILER_MODE and interval
   // settings from MOZ_PROFILER_INTERVAL and stack-scan threshhold
@@ -730,8 +752,8 @@ bool mozilla_sampler_register_thread(const char* aName, void* stackTop)
 
   PseudoStack* stack = new PseudoStack();
   tlsPseudoStack.set(stack);
-
-  return Sampler::RegisterCurrentThread(aName, stack, false, stackTop);
+  bool isMainThread = is_main_thread_name(aName);
+  return Sampler::RegisterCurrentThread(aName, stack, isMainThread, stackTop);
 }
 
 void mozilla_sampler_unregister_thread()
