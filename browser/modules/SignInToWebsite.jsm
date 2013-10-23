@@ -27,28 +27,17 @@ this.SignInToWebsiteUX = {
 
   init: function SignInToWebsiteUX_init() {
 
-    /*
-     * bug 793906 - temporarily disabling desktop UI so we can
-     * focus on b2g without worrying about desktop as well
-     *
     Services.obs.addObserver(this, "identity-request", false);
     Services.obs.addObserver(this, "identity-auth", false);
     Services.obs.addObserver(this, "identity-auth-complete", false);
     Services.obs.addObserver(this, "identity-login-state-changed", false);
-     */
   },
 
   uninit: function SignInToWebsiteUX_uninit() {
-    /*
-     * As above:
-     * bug 793906 - temporarily disabling desktop UI so we can
-     * focus on b2g without worrying about desktop as well
-     *
     Services.obs.removeObserver(this, "identity-request");
     Services.obs.removeObserver(this, "identity-auth");
     Services.obs.removeObserver(this, "identity-auth-complete");
     Services.obs.removeObserver(this, "identity-login-state-changed");
-     */
   },
 
   observe: function SignInToWebsiteUX_observe(aSubject, aTopic, aData) {

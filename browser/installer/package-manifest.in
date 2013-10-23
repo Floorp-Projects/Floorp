@@ -354,6 +354,8 @@
 @BINPATH@/browser/components/DownloadsStartup.js
 @BINPATH@/browser/components/DownloadsUI.js
 @BINPATH@/browser/components/BrowserPlaces.manifest
+@BINPATH@/browser/components/devtools-clhandler.manifest
+@BINPATH@/browser/components/devtools-clhandler.js
 @BINPATH@/components/Downloads.manifest
 @BINPATH@/components/DownloadLegacy.js
 @BINPATH@/components/BrowserPageThumbs.manifest

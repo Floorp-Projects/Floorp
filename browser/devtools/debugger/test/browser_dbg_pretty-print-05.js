@@ -24,7 +24,7 @@ function test() {
       yield waitForSourceShown(gPanel, TAB_URL);
 
       // From this point onward, the source editor's text should never change.
-      once(gEditor, SourceEditor.EVENTS.TEXT_CHANGED).then(() => {
+      gEditor.once("change", () => {
         ok(false, "The source editor text shouldn't have changed.");
       });
 

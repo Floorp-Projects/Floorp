@@ -78,14 +78,17 @@ const EVENTS = {
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
-Cu.import("resource:///modules/devtools/sourceeditor/source-editor.jsm");
 Cu.import("resource:///modules/devtools/BreadcrumbsWidget.jsm");
 Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/VariablesViewController.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+
+const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+const Editor = require("devtools/sourceeditor/editor");
+const promise = require("sdk/core/promise");
+const DebuggerEditor = require("devtools/sourceeditor/debugger.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Parser",
   "resource:///modules/devtools/Parser.jsm");
@@ -608,7 +611,7 @@ StackFrames.prototype = {
    * Handler for the thread client's resumed notification.
    */
   _onResumed: function() {
-    DebuggerView.editor.setDebugLocation(-1);
+    DebuggerView.editor.clearDebugLocation();
 
     // Prepare the watch expression evaluation string for the next pause.
     if (!this._isWatchExpressionsEvaluation) {
@@ -1434,7 +1437,6 @@ EventListeners.prototype = {
  * Handles all the breakpoints in the current debugger.
  */
 function Breakpoints() {
-  this._onEditorBreakpointChange = this._onEditorBreakpointChange.bind(this);
   this._onEditorBreakpointAdd = this._onEditorBreakpointAdd.bind(this);
   this._onEditorBreakpointRemove = this._onEditorBreakpointRemove.bind(this);
   this.addBreakpoint = this.addBreakpoint.bind(this);
@@ -1457,8 +1459,8 @@ Breakpoints.prototype = {
    *         A promise that is resolved when the breakpoints finishes initializing.
    */
   initialize: function() {
-    DebuggerView.editor.addEventListener(
-      SourceEditor.EVENTS.BREAKPOINT_CHANGE, this._onEditorBreakpointChange);
+    DebuggerView.editor.on("breakpointAdded", this._onEditorBreakpointAdd);
+    DebuggerView.editor.on("breakpointRemoved", this._onEditorBreakpointRemove);
 
     // Initialization is synchronous, for now.
     return promise.resolve(null);
@@ -1471,34 +1473,21 @@ Breakpoints.prototype = {
    *         A promise that is resolved when the breakpoints finishes destroying.
    */
   destroy: function() {
-    DebuggerView.editor.removeEventListener(
-      SourceEditor.EVENTS.BREAKPOINT_CHANGE, this._onEditorBreakpointChange);
+    DebuggerView.editor.off("breakpointAdded", this._onEditorBreakpointAdd);
+    DebuggerView.editor.off("breakpointRemoved", this._onEditorBreakpointRemove);
 
     return this.removeAllBreakpoints();
   },
 
   /**
-   * Event handler for breakpoint changes that happen in the editor. This
-   * function syncs the breakpoints in the editor to those in the debugger.
-   *
-   * @param object aEvent
-   *        The SourceEditor.EVENTS.BREAKPOINT_CHANGE event object.
-   */
-  _onEditorBreakpointChange: function(aEvent) {
-    aEvent.added.forEach(this._onEditorBreakpointAdd, this);
-    aEvent.removed.forEach(this._onEditorBreakpointRemove, this);
-  },
-
-  /**
    * Event handler for new breakpoints that come from the editor.
    *
-   * @param object aEditorBreakpoint
-   *        The breakpoint object coming from the editor.
+   * @param number aLine
+   *        Line number where breakpoint was set.
    */
-  _onEditorBreakpointAdd: function(aEditorBreakpoint) {
+  _onEditorBreakpointAdd: function(_, aLine) {
     let url = DebuggerView.Sources.selectedValue;
-    let line = aEditorBreakpoint.line + 1;
-    let location = { url: url, line: line };
+    let location = { url: url, line: aLine + 1 };
 
     // Initialize the breakpoint, but don't update the editor, since this
     // callback is invoked because a breakpoint was added in the editor itself.
@@ -1511,26 +1500,25 @@ Breakpoints.prototype = {
         DebuggerView.editor.addBreakpoint(aBreakpointClient.location.line - 1);
       }
       // Notify that we've shown a breakpoint in the source editor.
-      window.emit(EVENTS.BREAKPOINT_SHOWN, aEditorBreakpoint);
+      window.emit(EVENTS.BREAKPOINT_SHOWN);
     });
   },
 
   /**
    * Event handler for breakpoints that are removed from the editor.
    *
-   * @param object aEditorBreakpoint
-   *        The breakpoint object that was removed from the editor.
+   * @param number aLine
+   *        Line number where breakpoint was removed.
    */
-  _onEditorBreakpointRemove: function(aEditorBreakpoint) {
+  _onEditorBreakpointRemove: function(_, aLine) {
     let url = DebuggerView.Sources.selectedValue;
-    let line = aEditorBreakpoint.line + 1;
-    let location = { url: url, line: line };
+    let location = { url: url, line: aLine + 1 };
 
     // Destroy the breakpoint, but don't update the editor, since this callback
     // is invoked because a breakpoint was removed from the editor itself.
     this.removeBreakpoint(location, { noEditorUpdate: true }).then(() => {
       // Notify that we've hidden a breakpoint in the source editor.
-      window.emit(EVENTS.BREAKPOINT_HIDDEN, aEditorBreakpoint);
+      window.emit(EVENTS.BREAKPOINT_HIDDEN);
     });
   },
 
@@ -1644,7 +1632,7 @@ Breakpoints.prototype = {
       // after the target navigated). Note that this will get out of sync
       // if the source text contents change.
       let line = aBreakpointClient.location.line - 1;
-      aBreakpointClient.text = DebuggerView.getEditorLineText(line).trim();
+      aBreakpointClient.text = DebuggerView.editor.getText(line).trim();
 
       // Show the breakpoint in the editor and breakpoints pane, and resolve.
       this._showBreakpoint(aBreakpointClient, aOptions);

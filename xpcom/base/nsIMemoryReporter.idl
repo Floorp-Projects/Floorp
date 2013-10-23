@@ -6,12 +6,13 @@
 
 #include "nsISupports.idl"
 
-interface nsISimpleEnumerator;
-interface nsIRunnable;
 interface nsICancelableRunnable;
+interface nsIDOMWindow;
+interface nsIRunnable;
+interface nsISimpleEnumerator;
 
 /*
- * Memory reporters measure Firefox's memory usage.  They are mainly used to
+ * Memory reporters measure Firefox's memory usage.  They are primarily used to
  * generate the about:memory page.  You should read
  * https://wiki.mozilla.org/Memory_Reporting before writing a memory
  * reporter.
@@ -308,11 +309,31 @@ interface nsIMemoryReporterManager : nsISupports
    * null.  Returns a reference to the runnable used for carrying out the task.
    */
   nsICancelableRunnable minimizeMemoryUsage(in nsIRunnable callback);
+
+  /*
+   * Measure the memory that is known to be owned by this tab, split up into
+   * several broad categories.  Note that this will be an underestimate of the
+   * true number, due to imperfect memory reporter coverage (corresponding to
+   * about:memory's "heap-unclassified"), and due to some memory shared between
+   * tabs not being counted.
+   *
+   * The time taken for the measurement (split into JS and non-JS parts) is
+   * also returned.
+   */
+  void sizeOfTab(in nsIDOMWindow window,
+                 out int64_t jsObjectsSize, out int64_t jsStringsSize,
+                 out int64_t jsOtherSize, out int64_t domSize,
+                 out int64_t styleSize, out int64_t otherSize,
+                 out int64_t totalSize,
+                 out double jsMilliseconds, out double nonJSMilliseconds);
 };
 
 %{C++
 
+#include "js/TypeDecls.h"
 #include "nsStringGlue.h"
+
+class nsPIDOMWindow;
 
 // Note that the memory reporters are held in an nsCOMArray, which means
 // that individual reporters should be referenced with |nsIMemoryReporter *|
@@ -354,6 +375,21 @@ DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, GhostWindows)
 
 #undef DECL_REGISTER_DISTINGUISHED_AMOUNT
 #undef DECL_UNREGISTER_DISTINGUISHED_AMOUNT
+
+// Likewise for per-tab measurement.
+
+typedef nsresult (*JSSizeOfTabFn)(JSObject* aObj,
+                                  size_t* aJsObjectsSize,
+                                  size_t* aJsStringSize,
+                                  size_t* aJsPrivateSize,
+                                  size_t* aJsOtherSize);
+typedef nsresult (*NonJSSizeOfTabFn)(nsPIDOMWindow* aWindow,
+                                     size_t* aDomSize,
+                                     size_t* aStyleSize,
+                                     size_t* aOtherSize);
+
+nsresult RegisterJSSizeOfTab(JSSizeOfTabFn aSizeOfTabFn);
+nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
 
 }
 
