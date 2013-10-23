@@ -1712,6 +1712,18 @@ ElementForStyleContext(nsIContent* aParentContent,
     return block->GetContent()->AsElement();
   }
 
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_mozColorSwatch) {
+    MOZ_ASSERT(aFrame->GetParent() &&
+               aFrame->GetParent()->GetParent(),
+               "Color swatch frame should have a parent & grandparent");
+
+    nsIFrame* grandparentFrame = aFrame->GetParent()->GetParent();
+    MOZ_ASSERT(grandparentFrame->GetType() == nsGkAtoms::colorControlFrame,
+               "Color swatch's grandparent should be nsColorControlFrame");
+
+    return grandparentFrame->GetContent()->AsElement();
+  }
+
   nsIContent* content = aParentContent ? aParentContent : aFrame->GetContent();
   return content->AsElement();
 }
@@ -2333,6 +2345,11 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
           // We're reframing anyway; just keep the same context
           newContext = oldContext;
         }
+      } else if (nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(pseudoTag)) {
+        newContext = styleSet->ResolvePseudoElementStyle(element,
+                                                         pseudoType,
+                                                         parentContext,
+                                                         aSelf->GetContent()->AsElement());
       } else {
         // Don't expect XUL tree stuff here, since it needs a comparator and
         // all.

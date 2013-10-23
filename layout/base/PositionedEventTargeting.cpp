@@ -118,13 +118,13 @@ GetPrefsFor(nsEventStructType aEventStructType)
 static bool
 HasMouseListener(nsIContent* aContent)
 {
-  nsEventListenerManager* elm = aContent->GetListenerManager(false);
-  if (!elm) {
-    return false;
+  if (nsEventListenerManager* elm = aContent->GetExistingListenerManager()) {
+    return elm->HasListenersFor(nsGkAtoms::onclick) ||
+           elm->HasListenersFor(nsGkAtoms::onmousedown) ||
+           elm->HasListenersFor(nsGkAtoms::onmouseup);
   }
-  return elm->HasListenersFor(nsGkAtoms::onclick) ||
-         elm->HasListenersFor(nsGkAtoms::onmousedown) ||
-         elm->HasListenersFor(nsGkAtoms::onmouseup);
+
+  return false;
 }
 
 static bool gTouchEventsRegistered = false;
@@ -133,7 +133,7 @@ static int32_t gTouchEventsEnabled = 0;
 static bool
 HasTouchListener(nsIContent* aContent)
 {
-  nsEventListenerManager* elm = aContent->GetListenerManager(false);
+  nsEventListenerManager* elm = aContent->GetExistingListenerManager();
   if (!elm) {
     return false;
   }

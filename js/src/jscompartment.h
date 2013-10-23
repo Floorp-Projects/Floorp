@@ -196,9 +196,9 @@ struct JSCompartment
 
     void                         *data;
 
+  private:
     js::ObjectMetadataCallback   objectMetadataCallback;
 
-  private:
     js::WrapperMap               crossCompartmentWrappers;
 
   public:
@@ -325,6 +325,12 @@ struct JSCompartment
     void sweepCrossCompartmentWrappers();
     void purge();
     void clearTables();
+
+    bool hasObjectMetadataCallback() const { return objectMetadataCallback; }
+    void setObjectMetadataCallback(js::ObjectMetadataCallback callback);
+    bool callObjectMetadataCallback(JSContext *cx, JSObject **obj) const {
+        return objectMetadataCallback(cx, obj);
+    }
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 

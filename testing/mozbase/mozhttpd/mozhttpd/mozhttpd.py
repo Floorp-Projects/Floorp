@@ -95,6 +95,22 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         return False
 
+    def _find_path(self):
+        """Find the on-disk path to serve this request from,
+        using self.path_mappings and self.docroot.
+        Return (url_path, disk_path)."""
+        path_components = filter(None, self.request.path.split('/'))
+        for prefix, disk_path in self.path_mappings.iteritems():
+            prefix_components = filter(None, prefix.split('/'))
+            if len(path_components) < len(prefix_components):
+                continue
+            if path_components[:len(prefix_components)] == prefix_components:
+                return ('/'.join(path_components[len(prefix_components):]),
+                        disk_path)
+        if self.docroot:
+            return self.request.path, self.docroot
+        return None
+
     def parse_request(self):
         retval = SimpleHTTPServer.SimpleHTTPRequestHandler.parse_request(self)
         self.request = Request(self.path, self.headers, self.rfile)
@@ -102,14 +118,14 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if not self._try_handler('GET'):
-            if self.docroot:
+            res = self._find_path()
+            if res:
+                self.path, self.disk_root = res
                 # don't include query string and fragment, and prepend
                 # host directory if required.
                 if self.request.netloc and self.proxy_host_dirs:
                     self.path = '/' + self.request.netloc + \
-                        self.request.path
-                else:
-                    self.path = self.request.path
+                        self.path
                 SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
             else:
                 self.send_response(404)
@@ -142,7 +158,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         path = posixpath.normpath(urllib.unquote(self.path))
         words = path.split('/')
         words = filter(None, words)
-        path = self.docroot
+        path = self.disk_root
         for word in words:
             drive, word = os.path.splitdrive(word)
             head, word = os.path.split(word)
@@ -167,6 +183,7 @@ class MozHttpd(object):
     :param port: Port from which to serve (default 8888)
     :param docroot: Server root (default os.getcwd())
     :param urlhandlers: Handlers to specify behavior against method and path match (default None)
+    :param path_mappings: A dict mapping URL prefixes to additional on-disk paths.
     :param proxy_host_dirs: Toggle proxy behavior (default False)
     :param log_requests: Toggle logging behavior (default False)
 
@@ -201,22 +218,30 @@ class MozHttpd(object):
     True.
     """
 
-    def __init__(self, host="127.0.0.1", port=0, docroot=None,
-                 urlhandlers=None, proxy_host_dirs=False, log_requests=False):
+    def __init__(self,
+                 host="127.0.0.1",
+                 port=0,
+                 docroot=None,
+                 urlhandlers=None,
+                 path_mappings=None,
+                 proxy_host_dirs=False,
+                 log_requests=False):
         self.host = host
         self.port = int(port)
         self.docroot = docroot
-        if not urlhandlers and not docroot:
+        if not (urlhandlers or docroot or path_mappings):
             self.docroot = os.getcwd()
         self.proxy_host_dirs = proxy_host_dirs
         self.httpd = None
         self.urlhandlers = urlhandlers or []
+        self.path_mappings = path_mappings or {}
         self.log_requests = log_requests
         self.request_log = []
 
         class RequestHandlerInstance(RequestHandler):
             docroot = self.docroot
             urlhandlers = self.urlhandlers
+            path_mappings = self.path_mappings
             proxy_host_dirs = self.proxy_host_dirs
             request_log = self.request_log
             log_requests = self.log_requests

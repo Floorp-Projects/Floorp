@@ -4,11 +4,19 @@
 
 from __future__ import unicode_literals
 
+import json
+import os
+
 import mozpack.path as mozpath
 
 from .base import BuildBackend
 
-from ..frontend.data import XPIDLFile
+from ..frontend.data import (
+    TestManifest,
+    XPIDLFile,
+)
+
+from ..util import DefaultOnReadDict
 
 
 class XPIDLManager(object):
@@ -43,16 +51,49 @@ class XPIDLManager(object):
         self.modules.setdefault(entry['module'], set()).add(entry['root'])
 
 
+class TestManager(object):
+    """Helps hold state related to tests."""
+
+    def __init__(self, config):
+        self.config = config
+        self.topsrcdir = mozpath.normpath(config.topsrcdir)
+
+        self.tests_by_path = DefaultOnReadDict({}, global_default=[])
+
+    def add(self, t, flavor=None):
+        t = dict(t)
+        t['flavor'] = flavor
+
+        path = mozpath.normpath(t['path'])
+        assert path.startswith(self.topsrcdir)
+
+        key = path[len(self.topsrcdir)+1:]
+        t['file_relpath'] = key
+        t['dir_relpath'] = mozpath.dirname(key)
+
+        self.tests_by_path[key].append(t)
+
+
 class CommonBackend(BuildBackend):
     """Holds logic common to all build backends."""
 
     def _init(self):
         self._idl_manager = XPIDLManager(self.environment)
+        self._test_manager = TestManager(self.environment)
 
     def consume_object(self, obj):
+        if isinstance(obj, TestManifest):
+            for test in obj.tests:
+                self._test_manager.add(test, flavor=obj.flavor)
+
         if isinstance(obj, XPIDLFile):
             self._idl_manager.register_idl(obj.source_path, obj.module)
 
     def consume_finished(self):
         if len(self._idl_manager.idls):
             self._handle_idl_manager(self._idl_manager)
+
+        # Write out a machine-readable file describing every test.
+        path = os.path.join(self.environment.topobjdir, 'all-tests.json')
+        with self._write_file(path) as fh:
+            json.dump(self._test_manager.tests_by_path, fh, sort_keys=True)

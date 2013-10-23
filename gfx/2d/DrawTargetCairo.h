@@ -172,6 +172,8 @@ private: // methods
                            const IntRect& aSource,
                            const IntPoint& aDest);
 
+  Rect GetUserSpaceClip();
+
   // Call before you make any changes to the backing surface with which this
   // context is associated. Pass the path you're going to be using if you have
   // one.

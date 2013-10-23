@@ -1338,7 +1338,7 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
         NewObjectCache &cache = cx->runtime()->newObjectCache;
         if (proto.isObject() &&
             newKind == GenericObject &&
-            !cx->compartment()->objectMetadataCallback &&
+            !cx->compartment()->hasObjectMetadataCallback() &&
             (!parent || parent == proto.toObject()->getParent()) &&
             !proto.toObject()->is<GlobalObject>())
         {
@@ -1404,7 +1404,7 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
         if (parentArg->is<GlobalObject>() &&
             protoKey != JSProto_Null &&
             newKind == GenericObject &&
-            !cx->compartment()->objectMetadataCallback)
+            !cx->compartment()->hasObjectMetadataCallback())
         {
             if (cache.lookupGlobal(clasp, &parentArg->as<GlobalObject>(), allocKind, &entry)) {
                 JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
@@ -1457,7 +1457,7 @@ NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::Al
     NewObjectCache::EntryIndex entry = -1;
     if (parent == type->proto->getParent() &&
         newKind == GenericObject &&
-        !cx->compartment()->objectMetadataCallback)
+        !cx->compartment()->hasObjectMetadataCallback())
     {
         if (cache.lookupType(&JSObject::class_, type, allocKind, &entry)) {
             JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, &JSObject::class_));

@@ -19,9 +19,11 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::DoubleSignificandBits;
+using mozilla::FloatSignificandBits;
 using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
 using mozilla::SpecificNaN;
+using mozilla::SpecificFloatNaN;
 
 namespace js {
 namespace jit {
@@ -129,6 +131,17 @@ CodeGeneratorX86Shared::visitTestDAndBranch(LTestDAndBranch *test)
 }
 
 bool
+CodeGeneratorX86Shared::visitTestFAndBranch(LTestFAndBranch *test)
+{
+    const LAllocation *opd = test->input();
+    // ucomiss flags are the same as doubles; see comment above
+    masm.xorps(ScratchFloatReg, ScratchFloatReg);
+    masm.ucomiss(ToFloatRegister(opd), ScratchFloatReg);
+    emitBranch(Assembler::NotEqual, test->ifTrue(), test->ifFalse());
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitBitAndAndBranch(LBitAndAndBranch *baab)
 {
     if (baab->right()->isConstant())
@@ -188,6 +201,19 @@ CodeGeneratorX86Shared::visitCompareD(LCompareD *comp)
 }
 
 bool
+CodeGeneratorX86Shared::visitCompareF(LCompareF *comp)
+{
+    FloatRegister lhs = ToFloatRegister(comp->left());
+    FloatRegister rhs = ToFloatRegister(comp->right());
+
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
+    masm.compareFloat(cond, lhs, rhs);
+    masm.emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()),
+            Assembler::NaNCondFromDoubleCondition(cond));
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitNotI(LNotI *ins)
 {
     masm.cmpl(ToRegister(ins->input()), Imm32(0));
@@ -207,6 +233,17 @@ CodeGeneratorX86Shared::visitNotD(LNotD *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitNotF(LNotF *ins)
+{
+    FloatRegister opd = ToFloatRegister(ins->input());
+
+    masm.xorps(ScratchFloatReg, ScratchFloatReg);
+    masm.compareFloat(Assembler::DoubleEqualOrUnordered, opd, ScratchFloatReg);
+    masm.emitSet(Assembler::Equal, ToRegister(ins->output()), Assembler::NaN_IsTrue);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitCompareDAndBranch(LCompareDAndBranch *comp)
 {
     FloatRegister lhs = ToFloatRegister(comp->left());
@@ -214,6 +251,19 @@ CodeGeneratorX86Shared::visitCompareDAndBranch(LCompareDAndBranch *comp)
 
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
     masm.compareDouble(cond, lhs, rhs);
+    emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse(),
+               Assembler::NaNCondFromDoubleCondition(cond));
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitCompareFAndBranch(LCompareFAndBranch *comp)
+{
+    FloatRegister lhs = ToFloatRegister(comp->left());
+    FloatRegister rhs = ToFloatRegister(comp->right());
+
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
+    masm.compareFloat(cond, lhs, rhs);
     emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse(),
                Assembler::NaNCondFromDoubleCondition(cond));
     return true;
@@ -437,11 +487,31 @@ CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitAbsF(LAbsF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    // Same trick as visitAbsD above.
+    masm.loadConstantFloat32(SpecificFloatNaN(0, FloatSignificandBits), ScratchFloatReg);
+    masm.andps(ScratchFloatReg, input);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
     masm.sqrtsd(input, output);
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitSqrtF(LSqrtF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.sqrtss(input, output);
     return true;
 }
 

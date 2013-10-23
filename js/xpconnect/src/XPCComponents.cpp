@@ -3011,29 +3011,52 @@ nsXPCComponents_Utils::GetGlobalForObject(const Value& object,
 }
 
 /* jsval createObjectIn(in jsval vobj); */
-NS_IMETHODIMP
-nsXPCComponents_Utils::CreateObjectIn(const Value &vobj, JSContext *cx, Value *rval)
+bool
+xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &options,
+                    MutableHandleValue rval)
 {
-    if (!cx)
-        return NS_ERROR_FAILURE;
+    if (!vobj.isObject()) {
+        JS_ReportError(cx, "Expected an object as the target scope");
+        return false;
+    }
 
-    // first argument must be an object
-    if (vobj.isPrimitive())
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-
-    RootedObject scope(cx, js::UncheckedUnwrap(&vobj.toObject()));
+    RootedObject scope(cx, js::CheckedUnwrap(&vobj.toObject()));
+    if (!scope) {
+        JS_ReportError(cx, "Permission denied to create object in the target scope");
+        return false;
+    }
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
         obj = JS_NewObject(cx, nullptr, nullptr, scope);
         if (!obj)
-            return NS_ERROR_FAILURE;
+            return false;
+
+        if (!JSID_IS_VOID(options.defineAs) &&
+            !JS_DefinePropertyById(cx, scope, options.defineAs, ObjectValue(*obj),
+                                       JS_PropertyStub, JS_StrictPropertyStub,
+                                       JSPROP_ENUMERATE))
+            return false;
     }
 
     if (!JS_WrapObject(cx, &obj))
+        return false;
+
+    rval.setObject(*obj);
+    return true;
+}
+
+/* jsval createObjectIn(in jsval vobj); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateObjectIn(const Value &vobj, JSContext *cx, Value *rval)
+{
+    CreateObjectInOptions options;
+    RootedValue rvobj(cx, vobj);
+    RootedValue res(cx);
+    if (!xpc::CreateObjectIn(cx, rvobj, options, &res))
         return NS_ERROR_FAILURE;
 
-    *rval = ObjectValue(*obj);
+    *rval = res;
     return NS_OK;
 }
 
