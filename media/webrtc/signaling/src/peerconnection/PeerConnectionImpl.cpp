@@ -556,7 +556,7 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
 /**
  * In JS, an RTCConfiguration looks like this:
  *
- * { "iceServers": [ { url:"stun:23.21.150.121" },
+ * { "iceServers": [ { url:"stun:stun.example.org" },
  *                   { url:"turn:turn.example.org?transport=udp",
  *                     username: "jib", credential:"mypass"} ] }
  *
