@@ -15,6 +15,7 @@
 #include "CameraCommon.h"
 #include "AudioChannelAgent.h"
 #include "nsProxyRelease.h"
+#include "nsHashPropertyBag.h"
 
 class nsDOMDeviceStorage;
 class nsPIDOMWindow;
@@ -99,6 +100,7 @@ private:
   nsDOMCameraControl& operator=(const nsDOMCameraControl&) MOZ_DELETE;
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  already_AddRefed<nsHashPropertyBag> CreateRecordingDeviceEventsSubject();
 
 protected:
   /* additional members */
