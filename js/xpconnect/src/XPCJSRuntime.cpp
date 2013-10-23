@@ -261,9 +261,32 @@ public:
 
 namespace xpc {
 
+static uint32_t kLivingAdopters = 0;
+
+void
+RecordAdoptedNode(JSCompartment *c)
+{
+    CompartmentPrivate *priv = EnsureCompartmentPrivate(c);
+    if (!priv->adoptedNode) {
+        priv->adoptedNode = true;
+        ++kLivingAdopters;
+    }
+}
+
+void
+RecordDonatedNode(JSCompartment *c)
+{
+    EnsureCompartmentPrivate(c)->donatedNode = true;
+}
+
 CompartmentPrivate::~CompartmentPrivate()
 {
     MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
+
+    Telemetry::Accumulate(Telemetry::COMPARTMENT_ADOPTED_NODE, adoptedNode);
+    Telemetry::Accumulate(Telemetry::COMPARTMENT_DONATED_NODE, donatedNode);
+    if (adoptedNode)
+        --kLivingAdopters;
 }
 
 bool CompartmentPrivate::TryParseLocationURI()
@@ -653,6 +676,13 @@ XPCJSRuntime::GCSliceCallback(JSRuntime *rt,
 void
 XPCJSRuntime::CustomGCCallback(JSGCStatus status)
 {
+    // Record kLivingAdopters once per GC to approximate time sampling during
+    // periods of activity.
+    if (status == JSGC_BEGIN) {
+        Telemetry::Accumulate(Telemetry::COMPARTMENT_LIVING_ADOPTERS,
+                              kLivingAdopters);
+    }
+
     nsTArray<xpcGCCallback> callbacks(extraGCCallbacks);
     for (uint32_t i = 0; i < callbacks.Length(); ++i)
         callbacks[i](status);
