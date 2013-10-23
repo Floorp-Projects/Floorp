@@ -1659,7 +1659,7 @@ nsDocument::DeleteCycleCollectable()
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDocument)
   if (Element::CanSkip(tmp, aRemovingAllowed)) {
-    nsEventListenerManager* elm = tmp->GetListenerManager(false);
+    nsEventListenerManager* elm = tmp->GetExistingListenerManager();
     if (elm) {
       elm->MarkForCC();
     }
@@ -6971,14 +6971,20 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 }
 
 nsEventListenerManager*
-nsDocument::GetListenerManager(bool aCreateIfNotFound)
+nsDocument::GetOrCreateListenerManager()
 {
-  if (!mListenerManager && aCreateIfNotFound) {
+  if (!mListenerManager) {
     mListenerManager =
       new nsEventListenerManager(static_cast<EventTarget*>(this));
     SetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
+  return mListenerManager;
+}
+
+nsEventListenerManager*
+nsDocument::GetExistingListenerManager() const
+{
   return mListenerManager;
 }
 
@@ -7675,8 +7681,7 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
   // Check our event listener manager for unload/beforeunload listeners.
   nsCOMPtr<EventTarget> piTarget = do_QueryInterface(mScriptGlobalObject);
   if (piTarget) {
-    nsEventListenerManager* manager =
-      piTarget->GetListenerManager(false);
+    nsEventListenerManager* manager = piTarget->GetExistingListenerManager();
     if (manager && manager->HasUnloadListeners()) {
       return false;
     }

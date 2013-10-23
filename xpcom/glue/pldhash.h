@@ -28,9 +28,15 @@ extern "C" {
 #define PL_DHASHMETER 1
 #endif
 
-/* Table size limit, do not equal or exceed (see min&maxAlphaFrac, below). */
-#undef PL_DHASH_SIZE_LIMIT
-#define PL_DHASH_SIZE_LIMIT     ((uint32_t)1 << 24)
+/*
+ * Table size limit; do not exceed.  The max capacity used to be 1<<23 but that
+ * occasionally that wasn't enough.  Making it much bigger than 1<<26 probably
+ * isn't worthwhile -- tables that big are kind of ridiculous.  Also, the
+ * growth operation will (deliberately) fail if |capacity * entrySize|
+ * overflows a uint32_t, and entrySize is always at least 8 bytes.
+ */
+#undef PL_DHASH_MAX_SIZE
+#define PL_DHASH_MAX_SIZE     ((uint32_t)1 << 26)
 
 /* Minimum table size, or gross entry count (net is at most .75 loaded). */
 #ifndef PL_DHASH_MIN_SIZE
@@ -159,7 +165,7 @@ PL_DHASH_ENTRY_IS_LIVE(PLDHashEntryHdr* entry)
  * assuming esize is not too large (in which case, chaining should probably be
  * used for any alpha).  For esize=2 and k=3, we want alpha >= .2; for esize=3
  * and k=2, we want alpha >= .4.  For k=4, esize could be 6, and alpha >= .5
- * would still obtain.  See the PL_DHASH_MIN_ALPHA macro further below.
+ * would still obtain.
  *
  * The current implementation uses a configurable lower bound on alpha, which
  * defaults to .25, when deciding to shrink the table (while still respecting
@@ -180,8 +186,6 @@ struct PLDHashTable {
     const PLDHashTableOps *ops;         /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
     int16_t             hashShift;      /* multiplicative hash shift */
-    uint8_t             maxAlphaFrac;   /* 8-bit fixed point max alpha */
-    uint8_t             minAlphaFrac;   /* 8-bit fixed point min alpha */
     uint32_t            entrySize;      /* number of bytes in an entry */
     uint32_t            entryCount;     /* number of entries in table */
     uint32_t            removedCount;   /* removed entry sentinels in table */
@@ -401,52 +405,6 @@ PL_DHashTableDestroy(PLDHashTable *table);
 NS_COM_GLUE bool
 PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
                   uint32_t entrySize, uint32_t capacity);
-
-/*
- * Set maximum and minimum alpha for table.  The defaults are 0.75 and .25.
- * maxAlpha must be in [0.5, 0.9375] for the default PL_DHASH_MIN_SIZE; or if
- * MinSize=PL_DHASH_MIN_SIZE <= 256, in [0.5, (float)(MinSize-1)/MinSize]; or
- * else in [0.5, 255.0/256].  minAlpha must be in [0, maxAlpha / 2), so that
- * we don't shrink on the very next remove after growing a table upon adding
- * an entry that brings entryCount past maxAlpha * tableSize.
- */
-NS_COM_GLUE void
-PL_DHashTableSetAlphaBounds(PLDHashTable *table,
-                            float maxAlpha,
-                            float minAlpha);
-
-/*
- * Call this macro with k, the number of pointer-sized words wasted per entry
- * under chaining, to compute the minimum alpha at which double hashing still
- * beats chaining.
- */
-#define PL_DHASH_MIN_ALPHA(table, k)                                          \
-    ((float)((table)->entrySize / sizeof(void *) - 1)                         \
-     / ((table)->entrySize / sizeof(void *) + (k)))
-
-/*
- * Default max/min alpha, and macros to compute the value for the |capacity|
- * parameter to PL_NewDHashTable and PL_DHashTableInit, given default or any
- * max alpha, such that adding entryCount entries right after initializing the
- * table will not require a reallocation (so PL_DHASH_ADD can't fail for those
- * PL_DHashTableOperate calls).
- *
- * NB: PL_DHASH_CAP is a helper macro meant for use only in PL_DHASH_CAPACITY.
- * Don't use it directly!
- */
-#define PL_DHASH_DEFAULT_MAX_ALPHA 0.75
-#define PL_DHASH_DEFAULT_MIN_ALPHA 0.25
-
-#define PL_DHASH_CAP(entryCount, maxAlpha)                                    \
-    ((uint32_t)((double)(entryCount) / (maxAlpha)))
-
-#define PL_DHASH_CAPACITY(entryCount, maxAlpha)                               \
-    (PL_DHASH_CAP(entryCount, maxAlpha) +                                     \
-     (((PL_DHASH_CAP(entryCount, maxAlpha) * (uint8_t)(0x100 * (maxAlpha)))     \
-       >> 8) < (entryCount)))
-
-#define PL_DHASH_DEFAULT_CAPACITY(entryCount)                                 \
-    PL_DHASH_CAPACITY(entryCount, PL_DHASH_DEFAULT_MAX_ALPHA)
 
 /*
  * Finalize table's data, free its entry storage using table->ops->freeTable,

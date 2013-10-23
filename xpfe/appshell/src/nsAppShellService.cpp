@@ -23,7 +23,9 @@
 #include "nsCRT.h"
 #include "prprf.h"
 
+#include "nsWidgetInitData.h"
 #include "nsWidgetsCID.h"
+#include "nsIWidget.h"
 #include "nsIRequestObserver.h"
 
 /* For implementing GetHiddenWindowAndJSContext */

@@ -773,8 +773,8 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsEventListenerManager*
-    GetListenerManager(bool aCreateIfNotFound) MOZ_OVERRIDE;
+  virtual nsEventListenerManager* GetOrCreateListenerManager() MOZ_OVERRIDE;
+  virtual nsEventListenerManager* GetExistingListenerManager() const MOZ_OVERRIDE;
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE;

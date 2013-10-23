@@ -29,6 +29,81 @@ endif
 
 -include $(DEPTH)/.mozconfig.mk
 
+# Integrate with mozbuild-generated make files. We first verify that no
+# variables provided by the automatically generated .mk files are
+# present. If they are, this is a violation of the separation of
+# responsibility between Makefile.in and mozbuild files.
+_MOZBUILD_EXTERNAL_VARIABLES := \
+  ANDROID_GENERATED_RESFILES \
+  ANDROID_RESFILES \
+  CMMSRCS \
+  CPP_UNIT_TESTS \
+  DIRS \
+  EXTRA_PP_COMPONENTS \
+  EXTRA_PP_JS_MODULES \
+  GTEST_CMMSRCS \
+  GTEST_CPPSRCS \
+  GTEST_CSRCS \
+  HOST_CSRCS \
+  HOST_LIBRARY_NAME \
+  IS_COMPONENT \
+  JS_MODULES_PATH \
+  LIBRARY_NAME \
+  LIBXUL_LIBRARY \
+  MODULE \
+  MSVC_ENABLE_PGO \
+  NO_DIST_INSTALL \
+  PARALLEL_DIRS \
+  SDK_HEADERS \
+  SIMPLE_PROGRAMS \
+  TEST_DIRS \
+  TIERS \
+  TOOL_DIRS \
+  XPCSHELL_TESTS \
+  XPIDL_MODULE \
+  $(NULL)
+
+_DEPRECATED_VARIABLES := \
+  MOCHITEST_FILES_PARTS \
+  MOCHITEST_BROWSER_FILES_PARTS \
+  $(NULL)
+
+ifndef EXTERNALLY_MANAGED_MAKE_FILE
+# Using $(firstword) may not be perfect. But it should be good enough for most
+# scenarios.
+_current_makefile = $(CURDIR)/$(firstword $(MAKEFILE_LIST))
+
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(if $(filter file override,$(subst $(NULL) ,_,$(origin $(var)))),\
+    $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
+    ))
+
+$(foreach var,$(_DEPRECATED_VARIABLES),$(if $(filter file override,$(subst $(NULL) ,_,$(origin $(var)))),\
+    $(error Variable $(var) is defined in $(_current_makefile). This variable has been deprecated. It does nothing. It must be removed in order to build)\
+    ))
+
+# Import the automatically generated backend file. If this file doesn't exist,
+# the backend hasn't been properly configured. We want this to be a fatal
+# error, hence not using "-include".
+ifndef STANDALONE_MAKEFILE
+GLOBAL_DEPS += backend.mk
+include backend.mk
+endif
+
+# Freeze the values specified by moz.build to catch them if they fail.
+
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
+$(foreach var,$(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
+
+CHECK_MOZBUILD_VARIABLES = $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES), \
+  $(if $(subst $($(var)_FROZEN),,'$($(var))'), \
+	  $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
+  )) $(foreach var,$(_DEPRECATED_VARIABLES), \
+	$(if $(subst $($(var)_FROZEN),,'$($(var))'), \
+    $(error Variable $(var) is defined in $(_current_makefile). This variable has been deprecated. It does nothing. It must be removed in order to build),\
+    ))
+
+endif
+
 space = $(NULL) $(NULL)
 
 # Include defs.mk files that can be found in $(srcdir)/$(DEPTH),
@@ -74,12 +149,16 @@ RM = rm -f
 LIBXUL_DIST ?= $(DIST)
 
 # FINAL_TARGET specifies the location into which we copy end-user-shipped
-# build products (typelibs, components, chrome).
+# build products (typelibs, components, chrome). It may already be specified by
+# a moz.build file.
 #
 # If XPI_NAME is set, the files will be shipped to $(DIST)/xpi-stage/$(XPI_NAME)
 # instead of $(DIST)/bin. In both cases, if DIST_SUBDIR is set, the files will be
 # shipped to a $(DIST_SUBDIR) subdirectory.
-FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)
+FINAL_TARGET ?= $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)
+# Override the stored value for the check to make sure that the variable is not
+# redefined in the Makefile.in value.
+FINAL_TARGET_FROZEN := '$(FINAL_TARGET)'
 
 ifdef XPI_NAME
 DEFINES += -DXPI_NAME=$(XPI_NAME)
@@ -137,8 +216,8 @@ MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFI
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 ifdef _MSC_VER
-CC_WRAPPER ?= $(PYTHON) -O $(topsrcdir)/build/cl.py
-CXX_WRAPPER ?= $(PYTHON) -O $(topsrcdir)/build/cl.py
+CC_WRAPPER = $(call py_action,cl)
+CXX_WRAPPER = $(call py_action,cl)
 endif # _MSC_VER
 
 CC := $(CC_WRAPPER) $(CC)
@@ -817,15 +896,3 @@ MOZ_GTK2_CFLAGS := -I$(topsrcdir)/widget/gtk/compat $(MOZ_GTK2_CFLAGS)
 endif
 
 DEFINES += -DNO_NSPR_10_SUPPORT
-
-# Run a named Python build action. The first argument is the name of the build
-# action. The second argument are the arguments to pass to the action (space
-# delimited arguments). e.g.
-#
-#   libs::
-#       $(call py_action,purge_manifests,_build_manifests/purge/foo.manifest)
-ifdef .PYMAKE
-py_action = %mozbuild.action.$(1) main $(2)
-else
-py_action = $(PYTHON) -m mozbuild.action.$(1) $(2)
-endif

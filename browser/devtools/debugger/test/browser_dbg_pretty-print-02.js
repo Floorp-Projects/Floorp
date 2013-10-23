@@ -39,7 +39,7 @@ function selectContextMenuItem() {
     const menuItem = gDebugger.document.getElementById("se-dbg-cMenu-prettyPrint");
     menuItem.click();
   });
-  gContextMenu.openPopup(gEditor.editorElement, "overlap", 0, 0, true, false);
+  gContextMenu.openPopup(gEditor.container, "overlap", 0, 0, true, false);
 }
 
 function testSourceIsPretty() {

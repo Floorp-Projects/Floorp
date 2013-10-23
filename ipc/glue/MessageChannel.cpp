@@ -81,6 +81,7 @@ MessageChannel::~MessageChannel()
     DebugOnly<BOOL> ok = CloseHandle(mEvent);
     MOZ_ASSERT(ok);
 #endif
+    Clear();
 }
 
 bool

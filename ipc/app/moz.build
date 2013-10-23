@@ -12,6 +12,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     CPP_SOURCES += [
         'MozillaRuntimeMainAndroid.cpp',
     ]
+    FINAL_TARGET = 'dist/bin/lib'
 else:
     CPP_SOURCES += [
         'MozillaRuntimeMain.cpp',

@@ -66,7 +66,9 @@ class CodeGeneratorARM : public CodeGeneratorShared
     // Instruction visitors.
     virtual bool visitMinMaxD(LMinMaxD *ins);
     virtual bool visitAbsD(LAbsD *ins);
+    virtual bool visitAbsF(LAbsF *ins);
     virtual bool visitSqrtD(LSqrtD *ins);
+    virtual bool visitSqrtF(LSqrtF *ins);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitSubI(LSubI *ins);
     virtual bool visitBitNotI(LBitNotI *ins);
@@ -89,22 +91,28 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitCompare(LCompare *comp);
     virtual bool visitCompareAndBranch(LCompareAndBranch *comp);
     virtual bool visitTestDAndBranch(LTestDAndBranch *test);
+    virtual bool visitTestFAndBranch(LTestFAndBranch *test);
     virtual bool visitCompareD(LCompareD *comp);
+    virtual bool visitCompareF(LCompareF *comp);
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
+    virtual bool visitCompareFAndBranch(LCompareFAndBranch *comp);
     virtual bool visitCompareB(LCompareB *lir);
     virtual bool visitCompareBAndBranch(LCompareBAndBranch *lir);
     virtual bool visitCompareV(LCompareV *lir);
     virtual bool visitCompareVAndBranch(LCompareVAndBranch *lir);
     virtual bool visitBitAndAndBranch(LBitAndAndBranch *baab);
-    virtual bool visitUInt32ToDouble(LUInt32ToDouble *lir);
+    virtual bool visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir);
+    virtual bool visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir);
     virtual bool visitNotI(LNotI *ins);
     virtual bool visitNotD(LNotD *ins);
+    virtual bool visitNotF(LNotF *ins);
 
     virtual bool visitMathD(LMathD *math);
     virtual bool visitMathF(LMathF *math);
     virtual bool visitFloor(LFloor *lir);
     virtual bool visitRound(LRound *lir);
     virtual bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
+    virtual bool visitTruncateFToInt32(LTruncateFToInt32 *ins);
 
     // Out of line visitors.
     bool visitOutOfLineBailout(OutOfLineBailout *ool);
@@ -134,7 +142,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitBoxFloatingPoint(LBoxFloatingPoint *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
-    bool visitOsrValue(LOsrValue *value);
     bool visitDouble(LDouble *ins);
     bool visitFloat32(LFloat32 *ins);
 

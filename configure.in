@@ -222,6 +222,7 @@ if test -n "$gonkdir" ; then
     15)
         GONK_INCLUDES="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib -I$gonkdir/dalvik/libnativehelper/include/nativehelper"
         MOZ_B2G_BT=1
+        MOZ_B2G_BT_BLUEZ=1
         MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
@@ -230,9 +231,15 @@ if test -n "$gonkdir" ; then
     17|18)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
         if test -d "$gonkdir/external/bluetooth/bluez"; then
-            GONK_INCLUDES+=" -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"
+          GONK_INCLUDES="$GONK_INCLUDES -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"
             MOZ_B2G_BT=1
+            MOZ_B2G_BT_BLUEZ=1
         fi
+        if test -d "$gonkdir/external/bluetooth/bluedroid"; then
+            MOZ_B2G_BT=1
+            MOZ_B2G_BT_BLUEDROID=1
+        fi
+
         MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
@@ -5369,7 +5376,7 @@ AC_SUBST(MOZ_NATIVE_LIBVPX)
 AC_SUBST(MOZ_LIBVPX_CFLAGS)
 AC_SUBST(MOZ_LIBVPX_LIBS)
 
-if test "$MOZ_WEBM"; then
+if test "$MOZ_WEBM" -o "$MOZ_OGG"; then
     MOZ_CUBEB=1
     if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
         MOZ_VORBIS=1
@@ -5491,8 +5498,21 @@ if test -n "$MOZ_CUBEB"; then
     AC_DEFINE(MOZ_CUBEB)
 fi
 
+if test -n "$MOZ_OPUS" -a -z "$MOZ_OGG"; then
+    AC_MSG_ERROR([MOZ_OPUS requires MOZ_OGG which is disabled.])
+fi
+
+if test -n "$MOZ_VORBIS" -a -z "$MOZ_OGG"; then
+    AC_MSG_ERROR([MOZ_VORBIS requires MOZ_OGG which is disabled.
+Note that you need vorbis support for WebM playback.])
+fi
+
 if test -n "$MOZ_VORBIS" -a -n "$MOZ_TREMOR"; then
     AC_MSG_ERROR([MOZ_VORBIS and MOZ_TREMOR are mutually exclusive!  The build system should not allow them both to be set, but they are.  Please file a bug at https://bugzilla.mozilla.org/])
+fi
+
+if test -n "$MOZ_WEBRTC" -a -z "$MOZ_OPUS"; then
+    AC_MSG_ERROR([MOZ_WEBRTC requires MOZ_OPUS which is disabled.])
 fi
 
 if test -n "$MOZ_VORBIS"; then
@@ -7288,6 +7308,8 @@ if test -n "$MOZ_B2G_BT"; then
     AC_DEFINE(MOZ_B2G_BT)
 fi
 AC_SUBST(MOZ_B2G_BT)
+AC_SUBST(MOZ_B2G_BT_BLUEZ)
+AC_SUBST(MOZ_B2G_BT_BLUEDROID)
 
 dnl ========================================================
 dnl = Enable Pico Speech Synthesis (Gonk usually)
@@ -8485,6 +8507,14 @@ COMPILE_CXXFLAGS=`echo \
     $_DEFINES_CXXFLAGS \
 	$_DEPEND_CFLAGS \
     $COMPILE_CXXFLAGS`
+
+HOST_CFLAGS=`echo \
+    $HOST_CFLAGS \
+    $_DEPEND_CFLAGS`
+
+HOST_CXXFLAGS=`echo \
+    $HOST_CXXFLAGS \
+    $_DEPEND_CFLAGS`
 
 AC_SUBST(SYSTEM_LIBXUL)
 AC_SUBST(MOZ_NATIVE_JPEG)

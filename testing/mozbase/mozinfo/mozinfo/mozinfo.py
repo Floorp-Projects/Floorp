@@ -8,15 +8,11 @@
 # linux) to the information; I certainly wouldn't want anyone parsing this
 # information and having behaviour depend on it
 
+import json
 import os
 import platform
 import re
 import sys
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
 
 import mozfile
 

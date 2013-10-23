@@ -1002,9 +1002,11 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
   return index1 - index2;
 }
 
-static nsIFrame* FillAncestors(nsIFrame* aFrame,
-                               nsIFrame* aStopAtAncestor,
-                               nsTArray<nsIFrame*>* aAncestors)
+// static
+nsIFrame*
+nsLayoutUtils::FillAncestors(nsIFrame* aFrame,
+                             nsIFrame* aStopAtAncestor,
+                             nsTArray<nsIFrame*>* aAncestors)
 {
   while (aFrame && aFrame != aStopAtAncestor) {
     aAncestors->AppendElement(aFrame);
@@ -1036,6 +1038,27 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
   NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
   NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
 
+  nsAutoTArray<nsIFrame*,20> frame2Ancestors;
+  nsIFrame* nonCommonAncestor =
+    FillAncestors(aFrame2, aCommonAncestor, &frame2Ancestors);
+
+  return DoCompareTreePosition(aFrame1, aFrame2, frame2Ancestors,
+                               aIf1Ancestor, aIf2Ancestor,
+                               nonCommonAncestor ? aCommonAncestor : nullptr);
+}
+
+// static
+int32_t
+nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
+                                     nsIFrame* aFrame2,
+                                     nsTArray<nsIFrame*>& aFrame2Ancestors,
+                                     int32_t aIf1Ancestor,
+                                     int32_t aIf2Ancestor,
+                                     nsIFrame* aCommonAncestor)
+{
+  NS_PRECONDITION(aFrame1, "aFrame1 must not be null");
+  NS_PRECONDITION(aFrame2, "aFrame2 must not be null");
+
   nsPresContext* presContext = aFrame1->PresContext();
   if (presContext != aFrame2->PresContext()) {
     NS_ERROR("no common ancestor at all, different documents");
@@ -1043,25 +1066,18 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
   }
 
   nsAutoTArray<nsIFrame*,20> frame1Ancestors;
-  if (!FillAncestors(aFrame1, aCommonAncestor, &frame1Ancestors)) {
+  if (aCommonAncestor &&
+      !FillAncestors(aFrame1, aCommonAncestor, &frame1Ancestors)) {
     // We reached the root of the frame tree ... if aCommonAncestor was set,
     // it is wrong
-    aCommonAncestor = nullptr;
-  }
-
-  nsAutoTArray<nsIFrame*,20> frame2Ancestors;
-  if (!FillAncestors(aFrame2, aCommonAncestor, &frame2Ancestors) &&
-      aCommonAncestor) {
-    // We reached the root of the frame tree ... aCommonAncestor was wrong.
-    // Try again with no hint.
     return DoCompareTreePosition(aFrame1, aFrame2,
                                  aIf1Ancestor, aIf2Ancestor, nullptr);
   }
 
   int32_t last1 = int32_t(frame1Ancestors.Length()) - 1;
-  int32_t last2 = int32_t(frame2Ancestors.Length()) - 1;
+  int32_t last2 = int32_t(aFrame2Ancestors.Length()) - 1;
   while (last1 >= 0 && last2 >= 0 &&
-         frame1Ancestors[last1] == frame2Ancestors[last2]) {
+         frame1Ancestors[last1] == aFrame2Ancestors[last2]) {
     last1--;
     last2--;
   }
@@ -1081,7 +1097,7 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
   }
 
   nsIFrame* ancestor1 = frame1Ancestors[last1];
-  nsIFrame* ancestor2 = frame2Ancestors[last2];
+  nsIFrame* ancestor2 = aFrame2Ancestors[last2];
   // Now we should be able to walk sibling chains to find which one is first
   if (IsFrameAfter(ancestor2, ancestor1))
     return -1;
@@ -1323,10 +1339,9 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                   aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  const WidgetGUIEvent* GUIEvent = static_cast<const WidgetGUIEvent*>(aEvent);
   return GetEventCoordinatesRelativeTo(aEvent,
-                                       LayoutDeviceIntPoint::ToUntyped(GUIEvent->refPoint),
-                                       aFrame);
+           LayoutDeviceIntPoint::ToUntyped(aEvent->AsGUIEvent()->refPoint),
+           aFrame);
 }
 
 nsPoint
@@ -1338,8 +1353,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  const WidgetGUIEvent* GUIEvent = static_cast<const WidgetGUIEvent*>(aEvent);
-  nsIWidget* widget = GUIEvent->widget;
+  nsIWidget* widget = aEvent->AsGUIEvent()->widget;
   if (!widget) {
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }

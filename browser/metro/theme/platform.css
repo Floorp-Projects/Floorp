@@ -207,11 +207,7 @@ menulist {
   color: white;
 }
 
-.menu-popup > richlistbox[left-hand="true"] > richlistitem {
-  padding-left: 50px;
-}
-
-.menu-popup > richlistbox[left-hand="false"] > richlistitem {
+.menu-popup > richlistbox > richlistitem {
   padding-right: 50px;
 }
 
@@ -688,6 +684,34 @@ arrowbox {
   margin-top: @metro_spacing_xnormal@;
   padding: 0;
 }
+
+.meta-section > richgrid {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transition-duration: 367ms;
+  transition-delay: 500ms;
+  transition-timing-function: @metro_animation_easing@;
+}
+
+.meta-section:nth-child(2) > richgrid {
+  transition-delay: 600ms;
+}
+.meta-section:nth-child(3) > richgrid {
+  transition-delay: 700ms;
+}
+.meta-section:nth-child(4) > richgrid {
+  transition-delay: 800ms;
+}
+
+.meta-section > richgrid[fade] {
+  opacity: 0;
+  transform: translateX(150px) scale(.9);
+}
+
+#start-container[viewstate="snapped"] .meta-section > richgrid {
+  transition-property: none;
+}
+
 
 /* App bars ----------------------------------------------------------------- */
 

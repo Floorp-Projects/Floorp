@@ -1,0 +1,7 @@
+default-preferences pref(dom.forms.color,true)
+
+fails-if(B2G) == input-color-1.html input-color-1-ref.html # bug 928877
+fails-if(B2G) == margin-padding-1.html margin-padding-1-ref.html # bug 928877
+== block-invalidate-1.html block-invalidate-1-ref.html
+fails-if(B2G) == transformations-1.html transformations-1-ref.html # bug 928877
+fails-if(B2G) == custom-style-1.html custom-style-1-ref.html # bug 928877

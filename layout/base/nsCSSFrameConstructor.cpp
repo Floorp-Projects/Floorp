@@ -1241,23 +1241,67 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     // so this will make out-of-flows respect the ordering of placeholders,
     // which is great because it takes care of anonymous content.
     nsIFrame* firstNewFrame = aFrameItems.FirstChild();  
+
+    // Cache the ancestor chain so that we can reuse it if needed.
+    nsAutoTArray<nsIFrame*, 20> firstNewFrameAncestors;
+    nsIFrame* notCommonAncestor = nullptr;
+    if (lastChild) {
+      notCommonAncestor = nsLayoutUtils::FillAncestors(firstNewFrame,
+                                                       containingBlock,
+                                                       &firstNewFrameAncestors);
+    }
+
     if (!lastChild ||
-        nsLayoutUtils::CompareTreePosition(lastChild, firstNewFrame, containingBlock) < 0) {
+        nsLayoutUtils::CompareTreePosition(lastChild, firstNewFrame,
+                                           firstNewFrameAncestors,
+                                           notCommonAncestor ?
+                                             containingBlock : nullptr) < 0) {
       // no lastChild, or lastChild comes before the new children, so just append
       rv = mFrameManager->AppendFrames(containingBlock, aChildListID, aFrameItems);
     } else {
-      // try the other children
-      nsIFrame* insertionPoint = nullptr;
+      // Try the other children. First collect them to an array so that a
+      // reasonable fast binary search can be used to find the insertion point.
+      nsAutoTArray<nsIFrame*, 128> children;
       for (nsIFrame* f = childList.FirstChild(); f != lastChild;
            f = f->GetNextSibling()) {
+        children.AppendElement(f);
+      }
+
+      nsIFrame* insertionPoint = nullptr;
+      int32_t imin = 0;
+      int32_t max = children.Length();
+      while (max > imin) {
+        int32_t imid = imin + ((max - imin) / 2);
+        nsIFrame* f = children[imid];
         int32_t compare =
-          nsLayoutUtils::CompareTreePosition(f, firstNewFrame, containingBlock);
+          nsLayoutUtils::CompareTreePosition(f, firstNewFrame, firstNewFrameAncestors,
+                                             notCommonAncestor ? containingBlock : nullptr);
         if (compare > 0) {
-          // f comes after the new children, so stop here and insert after
-          // the previous frame
+          // f is after the new frame.
+          max = imid;
+          insertionPoint = imid > 0 ? children[imid - 1] : nullptr;
+        } else if (compare < 0) {
+          // f is before the new frame.
+          imin = imid + 1;
+          insertionPoint = f;
+        } else {
+          // This is for the old behavior. Should be removed once it is
+          // guaranteed that CompareTreePosition can't return 0!
+          // See bug 928645.
+          NS_WARNING("Something odd happening???");
+          insertionPoint = nullptr;
+          for (uint32_t i = 0; i < children.Length(); ++i) {
+            nsIFrame* f = children[i];
+            if (nsLayoutUtils::CompareTreePosition(f, firstNewFrame,
+                                                   firstNewFrameAncestors,
+                                                   notCommonAncestor ?
+                                                     containingBlock : nullptr) > 0) {
+              break;
+            }
+            insertionPoint = f;
+          }
           break;
         }
-        insertionPoint = f;
       }
       rv = mFrameManager->InsertFrames(containingBlock, aChildListID,
                                        insertionPoint, aFrameItems);
@@ -3339,6 +3383,9 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
     SIMPLE_INT_CREATE(NS_FORM_INPUT_URL, NS_NewTextControlFrame),
     SIMPLE_INT_CREATE(NS_FORM_INPUT_RANGE, NS_NewRangeFrame),
     SIMPLE_INT_CREATE(NS_FORM_INPUT_PASSWORD, NS_NewTextControlFrame),
+    { NS_FORM_INPUT_COLOR,
+      FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewColorControlFrame,
+                                 nsCSSAnonBoxes::buttonContent) },
     // TODO: this is temporary until a frame is written: bug 635240.
     SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewTextControlFrame),
     // TODO: this is temporary until a frame is written: bug 773205.

@@ -11,11 +11,7 @@ EXPORTS += [
 ]
 
 CPP_SOURCES += [
-    'nsCP949ToUnicode.cpp',
-    'nsISO2022KRToUnicode.cpp',
-    'nsJohabToUnicode.cpp',
-    'nsUnicodeToCP949.cpp',
-    'nsUnicodeToJohab.cpp',
+    'UnifiedUCVKO.cpp',
 ]
 
 LIBRARY_NAME = 'ucvko_s'

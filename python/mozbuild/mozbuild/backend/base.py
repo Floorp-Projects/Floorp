@@ -13,8 +13,11 @@ import os
 import sys
 import time
 
+from contextlib import contextmanager
+
 from mach.mixin.logging import LoggingMixin
 
+from ..util import FileAvoidWrite
 from ..frontend.data import (
     ReaderSummary,
     SandboxDerived,
@@ -230,3 +233,26 @@ class BuildBackend(LoggingMixin):
     def consume_finished(self):
         """Called when consume() has completed handling all objects."""
 
+    @contextmanager
+    def _write_file(self, path):
+        """Context manager to write a file.
+
+        This is a glorified wrapper around FileAvoidWrite with integration to
+        update the BackendConsumeSummary on this instance.
+
+        Example usage:
+
+            with self._write_file('foo.txt') as fh:
+                fh.write('hello world')
+        """
+
+        fh = FileAvoidWrite(path)
+        yield fh
+
+        existed, updated = fh.close()
+        if not existed:
+            self.summary.created_count += 1
+        elif updated:
+            self.summary.updated_count += 1
+        else:
+            self.summary.unchanged_count += 1
