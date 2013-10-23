@@ -62,7 +62,7 @@ static uint16_t LEUint16(const unsigned char* p)
 }
 
 // Reads a little-endian encoded signed 16bit integer at p.
-static int16_t LEInt16(const unsigned char* p)
+inline int16_t LEInt16(const unsigned char* p)
 {
   return static_cast<int16_t>(LEUint16(p));
 }
