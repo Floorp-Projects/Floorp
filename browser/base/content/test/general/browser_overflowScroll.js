@@ -62,7 +62,11 @@ function runOverflowTests(aEvent) {
   EventUtils.synthesizeMouse(upButton, 1, 1, {});
   isLeft(element, "Scrolled one tab to the left with a single click");
 
-  element = elementFromPoint(left(scrollbox) - width(scrollbox));
+  let elementPoint = left(scrollbox) - width(scrollbox);
+  element = elementFromPoint(elementPoint);
+  if (elementPoint == right(element)) {
+    element = element.nextSibling;
+  }
   EventUtils.synthesizeMouse(upButton, 1, 1, {clickCount: 2});
   isLeft(element, "Scrolled one page of tabs with a double click");
 
