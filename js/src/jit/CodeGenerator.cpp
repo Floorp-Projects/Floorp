@@ -3882,7 +3882,7 @@ CodeGenerator::visitMathFunctionF(LMathFunctionF *ins)
     masm.setupUnalignedABICall(1, temp);
     masm.passABIArg(input);
 
-    void *funptr = NULL;
+    void *funptr = nullptr;
     switch (ins->mir()->function()) {
       case MMathFunction::Log:  funptr = JS_FUNC_TO_DATA_PTR(void *, logf);  break;
       case MMathFunction::Sin:  funptr = JS_FUNC_TO_DATA_PTR(void *, sinf);  break;

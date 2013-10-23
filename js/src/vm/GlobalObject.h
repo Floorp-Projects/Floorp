@@ -351,7 +351,7 @@ class GlobalObject : public JSObject
     JSObject *maybeGetArrayPrototype() {
         if (arrayClassInitialized())
             return &getPrototype(JSProto_Array).toObject();
-        return NULL;
+        return nullptr;
     }
 
     JSObject *getOrCreateBooleanPrototype(JSContext *cx) {
