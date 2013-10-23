@@ -660,9 +660,9 @@ AudioBufferSourceNode::SendLoopParametersToStream()
     float rate = mBuffer->SampleRate();
     double length = (double(mBuffer->Length()) / mBuffer->SampleRate());
     double actualLoopStart, actualLoopEnd;
-    if (((mLoopStart != 0.0) || (mLoopEnd != 0.0)) &&
-        mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
+    if (mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
         mLoopStart < mLoopEnd) {
+      MOZ_ASSERT(mLoopStart != 0.0 || mLoopEnd != 0.0);
       actualLoopStart = (mLoopStart > length) ? 0.0 : mLoopStart;
       actualLoopEnd = std::min(mLoopEnd, length);
     } else {
