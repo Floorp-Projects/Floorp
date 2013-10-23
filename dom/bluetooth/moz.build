@@ -52,7 +52,7 @@ if CONFIG['MOZ_B2G_BT']:
             'BluetoothRilListener.cpp',
         ]
 
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_BT_BLUEZ']:
         CPP_SOURCES += [
             'linux/BluetoothDBusService.cpp',
             'gonk/BluetoothGonkService.cpp',
