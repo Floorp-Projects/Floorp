@@ -615,7 +615,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
 
       // Update the context menu to show the currently selected stackframe item
       // as a checked entry.
-      for (let otherItem of this) {
+      for (let otherItem in this) {
         if (otherItem != stackframeItem) {
           otherItem.attachment.popup.menuitem.removeAttribute("checked");
         } else {
