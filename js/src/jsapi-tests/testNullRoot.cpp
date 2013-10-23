@@ -18,7 +18,7 @@ BEGIN_TEST(testNullRoot)
     JSScript *scr = nullptr;
     CHECK(JS_AddNamedScriptRoot(cx, &scr, "testNullRoot's scr"));
 
-    // This used to crash because obj was NULL.
+    // This used to crash because obj was nullptr.
     JS_GC(cx->runtime());
 
     JS_RemoveObjectRoot(cx, &obj);
