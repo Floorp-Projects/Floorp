@@ -11,18 +11,13 @@
 
 #include "nsIObserver.h"
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
-#include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
-#include "nsString.h"
 #include "nsTArray.h"
 
+class nsIRunnable;
 class nsIThread;
 class nsITimer;
 class nsPIDOMWindow;
@@ -34,6 +29,10 @@ class WorkerPrivate;
 
 class RuntimeService MOZ_FINAL : public nsIObserver
 {
+public:
+  class WorkerThread;
+
+private:
   struct SharedWorkerInfo
   {
     WorkerPrivate* mWorkerPrivate;
@@ -68,7 +67,7 @@ class RuntimeService MOZ_FINAL : public nsIObserver
 
   struct IdleThreadInfo
   {
-    nsCOMPtr<nsIThread> mThread;
+    nsRefPtr<WorkerThread> mThread;
     mozilla::TimeStamp mExpirationTime;
   };
 
@@ -173,7 +172,7 @@ public:
   }
 
   void
-  NoteIdleThread(nsIThread* aThread);
+  NoteIdleThread(WorkerThread* aThread);
 
   static void
   GetDefaultJSSettings(JSSettings& aSettings)
