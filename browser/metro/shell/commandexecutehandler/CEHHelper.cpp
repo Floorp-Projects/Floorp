@@ -87,7 +87,7 @@ IsImmersiveProcessRunning(const wchar_t *processName)
   PROCESSENTRY32W entry;
   entry.dwSize = sizeof(PROCESSENTRY32W);
 
-  HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+  HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
   if (Process32First(snapshot, &entry)) {
     while (!exists && Process32Next(snapshot, &entry)) {

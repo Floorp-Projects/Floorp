@@ -984,7 +984,7 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
         if (aPropagateExceptions)
             ContextOptionsRef(cx).setDontReportUncaught(true);
         if (script) {
-            ok = JS_ExecuteScriptVersion(cx, obj, script, NULL, JSVERSION_LATEST);
+            ok = JS_ExecuteScriptVersion(cx, obj, script, nullptr, JSVERSION_LATEST);
         } else {
             jsval rval;
             ok = JS_CallFunction(cx, obj, function, 0, nullptr, &rval);

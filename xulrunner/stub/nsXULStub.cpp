@@ -71,7 +71,7 @@ static void Output(bool isError, const char *fmt, ... )
 		      wide_msg,
 		      sizeof(wide_msg) / sizeof(wchar_t));
   
-  MessageBoxW(NULL, wide_msg, L"XULRunner", flags);
+  MessageBoxW(nullptr, wide_msg, L"XULRunner", flags);
 #else
   vfprintf(stderr, fmt, ap);
 #endif
@@ -205,11 +205,11 @@ main(int argc, char **argv)
 
 #ifdef XP_WIN
   wchar_t wide_path[MAX_PATH];
-  if (!::GetModuleFileNameW(NULL, wide_path, MAX_PATH))
+  if (!::GetModuleFileNameW(nullptr, wide_path, MAX_PATH))
     return 1;
 
   WideCharToMultiByte(CP_UTF8, 0, wide_path,-1,
-		      iniPath, MAX_PATH, NULL, NULL);
+		      iniPath, MAX_PATH, nullptr, nullptr);
 
 #elif defined(XP_OS2)
    PPIB ppib;
@@ -254,7 +254,7 @@ main(int argc, char **argv)
         realpath(tmpPath, iniPath);
         break;
       }
-      token = strtok(NULL, ":");
+      token = strtok(nullptr, ":");
     }
     free (pathdup);
     if (!found)
@@ -360,13 +360,13 @@ main(int argc, char **argv)
 
     if (absfwurl) {
       CFURLRef xulurl =
-        CFURLCreateCopyAppendingPathComponent(NULL, absfwurl,
+        CFURLCreateCopyAppendingPathComponent(nullptr, absfwurl,
                                               CFSTR("XUL.framework"),
                                               true);
 
       if (xulurl) {
         CFURLRef xpcomurl =
-          CFURLCreateCopyAppendingPathComponent(NULL, xulurl,
+          CFURLCreateCopyAppendingPathComponent(nullptr, xulurl,
                                                 CFSTR("libxpcom.dylib"),
                                                 false);
 

@@ -1099,7 +1099,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kTCPSOCKETPARENT_CID, false, nullptr, TCPSocketParentConstructor },
   { &kTCPSERVERSOCKETCHILD_CID, false, nullptr, TCPServerSocketChildConstructor },
   { &kNS_TIMESERVICE_CID, false, nullptr, nsITimeServiceConstructor },
-  { &kNS_MEDIASTREAMCONTROLLERSERVICE_CID, false, NULL, nsIStreamingProtocolControllerServiceConstructor },
+  { &kNS_MEDIASTREAMCONTROLLERSERVICE_CID, false, nullptr, nsIStreamingProtocolControllerServiceConstructor },
 #ifdef MOZ_WIDGET_GONK
   { &kGONK_GPS_GEOLOCATION_PROVIDER_CID, false, nullptr, nsIGeolocationProviderConstructor },
 #endif
