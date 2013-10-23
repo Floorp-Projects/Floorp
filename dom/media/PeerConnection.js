@@ -331,7 +331,7 @@ RTCPeerConnection.prototype = {
   /**
    * An RTCConfiguration looks like this:
    *
-   * { "iceServers": [ { url:"stun:23.21.150.121" },
+   * { "iceServers": [ { url:"stun:stun.example.org" },
    *                   { url:"turn:turn.example.org",
    *                     username:"jib", credential:"mypass"} ] }
    *
