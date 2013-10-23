@@ -40,11 +40,11 @@ const int PluginHangUIChild::kExpectedMinimumArgc = 10;
 
 PluginHangUIChild::PluginHangUIChild()
   : mResponseBits(0),
-    mParentWindow(NULL),
-    mDlgHandle(NULL),
-    mMainThread(NULL),
-    mParentProcess(NULL),
-    mRegWaitProcess(NULL),
+    mParentWindow(nullptr),
+    mDlgHandle(nullptr),
+    mMainThread(nullptr),
+    mParentProcess(nullptr),
+    mRegWaitProcess(nullptr),
     mIPCTimeoutMs(0)
 {
 }
@@ -225,7 +225,8 @@ PluginHangUIChild::ResizeButtons()
     // deltaX accumulates the size changes so that each button's x coordinate 
     // can compensate for the width increases
     deltaX += idealSize.cx - itr->size.cx;
-    hwp = DeferWindowPos(hwp, itr->hwnd, NULL, itr->pos.x - deltaX, itr->pos.y,
+    hwp = DeferWindowPos(hwp, itr->hwnd, nullptr,
+                         itr->pos.x - deltaX, itr->pos.y,
                          idealSize.cx, itr->size.cy,
                          SWP_NOZORDER | SWP_NOACTIVATE);
     if (!hwp) {
@@ -256,7 +257,7 @@ PluginHangUIChild::HangUIDlgProc(HWND aDlgHandle, UINT aMsgCode, WPARAM aWParam,
       SetDlgItemText(aDlgHandle, IDC_CONTINUE, mWaitBtnText);
       SetDlgItemText(aDlgHandle, IDC_STOP, mKillBtnText);
       ResizeButtons();
-      HANDLE icon = LoadImage(NULL, IDI_QUESTION, IMAGE_ICON, 0, 0,
+      HANDLE icon = LoadImage(nullptr, IDI_QUESTION, IMAGE_ICON, 0, 0,
                               LR_DEFAULTSIZE | LR_SHARED);
       if (icon) {
         SendDlgItemMessage(aDlgHandle, IDC_DLGICON, STM_SETICON, (WPARAM)icon, 0);
@@ -336,11 +337,11 @@ PluginHangUIChild::RecvShow()
 bool
 PluginHangUIChild::Show()
 {
-  INT_PTR dlgResult = DialogBox(GetModuleHandle(NULL),
+  INT_PTR dlgResult = DialogBox(GetModuleHandle(nullptr),
                                 MAKEINTRESOURCE(IDD_HANGUIDLG),
-                                NULL,
+                                nullptr,
                                 &SHangUIDlgProc);
-  mDlgHandle = NULL;
+  mDlgHandle = nullptr;
   assert(dlgResult != -1);
   bool result = false;
   if (dlgResult != -1) {
@@ -389,7 +390,7 @@ PluginHangUIChild::SetMainThread()
 {
   if (mMainThread) {
     CloseHandle(mMainThread);
-    mMainThread = NULL;
+    mMainThread = nullptr;
   }
   mMainThread = OpenThread(THREAD_SET_CONTEXT,
                            FALSE,

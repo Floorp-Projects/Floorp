@@ -586,7 +586,7 @@ PluginScriptableObjectChild::NPObjectDestroyed()
   NS_ASSERTION(LocalObject == mType,
                "ScriptableDeallocate should have handled this for proxies");
   mInvalidated = true;
-  mObject = NULL;
+  mObject = nullptr;
 }
 
 bool
