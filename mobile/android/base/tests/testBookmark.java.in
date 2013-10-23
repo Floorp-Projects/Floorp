@@ -13,8 +13,6 @@ public class testBookmark extends AboutHomeTest {
     private static String BOOKMARK_URL;
     private static int WAIT_FOR_BOOKMARKED_TIMEOUT = 10000;
 
-    Navigation nav;
-
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
@@ -22,7 +20,6 @@ public class testBookmark extends AboutHomeTest {
 
     public void testBookmark() {
         BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
-        nav = new Navigation(mDevice);
         runAboutHomeTest();
         runMenuTest();
     }
@@ -70,7 +67,7 @@ public class testBookmark extends AboutHomeTest {
         // Bookmark a page for the test
         loadUrl(BOOKMARK_URL);
         waitForText(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
-        nav.bookmark();
+        toggleBookmark();
         mAsserter.is(waitForText(StringHelper.BOOKMARK_ADDED_LABEL), true, "bookmark added successfully");
     }
 
@@ -78,7 +75,7 @@ public class testBookmark extends AboutHomeTest {
         // Go back to the page we bookmarked
         loadUrl(BOOKMARK_URL);
         waitForText(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
-        nav.bookmark();
+        toggleBookmark();
         mAsserter.is(waitForText(StringHelper.BOOKMARK_REMOVED_LABEL), true, "bookmark removed successfully");
     }
 }
