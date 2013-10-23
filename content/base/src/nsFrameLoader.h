@@ -310,6 +310,8 @@ public:
    */
   void ApplySandboxFlags(uint32_t sandboxFlags);
 
+  void GetURL(nsString& aURL);
+
 private:
 
   void SetOwnerContent(mozilla::dom::Element* aContent);
@@ -358,7 +360,6 @@ private:
    */
   nsresult MaybeCreateDocShell();
   nsresult EnsureMessageManager();
-  NS_HIDDEN_(void) GetURL(nsString& aURL);
 
   // Properly retrieves documentSize of any subdocument type.
   nsresult GetWindowDimensions(nsRect& aRect);
