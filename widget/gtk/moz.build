@@ -44,13 +44,13 @@ if CONFIG['MOZ_X11']:
 
 if CONFIG['NS_PRINTING']:
     CPP_SOURCES += [
-        'nsDeviceContextSpecG.cpp',
-        'nsPrintOptionsGTK.cpp',
-        'nsPrintDialogGTK.cpp',
-        'nsPrintSettingsGTK.cpp',
         'nsCUPSShim.cpp',
-        'nsPaperPS.cpp',
+        'nsDeviceContextSpecG.cpp',
         'nsPSPrinters.cpp',
+        'nsPaperPS.cpp',
+        'nsPrintDialogGTK.cpp',
+        'nsPrintOptionsGTK.cpp',
+        'nsPrintSettingsGTK.cpp',
     ]
 
 if CONFIG['MOZ_X11']:

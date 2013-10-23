@@ -73,6 +73,7 @@ EXPORTS.mozilla += [
 ]
 
 CPP_SOURCES += [
+    'TimeStamp.cpp',
     'nsArray.cpp',
     'nsAtomService.cpp',
     'nsAtomTable.cpp',
@@ -90,7 +91,6 @@ CPP_SOURCES += [
     'nsSupportsArrayEnumerator.cpp',
     'nsSupportsPrimitives.cpp',
     'nsVariant.cpp',
-    'TimeStamp.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

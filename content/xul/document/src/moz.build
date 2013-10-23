@@ -12,9 +12,9 @@ CPP_SOURCES += [
 
 if CONFIG['MOZ_XUL']:
     CPP_SOURCES += [
+        'XULDocument.cpp',
         'nsXULCommandDispatcher.cpp',
         'nsXULContentSink.cpp',
-        'XULDocument.cpp',
         'nsXULPrototypeCache.cpp',
         'nsXULPrototypeDocument.cpp',
     ]

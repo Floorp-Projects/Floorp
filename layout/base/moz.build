@@ -12,8 +12,8 @@ XPIDL_SOURCES += [
 
 if CONFIG['IBMBIDI']:
     CPP_SOURCES += [
-        'nsBidiPresUtils.cpp',
         'nsBidi.cpp',
+        'nsBidiPresUtils.cpp',
     ]
 
 if CONFIG['MOZ_DEBUG']:

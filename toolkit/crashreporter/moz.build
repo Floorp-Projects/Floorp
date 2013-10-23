@@ -51,8 +51,8 @@ DIRS += ['client']
 if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
     DIRS += ['injector']
     CPP_SOURCES += [
-        'LoadLibraryRemote.cpp',
         'InjectCrashReporter.cpp',
+        'LoadLibraryRemote.cpp',
     ]
 
 TEST_TOOL_DIRS += ['test']

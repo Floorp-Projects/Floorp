@@ -27,6 +27,7 @@ CPP_SOURCES += [
     'NetworkActivityMonitor.cpp',
     'ProxyAutoConfig.cpp',
     'RedirectChannelRegistrar.cpp',
+    'StreamingProtocolService.cpp',
     'Tickler.cpp',
     'nsAsyncRedirectVerifyHelper.cpp',
     'nsAsyncStreamCopier.cpp',
@@ -74,7 +75,6 @@ CPP_SOURCES += [
     'nsURLHelper.cpp',
     'nsURLParsers.cpp',
     'nsUnicharStreamLoader.cpp',
-    'StreamingProtocolService.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
@@ -83,9 +83,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     CPP_SOURCES += [
-        'nsURLHelperWin.cpp',
-        'nsNativeConnectionHelper.cpp',
         'nsAutodialWin.cpp',
+        'nsNativeConnectionHelper.cpp',
+        'nsURLHelperWin.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CPP_SOURCES += [

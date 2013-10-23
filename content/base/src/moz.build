@@ -68,13 +68,14 @@ EXPORTS.mozilla.dom += [
 
 CPP_SOURCES += [
     'Attr.cpp',
+    'ChildIterator.cpp',
     'Comment.cpp',
     'DOMImplementation.cpp',
+    'DOMParser.cpp',
     'DOMRect.cpp',
     'DirectionalityUtils.cpp',
     'DocumentFragment.cpp',
     'DocumentType.cpp',
-    'DOMParser.cpp',
     'Element.cpp',
     'EventSource.cpp',
     'FileIOObject.cpp',
@@ -92,7 +93,6 @@ CPP_SOURCES += [
     'nsCCUncollectableMarker.cpp',
     'nsCSPService.cpp',
     'nsChannelPolicy.cpp',
-    'ChildIterator.cpp',
     'nsContentAreaDragDrop.cpp',
     'nsContentIterator.cpp',
     'nsContentList.cpp',

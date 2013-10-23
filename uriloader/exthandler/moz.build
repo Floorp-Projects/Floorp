@@ -83,10 +83,10 @@ if CONFIG['MOZ_ENABLE_GTK']:
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     CPP_SOURCES += [
-        'android/nsMIMEInfoAndroid.cpp',
         'android/nsAndroidHandlerApp.cpp',
         'android/nsExternalSharingAppService.cpp',
         'android/nsExternalURLHandlerService.cpp',
+        'android/nsMIMEInfoAndroid.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     CPP_SOURCES += [

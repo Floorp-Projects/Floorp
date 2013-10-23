@@ -17,22 +17,22 @@ EXPORTS.mozilla.a11y += [
 ]
 
 CPP_SOURCES += [
+    'ARIAGridAccessibleWrap.cpp',
     'AccessibleWrap.cpp',
     'ApplicationAccessibleWrap.cpp',
-    'ARIAGridAccessibleWrap.cpp',
+    'Compatibility.cpp',
     'DocAccessibleWrap.cpp',
+    'EnumVariant.cpp',
     'HTMLTableAccessibleWrap.cpp',
     'HTMLWin32ObjectAccessible.cpp',
     'HyperTextAccessibleWrap.cpp',
-    'ImageAccessibleWrap.cpp',
     'IUnknownImpl.cpp',
-    'nsWinUtils.cpp',
-    'Compatibility.cpp',
-    'EnumVariant.cpp',
+    'ImageAccessibleWrap.cpp',
     'Platform.cpp',
-    'ServiceProvider.cpp',
     'RootAccessibleWrap.cpp',
+    'ServiceProvider.cpp',
     'TextLeafAccessibleWrap.cpp',
+    'nsWinUtils.cpp',
 ]
 
 if CONFIG['MOZ_XUL']:
