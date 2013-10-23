@@ -57,3 +57,11 @@
 .variable-or-property:not([sealed]) > tooltip > label[value=sealed] {
   display: none;
 }
+
+*:not(:hover) .variables-view-delete {
+  visibility: hidden;
+}
+
+.variables-view-container[aligned-values] .title > [optional-visibility] {
+  display: none;
+}
