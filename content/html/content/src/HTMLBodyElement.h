@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class OnBeforeUnloadEventHandlerNonNull;
+class BeforeUnloadEventHandlerNonNull;
 class HTMLBodyElement;
 
 class BodyRule: public nsIStyleRule
@@ -64,7 +64,7 @@ public:
 #define WINDOW_EVENT(name_, id_, type_, struct_)                        \
   WINDOW_EVENT_HELPER(name_, EventHandlerNonNull)
 #define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                  \
-  WINDOW_EVENT_HELPER(name_, OnBeforeUnloadEventHandlerNonNull)
+  WINDOW_EVENT_HELPER(name_, BeforeUnloadEventHandlerNonNull)
 #include "nsEventNameList.h" // IWYU pragma: keep
 #undef BEFOREUNLOAD_EVENT
 #undef WINDOW_EVENT

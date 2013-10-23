@@ -12122,7 +12122,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
                                              JS::Value *vp) {                \
     nsEventListenerManager *elm = GetExistingListenerManager();              \
     if (elm) {                                                               \
-      OnBeforeUnloadEventHandlerNonNull* h =                                 \
+      BeforeUnloadEventHandlerNonNull* h =                                   \
         elm->GetOnBeforeUnloadEventHandler();                                \
       if (h) {                                                               \
         *vp = JS::ObjectValue(*h->Callable());                               \
@@ -12139,11 +12139,11 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
       return NS_ERROR_OUT_OF_MEMORY;                                         \
     }                                                                        \
                                                                              \
-    nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handler;                     \
+    nsRefPtr<BeforeUnloadEventHandlerNonNull> handler;                       \
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new OnBeforeUnloadEventHandlerNonNull(callable);             \
+      handler = new BeforeUnloadEventHandlerNonNull(callable);               \
     }                                                                        \
     elm->SetEventHandler(handler);                                           \
     return NS_OK;                                                            \
