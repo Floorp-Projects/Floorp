@@ -1558,6 +1558,7 @@ let CustomizableUIInternal = {
       }
     }
 
+    this.notifyListeners("onWidgetAfterCreation", widget.id, widget.currentArea);
     return widget.id;
   },
 
@@ -1977,7 +1978,7 @@ this.CustomizableUI = {
     }
 
     // We need to clone this, as we don't want to let consumers muck with placements
-    return [].concat(gPlacements.get(aArea));
+    return [...gPlacements.get(aArea)];
   },
   getWidgetsInArea: function(aArea) {
     return this.getWidgetIdsInArea(aArea).map(
