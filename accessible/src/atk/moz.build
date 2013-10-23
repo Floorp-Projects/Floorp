@@ -16,9 +16,6 @@ CPP_SOURCES += [
     'ApplicationAccessibleWrap.cpp',
     'AtkSocketAccessible.cpp',
     'DocAccessibleWrap.cpp',
-    'Platform.cpp',
-    'RootAccessibleWrap.cpp',
-    'UtilInterface.cpp',
     'nsMaiHyperlink.cpp',
     'nsMaiInterfaceAction.cpp',
     'nsMaiInterfaceComponent.cpp',
@@ -31,6 +28,9 @@ CPP_SOURCES += [
     'nsMaiInterfaceTable.cpp',
     'nsMaiInterfaceText.cpp',
     'nsMaiInterfaceValue.cpp',
+    'Platform.cpp',
+    'RootAccessibleWrap.cpp',
+    'UtilInterface.cpp',
 ]
 
 LIBRARY_NAME = 'accessibility_toolkit_s'

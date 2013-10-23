@@ -6,9 +6,9 @@
 
 XPIDL_SOURCES += [
     'nsIHttpActivityObserver.idl',
-    'nsIHttpAuthManager.idl',
     'nsIHttpAuthenticableChannel.idl',
     'nsIHttpAuthenticator.idl',
+    'nsIHttpAuthManager.idl',
     'nsIHttpChannel.idl',
     'nsIHttpChannelAuthProvider.idl',
     'nsIHttpChannelChild.idl',
@@ -47,13 +47,6 @@ CPP_SOURCES += [
     'HttpChannelParent.cpp',
     'HttpChannelParentListener.cpp',
     'HttpInfo.cpp',
-    'NullHttpTransaction.cpp',
-    'SpdyPush3.cpp',
-    'SpdyPush31.cpp',
-    'SpdySession3.cpp',
-    'SpdySession31.cpp',
-    'SpdyStream3.cpp',
-    'SpdyStream31.cpp',
     'nsHttp.cpp',
     'nsHttpActivityDistributor.cpp',
     'nsHttpAuthCache.cpp',
@@ -73,6 +66,13 @@ CPP_SOURCES += [
     'nsHttpRequestHead.cpp',
     'nsHttpResponseHead.cpp',
     'nsHttpTransaction.cpp',
+    'NullHttpTransaction.cpp',
+    'SpdyPush3.cpp',
+    'SpdyPush31.cpp',
+    'SpdySession3.cpp',
+    'SpdySession31.cpp',
+    'SpdyStream3.cpp',
+    'SpdyStream31.cpp',
 ]
 
 IPDL_SOURCES += [

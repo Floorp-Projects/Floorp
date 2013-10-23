@@ -41,10 +41,10 @@ EXPORTS += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXPORTS += [
-        osdir + '/nsExternalSharingAppService.h',
-        osdir + '/nsExternalURLHandlerService.h',
-    ]
+    EXPORTS += [ '%s/%s' % (osdir, f) for f in [
+        'nsExternalSharingAppService.h',
+        'nsExternalURLHandlerService.h',
+    ]]
 
 if CONFIG['MOZ_ENABLE_MEEGOTOUCHSHARE']:
     EXPORTS += [

@@ -19,8 +19,8 @@ CPP_SOURCES += [
 
 if CONFIG['NECKO_PROTOCOLS'].find('ftp') != -1:
     CPP_SOURCES += [
-        'ParseFTPList.cpp',
         'nsFTPDirListingConv.cpp',
+        'ParseFTPList.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'cocoa':

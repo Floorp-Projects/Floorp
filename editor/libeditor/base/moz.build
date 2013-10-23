@@ -21,9 +21,6 @@ CPP_SOURCES += [
     'InsertElementTxn.cpp',
     'InsertTextTxn.cpp',
     'JoinElementTxn.cpp',
-    'PlaceholderTxn.cpp',
-    'SetDocTitleTxn.cpp',
-    'SplitElementTxn.cpp',
     'nsEditor.cpp',
     'nsEditorCommands.cpp',
     'nsEditorController.cpp',
@@ -31,6 +28,9 @@ CPP_SOURCES += [
     'nsEditorUtils.cpp',
     'nsSelectionState.cpp',
     'nsStyleSheetTxns.cpp',
+    'PlaceholderTxn.cpp',
+    'SetDocTitleTxn.cpp',
+    'SplitElementTxn.cpp',
 ]
 
 LIBRARY_NAME = 'editorbase_s'

@@ -43,6 +43,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'AutoMounter.cpp',
         'AutoMounterSetting.cpp',
         'GonkGPSGeolocationProvider.cpp',
+        'nsVolume.cpp',
+        'nsVolumeMountLock.cpp',
+        'nsVolumeService.cpp',
+        'nsVolumeStat.cpp',
         'OpenFileFinder.cpp',
         'TimeZoneSettingObserver.cpp',
         'Volume.cpp',
@@ -50,10 +54,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'VolumeManager.cpp',
         'VolumeServiceIOThread.cpp',
         'VolumeServiceTest.cpp',
-        'nsVolume.cpp',
-        'nsVolumeMountLock.cpp',
-        'nsVolumeService.cpp',
-        'nsVolumeStat.cpp',
     ]
 
 if CONFIG['ENABLE_TESTS']:
@@ -68,9 +68,9 @@ EXTRA_COMPONENTS += [
     'NetworkInterfaceListService.manifest',
     'NetworkManager.js',
     'NetworkManager.manifest',
-    'RILContentHelper.js',
     'RadioInterfaceLayer.js',
     'RadioInterfaceLayer.manifest',
+    'RILContentHelper.js',
 ]
 
 EXTRA_JS_MODULES += [

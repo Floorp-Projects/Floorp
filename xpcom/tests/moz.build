@@ -24,6 +24,7 @@ EXPORTS.testing += [
 ]
 
 sources = [
+    'nsIFileEnumerator',
     'TestArguments',
     'TestBlockingProcess',
     'TestCallTemplates',
@@ -35,7 +36,6 @@ sources = [
     'TestThreadPoolListener',
     'TestTimers',
     'TestUnicodeArguments',
-    'nsIFileEnumerator',
 ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
@@ -48,15 +48,13 @@ if CONFIG['WRAP_STL_INCLUDES']:
         'TestSTLWrappers',
     ]
 
-sources.sort()
-
 CPP_SOURCES += [
-    '%s.cpp' % s for s in sources
+    '%s.cpp' % s for s in sorted(sources)
 ]
 
 bin_suffix = CONFIG['BIN_SUFFIX']
 SIMPLE_PROGRAMS += [
-    '%s%s' % (s, bin_suffix) for s in sources
+    '%s%s' % (s, bin_suffix) for s in sorted(sources)
 ]
 
 MODULE = 'xpcom'
@@ -76,8 +74,8 @@ CPP_UNIT_TESTS += [
     'TestID.cpp',
     'TestObserverArray.cpp',
     'TestObserverService.cpp',
-    'TestPLDHash.cpp',
     'TestPipe.cpp',
+    'TestPLDHash.cpp',
     'TestRefPtr.cpp',
     'TestTArray.cpp',
     'TestTextFormatter.cpp',

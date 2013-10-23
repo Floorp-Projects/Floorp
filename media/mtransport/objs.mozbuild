@@ -27,7 +27,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'gonk_addrs.cpp',
     ]
 
-mtransport_lcppsrcs.sort()
 mtransport_cppsrcs = [ 
-    '%s/media/mtransport/%s' % (TOPSRCDIR, s) for s in mtransport_lcppsrcs
+    '%s/media/mtransport/%s' % (TOPSRCDIR, s) for s in sorted(mtransport_lcppsrcs)
 ]

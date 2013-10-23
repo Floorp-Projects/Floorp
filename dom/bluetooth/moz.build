@@ -41,10 +41,10 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothUnixSocketConnector.cpp',
         'BluetoothUtils.cpp',
         'BluetoothUuid.cpp',
-        'ObexBase.cpp',
         'ipc/BluetoothChild.cpp',
         'ipc/BluetoothParent.cpp',
-        'ipc/BluetoothServiceChildProcess.cpp'
+        'ipc/BluetoothServiceChildProcess.cpp',
+        'ObexBase.cpp'
     ]
 
     if CONFIG['MOZ_B2G_RIL']:

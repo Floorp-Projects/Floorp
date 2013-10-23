@@ -48,9 +48,9 @@ MODULE = 'xpcom'
 EXPORTS += [
     'nsArray.h',
     'nsAtomService.h',
-    'nsCRT.h',
     'nsCharSeparatedTokenizer.h',
     'nsCheapSets.h',
+    'nsCRT.h',
     'nsExpirationTracker.h',
     'nsHashPropertyBag.h',
     'nsHashtable.h',
@@ -73,7 +73,6 @@ EXPORTS.mozilla += [
 ]
 
 CPP_SOURCES += [
-    'TimeStamp.cpp',
     'nsArray.cpp',
     'nsAtomService.cpp',
     'nsAtomTable.cpp',
@@ -91,6 +90,7 @@ CPP_SOURCES += [
     'nsSupportsArrayEnumerator.cpp',
     'nsSupportsPrimitives.cpp',
     'nsVariant.cpp',
+    'TimeStamp.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

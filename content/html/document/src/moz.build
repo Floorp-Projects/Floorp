@@ -19,10 +19,10 @@ CPP_SOURCES += [
     'HTMLAllCollection.cpp',
     'ImageDocument.cpp',
     'MediaDocument.cpp',
-    'PluginDocument.cpp',
-    'VideoDocument.cpp',
     'nsHTMLContentSink.cpp',
     'nsHTMLDocument.cpp',
+    'PluginDocument.cpp',
+    'VideoDocument.cpp',
 ]
 
 LIBRARY_NAME = 'gkconhtmldoc_s'

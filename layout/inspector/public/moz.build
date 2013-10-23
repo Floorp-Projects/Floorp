@@ -6,9 +6,9 @@
 
 XPIDL_SOURCES += [
     'inICSSValueSearch.idl',
+    'inIDeepTreeWalker.idl',
     'inIDOMUtils.idl',
     'inIDOMView.idl',
-    'inIDeepTreeWalker.idl',
     'inIFlasher.idl',
     'inISearchObserver.idl',
     'inISearchProcess.idl',
