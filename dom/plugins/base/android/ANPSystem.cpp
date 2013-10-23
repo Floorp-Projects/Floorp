@@ -19,8 +19,8 @@
 const char*
 anp_system_getApplicationDataDirectory(NPP instance)
 {
-  static const char *dir = NULL;
-  static const char *privateDir = NULL;
+  static const char *dir = nullptr;
+  static const char *privateDir = nullptr;
 
   bool isPrivate = false;
 
