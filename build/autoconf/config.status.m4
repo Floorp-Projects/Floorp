@@ -42,7 +42,7 @@ ifelse($#, 2, _MOZ_AC_DEFINE_UNQUOTED($1, $2), $#, 3, _MOZ_AC_DEFINE_UNQUOTED($1
 ])
 
 dnl Replace AC_OUTPUT to create and call a python config.status
-define([AC_OUTPUT],
+define([_MOZ_AC_OUTPUT],
 [dnl Top source directory in Windows format (as opposed to msys format).
 WIN_TOP_SRC=
 encoding=utf-8
@@ -121,33 +121,6 @@ done
 cat >> $CONFIG_STATUS <<\EOF
 ] ]
 
-dnl List of files to apply AC_SUBSTs to. This is the list of files given
-dnl as an argument to AC_OUTPUT ($1)
-files = [
-EOF
-
-for out in $1; do
-  echo "    '$out'," >> $CONFIG_STATUS
-done
-
-cat >> $CONFIG_STATUS <<\EOF
-]
-
-dnl List of header files to apply AC_DEFINEs to. This is stored in the
-dnl AC_LIST_HEADER m4 macro by AC_CONFIG_HEADER.
-headers = [
-EOF
-
-ifdef(<<<AC_LIST_HEADER>>>, <<<
-HEADERS="AC_LIST_HEADER"
-for header in $HEADERS; do
-  echo "    '$header'," >> $CONFIG_STATUS
-done
->>>)dnl
-
-cat >> $CONFIG_STATUS <<\EOF
-]
-
 dnl List of AC_DEFINEs that aren't to be exposed in ALLDEFINES
 non_global_defines = [
 EOF
@@ -161,7 +134,7 @@ fi
 cat >> $CONFIG_STATUS <<EOF
 ]
 
-__all__ = ['topobjdir', 'topsrcdir', 'defines', 'non_global_defines', 'substs', 'files', 'headers']
+__all__ = ['topobjdir', 'topsrcdir', 'defines', 'non_global_defines', 'substs']
 
 dnl Do the actual work
 if __name__ == '__main__':
@@ -180,6 +153,20 @@ if test "$no_create" != yes && ! ${PYTHON} $CONFIG_STATUS; then
     trap '' EXIT
     exit 1
 fi
+])
+
+define([m4_fatal],[
+errprint([$1
+])
+m4exit(1)
+])
+
+define([AC_OUTPUT], [ifelse($#_$1, 1_, [_MOZ_AC_OUTPUT()],
+[m4_fatal([Use CONFIGURE_SUBST_FILES in moz.build files to create substituted files.])]
+)])
+
+define([AC_CONFIG_HEADER],
+[m4_fatal([Use CONFIGURE_DEFINE_FILES in moz.build files to produce header files.])
 ])
 
 AC_SUBST([MOZ_PSEUDO_DERECURSE])

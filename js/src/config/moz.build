@@ -4,6 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+CONFIGURE_SUBST_FILES += [
+    'autoconf.mk',
+    'emptyvars.mk',
+]
+
 NO_DIST_INSTALL = True
 # For sanity's sake, we compile nsinstall without the wrapped system
 # headers, so that we can use it to set up the wrapped system headers.

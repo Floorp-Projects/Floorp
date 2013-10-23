@@ -25,6 +25,7 @@ from .data import (
     GeneratedEventWebIDLFile,
     GeneratedInclude,
     GeneratedWebIDLFile,
+    HeaderFileSubstitution,
     InstallationTarget,
     IPDLFile,
     LocalInclude,
@@ -99,14 +100,12 @@ class TreeMetadataEmitter(LoggingMixin):
         for o in self._emit_directory_traversal_from_sandbox(sandbox): yield o
 
         for path in sandbox['CONFIGURE_SUBST_FILES']:
-            if os.path.isabs(path):
-                path = path[1:]
+            yield self._create_substitution(ConfigFileSubstitution, sandbox,
+                path)
 
-            sub = ConfigFileSubstitution(sandbox)
-            sub.input_path = os.path.join(sandbox['SRCDIR'], '%s.in' % path)
-            sub.output_path = os.path.join(sandbox['OBJDIR'], path)
-            sub.relpath = path
-            yield sub
+        for path in sandbox['CONFIGURE_DEFINE_FILES']:
+            yield self._create_substitution(HeaderFileSubstitution, sandbox,
+                path)
 
         # XPIDL source files get processed and turned into .h and .xpt files.
         # If there are multiple XPIDL files in a directory, they get linked
@@ -265,6 +264,17 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for name, jar in sandbox.get('JAVA_JAR_TARGETS', {}).items():
             yield SandboxWrapped(sandbox, jar)
+
+    def _create_substitution(self, cls, sandbox, path):
+        if os.path.isabs(path):
+            path = path[1:]
+
+        sub = cls(sandbox)
+        sub.input_path = os.path.join(sandbox['SRCDIR'], '%s.in' % path)
+        sub.output_path = os.path.join(sandbox['OBJDIR'], path)
+        sub.relpath = path
+
+        return sub
 
     def _process_test_manifest(self, sandbox, info, manifest_path):
         flavor, install_prefix, filter_inactive = info

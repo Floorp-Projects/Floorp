@@ -29,6 +29,7 @@ from ..frontend.data import (
     GeneratedEventWebIDLFile,
     GeneratedInclude,
     GeneratedWebIDLFile,
+    HeaderFileSubstitution,
     InstallationTarget,
     IPDLFile,
     JavaJarData,
@@ -92,16 +93,6 @@ class BackendMakeFile(object):
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
         self.fh.write('\n')
         self.fh.write('MOZBUILD_DERIVED := 1\n')
-
-        # The global rule to incur backend generation generates Makefiles.
-        self.fh.write('NO_MAKEFILE_RULE := 1\n')
-
-        # We can't blindly have a SUBMAKEFILES rule because some of the
-        # Makefile may not have a corresponding Makefile.in. For the case
-        # where a new directory is added, the mozbuild file referencing that
-        # new directory will need updated. This will cause a full backend
-        # scan and build, installing the new Makefile.
-        self.fh.write('NO_SUBMAKEFILES_RULE := 1\n')
 
     def write(self, buf):
         self.fh.write(buf)
@@ -346,6 +337,11 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, ConfigFileSubstitution):
             self._update_from_avoid_write(
                 backend_file.environment.create_config_file(obj.output_path))
+            self.backend_input_files.add(obj.input_path)
+            self.summary.managed_count += 1
+        elif isinstance(obj, HeaderFileSubstitution):
+            self._update_from_avoid_write(
+                backend_file.environment.create_config_header(obj.output_path))
             self.backend_input_files.add(obj.input_path)
             self.summary.managed_count += 1
         elif isinstance(obj, XPIDLFile):

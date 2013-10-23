@@ -25,7 +25,14 @@ if CONFIG['JS_STANDALONE']:
 else:
     LIBRARY_NAME = 'mozjs'
 
-CONFIGURE_SUBST_FILES += ['devtools/rootAnalysis/Makefile']
+CONFIGURE_SUBST_FILES += [
+    'devtools/rootAnalysis/Makefile',
+    'js-confdefs.h',
+]
+
+CONFIGURE_DEFINE_FILES += [
+    'js-config.h',
+]
 
 # Changes to internal header files, used externally, massively slow down
 # browser builds.  Don't add new files here unless you know what you're
