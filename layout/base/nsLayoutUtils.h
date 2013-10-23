@@ -988,13 +988,9 @@ public:
    * and margin.
    */
   enum IntrinsicWidthType { MIN_WIDTH, PREF_WIDTH };
-  enum {
-    IGNORE_PADDING = 0x01
-  };
   static nscoord IntrinsicForContainer(nsRenderingContext* aRenderingContext,
                                        nsIFrame* aFrame,
-                                       IntrinsicWidthType aType,
-                                       uint32_t aFlags = 0);
+                                       IntrinsicWidthType aType);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the
