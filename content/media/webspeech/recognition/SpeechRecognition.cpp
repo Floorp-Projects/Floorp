@@ -477,7 +477,7 @@ SpeechRecognition::NotifyFinalResult(SpeechEvent* aEvent)
   srEvent->InitSpeechRecognitionEvent(NS_LITERAL_STRING("result"),
                                       true, false, 0, ilist,
                                       NS_LITERAL_STRING("NOT_IMPLEMENTED"),
-                                      NULL);
+                                      nullptr);
   domEvent->SetTrusted(true);
 
   bool defaultActionEnabled;

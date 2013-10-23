@@ -129,7 +129,7 @@ public:
     , mHeight(0)
     , mInitDone(false)
     , mInSnapshotMode(false)
-    , mSnapshotPath(NULL) {
+    , mSnapshotPath(nullptr) {
     MOZ_ASSERT(aVideoEnginePtr);
     mState = kReleased;
     Init();

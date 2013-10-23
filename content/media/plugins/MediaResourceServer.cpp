@@ -225,7 +225,7 @@ ServeResourceEvent::Run() {
     NS_NAMED_LITERAL_CSTRING(byteRange, "Range: bytes=");
     const char* s = strstr(line.get(), byteRange.get());
     if (s) {
-      start = strtoll(s+byteRange.Length(), NULL, 10);
+      start = strtoll(s+byteRange.Length(), nullptr, 10);
 
       // Clamp 'start' to be between 0 and the resource length.
       start = std::max(0ll, std::min(resource->GetLength(), start));

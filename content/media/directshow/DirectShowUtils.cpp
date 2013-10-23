@@ -163,7 +163,7 @@ GetGraphNotifyString(long evCode)
     CASE(VFW_S_VIDEO_NOT_RENDERED); // Partial success; the video was not rendered.
     CASE(E_ABORT); // Operation aborted.
     CASE(E_OUTOFMEMORY); // Insufficient memory.
-    CASE(E_POINTER); // NULL pointer argument.
+    CASE(E_POINTER); // Null pointer argument.
     CASE(VFW_E_CANNOT_CONNECT); // No combination of intermediate filters could be found to make the connection.
     CASE(VFW_E_CANNOT_RENDER); // No combination of filters could be found to render the stream.
     CASE(VFW_E_NO_ACCEPTABLE_TYPES); // There is no common media type between these pins.
@@ -187,7 +187,7 @@ CreateAndAddFilter(IGraphBuilder* aGraph,
 
   nsRefPtr<IBaseFilter> filter;
   hr = CoCreateInstance(aFilterClsId,
-                        NULL,
+                        nullptr,
                         CLSCTX_INPROC_SERVER,
                         IID_IBaseFilter,
                         getter_AddRefs(filter));
@@ -215,7 +215,7 @@ AddMP3DMOWrapperFilter(IGraphBuilder* aGraph,
   // Create the wrapper filter.
   nsRefPtr<IBaseFilter> filter;
   hr = CoCreateInstance(CLSID_DMOWrapperFilter,
-                        NULL,
+                        nullptr,
                         CLSCTX_INPROC_SERVER,
                         IID_IBaseFilter,
                         getter_AddRefs(filter));
@@ -281,7 +281,7 @@ GetUnconnectedPin(IBaseFilter* aFilter, PIN_DIRECTION aPinDir)
 
   // Test each pin to see if it matches the direction we're looking for.
   RefPtr<IPin> pin;
-  while (S_OK == enumPins->Next(1, byRef(pin), NULL)) {
+  while (S_OK == enumPins->Next(1, byRef(pin), nullptr)) {
     bool matches = FALSE;
     if (SUCCEEDED(MatchUnconnectedPin(pin, aPinDir, &matches)) &&
         matches) {
