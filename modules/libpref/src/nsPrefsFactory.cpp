@@ -20,10 +20,10 @@ static NS_DEFINE_CID(kPrefLocalizedStringCID, NS_PREFLOCALIZEDSTRING_CID);
 static NS_DEFINE_CID(kRelativeFilePrefCID, NS_RELATIVEFILEPREF_CID);
  
 static mozilla::Module::CIDEntry kPrefCIDs[] = {
-  { &kPrefServiceCID, true, NULL, PreferencesConstructor },
-  { &kPrefLocalizedStringCID, false, NULL, nsPrefLocalizedStringConstructor },
-  { &kRelativeFilePrefCID, false, NULL, nsRelativeFilePrefConstructor },
-  { NULL }
+  { &kPrefServiceCID, true, nullptr, PreferencesConstructor },
+  { &kPrefLocalizedStringCID, false, nullptr, nsPrefLocalizedStringConstructor },
+  { &kRelativeFilePrefCID, false, nullptr, nsRelativeFilePrefConstructor },
+  { nullptr }
 };
 
 static mozilla::Module::ContractIDEntry kPrefContracts[] = {
@@ -32,7 +32,7 @@ static mozilla::Module::ContractIDEntry kPrefContracts[] = {
   { NS_RELATIVEFILEPREF_CONTRACTID, &kRelativeFilePrefCID },
   // compatibility for extension that uses old service
   { "@mozilla.org/preferences;1", &kPrefServiceCID },
-  { NULL }
+  { nullptr }
 };
 
 static void
@@ -45,9 +45,9 @@ static const mozilla::Module kPrefModule = {
   mozilla::Module::kVersion,
   kPrefCIDs,
   kPrefContracts,
-  NULL,
-  NULL,
-  NULL,
+  nullptr,
+  nullptr,
+  nullptr,
   UnloadPrefsModule
 };
 

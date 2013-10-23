@@ -14,9 +14,9 @@ NS_DEFINE_NAMED_CID(DEFLATECONVERTER_CID);
 NS_DEFINE_NAMED_CID(ZIPWRITER_CID);
 
 static const mozilla::Module::CIDEntry kZipWriterCIDs[] = {
-  { &kDEFLATECONVERTER_CID, false, NULL, nsDeflateConverterConstructor },
-  { &kZIPWRITER_CID, false, NULL, nsZipWriterConstructor },
-  { NULL }
+  { &kDEFLATECONVERTER_CID, false, nullptr, nsDeflateConverterConstructor },
+  { &kZIPWRITER_CID, false, nullptr, nsZipWriterConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kZipWriterContracts[] = {
@@ -25,7 +25,7 @@ static const mozilla::Module::ContractIDEntry kZipWriterContracts[] = {
   { "@mozilla.org/streamconv;1?from=uncompressed&to=x-gzip", &kDEFLATECONVERTER_CID },
   { "@mozilla.org/streamconv;1?from=uncompressed&to=rawdeflate", &kDEFLATECONVERTER_CID },
   { ZIPWRITER_CONTRACTID, &kZIPWRITER_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kZipWriterModule = {
