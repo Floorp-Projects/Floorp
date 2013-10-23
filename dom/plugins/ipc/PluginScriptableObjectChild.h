@@ -21,7 +21,7 @@ class PPluginIdentifierChild;
 struct ChildNPObject : NPObject
 {
   ChildNPObject()
-    : NPObject(), parent(NULL), invalidated(false)
+    : NPObject(), parent(nullptr), invalidated(false)
   {
     MOZ_COUNT_CTOR(ChildNPObject);
   }

@@ -13,7 +13,7 @@ namespace mozilla {
 namespace plugins {
 
 NestedLoopTimer::NestedLoopTimer(PluginModuleChild *pmc):
-     QObject(), mModule(pmc), mQTimer(NULL)
+     QObject(), mModule(pmc), mQTimer(nullptr)
 {
 }
 
@@ -22,7 +22,7 @@ NestedLoopTimer::~NestedLoopTimer()
     if (mQTimer) {
         mQTimer->stop();
         delete mQTimer;
-        mQTimer = NULL;
+        mQTimer = nullptr;
     }
 }
 

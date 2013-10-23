@@ -102,7 +102,7 @@ void
 PluginIdentifierChildString::Hash()
 {
   PluginModuleChild* module = static_cast<PluginModuleChild*>(Manager());
-  NS_ASSERTION(module->mStringIdentifiers.Get(mString) == NULL, "Replacing Hash?");
+  NS_ASSERTION(module->mStringIdentifiers.Get(mString) == nullptr, "Replacing Hash?");
   module->mStringIdentifiers.Put(mString, this);
 }
 
@@ -125,7 +125,7 @@ void
 PluginIdentifierChildInt::Hash()
 {
   PluginModuleChild* module = static_cast<PluginModuleChild*>(Manager());
-  NS_ASSERTION(module->mIntIdentifiers.Get(mInt) == NULL, "Replacing Hash?");
+  NS_ASSERTION(module->mIntIdentifiers.Get(mInt) == nullptr, "Replacing Hash?");
   module->mIntIdentifiers.Put(mInt, this);
 }
 

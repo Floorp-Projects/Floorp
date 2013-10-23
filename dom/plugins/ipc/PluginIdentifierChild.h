@@ -68,7 +68,7 @@ public:
 
 protected:
   PluginIdentifierChild(bool aIsString)
-    : mCanonicalIdentifier(NULL)
+    : mCanonicalIdentifier(nullptr)
     , mHashed(false)
     , mTemporaryRefs(0)
     , mIsString(aIsString)
@@ -99,7 +99,7 @@ private:
   // In order to deal with temporary identifiers which appear on the stack,
   // identifiers use the following state invariants:
   //
-  // * mCanonicalIdentifier is non-NULL: this is a duplicate identifier, no
+  // * mCanonicalIdentifier is non-nullptr: this is a duplicate identifier, no
   //   further information is necessary.
   // * mHashed is false: this identifier is a newborn, non-permanent identifier
   // * mHashed is true, mTemporaryRefs is 0: this identifier is permanent

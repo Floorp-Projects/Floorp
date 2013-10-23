@@ -232,7 +232,7 @@ inline void AssertPluginThread()
 void DeferNPObjectLastRelease(const NPNetscapeFuncs* f, NPObject* o);
 void DeferNPVariantLastRelease(const NPNetscapeFuncs* f, NPVariant* v);
 
-// in NPAPI, char* == NULL is sometimes meaningful.  the following is
+// in NPAPI, char* == nullptr is sometimes meaningful.  the following is
 // helper code for dealing with nullable nsCString's
 inline nsCString
 NullableString(const char* aString)
@@ -249,7 +249,7 @@ inline const char*
 NullableStringGet(const nsCString& str)
 {
   if (str.IsVoid())
-    return NULL;
+    return nullptr;
 
   return str.get();
 }
@@ -499,12 +499,12 @@ struct ParamTraits<NPNSString*>
   typedef NPNSString* paramType;
 
   // Empty string writes a length of 0 and no buffer.
-  // We don't write a NULL terminating character in buffers.
+  // We don't write a nullptr terminating character in buffers.
   static void Write(Message* aMsg, const paramType& aParam)
   {
     CFStringRef cfString = (CFStringRef)aParam;
 
-    // Write true if we have a string, false represents NULL.
+    // Write true if we have a string, false represents nullptr.
     aMsg->WriteBool(!!cfString);
     if (!cfString) {
       return;
@@ -534,7 +534,7 @@ struct ParamTraits<NPNSString*>
       return false;
     }
     if (!haveString) {
-      *aResult = NULL;
+      *aResult = nullptr;
       return true;
     }
 
@@ -609,7 +609,7 @@ struct ParamTraits<NSCursorInfo>
       return false;
     }
 
-    uint8_t* data = NULL;
+    uint8_t* data = nullptr;
     if (dataLength != 0) {
       if (!aMsg->ReadBytes(aIter, (const char**)&data, dataLength) || !data) {
         return false;
