@@ -29,10 +29,10 @@ if CONFIG['NECKO_COOKIES']:
         'CookieServiceChild.h',
     ]
     CPP_SOURCES += [
+        'CookieServiceChild.cpp',
+        'CookieServiceParent.cpp',
         'nsCookie.cpp',
         'nsCookieService.cpp',
-        'CookieServiceParent.cpp',
-        'CookieServiceChild.cpp',
     ]
 
 if CONFIG['NECKO_COOKIES']:

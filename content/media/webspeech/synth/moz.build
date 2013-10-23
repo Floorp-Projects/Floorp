@@ -30,10 +30,10 @@ if CONFIG['MOZ_WEBSPEECH']:
     CPP_SOURCES += [
         'EnableSpeechSynthesisCheck.cpp',
         'SpeechSynthesis.cpp',
-        'ipc/SpeechSynthesisChild.cpp',
-        'ipc/SpeechSynthesisParent.cpp',
         'SpeechSynthesisUtterance.cpp',
         'SpeechSynthesisVoice.cpp',
+        'ipc/SpeechSynthesisChild.cpp',
+        'ipc/SpeechSynthesisParent.cpp',
         'nsSpeechTask.cpp',
         'nsSynthVoiceRegistry.cpp',
     ]

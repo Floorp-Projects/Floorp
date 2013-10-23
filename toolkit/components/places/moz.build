@@ -40,22 +40,22 @@ if CONFIG['MOZ_PLACES']:
     ]
 
     CPP_SOURCES += [
+        'AsyncFaviconHelpers.cpp',
+        'Database.cpp',
+        'Helpers.cpp',
+        'History.cpp',
+        'PlaceInfo.cpp',
+        'SQLFunctions.cpp',
+        'VisitInfo.cpp',
         'nsAnnoProtocolHandler.cpp',
         'nsAnnotationService.cpp',
         'nsFaviconService.cpp',
+        'nsMaybeWeakPtr.cpp',
+        'nsNavBookmarks.cpp',
         'nsNavHistory.cpp',
         'nsNavHistoryQuery.cpp',
         'nsNavHistoryResult.cpp',
-        'nsNavBookmarks.cpp',
-        'nsMaybeWeakPtr.cpp',
         'nsPlacesModule.cpp',
-        'SQLFunctions.cpp',
-        'Helpers.cpp',
-        'History.cpp',
-        'AsyncFaviconHelpers.cpp',
-        'PlaceInfo.cpp',
-        'VisitInfo.cpp',
-        'Database.cpp',
     ]
 
     LOCAL_INCLUDES += [

@@ -38,15 +38,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'nsVolumeService.h',
     ]
     CPP_SOURCES += [
+        'AudioChannelManager.cpp',
         'AudioManager.cpp',
         'AutoMounter.cpp',
         'AutoMounterSetting.cpp',
         'GonkGPSGeolocationProvider.cpp',
-        'AudioChannelManager.cpp',
-        'nsVolume.cpp',
-        'nsVolumeMountLock.cpp',
-        'nsVolumeService.cpp',
-        'nsVolumeStat.cpp',
         'OpenFileFinder.cpp',
         'TimeZoneSettingObserver.cpp',
         'Volume.cpp',
@@ -54,6 +50,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'VolumeManager.cpp',
         'VolumeServiceIOThread.cpp',
         'VolumeServiceTest.cpp',
+        'nsVolume.cpp',
+        'nsVolumeMountLock.cpp',
+        'nsVolumeService.cpp',
+        'nsVolumeStat.cpp',
     ]
 
 if CONFIG['ENABLE_TESTS']:

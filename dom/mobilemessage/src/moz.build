@@ -15,9 +15,9 @@ EXPORTS.mozilla.dom.mobilemessage += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     CPP_SOURCES += [
+        'android/MmsService.cpp',
         'android/MobileMessageDatabaseService.cpp',
         'android/SmsService.cpp',
-        'android/MmsService.cpp',
     ]
 elif CONFIG['MOZ_B2G_RIL']:
     EXTRA_JS_MODULES = [
@@ -37,8 +37,8 @@ elif CONFIG['MOZ_B2G_RIL']:
     ]
 else:
     CPP_SOURCES += [
-        'fallback/MobileMessageDatabaseService.cpp',
         'fallback/MmsService.cpp',
+        'fallback/MobileMessageDatabaseService.cpp',
         'fallback/SmsService.cpp',
     ]
 

@@ -71,10 +71,12 @@ CPP_SOURCES += [
     'DOMError.cpp',
     'DOMException.cpp',
     'DOMRequest.cpp',
-    'Navigator.cpp',
     'MessageChannel.cpp',
     'MessagePort.cpp',
     'MessagePortList.cpp',
+    'Navigator.cpp',
+    'URL.cpp',
+    'WindowNamedPropertiesHandler.cpp',
     'nsContentPermissionHelper.cpp',
     'nsDOMClassInfo.cpp',
     'nsDOMNavigationTiming.cpp',
@@ -99,8 +101,6 @@ CPP_SOURCES += [
     'nsWindowMemoryReporter.cpp',
     'nsWindowRoot.cpp',
     'nsWrapperCache.cpp',
-    'URL.cpp',
-    'WindowNamedPropertiesHandler.cpp',
 ]
 
 EXTRA_COMPONENTS += [
