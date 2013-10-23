@@ -4087,6 +4087,20 @@ pref("image.mem.max_ms_before_yield", 5);
 // might keep around more than this, but we'll try to get down to this value).
 pref("image.mem.max_decoded_image_kb", 51200);
 
+// Minimum timeout for expiring unused images from the surface cache, in
+// milliseconds. This controls how long we store cached temporary surfaces.
+pref("image.mem.surfacecache.min_expiration_ms", 60000); // 60ms
+
+// Maximum size for the surface cache, in kilobytes.
+pref("image.mem.surfacecache.max_size_kb", 102400); // 100MB
+
+// The surface cache's size, within the constraints of the maximum size set
+// above, is determined using a formula based on system capabilities like memory
+// size. The size factor is used to tune this formula. Larger size factors
+// result in smaller caches. The default should be a good balance for most
+// systems.
+pref("image.mem.surfacecache.size_factor", 64);
+
 // Whether we decode images on multiple background threads rather than the
 // foreground thread.
 pref("image.multithreaded_decoding.enabled", true);

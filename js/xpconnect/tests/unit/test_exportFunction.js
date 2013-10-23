@@ -17,7 +17,7 @@ function run_test() {
     Object.prototype.protoProp = "common";
     var wasCalled = false;
     var _this = this;
-    var funToExport = function(a, obj, native, mixed) {
+    this.funToExport = function(a, obj, native, mixed) {
       do_check_eq(a, 42);
       do_check_neq(obj, subsb.tobecloned);
       do_check_eq(obj.cloned, "cloned");
@@ -69,5 +69,20 @@ function run_test() {
     } catch (e) {
       do_check_true(e.toString().indexOf('Permission denied') > -1);
     }
+  }.toSource() + ")()", epsb);
+
+  // Let's create an object in the target scope and add privileged
+  // function to it as a property.
+  Cu.evalInSandbox("(" + function() {
+    var newContentObject = createObjectIn(subsb, {defineAs:"importedObject"});
+    exportFunction(funToExport, newContentObject, "privMethod");
+  }.toSource() + ")()", epsb);
+
+  Cu.evalInSandbox("(" + function () {
+    importedObject.privMethod(42, tobecloned, native, mixed);
+  }.toSource() + ")()", subsb);
+
+  Cu.evalInSandbox("(" + function() {
+    checkIfCalled();
   }.toSource() + ")()", epsb);
 }

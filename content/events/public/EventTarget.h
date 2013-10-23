@@ -26,8 +26,8 @@ template <class T> struct Nullable;
 
 // IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID \
-{ 0x0a5aed21, 0x0bab, 0x48b3, \
- { 0xbe, 0x4b, 0xd4, 0xf9, 0xd4, 0xea, 0xc7, 0xdb } }
+{ 0xce3817d0, 0x177b, 0x402f, \
+ { 0xae, 0x75, 0xf8, 0x4e, 0xbe, 0x5a, 0x07, 0xc3 } }
 
 class EventTarget : public nsIDOMEventTarget,
                     public nsWrapperCache
@@ -69,6 +69,17 @@ public:
   // target is associated with.  Will return null if the inner window is not the
   // current inner or if there is no window around at all.
   virtual nsIDOMWindow* GetOwnerGlobal() = 0;
+
+  /**
+   * Get the event listener manager, creating it if it does not already exist.
+   */
+  virtual nsEventListenerManager* GetOrCreateListenerManager() = 0;
+
+  /**
+   * Get the event listener manager, returning null if it does not already
+   * exist.
+   */
+  virtual nsEventListenerManager* GetExistingListenerManager() const = 0;
 
 protected:
   EventHandlerNonNull* GetEventHandler(nsIAtom* aType,

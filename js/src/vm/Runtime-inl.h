@@ -41,7 +41,7 @@ inline JSObject *
 NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::InitialHeap heap)
 {
     // The new object cache does not account for metadata attached via callbacks.
-    JS_ASSERT(!cx->compartment()->objectMetadataCallback);
+    JS_ASSERT(!cx->compartment()->hasObjectMetadataCallback());
 
     JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
     Entry *entry = &entries[entry_];

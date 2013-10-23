@@ -1,0 +1,17 @@
+input[type=color] {
+  /* This matches the "padding" declaration for 'input' in forms.css, but we
+     need to specify it here as well in order for the testcases to match the
+     reference cases' renderings on Windows. This is because
+     nsNativeThemeWin.cpp checks HasAuthorSpecifiedRules() when deciding
+     whether to apply some bonus theme-dependent widget padding. (And that
+     function only considers *author* style rules - not forms.css.) So, to make
+     sure the testcase and reference case get equivalent amounts of bonus
+     padding, we need to specify an *author*-level declaration for "padding"
+     for any testcase whose reference case has such a declaration.
+
+     Ultimately, when we pref on input[type="color"] by default, we can just
+     ensure that it uses the same padding as <button> in forms.css, at which
+     point we can drop the "padding" declaration from the testcases and the
+     reference cases (and probably drop this file altogether). */
+  padding: 1px 0px 1px 0px;
+}

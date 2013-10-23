@@ -4,8 +4,8 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.6'
-deps = ['moznetwork >= 0.1']
+PACKAGE_VERSION = '0.7'
+deps = ['moznetwork >= 0.24']
 
 setup(name='mozhttpd',
       version=PACKAGE_VERSION,

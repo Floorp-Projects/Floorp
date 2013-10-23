@@ -1050,6 +1050,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
         movl(dest, dest); // Zero upper 32-bits.
     }
+    void branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail) {
+        cvttss2sq(src, dest);
+
+        // Same trick as for Doubles
+        cmpq(dest, Imm32(1));
+        j(Assembler::Overflow, fail);
+
+        movl(dest, dest); // Zero upper 32-bits.
+    }
 
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand) {
         testl(operand.valueReg(), operand.valueReg());
@@ -1097,6 +1106,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest) {
         cvtsq2sd(src, dest);
+    }
+
+    void convertUInt32ToFloat32(const Register &src, const FloatRegister &dest) {
+        cvtsq2ss(src, dest);
     }
 
     void inc64(AbsoluteAddress dest) {

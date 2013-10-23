@@ -198,7 +198,7 @@ ComparePolicy::adjustInputs(MInstruction *def)
     // Convert all inputs to the right input type
     MIRType type = compare->inputType();
     JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double ||
-              type == MIRType_Object || type == MIRType_String);
+              type == MIRType_Object || type == MIRType_String || type == MIRType_Float32);
     for (size_t i = 0; i < 2; i++) {
         MDefinition *in = def->getOperand(i);
         if (in->type() == type)
@@ -226,6 +226,20 @@ ComparePolicy::adjustInputs(MInstruction *def)
                 in = boxAt(def, in);
             }
             replace = MToDouble::New(in, convert);
+            break;
+          }
+          case MIRType_Float32: {
+            MToFloat32::ConversionKind convert = MToFloat32::NumbersOnly;
+            if (compare->compareType() == MCompare::Compare_DoubleMaybeCoerceLHS && i == 0)
+                convert = MToFloat32::NonNullNonStringPrimitives;
+            else if (compare->compareType() == MCompare::Compare_DoubleMaybeCoerceRHS && i == 1)
+                convert = MToFloat32::NonNullNonStringPrimitives;
+            if (in->type() == MIRType_Null ||
+                (in->type() == MIRType_Boolean && convert == MToFloat32::NumbersOnly))
+            {
+                in = boxAt(def, in);
+            }
+            replace = MToFloat32::New(in, convert);
             break;
           }
           case MIRType_Int32:
@@ -303,6 +317,7 @@ TestPolicy::adjustInputs(MInstruction *ins)
       case MIRType_Boolean:
       case MIRType_Int32:
       case MIRType_Double:
+      case MIRType_Float32:
       case MIRType_Object:
         break;
 
@@ -339,13 +354,6 @@ BitwisePolicy::adjustInputs(MInstruction *ins)
         // See BinaryArithPolicy::adjustInputs for an explanation of the following
         if (in->type() == MIRType_Object || in->type() == MIRType_String)
             in = boxAt(ins, in);
-
-        if (in->type() == MIRType_Float32) {
-            MToDouble *replace = MToDouble::New(in);
-            ins->block()->insertBefore(ins, replace);
-            ins->replaceOperand(i, replace);
-            in = replace;
-        }
 
         MInstruction *replace = MTruncateToInt32::New(in);
         ins->block()->insertBefore(ins, replace);
@@ -652,11 +660,6 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
       case ScalarTypeRepresentation::TYPE_INT32:
       case ScalarTypeRepresentation::TYPE_UINT32:
         if (value->type() != MIRType_Int32) {
-            // Workaround for bug 915903
-            if (value->type() == MIRType_Float32) {
-                value = MToDouble::New(value);
-                ins->block()->insertBefore(ins, value->toInstruction());
-            }
             value = MTruncateToInt32::New(value);
             ins->block()->insertBefore(ins, value->toInstruction());
         }

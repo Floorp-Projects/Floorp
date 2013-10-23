@@ -3476,9 +3476,15 @@ nsDOMDeviceStorage::DispatchDOMEvent(WidgetEvent* aEvent,
 }
 
 nsEventListenerManager *
-nsDOMDeviceStorage::GetListenerManager(bool aMayCreate)
+nsDOMDeviceStorage::GetOrCreateListenerManager()
 {
-  return nsDOMEventTargetHelper::GetListenerManager(aMayCreate);
+  return nsDOMEventTargetHelper::GetOrCreateListenerManager();
+}
+
+nsEventListenerManager *
+nsDOMDeviceStorage::GetExistingListenerManager() const
+{
+  return nsDOMEventTargetHelper::GetExistingListenerManager();
 }
 
 nsIScriptContext *
