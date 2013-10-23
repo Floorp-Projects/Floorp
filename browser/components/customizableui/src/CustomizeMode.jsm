@@ -676,6 +676,31 @@ CustomizeMode.prototype = {
     }
   },
 
+  onWidgetDestroyed: function(aWidgetId) {
+    let wrapper = this.document.getElementById("wrapper-" + aWidgetId);
+    if (wrapper) {
+      let wasInPanel = wrapper.parentNode == this.panelUIContents;
+      wrapper.remove();
+      if (wasInPanel) {
+        this._showPanelCustomizationPlaceholders();
+      }
+    }
+  },
+
+  onWidgetAfterCreation: function(aWidgetId, aArea) {
+    // If the node was added to an area, we would have gotten an onWidgetAdded notification,
+    // plus associated DOM change notifications, so only do stuff for the palette:
+    if (!aArea) {
+      let widgetNode = this.document.getElementById(aWidgetId);
+      if (widgetNode) {
+        this.wrapToolbarItem(widgetNode, "palette");
+      } else {
+        let widget = CustomizableUI.getWidget(aWidgetId);
+        this.visiblePalette.appendChild(this.makePaletteItem(widget, "palette"));
+      }
+    }
+  },
+
   _onUIChange: function() {
     this._changed = true;
     this._updateResetButton();
@@ -954,15 +979,16 @@ CustomizeMode.prototype = {
       if (aTargetArea != aOriginArea) {
         return;
       }
+      let place = draggedItem.parentNode.getAttribute("place");
       this.unwrapToolbarItem(draggedItem.parentNode);
       if (aTargetNode == aTargetArea.customizationTarget) {
         aTargetArea.customizationTarget.appendChild(draggedItem);
       } else {
         this.unwrapToolbarItem(aTargetNode.parentNode);
         aTargetArea.customizationTarget.insertBefore(draggedItem, aTargetNode);
-        this.wrapToolbarItem(aTargetNode);
+        this.wrapToolbarItem(aTargetNode, place);
       }
-      this.wrapToolbarItem(draggedItem);
+      this.wrapToolbarItem(draggedItem, place);
       return;
     }
 
