@@ -64,3 +64,15 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
 toolbarbutton[cui-areatype="menu-panel"] {
   margin: 0;
 }
+
+#BMB_bookmarksPopup > menu,
+#BMB_bookmarksPopup > menuitem {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+/* Override OSX-specific toolkit styles for the bookmarks panel */
+#BMB_bookmarksPopup > menuitem > .menu-accel-container,
+#BMB_bookmarksPopup > menu > .menu-right {
+  -moz-margin-end: 0;
+}

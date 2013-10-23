@@ -1891,10 +1891,6 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
   height: 16px;
 }
 
-#BMB_bookmarksPopup > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 6px;
-}
-
 #BMB_bookmarksPopup[side="top"],
 #BMB_bookmarksPopup[side="bottom"] {
   margin-left: -26px;
@@ -1905,18 +1901,6 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 #BMB_bookmarksPopup[side="right"] {
   margin-top: -26px;
   margin-bottom: -26px;
-}
-
-/* Native styling background is bad on arrow panels */
-#BMB_bookmarksPopup > menuitem,
-#BMB_bookmarksPopup > menu,
-#BMB_bookmarksPopup > menuseparator {
-  -moz-appearance: none;
-}
-
-#BMB_bookmarksPopup > menuseparator {
-  border-top: 1px solid ThreeDShadow;
-  margin: 5px 0;
 }
 
 @media (min-resolution: 2dppx) {
