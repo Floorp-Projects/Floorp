@@ -5,6 +5,8 @@
 %filter substitution
 %define menuPanelWidth 21em
 %define exitSubviewGutterWidth 38px
+%define buttonStateHover :not(:-moz-any([disabled],[checked],[open],:active)):hover
+%define buttonStateActive :not([disabled]):-moz-any([open],[checked],:hover:active)
 
 %include ../browser.inc
 
@@ -291,7 +293,9 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 panelview toolbarbutton,
 #widget-overflow-list > toolbarbutton,
-.customizationmode-button {
+.customizationmode-button,
+#BMB_bookmarksPopup > menu,
+#BMB_bookmarksPopup > menuitem {
   -moz-appearance: none;
   padding: 2px 6px;
   background-color: hsla(210,32%,93%,0);
@@ -306,11 +310,13 @@ panelview toolbarbutton,
   transition-duration: 150ms;
 }
 
-panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
-#widget-overflow-list > toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):hover,
+panelview toolbarbutton@buttonStateHover@,
+#widget-overflow-list > toolbarbutton@buttonStateHover@,
 #edit-controls@inAnyPanel@ > toolbarbutton,
 #zoom-controls@inAnyPanel@ > toolbarbutton,
-.customizationmode-button {
+.customizationmode-button,
+#BMB_bookmarksPopup > menu@buttonStateHover@,
+#BMB_bookmarksPopup > menuitem@buttonStateHover@ {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
   box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
@@ -318,9 +324,11 @@ panelview toolbarbutton:not([disabled]):not([checked]):not([open]):not(:active):
               0 0 2px hsla(210,54%,20%,.1);
 }
 
-panelview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active),
+panelview toolbarbutton@buttonStateActive@,
 .customizationmode-button:not([disabled]):hover:active,
-#widget-overflow-list > toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active) {
+#widget-overflow-list > toolbarbutton@buttonStateActive@,
+#BMB_bookmarksPopup > menu@buttonStateActive@,
+#BMB_bookmarksPopup > menuitem@buttonStateActive@ {
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
   background-color: hsla(210,54%,20%,.15);
   border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
@@ -332,7 +340,25 @@ panelview toolbarbutton:not([disabled]):-moz-any([open],[checked],:hover:active)
   transition: none;
 }
 
-panelview toolbarseparator {
+#BMB_bookmarksPopup > menu,
+#BMB_bookmarksPopup > menuitem {
+  font: inherit;
+}
+
+#BMB_bookmarksPopup > menu:not([disabled="true"]),
+#BMB_bookmarksPopup > menuitem:not([disabled="true"]) {
+  color: inherit;
+}
+
+#BMB_bookmarksPopup > .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .autorepeatbutton-up,
+#BMB_bookmarksPopup > .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .autorepeatbutton-down {
+  -moz-appearance: none;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+panelview toolbarseparator,
+#BMB_bookmarksPopup > menuseparator {
   -moz-appearance: none;
   min-height: 0;
   border-top: 1px solid ThreeDShadow;
@@ -466,8 +492,13 @@ toolbarbutton.panel-multiview-anchor {
   -moz-padding-start: 0px;
 }
 
+#BMB_bookmarksPopup > menuitem[checked]::before,
 .PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
   content: "✓";
   display: -moz-box;
   width: 12px;
+}
+
+#BMB_bookmarksPopup > menuitem[checked] > .menu-iconic-left {
+  display: none;
 }
