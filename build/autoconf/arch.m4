@@ -14,6 +14,7 @@ MOZ_THUMB_INTERWORK=toolchain-default
 MOZ_FPU=toolchain-default
 MOZ_FLOAT_ABI=toolchain-default
 MOZ_SOFT_FLOAT=toolchain-default
+MOZ_ALIGN=toolchain-default
 
 MOZ_ARG_WITH_STRING(arch,
 [  --with-arch=[[type|toolchain-default]]
@@ -32,6 +33,7 @@ if test -z "$MOZ_ARCH"; then
         MOZ_ARCH=armv7-a
         MOZ_FPU=vfp
         MOZ_FLOAT_ABI=softfp
+        MOZ_ALIGN=no
         ;;
     arm-Darwin)
         MOZ_ARCH=toolchain-default
@@ -159,8 +161,28 @@ no)
     ;;
 esac
 
+case "$MOZ_ALIGN" in
+no)
+    align_flag="-mno-unaligned-access"
+    ;;
+yes)
+    align_flag="-munaligned-access"
+    ;;
+*)
+    align_flag=""
+    ;;
+esac
+
+if test -n "$align_flag"; then
+  _SAVE_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $align_flag"
+  AC_MSG_CHECKING(whether alignment flag ($align_flag) is supported)
+  AC_TRY_COMPILE([],[],,align_flag="")
+  CFLAGS="$_SAVE_CFLAGS"
+fi
+
 dnl Use echo to avoid accumulating space characters
-all_flags=`echo $arch_flag $thumb_flag $thumb_interwork_flag $fpu_flag $float_abi_flag $soft_float_flag`
+all_flags=`echo $arch_flag $thumb_flag $thumb_interwork_flag $fpu_flag $float_abi_flag $soft_float_flag $align_flag`
 if test -n "$all_flags"; then
     _SAVE_CFLAGS="$CFLAGS"
     CFLAGS="$all_flags"
