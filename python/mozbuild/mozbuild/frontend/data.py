@@ -320,6 +320,9 @@ class TestManifest(SandboxDerived):
         # The parsed manifestparser.TestManifest instance.
         'manifest',
 
+        # List of tests. Each element is a dict of metadata.
+        'tests',
+
         # The relative path of the parsed manifest within the srcdir.
         'manifest_relpath',
 
@@ -340,6 +343,7 @@ class TestManifest(SandboxDerived):
         self.manifest_relpath = relpath
         self.dupe_manifest = dupe_manifest
         self.installs = {}
+        self.tests = []
         self.external_installs = set()
 
 

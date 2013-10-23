@@ -2677,6 +2677,14 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
         OnValueChanged(!mParserCreating);
       }
 
+      // Call parent's SetAttr for color input so its control frame is notified
+      // and updated
+      if (mType == NS_FORM_INPUT_COLOR) {
+        return nsGenericHTMLFormElement::SetAttr(kNameSpaceID_None,
+                                                 nsGkAtoms::value, aValue,
+                                                 true);
+      }
+
       return NS_OK;
     }
 
@@ -3530,6 +3538,7 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               case NS_FORM_INPUT_RESET:
               case NS_FORM_INPUT_SUBMIT:
               case NS_FORM_INPUT_IMAGE: // Bug 34418
+              case NS_FORM_INPUT_COLOR:
               {
                 WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
                                        NS_MOUSE_CLICK, nullptr,

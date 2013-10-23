@@ -36,7 +36,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
 
   public:
     bool visitValue(LValue *value);
-    bool visitOsrValue(LOsrValue *value);
     bool visitBox(LBox *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitLoadSlotV(LLoadSlotV *ins);
@@ -50,6 +49,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitCompareV(LCompareV *lir);
     bool visitCompareVAndBranch(LCompareVAndBranch *lir);
     bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
+    bool visitTruncateFToInt32(LTruncateFToInt32 *ins);
     bool visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins);
     bool visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins);
     bool visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
@@ -59,6 +59,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);
     bool visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins);
     bool visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir);
+    bool visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir);
 
     void postAsmJSCall(LAsmJSCall *lir) {}
 };
