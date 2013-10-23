@@ -10,7 +10,6 @@ dnl ========================================================
 AC_PREREQ(2.13)
 AC_INIT(jsapi.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
-AC_CONFIG_HEADER(js-config.h)
 AC_CANONICAL_SYSTEM
 TARGET_CPU="${target_cpu}"
 TARGET_VENDOR="${target_vendor}"
@@ -4267,7 +4266,7 @@ AC_SUBST(ac_configure_args)
 dnl Spit out some output
 dnl ========================================================
 
-AC_OUTPUT([js-confdefs.h config/autoconf.mk config/emptyvars.mk])
+AC_OUTPUT()
 
 # Produce the js-config script at configure time; see the comments for
 # 'js*-config' in Makefile.in.

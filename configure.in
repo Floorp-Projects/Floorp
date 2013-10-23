@@ -8772,17 +8772,10 @@ HAVE_SYS_VFS_H
 HAVE_SYS_MOUNT_H
 "
 
-# FUTURE? Consider moving all these to moz.build files.
-AC_CONFIG_HEADER(
-netwerk/necko-config.h
-xpcom/xpcom-config.h
-xpcom/xpcom-private.h
-)
-
 AC_SUBST(STLPORT_LIBS)
 
 export WRITE_MOZINFO=1
-AC_OUTPUT([mozilla-config.h])
+AC_OUTPUT()
 unset WRITE_MOZINFO
 
 # Hack around an Apple bug that affects the egrep that comes with OS X 10.7.
