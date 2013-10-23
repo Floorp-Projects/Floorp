@@ -715,7 +715,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   metrics.mPresShellId = presShell->GetPresShellId();
 
   // If the scroll frame's content is marked 'scrollgrab', record this
-  // in the frame metrics, so APZC knows to provide the scroll grabbing
+  // in the FrameMetrics so APZ knows to provide the scroll grabbing
   // behaviour.
   if (aScrollFrame && nsContentUtils::HasScrollgrab(aScrollFrame->GetContent())) {
     metrics.mHasScrollgrab = true;
