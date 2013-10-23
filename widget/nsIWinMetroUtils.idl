@@ -12,23 +12,14 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(25524bde-8b30-4b49-8d67-7070c790aada)]
+[scriptable, uuid(496b4450-5757-40f7-aeb9-a958ae86dbd1)]
 interface nsIWinMetroUtils : nsISupports
 {
-  /* return constants for the handPreference property */
-  const long handPreferenceLeft = 0;
-  const long handPreferenceRight = 1;
-
   /**
    * Determine if the current browser is running in the metro immersive
    * environment.
    */
   readonly attribute boolean immersive;
-
-  /**
-   * Determine if the user prefers left handed or right handed input.
-   */
-  readonly attribute long handPreference;
 
   /**
    * Determine the activation URI

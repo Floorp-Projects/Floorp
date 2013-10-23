@@ -12,6 +12,7 @@
 #include "IUnknownImpl.h"
 #include "nsIAccessibleRelation.h"
 
+#include <utility>
 #include "nsTArray.h"
 
 #include "AccessibleRelation.h"
@@ -60,26 +61,19 @@ private:
 
 
 /**
- * Relations exposed to IAccessible2.
+ * Gecko to IAccessible2 relation types map.
  */
-static const RelationType sRelationTypesForIA2[] = {
-  RelationType::LABELLED_BY,
-  RelationType::LABEL_FOR,
-  RelationType::DESCRIBED_BY,
-  RelationType::DESCRIPTION_FOR,
-  RelationType::NODE_CHILD_OF,
-  RelationType::NODE_PARENT_OF,
-  RelationType::CONTROLLED_BY,
-  RelationType::CONTROLLER_FOR,
-  RelationType::FLOWS_TO,
-  RelationType::FLOWS_FROM,
-  RelationType::MEMBER_OF,
-  RelationType::SUBWINDOW_OF,
-  RelationType::EMBEDS,
-  RelationType::EMBEDDED_BY,
-  RelationType::POPUP_FOR,
-  RelationType::PARENT_WINDOW_OF
+
+const WCHAR *const IA2_RELATION_NULL = L"";
+
+#define RELATIONTYPE(geckoType, name, atkType, msaaType, ia2Type) \
+  std::pair<RelationType, const WCHAR *const>(RelationType::geckoType, ia2Type),
+
+static const std::pair<RelationType, const WCHAR *const> sRelationTypePairs[] = {
+#include "RelationTypeMap.h"
 };
+
+#undef RELATIONTYPE
 
 } // namespace a11y
 } // namespace mozilla

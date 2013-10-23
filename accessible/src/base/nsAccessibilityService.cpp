@@ -713,13 +713,22 @@ NS_IMETHODIMP
 nsAccessibilityService::GetStringRelationType(uint32_t aRelationType,
                                               nsAString& aString)
 {
-  if (aRelationType >= ArrayLength(kRelationTypeNames)) {
-    aString.AssignLiteral("unknown");
+  NS_ENSURE_ARG(aRelationType <= static_cast<uint32_t>(RelationType::LAST));
+
+#define RELATIONTYPE(geckoType, geckoTypeName, atkType, msaaType, ia2Type) \
+  case RelationType::geckoType: \
+    aString.AssignLiteral(geckoTypeName); \
     return NS_OK;
+
+  RelationType relationType = static_cast<RelationType>(aRelationType);
+  switch (relationType) {
+#include "RelationTypeMap.h"
+    default:
+      aString.AssignLiteral("unknown");
+      return NS_OK;
   }
 
-  CopyUTF8toUTF16(kRelationTypeNames[aRelationType], aString);
-  return NS_OK;
+#undef RELATIONTYPE
 }
 
 NS_IMETHODIMP

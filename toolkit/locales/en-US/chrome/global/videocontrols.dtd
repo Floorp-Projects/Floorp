@@ -17,8 +17,6 @@
 <!ENTITY stats.activityEnded "Ended">
 <!ENTITY stats.activitySeeking "(seeking)">
 <!ENTITY stats.volume "Volume">
-<!ENTITY stats.channels "Channels">
-<!ENTITY stats.sampleRate "Sample Rate">
 <!ENTITY stats.framesParsed "Frames parsed">
 <!ENTITY stats.framesDecoded "Frames decoded">
 <!ENTITY stats.framesPresented "Frames presented">

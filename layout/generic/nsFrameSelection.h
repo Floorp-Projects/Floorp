@@ -8,7 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Selection.h"
-#include "mozilla/TextEvents.h"
+#include "mozilla/TextRange.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsISelectionController.h"

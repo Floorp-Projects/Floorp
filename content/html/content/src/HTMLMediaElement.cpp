@@ -992,6 +992,12 @@ static bool UseAudioChannelService()
   return Preferences::GetBool("media.useAudioChannelService");
 }
 
+// Not static because it's used in HTMLAudioElement.
+bool IsAudioAPIEnabled()
+{
+  return mozilla::Preferences::GetBool("media.audio_data.enabled", false);
+}
+
 void HTMLMediaElement::UpdatePreloadAction()
 {
   PreloadAction nextAction = PRELOAD_UNDEFINED;
@@ -1537,6 +1543,11 @@ NS_IMETHODIMP HTMLMediaElement::SetVolume(double aVolume)
 uint32_t
 HTMLMediaElement::GetMozChannels(ErrorResult& aRv) const
 {
+  if (!IsAudioAPIEnabled()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return 0;
+  }
+
   if (!mDecoder && !mAudioStream) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return 0;
@@ -1556,6 +1567,11 @@ HTMLMediaElement::GetMozChannels(uint32_t* aMozChannels)
 uint32_t
 HTMLMediaElement::GetMozSampleRate(ErrorResult& aRv) const
 {
+  if (!IsAudioAPIEnabled()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return 0;
+  }
+
   if (!mDecoder && !mAudioStream) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return 0;
@@ -1647,6 +1663,11 @@ HTMLMediaElement::MozGetMetadata(JSContext* cx, JS::Value* aValue)
 uint32_t
 HTMLMediaElement::GetMozFrameBufferLength(ErrorResult& aRv) const
 {
+  if (!IsAudioAPIEnabled()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return 0;
+  }
+
   // The framebuffer (via MozAudioAvailable events) is only available
   // when reading vs. writing audio directly.
   if (!mDecoder) {
@@ -1668,6 +1689,11 @@ HTMLMediaElement::GetMozFrameBufferLength(uint32_t* aMozFrameBufferLength)
 void
 HTMLMediaElement::SetMozFrameBufferLength(uint32_t aMozFrameBufferLength, ErrorResult& aRv)
 {
+  if (!IsAudioAPIEnabled()) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
   if (!mDecoder) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -3189,6 +3215,10 @@ nsresult HTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
   // we hand off ownership of the frame buffer to the audioavailable event,
   // which frees the memory when it's destroyed.
   nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
+
+  if (!IsAudioAPIEnabled()) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
   nsRefPtr<HTMLMediaElement> kungFuDeathGrip = this;

@@ -9,7 +9,7 @@
 const TAB_URL = EXAMPLE_URL + "doc_with-frame.html";
 
 let gTab, gDebuggee, gPanel, gDebugger;
-let gEditor, gVariables, gSearchBox;
+let gVariables, gSearchBox;
 
 function test() {
   // Debug test slaves are a bit slow at this test.
@@ -20,7 +20,6 @@ function test() {
     gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
-    gEditor = gDebugger.DebuggerView.editor;
     gVariables = gDebugger.DebuggerView.Variables;
     gSearchBox = gDebugger.DebuggerView.Filtering._searchbox;
 
@@ -233,7 +232,6 @@ registerCleanupFunction(function() {
   gDebuggee = null;
   gPanel = null;
   gDebugger = null;
-  gEditor = null;
   gVariables = null;
   gSearchBox = null;
 });

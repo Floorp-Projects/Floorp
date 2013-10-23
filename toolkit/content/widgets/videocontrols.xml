@@ -240,14 +240,8 @@
                             <td class="statLabel">readyState</td> <td class="statValue"><span class="statReadyState"/></td>
                         </tr>
                         <tr>
-                            <td class="statLabel">&stats.channels;</td> <td class="statValue"><span class="statChannels"/></td>
-                        </tr>
-                        <tr>
                           <!-- Localization note: networkState is a HTML5 API MediaElement-specific attribute and should not be localized. -->
                           <td class="statLabel">networkState</td> <td class="statValue"><span class="statNetState"/></td>
-                        </tr>
-                        <tr>
-                          <td class="statLabel">&stats.sampleRate;</td> <td class="statValue"><span class="statSampleRate"/></td>
                         </tr>
                         <tr style="height: 1em;"/>
 
@@ -1218,9 +1212,6 @@
                     if (v.muted)
                         volume += " (muted)";
                     s.volume.textContent = volume;
-
-                    s.channels.textContent = v.mozChannels;
-                    s.sampRate.textContent = (v.mozSampleRate / 1000).toFixed(3) + " kHz";
                 },
 
                 keyHandler : function(event) {
@@ -1410,8 +1401,6 @@
                     this.stats.size       = document.getAnonymousElementByAttribute(binding, "class", "statSize");
                     this.stats.activity   = document.getAnonymousElementByAttribute(binding, "class", "statActivity");
                     this.stats.volume     = document.getAnonymousElementByAttribute(binding, "class", "statVolume");
-                    this.stats.channels   = document.getAnonymousElementByAttribute(binding, "class", "statChannels");
-                    this.stats.sampRate   = document.getAnonymousElementByAttribute(binding, "class", "statSampleRate");
                     this.stats.readyState = document.getAnonymousElementByAttribute(binding, "class", "statReadyState");
                     this.stats.netState   = document.getAnonymousElementByAttribute(binding, "class", "statNetState");
                     this.stats.framesParsed    = document.getAnonymousElementByAttribute(binding, "class", "statFramesParsed");

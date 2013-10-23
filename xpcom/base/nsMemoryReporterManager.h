@@ -39,6 +39,13 @@ public:
   };
   AmountFns mAmountFns;
 
+  // Functions that measure per-tab memory consumption.
+  struct SizeOfTabFns {
+    mozilla::JSSizeOfTabFn    mJS;
+    mozilla::NonJSSizeOfTabFn mNonJS;
+  };
+  SizeOfTabFns mSizeOfTabFns;
+
 private:
   nsresult RegisterReporterHelper(nsIMemoryReporter *aReporter, bool aForce);
 

@@ -100,7 +100,7 @@ function testClickLineToJump() {
 
     ok(isCaretPos(gPanel, 1, 5),
       "The editor didn't jump to the correct line (1).");
-    is(gEditor.getSelectedText(), "A",
+    is(gEditor.getSelection(), "A",
       "The editor didn't select the correct text (1).");
     ok(gSources.selectedValue.contains("-01.js"),
       "The currently shown source is incorrect (1).");
@@ -129,7 +129,7 @@ function testClickMatchToJump() {
 
     ok(isCaretPos(gPanel, 6, 6),
       "The editor didn't jump to the correct line (2).");
-    is(gEditor.getSelectedText(), "a",
+    is(gEditor.getSelection(), "a",
       "The editor didn't select the correct text (2).");
     ok(gSources.selectedValue.contains("-02.js"),
       "The currently shown source is incorrect (2).");

@@ -68,7 +68,7 @@ function runTests() {
 }
 
 window.addEventListener("load", function(e) {
-  runTests();
+  SpecialPowers.pushPrefEnv({"set": [["media.audio_data.enabled", true]]}, runTests);
 }, false);
 
 SimpleTest.waitForExplicitFinish();
