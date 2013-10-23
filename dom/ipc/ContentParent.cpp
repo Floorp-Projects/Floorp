@@ -78,6 +78,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIURIFixup.h"
 #include "nsIWindowWatcher.h"
+#include "nsMemoryReporterManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
 #include "nsThreadUtils.h"
@@ -160,61 +161,13 @@ namespace dom {
 
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
 
-// This represents all the memory reports provided by a child process.
-class ChildReporter MOZ_FINAL : public nsIMemoryReporter
-{
-public:
-    ChildReporter(const InfallibleTArray<MemoryReport>& childReports)
-    {
-        for (uint32_t i = 0; i < childReports.Length(); i++) {
-            MemoryReport r(childReports[i].process(),
-                           childReports[i].path(),
-                           childReports[i].kind(),
-                           childReports[i].units(),
-                           childReports[i].amount(),
-                           childReports[i].desc());
-
-            // Child reports have a non-empty process.
-            MOZ_ASSERT(!r.process().IsEmpty());
-
-            mChildReports.AppendElement(r);
-        }
-    }
-
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetName(nsACString& name)
-    {
-        name.AssignLiteral("content-child");
-        return NS_OK;
-    }
-
-    NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
-                              nsISupports* aClosure)
-    {
-        for (uint32_t i = 0; i < mChildReports.Length(); i++) {
-            nsresult rv;
-            MemoryReport r = mChildReports[i];
-            rv = aCb->Callback(r.process(), r.path(), r.kind(), r.units(),
-                               r.amount(), r.desc(), aClosure);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
-        return NS_OK;
-    }
-
-  private:
-    InfallibleTArray<MemoryReport> mChildReports;
-};
-
-NS_IMPL_ISUPPORTS1(ChildReporter, nsIMemoryReporter)
-
 class MemoryReportRequestParent : public PMemoryReportRequestParent
 {
 public:
     MemoryReportRequestParent();
     virtual ~MemoryReportRequestParent();
 
-    virtual bool Recv__delete__(const InfallibleTArray<MemoryReport>& report);
+    virtual bool Recv__delete__(const uint32_t& generation, const InfallibleTArray<MemoryReport>& report);
 private:
     ContentParent* Owner()
     {
@@ -228,9 +181,13 @@ MemoryReportRequestParent::MemoryReportRequestParent()
 }
 
 bool
-MemoryReportRequestParent::Recv__delete__(const InfallibleTArray<MemoryReport>& childReports)
+MemoryReportRequestParent::Recv__delete__(const uint32_t& generation, const InfallibleTArray<MemoryReport>& childReports)
 {
-    Owner()->SetChildMemoryReports(childReports);
+    nsRefPtr<nsMemoryReporterManager> mgr =
+        nsMemoryReporterManager::GetOrCreate();
+    if (mgr) {
+        mgr->HandleChildReports(generation, childReports);
+    }
     return true;
 }
 
@@ -1043,7 +1000,6 @@ ContentParent::ShutDownProcess(bool aCloseWithError)
     // shut down the cycle collector.  But by then it's too late to release any
     // CC'ed objects, so we need to null them out here, while we still can.  See
     // bug 899761.
-    mChildReporter = nullptr;
     if (mMessageManager) {
       mMessageManager->Disconnect();
       mMessageManager = nullptr;
@@ -1218,8 +1174,12 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
       ppm->Disconnect();
     }
 
-    // unregister the child memory reporter
-    UnregisterChildMemoryReporter();
+    // Tell the memory reporter manager that this ContentParent is going away.
+    nsRefPtr<nsMemoryReporterManager> mgr =
+        nsMemoryReporterManager::GetOrCreate();
+    if (mgr) {
+        mgr->DecrementNumChildProcesses();
+    }
 
     // remove the global remote preferences observers
     Preferences::RemoveObserver(this, "");
@@ -1425,6 +1385,13 @@ ContentParent::ContentParent(mozIApplication* aApp,
     mSubprocess->SetSandboxEnabled(ShouldSandboxContentProcesses());
 
     IToplevelProtocol::SetTransport(mSubprocess->GetChannel());
+
+    // Tell the memory reporter manager that this ContentParent exists.
+    nsRefPtr<nsMemoryReporterManager> mgr =
+        nsMemoryReporterManager::GetOrCreate();
+    if (mgr) {
+        mgr->IncrementNumChildProcesses();
+    }
 
     std::vector<std::string> extraArgs;
     if (aIsNuwaProcess) {
@@ -2037,7 +2004,7 @@ ContentParent::Observe(nsISupports* aSubject,
             return NS_ERROR_NOT_AVAILABLE;
     }
     else if (!strcmp(aTopic, "child-memory-reporter-request")) {
-        unused << SendPMemoryReportRequestConstructor();
+        unused << SendPMemoryReportRequestConstructor((uint32_t)(uintptr_t)aData);
     }
     else if (!strcmp(aTopic, "child-gc-request")){
         unused << SendGarbageCollect();
@@ -2481,7 +2448,7 @@ ContentParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor)
 }
 
 PMemoryReportRequestParent*
-ContentParent::AllocPMemoryReportRequestParent()
+ContentParent::AllocPMemoryReportRequestParent(const uint32_t& generation)
 {
   MemoryReportRequestParent* parent = new MemoryReportRequestParent();
   return parent;
@@ -2492,32 +2459,6 @@ ContentParent::DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* act
 {
   delete actor;
   return true;
-}
-
-void
-ContentParent::SetChildMemoryReports(const InfallibleTArray<MemoryReport>& childReports)
-{
-    nsCOMPtr<nsIMemoryReporterManager> mgr =
-        do_GetService("@mozilla.org/memory-reporter-manager;1");
-
-    if (mChildReporter)
-        mgr->UnregisterReporter(mChildReporter);
-
-    mChildReporter = new ChildReporter(childReports);
-    mgr->RegisterReporter(mChildReporter);
-
-    nsCOMPtr<nsIObserverService> obs =
-        do_GetService("@mozilla.org/observer-service;1");
-    if (obs)
-        obs->NotifyObservers(nullptr, "child-memory-reporter-update", nullptr);
-}
-
-void
-ContentParent::UnregisterChildMemoryReporter()
-{
-    nsCOMPtr<nsIMemoryReporterManager> mgr =
-        do_GetService("@mozilla.org/memory-reporter-manager;1");
-    mgr->UnregisterReporter(mChildReporter);
 }
 
 PTestShellParent*

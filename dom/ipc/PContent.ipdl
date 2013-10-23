@@ -231,7 +231,7 @@ child:
      */
     async SetProcessPrivileges(ChildPrivileges privs);
 
-    PMemoryReportRequest();
+    PMemoryReportRequest(uint32_t generation);
 
     /**
      * Notify the AudioChannelService in the child processes.

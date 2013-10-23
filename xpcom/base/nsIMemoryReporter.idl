@@ -179,13 +179,19 @@ interface nsIMemoryReporter : nsISupports
   const int32_t UNITS_PERCENTAGE = 3;
 };
 
-[scriptable, builtinclass, uuid(4db7040a-16f9-4249-879b-fe72729c7ef5)]
+[scriptable, function, uuid(548b3909-c04d-4ca6-8466-b8bee3837457)]
+interface nsIFinishReportingCallback : nsISupports
+{
+  void callback(in nsISupports data);
+};
+
+[scriptable, builtinclass, uuid(a1292276-726b-4ef5-a017-5a455d6664dd)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
-   * Return an enumerator of nsIMemoryReporters that are currently registered.
+   * Initialize.
    */
-  nsISimpleEnumerator enumerateReporters();
+  void init();
 
   /*
    * Register the given nsIMemoryReporter.  After a reporter is registered,
@@ -207,9 +213,30 @@ interface nsIMemoryReporterManager : nsISupports
   void registerReporterEvenIfBlocked(in nsIMemoryReporter aReporter);
 
   /*
-   * Initialize.
+   * Return an enumerator of nsIMemoryReporters that are currently registered
+   * in the current process.  WARNING: this does not do anything with child
+   * processes.  Use getReports() if you want measurements from child
+   * processes.
    */
-  void init();
+  nsISimpleEnumerator enumerateReporters();
+
+  /*
+   * Get memory reports for the current process and all child processes.
+   * |handleReport| is called for each report, and |finishReporting| is called
+   * once all reports have been handled.
+   *
+   * |finishReporting| is called even if, for example, some child processes
+   * fail to report back.  However, calls to this method will silently and
+   * immediately abort -- and |finishReporting| will not be called -- if a
+   * previous getReports() call is still in flight, i.e. if it has not yet
+   * finished invoking |finishReporting|.  The silent abort is because the
+   * in-flight request will finish soon, and the caller would very likely just
+   * catch and ignore any error anyway.
+   */
+  void getReports(in nsIMemoryReporterCallback handleReport,
+                  in nsISupports handleReportData,
+                  in nsIFinishReportingCallback finishReporting,
+                  in nsISupports finishReportingData);
 
   /*
    * The memory reporter manager, for the most part, treats reporters
@@ -332,8 +359,13 @@ interface nsIMemoryReporterManager : nsISupports
 
 #include "js/TypeDecls.h"
 #include "nsStringGlue.h"
+#include "nsTArray.h"
 
 class nsPIDOMWindow;
+
+// nsIHandleReportCallback is a better name, but keep nsIMemoryReporterCallback
+// around for backwards compatibility.
+typedef nsIMemoryReporterCallback nsIHandleReportCallback;
 
 // Note that the memory reporters are held in an nsCOMArray, which means
 // that individual reporters should be referenced with |nsIMemoryReporter *|
@@ -396,8 +428,9 @@ nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
 #if defined(MOZ_DMD)
 namespace mozilla {
 namespace dmd {
-// This runs all the memory reporters but does nothing with the results;  i.e.
-// it does the minimal amount of work possible for DMD to do its thing.
+// This runs all the memory reporters in the current process but does nothing
+// with the results;  i.e. it does the minimal amount of work possible for DMD
+// to do its thing.  It does nothing with child processes.
 void RunReporters();
 }
 }

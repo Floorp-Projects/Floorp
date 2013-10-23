@@ -140,10 +140,6 @@ public:
     bool IsAlive();
     bool IsForApp();
 
-    void SetChildMemoryReports(const InfallibleTArray<MemoryReport>&
-                               childReports);
-    void UnregisterChildMemoryReporter();
-
     GeckoChildProcessHost* Process() {
         return mSubprocess;
     }
@@ -340,7 +336,7 @@ private:
 
     virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor);
 
-    virtual PMemoryReportRequestParent* AllocPMemoryReportRequestParent();
+    virtual PMemoryReportRequestParent* AllocPMemoryReportRequestParent(const uint32_t& generation);
     virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor);
 
     virtual PTestShellParent* AllocPTestShellParent();
@@ -499,14 +495,6 @@ private:
 
     uint64_t mChildID;
     int32_t mGeolocationWatchID;
-
-    // This is a reporter holding the reports from the child's last
-    // "child-memory-reporter-update" notification.  To update this, one can
-    // broadcast the topic "child-memory-reporter-request" using the
-    // nsIObserverService.
-    //
-    // Note that this assumes there is at most one child process at a time!
-    nsCOMPtr<nsIMemoryReporter> mChildReporter;
 
     nsString mAppManifestURL;
 
