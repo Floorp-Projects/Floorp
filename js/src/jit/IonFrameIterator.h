@@ -422,7 +422,7 @@ class InlineFrameIteratorMaybeGC
             SnapshotIterator parent_s(it.snapshotIterator());
 
             // Skip over all slots untill we get to the last slots (= arguments slots of callee)
-            // the +2 is for [this], [returnvalue], [scopechain], and maybe +1 for [argsObj]
+            // the +3 is for [this], [returnvalue], [scopechain], and maybe +1 for [argsObj]
             JS_ASSERT(parent_s.slots() >= nactual + 3 + argsObjAdj);
             unsigned skip = parent_s.slots() - nactual - 3 - argsObjAdj;
             for (unsigned j = 0; j < skip; j++)
