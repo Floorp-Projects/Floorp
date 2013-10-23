@@ -737,10 +737,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     using MacroAssemblerSpecific::extractTag;
     Register extractTag(const TypedOrValueRegister &reg, Register scratch) {
-        if (reg.hasValue()) {
+        if (reg.hasValue())
             return extractTag(reg.valueReg(), scratch);
-        }
-        mov(ImmWord(ValueTypeFromMIRType(reg.type())), scratch);
+        mov(ImmWord(MIRTypeToTag(reg.type())), scratch);
         return scratch;
     }
 

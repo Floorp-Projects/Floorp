@@ -895,6 +895,12 @@ PrepareOsrTempData(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
         *((uint32_t *) (stackFrame + StackFrame::offsetOfFlags())) = 0;
     }
 
+    // Set return value.
+    if (frame->hasReturnValue()) {
+        *((uint32_t *) (stackFrame + StackFrame::offsetOfFlags())) |= StackFrame::HAS_RVAL;
+        *((Value *) (stackFrame + StackFrame::offsetOfReturnValue())) = *(frame->returnValue());
+    }
+
     // Do locals and stack values.  Note that in the fake StackFrame, these go from
     // low to high addresses, while on the C stack, they go from high to low addresses.
     // So we can't use memcpy on this, but must copy the values in reverse order.
@@ -6015,7 +6021,7 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
 
 #if JS_HAS_NO_SUCH_METHOD
     // Handle objects with __noSuchMethod__.
-    if (op == JSOP_CALLPROP && JS_UNLIKELY(res.isPrimitive()) && val.isObject()) {
+    if (op == JSOP_CALLPROP && JS_UNLIKELY(res.isUndefined()) && val.isObject()) {
         if (!OnUnknownMethod(cx, obj, IdToValue(id), res))
             return false;
     }

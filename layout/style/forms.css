@@ -449,6 +449,17 @@ input[type="file"] > button[type="button"] {
   cursor: inherit;
 }
 
+/* colored part of the color selector button */
+input[type="color"]::-moz-color-swatch {
+  width: 100%;
+  height: 100%;
+  min-width: 50px;
+  min-height: 1em;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
 /* Try to make RTL <input type='file'> look nicer. */
 /* TODO: use text-align: match-parent when bug 645642 is fixed. */
 input[type="file"]:-moz-dir(rtl) > xul|label {
@@ -524,6 +535,9 @@ input[type="radio"]:hover:active {
 /* Note: Values in nsNativeTheme IsWidgetStyled function 
    need to match button background/border values here */
 
+/* TODO: Once we're getting ready to turn on 'dom.forms.color' by default, we
+   probably want to add input[type="color"] to this selector list, so that it
+   gets the same styling as other form buttons. */
 button, 
 input[type="reset"],
 input[type="button"],

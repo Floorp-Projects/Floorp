@@ -4,8 +4,6 @@
 
 include $(topsrcdir)/config/config.mk
 
-DIST_SUBDIR=metro
-
 DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) \
            -DPACKAGE=browser \
            -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \

@@ -620,11 +620,13 @@ SyncProfile* TableTicker::GetBacktrace()
   TickSample sample;
   sample.threadProfile = profile;
 
+#if defined(HAVE_NATIVE_UNWIND)
 #if defined(XP_WIN) || defined(LINUX)
   tickcontext_t context;
   sample.PopulateContext(&context);
 #elif defined(XP_MACOSX)
   sample.PopulateContext(nullptr);
+#endif
 #endif
 
   sample.isSamplingCurrentThread = true;

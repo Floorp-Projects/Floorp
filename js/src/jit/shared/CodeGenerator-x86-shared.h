@@ -82,7 +82,9 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitFloat32(LFloat32 *ins);
     virtual bool visitMinMaxD(LMinMaxD *ins);
     virtual bool visitAbsD(LAbsD *ins);
+    virtual bool visitAbsF(LAbsF *ins);
     virtual bool visitSqrtD(LSqrtD *ins);
+    virtual bool visitSqrtF(LSqrtF *ins);
     virtual bool visitPowHalfD(LPowHalfD *ins);
     virtual bool visitAddI(LAddI *ins);
     virtual bool visitSubI(LSubI *ins);
@@ -98,13 +100,17 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitUrshD(LUrshD *ins);
     virtual bool visitTestIAndBranch(LTestIAndBranch *test);
     virtual bool visitTestDAndBranch(LTestDAndBranch *test);
+    virtual bool visitTestFAndBranch(LTestFAndBranch *test);
     virtual bool visitCompare(LCompare *comp);
     virtual bool visitCompareAndBranch(LCompareAndBranch *comp);
     virtual bool visitCompareD(LCompareD *comp);
     virtual bool visitCompareDAndBranch(LCompareDAndBranch *comp);
+    virtual bool visitCompareF(LCompareF *comp);
+    virtual bool visitCompareFAndBranch(LCompareFAndBranch *comp);
     virtual bool visitBitAndAndBranch(LBitAndAndBranch *baab);
     virtual bool visitNotI(LNotI *comp);
     virtual bool visitNotD(LNotD *comp);
+    virtual bool visitNotF(LNotF *comp);
     virtual bool visitMathD(LMathD *math);
     virtual bool visitMathF(LMathF *math);
     virtual bool visitFloor(LFloor *lir);

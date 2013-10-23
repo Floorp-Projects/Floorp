@@ -24,6 +24,7 @@ from .data import (
     Exports,
     GeneratedEventWebIDLFile,
     GeneratedWebIDLFile,
+    InstallationTarget,
     IPDLFile,
     LocalInclude,
     PreprocessedTestWebIDLFile,
@@ -208,6 +209,10 @@ class TreeMetadataEmitter(LoggingMixin):
             for name in sandbox.get(sandbox_var, []):
                 yield klass(sandbox, name)
 
+        if sandbox.get('FINAL_TARGET') or sandbox.get('XPI_NAME') or \
+                sandbox.get('DIST_SUBDIR'):
+            yield InstallationTarget(sandbox)
+
         # While there are multiple test manifests, the behavior is very similar
         # across them. We enforce this by having common handling of all
         # manifests and outputting a single class type with the differences
@@ -274,6 +279,8 @@ class TreeMetadataEmitter(LoggingMixin):
             finder = FileFinder(base=manifest_dir, find_executables=False)
 
             for test in filtered:
+                obj.tests.append(test)
+
                 obj.installs[mozpath.normpath(test['path'])] = \
                     mozpath.join(out_dir, test['relpath'])
 

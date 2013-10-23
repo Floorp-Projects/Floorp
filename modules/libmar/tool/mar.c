@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
        with the import and export command line arguments. */
     else if (argv[1][0] == '-' &&
              argv[1][1] == 'D' &&
-             (argv[1][2] == '0' + certCount || argv[1][2] == '\0')) {
+             (argv[1][2] == (char)('0' + certCount) || argv[1][2] == '\0')) {
       if (certCount >= MAX_SIGNATURES) {
         print_usage();
         return -1;

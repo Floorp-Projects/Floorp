@@ -1652,7 +1652,10 @@ nsSVGUtils::SetupCairoStrokeBBoxGeometry(nsIFrame* aFrame,
   aContext->SetLineWidth(width);
 
   // Apply any stroke-specific transform
-  aContext->Multiply(GetStrokeTransform(aFrame));
+  gfxMatrix strokeTransform = GetStrokeTransform(aFrame);
+  if (!strokeTransform.IsIdentity()) {
+    aContext->Multiply(strokeTransform);
+  }
 
   const nsStyleSVG* style = aFrame->StyleSVG();
   

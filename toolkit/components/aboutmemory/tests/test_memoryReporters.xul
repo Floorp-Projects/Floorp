@@ -155,6 +155,21 @@
     }
   }
 
+  // Run sizeOfTab() to make sure it doesn't crash.  We can't check the result
+  // values because they're non-deterministic.
+  let jsObjectsSize = {};
+  let jsStringsSize = {};
+  let jsOtherSize = {};
+  let domSize = {};
+  let styleSize = {};
+  let otherSize = {};
+  let totalSize = {};
+  let jsMilliseconds = {};
+  let nonJSMilliseconds = {};
+  mgr.sizeOfTab(window, jsObjectsSize, jsStringsSize, jsOtherSize,
+                domSize, styleSize, otherSize, totalSize,
+                jsMilliseconds, nonJSMilliseconds);
+
   let e = mgr.enumerateReporters();
   while (e.hasMoreElements()) {
     let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);

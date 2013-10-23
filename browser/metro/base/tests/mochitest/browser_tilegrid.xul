@@ -8,13 +8,10 @@
 <?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
-
 <!DOCTYPE window []>
-
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
   <vbox id="alayout">
-      <richgrid id="grid_layout" seltype="single" flex="1">
+      <richgrid id="grid_layout" seltype="single" nocontext="true" flex="1">
       </richgrid>
   </vbox>
   <vbox>
@@ -22,7 +19,7 @@
   </vbox>
   <vbox style="height:600px">
     <hbox>
-      <richgrid id="clearGrid" seltype="single" flex="1" rows="2">
+      <richgrid id="clearGrid" seltype="single" nocontext="true" flex="1" rows="2">
         <richgriditem value="about:blank" id="clearGrid_item1" label="First item"/>
         <richgriditem value="about:blank" id="clearGrid_item2" label="2nd item"/>
         <richgriditem value="about:blank" id="clearGrid_item1" label="First item"/>

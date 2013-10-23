@@ -11,28 +11,12 @@ EXPORTS += [
 ]
 
 CPP_SOURCES += [
-    'nsCP850ToUnicode.cpp',
-    'nsCP852ToUnicode.cpp',
-    'nsCP855ToUnicode.cpp',
-    'nsCP857ToUnicode.cpp',
-    'nsCP862ToUnicode.cpp',
-    'nsCP864ToUnicode.cpp',
-    'nsUnicodeToCP850.cpp',
-    'nsUnicodeToCP852.cpp',
-    'nsUnicodeToCP855.cpp',
-    'nsUnicodeToCP857.cpp',
-    'nsUnicodeToCP862.cpp',
-    'nsUnicodeToCP864.cpp',
+    'UnifiedUCVIBM.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'OS2':
     CPP_SOURCES += [
-        'nsCP869ToUnicode.cpp',
-        'nsUnicodeToCP869.cpp',
-        'nsCP1125ToUnicode.cpp',
-        'nsUnicodeToCP1125.cpp',
-        'nsCP1131ToUnicode.cpp',
-        'nsUnicodeToCP1131.cpp',
+        'UnifiedUCVIBMOS2.cpp',
     ]
 
 LIBRARY_NAME = 'ucvibm_s'

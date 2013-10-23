@@ -40,4 +40,4 @@ LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/mozapps/update/updater
 
 include $(topsrcdir)/config/rules.mk
 
-HOST_CXXFLAGS += $(MOZ_BZ2_CFLAGS)</textarea>
+HOST_CXXFLAGS += $(MOZ_BZ2_CFLAGS)

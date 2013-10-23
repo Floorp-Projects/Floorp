@@ -9,10 +9,7 @@ import urllib2
 import os
 import unittest
 import re
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 import tempfile
 
 here = os.path.dirname(os.path.abspath(__file__))

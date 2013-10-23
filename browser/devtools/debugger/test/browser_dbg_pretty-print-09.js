@@ -9,7 +9,7 @@ var gClient;
 var gThreadClient;
 var gSource;
 
-let gTab, gDebuggee, gPanel, gClient, gThreadClient;
+let gTab, gDebuggee, gPanel, gClient, gThreadClient, gSource;
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print-2.html";
 
@@ -38,12 +38,13 @@ function findSource() {
     ok(!error);
     sources = sources.filter(s => s.url === B_URL);
     is(sources.length, 1);
-    prettyPrint(sources[0]);
+    gSource = sources[0];
+    prettyPrint();
   });
 }
 
-function prettyPrint(source) {
-  gThreadClient.source(source).prettyPrint(2, runCode);
+function prettyPrint() {
+  gThreadClient.source(gSource).prettyPrint(2, runCode);
 }
 
 function runCode({ error }) {
@@ -53,19 +54,35 @@ function runCode({ error }) {
 }
 
 function testDbgStatement(event, { frame, why }) {
-  dump("FITZGEN: inside testDbgStatement\n");
+  is(why.type, "debuggerStatement");
+  const { url, line, column } = frame.where;
+  is(url, B_URL);
+  is(line, 2);
+  is(column, 2);
 
-  try {
-    is(why.type, "debuggerStatement");
-    const { url, line, column } = frame.where;
-    is(url, B_URL);
-    is(line, 2);
-    is(column, 2);
+  disablePrettyPrint();
+}
 
-    resumeDebuggerThenCloseAndFinish(gPanel);
-  } catch (e) {
-    dump("FITZGEN: got an error! " + DevToolsUtils.safeErrorString(e) + "\n");
-  }
+function disablePrettyPrint() {
+  gThreadClient.source(gSource).disablePrettyPrint(testUgly);
+}
+
+function testUgly({ error, source }) {
+  ok(!error);
+  ok(!source.contains("\n  "));
+  getFrame();
+}
+
+function getFrame() {
+  gThreadClient.getFrames(0, 1, testFrame);
+}
+
+function testFrame({ frames: [frame] }) {
+  const { url, line } = frame.where;
+  is(url, B_URL);
+  is(line, 1);
+
+  resumeDebuggerThenCloseAndFinish(gPanel);
 }
 
 registerCleanupFunction(function() {
