@@ -207,11 +207,7 @@ menulist {
   color: white;
 }
 
-.menu-popup > richlistbox[left-hand="true"] > richlistitem {
-  padding-left: 50px;
-}
-
-.menu-popup > richlistbox[left-hand="false"] > richlistitem {
+.menu-popup > richlistbox > richlistitem {
   padding-right: 50px;
 }
 

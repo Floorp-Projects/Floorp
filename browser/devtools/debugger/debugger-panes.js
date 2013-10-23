@@ -14,7 +14,7 @@ function SourcesView() {
   this.togglePrettyPrint = this.togglePrettyPrint.bind(this);
   this._onEditorLoad = this._onEditorLoad.bind(this);
   this._onEditorUnload = this._onEditorUnload.bind(this);
-  this._onEditorSelection = this._onEditorSelection.bind(this);
+  this._onEditorCursorActivity = this._onEditorCursorActivity.bind(this);
   this._onEditorContextMenu = this._onEditorContextMenu.bind(this);
   this._onSourceSelect = this._onSourceSelect.bind(this);
   this._onSourceClick = this._onSourceClick.bind(this);
@@ -479,7 +479,12 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _hideConditionalPopup: function() {
     this._cbPanel.hidden = true;
-    this._cbPanel.hidePopup();
+
+    // Sometimes this._cbPanel doesn't have hidePopup method which doesn't
+    // break anything but simply outputs an exception to the console.
+    if (this._cbPanel.hidePopup) {
+      this._cbPanel.hidePopup();
+    }
   },
 
   /**
@@ -645,30 +650,30 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * The load listener for the source editor.
    */
   _onEditorLoad: function(aName, aEditor) {
-    aEditor.addEventListener(SourceEditor.EVENTS.SELECTION, this._onEditorSelection, false);
-    aEditor.addEventListener(SourceEditor.EVENTS.CONTEXT_MENU, this._onEditorContextMenu, false);
+    aEditor.on("cursorActivity", this._onEditorCursorActivity);
+    aEditor.on("contextMenu", this._onEditorContextMenu);
   },
 
   /**
    * The unload listener for the source editor.
    */
   _onEditorUnload: function(aName, aEditor) {
-    aEditor.removeEventListener(SourceEditor.EVENTS.SELECTION, this._onEditorSelection, false);
-    aEditor.removeEventListener(SourceEditor.EVENTS.CONTEXT_MENU, this._onEditorContextMenu, false);
+    aEditor.off("cursorActivity", this._onEditorCursorActivity);
+    aEditor.off("contextMenu", this._onEditorContextMenu);
   },
 
   /**
    * The selection listener for the source editor.
    */
-  _onEditorSelection: function(e) {
-    let { start, end } = e.newValue;
+  _onEditorCursorActivity: function(e) {
+    let editor = DebuggerView.editor;
+    let start  = editor.getCursor("start").line + 1;
+    let end    = editor.getCursor().line + 1;
+    let url    = this.selectedValue;
 
-    let url = this.selectedValue;
-    let lineStart = DebuggerView.editor.getLineAtOffset(start) + 1;
-    let lineEnd = DebuggerView.editor.getLineAtOffset(end) + 1;
-    let location = { url: url, line: lineStart };
+    let location = { url: url, line: start };
 
-    if (this.getBreakpoint(location) && lineStart == lineEnd) {
+    if (this.getBreakpoint(location) && start == end) {
       this.highlightBreakpoint(location, { noEditorUpdate: true });
     } else {
       this.unhighlightBreakpoint();
@@ -679,9 +684,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * The context menu listener for the source editor.
    */
   _onEditorContextMenu: function({ x, y }) {
-    let offset = DebuggerView.editor.getOffsetAtLocation(x, y);
-    let line = DebuggerView.editor.getLineAtOffset(offset);
-    this._editorContextMenuLineNumber = line;
+    this._editorContextMenuLineNumber = DebuggerView.editor.getPositionFromCoords(x, y).line;
   },
 
   /**
@@ -869,13 +872,14 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     // If this command was executed via the context menu, add the breakpoint
     // on the currently hovered line in the source editor.
     if (this._editorContextMenuLineNumber >= 0) {
-      DebuggerView.editor.setCaretPosition(this._editorContextMenuLineNumber);
+      DebuggerView.editor.setCursor({ line: this._editorContextMenuLineNumber, ch: 0 });
     }
+
     // Avoid placing breakpoints incorrectly when using key shortcuts.
     this._editorContextMenuLineNumber = -1;
 
     let url = DebuggerView.Sources.selectedValue;
-    let line = DebuggerView.editor.getCaretPosition().line + 1;
+    let line = DebuggerView.editor.getCursor().line + 1;
     let location = { url: url, line: line };
     let breakpointItem = this.getBreakpoint(location);
 
@@ -896,13 +900,14 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     // If this command was executed via the context menu, add the breakpoint
     // on the currently hovered line in the source editor.
     if (this._editorContextMenuLineNumber >= 0) {
-      DebuggerView.editor.setCaretPosition(this._editorContextMenuLineNumber);
+      DebuggerView.editor.setCursor({ line: this._editorContextMenuLineNumber, ch: 0 });
     }
+
     // Avoid placing breakpoints incorrectly when using key shortcuts.
     this._editorContextMenuLineNumber = -1;
 
     let url =  DebuggerView.Sources.selectedValue;
-    let line = DebuggerView.editor.getCaretPosition().line + 1;
+    let line = DebuggerView.editor.getCursor().line + 1;
     let location = { url: url, line: line };
     let breakpointItem = this.getBreakpoint(location);
 
@@ -1456,7 +1461,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
   _onCmdAddExpression: function(aText) {
     // Only add a new expression if there's no pending input.
     if (this.getAllStrings().indexOf("") == -1) {
-      this.addExpression(aText || DebuggerView.editor.getSelectedText());
+      this.addExpression(aText || DebuggerView.editor.getSelection());
     }
   },
 
@@ -2100,12 +2105,9 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
 
     let url = sourceResultsItem.instance.url;
     let line = lineResultsItem.instance.line;
-    DebuggerView.setEditorLocation(url, line + 1, { noDebug: true });
 
-    let editor = DebuggerView.editor;
-    let offset = editor.getCaretOffset();
-    let { start, length } = lineResultsItem.lineData.range;
-    editor.setSelection(offset + start, offset + start + length);
+    DebuggerView.setEditorLocation(url, line + 1, { noDebug: true });
+    DebuggerView.editor.extendSelection(lineResultsItem.lineData.range);
   },
 
   /**

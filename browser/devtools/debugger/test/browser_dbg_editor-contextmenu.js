@@ -20,7 +20,7 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gContextMenu = gDebugger.document.getElementById("sourceEditorContextMenu");
 
-    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6).then(performTest);
+    waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6).then(performTest).then(null, info);
     gDebuggee.firstCall();
   });
 
@@ -39,14 +39,14 @@ function test() {
 
     ok(gContextMenu,
       "The source editor's context menupopup is available.");
-    ok(gEditor.readOnly,
+    ok(gEditor.isReadOnly(),
       "The source editor is read only.");
 
     gEditor.focus();
-    gEditor.setSelection(0, 10);
+    gEditor.setSelection({ line: 1, ch: 0 }, { line: 1, ch: 10 });
 
-    once(gContextMenu, "popupshown").then(testContextMenu);
-    gContextMenu.openPopup(gEditor.editorElement, "overlap", 0, 0, true, false);
+    once(gContextMenu, "popupshown").then(testContextMenu).then(null, info);
+    gContextMenu.openPopup(gEditor.container, "overlap", 0, 0, true, false);
   }
 
   function testContextMenu() {
@@ -56,21 +56,6 @@ function test() {
       "#editMenuCommands found.");
     ok(!document.getElementById("editMenuKeys"),
       "#editMenuKeys not found.");
-    ok(document.getElementById("sourceEditorCommands"),
-      "#sourceEditorCommands found.");
-
-    // Map command ids to their expected disabled state.
-    let commands = {"se-cmd-undo": true, "se-cmd-redo": true,
-                    "se-cmd-cut": true, "se-cmd-paste": true,
-                    "se-cmd-delete": true, "cmd_findAgain": true,
-                    "cmd_findPrevious": true, "cmd_find": false,
-                    "cmd_gotoLine": false, "cmd_copy": false,
-                    "se-cmd-selectAll": false};
-
-    for (let id in commands) {
-      is(document.getElementById(id).hasAttribute("disabled"), commands[id],
-        "The element with id: " + id + " hasAttribute('disabled').");
-    }
 
     gContextMenu.hidePopup();
     resumeDebuggerThenCloseAndFinish(gPanel);

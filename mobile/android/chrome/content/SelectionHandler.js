@@ -286,7 +286,7 @@ var SelectionHandler = {
     this._initTargetInfo(aElement);
 
     this._contentWindow.addEventListener("keydown", this, false);
-    this._contentWindow.addEventListener("blur", this, false);
+    this._contentWindow.addEventListener("blur", this, true);
 
     this._activeType = this.TYPE_CURSOR;
     this._positionHandles();

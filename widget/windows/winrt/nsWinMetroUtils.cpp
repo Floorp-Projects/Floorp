@@ -385,27 +385,6 @@ nsWinMetroUtils::GetImmersive(bool *aImersive)
 }
 
 NS_IMETHODIMP
-nsWinMetroUtils::GetHandPreference(int32_t *aHandPreference)
-{
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
-    *aHandPreference = nsIWinMetroUtils::handPreferenceRight;
-    return NS_OK;
-  }
-
-  ComPtr<IUISettings> uiSettings;
-  AssertRetHRESULT(ActivateGenericInstance(RuntimeClass_Windows_UI_ViewManagement_UISettings, uiSettings), NS_ERROR_UNEXPECTED);
-
-  HandPreference value;
-  uiSettings->get_HandPreference(&value);
-  if (value == HandPreference::HandPreference_LeftHanded)
-    *aHandPreference = nsIWinMetroUtils::handPreferenceLeft;
-  else
-    *aHandPreference = nsIWinMetroUtils::handPreferenceRight;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWinMetroUtils::GetActivationURI(nsAString &aActivationURI)
 {
   if (!sFrameworkView) {

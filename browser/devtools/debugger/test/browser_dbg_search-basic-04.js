@@ -33,11 +33,11 @@ function test() {
 
 function testLineSearch() {
   setText(gSearchBox, ":42");
-  ok(isCaretPos(gPanel, 1),
+  ok(isCaretPos(gPanel, 7),
     "The editor caret position appears to be correct (1.1).");
-  ok(isEditorSel(gPanel, [1, 1]),
+  ok(isEditorSel(gPanel, [160, 160]),
     "The editor selection appears to be correct (1.1).");
-  is(gEditor.getSelectedText(), "",
+  is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct (1.1).");
 
   backspaceText(gSearchBox, 1);
@@ -45,7 +45,7 @@ function testLineSearch() {
     "The editor caret position appears to be correct (1.2).");
   ok(isEditorSel(gPanel, [110, 110]),
     "The editor selection appears to be correct (1.2).");
-  is(gEditor.getSelectedText(), "",
+  is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct (1.2).");
 
   backspaceText(gSearchBox, 1);
@@ -53,7 +53,7 @@ function testLineSearch() {
     "The editor caret position appears to be correct (1.3).");
   ok(isEditorSel(gPanel, [110, 110]),
     "The editor selection appears to be correct (1.3).");
-  is(gEditor.getSelectedText(), "",
+  is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct (1.3).");
 
   setText(gSearchBox, ":4");
@@ -61,7 +61,7 @@ function testLineSearch() {
     "The editor caret position appears to be correct (1.4).");
   ok(isEditorSel(gPanel, [110, 110]),
     "The editor selection appears to be correct (1.4).");
-  is(gEditor.getSelectedText(), "",
+  is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct (1.4).");
 
   gSearchBox.select();
@@ -70,7 +70,7 @@ function testLineSearch() {
     "The editor caret position appears to be correct (1.5).");
   ok(isEditorSel(gPanel, [110, 110]),
     "The editor selection appears to be correct (1.5).");
-  is(gEditor.getSelectedText(), "",
+  is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct (1.5).");
   is(gSearchBox.value, "",
     "The searchbox should have been cleared.");
@@ -82,7 +82,7 @@ function testTokenSearch() {
     "The editor caret position appears to be correct (2.1).");
   ok(isEditorSel(gPanel, [153, 155]),
     "The editor selection appears to be correct (2.1).");
-  is(gEditor.getSelectedText(), ";\"",
+  is(gEditor.getSelection(), ";\"",
     "The editor selected text appears to be correct (2.1).");
 
   backspaceText(gSearchBox, 1);
@@ -90,7 +90,7 @@ function testTokenSearch() {
     "The editor caret position appears to be correct (2.2).");
   ok(isEditorSel(gPanel, [153, 154]),
     "The editor selection appears to be correct (2.2).");
-  is(gEditor.getSelectedText(), ";",
+  is(gEditor.getSelection(), ";",
     "The editor selected text appears to be correct (2.2).");
 
   backspaceText(gSearchBox, 1);
@@ -98,7 +98,7 @@ function testTokenSearch() {
     "The editor caret position appears to be correct (2.3).");
   ok(isEditorSel(gPanel, [154, 154]),
     "The editor selection appears to be correct (2.3).");
-  is(gEditor.getSelectedText(), "",
+  is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct (2.3).");
 
   setText(gSearchBox, "#;");
@@ -106,7 +106,7 @@ function testTokenSearch() {
     "The editor caret position appears to be correct (2.4).");
   ok(isEditorSel(gPanel, [153, 154]),
     "The editor selection appears to be correct (2.4).");
-  is(gEditor.getSelectedText(), ";",
+  is(gEditor.getSelection(), ";",
     "The editor selected text appears to be correct (2.4).");
 
   gSearchBox.select();
@@ -115,7 +115,7 @@ function testTokenSearch() {
     "The editor caret position appears to be correct (2.5).");
   ok(isEditorSel(gPanel, [154, 154]),
     "The editor selection appears to be correct (2.5).");
-  is(gEditor.getSelectedText(), "",
+  is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct (2.5).");
   is(gSearchBox.value, "",
     "The searchbox should have been cleared.");

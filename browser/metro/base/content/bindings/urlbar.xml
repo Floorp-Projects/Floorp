@@ -505,13 +505,13 @@
         <xul:label class="meta-section-title"
                    value="&autocompleteResultsHeader.label;"/>
         <richgrid anonid="results" rows="3" flex="1"
-                  seltype="single" deferlayout="true"/>
+                  seltype="single" nocontext="true" deferlayout="true"/>
       </xul:vbox>
 
       <xul:vbox class="meta-section" flex="1">
         <xul:label anonid="searches-header" class="meta-section-title"/>
         <richgrid anonid="searches" rows="3" flex="1"
-                  seltype="single" deferlayout="true"/>
+                  seltype="single" nocontext="true" deferlayout="true"/>
       </xul:vbox>
     </content>
 
@@ -519,7 +519,6 @@
       <constructor>
         <![CDATA[
           this.hidden = true;
-
           Services.obs.addObserver(this, "browser-search-engine-modified", false);
 
           this._results.controller = this;
