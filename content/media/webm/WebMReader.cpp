@@ -9,7 +9,6 @@
 #include "MediaResource.h"
 #include "WebMReader.h"
 #include "WebMBufferedParser.h"
-#include "VideoUtils.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "VorbisUtils.h"
 
