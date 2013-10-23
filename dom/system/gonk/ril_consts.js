@@ -508,6 +508,7 @@ this.ICC_EF_CFIS   = 0x6fcb;
 this.ICC_EF_SPDI   = 0x6fcd;
 
 // CSIM files
+this.ICC_EF_CSIM_IMSI_M   = 0x6f22;
 this.ICC_EF_CSIM_CDMAHOME = 0x6f28;
 this.ICC_EF_CSIM_CST      = 0x6f32; // CDMA Service table
 this.ICC_EF_CSIM_SPN      = 0x6f41;
@@ -665,6 +666,14 @@ this.USIM_TAG_NAME[ICC_USIM_EFGSD_TAG] = "gsd";
 this.USIM_TAG_NAME[ICC_USIM_EFUID_TAG] = "uid";
 this.USIM_TAG_NAME[ICC_USIM_EFEMAIL_TAG] = "email";
 this.USIM_TAG_NAME[ICC_USIM_EFCCP1_TAG] = "ccp1";
+
+// CDMA IMSI_M's byte const.
+// 3GPP2 C.S0065 Sec. 5.2.2
+this.CSIM_IMSI_M_MIN2_BYTE = 1;
+this.CSIM_IMSI_M_MIN1_BYTE = 3;
+this.CSIM_IMSI_M_MNC_BYTE = 6;
+this.CSIM_IMSI_M_PROGRAMMED_BYTE = 7;
+this.CSIM_IMSI_M_MCC_BYTE = 8;
 
 /**
  * STK constants.
