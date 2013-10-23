@@ -10,8 +10,8 @@ MODULE = 'accessibility'
 
 EXPORTS += [
     'AccEvent.h',
-    'nsAccessNode.h',
     'nsAccessibilityService.h',
+    'nsAccessNode.h',
 ]
 
 EXPORTS.mozilla.a11y += [
@@ -31,30 +31,30 @@ if CONFIG['MOZ_DEBUG']:
     ]
 
 CPP_SOURCES += [
-    'ARIAMap.cpp',
-    'ARIAStateMap.cpp',
     'AccCollector.cpp',
     'AccEvent.cpp',
     'AccGroupInfo.cpp',
     'AccIterator.cpp',
+    'ARIAMap.cpp',
+    'ARIAStateMap.cpp',
     'Asserts.cpp',
     'DocManager.cpp',
     'EventQueue.cpp',
     'Filters.cpp',
     'FocusManager.cpp',
     'NotificationController.cpp',
+    'nsAccessibilityService.cpp',
+    'nsAccessiblePivot.cpp',
+    'nsAccessNode.cpp',
+    'nsAccUtils.cpp',
+    'nsCoreUtils.cpp',
+    'nsEventShell.cpp',
+    'nsTextEquivUtils.cpp',
     'SelectionManager.cpp',
     'StyleInfo.cpp',
     'TextAttrs.cpp',
     'TextUpdater.cpp',
     'TreeWalker.cpp',
-    'nsAccUtils.cpp',
-    'nsAccessNode.cpp',
-    'nsAccessibilityService.cpp',
-    'nsAccessiblePivot.cpp',
-    'nsCoreUtils.cpp',
-    'nsEventShell.cpp',
-    'nsTextEquivUtils.cpp',
 ]
 
 if a11y_log:

@@ -40,9 +40,9 @@ EXPORTS += [
     'nsIScriptTimeoutHandler.h',
     'nsJSEnvironment.h',
     'nsJSUtils.h',
+    'nsPerformance.h',
     'nsPIDOMWindow.h',
     'nsPIWindowRoot.h',
-    'nsPerformance.h',
     'nsStructuredCloneContainer.h',
     'nsWindowMemoryReporter.h',
     'nsWrapperCache.h',
@@ -75,8 +75,6 @@ CPP_SOURCES += [
     'MessagePort.cpp',
     'MessagePortList.cpp',
     'Navigator.cpp',
-    'URL.cpp',
-    'WindowNamedPropertiesHandler.cpp',
     'nsContentPermissionHelper.cpp',
     'nsDOMClassInfo.cpp',
     'nsDOMNavigationTiming.cpp',
@@ -101,6 +99,8 @@ CPP_SOURCES += [
     'nsWindowMemoryReporter.cpp',
     'nsWindowRoot.cpp',
     'nsWrapperCache.cpp',
+    'URL.cpp',
+    'WindowNamedPropertiesHandler.cpp',
 ]
 
 EXTRA_COMPONENTS += [

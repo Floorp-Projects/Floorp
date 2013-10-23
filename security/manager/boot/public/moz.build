@@ -6,9 +6,9 @@
 
 XPIDL_SOURCES += [
     'nsIBufEntropyCollector.idl',
-    'nsISSLStatusProvider.idl',
     'nsISecurityUITelemetry.idl',
     'nsISecurityWarningDialogs.idl',
+    'nsISSLStatusProvider.idl',
 ]
 
 MODULE = 'pipboot'

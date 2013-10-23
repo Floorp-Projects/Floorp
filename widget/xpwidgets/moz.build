@@ -18,8 +18,6 @@ CPP_SOURCES += [
     'GfxInfoCollector.cpp',
     'GfxInfoWebGL.cpp',
     'InputData.cpp',
-    'PuppetWidget.cpp',
-    'WidgetUtils.cpp',
     'nsBaseAppShell.cpp',
     'nsBaseDragService.cpp',
     'nsBaseScreen.cpp',
@@ -28,14 +26,16 @@ CPP_SOURCES += [
     'nsClipboardPrivacyHandler.cpp',
     'nsFilePickerProxy.cpp',
     'nsHTMLFormatConverter.cpp',
-    'nsIWidgetListener.cpp',
     'nsIdleService.cpp',
+    'nsIWidgetListener.cpp',
     'nsPrimitiveHelpers.cpp',
     'nsPrintOptionsImpl.cpp',
     'nsPrintSession.cpp',
     'nsPrintSettingsImpl.cpp',
     'nsTransferable.cpp',
     'nsXPLookAndFeel.cpp',
+    'PuppetWidget.cpp',
+    'WidgetUtils.cpp',
 ]
 
 if CONFIG['MOZ_X11']:

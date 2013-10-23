@@ -29,32 +29,32 @@ CPP_SOURCES += ['../compiler/preprocessor/' + src for src in [
 CPP_SOURCES += ['../compiler/' + src for src in [
     'BuiltInFunctionEmulator.cpp',
     'Compiler.cpp',
+    'compiler_debug.cpp',
     'CompilerUniform.cpp',
     'DetectCallDepth.cpp',
     'Diagnostics.cpp',
     'DirectiveHandler.cpp',
     'ForLoopUnroll.cpp',
+    'glslang_lex.cpp',
+    'glslang_tab.cpp',
     'InfoSink.cpp',
     'Initialize.cpp',
     'InitializeDll.cpp',
     'InitializeParseContext.cpp',
-    'IntermTraverse.cpp',
     'Intermediate.cpp',
+    'intermOut.cpp',
+    'IntermTraverse.cpp',
     'MapLongVariableNames.cpp',
+    'parseConst.cpp',
     'ParseHelper.cpp',
     'PoolAlloc.cpp',
     'QualifierAlive.cpp',
     'RemoveTree.cpp',
     'SymbolTable.cpp',
+    'util.cpp',
     'ValidateLimitations.cpp',
     'VariableInfo.cpp',
     'VariablePacker.cpp',
-    'compiler_debug.cpp',
-    'glslang_lex.cpp',
-    'glslang_tab.cpp',
-    'intermOut.cpp',
-    'parseConst.cpp',
-    'util.cpp',
 ]]
 
 # src/compiler/depgraph:
@@ -109,8 +109,8 @@ CPP_SOURCES += ['../compiler/' + src for src in [
 #   Requires: 'translator_hlsl'
 # src/common:
 CPP_SOURCES += ['../common/' + src for src in [
-    'RefCountObject.cpp',
     'debug.cpp',
+    'RefCountObject.cpp',
 ]]
 
 # src/libGLESv2:
@@ -121,6 +121,9 @@ CPP_SOURCES += [
     'Float16ToFloat32.cpp',
     'Framebuffer.cpp',
     'HandleAllocator.cpp',
+    'libGLESv2.cpp',
+    'main.cpp',
+    'precompiled.cpp',
     'Program.cpp',
     'ProgramBinary.cpp',
     'Query.cpp',
@@ -129,9 +132,6 @@ CPP_SOURCES += [
     'Shader.cpp',
     'Texture.cpp',
     'Uniform.cpp',
-    'libGLESv2.cpp',
-    'main.cpp',
-    'precompiled.cpp',
     'utilities.cpp',
 ]
 
@@ -155,12 +155,14 @@ CPP_SOURCES += ['renderer/' + src for src in [
     'InputLayoutCache.cpp',
     'Query11.cpp',
     'Query9.cpp',
+    'Renderer.cpp',
+    'Renderer11.cpp',
+    'renderer11_utils.cpp',
+    'Renderer9.cpp',
+    'renderer9_utils.cpp',
     'RenderStateCache.cpp',
     'RenderTarget11.cpp',
     'RenderTarget9.cpp',
-    'Renderer.cpp',
-    'Renderer11.cpp',
-    'Renderer9.cpp',
     'ShaderExecutable11.cpp',
     'ShaderExecutable9.cpp',
     'SwapChain11.cpp',
@@ -173,8 +175,6 @@ CPP_SOURCES += ['renderer/' + src for src in [
     'VertexBuffer9.cpp',
     'VertexDataManager.cpp',
     'VertexDeclarationCache.cpp',
-    'renderer11_utils.cpp',
-    'renderer9_utils.cpp',
 ]]
 
 LIBRARY_NAME = 'libGLESv2'

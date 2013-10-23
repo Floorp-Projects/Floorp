@@ -33,9 +33,9 @@ CPP_SOURCES += ['libui/' + src for src in [
     'InputReader.cpp',
     'InputTransport.cpp',
     'InputWindow.cpp',
+    'Keyboard.cpp',
     'KeyCharacterMap.cpp',
     'KeyLayoutMap.cpp',
-    'Keyboard.cpp',
     'PointerController.cpp',
     'SpriteController.cpp',
     'Tokenizer.cpp',
@@ -50,13 +50,13 @@ CPP_SOURCES += [
     'GonkMemoryPressureMonitoring.cpp',
     'HwcComposer2D.cpp',
     'HwcUtils.cpp',
-    'OrientationObserver.cpp',
-    'ProcessOrientation.cpp',
     'nsAppShell.cpp',
     'nsIdleServiceGonk.cpp',
     'nsLookAndFeel.cpp',
     'nsWidgetFactory.cpp',
-    'nsWindow.cpp'
+    'nsWindow.cpp',
+    'OrientationObserver.cpp',
+    'ProcessOrientation.cpp'
 ]
 
 LIBXUL_LIBRARY = True

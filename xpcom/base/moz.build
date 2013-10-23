@@ -46,21 +46,21 @@ EXPORTS += [
     'nsAutoPtr.h',
     'nsAutoRef.h',
     'nsCom.h',
+    'nscore.h',
     'nsCycleCollector.h',
     'nsDebugImpl.h',
     'nsError.h',
     'nsGZFileWriter.h',
     'nsIAllocator.h',
     'nsIID.h',
+    'nsInterfaceRequestorAgg.h',
     'nsISizeOf.h',
     'nsISupportsBase.h',
     'nsISupportsObsolete.h',
-    'nsInterfaceRequestorAgg.h',
     'nsObjCExceptions.h',
     'nsStackWalk.h',
     'nsTraceRefcntImpl.h',
     'nsWeakPtr.h',
-    'nscore.h',
 ]
 
 if CONFIG['MOZ_DEBUG']:
@@ -75,11 +75,11 @@ EXPORTS.mozilla += [
     'AvailableMemoryTracker.h',
     'ClearOnShutdown.h',
     'CycleCollectedJSRuntime.h',
+    'nsMemoryInfoDumper.h',
     'StackWalk.h',
     'StaticMutex.h',
     'StaticPtr.h',
     'VisualEventTracer.h',
-    'nsMemoryInfoDumper.h',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -91,7 +91,6 @@ CPP_SOURCES += [
     'AvailableMemoryTracker.cpp',
     'ClearOnShutdown.cpp',
     'CycleCollectedJSRuntime.cpp',
-    'VisualEventTracer.cpp',
     'nsConsoleMessage.cpp',
     'nsConsoleService.cpp',
     'nsCycleCollector.cpp',
@@ -109,6 +108,7 @@ CPP_SOURCES += [
     'nsTraceRefcntImpl.cpp',
     'nsUUIDGenerator.cpp',
     'nsVersionComparatorImpl.cpp',
+    'VisualEventTracer.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

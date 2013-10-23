@@ -8,12 +8,10 @@ MODULE = 'thebes'
 
 EXPORTS += [
     'DrawMode.h',
-    'GraphicsFilter.h',
-    'RoundedRect.h',
     'gfx2DGlue.h',
     'gfx3DMatrix.h',
-    'gfxASurface.h',
     'gfxAlphaRecovery.h',
+    'gfxASurface.h',
     'gfxBaseSharedMemorySurface.h',
     'gfxBlur.h',
     'gfxCachedTempSurface.h',
@@ -41,15 +39,17 @@ EXPORTS += [
     'gfxReusableImageSurfaceWrapper.h',
     'gfxReusableSharedImageSurfaceWrapper.h',
     'gfxReusableSurfaceWrapper.h',
-    'gfxSVGGlyphs.h',
     'gfxSharedImageSurface.h',
     'gfxSharedQuartzSurface.h',
     'gfxSkipChars.h',
+    'gfxSVGGlyphs.h',
     'gfxTeeSurface.h',
     'gfxTypes.h',
     'gfxUserFontSet.h',
     'gfxUtils.h',
+    'GraphicsFilter.h',
     'nsSurfaceTexture.h',
+    'RoundedRect.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
@@ -105,18 +105,18 @@ elif CONFIG['MOZ_WIDGET_GTK']:
         'gfxFT2FontBase.h',
         'gfxGdkNativeRenderer.h',
         'gfxPDFSurface.h',
-        'gfxPSSurface.h',
         'gfxPlatformGtk.h',
+        'gfxPSSurface.h',
     ]
 
     CPP_SOURCES += [
+        'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
-        'gfxFontconfigUtils.cpp',
         'gfxGdkNativeRenderer.cpp',
         'gfxPDFSurface.cpp',
-        'gfxPSSurface.cpp',
         'gfxPlatformGtk.cpp',
+        'gfxPSSurface.cpp',
         'nsUnicodeRange.cpp',
     ]
 
@@ -164,9 +164,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'gfxQtPlatform.h',
     ]
     CPP_SOURCES += [
+        'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
-        'gfxFontconfigUtils.cpp',
         'gfxPDFSurface.cpp',
         'gfxQPainterSurface.cpp',
         'gfxQtPlatform.cpp',
@@ -233,8 +233,8 @@ if CONFIG['INTEL_ARCHITECTURE']:
 
 CPP_SOURCES += [
     'gfx3DMatrix.cpp',
-    'gfxASurface.cpp',
     'gfxAlphaRecovery.cpp',
+    'gfxASurface.cpp',
     'gfxBaseSharedMemorySurface.cpp',
     'gfxBlur.cpp',
     'gfxCachedTempSurface.cpp',
@@ -256,9 +256,9 @@ CPP_SOURCES += [
     'gfxRect.cpp',
     'gfxReusableImageSurfaceWrapper.cpp',
     'gfxReusableSharedImageSurfaceWrapper.cpp',
-    'gfxSVGGlyphs.cpp',
     'gfxScriptItemizer.cpp',
     'gfxSkipChars.cpp',
+    'gfxSVGGlyphs.cpp',
     'gfxTeeSurface.cpp',
     'gfxUserFontSet.cpp',
     'gfxUtils.cpp',

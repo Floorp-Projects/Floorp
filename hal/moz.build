@@ -23,8 +23,8 @@ TEST_DIRS += ['tests']
 CPP_SOURCES += [
     'Hal.cpp',
     'HalWakeLock.cpp',
-    'WindowIdentifier.cpp',
     'sandbox/SandboxHal.cpp',
+    'WindowIdentifier.cpp',
 ]
 
 if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':
@@ -131,8 +131,8 @@ else:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     CPP_SOURCES += [
         'fallback/FallbackDiskSpaceWatcher.cpp',
-        'fallback/FallbackFMRadio.cpp',
         'fallback/FallbackFactoryReset.cpp',
+        'fallback/FallbackFMRadio.cpp',
         'fallback/FallbackLights.cpp',
         'fallback/FallbackProcessPriority.cpp',
         'fallback/FallbackScreenPower.cpp',

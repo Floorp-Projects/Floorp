@@ -15,11 +15,11 @@ CPP_SOURCES += [
     'MetroInput.cpp',
     'MetroUtils.cpp',
     'MetroWidget.cpp',
+    'nsMetroFilePicker.cpp',
+    'nsWinMetroUtils.cpp',
     'ToastNotificationHandler.cpp',
     'UIAAccessibilityBridge.cpp',
     'UIABridge.cpp',
-    'nsMetroFilePicker.cpp',
-    'nsWinMetroUtils.cpp',
 ]
 
 EXTRA_COMPONENTS += [

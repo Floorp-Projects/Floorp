@@ -7,8 +7,8 @@
 MODULE = 'synthpico'
 
 CPP_SOURCES += [
-    'PicoModule.cpp',
-    'nsPicoService.cpp'
+    'nsPicoService.cpp',
+    'PicoModule.cpp'
 ]
 
 LIBRARY_NAME = 'synthpico'
