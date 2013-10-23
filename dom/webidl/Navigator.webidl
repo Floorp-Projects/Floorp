@@ -111,7 +111,7 @@ Navigator implements NavigatorBattery;
 // https://wiki.mozilla.org/WebAPI/DataStore
 [NoInterfaceObject]
 interface NavigatorDataStore {
-    [Throws, NewObject, Pref="dom.datastore.enabled"]
+    [Throws, Creator, Pref="dom.datastore.enabled"]
     Promise getDataStores(DOMString name);
 };
 Navigator implements NavigatorDataStore;

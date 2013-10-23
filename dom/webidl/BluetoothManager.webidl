@@ -13,6 +13,6 @@ interface BluetoothManager : EventTarget {
 
   [Throws]
   boolean     isConnected(unsigned short aProfile);
-  [NewObject, Throws]
+  [Creator, Throws]
   DOMRequest? getDefaultAdapter();
 };

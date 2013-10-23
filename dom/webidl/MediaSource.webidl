@@ -28,7 +28,7 @@ interface MediaSource : EventTarget {
   readonly attribute MediaSourceReadyState readyState;
   [SetterThrows]
   attribute unrestricted double duration;
-  [NewObject, Throws]
+  [Creator, Throws]
   SourceBuffer addSourceBuffer(DOMString type);
   [Throws]
   void removeSourceBuffer(SourceBuffer sourceBuffer);

@@ -21,7 +21,7 @@ interface AudioContext : EventTarget {
     readonly attribute double currentTime;
     readonly attribute AudioListener listener;
 
-    [NewObject, Throws]
+    [Creator, Throws]
     AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
 
     void decodeAudioData(ArrayBuffer audioData,
@@ -29,47 +29,47 @@ interface AudioContext : EventTarget {
                          optional DecodeErrorCallback errorCallback);
 
     // AudioNode creation 
-    [NewObject]
+    [Creator]
     AudioBufferSourceNode createBufferSource();
 
-    [NewObject, Throws]
+    [Creator, Throws]
     MediaStreamAudioDestinationNode createMediaStreamDestination();
 
-    [NewObject, Throws]
+    [Creator, Throws]
     ScriptProcessorNode createScriptProcessor(optional unsigned long bufferSize = 0,
                                               optional unsigned long numberOfInputChannels = 2,
                                               optional unsigned long numberOfOutputChannels = 2);
 
-    [NewObject]
+    [Creator]
     AnalyserNode createAnalyser();
-    [NewObject, Throws]
+    [Creator, Throws]
     MediaElementAudioSourceNode createMediaElementSource(HTMLMediaElement mediaElement);
-    [NewObject, Throws]
+    [Creator, Throws]
     MediaStreamAudioSourceNode createMediaStreamSource(MediaStream mediaStream);
-    [NewObject]
+    [Creator]
     GainNode createGain();
-    [NewObject, Throws]
+    [Creator, Throws]
     DelayNode createDelay(optional double maxDelayTime = 1);
-    [NewObject]
+    [Creator]
     BiquadFilterNode createBiquadFilter();
-    [NewObject]
+    [Creator]
     WaveShaperNode createWaveShaper();
-    [NewObject]
+    [Creator]
     PannerNode createPanner();
-    [NewObject]
+    [Creator]
     ConvolverNode createConvolver();
 
-    [NewObject, Throws]
+    [Creator, Throws]
     ChannelSplitterNode createChannelSplitter(optional unsigned long numberOfOutputs = 6);
-    [NewObject, Throws]
+    [Creator, Throws]
     ChannelMergerNode createChannelMerger(optional unsigned long numberOfInputs = 6);
 
-    [NewObject]
+    [Creator]
     DynamicsCompressorNode createDynamicsCompressor();
 
-    [NewObject]
+    [Creator]
     OscillatorNode createOscillator();
-    [NewObject, Throws]
+    [Creator, Throws]
     PeriodicWave createPeriodicWave(Float32Array real, Float32Array imag);
 
 };
@@ -80,19 +80,19 @@ interface AudioContext : EventTarget {
  */
 [PrefControlled]
 partial interface AudioContext {
-    [NewObject, Throws]
+    [Creator, Throws]
     AudioBuffer? createBuffer(ArrayBuffer buffer, boolean mixToMono);
 
     // Same as createGain()
-    [NewObject,Pref="media.webaudio.legacy.AudioContext"]
+    [Creator,Pref="media.webaudio.legacy.AudioContext"]
     GainNode createGainNode();
 
     // Same as createDelay()
-    [NewObject, Throws, Pref="media.webaudio.legacy.AudioContext"]
+    [Creator, Throws, Pref="media.webaudio.legacy.AudioContext"]
     DelayNode createDelayNode(optional double maxDelayTime = 1);
 
     // Same as createScriptProcessor()
-    [NewObject, Throws, Pref="media.webaudio.legacy.AudioContext"]
+    [Creator, Throws, Pref="media.webaudio.legacy.AudioContext"]
     ScriptProcessorNode createJavaScriptNode(optional unsigned long bufferSize = 0,
                                              optional unsigned long numberOfInputChannels = 2,
                                              optional unsigned long numberOfOutputChannels = 2);

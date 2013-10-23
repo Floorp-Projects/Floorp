@@ -15,46 +15,46 @@ interface SVGPathElement : SVGGraphicsElement {
 
   [Throws]
   float getTotalLength();
-  [NewObject, Throws]
+  [Creator, Throws]
   SVGPoint getPointAtLength(float distance);
   unsigned long getPathSegAtLength(float distance);
-  [NewObject]
+  [Creator]
   SVGPathSegClosePath createSVGPathSegClosePath();
-  [NewObject]
+  [Creator]
   SVGPathSegMovetoAbs createSVGPathSegMovetoAbs(float x, float y);
-  [NewObject]
+  [Creator]
   SVGPathSegMovetoRel createSVGPathSegMovetoRel(float x, float y);
-  [NewObject]
+  [Creator]
   SVGPathSegLinetoAbs createSVGPathSegLinetoAbs(float x, float y);
-  [NewObject]
+  [Creator]
   SVGPathSegLinetoRel createSVGPathSegLinetoRel(float x, float y);
-  [NewObject]
+  [Creator]
   SVGPathSegCurvetoCubicAbs createSVGPathSegCurvetoCubicAbs(float x, float y, float x1, float y1, float x2, float y2);
-  [NewObject]
+  [Creator]
   SVGPathSegCurvetoCubicRel createSVGPathSegCurvetoCubicRel(float x, float y, float x1, float y1, float x2, float y2);
-  [NewObject]
+  [Creator]
   SVGPathSegCurvetoQuadraticAbs createSVGPathSegCurvetoQuadraticAbs(float x, float y, float x1, float y1);
-  [NewObject]
+  [Creator]
   SVGPathSegCurvetoQuadraticRel createSVGPathSegCurvetoQuadraticRel(float x, float y, float x1, float y1);
-  [NewObject]
+  [Creator]
   SVGPathSegArcAbs createSVGPathSegArcAbs(float x, float y, float r1, float r2, float angle, boolean largeArcFlag, boolean sweepFlag);
-  [NewObject]
+  [Creator]
   SVGPathSegArcRel createSVGPathSegArcRel(float x, float y, float r1, float r2, float angle, boolean largeArcFlag, boolean sweepFlag);
-  [NewObject]
+  [Creator]
   SVGPathSegLinetoHorizontalAbs createSVGPathSegLinetoHorizontalAbs(float x);
-  [NewObject]
+  [Creator]
   SVGPathSegLinetoHorizontalRel createSVGPathSegLinetoHorizontalRel(float x);
-  [NewObject]
+  [Creator]
   SVGPathSegLinetoVerticalAbs createSVGPathSegLinetoVerticalAbs(float y);
-  [NewObject]
+  [Creator]
   SVGPathSegLinetoVerticalRel createSVGPathSegLinetoVerticalRel(float y);
-  [NewObject]
+  [Creator]
   SVGPathSegCurvetoCubicSmoothAbs createSVGPathSegCurvetoCubicSmoothAbs(float x, float y, float x2, float y2);
-  [NewObject]
+  [Creator]
   SVGPathSegCurvetoCubicSmoothRel createSVGPathSegCurvetoCubicSmoothRel(float x, float y, float x2, float y2);
-  [NewObject]
+  [Creator]
   SVGPathSegCurvetoQuadraticSmoothAbs createSVGPathSegCurvetoQuadraticSmoothAbs(float x, float y);
-  [NewObject]
+  [Creator]
   SVGPathSegCurvetoQuadraticSmoothRel createSVGPathSegCurvetoQuadraticSmoothRel(float x, float y);
 };
 

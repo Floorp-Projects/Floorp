@@ -40,17 +40,17 @@ interface Document : Node {
   HTMLCollection getElementsByClassName(DOMString classNames);
   Element? getElementById(DOMString elementId);
 
-  [NewObject, Throws]
+  [Creator, Throws]
   Element createElement(DOMString localName);
-  [NewObject, Throws]
+  [Creator, Throws]
   Element createElementNS(DOMString? namespace, DOMString qualifiedName);
-  [NewObject]
+  [Creator]
   DocumentFragment createDocumentFragment();
-  [NewObject]
+  [Creator]
   Text createTextNode(DOMString data);
-  [NewObject]
+  [Creator]
   Comment createComment(DOMString data);
-  [NewObject, Throws]
+  [Creator, Throws]
   ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
   [Throws]
@@ -58,16 +58,16 @@ interface Document : Node {
   [Throws]
   Node adoptNode(Node node);
 
-  [NewObject, Throws]
+  [Creator, Throws]
   Event createEvent(DOMString interface);
 
-  [NewObject, Throws]
+  [Creator, Throws]
   Range createRange();
 
   // NodeFilter.SHOW_ALL = 0xFFFFFFFF
-  [NewObject, Throws]
+  [Creator, Throws]
   NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
-  [NewObject, Throws]
+  [Creator, Throws]
   TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
 
   // NEW
@@ -77,11 +77,11 @@ interface Document : Node {
 
   // These are not in the spec, but leave them for now for backwards compat.
   // So sort of like Gecko extensions
-  [NewObject, Throws]
+  [Creator, Throws]
   CDATASection createCDATASection(DOMString data);
-  [NewObject, Throws]
+  [Creator, Throws]
   Attr createAttribute(DOMString name);
-  [NewObject, Throws]
+  [Creator, Throws]
   Attr createAttributeNS(DOMString? namespace, DOMString name);
   readonly attribute DOMString? inputEncoding;
 };
@@ -290,7 +290,7 @@ partial interface Document {
   // nsIDOMDocumentTouch
   // XXXbz I can't find the sane spec for this stuff, so just cribbing
   // from our xpidl for now.
-  [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   Touch createTouch(optional Window? view = null,
                     optional EventTarget? target = null,
                     optional long identifier = 0,
@@ -308,14 +308,14 @@ partial interface Document {
   // distinguishing arguments yet.  Once this hack is removed. we can also
   // remove the corresponding overload on nsIDocument, since Touch... and
   // sequence<Touch> look the same in the C++.
-  [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   TouchList createTouchList(Touch touch, Touch... touches);
   // XXXbz and another hack for the fact that we can't usefully have optional
   // distinguishing arguments but need a working zero-arg form of
   // createTouchList().
-  [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   TouchList createTouchList();
-  [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [Creator, Func="nsGenericHTMLElement::TouchEventsEnabled"]
   TouchList createTouchList(sequence<Touch> touches);
 
   [ChromeOnly]

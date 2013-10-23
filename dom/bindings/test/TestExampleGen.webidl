@@ -129,17 +129,17 @@ interface TestExampleInterface {
   void passOptionalSelfWithDefault(optional TestInterface? arg = null);
 
   // Non-wrapper-cache interface types
-  [NewObject]
+  [Creator]
   TestNonWrapperCacheInterface receiveNonWrapperCacheInterface();
-  [NewObject]
+  [Creator]
   TestNonWrapperCacheInterface? receiveNullableNonWrapperCacheInterface();
-  [NewObject]
+  [Creator]
   sequence<TestNonWrapperCacheInterface> receiveNonWrapperCacheInterfaceSequence();
-  [NewObject]
+  [Creator]
   sequence<TestNonWrapperCacheInterface?> receiveNullableNonWrapperCacheInterfaceSequence();
-  [NewObject]
+  [Creator]
   sequence<TestNonWrapperCacheInterface>? receiveNonWrapperCacheInterfaceNullableSequence();
-  [NewObject]
+  [Creator]
   sequence<TestNonWrapperCacheInterface?>? receiveNullableNonWrapperCacheInterfaceNullableSequence();
 
   // Non-castable interface types
