@@ -207,6 +207,10 @@ Editor.prototype = {
       cm.on("gutterClick", (cm, line) => this.emit("gutterClick", line));
       cm.on("cursorActivity", (cm) => this.emit("cursorActivity"));
 
+      win.CodeMirror.defineExtension("l10n", (name) => {
+        return L10N.GetStringFromName(name);
+      });
+
       doc.defaultView.controllers.insertControllerAt(0, controller(this, doc.defaultView));
 
       this.container = env;
