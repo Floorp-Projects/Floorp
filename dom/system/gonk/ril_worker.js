@@ -5055,15 +5055,6 @@ RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, options) {
   options.rilMessageType = "iccimsi";
   options.imsi = this.iccInfoPrivate.imsi;
   this.sendChromeMessage(options);
-
-  if (this._isCdma) {
-    let mccMnc = ICCUtilsHelper.parseMccMncFromImsi(this.iccInfoPrivate.imsi);
-    if (mccMnc) {
-      this.iccInfo.mcc = mccMnc.mcc;
-      this.iccInfo.mnc = mccMnc.mnc;
-      ICCUtilsHelper.handleICCInfoChange();
-    }
-  }
 };
 RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
   if (options.rilRequestError) {
@@ -10910,6 +10901,7 @@ let ICCFileHelper = {
    */
   getRuimEFPath: function getRuimEFPath(fileId) {
     switch(fileId) {
+      case ICC_EF_CSIM_IMSI_M:
       case ICC_EF_CSIM_CDMAHOME:
       case ICC_EF_CSIM_CST:
       case ICC_EF_CSIM_SPN:
@@ -13189,10 +13181,104 @@ let ICCContactHelper = {
 let RuimRecordHelper = {
   fetchRuimRecords: function fetchRuimRecords() {
     ICCRecordHelper.readICCID();
-    RIL.getIMSI();
+    this.getIMSI_M();
     this.readCST();
     this.readCDMAHome();
     RIL.getCdmaSubscription();
+  },
+
+  /**
+   * Get IMSI_M from CSIM/RUIM.
+   * See 3GPP2 C.S0065 Sec. 5.2.2
+   */
+  getIMSI_M: function getIMSI_M() {
+    function callback() {
+      let strLen = Buf.readInt32();
+      let encodedImsi = GsmPDUHelper.readHexOctetArray(strLen / 2);
+      Buf.readStringDelimiter(strLen);
+
+      if ((encodedImsi[CSIM_IMSI_M_PROGRAMMED_BYTE] & 0x80)) { // IMSI_M programmed
+        RIL.iccInfoPrivate.imsi = this.decodeIMSI(encodedImsi);
+        RIL.sendChromeMessage({rilMessageType: "iccimsi",
+                               imsi: RIL.iccInfoPrivate.imsi});
+
+        let mccMnc = ICCUtilsHelper.parseMccMncFromImsi(RIL.iccInfoPrivate.imsi);
+        if (mccMnc) {
+          RIL.iccInfo.mcc = mccMnc.mcc;
+          RIL.iccInfo.mnc = mccMnc.mnc;
+          ICCUtilsHelper.handleICCInfoChange();
+        }
+      }
+    }
+
+    ICCIOHelper.loadTransparentEF({fileId: ICC_EF_CSIM_IMSI_M,
+                                   callback: callback.bind(this)});
+  },
+
+  /**
+   * Decode IMSI from IMSI_M
+   * See 3GPP2 C.S0005 Sec. 2.3.1
+   * +---+---------+------------+---+--------+---------+---+---------+--------+
+   * |RFU|   MCC   | programmed |RFU|  MNC   |  MIN1   |RFU|   MIN2  |  CLASS |
+   * +---+---------+------------+---+--------+---------+---+---------+--------+
+   * | 6 | 10 bits |   8 bits   | 1 | 7 bits | 24 bits | 6 | 10 bits | 8 bits |
+   * +---+---------+------------+---+--------+---------+---+---------+--------+
+   */
+  decodeIMSI: function decodeIMSI(encodedImsi) {
+    // MCC: 10 bits, 3 digits
+    let encodedMCC = ((encodedImsi[CSIM_IMSI_M_MCC_BYTE + 1] & 0x03) << 8) +
+                      (encodedImsi[CSIM_IMSI_M_MCC_BYTE] & 0xff);
+    let mcc = this.decodeIMSIValue(encodedMCC, 3);
+
+    // MNC: 7 bits, 2 digits
+    let encodedMNC =  encodedImsi[CSIM_IMSI_M_MNC_BYTE] & 0x7f;
+    let mnc = this.decodeIMSIValue(encodedMNC, 2);
+
+    // MIN2: 10 bits, 3 digits
+    let encodedMIN2 = ((encodedImsi[CSIM_IMSI_M_MIN2_BYTE + 1] & 0x03) << 8) +
+                       (encodedImsi[CSIM_IMSI_M_MIN2_BYTE] & 0xff);
+    let min2 = this.decodeIMSIValue(encodedMIN2, 3);
+
+    // MIN1: 10+4+10 bits, 3+1+3 digits
+    let encodedMIN1First3 = ((encodedImsi[CSIM_IMSI_M_MIN1_BYTE + 2] & 0xff) << 2) +
+                             ((encodedImsi[CSIM_IMSI_M_MIN1_BYTE + 1] & 0xc0) >> 6);
+    let min1First3 = this.decodeIMSIValue(encodedMIN1First3, 3);
+
+    let encodedFourthDigit = (encodedImsi[CSIM_IMSI_M_MIN1_BYTE + 1] & 0x3c) >> 2;
+    if (encodedFourthDigit > 9) {
+      encodedFourthDigit = 0;
+    }
+    let fourthDigit = encodedFourthDigit.toString();
+
+    let encodedMIN1Last3 = ((encodedImsi[CSIM_IMSI_M_MIN1_BYTE + 1] & 0x03) << 8) +
+                            (encodedImsi[CSIM_IMSI_M_MIN1_BYTE] & 0xff);
+    let min1Last3 = this.decodeIMSIValue(encodedMIN1Last3, 3);
+
+    return mcc + mnc + min2 + min1First3 + fourthDigit + min1Last3;
+  },
+
+  /**
+   * Decode IMSI Helper function
+   * See 3GPP2 C.S0005 section 2.3.1.1
+   */
+  decodeIMSIValue: function decodeIMSIValue(encoded, length) {
+    let offset = length === 3 ? 111 : 11;
+    let value = encoded + offset;
+
+    for (let base = 10, temp = value, i = 0; i < length; i++) {
+      if (temp % 10 === 0) {
+        value -= base;
+      }
+      temp = Math.floor(value / base);
+      base = base * 10;
+    }
+
+    let s = value.toString();
+    while (s.length < length) {
+      s = "0" + s;
+    }
+
+    return s;
   },
 
   /**
