@@ -101,7 +101,7 @@ function checkCorrectLine(aCallback)
     {
       let debuggerView = dbg.panelWin.DebuggerView;
       if (debuggerView.editor &&
-          debuggerView.editor.getCaretPosition().line == line - 1) {
+          debuggerView.editor.getCursor().line == line - 1) {
         return true;
       }
       return false;

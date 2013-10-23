@@ -181,7 +181,7 @@ function test() {
   }
 
   function setCaretPosition(aLine) {
-    gEditor.setCaretPosition(aLine - 1);
+    gEditor.setCursor({ line: aLine - 1, ch: 0 });
   }
 
   function setContextPosition(aLine) {

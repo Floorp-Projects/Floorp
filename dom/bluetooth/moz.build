@@ -53,14 +53,19 @@ if CONFIG['MOZ_B2G_BT']:
         ]
 
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        CPP_SOURCES += [
-            'linux/BluetoothDBusService.cpp',
-            'gonk/BluetoothGonkService.cpp',
-        ]
+        if CONFIG['MOZ_B2G_BT_BLUEZ']:
+            CPP_SOURCES += [
+               'linux/BluetoothDBusService.cpp',
+               'gonk/BluetoothGonkService.cpp',
+            ]
+        if CONFIG['MOZ_B2G_BT_BLUEDROID']:
+            CPP_SOURCES += [
+                'BluetoothServiceBluedroid.cpp',
+            ]
     else:
         if CONFIG['MOZ_ENABLE_DBUS']:
             CPP_SOURCES += [
-                'linux/BluetoothDBusService.cpp',
+                 'linux/BluetoothDBusService.cpp',
             ]
 
 EXPORTS.mozilla.dom.bluetooth.ipc += [

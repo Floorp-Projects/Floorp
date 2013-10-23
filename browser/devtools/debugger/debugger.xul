@@ -13,7 +13,6 @@
   %debuggerDTD;
 ]>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/devtools/source-editor-overlay.xul"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         macanimationtype="document"
@@ -29,7 +28,6 @@
   <script type="text/javascript" src="debugger-panes.js"/>
 
   <commandset id="editMenuCommands"/>
-  <commandset id="sourceEditorCommands"/>
 
   <commandset id="debuggerCommands">
     <command id="prettyPrintCommand"
@@ -86,7 +84,7 @@
 
   <popupset id="debuggerPopupset">
     <menupopup id="sourceEditorContextMenu"
-               onpopupshowing="goUpdateSourceEditorMenuItems()">
+               onpopupshowing="goUpdateGlobalEditMenuItems()">
       <menuitem id="se-dbg-cMenu-addBreakpoint"
                 label="&debuggerUI.seMenuBreak;"
                 key="addBreakpointKey"
@@ -100,9 +98,9 @@
                 key="addWatchExpressionKey"
                 command="addWatchExpressionCommand"/>
       <menuseparator/>
-      <menuitem id="se-cMenu-copy"/>
+      <menuitem id="cMenu_copy"/>
       <menuseparator/>
-      <menuitem id="se-cMenu-selectAll"/>
+      <menuitem id="cMenu_selectAll"/>
       <menuseparator/>
       <menuitem id="se-dbg-cMenu-findFile"
                 label="&debuggerUI.searchFile;"

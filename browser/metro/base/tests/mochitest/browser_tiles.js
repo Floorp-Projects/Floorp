@@ -355,13 +355,6 @@ gTests.push({
     ok(grid.items[1].getAttribute("selected"), "Item selected attribute is truthy after grid.selectItem");
     ok(grid.selectedItems.length, "There are selectedItems after grid.selectItem");
 
-    // clearSelection
-    grid.selectItem(grid.items[0]);
-    grid.selectItem(grid.items[1]);
-    grid.clearSelection();
-    is(grid.selectedItems.length, 0, "Nothing selected when we clearSelection");
-    is(grid.selectedIndex, -1, "selectedIndex resets after clearSelection");
-
     // select events
     // in seltype=single mode, select is like the default action for the tile
     // (think <a>, not <select multiple>)
@@ -369,8 +362,17 @@ gTests.push({
       handleEvent: function(aEvent) {}
     };
     let handlerStub = stubMethod(handler, "handleEvent");
+
+    grid.items[1].selected = true;
+
     doc.defaultView.addEventListener("select", handler, false);
     info("select listener added");
+
+    // clearSelection
+    grid.clearSelection();
+    is(grid.selectedItems.length, 0, "Nothing selected when we clearSelection");
+    is(grid.selectedIndex, -1, "selectedIndex resets after clearSelection");
+    is(handlerStub.callCount, 0, "clearSelection should not fire a selectionchange event");
 
     info("calling selectItem, currently it is:" + grid.items[0].selected);
     // Note: A richgrid in seltype=single mode fires "select" events from selectItem
@@ -412,14 +414,6 @@ gTests.push({
     grid.toggleItemSelection(grid.items[1]);
     is(grid.selectedItems.length, 0, "Nothing selected when we toggleItemSelection again");
 
-    // clearSelection
-    grid.items[0].selected=true;
-    grid.items[1].selected=true;
-    is(grid.selectedItems.length, 2, "Both items are selected before calling clearSelection");
-    grid.clearSelection();
-    is(grid.selectedItems.length, 0, "Nothing selected when we clearSelection");
-    ok(!(grid.items[0].selected || grid.items[1].selected), "selected properties all falsy when we clearSelection");
-
     // selectionchange events
     // in seltype=multiple mode, we track selected state on all items
     // (think <select multiple> not <a>)
@@ -430,6 +424,15 @@ gTests.push({
     doc.defaultView.addEventListener("selectionchange", handler, false);
     info("selectionchange listener added");
 
+    // clearSelection
+    grid.items[0].selected=true;
+    grid.items[1].selected=true;
+    is(grid.selectedItems.length, 2, "Both items are selected before calling clearSelection");
+    grid.clearSelection();
+    is(grid.selectedItems.length, 0, "Nothing selected when we clearSelection");
+    ok(!(grid.items[0].selected || grid.items[1].selected), "selected properties all falsy when we clearSelection");
+    is(handlerStub.callCount, 0, "clearSelection should not fire a selectionchange event");
+
     info("calling toggleItemSelection, currently it is:" + grid.items[0].selected);
     // Note: A richgrid in seltype=single mode fires "select" events from selectItem
     grid.toggleItemSelection(grid.items[0]);
@@ -439,6 +442,39 @@ gTests.push({
     is(handlerStub.callCount, 1, "selectionchange event handler was called when we selected an item");
     is(handlerStub.calledWith[0].type, "selectionchange", "handler got a selectionchange event");
     is(handlerStub.calledWith[0].target, grid, "select event had the originating grid as the target");
+    handlerStub.restore();
+    doc.defaultView.removeEventListener("selectionchange", handler, false);
+  }
+});
+
+gTests.push({
+  desc: "selectNone",
+  run: function() {
+    let grid = doc.querySelector("#grid-select2");
+
+    is(typeof grid.selectNone, "function", "selectNone is a function on the grid");
+
+    is(grid.itemCount, 2, "2 items initially");
+
+    // selectNone should fire a selectionchange event
+    let handler = {
+      handleEvent: function(aEvent) {}
+    };
+    let handlerStub = stubMethod(handler, "handleEvent");
+    doc.defaultView.addEventListener("selectionchange", handler, false);
+    info("selectionchange listener added");
+
+    grid.items[0].selected=true;
+    grid.items[1].selected=true;
+    is(grid.selectedItems.length, 2, "Both items are selected before calling selectNone");
+    grid.selectNone();
+
+    is(grid.selectedItems.length, 0, "Nothing selected when we selectNone");
+    ok(!(grid.items[0].selected || grid.items[1].selected), "selected properties all falsy when we selectNone");
+
+    is(handlerStub.callCount, 1, "selectionchange event handler was called when we selectNone");
+    is(handlerStub.calledWith[0].type, "selectionchange", "handler got a selectionchange event");
+    is(handlerStub.calledWith[0].target, grid, "selectionchange event had the originating grid as the target");
     handlerStub.restore();
     doc.defaultView.removeEventListener("selectionchange", handler, false);
   }

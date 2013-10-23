@@ -44,7 +44,7 @@ function tryShowPopup() {
     "The editor caret position appears to be correct.");
   ok(isEditorSel(gPanel, [125, 131]),
     "The editor selection appears to be correct.");
-  is(gEditor.getSelectedText(), "Call()",
+  is(gEditor.getSelection(), "Call()",
     "The editor selected text appears to be correct.");
 
   is(gSearchBoxPanel.state, "closed",
@@ -68,7 +68,7 @@ function testFocusLost() {
     "The editor caret position appears to be correct after gaining focus.");
   ok(isEditorSel(gPanel, [165, 165]),
     "The editor selection appears to be correct after gaining focus.");
-  is(gEditor.getSelectedText(), "",
+  is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct after gaining focus.");
 
   is(gSearchBoxPanel.state, "closed",
