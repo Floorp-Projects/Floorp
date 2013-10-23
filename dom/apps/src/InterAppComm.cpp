@@ -12,7 +12,7 @@
 using namespace mozilla::dom;
 
 /* static */ bool
-InterAppComm::EnabledForScope(JSContext* /* unused */, JSObject* aObj)
+InterAppComm::EnabledForScope(JSContext* /* unused */, JS::Handle<JSObject*> aObj)
 {
   // Disable the constructors if they're disabled by the preference for sure.
   if (!Preferences::GetBool("dom.inter-app-communication-api.enabled", false)) {
