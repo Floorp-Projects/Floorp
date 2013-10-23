@@ -377,9 +377,17 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
     return;
   }
 
-  // If the frame is not prerendered, bail out.  Layout will still perform the
-  // animation.
+  // If the frame is not prerendered, bail out.
   if (!aItem->CanUseAsyncAnimations(aBuilder)) {
+    // AnimationManager or TransitionManager need to know that we refused to
+    // run this animation asynchronously so that they will not throttle the
+    // main thread animation.
+    frame->Properties().Set(nsIFrame::RefusedAsyncAnimation(),
+                            reinterpret_cast<void*>(intptr_t(true)));
+
+    // We need to schedule another refresh driver run so that AnimationManager
+    // or TransitionManager get a chance to unthrottle the animation.
+    frame->SchedulePaint();
     return;
   }
 
@@ -3667,16 +3675,6 @@ nsDisplayScrollLayer::GetScrollLayerCount()
 #endif
 }
 
-intptr_t
-nsDisplayScrollLayer::RemoveScrollLayerCount()
-{
-  intptr_t result = GetScrollLayerCount();
-  FrameProperties props = mScrolledFrame->Properties();
-  props.Remove(nsIFrame::ScrollLayerCount());
-  return result;
-}
-
-
 nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
   nsDisplayListBuilder* aBuilder,
   nsIFrame* aScrolledFrame,
@@ -3688,12 +3686,12 @@ nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
 #endif
 }
 
-#ifdef NS_BUILD_REFCNT_LOGGING
 nsDisplayScrollInfoLayer::~nsDisplayScrollInfoLayer()
 {
+  FrameProperties props = mScrolledFrame->Properties();
+  props.Remove(nsIFrame::ScrollLayerCount());
   MOZ_COUNT_DTOR(nsDisplayScrollInfoLayer);
 }
-#endif
 
 LayerState
 nsDisplayScrollInfoLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -3717,7 +3715,7 @@ nsDisplayScrollInfoLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
   // one nsDisplayScrollLayer (with rendered content) or one
   // nsDisplayScrollInfoLayer (with only the metadata) should survive the
   // visibility computation.
-  return RemoveScrollLayerCount() == 1;
+  return GetScrollLayerCount() == 1;
 }
 
 nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,

@@ -1150,12 +1150,6 @@ class TypeScript
     /* Analysis information for the script, cleared on each GC. */
     analyze::ScriptAnalysis *analysis;
 
-    /*
-     * List mapping indexes of bytecode type sets to the offset of the opcode
-     * they correspond to. Cleared on each GC.
-     */
-    uint32_t *bytecodeMap;
-
   public:
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     StackTypeSet *typeArray() const { return (StackTypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }

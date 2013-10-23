@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import json
 import os
 import unittest
 
@@ -394,6 +395,17 @@ class TestRecursiveMakeBackend(BackendTester):
             '[include:xpcshell.ini]',
         ])
 
+        all_tests_path = os.path.join(env.topobjdir, 'all-tests.json')
+        self.assertTrue(os.path.exists(all_tests_path))
+
+        with open(all_tests_path, 'rt') as fh:
+            o = json.load(fh)
+
+            self.assertIn('xpcshell.js', o)
+            self.assertIn('dir1/test_bar.js', o)
+
+            self.assertEqual(len(o['xpcshell.js']), 1)
+
     def test_xpidl_generation(self):
         """Ensure xpidl files and directories are written out."""
         env = self._consume('xpidl', RecursiveMakeBackend)
@@ -504,6 +516,39 @@ class TestRecursiveMakeBackend(BackendTester):
 
         found = [str for str in lines if str.startswith('LOCAL_INCLUDES')]
         self.assertEqual(found, expected)
+
+    def test_final_target(self):
+        """Test that FINAL_TARGET is written to backend.mk correctly."""
+        env = self._consume('final_target', RecursiveMakeBackend)
+
+        final_target_rule = "FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)"
+        print([x for x in os.walk(env.topobjdir)])
+        expected = dict()
+        expected[env.topobjdir] = []
+        expected[os.path.join(env.topobjdir, 'both')] = [
+            'XPI_NAME = mycrazyxpi',
+            'DIST_SUBDIR = asubdir',
+            final_target_rule
+        ]
+        expected[os.path.join(env.topobjdir, 'dist-subdir')] = [
+            'DIST_SUBDIR = asubdir',
+            final_target_rule
+        ]
+        expected[os.path.join(env.topobjdir, 'xpi-name')] = [
+            'XPI_NAME = mycrazyxpi',
+            final_target_rule
+        ]
+        expected[os.path.join(env.topobjdir, 'final-target')] = [
+            'FINAL_TARGET = $(DEPTH)/random-final-target'
+        ]
+        for key, expected_rules in expected.iteritems():
+            backend_path = os.path.join(key, 'backend.mk')
+            lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+            found = [str for str in lines if
+                str.startswith('FINAL_TARGET') or str.startswith('XPI_NAME') or
+                str.startswith('DIST_SUBDIR')]
+            self.assertEqual(found, expected_rules)
+
 
 if __name__ == '__main__':
     main()

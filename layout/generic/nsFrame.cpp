@@ -2345,12 +2345,13 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
 {
 
   if (aEvent->message == NS_MOUSE_MOVE) {
+    // XXX If the second argument of HandleDrag() is WidgetMouseEvent,
+    //     the implementation becomes simpler.
     return HandleDrag(aPresContext, aEvent, aEventStatus);
   }
 
   if ((aEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<WidgetMouseEvent*>(aEvent)->button ==
-        WidgetMouseEvent::eLeftButton) ||
+       aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) ||
       aEvent->eventStructType == NS_TOUCH_EVENT) {
     if (aEvent->message == NS_MOUSE_BUTTON_DOWN || aEvent->message == NS_TOUCH_START) {
       HandlePress(aPresContext, aEvent, aEventStatus);
@@ -2585,15 +2586,18 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   //weaaak. only the editor can display frame selection not just text and images
   isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
 
-  if (!aEvent->AsInputEvent()->IsAlt()) {
+  WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+
+  if (!mouseEvent->IsAlt()) {
     for (nsIContent* content = mContent; content;
          content = content->GetParent()) {
       if (nsContentUtils::ContentIsDraggable(content) &&
           !content->IsEditable()) {
         // coordinate stuff is the fix for bug #55921
         if ((mRect - GetPosition()).Contains(
-               nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this)))
+              nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this))) {
           return NS_OK;
+        }
       }
     }
   }
@@ -2641,27 +2645,24 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   if (!frameselection || frameselection->GetDisplaySelection() == nsISelectionController::SELECTION_OFF)
     return NS_OK;//nothing to do we cannot affect selection from here
 
-  WidgetMouseEvent* me = static_cast<WidgetMouseEvent*>(aEvent);
-
 #ifdef XP_MACOSX
-  if (me->IsControl())
+  if (mouseEvent->IsControl())
     return NS_OK;//short circuit. hard coded for mac due to time restraints.
-  bool control = me->IsMeta();
+  bool control = mouseEvent->IsMeta();
 #else
-  bool control = me->IsControl();
+  bool control = mouseEvent->IsControl();
 #endif
 
   nsRefPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
-  if (me->clickCount > 1)
-  {
+  if (mouseEvent->clickCount > 1) {
     // These methods aren't const but can't actually delete anything,
     // so no need for nsWeakFrame.
     fc->SetMouseDownState(true);
     fc->SetMouseDoubleDown(true);
-    return HandleMultiplePress(aPresContext, aEvent, aEventStatus, control);
+    return HandleMultiplePress(aPresContext, mouseEvent, aEventStatus, control);
   }
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
   ContentOffsets offsets = GetContentOffsetsFromPoint(pt, SKIP_HIDDEN);
 
   if (!offsets.content)
@@ -2682,11 +2683,14 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   nsCOMPtr<nsIContent>parentContent;
   int32_t  contentOffset;
   int32_t target;
-  rv = GetDataForTableSelection(frameselection, shell, me, getter_AddRefs(parentContent), &contentOffset, &target);
+  rv = GetDataForTableSelection(frameselection, shell, mouseEvent,
+                                getter_AddRefs(parentContent), &contentOffset,
+                                &target);
   if (NS_SUCCEEDED(rv) && parentContent)
   {
     fc->SetMouseDownState(true);
-    return fc->HandleTableSelection(parentContent, contentOffset, target, me);
+    return fc->HandleTableSelection(parentContent, contentOffset, target,
+                                    mouseEvent);
   }
 
   fc->SetDelayedCaretData(0);
@@ -2734,7 +2738,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
     if (inSelection) {
       fc->SetMouseDownState(false);
-      fc->SetDelayedCaretData(me);
+      fc->SetDelayedCaretData(mouseEvent);
       return NS_OK;
     }
   }
@@ -2744,7 +2748,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // Do not touch any nsFrame members after this point without adding
   // weakFrame checks.
   rv = fc->HandleClick(offsets.content, offsets.StartOffset(),
-                       offsets.EndOffset(), me->IsShift(), control,
+                       offsets.EndOffset(), mouseEvent->IsShift(), control,
                        offsets.associateWithNext);
 
   if (NS_FAILED(rv))
@@ -2753,7 +2757,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   if (offsets.offset != offsets.secondaryOffset)
     fc->MaintainSelection();
 
-  if (isEditor && !me->IsShift() &&
+  if (isEditor && !mouseEvent->IsShift() &&
       (offsets.EndOffset() - offsets.StartOffset()) == 1)
   {
     // A single node is selected and we aren't extending an existing
@@ -2838,26 +2842,29 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   // Otherwise, triple-click selects line, and quadruple-click selects paragraph
   // (on platforms that support quadruple-click).
   nsSelectionAmount beginAmount, endAmount;
-  WidgetMouseEvent* me = static_cast<WidgetMouseEvent*>(aEvent);
-  if (!me) return NS_OK;
+  WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+  if (!mouseEvent) {
+    return NS_OK;
+  }
 
-  if (me->clickCount == 4) {
+  if (mouseEvent->clickCount == 4) {
     beginAmount = endAmount = eSelectParagraph;
-  } else if (me->clickCount == 3) {
+  } else if (mouseEvent->clickCount == 3) {
     if (Preferences::GetBool("browser.triple_click_selects_paragraph")) {
       beginAmount = endAmount = eSelectParagraph;
     } else {
       beginAmount = eSelectBeginLine;
       endAmount = eSelectEndLine;
     }
-  } else if (me->clickCount == 2) {
+  } else if (mouseEvent->clickCount == 2) {
     // We only want inline frames; PeekBackwardAndForward dislikes blocks
     beginAmount = endAmount = eSelectWord;
   } else {
     return NS_OK;
   }
 
-  nsPoint relPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+  nsPoint relPoint =
+    nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
   return SelectByTypeAtPoint(aPresContext, relPoint, beginAmount, endAmount,
                              (aControlHeld ? SELECT_ACCUMULATE : 0));
 }
@@ -2968,17 +2975,18 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffset;
   int32_t target;
-  WidgetMouseEvent* me = static_cast<WidgetMouseEvent*>(aEvent);
+  WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   nsresult result;
-  result = GetDataForTableSelection(frameselection, presShell, me,
+  result = GetDataForTableSelection(frameselection, presShell, mouseEvent,
                                     getter_AddRefs(parentContent),
                                     &contentOffset, &target);      
 
   nsWeakFrame weakThis = this;
   if (NS_SUCCEEDED(result) && parentContent) {
-    frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+    frameselection->HandleTableSelection(parentContent, contentOffset, target,
+                                         mouseEvent);
   } else {
-    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent, this);
     frameselection->HandleDrag(this, pt);
   }
 
@@ -2997,8 +3005,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   if (scrollFrame) {
     nsIFrame* capturingFrame = scrollFrame->GetScrolledFrame();
     if (capturingFrame) {
-      nsPoint pt =
-        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, capturingFrame);
+      nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent,
+                                                                capturingFrame);
       frameselection->StartAutoScrollTimer(capturingFrame, pt, 30);
     }
   }
@@ -3058,7 +3066,7 @@ HandleFrameSelection(nsFrameSelection*         aFrameSelection,
                               aParentContentForTableSel,
                               aContentOffsetForTableSel,
                               aTargetForTableSel,
-                              static_cast<WidgetMouseEvent*>(aEvent));
+                              aEvent->AsMouseEvent());
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -3114,7 +3122,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
         handleTableSelection = false;
       } else {
         GetDataForTableSelection(frameselection, PresContext()->PresShell(),
-                                 static_cast<WidgetMouseEvent*>(aEvent),
+                                 aEvent->AsMouseEvent(),
                                  getter_AddRefs(parentContent),
                                  &contentOffsetForTableSel,
                                  &targetForTableSel);
@@ -8885,6 +8893,7 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsGkAtoms::blockFrame,            "block",     "block");
   AddFrameTypeInfo(nsGkAtoms::brFrame,               "br",        "br");
   AddFrameTypeInfo(nsGkAtoms::bulletFrame,           "bullet",    "bullet");
+  AddFrameTypeInfo(nsGkAtoms::colorControlFrame,     "color",     "colorControl");
   AddFrameTypeInfo(nsGkAtoms::gfxButtonControlFrame, "button",    "gfxButtonControl");
   AddFrameTypeInfo(nsGkAtoms::HTMLButtonControlFrame, "HTMLbutton",    "HTMLButtonControl");
   AddFrameTypeInfo(nsGkAtoms::HTMLCanvasFrame,       "HTMLCanvas","HTMLCanvas");

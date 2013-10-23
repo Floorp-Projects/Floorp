@@ -23,8 +23,9 @@
 #include "vm/WrapperObject.h"
 
 using mozilla::DebugOnly;
-using mozilla::OldMove;
+using mozilla::MallocSizeOf;
 using mozilla::MoveRef;
+using mozilla::OldMove;
 using mozilla::PodEqual;
 
 using namespace js;
@@ -268,13 +269,10 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 
         obj->addSizeOfExcludingThis(rtStats->mallocSizeOf_, &cStats->objectsExtra);
 
-        // JSObject::sizeOfExcludingThis() doesn't measure objectsPrivate,
-        // so we do it here.
         if (ObjectPrivateVisitor *opv = closure->opv) {
             nsISupports *iface;
-            if (opv->getISupports_(obj, &iface) && iface) {
+            if (opv->getISupports_(obj, &iface) && iface)
                 cStats->objectsPrivate += opv->sizeOfIncludingThis(iface);
-            }
         }
         break;
       }
@@ -338,7 +336,6 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         JSScript *script = static_cast<JSScript *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(script->compartment());
         cStats->scriptsGCHeap += thingSize;
-
         cStats->scriptsMallocHeapData += script->sizeOfData(rtStats->mallocSizeOf_);
         cStats->typeInferenceTypeScripts += script->sizeOfTypeScript(rtStats->mallocSizeOf_);
 #ifdef JS_ION
@@ -446,14 +443,12 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     StatsClosure closure(rtStats, opv);
     if (!closure.init())
         return false;
-    rtStats->runtime.scriptSources = 0;
     IterateZonesCompartmentsArenasCells(rt, &closure, StatsZoneCallback, StatsCompartmentCallback,
                                         StatsArenaCallback, StatsCellCallback);
 
     // Take the "explicit/js/runtime/" measurements.
     rt->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
 
-    rtStats->gcHeapGCThings = 0;
     for (size_t i = 0; i < rtStats->zoneStatsVector.length(); i++) {
         ZoneStats &zStats = rtStats->zoneStatsVector[i];
 
@@ -530,4 +525,63 @@ JS::PeakSizeOfTemporary(const JSRuntime *rt)
 {
     return rt->tempLifoAlloc.peakSizeOfExcludingThis();
 }
+
+namespace JS {
+
+JS_PUBLIC_API(bool)
+AddSizeOfTab(JSRuntime *rt, JSObject *obj, MallocSizeOf mallocSizeOf, ObjectPrivateVisitor *opv,
+             TabSizes *sizes)
+{
+    class SimpleJSRuntimeStats : public JS::RuntimeStats
+    {
+      public:
+        SimpleJSRuntimeStats(MallocSizeOf mallocSizeOf)
+          : JS::RuntimeStats(mallocSizeOf)
+        {}
+
+        virtual void initExtraZoneStats(JS::Zone *zone, JS::ZoneStats *zStats)
+            MOZ_OVERRIDE
+        {}
+
+        virtual void initExtraCompartmentStats(
+            JSCompartment *c, JS::CompartmentStats *cStats) MOZ_OVERRIDE
+        {}
+    };
+
+    SimpleJSRuntimeStats rtStats(mallocSizeOf);
+
+    JS::Zone *zone = GetObjectZone(obj);
+
+    if (!rtStats.compartmentStatsVector.reserve(zone->compartments.length()))
+        return false;
+
+    if (!rtStats.zoneStatsVector.reserve(1))
+        return false;
+
+    // Take the per-compartment measurements.
+    StatsClosure closure(&rtStats, opv);
+    if (!closure.init())
+        return false;
+    IterateZoneCompartmentsArenasCells(rt, zone, &closure, StatsZoneCallback,
+                                       StatsCompartmentCallback, StatsArenaCallback,
+                                       StatsCellCallback);
+
+    JS_ASSERT(rtStats.zoneStatsVector.length() == 1);
+    rtStats.zTotals.add(rtStats.zoneStatsVector[0]);
+
+    for (size_t i = 0; i < rtStats.compartmentStatsVector.length(); i++) {
+        CompartmentStats &cStats = rtStats.compartmentStatsVector[i];
+        rtStats.cTotals.add(cStats);
+    }
+
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
+        comp->compartmentStats = NULL;
+
+    rtStats.zTotals.addToTabSizes(sizes);
+    rtStats.cTotals.addToTabSizes(sizes);
+
+    return true;
+}
+
+} // namespace JS
 

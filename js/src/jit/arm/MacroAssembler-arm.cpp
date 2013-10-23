@@ -61,9 +61,17 @@ MacroAssemblerARM::convertUInt32ToDouble(const Register &src, const FloatRegiste
 {
     // direct conversions aren't possible.
     VFPRegister dest = VFPRegister(dest_);
-    as_vxfer(src, InvalidReg, dest.uintOverlay(),
-             CoreToFloat);
+    as_vxfer(src, InvalidReg, dest.uintOverlay(), CoreToFloat);
     as_vcvt(dest, dest.uintOverlay());
+}
+
+void
+MacroAssemblerARM::convertUInt32ToFloat32(const Register &src, const FloatRegister &dest_)
+{
+    // direct conversions aren't possible.
+    VFPRegister dest = VFPRegister(dest_);
+    as_vxfer(src, InvalidReg, dest.uintOverlay(), CoreToFloat);
+    as_vcvt(VFPRegister(dest).singleOverlay(), dest.uintOverlay());
 }
 
 void MacroAssemblerARM::convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest)
@@ -1426,9 +1434,21 @@ MacroAssemblerARM::ma_vabs(FloatRegister src, FloatRegister dest, Condition cc)
 }
 
 void
+MacroAssemblerARM::ma_vabs_f32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vabs(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
+}
+
+void
 MacroAssemblerARM::ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc)
 {
     as_vsqrt(dest, src, cc);
+}
+
+void
+MacroAssemblerARM::ma_vsqrt_f32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vsqrt(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
 }
 
 union DoublePun
@@ -1524,6 +1544,11 @@ void
 MacroAssemblerARM::ma_vcmpz(FloatRegister src1, Condition cc)
 {
     as_vcmpz(VFPRegister(src1), cc);
+}
+void
+MacroAssemblerARM::ma_vcmpz_f32(FloatRegister src1, Condition cc)
+{
+    as_vcmpz(VFPRegister(src1).singleOverlay(), cc);
 }
 
 void

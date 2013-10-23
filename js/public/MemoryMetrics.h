@@ -25,6 +25,37 @@
 
 class nsISupports;      // Needed for ObjectPrivateVisitor.
 
+namespace JS {
+
+struct TabSizes
+{
+    enum Kind {
+        Objects,
+        Strings,
+        Private,
+        Other
+    };
+
+    TabSizes() { mozilla::PodZero(this); }
+
+    void add(Kind kind, size_t n) {
+        switch (kind) {
+            case Objects: objects  += n; break;
+            case Strings: strings  += n; break;
+            case Private: private_ += n; break;
+            case Other:   other    += n; break;
+            default:      MOZ_CRASH("bad TabSizes kind");
+        }
+    }
+
+    size_t objects;
+    size_t strings;
+    size_t private_;
+    size_t other;
+};
+
+} // namespace JS
+
 namespace js {
 
 // In memory reporting, we have concept of "sundries", line items which are too
@@ -57,11 +88,12 @@ struct InefficientNonFlatteningStringHashPolicy
 // In some classes, one or more of the macro arguments aren't used.  We use '_'
 // for those.
 //
-#define DECL_SIZE(gc, mSize)                      size_t mSize;
-#define ZERO_SIZE(gc, mSize)                      mSize(0),
-#define COPY_OTHER_SIZE(gc, mSize)                mSize(other.mSize),
-#define ADD_OTHER_SIZE(gc, mSize)                 mSize += other.mSize;
-#define ADD_SIZE_TO_N_IF_LIVE_GC_THING(gc, mSize) n += (gc) ? mSize : 0;
+#define DECL_SIZE(kind, gc, mSize)                      size_t mSize;
+#define ZERO_SIZE(kind, gc, mSize)                      mSize(0),
+#define COPY_OTHER_SIZE(kind, gc, mSize)                mSize(other.mSize),
+#define ADD_OTHER_SIZE(kind, gc, mSize)                 mSize += other.mSize;
+#define ADD_SIZE_TO_N_IF_LIVE_GC_THING(kind, gc, mSize) n += (js::gc == js::IsLiveGCThing) ? mSize : 0;
+#define ADD_TO_TAB_SIZES(kind, gc, mSize)               sizes->add(JS::TabSizes::kind, mSize);
 
 // Used to annotate which size_t fields measure live GC things and which don't.
 enum {
@@ -72,17 +104,17 @@ enum {
 struct ZoneStatsPod
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(NotLiveGCThing, gcHeapArenaAdmin) \
-    macro(NotLiveGCThing, unusedGCThings) \
-    macro(IsLiveGCThing,  lazyScriptsGCHeap) \
-    macro(NotLiveGCThing, lazyScriptsMallocHeap) \
-    macro(IsLiveGCThing,  ionCodesGCHeap) \
-    macro(IsLiveGCThing,  typeObjectsGCHeap) \
-    macro(NotLiveGCThing, typeObjectsMallocHeap) \
-    macro(NotLiveGCThing, typePool) \
-    macro(IsLiveGCThing,  stringsShortGCHeap) \
-    macro(IsLiveGCThing,  stringsNormalGCHeap) \
-    macro(NotLiveGCThing, stringsNormalMallocHeap)
+    macro(Other,   NotLiveGCThing, gcHeapArenaAdmin) \
+    macro(Other,   NotLiveGCThing, unusedGCThings) \
+    macro(Other,   IsLiveGCThing,  lazyScriptsGCHeap) \
+    macro(Other,   NotLiveGCThing, lazyScriptsMallocHeap) \
+    macro(Other,   IsLiveGCThing,  ionCodesGCHeap) \
+    macro(Other,   IsLiveGCThing,  typeObjectsGCHeap) \
+    macro(Other,   NotLiveGCThing, typeObjectsMallocHeap) \
+    macro(Other,   NotLiveGCThing, typePool) \
+    macro(Strings, IsLiveGCThing,  stringsShortGCHeap) \
+    macro(Strings, IsLiveGCThing,  stringsNormalGCHeap) \
+    macro(Strings, NotLiveGCThing, stringsNormalMallocHeap)
 
     ZoneStatsPod()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -101,6 +133,11 @@ struct ZoneStatsPod
         return n;
     }
 
+    void addToTabSizes(JS::TabSizes *sizes) const {
+        FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+        // Do nothing with |extra|.
+    }
+
     FOR_EACH_SIZE(DECL_SIZE)
     void *extra;    // This field can be used by embedders.
 
@@ -115,16 +152,16 @@ namespace JS {
 struct ObjectsExtraSizes
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(js::NotLiveGCThing, mallocHeapSlots) \
-    macro(js::NotLiveGCThing, mallocHeapElementsNonAsmJS) \
-    macro(js::NotLiveGCThing, mallocHeapElementsAsmJS) \
-    macro(js::NotLiveGCThing, nonHeapElementsAsmJS) \
-    macro(js::NotLiveGCThing, nonHeapCodeAsmJS) \
-    macro(js::NotLiveGCThing, mallocHeapAsmJSModuleData) \
-    macro(js::NotLiveGCThing, mallocHeapArgumentsData) \
-    macro(js::NotLiveGCThing, mallocHeapRegExpStatics) \
-    macro(js::NotLiveGCThing, mallocHeapPropertyIteratorData) \
-    macro(js::NotLiveGCThing, mallocHeapCtypesData)
+    macro(Objects, NotLiveGCThing, mallocHeapSlots) \
+    macro(Objects, NotLiveGCThing, mallocHeapElementsNonAsmJS) \
+    macro(Objects, NotLiveGCThing, mallocHeapElementsAsmJS) \
+    macro(Objects, NotLiveGCThing, nonHeapElementsAsmJS) \
+    macro(Objects, NotLiveGCThing, nonHeapCodeAsmJS) \
+    macro(Objects, NotLiveGCThing, mallocHeapAsmJSModuleData) \
+    macro(Objects, NotLiveGCThing, mallocHeapArgumentsData) \
+    macro(Objects, NotLiveGCThing, mallocHeapRegExpStatics) \
+    macro(Objects, NotLiveGCThing, mallocHeapPropertyIteratorData) \
+    macro(Objects, NotLiveGCThing, mallocHeapCtypesData)
 
     ObjectsExtraSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -141,6 +178,10 @@ struct ObjectsExtraSizes
         return n;
     }
 
+    void addToTabSizes(TabSizes *sizes) const {
+        FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+    }
+
     FOR_EACH_SIZE(DECL_SIZE)
     int dummy;  // present just to absorb the trailing comma from FOR_EACH_SIZE(ZERO_SIZE)
 
@@ -151,11 +192,11 @@ struct ObjectsExtraSizes
 struct CodeSizes
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(_, ion) \
-    macro(_, baseline) \
-    macro(_, regexp) \
-    macro(_, other) \
-    macro(_, unused)
+    macro(_, _, ion) \
+    macro(_, _, baseline) \
+    macro(_, _, regexp) \
+    macro(_, _, other) \
+    macro(_, _, unused)
 
     CodeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -256,17 +297,17 @@ struct NotableStringInfo : public StringInfo
 struct RuntimeSizes
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(_, object) \
-    macro(_, atomsTable) \
-    macro(_, contexts) \
-    macro(_, dtoa) \
-    macro(_, temporary) \
-    macro(_, regexpData) \
-    macro(_, interpreterStack) \
-    macro(_, gcMarker) \
-    macro(_, mathCache) \
-    macro(_, scriptData) \
-    macro(_, scriptSources)
+    macro(_, _, object) \
+    macro(_, _, atomsTable) \
+    macro(_, _, contexts) \
+    macro(_, _, dtoa) \
+    macro(_, _, temporary) \
+    macro(_, _, regexpData) \
+    macro(_, _, interpreterStack) \
+    macro(_, _, gcMarker) \
+    macro(_, _, mathCache) \
+    macro(_, _, scriptData) \
+    macro(_, _, scriptSources)
 
     RuntimeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -335,35 +376,35 @@ struct ZoneStats : js::ZoneStatsPod
 struct CompartmentStats
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(js::IsLiveGCThing,  objectsGCHeapOrdinary) \
-    macro(js::IsLiveGCThing,  objectsGCHeapFunction) \
-    macro(js::IsLiveGCThing,  objectsGCHeapDenseArray) \
-    macro(js::IsLiveGCThing,  objectsGCHeapSlowArray) \
-    macro(js::IsLiveGCThing,  objectsGCHeapCrossCompartmentWrapper) \
-    macro(js::NotLiveGCThing, objectsPrivate) \
-    macro(js::IsLiveGCThing,  shapesGCHeapTreeGlobalParented) \
-    macro(js::IsLiveGCThing,  shapesGCHeapTreeNonGlobalParented) \
-    macro(js::IsLiveGCThing,  shapesGCHeapDict) \
-    macro(js::IsLiveGCThing,  shapesGCHeapBase) \
-    macro(js::NotLiveGCThing, shapesMallocHeapTreeTables) \
-    macro(js::NotLiveGCThing, shapesMallocHeapDictTables) \
-    macro(js::NotLiveGCThing, shapesMallocHeapTreeShapeKids) \
-    macro(js::NotLiveGCThing, shapesMallocHeapCompartmentTables) \
-    macro(js::IsLiveGCThing,  scriptsGCHeap) \
-    macro(js::NotLiveGCThing, scriptsMallocHeapData) \
-    macro(js::NotLiveGCThing, baselineData) \
-    macro(js::NotLiveGCThing, baselineStubsFallback) \
-    macro(js::NotLiveGCThing, baselineStubsOptimized) \
-    macro(js::NotLiveGCThing, ionData) \
-    macro(js::NotLiveGCThing, typeInferenceTypeScripts) \
-    macro(js::NotLiveGCThing, typeInferencePendingArrays) \
-    macro(js::NotLiveGCThing, typeInferenceAllocationSiteTables) \
-    macro(js::NotLiveGCThing, typeInferenceArrayTypeTables) \
-    macro(js::NotLiveGCThing, typeInferenceObjectTypeTables) \
-    macro(js::NotLiveGCThing, compartmentObject) \
-    macro(js::NotLiveGCThing, crossCompartmentWrappersTable) \
-    macro(js::NotLiveGCThing, regexpCompartment) \
-    macro(js::NotLiveGCThing, debuggeesSet)
+    macro(Objects, IsLiveGCThing,  objectsGCHeapOrdinary) \
+    macro(Objects, IsLiveGCThing,  objectsGCHeapFunction) \
+    macro(Objects, IsLiveGCThing,  objectsGCHeapDenseArray) \
+    macro(Objects, IsLiveGCThing,  objectsGCHeapSlowArray) \
+    macro(Objects, IsLiveGCThing,  objectsGCHeapCrossCompartmentWrapper) \
+    macro(Private, NotLiveGCThing, objectsPrivate) \
+    macro(Other,   IsLiveGCThing,  shapesGCHeapTreeGlobalParented) \
+    macro(Other,   IsLiveGCThing,  shapesGCHeapTreeNonGlobalParented) \
+    macro(Other,   IsLiveGCThing,  shapesGCHeapDict) \
+    macro(Other,   IsLiveGCThing,  shapesGCHeapBase) \
+    macro(Other,   NotLiveGCThing, shapesMallocHeapTreeTables) \
+    macro(Other,   NotLiveGCThing, shapesMallocHeapDictTables) \
+    macro(Other,   NotLiveGCThing, shapesMallocHeapTreeShapeKids) \
+    macro(Other,   NotLiveGCThing, shapesMallocHeapCompartmentTables) \
+    macro(Other,   IsLiveGCThing,  scriptsGCHeap) \
+    macro(Other,   NotLiveGCThing, scriptsMallocHeapData) \
+    macro(Other,   NotLiveGCThing, baselineData) \
+    macro(Other,   NotLiveGCThing, baselineStubsFallback) \
+    macro(Other,   NotLiveGCThing, baselineStubsOptimized) \
+    macro(Other,   NotLiveGCThing, ionData) \
+    macro(Other,   NotLiveGCThing, typeInferenceTypeScripts) \
+    macro(Other,   NotLiveGCThing, typeInferencePendingArrays) \
+    macro(Other,   NotLiveGCThing, typeInferenceAllocationSiteTables) \
+    macro(Other,   NotLiveGCThing, typeInferenceArrayTypeTables) \
+    macro(Other,   NotLiveGCThing, typeInferenceObjectTypeTables) \
+    macro(Other,   NotLiveGCThing, compartmentObject) \
+    macro(Other,   NotLiveGCThing, crossCompartmentWrappersTable) \
+    macro(Other,   NotLiveGCThing, regexpCompartment) \
+    macro(Other,   NotLiveGCThing, debuggeesSet)
 
     CompartmentStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -391,6 +432,12 @@ struct CompartmentStats
         return n;
     }
 
+    void addToTabSizes(TabSizes *sizes) const {
+        FOR_EACH_SIZE(ADD_TO_TAB_SIZES);
+        objectsExtra.addToTabSizes(sizes);
+        // Do nothing with |extra|.
+    }
+
     FOR_EACH_SIZE(DECL_SIZE)
     ObjectsExtraSizes  objectsExtra;
     void               *extra;  // This field can be used by embedders.
@@ -401,12 +448,12 @@ struct CompartmentStats
 struct RuntimeStats
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(_, gcHeapChunkTotal) \
-    macro(_, gcHeapDecommittedArenas) \
-    macro(_, gcHeapUnusedChunks) \
-    macro(_, gcHeapUnusedArenas) \
-    macro(_, gcHeapChunkAdmin) \
-    macro(_, gcHeapGCThings) \
+    macro(_, _, gcHeapChunkTotal) \
+    macro(_, _, gcHeapDecommittedArenas) \
+    macro(_, _, gcHeapUnusedChunks) \
+    macro(_, _, gcHeapUnusedArenas) \
+    macro(_, _, gcHeapChunkAdmin) \
+    macro(_, _, gcHeapGCThings) \
 
     RuntimeStats(mozilla::MallocSizeOf mallocSizeOf)
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -488,6 +535,17 @@ UserCompartmentCount(JSRuntime *rt);
 extern JS_PUBLIC_API(size_t)
 PeakSizeOfTemporary(const JSRuntime *rt);
 
+extern JS_PUBLIC_API(bool)
+AddSizeOfTab(JSRuntime *rt, JSObject *obj, mozilla::MallocSizeOf mallocSizeOf,
+             ObjectPrivateVisitor *opv, TabSizes *sizes);
+
 } // namespace JS
+
+#undef DECL_SIZE
+#undef ZERO_SIZE
+#undef COPY_OTHER_SIZE
+#undef ADD_OTHER_SIZE
+#undef ADD_SIZE_TO_N_IF_LIVE_GC_THING
+#undef ADD_TO_TAB_SIZES
 
 #endif /* js_MemoryMetrics_h */

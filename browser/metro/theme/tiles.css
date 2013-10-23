@@ -32,6 +32,7 @@ richgrid {
   display: -moz-box;
   overflow: hidden;
 }
+
 richgrid > .richgrid-grid {
   -moz-column-width: @grid_double_column_width@; /* tile width (2x unit + gutter) */
   min-width: @grid_double_column_width@; /* min 1 column */
@@ -54,9 +55,6 @@ richgriditem {
   -moz-column-gap: 0;
   overflow:hidden;
   cursor: default;
-  transition: 300ms height ease-out,
-              150ms opacity ease-out,
-              100ms transform ease-out;
 }
 
 .tile-content {
