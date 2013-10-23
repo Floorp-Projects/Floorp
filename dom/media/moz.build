@@ -51,5 +51,9 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'dom_media_s'
 
-include('/ipc/chromium/chromium-config.mozbuild')
+LOCAL_INCLUDES += [
+    '../base',
+    '../camera',
+]
 
+include('/ipc/chromium/chromium-config.mozbuild')

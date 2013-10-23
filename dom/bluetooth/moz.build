@@ -84,5 +84,10 @@ IPDL_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-include('/ipc/chromium/chromium-config.mozbuild')
+LOCAL_INCLUDES += [
+    '../base',
+    '../network/src',
+    '../system/gonk',
+]
 
+include('/ipc/chromium/chromium-config.mozbuild')
