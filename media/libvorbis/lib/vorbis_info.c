@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: maintain the info structure, info <-> header packets
- last mod: $Id: info.c 17584 2010-11-01 19:26:16Z xiphmont $
+ last mod: $Id: info.c 18186 2012-02-03 22:08:44Z xiphmont $
 
  ********************************************************************/
 
@@ -31,8 +31,8 @@
 #include "misc.h"
 #include "os.h"
 
-#define GENERAL_VENDOR_STRING "Xiph.Org libVorbis 1.3.2"
-#define ENCODE_VENDOR_STRING "Xiph.Org libVorbis I 20101101 (Schaufenugget)"
+#define GENERAL_VENDOR_STRING "Xiph.Org libVorbis 1.3.3"
+#define ENCODE_VENDOR_STRING "Xiph.Org libVorbis I 20120203 (Omnipresent)"
 
 /* helpers */
 static int ilog2(unsigned int v){
@@ -550,7 +550,10 @@ int vorbis_commentheader_out(vorbis_comment *vc,
   oggpack_buffer opb;
 
   oggpack_writeinit(&opb);
-  if(_vorbis_pack_comment(&opb,vc)) return OV_EIMPL;
+  if(_vorbis_pack_comment(&opb,vc)){
+    oggpack_writeclear(&opb);
+    return OV_EIMPL;
+  }
 
   op->packet = _ogg_malloc(oggpack_bytes(&opb));
   memcpy(op->packet, opb.buffer, oggpack_bytes(&opb));
@@ -561,6 +564,7 @@ int vorbis_commentheader_out(vorbis_comment *vc,
   op->granulepos=0;
   op->packetno=1;
 
+  oggpack_writeclear(&opb);
   return 0;
 }
 
