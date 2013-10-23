@@ -2716,7 +2716,7 @@ SpdySession31::RequestHead()
   MOZ_ASSERT(false,
              "SpdySession31::RequestHead() "
              "should not be called after SPDY is setup");
-  return NULL;
+  return nullptr;
 }
 
 uint32_t
