@@ -282,7 +282,7 @@ pref("media.video-queue.default-size", 10);
 pref("media.video_stats.enabled", true);
 
 // Whether to enable the audio writing APIs on the audio element
-pref("media.audio_data.enabled", true);
+pref("media.audio_data.enabled", false);
 
 // Whether to lock touch scrolling to one axis at a time
 // 0 = FREE (No locking at all)
