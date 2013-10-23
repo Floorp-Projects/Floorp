@@ -93,11 +93,11 @@ CopyVersion(verBlock *ver1, verBlock *ver2)
 static void
 TranslateVersionStr(const WCHAR* szVersion, verBlock *vbVersion)
 {
-  WCHAR* szNum1 = NULL;
-  WCHAR* szNum2 = NULL;
-  WCHAR* szNum3 = NULL;
-  WCHAR* szNum4 = NULL;
-  WCHAR* szJavaBuild = NULL;
+  WCHAR* szNum1 = nullptr;
+  WCHAR* szNum2 = nullptr;
+  WCHAR* szNum3 = nullptr;
+  WCHAR* szNum4 = nullptr;
+  WCHAR* szJavaBuild = nullptr;
 
   WCHAR *strVer = nullptr;
   if (szVersion) {
@@ -116,10 +116,10 @@ TranslateVersionStr(const WCHAR* szVersion, verBlock *vbVersion)
     szJavaBuild[0] = '.';
   }
 
-  szNum1 = wcstok(strVer, L".");
-  szNum2 = wcstok(NULL,   L".");
-  szNum3 = wcstok(NULL,   L".");
-  szNum4 = wcstok(NULL,   L".");
+  szNum1 = wcstok(strVer,  L".");
+  szNum2 = wcstok(nullptr, L".");
+  szNum3 = wcstok(nullptr, L".");
+  szNum4 = wcstok(nullptr, L".");
 
   vbVersion->wMajor   = szNum1 ? (WORD) _wtoi(szNum1) : 0;
   vbVersion->wMinor   = szNum2 ? (WORD) _wtoi(szNum2) : 0;

@@ -154,7 +154,7 @@ typedef struct _NPStream
   void*    notifyData;
   const    char* headers; /* Response headers from host.
                            * Exists only for >= NPVERS_HAS_RESPONSE_HEADERS.
-                           * Used for HTTP only; NULL for non-HTTP.
+                           * Used for HTTP only; nullptr for non-HTTP.
                            * Available from NPP_NewStream onwards.
                            * Plugin should copy this data before storing it.
                            * Includes HTTP status line and all headers,

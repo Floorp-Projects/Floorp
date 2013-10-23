@@ -175,15 +175,15 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow(bool aEnableXtFocus) {
   // removed, which means we're destroying it more than once.
   // SYNTAX ERROR.
   g_signal_connect(mSocketWidget, "plug_removed",
-                   G_CALLBACK(plug_removed_cb), NULL);
+                   G_CALLBACK(plug_removed_cb), nullptr);
 
   g_signal_connect(mSocketWidget, "unrealize",
-                   G_CALLBACK(socket_unrealize_cb), NULL);
+                   G_CALLBACK(socket_unrealize_cb), nullptr);
 
   g_signal_connect(mSocketWidget, "destroy",
                    G_CALLBACK(gtk_widget_destroyed), &mSocketWidget);
 
-  gpointer user_data = NULL;
+  gpointer user_data = nullptr;
   gdk_window_get_user_data(parent_win, &user_data);
 
   GtkContainer *container = GTK_CONTAINER(user_data);
@@ -197,7 +197,7 @@ nsresult nsPluginNativeWindowGtk2::CreateXEmbedWindow(bool aEnableXtFocus) {
   // painting this window, avoiding flicker.
   // TODO GTK3
 #if (MOZ_WIDGET_GTK == 2)
-  gdk_window_set_back_pixmap(gtk_widget_get_window(mSocketWidget), NULL, FALSE);
+  gdk_window_set_back_pixmap(gtk_widget_get_window(mSocketWidget), nullptr, FALSE);
 #endif
 
   // Resize before we show
@@ -262,11 +262,11 @@ nsresult nsPluginNativeWindowGtk2::CreateXtWindow() {
   gtk_widget_set_size_request(mSocketWidget, width, height);
 
 #ifdef DEBUG
-  printf("About to show xtbin(%p)...\n", (void*)mSocketWidget); fflush(NULL);
+  printf("About to show xtbin(%p)...\n", (void*)mSocketWidget); fflush(nullptr);
 #endif
   gtk_widget_show(mSocketWidget);
 #ifdef DEBUG
-  printf("completed gtk_widget_show(%p)\n", (void*)mSocketWidget); fflush(NULL);
+  printf("completed gtk_widget_show(%p)\n", (void*)mSocketWidget); fflush(nullptr);
 #endif
 
   // Fill out the ws_info structure.

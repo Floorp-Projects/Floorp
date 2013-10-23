@@ -137,13 +137,13 @@ void NPN_ReleaseVariantValue(NPVariant *variant);
 #define VOID_TO_NPVARIANT(_v)                                                 \
 NP_BEGIN_MACRO                                                                \
     (_v).type = NPVariantType_Void;                                           \
-    (_v).value.objectValue = NULL;                                            \
+    (_v).value.objectValue = nullptr;                                         \
 NP_END_MACRO
 
 #define NULL_TO_NPVARIANT(_v)                                                 \
 NP_BEGIN_MACRO                                                                \
     (_v).type = NPVariantType_Null;                                           \
-    (_v).value.objectValue = NULL;                                            \
+    (_v).value.objectValue = nullptr;                                         \
 NP_END_MACRO
 
 #define BOOLEAN_TO_NPVARIANT(_val, _v)                                        \
@@ -216,7 +216,7 @@ typedef void *NPIdentifier;
     methods and properties can be identified by either strings or
     integers (i.e. foo["bar"] vs foo[1]). NPIdentifiers can be
     compared using ==.  In case of any errors, the requested
-    NPIdentifier(s) will be NULL. NPIdentifier lifetime is controlled
+    NPIdentifier(s) will be nullptr. NPIdentifier lifetime is controlled
     by the browser. Plugins do not need to worry about memory management
     with regards to NPIdentifiers.
 */
@@ -283,9 +283,9 @@ typedef bool (*NPConstructFunctionPtr)(NPObject *npobj,
     NPObject instance after the invalidate callback has been
     called will result in undefined behavior, even if the native code
     is still retaining those NPObject instances.  (The runtime
-    will typically return immediately, with 0 or NULL, from an attempt
-    to dispatch to a NPObject, but this behavior should not be
-    depended upon.)
+    will typically return immediately, with 0 or nullptr, from an
+    attempt to dispatch to a NPObject, but this behavior should not
+    be depended upon.)
 
     The NPEnumerationFunctionPtr function may pass an array of
     NPIdentifiers back to the caller. The callee allocs the memory of
