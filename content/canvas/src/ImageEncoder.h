@@ -78,8 +78,8 @@ private:
 
   // Creates and returns an encoder instance of the type specified in aType.
   // aType may change to "image/png" if no instance of the original type could
-  // be created and we had to fall back to a PNG encoder. A return value of
-  // NULL should be interpreted as NS_IMAGELIB_ERROR_NO_ENCODER and aType is
+  // be created and we had to fall back to a PNG encoder. A null return value
+  // should be interpreted as NS_IMAGELIB_ERROR_NO_ENCODER and aType is
   // undefined in this case.
   static already_AddRefed<imgIEncoder> GetImageEncoder(nsAString& aType);
 
