@@ -172,7 +172,8 @@ this.OperatorAppsRegistry = {
       },
       appId: undefined,
       isBrowser: false,
-      isPackage: isPackage
+      isPackage: isPackage,
+      forceSuccessAck: true
     };
 
     if (isPackage) {
