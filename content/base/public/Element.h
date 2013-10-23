@@ -1465,8 +1465,6 @@ NS_IMETHOD MozRemove() MOZ_FINAL                                              \
   nsINode::Remove();                                                          \
   return NS_OK;                                                               \
 }                                                                             \
-using nsINode::GetOnmouseenter;                                               \
-using nsINode::SetOnmouseenter;                                               \
 NS_IMETHOD GetOnmouseenter(JSContext* cx, JS::Value* aOnmouseenter) MOZ_FINAL \
 {                                                                             \
   return Element::GetOnmouseenter(cx, aOnmouseenter);                         \
@@ -1476,8 +1474,6 @@ NS_IMETHOD SetOnmouseenter(JSContext* cx,                                     \
 {                                                                             \
   return Element::SetOnmouseenter(cx, aOnmouseenter);                         \
 }                                                                             \
-using nsINode::GetOnmouseleave;                                               \
-using nsINode::SetOnmouseleave;                                               \
 NS_IMETHOD GetOnmouseleave(JSContext* cx, JS::Value* aOnmouseleave) MOZ_FINAL \
 {                                                                             \
   return Element::GetOnmouseleave(cx, aOnmouseleave);                         \
