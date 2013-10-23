@@ -118,6 +118,10 @@ MessageLoop::MessageLoop(Type type)
     run_depth_base_ = 2;
     return;
   }
+  if (type_ == TYPE_MOZILLA_NONMAINTHREAD) {
+    pump_ = new mozilla::ipc::MessagePumpForNonMainThreads();
+    return;
+  }
 
 #if defined(OS_WIN)
   // TODO(rvargas): Get rid of the OS guards.

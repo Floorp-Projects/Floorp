@@ -75,7 +75,8 @@ void
 MessagePump::Run(MessagePump::Delegate* aDelegate)
 {
   MOZ_ASSERT(keep_running_);
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Use mozilla::ipc::MessagePumpForNonMainThreads instead!");
 
   mThread = NS_GetCurrentThread();
   MOZ_ASSERT(mThread);
@@ -275,4 +276,58 @@ MessagePumpForChildProcess::Run(base::MessagePump::Delegate* aDelegate)
 
   // Really run.
   mozilla::ipc::MessagePump::Run(aDelegate);
+}
+
+void
+MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate)
+{
+  MOZ_ASSERT(keep_running_);
+  MOZ_ASSERT(!NS_IsMainThread(), "Use mozilla::ipc::MessagePump instead!");
+
+  mThread = NS_GetCurrentThread();
+  MOZ_ASSERT(mThread);
+
+  mDelayedWorkTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  MOZ_ASSERT(mDelayedWorkTimer);
+
+  if (NS_FAILED(mDelayedWorkTimer->SetTarget(mThread))) {
+    MOZ_CRASH("Failed to set timer target!");
+  }
+
+  for (;;) {
+    bool didWork = NS_ProcessNextEvent(mThread, false) ? true : false;
+    if (!keep_running_) {
+      break;
+    }
+
+    didWork |= aDelegate->DoDelayedWork(&delayed_work_time_);
+
+    if (didWork && delayed_work_time_.is_null()) {
+      mDelayedWorkTimer->Cancel();
+    }
+
+    if (!keep_running_) {
+      break;
+    }
+
+    if (didWork) {
+      continue;
+    }
+
+    didWork = aDelegate->DoIdleWork();
+    if (!keep_running_) {
+      break;
+    }
+
+    if (didWork) {
+      continue;
+    }
+
+    // This will either sleep or process an event.
+    NS_ProcessNextEvent(mThread, true);
+  }
+
+  mDelayedWorkTimer->Cancel();
+
+  keep_running_ = true;
 }

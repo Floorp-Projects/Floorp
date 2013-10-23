@@ -4,9 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsThread.h"
+
+#include "base/message_loop.h"
+
+// Chromium's logging can sometimes leak through...
+#ifdef LOG
+#undef LOG
+#endif
+
 #include "mozilla/ReentrantMonitor.h"
 #include "nsMemoryPressure.h"
-#include "nsThread.h"
 #include "nsThreadManager.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIProgrammingLanguage.h"
@@ -214,6 +222,7 @@ public:
   } 
   NS_IMETHOD Run() {
     mThread->mShutdownContext = mShutdownContext;
+    MessageLoop::current()->Quit();
     return NS_OK;
   }
 private:
@@ -241,28 +250,32 @@ nsThread::ThreadFunc(void *arg)
   event->Run();  // unblocks nsThread::Init
   event = nullptr;
 
-  // Now, process incoming events...
-  while (!self->ShuttingDown())
-    NS_ProcessNextEvent(self);
+  { // Scope for MessageLoop.
+    nsAutoPtr<MessageLoop> loop(
+      new MessageLoop(MessageLoop::TYPE_MOZILLA_NONMAINTHREAD));
 
-  // Do NS_ProcessPendingEvents but with special handling to set
-  // mEventsAreDoomed atomically with the removal of the last event. The key
-  // invariant here is that we will never permit PutEvent to succeed if the
-  // event would be left in the queue after our final call to
-  // NS_ProcessPendingEvents.
-  while (true) {
-    {
-      MutexAutoLock lock(self->mLock);
-      if (!self->mEvents.HasPendingEvent()) {
-        // No events in the queue, so we will stop now. Don't let any more
-        // events be added, since they won't be processed. It is critical
-        // that no PutEvent can occur between testing that the event queue is
-        // empty and setting mEventsAreDoomed!
-        self->mEventsAreDoomed = true;
-        break;
+    // Now, process incoming events...
+    loop->Run();
+
+    // Do NS_ProcessPendingEvents but with special handling to set
+    // mEventsAreDoomed atomically with the removal of the last event. The key
+    // invariant here is that we will never permit PutEvent to succeed if the
+    // event would be left in the queue after our final call to
+    // NS_ProcessPendingEvents.
+    while (true) {
+      {
+        MutexAutoLock lock(self->mLock);
+        if (!self->mEvents.HasPendingEvent()) {
+          // No events in the queue, so we will stop now. Don't let any more
+          // events be added, since they won't be processed. It is critical
+          // that no PutEvent can occur between testing that the event queue is
+          // empty and setting mEventsAreDoomed!
+          self->mEventsAreDoomed = true;
+          break;
+        }
       }
+      NS_ProcessPendingEvents(self);
     }
-    NS_ProcessPendingEvents(self);
   }
 
   // Inform the threadmanager that this thread is going away
