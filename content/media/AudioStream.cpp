@@ -433,15 +433,16 @@ AudioStream* AudioStream::AllocateStream()
 
 int AudioStream::MaxNumberOfChannels()
 {
-  uint32_t maxNumberOfChannels, rv;
+#if defined(MOZ_CUBEB)
+  uint32_t maxNumberOfChannels;
 
-  rv = cubeb_get_max_channel_count(GetCubebContext(), &maxNumberOfChannels);
-
-  if (rv != CUBEB_OK) {
-    return 0;
+  if (cubeb_get_max_channel_count(GetCubebContext(),
+                                  &maxNumberOfChannels) == CUBEB_OK) {
+    return static_cast<int>(maxNumberOfChannels);
   }
+#endif
 
-  return static_cast<int>(maxNumberOfChannels);
+  return 0;
 }
 
 int AudioStream::PreferredSampleRate()
@@ -453,9 +454,13 @@ int AudioStream::PreferredSampleRate()
   // backend used.
   const int fallbackSampleRate = 44100;
   if (mPreferredSampleRate == 0) {
-    if (cubeb_get_preferred_sample_rate(GetCubebContext(), &mPreferredSampleRate) != CUBEB_OK) {
-      mPreferredSampleRate = fallbackSampleRate;
+#if defined(MOZ_CUBEB)
+    if (cubeb_get_preferred_sample_rate(GetCubebContext(),
+                                        &mPreferredSampleRate) == CUBEB_OK) {
+      return mPreferredSampleRate;
     }
+#endif
+    mPreferredSampleRate = fallbackSampleRate;
   }
 
   return mPreferredSampleRate;
