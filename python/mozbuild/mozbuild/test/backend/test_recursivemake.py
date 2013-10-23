@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import json
 import os
 import unittest
 
@@ -393,6 +394,17 @@ class TestRecursiveMakeBackend(BackendTester):
             '[include:dir1/xpcshell.ini]',
             '[include:xpcshell.ini]',
         ])
+
+        all_tests_path = os.path.join(env.topobjdir, 'all-tests.json')
+        self.assertTrue(os.path.exists(all_tests_path))
+
+        with open(all_tests_path, 'rt') as fh:
+            o = json.load(fh)
+
+            self.assertIn('xpcshell.js', o)
+            self.assertIn('dir1/test_bar.js', o)
+
+            self.assertEqual(len(o['xpcshell.js']), 1)
 
     def test_xpidl_generation(self):
         """Ensure xpidl files and directories are written out."""

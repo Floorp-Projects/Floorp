@@ -945,6 +945,10 @@ class StackFrame
         return offsetof(StackFrame, scopeChain_);
     }
 
+    static size_t offsetOfReturnValue() {
+        return offsetof(StackFrame, rval_);
+    }
+
     static size_t offsetOfArgumentsObject() {
         return offsetof(StackFrame, argsObj_);
     }

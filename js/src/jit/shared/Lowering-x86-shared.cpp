@@ -294,3 +294,13 @@ LIRGeneratorX86Shared::lowerTruncateDToInt32(MTruncateToInt32 *ins)
     LDefinition maybeTemp = Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempFloat();
     return define(new LTruncateDToInt32(useRegister(opd), maybeTemp), ins);
 }
+
+bool
+LIRGeneratorX86Shared::lowerTruncateFToInt32(MTruncateToInt32 *ins)
+{
+    MDefinition *opd = ins->input();
+    JS_ASSERT(opd->type() == MIRType_Float32);
+
+    LDefinition maybeTemp = Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempFloat();
+    return define(new LTruncateFToInt32(useRegister(opd), maybeTemp), ins);
+}

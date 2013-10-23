@@ -48,6 +48,7 @@ class MacroAssemblerARM : public Assembler
     void convertBoolToInt32(Register source, Register dest);
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertInt32ToDouble(const Address &src, FloatRegister dest);
+    void convertUInt32ToFloat32(const Register &src, const FloatRegister &dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
@@ -317,8 +318,10 @@ class MacroAssemblerARM : public Assembler
     void ma_vneg(FloatRegister src, FloatRegister dest, Condition cc = Always);
     void ma_vmov(FloatRegister src, FloatRegister dest, Condition cc = Always);
     void ma_vabs(FloatRegister src, FloatRegister dest, Condition cc = Always);
+    void ma_vabs_f32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
     void ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc = Always);
+    void ma_vsqrt_f32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
     void ma_vimm(double value, FloatRegister dest, Condition cc = Always);
     void ma_vimm_f32(float value, FloatRegister dest, Condition cc = Always);
@@ -326,6 +329,7 @@ class MacroAssemblerARM : public Assembler
     void ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc = Always);
     void ma_vcmp_f32(FloatRegister src1, FloatRegister src2, Condition cc = Always);
     void ma_vcmpz(FloatRegister src1, Condition cc = Always);
+    void ma_vcmpz_f32(FloatRegister src1, Condition cc = Always);
 
     void ma_vadd_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);
     void ma_vsub_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);
@@ -485,7 +489,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     enum Result {
         GENERAL,
-        DOUBLE
+        DOUBLE,
+        FLOAT
     };
 
     MacroAssemblerARMCompat()
@@ -605,6 +610,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void push(const Register &reg) {
         ma_push(reg);
     }
+    void push(const FloatRegister &reg) {
+        ma_vpush(VFPRegister(reg));
+    }
     void pushWithPadding(const Register &reg, const Imm32 extraSpace) {
         Imm32 totSpace = Imm32(extraSpace.value + 4);
         ma_dtr(IsStore, sp, totSpace, reg, PreIndex);
@@ -619,6 +627,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void pop(const Register &reg) {
         ma_pop(reg);
+    }
+    void pop(const FloatRegister &reg) {
+        ma_vpop(VFPRegister(reg));
     }
 
     void popN(const Register &reg, Imm32 extraSpace) {
