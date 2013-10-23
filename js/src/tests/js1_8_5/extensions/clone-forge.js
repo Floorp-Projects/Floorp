@@ -14,8 +14,13 @@ function assertThrows(f) {
         throw new TypeError("Assertion failed: " + f + " did not throw as expected");
 }
 
+function byteArray(str) {
+    return [ c.charCodeAt(0) for (c of str.split('')) ];
+}
+
 // Don't allow forging bogus Date objects.
-var buf = serialize(new Date(NaN));
+var mutated = byteArray(serialize(new Date(NaN)).clonebuffer);
+
 var a = [1/0, -1/0,
          Number.MIN_VALUE, -Number.MIN_VALUE,
          Math.PI, 1286523948674.5,
@@ -24,9 +29,11 @@ var a = [1/0, -1/0,
 for (var i = 0; i < a.length; i++) {
     var n = a[i];
     var nbuf = serialize(n);
+    var data = byteArray(nbuf.clonebuffer);
     for (var j = 0; j < 8; j++)
-        buf[j + 8] = nbuf[j];
-    assertThrows(function () { deserialize(buf); });
+      mutated[j+8] = data[j];
+    nbuf.clonebuffer = String.fromCharCode.apply(null, mutated);
+    assertThrows(function () { deserialize(nbuf); });
 }
 
 reportCompare(0, 0);

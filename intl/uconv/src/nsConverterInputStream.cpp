@@ -15,8 +15,7 @@
 
 NS_IMPL_ISUPPORTS3(nsConverterInputStream, nsIConverterInputStream,
                    nsIUnicharInputStream, nsIUnicharLineInputStream)
-    
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
 
 NS_IMETHODIMP
 nsConverterInputStream::Init(nsIInputStream* aStream,
@@ -24,6 +23,8 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
                              int32_t aBufferSize,
                              PRUnichar aReplacementChar)
 {
+    static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
     if (!aCharset)
         aCharset = "UTF-8";
 

@@ -66,19 +66,6 @@ CodeGeneratorX64::visitValue(LValue *value)
 }
 
 bool
-CodeGeneratorX64::visitOsrValue(LOsrValue *value)
-{
-    const LAllocation *frame  = value->getOperand(0);
-    const LDefinition *target = value->getDef(0);
-
-    const ptrdiff_t valueOffset = value->mir()->frameOffset();
-
-    masm.loadPtr(Address(ToRegister(frame), valueOffset), ToRegister(target));
-
-    return true;
-}
-
-bool
 CodeGeneratorX64::visitBox(LBox *box)
 {
     const LAllocation *in = box->getOperand(0);
@@ -383,6 +370,13 @@ CodeGeneratorX64::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir)
 }
 
 bool
+CodeGeneratorX64::visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir)
+{
+    masm.convertUInt32ToFloat32(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+    return true;
+}
+
+bool
 CodeGeneratorX64::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins)
 {
     MOZ_ASSUME_UNREACHABLE("NYI");
@@ -567,4 +561,16 @@ CodeGeneratorX64::visitTruncateDToInt32(LTruncateDToInt32 *ins)
     // implementation, this should handle most doubles and we can just
     // call a stub if it fails.
     return emitTruncateDouble(input, output);
+}
+
+bool
+CodeGeneratorX64::visitTruncateFToInt32(LTruncateFToInt32 *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    // On x64, branchTruncateFloat32 uses cvttss2sq. Unlike the x86
+    // implementation, this should handle most floats and we can just
+    // call a stub if it fails.
+    return emitTruncateFloat32(input, output);
 }

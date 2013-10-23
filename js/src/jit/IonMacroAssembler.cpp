@@ -639,7 +639,7 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
 
     // Don't execute the inline path if the compartment has an object metadata callback,
     // as the metadata to use for the object may vary between executions of the op.
-    if (GetIonContext()->compartment->objectMetadataCallback)
+    if (GetIonContext()->compartment->hasObjectMetadataCallback())
         jump(fail);
 
 #ifdef JSGC_GENERATIONAL
