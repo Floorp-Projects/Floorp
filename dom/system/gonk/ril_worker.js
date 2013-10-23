@@ -10382,7 +10382,7 @@ let ComprehensionTlvHelper = {
     } else {
       RIL.sendStkTerminalResponse({
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
-      throw new Error("Invalid octet in Comprehension TLV :" + length);
+      throw new Error("Invalid octet in Comprehension TLV :" + temp);
     }
 
     let ctlv = {
