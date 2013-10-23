@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const {utils: Cu} = Components;
+const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 const {Promise: promise} =
   Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
@@ -16,6 +16,8 @@ const APP_MANAGER_URL = "about:app-manager";
 const TEST_BASE =
   "chrome://mochitests/content/browser/browser/devtools/app-manager/test/";
 const HOSTED_APP_MANIFEST = TEST_BASE + "hosted_app.manifest";
+
+const PACKAGED_APP_DIR_PATH = getTestFilePath(".");
 
 function addTab(url, targetWindow = window) {
   info("Adding tab: " + url);
@@ -70,6 +72,18 @@ function addSampleHostedApp() {
 function removeSampleHostedApp() {
   info("Removing sample hosted app");
   return AppProjects.remove(HOSTED_APP_MANIFEST);
+}
+
+function addSamplePackagedApp() {
+  info("Adding sample packaged app");
+  let appDir = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
+  appDir.initWithPath(PACKAGED_APP_DIR_PATH);
+  return getProjectsWindow().UI.addPackaged(appDir);
+}
+
+function removeSamplePackagedApp() {
+  info("Removing sample packaged app");
+  return AppProjects.remove(PACKAGED_APP_DIR_PATH);
 }
 
 function getProjectsWindow() {

@@ -74,6 +74,9 @@
 <!ENTITY projects.hostedManifestPlaceHolder2 "http://example.com/app/manifest.webapp">
 <!ENTITY projects.noProjects "No projects. Add a new packaged app below (local directory) or a hosted app (link to a manifest file).">
 <!ENTITY projects.manifestEditor "Manifest Editor">
+<!ENTITY projects.manifestEditorTooltip "Edit your app's manifest in the panel below. The Update button will save your changes and update the app.">
+<!ENTITY projects.manifestViewer "Manifest Viewer">
+<!ENTITY projects.manifestViewerTooltip "Examine your app's manifest in the panel below.">
 
 <!ENTITY help.title "App Manager">
 <!ENTITY help.close "Close">
