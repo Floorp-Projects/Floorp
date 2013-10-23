@@ -359,6 +359,12 @@ SystemErrorReporterExternal(JSContext *cx, const char *message,
 NS_EXPORT_(void)
 SimulateActivityCallback(bool aActive);
 
+void
+RecordAdoptedNode(JSCompartment *c);
+
+void
+RecordDonatedNode(JSCompartment *c);
+
 } // namespace xpc
 
 namespace mozilla {
