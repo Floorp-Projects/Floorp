@@ -2636,7 +2636,7 @@ WorkerPrivateParent<Derived>::DispatchMessageEventToMessagePort(
   JSAutoCompartment(cx, sgo->GetGlobalJSObject());
 
   JS::Rooted<JS::Value> data(cx);
-  if (!buffer.read(cx, data.address(), WorkerStructuredCloneCallbacks(true))) {
+  if (!buffer.read(cx, &data, WorkerStructuredCloneCallbacks(true))) {
     return false;
   }
 
