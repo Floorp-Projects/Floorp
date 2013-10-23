@@ -120,7 +120,7 @@
 /* Sources and breakpoints view */
 
 .dbg-breakpoint {
-  -moz-margin-start: -14px;
+  -moz-margin-start: 4px;
 }
 
 .dbg-breakpoint-line {
