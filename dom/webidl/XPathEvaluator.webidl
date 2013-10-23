@@ -11,10 +11,10 @@ interface XPathResult;
 [Constructor]
 interface XPathEvaluator {
   // Based on nsIDOMXPathEvaluator
-  [NewObject, Throws]
+  [Creator, Throws]
   XPathExpression createExpression(DOMString expression,
                                    XPathNSResolver? resolver);
-  [NewObject, Throws]
+  [Creator, Throws]
   XPathNSResolver createNSResolver(Node? nodeResolver);
   [Throws]
   XPathResult evaluate(DOMString expression, Node? contextNode,
