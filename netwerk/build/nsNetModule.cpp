@@ -936,7 +936,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
       mozilla::net::WebSocketSSLChannelConstructor },
 #endif
 #ifdef MOZ_RTSP
-    { &kNS_RTSPPROTOCOLHANDLER_CID, false, NULL, mozilla::net::RtspHandlerConstructor },
+    { &kNS_RTSPPROTOCOLHANDLER_CID, false, nullptr, mozilla::net::RtspHandlerConstructor },
 #endif
 #if defined(XP_WIN)
     { &kNS_NETWORK_LINK_SERVICE_CID, false, nullptr, nsNotifyAddrListenerConstructor },

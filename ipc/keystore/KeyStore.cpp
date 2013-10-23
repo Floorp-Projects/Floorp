@@ -122,7 +122,7 @@ KeyStore::ResetHandlerInfo()
   mHandlerInfo.state = STATE_IDLE;
   mHandlerInfo.command = 0;
   mHandlerInfo.paramCount = 0;
-  mHandlerInfo.commandPattern = NULL;
+  mHandlerInfo.commandPattern = nullptr;
   for (int i = 0; i < MAX_PARAM; i++) {
     mHandlerInfo.param[i].length = 0;
     memset(mHandlerInfo.param[i].data, 0, VALUE_SIZE);

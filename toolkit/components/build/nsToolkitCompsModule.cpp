@@ -137,7 +137,7 @@ static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
 #if defined(USE_MOZ_UPDATER)
   { &kNS_UPDATEPROCESSOR_CID, false, nullptr, nsUpdateProcessorConstructor },
 #endif
-  { &kFINALIZATIONWITNESSSERVICE_CID, false, NULL, FinalizationWitnessServiceConstructor },
+  { &kFINALIZATIONWITNESSSERVICE_CID, false, nullptr, FinalizationWitnessServiceConstructor },
   { nullptr }
 };
 

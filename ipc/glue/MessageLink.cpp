@@ -58,7 +58,7 @@ MessageLink::~MessageLink()
 
 ProcessLink::ProcessLink(MessageChannel *aChan)
   : MessageLink(aChan),
-    mExistingListener(NULL)
+    mExistingListener(nullptr)
 {
 }
 

@@ -13,7 +13,7 @@
 
 // XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one 
 // here too?
-NS_IMPL_CLASSINFO(nsDBusHandlerApp, NULL, 0, NS_DBUSHANDLERAPP_CID)
+NS_IMPL_CLASSINFO(nsDBusHandlerApp, nullptr, 0, NS_DBUSHANDLERAPP_CID)
 NS_IMPL_ISUPPORTS2_CI(nsDBusHandlerApp, nsIDBusHandlerApp, nsIHandlerApp)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,12 +112,12 @@ nsDBusHandlerApp::LaunchWithURI(nsIURI *aURI,
   dbus_message_iter_init_append(msg, &iter);
   dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &uri);
   
-  if (dbus_connection_send(connection, msg, NULL)) {
+  if (dbus_connection_send(connection, msg, nullptr)) {
     dbus_connection_flush(connection);
     dbus_message_unref(msg);
   } else {
     dbus_message_unref(msg);
-    return NS_ERROR_FAILURE;		    
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
   
