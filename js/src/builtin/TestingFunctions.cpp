@@ -1264,11 +1264,8 @@ Serialize(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    Value v = args.length() > 0 ? args[0] : UndefinedValue();
-    Value transferables = args.length() > 1 ? args[1] : UndefinedValue();
-
     JSAutoStructuredCloneBuffer clonebuf;
-    if (!clonebuf.write(cx, v, transferables))
+    if (!clonebuf.write(cx, args.get(0), args.get(1)))
         return false;
 
     RootedObject obj(cx, CloneBufferObject::Create(cx, &clonebuf));
@@ -1309,7 +1306,7 @@ Deserialize(JSContext *cx, unsigned argc, jsval *vp)
 
     RootedValue deserialized(cx);
     if (!JS_ReadStructuredClone(cx, obj->data(), obj->nbytes(),
-                                JS_STRUCTURED_CLONE_VERSION, deserialized.address(), NULL, NULL)) {
+                                JS_STRUCTURED_CLONE_VERSION, &deserialized, NULL, NULL)) {
         return false;
     }
     args.rval().set(deserialized);
