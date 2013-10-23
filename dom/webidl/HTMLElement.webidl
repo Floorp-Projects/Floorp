@@ -111,7 +111,7 @@ interface TouchEventHandlers {
 };
 
 HTMLElement implements GlobalEventHandlers;
+HTMLElement implements NodeEventHandlers;
 HTMLElement implements TouchEventHandlers;
-HTMLElement implements OnErrorEventHandlerForNodes;
 
 interface HTMLUnknownElement : HTMLElement {};
