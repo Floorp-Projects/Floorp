@@ -54,7 +54,7 @@ function test() {
 
     info("Add the first breakpoint.");
     let location = { url: gSources.selectedValue, line: 6 };
-    gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointAddFirst);
+    gEditor.once("breakpointAdded", onEditorBreakpointAddFirst);
     gPanel.addBreakpoint(location).then(onBreakpointAddFirst);
   }
 
@@ -62,17 +62,12 @@ function test() {
   let breakpointsRemoved = 0;
   let editorBreakpointChanges = 0;
 
-  function onEditorBreakpointAddFirst(aEvent) {
-    gEditor.removeEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointAddFirst);
+  function onEditorBreakpointAddFirst(aEvent, aLine) {
     editorBreakpointChanges++;
 
     ok(aEvent,
       "breakpoint1 added to the editor.");
-    is(aEvent.added.length, 1,
-      "One breakpoint added to the editor.");
-    is(aEvent.removed.length, 0,
-      "No breakpoint was removed from the editor.");
-    is(aEvent.added[0].line, 5,
+    is(aLine, 5,
       "Editor breakpoint line is correct.");
 
     is(gEditor.getBreakpoints().length, 1,
@@ -108,21 +103,16 @@ function test() {
       "The second source should be currently selected.");
 
     info("Remove the first breakpoint.");
-    gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointRemoveFirst);
+    gEditor.once("breakpointRemoved", onEditorBreakpointRemoveFirst);
     gPanel.removeBreakpoint(aBreakpointClient.location).then(onBreakpointRemoveFirst);
   }
 
-  function onEditorBreakpointRemoveFirst(aEvent) {
-    gEditor.removeEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointRemoveFirst);
+  function onEditorBreakpointRemoveFirst(aEvent, aLine) {
     editorBreakpointChanges++;
 
     ok(aEvent,
       "breakpoint1 removed from the editor.");
-    is(aEvent.added.length, 0,
-      "No breakpoint was added to the editor.");
-    is(aEvent.removed.length, 1,
-      "One breakpoint was removed from the editor.");
-    is(aEvent.removed[0].line, 5,
+    is(aLine, 5,
       "Editor breakpoint line is correct.");
 
     is(gEditor.getBreakpoints().length, 0,
@@ -161,16 +151,14 @@ function test() {
     info("Add a breakpoint to the first source, which is not selected.");
     let location = { url: gSources.values[0], line: 5 };
     let options = { noEditorUpdate: true };
-    gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointAddBackgroundTrap);
+    gEditor.on("breakpointAdded", onEditorBreakpointAddBackgroundTrap);
     gPanel.addBreakpoint(location, options).then(onBreakpointAddBackground);
   }
 
-  function onEditorBreakpointAddBackgroundTrap(aEvent) {
+  function onEditorBreakpointAddBackgroundTrap() {
     // Trap listener: no breakpoint must be added to the editor when a
     // breakpoint is added to a source that is not currently selected.
-    gEditor.removeEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointAddBackgroundTrap);
     editorBreakpointChanges++;
-
     ok(false, "breakpoint2 must not be added to the editor.");
   }
 
@@ -203,25 +191,20 @@ function test() {
       "The second source should be currently selected.");
 
     // Remove the trap listener.
-    gEditor.removeEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointAddBackgroundTrap);
+    gEditor.off("breakpointAdded", onEditorBreakpointAddBackgroundTrap);
 
     info("Switch to the first source, which is not yet selected");
-    gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointAddSwitch);
-    gEditor.addEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onEditorTextChanged);
+    gEditor.once("breakpointAdded", onEditorBreakpointAddSwitch);
+    gEditor.once("change", onEditorTextChanged);
     gSources.selectedIndex = 0;
   }
 
-  function onEditorBreakpointAddSwitch(aEvent) {
-    gEditor.removeEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointAddSwitch);
+  function onEditorBreakpointAddSwitch(aEvent, aLine) {
     editorBreakpointChanges++;
 
     ok(aEvent,
       "breakpoint2 added to the editor.");
-    is(aEvent.added.length, 1,
-      "One breakpoint added to the editor.");
-    is(aEvent.removed.length, 0,
-      "No breakpoint was removed from the editor.");
-    is(aEvent.added[0].line, 4,
+    is(aLine, 4,
       "Editor breakpoint line is correct.");
 
     is(gEditor.getBreakpoints().length, 1,
@@ -230,13 +213,8 @@ function test() {
 
   function onEditorTextChanged() {
     // Wait for the actual text to be shown.
-    if (gEditor.getText() != gDebugger.L10N.getStr("loadingText")) {
-      onEditorTextReallyChanged();
-    }
-  }
-
-  function onEditorTextReallyChanged() {
-    gEditor.removeEventListener(SourceEditor.EVENTS.TEXT_CHANGED, onEditorTextChanged);
+    if (gEditor.getText() == gDebugger.L10N.getStr("loadingText"))
+      return void gEditor.once("change", onEditorTextChanged);
 
     is(gEditor.getText().indexOf("debugger"), -1,
       "The second source is no longer displayed.");
@@ -246,15 +224,15 @@ function test() {
     is(gSources.values[0], gSources.selectedValue,
       "The first source should be currently selected.");
 
-    let window = gEditor.editorElement.contentWindow;
+    let window = gEditor.container.contentWindow;
     executeSoon(() => window.mozRequestAnimationFrame(onReadyForClick));
   }
 
   function onReadyForClick() {
     info("Remove the second breakpoint using the mouse.");
-    gEditor.addEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointRemoveSecond);
+    gEditor.once("breakpointRemoved", onEditorBreakpointRemoveSecond);
 
-    let iframe = gEditor.editorElement;
+    let iframe = gEditor.container;
     let testWin = iframe.ownerDocument.defaultView;
 
     // Flush the layout for the iframe.
@@ -264,27 +242,20 @@ function test() {
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils);
 
-    let lineOffset = gEditor.getLineStart(4);
-    let coords = gEditor.getLocationAtOffset(lineOffset);
-
+    let coords = gEditor.cursorCoords({ line: 4, ch: 0 });
     let rect = iframe.getBoundingClientRect();
     let left = rect.left + 10;
-    let top = rect.top + coords.y + 4;
+    let top = rect.top + coords.top + 4;
     utils.sendMouseEventToWindow("mousedown", left, top, 0, 1, 0, false, 0, 0);
     utils.sendMouseEventToWindow("mouseup", left, top, 0, 1, 0, false, 0, 0);
   }
 
-  function onEditorBreakpointRemoveSecond(aEvent) {
-    gEditor.removeEventListener(SourceEditor.EVENTS.BREAKPOINT_CHANGE, onEditorBreakpointRemoveSecond);
+  function onEditorBreakpointRemoveSecond(aEvent, aLine) {
     editorBreakpointChanges++;
 
     ok(aEvent,
       "breakpoint2 removed from the editor.");
-    is(aEvent.added.length, 0,
-      "No breakpoint was added to the editor.");
-    is(aEvent.removed.length, 1,
-      "One breakpoint was removed from the editor.");
-    is(aEvent.removed[0].line, 4,
+    is(aLine, 4,
       "Editor breakpoint line is correct.");
 
     is(gEditor.getBreakpoints().length, 0,
