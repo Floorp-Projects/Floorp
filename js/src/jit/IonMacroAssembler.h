@@ -240,10 +240,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     MacroAssembler(JSContext *cx, IonScript *ion)
       : enoughMemory_(true),
         embedsNurseryPointers_(false),
-        sps_(NULL)
+        sps_(nullptr)
     {
         constructRoot(cx);
-         ionContext_.construct(cx, (js::jit::TempAllocator *)NULL);
+         ionContext_.construct(cx, (js::jit::TempAllocator *)nullptr);
          alloc_.construct(cx);
 #ifdef JS_CPU_ARM
          initWithAllocator();

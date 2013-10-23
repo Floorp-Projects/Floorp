@@ -1572,7 +1572,7 @@ CreateThisForFunctionWithType(JSContext *cx, HandleTypeObject type, JSObject *pa
         if (newKind == SingletonObject) {
             Rooted<TaggedProto> proto(cx, templateObject->getProto());
             if (!res->splicePrototype(cx, &JSObject::class_, proto))
-                return NULL;
+                return nullptr;
         } else {
             res->setType(type);
         }
