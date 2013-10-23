@@ -44,7 +44,7 @@ interface nsIReflowObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(5f4d82fc-3220-4f7e-9b00-626f1033318a)]
+[scriptable, builtinclass, uuid(A44B248D-A6E6-40F9-B2BB-55397B8DFD66)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -772,6 +772,13 @@ interface nsIDocShell : nsIDocShellTreeItem
    * for isBrowserElement!
    */
   [infallible] readonly attribute unsigned long appId;
+
+  /**
+   * Return the manifest URL of the app associated with this docshell.
+   *
+   * If there is no associated app in our hierarchy, we return empty string.
+   */
+  readonly attribute DOMString appManifestURL;
 
   /**
    * Like nsIDocShellTreeItem::GetSameTypeParent, except this ignores <iframe
