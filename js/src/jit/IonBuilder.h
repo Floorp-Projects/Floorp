@@ -697,6 +697,8 @@ class IonBuilder : public MIRGenerator
         return NULL;
     }
 
+    JSAtomState &names() { return compartment->runtimeFromAnyThread()->atomState; }
+
   private:
     bool init();
 

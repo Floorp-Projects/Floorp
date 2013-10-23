@@ -104,6 +104,10 @@ struct BaselineScript
     // Code pointer containing the actual method.
     HeapPtr<IonCode> method_;
 
+    // For heavyweight scripts, template objects to use for the call object and
+    // decl env object (linked via the call object's enclosing scope).
+    HeapPtrObject templateScope_;
+
     // Allocated space for fallback stubs.
     FallbackICStubSpace fallbackStubSpace_;
 
@@ -223,6 +227,14 @@ struct BaselineScript
     void setMethod(IonCode *code) {
         JS_ASSERT(!method_);
         method_ = code;
+    }
+
+    JSObject *templateScope() const {
+        return templateScope_;
+    }
+    void setTemplateScope(JSObject *templateScope) {
+        JS_ASSERT(!templateScope_);
+        templateScope_ = templateScope;
     }
 
     void toggleBarriers(bool enabled) {

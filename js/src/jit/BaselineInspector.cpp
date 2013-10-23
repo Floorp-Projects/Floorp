@@ -423,3 +423,21 @@ BaselineInspector::getTemplateObjectForNative(jsbytecode *pc, Native native)
 
     return NULL;
 }
+
+DeclEnvObject *
+BaselineInspector::templateDeclEnvObject()
+{
+    JSObject *res = &templateCallObject()->as<ScopeObject>().enclosingScope();
+    JS_ASSERT(res);
+
+    return &res->as<DeclEnvObject>();
+}
+
+CallObject *
+BaselineInspector::templateCallObject()
+{
+    JSObject *res = baselineScript()->templateScope();
+    JS_ASSERT(res);
+
+    return &res->as<CallObject>();
+}
