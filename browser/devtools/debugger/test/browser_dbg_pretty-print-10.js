@@ -22,8 +22,7 @@ function test() {
 
     waitForSourceShown(gPanel, "code_ugly.js")
       .then(testSourceIsUgly)
-      .then(blackBoxSource)
-      .then(waitForThreadEvents.bind(null, gPanel, "blackboxchange"))
+      .then(toggleBlackBoxing.bind(null, gPanel))
       .then(clickPrettyPrintButton)
       .then(testSourceIsStillUgly)
       .then(() => closeDebuggerAndFinish(gPanel))
@@ -36,12 +35,6 @@ function test() {
 function testSourceIsUgly() {
   ok(!gEditor.getText().contains("\n    "),
      "The source shouldn't be pretty printed yet.");
-}
-
-function blackBoxSource() {
-  const checkbox = gDebugger.document.querySelector(
-    ".selected .side-menu-widget-item-checkbox");
-  checkbox.click();
 }
 
 function clickPrettyPrintButton() {
