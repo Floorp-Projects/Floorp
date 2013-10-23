@@ -960,9 +960,9 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  // We don't want to update the main thread about timing update when we are not
-  // running in realtime.
-  if (ShouldUpdateMainThread()) {
+  // We don't want to frequently update the main thread about timing update
+  // when we are not running in realtime.
+  if (aFinalUpdate || ShouldUpdateMainThread()) {
     mStreamUpdates.SetCapacity(mStreamUpdates.Length() + mStreams.Length());
     for (uint32_t i = 0; i < mStreams.Length(); ++i) {
       MediaStream* stream = mStreams[i];
