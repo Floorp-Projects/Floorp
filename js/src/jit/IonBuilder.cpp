@@ -283,6 +283,13 @@ IonBuilder::canInlineTarget(JSFunction *target, bool constructing)
     if (target->isInterpretedLazy() && info().executionMode() == DefinitePropertiesAnalysis) {
         if (!target->getOrCreateScript(context()))
             return false;
+
+        RootedScript script(context(), target->nonLazyScript());
+        if (!script->hasBaselineScript()) {
+            MethodStatus status = BaselineCompile(context(), script);
+            if (status != Method_Compiled)
+                return false;
+        }
     }
 
     if (!target->hasScript()) {
