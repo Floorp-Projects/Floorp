@@ -204,14 +204,17 @@ class GetUserMediaNotificationEvent: public nsRunnable
       STOPPING
     };
     GetUserMediaNotificationEvent(GetUserMediaCallbackMediaStreamListener* aListener,
-                                  GetUserMediaStatus aStatus)
-    : mListener(aListener), mStatus(aStatus) {}
+                                  GetUserMediaStatus aStatus,
+                                  bool aIsAudio, bool aIsVideo, uint64_t aWindowID)
+    : mListener(aListener) , mStatus(aStatus) , mIsAudio(aIsAudio)
+    , mIsVideo(aIsVideo), mWindowID(aWindowID) {}
 
     GetUserMediaNotificationEvent(GetUserMediaStatus aStatus,
                                   already_AddRefed<DOMMediaStream> aStream,
-                                  DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback)
+                                  DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback,
+                                  bool aIsAudio, bool aIsVideo, uint64_t aWindowID)
     : mStream(aStream), mOnTracksAvailableCallback(aOnTracksAvailableCallback),
-      mStatus(aStatus) {}
+      mStatus(aStatus), mIsAudio(aIsAudio), mIsVideo(aIsVideo), mWindowID(aWindowID) {}
     virtual ~GetUserMediaNotificationEvent()
     {
 
@@ -224,6 +227,9 @@ class GetUserMediaNotificationEvent: public nsRunnable
     nsRefPtr<DOMMediaStream> mStream;
     nsAutoPtr<DOMMediaStream::OnTracksAvailableCallback> mOnTracksAvailableCallback;
     GetUserMediaStatus mStatus;
+    bool mIsAudio;
+    bool mIsVideo;
+    uint64_t mWindowID;
 };
 
 typedef enum {
@@ -244,7 +250,8 @@ public:
     DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback,
     MediaEngineSource* aAudioSource,
     MediaEngineSource* aVideoSource,
-    bool aNeedsFinish)
+    bool aNeedsFinish,
+    uint64_t aWindowID)
     : mType(aType)
     , mStream(aStream)
     , mOnTracksAvailableCallback(aOnTracksAvailableCallback)
@@ -252,6 +259,7 @@ public:
     , mVideoSource(aVideoSource)
     , mListener(aListener)
     , mFinish(aNeedsFinish)
+    , mWindowID(aWindowID)
     {}
 
   ~MediaOperationRunnable()
@@ -303,7 +311,10 @@ public:
           nsRefPtr<GetUserMediaNotificationEvent> event =
             new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STARTING,
                                               mStream.forget(),
-                                              mOnTracksAvailableCallback.forget());
+                                              mOnTracksAvailableCallback.forget(),
+                                              mAudioSource != nullptr,
+                                              mVideoSource != nullptr,
+                                              mWindowID);
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         }
         break;
@@ -324,7 +335,11 @@ public:
             source->Finish();
           }
           nsRefPtr<GetUserMediaNotificationEvent> event =
-            new GetUserMediaNotificationEvent(mListener, GetUserMediaNotificationEvent::STOPPING);
+            new GetUserMediaNotificationEvent(mListener,
+                                              GetUserMediaNotificationEvent::STOPPING,
+                                              mAudioSource != nullptr,
+                                              mVideoSource != nullptr,
+                                              mWindowID);
 
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         }
@@ -345,6 +360,7 @@ private:
   nsRefPtr<MediaEngineSource> mVideoSource; // threadsafe
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
   bool mFinish;
+  uint64_t mWindowID;
 };
 
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;
