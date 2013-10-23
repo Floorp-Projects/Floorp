@@ -14,6 +14,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsEventStateManager.h"
+#include "nsFocusManager.h"
 #include "nsIMEStateManager.h"
 #include "nsContentEventHandler.h"
 #include "nsIContent.h"
@@ -1955,7 +1956,7 @@ nsEventStateManager::FireContextClick()
       }
 
       nsIDocument* doc = mGestureDownContent->GetCurrentDoc();
-      nsAutoHandlingUserInputStatePusher userInpStatePusher(true, &event, doc);
+      AutoHandlingUserInputStatePusher userInpStatePusher(true, &event, doc);
 
       // dispatch to DOM
       nsEventDispatcher::Dispatch(mGestureDownContent, mPresContext, &event,
@@ -5848,4 +5849,51 @@ nsEventStateManager::Prefs::GetAccessModifierMask(int32_t aItemType)
   }
 }
 
+/******************************************************************/
+/* mozilla::AutoHandlingUserInputStatePusher                      */
+/******************************************************************/
+
+AutoHandlingUserInputStatePusher::AutoHandlingUserInputStatePusher(
+                                    bool aIsHandlingUserInput,
+                                    WidgetEvent* aEvent,
+                                    nsIDocument* aDocument) :
+  mIsHandlingUserInput(aIsHandlingUserInput),
+  mIsMouseDown(aEvent && aEvent->message == NS_MOUSE_BUTTON_DOWN),
+  mResetFMMouseDownState(false)
+{
+  if (!aIsHandlingUserInput) {
+    return;
+  }
+  nsEventStateManager::StartHandlingUserInput();
+  if (!mIsMouseDown) {
+    return;
+  }
+  nsIPresShell::SetCapturingContent(nullptr, 0);
+  nsIPresShell::AllowMouseCapture(true);
+  if (!aDocument || !aEvent->mFlags.mIsTrusted) {
+    return;
+  }
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE_VOID(fm);
+  fm->SetMouseButtonDownHandlingDocument(aDocument);
+  mResetFMMouseDownState = true;
+}
+
+AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher()
+{
+  if (!mIsHandlingUserInput) {
+    return;
+  }
+  nsEventStateManager::StopHandlingUserInput();
+  if (!mIsMouseDown) {
+    return;
+  }
+  nsIPresShell::AllowMouseCapture(false);
+  if (!mResetFMMouseDownState) {
+    return;
+  }
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE_VOID(fm);
+  fm->SetMouseButtonDownHandlingDocument(nullptr);
+}
 
