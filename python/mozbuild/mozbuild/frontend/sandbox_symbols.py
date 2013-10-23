@@ -198,7 +198,7 @@ VARIABLES = {
         to compile.
         """, 'compile'),
 
-    'GTEST_CPP_SOURCES': (list, list, [],
+    'GTEST_CPP_SOURCES': (StrictOrderingOnAppendList, list, [],
         """C++ source files for GTest unit tests.
 
         This is a list of C++ GTest unit test sources. Entries must be files
