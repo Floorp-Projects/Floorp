@@ -28,13 +28,6 @@ const SEARCH_FUNCTION_FLAG = "@";
 const SEARCH_TOKEN_FLAG = "#";
 const SEARCH_LINE_FLAG = ":";
 const SEARCH_VARIABLE_FLAG = "*";
-const DEFAULT_EDITOR_CONFIG = {
-  mode: SourceEditor.MODES.TEXT,
-  readOnly: true,
-  showLineNumbers: true,
-  showAnnotationRuler: true,
-  showOverviewRuler: true
-};
 
 /**
  * Object defining the debugger view components.
@@ -187,7 +180,7 @@ let DebuggerView = {
   },
 
   /**
-   * Initializes the SourceEditor instance.
+   * Initializes the Editor instance.
    *
    * @param function aCallback
    *        Called after the editor finishes initializing.
@@ -195,10 +188,34 @@ let DebuggerView = {
   _initializeEditor: function(aCallback) {
     dumpn("Initializing the DebuggerView editor");
 
-    this.editor = new SourceEditor();
-    this.editor.init(document.getElementById("editor"), DEFAULT_EDITOR_CONFIG, () => {
+    // This needs to be more localizable: see bug 929234.
+    let extraKeys = {};
+    extraKeys[(Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") + "F"] = (cm) => {
+      DebuggerView.Filtering._doTokenSearch();
+    };
+
+    this.editor = new Editor({
+      mode: Editor.modes.text,
+      readOnly: true,
+      lineNumbers: true,
+      showAnnotationRuler: true,
+      gutters: [ "breakpoints" ],
+      extraKeys: extraKeys,
+      contextMenu: "sourceEditorContextMenu"
+    });
+
+    this.editor.appendTo(document.getElementById("editor")).then(() => {
+      this.editor.extend(DebuggerEditor);
       this._loadingText = L10N.getStr("loadingText");
       this._onEditorLoad(aCallback);
+    });
+
+    this.editor.on("gutterClick", (ev, line) => {
+      if (this.editor.hasBreakpoint(line)) {
+        this.editor.removeBreakpoint(line);
+      } else {
+        this.editor.addBreakpoint(line);
+      }
     });
   },
 
@@ -219,7 +236,7 @@ let DebuggerView = {
   },
 
   /**
-   * Destroys the SourceEditor instance and also executes any necessary
+   * Destroys the Editor instance and also executes any necessary
    * post-unload operations.
    *
    * @param function aCallback
@@ -276,9 +293,9 @@ let DebuggerView = {
    *        The source text content.
    */
   _setEditorText: function(aTextContent = "") {
-    this.editor.setMode(SourceEditor.MODES.TEXT);
+    this.editor.setMode(Editor.modes.text);
     this.editor.setText(aTextContent);
-    this.editor.resetUndo();
+    this.editor.clearHistory();
   },
 
   /**
@@ -294,22 +311,24 @@ let DebuggerView = {
    */
   _setEditorMode: function(aUrl, aContentType = "", aTextContent = "") {
     // Avoid setting the editor mode for very large files.
+    // Is this still necessary? See bug 929225.
     if (aTextContent.length >= SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
-      this.editor.setMode(SourceEditor.MODES.TEXT);
+      return void this.editor.setMode(Editor.modes.text);
     }
+
     // Use JS mode for files with .js and .jsm extensions.
-    else if (SourceUtils.isJavaScript(aUrl, aContentType)) {
-      this.editor.setMode(SourceEditor.MODES.JAVASCRIPT);
+    if (SourceUtils.isJavaScript(aUrl, aContentType)) {
+      return void this.editor.setMode(Editor.modes.js);
     }
+
     // Use HTML mode for files in which the first non whitespace character is
     // &lt;, regardless of extension.
-    else if (aTextContent.match(/^\s*</)) {
-      this.editor.setMode(SourceEditor.MODES.HTML);
+    if (aTextContent.match(/^\s*</)) {
+      return void this.editor.setMode(Editor.modes.html);
     }
-    // Unknown languange, use plain text.
-    else {
-      this.editor.setMode(SourceEditor.MODES.TEXT);
-    }
+
+    // Unknown language, use text.
+    this.editor.setMode(Editor.modes.text);
   },
 
   /**
@@ -415,6 +434,11 @@ let DebuggerView = {
     let sourceItem = this.Sources.getItemByValue(aUrl);
     let sourceForm = sourceItem.attachment.source;
 
+    // Once we change the editor location, it replaces editor's contents.
+    // This means that the debug location information is now obsolete, so
+    // we need to clear it. We set a new location below, in this function.
+    this.editor.clearDebugLocation();
+
     // Make sure the requested source client is shown in the editor, then
     // update the source editor's caret position and debug location.
     return this._setEditorSource(sourceForm, aFlags).then(() => {
@@ -423,35 +447,23 @@ let DebuggerView = {
       if (aLine < 1) {
         return;
       }
+
       if (aFlags.charOffset) {
-        aLine += this.editor.getLineAtOffset(aFlags.charOffset);
+        aLine += this.editor.getPosition(aFlags.charOffset).line;
       }
+
       if (aFlags.lineOffset) {
         aLine += aFlags.lineOffset;
       }
-      if (!aFlags.noCaret) {
-        this.editor.setCaretPosition(aLine - 1, aFlags.columnOffset);
-      }
-      if (!aFlags.noDebug) {
-        this.editor.setDebugLocation(aLine - 1, aFlags.columnOffset);
-      }
-    });
-  },
 
-  /**
-   * Gets the text in the source editor's specified line.
-   *
-   * @param number aLine [optional]
-   *        The line to get the text from. If unspecified, it defaults to
-   *        the current caret position.
-   * @return string
-   *         The specified line's text.
-   */
-  getEditorLineText: function(aLine) {
-    let line = aLine || this.editor.getCaretPosition().line;
-    let start = this.editor.getLineStart(line);
-    let end = this.editor.getLineEnd(line);
-    return this.editor.getText(start, end);
+      if (!aFlags.noCaret) {
+        this.editor.setCursor({ line: aLine -1, ch: aFlags.columnOffset || 0 });
+      }
+
+      if (!aFlags.noDebug) {
+        this.editor.setDebugLocation(aLine - 1);
+      }
+    }).then(null, console.error);
   },
 
   /**
@@ -599,9 +611,9 @@ let DebuggerView = {
     this.EventListeners.empty();
 
     if (this.editor) {
-      this.editor.setMode(SourceEditor.MODES.TEXT);
+      this.editor.setMode(Editor.modes.text);
       this.editor.setText("");
-      this.editor.resetUndo();
+      this.editor.clearHistory();
       this._editorSource = {};
     }
   },
