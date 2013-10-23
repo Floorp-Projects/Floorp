@@ -108,21 +108,60 @@
     let e = document.createEvent('Event');
     e.initEvent('change', true, true);
 
-    if (!aFilename2) {
-      if (aDumpFirst) {
-          let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
-                          getService(Ci.nsIMemoryInfoDumper);
+    function check() {
+      // Initialize the clipboard contents.
+      SpecialPowers.clipboardCopyString("initial clipboard value");
 
-          dumper.dumpMemoryReportsToNamedFile(filePath,
-                                              /* minimizeMemoryUsage = */ false,
-                                              /* dumpChildProcesses = */ false);
+      let numFailures = 0, maxFailures = 30;
+
+      // Because the file load is async, we don't know when it will finish and
+      // the output will show up.  So we poll.
+      function copyPasteAndCheck() {
+        // Copy and paste frame contents, and filter out non-deterministic
+        // differences.
+        synthesizeKey("A", {accelKey: true});
+        synthesizeKey("C", {accelKey: true});
+        let actual = SpecialPowers.getClipboardData("text/unicode");
+        actual = actual.replace(/\(pid \d+\)/g, "(pid NNN)");
+
+        if (actual === aExpected) {
+          SimpleTest.ok(true, "Clipboard has the expected contents");
+          aNext();
+        } else {
+          numFailures++;
+          if (numFailures === maxFailures) {
+            ok(false, "pasted text doesn't match");
+            dump("******EXPECTED******\n");
+            dump(aExpected);
+            dump("*******ACTUAL*******\n");
+            dump(actual);
+            dump("********************\n");
+            finish();
+          } else {
+            setTimeout(copyPasteAndCheck, 100);
+          }
+        }
+      }
+      copyPasteAndCheck();
+    }
+
+    if (!aFilename2) {
+      function loadAndCheck() {
+        let fileInput1 =
+          frame.contentWindow.document.getElementById("fileInput1");
+        fileInput1.value = filePath;    // this works because it's a chrome test
+
+        fileInput1.dispatchEvent(e);
+        check();
       }
 
-      let fileInput1 =
-        frame.contentWindow.document.getElementById("fileInput1");
-      fileInput1.value = filePath;    // this works because it's a chrome test
-
-      fileInput1.dispatchEvent(e);
+      if (aDumpFirst) {
+        let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
+                        getService(Ci.nsIMemoryInfoDumper);
+        dumper.dumpMemoryReportsToNamedFile(filePath, loadAndCheck, null);
+      } else {
+        loadAndCheck();
+      }
 
     } else {
       let fileInput2 =
@@ -144,42 +183,9 @@
       let e2 = document.createEvent('Event');
       e2.initEvent('change', true, true);
       fileInput2.dispatchEvent(e);
+
+      check();
     }
-
-    // Initialize the clipboard contents.
-    SpecialPowers.clipboardCopyString("initial clipboard value");
-
-    let numFailures = 0, maxFailures = 30;
-
-    // Because the file load is async, we don't know when it will finish and
-    // the output will show up.  So we poll.
-    function copyPasteAndCheck() {
-      // Copy and paste frame contents, and filter out non-deterministic
-      // differences.
-      synthesizeKey("A", {accelKey: true});
-      synthesizeKey("C", {accelKey: true});
-      let actual = SpecialPowers.getClipboardData("text/unicode");
-      actual = actual.replace(/\(pid \d+\)/g, "(pid NNN)");
-
-      if (actual === aExpected) {
-        SimpleTest.ok(true, "Clipboard has the expected contents");
-        aNext();
-      } else {
-        numFailures++;
-        if (numFailures === maxFailures) {
-          ok(false, "pasted text doesn't match");
-          dump("******EXPECTED******\n");
-          dump(aExpected);
-          dump("*******ACTUAL*******\n");
-          dump(actual);
-          dump("********************\n");
-          finish();
-        } else {
-          setTimeout(copyPasteAndCheck, 100);
-        }
-      }
-    }
-    copyPasteAndCheck();
   }
 
   // Returns a function that chains together multiple test() calls.
