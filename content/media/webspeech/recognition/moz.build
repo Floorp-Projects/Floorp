@@ -44,5 +44,8 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkconwebspeechrecognition_s'
 
-include('/ipc/chromium/chromium-config.mozbuild')
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
 
+include('/ipc/chromium/chromium-config.mozbuild')
