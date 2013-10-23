@@ -73,9 +73,9 @@ if CONFIG['MOZ_CRASHREPORTER']:
 
 if CONFIG['NS_PRINTING']:
     CPP_SOURCES += [
+        'nsDeviceContextSpecWin.cpp',
         'nsPrintOptionsWin.cpp',
         'nsPrintSettingsWin.cpp',
-        'nsDeviceContextSpecWin.cpp',
     ]
 
 if CONFIG['NS_ENABLE_TSF']:

@@ -39,8 +39,8 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
         CPP_SOURCES += [
             'GonkBufferQueue.cpp',
             'GonkConsumerBase.cpp',
-            'GonkNativeWindowJB.cpp',
             'GonkNativeWindowClientJB.cpp',
+            'GonkNativeWindowJB.cpp',
         ]
     elif CONFIG['ANDROID_VERSION'] == '15':
         CPP_SOURCES += [

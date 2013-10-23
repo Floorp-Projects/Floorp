@@ -6,9 +6,12 @@
 
 NO_DIST_INSTALL = True
 
+CPP_SOURCES += [ '%s/%s' % (relative_path, p) for p in [
+    'nptest.cpp',
+    'nptest_utils.cpp',
+]]
+
 CPP_SOURCES += [
-    relative_path + '/nptest.cpp',
-    relative_path + '/nptest_utils.cpp',
     'nptest_name.cpp',
 ]
 
