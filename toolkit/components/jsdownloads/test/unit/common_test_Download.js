@@ -1625,9 +1625,10 @@ add_task(function test_platform_integration()
     // temporary directory or in the Downloads directory (such as setting
     // the Windows searchable attribute, and the Mac Downloads icon bouncing),
     // so use the system Downloads directory for the target file.
-    let targetFile = yield DownloadIntegration.getSystemDownloadsDirectory();
-    targetFile = targetFile.clone();
-    targetFile.append("test" + (Math.floor(Math.random() * 1000000)));
+    let targetFilePath = yield DownloadIntegration.getSystemDownloadsDirectory();
+    targetFilePath = OS.Path.join(targetFilePath,
+                                  "test" + (Math.floor(Math.random() * 1000000)));
+    let targetFile = new FileUtils.File(targetFilePath);
     downloadFiles.push(targetFile);
 
     let download;
