@@ -9677,7 +9677,7 @@ IonBuilder::lookupTypedObjectField(MDefinition *typedObj,
                                  fieldTypeReprs, fieldIndex))
         return false;
     if (fieldTypeReprs->empty())
-        return false;
+        return true;
 
     // Field offset must be representable as signed integer.
     if (offset >= size_t(INT_MAX)) {
