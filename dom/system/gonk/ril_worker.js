@@ -9982,6 +9982,15 @@ StkCommandParamsFactory[STK_CMD_TIMER_MANAGEMENT] = function STK_CMD_TIMER_MANAG
 StkCommandParamsFactory[STK_CMD_OPEN_CHANNEL] = function STK_CMD_OPEN_CHANNEL(cmdDetails, ctlvs) {
   return this.processBipMessage(cmdDetails, ctlvs);
 };
+StkCommandParamsFactory[STK_CMD_CLOSE_CHANNEL] = function STK_CMD_CLOSE_CHANNEL(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_RECEIVE_DATA] = function STK_CMD_RECEIVE_DATA(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SEND_DATA] = function STK_CMD_SEND_DATA(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
+};
 
 let StkProactiveCmdHelper = {
   retrieve: function retrieve(tag, length) {
