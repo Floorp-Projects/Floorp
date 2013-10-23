@@ -229,6 +229,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_1(AudioDestinationNode, AudioNode,
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioDestinationNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgentCallback)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
 NS_IMPL_ADDREF_INHERITED(AudioDestinationNode, AudioNode)
@@ -256,9 +257,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
 
   if (!aIsOffline && UseAudioChannelService()) {
-    mAudioChannelAgent = new AudioChannelAgent();
-    mAudioChannelAgent->InitWithWeakCallback(nsIAudioChannelAgent::AUDIO_AGENT_CHANNEL_NORMAL,
-                                             this);
 
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
     if (target) {
@@ -267,6 +265,9 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                      /* wantsUntrusted = */ false);
     }
 
+    mAudioChannelAgent = new AudioChannelAgent();
+    mAudioChannelAgent->InitWithWeakCallback(nsIAudioChannelAgent::AUDIO_AGENT_CHANNEL_NORMAL,
+                                             this);
     nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
     if (docshell) {
       bool isActive = false;
