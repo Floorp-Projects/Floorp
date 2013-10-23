@@ -3917,15 +3917,8 @@ nsDisplayTransform::GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
    * a distance, it's already computed for us!
    */
   const nsStyleDisplay* display = aFrame->StyleDisplay();
-  nsRect boundingRect;
-  if (aBoundsOverride) {
-    boundingRect = *aBoundsOverride;
-  } else if (display->mTransformOrigin[0].GetUnit() != eStyleUnit_Coord ||
-             display->mTransformOrigin[1].GetUnit() != eStyleUnit_Coord) {
-    // GetFrameBoundsForTransform is expensive for SVG frames and we don't need
-    // it if the origin is coords (which it is by default for SVG).
-    boundingRect = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
-  }
+  nsRect boundingRect = (aBoundsOverride ? *aBoundsOverride :
+                         nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
 
   /* Allows us to access named variables by index. */
   float coords[2];
