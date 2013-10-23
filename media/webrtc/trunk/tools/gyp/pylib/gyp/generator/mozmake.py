@@ -39,9 +39,6 @@ EXTERNALLY_MANAGED_MAKE_FILE := 1
 """
 
 COMMON_FOOTER = """
-# Skip rules that deal with regenerating Makefiles from Makefile.in files.
-NO_MAKEFILE_RULE = 1
-NO_SUBMAKEFILES_RULE = 1
 
 include %(common_mk_path)s
 """

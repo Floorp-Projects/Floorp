@@ -350,6 +350,14 @@ VARIABLES = {
         ``AC_SUBST`` variables declared during configure.
         """, None),
 
+    'CONFIGURE_DEFINE_FILES': (StrictOrderingOnAppendList, list, [],
+        """Output files generated from configure/config.status.
+
+        This is a substitute for ``AC_CONFIG_HEADER`` in autoconf. This is very
+        similar to ``CONFIGURE_SUBST_FILES`` except the generation logic takes
+        into account the values of ``AC_DEFINE`` instead of ``AC_SUBST``.
+        """, None),
+
     'MODULE': (unicode, unicode, "",
         """Module name.
 
