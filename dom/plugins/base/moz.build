@@ -33,9 +33,9 @@ EXPORTS += [
     'nsPluginLogging.h',
     'nsPluginNativeWindow.h',
     'nsPluginPlayPreviewInfo.h',
-    'nsPluginTags.h',
     'nsPluginsCID.h',
     'nsPluginsDir.h',
+    'nsPluginTags.h',
 ]
 
 EXPORTS.mozilla += [
@@ -43,7 +43,6 @@ EXPORTS.mozilla += [
 ]
 
 CPP_SOURCES += [
-    'PluginPRLibrary.cpp',
     'nsJSNPRuntime.cpp',
     'nsNPAPIPlugin.cpp',
     'nsNPAPIPluginInstance.cpp',
@@ -54,6 +53,7 @@ CPP_SOURCES += [
     'nsPluginPlayPreviewInfo.cpp',
     'nsPluginStreamListenerPeer.cpp',
     'nsPluginTags.cpp',
+    'PluginPRLibrary.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

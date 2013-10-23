@@ -25,8 +25,8 @@ if CONFIG['NECKO_COOKIES']:
     LIBRARY_NAME = 'neckocookie_s'
 
     EXPORTS.mozilla.net = [
-        'CookieServiceParent.h',
         'CookieServiceChild.h',
+        'CookieServiceParent.h',
     ]
     CPP_SOURCES += [
         'CookieServiceChild.cpp',

@@ -69,13 +69,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
 
 CPP_SOURCES += [
     'CreateAppData.cpp',
-    'ProfileReset.cpp',
     'nsAppRunner.cpp',
     'nsConsoleWriter.cpp',
     'nsEmbedFunctions.cpp',
     'nsNativeAppSupportBase.cpp',
     'nsSigHandlers.cpp',
     'nsXREDirProvider.cpp',
+    'ProfileReset.cpp',
 ]
 
 if CONFIG['MOZ_GL_DEFAULT_PROVIDER'] == 'GLX':

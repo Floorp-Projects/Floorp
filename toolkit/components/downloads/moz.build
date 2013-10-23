@@ -17,8 +17,8 @@ XPIDL_SOURCES += [
 MODULE = 'downloads'
 
 CPP_SOURCES += [
-    'SQLFunctions.cpp',
     'nsDownloadManager.cpp',
+    'SQLFunctions.cpp',
 ]
 
 if CONFIG['MOZ_URL_CLASSIFIER']:

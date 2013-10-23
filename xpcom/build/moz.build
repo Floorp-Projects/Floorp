@@ -17,11 +17,11 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'FileLocation.h',
+    'mozPoisonWrite.h',
     'Omnijar.h',
     'ServiceList.h',
     'Services.h',
     'XPCOM.h',
-    'mozPoisonWrite.h',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -49,10 +49,10 @@ CPP_SOURCES += xpcom_glue_src_cppsrcs
 CPP_SOURCES += [
     'FileLocation.cpp',
     'FrozenFunctions.cpp',
+    'nsXPComInit.cpp',
+    'nsXPCOMStrings.cpp',
     'Omnijar.cpp',
     'Services.cpp',
-    'nsXPCOMStrings.cpp',
-    'nsXPComInit.cpp',
 ]
 
 LIBXUL_LIBRARY = True

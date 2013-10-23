@@ -9,19 +9,19 @@ MODULE = 'gfxtest'
 LIBRARY_NAME = 'gfxtest'
 
 GTEST_CPP_SOURCES += [
+    'gfxSurfaceRefCountTest.cpp',
+    'gfxWordCacheTest.cpp',
     'TestAsyncPanZoomController.cpp',
     'TestBufferRotation.cpp',
     'TestColorNames.cpp',
     'TestLayers.cpp',
     'TestRegion.cpp',
-    'TestTextures.cpp',
-    'TestTiledLayerBuffer.cpp',
     # Hangs on linux in ApplyGdkScreenFontOptions
     #'gfxFontSelectionTest.cpp',
-    'gfxSurfaceRefCountTest.cpp',
+    'TestTextures.cpp',
     # Test works but it doesn't assert anything
     #'gfxTextRunPerfTest.cpp',
-    'gfxWordCacheTest.cpp',
+    'TestTiledLayerBuffer.cpp',
 ]
 
 # Because of gkmedia on windows we wont find these

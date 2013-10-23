@@ -29,6 +29,7 @@ if CONFIG['MOZ_GL_PROVIDER']:
 
 EXPORTS += [
     'ForceDiscreteGPUHelperCGL.h',
+    'GfxTexturesReporter.h',
     'GLConsts.h',
     'GLContext.h',
     'GLContextProvider.h',
@@ -41,7 +42,6 @@ EXPORTS += [
     'GLScreenBuffer.h',
     'GLTextureImage.h',
     'GLTypes.h',
-    'GfxTexturesReporter.h',
     'SharedSurface.h',
     'SharedSurfaceEGL.h',
     'SharedSurfaceGL.h',
@@ -91,6 +91,7 @@ else:
     ]
 
 CPP_SOURCES += [
+    'GfxTexturesReporter.cpp',
     'GLContext.cpp',
     'GLContextFeatures.cpp',
     'GLContextTypes.cpp',
@@ -99,7 +100,6 @@ CPP_SOURCES += [
     'GLLibraryLoader.cpp',
     'GLScreenBuffer.cpp',
     'GLTextureImage.cpp',
-    'GfxTexturesReporter.cpp',
     'SharedSurface.cpp',
     'SharedSurfaceEGL.cpp',
     'SharedSurfaceGL.cpp',

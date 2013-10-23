@@ -35,8 +35,8 @@ if CONFIG['MOZ_PLACES']:
     ]
 
     EXPORTS.mozilla.places = [
-        'History.h',
         'Database.h',
+        'History.h',
     ]
 
     CPP_SOURCES += [
@@ -44,9 +44,6 @@ if CONFIG['MOZ_PLACES']:
         'Database.cpp',
         'Helpers.cpp',
         'History.cpp',
-        'PlaceInfo.cpp',
-        'SQLFunctions.cpp',
-        'VisitInfo.cpp',
         'nsAnnoProtocolHandler.cpp',
         'nsAnnotationService.cpp',
         'nsFaviconService.cpp',
@@ -56,6 +53,9 @@ if CONFIG['MOZ_PLACES']:
         'nsNavHistoryQuery.cpp',
         'nsNavHistoryResult.cpp',
         'nsPlacesModule.cpp',
+        'PlaceInfo.cpp',
+        'SQLFunctions.cpp',
+        'VisitInfo.cpp',
     ]
 
     LOCAL_INCLUDES += [
@@ -78,10 +78,10 @@ if CONFIG['MOZ_PLACES']:
 
     EXTRA_COMPONENTS += [
         'ColorAnalyzer.js',
-        'PlacesCategoriesStarter.js',
         'nsLivemarkService.js',
         'nsPlacesExpiration.js',
         'nsTaggingService.js',
+        'PlacesCategoriesStarter.js',
         'toolkitplaces.manifest',
     ]
     if CONFIG['MOZ_XUL']:

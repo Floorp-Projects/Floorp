@@ -17,7 +17,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 CPP_SOURCES += [
-    'XBLChildrenElement.cpp',
     'nsBindingManager.cpp',
     'nsXBLBinding.cpp',
     'nsXBLContentSink.cpp',
@@ -34,6 +33,7 @@ CPP_SOURCES += [
     'nsXBLSerialize.cpp',
     'nsXBLService.cpp',
     'nsXBLWindowKeyHandler.cpp',
+    'XBLChildrenElement.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
