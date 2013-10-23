@@ -868,6 +868,45 @@ static const JSFunctionSpec array_iterator_methods[] = {
     JS_FS_END
 };
 
+static const Class StringIteratorPrototypeClass = {
+    "String Iterator",
+    JSCLASS_IMPLEMENTS_BARRIERS,
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr                  /* finalize    */
+};
+
+enum {
+    StringIteratorSlotIteratedObject,
+    StringIteratorSlotNextIndex,
+    StringIteratorSlotCount
+};
+
+const Class StringIteratorObject::class_ = {
+    "String Iterator",
+    JSCLASS_IMPLEMENTS_BARRIERS |
+    JSCLASS_HAS_RESERVED_SLOTS(StringIteratorSlotCount),
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr                  /* finalize    */
+};
+
+static const JSFunctionSpec string_iterator_methods[] = {
+    JS_SELF_HOSTED_FN("@@iterator", "StringIteratorIdentity", 0, 0),
+    JS_SELF_HOSTED_FN("next", "StringIteratorNext", 0, 0),
+    JS_FS_END
+};
+
 static bool
 CloseLegacyGenerator(JSContext *cx, HandleObject genobj);
 
@@ -1851,6 +1890,14 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, array_iterator_methods))
             return false;
         global->setReservedSlot(ARRAY_ITERATOR_PROTO, ObjectValue(*proto));
+    }
+
+    if (global->getSlot(STRING_ITERATOR_PROTO).isUndefined()) {
+        const Class *cls = &StringIteratorPrototypeClass;
+        proto = global->createBlankPrototype(cx, cls);
+        if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, string_iterator_methods))
+            return false;
+        global->setReservedSlot(STRING_ITERATOR_PROTO, ObjectValue(*proto));
     }
 
     if (global->getSlot(LEGACY_GENERATOR_OBJECT_PROTO).isUndefined()) {

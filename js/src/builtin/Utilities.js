@@ -64,6 +64,7 @@ var std_Object_getOwnPropertyNames = Object.getOwnPropertyNames;
 var std_Object_hasOwnProperty = Object.prototype.hasOwnProperty;
 var std_RegExp_test = RegExp.prototype.test;
 var Std_String = String;
+var std_String_charCodeAt = String.prototype.charCodeAt;
 var std_String_indexOf = String.prototype.indexOf;
 var std_String_lastIndexOf = String.prototype.lastIndexOf;
 var std_String_match = String.prototype.match;
