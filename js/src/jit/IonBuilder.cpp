@@ -4525,20 +4525,9 @@ IonBuilder::inlineCalls(CallInfo &callInfo, ObjectVector &targets,
 MInstruction *
 IonBuilder::createDeclEnvObject(MDefinition *callee, MDefinition *scope)
 {
-    // Create a template CallObject that we'll use to generate inline object
-    // creation. Even though this template will get discarded at the end of
-    // compilation, it is used by the background compilation thread and thus
-    // cannot use the Nursery.
-
-    RootedFunction fun(cx, info().fun());
-    RootedObject templateObj(cx, DeclEnvObject::createTemplateObject(cx, fun, gc::TenuredHeap));
-    if (!templateObj)
-        return nullptr;
-
-    // Add dummy values on the slot of the template object such as we do not try
-    // mark uninitialized values.
-    templateObj->setFixedSlot(DeclEnvObject::enclosingScopeSlot(), MagicValue(JS_GENERIC_MAGIC));
-    templateObj->setFixedSlot(DeclEnvObject::lambdaSlot(), MagicValue(JS_GENERIC_MAGIC));
+    // Get a template CallObject that we'll use to generate inline object
+    // creation.
+    DeclEnvObject *templateObj = inspector->templateDeclEnvObject();
 
     // One field is added to the function to handle its name.  This cannot be a
     // dynamic slot because there is still plenty of room on the DeclEnv object.
@@ -4563,15 +4552,9 @@ IonBuilder::createDeclEnvObject(MDefinition *callee, MDefinition *scope)
 MInstruction *
 IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
 {
-    // Create a template CallObject that we'll use to generate inline object
-    // creation. Even though this template will get discarded at the end of
-    // compilation, it is used by the background compilation thread and thus
-    // cannot use the Nursery.
-
-    RootedScript scriptRoot(cx, script());
-    RootedObject templateObj(cx, CallObject::createTemplateObject(cx, scriptRoot, gc::TenuredHeap));
-    if (!templateObj)
-        return nullptr;
+    // Get a template CallObject that we'll use to generate inline object
+    // creation.
+    CallObject *templateObj = inspector->templateCallObject();
 
     // If the CallObject needs dynamic slots, allocate those now.
     MInstruction *slots;
@@ -4631,11 +4614,11 @@ IonBuilder::createThisScripted(MDefinition *callee)
     //       and thus invalidation.
     MInstruction *getProto;
     if (!invalidatedIdempotentCache()) {
-        MGetPropertyCache *getPropCache = MGetPropertyCache::New(callee, cx->names().prototype);
+        MGetPropertyCache *getPropCache = MGetPropertyCache::New(callee, names().prototype);
         getPropCache->setIdempotent();
         getProto = getPropCache;
     } else {
-        MCallGetProperty *callGetProp = MCallGetProperty::New(callee, cx->names().prototype,
+        MCallGetProperty *callGetProp = MCallGetProperty::New(callee, names().prototype,
                                                               /* callprop = */ false);
         callGetProp->setIdempotent();
         getProto = callGetProp;
@@ -4658,7 +4641,7 @@ IonBuilder::getSingletonPrototype(JSFunction *target)
     if (targetType->unknownProperties())
         return nullptr;
 
-    jsid protoid = NameToId(cx->names().prototype);
+    jsid protoid = NameToId(names().prototype);
     types::HeapTypeSetKey protoProperty = targetType->property(protoid);
 
     return protoProperty.singleton(constraints());
@@ -6216,12 +6199,12 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
 
     if (staticObject->is<GlobalObject>()) {
         // Optimize undefined, NaN, and Infinity.
-        if (name == cx->names().undefined)
+        if (name == names().undefined)
             return pushConstant(UndefinedValue());
-        if (name == cx->names().NaN)
-            return pushConstant(cx->runtime()->NaNValue);
-        if (name == cx->names().Infinity)
-            return pushConstant(cx->runtime()->positiveInfinityValue);
+        if (name == names().NaN)
+            return pushConstant(compartment->runtimeFromAnyThread()->NaNValue);
+        if (name == names().Infinity)
+            return pushConstant(compartment->runtimeFromAnyThread()->positiveInfinityValue);
     }
 
     // For the fastest path, the property must be found, and it must be found
@@ -9448,7 +9431,7 @@ IonBuilder::jsop_instanceof()
             break;
 
         types::HeapTypeSetKey protoProperty =
-            rhsType->property(NameToId(cx->names().prototype));
+            rhsType->property(NameToId(names().prototype));
         JSObject *protoObject = protoProperty.singleton(constraints());
         if (!protoObject)
             break;
