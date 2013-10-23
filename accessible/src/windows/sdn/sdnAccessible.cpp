@@ -516,8 +516,8 @@ sdnAccessible::get_language(BSTR __RPC_FAR* aLanguage)
     return CO_E_OBJNOTCONNECTED;
 
   nsAutoString language;
-  if (mNode->IsElement())
-    nsCoreUtils::GetLanguageFor(mNode->AsElement(), nullptr, language);
+  if (mNode->IsContent())
+    nsCoreUtils::GetLanguageFor(mNode->AsContent(), nullptr, language);
   if (language.IsEmpty()) { // Nothing found, so use document's language
     mNode->OwnerDoc()->GetHeaderData(nsGkAtoms::headerContentLanguage,
                                      language);
