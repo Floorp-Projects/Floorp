@@ -246,8 +246,10 @@ public:
                       TrackTicks* aCurrentPosition,
                       TrackTicks aMaxPos)
   {
-    uint32_t numFrames = std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
-                                  uint32_t(aMaxPos - *aCurrentPosition));
+    MOZ_ASSERT(*aCurrentPosition < aMaxPos);
+    uint32_t numFrames =
+      std::min<TrackTicks>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+                           aMaxPos - *aCurrentPosition);
     if (numFrames == WEBAUDIO_BLOCK_SIZE) {
       aOutput->SetNull(numFrames);
     } else {
@@ -277,9 +279,11 @@ public:
                       uint32_t aBufferOffset,
                       uint32_t aBufferMax)
   {
-    uint32_t numFrames = std::min(std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
-                                           aBufferMax - aBufferOffset),
-                                  uint32_t(mStop - *aCurrentPosition));
+    MOZ_ASSERT(*aCurrentPosition < mStop);
+    uint32_t numFrames =
+      std::min<TrackTicks>(std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+                                    aBufferMax - aBufferOffset),
+                           mStop - *aCurrentPosition);
     if (numFrames == WEBAUDIO_BLOCK_SIZE && !ShouldResample(aStream->SampleRate())) {
       BorrowFromInputBuffer(aOutput, aChannels, aBufferOffset);
       *aOffsetWithinBlock += numFrames;

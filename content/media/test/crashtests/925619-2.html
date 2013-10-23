@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+var context = new window.OfflineAudioContext(1, 2048, 48000);
+// 1024 > 89478.5 * 48000 - (1 << 32)
+var buffer = context.createBuffer(1, 1024, context.sampleRate);
+var source = context.createBufferSource();
+source.buffer = buffer;
+source.onended = function(e) {
+  document.documentElement.removeAttribute("class");
+};
+source.start(0);
+source.stop(89478.5); // 89478.5 is a little greater than 2^32 / 48000.
+context.startRendering();
+</script>
