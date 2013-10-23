@@ -44,7 +44,7 @@ load_gstreamer()
     return true;
   }
 
-  void *gstreamerLib = NULL;
+  void *gstreamerLib = nullptr;
   guint major = 0;
   guint minor = 0;
   guint micro, nano;

@@ -34,7 +34,7 @@
 using namespace MPAPI;
 
 Decoder::Decoder() :
-  mResource(NULL), mPrivate(NULL)
+  mResource(nullptr), mPrivate(nullptr)
 {
 }
 
@@ -199,7 +199,7 @@ MediaPluginHost::MediaPluginHost() {
   ALOG("Loading OMX Plugin: %s", name ? name : "nullptr");
   if (name) {
     char *path = PR_GetLibraryFilePathname("libxul.so", (PRFuncPtr) GetOmxLibraryName);
-    PRLibrary *lib = NULL;
+    PRLibrary *lib = nullptr;
     if (path) {
       nsAutoCString libpath(path);
       PR_Free(path);

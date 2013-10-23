@@ -22,12 +22,12 @@ MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder,
                                      const nsACString& aContentType) :
   MediaDecoderReader(aDecoder),
   mType(aContentType),
-  mPlugin(NULL),
+  mPlugin(nullptr),
   mHasAudio(false),
   mHasVideo(false),
   mVideoSeekTimeUs(-1),
   mAudioSeekTimeUs(-1),
-  mLastVideoFrame(NULL)
+  mLastVideoFrame(nullptr)
 {
 }
 
@@ -105,11 +105,11 @@ nsresult MediaPluginReader::ResetDecode()
 {
   if (mLastVideoFrame) {
     delete mLastVideoFrame;
-    mLastVideoFrame = NULL;
+    mLastVideoFrame = nullptr;
   }
   if (mPlugin) {
     GetMediaPluginHost()->DestroyDecoder(mPlugin);
-    mPlugin = NULL;
+    mPlugin = nullptr;
   }
 
   return NS_OK;
@@ -126,7 +126,7 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
   // Throw away the currently buffered frame if we are seeking.
   if (mLastVideoFrame && mVideoSeekTimeUs != -1) {
     delete mLastVideoFrame;
-    mLastVideoFrame = NULL;
+    mLastVideoFrame = nullptr;
   }
 
   ImageBufferCallback bufferCallback(mDecoder->GetImageContainer());
@@ -146,7 +146,7 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                   ? durationUs
                                   : mLastVideoFrame->mTime;
         mVideoQueue.Push(mLastVideoFrame);
-        mLastVideoFrame = NULL;
+        mLastVideoFrame = nullptr;
       }
       return false;
     }
@@ -266,7 +266,7 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
     // in which case it wouldn't be displayed anyway.
     if (mLastVideoFrame->mEndTime < aTimeThreshold) {
       delete mLastVideoFrame;
-      mLastVideoFrame = NULL;
+      mLastVideoFrame = nullptr;
       continue;
     }
 

@@ -199,7 +199,7 @@ void GStreamerReader::PlayBinSourceSetupCb(GstElement* aPlayBin,
   GstElement *source;
   GStreamerReader* reader = reinterpret_cast<GStreamerReader*>(aUserData);
 
-  g_object_get(aPlayBin, "source", &source, NULL);
+  g_object_get(aPlayBin, "source", &source, nullptr);
   reader->PlayBinSourceSetup(GST_APP_SRC(source));
 }
 
