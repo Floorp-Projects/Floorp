@@ -25,7 +25,7 @@ HTTP(..) load ligature-with-space-1.html
 fails-if(cocoaWidget||winWidget) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
 skip-if(B2G) == long-1.html long-ref.html
-== pre-line-1.html pre-line-1-ref.html
+fuzzy-if(Android,255,42) == pre-line-1.html pre-line-1-ref.html
 == pre-line-2.html pre-line-2-ref.html
 == pre-line-3.html pre-line-3-ref.html
 == pre-line-4.html pre-line-4-ref.html
