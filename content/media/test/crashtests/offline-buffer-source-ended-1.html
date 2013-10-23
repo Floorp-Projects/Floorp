@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+// Currently this test fails unless an extra block is processed after the
+// BufferSource finishes. 12033 ≡ 1 (mod 128), but the test should pass even
+// when only 12001 samples are processed.
+var context = new window.OfflineAudioContext(1, 12033, 12000);
+
+var source = context.createBufferSource();
+source.buffer = context.createBuffer(1, 12000, context.sampleRate);
+source.onended = function(e) {
+  document.documentElement.removeAttribute("class");
+}
+source.connect(context.destination);
+source.start(0);
+
+context.startRendering();
+</script>
