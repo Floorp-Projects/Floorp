@@ -146,8 +146,7 @@ class ArrayBufferObject : public JSObject
     static bool stealContents(JSContext *cx, JSObject *obj, void **contents,
                               uint8_t **data);
 
-    static void setElementsHeader(js::ObjectElements *header, uint32_t bytes) {
-        header->flags = 0;
+    static void updateElementsHeader(js::ObjectElements *header, uint32_t bytes) {
         header->initializedLength = bytes;
 
         // NB: one or both of these fields is clobbered by GetViewList to store
@@ -157,6 +156,11 @@ class ArrayBufferObject : public JSObject
         header->capacity = 0;
     }
 
+    static void initElementsHeader(js::ObjectElements *header, uint32_t bytes) {
+        header->flags = 0;
+        updateElementsHeader(header, bytes);
+    }
+
     static uint32_t headerInitializedLength(const js::ObjectElements *header) {
         return header->initializedLength;
     }
@@ -164,21 +168,47 @@ class ArrayBufferObject : public JSObject
     void addView(ArrayBufferViewObject *view);
 
     bool allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = nullptr);
+
     void changeContents(JSContext *cx, ObjectElements *newHeader);
 
     /*
-     * Ensure that the data is not stored inline. Used when handing back a
+     * Copy the data into freshly-allocated memory. Used when un-inlining or
+     * when converting an ArrayBuffer to an AsmJS (MMU-assisted) ArrayBuffer.
+     */
+    bool copyData(JSContext *maybecx);
+
+    /*
+     * Ensure data is not stored inline in the object. Used when handing back a
      * GC-safe pointer.
      */
-    bool uninlineData(JSContext *cx);
+    bool ensureNonInline(JSContext *maybecx);
 
     uint32_t byteLength() const {
         return getElementsHeader()->initializedLength;
     }
 
+    /*
+     * Return the contents of an ArrayBuffer without modifying the ArrayBuffer
+     * itself. Set *callerOwns to true if the caller has the only pointer to
+     * the returned contents (which is the case for inline or asm.js buffers),
+     * and false if the ArrayBuffer still owns the pointer.
+     */
+    ObjectElements *getTransferableContents(JSContext *maybecx, bool *callerOwns);
+
+    /*
+     * Neuter all views of an ArrayBuffer.
+     */
+    void neuterViews(JSContext *maybecx);
+
     inline uint8_t * dataPointer() const {
         return (uint8_t *) elements;
     }
+
+    /*
+     * Discard the ArrayBuffer contents. For asm.js buffers, at least, should
+     * be called after neuterViews().
+     */
+    void neuter(JSContext *maybecx);
 
     /*
      * Check if the arrayBuffer contains any data. This will return false for
@@ -521,6 +551,7 @@ class DataViewObject : public ArrayBufferViewObject
     static bool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
 
     static JSObject *initClass(JSContext *cx);
+    static void neuter(JSObject *view);
     static bool getDataPointer(JSContext *cx, Handle<DataViewObject*> obj,
                                CallArgs args, size_t typeSize, uint8_t **data);
     template<typename NativeType>

@@ -38,6 +38,7 @@
 #include "nsThreadUtils.h"
 #include "nsRadioInterfaceLayer.h"
 #include "WifiWorker.h"
+#include "mozilla/Services.h"
 
 USING_WORKERS_NAMESPACE
 
@@ -353,8 +354,7 @@ SystemWorkerManager::Init()
     do_GetService(NS_AUDIOMANAGER_CONTRACTID);
 #endif
 
-  nsCOMPtr<nsIObserverService> obs =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs) {
     NS_WARNING("Failed to get observer service!");
     return NS_ERROR_FAILURE;
@@ -399,8 +399,7 @@ SystemWorkerManager::Shutdown()
   }
   mWifiWorker = nullptr;
 
-  nsCOMPtr<nsIObserverService> obs =
-    do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->RemoveObserver(this, WORKERS_SHUTDOWN_TOPIC);
   }

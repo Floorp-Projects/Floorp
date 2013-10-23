@@ -269,7 +269,8 @@ private:
         OP_INT3                         = 0xCC,
         OP_GROUP2_Ev1                   = 0xD1,
         OP_GROUP2_EvCL                  = 0xD3,
-	OP_FPU6				= 0xDD,
+        OP_FPU6                         = 0xDD,
+        OP_FLD32                        = 0xD9,
         OP_CALL_rel32                   = 0xE8,
         OP_JMP_rel32                    = 0xE9,
         PRE_SSE_F2                      = 0xF2,
@@ -300,6 +301,7 @@ private:
         OP2_DIVSD_VsdWsd    = 0x5E,
         OP2_MAXSD_VsdWsd    = 0x5F,
         OP2_SQRTSD_VsdWsd   = 0x51,
+        OP2_SQRTSS_VssWss   = 0x51,
         OP2_ANDPD_VpdWpd    = 0x54,
         OP2_ORPD_VpdWpd     = 0x56,
         OP2_XORPD_VpdWpd    = 0x57,
@@ -722,6 +724,11 @@ public:
     {
         spew("fld        %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FLD, base, offset);
+    }
+    void fld32_m(int offset, RegisterID base)
+    {
+        spew("fld        %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp(OP_FLD32, FPU6_OP_FLD, base, offset);
     }
     void fisttp_m(int offset, RegisterID base)
     {
@@ -2345,6 +2352,13 @@ public:
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp64(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
     }
+    void cvtsq2ss_rr(RegisterID src, XMMRegisterID dst)
+    {
+        spew("cvtsq2ss   %s, %s",
+             nameIReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp64(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
+    }
 #endif
 
     void cvtsi2sd_mr(int offset, RegisterID base, XMMRegisterID dst)
@@ -2408,12 +2422,17 @@ public:
 #if WTF_CPU_X86_64
     void cvttsd2sq_rr(XMMRegisterID src, RegisterID dst)
     {
-        // We call this instruction cvttsd2sq to differentiate the 64-bit
-        // version from the 32-bit version, but in assembler it's just
-        // called cvttsd2si and it's disambiguated by the register name.
         spew("cvttsd2si  %s, %s",
              nameFPReg(src), nameIReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
+        m_formatter.twoByteOp64(OP2_CVTTSD2SI_GdWsd, dst, (RegisterID)src);
+    }
+
+    void cvttss2sq_rr(XMMRegisterID src, RegisterID dst)
+    {
+        spew("cvttss2si  %s, %s",
+             nameFPReg(src), nameIReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
         m_formatter.twoByteOp64(OP2_CVTTSD2SI_GdWsd, dst, (RegisterID)src);
     }
 #endif
@@ -2887,12 +2906,27 @@ public:
         m_formatter.twoByteOp(OP2_ANDPD_VpdWpd, (RegisterID)dst, (RegisterID)src);
     }
 
+    void andps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("andps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_ANDPD_VpdWpd, (RegisterID)dst, (RegisterID)src);
+    }
+
     void sqrtsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
         spew("sqrtsd     %s, %s",
              nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_SQRTSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void sqrtss_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("sqrtss     %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_SQRTSS_VssWss, (RegisterID)dst, (RegisterID)src);
     }
 
     void roundsd_rr(XMMRegisterID src, XMMRegisterID dst, RoundingMode mode)

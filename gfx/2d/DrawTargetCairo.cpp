@@ -512,13 +512,10 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
 
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
-  double clipX1, clipY1, clipX2, clipY2;
-  cairo_clip_extents(mContext, &clipX1, &clipY1, &clipX2, &clipY2);
-  Rect clip(clipX1, clipY1, clipX2 - clipX1, clipY2 - clipY1); // Narrowing of doubles to floats
   // If the destination rect covers the entire clipped area, then unbounded and bounded
   // operations are identical, and we don't need to push a group.
   bool needsGroup = !IsOperatorBoundByMask(aOptions.mCompositionOp) &&
-                    !aDest.Contains(clip);
+                    !aDest.Contains(GetUserSpaceClip());
 
   cairo_translate(mContext, aDest.X(), aDest.Y());
 
@@ -638,8 +635,6 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
       (!IsOperatorBoundByMask(aOptions.mCompositionOp) && !aPathBoundsClip)) {
     cairo_push_group_with_content(mContext, CAIRO_CONTENT_COLOR_ALPHA);
 
-    ClearSurfaceForUnboundedSource(aOptions.mCompositionOp);
-
     // Don't want operators to be applied twice
     cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
 
@@ -656,7 +651,6 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
     cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
     cairo_paint_with_alpha(mContext, aOptions.mAlpha);
   } else {
-    ClearSurfaceForUnboundedSource(aOptions.mCompositionOp);
     cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
 
     if (aDrawType == DRAW_STROKE) {
@@ -682,13 +676,7 @@ DrawTargetCairo::FillRect(const Rect &aRect,
 
   bool pathBoundsClip = false;
 
-  double cexts[4];
-  cairo_clip_extents(mContext, &cexts[0], &cexts[1], &cexts[2], &cexts[3]);
-  Rect clipRect(cexts[0], cexts[1], cexts[2] - cexts[0], cexts[3] - cexts[1]);
-  double pexts[4];
-  cairo_path_extents(mContext, &pexts[0], &pexts[1], &pexts[2], &pexts[3]);
-  Rect pathRect(pexts[0], pexts[1], pexts[2] - pexts[0], pexts[3] - pexts[1]);
-  if (pathRect.Contains(clipRect)) {
+  if (aRect.Contains(GetUserSpaceClip())) {
     pathBoundsClip = true;
   }
 
@@ -1190,6 +1178,14 @@ DrawTargetCairo::SetTransform(const Matrix& aTransform)
   cairo_matrix_t mat;
   GfxMatrixToCairoMatrix(mTransform, mat);
   cairo_set_matrix(mContext, &mat);
+}
+
+Rect
+DrawTargetCairo::GetUserSpaceClip()
+{
+  double clipX1, clipY1, clipX2, clipY2;
+  cairo_clip_extents(mContext, &clipX1, &clipY1, &clipX2, &clipY2);
+  return Rect(clipX1, clipY1, clipX2 - clipX1, clipY2 - clipY1); // Narrowing of doubles to floats
 }
 
 cairo_t*

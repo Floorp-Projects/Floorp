@@ -340,11 +340,29 @@ CodeGeneratorARM::visitAbsD(LAbsD *ins)
 }
 
 bool
+CodeGeneratorARM::visitAbsF(LAbsF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    masm.ma_vabs_f32(input, input);
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
     masm.ma_vsqrt(input, output);
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitSqrtF(LSqrtF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.ma_vsqrt_f32(input, output);
     return true;
 }
 
@@ -1213,6 +1231,12 @@ CodeGeneratorARM::visitTruncateDToInt32(LTruncateDToInt32 *ins)
     return emitTruncateDouble(ToFloatRegister(ins->input()), ToRegister(ins->output()));
 }
 
+bool
+CodeGeneratorARM::visitTruncateFToInt32(LTruncateFToInt32 *ins)
+{
+    return emitTruncateFloat32(ToFloatRegister(ins->input()), ToRegister(ins->output()));
+}
+
 static const uint32_t FrameSizes[] = { 128, 256, 512, 1024 };
 
 FrameSizeClass
@@ -1271,18 +1295,6 @@ CodeGeneratorARM::visitValue(LValue *value)
     const ValueOperand out = ToOutValue(value);
 
     masm.moveValue(value->value(), out);
-    return true;
-}
-
-bool
-CodeGeneratorARM::visitOsrValue(LOsrValue *value)
-{
-    const LAllocation *frame   = value->getOperand(0);
-    const ValueOperand out     = ToOutValue(value);
-
-    const ptrdiff_t frameOffset = value->mir()->frameOffset();
-
-    masm.loadValue(Address(ToRegister(frame), frameOffset), out);
     return true;
 }
 
@@ -1379,6 +1391,25 @@ CodeGeneratorARM::visitTestDAndBranch(LTestDAndBranch *test)
 }
 
 bool
+CodeGeneratorARM::visitTestFAndBranch(LTestFAndBranch *test)
+{
+    const LAllocation *opd = test->input();
+    masm.ma_vcmpz_f32(ToFloatRegister(opd));
+    masm.as_vmrs(pc);
+
+    MBasicBlock *ifTrue = test->ifTrue();
+    MBasicBlock *ifFalse = test->ifFalse();
+    // If the compare set the  0 bit, then the result
+    // is definately false.
+    jumpToBlock(ifFalse, Assembler::Zero);
+    // it is also false if one of the operands is NAN, which is
+    // shown as Overflow.
+    jumpToBlock(ifFalse, Assembler::Overflow);
+    jumpToBlock(ifTrue);
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitCompareD(LCompareD *comp)
 {
     FloatRegister lhs = ToFloatRegister(comp->left());
@@ -1391,6 +1422,18 @@ CodeGeneratorARM::visitCompareD(LCompareD *comp)
 }
 
 bool
+CodeGeneratorARM::visitCompareF(LCompareF *comp)
+{
+    FloatRegister lhs = ToFloatRegister(comp->left());
+    FloatRegister rhs = ToFloatRegister(comp->right());
+
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
+    masm.compareFloat(lhs, rhs);
+    masm.emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()));
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
 {
     FloatRegister lhs = ToFloatRegister(comp->left());
@@ -1398,6 +1441,18 @@ CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
 
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
     masm.compareDouble(lhs, rhs);
+    emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse());
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitCompareFAndBranch(LCompareFAndBranch *comp)
+{
+    FloatRegister lhs = ToFloatRegister(comp->left());
+    FloatRegister rhs = ToFloatRegister(comp->right());
+
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
+    masm.compareFloat(lhs, rhs);
     emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse());
     return true;
 }
@@ -1515,9 +1570,16 @@ CodeGeneratorARM::visitBitAndAndBranch(LBitAndAndBranch *baab)
 }
 
 bool
-CodeGeneratorARM::visitUInt32ToDouble(LUInt32ToDouble *lir)
+CodeGeneratorARM::visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir)
 {
     masm.convertUInt32ToDouble(ToRegister(lir->input()), ToFloatRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir)
+{
+    masm.convertUInt32ToFloat32(ToRegister(lir->input()), ToFloatRegister(lir->output()));
     return true;
 }
 
@@ -1542,6 +1604,44 @@ CodeGeneratorARM::visitNotD(LNotD *ins)
 
     // Do the compare
     masm.ma_vcmpz(opd);
+    // TODO There are three variations here to compare performance-wise.
+    bool nocond = true;
+    if (nocond) {
+        // Load the value into the dest register
+        masm.as_vmrs(dest);
+        masm.ma_lsr(Imm32(28), dest, dest);
+        masm.ma_alu(dest, lsr(dest, 2), dest, op_orr); // 28 + 2 = 30
+        masm.ma_and(Imm32(1), dest);
+    } else {
+        masm.as_vmrs(pc);
+        masm.ma_mov(Imm32(0), dest);
+        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::Equal);
+        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::Overflow);
+#if 0
+        masm.as_vmrs(ToRegister(dest));
+        // Mask out just the two bits we care about.  If neither bit is set,
+        // the dest is already zero
+        masm.ma_and(Imm32(0x50000000), dest, dest, Assembler::SetCond);
+        // If it is non-zero, then force it to be 1.
+        masm.ma_mov(Imm32(1), dest, NoSetCond, Assembler::NotEqual);
+#endif
+    }
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitNotF(LNotF *ins)
+{
+    // Since this operation is not, we want to set a bit if
+    // the double is falsey, which means 0.0, -0.0 or NaN.
+    // when comparing with 0, an input of 0 will set the Z bit (30)
+    // and NaN will set the V bit (28) of the APSR.
+    FloatRegister opd = ToFloatRegister(ins->input());
+    Register dest = ToRegister(ins->output());
+
+    // Do the compare
+    masm.ma_vcmpz_f32(opd);
+    // TODO There are three variations here to compare performance-wise.
     bool nocond = true;
     if (nocond) {
         // Load the value into the dest register
