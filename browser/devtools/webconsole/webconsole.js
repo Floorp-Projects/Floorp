@@ -873,7 +873,7 @@ WebConsoleFrame.prototype = {
       let node = nodes[i];
 
       // hide nodes that match the strings
-      let text = node.clipboardText;
+      let text = node.textContent;
 
       // if the text matches the words in aSearchString...
       if (this.stringMatchesFilters(text, searchString)) {
