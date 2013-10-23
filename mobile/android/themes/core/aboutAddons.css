@@ -2,15 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.inner {
-  background-color: #eef2f5;
-  min-height: 3.8em;
-  padding: 0.5em;
-
-  /* make room for the favicon */
-  -moz-margin-start: 4.5em;
-}
-
 .details {
   width: 100%;
 }
@@ -31,14 +22,6 @@
   /* compensate for the title baseline */
   position: relative;
   bottom: -3px;
-}
-
-#browse-title {
-  margin-top: 1em;
-  background-image: url("chrome://browser/skin/images/chevron.png");
-  background-size: 8px 20px;
-  background-position: right;
-  background-repeat: no-repeat;
 }
 
 #header-button {
