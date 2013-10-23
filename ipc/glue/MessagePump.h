@@ -76,6 +76,19 @@ private:
   bool mFirstRun;
 };
 
+class MessagePumpForNonMainThreads MOZ_FINAL : public MessagePump
+{
+public:
+  MessagePumpForNonMainThreads()
+  { }
+
+  virtual void Run(base::MessagePump::Delegate* aDelegate) MOZ_OVERRIDE;
+
+private:
+  ~MessagePumpForNonMainThreads()
+  { }
+};
+
 } /* namespace ipc */
 } /* namespace mozilla */
 
