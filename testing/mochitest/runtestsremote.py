@@ -615,10 +615,9 @@ def main():
         if not os.path.exists(fennec_ids) and options.robocopIds:
             fennec_ids = options.robocopIds
         dm.pushFile(fennec_ids, os.path.join(deviceRoot, "fennec_ids.txt"))
-        options.extraPrefs.append('robocop.logfile="%s/robocop.log"' % deviceRoot)
         options.extraPrefs.append('browser.search.suggest.enabled=true')
         options.extraPrefs.append('browser.search.suggest.prompted=true')
-        options.extraPrefs.append('layout.css.devPixelsPerPx="1.0"')
+        options.extraPrefs.append('layout.css.devPixelsPerPx=1.0')
         options.extraPrefs.append('browser.chrome.dynamictoolbar=false')
 
         if (options.dm_trans == 'adb' and options.robocopApk):
