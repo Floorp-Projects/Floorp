@@ -48,13 +48,13 @@ public:
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTP Frames to the VoiceEngine for decoding
    */
- virtual MediaConduitErrorCode ReceivedRTPPacket(const void *data, int len);
+  virtual MediaConduitErrorCode ReceivedRTPPacket(const void *data, int len);
 
   /**
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTCP Frames to the VoiceEngine for decoding
    */
- virtual MediaConduitErrorCode ReceivedRTCPPacket(const void *data, int len);
+  virtual MediaConduitErrorCode ReceivedRTCPPacket(const void *data, int len);
 
   /**
    * Function to configure send codec for the audio session
@@ -64,8 +64,7 @@ public:
    * NOTE: This API can be invoked multiple time. Invoking this API may involve restarting
    *        transmission sub-system on the engine.
    */
- virtual MediaConduitErrorCode ConfigureSendMediaCodec(
-                               const AudioCodecConfig* codecConfig);
+  virtual MediaConduitErrorCode ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig);
   /**
    * Function to configure list of receive codecs for the audio session
    * @param sendSessionConfig: CodecConfiguration
@@ -75,15 +74,14 @@ public:
    * NOTE: This API can be invoked multiple time. Invoking this API may involve restarting
    *        transmission sub-system on the engine.
    */
- virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
-                               const std::vector<AudioCodecConfig* >& codecConfigList);
+  virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
+    const std::vector<AudioCodecConfig* >& codecConfigList);
 
   /**
-   * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEnigne
+   * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEngine
    * shall be passed to the registered transport for transporting externally.
    */
- virtual MediaConduitErrorCode AttachTransport(
-                               mozilla::RefPtr<TransportInterface> aTransport);
+  virtual MediaConduitErrorCode AttachTransport(mozilla::RefPtr<TransportInterface> aTransport);
 
   /**
    * Function to deliver externally captured audio sample for encoding and transport
@@ -101,10 +99,10 @@ public:
    *       This ensures the inserted audio-samples can be transmitted by the conduit
    *
    */
- virtual MediaConduitErrorCode SendAudioFrame(const int16_t speechData[],
-                                              int32_t lengthSamples,
-                                              int32_t samplingFreqHz,
-                                              int32_t capture_time);
+  virtual MediaConduitErrorCode SendAudioFrame(const int16_t speechData[],
+                                               int32_t lengthSamples,
+                                               int32_t samplingFreqHz,
+                                               int32_t capture_time);
 
   /**
    * Function to grab a decoded audio-sample from the media engine for rendering
@@ -143,14 +141,14 @@ public:
 
 
   WebrtcAudioConduit():
-                      mOtherDirection(NULL),
+                      mOtherDirection(nullptr),
                       mShutDown(false),
-                      mVoiceEngine(NULL),
-                      mTransport(NULL),
+                      mVoiceEngine(nullptr),
+                      mTransport(nullptr),
                       mEngineTransmitting(false),
                       mEngineReceiving(false),
                       mChannel(-1),
-                      mCurSendCodecConfig(NULL),
+                      mCurSendCodecConfig(nullptr),
                       mCaptureDelay(150),
                       mEchoOn(true),
                       mEchoCancel(webrtc::kEcAec)
@@ -195,6 +193,9 @@ private:
   //Utility function to dump recv codec database
   void DumpCodecDB() const;
 
+  // The two sides of a send/receive pair of conduits each keep a pointer to the other.
+  // The also share a single VoiceEngine and mChannel.  Shutdown must be coordinated
+  // carefully to avoid double-freeing or accessing after one frees.
   WebrtcAudioConduit*  mOtherDirection;
   // Other side has shut down our channel and related items already
   bool mShutDown;
