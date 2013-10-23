@@ -861,10 +861,9 @@ FilterView.prototype = {
    */
   _performLineSearch: function(aLine) {
     // Make sure we're actually searching for a valid line.
-    if (!aLine) {
-      return;
+    if (aLine) {
+      DebuggerView.editor.setCursor({ line: aLine - 1, ch: 0 });
     }
-    DebuggerView.editor.setCaretPosition(aLine - 1);
   },
 
   /**
@@ -879,10 +878,8 @@ FilterView.prototype = {
     if (!aToken) {
       return;
     }
-    let offset = DebuggerView.editor.find(aToken, { ignoreCase: true });
-    if (offset > -1) {
-      DebuggerView.editor.setSelection(offset, offset + aToken.length)
-    }
+
+    DebuggerView.editor.find(aToken);
   },
 
   /**
@@ -1043,14 +1040,8 @@ FilterView.prototype = {
 
     // Jump to the next/previous instance of the currently searched token.
     if (isTokenSearch) {
-      let [, token] = args;
-      let methods = { selectNext: "findNext", selectPrev: "findPrevious" };
-
-      // Search for the token and select it.
-      let offset = DebuggerView.editor[methods[actionToPerform]](true);
-      if (offset > -1) {
-        DebuggerView.editor.setSelection(offset, offset + token.length)
-      }
+      let methods = { selectNext: "findNext", selectPrev: "findPrev" };
+      DebuggerView.editor[methods[actionToPerform]]();
       return;
     }
 
@@ -1061,7 +1052,7 @@ FilterView.prototype = {
 
       // Modify the line number and jump to it.
       line += !isReturnKey ? amounts[actionToPerform] : 0;
-      let lineCount = DebuggerView.editor.getLineCount();
+      let lineCount = DebuggerView.editor.lineCount();
       let lineTarget = line < 1 ? 1 : line > lineCount ? lineCount : line;
       this._doSearch(SEARCH_LINE_FLAG, lineTarget);
       return;
@@ -1084,7 +1075,7 @@ FilterView.prototype = {
   _doSearch: function(aOperator = "", aText = "") {
     this._searchbox.focus();
     this._searchbox.value = ""; // Need to clear value beforehand. Bug 779738.
-    this._searchbox.value = aOperator + (aText || DebuggerView.editor.getSelectedText());
+    this._searchbox.value = aOperator + (aText || DebuggerView.editor.getSelection());
   },
 
   /**
