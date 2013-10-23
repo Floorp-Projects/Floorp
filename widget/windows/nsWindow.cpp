@@ -172,6 +172,8 @@
 #include "mozilla/HangMonitor.h"
 #include "WinIMEHandler.h"
 
+#include "npapi.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;

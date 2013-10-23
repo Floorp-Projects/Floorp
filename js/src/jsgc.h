@@ -1274,9 +1274,9 @@ typedef void (*IterateCellCallback)(JSRuntime *rt, void *data, void *thing,
                                     JSGCTraceKind traceKind, size_t thingSize);
 
 /*
- * This function calls |compartmentCallback| on every compartment,
- * |arenaCallback| on every in-use arena, and |cellCallback| on every in-use
- * cell in the GC heap.
+ * This function calls |zoneCallback| on every zone, |compartmentCallback| on
+ * every compartment, |arenaCallback| on every in-use arena, and |cellCallback|
+ * on every in-use cell in the GC heap.
  */
 extern void
 IterateZonesCompartmentsArenasCells(JSRuntime *rt, void *data,
@@ -1284,6 +1284,17 @@ IterateZonesCompartmentsArenasCells(JSRuntime *rt, void *data,
                                     JSIterateCompartmentCallback compartmentCallback,
                                     IterateArenaCallback arenaCallback,
                                     IterateCellCallback cellCallback);
+
+/*
+ * This function is like IterateZonesCompartmentsArenasCells, but does it for a
+ * single zone.
+ */
+extern void
+IterateZoneCompartmentsArenasCells(JSRuntime *rt, Zone *zone, void *data,
+                                   IterateZoneCallback zoneCallback,
+                                   JSIterateCompartmentCallback compartmentCallback,
+                                   IterateArenaCallback arenaCallback,
+                                   IterateCellCallback cellCallback);
 
 /*
  * Invoke chunkCallback on every in-use chunk.

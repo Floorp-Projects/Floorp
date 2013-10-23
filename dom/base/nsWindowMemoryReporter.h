@@ -12,10 +12,12 @@
 #include "nsDataHashtable.h"
 #include "nsWeakReference.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 #include "nsArenaMemoryStats.h"
-#include "mozilla/Attributes.h"
 
 // This should be used for any nsINode sub-class that has fields of its own
 // that it needs to measure;  any sub-class that doesn't use it will inherit
@@ -25,25 +27,44 @@
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 class nsWindowSizes {
+#define FOR_EACH_SIZE(macro) \
+  macro(DOM,   mDOMElementNodes) \
+  macro(DOM,   mDOMTextNodes) \
+  macro(DOM,   mDOMCDATANodes) \
+  macro(DOM,   mDOMCommentNodes) \
+  macro(DOM,   mDOMEventTargets) \
+  macro(DOM,   mDOMOther) \
+  macro(Style, mStyleSheets) \
+  macro(Other, mLayoutPresShell) \
+  macro(Style, mLayoutStyleSets) \
+  macro(Other, mLayoutTextRuns) \
+  macro(Other, mLayoutPresContext) \
+  macro(Other, mPropertyTables) \
+
 public:
-  nsWindowSizes(mozilla::MallocSizeOf aMallocSizeOf) {
-    memset(this, 0, sizeof(nsWindowSizes));
-    mMallocSizeOf = aMallocSizeOf;
+  nsWindowSizes(mozilla::MallocSizeOf aMallocSizeOf)
+    :
+      #define ZERO_SIZE(kind, mSize)  mSize(0),
+      FOR_EACH_SIZE(ZERO_SIZE)
+      #undef ZERO_SIZE
+      mArenaStats(),
+      mMallocSizeOf(aMallocSizeOf)
+  {}
+
+  void addToTabSizes(nsTabSizes *sizes) const {
+    #define ADD_TO_TAB_SIZES(kind, mSize) sizes->add(nsTabSizes::kind, mSize);
+    FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+    #undef ADD_TO_TAB_SIZES
+    mArenaStats.addToTabSizes(sizes);
   }
-  mozilla::MallocSizeOf mMallocSizeOf;
+
+  #define DECL_SIZE(kind, mSize) size_t mSize;
+  FOR_EACH_SIZE(DECL_SIZE);
+  #undef DECL_SIZE
   nsArenaMemoryStats mArenaStats;
-  size_t mDOMElementNodes;
-  size_t mDOMTextNodes;
-  size_t mDOMCDATANodes;
-  size_t mDOMCommentNodes;
-  size_t mDOMEventTargets;
-  size_t mDOMOther;
-  size_t mStyleSheets;
-  size_t mLayoutPresShell;
-  size_t mLayoutStyleSets;
-  size_t mLayoutTextRuns;
-  size_t mLayoutPresContext;
-  size_t mPropertyTables;
+  mozilla::MallocSizeOf mMallocSizeOf;
+
+#undef FOR_EACH_SIZE
 };
 
 /**

@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 926091 says hello to bug 924992 by touching webidl
+Bug 918207 needed a clobber on every platform because we can't have nice things

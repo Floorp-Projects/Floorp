@@ -871,6 +871,32 @@ refStateSetCB(AtkObject *aAtkObj)
     return state_set;
 }
 
+static void
+UpdateAtkRelation(RelationType aType, Accessible* aAcc,
+                  AtkRelationType aAtkType, AtkRelationSet* aAtkSet)
+{
+  if (aAtkType == ATK_RELATION_NULL)
+    return;
+
+  AtkRelation* atkRelation =
+    atk_relation_set_get_relation_by_type(aAtkSet, aAtkType);
+  if (atkRelation)
+    atk_relation_set_remove(aAtkSet, atkRelation);
+
+  Relation rel(aAcc->RelationByType(aType));
+  nsTArray<AtkObject*> targets;
+  Accessible* tempAcc = nullptr;
+  while ((tempAcc = rel.Next()))
+    targets.AppendElement(AccessibleWrap::GetAtkObject(tempAcc));
+
+  if (targets.Length()) {
+    atkRelation = atk_relation_new(targets.Elements(),
+                                   targets.Length(), aAtkType);
+    atk_relation_set_add(aAtkSet, atkRelation);
+    g_object_unref(atkRelation);
+  }
+}
+
 AtkRelationSet *
 refRelationSetCB(AtkObject *aAtkObj)
 {
@@ -881,46 +907,12 @@ refRelationSetCB(AtkObject *aAtkObj)
   if (!accWrap)
     return relation_set;
 
-  // Keep in sync with AtkRelationType enum.
-  static const RelationType relationTypes[] = {
-    RelationType::CONTROLLED_BY,
-    RelationType::CONTROLLER_FOR,
-    RelationType::LABEL_FOR,
-    RelationType::LABELLED_BY,
-    RelationType::MEMBER_OF,
-    RelationType::NODE_CHILD_OF,
-    RelationType::FLOWS_TO,
-    RelationType::FLOWS_FROM,
-    RelationType::SUBWINDOW_OF,
-    RelationType::EMBEDS,
-    RelationType::EMBEDDED_BY,
-    RelationType::POPUP_FOR,
-    RelationType::PARENT_WINDOW_OF,
-    RelationType::DESCRIBED_BY,
-    RelationType::DESCRIPTION_FOR,
-    RelationType::NODE_PARENT_OF
-  };
+#define RELATIONTYPE(geckoType, geckoTypeName, atkType, msaaType, ia2Type) \
+  UpdateAtkRelation(RelationType::geckoType, accWrap, atkType, relation_set);
 
-  for (uint32_t i = 0; i < ArrayLength(relationTypes); i++) {
-    // Shift to 1 to skip ATK_RELATION_NULL.
-    AtkRelationType atkType = static_cast<AtkRelationType>(i + 1);
-    AtkRelation* atkRelation =
-      atk_relation_set_get_relation_by_type(relation_set, atkType);
-    if (atkRelation)
-      atk_relation_set_remove(relation_set, atkRelation);
+#include "RelationTypeMap.h"
 
-    Relation rel(accWrap->RelationByType(relationTypes[i]));
-    nsTArray<AtkObject*> targets;
-    Accessible* tempAcc = nullptr;
-    while ((tempAcc = rel.Next()))
-      targets.AppendElement(AccessibleWrap::GetAtkObject(tempAcc));
-
-    if (targets.Length()) {
-      atkRelation = atk_relation_new(targets.Elements(), targets.Length(), atkType);
-      atk_relation_set_add(relation_set, atkRelation);
-      g_object_unref(atkRelation);
-    }
-  }
+#undef RELATIONTYPE
 
   return relation_set;
 }

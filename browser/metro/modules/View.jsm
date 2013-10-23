@@ -41,19 +41,28 @@ View.prototype = {
   },
 
   _adjustDOMforViewState: function _adjustDOMforViewState(aState) {
-    if (this._set) {
-      if (undefined == aState)
-        aState = this._set.getAttribute("viewstate");
-
-      this._set.setAttribute("suppressonselect", (aState == "snapped"));
-
-      if (aState == "portrait") {
-        this._set.setAttribute("vertical", true);
-      } else {
-        this._set.removeAttribute("vertical");
-      }
-
-      this._set.arrangeItems();
+    let grid = this._set;
+    if (!grid) {
+      return;
+    }
+    if (!aState) {
+      aState = grid.getAttribute("viewstate");
+    }
+    switch (aState) {
+      case "snapped":
+        grid.setAttribute("nocontext", true);
+        grid.selectNone();
+        break;
+      case "portrait":
+        grid.removeAttribute("nocontext");
+        grid.setAttribute("vertical", true);
+        break;
+      default:
+        grid.removeAttribute("nocontext");
+        grid.removeAttribute("vertical");
+    }
+    if ("arrangeItems" in grid) {
+      grid.arrangeItems();
     }
   },
 

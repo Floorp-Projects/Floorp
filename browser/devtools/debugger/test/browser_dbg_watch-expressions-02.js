@@ -12,14 +12,13 @@ function test() {
   requestLongerTimeout(2);
 
   let gTab, gDebuggee, gPanel, gDebugger;
-  let gEditor, gWatch, gVariables;
+  let gWatch, gVariables;
 
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
-    gEditor = gDebugger.DebuggerView.editor;
     gWatch = gDebugger.DebuggerView.WatchExpressions;
     gVariables = gDebugger.DebuggerView.Variables;
 

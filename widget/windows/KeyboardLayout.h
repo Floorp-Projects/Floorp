@@ -11,6 +11,7 @@
 #include "nsString.h"
 #include "nsWindowBase.h"
 #include "nsWindowDefs.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include <windows.h>
 
@@ -54,84 +55,36 @@ static const uint32_t sModifierKeyMap[][3] = {
 
 class KeyboardLayout;
 
-class ModifierKeyState {
+class ModifierKeyState
+{
 public:
-  ModifierKeyState()
-  {
-    Update();
-  }
+  ModifierKeyState();
+  ModifierKeyState(bool aIsShiftDown, bool aIsControlDown, bool aIsAltDown);
+  ModifierKeyState(Modifiers aModifiers);
 
-  ModifierKeyState(bool aIsShiftDown, bool aIsControlDown, bool aIsAltDown)
-  {
-    Update();
-    Unset(MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_ALTGRAPH);
-    Modifiers modifiers = 0;
-    if (aIsShiftDown) {
-      modifiers |= MODIFIER_SHIFT;
-    }
-    if (aIsControlDown) {
-      modifiers |= MODIFIER_CONTROL;
-    }
-    if (aIsAltDown) {
-      modifiers |= MODIFIER_ALT;
-    }
-    if (modifiers) {
-      Set(modifiers);
-    }
-  }
+  MOZ_ALWAYS_INLINE void Update();
 
-  ModifierKeyState(Modifiers aModifiers) :
-    mModifiers(aModifiers)
-  {
-    EnsureAltGr();
-  }
-
-  void Update();
-
-  void Unset(Modifiers aRemovingModifiers)
-  {
-    mModifiers &= ~aRemovingModifiers;
-    // Note that we don't need to unset AltGr flag here automatically.
-    // For nsEditor, we need to remove Alt and Control flags but AltGr isn't
-    // checked in nsEditor, so, it can be kept.
-  }
-
-  void Set(Modifiers aAddingModifiers)
-  {
-    mModifiers |= aAddingModifiers;
-    EnsureAltGr();
-  }
+  MOZ_ALWAYS_INLINE void Unset(Modifiers aRemovingModifiers);
+  MOZ_ALWAYS_INLINE void Set(Modifiers aAddingModifiers);
 
   void InitInputEvent(WidgetInputEvent& aInputEvent) const;
 
-  bool IsShift() const { return (mModifiers & MODIFIER_SHIFT) != 0; }
-  bool IsControl() const { return (mModifiers & MODIFIER_CONTROL) != 0; }
-  bool IsAlt() const { return (mModifiers & MODIFIER_ALT) != 0; }
-  bool IsAltGr() const { return IsControl() && IsAlt(); }
-  bool IsWin() const { return (mModifiers & MODIFIER_OS) != 0; }
+  MOZ_ALWAYS_INLINE bool IsShift() const;
+  MOZ_ALWAYS_INLINE bool IsControl() const;
+  MOZ_ALWAYS_INLINE bool IsAlt() const;
+  MOZ_ALWAYS_INLINE bool IsAltGr() const;
+  MOZ_ALWAYS_INLINE bool IsWin() const;
 
-  bool IsCapsLocked() const { return (mModifiers & MODIFIER_CAPSLOCK) != 0; }
-  bool IsNumLocked() const { return (mModifiers & MODIFIER_NUMLOCK) != 0; }
-  bool IsScrollLocked() const
-  {
-    return (mModifiers & MODIFIER_SCROLLLOCK) != 0;
-  }
+  MOZ_ALWAYS_INLINE bool IsCapsLocked() const;
+  MOZ_ALWAYS_INLINE bool IsNumLocked() const;
+  MOZ_ALWAYS_INLINE bool IsScrollLocked() const;
 
-  Modifiers GetModifiers() const { return mModifiers; }
+  MOZ_ALWAYS_INLINE Modifiers GetModifiers() const;
 
 private:
   Modifiers mModifiers;
 
-  void EnsureAltGr()
-  {
-    // If both Control key and Alt key are pressed, it means AltGr is pressed.
-    // Ideally, we should check whether the current keyboard layout has AltGr
-    // or not.  However, setting AltGr flags for keyboard which doesn't have
-    // AltGr must not be serious bug.  So, it should be OK for now.
-    if (IsAltGr()) {
-      mModifiers |= MODIFIER_ALTGRAPH;
-    }
-  }
+  MOZ_ALWAYS_INLINE void EnsureAltGr();
 
   void InitMouseEvent(WidgetInputEvent& aMouseEvent) const;
 };
@@ -196,45 +149,8 @@ public:
 
   typedef uint8_t ShiftState;
 
-  static ShiftState ModifiersToShiftState(Modifiers aModifiers)
-  {
-    ShiftState state = 0;
-    if (aModifiers & MODIFIER_SHIFT) {
-      state |= STATE_SHIFT;
-    }
-    if (aModifiers & MODIFIER_CONTROL) {
-      state |= STATE_CONTROL;
-    }
-    if (aModifiers & MODIFIER_ALT) {
-      state |= STATE_ALT;
-    }
-    if (aModifiers & MODIFIER_CAPSLOCK) {
-      state |= STATE_CAPSLOCK;
-    }
-    return state;
-  }
-
-  static Modifiers ShiftStateToModifiers(ShiftState aShiftState)
-  {
-    Modifiers modifiers = 0;
-    if (aShiftState & STATE_SHIFT) {
-      modifiers |= MODIFIER_SHIFT;
-    }
-    if (aShiftState & STATE_CONTROL) {
-      modifiers |= MODIFIER_CONTROL;
-    }
-    if (aShiftState & STATE_ALT) {
-      modifiers |= MODIFIER_ALT;
-    }
-    if (aShiftState & STATE_CAPSLOCK) {
-      modifiers |= MODIFIER_CAPSLOCK;
-    }
-    if ((modifiers & (MODIFIER_ALT | MODIFIER_CONTROL)) ==
-           (MODIFIER_ALT | MODIFIER_CONTROL)) {
-      modifiers |= MODIFIER_ALTGRAPH;
-    }
-    return modifiers;
-  }
+  static ShiftState ModifiersToShiftState(Modifiers aModifiers);
+  static Modifiers ShiftStateToModifiers(ShiftState aShiftState);
 
 private:
   union KeyShiftState
@@ -428,10 +344,7 @@ private:
    */
   void InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
                     const ModifierKeyState& aModKeyState) const;
-  void InitKeyEvent(WidgetKeyboardEvent& aKeyEvent) const
-  {
-    InitKeyEvent(aKeyEvent, mModKeyState);
-  }
+  void InitKeyEvent(WidgetKeyboardEvent& aKeyEvent) const;
 
   /**
    * Dispatches the key event.  Returns true if the event is consumed.

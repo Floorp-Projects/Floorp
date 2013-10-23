@@ -99,7 +99,8 @@ function testSwitchPaused1() {
   executeSoon(() => {
     ok(isCaretPos(gPanel, 1),
       "Editor caret location is correct.");
-    is(gEditor.getDebugLocation(), -1,
+
+    is(gEditor.getDebugLocation(), null,
       "Editor debugger location is correct.");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);

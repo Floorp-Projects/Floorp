@@ -2416,7 +2416,7 @@ class OrphanReporter : public JS::ObjectPrivateVisitor
     {
     }
 
-    virtual size_t sizeOfIncludingThis(nsISupports *aSupports) {
+    virtual size_t sizeOfIncludingThis(nsISupports *aSupports) MOZ_OVERRIDE {
         size_t n = 0;
         nsCOMPtr<nsINode> node = do_QueryInterface(aSupports);
         // https://bugzilla.mozilla.org/show_bug.cgi?id=773533#c11 explains
@@ -2671,6 +2671,25 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
                  KIND_HEAP, xpconnect,
                  "Memory used by XPConnect.");
 
+    return NS_OK;
+}
+
+static nsresult
+JSSizeOfTab(JSObject *obj, size_t *jsObjectsSize, size_t *jsStringsSize,
+            size_t *jsPrivateSize, size_t *jsOtherSize)
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+
+    TabSizes sizes;
+    OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
+    NS_ENSURE_TRUE(JS::AddSizeOfTab(rt, obj, moz_malloc_size_of,
+                                    &orphanReporter, &sizes),
+                   NS_ERROR_OUT_OF_MEMORY);
+
+    *jsObjectsSize = sizes.objects;
+    *jsStringsSize = sizes.strings;
+    *jsPrivateSize = sizes.private_;
+    *jsOtherSize   = sizes.other;
     return NS_OK;
 }
 
@@ -3040,6 +3059,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     RegisterJSMainRuntimeTemporaryPeakDistinguishedAmount(JSMainRuntimeTemporaryPeakDistinguishedAmount);
     RegisterJSMainRuntimeCompartmentsSystemDistinguishedAmount(JSMainRuntimeCompartmentsSystemDistinguishedAmount);
     RegisterJSMainRuntimeCompartmentsUserDistinguishedAmount(JSMainRuntimeCompartmentsUserDistinguishedAmount);
+    mozilla::RegisterJSSizeOfTab(JSSizeOfTab);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
