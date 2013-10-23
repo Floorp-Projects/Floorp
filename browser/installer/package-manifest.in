@@ -521,9 +521,6 @@
 @BINPATH@/components/TCPSocketParentIntermediary.js
 @BINPATH@/components/TCPSocket.manifest
 
-@BINPATH@/components/AppProtocolHandler.js
-@BINPATH@/components/AppProtocolHandler.manifest
-
 @BINPATH@/components/Payment.js
 @BINPATH@/components/PaymentFlowInfo.js
 @BINPATH@/components/PaymentRequestInfo.js
