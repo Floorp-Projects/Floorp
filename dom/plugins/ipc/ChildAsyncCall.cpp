@@ -22,9 +22,9 @@ ChildAsyncCall::ChildAsyncCall(PluginInstanceChild* instance,
 void
 ChildAsyncCall::Cancel()
 {
-  mInstance = NULL;
-  mFunc = NULL;
-  mData = NULL;
+  mInstance = nullptr;
+  mFunc = nullptr;
+  mData = nullptr;
 }
 
 void

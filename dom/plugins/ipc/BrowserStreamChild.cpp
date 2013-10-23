@@ -64,7 +64,7 @@ BrowserStreamChild::StreamConstructed(
     &mStream, seekable, stype);
   if (rv != NPERR_NO_ERROR) {
     mState = DELETING;
-    mStreamNotify = NULL;
+    mStreamNotify = nullptr;
   }
   else {
     mState = ALIVE;
@@ -243,7 +243,7 @@ BrowserStreamChild::Deliver()
     mNotifyPending = false;
     mStreamNotify->NPP_URLNotify(mStreamStatus);
     delete mStreamNotify;
-    mStreamNotify = NULL;
+    mStreamNotify = nullptr;
   }
   if (DYING == mState && DESTROYED == mDestroyPending
       && !mStreamNotify && !mInstanceDying) {
