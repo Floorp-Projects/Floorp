@@ -14,8 +14,6 @@
   display: block;
   unicode-bidi: inherit;
   text-overflow: inherit;
-  overflow: inherit;
-  padding: inherit;
   height: 100%;   /* Need this so percentage heights of kids work right */
 }
 
