@@ -209,8 +209,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   if (mHandler.Type() == nsEventHandler::eOnBeforeUnload) {
     MOZ_ASSERT(mEventName == nsGkAtoms::onbeforeunload);
 
-    nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handler =
-      mHandler.OnBeforeUnloadEventHandler();
+    nsRefPtr<BeforeUnloadEventHandlerNonNull> handler =
+      mHandler.BeforeUnloadEventHandler();
     ErrorResult rv;
     nsString retval;
     handler->Call(mTarget, *(aEvent->InternalDOMEvent()), retval, rv);
