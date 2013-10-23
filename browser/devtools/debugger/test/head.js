@@ -523,3 +523,29 @@ function resumeDebuggerThenCloseAndFinish(aPanel, aFlags = {}) {
   thread.resume(() => closeDebuggerAndFinish(aPanel, aFlags).then(deferred.resolve));
   return deferred.promise;
 }
+
+function getBlackBoxButton(aPanel) {
+  return aPanel.panelWin.document.getElementById("black-box");
+}
+
+function toggleBlackBoxing(aPanel, aSource = null) {
+  function clickBlackBoxButton() {
+    getBlackBoxButton(aPanel).click();
+  }
+
+  const blackBoxChanged = waitForThreadEvents(aPanel, "blackboxchange");
+
+  if (aSource) {
+    aPanel.panelWin.DebuggerView.Sources.selectedValue = aSource;
+    ensureSourceIs(aPanel, aSource, true).then(clickBlackBoxButton);
+  } else {
+    clickBlackBoxButton();
+  }
+  return blackBoxChanged;
+}
+
+function selectSourceAndGetBlackBoxButton(aPanel, aSource) {
+  aPanel.panelWin.DebuggerView.Sources.selectedValue = aSource;
+  return ensureSourceIs(aPanel, aSource, true)
+    .then(getBlackBoxButton.bind(null, aPanel));
+}
