@@ -7,6 +7,3 @@ MOCHITEST_BROWSER_FILES += \
   browser_taskbar_preview.js \
   $(NULL)
 endif
-
-# bug 793906 - temporarily disabling desktop UI while working on b2g
-# browser_SignInToWebsite.js

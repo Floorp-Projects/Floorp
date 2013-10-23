@@ -561,8 +561,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
   NS_ENSURE_TRUE_VOID(connection);
 
   nsCOMPtr<nsIDOMMozMobileConnectionInfo> voiceInfo;
-  // TODO: Bug 921991 - B2G BT: support multiple sim cards
-  connection->GetVoiceConnectionInfo(0, getter_AddRefs(voiceInfo));
+  connection->GetVoiceConnectionInfo(getter_AddRefs(voiceInfo));
   NS_ENSURE_TRUE_VOID(voiceInfo);
 
   nsString type;
@@ -598,8 +597,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
    * - manual: set mNetworkSelectionMode to 1 (manual)
    */
   nsString mode;
-  // TODO: Bug 921991 - B2G BT: support multiple sim cards
-  connection->GetNetworkSelectionMode(0, mode);
+  connection->GetNetworkSelectionMode(mode);
   if (mode.EqualsLiteral("manual")) {
     mNetworkSelectionMode = 1;
   } else {

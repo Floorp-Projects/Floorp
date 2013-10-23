@@ -87,7 +87,7 @@ function doFirstJump() {
     executeSoon(() => {
       ok(isCaretPos(gPanel, 5, 7),
         "The editor didn't jump to the correct line (1).");
-      is(gEditor.getSelectedText(), "eval",
+      is(gEditor.getSelection(), "eval",
         "The editor didn't select the correct text (1).");
 
       deferred.resolve();
@@ -115,7 +115,7 @@ function doSecondJump() {
     executeSoon(() => {
       ok(isCaretPos(gPanel, 6, 7),
         "The editor didn't jump to the correct line (2).");
-      is(gEditor.getSelectedText(), "eval",
+      is(gEditor.getSelection(), "eval",
         "The editor didn't select the correct text (2).");
 
       deferred.resolve();
@@ -143,7 +143,7 @@ function doWrapAroundJump() {
     executeSoon(() => {
       ok(isCaretPos(gPanel, 5, 7),
         "The editor didn't jump to the correct line (3).");
-      is(gEditor.getSelectedText(), "eval",
+      is(gEditor.getSelection(), "eval",
         "The editor didn't select the correct text (3).");
 
       deferred.resolve();
@@ -171,7 +171,7 @@ function doBackwardsWrapAroundJump() {
     executeSoon(() => {
       ok(isCaretPos(gPanel, 6, 7),
         "The editor didn't jump to the correct line (4).");
-      is(gEditor.getSelectedText(), "eval",
+      is(gEditor.getSelection(), "eval",
         "The editor didn't select the correct text (4).");
 
       deferred.resolve();
@@ -195,7 +195,7 @@ function testSearchTokenEmpty() {
     "Not all the sources are shown after the global search (4).");
   ok(isCaretPos(gPanel, 6, 7),
     "The editor didn't remain at the correct line (4).");
-  is(gEditor.getSelectedText(), "",
+  is(gEditor.getSelection(), "",
     "The editor shouldn't keep the previous text selected (4).");
 
   is(gSearchView.itemCount, 0,
