@@ -168,6 +168,7 @@ gbjar.sources += [
     'gfx/NativePanZoomController.java',
     'gfx/NinePatchTileLayer.java',
     'gfx/Overscroll.java',
+    'gfx/OverscrollEdgeEffect.java',
     'gfx/PanningPerfAPI.java',
     'gfx/PanZoomController.java',
     'gfx/PanZoomTarget.java',
