@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- This file tests the saving and loading of memory reports to/from file in
+       about:memory in the presence of child processes. -->
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <iframe id="amFrame"  height="400" src="about:memory"></iframe>
+
+  <script type="application/javascript">
+  <![CDATA[
+  "use strict";
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
+
+  let numRemotes = 3;
+  let numReady = 0;
+
+  // Create some remote processes, and set up message-passing so that
+  // we know when each child is fully initialized.
+  let remotes = [];
+  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 3]]}, function() {
+    for (let i = 0; i < numRemotes; i++) {
+      let w = remotes[i] = window.open("remote.xul", "", "chrome");
+
+      w.addEventListener("load", function loadHandler() {
+        w.removeEventListener("load", loadHandler);
+        let remoteBrowser = w.document.getElementById("remote");
+        let mm = remoteBrowser.messageManager;
+        mm.addMessageListener("test:ready", function readyHandler() {
+          mm.removeMessageListener("test:ready", readyHandler);
+          numReady++;
+          if (numReady == numRemotes) {
+            // All the remote processes are ready.
+            SimpleTest.waitForFocus(onFocus);
+          }
+        });
+        mm.loadFrameScript("data:," + encodeURI("sendAsyncMessage('test:ready');"), true);
+      });
+    }
+  });
+
+  // Load the given file into the frame, then copy+paste the entire frame and
+  // check that the cut text matches what we expect.
+  function onFocus() {
+    let frame = document.getElementById("amFrame");
+    frame.focus();
+
+    function getFilePath(aFilename) {
+      let file = Cc["@mozilla.org/file/directory_service;1"]
+                 .getService(Components.interfaces.nsIProperties)
+                 .get("CurWorkD", Components.interfaces.nsIFile);
+      file.append("chrome");
+      file.append("toolkit");
+      file.append("components");
+      file.append("aboutmemory");
+      file.append("tests");
+      file.append(aFilename);
+      return file.path;
+    }
+
+    let filePath = getFilePath("memory-reports-dumped.json.gz");
+
+    let e = document.createEvent('Event');
+    e.initEvent('change', true, true);
+
+    let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
+                    getService(Ci.nsIMemoryInfoDumper);
+    dumper.dumpMemoryReportsToNamedFile(filePath, loadAndCheck, null);
+
+    function loadAndCheck() {
+      // Load the file.
+      let fileInput1 =
+        frame.contentWindow.document.getElementById("fileInput1");
+      fileInput1.value = filePath;    // this works because it's a chrome test
+      fileInput1.dispatchEvent(e);
+
+      // Initialize the clipboard contents.
+      SpecialPowers.clipboardCopyString("initial clipboard value");
+
+      let numFailures = 0, maxFailures = 30;
+
+      copyPasteAndCheck();
+
+      // Because the file load is async, we don't know when it will finish and
+      // the output will show up.  So we poll.
+      function copyPasteAndCheck() {
+        // Copy and paste frame contents, and filter out non-deterministic
+        // differences.
+        synthesizeKey("A", {accelKey: true});
+        synthesizeKey("C", {accelKey: true});
+        let actual = SpecialPowers.getClipboardData("text/unicode");
+
+        // If we have more than 1000 chars, we've probably successfully
+        // copy+pasted.
+        if (actual.length > 1000) {
+          let vsizes = actual.match(/vsize/g);
+          let endOfBrowsers  = actual.match(/End of Browser/g);
+
+          if (vsizes.length == 4 && endOfBrowsers.length == 3) {
+            ok(true, "three child processes present in loaded data");
+          } else {
+            ok(false, "pasted text lacks four 'vsize' and three 'End of Browser' strings");
+            dump("*******ACTUAL*******\n");
+            dump(actual);
+            dump("********************\n");
+          }
+
+          // Close the remote processes.
+          for (let i = 0; i < numRemotes; i++) {
+            remotes[i].close();
+          }
+
+          SimpleTest.finish();
+
+        } else {
+          numFailures++;
+          if (numFailures === maxFailures) {
+            ok(false, "not enough chars in pasted output");
+            SimpleTest.finish();
+          } else {
+            setTimeout(copyPasteAndCheck, 100);
+          }
+        }
+      }
+    }
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>
