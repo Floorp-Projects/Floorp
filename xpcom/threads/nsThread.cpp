@@ -619,13 +619,14 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
 
   --mRunningEvent;
 
-  NOTIFY_EVENT_OBSERVERS(AfterProcessNextEvent, (this, mRunningEvent));
+  NOTIFY_EVENT_OBSERVERS(AfterProcessNextEvent,
+                         (this, mRunningEvent, *result));
 
   if (obs)
-    obs->AfterProcessNextEvent(this, mRunningEvent);
+    obs->AfterProcessNextEvent(this, mRunningEvent, *result);
 
   if (notifyMainThreadObserver && sMainThreadObserver)
-    sMainThreadObserver->AfterProcessNextEvent(this, mRunningEvent);
+    sMainThreadObserver->AfterProcessNextEvent(this, mRunningEvent, *result);
 
   return rv;
 }
