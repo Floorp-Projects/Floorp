@@ -33,8 +33,12 @@
   -  the button that opens up an options context menu for the debugger UI. -->
 <!ENTITY debuggerUI.optsButton.tooltip  "Debugger Options">
 
+<!-- LOCALIZATION NOTE (debuggerUI.sources.blackBoxTooltip): This is the tooltip
+  -  for the button that black boxes the selected source. -->
+<!ENTITY debuggerUI.sources.blackBoxTooltip "Toggle Black Boxing">
+
 <!-- LOCALIZATION NOTE (debuggerUI.sources.prettyPrint): This is the tooltip for the
-button that pretty prints the selected source. -->
+  -  button that pretty prints the selected source. -->
 <!ENTITY debuggerUI.sources.prettyPrint "Prettify Source">
 
 <!-- LOCALIZATION NOTE (debuggerUI.pauseExceptions): This is the label for the
