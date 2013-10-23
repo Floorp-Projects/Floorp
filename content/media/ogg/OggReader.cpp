@@ -131,9 +131,11 @@ nsresult OggReader::ResetDecode(bool start)
   if (mVorbisState && NS_FAILED(mVorbisState->Reset())) {
     res = NS_ERROR_FAILURE;
   }
+#ifdef MOZ_OPUS
   if (mOpusState && NS_FAILED(mOpusState->Reset(start))) {
     res = NS_ERROR_FAILURE;
   }
+#endif /* MOZ_OPUS */
   if (mTheoraState && NS_FAILED(mTheoraState->Reset())) {
     res = NS_ERROR_FAILURE;
   }
@@ -1822,10 +1824,12 @@ nsresult OggReader::GetBuffered(TimeRanges* aBuffered, int64_t aStartTime)
         startTime = VorbisState::Time(&mVorbisInfo, granulepos);
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       }
+#ifdef MOZ_OPUS
       else if (mOpusState && serial == mOpusSerial) {
         startTime = OpusState::Time(mOpusPreSkip, granulepos);
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       }
+#endif /* MOZ_OPUS */
       else if (mTheoraState && serial == mTheoraSerial) {
         startTime = TheoraState::Time(&mTheoraInfo, granulepos);
         NS_ASSERTION(startTime > 0, "Must have positive start time");
