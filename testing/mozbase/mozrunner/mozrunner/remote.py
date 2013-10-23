@@ -6,11 +6,9 @@ import shutil
 import subprocess
 import tempfile
 import time
-import traceback
 
 from runner import Runner
 from mozdevice import DMError
-import mozcrash
 import mozlog
 
 __all__ = ['RemoteRunner', 'B2GRunner', 'remote_runners']
@@ -23,13 +21,15 @@ class RemoteRunner(Runner):
                        process_class=None,
                        env=None,
                        remote_test_root=None,
-                       restore=True):
+                       restore=True,
+                       **kwargs):
 
         super(RemoteRunner, self).__init__(profile, clean_profile=clean_profile,
-                                                process_class=process_class, env=env)
+                                           process_class=process_class, env=env, **kwargs)
         self.log = mozlog.getLogger('RemoteRunner')
 
         self.dm = devicemanager
+        self.last_test = None
         self.remote_test_root = remote_test_root or self.dm.getDeviceRoot()
         self.remote_profile = posixpath.join(self.remote_test_root, 'profile')
         self.restore = restore
@@ -44,20 +44,21 @@ class RemoteRunner(Runner):
             self.backup_files.add(remote_path)
 
 
-    def check_for_crashes(self, symbols_path, last_test=None):
-        crashed = False
+    def check_for_crashes(self, last_test=None):
+        last_test = last_test or self.last_test
         remote_dump_dir = posixpath.join(self.remote_profile, 'minidumps')
+        crashed = False
+
         self.log.info("checking for crashes in '%s'" % remote_dump_dir)
         if self.dm.dirExists(remote_dump_dir):
             local_dump_dir = tempfile.mkdtemp()
             self.dm.getDirectory(remote_dump_dir, local_dump_dir)
-            try:
-                crashed = mozcrash.check_for_crashes(local_dump_dir, symbols_path, test_name=last_test)
-            except:
-                traceback.print_exc()
-            finally:
-                shutil.rmtree(local_dump_dir)
-                self.dm.removeDir(remote_dump_dir)
+
+            crashed = super(RemoteRunner, self).check_for_crashes(local_dump_dir, \
+                                                                  test_name=last_test)
+            shutil.rmtree(local_dump_dir)
+            self.dm.removeDir(remote_dump_dir)
+
         return crashed
 
     def cleanup(self):
@@ -197,6 +198,7 @@ class B2GRunner(RemoteRunner):
             msg = "%s with no output" % msg
 
         self.log.testFail(msg % (self.last_test, timeout))
+        self.check_for_crashes()
 
     def _reboot_device(self):
         serial, status = self._get_device_status()
