@@ -1076,15 +1076,15 @@ GetNPObjectWrapper(JSContext *cx, JSObject *aObj, bool wrapResult = true)
   while (obj && (obj = js::CheckedUnwrap(obj))) {
     if (JS_GetClass(obj) == &sNPObjectJSWrapperClass) {
       if (wrapResult && !JS_WrapObject(cx, &obj)) {
-        return NULL;
+        return nullptr;
       }
       return obj;
     }
     if (!::JS_GetPrototype(cx, obj, &obj)) {
-      return NULL;
+      return nullptr;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 static NPObject *
@@ -1620,13 +1620,13 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
   if (!JS_GetProperty(cx, obj, "toString", &v))
     return false;
   if (!JSVAL_IS_PRIMITIVE(v) && JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(v))) {
-    if (!JS_CallFunctionValue(cx, obj, v, 0, NULL, vp.address()))
+    if (!JS_CallFunctionValue(cx, obj, v, 0, nullptr, vp.address()))
       return false;
     if (JSVAL_IS_PRIMITIVE(vp))
       return true;
   }
 
-  JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
+  JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
                        JS_GetClass(obj)->name,
                        hint == JSTYPE_VOID
                        ? "primitive type"
@@ -1731,7 +1731,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
     JS::Rooted<JSObject*> obj(cx, ((nsJSObjWrapper *)npobj)->mJSObj);
     if (!JS_WrapObject(cx, &obj)) {
-      return NULL;
+      return nullptr;
     }
     return obj;
   }
@@ -1768,7 +1768,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
     // as cx, so we need to wrap it before returning it.
     JS::Rooted<JSObject*> obj(cx, entry->mJSObj);
     if (!JS_WrapObject(cx, &obj)) {
-      return NULL;
+      return nullptr;
     }
     return obj;
   }
