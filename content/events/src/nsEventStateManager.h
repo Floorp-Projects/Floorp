@@ -6,7 +6,6 @@
 #ifndef nsEventStateManager_h__
 #define nsEventStateManager_h__
 
-#include "mozilla/BasicEvents.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/TypedEnum.h"
 
@@ -15,11 +14,11 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsFocusManager.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIFrame.h"
 #include "Units.h"
 
+class nsFrameLoader;
 class nsIContent;
 class nsIDocument;
 class nsIDocShell;
@@ -847,51 +846,19 @@ public:
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
 };
 
+namespace mozilla {
+
 /**
  * This class is used while processing real user input. During this time, popups
  * are allowed. For mousedown events, mouse capturing is also permitted.
  */
-class nsAutoHandlingUserInputStatePusher
+class AutoHandlingUserInputStatePusher
 {
 public:
-  nsAutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
-                                     mozilla::WidgetEvent* aEvent,
-                                     nsIDocument* aDocument)
-    : mIsHandlingUserInput(aIsHandlingUserInput),
-      mIsMouseDown(aEvent && aEvent->message == NS_MOUSE_BUTTON_DOWN),
-      mResetFMMouseDownState(false)
-  {
-    if (aIsHandlingUserInput) {
-      nsEventStateManager::StartHandlingUserInput();
-      if (mIsMouseDown) {
-        nsIPresShell::SetCapturingContent(nullptr, 0);
-        nsIPresShell::AllowMouseCapture(true);
-        if (aDocument && aEvent->mFlags.mIsTrusted) {
-          nsFocusManager* fm = nsFocusManager::GetFocusManager();
-          if (fm) {
-            fm->SetMouseButtonDownHandlingDocument(aDocument);
-            mResetFMMouseDownState = true;
-          }
-        }
-      }
-    }
-  }
-
-  ~nsAutoHandlingUserInputStatePusher()
-  {
-    if (mIsHandlingUserInput) {
-      nsEventStateManager::StopHandlingUserInput();
-      if (mIsMouseDown) {
-        nsIPresShell::AllowMouseCapture(false);
-        if (mResetFMMouseDownState) {
-          nsFocusManager* fm = nsFocusManager::GetFocusManager();
-          if (fm) {
-            fm->SetMouseButtonDownHandlingDocument(nullptr);
-          }
-        }
-      }
-    }
-  }
+  AutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
+                                   WidgetEvent* aEvent,
+                                   nsIDocument* aDocument);
+  ~AutoHandlingUserInputStatePusher();
 
 protected:
   bool mIsHandlingUserInput;
@@ -903,6 +870,8 @@ private:
   static void* operator new(size_t /*size*/) CPP_THROW_NEW { return nullptr; }
   static void operator delete(void* /*memory*/) {}
 };
+
+} // namespace mozilla
 
 // Click and double-click events need to be handled even for content that
 // has no frame. This is required for Web compatibility.
