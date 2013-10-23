@@ -37,24 +37,6 @@ GetThreadPoolLog()
 #define DEFAULT_IDLE_THREAD_LIMIT 1
 #define DEFAULT_IDLE_THREAD_TIMEOUT PR_SecondsToInterval(60)
 
-class ShutdownHelper MOZ_FINAL : public nsRunnable
-{
-public:
-  NS_DECL_NSIRUNNABLE
-
-  ShutdownHelper(nsCOMArray<nsIThread>& aThreads,
-                 already_AddRefed<nsIThreadPoolListener> aListener)
-  : mListener(aListener)
-  {
-    MOZ_ASSERT(!aThreads.IsEmpty());
-    mThreads.SwapElements(aThreads);
-  }
-
-private:
-  nsCOMArray<nsIThread> mThreads;
-  nsCOMPtr<nsIThreadPoolListener> mListener;
-};
-
 NS_IMPL_ADDREF(nsThreadPool)
 NS_IMPL_RELEASE(nsThreadPool)
 NS_IMPL_CLASSINFO(nsThreadPool, nullptr, nsIClassInfo::THREADSAFE,
@@ -74,28 +56,9 @@ nsThreadPool::nsThreadPool()
 
 nsThreadPool::~nsThreadPool()
 {
-  // Calling Shutdown() directly is not safe since it will spin the event loop
-  // (perhaps during a GC). Instead we try to delay-shutdown each thread that is
-  // still alive.
-  nsCOMArray<nsIThread> threads;
-  nsCOMPtr<nsIThreadPoolListener> listener;
-  {
-    ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
-    if (!mShutdown) {
-      NS_WARNING("nsThreadPool destroyed before Shutdown() was called!");
-
-      mThreads.SwapElements(threads);
-      mListener.swap(listener);
-    }
-  }
-
-  if (!threads.IsEmpty()) {
-    nsRefPtr<ShutdownHelper> helper =
-      new ShutdownHelper(threads, listener.forget());
-    if (NS_FAILED(NS_DispatchToMainThread(helper, NS_DISPATCH_NORMAL))) {
-      NS_WARNING("Unable to shut down threads in this thread pool!");
-    }
-  }
+  // Threads keep a reference to the nsThreadPool until they return from Run()
+  // after removing themselves from mThreads.
+  MOZ_ASSERT(mThreads.IsEmpty());
 }
 
 nsresult
@@ -411,19 +374,5 @@ nsThreadPool::SetName(const nsACString& aName)
   }
 
   mName = aName;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ShutdownHelper::Run()
-{
-  MOZ_ASSERT(!mThreads.IsEmpty());
-
-  for (int32_t i = 0; i < mThreads.Count(); ++i)
-    mThreads[i]->Shutdown();
-
-  mThreads.Clear();
-
-  mListener = nullptr;
   return NS_OK;
 }
