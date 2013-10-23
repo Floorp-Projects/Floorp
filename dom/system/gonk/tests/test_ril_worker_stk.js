@@ -764,6 +764,42 @@ add_test(function test_stk_proactive_command_provide_local_information() {
 });
 
 /**
+ * Verify Proactive command : Open Channel
+ */
+add_test(function test_stk_proactive_command_open_channel() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+  let cmdFactory = worker.StkCommandParamsFactory;
+
+  // Open Channel
+  let open_channel = [
+    0xD0,
+    0x0F,
+    0x81, 0x03, 0x01, 0x16, 0x00,
+    0x82, 0x02, 0x81, 0x82,
+    0x85, 0x04, 0x54, 0x65, 0x78, 0x74 //alpha id: "Text"
+  ];
+
+  for (let i = 0; i < open_channel.length; i++) {
+    pduHelper.writeHexOctet(open_channel[i]);
+  }
+
+  let berTlv = berHelper.decode(open_channel.length);
+  let ctlvs = berTlv.value;
+  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  do_check_eq(tlv.value.commandNumber, 0x01);
+  do_check_eq(tlv.value.typeOfCommand, STK_CMD_OPEN_CHANNEL);
+  do_check_eq(tlv.value.commandQualifier, 0x00);
+
+  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+  do_check_eq(tlv.value.identifier, "Text");
+
+  run_next_test();
+});
+
+/**
  * Verify Event Download Command : Location Status
  */
 add_test(function test_stk_event_download_location_status() {
