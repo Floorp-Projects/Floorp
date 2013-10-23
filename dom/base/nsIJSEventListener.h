@@ -21,8 +21,8 @@ class nsEventHandler
 {
 public:
   typedef mozilla::dom::EventHandlerNonNull EventHandlerNonNull;
-  typedef mozilla::dom::OnBeforeUnloadEventHandlerNonNull
-    OnBeforeUnloadEventHandlerNonNull;
+  typedef mozilla::dom::BeforeUnloadEventHandlerNonNull
+    BeforeUnloadEventHandlerNonNull;
   typedef mozilla::dom::OnErrorEventHandlerNonNull OnErrorEventHandlerNonNull;
   typedef mozilla::dom::CallbackFunction CallbackFunction;
 
@@ -48,7 +48,7 @@ public:
     Assign(aHandler, eOnError);
   }
 
-  nsEventHandler(OnBeforeUnloadEventHandlerNonNull* aHandler)
+  nsEventHandler(BeforeUnloadEventHandlerNonNull* aHandler)
   {
     Assign(aHandler, eOnBeforeUnload);
   }
@@ -99,13 +99,13 @@ public:
     Assign(aHandler, eNormal);
   }
 
-  OnBeforeUnloadEventHandlerNonNull* OnBeforeUnloadEventHandler() const
+  BeforeUnloadEventHandlerNonNull* BeforeUnloadEventHandler() const
   {
     MOZ_ASSERT(Type() == eOnBeforeUnload);
-    return reinterpret_cast<OnBeforeUnloadEventHandlerNonNull*>(Ptr());
+    return reinterpret_cast<BeforeUnloadEventHandlerNonNull*>(Ptr());
   }
 
-  void SetHandler(OnBeforeUnloadEventHandlerNonNull* aHandler)
+  void SetHandler(BeforeUnloadEventHandlerNonNull* aHandler)
   {
     ReleaseHandler();
     Assign(aHandler, eOnBeforeUnload);
@@ -237,7 +237,7 @@ public:
   {
     mHandler.SetHandler(aHandler);
   }
-  void SetHandler(mozilla::dom::OnBeforeUnloadEventHandlerNonNull* aHandler)
+  void SetHandler(mozilla::dom::BeforeUnloadEventHandlerNonNull* aHandler)
   {
     mHandler.SetHandler(aHandler);
   }
