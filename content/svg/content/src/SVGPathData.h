@@ -11,8 +11,6 @@
 #include "nsIContent.h"
 #include "nsINode.h"
 #include "nsIWeakReferenceUtils.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
 #include "nsSVGElement.h"
 #include "nsTArray.h"
 
@@ -81,11 +79,6 @@ class SVGPathData
   friend class ::nsSVGPathDataParserToInternal;
   // nsSVGPathDataParserToInternal will not keep wrappers in sync, so consumers
   // are responsible for that!
-
-  typedef gfx::DrawTarget DrawTarget;
-  typedef gfx::Path Path;
-  typedef gfx::FillRule FillRule;
-  typedef gfx::CapStyle CapStyle;
 
 public:
   typedef const float* const_iterator;
@@ -161,9 +154,6 @@ public:
   ToPath(const gfxMatrix& aMatrix) const;
 
   void ConstructPath(gfxContext *aCtx) const;
-  TemporaryRef<Path> ConstructPath(DrawTarget* aDT,
-                                   FillRule aFillRule,
-                                   CapStyle aCapStyle) const;
 
   const_iterator begin() const { return mData.Elements(); }
   const_iterator end() const { return mData.Elements() + mData.Length(); }
