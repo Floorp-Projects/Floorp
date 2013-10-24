@@ -578,7 +578,6 @@ public:
      * for measuring text etc as if they will be rendered to the screen
      */
     gfxASurface* ScreenReferenceSurface() { return mScreenReferenceSurface; }
-    mozilla::gfx::DrawTarget* ScreenReferenceDrawTarget() { return mScreenReferenceDrawTarget; }
 
     virtual mozilla::gfx::SurfaceFormat Optimal2DFormatForContent(gfxContentType aContent);
 
@@ -711,7 +710,6 @@ private:
     virtual bool SupportsOffMainThreadCompositing() { return true; }
 
     nsRefPtr<gfxASurface> mScreenReferenceSurface;
-    mozilla::RefPtr<mozilla::gfx::DrawTarget> mScreenReferenceDrawTarget;
     nsTArray<uint32_t> mCJKPrefLangs;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;
