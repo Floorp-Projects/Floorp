@@ -929,46 +929,6 @@ class StackFrame
     }
 
   public:
-    static size_t offsetOfFlags() {
-        return offsetof(StackFrame, flags_);
-    }
-
-    static size_t offsetOfExec() {
-        return offsetof(StackFrame, exec);
-    }
-
-    static size_t offsetOfNumActual() {
-        return offsetof(StackFrame, u.nactual);
-    }
-
-    static size_t offsetOfScopeChain() {
-        return offsetof(StackFrame, scopeChain_);
-    }
-
-    static size_t offsetOfReturnValue() {
-        return offsetof(StackFrame, rval_);
-    }
-
-    static size_t offsetOfArgumentsObject() {
-        return offsetof(StackFrame, argsObj_);
-    }
-
-    static ptrdiff_t offsetOfThis(JSFunction *fun) {
-        return fun == nullptr
-               ? -1 * ptrdiff_t(sizeof(Value))
-               : -(fun->nargs + 1) * ptrdiff_t(sizeof(Value));
-    }
-
-    static ptrdiff_t offsetOfFormalArg(JSFunction *fun, unsigned i) {
-        JS_ASSERT(i < fun->nargs);
-        return (-(int)fun->nargs + i) * sizeof(Value);
-    }
-
-    static size_t offsetOfFixed(unsigned i) {
-        return sizeof(StackFrame) + i * sizeof(Value);
-    }
-
-  public:
     void mark(JSTracer *trc);
     void markValues(JSTracer *trc, Value *sp);
 

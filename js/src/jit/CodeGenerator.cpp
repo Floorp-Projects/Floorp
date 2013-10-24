@@ -1041,7 +1041,7 @@ CodeGenerator::visitOsrScopeChain(LOsrScopeChain *lir)
     const LAllocation *frame   = lir->getOperand(0);
     const LDefinition *object  = lir->getDef(0);
 
-    const ptrdiff_t frameOffset = StackFrame::offsetOfScopeChain();
+    const ptrdiff_t frameOffset = BaselineFrame::reverseOffsetOfScopeChain();
 
     masm.loadPtr(Address(ToRegister(frame), frameOffset), ToRegister(object));
     return true;
@@ -1053,7 +1053,7 @@ CodeGenerator::visitOsrArgumentsObject(LOsrArgumentsObject *lir)
     const LAllocation *frame   = lir->getOperand(0);
     const LDefinition *object  = lir->getDef(0);
 
-    const ptrdiff_t frameOffset = StackFrame::offsetOfArgumentsObject();
+    const ptrdiff_t frameOffset = BaselineFrame::reverseOffsetOfArgsObj();
 
     masm.loadPtr(Address(ToRegister(frame), frameOffset), ToRegister(object));
     return true;
@@ -1077,13 +1077,13 @@ CodeGenerator::visitOsrReturnValue(LOsrReturnValue *lir)
     const LAllocation *frame   = lir->getOperand(0);
     const ValueOperand out     = ToOutValue(lir);
 
-    Address flags = Address(ToRegister(frame), StackFrame::offsetOfFlags());
-    Address retval = Address(ToRegister(frame), StackFrame::offsetOfReturnValue());
+    Address flags = Address(ToRegister(frame), BaselineFrame::reverseOffsetOfFlags());
+    Address retval = Address(ToRegister(frame), BaselineFrame::reverseOffsetOfReturnValue());
 
     masm.moveValue(UndefinedValue(), out);
 
     Label done;
-    masm.branchTest32(Assembler::Zero, flags, Imm32(StackFrame::HAS_RVAL), &done);
+    masm.branchTest32(Assembler::Zero, flags, Imm32(BaselineFrame::HAS_RVAL), &done);
     masm.loadValue(retval, out);
     masm.bind(&done);
 
