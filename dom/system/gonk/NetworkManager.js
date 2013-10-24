@@ -244,7 +244,9 @@ NetworkManager.prototype = {
             this.setAndConfigureActive();
             // Update data connection when Wifi connected/disconnected
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              this.mRIL.getRadioInterface(0).updateRILNetworkInterface();
+              for (let i = 0; i < this.mRIL.numRadioInterfaces; i++) {
+                this.mRIL.getRadioInterface(i).updateRILNetworkInterface();
+              }
             }
 
             this.onConnectionChanged(network);
@@ -272,7 +274,9 @@ NetworkManager.prototype = {
             this.setAndConfigureActive();
             // Update data connection when Wifi connected/disconnected
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              this.mRIL.getRadioInterface(0).updateRILNetworkInterface();
+              for (let i = 0; i < this.mRIL.numRadioInterfaces; i++) {
+                this.mRIL.getRadioInterface(i).updateRILNetworkInterface();
+              }
             }
             break;
         }
