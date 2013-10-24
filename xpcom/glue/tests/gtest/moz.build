@@ -6,7 +6,7 @@
 
 MODULE = 'xpcom_glue_gtest'
 
-CPP_SOURCES += [
+SOURCES += [
     'TestFileUtils.cpp',
 ]
 

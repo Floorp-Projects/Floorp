@@ -17,7 +17,7 @@ EXPORTS.mozilla += [
     'PublicSSL.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'CertVerifier.cpp',
     'CryptoTask.cpp',
     'JARSignatureVerification.cpp',
@@ -74,18 +74,18 @@ CPP_SOURCES += [
 ]
 
 if not CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsSmartCardMonitor.cpp',
     ]
 
 if CONFIG['MOZ_XUL']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsCertTree.cpp',
     ]
 
 LIBRARY_NAME = 'pipnss'
 
-CSRCS += [
+SOURCES += [
     'md4.c',
 ]
 

@@ -21,7 +21,7 @@ EXPORTS.mozilla.net += [
     'FTPChannelParent.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'FTPChannelChild.cpp',
     'FTPChannelParent.cpp',
     'nsFTPChannel.cpp',

@@ -13,7 +13,7 @@ EXPORTS.mozilla.dom.network += [
     'Types.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'Connection.cpp',
     'TCPServerSocketChild.cpp',
     'TCPServerSocketParent.cpp',
@@ -22,7 +22,7 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_B2G_RIL']:
-    CPP_SOURCES += [
+    SOURCES += [
         'MobileConnection.cpp',
     ]
     EXTRA_JS_MODULES = [

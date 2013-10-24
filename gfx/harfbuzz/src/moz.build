@@ -30,7 +30,7 @@ EXPORTS.harfbuzz += [
     'hb.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'hb-blob.cc',
     'hb-buffer.cc',
     'hb-common.cc',

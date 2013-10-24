@@ -6,7 +6,7 @@
 
 if not CONFIG['MOZ_PROFILE_GENERATE']:
     PROGRAM = 'spacetrace'
-    CSRCS += [
+    SOURCES += [
         'formdata.c',
         'spacecategory.c',
         'spacetrace.c',
@@ -20,10 +20,10 @@ simple_c_sources = [
     'tmstats',
 ]
 
-CSRCS += [
+SOURCES += [
     '%s.c' % s for s in simple_c_sources
 ]
-CSRCS += [
+SOURCES += [
     'tmreader.c',
 ]
 
@@ -37,7 +37,7 @@ simple_cpp_sources = [
     'leaksoup',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     '%s.cpp' % s for s in simple_cpp_sources
 ]
 

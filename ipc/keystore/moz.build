@@ -10,7 +10,7 @@ EXPORTS.mozilla.ipc += [
   'KeyStore.h'
 ]
 
-CPP_SOURCES += [
+SOURCES += [
   'KeyStore.cpp'
 ]
 

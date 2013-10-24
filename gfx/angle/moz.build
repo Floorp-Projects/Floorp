@@ -20,7 +20,7 @@ EXPORTS.angle += [
 
 # Target: 'preprocessor'
 # src/compiler/preprocessor:
-CPP_SOURCES += ['src/compiler/preprocessor/' + src for src in [
+SOURCES += ['src/compiler/preprocessor/' + src for src in [
     'DiagnosticsBase.cpp',
     'DirectiveHandlerBase.cpp',
     'DirectiveParser.cpp',
@@ -38,7 +38,7 @@ CPP_SOURCES += ['src/compiler/preprocessor/' + src for src in [
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
 # src/compiler:
-CPP_SOURCES += ['src/compiler/' + src for src in [
+SOURCES += ['src/compiler/' + src for src in [
     'BuiltInFunctionEmulator.cpp',
     'Compiler.cpp',
     'compiler_debug.cpp',
@@ -70,7 +70,7 @@ CPP_SOURCES += ['src/compiler/' + src for src in [
 ]]
 
 # src/compiler/depgraph:
-CPP_SOURCES += ['src/compiler/depgraph/' + src for src in [
+SOURCES += ['src/compiler/depgraph/' + src for src in [
     'DependencyGraph.cpp',
     'DependencyGraphBuilder.cpp',
     'DependencyGraphOutput.cpp',
@@ -78,27 +78,27 @@ CPP_SOURCES += ['src/compiler/depgraph/' + src for src in [
 ]]
 
 # src/compiler/timing:
-CPP_SOURCES += ['src/compiler/timing/' + src for src in [
+SOURCES += ['src/compiler/timing/' + src for src in [
     'RestrictFragmentShaderTiming.cpp',
     'RestrictVertexShaderTiming.cpp',
 ]]
 
 # src/third_party/compiler:
-CPP_SOURCES += ['src/third_party/compiler/' + src for src in [
+SOURCES += ['src/third_party/compiler/' + src for src in [
     'ArrayBoundsClamper.cpp',
 ]]
 
 # src/third_party/murmurhash:
-CPP_SOURCES += ['src/third_party/murmurhash/' + src for src in [
+SOURCES += ['src/third_party/murmurhash/' + src for src in [
     'MurmurHash3.cpp',
 ]]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    CPP_SOURCES += [
+    SOURCES += [
         'src/compiler/ossource_win.cpp',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/compiler/ossource_posix.cpp',
     ]
 
@@ -106,7 +106,7 @@ else:
 # Target: 'translator_glsl'
 #   Requires: 'translator_common'
 # src/compiler:
-CPP_SOURCES += ['src/compiler/' + src for src in [
+SOURCES += ['src/compiler/' + src for src in [
     'CodeGenGLSL.cpp',
     'OutputESSL.cpp',
     'OutputGLSL.cpp',

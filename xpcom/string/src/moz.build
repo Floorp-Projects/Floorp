@@ -6,7 +6,7 @@
 
 MODULE = 'string'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsDependentString.cpp',
     'nsDependentSubstring.cpp',
     'nsPromiseFlatString.cpp',
@@ -21,7 +21,7 @@ CPP_SOURCES += [
 # Are we targeting x86 or x86-64?  If so, compile the SSE2 functions for
 # nsUTF8Utils.cpp.
 if CONFIG['INTEL_ARCHITECTURE']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsUTF8UtilsSSE2.cpp',
     ]
 

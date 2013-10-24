@@ -9,7 +9,7 @@ NO_DIST_INSTALL = True
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-CPP_SOURCES += [
+SOURCES += [
     'jsctypes-test-errno.cpp',
     'jsctypes-test-finalizer.cpp',
     'jsctypes-test.cpp',

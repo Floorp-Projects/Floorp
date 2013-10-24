@@ -6,7 +6,7 @@
 
 MODULE = 'content'
 
-CPP_SOURCES += [
+SOURCES += [
     'IMediaResourceManagerClient.cpp',
     'IMediaResourceManagerDeathNotifier.cpp',
     'IMediaResourceManagerService.cpp',

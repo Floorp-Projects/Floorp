@@ -27,7 +27,7 @@ EXPORTS.mozilla += [
     'MediaManager.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'GetUserMediaRequest.cpp',
     'MediaManager.cpp',
 ]
@@ -41,7 +41,7 @@ if CONFIG['MOZ_B2G']:
     EXPORTS.mozilla += [
         'MediaPermissionGonk.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'MediaPermissionGonk.cpp',
     ]
 

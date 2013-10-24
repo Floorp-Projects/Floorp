@@ -6,7 +6,7 @@
 
 MODULE = 'imgjpege'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsJPEGEncoder.cpp',
 ]
 

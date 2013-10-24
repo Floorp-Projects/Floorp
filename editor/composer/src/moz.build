@@ -6,7 +6,7 @@
 
 MODULE = 'editor'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsComposerCommands.cpp',
     'nsComposerCommandsUpdater.cpp',
     'nsComposerController.cpp',

@@ -6,7 +6,7 @@
 
 MODULE = 'i18n'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsI18nModule.cpp',
 ]
 

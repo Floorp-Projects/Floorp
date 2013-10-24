@@ -6,7 +6,7 @@
 
 MODULE = 'faststartupqt'
 
-CPP_SOURCES += [
+SOURCES += [
     'moc_moziqwidget.cpp',
     'moc_nsFastStartupQt.cpp',
     'mozqglwidgetwrapper.cpp',

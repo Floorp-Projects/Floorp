@@ -6,13 +6,13 @@
 
 MODULE = 'embedcomponents'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsAutoWindowStateHelper.cpp',
     'nsWindowWatcher.cpp',
 ]
 
 if CONFIG['MOZ_XUL']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsDialogParamBlock.cpp',
     ]
 

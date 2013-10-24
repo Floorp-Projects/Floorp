@@ -6,7 +6,7 @@
 
 MODULE = 'dom'
 
-CMMSRCS += ['CoreLocationLocationProvider.mm']
+SOURCES += ['CoreLocationLocationProvider.mm']
 
 FAIL_ON_WARNINGS = True
 

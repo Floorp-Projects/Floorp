@@ -14,7 +14,7 @@ EXPORTS.mozilla += [
     'BrowserElementParent.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'BrowserElementParent.cpp',
 ]
 

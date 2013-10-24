@@ -7,7 +7,7 @@
 MODULE = 'dom'
 
 if CONFIG['MOZ_ENABLE_QTMOBILITY']:
-    CPP_SOURCES += [
+    SOURCES += [
         'moc_QTMLocationProvider.cpp',
         'QTMLocationProvider.cpp',
     ]

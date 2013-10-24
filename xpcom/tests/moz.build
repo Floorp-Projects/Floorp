@@ -48,7 +48,7 @@ if CONFIG['WRAP_STL_INCLUDES']:
         'TestSTLWrappers',
     ]
 
-CPP_SOURCES += [
+SOURCES += [
     '%s.cpp' % s for s in sorted(sources)
 ]
 

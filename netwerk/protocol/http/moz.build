@@ -39,7 +39,7 @@ EXPORTS.mozilla.net += [
     'PSpdyPush.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'ASpdySession.cpp',
     'ConnectionDiagnostics.cpp',
     'HttpBaseChannel.cpp',

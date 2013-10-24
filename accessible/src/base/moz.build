@@ -30,7 +30,7 @@ if CONFIG['MOZ_DEBUG']:
         'Logging.h',
     ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AccCollector.cpp',
     'AccEvent.cpp',
     'AccGroupInfo.cpp',
@@ -58,7 +58,7 @@ CPP_SOURCES += [
 ]
 
 if a11y_log:
-    CPP_SOURCES += [
+    SOURCES += [
         'Logging.cpp',
     ]
 

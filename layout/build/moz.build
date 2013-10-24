@@ -12,7 +12,7 @@ EXPORTS += [
     'nsLayoutStatics.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsContentDLF.cpp',
     'nsLayoutModule.cpp',
     'nsLayoutStatics.cpp',

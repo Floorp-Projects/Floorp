@@ -12,7 +12,7 @@ EXPORTS.mozilla.layout += [
     'RenderFrameUtils.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'RenderFrameChild.cpp',
     'RenderFrameParent.cpp',
 ]

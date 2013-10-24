@@ -6,7 +6,7 @@
 
 MODULE = 'imgbmpe'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsBMPEncoder.cpp',
 ]
 

@@ -50,7 +50,7 @@ EXPORTS.mozilla.dom += [
     'WaveShaperNode.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AnalyserNode.cpp',
     'AudioBuffer.cpp',
     'AudioBufferSourceNode.cpp',

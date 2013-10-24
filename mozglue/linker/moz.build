@@ -6,7 +6,7 @@
 
 MODULE = 'mozglue'
 
-CPP_SOURCES += [
+SOURCES += [
     'CustomElf.cpp',
     'ElfLoader.cpp',
     'Mappable.cpp',
@@ -16,7 +16,7 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'linker'
 
-HOST_CPPSRCS += [
+HOST_SOURCES += [
     'SeekableZStream.cpp',
     'szip.cpp',
 ]

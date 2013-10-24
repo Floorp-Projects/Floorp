@@ -10,7 +10,7 @@ MODULE = 'rdfutil'
 
 include('objs.mozbuild')
 
-CPP_SOURCES += rdf_util_src_cppsrcs
+SOURCES += rdf_util_src_cppsrcs
 
 LIBRARY_NAME = 'rdfutil_external_s'
 

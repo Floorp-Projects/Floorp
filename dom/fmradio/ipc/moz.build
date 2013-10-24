@@ -11,7 +11,7 @@ EXPORTS.mozilla.dom += [
     'FMRadioRequestParent.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'FMRadioChild.cpp',
     'FMRadioParent.cpp',
     'FMRadioRequestChild.cpp',

@@ -6,7 +6,7 @@
 
 MODULE = 'pref'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsPrefBranch.cpp',
     'nsPrefsFactory.cpp',
     'prefapi.cpp',

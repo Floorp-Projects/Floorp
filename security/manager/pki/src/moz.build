@@ -6,7 +6,7 @@
 
 MODULE = 'pippki'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsASN1Tree.cpp',
     'nsFormSigningDialog.cpp',
     'nsNSSDialogHelper.cpp',

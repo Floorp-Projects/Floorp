@@ -10,7 +10,7 @@ EXPORTS.mozilla.dom += [
     'GamepadService.h',
     ]
 
-CPP_SOURCES = [
+SOURCES = [
     'Gamepad.cpp',
     'GamepadButton.cpp',
     'GamepadService.cpp',

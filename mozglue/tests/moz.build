@@ -7,7 +7,7 @@
 NO_DIST_INSTALL = True
 
 if CONFIG['MOZ_LINKER']:
-    CPP_SOURCES += [
+    SOURCES += [
         'ShowSSEConfig.cpp',
         'TestZip.cpp',
     ]
