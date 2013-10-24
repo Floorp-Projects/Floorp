@@ -27,6 +27,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
                                   "resource://gre/modules/PermissionsUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "ChromeRegistry",
@@ -102,6 +108,9 @@ const RDFURI_INSTALL_MANIFEST_ROOT    = "urn:mozilla:install-manifest";
 const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
+
+// The maximum amount of file data to buffer at a time during file extraction
+const EXTRACTION_BUFFER               = 1024 * 512;
 
 // The value for this is in Makefile.in
 #expand const DB_SCHEMA                       = __MOZ_EXTENSIONS_DB_SCHEMA__;
@@ -1111,6 +1120,140 @@ function getTemporaryFile() {
 }
 
 /**
+ * Asynchronously writes data from an nsIInputStream to an OS.File instance.
+ * The source stream and OS.File are closed regardless of whether the operation
+ * succeeds or fails.
+ * Returns a promise that will be resolved when complete.
+ *
+ * @param  aPath
+ *         The name of the file being extracted for logging purposes.
+ * @param  aStream
+ *         The source nsIInputStream.
+ * @param  aFile
+ *         The open OS.File instance to write to.
+ */
+function saveStreamAsync(aPath, aStream, aFile) {
+  let deferred = Promise.defer();
+
+  // Read the input stream on a background thread
+  let sts = Cc["@mozilla.org/network/stream-transport-service;1"].
+            getService(Ci.nsIStreamTransportService);
+  let transport = sts.createInputTransport(aStream, -1, -1, true);
+  let input = transport.openInputStream(0, 0, 0)
+                       .QueryInterface(Ci.nsIAsyncInputStream);
+  let source = Cc["@mozilla.org/binaryinputstream;1"].
+               createInstance(Ci.nsIBinaryInputStream);
+  source.setInputStream(input);
+
+  let data = Uint8Array(EXTRACTION_BUFFER);
+
+  function readFailed(error) {
+    try {
+      aStream.close();
+    }
+    catch (e) {
+      ERROR("Failed to close JAR stream for " + aPath);
+    }
+
+    aFile.close().then(function() {
+      deferred.reject(error);
+    }, function(e) {
+      ERROR("Failed to close file for " + aPath);
+      deferred.reject(error);
+    });
+  }
+
+  function readData() {
+    try {
+      let count = Math.min(source.available(), data.byteLength);
+      source.readArrayBuffer(count, data.buffer);
+
+      aFile.write(data, { bytes: count }).then(function() {
+        input.asyncWait(readData, 0, 0, Services.tm.currentThread);
+      }, readFailed);
+    }
+    catch (e if e.result == Cr.NS_BASE_STREAM_CLOSED) {
+      deferred.resolve(aFile.close());
+    }
+    catch (e) {
+      readFailed(e);
+    }
+  }
+
+  input.asyncWait(readData, 0, 0, Services.tm.currentThread);
+
+  return deferred.promise;
+}
+
+/**
+ * Asynchronously extracts files from a ZIP file into a directory.
+ * Returns a promise that will be resolved when the extraction is complete.
+ *
+ * @param  aZipFile
+ *         The source ZIP file that contains the add-on.
+ * @param  aDir
+ *         The nsIFile to extract to.
+ */
+function extractFilesAsync(aZipFile, aDir) {
+  let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
+                  createInstance(Ci.nsIZipReader);
+  zipReader.open(aZipFile);
+
+  let promises = [];
+
+  // Get all of the entries in the zip and sort them so we create directories
+  // before files
+  let entries = zipReader.findEntries(null);
+  let names = [];
+  while (entries.hasMore())
+    names.push(entries.getNext());
+  names.sort();
+
+  for (let name of names) {
+    let entryName = name;
+    let zipentry = zipReader.getEntry(name);
+    let path = OS.Path.join(aDir.path, ...name.split("/"));
+
+    if (zipentry.isDirectory) {
+      promises.push(OS.File.makeDir(path).then(null, function(e) {
+        ERROR("extractFilesAsync: failed to create directory " + path, e);
+        throw e;
+      }));
+    }
+    else {
+      let options = { unixMode: zipentry.permissions | FileUtils.PERMS_FILE };
+      let promise = OS.File.open(path, { truncate: true }, options).then(function(file) {
+        if (zipentry.realSize == 0)
+          return file.close();
+
+        return saveStreamAsync(path, zipReader.getInputStream(entryName), file);
+      });
+
+      promises.push(promise.then(null, function(e) {
+        ERROR("extractFilesAsync: failed to extract file " + path, e);
+        throw e;
+      }));
+    }
+  }
+
+  // Will be rejected if any of the promises are rejected and resolved otherwise
+  let result = Promise.defer();
+
+  // If any promise is rejected then result is rejected, the resulting array of
+  // promises are all resolved though
+  promises = promises.map(p => p.then(null, result.reject));
+
+  // Wait for all of the promises to be resolved
+  return Promise.all(promises).then(function() {
+    // Resolve the result if it hasn't already been rejected
+    result.resolve();
+
+    zipReader.close();
+    return result.promise;
+  });
+}
+
+/**
  * Extracts files from a ZIP file into a directory.
  *
  * @param  aZipFile
@@ -1244,42 +1387,43 @@ function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion)
   return uri;
 }
 
-
-/**
- * Removes the specified files or directories in a staging directory and then if
- * the staging directory is empty attempts to remove it.
- *
- * @param  aDir
- *         nsIFile for the staging directory to clean up
- * @param  aLeafNames
- *         An array of file or directory to remove from the directory, the
- *         array may be empty
- */
-function cleanStagingDir(aDir, aLeafNames) {
-  aLeafNames.forEach(function(aName) {
-    let file = aDir.clone();
-    file.append(aName);
-    if (file.exists())
-      recursiveRemove(file);
-  });
-
-  let dirEntries = aDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-  try {
-    if (dirEntries.nextFile)
+function recursiveRemoveAsync(aFile) {
+  return Task.spawn(function () {
+    let info = null;
+    try {
+      info = yield OS.File.stat(aFile.path);
+    }
+    catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
+      // The file has already gone away
       return;
-  }
-  finally {
-    dirEntries.close();
-  }
+    }
 
-  try {
-    setFilePermissions(aDir, FileUtils.PERMS_DIRECTORY);
-    aDir.remove(false);
-  }
-  catch (e) {
-    WARN("Failed to remove staging dir", e);
-    // Failing to remove the staging directory is ignorable
-  }
+    setFilePermissions(aFile, info.isDir ? FileUtils.PERMS_DIRECTORY
+                                         : FileUtils.PERMS_FILE);
+
+    // OS.File means we have to recurse into directories
+    if (info.isDir) {
+      let iterator = new OS.File.DirectoryIterator(aFile.path);
+      yield iterator.forEach(function(entry) {
+        let nextFile = aFile.clone();
+        nextFile.append(entry.name);
+        return recursiveRemoveAsync(nextFile);
+      });
+      yield iterator.close();
+    }
+
+    try {
+      yield info.isDir ? OS.File.removeEmptyDir(aFile.path)
+                       : OS.File.remove(aFile.path);
+    }
+    catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
+      // The file has already gone away
+    }
+    catch (e) {
+      ERROR("Failed to remove file " + aFile.path, e);
+      throw e;
+    }
+  });
 }
 
 /**
@@ -1299,6 +1443,8 @@ function recursiveRemove(aFile) {
     // happen on OSX where the resource fork is automatically moved with the
     // data fork for the file. See bug 733436.
     if (e.result == Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
+      return;
+    if (e.result == Cr.NS_ERROR_FILE_NOT_FOUND)
       return;
 
     throw e;
@@ -2376,7 +2522,7 @@ var XPIProvider = {
       }
 
       try {
-        cleanStagingDir(stagingDir, seenFiles);
+        aLocation.cleanStagingDir(seenFiles);
       }
       catch (e) {
         // Non-critical, just saves some perf on startup if we clean this up.
@@ -4286,7 +4432,7 @@ var XPIProvider = {
     if (!(aAddon.inDatabase))
       throw new Error("Can only cancel uninstall for installed addons.");
 
-    cleanStagingDir(aAddon._installLocation.getStagingDir(), [aAddon.id]);
+    aAddon._installLocation.cleanStagingDir([aAddon.id]);
 
     XPIDatabase.setAddonProperties(aAddon, {
       pendingUninstall: false
@@ -4607,9 +4753,8 @@ AddonInstall.prototype = {
       let xpi = this.installLocation.getStagingDir();
       xpi.append(this.addon.id + ".xpi");
       flushJarCache(xpi);
-      cleanStagingDir(this.installLocation.getStagingDir(),
-                      [this.addon.id, this.addon.id + ".xpi",
-                       this.addon.id + ".json"]);
+      this.installLocation.cleanStagingDir([this.addon.id, this.addon.id + ".xpi",
+                                            this.addon.id + ".json"]);
       this.state = AddonManager.STATE_CANCELLED;
       XPIProvider.removeActiveInstall(this);
 
@@ -5244,27 +5389,28 @@ AddonInstall.prototype = {
     AddonManagerPrivate.callAddonListeners("onInstalling",
                                            createWrapper(this.addon),
                                            requiresRestart);
-    let stagedAddon = this.installLocation.getStagingDir();
 
-    try {
+    let stagingDir = this.installLocation.getStagingDir();
+    let stagedAddon = stagingDir.clone();
+
+    Task.spawn((function() {
+      yield this.installLocation.requestStagingDir();
+
       // First stage the file regardless of whether restarting is necessary
       if (this.addon.unpack || Prefs.getBoolPref(PREF_XPI_UNPACK, false)) {
         LOG("Addon " + this.addon.id + " will be installed as " +
             "an unpacked directory");
         stagedAddon.append(this.addon.id);
-        if (stagedAddon.exists())
-          recursiveRemove(stagedAddon);
-        stagedAddon.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-        extractFiles(this.file, stagedAddon);
+        yield recursiveRemoveAsync(stagedAddon);
+        yield OS.File.makeDir(stagedAddon.path);
+        yield extractFilesAsync(this.file, stagedAddon);
       }
       else {
         LOG("Addon " + this.addon.id + " will be installed as " +
             "a packed xpi");
         stagedAddon.append(this.addon.id + ".xpi");
-        if (stagedAddon.exists())
-          stagedAddon.remove(true);
-        this.file.copyTo(this.installLocation.getStagingDir(),
-                         this.addon.id + ".xpi");
+        yield recursiveRemoveAsync(stagedAddon);
+        yield OS.File.copy(this.file.path, stagedAddon.path);
       }
 
       if (requiresRestart) {
@@ -5348,7 +5494,6 @@ AddonInstall.prototype = {
         let existingAddonID = this.existingAddon ? this.existingAddon.id : null;
         let file = this.installLocation.installAddon(this.addon.id, stagedAddon,
                                                      existingAddonID);
-        cleanStagingDir(stagedAddon.parent, []);
 
         // Update the metadata in the database
         this.addon._sourceBundle = file;
@@ -5399,9 +5544,8 @@ AddonInstall.prototype = {
           }
         }
       }
-    }
-    catch (e) {
-      WARN("Failed to install", e);
+    }).bind(this)).then(null, (e) => {
+      WARN("Failed to install " + this.file.path + " from " + this.sourceURI.spec, e);
       if (stagedAddon.exists())
         recursiveRemove(stagedAddon);
       this.state = AddonManager.STATE_INSTALL_FAILED;
@@ -5410,10 +5554,10 @@ AddonInstall.prototype = {
       AddonManagerPrivate.callInstallListeners("onInstallFailed",
                                                this.listeners,
                                                this.wrapper);
-    }
-    finally {
+    }).then(() => {
       this.removeTemporaryFile();
-    }
+      return this.installLocation.releaseStagingDir();
+    });
   },
 
   getInterface: function AI_getInterface(iid) {
@@ -6516,6 +6660,7 @@ function DirectoryInstallLocation(aName, aDirectory, aScope, aLocked) {
   this._IDToFileMap = {};
   this._FileToIDMap = {};
   this._linkedAddons = [];
+  this._stagingDirLock = 0;
 
   if (!aDirectory.exists())
     return;
@@ -6661,6 +6806,72 @@ DirectoryInstallLocation.prototype = {
     let dir = this._directory.clone();
     dir.append(DIR_STAGE);
     return dir;
+  },
+
+  requestStagingDir: function() {
+    this._stagingDirLock++;
+
+    if (this._stagingDirPromise)
+      return this._stagingDirPromise;
+
+    OS.File.makeDir(this._directory.path);
+    let stagepath = OS.Path.join(this._directory.path, DIR_STAGE);
+    return this._stagingDirPromise = OS.File.makeDir(stagepath).then(null, (e) => {
+      if (e instanceof OS.File.Error && e.becauseExists)
+        return;
+      ERROR("Failed to create staging directory", e);
+      throw e;
+    });
+  },
+
+  releaseStagingDir: function() {
+    this._stagingDirLock--;
+
+    if (this._stagingDirLock == 0) {
+      this._stagingDirPromise = null;
+      this.cleanStagingDir();
+    }
+
+    return Promise.resolve();
+  },
+
+  /**
+   * Removes the specified files or directories in the staging directory and
+   * then if the staging directory is empty attempts to remove it.
+   *
+   * @param  aLeafNames
+   *         An array of file or directory to remove from the directory, the
+   *         array may be empty
+   */
+  cleanStagingDir: function(aLeafNames = []) {
+    let dir = this.getStagingDir();
+
+    for (let name of aLeafNames) {
+      let file = dir.clone();
+      file.append(name);
+      recursiveRemove(file);
+    }
+
+    if (this.stagingDirLock > 0)
+      return;
+
+    let dirEntries = dir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
+    try {
+      if (dirEntries.nextFile)
+        return;
+    }
+    finally {
+      dirEntries.close();
+    }
+
+    try {
+      setFilePermissions(dir, FileUtils.PERMS_DIRECTORY);
+      dir.remove(false);
+    }
+    catch (e) {
+      WARN("Failed to remove staging dir", e);
+      // Failing to remove the staging directory is ignorable
+    }
   },
 
   /**
