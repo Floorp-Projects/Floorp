@@ -1985,6 +1985,7 @@ DisassembleToSprinter(JSContext *cx, unsigned argc, jsval *vp, Sprinter *sprinte
         /* Without arguments, disassemble the current script. */
         RootedScript script(cx, GetTopScript(cx));
         if (script) {
+            JSAutoCompartment ac(cx, script);
             if (!js_Disassemble(cx, script, p.lines, sprinter))
                 return false;
             SrcNotes(cx, script, sprinter);
@@ -3767,11 +3768,16 @@ DecompileThisScript(JSContext *cx, unsigned argc, Value *vp)
         args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
-    JSString *result = JS_DecompileScript(cx, script, "test", 0);
-    if (!result)
-        return false;
-    args.rval().setString(result);
-    return true;
+
+    {
+        JSAutoCompartment ac(cx, script);
+        JSString *result = JS_DecompileScript(cx, script, "test", 0);
+        if (!result)
+            return false;
+        args.rval().setString(result);
+    }
+
+    return JS_WrapValue(cx, vp);
 }
 
 static bool
