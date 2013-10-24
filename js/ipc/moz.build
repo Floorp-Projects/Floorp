@@ -6,7 +6,7 @@
 
 MODULE = 'js'
 
-CPP_SOURCES += [
+SOURCES += [
     'JavaScriptChild.cpp',
     'JavaScriptParent.cpp',
     'JavaScriptShared.cpp',

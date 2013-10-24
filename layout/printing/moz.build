@@ -14,7 +14,7 @@ XPIDL_MODULE = 'layout_printing'
 
 MODULE = 'layout'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsPagePrintTimer.cpp',
     'nsPrintData.cpp',
     'nsPrintEngine.cpp',

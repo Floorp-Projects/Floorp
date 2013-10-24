@@ -77,7 +77,7 @@ EXPORTS.mozilla.dom += [
     'ValidityState.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'HTMLAnchorElement.cpp',
     'HTMLAreaElement.cpp',
     'HTMLAudioElement.cpp',

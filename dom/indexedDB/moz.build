@@ -37,7 +37,7 @@ EXPORTS.mozilla.dom.indexedDB += [
     'KeyPath.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AsyncConnectionHelper.cpp',
     'CheckPermissionsHelper.cpp',
     'Client.cpp',

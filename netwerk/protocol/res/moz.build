@@ -12,7 +12,7 @@ XPIDL_MODULE = 'necko_res'
 
 MODULE = 'necko'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsResProtocolHandler.cpp',
 ]
 

@@ -18,7 +18,7 @@ EXPORTS += [
 ]
 
 if CONFIG['LIBJPEG_TURBO_X64_ASM']:
-    ASFILES += [
+    SOURCES += [
         'simd/jccolss2-64.asm',
         'simd/jcgrass2-64.asm',
         'simd/jcqnts2f-64.asm',
@@ -37,7 +37,7 @@ if CONFIG['LIBJPEG_TURBO_X64_ASM']:
 ]
 
 if CONFIG['LIBJPEG_TURBO_X86_ASM']:
-    ASFILES += [
+    SOURCES += [
         'simd/jccolmmx.asm',
         'simd/jccolss2.asm',
         'simd/jcgrammx.asm',
@@ -73,7 +73,7 @@ if CONFIG['LIBJPEG_TURBO_X86_ASM']:
         'simd/jsimdcpu.asm',
 ]
 
-CSRCS += [
+SOURCES += [
     'jcomapi.c',
     'jdapimin.c',
     'jdapistd.c',
@@ -108,7 +108,7 @@ CSRCS += [
 ]
 
 # These files enable support for writing JPEGs
-CSRCS += [
+SOURCES += [
     'jcapimin.c',
     'jcapistd.c',
     'jccoefct.c',
@@ -127,22 +127,22 @@ CSRCS += [
 ]
 
 if CONFIG['LIBJPEG_TURBO_ARM_ASM']:
-    CSRCS += [
+    SOURCES += [
         'simd/jsimd_arm.c',
     ]
-    SSRCS += [
+    SOURCES += [
         'simd/jsimd_arm_neon.S',
     ]
 elif CONFIG['LIBJPEG_TURBO_X64_ASM']:
-    CSRCS += [
+    SOURCES += [
         'simd/jsimd_x86_64.c',
     ]
 elif CONFIG['LIBJPEG_TURBO_X86_ASM']:
-    CSRCS += [
+    SOURCES += [
         'simd/jsimd_i386.c',
     ]
 else: # No SIMD support?
-    CSRCS += [
+    SOURCES += [
         'jsimd_none.c',
     ]
 

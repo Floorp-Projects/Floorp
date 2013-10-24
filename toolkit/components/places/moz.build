@@ -39,7 +39,7 @@ if CONFIG['MOZ_PLACES']:
         'History.h',
     ]
 
-    CPP_SOURCES += [
+    SOURCES += [
         'AsyncFaviconHelpers.cpp',
         'Database.cpp',
         'Helpers.cpp',

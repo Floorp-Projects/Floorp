@@ -6,7 +6,7 @@
 
 MODULE = 'jsdownloads'
 
-CPP_SOURCES += [
+SOURCES += [
     'DownloadPlatform.cpp',
 ]
 

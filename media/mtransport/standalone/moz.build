@@ -8,7 +8,7 @@ MODULE = 'mtransport_s'
 
 include('../objs.mozbuild')
 
-CPP_SOURCES += mtransport_cppsrcs
+SOURCES += mtransport_cppsrcs
 
 LIBRARY_NAME = 'mtransport_s'
 

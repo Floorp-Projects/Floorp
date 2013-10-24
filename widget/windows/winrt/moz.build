@@ -6,7 +6,7 @@
 
 MODULE = 'widget'
 
-CPP_SOURCES += [
+SOURCES += [
     'APZController.cpp',
     'FrameworkView.cpp',
     'MetroApp.cpp',

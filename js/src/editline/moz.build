@@ -6,7 +6,7 @@
 
 LIBRARY_NAME = 'editline'
 
-CSRCS += [
+SOURCES += [
     'editline.c',
     'sysunix.c',
 ]

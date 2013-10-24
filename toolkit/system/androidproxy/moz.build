@@ -6,7 +6,7 @@
 
 MODULE = 'androidproxy'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsAndroidSystemProxySettings.cpp',
 ]
 

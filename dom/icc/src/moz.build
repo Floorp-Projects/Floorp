@@ -9,7 +9,7 @@ EXPORTS.mozilla.dom += [
     'StkCommandEvent.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'IccManager.cpp',
     'StkCommandEvent.cpp',
 ]

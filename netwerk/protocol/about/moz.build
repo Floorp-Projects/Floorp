@@ -16,7 +16,7 @@ EXPORTS += [
     'nsAboutProtocolUtils.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsAboutBlank.cpp',
     'nsAboutBloat.cpp',
     'nsAboutCache.cpp',

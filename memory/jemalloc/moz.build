@@ -6,7 +6,7 @@
 
 MODULE = 'jemalloc'
 
-CSRCS += [
+SOURCES += [
     'src/src/arena.c',
     'src/src/atomic.c',
     'src/src/base.c',
@@ -34,7 +34,7 @@ CSRCS += [
 # Only OSX needs the zone allocation implementation,
 # but only if replace-malloc is not enabled.
 if CONFIG['OS_TARGET'] == 'Darwin' and not CONFIG['MOZ_REPLACE_MALLOC']:
-    CSRCS += [
+    SOURCES += [
         'src/src/zone.c',
     ]
 

@@ -11,7 +11,7 @@ EXPORTS += [
     'mar_cmdline.h',
 ]
 
-HOST_CSRCS += [
+HOST_SOURCES += [
     'mar_create.c',
     'mar_extract.c',
     'mar_read.c',
@@ -20,7 +20,7 @@ HOST_LIBRARY_NAME = 'hostmar'
 
 LIBRARY_NAME = 'mar'
 
-CSRCS += [
+SOURCES += [
     'mar_create.c',
     'mar_extract.c',
     'mar_read.c',

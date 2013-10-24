@@ -6,12 +6,12 @@
 
 MODULE = 'xuldoc'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsXULControllers.cpp',
 ]
 
 if CONFIG['MOZ_XUL']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsXULCommandDispatcher.cpp',
         'nsXULContentSink.cpp',
         'nsXULPrototypeCache.cpp',

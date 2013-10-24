@@ -10,7 +10,7 @@ EXPORTS += [
     'nsUCvTWCID.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'UnifiedUCVTW.cpp',
 ]
 

@@ -12,7 +12,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'identity'
 
-CPP_SOURCES += [
+SOURCES += [
     'IdentityCryptoService.cpp',
 ]
 

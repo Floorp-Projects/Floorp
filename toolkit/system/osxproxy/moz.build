@@ -6,7 +6,7 @@
 
 MODULE = 'osxproxy'
 
-CMMSRCS += [
+SOURCES += [
     'nsOSXSystemProxySettings.mm',
 ]
 

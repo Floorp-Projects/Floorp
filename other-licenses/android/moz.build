@@ -8,7 +8,7 @@ MODULE = 'android'
 
 LIBRARY_NAME = 'android'
 
-CSRCS += [
+SOURCES += [
     'ev_streams.c',
     'ev_timers.c',
     'getaddrinfo.c',

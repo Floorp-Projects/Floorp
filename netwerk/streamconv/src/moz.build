@@ -8,7 +8,7 @@ MODULE = 'necko'
 
 FAIL_ON_WARNINGS = True
 
-CPP_SOURCES += [
+SOURCES += [
     'nsStreamConverterService.cpp',
 ]
 

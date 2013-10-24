@@ -8,7 +8,7 @@ if CONFIG['MOZ_B2G_NFC']:
     EXPORTS.mozilla.ipc += [
         'Nfc.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'Nfc.cpp',
     ]
 

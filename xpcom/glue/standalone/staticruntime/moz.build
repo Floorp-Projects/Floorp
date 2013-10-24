@@ -8,9 +8,9 @@ MODULE = 'xpcom'
 
 include('../../objs.mozbuild')
 
-CPP_SOURCES += xpcom_glue_src_cppsrcs
+SOURCES += xpcom_glue_src_cppsrcs
 
-CPP_SOURCES += [
+SOURCES += [
     '../../nsStringAPI.cpp',
     '../nsXPCOMGlue.cpp',
 ]

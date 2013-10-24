@@ -16,23 +16,23 @@
 
 MODULE = 'display'
 
-CPP_SOURCES += [
+SOURCES += [
     'BootAnimation.cpp',
 ]
 
 if CONFIG['ANDROID_VERSION'] >= '18':
-    CPP_SOURCES += [
+    SOURCES += [
         'FramebufferSurface.cpp',
         'GonkDisplayJB.cpp',
     ]
 elif CONFIG['ANDROID_VERSION'] == '17':
-    CPP_SOURCES += [
+    SOURCES += [
         'FramebufferSurface.cpp',
         'GonkDisplayJB.cpp',
         'GraphicBufferAlloc.cpp',
     ]
 elif CONFIG['ANDROID_VERSION'] == '15':
-    CPP_SOURCES += [
+    SOURCES += [
         'GonkDisplayICS.cpp'
     ]
 else:

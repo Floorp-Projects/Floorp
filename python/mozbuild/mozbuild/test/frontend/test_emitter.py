@@ -166,12 +166,10 @@ class TestEmitterBasic(unittest.TestCase):
         )
 
         variables = objs[1].variables
-        self.assertEqual(len(variables), len(wanted))
-
-        for var, val in wanted.items():
-            # print("test_variable_passthru[%s]" % var)
-            self.assertIn(var, variables)
-            self.assertEqual(variables[var], val)
+        maxDiff = self.maxDiff
+        self.maxDiff = None
+        self.assertEqual(wanted, variables)
+        self.maxDiff = maxDiff
 
     def test_exports(self):
         reader = self.reader('exports')

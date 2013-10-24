@@ -6,7 +6,7 @@
 
 MODULE = 'writer'
 
-CPP_SOURCES += [
+SOURCES += [
     'linux_dumper.cc',
     'linux_ptrace_dumper.cc',
     'minidump_writer.cc',

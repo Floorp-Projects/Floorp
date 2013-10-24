@@ -17,7 +17,7 @@ if CONFIG['MOZ_B2G_FM']:
         'FMRadioService.h',
     ]
 
-    CPP_SOURCES += [
+    SOURCES += [
         'FMRadio.cpp',
         'FMRadioService.cpp',
     ]

@@ -10,7 +10,7 @@ EXPORTS.mozilla.dom += [
     'CellBroadcast.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'CellBroadcast.cpp',
 ]
 
