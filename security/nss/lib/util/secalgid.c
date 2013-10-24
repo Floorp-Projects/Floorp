@@ -9,7 +9,7 @@
 #include "secerr.h"
 
 SECOidTag
-SECOID_GetAlgorithmTag(SECAlgorithmID *id)
+SECOID_GetAlgorithmTag(const SECAlgorithmID *id)
 {
     if (id == NULL || id->algorithm.data == NULL)
 	return SEC_OID_UNKNOWN;
@@ -97,7 +97,8 @@ SECOID_SetAlgorithmID(PLArenaPool *arena, SECAlgorithmID *id, SECOidTag which,
 }
 
 SECStatus
-SECOID_CopyAlgorithmID(PLArenaPool *arena, SECAlgorithmID *to, SECAlgorithmID *from)
+SECOID_CopyAlgorithmID(PLArenaPool *arena, SECAlgorithmID *to,
+                       const SECAlgorithmID *from)
 {
     SECStatus rv;
 
