@@ -76,6 +76,7 @@ const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
 const kPrefCellBroadcastDisabled = "ril.cellbroadcast.disabled";
 const kPrefClirModePreference = "ril.clirMode";
+const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 
 const DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED = "received";
 const DOM_MOBILE_MESSAGE_DELIVERY_SENDING  = "sending";
@@ -86,7 +87,6 @@ const RADIO_POWER_OFF_TIMEOUT = 30000;
 const SMS_HANDLED_WAKELOCK_TIMEOUT = 5000;
 
 const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
-  "RIL:GetNumRadioInterfaces",
   "RIL:GetRilContext",
   "RIL:GetAvailableNetworks",
   "RIL:SelectNetwork",
@@ -111,7 +111,6 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
 ];
 
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
-  "RIL:GetNumRadioInterfaces",
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
   "RIL:SendStkTimerExpiration",
@@ -129,13 +128,11 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
 ];
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
-  "RIL:GetNumRadioInterfaces",
   "RIL:RegisterVoicemailMsg",
   "RIL:GetVoicemailInfo"
 ];
 
 const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
-  "RIL:GetNumRadioInterfaces",
   "RIL:RegisterCellBroadcastMsg"
 ];
 
@@ -399,8 +396,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       }
 
       switch (msg.name) {
-        case "RIL:GetNumRadioInterfaces":
-          return this.ril.numRadioInterfaces;
         case "RIL:RegisterMobileConnectionMsg":
           this._registerMessageTarget("mobileconnection", msg.target);
           return null;
@@ -470,6 +465,25 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     }
   };
 });
+
+// Initialize shared preference 'ril.numRadioInterfaces' according to system
+// property.
+try {
+  Services.prefs.setIntPref(kPrefRilNumRadioInterfaces, (function () {
+    // When Gonk property "ro.moz.ril.numclients" is not set, return 1; if
+    // explicitly set to any number larger-equal than 0, return num; else, return
+    // 1 for compatibility.
+    try {
+      let numString = libcutils.property_get("ro.moz.ril.numclients", "1");
+      let num = parseInt(numString, 10);
+      if (num >= 0) {
+        return num;
+      }
+    } catch (e) {}
+
+    return 1;
+  })());
+} catch (e) {}
 
 function IccInfo() {}
 IccInfo.prototype = {
@@ -572,16 +586,9 @@ RadioInterfaceLayer.prototype = {
 
 XPCOMUtils.defineLazyGetter(RadioInterfaceLayer.prototype,
                             "numRadioInterfaces", function () {
-  // When Gonk property "ro.moz.ril.numclients" is not set, return 1; if
-  // explicitly set to any number larger-equal than 0, return num; else, return
-  // 1 for compatibility.
   try {
-    let numString = libcutils.property_get("ro.moz.ril.numclients", "1");
-    let num = parseInt(numString, 10);
-    if (num >= 0) {
-      return num;
-    }
-  } catch (e) {}
+    return Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
+  } catch(e) {}
 
   return 1;
 });

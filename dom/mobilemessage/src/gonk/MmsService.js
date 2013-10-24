@@ -108,6 +108,9 @@ const PREF_RETRIEVAL_RETRY_INTERVALS = (function () {
   return intervals;
 })();
 
+const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
+const kPrefDefaultServiceId = "dom.mms.defaultServiceId";
+
 XPCOMUtils.defineLazyServiceGetter(this, "gpps",
                                    "@mozilla.org/network/protocol-proxy-service;1",
                                    "nsIProtocolProxyService");
@@ -1189,6 +1192,17 @@ AcknowledgeTransaction.prototype = {
   }
 };
 
+function getDefaultServiceId() {
+  let id = Services.prefs.getIntPref(kPrefDefaultServiceId);
+  let numRil = Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
+
+  if (id >= numRil || id < 0) {
+    id = 0;
+  }
+
+  return id;
+}
+
 /**
  * MmsService
  */
@@ -1199,13 +1213,17 @@ function MmsService() {
     debug("Running protocol version: " + macro + "." + minor);
   }
 
+  Services.prefs.addObserver(kPrefDefaultServiceId, this, false);
+  this.mmsDefaultServiceId = getDefaultServiceId();
+
   // TODO: bug 810084 - support application identifier
 }
 MmsService.prototype = {
 
   classID:   RIL_MMSSERVICE_CID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIMmsService,
-                                         Ci.nsIWapPushApplication]),
+                                         Ci.nsIWapPushApplication,
+                                         Ci.nsIObserver]),
   /*
    * Whether or not should we enable X-Mms-Report-Allowed in M-NotifyResp.ind
    * and M-Acknowledge.ind PDU.
@@ -1801,6 +1819,8 @@ MmsService.prototype = {
 
   // nsIMmsService
 
+  mmsDefaultServiceId: 0,
+
   send: function send(aParams, aRequest) {
     if (DEBUG) debug("send: aParams: " + JSON.stringify(aParams));
 
@@ -2111,6 +2131,18 @@ MmsService.prototype = {
         break;
     }
   },
+
+  // nsIObserver
+
+  observe: function observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
+        if (aData === kPrefDefaultServiceId) {
+          this.mmsDefaultServiceId = getDefaultServiceId();
+        }
+        break;
+    }
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MmsService]);
