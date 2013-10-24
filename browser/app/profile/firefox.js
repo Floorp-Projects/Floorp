@@ -1313,6 +1313,10 @@ pref("social.manifest.facebook", "{\"origin\":\"https://www.facebook.com\",\"nam
 pref("social.sidebar.open", true);
 pref("social.sidebar.unload_timeout_ms", 10000);
 
+// bug 906839 pref on by default during the train, remove pref later after we
+// know we will not pref off again
+pref("social.allowMultipleWorkers", true);
+
 pref("dom.identity.enabled", false);
 
 // Turn on the CSP 1.0 parser for Content Security Policy headers
