@@ -372,47 +372,41 @@ TraverseCurvetoQuadraticSmoothRel(const float* aArgs,
 static void
 TraverseArcAbs(const float* aArgs, SVGPathTraversalState& aState)
 {
-  gfxPoint to(aArgs[5], aArgs[6]);
+  Point to(aArgs[5], aArgs[6]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     float dist = 0;
-    gfxPoint radii(aArgs[0], aArgs[1]);
-    gfxPoint pos = ThebesPoint(aState.pos);
-    gfxPoint bez[4] = { pos, gfxPoint(0, 0), gfxPoint(0, 0), gfxPoint(0, 0) };
-    nsSVGArcConverter converter(pos, to, radii, aArgs[2],
+    Point radii(aArgs[0], aArgs[1]);
+    Point bez[4] = { aState.pos, Point(0, 0), Point(0, 0), Point(0, 0) };
+    nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
                                 aArgs[3] != 0, aArgs[4] != 0);
     while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
-      Point moz2dbez[4] = { ToPoint(bez[0]), ToPoint(bez[1]),
-                            ToPoint(bez[2]), ToPoint(bez[3]) };
-      dist += CalcBezLengthHelper(moz2dbez, 4, 0, SplitCubicBezier);
+      dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
       bez[0] = bez[3];
     }
     aState.length += dist;
-    aState.cp1 = aState.cp2 = ToPoint(to);
+    aState.cp1 = aState.cp2 = to;
   }
-  aState.pos = ToPoint(to);
+  aState.pos = to;
 }
 
 static void
 TraverseArcRel(const float* aArgs, SVGPathTraversalState& aState)
 {
-  gfxPoint to = ThebesPoint(aState.pos + Point(aArgs[5], aArgs[6]));
+  Point to = aState.pos + Point(aArgs[5], aArgs[6]);
   if (aState.ShouldUpdateLengthAndControlPoints()) {
     float dist = 0;
-    gfxPoint radii(aArgs[0], aArgs[1]);
-    gfxPoint pos = ThebesPoint(aState.pos);
-    gfxPoint bez[4] = { pos, gfxPoint(0, 0), gfxPoint(0, 0), gfxPoint(0, 0) };
-    nsSVGArcConverter converter(pos, to, radii, aArgs[2],
+    Point radii(aArgs[0], aArgs[1]);
+    Point bez[4] = { aState.pos, Point(0, 0), Point(0, 0), Point(0, 0) };
+    nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
                                 aArgs[3] != 0, aArgs[4] != 0);
     while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
-      Point moz2dbez[4] = { ToPoint(bez[0]), ToPoint(bez[1]),
-                            ToPoint(bez[2]), ToPoint(bez[3]) };
-      dist += CalcBezLengthHelper(moz2dbez, 4, 0, SplitCubicBezier);
+      dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
       bez[0] = bez[3];
     }
     aState.length += dist;
-    aState.cp1 = aState.cp2 = ToPoint(to);
+    aState.cp1 = aState.cp2 = to;
   }
-  aState.pos = ToPoint(to);
+  aState.pos = to;
 }
 
 
