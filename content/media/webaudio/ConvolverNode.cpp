@@ -123,11 +123,10 @@ public:
       AllocateAudioBlock(1, &input);
       WriteZeroesToAudioBlock(&input, 0, WEBAUDIO_BLOCK_SIZE);
 
-      mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
-      if (mLeftOverData <= 0) {
-        // Note: this keeps spamming the main thread with messages as long
-        // as there is nothing to play. This isn't great.
-        mLeftOverData = 0;
+      if (mLeftOverData > 0) {
+        mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
+      } else if (mLeftOverData != INT32_MIN) {
+        mLeftOverData = INT32_MIN;
         nsRefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
         NS_DispatchToMainThread(refchanged);
@@ -149,7 +148,7 @@ public:
           new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
         NS_DispatchToMainThread(refchanged);
       }
-      mLeftOverData = mBufferLength + WEBAUDIO_BLOCK_SIZE;
+      mLeftOverData = mBufferLength;
       MOZ_ASSERT(mLeftOverData > 0);
     }
     AllocateAudioBlock(2, aOutput);
