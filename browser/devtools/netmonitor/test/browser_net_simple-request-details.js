@@ -9,7 +9,7 @@ function test() {
   initNetMonitor(SIMPLE_SJS).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { document, L10N, SourceEditor, NetMonitorView } = aMonitor.panelWin;
+    let { document, L10N, Editor, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu, NetworkDetails } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
@@ -194,7 +194,7 @@ function test() {
       return NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
         is(aEditor.getText(), "Hello world!",
           "The text shown in the source editor is incorrect.");
-        is(aEditor.getMode(), SourceEditor.MODES.TEXT,
+        is(aEditor.getMode(), Editor.modes.text,
           "The mode active in the source editor is incorrect.");
       });
     }
