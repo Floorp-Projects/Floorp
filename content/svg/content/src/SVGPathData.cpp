@@ -4,7 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGPathData.h"
+
+#include "gfx2DGlue.h"
 #include "gfxPlatform.h"
+#include "mozilla/gfx/Point.h"
 #include "nsError.h"
 #include "nsString.h"
 #include "nsSVGPathDataParser.h"
@@ -16,6 +19,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 static bool IsMoveto(uint16_t aSegType)
 {
@@ -379,14 +383,21 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
         if (radii.x == 0.0f || radii.y == 0.0f) {
           aCtx->LineTo(segEnd);
         } else {
-          nsSVGArcConverter converter(segStart, segEnd, radii, mData[i+2],
+          nsSVGArcConverter converter(ToPoint(segStart), ToPoint(segEnd),
+                                      ToPoint(radii), mData[i+2],
                                       mData[i+3] != 0, mData[i+4] != 0);
-          while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
-            aCtx->CurveTo(cp1, cp2, segEnd);
+          Point cp1, cp2, segEnd_;
+          while (converter.GetNextSegment(&cp1, &cp2, &segEnd_)) {
+            aCtx->CurveTo(ThebesPoint(cp1), ThebesPoint(cp2), ThebesPoint(segEnd_));
           }
+          segEnd = ThebesPoint(segEnd_);
         }
       }
       if (!subpathHasLength) {
+        // Round to make sure the current comparison doesn't fail due to
+        // precision issues:
+        // XXX kill after all code is converted to float precision
+        segStart = ThebesPoint(ToPoint(segStart));
         subpathHasLength = (segEnd != segStart);
       }
       break;
