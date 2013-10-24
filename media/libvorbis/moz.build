@@ -35,6 +35,9 @@ SOURCES += [
     'lib/vorbis_window.c',
 ]
 
+if CONFIG['OS_ARCH'] == 'AIX':
+    DEFINES['alloca'] = '__alloca'
+
 MSVC_ENABLE_PGO = True
 
 FORCE_STATIC_LIB = True
