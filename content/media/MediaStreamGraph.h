@@ -1031,13 +1031,6 @@ public:
   CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine,
                                      TrackRate aSampleRate = 0);
 
-  /**
-   * Returns the number of graph updates sent. This can be used to track
-   * whether a given update has been processed by the graph thread and reflected
-   * in main-thread stream state.
-   */
-  int64_t GetCurrentGraphUpdateIndex() { return mGraphUpdatesSent; }
-
   bool IsNonRealtime() const;
   /**
    * Start processing non-realtime for a specific number of ticks.
@@ -1057,7 +1050,7 @@ public:
 
 protected:
   MediaStreamGraph()
-    : mGraphUpdatesSent(1)
+    : mNextGraphUpdateIndex(1)
   {
     MOZ_COUNT_CTOR(MediaStreamGraph);
   }
@@ -1070,9 +1063,9 @@ protected:
   nsTArray<nsCOMPtr<nsIRunnable> > mPendingUpdateRunnables;
 
   // Main thread only
-  // The number of updates we have sent to the media graph thread. We start
-  // this at 1 just to ensure that 0 is usable as a special value.
-  int64_t mGraphUpdatesSent;
+  // The number of updates we have sent to the media graph thread + 1.
+  // We start this at 1 just to ensure that 0 is usable as a special value.
+  int64_t mNextGraphUpdateIndex;
 };
 
 }
