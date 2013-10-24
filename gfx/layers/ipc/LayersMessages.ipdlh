@@ -148,9 +148,9 @@ struct AnimationSegment {
 struct TransformData {
   // the origin of the frame being transformed in app units
   nsPoint origin;
-  // the -moz-transform-origin property for the transform in css pixels
-  gfxPoint3D mozOrigin;
-  // the -moz-perspective-origin property for the transform in css pixels
+  // the transform-origin property for the transform in css pixels
+  gfxPoint3D transformOrigin;
+  // the perspective-origin property for the transform in css pixels
   gfxPoint3D perspectiveOrigin;
   nsRect bounds;
   nscoord perspective;
