@@ -3036,19 +3036,19 @@ public:
                              float aAppUnitsPerPixel,
                              const nsRect* aBoundsOverride);
     FrameTransformProperties(const nsCSSValueList* aTransformList,
-                             const gfxPoint3D& aToMozOrigin,
+                             const gfxPoint3D& aToTransformOrigin,
                              const gfxPoint3D& aToPerspectiveOrigin,
                              nscoord aChildPerspective)
       : mFrame(nullptr)
       , mTransformList(aTransformList)
-      , mToMozOrigin(aToMozOrigin)
+      , mToTransformOrigin(aToTransformOrigin)
       , mToPerspectiveOrigin(aToPerspectiveOrigin)
       , mChildPerspective(aChildPerspective)
     {}
 
     const nsIFrame* mFrame;
     const nsCSSValueList* mTransformList;
-    const gfxPoint3D mToMozOrigin;
+    const gfxPoint3D mToTransformOrigin;
     const gfxPoint3D mToPerspectiveOrigin;
     nscoord mChildPerspective;
   };
