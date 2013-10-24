@@ -198,19 +198,15 @@ function makeRemoteBrowser() {
     let browser = iframe.contentDocument.createElementNS(XUL_NS, "browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
+    let remote;
     // for now we use the same preference that enabled multiple workers - the
     // idea is that there is no point in having people help test multiple
     // "old" frameworkers - so anyone who wants multiple workers is forced to
     // help us test remote frameworkers too.
-    let useMultiProvider;
-    try {
-      useMultiProvider = Services.prefs.getBoolPref("social.allowMultipleWorkers");
-    } catch(e) {
-      useMultiProvider = false;
-    }
-    if (useMultiProvider)
+    if (Services.prefs.prefHasUserValue("social.allowMultipleWorkers") &&
+        Services.prefs.getBoolPref("social.allowMultipleWorkers")) {
       browser.setAttribute("remote", "true");
-
+    }
     iframe.contentDocument.documentElement.appendChild(browser);
     deferred.resolve(browser);
   }, true);

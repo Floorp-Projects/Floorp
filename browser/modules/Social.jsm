@@ -95,11 +95,8 @@ this.Social = {
   _disabledForSafeMode: false,
 
   get allowMultipleWorkers() {
-    try {
-      return Services.prefs.getBoolPref("social.allowMultipleWorkers");
-    } catch(e) {
-      return false;
-    }
+    return Services.prefs.prefHasUserValue("social.allowMultipleWorkers") &&
+           Services.prefs.getBoolPref("social.allowMultipleWorkers");
   },
 
   get _currentProviderPref() {
@@ -144,7 +141,6 @@ this.Social = {
     let enabled = !!provider;
     if (enabled != SocialService.enabled) {
       SocialService.enabled = enabled;
-      this._updateWorkerState(enabled);
     }
 
     let origin = this._provider && this._provider.origin;
