@@ -13,8 +13,7 @@ if CONFIG['MOZ_PROFILELOCKING']:
         'nsProfileLock.cpp',
     ]
 
-modules_profiledirservice_src_lcsrcs.sort()
 modules_profiledirservice_src_csrcs = [ 
     '%s/profile/dirserviceprovider/src/%s' % (TOPSRCDIR, s) \
-        for s in modules_profiledirservice_src_lcsrcs
+        for s in sorted(modules_profiledirservice_src_lcsrcs)
 ]

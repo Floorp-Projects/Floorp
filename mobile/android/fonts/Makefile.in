@@ -7,12 +7,14 @@ packaged_fonts =  \
 	CharisSILCompact-B.ttf \
 	CharisSILCompact-I.ttf \
 	CharisSILCompact-BI.ttf \
-	OpenSans-Regular.ttf \
-	OpenSans-Bold.ttf \
-	OpenSans-Light.ttf \
-	OpenSans-Italic.ttf \
-	OpenSans-BoldItalic.ttf \
-	OpenSans-LightItalic.ttf \
+	ClearSans-Thin.ttf \
+	ClearSans-Light.ttf \
+	ClearSans-Regular.ttf \
+	ClearSans-Medium.ttf \
+	ClearSans-Bold.ttf \
+	ClearSans-Italic.ttf \
+	ClearSans-MediumItalic.ttf \
+	ClearSans-BoldItalic.ttf \
 	$(NULL)
 
 GARBAGE += $(packaged_fonts)

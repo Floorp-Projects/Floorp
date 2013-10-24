@@ -23,16 +23,16 @@ CPP_SOURCES += [
 
 if CONFIG['OS_TARGET'] != 'WINNT':
     CPP_SOURCES += [
-        'md5.cc',
-        'dwarf/bytereader.cc',
-        'dwarf_cfi_to_module.cc',
-        'dwarf/dwarf2reader.cc',
-        'dwarf_cu_to_module.cc',
-        'language.cc',
-        'dwarf/dwarf2diehandler.cc',
-        'dwarf_line_to_module.cc',
         'arm_ex_reader.cc',
         'arm_ex_to_module.cc',
+        'dwarf/bytereader.cc',
+        'dwarf/dwarf2diehandler.cc',
+        'dwarf/dwarf2reader.cc',
+        'dwarf_cfi_to_module.cc',
+        'dwarf_cu_to_module.cc',
+        'dwarf_line_to_module.cc',
+        'language.cc',
+        'md5.cc',
     ]
 
 if CONFIG['OS_ARCH'] == 'Linux':
@@ -46,8 +46,8 @@ if CONFIG['OS_TARGET'] == 'Android':
 else:
     if CONFIG['OS_TARGET'] != 'WINNT':
         CPP_SOURCES += [
-            'stabs_to_module.cc',
             'stabs_reader.cc',
+            'stabs_to_module.cc',
         ]
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_CRASHREPORTER']:

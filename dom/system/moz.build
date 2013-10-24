@@ -37,8 +37,8 @@ EXPORTS.mozilla += [
 ]
 
 CPP_SOURCES += [
-    'OSFileConstants.cpp',
     'nsDeviceSensors.cpp',
+    'OSFileConstants.cpp',
 ]
 
 # On Systems that have build in geolocation providers,

@@ -300,6 +300,21 @@ def run_test(test, prefix, options):
     if test.tz_pacific:
         env['TZ'] = 'PST8PDT'
 
+    # Ensure interpreter directory is in shared library path.
+    pathvar = ''
+    if sys.platform.startswith('linux'):
+        pathvar = 'LD_LIBRARY_PATH'
+    elif sys.platform.startswith('darwin'):
+        pathvar = 'DYLD_LIBRARY_PATH'
+    elif sys.platform.startswith('win'):
+        pathvar = 'PATH'
+    if pathvar:
+        bin_dir = os.path.dirname(cmd[0])
+        if pathvar in env:
+            env[pathvar] = '%s%s%s' % (bin_dir, os.pathsep, env[pathvar])
+        else:
+            env[pathvar] = bin_dir
+
     out, err, code, timed_out = run(cmd, env, options.timeout)
     return TestOutput(test, cmd, out, err, code, None, timed_out)
 

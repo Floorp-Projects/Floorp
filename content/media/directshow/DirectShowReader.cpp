@@ -83,7 +83,7 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
   // Create the filter graph, reference it by the GraphBuilder interface,
   // to make graph building more convenient.
   hr = CoCreateInstance(CLSID_FilterGraph,
-                        NULL,
+                        nullptr,
                         CLSCTX_INPROC_SERVER,
                         IID_IGraphBuilder,
                         reinterpret_cast<void**>(static_cast<IGraphBuilder**>(byRef(mGraph))));
@@ -217,7 +217,7 @@ DirectShowReader::Finish(HRESULT aStatus)
   RefPtr<IMediaEventSink> eventSink;
   HRESULT hr = mGraph->QueryInterface(static_cast<IMediaEventSink**>(byRef(eventSink)));
   if (SUCCEEDED(hr) && eventSink) {
-    eventSink->Notify(EC_COMPLETE, aStatus, NULL);
+    eventSink->Notify(EC_COMPLETE, aStatus, 0);
   }
   return false;
 }

@@ -7,8 +7,8 @@
 MODULE = 'string'
 
 EXPORTS += [
-    'nsAString.h',
     'nsAlgorithm.h',
+    'nsAString.h',
     'nsCharTraits.h',
     'nsDependentString.h',
     'nsDependentSubstring.h',

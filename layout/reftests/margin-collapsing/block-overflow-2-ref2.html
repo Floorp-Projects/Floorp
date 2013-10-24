@@ -4,29 +4,29 @@
 <style type="text/css">
 .separator {
  height: 20px;
- background-color: green;
+ background-color: blue;
 }
-.margin {
+.spacer {
  height: 20px;
 }
-#overflow {
- height: 200px;
- background-color: blue;
- overflow: hidden;
-}
-#overflow div {
+#margin {
  height: 40px;
+ background-color: lightgreen;
+}
+#child {
+ height: 160px;
  background-color: green;
 }
 </style>
 </head>
 <body>
 <div class="separator"></div>
-<div class="margin"></div>
-<div id="overflow">
- <div></div>
+<div class="spacer"></div>
+<div>
+ <div id="margin"></div>
+ <div id="child"></div>
 </div>
-<div class="margin"></div>
+<div class="spacer"></div>
 <div class="separator"></div>
 </body>
 </html>

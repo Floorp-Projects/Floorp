@@ -5,10 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'SimToolKit.idl',
     'nsIDOMIccInfo.idl',
     'nsIDOMIccManager.idl',
     'nsIIccProvider.idl',
+    'SimToolKit.idl',
 ]
 
 XPIDL_MODULE = 'dom_icc'

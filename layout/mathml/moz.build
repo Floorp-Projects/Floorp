@@ -10,9 +10,6 @@ CPP_SOURCES += [
     'nsMathMLChar.cpp',
     'nsMathMLContainerFrame.cpp',
     'nsMathMLFrame.cpp',
-    'nsMathMLOperators.cpp',
-    'nsMathMLSelectedFrame.cpp',
-    'nsMathMLTokenFrame.cpp',
     'nsMathMLmactionFrame.cpp',
     'nsMathMLmencloseFrame.cpp',
     'nsMathMLmfencedFrame.cpp',
@@ -28,7 +25,10 @@ CPP_SOURCES += [
     'nsMathMLmstyleFrame.cpp',
     'nsMathMLmtableFrame.cpp',
     'nsMathMLmunderoverFrame.cpp',
+    'nsMathMLOperators.cpp',
+    'nsMathMLSelectedFrame.cpp',
     'nsMathMLsemanticsFrame.cpp',
+    'nsMathMLTokenFrame.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

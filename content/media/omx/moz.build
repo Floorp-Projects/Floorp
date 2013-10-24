@@ -14,8 +14,8 @@ EXPORTS += [
 CPP_SOURCES += [
     'MediaOmxDecoder.cpp',
     'MediaOmxReader.cpp',
-    'OmxDecoder.cpp',
     'OMXCodecProxy.cpp',
+    'OmxDecoder.cpp',
 ]
 
 if CONFIG['MOZ_RTSP']:

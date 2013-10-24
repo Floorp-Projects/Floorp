@@ -13,10 +13,6 @@ EXPORTS.mozilla.storage += [
 
 CPP_SOURCES += [
     'FileSystemModule.cpp',
-    'SQLCollations.cpp',
-    'StorageBaseStatementInternal.cpp',
-    'TelemetryVFS.cpp',
-    'VacuumManager.cpp',
     'mozStorageArgValueArray.cpp',
     'mozStorageAsyncStatement.cpp',
     'mozStorageAsyncStatementExecution.cpp',
@@ -29,12 +25,16 @@ CPP_SOURCES += [
     'mozStoragePrivateHelpers.cpp',
     'mozStorageResultSet.cpp',
     'mozStorageRow.cpp',
-    'mozStorageSQLFunctions.cpp',
     'mozStorageService.cpp',
+    'mozStorageSQLFunctions.cpp',
     'mozStorageStatement.cpp',
     'mozStorageStatementJSHelper.cpp',
     'mozStorageStatementParams.cpp',
     'mozStorageStatementRow.cpp',
+    'SQLCollations.cpp',
+    'StorageBaseStatementInternal.cpp',
+    'TelemetryVFS.cpp',
+    'VacuumManager.cpp',
 ]
 
 LIBRARY_NAME = 'storage_s'

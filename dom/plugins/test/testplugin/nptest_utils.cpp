@@ -105,7 +105,7 @@ parseHexColor(const char* color, int len)
     byte[1] = color[len - 1];
     byte[2] = '\0';
 
-    bgra[i] = (uint8_t)(strtoul(byte, NULL, 16) & 0xFF);
+    bgra[i] = (uint8_t)(strtoul(byte, nullptr, 16) & 0xFF);
     i++;
     len -= 2;
   }

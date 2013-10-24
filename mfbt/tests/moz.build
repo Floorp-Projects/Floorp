@@ -16,8 +16,8 @@ CPP_UNIT_TESTS += [
     'TestFloatingPoint.cpp',
     'TestIntegerPrintfMacros.cpp',
     'TestSHA1.cpp',
-    'TestTypeTraits.cpp',
     'TestTypedEnum.cpp',
+    'TestTypeTraits.cpp',
     'TestWeakPtr.cpp',
 ]
 
