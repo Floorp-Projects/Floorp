@@ -1494,7 +1494,7 @@ JSStructuredCloneReader::readTransferMap()
         if (!in.read(&userdata))
             return false;
 
-        JSObject *obj = JS_NewArrayBufferWithContents(context(), content);
+        RootedObject obj(context(), JS_NewArrayBufferWithContents(context(), content));
         if (!obj)
             return false;
 
