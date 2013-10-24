@@ -355,7 +355,7 @@ class TestRecursiveMakeBackend(BackendTester):
                 'SIMPLE_PROGRAMS += foo.x',
             ],
             'SSRCS': [
-                'SSRCS += bar.S',
+                'SSRCS += baz.S',
                 'SSRCS += foo.S',
             ],
         }

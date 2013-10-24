@@ -77,7 +77,7 @@ if CONFIG['OS_ARCH'] == 'Darwin':
 
 if CONFIG['OS_TARGET'] == 'Android':
     SSRCS += [
-        'breakpad_getcontext.S',
+        'android/breakpad_getcontext.S',
     ]
 
 LIBRARY_NAME = 'breakpad_common_s'

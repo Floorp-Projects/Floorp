@@ -162,7 +162,7 @@ class TestEmitterBasic(unittest.TestCase):
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
             SHARED_LIBRARY_LIBS=['fans.sll', 'tans.sll'],
             SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
-            SSRCS=['fans.S', 'tans.S'],
+            SSRCS=['bans.S', 'fans.S'],
         )
 
         variables = objs[1].variables
