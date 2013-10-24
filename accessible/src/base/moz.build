@@ -10,8 +10,8 @@ MODULE = 'accessibility'
 
 EXPORTS += [
     'AccEvent.h',
-    'nsAccessNode.h',
     'nsAccessibilityService.h',
+    'nsAccessNode.h',
 ]
 
 EXPORTS.mozilla.a11y += [

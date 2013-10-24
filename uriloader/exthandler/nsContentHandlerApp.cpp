@@ -13,7 +13,7 @@
 #define NS_CONTENTHANDLER_CID \
 { 0x43ec2c82, 0xb9db, 0x4835, {0x80, 0x3f, 0x64, 0xc9, 0x72, 0x5a, 0x70, 0x28 } }
 
-NS_IMPL_CLASSINFO(nsContentHandlerApp, NULL, 0, NS_CONTENTHANDLER_CID)
+NS_IMPL_CLASSINFO(nsContentHandlerApp, nullptr, 0, NS_CONTENTHANDLER_CID)
 NS_IMPL_ISUPPORTS1_CI(nsContentHandlerApp, nsIHandlerApp)
 
 nsContentHandlerApp::nsContentHandlerApp(nsString aName, nsCString aType,

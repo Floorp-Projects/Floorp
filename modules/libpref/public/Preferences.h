@@ -133,8 +133,8 @@ public:
 
   /**
    * Gets char type pref value directly.  If failed, the get() of result
-   * returns NULL.  Even if succeeded but the result was empty string, the
-   * get() does NOT return NULL.  So, you can check whether the method
+   * returns nullptr.  Even if succeeded but the result was empty string, the
+   * get() does NOT return nullptr.  So, you can check whether the method
    * succeeded or not by:
    *
    * nsAdoptingString value = Prefereces::GetString("foo.bar");
@@ -149,8 +149,8 @@ public:
    *   // the condition is always FALSE!!
    * }
    *
-   * The value.get() doesn't return NULL. You must use nsAdoptingString when
-   * you need to check whether it was failure or not.
+   * The value.get() doesn't return nullptr. You must use nsAdoptingString
+   * when you need to check whether it was failure or not.
    */
   static nsAdoptingCString GetCString(const char* aPref);
   static nsAdoptingString GetString(const char* aPref);
@@ -162,8 +162,8 @@ public:
    * nsIPrefBranch.
    *
    * @param aPref       A pref name.
-   * @param aResult     Must not be NULL.  The value is never modified when
-   *                    these methods fail.
+   * @param aResult     Must not be nullptr.  The value is never modified
+   *                    when these methods fail.
    */
   static nsresult GetBool(const char* aPref, bool* aResult);
   static nsresult GetInt(const char* aPref, int32_t* aResult);
@@ -182,8 +182,8 @@ public:
    * Gets string type pref value with raw return value of nsIPrefBranch.
    *
    * @param aPref       A pref name.
-   * @param aResult     Must not be NULL.  The value is never modified when
-   *                    these methods fail.
+   * @param aResult     Must not be nullptr.  The value is never modified
+   *                    when these methods fail.
    */
   static nsresult GetCString(const char* aPref, nsACString* aResult);
   static nsresult GetString(const char* aPref, nsAString* aResult);
@@ -237,7 +237,7 @@ public:
 
   /**
    * Adds/Removes two or more observers for the root pref branch.
-   * Pass to aPrefs an array of const char* whose last item is NULL.
+   * Pass to aPrefs an array of const char* whose last item is nullptr.
    */
   static nsresult AddStrongObservers(nsIObserver* aObserver,
                                      const char** aPrefs);
@@ -318,7 +318,7 @@ public:
 
   /**
    * Gets the default value of the char type pref.
-   * If the get() of the result returned NULL, that meant the value didn't
+   * If the get() of the result returned nullptr, that meant the value didn't
    * have default value.
    *
    * See the comment at definition at GetString() and GetCString() for more

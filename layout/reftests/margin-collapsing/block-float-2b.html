@@ -2,28 +2,27 @@
 <html>
 <head>
 <style type="text/css">
-#a {
+#separator {
  height: 20px;
  background-color: green;
 }
-#b {
+#float {
  float: right;
  width: 50px;
- background-color: blue;
- margin-top: 20px;
+ margin: 20px 0;
+ background-color: green;
 }
-#b div {
+#child {
  height: 20px;
- background-color: red;
- margin-top: 40px;
- margin-bottom: 40px;
+ margin: 40px 0;
+ background-color: lightgreen;
 }
 </style>
 </head>
 <body>
-<div id="a"></div>
-<div id="b">
- <div></div>
+<div id="separator"></div>
+<div id="float">
+ <div id="child"></div>
 </div>
 </body>
 </html>

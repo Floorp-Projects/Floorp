@@ -11,16 +11,16 @@ LIBRARY_NAME = 'ipdlunittest_s'
 
 EXPORTS.mozilla._ipdltest += [
     'IPDLUnitTestProcessChild.h',
+    'IPDLUnitTests.h',
     'IPDLUnitTestTypes.h',
     'IPDLUnitTestUtils.h',
-    'IPDLUnitTests.h',
 ]
 
 CPP_SOURCES += [
     '$(IPDLTESTSRCS)',
     'IPDLUnitTestProcessChild.cpp',
-    'IPDLUnitTestSubprocess.cpp',
     'IPDLUnitTests.cpp',
+    'IPDLUnitTestSubprocess.cpp',
 ]
 
 IPDL_SOURCES += [
@@ -62,11 +62,11 @@ IPDL_SOURCES += [
     'PTestNestedLoops.ipdl',
     'PTestOpens.ipdl',
     'PTestOpensOpened.ipdl',
-    'PTestRPC.ipdl',
     'PTestRaceDeferral.ipdl',
     'PTestRacyInterruptReplies.ipdl',
     'PTestRacyReentry.ipdl',
     'PTestRacyUndefer.ipdl',
+    'PTestRPC.ipdl',
     'PTestSanity.ipdl',
     'PTestSelfManage.ipdl',
     'PTestSelfManageRoot.ipdl',

@@ -2,23 +2,22 @@
 <html>
 <head>
 <style type="text/css">
-#a {
- background-color: green;
- width: 200px;
+#abs-pos {
  position: absolute;
  top: 20px; left: 20px;
- padding-top: 40px;
- padding-bottom: 40px;
+ width: 200px;
+ padding: 40px 0;
+ background-color: lightgreen;
 }
-#b {
- background-color: blue;
+#in-flow-child {
  height: 100px;
+ background-color: green;
 }
 </style>
 </head>
 <body>
-<div id="a">
- <div id="b"></div>
+<div id="abs-pos">
+ <div id="in-flow-child"></div>
 </div>
 </body>
 </html>

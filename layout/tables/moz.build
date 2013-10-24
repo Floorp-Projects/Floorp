@@ -15,7 +15,6 @@ EXPORTS += [
 CPP_SOURCES += [
     'BasicTableLayoutStrategy.cpp',
     'FixedTableLayoutStrategy.cpp',
-    'SpanningCellSorter.cpp',
     'nsCellMap.cpp',
     'nsTableCellFrame.cpp',
     'nsTableColFrame.cpp',
@@ -25,6 +24,7 @@ CPP_SOURCES += [
     'nsTablePainter.cpp',
     'nsTableRowFrame.cpp',
     'nsTableRowGroupFrame.cpp',
+    'SpanningCellSorter.cpp',
 ]
 
 LIBRARY_NAME = 'gktable_s'

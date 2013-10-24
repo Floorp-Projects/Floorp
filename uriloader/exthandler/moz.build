@@ -41,10 +41,10 @@ EXPORTS += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXPORTS += [
-        osdir + '/nsExternalSharingAppService.h',
-        osdir + '/nsExternalURLHandlerService.h',
-    ]
+    EXPORTS += [ '%s/%s' % (osdir, f) for f in [
+        'nsExternalSharingAppService.h',
+        'nsExternalURLHandlerService.h',
+    ]]
 
 if CONFIG['MOZ_ENABLE_MEEGOTOUCHSHARE']:
     EXPORTS += [
@@ -83,10 +83,10 @@ if CONFIG['MOZ_ENABLE_GTK']:
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     CPP_SOURCES += [
-        'android/nsMIMEInfoAndroid.cpp',
         'android/nsAndroidHandlerApp.cpp',
         'android/nsExternalSharingAppService.cpp',
         'android/nsExternalURLHandlerService.cpp',
+        'android/nsMIMEInfoAndroid.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     CPP_SOURCES += [

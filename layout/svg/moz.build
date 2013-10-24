@@ -7,20 +7,15 @@
 MODULE = 'layout'
 
 EXPORTS += [
-    'SVGImageContext.h',
     'nsSVGEffects.h',
     'nsSVGFilterInstance.h',
     'nsSVGForeignObjectFrame.h',
     'nsSVGIntegrationUtils.h',
     'nsSVGUtils.h',
+    'SVGImageContext.h',
 ]
 
 CPP_SOURCES += [
-    'SVGFEContainerFrame.cpp',
-    'SVGFEImageFrame.cpp',
-    'SVGFELeafFrame.cpp',
-    'SVGFEUnstyledLeafFrame.cpp',
-    'SVGViewFrame.cpp',
     'nsSVGAFrame.cpp',
     'nsSVGClipPathFrame.cpp',
     'nsSVGContainerFrame.cpp',
@@ -28,9 +23,9 @@ CPP_SOURCES += [
     'nsSVGFilterFrame.cpp',
     'nsSVGFilterInstance.cpp',
     'nsSVGForeignObjectFrame.cpp',
-    'nsSVGGFrame.cpp',
     'nsSVGGenericContainerFrame.cpp',
     'nsSVGGeometryFrame.cpp',
+    'nsSVGGFrame.cpp',
     'nsSVGGlyphFrame.cpp',
     'nsSVGGradientFrame.cpp',
     'nsSVGImageFrame.cpp',
@@ -44,13 +39,18 @@ CPP_SOURCES += [
     'nsSVGPatternFrame.cpp',
     'nsSVGStopFrame.cpp',
     'nsSVGSwitchFrame.cpp',
-    'nsSVGTSpanFrame.cpp',
     'nsSVGTextContainerFrame.cpp',
     'nsSVGTextFrame.cpp',
     'nsSVGTextFrame2.cpp',
     'nsSVGTextPathFrame.cpp',
+    'nsSVGTSpanFrame.cpp',
     'nsSVGUseFrame.cpp',
     'nsSVGUtils.cpp',
+    'SVGFEContainerFrame.cpp',
+    'SVGFEImageFrame.cpp',
+    'SVGFELeafFrame.cpp',
+    'SVGFEUnstyledLeafFrame.cpp',
+    'SVGViewFrame.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

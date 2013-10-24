@@ -11,9 +11,9 @@ if CONFIG['MOZ_XUL']:
     MSVC_ENABLE_PGO = True
 
     CPP_SOURCES += [
+        'nsXULContextMenuBuilder.cpp',
         'nsXULElement.cpp',
         'nsXULPopupListener.cpp',
-        'nsXULContextMenuBuilder.cpp',
     ]
     LIBRARY_NAME = 'gkconxulcon_s'
 

@@ -14,9 +14,9 @@ if CONFIG['MOZ_XUL']:
     CPP_SOURCES += [
         'nsXULCommandDispatcher.cpp',
         'nsXULContentSink.cpp',
-        'XULDocument.cpp',
         'nsXULPrototypeCache.cpp',
         'nsXULPrototypeDocument.cpp',
+        'XULDocument.cpp',
     ]
 
 LIBRARY_NAME = 'gkconxuldoc_s'

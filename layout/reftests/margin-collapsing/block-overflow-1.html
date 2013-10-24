@@ -2,29 +2,27 @@
 <html>
 <head>
 <style type="text/css">
-.a {
+.separator {
  height: 20px;
- background-color: green;
-}
-#b {
- margin-top: 20px;
- margin-bottom: 20px;
- background-color: red;
- overflow: visible;
-}
-#c {
- height: 200px;
  background-color: blue;
- margin-top: 40px;
- margin-bottom: 40px;
+}
+#overflow {
+ overflow: visible;
+ margin: 20px 0;
+ background-color: lightgreen;
+}
+#child {
+ height: 200px;
+ margin: 40px 0;
+ background-color: green;
 }
 </style>
 </head>
 <body>
-<div class="a"></div>
-<div id="b">
- <div id="c"></div>
+<div class="separator"></div>
+<div id="overflow">
+ <div id="child"></div>
 </div>
-<div class="a"></div>
+<div class="separator"></div>
 </body>
 </html>
