@@ -33,9 +33,8 @@ const kSmsRetrievingObserverTopic        = "sms-retrieving";
 const kSmsDeliverySuccessObserverTopic   = "sms-delivery-success";
 const kSmsDeliveryErrorObserverTopic     = "sms-delivery-error";
 
+const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
-const kXpcomShutdownObserverTopic        = "xpcom-shutdown";
-const kPrefenceChangedObserverTopic      = "nsPref:changed";
 const kMobileMessageDeletedObserverTopic = "mobile-message-deleted";
 
 // HTTP status codes:
@@ -59,16 +58,17 @@ const CONFIG_SEND_REPORT_DEFAULT_NO  = 1;
 const CONFIG_SEND_REPORT_DEFAULT_YES = 2;
 const CONFIG_SEND_REPORT_ALWAYS      = 3;
 
+const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
+
 const TIME_TO_BUFFER_MMS_REQUESTS    = 30000;
 const PREF_TIME_TO_RELEASE_MMS_CONNECTION =
   Services.prefs.getIntPref("network.gonk.ms-release-mms-connection");
 
-const PREF_RETRIEVAL_MODE      = 'dom.mms.retrieval_mode';
+const kPrefRetrievalMode       = 'dom.mms.retrieval_mode';
 const RETRIEVAL_MODE_MANUAL    = "manual";
 const RETRIEVAL_MODE_AUTOMATIC = "automatic";
 const RETRIEVAL_MODE_AUTOMATIC_HOME = "automatic-home";
 const RETRIEVAL_MODE_NEVER     = "never";
-
 
 //Internal const values.
 const DELIVERY_RECEIVED       = "received";
@@ -197,7 +197,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
     init: function init() {
       Services.obs.addObserver(this, kNetworkInterfaceStateChangedTopic,
                                false);
-      Services.obs.addObserver(this, kXpcomShutdownObserverTopic, false);
+      Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
       this.settings.forEach(function(name) {
         Services.prefs.addObserver(name, this, false);
       }, this);
@@ -341,10 +341,9 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
     },
 
     shutdown: function shutdown() {
+      Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       Services.obs.removeObserver(this, kNetworkInterfaceStateChangedTopic);
-      this.settings.forEach(function(name) {
-        Services.prefs.removeObserver(name, this);
-      }, this);
+
       this.connectTimer.cancel();
       this.flushPendingCallbacks(_HTTP_STATUS_RADIO_DISABLED);
       this.disconnectTimer.cancel();
@@ -370,7 +369,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
           this.flushPendingCallbacks(_HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS)
           break;
         }
-        case kPrefenceChangedObserverTopic: {
+        case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
           if (data == "ril.radio.disabled") {
             try {
               this.radioDisabled = Services.prefs.getBoolPref("ril.radio.disabled");
@@ -404,8 +403,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
           }
           break;
         }
-        case kXpcomShutdownObserverTopic: {
-          Services.obs.removeObserver(this, kXpcomShutdownObserverTopic);
+        case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
           this.shutdown();
         }
       }
@@ -757,7 +755,7 @@ CancellableTransaction.prototype = {
 
   registerRunCallback: function registerRunCallback(callback) {
     if (!this.isObserversAdded) {
-      Services.obs.addObserver(this, kXpcomShutdownObserverTopic, false);
+      Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
       Services.obs.addObserver(this, kMobileMessageDeletedObserverTopic, false);
       this.isObserversAdded = true;
     }
@@ -768,7 +766,7 @@ CancellableTransaction.prototype = {
 
   removeObservers: function removeObservers() {
     if (this.isObserversAdded) {
-      Services.obs.removeObserver(this, kXpcomShutdownObserverTopic);
+      Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       Services.obs.removeObserver(this, kMobileMessageDeletedObserverTopic);
       this.isObserversAdded = false;
     }
@@ -811,7 +809,7 @@ CancellableTransaction.prototype = {
 
   observe: function observe(subject, topic, data) {
     switch (topic) {
-      case kXpcomShutdownObserverTopic: {
+      case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
         this.cancelRunning();
         break;
       }
@@ -1584,7 +1582,7 @@ MmsService.prototype = {
 
       let retrievalMode = RETRIEVAL_MODE_MANUAL;
       try {
-        retrievalMode = Services.prefs.getCharPref(PREF_RETRIEVAL_MODE);
+        retrievalMode = Services.prefs.getCharPref(kPrefRetrievalMode);
       } catch (e) {}
 
       let savableMessage = this.convertIntermediateToSavable(notification, retrievalMode);
