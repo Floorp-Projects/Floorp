@@ -2200,8 +2200,24 @@ eventSource(EnvironmentClient.prototype);
 this.debuggerSocketConnect = function debuggerSocketConnect(aHost, aPort)
 {
   let s = socketTransportService.createTransport(null, 0, aHost, aPort, null);
-  let transport = new DebuggerTransport(s.openInputStream(0, 0, 0),
-                                        s.openOutputStream(0, 0, 0));
+  // By default the CONNECT socket timeout is very long, 65535 seconds,
+  // so that if we race to be in CONNECT state while the server socket is still
+  // initializing, the connection is stuck in connecting state for 18.20 hours!
+  s.setTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT, 2);
+
+  // openOutputStream may throw NS_ERROR_NOT_INITIALIZED if we hit some race
+  // where the nsISocketTransport gets shutdown in between its instantiation and
+  // the call to this method.
+  let transport;
+  try {
+    transport = new DebuggerTransport(s.openInputStream(0, 0, 0),
+                                      s.openOutputStream(0, 0, 0));
+  } catch(e) {
+    let msg = e + ": " + e.stack;
+    Cu.reportError(msg);
+    dumpn(msg);
+    throw e;
+  }
   return transport;
 }
 

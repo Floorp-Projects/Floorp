@@ -287,7 +287,7 @@ pref("media.audio_data.enabled", true);
 // 0 = FREE (No locking at all)
 // 1 = STANDARD (Once locked, remain locked until scrolling ends)
 // 2 = STICKY (Allow lock to be broken, with hysteresis)
-pref("apzc.axis_lock_mode", 0);
+pref("apz.axis_lock_mode", 0);
 
 #ifdef XP_MACOSX
 // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI display;

@@ -29,6 +29,12 @@ let DownloadTaskbarProgress, TaskbarService, observerService, wwatch, chromeWind
 let gGen = null;
 
 function test() {
+  var dmui = getDMUI();
+  if (!dmui) {
+    todo(false, "skip test for toolkit download manager UI");
+    return;
+  }
+
   let isWin7OrHigher = false;
   try {
     let version = Cc["@mozilla.org/system-info;1"]
