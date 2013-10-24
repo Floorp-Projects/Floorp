@@ -27,7 +27,7 @@ NS_IMPL_RELEASE_INHERITED(DelayNode, AudioNode)
 
 class DelayNodeEngine : public AudioNodeEngine
 {
-  typedef PlayingRefChangeHandler<DelayNode> PlayingRefChanged;
+  typedef PlayingRefChangeHandler PlayingRefChanged;
 public:
   DelayNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination,
                   int aMaxDelayFrames)

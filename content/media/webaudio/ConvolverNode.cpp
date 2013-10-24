@@ -24,7 +24,7 @@ NS_IMPL_RELEASE_INHERITED(ConvolverNode, AudioNode)
 
 class ConvolverNodeEngine : public AudioNodeEngine
 {
-  typedef PlayingRefChangeHandler<ConvolverNode> PlayingRefChanged;
+  typedef PlayingRefChangeHandler PlayingRefChanged;
 public:
   ConvolverNodeEngine(AudioNode* aNode, bool aNormalize)
     : AudioNodeEngine(aNode)
