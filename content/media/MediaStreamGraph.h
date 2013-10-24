@@ -1041,7 +1041,8 @@ public:
    * Media graph thread only.
    * Dispatches a runnable that will run on the main thread after all
    * main-thread stream state has been next updated.
-   * Should only be called during MediaStreamListener callbacks.
+   * Should only be called during MediaStreamListener callbacks or during
+   * ProcessedMediaStream::ProduceOutput().
    */
   void DispatchToMainThreadAfterStreamStateUpdate(already_AddRefed<nsIRunnable> aRunnable)
   {

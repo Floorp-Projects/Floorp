@@ -88,7 +88,8 @@ public:
       if (mLeftOverData <= 0) {
         nsRefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
-        NS_DispatchToMainThread(refchanged);
+        aStream->Graph()->
+          DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
       }
       mLeftOverData = mProcessor.MaxDelayFrames();
     } else if (mLeftOverData > 0) {
