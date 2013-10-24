@@ -31,11 +31,11 @@ class gfxPath {
 
 protected:
     gfxPath(cairo_path_t* aPath);
-    gfxPath(mozilla::gfx::Path* aPath);
 
     void EnsureFlattenedPath();
 
 public:
+    gfxPath(mozilla::gfx::Path* aPath);
     virtual ~gfxPath();
     
     /**
