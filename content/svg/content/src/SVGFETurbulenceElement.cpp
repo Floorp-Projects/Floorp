@@ -276,7 +276,7 @@ SVGFETurbulenceElement::Noise2(int aColorChannel, double aVec[2],
   ry0 = t - (int) t;
   ry1 = ry0 - 1.0f;
   // If stitching, adjust lattice points accordingly.
-  if (aStitchInfo != NULL) {
+  if (aStitchInfo != nullptr) {
     if (bx0 >= aStitchInfo->mWrapX)
       bx0 -= aStitchInfo->mWidth;
     if (bx1 >= aStitchInfo->mWrapX)
@@ -322,7 +322,7 @@ SVGFETurbulenceElement::Turbulence(int aColorChannel, double* aPoint,
                                    double aTileWidth, double aTileHeight)
 {
   StitchInfo stitch;
-  StitchInfo *stitchInfo = NULL; // Not stitching when NULL.
+  StitchInfo *stitchInfo = nullptr; // Not stitching when nullptr.
   // Adjust the base frequencies if necessary for stitching.
   if (aDoStitching) {
     // When stitching tiled turbulence, the frequencies must be adjusted
@@ -363,7 +363,7 @@ SVGFETurbulenceElement::Turbulence(int aColorChannel, double* aPoint,
     vec[0] *= 2;
     vec[1] *= 2;
     ratio *= 2;
-    if (stitchInfo != NULL) {
+    if (stitchInfo != nullptr) {
       // Update stitch values. Subtracting sPerlinN before the multiplication
       // and adding it afterward simplifies to subtracting it once.
       stitch.mWidth *= 2;

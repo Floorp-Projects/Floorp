@@ -113,6 +113,9 @@ class BaselineInspector
 
     JSObject *getTemplateObject(jsbytecode *pc);
     JSObject *getTemplateObjectForNative(jsbytecode *pc, Native native);
+
+    DeclEnvObject *templateDeclEnvObject();
+    CallObject *templateCallObject();
 };
 
 } // namespace jit

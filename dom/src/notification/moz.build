@@ -6,6 +6,15 @@
 
 MODULE = 'dom'
 
+EXTRA_COMPONENTS += [
+    'NotificationStorage.js',
+    'NotificationStorage.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'NotificationDB.jsm'
+]
+
 EXPORTS.mozilla.dom += [
     'DesktopNotification.h',
     'Notification.h',

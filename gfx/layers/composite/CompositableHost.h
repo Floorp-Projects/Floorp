@@ -110,6 +110,12 @@ public:
     mBackendData = aBackendData;
   }
 
+  /**
+   * Our IPDL actor is being destroyed, get rid of any shmem resources now and
+   * don't worry about compositing anymore.
+   */
+  virtual void OnActorDestroy() = 0;
+
   // If base class overrides, it should still call the parent implementation
   virtual void SetCompositor(Compositor* aCompositor);
 
@@ -241,6 +247,7 @@ public:
   static const AttachFlags NO_FLAGS = 0;
   static const AttachFlags ALLOW_REATTACH = 1;
   static const AttachFlags KEEP_ATTACHED = 2;
+  static const AttachFlags FORCE_DETACH = 2;
 
   virtual void Attach(Layer* aLayer,
                       Compositor* aCompositor,
@@ -261,10 +268,12 @@ public:
   // attached to that layer. If we are part of a normal layer, then we will be
   // detached in any case. if aLayer is null, then we will only detach if we are
   // not async.
-  void Detach(Layer* aLayer = nullptr)
+  // Only force detach if the IPDL tree is being shutdown.
+  void Detach(Layer* aLayer = nullptr, AttachFlags aFlags = NO_FLAGS)
   {
     if (!mKeepAttached ||
-        aLayer == mLayer) {
+        aLayer == mLayer ||
+        aFlags & FORCE_DETACH) {
       SetLayer(nullptr);
       SetCompositor(nullptr);
       mAttached = false;

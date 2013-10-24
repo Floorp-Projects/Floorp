@@ -8,6 +8,7 @@ TEST_DIRS += ['tests']
 
 EXTRA_JS_MODULES += [
     'AsyncShutdown.jsm',
+    'debug.js',
     'DeferredTask.jsm',
     'Deprecated.jsm',
     'Dict.jsm',
@@ -42,7 +43,6 @@ EXTRA_JS_MODULES += [
     'Task.jsm',
     'TelemetryTimestamps.jsm',
     'Timer.jsm',
-    'debug.js',
 ]
 
 EXTRA_PP_JS_MODULES += [

@@ -313,7 +313,7 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
     mInfo.mAudio.mChannels = mVorbisState->mInfo.channels > 2 ? 2 : mVorbisState->mInfo.channels;
     // Copy Vorbis info data for time computations on other threads.
     memcpy(&mVorbisInfo, &mVorbisState->mInfo, sizeof(mVorbisInfo));
-    mVorbisInfo.codec_setup = NULL;
+    mVorbisInfo.codec_setup = nullptr;
     mVorbisSerial = mVorbisState->mSerial;
     *aTags = mVorbisState->GetTags();
   } else {

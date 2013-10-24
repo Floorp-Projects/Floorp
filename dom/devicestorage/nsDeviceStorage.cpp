@@ -762,10 +762,16 @@ DeviceStorageFile::GetRootDirectoryForType(const nsAString& aStorageType,
   // crash reports directory.
   else if (aStorageType.EqualsLiteral(DEVICESTORAGE_CRASHES)) {
     f = sDirs->crashes;
+  } else {
+    // Not a storage type that we recognize. Return null
+    return;
   }
 
-  // in testing, we default all device storage types to a temp directory
-  if (f && sDirs->temp) {
+  // In testing, we default all device storage types to a temp directory.
+  // sDirs->temp will only have been initialized (in InitDirs) if the
+  // preference device.storage.testing was set to true. We can't test the
+  // preference directly here, since we may not be on the main thread.
+  if (sDirs->temp) {
     f = sDirs->temp;
   }
 

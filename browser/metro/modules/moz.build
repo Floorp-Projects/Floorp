@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
+    'colorUtils.jsm',
     'ContentUtil.jsm',
     'CrossSlide.jsm',
     'View.jsm',
-    'colorUtils.jsm',
 ]
 

@@ -79,10 +79,10 @@ PluginHangUIParent::PluginHangUIParent(PluginModuleParent* aModule,
     mMainThreadMessageLoop(MessageLoop::current()),
     mIsShowing(false),
     mLastUserResponse(0),
-    mHangUIProcessHandle(NULL),
-    mMainWindowHandle(NULL),
-    mRegWait(NULL),
-    mShowEvent(NULL),
+    mHangUIProcessHandle(nullptr),
+    mMainWindowHandle(nullptr),
+    mRegWait(nullptr),
+    mShowEvent(nullptr),
     mShowTicks(0),
     mResponseTicks(0)
 {
@@ -224,7 +224,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   }
   commandLine.AppendLooseValue(ipcCookie);
 
-  ScopedHandle showEvent(::CreateEvent(NULL, FALSE, FALSE, NULL));
+  ScopedHandle showEvent(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
   if (!showEvent.IsValid()) {
     return false;
   }
@@ -232,7 +232,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
 
   MutexAutoLock lock(mMutex);
   STARTUPINFO startupInfo = { sizeof(STARTUPINFO) };
-  PROCESS_INFORMATION processInfo = { NULL };
+  PROCESS_INFORMATION processInfo = { nullptr };
   BOOL isProcessCreated = ::CreateProcess(exePath.value().c_str(),
                                           const_cast<wchar_t*>(commandLine.command_line_string().c_str()),
                                           nullptr,
@@ -261,7 +261,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
     // processes, which is not what we want.
     mIsShowing = true;
   }
-  mShowEvent = NULL;
+  mShowEvent = nullptr;
   return !(!isProcessCreated);
 }
 
@@ -286,11 +286,11 @@ PluginHangUIParent::UnwatchHangUIChildProcess(bool aWait)
 {
   mMutex.AssertCurrentThreadOwns();
   if (mRegWait) {
-    // If aWait is false then we want to pass a NULL (i.e. default constructor)
-    // completionEvent
+    // If aWait is false then we want to pass a nullptr (i.e. default
+    // constructor) completionEvent
     ScopedHandle completionEvent;
     if (aWait) {
-      completionEvent.Set(::CreateEvent(NULL, FALSE, FALSE, NULL));
+      completionEvent.Set(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
       if (!completionEvent.IsValid()) {
         return false;
       }
@@ -301,7 +301,7 @@ PluginHangUIParent::UnwatchHangUIChildProcess(bool aWait)
     // callback is running but will be cleaned up once the callback returns.
     if (::UnregisterWaitEx(mRegWait, completionEvent) ||
         !aWait && ::GetLastError() == ERROR_IO_PENDING) {
-      mRegWait = NULL;
+      mRegWait = nullptr;
       if (aWait) {
         // We must temporarily unlock mMutex while waiting for the registered
         // wait callback to complete, or else we could deadlock.
@@ -374,7 +374,7 @@ PluginHangUIParent::RecvUserResponse(const unsigned int& aResponse)
 nsresult
 PluginHangUIParent::GetHangUIOwnerWindowHandle(NativeWindowHandle& windowHandle)
 {
-  windowHandle = NULL;
+  windowHandle = nullptr;
 
   nsresult rv;
   nsCOMPtr<nsIWindowMediator> winMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID,

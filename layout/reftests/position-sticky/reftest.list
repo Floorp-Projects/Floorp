@@ -1,5 +1,5 @@
 test-pref(layout.css.sticky.enabled,false) fuzzy-if(Android&&AndroidVersion>=15,6,406) == pref-1.html pref-1-disabled-ref.html
-test-pref(layout.css.sticky.enabled,true) fuzzy-if(Android&&AndroidVersion>=15,6,406) == pref-1.html pref-1-enabled-ref.html
+test-pref(layout.css.sticky.enabled,true) fuzzy-if(Android&&AndroidVersion<15,4,30) fuzzy-if(Android&&AndroidVersion>=15,6,406) == pref-1.html pref-1-enabled-ref.html
 default-preferences pref(layout.css.sticky.enabled,true)
 
 == top-1.html top-1-ref.html

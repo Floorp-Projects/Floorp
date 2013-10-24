@@ -28,8 +28,8 @@ if CONFIG['ANDROID_VERSION'] >= '18':
 elif CONFIG['ANDROID_VERSION'] == '17':
     CPP_SOURCES += [
         'FramebufferSurface.cpp',
-        'GraphicBufferAlloc.cpp',
         'GonkDisplayJB.cpp',
+        'GraphicBufferAlloc.cpp',
     ]
 elif CONFIG['ANDROID_VERSION'] == '15':
     CPP_SOURCES += [

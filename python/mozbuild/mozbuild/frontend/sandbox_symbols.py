@@ -198,7 +198,7 @@ VARIABLES = {
         to compile.
         """, 'compile'),
 
-    'GTEST_CPP_SOURCES': (list, list, [],
+    'GTEST_CPP_SOURCES': (StrictOrderingOnAppendList, list, [],
         """C++ source files for GTest unit tests.
 
         This is a list of C++ GTest unit test sources. Entries must be files
@@ -402,7 +402,7 @@ VARIABLES = {
         ``BIN_SUFFIX``, ``PROGRAM`` will remain unchanged.
         """, 'binaries'),
 
-    'CPP_SOURCES': (list, list, [],
+    'CPP_SOURCES': (StrictOrderingOnAppendList, list, [],
         """C++ source file list.
 
         This is a list of C++ files to be compiled. Entries must be files that

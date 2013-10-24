@@ -14,9 +14,9 @@ XPIDL_SOURCES += [
     'nsIDirectoryEnumerator.idl',
     'nsIDirectoryService.idl',
     'nsIFile.idl',
-    'nsIIOUtil.idl',
     'nsIInputStream.idl',
     'nsIInputStreamTee.idl',
+    'nsIIOUtil.idl',
     'nsILineInputStream.idl',
     'nsILocalFile.idl',
     'nsILocalFileWin.idl',
@@ -68,7 +68,6 @@ XPIDL_MODULE = 'xpcom_io'
 MODULE = 'xpcom'
 
 EXPORTS += [
-    'SpecialSystemDirectory.h',
     'nsAnonymousTemporaryFile.h',
     'nsAppDirectoryServiceDefs.h',
     'nsDirectoryService.h',
@@ -86,6 +85,7 @@ EXPORTS += [
     'nsStringStream.h',
     'nsUnicharInputStream.h',
     'nsWildCard.h',
+    'SpecialSystemDirectory.h',
 ]
 
 EXPORTS.mozilla += [
@@ -94,14 +94,13 @@ EXPORTS.mozilla += [
 
 CPP_SOURCES += [
     'Base64.cpp',
-    'SpecialSystemDirectory.cpp',
     'nsAnonymousTemporaryFile.cpp',
     'nsAppFileLocationProvider.cpp',
     'nsBinaryStream.cpp',
     'nsDirectoryService.cpp',
     'nsEscape.cpp',
-    'nsIOUtil.cpp',
     'nsInputStreamTee.cpp',
+    'nsIOUtil.cpp',
     'nsLinebreakConverter.cpp',
     'nsLocalFileCommon.cpp',
     'nsMultiplexInputStream.cpp',
@@ -115,6 +114,7 @@ CPP_SOURCES += [
     'nsStringStream.cpp',
     'nsUnicharInputStream.cpp',
     'nsWildCard.cpp',
+    'SpecialSystemDirectory.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

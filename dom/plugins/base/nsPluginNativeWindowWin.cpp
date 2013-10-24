@@ -56,7 +56,7 @@ public:
   UINT   GetMsg()    { return mMsg; };
   WPARAM GetWParam() { return mWParam; };
   LPARAM GetLParam() { return mLParam; };
-  bool InUse()     { return (mWnd!=NULL); };
+  bool InUse()       { return mWnd != nullptr; };
 
   NS_DECL_NSIRUNNABLE
 
@@ -75,7 +75,7 @@ PluginWindowEvent::PluginWindowEvent()
 
 void PluginWindowEvent::Clear()
 {
-  mWnd    = NULL;
+  mWnd    = nullptr;
   mMsg    = 0;
   mWParam = 0;
   mLParam = 0;
@@ -84,8 +84,8 @@ void PluginWindowEvent::Clear()
 void PluginWindowEvent::Init(const PluginWindowWeakRef &ref, HWND aWnd,
                              UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 {
-  NS_ASSERTION(aWnd != NULL, "invalid plugin event value");
-  NS_ASSERTION(mWnd == NULL, "event already in use");
+  NS_ASSERTION(aWnd != nullptr, "invalid plugin event value");
+  NS_ASSERTION(mWnd == nullptr, "event already in use");
   mPluginWindowRef = ref;
   mWnd    = aWnd;
   mMsg    = aMsg;
@@ -375,8 +375,8 @@ typedef LONG_PTR
   (WINAPI *User32SetWindowLongPtrW)(HWND hWnd,
                                     int nIndex,
                                     LONG_PTR dwNewLong);
-static User32SetWindowLongPtrA sUser32SetWindowLongAHookStub = NULL;
-static User32SetWindowLongPtrW sUser32SetWindowLongWHookStub = NULL;
+static User32SetWindowLongPtrA sUser32SetWindowLongAHookStub = nullptr;
+static User32SetWindowLongPtrW sUser32SetWindowLongWHookStub = nullptr;
 #else
 typedef LONG
 (WINAPI *User32SetWindowLongA)(HWND hWnd,
@@ -386,8 +386,8 @@ typedef LONG
 (WINAPI *User32SetWindowLongW)(HWND hWnd,
                                int nIndex,
                                LONG dwNewLong);
-static User32SetWindowLongA sUser32SetWindowLongAHookStub = NULL;
-static User32SetWindowLongW sUser32SetWindowLongWHookStub = NULL;
+static User32SetWindowLongA sUser32SetWindowLongAHookStub = nullptr;
+static User32SetWindowLongW sUser32SetWindowLongWHookStub = nullptr;
 #endif
 static inline bool
 SetWindowLongHookCheck(HWND hWnd,
@@ -498,11 +498,11 @@ nsPluginNativeWindowWin::nsPluginNativeWindowWin() : nsPluginNativeWindow()
   width = 0; 
   height = 0; 
 
-  mPrevWinProc = NULL;
-  mPluginWinProc = NULL;
+  mPrevWinProc = nullptr;
+  mPluginWinProc = nullptr;
   mPluginType = nsPluginType_Unknown;
 
-  mParentWnd = NULL;
+  mParentWnd = nullptr;
   mParentProc = 0;
 
   if (!sWM_FLASHBOUNCEMSG) {
@@ -720,7 +720,7 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
     WNDPROC currentWndProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_WNDPROC);
     if (currentWndProc == PluginWndProc)
       SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)mPluginWinProc);
-    mPluginWinProc = NULL;
+    mPluginWinProc = nullptr;
 
     LONG_PTR style = GetWindowLongPtr(hWnd, GWL_STYLE);
     style &= ~WS_CLIPCHILDREN;
@@ -729,7 +729,7 @@ nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
 
   if (mPluginType == nsPluginType_PDF && mParentWnd) {
     ::SetWindowLongPtr(mParentWnd, GWLP_WNDPROC, mParentProc);
-    mParentWnd = NULL;
+    mParentWnd = nullptr;
     mParentProc = 0;
   }
 

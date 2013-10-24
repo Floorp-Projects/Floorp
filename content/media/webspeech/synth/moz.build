@@ -18,24 +18,24 @@ if CONFIG['MOZ_WEBSPEECH']:
 
     EXPORTS.mozilla.dom += [
         'EnableSpeechSynthesisCheck.h',
-        'SpeechSynthesis.h',
-        'SpeechSynthesisUtterance.h',
-        'SpeechSynthesisVoice.h',
         'ipc/SpeechSynthesisChild.h',
         'ipc/SpeechSynthesisParent.h',
         'nsSpeechTask.h',
         'nsSynthVoiceRegistry.h',
+        'SpeechSynthesis.h',
+        'SpeechSynthesisUtterance.h',
+        'SpeechSynthesisVoice.h',
     ]
 
     CPP_SOURCES += [
         'EnableSpeechSynthesisCheck.cpp',
-        'SpeechSynthesis.cpp',
         'ipc/SpeechSynthesisChild.cpp',
         'ipc/SpeechSynthesisParent.cpp',
-        'SpeechSynthesisUtterance.cpp',
-        'SpeechSynthesisVoice.cpp',
         'nsSpeechTask.cpp',
         'nsSynthVoiceRegistry.cpp',
+        'SpeechSynthesis.cpp',
+        'SpeechSynthesisUtterance.cpp',
+        'SpeechSynthesisVoice.cpp',
     ]
 
     if CONFIG['MOZ_SYNTH_PICO']:
