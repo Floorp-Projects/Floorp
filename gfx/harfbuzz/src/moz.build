@@ -6,11 +6,10 @@
 
 MODULE = 'harfbuzz'
 
-if CONFIG['OS_ARCH'] != 'WINNT':
-    LIBXUL_LIBRARY = True
+if CONFIG['OS_ARCH'] == 'WINNT':
+    FORCE_STATIC_LIB = True
 else:
-    # FORCE_STATIC_LIB = True
-    pass
+    LIBXUL_LIBRARY = True
 
 EXPORTS.harfbuzz += [
     'hb-blob.h',
