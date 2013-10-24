@@ -70,10 +70,6 @@
   border-top: 1px solid rgba(0,0,0,0.65);
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
-  padding: 2px 4px;
-}
-
 /* Because of -moz-box-align: center above, separators will be invisible unless
    we set their min-height. See bug 583510 for more information. */
 toolbarseparator {
@@ -114,6 +110,10 @@ toolbarseparator {
 
 #nav-bar-customization-target {
   padding: 4px;
+}
+
+#PersonalToolbar {
+  padding: 0 4px 4px;
 }
 
 #navigator-toolbox > toolbar:not(#TabsToolbar):-moz-lwtheme {
