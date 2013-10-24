@@ -96,20 +96,9 @@ function testEditor(aEditor) {
   is(computedStyle.backgroundColor, "rgb(255, 255, 255)",
      "content's background color is initially white");
 
-  EventUtils.synthesizeKey("[", {accelKey: true}, gPanelWindow);
-  is(aEditor.sourceEditor.getText(), "",
-     "Nothing happened as it is a known shortcut in source editor");
-
-  EventUtils.synthesizeKey("]", {accelKey: true}, gPanelWindow);
-  is(aEditor.sourceEditor.getText(), "",
-     "Nothing happened as it is a known shortcut in source editor");
-
   for each (let c in TESTCASE_CSS_SOURCE) {
     EventUtils.synthesizeKey(c, {}, gPanelWindow);
   }
-
-  is(aEditor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
-     "rule bracket has been auto-closed");
 
   ok(aEditor.unsaved,
      "new editor has unsaved flag");
@@ -121,6 +110,9 @@ function testEditor(aEditor) {
 
 function onTransitionEnd() {
   content.removeEventListener("transitionend", onTransitionEnd, false);
+
+  is(gNewEditor.sourceEditor.getText(), TESTCASE_CSS_SOURCE + "}",
+     "rule bracket has been auto-closed");
 
   let computedStyle = content.getComputedStyle(content.document.body, null);
   is(computedStyle.backgroundColor, "rgb(255, 0, 0)",
