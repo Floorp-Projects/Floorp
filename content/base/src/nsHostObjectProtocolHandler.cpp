@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,6 +13,7 @@
 #include "nsIDOMFile.h"
 #include "nsIDOMMediaStream.h"
 #include "mozilla/dom/MediaSource.h"
+#include "nsIMemoryReporter.h"
 
 // -----------------------------------------------------------------------
 // Hash table
@@ -22,6 +25,37 @@ struct DataInfo
 };
 
 static nsClassHashtable<nsCStringHashKey, DataInfo>* gDataTable;
+
+// Memory reporting for the hash table.
+namespace mozilla {
+
+class HostObjectURLsReporter MOZ_FINAL : public MemoryUniReporter
+{
+ public:
+  HostObjectURLsReporter()
+    : MemoryUniReporter("host-object-urls",
+                        KIND_OTHER, UNITS_COUNT,
+                        "The number of host objects stored for access via URLs "
+                        "(e.g. blobs passed to URL.createObjectURL).")
+    {}
+ private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    return gDataTable ? gDataTable->Count() : 0;
+  }
+};
+
+}
+
+nsHostObjectProtocolHandler::nsHostObjectProtocolHandler()
+{
+  static bool initialized = false;
+
+  if (!initialized) {
+    initialized = true;
+    NS_RegisterMemoryReporter(new mozilla::HostObjectURLsReporter());
+  }
+}
 
 nsresult
 nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
