@@ -93,29 +93,13 @@ DownloadsStartup.prototype = {
                           .registerFactory(kDownloadsUICid, "",
                                            kDownloadsUIContractId, null);
 
-        // If the integration preference is enabled, override Toolkit's
-        // nsITransfer implementation with the one from the JavaScript API for
-        // downloads.  This should be used only by developers while testing new
-        // code that uses the JavaScript API, and will eventually be removed
-        // when nsIDownloadManager will not be available anymore (bug 851471).
-        let useJSTransfer = false;
-        try {
-          // For performance reasons, we don't want to load the DownloadsCommon
-          // module during startup, so we read the preference value directly.
-          useJSTransfer =
-            Services.prefs.getBoolPref("browser.download.useJSTransfer");
-        } catch (ex) { }
-        if (useJSTransfer) {
-          Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
-                            .registerFactory(kTransferCid, "",
-                                             kTransferContractId, null);
-        } else {
-          // The other notifications are handled internally by the JavaScript
-          // API for downloads, no need to observe when that API is enabled.
-          for (let topic of kObservedTopics) {
-            Services.obs.addObserver(this, topic, true);
-          }
-        }
+        // Override Toolkit's nsITransfer implementation with the one from the
+        // JavaScript API for downloads.  This will eventually be removed when
+        // nsIDownloadManager will not be available anymore (bug 851471).  The
+        // old code in this module will be removed in bug 899110.
+        Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+                          .registerFactory(kTransferCid, "",
+                                           kTransferContractId, null);
         break;
 
       case "sessionstore-windows-restored":

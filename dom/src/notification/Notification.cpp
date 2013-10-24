@@ -6,14 +6,18 @@
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/OwningNonNull.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/Preferences.h"
 #include "TabChild.h"
 #include "nsContentUtils.h"
 #include "nsDOMEvent.h"
 #include "nsIAlertsService.h"
+#include "nsIAppsService.h"
 #include "nsIContentPermissionPrompt.h"
 #include "nsIDocument.h"
+#include "nsINotificationStorage.h"
 #include "nsIPermissionManager.h"
+#include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
 #include "nsToolkitCompsCID.h"
 #include "nsGlobalWindow.h"
@@ -21,11 +25,123 @@
 #include "nsIScriptSecurityManager.h"
 #ifdef MOZ_B2G
 #include "nsIDOMDesktopNotification.h"
-#include "nsIAppsService.h"
 #endif
 
 namespace mozilla {
 namespace dom {
+
+class NotificationStorageCallback MOZ_FINAL : public nsINotificationStorageCallback
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(NotificationStorageCallback)
+
+  NotificationStorageCallback(const GlobalObject& aGlobal, nsPIDOMWindow* aWindow, Promise* aPromise)
+    : mCount(0),
+      mGlobal(aGlobal.Get()),
+      mWindow(aWindow),
+      mPromise(aPromise)
+  {
+    MOZ_ASSERT(aWindow);
+    MOZ_ASSERT(aPromise);
+    JSContext* cx = aGlobal.GetContext();
+    JSAutoCompartment ac(cx, mGlobal);
+    mNotifications = JS_NewArrayObject(cx, 0, nullptr);
+    HoldData();
+  }
+
+  NS_IMETHOD Handle(const nsAString& aID,
+                    const nsAString& aTitle,
+                    const nsAString& aDir,
+                    const nsAString& aLang,
+                    const nsAString& aBody,
+                    const nsAString& aTag,
+                    const nsAString& aIcon,
+                    JSContext* aCx)
+  {
+    MOZ_ASSERT(!aID.IsEmpty());
+    MOZ_ASSERT(!aTitle.IsEmpty());
+
+    NotificationOptions options;
+    options.mDir = Notification::StringToDirection(nsString(aDir));
+    options.mLang = aLang;
+    options.mBody = aBody;
+    options.mTag = aTag;
+    options.mIcon = aIcon;
+    nsRefPtr<Notification> notification = Notification::CreateInternal(mWindow,
+                                                                       aID,
+                                                                       aTitle,
+                                                                       options);
+    JSAutoCompartment ac(aCx, mGlobal);
+    JS::RootedObject scope(aCx, mGlobal);
+    JS::RootedObject element(aCx, notification->WrapObject(aCx, scope));
+    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+
+    if (!JS_DefineElement(aCx, mNotifications, mCount++,
+                          JS::ObjectValue(*element), nullptr, nullptr, 0)) {
+      return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+  }
+
+  NS_IMETHOD Done(JSContext* aCx)
+  {
+    JSAutoCompartment ac(aCx, mGlobal);
+    Optional<JS::HandleValue> result(aCx, JS::ObjectValue(*mNotifications));
+    mPromise->MaybeResolve(aCx, result);
+    return NS_OK;
+  }
+
+private:
+  ~NotificationStorageCallback()
+  {
+    DropData();
+  }
+
+  void HoldData()
+  {
+    mozilla::HoldJSObjects(this);
+  }
+
+  void DropData()
+  {
+    mGlobal = nullptr;
+    mNotifications = nullptr;
+    mozilla::DropJSObjects(this);
+  }
+
+  uint32_t  mCount;
+  JS::Heap<JSObject *> mGlobal;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<Promise> mPromise;
+  JS::Heap<JSObject *> mNotifications;
+};
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(NotificationStorageCallback)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(NotificationStorageCallback)
+NS_IMPL_CYCLE_COLLECTION_CLASS(NotificationStorageCallback)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NotificationStorageCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINotificationStorageCallback)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(NotificationStorageCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mNotifications)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NotificationStorageCallback)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NotificationStorageCallback)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise)
+  tmp->DropData();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 class NotificationPermissionRequest : public nsIContentPermissionRequest,
                                       public PCOMContentPermissionRequestChild,
@@ -257,12 +373,15 @@ NotificationTask::Run()
 {
   switch (mAction) {
   case eShow:
-    return mNotification->ShowInternal();
+    mNotification->ShowInternal();
+    break;
   case eClose:
-    return mNotification->CloseInternal();
+    mNotification->CloseInternal();
+    break;
   default:
     MOZ_CRASH("Unexpected action for NotificationTask.");
   }
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1(NotificationObserver, nsIObserver)
@@ -283,50 +402,103 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-Notification::Notification(const nsAString& aTitle, const nsAString& aBody,
+Notification::Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
                            NotificationDirection aDir, const nsAString& aLang,
                            const nsAString& aTag, const nsAString& aIconUrl)
-  : mTitle(aTitle), mBody(aBody), mDir(aDir), mLang(aLang),
+  : mID(aID), mTitle(aTitle), mBody(aBody), mDir(aDir), mLang(aLang),
     mTag(aTag), mIconUrl(aIconUrl), mIsClosed(false)
 {
   SetIsDOMBinding();
 }
 
+// static
 already_AddRefed<Notification>
 Notification::Constructor(const GlobalObject& aGlobal,
                           const nsAString& aTitle,
                           const NotificationOptions& aOptions,
                           ErrorResult& aRv)
 {
-  nsString tag;
-  if (aOptions.mTag.WasPassed()) {
-    tag.Append(NS_LITERAL_STRING("tag:"));
-    tag.Append(aOptions.mTag.Value());
-  } else {
-    tag.Append(NS_LITERAL_STRING("notag:"));
-    tag.AppendInt(sCount++);
-  }
-
-  nsRefPtr<Notification> notification = new Notification(aTitle,
-                                                         aOptions.mBody,
-                                                         aOptions.mDir,
-                                                         aOptions.mLang,
-                                                         tag,
-                                                         aOptions.mIcon);
-
+  MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(window, "Window should not be null.");
-  notification->BindToOwner(window);
+  nsRefPtr<Notification> notification = CreateInternal(window,
+                                                       EmptyString(),
+                                                       aTitle,
+                                                       aOptions);
 
   // Queue a task to show the notification.
   nsCOMPtr<nsIRunnable> showNotificationTask =
     new NotificationTask(notification, NotificationTask::eShow);
-  NS_DispatchToMainThread(showNotificationTask);
+  NS_DispatchToCurrentThread(showNotificationTask);
+
+  // Persist the notification.
+  nsresult rv;
+  nsCOMPtr<nsINotificationStorage> notificationStorage =
+    do_GetService(NS_NOTIFICATION_STORAGE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  nsString origin;
+  aRv = GetOrigin(window, origin);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsString id;
+  notification->GetID(id);
+  aRv = notificationStorage->Put(origin,
+                                 id,
+                                 aTitle,
+                                 DirectionToString(aOptions.mDir),
+                                 aOptions.mLang,
+                                 aOptions.mBody,
+                                 aOptions.mTag,
+                                 aOptions.mIcon);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   return notification.forget();
 }
 
-nsresult
+already_AddRefed<Notification>
+Notification::CreateInternal(nsPIDOMWindow* aWindow,
+                             const nsAString& aID,
+                             const nsAString& aTitle,
+                             const NotificationOptions& aOptions)
+{
+  nsString id;
+  if (!aID.IsEmpty()) {
+    id = aID;
+  } else {
+    nsCOMPtr<nsIUUIDGenerator> uuidgen =
+      do_GetService("@mozilla.org/uuid-generator;1");
+    NS_ENSURE_TRUE(uuidgen, nullptr);
+    nsID uuid;
+    nsresult rv = uuidgen->GenerateUUIDInPlace(&uuid);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+
+    char buffer[NSID_LENGTH];
+    uuid.ToProvidedString(buffer);
+    NS_ConvertASCIItoUTF16 convertedID(buffer);
+    id = convertedID;
+  }
+
+  nsRefPtr<Notification> notification = new Notification(id,
+                                                         aTitle,
+                                                         aOptions.mBody,
+                                                         aOptions.mDir,
+                                                         aOptions.mLang,
+                                                         aOptions.mTag,
+                                                         aOptions.mIcon);
+
+  notification->BindToOwner(aWindow);
+  return notification.forget();
+}
+
+void
 Notification::ShowInternal()
 {
   nsCOMPtr<nsIAlertsService> alertService =
@@ -337,7 +509,8 @@ Notification::ShowInternal()
     NotificationPermission::Granted || !alertService) {
     // We do not have permission to show a notification or alert service
     // is not available.
-    return DispatchTrustedEvent(NS_LITERAL_STRING("error"));
+    DispatchTrustedEvent(NS_LITERAL_STRING("error"));
+    return;
   }
 
   nsresult rv;
@@ -345,17 +518,19 @@ Notification::ShowInternal()
   if (mIconUrl.Length() > 0) {
     // Resolve image URL against document base URI.
     nsIDocument* doc = GetOwner()->GetExtantDoc();
-    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-    nsCOMPtr<nsIURI> baseUri = doc->GetBaseURI();
-    NS_ENSURE_TRUE(baseUri, NS_ERROR_UNEXPECTED);
-    nsCOMPtr<nsIURI> srcUri;
-    rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(srcUri),
-                                                   mIconUrl, doc, baseUri);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (srcUri) {
-      nsAutoCString src;
-      srcUri->GetSpec(src);
-      absoluteUrl = NS_ConvertUTF8toUTF16(src);
+    if (doc) {
+      nsCOMPtr<nsIURI> baseUri = doc->GetBaseURI();
+      if (baseUri) {
+        nsCOMPtr<nsIURI> srcUri;
+        rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(srcUri),
+                                                       mIconUrl, doc, baseUri);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoCString src;
+          srcUri->GetSpec(src);
+          absoluteUrl = NS_ConvertUTF8toUTF16(src);
+        }
+      }
+
     }
   }
 
@@ -363,7 +538,7 @@ Notification::ShowInternal()
 
   nsString alertName;
   rv = GetAlertName(alertName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
 #ifdef MOZ_B2G
   nsCOMPtr<nsIAppNotificationService> appNotifier =
@@ -375,23 +550,26 @@ Notification::ShowInternal()
     if (appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
       nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
       nsString manifestUrl = EmptyString();
-      appsService->GetManifestURLByLocalId(appId, manifestUrl);
-      mozilla::AutoSafeJSContext cx;
-      JS::RootedValue val(cx);
-      AppNotificationServiceOptions ops;
-      ops.mTextClickable = true;
-      ops.mManifestURL = manifestUrl;
-      ops.mId = alertName;
-      ops.mDir = DirectionToString(mDir);
-      ops.mLang = mLang;
+      rv = appsService->GetManifestURLByLocalId(appId, manifestUrl);
+      if (NS_SUCCEEDED(rv)) {
+        mozilla::AutoSafeJSContext cx;
+        JS::RootedValue val(cx);
+        AppNotificationServiceOptions ops;
+        ops.mTextClickable = true;
+        ops.mManifestURL = manifestUrl;
+        ops.mId = alertName;
+        ops.mDir = DirectionToString(mDir);
+        ops.mLang = mLang;
 
-      if (!ops.ToObject(cx, JS::NullPtr(), &val)) {
-        NS_WARNING("Converting dict to object failed!");
-        return NS_ERROR_FAILURE;
+        if (!ops.ToObject(cx, JS::NullPtr(), &val)) {
+          NS_WARNING("Converting dict to object failed!");
+          return;
+        }
+
+        appNotifier->ShowAppNotification(mIconUrl, mTitle, mBody,
+                                         observer, val);
+        return;
       }
-
-      return appNotifier->ShowAppNotification(mIconUrl, mTitle, mBody,
-                                              observer, val);
     }
   }
 #endif
@@ -400,9 +578,9 @@ Notification::ShowInternal()
   // nsIObserver. Thus the cookie must be unique to differentiate observers.
   nsString uniqueCookie = NS_LITERAL_STRING("notification:");
   uniqueCookie.AppendInt(sCount++);
-  return alertService->ShowAlertNotification(absoluteUrl, mTitle, mBody, true,
-                                             uniqueCookie, observer, alertName,
-                                             DirectionToString(mDir), mLang);
+  alertService->ShowAlertNotification(absoluteUrl, mTitle, mBody, true,
+                                      uniqueCookie, observer, alertName,
+                                      DirectionToString(mDir), mLang);
 }
 
 void
@@ -490,6 +668,47 @@ Notification::GetPermissionInternal(nsISupports* aGlobal, ErrorResult& aRv)
   }
 }
 
+already_AddRefed<Promise>
+Notification::Get(const GlobalObject& aGlobal,
+                  const GetNotificationOptions& aFilter,
+                  ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(window);
+  nsIDocument* doc = window->GetExtantDoc();
+  if (!doc) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsString origin;
+  aRv = GetOrigin(window, origin);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsINotificationStorage> notificationStorage =
+    do_GetService(NS_NOTIFICATION_STORAGE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = new Promise(window);
+  nsCOMPtr<nsINotificationStorageCallback> callback =
+    new NotificationStorageCallback(aGlobal, window, promise);
+  nsString tag = aFilter.mTag.WasPassed() ?
+                 aFilter.mTag.Value() :
+                 EmptyString();
+  aRv = notificationStorage->Get(origin, tag, callback);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  return promise.forget();
+}
+
 bool
 Notification::PrefEnabled()
 {
@@ -511,21 +730,60 @@ Notification::Close()
   NS_DispatchToMainThread(showNotificationTask);
 }
 
-nsresult
+void
 Notification::CloseInternal()
 {
   if (!mIsClosed) {
+    nsresult rv;
+    // Don't bail out if notification storage fails, since we still
+    // want to send the close event through the alert service.
+    nsCOMPtr<nsINotificationStorage> notificationStorage =
+      do_GetService(NS_NOTIFICATION_STORAGE_CONTRACTID);
+    if (notificationStorage) {
+      nsString origin;
+      rv = GetOrigin(GetOwner(), origin);
+      if (NS_SUCCEEDED(rv)) {
+        notificationStorage->Delete(origin, mID);
+      }
+    }
+
     nsCOMPtr<nsIAlertsService> alertService =
       do_GetService(NS_ALERTSERVICE_CONTRACTID);
-
     if (alertService) {
       nsString alertName;
-      nsresult rv = GetAlertName(alertName);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = alertService->CloseAlert(alertName);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = GetAlertName(alertName);
+      if (NS_SUCCEEDED(rv)) {
+        alertService->CloseAlert(alertName);
+      }
     }
+  }
+}
+
+nsresult
+Notification::GetOrigin(nsPIDOMWindow* aWindow, nsString& aOrigin)
+{
+  MOZ_ASSERT(aWindow);
+  nsresult rv;
+  nsIDocument* doc = aWindow->GetExtantDoc();
+  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+  nsIPrincipal* principal = doc->NodePrincipal();
+  NS_ENSURE_TRUE(principal, NS_ERROR_UNEXPECTED);
+
+  uint16_t appStatus = principal->GetAppStatus();
+  uint32_t appId = principal->GetAppId();
+
+  if (appStatus == nsIPrincipal::APP_STATUS_NOT_INSTALLED ||
+      appId == nsIScriptSecurityManager::NO_APP_ID ||
+      appId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+    rv = nsContentUtils::GetUTFOrigin(principal, aOrigin);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // If we are in "app code", use manifest URL as unique origin since
+    // multiple apps can share the same origin but not same notifications.
+    nsCOMPtr<nsIAppsService> appsService =
+      do_GetService("@mozilla.org/AppsService;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    appsService->GetManifestURLByLocalId(appId, aOrigin);
   }
 
   return NS_OK;
@@ -534,20 +792,18 @@ Notification::CloseInternal()
 nsresult
 Notification::GetAlertName(nsString& aAlertName)
 {
-  // Get the notification name that is unique per origin + tag.
-  // The name of the alert is of the form origin#tag
-
-  nsPIDOMWindow* owner = GetOwner();
-  NS_ENSURE_TRUE(owner, NS_ERROR_UNEXPECTED);
-
-  nsIDocument* doc = owner->GetExtantDoc();
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-  nsresult rv = nsContentUtils::GetUTFOrigin(doc->NodePrincipal(),
-                                             aAlertName);
+  // Get the notification name that is unique per origin + tag/ID.
+  // The name of the alert is of the form origin#tag/ID.
+  nsresult rv = GetOrigin(GetOwner(), aAlertName);
   NS_ENSURE_SUCCESS(rv, rv);
   aAlertName.AppendLiteral("#");
-  aAlertName.Append(mTag);
+  if (!mTag.IsEmpty()) {
+    aAlertName.Append(NS_LITERAL_STRING("tag:"));
+    aAlertName.Append(mTag);
+  } else {
+    aAlertName.Append(NS_LITERAL_STRING("notag:"));
+    aAlertName.Append(mID);
+  }
   return NS_OK;
 }
 

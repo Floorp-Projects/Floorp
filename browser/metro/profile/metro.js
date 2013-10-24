@@ -36,15 +36,17 @@ pref("prompts.tab_modal.enabled", true);
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-pan-zoom.enabled", true);
 pref("layers.componentalpha.enabled", false);
-pref("gfx.azpc.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel threshold
-pref("gfx.azpc.pan_repaint_interval", "50");   // prefer 20 fps
-pref("gfx.azpc.fling_repaint_interval", "50"); // prefer 20 fps
-pref("gfx.axis.fling_friction", "0.002");
-pref("gfx.axis.fling_stopped_threshold", "0.2");
+
+// Prefs to control the async pan/zoom behaviour
+pref("apz.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel threshold
+pref("apz.pan_repaint_interval", "50");   // prefer 20 fps
+pref("apz.fling_repaint_interval", "50"); // prefer 20 fps
+pref("apz.fling_friction", "0.002");
+pref("apz.fling_stopped_threshold", "0.2");
 
 // 0 = free, 1 = standard, 2 = sticky
-pref("apzc.axis_lock_mode", 2);
-pref("apzc.cross_slide.enabled", true);
+pref("apz.axis_lock_mode", 2);
+pref("apz.cross_slide.enabled", true);
 
 // Enable Microsoft TSF support by default for imes.
 pref("intl.enable_tsf_support", true);

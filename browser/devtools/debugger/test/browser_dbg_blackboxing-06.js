@@ -2,7 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Test that clicking the black box checkbox doesn't select that source.
+ * Test that clicking the black box checkbox when paused doesn't re-select the
+ * currently paused frame's source.
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_blackboxing.html";
@@ -18,33 +19,33 @@ function test() {
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
 
-    waitForSourceShown(gPanel, ".js")
+    waitForSourceAndCaretAndScopes(gPanel, ".html", 21)
       .then(testBlackBox)
-      .then(() => closeDebuggerAndFinish(gPanel))
+      .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
+
+    gDebuggee.runTest();
   });
 }
 
 function testBlackBox() {
   const selectedUrl = gSources.selectedValue;
-  const checkbox = getDifferentBlackBoxCheckbox(selectedUrl);
-  ok(checkbox, "We should be able to grab a different checkbox.");
 
-  let finished = waitForThreadEvents(gPanel, "blackboxchange").then(() => {
-    is(selectedUrl, gSources.selectedValue,
-      "The same source should still be selected.");
+  let finished = waitForSourceShown(gPanel, "blackboxme.js").then(() => {
+    const newSelectedUrl = gSources.selectedValue;
+    isnot(selectedUrl, newSelectedUrl,
+      "Should not have the same url selected.");
+
+    return toggleBlackBoxing(gPanel).then(() => {
+      is(gSources.selectedValue, newSelectedUrl,
+        "The selected source did not change.");
+    });
   });
 
-  checkbox.click();
+  gSources.selectedIndex = 0;
   return finished;
-}
-
-function getDifferentBlackBoxCheckbox(aUrl) {
-  return gDebugger.document.querySelector(
-    ".side-menu-widget-item:not([tooltiptext=\"" + aUrl + "\"]) " +
-    ".side-menu-widget-item-checkbox");
 }
 
 registerCleanupFunction(function() {
