@@ -85,9 +85,9 @@ namespace {
   struct ScopedResourceUpdateTraits
   {
     typedef HANDLE type;
-    static type empty() { return NULL; }
+    static type empty() { return nullptr; }
     static void release(type handle) {
-      if(NULL != handle) {
+      if(nullptr != handle) {
         EndUpdateResourceW(handle, TRUE); // Discard changes
       }
     }
@@ -131,7 +131,7 @@ wmain(int argc, wchar_t** argv)
 
   // Open the target library for updating
   ScopedResourceUpdate updateRes(BeginUpdateResourceW(argv[1], FALSE));
-  if (NULL == updateRes) {
+  if (nullptr == updateRes) {
     fprintf(stderr, "Unable to open library for modification.\n");
     return 1;
   }

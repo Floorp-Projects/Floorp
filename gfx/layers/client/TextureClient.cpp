@@ -388,6 +388,15 @@ DeprecatedTextureClient::~DeprecatedTextureClient()
   MOZ_ASSERT(mDescriptor.type() == SurfaceDescriptor::T__None, "Need to release surface!");
 }
 
+void
+DeprecatedTextureClient::OnActorDestroy()
+{
+  if (ISurfaceAllocator::IsShmem(&mDescriptor)) {
+    mDescriptor = SurfaceDescriptor();
+  }
+}
+
+
 DeprecatedTextureClientShmem::DeprecatedTextureClientShmem(CompositableForwarder* aForwarder,
                                        const TextureInfo& aTextureInfo)
   : DeprecatedTextureClient(aForwarder, aTextureInfo)

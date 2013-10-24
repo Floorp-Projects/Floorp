@@ -123,8 +123,8 @@ class TypeRepresentation {
     // buffer, for use in error messages and the like.
     bool appendString(JSContext *cx, StringBuffer &buffer);
 
-    static bool isTypeRepresentationOwnerObject(JSObject *obj);
-    static TypeRepresentation *fromOwnerObject(JSObject *obj);
+    static bool isOwnerObject(JSObject &obj);
+    static TypeRepresentation *fromOwnerObject(JSObject &obj);
 
     bool isScalar() const {
         return kind() == Scalar;

@@ -45,12 +45,16 @@
     var isRE = query.match(/^\/(.*)\/([a-z]*)$/);
     return isRE ? new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i") : query;
   }
-  var queryDialog =
-    'Search: <input type="text" style="width: 10em"/> <span style="color: #888">(Use /re/ syntax for regexp search)</span>';
+  var queryDialog;
   function doSearch(cm, rev) {
+    if (!queryDialog) {
+      queryDialog = cm.l10n('findCmd.promptMessage') +
+        ' <input type="text" style="width: 10em"/>';
+    }
+
     var state = getSearchState(cm);
     if (state.query) return findNext(cm, rev);
-    dialog(cm, queryDialog, "Search for:", function(query) {
+    dialog(cm, queryDialog, cm.l10n('findCmd.promptMessage'), function(query) {
       cm.operation(function() {
         if (!query || state.query) return;
         state.query = parseQuery(query);

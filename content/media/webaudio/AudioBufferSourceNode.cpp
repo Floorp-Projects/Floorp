@@ -246,8 +246,10 @@ public:
                       TrackTicks* aCurrentPosition,
                       TrackTicks aMaxPos)
   {
-    uint32_t numFrames = std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
-                                  uint32_t(aMaxPos - *aCurrentPosition));
+    MOZ_ASSERT(*aCurrentPosition < aMaxPos);
+    uint32_t numFrames =
+      std::min<TrackTicks>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+                           aMaxPos - *aCurrentPosition);
     if (numFrames == WEBAUDIO_BLOCK_SIZE) {
       aOutput->SetNull(numFrames);
     } else {
@@ -277,9 +279,11 @@ public:
                       uint32_t aBufferOffset,
                       uint32_t aBufferMax)
   {
-    uint32_t numFrames = std::min(std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
-                                           aBufferMax - aBufferOffset),
-                                  uint32_t(mStop - *aCurrentPosition));
+    MOZ_ASSERT(*aCurrentPosition < mStop);
+    uint32_t numFrames =
+      std::min<TrackTicks>(std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+                                    aBufferMax - aBufferOffset),
+                           mStop - *aCurrentPosition);
     if (numFrames == WEBAUDIO_BLOCK_SIZE && !ShouldResample(aStream->SampleRate())) {
       BorrowFromInputBuffer(aOutput, aChannels, aBufferOffset);
       *aOffsetWithinBlock += numFrames;
@@ -656,9 +660,9 @@ AudioBufferSourceNode::SendLoopParametersToStream()
     float rate = mBuffer->SampleRate();
     double length = (double(mBuffer->Length()) / mBuffer->SampleRate());
     double actualLoopStart, actualLoopEnd;
-    if (((mLoopStart != 0.0) || (mLoopEnd != 0.0)) &&
-        mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
+    if (mLoopStart >= 0.0 && mLoopEnd > 0.0 &&
         mLoopStart < mLoopEnd) {
+      MOZ_ASSERT(mLoopStart != 0.0 || mLoopEnd != 0.0);
       actualLoopStart = (mLoopStart > length) ? 0.0 : mLoopStart;
       actualLoopEnd = std::min(mLoopEnd, length);
     } else {

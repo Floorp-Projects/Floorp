@@ -17,8 +17,8 @@ EXPORTS.mozilla.ipc += [
     'FileDescriptor.h',
     'FileDescriptorUtils.h',
     'GeckoChildProcessHost.h',
-    'IOThreadChild.h',
     'InputStreamUtils.h',
+    'IOThreadChild.h',
     'MessageChannel.h',
     'MessageLink.h',
     'ProcessChild.h',
@@ -37,19 +37,19 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'Transport_win.h',
     ]
     CPP_SOURCES += [
+        'CrossProcessMutex_windows.cpp',
         'SharedMemory_windows.cpp',
         'Transport_win.cpp',
         'WindowsMessageLoop.cpp',
-        'CrossProcessMutex_windows.cpp',
     ]
 else:
     EXPORTS.mozilla.ipc += [
         'Transport_posix.h',
     ]
     CPP_SOURCES += [
+        'CrossProcessMutex_unimplemented.cpp',
         'SharedMemory_posix.cpp',
         'Transport_posix.cpp',
-        'CrossProcessMutex_unimplemented.cpp',
     ]
 
 # Android has its own,

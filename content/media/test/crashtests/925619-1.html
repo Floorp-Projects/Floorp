@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+// 1024 > 89478.5 * 48000 - (1 << 32)
+var context = new window.OfflineAudioContext(1, 1024, 48000);
+context.oncomplete = function(e) {
+    document.documentElement.removeAttribute("class");
+};
+var buffer = context.createBuffer(1, 2048, context.sampleRate);
+var source = context.createBufferSource();
+source.buffer = buffer;
+source.start(89478.5); // 89478.5 is a little greater than 2^32 / 48000.
+context.startRendering();
+</script>

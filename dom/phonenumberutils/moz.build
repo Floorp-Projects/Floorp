@@ -12,10 +12,10 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'mcc_iso3166_table.jsm',
     'PhoneNumber.jsm',
     'PhoneNumberMetaData.jsm',
     'PhoneNumberNormalizer.jsm',
-    'mcc_iso3166_table.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [

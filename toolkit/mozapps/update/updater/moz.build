@@ -32,8 +32,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     have_progressui = 1
     CPP_SOURCES += [
-        'progressui_gonk.cpp',
         'automounter_gonk.cpp',
+        'progressui_gonk.cpp',
     ]
 
 if have_progressui == 0:

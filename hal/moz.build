@@ -23,8 +23,8 @@ TEST_DIRS += ['tests']
 CPP_SOURCES += [
     'Hal.cpp',
     'HalWakeLock.cpp',
-    'WindowIdentifier.cpp',
     'sandbox/SandboxHal.cpp',
+    'WindowIdentifier.cpp',
 ]
 
 if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':
@@ -48,8 +48,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     CPP_SOURCES += [
         'android/AndroidHal.cpp',
         'android/AndroidSensor.cpp',
-        'fallback/FallbackPower.cpp',
         'fallback/FallbackAlarm.cpp',
+        'fallback/FallbackPower.cpp',
         'linux/LinuxMemory.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
@@ -60,8 +60,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'gonk/GonkSensor.cpp',
         'gonk/GonkSwitch.cpp',
         'gonk/UeventPoller.cpp',
-        'linux/LinuxPower.cpp',
         'linux/LinuxMemory.cpp',
+        'linux/LinuxPower.cpp',
     ]
 elif CONFIG['OS_TARGET'] == 'Linux':
     CPP_SOURCES += [
@@ -69,8 +69,8 @@ elif CONFIG['OS_TARGET'] == 'Linux':
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
-        'linux/LinuxPower.cpp',
         'linux/LinuxMemory.cpp',
+        'linux/LinuxPower.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
         CPP_SOURCES += [
@@ -83,30 +83,30 @@ elif CONFIG['OS_TARGET'] == 'Linux':
 elif CONFIG['OS_TARGET'] == 'WINNT':
     CPP_SOURCES += [
         'fallback/FallbackAlarm.cpp',
+        'fallback/FallbackMemory.cpp',
         'fallback/FallbackPower.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackVibration.cpp',
         'windows/WindowsBattery.cpp',
         'windows/WindowsSensor.cpp',
-        'fallback/FallbackMemory.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CPP_SOURCES += [
         'cocoa/CocoaBattery.cpp',
         'fallback/FallbackAlarm.cpp',
+        'fallback/FallbackMemory.cpp',
         'fallback/FallbackPower.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackVibration.cpp',
-        'fallback/FallbackMemory.cpp',
     ]
 elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
     CPP_SOURCES += [
         'fallback/FallbackAlarm.cpp',
+        'fallback/FallbackMemory.cpp',
         'fallback/FallbackPower.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
-        'fallback/FallbackMemory.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
         CPP_SOURCES += [
@@ -120,19 +120,19 @@ else:
     CPP_SOURCES += [
         'fallback/FallbackAlarm.cpp',
         'fallback/FallbackBattery.cpp',
+        'fallback/FallbackMemory.cpp',
         'fallback/FallbackPower.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
         'fallback/FallbackVibration.cpp',
-        'fallback/FallbackMemory.cpp',
     ]
 
 # Fallbacks for backends implemented on Gonk only.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     CPP_SOURCES += [
         'fallback/FallbackDiskSpaceWatcher.cpp',
-        'fallback/FallbackFMRadio.cpp',
         'fallback/FallbackFactoryReset.cpp',
+        'fallback/FallbackFMRadio.cpp',
         'fallback/FallbackLights.cpp',
         'fallback/FallbackProcessPriority.cpp',
         'fallback/FallbackScreenPower.cpp',

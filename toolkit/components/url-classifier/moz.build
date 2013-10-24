@@ -22,13 +22,13 @@ CPP_SOURCES += [
     'Classifier.cpp',
     'HashStore.cpp',
     'LookupCache.cpp',
-    'ProtocolParser.cpp',
     'nsCheckSummedOutputStream.cpp',
     'nsUrlClassifierDBService.cpp',
     'nsUrlClassifierPrefixSet.cpp',
     'nsUrlClassifierProxies.cpp',
     'nsUrlClassifierStreamUpdater.cpp',
     'nsUrlClassifierUtils.cpp',
+    'ProtocolParser.cpp',
 ]
 
 EXTRA_COMPONENTS += [

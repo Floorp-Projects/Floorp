@@ -6,25 +6,25 @@
 
 EXPORTS.mozilla.dom.mobilemessage += [
     'Constants.h',            # Required by almost all cpp files
+    'ipc/SmsChild.h',
+    'ipc/SmsParent.h',
     'MobileMessageService.h', # Required by nsLayoutModule.cpp
     'SmsServicesFactory.h',   # Required by nsLayoutModule.cpp
     'Types.h',                # Required by IPDL SmsTypes.h
-    'ipc/SmsChild.h',
-    'ipc/SmsParent.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     CPP_SOURCES += [
+        'android/MmsService.cpp',
         'android/MobileMessageDatabaseService.cpp',
         'android/SmsService.cpp',
-        'android/MmsService.cpp',
     ]
 elif CONFIG['MOZ_B2G_RIL']:
     EXTRA_JS_MODULES = [
-        'gonk/MmsPduHelper.jsm',
-        'gonk/WspPduHelper.jsm',
         'gonk/mms_consts.js',
+        'gonk/MmsPduHelper.jsm',
         'gonk/wap_consts.js',
+        'gonk/WspPduHelper.jsm',
     ]
     EXTRA_COMPONENTS += [
         'gonk/MmsService.js',
@@ -37,8 +37,8 @@ elif CONFIG['MOZ_B2G_RIL']:
     ]
 else:
     CPP_SOURCES += [
-        'fallback/MobileMessageDatabaseService.cpp',
         'fallback/MmsService.cpp',
+        'fallback/MobileMessageDatabaseService.cpp',
         'fallback/SmsService.cpp',
     ]
 
@@ -52,6 +52,9 @@ EXPORTS.mozilla.dom += [
 
 CPP_SOURCES += [
     'Constants.cpp',
+    'ipc/SmsChild.cpp',
+    'ipc/SmsIPCService.cpp',
+    'ipc/SmsParent.cpp',
     'MmsMessage.cpp',
     'MobileMessageCallback.cpp',
     'MobileMessageCursorCallback.cpp',
@@ -62,9 +65,6 @@ CPP_SOURCES += [
     'SmsMessage.cpp',
     'SmsSegmentInfo.cpp',
     'SmsServicesFactory.cpp',
-    'ipc/SmsChild.cpp',
-    'ipc/SmsIPCService.cpp',
-    'ipc/SmsParent.cpp',
 ]
 
 IPDL_SOURCES += [
