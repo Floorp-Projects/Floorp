@@ -38,9 +38,6 @@ template <typename T> class AutoVectorRooter;
 template<typename K, typename V> class AutoHashMapRooter;
 template<typename T> class AutoHashSetRooter;
 
-class ContextOptions;
-class AutoSaveContextOptions;
-
 }
 
 // Do the importing.
@@ -114,9 +111,6 @@ using JS::MutableHandleString;
 using JS::MutableHandleValue;
 
 using JS::Zone;
-
-using JS::ContextOptions;
-using JS::AutoSaveContextOptions;
 
 } /* namespace js */
 
