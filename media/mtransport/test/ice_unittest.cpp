@@ -107,6 +107,9 @@ class IceCandidatePairCompare {
                     const NrIceCandidatePair& rhs) const {
       if (lhs.priority == rhs.priority) {
         if (lhs.local == rhs.local) {
+          if (lhs.remote == rhs.remote) {
+            return lhs.codeword < rhs.codeword;
+          }
           return lhs.remote < rhs.remote;
         }
         return lhs.local < rhs.local;
@@ -481,7 +484,8 @@ class IceTestPeer : public sigslot::has_slots<> {
       std::cerr << "state = " << pair.state
                 << " priority = " << pair.priority
                 << " nominated = " << pair.nominated
-                << " selected = " << pair.selected << std::endl;
+                << " selected = " << pair.selected
+                << " codeword = " << pair.codeword << std::endl;
   }
 
   void DumpCandidatePairs(NrIceMediaStream *stream) {
@@ -1249,12 +1253,22 @@ TEST_F(IceConnectTest, TestRLogRingBuffer) {
   ASSERT_TRUE(ContainsSucceededPair(pairs1));
   ASSERT_TRUE(ContainsSucceededPair(pairs2));
 
-  std::deque<std::string> logs;
-  RLogRingBuffer::GetInstance()->Filter("CAND-PAIR", 0, &logs);
-  std::cerr << "Dumping CAND-PAIR logging:" << std::endl;
-  for (auto i = logs.rbegin(); i != logs.rend(); ++i) {
-    std::cerr << *i << std::endl;
+  for (auto p = pairs1.begin(); p != pairs1.end(); ++p) {
+    std::deque<std::string> logs;
+    std::string substring("CAND-PAIR(");
+    substring += p->codeword;
+    RLogRingBuffer::GetInstance()->Filter(substring, 0, &logs);
+    ASSERT_NE(0U, logs.size());
   }
+
+  for (auto p = pairs2.begin(); p != pairs2.end(); ++p) {
+    std::deque<std::string> logs;
+    std::string substring("CAND-PAIR(");
+    substring += p->codeword;
+    RLogRingBuffer::GetInstance()->Filter(substring, 0, &logs);
+    ASSERT_NE(0U, logs.size());
+  }
+
   RLogRingBuffer::DestroyInstance();
 }
 
