@@ -18,3 +18,5 @@ SOURCES += [
 
 LIBRARY_NAME = 'kiss_fft'
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    NO_VISIBILITY_FLAGS = True

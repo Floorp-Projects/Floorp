@@ -5,9 +5,6 @@
 
 DEFINES += -DHAVE_CONFIG_H=vpx_config.h
 
-ifeq (WINNT,$(OS_TARGET))
-VISIBILITY_FLAGS =
-endif
 
 LOCAL_INCLUDES += \
   -I. \
