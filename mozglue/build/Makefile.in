@@ -9,8 +9,6 @@ DIST_INSTALL = 1
 # If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
 ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
 FORCE_SHARED_LIB = 1
-else
-FORCE_STATIC_LIB = 1
 endif
 
 # Keep jemalloc separated when mozglue is statically linked
