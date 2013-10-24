@@ -122,7 +122,8 @@ public:
           mLeftOverData = INT32_MIN;
           nsRefPtr<PlayingRefChanged> refchanged =
             new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
-          NS_DispatchToMainThread(refchanged);
+          aStream->Graph()->
+            DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
         }
         aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
         return;
