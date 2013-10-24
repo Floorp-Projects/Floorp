@@ -38,6 +38,9 @@ SOURCES += [
 if CONFIG['OS_ARCH'] == 'AIX':
     DEFINES['alloca'] = '__alloca'
 
+if CONFIG['OS_ARCH'] == 'SunOS':
+    DEFINES['HAVE_ALLOCA_H'] = True
+
 MSVC_ENABLE_PGO = True
 
 FORCE_STATIC_LIB = True
