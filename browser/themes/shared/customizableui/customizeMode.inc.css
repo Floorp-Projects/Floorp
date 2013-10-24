@@ -143,11 +143,15 @@ toolbarpaletteitem[dragover] {
   margin-bottom: 25px;
 }
 
-#customization-palette > toolbarpaletteitem {
+toolbarpaletteitem[place="palette"] {
   width: 110px;
   height: 94px;
   overflow: hidden;
   display: inline-block;
+}
+
+toolbarpaletteitem[place="palette"][hidden] {
+  display: none;
 }
 
 #customization-palette > #wrapper-edit-controls,
