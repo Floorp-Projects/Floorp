@@ -6,11 +6,10 @@
 
 MODULE = 'graphite2'
 
-if CONFIG['OS_TARGET'] != 'WINNT':
-    LIBXUL_LIBRARY = True
+if CONFIG['OS_TARGET'] == 'WINNT':
+    FORCE_STATIC_LIB = True
 else:
-    # FORCE_STATIC_LIB = True
-    pass
+    LIBXUL_LIBRARY = True
 
 # This should contain all of the _PUBLIC_HEADERS from files.mk
 EXPORTS.graphite2 += [

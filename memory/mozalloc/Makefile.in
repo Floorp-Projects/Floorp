@@ -11,9 +11,7 @@ endif
 
 DIST_INSTALL 	= 1
 
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-FORCE_STATIC_LIB= 1
-else
+ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
 FORCE_SHARED_LIB= 1
 endif
 

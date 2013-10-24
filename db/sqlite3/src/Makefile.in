@@ -4,9 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SHORT_LIBNAME    = mozsqlt3
-ifdef MOZ_FOLD_LIBS
-FORCE_STATIC_LIB = 1
-else
+ifndef MOZ_FOLD_LIBS
 FORCE_SHARED_LIB = 1
 endif
 VISIBILITY_FLAGS =
