@@ -344,6 +344,20 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
     mMainThreadListeners.RemoveElement(aListener);
   }
+  /**
+   * Ensure a runnable will run on the main thread after running all pending
+   * updates that were sent from the graph thread or will be sent before the
+   * graph thread receives the next graph update.
+   *
+   * If the graph has been shutdown or destroyed, or if it is non-realtime
+   * and has not started, then the runnable will be run
+   * synchronously/immediately.  (There are no pending updates in these
+   * situations.)
+   *
+   * Main thread only.
+   */
+  void RunAfterPendingUpdates(nsRefPtr<nsIRunnable> aRunnable);
+
   // Signal that the client is done with this MediaStream. It will be deleted later.
   virtual void Destroy();
   // Returns the main-thread's view of how much data has been processed by
