@@ -14,7 +14,9 @@ MOCHITEST_DATA_FILES = \
     data/app-redirect.zip \
     data/app-updated.zip \
     data/app.zip \
+    data/app-certified.zip \
     $(NULL)
+
 MOCHITEST_DATA_DEST = $(MOCHITEST_DEST)/data
 INSTALL_TARGETS += MOCHITEST_DATA
 endif

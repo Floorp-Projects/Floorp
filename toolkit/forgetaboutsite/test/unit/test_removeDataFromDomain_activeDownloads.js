@@ -82,6 +82,10 @@ function makeGUID() {
 
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   // We add this data to the database first, but we cannot instantiate the
   // download manager service, otherwise these downloads will not be placed in
   // the active downloads array.
