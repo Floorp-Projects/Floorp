@@ -189,6 +189,20 @@ Promise::EnabledForScope(JSContext* aCx, JSObject* /* unused */)
     prin->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED;
 }
 
+void
+Promise::MaybeResolve(JSContext* aCx,
+                      const Optional<JS::Handle<JS::Value> >& aValue)
+{
+  MaybeResolveInternal(aCx, aValue);
+}
+
+void
+Promise::MaybeReject(JSContext* aCx,
+                     const Optional<JS::Handle<JS::Value> >& aValue)
+{
+  MaybeRejectInternal(aCx, aValue);
+}
+
 static void
 EnterCompartment(Maybe<JSAutoCompartment>& aAc, JSContext* aCx,
                  const Optional<JS::Handle<JS::Value> >& aValue)
@@ -229,9 +243,9 @@ Promise::JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp)
   PromiseCallback::Task task = static_cast<PromiseCallback::Task>(v.toInt32());
 
   if (task == PromiseCallback::Resolve) {
-    promise->MaybeResolve(aCx, value);
+    promise->MaybeResolveInternal(aCx, value);
   } else {
-    promise->MaybeReject(aCx, value);
+    promise->MaybeRejectInternal(aCx, value);
   }
 
   return true;
@@ -300,7 +314,7 @@ Promise::Constructor(const GlobalObject& aGlobal,
 
     Maybe<JSAutoCompartment> ac;
     EnterCompartment(ac, cx, value);
-    promise->MaybeReject(cx, value);
+    promise->MaybeRejectInternal(cx, value);
   }
 
   return promise.forget();
@@ -319,7 +333,7 @@ Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
   nsRefPtr<Promise> promise = new Promise(window);
 
   Optional<JS::Handle<JS::Value> > value(aCx, aValue);
-  promise->MaybeResolve(aCx, value);
+  promise->MaybeResolveInternal(aCx, value);
   return promise.forget();
 }
 
@@ -336,7 +350,7 @@ Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
   nsRefPtr<Promise> promise = new Promise(window);
 
   Optional<JS::Handle<JS::Value> > value(aCx, aValue);
-  promise->MaybeReject(aCx, value);
+  promise->MaybeRejectInternal(aCx, value);
   return promise.forget();
 }
 
@@ -441,9 +455,9 @@ Promise::MaybeReportRejected()
 }
 
 void
-Promise::MaybeResolve(JSContext* aCx,
-                      const Optional<JS::Handle<JS::Value> >& aValue,
-                      PromiseTaskSync aAsynchronous)
+Promise::MaybeResolveInternal(JSContext* aCx,
+                              const Optional<JS::Handle<JS::Value> >& aValue,
+                              PromiseTaskSync aAsynchronous)
 {
   if (mResolvePending) {
     return;
@@ -453,9 +467,9 @@ Promise::MaybeResolve(JSContext* aCx,
 }
 
 void
-Promise::MaybeReject(JSContext* aCx,
-                     const Optional<JS::Handle<JS::Value> >& aValue,
-                     PromiseTaskSync aAsynchronous)
+Promise::MaybeRejectInternal(JSContext* aCx,
+                             const Optional<JS::Handle<JS::Value> >& aValue,
+                             PromiseTaskSync aAsynchronous)
 {
   if (mResolvePending) {
     return;
