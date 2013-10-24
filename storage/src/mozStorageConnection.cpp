@@ -836,7 +836,7 @@ Connection::internalClose()
   if (srv == SQLITE_BUSY) {
     // We still have non-finalized statements. Finalize them.
 
-    sqlite3_stmt *stmt = NULL;
+    sqlite3_stmt *stmt = nullptr;
     while ((stmt = ::sqlite3_next_stmt(mDBConn, stmt))) {
       PR_LOG(gStorageLog, PR_LOG_NOTICE,
              ("Auto-finalizing SQL statement '%s' (%x)",
@@ -866,7 +866,7 @@ Connection::internalClose()
       // Ensure that the loop continues properly, whether closing has succeeded
       // or not.
       if (srv == SQLITE_OK) {
-        stmt = NULL;
+        stmt = nullptr;
       }
     }
 

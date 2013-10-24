@@ -68,9 +68,7 @@ private:
     }                    \
   } while(0)
 
-/* HAVE_64BIT_OS is not defined when building host tools, so use
- * __SIZEOF_POINTER__ */
-#if defined(HAVE_64BIT_OS) || __SIZEOF_POINTER__ == 8
+#if defined(__LP64__)
 #  define PRIxAddr "lx"
 #  define PRIxSize "lx"
 #  define PRIdSize "ld"

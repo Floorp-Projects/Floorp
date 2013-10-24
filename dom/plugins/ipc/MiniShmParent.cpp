@@ -18,12 +18,12 @@ const unsigned int MiniShmParent::kDefaultMiniShmSectionSize = 0x1000;
 
 MiniShmParent::MiniShmParent()
   : mSectionSize(0),
-    mParentEvent(NULL),
-    mParentGuard(NULL),
-    mChildEvent(NULL),
-    mChildGuard(NULL),
-    mRegWait(NULL),
-    mFileMapping(NULL),
+    mParentEvent(nullptr),
+    mParentGuard(nullptr),
+    mChildEvent(nullptr),
+    mChildGuard(nullptr),
+    mRegWait(nullptr),
+    mFileMapping(nullptr),
     mView(nullptr),
     mIsConnected(false),
     mTimeout(INFINITE)
@@ -40,23 +40,23 @@ MiniShmParent::CleanUp()
 {
   if (mRegWait) {
     ::UnregisterWaitEx(mRegWait, INVALID_HANDLE_VALUE);
-    mRegWait = NULL;
+    mRegWait = nullptr;
   }
   if (mParentEvent) {
     ::CloseHandle(mParentEvent);
-    mParentEvent = NULL;
+    mParentEvent = nullptr;
   }
   if (mParentGuard) {
     ::CloseHandle(mParentGuard);
-    mParentGuard = NULL;
+    mParentGuard = nullptr;
   }
   if (mChildEvent) {
     ::CloseHandle(mChildEvent);
-    mChildEvent = NULL;
+    mChildEvent = nullptr;
   }
   if (mChildGuard) {
     ::CloseHandle(mChildGuard);
-    mChildGuard = NULL;
+    mChildGuard = nullptr;
   }
   if (mView) {
     ::UnmapViewOfFile(mView);
@@ -64,7 +64,7 @@ MiniShmParent::CleanUp()
   }
   if (mFileMapping) {
     ::CloseHandle(mFileMapping);
-    mFileMapping = NULL;
+    mFileMapping = nullptr;
   }
 }
 

@@ -34,17 +34,17 @@ CPP_SOURCES += [
 
 if CONFIG['MOZ_B2G_CAMERA']:
     CPP_SOURCES += [
-        'GonkCameraManager.cpp',
         'GonkCameraControl.cpp',
         'GonkCameraHwMgr.cpp',
-        'GonkRecorder.cpp',
+        'GonkCameraManager.cpp',
         'GonkCameraSource.cpp',
+        'GonkRecorder.cpp',
         'GonkRecorderProfiles.cpp',
     ]
 else:
     CPP_SOURCES += [
-        'FallbackCameraManager.cpp',
         'FallbackCameraControl.cpp',
+        'FallbackCameraManager.cpp',
     ]
 
 FAIL_ON_WARNINGS = True

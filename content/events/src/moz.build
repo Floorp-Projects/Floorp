@@ -25,8 +25,6 @@ if CONFIG['MOZ_WEBSPEECH']:
 CPP_SOURCES += [
     'DOMWheelEvent.cpp',
     'EventTarget.cpp',
-    'TextComposition.cpp',
-    'Touch.cpp',
     'nsAsyncDOMEvent.cpp',
     'nsContentEventHandler.cpp',
     'nsDOMAnimationEvent.cpp',
@@ -62,6 +60,8 @@ CPP_SOURCES += [
     'nsIMEStateManager.cpp',
     'nsPaintRequest.cpp',
     'nsPrivateTextRange.cpp',
+    'TextComposition.cpp',
+    'Touch.cpp',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:

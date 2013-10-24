@@ -548,12 +548,12 @@ class TransportConduitTest : public ::testing::Test
   {
     int err = 0;
     //get pointer to VideoSessionConduit
-    mVideoSession = mozilla::VideoSessionConduit::Create();
+    mVideoSession = mozilla::VideoSessionConduit::Create(NULL);
     if( !mVideoSession )
       ASSERT_NE(mVideoSession, (void*)NULL);
 
    // This session is for other one
-    mVideoSession2 = mozilla::VideoSessionConduit::Create();
+    mVideoSession2 = mozilla::VideoSessionConduit::Create(NULL);
     if( !mVideoSession2 )
       ASSERT_NE(mVideoSession2,(void*)NULL);
 
@@ -622,7 +622,7 @@ class TransportConduitTest : public ::testing::Test
     int err = 0;
     mozilla::RefPtr<mozilla::VideoSessionConduit> mVideoSession;
     //get pointer to VideoSessionConduit
-    mVideoSession = mozilla::VideoSessionConduit::Create();
+    mVideoSession = mozilla::VideoSessionConduit::Create(NULL);
     if( !mVideoSession )
       ASSERT_NE(mVideoSession, (void*)NULL);
 
@@ -726,7 +726,7 @@ class TransportConduitTest : public ::testing::Test
     int err = 0;
 
     // Get pointer to VideoSessionConduit.
-    mVideoSession = mozilla::VideoSessionConduit::Create();
+    mVideoSession = mozilla::VideoSessionConduit::Create(NULL);
     if( !mVideoSession )
       ASSERT_NE(mVideoSession, (void*)NULL);
 

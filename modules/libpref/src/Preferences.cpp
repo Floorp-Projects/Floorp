@@ -412,7 +412,7 @@ Preferences::Shutdown()
   if (!sShutdown) {
     sShutdown = true; // Don't create the singleton instance after here.
 
-    // Don't set NULL to sPreferences here.  The instance may be grabbed by
+    // Don't set sPreferences to nullptr here.  The instance may be grabbed by
     // other modules.  The utility methods of Preferences should be available
     // until the singleton instance actually released.
     if (sPreferences) {
@@ -659,7 +659,7 @@ ReadExtensionPrefs(nsIFile *aFile)
     uint32_t read;
 
     PrefParseState ps;
-    PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
+    PREF_InitParseState(&ps, PREF_ReaderCallback, nullptr);
     while (NS_SUCCEEDED(rv = stream->Available(&avail)) && avail) {
       rv = stream->Read(buffer, 4096, &read);
       if (NS_FAILED(rv)) {
@@ -916,7 +916,7 @@ Preferences::WritePrefFile(nsIFile* aFile)
   PL_DHashTableEnumerate(&gHashTable, pref_savePref, &saveArgs);
     
   /* Sort the preferences to make a readable file on disk */
-  NS_QuickSort(valueArray, gHashTable.entryCount, sizeof(char *), pref_CompareStrings, NULL);
+  NS_QuickSort(valueArray, gHashTable.entryCount, sizeof(char *), pref_CompareStrings, nullptr);
   
   // write out the file header
   outStream->Write(outHeader, sizeof(outHeader) - 1, &writeAmount);
@@ -966,7 +966,7 @@ static nsresult openPrefFile(nsIFile* aFile)
     return NS_ERROR_OUT_OF_MEMORY;
 
   PrefParseState ps;
-  PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
+  PREF_InitParseState(&ps, PREF_ReaderCallback, nullptr);
 
   // Read is not guaranteed to return a buf the size of fileSize,
   // but usually will.
@@ -1141,7 +1141,7 @@ static nsresult pref_ReadPrefFromJar(nsZipArchive* jarReader, const char *name)
   NS_ENSURE_TRUE(manifest.Buffer(), NS_ERROR_NOT_AVAILABLE);
 
   PrefParseState ps;
-  PREF_InitParseState(&ps, PREF_ReaderCallback, NULL);
+  PREF_InitParseState(&ps, PREF_ReaderCallback, nullptr);
   PREF_ParseBuf(&ps, manifest, manifest.Length());
   PREF_FinalizeParseState(&ps);
 

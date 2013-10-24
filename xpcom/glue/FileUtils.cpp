@@ -225,7 +225,7 @@ mozilla::ReadAheadFile(nsIFile* aFile, const size_t aOffset,
 
 static const unsigned int bufsize = 4096;
 
-#ifdef HAVE_64BIT_OS
+#ifdef __LP64__
 typedef Elf64_Ehdr Elf_Ehdr;
 typedef Elf64_Phdr Elf_Phdr;
 static const unsigned char ELFCLASS = ELFCLASS64;

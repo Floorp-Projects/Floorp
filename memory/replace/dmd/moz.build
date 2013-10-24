@@ -11,9 +11,9 @@ EXPORTS += [
 ]
 
 CPP_SOURCES += [
-    'DMD.cpp',
     '../../../mfbt/HashFunctions.cpp',
     '../../../xpcom/base/nsStackWalk.cpp',
+    'DMD.cpp',
 ]
 
 CSRCS += [

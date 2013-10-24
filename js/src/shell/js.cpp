@@ -710,7 +710,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
         else if (strcmp(opt.ptr(), "strict_mode") == 0)
             ContextOptionsRef(cx).toggleStrictMode();
         else {
-            char* msg = JS_sprintf_append(NULL,
+            char* msg = JS_sprintf_append(nullptr,
                                           "unknown option name '%s'."
                                           " The valid names are strict,"
                                           " typeinfer, werror, and strict_mode.",
@@ -1235,7 +1235,7 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
             return false;
     }
 
-    if (!JS_ExecuteScript(cx, thisobj, script, NULL))
+    if (!JS_ExecuteScript(cx, thisobj, script, nullptr))
         return false;
 
     int64_t endClock = PRMJ_Now();

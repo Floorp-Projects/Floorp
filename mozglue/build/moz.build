@@ -36,8 +36,8 @@ if CONFIG['MOZ_NUWA_PROCESS']:
     ]
 
 EXPORTS.mozilla += [
-    'SSE.h',
     'arm.h',
+    'SSE.h',
 ]
 
 if CONFIG['CPU_ARCH'].startswith('x86'):

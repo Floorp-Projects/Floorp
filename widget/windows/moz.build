@@ -12,9 +12,9 @@ TEST_DIRS += ['tests']
 MODULE = 'widget'
 
 EXPORTS += [
-    'WinUtils.h',
-    'WindowHook.h',
     'nsdefs.h',
+    'WindowHook.h',
+    'WinUtils.h',
 ]
 
 EXPORTS.mozilla.widget += [
@@ -28,16 +28,6 @@ CPP_SOURCES += [
     'JumpListBuilder.cpp',
     'JumpListItem.cpp',
     'KeyboardLayout.cpp',
-    'TaskbarPreview.cpp',
-    'TaskbarPreviewButton.cpp',
-    'TaskbarTabPreview.cpp',
-    'TaskbarWindowPreview.cpp',
-    'WidgetTraceEvent.cpp',
-    'WinIMEHandler.cpp',
-    'WinMouseScrollHandler.cpp',
-    'WinTaskbar.cpp',
-    'WinUtils.cpp',
-    'WindowHook.cpp',
     'nsAppShell.cpp',
     'nsBidiKeyboard.cpp',
     'nsClipboard.cpp',
@@ -46,9 +36,9 @@ CPP_SOURCES += [
     'nsDataObjCollection.cpp',
     'nsDragService.cpp',
     'nsFilePicker.cpp',
-    'nsIMM32Handler.cpp',
     'nsIdleServiceWin.cpp',
     'nsImageClipboard.cpp',
+    'nsIMM32Handler.cpp',
     'nsLookAndFeel.cpp',
     'nsNativeDragSource.cpp',
     'nsNativeDragTarget.cpp',
@@ -59,11 +49,21 @@ CPP_SOURCES += [
     'nsToolkit.cpp',
     'nsUXThemeData.cpp',
     'nsWidgetFactory.cpp',
-    'nsWinGesture.cpp',
     'nsWindow.cpp',
     'nsWindowBase.cpp',
     'nsWindowDbg.cpp',
     'nsWindowGfx.cpp',
+    'nsWinGesture.cpp',
+    'TaskbarPreview.cpp',
+    'TaskbarPreviewButton.cpp',
+    'TaskbarTabPreview.cpp',
+    'TaskbarWindowPreview.cpp',
+    'WidgetTraceEvent.cpp',
+    'WindowHook.cpp',
+    'WinIMEHandler.cpp',
+    'WinMouseScrollHandler.cpp',
+    'WinTaskbar.cpp',
+    'WinUtils.cpp',
 ]
 
 if CONFIG['MOZ_CRASHREPORTER']:
@@ -73,9 +73,9 @@ if CONFIG['MOZ_CRASHREPORTER']:
 
 if CONFIG['NS_PRINTING']:
     CPP_SOURCES += [
+        'nsDeviceContextSpecWin.cpp',
         'nsPrintOptionsWin.cpp',
         'nsPrintSettingsWin.cpp',
-        'nsDeviceContextSpecWin.cpp',
     ]
 
 if CONFIG['NS_ENABLE_TSF']:

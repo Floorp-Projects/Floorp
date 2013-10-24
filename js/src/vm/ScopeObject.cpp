@@ -165,7 +165,7 @@ js::ScopeCoordinateFunctionScript(JSContext *cx, JSScript *script, jsbytecode *p
 
 /*****************************************************************************/
 
-inline void
+void
 ScopeObject::setEnclosingScope(HandleObject obj)
 {
     JS_ASSERT_IF(obj->is<CallObject>() || obj->is<DeclEnvObject>() || obj->is<BlockObject>(),
