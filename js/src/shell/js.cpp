@@ -423,7 +423,7 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
     RootedScript script(cx);
 
     {
-        AutoSaveContextOptions asco(cx);
+        JS::AutoSaveContextOptions asco(cx);
         JS::ContextOptionsRef(cx).setCompileAndGo(true)
                                  .setNoScriptRval(true);
 
@@ -690,7 +690,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    ContextOptions oldOptions = JS::ContextOptionsRef(cx);
+    JS::ContextOptions oldOptions = JS::ContextOptionsRef(cx);
     for (unsigned i = 0; i < args.length(); i++) {
         JSString *str = JS_ValueToString(cx, args[i]);
         if (!str)
@@ -1063,7 +1063,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         RootedScript script(cx);
 
         {
-            AutoSaveContextOptions asco(cx);
+            JS::AutoSaveContextOptions asco(cx);
             JS::ContextOptionsRef(cx).setCompileAndGo(compileAndGo)
                                  .setNoScriptRval(noScriptRval);
 
@@ -1226,7 +1226,7 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
     RootedScript script(cx);
     int64_t startClock = PRMJ_Now();
     {
-        AutoSaveContextOptions asco(cx);
+        JS::AutoSaveContextOptions asco(cx);
         JS::ContextOptionsRef(cx).setCompileAndGo(true)
                                  .setNoScriptRval(true);
 
@@ -2064,7 +2064,7 @@ DisassFile(JSContext *cx, unsigned argc, jsval *vp)
     RootedScript script(cx);
 
     {
-        AutoSaveContextOptions asco(cx);
+        JS::AutoSaveContextOptions asco(cx);
         JS::ContextOptionsRef(cx).setCompileAndGo(true)
                                  .setNoScriptRval(true);
 
@@ -3183,7 +3183,7 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
 
     RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
-    AutoSaveContextOptions asco(cx);
+    JS::AutoSaveContextOptions asco(cx);
     JS::ContextOptionsRef(cx).setCompileAndGo(true)
                               .setNoScriptRval(true);
     bool ok = JS_CompileUCScript(cx, global, JS_GetStringCharsZ(cx, scriptContents),
