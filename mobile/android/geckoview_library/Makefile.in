@@ -25,7 +25,7 @@ package:
 	$(MKDIR) -p bin gen libs/$(ABI_DIR) src
 
 	# Copy the JARs
-	cp ../base/jars/*.jar libs/
+	cp ../base/*.jar libs/
 
 	# Copy the SOs
 	cp $(DIST)/bin/libmozglue.so $(DIST)/bin/lib/libplugin-container.so libs/$(ABI_DIR)/
