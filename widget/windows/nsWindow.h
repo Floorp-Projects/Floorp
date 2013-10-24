@@ -91,6 +91,7 @@ public:
                          nsIntPoint* aPoint = nullptr) MOZ_OVERRIDE;
   virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent) MOZ_OVERRIDE;
   virtual bool DispatchKeyboardEvent(mozilla::WidgetGUIEvent* aEvent) MOZ_OVERRIDE;
+  virtual bool DispatchScrollEvent(mozilla::WidgetGUIEvent* aEvent) MOZ_OVERRIDE;
   virtual nsWindowBase* GetParentWindowBase(bool aIncludeOwner) MOZ_OVERRIDE;
   virtual bool IsTopLevelWidget() MOZ_OVERRIDE { return mIsTopWidgetWindow; }
 
