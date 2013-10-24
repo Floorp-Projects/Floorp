@@ -86,6 +86,7 @@ class CommonTestCase(unittest.TestCase):
         unittest.TestCase.__init__(self, methodName)
         self.loglines = []
         self.duration = 0
+        self.start_time = 0
         self.expected = kwargs.pop('expected', 'pass')
 
     def _addSkip(self, result, reason):
@@ -98,6 +99,7 @@ class CommonTestCase(unittest.TestCase):
             result.addSuccess(self)
 
     def run(self, result=None):
+        self.start_time = time.time()
         orig_result = result
         if result is None:
             result = self.defaultTestResult()
@@ -117,6 +119,7 @@ class CommonTestCase(unittest.TestCase):
                 self._addSkip(result, skip_why)
             finally:
                 result.stopTest(self)
+            self.stop_time = time.time()
             return
         try:
             success = False

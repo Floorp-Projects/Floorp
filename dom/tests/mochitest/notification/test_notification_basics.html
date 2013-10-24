@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Notification Basics</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="MockServices.js"></script>
+  <script type="text/javascript" src="NotificationTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script type="text/javascript">
+
+  var info = NotificationTest.info;
+
+  var steps = [
+    function () {
+      info("Test notification spec");
+      ok(Notification, "Notification constructor exists");
+      ok(Notification.permission, "Notification.permission exists");
+      ok(Notification.requestPermission, "Notification.requestPermission exists");
+      ok(Notification.get, "Notification.get exists");
+    },
+
+    function () {
+      info("Test blank requestPermission");
+      Notification.requestPermission();
+    },
+
+    function (done) {
+      info("Test requestPermission deny");
+      NotificationTest.denyNotifications();
+      Notification.requestPermission(function(perm) {
+        is(perm, "denied", "Permission should be denied.");
+        is(Notification.permission, "denied", "Permission should be denied.");
+        done();
+      });
+    },
+
+    function (done) {
+      info("Test requestPermission grant");
+      NotificationTest.allowNotifications();
+      Notification.requestPermission(function (perm) {
+        is(perm, "granted", "Permission should be granted.");
+        is(Notification.permission, "granted", "Permission should be granted");
+        done();
+      });
+    },
+
+    function () {
+      info("Test invalid requestPermission");
+      try {
+        Notification.requestPermission({});
+        ok(false, "Non callable arg to requestPermission should throw");
+      } catch (e) {
+        ok(true, "Non callable arg to requestPermission should throw");
+      }
+    },
+
+    function (done) {
+      info("Test create notification");
+
+      var options = {
+        dir: "auto",
+        lang: "",
+        body: "This is a notification body",
+        tag: "sometag",
+        icon: "icon.png"
+      };
+      var notification = new Notification("This is a title", options);
+
+      ok(notification, "Notification exists");
+      is(notification.onclick, null, "onclick() should be null");
+      is(notification.onshow, null, "onshow() should be null");
+      is(notification.onerror, null, "onerror() should be null");
+      is(notification.onclose, null, "onclose() should be null");
+      is(typeof notification.close, "function", "close() should exist");
+
+      is(notification.dir, options.dir, "auto should get set");
+      is(notification.lang, options.lang, "lang should get set");
+      is(notification.body, options.body, "body should get set");
+      is(notification.tag, options.tag, "tag should get set");
+      is(notification.icon, options.icon, "icon should get set");
+
+      // store notification in test context
+      this.notification = notification;
+
+      notification.onshow = function () {
+        ok(true, "onshow handler should be called");
+        done();
+      };
+    },
+
+    function (done) {
+      info("Test closing a notification");
+      var notification = this.notification;
+
+      notification.onclose = function () {
+        ok(true, "onclose handler should be called");
+        done();
+      };
+
+      notification.close();
+    },
+  ];
+
+  MockServices.register();
+  NotificationTest.run(steps, function () {
+    MockServices.unregister();
+  });
+</script>
+</body>
+</html>

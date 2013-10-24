@@ -10,12 +10,12 @@ LIBRARY_NAME = 'theora'
 
 if CONFIG['OS_TEST'] == 'arm' and CONFIG['GNU_AS']:
     asm_suffix = CONFIG['ASM_SUFFIX']
-    ASFILES += [
-        'armbits-gnu.%s' % asm_suffix,
-        'armfrag-gnu.%s' % asm_suffix,
-        'armidct-gnu.%s' % asm_suffix,
-        'armloop-gnu.%s' % asm_suffix,
-    ]
+    ASFILES += [ '%s.%s' % (f, asm_suffix) for f in [
+        'armbits-gnu',
+        'armfrag-gnu',
+        'armidct-gnu',
+        'armloop-gnu',
+    ]]
 
 CSRCS += [
     'apiwrapper.c',

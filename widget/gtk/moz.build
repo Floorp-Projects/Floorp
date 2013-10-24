@@ -18,7 +18,6 @@ EXPORTS += [
 ]
 
 CPP_SOURCES += [
-    'WidgetTraceEvent.cpp',
     'nsAppShell.cpp',
     'nsBidiKeyboard.cpp',
     'nsColorPicker.cpp',
@@ -35,6 +34,7 @@ CPP_SOURCES += [
     'nsToolkit.cpp',
     'nsWidgetFactory.cpp',
     'nsWindow.cpp',
+    'WidgetTraceEvent.cpp',
 ]
 
 if CONFIG['MOZ_X11']:
@@ -44,12 +44,12 @@ if CONFIG['MOZ_X11']:
 
 if CONFIG['NS_PRINTING']:
     CPP_SOURCES += [
-        'nsDeviceContextSpecG.cpp',
-        'nsPrintOptionsGTK.cpp',
-        'nsPrintDialogGTK.cpp',
-        'nsPrintSettingsGTK.cpp',
         'nsCUPSShim.cpp',
+        'nsDeviceContextSpecG.cpp',
         'nsPaperPS.cpp',
+        'nsPrintDialogGTK.cpp',
+        'nsPrintOptionsGTK.cpp',
+        'nsPrintSettingsGTK.cpp',
         'nsPSPrinters.cpp',
     ]
 

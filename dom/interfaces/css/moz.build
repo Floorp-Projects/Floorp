@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
+    'nsIDOMCounter.idl',
     'nsIDOMCSSCharsetRule.idl',
     'nsIDOMCSSConditionRule.idl',
     'nsIDOMCSSFontFaceRule.idl',
@@ -24,7 +25,6 @@ XPIDL_SOURCES += [
     'nsIDOMCSSUnknownRule.idl',
     'nsIDOMCSSValue.idl',
     'nsIDOMCSSValueList.idl',
-    'nsIDOMCounter.idl',
     'nsIDOMElementCSSInlineStyle.idl',
     'nsIDOMMozCSSKeyframeRule.idl',
     'nsIDOMMozCSSKeyframesRule.idl',

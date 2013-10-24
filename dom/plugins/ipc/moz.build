@@ -50,9 +50,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     CPP_SOURCES += [
         'COMMessageFilter.cpp',
-        'PluginSurfaceParent.cpp',
         'MiniShmParent.cpp',
         'PluginHangUIParent.cpp',
+        'PluginSurfaceParent.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

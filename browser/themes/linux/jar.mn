@@ -195,6 +195,7 @@ browser.jar:
   skin/classic/browser/devtools/debugger-step-in.png   (devtools/debugger-step-in.png)
   skin/classic/browser/devtools/debugger-step-out.png  (devtools/debugger-step-out.png)
   skin/classic/browser/devtools/debugger-step-over.png (devtools/debugger-step-over.png)
+  skin/classic/browser/devtools/debugger-blackbox.png  (devtools/debugger-blackbox.png)
   skin/classic/browser/devtools/responsive-se-resizer.png (devtools/responsive-se-resizer.png)
   skin/classic/browser/devtools/responsive-vertical-resizer.png (devtools/responsive-vertical-resizer.png)
   skin/classic/browser/devtools/responsive-horizontal-resizer.png (devtools/responsive-horizontal-resizer.png)

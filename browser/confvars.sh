@@ -61,3 +61,5 @@ fi
 MOZ_WEBGL_CONFORMANT=1
 # Enable navigator.mozPay
 MOZ_PAY=1
+MOZ_JSDOWNLOADS=1
+

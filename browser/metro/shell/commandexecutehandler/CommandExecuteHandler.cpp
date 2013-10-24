@@ -630,7 +630,8 @@ private:
 static HRESULT
 PrepareActivationManager(CComPtr<IApplicationActivationManager> &activateMgr)
 {
-  HRESULT hr = activateMgr.CoCreateInstance(CLSID_ApplicationActivationManager, NULL, CLSCTX_LOCAL_SERVER);
+  HRESULT hr = activateMgr.CoCreateInstance(CLSID_ApplicationActivationManager,
+                                            nullptr, CLSCTX_LOCAL_SERVER);
   if (FAILED(hr)) {
     Log(L"CoCreateInstance failed, launching on desktop.");
     return E_FAIL;
@@ -654,7 +655,7 @@ DelayedExecuteThread(LPVOID param)
   bool &bRequestMet(*(bool*)param);
   AutoSetRequestMet asrm(&bRequestMet);
 
-  CoInitialize(NULL);
+  CoInitialize(nullptr);
 
   CComPtr<IApplicationActivationManager> activateMgr;
   if (FAILED(PrepareActivationManager(activateMgr))) {
@@ -698,7 +699,8 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
   }
 
   if (mIsRestartMetroRequest) {
-    HANDLE thread = CreateThread(NULL, 0, DelayedExecuteThread, &mRequestMet, 0, NULL);
+    HANDLE thread = CreateThread(nullptr, 0, DelayedExecuteThread,
+                                 &mRequestMet, 0, nullptr);
     CloseHandle(thread);
     return S_OK;
   }

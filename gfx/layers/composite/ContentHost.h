@@ -128,6 +128,8 @@ public:
   // destroy our front buffer so that we can continue to composite.
   virtual void DestroyTextures() = 0;
 
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
+
 protected:
   virtual nsIntPoint GetOriginOffset()
   {
@@ -177,6 +179,8 @@ public:
                                  ISurfaceAllocator* aAllocator,
                                  const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
   virtual void DestroyTextures() MOZ_OVERRIDE;
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 #ifdef MOZ_DUMP_PAINTING
   virtual void Dump(FILE* aFile=nullptr,

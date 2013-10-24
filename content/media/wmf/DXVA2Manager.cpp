@@ -106,7 +106,7 @@ D3D9DXVA2Manager::Init()
                               D3DCREATE_MULTITHREADED |
                               D3DCREATE_MIXED_VERTEXPROCESSING,
                               &params,
-                              NULL,
+                              nullptr,
                               getter_AddRefs(device));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
