@@ -43,6 +43,10 @@
 #include "nsIURI.h"
 #include "nsICacheSession.h"
 
+#ifdef MOZ_WIDGET_GONK
+#include "nsINetworkStatsServiceProxy.h"
+#endif
+
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
 #endif
@@ -1684,9 +1688,12 @@ nsFtpState::Init(nsFtpChannel *channel)
 
     mChannel = channel; // a straight ref ptr to the channel
 
+    // initialize counter for network metering
+    mCountRecv = 0;
+
     mKeepRunning = true;
     mSuppliedEntityID = channel->EntityID();
-  
+
     if (channel->UploadStream())
         mAction = PUT;
 
@@ -2176,11 +2183,77 @@ nsFtpState::ReadSegments(nsWriteSegmentFun writer, void *closure,
 
     if (mDataStream) {
         nsWriteSegmentThunk thunk = { this, writer, closure };
-        return mDataStream->ReadSegments(NS_WriteSegmentThunk, &thunk, count,
-                                         result);
+        nsresult rv;
+        rv = mDataStream->ReadSegments(NS_WriteSegmentThunk, &thunk, count,
+                                       result);
+        if (NS_SUCCEEDED(rv)) {
+            CountRecvBytes(*result);
+        }
+        return rv;
     }
 
     return nsBaseContentStream::ReadSegments(writer, closure, count, result);
+}
+
+nsresult
+nsFtpState::SaveNetworkStats(bool enforce)
+{
+#ifdef MOZ_WIDGET_GONK
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Obtain active network
+    nsresult rv;
+    if (!mActiveNetwork) {
+        nsCOMPtr<nsINetworkManager> networkManager =
+            do_GetService("@mozilla.org/network/manager;1", &rv);
+
+        if (NS_FAILED(rv) || !networkManager) {
+            mActiveNetwork = nullptr;
+            return rv;
+        }
+
+        networkManager->GetActive(getter_AddRefs(mActiveNetwork));
+    }
+
+    // Obtain app id
+    uint32_t appId;
+    bool isInBrowser;
+    NS_GetAppInfo(mChannel, &appId, &isInBrowser);
+
+    // Check if active network and appid are valid.
+    if (!mActiveNetwork || appId == NECKO_NO_APP_ID) {
+        return NS_OK;
+    }
+
+    if (mCountRecv <= 0) {
+        // There is no traffic, no need to save.
+        return NS_OK;
+    }
+
+    // If |enforce| is false, the traffic amount is saved
+    // only when the total amount exceeds the predefined
+    // threshold.
+    if (!enforce && mCountRecv < NETWORK_STATS_THRESHOLD) {
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsINetworkStatsServiceProxy> networkStatsServiceProxy =
+        do_GetService("@mozilla.org/networkstatsServiceProxy;1", &rv);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    networkStatsServiceProxy->SaveAppStats(appId, mActiveNetwork,
+                                           PR_Now() / 1000, mCountRecv,
+                                           0, nullptr);
+
+    // Reset the counters after saving.
+    mCountRecv = 0;
+
+    return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 NS_IMETHODIMP
@@ -2202,6 +2275,9 @@ nsFtpState::CloseWithStatus(nsresult status)
     }
 
     if (mDataTransport) {
+        // Save the network stats before data transport is closing.
+        SaveNetworkStats(true);
+
         // Shutdown the data transport.
         mDataTransport->Close(NS_ERROR_ABORT);
         mDataTransport = nullptr;
