@@ -14,7 +14,6 @@ namespace mozilla {
 namespace dom {
 
 class AudioContext;
-template <class T> class PlayingRefChangeHandler;
 
 class DelayNode : public AudioNode
 {
