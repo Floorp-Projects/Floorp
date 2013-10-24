@@ -1327,6 +1327,11 @@ Neuter(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_ValueToObject(cx, args.get(0), &obj))
         return false;
 
+    if (!obj) {
+        JS_ReportError(cx, "neuter must be passed an object");
+        return false;
+    }
+
     void *contents;
     uint8_t *data;
     if (!JS_StealArrayBufferContents(cx, obj, &contents, &data))
