@@ -33,6 +33,11 @@ inline Rect ToRect(const gfxRect &aRect)
               Float(aRect.width), Float(aRect.height));
 }
 
+inline Rect ToRect(const nsIntRect &aRect)
+{
+  return Rect(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
 inline IntRect ToIntRect(const nsIntRect &aRect)
 {
   return IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
