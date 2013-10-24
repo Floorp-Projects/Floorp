@@ -594,8 +594,9 @@ CodeGeneratorX86::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
 
     Address dstAddr(ptr, (int32_t) mir->base());
     if (vt == ArrayBufferView::TYPE_FLOAT32) {
-        JS_ASSERT(mir->value()->type() == MIRType_Float32);
-        masm.movssWithPatch(ToFloatRegister(value), dstAddr);
+        JS_ASSERT(mir->value()->type() == MIRType_Double);
+        masm.cvtsd2ss(ToFloatRegister(value), ScratchFloatReg);
+        masm.movssWithPatch(ScratchFloatReg, dstAddr);
         masm.bind(&rejoin);
         return true;
     }

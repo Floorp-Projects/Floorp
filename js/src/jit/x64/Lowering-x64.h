@@ -49,7 +49,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
 
     static bool allowFloat32Optimizations() {
-        return true;
+        return false; // See bug 927408.
     }
 };
 
