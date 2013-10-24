@@ -61,21 +61,21 @@ TEST_F(RLogRingBufferTest, TestFilterEmpty) {
 }
 
 TEST_F(RLogRingBufferTest, TestBasicFilter) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test");
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->Filter("Test", 0, &logs);
   ASSERT_EQ(1U, logs.size());
 }
 
 TEST_F(RLogRingBufferTest, TestBasicFilterContent) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test");
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->Filter("Test", 0, &logs);
   ASSERT_EQ("Test", logs.back());
 }
 
 TEST_F(RLogRingBufferTest, TestFilterAnyFrontMatch) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test");
   std::vector<std::string> substrings;
   substrings.push_back("foo");
   substrings.push_back("Test");
@@ -85,7 +85,7 @@ TEST_F(RLogRingBufferTest, TestFilterAnyFrontMatch) {
 }
 
 TEST_F(RLogRingBufferTest, TestFilterAnyBackMatch) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test");
   std::vector<std::string> substrings;
   substrings.push_back("Test");
   substrings.push_back("foo");
@@ -95,7 +95,7 @@ TEST_F(RLogRingBufferTest, TestFilterAnyBackMatch) {
 }
 
 TEST_F(RLogRingBufferTest, TestFilterAnyBothMatch) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test");
   std::vector<std::string> substrings;
   substrings.push_back("Tes");
   substrings.push_back("est");
@@ -105,7 +105,7 @@ TEST_F(RLogRingBufferTest, TestFilterAnyBothMatch) {
 }
 
 TEST_F(RLogRingBufferTest, TestFilterAnyNeitherMatch) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test");
   std::vector<std::string> substrings;
   substrings.push_back("tes");
   substrings.push_back("esT");
@@ -115,16 +115,16 @@ TEST_F(RLogRingBufferTest, TestFilterAnyNeitherMatch) {
 }
 
 TEST_F(RLogRingBufferTest, TestAllMatch) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->GetAny(0, &logs);
   ASSERT_EQ(2U, logs.size());
 }
 
 TEST_F(RLogRingBufferTest, TestOrder) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->GetAny(0, &logs);
   ASSERT_EQ("Test2", logs.back());
@@ -132,16 +132,16 @@ TEST_F(RLogRingBufferTest, TestOrder) {
 }
 
 TEST_F(RLogRingBufferTest, TestNoMatch) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->Filter("foo", 0, &logs);
   ASSERT_EQ(0U, logs.size());
 }
 
 TEST_F(RLogRingBufferTest, TestSubstringFilter) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->Filter("t1", 0, &logs);
   ASSERT_EQ(1U, logs.size());
@@ -149,12 +149,12 @@ TEST_F(RLogRingBufferTest, TestSubstringFilter) {
 }
 
 TEST_F(RLogRingBufferTest, TestFilterLimit) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test3");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test4");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test5");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test6");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test3");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test4");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test5");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test6");
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->Filter("Test", 2, &logs);
   ASSERT_EQ(2U, logs.size());
@@ -163,12 +163,12 @@ TEST_F(RLogRingBufferTest, TestFilterLimit) {
 }
 
 TEST_F(RLogRingBufferTest, TestFilterAnyLimit) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "TestOne");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "TestTwo");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "TestThree");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "TestFour");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "TestFive");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "TestSix");
+  r_log(NR_LOG_TEST, LOG_INFO, "TestOne");
+  r_log(NR_LOG_TEST, LOG_INFO, "TestTwo");
+  r_log(NR_LOG_TEST, LOG_INFO, "TestThree");
+  r_log(NR_LOG_TEST, LOG_INFO, "TestFour");
+  r_log(NR_LOG_TEST, LOG_INFO, "TestFive");
+  r_log(NR_LOG_TEST, LOG_INFO, "TestSix");
   std::vector<std::string> substrings;
   // Matches Two, Three, Four, and Six
   substrings.push_back("tT");
@@ -184,12 +184,12 @@ TEST_F(RLogRingBufferTest, TestFilterAnyLimit) {
 
 TEST_F(RLogRingBufferTest, TestLimit) {
   RLogRingBuffer::GetInstance()->SetLogLimit(3);
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test3");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test4");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test5");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test6");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test3");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test4");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test5");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test6");
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->GetAny(0, &logs);
   ASSERT_EQ(3U, logs.size());
@@ -198,12 +198,12 @@ TEST_F(RLogRingBufferTest, TestLimit) {
 }
 
 TEST_F(RLogRingBufferTest, TestLimitBulkDiscard) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test3");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test4");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test5");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test6");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test3");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test4");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test5");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test6");
   RLogRingBuffer::GetInstance()->SetLogLimit(3);
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->GetAny(0, &logs);
@@ -214,12 +214,12 @@ TEST_F(RLogRingBufferTest, TestLimitBulkDiscard) {
 
 TEST_F(RLogRingBufferTest, TestIncreaseLimit) {
   RLogRingBuffer::GetInstance()->SetLogLimit(3);
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test3");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test4");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test5");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test6");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test3");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test4");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test5");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test6");
   RLogRingBuffer::GetInstance()->SetLogLimit(300);
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->GetAny(0, &logs);
@@ -229,12 +229,12 @@ TEST_F(RLogRingBufferTest, TestIncreaseLimit) {
 }
 
 TEST_F(RLogRingBufferTest, TestClear) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test3");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test4");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test5");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test6");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test3");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test4");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test5");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test6");
   RLogRingBuffer::GetInstance()->SetLogLimit(0);
   RLogRingBuffer::GetInstance()->SetLogLimit(4096);
   std::deque<std::string> logs;
@@ -243,12 +243,12 @@ TEST_F(RLogRingBufferTest, TestClear) {
 }
 
 TEST_F(RLogRingBufferTest, TestReInit) {
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test1");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test2");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test3");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test4");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test5");
-  r_log(NR_LOG_TEST, LOG_DEBUG, "Test6");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test1");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test2");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test3");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test4");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test5");
+  r_log(NR_LOG_TEST, LOG_INFO, "Test6");
   ReInit();
   std::deque<std::string> logs;
   RLogRingBuffer::GetInstance()->GetAny(0, &logs);

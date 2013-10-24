@@ -383,7 +383,7 @@ int nr_ice_candidate_pair_do_triggered_check(nr_ice_peer_ctx *pctx, nr_ice_cand_
   {
     int r,_status;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND-PAIR(%s): triggered check on %s",pctx->label,pair->codeword,pair->as_string);
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/CAND-PAIR(%s): triggered check on %s",pctx->label,pair->codeword,pair->as_string);
 
     switch(pair->state){
       case NR_ICE_PAIR_STATE_FROZEN:
@@ -461,7 +461,7 @@ int nr_ice_candidate_pair_set_state(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pai
   {
     int r,_status;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND-PAIR(%s): setting pair to state %s: %s",
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/CAND-PAIR(%s): setting pair to state %s: %s",
       pctx->label,pair->codeword,nr_ice_cand_pair_states[state],pair->as_string);
 
     /* NOTE: This function used to reference pctx->state instead of
@@ -533,7 +533,7 @@ void nr_ice_candidate_pair_restart_stun_nominated_cb(NR_SOCKET s, int how, void 
 
     pair->restart_nominated_cb_timer=0;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/CAND-PAIR(%s)/COMP(%d): Restarting pair as nominated: %s",pair->pctx->label,pair->local->stream->label,pair->codeword,pair->remote->component->component_id,pair->as_string);
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/CAND-PAIR(%s)/COMP(%d): Restarting pair as nominated: %s",pair->pctx->label,pair->local->stream->label,pair->codeword,pair->remote->component->component_id,pair->as_string);
 
     nr_stun_client_reset(pair->stun_client);
 
@@ -555,7 +555,7 @@ static void nr_ice_candidate_pair_restart_stun_controlled_cb(NR_SOCKET s, int ho
 
     pair->restart_controlled_cb_timer=0;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/CAND-PAIR(%s):COMP(%d): Restarting pair as CONTROLLED: %s",pair->pctx->label,pair->local->stream->label,pair->codeword,pair->remote->component->component_id,pair->as_string);
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/CAND-PAIR(%s):COMP(%d): Restarting pair as CONTROLLED: %s",pair->pctx->label,pair->local->stream->label,pair->codeword,pair->remote->component->component_id,pair->as_string);
 
     nr_stun_client_reset(pair->stun_client);
     pair->stun_client->params.ice_binding_request.control=NR_ICE_CONTROLLED;
