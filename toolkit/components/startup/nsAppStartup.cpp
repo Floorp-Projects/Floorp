@@ -37,7 +37,6 @@
 #include "jsapi.h"
 #include "prenv.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "mozilla/mozPoisonWrite.h"
 
 #if defined(XP_WIN)
 // Prevent collisions with nsAppStartup::GetStartupInfo()
