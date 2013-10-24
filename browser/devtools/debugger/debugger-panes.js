@@ -19,7 +19,7 @@ function SourcesView() {
   this._onSourceSelect = this._onSourceSelect.bind(this);
   this._onSourceClick = this._onSourceClick.bind(this);
   this._onBreakpointRemoved = this._onBreakpointRemoved.bind(this);
-  this._onSourceCheck = this._onSourceCheck.bind(this);
+  this.toggleBlackBoxing = this.toggleBlackBoxing.bind(this);
   this._onStopBlackBoxing = this._onStopBlackBoxing.bind(this);
   this._onBreakpointClick = this._onBreakpointClick.bind(this);
   this._onBreakpointCheckboxClick = this._onBreakpointCheckboxClick.bind(this);
@@ -28,7 +28,7 @@ function SourcesView() {
   this._onConditionalPopupHiding = this._onConditionalPopupHiding.bind(this);
   this._onConditionalTextboxInput = this._onConditionalTextboxInput.bind(this);
   this._onConditionalTextboxKeyPress = this._onConditionalTextboxKeyPress.bind(this);
-  this._updatePrettyPrintButtonState = this._updatePrettyPrintButtonState.bind(this);
+  this.updateToolbarButtonsState = this.updateToolbarButtonsState.bind(this);
 }
 
 SourcesView.prototype = Heritage.extend(WidgetMethods, {
@@ -39,7 +39,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     dumpn("Initializing the SourcesView");
 
     this.widget = new SideMenuWidget(document.getElementById("sources"), {
-      showItemCheckboxes: true,
       showArrows: true
     });
 
@@ -51,6 +50,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cmPopup = document.getElementById("sourceEditorContextMenu");
     this._cbPanel = document.getElementById("conditional-breakpoint-panel");
     this._cbTextbox = document.getElementById("conditional-breakpoint-panel-textbox");
+    this._blackBoxButton = document.getElementById("black-box");
     this._stopBlackBoxButton = document.getElementById("black-boxed-message-button");
     this._prettyPrintButton = document.getElementById("pretty-print");
 
@@ -62,7 +62,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     window.on(EVENTS.EDITOR_UNLOADED, this._onEditorUnload, false);
     this.widget.addEventListener("select", this._onSourceSelect, false);
     this.widget.addEventListener("click", this._onSourceClick, false);
-    this.widget.addEventListener("check", this._onSourceCheck, false);
     this._stopBlackBoxButton.addEventListener("click", this._onStopBlackBoxing, false);
     this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false);
@@ -86,7 +85,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     window.off(EVENTS.EDITOR_UNLOADED, this._onEditorUnload, false);
     this.widget.removeEventListener("select", this._onSourceSelect, false);
     this.widget.removeEventListener("click", this._onSourceClick, false);
-    this.widget.removeEventListener("check", this._onSourceCheck, false);
     this._stopBlackBoxButton.removeEventListener("click", this._onStopBlackBoxing, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShown, false);
@@ -702,22 +700,23 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", script);
 
     DebuggerView.maybeShowBlackBoxMessage();
-    this._updatePrettyPrintButtonState();
+    this.updateToolbarButtonsState();
   },
 
   /**
-   * Enable or disable the pretty print button depending on whether the selected
-   * source is black boxed or not and check or uncheck it depending on if the
-   * selected source is already pretty printed or not.
+   * Update the checked/unchecked and enabled/disabled states of the buttons in
+   * the sources toolbar based on the currently selected source's state.
    */
-  _updatePrettyPrintButtonState: function() {
+  updateToolbarButtonsState: function() {
     const { source } = this.selectedItem.attachment;
     const sourceClient = gThreadClient.source(source);
 
     if (sourceClient.isBlackBoxed) {
       this._prettyPrintButton.setAttribute("disabled", true);
+      this._blackBoxButton.setAttribute("checked", true);
     } else {
       this._prettyPrintButton.removeAttribute("disabled");
+      this._blackBoxButton.removeAttribute("checked");
     }
 
     if (sourceClient.isPrettyPrinted) {
@@ -736,26 +735,30 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * The check listener for the sources container.
+   * Toggle the black boxed state of the selected source.
    */
-  _onSourceCheck: function({ detail: { checked }, target }) {
-    const shouldBlackBox = !checked;
+  toggleBlackBoxing: function() {
+    const { source } = this.selectedItem.attachment;
+    const sourceClient = gThreadClient.source(source);
+    const shouldBlackBox = !sourceClient.isBlackBoxed;
 
-    // Be optimistic that the (un-)black boxing will succeed and enable/disable
-    // the pretty print button immediately. Then, once we actually get the
-    // results from the server, make sure that it is in the correct state again
-    // by calling `_updatePrettyPrintButtonState`.
+    // Be optimistic that the (un-)black boxing will succeed, so enable/disable
+    // the pretty print button and check/uncheck the black box button
+    // immediately. Then, once we actually get the results from the server, make
+    // sure that it is in the correct state again by calling
+    // `updateToolbarButtonsState`.
 
     if (shouldBlackBox) {
       this._prettyPrintButton.setAttribute("disabled", true);
+      this._blackBoxButton.setAttribute("checked", true);
     } else {
       this._prettyPrintButton.removeAttribute("disabled");
+      this._blackBoxButton.removeAttribute("checked");
     }
 
-    const { source } = this.getItemForElement(target).attachment;
     DebuggerController.SourceScripts.blackBox(source, shouldBlackBox)
-      .then(this._updatePrettyPrintButtonState,
-            this._updatePrettyPrintButtonState);
+      .then(this.updateToolbarButtonsState,
+            this.updateToolbarButtonsState);
   },
 
   /**
@@ -763,7 +766,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onStopBlackBoxing: function() {
     let sourceForm = this.selectedItem.attachment.source;
-    DebuggerController.SourceScripts.blackBox(sourceForm, false);
+    DebuggerController.SourceScripts.blackBox(sourceForm, false)
+      .then(this.updateToolbarButtonsState,
+            this.updateToolbarButtonsState);
   },
 
   /**

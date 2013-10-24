@@ -243,9 +243,10 @@ do_register_cleanup(function() {
 
 function oldDownloadManagerDisabled() {
   try {
-    if (Services.prefs.getBoolPref("browser.download.useJSTransfer")) {
-      return true;
-    }
-  } catch (ex) { }
+    // This method throws an exception if the old Download Manager is disabled.
+    Services.downloads.activeDownloadCount;
+  } catch (ex) {
+    return true;
+  }
   return false;
 }

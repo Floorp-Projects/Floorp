@@ -65,6 +65,15 @@ body {
   background-image: none;
 }
 
+.inner {
+  background-color: #eef2f5;
+  min-height: 3.8em;
+  padding: 0.5em;
+
+  /* make room for the favicon */
+  -moz-margin-start: 4.5em;
+}
+
 /* Icons */
 body[dir="ltr"] .icon {
   left: 1.35em;
@@ -131,4 +140,12 @@ body[dir="ltr"] .icon {
   font-weight: bold;
   overflow: hidden;
   flex: 1;
+}
+
+#browse-title {
+  margin-top: 1em;
+  background-image: url("chrome://browser/skin/images/chevron.png");
+  background-size: 8px 20px;
+  background-position: right;
+  background-repeat: no-repeat;
 }
