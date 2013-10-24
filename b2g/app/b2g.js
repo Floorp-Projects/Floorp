@@ -817,6 +817,9 @@ pref("gfx.canvas.azure.accelerated", true);
 // Turn on dynamic cache size for Skia
 pref("gfx.canvas.skiagl.dynamic-cache", true);
 
+// enable fence with readpixels for SurfaceStream
+pref("gfx.gralloc.fence-with-readpixels", true);
+
 // Enable Telephony API
 pref("dom.telephony.enabled", true);
 
