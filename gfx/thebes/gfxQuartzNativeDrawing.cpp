@@ -5,6 +5,7 @@
 
 #include "gfxQuartzNativeDrawing.h"
 #include "gfxQuartzSurface.h"
+#include "gfxPlatform.h"
 #include "cairo-quartz.h"
 
 // see cairo-quartz-surface.c for the complete list of these
