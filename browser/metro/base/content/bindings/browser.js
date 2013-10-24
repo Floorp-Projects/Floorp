@@ -714,10 +714,10 @@ let ContentScroll =  {
     utils.getPresShellId(presShellId);
     let viewId = utils.getViewId(element);
 
-    sendAsyncMessage("scroll", { presShellId: presShellId.value,
-                                 viewId: viewId,
-                                 scrollOffset: scrollOffset,
-                                 isRoot: isRoot });
+    sendSyncMessage("scroll", { presShellId: presShellId.value,
+                                viewId: viewId,
+                                scrollOffset: scrollOffset,
+                                isRoot: isRoot });
   }
 };
 
