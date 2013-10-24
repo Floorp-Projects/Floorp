@@ -5713,12 +5713,9 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 
     if (info().fun()) {
         // Initialize |this| parameter.
-        uint32_t slot = info().thisSlot();
-        ptrdiff_t offset = StackFrame::offsetOfThis(info().fun());
-
-        MOsrValue *thisv = MOsrValue::New(entry, offset);
+        MParameter *thisv = MParameter::New(MParameter::THIS_SLOT, nullptr);
         osrBlock->add(thisv);
-        osrBlock->initSlot(slot, thisv);
+        osrBlock->initSlot(info().thisSlot(), thisv);
 
         // Initialize arguments.
         for (uint32_t i = 0; i < info().nargs(); i++) {
@@ -5741,10 +5738,9 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
                 osrBlock->add(osrv);
                 osrBlock->initSlot(slot, osrv);
             } else {
-                ptrdiff_t offset = StackFrame::offsetOfFormalArg(info().fun(), i);
-                MOsrValue *osrv = MOsrValue::New(entry, offset);
-                osrBlock->add(osrv);
-                osrBlock->initSlot(slot, osrv);
+                MParameter *arg = MParameter::New(i, nullptr);
+                osrBlock->add(arg);
+                osrBlock->initSlot(slot, arg);
             }
         }
     }
@@ -5752,7 +5748,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     // Initialize locals.
     for (uint32_t i = 0; i < info().nlocals(); i++) {
         uint32_t slot = info().localSlot(i);
-        ptrdiff_t offset = StackFrame::offsetOfFixed(i);
+        ptrdiff_t offset = BaselineFrame::reverseOffsetOfLocal(i);
 
         MOsrValue *osrv = MOsrValue::New(entry, offset);
         osrBlock->add(osrv);
@@ -5763,7 +5759,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
     uint32_t numStackSlots = preheader->stackDepth() - info().firstStackSlot();
     for (uint32_t i = 0; i < numStackSlots; i++) {
         uint32_t slot = info().stackSlot(i);
-        ptrdiff_t offset = StackFrame::offsetOfFixed(info().nlocals() + i);
+        ptrdiff_t offset = BaselineFrame::reverseOffsetOfLocal(info().nlocals() + i);
 
         MOsrValue *osrv = MOsrValue::New(entry, offset);
         osrBlock->add(osrv);
