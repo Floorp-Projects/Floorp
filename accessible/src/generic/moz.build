@@ -13,9 +13,9 @@ EXPORTS.mozilla.a11y += [
 ]
 
 CPP_SOURCES += [
-    'ARIAGridAccessible.cpp',
     'Accessible.cpp',
     'ApplicationAccessible.cpp',
+    'ARIAGridAccessible.cpp',
     'BaseAccessibles.cpp',
     'DocAccessible.cpp',
     'FormControlAccessible.cpp',

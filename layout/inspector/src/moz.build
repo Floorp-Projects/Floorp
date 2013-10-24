@@ -13,8 +13,8 @@ EXPORTS += [
 
 CPP_SOURCES += [
     'inCSSValueSearch.cpp',
-    'inDOMUtils.cpp',
     'inDeepTreeWalker.cpp',
+    'inDOMUtils.cpp',
     'inFlasher.cpp',
     'inLayoutUtils.cpp',
     'inSearchLoop.cpp',

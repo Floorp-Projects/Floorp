@@ -15,18 +15,18 @@ DIRS += ['locales']
 
 EXTRA_COMPONENTS += [
     'CommandLineHandler.js',
+    'components.manifest',
     'ContentPermission.js',
     'DirectoryProvider.js',
     'PaymentUIGlue.js',
-    'components.manifest',
 ]
 
 EXTRA_JS_MODULES += [
     'RemoteDebugger.jsm',
     'Startup.jsm',
-    'WebRTCHandler.jsm',
     'WebappRT.jsm',
     'WebappsHandler.jsm',
+    'WebRTCHandler.jsm',
 ]
 
 MOCHITEST_WEBAPPRT_CHROME_MANIFESTS += ['test/chrome/webapprt.ini']

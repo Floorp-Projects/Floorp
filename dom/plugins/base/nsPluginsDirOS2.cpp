@@ -63,7 +63,7 @@ static char *LoadRCDATAVersion(HMODULE hMod, ULONG resid)
    // version info is should be 8 chars
    if (rc == NO_ERROR && ulSize == 8)
    {
-      char *version = NULL;
+      char *version = nullptr;
       rc = DosGetResource(hMod, RT_RCDATA, resid, (void**) &version);
 
       if (rc == NO_ERROR)

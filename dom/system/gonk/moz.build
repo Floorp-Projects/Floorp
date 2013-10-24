@@ -38,11 +38,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'nsVolumeService.h',
     ]
     CPP_SOURCES += [
+        'AudioChannelManager.cpp',
         'AudioManager.cpp',
         'AutoMounter.cpp',
         'AutoMounterSetting.cpp',
         'GonkGPSGeolocationProvider.cpp',
-        'AudioChannelManager.cpp',
         'nsVolume.cpp',
         'nsVolumeMountLock.cpp',
         'nsVolumeService.cpp',
@@ -68,9 +68,9 @@ EXTRA_COMPONENTS += [
     'NetworkInterfaceListService.manifest',
     'NetworkManager.js',
     'NetworkManager.manifest',
-    'RILContentHelper.js',
     'RadioInterfaceLayer.js',
     'RadioInterfaceLayer.manifest',
+    'RILContentHelper.js',
 ]
 
 EXTRA_JS_MODULES += [

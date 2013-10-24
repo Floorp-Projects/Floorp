@@ -14,7 +14,7 @@
 #include <initguid.h>
 #include <wmsdkidl.h>
 
-#define DELETE_RESET(p) { delete (p) ; (p) = NULL ;}
+#define DELETE_RESET(p) { delete (p) ; (p) = nullptr ;}
 
 DEFINE_GUID(CLSID_MozAudioSinkFilter, 0x1872d8c8, 0xea8d, 0x4c34, 0xae, 0x96, 0x69, 0xde,
             0xf1, 0x33, 0x7b, 0x33);

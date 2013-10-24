@@ -212,7 +212,7 @@ WMFByteStream::QueryInterface(REFIID aIId, void **aInterface)
     return DoGetInterface(static_cast<IMFAttributes*>(this), aInterface);
   }
 
-  *aInterface = NULL;
+  *aInterface = nullptr;
   return E_NOINTERFACE;
 }
 
@@ -258,7 +258,7 @@ ReadRequest::QueryInterface(REFIID aIId, void **aInterface)
     return DoGetInterface(static_cast<IUnknown*>(this), aInterface);
   }
 
-  *aInterface = NULL;
+  *aInterface = nullptr;
   return E_NOINTERFACE;
 }
 

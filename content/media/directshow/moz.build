@@ -27,12 +27,12 @@ CPP_SOURCES += [
 # If WebRTC isn't being built, we need to compile the DirectShow base classes so that
 # they're available at link time.
 if not CONFIG['MOZ_WEBRTC']:
-    CPP_SOURCES += [
-        TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseFilter.cpp',
-        TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseInputPin.cpp',
-        TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/BasePin.cpp',
-        TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/MediaType.cpp',
-    ]
+    CPP_SOURCES += [ '%s/%s' % (TOPSRCDIR, p) for p in [
+        'media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseFilter.cpp',
+        'media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseInputPin.cpp',
+        'media/webrtc/trunk/webrtc/modules/video_capture/windows/BasePin.cpp',
+        'media/webrtc/trunk/webrtc/modules/video_capture/windows/MediaType.cpp',
+    ]]
 
 FAIL_ON_WARNINGS = True
 

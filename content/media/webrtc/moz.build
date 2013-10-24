@@ -18,8 +18,8 @@ if CONFIG['MOZ_WEBRTC']:
     CPP_SOURCES += [
         'MediaEngineTabVideoSource.cpp',
         'MediaEngineWebRTC.cpp',
-        'MediaEngineWebRTCVideo.cpp',
         'MediaEngineWebRTCAudio.cpp',
+        'MediaEngineWebRTCVideo.cpp',
     ]
 XPIDL_SOURCES += [
         'nsITabSource.idl'

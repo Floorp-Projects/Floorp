@@ -8,10 +8,10 @@ MODULE = 'imglib2'
 
 EXPORTS += [
     'ImageOps.h',
-    'Orientation.h',
     'imgLoader.h',
     'imgRequest.h',
     'imgRequestProxy.h',
+    'Orientation.h',
 ]
 
 CPP_SOURCES += [
@@ -27,18 +27,18 @@ CPP_SOURCES += [
     'ImageMetadata.cpp',
     'ImageOps.cpp',
     'ImageWrapper.cpp',
-    'OrientedImage.cpp',
-    'RasterImage.cpp',
-    'SVGDocumentWrapper.cpp',
-    'ScriptedNotificationObserver.cpp',
-    'SurfaceCache.cpp',
-    'VectorImage.cpp',
     'imgFrame.cpp',
     'imgLoader.cpp',
     'imgRequest.cpp',
     'imgRequestProxy.cpp',
     'imgStatusTracker.cpp',
     'imgTools.cpp',
+    'OrientedImage.cpp',
+    'RasterImage.cpp',
+    'ScriptedNotificationObserver.cpp',
+    'SurfaceCache.cpp',
+    'SVGDocumentWrapper.cpp',
+    'VectorImage.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

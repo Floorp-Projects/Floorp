@@ -7,8 +7,8 @@
 MODULE = 'plugin'
 
 EXPORTS += [
-    'ANPKeyCodes.h',
     'android_npapi.h',
+    'ANPKeyCodes.h',
 ]
 
 CPP_SOURCES += [

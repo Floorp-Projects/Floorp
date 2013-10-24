@@ -8,18 +8,16 @@ XPIDL_MODULE = 'necko_rtsp'
 MODULE = 'necko'
 
 EXPORTS.mozilla.net += [
-    'RtspChannel.h',
-    'RtspHandler.h',
     'controller/RtspController.h',
     'controller/RtspControllerChild.h',
     'controller/RtspControllerParent.h',
     'controller/RtspMetaData.h',
     'rtsp/RTSPSource.h',
+    'RtspChannel.h',
+    'RtspHandler.h',
 ]
 
 CPP_SOURCES += [
-    'RtspChannel.cpp',
-    'RtspHandler.cpp',
     'controller/RtspController.cpp',
     'controller/RtspControllerChild.cpp',
     'controller/RtspControllerParent.cpp',
@@ -30,14 +28,16 @@ CPP_SOURCES += [
     'rtsp/AMPEG4AudioAssembler.cpp',
     'rtsp/AMPEG4ElementaryAssembler.cpp',
     'rtsp/APacketSource.cpp',
+    'rtsp/ARawAudioAssembler.cpp',
     'rtsp/ARTPAssembler.cpp',
     'rtsp/ARTPConnection.cpp',
     'rtsp/ARTPSource.cpp',
     'rtsp/ARTPWriter.cpp',
     'rtsp/ARTSPConnection.cpp',
-    'rtsp/ARawAudioAssembler.cpp',
     'rtsp/ASessionDescription.cpp',
     'rtsp/RTSPSource.cpp',
+    'RtspChannel.cpp',
+    'RtspHandler.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

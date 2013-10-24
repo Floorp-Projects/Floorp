@@ -17,8 +17,8 @@ EXPORTS.mozilla += [
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 CPP_SOURCES += [
-    'StartupTimeline.cpp',
     'nsAppStartup.cpp',
+    'StartupTimeline.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':

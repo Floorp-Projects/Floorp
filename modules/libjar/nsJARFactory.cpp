@@ -28,18 +28,18 @@ NS_DEFINE_NAMED_CID(NS_JARPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_JARURI_CID);
 
 static const mozilla::Module::CIDEntry kJARCIDs[] = {
-    { &kNS_ZIPREADER_CID, false, NULL, nsJARConstructor },
-    { &kNS_ZIPREADERCACHE_CID, false, NULL, nsZipReaderCacheConstructor },
-    { &kNS_JARPROTOCOLHANDLER_CID, false, NULL, nsJARProtocolHandlerConstructor },
-    { &kNS_JARURI_CID, false, NULL, nsJARURIConstructor },
-    { NULL }
+    { &kNS_ZIPREADER_CID, false, nullptr, nsJARConstructor },
+    { &kNS_ZIPREADERCACHE_CID, false, nullptr, nsZipReaderCacheConstructor },
+    { &kNS_JARPROTOCOLHANDLER_CID, false, nullptr, nsJARProtocolHandlerConstructor },
+    { &kNS_JARURI_CID, false, nullptr, nsJARURIConstructor },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kJARContracts[] = {
     { "@mozilla.org/libjar/zip-reader;1", &kNS_ZIPREADER_CID },
     { "@mozilla.org/libjar/zip-reader-cache;1", &kNS_ZIPREADERCACHE_CID },
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", &kNS_JARPROTOCOLHANDLER_CID },
-    { NULL }
+    { nullptr }
 };
 
 // Jar module shutdown hook
@@ -52,9 +52,9 @@ static const mozilla::Module kJARModule = {
     mozilla::Module::kVersion,
     kJARCIDs,
     kJARContracts,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
     nsJarShutdown
 };
 

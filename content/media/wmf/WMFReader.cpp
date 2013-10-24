@@ -239,7 +239,7 @@ ConfigureSourceReaderStream(IMFSourceReader *aReader,
 
   // Set the uncompressed format. This can fail if the decoder can't produce
   // that type.
-  return aReader->SetCurrentMediaType(aStreamIndex, NULL, type);
+  return aReader->SetCurrentMediaType(aStreamIndex, nullptr, type);
 }
 
 // Returns the duration of the resource, in microseconds.
@@ -333,7 +333,7 @@ GetPictureRegion(IMFMediaType* aMediaType, nsIntRect& aOutPictureRegion)
     hr = aMediaType->GetBlob(MF_MT_PAN_SCAN_APERTURE,
                              (UINT8*)&videoArea,
                              sizeof(MFVideoArea),
-                             NULL);
+                             nullptr);
   }
 
   // If we're not in pan-and-scan mode, or the pan-and-scan region is not set,
@@ -342,7 +342,7 @@ GetPictureRegion(IMFMediaType* aMediaType, nsIntRect& aOutPictureRegion)
     hr = aMediaType->GetBlob(MF_MT_MINIMUM_DISPLAY_APERTURE,
                              (UINT8*)&videoArea,
                              sizeof(MFVideoArea),
-                             NULL);
+                             nullptr);
   }
 
   if (hr == MF_E_ATTRIBUTENOTFOUND) {
@@ -351,7 +351,7 @@ GetPictureRegion(IMFMediaType* aMediaType, nsIntRect& aOutPictureRegion)
     hr = aMediaType->GetBlob(MF_MT_GEOMETRIC_APERTURE,
                              (UINT8*)&videoArea,
                              sizeof(MFVideoArea),
-                             NULL);
+                             nullptr);
   }
 
   if (SUCCEEDED(hr)) {
@@ -796,7 +796,7 @@ WMFReader::CreateBasicVideoFrame(IMFSample* aSample,
     hr = twoDBuffer->Lock2D(&data, &stride);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   } else {
-    hr = buffer->Lock(&data, NULL, NULL);
+    hr = buffer->Lock(&data, nullptr, nullptr);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
     stride = mVideoStride;
   }
