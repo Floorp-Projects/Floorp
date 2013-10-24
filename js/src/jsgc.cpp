@@ -4081,10 +4081,13 @@ class AutoGCSession
     JSRuntime *runtime;
     AutoPauseWorkersForTracing pause;
     AutoTraceSession session;
+    bool canceled;
 
   public:
     explicit AutoGCSession(JSRuntime *rt);
     ~AutoGCSession();
+
+    void cancel() { canceled = true; }
 };
 
 } /* anonymous namespace */
@@ -4109,7 +4112,8 @@ AutoTraceSession::~AutoTraceSession()
 AutoGCSession::AutoGCSession(JSRuntime *rt)
   : runtime(rt),
     pause(rt),
-    session(rt, MajorCollecting)
+    session(rt, MajorCollecting),
+    canceled(false)
 {
     runtime->gcIsNeeded = false;
     runtime->gcInterFrameGC = true;
@@ -4126,6 +4130,9 @@ AutoGCSession::AutoGCSession(JSRuntime *rt)
 
 AutoGCSession::~AutoGCSession()
 {
+    if (canceled)
+        return;
+
 #ifndef JS_MORE_DETERMINISTIC
     runtime->gcNextFullGCTime = PRMJ_Now() + GC_IDLE_FULL_SPAN;
 #endif
@@ -4500,13 +4507,17 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
 }
 
 /*
- * GC, repeatedly if necessary, until we think we have not created any new
- * garbage. We disable inlining to ensure that the bottom of the stack with
- * possible GC roots recorded in MarkRuntime excludes any pointers we use during
- * the marking implementation.
+ * Run one GC "cycle" (either a slice of incremental GC or an entire
+ * non-incremental GC. We disable inlining to ensure that the bottom of the
+ * stack with possible GC roots recorded in MarkRuntime excludes any pointers we
+ * use during the marking implementation.
+ *
+ * Returns true if we "reset" an existing incremental GC, which would force us
+ * to run another cycle.
  */
-static JS_NEVER_INLINE void
-GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gckind, JS::gcreason::Reason reason)
+static JS_NEVER_INLINE bool
+GCCycle(JSRuntime *rt, bool incremental, int64_t budget,
+        JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
     /* If we attempt to invoke the GC while we are running in the GC, assert. */
     JS_ASSERT(!rt->isHeapBusy());
@@ -4524,18 +4535,26 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
         rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
     }
 
-    {
-        if (!incremental) {
-            /* If non-incremental GC was requested, reset incremental GC. */
-            ResetIncrementalGC(rt, "requested");
-            rt->gcStats.nonincremental("requested");
-            budget = SliceBudget::Unlimited;
-        } else {
-            BudgetIncrementalGC(rt, &budget);
-        }
+    State prevState = rt->gcIncrementalState;
 
-        IncrementalCollectSlice(rt, budget, reason, gckind);
+    if (!incremental) {
+        /* If non-incremental GC was requested, reset incremental GC. */
+        ResetIncrementalGC(rt, "requested");
+        rt->gcStats.nonincremental("requested");
+        budget = SliceBudget::Unlimited;
+    } else {
+        BudgetIncrementalGC(rt, &budget);
     }
+
+    /* The GC was reset, so we need a do-over. */
+    if (prevState != NO_INCREMENTAL && rt->gcIncrementalState == NO_INCREMENTAL) {
+        gcsession.cancel();
+        return true;
+    }
+
+    IncrementalCollectSlice(rt, budget, reason, gckind);
+
+    return false;
 }
 
 #ifdef JS_GC_ZEAL
@@ -4663,6 +4682,8 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 
     gcstats::AutoGCSlice agc(rt->gcStats, collectedCount, zoneCount, compartmentCount, reason);
 
+    bool repeat = false;
+
     do {
         /*
          * Let the API user decide to defer a GC if it wants to (unless this
@@ -4675,7 +4696,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         }
 
         rt->gcPoke = false;
-        GCCycle(rt, incremental, budget, gckind, reason);
+        bool wasReset = GCCycle(rt, incremental, budget, gckind, reason);
 
         if (rt->gcIncrementalState == NO_INCREMENTAL) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_GC_END);
@@ -4688,10 +4709,13 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
             JS::PrepareForFullGC(rt);
 
         /*
-         * On shutdown, iterate until finalizers or the JSGC_END callback
-         * stop creating garbage.
+         * If we reset an existing GC, we need to start a new one. Also, we
+         * repeat GCs that happen during shutdown (the gcShouldCleanUpEverything
+         * case) until we can be sure that no additional garbage is created
+         * (which typically happens if roots are dropped during finalizers).
          */
-    } while (rt->gcPoke && rt->gcShouldCleanUpEverything);
+        repeat = (rt->gcPoke && rt->gcShouldCleanUpEverything) || wasReset;
+    } while (repeat);
 }
 
 void
