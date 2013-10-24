@@ -109,7 +109,9 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 
 #include "nsChromeRegistry.h"
 #include "nsChromeProtocolHandler.h"
-#include "mozilla/mozPoisonWrite.h"
+#include "mozilla/IOInterposer.h"
+#include "mozilla/PoisonIOInterposer.h"
+#include "mozilla/LateWriteChecks.h"
 
 #include "mozilla/scache/StartupCache.h"
 
@@ -682,10 +684,10 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
 
         HangMonitor::NotifyActivity();
 
-        // Write poisoning needs to find the profile directory, so it has to
+        // Late-write checks needs to find the profile directory, so it has to
         // be initialized before mozilla::services::Shutdown or (because of
         // xpcshell tests replacing the service) modules being unloaded.
-        InitWritePoisoning();
+        mozilla::InitLateWriteChecks();
 
         // We save the "xpcom-shutdown-loaders" observers to notify after
         // the observerservice is gone.
@@ -753,7 +755,15 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     PROFILER_MARKER("Shutdown xpcom");
     // If we are doing any shutdown checks, poison writes.
     if (gShutdownChecks != SCM_NOTHING) {
-        mozilla::PoisonWrite();
+        // Calling InitIOInterposer or InitPoisonIOInterposer twice doesn't
+        // cause any problems, they'll safely abort the initialization on their
+        // own initiative.
+        mozilla::IOInterposer::Init();
+        mozilla::InitPoisonIOInterposer();
+#ifdef XP_MACOSX
+        mozilla::OnlyReportDirtyWrites();
+#endif /* XP_MACOSX */
+        mozilla::BeginLateWriteChecks();
     }
 
     // Shutdown nsLocalFile string conversion

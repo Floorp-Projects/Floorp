@@ -82,7 +82,7 @@ using mozilla::InjectCrashRunnable;
 #include <vector>
 
 #include "mozilla/mozalloc_oom.h"
-#include "mozilla/mozPoisonWrite.h"
+#include "mozilla/LateWriteChecks.h"
 
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
@@ -792,7 +792,7 @@ static bool ShouldReport()
 
 namespace {
   bool Filter(void* context) {
-    mozilla::DisableWritePoisoning();
+    mozilla::StopLateWriteChecks();
     return true;
   }
 }
@@ -2234,7 +2234,7 @@ OOPInitialized()
 
 #ifdef XP_MACOSX
 static bool ChildFilter(void *context) {
-  mozilla::DisableWritePoisoning();
+  mozilla::StopLateWriteChecks();
   return true;
 }
 #endif
