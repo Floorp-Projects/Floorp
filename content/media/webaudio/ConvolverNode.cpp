@@ -33,7 +33,6 @@ public:
     , mSampleRate(0.0f)
     , mUseBackgroundThreads(!aNode->Context()->IsOffline())
     , mNormalize(aNormalize)
-    , mSeenInput(false)
   {
   }
 
@@ -92,7 +91,6 @@ public:
 
     if (!mBuffer || !mBufferLength || !mSampleRate) {
       mReverb = nullptr;
-      mSeenInput = false;
       mLeftOverData = INT32_MIN;
       return;
     }
@@ -108,28 +106,26 @@ public:
                                  AudioChunk* aOutput,
                                  bool* aFinished)
   {
-    if (!mSeenInput && aInput.IsNull()) {
-      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-      return;
-    }
     if (!mReverb) {
       *aOutput = aInput;
       return;
     }
 
-    mSeenInput = true;
     AudioChunk input = aInput;
     if (aInput.IsNull()) {
-      AllocateAudioBlock(1, &input);
-      WriteZeroesToAudioBlock(&input, 0, WEBAUDIO_BLOCK_SIZE);
-
       if (mLeftOverData > 0) {
         mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
-      } else if (mLeftOverData != INT32_MIN) {
-        mLeftOverData = INT32_MIN;
-        nsRefPtr<PlayingRefChanged> refchanged =
-          new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
-        NS_DispatchToMainThread(refchanged);
+        AllocateAudioBlock(1, &input);
+        WriteZeroesToAudioBlock(&input, 0, WEBAUDIO_BLOCK_SIZE);
+      } else {
+        if (mLeftOverData != INT32_MIN) {
+          mLeftOverData = INT32_MIN;
+          nsRefPtr<PlayingRefChanged> refchanged =
+            new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
+          NS_DispatchToMainThread(refchanged);
+        }
+        aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+        return;
       }
     } else {
       if (aInput.mVolume != 1.0f) {
@@ -164,7 +160,6 @@ private:
   float mSampleRate;
   bool mUseBackgroundThreads;
   bool mNormalize;
-  bool mSeenInput;
 };
 
 ConvolverNode::ConvolverNode(AudioContext* aContext)
