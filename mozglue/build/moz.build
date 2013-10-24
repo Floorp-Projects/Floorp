@@ -20,6 +20,8 @@ if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_NATIVE_JEMALLOC'] or force_shared_lib):
     pass
     # TODO: SHARED_LIBRARY_LIBS go here
 else:
+    # Temporary, until bug 662814 lands
+    NO_VISIBILITY_FLAGS = True
     SOURCES += [
         'dummy.cpp',
     ]

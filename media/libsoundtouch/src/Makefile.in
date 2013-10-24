@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SHORT_LIBNAME = soundt
-VISIBILITY_FLAGS =
 EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)
 
 # Use abort() instead of exception in SoundTouch.
