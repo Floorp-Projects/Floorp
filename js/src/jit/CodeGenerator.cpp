@@ -5698,7 +5698,7 @@ CodeGenerator::generate()
 bool
 CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 {
-    JSScript *script = gen->info().script();
+    RootedScript script(cx, gen->info().script());
     ExecutionMode executionMode = gen->info().executionMode();
     JS_ASSERT(!HasIonScript(script, executionMode));
 
