@@ -112,6 +112,7 @@ const DiagnosticFlags DIAGNOSTIC_CONTAINER  = 1 << 4;
 const DiagnosticFlags DIAGNOSTIC_TILE       = 1 << 5;
 const DiagnosticFlags DIAGNOSTIC_BIGIMAGE   = 1 << 6;
 const DiagnosticFlags DIAGNOSTIC_COMPONENT_ALPHA = 1 << 7;
+const DiagnosticFlags DIAGNOSTIC_REGION_RECT = 1 << 8;
 
 /**
  * See gfx/layers/Effects.h
