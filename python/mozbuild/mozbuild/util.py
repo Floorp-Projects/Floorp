@@ -252,7 +252,7 @@ class StrictOrderingOnAppendList(list):
     """
     @staticmethod
     def ensure_sorted(l):
-        srtd = sorted(l)
+        srtd = sorted(l, key=lambda x: x.lower())
 
         if srtd != l:
             raise UnsortedError(srtd, l)

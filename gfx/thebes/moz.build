@@ -8,12 +8,10 @@ MODULE = 'thebes'
 
 EXPORTS += [
     'DrawMode.h',
-    'GraphicsFilter.h',
-    'RoundedRect.h',
     'gfx2DGlue.h',
     'gfx3DMatrix.h',
-    'gfxASurface.h',
     'gfxAlphaRecovery.h',
+    'gfxASurface.h',
     'gfxBaseSharedMemorySurface.h',
     'gfxBlur.h',
     'gfxCachedTempSurface.h',
@@ -41,15 +39,17 @@ EXPORTS += [
     'gfxReusableImageSurfaceWrapper.h',
     'gfxReusableSharedImageSurfaceWrapper.h',
     'gfxReusableSurfaceWrapper.h',
-    'gfxSVGGlyphs.h',
     'gfxSharedImageSurface.h',
     'gfxSharedQuartzSurface.h',
     'gfxSkipChars.h',
+    'gfxSVGGlyphs.h',
     'gfxTeeSurface.h',
     'gfxTypes.h',
     'gfxUserFontSet.h',
     'gfxUtils.h',
+    'GraphicsFilter.h',
     'nsSurfaceTexture.h',
+    'RoundedRect.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
@@ -61,10 +61,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     ]
     CPP_SOURCES += [
         'gfxAndroidPlatform.cpp',
-        'gfxFT2Fonts.cpp',
         'gfxFT2FontBase.cpp',
-        'gfxFT2Utils.cpp',
         'gfxFT2FontList.cpp',
+        'gfxFT2Fonts.cpp',
+        'gfxFT2Utils.cpp',
         'gfxPDFSurface.cpp',
         'nsUnicodeRange.cpp',
     ]
@@ -77,10 +77,10 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     ]
     CPP_SOURCES += [
         'gfxAndroidPlatform.cpp',
-        'gfxFT2Fonts.cpp',
         'gfxFT2FontBase.cpp',
-        'gfxFT2Utils.cpp',
         'gfxFT2FontList.cpp',
+        'gfxFT2Fonts.cpp',
+        'gfxFT2Utils.cpp',
         'gfxPDFSurface.cpp',
         'nsUnicodeRange.cpp',
     ]
@@ -92,31 +92,31 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'gfxQuartzSurface.h',
     ]
     CPP_SOURCES += [
-        'gfxQuartzSurface.cpp',
-        'gfxQuartzImageSurface.cpp',
-        'gfxPlatformMac.cpp',
-        'gfxMacFont.cpp',
         'gfxCoreTextShaper.cpp',
-        'nsUnicodeRange.cpp',
+        'gfxMacFont.cpp',
+        'gfxPlatformMac.cpp',
+        'gfxQuartzImageSurface.cpp',
         'gfxQuartzNativeDrawing.cpp',
+        'gfxQuartzSurface.cpp',
+        'nsUnicodeRange.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_GTK']:
     EXPORTS += [
         'gfxFT2FontBase.h',
         'gfxGdkNativeRenderer.h',
         'gfxPDFSurface.h',
-        'gfxPSSurface.h',
         'gfxPlatformGtk.h',
+        'gfxPSSurface.h',
     ]
 
     CPP_SOURCES += [
-        'gfxPlatformGtk.cpp',
-        'gfxGdkNativeRenderer.cpp',
-        'gfxPDFSurface.cpp',
-        'gfxPSSurface.cpp',
         'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
+        'gfxGdkNativeRenderer.cpp',
+        'gfxPDFSurface.cpp',
+        'gfxPlatformGtk.cpp',
+        'gfxPSSurface.cpp',
         'nsUnicodeRange.cpp',
     ]
 
@@ -126,8 +126,8 @@ elif CONFIG['MOZ_WIDGET_GTK']:
             'gfxXlibSurface.h',
         ]
         CPP_SOURCES += [
-            'gfxXlibSurface.cpp',
             'gfxXlibNativeRenderer.cpp',
+            'gfxXlibSurface.cpp',
         ]
 
     if CONFIG['MOZ_PANGO']:
@@ -148,12 +148,12 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
         'gfxPDFSurface.h',
     ]
     CPP_SOURCES += [
+        'gfxFontconfigUtils.cpp',
         'gfxOS2Fonts.cpp',
         'gfxOS2Platform.cpp',
         'gfxOS2Surface.cpp',
-        'nsUnicodeRange.cpp',
-        'gfxFontconfigUtils.cpp',
-        'gfxPDFSurface.cpp'
+        'gfxPDFSurface.cpp',
+        'nsUnicodeRange.cpp'
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += [
@@ -164,13 +164,13 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'gfxQtPlatform.h',
     ]
     CPP_SOURCES += [
-        'gfxQtPlatform.cpp',
-        'gfxQPainterSurface.cpp',
+        'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
-        'gfxFontconfigUtils.cpp',
-        'nsUnicodeRange.cpp',
         'gfxPDFSurface.cpp',
+        'gfxQPainterSurface.cpp',
+        'gfxQtPlatform.cpp',
+        'nsUnicodeRange.cpp',
     ]
 
     if CONFIG['MOZ_X11']:
@@ -178,8 +178,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
             'gfxXlibSurface.h',
         ]
         CPP_SOURCES += [
-            'gfxXlibSurface.cpp',
             'gfxQtNativeRenderer.cpp',
+            'gfxXlibSurface.cpp',
         ]
 
     if CONFIG['MOZ_PANGO']:
@@ -205,24 +205,24 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'gfxWindowsSurface.h',
     ]
     CPP_SOURCES += [
-        'gfxWindowsPlatform.cpp',
-        'gfxWindowsSurface.cpp',
-        'gfxWindowsNativeDrawing.cpp',
-        'nsUnicodeRange.cpp',
         'gfxGDIFont.cpp',
         'gfxGDIFontList.cpp',
         'gfxGDIShaper.cpp',
-        'gfxUniscribeShaper.cpp',
         'gfxPDFSurface.cpp',
+        'gfxUniscribeShaper.cpp',
+        'gfxWindowsNativeDrawing.cpp',
+        'gfxWindowsPlatform.cpp',
+        'gfxWindowsSurface.cpp',
+        'nsUnicodeRange.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
         CPP_SOURCES += [
+            'gfxD2DSurface.cpp',
+            'gfxDWriteCommon.cpp',
+            'gfxDWriteFontList.cpp',
             'gfxDWriteFonts.cpp',
             'gfxDWriteShaper.cpp',
             'gfxDWriteTextAnalysis.cpp',
-            'gfxDWriteCommon.cpp',
-            'gfxD2DSurface.cpp',
-            'gfxDWriteFontList.cpp',
         ]
 
 # Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
@@ -233,8 +233,8 @@ if CONFIG['INTEL_ARCHITECTURE']:
 
 CPP_SOURCES += [
     'gfx3DMatrix.cpp',
-    'gfxASurface.cpp',
     'gfxAlphaRecovery.cpp',
+    'gfxASurface.cpp',
     'gfxBaseSharedMemorySurface.cpp',
     'gfxBlur.cpp',
     'gfxCachedTempSurface.cpp',
@@ -256,9 +256,9 @@ CPP_SOURCES += [
     'gfxRect.cpp',
     'gfxReusableImageSurfaceWrapper.cpp',
     'gfxReusableSharedImageSurfaceWrapper.cpp',
-    'gfxSVGGlyphs.cpp',
     'gfxScriptItemizer.cpp',
     'gfxSkipChars.cpp',
+    'gfxSVGGlyphs.cpp',
     'gfxTeeSurface.cpp',
     'gfxUserFontSet.cpp',
     'gfxUtils.cpp',

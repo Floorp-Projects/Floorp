@@ -1821,7 +1821,9 @@ class Assembler
 
     static void updateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
     void processCodeLabels(uint8_t *rawCode);
-
+    bool bailed() {
+        return m_buffer.bail();
+    }
 }; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.

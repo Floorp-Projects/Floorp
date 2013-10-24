@@ -24,18 +24,18 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPicoService,
 NS_DEFINE_NAMED_CID(PICOSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kCIDs[] = {
-  { &kPICOSERVICE_CID, true, NULL, nsPicoServiceConstructor },
-  { NULL }
+  { &kPICOSERVICE_CID, true, nullptr, nsPicoServiceConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kContracts[] = {
   { PICOSERVICE_CONTRACTID, &kPICOSERVICE_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module::CategoryEntry kCategories[] = {
   { "profile-after-change", "Pico Speech Synth", PICOSERVICE_CONTRACTID },
-  { NULL }
+  { nullptr }
 };
 
 static void
@@ -49,8 +49,8 @@ static const mozilla::Module kModule = {
   kCIDs,
   kContracts,
   kCategories,
-  NULL,
-  NULL,
+  nullptr,
+  nullptr,
   UnloadPicoModule
 };
 

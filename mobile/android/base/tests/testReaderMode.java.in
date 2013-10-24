@@ -29,40 +29,48 @@ public class testReaderMode extends AboutHomeTest {
         Actions.EventExpecter contentEventExpecter;
         Actions.EventExpecter contentReaderAddedExpecter;
         Actions.EventExpecter faviconExpecter;
+        Actions.EventExpecter contentPageShowExpecter;
+        Actions.RepeatedEventExpecter paintExpecter;
         ListView list;
         View child;
         String textUrl = getAbsoluteUrl(StringHelper.ROBOCOP_TEXT_PAGE_URL);
         String devType = mDevice.type;
         int childNo;
+        int eventClearDelay = 3000;
 
         contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         loadAndPaint(textUrl);
         contentEventExpecter.blockForEvent();
         contentEventExpecter.unregisterListener();
-        View readerIcon = getReaderIcon();
 
         // Add the page to the Reading List using log click on the reader icon
         contentReaderAddedExpecter = mActions.expectGeckoEvent("Reader:Added");
-        mSolo.clickLongOnView(readerIcon);
+        mSolo.clickLongOnView(getReaderIcon());
         String eventData = contentReaderAddedExpecter.blockForEventData();
         isAdded(eventData);
         contentReaderAddedExpecter.unregisterListener();
 
         // Try to add the page to the Reading List using log click on the reader icon a second time
         contentReaderAddedExpecter = mActions.expectGeckoEvent("Reader:Added");
-        mSolo.clickLongOnView(readerIcon);
+        mSolo.clickLongOnView(getReaderIcon());
         eventData = contentReaderAddedExpecter.blockForEventData();
         isAdded(eventData);
         contentReaderAddedExpecter.unregisterListener();
 
         // Waiting for the favicon since is the last element loaded usually
         faviconExpecter = mActions.expectGeckoEvent("Reader:FaviconRequest");
+        contentPageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+        paintExpecter = mActions.expectPaint();
         mSolo.clickOnView(getReaderIcon());
 
         // Changing devices orientation to be sure that all devices are in portrait when will access the reader toolbar
         mSolo.setActivityOrientation(Solo.PORTRAIT);
         faviconExpecter.blockForEvent();
         faviconExpecter.unregisterListener();
+        contentPageShowExpecter.blockForEvent();
+        contentPageShowExpecter.unregisterListener();
+        paintExpecter.blockUntilClear(eventClearDelay);
+        paintExpecter.unregisterListener();
         verifyPageTitle("Robocop Text Page");
 
         // Open the share menu for the reader toolbar

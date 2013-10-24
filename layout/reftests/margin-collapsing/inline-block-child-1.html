@@ -2,23 +2,22 @@
 <html>
 <head>
 <style type="text/css">
-#a {
+#parent {
  display: inline-block;
  background-color: green;
 }
-#b {
+#child {
  display: inline-block;
  height: 40px; width: 200px;
- background-color: blue;
- margin-top: 20px;
- margin-bottom: 20px;
+ margin: 20px 0;
  vertical-align: bottom;
+ background-color: lightgreen;
 }
 </style>
 </head>
 <body>
-<div id="a">
- <div id="b"></div>
+<div id="parent">
+ <div id="child"></div>
 </div>
 </body>
 </html>

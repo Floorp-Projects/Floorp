@@ -29,9 +29,9 @@ EXTRA_PP_COMPONENTS += [
     'AboutRedirector.js',
     'BrowserCLH.js',
     'BrowserStartup.js',
+    'components.manifest',
     'DirectoryProvider.js',
     'HelperAppDialog.js',
     'SessionStore.js',
     'Sidebar.js',
-    'components.manifest',
 ]

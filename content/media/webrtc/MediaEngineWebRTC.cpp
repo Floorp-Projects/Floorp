@@ -238,8 +238,8 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
 void
 MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >* aASources)
 {
-  webrtc::VoEBase* ptrVoEBase = NULL;
-  webrtc::VoEHardware* ptrVoEHw = NULL;
+  webrtc::VoEBase* ptrVoEBase = nullptr;
+  webrtc::VoEHardware* ptrVoEHw = nullptr;
   // We spawn threads to handle gUM runnables, so we must protect the member vars
   MutexAutoLock lock(mMutex);
 
@@ -250,7 +250,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
   JavaVM *jvm = mozilla::AndroidBridge::Bridge()->GetVM();
 
   JNIEnv *env;
-  jvm->AttachCurrentThread(&env, NULL);
+  jvm->AttachCurrentThread(&env, nullptr);
 
   if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
     LOG(("VoiceEngine:SetAndroidObjects Failed"));
@@ -357,8 +357,8 @@ MediaEngineWebRTC::Shutdown()
     webrtc::VoiceEngine::Delete(mVoiceEngine);
   }
 
-  mVideoEngine = NULL;
-  mVoiceEngine = NULL;
+  mVideoEngine = nullptr;
+  mVoiceEngine = nullptr;
 }
 
 }

@@ -12,8 +12,8 @@ XPIDL_SOURCES += [
 
 if CONFIG['IBMBIDI']:
     CPP_SOURCES += [
-        'nsBidiPresUtils.cpp',
         'nsBidi.cpp',
+        'nsBidiPresUtils.cpp',
     ]
 
 if CONFIG['MOZ_DEBUG']:
@@ -30,16 +30,13 @@ EXPORTS += [
     'DisplayListClipState.h',
     'FrameLayerBuilder.h',
     'FramePropertyTable.h',
-    'ScrollbarStyles.h',
-    'StackArena.h',
-    'Units.h',
     'nsArenaMemoryStats.h',
     'nsBidi.h',
     'nsBidiPresUtils.h',
-    'nsCSSFrameConstructor.h',
     'nsCaret.h',
     'nsChangeHint.h',
     'nsCompatibility.h',
+    'nsCSSFrameConstructor.h',
     'nsDisplayItemTypes.h',
     'nsDisplayItemTypesList.h',
     'nsDisplayList.h',
@@ -59,6 +56,9 @@ EXPORTS += [
     'nsPresState.h',
     'nsRefreshDriver.h',
     'nsStyleChangeList.h',
+    'ScrollbarStyles.h',
+    'StackArena.h',
+    'Units.h',
 ]
 
 EXPORTS.mozilla += [
@@ -71,17 +71,12 @@ CPP_SOURCES += [
     'FrameLayerBuilder.cpp',
     'FramePropertyTable.cpp',
     'MaskLayerImageCache.cpp',
-    'PaintTracker.cpp',
-    'PositionedEventTargeting.cpp',
-    'RestyleManager.cpp',
-    'RestyleTracker.cpp',
-    'StackArena.cpp',
+    'nsCaret.cpp',
+    'nsCounterManager.cpp',
     'nsCSSColorUtils.cpp',
     'nsCSSFrameConstructor.cpp',
     'nsCSSRendering.cpp',
     'nsCSSRenderingBorders.cpp',
-    'nsCaret.cpp',
-    'nsCounterManager.cpp',
     'nsDisplayList.cpp',
     'nsDisplayListInvalidation.cpp',
     'nsDocumentViewer.cpp',
@@ -98,6 +93,11 @@ CPP_SOURCES += [
     'nsRefreshDriver.cpp',
     'nsStyleChangeList.cpp',
     'nsStyleSheetService.cpp',
+    'PaintTracker.cpp',
+    'PositionedEventTargeting.cpp',
+    'RestyleManager.cpp',
+    'RestyleTracker.cpp',
+    'StackArena.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

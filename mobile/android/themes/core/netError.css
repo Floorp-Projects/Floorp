@@ -23,7 +23,7 @@ body {
   font-weight: 300;
   font-size: 13px;
   -moz-text-size-adjust: none;
-  font-family: "Open Sans", sans-serif;
+  font-family: sans-serif;
 }
 
 
@@ -61,7 +61,7 @@ button {
   width: 100%;
   border: none;
   padding: 1rem;
-  font-family: "Open Sans", sans-serif;
+  font-family: sans-serif;
   background-color: #e0e2e5;
   font-size: 1rem; /* Not sure why this has to be specified. See bug 892843. */
   font-weight: 300;

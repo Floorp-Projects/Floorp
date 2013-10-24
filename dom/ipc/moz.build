@@ -10,8 +10,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'cocoa':
 MODULE = 'dom'
 
 EXPORTS += [
-    'PCOMContentPermissionRequestChild.h',
     'nsICachedFileDescriptorListener.h',
+    'PCOMContentPermissionRequestChild.h',
 ]
 
 EXPORTS.mozilla.dom.ipc += [
@@ -42,19 +42,19 @@ EXPORTS.mozilla += [
 CPP_SOURCES += [
     'AppProcessChecker.cpp',
     'Blob.cpp',
-    'ContentProcess.cpp',
-    'ContentParent.cpp',
     'ContentChild.cpp',
-    'CrashReporterParent.cpp',
+    'ContentParent.cpp',
+    'ContentProcess.cpp',
     'CrashReporterChild.cpp',
+    'CrashReporterParent.cpp',
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
     'StructuredCloneUtils.cpp',
-    'TabParent.cpp',
     'TabChild.cpp',
     'TabContext.cpp',
     'TabMessageUtils.cpp',
+    'TabParent.cpp',
 ]
 
 IPDL_SOURCES += [

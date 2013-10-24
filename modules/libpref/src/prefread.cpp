@@ -185,7 +185,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
         case PREF_PARSE_INIT:
             if (ps->lbcur != ps->lb) { /* reset state */
                 ps->lbcur = ps->lb;
-                ps->vb    = NULL;
+                ps->vb    = nullptr;
                 ps->vtype = PREF_INVALID;
                 ps->fdefault = false;
             }
@@ -593,7 +593,7 @@ main(int argc, char **argv)
         return -1;
     }
 
-    PREF_InitParseState(&ps, pref_reader, NULL);
+    PREF_InitParseState(&ps, pref_reader, nullptr);
 
     while ((n = fread(buf, 1, sizeof(buf), fp)) > 0)
         PREF_ParseBuf(&ps, buf, n);

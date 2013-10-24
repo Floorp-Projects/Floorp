@@ -40,6 +40,7 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue *stackVal)
 
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t spsPushToggleOffset)
   : method_(nullptr),
+    templateScope_(nullptr),
     fallbackStubSpace_(),
     prologueOffset_(prologueOffset),
 #ifdef DEBUG
@@ -411,6 +412,8 @@ void
 BaselineScript::trace(JSTracer *trc)
 {
     MarkIonCode(trc, &method_, "baseline-method");
+    if (templateScope_)
+        MarkObject(trc, &templateScope_, "baseline-template-scope");
 
     // Mark all IC stub codes hanging off the IC stub entries.
     for (size_t i = 0; i < numICEntries(); i++) {

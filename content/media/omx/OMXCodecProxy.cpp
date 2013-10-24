@@ -35,7 +35,7 @@ sp<OMXCodecProxy> OMXCodecProxy::Create(
 
   const char *mime;
   if (!meta->findCString(kKeyMIMEType, &mime)) {
-    return NULL;
+    return nullptr;
   }
 
   if (!strncasecmp(mime, "video/", 6)) {
@@ -57,7 +57,7 @@ OMXCodecProxy::OMXCodecProxy(
       mSrcMeta(meta),
       mIsEncoder(createEncoder),
       mSource(source),
-      mComponentName(NULL),
+      mComponentName(nullptr),
       mFlags(flags),
       mNativeWindow(nativeWindow),
       mState(MediaResourceManagerClient::CLIENT_STATE_WAIT_FOR_RESOURCE)
@@ -71,7 +71,7 @@ OMXCodecProxy::~OMXCodecProxy()
   if (mOMXCodec.get()) {
     wp<MediaSource> tmp = mOMXCodec;
     mOMXCodec.clear();
-    while (tmp.promote() != NULL) {
+    while (tmp.promote() != nullptr) {
         // this value come from stagefrigh's AwesomePlayer.
         usleep(1000);
     }
@@ -85,7 +85,7 @@ OMXCodecProxy::~OMXCodecProxy()
 
   mSource.clear();
   free(mComponentName);
-  mComponentName = NULL;
+  mComponentName = nullptr;
 }
 
 MediaResourceManagerClient::State OMXCodecProxy::getState()
@@ -102,9 +102,9 @@ void OMXCodecProxy::setEventListener(const wp<OMXCodecProxy::EventListener>& lis
 
 void OMXCodecProxy::notifyStatusChangedLocked()
 {
-  if (mEventListener != NULL) {
+  if (mEventListener != nullptr) {
     sp<EventListener> listener = mEventListener.promote();
-    if (listener != NULL) {
+    if (listener != nullptr) {
       listener->statusChanged();
     }
   }
@@ -122,7 +122,7 @@ void OMXCodecProxy::requestResource()
 
   mManagerService = mClient->getMediaResourceManagerService();
   if (!mManagerService.get()) {
-    mClient = NULL;
+    mClient = nullptr;
     return;
   }
 
@@ -159,7 +159,7 @@ void OMXCodecProxy::statusChanged(int event)
   if (!strncasecmp(mime, "video/", 6)) {
     sp<MediaSource> codec;
     mOMXCodec = OMXCodec::Create(mOMX, mSrcMeta, mIsEncoder, mSource, mComponentName, mFlags, mNativeWindow);
-    if (mOMXCodec == NULL) {
+    if (mOMXCodec == nullptr) {
       mState = MediaResourceManagerClient::CLIENT_STATE_SHUTDOWN;
       notifyStatusChangedLocked();
       return;
@@ -204,7 +204,7 @@ status_t OMXCodecProxy::start(MetaData *params)
   if (mState != MediaResourceManagerClient::CLIENT_STATE_RESOURCE_ASSIGNED) {
     return NO_INIT;
   }
-  CHECK(mOMXCodec.get() != NULL);
+  CHECK(mOMXCodec.get() != nullptr);
   return mOMXCodec->start();
 }
 
@@ -215,7 +215,7 @@ status_t OMXCodecProxy::stop()
   if (mState != MediaResourceManagerClient::CLIENT_STATE_RESOURCE_ASSIGNED) {
     return NO_INIT;
   }
-  CHECK(mOMXCodec.get() != NULL);
+  CHECK(mOMXCodec.get() != nullptr);
   return mOMXCodec->stop();
 }
 
@@ -227,7 +227,7 @@ sp<MetaData> OMXCodecProxy::getFormat()
     sp<MetaData> meta = new MetaData;
     return meta;
   }
-  CHECK(mOMXCodec.get() != NULL);
+  CHECK(mOMXCodec.get() != nullptr);
   return mOMXCodec->getFormat();
 }
 
@@ -238,7 +238,7 @@ status_t OMXCodecProxy::read(MediaBuffer **buffer, const ReadOptions *options)
   if (mState != MediaResourceManagerClient::CLIENT_STATE_RESOURCE_ASSIGNED) {
     return NO_INIT;
   }
-  CHECK(mOMXCodec.get() != NULL);
+  CHECK(mOMXCodec.get() != nullptr);
   return mOMXCodec->read(buffer, options);
 }
 
@@ -249,7 +249,7 @@ status_t OMXCodecProxy::pause()
   if (mState != MediaResourceManagerClient::CLIENT_STATE_RESOURCE_ASSIGNED) {
     return NO_INIT;
   }
-  CHECK(mOMXCodec.get() != NULL);
+  CHECK(mOMXCodec.get() != nullptr);
   return mOMXCodec->pause();
 }
 

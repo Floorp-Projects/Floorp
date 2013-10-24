@@ -1659,13 +1659,18 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
 
   JSAutoCompartment oldAc(aCx, oldParent);
 
-  if (js::GetObjectCompartment(oldParent) ==
-      js::GetObjectCompartment(newParent)) {
+  JSCompartment* oldCompartment = js::GetObjectCompartment(oldParent);
+  JSCompartment* newCompartment = js::GetObjectCompartment(newParent);
+  if (oldCompartment == newCompartment) {
     if (!JS_SetParent(aCx, aObj, newParent)) {
       MOZ_CRASH();
     }
     return NS_OK;
   }
+
+  // Telemetry.
+  xpc::RecordDonatedNode(oldCompartment);
+  xpc::RecordAdoptedNode(newCompartment);
 
   nsISupports* native = UnwrapDOMObjectToISupports(aObj);
   if (!native) {

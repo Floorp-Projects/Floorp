@@ -1267,7 +1267,7 @@ static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
     nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     file->InitWithPath(NS_ConvertUTF8toUTF16(aPluginTag->mFullPath));
     nsPluginFile pluginFile(file);
-    PRLibrary* pluginLibrary = NULL;
+    PRLibrary* pluginLibrary = nullptr;
 
     if (NS_FAILED(pluginFile.LoadPlugin(&pluginLibrary)) || !pluginLibrary)
       return NS_ERROR_FAILURE;
@@ -1297,7 +1297,7 @@ nsresult nsPluginHost::EnsurePluginLoaded(nsPluginTag* aPluginTag)
 nsresult nsPluginHost::GetPlugin(const char *aMimeType, nsNPAPIPlugin** aPlugin)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  *aPlugin = NULL;
+  *aPlugin = nullptr;
 
   if (!aMimeType)
     return NS_ERROR_ILLEGAL_VALUE;
@@ -1510,7 +1510,7 @@ nsPluginHost::ClearSiteData(nsIPluginTag* plugin, const nsACString& domain,
 
   // If 'domain' is the null string, clear everything.
   if (domain.IsVoid()) {
-    return library->NPP_ClearSiteData(NULL, flags, maxAge);
+    return library->NPP_ClearSiteData(nullptr, flags, maxAge);
   }
 
   // Get the list of sites from the plugin.
@@ -2108,8 +2108,8 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList, bool * aPluginsChange
 
       invalidPlugins = invalidPlugin->mNext;
 
-      invalidPlugin->mPrev = NULL;
-      invalidPlugin->mNext = NULL;
+      invalidPlugin->mPrev = nullptr;
+      invalidPlugin->mNext = nullptr;
     }
     else {
       invalidPlugins->mSeen = false;
@@ -2534,7 +2534,7 @@ nsPluginHost::ReadPluginInfo()
         file->GetNativeLeafName(derivedFileName);
         filename = derivedFileName.get();
       } else {
-        filename = NULL;
+        filename = nullptr;
       }
 
       // skip the next line, useless in this version

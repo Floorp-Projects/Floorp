@@ -987,7 +987,7 @@ static bool
 GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
                    IonCache::StubAttacher &attacher, JSObject *obj, PropertyName *name,
                    JSObject *holder, HandleShape shape, RegisterSet &liveRegs, Register object,
-                   TypedOrValueRegister output, void *returnAddr, Label *failures = NULL)
+                   TypedOrValueRegister output, void *returnAddr, Label *failures = nullptr)
 {
     JS_ASSERT(obj->isNative());
     JS_ASSERT(output.hasValue());
