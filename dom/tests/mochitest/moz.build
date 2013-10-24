@@ -29,7 +29,3 @@ DIRS += [
 if CONFIG['MOZ_GAMEPAD']:
    DIRS += ['gamepad']
 
-#needs IPC support, also tests do not run successfully in Firefox for now
-#if CONFIG['MOZ_BUILD_APP'] != 'mobile':
-#    DIRS += ['notification']
-
