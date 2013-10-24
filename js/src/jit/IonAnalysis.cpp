@@ -2058,7 +2058,7 @@ CmpInstructions(const void *a, const void *b)
 }
 
 bool
-jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
+jit::AnalyzeNewScriptProperties(JSContext *cx, HandleFunction fun,
                                 types::TypeObject *type, HandleObject baseobj,
                                 Vector<types::TypeNewScript::Initializer> *initializerList)
 {
