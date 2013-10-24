@@ -18,8 +18,9 @@ To confirm the functionality run mochitests for the following components:
 
 The sourceeditor component contains imported CodeMirror tests [3]. Some
 tests were commented out because we don't use that functionality within
-Firefox (for example Ruby editing mode). Other than that, we don't have
-any Mozilla-specific patches applied to CodeMirror itself.
+Firefox (for example Ruby editing mode). The search addon (search.js)
+was slightly modified to make search UI localizable. Other than that,
+we don't have any Mozilla-specific patches applied to CodeMirror itself.
 
 # Addons
 

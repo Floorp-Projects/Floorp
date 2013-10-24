@@ -42,7 +42,7 @@ mozilla::RefPtr<AudioSessionConduit> AudioSessionConduit::Create(AudioSessionCon
   {
     CSFLogError(logTag,  "%s AudioConduit Init Failed ", __FUNCTION__);
     delete obj;
-    return NULL;
+    return nullptr;
   }
   CSFLogDebug(logTag,  "%s Successfully created AudioConduit ", __FUNCTION__);
   return obj;
@@ -110,7 +110,7 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
   if (mOtherDirection)
   {
     // mOtherDirection owns these now!
-    mOtherDirection->mOtherDirection = NULL;
+    mOtherDirection->mOtherDirection = nullptr;
     // let other side we terminated the channel
     mOtherDirection->mShutDown = true;
     mVoiceEngine = nullptr;
@@ -283,7 +283,7 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
     if(mPtrVoEBase->StopSend(mChannel) == -1)
     {
       CSFLogError(logTag, "%s StopSend() Failed %d ", __FUNCTION__,
-                                          mPtrVoEBase->LastError());
+                  mPtrVoEBase->LastError());
       return kMediaConduitUnknownError;
     }
   }
@@ -304,9 +304,11 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
 
     if(error ==  VE_CANNOT_SET_SEND_CODEC || error == VE_CODEC_ERROR)
     {
+      CSFLogError(logTag, "%s Invalid Send Codec", __FUNCTION__);
       return kMediaConduitInvalidSendCodec;
     }
-
+    CSFLogError(logTag, "%s SetSendCodec Failed %d ", __FUNCTION__,
+                                         mPtrVoEBase->LastError());
     return kMediaConduitUnknownError;
   }
 
@@ -357,7 +359,6 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
                                               codecConfig->mChannels,
                                               codecConfig->mRate);
 
-
   mEngineTransmitting = true;
   return kMediaConduitNoError;
 }
@@ -371,13 +372,13 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
   int error = 0; //webrtc engine errors
   bool success = false;
 
-  // are we receiving already. If so, stop receiving and playout
-  // since we can't apply new recv codec when the engine is playing
+  // Are we receiving already? If so, stop receiving and playout
+  // since we can't apply new recv codec when the engine is playing.
   if(mEngineReceiving)
   {
     CSFLogDebug(logTag, "%s Engine Already Receiving. Attemping to Stop ", __FUNCTION__);
-    // AudioEngine doesn't fail fatal on stop reception. Ref:voe_errors.h.
-    // hence we need-not be strict in failing here on error
+    // AudioEngine doesn't fail fatally on stopping reception. Ref:voe_errors.h.
+    // hence we need not be strict in failing here on errors
     mPtrVoEBase->StopReceive(mChannel);
     CSFLogDebug(logTag, "%s Attemping to Stop playout ", __FUNCTION__);
     if(mPtrVoEBase->StopPlayout(mChannel) == -1)
@@ -392,13 +393,15 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
 
   mEngineReceiving = false;
 
-  if(!codecConfigList.size())
+  if(codecConfigList.empty())
   {
     CSFLogError(logTag, "%s Zero number of codecs to configure", __FUNCTION__);
     return kMediaConduitMalformedArgument;
   }
 
-  //Try Applying the codecs in the list
+  // Try Applying the codecs in the list.
+  // We succeed if at least one codec was applied and reception was
+  // started successfully.
   for(std::vector<AudioCodecConfig*>::size_type i=0 ;i<codecConfigList.size();i++)
   {
     //if the codec param is invalid or diplicate, return error
@@ -435,7 +438,6 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
 
   } //end for
 
-  //Success == false indicates none of the codec was applied
   if(!success)
   {
     CSFLogError(logTag, "%s Setting Receive Codec Failed ", __FUNCTION__);
@@ -488,7 +490,7 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
                     (IsSamplingFreqSupported(samplingFreqHz) == false) ||
                     ((lengthSamples % (samplingFreqHz / 100) != 0)) )
   {
-    CSFLogError(logTag, "%s Invalid Params ", __FUNCTION__);
+    CSFLogError(logTag, "%s Invalid Parameters ",__FUNCTION__);
     MOZ_ASSERT(PR_FALSE);
     return kMediaConduitMalformedArgument;
   }
@@ -610,11 +612,10 @@ WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len)
       return kMediaConduitUnknownError;
     }
   } else {
-    //engine not receiving
-    CSFLogError(logTag, "%s ReceivedRTPPacket: Engine Error", __FUNCTION__);
+    CSFLogError(logTag, "Error: %s when not receiving", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
-  //good here
+
   return kMediaConduitNoError;
 }
 
@@ -636,19 +637,16 @@ WebrtcAudioConduit::ReceivedRTCPPacket(const void *data, int len)
       return kMediaConduitUnknownError;
     }
   } else {
-    //engine not running
-    CSFLogError(logTag, "%s ReceivedRTPPacket: Engine Error", __FUNCTION__);
+    CSFLogError(logTag, "Error: %s when not receiving", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
-  //good here
   return kMediaConduitNoError;
 }
 
 //WebRTC::RTP Callback Implementation
-
 int WebrtcAudioConduit::SendPacket(int channel, const void* data, int len)
 {
-  CSFLogDebug(logTag,  "%s : channel %d %s",__FUNCTION__,channel,
+  CSFLogDebug(logTag,  "%s : channel %d %s", __FUNCTION__, channel,
               (mEngineReceiving && mOtherDirection) ? "(using mOtherDirection)" : "");
 
   if (mEngineReceiving)
@@ -682,18 +680,18 @@ int WebrtcAudioConduit::SendRTCPPacket(int channel, const void* data, int len)
     {
       return mOtherDirection->SendRTCPPacket(channel, data, len);
     }
-    CSFLogDebug(logTag,  "%s : Asked to send RTCP without an RTP receiver on channel %d",
-                __FUNCTION__, channel);
-    return -1;
+  }
+
+  // We come here if we have only one pipeline/conduit setup,
+  // such as for unidirectional streams.
+  // We also end up here if we are receiving
+  if(mTransport && mTransport->SendRtcpPacket(data, len) == NS_OK)
+  {
+    CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
+    return len;
   } else {
-    if(mTransport && mTransport->SendRtcpPacket(data, len) == NS_OK)
-    {
-      CSFLogDebug(logTag, "%s Sent RTCP Packet ", __FUNCTION__);
-      return len;
-    } else {
-      CSFLogError(logTag, "%s RTCP Packet Send Failed ", __FUNCTION__);
-      return -1;
-    }
+    CSFLogError(logTag, "%s RTCP Packet Send Failed ", __FUNCTION__);
+    return -1;
   }
 }
 
@@ -812,12 +810,12 @@ WebrtcAudioConduit::CheckCodecForMatch(const AudioCodecConfig* codecInfo) const
 
 
 /**
- * Perform validation on the codecCofig to be applied
+ * Perform validation on the codecConfig to be applied.
  * Verifies if the codec is already applied.
  */
 MediaConduitErrorCode
 WebrtcAudioConduit::ValidateCodecConfig(const AudioCodecConfig* codecInfo,
-                                         bool send) const
+                                        bool send) const
 {
   bool codecAppliedAlready = false;
 

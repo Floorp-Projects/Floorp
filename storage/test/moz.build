@@ -10,14 +10,14 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 CPP_UNIT_TESTS += [
     'test_AsXXX_helpers.cpp',
-    'test_StatementCache.cpp',
-    'test_asyncStatementExecution_transaction.cpp',
     'test_async_callbacks_with_spun_event_loops.cpp',
+    'test_asyncStatementExecution_transaction.cpp',
     'test_binding_params.cpp',
     'test_file_perms.cpp',
     'test_mutex.cpp',
     'test_service_init_background_thread.cpp',
     'test_statement_scoper.cpp',
+    'test_StatementCache.cpp',
     'test_transaction_helper.cpp',
     'test_true_async.cpp',
     'test_unlock_notify.cpp',

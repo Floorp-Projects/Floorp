@@ -23,8 +23,8 @@ EXTRA_JS_MODULES += [
     'DownloadCore.jsm',
     'DownloadImport.jsm',
     'DownloadList.jsm',
-    'DownloadStore.jsm',
     'Downloads.jsm',
+    'DownloadStore.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [

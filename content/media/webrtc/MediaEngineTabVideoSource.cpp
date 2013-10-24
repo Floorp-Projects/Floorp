@@ -49,7 +49,7 @@ MediaEngineTabVideoSource::StopRunnable::Run()
 
   if (mVideoSource->mTimer) {
     mVideoSource->mTimer->Cancel();
-    mVideoSource->mTimer = NULL;
+    mVideoSource->mTimer = nullptr;
   }
   return NS_OK;
 }
@@ -152,7 +152,7 @@ NotifyPull(MediaStreamGraph*, SourceMediaStream* aSource, mozilla::TrackID aID, 
   TrackTicks target = TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
   if (delta > 0) {
-    // NULL images are allowed
+    // nullptr images are allowed
     if (image) {
       gfxIntSize size = image->GetSize();
       segment.AppendFrame(image.forget(), delta, size);

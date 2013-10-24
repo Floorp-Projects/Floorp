@@ -27,6 +27,9 @@ EXPORTS.mozilla.dom += [
 
 CPP_SOURCES += [
     'EnableWebSpeechRecognitionCheck.cpp',
+    'endpointer.cc',
+    'energy_endpointer.cc',
+    'energy_endpointer_params.cc',
     'SpeechGrammar.cpp',
     'SpeechGrammarList.cpp',
     'SpeechRecognition.cpp',
@@ -34,9 +37,6 @@ CPP_SOURCES += [
     'SpeechRecognitionResult.cpp',
     'SpeechRecognitionResultList.cpp',
     'SpeechStreamListener.cpp',
-    'endpointer.cc',
-    'energy_endpointer.cc',
-    'energy_endpointer_params.cc',
     'test/FakeSpeechRecognitionService.cpp',
 ]
 

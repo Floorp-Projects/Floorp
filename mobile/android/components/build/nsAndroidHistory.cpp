@@ -13,7 +13,7 @@ using mozilla::dom::Link;
 
 NS_IMPL_ISUPPORTS2(nsAndroidHistory, IHistory, nsIRunnable)
 
-nsAndroidHistory* nsAndroidHistory::sHistory = NULL;
+nsAndroidHistory* nsAndroidHistory::sHistory = nullptr;
 
 /*static*/
 nsAndroidHistory*

@@ -171,7 +171,7 @@ class ScopeObject : public JSObject
         return getReservedSlot(SCOPE_CHAIN_SLOT).toObject();
     }
 
-    inline void setEnclosingScope(HandleObject obj);
+    void setEnclosingScope(HandleObject obj);
 
     /*
      * Get or set an aliased variable contained in this scope. Unaliased

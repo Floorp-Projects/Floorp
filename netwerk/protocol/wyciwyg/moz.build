@@ -18,11 +18,11 @@ EXPORTS.mozilla.net += [
 ]
 
 CPP_SOURCES += [
-    'WyciwygChannelChild.cpp',
-    'WyciwygChannelParent.cpp',
     'nsWyciwyg.cpp',
     'nsWyciwygChannel.cpp',
     'nsWyciwygProtocolHandler.cpp',
+    'WyciwygChannelChild.cpp',
+    'WyciwygChannelParent.cpp',
 ]
 
 IPDL_SOURCES += [

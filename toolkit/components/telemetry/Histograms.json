@@ -28,6 +28,19 @@
     "n_values": 21,
     "description": "Maximum number of concurrent threads reached during a given download session"
   },
+  "COMPARTMENT_DONATED_NODE": {
+    "kind": "boolean",
+    "description": "When a compartment is destroyed, we record whether one of its nodes was ever adopted into another compartment"
+  },
+  "COMPARTMENT_ADOPTED_NODE": {
+    "kind": "boolean",
+    "description": "When a compartment is destroyed, we record whether it had ever adopted a node from another compartment"
+  },
+  "COMPARTMENT_LIVING_ADOPTERS": {
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "The number of living compartments for which COMPARTMENT_ADOPTED_NODE is true"
+  },
   "CYCLE_COLLECTOR": {
     "kind": "exponential",
     "high": "10000",

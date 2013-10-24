@@ -309,7 +309,7 @@ bool TheoraState::Init() {
   }
 
   mCtx = th_decode_alloc(&mInfo, mSetup);
-  if (mCtx == NULL) {
+  if (mCtx == nullptr) {
     return mActive = false;
   }
 
@@ -838,7 +838,7 @@ OpusState::OpusState(ogg_page* aBosPage) :
   mChannelMapping(0),
   mStreams(0),
   mCoupledStreams(0),
-  mDecoder(NULL),
+  mDecoder(nullptr),
   mSkip(0),
   mPrevPacketGranulepos(0),
   mPrevPageGranulepos(0)
@@ -852,7 +852,7 @@ OpusState::~OpusState() {
 
   if (mDecoder) {
     opus_multistream_decoder_destroy(mDecoder);
-    mDecoder = NULL;
+    mDecoder = nullptr;
   }
 }
 
@@ -893,7 +893,7 @@ bool OpusState::Init(void)
 
   int error;
 
-  NS_ASSERTION(mDecoder == NULL, "leaking OpusDecoder");
+  NS_ASSERTION(mDecoder == nullptr, "leaking OpusDecoder");
 
   mDecoder = opus_multistream_decoder_create(mRate,
                                              mChannels,

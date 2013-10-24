@@ -25,9 +25,6 @@ CPP_SOURCES += [
     'EventTokenBucket.cpp',
     'LoadContextInfo.cpp',
     'NetworkActivityMonitor.cpp',
-    'ProxyAutoConfig.cpp',
-    'RedirectChannelRegistrar.cpp',
-    'Tickler.cpp',
     'nsAsyncRedirectVerifyHelper.cpp',
     'nsAsyncStreamCopier.cpp',
     'nsAuthInformationHolder.cpp',
@@ -36,17 +33,17 @@ CPP_SOURCES += [
     'nsBaseContentStream.cpp',
     'nsBufferedStreams.cpp',
     'nsChannelClassifier.cpp',
-    'nsDNSPrefetch.cpp',
     'nsDirectoryIndexStream.cpp',
+    'nsDNSPrefetch.cpp',
     'nsDownloader.cpp',
     'nsFileStreams.cpp',
-    'nsIOService.cpp',
     'nsIncrementalDownload.cpp',
     'nsInputStreamChannel.cpp',
     'nsInputStreamPump.cpp',
+    'nsIOService.cpp',
     'nsLoadGroup.cpp',
-    'nsMIMEInputStream.cpp',
     'nsMediaFragmentURIParser.cpp',
+    'nsMIMEInputStream.cpp',
     'nsNetAddr.cpp',
     'nsNetStrings.cpp',
     'nsPACMan.cpp',
@@ -70,11 +67,14 @@ CPP_SOURCES += [
     'nsTemporaryFileInputStream.cpp',
     'nsTransportUtils.cpp',
     'nsUDPServerSocket.cpp',
+    'nsUnicharStreamLoader.cpp',
     'nsURIChecker.cpp',
     'nsURLHelper.cpp',
     'nsURLParsers.cpp',
-    'nsUnicharStreamLoader.cpp',
+    'ProxyAutoConfig.cpp',
+    'RedirectChannelRegistrar.cpp',
     'StreamingProtocolService.cpp',
+    'Tickler.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
@@ -83,9 +83,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     CPP_SOURCES += [
-        'nsURLHelperWin.cpp',
-        'nsNativeConnectionHelper.cpp',
         'nsAutodialWin.cpp',
+        'nsNativeConnectionHelper.cpp',
+        'nsURLHelperWin.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CPP_SOURCES += [
