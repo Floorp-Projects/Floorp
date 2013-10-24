@@ -31,6 +31,7 @@ from .data import (
     PreprocessedWebIDLFile,
     Program,
     ReaderSummary,
+    SandboxWrapped,
     TestWebIDLFile,
     TestManifest,
     VariablePassthru,
@@ -247,6 +248,9 @@ class TreeMetadataEmitter(LoggingMixin):
             for path in sandbox.get('%s_MANIFESTS' % prefix, []):
                 for obj in self._process_test_manifest(sandbox, info, path):
                     yield obj
+
+        for name, jar in sandbox.get('JAVA_JAR_TARGETS', {}).items():
+            yield SandboxWrapped(sandbox, jar)
 
     def _process_test_manifest(self, sandbox, info, manifest_path):
         flavor, install_prefix, filter_inactive = info
