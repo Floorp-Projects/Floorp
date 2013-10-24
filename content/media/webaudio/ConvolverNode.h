@@ -13,8 +13,6 @@
 namespace mozilla {
 namespace dom {
 
-template <class T> class PlayingRefChangeHandler;
-
 class ConvolverNode : public AudioNode
 {
 public:
