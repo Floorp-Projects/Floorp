@@ -729,6 +729,10 @@ class AsmJSModule
         JS_ASSERT(linked_);
         return heapDatum();
     }
+    ArrayBufferObject *maybeHeapBufferObject() const {
+        JS_ASSERT(linked_);
+        return maybeHeap_;
+    }
     size_t heapLength() const {
         JS_ASSERT(linked_);
         return maybeHeap_ ? maybeHeap_->byteLength() : 0;

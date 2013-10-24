@@ -60,6 +60,7 @@ class AsmJSActivation
 
     JSContext *cx() { return cx_; }
     AsmJSModule &module() const { return module_; }
+    AsmJSActivation *prev() const { return prev_; }
 
     // Read by JIT code:
     static unsigned offsetOfContext() { return offsetof(AsmJSActivation, cx_); }
