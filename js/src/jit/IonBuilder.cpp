@@ -8045,21 +8045,32 @@ IonBuilder::jsop_getprop(PropertyName *name)
     bool barrier = PropertyReadNeedsTypeBarrier(cx, context(), constraints(),
                                                 current->peek(-1), name, types);
 
-    // Try to hardcode known constants.
-    if (!getPropTryConstant(&emitted, name, types) || emitted)
-        return emitted;
-
-    // Except when loading constants above, always use a call if we are doing
-    // the definite properties analysis and not actually emitting code, to
-    // simplify later analysis. Also skip deeper analysis if there are no known
-    // types for this operation, as it will always invalidate when executing.
+    // Always use a call if we are doing the definite properties analysis and
+    // not actually emitting code, to simplify later analysis. Also skip deeper
+    // analysis if there are no known types for this operation, as it will
+    // always invalidate when executing.
     if (info().executionMode() == DefinitePropertiesAnalysis || types->empty()) {
-        MDefinition *obj = current->pop();
+        MDefinition *obj = current->peek(-1);
         MCallGetProperty *call = MCallGetProperty::New(obj, name, *pc == JSOP_CALLPROP);
         current->add(call);
+
+        // During the definite properties analysis we can still try to bake in
+        // constants read off the prototype chain, to allow inlining later on.
+        // In this case we still need the getprop call so that the later
+        // analysis knows when the |this| value has been read from.
+        if (info().executionMode() == DefinitePropertiesAnalysis) {
+            if (!getPropTryConstant(&emitted, name, types) || emitted)
+                return emitted;
+        }
+
+        current->pop();
         current->push(call);
         return resumeAfter(call) && pushTypeBarrier(call, types, true);
     }
+
+    // Try to hardcode known constants.
+    if (!getPropTryConstant(&emitted, name, types) || emitted)
+        return emitted;
 
     // Try to emit loads from known binary data blocks
     if (!getPropTryTypedObject(&emitted, name, types) || emitted)
