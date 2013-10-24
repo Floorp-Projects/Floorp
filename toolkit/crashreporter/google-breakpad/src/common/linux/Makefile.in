@@ -17,9 +17,6 @@ endif
 
 DEFINES += -DNO_STABS_SUPPORT
 
-# need static lib
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=741348#c11

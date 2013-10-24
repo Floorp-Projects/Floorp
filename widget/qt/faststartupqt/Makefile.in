@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIST_INSTALL = 1
-FORCE_STATIC_LIB = 1
 STL_FLAGS=
 
 EXTRA_DSO_LDOPTS = \

@@ -26,3 +26,5 @@ EXTRA_COMPONENTS += [
     'nsSetDefaultBrowser.js',
     'nsSetDefaultBrowser.manifest',
 ]
+
+FORCE_STATIC_LIB = True

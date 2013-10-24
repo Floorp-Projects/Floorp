@@ -16,3 +16,4 @@ if CONFIG['MOZ_LIBSTDCXX_HOST_VERSION']:
         'stdc++compat.cpp',
     ]
 
+FORCE_STATIC_LIB = True
