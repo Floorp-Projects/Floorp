@@ -216,8 +216,8 @@ MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFI
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 ifdef _MSC_VER
-CC_WRAPPER = $(call py_action,cl)
-CXX_WRAPPER = $(call py_action,cl)
+CC_WRAPPER ?= $(call py_action,cl)
+CXX_WRAPPER ?= $(call py_action,cl)
 endif # _MSC_VER
 
 CC := $(CC_WRAPPER) $(CC)
