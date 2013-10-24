@@ -97,6 +97,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("liveGroup", {"container-live-role" : "group"}, true);
       testAttrs("liveGroupChild", {"container-live-role" : "group"}, true);
 
+      // text input type
+      testAbsentAttrs("button", { "text-input-type": "button"});
+      testAbsentAttrs("checkbox", { "text-input-type": "checkbox"});
+      testAbsentAttrs("radio", { "text-input-type": "radio"});
+      testAttrs("email", {"text-input-type" : "email"}, true);
+      testAttrs("search", {"text-input-type" : "search"}, true);
+      testAttrs("tel", {"text-input-type" : "tel"}, true);
+      testAttrs("url", {"text-input-type" : "url"}, true);
+
       // html
       testAttrs("radio", {"checkable" : "true"}, true); 
       testAttrs("checkbox", {"checkable" : "true"}, true); 
@@ -222,6 +231,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="liveGroup" role="group" aria-live="polite">
     excuse <div id="liveGroupChild">me</div>
   </div>
+
+  <!-- text input type -->
+  <input id="button" type="button"/>
+  <input id="email" type="email"/>
+  <input id="search" type="search"/>
+  <input id="tel" type="tel"/>
+  <input id="url" type="url"/>
 
   <!-- html -->
   <input id="radio" type="radio"/>
