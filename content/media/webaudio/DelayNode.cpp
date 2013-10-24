@@ -92,18 +92,17 @@ public:
         NS_DispatchToMainThread(refchanged);
       }
       mLeftOverData = mProcessor.MaxDelayFrames();
-    } else if (mLeftOverData != INT32_MIN) {
-      if (mLeftOverData <= 0) {
-        // Continue spamming the main thread with messages until we are destroyed.
-        // This isn't great.
-        mLeftOverData = 0;
+    } else if (mLeftOverData > 0) {
+      mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
+    } else {
+      if (mLeftOverData != INT32_MIN) {
+        mLeftOverData = INT32_MIN;
         playedBackAllLeftOvers = true;
 
         nsRefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
         NS_DispatchToMainThread(refchanged);
       }
-      mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
     }
 
     AllocateAudioBlock(numChannels, aOutput);
