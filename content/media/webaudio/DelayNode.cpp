@@ -84,7 +84,6 @@ public:
                                  mProcessor.BufferChannelCount() :
                                  aInput.mChannelData.Length();
 
-    bool playedBackAllLeftOvers = false;
     if (!aInput.IsNull()) {
       if (mLeftOverData <= 0) {
         nsRefPtr<PlayingRefChanged> refchanged =
@@ -97,12 +96,15 @@ public:
     } else {
       if (mLeftOverData != INT32_MIN) {
         mLeftOverData = INT32_MIN;
-        playedBackAllLeftOvers = true;
+        // Delete our buffered data now we no longer need it
+        mProcessor.Reset();
 
         nsRefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
         NS_DispatchToMainThread(refchanged);
       }
+      *aOutput = aInput;
+      return;
     }
 
     AllocateAudioBlock(numChannels, aOutput);
@@ -148,12 +150,6 @@ public:
       }
       mProcessor.Process(computedDelay, inputChannels, outputChannels,
                          numChannels, WEBAUDIO_BLOCK_SIZE);
-    }
-
-
-    if (playedBackAllLeftOvers) {
-      // Delete our buffered data once we no longer need it
-      mProcessor.Reset();
     }
   }
 
