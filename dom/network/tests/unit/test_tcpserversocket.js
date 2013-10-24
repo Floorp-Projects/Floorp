@@ -202,7 +202,7 @@ function openSockInClosingServer() {
     '127.0.0.1', PORT, options);
 
   sock.onopen = makeFailureCase('open');
-  sock.onerror = success();
+  sock.onerror = success;
 }
 
 /**
@@ -300,13 +300,4 @@ function run_test() {
     Services.prefs.setBoolPref('dom.mozTCPSocket.enabled', true);
 
   run_next_test();
-
-  do_timeout(10000, function() {
-    if (server) {
-      server.close();
-    }
-
-    do_throw(
-      "The test should never take this long unless the system is hosed.");
-  });
 }
