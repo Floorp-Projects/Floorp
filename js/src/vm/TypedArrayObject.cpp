@@ -556,6 +556,7 @@ ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj)
 bool
 ArrayBufferObject::neuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buffer)
 {
+#ifdef JS_ION
     AsmJSActivation *act = cx->mainThread().asmJSActivationStackFromOwnerThread();
     for (; act; act = act->prev()) {
         if (act->module().maybeHeapBufferObject() == &buffer)
@@ -566,6 +567,9 @@ ArrayBufferObject::neuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buff
 
     js_ReportOverRecursed(cx);
     return false;
+#else
+    return true;
+#endif
 }
 
 void
