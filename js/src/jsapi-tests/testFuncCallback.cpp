@@ -133,8 +133,8 @@ JSContext *createContext()
     JSContext *cx = JSAPITest::createContext();
     if (!cx)
         return nullptr;
-    ContextOptionsRef(cx).setBaseline(true)
-                         .setIon(true);
+    JS::ContextOptionsRef(cx).setBaseline(true)
+                             .setIon(true);
     return cx;
 }
 
