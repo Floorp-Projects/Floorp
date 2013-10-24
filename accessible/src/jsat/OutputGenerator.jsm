@@ -204,19 +204,6 @@ this.OutputGenerator = {
       landmark);
   },
 
-  /**
-   * Adds an entry type attribute to the description if available.
-   * @param {Array} aDesc Description array.
-   * @param {nsIAccessible} aAccessible current accessible object.
-   */
-  _addType: function _addType(aDesc, aAccessible) {
-    let typeName = Utils.getAttributes(aAccessible)['text-input-type'];
-    if (!typeName) {
-      return;
-    }
-    aDesc.push(gStringBundle.GetStringFromName('textInputType_' + typeName));
-  },
-
   get outputOrder() {
     if (!this._utteranceOrder) {
       this._utteranceOrder = new PrefCache('accessibility.accessfu.utterance');
@@ -319,10 +306,8 @@ this.OutputGenerator = {
       if (aFlags & INCLUDE_DESC) {
         let desc = this._getLocalizedStates(aStates);
         let roleStr = this._getLocalizedRole(aRoleStr);
-        if (roleStr) {
-          this._addType(desc, aAccessible);
+        if (roleStr)
           desc.push(roleStr);
-        }
         output.push(desc.join(' '));
       }
 
