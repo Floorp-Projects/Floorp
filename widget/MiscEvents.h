@@ -63,6 +63,17 @@ public:
 
   bool mSucceeded; // [out]
   bool mIsEnabled; // [out]
+
+  void AssignContentCommandEventData(const WidgetContentCommandEvent& aEvent,
+                                     bool aCopyTargets)
+  {
+    AssignGUIEventData(aEvent, aCopyTargets);
+
+    mScroll = aEvent.mScroll;
+    mOnlyEnabledCheck = aEvent.mOnlyEnabledCheck;
+    mSucceeded = aEvent.mSucceeded;
+    mIsEnabled = aEvent.mIsEnabled;
+  }
 };
 
 /******************************************************************************
