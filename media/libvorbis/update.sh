@@ -47,4 +47,4 @@ cp $1/COPYING ./COPYING
 cp $1/README ./README
 cp $1/AUTHORS ./AUTHORS
 
-patch -p3 < ./alloca.diff
+# Add any patches against upstream here.
