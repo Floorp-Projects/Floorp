@@ -654,10 +654,6 @@ def main():
                 osInfo = dm.getInfo("os")
                 devOS = " ".join(osInfo['os'])
 
-                # Bug 900664: stock browser db not available on x86 emulator
-                if ("sdk_x86" in devOS):
-                    continue
-
                 if ("pandaboard" in devOS):
                     delete = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]
                 else:
