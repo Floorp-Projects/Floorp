@@ -108,12 +108,10 @@ ssl_Do1stHandshake(sslSocket *ss)
 	    if ((ss->handshakeCallback != NULL) && /* has callback */
 		(!ss->firstHsDone) &&              /* only first time */
 		(ss->version < SSL_LIBRARY_VERSION_3_0)) {  /* not ssl3 */
-		ss->firstHsDone = PR_TRUE;
-		ss->enoughFirstHsDone = PR_TRUE;
+		ss->firstHsDone     = PR_TRUE;
 		(ss->handshakeCallback)(ss->fd, ss->handshakeCallbackData);
 	    }
-	    ss->firstHsDone = PR_TRUE;
-	    ss->enoughFirstHsDone = PR_TRUE;
+	    ss->firstHsDone         = PR_TRUE;
 	    ss->gs.writeOffset = 0;
 	    ss->gs.readOffset  = 0;
 	    break;
@@ -208,7 +206,6 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     ssl_Get1stHandshakeLock(ss);
 
     ss->firstHsDone = PR_FALSE;
-    ss->enoughFirstHsDone = PR_FALSE;
     if ( asServer ) {
 	ss->handshake = ssl2_BeginServerHandshake;
 	ss->handshaking = sslHandshakingAsServer;
@@ -224,8 +221,6 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     ssl_ReleaseRecvBufLock(ss);
 
     ssl_GetSSL3HandshakeLock(ss);
-    ss->ssl3.hs.canFalseStart = PR_FALSE;
-    ss->ssl3.hs.restartTarget = NULL;
 
     /*
     ** Blow away old security state and get a fresh setup.
@@ -332,74 +327,6 @@ SSL_HandshakeCallback(PRFileDesc *fd, SSLHandshakeCallback cb,
 
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
-
-    return SECSuccess;
-}
-
-/* Register an application callback to be called when false start may happen.
-** Acquires and releases HandshakeLock.
-*/
-SECStatus
-SSL_SetCanFalseStartCallback(PRFileDesc *fd, SSLCanFalseStartCallback cb,
-			     void *client_data)
-{
-    sslSocket *ss;
-
-    ss = ssl_FindSocket(fd);
-    if (!ss) {
-	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_SetCanFalseStartCallback",
-		 SSL_GETPID(), fd));
-	return SECFailure;
-    }
-
-    if (!ss->opt.useSecurity) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
-    }
-
-    ssl_Get1stHandshakeLock(ss);
-    ssl_GetSSL3HandshakeLock(ss);
-
-    ss->canFalseStartCallback     = cb;
-    ss->canFalseStartCallbackData = client_data;
-
-    ssl_ReleaseSSL3HandshakeLock(ss);
-    ssl_Release1stHandshakeLock(ss);
-
-    return SECSuccess;
-}
-
-/* A utility function that can be called from a custom CanFalseStartCallback
-** function to determine what NSS would have done for this connection if the
-** custom callback was not implemented.
-*/
-SECStatus
-SSL_DefaultCanFalseStart(PRFileDesc *fd, PRBool *canFalseStart)
-{
-    sslSocket *ss;
-    *canFalseStart = PR_FALSE;
-    ss = ssl_FindSocket(fd);
-    if (!ss) {
-	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_DefaultCanFalseStart",
-		 SSL_GETPID(), fd));
-	return SECFailure;
-    }
-
-    if (!ss->ssl3.initialized) {
-	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
-	return SECFailure;
-    }
-
-    if (ss->version <= SSL_LIBRARY_VERSION_3_0) {
-	PORT_SetError(SSL_ERROR_FEATURE_NOT_SUPPORTED_FOR_VERSION);
-	return SECFailure;
-    }
-
-    /* Require a forward-secret key exchange. */
-    *canFalseStart = ss->ssl3.hs.kea_def->kea == kea_dhe_dss ||
-		     ss->ssl3.hs.kea_def->kea == kea_dhe_rsa ||
-		     ss->ssl3.hs.kea_def->kea == kea_ecdhe_ecdsa ||
-		     ss->ssl3.hs.kea_def->kea == kea_ecdhe_rsa;
 
     return SECSuccess;
 }
@@ -1268,7 +1195,12 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 	ssl_Get1stHandshakeLock(ss);
 	if (ss->version >= SSL_LIBRARY_VERSION_3_0) {
 	    ssl_GetSSL3HandshakeLock(ss);
-	    canFalseStart = ss->ssl3.hs.canFalseStart;
+	    if ((ss->ssl3.hs.ws == wait_change_cipher ||
+		ss->ssl3.hs.ws == wait_finished ||
+		ss->ssl3.hs.ws == wait_new_session_ticket) &&
+		ssl3_CanFalseStart(ss)) {
+		canFalseStart = PR_TRUE;
+	    }
 	    ssl_ReleaseSSL3HandshakeLock(ss);
 	}
 	if (!canFalseStart &&

@@ -1,6 +1,2 @@
 This directory contains patches that were added locally
 on top of the NSS release.
-
-bug-713933-false-start.patch: First iteration of false start. The patch will be
-                              further modified to make it work for Chromium and
-			      other projects before being checked in.

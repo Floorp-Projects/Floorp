@@ -399,6 +399,8 @@ const char * V2CipherString(int cs_int)
   case 0x000099:    cs_str = "TLS/DHE-DSS/SEED-CBC/SHA";	break;     
   case 0x00009A:    cs_str = "TLS/DHE-RSA/SEED-CBC/SHA";	break;     
   case 0x00009B:    cs_str = "TLS/DH-ANON/SEED-CBC/SHA";	break;     
+  case 0x00009C:    cs_str = "TLS/RSA/AES128-GCM/SHA256";	break;     
+  case 0x00009E:    cs_str = "TLS/DHE-RSA/AES128-GCM/SHA256";	break;     
 
   case 0x0000FF:    cs_str = "TLS_EMPTY_RENEGOTIATION_INFO_SCSV"; break;
 
@@ -438,6 +440,7 @@ const char * V2CipherString(int cs_int)
   case 0x00C02A:    cs_str = "TLS/ECDH-RSA/AES256-CBC/SHA384"; break;
   case 0x00C02B:    cs_str = "TLS/ECDHE-ECDSA/AES128-GCM/SHA256"; break;
   case 0x00C02C:    cs_str = "TLS/ECDHE-ECDSA/AES256-GCM/SHA384"; break;
+  case 0x00C02F:    cs_str = "TLS/ECDHE-RSA/AES128-GCM/SHA256"; break;
 
   case 0x00FEFF:    cs_str = "SSL3/RSA-FIPS/3DESEDE-CBC/SHA";	break;
   case 0x00FEFE:    cs_str = "SSL3/RSA-FIPS/DES-CBC/SHA";	break;

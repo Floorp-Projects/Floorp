@@ -293,12 +293,12 @@ SECStatus SECOID_SetAlgorithmID(PLArenaPool *arena, SECAlgorithmID *aid,
 }
 
 SECStatus SECOID_CopyAlgorithmID(PLArenaPool *arena, SECAlgorithmID *dest,
-				    SECAlgorithmID *src)
+				 const SECAlgorithmID *src)
 {
     return SECOID_CopyAlgorithmID_Util(arena, dest, src);
 }
 
-SECOidTag SECOID_GetAlgorithmTag(SECAlgorithmID *aid)
+SECOidTag SECOID_GetAlgorithmTag(const SECAlgorithmID *aid)
 {
     return SECOID_GetAlgorithmTag_Util(aid);
 }
