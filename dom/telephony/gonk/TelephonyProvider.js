@@ -18,8 +18,11 @@ const GONK_TELEPHONYPROVIDER_CONTRACTID =
 const GONK_TELEPHONYPROVIDER_CID =
   Components.ID("{67d26434-d063-4d28-9f48-5b3189788155}");
 
-const kPrefenceChangedObserverTopic = "nsPref:changed";
-const kXpcomShutdownObserverTopic   = "xpcom-shutdown";
+const NS_XPCOM_SHUTDOWN_OBSERVER_ID   = "xpcom-shutdown";
+
+const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
+
+const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 
 const nsIAudioManager = Ci.nsIAudioManager;
 const nsITelephonyProvider = Ci.nsITelephonyProvider;
@@ -84,8 +87,9 @@ function TelephonyProvider() {
 
   this._updateDebugFlag();
 
-  Services.obs.addObserver(this, kPrefenceChangedObserverTopic, false);
-  Services.obs.addObserver(this, kXpcomShutdownObserverTopic, false);
+  Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
+
+  Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 }
 TelephonyProvider.prototype = {
   classID: GONK_TELEPHONYPROVIDER_CID,
@@ -265,7 +269,7 @@ TelephonyProvider.prototype = {
   _updateDebugFlag: function _updateDebugFlag() {
     try {
       DEBUG = RIL.DEBUG_RIL ||
-              Services.prefs.getBoolPref("ril.debugging.enabled");
+              Services.prefs.getBoolPref(kPrefRilDebuggingEnabled);
     } catch (e) {}
   },
 
@@ -506,18 +510,17 @@ TelephonyProvider.prototype = {
 
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case kPrefenceChangedObserverTopic:
-        if (aData === "ril.debugging.enabled") {
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
+        if (aData === kPrefRilDebuggingEnabled) {
           this._updateDebugFlag();
         }
         break;
 
-      case kXpcomShutdownObserverTopic:
+      case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
         // Cancel the timer for the call-ring wake lock.
         this._cancelCallRingWakeLockTimer();
 
-        Services.obs.removeObserver(this, kPrefenceChangedObserverTopic);
-        Services.obs.removeObserver(this, kXpcomShutdownObserverTopic);
+        Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         break;
     }
   }
