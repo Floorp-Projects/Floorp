@@ -792,7 +792,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
     if(comp->nominated){
       if(comp->nominated->priority > pair->priority)
         return(0);
-      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): replacing pair %s with CAND-PAIR(%s)",comp->stream->pctx->label,comp->stream->label,comp->component_id,comp->nominated->codeword,comp->nominated->as_string,pair->codeword);
+      r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): replacing pair %s with CAND-PAIR(%s)",comp->stream->pctx->label,comp->stream->label,comp->component_id,comp->nominated->codeword,comp->nominated->as_string,pair->codeword);
     }
 
     /* Set the new nominated pair */
@@ -801,7 +801,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
     comp->nominated=pair;
     comp->active=pair;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling all pairs but %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->codeword,pair->as_string);
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling all pairs but %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->codeword,pair->as_string);
 
     /* Cancel checks in WAITING and FROZEN per ICE S 8.1.2 */
     p2=TAILQ_FIRST(&comp->stream->check_list);
@@ -810,7 +810,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
          (p2->remote->component->component_id == comp->component_id) &&
          ((p2->state == NR_ICE_PAIR_STATE_FROZEN) ||
 	  (p2->state == NR_ICE_PAIR_STATE_WAITING))) {
-        r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling FROZEN/WAITING pair %s because CAND-PAIR(%s) was nominated.",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->codeword,p2->as_string,pair->codeword);
+        r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling FROZEN/WAITING pair %s because CAND-PAIR(%s) was nominated.",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->codeword,p2->as_string,pair->codeword);
 
         if(r=nr_ice_candidate_pair_cancel(pair->pctx,p2))
           ABORT(r);
