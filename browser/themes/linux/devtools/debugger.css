@@ -22,56 +22,29 @@
   font-weight: bold;
 }
 
-#sources .side-menu-widget-item-checkbox {
-  -moz-appearance: none;
-  opacity: 0;
-  transition: opacity .15s ease 0s;
+#black-box {
+  list-style-image: url(debugger-blackbox.png);
+  -moz-image-region: rect(0px,16px,16px,0px);
 }
 
-/* Only show the checkbox when the source is hovered over, is selected, or if it
- * is not checked. */
-#sources .side-menu-widget-item:hover > .side-menu-widget-item-checkbox,
-#sources .side-menu-widget-item.selected > .side-menu-widget-item-checkbox,
-#sources .side-menu-widget-item-checkbox:not([checked]) {
-  opacity: 1;
-  transition: opacity .15s ease 0s;
+#black-box[checked] {
+  -moz-image-region: rect(0px,32px,16px,16px);
 }
 
-#sources .side-menu-widget-item-checkbox > .checkbox-spacer-box {
-  -moz-appearance: none;
-}
-
-#sources .side-menu-widget-item-checkbox > .checkbox-spacer-box > .checkbox-check {
-  -moz-appearance: none;
-  background: none;
-  background-image: url(itemToggle.png);
-  background-repeat: no-repeat;
-  background-clip: content-box;
-  background-size: 32px 16px;
-  background-position: -16px 0;
-  width: 16px;
-  height: 16px;
-  border: 0;
-}
-
-#sources .side-menu-widget-item-checkbox[checked] > .checkbox-spacer-box > .checkbox-check {
-  background-position: 0 0;
-}
-
-#sources .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents {
+#sources .black-boxed {
   color: #888;
 }
 
-#sources .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents > .dbg-breakpoint {
+#sources .black-boxed > .dbg-breakpoint {
   display: none;
 }
 
-#sources .side-menu-widget-item.selected > .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
+#sources .black-boxed + .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
   background-image: none;
   box-shadow: inset -1px 0 0 #222426;
 }
 
-#sources .side-menu-widget-item.selected > .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
+#sources .black-boxed + .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
   background-image: none;
   box-shadow: inset 1px 0 0 #222426;
 }
@@ -147,7 +120,7 @@
 /* Sources and breakpoints view */
 
 .dbg-breakpoint {
-  -moz-margin-start: -14px;
+  -moz-margin-start: 4px;
 }
 
 .dbg-breakpoint-line {
@@ -402,7 +375,8 @@
   list-style-image: url("chrome://browser/skin/devtools/debugger-step-out.png");
 }
 
-#debugger-controls > toolbarbutton {
+#debugger-controls > toolbarbutton,
+#sources-controls > toolbarbutton {
   margin: 0;
   box-shadow: none;
   border-radius: 0;
@@ -411,11 +385,13 @@
   outline-offset: -3px;
 }
 
-#debugger-controls > toolbarbutton:last-of-type {
+#debugger-controls > toolbarbutton:last-of-type,
+#sources-controls > toolbarbutton:last-of-type {
   -moz-border-end-width: 0;
 }
 
-#debugger-controls {
+#debugger-controls,
+#sources-controls {
   box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset,
               0 0 0 1px hsla(210,16%,76%,.15) inset,
               0 1px 0 hsla(210,16%,76%,.15);

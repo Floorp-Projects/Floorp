@@ -40,7 +40,7 @@ function testBlackBoxStack() {
 }
 
 function testBlackBoxSource() {
-  let finished = waitForThreadEvents(gPanel, "blackboxchange").then(aSource => {
+  return toggleBlackBoxing(gPanel, BLACKBOXME_URL).then(aSource => {
     ok(aSource.isBlackBoxed, "The source should be black boxed now.");
 
     is(gFrames.itemCount, 3,
@@ -48,15 +48,6 @@ function testBlackBoxSource() {
     is(gDebugger.document.querySelectorAll(".dbg-stackframe-black-boxed").length, 1,
       "And one of them should be the combined black boxed frames.");
   });
-
-  getBlackBoxCheckbox(BLACKBOXME_URL).click();
-  return finished;
-}
-
-function getBlackBoxCheckbox(aUrl) {
-  return gDebugger.document.querySelector(
-    ".side-menu-widget-item[tooltiptext=\"" + aUrl + "\"] " +
-    ".side-menu-widget-item-checkbox");
 }
 
 registerCleanupFunction(function() {
