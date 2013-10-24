@@ -4,321 +4,9 @@
 
 DIST_FILES = package-name.txt
 
-include $(topsrcdir)/mobile/android/base/android-services-files.mk
-
-MOZGLUE_JAVA_FILES := \
-  mozglue/ByteBufferInputStream.java \
-  mozglue/DirectBufferAllocator.java \
-  mozglue/GeneratableAndroidBridgeTarget.java \
-  mozglue/NativeReference.java \
-  mozglue/NativeZip.java \
-  mozglue/OptionalGeneratedParameter.java \
-  $(NULL)
-
-MOZGLUE_PP_JAVA_FILES := \
-  mozglue/GeckoLoader.java \
-  $(NULL)
-
-UTIL_JAVA_FILES := \
-  util/ActivityResultHandler.java \
-  util/ActivityResultHandlerMap.java \
-  util/Clipboard.java \
-  util/EventDispatcher.java \
-  util/FloatUtils.java \
-  util/GamepadUtils.java \
-  util/GeckoBackgroundThread.java \
-  util/GeckoEventListener.java \
-  util/GeckoEventResponder.java \
-  util/GeckoJarReader.java \
-  util/HardwareUtils.java \
-  util/INIParser.java \
-  util/INISection.java \
-  util/JSONUtils.java \
-  util/StringUtils.java \
-  util/ThreadUtils.java \
-  util/UiAsyncTask.java \
-  $(NULL)
-
-FENNEC_JAVA_FILES = \
-  ANRReporter.java \
-  ActivityHandlerHelper.java \
-  AlertNotification.java \
-  AlignRightLinkPreference.java \
-  AllCapsTextView.java \
-  AndroidImport.java \
-  AndroidImportPreference.java \
-  AnimatedHeightLayout.java \
-  AppNotificationClient.java \
-  AutocompleteHandler.java \
-  animation/AnimatorProxy.java \
-  animation/HeightChangeAnimation.java \
-  animation/PropertyAnimator.java \
-  animation/Rotate3DAnimation.java \
-  animation/ViewHelper.java \
-  BackButton.java \
-  BaseGeckoInterface.java \
-  BrowserApp.java \
-  BrowserToolbar.java \
-  BrowserToolbarBackground.java \
-  CameraImageResultHandler.java \
-  CameraVideoResultHandler.java \
-  CanvasDelegate.java \
-  CheckableLinearLayout.java \
-  ClickableWhenDisabledEditText.java \
-  ContactService.java \
-  ContextGetter.java \
-  CustomEditText.java \
-  db/BrowserDB.java \
-  db/LocalBrowserDB.java \
-  db/DBUtils.java \
-  DataReportingNotification.java \
-  Distribution.java \
-  DoorHanger.java \
-  DoorHangerPopup.java \
-  EditBookmarkDialog.java \
-  favicons/cache/FaviconCache.java \
-  favicons/cache/FaviconCacheElement.java \
-  favicons/cache/FaviconsForURL.java \
-  favicons/Favicons.java \
-  favicons/LoadFaviconTask.java \
-  favicons/OnFaviconLoadedListener.java \
-  FilePickerResultHandler.java \
-  FilePickerResultHandlerSync.java \
-  FindInPageBar.java \
-  FlowLayout.java \
-  FontSizePreference.java \
-  FormAssistPopup.java \
-  ForwardButton.java \
-  GeckoAccessibility.java \
-  GeckoApplication.java \
-  GeckoApp.java \
-  GeckoAppShell.java \
-  GeckoActivity.java \
-  GeckoBatteryManager.java \
-  GeckoConnectivityReceiver.java \
-  GeckoEditable.java \
-  GeckoEvent.java \
-  GeckoHalDefines.java \
-  GeckoInputConnection.java \
-  GeckoMessageReceiver.java \
-  GeckoPreferences.java \
-  GeckoPreferenceFragment.java \
-  GeckoProfile.java \
-  GeckoSmsManager.java \
-  GeckoThread.java \
-  GeckoJavaSampler.java \
-  GlobalHistory.java \
-  GeckoView.java \
-  health/BrowserHealthRecorder.java \
-  health/BrowserHealthReporter.java \
-  InputMethods.java \
-  JavaAddonManager.java \
-  LightweightTheme.java \
-  LightweightThemeDrawable.java \
-  LinkPreference.java \
-  MemoryMonitor.java \
-  MotionEventInterceptor.java \
-  MultiChoicePreference.java \
-  NotificationClient.java \
-  NotificationHandler.java \
-  NotificationHelper.java \
-  NotificationService.java \
-  NSSBridge.java \
-  OrderedBroadcastHelper.java \
-  PageActionLayout.java \
-  PrefsHelper.java \
-  PrivateDataPreference.java \
-  PrivateTab.java \
-  prompts/Prompt.java \
-  prompts/PromptInput.java \
-  prompts/PromptService.java \
-  prompts/IconGridInput.java \
-  Restarter.java \
-  sqlite/ByteBufferInputStream.java \
-  sqlite/MatrixBlobCursor.java \
-  sqlite/SQLiteBridge.java \
-  sqlite/SQLiteBridgeException.java \
-  ReaderModeUtils.java \
-  RemoteTabs.java \
-  RobocopAPI.java \
-  ServiceNotificationClient.java \
-  ScrollAnimator.java \
-  SessionParser.java \
-  ShapedButton.java \
-  SharedPreferencesHelper.java \
-  SiteIdentityPopup.java \
-  SmsManager.java \
-  SurfaceBits.java \
-  SyncPreference.java \
-  Tab.java \
-  TabCounter.java \
-  Tabs.java \
-  TabsPanel.java \
-  TabsTray.java \
-  TabsAccessor.java \
-  Telemetry.java \
-  TextSelection.java \
-  TextSelectionHandle.java \
-  ThumbnailHelper.java \
-  TouchEventInterceptor.java \
-  VideoPlayer.java \
-  WebAppAllocator.java \
-  WebAppImpl.java \
-  ZoomConstraints.java \
-  db/BrowserContract.java \
-  db/BrowserProvider.java \
-  db/FormHistoryProvider.java \
-  db/PerProfileContentProvider.java \
-  db/PasswordsProvider.java \
-  db/TabsProvider.java \
-  gfx/Axis.java \
-  gfx/BitmapUtils.java \
-  gfx/BufferedCairoImage.java \
-  gfx/CairoGLInfo.java \
-  gfx/CairoImage.java \
-  gfx/CairoUtils.java \
-  gfx/DisplayPortCalculator.java \
-  gfx/DisplayPortMetrics.java \
-  gfx/DrawTimingQueue.java \
-  gfx/FloatSize.java \
-  gfx/GeckoLayerClient.java \
-  gfx/GfxInfoThread.java \
-  gfx/GLController.java \
-  gfx/ImmutableViewportMetrics.java \
-  gfx/InputConnectionHandler.java \
-  gfx/IntSize.java \
-  gfx/JavaPanZoomController.java \
-  gfx/Layer.java \
-  gfx/LayerMarginsAnimator.java \
-  gfx/LayerRenderer.java \
-  gfx/LayerView.java \
-  gfx/NativePanZoomController.java \
-  gfx/NinePatchTileLayer.java \
-  gfx/Overscroll.java \
-  gfx/PanningPerfAPI.java \
-  gfx/PanZoomController.java \
-  gfx/PanZoomTarget.java \
-  gfx/PluginLayer.java \
-  gfx/PointUtils.java \
-  gfx/ProgressiveUpdateData.java \
-  gfx/RectUtils.java \
-  gfx/RenderTask.java \
-  gfx/ScrollbarLayer.java \
-  gfx/SimpleScaleGestureDetector.java \
-  gfx/SingleTileLayer.java \
-  gfx/SubdocumentScrollHelper.java \
-  gfx/TextLayer.java \
-  gfx/TextureGenerator.java \
-  gfx/TextureReaper.java \
-  gfx/TileLayer.java \
-  gfx/TouchEventHandler.java \
-  gfx/ViewTransform.java \
-  gfx/VirtualLayer.java \
-  home/BookmarksListAdapter.java \
-  home/BookmarksListView.java \
-  home/BookmarksPage.java \
-  home/BookmarkFolderView.java \
-  home/BrowserSearch.java \
-  home/HistoryPage.java \
-  home/HomeFragment.java \
-  home/HomeListView.java \
-  home/HomePager.java \
-  home/HomePagerTabStrip.java \
-  home/HomeBanner.java \
-  home/FadedTextView.java \
-  home/LastTabsPage.java \
-  home/MostRecentPage.java \
-  home/MultiTypeCursorAdapter.java \
-  home/PinSiteDialog.java \
-  home/ReadingListPage.java \
-  home/SearchEngine.java \
-  home/SearchEngineRow.java \
-  home/SearchLoader.java \
-  home/SimpleCursorLoader.java \
-  home/SuggestClient.java \
-  home/TabMenuStrip.java \
-  home/TopSitesGridItemView.java \
-  home/TopSitesGridView.java \
-  home/TopSitesPage.java \
-  home/TopSitesThumbnailView.java \
-  home/TwoLinePageRow.java \
-  menu/GeckoMenu.java \
-  menu/GeckoMenuInflater.java \
-  menu/GeckoMenuItem.java \
-  menu/GeckoSubMenu.java \
-  menu/MenuItemActionBar.java \
-  menu/MenuItemActionView.java \
-  menu/MenuItemDefault.java \
-  menu/MenuPanel.java \
-  menu/MenuPopup.java \
-  preferences/SearchPreferenceCategory.java \
-  preferences/SearchEnginePreference.java \
-  updater/UpdateServiceHelper.java \
-  updater/UpdateService.java \
-  widget/ActivityChooserModel.java \
-  widget/ButtonToast.java \
-  widget/ArrowPopup.java \
-  widget/DateTimePicker.java \
-  widget/Divider.java \
-  widget/FaviconView.java \
-  widget/GeckoPopupMenu.java \
-  widget/GeckoActionProvider.java \
-  widget/IconTabWidget.java \
-  widget/TabRow.java \
-  widget/ThumbnailView.java \
-  widget/TwoWayView.java \
-  GeckoNetworkManager.java \
-  GeckoScreenOrientationListener.java \
-  GeckoUpdateReceiver.java \
-  ReferrerReceiver.java \
-  $(NULL)
-
-BRAILLE_JAVA_FILES := \
-  com/googlecode/eyesfree/braille/selfbraille/ISelfBrailleService.java \
-  com/googlecode/eyesfree/braille/selfbraille/SelfBrailleClient.java \
-  com/googlecode/eyesfree/braille/selfbraille/WriteData.java \
-  $(NULL)
-
-WEBSOCKETS_JAVA_FILES := \
-  com/codebutler/android_websockets/HybiParser.java \
-  com/codebutler/android_websockets/WebSocketClient.java \
-  $(NULL)
-
-ifdef MOZ_WEBRTC
-WEBRTC_VIDEO_CAPTURE_JAVA_FILES = \
-  CaptureCapabilityAndroid.java \
-  VideoCaptureAndroid.java \
-  VideoCaptureDeviceInfoAndroid.java \
-  $(NULL)
-
-WEBRTC_AUDIO_CAPTURE_JAVA_FILES = \
-  WebRTCAudioDevice.java \
-  $(NULL)
-
-WEBRTC_JAVA_FILES = \
-  $(addprefix $(DEPTH)/media/webrtc/trunk/webrtc/modules/video_capture/android/java/org/webrtc/videoengine/, $(WEBRTC_VIDEO_CAPTURE_JAVA_FILES)) \
-  $(addprefix $(DEPTH)/media/webrtc/trunk/webrtc/modules/audio_device/android/org/webrtc/voiceengine/, $(WEBRTC_AUDIO_CAPTURE_JAVA_FILES)) \
-  $(NULL)
-endif
-
 ifdef MOZ_ANDROID_ANR_REPORTER
 DEFINES += -DMOZ_ANDROID_ANR_REPORTER=1
 endif
-
-FENNEC_PP_JAVA_FILES := \
-  App.java \
-  AppConstants.java \
-  widget/GeckoEditText.java \
-  widget/GeckoImageButton.java \
-  widget/GeckoImageView.java \
-  widget/GeckoLinearLayout.java \
-  widget/GeckoRelativeLayout.java \
-  widget/GeckoTextSwitcher.java \
-  widget/GeckoTextView.java \
-  SysInfo.java \
-  WebApp.java \
-  WebApps.java \
-  $(NULL)
 
 ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
 MIN_CPU_VERSION=7
@@ -388,12 +76,12 @@ ifdef MOZ_LINKER_EXTRACT
 DEFINES += -DMOZ_LINKER_EXTRACT=1
 endif
 
+PP_JAVAFILES = $(filter-out R.java,$(gecko-mozglue_PP_JAVAFILES) $(gecko-browser_PP_JAVAFILES))
+
 GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
-  $(MOZGLUE_PP_JAVA_FILES) \
-  $(FENNEC_PP_JAVA_FILES) \
-  $(SYNC_PP_JAVA_FILES) \
+  $(PP_JAVAFILES) \
   gecko.ap_  \
   res/values/strings.xml \
   R.java \
@@ -421,93 +109,17 @@ endif
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
-ifdef MOZ_CRASHREPORTER
-FENNEC_JAVA_FILES += CrashReporter.java
-endif
-
 ALL_JARS = \
-  jars/gecko-browser.jar \
-  jars/gecko-mozglue.jar \
-  jars/gecko-util.jar \
-  jars/sync-thirdparty.jar \
-  jars/websockets.jar \
+  gecko-browser.jar \
+  gecko-mozglue.jar \
+  gecko-util.jar \
+  sync-thirdparty.jar \
+  websockets.jar \
   $(NULL)
 
 ifdef MOZ_WEBRTC
-ALL_JARS += jars/webrtc.jar
+ALL_JARS += webrtc.jar
 endif
-
-thirdparty_source_dir = $(topsrcdir)/mobile/android/thirdparty
-
-JAVA_JAR_TARGETS += websockets
-websockets_DEST := jars/websockets.jar
-websockets_JAVAFILES := \
-  $(addprefix $(thirdparty_source_dir)/,$(WEBSOCKETS_JAVA_FILES)) \
-  $(NULL)
-websockets_JAVAC_FLAGS := -Xlint:all,-serial
-
-JAVA_JAR_TARGETS += gecko-browser
-gecko-browser_DEST := jars/gecko-browser.jar
-gecko-browser_JAVAFILES := \
-  $(FENNEC_JAVA_FILES) \
-  $(addprefix $(thirdparty_source_dir)/,$(BRAILLE_JAVA_FILES)) \
-  $(SYNC_JAVA_FILES) \
-  $(NULL)
-gecko-browser_PP_JAVAFILES := \
-  $(FENNEC_PP_JAVA_FILES) \
-  $(SYNC_PP_JAVA_FILES) \
-  R.java \
-  $(NULL)
-gecko-browser_EXTRA_JARS := \
-  jars/gecko-mozglue.jar \
-  jars/gecko-util.jar \
-  jars/sync-thirdparty.jar \
-  jars/websockets.jar \
-  $(NULL)
-gecko-browser_JAVAC_FLAGS := -Xlint:all,-deprecation,-fallthrough
-
-JAVA_JAR_TARGETS += gecko-mozglue
-gecko-mozglue_DEST := jars/gecko-mozglue.jar
-gecko-mozglue_JAVAFILES := \
-  $(MOZGLUE_JAVA_FILES) \
-  $(NULL)
-gecko-mozglue_PP_JAVAFILES := \
-  $(MOZGLUE_PP_JAVA_FILES) \
-  $(NULL)
-gecko-mozglue_JAVAC_FLAGS := -Xlint:all
-
-JAVA_JAR_TARGETS += gecko-util
-gecko-util_DEST := jars/gecko-util.jar
-gecko-util_JAVAFILES := \
-  $(UTIL_JAVA_FILES) \
-  $(NULL)
-gecko-util_EXTRA_JARS := \
-  jars/gecko-mozglue.jar \
-  $(NULL)
-gecko-util_JAVAC_FLAGS := -Xlint:all,-deprecation
-
-JAVA_JAR_TARGETS += sync-thirdparty
-sync-thirdparty_DEST := jars/sync-thirdparty.jar
-sync-thirdparty_JAVAFILES := \
-  $(addprefix $(thirdparty_source_dir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) \
-  $(NULL)
-sync-thirdparty_JAVAC_FLAGS := -Xlint:none
-
-ifdef MOZ_WEBRTC
-JAVA_JAR_TARGETS += webrtc
-webrtc_DEST := jars/webrtc.jar
-webrtc_JAVAFILES := \
-  $(WEBRTC_JAVA_FILES) \
-  $(NULL)
-webrtc_EXTRA_JARS := \
-  jars/gecko-browser.jar \
-  jars/gecko-util.jar \
-  jars/gecko-mozglue.jar \
-  $(NULL)
-webrtc_JAVAC_FLAGS := -Xlint:all,-deprecation,-cast
-endif
-
-include $(topsrcdir)/config/makefiles/java-build.mk
 
 # We process ANDROID_RESFILES specially for now; the following flag
 # disables the default processing.
@@ -543,7 +155,7 @@ ifdef MOZ_WEBSMS_BACKEND
 CLASSES_WITH_JNI += org.mozilla.gecko.GeckoSmsManager
 endif
 
-jni-stubs.inc: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar
+jni-stubs.inc: gecko-browser.jar gecko-mozglue.jar gecko-util.jar sync-thirdparty.jar
 	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) $(CLASSES_WITH_JNI)
 	$(PYTHON) $(topsrcdir)/mobile/android/base/jni-generator.py javah.out $@
 
@@ -558,19 +170,15 @@ SERVICES_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/services/ma
 
 android-tgts = \
   AndroidManifest.xml \
-  $(MOZGLUE_PP_JAVA_FILES) \
-  $(FENNEC_PP_JAVA_FILES) \
-  $(SYNC_PP_JAVA_FILES) \
   package-name.txt \
+  $(PP_JAVAFILES) \
   $(NULL)
 
 android-preqs = \
   Makefile.in \
   widget/GeckoView.java.frag \
-  $(call mkdir_deps,$(sort $(dir $(MOZGLUE_PP_JAVA_FILES)))) \
-  $(call mkdir_deps,$(sort $(dir $(FENNEC_PP_JAVA_FILES)))) \
-  $(call mkdir_deps,$(sort $(dir $(SYNC_PP_JAVA_FILES)))) \
   $(SERVICES_MANIFEST_FRAGMENTS) \
+  $(call mkdir_deps,$(sort $(dir $(PP_JAVAFILES)))) \
   $(NULL)
 
 $(android-tgts): % : %.in $(android-preqs)
