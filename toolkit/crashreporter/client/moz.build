@@ -31,8 +31,8 @@ elif CONFIG['OS_ARCH'] == 'SunOS':
 if CONFIG['MOZ_ENABLE_GTK']:
     CPP_SOURCES += [
         'crashreporter_gtk_common.cpp',
-        'crashreporter_unix_common.cpp',
-        'crashreporter_linux.cpp'
+        'crashreporter_linux.cpp',
+        'crashreporter_unix_common.cpp'
         ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':

@@ -29,6 +29,7 @@ if CONFIG['MOZ_GL_PROVIDER']:
 
 EXPORTS += [
     'ForceDiscreteGPUHelperCGL.h',
+    'GfxTexturesReporter.h',
     'GLConsts.h',
     'GLContext.h',
     'GLContextProvider.h',
@@ -41,7 +42,6 @@ EXPORTS += [
     'GLScreenBuffer.h',
     'GLTextureImage.h',
     'GLTypes.h',
-    'GfxTexturesReporter.h',
     'SharedSurface.h',
     'SharedSurfaceEGL.h',
     'SharedSurfaceGL.h',
@@ -91,23 +91,23 @@ else:
     ]
 
 CPP_SOURCES += [
+    'GfxTexturesReporter.cpp',
     'GLContext.cpp',
     'GLContextFeatures.cpp',
     'GLContextTypes.cpp',
     'GLContextUtils.cpp',
+    'GLLibraryEGL.cpp',
     'GLLibraryLoader.cpp',
     'GLScreenBuffer.cpp',
     'GLTextureImage.cpp',
-    'GfxTexturesReporter.cpp',
     'SharedSurface.cpp',
-    'GLLibraryEGL.cpp',
     'SharedSurfaceEGL.cpp',
-    'TextureImageEGL.cpp',
     'SharedSurfaceGL.cpp',
     'SurfaceFactory.cpp',
     'SurfaceStream.cpp',
-    'VBOArena.cpp',
     'TextureGarbageBin.cpp',
+    'TextureImageEGL.cpp',
+    'VBOArena.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

@@ -26,25 +26,25 @@ if CONFIG['MOZ_B2G_BT']:
     ]
 
     CPP_SOURCES += [
-        'BluetoothService.cpp',
-        'BluetoothManager.cpp',
+        'BluetoothA2dpManager.cpp',
         'BluetoothAdapter.cpp',
         'BluetoothDevice.cpp',
-        'BluetoothReplyRunnable.cpp',
+        'BluetoothHfpManager.cpp',
+        'BluetoothHidManager.cpp',
+        'BluetoothManager.cpp',
+        'BluetoothOppManager.cpp',
+        'BluetoothProfileController.cpp',
         'BluetoothPropertyContainer.cpp',
+        'BluetoothReplyRunnable.cpp',
+        'BluetoothService.cpp',
+        'BluetoothSocket.cpp',
+        'BluetoothUnixSocketConnector.cpp',
         'BluetoothUtils.cpp',
+        'BluetoothUuid.cpp',
         'ipc/BluetoothChild.cpp',
         'ipc/BluetoothParent.cpp',
         'ipc/BluetoothServiceChildProcess.cpp',
-        'BluetoothUnixSocketConnector.cpp',
-        'BluetoothA2dpManager.cpp',
-        'BluetoothHfpManager.cpp',
-        'BluetoothHidManager.cpp',
-        'BluetoothOppManager.cpp',
-        'ObexBase.cpp',
-        'BluetoothUuid.cpp',
-        'BluetoothSocket.cpp',
-        'BluetoothProfileController.cpp'
+        'ObexBase.cpp'
     ]
 
     if CONFIG['MOZ_B2G_RIL']:
@@ -55,8 +55,8 @@ if CONFIG['MOZ_B2G_BT']:
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         if CONFIG['MOZ_B2G_BT_BLUEZ']:
             CPP_SOURCES += [
-               'linux/BluetoothDBusService.cpp',
                'gonk/BluetoothGonkService.cpp',
+               'linux/BluetoothDBusService.cpp',
             ]
         if CONFIG['MOZ_B2G_BT_BLUEDROID']:
             CPP_SOURCES += [

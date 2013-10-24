@@ -100,7 +100,7 @@ public:
       if (path.IsEmpty())
         return;
       HANDLE handle = CreateFileW(path.get(), FILE_APPEND_DATA, FILE_SHARE_WRITE,
-                                  NULL, OPEN_ALWAYS, 0, NULL);
+                                  nullptr, OPEN_ALWAYS, 0, nullptr);
       if (handle == INVALID_HANDLE_VALUE)
         return;
       file = PR_ImportFile((PROsfd)handle);
@@ -129,7 +129,7 @@ public:
     MOZ_ASSERT(refCnt > 0);
     if ((0 == --refCnt) && fd) {
       PR_Close(fd);
-      fd = NULL;
+      fd = nullptr;
     }
   }
 private:
@@ -333,7 +333,7 @@ nsresult nsZipArchive::CloseArchive()
 {
   if (mFd) {
     PL_FinishArenaPool(&mArena);
-    mFd = NULL;
+    mFd = nullptr;
   }
 
   // CAUTION:
@@ -445,7 +445,7 @@ nsZipArchive::FindInit(const char * aPattern, nsZipFind **aFind)
     return NS_ERROR_ILLEGAL_VALUE;
 
   // null out param in case an error happens
-  *aFind = NULL;
+  *aFind = nullptr;
 
   bool    regExp = false;
   char*   pattern = 0;
@@ -715,7 +715,7 @@ MOZ_WIN_MEM_TRY_BEGIN
         // Is the directory already in the file table?
         uint32_t hash = HashName(item->Name(), dirlen);
         bool found = false;
-        for (nsZipItem* zi = mFiles[hash]; zi != NULL; zi = zi->next)
+        for (nsZipItem* zi = mFiles[hash]; zi != nullptr; zi = zi->next)
         {
           if ((dirlen == zi->nameLength) &&
               (0 == memcmp(item->Name(), zi->Name(), dirlen)))
@@ -753,7 +753,7 @@ MOZ_WIN_MEM_TRY_CATCH(return NS_ERROR_FAILURE)
 nsZipHandle* nsZipArchive::GetFD()
 {
   if (!mFd)
-    return NULL;
+    return nullptr;
   return mFd.get();
 }
 
@@ -821,7 +821,7 @@ nsZipArchive::nsZipArchive()
 
   MOZ_COUNT_CTOR(nsZipArchive);
 
-  // initialize the table to NULL
+  // initialize the table to nullptr
   memset(mFiles, 0, sizeof(mFiles));
 }
 

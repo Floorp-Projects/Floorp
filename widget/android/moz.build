@@ -14,8 +14,8 @@ MODULE = 'widget'
 
 EXPORTS += [
     'AndroidBridge.h',
-    'AndroidJNIWrapper.h',
     'AndroidJavaWrappers.h',
+    'AndroidJNIWrapper.h',
     'GeneratedJNIWrappers.h'
 ]
 
@@ -23,16 +23,16 @@ CPP_SOURCES += [
     'AndroidBridge.cpp',
     'AndroidDirectTexture.cpp',
     'AndroidGraphicBuffer.cpp',
+    'AndroidJavaWrappers.cpp',
     'AndroidJNI.cpp',
     'AndroidJNIWrapper.cpp',
-    'AndroidJavaWrappers.cpp',
     'GeneratedJNIWrappers.cpp',
     'GfxInfo.cpp',
     'nsAppShell.cpp',
     'nsClipboard.cpp',
     'nsDeviceContextAndroid.cpp',
-    'nsIMEPicker.cpp',
     'nsIdleServiceAndroid.cpp',
+    'nsIMEPicker.cpp',
     'nsLookAndFeel.cpp',
     'nsPrintOptionsAndroid.cpp',
     'nsScreenManagerAndroid.cpp',

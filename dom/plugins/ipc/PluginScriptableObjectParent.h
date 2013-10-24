@@ -22,7 +22,7 @@ class PPluginIdentifierParent;
 struct ParentNPObject : NPObject
 {
   ParentNPObject()
-    : NPObject(), parent(NULL), invalidated(false) { }
+    : NPObject(), parent(nullptr), invalidated(false) { }
 
   // |parent| is always valid as long as the actor is alive. Once the actor is
   // destroyed this will be set to null.

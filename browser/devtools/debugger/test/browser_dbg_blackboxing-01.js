@@ -27,24 +27,19 @@ function test() {
 }
 
 function testBlackBoxSource() {
-  const checkbox = gDebugger.document.querySelector(".side-menu-widget-item-checkbox");
-  ok(checkbox, "Should get the checkbox for black boxing the source.");
-  ok(checkbox.checked, "Should not be black boxed by default.");
+  const bbButton = getBlackBoxButton(gPanel);
+  ok(!bbButton.checked, "Should not be black boxed by default");
 
-  let finished = waitForThreadEvents(gPanel, "blackboxchange").then(aSource => {
+  return toggleBlackBoxing(gPanel).then(aSource => {
     ok(aSource.isBlackBoxed, "The source should be black boxed now.");
-    ok(!checkbox.checked, "The checkbox should no longer be checked.");
+    ok(bbButton.checked, "The checkbox should no longer be checked.");
   });
-
-  checkbox.click();
-  return finished;
 }
 
 function testBlackBoxReload() {
   return reloadActiveTab(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(() => {
-    const checkbox = gDebugger.document.querySelector(".side-menu-widget-item-checkbox");
-    ok(checkbox, "Should get the checkbox for black boxing the source.");
-    ok(!checkbox.checked, "Should still be black boxed.");
+    const bbButton = getBlackBoxButton(gPanel);
+    ok(bbButton.checked, "Should still be black boxed.");
   });
 }
 

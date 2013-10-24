@@ -442,7 +442,6 @@ class Marionette(object):
         self.noWindow = noWindow
         self.logcat_dir = logcat_dir
         self._test_name = None
-        self.symbols_path = symbols_path
         self.timeout = timeout
         self.device_serial = device_serial
 
@@ -471,6 +470,7 @@ class Marionette(object):
                                      logcat_dir=self.logcat_dir,
                                      arch=emulator,
                                      sdcard=sdcard,
+                                     symbols_path=symbols_path,
                                      emulatorBinary=emulatorBinary,
                                      userdata=emulatorImg,
                                      res=emulator_res)
@@ -648,7 +648,7 @@ class Marionette(object):
                 name = 'emulator'
                 crashed = True
 
-            if self.symbols_path and self.emulator.check_for_minidumps(self.symbols_path):
+            if self.emulator.check_for_minidumps():
                 crashed = True
         elif self.instance:
             # In the future, a check for crashed Firefox processes
