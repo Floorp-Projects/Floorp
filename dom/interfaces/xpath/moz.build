@@ -8,8 +8,8 @@ XPIDL_SOURCES += [
     'nsIDOMNSXPathExpression.idl',
     'nsIDOMXPathEvaluator.idl',
     'nsIDOMXPathExpression.idl',
-    'nsIDOMXPathNSResolver.idl',
     'nsIDOMXPathNamespace.idl',
+    'nsIDOMXPathNSResolver.idl',
     'nsIDOMXPathResult.idl',
 ]
 

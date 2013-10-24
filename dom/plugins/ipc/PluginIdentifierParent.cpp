@@ -50,7 +50,7 @@ PluginIdentifierParent::StackIdentifier::StackIdentifier
 
 PluginIdentifierParent::StackIdentifier::StackIdentifier
     (NPObject* aObject, NPIdentifier aIdentifier)
-  : mIdentifier(NULL)
+  : mIdentifier(nullptr)
 {
   PluginInstanceParent* inst = GetInstance(aObject);
   mIdentifier = inst->Module()->GetIdentifierForNPIdentifier(inst->GetNPP(), aIdentifier);

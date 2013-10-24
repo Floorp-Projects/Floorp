@@ -8,9 +8,9 @@ MODULE = 'pipnss'
 
 EXPORTS += [
     'CryptoTask.h',
-    'ScopedNSSTypes.h',
     'nsNSSShutDown.h',
     'nsRandomGenerator.h',
+    'ScopedNSSTypes.h',
 ]
 
 EXPORTS.mozilla += [
@@ -66,7 +66,7 @@ CPP_SOURCES += [
     'nsStreamCipher.cpp',
     'nsTLSSocketProvider.cpp',
     'nsUsageArrayHelper.cpp',
-	'PSMContentListener.cpp',
+    'PSMContentListener.cpp',
     'PSMRunnable.cpp',
     'SharedSSLState.cpp',
     'SSLServerCertVerification.cpp',

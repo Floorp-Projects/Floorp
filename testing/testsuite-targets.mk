@@ -514,6 +514,8 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 	$(NSINSTALL) $(topsrcdir)/testing/android_cppunittest_manifest.txt $(PKG_STAGE)/cppunittests
 endif
+	$(NSINSTALL) $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.js $(PKG_STAGE)/cppunittests
+	$(NSINSTALL) $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.manifest $(PKG_STAGE)/cppunittests
 
 stage-jittest:
 	$(NSINSTALL) -D $(PKG_STAGE)/jit-test/tests

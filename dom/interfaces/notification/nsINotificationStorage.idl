@@ -1,0 +1,92 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+[scriptable, uuid(fb089720-1c5c-11e3-b773-0800200c9a66)]
+interface nsINotificationStorageCallback : nsISupports
+{
+  /**
+   * Callback function used to pass single notification back
+   * into C++ land for Notification.get return data.
+   *
+   * @param id: a uuid for this notification
+   * @param title: the notification title
+   * @param dir: the notification direction,
+   *             possible values are "ltr", "rtl", "auto"
+   * @param lang: the notification language
+   * @param body: the notification body
+   * @param tag: the notification tag
+   */
+  [implicit_jscontext]
+  void handle(in DOMString id,
+              in DOMString title,
+              in DOMString dir,
+              in DOMString lang,
+              in DOMString body,
+              in DOMString tag,
+              in DOMString icon);
+
+  /**
+   * Callback function used to notify C++ the we have returned
+   * all notification objects for this Notification.get call.
+   */
+  [implicit_jscontext]
+  void done();
+};
+
+/**
+ * Interface for notification persistence layer.
+ */
+[scriptable, uuid(b177b080-2a23-11e3-8224-0800200c9a66)]
+interface nsINotificationStorage : nsISupports
+{
+
+  /**
+   * Add/replace a notification to the persistence layer.
+   *
+   * @param origin: the origin/app of this notification
+   * @param id: a uuid for this notification
+   * @param title: the notification title
+   * @param dir: the notification direction,
+   *             possible values are "ltr", "rtl", "auto"
+   * @param lang: the notification language
+   * @param body: the notification body
+   * @param tag: notification tag, will replace any existing
+   *             notifications with same origin/tag pair
+   */
+  void put(in DOMString origin,
+           in DOMString id,
+           in DOMString title,
+           in DOMString dir,
+           in DOMString lang,
+           in DOMString body,
+           in DOMString tag,
+           in DOMString icon);
+
+  /**
+   * Retrieve a list of notifications.
+   *
+   * @param origin: the origin/app for which to fetch notifications from
+   * @param tag: used to fetch only a specific tag
+   * @param callback: nsINotificationStorageCallback, used for
+   *                  returning notifications objects
+   */
+  void get(in DOMString origin,
+           in DOMString tag,
+           in nsINotificationStorageCallback aCallback);
+
+  /**
+   * Remove a notification from storage.
+   *
+   * @param origin: the origin/app to delete the notification from
+   * @param id: the uuid for the notification to delete
+   */
+  void delete(in DOMString origin,
+              in DOMString id);
+};
+
+%{C++
+#define NS_NOTIFICATION_STORAGE_CONTRACTID "@mozilla.org/notificationStorage;1"
+%}

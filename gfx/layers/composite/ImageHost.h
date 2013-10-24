@@ -69,6 +69,13 @@ public:
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
 
+  virtual void OnActorDestroy() MOZ_OVERRIDE
+  {
+    if (mFrontBuffer) {
+      mFrontBuffer->OnActorDestroy();
+    }
+  }
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
 #endif
@@ -131,6 +138,13 @@ public:
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE
+  {
+    if (mDeprecatedTextureHost) {
+      mDeprecatedTextureHost->OnActorDestroy();
+    }
+  }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);

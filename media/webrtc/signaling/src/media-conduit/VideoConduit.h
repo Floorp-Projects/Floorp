@@ -43,9 +43,7 @@ class WebrtcVideoConduit:public VideoSessionConduit
                          ,public webrtc::Transport
                          ,public webrtc::ExternalRenderer
 {
-
 public:
-
   //VoiceEngine defined constant for Payload Name Size.
   static const unsigned int CODEC_PLNAME_SIZE;
 
@@ -98,7 +96,7 @@ public:
                                const std::vector<VideoCodecConfig* >& codecConfigList);
 
   /**
-   * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEnigne
+   * Register Transport for this Conduit. RTP and RTCP frames from the VideoEngine
    * shall be passed to the registered transport for transporting externally.
    */
   virtual MediaConduitErrorCode AttachTransport(mozilla::RefPtr<TransportInterface> aTransport);
@@ -133,13 +131,13 @@ public:
 
   /**
    * Webrtc transport implementation to send and receive RTP packet.
-   * AudioConduit registers itself as ExternalTransport to the VideoEngine
+   * VideoConduit registers itself as ExternalTransport to the VideoEngine
    */
   virtual int SendPacket(int channel, const void *data, int len) ;
 
   /**
    * Webrtc transport implementation to send and receive RTCP packet.
-   * AudioConduit registers itself as ExternalTransport to the VideoEngine
+   * VideoConduit registers itself as ExternalTransport to the VideoEngine
    */
   virtual int SendRTCPPacket(int channel, const void *data, int len) ;
 
@@ -175,6 +173,8 @@ public:
   }
 
   WebrtcVideoConduit():
+                      mOtherDirection(nullptr),
+                      mShutDown(false),
                       mVideoEngine(nullptr),
                       mTransport(nullptr),
                       mRenderer(nullptr),
@@ -195,12 +195,12 @@ public:
   {
   }
 
-
   virtual ~WebrtcVideoConduit() ;
 
+  MediaConduitErrorCode Init(WebrtcVideoConduit *other);
 
-
-  MediaConduitErrorCode Init();
+  int GetChannel() { return mChannel; }
+  webrtc::VideoEngine* GetVideoEngine() { return mVideoEngine; }
 
 private:
 
@@ -228,8 +228,17 @@ private:
 
   //Utility function to dump recv codec database
   void DumpCodecDB() const;
-  webrtc::VideoEngine* mVideoEngine;
 
+  // The two sides of a send/receive pair of conduits each keep a pointer to the other.
+  // They also share a single VideoEngine and mChannel.  Shutdown must be coordinated
+  // carefully to avoid double-freeing or accessing after one frees.
+  WebrtcVideoConduit*  mOtherDirection;
+  // The other side has shut down our mChannel and related items already
+  bool mShutDown;
+
+  // A few of these are shared by both directions.  They're released by the last
+  // conduit to die.
+  webrtc::VideoEngine* mVideoEngine;          // shared
   mozilla::RefPtr<TransportInterface> mTransport;
   mozilla::RefPtr<VideoRenderer> mRenderer;
 
@@ -238,7 +247,7 @@ private:
   webrtc::ViECodec* mPtrViECodec;
   webrtc::ViENetwork* mPtrViENetwork;
   webrtc::ViERender* mPtrViERender;
-  webrtc::ViEExternalCapture*  mPtrExtCapture;
+  webrtc::ViEExternalCapture*  mPtrExtCapture; // shared
   webrtc::ViERTP_RTCP* mPtrRTP;
 
   // Engine state we are concerned with.
@@ -254,8 +263,6 @@ private:
 
   mozilla::RefPtr<WebrtcAudioConduit> mSyncedTo;
 };
-
-
 
 } // end namespace
 

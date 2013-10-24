@@ -15,11 +15,12 @@ import mozcrash
 
 class B2GInstance(B2GBuild):
 
-    def __init__(self, devicemanager=None, **kwargs):
+    def __init__(self, devicemanager=None, symbols_path=None, **kwargs):
         B2GBuild.__init__(self, **kwargs)
 
         self._dm = devicemanager
         self._remote_profiles = None
+        self.symbols_path = symbols_path
 
     @property
     def dm(self):
@@ -52,14 +53,14 @@ class B2GInstance(B2GBuild):
         self._remote_profiles = remote_profiles
         return remote_profiles
 
-    def check_for_crashes(self, symbols_path):
+    def check_for_crashes(self):
         remote_dump_dirs = [posixpath.join(p, 'minidumps') for p in self.remote_profiles]
         crashed = False
         for remote_dump_dir in remote_dump_dirs:
             local_dump_dir = tempfile.mkdtemp()
             self.dm.getDirectory(remote_dump_dir, local_dump_dir)
             try:
-                if mozcrash.check_for_crashes(local_dump_dir, symbols_path):
+                if mozcrash.check_for_crashes(local_dump_dir, self.symbols_path):
                     crashed = True
             except:
                 traceback.print_exc()

@@ -22,7 +22,7 @@ public:
     : mLock(aLock)
   {
     CriticalSectionAutoEnter lock(*mLock);
-    mEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    mEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   }
 
   ~Signal() {

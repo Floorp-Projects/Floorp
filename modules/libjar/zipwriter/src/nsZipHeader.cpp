@@ -340,5 +340,5 @@ const uint8_t * nsZipHeader::GetExtraField(uint16_t aTag, bool aLocal, uint16_t 
       pos += blocksize;
     }
 
-    return NULL;
+    return nullptr;
 }

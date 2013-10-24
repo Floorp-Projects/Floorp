@@ -308,29 +308,29 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Add a transport flow
   void AddTransportFlow(int aIndex, bool aRtcp,
-                        mozilla::RefPtr<mozilla::TransportFlow> aFlow) {
+                        const mozilla::RefPtr<mozilla::TransportFlow> &aFlow) {
     int index_inner = aIndex * 2 + (aRtcp ? 1 : 0);
 
     MOZ_ASSERT(!mTransportFlows[index_inner]);
     mTransportFlows[index_inner] = aFlow;
   }
 
-  mozilla::RefPtr<mozilla::AudioSessionConduit> GetConduit(int aStreamIndex, bool aReceive) {
+  mozilla::RefPtr<mozilla::MediaSessionConduit> GetConduit(int aStreamIndex, bool aReceive) {
     int index_inner = aStreamIndex * 2 + (aReceive ? 0 : 1);
 
-    if (mAudioConduits.find(index_inner) == mAudioConduits.end())
+    if (mConduits.find(index_inner) == mConduits.end())
       return NULL;
 
-    return mAudioConduits[index_inner];
+    return mConduits[index_inner];
   }
 
   // Add a conduit
   void AddConduit(int aIndex, bool aReceive,
-                  const mozilla::RefPtr<mozilla::AudioSessionConduit> &aConduit) {
+                  const mozilla::RefPtr<mozilla::MediaSessionConduit> &aConduit) {
     int index_inner = aIndex * 2 + (aReceive ? 0 : 1);
 
-    MOZ_ASSERT(!mAudioConduits[index_inner]);
-    mAudioConduits[index_inner] = aConduit;
+    MOZ_ASSERT(!mConduits[index_inner]);
+    mConduits[index_inner] = aConduit;
   }
 
   // ICE state signals
@@ -374,7 +374,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Conduits: even is receive, odd is transmit (for easier correlation with
   // flows)
-  std::map<int, mozilla::RefPtr<mozilla::AudioSessionConduit> > mAudioConduits;
+  std::map<int, mozilla::RefPtr<mozilla::MediaSessionConduit> > mConduits;
 
   // The main thread.
   nsCOMPtr<nsIThread> mMainThread;

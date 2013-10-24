@@ -48,9 +48,9 @@ MODULE = 'xpcom'
 EXPORTS += [
     'nsArray.h',
     'nsAtomService.h',
-    'nsCRT.h',
     'nsCharSeparatedTokenizer.h',
     'nsCheapSets.h',
+    'nsCRT.h',
     'nsExpirationTracker.h',
     'nsHashPropertyBag.h',
     'nsHashtable.h',

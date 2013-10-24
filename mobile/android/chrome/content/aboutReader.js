@@ -80,11 +80,11 @@ let AboutReader = function(doc, win) {
   let fontTypeSample = gStrings.GetStringFromName("aboutReader.fontTypeSample");
   let fontTypeOptions = [
     { name: fontTypeSample,
-      description: gStrings.GetStringFromName("aboutReader.fontTypeCharis"),
+      description: gStrings.GetStringFromName("aboutReader.fontTypeSerif"),
       value: "serif",
       linkClass: "serif" },
     { name: fontTypeSample,
-      description: gStrings.GetStringFromName("aboutReader.fontTypeOpenSans"),
+      description: gStrings.GetStringFromName("aboutReader.fontTypeSansSerif"),
       value: "sans-serif",
       linkClass: "sans-serif"
     },

@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 918207 needed a clobber on every platform because we can't have nice things
+Bug 899574 needed a clobber on every platform because we can't have nice things

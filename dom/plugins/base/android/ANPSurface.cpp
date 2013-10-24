@@ -58,7 +58,7 @@ static struct ANPSurfaceFunctions {
 
 static inline void* getSurface(JNIEnv* env, jobject view) {
   if (!env || !view) {
-    return NULL;
+    return nullptr;
   }
 
   if (!gSurfaceJavaGlue.initialized) {
@@ -93,14 +93,14 @@ static inline void* getSurface(JNIEnv* env, jobject view) {
 
     if (!gSurfaceJavaGlue.surfacePointer) {
       LOG("Failed to acquire surface pointer");
-      return NULL;
+      return nullptr;
     }
 
     env->DeleteLocalRef(surfaceClass);
     env->DeleteLocalRef(surfaceViewClass);
     env->DeleteLocalRef(surfaceHolderClass);
 
-    gSurfaceJavaGlue.initialized = (gSurfaceJavaGlue.surfacePointer != NULL);
+    gSurfaceJavaGlue.initialized = (gSurfaceJavaGlue.surfacePointer != nullptr);
   }
 
   jobject holder = env->CallObjectMethod(view, gSurfaceJavaGlue.getSurfaceHolder);
@@ -182,7 +182,7 @@ static bool anp_surface_lock(JNIEnv* env, jobject surfaceView, ANPBitmap* bitmap
     return false;
   }
 
-  void* region = NULL;
+  void* region = nullptr;
   if (dirtyRect) {
     region = malloc(ANDROID_REGION_SIZE);
     gSurfaceFunctions.regionConstructor(region);
@@ -227,7 +227,7 @@ static bool anp_surface_lock(JNIEnv* env, jobject surfaceView, ANPBitmap* bitmap
   if (info.w > 0 && info.h > 0) {
     bitmap->baseAddr = info.bits;
   } else {
-    bitmap->baseAddr = NULL;
+    bitmap->baseAddr = nullptr;
     return false;
   }
 

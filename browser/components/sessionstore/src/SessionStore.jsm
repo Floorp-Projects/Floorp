@@ -350,6 +350,10 @@ let SessionStoreInternal = {
   // See bug 516755.
   _disabledForMultiProcess: false,
 
+  // Promise that is resolved when we're ready to initialize
+  // and restore the session.
+  _promiseReadyForInitialization: null,
+
   /**
    * A promise fulfilled once initialization is complete.
    */
@@ -870,13 +874,33 @@ let SessionStoreInternal = {
         return;
       }
 
+      // The very first window that is opened creates a promise that is then
+      // re-used by all subsequent windows. The promise will be used to tell
+      // when we're ready for initialization.
+      if (!this._promiseReadyForInitialization) {
+        let deferred = Promise.defer();
+
+        // Wait for the given window's delayed startup to be finished.
+        Services.obs.addObserver(function obs(subject, topic) {
+          if (aWindow == subject) {
+            Services.obs.removeObserver(obs, topic);
+            deferred.resolve();
+          }
+        }, "browser-delayed-startup-finished", false);
+
+        // We are ready for initialization as soon as the session file has been
+        // read from disk and the initial window's delayed startup has finished.
+        this._promiseReadyForInitialization =
+          Promise.all([deferred.promise, gSessionStartup.onceInitialized]);
+      }
+
       // We can't call this.onLoad since initialization
       // hasn't completed, so we'll wait until it is done.
       // Even if additional windows are opened and wait
       // for initialization as well, the first opened
       // window should execute first, and this.onLoad
       // will be called with the initialState.
-      gSessionStartup.onceInitialized.then(() => {
+      this._promiseReadyForInitialization.then(() => {
         if (aWindow.closed) {
           return;
         }

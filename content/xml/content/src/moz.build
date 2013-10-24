@@ -8,16 +8,16 @@ MODULE = 'content'
 
 EXPORTS.mozilla.dom += [
     'CDATASection.h',
+    'nsXMLElement.h',
     'ProcessingInstruction.h',
     'XMLStylesheetProcessingInstruction.h',
-    'nsXMLElement.h',
 ]
 
 CPP_SOURCES += [
     'CDATASection.cpp',
+    'nsXMLElement.cpp',
     'ProcessingInstruction.cpp',
     'XMLStylesheetProcessingInstruction.cpp',
-    'nsXMLElement.cpp',
 ]
 
 LIBRARY_NAME = 'gkconxmlcon_s'
