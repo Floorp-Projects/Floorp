@@ -1484,8 +1484,8 @@ MediaStreamGraphImpl::RunInStableState()
       if (mLifecycleState <= LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
         MessageBlock* block = mMessageQueue.AppendElement();
         block->mMessages.SwapElements(mCurrentTaskMessageQueue);
-        block->mGraphUpdateIndex = mGraphUpdatesSent;
-        ++mGraphUpdatesSent;
+        block->mGraphUpdateIndex = mNextGraphUpdateIndex;
+        ++mNextGraphUpdateIndex;
         EnsureNextIterationLocked(lock);
       }
 
