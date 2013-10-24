@@ -914,6 +914,19 @@ VariablesView.prototype = {
   },
 
   /**
+   * Sets if action buttons (like delete) should be placed at the beginning or
+   * end of a line.
+   * @param boolean aFlag
+   */
+  set actionsFirst(aFlag) {
+    if (aFlag) {
+      this._parent.setAttribute("actions-first", "");
+    } else {
+      this._parent.removeAttribute("actions-first");
+    }
+  },
+
+  /**
    * Gets the parent node holding this view.
    * @return nsIDOMNode
    */
@@ -2407,7 +2420,6 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     if (ownerView.delete) {
       let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
       deleteNode.className = "plain variables-view-delete";
-      deleteNode.setAttribute("ordinal", 2);
       deleteNode.addEventListener("click", this._onDelete.bind(this), false);
       this._title.appendChild(deleteNode);
     }
