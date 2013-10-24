@@ -130,7 +130,8 @@ div[collapsed="true"] > .expander {
   background-position: 5.5px 4px;
 }
 
-/* Hide the first element after the expander */
+div[hidden] > .expander,
+div[hidden] > .expander + *,
 div[collapsed="true"] > .expander + * {
   display: none;
 }
