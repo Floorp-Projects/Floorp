@@ -19,8 +19,7 @@ class PlayingRefChangeHandler : public nsRunnable
 public:
   enum ChangeType { ADDREF, RELEASE };
   PlayingRefChangeHandler(AudioNodeStream* aStream, ChangeType aChange)
-    : mLastProcessedGraphUpdateIndex(aStream->GetProcessingGraphUpdateIndex())
-    , mStream(aStream)
+    : mStream(aStream)
     , mChange(aChange)
   {
   }
@@ -39,8 +38,7 @@ public:
     if (node) {
       if (mChange == ADDREF) {
         node->MarkActive();
-      } else if (mChange == RELEASE &&
-                 node->AcceptPlayingRefRelease(mLastProcessedGraphUpdateIndex)) {
+      } else if (mChange == RELEASE) {
         node->MarkInactive();
       }
     }
@@ -48,7 +46,6 @@ public:
   }
 
 private:
-  int64_t mLastProcessedGraphUpdateIndex;
   nsRefPtr<AudioNodeStream> mStream;
   ChangeType mChange;
 };
