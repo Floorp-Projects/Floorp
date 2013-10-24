@@ -29,7 +29,9 @@ const NS_XPCOM_SHUTDOWN_OBSERVER_ID = "xpcom-shutdown";
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
+const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
+const kPrefVoicemailDefaultServiceId = "dom.voicemail.defaultServiceId";
 
 let DEBUG;
 function debug(s) {
@@ -119,8 +121,7 @@ XPCOMUtils.defineLazyGetter(this, "gNumRadioInterfaces", function () {
     return ril.numRadioInterfaces;
   }
 
-  let num = cpmm.sendSyncMessage("RIL:GetNumRadioInterfaces")[0];
-  return num;
+  return Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
 });
 
 function MobileIccCardLockResult(options) {
@@ -452,6 +453,7 @@ function RILContentHelper() {
     dataConnectionInfo:   new MobileConnectionInfo()
   };
   this.voicemailInfo = new VoicemailInfo();
+  this.voicemailDefaultServiceId = this.getVoicemailDefaultServiceId();
 
   this.initDOMRequestHelper(/* aWindow */ null, RIL_IPC_MSG_NAMES);
   this._windowsMap = [];
@@ -459,6 +461,7 @@ function RILContentHelper() {
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
+  Services.prefs.addObserver(kPrefVoicemailDefaultServiceId, this, false);
 }
 
 RILContentHelper.prototype = {
@@ -1318,6 +1321,17 @@ RILContentHelper.prototype = {
 
   voicemailStatus: null,
 
+  voicemailDefaultServiceId: 0,
+  getVoicemailDefaultServiceId: function getVoicemailDefaultServiceId() {
+    let id = Services.prefs.getIntPref(kPrefVoicemailDefaultServiceId);
+
+    if (id >= gNumRadioInterfaces || id < 0) {
+      id = 0;
+    }
+
+    return id;
+  },
+
   getVoicemailInfo: function getVoicemailInfo() {
     // Get voicemail infomation by IPC only on first time.
     this.getVoicemailInfo = function getVoicemailInfo() {
@@ -1332,9 +1346,11 @@ RILContentHelper.prototype = {
 
     return this.voicemailInfo;
   },
+
   get voicemailNumber() {
     return this.getVoicemailInfo().number;
   },
+
   get voicemailDisplayName() {
     return this.getVoicemailInfo().displayName;
   },
@@ -1413,6 +1429,8 @@ RILContentHelper.prototype = {
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
         if (data == kPrefRilDebuggingEnabled) {
           this.updateDebugFlag();
+        } else if (data == kPrefVoicemailDefaultServiceId) {
+          this.voicemailDefaultServiceId = this.getVoicemailDefaultServiceId();
         }
         break;
 
