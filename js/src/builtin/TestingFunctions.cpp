@@ -922,7 +922,7 @@ DisableSPSProfiling(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 EnableOsiPointRegisterChecks(JSContext *, unsigned, jsval *vp)
 {
-#ifdef CHECK_OSIPOINT_REGISTERS
+#if defined(JS_ION) && defined(CHECK_OSIPOINT_REGISTERS)
     jit::js_IonOptions.checkOsiPointRegisters = true;
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -1091,7 +1091,9 @@ static bool
 SetIonAssertGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef JS_ION
     jit::js_IonOptions.assertGraphConsistency = ToBoolean(args.get(0));
+#endif
     args.rval().setUndefined();
     return true;
 }
