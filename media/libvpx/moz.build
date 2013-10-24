@@ -33,7 +33,7 @@ EXPORTS.vpx += [
 
 if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
     HOST_CSRCS += [
-        'obj_int_extract.c',
+        'build/make/obj_int_extract.c',
     ]
 
 LIBRARY_NAME = 'vpx'

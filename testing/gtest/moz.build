@@ -62,7 +62,7 @@ CPP_SOURCES += [
 LIBRARY_NAME = 'gtest'
 
 GTEST_CPP_SOURCES += [
-    'SanityTest.cpp',
+    'mozilla/SanityTest.cpp',
 ]
 
 LIBXUL_LIBRARY = True

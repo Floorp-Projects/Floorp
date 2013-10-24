@@ -166,19 +166,19 @@ if os_macosx:
         'src/chrome/common/transport_dib_mac.cc',
     ]
     CMMSRCS += [
-        'base_paths_mac.mm',
-        'chrome_application_mac.mm',
-        'chrome_paths_mac.mm',
-        'file_util_mac.mm',
-        'file_version_info_mac.mm',
-        'mac_util.mm',
-        'mach_ipc_mac.mm',
-        'message_pump_mac.mm',
-        'platform_thread_mac.mm',
-        'process_util_mac.mm',
-        'scoped_nsautorelease_pool.mm',
-        'sys_string_conversions_mac.mm',
-        'worker_pool_mac.mm',
+        'src/base/base_paths_mac.mm',
+        'src/base/chrome_application_mac.mm',
+        'src/base/file_util_mac.mm',
+        'src/base/file_version_info_mac.mm',
+        'src/base/mac_util.mm',
+        'src/base/message_pump_mac.mm',
+        'src/base/platform_thread_mac.mm',
+        'src/base/process_util_mac.mm',
+        'src/base/scoped_nsautorelease_pool.mm',
+        'src/base/sys_string_conversions_mac.mm',
+        'src/base/worker_pool_mac.mm',
+        'src/chrome/common/chrome_paths_mac.mm',
+        'src/chrome/common/mach_ipc_mac.mm',
     ]
 
 if os_linux:
