@@ -52,5 +52,43 @@
                 "C:/slave/talos-data/talos/xperf.config"
             ]
         }
+    },
+    "mobile-suites": {
+        "remote-tspaint": {
+            "tests": ["ts_paint"]
+        },
+        "remote-tsvgx": {
+            "tests": ["tsvgx"],
+            "talos_options": [
+                "--noChrome"
+            ]
+        },
+        "remote-tcanvasmark": {
+            "tests": ["tcanvasmark"],
+            "talos_options": [
+                "--noChrome"
+            ]
+        },
+        "remote-trobopan": {
+            "tests": ["trobopan"],
+            "talos_options": [
+                "--fennecIDs", "../fennec_ids.txt"
+            ]
+        },
+        "remote-troboprovider": {
+            "tests": ["tprovider"],
+            "talos_options": [
+                "--fennecIDs", "../fennec_ids.txt"
+            ]
+        },
+        "remote-trobocheck2": {
+            "tests": ["tcheck2"],
+            "talos_options": [
+                "--fennecIDs", "../fennec_ids.txt"
+            ]
+        },
+        "remote-tp4m_nochrome": {
+            "tests": ["tp4m"]
+        }
     }
 }
