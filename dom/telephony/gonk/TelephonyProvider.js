@@ -22,7 +22,9 @@ const NS_XPCOM_SHUTDOWN_OBSERVER_ID   = "xpcom-shutdown";
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
+const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
+const kPrefDefaultServiceId = "dom.telephony.defaultServiceId";
 
 const nsIAudioManager = Ci.nsIAudioManager;
 const nsITelephonyProvider = Ci.nsITelephonyProvider;
@@ -86,8 +88,10 @@ function TelephonyProvider() {
   this._listeners = [];
 
   this._updateDebugFlag();
+  this.defaultServiceId = this._getDefaultServiceId();
 
   Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
+  Services.prefs.addObserver(kPrefDefaultServiceId, this, false);
 
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 }
@@ -273,9 +277,22 @@ TelephonyProvider.prototype = {
     } catch (e) {}
   },
 
+  _getDefaultServiceId: function _getDefaultServiceId() {
+    let id = Services.prefs.getIntPref(kPrefDefaultServiceId);
+    let numRil = Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
+
+    if (id >= numRil || id < 0) {
+      id = 0;
+    }
+
+    return id;
+  },
+
   /**
    * nsITelephonyProvider interface.
    */
+
+  defaultServiceId: 0,
 
   registerListener: function(aListener) {
     if (this._listeners.indexOf(aListener) >= 0) {
@@ -513,6 +530,8 @@ TelephonyProvider.prototype = {
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
         if (aData === kPrefRilDebuggingEnabled) {
           this._updateDebugFlag();
+	} else if (aData === kPrefDefaultServiceId) {
+          this.defaultServiceId = this._getDefaultServiceId();
         }
         break;
 

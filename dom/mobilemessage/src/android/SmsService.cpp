@@ -16,6 +16,14 @@ namespace mobilemessage {
 NS_IMPL_ISUPPORTS1(SmsService, nsISmsService)
 
 NS_IMETHODIMP
+SmsService::GetSmsDefaultServiceId(uint32_t* aServiceId)
+{
+  // Android has no official DSDS support.
+  *aServiceId = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 SmsService::HasSupport(bool* aHasSupport)
 {
   *aHasSupport = true;
