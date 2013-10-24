@@ -219,7 +219,6 @@ Editor.prototype = {
       cm = win.CodeMirror(win.document.body, this.config);
       cm.getWrapperElement().addEventListener("contextmenu", (ev) => {
         ev.preventDefault();
-        this.emit("contextMenu");
         this.showContextMenu(doc, ev.screenX, ev.screenY);
       }, false);
 
