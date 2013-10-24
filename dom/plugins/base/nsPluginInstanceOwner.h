@@ -365,7 +365,8 @@ private:
   nsRefPtr<nsPluginDOMContextMenuListener> mCXMenuListener;
   
   nsresult DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent);
-  nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent);
+  nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
+                                 bool aAllowPropagate = false);
   nsresult DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent);
 
   int mLastMouseDownButtonType;
