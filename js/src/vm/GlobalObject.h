@@ -96,7 +96,8 @@ class GlobalObject : public JSObject
 
     /* One-off properties stored after slots for built-ins. */
     static const unsigned ARRAY_ITERATOR_PROTO  = FROM_BUFFER_UINT8CLAMPED + 1;
-    static const unsigned LEGACY_GENERATOR_OBJECT_PROTO = ARRAY_ITERATOR_PROTO + 1;
+    static const unsigned STRING_ITERATOR_PROTO  = ARRAY_ITERATOR_PROTO + 1;
+    static const unsigned LEGACY_GENERATOR_OBJECT_PROTO = STRING_ITERATOR_PROTO + 1;
     static const unsigned STAR_GENERATOR_OBJECT_PROTO = LEGACY_GENERATOR_OBJECT_PROTO + 1;
     static const unsigned MAP_ITERATOR_PROTO      = STAR_GENERATOR_OBJECT_PROTO + 1;
     static const unsigned SET_ITERATOR_PROTO      = MAP_ITERATOR_PROTO + 1;
@@ -350,7 +351,7 @@ class GlobalObject : public JSObject
     JSObject *maybeGetArrayPrototype() {
         if (arrayClassInitialized())
             return &getPrototype(JSProto_Array).toObject();
-        return NULL;
+        return nullptr;
     }
 
     JSObject *getOrCreateBooleanPrototype(JSContext *cx) {
@@ -464,6 +465,10 @@ class GlobalObject : public JSObject
 
     JSObject *getOrCreateArrayIteratorPrototype(JSContext *cx) {
         return getOrCreateObject(cx, ARRAY_ITERATOR_PROTO, initIteratorClasses);
+    }
+
+    JSObject *getOrCreateStringIteratorPrototype(JSContext *cx) {
+        return getOrCreateObject(cx, STRING_ITERATOR_PROTO, initIteratorClasses);
     }
 
     JSObject *getOrCreateLegacyGeneratorObjectPrototype(JSContext *cx) {

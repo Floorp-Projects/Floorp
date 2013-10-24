@@ -2,10 +2,9 @@
 <html>
 <head>
 <style type="text/css">
-.separator {
+.block {
  height: 20px;
  background-color: green;
- margin-bottom: 20px;
 }
 #table {
  width: 100px;
@@ -13,20 +12,31 @@
 #caption {
  height: 20px;
  background-color: blue;
- margin-bottom: 20px;
 }
 #cell {
  height: 20px;
- background-color: red;
+ background-color: orange;
+}
+#spacer1 {
+ height: 10px;
+}
+#spacer2 {
+ height: 20px;
+}
+#spacer3 {
+ height: 30px;
 }
 </style>
 </head>
 <body>
-<div class="separator"></div>
+<div class="block"></div>
+<div id="spacer3"></div>
 <div id="table">
  <div id="caption"></div>
+<div id="spacer2"></div>
  <div id="cell"></div>
 </div>
-<div class="separator"></div>
+<div id="spacer1"></div>
+<div class="block"></div>
 </body>
 </html>

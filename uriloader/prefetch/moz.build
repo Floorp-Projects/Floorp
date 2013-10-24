@@ -21,12 +21,12 @@ EXPORTS.mozilla.docshell += [
 ]
 
 CPP_SOURCES += [
-    'OfflineCacheUpdateChild.cpp',
-    'OfflineCacheUpdateGlue.cpp',
-    'OfflineCacheUpdateParent.cpp',
     'nsOfflineCacheUpdate.cpp',
     'nsOfflineCacheUpdateService.cpp',
     'nsPrefetchService.cpp',
+    'OfflineCacheUpdateChild.cpp',
+    'OfflineCacheUpdateGlue.cpp',
+    'OfflineCacheUpdateParent.cpp',
 ]
 
 IPDL_SOURCES += [

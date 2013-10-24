@@ -109,6 +109,13 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
   return true;
 }
 
+/* static */ bool
+ISurfaceAllocator::IsShmem(SurfaceDescriptor* aSurface)
+{
+  return aSurface && (aSurface->type() == SurfaceDescriptor::TShmem ||
+                      aSurface->type() == SurfaceDescriptor::TYCbCrImage ||
+                      aSurface->type() == SurfaceDescriptor::TRGBImage);
+}
 
 void
 ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)

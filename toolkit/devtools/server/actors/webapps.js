@@ -389,13 +389,6 @@ WebappsActor.prototype = {
 
           let appType = self._getAppType(manifest.type);
 
-          // In production builds, don't allow installation of certified apps.
-          if (!DOMApplicationRegistry.allowSideloadingCertified &&
-              appType == Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
-            self._sendError(deferred, "Installing certified apps is not allowed.", aId);
-            return;
-          }
-
           // Privileged and certified packaged apps can setup a custom origin
           // via `origin` manifest property
           let id = aId;

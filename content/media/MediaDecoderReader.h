@@ -166,14 +166,14 @@ public:
     Plane mPlanes[3];
   };
 
-  // Constructs a VideoData object. If aImage is NULL, creates a new Image
-  // holding a copy of the YCbCr data passed in aBuffer. If aImage is not NULL,
-  // it's stored as the underlying video image and aBuffer is assumed to point
-  // to memory within aImage so no copy is made. aTimecode is a codec specific
-  // number representing the timestamp of the frame of video data. Returns
-  // nsnull if an error occurs. This may indicate that memory couldn't be
-  // allocated to create the VideoData object, or it may indicate some problem
-  // with the input data (e.g. negative stride).
+  // Constructs a VideoData object. If aImage is nullptr, creates a new Image
+  // holding a copy of the YCbCr data passed in aBuffer. If aImage is not
+  // nullptr, it's stored as the underlying video image and aBuffer is assumed
+  // to point to memory within aImage so no copy is made. aTimecode is a codec
+  // specific number representing the timestamp of the frame of video data.
+  // Returns nsnull if an error occurs. This may indicate that memory couldn't
+  // be allocated to create the VideoData object, or it may indicate some
+  // problem with the input data (e.g. negative stride).
   static VideoData* Create(VideoInfo& aInfo,
                            ImageContainer* aContainer,
                            Image* aImage,

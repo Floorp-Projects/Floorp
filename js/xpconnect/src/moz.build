@@ -8,14 +8,18 @@ MODULE = 'xpconnect'
 
 EXPORTS += [
     'BackstagePass.h',
-    'XPCJSMemoryReporter.h',
     'nsCxPusher.h',
     'qsObjectHelper.h',
+    'XPCJSMemoryReporter.h',
     'xpcObjectHelper.h',
     'xpcpublic.h',
 ]
 
 CPP_SOURCES += [
+    'nsCxPusher.cpp',
+    'nsScriptError.cpp',
+    'nsXPConnect.cpp',
+    'Sandbox.cpp',
     'XPCCallContext.cpp',
     'XPCComponents.cpp',
     'XPCContext.cpp',
@@ -44,10 +48,6 @@ CPP_SOURCES += [
     'XPCWrappedNativeProto.cpp',
     'XPCWrappedNativeScope.cpp',
     'XPCWrapper.cpp',
-    'nsCxPusher.cpp',
-    'nsScriptError.cpp',
-    'nsXPConnect.cpp',
-    'Sandbox.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

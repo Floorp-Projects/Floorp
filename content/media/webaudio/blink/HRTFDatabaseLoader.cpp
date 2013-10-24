@@ -198,7 +198,7 @@ void HRTFDatabaseLoader::shutdown()
 {
     MOZ_ASSERT(NS_IsMainThread());
     if (s_loaderMap) {
-        // Set s_loaderMap to NULL so that the hashtable is not modified on
+        // Set s_loaderMap to nullptr so that the hashtable is not modified on
         // reference release during enumeration.
         nsTHashtable<LoaderByRateEntry>* loaderMap = s_loaderMap;
         s_loaderMap = nullptr;

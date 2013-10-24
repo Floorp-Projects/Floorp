@@ -23,11 +23,11 @@ NS_DEFINE_NAMED_CID(NS_ANDROIDHISTORY_CID);
 #endif
 
 static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
-  { &knsShellService_CID, false, NULL, nsShellServiceConstructor },
+  { &knsShellService_CID, false, nullptr, nsShellServiceConstructor },
 #ifdef MOZ_ANDROID_HISTORY
-  { &kNS_ANDROIDHISTORY_CID, false, NULL, nsAndroidHistoryConstructor },
+  { &kNS_ANDROIDHISTORY_CID, false, nullptr, nsAndroidHistoryConstructor },
 #endif
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
@@ -35,7 +35,7 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
 #ifdef MOZ_ANDROID_HISTORY
   { NS_IHISTORY_CONTRACTID, &kNS_ANDROIDHISTORY_CID },
 #endif
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kBrowserModule = {

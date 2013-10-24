@@ -7,10 +7,10 @@
 MODULE = 'pref'
 
 CPP_SOURCES += [
-    'Preferences.cpp',
     'nsPrefBranch.cpp',
     'nsPrefsFactory.cpp',
     'prefapi.cpp',
+    'Preferences.cpp',
     'prefread.cpp',
 ]
 
