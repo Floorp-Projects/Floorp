@@ -5771,13 +5771,12 @@ nsGlobalWindow::Blur()
 
   // If embedding apps don't implement nsIEmbeddingSiteWindow, we
   // shouldn't throw exceptions to web content.
-  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
   nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_GetInterface(treeOwner));
   if (siteWindow) {
     // This method call may cause mDocShell to become nullptr.
-    rv = siteWindow->Blur();
+    siteWindow->Blur();
 
     // if the root is focused, clear the focus
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -5790,7 +5789,7 @@ nsGlobalWindow::Blur()
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
