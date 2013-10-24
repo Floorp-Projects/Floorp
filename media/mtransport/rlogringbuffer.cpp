@@ -70,7 +70,7 @@ inline void RLogRingBuffer::RemoveOld() {
 RLogRingBuffer* RLogRingBuffer::CreateInstance() {
   if (!instance) {
     instance = new RLogRingBuffer;
-    r_log_set_extra_destination(LOG_DEBUG, &ringbuffer_vlog);
+    r_log_set_extra_destination(LOG_INFO, &ringbuffer_vlog);
   }
   return instance;
 }
@@ -81,7 +81,7 @@ RLogRingBuffer* RLogRingBuffer::GetInstance() {
 
 void RLogRingBuffer::DestroyInstance() {
   // First param is ignored when passing null
-  r_log_set_extra_destination(LOG_DEBUG, nullptr);
+  r_log_set_extra_destination(LOG_INFO, nullptr);
   delete instance;
   instance = nullptr;
 }
