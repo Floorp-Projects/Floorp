@@ -64,7 +64,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     }
 
     static bool allowFloat32Optimizations() {
-        return true;
+        return false; // See bug 927408.
     }
 };
 
