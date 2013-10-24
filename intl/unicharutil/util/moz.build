@@ -21,3 +21,5 @@ include('objs.mozbuild')
 SOURCES += intl_unicharutil_util_cppsrcs
 
 LIBRARY_NAME = 'unicharutil_external_s'
+
+FORCE_STATIC_LIB = True

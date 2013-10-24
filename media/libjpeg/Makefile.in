@@ -16,9 +16,6 @@ ifeq ($(AS),yasm)
   AS_DASH_C_FLAG=
 endif
 
-# need static lib for some of the libimg componentry to link properly
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
 jpeg_nbits_table.h: $(srcdir)/genTables.py
