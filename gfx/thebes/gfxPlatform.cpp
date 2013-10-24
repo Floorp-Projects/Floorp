@@ -393,6 +393,15 @@ gfxPlatform::Init()
         NS_RUNTIMEABORT("Could not initialize mScreenReferenceSurface");
     }
 
+    if (gPlatform->SupportsAzureContent()) {
+        gPlatform->mScreenReferenceDrawTarget =
+            gPlatform->CreateOffscreenContentDrawTarget(IntSize(1, 1),
+                                                        FORMAT_B8G8R8A8);
+      if (!gPlatform->mScreenReferenceDrawTarget) {
+        NS_RUNTIMEABORT("Could not initialize mScreenReferenceDrawTarget");
+      }
+    }
+
     rv = gfxFontCache::Init();
     if (NS_FAILED(rv)) {
         NS_RUNTIMEABORT("Could not initialize gfxFontCache");
@@ -500,6 +509,7 @@ gfxPlatform::Shutdown()
 gfxPlatform::~gfxPlatform()
 {
     mScreenReferenceSurface = nullptr;
+    mScreenReferenceDrawTarget = nullptr;
 
     // The cairo folks think we should only clean up in debug builds,
     // but we're generally in the habit of trying to shut down as
