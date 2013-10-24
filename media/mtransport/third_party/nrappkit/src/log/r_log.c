@@ -330,6 +330,15 @@ int r_dump(int facility,int level,char *name,char *data,int len)
     return(0);
   }
 
+// Some platforms (notably WIN32) do not have this
+#ifndef va_copy
+  #ifdef WIN32
+    #define va_copy(dest, src) ( (dest) = (src) )
+  #else  // WIN32
+    #error va_copy undefined, and semantics of assignment on va_list unknown
+  #endif //WIN32
+#endif //va_copy
+
 int r_vlog(int facility,int level,const char *format,va_list ap)
   {
     char log_fmt_buf[MAX_ERROR_STRING_SIZE];
@@ -354,7 +363,12 @@ int r_vlog(int facility,int level,const char *format,va_list ap)
 
     for(i=0; i<LOG_NUM_DESTINATIONS; i++){
       if(r_logging_dest(i,facility,level)){
-        log_destinations[i].dest_vlog(facility,level,fmt_str,ap);
+        // Some platforms do not react well when you use a va_list more than
+        // once
+        va_list copy;
+        va_copy(copy, ap);
+        log_destinations[i].dest_vlog(facility,level,fmt_str,copy);
+        va_end(copy);
       }
     }
     return(0);
