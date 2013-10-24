@@ -15,7 +15,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'satchel'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsFormFillController.cpp',
 ]
 

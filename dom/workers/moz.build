@@ -31,7 +31,7 @@ EXPORTS.mozilla.dom.workers.bindings += [
     'XMLHttpRequestUpload.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'ChromeWorkerScope.cpp',
     'DOMBindingBase.cpp',
     'EventListenerManager.cpp',

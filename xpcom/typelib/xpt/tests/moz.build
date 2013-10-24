@@ -11,7 +11,7 @@ sources = [
     'SimpleTypeLib',
 ]
 
-CSRCS += [
+SOURCES += [
     '%s.c' % s for s in sources
 ]
 

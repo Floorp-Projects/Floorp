@@ -14,7 +14,7 @@ EXPORTS += [
     'Orientation.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'ClippedImage.cpp',
     'Decoder.cpp',
     'DiscardTracker.cpp',

@@ -21,12 +21,12 @@ csrcs = [
     'randtable.c',
 ]
 
-HOST_CSRCS += csrcs
+HOST_SOURCES += csrcs
 HOST_LIBRARY_NAME = 'hostbz2'
 
 LIBRARY_NAME = 'bz2'
 
-CSRCS += [
+SOURCES += [
     'blocksort.c',
     'bzlib.c',
     'compress.c',

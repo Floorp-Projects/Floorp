@@ -76,7 +76,7 @@ EXPORTS.mozilla.css += [
     'StyleRule.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AnimationCommon.cpp',
     'CSS.cpp',
     'Declaration.cpp',

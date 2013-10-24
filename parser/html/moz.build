@@ -47,7 +47,7 @@ EXPORTS += [
     'nsParserUtils.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsHtml5Atom.cpp',
     'nsHtml5Atoms.cpp',
     'nsHtml5AtomTable.cpp',

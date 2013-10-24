@@ -25,7 +25,7 @@ elif toolkit == 'android':
 
 MODULE = 'imgdecoders'
 
-CPP_SOURCES += [
+SOURCES += [
     'EXIF.cpp',
     'nsBMPDecoder.cpp',
     'nsGIFDecoder2.cpp',
@@ -41,7 +41,7 @@ FAIL_ON_WARNINGS = True
 
 LIBXUL_LIBRARY = True
 
-CSRCS += [
+SOURCES += [
     'iccjpeg.c',
 ]
 

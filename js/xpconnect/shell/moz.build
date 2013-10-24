@@ -10,12 +10,12 @@ MODULE = 'xpcshell'
 
 PROGRAM = 'xpcshell'
 
-CPP_SOURCES += [
+SOURCES += [
     'xpcshell.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CMMSRCS += [
+    SOURCES += [
         'xpcshellMacUtils.mm',
     ]
 

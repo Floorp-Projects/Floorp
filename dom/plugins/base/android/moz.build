@@ -11,7 +11,7 @@ EXPORTS += [
     'ANPKeyCodes.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'ANPAudio.cpp',
     'ANPBitmap.cpp',
     'ANPEvent.cpp',

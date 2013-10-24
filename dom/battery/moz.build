@@ -11,7 +11,7 @@ EXPORTS.mozilla.dom.battery += [
     'Types.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'BatteryManager.cpp',
 ]
 

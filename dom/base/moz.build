@@ -63,7 +63,7 @@ EXPORTS.mozilla.dom += [
     'URL.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'BarProps.cpp',
     'CompositionStringSynthesizer.cpp',
     'Crypto.cpp',

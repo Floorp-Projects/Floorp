@@ -12,7 +12,7 @@ EXPORTS += [
     'pngconf.h',
 ]
 
-CSRCS += [
+SOURCES += [
     'png.c',
     'pngerror.c',
     'pngget.c',
@@ -36,12 +36,12 @@ if CONFIG['MOZ_PNG_ARM_NEON']:
     ]
 
 if CONFIG['MOZ_PNG_ARM_NEON']:
-    CSRCS += [
+    SOURCES += [
         'arm/arm_init.c'
     ]
 
 if CONFIG['MOZ_PNG_ARM_NEON']:
-    SSRCS += [
+    SOURCES += [
         'arm/filter_neon.S'
     ]
 

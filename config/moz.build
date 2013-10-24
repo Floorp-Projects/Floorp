@@ -16,7 +16,7 @@ CONFIGURE_SUBST_FILES += [
 ]
 
 if CONFIG['HOST_OS_ARCH'] != 'WINNT':
-    HOST_CSRCS += [
+    HOST_SOURCES += [
         'nsinstall.c',
         'pathsub.c',
     ]

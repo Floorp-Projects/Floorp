@@ -11,7 +11,7 @@ EXPORTS += [
     'nsGeoPositionIPCSerialiser.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsGeolocation.cpp',
     'nsGeoPosition.cpp',
 ]

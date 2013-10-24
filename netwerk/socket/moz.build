@@ -16,7 +16,7 @@ XPIDL_MODULE = 'necko_socket'
 
 MODULE = 'necko'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsSocketProviderService.cpp',
     'nsSOCKSIOLayer.cpp',
     'nsSOCKSSocketProvider.cpp',

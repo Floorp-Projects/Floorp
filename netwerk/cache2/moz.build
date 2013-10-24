@@ -22,7 +22,7 @@ EXPORTS += [
     'CacheStorageService.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AppCacheStorage.cpp',
     'CacheEntriesEnumerator.cpp',
     'CacheEntry.cpp',

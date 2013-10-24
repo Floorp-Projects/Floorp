@@ -19,13 +19,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'updatehelper.cpp',
         'updatehelper.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'pathhash.cpp',
         'uachelper.cpp',
         'updatehelper.cpp',
     ]
 
-CPP_SOURCES += [
+SOURCES += [
     'readstrings.cpp',
     'updatelogging.cpp',
 ]

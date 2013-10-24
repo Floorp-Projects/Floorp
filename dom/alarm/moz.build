@@ -19,7 +19,7 @@ EXPORTS.mozilla.dom.alarm += [
     'AlarmHalService.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AlarmHalService.cpp',
 ]
 

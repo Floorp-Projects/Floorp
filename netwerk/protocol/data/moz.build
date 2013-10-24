@@ -6,7 +6,7 @@
 
 MODULE = 'necko'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsDataChannel.cpp',
     'nsDataHandler.cpp',
 ]

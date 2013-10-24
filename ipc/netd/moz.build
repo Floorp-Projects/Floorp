@@ -10,7 +10,7 @@ EXPORTS.mozilla.ipc += [
     'Netd.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'Netd.cpp',
 ]
 
