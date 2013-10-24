@@ -354,3 +354,5 @@ HOST_SOURCES += [
     'jskwgen.cpp',
     'jsoplengen.cpp',
 ]
+
+FORCE_STATIC_LIB = True

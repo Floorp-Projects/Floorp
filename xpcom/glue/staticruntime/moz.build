@@ -22,3 +22,4 @@ SDK_LIBRARY = [
     "%s%s.%s" % (CONFIG['LIB_PREFIX'], 'xpcomglue_staticruntime_s', CONFIG['LIB_SUFFIX']),
 ]
 
+FORCE_STATIC_LIB = True

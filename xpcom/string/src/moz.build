@@ -29,3 +29,6 @@ LIBRARY_NAME = 'string_s'
 
 MSVC_ENABLE_PGO = True
 
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+FORCE_STATIC_LIB = True

@@ -42,3 +42,4 @@ EXTRA_PP_JS_MODULES += [
     'MigrationUtils.jsm',
 ]
 
+FORCE_STATIC_LIB = True
