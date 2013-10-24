@@ -24,7 +24,3 @@
   background-image: url("chrome://browser/skin/devtools/orion-debug-location.png"),
     url("chrome://browser/skin/devtools/orion-breakpoint.png");
 }
-
-.CodeMirror-activeline-background {
-  background: #e8f2ff;
-}

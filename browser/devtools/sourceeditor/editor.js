@@ -27,12 +27,14 @@ const L10N = Services.strings.createBundle(L10N_BUNDLE);
 // order to initialize a CodeMirror instance.
 
 const CM_STYLES   = [
+  "chrome://browser/skin/devtools/common.css",
   "chrome://browser/content/devtools/codemirror/codemirror.css",
   "chrome://browser/content/devtools/codemirror/dialog.css",
   "chrome://browser/content/devtools/codemirror/mozilla.css"
 ];
 
 const CM_SCRIPTS  = [
+  "chrome://browser/content/devtools/theme-switching.js",
   "chrome://browser/content/devtools/codemirror/codemirror.js",
   "chrome://browser/content/devtools/codemirror/dialog.js",
   "chrome://browser/content/devtools/codemirror/searchcursor.js",
@@ -58,7 +60,7 @@ const CM_IFRAME   =
   "    </style>" +
 [ "    <link rel='stylesheet' href='" + style + "'>" for (style of CM_STYLES) ].join("\n") +
   "  </head>" +
-  "  <body></body>" +
+  "  <body class='theme-body devtools-monospace'></body>" +
   "</html>";
 
 const CM_MAPPING = [
@@ -74,7 +76,8 @@ const CM_MAPPING = [
   "clearHistory",
   "openDialog",
   "cursorCoords",
-  "lineCount"
+  "lineCount",
+  "refresh"
 ];
 
 const CM_JUMP_DIALOG = [
@@ -132,7 +135,8 @@ function Editor(config) {
     matchBrackets:   true,
     extraKeys:       {},
     indentWithTabs:  useTabs,
-    styleActiveLine: true
+    styleActiveLine: true,
+    theme: "mozilla"
   };
 
   // Overwrite default config with user-provided, if needed.
@@ -182,7 +186,7 @@ Editor.prototype = {
     let def = promise.defer();
     let cm  = editors.get(this);
     let doc = el.ownerDocument;
-    let env = doc.createElementNS(XUL_NS, "iframe");
+    let env = doc.createElement("iframe");
     env.flex = 1;
 
     if (cm)
