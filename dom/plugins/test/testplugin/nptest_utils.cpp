@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include "mozilla/NullPtr.h"
 
 NPUTF8*
 createCStringFromNPVariant(const NPVariant* variant)
