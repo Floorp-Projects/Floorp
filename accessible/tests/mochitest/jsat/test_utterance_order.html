@@ -84,6 +84,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             "table with 1 column and 1 row"
           ]]
         }, {
+          accOrElmOrID: "email",
+          expected: [
+            ["e-mail entry", "test@example.com"],
+            ["test@example.com", "e-mail entry"]
+          ]
+        }, {
+          accOrElmOrID: "search",
+          expected: [
+            ["search entry", "This is a search"],
+            ["This is a search", "search entry"]
+          ]
+        }, {
+          accOrElmOrID: "tel",
+          expected: [
+            ["telephone entry", "555-5555"], ["555-5555", "telephone entry"]
+          ]
+        }, {
+          accOrElmOrID: "url",
+          expected: [
+            ["URL entry", "http://example.com"],
+            ["http://example.com", "URL entry"]
+          ]
+        }, {
           // Test pivot to list from li_one.
           accOrElmOrID: "list",
           oldAccOrElmOrID: "li_one",
@@ -276,6 +299,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <label id="label4">Points:
         <input id="input4" type="range" name="points" min="1" max="10" value="3">
       </label>
+      <input id="email" type="email" value="test@example.com" />
+      <input id="search" type="search" value="This is a search" />
+      <input id="tel" type="tel" value="555-5555" />
+      <input id="url" type="url" value="http://example.com" />
     </div>
   </body>
 </html>
