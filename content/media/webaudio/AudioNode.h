@@ -229,8 +229,6 @@ public:
 
   void RemoveOutputParam(AudioParam* aParam);
 
-  virtual void NotifyInputConnected() {}
-
   // MarkActive() asks the context to keep the AudioNode alive until the
   // context is finished.  This takes care of "playing" references and
   // "tail-time" references.
