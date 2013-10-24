@@ -71,3 +71,6 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/win32/include',
     ]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    NO_VISIBILITY_FLAGS = True
