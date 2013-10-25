@@ -680,7 +680,7 @@ public:
   }
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCallback,
-                            nsISupports* aClosure)
+                            nsISupports* aData)
   {
     dmd::Sizes sizes;
     dmd::SizeOf(&sizes);
@@ -691,7 +691,7 @@ public:
       rv = aCallback->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),     \
                                nsIMemoryReporter::KIND_HEAP,                  \
                                nsIMemoryReporter::UNITS_BYTES, _amount,       \
-                               NS_LITERAL_CSTRING(_desc), aClosure);          \
+                               NS_LITERAL_CSTRING(_desc), aData);             \
       NS_ENSURE_SUCCESS(rv, rv);                                              \
     } while (0)
 
