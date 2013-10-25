@@ -4,6 +4,3 @@
 
 
 MOZILLA_INTERNAL_API = 1
-
-# we don't want the shared lib
-FORCE_STATIC_LIB = 1

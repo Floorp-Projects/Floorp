@@ -18,3 +18,4 @@ LIBRARY_NAME = 'mediaresourcemanager'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FORCE_STATIC_LIB = True

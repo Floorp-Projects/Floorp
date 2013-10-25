@@ -13,6 +13,8 @@
 #include "nsAccUtils.h"
 #include "nsAccessibleRelation.h"
 #include "nsAccessibilityService.h"
+#include "ApplicationAccessible.h"
+#include "nsCoreUtils.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIAccessibleRole.h"
 #include "nsEventShell.h"
@@ -2180,6 +2182,33 @@ Accessible::RelationByType(RelationType aType)
       return Relation();
     }
 
+    case RelationType::CONTAINING_DOCUMENT:
+      return Relation(mDoc);
+
+    case RelationType::CONTAINING_TAB_PANE: {
+      nsCOMPtr<nsIDocShell> docShell =
+        nsCoreUtils::GetDocShellFor(GetNode());
+      if (docShell) {
+        // Walk up the parent chain without crossing the boundary at which item
+        // types change, preventing us from walking up out of tab content.
+        nsCOMPtr<nsIDocShellTreeItem> root;
+        docShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+        if (root) {
+          // If the item type is typeContent, we assume we are in browser tab
+          // content. Note, this includes content such as about:addons,
+          // for consistency.
+          int32_t itemType = 0;
+          root->GetItemType(&itemType);
+          if (itemType == nsIDocShellTreeItem::typeContent)
+            return Relation(nsAccUtils::GetDocAccessibleFor(root));
+        }
+      }
+      return  Relation();
+    }
+
+    case RelationType::CONTAINING_APPLICATION:
+      return Relation(ApplicationAcc());
+
     default:
       return Relation();
   }
@@ -2214,7 +2243,10 @@ Accessible::GetRelations(nsIArray **aRelations)
     nsIAccessibleRelation::RELATION_EMBEDDED_BY,
     nsIAccessibleRelation::RELATION_POPUP_FOR,
     nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF,
-    nsIAccessibleRelation::RELATION_DEFAULT_BUTTON
+    nsIAccessibleRelation::RELATION_DEFAULT_BUTTON,
+    nsIAccessibleRelation::RELATION_CONTAINING_DOCUMENT,
+    nsIAccessibleRelation::RELATION_CONTAINING_TAB_PANE,
+    nsIAccessibleRelation::RELATION_CONTAINING_APPLICATION
   };
 
   for (uint32_t idx = 0; idx < ArrayLength(relationTypes); idx++) {
