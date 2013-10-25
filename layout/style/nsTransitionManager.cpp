@@ -178,7 +178,8 @@ ElementTransitions::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
 
     if (!css::CommonElementAnimationData::CanAnimatePropertyOnCompositor(mElement,
                                                                          pt.mProperty,
-                                                                         aFlags)) {
+                                                                         aFlags) ||
+        !css::CommonElementAnimationData::IsCompositorAnimationDisabledForFrame(frame)) {
       return false;
     }
     if (pt.mProperty == eCSSProperty_opacity) {

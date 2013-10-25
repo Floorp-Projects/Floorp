@@ -377,9 +377,17 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
     return;
   }
 
-  // If the frame is not prerendered, bail out.  Layout will still perform the
-  // animation.
+  // If the frame is not prerendered, bail out.
   if (!aItem->CanUseAsyncAnimations(aBuilder)) {
+    // AnimationManager or TransitionManager need to know that we refused to
+    // run this animation asynchronously so that they will not throttle the
+    // main thread animation.
+    frame->Properties().Set(nsIFrame::RefusedAsyncAnimation(),
+                            reinterpret_cast<void*>(intptr_t(true)));
+
+    // We need to schedule another refresh driver run so that AnimationManager
+    // or TransitionManager get a chance to unthrottle the animation.
+    frame->SchedulePaint();
     return;
   }
 

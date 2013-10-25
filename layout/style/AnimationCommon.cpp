@@ -288,6 +288,13 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
   return enabled && propertyAllowed;
 }
 
+/* static */ bool
+CommonElementAnimationData::IsCompositorAnimationDisabledForFrame(nsIFrame* aFrame)
+{
+  void* prop = aFrame->Properties().Get(nsIFrame::RefusedAsyncAnimation());
+  return bool(reinterpret_cast<intptr_t>(prop));
+}
+
 /* static */ void
 CommonElementAnimationData::LogAsyncAnimationFailure(nsCString& aMessage,
                                                      const nsIContent* aContent)
