@@ -8,6 +8,8 @@
 
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "EncodedFrameContainer.h"
+#include "TrackMetadataBase.h"
 
 namespace mozilla {
 /**
@@ -31,11 +33,20 @@ public:
    * END_OF_STREAM if this is the last packet of track.
    * Currently, WriteEncodedTrack doesn't support multiple tracks.
    */
-  virtual nsresult WriteEncodedTrack(const nsTArray<uint8_t>& aBuffer,
-                                     int aDuration, uint32_t aFlags = 0) = 0;
+  virtual nsresult WriteEncodedTrack(const EncodedFrameContainer& aData,
+                                     uint32_t aFlags = 0) = 0;
+
+  /**
+   * Set the meta data pointer into muxer
+   * This function will check the integrity of aMetadata.
+   * If the meta data isn't well format, this function will return NS_ERROR_FAILURE to caller,
+   * else save the pointer to mMetadata and return NS_OK.
+   */
+  virtual nsresult SetMetadata(nsRefPtr<TrackMetadataBase> aMetadata) = 0;
 
   enum {
-    FLUSH_NEEDED = 1 << 0
+    FLUSH_NEEDED = 1 << 0,
+    GET_HEADER = 1 << 1
   };
 
   /**
@@ -50,6 +61,7 @@ public:
                                     uint32_t aFlags = 0) = 0;
 
 protected:
+  nsRefPtr<TrackMetadataBase> mMetadata;
   bool mInitialized;
 };
 }

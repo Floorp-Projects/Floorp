@@ -8,8 +8,10 @@ MODULE = 'content'
 
 EXPORTS += [
     'ContainerWriter.h',
+    'EncodedFrameContainer.h',
     'MediaEncoder.h',
     'TrackEncoder.h',
+    'TrackMetadataBase.h',
 ]
 
 SOURCES += [
