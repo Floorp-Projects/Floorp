@@ -24,7 +24,18 @@ const char* LatencyLogIndex2Strings[] = {
   "Video MediaStreamTrack",
   "Cubeb",
   "AudioStream",
-  "NetStat"
+  "NetEQ",
+  "AudioCapture Base",
+  "AudioCapture Samples",
+  "AudioTrackInsertion",
+  "MediaPipeline Audio Insertion",
+  "AudioTransmit",
+  "AudioReceive",
+  "MediaPipelineAudioPlayout",
+  "MediaStream Create",
+  "AudioStream Create",
+  "AudioSendRTP",
+  "AudioRecvRTP"
 };
 
 static StaticRefPtr<AsyncLatencyLogger> gAsyncLogger;
@@ -43,15 +54,23 @@ GetLatencyLog()
 class LogEvent : public nsRunnable
 {
 public:
+  LogEvent(AsyncLatencyLogger::LatencyLogIndex aIndex, uint64_t aID, int64_t aValue,
+           TimeStamp aTimeStamp) :
+    mIndex(aIndex),
+    mID(aID),
+    mValue(aValue),
+    mTimeStamp(aTimeStamp)
+  {}
   LogEvent(AsyncLatencyLogger::LatencyLogIndex aIndex, uint64_t aID, int64_t aValue) :
     mIndex(aIndex),
     mID(aID),
-    mValue(aValue)
+    mValue(aValue),
+    mTimeStamp(TimeStamp())
   {}
   ~LogEvent() {}
 
   NS_IMETHOD Run() {
-    AsyncLatencyLogger::Get(true)->WriteLog(mIndex, mID, mValue);
+    AsyncLatencyLogger::Get(true)->WriteLog(mIndex, mID, mValue, mTimeStamp);
     return NS_OK;
   }
 
@@ -59,11 +78,36 @@ protected:
   AsyncLatencyLogger::LatencyLogIndex mIndex;
   uint64_t mID;
   int64_t mValue;
+  TimeStamp mTimeStamp;
 };
 
 void LogLatency(AsyncLatencyLogger::LatencyLogIndex aIndex, uint64_t aID, int64_t aValue)
 {
   AsyncLatencyLogger::Get()->Log(aIndex, aID, aValue);
+}
+
+void LogTime(AsyncLatencyLogger::LatencyLogIndex aIndex, uint64_t aID, int64_t aValue)
+{
+  TimeStamp now = TimeStamp::Now();
+  AsyncLatencyLogger::Get()->Log(aIndex, aID, aValue, now);
+}
+
+void LogTime(AsyncLatencyLogger::LatencyLogIndex aIndex, uint64_t aID, int64_t aValue, TimeStamp &aTime)
+{
+  AsyncLatencyLogger::Get()->Log(aIndex, aID, aValue, aTime);
+}
+
+void LogTime(uint32_t aIndex, uint64_t aID, int64_t aValue)
+{
+  LogTime(static_cast<AsyncLatencyLogger::LatencyLogIndex>(aIndex), aID, aValue);
+}
+void LogTime(uint32_t aIndex, uint64_t aID, int64_t aValue, TimeStamp &aTime)
+{
+  LogTime(static_cast<AsyncLatencyLogger::LatencyLogIndex>(aIndex), aID, aValue, aTime);
+}
+void LogLatency(uint32_t aIndex, uint64_t aID, int64_t aValue)
+{
+  LogLatency(static_cast<AsyncLatencyLogger::LatencyLogIndex>(aIndex), aID, aValue);
 }
 
 /* static */
@@ -128,6 +172,12 @@ void AsyncLatencyLogger::Init()
   }
 }
 
+void AsyncLatencyLogger::GetStartTime(TimeStamp &aStart)
+{
+  MutexAutoLock lock(mMutex);
+  aStart = mStart;
+}
+
 nsresult
 AsyncLatencyLogger::Observe(nsISupports* aSubject, const char* aTopic,
                             const PRUnichar* aData)
@@ -140,11 +190,19 @@ AsyncLatencyLogger::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 // aID is a sub-identifier (in particular a specific MediaStramTrack)
-void AsyncLatencyLogger::WriteLog(LatencyLogIndex aIndex, uint64_t aID, int64_t aValue)
+void AsyncLatencyLogger::WriteLog(LatencyLogIndex aIndex, uint64_t aID, int64_t aValue,
+                                  TimeStamp aTimeStamp)
 {
-  PR_LOG(GetLatencyLog(), PR_LOG_DEBUG,
-         ("%s,%llu,%lld.,%lld.",
-          LatencyLogIndex2Strings[aIndex], aID, GetTimeStamp(), aValue));
+  if (aTimeStamp.IsNull()) {
+    PR_LOG(GetLatencyLog(), PR_LOG_DEBUG,
+      ("Latency: %s,%llu,%lld,%lld",
+       LatencyLogIndex2Strings[aIndex], aID, GetTimeStamp(), aValue));
+  } else {
+    PR_LOG(GetLatencyLog(), PR_LOG_DEBUG,
+      ("Latency: %s,%llu,%lld,%lld,%lld",
+       LatencyLogIndex2Strings[aIndex], aID, GetTimeStamp(), aValue,
+       static_cast<int64_t>((aTimeStamp - gAsyncLogger->mStart).ToMilliseconds())));
+  }
 }
 
 int64_t AsyncLatencyLogger::GetTimeStamp()
@@ -155,8 +213,14 @@ int64_t AsyncLatencyLogger::GetTimeStamp()
 
 void AsyncLatencyLogger::Log(LatencyLogIndex aIndex, uint64_t aID, int64_t aValue)
 {
+  TimeStamp null;
+  Log(aIndex, aID, aValue, null);
+}
+
+void AsyncLatencyLogger::Log(LatencyLogIndex aIndex, uint64_t aID, int64_t aValue, TimeStamp &aTime)
+{
   if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
-    nsCOMPtr<nsIRunnable> event = new LogEvent(aIndex, aID, aValue);
+    nsCOMPtr<nsIRunnable> event = new LogEvent(aIndex, aID, aValue, aTime);
     if (mThread) {
       mThread->Dispatch(event, NS_DISPATCH_NORMAL);
     }

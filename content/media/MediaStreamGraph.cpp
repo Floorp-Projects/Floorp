@@ -772,6 +772,10 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
         // match the system's ideal channel configuration.
         audioOutputStream->mStream->Init(2, tracks->GetRate(), AUDIO_CHANNEL_NORMAL, AudioStream::LowLatency);
         audioOutputStream->mTrackID = tracks->GetID();
+
+        LogLatency(AsyncLatencyLogger::AudioStreamCreate,
+                   reinterpret_cast<uint64_t>(aStream),
+                   reinterpret_cast<int64_t>(audioOutputStream->mStream.get()));
       }
     }
   }
@@ -854,8 +858,9 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
                              aStream, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
                              startTicks, endTicks));
       }
-      // XXX need unique id for stream & track
-      output.WriteTo((((uint64_t)i) << 32) | track->GetID(), audioOutput.mStream);
+      // Need unique id for stream & track - and we want it to match the inserter
+      output.WriteTo(LATENCY_STREAM_ID(aStream, track->GetID()),
+                     audioOutput.mStream);
       t = end;
     }
   }
