@@ -135,6 +135,48 @@ gfxXlibSurface::ReleasePixmap() {
     return mDrawable;
 }
 
+static cairo_user_data_key_t gDestroyPixmapKey;
+
+struct DestroyPixmapClosure {
+    DestroyPixmapClosure(Drawable d, Screen *s) : mPixmap(d), mScreen(s) {}
+    Drawable mPixmap;
+    Screen *mScreen;
+};
+
+static void
+DestroyPixmap(void *data)
+{
+    DestroyPixmapClosure *closure = static_cast<DestroyPixmapClosure*>(data);
+    XFreePixmap(DisplayOfScreen(closure->mScreen), closure->mPixmap);
+    delete closure;
+}
+
+/* static */
+cairo_surface_t *
+gfxXlibSurface::CreateCairoSurface(Screen *screen, Visual *visual,
+                                   const gfxIntSize& size, Drawable relatedDrawable)
+{
+    Drawable drawable =
+        CreatePixmap(screen, size, DepthOfVisual(screen, visual),
+                     relatedDrawable);
+    if (!drawable)
+        return nullptr;
+
+    cairo_surface_t* surface =
+        cairo_xlib_surface_create(DisplayOfScreen(screen), drawable, visual,
+                                  size.width, size.height);
+    if (cairo_surface_status(surface)) {
+        cairo_surface_destroy(surface);
+        XFreePixmap(DisplayOfScreen(screen), drawable);
+        return nullptr;
+    }
+
+    DestroyPixmapClosure *closure = new DestroyPixmapClosure(drawable, screen);
+    cairo_surface_set_user_data(surface, &gDestroyPixmapKey,
+                                closure, DestroyPixmap);
+    return surface;
+}
+
 /* static */
 already_AddRefed<gfxXlibSurface>
 gfxXlibSurface::Create(Screen *screen, Visual *visual,
