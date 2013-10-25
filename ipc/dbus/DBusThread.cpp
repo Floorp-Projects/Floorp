@@ -552,6 +552,15 @@ public:
 
     mDBusWatcher->CleanUp();
 
+    nsIThread* thread;
+    nsresult rv = NS_GetCurrentThread(&thread);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsRefPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(thread, &nsIThread::Shutdown);
+    rv = NS_DispatchToMainThread(runnable);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     return NS_OK;
   }
 
@@ -612,13 +621,7 @@ StopDBus()
     return false;
   }
 
-  nsRefPtr<nsIThread> dbusServiceThread(gDBusServiceThread);
   gDBusServiceThread = nullptr;
-
-  nsRefPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethod(dbusServiceThread, &nsIThread::Shutdown);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  NS_ENSURE_SUCCESS(rv, false);
 
   return true;
 }
