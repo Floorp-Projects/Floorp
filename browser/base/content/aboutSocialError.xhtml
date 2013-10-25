@@ -112,7 +112,19 @@
     }
 
     function reloadProvider() {
+      // Just incase the current provider *isn't* in a frameworker-error
+      // state, reload the current one.
       Social.provider.reload();
+      // If the problem is a frameworker-error, it may be that the child
+      // process crashed - and if that happened, then *all* providers in that
+      // process will have crashed.  However, only the current provider is
+      // likely to have the error surfaced in the UI - so we reload *all*
+      // providers that are in a frameworker-error state.
+      for (let provider of Social.providers) {
+        if (provider.enabled && provider.errorState == "frameworker-error") {
+          provider.reload();
+        }
+      }
     }
 
     parseQueryString();

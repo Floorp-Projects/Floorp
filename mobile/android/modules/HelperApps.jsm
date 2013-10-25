@@ -75,7 +75,11 @@ var HelperApps =  {
 
     // Query for apps that can/can't handle the mimetype
     let msg = this._getMessage("Intent:GetHandlers", uri, flags);
-    let apps = this._parseApps(this._sendMessage(msg).apps);
+    let data = this._sendMessage(msg);
+    if (!data)
+      return [];
+
+    let apps = this._parseApps(data.apps);
 
     if (flags.filterHttp) {
       apps = apps.filter(function(app) {
@@ -132,7 +136,6 @@ var HelperApps =  {
   },
 
   _sendMessage: function(msg) {
-    Services.console.logStringMessage("Sending: " + JSON.stringify(msg));
     let res = Services.androidBridge.handleGeckoMessage(JSON.stringify(msg));
     return JSON.parse(res);
   },

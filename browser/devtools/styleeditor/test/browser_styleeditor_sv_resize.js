@@ -29,13 +29,14 @@ function runTests(aUI)
   is(aUI.editors.length, 2,
      "there is 2 stylesheets initially");
 
-  aUI.editors[0].getSourceEditor().then(function onEditorAttached(aEditor) {
+  aUI.editors[0].getSourceEditor().then(aEditor => {
     executeSoon(function () {
       waitForFocus(function () {
         // queue a resize to inverse aspect ratio
         // this will trigger a detach and reattach (to workaround bug 254144)
         let originalSourceEditor = aEditor.sourceEditor;
-        aEditor.sourceEditor.setCaretOffset(4); // to check the caret is preserved
+        let editor = aEditor.sourceEditor;
+        editor.setCursor(editor.getPosition(4)); // to check the caret is preserved
 
         gOriginalWidth = gPanelWindow.outerWidth;
         gOriginalHeight = gPanelWindow.outerHeight;
@@ -44,7 +45,8 @@ function runTests(aUI)
         executeSoon(function () {
           is(aEditor.sourceEditor, originalSourceEditor,
              "the editor still references the same SourceEditor instance");
-          is(aEditor.sourceEditor.getCaretOffset(), 4,
+          let editor = aEditor.sourceEditor;
+          is(editor.getOffset(editor.getCursor()), 4,
              "the caret position has been preserved");
 
           // queue a resize to original aspect ratio

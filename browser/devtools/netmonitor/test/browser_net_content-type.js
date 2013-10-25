@@ -9,7 +9,7 @@ function test() {
   initNetMonitor(CONTENT_TYPE_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { document, L10N, SourceEditor, NetMonitorView } = aMonitor.panelWin;
+    let { document, L10N, Editor, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
@@ -130,7 +130,7 @@ function test() {
             return NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
               is(aEditor.getText(), "<label value='greeting'>Hello XML!</label>",
                 "The text shown in the source editor is incorrect for the xml request.");
-              is(aEditor.getMode(), SourceEditor.MODES.HTML,
+              is(aEditor.getMode(), Editor.modes.html,
                 "The mode active in the source editor is incorrect for the xml request.");
             });
           }
@@ -140,7 +140,7 @@ function test() {
             return NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
               is(aEditor.getText(), "body:pre { content: 'Hello CSS!' }",
                 "The text shown in the source editor is incorrect for the xml request.");
-              is(aEditor.getMode(), SourceEditor.MODES.CSS,
+              is(aEditor.getMode(), Editor.modes.css,
                 "The mode active in the source editor is incorrect for the xml request.");
             });
           }
@@ -150,7 +150,7 @@ function test() {
             return NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
               is(aEditor.getText(), "function() { return 'Hello JS!'; }",
                 "The text shown in the source editor is incorrect for the xml request.");
-              is(aEditor.getMode(), SourceEditor.MODES.JAVASCRIPT,
+              is(aEditor.getMode(), Editor.modes.js,
                 "The mode active in the source editor is incorrect for the xml request.");
             });
           }
@@ -188,7 +188,7 @@ function test() {
             return NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
               is(aEditor.getText(), "<blink>Not Found</blink>",
                 "The text shown in the source editor is incorrect for the xml request.");
-              is(aEditor.getMode(), SourceEditor.MODES.HTML,
+              is(aEditor.getMode(), Editor.modes.html,
                 "The mode active in the source editor is incorrect for the xml request.");
             });
           }

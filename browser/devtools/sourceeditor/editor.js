@@ -12,6 +12,10 @@ const EXPAND_TAB  = "devtools.editor.expandtab";
 const L10N_BUNDLE = "chrome://browser/locale/devtools/sourceeditor.properties";
 const XUL_NS      = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+// Maximum allowed margin (in number of lines) from top or bottom of the editor
+// while shifting to a line which was initially out of view.
+const MAX_VERTICAL_OFFSET = 3;
+
 const promise = require("sdk/core/promise");
 const events  = require("devtools/shared/event-emitter");
 
@@ -23,17 +27,20 @@ const L10N = Services.strings.createBundle(L10N_BUNDLE);
 // order to initialize a CodeMirror instance.
 
 const CM_STYLES   = [
+  "chrome://browser/skin/devtools/common.css",
   "chrome://browser/content/devtools/codemirror/codemirror.css",
   "chrome://browser/content/devtools/codemirror/dialog.css",
   "chrome://browser/content/devtools/codemirror/mozilla.css"
 ];
 
 const CM_SCRIPTS  = [
+  "chrome://browser/content/devtools/theme-switching.js",
   "chrome://browser/content/devtools/codemirror/codemirror.js",
   "chrome://browser/content/devtools/codemirror/dialog.js",
   "chrome://browser/content/devtools/codemirror/searchcursor.js",
   "chrome://browser/content/devtools/codemirror/search.js",
   "chrome://browser/content/devtools/codemirror/matchbrackets.js",
+  "chrome://browser/content/devtools/codemirror/closebrackets.js",
   "chrome://browser/content/devtools/codemirror/comment.js",
   "chrome://browser/content/devtools/codemirror/javascript.js",
   "chrome://browser/content/devtools/codemirror/xml.js",
@@ -53,13 +60,12 @@ const CM_IFRAME   =
   "    </style>" +
 [ "    <link rel='stylesheet' href='" + style + "'>" for (style of CM_STYLES) ].join("\n") +
   "  </head>" +
-  "  <body></body>" +
+  "  <body class='theme-body devtools-monospace'></body>" +
   "</html>";
 
 const CM_MAPPING = [
   "focus",
   "hasFocus",
-  "setCursor",
   "getCursor",
   "somethingSelected",
   "setSelection",
@@ -70,13 +76,16 @@ const CM_MAPPING = [
   "clearHistory",
   "openDialog",
   "cursorCoords",
-  "lineCount"
+  "lineCount",
+  "refresh"
 ];
 
 const CM_JUMP_DIALOG = [
   L10N.GetStringFromName("gotoLineCmd.promptTitle")
     + " <input type=text style='width: 10em'/>"
 ];
+
+const { cssProperties, cssValues, cssColors } = getCSSKeywords();
 
 const editors = new WeakMap();
 
@@ -126,7 +135,8 @@ function Editor(config) {
     matchBrackets:   true,
     extraKeys:       {},
     indentWithTabs:  useTabs,
-    styleActiveLine: true
+    styleActiveLine: true,
+    theme: "mozilla"
   };
 
   // Overwrite default config with user-provided, if needed.
@@ -176,7 +186,7 @@ Editor.prototype = {
     let def = promise.defer();
     let cm  = editors.get(this);
     let doc = el.ownerDocument;
-    let env = doc.createElementNS(XUL_NS, "iframe");
+    let env = doc.createElement("iframe");
     env.flex = 1;
 
     if (cm)
@@ -192,14 +202,27 @@ Editor.prototype = {
       CM_SCRIPTS.forEach((url) =>
         Services.scriptloader.loadSubScript(url, win, "utf8"));
 
-      // Create a CodeMirror instance add support for context menus and
+      // Replace the propertyKeywords, colorKeywords and valueKeywords
+      // properties of the CSS MIME type with the values provided by Gecko.
+      let cssSpec = win.CodeMirror.resolveMode("text/css");
+      cssSpec.propertyKeywords = cssProperties;
+      cssSpec.colorKeywords = cssColors;
+      cssSpec.valueKeywords = cssValues;
+      win.CodeMirror.defineMIME("text/css", cssSpec);
+
+      let scssSpec = win.CodeMirror.resolveMode("text/x-scss");
+      scssSpec.propertyKeywords = cssProperties;
+      scssSpec.colorKeywords = cssColors;
+      scssSpec.valueKeywords = cssValues;
+      win.CodeMirror.defineMIME("text/x-scss", scssSpec);
+
+      // Create a CodeMirror instance add support for context menus,
       // overwrite the default controller (otherwise items in the top and
       // context menus won't work).
 
       cm = win.CodeMirror(win.document.body, this.config);
       cm.getWrapperElement().addEventListener("contextmenu", (ev) => {
         ev.preventDefault();
-        this.emit("contextMenu");
         this.showContextMenu(doc, ev.screenX, ev.screenY);
       }, false);
 
@@ -434,6 +457,67 @@ Editor.prototype = {
     });
   },
 
+  /**
+   * Gets the first visible line number in the editor.
+   */
+  getFirstVisibleLine: function () {
+    let cm = editors.get(this);
+    return cm.lineAtHeight(0, "local");
+  },
+
+  /**
+   * Scrolls the view such that the given line number is the first visible line.
+   */
+  setFirstVisibleLine: function (line) {
+    let cm = editors.get(this);
+    let { top } = cm.charCoords({line: line, ch: 0}, "local");
+    cm.scrollTo(0, top);
+  },
+
+  /**
+   * Sets the cursor to the specified {line, ch} position with an additional
+   * option to align the line at the "top", "center" or "bottom" of the editor
+   * with "top" being default value.
+   */
+  setCursor: function ({line, ch}, align) {
+    let cm = editors.get(this);
+    this.alignLine(line, align);
+    cm.setCursor({line: line, ch: ch});
+  },
+
+  /**
+   * Aligns the provided line to either "top", "center" or "bottom" of the
+   * editor view with a maximum margin of MAX_VERTICAL_OFFSET lines from top or
+   * bottom.
+   */
+  alignLine: function(line, align) {
+    let cm = editors.get(this);
+    let from = cm.lineAtHeight(0, "page");
+    let to = cm.lineAtHeight(cm.getWrapperElement().clientHeight, "page");
+    let linesVisible = to - from;
+    let halfVisible = Math.round(linesVisible/2);
+
+    // If the target line is in view, skip the vertical alignment part.
+    if (line <= to && line >= from) {
+      return;
+    }
+
+    // Setting the offset so that the line always falls in the upper half
+    // of visible lines (lower half for bottom aligned).
+    // MAX_VERTICAL_OFFSET is the maximum allowed value.
+    let offset = Math.min(halfVisible, MAX_VERTICAL_OFFSET);
+
+    let topLine = {
+      "center": Math.max(line - halfVisible, 0),
+      "bottom": Math.max(line - linesVisible + offset, 0),
+      "top": Math.max(line - offset, 0)
+    }[align || "top"] || offset;
+
+    // Bringing down the topLine to total lines in the editor if exceeding.
+    topLine = Math.min(topLine, this.lineCount());
+    this.setFirstVisibleLine(topLine);
+  },
+
   destroy: function () {
     this.container = null;
     this.config = null;
@@ -451,6 +535,44 @@ CM_MAPPING.forEach(function (name) {
     return cm[name].apply(cm, args);
   };
 });
+
+// Since Gecko already provide complete and up to date list of CSS property
+// names, values and color names, we compute them so that they can replace
+// the ones used in CodeMirror while initiating an editor object. This is done
+// here instead of the file codemirror/css.js so as to leave that file untouched
+// and easily upgradable.
+function getCSSKeywords() {
+  function keySet(array) {
+    var keys = {};
+    for (var i = 0; i < array.length; ++i) {
+      keys[array[i]] = true;
+    }
+    return keys;
+  }
+
+  let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
+                   .getService(Ci.inIDOMUtils);
+  let cssProperties = domUtils.getCSSPropertyNames(domUtils.INCLUDE_ALIASES);
+  let cssColors = {};
+  let cssValues = {};
+  cssProperties.forEach(property => {
+    if (property.contains("color")) {
+      domUtils.getCSSValuesForProperty(property).forEach(value => {
+        cssColors[value] = true;
+      });
+    }
+    else {
+      domUtils.getCSSValuesForProperty(property).forEach(value => {
+        cssValues[value] = true;
+      });
+    }
+  });
+  return {
+    cssProperties: keySet(cssProperties),
+    cssValues: cssValues,
+    cssColors: cssColors
+  };
+}
 
 /**
  * Returns a controller object that can be used for

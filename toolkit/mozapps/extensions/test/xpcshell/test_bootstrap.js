@@ -13,6 +13,7 @@ const ADDON_DOWNGRADE                 = 8;
 
 // This verifies that bootstrappable add-ons can be used without restarts.
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Promise.jsm");
 
 // Enable loading extensions from the user scopes
 Services.prefs.setIntPref("extensions.enabledScopes",
@@ -56,6 +57,24 @@ function waitForPref(aPref, aCallback) {
     do_execute_soon(aCallback);
   }
   Services.prefs.addObserver(aPref, prefChanged, false);
+}
+
+function promisePref(aPref) {
+  let deferred = Promise.defer();
+
+  waitForPref(aPref, deferred.resolve.bind(deferred));
+
+  return deferred.promise;
+}
+
+function promiseInstall(aFiles) {
+  let deferred = Promise.defer();
+
+  installAllFiles(aFiles, function() {
+    deferred.resolve();
+  });
+
+  return deferred.promise;
 }
 
 function getActiveVersion() {
@@ -1224,7 +1243,10 @@ function check_test_23() {
 function run_test_24() {
   resetPrefs();
   do_print("starting 24");
-  waitForPref("bootstraptest2.active_version", function test_24_pref() {
+
+  Promise.all([promisePref("bootstraptest2.active_version"),
+              promiseInstall([do_get_addon("test_bootstrap1_1"), do_get_addon("test_bootstrap2_1")])])
+         .then(function test_24_pref() {
     do_print("test 24 got prefs");
     do_check_eq(getInstalledVersion(), 1);
     do_check_eq(getActiveVersion(), 1);
@@ -1260,11 +1282,6 @@ function run_test_24() {
     do_check_eq(getActiveVersion2(), 1);
 
     run_test_25();
-  });
-
-  installAllFiles([do_get_addon("test_bootstrap1_1"), do_get_addon("test_bootstrap2_1")],
-                  function test_24_installed() {
-    do_print("test 24 installed");
   });
 }
 
