@@ -25,7 +25,7 @@
  * Returns true if no profilers fail to start.
  */
 extern JS_PUBLIC_API(bool)
-JS_StartProfiling(const char *profileName);
+JS_StartProfiling(const char *profileName, pid_t pid);
 
 /**
  * Stop any profilers that were previously started with JS_StartProfiling.

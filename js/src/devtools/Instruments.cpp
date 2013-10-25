@@ -143,7 +143,7 @@ Error(CFErrorRef error)
 }
 
 bool
-Start()
+Start(pid_t pid)
 {
   if (gSession) {
     return false;
@@ -154,8 +154,7 @@ Start()
   }
 
   AutoReleased<CFStringRef> process =
-    CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%d"),
-                             getpid());
+    CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%d"), pid);
   if (!process) {
     return false;
   }
