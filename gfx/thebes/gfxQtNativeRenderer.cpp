@@ -9,8 +9,7 @@
 
 nsresult
 gfxQtNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
-                          uint32_t flags, Screen* screen, Visual* visual,
-                          DrawOutput* output)
+                          uint32_t flags, Screen* screen, Visual* visual)
 {
     Display *dpy = DisplayOfScreen(screen);
     bool isOpaque = (flags & DRAW_IS_OPAQUE) ? true : false;

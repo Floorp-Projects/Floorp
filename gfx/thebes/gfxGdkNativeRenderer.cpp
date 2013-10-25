@@ -59,7 +59,7 @@ gfxGdkNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
     Screen* screen =
         gdk_x11_screen_get_xscreen(gdk_colormap_get_screen(colormap));
 
-    gfxXlibNativeRenderer::Draw(ctx, size, flags, screen, visual, nullptr);
+    gfxXlibNativeRenderer::Draw(ctx, size, flags, screen, visual);
 }
 
 #else
