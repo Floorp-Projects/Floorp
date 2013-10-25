@@ -442,7 +442,7 @@ nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable          *table,
   EntryType* fromEntry =
     const_cast<EntryType*>(reinterpret_cast<const EntryType*>(from));
 
-  new(to) EntryType(*fromEntry);
+  new(to) EntryType(mozilla::Move(*fromEntry));
 
   fromEntry->~EntryType();
 }
