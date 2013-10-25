@@ -686,3 +686,5 @@
 .arrow[invisible] {
   visibility: hidden;
 }
+
+%include ../../shared/devtools/app-manager/manifest-editor.inc.css

@@ -110,6 +110,7 @@ strong {
   right: 5px;
   bottom: 5px;
   visibility: hidden;
+  opacity: 0.5;
 }
 
 .project-item:hover .button-remove {
