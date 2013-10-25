@@ -818,7 +818,6 @@ pref("gfx.canvas.azure.accelerated", true);
 pref("gfx.canvas.skiagl.dynamic-cache", true);
 
 // Cell Broadcast API
-pref("dom.cellbroadcast.enabled", true);
 pref("ril.cellbroadcast.disabled", false);
 
 // ICC API
