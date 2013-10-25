@@ -342,7 +342,7 @@ Call::IsActive()
 /**
  *  BluetoothHfpManager
  */
-BluetoothHfpManager::BluetoothHfpManager() : mController(nullptr)
+BluetoothHfpManager::BluetoothHfpManager()
 {
   Reset();
 }
@@ -392,7 +392,11 @@ BluetoothHfpManager::Reset()
   //
   // Please see Bug 878728 for more information.
   mBSIR = false;
+#endif
 
+  mController = nullptr;
+
+#ifdef MOZ_B2G_RIL
   ResetCallArray();
 #endif
 }
@@ -1139,6 +1143,7 @@ BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
 
   mController = aController;
   mSocket->Disconnect();
+  mSocket = nullptr;
 }
 
 #ifdef MOZ_B2G_RIL
@@ -1705,8 +1710,6 @@ BluetoothHfpManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
     return;
   }
 
-  MOZ_ASSERT(mSocket);
-
   if (!mSocket->Connect(NS_ConvertUTF16toUTF8(aDeviceAddress), aChannel)) {
     OnConnect(NS_LITERAL_STRING("SocketConnectionError"));
   }
@@ -1869,8 +1872,8 @@ BluetoothHfpManager::OnConnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  nsRefPtr<BluetoothProfileController> controller = mController.forget();
-  controller->OnConnect(aErrorStr);
+  mController->OnConnect(aErrorStr);
+  mController = nullptr;
 }
 
 void
@@ -1888,8 +1891,8 @@ BluetoothHfpManager::OnDisconnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  nsRefPtr<BluetoothProfileController> controller = mController.forget();
-  controller->OnDisconnect(aErrorStr);
+  mController->OnDisconnect(aErrorStr);
+  mController = nullptr;
 }
 
 NS_IMPL_ISUPPORTS1(BluetoothHfpManager, nsIObserver)
