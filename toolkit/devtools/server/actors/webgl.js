@@ -68,6 +68,7 @@ let ShaderActor = protocol.ActorClass({
       proxy.call("compileShader", context, program, shader, this.text = oldText);
       return error;
     }
+    return undefined;
   }, {
     request: { text: Arg(0, "string") },
     response: { error: RetVal("nullable:json") }
@@ -401,14 +402,14 @@ let WebGLInstrumenter = {
 
       if (timing == "before" && !observer.suppressHandlers) {
         glBreak = observer.call(callbackName || funcName, context, glArgs);
-        if (glBreak) return;
+        if (glBreak) return undefined;
       }
 
       glResult = originalFunc.apply(this, glArgs);
 
       if (timing == "after" && !observer.suppressHandlers) {
         glBreak = observer.call(callbackName || funcName, context, glArgs, glResult);
-        if (glBreak) return;
+        if (glBreak) return undefined;
       }
 
       return glResult;
