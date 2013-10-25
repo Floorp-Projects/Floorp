@@ -66,6 +66,10 @@ public:
     // (The zeroes will be the inverse of the poles)
     void setAllpassPole(const Complex& pole);
 
+    // Return true iff the next output block will contain sound even with
+    // silent input.
+    bool hasTail() const { return m_y1 || m_y2 || m_x1 || m_x2; }
+
     // Resets filter state
     void reset();
 
