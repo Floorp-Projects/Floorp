@@ -7,6 +7,7 @@
 
 #include "mozilla/dom/TextTrackManager.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/HTMLTrackElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -37,7 +38,10 @@ already_AddRefed<TextTrack>
 TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
                                const nsAString& aLanguage)
 {
-  return mTextTracks->AddTextTrack(mMediaElement, aKind, aLabel, aLanguage);
+  nsRefPtr<TextTrack> ttrack =
+    mTextTracks->AddTextTrack(mMediaElement, aKind, aLabel, aLanguage);
+  ttrack->SetReadyState(HTMLTrackElement::LOADED);
+  return ttrack.forget();
 }
 
 void
