@@ -9,7 +9,7 @@ function test() {
   initNetMonitor(STATUS_CODES_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { L10N, NetMonitorView } = aMonitor.panelWin;
+    let { $all, L10N, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
@@ -182,6 +182,8 @@ function test() {
         "There should be a total of 5 items in the requests menu.");
       is(RequestsMenu.visibleItems.length, 5,
         "There should be a total of 5 visbile items in the requests menu.");
+      is($all(".side-menu-widget-item").length, 5,
+        "The visible items in the requests menu are, in fact, visible!");
 
       is(RequestsMenu.getItemAtIndex(0), RequestsMenu.items[0],
         "The requests menu items aren't ordered correctly. First item is misplaced.");
