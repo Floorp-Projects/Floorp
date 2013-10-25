@@ -80,6 +80,8 @@ function test() {
   is(url, base + "&channel=rcs", "Check context menu search URL for 'foo'");
   url = engine.getSubmission("foo", null, "keyword").uri.spec;
   is(url, base + "&channel=fflb", "Check keyword search URL for 'foo'");
+  url = engine.getSubmission("foo", null, "homepage").uri.spec;
+  is(url, base + "&channel=np&source=hp", "Check homepage search URL for 'foo'");
 
   // Check search suggestion URL.
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
