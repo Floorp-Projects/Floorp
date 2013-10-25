@@ -50,21 +50,36 @@ ActivityWrapper.prototype = {
 
     let observer = {
       observe: function(aSubject, aTopic, aData) {
-        if (aTopic !== "inner-window-destroyed") {
-          return;
-        }
 
-        let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
-        if (wId == innerWindowID) {
-          debug("Closing activity window " + innerWindowID);
-          Services.obs.removeObserver(observer, "inner-window-destroyed");
-          cpmm.sendAsyncMessage("Activity:PostError",
-                                { id: aMessage.id,
-                                  error: "ActivityCanceled" });
+        switch (aTopic) {
+          case 'inner-window-destroyed':
+            let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
+            if (wId == innerWindowID) {
+              debug("Closing activity window " + innerWindowID);
+              Services.obs.removeObserver(observer, "inner-window-destroyed");
+              cpmm.sendAsyncMessage("Activity:PostError",
+                                    { id: aMessage.id,
+                                      error: "ActivityCanceled"
+                                    });
+            }
+            break;
+          case 'activity-error':
+          case 'activity-success':
+            if (aData !== aMessage.id) {
+              return;
+            }
+            Services.obs.removeObserver(observer, "activity-error");
+            Services.obs.removeObserver(observer, "activity-success");
+            let docshell = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIWebNavigation);
+            Services.obs.notifyObservers(docshell, "activity-done", aTopic);
+            break;
         }
       }
     }
 
+    Services.obs.addObserver(observer, "activity-error", false);
+    Services.obs.addObserver(observer, "activity-success", false);
     Services.obs.addObserver(observer, "inner-window-destroyed", false);
     return handler;
   },

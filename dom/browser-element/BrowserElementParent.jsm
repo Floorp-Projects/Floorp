@@ -127,6 +127,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
     "iconchange": this._fireEventFromMsg,
     "close": this._fireEventFromMsg,
     "resize": this._fireEventFromMsg,
+    "activitydone": this._fireEventFromMsg,
     "opensearch": this._fireEventFromMsg,
     "securitychange": this._fireEventFromMsg,
     "error": this._fireEventFromMsg,
