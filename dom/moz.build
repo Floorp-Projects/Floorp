@@ -72,6 +72,7 @@ PARALLEL_DIRS += [
     'camera',
     'audiochannel',
     'promise',
+    'wappush',
     'telephony',
     'inputmethod',
     'webidl',
@@ -86,7 +87,6 @@ if CONFIG['MOZ_B2G_RIL']:
         'icc',
         'cellbroadcast',
         'voicemail',
-        'wappush',
     ]
 
 if CONFIG['MOZ_PAY']:
