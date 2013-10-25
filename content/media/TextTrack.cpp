@@ -182,6 +182,10 @@ void
 TextTrack::SetReadyState(uint16_t aState)
 {
   mReadyState = aState;
+  if (mReadyState == HTMLTrackElement::LOADED ||
+      mReadyState == HTMLTrackElement::ERROR) {
+    mMediaElement->RemoveTextTrack(this, true);
+  }
 }
 
 } // namespace dom

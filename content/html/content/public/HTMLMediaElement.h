@@ -532,9 +532,9 @@ public:
     }
   }
 
-  void RemoveTextTrack(TextTrack* aTextTrack) {
+  void RemoveTextTrack(TextTrack* aTextTrack, bool aPendingListOnly = false) {
     if (mTextTrackManager) {
-      mTextTrackManager->RemoveTextTrack(aTextTrack);
+      mTextTrackManager->RemoveTextTrack(aTextTrack, aPendingListOnly);
     }
   }
 
@@ -861,6 +861,11 @@ protected:
 
   // Update the audio channel playing state
   virtual void UpdateAudioChannelPlayingState();
+
+  // Adds to the element's list of pending text tracks each text track
+  // in the element's list of text tracks whose text track mode is not disabled
+  // and whose text track readiness state is loading.
+  void PopulatePendingTextTrackList();
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
