@@ -102,6 +102,7 @@
                 <button class="action-primary" onclick="UI.installSimulator()" title="&connection.installOneSimulatorTooltip;">&connection.installOneSimulator;</button>
               </div>
               <div class="found-simulator">
+                <span>&connection.startRegisteredSimulator;</span>
                 <span template-loop='{"arrayPath":"simulators.versions","childSelector":"#simulator-item-template"}'></span>
                 <button class="action-primary" onclick="UI.installSimulator()" title="&connection.installAnotherSimulatorTooltip;">&connection.installAnotherSimulator;</button>
               </div>
@@ -124,7 +125,7 @@
 
   <template id="simulator-item-template">
   <span>
-    <button class="simulator-item" onclick="UI.startSimulator(this.dataset.version)" template='{"type":"attribute","path":"version","name":"data-version"}' title="&connection.startSimulatorTooltip;">
+    <button class="simulator-item action-primary" onclick="UI.startSimulator(this.dataset.version)" template='{"type":"attribute","path":"version","name":"data-version"}' title="&connection.startSimulatorTooltip;">
       <span template='{"type":"textContent", "path":"version"}'></span>
     </button>
   </span>
