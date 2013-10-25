@@ -2795,7 +2795,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   Visual* visual = DefaultVisualOfScreen(screen);
 
   renderer.Draw(aContext, nsIntSize(window->width, window->height),
-                rendererFlags, screen, visual, nullptr);
+                rendererFlags, screen, visual);
 }
 nsresult
 nsPluginInstanceOwner::Renderer::DrawWithXlib(cairo_surface_t* xsurface,
