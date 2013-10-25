@@ -2631,6 +2631,7 @@ BluetoothDBusService::IsConnected(const uint16_t aServiceUuid)
   return profile->IsConnected();
 }
 
+#ifdef MOZ_B2G_RIL
 void
 BluetoothDBusService::AnswerWaitingCall(BluetoothReplyRunnable* aRunnable)
 {
@@ -2663,6 +2664,7 @@ BluetoothDBusService::ToggleCalls(BluetoothReplyRunnable* aRunnable)
 
   DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
 }
+#endif // MOZ_B2G_RIL
 
 class OnUpdateSdpRecordsRunnable : public nsRunnable
 {
