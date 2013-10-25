@@ -167,7 +167,7 @@ TCPSocket.prototype = {
   _txBytes: 0,
   _rxBytes: 0,
   _appId: Ci.nsIScriptSecurityManager.NO_APP_ID,
-  _connectionType: Ci.nsINetworkInterface.NETWORK_TYPE_UNKNOWN,
+  _activeNetwork: null,
 #endif
 
   // Public accessors.
@@ -347,7 +347,7 @@ TCPSocket.prototype = {
       LOG("Error: Ci.nsINetworkStatsServiceProxy service is not available.");
       return;
     }
-    nssProxy.saveAppStats(this._appId, this._connectionType, Date.now(),
+    nssProxy.saveAppStats(this._appId, this._activeNetwork, Date.now(),
                           this._rxBytes, this._txBytes);
 
     // Reset the counters once the statistics is saved to NetworkStatsServiceProxy.
@@ -527,12 +527,12 @@ TCPSocket.prototype = {
     that._initStream(that._binaryType);
 
 #ifdef MOZ_WIDGET_GONK
-    // Set _connectionType, which is only required for network statistics.
+    // Set _activeNetwork, which is only required for network statistics.
     // Note that nsINetworkManager, as well as nsINetworkStatsServiceProxy, is
     // Gonk-specific.
     let networkManager = Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
-    if (networkManager && networkManager.active) {
-      that._connectionType = networkManager.active.type;
+    if (networkManager) {
+      that._activeNetwork = networkManager.active;
     }
 #endif
 

@@ -24,6 +24,7 @@ StartArgSlot(JSScript *script, JSFunction *fun)
     // When needed:
     // Slot 2: Argumentsobject.
 
+    // Note: when updating this, please also update the assert in SnapshotWriter::startFrame
     return 2 + (script->argumentsHasVarBinding() ? 1 : 0);
 }
 
@@ -34,6 +35,8 @@ CountArgSlots(JSScript *script, JSFunction *fun)
     // Slot x + 1: Argument 1.
     // ...
     // Slot x + n: Argument n.
+
+    // Note: when updating this, please also update the assert in SnapshotWriter::startFrame
     return StartArgSlot(script, fun) + (fun ? fun->nargs + 1 : 0);
 }
 
