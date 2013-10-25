@@ -1759,6 +1759,126 @@
     "extended_statistics_ok": true,
     "description": "Time for an unsuccessful DNS OS resolution (msec)"
   },
+  "SEER_PREDICT_ATTEMPTS": {
+      "kind": "exponential",
+      "high": "1000 * 1000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "Number of times nsINetworkSeer::Predict is called and attempts to predict"
+  },
+  "SEER_LEARN_ATTEMPTS": {
+      "kind": "exponential",
+      "high": "1000 * 1000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "Number of times nsINetworkSeer::Learn is called and attempts to learn"
+  },
+  "SEER_PREDICT_FULL_QUEUE": {
+      "kind": "exponential",
+      "high": "60000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "Number of times nsINetworkSeer::Predict doesn't continue because the queue is full"
+  },
+  "SEER_LEARN_FULL_QUEUE": {
+      "kind": "exponential",
+      "high": "60000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "Number of times nsINetworkSeer::Learn doesn't continue because the queue is full"
+  },
+  "SEER_PREDICT_WAIT_TIME": {
+      "kind": "exponential",
+      "high": "3000",
+      "n_buckets": 10,
+      "extended_statistics_ok": true,
+      "description": "Amount of time a predict event waits in the queue (ms)"
+  },
+  "SEER_PREDICT_WORK_TIME": {
+      "kind": "exponential",
+      "high": "3000",
+      "n_buckets": 10,
+      "extended_statistics_ok": true,
+      "description": "Amount of time spent doing the work for predict (ms)"
+  },
+  "SEER_LEARN_WAIT_TIME": {
+      "kind": "exponential",
+      "high": "3000",
+      "n_buckets": 10,
+      "extended_statistics_ok": true,
+      "description": "Amount of time a learn event waits in the queue (ms)"
+  },
+  "SEER_LEARN_WORK_TIME": {
+      "kind": "exponential",
+      "high": "3000",
+      "n_buckets": 10,
+      "extended_statistics_ok": true,
+      "description": "Amount of time spent doing the work for learn (ms)"
+  },
+  "SEER_TOTAL_PREDICTIONS": {
+      "kind": "exponential",
+      "high": "1000 * 1000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "How many actual predictions (preresolves, preconnects, ...) happen"
+  },
+  "SEER_TOTAL_PRECONNECTS": {
+      "kind": "exponential",
+      "high": "1000 * 1000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "How many actual preconnects happen"
+  },
+  "SEER_TOTAL_PRERESOLVES": {
+      "kind": "exponential",
+      "high": "1000 * 1000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "How many actual preresolves happen"
+  },
+  "SEER_PREDICTIONS_CALCULATED": {
+      "kind": "exponential",
+      "high": "1000 * 1000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "How many prediction calculations are performed"
+  },
+  "SEER_GLOBAL_DEGRADATION": {
+      "kind": "linear",
+      "high": "100",
+      "n_buckets": 50,
+      "description": "The global degradation calculated"
+  },
+  "SEER_SUBRESOURCE_DEGRADATION": {
+      "kind": "linear",
+      "high": "100",
+      "n_buckets": 50,
+      "description": "The degradation calculated for a subresource"
+  },
+  "SEER_BASE_CONFIDENCE": {
+      "kind": "linear",
+      "high": "100",
+      "n_buckets": 50,
+      "description": "The base confidence calculated for a subresource"
+  },
+  "SEER_CONFIDENCE": {
+      "kind": "linear",
+      "high": "100",
+      "n_buckets": 50,
+      "description": "The final confidence calculated for a subresource"
+  },
+  "SEER_PREDICT_TIME_TO_ACTION": {
+      "kind": "exponential",
+      "high": "3000",
+      "n_buckets": 10,
+      "description": "How long it takes from the time Predict() is called to the time we take action"
+  },
+  "SEER_PREDICT_TIME_TO_INACTION": {
+      "kind": "exponential",
+      "high": "3000",
+      "n_buckets": 10,
+      "description": "How long it takes from the time Predict() is called to the time we figure out there's nothing to do"
+  },
   "FIND_PLUGINS": {
     "kind": "exponential",
     "high": "3000",
