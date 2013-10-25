@@ -320,7 +320,13 @@ public:
   void SetFragmentEndTime(int64_t aEndTime);
 
   // Drop reference to decoder.  Only called during shutdown dance.
-  void ReleaseDecoder() { mDecoder = nullptr; }
+  void ReleaseDecoder() {
+    MOZ_ASSERT(mReader);
+    if (mReader) {
+      mReader->ReleaseDecoder();
+    }
+    mDecoder = nullptr;
+  }
 
    // Called when a "MozAudioAvailable" event listener is added to the media
    // element. Called on the main thread.
