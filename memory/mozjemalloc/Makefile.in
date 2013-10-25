@@ -4,8 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifndef MOZ_JEMALLOC3
-FORCE_STATIC_LIB= 1
-
 ifeq ($(OS_ARCH),SunOS)
 ifndef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -xO5

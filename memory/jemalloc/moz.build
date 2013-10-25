@@ -40,3 +40,4 @@ if CONFIG['OS_TARGET'] == 'Darwin' and not CONFIG['MOZ_REPLACE_MALLOC']:
 
 LIBRARY_NAME = 'jemalloc'
 
+FORCE_STATIC_LIB = True
