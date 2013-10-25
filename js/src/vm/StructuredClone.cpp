@@ -991,9 +991,10 @@ JSStructuredCloneWriter::transferOwnership()
          !tr.empty();
          tr.popFront())
     {
+        RootedObject obj(context(), tr.front());
         void *content;
         uint8_t *data;
-        if (!JS_StealArrayBufferContents(context(), tr.front(), &content, &data))
+        if (!JS_StealArrayBufferContents(context(), obj, &content, &data))
             return false; // Destructor will clean up the already-transferred data
 
         MOZ_ASSERT(uint32_t(LittleEndian::readUint64(point) >> 32) == SCTAG_TRANSFER_MAP_ENTRY);
