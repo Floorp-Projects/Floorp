@@ -331,7 +331,7 @@ void MediaPipeline::increment_rtp_packets_sent() {
   ++rtp_packets_sent_;
 
   if (!(rtp_packets_sent_ % 100)) {
-    MOZ_MTLOG(ML_DEBUG, "RTP sent packet count for " << description_
+    MOZ_MTLOG(ML_INFO, "RTP sent packet count for " << description_
               << " Pipeline " << static_cast<void *>(this)
               << " Flow : " << static_cast<void *>(rtp_transport_)
               << ": " << rtp_packets_sent_);
@@ -341,7 +341,7 @@ void MediaPipeline::increment_rtp_packets_sent() {
 void MediaPipeline::increment_rtcp_packets_sent() {
   ++rtcp_packets_sent_;
   if (!(rtcp_packets_sent_ % 100)) {
-    MOZ_MTLOG(ML_DEBUG, "RTCP sent packet count for " << description_
+    MOZ_MTLOG(ML_INFO, "RTCP sent packet count for " << description_
               << " Pipeline " << static_cast<void *>(this)
               << " Flow : " << static_cast<void *>(rtcp_transport_)
               << ": " << rtcp_packets_sent_);
@@ -351,7 +351,7 @@ void MediaPipeline::increment_rtcp_packets_sent() {
 void MediaPipeline::increment_rtp_packets_received() {
   ++rtp_packets_received_;
   if (!(rtp_packets_received_ % 100)) {
-    MOZ_MTLOG(ML_DEBUG, "RTP received packet count for " << description_
+    MOZ_MTLOG(ML_INFO, "RTP received packet count for " << description_
               << " Pipeline " << static_cast<void *>(this)
               << " Flow : " << static_cast<void *>(rtp_transport_)
               << ": " << rtp_packets_received_);
@@ -361,7 +361,7 @@ void MediaPipeline::increment_rtp_packets_received() {
 void MediaPipeline::increment_rtcp_packets_received() {
   ++rtcp_packets_received_;
   if (!(rtcp_packets_received_ % 100)) {
-    MOZ_MTLOG(ML_DEBUG, "RTCP received packet count for " << description_
+    MOZ_MTLOG(ML_INFO, "RTCP received packet count for " << description_
               << " Pipeline " << static_cast<void *>(this)
               << " Flow : " << static_cast<void *>(rtcp_transport_)
               << ": " << rtcp_packets_received_);

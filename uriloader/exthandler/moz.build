@@ -56,7 +56,7 @@ EXPORTS.mozilla.dom += [
     'ExternalHelperAppParent.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'ExternalHelperAppChild.cpp',
     'ExternalHelperAppParent.cpp',
     'nsExternalHelperAppService.cpp',
@@ -66,54 +66,54 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CMMSRCS += [
-        'nsLocalHandlerAppMac.mm',
-        'nsMIMEInfoMac.mm',
-        'nsOSHelperAppService.mm',
+    SOURCES += [
+        'mac/nsLocalHandlerAppMac.mm',
+        'mac/nsMIMEInfoMac.mm',
+        'mac/nsOSHelperAppService.mm',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         osdir + '/nsOSHelperAppService.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_GTK']:
-    CPP_SOURCES += [
+    SOURCES += [
         'unix/nsGNOMERegistry.cpp',
         'unix/nsMIMEInfoUnix.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    CPP_SOURCES += [
+    SOURCES += [
         'android/nsAndroidHandlerApp.cpp',
         'android/nsExternalSharingAppService.cpp',
         'android/nsExternalURLHandlerService.cpp',
         'android/nsMIMEInfoAndroid.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    CPP_SOURCES += [
+    SOURCES += [
         'unix/nsGNOMERegistry.cpp',
         'unix/nsMIMEInfoUnix.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    CPP_SOURCES += [
+    SOURCES += [
         'win/nsMIMEInfoWin.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    CPP_SOURCES += [
+    SOURCES += [
         'os2/nsMIMEInfoOS2.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_DBUS']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsDBusHandlerApp.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_MEEGOTOUCHSHARE']:
-    CPP_SOURCES += [
+    SOURCES += [
         'unix/nsMeegoExternalSharingAppService.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_CONTENTACTION']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsContentHandlerApp.cpp',
     ]
 
@@ -133,4 +133,6 @@ FAIL_ON_WARNINGS = True
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'exthandler_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

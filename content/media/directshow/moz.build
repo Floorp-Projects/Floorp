@@ -14,7 +14,7 @@ EXPORTS += [
     'DirectShowUtils.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AudioSinkFilter.cpp',
     'AudioSinkInputPin.cpp',
     'DirectShowDecoder.cpp',
@@ -27,7 +27,7 @@ CPP_SOURCES += [
 # If WebRTC isn't being built, we need to compile the DirectShow base classes so that
 # they're available at link time.
 if not CONFIG['MOZ_WEBRTC']:
-    CPP_SOURCES += [ '%s/%s' % (TOPSRCDIR, p) for p in [
+    SOURCES += [ '%s/%s' % (TOPSRCDIR, p) for p in [
         'media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseFilter.cpp',
         'media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseInputPin.cpp',
         'media/webrtc/trunk/webrtc/modules/video_capture/windows/BasePin.cpp',

@@ -6,7 +6,7 @@
 
 MODULE = 'accessibility'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsAccessibleRelation.cpp',
     'xpcAccessibleTable.cpp',
     'xpcAccessibleTableCell.cpp',

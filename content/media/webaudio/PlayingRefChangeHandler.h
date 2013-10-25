@@ -13,34 +13,31 @@
 namespace mozilla {
 namespace dom {
 
-template<class NodeType>
 class PlayingRefChangeHandler : public nsRunnable
 {
 public:
   enum ChangeType { ADDREF, RELEASE };
   PlayingRefChangeHandler(AudioNodeStream* aStream, ChangeType aChange)
-    : mLastProcessedGraphUpdateIndex(aStream->GetProcessingGraphUpdateIndex())
-    , mStream(aStream)
+    : mStream(aStream)
     , mChange(aChange)
   {
   }
 
   NS_IMETHOD Run()
   {
-    nsRefPtr<NodeType> node;
+    nsRefPtr<AudioNode> node;
     {
       // No need to keep holding the lock for the whole duration of this
       // function, since we're holding a strong reference to it, so if
       // we can obtain the reference, we will hold the node alive in
       // this function.
       MutexAutoLock lock(mStream->Engine()->NodeMutex());
-      node = static_cast<NodeType*>(mStream->Engine()->Node());
+      node = mStream->Engine()->Node();
     }
     if (node) {
       if (mChange == ADDREF) {
         node->MarkActive();
-      } else if (mChange == RELEASE &&
-                 node->AcceptPlayingRefRelease(mLastProcessedGraphUpdateIndex)) {
+      } else if (mChange == RELEASE) {
         node->MarkInactive();
       }
     }
@@ -48,7 +45,6 @@ public:
   }
 
 private:
-  int64_t mLastProcessedGraphUpdateIndex;
   nsRefPtr<AudioNodeStream> mStream;
   ChangeType mChange;
 };

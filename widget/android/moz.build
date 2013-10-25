@@ -19,7 +19,7 @@ EXPORTS += [
     'GeneratedJNIWrappers.h'
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AndroidBridge.cpp',
     'AndroidDirectTexture.cpp',
     'AndroidGraphicBuffer.cpp',
@@ -47,4 +47,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'widget_android'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

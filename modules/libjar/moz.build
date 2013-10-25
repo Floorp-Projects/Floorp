@@ -25,7 +25,7 @@ EXPORTS += [
     'zipstruct.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsJAR.cpp',
     'nsJARChannel.cpp',
     'nsJARFactory.cpp',
@@ -42,4 +42,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -15,7 +15,7 @@ LIBRARY_NAME = 'gtkxtbin'
 LIBXUL_LIBRARY = True
 
 if CONFIG['MOZ_ENABLE_GTK2']:
-    CSRCS += [
+    SOURCES += [
         'gtk2xtbin.c',
     ]
 

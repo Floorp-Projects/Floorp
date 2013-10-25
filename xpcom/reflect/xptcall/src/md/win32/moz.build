@@ -8,30 +8,30 @@ MODULE = 'xpcom'
 
 if CONFIG['TARGET_CPU'] == 'x86_64':
     if CONFIG['GNU_CXX']:
-        CPP_SOURCES += [
+        SOURCES += [
             'xptcinvoke_x86_64.cpp',
             'xptcstubs_x86_64_gnu.cpp',
         ]
-        ASFILES += [
+        SOURCES += [
             'xptcinvoke_asm_x86_64_gnu.s'
         ]
     else:
-        CPP_SOURCES += [
+        SOURCES += [
             'xptcinvoke_x86_64.cpp',
             'xptcstubs_x86_64.cpp'
         ]
-        ASFILES += [
+        SOURCES += [
             'xptcinvoke_asm_x86_64.asm',
             'xptcstubs_asm_x86_64.asm'
         ]
 else:
     if CONFIG['GNU_CXX']:
-        CPP_SOURCES += [
+        SOURCES += [
             'xptcinvoke_x86_gnu.cpp',
             'xptcstubs.cpp',
         ]
     else:
-        CPP_SOURCES += [
+        SOURCES += [
             'xptcinvoke.cpp',
             'xptcstubs.cpp',
         ]

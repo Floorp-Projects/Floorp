@@ -6,3 +6,5 @@
 
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

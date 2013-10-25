@@ -18,6 +18,6 @@ EXPORTS += [
 
 include('objs.mozbuild')
 
-CPP_SOURCES += intl_unicharutil_util_cppsrcs
+SOURCES += intl_unicharutil_util_cppsrcs
 
 LIBRARY_NAME = 'unicharutil_external_s'

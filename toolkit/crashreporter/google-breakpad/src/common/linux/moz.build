@@ -6,7 +6,7 @@
 
 MODULE = 'breakpad_linux_common'
 
-CPP_SOURCES += [
+SOURCES += [
     'elfutils.cc',
     'file_id.cc',
     'guid_creator.cc',
@@ -16,13 +16,13 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['OS_TARGET'] != 'Android':
-    CPP_SOURCES += [
+    SOURCES += [
         'http_upload.cc',
     ]
 
 if CONFIG['MOZ_CRASHREPORTER']:
     HOST_LIBRARY_NAME = 'host_breakpad_linux_common_s'
-    HOST_CPPSRCS += [
+    HOST_SOURCES += [
         'dump_symbols.cc',
         'elf_symbols_to_module.cc',
         'elfutils.cc',

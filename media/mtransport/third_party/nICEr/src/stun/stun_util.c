@@ -117,7 +117,7 @@ nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count)
     }
 
     if (*count >= maxaddrs) {
-        r_log(NR_LOG_STUN, LOG_WARNING, "Address list truncated from %d to %d", *count, maxaddrs);
+        r_log(NR_LOG_STUN, LOG_INFO, "Address list truncated from %d to %d", *count, maxaddrs);
        *count = maxaddrs;
     }
 

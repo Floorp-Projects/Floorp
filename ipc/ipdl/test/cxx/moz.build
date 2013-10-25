@@ -16,10 +16,47 @@ EXPORTS.mozilla._ipdltest += [
     'IPDLUnitTestUtils.h',
 ]
 
-CPP_SOURCES += [
-    '$(IPDLTESTSRCS)',
+SOURCES += [
+    'TestActorPunning.cpp',
+    'TestBadActor.cpp',
+    'TestBridgeMain.cpp',
+    'TestCrashCleanup.cpp',
+    'TestDataStructures.cpp',
+    'TestDesc.cpp',
+    'TestFailedCtor.cpp',
+    'TestHangs.cpp',
+    'TestInterruptErrorCleanup.cpp',
+    'TestInterruptRaces.cpp',
+    'TestInterruptShutdownRace.cpp',
+    'TestJSON.cpp',
+    'TestLatency.cpp',
+    'TestManyChildAllocs.cpp',
+    'TestMultiMgrs.cpp',
+    'TestNestedLoops.cpp',
+    'TestOpens.cpp',
+    'TestRaceDeferral.cpp',
+    'TestRacyInterruptReplies.cpp',
+    'TestRacyReentry.cpp',
+    'TestRacyUndefer.cpp',
+    'TestRPC.cpp',
+    'TestSanity.cpp',
+    'TestSelfManageRoot.cpp',
+    'TestShmem.cpp',
+    'TestShutdown.cpp',
+    'TestStackHooks.cpp',
+    'TestSyncError.cpp',
+    'TestSyncHang.cpp',
+    'TestSyncWakeup.cpp',
+    'TestUrgency.cpp',
+]
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    SOURCES += [
+        'TestSysVShmem.cpp',
+    ]
+
+SOURCES += [
     'IPDLUnitTestProcessChild.cpp',
-    'IPDLUnitTests.cpp',
     'IPDLUnitTestSubprocess.cpp',
 ]
 
@@ -85,4 +122,6 @@ IPDL_SOURCES += [
 LIBXUL_LIBRARY = True
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

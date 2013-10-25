@@ -17,7 +17,7 @@ EXPORTS.mozilla.a11y += [
 
 LIBRARY_NAME = 'accessibility_toolkit_s'
 
-CMMSRCS += [
+SOURCES += [
     'AccessibleWrap.mm',
     'DocAccessibleWrap.mm',
     'MacUtils.mm',

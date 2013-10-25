@@ -9,12 +9,12 @@
 
 #include "nsISupports.h"
 
-#include "Accessible2.h"
+#include "Accessible2_2.h"
 
 namespace mozilla {
 namespace a11y {
 
-class ia2Accessible : public IAccessible2
+class ia2Accessible : public IAccessible2_2
 {
 public:
 
@@ -87,6 +87,21 @@ public:
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_attributes(
     /* [retval][out] */ BSTR* attributes);
 
+  // IAccessible2_2
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_attribute(
+    /* [in] */ BSTR name,
+    /* [out, retval] */ VARIANT* attribute);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_accessibleWithCaret(
+    /* [out] */ IUnknown** accessible,
+    /* [out, retval] */ long* caretOffset);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_relationTargetsOfType(
+    /* [in] */ BSTR type,
+    /* [in] */ long maxTargets,
+    /* [out, size_is(,*nTargets)] */ IUnknown*** targets,
+    /* [out, retval] */ long* nTargets
+  );
 
   // Helper method
   static HRESULT ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,

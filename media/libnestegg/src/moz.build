@@ -6,7 +6,7 @@
 
 MODULE = 'nestegg'
 
-CSRCS += [
+SOURCES += [
     'halloc.c',
     'nestegg.c',
 ]

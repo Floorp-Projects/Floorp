@@ -162,7 +162,8 @@ namespace dom {
 
 bool
 ReadStructuredClone(JSContext* aCx, uint64_t* aData, size_t aDataLength,
-                    const StructuredCloneClosure& aClosure, JS::Value* aClone)
+                    const StructuredCloneClosure& aClosure,
+                    JS::MutableHandle<JS::Value> aClone)
 {
   void* closure = &const_cast<StructuredCloneClosure&>(aClosure);
   return !!JS_ReadStructuredClone(aCx, aData, aDataLength,
@@ -171,7 +172,7 @@ ReadStructuredClone(JSContext* aCx, uint64_t* aData, size_t aDataLength,
 }
 
 bool
-WriteStructuredClone(JSContext* aCx, const JS::Value& aSource,
+WriteStructuredClone(JSContext* aCx, JS::Handle<JS::Value> aSource,
                      JSAutoStructuredCloneBuffer& aBuffer,
                      StructuredCloneClosure& aClosure)
 {

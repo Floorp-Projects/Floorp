@@ -442,7 +442,7 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
     // will sometimes be hard on the branch predictor.
     masm.ucomisd(first, second);
     masm.j(Assembler::NotEqual, &minMaxInst);
-    if (!ins->mir()->range() || ins->mir()->range()->canBeInfiniteOrNaN())
+    if (!ins->mir()->range() || ins->mir()->range()->canBeNaN())
         masm.j(Assembler::Parity, &nan);
 
     // Ordered and equal. The operands are bit-identical unless they are zero
@@ -457,7 +457,7 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
     // x86's min/max are not symmetric; if either operand is a NaN, they return
     // the read-only operand. We need to return a NaN if either operand is a
     // NaN, so we explicitly check for a NaN in the read-write operand.
-    if (!ins->mir()->range() || ins->mir()->range()->canBeInfiniteOrNaN()) {
+    if (!ins->mir()->range() || ins->mir()->range()->canBeNaN()) {
         masm.bind(&nan);
         masm.ucomisd(first, first);
         masm.j(Assembler::Parity, &done);

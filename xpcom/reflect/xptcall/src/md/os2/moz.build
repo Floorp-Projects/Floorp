@@ -6,7 +6,7 @@
 
 MODULE = 'xpcom'
 
-CPP_SOURCES += [
+SOURCES += [
     '../unix/xptcinvoke_gcc_x86_unix.cpp',
     'xptcstubs_gcc_x86_os2.cpp',
 ]

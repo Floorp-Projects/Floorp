@@ -12,13 +12,13 @@ EXPORTS.speex += [
     'speex_types.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
   'sse_detect.cpp',
 ]
 
 LIBRARY_NAME = 'speex_resampler'
 
-CSRCS += [
+SOURCES += [
     'resample.c',
 ]
 

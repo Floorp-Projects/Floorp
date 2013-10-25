@@ -39,7 +39,7 @@ EXPORTS.mozilla += [
     'ProcessPriorityManager.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AppProcessChecker.cpp',
     'Blob.cpp',
     'ContentChild.cpp',
@@ -78,4 +78,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'domipc_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -6,37 +6,37 @@
 
 NO_DIST_INSTALL = True
 
-CPP_SOURCES += [ '%s/%s' % (relative_path, p) for p in [
+SOURCES += [ '%s/%s' % (relative_path, p) for p in [
     'nptest.cpp',
     'nptest_utils.cpp',
 ]]
 
-CPP_SOURCES += [
+SOURCES += [
     'nptest_name.cpp',
 ]
 
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 if toolkit == 'cocoa':
-    CMMSRCS += [
+    SOURCES += [
         relative_path + '/nptest_macosx.mm'
     ]
 elif toolkit == 'gtk2':
-    CPP_SOURCES += [
+    SOURCES += [
         relative_path + '/nptest_gtk2.cpp',
     ]
 elif toolkit == 'android':
-    CPP_SOURCES += [
+    SOURCES += [
         relative_path + '/nptest_droid.cpp',
     ]
 elif toolkit == 'os2':
-    CPP_SOURCES += [
+    SOURCES += [
         relative_path + '/nptest_os2.cpp',
     ]
 elif toolkit == 'qt':
-    CPP_SOURCES += [
+    SOURCES += [
         relative_path + '/nptest_qt.cpp',
     ]
 elif toolkit == 'windows':
-    CPP_SOURCES += [
+    SOURCES += [
         relative_path + '/nptest_windows.cpp',
     ]

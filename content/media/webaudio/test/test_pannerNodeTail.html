@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test tail time lifetime of PannerNode</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// This tests that a PannerNode does not release its reference before
+// it finishes emitting sound.
+//
+// The PannerNode tail time is short, so, when a PannerNode is destroyed on
+// the main thread, it is unlikely to notify the graph thread before the tail
+// time expires.  However, by adding DelayNodes downstream from the
+// PannerNodes, the graph thread can have enough time to notice that a
+// DelayNode has been destroyed.
+//
+// In the current implementation, DelayNodes will take a tail-time reference
+// immediately when they receive the first block of sound from an upstream
+// node, so this test connects the downstream DelayNodes while the upstream
+// nodes are finishing, and then runs GC (on the main thread) before the
+// DelayNodes receive any input (on the graph thread).
+//
+// Web Audio doesn't provide a means to precisely time connect()s but we can
+// test that the output of delay nodes matches the output from a reference
+// PannerNodes that we know will not be GCed.
+//
+// Another set of delay nodes is added upstream to ensure that the source node
+// has removed its self-reference after dispatching its "ended" event.
+
+SimpleTest.waitForExplicitFinish();
+
+const blockSize = 128;
+// bufferSize should be long enough that to allow an audioprocess event to be
+// sent to the main thread and a connect message to return to the graph
+// thread.
+const bufferSize = 4096;
+const pannerCount = bufferSize / blockSize;
+// sourceDelayBufferCount should be long enough to allow the source node
+// onended to finish.  Because of the way blocks are processed in sets on
+// the graph thread, this also affects when the graph thread receives the
+// disconnect.
+const sourceDelayBufferCount = 3;
+var gotEnded = false;
+// ccDelayLength should be long enough to allow CC to run
+var ccDelayBufferCount = 20;
+const ccDelayLength = ccDelayBufferCount * bufferSize;
+
+var testPanners = [];
+var referencePanner;
+var referenceProcessCount = 0;
+var referenceOutput = [new Float32Array(bufferSize),
+                       new Float32Array(bufferSize)];
+var testProcessor;
+var testProcessCount = 0;
+
+function onReferenceOutput(e) {
+  switch(referenceProcessCount) {
+
+  case sourceDelayBufferCount - 1:
+    // The panners are about to finish.
+    if (!gotEnded) {
+      todo(false, "Oscillator hasn't ended.  Increase sourceDelayBufferCount?");
+    }
+
+    // Connect each PannerNode output to a downstream DelayNode,
+    // and connect ScriptProcessors to compare test and reference panners.
+    var ctx = e.target.context;
+    var delayDuration = ccDelayLength / ctx.sampleRate;
+    for (var i = 0; i < pannerCount; ++i) {
+      var delay = ctx.createDelay(delayDuration);
+      delay.delayTime.value = delayDuration;
+      delay.connect(testProcessor);
+      testPanners[i].connect(delay);
+    }
+    testProcessor = null;
+    testPanners = null;
+
+    referencePanner.connect(e.target);
+
+    // Assuming the above operations have already scheduled an event to run in
+    // stable state and ask the graph thread to make connections, schedule a
+    // subsequent event to run cycle collection, which should not collect
+    // panners that are still producing sound.
+    SimpleTest.executeSoon(function() {
+      SpecialPowers.forceGC();
+      SpecialPowers.forceCC();
+    });
+
+    break;
+
+  case sourceDelayBufferCount:
+    // Record this buffer during which PannerNode outputs were connected.
+    for (var i = 0; i < 2; ++i) {
+      e.inputBuffer.copyFromChannel(referenceOutput[i], i);
+    }
+    e.target.onaudioprocess = null;
+    e.target.disconnect();
+
+    for (var i = 0; i < referenceOutput[0].length; ++i) {
+      if (referenceOutput[0][i] != 0.0) {
+        return; // good - a connection must have been received by the graph
+      }
+    }
+    // If the buffer is silent, there is probably not much point just
+    // increasing the buffer size, because, with the buffer size already
+    // significantly larger than panner tail time, it demonstrates that the
+    // lag between threads is much greater than the tail time.
+    todo(false, "Connections not detected.");
+  }
+
+  referenceProcessCount++;
+}
+
+function onTestOutput(e) {
+  if (testProcessCount < sourceDelayBufferCount + ccDelayBufferCount) {
+    testProcessCount++;
+    return;
+  }
+
+  for (var i = 0; i < 2; ++i) {
+    compareBuffers(e.inputBuffer.getChannelData(i), referenceOutput[i]);
+  }
+  e.target.onaudioprocess = null;
+  e.target.disconnect();
+  SimpleTest.finish();
+}
+
+function startTest() {
+  var ctx = new AudioContext();
+  // Place the listener to the side of the origin, where the panners are
+  // positioned, to maximize delay in one ear.
+  ctx.listener.setPosition(1,0,0);
+
+  // 0.002 is MaxDelayTimeSeconds in HRTFpanner.cpp
+  // and 512 is fftSize() at 48 kHz.
+  const expectedPannerTailTime = 0.002 * ctx.sampleRate + 512;
+
+  // Create some PannerNodes downstream from DelayNodes with delays long
+  // enough for their source oscillator to finish, dispatch its "ended" event
+  // and release its playing reference.  The DelayNodes should expire their
+  // tail-time references before the PannerNodes and so only the PannerNode
+  // lifetimes depends on their tail-time references.  Many DelayNodes are
+  // created and timed to finish at different times so that one PannerNode
+  // will be finishing the block processed immediately after the connect is
+  // received.
+  var oscillator = ctx.createOscillator();
+  oscillator.start(0);
+  // Just short of blockSize here to avoid rounding into the next block
+  oscillator.stop((blockSize - 1) / ctx.sampleRate);
+  oscillator.onended = function(e) {
+    gotEnded = true;
+  };
+
+  // The panner effect is linear so only one reference panner is required.
+  // This also checks that the individual panners don't chop their output too
+  // soon.
+  referencePanner = ctx.createPanner();
+
+  // Time the first test panner to finish just before downstream DelayNodes
+  // are about the be connected.  Note that DelayNode lifetime depends on
+  // maxDelayTime so set that equal to the delay.
+  var delayDuration =
+    (sourceDelayBufferCount * bufferSize
+     - expectedPannerTailTime - 2 * blockSize) / ctx.sampleRate;
+
+  for (var i = 0; i < pannerCount; ++i) {
+    var delay = ctx.createDelay(delayDuration);
+    delay.delayTime.value = delayDuration;
+    oscillator.connect(delay);
+    delay.connect(referencePanner)
+
+    var panner = ctx.createPanner();
+    delay.connect(panner)
+    testPanners[i] = panner;
+
+    delayDuration += blockSize / ctx.sampleRate;
+  }
+
+  // Create a ScriptProcessor now to use as a timer to trigger connection of
+  // downstream nodes.  It will also be used to record reference output.
+  var referenceProcessor = ctx.createScriptProcessor(bufferSize, 2, 0);
+  referenceProcessor.onaudioprocess = onReferenceOutput;
+  // Start audioprocess events before source delays are connected.
+  referenceProcessor.connect(ctx.destination);
+
+  // The test ScriptProcessor will record output of testPanners. 
+  // Create it now so that it is synchronized with the referenceProcessor.
+  testProcessor = ctx.createScriptProcessor(bufferSize, 2, 0);
+  testProcessor.onaudioprocess = onTestOutput;
+  // Start audioprocess events before source delays are connected.
+  testProcessor.connect(ctx.destination);
+}
+
+startTest();
+</script>
+</pre>
+</body>
+</html>

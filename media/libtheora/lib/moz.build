@@ -8,16 +8,7 @@ MODULE = 'theora'
 
 LIBRARY_NAME = 'theora'
 
-if CONFIG['OS_TEST'] == 'arm' and CONFIG['GNU_AS']:
-    asm_suffix = CONFIG['ASM_SUFFIX']
-    ASFILES += [ '%s.%s' % (f, asm_suffix) for f in [
-        'armbits-gnu',
-        'armfrag-gnu',
-        'armidct-gnu',
-        'armloop-gnu',
-    ]]
-
-CSRCS += [
+SOURCES += [
     'apiwrapper.c',
     'bitpack.c',
     'decapiwrapper.c',

@@ -456,7 +456,7 @@ if (IS_WIN) {
   function lockDirectory(aDir) {
     var file = aDir.clone();
     file.append(kLockFileName);
-    file.create(file.NORMAL_FILE_TYPE, 0444);
+    file.create(file.NORMAL_FILE_TYPE, 4 * 64 + 4 * 8 + 4); // 0444
     file.QueryInterface(AUS_Ci.nsILocalFileWin);
     file.fileAttributesWin |= file.WFA_READONLY;
     file.fileAttributesWin &= ~file.WFA_READWRITE;
@@ -516,7 +516,7 @@ function copyMinimumAppFiles(aSrcDir, aDestDir, aDestLeafName) {
   deplibsFile.append("dependentlibs.list");
   let istream = AUS_Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(AUS_Ci.nsIFileInputStream);
-  istream.init(deplibsFile, 0x01, 0444, 0);
+  istream.init(deplibsFile, 0x01, 4 * 64 + 4 * 8 + 4, 0); // 0444
   istream.QueryInterface(AUS_Ci.nsILineInputStream);
 
   let hasMore;
@@ -2112,7 +2112,7 @@ function symlinkUpdateFilesIntoBundleDirectory() {
   let dest = getAppDir();
   dest.append("active-update.xml");
   if (!dest.exists()) {
-    dest.create(dest.NORMAL_FILE_TYPE, 0644);
+    dest.create(dest.NORMAL_FILE_TYPE, 6 * 64 + 4 * 8 + 4); // 0644
   }
   do_check_true(dest.exists());
   let source = getUpdatesRootDir();
@@ -2128,7 +2128,7 @@ function symlinkUpdateFilesIntoBundleDirectory() {
   if (dest2.exists()) {
     dest2.remove(true);
   }
-  dest2.create(dest.DIRECTORY_TYPE, 0755);
+  dest2.create(dest.DIRECTORY_TYPE, 7 * 64 + 5 * 8 + 5); // 0755
   do_check_true(dest2.exists());
   let source2 = getUpdatesRootDir();
   source2.append("updates");
@@ -2166,7 +2166,7 @@ function adjustPathsOnWindows() {
   // running doesn't prevent the updater from moving stuff around.
   let tmpDir = do_get_profile();
   tmpDir.append("ExecutableDir.tmp");
-  tmpDir.createUnique(tmpDir.DIRECTORY_TYPE, 0755);
+  tmpDir.createUnique(tmpDir.DIRECTORY_TYPE, 7 * 64 + 5 * 8 + 5); // 0755
   let procDir = getCurrentProcessDir();
   logTestInfo("start - copy the process directory");
   copyMinimumAppFiles(procDir, tmpDir, "bin");

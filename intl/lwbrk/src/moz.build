@@ -6,29 +6,29 @@
 
 MODULE = 'lwbrk'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsJISx4051LineBreaker.cpp',
     'nsSampleWordBreaker.cpp',
     'nsSemanticUnitScanner.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_GTK']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsPangoBreaker.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    CPP_SOURCES += [
+    SOURCES += [
         'nsUniscribeBreaker.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CPP_SOURCES += [
+    SOURCES += [
         'nsCarbonBreaker.cpp',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsRuleBreaker.cpp',
     ]
-    CSRCS += [
+    SOURCES += [
         'rulebrk.c',
     ]
 

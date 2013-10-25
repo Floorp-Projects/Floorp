@@ -719,7 +719,7 @@ nr_stun_attr_codec_fingerprint_decode(nr_stun_attr_info *attr_info, int attrlen,
 
     r_log(NR_LOG_STUN, LOG_DEBUG, "Computed FINGERPRINT %08x", (checksum ^ 0x5354554e));
     if (! fingerprint->valid)
-        r_log(NR_LOG_STUN, LOG_DEBUG, "Invalid FINGERPRINT %08x", fingerprint->checksum);
+        r_log(NR_LOG_STUN, LOG_WARNING, "Invalid FINGERPRINT %08x", fingerprint->checksum);
 
     _status=0;
   abort:
@@ -1311,7 +1311,7 @@ nr_stun_encode_message(nr_stun_message *msg)
 
     TAILQ_FOREACH(attr, &msg->attributes, entry) {
         if ((r=nr_stun_find_attr_info(attr->type, &attr_info))) {
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Unrecognized attribute: 0x%04x", attr->type);
+            r_log(NR_LOG_STUN, LOG_WARNING, "Unrecognized attribute: 0x%04x", attr->type);
             ABORT(R_INTERNAL);
         }
 
@@ -1445,7 +1445,7 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
                 ++msg->comprehension_required_unknown_attributes;
             else
                 ++msg->comprehension_optional_unknown_attributes;
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Unrecognized attribute: 0x%04x", attr->type);
+            r_log(NR_LOG_STUN, LOG_INFO, "Unrecognized attribute: 0x%04x", attr->type);
         }
         else {
             attr_info->name = attr_info->name;
@@ -1468,7 +1468,7 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
             }
             else if (attr->type == NR_STUN_ATTR_OLD_XOR_MAPPED_ADDRESS) {
                 attr->type = NR_STUN_ATTR_XOR_MAPPED_ADDRESS;
-                r_log(NR_LOG_STUN, LOG_DEBUG, "Translating obsolete XOR-MAPPED-ADDRESS type");
+                r_log(NR_LOG_STUN, LOG_INFO, "Translating obsolete XOR-MAPPED-ADDRESS type");
             }
 
             if ((r=attr_info->codec->decode(attr_info, attr->length, msg->buffer, offset+4, msg->length, &attr->u))) {
@@ -1488,7 +1488,7 @@ nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_s
                 r_log(NR_LOG_STUN, LOG_DEBUG, "Before pedantic attr_info checks");
                 if (attr_info->illegal) {
                     if ((r=attr_info->illegal(attr_info, attr->length, &attr->u))) {
-                        r_log(NR_LOG_STUN, LOG_DEBUG, "Failed pedantic attr_info checks");
+                        r_log(NR_LOG_STUN, LOG_WARNING, "Failed pedantic attr_info checks");
                         ABORT(r);
                     }
                 }
