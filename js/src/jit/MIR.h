@@ -2755,8 +2755,6 @@ class MToFloat32
     }
 
     void computeRange();
-    bool truncate();
-    bool isOperandTruncated(size_t index) const;
 
     bool canConsumeFloat32() const { return true; }
     bool canProduceFloat32() const { return true; }
