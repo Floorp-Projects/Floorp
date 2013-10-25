@@ -43,9 +43,7 @@ public:
   explicit PannerNodeEngine(AudioNode* aNode)
     : AudioNodeEngine(aNode)
     // Please keep these default values consistent with PannerNode::PannerNode below.
-    , mPanningModel(PanningModelType::HRTF)
     , mPanningModelFunction(&PannerNodeEngine::HRTFPanningFunction)
-    , mDistanceModel(DistanceModelType::Inverse)
     , mDistanceModelFunction(&PannerNodeEngine::InverseGainFunction)
     , mPosition()
     , mOrientation(1., 0., 0.)
@@ -71,8 +69,7 @@ public:
   {
     switch (aIndex) {
     case PannerNode::PANNING_MODEL:
-      mPanningModel = PanningModelType(aParam);
-      switch (mPanningModel) {
+      switch (PanningModelType(aParam)) {
         case PanningModelType::Equalpower:
           mPanningModelFunction = &PannerNodeEngine::EqualPowerPanningFunction;
           break;
@@ -85,8 +82,7 @@ public:
       }
       break;
     case PannerNode::DISTANCE_MODEL:
-      mDistanceModel = DistanceModelType(aParam);
-      switch (mDistanceModel) {
+      switch (DistanceModelType(aParam)) {
         case DistanceModelType::Inverse:
           mDistanceModelFunction = &PannerNodeEngine::InverseGainFunction;
           break;
@@ -162,10 +158,8 @@ public:
   float ExponentialGainFunction(float aDistance);
 
   nsAutoPtr<HRTFPanner> mHRTFPanner;
-  PanningModelType mPanningModel;
   typedef void (PannerNodeEngine::*PanningModelFunction)(const AudioChunk& aInput, AudioChunk* aOutput);
   PanningModelFunction mPanningModelFunction;
-  DistanceModelType mDistanceModel;
   typedef float (PannerNodeEngine::*DistanceModelFunction)(float aDistance);
   DistanceModelFunction mDistanceModelFunction;
   ThreeDPoint mPosition;
