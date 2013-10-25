@@ -57,6 +57,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_candidate.c,v 1.2 2008/04/28 17:59:0
 #include "turn_client_ctx.h"
 #include "ice_ctx.h"
 #include "ice_candidate.h"
+#include "ice_codeword.h"
 #include "ice_reg.h"
 #include "ice_util.h"
 #include "nr_socket_turn.h"
@@ -73,6 +74,19 @@ static int nr_ice_start_relay_turn(nr_ice_candidate *cand);
 static void nr_ice_turn_allocated_cb(NR_SOCKET sock, int how, void *cb_arg);
 static int nr_ice_candidate_resolved_cb(void *cb_arg, nr_transport_addr *addr);
 #endif /* USE_TURN */
+
+void nr_ice_candidate_compute_codeword(nr_ice_candidate *cand)
+  {
+    char as_string[1024];
+
+    snprintf(as_string,
+             sizeof(as_string),
+             "%s(%s)",
+             cand->addr.as_string,
+             cand->label);
+
+    nr_ice_compute_codeword(as_string,strlen(as_string),cand->codeword);
+  }
 
 char *nr_ice_candidate_type_names[]={0,"host","srflx","prflx","relay",0};
 
@@ -176,6 +190,8 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket
     /* Add the candidate to the isock list*/
     TAILQ_INSERT_TAIL(&isock->candidates,cand,entry_sock);
 
+    nr_ice_candidate_compute_codeword(cand);
+
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): created candidate %s with type %s",
       ctx->label,cand->label,nr_ctype_name(ctype));
 
@@ -221,6 +237,8 @@ int nr_ice_peer_peer_rflx_candidate_create(nr_ice_ctx *ctx,char *label, nr_ice_c
     /* Bogus foundation */
     if(!(cand->foundation=r_strdup(cand->addr.as_string)))
       ABORT(r);
+
+    nr_ice_candidate_compute_codeword(cand);
 
     *candp=cand;
 
@@ -483,6 +501,8 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
       default:
         ABORT(R_INTERNAL);
     }
+
+    nr_ice_candidate_compute_codeword(cand);
 
     _status=0;
   abort:

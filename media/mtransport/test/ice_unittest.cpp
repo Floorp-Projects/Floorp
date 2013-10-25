@@ -87,6 +87,9 @@ bool operator<(const NrIceCandidate& lhs,
                const NrIceCandidate& rhs) {
   if (lhs.host == rhs.host) {
     if (lhs.port == rhs.port) {
+      if (lhs.type == rhs.type) {
+        return lhs.codeword < rhs.codeword;
+      }
       return lhs.type < rhs.type;
     }
     return lhs.port < rhs.port;
@@ -98,7 +101,8 @@ bool operator==(const NrIceCandidate& lhs,
                 const NrIceCandidate& rhs) {
   return lhs.host == rhs.host &&
          lhs.port == rhs.port &&
-         lhs.type == rhs.type;
+         lhs.type == rhs.type &&
+         lhs.codeword == rhs.codeword;
 }
 
 class IceCandidatePairCompare {
@@ -371,6 +375,8 @@ class IceTestPeer : public sigslot::has_slots<> {
               << cand.host
               << ":"
               << cand.port
+              << " codeword="
+              << cand.codeword
               << std::endl;
   }
 

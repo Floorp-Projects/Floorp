@@ -112,6 +112,7 @@ static bool ToNrIceCandidate(const nr_ice_candidate& candc,
   out->host = addr;
   out->port = port;
   out->type = type;
+  out->codeword = candc.codeword;
   return true;
 }
 
