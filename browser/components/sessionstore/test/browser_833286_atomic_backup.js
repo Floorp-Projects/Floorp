@@ -7,9 +7,9 @@
 
 let tmp = {};
 Cu.import("resource://gre/modules/osfile.jsm", tmp);
-Cu.import("resource:///modules/sessionstore/_SessionFile.jsm", tmp);
+Cu.import("resource:///modules/sessionstore/SessionFile.jsm", tmp);
 
-const {OS, _SessionFile} = tmp;
+const {OS, SessionFile} = tmp;
 
 const PREF_SS_INTERVAL = "browser.sessionstore.interval";
 // Full paths for sessionstore.js and sessionstore.bak.
@@ -100,29 +100,29 @@ function testReadBackup() {
   array = yield OS.File.read(path);
   gSSData = gDecoder.decode(array);
 
-  // Read sessionstore.js with _SessionFile.read.
-  let ssDataRead = yield _SessionFile.read();
-  is(ssDataRead, gSSData, "_SessionFile.read read sessionstore.js correctly.");
+  // Read sessionstore.js with SessionFile.read.
+  let ssDataRead = yield SessionFile.read();
+  is(ssDataRead, gSSData, "SessionFile.read read sessionstore.js correctly.");
 
-  // Read sessionstore.js with _SessionFile.syncRead.
-  ssDataRead = _SessionFile.syncRead();
+  // Read sessionstore.js with SessionFile.syncRead.
+  ssDataRead = SessionFile.syncRead();
   is(ssDataRead, gSSData,
-    "_SessionFile.syncRead read sessionstore.js correctly.");
+    "SessionFile.syncRead read sessionstore.js correctly.");
 
   // Remove sessionstore.js to test fallback onto sessionstore.bak.
   yield OS.File.remove(path);
   ssExists = yield OS.File.exists(path);
   ok(!ssExists, "sessionstore.js should be removed now.");
 
-  // Read sessionstore.bak with _SessionFile.read.
-  ssDataRead = yield _SessionFile.read();
+  // Read sessionstore.bak with SessionFile.read.
+  ssDataRead = yield SessionFile.read();
   is(ssDataRead, gSSBakData,
-    "_SessionFile.read read sessionstore.bak correctly.");
+    "SessionFile.read read sessionstore.bak correctly.");
 
-  // Read sessionstore.bak with _SessionFile.syncRead.
-  ssDataRead = _SessionFile.syncRead();
+  // Read sessionstore.bak with SessionFile.syncRead.
+  ssDataRead = SessionFile.syncRead();
   is(ssDataRead, gSSBakData,
-    "_SessionFile.syncRead read sessionstore.bak correctly.");
+    "SessionFile.syncRead read sessionstore.bak correctly.");
 
   nextTest(testBackupUnchanged);
 }

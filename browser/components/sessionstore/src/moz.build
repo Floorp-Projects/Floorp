@@ -13,7 +13,6 @@ EXTRA_COMPONENTS += [
 JS_MODULES_PATH = 'modules/sessionstore'
 
 EXTRA_JS_MODULES = [
-    '_SessionFile.jsm',
     'DocShellCapabilities.jsm',
     'DocumentUtils.jsm',
     'Messenger.jsm',
@@ -21,6 +20,7 @@ EXTRA_JS_MODULES = [
     'PrivacyLevel.jsm',
     'RecentlyClosedTabsAndWindowsMenuUtils.jsm',
     'SessionCookies.jsm',
+    'SessionFile.jsm',
     'SessionHistory.jsm',
     'SessionMigration.jsm',
     'SessionStorage.jsm',
