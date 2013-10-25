@@ -122,6 +122,8 @@ public:
 
   void WakeUp();
 
+  bool Poll();
+
   bool AddWatch(DBusWatch* aWatch);
   void RemoveWatch(DBusWatch* aWatch);
 
@@ -210,6 +212,69 @@ DBusWatcher::WakeUp()
   if (res < 0) {
     NS_WARNING("Cannot write wakeup bit to DBus controller!");
   }
+}
+
+bool
+DBusWatcher::Poll()
+{
+  int res = TEMP_FAILURE_RETRY(poll(mPollData.Elements(),
+                                    mPollData.Length(), -1));
+  NS_ENSURE_TRUE(res > 0, false);
+
+  bool continueThread = true;
+
+  nsTArray<pollfd>::size_type i = 0;
+
+  while (i < mPollData.Length()) {
+    if (mPollData[i].revents == POLLIN) {
+      if (mPollData[i].fd == mControlFdR.get()) {
+        char data;
+        res = TEMP_FAILURE_RETRY(read(mControlFdR.get(), &data, sizeof(data)));
+        NS_ENSURE_TRUE(res > 0, NS_OK);
+
+        switch (data) {
+          case DBUS_EVENT_LOOP_EXIT:
+            continueThread = false;
+            break;
+          case DBUS_EVENT_LOOP_ADD:
+            HandleWatchAdd();
+            break;
+          case DBUS_EVENT_LOOP_REMOVE:
+            HandleWatchRemove();
+            // don't increment i, or we'll skip one element
+            continue;
+          case DBUS_EVENT_LOOP_WAKEUP:
+            NS_ProcessPendingEvents(NS_GetCurrentThread(),
+                                    PR_INTERVAL_NO_TIMEOUT);
+            break;
+          default:
+#if DEBUG
+            nsCString warning("unknown command ");
+            warning.AppendInt(data);
+            NS_WARNING(warning.get());
+#endif
+            break;
+        }
+      } else {
+        short events = mPollData[i].revents;
+        unsigned int flags = UnixEventsToDBusFlags(events);
+        dbus_watch_handle(mWatchData[i], flags);
+        mPollData[i].revents = 0;
+        // Break at this point since we don't know if the operation
+        // was destructive
+        break;
+      }
+
+      DBusDispatchStatus dbusDispatchStatus;
+      do {
+        dbusDispatchStatus = dbus_connection_dispatch(GetConnection());
+      } while (dbusDispatchStatus == DBUS_DISPATCH_DATA_REMAINS);
+    }
+
+    ++i;
+  }
+
+  return continueThread;
 }
 
 bool
@@ -463,64 +528,11 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    bool exitThread = false;
+    bool continueThread;
 
-    while (!exitThread) {
-
-      int res = TEMP_FAILURE_RETRY(poll(mDBusWatcher->mPollData.Elements(),
-                                        mDBusWatcher->mPollData.Length(),
-                                        -1));
-      NS_ENSURE_TRUE(res > 0, NS_OK);
-
-      nsTArray<pollfd>::size_type i = 0;
-
-      while (i < mDBusWatcher->mPollData.Length()) {
-        if (mDBusWatcher->mPollData[i].revents == POLLIN) {
-
-          if (mDBusWatcher->mPollData[i].fd == mDBusWatcher->mControlFdR.get()) {
-            char data;
-            res = TEMP_FAILURE_RETRY(read(mDBusWatcher->mControlFdR.get(), &data, sizeof(data)));
-            NS_ENSURE_TRUE(res > 0, NS_OK);
-
-            switch (data) {
-            case DBUS_EVENT_LOOP_EXIT:
-              exitThread = true;
-              break;
-            case DBUS_EVENT_LOOP_ADD:
-              mDBusWatcher->HandleWatchAdd();
-              break;
-            case DBUS_EVENT_LOOP_REMOVE:
-              mDBusWatcher->HandleWatchRemove();
-              // don't increment i, or we'll skip one element
-              continue;
-            case DBUS_EVENT_LOOP_WAKEUP:
-              NS_ProcessPendingEvents(NS_GetCurrentThread(),
-                                      PR_INTERVAL_NO_TIMEOUT);
-              break;
-            default:
-#if DEBUG
-              nsCString warning("unknown command ");
-              warning.AppendInt(data);
-              NS_WARNING(warning.get());
-#endif
-              break;
-            }
-          } else {
-            short events = mDBusWatcher->mPollData[i].revents;
-            unsigned int flags = UnixEventsToDBusFlags(events);
-            dbus_watch_handle(mDBusWatcher->mWatchData[i], flags);
-            mDBusWatcher->mPollData[i].revents = 0;
-            // Break at this point since we don't know if the operation
-            // was destructive
-            break;
-          }
-          while (dbus_connection_dispatch(mDBusWatcher->GetConnection()) ==
-                 DBUS_DISPATCH_DATA_REMAINS)
-          {}
-        }
-        ++i;
-      }
-    }
+    do {
+      continueThread = mDBusWatcher->Poll();
+    } while (continueThread);
 
     mDBusWatcher->CleanUp();
 
