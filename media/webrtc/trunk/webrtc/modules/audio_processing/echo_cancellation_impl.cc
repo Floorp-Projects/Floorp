@@ -13,11 +13,13 @@
 #include <assert.h>
 #include <string.h>
 
+extern "C" {
+#include "webrtc/modules/audio_processing/aec/aec_core.h"
+}
+#include "webrtc/modules/audio_processing/aec/include/echo_cancellation.h"
 #include "webrtc/modules/audio_processing/audio_buffer.h"
 #include "webrtc/modules/audio_processing/audio_processing_impl.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-
-#include "webrtc/modules/audio_processing/aec/include/echo_cancellation.h"
 
 namespace webrtc {
 
@@ -64,7 +66,8 @@ EchoCancellationImpl::EchoCancellationImpl(const AudioProcessingImpl* apm)
     stream_drift_samples_(0),
     was_stream_drift_set_(false),
     stream_has_echo_(false),
-    delay_logging_enabled_(false) {}
+    delay_logging_enabled_(false),
+    delay_correction_enabled_(true) {}
 
 EchoCancellationImpl::~EchoCancellationImpl() {}
 
@@ -333,6 +336,13 @@ int EchoCancellationImpl::Initialize() {
   return apm_->kNoError;
 }
 
+#if 0
+void EchoCancellationImpl::SetExtraOptions(const Config& config) {
+  delay_correction_enabled_ = config.Get<DelayCorrection>().enabled;
+  Configure();
+}
+#endif
+
 void* EchoCancellationImpl::CreateHandle() const {
   Handle* handle = NULL;
   if (WebRtcAec_Create(&handle) != apm_->kNoError) {
@@ -364,6 +374,8 @@ int EchoCancellationImpl::ConfigureHandle(void* handle) const {
   config.skewMode = drift_compensation_enabled_;
   config.delay_logging = delay_logging_enabled_;
 
+  WebRtcAec_enable_delay_correction(WebRtcAec_aec_core(
+      static_cast<Handle*>(handle)), delay_correction_enabled_ ? 1 : 0);
   return WebRtcAec_set_config(static_cast<Handle*>(handle), config);
 }
 
