@@ -47,9 +47,8 @@ HRTFPanner::HRTFPanner(float sampleRate, mozilla::TemporaryRef<HRTFDatabaseLoade
     , m_sampleRate(sampleRate)
     , m_crossfadeSelection(CrossfadeSelection1)
     , m_azimuthIndex1(UninitializedAzimuth)
-    , m_elevation1(0)
     , m_azimuthIndex2(UninitializedAzimuth)
-    , m_elevation2(0)
+    // m_elevation1 and m_elevation2 are initialized in pan()
     , m_crossfadeX(0)
     , m_crossfadeIncr(0)
     , m_convolverL1(HRTFElevation::fftSizeForSampleRate(sampleRate))
@@ -77,6 +76,12 @@ HRTFPanner::~HRTFPanner()
 
 void HRTFPanner::reset()
 {
+    m_azimuthIndex1 = UninitializedAzimuth;
+    m_azimuthIndex2 = UninitializedAzimuth;
+    // m_elevation1 and m_elevation2 are initialized in pan()
+    m_crossfadeSelection = CrossfadeSelection1;
+    m_crossfadeX = 0.0f;
+    m_crossfadeIncr = 0.0f;
     m_convolverL1.reset();
     m_convolverR1.reset();
     m_convolverL2.reset();
