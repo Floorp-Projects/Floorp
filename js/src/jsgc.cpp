@@ -1508,14 +1508,14 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind)
     AutoLockGC maybeLock;
 
 #ifdef JS_THREADSAFE
-    volatile uintptr_t *bfs = &backgroundFinalizeState[thingKind];
+    ArenaLists::BackgroundFinalizeState *bfs = &backgroundFinalizeState[thingKind];
     if (*bfs != BFS_DONE) {
         /*
          * We cannot search the arena list for free things while background
          * finalization runs and can modify it at any moment. So we always
          * allocate a new arena in that case.
          */
-        JSRuntime *rt = zone->runtimeFromAnyThread(); 
+        JSRuntime *rt = zone->runtimeFromAnyThread();
         maybeLock.lock(rt);
         if (*bfs == BFS_RUN) {
             JS_ASSERT(al->isCursorAtEnd());
@@ -5361,7 +5361,7 @@ js::PurgeJITCaches(Zone *zone)
 void
 ArenaLists::normalizeBackgroundFinalizeState(AllocKind thingKind)
 {
-    volatile uintptr_t *bfs = &backgroundFinalizeState[thingKind];
+    ArenaLists::BackgroundFinalizeState *bfs = &backgroundFinalizeState[thingKind];
     switch (*bfs) {
       case BFS_DONE:
         break;
