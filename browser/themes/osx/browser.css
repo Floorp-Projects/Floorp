@@ -885,18 +885,11 @@ toolbarbutton.bookmark-item > menupopup {
   }
 
   #nav-bar-overflow-button {
-    /* Need to override chevron styling */
-    list-style-image: url(chrome://browser/skin/Toolbar@2x.png) !important;
     -moz-image-region: rect(0, 1224px, 36px, 1188px);
   }
 
   #nav-bar-overflow-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 1224px, 72px, 1188px);
-  }
-
-  #nav-bar-overflow-button:-moz-lwtheme-brighttext {
-    /* Need to override chevron styling */
-    list-style-image: url(chrome://browser/skin/Toolbar-inverted@2x.png) !important;
   }
 
   #nav-bar-overflow-button[open] {
