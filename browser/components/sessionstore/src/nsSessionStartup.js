@@ -43,8 +43,8 @@ Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "_SessionFile",
-  "resource:///modules/sessionstore/_SessionFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
+  "resource:///modules/sessionstore/SessionFile.jsm");
 
 const STATE_RUNNING_STR = "running";
 
@@ -80,7 +80,7 @@ SessionStartup.prototype = {
       return;
     }
 
-    _SessionFile.read().then(
+    SessionFile.read().then(
       this._onSessionFileRead.bind(this),
       Cu.reportError
     );
@@ -284,7 +284,7 @@ SessionStartup.prototype = {
         // Initialization is complete, nothing else to do
         return;
       }
-      let contents = _SessionFile.syncRead();
+      let contents = SessionFile.syncRead();
       this._onSessionFileRead(contents);
     } catch(ex) {
       debug("ensureInitialized: could not read session " + ex + ", " + ex.stack);

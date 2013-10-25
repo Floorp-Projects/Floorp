@@ -109,7 +109,7 @@ let SessionMigration = {
     return Task.spawn(function() {
       let inState = yield SessionMigrationInternal.readState(aFromPath);
       let outState = SessionMigrationInternal.convertState(inState);
-      // Unfortunately, we can't use SessionStore's own _SessionFile to
+      // Unfortunately, we can't use SessionStore's own SessionFile to
       // write out the data because it has a dependency on the profile dir
       // being known. When the migration runs, there is no guarantee that
       // that's true.
