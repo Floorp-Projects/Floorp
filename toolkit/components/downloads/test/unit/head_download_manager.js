@@ -56,25 +56,6 @@ var provider = {
 };
 dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 
-/**
- * Imports a download test file to use.  Works with rdf and sqlite files.
- *
- * @param aFName
- *        The name of the file to import.  This file should be located in the
- *        same directory as this file.
- */
-function importDownloadsFile(aFName)
-{
-  var file = do_get_file(aFName);
-  var newFile = dirSvc.get("ProfD", Ci.nsIFile);
-  if (/\.rdf$/i.test(aFName))
-    file.copyTo(newFile, "downloads.rdf");
-  else if (/\.sqlite$/i.test(aFName))
-    file.copyTo(newFile, "downloads.sqlite");
-  else
-    do_throw("Unexpected filename!");
-}
-
 var gDownloadCount = 0;
 /**
  * Adds a download to the DM, and starts it.
@@ -243,9 +224,10 @@ do_register_cleanup(function() {
 
 function oldDownloadManagerDisabled() {
   try {
-    if (Services.prefs.getBoolPref("browser.download.useJSTransfer")) {
-      return true;
-    }
-  } catch (ex) { }
+    // This method throws an exception if the old Download Manager is disabled.
+    Services.downloads.activeDownloadCount;
+  } catch (ex) {
+    return true;
+  }
   return false;
 }

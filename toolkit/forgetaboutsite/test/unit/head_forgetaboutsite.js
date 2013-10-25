@@ -30,3 +30,14 @@ function cleanUp()
   }
 }
 cleanUp();
+
+function oldDownloadManagerDisabled()
+{
+  try {
+    // This method throws an exception if the old Download Manager is disabled.
+    Services.downloads.activeDownloadCount;
+  } catch (ex) {
+    return true;
+  }
+  return false;
+}

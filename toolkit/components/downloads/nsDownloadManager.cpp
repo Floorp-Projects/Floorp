@@ -40,6 +40,7 @@
 
 #ifdef XP_WIN
 #include <shlobj.h>
+#include "nsWindowsHelpers.h"
 #ifdef DOWNLOAD_SCANNER
 #include "nsDownloadScanner.h"
 #endif
@@ -937,7 +938,25 @@ nsDownloadManager::Init()
                                    getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
+#if defined(MOZ_JSDOWNLOADS) && !defined(XP_WIN)
+
+  // When MOZ_JSDOWNLOADS is defined on a non-Windows platform, this component
+  // is always disabled and we can safely omit the initialization code.
+  mUseJSTransfer = true;
+
+#else
+
+#if defined(MOZ_JSDOWNLOADS) && defined(XP_WIN)
+  // When MOZ_JSDOWNLOADS is defined on Windows, this component is disabled
+  // unless we are running in Windows Metro.  The conversion of Windows Metro
+  // to use the JavaScript API for downloads is tracked in bug 906042.
+  mUseJSTransfer = !IsRunningInWindowsMetro();
+#else
+  // When MOZ_JSDOWNLOADS is undefined, we still check the preference that can
+  // be used to enable the JavaScript API during the migration process.
   mUseJSTransfer = Preferences::GetBool(PREF_BD_USEJSTRANSFER, false);
+#endif
+
   if (mUseJSTransfer)
     return NS_OK;
 
@@ -1007,6 +1026,8 @@ nsDownloadManager::Init()
 
   if (history)
     (void)history->AddObserver(this, true);
+
+#endif // defined(MOZ_JSDOWNLOADS) && !defined(XP_WIN)
 
   return NS_OK;
 }
