@@ -3931,6 +3931,10 @@
     "kind": "boolean",
     "description": "How many times has the devtool's Style Editor been opened?"
   },
+  "DEVTOOLS_SHADEREDITOR_OPENED_BOOLEAN": {
+    "kind": "boolean",
+    "description": "How many times has the devtool's Shader Editor been opened?"
+  },
   "DEVTOOLS_JSPROFILER_OPENED_BOOLEAN": {
     "kind": "boolean",
     "description": "How many times has the devtool's JS Profiler been opened?"
@@ -4002,6 +4006,10 @@
   "DEVTOOLS_STYLEEDITOR_OPENED_PER_USER_FLAG": {
     "kind": "flag",
     "description": "How many users have opened the devtool's Style Editor?"
+  },
+  "DEVTOOLS_SHADEREDITOR_OPENED_PER_USER_FLAG": {
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Shader Editor?"
   },
   "DEVTOOLS_JSPROFILER_OPENED_PER_USER_FLAG": {
     "kind": "flag",
@@ -4102,6 +4110,12 @@
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has the style editor been active (seconds)"
+  },
+  "DEVTOOLS_SHADEREDITOR_TIME_ACTIVE_SECONDS": {
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the Shader Editor been active (seconds)"
   },
   "DEVTOOLS_JSPROFILER_TIME_ACTIVE_SECONDS": {
     "kind": "exponential",

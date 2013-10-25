@@ -565,6 +565,26 @@
   text-shadow: 0 0 8px #ccf;
 }
 
+/* Aligned values */
+
+.variables-view-container[aligned-values] .title > .separator {
+  -moz-box-flex: 1;
+}
+
+.variables-view-container[aligned-values] .title > .value {
+  width: 70vw;
+}
+
+.variables-view-container[aligned-values] .title > .element-value-input {
+  width: calc(70vw - 10px);
+}
+
+/* Actions first */
+
+.variables-view-container[actions-first] .variables-view-delete {
+  -moz-box-ordinal-group: 0;
+}
+
 /* Variables and properties tooltips */
 
 .variable-or-property > tooltip > label {
@@ -598,10 +618,6 @@
 
 .variables-view-delete:active {
   -moz-image-region: rect(0,48px,16px,32px);
-}
-
-*:not(:hover) .variables-view-delete {
-  display: none;
 }
 
 .variables-view-delete > .toolbarbutton-text {
@@ -667,3 +683,5 @@
 .arrow[invisible] {
   visibility: hidden;
 }
+
+%include ../../shared/devtools/app-manager/manifest-editor.inc.css
