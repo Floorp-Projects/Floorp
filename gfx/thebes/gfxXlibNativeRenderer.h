@@ -34,11 +34,10 @@ class gfxXlibNativeRenderer {
 public:
     /**
      * Perform the native drawing.
-     * @param surface the drawable for drawing.
+     * @param surface the cairo_surface_t for drawing. Must be a cairo_xlib_surface_t.
      *                The extents of this surface do not necessarily cover the
      *                entire rectangle with size provided to Draw().
-     * @param offsetX draw at this offset into the given drawable
-     * @param offsetY draw at this offset into the given drawable
+     * @param offset  draw at this offset into the given drawable
      * @param clipRects an array of rectangles; clip to the union.
      *                  Any rectangles provided will be contained by the
      *                  rectangle with size provided to Draw and by the
@@ -46,7 +45,7 @@ public:
      * @param numClipRects the number of rects in the array, or zero if
      *                     no clipping is required.
      */
-    virtual nsresult DrawWithXlib(gfxXlibSurface* surface,
+    virtual nsresult DrawWithXlib(cairo_surface_t* surface,
                                   nsIntPoint offset,
                                   nsIntRect* clipRects, uint32_t numClipRects) = 0;
   
