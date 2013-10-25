@@ -31,9 +31,12 @@ const MULTIPLE_CONTEXTS_URL = EXAMPLE_URL + "doc_multiple-contexts.html";
 // All tests are asynchronous.
 waitForExplicitFinish();
 
+let gToolEnabled = Services.prefs.getBoolPref("devtools.shadereditor.enabled");
+
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
+  Services.prefs.setBoolPref("devtools.shadereditor.enabled", gToolEnabled);
 });
 
 function addTab(aUrl, aWindow) {
@@ -190,6 +193,12 @@ function ensurePixelIs(aDebuggee, aPosition, aColor, aWaitFlag = false, aSelecto
   return promise.reject(null);
 }
 
+function navigate(aTarget, aUrl) {
+  let navigated = once(aTarget, "navigate");
+  aTarget.client.activeTab.navigateTo(aUrl);
+  return navigated;
+}
+
 function reload(aTarget) {
   let navigated = once(aTarget, "navigate");
   aTarget.client.activeTab.reload();
@@ -214,4 +223,30 @@ function initBackend(aUrl) {
     let front = new WebGLFront(target.client, target.form);
     return [target, debuggee, front];
   });
+}
+
+function initShaderEditor(aUrl) {
+  info("Initializing a shader editor pane.");
+
+  return Task.spawn(function*() {
+    let tab = yield addTab(aUrl);
+    let target = TargetFactory.forTab(tab);
+    let debuggee = target.window.wrappedJSObject;
+
+    yield target.makeRemote();
+
+    Services.prefs.setBoolPref("devtools.shadereditor.enabled", true);
+    let toolbox = yield gDevTools.showToolbox(target, "shadereditor");
+    let panel = toolbox.getCurrentPanel();
+    return [target, debuggee, panel];
+  });
+}
+
+function teardown(aPanel) {
+  info("Destroying the specified shader editor.");
+
+  return promise.all([
+    once(aPanel, "destroyed"),
+    removeTab(aPanel.target.tab)
+  ]);
 }

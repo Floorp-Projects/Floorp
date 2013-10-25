@@ -27,6 +27,7 @@ loader.lazyGetter(this, "InspectorPanel", () => require("devtools/inspector/insp
 loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/webconsole/panel").WebConsolePanel);
 loader.lazyGetter(this, "DebuggerPanel", () => require("devtools/debugger/debugger-panel").DebuggerPanel);
 loader.lazyImporter(this, "StyleEditorPanel", "resource:///modules/devtools/StyleEditorPanel.jsm");
+loader.lazyGetter(this, "ShaderEditorPanel", () => require("devtools/shadereditor/panel").ShaderEditorPanel);
 loader.lazyGetter(this, "ProfilerPanel", () => require("devtools/profiler/panel"));
 loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/netmonitor/netmonitor-panel").NetMonitorPanel);
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/scratchpad/scratchpad-panel").ScratchpadPanel);
@@ -36,6 +37,7 @@ const toolboxProps = "chrome://browser/locale/devtools/toolbox.properties";
 const inspectorProps = "chrome://browser/locale/devtools/inspector.properties";
 const debuggerProps = "chrome://browser/locale/devtools/debugger.properties";
 const styleEditorProps = "chrome://browser/locale/devtools/styleeditor.properties";
+const shaderEditorProps = "chrome://browser/locale/devtools/shadereditor.properties";
 const webConsoleProps = "chrome://browser/locale/devtools/webconsole.properties";
 const profilerProps = "chrome://browser/locale/devtools/profiler.properties";
 const netMonitorProps = "chrome://browser/locale/devtools/netmonitor.properties";
@@ -44,6 +46,7 @@ loader.lazyGetter(this, "toolboxStrings", () => Services.strings.createBundle(to
 loader.lazyGetter(this, "webConsoleStrings", () => Services.strings.createBundle(webConsoleProps));
 loader.lazyGetter(this, "debuggerStrings", () => Services.strings.createBundle(debuggerProps));
 loader.lazyGetter(this, "styleEditorStrings", () => Services.strings.createBundle(styleEditorProps));
+loader.lazyGetter(this, "shaderEditorStrings", () => Services.strings.createBundle(shaderEditorProps));
 loader.lazyGetter(this, "inspectorStrings", () => Services.strings.createBundle(inspectorProps));
 loader.lazyGetter(this, "profilerStrings",() => Services.strings.createBundle(profilerProps));
 loader.lazyGetter(this, "netMonitorStrings", () => Services.strings.createBundle(netMonitorProps));
@@ -166,11 +169,30 @@ Tools.styleEditor = {
   }
 };
 
+Tools.shaderEditor = {
+  id: "shadereditor",
+  ordinal: 5,
+  visibilityswitch: "devtools.shadereditor.enabled",
+  icon: "chrome://browser/skin/devtools/tool-styleeditor.png",
+  url: "chrome://browser/content/devtools/shadereditor.xul",
+  label: l10n("ToolboxShaderEditor.label", shaderEditorStrings),
+  tooltip: l10n("ToolboxShaderEditor.tooltip", shaderEditorStrings),
+
+  isTargetSupported: function(target) {
+    return true;
+  },
+
+  build: function(iframeWindow, toolbox) {
+    let panel = new ShaderEditorPanel(iframeWindow, toolbox);
+    return panel.open();
+  }
+};
+
 Tools.jsprofiler = {
   id: "jsprofiler",
   accesskey: l10n("profiler.accesskey", profilerStrings),
   key: l10n("profiler2.commandkey", profilerStrings),
-  ordinal: 5,
+  ordinal: 6,
   modifiers: "shift",
   visibilityswitch: "devtools.profiler.enabled",
   icon: "chrome://browser/skin/devtools/tool-profiler.png",
@@ -193,7 +215,7 @@ Tools.netMonitor = {
   id: "netmonitor",
   accesskey: l10n("netmonitor.accesskey", netMonitorStrings),
   key: l10n("netmonitor.commandkey", netMonitorStrings),
-  ordinal: 6,
+  ordinal: 7,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.netmonitor.enabled",
   icon: "chrome://browser/skin/devtools/tool-network.png",
@@ -214,7 +236,7 @@ Tools.netMonitor = {
 
 Tools.scratchpad = {
   id: "scratchpad",
-  ordinal: 7,
+  ordinal: 8,
   visibilityswitch: "devtools.scratchpad.enabled",
   icon: "chrome://browser/skin/devtools/tool-scratchpad.png",
   url: "chrome://browser/content/devtools/scratchpad.xul",
@@ -234,10 +256,11 @@ Tools.scratchpad = {
 
 let defaultTools = [
   Tools.options,
-  Tools.styleEditor,
   Tools.webConsole,
-  Tools.jsdebugger,
   Tools.inspector,
+  Tools.jsdebugger,
+  Tools.styleEditor,
+  Tools.shaderEditor,
   Tools.jsprofiler,
   Tools.netMonitor,
   Tools.scratchpad
