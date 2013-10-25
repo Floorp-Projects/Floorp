@@ -401,19 +401,27 @@ DisplayTable::DisplayClosing(Display *display, XExtCodes* codes)
     return 0;
 }
 
+/* static */
+bool
+gfxXlibSurface::GetColormapAndVisual(cairo_surface_t* aXlibSurface,
+                                     Colormap* aColormap, Visual** aVisual)
+{
+    XRenderPictFormat* format =
+        cairo_xlib_surface_get_xrender_format(aXlibSurface);
+    Screen* screen = cairo_xlib_surface_get_screen(aXlibSurface);
+    Visual* visual = cairo_xlib_surface_get_visual(aXlibSurface);
+
+    return DisplayTable::GetColormapAndVisual(screen, format, visual,
+                                              aColormap, aVisual);
+}
+
 bool
 gfxXlibSurface::GetColormapAndVisual(Colormap* aColormap, Visual** aVisual)
 {
     if (!mSurfaceValid)
         return false;
 
-    XRenderPictFormat* format =
-        cairo_xlib_surface_get_xrender_format(CairoSurface());
-    Screen* screen = cairo_xlib_surface_get_screen(CairoSurface());
-    Visual* visual = cairo_xlib_surface_get_visual(CairoSurface());
-
-    return DisplayTable::GetColormapAndVisual(screen, format, visual,
-                                              aColormap, aVisual);
+    return GetColormapAndVisual(CairoSurface(), aColormap, aVisual);
 }
 
 /* static */
