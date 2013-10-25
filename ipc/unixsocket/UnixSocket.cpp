@@ -521,6 +521,14 @@ UnixSocketImpl::Accept()
       return;
     }
 
+    if (!mConnector->SetUpListenSocket(mFd)) {
+      NS_WARNING("Could not set up listen socket!");
+      nsRefPtr<OnSocketEventTask> t =
+        new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
+      NS_DispatchToMainThread(t);
+      return;
+    }
+
   }
 
   SetUpIO();
