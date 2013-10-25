@@ -18,18 +18,20 @@
 #include <hardware/gps.h>
 
 #include "GonkGPSGeolocationProvider.h"
-#include "SystemWorkerManager.h"
 #include "mozilla/Preferences.h"
 #include "nsGeoPosition.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINetworkManager.h"
-#include "nsIRadioInterfaceLayer.h"
-#include "nsIDOMIccInfo.h"
-#include "nsIDOMMobileConnection.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsContentUtils.h"
+
+#ifdef MOZ_B2G_RIL
+#include "nsIDOMIccInfo.h"
+#include "nsIDOMMobileConnection.h"
+#include "nsIRadioInterfaceLayer.h"
+#endif
 
 #ifdef AGPS_TYPE_INVALID
 #define AGPS_HAVE_DUAL_APN
@@ -44,10 +46,15 @@ static const int kDefaultPeriod = 1000; // ms
 // While most methods of GonkGPSGeolocationProvider should only be
 // called from main thread, we deliberately put the Init and ShutdownGPS
 // methods off main thread to avoid blocking.
+#ifdef MOZ_B2G_RIL
 NS_IMPL_ISUPPORTS3(GonkGPSGeolocationProvider,
                    nsIGeolocationProvider,
                    nsIRILDataCallback,
                    nsISettingsServiceCallback)
+#else
+NS_IMPL_ISUPPORTS1(GonkGPSGeolocationProvider,
+                   nsIGeolocationProvider)
+#endif
 
 /* static */ GonkGPSGeolocationProvider* GonkGPSGeolocationProvider::sSingleton = nullptr;
 GpsCallbacks GonkGPSGeolocationProvider::mCallbacks = {
@@ -65,6 +72,7 @@ GpsCallbacks GonkGPSGeolocationProvider::mCallbacks = {
 #endif
 };
 
+#ifdef MOZ_B2G_RIL
 AGpsCallbacks
 GonkGPSGeolocationProvider::mAGPSCallbacks = {
   AGPSStatusCallback,
@@ -77,6 +85,7 @@ GonkGPSGeolocationProvider::mAGPSRILCallbacks = {
   AGPSRILRefLocCallback,
   CreateThreadCallback,
 };
+#endif // MOZ_B2G_RIL
 
 void
 GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
@@ -146,8 +155,10 @@ GonkGPSGeolocationProvider::SetCapabilitiesCallback(uint32_t capabilities)
         GonkGPSGeolocationProvider::GetSingleton();
 
       provider->mSupportsScheduling = mCapabilities & GPS_CAPABILITY_SCHEDULING;
+#ifdef MOZ_B2G_RIL
       provider->mSupportsMSB = mCapabilities & GPS_CAPABILITY_MSB;
       provider->mSupportsMSA = mCapabilities & GPS_CAPABILITY_MSA;
+#endif
       provider->mSupportsSingleShot = mCapabilities & GPS_CAPABILITY_SINGLE_SHOT;
 #ifdef GPS_CAPABILITY_ON_DEMAND_TIME
       provider->mSupportsTimeInjection = mCapabilities & GPS_CAPABILITY_ON_DEMAND_TIME;
@@ -196,6 +207,7 @@ GonkGPSGeolocationProvider::RequestUtcTimeCallback()
 {
 }
 
+#ifdef MOZ_B2G_RIL
 void
 GonkGPSGeolocationProvider::AGPSStatusCallback(AGpsStatus* status)
 {
@@ -267,12 +279,15 @@ GonkGPSGeolocationProvider::AGPSRILRefLocCallback(uint32_t flags)
     NS_DispatchToMainThread(new RequestRefLocEvent());
   }
 }
+#endif // MOZ_B2G_RIL
 
 GonkGPSGeolocationProvider::GonkGPSGeolocationProvider()
   : mStarted(false)
   , mSupportsScheduling(false)
+#ifdef MOZ_B2G_RIL
   , mSupportsMSB(false) 
   , mSupportsMSA(false) 
+#endif
   , mSupportsSingleShot(false)
   , mSupportsTimeInjection(false)
   , mGpsInterface(nullptr)
@@ -320,6 +335,7 @@ GonkGPSGeolocationProvider::GetGPSInterface()
   return result;
 }
 
+#ifdef MOZ_B2G_RIL
 int32_t
 GonkGPSGeolocationProvider::GetDataConnectionState()
 {
@@ -507,6 +523,7 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
     }
   }
 }
+#endif // MOZ_B2G_RIL
 
 void
 GonkGPSGeolocationProvider::Init()
@@ -523,6 +540,7 @@ GonkGPSGeolocationProvider::Init()
     return;
   }
 
+#ifdef MOZ_B2G_RIL
   mAGpsInterface =
     static_cast<const AGpsInterface*>(mGpsInterface->get_extension(AGPS_INTERFACE));
   if (mAGpsInterface) {
@@ -534,6 +552,7 @@ GonkGPSGeolocationProvider::Init()
   if (mAGpsRilInterface) {
     mAGpsRilInterface->init(&mAGPSRILCallbacks);
   }
+#endif
 
   NS_DispatchToMainThread(NS_NewRunnableMethod(this, &GonkGPSGeolocationProvider::StartGPS));
 }
@@ -546,19 +565,23 @@ GonkGPSGeolocationProvider::StartGPS()
 
   int32_t update = Preferences::GetInt("geo.default.update", kDefaultPeriod);
 
+#ifdef MOZ_B2G_RIL
   if (mSupportsMSA || mSupportsMSB) {
     SetupAGPS();
   }
+#endif
 
   int positionMode = GPS_POSITION_MODE_STANDALONE;
   bool singleShot = false;
 
+#ifdef MOZ_B2G_RIL
   // XXX: If we know this is a single shot request, use MSA can be faster.
   if (singleShot && mSupportsMSA) {
     positionMode = GPS_POSITION_MODE_MS_ASSISTED;
   } else if (mSupportsMSB) {
     positionMode = GPS_POSITION_MODE_MS_BASED;
   }
+#endif
   if (!mSupportsScheduling) {
     update = kDefaultPeriod;
   }
@@ -574,6 +597,7 @@ GonkGPSGeolocationProvider::StartGPS()
   mGpsInterface->start();
 }
 
+#ifdef MOZ_B2G_RIL
 void
 GonkGPSGeolocationProvider::SetupAGPS()
 {
@@ -599,9 +623,8 @@ GonkGPSGeolocationProvider::SetupAGPS()
       mRadioInterface->RegisterDataCallCallback(this);
     }
   }
-
-  return;
 }
+#endif // MOZ_B2G_RIL
 
 NS_IMETHODIMP
 GonkGPSGeolocationProvider::Startup()
@@ -643,9 +666,11 @@ GonkGPSGeolocationProvider::Shutdown()
   }
   mStarted = false;
 
+#ifdef MOZ_B2G_RIL
   if (mRadioInterface) {
     mRadioInterface->UnregisterDataCallCallback(this);
   }
+#endif
 
   mInitThread->Dispatch(NS_NewRunnableMethod(this, &GonkGPSGeolocationProvider::ShutdownGPS),
                         NS_DISPATCH_NORMAL);
@@ -670,6 +695,7 @@ GonkGPSGeolocationProvider::SetHighAccuracy(bool)
   return NS_OK;
 }
 
+#ifdef MOZ_B2G_RIL
 /** nsIRILDataCallback interface **/
 
 NS_IMETHODIMP
@@ -721,3 +747,4 @@ GonkGPSGeolocationProvider::HandleError(const nsAString& aErrorMessage)
 {
   return NS_OK;
 }
+#endif // MOZ_B2G_RIL
