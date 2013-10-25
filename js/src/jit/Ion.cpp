@@ -1657,12 +1657,6 @@ IonCompile(JSContext *cx, JSScript *script,
 }
 
 static bool
-TooManyArguments(unsigned nargs)
-{
-    return (nargs >= SNAPSHOT_MAX_NARGS || nargs > js_IonOptions.maxStackArgs);
-}
-
-static bool
 CheckFrame(BaselineFrame *frame)
 {
     JS_ASSERT(!frame->isGeneratorFrame());
@@ -1898,6 +1892,12 @@ jit::CanEnter(JSContext *cx, RunState &state)
 
         if (TooManyArguments(invoke.args().length())) {
             IonSpew(IonSpew_Abort, "too many actual args");
+            ForbidCompilation(cx, script);
+            return Method_CantCompile;
+        }
+
+        if (TooManyArguments(invoke.args().callee().as<JSFunction>().nargs)) {
+            IonSpew(IonSpew_Abort, "too many args");
             ForbidCompilation(cx, script);
             return Method_CantCompile;
         }

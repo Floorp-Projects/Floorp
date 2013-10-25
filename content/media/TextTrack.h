@@ -92,6 +92,9 @@ public:
     return nullptr;
   }
 
+  uint16_t ReadyState() const;
+  void SetReadyState(uint16_t aState);
+
   void AddRegion(TextTrackRegion& aRegion);
   void RemoveRegion(const TextTrackRegion& aRegion, ErrorResult& aRv);
 
@@ -121,6 +124,7 @@ private:
   nsRefPtr<TextTrackRegionList> mRegionList;
 
   uint32_t mCuePos;
+  uint16_t mReadyState;
   bool mDirty;
 };
 
