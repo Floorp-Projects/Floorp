@@ -155,10 +155,13 @@ AudioSegment::WriteTo(uint64_t aID, AudioStream* aOutput)
         // Assumes that a bit pattern of zeroes == 0.0f
         memset(buf.Elements(), 0, buf.Length()*sizeof(AudioDataValue));
       }
-      aOutput->Write(buf.Elements(), int32_t(duration));
-      if(!c.mTimeStamp.IsNull())
-        LogLatency(AsyncLatencyLogger::AudioMediaStreamTrack, aID,
-                   (mozilla::TimeStamp::Now() - c.mTimeStamp).ToMilliseconds());
+      aOutput->Write(buf.Elements(), int32_t(duration), &(c.mTimeStamp));
+      if(!c.mTimeStamp.IsNull()) {
+        TimeStamp now = TimeStamp::Now();
+        // would be more efficient to c.mTimeStamp to ms on create time then pass here
+        LogTime(AsyncLatencyLogger::AudioMediaStreamTrack, aID,
+                (now - c.mTimeStamp).ToMilliseconds(), c.mTimeStamp);
+      }
       offset += duration;
     }
   }
