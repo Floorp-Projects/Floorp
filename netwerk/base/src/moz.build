@@ -73,6 +73,7 @@ SOURCES += [
     'nsURLParsers.cpp',
     'ProxyAutoConfig.cpp',
     'RedirectChannelRegistrar.cpp',
+    'Seer.cpp',
     'StreamingProtocolService.cpp',
     'Tickler.cpp',
 ]
