@@ -46,6 +46,13 @@ int         sLastFrameNumber = 0;
 int         sInitCount = 0; // Each init must have a matched shutdown.
 static bool sIsProfiling = false; // is raced on
 
+// env variables to control the profiler
+const char* PROFILER_MODE = "MOZ_PROFILER_MODE";
+const char* PROFILER_INTERVAL = "MOZ_PROFILER_INTERVAL";
+const char* PROFILER_ENTRIES = "MOZ_PROFILER_ENTRIES";
+const char* PROFILER_STACK = "MOZ_PROFILER_STACK_SCAN";
+const char* PROFILER_FEATURES = "MOZ_PROFILING_FEATURES";
+
 /* used to keep track of the last event that we sampled during */
 unsigned int sLastSampledEventGeneration = 0;
 
@@ -252,68 +259,112 @@ static inline const char* name_UnwMode(UnwMode m)
   }
 }
 
+bool set_profiler_mode(const char* mode) {
+  if (mode) {
+    if (0 == strcmp(mode, "pseudo")) {
+      sUnwindMode = UnwPSEUDO;
+      return true;
+    }
+    else if (0 == strcmp(mode, "native") && is_native_unwinding_avail()) {
+      sUnwindMode = UnwNATIVE;
+      return true;
+    }
+    else if (0 == strcmp(mode, "combined") && is_native_unwinding_avail()) {
+      sUnwindMode = UnwCOMBINED;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool set_profiler_interval(const char* interval) {
+  if (interval) {
+    errno = 0;
+    long int n = strtol(interval, (char**)NULL, 10);
+    if (errno == 0 && n >= 1 && n <= 1000) {
+      sUnwindInterval = n;
+      return true;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+bool set_profiler_entries(const char* entries) {
+  if (entries) {
+    errno = 0;
+    long int n = strtol(entries, (char**)NULL, 10);
+    if (errno == 0 && n > 0) {
+      sProfileEntries = n;
+      return true;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+bool set_profiler_scan(const char* scanCount) {
+  if (scanCount) {
+    errno = 0;
+    long int n = strtol(scanCount, (char**)NULL, 10);
+    if (errno == 0 && n >= 0 && n <= 100) {
+      sUnwindStackScan = n;
+      return true;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+bool is_native_unwinding_avail() {
+# if defined(HAVE_NATIVE_UNWIND)
+  return true;
+#else
+  return false;
+#endif
+}
+
 // Read env vars at startup, so as to set sUnwindMode and sInterval.
 void read_profiler_env_vars()
 {
-  bool nativeAvail = false;
-# if defined(HAVE_NATIVE_UNWIND)
-  nativeAvail = true;
-# endif
-
-  MOZ_ASSERT(sUnwindMode     == UnwINVALID);
-  MOZ_ASSERT(sUnwindInterval == 0);
-  MOZ_ASSERT(sProfileEntries == 0);
+  bool nativeAvail = is_native_unwinding_avail();
 
   /* Set defaults */
   sUnwindMode     = nativeAvail ? UnwCOMBINED : UnwPSEUDO;
   sUnwindInterval = 0;  /* We'll have to look elsewhere */
   sProfileEntries = 0;
 
-  const char* strM = PR_GetEnv("MOZ_PROFILER_MODE");
-  const char* strI = PR_GetEnv("MOZ_PROFILER_INTERVAL");
-  const char* strE = PR_GetEnv("MOZ_PROFILER_ENTRIES");
-  const char* strF = PR_GetEnv("MOZ_PROFILER_STACK_SCAN");
+  const char* stackMode = PR_GetEnv(PROFILER_MODE);
+  const char* interval = PR_GetEnv(PROFILER_INTERVAL);
+  const char* entries = PR_GetEnv(PROFILER_ENTRIES);
+  const char* scanCount = PR_GetEnv(PROFILER_STACK);
 
-  if (strM) {
-    if (0 == strcmp(strM, "pseudo"))
-      sUnwindMode = UnwPSEUDO;
-    else if (0 == strcmp(strM, "native") && nativeAvail)
-      sUnwindMode = UnwNATIVE;
-    else if (0 == strcmp(strM, "combined") && nativeAvail)
-      sUnwindMode = UnwCOMBINED;
-    else goto usage;
+  if (!set_profiler_mode(stackMode) ||
+      !set_profiler_interval(interval) ||
+      !set_profiler_entries(entries) ||
+      !set_profiler_scan(scanCount)) {
+      profiler_usage();
+  } else {
+    LOG( "SPS:");
+    LOGF("SPS: Unwind mode       = %s", name_UnwMode(sUnwindMode));
+    LOGF("SPS: Sampling interval = %d ms (zero means \"platform default\")",
+        (int)sUnwindInterval);
+    LOGF("SPS: Entry store size  = %d (zero means \"platform default\")",
+        (int)sProfileEntries);
+    LOGF("SPS: UnwindStackScan   = %d (max dubious frames per unwind).",
+        (int)sUnwindStackScan);
+    LOG( "SPS: Use env var MOZ_PROFILER_MODE=help for further information.");
+    LOG( "SPS:");
   }
+}
 
-  if (strI) {
-    errno = 0;
-    long int n = strtol(strI, (char**)NULL, 10);
-    if (errno == 0 && n >= 1 && n <= 1000) {
-      sUnwindInterval = n;
-    }
-    else goto usage;
-  }
-
-  if (strE) {
-    errno = 0;
-    long int n = strtol(strE, (char**)NULL, 10);
-    if (errno == 0 && n > 0) {
-      sProfileEntries = n;
-    }
-    else goto usage;
-  }
-
-  if (strF) {
-    errno = 0;
-    long int n = strtol(strF, (char**)NULL, 10);
-    if (errno == 0 && n >= 0 && n <= 100) {
-      sUnwindStackScan = n;
-    }
-    else goto usage;
-  }
-
-  goto out;
-
- usage:
+void profiler_usage() {
   LOG( "SPS: ");
   LOG( "SPS: Environment variable usage:");
   LOG( "SPS: ");
@@ -339,15 +390,15 @@ void read_profiler_env_vars()
   LOG( "SPS:   Needs to be set to use Breakpad-based unwinding.");
   LOG( "SPS: ");
   LOGF("SPS:   This platform %s native unwinding.",
-       nativeAvail ? "supports" : "does not support");
+       is_native_unwinding_avail() ? "supports" : "does not support");
   LOG( "SPS: ");
+
   /* Re-set defaults */
-  sUnwindMode       = nativeAvail ? UnwCOMBINED : UnwPSEUDO;
+  sUnwindMode       = is_native_unwinding_avail() ? UnwCOMBINED : UnwPSEUDO;
   sUnwindInterval   = 0;  /* We'll have to look elsewhere */
   sProfileEntries   = 0;
   sUnwindStackScan  = 0;
 
- out:
   LOG( "SPS:");
   LOGF("SPS: Unwind mode       = %s", name_UnwMode(sUnwindMode));
   LOGF("SPS: Sampling interval = %d ms (zero means \"platform default\")",
