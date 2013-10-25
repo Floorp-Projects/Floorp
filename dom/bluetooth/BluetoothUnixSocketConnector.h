@@ -26,6 +26,7 @@ public:
                           mozilla::ipc::sockaddr_any& aAddr,
                           const char* aAddress) MOZ_OVERRIDE;
   virtual bool SetUp(int aFd) MOZ_OVERRIDE;
+  virtual bool SetUpListenSocket(int aFd) MOZ_OVERRIDE;
   virtual void GetSocketAddr(const mozilla::ipc::sockaddr_any& aAddr,
                              nsAString& aAddrStr) MOZ_OVERRIDE;
 
