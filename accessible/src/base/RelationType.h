@@ -109,7 +109,27 @@ MOZ_BEGIN_ENUM_CLASS(RelationType)
    */
   DEFAULT_BUTTON = 0x10,
 
-  LAST = DEFAULT_BUTTON
+  /**
+   * The target object is the containing document object.
+   */
+  CONTAINING_DOCUMENT = 0x11,
+
+  /**
+   * The target object is the topmost containing document object in the tab pane.
+   */
+  CONTAINING_TAB_PANE = 0x12,
+
+  /**
+   * The target object is the containing window object.
+   */
+  CONTAINING_WINDOW = 0x13,
+
+  /**
+   * The target object is the containing application object.
+   */
+  CONTAINING_APPLICATION = 0x14,
+
+  LAST = CONTAINING_APPLICATION
 
 MOZ_END_ENUM_CLASS(RelationType)
 
