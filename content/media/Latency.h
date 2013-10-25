@@ -8,7 +8,7 @@
 #define MOZILLA_LATENCY_H
 
 #include "mozilla/TimeStamp.h"
-#include "nspr/prlog.h"
+#include "prlog.h"
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
 #include "mozilla/Monitor.h"
@@ -29,34 +29,15 @@ class AsyncLatencyLogger : public nsIObserver
 public:
 
   enum LatencyLogIndex {
-    AudioMediaStreamTrack = 0,
+    AudioMediaStreamTrack,
     VideoMediaStreamTrack,
     Cubeb,
     AudioStream,
     NetEQ,
-    AudioCaptureBase, // base time for capturing an audio stream
-    AudioCapture, // records number of samples captured and the time
-    AudioTrackInsertion, // # of samples inserted into a mediastreamtrack and the time
-    MediaPipelineAudioInsertion, // Timestamp and time of timestamp
-    AudioTransmit, // Timestamp and socket send time
-    AudioReceive, // Timestamp and receive time
-    MediaPipelineAudioPlayout, // Timestamp and playout into MST time
-    MediaStreamCreate, // Source and TrackUnion streams
-    AudioStreamCreate, // TrackUnion stream and AudioStream
-    AudioSendRTP,
-    AudioRecvRTP,
     _MAX_INDEX
   };
-  // Log with a null timestamp
-  void Log(LatencyLogIndex index, uint64_t aID, int64_t aValue);
-  // Log with a timestamp
-  void Log(LatencyLogIndex index, uint64_t aID, int64_t aValue,
-           mozilla::TimeStamp &aTime);
-  // Write a log message to NSPR
-  void WriteLog(LatencyLogIndex index, uint64_t aID, int64_t aValue,
-                mozilla::TimeStamp timestamp);
-  // Get the base time used by the logger for delta calculations
-  void GetStartTime(mozilla::TimeStamp &aStart);
+  void Log(LatencyLogIndex index, uint64_t aID, int64_t value);
+  void WriteLog(LatencyLogIndex index, uint64_t aID, int64_t value);
 
   static AsyncLatencyLogger* Get(bool aStartTimer = false);
   static void InitializeStatics();
@@ -82,19 +63,6 @@ private:
   mozilla::Mutex mMutex;
 };
 
-// need uint32_t versions for access from webrtc/trunk code
-// Log without a time delta
-void LogLatency(AsyncLatencyLogger::LatencyLogIndex index, uint64_t aID, int64_t aValue);
-void LogLatency(uint32_t index, uint64_t aID, int64_t aValue);
-// Log TimeStamp::Now() (as delta)
-void LogTime(AsyncLatencyLogger::LatencyLogIndex index, uint64_t aID, int64_t aValue);
-void LogTime(uint32_t index, uint64_t aID, int64_t aValue);
-// Log the specified time (as delta)
-void LogTime(AsyncLatencyLogger::LatencyLogIndex index, uint64_t aID, int64_t aValue,
-             mozilla::TimeStamp &aTime);
-
-// For generating unique-ish ids for logged sources
-#define LATENCY_STREAM_ID(source, trackID) \
-  ((((uint64_t) (source)) & ~0x0F) | (trackID))
+void LogLatency(AsyncLatencyLogger::LatencyLogIndex index, uint64_t aID, int64_t value);
 
 #endif

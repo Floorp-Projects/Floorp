@@ -156,17 +156,13 @@ MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   AudioSegment* segment = new AudioSegment();
   aStream->AddTrack(aID, SAMPLE_FREQUENCY, 0, segment);
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
-  LOG(("Start audio for stream %p", aStream));
+  LOG(("Initial audio"));
+  mTrackID = aID;
 
   if (mState == kStarted) {
-    MOZ_ASSERT(aID == mTrackID);
     return NS_OK;
   }
   mState = kStarted;
-  mTrackID = aID;
-
-  // Make sure logger starts before capture
-  AsyncLatencyLogger::Get(true);
 
   // Configure audio processing in webrtc code
   Config(mEchoOn, webrtc::kEcUnchanged,
@@ -374,18 +370,11 @@ MediaEngineWebRTCAudioSource::Process(int channel,
     nsAutoTArray<const sample*,1> channels;
     channels.AppendElement(dest);
     segment.AppendFrames(buffer.forget(), channels, length);
-    TimeStamp insertTime;
-    segment.GetStartTime(insertTime);
 
     SourceMediaStream *source = mSources[i];
     if (source) {
       // This is safe from any thread, and is safe if the track is Finished
-      // or Destroyed.
-      // Make sure we include the stream and the track.
-      // The 0:1 is a flag to note when we've done the final insert for a given input block.
-      LogTime(AsyncLatencyLogger::AudioTrackInsertion, LATENCY_STREAM_ID(source, mTrackID),
-              (i+1 < len) ? 0 : 1, insertTime);
-
+      // or Destroyed
       source->AppendToTrack(mTrackID, &segment);
     }
   }
