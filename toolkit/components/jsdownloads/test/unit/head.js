@@ -466,6 +466,31 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 }
 
 /**
+ * Waits for a download to finish, in case it has not finished already.
+ *
+ * @param aDownload
+ *        The Download object to wait upon.
+ *
+ * @return {Promise}
+ * @resolves When the download has finished successfully.
+ * @rejects JavaScript exception if the download failed.
+ */
+function promiseDownloadStopped(aDownload) {
+  if (!aDownload.stopped) {
+    // The download is in progress, wait for the current attempt to finish and
+    // report any errors that may occur.
+    return aDownload.start();
+  }
+
+  if (aDownload.succeeded) {
+    return Promise.resolve();
+  }
+
+  // The download failed or was canceled.
+  return Promise.reject(aDownload.error || new Error("Download canceled."));
+}
+
+/**
  * Waits for a download to reach half of its progress, in case it has not
  * reached the expected progress already.
  *
