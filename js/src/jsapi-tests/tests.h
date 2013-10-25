@@ -300,7 +300,7 @@ class JSAPITest
         JSContext *cx = JS_NewContext(rt, 8192);
         if (!cx)
             return nullptr;
-        ContextOptionsRef(cx).setVarObjFix(true);
+        JS::ContextOptionsRef(cx).setVarObjFix(true);
         JS_SetErrorReporter(cx, &reportError);
         return cx;
     }

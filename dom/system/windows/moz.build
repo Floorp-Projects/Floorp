@@ -6,7 +6,7 @@
 
 MODULE = 'dom'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsHapticFeedback.cpp',
 ]
 

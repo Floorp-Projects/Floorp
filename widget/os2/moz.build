@@ -6,7 +6,7 @@
 
 MODULE = 'widget'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsAppShell.cpp',
     'nsBidiKeyboard.cpp',
     'nsClipboard.cpp',

@@ -47,9 +47,8 @@ HRTFPanner::HRTFPanner(float sampleRate, mozilla::TemporaryRef<HRTFDatabaseLoade
     , m_sampleRate(sampleRate)
     , m_crossfadeSelection(CrossfadeSelection1)
     , m_azimuthIndex1(UninitializedAzimuth)
-    , m_elevation1(0)
     , m_azimuthIndex2(UninitializedAzimuth)
-    , m_elevation2(0)
+    // m_elevation1 and m_elevation2 are initialized in pan()
     , m_crossfadeX(0)
     , m_crossfadeIncr(0)
     , m_convolverL1(HRTFElevation::fftSizeForSampleRate(sampleRate))
@@ -77,6 +76,12 @@ HRTFPanner::~HRTFPanner()
 
 void HRTFPanner::reset()
 {
+    m_azimuthIndex1 = UninitializedAzimuth;
+    m_azimuthIndex2 = UninitializedAzimuth;
+    // m_elevation1 and m_elevation2 are initialized in pan()
+    m_crossfadeSelection = CrossfadeSelection1;
+    m_crossfadeX = 0.0f;
+    m_crossfadeIncr = 0.0f;
     m_convolverL1.reset();
     m_convolverR1.reset();
     m_convolverL2.reset();
@@ -285,19 +290,16 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
     }
 }
 
-double HRTFPanner::tailTime() const
+int HRTFPanner::maxTailFrames() const
 {
-    // Because HRTFPanner is implemented with a DelayKernel and a FFTConvolver, the tailTime of the HRTFPanner
-    // is the sum of the tailTime of the DelayKernel and the tailTime of the FFTConvolver, which is MaxDelayTimeSeconds
-    // and fftSize() / 2, respectively.
-    return MaxDelayTimeSeconds + (fftSize() / 2) / static_cast<double>(sampleRate());
-}
-
-double HRTFPanner::latencyTime() const
-{
-    // The latency of a FFTConvolver is also fftSize() / 2, and is in addition to its tailTime of the
-    // same value.
-    return (fftSize() / 2) / static_cast<double>(sampleRate());
+    // Although the ideal tail time would be the length of the impulse
+    // response, there is additional tail time from the approximations in the
+    // implementation.  Because HRTFPanner is implemented with a DelayKernel
+    // and a FFTConvolver, the tailTime of the HRTFPanner is the sum of the
+    // tailTime of the DelayKernel and the tailTime of the FFTConvolver.
+    // The FFTConvolver has a tail time of fftSize(), including latency of
+    // fftSize()/2.
+    return m_delayLineL.MaxDelayFrames() + fftSize();
 }
 
 } // namespace WebCore

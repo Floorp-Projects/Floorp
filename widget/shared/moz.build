@@ -9,7 +9,7 @@ if CONFIG['MOZ_X11']:
 
 MODULE = 'widget'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsShmImage.cpp',
     'WidgetEventImpl.cpp',
     'WidgetUtils.cpp',
@@ -18,4 +18,6 @@ CPP_SOURCES += [
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'widget_shared'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

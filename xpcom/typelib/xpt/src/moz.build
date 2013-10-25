@@ -8,7 +8,7 @@ MODULE = 'xpcom'
 
 LIBRARY_NAME = 'xpt'
 
-CSRCS += [
+SOURCES += [
     'xpt_arena.c',
     'xpt_struct.c',
     'xpt_xdr.c',

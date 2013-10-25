@@ -8,7 +8,7 @@ PARALLEL_DIRS += ['test']
 
 MODULE = 'appshell'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsAppShellFactory.cpp',
     'nsAppShellService.cpp',
     'nsAppShellWindowEnumerator.cpp',

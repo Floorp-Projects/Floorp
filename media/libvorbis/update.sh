@@ -46,6 +46,5 @@ cp $1/todo.txt ./todo.txt
 cp $1/COPYING ./COPYING
 cp $1/README ./README
 cp $1/AUTHORS ./AUTHORS
+
 patch -p3 < ./alloca.diff
-patch -p3 < ./bug719612.patch
-patch -p3 < ./bug722924.patch

@@ -84,6 +84,12 @@ armopts-gnu.S: armopts.s
 %-gnu.$(ASM_SUFFIX): %.s
 	$(PERL) $(srcdir)/arm/arm2gnu.pl < $< > $@
 
+ASFILES += $(addsuffix .$(ASM_SUFFIX), \
+  armbits-gnu \
+  armfrag-gnu \
+  armidct-gnu \
+  armloop-gnu \
+)
 endif
 endif
 

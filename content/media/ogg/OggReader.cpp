@@ -803,7 +803,7 @@ nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
   if (ret == TH_DUPFRAME) {
     VideoData* v = VideoData::CreateDuplicate(mDecoder->GetResource()->Tell(),
                                               time,
-                                              endTime,
+                                              endTime - time,
                                               aPacket->granulepos);
     mVideoQueue.Push(v);
   } else if (ret == 0) {
@@ -824,7 +824,7 @@ nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
                                      mDecoder->GetImageContainer(),
                                      mDecoder->GetResource()->Tell(),
                                      time,
-                                     endTime,
+                                     endTime - time,
                                      b,
                                      isKeyframe,
                                      aPacket->granulepos,

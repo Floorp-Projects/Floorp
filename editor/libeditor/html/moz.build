@@ -8,7 +8,7 @@ TEST_DIRS += ['tests']
 
 MODULE = 'editor'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsEditProperty.cpp',
     'nsHTMLAbsPosition.cpp',
     'nsHTMLAnonymousUtils.cpp',

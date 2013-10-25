@@ -926,7 +926,7 @@ class TypeConstraintFreezeStack : public TypeConstraint
 } /* anonymous namespace */
 
 bool
-types::FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executionMode,
+types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode executionMode,
                          CompilerConstraintList *constraints, RecompileInfo *precompileInfo)
 {
     if (constraints->failed())
@@ -1368,7 +1368,7 @@ ObjectStateChange(ExclusiveContext *cxArg, TypeObject *object, bool markingUnkno
 }
 
 static void
-CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun);
+CheckNewScriptProperties(JSContext *cx, TypeObject *type, HandleFunction fun);
 
 namespace {
 
@@ -1402,7 +1402,8 @@ class ConstraintDataFreezeConfiguredProperty
         if (type->flags & OBJECT_FLAG_NEW_SCRIPT_REGENERATE) {
             type->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
             if (type->hasNewScript()) {
-                CheckNewScriptProperties(cx, type, type->newScript()->fun);
+                RootedFunction fun(cx, type->newScript()->fun);
+                CheckNewScriptProperties(cx, type, fun);
             } else {
                 JS_ASSERT(type->flags & OBJECT_FLAG_ADDENDUM_CLEARED);
                 type->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
@@ -3211,7 +3212,7 @@ types::AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
  * newScript on the type after they were cleared by a GC.
  */
 static void
-CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
+CheckNewScriptProperties(JSContext *cx, TypeObject *type, HandleFunction fun)
 {
     JS_ASSERT(cx->compartment()->activeAnalysis);
 

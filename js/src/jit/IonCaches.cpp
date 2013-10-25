@@ -2982,6 +2982,19 @@ GetElementIC::canAttachGetProp(JSObject *obj, const Value &idval, jsid id)
             !JSID_TO_ATOM(id)->isIndex(&dummy));
 }
 
+static bool
+EqualStringsHelper(JSString *str1, JSString *str2)
+{
+    JS_ASSERT(str1->isAtom());
+    JS_ASSERT(!str2->isAtom());
+    JS_ASSERT(str1->length() == str2->length());
+
+    const jschar *chars = str2->getChars(NULL);
+    if (!chars)
+        return false;
+    return mozilla::PodEqual(str1->asAtom().chars(), chars, str1->length());
+}
+
 bool
 GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
                             const Value &idval, HandlePropertyName name,
@@ -3006,14 +3019,59 @@ GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
     }
 
     JS_ASSERT(idval.isString());
+    JS_ASSERT(idval.toString()->length() == name->length());
 
     Label failures;
     MacroAssembler masm(cx);
     SkipRoot skip(cx, &masm);
 
-    // Guard on the index value.
+    // Ensure the index is a string.
     ValueOperand val = index().reg().valueReg();
-    masm.branchTestValue(Assembler::NotEqual, val, idval, &failures);
+    masm.branchTestString(Assembler::NotEqual, val, &failures);
+
+    Register scratch = output().valueReg().scratchReg();
+    masm.unboxString(val, scratch);
+
+    Label equal;
+    masm.branchPtr(Assembler::Equal, scratch, ImmGCPtr(name), &equal);
+
+    // The pointers are not equal, so if the input string is also an atom it
+    // must be a different string.
+    masm.loadPtr(Address(scratch, JSString::offsetOfLengthAndFlags()), scratch);
+    masm.branchTest32(Assembler::NonZero, scratch, Imm32(JSString::ATOM_BIT), &failures);
+
+    // Check the length.
+    masm.rshiftPtr(Imm32(JSString::LENGTH_SHIFT), scratch);
+    masm.branch32(Assembler::NotEqual, scratch, Imm32(name->length()), &failures);
+
+    // We have a non-atomized string with the same length. For now call a helper
+    // function to do the comparison.
+    RegisterSet volatileRegs = RegisterSet::Volatile();
+    masm.PushRegsInMask(volatileRegs);
+
+    Register objReg = object();
+    JS_ASSERT(objReg != scratch);
+
+    if (!volatileRegs.has(objReg))
+        masm.push(objReg);
+
+    masm.setupUnalignedABICall(2, scratch);
+    masm.movePtr(ImmGCPtr(name), objReg);
+    masm.passABIArg(objReg);
+    masm.unboxString(val, scratch);
+    masm.passABIArg(scratch);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, EqualStringsHelper));
+    masm.mov(ReturnReg, scratch);
+
+    if (!volatileRegs.has(objReg))
+        masm.pop(objReg);
+
+    RegisterSet ignore = RegisterSet();
+    ignore.add(scratch);
+    masm.PopRegsInMaskIgnore(volatileRegs, ignore);
+
+    masm.branchIfFalseBool(scratch, &failures);
+    masm.bind(&equal);
 
     RepatchStubAppender attacher(*this);
     if (canCache == GetPropertyIC::CanAttachReadSlot) {

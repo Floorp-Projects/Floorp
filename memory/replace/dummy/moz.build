@@ -7,7 +7,7 @@
 MODULE = 'memory'
 NO_DIST_INSTALL = True
 
-CSRCS += [
+SOURCES += [
     'dummy_replace_malloc.c',
 ]
 

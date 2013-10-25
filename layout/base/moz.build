@@ -11,13 +11,13 @@ XPIDL_SOURCES += [
 ]
 
 if CONFIG['IBMBIDI']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsBidi.cpp',
         'nsBidiPresUtils.cpp',
     ]
 
 if CONFIG['MOZ_DEBUG']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsAutoLayoutPhase.cpp',
     ]
 
@@ -65,7 +65,7 @@ EXPORTS.mozilla += [
     'PaintTracker.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'DisplayItemClip.cpp',
     'DisplayListClipState.cpp',
     'FrameLayerBuilder.cpp',
@@ -107,4 +107,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkbase_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

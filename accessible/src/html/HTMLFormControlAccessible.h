@@ -131,6 +131,7 @@ public:
   virtual void ApplyARIAState(uint64_t* aState) const;
   virtual mozilla::a11y::role NativeRole();
   virtual uint64_t NativeState();
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
 
   // ActionAccessible
   virtual uint8_t ActionCount();

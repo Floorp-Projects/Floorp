@@ -11,7 +11,7 @@ EXPORTS += [
     'AppleMP3Reader.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AppleDecoder.cpp',
     'AppleMP3Reader.cpp',
 ]

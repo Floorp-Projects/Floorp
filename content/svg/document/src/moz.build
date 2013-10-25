@@ -10,7 +10,7 @@ EXPORTS.mozilla.dom += [
     'SVGDocument.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'SVGDocument.cpp',
 ]
 

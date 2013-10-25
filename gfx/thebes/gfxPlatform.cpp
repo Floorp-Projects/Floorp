@@ -393,6 +393,15 @@ gfxPlatform::Init()
         NS_RUNTIMEABORT("Could not initialize mScreenReferenceSurface");
     }
 
+    if (gPlatform->SupportsAzureContent()) {
+        gPlatform->mScreenReferenceDrawTarget =
+            gPlatform->CreateOffscreenContentDrawTarget(IntSize(1, 1),
+                                                        FORMAT_B8G8R8A8);
+      if (!gPlatform->mScreenReferenceDrawTarget) {
+        NS_RUNTIMEABORT("Could not initialize mScreenReferenceDrawTarget");
+      }
+    }
+
     rv = gfxFontCache::Init();
     if (NS_FAILED(rv)) {
         NS_RUNTIMEABORT("Could not initialize gfxFontCache");
@@ -500,6 +509,7 @@ gfxPlatform::Shutdown()
 gfxPlatform::~gfxPlatform()
 {
     mScreenReferenceSurface = nullptr;
+    mScreenReferenceDrawTarget = nullptr;
 
     // The cairo folks think we should only clean up in debug builds,
     // but we're generally in the habit of trying to shut down as
@@ -641,6 +651,10 @@ gfxPlatform::ClearSourceSurfaceForSurface(gfxASurface *aSurface)
 RefPtr<SourceSurface>
 gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurface)
 {
+  if (!aSurface->CairoSurface() || aSurface->CairoStatus()) {
+    return nullptr;
+  }
+
   void *userData = aSurface->GetData(&kSourceSurface);
 
   if (userData) {
@@ -737,10 +751,6 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
       // alive. This is true if gfxASurface actually -is- an ImageSurface or
       // if it is a gfxWindowsSurface which supports GetAsImageSurface.
       if (imgSurface != aSurface && !isWin32ImageSurf) {
-        // This shouldn't happen for now, it can be easily supported by making
-        // a copy. For now let's just abort.
-        NS_RUNTIMEABORT("Attempt to create unsupported SourceSurface from"
-            "non-image surface.");
         return nullptr;
       }
 

@@ -6,7 +6,7 @@
 
 MODULE = 'zipwriter'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsDeflateConverter.cpp',
     'nsZipDataStream.cpp',
     'nsZipHeader.cpp',

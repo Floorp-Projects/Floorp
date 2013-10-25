@@ -8,10 +8,10 @@ MODULE = 'xpcom'
 
 include('../objs.mozbuild')
 
-CPP_SOURCES += xpcom_gluens_src_cppsrcs
-CPP_SOURCES += xpcom_glue_src_cppsrcs
+SOURCES += xpcom_gluens_src_cppsrcs
+SOURCES += xpcom_glue_src_cppsrcs
 
-CPP_SOURCES += [
+SOURCES += [
     '../GenericModule.cpp',
     '../nsStringAPI.cpp',
 ]

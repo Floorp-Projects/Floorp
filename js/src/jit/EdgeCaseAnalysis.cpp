@@ -30,6 +30,7 @@ EdgeCaseAnalysis::analyzeLate()
             iter->setId(nextId++);
             iter->analyzeEdgeCasesForward();
         }
+        block->lastIns()->setId(nextId++);
     }
 
     for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {

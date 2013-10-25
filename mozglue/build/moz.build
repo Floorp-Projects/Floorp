@@ -21,12 +21,12 @@ if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_NATIVE_JEMALLOC'] or force_shared_lib):
     pass
     # TODO: SHARED_LIBRARY_LIBS go here
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'dummy.cpp',
     ]
 
 if CONFIG['OS_TARGET'] == 'Android':
-    CPP_SOURCES += [
+    SOURCES += [
         'BionicGlue.cpp',
     ]
 
@@ -41,17 +41,17 @@ EXPORTS.mozilla += [
 ]
 
 if CONFIG['CPU_ARCH'].startswith('x86'):
-    CPP_SOURCES += [
+    SOURCES += [
         'SSE.cpp',
     ]
 
 if CONFIG['CPU_ARCH'] == 'arm':
-    CPP_SOURCES += [
+    SOURCES += [
         'arm.cpp',
     ]
 
 if CONFIG['MOZ_ASAN']:
-    CPP_SOURCES += [
+    SOURCES += [
         'AsanOptions.cpp',
     ]
 
@@ -59,6 +59,6 @@ if CONFIG['MOZ_ASAN']:
 LIBRARY_NAME = 'mozglue'
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    CSRCS += [
+    SOURCES += [
         'cpuacct.c',
     ]

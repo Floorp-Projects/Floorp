@@ -72,11 +72,11 @@ struct StreamUpdate {
 
 /**
  * This represents a message passed from the main thread to the graph thread.
- * A ControlMessage always references a particular affected stream.
+ * A ControlMessage always has a weak reference a particular affected stream.
  */
 class ControlMessage {
 public:
-  ControlMessage(MediaStream* aStream) : mStream(aStream)
+  explicit ControlMessage(MediaStream* aStream) : mStream(aStream)
   {
     MOZ_COUNT_CTOR(ControlMessage);
   }

@@ -168,7 +168,7 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
     }
 
     if(attrct < 1){
-      r_log(LOG_ICE,LOG_WARNING,"ICE-STREAM(%s): Failed to find any components for stream",stream->label);
+      r_log(LOG_ICE,LOG_ERR,"ICE-STREAM(%s): Failed to find any components for stream",stream->label);
       ABORT(R_FAILED);
     }
 
@@ -346,7 +346,7 @@ static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
     timer_val=stream->pctx->ctx->Ta*stream->pctx->active_streams;
 
     if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED) {
-      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): bogus state for stream %s",stream->pctx->label,stream->label);
+      r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): (bug) bogus state for stream %s",stream->pctx->label,stream->label);
     }
     assert(stream->ice_state != NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED);
 
@@ -380,7 +380,7 @@ static void nr_ice_media_stream_check_timer_cb(NR_SOCKET s, int h, void *cb_arg)
       NR_ASYNC_TIMER_SET(timer_val,nr_ice_media_stream_check_timer_cb,cb_arg,&stream->timer);
     }
     else {
-      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): no pairs for %s",stream->pctx->label,stream->label);
+      r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s): no pairs for %s",stream->pctx->label,stream->label);
     }
 
     _status=0;

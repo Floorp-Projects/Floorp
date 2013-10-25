@@ -36,14 +36,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'MacIOSurface.h',
         'QuartzSupport.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'DrawTargetCG.cpp',
         'PathCG.cpp',
         'ScaledFontMac.cpp',
         'SourceSurfaceCG.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    CPP_SOURCES += [
+    SOURCES += [
         'DrawTargetD2D.cpp',
         'PathD2D.cpp',
         'ScaledFontDWrite.cpp',
@@ -51,18 +51,18 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SourceSurfaceD2DTarget.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DIRECT2D1_1']:
-        CPP_SOURCES += [
+        SOURCES += [
             'DrawTargetD2D1.cpp',
             'RadialGradientEffectD2D1.cpp',
             'SourceSurfaceD2D1.cpp'
         ]
     if CONFIG['MOZ_ENABLE_SKIA']:
-        CPP_SOURCES += [
+        SOURCES += [
             'ScaledFontWin.cpp',
         ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
-    CPP_SOURCES += [
+    SOURCES += [
         'convolver.cpp',
         'DrawTargetSkia.cpp',
         'image_operations.cpp',
@@ -74,12 +74,12 @@ if CONFIG['MOZ_ENABLE_SKIA']:
 if CONFIG['INTEL_ARCHITECTURE']:
     # VC2005 doesn't support _mm_castsi128_ps, so SSE2 is turned off
     if CONFIG['_MSC_VER'] != '1400':
-        CPP_SOURCES += [
+        SOURCES += [
             'BlurSSE2.cpp',
             'ImageScalingSSE2.cpp',
         ]
 
-CPP_SOURCES += [
+SOURCES += [
     'Blur.cpp',
     'DrawEventRecorder.cpp',
     'DrawTargetCairo.cpp',
@@ -99,7 +99,7 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CMMSRCS += [
+    SOURCES += [
         'QuartzSupport.mm',
     ]
 
@@ -110,4 +110,6 @@ MSVC_ENABLE_PGO = True
 LIBRARY_NAME = 'gfx2d'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -27,6 +27,7 @@ from ..frontend.data import (
     DirectoryTraversal,
     Exports,
     GeneratedEventWebIDLFile,
+    GeneratedInclude,
     GeneratedWebIDLFile,
     InstallationTarget,
     IPDLFile,
@@ -409,6 +410,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, LocalInclude):
             self._process_local_include(obj.path, backend_file)
+
+        elif isinstance(obj, GeneratedInclude):
+            self._process_generated_include(obj.path, backend_file)
 
         elif isinstance(obj, InstallationTarget):
             self._process_installation_target(obj, backend_file)
@@ -992,6 +996,13 @@ class RecursiveMakeBackend(CommonBackend):
         else:
             path = '$(srcdir)/'
         backend_file.write('LOCAL_INCLUDES += -I%s%s\n' % (path, local_include))
+
+    def _process_generated_include(self, generated_include, backend_file):
+        if generated_include.startswith('/'):
+            path = self.environment.topobjdir.replace('\\', '/')
+        else:
+            path = ''
+        backend_file.write('LOCAL_INCLUDES += -I%s%s\n' % (path, generated_include))
 
     def _write_manifests(self, dest, manifests):
         man_dir = os.path.join(self.environment.topobjdir, '_build_manifests',

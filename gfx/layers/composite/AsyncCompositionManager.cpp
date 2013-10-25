@@ -356,14 +356,14 @@ SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aSta
   // adjust to dev pixels.
   double cssPerDev = double(nsDeviceContext::AppUnitsPerCSSPixel())
                      / double(data.appUnitsPerDevPixel());
-  gfxPoint3D mozOrigin = data.mozOrigin();
-  mozOrigin.x = mozOrigin.x * cssPerDev;
-  mozOrigin.y = mozOrigin.y * cssPerDev;
+  gfxPoint3D transformOrigin = data.transformOrigin();
+  transformOrigin.x = transformOrigin.x * cssPerDev;
+  transformOrigin.y = transformOrigin.y * cssPerDev;
   gfxPoint3D perspectiveOrigin = data.perspectiveOrigin();
   perspectiveOrigin.x = perspectiveOrigin.x * cssPerDev;
   perspectiveOrigin.y = perspectiveOrigin.y * cssPerDev;
   nsDisplayTransform::FrameTransformProperties props(interpolatedList,
-                                                     mozOrigin,
+                                                     transformOrigin,
                                                      perspectiveOrigin,
                                                      data.perspective());
   gfx3DMatrix transform =

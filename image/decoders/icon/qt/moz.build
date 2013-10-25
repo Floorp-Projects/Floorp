@@ -8,7 +8,7 @@ DIRS += ['public']
 
 MODULE = 'imgicon'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsIconChannel.cpp',
 ]
 

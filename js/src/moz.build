@@ -77,7 +77,7 @@ EXPORTS.js += [
     '../public/Vector.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'assembler/jit/ExecutableAllocator.cpp',
     'builtin/Eval.cpp',
     'builtin/Intl.cpp',
@@ -188,17 +188,17 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_INSTRUMENTS']:
-    CPP_SOURCES += [
+    SOURCES += [
         'devtools/Instruments.cpp',
     ]
 
 if CONFIG['ENABLE_TRACE_LOGGING']:
-    CPP_SOURCES += [
+    SOURCES += [
         'TraceLogging.cpp',
     ]
 
 if CONFIG['ENABLE_ION']:
-    CPP_SOURCES += [
+    SOURCES += [
         'jit/AliasAnalysis.cpp',
         'jit/AsmJS.cpp',
         'jit/AsmJSLink.cpp',
@@ -254,7 +254,7 @@ if CONFIG['ENABLE_ION']:
         'jit/VMFunctions.cpp',
     ]
     if CONFIG['TARGET_CPU'].find('86') != -1:
-        CPP_SOURCES += [
+        SOURCES += [
             'jit/shared/Assembler-x86-shared.cpp',
             'jit/shared/BaselineCompiler-x86-shared.cpp',
             'jit/shared/BaselineIC-x86-shared.cpp',
@@ -264,7 +264,7 @@ if CONFIG['ENABLE_ION']:
             'jit/shared/MoveEmitter-x86-shared.cpp',
         ]
         if CONFIG['TARGET_CPU'] == 'x86_64':
-            CPP_SOURCES += [
+            SOURCES += [
                 'jit/x64/Assembler-x64.cpp',
                 'jit/x64/Bailouts-x64.cpp',
                 'jit/x64/BaselineCompiler-x64.cpp',
@@ -275,7 +275,7 @@ if CONFIG['ENABLE_ION']:
                 'jit/x64/Trampoline-x64.cpp',
             ]
         else:
-            CPP_SOURCES += [
+            SOURCES += [
                 'jit/x86/Assembler-x86.cpp',
                 'jit/x86/Bailouts-x86.cpp',
                 'jit/x86/BaselineCompiler-x86.cpp',
@@ -286,7 +286,7 @@ if CONFIG['ENABLE_ION']:
                 'jit/x86/Trampoline-x86.cpp',
             ]
     elif CONFIG['TARGET_CPU'].find('arm') != -1:
-        CPP_SOURCES += [
+        SOURCES += [
             'jit/arm/Architecture-arm.cpp',
             'jit/arm/Assembler-arm.cpp',
             'jit/arm/Bailouts-arm.cpp',
@@ -301,56 +301,56 @@ if CONFIG['ENABLE_ION']:
         ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
+    SOURCES += [
         'assembler/jit/ExecutableAllocatorWin.cpp',
         'yarr/OSAllocatorWin.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'OS2':
-    CPP_SOURCES += [
+    SOURCES += [
         'assembler/jit/ExecutableAllocatorOS2.cpp',
         'yarr/OSAllocatorOS2.cpp',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'assembler/jit/ExecutableAllocatorPosix.cpp',
         'yarr/OSAllocatorPosix.cpp',
     ]
 
 if CONFIG['ENABLE_ION'] or CONFIG['ENABLE_YARR_JIT']:
-    CPP_SOURCES += [
+    SOURCES += [
         'assembler/assembler/ARMAssembler.cpp',
         'assembler/assembler/MacroAssemblerARM.cpp',
         'assembler/assembler/MacroAssemblerX86Common.cpp',
     ]
 
 if CONFIG['ENABLE_YARR_JIT']:
-    CPP_SOURCES += [
+    SOURCES += [
         'yarr/YarrJIT.cpp'
     ]
 
 if CONFIG['JS_HAS_CTYPES']:
-    CPP_SOURCES += [
+    SOURCES += [
         'ctypes/CTypes.cpp',
         'ctypes/Library.cpp',
     ]
 
 if CONFIG['MOZ_VTUNE']:
-    CSRCS += [
+    SOURCES += [
         'vtune/jitprofiling.c'
     ]
 
 if CONFIG['HAVE_LINUX_PERF_EVENT_H']:
-    CPP_SOURCES += [
+    SOURCES += [
         'perf/pm_linux.cpp'
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'perf/pm_stub.cpp'
     ]
 
 MSVC_ENABLE_PGO = True
 
-HOST_CPPSRCS += [
+HOST_SOURCES += [
     'jskwgen.cpp',
     'jsoplengen.cpp',
 ]
