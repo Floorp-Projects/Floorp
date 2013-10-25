@@ -1503,7 +1503,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
     list-style-image: url(chrome://browser/skin/tabview/tabview-inverted.png);
   }
 
-  #main-window[tabsintitlebar]:not([inFullscreen]) .tab-close-button:not(:hover):not([selected="true"]) {
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tab-close-button:not(:-moz-any(:hover,:-moz-lwtheme,[selected="true"])) {
     -moz-image-region: rect(0, 64px, 16px, 48px);
   }
 
@@ -1514,6 +1514,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   }
 }
 %endif
+
+.tab-close-button:not(:hover):not([selected="true"]):-moz-lwtheme-brighttext {
+  -moz-image-region: rect(0, 64px, 16px, 48px) !important;
+}
 
 #main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-tab:not([selected]):not(:-moz-lwtheme) {
   color: CaptionText;
