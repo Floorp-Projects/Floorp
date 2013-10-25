@@ -73,19 +73,24 @@ ifndef MOZ_NATIVE_NSPR
 ifeq ($(_MSC_VER),1400)
 JSSHELL_BINS += $(DIST)/bin/Microsoft.VC80.CRT.manifest
 JSSHELL_BINS += $(DIST)/bin/msvcr80.dll
+JSSHELL_BINS += $(DIST)/bin/msvcp80.dll
 endif
 ifeq ($(_MSC_VER),1500)
 JSSHELL_BINS += $(DIST)/bin/Microsoft.VC90.CRT.manifest
 JSSHELL_BINS += $(DIST)/bin/msvcr90.dll
+JSSHELL_BINS += $(DIST)/bin/msvcp90.dll
 endif
 ifeq ($(_MSC_VER),1600)
 JSSHELL_BINS += $(DIST)/bin/msvcr100.dll
+JSSHELL_BINS += $(DIST)/bin/msvcp100.dll
 endif
 ifeq ($(_MSC_VER),1700)
 JSSHELL_BINS += $(DIST)/bin/msvcr110.dll
+JSSHELL_BINS += $(DIST)/bin/msvcp110.dll
 endif
 ifeq ($(_MSC_VER),1800)
 JSSHELL_BINS += $(DIST)/bin/msvcr120.dll
+JSSHELL_BINS += $(DIST)/bin/msvcp120.dll
 endif
 ifdef MOZ_FOLD_LIBS
 JSSHELL_BINS += $(DIST)/bin/$(DLL_PREFIX)nss3$(DLL_SUFFIX)
