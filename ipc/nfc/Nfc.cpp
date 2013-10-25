@@ -77,6 +77,7 @@ public:
                             sockaddr_any& aAddr,
                             const char* aAddress);
     virtual bool SetUp(int aFd);
+    virtual bool SetUpListenSocket(int aFd);
     virtual void GetSocketAddr(const sockaddr_any& aAddr,
                                nsAString& aAddrStr);
 };
@@ -146,6 +147,13 @@ NfcConnector::CreateAddr(bool aIsServer,
 
 bool
 NfcConnector::SetUp(int aFd)
+{
+    // Nothing to do here.
+    return true;
+}
+
+bool
+NfcConnector::SetUpListenSocket(int aFd)
 {
     // Nothing to do here.
     return true;

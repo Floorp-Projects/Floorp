@@ -231,7 +231,7 @@ class IonBuilder : public MIRGenerator
     JSFunction *getSingleCallTarget(types::TemporaryTypeSet *calleeTypes);
     bool getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constructing,
                             ObjectVector &targets, uint32_t maxTargets, bool *gotLambda);
-    bool canInlineTarget(JSFunction *target, bool constructing);
+    bool canInlineTarget(JSFunction *target, CallInfo &callInfo);
 
     void popCfgStack();
     DeferredEdge *filterDeadDeferredEdges(DeferredEdge *edge);

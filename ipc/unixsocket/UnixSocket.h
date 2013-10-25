@@ -119,13 +119,23 @@ public:
                           const char* aAddress) = 0;
 
   /**
-   * Does any socket type specific setup that may be needed
+   * Does any socket type specific setup that may be needed, only for socket
+   * created by ConnectSocket()
    *
    * @param aFd File descriptor for opened socket
    *
    * @return true is successful, false otherwise
    */
   virtual bool SetUp(int aFd) = 0;
+
+  /**
+   * Perform socket setup for socket created by ListenSocket(), after listen().
+   *
+   * @param aFd File descriptor for opened socket
+   *
+   * @return true is successful, false otherwise
+   */
+  virtual bool SetUpListenSocket(int aFd) = 0;
 
   /**
    * Get address of socket we're currently connected to. Return null string if
