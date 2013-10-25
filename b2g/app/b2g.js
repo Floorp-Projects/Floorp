@@ -820,9 +820,6 @@ pref("gfx.canvas.skiagl.dynamic-cache", true);
 // Cell Broadcast API
 pref("ril.cellbroadcast.disabled", false);
 
-// Voice Mail API
-pref("dom.voicemail.enabled", true);
-
 // The url of the page used to display network error details.
 pref("b2g.neterror.url", "app://system.gaiamobile.org/net_error.html");
 
