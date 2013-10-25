@@ -167,8 +167,8 @@ BluetoothHidManager::OnConnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  mController->OnConnect(aErrorStr);
-  mController = nullptr;
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
+  controller->OnConnect(aErrorStr);
 }
 
 void
@@ -182,8 +182,8 @@ BluetoothHidManager::OnDisconnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  mController->OnDisconnect(aErrorStr);
-  mController = nullptr;
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
+  controller->OnDisconnect(aErrorStr);
 }
 
 bool
