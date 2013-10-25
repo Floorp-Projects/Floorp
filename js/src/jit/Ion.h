@@ -384,6 +384,12 @@ IsIonInlinablePC(jsbytecode *pc) {
     return IsCallPC(pc) || IsGetPropPC(pc) || IsSetPropPC(pc);
 }
 
+inline bool
+TooManyArguments(unsigned nargs)
+{
+    return (nargs >= SNAPSHOT_MAX_NARGS || nargs > js_IonOptions.maxStackArgs);
+}
+
 void ForbidCompilation(JSContext *cx, JSScript *script);
 void ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode);
 uint32_t UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc);
