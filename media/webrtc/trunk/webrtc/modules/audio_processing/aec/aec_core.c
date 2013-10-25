@@ -109,7 +109,17 @@ const float WebRtcAec_overDriveCurve[65] = {
 // Target suppression levels for nlp modes.
 // log{0.001, 0.00001, 0.00000001}
 static const float kTargetSupp[3] = { -6.9f, -11.5f, -18.4f };
-static const float kMinOverDrive[3] = { 1.0f, 2.0f, 5.0f };
+
+// Two sets of parameters, one for the extended filter mode.
+static const float kExtendedMinOverDrive[3] = { 3.0f, 6.0f, 15.0f };
+static const float kNormalMinOverDrive[3] = { 1.0f, 2.0f, 5.0f };
+static const float kExtendedSmoothingCoefficients[2][2] =
+    { { 0.9f, 0.1f }, { 0.92f, 0.08f } };
+static const float kNormalSmoothingCoefficients[2][2] =
+    { { 0.9f, 0.1f }, { 0.93f, 0.07f } };
+
+// Number of partitions forming the NLP's "preferred" bands.
+enum { kPrefBandSize = 24 };
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
 extern int webrtc_aec_instance_count;
@@ -281,13 +291,13 @@ int WebRtcAec_FreeAec(AecCore* aec)
 static void FilterFar(AecCore* aec, float yf[2][PART_LEN1])
 {
   int i;
-  for (i = 0; i < NR_PART; i++) {
+  for (i = 0; i < aec->num_partitions; i++) {
     int j;
     int xPos = (i + aec->xfBufBlockPos) * PART_LEN1;
     int pos = i * PART_LEN1;
     // Check for wrap
-    if (i + aec->xfBufBlockPos >= NR_PART) {
-      xPos -= NR_PART*(PART_LEN1);
+    if (i + aec->xfBufBlockPos >= aec->num_partitions) {
+      xPos -= aec->num_partitions*(PART_LEN1);
     }
 
     for (j = 0; j < PART_LEN1; j++) {
@@ -301,22 +311,25 @@ static void FilterFar(AecCore* aec, float yf[2][PART_LEN1])
 
 static void ScaleErrorSignal(AecCore* aec, float ef[2][PART_LEN1])
 {
+  const float mu = aec->extended_filter_enabled ? kExtendedMu : aec->normal_mu;
+  const float error_threshold = aec->extended_filter_enabled ?
+      kExtendedErrorThreshold : aec->normal_error_threshold;
   int i;
-  float absEf;
+  float abs_ef;
   for (i = 0; i < (PART_LEN1); i++) {
     ef[0][i] /= (aec->xPow[i] + 1e-10f);
     ef[1][i] /= (aec->xPow[i] + 1e-10f);
-    absEf = sqrtf(ef[0][i] * ef[0][i] + ef[1][i] * ef[1][i]);
+    abs_ef = sqrtf(ef[0][i] * ef[0][i] + ef[1][i] * ef[1][i]);
 
-    if (absEf > aec->errThresh) {
-      absEf = aec->errThresh / (absEf + 1e-10f);
-      ef[0][i] *= absEf;
-      ef[1][i] *= absEf;
+    if (abs_ef > error_threshold) {
+      abs_ef = error_threshold / (abs_ef + 1e-10f);
+      ef[0][i] *= abs_ef;
+      ef[1][i] *= abs_ef;
     }
 
     // Stepsize factor
-    ef[0][i] *= aec->mu;
-    ef[1][i] *= aec->mu;
+    ef[0][i] *= mu;
+    ef[1][i] *= mu;
   }
 }
 
@@ -325,35 +338,35 @@ static void ScaleErrorSignal(AecCore* aec, float ef[2][PART_LEN1])
 //static void FilterAdaptationUnconstrained(AecCore* aec, float *fft,
 //                                          float ef[2][PART_LEN1]) {
 //  int i, j;
-//  for (i = 0; i < NR_PART; i++) {
+//  for (i = 0; i < aec->num_partitions; i++) {
 //    int xPos = (i + aec->xfBufBlockPos)*(PART_LEN1);
 //    int pos;
 //    // Check for wrap
-//    if (i + aec->xfBufBlockPos >= NR_PART) {
-//      xPos -= NR_PART * PART_LEN1;
+//    if (i + aec->xfBufBlockPos >= aec->num_partitions) {
+//      xPos -= aec->num_partitions * PART_LEN1;
 //    }
 //
 //    pos = i * PART_LEN1;
 //
 //    for (j = 0; j < PART_LEN1; j++) {
-//      aec->wfBuf[pos + j][0] += MulRe(aec->xfBuf[xPos + j][0],
-//                                      -aec->xfBuf[xPos + j][1],
-//                                      ef[j][0], ef[j][1]);
-//      aec->wfBuf[pos + j][1] += MulIm(aec->xfBuf[xPos + j][0],
-//                                      -aec->xfBuf[xPos + j][1],
-//                                      ef[j][0], ef[j][1]);
+//      aec->wfBuf[0][pos + j] += MulRe(aec->xfBuf[0][xPos + j],
+//                                      -aec->xfBuf[1][xPos + j],
+//                                      ef[0][j], ef[1][j]);
+//      aec->wfBuf[1][pos + j] += MulIm(aec->xfBuf[0][xPos + j],
+//                                      -aec->xfBuf[1][xPos + j],
+//                                      ef[0][j], ef[1][j]);
 //    }
 //  }
 //}
 
 static void FilterAdaptation(AecCore* aec, float *fft, float ef[2][PART_LEN1]) {
   int i, j;
-  for (i = 0; i < NR_PART; i++) {
+  for (i = 0; i < aec->num_partitions; i++) {
     int xPos = (i + aec->xfBufBlockPos)*(PART_LEN1);
     int pos;
     // Check for wrap
-    if (i + aec->xfBufBlockPos >= NR_PART) {
-      xPos -= NR_PART * PART_LEN1;
+    if (i + aec->xfBufBlockPos >= aec->num_partitions) {
+      xPos -= aec->num_partitions * PART_LEN1;
     }
 
     pos = i * PART_LEN1;
@@ -427,12 +440,12 @@ int WebRtcAec_InitAec(AecCore* aec, int sampFreq)
     aec->sampFreq = sampFreq;
 
     if (sampFreq == 8000) {
-        aec->mu = 0.6f;
-        aec->errThresh = 2e-6f;
+        aec->normal_mu = 0.6f;
+        aec->normal_error_threshold = 2e-6f;
     }
     else {
-        aec->mu = 0.5f;
-        aec->errThresh = 1.5e-6f;
+        aec->normal_mu = 0.5f;
+        aec->normal_error_threshold = 1.5e-6f;
     }
 
     if (WebRtc_InitBuffer(aec->nearFrBuf) == -1) {
@@ -474,6 +487,9 @@ int WebRtcAec_InitAec(AecCore* aec, int sampFreq)
     aec->delay_logging_enabled = 0;
     memset(aec->delay_histogram, 0, sizeof(aec->delay_histogram));
 
+    aec->extended_filter_enabled = 0;
+    aec->num_partitions = kNormalNumPartitions;
+
     // Default target suppression mode.
     aec->nlp_mode = 1;
 
@@ -483,7 +499,7 @@ int WebRtcAec_InitAec(AecCore* aec, int sampFreq)
       aec->mult = (short)aec->sampFreq / 16000;
     }
     else {
-        aec->mult = (short)aec->sampFreq / 8000;
+      aec->mult = (short)aec->sampFreq / 8000;
     }
 
     aec->farBufWritePos = 0;
@@ -514,11 +530,14 @@ int WebRtcAec_InitAec(AecCore* aec, int sampFreq)
     aec->xfBufBlockPos = 0;
     // TODO: Investigate need for these initializations. Deleting them doesn't
     //       change the output at all and yields 0.4% overall speedup.
-    memset(aec->xfBuf, 0, sizeof(complex_t) * NR_PART * PART_LEN1);
-    memset(aec->wfBuf, 0, sizeof(complex_t) * NR_PART * PART_LEN1);
+    memset(aec->xfBuf, 0, sizeof(complex_t) * kExtendedNumPartitions *
+        PART_LEN1);
+    memset(aec->wfBuf, 0, sizeof(complex_t) * kExtendedNumPartitions *
+        PART_LEN1);
     memset(aec->sde, 0, sizeof(complex_t) * PART_LEN1);
     memset(aec->sxd, 0, sizeof(complex_t) * PART_LEN1);
-    memset(aec->xfwBuf, 0, sizeof(complex_t) * NR_PART * PART_LEN1);
+    memset(aec->xfwBuf, 0, sizeof(complex_t) * kExtendedNumPartitions *
+        PART_LEN1);
     memset(aec->se, 0, sizeof(float) * PART_LEN1);
 
     // To prevent numerical instability in the first block.
@@ -734,13 +753,11 @@ int WebRtcAec_GetDelayMetricsCore(AecCore* self, int* median, int* std) {
 }
 
 int WebRtcAec_echo_state(AecCore* self) {
-  assert(self != NULL);
   return self->echoState;
 }
 
 void WebRtcAec_GetEchoStats(AecCore* self, Stats* erl, Stats* erle,
                             Stats* a_nlp) {
-  assert(self != NULL);
   assert(erl != NULL);
   assert(erle != NULL);
   assert(a_nlp != NULL);
@@ -751,14 +768,12 @@ void WebRtcAec_GetEchoStats(AecCore* self, Stats* erl, Stats* erle,
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
 void* WebRtcAec_far_time_buf(AecCore* self) {
-  assert(self != NULL);
   return self->far_time_buf;
 }
 #endif
 
 void WebRtcAec_SetConfigCore(AecCore* self, int nlp_mode, int metrics_mode,
                              int delay_logging) {
-  assert(self != NULL);
   assert(nlp_mode >= 0 && nlp_mode < 3);
   self->nlp_mode = nlp_mode;
   self->metricsMode = metrics_mode;
@@ -771,13 +786,20 @@ void WebRtcAec_SetConfigCore(AecCore* self, int nlp_mode, int metrics_mode,
   }
 }
 
+void WebRtcAec_enable_delay_correction(AecCore* self, int enable) {
+  self->extended_filter_enabled = enable;
+  self->num_partitions = enable ? kExtendedNumPartitions : kNormalNumPartitions;
+}
+
+int WebRtcAec_delay_correction_enabled(AecCore* self) {
+  return self->extended_filter_enabled;
+}
+
 int WebRtcAec_system_delay(AecCore* self) {
-  assert(self != NULL);
   return self->system_delay;
 }
 
 void WebRtcAec_SetSystemDelay(AecCore* self, int delay) {
-  assert(self != NULL);
   assert(delay >= 0);
   self->system_delay = delay;
 }
@@ -853,7 +875,8 @@ static void ProcessBlock(AecCore* aec) {
     for (i = 0; i < PART_LEN1; i++) {
       far_spectrum = (xf_ptr[i] * xf_ptr[i]) +
           (xf_ptr[PART_LEN1 + i] * xf_ptr[PART_LEN1 + i]);
-      aec->xPow[i] = gPow[0] * aec->xPow[i] + gPow[1] * NR_PART * far_spectrum;
+      aec->xPow[i] = gPow[0] * aec->xPow[i] + gPow[1] * aec->num_partitions *
+          far_spectrum;
       // Calculate absolute spectra
       abs_far_spectrum[i] = sqrtf(far_spectrum);
 
@@ -913,7 +936,7 @@ static void ProcessBlock(AecCore* aec) {
     // Update the xfBuf block position.
     aec->xfBufBlockPos--;
     if (aec->xfBufBlockPos == -1) {
-        aec->xfBufBlockPos = NR_PART - 1;
+        aec->xfBufBlockPos = aec->num_partitions - 1;
     }
 
     // Buffer xf
@@ -1014,18 +1037,21 @@ static void NonLinearProcessing(AecCore* aec, short *output, short *outputH)
     float cohde[PART_LEN1], cohxd[PART_LEN1];
     float hNlDeAvg, hNlXdAvg;
     float hNl[PART_LEN1];
-    float hNlPref[PREF_BAND_SIZE];
+    float hNlPref[kPrefBandSize];
     float hNlFb = 0, hNlFbLow = 0;
     const float prefBandQuant = 0.75f, prefBandQuantLow = 0.5f;
-    const int prefBandSize = PREF_BAND_SIZE / aec->mult;
+    const int prefBandSize = kPrefBandSize / aec->mult;
     const int minPrefBand = 4 / aec->mult;
 
     // Near and error power sums
     float sdSum = 0, seSum = 0;
 
-    // Power estimate smoothing coefficients
-    const float gCoh[2][2] = {{0.9f, 0.1f}, {0.93f, 0.07f}};
-    const float *ptrGCoh = gCoh[aec->mult - 1];
+    // Power estimate smoothing coefficients.
+    const float *ptrGCoh = aec->extended_filter_enabled ?
+        kExtendedSmoothingCoefficients[aec->mult - 1] :
+        kNormalSmoothingCoefficients[aec->mult - 1];
+    const float* min_overdrive = aec->extended_filter_enabled ?
+        kExtendedMinOverDrive : kNormalMinOverDrive;
 
     // Filter energy
     float wfEnMax = 0, wfEn = 0;
@@ -1048,7 +1074,7 @@ static void NonLinearProcessing(AecCore* aec, short *output, short *outputH)
     if (aec->delayEstCtr == 0) {
         wfEnMax = 0;
         aec->delayIdx = 0;
-        for (i = 0; i < NR_PART; i++) {
+        for (i = 0; i < aec->num_partitions; i++) {
             pos = i * PART_LEN1;
             wfEn = 0;
             for (j = 0; j < PART_LEN1; j++) {
@@ -1189,7 +1215,7 @@ static void NonLinearProcessing(AecCore* aec, short *output, short *outputH)
 
     if (aec->hNlXdAvgMin == 1) {
         aec->echoState = 0;
-        aec->overDrive = kMinOverDrive[aec->nlp_mode];
+        aec->overDrive = min_overdrive[aec->nlp_mode];
 
         if (aec->stNearState == 1) {
             memcpy(hNl, cohde, sizeof(hNl));
@@ -1245,7 +1271,7 @@ static void NonLinearProcessing(AecCore* aec, short *output, short *outputH)
         aec->hNlMinCtr = 0;
         aec->overDrive = WEBRTC_SPL_MAX(kTargetSupp[aec->nlp_mode] /
             ((float)log(aec->hNlFbMin + 1e-10f) + 1e-10f),
-            kMinOverDrive[aec->nlp_mode]);
+            min_overdrive[aec->nlp_mode]);
     }
 
     // Smooth the overdrive.
@@ -1465,7 +1491,6 @@ static void InitStats(Stats* stats) {
 }
 
 static void InitMetrics(AecCore* self) {
-  assert(self != NULL);
   self->stateCounter = 0;
   InitLevel(&self->farlevel);
   InitLevel(&self->nearlevel);
@@ -1687,3 +1712,4 @@ static void TimeToFrequency(float time_data[PART_LEN2],
     freq_data[1][i] = time_data[2 * i + 1];
   }
 }
+
