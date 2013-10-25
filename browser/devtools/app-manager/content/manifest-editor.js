@@ -42,9 +42,13 @@ ManifestEditor.prototype = {
   _onContainerReady: function(varWindow) {
     let variablesContainer = varWindow.document.querySelector("#variables");
 
+    variablesContainer.classList.add("manifest-editor");
+
     let editor = this.editor = new VariablesView(variablesContainer);
 
     editor.onlyEnumVisible = true;
+    editor.alignedValues = true;
+    editor.actionsFirst = true;
 
     if (this.editable) {
       editor.eval = this._onEval;
