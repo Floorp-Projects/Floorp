@@ -255,8 +255,7 @@ gfxXlibNativeRenderer::DrawCairo(cairo_t* cr, nsIntSize size,
     /* we're good to go! */
     NATIVE_DRAWING_NOTE("TAKING FAST PATH\n");
     cairo_surface_flush (target);
-    nsRefPtr<gfxASurface> surface = gfxASurface::Wrap(target);
-    nsresult rv = DrawWithXlib(static_cast<gfxXlibSurface*>(surface.get()),
+    nsresult rv = DrawWithXlib(target,
                                offset, rectangles,
                                needs_clip ? rect_count : 0);
     if (NS_SUCCEEDED(rv)) {
@@ -444,7 +443,7 @@ gfxXlibNativeRenderer::DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
     tempXlibSurface->Flush();
     /* no clipping is needed because the callback can't draw outside the native
        surface anyway */
-    nsresult rv = DrawWithXlib(tempXlibSurface, offset, nullptr, 0);
+    nsresult rv = DrawWithXlib(tempXlibSurface->CairoSurface(), offset, nullptr, 0);
     tempXlibSurface->MarkDirty();
     return NS_SUCCEEDED(rv);
 }
