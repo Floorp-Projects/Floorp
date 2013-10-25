@@ -233,13 +233,6 @@ public:
   {
     RemoveLeading(aDuration, 0);
   }
-
-#ifdef MOZILLA_INTERNAL_API
-  void GetStartTime(TimeStamp &aTime) {
-    aTime = mChunks[0].mTimeStamp;
-  }
-#endif
-
 protected:
   MediaSegmentBase(Type aType) : MediaSegment(aType) {}
 
