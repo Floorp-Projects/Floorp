@@ -61,36 +61,36 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SharedSurfaceANGLE.h',
         'WGLLibrary.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'GLContextProviderEGL.cpp',
         'SharedSurfaceANGLE.cpp',
     ]
 if CONFIG['MOZ_ENABLE_SKIA_GPU']:
     EXPORTS += ['GLContextSkia.h']
-    CPP_SOURCES += [
+    SOURCES += [
         'GLContextSkia.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    CPP_SOURCES += ['SharedSurfaceGralloc.cpp']
+    SOURCES += ['SharedSurfaceGralloc.cpp']
     EXPORTS += ['SharedSurfaceGralloc.h']
 
 if gl_provider == 'CGL':
-    CMMSRCS += [
+    SOURCES += [
         "GLContextProvider%s.mm" % (gl_provider),
     ]
     EXPORTS += [
         'SharedSurfaceIO.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'SharedSurfaceIO.cpp',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'GLContextProvider%s.cpp' % gl_provider,
     ]
 
-CPP_SOURCES += [
+SOURCES += [
     'GfxTexturesReporter.cpp',
     'GLContext.cpp',
     'GLContextFeatures.cpp',
@@ -119,4 +119,6 @@ MSVC_ENABLE_PGO = True
 LIBRARY_NAME = 'gl'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

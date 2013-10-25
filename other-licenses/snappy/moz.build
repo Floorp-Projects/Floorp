@@ -10,7 +10,7 @@ EXPORTS.snappy += [
     'src/snappy.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'src/snappy-c.cc',
     'src/snappy-sinksource.cc',
     'src/snappy-stubs-internal.cc',

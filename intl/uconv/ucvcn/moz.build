@@ -10,7 +10,7 @@ EXPORTS += [
     'nsUCvCnCID.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'UnifiedUCVCN.cpp',
 ]
 

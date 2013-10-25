@@ -3877,7 +3877,7 @@ nsGlobalWindow::GetApplicationCache(nsIDOMOfflineResourceList **aApplicationCach
 NS_IMETHODIMP
 nsGlobalWindow::GetCrypto(nsIDOMCrypto** aCrypto)
 {
-  FORWARD_TO_OUTER(GetCrypto, (aCrypto), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(GetCrypto, (aCrypto), NS_ERROR_NOT_INITIALIZED);
 
   if (!mCrypto) {
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
@@ -5771,13 +5771,12 @@ nsGlobalWindow::Blur()
 
   // If embedding apps don't implement nsIEmbeddingSiteWindow, we
   // shouldn't throw exceptions to web content.
-  nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
   nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_GetInterface(treeOwner));
   if (siteWindow) {
     // This method call may cause mDocShell to become nullptr.
-    rv = siteWindow->Blur();
+    siteWindow->Blur();
 
     // if the root is focused, clear the focus
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -5790,7 +5789,7 @@ nsGlobalWindow::Blur()
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -6978,8 +6977,7 @@ PostMessageEvent::Run()
     scInfo.event = this;
     scInfo.window = targetWindow;
 
-    if (!buffer.read(cx, messageData.address(), &kPostMessageCallbacks,
-                     &scInfo)) {
+    if (!buffer.read(cx, &messageData, &kPostMessageCallbacks, &scInfo)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
   }
@@ -7129,7 +7127,9 @@ nsGlobalWindow::PostMessageMoz(const JS::Value& aMessage,
   if (NS_FAILED(callerPrin->Subsumes(principal, &scInfo.subsumes)))
     return NS_ERROR_DOM_DATA_CLONE_ERR;
 
-  if (!buffer.write(aCx, aMessage, aTransfer, &kPostMessageCallbacks, &scInfo))
+  JS::Rooted<JS::Value> message(aCx, aMessage);
+  JS::Rooted<JS::Value> transfer(aCx, aTransfer);
+  if (!buffer.write(aCx, message, transfer, &kPostMessageCallbacks, &scInfo))
     return NS_ERROR_DOM_DATA_CLONE_ERR;
 
   event->SetJSData(buffer);
@@ -12122,7 +12122,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
                                              JS::Value *vp) {                \
     nsEventListenerManager *elm = GetExistingListenerManager();              \
     if (elm) {                                                               \
-      BeforeUnloadEventHandlerNonNull* h =                                   \
+      OnBeforeUnloadEventHandlerNonNull* h =                                 \
         elm->GetOnBeforeUnloadEventHandler();                                \
       if (h) {                                                               \
         *vp = JS::ObjectValue(*h->Callable());                               \
@@ -12139,11 +12139,11 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
       return NS_ERROR_OUT_OF_MEMORY;                                         \
     }                                                                        \
                                                                              \
-    nsRefPtr<BeforeUnloadEventHandlerNonNull> handler;                       \
+    nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handler;                     \
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new BeforeUnloadEventHandlerNonNull(callable);               \
+      handler = new OnBeforeUnloadEventHandlerNonNull(callable);             \
     }                                                                        \
     elm->SetEventHandler(handler);                                           \
     return NS_OK;                                                            \

@@ -36,7 +36,7 @@ EXPORTS.mozilla += [
     'OSFileConstants.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsDeviceSensors.cpp',
     'OSFileConstants.cpp',
 ]
@@ -56,4 +56,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'domsystem_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

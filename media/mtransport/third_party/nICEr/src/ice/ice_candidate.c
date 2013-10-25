@@ -164,7 +164,7 @@ int nr_ice_candidate_create(nr_ice_ctx *ctx,nr_ice_component *comp,nr_ice_socket
 
     TAILQ_FOREACH(tmp,&isock->candidates,entry_sock){
       if(cand->priority==tmp->priority){
-        r_log(LOG_ICE,LOG_WARNING,"ICE(%s): duplicate priority %u candidate %s and candidate %s",
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): duplicate priority %u candidate %s and candidate %s",
           ctx->label,cand->priority,cand->label,tmp->label);
       }
     }
@@ -365,7 +365,7 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
         &interface_preference)) {
         if (r==R_NOT_FOUND) {
           if (next_automatic_preference == 1) {
-            r_log(LOG_ICE,LOG_DEBUG,"Out of preference values. Can't assign one for interface %s",cand->base.ifname);
+            r_log(LOG_ICE,LOG_ERR,"Out of preference values. Can't assign one for interface %s",cand->base.ifname);
             ABORT(R_NOT_FOUND);
           }
           r_log(LOG_ICE,LOG_DEBUG,"Automatically assigning preference for interface %s->%d",cand->base.ifname,
@@ -466,7 +466,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
 
           /* Try to resolve */
           if(!cand->ctx->resolver) {
-            r_log(LOG_ICE, LOG_ERR, "Can't use DNS names without a resolver");
+            r_log(LOG_ICE, LOG_ERR, "ICE-CANDIDATE(%s): Can't use DNS names without a resolver", cand->label);
             ABORT(R_BAD_ARGS);
           }
 
@@ -475,7 +475,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
                                    nr_ice_candidate_resolved_cb,
                                    (void *)cand,
                                    &cand->resolver_handle)){
-            r_log(LOG_ICE,LOG_ERR,"ICE-CANDIDATE(%s): Could not resolve domain name",cand->label);
+            r_log(LOG_ICE,LOG_ERR,"ICE-CANDIDATE(%s): Could not invoke DNS resolver",cand->label);
             ABORT(r);
           }
         }
@@ -504,7 +504,7 @@ static int nr_ice_candidate_resolved_cb(void *cb_arg, nr_transport_addr *addr)
             cand->ctx->label,cand->label,addr->as_string);
     }
     else {
-      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): failed to resolve candidate %s.",
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): failed to resolve candidate %s.",
             cand->ctx->label,cand->label);
       ABORT(R_NOT_FOUND);
     }
@@ -750,7 +750,7 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
 
     case NR_TURN_CLIENT_STATE_FAILED:
     case NR_TURN_CLIENT_STATE_CANCELLED:
-      r_log(NR_LOG_TURN, LOG_ERR,
+      r_log(NR_LOG_TURN, LOG_WARNING,
             "ICE-CANDIDATE(%s): nr_turn_allocated_cb called with state %d",
             cand->label, turn->state);
       /* This failed, so go to the next TURN server if there is one */
@@ -764,7 +764,7 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
     _status=0;
   abort:
     if(_status){
-      r_log(NR_LOG_TURN, LOG_ERR,
+      r_log(NR_LOG_TURN, LOG_WARNING,
             "ICE-CANDIDATE(%s): nr_turn_allocated_cb failed", cand->label);
       cand->state=NR_ICE_CAND_STATE_FAILED;
       cand->done_cb(0,0,cand->cb_arg);

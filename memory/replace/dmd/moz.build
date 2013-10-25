@@ -10,13 +10,13 @@ EXPORTS += [
     'DMD.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     '../../../mfbt/HashFunctions.cpp',
     '../../../xpcom/base/nsStackWalk.cpp',
     'DMD.cpp',
 ]
 
-CSRCS += [
+SOURCES += [
     '../../../nsprpub/lib/libc/src/strcpy.c',
 ]
 

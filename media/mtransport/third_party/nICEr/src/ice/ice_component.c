@@ -209,7 +209,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
 
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): host address %s",ctx->label,addrs[i].addr.as_string);
       if(r=nr_socket_local_create(&addrs[i].addr,&sock)){
-        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create socket for address %s",ctx->label,addrs[i].addr.as_string);
+        r_log(LOG_ICE,LOG_WARNING,"ICE(%s): couldn't create socket for address %s",ctx->label,addrs[i].addr.as_string);
         continue;
       }
 
@@ -302,7 +302,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     /* count the candidates that will be initialized */
     cand=TAILQ_FIRST(&component->candidates);
     if(!cand){
-      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create any valid candidates",ctx->label);
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): couldn't create any valid candidates",ctx->label);
       ABORT(R_NOT_FOUND);
     }
 
@@ -412,17 +412,17 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
     if(comp->stream->pctx->controlling){
       if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_ICE_CONTROLLING,&attr)){
         /* OK, there is a conflict. Who's right? */
-        r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): role conflict, both controlling",comp->stream->pctx->label);
+        r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s): role conflict, both controlling",comp->stream->pctx->label);
 
         if(attr->u.ice_controlling > comp->stream->pctx->tiebreaker){
           /* They are: switch */
-          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): switching to controlled",comp->stream->pctx->label);
+          r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s): switching to controlled",comp->stream->pctx->label);
 
           comp->stream->pctx->controlling=0;
         }
         else {
           /* We are: throw an error */
-          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): returning 487 role conflict",comp->stream->pctx->label);
+          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s): returning 487 role conflict",comp->stream->pctx->label);
 
           *error=487;
           ABORT(R_REJECTED);
@@ -432,17 +432,17 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
     else{
       if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_ICE_CONTROLLED,&attr)){
         /* OK, there is a conflict. Who's right? */
-        r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): role conflict, both controlled",comp->stream->pctx->label);
+        r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s): role conflict, both controlled",comp->stream->pctx->label);
 
         if(attr->u.ice_controlling < comp->stream->pctx->tiebreaker){
-          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): switching to controlling",comp->stream->pctx->label);
+          r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s): switching to controlling",comp->stream->pctx->label);
 
           /* They are: switch */
           comp->stream->pctx->controlling=1;
         }
         else {
           /* We are: throw an error */
-          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): returning 487 role conflict",comp->stream->pctx->label);
+          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s): returning 487 role conflict",comp->stream->pctx->label);
 
           *error=487;
           ABORT(R_REJECTED);
@@ -514,7 +514,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
           ABORT(r);
         }
         if(!nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_PRIORITY,&attr)){
-          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): Rejecting stun request without priority",comp->stream->pctx->label);
+          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s): Rejecting stun request without priority",comp->stream->pctx->label);
           *error=487;
           ABORT(R_BAD_DATA);
         }
@@ -543,7 +543,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
         if(found_invalid->state == NR_ICE_PAIR_STATE_FAILED){
           pair=found_invalid;
 
-          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND-PAIR(%s): received STUN check on invalid pair, resurrecting: %s",comp->stream->pctx->label,pair->codeword,pair->as_string);
+          r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/CAND-PAIR(%s): received STUN check on invalid pair, resurrecting: %s",comp->stream->pctx->label,pair->codeword,pair->as_string);
           nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_WAITING);
         }
         else{
@@ -559,7 +559,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
     assert(pair);
     if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_USE_CANDIDATE,0)){
       if(comp->stream->pctx->controlling){
-        r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s)/CAND_PAIR(%s): Peer sent USE-CANDIDATE but is controlled",comp->stream->pctx->label, pair->codeword);
+        r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND_PAIR(%s): Peer sent USE-CANDIDATE but is controlled",comp->stream->pctx->label, pair->codeword);
       }
       else{
         /* If this is the first time we've noticed this is nominated...*/
@@ -796,7 +796,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
     }
 
     /* Set the new nominated pair */
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): nominated pair is %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->codeword,pair->as_string);
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): nominated pair is %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->codeword,pair->as_string);
     comp->state=NR_ICE_COMPONENT_NOMINATED;
     comp->nominated=pair;
     comp->active=pair;

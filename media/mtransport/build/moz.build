@@ -26,7 +26,7 @@ EXPORTS.mtransport += [
 
 include('../objs.mozbuild')
 
-CPP_SOURCES += mtransport_cppsrcs
+SOURCES += mtransport_cppsrcs
 
 LIBRARY_NAME = 'mtransport'
 

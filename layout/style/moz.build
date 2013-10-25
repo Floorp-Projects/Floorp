@@ -76,7 +76,7 @@ EXPORTS.mozilla.css += [
     'StyleRule.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AnimationCommon.cpp',
     'CSS.cpp',
     'Declaration.cpp',
@@ -130,4 +130,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkstyle_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

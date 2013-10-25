@@ -7,7 +7,7 @@
 MODULE = 'migration'
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
+    SOURCES += [
         'nsIEHistoryEnumerator.cpp',
     ]
 

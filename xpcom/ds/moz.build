@@ -37,7 +37,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     EXPORTS += ['nsWindowsRegKey.h']
     EXPORTS.mozilla += ['TimeStamp_windows.h']
-    CPP_SOURCES += [
+    SOURCES += [
         'nsWindowsRegKey.cpp'
     ]
 
@@ -72,7 +72,7 @@ EXPORTS.mozilla += [
     'TimeStamp.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsArray.cpp',
     'nsAtomService.cpp',
     'nsAtomTable.cpp',
@@ -94,15 +94,15 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
+    SOURCES += [
         'TimeStamp_windows.cpp',
     ]
 elif CONFIG['HAVE_CLOCK_MONOTONIC']:
-    CPP_SOURCES += [
+    SOURCES += [
         'TimeStamp_posix.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'Darwin':
-    CPP_SOURCES += [
+    SOURCES += [
         'TimeStamp_darwin.cpp',
     ]
 else:

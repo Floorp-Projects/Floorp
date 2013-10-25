@@ -10,7 +10,7 @@ EXPORTS += [
     'SkANP.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'ANPCanvas.cpp',
     'ANPPaint.cpp',
     'ANPPath.cpp',

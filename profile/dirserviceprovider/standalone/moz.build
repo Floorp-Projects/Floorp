@@ -8,6 +8,6 @@ MODULE = 'profdirserviceprovider'
 
 include('../src/objs.mozbuild')
 
-CPP_SOURCES += modules_profiledirservice_src_csrcs
+SOURCES += modules_profiledirservice_src_csrcs
 
 LIBRARY_NAME = 'profdirserviceprovidersa_s'

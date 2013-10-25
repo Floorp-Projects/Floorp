@@ -65,7 +65,6 @@ ifeq ($(MOZ_BUILD_APP),mobile/android)
 _SERV_FILES += \
   $(topsrcdir)/mobile/android/base/tests/robocop.ini \
   $(topsrcdir)/mobile/android/base/tests/robocop_autophone.ini \
-  $(topsrcdir)/mobile/android/base/tests/robocop_x86.ini \
   $(NULL)
 endif
 

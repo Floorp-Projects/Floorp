@@ -106,7 +106,7 @@ EXPORTS.mozilla.dom += [
     'VideoStreamTrack.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AudioAvailableEventManager.cpp',
     'AudioChannelFormat.cpp',
     'AudioNodeEngine.cpp',
@@ -149,7 +149,7 @@ CPP_SOURCES += [
 FAIL_ON_WARNINGS = True
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
-    CPP_SOURCES += [
+    SOURCES += [
         'AudioNodeEngineNEON.cpp',
     ]
 
@@ -158,4 +158,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkconmedia_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

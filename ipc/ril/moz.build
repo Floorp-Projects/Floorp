@@ -10,7 +10,7 @@ EXPORTS.mozilla.ipc += [
     'Ril.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'Ril.cpp',
 ]
 
@@ -19,4 +19,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'mozril_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

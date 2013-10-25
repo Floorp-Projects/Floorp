@@ -43,3 +43,20 @@ LIBRARY_NAME = 'dombindings_s'
 
 EXPORT_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../bluetooth',
+    '../camera',
+    '../file',
+    '../src/geolocation',
+    '../workers',
+    '/content/base/src',
+    '/content/events/src',
+    '/content/html/document/src',
+    '/content/media/webaudio',
+    '/content/svg/content/src',
+    '/content/xbl/src',
+    '/layout/style',
+    '/layout/xul/tree',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')

@@ -14,7 +14,7 @@ EXPORTS.mozilla.dom.mobilemessage += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    CPP_SOURCES += [
+    SOURCES += [
         'android/MmsService.cpp',
         'android/MobileMessageDatabaseService.cpp',
         'android/SmsService.cpp',
@@ -32,11 +32,11 @@ elif CONFIG['MOZ_B2G_RIL']:
         'gonk/MobileMessageDatabaseService.js',
         'gonk/MobileMessageDatabaseService.manifest',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'gonk/SmsService.cpp',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'fallback/MmsService.cpp',
         'fallback/MobileMessageDatabaseService.cpp',
         'fallback/SmsService.cpp',
@@ -50,7 +50,7 @@ EXPORTS.mozilla.dom += [
     'SmsSegmentInfo.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'Constants.cpp',
     'ipc/SmsChild.cpp',
     'ipc/SmsIPCService.cpp',
@@ -82,3 +82,8 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'dom_mobilemessage_s'
 
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')

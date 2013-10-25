@@ -554,7 +554,7 @@ void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
     return;
   }
   aStream->mLastAudioPacketTime = aAudio->mTime;
-  aStream->mLastAudioPacketEndTime = aAudio->GetEnd();
+  aStream->mLastAudioPacketEndTime = aAudio->GetEndTime();
 
   // This logic has to mimic AudioLoop closely to make sure we write
   // the exact same silences
@@ -692,14 +692,14 @@ void MediaDecoderStateMachine::SendStreamData()
             &output);
         stream->mNextVideoTime = v->mTime - mStartTime;
       }
-      if (stream->mNextVideoTime + mStartTime < v->mEndTime) {
+      if (stream->mNextVideoTime + mStartTime < v->GetEndTime()) {
         LOG(PR_LOG_DEBUG, ("%p Decoder writing video frame %lld to MediaStream %p for %lld ms",
                            mDecoder.get(), v->mTime, mediaStream,
-                           v->mEndTime - (stream->mNextVideoTime + mStartTime)));
+                           v->GetEndTime() - (stream->mNextVideoTime + mStartTime)));
         WriteVideoToMediaStream(v->mImage,
-            v->mEndTime - (stream->mNextVideoTime + mStartTime), v->mDisplay,
+            v->GetEndTime() - (stream->mNextVideoTime + mStartTime), v->mDisplay,
             &output);
-        stream->mNextVideoTime = v->mEndTime - mStartTime;
+        stream->mNextVideoTime = v->GetEndTime() - mStartTime;
         stream->mLastVideoImage = v->mImage;
         stream->mLastVideoImageDisplaySize = v->mDisplay;
       } else {
@@ -742,7 +742,7 @@ void MediaDecoderStateMachine::SendStreamData()
       // very start. That's OK, we'll play silence instead for a brief moment.
       // That's OK. Seeking to this time would have a similar issue for such
       // badly muxed resources.
-      if (a->GetEnd() >= minLastAudioPacketTime) {
+      if (a->GetEndTime() >= minLastAudioPacketTime) {
         mReader->AudioQueue().PushFront(a.forget());
         break;
       }
@@ -2058,7 +2058,7 @@ void MediaDecoderStateMachine::DecodeSeek()
       if (HasVideo()) {
         VideoData* video = mReader->VideoQueue().PeekFront();
         if (video) {
-          NS_ASSERTION((video->mTime <= seekTime && seekTime <= video->mEndTime) ||
+          NS_ASSERTION((video->mTime <= seekTime && seekTime <= video->GetEndTime()) ||
                         mReader->VideoQueue().IsFinished(),
             "Seek target should lie inside the first frame after seek, unless it's the last frame.");
           {
@@ -2496,7 +2496,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
   if (mReader->VideoQueue().GetSize() > 0) {
     VideoData* frame = mReader->VideoQueue().PeekFront();
     while (mRealTime || clock_time >= frame->mTime) {
-      mVideoFrameEndTime = frame->mEndTime;
+      mVideoFrameEndTime = frame->GetEndTime();
       currentFrame = frame;
 #ifdef PR_LOGGING
       if (!PR_GetEnv("MOZ_QUIET")) {
@@ -2572,7 +2572,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
     double frameDelay = double(clock_time - currentFrame->mTime) / USECS_PER_S;
     NS_ASSERTION(frameDelay >= 0.0, "Frame should never be displayed early.");
     frameStats.NotifyFrameDelay(frameDelay);
-    remainingTime = currentFrame->mEndTime - clock_time;
+    remainingTime = currentFrame->GetEndTime() - clock_time;
     currentFrame = nullptr;
   }
 

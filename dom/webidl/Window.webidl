@@ -8,3 +8,5 @@
  */
 
 callback FrameRequestCallback = void (DOMHighResTimeStamp time);
+
+//Window implements OnErrorEventHandlerForWindow;

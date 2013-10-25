@@ -6,44 +6,44 @@
 
 MODULE = 'cubeb'
 
-CSRCS += [
+SOURCES += [
     'cubeb.c',
 ]
 
 if CONFIG['MOZ_ALSA']:
-    CSRCS += [
+    SOURCES += [
         'cubeb_alsa.c',
     ]
 
 if CONFIG['MOZ_PULSEAUDIO']:
-    CSRCS += [
+    SOURCES += [
         'cubeb_pulse.c',
     ]
 
 if CONFIG['OS_ARCH'] == 'OpenBSD':
-    CSRCS += [
+    SOURCES += [
         'cubeb_sndio.c',
     ]
 
 if CONFIG['OS_TARGET'] == 'Darwin':
-    CSRCS += [
+    SOURCES += [
         'cubeb_audiounit.c',
     ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    CSRCS += [
+    SOURCES += [
         'cubeb_winmm.c',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'cubeb_wasapi.cpp'
     ]
 
 if CONFIG['OS_TARGET'] == 'Android':
-    CSRCS += [
+    SOURCES += [
         'cubeb_opensl.c',
     ]
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-        CSRCS += [
+        SOURCES += [
             'cubeb_audiotrack.c',
         ]
 

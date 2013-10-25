@@ -9,21 +9,21 @@
 
 BEGIN_TEST(testNullRoot)
 {
-    JSObject *obj = nullptr;
-    CHECK(JS_AddObjectRoot(cx, &obj));
+    JS::RootedObject obj(cx);
+    CHECK(JS_AddObjectRoot(cx, obj.address()));
 
-    JSString *str = nullptr;
-    CHECK(JS_AddStringRoot(cx, &str));
+    JS::RootedString str(cx);
+    CHECK(JS_AddStringRoot(cx, str.address()));
 
-    JSScript *scr = nullptr;
-    CHECK(JS_AddNamedScriptRoot(cx, &scr, "testNullRoot's scr"));
+    JS::RootedScript script(cx);
+    CHECK(JS_AddNamedScriptRoot(cx, script.address(), "testNullRoot's script"));
 
     // This used to crash because obj was nullptr.
     JS_GC(cx->runtime());
 
-    JS_RemoveObjectRoot(cx, &obj);
-    JS_RemoveStringRoot(cx, &str);
-    JS_RemoveScriptRoot(cx, &scr);
+    JS_RemoveObjectRoot(cx, obj.address());
+    JS_RemoveStringRoot(cx, str.address());
+    JS_RemoveScriptRoot(cx, script.address());
     return true;
 }
 END_TEST(testNullRoot)

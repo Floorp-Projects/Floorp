@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Bidi with European terminators</title>
+  </head>
+  <body>
+    <p>In the Bidi Algorithm, a sequence of European terminators
+      adjacent to European numbers changes to all European numbers. A
+      change was made in Unicode 6.3 so that all undefined Unicode
+      codepoints betweem U+20A0 and U+20CF would have the bidi category of
+      European terminator by default</p>
+    <p>פרס $$$$1000000!!!</p>
+    <p>פרס &#x20A0;&#x20A0;&#x20A0;&#x20A0;1000000!!!</p>
+    <p>פרס &#x20BA;&#x20BA;&#x20BA;&#x20BA;1000000!!!</p>
+    <p>פרס &#x20CF;&#x20CF;&#x20CF;&#x20CF;1000000!!!</p>
+    <p>פרס
+      &#x20A0;&#x20A1;&#x20A2;&#x20A3;&#x20A4;&#x20A5;&#x20A6;<!--
+   -->&#x20A7;&#x20A8;&#x20A9;&#x20AA;&#x20AB;&#x20AC;&#x20AD;<!--
+   -->&#x20AE;&#x20AF;&#x20B0;&#x20B1;&#x20B2;&#x20B3;&#x20B4;<!--
+   -->&#x20B5;&#x20B6;&#x20B7;&#x20B8;&#x20B9;&#x20BA;&#x20BB;<!--
+   -->&#x20BC;&#x20BD;&#x20BE;&#x20BF;&#x20C0;&#x20C1;&#x20C2;<!--
+   -->&#x20C3;&#x20C4;&#x20C5;&#x20C6;&#x20C7;&#x20C8;&#x20C9;<!--
+   -->&#x20CA;&#x20CB;&#x20CC;&#x20CD;&#x20CE;&#x20CF;1000000!!!</p>
+  </body>
+</html>

@@ -10,6 +10,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIDOMGeoPositionError.h"
 #include "CoreLocationLocationProvider.h"
+#include "nsCocoaFeatures.h"
 #include "prtime.h"
 
 #include <CoreLocation/CLError.h>
@@ -134,6 +135,12 @@ CoreLocationLocationProvider::CoreLocationLocationProvider()
 bool
 CoreLocationLocationProvider::IsCoreLocationAvailable()
 {
+#if !defined(MAC_OS_X_VERSION_10_9) || \
+    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_9
+  if (nsCocoaFeatures::OnMavericksOrLater()) {
+    return false;
+  }
+
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   @try {
@@ -157,6 +164,7 @@ CoreLocationLocationProvider::IsCoreLocationAvailable()
   @catch(NSException *e) {
   }
   [pool release];
+#endif
   return false;
 }
 

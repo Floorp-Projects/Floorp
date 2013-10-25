@@ -13,7 +13,7 @@ EXPORTS += [
 
 LIBRARY_NAME = 'mozexpat_s'
 
-CSRCS += [
+SOURCES += [
     'xmlparse.c',
     'xmlrole.c',
     'xmltok.c',

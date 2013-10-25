@@ -7,7 +7,7 @@
 NO_DIST_INSTALL = True
 
 if CONFIG['HOST_OS_ARCH'] != 'WINNT':
-    HOST_CSRCS += [
+    HOST_SOURCES += [
         'nsinstall.c',
         'pathsub.c',
     ]

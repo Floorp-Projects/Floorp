@@ -85,6 +85,12 @@
           toggle('expertContent');
         }
 
+        // Disallow overrides if this is a Strict-Transport-Security
+        // host and the cert is bad (STS Spec section 7.3) or if the
+        // certerror is in a frame (bug 633691).
+        if (getCSSClass() == "badStsCert" || window != top)
+          document.getElementById("expertContent").setAttribute("hidden", "true");
+
         var tech = document.getElementById("technicalContentText");
         if (tech)
           tech.textContent = getDescription();

@@ -30,12 +30,12 @@ if CONFIG['WRAP_STL_INCLUDES']:
                 'msvc_throw_wrapper.h',
                 'throw_msvc.h',
             ]
-            CPP_SOURCES += [
+            SOURCES += [
                 'msvc_raise_wrappers.cpp',
                 'msvc_throw_wrapper.cpp',
             ]
 
-CPP_SOURCES += [
+SOURCES += [
     'mozalloc.cpp',
     'mozalloc_abort.cpp',
     'mozalloc_oom.cpp',

@@ -11,7 +11,7 @@ EXPORTS += [
     'ANPKeyCodes.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'ANPAudio.cpp',
     'ANPBitmap.cpp',
     'ANPEvent.cpp',
@@ -32,4 +32,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'gkpluginandroid_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

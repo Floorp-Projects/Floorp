@@ -13,7 +13,7 @@ EXPORTS += [
     'yuv_row.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'ycbcr_to_rgb565.cpp',
     'yuv_convert.cpp',
     'yuv_row_c.cpp',
@@ -21,18 +21,18 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['INTEL_ARCHITECTURE']:
-    CPP_SOURCES += [
+    SOURCES += [
         'yuv_convert_sse2.cpp',
     ]
 
     # MSVC doesn't support MMX when targeting AMD64.
     if CONFIG['_MSC_VER']:
         if CONFIG['OS_TEST'] != 'x86_64':
-            CPP_SOURCES += [
+            SOURCES += [
                 'yuv_convert_mmx.cpp',
             ]
     else:
-        CPP_SOURCES += [
+        SOURCES += [
             'yuv_convert_mmx.cpp',
         ]
 
@@ -40,32 +40,32 @@ if CONFIG['_MSC_VER']:
     if CONFIG['OS_TEST'] == 'x86_64':
         if CONFIG['_MSC_VER'] == '1400':
             # VC8 doesn't support some SSE2 built-in functions
-            CPP_SOURCES += [
+            SOURCES += [
                 'yuv_row_win.cpp',
             ]
         else:
-            CPP_SOURCES += [
+            SOURCES += [
                 'yuv_row_win64.cpp',
             ]
     else:
-        CPP_SOURCES += [
+        SOURCES += [
             'yuv_row_win.cpp',
         ]
 elif CONFIG['OS_ARCH'] in ('Linux', 'SunOS', 'Darwin', 'DragonFly',
                            'FreeBSD', 'NetBSD', 'OpenBSD'):
-    CPP_SOURCES += [
+    SOURCES += [
         'yuv_row_posix.cpp',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'yuv_row_other.cpp',
     ]
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
-    ASFILES += [
+    SOURCES += [
         'yuv_row_arm.s',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'yuv_convert_arm.cpp',
     ]
 

@@ -479,9 +479,6 @@ TCPSocket.prototype = {
 
   // nsIDOMTCPSocket
   open: function ts_open(host, port, options) {
-    if (!this.initWindowless())
-      return null;
-
     this._inChild = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
                        .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
     LOG("content process: " + (this._inChild ? "true" : "false"));
@@ -566,9 +563,6 @@ TCPSocket.prototype = {
   },
 
   listen: function ts_listen(localPort, options, backlog) {
-    if (!this.initWindowless())
-      return null;
-
     // in the testing case, init won't be called and
     // hasPrivileges will be null. We want to proceed to test.
     if (this._hasPrivileges !== true && this._hasPrivileges !== null) {

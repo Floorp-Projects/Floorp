@@ -6,7 +6,7 @@
 
 MODULE = 'breakpad_sps_common'
 
-CPP_SOURCES += [
+SOURCES += [
     'basic_code_modules.cc',
     'basic_source_line_resolver.cc',
     'call_stack.cc',

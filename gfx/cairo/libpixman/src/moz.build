@@ -17,19 +17,19 @@ EXPORTS += [
 # viable solution in the future.
 if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['GNU_CC']:
     if CONFIG['HAVE_ARM_NEON']:
-        SSRCS += [
+        SOURCES += [
             'pixman-arm-neon-asm-bilinear.S',
             'pixman-arm-neon-asm.S',
         ]
     if CONFIG['HAVE_ARM_SIMD']:
-        SSRCS += [
+        SOURCES += [
             'pixman-arm-simd-asm-scaled.S',
             'pixman-arm-simd-asm.S',
         ]
 
 LIBXUL_LIBRARY = True
 
-CSRCS += [
+SOURCES += [
     'pixman-access-accessors.c',
     'pixman-access.c',
     'pixman-arm.c',

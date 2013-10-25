@@ -17,7 +17,7 @@ EXPORTS += [
     '../include/ots-memory-stream.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'cff.cc',
     'cff_type2_charstring.cc',
     'cmap.cc',

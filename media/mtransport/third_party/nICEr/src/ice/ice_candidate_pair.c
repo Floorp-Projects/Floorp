@@ -93,7 +93,7 @@ int nr_ice_candidate_pair_create(nr_ice_peer_ctx *pctx, nr_ice_candidate *lcand,
        created (initial pair generation, triggered check, and new trickle
        candidate seem to be the possibilities here).
     */
-    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/CAND-PAIR(%s): Pairing candidate %s (%x):%s (%x) priority=%llu (%llx)",pctx->ctx->label,pair->codeword,lcand->addr.as_string,lcand->priority,rcand->addr.as_string,rcand->priority,pair->priority,pair->priority);
+    r_log(LOG_ICE,LOG_INFO,"ICE(%s)/CAND-PAIR(%s): Pairing candidate %s (%x):%s (%x) priority=%llu (%llx)",pctx->ctx->label,pair->codeword,lcand->addr.as_string,lcand->priority,rcand->addr.as_string,rcand->priority,pair->priority,pair->priority);
 
     /* Foundation */
     if(r=nr_concat_strings(&pair->foundation,lcand->foundation,"|",
@@ -202,7 +202,7 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
       case NR_STUN_CLIENT_STATE_FAILED:
         sres=pair->stun_client->response;
         if(sres && nr_stun_message_has_attribute(sres,NR_STUN_ATTR_ERROR_CODE,&attr)&&attr->u.error_code.number==487){
-          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s)/CAND-PAIR(%s): detected role conflict. Switching to controlled",pair->pctx->label,pair->codeword);
+          r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/CAND-PAIR(%s): detected role conflict. Switching to controlled",pair->pctx->label,pair->codeword);
 
           pair->pctx->controlling=0;
 
@@ -221,14 +221,14 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
         response_src=&pair->stun_client->peer_addr;
         request_dst=&pair->remote->addr;
         if (nr_transport_addr_cmp(response_src,request_dst,NR_TRANSPORT_ADDR_CMP_MODE_ALL)){
-          r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND-PAIR(%s): Peer address mismatch %s != %s",pair->pctx->label,pair->codeword,response_src->as_string,request_dst->as_string);
+          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND-PAIR(%s): Peer address mismatch %s != %s",pair->pctx->label,pair->codeword,response_src->as_string,request_dst->as_string);
           nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FAILED);
           break;
         }
         request_src=&pair->stun_client->my_addr;
         nr_socket_getaddr(pair->local->osock,&response_dst);
         if (nr_transport_addr_cmp(request_src,&response_dst,NR_TRANSPORT_ADDR_CMP_MODE_ALL)){
-          r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND-PAIR(%s): Local address mismatch %s != %s",pair->pctx->label,pair->codeword,request_src->as_string,response_dst.as_string);
+          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND-PAIR(%s): Local address mismatch %s != %s",pair->pctx->label,pair->codeword,request_src->as_string,response_dst.as_string);
           nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FAILED);
           break;
         }
@@ -241,7 +241,7 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
            * just assume that it's the server we're talking to and that our
            * peer is ok, but I'm not sure how that'll interact with the
            * peer reflexive logic below */
-          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s)/CAND-PAIR(%s): server failed to return mapped address on pair %s", pair->pctx->label,pair->codeword,pair->as_string);
+          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND-PAIR(%s): server failed to return mapped address on pair %s", pair->pctx->label,pair->codeword,pair->as_string);
           nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_FAILED);
           break;
         }

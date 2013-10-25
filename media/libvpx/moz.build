@@ -32,13 +32,13 @@ EXPORTS.vpx += [
 ]
 
 if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
-    HOST_CSRCS += [
-        'obj_int_extract.c',
+    HOST_SOURCES += [
+        'build/make/obj_int_extract.c',
     ]
 
 LIBRARY_NAME = 'vpx'
 
-CSRCS += [
+SOURCES += [
     'vp8/common/alloccommon.c',
     'vp8/common/blockd.c',
     'vp8/common/debugmodes.c',

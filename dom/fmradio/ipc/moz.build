@@ -11,7 +11,7 @@ EXPORTS.mozilla.dom += [
     'FMRadioRequestParent.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'FMRadioChild.cpp',
     'FMRadioParent.cpp',
     'FMRadioRequestChild.cpp',
@@ -23,3 +23,8 @@ FAIL_ON_WARNINGS = True
 LIBXUL_LIBRARY = True
 LIBRARY_NAME   = 'domfmradio_s'
 
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')

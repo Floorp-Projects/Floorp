@@ -21,13 +21,13 @@ EXPORTS.mozilla.net += [
     'DNS.h',
 ]
 
-CSRCS += [
+SOURCES += [
     'nameprep.c',
     'punycode.c',
     'race.c',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'DNS.cpp',
     'nsDNSService2.cpp',
     'nsEffectiveTLDService.cpp',

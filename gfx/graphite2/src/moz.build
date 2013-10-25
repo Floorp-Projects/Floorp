@@ -21,16 +21,16 @@ EXPORTS.graphite2 += [
 ]
 
 if CONFIG['GNU_CC']:
-    CPP_SOURCES += [
+    SOURCES += [
         'direct_machine.cpp'
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'call_machine.cpp'
     ]
 
 # This should contain all of the _SOURCES from files.mk, except *_machine.cpp
-CPP_SOURCES += [
+SOURCES += [
     'Bidi.cpp',
     'CachedFace.cpp',
     'CmapCache.cpp',

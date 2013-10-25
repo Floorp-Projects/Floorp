@@ -49,7 +49,6 @@ nsToolkit::nsToolkit()
 {
   MOZ_COUNT_CTOR(nsToolkit);
   RegisterForSleepWakeNotifcations();
-  RegisterForAllProcessMouseEvents();
 }
 
 nsToolkit::~nsToolkit()

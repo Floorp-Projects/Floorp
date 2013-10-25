@@ -151,7 +151,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.skia += [
         'include/ports/SkTypeface_mac.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'src/ports/SkFontHost_mac.cpp',
         'src/ports/SkThread_pthread.cpp',
         'src/ports/SkTime_Unix.cpp',
@@ -164,7 +164,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'include/config/sk_stdint.h',
         'include/ports/SkTypeface_win.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'src/ports/SkFontHost_sandbox_none.cpp',
         'src/ports/SkFontHost_win.cpp',
         'src/ports/SkThread_win.cpp',
@@ -175,7 +175,7 @@ elif CONFIG['MOZ_WIDGET_GTK']:
     EXPORTS.skia += [
         'include/ports/SkTypeface_cairo.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'src/ports/SkFontHost_cairo.cpp',
         'src/ports/SkFontHost_FreeType_common.cpp',
         'src/ports/SkThread_pthread.cpp',
@@ -184,15 +184,15 @@ elif CONFIG['MOZ_WIDGET_GTK']:
         'src/utils/SkThreadUtils_pthread.cpp',
     ]
     if CONFIG['OS_TARGET'] in ('Linux', 'FreeBSD', 'NetBSD'):
-        CPP_SOURCES += [
+        SOURCES += [
             'src/utils/SkThreadUtils_pthread_linux.cpp',
         ]
     else:
-        CPP_SOURCES += [
+        SOURCES += [
             'src/utils/SkThreadUtils_pthread_other.cpp',
         ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    CPP_SOURCES += [
+    SOURCES += [
         'src/ports/SkFontHost_cairo.cpp',
         'src/ports/SkFontHost_FreeType_common.cpp',
         'src/utils/SkOSFile.cpp',
@@ -201,7 +201,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         EXPORTS.skia += [
             'include/ports/SkTypeface_cairo.h',
         ]
-        CPP_SOURCES += [
+        SOURCES += [
             'src/ports/SkThread_pthread.cpp',
             'src/ports/SkTime_Unix.cpp',
             'src/utils/SkThreadUtils_pthread.cpp',
@@ -213,7 +213,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     EXPORTS.skia += [
         'include/ports/SkTypeface_cairo.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'src/images/SkImageRef_ashmem.cpp',
         'src/ports/SkDebug_android.cpp',
         'src/ports/SkFontHost_cairo.cpp',
@@ -228,12 +228,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
         'src/utils/SkThreadUtils_pthread_other.cpp',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/ports/SkDebug_stdio.cpp',
     ]
 
 if CONFIG['INTEL_ARCHITECTURE']:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/opts/opts_check_SSE2.cpp',
         'src/opts/SkBitmapProcState_opts_SSE2.cpp',
         'src/opts/SkBlitRect_opts_SSE2.cpp',
@@ -241,24 +241,24 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'src/opts/SkUtils_opts_SSE2.cpp',
     ]
     if CONFIG['HAVE_TOOLCHAIN_SUPPORT_MSSSE3']:
-        CPP_SOURCES += [
+        SOURCES += [
             'src/opts/SkBitmapProcState_opts_SSSE3.cpp',
         ]
 elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
-        CPP_SOURCES += [
+        SOURCES += [
             'src/opts/opts_check_arm.cpp',
             'src/opts/SkBitmapProcState_opts_arm.cpp',
             'src/opts/SkBlitRow_opts_arm.cpp',
         ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/opts/SkBitmapProcState_opts_none.cpp',
         'src/opts/SkBlitRow_opts_none.cpp',
         'src/opts/SkUtils_opts_none.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_SKIA_GPU']:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/gpu/effects/GrConfigConversionEffect.cpp',
         'src/gpu/effects/GrConvolutionEffect.cpp',
         'src/gpu/effects/GrSimpleTextureEffect.cpp',
@@ -342,7 +342,7 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
         'src/gpu/SkGrTexturePixelRef.cpp',
     ]
 
-CPP_SOURCES += [
+SOURCES += [
         'src/core/Sk64.cpp',
         'src/core/SkAAClip.cpp',
         'src/core/SkAdvancedTypefaceMetrics.cpp',
@@ -543,8 +543,8 @@ CPP_SOURCES += [
 ]
 
 if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:
-    SSRCS += [
-        'memset.arm.S',
+    SOURCES += [
+        'src/opts/memset.arm.S',
     ]
 
 LIBRARY_NAME = 'skia'

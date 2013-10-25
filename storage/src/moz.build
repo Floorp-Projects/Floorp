@@ -11,7 +11,7 @@ EXPORTS.mozilla.storage += [
     'Variant_inl.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'FileSystemModule.cpp',
     'mozStorageArgValueArray.cpp',
     'mozStorageAsyncStatement.cpp',
