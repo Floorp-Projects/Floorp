@@ -7,6 +7,8 @@
 #define AUDIO_SESSION_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/TimeStamp.h"
+#include "nsTArray.h"
 
 #include "MediaConduitInterface.h"
 
@@ -19,6 +21,7 @@
 #include "webrtc/voice_engine/include/voe_network.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
+#include "webrtc/voice_engine/include/voe_video_sync.h"
 
 //Some WebRTC types for short notations
  using webrtc::VoEBase;
@@ -26,6 +29,7 @@
  using webrtc::VoECodec;
  using webrtc::VoEExternalMedia;
  using webrtc::VoEAudioProcessing;
+ using webrtc::VoEVideoSync;
 
 /** This file hosts several structures identifying different aspects
  * of a RTP Session.
@@ -147,6 +151,7 @@ public:
                       mTransport(nullptr),
                       mEngineTransmitting(false),
                       mEngineReceiving(false),
+                      mLastTimestamp(0),
                       mChannel(-1),
                       mCurSendCodecConfig(nullptr),
                       mCaptureDelay(150),
@@ -209,11 +214,22 @@ private:
   webrtc::VoECodec*    mPtrVoECodec;
   webrtc::VoEExternalMedia* mPtrVoEXmedia;
   webrtc::VoEAudioProcessing* mPtrVoEProcessing;
+  webrtc::VoEVideoSync* mPtrVoEVideoSync;
 
   //engine states of our interets
   bool mEngineTransmitting; // If true => VoiceEngine Send-subsystem is up
   bool mEngineReceiving;    // If true => VoiceEngine Receive-subsystem is up
                             // and playout is enabled
+
+  // Keep track of each inserted RTP block and the time it was inserted
+  // so we can estimate the clock time for a specific TimeStamp coming out
+  // (for when we send data to MediaStreamTracks).  Blocks are aged out as needed.
+  struct Processing {
+    TimeStamp mTimeStamp;
+    uint32_t mRTPTimeStamp; // RTP timestamps received
+  };
+  nsAutoTArray<Processing,8> mProcessing;
+  uint32_t mLastTimestamp;
 
   int mChannel;
   RecvCodecList    mRecvCodecList;
