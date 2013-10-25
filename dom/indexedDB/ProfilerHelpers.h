@@ -9,12 +9,11 @@
 
 #include "GeckoProfiler.h"
 
-// Comment this if you do not want IndexedDB operations to be marked in the
-// profiler.
-#define IDB_PROFILER_USE_MARKS
+// Uncomment this if you want IndexedDB operations to be marked in the profiler.
+//#define IDB_PROFILER_USE_MARKS
 
-// Comment this if you do not want extended details to appear in profiler marks.
-#define IDB_PROFILER_MARK_DETAILS
+// Uncomment this if you want extended details to appear in profiler marks.
+//#define IDB_PROFILER_MARK_DETAILS 0
 
 // Sanity check the options above.
 #if defined(IDB_PROFILER_USE_MARKS) && !defined(MOZ_ENABLE_PROFILER_SPS)
@@ -41,15 +40,21 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class ProfilerString : public nsAutoCString
 {
+  static const char kQuote = '\"';
+  static const char kOpenBracket = '[';
+  static const char kCloseBracket = ']';
+  static const char kOpenParen = '(';
+  static const char kCloseParen = ')';
+
 public:
   explicit
   ProfilerString(IDBDatabase* aDatabase)
   {
     MOZ_ASSERT(aDatabase);
 
-    Append('"');
+    Append(kQuote);
     AppendUTF16toUTF8(aDatabase->Name(), *this);
-    Append('"');
+    Append(kQuote);
   }
 
   explicit
@@ -77,9 +82,9 @@ public:
   {
     MOZ_ASSERT(aObjectStore);
 
-    Append('"');
+    Append(kQuote);
     AppendUTF16toUTF8(aObjectStore->Name(), *this);
-    Append('"');
+    Append(kQuote);
   }
 
   explicit
@@ -87,9 +92,9 @@ public:
   {
     MOZ_ASSERT(aIndex);
 
-    Append('"');
+    Append(kQuote);
     AppendUTF16toUTF8(aIndex->Name(), *this);
-    Append('"');
+    Append(kQuote);
   }
 
   explicit
@@ -100,11 +105,11 @@ public:
         Append(ProfilerString(aKeyRange->Lower()));
       }
       else {
-        Append(aKeyRange->IsLowerOpen() ? '(' : '[');
+        Append(aKeyRange->IsLowerOpen() ? kOpenParen : kOpenBracket);
         Append(ProfilerString(aKeyRange->Lower()));
         AppendLiteral(", ");
         Append(ProfilerString(aKeyRange->Upper()));
-        Append(aKeyRange->IsUpperOpen() ? ')' : ']');
+        Append(aKeyRange->IsUpperOpen() ? kCloseParen : kCloseBracket);
       }
     }
   }
@@ -160,7 +165,7 @@ END_INDEXEDDB_NAMESPACE
   do {                                                                         \
     nsAutoCString _mark;                                                       \
     _mark.AppendPrintf(_detailedFmt, ##__VA_ARGS__);                           \
-    profiler_tracing("IndexedDB", _mark.get());                                \
+    PROFILER_MARKER(_mark.get());                                              \
   } while (0)
 
 #define IDB_PROFILER_STRING(_arg)                                              \
@@ -172,7 +177,7 @@ END_INDEXEDDB_NAMESPACE
   do {                                                                         \
     nsAutoCString _mark;                                                       \
     _mark.AppendPrintf(_conciseFmt, ##__VA_ARGS__);                            \
-    profiler_tracing("IndexedDB", _mark.get());                                \
+    PROFILER_MARKER(_mark.get());                                              \
   } while (0)
 
 #define IDB_PROFILER_STRING(_arg) ""
