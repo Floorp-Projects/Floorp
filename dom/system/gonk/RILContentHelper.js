@@ -25,22 +25,17 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
-// set to true to in ril_consts.js to see debug messages
-var DEBUG = RIL.DEBUG_CONTENT_HELPER;
+const NS_XPCOM_SHUTDOWN_OBSERVER_ID = "xpcom-shutdown";
 
-// Read debug setting from pref
-try {
-  let debugPref = Services.prefs.getBoolPref("ril.debugging.enabled");
-  DEBUG = RIL.DEBUG_CONTENT_HELPER || debugPref;
-} catch (e) {}
+const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
-let debug;
-if (DEBUG) {
-  debug = function (s) {
-    dump("-*- RILContentHelper: " + s + "\n");
-  };
-} else {
-  debug = function (s) {};
+const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
+const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
+const kPrefVoicemailDefaultServiceId = "dom.voicemail.defaultServiceId";
+
+let DEBUG;
+function debug(s) {
+  dump("-*- RILContentHelper: " + s + "\n");
 }
 
 const RILCONTENTHELPER_CID =
@@ -126,8 +121,7 @@ XPCOMUtils.defineLazyGetter(this, "gNumRadioInterfaces", function () {
     return ril.numRadioInterfaces;
   }
 
-  let num = cpmm.sendSyncMessage("RIL:GetNumRadioInterfaces")[0];
-  return num;
+  return Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
 });
 
 function MobileIccCardLockResult(options) {
@@ -449,6 +443,8 @@ IccCardLockError.prototype = {
 };
 
 function RILContentHelper() {
+  this.updateDebugFlag();
+
   this.rilContext = {
     cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
     networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
@@ -457,10 +453,15 @@ function RILContentHelper() {
     dataConnectionInfo:   new MobileConnectionInfo()
   };
   this.voicemailInfo = new VoicemailInfo();
+  this.voicemailDefaultServiceId = this.getVoicemailDefaultServiceId();
 
   this.initDOMRequestHelper(/* aWindow */ null, RIL_IPC_MSG_NAMES);
   this._windowsMap = [];
-  Services.obs.addObserver(this, "xpcom-shutdown", false);
+
+  Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+
+  Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
+  Services.prefs.addObserver(kPrefVoicemailDefaultServiceId, this, false);
 }
 
 RILContentHelper.prototype = {
@@ -479,6 +480,13 @@ RILContentHelper.prototype = {
                                                  Ci.nsICellBroadcastProvider,
                                                  Ci.nsIVoicemailProvider,
                                                  Ci.nsIIccProvider]}),
+
+  updateDebugFlag: function updateDebugFlag() {
+    try {
+      DEBUG = RIL.DEBUG_CONTENT_HELPER ||
+              Services.prefs.getBoolPref(kPrefRilDebuggingEnabled);
+    } catch (e) {}
+  },
 
   // An utility function to copy objects.
   updateInfo: function updateInfo(srcInfo, destInfo) {
@@ -1313,6 +1321,17 @@ RILContentHelper.prototype = {
 
   voicemailStatus: null,
 
+  voicemailDefaultServiceId: 0,
+  getVoicemailDefaultServiceId: function getVoicemailDefaultServiceId() {
+    let id = Services.prefs.getIntPref(kPrefVoicemailDefaultServiceId);
+
+    if (id >= gNumRadioInterfaces || id < 0) {
+      id = 0;
+    }
+
+    return id;
+  },
+
   getVoicemailInfo: function getVoicemailInfo() {
     // Get voicemail infomation by IPC only on first time.
     this.getVoicemailInfo = function getVoicemailInfo() {
@@ -1327,9 +1346,11 @@ RILContentHelper.prototype = {
 
     return this.voicemailInfo;
   },
+
   get voicemailNumber() {
     return this.getVoicemailInfo().number;
   },
+
   get voicemailDisplayName() {
     return this.getVoicemailInfo().displayName;
   },
@@ -1404,9 +1425,19 @@ RILContentHelper.prototype = {
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
-    if (topic == "xpcom-shutdown") {
-      this.destroyDOMRequestHelper();
-      Services.obs.removeObserver(this, "xpcom-shutdown");
+    switch (topic) {
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
+        if (data == kPrefRilDebuggingEnabled) {
+          this.updateDebugFlag();
+        } else if (data == kPrefVoicemailDefaultServiceId) {
+          this.voicemailDefaultServiceId = this.getVoicemailDefaultServiceId();
+        }
+        break;
+
+      case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
+        this.destroyDOMRequestHelper();
+        Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+        break;
     }
   },
 
