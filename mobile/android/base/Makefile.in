@@ -4,6 +4,8 @@
 
 DIST_FILES = package-name.txt
 
+include $(topsrcdir)/mobile/android/base/android-services-files.mk
+
 ifdef MOZ_ANDROID_ANR_REPORTER
 DEFINES += -DMOZ_ANDROID_ANR_REPORTER=1
 endif
