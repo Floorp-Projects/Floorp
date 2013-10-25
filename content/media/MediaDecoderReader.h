@@ -94,8 +94,45 @@ public:
   AudioInfo mAudio;
 };
 
+// Container that holds media samples.
+class MediaData {
+public:
+
+  enum Type {
+    AUDIO_SAMPLES = 0,
+    VIDEO_FRAME = 1
+  };
+
+  MediaData(Type aType,
+            int64_t aOffset,
+            int64_t aTimestamp,
+            int64_t aDuration)
+    : mType(aType),
+      mOffset(aOffset),
+      mTime(aTimestamp),
+      mDuration(aDuration)
+  {}
+
+  virtual ~MediaData() {}
+
+  // Type of contained data.
+  const Type mType;
+
+  // Approximate byte offset where this data was demuxed from its media.
+  const int64_t mOffset;
+
+  // Start time of sample, in microseconds.
+  const int64_t mTime;
+
+  // Duration of sample, in microseconds.
+  const int64_t mDuration;
+
+  int64_t GetEndTime() const { return mTime + mDuration; }
+
+};
+
 // Holds chunk a decoded audio frames.
-class AudioData {
+class AudioData : public MediaData {
 public:
 
   AudioData(int64_t aOffset,
@@ -104,9 +141,7 @@ public:
             uint32_t aFrames,
             AudioDataValue* aData,
             uint32_t aChannels)
-  : mOffset(aOffset),
-    mTime(aTime),
-    mDuration(aDuration),
+  : MediaData(AUDIO_SAMPLES, aOffset, aTime, aDuration),
     mFrames(aFrames),
     mChannels(aChannels),
     mAudioData(aData)
@@ -122,14 +157,6 @@ public:
   // If mAudioBuffer is null, creates it from mAudioData.
   void EnsureAudioBuffer();
 
-  int64_t GetEnd() { return mTime + mDuration; }
-
-  // Approximate byte offset of the end of the page on which this chunk
-  // ends.
-  const int64_t mOffset;
-
-  int64_t mTime; // Start time of data in usecs.
-  const int64_t mDuration; // In usecs.
   const uint32_t mFrames;
   const uint32_t mChannels;
   // At least one of mAudioBuffer/mAudioData must be non-null.
@@ -144,7 +171,7 @@ class GraphicBufferLocked;
 }
 
 // Holds a decoded video frame, in YCbCr format. These are queued in the reader.
-class VideoData {
+class VideoData : public MediaData {
 public:
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
@@ -179,7 +206,7 @@ public:
                            Image* aImage,
                            int64_t aOffset,
                            int64_t aTime,
-                           int64_t aEndTime,
+                           int64_t aDuration,
                            const YCbCrBuffer &aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
@@ -190,7 +217,7 @@ public:
                            ImageContainer* aContainer,
                            int64_t aOffset,
                            int64_t aTime,
-                           int64_t aEndTime,
+                           int64_t aDuration,
                            const YCbCrBuffer &aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
@@ -201,7 +228,7 @@ public:
                            Image* aImage,
                            int64_t aOffset,
                            int64_t aTime,
-                           int64_t aEndTime,
+                           int64_t aDuration,
                            const YCbCrBuffer &aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
@@ -211,7 +238,7 @@ public:
                            ImageContainer* aContainer,
                            int64_t aOffset,
                            int64_t aTime,
-                           int64_t aEndTime,
+                           int64_t aDuration,
                            layers::GraphicBufferLocked* aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
@@ -221,59 +248,61 @@ public:
                                     ImageContainer* aContainer,
                                     int64_t aOffset,
                                     int64_t aTime,
-                                    int64_t aEndTime,
+                                    int64_t aDuration,
                                     const nsRefPtr<Image>& aImage,
                                     bool aKeyframe,
                                     int64_t aTimecode,
                                     nsIntRect aPicture);
+
+  // Creates a new VideoData identical to aOther, but with a different
+  // specified duration. All data from aOther is copied into the new
+  // VideoData. The new VideoData's mImage field holds a reference to
+  // aOther's mImage, i.e. the Image is not copied. This function is useful
+  // in reader backends that can't determine the duration of a VideoData
+  // until the next frame is decoded, i.e. it's a way to change the const
+  // duration field on a VideoData.
+  static VideoData* ShallowCopyUpdateDuration(VideoData* aOther,
+                                              int64_t aDuration);
 
   // Constructs a duplicate VideoData object. This intrinsically tells the
   // player that it does not need to update the displayed frame when this
   // frame is played; this frame is identical to the previous.
   static VideoData* CreateDuplicate(int64_t aOffset,
                                     int64_t aTime,
-                                    int64_t aEndTime,
+                                    int64_t aDuration,
                                     int64_t aTimecode)
   {
-    return new VideoData(aOffset, aTime, aEndTime, aTimecode);
+    return new VideoData(aOffset, aTime, aDuration, aTimecode);
   }
 
   ~VideoData();
 
-  int64_t GetEnd() { return mEndTime; }
-
   // Dimensions at which to display the video frame. The picture region
   // will be scaled to this size. This is should be the picture region's
   // dimensions scaled with respect to its aspect ratio.
-  nsIntSize mDisplay;
-
-  // Approximate byte offset of the end of the frame in the media.
-  int64_t mOffset;
-
-  // Start time of frame in microseconds.
-  int64_t mTime;
-
-  // End time of frame in microseconds.
-  int64_t mEndTime;
+  const nsIntSize mDisplay;
 
   // Codec specific internal time code. For Ogg based codecs this is the
   // granulepos.
-  int64_t mTimecode;
+  const int64_t mTimecode;
 
   // This frame's image.
   nsRefPtr<Image> mImage;
 
   // When true, denotes that this frame is identical to the frame that
   // came before; it's a duplicate. mBuffer will be empty.
-  bool mDuplicate;
-  bool mKeyframe;
+  const bool mDuplicate;
+  const bool mKeyframe;
 
 public:
-  VideoData(int64_t aOffset, int64_t aTime, int64_t aEndTime, int64_t aTimecode);
+  VideoData(int64_t aOffset,
+            int64_t aTime,
+            int64_t aDuration,
+            int64_t aTimecode);
 
   VideoData(int64_t aOffset,
             int64_t aTime,
-            int64_t aEndTime,
+            int64_t aDuration,
             bool aKeyframe,
             int64_t aTimecode,
             nsIntSize aDisplay);
@@ -400,7 +429,7 @@ template <class T> class MediaQueue : private nsDeque {
     int32_t i;
     for (i = GetSize() - 1; i > 0; --i) {
       T* v = static_cast<T*>(ObjectAt(i));
-      if (v->GetEnd() < aTime)
+      if (v->GetEndTime() < aTime)
         break;
     }
     // Elements less than i have a end time before aTime. It's also possible
