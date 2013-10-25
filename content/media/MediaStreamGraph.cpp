@@ -499,16 +499,18 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream
       // mute all nodes we find, or just mute the node itself.
       if (!iter) {
         // The node is connected to itself.
+        // There can't be a non-AudioNodeStream here, because only AudioNodes
+        // can be self-connected.
         iter = aStack->getLast();
+        MOZ_ASSERT(iter->AsAudioNodeStream());
         iter->AsAudioNodeStream()->Mute();
       } else {
         MOZ_ASSERT(iter);
         do {
-          // There can't be non-AudioNodeStream here, MediaStreamAudio{Source,
-          // Destination}Node are connected to regular MediaStreams, but they can't be
-          // in a cycle (there is no content API to do so).
-          MOZ_ASSERT(iter->AsAudioNodeStream());
-          iter->AsAudioNodeStream()->Mute();
+          AudioNodeStream* nodeStream = iter->AsAudioNodeStream();
+          if (nodeStream) {
+            nodeStream->Mute();
+          }
         } while((iter = iter->getNext()));
       }
     }
