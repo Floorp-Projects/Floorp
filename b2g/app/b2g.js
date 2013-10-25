@@ -817,9 +817,6 @@ pref("gfx.canvas.azure.accelerated", true);
 // Turn on dynamic cache size for Skia
 pref("gfx.canvas.skiagl.dynamic-cache", true);
 
-// Enable Telephony API
-pref("dom.telephony.enabled", true);
-
 // Cell Broadcast API
 pref("dom.cellbroadcast.enabled", true);
 pref("ril.cellbroadcast.disabled", false);
