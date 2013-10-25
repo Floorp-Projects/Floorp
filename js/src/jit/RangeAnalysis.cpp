@@ -979,6 +979,9 @@ MConstant::computeRange()
     if (value().isNumber()) {
         double d = value().toNumber();
         setRange(Range::NewDoubleRange(d, d));
+    } else if (value().isBoolean()) {
+        bool b = value().toBoolean();
+        setRange(Range::NewInt32Range(b, b));
     }
 }
 
