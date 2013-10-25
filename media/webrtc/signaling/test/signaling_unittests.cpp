@@ -78,13 +78,6 @@ namespace sipcc {
 
 class MediaConstraints : public MediaConstraintsExternal {
 public:
-  MediaConstraints()
-  : MediaConstraintsExternal((cc_media_constraints_t*)
-                             cpr_malloc(sizeof(*mConstraints))) {
-    MOZ_ASSERT(mConstraints);
-    memset(mConstraints, 0, sizeof(*mConstraints));
-  }
-
   void setBooleanConstraint(const char *namePtr, bool value, bool mandatory) {
     cc_boolean_constraint_t &member (getMember(namePtr));
     member.was_passed = true;
@@ -93,15 +86,14 @@ public:
   }
 private:
   cc_boolean_constraint_t &getMember(const char *namePtr) {
-    MOZ_ASSERT(mConstraints);
     if (strcmp(namePtr, "OfferToReceiveAudio") == 0) {
-        return mConstraints->offer_to_receive_audio;
+        return mConstraints.offer_to_receive_audio;
     }
     if (strcmp(namePtr, "OfferToReceiveVideo") == 0) {
-        return mConstraints->offer_to_receive_video;
+        return mConstraints.offer_to_receive_video;
     }
     MOZ_ASSERT(false);
-    return mConstraints->moz_dont_offer_datachannel;
+    return mConstraints.moz_dont_offer_datachannel;
   }
 };
 }
