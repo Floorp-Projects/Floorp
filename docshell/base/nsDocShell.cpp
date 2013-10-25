@@ -116,6 +116,7 @@
 #include "nsIFaviconService.h"
 #include "mozIAsyncFavicons.h"
 #endif
+#include "nsINetworkSeer.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -7019,9 +7020,12 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                 aStatus = NS_ERROR_OFFLINE;
             DisplayLoadError(aStatus, url, nullptr, aChannel);
         }
-  } // if we have a host
+    } // if we have a host
+    else if (url && NS_SUCCEEDED(aStatus)) {
+        mozilla::net::SeerLearnRedirect(url, aChannel, this);
+    }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 
@@ -9407,6 +9411,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
       srcdoc = aSrcdoc;
     else
       srcdoc = NullString();
+
+    mozilla::net::SeerPredict(aURI, nullptr, nsINetworkSeer::PREDICT_LOAD,
+                              this, nullptr);
 
     nsCOMPtr<nsIRequest> req;
     rv = DoURILoad(aURI, aReferrer,
@@ -12463,6 +12470,9 @@ nsDocShell::OnOverLink(nsIContent* aContent,
   nsAutoString uStr;
   rv = textToSubURI->UnEscapeURIForUI(charset, spec, uStr);    
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mozilla::net::SeerPredict(aURI, mCurrentURI, nsINetworkSeer::PREDICT_LINK,
+                            this, nullptr);
 
   if (browserChrome2) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
