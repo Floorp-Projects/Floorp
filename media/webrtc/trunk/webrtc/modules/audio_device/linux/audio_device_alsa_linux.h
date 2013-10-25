@@ -234,6 +234,7 @@ private:
 private:
     bool _initialized;
     bool _recording;
+    bool _firstRecord;
     bool _playing;
     bool _recIsInitialized;
     bool _playIsInitialized;
