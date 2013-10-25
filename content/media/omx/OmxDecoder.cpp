@@ -628,9 +628,14 @@ bool OmxDecoder::SetAudioFormat() {
   return true;
 }
 
+void OmxDecoder::ReleaseDecoder()
+{
+  mDecoder = nullptr;
+}
+
 void OmxDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
-  if (!mAudioTrack.get() || !mIsMp3 || !mMP3FrameParser.IsMP3()) {
+  if (!mAudioTrack.get() || !mIsMp3 || !mMP3FrameParser.IsMP3() || !mDecoder) {
     return;
   }
 

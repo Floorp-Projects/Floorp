@@ -420,6 +420,8 @@ public:
   virtual bool IsDormantNeeded() { return false; }
   // Release media resources they should be released in dormant state
   virtual void ReleaseMediaResources() {};
+  // Release the decoder during shutdown
+  virtual void ReleaseDecoder() {};
 
   // Resets all state related to decoding, emptying all buffers etc.
   virtual nsresult ResetDecode();
