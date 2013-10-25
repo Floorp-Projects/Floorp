@@ -62,25 +62,27 @@ function getSearchCursor(cm, query, pos) {
  * Otherwise, creates a new search and selects the first
  * result.
  */
-function doSearch(cm, rev, query) {
+function doSearch(ctx, rev, query) {
+  let { cm } = ctx;
   let state = getSearchState(cm);
 
   if (state.query)
-    return searchNext(cm, rev);
+    return searchNext(ctx, rev);
 
   cm.operation(function () {
     if (state.query) return;
 
     state.query = query;
     state.posFrom = state.posTo = { line: 0, ch: 0 };
-    searchNext(cm, rev);
+    searchNext(ctx, rev);
   });
 }
 
 /**
  * Selects the next result of a saved search.
  */
-function searchNext(cm, rev) {
+function searchNext(ctx, rev) {
+  let { cm, ed } = ctx;
   cm.operation(function () {
     let state = getSearchState(cm)
     let cursor = getSearchCursor(cm, state.query, rev ? state.posFrom : state.posTo);
@@ -92,6 +94,7 @@ function searchNext(cm, rev) {
         return;
     }
 
+    ed.alignLine(cursor.from().line, "center");
     cm.setSelection(cursor.from(), cursor.to());
     state.posFrom = cursor.from();
     state.posTo = cursor.to();
@@ -236,25 +239,22 @@ function clearDebugLocation(ctx) {
  * Starts a new search.
  */
 function find(ctx, query) {
-  let { cm } = ctx;
-  clearSearch(cm);
-  doSearch(cm, false, query);
+  clearSearch(ctx.cm);
+  doSearch(ctx, false, query);
 }
 
 /**
  * Finds the next item based on the currently saved search.
  */
 function findNext(ctx, query) {
-  let { cm } = ctx;
-  doSearch(cm, false, query);
+  doSearch(ctx, false, query);
 }
 
 /**
  * Finds the previous item based on the currently saved search.
  */
 function findPrev(ctx, query) {
-  let { cm } = ctx;
-  doSearch(cm, true, query);
+  doSearch(ctx, true, query);
 }
 
 

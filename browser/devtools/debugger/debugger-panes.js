@@ -15,7 +15,6 @@ function SourcesView() {
   this._onEditorLoad = this._onEditorLoad.bind(this);
   this._onEditorUnload = this._onEditorUnload.bind(this);
   this._onEditorCursorActivity = this._onEditorCursorActivity.bind(this);
-  this._onEditorContextMenu = this._onEditorContextMenu.bind(this);
   this._onSourceSelect = this._onSourceSelect.bind(this);
   this._onSourceClick = this._onSourceClick.bind(this);
   this._onBreakpointRemoved = this._onBreakpointRemoved.bind(this);
@@ -649,7 +648,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onEditorLoad: function(aName, aEditor) {
     aEditor.on("cursorActivity", this._onEditorCursorActivity);
-    aEditor.on("contextMenu", this._onEditorContextMenu);
   },
 
   /**
@@ -657,7 +655,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onEditorUnload: function(aName, aEditor) {
     aEditor.off("cursorActivity", this._onEditorCursorActivity);
-    aEditor.off("contextMenu", this._onEditorContextMenu);
   },
 
   /**
@@ -676,13 +673,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     } else {
       this.unhighlightBreakpoint();
     }
-  },
-
-  /**
-   * The context menu listener for the source editor.
-   */
-  _onEditorContextMenu: function({ x, y }) {
-    this._editorContextMenuLineNumber = DebuggerView.editor.getPositionFromCoords(x, y).line;
   },
 
   /**
@@ -874,15 +864,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Called when the add breakpoint key sequence was pressed.
    */
   _onCmdAddBreakpoint: function() {
-    // If this command was executed via the context menu, add the breakpoint
-    // on the currently hovered line in the source editor.
-    if (this._editorContextMenuLineNumber >= 0) {
-      DebuggerView.editor.setCursor({ line: this._editorContextMenuLineNumber, ch: 0 });
-    }
-
-    // Avoid placing breakpoints incorrectly when using key shortcuts.
-    this._editorContextMenuLineNumber = -1;
-
     let url = DebuggerView.Sources.selectedValue;
     let line = DebuggerView.editor.getCursor().line + 1;
     let location = { url: url, line: line };
@@ -902,15 +883,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Called when the add conditional breakpoint key sequence was pressed.
    */
   _onCmdAddConditionalBreakpoint: function() {
-    // If this command was executed via the context menu, add the breakpoint
-    // on the currently hovered line in the source editor.
-    if (this._editorContextMenuLineNumber >= 0) {
-      DebuggerView.editor.setCursor({ line: this._editorContextMenuLineNumber, ch: 0 });
-    }
-
-    // Avoid placing breakpoints incorrectly when using key shortcuts.
-    this._editorContextMenuLineNumber = -1;
-
     let url =  DebuggerView.Sources.selectedValue;
     let line = DebuggerView.editor.getCursor().line + 1;
     let location = { url: url, line: line };
@@ -1043,7 +1015,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   _cbPanel: null,
   _cbTextbox: null,
   _selectedBreakpointItem: null,
-  _editorContextMenuLineNumber: -1,
   _conditionalPopupVisible: false
 });
 

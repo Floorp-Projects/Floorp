@@ -46,7 +46,12 @@ public class GeckoView extends LayerView
 
         // If running outside of a GeckoActivity (eg, from a library project),
         // load the native code and disable content providers
-        if (!(context instanceof GeckoActivity)) {
+        boolean isGeckoActivity = false;
+        try {
+            isGeckoActivity = context instanceof GeckoActivity;
+        } catch (NoClassDefFoundError ex) {}
+
+        if (!isGeckoActivity) {
             // Set the GeckoInterface if the context is an activity and the GeckoInterface
             // has not already been set
             if (context instanceof Activity && getGeckoInterface() == null) {
@@ -59,7 +64,7 @@ public class GeckoView extends LayerView
 
             GeckoLoader.loadMozGlue();
             BrowserDB.setEnableContentProviders(false);
-        }
+         }
 
         if (url != null) {
             GeckoThread.setUri(url);

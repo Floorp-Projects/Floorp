@@ -22,7 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIStorage",
 
 for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
                   "ConsoleAPIListener", "ConsoleProgressListener",
-                  "JSTermHelpers", "JSPropertyProvider", "NetworkMonitor"]) {
+                  "JSTermHelpers", "JSPropertyProvider", "NetworkMonitor",
+                  "ConsoleReflowListener"]) {
   Object.defineProperty(this, name, {
     get: function(prop) {
       if (prop == "WebConsoleUtils") {
@@ -67,6 +68,8 @@ function WebConsoleActor(aConnection, aParentActor)
                              "last-pb-context-exited", false);
   }
 }
+
+WebConsoleActor.l10n = new WebConsoleUtils.l10n("chrome://global/locale/console.properties");
 
 WebConsoleActor.prototype =
 {
@@ -123,13 +126,80 @@ WebConsoleActor.prototype =
    */
   get window() {
     if (this.parentActor.isRootActor) {
-      // Try to find the Browser Console window, otherwise use the window of
-      // the root actor.
-      let window = Services.wm.getMostRecentWindow("devtools:webconsole");
-      return window || this.parentActor.window;
+      return this._getWindowForBrowserConsole();
     }
     return this.parentActor.window;
   },
+
+  /**
+   * Get a window to use for the browser console.
+   *
+   * @private
+   * @return nsIDOMWindow
+   *         The window to use, or null if no window could be found.
+   */
+  _getWindowForBrowserConsole: function WCA__getWindowForBrowserConsole()
+  {
+    // Check if our last used chrome window is still live.
+    let window = this._lastChromeWindow && this._lastChromeWindow.get();
+    // If not, look for a new one.
+    if (!window || window.closed) {
+      window = this.parentActor.window;
+      if (!window) {
+        // Try to find the Browser Console window to use instead.
+        window = Services.wm.getMostRecentWindow("devtools:webconsole");
+        // We prefer the normal chrome window over the console window,
+        // so we'll look for those windows in order to replace our reference.
+        let onChromeWindowOpened = () => {
+          // We'll look for this window when someone next requests window()
+          Services.obs.removeObserver(onChromeWindowOpened, "domwindowopened");
+          this._lastChromeWindow = null;
+        };
+        Services.obs.addObserver(onChromeWindowOpened, "domwindowopened", false);
+      }
+
+      this._handleNewWindow(window);
+    }
+
+    return window;
+  },
+
+  /**
+   * Store a newly found window on the actor to be used in the future.
+   *
+   * @private
+   * @param nsIDOMWindow window
+   *        The window to store on the actor (can be null).
+   */
+  _handleNewWindow: function WCA__handleNewWindow(window)
+  {
+    if (window) {
+      if (this._hadChromeWindow) {
+        let contextChangedMsg = WebConsoleActor.l10n.getStr("evaluationContextChanged");
+        Services.console.logStringMessage(contextChangedMsg);
+      }
+      this._lastChromeWindow = Cu.getWeakReference(window);
+      this._hadChromeWindow = true;
+    } else {
+      this._lastChromeWindow = null;
+    }
+  },
+
+  /**
+   * Whether we've been using a window before.
+   *
+   * @private
+   * @type boolean
+   */
+  _hadChromeWindow: false,
+
+  /**
+   * A weak reference to the last chrome window we used to work with.
+   *
+   * @private
+   * @type nsIWeakReference
+   */
+  _lastChromeWindow: null,
 
   /**
    * The ConsoleServiceListener instance.
@@ -151,6 +221,11 @@ WebConsoleActor.prototype =
    * The ConsoleProgressListener instance.
    */
   consoleProgressListener: null,
+
+  /**
+   * The ConsoleReflowListener instance.
+   */
+  consoleReflowListener: null,
 
   /**
    * Getter for the NetworkMonitor.saveRequestAndResponseBodies preference.
@@ -193,6 +268,10 @@ WebConsoleActor.prototype =
     if (this.consoleProgressListener) {
       this.consoleProgressListener.destroy();
       this.consoleProgressListener = null;
+    }
+    if (this.consoleReflowListener) {
+      this.consoleReflowListener.destroy();
+      this.consoleReflowListener = null;
     }
     this.conn.removeActorPool(this._actorPool);
     if (this.parentActor.isRootActor) {
@@ -399,6 +478,13 @@ WebConsoleActor.prototype =
                                                     MONITOR_FILE_ACTIVITY);
           startedListeners.push(listener);
           break;
+        case "ReflowActivity":
+          if (!this.consoleReflowListener) {
+            this.consoleReflowListener =
+              new ConsoleReflowListener(this.window, this);
+          }
+          startedListeners.push(listener);
+          break;
       }
     }
     return {
@@ -455,6 +541,13 @@ WebConsoleActor.prototype =
             this.consoleProgressListener.stopMonitor(this.consoleProgressListener.
                                                      MONITOR_FILE_ACTIVITY);
             this.consoleProgressListener = null;
+          }
+          stoppedListeners.push(listener);
+          break;
+        case "ReflowActivity":
+          if (this.consoleReflowListener) {
+            this.consoleReflowListener.destroy();
+            this.consoleReflowListener = null;
           }
           stoppedListeners.push(listener);
           break;
@@ -1065,6 +1158,29 @@ WebConsoleActor.prototype =
       type: "fileActivity",
       uri: aFileURI,
     };
+    this.conn.send(packet);
+  },
+
+  /**
+   * Handler for reflow activity. This method forwards reflow events to the
+   * remote Web Console client.
+   *
+   * @see ConsoleReflowListener
+   * @param Object aReflowInfo
+   */
+  onReflowActivity: function WCA_onReflowActivity(aReflowInfo)
+  {
+    let packet = {
+      from: this.actorID,
+      type: "reflowActivity",
+      interruptible: aReflowInfo.interruptible,
+      start: aReflowInfo.start,
+      end: aReflowInfo.end,
+      sourceURL: aReflowInfo.sourceURL,
+      sourceLine: aReflowInfo.sourceLine,
+      functionName: aReflowInfo.functionName
+    };
+
     this.conn.send(packet);
   },
 

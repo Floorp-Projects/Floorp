@@ -14,6 +14,32 @@
    content: "";
    display: block;
    clear: both;
+   position:relative;
+}
+
+.html-editor {
+  display: none;
+  position: absolute;
+  z-index: 2;
+
+  /* Use the same margin/padding trick used by .child tags to ensure that
+   * the editor covers up any content to the left (including expander arrows
+   * and hover effects). */
+  margin-left: -1000em;
+  padding-left: 1000em;
+}
+
+.html-editor-inner {
+  border: solid .1px;
+  flex: 1 1 auto;
+}
+
+.html-editor iframe {
+  height: 100%;
+  width: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
 }
 
 .children {
@@ -34,6 +60,11 @@
   min-height: 1.4em;
   line-height: 1.4em;
   position: relative;
+}
+
+.html-editor-container {
+  position: relative;
+  min-height: 200px;
 }
 
 /* This extra element placed in each tag is positioned absolutely to cover the

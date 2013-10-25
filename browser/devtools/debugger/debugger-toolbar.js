@@ -862,7 +862,7 @@ FilterView.prototype = {
   _performLineSearch: function(aLine) {
     // Make sure we're actually searching for a valid line.
     if (aLine) {
-      DebuggerView.editor.setCursor({ line: aLine - 1, ch: 0 });
+      DebuggerView.editor.setCursor({ line: aLine - 1, ch: 0 }, "center");
     }
   },
 
@@ -1497,6 +1497,7 @@ FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototyp
       DebuggerView.setEditorLocation(sourceUrl, actualLocation.start.line, {
         charOffset: scriptOffset,
         columnOffset: actualLocation.start.column,
+        align: "center",
         noDebug: true
       });
     }
