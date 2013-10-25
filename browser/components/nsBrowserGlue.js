@@ -1428,9 +1428,6 @@ BrowserGlue.prototype = {
         }
         this._setPersist(toolbarResource, currentsetResource, currentset);
       }
-
-      Services.prefs.clearUserPref("browser.download.useToolkitUI");
-      Services.prefs.clearUserPref("browser.library.useNewDownloadsView");
     }
 
 #ifdef XP_WIN

@@ -98,8 +98,11 @@ this.ForgetAboutSite = {
     // Downloads
     let useJSTransfer = false;
     try {
-      useJSTransfer = Services.prefs.getBoolPref("browser.download.useJSTransfer");
-    } catch(ex) { }
+      // This method throws an exception if the old Download Manager is disabled.
+      Services.downloads.activeDownloadCount;
+    } catch (ex) {
+      useJSTransfer = true;
+    }
 
     if (useJSTransfer) {
       Task.spawn(function() {
