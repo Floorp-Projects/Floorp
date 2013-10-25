@@ -4621,7 +4621,17 @@ LayerActivityTracker::NotifyExpired(LayerActivity* aObject)
   nsIFrame* f = aObject->mFrame;
   aObject->mFrame = nullptr;
 
-  f->SchedulePaint();
+  // if there are hints other than transform/opacity, invalidate, since we don't know what else to do.
+  if (aObject->mChangeHint & ~(nsChangeHint_UpdateOpacityLayer|nsChangeHint_UpdateTransformLayer)) {
+    f->InvalidateFrameSubtree();
+  } else {
+    if (aObject->mChangeHint & nsChangeHint_UpdateOpacityLayer) {
+      f->InvalidateFrameSubtree(nsDisplayItem::TYPE_OPACITY);
+    } 
+    if (aObject->mChangeHint & nsChangeHint_UpdateTransformLayer) {
+      f->InvalidateFrameSubtree(nsDisplayItem::TYPE_TRANSFORM);
+    }
+  } 
   f->Properties().Delete(LayerActivityProperty());
 }
 
