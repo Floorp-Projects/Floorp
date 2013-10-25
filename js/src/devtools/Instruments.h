@@ -7,9 +7,11 @@
 
 #ifdef __APPLE__
 
+#include <unistd.h>
+
 namespace Instruments {
 
-bool Start();
+bool Start(pid_t pid);
 void Pause();
 bool Resume();
 void Stop(const char* profileName);
