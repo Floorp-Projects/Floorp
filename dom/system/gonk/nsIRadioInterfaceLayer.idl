@@ -3,10 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsINetworkManager.idl"
 
 interface nsIDOMMozIccInfo;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIMobileMessageCallback;
+
+[scriptable, uuid(a15769f1-538e-4b4b-81da-c52866d38f88)]
+interface nsIRilNetworkInterface : nsINetworkInterface
+{
+  readonly attribute unsigned long serviceId;
+  readonly attribute DOMString iccId;
+};
 
 [scriptable, uuid(1e602d20-d066-4399-8997-daf36b3158ef)]
 interface nsIRILDataCallInfo : nsISupports

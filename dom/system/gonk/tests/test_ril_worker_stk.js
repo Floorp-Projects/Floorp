@@ -61,6 +61,31 @@ function newUint8SupportOutgoingIndexWorker() {
 }
 
 // Test RIL requests related to STK.
+/**
+ * Verify if RIL.sendStkTerminalProfile be called.
+ */
+add_test(function test_if_send_stk_terminal_profile() {
+  let worker = newUint8Worker();
+  let profileSend = false;
+  worker.RIL.sendStkTerminalProfile = function (data) {
+    profileSend = true;
+  };
+
+  let iccStatus = {
+    gsmUmtsSubscriptionAppIndex: 0,
+    apps: [{
+      app_state: CARD_APPSTATE_READY,
+      app_type: CARD_APPTYPE_USIM
+    }],
+  };
+  worker.RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD = false;
+
+  worker.RIL._processICCStatus(iccStatus);
+
+  do_check_eq(profileSend, false);
+
+  run_next_test();
+});
 
 /**
  * Verify RIL.sendStkTerminalProfile
