@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title></title>
+    <script>
+      var ret = "pass";
+      try {
+        window.foo = window.crypto.getRandomValues;
+      } catch(ex) {
+        ret = "" + ex;
+      }
+      parent.postMessage(ret, "*");
+    </script>
+    <style>
+    </style>
+  </head>
+  <body onload="document.body.textContent = 'Crypto test file on ' + location">
+  </body>
+</html>
