@@ -37,7 +37,7 @@ DOM_SRCDIRS = \
   dom/camera \
   $(NULL)
 
-ifdef MOZ_B2G_RIL
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 DOM_SRCDIRS += \
   dom/system/gonk \
   dom/wifi \
