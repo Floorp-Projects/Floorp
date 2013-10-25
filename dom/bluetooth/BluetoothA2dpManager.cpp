@@ -207,8 +207,8 @@ BluetoothA2dpManager::OnConnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  nsRefPtr<BluetoothProfileController> controller = mController.forget();
-  controller->OnConnect(aErrorStr);
+  mController->OnConnect(aErrorStr);
+  mController = nullptr;
 }
 
 void
@@ -222,8 +222,8 @@ BluetoothA2dpManager::OnDisconnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  nsRefPtr<BluetoothProfileController> controller = mController.forget();
-  controller->OnDisconnect(aErrorStr);
+  mController->OnDisconnect(aErrorStr);
+  mController = nullptr;
 }
 
 /* HandleSinkPropertyChanged update sink state in A2dp
