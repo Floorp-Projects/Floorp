@@ -99,15 +99,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
 XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
   "@mozilla.org/gfx/screenmanager;1", "nsIScreenManager");
 
-/**
- * Get nsIURI from string
- * @param string
- * @returns nsIURI
- */
-function makeURI(aString) {
-  return Services.io.newURI(aString, null, null);
-}
-
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
   "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
@@ -132,6 +123,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TabState",
   "resource:///modules/sessionstore/TabState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource:///modules/sessionstore/Utils.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -1127,12 +1120,9 @@ let SessionStoreInternal = {
   onPurgeDomainData: function ssi_onPurgeDomainData(aData) {
     // does a session history entry contain a url for the given domain?
     function containsDomain(aEntry) {
-      try {
-        if (makeURI(aEntry.url).host.hasRootDomain(aData)) {
-          return true;
-        }
+      if (Utils.hasRootDomain(aEntry.url, aData)) {
+        return true;
       }
-      catch (ex) { /* url had no host at all */ }
       return aEntry.children && aEntry.children.some(containsDomain, this);
     }
     // remove all closed tabs containing a reference to the given domain
@@ -2598,7 +2588,7 @@ let SessionStoreInternal = {
       // the tab is restored. We'll reset this to about:blank when we try to
       // restore the tab to ensure that docshell doeesn't get confused.
       if (uri) {
-        browser.docShell.setCurrentURI(makeURI(uri));
+        browser.docShell.setCurrentURI(Utils.makeURI(uri));
       }
 
       // If the page has a title, set it.
@@ -2774,7 +2764,7 @@ let SessionStoreInternal = {
     // Reset currentURI.  This creates a new session history entry with a new
     // doc identifier, so we need to explicitly save and restore the old doc
     // identifier (corresponding to the SHEntry at activeIndex) below.
-    browser.webNavigation.setCurrentURI(makeURI("about:blank"));
+    browser.webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
     // Attach data that will be restored on "load" event, after tab is restored.
     if (activeIndex > -1) {
       // restore those aspects of the currently active documents which are not
@@ -2866,7 +2856,7 @@ let SessionStoreInternal = {
     var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
                   createInstance(Ci.nsISHEntry);
 
-    shEntry.setURI(makeURI(aEntry.url));
+    shEntry.setURI(Utils.makeURI(aEntry.url));
     shEntry.setTitle(aEntry.title || aEntry.url);
     if (aEntry.subframe)
       shEntry.setIsSubFrame(aEntry.subframe || false);
@@ -2874,7 +2864,7 @@ let SessionStoreInternal = {
     if (aEntry.contentType)
       shEntry.contentType = aEntry.contentType;
     if (aEntry.referrer)
-      shEntry.referrerURI = makeURI(aEntry.referrer);
+      shEntry.referrerURI = Utils.makeURI(aEntry.referrer);
     if (aEntry.isSrcdocEntry)
       shEntry.srcdocData = aEntry.srcdocData;
 
@@ -4146,20 +4136,6 @@ SessionStoreSHistoryListener.prototype = {
     return false;
   }
 }
-
-// see nsPrivateBrowsingService.js
-String.prototype.hasRootDomain = function hasRootDomain(aDomain) {
-  let index = this.indexOf(aDomain);
-  if (index == -1)
-    return false;
-
-  if (this == aDomain)
-    return true;
-
-  let prevChar = this[index - 1];
-  return (index == (this.length - aDomain.length)) &&
-         (prevChar == "." || prevChar == "/");
-};
 
 // The state from the previous session (after restoring pinned tabs). This
 // state is persisted and passed through to the next session during an app
