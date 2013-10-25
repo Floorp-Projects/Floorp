@@ -120,6 +120,11 @@ function BrowserGlue() {
       return sanitizerScope.Sanitizer;
     });
 
+  XPCOMUtils.defineLazyServiceGetter(this, "_rdf", "@mozilla.org/rdf/rdf-service;1",
+                                     "nsIRDFService");
+  XPCOMUtils.defineLazyGetter(this, "_dataSource",
+                              function() this._rdf.GetDataSource("rdf:local-store"));
+
   this._init();
 }
 
@@ -1287,15 +1292,38 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     const UI_VERSION = 14;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
+
+    // No version check for this as this code should run until we have Australis everywhere:
+    if (Services.prefs.prefHasUserValue("browser.uiCustomization.state")) {
+      // This profile's been on australis! If it's missing the back/fwd button
+      // or go/stop/reload button, then put them back:
+      let currentsetResource = this._rdf.GetResource("currentset");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
+      let currentset = this._getPersist(toolbarResource, currentsetResource);
+      if (currentset.indexOf("unified-back-forward-button") == -1) {
+        currentset = currentset.replace("urlbar-container",
+                                        "unified-back-forward-button,urlbar-container");
+      }
+      if (currentset.indexOf("reload-button") == -1) {
+        currentset = currentset.replace("urlbar-container", "urlbar-container,reload-button");
+      }
+      if (currentset.indexOf("stop-button") == -1) {
+        currentset = currentset.replace("reload-button", "reload-button,stop-button");
+      }
+      this._setPersist(toolbarResource, currentsetResource, currentset);
+      Services.prefs.clearUserPref("browser.uiCustomization.state");
+    }
+
     let currentUIVersion = 0;
     try {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
     } catch(ex) {}
-    if (currentUIVersion >= UI_VERSION)
+    if (currentUIVersion >= UI_VERSION) {
+      delete this._rdf;
+      delete this._dataSource;
       return;
+    }
 
-    this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
-    this._dataSource = this._rdf.GetDataSource("rdf:local-store");
     this._dirty = false;
 
     if (currentUIVersion < 2) {
