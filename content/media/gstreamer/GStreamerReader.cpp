@@ -559,13 +559,8 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
   }
   NS_ASSERTION(GST_CLOCK_TIME_IS_VALID(timestamp),
                "frame has invalid timestamp");
-  int64_t nextTimestamp = timestamp = GST_TIME_AS_USECONDS(timestamp);
-  if (GST_CLOCK_TIME_IS_VALID(GST_BUFFER_DURATION(buffer)))
-    nextTimestamp += GST_TIME_AS_USECONDS(GST_BUFFER_DURATION(buffer));
-  else if (fpsNum && fpsDen)
-    /* add 1-frame duration */
-    nextTimestamp += gst_util_uint64_scale(GST_USECOND, fpsNum, fpsDen);
 
+  timestamp = GST_TIME_AS_USECONDS(timestamp);
   if (timestamp < aTimeThreshold) {
     LOG(PR_LOG_DEBUG, ("skipping frame %" GST_TIME_FORMAT
                        " threshold %" GST_TIME_FORMAT,
@@ -577,6 +572,13 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
   if (!buffer)
     /* no more frames */
     return false;
+
+  int64_t duration = 0;
+  if (GST_CLOCK_TIME_IS_VALID(GST_BUFFER_DURATION(buffer)))
+    duration = GST_TIME_AS_USECONDS(GST_BUFFER_DURATION(buffer));
+  else if (fpsNum && fpsDen)
+    /* 1-frame duration */
+    duration = gst_util_uint64_scale(GST_USECOND, fpsNum, fpsDen);
 
   nsRefPtr<PlanarYCbCrImage> image;
   GstMozVideoBufferData* bufferdata = reinterpret_cast<GstMozVideoBufferData*>
@@ -621,10 +623,9 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
   }
 
   isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-  /* XXX ? */
-  int64_t offset = 0;
+  int64_t offset = mDecoder->GetResource()->Tell(); // Estimate location in media.
   VideoData* video = VideoData::Create(mInfo.mVideo, image, offset,
-                                       timestamp, nextTimestamp, b,
+                                       timestamp, duration, b,
                                        isKeyframe, -1, mPicture);
   mVideoQueue.Push(video);
   gst_buffer_unref(buffer);
