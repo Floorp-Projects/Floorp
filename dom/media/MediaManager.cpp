@@ -23,6 +23,8 @@
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/GetUserMediaRequestBinding.h"
 
+#include "Latency.h"
+
 // For PR_snprintf
 #include "prprf.h"
 
@@ -564,6 +566,12 @@ public:
       AllocateInputPort(stream, MediaInputPort::FLAG_BLOCK_OUTPUT);
     trackunion->mSourceStream = stream;
     trackunion->mPort = port.forget();
+    // Log the relationship between SourceMediaStream and TrackUnion stream
+    // Make sure logger starts before capture
+    AsyncLatencyLogger::Get(true);
+    LogLatency(AsyncLatencyLogger::MediaStreamCreate,
+               reinterpret_cast<uint64_t>(stream.get()),
+               reinterpret_cast<int64_t>(trackunion->GetStream()));
 
     trackunion->CombineWithPrincipal(window->GetExtantDoc()->NodePrincipal());
 
