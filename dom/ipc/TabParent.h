@@ -238,6 +238,12 @@ public:
 
     ContentParent* Manager() { return mManager; }
 
+    /**
+     * Let managees query if Destroy() is already called so they don't send out
+     * messages when the PBrowser actor is being destroyed.
+     */
+    bool IsDestroyed() const { return mIsDestroyed; }
+
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,

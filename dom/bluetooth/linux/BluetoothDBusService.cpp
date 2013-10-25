@@ -1578,27 +1578,31 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
   return DBUS_HANDLER_RESULT_HANDLED;
 }
 
-static bool
-GetDefaultAdapterPath(BluetoothValue& aValue, nsString& aError)
+static void
+OnDefaultAdapterReply(DBusMessage* aReply, void* aData)
 {
-  // This could block. It should never be run on the main thread.
-  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+
+  if (!aReply || dbus_message_is_error(aReply, DBUS_ERROR_TIMEOUT)) {
+    return;
+  }
 
   DBusError err;
   dbus_error_init(&err);
 
-  DBusMessage* msg;
-  bool success = gThreadConnection->SendWithError(&msg, &err, 1000, "/",
-                                                  DBUS_MANAGER_IFACE,
-                                                  "DefaultAdapter",
-                                                  DBUS_TYPE_INVALID);
-  NS_ENSURE_TRUE(success, false);
+  BluetoothValue v;
+  nsAutoString errorString;
 
-  UnpackObjectPathMessage(msg, &err, aValue, aError);
+  UnpackObjectPathMessage(aReply, &err, v, errorString);
 
-  dbus_message_unref(msg);
+  if (!errorString.IsEmpty()) {
+    return;
+  }
 
-  return aError.IsEmpty();
+  nsRefPtr<PrepareAdapterRunnable> b = new PrepareAdapterRunnable(v.get_nsString());
+  if (NS_FAILED(NS_DispatchToMainThread(b))) {
+    BT_WARNING("Failed to dispatch to main thread!");
+  }
 }
 
 bool
@@ -1669,17 +1673,17 @@ BluetoothDBusService::StartInternal()
     sPairingReqTable = new nsDataHashtable<nsStringHashKey, DBusMessage* >;
   }
 
-  BluetoothValue v;
-  nsAutoString replyError;
-  if (!GetDefaultAdapterPath(v, replyError)) {
-    // Adapter path is not ready yet
-    // Let's do PrepareAdapterRunnable when we receive signal 'AdapterAdded'
-  } else {
-    // Adapter path has been ready. let's do PrepareAdapterRunnable now
-    nsRefPtr<PrepareAdapterRunnable> b = new PrepareAdapterRunnable(v.get_nsString());
-    if (NS_FAILED(NS_DispatchToMainThread(b))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
+  // Normally we'll receive the signal 'AdapterAdded' for the default
+  // adapter from the DBus daemon during start up. If we restart after
+  // a crash, the default adapter might already be available, so we ask
+  // the daemon explicitly here.
+  bool success = mConnection->SendWithReply(OnDefaultAdapterReply, nullptr,
+                                            1000, "/",
+                                            DBUS_ADAPTER_IFACE,
+                                            "DefaultAdapter",
+                                            DBUS_TYPE_INVALID);
+  if (!success) {
+    BT_WARNING("Failed to query default adapter!");
   }
 
   return NS_OK;
