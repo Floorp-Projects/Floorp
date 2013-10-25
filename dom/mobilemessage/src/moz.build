@@ -19,7 +19,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'android/MobileMessageDatabaseService.cpp',
         'android/SmsService.cpp',
     ]
-elif CONFIG['MOZ_B2G_RIL']:
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
     EXTRA_JS_MODULES = [
         'gonk/mms_consts.js',
         'gonk/MmsPduHelper.jsm',
