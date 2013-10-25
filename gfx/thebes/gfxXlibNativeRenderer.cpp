@@ -611,7 +611,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
   
     if (blackImage->CairoStatus() == CAIRO_STATUS_SUCCESS &&
         whiteImage->CairoStatus() == CAIRO_STATUS_SUCCESS) {
-        if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage, nullptr)) {
+        if (!gfxAlphaRecovery::RecoverAlpha(blackImage, whiteImage)) {
             cairo_surface_destroy(tempXlibSurface);
             return;
         }
