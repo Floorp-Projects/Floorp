@@ -10,6 +10,8 @@
 
 #include "AudioSegment.h"
 #include "StreamBuffer.h"
+#include "TrackMetadataBase.h"
+#include "EncodedFrameContainer.h"
 
 namespace mozilla {
 
@@ -48,17 +50,14 @@ public:
   virtual void NotifyRemoved(MediaStreamGraph* aGraph) = 0;
 
   /**
-   * Creates and sets up header for a specific codec. Result data is returned
-   * in aOutput.
+   * Creates and sets up meta data for a specific codec
    */
-  virtual nsresult GetHeader(nsTArray<uint8_t>* aOutput) = 0;
+  virtual nsRefPtr<TrackMetadataBase> GetMetadata() = 0;
 
   /**
-   * Encodes raw segments. Result data is returned in aOutput. aOutputDuration
-   * is the playback duration of this packet in number of samples.
+   * Encodes raw segments. Result data is returned in aData.
    */
-  virtual nsresult GetEncodedTrack(nsTArray<uint8_t>* aOutput,
-                                   int &aOutputDuration) = 0;
+  virtual nsresult GetEncodedTrack(EncodedFrameContainer& aData) = 0;
 };
 
 class AudioTrackEncoder : public TrackEncoder
