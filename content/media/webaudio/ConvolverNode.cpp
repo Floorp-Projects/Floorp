@@ -143,7 +143,8 @@ public:
       if (mLeftOverData <= 0) {
         nsRefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
-        NS_DispatchToMainThread(refchanged);
+        aStream->Graph()->
+          DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
       }
       mLeftOverData = mBufferLength;
       MOZ_ASSERT(mLeftOverData > 0);
