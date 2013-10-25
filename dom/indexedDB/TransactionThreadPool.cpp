@@ -16,6 +16,10 @@
 
 #include "ProfilerHelpers.h"
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
+#include "mozilla/Atomics.h"
+#endif
+
 using mozilla::MonitorAutoLock;
 
 USING_INDEXEDDB_NAMESPACE
@@ -30,6 +34,8 @@ TransactionThreadPool* gInstance = nullptr;
 bool gShutdown = false;
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
+
+mozilla::Atomic<uint32_t> gNextThreadSerial(0);
 
 class TransactionThreadPoolListener : public nsIThreadPoolListener
 {
@@ -669,8 +675,14 @@ NS_IMETHODIMP
 TransactionThreadPoolListener::OnThreadCreated()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  char aLocal;
-  profiler_register_thread("IndexedDB Transaction", &aLocal);
+
+  char stackBaseGuess;
+
+  nsAutoCString name;
+  name.AssignLiteral("IndexedDB Transaction ");
+  name.AppendInt(gNextThreadSerial++);
+
+  profiler_register_thread(name.get(), &stackBaseGuess);
   return NS_OK;
 }
 
