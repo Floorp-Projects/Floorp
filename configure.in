@@ -9145,7 +9145,10 @@ MOZ_ARG_WITH_STRING(intl-api,
 ])
 if test -z "$WITH_INTL"; then
 if test "$MOZ_BUILD_APP" = "browser"; then
-    WITH_INTL="--with-intl-api"
+    # Don't build the Intl API til we can update ICU (bug 924839).  Don't take
+    # the smaller step of building but not exposing it, either, as we also
+    # don't want dead code in shipping builds.
+    WITH_INTL="--without-intl-api"
 else
     # Internationalization isn't built or exposed by default in non-desktop
     # builds.  Bugs to enable:

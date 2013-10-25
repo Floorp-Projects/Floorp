@@ -16,3 +16,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'browserabout_s'
 
+FORCE_STATIC_LIB = True

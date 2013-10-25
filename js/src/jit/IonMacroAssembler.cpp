@@ -160,6 +160,14 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet *types,
     }
 
     if (hasTypeObjects) {
+        // We are possibly going to overwrite the obj register. So already
+        // emit the branch, since branch depends on previous value of obj
+        // register and there is definitely a branch following. So no need
+        // to invert the condition.
+        if (lastBranch.isInitialized())
+            lastBranch.emit(*this);
+        lastBranch = BranchGCPtr();
+
         // Note: Some platforms give the same register for obj and scratch.
         // Make sure when writing to scratch, the obj register isn't used anymore!
         loadPtr(Address(obj, JSObject::offsetOfType()), scratch);

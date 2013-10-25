@@ -31,7 +31,6 @@ LIBS		= $(NSPR_LIBS)
 ifdef JS_SHARED_LIBRARY
 FORCE_SHARED_LIB = 1
 endif
-FORCE_STATIC_LIB = 1
 DIST_INSTALL = 1
 
 ###############################################

@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 922160 needs a clobber due to WebIDL binding dependency issues (bug 928195).
+Bug 914270 needs a clobber since moving variables to moz.build always requires a clobber (bug 852814)

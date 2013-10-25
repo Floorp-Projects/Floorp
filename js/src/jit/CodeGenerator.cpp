@@ -2358,8 +2358,13 @@ CodeGenerator::visitCallDirectEval(LCallDirectEval *lir)
 static const uint32_t EntryTempMask = Registers::TempMask & ~(1 << OsrFrameReg.code());
 
 bool
-CodeGenerator::generateArgumentsChecks()
+CodeGenerator::generateArgumentsChecks(bool bailout)
 {
+    // This function can be used the normal way to check the argument types,
+    // before entering the function and bailout when arguments don't match.
+    // For debug purpose, this is can also be used to force/check that the
+    // arguments are correct. Upon fail it will hit a breakpoint.
+
     MIRGraph &mir = gen->graph();
     MResumePoint *rp = mir.entryResumePoint();
 
@@ -2389,8 +2394,18 @@ CodeGenerator::generateArgumentsChecks()
         masm.guardTypeSet(Address(StackPointer, offset), types, temp, &miss);
     }
 
-    if (miss.used() && !bailoutFrom(&miss, graph.entrySnapshot()))
-        return false;
+    if (miss.used()) {
+        if (bailout) {
+            if (!bailoutFrom(&miss, graph.entrySnapshot()))
+                return false;
+        } else {
+            Label success;
+            masm.jump(&success);
+            masm.bind(&miss);
+            masm.breakpoint();
+            masm.bind(&success);
+        }
+    }
 
     masm.freeStack(frameSize());
 
@@ -5677,6 +5692,12 @@ CodeGenerator::generate()
     masm.tracelogStart(gen->info().script());
     masm.tracelogLog(TraceLogging::INFO_ENGINE_IONMONKEY);
     masm.bind(&skip);
+#endif
+
+#ifdef DEBUG
+    // Assert that the argument types are correct.
+    if (!generateArgumentsChecks(/* bailout = */ false))
+        return false;
 #endif
 
     if (!generatePrologue())

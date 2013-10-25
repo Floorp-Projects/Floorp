@@ -10,8 +10,6 @@ VPATH = \
   @srcdir@/google/protobuf/stubs \
   $(NULL)
 
-FORCE_STATIC_LIB = 1
-
 LOCAL_INCLUDES = \
   -I$(srcdir) \
   $(NULL)

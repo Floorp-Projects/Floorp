@@ -21,3 +21,4 @@ LIBRARY_NAME = 'android'
 
 FAIL_ON_WARNINGS = True
 
+FORCE_STATIC_LIB = True
