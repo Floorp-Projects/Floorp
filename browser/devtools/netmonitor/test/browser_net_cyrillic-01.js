@@ -9,7 +9,7 @@ function test() {
   initNetMonitor(CYRILLIC_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { document, SourceEditor, NetMonitorView } = aMonitor.panelWin;
+    let { document, Editor, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
@@ -29,7 +29,7 @@ function test() {
       NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
         is(aEditor.getText().indexOf("\u044F"), 26, // я
           "The text shown in the source editor is incorrect.");
-        is(aEditor.getMode(), SourceEditor.MODES.TEXT,
+        is(aEditor.getMode(), Editor.modes.text,
           "The mode active in the source editor is incorrect.");
 
         teardown(aMonitor).then(finish);

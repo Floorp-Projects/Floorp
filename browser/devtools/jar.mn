@@ -37,6 +37,7 @@ browser.jar:
     content/browser/devtools/codemirror/htmlmixed.js                   (sourceeditor/codemirror/htmlmixed.js)
     content/browser/devtools/codemirror/activeline.js                  (sourceeditor/codemirror/activeline.js)
     content/browser/devtools/codemirror/matchbrackets.js               (sourceeditor/codemirror/matchbrackets.js)
+    content/browser/devtools/codemirror/closebrackets.js               (sourceeditor/codemirror/closebrackets.js)
     content/browser/devtools/codemirror/comment.js                     (sourceeditor/codemirror/comment.js)
     content/browser/devtools/codemirror/searchcursor.js                (sourceeditor/codemirror/search/searchcursor.js)
     content/browser/devtools/codemirror/search.js                      (sourceeditor/codemirror/search/search.js)

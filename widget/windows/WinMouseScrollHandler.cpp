@@ -328,7 +328,8 @@ bool
 MouseScrollHandler::DispatchEvent(nsWindowBase* aWidget,
                                   WidgetGUIEvent& aEvent)
 {
-  return aWidget->DispatchWindowEvent(&aEvent);
+  // note, in metrofx, this will always return false for now
+  return aWidget->DispatchScrollEvent(&aEvent);
 }
 
 /* static */

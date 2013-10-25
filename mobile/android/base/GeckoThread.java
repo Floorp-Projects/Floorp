@@ -147,7 +147,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
                 if (args == null || !args.contains(BrowserApp.GUEST_BROWSING_ARG)) {
                     guest = " " + BrowserApp.GUEST_BROWSING_ARG;
                 }
-            } else if (!GeckoApp.sIsUsingCustomProfile) {
+            } else if (!GeckoProfile.sIsUsingCustomProfile) {
                 // If nothing was passed in in the intent, force Gecko to use the default profile for
                 // for this activity
                 profile = " -P " + GeckoAppShell.getGeckoInterface().getProfile().getName();
