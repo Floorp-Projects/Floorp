@@ -41,6 +41,9 @@ public:
     static already_AddRefed<gfxXlibSurface>
     Create(Screen *screen, Visual *visual, const gfxIntSize& size,
            Drawable relatedDrawable = None);
+    static cairo_surface_t *
+    CreateCairoSurface(Screen *screen, Visual *visual, const gfxIntSize& size,
+                       Drawable relatedDrawable = None);
     static already_AddRefed<gfxXlibSurface>
     Create(Screen* screen, XRenderPictFormat *format, const gfxIntSize& size,
            Drawable relatedDrawable = None);
