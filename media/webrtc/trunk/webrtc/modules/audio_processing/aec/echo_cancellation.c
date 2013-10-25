@@ -814,13 +814,18 @@ static void ProcessExtended(aecpc_t* self, const int16_t* near,
 
   EstBufDelayExtended(self);
 
-  for (i = 0; i < num_frames; ++i) {
+  {
     // |delay_diff_offset| gives us the option to manually rewind the delay on
     // very low delay platforms which can't be expressed purely through
     // |reported_delay_ms|.
-    WebRtcAec_ProcessFrame(self->aec, &near[FRAME_LEN * i],
-        &near_high[FRAME_LEN * i], self->knownDelay + delay_diff_offset,
-        &out[FRAME_LEN * i], &out_high[FRAME_LEN * i]);
+    const int adjusted_known_delay =
+        WEBRTC_SPL_MAX(0, self->knownDelay + delay_diff_offset);
+
+    for (i = 0; i < num_frames; ++i) {
+      WebRtcAec_ProcessFrame(self->aec, &near[FRAME_LEN * i],
+          &near_high[FRAME_LEN * i], adjusted_known_delay,
+          &out[FRAME_LEN * i], &out_high[FRAME_LEN * i]);
+    }
   }
 }
 
