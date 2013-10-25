@@ -882,7 +882,7 @@
       </hbox>
 
       <toolbarbutton id="nav-bar-overflow-button"
-                     class="toolbarbutton-1 chromeclass-toolbar-additional chevron overflow-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional overflow-button"
                      skipintoolbarset="true"
                      tooltiptext="&navbarOverflow.label;"/>
 
