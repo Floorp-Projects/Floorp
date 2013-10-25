@@ -5,5 +5,5 @@
 
 PARALLEL_DIRS += ['interfaces', 'src']
 
-if CONFIG['MOZ_B2G_RIL'] and CONFIG['ENABLE_TESTS']:
+if CONFIG['ENABLE_TESTS']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
