@@ -430,7 +430,7 @@ pref("services.push.requestTimeout", 10000);
 pref("services.push.udp.wakeupEnabled", true);
 
 // NetworkStats
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G_RIL
 pref("dom.mozNetworkStats.enabled", true);
 pref("dom.webapps.firstRunWithSIM", true);
 #endif
