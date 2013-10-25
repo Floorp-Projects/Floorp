@@ -9,14 +9,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm");
-
-if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-  // Refuse to run in child processes.
-  throw new Error("You cannot use the AddonManager in child processes!");
-}
-
-
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
@@ -51,6 +43,7 @@ const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
 const VALID_TYPES_REGEXP = /^[\w\-]+$/;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
