@@ -9,7 +9,7 @@ import re
 import os
 
 
-BUGZILLA_FINGERPRINT = '45:77:35:fd:6f:2c:1c:c2:90:4b:f7:b4:4d:60:c6:97:c5:5c:47:27'
+BUGZILLA_FINGERPRINT = '47:13:a2:14:0c:46:45:53:12:0d:e5:36:16:a5:60:26:3e:da:3a:60'
 HG_FINGERPRINT = '10:78:e8:57:2d:95:de:7c:de:90:bd:22:e1:38:17:67:c5:a7:9c:14'
 
 
