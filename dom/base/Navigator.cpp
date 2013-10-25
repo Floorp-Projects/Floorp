@@ -39,8 +39,8 @@
 #include "nsGlobalWindow.h"
 #ifdef MOZ_B2G_RIL
 #include "mozilla/dom/IccManager.h"
-#include "MobileConnection.h"
 #include "mozilla/dom/CellBroadcast.h"
+#include "mozilla/dom/network/MobileConnection.h"
 #include "mozilla/dom/Voicemail.h"
 #endif
 #include "nsIIdleObserver.h"

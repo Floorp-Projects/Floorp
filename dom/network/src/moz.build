@@ -22,6 +22,9 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_B2G_RIL']:
+    EXPORTS.mozilla.dom.network += [
+        'MobileConnection.h',
+    ]
     CPP_SOURCES += [
         'MobileConnection.cpp',
     ]

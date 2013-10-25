@@ -4509,7 +4509,11 @@ pref("dom.icc.enabled", false);
 #endif
 
 // Mobile Connection API
+#ifdef MOZ_B2G_RIL
+pref("dom.mobileconnection.enabled", true);
+#else
 pref("dom.mobileconnection.enabled", false);
+#endif
 
 // Voice Mail API
 pref("dom.voicemail.enabled", false);
