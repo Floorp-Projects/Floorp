@@ -237,14 +237,7 @@ void
 CompositableParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mHost) {
-    // XXX: sadness warning. We should be able to do this whenever we get ActorDestroy,
-    // not just for abnormal shutdowns (which is the only case we _need_ to - so that
-    // we don't double release our shmems). But, for some reason, that causes a
-    // crash, we don't know why. (Bug 925773).
-    if (why == AbnormalShutdown) {
-      mHost->OnActorDestroy();
-    }
-    mHost->Detach(nullptr, CompositableHost::FORCE_DETACH);
+    mHost->Detach();
   }
 }
 
