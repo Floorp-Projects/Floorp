@@ -820,9 +820,6 @@ pref("gfx.canvas.skiagl.dynamic-cache", true);
 // Cell Broadcast API
 pref("ril.cellbroadcast.disabled", false);
 
-// Mobile Connection API
-pref("dom.mobileconnection.enabled", true);
-
 // Voice Mail API
 pref("dom.voicemail.enabled", true);
 
