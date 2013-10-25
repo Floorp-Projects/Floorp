@@ -35,7 +35,7 @@
 #include "nsStackWalk.h"
 #include "nsTraceMallocCallbacks.h"
 #include "nsTypeInfo.h"
-#include "mozilla/PoisonIOInterposer.h"
+#include "mozilla/mozPoisonWrite.h"
 
 #if defined(XP_MACOSX)
 

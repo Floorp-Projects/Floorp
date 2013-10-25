@@ -22,7 +22,7 @@
 #include "nsIPropertyBag2.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/LateWriteChecks.h"
+#include "mozilla/mozPoisonWrite.h"
 #include "mozIStorageCompletionCallback.h"
 
 #include "sqlite3.h"

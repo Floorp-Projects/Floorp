@@ -29,6 +29,7 @@
 #include "nsPISocketTransportService.h"
 #include "nsServiceManagerUtils.h"
 #include "TestHarness.h"
+#include "mozilla/mozPoisonWrite.h"
 
 class MtransportTestUtils {
  public:
