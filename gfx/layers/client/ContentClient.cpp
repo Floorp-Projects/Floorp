@@ -327,21 +327,6 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
   }
 }
 
-
-void
-ContentClientRemoteBuffer::OnActorDestroy()
-{
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
-  if (mDeprecatedTextureClientOnWhite) {
-    mDeprecatedTextureClientOnWhite->OnActorDestroy();
-  }
-  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
-    mOldTextures[i]->OnActorDestroy();
-  }
-}
-
 ContentClientDoubleBuffered::~ContentClientDoubleBuffered()
 {
   if (mDeprecatedTextureClient) {
@@ -440,26 +425,6 @@ ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
   }
 
   ContentClientRemoteBuffer::SwapBuffers(aFrontUpdatedRegion);
-}
-
-void
-ContentClientDoubleBuffered::OnActorDestroy()
-{
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
-  if (mDeprecatedTextureClientOnWhite) {
-    mDeprecatedTextureClientOnWhite->OnActorDestroy();
-  }
-  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
-    mOldTextures[i]->OnActorDestroy();
-  }
-  if (mFrontClient) {
-    mFrontClient->OnActorDestroy();
-  }
-  if (mFrontClientOnWhite) {
-    mFrontClientOnWhite->OnActorDestroy();
-  }
 }
 
 struct AutoDeprecatedTextureClient {
@@ -574,10 +539,7 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
 
   if (SupportsAzureContent()) {
     MOZ_ASSERT(!destCtx->IsCairo());
-    if (destCtx->GetDrawTarget()->GetFormat() == FORMAT_B8G8R8A8) {
-      destCtx->GetDrawTarget()->ClearRect(Rect(0, 0, mFrontBufferRect.width, mFrontBufferRect.height));
-    }
-    aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_BLACK);
+    aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_BLACK, 1.0, OP_SOURCE);
   } else {
     aSource.DrawBufferWithRotation(destCtx, BUFFER_BLACK);
   }
@@ -595,10 +557,7 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
 
     if (SupportsAzureContent()) {
       MOZ_ASSERT(!destCtx->IsCairo());
-      if (destCtx->GetDrawTarget()->GetFormat() == FORMAT_B8G8R8A8) {
-        destCtx->GetDrawTarget()->ClearRect(Rect(0, 0, mFrontBufferRect.width, mFrontBufferRect.height));
-      }
-      aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_WHITE);
+      aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_WHITE, 1.0, OP_SOURCE);
     } else {
       aSource.DrawBufferWithRotation(destCtx, BUFFER_WHITE);
     }

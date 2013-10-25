@@ -280,25 +280,6 @@ ImageClientBuffered::UpdateImage(ImageContainer* aContainer,
   return ImageClientSingle::UpdateImage(aContainer, aContentFlags);
 }
 
-void
-ImageClientSingle::OnActorDestroy()
-{
-  if (mFrontBuffer) {
-    mFrontBuffer->OnActorDestroy();
-  }
-}
-
-void
-ImageClientBuffered::OnActorDestroy()
-{
-  if (mFrontBuffer) {
-    mFrontBuffer->OnActorDestroy();
-  }
-  if (mBackBuffer) {
-    mBackBuffer->OnActorDestroy();
-  }
-}
-
 bool
 ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 {
@@ -482,14 +463,6 @@ ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
 , mAsyncContainerID(0)
 , mLayer(nullptr)
 {
-}
-
-void
-DeprecatedImageClientSingle::OnActorDestroy()
-{
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
 }
 
 bool
