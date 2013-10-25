@@ -260,7 +260,7 @@ this.Downloads = {
    *     standard downloads directory i.e. /sdcard
    *
    * @return {Promise}
-   * @resolves The nsIFile of downloads directory.
+   * @resolves The downloads directory string path.
    */
   getSystemDownloadsDirectory: function D_getSystemDownloadsDirectory() {
     return DownloadIntegration.getSystemDownloadsDirectory();
@@ -271,10 +271,10 @@ this.Downloads = {
    * in the current profile asynchronously.
    *
    * @return {Promise}
-   * @resolves The nsIFile of downloads directory.
+   * @resolves The downloads directory string path.
    */
-  getUserDownloadsDirectory: function D_getUserDownloadsDirectory() {
-    return DownloadIntegration.getUserDownloadsDirectory();
+  getPreferredDownloadsDirectory: function D_getPreferredDownloadsDirectory() {
+    return DownloadIntegration.getPreferredDownloadsDirectory();
   },
 
   /**
@@ -284,7 +284,7 @@ this.Downloads = {
    * directory, based on the platform asynchronously.
    *
    * @return {Promise}
-   * @resolves The nsIFile of downloads directory.
+   * @resolves The downloads directory string path.
    */
   getTemporaryDownloadsDirectory: function D_getTemporaryDownloadsDirectory() {
     return DownloadIntegration.getTemporaryDownloadsDirectory();
