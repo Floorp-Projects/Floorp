@@ -121,6 +121,7 @@ public:
   void CleanUp();
 
   void WakeUp();
+  bool Stop();
 
   bool Poll();
 
@@ -212,6 +213,18 @@ DBusWatcher::WakeUp()
   if (res < 0) {
     NS_WARNING("Cannot write wakeup bit to DBus controller!");
   }
+}
+
+bool
+DBusWatcher::Stop()
+{
+  static const char data = DBUS_EVENT_LOOP_EXIT;
+
+  ssize_t res =
+    TEMP_FAILURE_RETRY(write(mControlFdW.get(), &data, sizeof(data)));
+  NS_ENSURE_TRUE(res == 1, false);
+
+  return true;
 }
 
 bool
@@ -592,11 +605,8 @@ StopDBus()
   nsRefPtr<DBusWatcher> dbusWatcher(gDBusWatcher);
   gDBusWatcher = nullptr;
 
-  if (dbusWatcher) {
-    static const char data = DBUS_EVENT_LOOP_EXIT;
-    ssize_t wret = TEMP_FAILURE_RETRY(write(dbusWatcher->mControlFdW.get(),
-                                            &data, sizeof(data)));
-    NS_ENSURE_TRUE(wret == 1, false);
+  if (dbusWatcher && !dbusWatcher->Stop()) {
+    return false;
   }
 
   nsRefPtr<nsIThread> dbusServiceThread(gDBusServiceThread);
