@@ -69,44 +69,8 @@
 
 #define DEFAULT_INITIAL_POLLFD_COUNT 8
 
-// Functions for converting between unix events in the poll struct,
-// and their dbus definitions
-
-enum DBusEventTypes {
-  DBUS_EVENT_LOOP_EXIT = 1,
-  DBUS_EVENT_LOOP_ADD = 2,
-  DBUS_EVENT_LOOP_REMOVE = 3,
-  DBUS_EVENT_LOOP_WAKEUP = 4
-};
-
-static unsigned int UnixEventsToDBusFlags(short events)
-{
-  return (events & DBUS_WATCH_READABLE ? POLLIN : 0) |
-    (events & DBUS_WATCH_WRITABLE ? POLLOUT : 0) |
-    (events & DBUS_WATCH_ERROR ? POLLERR : 0) |
-    (events & DBUS_WATCH_HANGUP ? POLLHUP : 0);
-}
-
-static short DBusFlagsToUnixEvents(unsigned int flags)
-{
-  return (flags & POLLIN ? DBUS_WATCH_READABLE : 0) |
-    (flags & POLLOUT ? DBUS_WATCH_WRITABLE : 0) |
-    (flags & POLLERR ? DBUS_WATCH_ERROR : 0) |
-    (flags & POLLHUP ? DBUS_WATCH_HANGUP : 0);
-}
-
 namespace mozilla {
 namespace ipc {
-
-struct PollFdComparator {
-  bool Equals(const pollfd& a, const pollfd& b) const {
-    return ((a.fd == b.fd) &&
-            (a.events == b.events));
-  }
-  bool LessThan(const pollfd& a, const pollfd&b) const {
-    return false;
-  }
-};
 
 class DBusWatcher : public RawDBusConnection
 {
@@ -143,6 +107,25 @@ public:
   ScopedClose mControlFdW;
 
 private:
+  struct PollFdComparator {
+    bool Equals(const pollfd& a, const pollfd& b) const {
+      return ((a.fd == b.fd) && (a.events == b.events));
+    }
+    bool LessThan(const pollfd& a, const pollfd&b) const {
+      return false;
+    }
+  };
+
+  enum DBusEventTypes {
+    DBUS_EVENT_LOOP_EXIT = 1,
+    DBUS_EVENT_LOOP_ADD = 2,
+    DBUS_EVENT_LOOP_REMOVE = 3,
+    DBUS_EVENT_LOOP_WAKEUP = 4
+  };
+
+  static unsigned int UnixEventsToDBusFlags(short events);
+  static short        DBusFlagsToUnixEvents(unsigned int flags);
+
   static dbus_bool_t AddWatchFunction(DBusWatch* aWatch, void* aData);
   static void        RemoveWatchFunction(DBusWatch* aWatch, void* aData);
   static void        ToggleWatchFunction(DBusWatch* aWatch, void* aData);
@@ -432,6 +415,26 @@ DBusWatcher::HandleWatchRemove()
   // DBusWatch pointers are maintained by DBus, so we won't leak by
   // removing.
   mWatchData.RemoveElementAt(index);
+}
+
+// Flag conversion
+
+unsigned int
+DBusWatcher::UnixEventsToDBusFlags(short events)
+{
+  return (events & DBUS_WATCH_READABLE ? POLLIN : 0) |
+         (events & DBUS_WATCH_WRITABLE ? POLLOUT : 0) |
+         (events & DBUS_WATCH_ERROR ? POLLERR : 0) |
+         (events & DBUS_WATCH_HANGUP ? POLLHUP : 0);
+}
+
+short
+DBusWatcher::DBusFlagsToUnixEvents(unsigned int flags)
+{
+  return (flags & POLLIN ? DBUS_WATCH_READABLE : 0) |
+         (flags & POLLOUT ? DBUS_WATCH_WRITABLE : 0) |
+         (flags & POLLERR ? DBUS_WATCH_ERROR : 0) |
+         (flags & POLLHUP ? DBUS_WATCH_HANGUP : 0);
 }
 
 // DBus utility functions, used as function pointers in DBus setup
