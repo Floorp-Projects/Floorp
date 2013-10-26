@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+-->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Update Wizard pages: update check, basic, download, and finished (partial patch with an invalid hash and successful complete patch)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTestDefault();">
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript"
+        src="utils.js"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+const TESTS = [ {
+  pageid: PAGEID_CHECKING
+}, {
+  pageid: PAGEID_FOUND_BASIC,
+  buttonClick: "next"
+}, {
+  pageid: PAGEID_DOWNLOADING
+}, {
+  pageid: PAGEID_FINISHED,
+  buttonClick: "extra1"
+} ];
+
+function runTest() {
+  debugDump("entering");
+
+  let url = URL_HTTP_UPDATE_XML + "?showDetails=1&invalidPartialHash=1" +
+            getVersionParams();
+  setUpdateURLOverride(url);
+
+  gUP.checkForUpdates();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+</window>
