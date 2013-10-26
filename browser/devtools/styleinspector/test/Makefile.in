@@ -38,6 +38,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_ruleview_pseudoelement.js \
   browser_computedview_bug835808_keyboard_nav.js \
   browser_bug913014_matched_expand.js \
+  browser_bug765105_background_image_tooltip.js \
   head.js \
   $(NULL)
 

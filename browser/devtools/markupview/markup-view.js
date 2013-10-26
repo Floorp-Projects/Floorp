@@ -21,6 +21,7 @@ const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 const {HTMLEditor} = require("devtools/markupview/html-editor");
 const {OutputParser} = require("devtools/output-parser");
 const promise = require("sdk/core/promise");
+const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
@@ -374,7 +375,7 @@ MarkupView.prototype = {
       this._elt.appendChild(container.elt);
       this._rootNode = aNode;
     } else {
-      var container = new MarkupContainer(this, aNode);
+      var container = new MarkupContainer(this, aNode, this._inspector);
       if (aFlashNode) {
         container.flashMutation();
       }
@@ -1046,12 +1047,15 @@ MarkupView.prototype = {
  *        The markup view that owns this container.
  * @param DOMNode aNode
  *        The node to display.
+ * @param Inspector aInspector
+ *        The inspector tool container the markup-view
  */
-function MarkupContainer(aMarkupView, aNode) {
+function MarkupContainer(aMarkupView, aNode, aInspector) {
   this.markup = aMarkupView;
   this.doc = this.markup.doc;
   this.undo = this.markup.undo;
   this.node = aNode;
+  this._inspector = aInspector;
 
   if (aNode.nodeType == Ci.nsIDOMNode.TEXT_NODE) {
     this.editor = new TextEditor(this, aNode, "text");
@@ -1094,11 +1098,47 @@ function MarkupContainer(aMarkupView, aNode) {
 
   this._onMouseDown = this._onMouseDown.bind(this);
   this.elt.addEventListener("mousedown", this._onMouseDown, false);
+
+  this.tooltip = null;
+  this._attachTooltipIfNeeded();
 }
 
 MarkupContainer.prototype = {
   toString: function() {
     return "[MarkupContainer for " + this.node + "]";
+  },
+
+  _attachTooltipIfNeeded: function() {
+    if (this.node.tagName) {
+      let tagName = this.node.tagName.toLowerCase();
+      let isImage = tagName === "img" &&
+        this.editor.getAttributeElement("src");
+      let isCanvas = tagName && tagName === "canvas";
+
+      // Get the image data for later so that when the user actually hovers over
+      // the element, the tooltip does contain the image
+      if (isImage || isCanvas) {
+        this.tooltip = new Tooltip(this._inspector.panelDoc);
+
+        this.node.getImageData().then(data => {
+          if (data) {
+            data.string().then(str => {
+              this.tooltip.setImageContent(str);
+            });
+          }
+        });
+      }
+
+      // If it's an image, show the tooltip on the src attribute
+      if (isImage) {
+        this.tooltip.startTogglingOnHover(this.editor.getAttributeElement("src"));
+      }
+
+      // If it's a canvas, show it on the tag
+      if (isCanvas) {
+        this.tooltip.startTogglingOnHover(this.editor.tag);
+      }
+    }
   },
 
   /**
@@ -1335,6 +1375,12 @@ MarkupContainer.prototype = {
 
     // Destroy my editor
     this.editor.destroy();
+
+    // Destroy the tooltip if any
+    if (this.tooltip) {
+      this.tooltip.destroy();
+      this.tooltip = null;
+    }
   }
 };
 
@@ -1348,7 +1394,7 @@ function RootContainer(aMarkupView, aNode) {
   this.elt.container = this;
   this.children = this.elt;
   this.node = aNode;
-  this.toString = function() { return "[root container]"}
+  this.toString = () => "[root container]";
 }
 
 RootContainer.prototype = {
@@ -1576,6 +1622,16 @@ ElementEditor.prototype = {
 
   _startModifyingAttributes: function() {
     return this.node.startModifyingAttributes();
+  },
+
+  /**
+   * Get the element used for one of the attributes of this element
+   * @param string attrName The name of the attribute to get the element for
+   * @return DOMElement
+   */
+  getAttributeElement: function(attrName) {
+    return this.attrList.querySelector(
+      ".attreditor[data-attr=" + attrName + "] .attr-value");
   },
 
   _createAttribute: function(aAttr, aBefore = null) {
