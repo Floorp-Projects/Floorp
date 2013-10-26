@@ -538,9 +538,8 @@ input[type="radio"]:hover:active {
 /* Note: Values in nsNativeTheme IsWidgetStyled function 
    need to match button background/border values here */
 
-/* TODO: Once we're getting ready to turn on 'dom.forms.color' by default, we
-   probably want to add input[type="color"] to this selector list, so that it
-   gets the same styling as other form buttons. */
+/* Non text-related properties for buttons: these ones are shared with
+   input[type="color"] */
 button, 
 input[type="reset"],
 input[type="button"],
@@ -552,14 +551,22 @@ input[type="submit"] {
   padding: 0px 6px 0px 6px;
   border: 2px outset ButtonFace;
   background-color: ButtonFace;
-  color: ButtonText; 
-  font: -moz-button;
-  line-height: normal;
-  white-space: pre;
   cursor: default;
   -moz-box-sizing: border-box;
   -moz-user-select: none;
   -moz-binding: none;
+}
+
+/* Text-related properties for buttons: these ones are not shared with
+   input[type="color"] */
+button, 
+input[type="reset"],
+input[type="button"],
+input[type="submit"] { 
+  color: ButtonText; 
+  font: -moz-button;
+  line-height: normal;
+  white-space: pre;
   text-align: center;
   text-shadow: none;
 }
@@ -581,6 +588,12 @@ input[type="reset"]:hover,
 input[type="button"]:hover,
 input[type="submit"]:hover {
   background-color: -moz-buttonhoverface;
+}
+
+button:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover {
   color: -moz-buttonhovertext;
 }
 
@@ -591,6 +604,12 @@ input[type="submit"]:active:hover {
   padding: 0px 5px 0px 7px;
   border-style: inset;
   background-color: ButtonFace;
+}
+
+button:active:hover,
+input[type="reset"]:active:hover,
+input[type="button"]:active:hover,
+input[type="submit"]:active:hover {
   color: ButtonText;
 }
 
@@ -624,8 +643,18 @@ input[type="submit"]:disabled {
      must be the same here and for text inputs */
   padding: 0px 6px 0px 6px;
   border: 2px outset ButtonFace;
-  color: GrayText;
   cursor: inherit; 
+}
+
+input[type="reset"]:disabled:active,
+input[type="reset"]:disabled,
+input[type="button"]:disabled:active,
+input[type="button"]:disabled,
+select:disabled > button,
+select:disabled > button,
+input[type="submit"]:disabled:active,
+input[type="submit"]:disabled {
+  color: GrayText;
 }
 
  /*
