@@ -6,6 +6,7 @@
 
 #include "jit/BaselineIC.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/TemplateLib.h"
 
 #include "jsautooplen.h"
@@ -30,6 +31,8 @@
 #include "vm/Interpreter-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/StringObject-inl.h"
+
+using mozilla::DebugOnly;
 
 namespace js {
 namespace jit {
@@ -4138,8 +4141,8 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler &masm)
         EmitUnstowICValues(masm, 1);
 
         // Extract string from R1 again.
-        Register strExtract2 = masm.extractString(R1, ExtractTemp1);
-        JS_ASSERT(strExtract2 == strExtract);
+        DebugOnly<Register> strExtract2 = masm.extractString(R1, ExtractTemp1);
+        JS_ASSERT(Register(strExtract2) == strExtract);
 
         masm.bind(&skipAtomize);
     }
