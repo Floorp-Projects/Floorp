@@ -40,6 +40,10 @@ from mozbuild.util import (
 
 from mozbuild.backend.configenvironment import ConfigEnvironment
 
+from .data import (
+    JavaJarData,
+)
+
 from .sandbox import (
     SandboxError,
     SandboxExecutionError,
@@ -221,6 +225,22 @@ class MozbuildSandbox(Sandbox):
                 sys.exc_info()[2], illegal_path=path)
 
         Sandbox.exec_file(self, path)
+
+    def _add_java_jar(self, name):
+        """Add a Java JAR build target."""
+        if not name:
+            raise Exception('Java JAR cannot be registered without a name')
+
+        if '/' in name or '\\' in name or '.jar' in name:
+            raise Exception('Java JAR names must not include slashes or'
+                ' .jar: %s' % name)
+
+        if self['JAVA_JAR_TARGETS'].has_key(name):
+            raise Exception('Java JAR has already been registered: %s' % name)
+
+        jar = JavaJarData(name)
+        self['JAVA_JAR_TARGETS'][name] = jar
+        return jar
 
     def _add_tier_directory(self, tier, reldir, static=False, external=False):
         """Register a tier directory with the build."""

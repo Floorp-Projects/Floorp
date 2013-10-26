@@ -21,3 +21,6 @@ LIBRARY_NAME = 'xpcomglue_s_nomozalloc'
 SDK_LIBRARY = [
     "%s%s.%s" % (CONFIG['LIB_PREFIX'], 'xpcomglue_s_nomozalloc', CONFIG['LIB_SUFFIX']),
 ]
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = True
