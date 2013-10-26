@@ -160,8 +160,6 @@ bool IsIPAddrAny(const NetAddr *addr);
 
 bool IsIPAddrV4Mapped(const NetAddr *addr);
 
-bool IsIPAddrLocal(const NetAddr *addr);
-
 } // namespace net
 } // namespace mozilla
 
