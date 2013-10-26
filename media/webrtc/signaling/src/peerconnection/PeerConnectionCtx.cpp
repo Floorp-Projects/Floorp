@@ -24,6 +24,10 @@
 
 #include "mozilla/Telemetry.h"
 
+#ifdef MOZILLA_INTERNAL_API
+#include "mozilla/dom/RTCPeerConnectionBinding.h"
+#endif
+
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
@@ -41,6 +45,57 @@ extern char ccAppReadyToStart;
 }
 
 namespace mozilla {
+
+using namespace dom;
+
+// Convert constraints to C structures
+
+#ifdef MOZILLA_INTERNAL_API
+static void
+Apply(const Optional<bool> &aSrc, cc_boolean_constraint_t *aDst,
+      bool mandatory = false) {
+  if (aSrc.WasPassed() && (mandatory || !aDst->was_passed)) {
+    aDst->was_passed = true;
+    aDst->value = aSrc.Value();
+    aDst->mandatory = mandatory;
+  }
+}
+#endif
+
+MediaConstraintsExternal::MediaConstraintsExternal() {
+  memset(&mConstraints, 0, sizeof(mConstraints));
+}
+
+MediaConstraintsExternal::MediaConstraintsExternal(
+    const MediaConstraintsInternal &aSrc) {
+  cc_media_constraints_t* c = &mConstraints;
+  memset(c, 0, sizeof(*c));
+#ifdef MOZILLA_INTERNAL_API
+  Apply(aSrc.mMandatory.mOfferToReceiveAudio, &c->offer_to_receive_audio, true);
+  Apply(aSrc.mMandatory.mOfferToReceiveVideo, &c->offer_to_receive_video, true);
+  Apply(aSrc.mMandatory.mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel,
+        true);
+  if (aSrc.mOptional.WasPassed()) {
+    const Sequence<MediaConstraintSet> &array = aSrc.mOptional.Value();
+    for (uint32_t i = 0; i < array.Length(); i++) {
+      Apply(array[i].mOfferToReceiveAudio, &c->offer_to_receive_audio);
+      Apply(array[i].mOfferToReceiveVideo, &c->offer_to_receive_video);
+      Apply(array[i].mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel);
+    }
+  }
+#endif
+}
+
+cc_media_constraints_t*
+MediaConstraintsExternal::build() const {
+  cc_media_constraints_t* cc  = (cc_media_constraints_t*)
+    cpr_malloc(sizeof(cc_media_constraints_t));
+  if (cc) {
+    *cc = mConstraints;
+  }
+  return cc;
+}
+
 class PeerConnectionCtxShutdown : public nsIObserver
 {
 public:
