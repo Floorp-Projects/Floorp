@@ -1,2 +1,4 @@
 {
+  "btoa(null) == \"bnVsbA==\"": true,
+  "atob(null) == \"\u009e\u00e9e\"": true
 }

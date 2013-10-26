@@ -1374,7 +1374,7 @@ Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
 
     JS::RootedValue root(cx, val);
     xpc_qsACString encodedString(cx, root, &root, false,
-                                 xpc_qsACString::eStringify,
+                                 xpc_qsACString::eNull,
                                  xpc_qsACString::eStringify);
     if (!encodedString.IsValid())
         return false;
@@ -1401,8 +1401,8 @@ Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
 
     JS::RootedValue root(cx, val);
     xpc_qsACString encodedString(cx, root, &root, false,
-                                 xpc_qsACString::eStringify,
-                                 xpc_qsACString::eStringify);
+                                 xpc_qsACString::eNull,
+                                 xpc_qsACString::eNull);
     if (!encodedString.IsValid())
         return false;
 
