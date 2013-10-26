@@ -18,14 +18,14 @@ WaiveAccessors(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     if (desc.hasGetterObject() && desc.getterObject()) {
         RootedValue v(cx, JS::ObjectValue(*desc.getterObject()));
-        if (!WrapperFactory::WaiveXrayAndWrap(cx, v.address()))
+        if (!WrapperFactory::WaiveXrayAndWrap(cx, &v))
             return false;
         desc.setGetterObject(&v.toObject());
     }
 
     if (desc.hasSetterObject() && desc.setterObject()) {
         RootedValue v(cx, JS::ObjectValue(*desc.setterObject()));
-        if (!WrapperFactory::WaiveXrayAndWrap(cx, v.address()))
+        if (!WrapperFactory::WaiveXrayAndWrap(cx, &v))
             return false;
         desc.setSetterObject(&v.toObject());
     }
@@ -46,7 +46,7 @@ WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
                                         unsigned flags)
 {
     return CrossCompartmentWrapper::getPropertyDescriptor(cx, wrapper, id, desc, flags) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, desc.value().address()) && WaiveAccessors(cx, desc);
+           WrapperFactory::WaiveXrayAndWrap(cx, desc.value()) && WaiveAccessors(cx, desc);
 }
 
 bool
@@ -55,7 +55,7 @@ WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
                                            unsigned flags)
 {
     return CrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, desc.value().address()) && WaiveAccessors(cx, desc);
+           WrapperFactory::WaiveXrayAndWrap(cx, desc.value()) && WaiveAccessors(cx, desc);
 }
 
 bool
@@ -64,21 +64,21 @@ WaiveXrayWrapper::get(JSContext *cx, HandleObject wrapper,
                       MutableHandleValue vp)
 {
     return CrossCompartmentWrapper::get(cx, wrapper, receiver, id, vp) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, vp.address());
+           WrapperFactory::WaiveXrayAndWrap(cx, vp);
 }
 
 bool
 WaiveXrayWrapper::call(JSContext *cx, HandleObject wrapper, const JS::CallArgs &args)
 {
     return CrossCompartmentWrapper::call(cx, wrapper, args) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, args.rval().address());
+           WrapperFactory::WaiveXrayAndWrap(cx, args.rval());
 }
 
 bool
 WaiveXrayWrapper::construct(JSContext *cx, HandleObject wrapper, const JS::CallArgs &args)
 {
     return CrossCompartmentWrapper::construct(cx, wrapper, args) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, args.rval().address());
+           WrapperFactory::WaiveXrayAndWrap(cx, args.rval());
 }
 
 // NB: This is important as the other side of a handshake with FieldGetter. See
@@ -88,7 +88,7 @@ WaiveXrayWrapper::nativeCall(JSContext *cx, JS::IsAcceptableThis test,
                              JS::NativeImpl impl, JS::CallArgs args)
 {
     return CrossCompartmentWrapper::nativeCall(cx, test, impl, args) &&
-           WrapperFactory::WaiveXrayAndWrap(cx, args.rval().address());
+           WrapperFactory::WaiveXrayAndWrap(cx, args.rval());
 }
 
 }

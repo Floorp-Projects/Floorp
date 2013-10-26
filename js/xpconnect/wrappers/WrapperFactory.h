@@ -63,7 +63,7 @@ class WrapperFactory {
                                             JS::HandleObject obj);
 
     // Wrap wrapped object into a waiver wrapper and then re-wrap it.
-    static bool WaiveXrayAndWrap(JSContext *cx, jsval *vp);
+    static bool WaiveXrayAndWrap(JSContext *cx, JS::MutableHandleValue vp);
 
     // Wrap a (same compartment) object in a SOW.
     static JSObject *WrapSOWObject(JSContext *cx, JSObject *obj);
