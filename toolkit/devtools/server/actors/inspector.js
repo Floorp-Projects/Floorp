@@ -249,6 +249,47 @@ var NodeActor = protocol.ActorClass({
   }),
 
   /**
+   * Get the node's image data if any (for canvas and img nodes).
+   * Returns a LongStringActor with the image or canvas' image data as png
+   * a data:image/png;base64,.... string
+   * A null return value means the node isn't an image
+   * An empty string return value means the node is an image but image data
+   * could not be retrieved (missing/broken image).
+   */
+  getImageData: method(function() {
+    let isImg = this.rawNode.tagName.toLowerCase() === "img";
+    let isCanvas = this.rawNode.tagName.toLowerCase() === "canvas";
+
+    if (!isImg && !isCanvas) {
+      return null;
+    }
+
+    let imageData;
+    if (isImg) {
+      let canvas = this.rawNode.ownerDocument.createElement("canvas");
+      canvas.width = this.rawNode.naturalWidth;
+      canvas.height = this.rawNode.naturalHeight;
+      let ctx = canvas.getContext("2d");
+      try {
+        // This will fail if the image is missing
+        ctx.drawImage(this.rawNode, 0, 0);
+        imageData = canvas.toDataURL("image/png");
+      } catch (e) {
+        imageData = "";
+      }
+    } else if (isCanvas) {
+      imageData = this.rawNode.toDataURL("image/png");
+    }
+
+    return LongStringActor(this.conn, imageData);
+  }, {
+    request: {},
+    response: {
+      data: RetVal("nullable:longstring")
+    }
+  }),
+
+  /**
    * Modify a node's attributes.  Passed an array of modifications
    * similar in format to "attributes" mutations.
    * {
@@ -283,8 +324,7 @@ var NodeActor = protocol.ActorClass({
       modifications: Arg(0, "array:json")
     },
     response: {}
-  }),
-
+  })
 });
 
 /**

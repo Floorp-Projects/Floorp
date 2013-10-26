@@ -111,3 +111,25 @@
     max-height: 75vh;
   }
 }
+
+/* Tooltip widget (see browser/devtools/shared/widgets/Tooltip.js) */
+
+.devtools-tooltip.devtools-tooltip-tooltip {
+  /* If the tooltip uses a <tooltip> XUL element */
+  -moz-appearance: none;
+  padding: 4px;
+  background: #eee;
+  border-radius: 3px;
+}
+.devtools-tooltip.devtools-tooltip-panel .panel-arrowcontent {
+  /* If the tooltip uses a <panel> XUL element instead */
+  padding: 4px;
+}
+
+.devtools-tooltip-tiles {
+  background-color: #eee;
+  background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
