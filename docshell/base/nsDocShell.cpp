@@ -4588,15 +4588,9 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     errorPageUrl.AppendASCII(escapedDescription.get());
 
     // Append the manifest URL if the error comes from an app.
-    uint32_t appId;
-    nsresult rv = GetAppId(&appId);
-    if (appId != nsIScriptSecurityManager::NO_APP_ID &&
-        appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-      nsCOMPtr<nsIAppsService> appsService =
-        do_GetService(APPS_SERVICE_CONTRACTID);
-      NS_ASSERTION(appsService, "No AppsService available");
-      nsAutoString manifestURL;
-      appsService->GetManifestURLByLocalId(appId, manifestURL);
+    nsString manifestURL;
+    nsresult rv = GetAppManifestURL(manifestURL);
+    if (manifestURL.Length() > 0) {
       nsCString manifestParam;
       SAFE_ESCAPE(manifestParam,
                   NS_ConvertUTF16toUTF8(manifestURL).get(),
@@ -12739,6 +12733,25 @@ nsDocShell::GetAppId(uint32_t* aAppId)
     }
 
     return parent->GetAppId(aAppId);
+}
+
+NS_IMETHODIMP
+nsDocShell::GetAppManifestURL(nsAString& aAppManifestURL)
+{
+  uint32_t appId;
+  GetAppId(&appId);
+
+  if (appId != nsIScriptSecurityManager::NO_APP_ID &&
+      appId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+    nsCOMPtr<nsIAppsService> appsService =
+      do_GetService(APPS_SERVICE_CONTRACTID);
+    NS_ASSERTION(appsService, "No AppsService available");
+    appsService->GetManifestURLByLocalId(appId, aAppManifestURL);
+  } else {
+    aAppManifestURL.SetLength(0);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
