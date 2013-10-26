@@ -34,9 +34,9 @@ public:
   PrefEnabled();
 
   void
-  PostMessageMoz(JSContext* aCx, JS::HandleValue aMessage,
-                 const Optional<Sequence<JS::Value>>& aTransferable,
-                 ErrorResult& aRv);
+  PostMessage(JSContext* aCx, JS::HandleValue aMessage,
+              const Optional<Sequence<JS::Value>>& aTransferable,
+              ErrorResult& aRv);
 
   void
   Start();

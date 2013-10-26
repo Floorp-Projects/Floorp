@@ -27,7 +27,6 @@
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/dom/HTMLDocumentBinding.h"
 #include "XPCQuickStubs.h"
-#include "nsGlobalWindow.h"
 
 template<class T>
 struct ProtoIDAndDepth
