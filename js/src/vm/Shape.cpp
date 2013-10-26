@@ -1619,7 +1619,7 @@ EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleOb
                                      shape->numFixedSlots(), shape->getObjectFlags());
 
     /* Bug 929547 - we do not rekey based on metadata object moves */
-    JSObject *metadata = shape->getObjectMetadata();
+    DebugOnly<JSObject *> metadata = shape->getObjectMetadata();
     JS_ASSERT_IF(metadata, !gc::IsInsideNursery(cx->compartment()->runtimeFromAnyThread(), metadata));
 
     InitialShapeSet::Ptr p = cx->compartment()->initialShapes.lookup(lookup);
