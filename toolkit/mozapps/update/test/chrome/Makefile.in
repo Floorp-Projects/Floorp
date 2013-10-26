@@ -60,8 +60,6 @@ MOCHITEST_CHROME_FILES += \
   test_0096_restartNotification_stagedBackground.xul \
   test_0097_restartNotification_stagedServiceBackground.xul \
   test_0101_background_restartNotification.xul \
-  test_0102_background_restartNotification_staging.xul \
-  test_0103_background_restartNotification_stagingService.xul \
   test_0111_neverButton_basic.xul \
   test_0112_neverButton_billboard.xul \
   test_0113_showNeverForVersionRemovedWithPref.xul \
@@ -80,6 +78,19 @@ MOCHITEST_CHROME_FILES += \
   test_9999_cleanup.xul \
   $(NULL)
 
+# Bug 918029 - timeout caused by copying too many files.
+ifneq ($(OS_ARCH),Linux)
+MOCHITEST_CHROME_FILES += \
+  test_0102_background_restartNotification_staging.xul \
+  $(NULL)
+#endif
+
+# Only Windows has the maintenance service.
+ifeq ($(OS_ARCH),WINNT)
+MOCHITEST_CHROME_FILES += \
+  test_0103_background_restartNotification_stagingService.xul \
+  $(NULL)
+#endif
 
 include $(topsrcdir)/config/rules.mk
 
