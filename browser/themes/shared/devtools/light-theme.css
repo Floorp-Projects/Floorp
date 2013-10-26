@@ -63,7 +63,8 @@
 
 .theme-comment,
 .cm-s-mozilla .cm-meta,
-.cm-s-mozilla .cm-hr { /* grey */
+.cm-s-mozilla .cm-hr,
+.cm-s-mozilla .cm-comment { /* grey */
   color: hsl(90,2%,46%);
 }
 
@@ -79,8 +80,7 @@
 
 .theme-fg-color1,
 .cm-s-mozilla .cm-variable-2,
-.cm-s-mozilla .cm-quote,
-.cm-s-mozilla .CodeMirror-matchingbracket { /* green */
+.cm-s-mozilla .cm-quote { /* green */
   color: hsl(72,100%,27%);
 }
 
@@ -101,8 +101,7 @@
   color: hsl(208,81%,21%)
 }
 
-.theme-fg-color4,
-.cm-s-mozilla .cm-comment { /* Orange */
+.theme-fg-color4 { /* Orange */
   color: hsl(24,85%,39%);
 }
 
@@ -119,7 +118,6 @@
 }
 
 .theme-fg-color7,
-.cm-s-mozilla .CodeMirror-nonmatchingbracket,
 .cm-s-mozilla .cm-string-2,
 .cm-s-mozilla .cm-error { /* Red */
   color: #bf5656;
@@ -165,7 +163,20 @@
 }
 
 .CodeMirror-activeline-background { /* selected color with alpha */
-  background: rgba(185, 215, 253, .4);
+  background: rgba(185, 215, 253, .35);
+}
+
+div.cm-s-mozilla span.CodeMirror-matchingbracket { /* highlight brackets */
+  outline: solid 1px rgba(0, 0, 0, .25);
+  color: black;
+}
+
+.cm-s-mozilla .CodeMirror-linenumber { /* line number text */
+  color: #667380;
+}
+
+.cm-s-mozilla .CodeMirror-gutters { /* vertical line next to line numbers */
+  border-right-color: #a6a6a6;
 }
 
 .cm-s-markup-view pre {
