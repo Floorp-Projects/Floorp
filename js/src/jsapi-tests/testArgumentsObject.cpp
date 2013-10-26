@@ -8,6 +8,7 @@
 #include "jsapi-tests/tests.h"
 
 #include "vm/ArgumentsObject-inl.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 
