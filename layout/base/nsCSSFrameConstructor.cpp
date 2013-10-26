@@ -3050,39 +3050,50 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
 
-  nsIFrame* newFrame = NS_NewFieldSetFrame(mPresShell, styleContext);
+  nsIFrame* fieldsetFrame = NS_NewFieldSetFrame(mPresShell, styleContext);
 
   // Initialize it
   InitAndRestoreFrame(aState, content,
                       aState.GetGeometricParent(aStyleDisplay, aParentFrame),
-                      newFrame);
+                      fieldsetFrame);
 
   // Resolve style and initialize the frame
   nsRefPtr<nsStyleContext> fieldsetContentStyle;
   fieldsetContentStyle = mPresShell->StyleSet()->
     ResolveAnonymousBoxStyle(nsCSSAnonBoxes::fieldsetContent, styleContext);
 
+  const nsStyleDisplay* fieldsetContentDisplay = fieldsetContentStyle->StyleDisplay();
+  bool isScrollable = fieldsetContentDisplay->IsScrollableOverflow();
+  nsIFrame* scrollFrame = nullptr;
+  if (isScrollable) {
+    fieldsetContentStyle =
+      BeginBuildingScrollFrame(aState, content, fieldsetContentStyle,
+                               fieldsetFrame, nsCSSAnonBoxes::scrolledContent,
+                               false, scrollFrame);
+  }
+
   nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, fieldsetContentStyle,
                                           NS_BLOCK_FLOAT_MGR |
                                           NS_BLOCK_MARGIN_ROOT);
-  InitAndRestoreFrame(aState, content, newFrame, blockFrame);
+  InitAndRestoreFrame(aState, content,
+    scrollFrame ? scrollFrame : fieldsetFrame, blockFrame);
 
-  aState.AddChild(newFrame, aFrameItems, content, styleContext, aParentFrame);
+  aState.AddChild(fieldsetFrame, aFrameItems, content, styleContext, aParentFrame);
   
   // Process children
   nsFrameConstructorSaveState absoluteSaveState;
   nsFrameItems                childItems;
 
-  newFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
-  if (newFrame->IsPositioned()) {
-    aState.PushAbsoluteContainingBlock(newFrame, newFrame, absoluteSaveState);
+  blockFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+  if (fieldsetFrame->IsPositioned()) {
+    aState.PushAbsoluteContainingBlock(blockFrame, fieldsetFrame, absoluteSaveState);
   }
 
   ProcessChildren(aState, content, styleContext, blockFrame, true,
                   childItems, true, aItem.mPendingBinding);
 
   nsFrameItems fieldsetKids;
-  fieldsetKids.AddChild(blockFrame);
+  fieldsetKids.AddChild(scrollFrame ? scrollFrame : blockFrame);
 
   for (nsFrameList::Enumerator e(childItems); !e.AtEnd(); e.Next()) {
     nsIFrame* child = e.get();
@@ -3094,21 +3105,25 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       // GetAdjustedParentFrame() below depends on this frame order.
       childItems.RemoveFrame(child);
       // Make sure to reparent the legend so it has the fieldset as the parent.
-      fieldsetKids.InsertFrame(newFrame, nullptr, child);
+      fieldsetKids.InsertFrame(fieldsetFrame, nullptr, child);
       break;
     }
+  }
+
+  if (isScrollable) {
+    FinishBuildingScrollFrame(scrollFrame, blockFrame);
   }
 
   // Set the inner frame's initial child lists
   blockFrame->SetInitialChildList(kPrincipalList, childItems);
 
   // Set the outer frame's initial child list
-  newFrame->SetInitialChildList(kPrincipalList, fieldsetKids);
+  fieldsetFrame->SetInitialChildList(kPrincipalList, fieldsetKids);
 
-  newFrame->AddStateBits(NS_FRAME_MAY_HAVE_GENERATED_CONTENT);
+  fieldsetFrame->AddStateBits(NS_FRAME_MAY_HAVE_GENERATED_CONTENT);
 
   // Our new frame returned is the outer frame, which is the fieldset frame.
-  return newFrame; 
+  return fieldsetFrame; 
 }
 
 static nsIFrame*
@@ -3262,6 +3277,17 @@ nsCSSFrameConstructor::FindDataByTag(nsIAtom* aTag,
 #define COMPLEX_TAG_CREATE(_tag, _func)             \
   { &nsGkAtoms::_tag, FULL_CTOR_FCDATA(0, _func) }
 
+static bool
+IsFrameForFieldSet(nsIFrame* aFrame, nsIAtom* aFrameType)
+{
+  nsIAtom* pseudo = aFrame->StyleContext()->GetPseudo();
+  if (pseudo == nsCSSAnonBoxes::fieldsetContent ||
+      pseudo == nsCSSAnonBoxes::scrolledContent) {
+    return IsFrameForFieldSet(aFrame->GetParent(), aFrame->GetParent()->GetType());
+  }
+  return aFrameType == nsGkAtoms::fieldSetFrame;
+}
+
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindHTMLData(Element* aElement,
@@ -3284,9 +3310,7 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
                "Unexpected parent for fieldset content anon box");
   if (aTag == nsGkAtoms::legend &&
       (!aParentFrame ||
-       (aParentFrame->GetType() != nsGkAtoms::fieldSetFrame &&
-        aParentFrame->StyleContext()->GetPseudo() !=
-          nsCSSAnonBoxes::fieldsetContent) ||
+       !IsFrameForFieldSet(aParentFrame, aParentFrame->GetType()) ||
        !aElement->GetParent() ||
        !aElement->GetParent()->IsHTML(nsGkAtoms::fieldset) ||
        aStyleContext->StyleDisplay()->IsFloatingStyle() ||
@@ -5919,13 +5943,8 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
 {
   nsIFrame* parentFrame = aSibling->GetParent();
   nsIAtom* parentType = nullptr;
-  nsIAtom* grandparentType = nullptr;
   if (parentFrame) {
     parentType = parentFrame->GetType();
-    nsIFrame* grandparentFrame = parentFrame->GetParent();
-    if (grandparentFrame) {
-      grandparentType = grandparentFrame->GetType();
-    }
   }
 
   uint8_t siblingDisplay = aSibling->GetDisplay();
@@ -5984,9 +6003,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
 
     return true;
   }
-  else if (nsGkAtoms::fieldSetFrame == parentType ||
-           (nsGkAtoms::fieldSetFrame == grandparentType &&
-            nsGkAtoms::blockFrame == parentType)) {
+  else if (IsFrameForFieldSet(parentFrame, parentType)) {
     // Legends can be sibling of legends but not of other content in the fieldset
     nsIAtom* sibType = aSibling->GetContentInsertionFrame()->GetType();
     bool legendContent = aContent->IsHTML(nsGkAtoms::legend);
@@ -7083,7 +7100,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   // fieldsets have multiple insertion points.
   NS_ASSERTION(isSingleInsert || frameType != nsGkAtoms::fieldSetFrame,
                "Unexpected parent");
-  if (frameType == nsGkAtoms::fieldSetFrame &&
+  if (IsFrameForFieldSet(parentFrame, frameType) &&
       aStartChild->Tag() == nsGkAtoms::legend) {
     // Just reframe the parent, since figuring out whether this
     // should be the new legend and then handling it is too complex.

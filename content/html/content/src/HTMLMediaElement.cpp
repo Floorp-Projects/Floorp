@@ -3920,5 +3920,13 @@ HTMLMediaElement::AddTextTrack(TextTrackKind aKind,
                            : nullptr;
 }
 
+void
+HTMLMediaElement::PopulatePendingTextTrackList()
+{
+  if (mTextTrackManager) {
+    mTextTrackManager->PopulatePendingList();
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

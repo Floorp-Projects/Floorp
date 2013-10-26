@@ -1,0 +1,83 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>WebGL editor test page</title>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+      precision lowp float;
+
+      void main(void) {
+        gl_Position = vec4(0, 0, 0, 1); // I'm a vertex shader!
+      }
+    </script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+      precision lowp float;
+      varying vec3 vFragmentColor;
+
+      void main(void) {
+        gl_FragColor = vec4(1, 0, 0, 1); // I'm a fragment shader!
+      }
+    </script>
+  </head>
+
+  <body>
+    <canvas width="512" height="512"></canvas>
+
+    <script type="text/javascript;version=1.8">
+      "use strict";
+
+      let canvas, gl;
+
+      window.onload = function() {
+        canvas = document.querySelector("canvas");
+        gl = canvas.getContext("webgl");
+
+        let shaderProgram = gl.createProgram();
+        let vertexShader, fragmentShader;
+
+        // Compile and attach the shaders in a random order. The test will
+        // ensure that the correct vertex and fragment source is retrieved
+        // regardless of this crazyness.
+        if (Math.random() > 0.5) {
+          vertexShader = getShader(gl, "shader-vs");
+          fragmentShader = getShader(gl, "shader-fs");
+        } else {
+          fragmentShader = getShader(gl, "shader-fs");
+          vertexShader = getShader(gl, "shader-vs");
+        }
+        if (Math.random() > 0.5) {
+          gl.attachShader(shaderProgram, vertexShader);
+          gl.attachShader(shaderProgram, fragmentShader);
+        } else {
+          gl.attachShader(shaderProgram, fragmentShader);
+          gl.attachShader(shaderProgram, vertexShader);
+        }
+
+        gl.linkProgram(shaderProgram);
+      }
+
+      function getShader(gl, id) {
+        let script = document.getElementById(id);
+        let source = script.textContent;
+        let shader;
+
+        if (script.type == "x-shader/x-fragment") {
+          shader = gl.createShader(gl.FRAGMENT_SHADER);
+        } else if (script.type == "x-shader/x-vertex") {
+          shader = gl.createShader(gl.VERTEX_SHADER);
+        }
+
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+
+        return shader;
+      }
+    </script>
+  </body>
+
+</html>
