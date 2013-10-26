@@ -14,3 +14,6 @@ if CONFIG['MOZ_CRASHREPORTER']:
         'dwarf2reader.cc',
         'functioninfo.cc',
     ]
+
+# need static lib
+FORCE_STATIC_LIB = True

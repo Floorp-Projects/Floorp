@@ -763,8 +763,11 @@ nsIncrementalDownload::OnDataAvailable(nsIRequest *request,
     count -= n;
     mChunkLen += n;
 
-    if (mChunkLen == mChunkSize)
-      FlushChunk();
+    if (mChunkLen == mChunkSize) {
+      rv = FlushChunk();
+      if (NS_FAILED(rv))
+        return rv;
+    }
   }
 
   if (PR_Now() > mLastProgressUpdate + UPDATE_PROGRESS_INTERVAL)
