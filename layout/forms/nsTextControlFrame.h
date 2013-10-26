@@ -39,8 +39,6 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() MOZ_OVERRIDE {
-    if (!IsScrollable())
-      return nullptr;
     return do_QueryFrame(GetFirstPrincipalChild());
   }
 
@@ -233,13 +231,6 @@ protected:
   };
 
   nsresult OffsetToDOMPoint(int32_t aOffset, nsIDOMNode** aResult, int32_t* aPosition);
-
-  /**
-   * Find out whether this control is scrollable (i.e. if it is not a single
-   * line text control)
-   * @return whether this control is scrollable
-   */
-  bool IsScrollable() const;
 
   /**
    * Update the textnode under our anonymous div to show the new
