@@ -12,10 +12,9 @@ if CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android'):
     # TODO: These should be the all-caps variables when FORCE_SHARED_LIB and
     # FORCE_STATIC_LIB are ported over
     force_shared_lib = 1
-    force_static_lib = 0
 else:
     force_shared_lib = 0
-    force_static_lib = 1
+    FORCE_STATIC_LIB = True
 
 if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_NATIVE_JEMALLOC'] or force_shared_lib):
     pass
