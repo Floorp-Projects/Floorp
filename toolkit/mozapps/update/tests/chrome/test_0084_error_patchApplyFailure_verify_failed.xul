@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+-->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Update Wizard pages: error patching, download, and errors (partial failed and download complete verification failure)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTestDefault();">
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript"
+        src="utils.js"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+const TESTS = [ {
+  pageid: PAGEID_ERROR_PATCHING,
+  buttonClick: "next"
+}, {
+  pageid: PAGEID_DOWNLOADING
+}, {
+  pageid: PAGEID_ERRORS,
+  buttonClick: "finish"
+} ];
+
+function runTest() {
+  debugDump("entering");
+
+  // Specify the url to update.sjs with a slowDownloadMar param so the ui can
+  // load before the download completes.
+  let slowDownloadURL = URL_HTTP_UPDATE_XML + "?slowDownloadMar=1";
+  let patches = getLocalPatchString("partial", null, null, null, null, null,
+                                    STATE_PENDING) +
+                getLocalPatchString("complete", slowDownloadURL, "MD5",
+                                    "1234cd43a1c77e30191c53a329a3f99d", null,
+                                    "false");
+  let updates = getLocalUpdateString(patches, null, null, null,
+                                     Services.appinfo.version,
+                                     Services.appinfo.platformVersion, null,
+                                     null, null, null, null, null, null,
+                                     "false");
+
+  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
+
+  writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
+  writeStatusFile(STATE_FAILED + ": " + CRC_ERROR);
+  reloadUpdateManagerData();
+
+  initUpdateServiceStub();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+</window>

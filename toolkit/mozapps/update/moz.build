@@ -14,24 +14,13 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
         # which the maintenance service uses.
         DIRS += ['common']
 
-TEST_DIRS += ['test_timermanager']
+MODULE = 'update'
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit_timermanager/xpcshell.ini']
 
 XPIDL_SOURCES += [
     'nsIUpdateTimerManager.idl',
 ]
-
-# Update tests require the updater binary
-if CONFIG['MOZ_UPDATER']:
-    TEST_DIRS += ['test']
-
-    if CONFIG['MOZ_MAINTENANCE_SERVICE']:
-        TEST_DIRS += ['test_svc']
-
-    XPIDL_SOURCES += [
-        'nsIUpdateService.idl',
-    ]
-
-MODULE = 'update'
 
 EXTRA_COMPONENTS += [
     'nsUpdateTimerManager.js',
@@ -39,11 +28,16 @@ EXTRA_COMPONENTS += [
 ]
 
 if CONFIG['MOZ_UPDATER']:
+    TEST_DIRS += ['tests']
+
+    XPIDL_SOURCES += [
+        'nsIUpdateService.idl',
+    ]
+
     EXTRA_COMPONENTS += [
         'nsUpdateService.manifest',
     ]
 
-if CONFIG['MOZ_UPDATER']:
     EXTRA_PP_COMPONENTS += [
         'nsUpdateService.js',
         'nsUpdateServiceStub.js',
