@@ -1,0 +1,67 @@
+<html>
+
+<head>
+  <title>Accessible text selection change events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../text.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+    var gQueue = null;
+
+    // gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    function doTests()
+    {
+      // test caret move events and caret offsets
+      gQueue = new eventQueue();
+
+      var onclickSeq = [
+        new caretMoveChecker(0, "c1_p1"), 
+        new unexpectedInvokerChecker(EVENT_TEXT_SELECTION_CHANGED, "c1_p1")
+      ];
+      gQueue.push(new synthClick("c1_p1", onclickSeq));
+      gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 1), { shiftKey: true }));
+      gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 2), { shiftKey: true }));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=762934"
+     title="Text selection change event has a wrong target when selection is spanned through several objects">
+    Bug 762934
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="c1" contentEditable="true">
+    <p id="c1_p1">paragraph</p>
+    <p id="c1_p2">paragraph</p>
+  </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>
