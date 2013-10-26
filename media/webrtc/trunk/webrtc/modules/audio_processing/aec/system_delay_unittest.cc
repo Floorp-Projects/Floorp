@@ -128,7 +128,7 @@ void SystemDelayTest::RunStableStartup() {
   for (; process_time_ms < kStableConvergenceMs; process_time_ms += 10) {
     RenderAndCapture(kDeviceBufMs);
     buffer_size += samples_per_frame_;
-    if (self_->ECstartup == 0) {
+    if (self_->startup_phase == 0) {
       // We have left the startup phase.
       break;
     }
@@ -222,7 +222,7 @@ TEST_F(SystemDelayTest, CorrectDelayAfterUnstableStartup) {
       RenderAndCapture(reported_delay_ms);
       buffer_size += samples_per_frame_;
       buffer_offset_ms = -buffer_offset_ms;
-      if (self_->ECstartup == 0) {
+      if (self_->startup_phase == 0) {
         // We have left the startup phase.
         break;
       }
@@ -268,7 +268,7 @@ TEST_F(SystemDelayTest, CorrectDelayAfterStableBufferBuildUp) {
     for (; process_time_ms <= kMaxConvergenceMs; process_time_ms += 10) {
       RenderAndCapture(kDeviceBufMs);
       buffer_size += samples_per_frame_;
-      if (self_->ECstartup == 0) {
+      if (self_->startup_phase == 0) {
         // We have left the startup phase.
         break;
       }
