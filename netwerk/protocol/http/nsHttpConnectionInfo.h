@@ -92,6 +92,9 @@ public:
     // Returns true for any kind of proxy (http, socks, etc..)
     bool UsingProxy();
 
+    // Returns true when mHost is an RFC1918 literal.
+    bool HostIsLocalIPLiteral() const;
+
 private:
     mozilla::ThreadSafeAutoRefCnt mRef;
     nsCString              mHashKey;
