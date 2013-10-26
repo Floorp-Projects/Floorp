@@ -1206,15 +1206,20 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
     ConvertSupportsTojsvals(aArgs, global, &argc, &argv, tempStorage);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  JS::AutoArrayRooter array(mContext, argc, argv);
+
   // got the arguments, now attach them.
 
   for (uint32_t i = 0; i < argc; ++i) {
-    if (!JS_WrapValue(mContext, &argv[i])) {
+    if (!JS_WrapValue(mContext, array.handleAt(i))) {
       return NS_ERROR_FAILURE;
     }
   }
 
-  JSObject *args = ::JS_NewArrayObject(mContext, argc, argv);
+  JSObject *args = ::JS_NewArrayObject(mContext, argc, array.array);
+  if (!args) {
+    return NS_ERROR_FAILURE;
+  }
   JS::Value vargs = OBJECT_TO_JSVAL(args);
 
   return JS_DefineProperty(mContext, aTarget, aPropName, vargs, NULL, NULL, 0)
