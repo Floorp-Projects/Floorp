@@ -3146,17 +3146,15 @@ nsObjectLoadingContent::LegacyCall(JSContext* aCx,
   JSAutoCompartment ac(aCx, obj);
   nsTArray<JS::Value> args(aArguments);
   JS::AutoArrayRooter rooter(aCx, args.Length(), args.Elements());
-  for (JS::Value *arg = args.Elements(), *arg_end = arg + args.Length();
-       arg != arg_end;
-       ++arg) {
-    if (!JS_WrapValue(aCx, arg)) {
+  for (size_t i = 0; i < args.Length(); i++) {
+    if (!JS_WrapValue(aCx, rooter.handleAt(i))) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return JS::UndefinedValue();
     }
   }
 
   JS::Rooted<JS::Value> thisVal(aCx, aThisVal);
-  if (!JS_WrapValue(aCx, thisVal.address())) {
+  if (!JS_WrapValue(aCx, &thisVal)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return JS::UndefinedValue();
   }
@@ -3189,7 +3187,7 @@ nsObjectLoadingContent::LegacyCall(JSContext* aCx,
   }
 
   JS::Rooted<JS::Value> retval(aCx);
-  bool ok = JS::Call(aCx, thisVal, pi_obj, args.Length(), args.Elements(),
+  bool ok = JS::Call(aCx, thisVal, pi_obj, args.Length(), rooter.array,
                      &retval);
   if (!ok) {
     aRv.Throw(NS_ERROR_FAILURE);
