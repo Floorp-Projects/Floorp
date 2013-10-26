@@ -159,7 +159,7 @@
       synthesizeKey("A", {accelKey: true});
       synthesizeKey("C", {accelKey: true});
       let actual = SpecialPowers.getClipboardData("text/unicode");
-      actual = actual.replace(/\(pid \d+\)/, "(pid NNN)");
+      actual = actual.replace(/\(pid \d+\)/g, "(pid NNN)");
 
       if (actual === aExpected) {
         SimpleTest.ok(true, "Clipboard has the expected contents");
@@ -204,6 +204,7 @@ Explicit Allocations\n\
 \n\
 Other Measurements\n\
 \n\
+End of Explicit-only process\n\
 Main Process (pid NNN)\n\
 Explicit Allocations\n\
 \n\
@@ -237,6 +238,7 @@ Other Measurements\n\
 \n\
 262,144,000 B ── heap-allocated\n\
 \n\
+End of Main Process (pid NNN)\n\
 Other-only process\n\
 \n\
 WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
@@ -250,6 +252,7 @@ Other Measurements\n\
 \n\
 500,000 B ── heap-allocated\n\
 \n\
+End of Other-only process\n\
 ";
 
   let expectedGood2 =
@@ -269,12 +272,14 @@ Other Measurements\n\
 \n\
 262,144,000 B ── heap-allocated\n\
 \n\
+End of Main Process (pid NNN)\n\
 ";
 
   // This is the output for a malformed data file.
   let expectedBad =
 "\
-Invalid memory report(s): missing 'hasMozMallocUsableSize' property";
+Invalid memory report(s): missing 'hasMozMallocUsableSize' property\
+";
 
   // This is the output for a diff.
   let expectedDiff =
@@ -294,6 +299,7 @@ Other Measurements\n\
 3,000 B ── canvas-2d-pixel-bytes [2] [+]\n\
  -100 B ── foobar [-]\n\
 \n\
+End of P\n\
 P2 (pid NNN)\n\
 \n\
 WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
@@ -303,6 +309,7 @@ Other Measurements\n\
 \n\
 11 B ── z 0xNNN\n\
 \n\
+End of P2 (pid NNN)\n\
 P3\n\
 \n\
 WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
@@ -312,6 +319,7 @@ Other Measurements\n\
 \n\
 -55 B ── p3 [-]\n\
 \n\
+End of P3\n\
 P4\n\
 \n\
 WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
@@ -321,6 +329,7 @@ Other Measurements\n\
 \n\
 66 B ── p4 [+]\n\
 \n\
+End of P4\n\
 ";
 
   let frames = [

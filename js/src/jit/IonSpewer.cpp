@@ -83,15 +83,19 @@ jit::IonSpewNewFunction(MIRGraph *graph, HandleScript func)
 {
     if (!OffThreadIonCompilationEnabled(GetIonContext()->runtime)) {
         ionspewer.beginFunction(graph, func);
+        return;
+    }
+
+    if (!IonSpewEnabled(IonSpew_Logs))
+        return;
+
+    // Ionspewer isn't threads-safe. Therefore logging is disabled for
+    // off-thread spewing. Throw informative message when trying.
+    if (func) {
+        IonSpew(IonSpew_Logs, "Can't log script %s:%d. (Compiled on background thread.)",
+                              func->filename(), func->lineno);
     } else {
-        if (func) {
-            IonSpew(IonSpew_Logs,
-                    "Can't log script %s:%d. (Compiled on background thread.)",
-                    func->filename(), func->lineno);
-        } else {
-            IonSpew(IonSpew_Logs,
-                    "Can't log asm.js compilation. (Compiled on background thread.)");
-        }
+        IonSpew(IonSpew_Logs, "Can't log asm.js compilation. (Compiled on background thread.)");
     }
 }
 
@@ -341,9 +345,6 @@ jit::CheckLogging()
         EnableChannel(IonSpew_BaselineOSR);
         EnableChannel(IonSpew_BaselineBailouts);
     }
-
-    if (LoggingBits != 0)
-        EnableIonDebugLogging();
 
     IonSpewFile = stderr;
 }

@@ -301,12 +301,10 @@ let Activities = {
 
       case "Activity:PostResult":
         caller.mm.sendAsyncMessage("Activity:FireSuccess", msg);
-        Services.obs.notifyObservers(null, "activity-done", obsData);
         delete this.callers[msg.id];
         break;
       case "Activity:PostError":
         caller.mm.sendAsyncMessage("Activity:FireError", msg);
-        Services.obs.notifyObservers(null, "activity-done", obsData);
         delete this.callers[msg.id];
         break;
 

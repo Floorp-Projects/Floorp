@@ -3665,7 +3665,7 @@ nsGlobalWindow::GetPrompter(nsIPrompt** aPrompt)
 NS_IMETHODIMP
 nsGlobalWindow::GetMenubar(nsISupports** aMenubar)
 {
-  FORWARD_TO_OUTER(GetMenubar, (aMenubar), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(GetMenubar, (aMenubar), NS_ERROR_NOT_INITIALIZED);
 
   *aMenubar = nullptr;
 
@@ -3684,7 +3684,7 @@ nsGlobalWindow::GetMenubar(nsISupports** aMenubar)
 NS_IMETHODIMP
 nsGlobalWindow::GetToolbar(nsISupports** aToolbar)
 {
-  FORWARD_TO_OUTER(GetToolbar, (aToolbar), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(GetToolbar, (aToolbar), NS_ERROR_NOT_INITIALIZED);
 
   *aToolbar = nullptr;
 
@@ -3703,7 +3703,7 @@ nsGlobalWindow::GetToolbar(nsISupports** aToolbar)
 NS_IMETHODIMP
 nsGlobalWindow::GetLocationbar(nsISupports** aLocationbar)
 {
-  FORWARD_TO_OUTER(GetLocationbar, (aLocationbar), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(GetLocationbar, (aLocationbar), NS_ERROR_NOT_INITIALIZED);
 
   *aLocationbar = nullptr;
 
@@ -3722,7 +3722,7 @@ nsGlobalWindow::GetLocationbar(nsISupports** aLocationbar)
 NS_IMETHODIMP
 nsGlobalWindow::GetPersonalbar(nsISupports** aPersonalbar)
 {
-  FORWARD_TO_OUTER(GetPersonalbar, (aPersonalbar), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(GetPersonalbar, (aPersonalbar), NS_ERROR_NOT_INITIALIZED);
 
   *aPersonalbar = nullptr;
 
@@ -3741,7 +3741,7 @@ nsGlobalWindow::GetPersonalbar(nsISupports** aPersonalbar)
 NS_IMETHODIMP
 nsGlobalWindow::GetStatusbar(nsISupports** aStatusbar)
 {
-  FORWARD_TO_OUTER(GetStatusbar, (aStatusbar), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(GetStatusbar, (aStatusbar), NS_ERROR_NOT_INITIALIZED);
 
   *aStatusbar = nullptr;
 
@@ -3758,8 +3758,9 @@ nsGlobalWindow::GetStatusbar(nsISupports** aStatusbar)
 }
 
 mozilla::dom::BarProp*
-nsGlobalWindow::Scrollbars()
+nsGlobalWindow::GetScrollbars()
 {
+  FORWARD_TO_INNER(GetScrollbars, (), nullptr);
   if (!mScrollbars) {
     mScrollbars = new ScrollbarsProp(this);
   }
@@ -3770,9 +3771,7 @@ nsGlobalWindow::Scrollbars()
 NS_IMETHODIMP
 nsGlobalWindow::GetScrollbars(nsISupports** aScrollbars)
 {
-  FORWARD_TO_OUTER(GetScrollbars, (aScrollbars), NS_ERROR_NOT_INITIALIZED);
-
-  NS_ADDREF(*aScrollbars = Scrollbars());
+  NS_IF_ADDREF(*aScrollbars = GetScrollbars());
   return NS_OK;
 }
 

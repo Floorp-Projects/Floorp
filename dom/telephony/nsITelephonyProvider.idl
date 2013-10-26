@@ -118,7 +118,7 @@ interface nsITelephonyListener : nsISupports
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(effca006-1ca8-47f7-9bab-1323f90a14ec)]
+[scriptable, uuid(f7680b82-53fc-42a7-9adf-bc0f2726425c)]
 interface nsITelephonyProvider : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -135,6 +135,8 @@ interface nsITelephonyProvider : nsISupports
 
   const unsigned short NOTIFICATION_REMOTE_HELD = 0;
   const unsigned short NOTIFICATION_REMOTE_RESUMED = 1;
+
+  readonly attribute unsigned long defaultServiceId;
 
   /**
    * Called when a content process registers receiving unsolicited messages from

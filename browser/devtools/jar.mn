@@ -51,6 +51,8 @@ browser.jar:
     content/browser/devtools/debugger-view.js                          (debugger/debugger-view.js)
     content/browser/devtools/debugger-toolbar.js                       (debugger/debugger-toolbar.js)
     content/browser/devtools/debugger-panes.js                         (debugger/debugger-panes.js)
+    content/browser/devtools/shadereditor.xul                          (shadereditor/shadereditor.xul)
+    content/browser/devtools/shadereditor.js                           (shadereditor/shadereditor.js)
     content/browser/devtools/profiler.xul                              (profiler/profiler.xul)
     content/browser/devtools/cleopatra.html                            (profiler/cleopatra/cleopatra.html)
     content/browser/devtools/profiler/cleopatra/css/ui.css             (profiler/cleopatra/css/ui.css)

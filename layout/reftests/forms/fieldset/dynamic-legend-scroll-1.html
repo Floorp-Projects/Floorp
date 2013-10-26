@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<style>
+fieldset { 
+  background:pink;
+  overflow:hidden;
+  height:100px;
+}
+legend::after { content:"legend"; }
+p {
+  background:lime;
+  height:20px;
+}
+</style>
+</head>
+<body>
+<fieldset id="f1"><p></p></fieldset>
+<br>
+<fieldset id="f2"><p></p></fieldset>
+<br>
+<fieldset id="f3"></fieldset>
+<script>
+function doTest() {
+  f1.appendChild(document.createElement('legend'));
+  f2.insertBefore(document.createElement('legend'), f2.firstChild);
+  f3.appendChild(document.createElement('legend'));
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</body>
+</html>

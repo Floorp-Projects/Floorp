@@ -163,8 +163,6 @@ public:
     MOZ_CRASH("Should not be called on non-remote ContentClient");
   }
 
-  virtual void OnActorDestroy() MOZ_OVERRIDE {}
-
 private:
   BasicLayerManager* mManager;
 };
@@ -249,8 +247,6 @@ public:
     return mTextureInfo;
   }
 
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
-
 protected:
   virtual nsIntRegion GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
                                        const nsIntRegion& aVisibleRegion,
@@ -313,8 +309,6 @@ protected:
   virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
   virtual void DestroyFrontBuffer() MOZ_OVERRIDE;
   virtual void LockFrontBuffer() MOZ_OVERRIDE;
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 private:
   void UpdateDestinationFrom(const RotatedBuffer& aSource,
@@ -400,8 +394,6 @@ public:
       mForwarder->DestroySharedSurface(&mUpdateDescriptorOnWhite);
     }
   }
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE {}
 
 private:
 
