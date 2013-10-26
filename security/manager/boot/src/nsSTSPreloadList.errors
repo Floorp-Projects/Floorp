@@ -68,6 +68,7 @@ piratenlogin.de: could not connect to host
 plus.google.com: did not receive HSTS header
 plus.sandbox.google.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header
+rapidresearch.me: did not receive HSTS header
 romab.com: max-age too low: 2628000
 sah3.net: could not connect to host
 saturngames.co.uk: did not receive HSTS header
@@ -77,6 +78,7 @@ serverdensity.io: did not receive HSTS header
 shops.neonisi.com: could not connect to host
 silentcircle.org: could not connect to host
 simon.butcher.name: max-age too low: 2629743
+simple.com: did not receive HSTS header
 sites.google.com: did not receive HSTS header
 sol.io: could not connect to host
 spreadsheets.google.com: did not receive HSTS header

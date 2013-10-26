@@ -1,0 +1,28 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPCSHELL_TESTS_MANIFESTS += ['unit_aus_update/xpcshell.ini']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
+    XPCSHELL_TESTS_MANIFESTS += ['unit_base_updater/xpcshell.ini']
+
+    if CONFIG['MOZ_MAINTENANCE_SERVICE']:
+        XPCSHELL_TESTS_MANIFESTS += ['unit_service_updater/xpcshell.ini']
+
+    sources = [
+        'TestAUSHelper',
+        'TestAUSReadStrings',
+    ]
+
+    SOURCES += [
+        '%s.cpp' % s for s in sources
+    ]
+
+    bin_suffix = CONFIG['BIN_SUFFIX']
+    SIMPLE_PROGRAMS += [
+        '%s%s' % (s, bin_suffix) for s in sources
+    ]
