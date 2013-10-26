@@ -209,6 +209,13 @@ VARIABLES = {
         """Name of target library generated when cross compiling.
         """, 'binaries'),
 
+    'JAVA_JAR_TARGETS': (dict, dict, {},
+        """Defines Java JAR targets to be built.
+
+        This variable should not be populated directly. Instead, it should
+        populated by calling add_java_jar().
+        """, 'binaries'),
+
     'JS_MODULES_PATH': (unicode, unicode, "",
         """Sub-directory of ``$(FINAL_TARGET)`` to install
         ``EXTRA_JS_MODULES``.
@@ -533,6 +540,19 @@ FUNCTIONS = {
         Include ``foo.build`` from a path within the top source directory::
 
            include('/elsewhere/foo.build')
+        """),
+
+    'add_java_jar': ('_add_java_jar', (str,),
+        """Declare a Java JAR target to be built.
+
+        This is the supported way to populate the JAVA_JAR_TARGETS
+        variable.
+
+        The parameters are:
+        * dest - target name, without the trailing .jar. (required)
+
+        This returns a rich Java JAR type, described at
+        :py:class:`mozbuild.frontend.data.JavaJarData`.
         """),
 
     'add_tier_dir': ('_add_tier_directory', (str, [str, list], bool, bool),
