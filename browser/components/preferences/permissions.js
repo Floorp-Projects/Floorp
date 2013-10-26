@@ -6,6 +6,8 @@
 const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
 const nsICookiePermission = Components.interfaces.nsICookiePermission;
 
+const NOTIFICATION_FLUSH_PERMISSIONS = "flush-pending-permissions";
+
 function Permission(host, rawHost, type, capability, perm) 
 {
   this.host = host;
@@ -183,6 +185,7 @@ var gPermissionManager = {
 
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
+    os.notifyObservers(null, NOTIFICATION_FLUSH_PERMISSIONS, this._type);
     os.addObserver(this, "perm-changed", false);
 
     this._loadPermissions();

@@ -117,7 +117,11 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
         apzc = container->GetAsyncPanZoomController();
 
-        bool newApzc = (apzc == nullptr);
+        // The APZC we get off the layer may have been destroyed previously if the layer was inactive
+        // or omitted from the layer tree for whatever reason from a layers update. If it later comes
+        // back it will have a reference to a destroyed APZC and so we need to throw that out and make
+        // a new one.
+        bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
         if (newApzc) {
           apzc = new AsyncPanZoomController(aLayersId, this, state->mController,
                                             AsyncPanZoomController::USE_GESTURE_DETECTOR);

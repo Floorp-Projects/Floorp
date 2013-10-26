@@ -27,6 +27,8 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
                                  const IPC::Principal& principal);
   virtual ~ContentPermissionRequestParent();
 
+  bool IsBeingDestroyed();
+
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<Element> mElement;
   nsCOMPtr<nsContentPermissionRequestProxy> mProxy;

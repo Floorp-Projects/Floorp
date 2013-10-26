@@ -62,11 +62,22 @@ div.non-verbose pre.entries {
 h1 {
   padding: 0;
   margin: 0;
+  display: inline;  /* allow subsequent text to the right of the heading */
 }
 
 h2 {
   background: #ddd;
   padding-left: .1em;
+}
+
+h3 {
+  display: inline;  /* allow subsequent text to the right of the heading */
+}
+
+a.upDownArrow {
+  font-size: 130%;
+  text-decoration: none;
+  -moz-user-select: none;  /* no need to include this when cutting+pasting */
 }
 
 .accuracyWarning {

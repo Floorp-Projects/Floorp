@@ -1963,7 +1963,7 @@ void nsXULWindow::SetContentScrollbarVisibility(bool aVisible)
   nsCOMPtr<nsPIDOMWindow> contentWin(do_GetInterface(mPrimaryContentShell));
   if (contentWin) {
     nsRefPtr<nsGlobalWindow> window = static_cast<nsGlobalWindow*>(contentWin.get());
-    nsRefPtr<mozilla::dom::BarProp> scrollbars = window->Scrollbars();
+    nsRefPtr<mozilla::dom::BarProp> scrollbars = window->GetScrollbars();
     if (scrollbars) {
       mozilla::ErrorResult rv;
       scrollbars->SetVisible(aVisible, rv);

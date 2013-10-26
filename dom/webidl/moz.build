@@ -19,7 +19,6 @@ WEBIDL_FILES = [
     'AbstractWorker.webidl',
     'AnalyserNode.webidl',
     'AnimationEvent.webidl',
-    'AppInfo.webidl',
     'AppNotificationServiceOptions.webidl',
     'ArchiveReader.webidl',
     'ArchiveRequest.webidl',
