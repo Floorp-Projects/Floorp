@@ -10,3 +10,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'google_breakpad_libxul_s'
 
+FORCE_STATIC_LIB = True

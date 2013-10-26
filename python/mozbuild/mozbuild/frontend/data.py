@@ -371,6 +371,54 @@ class GeneratedInclude(SandboxDerived):
 
         self.path = path
 
+
+class SandboxWrapped(SandboxDerived):
+    """Generic sandbox container object for a wrapped rich object.
+
+    Use this wrapper class to shuttle a rich build system object
+    completely defined in moz.build files through the tree metadata
+    emitter to the build backend for processing as-is.
+    """
+
+    __slots__ = (
+        'wrapped',
+    )
+
+    def __init__(self, sandbox, wrapped):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.wrapped = wrapped
+
+
+class JavaJarData(object):
+    """Represents a Java JAR file.
+
+    A Java JAR has the following members:
+        * sources - list of input java sources
+        * generated_sources - list of generated input java sources
+        * extra_jars - list of JAR file dependencies to include on the
+          javac compiler classpath
+        * javac_flags - string containing extra flags passed to the
+          javac compiler
+    """
+
+    __slots__ = (
+        'name',
+        'sources',
+        'generated_sources',
+        'extra_jars',
+        'javac_flags',
+    )
+
+    def __init__(self, name, sources=[], generated_sources=[],
+            extra_jars=[], javac_flags=None):
+        self.name = name
+        self.sources = list(sources)
+        self.generated_sources = list(generated_sources)
+        self.extra_jars = list(extra_jars)
+        self.javac_flags = javac_flags
+
+
 class InstallationTarget(SandboxDerived):
     """Describes the rules that affect where files get installed to."""
 

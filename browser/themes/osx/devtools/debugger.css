@@ -19,6 +19,13 @@
   -moz-border-start-color: transparent;
 }
 
+/* Sources toolbar */
+
+#sources-toolbar {
+  border: none; /* Remove the devtools-toolbar's black bottom border. */
+  -moz-border-end: 1px solid #222426; /* Match the sources list's dark margin. */
+}
+
 #pretty-print {
   min-width: 0;
   font-weight: bold;
@@ -436,4 +443,9 @@
 
 #body[layout=vertical] .side-menu-widget-item-arrow {
   background-image: none !important;
+}
+
+#body[layout=vertical] .side-menu-widget-group,
+#body[layout=vertical] .side-menu-widget-item {
+  -moz-margin-end: 0;
 }

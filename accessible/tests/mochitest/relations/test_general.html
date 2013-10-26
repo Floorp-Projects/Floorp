@@ -167,6 +167,11 @@
       testRelation("legend", RELATION_LABEL_FOR, "fieldset");
       testRelation("fieldset", RELATION_LABELLED_BY, "legend");
 
+      // containing relations
+      testRelation("control1_1", RELATION_CONTAINING_DOCUMENT, document);
+      testRelation("control1_1", RELATION_CONTAINING_TAB_PANE, getTabDocAccessible("control1_1"));
+      testRelation("control1_1", RELATION_CONTAINING_APPLICATION, getApplicationAccessible());
+
       // finish test
       SimpleTest.finish();
     }

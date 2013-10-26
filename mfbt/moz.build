@@ -10,3 +10,4 @@ MODULE = 'mozglue'
 
 LIBRARY_NAME = 'mfbt'
 
+FORCE_STATIC_LIB = True

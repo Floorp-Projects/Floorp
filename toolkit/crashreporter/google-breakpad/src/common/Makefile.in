@@ -29,14 +29,6 @@ HOST_CXXFLAGS += -DHAVE_MACH_O_NLIST_H
 OS_CXXFLAGS += -DHAVE_MACH_O_NLIST_H
 endif
 
-ifneq (WINNT,$(OS_TARGET))
-ifdef MOZ_CRASHREPORTER
-endif
-endif
-
-# need static lib
-FORCE_STATIC_LIB = 1
-
 include $(topsrcdir)/config/rules.mk
 
 ifneq (WINNT,$(OS_TARGET))

@@ -7,8 +7,6 @@
 # the application binaries. The fact that it's under mozilla/widget is a fluke
 # of tree history.
 
-FORCE_STATIC_LIB = 1
-
 DEFINES += -DXPCOM_GLUE
 
 LIBCPPSRCS = XRemoteClient.cpp
