@@ -164,7 +164,7 @@ public: // construction, destruction
    * We will use an invisible system caret.
    * Gecko is still responsible for drawing its own caret
    */
-  void UpdateSystemCaret();
+  void UpdateSystemCaretFor(Accessible* aAccessible);
 
   /**
    * Find an accessible by the given child ID in cached documents.

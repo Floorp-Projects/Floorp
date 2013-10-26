@@ -16,6 +16,10 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+static_assert(static_cast<bool>(eNoUserInput) == false &&
+              static_cast<bool>(eFromUserInput) == true,
+              "EIsFromUserInput cannot be casted to bool");
+
 ////////////////////////////////////////////////////////////////////////////////
 // AccEvent
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,6 +120,18 @@ AccShowEvent::
 {
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// AccTextSelChangeEvent
+////////////////////////////////////////////////////////////////////////////////
+
+AccTextSelChangeEvent::AccTextSelChangeEvent(HyperTextAccessible* aTarget,
+                                             nsISelection* aSelection) :
+  AccEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED, aTarget,
+           eAutoDetect, eCoalesceTextSelChange),
+  mSel(aSelection) {}
+
+AccTextSelChangeEvent::~AccTextSelChangeEvent() { }
 
 ////////////////////////////////////////////////////////////////////////////////
 // AccSelChangeEvent
