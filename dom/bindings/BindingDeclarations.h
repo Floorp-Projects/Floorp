@@ -451,10 +451,7 @@ GetWrapperCache(nsWrapperCache* cache)
 }
 
 inline nsWrapperCache*
-GetWrapperCache(nsGlobalWindow*)
-{
-  return nullptr;
-}
+GetWrapperCache(nsGlobalWindow* not_allowed);
 
 inline nsWrapperCache*
 GetWrapperCache(void* p)

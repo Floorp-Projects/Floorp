@@ -72,6 +72,5 @@ xpidl_to_native = [
     ['nsIDOMDocument', 'nsIDocument', 'nsIDocument'],
     ['nsIDOMElement', 'mozilla::dom::Element', 'mozilla::dom::Element'],
     ['nsIDOMCSSStyleSheet', 'nsCSSStyleSheet', 'nsIStyleSheet'],
-    ['nsIDOMWindow', 'nsGlobalWindow', 'nsIDOMEventTarget']
   ]
 

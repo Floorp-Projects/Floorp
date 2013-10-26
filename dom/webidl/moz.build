@@ -13,7 +13,6 @@ GENERATED_WEBIDL_FILES = [
 PREPROCESSED_WEBIDL_FILES = [
     'Crypto.webidl',
     'Navigator.webidl',
-    'Window.webidl',
 ]
 
 WEBIDL_FILES = [
@@ -182,7 +181,6 @@ WEBIDL_FILES = [
     'HTMLVideoElement.webidl',
     'IDBCursor.webidl',
     'IDBDatabase.webidl',
-    'IDBEnvironment.webidl',
     'IDBFactory.webidl',
     'IDBFileHandle.webidl',
     'IDBIndex.webidl',
@@ -413,6 +411,7 @@ WEBIDL_FILES = [
     'WebSocket.webidl',
     'WheelEvent.webidl',
     'WifiOptions.webidl',
+    'Window.webidl',
     'WorkerLocation.webidl',
     'WorkerMessagePort.webidl',
     'WorkerNavigator.webidl',
