@@ -2205,7 +2205,7 @@ function symlinkUpdateFilesIntoBundleDirectory() {
   let dest = getAppDir();
   dest.append("active-update.xml");
   if (!dest.exists()) {
-    dest.create(dest.NORMAL_FILE_TYPE, 6 * 64 + 4 * 8 + 4); // 0644
+    dest.create(dest.NORMAL_FILE_TYPE, 0o644);
   }
   do_check_true(dest.exists());
   let source = getUpdatesRootDir();
@@ -2221,7 +2221,7 @@ function symlinkUpdateFilesIntoBundleDirectory() {
   if (dest2.exists()) {
     dest2.remove(true);
   }
-  dest2.create(dest.DIRECTORY_TYPE, 7 * 64 + 5 * 8 + 5); // 0755
+  dest2.create(dest.DIRECTORY_TYPE, 0o755);
   do_check_true(dest2.exists());
   let source2 = getUpdatesRootDir();
   source2.append("updates");
@@ -2259,7 +2259,7 @@ function adjustPathsOnWindows() {
   // running doesn't prevent the updater from moving stuff around.
   let tmpDir = do_get_profile();
   tmpDir.append("ExecutableDir.tmp");
-  tmpDir.createUnique(tmpDir.DIRECTORY_TYPE, 7 * 64 + 5 * 8 + 5); // 0755
+  tmpDir.createUnique(tmpDir.DIRECTORY_TYPE, 0o755);
   let procDir = getCurrentProcessDir();
   logTestInfo("start - copy the process directory");
   copyMinimumAppFiles(procDir, tmpDir, "bin");
