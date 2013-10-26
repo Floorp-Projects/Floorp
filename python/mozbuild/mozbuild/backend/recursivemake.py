@@ -31,11 +31,13 @@ from ..frontend.data import (
     GeneratedWebIDLFile,
     InstallationTarget,
     IPDLFile,
+    JavaJarData,
     LocalInclude,
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
     Program,
     SandboxDerived,
+    SandboxWrapped,
     TestWebIDLFile,
     VariablePassthru,
     XPIDLFile,
@@ -416,6 +418,15 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, InstallationTarget):
             self._process_installation_target(obj, backend_file)
+
+        elif isinstance(obj, SandboxWrapped):
+            # Process a rich build system object from the front-end
+            # as-is.  Please follow precedent and handle CamelCaseData
+            # in a function named _process_camel_case_data.  At some
+            # point in the future, this unwrapping process may be
+            # automated.
+            if isinstance(obj.wrapped, JavaJarData):
+                self._process_java_jar_data(obj.wrapped, backend_file)
 
         self._backend_files[obj.srcdir] = backend_file
 
@@ -1003,6 +1014,23 @@ class RecursiveMakeBackend(CommonBackend):
         else:
             path = ''
         backend_file.write('LOCAL_INCLUDES += -I%s%s\n' % (path, generated_include))
+
+    def _process_java_jar_data(self, jar, backend_file):
+        target = jar.name
+        backend_file.write('JAVA_JAR_TARGETS += %s\n' % target)
+        backend_file.write('%s_DEST := %s.jar\n' % (target, jar.name))
+        if jar.sources:
+            backend_file.write('%s_JAVAFILES := %s\n' %
+                (target, ' '.join(jar.sources)))
+        if jar.generated_sources:
+            backend_file.write('%s_PP_JAVAFILES := %s\n' %
+                (target, ' '.join(jar.generated_sources)))
+        if jar.extra_jars:
+            backend_file.write('%s_EXTRA_JARS := %s\n' %
+                (target, ' '.join(jar.extra_jars)))
+        if jar.javac_flags:
+            backend_file.write('%s_JAVAC_FLAGS := %s\n' %
+                (target, jar.javac_flags))
 
     def _write_manifests(self, dest, manifests):
         man_dir = os.path.join(self.environment.topobjdir, '_build_manifests',
