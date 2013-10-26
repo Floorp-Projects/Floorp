@@ -456,8 +456,8 @@ input[type="file"] > button[type="button"] {
 input[type="color"]::-moz-color-swatch {
   width: 100%;
   height: 100%;
-  min-width: 50px;
-  min-height: 1em;
+  min-width: 40px;
+  min-height: 15px;
   margin-left: auto;
   margin-right: auto;
   display: block;
@@ -540,10 +540,11 @@ input[type="radio"]:hover:active {
 
 /* Non text-related properties for buttons: these ones are shared with
    input[type="color"] */
-button, 
+button,
+input[type="color"],
 input[type="reset"],
 input[type="button"],
-input[type="submit"] { 
+input[type="submit"] {
   -moz-appearance: button;
   /* The sum of border-top, border-bottom, padding-top, padding-bottom
      must be the same here, for text inputs, and for <select>.  For
@@ -559,10 +560,10 @@ input[type="submit"] {
 
 /* Text-related properties for buttons: these ones are not shared with
    input[type="color"] */
-button, 
+button,
 input[type="reset"],
 input[type="button"],
-input[type="submit"] { 
+input[type="submit"] {
   color: ButtonText; 
   font: -moz-button;
   line-height: normal;
@@ -584,6 +585,7 @@ button {
 }
 
 button:hover,
+input[type="color"]:hover,
 input[type="reset"]:hover,
 input[type="button"]:hover,
 input[type="submit"]:hover {
@@ -598,6 +600,7 @@ input[type="submit"]:hover {
 }
 
 button:active:hover,
+input[type="color"]:active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
@@ -614,6 +617,7 @@ input[type="submit"]:active:hover {
 }
 
 button::-moz-focus-inner,
+input[type="color"]::-moz-focus-inner,
 input[type="reset"]::-moz-focus-inner,
 input[type="button"]::-moz-focus-inner,
 input[type="submit"]::-moz-focus-inner,
@@ -623,6 +627,7 @@ input[type="file"] > button[type="button"]::-moz-focus-inner {
 }
 
 button:-moz-focusring::-moz-focus-inner,
+input[type="color"]:-moz-focusring::-moz-focus-inner,
 input[type="reset"]:-moz-focusring::-moz-focus-inner,
 input[type="button"]:-moz-focusring::-moz-focus-inner,
 input[type="submit"]:-moz-focusring::-moz-focus-inner,
@@ -631,6 +636,8 @@ input[type="file"] > button[type="button"]:-moz-focusring::-moz-focus-inner {
 }
 
 button:disabled:active, button:disabled,
+input[type="color"]:disabled:active,
+input[type="color"]:disabled,
 input[type="reset"]:disabled:active,
 input[type="reset"]:disabled,
 input[type="button"]:disabled:active,
