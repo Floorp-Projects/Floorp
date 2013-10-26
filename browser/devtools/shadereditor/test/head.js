@@ -103,6 +103,7 @@ function createCanvas() {
 
 function isWebGLSupported() {
   let supported =
+    !TiltGL.isWebGLForceEnabled() &&
      TiltGL.isWebGLSupported() &&
      TiltGL.create3DContext(createCanvas());
 
