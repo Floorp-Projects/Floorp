@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717878
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 717878</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717878">Mozilla Bug 717878</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<!-- size=10 and monospace font ensure there's no overflow in either direction -->
+<input id="no-overflow" type="text"
+  size="10"
+  style="
+    font-family: monospace;
+    font-size: 1em;"
+  value="Short">
+<!-- size=10, monospace font, and height=0.5em ensure overflow in both directions -->
+<input id="overflow" type="text"
+  size="10"
+  style="
+    font-family: monospace;
+    font-size: 1em;
+    height: 0.5em;"
+  value="This is a long string">
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 717878 **/
+
+/**
+ * Test an element's scroll properties for correctness
+ *
+ * @param element Element to test
+ * @param prop Specify the property to test,
+ *             i.e. "scrollLeft" or "scrollTop"
+ * @param propMax Specify the scrollMax property to test,
+ *                i.e. "scrollLeftMax" or "scrollTopMax"
+ * @param is_overflow Specify whether the element is
+ *                    scrollable in the above direction
+ */
+function test_scroll(element, scroll, scrollMax, is_overflow) {
+
+  is(element[scroll], 0, element.id + " initial " + scroll + " != 0");
+  if (is_overflow) {
+    isnot(element[scrollMax], 0, element.id + " " + scrollMax + " == 0");
+  } else {
+    is(element[scrollMax], 0, element.id + " " + scrollMax + " != 0");
+  }
+
+  element[scroll] = 10;
+  if (is_overflow) {
+    isnot(element[scroll], 0, element.id + " unable to scroll " + scroll);
+  } else {
+    is(element[scroll], 0, element.id + " able to scroll " + scroll);
+  }
+
+  element[scroll] = element[scrollMax];
+  is(element[scroll], element[scrollMax], element.id + " did not scroll to " + scrollMax);
+
+  element[scroll] = element[scrollMax] + 10;
+  is(element[scroll], element[scrollMax], element.id + " scrolled past " + scrollMax);
+}
+
+var no_overflow = document.getElementById("no-overflow");
+test_scroll(no_overflow, "scrollLeft", "scrollLeftMax", /* is_overflow */ false);
+test_scroll(no_overflow, "scrollTop", "scrollTopMax", /* is_overflow */ false);
+
+var overflow = document.getElementById("overflow");
+test_scroll(overflow, "scrollLeft", "scrollLeftMax", /* is_overflow */ true);
+test_scroll(overflow, "scrollTop", "scrollTopMax", /* is_overflow */ true);
+
+</script>
+</pre>
+</body>
+</html>
