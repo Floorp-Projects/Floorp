@@ -304,6 +304,14 @@ parent:
      */
     UpdateScrollOffset(uint32_t aPresShellId, ViewID aViewId, CSSIntPoint aScrollOffset);
 
+    /**
+     * Notifies the parent about a recording device is starting or shutdown.
+     * @param recordingStatus starting or shutdown
+     * @param isAudio recording start with microphone
+     * @param isVideo recording start with camera
+     */
+    async RecordingDeviceEvents(nsString recordingStatus, bool isAudio, bool isVideo);
+
     __delete__();
 
 child:
