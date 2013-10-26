@@ -226,7 +226,7 @@ DBusWatcher::Poll()
       if (mPollData[i].fd == mControlFdR.get()) {
         char data;
         res = TEMP_FAILURE_RETRY(read(mControlFdR.get(), &data, sizeof(data)));
-        NS_ENSURE_TRUE(res > 0, NS_OK);
+        NS_ENSURE_TRUE(res > 0, false);
 
         switch (data) {
           case DBUS_EVENT_LOOP_EXIT:
