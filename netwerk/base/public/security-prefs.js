@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 pref("security.tls.version.min", 0);
-pref("security.tls.version.max", 1);
+pref("security.tls.version.max", 2);
 pref("security.enable_md5_signatures", false);
 
 pref("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", false);
