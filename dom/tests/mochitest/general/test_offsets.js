@@ -110,7 +110,7 @@ function testElement(element)
      element.id + " bounding rect bottom");
 
   var rects = element.getClientRects();
-  if (element.id == "input-displaynone" || element.id == "nonappended") {
+  if (element.id == "div-displaynone" || element.id == "nonappended") {
     is(rects.length, 0, element.id + " getClientRects empty");
   }
   else {
@@ -194,12 +194,9 @@ function checkCoords(element, type, left, top, width, height, testname)
   if (element.id == "outerpopup" && !element.parentNode.open) // closed popup
     return;
 
-  if (element.id == "input-displaynone" || element.id == "nonappended") // hidden elements
+  if (element.id == "div-displaynone" || element.id == "nonappended") // hidden elements
     ok(element[type + "Width"] == 0 && element[type + "Height"] == 0,
        element.id + " has zero " + type + " width and height");
-  else if (element.id != "input-nosize") // for some reason, this element has a width of 2
-    ok(element[type + "Width"] > 0 && element[type + "Height"] > 0,
-       element.id + " has non-zero " + type + " width and height");
 }
 
 function gcs(element, prop)
