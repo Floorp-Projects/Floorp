@@ -16,3 +16,5 @@ LIBRARY_NAME = 'exception_handler_s'
 
 XPI_NAME = 'crashreporter'
 
+# need static lib
+FORCE_STATIC_LIB = True

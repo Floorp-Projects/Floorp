@@ -25,7 +25,7 @@ JAVAFILES := $(BACKGROUND_TESTS_JAVA_FILES)
 # The test APK needs to know the contents of the target APK while not
 # being linked against them.  This is a best effort to avoid getting
 # out of sync with base's build config.
-JARS_DIR := $(DEPTH)/mobile/android/base/jars
+JARS_DIR := $(DEPTH)/mobile/android/base
 JAVA_BOOTCLASSPATH := $(JAVA_BOOTCLASSPATH):$(subst $(NULL) ,:,$(wildcard $(JARS_DIR)/*.jar))
 # We also want to re-compile classes.dex when the associated base
 # content changes.
