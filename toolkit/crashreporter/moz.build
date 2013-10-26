@@ -73,6 +73,7 @@ if CONFIG['OS_ARCH'] == 'Darwin':
     ]
 
 EXTRA_JS_MODULES += [
+    'CrashReports.jsm',
     'CrashSubmit.jsm',
     'KeyValueParser.jsm',
 ]
