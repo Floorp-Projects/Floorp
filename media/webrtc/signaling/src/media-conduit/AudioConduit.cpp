@@ -5,6 +5,12 @@
 #include "CSFLog.h"
 #include "nspr.h"
 
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#elif defined XP_WIN
+#include <winsock2.h>
+#endif
+
 #include "AudioConduit.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Services.h"
