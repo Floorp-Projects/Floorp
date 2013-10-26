@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<!--
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+-->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Test update check with certificate that is not built-in and valid certificate attribute names and values"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTestDefault();">
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script type="application/javascript"
+        src="utils.js"/>
+
+<script type="application/javascript">
+<![CDATA[
+
+const TESTS = [ {
+  pageid: PAGEID_CHECKING
+}, {
+  pageid: PAGEID_ERRORS,
+  buttonClick: "finish"
+} ];
+
+Components.utils.import("resource://gre/modules/CertUtils.jsm");
+
+const CERT_ATTRS = ["nickname", "emailAddress", "subjectName", "commonName",
+                    "organization", "organizationalUnit", "sha1Fingerprint",
+                    "md5Fingerprint", "tokenName", "issuerName", "serialNumber",
+                    "issuerCommonName", "issuerOrganization",
+                    "issuerOrganizationUnit", "dbKey", "windowTitle"];
+
+var gRequest;
+
+function runTest() {
+  debugDump("entering");
+
+  gRequest = AUS_Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+             createInstance(AUS_Ci.nsIXMLHttpRequest);
+  gRequest.open("GET", "https://example.com/", true);
+  gRequest.channel.notificationCallbacks = new BadCertHandler(true);
+  gRequest.onload = function(event) { testXHRLoad(event); };
+  gRequest.onerror = function(event) { testXHRError(event); };
+  gRequest.send(null);
+}
+
+function testXHRError(aEvent) {
+  debugDump("entering");
+
+  ok(true, "Entering testXHRError - something went wrong");
+
+  var request = aEvent.target;
+  var status = 0;
+  try {
+    status = request.status;
+  }
+  catch (e) {
+  }
+
+  if (status == 0)
+    status = request.channel.QueryInterface(AUS_Ci.nsIRequest).status;
+
+  ok(false, "XHR onerror called: " + status);
+
+  gRequest = null;
+  finishTestDefault();
+}
+
+function testXHRLoad(aEvent) {
+  debugDump("entering");
+
+  var channel = aEvent.target.channel;
+  var cert = channel.securityInfo.QueryInterface(AUS_Ci.nsISSLStatusProvider).
+             SSLStatus.QueryInterface(AUS_Ci.nsISSLStatus).serverCert;
+  CERT_ATTRS.forEach(function(aCertAttrName) {
+    Services.prefs.setCharPref(PREF_APP_UPDATE_CERTS_BRANCH + "1." +
+                               aCertAttrName, cert[aCertAttrName]);
+  });
+
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_REQUIREBUILTIN, true);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_CHECKATTRS, false);
+
+  let url = URL_HTTPS_UPDATE_XML + "?showDetails=1" + getVersionParams();
+  gAppUpdateURLDefault = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);
+  debugDump("setting default pref " + PREF_APP_UPDATE_URL + " to " + url);
+  gDefaultPrefBranch.setCharPref(PREF_APP_UPDATE_URL, url);
+
+  gRequest = null;
+  gUP.checkForUpdates();
+}
+
+function finishTest() {
+  if (gRequest) {
+    gRequest.abort();
+    gRequest = null;
+  }
+  finishTestDefault();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+</window>
