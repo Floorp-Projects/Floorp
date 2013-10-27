@@ -12,7 +12,7 @@
 #include "LayerManagerComposite.h"      // for LayerManagerComposite, etc
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPoint.h"                   // for gfxPoint, gfxSize
+#include "gfxPoint.h"                   // for gfxPoint
 #include "gfxPoint3D.h"                 // for gfxPoint3D
 #include "mozilla/WidgetUtils.h"        // for ComputeTransformForRotation
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
@@ -656,7 +656,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const LayoutDev
   }
   oldTransform.Translate(overscrollTranslation);
 
-  gfxSize underZoomScale(1.0f, 1.0f);
+  gfx::Size underZoomScale(1.0f, 1.0f);
   if (mContentRect.width * userZoom.scale < metrics.mCompositionBounds.width) {
     underZoomScale.width = (mContentRect.width * userZoom.scale) /
       metrics.mCompositionBounds.width;
