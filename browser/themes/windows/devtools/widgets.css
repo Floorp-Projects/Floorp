@@ -321,11 +321,6 @@
   background-image: linear-gradient(#fff, #eee);
 }
 
-.side-menu-widget-group-checkbox {
-  margin: 0;
-  padding: 0;
-}
-
 /* SideMenuWidget items */
 
 .side-menu-widget-item[theme="dark"] {
@@ -383,11 +378,6 @@
   width: 8px;
 }
 
-.side-menu-widget-item-checkbox {
-  -moz-margin-start: 4px;
-  -moz-margin-end: -6px;
-}
-
 .side-menu-widget-item-other {
   background: url(background-noise-toolbar.png), hsla(208,11%,27%, 0.65);
 }
@@ -404,6 +394,19 @@
 
 .side-menu-widget-item-other > label {
   color: #f5f7fa;
+}
+
+/* SideMenuWidget checkboxes */
+
+.side-menu-widget-group-checkbox {
+  margin: 0;
+  -moz-margin-end: 4px;
+}
+
+.side-menu-widget-item-checkbox {
+  margin: 0;
+  -moz-margin-start: 4px;
+  -moz-margin-end: -4px;
 }
 
 /* SideMenuWidget misc */
