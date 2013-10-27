@@ -114,7 +114,7 @@ public:
   // LayerOGL Implementation
   virtual void Destroy() { mDestroyed = true; }
   virtual Layer* GetLayer();
-  virtual bool LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize);
+  virtual bool LoadAsTexture(GLuint aTextureUnit, gfx::IntSize* aSize);
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
@@ -156,7 +156,7 @@ struct CairoOGLBackendData : public ImageBackendData
   CairoOGLBackendData() : mLayerProgram(RGBALayerProgramType) {}
   GLTexture mTexture;
   ShaderProgramType mLayerProgram;
-  gfxIntSize mTextureSize;
+  gfx::IntSize mTextureSize;
 };
 
 } /* layers */

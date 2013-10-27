@@ -16,6 +16,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF
+#include "gfx2DGlue.h"
 #ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
 #endif
@@ -49,7 +50,7 @@ Atomic<int32_t> Image::sSerialCounter(0);
 already_AddRefed<Image>
 ImageFactory::CreateImage(const ImageFormat *aFormats,
                           uint32_t aNumFormats,
-                          const gfxIntSize &,
+                          const gfx::IntSize &,
                           BufferRecycleBin *aRecycleBin)
 {
   if (!aNumFormats) {
@@ -275,7 +276,7 @@ ImageContainer::LockCurrentImage()
 }
 
 already_AddRefed<gfxASurface>
-ImageContainer::LockCurrentAsSurface(gfxIntSize *aSize, Image** aCurrentImage)
+ImageContainer::LockCurrentAsSurface(gfx::IntSize *aSize, Image** aCurrentImage)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -333,7 +334,7 @@ ImageContainer::UnlockCurrentImage()
 }
 
 already_AddRefed<gfxASurface>
-ImageContainer::GetCurrentAsSurface(gfxIntSize *aSize)
+ImageContainer::GetCurrentAsSurface(gfx::IntSize *aSize)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -352,7 +353,7 @@ ImageContainer::GetCurrentAsSurface(gfxIntSize *aSize)
   return mActiveImage->GetAsSurface();
 }
 
-gfxIntSize
+gfx::IntSize
 ImageContainer::GetCurrentSize()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -366,7 +367,7 @@ ImageContainer::GetCurrentSize()
   }
 
   if (!mActiveImage) {
-    return gfxIntSize(0,0);
+    return gfx::IntSize(0,0);
   }
 
   return mActiveImage->GetSize();
@@ -541,7 +542,7 @@ PlanarYCbCrImage::GetAsSurface()
   }
 
   gfxImageFormat format = GetOffscreenFormat();
-  gfxIntSize size(mSize);
+  gfx::IntSize size(mSize);
   gfxUtils::GetYCbCrToRGBDestFormatAndSize(mData, format, size);
   if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
       size.height > PlanarYCbCrImage::MAX_DIMENSION) {
@@ -550,7 +551,7 @@ PlanarYCbCrImage::GetAsSurface()
   }
 
   nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(mSize, format);
+    new gfxImageSurface(ThebesIntSize(mSize), format);
 
   gfxUtils::ConvertYCbCrToRGB(mData, format, mSize,
                               imageSurface->Data(),
@@ -565,7 +566,7 @@ already_AddRefed<gfxASurface>
 RemoteBitmapImage::GetAsSurface()
 {
   nsRefPtr<gfxImageSurface> newSurf =
-    new gfxImageSurface(mSize,
+    new gfxImageSurface(ThebesIntSize(mSize),
     mFormat == RemoteImageData::BGRX32 ? gfxImageFormatRGB24 : gfxImageFormatARGB32);
 
   for (int y = 0; y < mSize.height; y++) {

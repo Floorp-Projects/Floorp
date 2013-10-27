@@ -82,6 +82,7 @@
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
 #include "RestyleManager.h"
+#include "gfx2DGlue.h"
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -4899,24 +4900,25 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
   if (!container)
     return result;
 
-  gfxIntSize size;
+  gfx::IntSize size;
   nsRefPtr<gfxASurface> surf = container->GetCurrentAsSurface(&size);
   if (!surf)
     return result;
 
+  gfxIntSize gfxSize = ThebesIntSize(size);
   if (wantImageSurface && surf->GetType() != gfxSurfaceTypeImage) {
     nsRefPtr<gfxImageSurface> imgSurf =
-      new gfxImageSurface(size, gfxImageFormatARGB32);
+      new gfxImageSurface(gfxSize, gfxImageFormatARGB32);
 
     nsRefPtr<gfxContext> ctx = new gfxContext(imgSurf);
     ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx->DrawSurface(surf, size);
+    ctx->DrawSurface(surf, gfxSize);
     surf = imgSurf;
   }
 
   result.mCORSUsed = aElement->GetCORSMode() != CORS_NONE;
   result.mSurface = surf;
-  result.mSize = size;
+  result.mSize = gfxSize;
   result.mPrincipal = principal.forget();
   result.mIsWriteOnly = false;
 

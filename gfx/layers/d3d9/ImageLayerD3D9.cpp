@@ -16,6 +16,7 @@
 #include "nsIConsoleService.h"
 #include "Nv3DVUtils.h"
 #include "D3D9SurfaceImage.h"
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace layers {
@@ -34,7 +35,7 @@ static already_AddRefed<IDirect3DTexture9>
 DataToTexture(IDirect3DDevice9 *aDevice,
               unsigned char *aData,
               int aStride,
-              const gfxIntSize &aSize,
+              const gfx::IntSize &aSize,
               _D3DFORMAT aFormat)
 {
   nsRefPtr<IDirect3DTexture9> texture;
@@ -130,13 +131,13 @@ OpenSharedTexture(const D3DSURFACE_DESC& aDesc,
 static already_AddRefed<IDirect3DTexture9>
 SurfaceToTexture(IDirect3DDevice9 *aDevice,
                  gfxASurface *aSurface,
-                 const gfxIntSize &aSize)
+                 const gfx::IntSize &aSize)
 {
 
   nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
 
   if (!imageSurface) {
-    imageSurface = new gfxImageSurface(aSize,
+    imageSurface = new gfxImageSurface(ThebesIntSize(aSize),
                                        gfxImageFormatARGB32);
 
     nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
@@ -403,7 +404,7 @@ ImageLayerD3D9::RenderLayer()
 
   SetShaderTransformAndOpacity();
 
-  gfxIntSize size = image->GetSize();
+  gfx::IntSize size = image->GetSize();
 
   if (image->GetFormat() == CAIRO_SURFACE ||
       image->GetFormat() == REMOTE_IMAGE_BITMAP ||
@@ -564,7 +565,7 @@ ImageLayerD3D9::GetAsTexture(gfxIntSize* aSize)
   }
 
   bool dontCare;
-  *aSize = image->GetSize();
+  *aSize = gfx::ThebesIntSize(image->GetSize());
   nsRefPtr<IDirect3DTexture9> result = GetTexture(image, dontCare);
   return result.forget();
 }

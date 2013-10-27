@@ -11,7 +11,6 @@
 #include "gfxASurface.h"                // for gfxASurface, etc
 #include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "gfxUtils.h"                   // for gfxUtils
 #include "mozilla/mozalloc.h"           // for operator delete[], etc
 #include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoArrayPtr
@@ -23,6 +22,7 @@
 #ifdef XP_MACOSX
 #include "gfxQuartzImageSurface.h"
 #endif
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace layers {
@@ -30,7 +30,7 @@ namespace layers {
 class BasicPlanarYCbCrImage : public PlanarYCbCrImage
 {
 public:
-  BasicPlanarYCbCrImage(const gfxIntSize& aScaleHint, gfxImageFormat aOffscreenFormat, BufferRecycleBin *aRecycleBin)
+  BasicPlanarYCbCrImage(const gfx::IntSize& aScaleHint, gfxImageFormat aOffscreenFormat, BufferRecycleBin *aRecycleBin)
     : PlanarYCbCrImage(aRecycleBin)
     , mScaleHint(aScaleHint)
     , mDelayedConversion(false)
@@ -54,7 +54,7 @@ public:
 
 private:
   nsAutoArrayPtr<uint8_t> mDecodedBuffer;
-  gfxIntSize mScaleHint;
+  gfx::IntSize mScaleHint;
   int mStride;
   bool mDelayedConversion;
 };
@@ -66,7 +66,7 @@ public:
 
   virtual already_AddRefed<Image> CreateImage(const ImageFormat* aFormats,
                                               uint32_t aNumFormats,
-                                              const gfxIntSize &aScaleHint,
+                                              const gfx::IntSize &aScaleHint,
                                               BufferRecycleBin *aRecycleBin)
   {
     if (!aNumFormats) {
@@ -101,7 +101,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
 
   gfxImageFormat format = GetOffscreenFormat();
 
-  gfxIntSize size(mScaleHint);
+  gfx::IntSize size(mScaleHint);
   gfxUtils::GetYCbCrToRGBDestFormatAndSize(aData, format, size);
   if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
       size.height > PlanarYCbCrImage::MAX_DIMENSION) {
@@ -146,7 +146,7 @@ BasicPlanarYCbCrImage::GetAsSurface()
   gfxImageFormat format = GetOffscreenFormat();
 
   nsRefPtr<gfxImageSurface> imgSurface =
-      new gfxImageSurface(mDecodedBuffer, mSize, mStride, format);
+      new gfxImageSurface(mDecodedBuffer, ThebesIntSize(mSize), mStride, format);
   if (!imgSurface || imgSurface->CairoStatus() != 0) {
     return nullptr;
   }
