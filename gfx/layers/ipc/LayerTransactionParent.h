@@ -94,7 +94,7 @@ protected:
                                 gfx3DMatrix* aTransform) MOZ_OVERRIDE;
 
   virtual PGrallocBufferParent*
-  AllocPGrallocBufferParent(const gfxIntSize& aSize,
+  AllocPGrallocBufferParent(const gfx::IntSize& aSize,
                       const uint32_t& aFormat, const uint32_t& aUsage,
                       MaybeMagicGrallocBufferHandle* aOutHandle) MOZ_OVERRIDE;
   virtual bool

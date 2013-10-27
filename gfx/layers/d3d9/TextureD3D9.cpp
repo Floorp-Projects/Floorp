@@ -11,6 +11,7 @@
 #include "ipc/AutoOpenSurface.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxWindowsPlatform.h"
+#include "gfx2DGlue.h"
 
 using namespace mozilla::gfx;
 

@@ -30,6 +30,7 @@
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
+#include "gfx2DGlue.h"
 
 using namespace base;
 using namespace mozilla::ipc;
@@ -138,13 +139,13 @@ static  uint64_t GenImageContainerID() {
 }
 
 PGrallocBufferParent*
-ImageBridgeParent::AllocPGrallocBufferParent(const gfxIntSize& aSize,
+ImageBridgeParent::AllocPGrallocBufferParent(const gfx::IntSize& aSize,
                                              const uint32_t& aFormat,
                                              const uint32_t& aUsage,
                                              MaybeMagicGrallocBufferHandle* aOutHandle)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  return GrallocBufferActor::Create(aSize, aFormat, aUsage, aOutHandle);
+  return GrallocBufferActor::Create(ThebesIntSize(aSize), aFormat, aUsage, aOutHandle);
 #else
   NS_RUNTIMEABORT("No gralloc buffers for you");
   return nullptr;
