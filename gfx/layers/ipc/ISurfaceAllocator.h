@@ -9,9 +9,9 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t
 #include "gfxTypes.h"
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "mozilla/WeakPtr.h"
+#include "mozilla/gfx/Point.h"
 
 /*
  * FIXME [bjacob] *** PURE CRAZYNESS WARNING ***
@@ -96,15 +96,15 @@ ISurfaceAllocator() {}
   virtual void DeallocShmem(ipc::Shmem& aShmem) = 0;
 
   // was AllocBuffer
-  virtual bool AllocSharedImageSurface(const gfxIntSize& aSize,
+  virtual bool AllocSharedImageSurface(const gfx::IntSize& aSize,
                                        gfxContentType aContent,
                                        gfxSharedImageSurface** aBuffer);
-  virtual bool AllocSurfaceDescriptor(const gfxIntSize& aSize,
+  virtual bool AllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                       gfxContentType aContent,
                                       SurfaceDescriptor* aBuffer);
 
   // was AllocBufferWithCaps
-  virtual bool AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
+  virtual bool AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
                                               gfxContentType aContent,
                                               uint32_t aCaps,
                                               SurfaceDescriptor* aBuffer);
@@ -112,7 +112,7 @@ ISurfaceAllocator() {}
   virtual void DestroySharedSurface(SurfaceDescriptor* aSurface);
 
   // method that does the actual allocation work
-  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
+  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfx::IntSize& aSize,
                                                   uint32_t aFormat,
                                                   uint32_t aUsage,
                                                   MaybeMagicGrallocBufferHandle* aHandle)
@@ -124,7 +124,7 @@ protected:
   // DeprecatedTextureClient/Host rework.
   virtual bool IsOnCompositorSide() const = 0;
   static bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
-  virtual bool PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
+  virtual bool PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                               gfxContentType aContent,
                                               uint32_t aCaps,
                                               SurfaceDescriptor* aBuffer);

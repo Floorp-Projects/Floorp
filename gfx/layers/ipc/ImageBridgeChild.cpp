@@ -693,7 +693,7 @@ ImageBridgeChild::CreateImageClientNow(CompositableType aType)
 }
 
 PGrallocBufferChild*
-ImageBridgeChild::AllocPGrallocBufferChild(const gfxIntSize&, const uint32_t&, const uint32_t&,
+ImageBridgeChild::AllocPGrallocBufferChild(const gfx::IntSize&, const uint32_t&, const uint32_t&,
                                            MaybeMagicGrallocBufferHandle*)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
@@ -924,7 +924,7 @@ ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 }
 
 PGrallocBufferChild*
-ImageBridgeChild::AllocGrallocBuffer(const gfxIntSize& aSize,
+ImageBridgeChild::AllocGrallocBuffer(const gfx::IntSize& aSize,
                                      uint32_t aFormat,
                                      uint32_t aUsage,
                                      MaybeMagicGrallocBufferHandle* aHandle)

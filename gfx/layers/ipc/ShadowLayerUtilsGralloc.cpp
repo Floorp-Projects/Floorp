@@ -29,6 +29,7 @@
 #include "cutils/properties.h"
 
 #include "MainThreadUtils.h"
+#include "gfx2DGlue.h"
 
 using namespace android;
 using namespace base;
@@ -358,7 +359,7 @@ GrallocBufferActor::InitFromHandle(const MagicGrallocBufferHandle& aHandle)
 }
 
 PGrallocBufferChild*
-ShadowLayerForwarder::AllocGrallocBuffer(const gfxIntSize& aSize,
+ShadowLayerForwarder::AllocGrallocBuffer(const gfx::IntSize& aSize,
                                          uint32_t aFormat,
                                          uint32_t aUsage,
                                          MaybeMagicGrallocBufferHandle* aHandle)
@@ -367,7 +368,7 @@ ShadowLayerForwarder::AllocGrallocBuffer(const gfxIntSize& aSize,
 }
 
 bool
-ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
+ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                                   gfxContentType aContent,
                                                   uint32_t aCaps,
                                                   SurfaceDescriptor* aBuffer)
@@ -447,7 +448,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
   GrallocBufferActor* gba = static_cast<GrallocBufferActor*>(gc);
   gba->InitFromHandle(handle.get_MagicGrallocBufferHandle());
 
-  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, aSize,
+  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, ThebesIntSize(aSize),
                                       /* external */ false,
                                       defaultRBSwap);
   return true;

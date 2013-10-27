@@ -34,7 +34,7 @@ public:
 
 protected:
   virtual PGrallocBufferChild*
-  AllocPGrallocBufferChild(const gfxIntSize&,
+  AllocPGrallocBufferChild(const gfx::IntSize&,
                       const uint32_t&, const uint32_t&,
                       MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE;
   virtual bool
