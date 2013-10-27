@@ -6,6 +6,8 @@
 
 //#define __INCREMENTAL 1
 
+#include "mozilla/DebugOnly.h"
+
 #include "nsScanner.h"
 #include "nsDebug.h"
 #include "nsIServiceManager.h"
@@ -118,26 +120,23 @@ nsScanner::nsScanner(nsString& aFilename, bool aCreateStream)
 
 nsresult nsScanner::SetDocumentCharset(const nsACString& aCharset , int32_t aSource)
 {
-  if (aSource < mCharsetSource) // priority is lower the the current one , just
+  if (aSource < mCharsetSource) // priority is lower than the current one
     return NS_OK;
 
+  mCharsetSource = aSource;
+
   nsCString charsetName;
-  bool valid = EncodingUtils::FindEncodingForLabel(aCharset, charsetName);
+  mozilla::DebugOnly<bool> valid =
+      EncodingUtils::FindEncodingForLabel(aCharset, charsetName);
   MOZ_ASSERT(valid, "Should never call with a bogus aCharset.");
-  if (!mCharset.IsEmpty())
-  {
-    if (charsetName.Equals(mCharset))
-    {
-      mCharsetSource = aSource;
-      return NS_OK; // no difference, don't change it
-    }
+
+  if (!mCharset.IsEmpty() && charsetName.Equals(mCharset)) {
+    return NS_OK; // no difference, don't change it
   }
 
   // different, need to change it
 
   mCharset.Assign(charsetName);
-
-  mCharsetSource = aSource;
 
   NS_ASSERTION(nsParser::GetCharsetConverterManager(),
                "Must have the charset converter manager!");
