@@ -3079,7 +3079,7 @@ var gCSSProperties = {
 		// don't know whether left and right are same as start
 		initial_values: [ "start" ],
 		other_values: [ "center", "justify", "end" ],
-		invalid_values: []
+		invalid_values: [ "true", "true true" ]
 	},
 	"-moz-text-align-last": {
 		domProp: "MozTextAlignLast",
@@ -4792,5 +4792,10 @@ if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
   gCSSProperties["-moz-animation-name"].invalid_values.push("bounce, unset", "unset, bounce");
   if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
     gCSSProperties["filter"].invalid_values.push("drop-shadow(unset, 2px 2px)", "drop-shadow(2px 2px, unset)");
+  }
+  if (SpecialPowers.getBoolPref("layout.css.text-align-true-value.enabled")) {
+    gCSSProperties["text-align"].other_values.push("true left");
+  } else {
+    gCSSProperties["text-align"].invalid_values.push("true left");
   }
 }
