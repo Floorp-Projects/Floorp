@@ -16,10 +16,10 @@
       style="margin: 1px; border: 2px solid black; padding: 4px;">
 
 <div id="testelements" style="margin: 0; border: 0; padding: 0;">
-  <input id="input1" style="margin: 0; margin-left: 6px; margin-top: 2px; border: 1px solid green; padding: 6px; width: 50px; height: 20px"
+  <div id="div1" style="margin: 0; margin-left: 6px; margin-top: 2px; border: 1px solid green; padding: 6px; width: 50px; height: 20px"
          _offsetLeft="13" _offsetTop="9" _offsetWidth="64" _offsetHeight="34"
          _scrollWidth="62" _scrollHeight="32"
-         _clientLeft="1" _clientTop="1" _clientWidth="62" _clientHeight="32">
+         _clientLeft="1" _clientTop="1" _clientWidth="62" _clientHeight="32"></div>
   <div id="noscroll" style="margin: 2px; border: 1px solid blue; padding: 3px;"
        _offsetLeft="10" _offsetTop="12" _offsetWidth="64" _offsetHeight="34"
        _scrollWidth="62" _scrollHeight="32"
@@ -29,28 +29,28 @@
 
   <div id="absolute" style="position: absolute; margin: 5px; border: 2px solid blue; padding: 0;">
     <div id="absolute-block" _offsetParent="absolute">
-      <input id="absolute-replaced" _offsetParent="absolute" style="margin: 1px; border: 0; padding: 3px;">
+      <div id="absolute-replaced" _offsetParent="absolute" style="margin: 1px; border: 0; padding: 3px;"></div>
     </div>
   </div>
 
   <div id="absolutelr" style="position: absolute; margin: 5px; border: 2px solid blue; padding: 0; left: 90px; top: 130px;">
     This is some absolute positioned text.
     <div id="absolutelr-block" _offsetParent="absolutelr">
-      <input id="absolutelr-replaced" _offsetParent="absolutelr" style="margin: 1px; border: 0; padding: 3px;">
+      <div id="absolutelr-replaced" _offsetParent="absolutelr" style="margin: 1px; border: 0; padding: 3px;"></div>
     </div>
   </div>
 
   <div id="relative" style="position: relative; margin: 2px; border: 1px solid orange; padding: 7px; left: 10px; top: 5px;">
     This is some relative positioned text.
     <div id="relative-block" _offsetParent="relative">
-      <input id="relative-replaced" _offsetParent="relative" style="margin: 1px; border: 0; padding: 3px;">
+      <div id="relative-replaced" _offsetParent="relative" style="margin: 1px; border: 0; padding: 3px;"></div>
     </div>
   </div>
 
   <div id="fixed" style="position: fixed; margin: 2px; border: 1px solid orange; padding: 7px; left: 87px; top: 12px;">
     This is some fixed positioned text.
     <div id="fixed-block" _offsetParent="fixed">
-      <input id="fixed-replaced" _offsetParent="fixed" style="margin: 1px; border: 0; padding: 3px;">
+      <div id="fixed-replaced" _offsetParent="fixed" style="margin: 1px; border: 0; padding: 3px;"></div>
     </div>
   </div>
 
@@ -70,13 +70,13 @@
     <div id="overflow-visible-2" style="height:200px; background:lime;"></div>
   </div>
 
-  <input id="input-displaynone" style="display: none; border: 0; padding: 0;"
-         _offsetParent="null">
+  <div id="div-displaynone" style="display: none; border: 0; padding: 0;"
+         _offsetParent="null"></div>
   <p id="p3" style="margin: 2px; border: 0; padding: 1px;"
          _offsetLeft="9" _offsetTop="9" _offsetWidth="64" _offsetHeight="34"
          _scrollWidth="62" _scrollHeight="32"
          _clientLeft="1" _clientTop="1" _clientWidth="62" _clientHeight="32">
-    <input id="input-nosize" style="width: 0; height: 0; margin: 0; border: 0; padding: 0;">
+    <div id="div-nosize" style="width: 0; height: 0; margin: 0; border: 0; padding: 0;"></div>
   </p>
 
 </div>

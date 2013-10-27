@@ -137,20 +137,15 @@ public:
                                             uint64_t aState);
 
   /**
+   * Return a text container accessible for the given node.
+   */
+  static HyperTextAccessible* GetTextContainer(nsINode* aNode);
+
+  /**
    * Return true if the DOM node of given accessible has aria-selected="true"
    * attribute.
    */
   static bool IsARIASelected(Accessible* aAccessible);
-
-  /**
-   * Return text accessible containing focus point of the given selection.
-   * Used for normal and misspelling selection changes processing.
-   *
-   * @param aSelection  [in] the given selection
-   * @return            text accessible
-   */
-  static HyperTextAccessible*
-    GetTextAccessibleFromSelection(nsISelection* aSelection);
 
   /**
    * Converts the given coordinates to coordinates relative screen.

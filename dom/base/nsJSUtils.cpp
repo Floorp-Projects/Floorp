@@ -306,8 +306,13 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   }
 
   // Wrap the return value into whatever compartment aCx was in.
-  if (aRetValue && !JS_WrapValue(aCx, aRetValue))
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (aRetValue) {
+    JS::Rooted<JS::Value> v(aCx, *aRetValue);
+    if (!JS_WrapValue(aCx, &v)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    *aRetValue = v;
+  }
   return rv;
 }
 
