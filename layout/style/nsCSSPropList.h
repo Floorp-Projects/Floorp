@@ -2768,7 +2768,8 @@ CSS_PROP_TEXT(
     text-align,
     text_align,
     TextAlign,
-    CSS_PROPERTY_PARSE_VALUE | CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
+    CSS_PROPERTY_PARSE_VALUE | CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+      CSS_PROPERTY_APPLIES_TO_PLACEHOLDER,
     "",
     // When we support aligning on a string, we can parse text-align
     // as a string....
@@ -2780,7 +2781,7 @@ CSS_PROP_TEXT(
     -moz-text-align-last,
     text_align_last,
     CSS_PROP_DOMPROP_PREFIXED(TextAlignLast),
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_VALUE | CSS_PROPERTY_VALUE_PARSER_FUNCTION,
     "",
     VARIANT_HK,
     kTextAlignLastKTable,
