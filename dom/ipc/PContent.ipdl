@@ -55,7 +55,7 @@ using mozilla::dom::AudioChannelState;
 using mozilla::dom::BlobConstructorParams;
 using mozilla::dom::NativeThreadId;
 using mozilla::hal::ProcessPriority;
-using gfxIntSize;
+using mozilla::gfx::IntSize;
 
 namespace mozilla {
 namespace dom {
@@ -287,13 +287,13 @@ child:
     // nsIPermissionManager messages
     AddPermission(Permission permission);
 
-    ScreenSizeChanged(gfxIntSize size);
+    ScreenSizeChanged(IntSize size);
 
     FlushMemory(nsString reason);
 
     GarbageCollect();
     CycleCollect();
-    
+
     /**
      * Start accessibility engine in content process.
      */

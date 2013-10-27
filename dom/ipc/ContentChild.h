@@ -191,7 +191,7 @@ public:
 
     virtual bool RecvAddPermission(const IPC::Permission& permission);
 
-    virtual bool RecvScreenSizeChanged(const gfxIntSize &size);
+    virtual bool RecvScreenSizeChanged(const gfx::IntSize &size);
 
     virtual bool RecvFlushMemory(const nsString& reason);
 
@@ -227,7 +227,7 @@ public:
 
     virtual bool RecvNotifyPhoneStateChange(const nsString& state);
 #ifdef ANDROID
-    gfxIntSize GetScreenSize() { return mScreenSize; }
+    gfx::IntSize GetScreenSize() { return mScreenSize; }
 #endif
 
     // Get the directory for IndexedDB files. We query the parent for this and
@@ -272,7 +272,7 @@ private:
     AppInfo mAppInfo;
 
 #ifdef ANDROID
-    gfxIntSize mScreenSize;
+    gfx::IntSize mScreenSize;
 #endif
 
     bool mIsForApp;
