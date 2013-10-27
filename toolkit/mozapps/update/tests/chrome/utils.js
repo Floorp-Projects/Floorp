@@ -163,7 +163,7 @@ const TEST_ADDONS = [ "appdisabled_1", "appdisabled_2",
 
 var gURLData = URL_HOST + "/" + REL_PATH_DATA + "/";
 
-var gTestTimeout = 45000; // 45 seconds
+var gTestTimeout = 240000; // 4 minutes
 var gTimeoutTimer;
 
 // The number of SimpleTest.executeSoon calls to perform when waiting on an
