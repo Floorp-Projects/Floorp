@@ -152,18 +152,6 @@
             </td>
           </tr>
 
-#ifdef MOZ_CRASHREPORTER
-          <tr class="no-copy">
-            <th class="column">
-              &aboutSupport.appBasicsCrashIDs;
-            </th>
-
-            <td>
-              <a href="about:crashes">about:crashes</a>
-            </td>
-          </tr>
-#endif
-
           <tr class="no-copy">
             <th class="column">
               &aboutSupport.appBasicsMemoryUse;
@@ -177,6 +165,33 @@
         </tbody>
       </table>
 
+      <!-- - - - - - - - - - - - - - - - - - - - - -->
+#ifdef MOZ_CRASHREPORTER
+
+      <h2 class="major-section" id="crashes-title">
+        &aboutSupport.crashes.title;
+      </h2>
+
+      <table id="crashes-table">
+        <thead>
+          <tr>
+            <th>
+              &aboutSupport.crashes.id;
+            </th>
+            <th>
+              &aboutSupport.crashes.sendDate;
+            </th>
+          </tr>
+        </thead>
+        <tbody id="crashes-tbody">
+        </tbody>
+      </table>
+      <p id="crashes-allReports" class="no-copy" style="display: none">
+        <a href="about:crashes" id="crashes-allReportsWithPending" style="display: block">&aboutSupport.crashes.allReports;</a>
+      </p>
+      <p id="crashes-noConfig" class="no-copy" style="display: none">&aboutSupport.crashes.noConfig;</p>
+
+#endif
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
       <h2 class="major-section">
