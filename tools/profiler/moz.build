@@ -26,7 +26,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     EXTRA_JS_MODULES = [
         'Profiler.jsm',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'BreakpadSampler.cpp',
         'IOInterposer.cpp',
         'JSCustomObjectBuilder.cpp',
@@ -47,24 +47,24 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
-        CPP_SOURCES += [
+        SOURCES += [
             'platform-linux.cc',
             'shared-libraries-linux.cc',
         ]
         if CONFIG['CPU_ARCH'] == 'arm':
-            CPP_SOURCES += [
+            SOURCES += [
                 'EHABIStackWalk.cpp',
             ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
-        CPP_SOURCES += [
+        SOURCES += [
             'platform-macos.cc',
             'shared-libraries-macos.cc',
         ]
-        CMMSRCS += [
+        SOURCES += [
             'shim_mac_dump_syms.mm',
         ]
     elif CONFIG['OS_TARGET'] == 'WINNT':
-        CPP_SOURCES += [
+        SOURCES += [
             'platform-win32.cc',
             'shared-libraries-win32.cc',
         ]

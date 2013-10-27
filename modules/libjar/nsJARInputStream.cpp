@@ -229,7 +229,6 @@ NS_IMETHODIMP
 nsJARInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, uint32_t count, uint32_t *_retval)
 {
     // don't have a buffer to read from, so this better not be called!
-    NS_NOTREACHED("Consumers should be using Read()!");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

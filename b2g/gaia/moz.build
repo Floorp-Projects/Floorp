@@ -7,6 +7,6 @@
 PROGRAM = CONFIG['MOZ_APP_NAME']
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
+    SOURCES += [
         'run-b2g.cpp',
     ]

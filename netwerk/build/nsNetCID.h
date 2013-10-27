@@ -436,6 +436,17 @@
     { 0x8d, 0x17, 0xa2, 0x7e, 0x44, 0xa8, 0x39, 0x3e } \
 }
 
+// service implementing nsINetworkSeer
+#define NS_NETWORKSEER_CONTRACTID \
+    "@mozilla.org/network/seer;1"
+#define NS_NETWORKSEER_CID \
+{ /* {1C218009-A531-46AD-8351-1E7F45D5A3C4} */ \
+    0x1C218009, \
+    0xA531, \
+    0x46AD, \
+    { 0x83, 0x51, 0x1E, 0x7F, 0x45, 0xD5, 0xA3, 0xC4 } \
+}
+
 /******************************************************************************
  * netwerk/cache/ classes
  */
@@ -600,18 +611,6 @@
     0x1f69,                                          \
     0x11d3,                                          \
     {0x93, 0x44, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
-/******************************************************************************
- * netwerk/protocol/app/ classes
- */
-
-#define NS_APPPROTOCOLHANDLER_CID                    \
-{ /* {B6ED3030-9999-11d3-A178-0050041CAF44} */       \
-    0xb6ed3030,                                      \
-    0x9999,                                          \
-    0x11d3,                                          \
-    {0xa1, 0x78, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
 }
 
 /******************************************************************************

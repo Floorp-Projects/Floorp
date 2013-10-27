@@ -164,6 +164,8 @@ public:
     void KillHard();
 
     uint64_t ChildID() { return mChildID; }
+    const nsString& AppManifestURL() const { return mAppManifestURL; }
+
     bool IsPreallocated();
 
     /**
@@ -470,8 +472,6 @@ private:
       const AudioChannelType& aType, const bool& aHidden);
 
     virtual bool RecvBroadcastVolume(const nsString& aVolumeName);
-
-    virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus);
 
     virtual bool RecvSystemMessageHandled() MOZ_OVERRIDE;
 

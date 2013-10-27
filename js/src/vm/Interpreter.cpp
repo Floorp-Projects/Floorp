@@ -396,7 +396,7 @@ js::RunScript(JSContext *cx, RunState &state)
         if (status == jit::Method_Error)
             return false;
         if (status == jit::Method_Compiled) {
-            jit::IonExecStatus status = jit::Cannon(cx, state);
+            jit::IonExecStatus status = jit::IonCannon(cx, state);
             return !IsErrorStatus(status);
         }
     }
@@ -2489,7 +2489,7 @@ BEGIN_CASE(JSOP_FUNCALL)
             if (status == jit::Method_Error)
                 goto error;
             if (status == jit::Method_Compiled) {
-                jit::IonExecStatus exec = jit::Cannon(cx, state);
+                jit::IonExecStatus exec = jit::IonCannon(cx, state);
                 CHECK_BRANCH();
                 regs.sp = args.spAfterCall();
                 interpReturnOK = !IsErrorStatus(exec);

@@ -21,7 +21,7 @@ EXPORTS += [
     'nsTreeUtils.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsTreeBodyFrame.cpp',
     'nsTreeBoxObject.cpp',
     'nsTreeColFrame.cpp',

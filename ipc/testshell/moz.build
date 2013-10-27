@@ -16,7 +16,7 @@ EXPORTS.mozilla.ipc += [
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 
-CPP_SOURCES += [
+SOURCES += [
     'TestShellChild.cpp',
     'TestShellParent.cpp',
     'XPCShellEnvironment.cpp',
@@ -34,4 +34,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'ipcshell_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

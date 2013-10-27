@@ -1166,15 +1166,33 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
                                         const nsIFrame* aStopAtAncestor)
 {
   nsIFrame* f = aFrame;
+  nsIFrame* stickyFrame = nullptr;
   while (f != aStopAtAncestor) {
     if (IsPopup(f))
       break;
     nsIFrame* parent = GetCrossDocParentFrame(f);
     if (!parent)
       break;
+    // Sticky frames are active if their nearest scrollable frame
+    // is also active, just keep a record of sticky frames that we
+    // encounter for now.
+    if (f->StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY &&
+        !stickyFrame) {
+      stickyFrame = f;
+    }
     nsIScrollableFrame* sf = do_QueryFrame(parent);
-    if (sf && sf->IsScrollingActive() && sf->GetScrolledFrame() == f)
-      break;
+    if (sf) {
+      if (sf->IsScrollingActive() && sf->GetScrolledFrame() == f) {
+        // If we found a sticky frame inside this active scroll frame,
+        // then use that. Otherwise use the scroll frame.
+        if (stickyFrame) {
+          return stickyFrame;
+        }
+        return f;
+      } else {
+        stickyFrame = nullptr;
+      }
+    }
     f = parent;
   }
   return f;
@@ -2807,7 +2825,8 @@ static int32_t gNoiseIndent = 0;
 /* static */ nscoord
 nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
                                      nsIFrame *aFrame,
-                                     IntrinsicWidthType aType)
+                                     IntrinsicWidthType aType,
+                                     uint32_t aFlags)
 {
   NS_PRECONDITION(aFrame, "null frame");
   NS_PRECONDITION(aType == MIN_WIDTH || aType == PREF_WIDTH, "bad type");
@@ -2901,15 +2920,17 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
           // fall through
         }
         case NS_STYLE_BOX_SIZING_PADDING: {
-          const nsStylePadding* stylePadding = aFrame->StylePadding();
-          nscoord pad;
-          if (GetAbsoluteCoord(stylePadding->mPadding.GetTop(), pad) ||
-              GetPercentHeight(stylePadding->mPadding.GetTop(), aFrame, pad)) {
-            heightTakenByBoxSizing += pad;
-          }
-          if (GetAbsoluteCoord(stylePadding->mPadding.GetBottom(), pad) ||
-              GetPercentHeight(stylePadding->mPadding.GetBottom(), aFrame, pad)) {
-            heightTakenByBoxSizing += pad;
+          if (!(aFlags & IGNORE_PADDING)) {
+            const nsStylePadding* stylePadding = aFrame->StylePadding();
+            nscoord pad;
+            if (GetAbsoluteCoord(stylePadding->mPadding.GetTop(), pad) ||
+                GetPercentHeight(stylePadding->mPadding.GetTop(), aFrame, pad)) {
+              heightTakenByBoxSizing += pad;
+            }
+            if (GetAbsoluteCoord(stylePadding->mPadding.GetBottom(), pad) ||
+                GetPercentHeight(stylePadding->mPadding.GetBottom(), aFrame, pad)) {
+              heightTakenByBoxSizing += pad;
+            }
           }
           // fall through
         }
@@ -2960,18 +2981,22 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   // percentages do not operate linearly.
   // Doing this is ok because although percentages aren't handled
   // linearly, they are handled monotonically.
-  nscoord coordOutsideWidth = offsets.hPadding;
-  float pctOutsideWidth = offsets.hPctPadding;
-
+  nscoord coordOutsideWidth = 0;
+  float pctOutsideWidth = 0;
   float pctTotal = 0.0f;
 
-  if (boxSizing == NS_STYLE_BOX_SIZING_PADDING) {
-    min += coordOutsideWidth;
-    result = NSCoordSaturatingAdd(result, coordOutsideWidth);
-    pctTotal += pctOutsideWidth;
+  if (!(aFlags & IGNORE_PADDING)) {
+    coordOutsideWidth += offsets.hPadding;
+    pctOutsideWidth += offsets.hPctPadding;
 
-    coordOutsideWidth = 0;
-    pctOutsideWidth = 0.0f;
+    if (boxSizing == NS_STYLE_BOX_SIZING_PADDING) {
+      min += coordOutsideWidth;
+      result = NSCoordSaturatingAdd(result, coordOutsideWidth);
+      pctTotal += pctOutsideWidth;
+
+      coordOutsideWidth = 0;
+      pctOutsideWidth = 0.0f;
+    }
   }
 
   coordOutsideWidth += offsets.hBorder;

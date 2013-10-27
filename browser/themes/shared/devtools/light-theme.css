@@ -47,7 +47,8 @@
   background-color: #CCC;
 }
 
-.theme-bg-darker {
+.theme-bg-darker,
+.cm-s-mozilla .CodeMirror-gutters {
   background: #EFEFEF;
 }
 
@@ -55,11 +56,14 @@
   background: #a18650;
 }
 
-.theme-link { /* blue */
+.theme-link,
+.cm-s-mozilla .cm-link { /* blue */
   color: hsl(208,56%,40%);
 }
 
-.theme-comment { /* grey */
+.theme-comment,
+.cm-s-mozilla .cm-meta,
+.cm-s-mozilla .cm-hr { /* grey */
   color: hsl(90,2%,46%);
 }
 
@@ -73,31 +77,51 @@
   border-color: #cddae5;
 }
 
-.theme-fg-color1 { /* green */
+.theme-fg-color1,
+.cm-s-mozilla .cm-variable-2,
+.cm-s-mozilla .cm-quote,
+.cm-s-mozilla .CodeMirror-matchingbracket { /* green */
   color: hsl(72,100%,27%);
 }
 
-.theme-fg-color2 { /* blue */
+.theme-fg-color2,
+.cm-s-mozilla .cm-attribute,
+.cm-s-mozilla .cm-builtin,
+.cm-s-mozilla .cm-variable,
+.cm-s-mozilla .cm-def,
+.cm-s-mozilla .cm-variable-3,
+.cm-s-mozilla .cm-property,
+.cm-s-mozilla .cm-qualifier { /* blue */
   color: hsl(208,56%,40%);
 }
 
-.theme-fg-color3 { /* dark blue */
+.theme-fg-color3,
+.cm-s-mozilla .cm-tag,
+.cm-s-mozilla .cm-header { /* dark blue */
   color: hsl(208,81%,21%)
 }
 
-.theme-fg-color4 { /* Orange */
+.theme-fg-color4,
+.cm-s-mozilla .cm-comment { /* Orange */
   color: hsl(24,85%,39%);
 }
 
-.theme-fg-color5 { /* Yellow */
+.theme-fg-color5,
+.cm-s-mozilla .cm-bracket,
+.cm-s-mozilla .cm-keyword,
+.cm-s-mozilla .cm-atom { /* Yellow */
   color: #a18650;
 }
 
-.theme-fg-color6 { /* Orange */
+.theme-fg-color6,
+.cm-s-mozilla .cm-string { /* Orange */
   color: hsl(24,85%,39%);
 }
 
-.theme-fg-color7 { /* Red */
+.theme-fg-color7,
+.cm-s-mozilla .CodeMirror-nonmatchingbracket,
+.cm-s-mozilla .cm-string-2,
+.cm-s-mozilla .cm-error { /* Red */
   color: #bf5656;
 }
 
@@ -109,4 +133,42 @@
 .computedview-colorswatch,
 .markupview-colorswatch {
   box-shadow: 0 0 0 1px #EFEFEF;
+}
+
+/* CodeMirror specific styles.
+ * Best effort to match the existing theme, some of the colors
+ * are duplicated here to prevent weirdness in the main theme. */
+
+.CodeMirror { /* Inherit platform specific font sizing and styles */
+  font-family: inherit;
+  font-size: inherit;
+  background: transparent;
+}
+
+.CodeMirror pre,
+.cm-s-mozilla .cm-operator,
+.cm-s-mozilla .cm-special,
+.cm-s-mozilla .cm-number { /* theme-body color */
+  color: black;
+}
+
+.cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor {
+  border-left: solid 1px black;
+}
+
+.cm-s-mozilla.CodeMirror-focused .CodeMirror-selected { /* selected text (focused) */
+  background: rgb(185, 215, 253);
+}
+
+.cm-s-mozilla .CodeMirror-selected { /* selected text (unfocused) */
+  background: rgb(176, 176, 176);
+}
+
+.CodeMirror-activeline-background { /* selected color with alpha */
+  background: rgba(185, 215, 253, .4);
+}
+
+.cm-s-markup-view pre {
+  line-height: 1.4em;
+  min-height: 1.4em;
 }

@@ -106,7 +106,7 @@ this.DownloadImport.prototype = {
 
             let autoResume = false;
             try {
-              autoResume = row.getResultByName("autoResume");
+              autoResume = (row.getResultByName("autoResume") == 1);
             } catch (ex) {
               // autoResume wasn't present in schema version 7
             }

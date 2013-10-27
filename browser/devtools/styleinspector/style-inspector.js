@@ -25,7 +25,7 @@ function RuleViewTool(aInspector, aWindow, aIFrame)
   this.doc = aWindow.document;
   this.outerIFrame = aIFrame;
 
-  this.view = new RuleView.CssRuleView(this.doc);
+  this.view = new RuleView.CssRuleView(aInspector, this.doc);
   this.doc.documentElement.appendChild(this.view.element);
 
   this._changeHandler = () => {

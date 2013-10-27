@@ -22,7 +22,7 @@ EXPORTS += [
     'nsCacheService.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsApplicationCacheService.cpp',
     'nsCache.cpp',
     'nsCacheEntry.cpp',

@@ -25,27 +25,27 @@ interface SVGMatrix {
   [SetterThrows]
   attribute float f;
 
-  [Creator]
+  [NewObject]
   SVGMatrix multiply(SVGMatrix secondMatrix);
-  [Creator, Throws]
+  [NewObject, Throws]
   SVGMatrix inverse();
-  [Creator]
+  [NewObject]
   SVGMatrix translate(float x, float y);
-  [Creator]
+  [NewObject]
   SVGMatrix scale(float scaleFactor);
-  [Creator]
+  [NewObject]
   SVGMatrix scaleNonUniform(float scaleFactorX, float scaleFactorY);
-  [Creator]
+  [NewObject]
   SVGMatrix rotate(float angle);
-  [Creator, Throws]
+  [NewObject, Throws]
   SVGMatrix rotateFromVector(float x, float y);
-  [Creator]
+  [NewObject]
   SVGMatrix flipX();
-  [Creator]
+  [NewObject]
   SVGMatrix flipY();
-  [Creator, Throws]
+  [NewObject, Throws]
   SVGMatrix skewX(float angle);
-  [Creator, Throws]
+  [NewObject, Throws]
   SVGMatrix skewY(float angle);
 };
 

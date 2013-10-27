@@ -157,6 +157,16 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
     function(value) {
       Services.prefs.setCharPref('wap.UAProf.tagname', value);
   });
+
+  // DSDS default service IDs
+  ['mms', 'sms', 'telephony', 'voicemail'].forEach(function(key) {
+    SettingsListener.observe('ril.' + key + '.defaultServiceId', 0,
+                             function(value) {
+      if (value != null) {
+        Services.prefs.setIntPref('dom.' + key + '.defaultServiceId', value);
+      }
+    });
+  });
 })();
 
 //=================== DeviceInfo ====================

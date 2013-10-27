@@ -7,7 +7,7 @@
 MODULE = 'memory'
 NO_DIST_INSTALL = True
 
-CSRCS += [
+SOURCES += [
     '../../build/jemalloc_config.c',
     '../../build/mozjemalloc_compat.c',
 ]
@@ -16,7 +16,7 @@ CSRCS += [
 # It shouldn't make much problem, as the use of fork is pretty limited on
 # Android.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    CSRCS += [
+    SOURCES += [
         'pthread_atfork.c',
     ]
 

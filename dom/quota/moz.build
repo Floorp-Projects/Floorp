@@ -33,7 +33,7 @@ EXPORTS.mozilla.dom.quota += [
     'Utilities.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'CheckQuotaHelper.cpp',
     'FileStreams.cpp',
     'QuotaManager.cpp',
@@ -47,4 +47,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'domquota_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

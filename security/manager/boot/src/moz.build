@@ -6,7 +6,7 @@
 
 MODULE = 'pipboot'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsBOOTModule.cpp',
     'nsEntropyCollector.cpp',
     'nsSecureBrowserUIImpl.cpp',

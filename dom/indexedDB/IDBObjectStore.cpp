@@ -1340,7 +1340,7 @@ IDBObjectStore::DeserializeValue(JSContext* aCx,
     nullptr
   };
 
-  return buffer.read(aCx, aValue.address(), &callbacks, &aCloneReadInfo);
+  return buffer.read(aCx, aValue, &callbacks, &aCloneReadInfo);
 }
 
 // static
@@ -4542,7 +4542,7 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
     };
 
     JS::Rooted<JS::Value> clone(cx);
-    if (!buffer.read(cx, clone.address(), &callbacks, &cloneReadInfo)) {
+    if (!buffer.read(cx, &clone, &callbacks, &cloneReadInfo)) {
       NS_WARNING("Failed to deserialize structured clone data!");
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }

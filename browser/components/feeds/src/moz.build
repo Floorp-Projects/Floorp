@@ -6,7 +6,7 @@
 
 MODULE = 'browser_feeds'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsFeedSniffer.cpp',
 ]
 
@@ -22,3 +22,4 @@ EXTRA_PP_COMPONENTS += [
 
 LIBRARY_NAME = 'browser_feeds_s'
 
+FORCE_STATIC_LIB = True

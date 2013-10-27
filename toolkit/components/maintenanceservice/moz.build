@@ -6,7 +6,7 @@
 
 PROGRAM = 'maintenanceservice'
 
-CPP_SOURCES += [
+SOURCES += [
     'certificatecheck.cpp',
     'maintenanceservice.cpp',
     'registrycertificates.cpp',

@@ -12,7 +12,7 @@ EXPORTS += [
     'nsQtKeyUtils.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'moc_moziqwidget.cpp',
     'moc_mozqwidget.cpp',
     'moc_nsAppShell.cpp',
@@ -40,13 +40,13 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_ENABLE_CONTENTMANAGER']:
-    CPP_SOURCES += [
+    SOURCES += [
         'moc_nsMFilePicker.cpp',
         'nsMFilePicker.cpp',
     ]
 
 if CONFIG[' MOZ_ENABLE_QTMOBILITY']:
-    CPP_SOURCES += [
+    SOURCES += [
         'moc_mozqorientationsensorfilter.cpp',
         'mozqorientationsensorfilter.cpp',
     ]
@@ -56,4 +56,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'widget_qt'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

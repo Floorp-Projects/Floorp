@@ -1836,9 +1836,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
         }
         // If the filename is relative, tack it onto the download directory
         if (!filename.match(/[\\\/]/)) {
-          let tempfile = yield Downloads.getPreferredDownloadsDirectory();
-          tempfile.append(filename);
-          filename = tempfile.path;
+          let preferredDir = yield Downloads.getPreferredDownloadsDirectory();
+          filename = OS.Path.join(preferredDir, filename);
         }
 
         try {

@@ -40,14 +40,14 @@ if CONFIG['MOZ_WEBRTC']:
         'nsDOMDataChannel.h',
         'nsDOMDataChannelDeclarations.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'nsDOMDataChannel.cpp',
     ]
 
 # Are we targeting x86-32 or x86-64?  If so, we want to include SSE2 code for
 # nsTextFragment.cpp
 if CONFIG['INTEL_ARCHITECTURE']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsTextFragmentSSE2.cpp',
     ]
 
@@ -66,7 +66,7 @@ EXPORTS.mozilla.dom += [
     'TreeWalker.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'Attr.cpp',
     'ChildIterator.cpp',
     'Comment.cpp',
@@ -181,4 +181,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkconbase_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

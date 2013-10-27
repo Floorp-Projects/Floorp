@@ -14,7 +14,6 @@ DEFINES		+= -DNATIVE_THEME_SUPPORT
 endif
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CFLAGS          += $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 CXXFLAGS        += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) \

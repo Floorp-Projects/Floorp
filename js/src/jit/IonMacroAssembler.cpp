@@ -160,6 +160,14 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet *types,
     }
 
     if (hasTypeObjects) {
+        // We are possibly going to overwrite the obj register. So already
+        // emit the branch, since branch depends on previous value of obj
+        // register and there is definitely a branch following. So no need
+        // to invert the condition.
+        if (lastBranch.isInitialized())
+            lastBranch.emit(*this);
+        lastBranch = BranchGCPtr();
+
         // Note: Some platforms give the same register for obj and scratch.
         // Make sure when writing to scratch, the obj register isn't used anymore!
         loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
@@ -865,82 +873,6 @@ MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
     movePtr(ImmPtr(&GetIonContext()->runtime->interrupt), tempReg);
     load32(Address(tempReg, 0), tempReg);
     branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
-}
-
-void
-MacroAssembler::maybeRemoveOsrFrame(Register scratch)
-{
-    // Before we link an exit frame, check for an OSR frame, which is
-    // indicative of working inside an existing bailout. In this case, remove
-    // the OSR frame, so we don't explode the stack with repeated bailouts.
-    Label osrRemoved;
-    loadPtr(Address(StackPointer, IonCommonFrameLayout::offsetOfDescriptor()), scratch);
-    and32(Imm32(FRAMETYPE_MASK), scratch);
-    branch32(Assembler::NotEqual, scratch, Imm32(IonFrame_Osr), &osrRemoved);
-    addPtr(Imm32(sizeof(IonOsrFrameLayout)), StackPointer);
-    bind(&osrRemoved);
-}
-
-void
-MacroAssembler::performOsr()
-{
-    GeneralRegisterSet regs = GeneralRegisterSet::All();
-    if (FramePointer != InvalidReg && sps_ && sps_->enabled())
-        regs.take(FramePointer);
-
-    // This register must be fixed as it's used in the Osr prologue.
-    regs.take(OsrFrameReg);
-
-    // Remove any existing OSR frame so we don't create one per bailout.
-    maybeRemoveOsrFrame(regs.getAny());
-
-    const Register script = regs.takeAny();
-    const Register calleeToken = regs.takeAny();
-
-    // Grab fp.exec
-    loadPtr(Address(OsrFrameReg, StackFrame::offsetOfExec()), script);
-    mov(script, calleeToken);
-
-    Label isFunction, performOsr;
-    branchTest32(Assembler::NonZero,
-                 Address(OsrFrameReg, StackFrame::offsetOfFlags()),
-                 Imm32(StackFrame::FUNCTION),
-                 &isFunction);
-
-    {
-        // Not a function - just tag the calleeToken now.
-        orPtr(Imm32(CalleeToken_Script), calleeToken);
-        jump(&performOsr);
-    }
-
-    bind(&isFunction);
-    {
-        // Function - create the callee token, then get the script.
-
-        // Skip the or-ing of CalleeToken_Function into calleeToken since it is zero.
-        JS_ASSERT(CalleeToken_Function == 0);
-
-        loadPtr(Address(script, JSFunction::offsetOfNativeOrScript()), script);
-    }
-
-    bind(&performOsr);
-
-    const Register ionScript = regs.takeAny();
-    const Register osrEntry = regs.takeAny();
-
-    loadPtr(Address(script, JSScript::offsetOfIonScript()), ionScript);
-    load32(Address(ionScript, IonScript::offsetOfOsrEntryOffset()), osrEntry);
-
-    // Get ionScript->method->code, and scoot to the osrEntry.
-    const Register code = ionScript;
-    loadPtr(Address(ionScript, IonScript::offsetOfMethod()), code);
-    loadPtr(Address(code, IonCode::offsetOfCode()), code);
-    addPtr(osrEntry, code);
-
-    // To simplify stack handling, we create an intermediate OSR frame, that
-    // looks like a JS frame with no argv.
-    enterOsr(calleeToken, code);
-    ret();
 }
 
 static void

@@ -211,7 +211,7 @@ bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                    mDecoder->GetImageContainer(),
                                    -1,
                                    currentFrameTime,
-                                   currentFrameTime + (USECS_PER_S / mFrameRate),
+                                   (USECS_PER_S / mFrameRate),
                                    b,
                                    1, // In raw video every frame is a keyframe
                                    -1,
@@ -265,7 +265,7 @@ nsresult RawReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, in
     }
 
     nsAutoPtr<VideoData> video(mVideoQueue.PeekFront());
-    if (video && video->mEndTime < aTime) {
+    if (video && video->GetEndTime() < aTime) {
       mVideoQueue.PopFront();
       video = nullptr;
     } else {

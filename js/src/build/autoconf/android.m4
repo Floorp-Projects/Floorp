@@ -38,11 +38,6 @@ if test $android_version -lt MIN_ANDROID_VERSION ; then
     AC_MSG_ERROR([--with-android-version must be at least MIN_ANDROID_VERSION.])
 fi
 
-MOZ_ARG_WITH_STRING(android-platform,
-[  --with-android-platform=DIR
-                           location of platform dir],
-    android_platform=$withval)
-
 case "$target" in
 arm-linux*-android*|*-linuxandroid*)
     android_tool_prefix="arm-linux-androideabi"
@@ -116,29 +111,26 @@ case "$target" in
 
     NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-android-version=$android_version"
 
-    if test -z "$android_platform" ; then
-        AC_MSG_CHECKING([for android platform directory])
+    AC_MSG_CHECKING([for android platform directory])
 
-        case "$target_cpu" in
-        arm)
-            target_name=arm
-            ;;
-        i?86)
-            target_name=x86
-            ;;
-        mipsel)
-            target_name=mips
-            ;;
-        esac
+    case "$target_cpu" in
+    arm)
+        target_name=arm
+        ;;
+    i?86)
+        target_name=x86
+        ;;
+    mipsel)
+        target_name=mips
+        ;;
+    esac
 
-        android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_name"
+    android_platform="$android_ndk"/platforms/android-"$android_version"/arch-"$target_name"
 
-        if test -d "$android_platform" ; then
-            AC_MSG_RESULT([$android_platform])
-        else
-            AC_MSG_ERROR([not found. You have to specify --with-android-platform=/path/to/ndk/platform.])
-        fi
-        NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-android-platform=$android_platform"
+    if test -d "$android_platform" ; then
+        AC_MSG_RESULT([$android_platform])
+    else
+        AC_MSG_ERROR([not found. Please check your NDK. With the current configuration, it should be in $android_platform])
     fi
 
     dnl Old NDK support. If minimum requirement is changed to NDK r8b,

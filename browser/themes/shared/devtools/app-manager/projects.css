@@ -110,6 +110,7 @@ strong {
   right: 5px;
   bottom: 5px;
   visibility: hidden;
+  opacity: 0.5;
 }
 
 .project-item:hover .button-remove {
@@ -458,6 +459,15 @@ strong {
 .manifest-editor > h2 {
   font-size: 18px;
   margin: 1em 30px;
+  display: none;
+}
+
+[type="packaged"] > .editable {
+  display: block;
+}
+
+[type="hosted"] > .viewable {
+  display: block;
 }
 
 .variables-view {

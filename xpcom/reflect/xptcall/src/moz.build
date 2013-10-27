@@ -8,7 +8,7 @@ DIRS += ['md']
 
 MODULE = 'xpcom'
 
-CPP_SOURCES += [
+SOURCES += [
     'xptcall.cpp',
 ]
 

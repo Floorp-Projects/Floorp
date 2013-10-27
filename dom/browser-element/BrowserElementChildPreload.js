@@ -265,12 +265,18 @@ BrowserElementChild.prototype = {
     Services.obs.addObserver(this,
                              'xpcom-shutdown',
                              /* ownsWeak = */ true);
+
+    Services.obs.addObserver(this,
+                             'activity-done',
+                             /* ownsWeak = */ true);
   },
 
   observe: function(subject, topic, data) {
     // Ignore notifications not about our document.  (Note that |content| /can/
     // be null; see bug 874900.)
-    if (!content || subject != content.document)
+    if (topic !== 'activity-done' && (!content || subject != content.document))
+      return;
+    if (topic == 'activity-done' && docShell !== subject)
       return;
     switch (topic) {
       case 'fullscreen-origin-change':
@@ -281,6 +287,9 @@ BrowserElementChild.prototype = {
         break;
       case 'ask-parent-to-rollback-fullscreen':
         sendAsyncMsg('rollback-fullscreen');
+        break;
+      case 'activity-done':
+        sendAsyncMsg('activitydone', { success: (data == 'activity-success') });
         break;
       case 'xpcom-shutdown':
         this._shuttingDown = true;

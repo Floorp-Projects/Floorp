@@ -6,22 +6,22 @@
 
 MODULE = 'mozgnome'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsGnomeModule.cpp',
 ]
 
 if CONFIG['MOZ_ENABLE_GCONF']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsGConfService.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_GNOMEVFS']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsGnomeVFSService.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_GIO']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsGIOService.cpp',
         'nsGSettingsService.cpp',
     ]

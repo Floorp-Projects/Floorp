@@ -16,9 +16,9 @@ class nsEventChainPostVisitor;
 
 #include "mozilla/Attributes.h"
 #include "nsIDOMEventTarget.h"
-#include "nsEventListenerManager.h"
 #include "nsPIWindowRoot.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsAutoPtr.h"
 
 class nsWindowRoot : public nsPIWindowRoot
 {

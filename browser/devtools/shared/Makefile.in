@@ -9,3 +9,4 @@ libs::
 	$(NSINSTALL) $(srcdir)/*.jsm $(FINAL_TARGET)/modules/devtools
 	$(NSINSTALL) $(srcdir)/widgets/*.jsm $(FINAL_TARGET)/modules/devtools
 	$(NSINSTALL) $(srcdir)/*.js $(FINAL_TARGET)/modules/devtools/shared
+	$(NSINSTALL) $(srcdir)/widgets/*.js $(FINAL_TARGET)/modules/devtools/shared/widgets
