@@ -2421,7 +2421,7 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                         return false;
                     }
                 }
-                memset(intmap, 0, size_t(intmap_bitlen) / JS_BITMAP_NBITS);
+                memset(intmap, 0, size_t(intmap_bitlen) / CHAR_BIT);
             }
             if (JS_TEST_BIT(intmap, i)) {
                 switchOp = JSOP_CONDSWITCH;
