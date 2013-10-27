@@ -10,7 +10,7 @@ function run_test() {
   logTestInfo("testing write access to the application directory");
   var testFile = getCurrentProcessDir();
   testFile.append("update_write_access_test");
-  testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+  testFile.create(AUS_Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
   do_check_true(testFile.exists());
   testFile.remove(false);
   do_check_false(testFile.exists());
