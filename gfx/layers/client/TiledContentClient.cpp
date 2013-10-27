@@ -421,7 +421,7 @@ BasicTiledLayerBuffer::ValidateTile(BasicTiledLayerTile aTile,
 static nsIntRect
 RoundedTransformViewportBounds(const gfx::Rect& aViewport,
                                const CSSPoint& aScrollOffset,
-                               const gfxSize& aResolution,
+                               const LayerSize& aResolution,
                                float aScaleX,
                                float aScaleY,
                                const gfx3DMatrix& aTransform)

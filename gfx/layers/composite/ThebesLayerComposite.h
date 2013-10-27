@@ -86,7 +86,7 @@ protected:
 
 private:
   gfxRect GetDisplayPort();
-  gfxSize GetEffectiveResolution();
+  LayerSize GetEffectiveResolution();
   gfxRect GetCompositionBounds();
 
   RefPtr<ContentHost> mBuffer;
