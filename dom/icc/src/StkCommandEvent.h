@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_icc_stkcommandevent_h
-#define mozilla_dom_icc_stkcommandevent_h
+#ifndef mozilla_dom_StkCommandEvent_h
+#define mozilla_dom_StkCommandEvent_h
 
+#include "mozilla/dom/MozStkCommandEventBinding.h"
 #include "nsDOMEvent.h"
 #include "SimToolKit.h"
-#include "mozilla/dom/MozStkCommandEventBinding.h"
 
 namespace mozilla {
 namespace dom {
-namespace icc {
 
 class StkCommandEvent : public nsDOMEvent,
                         public nsIDOMMozStkCommandEvent
@@ -49,10 +48,10 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::MozStkCommandEventBinding::Wrap(aCx, aScope, this);
+    return MozStkCommandEventBinding::Wrap(aCx, aScope, this);
   }
 
-  JS::Value GetCommand(JSContext* aCx, mozilla::ErrorResult& aRv)
+  JS::Value GetCommand(JSContext* aCx, ErrorResult& aRv)
   {
     JS::Rooted<JS::Value> retVal(aCx);
     aRv = GetCommand(aCx, retVal.address());
@@ -60,7 +59,7 @@ public:
   }
 
 private:
-  StkCommandEvent(mozilla::dom::EventTarget* aOwner)
+  StkCommandEvent(EventTarget* aOwner)
   : nsDOMEvent(aOwner, nullptr, nullptr)
   {
     SetIsDOMBinding();
@@ -70,8 +69,7 @@ private:
   { }
 };
 
-}
-}
-}
+} // namespace dom
+} // namespace mozilla
 
-#endif // mozilla_dom_icc_stkcommandevent_h
+#endif // mozilla_dom_StkCommandEvent_h

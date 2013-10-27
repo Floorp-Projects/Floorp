@@ -4,20 +4,11 @@
 
 VPATH            = $(srcdir)
 
-ifdef MOZ_B2G_RIL
-endif
-
 include $(topsrcdir)/dom/dom-config.mk
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
-
-ifdef MOZ_B2G_RIL
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/dom/icc/src \
-  $(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
