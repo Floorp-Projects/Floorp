@@ -132,13 +132,6 @@ YCbCrImageDataSerializer::ComputeMinBufferSize(const LayerIntSize& aYSize,
          + MOZ_ALIGN_WORD(sizeof(YCbCrBufferInfo));
 }
 
-size_t
-YCbCrImageDataSerializer::ComputeMinBufferSize(const gfxIntSize& aYSize,
-                                               const gfxIntSize& aCbCrSize)
-{
-  return ComputeMinBufferSize(LayerIntSize(aYSize.width, aYSize.height),
-                              LayerIntSize(aCbCrSize.width, aCbCrSize.height));
-}
 // Offset in bytes
 static size_t ComputeOffset(uint32_t aSize)
 {
@@ -169,16 +162,6 @@ YCbCrImageDataSerializer::InitializeBufferInfo(const LayerIntSize& aYSize,
   info->mCbCrWidth = aCbCrSize.width;
   info->mCbCrHeight = aCbCrSize.height;
   info->mStereoMode = aStereoMode;
-}
-
-void
-YCbCrImageDataSerializer::InitializeBufferInfo(const gfxIntSize& aYSize,
-                                               const gfxIntSize& aCbCrSize,
-                                               StereoMode aStereoMode)
-{
-  InitializeBufferInfo(LayerIntSize(aYSize.width, aYSize.height),
-                       LayerIntSize(aCbCrSize.width, aCbCrSize.height),
-                       aStereoMode);
 }
 
 static void CopyLineWithSkip(const uint8_t* src, uint8_t* dst, uint32_t len, uint32_t skip) {
