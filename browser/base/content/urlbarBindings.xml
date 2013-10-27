@@ -1567,14 +1567,20 @@
       <field name="_items">[]</field>
       <constructor><![CDATA[
         const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-        for (let action of this.notification.options.centerActions) {
+        let sortedActions = [];
+        for (let action of this.notification.options.centerActions.values()) {
+          sortedActions.push(action);
+        }
+        sortedActions.sort((a, b) => a.pluginName.localeCompare(b.pluginName));
+
+        for (let action of sortedActions) {
           let item = document.createElementNS(XUL_NS, "row");
           item.setAttribute("class", "plugin-popupnotification-centeritem");
           item.action = action;
           this.appendChild(item);
           this._items.push(item);
         }
-        switch (this.notification.options.centerActions.length) {
+        switch (this._items.length) {
           case 0:
             PopupNotifications._dismiss();
             break;
@@ -1639,7 +1645,7 @@
       </method>
       <method name="_setupSingleState">
         <body><![CDATA[
-          var action = this.notification.options.centerActions[0];
+          var action = this._items[0].action;
           var host = action.pluginPermissionHost;
 
           let label, linkLabel, linkUrl, button1, button2;
@@ -1803,7 +1809,7 @@
       <method name="_singleActivateNow">
         <body><![CDATA[
           gPluginHandler._updatePluginPermission(this.notification,
-            this.notification.options.centerActions[0],
+            this._items[0].action,
             "allownow");
           this._cancel();
         ]]></body>
@@ -1811,7 +1817,7 @@
       <method name="_singleBlock">
         <body><![CDATA[
           gPluginHandler._updatePluginPermission(this.notification,
-            this.notification.options.centerActions[0],
+            this._items[0].action,
             "block");
             this._cancel();
         ]]></body>
@@ -1819,7 +1825,7 @@
       <method name="_singleActivateAlways">
         <body><![CDATA[
           gPluginHandler._updatePluginPermission(this.notification,
-            this.notification.options.centerActions[0],
+            this._items[0].action,
             "allowalways");
           this._cancel();
         ]]></body>
@@ -1827,7 +1833,7 @@
       <method name="_singleContinue">
         <body><![CDATA[
           gPluginHandler._updatePluginPermission(this.notification,
-            this.notification.options.centerActions[0],
+            this._items[0].action,
             "continue");
           this._cancel();
         ]]></body>
