@@ -181,7 +181,7 @@ function test5() {
   ok(notification.dismissed, "Test 5: The plugin notification should be dismissed by default");
 
   notification.reshow();
-  is(notification.options.centerActions.length, 1, "Test 5: Only the blocked plugin should be present in the notification");
+  is(notification.options.centerActions.size, 1, "Test 5: Only the blocked plugin should be present in the notification");
   ok(PopupNotifications.panel.firstChild._buttonContainer.hidden, "Part 5: The blocked plugins notification should not have any buttons visible.");
 
   ok(!gTestBrowser.missingPlugins, "Test 5, Should not be a missing plugin list");
@@ -443,10 +443,11 @@ function test18f() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 18f, Plugin should not be activated");
 
-  // XXXBAD: this code doesn't do what you think it does! it is actually
-  // observing the "removed" event of the old notification, since we create
-  // a *new* one when the plugin is clicked.
-  notification.options.eventCallback = function() { executeSoon(test18g); };
+  var oldEventCallback = notification.options.eventCallback;
+  notification.options.eventCallback = function() {
+    oldEventCallback();
+    executeSoon(test18g);
+  };
   EventUtils.synthesizeMouseAtCenter(plugin, {}, gTestBrowser.contentWindow);
 }
 
@@ -605,10 +606,10 @@ function test21a() {
 
   // we have to actually show the panel to get the bindings to instantiate
   notification.reshow();
-  is(notification.options.centerActions.length, 2, "Test 21a, Should have two types of plugin in the notification");
+  is(notification.options.centerActions.size, 2, "Test 21a, Should have two types of plugin in the notification");
 
   var centerAction = null;
-  for (var action of notification.options.centerActions) {
+  for (var action of notification.options.centerActions.values()) {
     if (action.pluginName == "Test") {
       centerAction = action;
       break;
@@ -642,7 +643,7 @@ function test21c() {
   ok(notification, "Test 21c, Should have a click-to-play notification");
 
   notification.reshow();
-  ok(notification.options.centerActions.length == 2, "Test 21c, Should have one type of plugin in the notification");
+  ok(notification.options.centerActions.size == 2, "Test 21c, Should have one type of plugin in the notification");
 
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("test");
@@ -663,7 +664,7 @@ function test21c() {
   }
 
   var centerAction = null;
-  for (var action of notification.options.centerActions) {
+  for (var action of notification.options.centerActions.values()) {
     if (action.pluginName == "Second Test") {
       centerAction = action;
       break;
