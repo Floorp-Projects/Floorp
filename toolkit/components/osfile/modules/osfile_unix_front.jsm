@@ -171,6 +171,11 @@
      /**
       * Flushes the file's buffers and causes all buffered data
       * to be written.
+      * Disk flushes are very expensive and therefore should be used carefully,
+      * sparingly and only in scenarios where it is vital that data survives
+      * system crashes. Even though the function will be executed off the
+      * main-thread, it might still affect the overall performance of any
+      * running application.
       *
       * @throws {OS.File.Error} In case of I/O error.
       */
