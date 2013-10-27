@@ -12,7 +12,6 @@
 #include "ContentHost.h"                // for ContentHost
 #include "TiledLayerBuffer.h"           // for TiledLayerBuffer, etc
 #include "CompositableHost.h"
-#include "gfxPoint.h"                   // for gfxSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -106,13 +105,13 @@ public:
   void Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,
               const nsIntRegion& aNewValidRegion,
               const nsIntRegion& aInvalidateRegion,
-              const gfxSize& aResolution);
+              const LayerSize& aResolution);
 
   TiledTexture GetPlaceholderTile() const { return TiledTexture(); }
 
   // Stores the absolute resolution of the containing frame, calculated
   // by the sum of the resolutions of all parent layers' FrameMetrics.
-  const gfxSize& GetFrameResolution() { return mFrameResolution; }
+  const LayerSize& GetFrameResolution() { return mFrameResolution; }
 
   void SetCompositor(Compositor* aCompositor)
   {
@@ -134,7 +133,7 @@ protected:
 private:
   Compositor* mCompositor;
   const BasicTiledLayerBuffer* mMainMemoryTiledBuffer;
-  gfxSize mFrameResolution;
+  LayerSize mFrameResolution;
 };
 
 /**
