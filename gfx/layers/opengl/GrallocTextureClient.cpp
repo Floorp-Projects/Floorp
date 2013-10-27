@@ -223,10 +223,12 @@ GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize)
 }
 
 bool
-GrallocTextureClientOGL::AllocateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbCrSize, StereoMode aStereoMode)
+GrallocTextureClientOGL::AllocateForYCbCr(LayerIntSize aYSize,
+                                          LayerIntSize aCbCrSize,
+                                          StereoMode aStereoMode)
 {
   MOZ_ASSERT(IsValid());
-  return AllocateGralloc(aYSize,
+  return AllocateGralloc(aYSize.ToUnknownSize(),
                          HAL_PIXEL_FORMAT_YV12,
                          android::GraphicBuffer::USAGE_SW_READ_OFTEN);
 }

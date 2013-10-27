@@ -10,7 +10,6 @@
 #include "ImageContainer.h"             // for ImageBackendData, etc
 #include "ImageLayers.h"                // for ImageLayer
 #include "LayerManagerOGL.h"            // for LayerOGL
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Mutex.h"              // for Mutex
 #include "mozilla/mozalloc.h"           // for operator delete
@@ -89,8 +88,8 @@ public:
   };
 
   void RecycleTexture(GLTexture *aTexture, TextureType aType,
-                      const gfxIntSize& aSize);
-  void GetTexture(TextureType aType, const gfxIntSize& aSize,
+                      const LayerIntSize& aSize);
+  void GetTexture(TextureType aType, const LayerIntSize& aSize,
                   GLContext *aContext, GLTexture *aOutTexture);
 
 private:
@@ -101,7 +100,7 @@ private:
   Mutex mLock;
 
   nsTArray<GLTexture> mRecycledTextures[2];
-  gfxIntSize mRecycledTextureSizes[2];
+  LayerIntSize mRecycledTextureSizes[2];
 };
 
 class ImageLayerOGL : public ImageLayer,
@@ -146,7 +145,7 @@ struct PlanarYCbCrOGLBackendData : public ImageBackendData
   }
 
   GLTexture mTextures[3];
-  gfxIntSize mYSize, mCbCrSize;
+  LayerIntSize mYSize, mCbCrSize;
   nsRefPtr<TextureRecycleBin> mTextureRecycleBin;
 };
 

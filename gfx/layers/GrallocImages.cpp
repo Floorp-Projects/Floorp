@@ -76,13 +76,13 @@ GrallocImage::SetData(const Data& aData)
   NS_PRECONDITION(aData.mYStride % 16 == 0, "Image should have stride of multiple of 16 pixels");
 
   mData = aData;
-  mSize = aData.mPicSize;
+  mSize = aData.mPicSize.ToUnknownSize();
 
   if (!mGraphicBuffer.get()) {
 
     SurfaceDescriptor desc;
     ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
-    ibc->AllocSurfaceDescriptorGralloc(aData.mYSize,
+    ibc->AllocSurfaceDescriptorGralloc(ThebesIntSize(aData.mYSize.ToUnknownSize()),
                                        HAL_PIXEL_FORMAT_YV12,
                                        GraphicBuffer::USAGE_SW_READ_OFTEN |
                                        GraphicBuffer::USAGE_SW_WRITE_OFTEN |

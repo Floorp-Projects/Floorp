@@ -76,15 +76,15 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 
   layers::PlanarYCbCrData data;
   data.mYChannel = frame;
-  data.mYSize = gfxIntSize(mWidth, mHeight);
+  data.mYSize = LayerIntSize(mWidth, mHeight);
   data.mYStride = mWidth * lumaBpp/ 8;
   data.mCbCrStride = mWidth * chromaBpp / 8;
   data.mCbChannel = frame + mHeight * data.mYStride;
   data.mCrChannel = data.mCbChannel + mHeight * data.mCbCrStride / 2;
-  data.mCbCrSize = gfxIntSize(mWidth/ 2, mHeight/ 2);
+  data.mCbCrSize = LayerIntSize(mWidth/ 2, mHeight/ 2);
   data.mPicX = 0;
   data.mPicY = 0;
-  data.mPicSize = gfxIntSize(mWidth, mHeight);
+  data.mPicSize = LayerIntSize(mWidth, mHeight);
   data.mStereoMode = STEREO_MODE_MONO;
 
   videoImage->SetData(data);

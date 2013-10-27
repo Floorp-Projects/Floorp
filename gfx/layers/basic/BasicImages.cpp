@@ -101,7 +101,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
 
   gfxImageFormat format = GetOffscreenFormat();
 
-  gfx::IntSize size(mScaleHint);
+  LayerIntSize size(mScaleHint.width, mScaleHint.height);
   gfxUtils::GetYCbCrToRGBDestFormatAndSize(aData, format, size);
   if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
       size.height > PlanarYCbCrImage::MAX_DIMENSION) {
@@ -118,7 +118,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
 
   gfxUtils::ConvertYCbCrToRGB(aData, format, size, mDecodedBuffer, mStride);
   SetOffscreenFormat(format);
-  mSize = size;
+  mSize = size.ToUnknownSize();
 }
 
 static cairo_user_data_key_t imageSurfaceDataKey;
