@@ -136,33 +136,33 @@ add_task(function test_getSummary()
 });
 
 /**
- * Tests that the getSystemDownloadsDirectory returns a valid nsFile
- * download directory object.
+ * Tests that the getSystemDownloadsDirectory returns a non-empty download
+ * directory string.
  */
 add_task(function test_getSystemDownloadsDirectory()
 {
   let downloadDir = yield Downloads.getSystemDownloadsDirectory();
-  do_check_true(downloadDir instanceof Ci.nsIFile);
+  do_check_neq(downloadDir, "");
 });
 
 /**
- * Tests that the getPreferredDownloadsDirectory returns a valid nsFile
- * download directory object.
+ * Tests that the getPreferredDownloadsDirectory returns a non-empty download
+ * directory string.
  */
 add_task(function test_getPreferredDownloadsDirectory()
 {
   let downloadDir = yield Downloads.getPreferredDownloadsDirectory();
-  do_check_true(downloadDir instanceof Ci.nsIFile);
+  do_check_neq(downloadDir, "");
 });
 
 /**
- * Tests that the getTemporaryDownloadsDirectory returns a valid nsFile
- * download directory object.
+ * Tests that the getTemporaryDownloadsDirectory returns a non-empty download
+ * directory string.
  */
 add_task(function test_getTemporaryDownloadsDirectory()
 {
   let downloadDir = yield Downloads.getTemporaryDownloadsDirectory();
-  do_check_true(downloadDir instanceof Ci.nsIFile);
+  do_check_neq(downloadDir, "");
 });
 
 ////////////////////////////////////////////////////////////////////////////////

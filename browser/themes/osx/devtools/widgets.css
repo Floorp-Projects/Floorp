@@ -279,6 +279,8 @@
   color: #000;
 }
 
+/* SideMenuWidget container */
+
 .side-menu-widget-container[with-arrows=true]:-moz-locale-dir(ltr) {
   box-shadow: inset -1px 0 0 #222426;
 }
@@ -286,6 +288,18 @@
 .side-menu-widget-container[with-arrows=true]:-moz-locale-dir(rtl) {
   box-shadow: inset 1px 0 0 #222426;
 }
+
+.side-menu-widget-container[with-arrows=true] .side-menu-widget-group {
+  /* To allow visibility of the dark margin shadow. */
+  -moz-margin-end: 1px;
+}
+
+.side-menu-widget-container[with-arrows=true] .side-menu-widget-item {
+  /* To compensate for the arrow image's dark margin. */
+  -moz-margin-end: -1px;
+}
+
+/* SideMenuWidget groups */
 
 .side-menu-widget-group-title {
   padding: 4px;
@@ -307,6 +321,8 @@
   margin: 0;
   padding: 0;
 }
+
+/* SideMenuWidget items */
 
 .side-menu-widget-item[theme="dark"] {
   border-top: 1px solid hsla(210,8%,5%,.25);
@@ -343,14 +359,16 @@
 }
 
 .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(itemArrow-ltr.png), linear-gradient(to right, black, black);
+  background-image: url(itemArrow-ltr.png), linear-gradient(to right, #222426, #222426);
   background-position: center right, top right;
 }
 
 .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-rtl.png), linear-gradient(to right, black, black);
+  background-image: url(itemArrow-rtl.png), linear-gradient(to right, #222426, #222426);
   background-position: center left, top left;
 }
+
+/* SideMenuWidget items contents */
 
 .side-menu-widget-item-label {
   padding: 4px 0px;
@@ -384,6 +402,8 @@
   color: #f5f7fa;
   text-shadow: 0 1px 1px #111;
 }
+
+/* SideMenuWidget misc */
 
 .side-menu-widget-empty-notice-container {
   padding: 12px;
@@ -565,6 +585,26 @@
   text-shadow: 0 0 8px #ccf;
 }
 
+/* Aligned values */
+
+.variables-view-container[aligned-values] .title > .separator {
+  -moz-box-flex: 1;
+}
+
+.variables-view-container[aligned-values] .title > .value {
+  width: 70vw;
+}
+
+.variables-view-container[aligned-values] .title > .element-value-input {
+  width: calc(70vw - 10px);
+}
+
+/* Actions first */
+
+.variables-view-container[actions-first] .variables-view-delete {
+  -moz-box-ordinal-group: 0;
+}
+
 /* Variables and properties tooltips */
 
 .variable-or-property > tooltip > label {
@@ -598,10 +638,6 @@
 
 .variables-view-delete:active {
   -moz-image-region: rect(0,48px,16px,32px);
-}
-
-*:not(:hover) .variables-view-delete {
-  display: none;
 }
 
 .variables-view-delete > .toolbarbutton-text {
@@ -663,3 +699,5 @@
 .arrow[invisible] {
   visibility: hidden;
 }
+
+%include ../../shared/devtools/app-manager/manifest-editor.inc.css

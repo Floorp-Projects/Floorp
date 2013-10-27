@@ -6,7 +6,7 @@
 
 MODULE = 'imgicoe'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsICOEncoder.cpp',
 ]
 

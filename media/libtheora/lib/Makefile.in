@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FORCE_STATIC_LIB = 1
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
@@ -84,6 +83,12 @@ armopts-gnu.S: armopts.s
 %-gnu.$(ASM_SUFFIX): %.s
 	$(PERL) $(srcdir)/arm/arm2gnu.pl < $< > $@
 
+ASFILES += $(addsuffix .$(ASM_SUFFIX), \
+  armbits-gnu \
+  armfrag-gnu \
+  armidct-gnu \
+  armloop-gnu \
+)
 endif
 endif
 

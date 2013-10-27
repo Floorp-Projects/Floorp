@@ -36,3 +36,26 @@ sfnt2woff svg.ttf
 
 [1] https://github.com/edf825/SVG-OpenType-Utils
 [2] http://people.mozilla.com/~jkew/woff/
+
+
+
+Additional test fonts:
+======================
+
+svg-glyph-extents.otf
+---------------------
+
+This is a copy of Fira Sans with a simple SVG table added using the tool from
+https://github.com/rocallahan/svg-opentype-workshop. The SVG table defines four
+glyphs, corresponding to 'A' through 'D':
+
+ <svg xmlns='http://www.w3.org/2000/svg'>
+   <rect id='glyph36' x='0' y='-1000' width='1000' height='1500' fill='red'/>
+   <rect id='glyph37' x='0' y='-1000' width='1000' height='1500' fill='green' transform='scale(2)'/>
+   <g id='glyph38'>
+     <rect x='0' y='-1000' width='1000' height='1500' fill='red'/>
+   </g>
+   <g id='glyph39'>
+     <rect x='0' y='-1000' width='1000' height='1500' fill='green' transform='scale(2)'/>
+   </g>
+ </svg>

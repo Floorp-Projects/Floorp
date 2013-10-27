@@ -35,6 +35,7 @@ CompositableClient::~CompositableClient()
   Destroy();
 
   FlushTexturesToRemoveCallbacks();
+
   MOZ_ASSERT(mTexturesToRemove.Length() == 0, "would leak textures pending for deletion");
 }
 
@@ -86,7 +87,6 @@ CompositableClient::Destroy()
   if (!mCompositableChild) {
     return;
   }
-  mCompositableChild->SetClient(nullptr);
   mCompositableChild->Destroy();
   mCompositableChild = nullptr;
 }
@@ -257,13 +257,5 @@ CompositableClient::OnTransaction()
   mTexturesToRemove.Clear();
 }
 
-
-void
-CompositableChild::ActorDestroy(ActorDestroyReason why)
-{
-  if (mCompositableClient) {
-    mCompositableClient->OnActorDestroy();
-  }
-}
 } // namespace layers
 } // namespace mozilla

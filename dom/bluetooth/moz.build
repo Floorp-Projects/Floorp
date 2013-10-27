@@ -25,7 +25,7 @@ if CONFIG['MOZ_B2G_BT']:
         'nsIDOMBluetoothStatusChangedEvent.idl',
     ]
 
-    CPP_SOURCES += [
+    SOURCES += [
         'BluetoothA2dpManager.cpp',
         'BluetoothAdapter.cpp',
         'BluetoothDevice.cpp',
@@ -48,23 +48,23 @@ if CONFIG['MOZ_B2G_BT']:
     ]
 
     if CONFIG['MOZ_B2G_RIL']:
-        CPP_SOURCES += [
+        SOURCES += [
             'BluetoothRilListener.cpp',
         ]
 
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         if CONFIG['MOZ_B2G_BT_BLUEZ']:
-            CPP_SOURCES += [
+            SOURCES += [
                'gonk/BluetoothGonkService.cpp',
                'linux/BluetoothDBusService.cpp',
             ]
         if CONFIG['MOZ_B2G_BT_BLUEDROID']:
-            CPP_SOURCES += [
+            SOURCES += [
                 'BluetoothServiceBluedroid.cpp',
             ]
     else:
         if CONFIG['MOZ_ENABLE_DBUS']:
-            CPP_SOURCES += [
+            SOURCES += [
                  'linux/BluetoothDBusService.cpp',
             ]
 
@@ -84,3 +84,10 @@ IPDL_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
+LOCAL_INCLUDES += [
+    '../base',
+    '../network/src',
+    '../system/gonk',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')

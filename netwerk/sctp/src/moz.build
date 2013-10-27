@@ -12,7 +12,7 @@ EXPORTS.mozilla.net += [
     'usrsctp.h',
 ]
 
-CSRCS += [
+SOURCES += [
     'netinet/sctp_asconf.c',
     'netinet/sctp_auth.c',
     'netinet/sctp_bsd_addr.c',
@@ -41,11 +41,13 @@ CSRCS += [
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':
-    CPP_SOURCES += [
+    SOURCES += [
         'ifaddrs_android.cpp',
     ]
 
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'nksctp_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

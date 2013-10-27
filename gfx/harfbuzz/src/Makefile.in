@@ -24,11 +24,6 @@
 # Mozilla author(s): Jonathan Kew
 #
 
-
-ifeq ($(OS_ARCH),WINNT)
-FORCE_STATIC_LIB = 1
-endif
-
 LOCAL_INCLUDES  += -I$(srcdir) 
 
 

@@ -7,6 +7,7 @@
 #include "AccessibleWrap.h"
 
 #include "Accessible2_i.c"
+#include "Accessible2_2_i.c"
 #include "AccessibleRole.h"
 #include "AccessibleStates.h"
 
@@ -35,8 +36,12 @@ ia2Accessible::QueryInterface(REFIID iid, void** ppv)
 
   *ppv = nullptr;
 
-  if (IID_IAccessible2 == iid && !Compatibility::IsIA2Off()) {
+  if (IID_IAccessible2_2 == iid)
+    *ppv = static_cast<IAccessible2_2*>(this);
+  else if (IID_IAccessible2 == iid && !Compatibility::IsIA2Off())
     *ppv = static_cast<IAccessible2*>(this);
+
+  if (*ppv) {
     (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
     return S_OK;
   }
@@ -518,6 +523,89 @@ ia2Accessible::get_attributes(BSTR* aAttributes)
   // characters ":;=,\".
   nsCOMPtr<nsIPersistentProperties> attributes = acc->Attributes();
   return ConvertToIA2Attributes(attributes, aAttributes);
+
+  A11Y_TRYBLOCK_END
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// IAccessible2_2
+
+STDMETHODIMP
+ia2Accessible::get_attribute(BSTR name, VARIANT* aAttribute)
+{
+  A11Y_TRYBLOCK_BEGIN
+
+  if (!aAttribute)
+    return E_INVALIDARG;
+
+  return E_NOTIMPL;
+
+  A11Y_TRYBLOCK_END
+}
+
+STDMETHODIMP
+ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
+                                       long* aCaretOffset)
+{
+  A11Y_TRYBLOCK_BEGIN
+
+  if (!aAccessible || !aCaretOffset)
+    return E_INVALIDARG;
+
+  *aAccessible = nullptr;
+  *aCaretOffset = -1;
+  return E_NOTIMPL;
+
+  A11Y_TRYBLOCK_END
+}
+
+STDMETHODIMP
+ia2Accessible::get_relationTargetsOfType(BSTR aType,
+                                         long aMaxTargets,
+                                         IUnknown*** aTargets,
+                                         long* aNTargets)
+{
+  A11Y_TRYBLOCK_BEGIN
+
+  if (!aTargets || !aNTargets)
+    return E_INVALIDARG;
+  *aNTargets = 0;
+
+  Maybe<RelationType> relationType;
+  for (uint32_t idx = 0; idx < ArrayLength(sRelationTypePairs); idx++) {
+    if (wcscmp(aType, sRelationTypePairs[idx].second) == 0) {
+      relationType.construct(sRelationTypePairs[idx].first);
+      break;
+    }
+  }
+  if (relationType.empty())
+    return E_INVALIDARG;
+
+  AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
+  if (acc->IsDefunct())
+    return CO_E_OBJNOTCONNECTED;
+
+  Relation rel = acc->RelationByType(relationType.ref());
+
+  nsTArray<Accessible*> targets;
+  Accessible* target = nullptr;
+  while ((target = rel.Next()) &&
+         static_cast<long>(targets.Length()) <= aMaxTargets)
+    targets.AppendElement(target);
+
+  *aNTargets = targets.Length();
+  *aTargets = static_cast<IUnknown**>(
+    ::CoTaskMemAlloc(sizeof(IUnknown*) * *aNTargets));
+  if (!*aTargets)
+    return E_OUTOFMEMORY;
+
+  for (int32_t i = 0; i < *aNTargets; i++) {
+    AccessibleWrap* target= static_cast<AccessibleWrap*>(targets[i]);
+    (*aTargets)[i] = static_cast<IAccessible2*>(target);
+    (*aTargets)[i]->AddRef();
+  }
+
+  return S_OK;
 
   A11Y_TRYBLOCK_END
 }

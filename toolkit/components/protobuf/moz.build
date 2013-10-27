@@ -32,7 +32,7 @@ EXPORTS.protobuf.google.protobuf.io += [
     'google/protobuf/package_info.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'google/protobuf/extension_set.cc',
     'google/protobuf/generated_message_util.cc',
     'google/protobuf/io/coded_stream.cc',
@@ -47,3 +47,4 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'protobuf_s'
 
+FORCE_STATIC_LIB = True

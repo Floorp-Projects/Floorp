@@ -8,7 +8,7 @@ MODULE = 'ucgendat'
 
 PROGRAM = 'ucgendat'
 
-CSRCS += [
+SOURCES += [
     'ucgendat.c',
 ]
 

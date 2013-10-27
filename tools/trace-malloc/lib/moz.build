@@ -10,16 +10,16 @@ EXPORTS += [
     'nsTraceMalloc.h',
 ]
 
-CSRCS += [
+SOURCES += [
     'nsTraceMalloc.c',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsTypeInfo.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
+    SOURCES += [
         'nsDebugHelpWin32.cpp',
         'nsWinTraceMalloc.cpp',
     ]

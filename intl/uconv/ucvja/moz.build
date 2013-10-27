@@ -11,7 +11,7 @@ EXPORTS += [
     'nsUCVJACID.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'UnifiedUCVJA.cpp',
 ]
 

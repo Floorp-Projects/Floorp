@@ -540,16 +540,6 @@ HistogramView.prototype = {
       }
       var roundedHeight = Math.round(step.value * height);
       ctx.fillRect(step.x, height - roundedHeight, step.width, roundedHeight);
-      if (step.marker) {
-        var x = step.x + step.width + 2;
-        var endPoint = x + ctx.measureText(step.marker).width;
-        var lastDataPoint = this._histogramData[this._histogramData.length-1];
-        if (endPoint >= lastDataPoint.x + lastDataPoint.width) {
-          x -= endPoint - (lastDataPoint.x + lastDataPoint.width) - 1;
-        }
-        ctx.fillText(step.marker, x, 15 + ((markerCount % 2) == 0 ? 0 : 20));
-        markerCount++;
-      }
     }
 
     this._finishedRendering = true;

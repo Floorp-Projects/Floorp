@@ -6,7 +6,7 @@
 
 MODULE = 'uconv'
 
-CPP_SOURCES += [
+SOURCES += [
     'UnifiedUCVUtils.cpp',
 ]
 
@@ -14,7 +14,7 @@ LIBRARY_NAME = 'ucvutil_s'
 
 LIBXUL_LIBRARY = True
 
-CSRCS += [
+SOURCES += [
     'UnifiedUCVCUtils.c',
 ]
 

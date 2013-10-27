@@ -10,9 +10,10 @@ EXPORTS.mozilla.browser += [
     'AboutRedirector.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AboutRedirector.cpp',
 ]
 
 LIBRARY_NAME = 'browserabout_s'
 
+FORCE_STATIC_LIB = True

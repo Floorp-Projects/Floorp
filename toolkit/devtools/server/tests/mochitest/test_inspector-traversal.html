@@ -73,6 +73,25 @@ addTest(function testOuterHTML() {
   }).then(runNextTest));
 });
 
+addTest(function testSetOuterHTMLNode() {
+  let newHTML = "<p id=\"edit-html-done\">after edit</p>";
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#edit-html").then(node => {
+    return gWalker.setOuterHTML(node, newHTML);
+  }).then(() => {
+    return gWalker.querySelector(gWalker.rootNode, "#edit-html-done");
+  }).then(node => {
+    return gWalker.outerHTML(node);
+  }).then(longstring => {
+    return longstring.string();
+  }).then(outerHTML => {
+    is(outerHTML, newHTML, "outerHTML has been updated");
+  }).then(() => {
+    return gWalker.querySelector(gWalker.rootNode, "#edit-html");
+  }).then(node => {
+    ok(!node, "The node with the old ID cannot be selected anymore");
+  }).then(runNextTest));
+});
+
 addTest(function testQuerySelector() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#longlist").then(node => {
     is(node.getAttribute("data-test"), "exists", "should have found the right node");

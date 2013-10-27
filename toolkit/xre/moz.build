@@ -22,16 +22,16 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += ['nsWindowsDllInterceptor.h']
-    CPP_SOURCES += [
+    SOURCES += [
         'nsNativeAppSupportWin.cpp',
         'nsWindowsDllBlocklist.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS += ['MacQuirks.h']
-    CPP_SOURCES += [
+    SOURCES += [
         'nsCommandLineServiceMac.cpp',
     ]
-    CMMSRCS += [
+    SOURCES += [
         'MacApplicationDelegate.mm',
         'MacAutoreleasePool.mm',
         'MacLaunchHelper.mm',
@@ -39,35 +39,35 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += ['nsQAppInstance.h']
-    CPP_SOURCES += [
+    SOURCES += [
         'moc_nsNativeAppSupportQt.cpp',
         'nsNativeAppSupportQt.cpp',
         'nsQAppInstance.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    CPP_SOURCES += [
+    SOURCES += [
         'nsNativeAppSupportOS2.cpp',
     ]
 elif CONFIG['MOZ_ENABLE_GTK']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsNativeAppSupportUnix.cpp',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsNativeAppSupportDefault.cpp',
     ]
 
 if CONFIG['MOZ_X11']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsX11ErrorHandler.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    CPP_SOURCES += [
+    SOURCES += [
         'nsAndroidStartup.cpp',
     ]
 
-CPP_SOURCES += [
+SOURCES += [
     'CreateAppData.cpp',
     'nsAppRunner.cpp',
     'nsConsoleWriter.cpp',
@@ -79,18 +79,18 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_GL_DEFAULT_PROVIDER'] == 'GLX':
-    CPP_SOURCES += [
+    SOURCES += [
         'glxtest.cpp',
     ]
 
 if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
-    CPP_SOURCES += [
+    SOURCES += [
         'EventTracer.cpp',
     ]
 
 if CONFIG['MOZ_UPDATER']:
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
-        CPP_SOURCES += [
+        SOURCES += [
             'nsUpdateDriver.cpp',
         ]
 
@@ -99,4 +99,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'xulapp_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

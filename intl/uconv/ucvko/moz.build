@@ -10,7 +10,7 @@ EXPORTS += [
     'nsUCvKOCID.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'UnifiedUCVKO.cpp',
 ]
 

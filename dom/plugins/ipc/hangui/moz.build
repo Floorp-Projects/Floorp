@@ -8,7 +8,9 @@ FAIL_ON_WARNINGS = True
 
 PROGRAM = 'plugin-hang-ui'
 
-CPP_SOURCES += [
+SOURCES += [
     'MiniShmChild.cpp',
     'PluginHangUIChild.cpp',
 ]
+include('/ipc/chromium/chromium-config.mozbuild')
+

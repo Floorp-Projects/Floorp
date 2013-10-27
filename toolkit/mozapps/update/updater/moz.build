@@ -6,7 +6,7 @@
 
 PROGRAM = 'updater'
 
-CPP_SOURCES += [
+SOURCES += [
     'archivereader.cpp',
     'bspatch.cpp',
     'updater.cpp',
@@ -15,7 +15,7 @@ CPP_SOURCES += [
 have_progressui = 0
 if CONFIG['OS_ARCH'] == 'WINNT':
     have_progressui = 1
-    CPP_SOURCES += [
+    SOURCES += [
         'loaddlls.cpp',
         'progressui_win.cpp',
         'win_dirent.cpp',
@@ -23,7 +23,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 if CONFIG['MOZ_ENABLE_GTK']:
     have_progressui = 1
-    CPP_SOURCES += [
+    SOURCES += [
         'progressui_gtk.cpp',
     ]
 
@@ -31,18 +31,18 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     have_progressui = 1
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     have_progressui = 1
-    CPP_SOURCES += [
+    SOURCES += [
         'automounter_gonk.cpp',
         'progressui_gonk.cpp',
     ]
 
 if have_progressui == 0:
-    CPP_SOURCES += [
+    SOURCES += [
         'progressui_null.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CMMSRCS += [
+    SOURCES += [
         'launchchild_osx.mm',
         'progressui_osx.mm',
     ]

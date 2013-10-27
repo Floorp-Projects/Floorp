@@ -16,7 +16,7 @@ EXPORTS += [
     'nsAboutProtocolUtils.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsAboutBlank.cpp',
     'nsAboutBloat.cpp',
     'nsAboutCache.cpp',
@@ -29,4 +29,6 @@ FAIL_ON_WARNINGS = True
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'nkabout_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

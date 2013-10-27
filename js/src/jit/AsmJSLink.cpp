@@ -331,6 +331,15 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     unsigned exportIndex = callee->getExtendedSlot(ASM_EXPORT_INDEX_SLOT).toInt32();
     const AsmJSModule::ExportedFunction &func = module.exportedFunction(exportIndex);
 
+    // An asm.js module is specialized to its heap's base address and length
+    // which is normally immutable except for the neuter operation that occurs
+    // when an ArrayBuffer is transfered. Throw an internal error if we try to
+    // run with a neutered heap.
+    if (module.maybeHeapBufferObject() && module.maybeHeapBufferObject()->isNeutered()) {
+        js_ReportOverRecursed(cx);
+        return false;
+    }
+
     // The calling convention for an external call into asm.js is to pass an
     // array of 8-byte values where each value contains either a coerced int32
     // (in the low word) or double value, with the coercions specified by the

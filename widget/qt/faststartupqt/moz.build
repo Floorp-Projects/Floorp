@@ -6,7 +6,7 @@
 
 MODULE = 'faststartupqt'
 
-CPP_SOURCES += [
+SOURCES += [
     'moc_moziqwidget.cpp',
     'moc_nsFastStartupQt.cpp',
     'mozqglwidgetwrapper.cpp',
@@ -17,3 +17,4 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'faststartupqt'
 
+FORCE_STATIC_LIB = True

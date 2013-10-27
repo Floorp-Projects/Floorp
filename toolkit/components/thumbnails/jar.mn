@@ -3,6 +3,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-#ifndef RELEASE_BUILD
 + content/global/backgroundPageThumbsContent.js (content/backgroundPageThumbsContent.js)
-#endif

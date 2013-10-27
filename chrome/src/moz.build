@@ -10,7 +10,7 @@ EXPORTS.mozilla.chrome += [
     'RegistryMessageUtils.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsChromeProtocolHandler.cpp',
     'nsChromeRegistry.cpp',
     'nsChromeRegistryChrome.cpp',
@@ -22,4 +22,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'chrome_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

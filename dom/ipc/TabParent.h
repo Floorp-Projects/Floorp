@@ -162,6 +162,9 @@ public:
                                            const CSSToScreenScale& aMaxZoom);
     virtual bool RecvUpdateScrollOffset(const uint32_t& aPresShellId, const ViewID& aViewId, const CSSIntPoint& aScrollOffset);
     virtual bool RecvContentReceivedTouch(const bool& aPreventDefault);
+    virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
+                                           const bool& aIsAudio,
+                                           const bool& aIsVideo);
     virtual PContentDialogParent* AllocPContentDialogParent(const uint32_t& aType,
                                                             const nsCString& aName,
                                                             const nsCString& aFeatures,
@@ -237,6 +240,12 @@ public:
     static TabParent* GetFrom(nsIContent* aContent);
 
     ContentParent* Manager() { return mManager; }
+
+    /**
+     * Let managees query if Destroy() is already called so they don't send out
+     * messages when the PBrowser actor is being destroyed.
+     */
+    bool IsDestroyed() const { return mIsDestroyed; }
 
 protected:
     bool ReceiveMessage(const nsString& aMessage,

@@ -12,7 +12,6 @@ LOCAL_INCLUDES = -I$(topsrcdir)/dom/base
 endif
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CFLAGS          += $(GLIB_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
 CXXFLAGS        += $(GLIB_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)

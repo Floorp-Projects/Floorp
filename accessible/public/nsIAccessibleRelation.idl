@@ -11,7 +11,7 @@ interface nsIAccessible;
 /**
  * This interface gives access to an accessible's set of relations.
  */
-[scriptable, uuid(9f85fc0d-2969-48e6-b822-68140f7e5770)]
+[scriptable, uuid(55b308c4-2ae4-46bc-b4cd-4d4370e0a660)]
 interface nsIAccessibleRelation : nsISupports
 {
   /**
@@ -108,6 +108,21 @@ interface nsIAccessibleRelation : nsISupports
    * MSAA/XPCOM, it isn't for IA2 or ATK.
    */
   const unsigned long RELATION_DEFAULT_BUTTON = 0x10;
+
+  /**
+   * The target object is the containing document object.
+   */
+  const unsigned long RELATION_CONTAINING_DOCUMENT = 0x11;
+
+  /**
+   * The target object is the topmost containing document object in the tab pane.
+   */
+  const unsigned long RELATION_CONTAINING_TAB_PANE = 0x12;
+
+  /**
+   * The target object is the containing application object.
+   */
+  const unsigned long RELATION_CONTAINING_APPLICATION = 0x14;
 
   /**
    * Returns the type of the relation.

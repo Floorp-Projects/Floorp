@@ -6,7 +6,7 @@
 
 MODULE = 'locale'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsCollationMacUC.cpp',
     'nsDateTimeFormatMac.cpp',
     'nsMacCharset.cpp',

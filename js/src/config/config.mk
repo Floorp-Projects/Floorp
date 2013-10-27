@@ -41,12 +41,14 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   DIRS \
   EXTRA_PP_COMPONENTS \
   EXTRA_PP_JS_MODULES \
+  FORCE_STATIC_LIB \
   GTEST_CMMSRCS \
   GTEST_CPPSRCS \
   GTEST_CSRCS \
   HOST_CSRCS \
   HOST_LIBRARY_NAME \
   IS_COMPONENT \
+  JAVA_JAR_TARGETS \
   JS_MODULES_PATH \
   LIBRARY_NAME \
   LIBXUL_LIBRARY \
@@ -216,8 +218,8 @@ MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFI
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 ifdef _MSC_VER
-CC_WRAPPER = $(call py_action,cl)
-CXX_WRAPPER = $(call py_action,cl)
+CC_WRAPPER ?= $(call py_action,cl)
+CXX_WRAPPER ?= $(call py_action,cl)
 endif # _MSC_VER
 
 CC := $(CC_WRAPPER) $(CC)

@@ -11,7 +11,7 @@ EXPORTS += [
     'GfxInfoCollector.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'APZCCallbackHelper.cpp',
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
@@ -39,23 +39,23 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_X11']:
-    CPP_SOURCES += [
+    SOURCES += [
         'GfxInfoX11.cpp'
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('os2', 'cocoa', 'windows'):
-    CPP_SOURCES += [
+    SOURCES += [
         'nsBaseClipboard.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'os2', 'cocoa', 'windows',
                                     'android', 'gonk'):
-    CPP_SOURCES += [
+    SOURCES += [
         'nsBaseFilePicker.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'windows', 'cocoa'):
-    CPP_SOURCES += [
+    SOURCES += [
         'nsNativeTheme.cpp',
     ]
 
@@ -64,4 +64,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'xpwidgets_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -48,7 +48,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla.plugins += [
         'PluginSurfaceParent.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'COMMessageFilter.cpp',
         'MiniShmParent.cpp',
         'PluginHangUIParent.cpp',
@@ -61,12 +61,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 
 if CONFIG['MOZ_ENABLE_QT']:
-    CPP_SOURCES += [
+    SOURCES += [
         'moc_NestedLoopTimer.cpp',
         'NestedLoopTimer.cpp',
     ]
 
-CPP_SOURCES += [
+SOURCES += [
     'BrowserStreamChild.cpp',
     'BrowserStreamParent.cpp',
     'ChildAsyncCall.cpp',
@@ -88,7 +88,7 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CMMSRCS += [
+    SOURCES += [
         'PluginInterposeOSX.mm',
         'PluginUtilsOSX.mm',
     ]
@@ -112,4 +112,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'domplugins_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

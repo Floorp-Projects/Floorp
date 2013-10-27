@@ -20,8 +20,6 @@ typedef struct {
   int splitSampFreq;
   int scSampFreq;
   float sampFactor;  // scSampRate / sampFreq
-  short autoOnOff;
-  short activity;
   short skewMode;
   int bufSizeStart;
   int knownDelay;
@@ -39,7 +37,7 @@ typedef struct {
   short msInSndCardBuf;
   short filtDelay;  // Filtered delay estimate.
   int timeForDelayChange;
-  int ECstartup;
+  int startup_phase;
   int checkBuffSize;
   short lastDelayDiff;
 
@@ -61,6 +59,8 @@ typedef struct {
   RingBuffer* far_pre_buf;  // Time domain far-end pre-buffer.
 
   int lastError;
+
+  int farend_started;
 
   AecCore* aec;
 } aecpc_t;

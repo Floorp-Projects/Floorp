@@ -12,7 +12,7 @@ EXPORTS.mozilla += [
     'Sandbox.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'Sandbox.cpp',
 ]
 
@@ -21,4 +21,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'sandbox_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

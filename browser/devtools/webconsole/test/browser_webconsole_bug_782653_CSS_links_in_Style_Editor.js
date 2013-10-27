@@ -131,7 +131,7 @@ function performLineCheck(aEditor, aLine, aCallback)
 {
   function checkForCorrectState()
   {
-    is(aEditor.sourceEditor.getCaretPosition().line, aLine,
+    is(aEditor.sourceEditor.getCursor().line, aLine,
        "correct line is selected");
     is(StyleEditorUI.selectedStyleSheetIndex, aEditor.styleSheet.styleSheetIndex,
        "correct stylesheet is selected in the editor");

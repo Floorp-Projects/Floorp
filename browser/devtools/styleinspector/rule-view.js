@@ -13,6 +13,7 @@ let {CssLogic} = require("devtools/styleinspector/css-logic");
 let {InplaceEditor, editableField, editableItem} = require("devtools/shared/inplace-editor");
 let {ELEMENT_STYLE, PSEUDO_ELEMENTS} = require("devtools/server/actors/styles");
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+let {Tooltip} = require("devtools/shared/widgets/Tooltip");
 
 const {OutputParser} = require("devtools/output-parser");
 
@@ -1029,6 +1030,7 @@ TextProperty.prototype = {
  * apply to a given element.  After construction, the 'element'
  * property will be available with the user interface.
  *
+ * @param {Inspector} aInspector
  * @param {Document} aDoc
  *        The document that will contain the rule view.
  * @param {object} aStore
@@ -1039,8 +1041,9 @@ TextProperty.prototype = {
  *        The PageStyleFront for communicating with the remote server.
  * @constructor
  */
-function CssRuleView(aDoc, aStore, aPageStyle)
+function CssRuleView(aInspector, aDoc, aStore, aPageStyle)
 {
+  this.inspector = aInspector;
   this.doc = aDoc;
   this.store = aStore || {};
   this.pageStyle = aPageStyle;
@@ -1066,6 +1069,9 @@ function CssRuleView(aDoc, aStore, aPageStyle)
     theme: "auto"
   };
   this.popup = new AutocompletePopup(aDoc.defaultView.parent.document, options);
+
+  this.tooltip = new Tooltip(this.inspector.panelDoc);
+  this.tooltip.startTogglingOnHover(this.element, this._buildTooltipContent.bind(this));
 
   this._buildContextMenu();
   this._showEmpty();
@@ -1105,6 +1111,37 @@ CssRuleView.prototype = {
     }
 
     popupset.appendChild(this._contextmenu);
+  },
+
+  /**
+   * Verify that target is indeed a css value we want a tooltip on, and if yes
+   * prepare some content for the tooltip
+   */
+  _buildTooltipContent: function(target) {
+    let isValueWithImage = target.classList.contains("ruleview-propertyvalue") &&
+      target.querySelector(".theme-link");
+
+    let isImageHref = target.classList.contains("theme-link") &&
+      target.parentNode.classList.contains("ruleview-propertyvalue");
+    if (isImageHref) {
+      target = target.parentNode;
+    }
+
+    let isEditing = this.isEditing;
+
+    // If the inplace-editor is visible or if this is not a background image
+    // don't show the tooltip
+    if (this.isEditing || (!isImageHref && !isValueWithImage)) {
+      return false;
+    }
+
+    // Retrieve the TextProperty for the hovered element
+    let property = target.textProperty;
+    let href = property.rule.domRule.href;
+
+    // Fill some content
+    this.tooltip.setCssBackgroundImageContent(property.value, href);
+    return true;
   },
 
   /**
@@ -1240,6 +1277,9 @@ CssRuleView.prototype = {
     // We manage the popupNode ourselves so we also need to destroy it.
     this.doc.popupNode = null;
 
+    this.tooltip.stopTogglingOnHover(this.element);
+    this.tooltip.destroy();
+
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
     }
@@ -1306,7 +1346,6 @@ CssRuleView.prototype = {
         return promise.reject("element changed");
       }
       this._createEditors();
-
 
       // Notify anyone that cares that we refreshed.
       var evt = this.doc.createEvent("Events");
@@ -1853,6 +1892,10 @@ TextPropertyEditor.prototype = {
       tabindex: "0",
     });
 
+    // Storing the TextProperty on the valuespan for easy access
+    // (for instance by the tooltip)
+    this.valueSpan.textProperty = this.prop;
+
     // Save the initial value as the last committed value,
     // for restoring after pressing escape.
     this.committed = { name: this.prop.name,
@@ -1971,7 +2014,6 @@ TextPropertyEditor.prototype = {
       });
 
       a.addEventListener("click", (aEvent) => {
-
         // Clicks within the link shouldn't trigger editing.
         aEvent.stopPropagation();
         aEvent.preventDefault();
@@ -2133,6 +2175,7 @@ TextPropertyEditor.prototype = {
   {
     this.element.parentNode.removeChild(this.element);
     this.ruleEditor.rule.editClosestTextProperty(this.prop);
+    this.valueSpan.textProperty = null;
     this.prop.remove();
   },
 

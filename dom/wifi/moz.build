@@ -28,7 +28,7 @@ EXTRA_JS_MODULES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    CPP_SOURCES = [
+    SOURCES = [
         'NetUtils.cpp',
         'WifiProxyService.cpp',
         'WifiUtils.cpp',

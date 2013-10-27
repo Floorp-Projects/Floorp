@@ -71,6 +71,11 @@ function _Worker(browserPromise, options) {
   this.options = options;
   this.ports = new Map();
   browserPromise.then(browser => {
+    browser.addEventListener("oop-browser-crashed", () => {
+      Cu.reportError("FrameWorker remote process crashed");
+      notifyWorkerError(options.origin);
+    });
+
     let mm = browser.messageManager;
     // execute the content script and send the message to bootstrap the content
     // side of the world.

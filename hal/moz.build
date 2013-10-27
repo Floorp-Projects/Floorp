@@ -20,7 +20,7 @@ EXPORTS.mozilla += [
 ]
 
 TEST_DIRS += ['tests']
-CPP_SOURCES += [
+SOURCES += [
     'Hal.cpp',
     'HalWakeLock.cpp',
     'sandbox/SandboxHal.cpp',
@@ -28,24 +28,24 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':
-    CPP_SOURCES += [
+    SOURCES += [
         'fallback/FallbackGamepad.cpp'
     ]
 elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'cocoa':
-    CPP_SOURCES += [
+    SOURCES += [
         'cocoa/CocoaGamepad.cpp'
     ]
 elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'windows':
-    CPP_SOURCES += [
+    SOURCES += [
         'windows/WindowsGamepad.cpp'
     ]
 elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'linux':
-    CPP_SOURCES += [
+    SOURCES += [
         'linux/LinuxGamepad.cpp'
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    CPP_SOURCES += [
+    SOURCES += [
         'android/AndroidHal.cpp',
         'android/AndroidSensor.cpp',
         'fallback/FallbackAlarm.cpp',
@@ -53,7 +53,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'linux/LinuxMemory.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    CPP_SOURCES += [
+    SOURCES += [
         'gonk/GonkDiskSpaceWatcher.cpp',
         'gonk/GonkFMRadio.cpp',
         'gonk/GonkHal.cpp',
@@ -64,7 +64,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'linux/LinuxPower.cpp',
     ]
 elif CONFIG['OS_TARGET'] == 'Linux':
-    CPP_SOURCES += [
+    SOURCES += [
         'fallback/FallbackAlarm.cpp',
         'fallback/FallbackScreenConfiguration.cpp',
         'fallback/FallbackSensor.cpp',
@@ -73,15 +73,15 @@ elif CONFIG['OS_TARGET'] == 'Linux':
         'linux/LinuxPower.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
-        CPP_SOURCES += [
+        SOURCES += [
             'linux/UPowerClient.cpp',
         ]
     else:
-        CPP_SOURCES += [
+        SOURCES += [
             'fallback/FallbackBattery.cpp',
         ]
 elif CONFIG['OS_TARGET'] == 'WINNT':
-    CPP_SOURCES += [
+    SOURCES += [
         'fallback/FallbackAlarm.cpp',
         'fallback/FallbackMemory.cpp',
         'fallback/FallbackPower.cpp',
@@ -91,7 +91,7 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
         'windows/WindowsSensor.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CPP_SOURCES += [
+    SOURCES += [
         'cocoa/CocoaBattery.cpp',
         'fallback/FallbackAlarm.cpp',
         'fallback/FallbackMemory.cpp',
@@ -100,7 +100,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'fallback/FallbackVibration.cpp',
     ]
 elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
-    CPP_SOURCES += [
+    SOURCES += [
         'fallback/FallbackAlarm.cpp',
         'fallback/FallbackMemory.cpp',
         'fallback/FallbackPower.cpp',
@@ -109,15 +109,15 @@ elif CONFIG['OS_TARGET'] in ('OpenBSD', 'NetBSD', 'FreeBSD', 'DragonFly'):
         'fallback/FallbackVibration.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
-        CPP_SOURCES += [
+        SOURCES += [
             'linux/UPowerClient.cpp',
         ]
     else:
-        CPP_SOURCES += [
+        SOURCES += [
             'fallback/FallbackBattery.cpp',
         ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'fallback/FallbackAlarm.cpp',
         'fallback/FallbackBattery.cpp',
         'fallback/FallbackMemory.cpp',
@@ -129,7 +129,7 @@ else:
 
 # Fallbacks for backends implemented on Gonk only.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    CPP_SOURCES += [
+    SOURCES += [
         'fallback/FallbackDiskSpaceWatcher.cpp',
         'fallback/FallbackFactoryReset.cpp',
         'fallback/FallbackFMRadio.cpp',
@@ -143,12 +143,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
 
 # Fallbacks for backends implemented on Android only.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
-    CPP_SOURCES += [
+    SOURCES += [
         'fallback/FallbackNetwork.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CMMSRCS += [
+    SOURCES += [
         'cocoa/CocoaSensor.mm',
         'cocoa/smslib.mm',
     ]
@@ -164,4 +164,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'hal_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

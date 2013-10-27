@@ -6,8 +6,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/fmradio \
   $(NULL)
 
-include $(topsrcdir)/dom/dom-config.mk
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

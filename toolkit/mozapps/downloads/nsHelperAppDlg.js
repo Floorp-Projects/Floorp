@@ -103,6 +103,7 @@ Components.utils.import("resource://gre/modules/DownloadLastDir.jsm", downloadMo
 Components.utils.import("resource://gre/modules/DownloadPaths.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/Downloads.jsm");
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 
 /* ctor
@@ -216,7 +217,8 @@ nsUnknownContentTypeDialog.prototype = {
 
         if (autodownload) {
           // Retrieve the user's default download directory
-          let defaultFolder = yield Downloads.getPreferredDownloadsDirectory();
+          let preferredDir = yield Downloads.getPreferredDownloadsDirectory();
+          let defaultFolder = new FileUtils.File(preferredDir);
 
           try {
             result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
@@ -274,9 +276,10 @@ nsUnknownContentTypeDialog.prototype = {
       picker.appendFilters( nsIFilePicker.filterAll );
 
       // Default to lastDir if it is valid, otherwise use the user's default
-      // downloads directory.  userDownloadsDirectory should always return a
-      // valid directory, so we can safely default to it.
-      picker.displayDirectory = yield Downloads.getPreferredDownloadsDirectory();
+      // downloads directory.  getPreferredDownloadsDirectory should always 
+      // return a valid directory path, so we can safely default to it.
+      let preferredDir = yield Downloads.getPreferredDownloadsDirectory();
+      picker.displayDirectory = new FileUtils.File(preferredDir);
 
       gDownloadLastDir.getFileAsync(aLauncher.source, function LastDirCallback(lastDir) {
         if (lastDir && isUsableDirectory(lastDir))

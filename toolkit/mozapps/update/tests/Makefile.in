@@ -1,0 +1,112 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPCSHELLTESTROOT = $(abspath $(DEPTH))/_tests/xpcshell/$(relativesrcdir)
+CHROMETESTROOT = $(abspath $(DEPTH))/_tests/testing/mochitest/chrome/$(relativesrcdir)
+
+DEFINES += \
+  -DAB_CD=$(AB_CD) \
+  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
+  -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
+  -DBIN_SUFFIX=$(BIN_SUFFIX) \
+  -DNS_NO_XPCOM \
+  -DMOZ_DEBUG=$(MOZ_DEBUG) \
+  $(NULL)
+
+ifdef MOZ_MAINTENANCE_SERVICE
+DEFINES += -DMOZ_MAINTENANCE_SERVICE=$(MOZ_MAINTENANCE_SERVICE)
+endif
+
+# For debugging purposes only
+#DEFINES += -DDISABLE_UPDATER_AUTHENTICODE_CHECK
+
+PP_TARGETS            += aus-update-head
+aus-update-head_FLAGS := -Fsubstitution $(DEFINES) $(ACDEFINES)
+aus-update-head       := $(srcdir)/unit_aus_update/head_update.js
+aus-update-head_PATH  := $(XPCSHELLTESTROOT)/unit_aus_update
+
+INSTALL_TARGETS       += xpcshell-data
+xpcshell-data_TARGET  := libs
+xpcshell-data_DEST    := $(XPCSHELLTESTROOT)/data
+xpcshell-data_FILES   := $(wildcard $(srcdir)/data/*)
+
+# Android doesn't use the Mozilla updater or the toolkit update UI
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+INSTALL_TARGETS           += base-updater-head
+base-updater-head_TARGET  := libs
+base-updater-head_DEST    := $(XPCSHELLTESTROOT)/unit_base_updater
+base-updater-head_FILES   := $(XPCSHELLTESTROOT)/unit_aus_update/head_update.js
+
+INSTALL_TARGETS              += service-updater-head
+service-updater-head_TARGET  := libs
+service-updater-head_DEST    := $(XPCSHELLTESTROOT)/unit_service_updater
+service-updater-head_FILES   := $(XPCSHELLTESTROOT)/unit_aus_update/head_update.js
+
+ifndef MOZ_PROFILE_GENERATE
+INSTALL_TARGETS              += xpcshell-test-helper
+xpcshell-test-helper_TARGET  := libs
+xpcshell-test-helper_DEST    := $(XPCSHELLTESTROOT)/data
+xpcshell-test-helper_FILES   := $(DIST)/bin/TestAUSHelper$(BIN_SUFFIX)
+endif # Not MOZ_PROFILE_GENERATE
+
+_CHROME_SHARED := \
+  update.sjs \
+  utils.js \
+  $(NULL)
+PP_TARGETS         += chrome-shared
+chrome-shared      := $(addprefix $(srcdir)/chrome/,$(_CHROME_SHARED))
+chrome-shared_PATH := $(CHROMETESTROOT)/chrome
+
+_CHROME_DATA := \
+  simple.mar \
+  simple_no_pib.mar \
+  $(NULL)
+INSTALL_TARGETS     += chrome-data
+chrome-data_TARGET  := libs
+chrome-data_DEST    := $(CHROMETESTROOT)/data
+chrome-data_FILES   := $(addprefix $(srcdir)/data/,$(_CHROME_DATA))
+
+INI_TEST_FILES = \
+  TestAUSReadStrings1.ini \
+  TestAUSReadStrings2.ini \
+  TestAUSReadStrings3.ini \
+  $(NULL)
+
+LOCAL_INCLUDES += \
+  -I$(srcdir) \
+  -I$(topsrcdir)/toolkit/mozapps/update \
+  -I$(topsrcdir)/toolkit/mozapps/update/common \
+  $(NULL)
+
+MOZ_WINCONSOLE = 1
+
+LIBS += \
+  ../common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
+  $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+USE_STATIC_LIBS = 1
+DEFINES += -DUNICODE -D_UNICODE
+endif # WINNT
+endif # Not Android
+
+include $(topsrcdir)/config/rules.mk
+
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+# TestAUSReadStrings runs during check in the following directory with a Unicode
+# char in order to test bug 473417 on Windows.
+ifeq ($(OS_ARCH),WINNT)
+bug473417dir = test_bug473417-ó
+else
+bug473417dir = test_bug473417
+endif
+
+check::
+	$(RM) -rf $(DEPTH)/_tests/updater/ && $(NSINSTALL) -D $(DEPTH)/_tests/updater/$(bug473417dir)/
+	for i in $(INI_TEST_FILES); do \
+	  $(INSTALL) $(srcdir)/$$i $(DEPTH)/_tests/updater/$(bug473417dir)/; \
+	done
+	$(INSTALL) $(FINAL_TARGET)/TestAUSReadStrings$(BIN_SUFFIX) $(DEPTH)/_tests/updater/$(bug473417dir)/
+	@$(RUN_TEST_PROGRAM) $(DEPTH)/_tests/updater/$(bug473417dir)/TestAUSReadStrings$(BIN_SUFFIX)
+endif # Not Android

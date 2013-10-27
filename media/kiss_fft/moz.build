@@ -11,7 +11,7 @@ EXPORTS.kiss_fft += [
     'kiss_fftr.h',
 ]
 
-CSRCS += [
+SOURCES += [
     'kiss_fft.c',
     'kiss_fftr.c',
 ]

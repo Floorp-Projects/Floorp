@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test BiquadFilterNode after a GainNode and tail - Bugs 924286 and 924288</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+const signalLength = 2048;
+
+var gTest = {
+  length: signalLength,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    // Two oscillators scheduled sequentially
+    var signalDuration = signalLength / context.sampleRate;
+    var osc1 = context.createOscillator();
+    osc1.type = "square";
+    osc1.start(0);
+    osc1.stop(signalDuration / 2);
+    var osc2 = context.createOscillator();
+    osc2.start(signalDuration / 2);
+    osc2.stop(signalDuration);
+
+    // Comparing a biquad on each source with one on both sources checks that
+    // the biquad on the first source doesn't shut down early.
+    var biquad1 = context.createBiquadFilter();
+    osc1.connect(biquad1);
+    var biquad2 = context.createBiquadFilter();
+    osc2.connect(biquad2);
+
+    var gain = context.createGain();
+    gain.gain.value = -1;
+    osc1.connect(gain);
+    osc2.connect(gain);
+
+    var biquadWithGain = context.createBiquadFilter();
+    gain.connect(biquadWithGain);
+
+    // The output of biquadWithGain should be the inverse of the sum of the
+    // outputs of biquad1 and biquad2, so blend them together and expect
+    // silence.
+    var blend = context.createGain();
+    biquad1.connect(blend);
+    biquad2.connect(blend);
+    biquadWithGain.connect(blend);
+
+    return blend;
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

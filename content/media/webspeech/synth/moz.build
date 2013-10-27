@@ -27,7 +27,7 @@ if CONFIG['MOZ_WEBSPEECH']:
         'SpeechSynthesisVoice.h',
     ]
 
-    CPP_SOURCES += [
+    SOURCES += [
         'EnableSpeechSynthesisCheck.cpp',
         'ipc/SpeechSynthesisChild.cpp',
         'ipc/SpeechSynthesisParent.cpp',
@@ -53,4 +53,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'gkconwebspeechsynth_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -6,7 +6,7 @@
 
 MODULE = 'layout'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsBox.cpp',
     'nsBoxFrame.cpp',
     'nsBoxLayout.cpp',
@@ -26,7 +26,7 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_XUL']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsContainerBoxObject.cpp',
         'nsDeckFrame.cpp',
         'nsDocElementBoxFrame.cpp',

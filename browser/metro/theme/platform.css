@@ -687,7 +687,7 @@ arrowbox {
 
 .meta-section > richgrid {
   opacity: 1;
-  transform: translateX(0) scale(1);
+  transform: translateX(0) translateY(0);
   transition-duration: 367ms;
   transition-delay: 500ms;
   transition-timing-function: @metro_animation_easing@;
@@ -705,7 +705,7 @@ arrowbox {
 
 .meta-section > richgrid[fade] {
   opacity: 0;
-  transform: translateX(150px) scale(.9);
+  transform: translateX(150px) translateY(25px);
 }
 
 #start-container[viewstate="snapped"] .meta-section > richgrid {

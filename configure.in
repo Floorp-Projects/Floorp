@@ -234,8 +234,7 @@ if test -n "$gonkdir" ; then
           GONK_INCLUDES="$GONK_INCLUDES -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"
             MOZ_B2G_BT=1
             MOZ_B2G_BT_BLUEZ=1
-        fi
-        if test -d "$gonkdir/external/bluetooth/bluedroid"; then
+        elif test -d "$gonkdir/external/bluetooth/bluedroid"; then
             MOZ_B2G_BT=1
             MOZ_B2G_BT_BLUEDROID=1
         fi
@@ -3986,7 +3985,7 @@ MOZ_PDF_PRINTING=
 MOZ_DISABLE_CRYPTOLEGACY=
 NSS_DISABLE_DBM=
 NECKO_COOKIES=1
-NECKO_PROTOCOLS_DEFAULT="about app data file ftp http res viewsource websocket wyciwyg device"
+NECKO_PROTOCOLS_DEFAULT="about data file ftp http res viewsource websocket wyciwyg device"
 USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=

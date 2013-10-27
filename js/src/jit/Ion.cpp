@@ -1657,12 +1657,6 @@ IonCompile(JSContext *cx, JSScript *script,
 }
 
 static bool
-TooManyArguments(unsigned nargs)
-{
-    return (nargs >= SNAPSHOT_MAX_NARGS || nargs > js_IonOptions.maxStackArgs);
-}
-
-static bool
 CheckFrame(BaselineFrame *frame)
 {
     JS_ASSERT(!frame->isGeneratorFrame());
@@ -1902,6 +1896,12 @@ jit::CanEnter(JSContext *cx, RunState &state)
             return Method_CantCompile;
         }
 
+        if (TooManyArguments(invoke.args().callee().as<JSFunction>().nargs)) {
+            IonSpew(IonSpew_Abort, "too many args");
+            ForbidCompilation(cx, script);
+            return Method_CantCompile;
+        }
+
         if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
             RootedScript scriptRoot(cx, script);
             RootedObject callee(cx, &invoke.args().callee());
@@ -2131,7 +2131,7 @@ jit::SetEnterJitData(JSContext *cx, EnterJitData &data, RunState &state, AutoVal
 }
 
 IonExecStatus
-jit::Cannon(JSContext *cx, RunState &state)
+jit::IonCannon(JSContext *cx, RunState &state)
 {
     IonScript *ion = state.script()->ionScript();
 

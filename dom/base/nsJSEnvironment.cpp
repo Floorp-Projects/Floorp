@@ -1044,10 +1044,12 @@ nsJSContext::JSObjectFromInterface(nsISupports* aTarget,
   }
 
 #ifdef DEBUG
+  JS::Rooted<JSObject*> rootedObj(cx, obj);
   nsCOMPtr<nsISupports> targetSupp = do_QueryInterface(aTarget);
   nsCOMPtr<nsISupports> native =
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, obj);
+    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, rootedObj);
   NS_ASSERTION(native == targetSupp, "Native should be the target!");
+  obj = rootedObj;
 #endif
 
   *aRet = obj;

@@ -183,7 +183,7 @@ static int nr_stun_server_get_password(void *arg, nr_stun_message *msg, Data **p
 
     if ((nr_stun_get_message_client(ctx, msg, &clnt))) {
         if (! nr_stun_message_has_attribute(msg, NR_STUN_ATTR_USERNAME, &username_attribute)) {
-           r_log(NR_LOG_STUN,LOG_NOTICE,"STUN-SERVER(%s): Missing Username",ctx->label);
+           r_log(NR_LOG_STUN,LOG_WARNING,"STUN-SERVER(%s): Missing Username",ctx->label);
            ABORT(R_NOT_FOUND);
         }
 
@@ -275,7 +275,7 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
 
     if (NR_STUN_GET_TYPE_CLASS(req->header.type) != NR_CLASS_REQUEST
      && NR_STUN_GET_TYPE_CLASS(req->header.type) != NR_CLASS_INDICATION) {
-         r_log(NR_LOG_STUN,LOG_NOTICE,"STUN-SERVER(%s): Illegal message type: %04x",ctx->label,req->header.type);
+         r_log(NR_LOG_STUN,LOG_WARNING,"STUN-SERVER(%s): Illegal message type: %04x",ctx->label,req->header.type);
         /* draft-ietf-behave-rfc3489bis-07.txt S 7.3 says "If any errors are
          * detected, the message is silently discarded."  */
 #ifndef USE_STUN_PEDANTIC
@@ -347,7 +347,7 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
          nr_stun_form_error_response(req, res, 500, "Failed to specify error");
 
     if ((r=nr_stun_server_send_response(ctx, sock, peer_addr, res, clnt))) {
-        r_log(NR_LOG_STUN,LOG_WARNING,"STUN-SERVER(label=%s): Failed sending response (my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,peer_addr->as_string);
+        r_log(NR_LOG_STUN,LOG_ERR,"STUN-SERVER(label=%s): Failed sending response (my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,peer_addr->as_string);
         _status = R_FAILED;
     }
 
@@ -431,7 +431,7 @@ int nr_stun_get_message_client(nr_stun_server_ctx *ctx, nr_stun_message *req, nr
     nr_stun_server_client *clnt=0;
 
     if (! nr_stun_message_has_attribute(req, NR_STUN_ATTR_USERNAME, &attr)) {
-       r_log(NR_LOG_STUN,LOG_NOTICE,"STUN-SERVER(%s): Missing Username",ctx->label);
+       r_log(NR_LOG_STUN,LOG_WARNING,"STUN-SERVER(%s): Missing Username",ctx->label);
        ABORT(R_NOT_FOUND);
     }
 
@@ -450,12 +450,12 @@ int nr_stun_get_message_client(nr_stun_server_ctx *ctx, nr_stun_message *req, nr
                             attr->u.username,
                             colon - attr->u.username)) {
         clnt = ctx->default_client;
-        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-SERVER(%s): Falling back to default client, username=: %s",ctx->label,attr->u.username);
+        r_log(NR_LOG_STUN,LOG_NOTICE,"STUN-SERVER(%s): Falling back to default client, username=: %s",ctx->label,attr->u.username);
       }
     }
 
     if (!clnt) {
-        r_log(NR_LOG_STUN,LOG_NOTICE,"STUN-SERVER(%s): Request from unknown user: %s",ctx->label,attr->u.username);
+        r_log(NR_LOG_STUN,LOG_WARNING,"STUN-SERVER(%s): Request from unknown user: %s",ctx->label,attr->u.username);
         ABORT(R_NOT_FOUND);
     }
 

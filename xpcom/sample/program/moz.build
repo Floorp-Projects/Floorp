@@ -8,7 +8,7 @@ MODULE = 'xpcomsample'
 
 # We must specify CPP_SOURCES in order to link using the proper c++ linker
 # on certain platforms.
-CPP_SOURCES += [
+SOURCES += [
     'nsTestSample.cpp',
 ]
 

@@ -16,24 +16,24 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 
-class nsThreadPool MOZ_FINAL : public nsIThreadPool
+class nsThreadPool MOZ_FINAL : public nsIThreadPool,
+                               public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET
   NS_DECL_NSITHREADPOOL
+  NS_DECL_NSIRUNNABLE
 
   nsThreadPool();
 
 private:
   ~nsThreadPool();
 
-  void ShutdownThread(PRThread *thread);
-  static void ThreadFunc(void *arg);
-  void Run();
+  void ShutdownThread(nsIThread *thread);
   nsresult PutEvent(nsIRunnable *event);
 
-  nsTArray<PRThread*>   mThreads;
+  nsCOMArray<nsIThread> mThreads;
   nsEventQueue          mEvents;
   uint32_t              mThreadLimit;
   uint32_t              mIdleThreadLimit;
