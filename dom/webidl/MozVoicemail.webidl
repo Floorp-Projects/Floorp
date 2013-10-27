@@ -7,6 +7,7 @@
 // nsIDOMMozVoicemailStatus
 interface MozVoicemailStatus;
 
+[Pref="dom.voicemail.enabled"]
 interface MozVoicemail : EventTarget
 {
   /**
