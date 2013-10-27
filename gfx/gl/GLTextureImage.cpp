@@ -277,12 +277,13 @@ BasicTextureImage::BasicTextureImage(GLuint aTexture,
 
 already_AddRefed<TextureImage>
 CreateBasicTextureImage(GLContext* aGL,
-                        const gfx::IntSize& aSize,
+                        const LayerIntSize& aSize,
                         TextureImage::ContentType aContentType,
                         GLenum aWrapMode,
                         TextureImage::Flags aFlags)
 {
-  return CreateBasicTextureImage(aGL, ThebesIntSize(aSize), aContentType, aWrapMode, aFlags);
+  return CreateBasicTextureImage(aGL, ThebesIntSize(aSize.ToUnknownSize()),
+                                 aContentType, aWrapMode, aFlags);
 }
 
 TiledTextureImage::TiledTextureImage(GLContext* aGL,
