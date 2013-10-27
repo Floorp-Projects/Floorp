@@ -1277,7 +1277,7 @@ nsContextMenu.prototype = {
   },
 
   playPlugin: function() {
-    gPluginHandler._showClickToPlayNotification(this.browser, this.target);
+    gPluginHandler._showClickToPlayNotification(this.browser, this.target, true);
   },
 
   hidePlugin: function() {
