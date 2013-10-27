@@ -89,6 +89,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                        GeckoEventListener {
     private static final String LOGTAG = "GeckoToolbar";
     public static final String PREF_TITLEBAR_MODE = "browser.chrome.titlebarMode";
+    public static final String PREF_TRIM_URLS = "browser.urlbar.trimURLs";
 
     public interface OnActivateListener {
         public void onActivate();
@@ -188,6 +189,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private final ForegroundColorSpan mPrivateDomainColor;
 
     private boolean mShowUrl;
+    private boolean mTrimURLs;
 
     private Integer mPrefObserverId;
 
@@ -210,11 +212,17 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mIsEditing = false;
         mAnimatingEntry = false;
         mShowUrl = false;
+        mTrimURLs = true;
 
+        final String[] prefs = {
+            PREF_TITLEBAR_MODE,
+            PREF_TRIM_URLS
+        };
         // listen to the title bar pref.
-        mPrefObserverId = PrefsHelper.getPref(PREF_TITLEBAR_MODE, new PrefsHelper.PrefHandlerBase() {
+        mPrefObserverId = PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
             @Override
             public void prefValue(String pref, String str) {
+                // Handles PREF_TITLEBAR_MODE, which is always a string.
                 int value = Integer.parseInt(str);
                 boolean shouldShowUrl = (value == 1);
 
@@ -223,12 +231,18 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 }
                 mShowUrl = shouldShowUrl;
 
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateTitle();
-                    }
-                });
+                triggerTitleUpdate();
+            }
+
+            @Override
+            public void prefValue(String pref, boolean value) {
+                // Handles PREF_TRIM_URLS, which should usually be a boolean.
+                if (value == mTrimURLs) {
+                    return;
+                }
+                mTrimURLs = value;
+
+                triggerTitleUpdate();
             }
 
             @Override
@@ -236,6 +250,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 // We want to be notified of changes to be able to switch mode
                 // without restarting.
                 return true;
+            }
+
+            private void triggerTitleUpdate() {
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateTitle();
+                    }
+                });
             }
         });
 
@@ -1097,7 +1120,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
             return;
         }
 
-        CharSequence title = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url));
+        CharSequence title = url;
+        if (mTrimURLs) {
+            title = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url));
+        }
 
         String baseDomain = tab.getBaseDomain();
         if (!TextUtils.isEmpty(baseDomain)) {

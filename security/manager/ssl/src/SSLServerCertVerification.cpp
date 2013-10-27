@@ -1164,17 +1164,14 @@ AuthCertificateHook(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
 
   nsNSSSocketInfo *socketInfo = static_cast<nsNSSSocketInfo*>(arg);
   
-  if (socketInfo) {
-    // This is the first callback during full handshakes.
-    socketInfo->SetFirstServerHelloReceived();
-  }
-
   ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
 
   if (!checkSig || isServer || !socketInfo || !serverCert) {
       PR_SetError(PR_INVALID_STATE_ERROR, 0);
       return SECFailure;
   }
+
+  socketInfo->SetFullHandshake();
 
   if (BlockServerCertChangeForSpdy(socketInfo, serverCert) != SECSuccess)
     return SECFailure;
