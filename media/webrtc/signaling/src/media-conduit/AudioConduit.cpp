@@ -5,6 +5,12 @@
 #include "CSFLog.h"
 #include "nspr.h"
 
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#elif defined XP_WIN
+#include <winsock2.h>
+#endif
+
 #include "AudioConduit.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Services.h"
@@ -12,6 +18,9 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsThreadUtils.h"
+#ifdef MOZILLA_INTERNAL_API
+#include "Latency.h"
+#endif
 
 #include "webrtc/voice_engine/include/voe_errors.h"
 
@@ -201,6 +210,12 @@ MediaConduitErrorCode WebrtcAudioConduit::Init(WebrtcAudioConduit *other)
   if(!(mPtrVoEXmedia = VoEExternalMedia::GetInterface(mVoiceEngine)))
   {
     CSFLogError(logTag, "%s Unable to initialize VoEExternalMedia", __FUNCTION__);
+    return kMediaConduitSessionNotInited;
+  }
+
+  if(!(mPtrVoEVideoSync = VoEVideoSync::GetInterface(mVoiceEngine)))
+  {
+    CSFLogError(logTag, "%s Unable to initialize VoEVideoSync", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
 
@@ -510,6 +525,13 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
     return kMediaConduitSessionNotInited;
   }
 
+#ifdef MOZILLA_INTERNAL_API
+    if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+      struct Processing insert = { TimeStamp::Now(), 0 };
+      mProcessing.AppendElement(insert);
+    }
+#endif
+
   capture_delay = mCaptureDelay;
   //Insert the samples
   if(mPtrVoEXmedia->ExternalRecordingInsertData(audio_data,
@@ -588,6 +610,30 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
     return kMediaConduitUnknownError;
   }
 
+#ifdef MOZILLA_INTERNAL_API
+  if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+    if (mProcessing.Length() > 0) {
+      unsigned int now;
+      mPtrVoEVideoSync->GetPlayoutTimestamp(mChannel, now);
+      if (static_cast<uint32_t>(now) != mLastTimestamp) {
+        mLastTimestamp = static_cast<uint32_t>(now);
+        // Find the block that includes this timestamp in the network input
+        while (mProcessing.Length() > 0) {
+          // FIX! assumes 20ms @ 48000Hz
+          // FIX handle wrap-around
+          if (mProcessing[0].mRTPTimeStamp + 20*(48000/1000) >= now) {
+            TimeDuration t = TimeStamp::Now() - mProcessing[0].mTimeStamp;
+            // Wrap-around?
+            int64_t delta = t.ToMilliseconds() + (now - mProcessing[0].mRTPTimeStamp)/(48000/1000);
+            LogTime(AsyncLatencyLogger::AudioRecvRTP, ((uint64_t) this), delta);
+            break;
+          }
+          mProcessing.RemoveElementAt(0);
+        }
+      }
+    }
+  }
+#endif
   CSFLogDebug(logTag,"%s GetAudioFrame:Got samples: length %d ",__FUNCTION__,
                                                                lengthSamples);
   return kMediaConduitNoError;
@@ -601,6 +647,15 @@ WebrtcAudioConduit::ReceivedRTPPacket(const void *data, int len)
 
   if(mEngineReceiving)
   {
+#ifdef MOZILLA_INTERNAL_API
+    if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+      // timestamp is at 32 bits in ([1])
+      struct Processing insert = { TimeStamp::Now(),
+                                   ntohl(static_cast<const uint32_t *>(data)[1]) };
+      mProcessing.AppendElement(insert);
+    }
+#endif
+
     if(mPtrVoENetwork->ReceivedRTPPacket(mChannel,data,len) == -1)
     {
       int error = mPtrVoEBase->LastError();
@@ -659,6 +714,18 @@ int WebrtcAudioConduit::SendPacket(int channel, const void* data, int len)
                 __FUNCTION__, channel);
     return -1;
   } else {
+#ifdef MOZILLA_INTERNAL_API
+    if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+      if (mProcessing.Length() > 0) {
+        TimeStamp started = mProcessing[0].mTimeStamp;
+        mProcessing.RemoveElementAt(0);
+        mProcessing.RemoveElementAt(0); // 20ms packetization!  Could automate this by watching sizes
+        TimeDuration t = TimeStamp::Now() - started;
+        int64_t delta = t.ToMilliseconds();
+        LogTime(AsyncLatencyLogger::AudioSendRTP, ((uint64_t) this), delta);
+      }
+    }
+#endif
     if(mTransport && (mTransport->SendRtpPacket(data, len) == NS_OK))
     {
       CSFLogDebug(logTag, "%s Sent RTP Packet ", __FUNCTION__);

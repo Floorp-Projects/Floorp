@@ -284,93 +284,6 @@ GetSourceReaderCanSeek(IMFSourceReader* aReader, bool& aOutCanSeek)
   return S_OK;
 }
 
-static HRESULT
-GetDefaultStride(IMFMediaType *aType, uint32_t* aOutStride)
-{
-  // Try to get the default stride from the media type.
-  HRESULT hr = aType->GetUINT32(MF_MT_DEFAULT_STRIDE, aOutStride);
-  if (SUCCEEDED(hr)) {
-    return S_OK;
-  }
-
-  // Stride attribute not set, calculate it.
-  GUID subtype = GUID_NULL;
-  uint32_t width = 0;
-  uint32_t height = 0;
-
-  hr = aType->GetGUID(MF_MT_SUBTYPE, &subtype);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  hr = MFGetAttributeSize(aType, MF_MT_FRAME_SIZE, &width, &height);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  hr = wmf::MFGetStrideForBitmapInfoHeader(subtype.Data1, width, (LONG*)(aOutStride));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  return hr;
-}
-
-static int32_t
-MFOffsetToInt32(const MFOffset& aOffset)
-{
-  return int32_t(aOffset.value + (aOffset.fract / 65536.0f));
-}
-
-// Gets the sub-region of the video frame that should be displayed.
-// See: http://msdn.microsoft.com/en-us/library/windows/desktop/bb530115(v=vs.85).aspx
-static HRESULT
-GetPictureRegion(IMFMediaType* aMediaType, nsIntRect& aOutPictureRegion)
-{
-  // Determine if "pan and scan" is enabled for this media. If it is, we
-  // only display a region of the video frame, not the entire frame.
-  BOOL panScan = MFGetAttributeUINT32(aMediaType, MF_MT_PAN_SCAN_ENABLED, FALSE);
-
-  // If pan and scan mode is enabled. Try to get the display region.
-  HRESULT hr = E_FAIL;
-  MFVideoArea videoArea;
-  memset(&videoArea, 0, sizeof(MFVideoArea));
-  if (panScan) {
-    hr = aMediaType->GetBlob(MF_MT_PAN_SCAN_APERTURE,
-                             (UINT8*)&videoArea,
-                             sizeof(MFVideoArea),
-                             nullptr);
-  }
-
-  // If we're not in pan-and-scan mode, or the pan-and-scan region is not set,
-  // check for a minimimum display aperture.
-  if (!panScan || hr == MF_E_ATTRIBUTENOTFOUND) {
-    hr = aMediaType->GetBlob(MF_MT_MINIMUM_DISPLAY_APERTURE,
-                             (UINT8*)&videoArea,
-                             sizeof(MFVideoArea),
-                             nullptr);
-  }
-
-  if (hr == MF_E_ATTRIBUTENOTFOUND) {
-    // Minimum display aperture is not set, for "backward compatibility with
-    // some components", check for a geometric aperture.
-    hr = aMediaType->GetBlob(MF_MT_GEOMETRIC_APERTURE,
-                             (UINT8*)&videoArea,
-                             sizeof(MFVideoArea),
-                             nullptr);
-  }
-
-  if (SUCCEEDED(hr)) {
-    // The media specified a picture region, return it.
-    aOutPictureRegion = nsIntRect(MFOffsetToInt32(videoArea.OffsetX),
-                                  MFOffsetToInt32(videoArea.OffsetY),
-                                  videoArea.Area.cx,
-                                  videoArea.Area.cy);
-    return S_OK;
-  }
-
-  // No picture region defined, fall back to using the entire video area.
-  UINT32 width = 0, height = 0;
-  hr = MFGetAttributeSize(aMediaType, MF_MT_FRAME_SIZE, &width, &height);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  aOutPictureRegion = nsIntRect(0, 0, width, height);
-  return S_OK;
-}
-
 HRESULT
 WMFReader::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
 {
@@ -637,39 +550,6 @@ WMFReader::ReadMetadata(MediaInfo* aInfo,
   // http://blogs.msdn.com/b/mf/archive/2010/01/12/mfmediapropdump.aspx
 
   return NS_OK;
-}
-
-static int64_t
-GetSampleDuration(IMFSample* aSample)
-{
-  int64_t duration = 0;
-  aSample->GetSampleDuration(&duration);
-  return HNsToUsecs(duration);
-}
-
-HRESULT
-HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames)
-{
-  MOZ_ASSERT(aOutFrames);
-  const int64_t HNS_PER_S = USECS_PER_S * 10;
-  CheckedInt<int64_t> i = aHNs;
-  i *= aRate;
-  i /= HNS_PER_S;
-  NS_ENSURE_TRUE(i.isValid(), E_FAIL);
-  *aOutFrames = i.value();
-  return S_OK;
-}
-
-HRESULT
-FramesToUsecs(int64_t aSamples, uint32_t aRate, int64_t* aOutUsecs)
-{
-  MOZ_ASSERT(aOutUsecs);
-  CheckedInt<int64_t> i = aSamples;
-  i *= USECS_PER_S;
-  i /= aRate;
-  NS_ENSURE_TRUE(i.isValid(), E_FAIL);
-  *aOutUsecs = i.value();
-  return S_OK;
 }
 
 bool

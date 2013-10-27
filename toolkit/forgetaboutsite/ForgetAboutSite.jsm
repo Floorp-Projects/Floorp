@@ -219,5 +219,11 @@ this.ForgetAboutSite = {
       handleCompletion: function() onContentPrefsRemovalFinished(),
       handleError: function() {}
     });
+
+    // Predictive network data - like cache, no way to clear this per
+    // domain, so just trash it all
+    let ns = Cc["@mozilla.org/network/seer;1"].
+             getService(Ci.nsINetworkSeer);
+    ns.reset();
   }
 };

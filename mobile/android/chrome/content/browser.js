@@ -4645,12 +4645,14 @@ var BrowserEventHandler = {
        * - It has overflow 'auto' or 'scroll'
        * - It's a textarea
        * - It's an HTML/BODY node
+       * - It's a text input
        * - It's a select element showing multiple rows
        */
       if (checkElem) {
         if ((elem.scrollTopMax > 0 || elem.scrollLeftMax > 0) &&
             (this._hasScrollableOverflow(elem) ||
              elem.mozMatchesSelector("html, body, textarea")) ||
+            (elem instanceof HTMLInputElement && elem.mozIsTextField(false)) ||
             (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
           scrollable = true;
           break;

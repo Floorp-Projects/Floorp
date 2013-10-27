@@ -35,6 +35,7 @@
 #define DATA_CHANNEL_FLAGS_FINISH_OPEN          0x00000020
 #define DATA_CHANNEL_FLAGS_FINISH_RSP           0x00000040
 #define DATA_CHANNEL_FLAGS_EXTERNAL_NEGOTIATED  0x00000080
+#define DATA_CHANNEL_FLAGS_WAITING_ACK          0x00000100
 
 #define INVALID_STREAM (0xFFFF)
 // max is 0xFFFF: Streams 0 to 0xFFFE = 0xFFFF streams
@@ -50,8 +51,13 @@ struct rtcweb_datachannel_open_request {
   char     label[1]; // (and protocol) keep VC++ happy...
 } SCTP_PACKED;
 
+struct rtcweb_datachannel_ack {
+  uint8_t  msg_type; // DATA_CHANNEL_ACK
+} SCTP_PACKED;
+
 /* msg_type values: */
-/* 0-2 were used in an early version of the protocol with 3-way handshakes */
+/* 0-1 were used in an early version of the protocol with 3-way handshakes */
+#define DATA_CHANNEL_ACK                      2
 #define DATA_CHANNEL_OPEN_REQUEST             3
 
 /* channel_type values: */

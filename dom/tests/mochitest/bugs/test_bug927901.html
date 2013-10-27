@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=927901
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 927901</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 927901 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var counter = 0;
+  window.onmessage = function(e) {
+    ++counter;
+    is(e.data, "pass", "Accessing window.crypto.getRandomValues in the iframe should have succeeded!");
+    if (counter == 1) {
+      document.getElementById("testiframe").src =
+        "http://mochi.test:8888/tests/dom/tests/mochitest/bugs/file_bug927901.html "
+    } else if (counter == 2) {
+      SimpleTest.finish();
+    }
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=927901">Mozilla Bug 927901</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<iframe id="testiframe" src="http://test1.example.org:8000/tests/dom/tests/mochitest/bugs/file_bug927901.html"></iframe>
+</body>
+</html>

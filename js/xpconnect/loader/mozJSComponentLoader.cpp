@@ -1074,7 +1074,7 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
             // content by passing a raw content JS object (where Xrays aren't
             // possible), we aim for consistency here. Waive xray.
             if (WrapperFactory::IsXrayWrapper(&targetVal.toObject()) &&
-                !WrapperFactory::WaiveXrayAndWrap(cx, targetVal.address()))
+                !WrapperFactory::WaiveXrayAndWrap(cx, &targetVal))
             {
                 return NS_ERROR_FAILURE;
             }
@@ -1207,7 +1207,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
             if (!exception.isUndefined()) {
                 // An exception was thrown during compilation. Propagate it
                 // out to our caller so they can report it.
-                if (!JS_WrapValue(callercx, exception.address()))
+                if (!JS_WrapValue(callercx, &exception))
                     return NS_ERROR_OUT_OF_MEMORY;
                 JS_SetPendingException(callercx, exception);
                 return NS_OK;
@@ -1281,7 +1281,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
 
             JSAutoCompartment target_ac(mContext, targetObj);
 
-            if (!JS_WrapValue(mContext, value.address()) ||
+            if (!JS_WrapValue(mContext, &value) ||
                 !JS_SetPropertyById(mContext, targetObj, symbolId, value)) {
                 JSAutoByteString bytes(mContext, JSID_TO_STRING(symbolId));
                 if (!bytes)

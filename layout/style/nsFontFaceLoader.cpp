@@ -29,6 +29,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
+#include "nsINetworkSeer.h"
 
 #include "nsIConsoleService.h"
 
@@ -374,6 +375,10 @@ nsUserFontSet::StartLoad(gfxMixedFontFamily* aFamily,
     httpChannel->SetReferrer(aFontFaceSrc->mReferrer);
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIDocument *document = ps->GetDocument();
+  mozilla::net::SeerLearn(aFontFaceSrc->mURI, document->GetDocumentURI(),
+                          nsINetworkSeer::LEARN_LOAD_SUBRESOURCE, loadGroup);
 
   bool inherits = false;
   rv = NS_URIChainHasFlags(aFontFaceSrc->mURI,

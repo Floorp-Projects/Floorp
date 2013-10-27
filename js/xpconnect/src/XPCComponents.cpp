@@ -3213,12 +3213,12 @@ nsXPCComponents_Utils::GetComponentsForScope(const jsval &vscope, JSContext *cx,
         return NS_ERROR_INVALID_ARG;
     JSObject *scopeObj = js::UncheckedUnwrap(&vscope.toObject());
     XPCWrappedNativeScope *scope = GetObjectScope(scopeObj);
-    JSObject *components = scope->GetComponentsJSObject();
+    RootedObject components(cx, scope->GetComponentsJSObject());
     if (!components)
         return NS_ERROR_FAILURE;
-    *rval = ObjectValue(*components);
-    if (!JS_WrapValue(cx, rval))
+    if (!JS_WrapObject(cx, &components))
         return NS_ERROR_FAILURE;
+    *rval = ObjectValue(*components);
     return NS_OK;
 }
 
@@ -3234,7 +3234,7 @@ nsXPCComponents_Utils::Dispatch(const jsval &runnableArg, const jsval &scope,
         if (!scopeObj)
             return NS_ERROR_FAILURE;
         ac.construct(cx, scopeObj);
-        if (!JS_WrapValue(cx, runnable.address()))
+        if (!JS_WrapValue(cx, &runnable))
             return NS_ERROR_FAILURE;
     }
 
@@ -3343,9 +3343,10 @@ nsXPCComponents_Utils::IsXrayWrapper(const Value &obj, bool* aRetval)
 NS_IMETHODIMP
 nsXPCComponents_Utils::WaiveXrays(const Value &aVal, JSContext *aCx, jsval *aRetval)
 {
-    *aRetval = aVal;
-    if (!xpc::WrapperFactory::WaiveXrayAndWrap(aCx, aRetval))
+    RootedValue value(aCx, aVal);
+    if (!xpc::WrapperFactory::WaiveXrayAndWrap(aCx, &value))
         return NS_ERROR_FAILURE;
+    *aRetval = value;
     return NS_OK;
 }
 
@@ -3357,9 +3358,10 @@ nsXPCComponents_Utils::UnwaiveXrays(const Value &aVal, JSContext *aCx, jsval *aR
         return NS_OK;
     }
 
-    *aRetval = ObjectValue(*js::UncheckedUnwrap(&aVal.toObject()));
-    if (!JS_WrapValue(aCx, aRetval))
+    RootedObject obj(aCx, js::UncheckedUnwrap(&aVal.toObject()));
+    if (!JS_WrapObject(aCx, &obj))
         return NS_ERROR_FAILURE;
+    *aRetval = ObjectValue(*obj);
     return NS_OK;
 }
 
