@@ -17,7 +17,7 @@ const TEST_FILES = [
   compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0767,
+  originalPerms    : 0o767,
   comparePerms     : null
 }, {
   description      : "Not added for failed update (add)",
@@ -27,8 +27,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete_precomplete",
   compareFile      : "complete_precomplete",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Not added for failed update (add)",
   fileName         : "searchpluginstext0",
@@ -37,8 +37,8 @@ const TEST_FILES = [
   compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0775,
-  comparePerms     : 0775
+  originalPerms    : 0o775,
+  comparePerms     : 0o775
 }, {
   description      : "Not patched for failed update (patch-if)",
   fileName         : "searchpluginspng1.png",
@@ -47,8 +47,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "complete.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Not patched for failed update (patch-if)",
   fileName         : "searchpluginspng0.png",
@@ -57,8 +57,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "complete.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Not added for failed update (add-if)",
   fileName         : "extensions1text0",
@@ -77,8 +77,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "complete.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Not patched for failed update (patch-if)",
   fileName         : "extensions1png0.png",
@@ -87,8 +87,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "complete.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Not added for failed update (add-if)",
   fileName         : "extensions0text0",
@@ -97,8 +97,8 @@ const TEST_FILES = [
   compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0644,
-  comparePerms     : 0644
+  originalPerms    : 0o644,
+  comparePerms     : 0o644
 }, {
   description      : "Not patched for failed update (patch-if)",
   fileName         : "extensions0png1.png",
@@ -107,8 +107,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "complete.png",
-  originalPerms    : 0644,
-  comparePerms     : 0644
+  originalPerms    : 0o644,
+  comparePerms     : 0o644
 }, {
   description      : "Not patched for failed update (patch-if)",
   fileName         : "extensions0png0.png",
@@ -117,8 +117,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "complete.png",
-  originalPerms    : 0644,
-  comparePerms     : 0644
+  originalPerms    : 0o644,
+  comparePerms     : 0o644
 }, {
   description      : "Not patched for failed update (patch)",
   fileName         : "exe0.exe",
@@ -127,8 +127,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "complete.png",
-  originalPerms    : 0755,
-  comparePerms     : 0755
+  originalPerms    : 0o755,
+  comparePerms     : 0o755
 }, {
   description      : "Not patched for failed update (patch) and causes " +
                      "LoadSourceFile failed",
@@ -138,8 +138,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "partial.png",
   compareFile      : "partial.png",
-  originalPerms    : 0755,
-  comparePerms     : 0755
+  originalPerms    : 0o755,
+  comparePerms     : 0o755
 }, {
   description      : "Not added for failed update (add)",
   fileName         : "00text0",
@@ -158,8 +158,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "complete.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Not added for failed update (add)",
   fileName         : "20text0",
@@ -198,8 +198,8 @@ const TEST_FILES = [
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Not removed for failed update (remove)",
   fileName         : "00text1",
@@ -208,8 +208,8 @@ const TEST_FILES = [
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }];
 
 ADDITIONAL_TEST_DIRS = [
