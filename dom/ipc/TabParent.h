@@ -213,7 +213,8 @@ public:
     virtual bool DeallocPDocumentRendererParent(PDocumentRendererParent* actor);
 
     virtual PContentPermissionRequestParent*
-    AllocPContentPermissionRequestParent(const nsCString& aType, const nsCString& aAccess, const IPC::Principal& aPrincipal);
+    AllocPContentPermissionRequestParent(const InfallibleTArray<PermissionRequest>& aRequests,
+                                         const IPC::Principal& aPrincipal);
     virtual bool DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor);
 
     virtual POfflineCacheUpdateParent* AllocPOfflineCacheUpdateParent(
