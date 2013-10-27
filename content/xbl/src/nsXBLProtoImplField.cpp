@@ -345,7 +345,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   // First, enter the XBL scope, and compile the functions there.
   JSAutoCompartment ac(aCx, scopeObject);
   JS::Rooted<JS::Value> wrappedClassObj(aCx, JS::ObjectValue(*aTargetClassObject));
-  if (!JS_WrapValue(aCx, wrappedClassObj.address()) || !JS_WrapId(aCx, id.address()))
+  if (!JS_WrapValue(aCx, &wrappedClassObj) || !JS_WrapId(aCx, id.address()))
     return NS_ERROR_OUT_OF_MEMORY;
 
   JS::Rooted<JSObject*> get(aCx,
@@ -445,9 +445,9 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   // the bound node.
   JSAutoCompartment ac2(cx, aBoundNode);
   nsDependentString name(mName);
-  if (!JS_WrapValue(cx, result.address()) ||
+  if (!JS_WrapValue(cx, &result) ||
       !::JS_DefineUCProperty(cx, aBoundNode,
-                             reinterpret_cast<const jschar*>(mName), 
+                             reinterpret_cast<const jschar*>(mName),
                              name.Length(), result, nullptr, nullptr,
                              mJSAttributes)) {
     return NS_ERROR_OUT_OF_MEMORY;

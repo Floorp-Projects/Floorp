@@ -1155,16 +1155,12 @@ JS_WrapObject(JSContext *cx, MutableHandleObject objp)
 }
 
 JS_PUBLIC_API(bool)
-JS_WrapValue(JSContext *cx, jsval *vp)
+JS_WrapValue(JSContext *cx, MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    if (vp)
-        JS::ExposeValueToActiveJS(*vp);
-    RootedValue value(cx, *vp);
-    bool ok = cx->compartment()->wrap(cx, &value);
-    *vp = value.get();
-    return ok;
+    JS::ExposeValueToActiveJS(vp);
+    return cx->compartment()->wrap(cx, vp);
 }
 
 JS_PUBLIC_API(bool)

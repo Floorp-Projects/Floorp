@@ -40,10 +40,10 @@
              value="&shaderEditorUI.emptyNotice;"/>
     </hbox>
 
-    <hbox id="content" flex="1" hidden="true">
+    <box id="content" class="devtools-responsive-container" flex="1" hidden="true">
       <vbox id="shaders-pane"/>
       <splitter class="devtools-side-splitter"/>
-      <hbox id="shaders-editors" flex="1">
+      <box id="shaders-editors" class="devtools-responsive-container" flex="1">
         <vbox flex="1">
           <vbox id="vs-editor" flex="1"/>
           <label id="vs-editor-label"
@@ -57,8 +57,8 @@
                  class="plain editor-label"
                  value="&shaderEditorUI.fragmentShader;"/>
         </vbox>
-      </hbox>
-    </hbox>
+      </box>
+    </box>
   </vbox>
 
 </window>

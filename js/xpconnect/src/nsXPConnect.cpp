@@ -913,10 +913,9 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
 {
     *_retval = nullptr;
 
-    RootedValue rval(cx, JSVAL_VOID);
-
+    RootedValue rval(cx);
     SandboxOptions options;
-    nsresult rv = CreateSandboxObject(cx, rval.address(), principal, options);
+    nsresult rv = CreateSandboxObject(cx, &rval, principal, options);
     MOZ_ASSERT(NS_FAILED(rv) || !JSVAL_IS_PRIMITIVE(rval),
                "Bad return value from xpc_CreateSandboxObject()!");
 

@@ -728,6 +728,9 @@ pref("browser.chrome.dynamictoolbar", true);
 // 1: Show a current page url.
 pref("browser.chrome.titlebarMode", 0);
 
+// Hide common parts of URLs like "www." or "http://"
+pref("browser.urlbar.trimURLs", true);
+
 #ifdef MOZ_PKG_SPECIAL
 // Disable webgl on ARMv6 because running the reftests takes
 // too long for some reason (bug 843738)

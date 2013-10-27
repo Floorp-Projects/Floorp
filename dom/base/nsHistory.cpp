@@ -131,7 +131,7 @@ nsHistory::GetState(JSContext* aCx, ErrorResult& aRv) const
       return JS::UndefinedValue();
     }
 
-    if (!JS_WrapValue(aCx, jsData.address())) {
+    if (!JS_WrapValue(aCx, &jsData)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return JS::UndefinedValue();
     }

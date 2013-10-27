@@ -62,6 +62,10 @@
       gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
       gQueue.push(new synthDownKey(id, new caretMoveChecker(12, id)));
 
+      id = "textarea_wrapped";
+      gQueue.push(new setCaretOffset(id, 4, id));
+      gQueue.push(new synthLeftKey(id, new caretMoveChecker(4, id)));
+
       id = "p";
       gQueue.push(new synthClick(id, new caretMoveChecker(0, id)));
       gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
@@ -105,6 +109,11 @@
     Bug 454377
   </a>
   <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=567571"
+     title="caret-moved events missing at the end of a wrapped line of text">
+    Bug 567571
+  </a>
+  <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=824901"
      title="HyperTextAccessible::DOMPointToHypertextOffset fails for node and offset equal to node child count">
     Bug 824901
@@ -123,6 +132,8 @@
   <p contentEditable="true" id="test2"><span><span id="test2_span">text</span></span>ohoho</p>
   <p contentEditable="true" id="test3"></p>
   <p contentEditable="true" id="test4"><span id="test4_span"></span></p>
+
+  <textarea id="textarea_wrapped" cols="5">hey friend</textarea>
 
   <div id="eventdump"></div>
 </body>
