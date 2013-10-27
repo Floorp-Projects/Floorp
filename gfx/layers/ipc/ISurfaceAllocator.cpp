@@ -18,6 +18,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
+#include "gfx2DGlue.h"
 #ifdef DEBUG
 #include "prenv.h"
 #endif
@@ -40,7 +41,7 @@ IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface)
 }
 
 bool
-ISurfaceAllocator::AllocSharedImageSurface(const gfxIntSize& aSize,
+ISurfaceAllocator::AllocSharedImageSurface(const gfx::IntSize& aSize,
                                gfxContentType aContent,
                                gfxSharedImageSurface** aBuffer)
 {
@@ -48,7 +49,7 @@ ISurfaceAllocator::AllocSharedImageSurface(const gfxIntSize& aSize,
   gfxImageFormat format = gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
 
   nsRefPtr<gfxSharedImageSurface> back =
-    gfxSharedImageSurface::CreateUnsafe(this, aSize, format, shmemType);
+    gfxSharedImageSurface::CreateUnsafe(this, ThebesIntSize(aSize), format, shmemType);
   if (!back)
     return false;
 
@@ -58,7 +59,7 @@ ISurfaceAllocator::AllocSharedImageSurface(const gfxIntSize& aSize,
 }
 
 bool
-ISurfaceAllocator::AllocSurfaceDescriptor(const gfxIntSize& aSize,
+ISurfaceAllocator::AllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                           gfxContentType aContent,
                                           SurfaceDescriptor* aBuffer)
 {
@@ -66,7 +67,7 @@ ISurfaceAllocator::AllocSurfaceDescriptor(const gfxIntSize& aSize,
 }
 
 bool
-ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
+ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
                                                   gfxContentType aContent,
                                                   uint32_t aCaps,
                                                   SurfaceDescriptor* aBuffer)
@@ -95,7 +96,7 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
       memset(data, 0, stride * aSize.height);
     }
 #endif
-    *aBuffer = MemoryImage((uintptr_t)data, aSize, stride, format);
+    *aBuffer = MemoryImage((uintptr_t)data, ThebesIntSize(aSize), stride, format);
     return true;
   }
 
@@ -148,7 +149,7 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
 
 #if !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
 bool
-ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize&,
+ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize&,
                                                   gfxContentType,
                                                   uint32_t,
                                                   SurfaceDescriptor*)

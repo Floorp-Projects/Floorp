@@ -189,7 +189,7 @@ public:
   ~ImageBridgeChild();
 
   virtual PGrallocBufferChild*
-  AllocPGrallocBufferChild(const gfxIntSize&, const uint32_t&, const uint32_t&,
+  AllocPGrallocBufferChild(const gfx::IntSize&, const uint32_t&, const uint32_t&,
                            MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE;
 
   virtual bool
@@ -388,7 +388,7 @@ protected:
   CompositableTransaction* mTxn;
 
   // ISurfaceAllocator
-  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
+  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfx::IntSize& aSize,
                                                   uint32_t aFormat, uint32_t aUsage,
                                                   MaybeMagicGrallocBufferHandle* aHandle) MOZ_OVERRIDE;
 };
