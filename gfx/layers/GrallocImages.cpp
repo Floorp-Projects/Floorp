@@ -76,13 +76,13 @@ GrallocImage::SetData(const Data& aData)
   NS_PRECONDITION(aData.mYStride % 16 == 0, "Image should have stride of multiple of 16 pixels");
 
   mData = aData;
-  mSize = aData.mPicSize.ToUnknownSize();
+  mSize = aData.mPicSize;
 
   if (!mGraphicBuffer.get()) {
 
     SurfaceDescriptor desc;
     ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
-    ibc->AllocSurfaceDescriptorGralloc(ThebesIntSize(aData.mYSize.ToUnknownSize()),
+    ibc->AllocSurfaceDescriptorGralloc(aData.mYSize,
                                        HAL_PIXEL_FORMAT_YV12,
                                        GraphicBuffer::USAGE_SW_READ_OFTEN |
                                        GraphicBuffer::USAGE_SW_WRITE_OFTEN |
@@ -229,11 +229,11 @@ GrallocImage::GetAsSurface()
     return nullptr;
   }
 
+  nsRefPtr<gfxImageSurface> imageSurface =
+    new gfxImageSurface(GetSize(), gfxImageFormatRGB16_565);
+
   uint32_t width = GetSize().width;
   uint32_t height = GetSize().height;
-
-  nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(gfxIntSize(width, height), gfxImageFormatRGB16_565);
 
   if (format == HAL_PIXEL_FORMAT_YCrCb_420_SP_ADRENO) {
     // The Adreno hardware decoder aligns image dimensions to a multiple of 32,
@@ -295,7 +295,9 @@ GrallocImage::GetTextureClient()
       flags |= TEXTURE_RB_SWAPPED;
     }
     GrallocBufferActor* actor = static_cast<GrallocBufferActor*>(desc.bufferChild());
-    mTextureClient = new GrallocTextureClientOGL(actor, mSize, flags);
+    mTextureClient = new GrallocTextureClientOGL(actor,
+                                                 gfx::ToIntSize(mSize),
+                                                 flags);
     mTextureClient->SetGraphicBufferLocked(mGraphicBuffer);
   }
   return mTextureClient;

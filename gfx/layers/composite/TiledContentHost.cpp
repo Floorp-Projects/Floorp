@@ -28,7 +28,7 @@ void
 TiledLayerBufferComposite::Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,
                                   const nsIntRegion& aNewValidRegion,
                                   const nsIntRegion& aInvalidateRegion,
-                                  const LayerSize& aResolution)
+                                  const gfxSize& aResolution)
 {
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   printf_stderr("Upload %i, %i, %i, %i\n", aInvalidateRegion.GetBounds().x, aInvalidateRegion.GetBounds().y, aInvalidateRegion.GetBounds().width, aInvalidateRegion.GetBounds().height);
@@ -227,12 +227,12 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     return;
   }
   float resolution = aLayerBuffer.GetResolution();
-  LayerSize layerScale(1, 1);
+  gfxSize layerScale(1, 1);
   // We assume that the current frame resolution is the one used in our primary
   // layer buffer. Compensate for a changing frame resolution.
   if (aLayerBuffer.GetFrameResolution() != mVideoMemoryTiledBuffer.GetFrameResolution()) {
-    const LayerSize& layerResolution = aLayerBuffer.GetFrameResolution();
-    const LayerSize& localResolution = mVideoMemoryTiledBuffer.GetFrameResolution();
+    const gfxSize& layerResolution = aLayerBuffer.GetFrameResolution();
+    const gfxSize& localResolution = mVideoMemoryTiledBuffer.GetFrameResolution();
     layerScale.width = layerResolution.width / localResolution.width;
     layerScale.height = layerResolution.height / localResolution.height;
     aVisibleRect.ScaleRoundOut(layerScale.width, layerScale.height);

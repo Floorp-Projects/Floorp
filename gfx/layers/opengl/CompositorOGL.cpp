@@ -54,6 +54,10 @@ namespace layers {
 
 using namespace mozilla::gl;
 
+static inline IntSize ns2gfxSize(const nsIntSize& s) {
+  return IntSize(s.width, s.height);
+}
+
 // Draw the given quads with the already selected shader. Texture coordinates
 // are supplied if the shader requires them.
 static void

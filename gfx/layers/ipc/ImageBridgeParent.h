@@ -48,7 +48,7 @@ public:
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   virtual PGrallocBufferParent*
-  AllocPGrallocBufferParent(const gfx::IntSize&, const uint32_t&, const uint32_t&,
+  AllocPGrallocBufferParent(const gfxIntSize&, const uint32_t&, const uint32_t&,
                             MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE;
 
   virtual bool

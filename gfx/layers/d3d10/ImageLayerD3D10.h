@@ -10,7 +10,6 @@
 #include "ImageLayers.h"
 #include "ImageContainer.h"
 #include "yuv_convert.h"
-#include "mozilla/gfx/Point.h"
 
 namespace mozilla {
 namespace layers {
@@ -61,11 +60,11 @@ public:
 
   already_AddRefed<gfxASurface> GetAsSurface();
 
-  gfx::IntSize GetSize() { return mSize; }
+  gfxIntSize GetSize() { return mSize; }
 
   TextureD3D10BackendData *GetD3D10TextureBackendData(ID3D10Device *aDevice);
 
-  gfx::IntSize mSize;
+  gfxIntSize mSize;
   RemoteImageData::Format mFormat;
   HANDLE mHandle;
 };

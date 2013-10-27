@@ -100,7 +100,7 @@ CreateTextureHostOGL(uint64_t aID,
       result = new SharedTextureHostOGL(aID, aFlags,
                                         desc.shareType(),
                                         desc.handle(),
-                                        desc.size(),
+                                        gfx::ToIntSize(desc.size()),
                                         desc.inverted());
       break;
     }
@@ -617,7 +617,8 @@ SharedDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage
   SharedTextureDescriptor texture = aImage.get_SharedTextureDescriptor();
 
   SharedTextureHandle newHandle = texture.handle();
-  mSize = texture.size();
+  nsIntSize size = texture.size();
+  mSize = gfx::IntSize(size.width, size.height);
   if (texture.inverted()) {
     mFlags |= TEXTURE_NEEDS_Y_FLIP;
   }
@@ -846,24 +847,24 @@ YCbCrDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
 
   YCbCrImageDataDeserializer deserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
-  LayerIntSize gfxSize = deserializer.GetYSize();
-  LayerIntSize gfxCbCrSize = deserializer.GetCbCrSize();
+  gfxIntSize gfxSize = deserializer.GetYSize();
+  gfxIntSize gfxCbCrSize = deserializer.GetCbCrSize();
 
-  if (!mYTexture->mTexImage || mYTexture->mTexImage->GetSize() != gfxSize.ToUnknownSize()) {
+  if (!mYTexture->mTexImage || mYTexture->mTexImage->GetSize() != gfxSize) {
     mYTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                    gfxSize,
                                                    GFX_CONTENT_ALPHA,
                                                    WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                    FlagsToGLFlags(mFlags));
   }
-  if (!mCbTexture->mTexImage || mCbTexture->mTexImage->GetSize() != gfxCbCrSize.ToUnknownSize()) {
+  if (!mCbTexture->mTexImage || mCbTexture->mTexImage->GetSize() != gfxCbCrSize) {
     mCbTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                     gfxCbCrSize,
                                                     GFX_CONTENT_ALPHA,
                                                     WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                     FlagsToGLFlags(mFlags));
   }
-  if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxCbCrSize.ToUnknownSize()) {
+  if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxCbCrSize) {
     mCrTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                     gfxCbCrSize,
                                                     GFX_CONTENT_ALPHA,

@@ -239,18 +239,18 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
 
   PlanarYCbCrData data;
   data.mYChannel = Y.mData + Y.mOffset;
-  data.mYSize = LayerIntSize(Y.mWidth, Y.mHeight);
+  data.mYSize = gfxIntSize(Y.mWidth, Y.mHeight);
   data.mYStride = Y.mStride;
   data.mYSkip = Y.mSkip;
   data.mCbChannel = Cb.mData + Cb.mOffset;
   data.mCrChannel = Cr.mData + Cr.mOffset;
-  data.mCbCrSize = LayerIntSize(Cb.mWidth, Cb.mHeight);
+  data.mCbCrSize = gfxIntSize(Cb.mWidth, Cb.mHeight);
   data.mCbCrStride = Cb.mStride;
   data.mCbSkip = Cb.mSkip;
   data.mCrSkip = Cr.mSkip;
   data.mPicX = aPicture.x;
   data.mPicY = aPicture.y;
-  data.mPicSize = LayerIntSize(aPicture.width, aPicture.height);
+  data.mPicSize = gfxIntSize(aPicture.width, aPicture.height);
   data.mStereoMode = aInfo.mStereoMode;
 
   videoImage->SetDelayedConversion(true);

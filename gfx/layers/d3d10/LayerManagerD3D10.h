@@ -92,9 +92,9 @@ public:
   enum {
     MAX_TEXTURE_SIZE = 8192
   };
-  virtual bool CanUseCanvasLayerForSize(const LayerIntSize &aSize)
+  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize)
   {
-    return aSize <= LayerIntSize(MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);
+    return aSize <= gfxIntSize(MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);
   }
 
   virtual int32_t GetMaxTextureSize() const

@@ -11,7 +11,6 @@
 #include "ipc/AutoOpenSurface.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxWindowsPlatform.h"
-#include "gfx2DGlue.h"
 
 using namespace mozilla::gfx;
 
@@ -216,7 +215,7 @@ static TemporaryRef<IDirect3DTexture9>
 DataToTexture(IDirect3DDevice9 *aDevice,
               unsigned char *aData,
               int aStride,
-              const LayerIntSize &aSize,
+              const gfxIntSize &aSize,
               _D3DFORMAT aFormat,
               uint32_t aBPP)
 {
@@ -225,7 +224,7 @@ DataToTexture(IDirect3DDevice9 *aDevice,
   D3DLOCKED_RECT lockedRect;
   bool usingD3D9Ex;
 
-  if (!InitTextures(aDevice, ThebesIntSize(aSize.ToUnknownSize()), aFormat,
+  if (!InitTextures(aDevice, aSize, aFormat,
                     texture, surface, lockedRect, usingD3D9Ex)) {
     return nullptr;
   }
@@ -286,8 +285,7 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
   if (size.width <= maxSize && size.height <= maxSize) {
     mTextures[0] = DataToTexture(mDevice,
                                  surf->Data(), surf->Stride(),
-                                 LayerIntSize(size.width, size.height),
-                                 format, bpp);
+                                 size, format, bpp);
     NS_ASSERTION(mTextures[0], "Could not upload texture");
     mIsTiled = false;
   } else {
@@ -304,7 +302,7 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
       mTileTextures[i] = DataToTexture(mDevice,
                                        data,
                                        surf->Stride(),
-                                       LayerIntSize(tileRect.width, tileRect.height),
+                                       gfxIntSize(tileRect.width, tileRect.height),
                                        format,
                                        bpp);
     }
@@ -349,9 +347,9 @@ DeprecatedTextureHostYCbCrD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
 
   YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
-  LayerIntSize gfxCbCrSize = yuvDeserializer.GetCbCrSize();
-  LayerIntSize size = yuvDeserializer.GetYSize();
-  mSize = size.ToUnknownSize();
+  gfxIntSize gfxCbCrSize = yuvDeserializer.GetCbCrSize();
+  gfxIntSize size = yuvDeserializer.GetYSize();
+  mSize = IntSize(size.width, size.height);
   mStereoMode = yuvDeserializer.GetStereoMode();
 
   mTextures[0] = DataToTexture(mDevice,
@@ -460,7 +458,7 @@ DeprecatedTextureHostSystemMemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
       mTileTextures[i] = DataToTexture(mDevice,
                                        reinterpret_cast<unsigned char*>(lockedRect.pBits),
                                        lockedRect.Pitch,
-                                       LayerIntSize(tileRect.width, tileRect.height),
+                                       gfxIntSize(tileRect.width, tileRect.height),
                                        format,
                                        bpp);
       texture->UnlockRect(0);
@@ -570,7 +568,7 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
       mTileTextures[i] = DataToTexture(mDevice,
                                        data,
                                        imgSurface->Stride(),
-                                       LayerIntSize(tileRect.width, tileRect.height),
+                                       gfxIntSize(tileRect.width, tileRect.height),
                                        format,
                                        bpp);
     }

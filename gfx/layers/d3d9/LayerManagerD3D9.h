@@ -78,12 +78,12 @@ public:
 
   void SetRoot(Layer* aLayer);
 
-  virtual bool CanUseCanvasLayerForSize(const LayerIntSize &aSize)
+  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize)
   {
     if (!mDeviceManager)
       return false;
     int32_t maxSize = mDeviceManager->GetMaxTextureSize();
-    return aSize <= LayerIntSize(maxSize, maxSize);
+    return aSize <= gfxIntSize(maxSize, maxSize);
   }
 
   virtual int32_t GetMaxTextureSize() const

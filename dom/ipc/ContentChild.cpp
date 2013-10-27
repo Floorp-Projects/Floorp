@@ -1213,7 +1213,7 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
 }
 
 bool
-ContentChild::RecvScreenSizeChanged(const gfx::IntSize& size)
+ContentChild::RecvScreenSizeChanged(const gfxIntSize& size)
 {
 #ifdef ANDROID
     mScreenSize = size;

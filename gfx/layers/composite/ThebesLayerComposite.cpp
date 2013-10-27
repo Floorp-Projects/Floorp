@@ -176,7 +176,7 @@ ThebesLayerComposite::CleanupResources()
   mBuffer = nullptr;
 }
 
-LayerSize
+gfxSize
 ThebesLayerComposite::GetEffectiveResolution()
 {
   // Work out render resolution by multiplying the resolution of our ancestors.
@@ -184,7 +184,7 @@ ThebesLayerComposite::GetEffectiveResolution()
   // resolution of 1, 1.
   // XXX For large layer trees, it would be faster to do this once from the
   //     root node upwards and store the value on each layer.
-  LayerSize resolution(1, 1);
+  gfxSize resolution(1, 1);
   for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
     const FrameMetrics& metrics = parent->GetFrameMetrics();
     resolution.width *= metrics.mResolution.scale;
@@ -206,7 +206,7 @@ ThebesLayerComposite::GetDisplayPort()
   // Find out the area of the nearest display-port to invalidate retained
   // tiles.
   gfxRect displayPort;
-  LayerSize parentResolution = GetEffectiveResolution();
+  gfxSize parentResolution = GetEffectiveResolution();
   for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
     const FrameMetrics& metrics = parent->GetFrameMetrics();
     if (displayPort.IsEmpty()) {

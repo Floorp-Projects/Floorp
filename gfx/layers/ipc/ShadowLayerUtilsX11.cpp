@@ -29,7 +29,6 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ERROR
 #include "prenv.h"                      // for PR_GetEnv
-#include "gfx2DGlue.h"
 
 using namespace mozilla::gl;
 
@@ -116,7 +115,7 @@ SurfaceDescriptorX11::OpenForeign() const
 }
 
 bool
-ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
+ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
                                                   gfxContentType aContent,
                                                   uint32_t aCaps,
                                                   SurfaceDescriptor* aBuffer)
@@ -134,8 +133,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
   }
 
   gfxPlatform* platform = gfxPlatform::GetPlatform();
-  nsRefPtr<gfxASurface> buffer = platform->CreateOffscreenSurface(ThebesIntSize(aSize),
-                                                                  aContent);
+  nsRefPtr<gfxASurface> buffer = platform->CreateOffscreenSurface(aSize, aContent);
   if (!buffer ||
       buffer->GetType() != gfxSurfaceTypeXlib) {
     NS_ERROR("creating Xlib front/back surfaces failed!");

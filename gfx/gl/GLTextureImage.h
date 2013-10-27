@@ -13,7 +13,6 @@
 #include "GLContextTypes.h"
 #include "GraphicsFilter.h"
 #include "mozilla/gfx/Rect.h"
-#include "Units.h"
 
 class gfxASurface;
 
@@ -428,7 +427,7 @@ CreateBasicTextureImage(GLContext* aGL,
 
 already_AddRefed<TextureImage>
 CreateBasicTextureImage(GLContext* aGL,
-                        const LayerIntSize& aSize,
+                        const gfx::IntSize& aSize,
                         TextureImage::ContentType aContentType,
                         GLenum aWrapMode,
                         TextureImage::Flags aFlags);

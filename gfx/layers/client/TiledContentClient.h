@@ -14,6 +14,7 @@
 #include "Units.h"                      // for CSSPoint
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxTypes.h"
+#include "gfxPoint.h"                   // for gfxSize
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
@@ -107,7 +108,7 @@ struct BasicTiledLayerPaintData {
   CSSPoint mLastScrollOffset;
   gfx3DMatrix mTransformScreenToLayer;
   nsIntRect mLayerCriticalDisplayPort;
-  LayerSize mResolution;
+  gfxSize mResolution;
   nsIntRect mCompositionBounds;
   uint16_t mLowPrecisionPaintCount;
   bool mFirstPaint : 1;
@@ -179,8 +180,8 @@ public:
     }
   }
 
-  const LayerSize& GetFrameResolution() { return mFrameResolution; }
-  void SetFrameResolution(const LayerSize& aResolution) { mFrameResolution = aResolution; }
+  const gfxSize& GetFrameResolution() { return mFrameResolution; }
+  void SetFrameResolution(const gfxSize& aResolution) { mFrameResolution = aResolution; }
 
   bool HasFormatChanged() const;
 
@@ -225,7 +226,7 @@ private:
   ClientLayerManager* mManager;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
-  LayerSize mFrameResolution;
+  gfxSize mFrameResolution;
   bool mLastPaintOpaque;
 
   // The buffer we use when UseSinglePaintBuffer() above is true.
