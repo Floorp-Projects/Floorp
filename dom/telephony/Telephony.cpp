@@ -719,25 +719,3 @@ Telephony::EnqueueEnumerationAck()
     NS_WARNING("Failed to dispatch to current thread!");
   }
 }
-
-/* static */
-bool
-Telephony::CheckPermission(nsPIDOMWindow* aWindow)
-{
-  MOZ_ASSERT(aWindow && aWindow->IsInnerWindow());
-
-  nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, false);
-
-  uint32_t permission;
-  nsresult rv =
-    permMgr->TestPermissionFromWindow(aWindow, "telephony", &permission);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (permission != nsIPermissionManager::ALLOW_ACTION) {
-    return false;
-  }
-
-  return true;
-}
