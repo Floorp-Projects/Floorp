@@ -104,12 +104,12 @@ public:
 
   virtual bool SupportsPartialTextureUpdate() MOZ_OVERRIDE;
 
-  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) MOZ_OVERRIDE
+  virtual bool CanUseCanvasLayerForSize(const LayerIntSize &aSize) MOZ_OVERRIDE
   {
     if (!mGLContext)
       return false;
     int32_t maxSize = GetMaxTextureSize();
-    return aSize <= gfx::IntSize(maxSize, maxSize);
+    return aSize <= LayerIntSize(maxSize, maxSize);
   }
 
   virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE;
