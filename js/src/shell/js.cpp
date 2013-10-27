@@ -1104,7 +1104,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    return JS_WrapValue(cx, vp);
+    return JS_WrapValue(cx, args.rval());
 }
 
 static JSString *
@@ -3777,7 +3777,7 @@ DecompileThisScript(JSContext *cx, unsigned argc, Value *vp)
         args.rval().setString(result);
     }
 
-    return JS_WrapValue(cx, vp);
+    return JS_WrapValue(cx, args.rval());
 }
 
 static bool

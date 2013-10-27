@@ -4605,9 +4605,9 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
     if type.isAny():
         assert not type.nullable()
         if isMember:
-            value = "&" + value
+            value = "JS::MutableHandleValue::fromMarkedLocation(&%s)" % value
         else:
-            value = value + ".address()"
+            value = "&" + value
         return CGGeneric("if (!JS_WrapValue(cx, %s)) {\n"
                          "  return false;\n"
                          "}" % value)

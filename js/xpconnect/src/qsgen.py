@@ -679,7 +679,7 @@ resultConvTemplates = {
 
     '[jsval]':
         "    ${jsvalPtr}.set(result);\n"
-        "    return JS_WrapValue(cx, ${jsvalPtr}.address());\n"
+        "    return JS_WrapValue(cx, ${jsvalPtr});\n"
     }
 
 def isVariantType(t):
