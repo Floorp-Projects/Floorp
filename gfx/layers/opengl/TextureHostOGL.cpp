@@ -846,24 +846,24 @@ YCbCrDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
 
   YCbCrImageDataDeserializer deserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
-  gfxIntSize gfxSize = ThebesIntSize(deserializer.GetYSize().ToUnknownSize());
-  gfxIntSize gfxCbCrSize = ThebesIntSize(deserializer.GetCbCrSize().ToUnknownSize());
+  LayerIntSize gfxSize = deserializer.GetYSize();
+  LayerIntSize gfxCbCrSize = deserializer.GetCbCrSize();
 
-  if (!mYTexture->mTexImage || mYTexture->mTexImage->GetSize() != gfxSize) {
+  if (!mYTexture->mTexImage || mYTexture->mTexImage->GetSize() != gfxSize.ToUnknownSize()) {
     mYTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                    gfxSize,
                                                    GFX_CONTENT_ALPHA,
                                                    WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                    FlagsToGLFlags(mFlags));
   }
-  if (!mCbTexture->mTexImage || mCbTexture->mTexImage->GetSize() != gfxCbCrSize) {
+  if (!mCbTexture->mTexImage || mCbTexture->mTexImage->GetSize() != gfxCbCrSize.ToUnknownSize()) {
     mCbTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                     gfxCbCrSize,
                                                     GFX_CONTENT_ALPHA,
                                                     WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                     FlagsToGLFlags(mFlags));
   }
-  if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxCbCrSize) {
+  if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxCbCrSize.ToUnknownSize()) {
     mCrTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                     gfxCbCrSize,
                                                     GFX_CONTENT_ALPHA,

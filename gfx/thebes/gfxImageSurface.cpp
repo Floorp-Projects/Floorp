@@ -44,6 +44,12 @@ gfxImageSurface::gfxImageSurface(unsigned char *aData, const gfxIntSize& aSize,
     InitWithData(aData, aSize, aStride, aFormat);
 }
 
+gfxImageSurface::gfxImageSurface(unsigned char *aData, const mozilla::LayerIntSize& aSize,
+                                 long aStride, gfxImageFormat aFormat)
+{
+    InitWithData(aData, gfxIntSize(aSize.width, aSize.height), aStride, aFormat);
+}
+
 void
 gfxImageSurface::MakeInvalid()
 {
