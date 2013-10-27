@@ -351,7 +351,7 @@ struct ImageLayerProperties : public LayerPropertiesBase
   nsIntRegion mVisibleRegion;
   nsRefPtr<ImageContainer> mContainer;
   GraphicsFilter mFilter;
-  gfxIntSize mScaleToSize;
+  LayerIntSize mScaleToSize;
   ScaleMode mScaleMode;
 };
 

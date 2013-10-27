@@ -36,6 +36,7 @@ using mozilla::LayerPoint;
 using mozilla::LayerRect;
 using mozilla::layers::ScaleMode;
 using mozilla::layers::DiagnosticTypes;
+using mozilla::gfx::IntSize;
 
 namespace mozilla {
 namespace layers {
@@ -215,7 +216,7 @@ struct ContainerLayerAttributes {
 struct ColorLayerAttributes     { LayerColor color; nsIntRect bounds; };
 struct CanvasLayerAttributes    { GraphicsFilterType filter; nsIntRect bounds; };
 struct RefLayerAttributes       { int64_t id; };
-struct ImageLayerAttributes     { GraphicsFilterType filter; gfxIntSize scaleToSize; ScaleMode scaleMode; };
+struct ImageLayerAttributes     { GraphicsFilterType filter; IntSize scaleToSize; ScaleMode scaleMode; };
 
 union SpecificLayerAttributes {
   null_t;

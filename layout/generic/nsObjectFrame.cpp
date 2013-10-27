@@ -1527,7 +1527,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     scaleFactor = 1.0;
   }
   int intScaleFactor = ceil(scaleFactor);
-  gfxIntSize size(window->width * intScaleFactor, window->height * intScaleFactor);
+  gfx::IntSize size(window->width * intScaleFactor, window->height * intScaleFactor);
 
   nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
   gfxRect r = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
