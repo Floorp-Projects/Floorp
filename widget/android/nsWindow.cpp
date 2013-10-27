@@ -58,7 +58,6 @@ using mozilla::unused;
 
 #include "nsString.h"
 #include "GeckoProfiler.h" // For PROFILER_LABEL
-#include "mozilla/gfx/Point.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -69,7 +68,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 // The dimensions of the current android view
 static gfxIntSize gAndroidBounds = gfxIntSize(0, 0);
-static mozilla::gfx::IntSize gAndroidScreenBounds;
+static gfxIntSize gAndroidScreenBounds;
 
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/layers/CompositorChild.h"
@@ -1142,7 +1141,7 @@ nsWindow::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
     event.time = PR_Now() / 1000;
 }
 
-mozilla::gfx::IntSize
+gfxIntSize
 nsWindow::GetAndroidScreenBounds()
 {
     if (XRE_GetProcessType() == GeckoProcessType_Content) {

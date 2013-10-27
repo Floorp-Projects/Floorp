@@ -111,11 +111,11 @@ public:
 
   virtual void SetRoot(Layer* aLayer) { mRoot = aLayer; }
 
-  virtual bool CanUseCanvasLayerForSize(const LayerIntSize &aSize) {
+  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) {
     if (!mGLContext)
       return false;
     int32_t maxSize = GetMaxTextureSize();
-    return aSize <= LayerIntSize(maxSize, maxSize);
+    return aSize <= gfxIntSize(maxSize, maxSize);
   }
 
   virtual int32_t GetMaxTextureSize() const;
@@ -493,7 +493,7 @@ public:
    * Any layer that can be used as a mask layer should override this method.
    * aSize will contain the size of the image.
    */
-  virtual bool LoadAsTexture(GLuint aTextureUnit, gfx::IntSize* aSize)
+  virtual bool LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
   {
     NS_WARNING("LoadAsTexture called without being overriden");
     return false;

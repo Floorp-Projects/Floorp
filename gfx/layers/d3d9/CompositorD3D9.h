@@ -28,7 +28,7 @@ public:
   virtual TextureFactoryIdentifier
     GetTextureFactoryIdentifier() MOZ_OVERRIDE;
 
-  virtual bool CanUseCanvasLayerForSize(const LayerIntSize &aSize) MOZ_OVERRIDE;
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) MOZ_OVERRIDE;
   virtual int32_t GetMaxTextureSize() const MOZ_FINAL;
 
   virtual void SetTargetContext(gfx::DrawTarget *aTarget) MOZ_OVERRIDE

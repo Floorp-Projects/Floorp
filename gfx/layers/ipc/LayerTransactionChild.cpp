@@ -29,7 +29,7 @@ LayerTransactionChild::Destroy()
 }
 
 PGrallocBufferChild*
-LayerTransactionChild::AllocPGrallocBufferChild(const gfx::IntSize&,
+LayerTransactionChild::AllocPGrallocBufferChild(const gfxIntSize&,
                                            const uint32_t&,
                                            const uint32_t&,
                                            MaybeMagicGrallocBufferHandle*)

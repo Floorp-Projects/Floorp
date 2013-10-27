@@ -27,7 +27,6 @@
 #include "nsThreadUtils.h"              // for nsRunnable
 #include "nscore.h"                     // for NS_IMETHOD
 #include "LayerManagerOGL.h"            // for LayerOGL::GLContext, etc
-#include "gfx2DGlue.h"
 #if defined(GL_PROVIDER_GLX)
 # include "GLXLibrary.h"
 # include "gfxXlibSurface.h"
@@ -141,7 +140,7 @@ TextureRecycleBin::TextureRecycleBin()
 
 void
 TextureRecycleBin::RecycleTexture(GLTexture *aTexture, TextureType aType,
-                           const LayerIntSize& aSize)
+                           const gfxIntSize& aSize)
 {
   MutexAutoLock lock(mLock);
 
@@ -156,7 +155,7 @@ TextureRecycleBin::RecycleTexture(GLTexture *aTexture, TextureType aType,
 }
 
 void
-TextureRecycleBin::GetTexture(TextureType aType, const LayerIntSize& aSize,
+TextureRecycleBin::GetTexture(TextureType aType, const gfxIntSize& aSize,
                        GLContext *aContext, GLTexture *aOutTexture)
 {
   MutexAutoLock lock(mLock);
@@ -375,7 +374,7 @@ ImageLayerOGL::RenderLayer(int,
     }
 
     gl()->ApplyFilterToBoundTexture(handleDetails.mTarget, mFilter);
-    program->SetLayerQuadRect(gfx::Rect(0, 0, data->mSize.width, data->mSize.height));
+    program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), data->mSize));
     mOGLManager->BindAndDrawQuad(program, data->mInverted);
     gl()->fBindTexture(handleDetails.mTarget, 0);
     gl()->DetachSharedHandle(data->mShareType, data->mHandle);
@@ -400,7 +399,7 @@ UploadYUVToTexture(GLContext* gl, const PlanarYCbCrData& aData,
   nsIntRect size(0, 0, aData.mYSize.width, aData.mYSize.height);
   GLuint texture = aYTexture->GetTextureID();
   nsRefPtr<gfxASurface> surf = new gfxImageSurface(aData.mYChannel,
-                                                   ThebesIntSize(aData.mYSize.ToUnknownSize()),
+                                                   aData.mYSize,
                                                    aData.mYStride,
                                                    gfxImageFormatA8);
   gl->UploadSurfaceToTexture(surf, size, texture, true);
@@ -408,14 +407,14 @@ UploadYUVToTexture(GLContext* gl, const PlanarYCbCrData& aData,
   size = nsIntRect(0, 0, aData.mCbCrSize.width, aData.mCbCrSize.height);
   texture = aUTexture->GetTextureID();
   surf = new gfxImageSurface(aData.mCbChannel,
-                             ThebesIntSize(aData.mCbCrSize.ToUnknownSize()),
+                             aData.mCbCrSize,
                              aData.mCbCrStride,
                              gfxImageFormatA8);
   gl->UploadSurfaceToTexture(surf, size, texture, true);
 
   texture = aVTexture->GetTextureID();
   surf = new gfxImageSurface(aData.mCrChannel,
-                             ThebesIntSize(aData.mCbCrSize.ToUnknownSize()),
+                             aData.mCbCrSize,
                              aData.mCbCrStride,
                              gfxImageFormatA8);
   gl->UploadSurfaceToTexture(surf, size, texture, true);
@@ -516,17 +515,17 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
  * If the OpenGL setup is capable of using non-POT textures, then it
  * will just return aSize.
  */
-static gfx::IntSize
-CalculatePOTSize(const gfx::IntSize& aSize, GLContext* gl)
+static gfxIntSize
+CalculatePOTSize(const gfxIntSize& aSize, GLContext* gl)
 {
   if (gl->CanUploadNonPowerOfTwo())
     return aSize;
 
-  return gfx::IntSize(NextPowerOfTwo(aSize.width), NextPowerOfTwo(aSize.height));
+  return gfxIntSize(NextPowerOfTwo(aSize.width), NextPowerOfTwo(aSize.height));
 }
 
 bool
-ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfx::IntSize* aSize)
+ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
 {
   // this method shares a lot of code with RenderLayer, but it doesn't seem
   // to be possible to factor it out into a helper method

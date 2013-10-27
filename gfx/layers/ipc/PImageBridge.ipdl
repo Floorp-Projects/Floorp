@@ -14,7 +14,6 @@ include "mozilla/GfxMessageUtils.h";
 
 using ImageHandle;
 using mozilla::layers::TextureInfo;
-using mozilla::gfx::IntSize;
 
 namespace mozilla {
 namespace layers {
@@ -39,7 +38,7 @@ parent:
   // buffer directly. The format is a enum defined in
   // system/graphics.h and the usage is the GraphicBuffer usage
   // flag. See GraphicBuffer.h and gralloc.h.
-  sync PGrallocBuffer(IntSize size, uint32_t format, uint32_t usage)
+  sync PGrallocBuffer(gfxIntSize size, uint32_t format, uint32_t usage)
     returns (MaybeMagicGrallocBufferHandle handle);
 
   // First step of the destruction sequence. This puts all the ImageContainerParents

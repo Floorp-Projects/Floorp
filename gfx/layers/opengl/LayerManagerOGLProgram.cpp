@@ -446,7 +446,7 @@ ShaderProgramOGL::LoadMask(Layer* aMaskLayer)
     return false;
   }
 
-  gfx::IntSize size;
+  gfxIntSize size;
   if (!static_cast<LayerOGL*>(aMaskLayer->ImplData())
         ->LoadAsTexture(LOCAL_GL_TEXTURE0 + mProfile.mTextureCount - 1, &size)){
     return false;
@@ -459,7 +459,7 @@ ShaderProgramOGL::LoadMask(Layer* aMaskLayer)
   mozilla::DebugOnly<bool> isMask2D =
     aMaskLayer->GetEffectiveTransform().CanDraw2D(&maskTransform);
   NS_ASSERTION(isMask2D, "How did we end up with a 3D transform here?!");
-  gfxRect bounds = gfxRect(0, 0, size.width, size.height);
+  gfxRect bounds = gfxRect(gfxPoint(), size);
   bounds = maskTransform.TransformBounds(bounds);
 
   gfx3DMatrix m;

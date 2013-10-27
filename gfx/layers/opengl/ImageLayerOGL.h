@@ -10,6 +10,7 @@
 #include "ImageContainer.h"             // for ImageBackendData, etc
 #include "ImageLayers.h"                // for ImageLayer
 #include "LayerManagerOGL.h"            // for LayerOGL
+#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Mutex.h"              // for Mutex
 #include "mozilla/mozalloc.h"           // for operator delete
@@ -88,8 +89,8 @@ public:
   };
 
   void RecycleTexture(GLTexture *aTexture, TextureType aType,
-                      const LayerIntSize& aSize);
-  void GetTexture(TextureType aType, const LayerIntSize& aSize,
+                      const gfxIntSize& aSize);
+  void GetTexture(TextureType aType, const gfxIntSize& aSize,
                   GLContext *aContext, GLTexture *aOutTexture);
 
 private:
@@ -100,7 +101,7 @@ private:
   Mutex mLock;
 
   nsTArray<GLTexture> mRecycledTextures[2];
-  LayerIntSize mRecycledTextureSizes[2];
+  gfxIntSize mRecycledTextureSizes[2];
 };
 
 class ImageLayerOGL : public ImageLayer,
@@ -113,7 +114,7 @@ public:
   // LayerOGL Implementation
   virtual void Destroy() { mDestroyed = true; }
   virtual Layer* GetLayer();
-  virtual bool LoadAsTexture(GLuint aTextureUnit, gfx::IntSize* aSize);
+  virtual bool LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize);
 
   virtual void RenderLayer(int aPreviousFrameBuffer,
                            const nsIntPoint& aOffset);
@@ -145,7 +146,7 @@ struct PlanarYCbCrOGLBackendData : public ImageBackendData
   }
 
   GLTexture mTextures[3];
-  LayerIntSize mYSize, mCbCrSize;
+  gfxIntSize mYSize, mCbCrSize;
   nsRefPtr<TextureRecycleBin> mTextureRecycleBin;
 };
 
@@ -155,7 +156,7 @@ struct CairoOGLBackendData : public ImageBackendData
   CairoOGLBackendData() : mLayerProgram(RGBALayerProgramType) {}
   GLTexture mTexture;
   ShaderProgramType mLayerProgram;
-  gfx::IntSize mTextureSize;
+  gfxIntSize mTextureSize;
 };
 
 } /* layers */

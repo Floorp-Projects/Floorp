@@ -13,7 +13,6 @@
 #include "mozilla/Attributes.h"         // for MOZ_STACK_CLASS
 #include "mozilla/RefPtr.h"             // for TemporaryRef
 #include "mozilla/gfx/Point.h"          // for IntSize
-#include "Units.h"
 
 namespace mozilla {
 namespace gfx {
@@ -59,12 +58,12 @@ public:
   /**
    * Returns the dimensions of the Y Channel.
    */
-  LayerIntSize GetYSize();
+  gfxIntSize GetYSize();
 
   /**
    * Returns the dimensions of the Cb and Cr Channel.
    */
-  LayerIntSize GetCbCrSize();
+  gfxIntSize GetCbCrSize();
 
   /**
    * Stereo mode for the image.
@@ -104,8 +103,10 @@ public:
    * to allocate in a shmem in order to place a shared YCbCr image blob of
    * given dimensions.
    */
-  static size_t ComputeMinBufferSize(const LayerIntSize& aYSize,
-                                     const LayerIntSize& aCbCrSize);
+  static size_t ComputeMinBufferSize(const gfx::IntSize& aYSize,
+                                     const gfx::IntSize& aCbCrSize);
+  static size_t ComputeMinBufferSize(const gfxIntSize& aYSize,
+                                     const gfxIntSize& aCbCrSize);
   static size_t ComputeMinBufferSize(uint32_t aSize);
 
   /**
@@ -113,14 +114,17 @@ public:
    * The provided pointer should point to the beginning of the (chunk of)
    * buffer on which we want to store the image.
    */
-  void InitializeBufferInfo(const LayerIntSize& aYSize,
-                            const LayerIntSize& aCbCrSize,
+  void InitializeBufferInfo(const gfx::IntSize& aYSize,
+                            const gfx::IntSize& aCbCrSize,
+                            StereoMode aStereoMode);
+  void InitializeBufferInfo(const gfxIntSize& aYSize,
+                            const gfxIntSize& aCbCrSize,
                             StereoMode aStereoMode);
 
   bool CopyData(const uint8_t* aYData,
                 const uint8_t* aCbData, const uint8_t* aCrData,
-                LayerIntSize aYSize, uint32_t aYStride,
-                LayerIntSize aCbCrSize, uint32_t aCbCrStride,
+                gfxIntSize aYSize, uint32_t aYStride,
+                gfxIntSize aCbCrSize, uint32_t aCbCrStride,
                 uint32_t aYSkip, uint32_t aCbCrSkip);
 };
 

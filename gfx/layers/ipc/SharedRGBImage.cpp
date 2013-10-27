@@ -100,7 +100,7 @@ DeprecatedSharedRGBImage::GetBufferSize()
   return mSize.width * mSize.height * gfxASurface::BytesPerPixel(mImageFormat);
 }
 
-  gfx::IntSize
+gfxIntSize
 DeprecatedSharedRGBImage::GetSize()
 {
   return mSize;
@@ -207,10 +207,10 @@ SharedRGBImage::GetBuffer()
                         : nullptr;
 }
 
-gfx::IntSize
+gfxIntSize
 SharedRGBImage::GetSize()
 {
-  return mSize;
+  return ThebesIntSize(mSize);
 }
 
 size_t

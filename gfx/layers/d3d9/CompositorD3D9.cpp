@@ -65,10 +65,15 @@ CompositorD3D9::GetTextureFactoryIdentifier()
 }
 
 bool
-CompositorD3D9::CanUseCanvasLayerForSize(const LayerIntSize &aSize)
+CompositorD3D9::CanUseCanvasLayerForSize(const IntSize &aSize)
 {
   int32_t maxTextureSize = GetMaxTextureSize();
-  return aSize < LayerIntSize(maxTextureSize, maxTextureSize);
+
+  if (aSize.width > maxTextureSize || aSize.height > maxTextureSize) {
+    return false;
+  }
+
+  return true;
 }
 
 int32_t

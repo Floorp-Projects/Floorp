@@ -767,9 +767,10 @@ LayerManagerComposite::NotifyShadowTreeTransaction()
 }
 
 bool
-LayerManagerComposite::CanUseCanvasLayerForSize(const LayerIntSize &aSize)
+LayerManagerComposite::CanUseCanvasLayerForSize(const gfxIntSize &aSize)
 {
-  return mCompositor->CanUseCanvasLayerForSize(aSize);
+  return mCompositor->CanUseCanvasLayerForSize(gfx::IntSize(aSize.width,
+                                                            aSize.height));
 }
 
 TextureFactoryIdentifier

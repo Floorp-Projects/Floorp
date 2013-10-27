@@ -10,7 +10,6 @@
 #include "ImageContainer.h"
 #include "nsAutoPtr.h"
 #include "d3d9.h"
-#include "mozilla/gfx/Point.h"
 
 namespace mozilla {
 namespace layers {
@@ -45,7 +44,7 @@ public:
   // complete.
   HANDLE GetShareHandle();
 
-  gfx::IntSize GetSize() MOZ_OVERRIDE;
+  gfxIntSize GetSize() MOZ_OVERRIDE;
 
   already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE;
 
@@ -55,7 +54,7 @@ private:
   // is complete, whereupon the texture is safe to use.
   void EnsureSynchronized();
 
-  gfx::IntSize mSize;
+  gfxIntSize mSize;
   RefPtr<IDirect3DTexture9> mTexture;
   RefPtr<IDirect3DQuery9> mQuery;
   HANDLE mShareHandle;

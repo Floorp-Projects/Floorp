@@ -12,7 +12,6 @@
 #include "D3D9SurfaceImage.h"
 
 #include "gfxWindowsPlatform.h"
-#include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace layers {
@@ -21,7 +20,7 @@ static already_AddRefed<ID3D10Texture2D>
 DataToTexture(ID3D10Device *aDevice,
               unsigned char *data,
               int stride,
-              const gfx::IntSize &aSize)
+              const gfxIntSize &aSize)
 {
   D3D10_SUBRESOURCE_DATA srdata;
 
@@ -48,7 +47,7 @@ DataToTexture(ID3D10Device *aDevice,
 static already_AddRefed<ID3D10Texture2D>
 SurfaceToTexture(ID3D10Device *aDevice,
                  gfxASurface *aSurface,
-                 const gfx::IntSize &aSize)
+                 const gfxIntSize &aSize)
 {
   if (!aSurface) {
     return nullptr;
@@ -69,7 +68,7 @@ SurfaceToTexture(ID3D10Device *aDevice,
   nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
 
   if (!imageSurface) {
-    imageSurface = new gfxImageSurface(ThebesIntSize(aSize),
+    imageSurface = new gfxImageSurface(aSize,
                                        gfxImageFormatARGB32);
 
     nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
@@ -203,7 +202,7 @@ ImageLayerD3D10::RenderLayer()
     return;
   }
 
-  gfx::IntSize size = image->GetSize();
+  gfxIntSize size = image->GetSize();
 
   SetEffectTransformAndOpacity();
 
@@ -411,7 +410,7 @@ ImageLayerD3D10::GetAsTexture(gfxIntSize* aSize)
     return nullptr;
   }
 
-  *aSize = ThebesIntSize(image->GetSize());
+  *aSize = image->GetSize();
   bool dontCare;
   nsRefPtr<ID3D10ShaderResourceView> result = GetImageSRView(image, dontCare);
   return result.forget();
@@ -466,10 +465,9 @@ RemoteDXGITextureImage::GetAsSurface()
   keyedMutex->ReleaseSync(0);
 
   nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(ThebesIntSize(mSize),
-                        mFormat == RemoteImageData::BGRX32 ?
-                                   gfxImageFormatRGB24 :
-                                   gfxImageFormatARGB32);
+    new gfxImageSurface(mSize, mFormat == RemoteImageData::BGRX32 ?
+                                          gfxImageFormatRGB24 :
+                                          gfxImageFormatARGB32);
 
   if (!surface->CairoSurface() || surface->CairoStatus()) {
     NS_WARNING("Failed to created image surface for DXGI texture.");

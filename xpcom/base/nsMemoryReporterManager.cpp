@@ -1418,7 +1418,7 @@ DEFINE_REGISTER_SIZE_OF_TAB(NonJS);
 namespace mozilla {
 namespace dmd {
 
-class NullReporterCallback MOZ_FINAL : public nsIMemoryReporterCallback
+class NullReporterCallback : public nsIMemoryReporterCallback
 {
 public:
     NS_DECL_ISUPPORTS

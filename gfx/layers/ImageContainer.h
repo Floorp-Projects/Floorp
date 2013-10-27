@@ -27,7 +27,6 @@
 #include "nsTArray.h"                   // for nsTArray
 #include "mozilla/Atomics.h"
 #include "nsThreadUtils.h"
-#include "Units.h"
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
@@ -148,7 +147,7 @@ public:
   void* GetImplData() { return mImplData; }
 
   virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
-  virtual gfx::IntSize GetSize() = 0;
+  virtual gfxIntSize GetSize() = 0;
   virtual nsIntRect GetPictureRect()
   {
     return nsIntRect(0, 0, GetSize().width, GetSize().height);
@@ -263,7 +262,7 @@ protected:
 
   virtual already_AddRefed<Image> CreateImage(const ImageFormat* aFormats,
                                               uint32_t aNumFormats,
-                                              const gfx::IntSize &aScaleHint,
+                                              const gfxIntSize &aScaleHint,
                                               BufferRecycleBin *aRecycleBin);
 
 };
@@ -484,7 +483,7 @@ public:
    * the lock methods should be used to avoid the copy, however this should be
    * avoided if the surface is required for a long period of time.
    */
-  already_AddRefed<gfxASurface> GetCurrentAsSurface(gfx::IntSize* aSizeResult);
+  already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSizeResult);
 
   /**
    * This is similar to GetCurrentAsSurface, however this does not make a copy
@@ -494,7 +493,7 @@ public:
    * type of image. Optionally a pointer can be passed to receive the current
    * image.
    */
-  already_AddRefed<gfxASurface> LockCurrentAsSurface(gfx::IntSize* aSizeResult,
+  already_AddRefed<gfxASurface> LockCurrentAsSurface(gfxIntSize* aSizeResult,
                                                      Image** aCurrentImage = nullptr);
 
   /**
@@ -502,7 +501,7 @@ public:
    * Can be called on any thread. This method takes mReentrantMonitor when accessing
    * thread-shared state.
    */
-  gfx::IntSize GetCurrentSize();
+  gfxIntSize GetCurrentSize();
 
   /**
    * Sets a size that the image is expected to be rendered at.
@@ -674,7 +673,7 @@ public:
   ~AutoLockImage() { if (mContainer) { mContainer->UnlockCurrentImage(); } }
 
   Image* GetImage() { return mImage; }
-  const gfx::IntSize &GetSize() { return mSize; }
+  const gfxIntSize &GetSize() { return mSize; }
 
   void Unlock() { 
     if (mContainer) {
@@ -699,26 +698,26 @@ public:
 private:
   ImageContainer *mContainer;
   nsRefPtr<Image> mImage;
-  gfx::IntSize mSize;
+  gfxIntSize mSize;
 };
 
 struct PlanarYCbCrData {
   // Luminance buffer
   uint8_t* mYChannel;
   int32_t mYStride;
-  LayerIntSize mYSize;
+  gfxIntSize mYSize;
   int32_t mYSkip;
   // Chroma buffers
   uint8_t* mCbChannel;
   uint8_t* mCrChannel;
   int32_t mCbCrStride;
-  LayerIntSize mCbCrSize;
+  gfxIntSize mCbCrSize;
   int32_t mCbSkip;
   int32_t mCrSkip;
   // Picture region
   uint32_t mPicX;
   uint32_t mPicY;
-  LayerIntSize mPicSize;
+  gfxIntSize mPicSize;
   StereoMode mStereoMode;
 
   nsIntRect GetPictureRect() const {
@@ -820,7 +819,7 @@ public:
 
   virtual bool IsValid() { return !!mBufferSize; }
 
-  virtual gfx::IntSize GetSize() { return mSize; }
+  virtual gfxIntSize GetSize() { return mSize; }
 
   PlanarYCbCrImage(BufferRecycleBin *aRecycleBin);
 
@@ -850,7 +849,7 @@ protected:
   nsAutoArrayPtr<uint8_t> mBuffer;
   uint32_t mBufferSize;
   Data mData;
-  gfx::IntSize mSize;
+  gfxIntSize mSize;
   gfxImageFormat mOffscreenFormat;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   nsRefPtr<BufferRecycleBin> mRecycleBin;
@@ -886,12 +885,12 @@ public:
     return surface.forget();
   }
 
-  gfx::IntSize GetSize() { return mSize; }
+  gfxIntSize GetSize() { return mSize; }
 
   CairoImage() : Image(nullptr, CAIRO_SURFACE) {}
 
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
-  gfx::IntSize mSize;
+  gfxIntSize mSize;
 };
 
 class RemoteBitmapImage : public Image {
@@ -900,11 +899,11 @@ public:
 
   already_AddRefed<gfxASurface> GetAsSurface();
 
-  gfx::IntSize GetSize() { return mSize; }
+  gfxIntSize GetSize() { return mSize; }
 
   unsigned char *mData;
   int mStride;
-  gfx::IntSize mSize;
+  gfxIntSize mSize;
   RemoteImageData::Format mFormat;
 };
 

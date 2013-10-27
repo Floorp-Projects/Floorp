@@ -11,6 +11,7 @@
 #include "LayerManagerOGL.h"            // for LayerOGL::GLContext, etc
 #include "Layers.h"                     // for CanvasLayer, etc
 #include "gfxTypes.h"
+#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/2D.h"             // for DrawTarget
@@ -68,10 +69,10 @@ protected:
 #endif
 
   nsRefPtr<gfxImageSurface> mCachedTempSurface;
-  LayerIntSize mCachedSize;
+  gfxIntSize mCachedSize;
   gfxImageFormat mCachedFormat;
 
-  gfxImageSurface* GetTempSurface(const LayerIntSize& aSize,
+  gfxImageSurface* GetTempSurface(const gfxIntSize& aSize,
                                   const gfxImageFormat aFormat);
 
   void DiscardTempSurface() {
