@@ -571,7 +571,7 @@
                    onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
             <image id="star-button"
                    class="urlbar-icon"
-                   onclick="BookmarkingUI.onCommand(event);"/>
+                   onclick="if (event.button === 0) BookmarkingUI.onCommand(event);"/>
             <image id="go-button"
                    class="urlbar-icon"
                    tooltiptext="&goEndCap.tooltip;"
