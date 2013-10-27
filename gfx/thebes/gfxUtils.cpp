@@ -685,7 +685,7 @@ gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 void
 gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
                                          gfxImageFormat& aSuggestedFormat,
-                                         LayerIntSize& aSuggestedSize)
+                                         gfxIntSize& aSuggestedSize)
 {
   gfx::YUVType yuvtype =
     gfx::TypeFromSize(aData.mYSize.width,
@@ -739,7 +739,7 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
 void
 gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                             const gfxImageFormat& aDestFormat,
-                            const LayerIntSize& aDestSize,
+                            const gfxIntSize& aDestSize,
                             unsigned char* aDestBuffer,
                             int32_t aStride)
 {

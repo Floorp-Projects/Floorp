@@ -120,6 +120,27 @@ struct ParamTraits<gfxPoint3D>
 };
 
 template<>
+struct ParamTraits<gfxSize>
+{
+  typedef gfxSize paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.height);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (ReadParam(aMsg, aIter, &aResult->width) &&
+        ReadParam(aMsg, aIter, &aResult->height))
+      return true;
+
+    return false;
+  }
+};
+
+template<>
 struct ParamTraits<gfxRect>
 {
   typedef gfxRect paramType;

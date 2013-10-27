@@ -8,7 +8,6 @@
 #include "nsScreenManagerAndroid.h"
 #include "nsWindow.h"
 #include "AndroidBridge.h"
-#include "mozilla/gfx/Point.h"
 
 using namespace mozilla;
 
@@ -23,7 +22,7 @@ nsScreenAndroid::~nsScreenAndroid()
 NS_IMETHODIMP
 nsScreenAndroid::GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
-    gfx::IntSize sz = nsWindow::GetAndroidScreenBounds();
+    gfxIntSize sz = nsWindow::GetAndroidScreenBounds();
 
     *outLeft = 0;
     *outTop = 0;

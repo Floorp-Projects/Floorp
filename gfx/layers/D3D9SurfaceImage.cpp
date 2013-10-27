@@ -5,7 +5,6 @@
 
 #include "D3D9SurfaceImage.h"
 #include "gfxImageSurface.h"
-#include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace layers {
@@ -110,7 +109,7 @@ D3D9SurfaceImage::GetDesc() const
   return mDesc;
 }
 
-gfx::IntSize
+gfxIntSize
 D3D9SurfaceImage::GetSize()
 {
   return mSize;
@@ -123,7 +122,7 @@ D3D9SurfaceImage::GetAsSurface()
 
   HRESULT hr;
   nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(ThebesIntSize(mSize), gfxImageFormatRGB24);
+    new gfxImageSurface(mSize, gfxImageFormatRGB24);
 
   if (!surface->CairoSurface() || surface->CairoStatus()) {
     NS_WARNING("Failed to created Cairo image surface for D3D9SurfaceImage.");

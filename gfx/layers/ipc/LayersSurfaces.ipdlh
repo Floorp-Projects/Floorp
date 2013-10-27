@@ -54,7 +54,7 @@ struct SurfaceDescriptorD3D10 {
 struct SharedTextureDescriptor {
   SharedTextureShareType shareType;
   SharedTextureHandle handle;
-  IntSize size;
+  nsIntSize size;
   bool inverted;
 };
 

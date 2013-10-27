@@ -7,7 +7,7 @@
 #define NSWINDOW_H_
 
 #include "nsBaseWidget.h"
-#include "mozilla/gfx/Point.h"
+#include "gfxPoint.h"
 #include "nsIIdleServiceInternal.h"
 #include "nsTArray.h"
 #include "AndroidJavaWrappers.h"
@@ -42,7 +42,7 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
-    static mozilla::gfx::IntSize GetAndroidScreenBounds();
+    static gfxIntSize GetAndroidScreenBounds();
     static nsWindow* TopWindow();
 
     nsWindow* FindWindowForPoint(const nsIntPoint& pt);

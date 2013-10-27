@@ -423,7 +423,7 @@ protected:
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   // from ISurfaceAllocator
-  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfx::IntSize& aSize,
+  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
                                                   uint32_t aFormat,
                                                   uint32_t aUsage,
                                                   MaybeMagicGrallocBufferHandle* aHandle) MOZ_OVERRIDE;

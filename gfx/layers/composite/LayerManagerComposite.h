@@ -118,7 +118,7 @@ public:
 
   virtual void SetRoot(Layer* aLayer) MOZ_OVERRIDE { mRoot = aLayer; }
 
-  virtual bool CanUseCanvasLayerForSize(const LayerIntSize &aSize) MOZ_OVERRIDE;
+  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) MOZ_OVERRIDE;
 
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE;
 

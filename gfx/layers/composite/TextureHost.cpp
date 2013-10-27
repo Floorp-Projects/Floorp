@@ -413,17 +413,17 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     RefPtr<gfx::DataSourceSurface> tempY =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetYData(),
                                                     yuvDeserializer.GetYStride(),
-                                                    yuvDeserializer.GetYSize().ToUnknownSize(),
+                                                    gfx::ToIntSize(yuvDeserializer.GetYSize()),
                                                     gfx::FORMAT_A8);
     RefPtr<gfx::DataSourceSurface> tempCb =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCbData(),
                                                     yuvDeserializer.GetCbCrStride(),
-                                                    yuvDeserializer.GetCbCrSize().ToUnknownSize(),
+                                                    gfx::ToIntSize(yuvDeserializer.GetCbCrSize()),
                                                     gfx::FORMAT_A8);
     RefPtr<gfx::DataSourceSurface> tempCr =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCrData(),
                                                     yuvDeserializer.GetCbCrStride(),
-                                                    yuvDeserializer.GetCbCrSize().ToUnknownSize(),
+                                                    gfx::ToIntSize(yuvDeserializer.GetCbCrSize()),
                                                     gfx::FORMAT_A8);
     // We don't support partial updates for Y U V textures
     NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");
@@ -470,7 +470,7 @@ BufferTextureHost::GetAsSurface()
       return nullptr;
     }
     result = new gfxImageSurface(yuvDeserializer.GetYData(),
-                                 ThebesIntSize(yuvDeserializer.GetYSize().ToUnknownSize()),
+                                 yuvDeserializer.GetYSize(),
                                  yuvDeserializer.GetYStride(),
                                  gfxImageFormatA8);
   } else {

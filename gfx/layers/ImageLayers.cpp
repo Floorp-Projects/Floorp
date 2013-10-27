@@ -9,7 +9,6 @@
 #include "gfxRect.h"                    // for gfxRect
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for ImageContainer::Release, etc
-#include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace layers {
@@ -34,7 +33,7 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurfa
   // Snap image edges to pixel boundaries
   gfxRect sourceRect(0, 0, 0, 0);
   if (mContainer) {
-    sourceRect.SizeTo(ThebesIntSize(mContainer->GetCurrentSize()));
+    sourceRect.SizeTo(mContainer->GetCurrentSize());
     if (mScaleMode != SCALE_NONE &&
         sourceRect.width != 0.0 && sourceRect.height != 0.0) {
       NS_ASSERTION(mScaleMode == SCALE_STRETCH,

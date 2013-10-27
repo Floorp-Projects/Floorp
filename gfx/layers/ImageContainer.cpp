@@ -16,7 +16,6 @@
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF
-#include "gfx2DGlue.h"
 #ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
 #endif
@@ -50,7 +49,7 @@ Atomic<int32_t> Image::sSerialCounter(0);
 already_AddRefed<Image>
 ImageFactory::CreateImage(const ImageFormat *aFormats,
                           uint32_t aNumFormats,
-                          const gfx::IntSize &,
+                          const gfxIntSize &,
                           BufferRecycleBin *aRecycleBin)
 {
   if (!aNumFormats) {
@@ -276,7 +275,7 @@ ImageContainer::LockCurrentImage()
 }
 
 already_AddRefed<gfxASurface>
-ImageContainer::LockCurrentAsSurface(gfx::IntSize *aSize, Image** aCurrentImage)
+ImageContainer::LockCurrentAsSurface(gfxIntSize *aSize, Image** aCurrentImage)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -334,7 +333,7 @@ ImageContainer::UnlockCurrentImage()
 }
 
 already_AddRefed<gfxASurface>
-ImageContainer::GetCurrentAsSurface(gfx::IntSize *aSize)
+ImageContainer::GetCurrentAsSurface(gfxIntSize *aSize)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -353,7 +352,7 @@ ImageContainer::GetCurrentAsSurface(gfx::IntSize *aSize)
   return mActiveImage->GetAsSurface();
 }
 
-gfx::IntSize
+gfxIntSize
 ImageContainer::GetCurrentSize()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -367,7 +366,7 @@ ImageContainer::GetCurrentSize()
   }
 
   if (!mActiveImage) {
-    return gfx::IntSize(0,0);
+    return gfxIntSize(0,0);
   }
 
   return mActiveImage->GetSize();
@@ -451,7 +450,7 @@ PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 
 static void
 CopyPlane(uint8_t *aDst, const uint8_t *aSrc,
-          const LayerIntSize &aSize, int32_t aStride, int32_t aSkip)
+          const gfxIntSize &aSize, int32_t aStride, int32_t aSkip)
 {
   if (!aSkip) {
     // Fast path: planar input.
@@ -498,7 +497,7 @@ PlanarYCbCrImage::CopyData(const Data& aData)
   CopyPlane(mData.mCrChannel, aData.mCrChannel,
             mData.mCbCrSize, mData.mCbCrStride, mData.mCrSkip);
 
-  mSize = aData.mPicSize.ToUnknownSize();
+  mSize = aData.mPicSize;
 }
 
 void
@@ -519,7 +518,7 @@ void
 PlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   mData = aData;
-  mSize = aData.mPicSize.ToUnknownSize();
+  mSize = aData.mPicSize;
 }
 
 uint8_t*
@@ -542,7 +541,7 @@ PlanarYCbCrImage::GetAsSurface()
   }
 
   gfxImageFormat format = GetOffscreenFormat();
-  LayerIntSize size(mSize.width, mSize.height);
+  gfxIntSize size(mSize);
   gfxUtils::GetYCbCrToRGBDestFormatAndSize(mData, format, size);
   if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
       size.height > PlanarYCbCrImage::MAX_DIMENSION) {
@@ -551,10 +550,9 @@ PlanarYCbCrImage::GetAsSurface()
   }
 
   nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(ThebesIntSize(mSize), format);
+    new gfxImageSurface(mSize, format);
 
-  size = LayerIntSize(mSize.width, mSize.height);
-  gfxUtils::ConvertYCbCrToRGB(mData, format, size,
+  gfxUtils::ConvertYCbCrToRGB(mData, format, mSize,
                               imageSurface->Data(),
                               imageSurface->Stride());
 
@@ -567,7 +565,7 @@ already_AddRefed<gfxASurface>
 RemoteBitmapImage::GetAsSurface()
 {
   nsRefPtr<gfxImageSurface> newSurf =
-    new gfxImageSurface(ThebesIntSize(mSize),
+    new gfxImageSurface(mSize,
     mFormat == RemoteImageData::BGRX32 ? gfxImageFormatRGB24 : gfxImageFormatARGB32);
 
   for (int y = 0; y < mSize.height; y++) {
