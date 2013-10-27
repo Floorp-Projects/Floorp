@@ -143,7 +143,8 @@ AudioStream::AudioStream()
   mOutRate(0),
   mChannels(0),
   mWritten(0),
-  mAudioClock(MOZ_THIS_IN_INITIALIZER_LIST())
+  mAudioClock(MOZ_THIS_IN_INITIALIZER_LIST()),
+  mReadPoint(0)
 {}
 
 void AudioStream::InitLibrary()
@@ -328,7 +329,7 @@ class BufferedAudioStream : public AudioStream
                 const dom::AudioChannelType aAudioChannelType,
                 AudioStream::LatencyRequest aLatencyRequest);
   void Shutdown();
-  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
+  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTime = nullptr);
   uint32_t Available();
   void SetVolume(double aVolume);
   void Drain();
@@ -340,6 +341,7 @@ class BufferedAudioStream : public AudioStream
   int64_t GetPositionInFramesInternal();
   int64_t GetLatencyInFrames();
   bool IsPaused();
+  void GetBufferInsertTime(int64_t &aTimeMs);
   // This method acquires the monitor and forward the call to the base
   // class, to prevent a race on |mTimeStretcher|, in
   // |AudioStream::EnsureTimeStretcherInitialized|.
@@ -359,10 +361,9 @@ private:
   long DataCallback(void* aBuffer, long aFrames);
   void StateCallback(cubeb_state aState);
 
-  long GetUnprocessed(void* aBuffer, long aFrames);
-
-  long GetTimeStretched(void* aBuffer, long aFrames);
-
+  // aTime is the time in ms the samples were inserted into MediaStreamGraph
+  long GetUnprocessed(void* aBuffer, long aFrames, int64_t &aTime);
+  long GetTimeStretched(void* aBuffer, long aFrames, int64_t &aTime);
 
   // Shared implementation of underflow adjusted position calculation.
   // Caller must own the monitor.
@@ -542,7 +543,8 @@ BufferedAudioStream::BufferedAudioStream()
   : mMonitor("BufferedAudioStream"), mLostFrames(0), mDumpFile(nullptr),
     mVolume(1.0), mBytesPerFrame(0), mState(INITIALIZED)
 {
-  AsyncLatencyLogger::Get(true)->AddRef();
+  // keep a ref in case we shut down later than nsLayoutStatics
+  mLatencyLog = AsyncLatencyLogger::Get(true);
 }
 
 BufferedAudioStream::~BufferedAudioStream()
@@ -551,7 +553,6 @@ BufferedAudioStream::~BufferedAudioStream()
   if (mDumpFile) {
     fclose(mDumpFile);
   }
-  AsyncLatencyLogger::Get()->Release();
 }
 
 nsresult
@@ -572,6 +573,8 @@ BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
     return NS_ERROR_FAILURE;
   }
 
+  PR_LOG(gAudioStreamLog, PR_LOG_DEBUG,
+    ("%s  channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate));
   mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
 
@@ -645,8 +648,9 @@ BufferedAudioStream::Shutdown()
   }
 }
 
+// aTime is the time in ms the samples were inserted into MediaStreamGraph
 nsresult
-BufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
+BufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTime)
 {
   MonitorAutoLock mon(mMonitor);
   if (!mCubebStream || mState == ERRORED) {
@@ -657,6 +661,22 @@ BufferedAudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames)
 
   const uint8_t* src = reinterpret_cast<const uint8_t*>(aBuf);
   uint32_t bytesToCopy = FramesToBytes(aFrames);
+
+  // XXX this will need to change if we want to enable this on-the-fly!
+  if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+    // Record the position and time this data was inserted
+    int64_t timeMs;
+    if (aTime && !aTime->IsNull()) {
+      if (mStartTime.IsNull()) {
+        AsyncLatencyLogger::Get(true)->GetStartTime(mStartTime);
+      }
+      timeMs = (*aTime - mStartTime).ToMilliseconds();
+    } else {
+      timeMs = 0;
+    }
+    struct Inserts insert = { timeMs, aFrames};
+    mInserts.AppendElement(insert);
+  }
 
   while (bytesToCopy > 0) {
     uint32_t available = std::min(bytesToCopy, mBuffer.Available());
@@ -846,8 +866,25 @@ BufferedAudioStream::IsPaused()
   return mState == STOPPED;
 }
 
+void
+BufferedAudioStream::GetBufferInsertTime(int64_t &aTimeMs)
+{
+  if (mInserts.Length() > 0) {
+    // Find the right block, but don't leave the array empty
+    while (mInserts.Length() > 1 && mReadPoint >= mInserts[0].mFrames) {
+      mReadPoint -= mInserts[0].mFrames;
+      mInserts.RemoveElementAt(0);
+    }
+    // offset for amount already read
+    // XXX Note: could misreport if we couldn't find a block in the right timeframe
+    aTimeMs = mInserts[0].mTimeMs + ((mReadPoint * 1000) / mOutRate);
+  } else {
+    aTimeMs = INT64_MAX;
+  }
+}
+
 long
-BufferedAudioStream::GetUnprocessed(void* aBuffer, long aFrames)
+BufferedAudioStream::GetUnprocessed(void* aBuffer, long aFrames, int64_t &aTimeMs)
 {
   uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
 
@@ -867,11 +904,16 @@ BufferedAudioStream::GetUnprocessed(void* aBuffer, long aFrames)
   memcpy(wpos, input[0], input_size[0]);
   wpos += input_size[0];
   memcpy(wpos, input[1], input_size[1]);
+
+  // First time block now has our first returned sample
+  mReadPoint += BytesToFrames(available);
+  GetBufferInsertTime(aTimeMs);
+
   return BytesToFrames(available) + flushedFrames;
 }
 
 long
-BufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
+BufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames, int64_t &aTimeMs)
 {
   long processedFrames = 0;
 
@@ -896,6 +938,7 @@ BufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
       }
       mBuffer.PopElements(available, &input[0], &input_size[0],
                                      &input[1], &input_size[1]);
+      mReadPoint += BytesToFrames(available);
       for(uint32_t i = 0; i < 2; i++) {
         mTimeStretcher->putSamples(reinterpret_cast<AudioDataValue*>(input[i]), BytesToFrames(input_size[i]));
       }
@@ -904,6 +947,8 @@ BufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames)
     wpos += FramesToBytes(receivedFrames);
     processedFrames += receivedFrames;
   } while (processedFrames < aFrames && !lowOnBufferedData);
+
+  GetBufferInsertTime(aTimeMs);
 
   return processedFrames;
 }
@@ -914,15 +959,16 @@ BufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
   MonitorAutoLock mon(mMonitor);
   uint32_t available = std::min(static_cast<uint32_t>(FramesToBytes(aFrames)), mBuffer.Length());
   NS_ABORT_IF_FALSE(available % mBytesPerFrame == 0, "Must copy complete frames");
+  AudioDataValue* output = reinterpret_cast<AudioDataValue*>(aBuffer);
   uint32_t underrunFrames = 0;
   uint32_t servicedFrames = 0;
+  int64_t insertTime;
 
   if (available) {
-    AudioDataValue* output = reinterpret_cast<AudioDataValue*>(aBuffer);
     if (mInRate == mOutRate) {
-      servicedFrames = GetUnprocessed(output, aFrames);
+      servicedFrames = GetUnprocessed(output, aFrames, insertTime);
     } else {
-      servicedFrames = GetTimeStretched(output, aFrames);
+      servicedFrames = GetTimeStretched(output, aFrames, insertTime);
     }
     float scaled_volume = float(GetVolumeScale() * mVolume);
 
@@ -932,6 +978,8 @@ BufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
 
     // Notify any blocked Write() call that more space is available in mBuffer.
     mon.NotifyAll();
+  } else {
+    GetBufferInsertTime(insertTime);
   }
 
   underrunFrames = aFrames - servicedFrames;
@@ -939,24 +987,28 @@ BufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
   if (mState != DRAINING) {
     uint8_t* rpos = static_cast<uint8_t*>(aBuffer) + FramesToBytes(aFrames - underrunFrames);
     memset(rpos, 0, FramesToBytes(underrunFrames));
-#ifdef PR_LOGGING
     if (underrunFrames) {
       PR_LOG(gAudioStreamLog, PR_LOG_WARNING,
              ("AudioStream %p lost %d frames", this, underrunFrames));
     }
-#endif
     mLostFrames += underrunFrames;
     servicedFrames += underrunFrames;
   }
 
   WriteDumpFile(mDumpFile, this, aFrames, aBuffer);
-  if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
+  // Don't log if we're not interested or if the stream is inactive
+  if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG) &&
+      insertTime != INT64_MAX && servicedFrames > underrunFrames) {
     uint32_t latency = UINT32_MAX;
     if (cubeb_stream_get_latency(mCubebStream, &latency)) {
       NS_WARNING("Could not get latency from cubeb.");
     }
-    mLatencyLog->Log(AsyncLatencyLogger::AudioStream, 0, (mBuffer.Length() * 1000) / mOutRate);
-    mLatencyLog->Log(AsyncLatencyLogger::Cubeb, 0, (latency * 1000) / mOutRate);
+    TimeStamp now = TimeStamp::Now();
+
+    mLatencyLog->Log(AsyncLatencyLogger::AudioStream, reinterpret_cast<uint64_t>(this),
+                     insertTime, now);
+    mLatencyLog->Log(AsyncLatencyLogger::Cubeb, reinterpret_cast<uint64_t>(mCubebStream.get()),
+                     (latency * 1000) / mOutRate, now);
   }
 
   mAudioClock.UpdateWritePosition(servicedFrames);

@@ -19,6 +19,13 @@
 #include "trace.h"
 #include "thread_wrapper.h"
 
+#include "Latency.h"
+
+#define LOG_FIRST_CAPTURE(x) LogTime(AsyncLatencyLogger::AudioCaptureBase, \
+                                     reinterpret_cast<uint64_t>(x), 0)
+#define LOG_CAPTURE_FRAMES(x, frames) LogLatency(AsyncLatencyLogger::AudioCapture, \
+                                                 reinterpret_cast<uint64_t>(x), frames)
+
 webrtc_adm_linux_alsa::AlsaSymbolTable AlsaSymbolTable;
 
 // Accesses ALSA functions through our late-binding symbol table instead of
@@ -96,6 +103,7 @@ AudioDeviceLinuxALSA::AudioDeviceLinuxALSA(const int32_t id) :
     _playBufType(AudioDeviceModule::kFixedBufferSize),
     _initialized(false),
     _recording(false),
+    _firstRecord(true),
     _playing(false),
     _recIsInitialized(false),
     _playIsInitialized(false),
@@ -1449,6 +1457,7 @@ int32_t AudioDeviceLinuxALSA::StartRecording()
     }
     // RECORDING
     const char* threadName = "webrtc_audio_module_capture_thread";
+    _firstRecord = true;
     _ptrThreadRec = ThreadWrapper::CreateThread(RecThreadFunc,
                                                 this,
                                                 kRealtimePriority,
@@ -2267,6 +2276,11 @@ bool AudioDeviceLinuxALSA::RecThreadProcess()
         { // buf is full
             _recordingFramesLeft = _recordingFramesIn10MS;
 
+            if (_firstRecord) {
+              LOG_FIRST_CAPTURE(this);
+              _firstRecord = false;
+            }
+            LOG_CAPTURE_FRAMES(this, _recordingFramesIn10MS);
             // store the recorded buffer (no action will be taken if the
             // #recorded samples is not a full buffer)
             _ptrAudioBuffer->SetRecordedBuffer(_recordingBuffer,

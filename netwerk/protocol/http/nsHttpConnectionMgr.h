@@ -512,7 +512,7 @@ private:
     nsresult BuildPipeline(nsConnectionEntry *,
                            nsAHttpTransaction *,
                            nsHttpPipeline **);
-    bool     RestrictConnections(nsConnectionEntry *);
+    bool     RestrictConnections(nsConnectionEntry *, bool = false);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
     nsresult EnsureSocketThreadTarget();
     void     ClosePersistentConnections(nsConnectionEntry *ent);

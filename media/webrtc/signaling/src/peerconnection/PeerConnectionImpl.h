@@ -74,6 +74,7 @@ class PeerConnectionObserver;
 typedef NS_ConvertUTF8toUTF16 PCObserverString;
 #endif
 }
+class MediaConstraintsExternal;
 }
 
 #if defined(__cplusplus) && __cplusplus >= 201103L
@@ -98,6 +99,7 @@ namespace sipcc {
 using mozilla::dom::PeerConnectionObserver;
 using mozilla::dom::RTCConfiguration;
 using mozilla::dom::MediaConstraintsInternal;
+using mozilla::MediaConstraintsExternal;
 using mozilla::DOMMediaStream;
 using mozilla::NrIceCtx;
 using mozilla::NrIceMediaStream;
@@ -109,7 +111,6 @@ using mozilla::NrIceTurnServer;
 class PeerConnectionWrapper;
 class PeerConnectionMedia;
 class RemoteSourceStreamInfo;
-class MediaConstraintsExternal;
 class OnCallEventArgs;
 
 class IceConfiguration
