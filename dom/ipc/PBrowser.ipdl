@@ -29,7 +29,6 @@ include "mozilla/layers/CompositorTypes.h";
 
 using IPC::Principal;
 using gfxMatrix;
-using gfxSize;
 using CSSRect;
 using mozilla::layers::FrameMetrics;
 using FrameMetrics::ViewID;
