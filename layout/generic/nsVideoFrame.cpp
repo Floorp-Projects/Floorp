@@ -184,10 +184,10 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsRefPtr<ImageContainer> container = element->GetImageContainer();
   if (!container)
     return nullptr;
-  
+
   // Retrieve the size of the decoded video frame, before being scaled
   // by pixel aspect ratio.
-  gfxIntSize frameSize = container->GetCurrentSize();
+  gfx::IntSize frameSize = container->GetCurrentSize();
   if (frameSize.width == 0 || frameSize.height == 0) {
     // No image, or zero-sized image. No point creating a layer.
     return nullptr;

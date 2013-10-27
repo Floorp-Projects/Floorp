@@ -493,7 +493,7 @@ public:
    * Any layer that can be used as a mask layer should override this method.
    * aSize will contain the size of the image.
    */
-  virtual bool LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
+  virtual bool LoadAsTexture(GLuint aTextureUnit, gfx::IntSize* aSize)
   {
     NS_WARNING("LoadAsTexture called without being overriden");
     return false;

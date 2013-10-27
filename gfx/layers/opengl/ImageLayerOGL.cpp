@@ -374,7 +374,7 @@ ImageLayerOGL::RenderLayer(int,
     }
 
     gl()->ApplyFilterToBoundTexture(handleDetails.mTarget, mFilter);
-    program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), data->mSize));
+    program->SetLayerQuadRect(gfx::Rect(0, 0, data->mSize.width, data->mSize.height));
     mOGLManager->BindAndDrawQuad(program, data->mInverted);
     gl()->fBindTexture(handleDetails.mTarget, 0);
     gl()->DetachSharedHandle(data->mShareType, data->mHandle);
@@ -515,17 +515,17 @@ ImageLayerOGL::AllocateTexturesCairo(CairoImage *aImage)
  * If the OpenGL setup is capable of using non-POT textures, then it
  * will just return aSize.
  */
-static gfxIntSize
-CalculatePOTSize(const gfxIntSize& aSize, GLContext* gl)
+static gfx::IntSize
+CalculatePOTSize(const gfx::IntSize& aSize, GLContext* gl)
 {
   if (gl->CanUploadNonPowerOfTwo())
     return aSize;
 
-  return gfxIntSize(NextPowerOfTwo(aSize.width), NextPowerOfTwo(aSize.height));
+  return gfx::IntSize(NextPowerOfTwo(aSize.width), NextPowerOfTwo(aSize.height));
 }
 
 bool
-ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
+ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfx::IntSize* aSize)
 {
   // this method shares a lot of code with RenderLayer, but it doesn't seem
   // to be possible to factor it out into a helper method

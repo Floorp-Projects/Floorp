@@ -837,7 +837,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     return;
   }
 
-  gfxIntSize size = img->GetSize();
+  gfx::IntSize size = img->GetSize();
   if ((size.width & 1) != 0 || (size.height & 1) != 0) {
     MOZ_ASSERT(false, "Can't handle odd-sized images");
     return;

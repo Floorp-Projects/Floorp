@@ -15,6 +15,8 @@
 #include "VideoUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrefService.h"
+#include "gfx2DGlue.h"
+
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS1(MediaEngineTabVideoSource, MediaEngineVideoSource)
@@ -154,7 +156,7 @@ NotifyPull(MediaStreamGraph*, SourceMediaStream* aSource, mozilla::TrackID aID, 
   if (delta > 0) {
     // nullptr images are allowed
     if (image) {
-      gfxIntSize size = image->GetSize();
+      gfxIntSize size = ThebesIntSize(image->GetSize());
       segment.AppendFrame(image.forget(), delta, size);
     } else {
       segment.AppendFrame(nullptr, delta, gfxIntSize(0,0));
