@@ -95,16 +95,16 @@ uint32_t YCbCrImageDataDeserializerBase::GetCbCrStride()
   return info->mCbCrWidth;
 }
 
-gfxIntSize YCbCrImageDataDeserializerBase::GetYSize()
+LayerIntSize YCbCrImageDataDeserializerBase::GetYSize()
 {
   YCbCrBufferInfo* info = GetYCbCrBufferInfo(mData);
-  return gfxIntSize(info->mYWidth, info->mYHeight);
+  return LayerIntSize(info->mYWidth, info->mYHeight);
 }
 
-gfxIntSize YCbCrImageDataDeserializerBase::GetCbCrSize()
+LayerIntSize YCbCrImageDataDeserializerBase::GetCbCrSize()
 {
   YCbCrBufferInfo* info = GetYCbCrBufferInfo(mData);
-  return gfxIntSize(info->mCbCrWidth, info->mCbCrHeight);
+  return LayerIntSize(info->mCbCrWidth, info->mCbCrHeight);
 }
 
 StereoMode YCbCrImageDataDeserializerBase::GetStereoMode()
@@ -121,8 +121,8 @@ static size_t ComputeOffset(uint32_t aHeight, uint32_t aStride)
 
 // Minimum required shmem size in bytes
 size_t
-YCbCrImageDataSerializer::ComputeMinBufferSize(const gfx::IntSize& aYSize,
-                                               const gfx::IntSize& aCbCrSize)
+YCbCrImageDataSerializer::ComputeMinBufferSize(const LayerIntSize& aYSize,
+                                               const LayerIntSize& aCbCrSize)
 {
   uint32_t yStride = aYSize.width;
   uint32_t CbCrStride = aCbCrSize.width;
@@ -136,8 +136,8 @@ size_t
 YCbCrImageDataSerializer::ComputeMinBufferSize(const gfxIntSize& aYSize,
                                                const gfxIntSize& aCbCrSize)
 {
-  return ComputeMinBufferSize(gfx::IntSize(aYSize.width, aYSize.height),
-                              gfx::IntSize(aCbCrSize.width, aCbCrSize.height));
+  return ComputeMinBufferSize(LayerIntSize(aYSize.width, aYSize.height),
+                              LayerIntSize(aCbCrSize.width, aCbCrSize.height));
 }
 // Offset in bytes
 static size_t ComputeOffset(uint32_t aSize)
@@ -153,8 +153,8 @@ YCbCrImageDataSerializer::ComputeMinBufferSize(uint32_t aSize)
 }
 
 void
-YCbCrImageDataSerializer::InitializeBufferInfo(const gfx::IntSize& aYSize,
-                                               const gfx::IntSize& aCbCrSize,
+YCbCrImageDataSerializer::InitializeBufferInfo(const LayerIntSize& aYSize,
+                                               const LayerIntSize& aCbCrSize,
                                                StereoMode aStereoMode)
 {
   YCbCrBufferInfo* info = GetYCbCrBufferInfo(mData);
@@ -176,8 +176,8 @@ YCbCrImageDataSerializer::InitializeBufferInfo(const gfxIntSize& aYSize,
                                                const gfxIntSize& aCbCrSize,
                                                StereoMode aStereoMode)
 {
-  InitializeBufferInfo(gfx::IntSize(aYSize.width, aYSize.height),
-                       gfx::IntSize(aCbCrSize.width, aCbCrSize.height),
+  InitializeBufferInfo(LayerIntSize(aYSize.width, aYSize.height),
+                       LayerIntSize(aCbCrSize.width, aCbCrSize.height),
                        aStereoMode);
 }
 
@@ -192,8 +192,8 @@ static void CopyLineWithSkip(const uint8_t* src, uint8_t* dst, uint32_t len, uin
 bool
 YCbCrImageDataSerializer::CopyData(const uint8_t* aYData,
                                    const uint8_t* aCbData, const uint8_t* aCrData,
-                                   gfxIntSize aYSize, uint32_t aYStride,
-                                   gfxIntSize aCbCrSize, uint32_t aCbCrStride,
+                                   LayerIntSize aYSize, uint32_t aYStride,
+                                   LayerIntSize aCbCrSize, uint32_t aCbCrStride,
                                    uint32_t aYSkip, uint32_t aCbCrSkip)
 {
   if (!IsValid() || GetYSize() != aYSize || GetCbCrSize() != aCbCrSize) {
@@ -238,7 +238,7 @@ TemporaryRef<gfx::DataSourceSurface>
 YCbCrImageDataDeserializer::ToDataSourceSurface()
 {
   RefPtr<gfx::DataSourceSurface> result =
-    gfx::Factory::CreateDataSourceSurface(ToIntSize(GetYSize()), gfx::FORMAT_R8G8B8X8);
+    gfx::Factory::CreateDataSourceSurface(GetYSize().ToUnknownSize(), gfx::FORMAT_R8G8B8X8);
 
   gfx::ConvertYCbCrToRGB32(GetYData(), GetCbData(), GetCrData(),
                            result->GetData(),

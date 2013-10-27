@@ -486,9 +486,9 @@ DeprecatedTextureHostYCbCrD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
 
   YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
-  gfxIntSize gfxCbCrSize = yuvDeserializer.GetCbCrSize();
+  LayerIntSize gfxCbCrSize = yuvDeserializer.GetCbCrSize();
 
-  gfxIntSize size = yuvDeserializer.GetYSize();
+  LayerIntSize size = yuvDeserializer.GetYSize();
 
   D3D11_SUBRESOURCE_DATA initData;
   initData.pSysMem = yuvDeserializer.GetYData();
@@ -502,15 +502,15 @@ DeprecatedTextureHostYCbCrD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
 
   initData.pSysMem = yuvDeserializer.GetCbData();
   initData.SysMemPitch = yuvDeserializer.GetCbCrStride();
-  desc.Width = yuvDeserializer.GetCbCrSize().width;
-  desc.Height = yuvDeserializer.GetCbCrSize().height;
+  desc.Width = gfxCbCrSize.width;
+  desc.Height = gfxCbCrSize.height;
 
   mDevice->CreateTexture2D(&desc, &initData, byRef(mTextures[1]));
 
   initData.pSysMem = yuvDeserializer.GetCrData();
   mDevice->CreateTexture2D(&desc, &initData, byRef(mTextures[2]));
 
-  mSize = IntSize(size.width, size.height);
+  mSize = size.ToUnknownSize();
 }
 
 }

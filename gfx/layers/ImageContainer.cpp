@@ -451,7 +451,7 @@ PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 
 static void
 CopyPlane(uint8_t *aDst, const uint8_t *aSrc,
-          const gfxIntSize &aSize, int32_t aStride, int32_t aSkip)
+          const LayerIntSize &aSize, int32_t aStride, int32_t aSkip)
 {
   if (!aSkip) {
     // Fast path: planar input.
@@ -498,7 +498,7 @@ PlanarYCbCrImage::CopyData(const Data& aData)
   CopyPlane(mData.mCrChannel, aData.mCrChannel,
             mData.mCbCrSize, mData.mCbCrStride, mData.mCrSkip);
 
-  mSize = aData.mPicSize;
+  mSize = aData.mPicSize.ToUnknownSize();
 }
 
 void
@@ -519,7 +519,7 @@ void
 PlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   mData = aData;
-  mSize = aData.mPicSize;
+  mSize = aData.mPicSize.ToUnknownSize();
 }
 
 uint8_t*
@@ -542,7 +542,7 @@ PlanarYCbCrImage::GetAsSurface()
   }
 
   gfxImageFormat format = GetOffscreenFormat();
-  gfx::IntSize size(mSize);
+  LayerIntSize size(mSize.width, mSize.height);
   gfxUtils::GetYCbCrToRGBDestFormatAndSize(mData, format, size);
   if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
       size.height > PlanarYCbCrImage::MAX_DIMENSION) {
@@ -553,7 +553,8 @@ PlanarYCbCrImage::GetAsSurface()
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(ThebesIntSize(mSize), format);
 
-  gfxUtils::ConvertYCbCrToRGB(mData, format, mSize,
+  size = LayerIntSize(mSize.width, mSize.height);
+  gfxUtils::ConvertYCbCrToRGB(mData, format, size,
                               imageSurface->Data(),
                               imageSurface->Stride());
 

@@ -103,7 +103,7 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
   // shmem.
   mBufferSize = YCbCrImageDataSerializer::ComputeMinBufferSize(mData.mYSize,
                                                                mData.mCbCrSize);
-  mSize = mData.mPicSize;
+  mSize = mData.mPicSize.ToUnknownSize();
 
   YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
   mData.mYChannel = serializer.GetYData();
@@ -134,7 +134,7 @@ void
 SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   mData = aData;
-  mSize = aData.mPicSize;
+  mSize = aData.mPicSize.ToUnknownSize();
   YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
   serializer.InitializeBufferInfo(aData.mYSize,
                                   aData.mCbCrSize,
@@ -219,7 +219,7 @@ DeprecatedSharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
   // shmem.
   mBufferSize = YCbCrImageDataSerializer::ComputeMinBufferSize(mData.mYSize,
                                                                mData.mCbCrSize);
-  mSize = mData.mPicSize;
+  mSize = mData.mPicSize.ToUnknownSize();
 
   YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
   MOZ_ASSERT(aData.mCbSkip == aData.mCrSkip);
@@ -256,7 +256,7 @@ void
 DeprecatedSharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   mData = aData;
-  mSize = aData.mPicSize;
+  mSize = aData.mPicSize.ToUnknownSize();
   YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
   serializer.InitializeBufferInfo(aData.mYSize,
                                   aData.mCbCrSize,

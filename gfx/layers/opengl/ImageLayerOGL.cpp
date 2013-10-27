@@ -27,6 +27,7 @@
 #include "nsThreadUtils.h"              // for nsRunnable
 #include "nscore.h"                     // for NS_IMETHOD
 #include "LayerManagerOGL.h"            // for LayerOGL::GLContext, etc
+#include "gfx2DGlue.h"
 #if defined(GL_PROVIDER_GLX)
 # include "GLXLibrary.h"
 # include "gfxXlibSurface.h"
@@ -140,7 +141,7 @@ TextureRecycleBin::TextureRecycleBin()
 
 void
 TextureRecycleBin::RecycleTexture(GLTexture *aTexture, TextureType aType,
-                           const gfxIntSize& aSize)
+                           const LayerIntSize& aSize)
 {
   MutexAutoLock lock(mLock);
 
@@ -155,7 +156,7 @@ TextureRecycleBin::RecycleTexture(GLTexture *aTexture, TextureType aType,
 }
 
 void
-TextureRecycleBin::GetTexture(TextureType aType, const gfxIntSize& aSize,
+TextureRecycleBin::GetTexture(TextureType aType, const LayerIntSize& aSize,
                        GLContext *aContext, GLTexture *aOutTexture)
 {
   MutexAutoLock lock(mLock);
@@ -399,7 +400,7 @@ UploadYUVToTexture(GLContext* gl, const PlanarYCbCrData& aData,
   nsIntRect size(0, 0, aData.mYSize.width, aData.mYSize.height);
   GLuint texture = aYTexture->GetTextureID();
   nsRefPtr<gfxASurface> surf = new gfxImageSurface(aData.mYChannel,
-                                                   aData.mYSize,
+                                                   ThebesIntSize(aData.mYSize.ToUnknownSize()),
                                                    aData.mYStride,
                                                    gfxImageFormatA8);
   gl->UploadSurfaceToTexture(surf, size, texture, true);
@@ -407,14 +408,14 @@ UploadYUVToTexture(GLContext* gl, const PlanarYCbCrData& aData,
   size = nsIntRect(0, 0, aData.mCbCrSize.width, aData.mCbCrSize.height);
   texture = aUTexture->GetTextureID();
   surf = new gfxImageSurface(aData.mCbChannel,
-                             aData.mCbCrSize,
+                             ThebesIntSize(aData.mCbCrSize.ToUnknownSize()),
                              aData.mCbCrStride,
                              gfxImageFormatA8);
   gl->UploadSurfaceToTexture(surf, size, texture, true);
 
   texture = aVTexture->GetTextureID();
   surf = new gfxImageSurface(aData.mCrChannel,
-                             aData.mCbCrSize,
+                             ThebesIntSize(aData.mCbCrSize.ToUnknownSize()),
                              aData.mCbCrStride,
                              gfxImageFormatA8);
   gl->UploadSurfaceToTexture(surf, size, texture, true);
