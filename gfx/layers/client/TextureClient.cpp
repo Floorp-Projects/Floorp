@@ -315,7 +315,7 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize)
   }
   ImageDataSerializer serializer(GetBuffer());
   serializer.InitializeBufferInfo(aSize, mFormat);
-  mSize = aSize;
+  mSize = LayerIntSize(aSize.width, aSize.height);
   return true;
 }
 
@@ -346,8 +346,8 @@ BufferTextureClient::UpdateYCbCr(const PlanarYCbCrData& aData)
 }
 
 bool
-BufferTextureClient::AllocateForYCbCr(gfx::IntSize aYSize,
-                                      gfx::IntSize aCbCrSize,
+BufferTextureClient::AllocateForYCbCr(LayerIntSize aYSize,
+                                      LayerIntSize aCbCrSize,
                                       StereoMode aStereoMode)
 {
   MOZ_ASSERT(IsValid());

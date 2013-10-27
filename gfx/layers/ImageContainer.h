@@ -27,6 +27,7 @@
 #include "nsTArray.h"                   // for nsTArray
 #include "mozilla/Atomics.h"
 #include "nsThreadUtils.h"
+#include "Units.h"
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
@@ -705,19 +706,19 @@ struct PlanarYCbCrData {
   // Luminance buffer
   uint8_t* mYChannel;
   int32_t mYStride;
-  gfxIntSize mYSize;
+  LayerIntSize mYSize;
   int32_t mYSkip;
   // Chroma buffers
   uint8_t* mCbChannel;
   uint8_t* mCrChannel;
   int32_t mCbCrStride;
-  gfxIntSize mCbCrSize;
+  LayerIntSize mCbCrSize;
   int32_t mCbSkip;
   int32_t mCrSkip;
   // Picture region
   uint32_t mPicX;
   uint32_t mPicY;
-  gfxIntSize mPicSize;
+  LayerIntSize mPicSize;
   StereoMode mStereoMode;
 
   nsIntRect GetPictureRect() const {

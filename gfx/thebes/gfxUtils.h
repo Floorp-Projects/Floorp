@@ -9,6 +9,7 @@
 #include "gfxTypes.h"
 #include "GraphicsFilter.h"
 #include "imgIContainer.h"
+#include "Units.h"
 
 class gfxDrawable;
 class nsIntRegion;
@@ -134,7 +135,7 @@ public:
     static void
     GetYCbCrToRGBDestFormatAndSize(const mozilla::layers::PlanarYCbCrData& aData,
                                    gfxImageFormat& aSuggestedFormat,
-                                   mozilla::gfx::IntSize& aSuggestedSize);
+                                   mozilla::LayerIntSize& aSuggestedSize);
 
     /**
      * Convert YCbCrImage into RGB aDestBuffer
@@ -144,7 +145,7 @@ public:
     static void
     ConvertYCbCrToRGB(const mozilla::layers::PlanarYCbCrData& aData,
                       const gfxImageFormat& aDestFormat,
-                      const mozilla::gfx::IntSize& aDestSize,
+                      const mozilla::LayerIntSize& aDestSize,
                       unsigned char* aDestBuffer,
                       int32_t aStride);
 

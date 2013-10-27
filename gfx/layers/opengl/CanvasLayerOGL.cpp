@@ -21,6 +21,7 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsSize.h"                     // for nsIntSize
 #include "LayerManagerOGL.h"            // for LayerOGL::GLContext, etc
+#include "gfx2DGlue.h"
 
 #ifdef XP_MACOSX
 #include "mozilla/gfx/MacIOSurface.h"
@@ -384,7 +385,7 @@ CanvasLayerOGL::CleanupResources()
 }
 
 gfxImageSurface*
-CanvasLayerOGL::GetTempSurface(const gfxIntSize& aSize,
+CanvasLayerOGL::GetTempSurface(const LayerIntSize& aSize,
                                const gfxImageFormat aFormat)
 {
   if (!mCachedTempSurface ||
@@ -392,7 +393,8 @@ CanvasLayerOGL::GetTempSurface(const gfxIntSize& aSize,
       aSize.height != mCachedSize.height ||
       aFormat != mCachedFormat)
   {
-    mCachedTempSurface = new gfxImageSurface(aSize, aFormat);
+    mCachedTempSurface = new gfxImageSurface(ThebesIntSize(aSize.ToUnknownSize()),
+                                             aFormat);
     mCachedSize = aSize;
     mCachedFormat = aFormat;
   }

@@ -24,6 +24,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
+#include "Units.h"
 
 class gfxReusableSurfaceWrapper;
 class gfxASurface;
@@ -66,8 +67,8 @@ class TextureClientYCbCr
 {
 public:
   virtual bool UpdateYCbCr(const PlanarYCbCrData& aData) = 0;
-  virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
-                                gfx::IntSize aCbCrSize,
+  virtual bool AllocateForYCbCr(LayerIntSize aYSize,
+                                LayerIntSize aCbCrSize,
                                 StereoMode aStereoMode) = 0;
 };
 
@@ -250,7 +251,7 @@ public:
 
   virtual uint8_t* GetBuffer() const = 0;
 
-  virtual gfx::IntSize GetSize() const { return mSize; }
+  virtual gfx::IntSize GetSize() const { return mSize.ToUnknownSize(); }
 
   // TextureClientSurface
 
@@ -268,8 +269,8 @@ public:
 
   virtual bool UpdateYCbCr(const PlanarYCbCrData& aData) MOZ_OVERRIDE;
 
-  virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
-                                gfx::IntSize aCbCrSize,
+  virtual bool AllocateForYCbCr(LayerIntSize aYSize,
+                                LayerIntSize aCbCrSize,
                                 StereoMode aStereoMode) MOZ_OVERRIDE;
 
   gfx::SurfaceFormat GetFormat() const { return mFormat; }
@@ -285,7 +286,7 @@ public:
 protected:
   CompositableClient* mCompositable;
   gfx::SurfaceFormat mFormat;
-  gfx::IntSize mSize;
+  LayerIntSize mSize;
 };
 
 /**
