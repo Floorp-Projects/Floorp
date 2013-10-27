@@ -15,6 +15,12 @@ this.Utils = Object.freeze({
     return Services.io.newURI(url, null, null);
   },
 
+  /**
+   * Returns true if the |url| passed in is part of the given root |domain|.
+   * For example, if |url| is "www.mozilla.org", and we pass in |domain| as
+   * "mozilla.org", this will return true. It would return false the other way
+   * around.
+   */
   hasRootDomain: function (url, domain) {
     let host;
 
@@ -35,5 +41,28 @@ this.Utils = Object.freeze({
     let prevChar = host[index - 1];
     return (index == (host.length - domain.length)) &&
            (prevChar == "." || prevChar == "/");
+  },
+
+  swapMapEntries: function (map, key, otherKey) {
+    // Make sure that one or the other of these has an entry in the map,
+    // and let it be |key|.
+    if (!map.has(key)) {
+      [key, otherKey] = [otherKey, key];
+      if (!map.has(key)) {
+        return;
+      }
+    }
+
+    // At this point, |key| is guaranteed to have an entry,
+    // although |otherKey| may not. Perform the swap.
+    let value = map.get(key);
+    if (map.has(otherKey)) {
+      let otherValue = map.get(otherKey);
+      map.set(key, otherValue);
+      map.set(otherKey, value);
+    } else {
+      map.set(otherKey, value);
+      map.delete(key);
+    }
   }
 });
