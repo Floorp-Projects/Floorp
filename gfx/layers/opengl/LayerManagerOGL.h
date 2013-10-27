@@ -111,11 +111,11 @@ public:
 
   virtual void SetRoot(Layer* aLayer) { mRoot = aLayer; }
 
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) {
+  virtual bool CanUseCanvasLayerForSize(const LayerIntSize &aSize) {
     if (!mGLContext)
       return false;
     int32_t maxSize = GetMaxTextureSize();
-    return aSize <= gfxIntSize(maxSize, maxSize);
+    return aSize <= LayerIntSize(maxSize, maxSize);
   }
 
   virtual int32_t GetMaxTextureSize() const;

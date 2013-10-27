@@ -210,7 +210,7 @@ public:
   /**
    * Properties of the compositor.
    */
-  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) = 0;
+  virtual bool CanUseCanvasLayerForSize(const LayerIntSize& aSize) = 0;
   virtual int32_t GetMaxTextureSize() const = 0;
 
   /**
