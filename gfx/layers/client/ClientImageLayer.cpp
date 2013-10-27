@@ -63,7 +63,7 @@ public:
 
   virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
   {
-    aAttrs = ImageLayerAttributes(mFilter, mScaleToSize, mScaleMode);
+    aAttrs = ImageLayerAttributes(mFilter, mScaleToSize.ToUnknownSize(), mScaleMode);
   }
 
   virtual Layer* AsLayer() { return this; }

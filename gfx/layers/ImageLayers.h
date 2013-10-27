@@ -50,10 +50,11 @@ public:
    * CONSTRUCTION PHASE ONLY
    * Set the size to scale the image to and the mode at which to scale.
    */
-  void SetScaleToSize(const gfxIntSize &aSize, ScaleMode aMode)
+  void SetScaleToSize(const gfx::IntSize &aSize, ScaleMode aMode)
   {
-    if (mScaleToSize != aSize || mScaleMode != aMode) {
-      mScaleToSize = aSize;
+    LayerIntSize size(aSize.width, aSize.height);
+    if (mScaleToSize != size || mScaleMode != aMode) {
+      mScaleToSize = size;
       mScaleMode = aMode;
       Mutated();
     }
@@ -62,7 +63,7 @@ public:
 
   ImageContainer* GetContainer() { return mContainer; }
   GraphicsFilter GetFilter() { return mFilter; }
-  const gfxIntSize& GetScaleToSize() { return mScaleToSize; }
+  const LayerIntSize& GetScaleToSize() { return mScaleToSize; }
   ScaleMode GetScaleMode() { return mScaleMode; }
 
   MOZ_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
@@ -89,7 +90,7 @@ protected:
 
   nsRefPtr<ImageContainer> mContainer;
   GraphicsFilter mFilter;
-  gfxIntSize mScaleToSize;
+  LayerIntSize mScaleToSize;
   ScaleMode mScaleMode;
   bool mDisallowBigImage;
 };
