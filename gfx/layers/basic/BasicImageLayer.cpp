@@ -69,7 +69,7 @@ protected:
                           float aOpacity,
                           Layer* aMaskLayer);
 
-  gfxIntSize mSize;
+  gfx::IntSize mSize;
 };
 
 void
@@ -94,7 +94,7 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   nsRefPtr<gfxASurface> surface;
   AutoLockImage autoLock(mContainer, getter_AddRefs(surface));
   Image *image = autoLock.GetImage();
-  gfxIntSize size = mSize = autoLock.GetSize();
+  gfx::IntSize size = mSize = autoLock.GetSize();
 
   if (!surface || surface->CairoStatus()) {
     return nullptr;
@@ -166,7 +166,7 @@ BasicImageLayer::GetAsSurface(gfxASurface** aSurface,
     return false;
   }
 
-  gfxIntSize dontCare;
+  gfx::IntSize dontCare;
   nsRefPtr<gfxASurface> surface = mContainer->GetCurrentAsSurface(&dontCare);
   *aSurface = surface.forget().get();
   return true;

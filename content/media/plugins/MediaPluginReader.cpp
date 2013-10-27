@@ -13,6 +13,7 @@
 #include "MediaDecoderStateMachine.h"
 #include "ImageContainer.h"
 #include "AbstractMediaDecoder.h"
+#include "mozilla/gfx/Point.h"
 
 namespace mozilla {
 
@@ -169,10 +170,10 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
     currentImage = bufferCallback.GetImage();
     int64_t pos = mDecoder->GetResource()->Tell();
     nsIntRect picture = mPicture;
- 
+
     nsAutoPtr<VideoData> v;
     if (currentImage) {
-      gfxIntSize frameSize = currentImage->GetSize();
+      gfx::IntSize frameSize = currentImage->GetSize();
       if (frameSize.width != mInitialFrame.width ||
           frameSize.height != mInitialFrame.height) {
         // Frame size is different from what the container reports. This is legal,

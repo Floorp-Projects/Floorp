@@ -57,7 +57,7 @@ public:
 
   virtual uint8_t *GetBuffer() MOZ_OVERRIDE;
 
-  gfxIntSize GetSize();
+  gfx::IntSize GetSize();
   size_t GetBufferSize();
 
   static uint8_t BytesPerPixel(gfxImageFormat aImageFormat);
@@ -89,7 +89,7 @@ public:
   TextureClient* GetTextureClient() MOZ_OVERRIDE { return nullptr; }
 
 protected:
-  gfxIntSize mSize;
+  gfx::IntSize mSize;
   gfxImageFormat mImageFormat;
   ISurfaceAllocator* mSurfaceAllocator;
 
@@ -114,7 +114,7 @@ public:
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
-  gfxIntSize GetSize();
+  gfx::IntSize GetSize();
 
   size_t GetBufferSize();
 

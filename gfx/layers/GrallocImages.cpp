@@ -229,11 +229,11 @@ GrallocImage::GetAsSurface()
     return nullptr;
   }
 
-  nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(GetSize(), gfxImageFormatRGB16_565);
-
   uint32_t width = GetSize().width;
   uint32_t height = GetSize().height;
+
+  nsRefPtr<gfxImageSurface> imageSurface =
+    new gfxImageSurface(gfxIntSize(width, height), gfxImageFormatRGB16_565);
 
   if (format == HAL_PIXEL_FORMAT_YCrCb_420_SP_ADRENO) {
     // The Adreno hardware decoder aligns image dimensions to a multiple of 32,
@@ -295,9 +295,7 @@ GrallocImage::GetTextureClient()
       flags |= TEXTURE_RB_SWAPPED;
     }
     GrallocBufferActor* actor = static_cast<GrallocBufferActor*>(desc.bufferChild());
-    mTextureClient = new GrallocTextureClientOGL(actor,
-                                                 gfx::ToIntSize(mSize),
-                                                 flags);
+    mTextureClient = new GrallocTextureClientOGL(actor, mSize, flags);
     mTextureClient->SetGraphicBufferLocked(mGraphicBuffer);
   }
   return mTextureClient;

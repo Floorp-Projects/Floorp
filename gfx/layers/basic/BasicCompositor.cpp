@@ -186,7 +186,7 @@ public:
     DeserializerToPlanarYCbCrImageData(deserializer, data);
 
     gfxImageFormat format = gfxImageFormatRGB24;
-    gfxIntSize size;
+    gfx::IntSize size;
     gfxUtils::GetYCbCrToRGBDestFormatAndSize(data, format, size);
     if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
         size.height > PlanarYCbCrImage::MAX_DIMENSION) {
@@ -195,7 +195,7 @@ public:
     }
 
     mThebesSurface = mThebesImage =
-      new gfxImageSurface(size, format);
+      new gfxImageSurface(ThebesIntSize(size), format);
 
     gfxUtils::ConvertYCbCrToRGB(data, format, size,
                                 mThebesImage->Data(),
