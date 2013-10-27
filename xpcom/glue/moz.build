@@ -89,10 +89,10 @@ EXPORTS.mozilla.threads += [
 
 include('objs.mozbuild')
 
-CPP_SOURCES += xpcom_gluens_src_cppsrcs
-CPP_SOURCES += xpcom_glue_src_cppsrcs
+SOURCES += xpcom_gluens_src_cppsrcs
+SOURCES += xpcom_glue_src_cppsrcs
 
-CPP_SOURCES += [
+SOURCES += [
     'GenericModule.cpp',
     'nsStringAPI.cpp',
 ]
@@ -102,3 +102,5 @@ LIBRARY_NAME = 'xpcomglue_s'
 SDK_LIBRARY = [
     "%s%s.%s" % (CONFIG['LIB_PREFIX'], 'xpcomglue_s', CONFIG['LIB_SUFFIX']),
 ]
+
+FORCE_STATIC_LIB = True

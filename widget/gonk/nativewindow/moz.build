@@ -36,14 +36,14 @@ elif CONFIG['ANDROID_VERSION'] == '15':
 
 if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
     if CONFIG['ANDROID_VERSION'] in ('17', '18'):
-        CPP_SOURCES += [
+        SOURCES += [
             'GonkBufferQueue.cpp',
             'GonkConsumerBase.cpp',
             'GonkNativeWindowClientJB.cpp',
             'GonkNativeWindowJB.cpp',
         ]
     elif CONFIG['ANDROID_VERSION'] == '15':
-        CPP_SOURCES += [
+        SOURCES += [
             'GonkNativeWindowClientICS.cpp',
             'GonkNativeWindowICS.cpp',
         ]
@@ -53,4 +53,6 @@ FAIL_ON_WARNINGS = True
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'nativewindow'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

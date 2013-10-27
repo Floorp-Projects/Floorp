@@ -17,7 +17,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'url-classifier'
 
-CPP_SOURCES += [
+SOURCES += [
     'ChunkSet.cpp',
     'Classifier.cpp',
     'HashStore.cpp',

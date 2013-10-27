@@ -6,7 +6,7 @@
 
 MODULE = 'accessibility'
 
-CPP_SOURCES += [
+SOURCES += [
     'sdnAccessible.cpp',
     'sdnDocAccessible.cpp',
     'sdnTextAccessible.cpp',

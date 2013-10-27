@@ -740,12 +740,12 @@ public:
     }                                                                         \
   }
 #define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                        \
-  mozilla::dom::BeforeUnloadEventHandlerNonNull* GetOn##name_()               \
+  mozilla::dom::OnBeforeUnloadEventHandlerNonNull* GetOn##name_()             \
   {                                                                           \
     nsEventListenerManager *elm = GetExistingListenerManager();               \
     return elm ? elm->GetOnBeforeUnloadEventHandler() : nullptr;              \
   }                                                                           \
-  void SetOn##name_(mozilla::dom::BeforeUnloadEventHandlerNonNull* handler)   \
+  void SetOn##name_(mozilla::dom::OnBeforeUnloadEventHandlerNonNull* handler) \
   {                                                                           \
     nsEventListenerManager *elm = GetOrCreateListenerManager();               \
     if (elm) {                                                                \
@@ -765,7 +765,7 @@ public:
   mozilla::dom::SpeechSynthesis* GetSpeechSynthesisInternal();
 #endif
 
-  mozilla::dom::BarProp* Scrollbars();
+  mozilla::dom::BarProp* GetScrollbars();
 
 protected:
   // Array of idle observers that are notified of idle events.

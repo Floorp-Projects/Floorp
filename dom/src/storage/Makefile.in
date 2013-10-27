@@ -12,4 +12,3 @@ DEFINES += -DDOM_STORAGE_TESTS
 endif
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk

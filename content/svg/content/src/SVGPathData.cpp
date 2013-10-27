@@ -4,7 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGPathData.h"
+
+#include "gfx2DGlue.h"
 #include "gfxPlatform.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Types.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/RefPtr.h"
 #include "nsError.h"
 #include "nsString.h"
 #include "nsSVGPathDataParser.h"
@@ -16,6 +22,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 static bool IsMoveto(uint16_t aSegType)
 {
@@ -237,6 +244,35 @@ ApproximateZeroLengthSubpathSquareCaps(const gfxPoint &aPoint, gfxContext *aCtx)
   aCtx->MoveTo(aPoint);
 }
 
+static void
+ApproximateZeroLengthSubpathSquareCaps(const Point& aPoint,
+                                       DrawTarget* aDT,
+                                       PathBuilder* aPB)
+{
+  // Cairo's fixed point fractional part is 8 bits wide, so its device space
+  // coordinate granularity is 1/256 pixels. However, to prevent user space
+  // |aPoint| and |aPoint + tinyAdvance| being rounded to the same device
+  // coordinates, we double this for |tinyAdvance|:
+
+  Matrix currentTransform = aDT->GetTransform();
+  currentTransform.Invert();
+  Size tinyAdvance = currentTransform * Size(2.0/256.0, 0.0);
+
+  aPB->MoveTo(aPoint);
+  aPB->LineTo(aPoint + Point(tinyAdvance.width, tinyAdvance.height));
+  aPB->MoveTo(aPoint);
+}
+
+#define MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT               \
+  do {                                                                        \
+    if (capsAreSquare && !subpathHasLength && subpathContainsNonArc &&        \
+        SVGPathSegUtils::IsValidType(prevSegType) &&                          \
+        (!IsMoveto(prevSegType) ||                                            \
+         segType == PATHSEG_CLOSEPATH)) {                                     \
+      ApproximateZeroLengthSubpathSquareCaps(segStart, aDT, builder);         \
+    }                                                                         \
+  } while(0)
+
 #define MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS                     \
   do {                                                                        \
     if (capsAreSquare && !subpathHasLength && subpathContainsNonArc &&        \
@@ -246,6 +282,257 @@ ApproximateZeroLengthSubpathSquareCaps(const gfxPoint &aPoint, gfxContext *aCtx)
       ApproximateZeroLengthSubpathSquareCaps(segStart, aCtx);                 \
     }                                                                         \
   } while(0)
+
+TemporaryRef<Path>
+SVGPathData::ConstructPath(DrawTarget *aDT,
+                           FillRule aFillRule,
+                           CapStyle aCapStyle) const
+{
+  if (mData.IsEmpty() || !IsMoveto(SVGPathSegUtils::DecodeType(mData[0]))) {
+    return nullptr; // paths without an initial moveto are invalid
+  }
+
+  RefPtr<PathBuilder> builder = aDT->CreatePathBuilder(aFillRule);
+
+  bool capsAreSquare = aCapStyle == CAP_SQUARE;
+  bool subpathHasLength = false;  // visual length
+  bool subpathContainsNonArc = false;
+
+  uint32_t segType     = PATHSEG_UNKNOWN;
+  uint32_t prevSegType = PATHSEG_UNKNOWN;
+  Point pathStart(0.0, 0.0); // start point of [sub]path
+  Point segStart(0.0, 0.0);
+  Point segEnd;
+  Point cp1, cp2;            // previous bezier's control points
+  Point tcp1, tcp2;          // temporaries
+
+  // Regarding cp1 and cp2: If the previous segment was a cubic bezier curve,
+  // then cp2 is its second control point. If the previous segment was a
+  // quadratic curve, then cp1 is its (only) control point.
+
+  uint32_t i = 0;
+  while (i < mData.Length()) {
+    segType = SVGPathSegUtils::DecodeType(mData[i++]);
+    uint32_t argCount = SVGPathSegUtils::ArgCountForType(segType);
+
+    switch (segType)
+    {
+    case PATHSEG_CLOSEPATH:
+      // set this early to allow drawing of square caps for "M{x},{y} Z":
+      subpathContainsNonArc = true;
+      MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
+      segEnd = pathStart;
+      builder->Close();
+      break;
+
+    case PATHSEG_MOVETO_ABS:
+      MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
+      pathStart = segEnd = Point(mData[i], mData[i+1]);
+      builder->MoveTo(segEnd);
+      subpathHasLength = false;
+      subpathContainsNonArc = false;
+      break;
+
+    case PATHSEG_MOVETO_REL:
+      MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
+      pathStart = segEnd = segStart + Point(mData[i], mData[i+1]);
+      builder->MoveTo(segEnd);
+      subpathHasLength = false;
+      subpathContainsNonArc = false;
+      break;
+
+    case PATHSEG_LINETO_ABS:
+      segEnd = Point(mData[i], mData[i+1]);
+      builder->LineTo(segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_LINETO_REL:
+      segEnd = segStart + Point(mData[i], mData[i+1]);
+      builder->LineTo(segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_CURVETO_CUBIC_ABS:
+      cp1 = Point(mData[i], mData[i+1]);
+      cp2 = Point(mData[i+2], mData[i+3]);
+      segEnd = Point(mData[i+4], mData[i+5]);
+      builder->BezierTo(cp1, cp2, segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart || segEnd != cp1 || segEnd != cp2);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_CURVETO_CUBIC_REL:
+      cp1 = segStart + Point(mData[i], mData[i+1]);
+      cp2 = segStart + Point(mData[i+2], mData[i+3]);
+      segEnd = segStart + Point(mData[i+4], mData[i+5]);
+      builder->BezierTo(cp1, cp2, segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart || segEnd != cp1 || segEnd != cp2);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_CURVETO_QUADRATIC_ABS:
+      cp1 = Point(mData[i], mData[i+1]);
+      // Convert quadratic curve to cubic curve:
+      tcp1 = segStart + (cp1 - segStart) * 2 / 3;
+      segEnd = Point(mData[i+2], mData[i+3]); // set before setting tcp2!
+      tcp2 = cp1 + (segEnd - cp1) / 3;
+      builder->BezierTo(tcp1, tcp2, segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart || segEnd != cp1);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_CURVETO_QUADRATIC_REL:
+      cp1 = segStart + Point(mData[i], mData[i+1]);
+      // Convert quadratic curve to cubic curve:
+      tcp1 = segStart + (cp1 - segStart) * 2 / 3;
+      segEnd = segStart + Point(mData[i+2], mData[i+3]); // set before setting tcp2!
+      tcp2 = cp1 + (segEnd - cp1) / 3;
+      builder->BezierTo(tcp1, tcp2, segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart || segEnd != cp1);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_ARC_ABS:
+    case PATHSEG_ARC_REL:
+    {
+      Point radii(mData[i], mData[i+1]);
+      segEnd = Point(mData[i+5], mData[i+6]);
+      if (segType == PATHSEG_ARC_REL) {
+        segEnd += segStart;
+      }
+      if (segEnd != segStart) {
+        if (radii.x == 0.0f || radii.y == 0.0f) {
+          builder->LineTo(segEnd);
+        } else {
+          nsSVGArcConverter converter(segStart, segEnd, radii, mData[i+2],
+                                      mData[i+3] != 0, mData[i+4] != 0);
+          while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
+            builder->BezierTo(cp1, cp2, segEnd);
+          }
+        }
+      }
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart);
+      }
+      break;
+    }
+
+    case PATHSEG_LINETO_HORIZONTAL_ABS:
+      segEnd = Point(mData[i], segStart.y);
+      builder->LineTo(segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_LINETO_HORIZONTAL_REL:
+      segEnd = segStart + Point(mData[i], 0.0f);
+      builder->LineTo(segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_LINETO_VERTICAL_ABS:
+      segEnd = Point(segStart.x, mData[i]);
+      builder->LineTo(segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_LINETO_VERTICAL_REL:
+      segEnd = segStart + Point(0.0f, mData[i]);
+      builder->LineTo(segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
+      cp1 = SVGPathSegUtils::IsCubicType(prevSegType) ? segStart * 2 - cp2 : segStart;
+      cp2 = Point(mData[i],   mData[i+1]);
+      segEnd = Point(mData[i+2], mData[i+3]);
+      builder->BezierTo(cp1, cp2, segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart || segEnd != cp1 || segEnd != cp2);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
+      cp1 = SVGPathSegUtils::IsCubicType(prevSegType) ? segStart * 2 - cp2 : segStart;
+      cp2 = segStart + Point(mData[i], mData[i+1]);
+      segEnd = segStart + Point(mData[i+2], mData[i+3]);
+      builder->BezierTo(cp1, cp2, segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart || segEnd != cp1 || segEnd != cp2);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
+      cp1 = SVGPathSegUtils::IsQuadraticType(prevSegType) ? segStart * 2 - cp1 : segStart;
+      // Convert quadratic curve to cubic curve:
+      tcp1 = segStart + (cp1 - segStart) * 2 / 3;
+      segEnd = Point(mData[i], mData[i+1]); // set before setting tcp2!
+      tcp2 = cp1 + (segEnd - cp1) / 3;
+      builder->BezierTo(tcp1, tcp2, segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart || segEnd != cp1);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    case PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
+      cp1 = SVGPathSegUtils::IsQuadraticType(prevSegType) ? segStart * 2 - cp1 : segStart;
+      // Convert quadratic curve to cubic curve:
+      tcp1 = segStart + (cp1 - segStart) * 2 / 3;
+      segEnd = segStart + Point(mData[i], mData[i+1]); // changed before setting tcp2!
+      tcp2 = cp1 + (segEnd - cp1) / 3;
+      builder->BezierTo(tcp1, tcp2, segEnd);
+      if (!subpathHasLength) {
+        subpathHasLength = (segEnd != segStart || segEnd != cp1);
+      }
+      subpathContainsNonArc = true;
+      break;
+
+    default:
+      NS_NOTREACHED("Bad path segment type");
+      return nullptr; // according to spec we'd use everything up to the bad seg anyway
+    }
+    i += argCount;
+    prevSegType = segType;
+    segStart = segEnd;
+  }
+
+  NS_ABORT_IF_FALSE(i == mData.Length(), "Very, very bad - mData corrupt");
+  NS_ABORT_IF_FALSE(prevSegType == segType,
+                    "prevSegType should be left at the final segType");
+
+  MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
+
+  return builder->Finish();
+}
 
 void
 SVGPathData::ConstructPath(gfxContext *aCtx) const
@@ -379,14 +666,21 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
         if (radii.x == 0.0f || radii.y == 0.0f) {
           aCtx->LineTo(segEnd);
         } else {
-          nsSVGArcConverter converter(segStart, segEnd, radii, mData[i+2],
+          nsSVGArcConverter converter(ToPoint(segStart), ToPoint(segEnd),
+                                      ToPoint(radii), mData[i+2],
                                       mData[i+3] != 0, mData[i+4] != 0);
-          while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
-            aCtx->CurveTo(cp1, cp2, segEnd);
+          Point cp1, cp2, segEnd_;
+          while (converter.GetNextSegment(&cp1, &cp2, &segEnd_)) {
+            aCtx->CurveTo(ThebesPoint(cp1), ThebesPoint(cp2), ThebesPoint(segEnd_));
           }
+          segEnd = ThebesPoint(segEnd_);
         }
       }
       if (!subpathHasLength) {
+        // Round to make sure the current comparison doesn't fail due to
+        // precision issues:
+        // XXX kill after all code is converted to float precision
+        segStart = ThebesPoint(ToPoint(segStart));
         subpathHasLength = (segEnd != segStart);
       }
       break;

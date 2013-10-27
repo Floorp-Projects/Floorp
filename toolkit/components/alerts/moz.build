@@ -12,7 +12,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'alerts'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsAlertsService.cpp',
     'nsXULAlerts.cpp',
 ]
@@ -20,4 +20,6 @@ CPP_SOURCES += [
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'alerts_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

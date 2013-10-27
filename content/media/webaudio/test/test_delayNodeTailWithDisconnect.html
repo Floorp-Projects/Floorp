@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test tail time lifetime of DelayNode after input is disconnected</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// Web Audio doesn't provide a means to precisely time disconnect()s but we
+// can test that the output of delay nodes matches the output from their
+// sources before they are disconnected.
+
+SimpleTest.waitForExplicitFinish();
+
+const signalLength = 128;
+const bufferSize = 4096;
+const sourceCount = bufferSize / signalLength;
+// Delay should be long enough to allow CC to run
+var delayBufferCount = 20;
+const delayLength = delayBufferCount * bufferSize;
+
+var sourceOutput = new Float32Array(bufferSize);
+var delayOutputCount = 0;
+var sources = [];
+
+function onDelayOutput(e) {
+  if (delayOutputCount < delayBufferCount) {
+    delayOutputCount++;
+    return;
+  }
+
+  compareBuffers(e.inputBuffer.getChannelData(0), sourceOutput);
+  e.target.onaudioprocess = null;
+  SimpleTest.finish();
+}
+
+function onSourceOutput(e) {
+  // Record the first buffer
+  e.inputBuffer.copyFromChannel(sourceOutput, 0);
+  e.target.onaudioprocess = null;
+}
+
+function disconnectSources() {
+  dump("disconnecting\n")
+  for (var i = 0; i < sourceCount; ++i) {
+    sources[i].disconnect();
+  }
+
+  SpecialPowers.forceGC();
+  SpecialPowers.forceCC();
+  dump("forced GC\n");
+}
+
+function startTest() {
+  var ctx = new AudioContext();
+
+  var sourceProcessor = ctx.createScriptProcessor(bufferSize, 1, 0);
+  sourceProcessor.onaudioprocess = onSourceOutput;
+  // Keep audioprocess events going after source disconnect.
+  sourceProcessor.connect(ctx.destination);
+
+  var delayProcessor = ctx.createScriptProcessor(bufferSize, 1, 0);
+  delayProcessor.onaudioprocess = onDelayOutput;
+  // Work around bug 916387.
+  delayProcessor.connect(ctx.destination);
+
+  var delayDuration = delayLength / ctx.sampleRate;
+  for (var i = 0; i < sourceCount; ++i) {
+    var delay = ctx.createDelay(delayDuration);
+    delay.delayTime.value = delayDuration;
+    delay.connect(delayProcessor);
+
+    var source = ctx.createOscillator();
+    source.frequency.value = 440 + 10 * i
+    source.start(i * signalLength / ctx.sampleRate);
+    source.stop((i + 1) * signalLength / ctx.sampleRate);
+    source.connect(delay);
+    source.connect(sourceProcessor);
+
+    sources[i] = source;
+  }
+
+  // Assuming the above Web Audio operations have already scheduled an event
+  // to run in stable state and start the graph thread, schedule a subsequent
+  // event to disconnect the sources, which will remove main thread connection
+  // references before it knows the graph thread has started using the source
+  // streams.
+  SimpleTest.executeSoon(disconnectSources);
+};
+
+startTest();
+</script>
+</pre>
+</body>
+</html>

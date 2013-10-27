@@ -11,7 +11,7 @@ EXPORTS += [
     'MediaOmxReader.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'MediaOmxDecoder.cpp',
     'MediaOmxReader.cpp',
     'OMXCodecProxy.cpp',
@@ -23,7 +23,7 @@ if CONFIG['MOZ_RTSP']:
         'RtspOmxDecoder.h',
         'RtspOmxReader.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'RtspOmxDecoder.cpp',
         'RtspOmxReader.cpp',
     ]
@@ -31,4 +31,6 @@ if CONFIG['MOZ_RTSP']:
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkconomx_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

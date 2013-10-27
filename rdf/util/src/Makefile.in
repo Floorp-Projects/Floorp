@@ -8,6 +8,3 @@
 # rdfutil_s which is built in the internal/ subdirectory. 
 
 DIST_INSTALL = 1
-
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB = 1

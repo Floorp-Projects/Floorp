@@ -8,7 +8,6 @@ DEFINES += -DOS_ARCH=$(OS_ARCH) \
            $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
 			mailnews.js editor.js \

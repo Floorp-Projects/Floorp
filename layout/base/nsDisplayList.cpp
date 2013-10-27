@@ -399,9 +399,9 @@ AddAnimationsAndTransitionsToLayer(Layer* aLayer, nsDisplayListBuilder* aBuilder
     // all data passed directly to the compositor should be in css pixels
     float scale = nsDeviceContext::AppUnitsPerCSSPixel();
     gfxPoint3D offsetToTransformOrigin =
-      nsDisplayTransform::GetDeltaToMozTransformOrigin(frame, scale, &bounds);
+      nsDisplayTransform::GetDeltaToTransformOrigin(frame, scale, &bounds);
     gfxPoint3D offsetToPerspectiveOrigin =
-      nsDisplayTransform::GetDeltaToMozPerspectiveOrigin(frame, scale);
+      nsDisplayTransform::GetDeltaToPerspectiveOrigin(frame, scale);
     nscoord perspective = 0.0;
     nsStyleContext* parentStyleContext = frame->StyleContext()->GetParent();
     if (parentStyleContext) {
@@ -3249,9 +3249,14 @@ already_AddRefed<Layer>
 nsDisplayBlendContainer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                     LayerManager* aManager,
                                     const ContainerParameters& aContainerParameters) {
+  // turn off anti-aliasing in the parent stacking context because it changes
+  // how the group is initialized.
+  ContainerParameters newContainerParameters = aContainerParameters;
+  newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
+
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
   BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
-                         aContainerParameters, nullptr);
+                         newContainerParameters, nullptr);
   if (!container) {
     return nullptr;
   }
@@ -3904,9 +3909,9 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame 
  * called off the main thread.
  */
 /* static */ gfxPoint3D
-nsDisplayTransform::GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
-                                                 float aAppUnitsPerPixel,
-                                                 const nsRect* aBoundsOverride)
+nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
+                                              float aAppUnitsPerPixel,
+                                              const nsRect* aBoundsOverride)
 {
   NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
   NS_PRECONDITION(aFrame->IsTransformed(),
@@ -3917,8 +3922,15 @@ nsDisplayTransform::GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
    * a distance, it's already computed for us!
    */
   const nsStyleDisplay* display = aFrame->StyleDisplay();
-  nsRect boundingRect = (aBoundsOverride ? *aBoundsOverride :
-                         nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
+  nsRect boundingRect;
+  if (aBoundsOverride) {
+    boundingRect = *aBoundsOverride;
+  } else if (display->mTransformOrigin[0].GetUnit() != eStyleUnit_Coord ||
+             display->mTransformOrigin[1].GetUnit() != eStyleUnit_Coord) {
+    // GetFrameBoundsForTransform is expensive for SVG frames and we don't need
+    // it if the origin is coords (which it is by default for SVG).
+    boundingRect = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
+  }
 
   /* Allows us to access named variables by index. */
   float coords[2];
@@ -3968,8 +3980,8 @@ nsDisplayTransform::GetDeltaToMozTransformOrigin(const nsIFrame* aFrame,
  * called off the main thread.
  */
 /* static */ gfxPoint3D
-nsDisplayTransform::GetDeltaToMozPerspectiveOrigin(const nsIFrame* aFrame,
-                                                   float aAppUnitsPerPixel)
+nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
+                                                float aAppUnitsPerPixel)
 {
   NS_PRECONDITION(aFrame, "Can't get delta for a null frame!");
   NS_PRECONDITION(aFrame->IsTransformed(),
@@ -4032,8 +4044,8 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsI
                                                                        const nsRect* aBoundsOverride)
   : mFrame(aFrame)
   , mTransformList(aFrame->StyleDisplay()->mSpecifiedTransform)
-  , mToMozOrigin(GetDeltaToMozTransformOrigin(aFrame, aAppUnitsPerPixel, aBoundsOverride))
-  , mToPerspectiveOrigin(GetDeltaToMozPerspectiveOrigin(aFrame, aAppUnitsPerPixel))
+  , mToTransformOrigin(GetDeltaToTransformOrigin(aFrame, aAppUnitsPerPixel, aBoundsOverride))
+  , mToPerspectiveOrigin(GetDeltaToPerspectiveOrigin(aFrame, aAppUnitsPerPixel))
   , mChildPerspective(0)
 {
   const nsStyleDisplay* parentDisp = nullptr;
@@ -4142,7 +4154,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     /* At the point when perspective is applied, we have been translated to the transform origin.
      * The translation to the perspective origin is the difference between these values.
      */
-    result = result * nsLayoutUtils::ChangeMatrixBasis(aProperties.mToPerspectiveOrigin - aProperties.mToMozOrigin, perspective);
+    result = result * nsLayoutUtils::ChangeMatrixBasis(aProperties.mToPerspectiveOrigin - aProperties.mToTransformOrigin, perspective);
   }
 
   gfxPoint3D rounded(hasSVGTransforms ? newOrigin.x : NS_round(newOrigin.x),
@@ -4162,11 +4174,11 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
         GetResultingTransformMatrixInternal(props,
                                             aOrigin - frame->GetPosition(),
                                             aAppUnitsPerPixel, nullptr, aOutAncestor);
-      return nsLayoutUtils::ChangeMatrixBasis(rounded + aProperties.mToMozOrigin, result) * parent;
+      return nsLayoutUtils::ChangeMatrixBasis(rounded + aProperties.mToTransformOrigin, result) * parent;
   }
 
   return nsLayoutUtils::ChangeMatrixBasis
-    (rounded + aProperties.mToMozOrigin, result);
+    (rounded + aProperties.mToTransformOrigin, result);
 }
 
 bool

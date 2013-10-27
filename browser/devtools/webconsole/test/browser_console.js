@@ -62,7 +62,7 @@ function consoleOpened(hud)
     let text = output.textContent;
     chromeConsole = text.indexOf("bug587757a");
     contentConsole = text.indexOf("bug587757b");
-    execValue = text.indexOf("webconsole.xul");
+    execValue = text.indexOf("browser.xul");
     exception = text.indexOf("foobarExceptionBug587757");
     xhrRequest = text.indexOf("test-console.html");
   }

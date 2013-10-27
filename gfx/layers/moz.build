@@ -44,7 +44,7 @@ EXPORTS += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    CPP_SOURCES += [
+    SOURCES += [
         'D3D9SurfaceImage.cpp',
     ]
     if CONFIG['MOZ_ENABLE_D3D9_LAYER']:
@@ -56,7 +56,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
             'd3d9/CompositorD3D9.h',
             'd3d9/TextureD3D9.h',
         ]
-        CPP_SOURCES += [
+        SOURCES += [
             'd3d9/CanvasLayerD3D9.cpp',
             'd3d9/ColorLayerD3D9.cpp',
             'd3d9/CompositorD3D9.cpp',
@@ -78,7 +78,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
             'd3d11/TextureD3D11.h',
             'ipc/ShadowLayerUtilsD3D10.h',
         ]
-        CPP_SOURCES += [
+        SOURCES += [
             'd3d10/CanvasLayerD3D10.cpp',
             'd3d10/ColorLayerD3D10.cpp',
             'd3d10/ContainerLayerD3D10.cpp',
@@ -153,7 +153,7 @@ if CONFIG['MOZ_X11']:
     EXPORTS.mozilla.layers += [
         'ipc/ShadowLayerUtilsX11.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'ipc/ShadowLayerUtilsX11.cpp'
     ]
 
@@ -161,7 +161,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.layers += [
         'opengl/GLManager.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'ipc/ShadowLayerUtilsMac.cpp',
         'opengl/GLManager.cpp',
     ]
@@ -173,14 +173,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXPORTS.mozilla.layers += [
         'ipc/ShadowLayerUtilsGralloc.h',
     ]
-    CPP_SOURCES += [
+    SOURCES += [
         'GrallocImages.cpp',
         'ipc/ShadowLayerUtilsGralloc.cpp',
         'opengl/GrallocTextureClient.cpp',
         'opengl/GrallocTextureHost.cpp',
     ]
 
-CPP_SOURCES += [
+SOURCES += [
     'basic/BasicCanvasLayer.cpp',
     'basic/BasicColorLayer.cpp',
     'basic/BasicCompositor.cpp',
@@ -279,4 +279,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'layers'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -22,9 +22,11 @@ interface nsIVoicemailListener : nsISupports
  * XPCOM component (in the content process) that provides the voicemail
  * information.
  */
-[scriptable, uuid(37bc0991-21a3-4de9-b888-d667fea6c05d)]
+[scriptable, uuid(38746f3c-f4e3-4804-b900-ba2463b923c8)]
 interface nsIVoicemailProvider : nsISupports
 {
+  readonly attribute unsigned long voicemailDefaultServiceId;
+
   /**
    * Called when a content process registers receiving unsolicited messages from
    * RadioInterfaceLayer in the chrome process. Only a content process that has

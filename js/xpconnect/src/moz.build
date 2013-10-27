@@ -15,7 +15,7 @@ EXPORTS += [
     'xpcpublic.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsCxPusher.cpp',
     'nsScriptError.cpp',
     'nsXPConnect.cpp',
@@ -57,4 +57,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'xpconnect_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -7,7 +7,7 @@
 MODULE = 'migration'
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
+    SOURCES += [
         'nsIEHistoryEnumerator.cpp',
     ]
 
@@ -42,3 +42,4 @@ EXTRA_PP_JS_MODULES += [
     'MigrationUtils.jsm',
 ]
 
+FORCE_STATIC_LIB = True

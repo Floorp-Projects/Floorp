@@ -40,6 +40,7 @@ in the LICENSE file:
  * dialog/dialog.js
  * javascript.js
  * matchbrackets.js
+ * closebrackets.js
  * search/match-highlighter.js
  * search/search.js
  * search/searchcursor.js

@@ -16,6 +16,7 @@ from mozbuild.frontend.data import (
     VariablePassthru,
     Defines,
     Exports,
+    GeneratedInclude,
     Program,
     IPDLFile,
     LocalInclude,
@@ -161,16 +162,14 @@ class TestEmitterBasic(unittest.TestCase):
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
             SHARED_LIBRARY_LIBS=['fans.sll', 'tans.sll'],
             SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
-            SSRCS=['fans.S', 'tans.S'],
+            SSRCS=['bans.S', 'fans.S'],
         )
 
         variables = objs[1].variables
-        self.assertEqual(len(variables), len(wanted))
-
-        for var, val in wanted.items():
-            # print("test_variable_passthru[%s]" % var)
-            self.assertIn(var, variables)
-            self.assertEqual(variables[var], val)
+        maxDiff = self.maxDiff
+        self.maxDiff = None
+        self.assertEqual(wanted, variables)
+        self.maxDiff = maxDiff
 
     def test_exports(self):
         reader = self.reader('exports')
@@ -374,6 +373,19 @@ class TestEmitterBasic(unittest.TestCase):
         ]
 
         self.assertEqual(local_includes, expected)
+
+    def test_generated_includes(self):
+        """Test that GENERATED_INCLUDES is emitted correctly."""
+        reader = self.reader('generated_includes')
+        objs = self.read_topsrcdir(reader)
+
+        generated_includes = [o.path for o in objs if isinstance(o, GeneratedInclude)]
+        expected = [
+            '/bar/baz',
+            'foo',
+        ]
+
+        self.assertEqual(generated_includes, expected)
 
     def test_defines(self):
         reader = self.reader('defines')

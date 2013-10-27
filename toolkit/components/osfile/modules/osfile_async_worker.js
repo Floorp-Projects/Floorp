@@ -67,10 +67,18 @@ if (this.Components) {
    // built-in serialization.
    if (!exn) {
      LOG("Sending positive reply", result, "id is", id);
-     if (result instanceof Transfer) {
-       // Take advantage of zero-copy transfers
-       self.postMessage({ok: result.data, id: id, durationMs: durationMs},
-         result.transfers);
+     if (result instanceof Meta) {
+       if ("transfers" in result.meta) {
+         // Take advantage of zero-copy transfers
+         self.postMessage({ok: result.data, id: id, durationMs: durationMs},
+           result.meta.transfers);
+       } else {
+         self.postMessage({ok: result.data, id:id, durationMs: durationMs});
+       }
+       if (result.meta.shutdown || false) {
+         // Time to close the worker
+         self.close();
+       }
      } else {
        self.postMessage({ok: result, id:id, durationMs: durationMs});
      }
@@ -192,19 +200,24 @@ if (this.Components) {
 
   let File = exports.OS.File;
 
- /**
-  * A constructor used to transfer data to the caller
-  * without copy.
-  *
-  * @param {*} data The data to return to the caller.
-  * @param {Array} transfers An array of Transferable
-  * values that should be moved instead of being copied.
-  *
-  * @constructor
-  */
-  let Transfer = function Transfer(data, transfers) {
-   this.data = data;
-   this.transfers = transfers;
+  /**
+   * A constructor used to return data to the caller thread while
+   * also executing some specific treatment (e.g. shutting down
+   * the current thread, transmitting data instead of copying it).
+   *
+   * @param {object=} data The data to return to the caller thread.
+   * @param {object=} meta Additional instructions, as an object
+   * that may contain the following fields:
+   * - {bool} shutdown If |true|, shut down the current thread after
+   *   having sent the result.
+   * - {Array} transfers An array of objects that should be transferred
+   *   instead of being copied.
+   *
+   * @constructor
+   */
+  let Meta = function Meta(data, meta) {
+    this.data = data;
+    this.meta = meta;
   };
 
  /**
@@ -216,23 +229,42 @@ if (this.Components) {
   */
   let Agent = {
    // Update worker's OS.Shared.DEBUG flag message from controller.
-   SET_DEBUG: function SET_DEBUG (aDEBUG) {
+   SET_DEBUG: function(aDEBUG) {
      SharedAll.Config.DEBUG = aDEBUG;
    },
    // Return worker's current OS.Shared.DEBUG value to controller.
    // Note: This is used for testing purposes.
-   GET_DEBUG: function GET_DEBUG () {
+   GET_DEBUG: function() {
      return SharedAll.Config.DEBUG;
    },
-   // Report file descriptors leaks.
-   System_shutdown: function System_shutdown () {
+   Meta_getUnclosedResources: function() {
      // Return information about both opened files and opened
      // directory iterators.
      return {
        openedFiles: OpenedFiles.listOpenedResources(),
-       openedDirectoryIterators:
-         OpenedDirectoryIterators.listOpenedResources()
+       openedDirectoryIterators: OpenedDirectoryIterators.listOpenedResources()
      };
+   },
+   Meta_reset: function() {
+     // Attempt to stop the worker. This fails if at least one
+     // resource is still open. Returns the list of files and
+     // directory iterators that cannot be closed safely (or undefined
+     // if there are no such files/directory iterators).
+     let openedFiles = OpenedFiles.listOpenedResources();
+     let openedDirectoryIterators =
+       OpenedDirectoryIterators.listOpenedResources();
+     let canShutdown = openedFiles.length == 0
+                         && openedDirectoryIterators.length == 0;
+     if (canShutdown) {
+       // Succeed. Shutdown the thread, nothing to return
+       return new Meta(null, {shutdown: true});
+     } else {
+       // Fail. Don't shutdown the thread, return info on resources
+       return {
+         openedFiles: openedFiles,
+         openedDirectoryIterators: openedDirectoryIterators
+       };
+     }
    },
    // Functions of OS.File
    stat: function stat(path) {
@@ -287,7 +319,13 @@ if (this.Components) {
    },
    read: function read(path, bytes, options) {
      let data = File.read(Type.path.fromMsg(path), bytes, options);
-     return new Transfer({buffer: data.buffer, byteOffset: data.byteOffset, byteLength: data.byteLength}, [data.buffer]);
+     return new Meta({
+         buffer: data.buffer,
+         byteOffset: data.byteOffset,
+         byteLength: data.byteLength
+     }, {
+       transfers: [data.buffer]
+     });
    },
    exists: function exists(path) {
      return File.exists(Type.path.fromMsg(path));
@@ -334,7 +372,13 @@ if (this.Components) {
      return withFile(fd,
        function do_read() {
          let data = this.read(nbytes, options);
-         return new Transfer({buffer: data.buffer, byteOffset: data.byteOffset, byteLength: data.byteLength}, [data.buffer]);
+         return new Meta({
+             buffer: data.buffer,
+             byteOffset: data.byteOffset,
+             byteLength: data.byteLength
+         }, {
+           transfers: [data.buffer]
+         });
        }
      );
    },

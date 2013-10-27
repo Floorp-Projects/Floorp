@@ -4,7 +4,7 @@
 
 MODULE = 'module_name'
 
-ASFILES = ['bar.s', 'foo.asm']
+SOURCES += ['bar.s', 'foo.asm']
 
 EXTRA_COMPONENTS = ['bar.js', 'foo.js']
 EXTRA_PP_COMPONENTS = ['bar.pp.js', 'foo.pp.js']
@@ -14,12 +14,12 @@ EXTRA_PP_JS_MODULES = ['bar.pp.jsm', 'foo.pp.jsm']
 
 CPP_UNIT_TESTS = ['foo.cpp']
 
-GTEST_C_SOURCES = ['test1.c', 'test2.c']
-GTEST_CMM_SOURCES = ['test1.mm', 'test2.mm']
-GTEST_CPP_SOURCES = ['test1.cpp', 'test2.cpp']
+GTEST_SOURCES += ['test1.c', 'test2.c']
+GTEST_SOURCES += ['test1.mm', 'test2.mm']
+GTEST_SOURCES += ['test1.cpp', 'test2.cpp']
 
-HOST_CPPSRCS = ['bar.cpp', 'foo.cpp']
-HOST_CSRCS = ['bar.c', 'foo.c']
+HOST_SOURCES += ['bar.cpp', 'foo.cpp']
+HOST_SOURCES += ['bar.c', 'foo.c']
 
 HOST_LIBRARY_NAME = 'host_bar'
 
@@ -34,11 +34,11 @@ SHARED_LIBRARY_LIBS += ['bar.sll', 'foo.sll']
 
 SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
 
-CSRCS += ['bar.c', 'foo.c']
+SOURCES += ['bar.c', 'foo.c']
 
-CMMSRCS = ['bar.mm', 'foo.mm']
+SOURCES += ['bar.mm', 'foo.mm']
 
-SSRCS = ['bar.S', 'foo.S']
+SOURCES += ['baz.S', 'foo.S']
 
 FAIL_ON_WARNINGS = True
 LIBXUL_LIBRARY = True

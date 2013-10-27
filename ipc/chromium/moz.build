@@ -35,7 +35,7 @@ else:
     else:
         os_linux = 1
 
-CPP_SOURCES += [
+SOURCES += [
     'src/base/at_exit.cc',
     'src/base/base_paths.cc',
     'src/base/base_switches.cc',
@@ -89,7 +89,7 @@ CPP_SOURCES += [
 ]
 
 if os_win:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/base/base_paths_win.cc',
         'src/base/condition_variable_win.cc',
         'src/base/cpu.cc',
@@ -125,7 +125,7 @@ if os_win:
     ]
 
 if os_posix:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/base/condition_variable_posix.cc',
         'src/base/debug_util_posix.cc',
         'src/base/event_recorder_stubs.cc',
@@ -151,12 +151,12 @@ if os_posix:
         'src/chrome/common/process_watcher_posix_sigchld.cc',
     ]
     if CONFIG['OS_TARGET'] == 'Android':
-        CPP_SOURCES += [
+        SOURCES += [
             'src/base/message_pump_android.cc',
         ]
 
 if os_macosx:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/base/debug_util_mac.cc',
         'src/base/hmac_mac.cc',
         'src/base/idle_timer.cc',
@@ -165,24 +165,24 @@ if os_macosx:
         'src/chrome/common/mach_message_source_mac.cc',
         'src/chrome/common/transport_dib_mac.cc',
     ]
-    CMMSRCS += [
-        'base_paths_mac.mm',
-        'chrome_application_mac.mm',
-        'chrome_paths_mac.mm',
-        'file_util_mac.mm',
-        'file_version_info_mac.mm',
-        'mac_util.mm',
-        'mach_ipc_mac.mm',
-        'message_pump_mac.mm',
-        'platform_thread_mac.mm',
-        'process_util_mac.mm',
-        'scoped_nsautorelease_pool.mm',
-        'sys_string_conversions_mac.mm',
-        'worker_pool_mac.mm',
+    SOURCES += [
+        'src/base/base_paths_mac.mm',
+        'src/base/chrome_application_mac.mm',
+        'src/base/file_util_mac.mm',
+        'src/base/file_version_info_mac.mm',
+        'src/base/mac_util.mm',
+        'src/base/message_pump_mac.mm',
+        'src/base/platform_thread_mac.mm',
+        'src/base/process_util_mac.mm',
+        'src/base/scoped_nsautorelease_pool.mm',
+        'src/base/sys_string_conversions_mac.mm',
+        'src/base/worker_pool_mac.mm',
+        'src/chrome/common/chrome_paths_mac.mm',
+        'src/chrome/common/mach_ipc_mac.mm',
     ]
 
 if os_linux:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/base/atomicops_internals_x86_gcc.cc',
         'src/base/base_paths_linux.cc',
         'src/base/file_version_info_linux.cc',
@@ -191,46 +191,46 @@ if os_linux:
         'src/base/time_posix.cc',
     ]
     if CONFIG['MOZ_WIDGET_GTK']:
-        CPP_SOURCES += [
+        SOURCES += [
             'src/base/message_pump_glib.cc',
         ]
     if CONFIG['MOZ_ENABLE_QT']:
-        CPP_SOURCES += [
+        SOURCES += [
             'src/base/message_pump_qt.cc',
             'src/base/moc_message_pump_qt.cc',
         ]
 
 if os_bsd:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/base/atomicops_internals_x86_gcc.cc',
         'src/base/time_posix.cc',
     ]
     if CONFIG['OS_ARCH'] == 'GNU_kFreeBSD':
-        CPP_SOURCES += [
+        SOURCES += [
             'src/base/process_util_linux.cc'
         ]
     else:
-        CPP_SOURCES += [
+        SOURCES += [
             'src/base/process_util_bsd.cc'
         ]
     if CONFIG['MOZ_WIDGET_GTK']:
-        CPP_SOURCES += [
+        SOURCES += [
             'src/base/message_pump_glib.cc',
         ]
     if CONFIG['MOZ_ENABLE_QT']:
-        CPP_SOURCES += [
+        SOURCES += [
             'src/base/message_pump_qt.cc',
             'src/base/moc_message_pump_qt.cc',
         ]
 
 if CONFIG['_MSC_VER']:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/base/debug_on_start.cc',
     ]
 
 ost = CONFIG['OS_TEST']
 if ost.find('86') == -1 and ost.find('arm') == -1 and ost.find('mips') == -1:
-    CPP_SOURCES += [
+    SOURCES += [
         'src/base/atomicops_internals_mutex.cc',
     ]
 
@@ -239,4 +239,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'chromium_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

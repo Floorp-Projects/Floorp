@@ -4,8 +4,6 @@
 
 VPATH		= $(srcdir) $(srcdir)/src/src
 
-FORCE_STATIC_LIB = 1
-
 ifdef MOZ_GLUE_PROGRAM_LDFLAGS
 SDK_LIBRARY = $(REAL_LIBRARY)
 DIST_INSTALL = 1

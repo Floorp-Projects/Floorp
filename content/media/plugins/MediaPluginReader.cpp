@@ -26,8 +26,7 @@ MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder,
   mHasAudio(false),
   mHasVideo(false),
   mVideoSeekTimeUs(-1),
-  mAudioSeekTimeUs(-1),
-  mLastVideoFrame(nullptr)
+  mAudioSeekTimeUs(-1)
 {
 }
 
@@ -104,7 +103,6 @@ nsresult MediaPluginReader::ReadMetadata(MediaInfo* aInfo,
 nsresult MediaPluginReader::ResetDecode()
 {
   if (mLastVideoFrame) {
-    delete mLastVideoFrame;
     mLastVideoFrame = nullptr;
   }
   if (mPlugin) {
@@ -116,7 +114,7 @@ nsresult MediaPluginReader::ResetDecode()
 }
 
 bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
-                                           int64_t aTimeThreshold)
+                                         int64_t aTimeThreshold)
 {
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
@@ -125,7 +123,6 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
   // Throw away the currently buffered frame if we are seeking.
   if (mLastVideoFrame && mVideoSeekTimeUs != -1) {
-    delete mLastVideoFrame;
     mLastVideoFrame = nullptr;
   }
 
@@ -142,10 +139,11 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
       if (mLastVideoFrame) {
         int64_t durationUs;
         mPlugin->GetDuration(mPlugin, &durationUs);
-        mLastVideoFrame->mEndTime = (durationUs > mLastVideoFrame->mTime)
-                                  ? durationUs
-                                  : mLastVideoFrame->mTime;
-        mVideoQueue.Push(mLastVideoFrame);
+        if (durationUs < mLastVideoFrame->mTime) {
+          durationUs = 0;
+        }
+        mVideoQueue.Push(VideoData::ShallowCopyUpdateDuration(mLastVideoFrame,
+                                                              durationUs));
         mLastVideoFrame = nullptr;
       }
       return false;
@@ -172,7 +170,7 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
     int64_t pos = mDecoder->GetResource()->Tell();
     nsIntRect picture = mPicture;
  
-    VideoData *v;
+    nsAutoPtr<VideoData> v;
     if (currentImage) {
       gfxIntSize frameSize = currentImage->GetSize();
       if (frameSize.width != mInitialFrame.width ||
@@ -190,7 +188,7 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                      mDecoder->GetImageContainer(),
                                      pos,
                                      frame.mTimeUs,
-                                     frame.mTimeUs+1, // We don't know the end time.
+                                     1, // We don't know the duration yet.
                                      currentImage,
                                      frame.mKeyFrame,
                                      -1,
@@ -236,7 +234,7 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
                             mDecoder->GetImageContainer(),
                             pos,
                             frame.mTimeUs,
-                            frame.mTimeUs+1, // We don't know the end time.
+                            1, // We don't know the duration yet.
                             b,
                             frame.mKeyFrame,
                             -1,
@@ -259,18 +257,21 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
       continue;
     }
 
-    mLastVideoFrame->mEndTime = v->mTime;
+    // Calculate the duration as the timestamp of the current frame minus the
+    // timestamp of the previous frame. We can then return the previously
+    // decoded frame, and it will have a valid timestamp.
+    int64_t duration = v->mTime - mLastVideoFrame->mTime;
+    mLastVideoFrame = VideoData::ShallowCopyUpdateDuration(mLastVideoFrame, duration);
 
     // We have the start time of the next frame, so we can push the previous
     // frame into the queue, except if the end time is below the threshold,
     // in which case it wouldn't be displayed anyway.
-    if (mLastVideoFrame->mEndTime < aTimeThreshold) {
-      delete mLastVideoFrame;
+    if (mLastVideoFrame->GetEndTime() < aTimeThreshold) {
       mLastVideoFrame = nullptr;
       continue;
     }
 
-    mVideoQueue.Push(mLastVideoFrame);
+    mVideoQueue.Push(mLastVideoFrame.forget());
 
     // Buffer the current frame we just decoded.
     mLastVideoFrame = v;

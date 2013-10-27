@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void BufferUnrotate(uint8_t* aBuffer, int aByteWidth, int aHeight,
                     int aByteStride, int aXBoundary, int aYBoundary)

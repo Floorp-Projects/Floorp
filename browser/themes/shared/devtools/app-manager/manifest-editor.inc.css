@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Manifest Editor overrides */
+
+.variables-view-container.manifest-editor {
+  background-color: #F5F5F5;
+  padding: 20px 13px;
+}
+
+.manifest-editor .variable-or-property:focus > .title {
+  background-color: #EDEDED;
+  color: #000;
+  border-radius: 4px;
+}
+
+.manifest-editor .variables-view-property > .title > .name {
+  color: #27406A;
+}
+
+.manifest-editor .variable-or-property > .title > label {
+  font-family: monospace;
+}
+
+.manifest-editor .variable-or-property > .title > .token-string {
+  color: #54BC6A;
+  font-weight: bold;
+}
+
+.manifest-editor .variable-or-property > .title > .token-boolean,
+.manifest-editor .variable-or-property > .title > .token-number {
+  color: #009BD4;
+  font-weight: bold;
+}
+
+.manifest-editor .variable-or-property > .title > .token-undefined {
+  color: #bbb;
+}
+
+.manifest-editor .variable-or-property > .title > .token-null {
+  color: #999;
+}
+
+.manifest-editor .variable-or-property > .title > .token-other {
+  color: #333;
+}
+
+.manifest-editor .variables-view-variable {
+  border-bottom: none;
+}
+
+.manifest-editor .variables-view-delete,
+.manifest-editor .variables-view-delete:hover,
+.manifest-editor .variables-view-delete:active {
+  list-style-image: none;
+  -moz-image-region: initial;
+}
+
+.manifest-editor .variables-view-delete::before {
+  width: 12px;
+  height: 12px;
+  content: "";
+  display: inline-block;
+  background-image: url("app-manager/remove.svg");
+  background-size: 12px auto;
+}

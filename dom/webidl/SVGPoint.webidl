@@ -17,7 +17,7 @@ interface SVGPoint {
   [SetterThrows]
   attribute float y;
 
-  [Creator]
+  [NewObject]
   SVGPoint matrixTransform(SVGMatrix matrix);
 };
 

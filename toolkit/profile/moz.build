@@ -16,9 +16,9 @@ XPIDL_MODULE = 'toolkitprofile'
 
 MODULE = 'xulapp'
 
-CPP_SOURCES += [ TOPSRCDIR + '/profile/dirserviceprovider/src/nsProfileLock.cpp' ]
+SOURCES += [ TOPSRCDIR + '/profile/dirserviceprovider/src/nsProfileLock.cpp' ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsToolkitProfileService.cpp'
 ]
 

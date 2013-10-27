@@ -17,7 +17,7 @@ if CONFIG['MOZ_B2G_FM']:
         'FMRadioService.h',
     ]
 
-    CPP_SOURCES += [
+    SOURCES += [
         'FMRadio.cpp',
         'FMRadioService.cpp',
     ]
@@ -33,3 +33,8 @@ IPDL_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
+LOCAL_INCLUDES += [
+    '../base',
+    '../system/gonk',
+]
+include('/ipc/chromium/chromium-config.mozbuild')

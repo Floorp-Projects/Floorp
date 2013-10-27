@@ -28,7 +28,7 @@ BEGIN_TEST(testStructuredClone_object)
         JSAutoCompartment ac(cx, g2);
         JS::RootedValue v2(cx);
 
-        CHECK(JS_StructuredClone(cx, v1, v2.address(), nullptr, nullptr));
+        CHECK(JS_StructuredClone(cx, v1, &v2, nullptr, nullptr));
         CHECK(v2.isObject());
 
         JS::RootedValue prop(cx);
@@ -64,10 +64,10 @@ BEGIN_TEST(testStructuredClone_string)
         JSAutoCompartment ac(cx, g2);
         JS::RootedValue v2(cx);
 
-        CHECK(JS_StructuredClone(cx, v1, v2.address(), nullptr, nullptr));
+        CHECK(JS_StructuredClone(cx, v1, &v2, nullptr, nullptr));
         CHECK(v2.isString());
         CHECK(v2.toString());
-        
+
         JS::RootedValue expected(cx, JS::StringValue(
             JS_NewStringCopyZ(cx, "Hello World!")));
         CHECK_SAME(v2, expected);

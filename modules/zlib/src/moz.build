@@ -14,7 +14,7 @@ EXPORTS += [
 
 LIBRARY_NAME = 'mozz'
 
-CSRCS += [
+SOURCES += [
     'adler32.c',
     'compress.c',
     'crc32.c',

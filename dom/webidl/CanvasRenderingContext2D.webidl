@@ -48,11 +48,11 @@ interface CanvasRenderingContext2D {
   // colors and styles (see also the CanvasDrawingStyles interface)
            attribute (DOMString or CanvasGradient or CanvasPattern) strokeStyle; // (default black)
            attribute (DOMString or CanvasGradient or CanvasPattern) fillStyle; // (default black)
-  [Creator]
+  [NewObject]
   CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
-  [Creator, Throws]
+  [NewObject, Throws]
   CanvasGradient createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1);
-  [Creator, Throws]
+  [NewObject, Throws]
   CanvasPattern createPattern((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, [TreatNullAs=EmptyString] DOMString repetition);
 
   // shadows
@@ -96,7 +96,7 @@ interface CanvasRenderingContext2D {
   void fillText(DOMString text, double x, double y, optional double maxWidth);
   [Throws, LenientFloat]
   void strokeText(DOMString text, double x, double y, optional double maxWidth);
-  [Creator, Throws]
+  [NewObject, Throws]
   TextMetrics measureText(DOMString text);
 
   // drawing images
@@ -112,11 +112,11 @@ interface CanvasRenderingContext2D {
 // NOT IMPLEMENTED  void addHitRegion(HitRegionOptions options);
 
   // pixel manipulation
-  [Creator, Throws]
+  [NewObject, Throws]
   ImageData createImageData(double sw, double sh);
-  [Creator, Throws]
+  [NewObject, Throws]
   ImageData createImageData(ImageData imagedata);
-  [Creator, Throws]
+  [NewObject, Throws]
   ImageData getImageData(double sx, double sy, double sw, double sh);
   [Throws]
   void putImageData(ImageData imagedata, double dx, double dy);

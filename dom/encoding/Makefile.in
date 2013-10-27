@@ -6,7 +6,6 @@ LOCAL_INCLUDES = \
 	-I$(topsrcdir)/intl/locale/src \
 	$(NULL)
 
-include $(topsrcdir)/dom/dom-config.mk
 include $(topsrcdir)/config/rules.mk
 
 EncodingUtils.$(OBJ_SUFFIX): labelsencodings.properties.h

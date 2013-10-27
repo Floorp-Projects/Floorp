@@ -56,6 +56,13 @@ public:
   virtual bool DispatchKeyboardEvent(mozilla::WidgetGUIEvent* aEvent) = 0;
 
   /*
+   * Dispatch a gecko scroll event for this widget. This
+   * is called by ScrollHandler to dispatch gecko events.
+   * Returns true if it's consumed.  Otherwise, false.
+   */
+  virtual bool DispatchScrollEvent(mozilla::WidgetGUIEvent* aEvent) = 0;
+
+  /*
    * Default dispatch of a plugin event.
    */
   virtual bool DispatchPluginEvent(const MSG& aMsg);

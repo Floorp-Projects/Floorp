@@ -15,7 +15,7 @@ EXPORTS.mozilla.dom += [
     'TextMetrics.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'CanvasImageCache.cpp',
     'CanvasRenderingContext2D.cpp',
     'CanvasUtils.cpp',
@@ -26,7 +26,7 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_WEBGL']:
-    CPP_SOURCES += [
+    SOURCES += [
         'WebGL1Context.cpp',
         'WebGL2Context.cpp',
         'WebGLActiveInfo.cpp',
@@ -73,7 +73,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLVertexArray.cpp',
     ]
 else:
-    CPP_SOURCES += [
+    SOURCES += [
         'WebGLContextNotSupported.cpp',
     ]
 
@@ -84,4 +84,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkconcvs_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ALM character</title>
+    <style type="text/css">
+      p { font-size: 2em; }
+    </style>
+    <!--
+	Test that U+061C functions as an invisible Arabic character.
+
+	In the test text it is followed by two European numbers with a
+	European separator between them. By rules W2, W3 and W6 of the
+	Bidi algorithm (http://unicode.org/reports/tr9/#W2) the
+	European numbers change to Arabic numbers, the ARABIC LETTER
+	MARK changes to R and the separator changes to Other Neutral,
+	and then by rule N1 the Arabic numbers make the separator
+	change to R, so the final visual order is "a2+1&#x061c;", but
+	the &#x061c should not appear
+      -->
+</head>
+  <body>
+    <p>a&#x061c;1+2</p>
+  </body>
+</html>
