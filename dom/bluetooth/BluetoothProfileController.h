@@ -53,47 +53,76 @@ typedef void (*BluetoothProfileControllerCallback)();
 class BluetoothProfileController : public RefCounted<BluetoothProfileController>
 {
 public:
-  BluetoothProfileController(const nsAString& aDeviceAddress,
+  /**
+   * @param aConnect:       If it's a connect request, the value should be set
+   *                        to true. For disconnect request, set it to false.
+   * @param aDeviceAddress: The address of remote device.
+   * @param aRunnable:      Once the controller has done, the runnable will be
+   *                        replied. When all connection/disconnection attemps
+   *                        have failed, an error is fired. In other words,
+   *                        reply a success if any attemp successes.
+   * @param aCallback:      The callback will be invoked after the runnable is
+   *                        replied.
+   * @param aServiceUuid:   Connect/Disconnect to the specified profile. Please
+   *                        see enum BluetoothServiceClass for valid value.
+   * @param aCod:           If aServiceUuid is not assigned, i.e. the value is
+   *                        0, the controller connect multiple profiles based on
+   *                        aCod or disconnect all connected profiles.
+   */
+  BluetoothProfileController(bool aConnect,
+                             const nsAString& aDeviceAddress,
                              BluetoothReplyRunnable* aRunnable,
-                             BluetoothProfileControllerCallback aCallback);
+                             BluetoothProfileControllerCallback aCallback,
+                             uint16_t aServiceUuid,
+                             uint32_t aCod = 0);
   ~BluetoothProfileController();
 
-  // Connect to a specific service UUID.
-  void Connect(BluetoothServiceClass aClass);
-
-  // Based on the CoD, connect to multiple profiles sequencely.
-  void Connect(uint32_t aCod);
+  /**
+   * The controller starts connecting/disconnecting profiles one by one
+   * according to the order in array mProfiles.
+   */
+  void Start();
 
   /**
-   * If aClass is assigned with specific service class, disconnect its
-   * corresponding profile. Otherwise, disconnect all profiles connected to the
-   * remote device.
+   * It is invoked after a profile has tried to establish the connection.
+   * An error string is returned when it fails.
    */
-  void Disconnect(BluetoothServiceClass aClass = BluetoothServiceClass::UNKNOWN);
-
   void OnConnect(const nsAString& aErrorStr);
+
+  /**
+   * It is invoked after a profile has tried to drop the connection.
+   * An error string is returned when it fails.
+   */
   void OnDisconnect(const nsAString& aErrorStr);
 
-  uint32_t GetCod() const
-  {
-    return mCod;
-  }
-
 private:
-  void ConnectNext();
-  void DisconnectNext();
-  bool AddProfile(BluetoothProfileManagerBase* aProfile,
-                  bool aCheckConnected = false);
-  bool AddProfileWithServiceClass(BluetoothServiceClass aClass);
+  // Setup data member mProfiles
+  void SetupProfiles(bool aAssignServiceClass);
 
+  // Add profiles into array with/without checking connection status
+  void AddProfile(BluetoothProfileManagerBase* aProfile,
+                  bool aCheckConnected = false);
+
+  // Add specified profile into array
+  void AddProfileWithServiceClass(BluetoothServiceClass aClass);
+
+  // Connect/Disconnect next profile in the array
+  void Next();
+
+  const bool mConnect;
+  nsString mDeviceAddress;
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
+  BluetoothProfileControllerCallback mCallback;
+
+  bool mSuccess;
   int8_t mProfilesIndex;
   nsTArray<BluetoothProfileManagerBase*> mProfiles;
 
-  BluetoothProfileControllerCallback mCallback;
-  uint32_t mCod;
-  nsString mDeviceAddress;
-  nsRefPtr<BluetoothReplyRunnable> mRunnable;
-  bool mSuccess;
+  // Either CoD or BluetoothServiceClass is assigned.
+  union {
+    uint32_t cod;
+    BluetoothServiceClass service;
+  } mTarget;
 };
 
 END_BLUETOOTH_NAMESPACE
