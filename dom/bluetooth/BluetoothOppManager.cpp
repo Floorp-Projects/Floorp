@@ -290,7 +290,6 @@ BluetoothOppManager::Disconnect(BluetoothProfileController* aController)
 
   mController = aController;
   mSocket->Disconnect();
-  mSocket = nullptr;
 }
 
 void
@@ -1494,8 +1493,8 @@ BluetoothOppManager::OnConnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  mController->OnConnect(aErrorStr);
-  mController = nullptr;
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
+  controller->OnConnect(aErrorStr);
 }
 
 void
@@ -1512,6 +1511,6 @@ BluetoothOppManager::OnDisconnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  mController->OnDisconnect(aErrorStr);
-  mController = nullptr;
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
+  controller->OnDisconnect(aErrorStr);
 }
