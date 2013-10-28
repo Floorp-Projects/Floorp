@@ -281,3 +281,5 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-g
 fails-if(!cocoaWidget||OSX==10.6||OSX==10.7) != osx-font-smoothing.html osx-font-smoothing-ref.html
 fails-if(!cocoaWidget||OSX==10.6||OSX==10.7) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
 == osx-font-smoothing-2.html osx-font-smoothing-2-ref.html
+
+pref(layout.css.text-align-true-value.enabled,true) == text-align-true.html text-align-true-ref.html
