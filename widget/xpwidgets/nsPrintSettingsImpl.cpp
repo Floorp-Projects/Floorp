@@ -97,7 +97,7 @@ NS_IMETHODIMP nsPrintSettings::GetPrintSession(nsIPrintSession **aPrintSession)
 }
 NS_IMETHODIMP nsPrintSettings::SetPrintSession(nsIPrintSession *aPrintSession)
 {
-  // Clearing it by passing NULL is not allowed. That's why we
+  // Clearing it by passing nullptr is not allowed. That's why we
   // use a weak ref so that it doesn't have to be cleared.
   NS_ENSURE_ARG(aPrintSession);
   

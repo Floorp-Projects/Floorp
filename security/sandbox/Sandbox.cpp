@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <string.h>
 
+#include "mozilla/NullPtr.h"
 #include "mozilla/Util.h"
 #if defined(ANDROID)
 #include "android_ucontext.h"
@@ -109,12 +110,12 @@ InstallSyscallReporter(void)
 
   act.sa_sigaction = &Reporter;
   act.sa_flags = SA_SIGINFO | SA_NODEFER;
-  if (sigaction(SIGSYS, &act, NULL) < 0) {
+  if (sigaction(SIGSYS, &act, nullptr) < 0) {
     return -1;
   }
   if (sigemptyset(&mask) ||
     sigaddset(&mask, SIGSYS) ||
-    sigprocmask(SIG_UNBLOCK, &mask, NULL)) {
+    sigprocmask(SIG_UNBLOCK, &mask, nullptr)) {
       return -1;
   }
   return 0;

@@ -3,10 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(OS_ARCH),WINNT)
-VISIBILITY_FLAGS	=
-endif
-
 AS=$(LIBJPEG_TURBO_AS)
 ASM_SUFFIX=asm
 ASFLAGS=$(LIBJPEG_TURBO_ASFLAGS) -I$(topsrcdir)/media/libjpeg/simd/

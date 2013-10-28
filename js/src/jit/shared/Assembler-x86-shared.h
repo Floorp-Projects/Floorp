@@ -1466,6 +1466,12 @@ class AssemblerX86Shared
         JS_ASSERT(HasSSE41());
         masm.roundsd_rr(src.code(), dest.code(), mode);
     }
+    void roundss(const FloatRegister &src, const FloatRegister &dest,
+                 JSC::X86Assembler::RoundingMode mode)
+    {
+        JS_ASSERT(HasSSE41());
+        masm.roundss_rr(src.code(), dest.code(), mode);
+    }
     void minsd(const FloatRegister &src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         masm.minsd_rr(src.code(), dest.code());
@@ -1523,6 +1529,15 @@ class AssemblerX86Shared
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
             masm.fstp_m(src.disp(), src.base());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+    void fstp32(const Operand &src) {
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.fstp32_m(src.disp(), src.base());
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");

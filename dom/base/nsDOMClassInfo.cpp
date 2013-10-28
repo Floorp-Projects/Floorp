@@ -3606,7 +3606,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   // Handle resolving if id refers to a name resolved by DOM worker code.
-  JS::Rooted<JSObject*> tmp(cx, NULL);
+  JS::Rooted<JSObject*> tmp(cx, nullptr);
   if (!ResolveWorkerClasses(cx, obj, id, flags, &tmp)) {
     return NS_ERROR_FAILURE;
   }
