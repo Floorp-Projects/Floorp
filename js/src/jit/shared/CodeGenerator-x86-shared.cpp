@@ -9,8 +9,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jit/IonCompartment.h"
 #include "jit/IonFrames.h"
+#include "jit/JitCompartment.h"
 #include "jit/RangeAnalysis.h"
 
 #include "jit/shared/CodeGenerator-shared-inl.h"
@@ -298,7 +298,7 @@ CodeGeneratorX86Shared::generateOutOfLineCode()
         // Push the frame size, so the handler can recover the IonScript.
         masm.push(Imm32(frameSize()));
 
-        IonCode *handler = gen->ionRuntime()->getGenericBailoutHandler();
+        IonCode *handler = gen->jitRuntime()->getGenericBailoutHandler();
         masm.jmp(ImmPtr(handler->raw()), Relocation::IONCODE);
     }
 
@@ -1601,7 +1601,7 @@ CodeGeneratorX86Shared::generateInvalidateEpilogue()
 
     // Push the Ion script onto the stack (when we determine what that pointer is).
     invalidateEpilogueData_ = masm.pushWithPatch(ImmWord(uintptr_t(-1)));
-    IonCode *thunk = gen->ionRuntime()->getInvalidationThunk();
+    IonCode *thunk = gen->jitRuntime()->getInvalidationThunk();
 
     masm.call(thunk);
 

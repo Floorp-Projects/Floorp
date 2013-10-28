@@ -1310,6 +1310,8 @@ struct nsStyleText {
 
   uint8_t mTextAlign;                   // [inherited] see nsStyleConsts.h
   uint8_t mTextAlignLast;               // [inherited] see nsStyleConsts.h
+  bool mTextAlignTrue : 1;              // [inherited] see nsStyleConsts.h
+  bool mTextAlignLastTrue : 1;          // [inherited] see nsStyleConsts.h
   uint8_t mTextTransform;               // [inherited] see nsStyleConsts.h
   uint8_t mWhiteSpace;                  // [inherited] see nsStyleConsts.h
   uint8_t mWordBreak;                   // [inherited] see nsStyleConsts.h

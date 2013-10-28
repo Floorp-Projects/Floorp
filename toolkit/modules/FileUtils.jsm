@@ -23,8 +23,8 @@ this.FileUtils = {
   MODE_APPEND   : 0x10,
   MODE_TRUNCATE : 0x20,
 
-  PERMS_FILE      : 0644,
-  PERMS_DIRECTORY : 0755,
+  PERMS_FILE      : 0o644,
+  PERMS_DIRECTORY : 0o755,
 
   /**
    * Gets a file at the specified hierarchy under a nsIDirectoryService key.

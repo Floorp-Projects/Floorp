@@ -546,96 +546,63 @@ SendCommand(JSContext* cx,
     return true;
 }
 
-/*
- * JSContext option name to flag map. The option names are in alphabetical
- * order for better reporting.
- */
-static const struct JSOption {
-    const char  *name;
-    uint32_t    flag;
-} js_options[] = {
-    {"strict",          JSOPTION_EXTRA_WARNINGS},
-    {"werror",          JSOPTION_WERROR},
-    {"strict_mode",     JSOPTION_STRICT_MODE},
-};
-
-static uint32_t
-MapContextOptionNameToFlag(JSContext* cx, const char* name)
-{
-    for (size_t i = 0; i < ArrayLength(js_options); ++i) {
-        if (strcmp(name, js_options[i].name) == 0)
-            return js_options[i].flag;
-    }
-
-    char* msg = JS_sprintf_append(nullptr,
-                                  "unknown option name '%s'."
-                                  " The valid names are ", name);
-    for (size_t i = 0; i < ArrayLength(js_options); ++i) {
-        if (!msg)
-            break;
-        msg = JS_sprintf_append(msg, "%s%s", js_options[i].name,
-                                (i + 2 < ArrayLength(js_options)
-                                 ? ", "
-                                 : i + 2 == ArrayLength(js_options)
-                                 ? " and "
-                                 : "."));
-    }
-    if (!msg) {
-        JS_ReportOutOfMemory(cx);
-    } else {
-        JS_ReportError(cx, msg);
-        free(msg);
-    }
-    return 0;
-}
-
 static bool
 Options(JSContext *cx, unsigned argc, jsval *vp)
 {
-    uint32_t optset, flag;
-    JSString *str;
-    char *names;
-    bool found;
+    JS::CallArgs args = CallArgsFromVp(argc, vp);
+    ContextOptions oldOptions = ContextOptionsRef(cx);
 
-    optset = 0;
-    jsval *argv = JS_ARGV(cx, vp);
-    for (unsigned i = 0; i < argc; i++) {
-        str = JS_ValueToString(cx, argv[i]);
+    for (unsigned i = 0; i < argc; ++i) {
+        JSString *str = JS_ValueToString(cx, args[i]);
         if (!str)
             return false;
-        argv[i] = STRING_TO_JSVAL(str);
+
         JSAutoByteString opt(cx, str);
         if (!opt)
             return false;
-        flag = MapContextOptionNameToFlag(cx,  opt.ptr());
-        if (!flag)
-            return false;
-        optset |= flag;
-    }
-    optset = JS_ToggleOptions(cx, optset);
 
-    names = nullptr;
-    found = false;
-    for (size_t i = 0; i < ArrayLength(js_options); i++) {
-        if (js_options[i].flag & optset) {
-            found = true;
-            names = JS_sprintf_append(names, "%s%s",
-                                      names ? "," : "", js_options[i].name);
-            if (!names)
-                break;
+        if (strcmp(opt.ptr(), "strict") == 0)
+            ContextOptionsRef(cx).toggleExtraWarnings();
+        else if (strcmp(opt.ptr(), "werror") == 0)
+            ContextOptionsRef(cx).toggleWerror();
+        else if (strcmp(opt.ptr(), "strict_mode") == 0)
+            ContextOptionsRef(cx).toggleStrictMode();
+        else {
+            JS_ReportError(cx, "unknown option name '%s'. The valid names are "
+                           "strict, werror, and strict_mode.", opt.ptr());
+            return false;
         }
     }
-    if (!found)
-        names = strdup("");
-    if (!names) {
-        JS_ReportOutOfMemory(cx);
-        return false;
+
+    char *names = NULL;
+    if (oldOptions.extraWarnings()) {
+        names = JS_sprintf_append(names, "%s", "strict");
+        if (!names) {
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
     }
-    str = JS_NewStringCopyZ(cx, names);
+    if (oldOptions.werror()) {
+        names = JS_sprintf_append(names, "%s%s", names ? "," : "", "werror");
+        if (!names) {
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+    if (names && oldOptions.strictMode()) {
+        names = JS_sprintf_append(names, "%s%s", names ? "," : "", "strict_mode");
+        if (!names) {
+            JS_ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+
+    JSString *str = JS_NewStringCopyZ(cx, names);
     free(names);
     if (!str)
         return false;
-    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(str));
+
+    args.rval().setString(str);
     return true;
 }
 
@@ -1140,17 +1107,17 @@ ProcessArgsForCompartment(JSContext *cx, char **argv, int argc)
                 return;
             break;
         case 'S':
-            JS_ToggleOptions(cx, JSOPTION_WERROR);
+            ContextOptionsRef(cx).toggleWerror();
         case 's':
-            JS_ToggleOptions(cx, JSOPTION_EXTRA_WARNINGS);
+            ContextOptionsRef(cx).toggleExtraWarnings();
             break;
         case 'I':
-            JS_ToggleOptions(cx, JSOPTION_COMPILE_N_GO);
-            JS_ToggleOptions(cx, JSOPTION_ION);
-            JS_ToggleOptions(cx, JSOPTION_ASMJS);
+            ContextOptionsRef(cx).toggleCompileAndGo()
+                                 .toggleIon()
+                                 .toggleAsmJS();
             break;
         case 'n':
-            JS_ToggleOptions(cx, JSOPTION_TYPE_INFERENCE);
+            ContextOptionsRef(cx).toggleTypeInference();
             break;
         }
     }

@@ -64,7 +64,7 @@ function test() {
 
     MockFilePicker.returnFiles = [aFile];
     MockFilePicker.displayDirectory = null;
-    aWin.getTargetFile(params, function() {
+    aWin.promiseTargetFile(params).then(function() {
       // File picker should start with expected display dir.
       is(MockFilePicker.displayDirectory.path, aDisplayDir.path,
          "File picker should start with browser.download.lastDir");
@@ -78,7 +78,7 @@ function test() {
       gDownloadLastDir.cleanupPrivateFile();
       aWin.close();
       aCallback();
-    });
+    }).then(null, function() { ok(false); });
   }
 
   testOnWindow(false, function(win, downloadDir) {

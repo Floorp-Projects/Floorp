@@ -73,7 +73,7 @@ BEGIN_TEST(testChromeBuffer)
         }
 
         JS::RootedValue v(cx, JS::ObjectValue(*trusted_fun));
-        CHECK(JS_WrapValue(cx, v.address()));
+        CHECK(JS_WrapValue(cx, &v));
 
         const char *paramName = "trusted";
         const char *bytes = "try {                                      "
@@ -114,7 +114,7 @@ BEGIN_TEST(testChromeBuffer)
         }
 
         JS::RootedValue v(cx, JS::ObjectValue(*trusted_fun));
-        CHECK(JS_WrapValue(cx, v.address()));
+        CHECK(JS_WrapValue(cx, &v));
 
         const char *paramName = "trusted";
         const char *bytes = "try {                                      "

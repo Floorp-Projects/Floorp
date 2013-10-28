@@ -738,14 +738,6 @@ public:
   bool HasPluginActivationEventMessage() const;
 
   /**
-   * Returns true if left click event.
-   */
-  bool IsLeftClickEvent() const;
-  /**
-   * Returns true if the event is a context menu event caused by key.
-   */
-  bool IsContextMenuKeyEvent() const;
-  /**
    * Returns true if the event is native event deliverer event for plugin and
    * it should be retarted to focused document.
    */

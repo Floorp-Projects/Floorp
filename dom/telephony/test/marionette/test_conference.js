@@ -4,10 +4,7 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-SpecialPowers.addPermission("telephony", true, document);
-
-let telephony = window.navigator.mozTelephony;
-let conference = telephony.conferenceGroup;
+let conference;
 let outNumber = "5555551111";
 let inNumber = "5555552222";
 let inNumber2 = "5555553333";
@@ -41,25 +38,6 @@ function checkState(telephonyActive, telephonyCalls, conferenceState,
   for (let i = 0; i < conferenceCalls.length; i++) {
     is(conference.calls[i], conferenceCalls[i]);
   }
-}
-
-function verifyInitialState() {
-  log("Verifying initial state.");
-  ok(telephony);
-  ok(conference);
-
-  emulator.run("gsm clear", function(result) {
-    log("Clear up calls from a previous test if any.");
-    is(result[0], "OK");
-
-    // No more calls in the list; give time for emulator to catch up.
-    waitFor(function next() {
-      checkState(null, [], '', []);
-      dial();
-    }, function isDone() {
-      return (telephony.calls.length === 0);
-    });
-  });
 }
 
 function dial() {
@@ -701,11 +679,11 @@ function hangUpLastCall() {
 }
 
 function cleanUp() {
-  SpecialPowers.removePermission("telephony", document);
   finish();
 }
 
-// Start the test
 startTest(function() {
-  verifyInitialState();
+  conference = telephony.conferenceGroup;
+  ok(conference);
+  dial();
 });

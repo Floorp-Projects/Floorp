@@ -17,7 +17,7 @@ if (typeof setTimeout != 'undefined')
   expect = 'error';
   try
   {
-    setTimeout(2);
+    setTimeout();
   }
   catch(ex)
   {

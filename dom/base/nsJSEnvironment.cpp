@@ -724,17 +724,12 @@ int
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
   nsJSContext *context = reinterpret_cast<nsJSContext *>(data);
-  uint32_t oldDefaultJSOptions = context->mDefaultJSOptions;
-  uint32_t newDefaultJSOptions = oldDefaultJSOptions;
+  JSContext *cx = context->mContext;
 
   sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
   sPostGCEventsToObserver = Preferences::GetBool(js_memnotify_option_str);
 
-  bool strict = Preferences::GetBool(js_strict_option_str);
-  if (strict)
-    newDefaultJSOptions |= JSOPTION_EXTRA_WARNINGS;
-  else
-    newDefaultJSOptions &= ~JSOPTION_EXTRA_WARNINGS;
+  JS::ContextOptionsRef(cx).setExtraWarnings(Preferences::GetBool(js_strict_option_str));
 
   // The vanilla GetGlobalObject returns null if a global isn't set up on
   // the context yet. We can sometimes be call midway through context init,
@@ -776,43 +771,21 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     }
   }
 
-  if (useTypeInference)
-    newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
-  else
-    newDefaultJSOptions &= ~JSOPTION_TYPE_INFERENCE;
-
-  if (useBaselineJIT)
-    newDefaultJSOptions |= JSOPTION_BASELINE;
-  else
-    newDefaultJSOptions &= ~JSOPTION_BASELINE;
-
-  if (useIon)
-    newDefaultJSOptions |= JSOPTION_ION;
-  else
-    newDefaultJSOptions &= ~JSOPTION_ION;
-
-  if (useAsmJS)
-    newDefaultJSOptions |= JSOPTION_ASMJS;
-  else
-    newDefaultJSOptions &= ~JSOPTION_ASMJS;
+  JS::ContextOptionsRef(cx).setTypeInference(useTypeInference)
+                           .setBaseline(useBaselineJIT)
+                           .setIon(useIon)
+                           .setAsmJS(useAsmJS);
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if
   // javascript.options.strict.debug is true
-  bool strictDebug = Preferences::GetBool(js_strict_debug_option_str);
-  if (strictDebug && (newDefaultJSOptions & JSOPTION_EXTRA_WARNINGS) == 0) {
-    if (chromeWindow || !contentWindow)
-      newDefaultJSOptions |= JSOPTION_EXTRA_WARNINGS;
+  if (Preferences::GetBool(js_strict_debug_option_str) &&
+      (chromeWindow || !contentWindow)) {
+    JS::ContextOptionsRef(cx).setExtraWarnings(true);
   }
 #endif
 
-  bool werror = Preferences::GetBool(js_werror_option_str);
-  if (werror)
-    newDefaultJSOptions |= JSOPTION_WERROR;
-  else
-    newDefaultJSOptions &= ~JSOPTION_WERROR;
-
-  ::JS_SetOptions(context->mContext, newDefaultJSOptions & JSOPTION_MASK);
+  JS::ContextOptionsRef(cx).setWerror(Preferences::GetBool(js_werror_option_str));
 
   ::JS_SetParallelParsingEnabled(context->mContext, parallelParsing);
   ::JS_SetParallelIonCompilationEnabled(context->mContext, parallelIonCompilation);
@@ -822,9 +795,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
   ::JS_SetGlobalJitCompilerOption(context->mContext, JSJITCOMPILER_ION_USECOUNT_TRIGGER,
                                   (useIonEager ? 0 : -1));
-
-  // Save the new defaults for the next page load (InitContext).
-  context->mDefaultJSOptions = newDefaultJSOptions;
 
   JSRuntime *rt = JS_GetRuntime(context->mContext);
   JS_SetJitHardening(rt, useHardening);
@@ -856,18 +826,13 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
 
   ++sContextCount;
 
-  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS |
-                      JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT;
-
   mContext = ::JS_NewContext(sRuntime, gStackSize);
   if (mContext) {
     ::JS_SetContextPrivate(mContext, static_cast<nsIScriptContext *>(this));
 
-    // Preserve any flags the context callback might have set.
-    mDefaultJSOptions |= ::JS_GetOptions(mContext);
-
     // Make sure the new context gets the default context options
-    ::JS_SetOptions(mContext, mDefaultJSOptions);
+    JS::ContextOptionsRef(mContext).setPrivateIsNSISupports(true)
+                                   .setNoDefaultCompartmentObject(true);
 
     // Watch for the JS boolean options
     Preferences::RegisterCallback(JSOptionChangedCallback,
@@ -1206,15 +1171,20 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
     ConvertSupportsTojsvals(aArgs, global, &argc, &argv, tempStorage);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  JS::AutoArrayRooter array(mContext, argc, argv);
+
   // got the arguments, now attach them.
 
   for (uint32_t i = 0; i < argc; ++i) {
-    if (!JS_WrapValue(mContext, &argv[i])) {
+    if (!JS_WrapValue(mContext, array.handleAt(i))) {
       return NS_ERROR_FAILURE;
     }
   }
 
-  JSObject *args = ::JS_NewArrayObject(mContext, argc, argv);
+  JSObject *args = ::JS_NewArrayObject(mContext, argc, array.array);
+  if (!args) {
+    return NS_ERROR_FAILURE;
+  }
   JS::Value vargs = OBJECT_TO_JSVAL(args);
 
   return JS_DefineProperty(mContext, aTarget, aPropName, vargs, NULL, NULL, 0)

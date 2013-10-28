@@ -452,8 +452,8 @@ public:
   GetInnerWindowId();
 
   void
-  UpdateJSContextOptions(JSContext* aCx, uint32_t aChromeOptions,
-                         uint32_t aContentOptions);
+  UpdateJSContextOptions(JSContext* aCx, const JS::ContextOptions& aChromeOptions,
+                         const JS::ContextOptions& aContentOptions);
 
   void
   UpdateJSWorkerMemoryParameter(JSContext* aCx, JSGCParamKey key,
@@ -935,8 +935,8 @@ public:
   }
 
   void
-  UpdateJSContextOptionsInternal(JSContext* aCx, uint32_t aContentOptions,
-                                 uint32_t aChromeOptions);
+  UpdateJSContextOptionsInternal(JSContext* aCx, const JS::ContextOptions& aContentOptions,
+                                 const JS::ContextOptions& aChromeOptions);
 
   void
   UpdateJSWorkerMemoryParameterInternal(JSContext* aCx, JSGCParamKey key, uint32_t aValue);

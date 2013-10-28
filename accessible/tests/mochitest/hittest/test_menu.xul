@@ -81,6 +81,8 @@
         return;
       }
 
+      getNode("mi_file1").scrollIntoView(true);
+
       gQueue = new eventQueue();
       gQueue.push(new openMenu("mi_file1", "mp_file1", "mi_file1.1"));
       gQueue.push(new openMenu("mi_file1.2", "mp_file1.2", "mi_file1.2.1"));

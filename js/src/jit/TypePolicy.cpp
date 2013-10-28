@@ -536,6 +536,27 @@ ToDoublePolicy::staticAdjustInputs(MInstruction *ins)
     return true;
 }
 
+bool
+ToInt32Policy::staticAdjustInputs(MInstruction *ins)
+{
+    JS_ASSERT(ins->isToInt32());
+
+    MDefinition *in = ins->getOperand(0);
+    switch (in->type()) {
+      case MIRType_Object:
+      case MIRType_String:
+      case MIRType_Undefined:
+        // Objects might be effectful. Undefined coerces to NaN, not int32.
+        in = boxAt(ins, in);
+        ins->replaceOperand(0, in);
+        break;
+      default:
+        break;
+    }
+
+    return true;
+}
+
 template <unsigned Op>
 bool
 ObjectPolicy<Op>::staticAdjustInputs(MInstruction *ins)

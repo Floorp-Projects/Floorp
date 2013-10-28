@@ -969,7 +969,7 @@ function getUpdatesDirInApplyToDir() {
 #endif
   dir.append(DIR_UPDATES);
   if (!dir.exists()) {
-    dir.create(Ci.nsILocalFile.DIRECTORY_TYPE, 0755);
+    dir.create(Ci.nsILocalFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   }
   return dir;
 }

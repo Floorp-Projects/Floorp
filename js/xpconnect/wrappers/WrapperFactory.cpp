@@ -544,15 +544,15 @@ WrapperFactory::WrapForSameCompartment(JSContext *cx, HandleObject objArg)
 // using the returned object. If the object to be wrapped is already in the
 // correct compartment, then this returns the unwrapped object.
 bool
-WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
+WrapperFactory::WaiveXrayAndWrap(JSContext *cx, MutableHandleValue vp)
 {
-    if (JSVAL_IS_PRIMITIVE(*vp))
+    if (vp.isPrimitive())
         return JS_WrapValue(cx, vp);
 
-    JSObject *obj = js::UncheckedUnwrap(JSVAL_TO_OBJECT(*vp));
+    JSObject *obj = js::UncheckedUnwrap(&vp.toObject());
     MOZ_ASSERT(!js::IsInnerObject(obj));
     if (js::IsObjectInContextCompartment(obj, cx)) {
-        *vp = OBJECT_TO_JSVAL(obj);
+        vp.setObject(*obj);
         return true;
     }
 
@@ -570,7 +570,7 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, jsval *vp)
     if (!obj)
         return false;
 
-    *vp = OBJECT_TO_JSVAL(obj);
+    vp.setObject(*obj);
     return JS_WrapValue(cx, vp);
 }
 
