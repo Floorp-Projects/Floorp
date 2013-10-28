@@ -153,9 +153,9 @@ class TestRecursiveMakeBackend(BackendTester):
         """Ensure the RecursiveMakeBackend works without error."""
         env = self._consume('stub0', RecursiveMakeBackend)
         self.assertTrue(os.path.exists(os.path.join(env.topobjdir,
-            'backend.RecursiveMakeBackend.built')))
+            'backend.RecursiveMakeBackend')))
         self.assertTrue(os.path.exists(os.path.join(env.topobjdir,
-            'backend.RecursiveMakeBackend.built.pp')))
+            'backend.RecursiveMakeBackend.pp')))
 
     def test_output_files(self):
         """Ensure proper files are generated."""
