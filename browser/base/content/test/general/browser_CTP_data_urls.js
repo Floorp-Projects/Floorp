@@ -161,10 +161,10 @@ function test2b() {
 
   // Simulate choosing "Allow now" for the test plugin
   notification.reshow();
-  is(notification.options.centerActions.length, 2, "Test 2b, Should have two types of plugin in the notification");
+  is(notification.options.centerActions.size, 2, "Test 2b, Should have two types of plugin in the notification");
 
   var centerAction = null;
-  for (var action of notification.options.centerActions) {
+  for (var action of notification.options.centerActions.values()) {
     if (action.pluginName == "Test") {
       centerAction = action;
       break;
