@@ -710,6 +710,14 @@ Telephony::NotifyCdmaCallWaiting(uint32_t aServiceId, const nsAString& aNumber)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+Telephony::NotifyConferenceError(const nsAString& aName,
+                                 const nsAString& aMessage)
+{
+  mGroup->NotifyError(aName, aMessage);
+  return NS_OK;
+}
+
 nsresult
 Telephony::DispatchCallEvent(const nsAString& aType,
                              TelephonyCall* aCall)
