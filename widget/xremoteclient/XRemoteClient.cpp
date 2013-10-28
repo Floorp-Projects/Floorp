@@ -51,7 +51,7 @@
 
 #define ARRAY_LENGTH(array_) (sizeof(array_)/sizeof(array_[0]))
 
-static PRLogModuleInfo *sRemoteLm = NULL;
+static PRLogModuleInfo *sRemoteLm = nullptr;
 
 static int (*sOldHandler)(Display *, XErrorEvent *);
 static bool sGotBadWindow;
@@ -403,7 +403,7 @@ XRemoteClient::GetLock(Window aWindow, bool *aDestroyed)
 	// add the x event queue to the select set
 	FD_SET(ConnectionNumber(mDisplay), &select_set);
 	select_retval = select(ConnectionNumber(mDisplay) + 1,
-			       &select_set, NULL, NULL, &delay);
+			       &select_set, nullptr, nullptr, &delay);
 	// did we time out?
 	if (select_retval == 0) {
 	  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("timed out waiting for window\n"));
