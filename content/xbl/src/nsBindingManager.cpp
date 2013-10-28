@@ -33,6 +33,7 @@
 #include "nsRuleProcessorData.h"
 #include "nsIWeakReference.h"
 
+#include "nsWrapperCacheInlines.h"
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
