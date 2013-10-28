@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gc/Marking.h"
-#include "jit/IonCompartment.h"
+#include "jit/JitCompartment.h"
 #if defined(JS_CPU_X86)
 # include "jit/x86/MacroAssembler-x86.h"
 #elif defined(JS_CPU_X64)

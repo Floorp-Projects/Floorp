@@ -8,8 +8,8 @@
 
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
-#include "jit/IonCompartment.h"
 #include "jit/IonFrames.h"
+#include "jit/JitCompartment.h"
 #include "jit/MoveEmitter.h"
 
 using namespace js;
@@ -288,7 +288,7 @@ MacroAssemblerX64::handleFailureWithHandler(void *handler)
     passABIArg(rax);
     callWithABI(handler);
 
-    IonCode *excTail = GetIonContext()->runtime->ionRuntime()->getExceptionTail();
+    IonCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
     jmp(excTail);
 }
 

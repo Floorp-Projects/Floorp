@@ -103,7 +103,7 @@ static const uint32_t BAILOUT_RETURN_OK = 0;
 static const uint32_t BAILOUT_RETURN_FATAL_ERROR = 1;
 static const uint32_t BAILOUT_RETURN_OVERRECURSED = 2;
 
-class IonCompartment;
+class JitCompartment;
 
 // BailoutStack is an architecture specific pointer to the stack, given by the
 // bailout handler.
