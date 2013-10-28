@@ -64,16 +64,15 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     typedef typename Base::Enum Enum;
     typedef typename Base::Lookup Lookup;
 
+    /* Expose WeakMap public interface */
+
+    using Base::clearWithoutCallingDestructors;
+    using Base::lookupForAdd;
+    using Base::all;
+    using Base::trace;
+
     bool init(uint32_t len = 16) {
         return Base::init(len) && zoneCounts.init();
-    }
-
-    void clearWithoutCallingDestructors() {
-        Base::clearWithoutCallingDestructors();
-    }
-
-    AddPtr lookupForAdd(const Lookup &l) const {
-        return Base::lookupForAdd(l);
     }
 
     template<typename KeyInput, typename ValueInput>
@@ -87,19 +86,9 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
         return ok;
     }
 
-    Range all() const {
-        return Base::all();
-    }
-
     void remove(const Lookup &l) {
         Base::remove(l);
         decZoneCount(l->zone());
-    }
-
-  public:
-    /* Expose WeakMap public interface*/
-    void trace(JSTracer *tracer) {
-        Base::trace(tracer);
     }
 
   public:
