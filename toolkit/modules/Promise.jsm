@@ -220,11 +220,11 @@ Services.obs.addObserver(function observe(aSubject, aTopic, aValue) {
     return;
   }
   if (stack) {
-    message += " at " + stack;
+    message += "\nFull Stack: " + stack;
   }
   error.init(
-             /*message*/"A promise chain failed to handle a rejection: on " +
-               date + ", " + message,
+             /*message*/"A promise chain failed to handle a rejection.\n\n" +
+             "Date: " + date + "\nFull Message: " + message,
              /*sourceName*/ fileName,
              /*sourceLine*/ lineNumber?("" + lineNumber):0,
              /*lineNumber*/ lineNumber || 0,

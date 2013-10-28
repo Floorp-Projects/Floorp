@@ -6,39 +6,54 @@
 #define nsContentPermissionHelper_h
 
 #include "nsIContentPermissionPrompt.h"
-#include "nsString.h"
-
-#include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/PContentPermissionRequestParent.h"
+#include "nsTArray.h"
+#include "nsIMutableArray.h"
 
 class nsContentPermissionRequestProxy;
+
+// Forward declare IPC::Principal here which is defined in
+// PermissionMessageUtils.h. Include this file will transitively includes
+// "windows.h" and it defines
+//   #define CreateEvent CreateEventW
+//   #define LoadImage LoadImageW
+// That will mess up windows build.
+namespace IPC {
+class Principal;
+}
 
 namespace mozilla {
 namespace dom {
 
 class Element;
+class PermissionRequest;
+class ContentPermissionRequestParent;
+class PContentPermissionRequestParent;
 
-class ContentPermissionRequestParent : public PContentPermissionRequestParent
+class ContentPermissionType : public nsIContentPermissionType
 {
- public:
-  ContentPermissionRequestParent(const nsACString& type,
-                                 const nsACString& access,
-                                 Element* element,
-                                 const IPC::Principal& principal);
-  virtual ~ContentPermissionRequestParent();
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTPERMISSIONTYPE
 
-  bool IsBeingDestroyed();
+  ContentPermissionType(const nsACString& aType, const nsACString& aAccess);
+  virtual ~ContentPermissionType();
 
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMPtr<Element> mElement;
-  nsCOMPtr<nsContentPermissionRequestProxy> mProxy;
+protected:
   nsCString mType;
   nsCString mAccess;
-
- private:
-  virtual bool Recvprompt();
-  virtual void ActorDestroy(ActorDestroyReason why);
 };
+
+uint32_t ConvertPermissionRequestToArray(nsTArray<PermissionRequest>& aSrcArray,
+                                         nsIMutableArray* aDesArray);
+
+nsresult CreatePermissionArray(const nsACString& aType,
+                               const nsACString& aAccess,
+                               nsIArray** aTypesArray);
+
+PContentPermissionRequestParent*
+CreateContentPermissionRequestParent(const nsTArray<PermissionRequest>& aRequests,
+                                     Element* element,
+                                     const IPC::Principal& principal);
 
 } // namespace dom
 } // namespace mozilla
@@ -46,20 +61,20 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
 class nsContentPermissionRequestProxy : public nsIContentPermissionRequest
 {
  public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTPERMISSIONREQUEST
+
   nsContentPermissionRequestProxy();
   virtual ~nsContentPermissionRequestProxy();
 
-  nsresult Init(const nsACString& type, const nsACString& access, mozilla::dom::ContentPermissionRequestParent* parent);
+  nsresult Init(const nsTArray<mozilla::dom::PermissionRequest>& requests,
+                mozilla::dom::ContentPermissionRequestParent* parent);
   void OnParentDestroyed();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICONTENTPERMISSIONREQUEST
 
  private:
   // Non-owning pointer to the ContentPermissionRequestParent object which owns this proxy.
   mozilla::dom::ContentPermissionRequestParent* mParent;
-  nsCString mType;
-  nsCString mAccess;
+  nsTArray<mozilla::dom::PermissionRequest> mPermissionRequests;
 };
-#endif // nsContentPermissionHelper_h
 
+#endif // nsContentPermissionHelper_h

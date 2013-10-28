@@ -12,7 +12,6 @@
  */
 
 interface HitRegionOptions;
-interface Window;
 
 enum CanvasWindingRule { "nonzero", "evenodd" };
 

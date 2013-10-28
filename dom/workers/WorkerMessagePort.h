@@ -39,7 +39,7 @@ public:
   _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   void
-  PostMessage(JSContext* aCx, JS::HandleValue aMessage,
+  PostMessageMoz(JSContext* aCx, JS::HandleValue aMessage,
               const Optional<Sequence<JS::Value>>& aTransferable,
               ErrorResult& aRv);
 

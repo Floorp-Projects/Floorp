@@ -1313,11 +1313,11 @@ PeerConnectionWrapper.prototype = {
    *        The media constraints of the remote peer connection object
    */
   checkMediaStreams : function PCW_checkMediaStreams(constraintsRemote) {
-    is(this._pc.localStreams.length, this.constraints.length,
+    is(this._pc.getLocalStreams().length, this.constraints.length,
        this + ' has ' + this.constraints.length + ' local streams');
 
     // TODO: change this when multiple incoming streams are supported (bug 834835)
-    is(this._pc.remoteStreams.length, 1,
+    is(this._pc.getRemoteStreams().length, 1,
        this + ' has ' + 1 + ' remote streams');
   },
 

@@ -24,7 +24,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISelectionController.h"
-#include "jsapi.h"
 #include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 

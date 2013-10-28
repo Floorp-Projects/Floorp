@@ -26,8 +26,11 @@
   -moz-border-end: 1px solid #222426; /* Match the sources list's dark margin. */
 }
 
+#sources-toolbar .devtools-toolbarbutton {
+  min-width: 32px;
+}
+
 #pretty-print {
-  min-width: 0;
   font-weight: bold;
 }
 
