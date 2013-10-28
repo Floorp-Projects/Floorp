@@ -7,7 +7,7 @@
 #ifndef AudioDestinationNode_h_
 #define AudioDestinationNode_h_
 
-#include "mozilla/dom/AudioContextBinding.h"
+#include "mozilla/dom/AudioChannelBinding.h"
 #include "AudioNode.h"
 #include "nsIDOMEventListener.h"
 #include "nsIAudioChannelAgent.h"

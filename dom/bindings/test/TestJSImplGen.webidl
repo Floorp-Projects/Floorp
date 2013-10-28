@@ -371,6 +371,9 @@ interface TestJSImplInterface {
   void passUnion9((object or DOMString or long or boolean) arg);
   void passUnion10(optional (EventInit or long) arg);
   void passUnion11(optional (CustomEventInit or long) arg);
+  void passUnion12(optional (EventInit or long) arg = 5);
+  void passUnion13(optional (object or long?) arg = null);
+  void passUnion14(optional (object or long?) arg = 5);
 #endif
   void passUnionWithNullable((object? or long) arg);
   // FIXME: Bug 863948 Nullable unions not supported yet

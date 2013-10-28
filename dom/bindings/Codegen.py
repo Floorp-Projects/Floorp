@@ -171,8 +171,6 @@ class CGDOMJSClass(CGThing):
     def __init__(self, descriptor):
         CGThing.__init__(self)
         self.descriptor = descriptor
-        # Our current reserved slot situation is unsafe for globals. Fix bug 760095!
-        assert "Window" not in descriptor.interface.identifier.name
     def declare(self):
         return ""
     def define(self):
@@ -2154,6 +2152,11 @@ def CreateBindingJSObject(descriptor, properties, parent):
 
   js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
 """
+        if "Window" in descriptor.interface.identifier.name:
+            create = """  MOZ_ASSERT(false,
+             "Our current reserved slot situation is unsafe for globals. Fix "
+             "bug 760095!");
+""" + create
     create = objDecl + create
 
     if descriptor.nativeOwnership == 'refcounted':
@@ -3058,14 +3061,21 @@ for (uint32_t i = 0; i < length; ++i) {
             typeName = "Nullable<" + typeName + " >"
 
         def handleNull(templateBody, setToNullVar, extraConditionForNull=""):
-            null = CGGeneric("if (%s${val}.isNullOrUndefined()) {\n"
-                             "  %s.SetNull();\n"
-                             "}" % (extraConditionForNull, setToNullVar))
-            templateBody = CGWrapper(CGIndenter(templateBody), pre="{\n", post="\n}")
-            return CGList([null, templateBody], " else ")
+            nullTest = "%s${val}.isNullOrUndefined()" % extraConditionForNull
+            return CGIfElseWrapper(nullTest,
+                                   CGGeneric("%s.SetNull();" % setToNullVar),
+                                   templateBody)
 
         if type.hasNullableType:
-            templateBody = handleNull(templateBody, unionArgumentObj)
+            assert not nullable
+            # Make sure to handle a null default value here
+            if defaultValue and isinstance(defaultValue, IDLNullValue):
+                assert defaultValue.type == type
+                extraConditionForNull = "!(${haveValue}) || "
+            else:
+                extraConditionForNull = ""
+            templateBody = handleNull(templateBody, unionArgumentObj,
+                                      extraConditionForNull=extraConditionForNull)
 
         declType = CGGeneric(typeName)
         holderType = CGGeneric(argumentTypeName) if not isMember else None
@@ -3121,6 +3131,22 @@ for (uint32_t i = 0; i < length; ++i) {
                 extraConditionForNull = ""
             templateBody = handleNull(templateBody, declLoc,
                                       extraConditionForNull=extraConditionForNull)
+        elif (not type.hasNullableType and defaultValue and
+              isinstance(defaultValue, IDLNullValue)):
+            assert type.hasDictionaryType
+            assert defaultValue.type.isDictionary()
+            if not isMember and typeNeedsRooting(defaultValue.type):
+                ctorArgs = "cx"
+            else:
+                ctorArgs = ""
+            initDictionaryWithNull = CGIfWrapper(
+                CGGeneric("return false;"),
+                ('!%s.SetAs%s(%s).Init(cx, JS::NullHandleValue, "Member of %s")'
+                 % (declLoc, getUnionMemberName(defaultValue.type),
+                    ctorArgs, type)))
+            templateBody = CGIfElseWrapper("!(${haveValue})",
+                                           initDictionaryWithNull,
+                                           templateBody)
 
         templateBody = CGList([constructDecl, templateBody], "\n")
 

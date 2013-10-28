@@ -23,6 +23,7 @@
 #include "nsGlobalWindow.h"
 #include "nsDOMJSUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsContentPermissionHelper.h"
 #ifdef MOZ_B2G
 #include "nsIDOMDesktopNotification.h"
 #endif
@@ -267,9 +268,11 @@ NotificationPermissionRequest::Run()
     // Corresponding release occurs in DeallocPContentPermissionRequest.
     AddRef();
 
-    NS_NAMED_LITERAL_CSTRING(type, "desktop-notification");
-    NS_NAMED_LITERAL_CSTRING(access, "unused");
-    child->SendPContentPermissionRequestConstructor(this, type, access,
+    nsTArray<PermissionRequest> permArray;
+    permArray.AppendElement(PermissionRequest(
+                            NS_LITERAL_CSTRING("desktop-notification"),
+                            NS_LITERAL_CSTRING("unused")));
+    child->SendPContentPermissionRequestConstructor(this, permArray,
                                                     IPC::Principal(mPrincipal));
 
     Sendprompt();
@@ -342,17 +345,11 @@ NotificationPermissionRequest::CallCallback()
 }
 
 NS_IMETHODIMP
-NotificationPermissionRequest::GetAccess(nsACString& aAccess)
+NotificationPermissionRequest::GetTypes(nsIArray** aTypes)
 {
-  aAccess.AssignLiteral("unused");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-NotificationPermissionRequest::GetType(nsACString& aType)
-{
-  aType.AssignLiteral("desktop-notification");
-  return NS_OK;
+  return CreatePermissionArray(NS_LITERAL_CSTRING("desktop-notification"),
+                               NS_LITERAL_CSTRING("unused"),
+                               aTypes);
 }
 
 bool

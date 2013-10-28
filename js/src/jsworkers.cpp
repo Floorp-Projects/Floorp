@@ -105,7 +105,7 @@ FinishOffThreadIonCompile(jit::IonBuilder *builder)
     JS_ASSERT(compartment->runtimeFromAnyThread()->workerThreadState);
     JS_ASSERT(compartment->runtimeFromAnyThread()->workerThreadState->isLocked());
 
-    compartment->ionCompartment()->finishedOffThreadCompilations().append(builder);
+    compartment->jitCompartment()->finishedOffThreadCompilations().append(builder);
 }
 
 static inline bool
@@ -126,8 +126,8 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 
     WorkerThreadState &state = *rt->workerThreadState;
 
-    jit::IonCompartment *ion = compartment->ionCompartment();
-    if (!ion)
+    jit::JitCompartment *jitComp = compartment->jitCompartment();
+    if (!jitComp)
         return;
 
     AutoLockWorkerThreadState lock(state);
@@ -153,7 +153,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
         }
     }
 
-    jit::OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
+    jit::OffThreadCompilationVector &compilations = jitComp->finishedOffThreadCompilations();
 
     /* Cancel code generation for any completed entries. */
     for (size_t i = 0; i < compilations.length(); i++) {

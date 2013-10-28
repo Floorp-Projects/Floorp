@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+ <head>
+  <title>text-align-true</title>
+  <meta charset="utf-8">
+  <style type="text/css">
+   p {
+     overflow:hidden;
+     width:8em;
+     white-space:nowrap;
+     margin:0;
+   }
+.test1 p {
+   text-align: true right;
+   -moz-text-align-last: end;
+}
+.test2 p {
+   text-align: true right;
+}
+.test3 p {
+   text-align: end true;
+}
+.test4 p {
+   text-align: true left;
+}
+.test5 p {
+   text-align: left;
+   -moz-text-align-last: true right;
+}
+  </style>
+ </head>
+ <body>
+<div class=test1>
+ <p>Lorem ipsum dolor sit amet.</p>
+ <p dir="rtl">ישים אל לבו חובתו אשר הוא&nbsp;מתעלם&nbsp;ממנה.</p>
+</div>
+
+<div class=test2>
+ <p>Lorem ipsum dolor sit amet.</p>
+ <p dir="rtl">ישים אל לבו חובתו אשר הוא&nbsp;מתעלם&nbsp;ממנה.</p>
+</div>
+
+<div class=test3>
+ <p>Lorem ipsum dolor sit amet.</p>
+ <p dir="rtl">ישים אל לבו חובתו אשר הוא&nbsp;מתעלם&nbsp;ממנה.</p>
+</div>
+
+<div class=test4>
+ <p>Lorem ipsum dolor sit amet.</p>
+ <p dir="rtl">ישים אל לבו חובתו אשר הוא&nbsp;מתעלם&nbsp;ממנה.</p>
+</div>
+
+<div class=test5>
+ <p>Lorem ipsum dolor sit amet.</p>
+</div>
+
+<script>
+  var elem = document.querySelector('.test5 p');
+  var a = window.getComputedStyle(elem,null).getPropertyValue("text-align");
+  document.body.appendChild(document.createTextNode(a +"|"));
+  a = window.getComputedStyle(elem,null).getPropertyValue("-moz-text-align-last");
+  document.body.appendChild(document.createTextNode(a));
+
+  document.documentElement.removeAttribute('class');
+</script>
+
+</body>
+</html>

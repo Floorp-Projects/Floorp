@@ -15,9 +15,9 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
-#include "jit/IonCompartment.h"
 #include "jit/IonMacroAssembler.h"
 #include "jit/IonSpewer.h"
+#include "jit/JitCompartment.h"
 #include "jit/ParallelFunctions.h"
 #include "jit/PcScriptCache.h"
 #include "jit/Safepoints.h"
@@ -377,7 +377,7 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
                 if (retval == BAILOUT_RETURN_OK) {
                     JS_ASSERT(info);
                     rfe->kind = ResumeFromException::RESUME_BAILOUT;
-                    rfe->target = cx->runtime()->ionRuntime()->getBailoutTail()->raw();
+                    rfe->target = cx->runtime()->jitRuntime()->getBailoutTail()->raw();
                     rfe->bailoutInfo = info;
                     return;
                 }

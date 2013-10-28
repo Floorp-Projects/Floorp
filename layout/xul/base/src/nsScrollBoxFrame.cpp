@@ -9,7 +9,7 @@
 #include "nsButtonBoxFrame.h"
 #include "nsITimer.h"
 #include "nsRepeatService.h"
-#include "mozilla/BasicEvents.h"
+#include "mozilla/MouseEvents.h"
 #include "nsIContent.h"
 
 using namespace mozilla;
@@ -104,12 +104,14 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
       mTrustedEvent = false;
       break;
 
-    case NS_MOUSE_CLICK:
-      if (aEvent->IsLeftClickEvent()) {
+    case NS_MOUSE_CLICK: {
+      WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+      if (mouseEvent->IsLeftClickEvent()) {
         // skip button frame handling to prevent click handling
-         return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+        return nsBoxFrame::HandleEvent(aPresContext, mouseEvent, aEventStatus);
       }
       break;
+    }
   }
      
   return nsButtonBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);

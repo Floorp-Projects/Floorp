@@ -696,8 +696,8 @@ struct IonScriptCounts
 
 struct VMFunction;
 
-class IonCompartment;
-class IonRuntime;
+class JitCompartment;
+class JitRuntime;
 
 struct AutoFlushCache
 {
@@ -705,14 +705,14 @@ struct AutoFlushCache
     uintptr_t start_;
     uintptr_t stop_;
     const char *name_;
-    IonRuntime *runtime_;
+    JitRuntime *runtime_;
     bool used_;
 
   public:
     void update(uintptr_t p, size_t len);
     static void updateTop(uintptr_t p, size_t len);
     ~AutoFlushCache();
-    AutoFlushCache(const char *nonce, IonRuntime *rt);
+    AutoFlushCache(const char *nonce, JitRuntime *rt);
     void flushAnyway();
 };
 
@@ -727,10 +727,10 @@ struct AutoFlushCache
 struct AutoFlushInhibitor
 {
   private:
-    IonRuntime *runtime_;
+    JitRuntime *runtime_;
     AutoFlushCache *afc;
   public:
-    AutoFlushInhibitor(IonRuntime *rt);
+    AutoFlushInhibitor(JitRuntime *rt);
     ~AutoFlushInhibitor();
 };
 } // namespace jit

@@ -28,18 +28,18 @@
 
 class nsWindowSizes {
 #define FOR_EACH_SIZE(macro) \
-  macro(DOM,   mDOMElementNodes) \
-  macro(DOM,   mDOMTextNodes) \
-  macro(DOM,   mDOMCDATANodes) \
-  macro(DOM,   mDOMCommentNodes) \
-  macro(DOM,   mDOMEventTargets) \
-  macro(DOM,   mDOMOther) \
-  macro(Style, mStyleSheets) \
-  macro(Other, mLayoutPresShell) \
-  macro(Style, mLayoutStyleSets) \
-  macro(Other, mLayoutTextRuns) \
-  macro(Other, mLayoutPresContext) \
-  macro(Other, mPropertyTables) \
+  macro(DOM,   mDOMElementNodesSize) \
+  macro(DOM,   mDOMTextNodesSize) \
+  macro(DOM,   mDOMCDATANodesSize) \
+  macro(DOM,   mDOMCommentNodesSize) \
+  macro(DOM,   mDOMEventTargetsSize) \
+  macro(DOM,   mDOMOtherSize) \
+  macro(Style, mStyleSheetsSize) \
+  macro(Other, mLayoutPresShellSize) \
+  macro(Style, mLayoutStyleSetsSize) \
+  macro(Other, mLayoutTextRunsSize) \
+  macro(Other, mLayoutPresContextSize) \
+  macro(Other, mPropertyTablesSize) \
 
 public:
   nsWindowSizes(mozilla::MallocSizeOf aMallocSizeOf)
@@ -61,6 +61,10 @@ public:
   #define DECL_SIZE(kind, mSize) size_t mSize;
   FOR_EACH_SIZE(DECL_SIZE);
   #undef DECL_SIZE
+
+  uint32_t mDOMEventTargetsCount;
+  uint32_t mDOMEventListenersCount;
+
   nsArenaMemoryStats mArenaStats;
   mozilla::MallocSizeOf mMallocSizeOf;
 
