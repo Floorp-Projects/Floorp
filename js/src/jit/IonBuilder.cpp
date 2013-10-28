@@ -8118,20 +8118,28 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
         return false;
     types::TemporaryTypeSet *types = cloneTypeSet(baseTypes);
 
+    // Always use a call if we are doing the definite properties analysis and
+    // not actually emitting code, to simplify later analysis.
+    if (info().executionMode() == DefinitePropertiesAnalysis) {
+        MDefinition *obj = current->peek(-1);
+        MCallGetProperty *call = MCallGetProperty::New(obj, name);
+        current->add(call);
+
+        // During the definite properties analysis we can still try to bake in
+        // constants read off the prototype chain, to allow inlining later on.
+        // In this case we still need the getprop call so that the later
+        // analysis knows when the |this| value has been read from.
+        if (!getPropTryConstant(&emitted, id, types) || emitted)
+            return emitted;
+
+        current->pop();
+        current->push(call);
+        return resumeAfter(call) && pushTypeBarrier(call, types, true);
+    }
+
     // Try to hardcode known constants.
     if (!getPropTryConstant(&emitted, id, types) || emitted)
         return emitted;
-
-    // Except when loading constants above, always use a call if we are doing
-    // the definite properties analysis and not actually emitting code, to
-    // simplify later analysis.
-    if (info().executionMode() == DefinitePropertiesAnalysis) {
-        MDefinition *obj = current->pop();
-        MCallGetProperty *call = MCallGetProperty::New(obj, name);
-        current->add(call);
-        current->push(call);
-        return resumeAfter(call);
-    }
 
     // Try to emit loads from definite slots.
     if (!getPropTryDefiniteSlot(&emitted, name, barrier, types) || emitted)
