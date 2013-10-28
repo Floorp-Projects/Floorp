@@ -37,9 +37,9 @@ JSObject* GetDefaultScopeFromJSContext(JSContext *cx);
 //    ((JS::Value*)aArgv)[0], ..., ((JS::Value*)aArgv)[aArgc - 1]
 // The resulting object will take a copy of the array, and ensure each
 // element is rooted.
-// Optionally, aArgv may be NULL, in which case the array is allocated and
-// rooted, but all items remain NULL.  This presumably means the caller will
-// then QI us for nsIJSArgArray, and set our array elements.
+// Optionally, aArgv may be nullptr, in which case the array is allocated and
+// rooted, but all items remain nullptr.  This presumably means the caller
+// will then QI us for nsIJSArgArray, and set our array elements.
 nsresult NS_CreateJSArgv(JSContext *aContext, uint32_t aArgc, void *aArgv,
                          nsIJSArgArray **aArray);
 

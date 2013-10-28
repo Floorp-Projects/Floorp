@@ -315,7 +315,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
 {
 #ifdef MOZ_WIDGET_GTK
     // sigh
-    gtk_init(NULL, NULL);
+    gtk_init(nullptr, nullptr);
 #endif
 
 #ifdef MOZ_WIDGET_QT
@@ -576,16 +576,16 @@ mozilla::jsipc::PJavaScriptChild *
 ContentChild::AllocPJavaScriptChild()
 {
     nsCOMPtr<nsIJSRuntimeService> svc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-    NS_ENSURE_TRUE(svc, NULL);
+    NS_ENSURE_TRUE(svc, nullptr);
 
     JSRuntime *rt;
     svc->GetRuntime(&rt);
-    NS_ENSURE_TRUE(svc, NULL);
+    NS_ENSURE_TRUE(svc, nullptr);
 
     mozilla::jsipc::JavaScriptChild *child = new mozilla::jsipc::JavaScriptChild(rt);
     if (!child->init()) {
         delete child;
-        return NULL;
+        return nullptr;
     }
     return child;
 }
@@ -819,7 +819,7 @@ PIndexedDBChild*
 ContentChild::AllocPIndexedDBChild()
 {
   NS_NOTREACHED("Should never get here!");
-  return NULL;
+  return nullptr;
 }
 
 bool

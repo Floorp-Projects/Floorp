@@ -95,7 +95,7 @@ ParseHeaders(const uint8_t* aHeaderStart,
     switch (headerId >> 6)
     {
       case 0x00:
-        // NULL terminated Unicode text, length prefixed with 2-byte
+        // Null-terminated Unicode text, length prefixed with 2-byte
         // unsigned integer.
       case 0x01:
         // byte sequence, length prefixed with 2 byte unsigned integer.
