@@ -724,16 +724,12 @@ int
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
   nsJSContext *context = reinterpret_cast<nsJSContext *>(data);
-  uint32_t options = JS_GetOptions(context->mContext);
+  JSContext *cx = context->mContext;
 
   sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
   sPostGCEventsToObserver = Preferences::GetBool(js_memnotify_option_str);
 
-  bool strict = Preferences::GetBool(js_strict_option_str);
-  if (strict)
-    options |= JSOPTION_EXTRA_WARNINGS;
-  else
-    options &= ~JSOPTION_EXTRA_WARNINGS;
+  JS::ContextOptionsRef(cx).setExtraWarnings(Preferences::GetBool(js_strict_option_str));
 
   // The vanilla GetGlobalObject returns null if a global isn't set up on
   // the context yet. We can sometimes be call midway through context init,
@@ -775,43 +771,21 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     }
   }
 
-  if (useTypeInference)
-    options |= JSOPTION_TYPE_INFERENCE;
-  else
-    options &= ~JSOPTION_TYPE_INFERENCE;
-
-  if (useBaselineJIT)
-    options |= JSOPTION_BASELINE;
-  else
-    options &= ~JSOPTION_BASELINE;
-
-  if (useIon)
-    options |= JSOPTION_ION;
-  else
-    options &= ~JSOPTION_ION;
-
-  if (useAsmJS)
-    options |= JSOPTION_ASMJS;
-  else
-    options &= ~JSOPTION_ASMJS;
+  JS::ContextOptionsRef(cx).setTypeInference(useTypeInference)
+                           .setBaseline(useBaselineJIT)
+                           .setIon(useIon)
+                           .setAsmJS(useAsmJS);
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if
   // javascript.options.strict.debug is true
-  bool strictDebug = Preferences::GetBool(js_strict_debug_option_str);
-  if (strictDebug && (options & JSOPTION_EXTRA_WARNINGS) == 0) {
-    if (chromeWindow || !contentWindow)
-      options |= JSOPTION_EXTRA_WARNINGS;
+  if (Preferences::GetBool(js_strict_debug_option_str) &&
+      (chromeWindow || !contentWindow)) {
+    JS::ContextOptionsRef(cx).setExtraWarnings(true);
   }
 #endif
 
-  bool werror = Preferences::GetBool(js_werror_option_str);
-  if (werror)
-    options |= JSOPTION_WERROR;
-  else
-    options &= ~JSOPTION_WERROR;
-
-  ::JS_SetOptions(context->mContext, options & JSOPTION_MASK);
+  JS::ContextOptionsRef(cx).setWerror(Preferences::GetBool(js_werror_option_str));
 
   ::JS_SetParallelParsingEnabled(context->mContext, parallelParsing);
   ::JS_SetParallelIonCompilationEnabled(context->mContext, parallelIonCompilation);
@@ -857,9 +831,8 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
     ::JS_SetContextPrivate(mContext, static_cast<nsIScriptContext *>(this));
 
     // Make sure the new context gets the default context options
-    ::JS_SetOptions(mContext, ::JS_GetOptions(mContext) |
-                    JSOPTION_PRIVATE_IS_NSISUPPORTS |
-                    JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT);
+    JS::ContextOptionsRef(mContext).setPrivateIsNSISupports(true)
+                                   .setNoDefaultCompartmentObject(true);
 
     // Watch for the JS boolean options
     Preferences::RegisterCallback(JSOptionChangedCallback,
