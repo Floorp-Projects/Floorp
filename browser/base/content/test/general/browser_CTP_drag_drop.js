@@ -64,13 +64,11 @@ function part5() {
   gBrowser.selectedBrowser.removeEventListener("PluginBindingAttached", handleEvent);
   ok(PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should have a click-to-play notification in the initial tab");
 
-  gNextTest = part6;
   gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-  gNewWindow.addEventListener("load", handleEvent, true);
+  waitForFocus(part6, gNewWindow);
 }
 
 function part6() {
-  gNewWindow.removeEventListener("load", handleEvent);
   let condition = function() PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser);
   waitForCondition(condition, part7, "Waited too long for click-to-play notification");
 }

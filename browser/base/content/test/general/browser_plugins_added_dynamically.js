@@ -68,7 +68,7 @@ function testActivateAddSameTypePart2() {
 function testActivateAddSameTypePart3() {
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   let centerAction = null;
-  for (let action of popupNotification.options.centerActions) {
+  for (let action of popupNotification.options.centerActions.values()) {
     if (action.pluginName == "Test") {
       centerAction = action;
       break;
@@ -142,7 +142,7 @@ function testActivateAddDifferentTypePart2() {
 
 function testActivateAddDifferentTypePart3() {
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  is(popupNotification.options.centerActions.length, 1, "Should be one plugin action");
+  is(popupNotification.options.centerActions.size, 1, "Should be one plugin action");
 
   let plugin = gTestBrowser.contentDocument.getElementsByTagName("embed")[0];
   ok(!plugin.activated, "testActivateAddDifferentTypePart3: plugin should not be activated");
