@@ -15,7 +15,7 @@ class nsIJSArgArray;
 inline nsIScriptContext *
 GetScriptContextFromJSContext(JSContext *cx)
 {
-  if (!(::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
+  if (!(JS::ContextOptionsRef(cx).privateIsNSISupports())) {
     return nullptr;
   }
 
