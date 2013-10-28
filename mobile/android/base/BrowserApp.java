@@ -491,8 +491,6 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.setOnStopEditingListener(new BrowserToolbar.OnStopEditingListener() {
             public void onStopEditing() {
                 selectTargetTabForEditingMode();
-                hideHomePager();
-                hideBrowserSearch();
 
                 // Re-enable doorhanger notifications. They may trigger on the selected tab above.
                 mDoorHangerPopup.enable();
@@ -1314,11 +1312,17 @@ abstract public class BrowserApp extends GeckoApp
             return false;
         }
 
-        // Set the target tab to null so it does not get selected (on editing
-        // mode exit) in lieu of the tab we are about to select.
-        mTargetTabForEditingMode = null;
-        Tabs.getInstance().selectTab(tabId);
+        // If this tab is already selected, just hide the home pager.
+        if (tabs.isSelectedTabId(tabId)) {
+            hideHomePager();
+        } else {
+            // Set the target tab to null so it does not get selected (on editing
+            // mode exit) in lieu of the tab we are about to select.
+            mTargetTabForEditingMode = null;
+            Tabs.getInstance().selectTab(tabId);
+        }
 
+        hideBrowserSearch();
         mBrowserToolbar.cancelEdit();
 
         return true;
@@ -1346,6 +1350,7 @@ abstract public class BrowserApp extends GeckoApp
 
         Tabs.getInstance().loadUrl(url, searchEngine, -1, flags);
 
+        hideBrowserSearch();
         mBrowserToolbar.cancelEdit();
     }
 
@@ -1446,6 +1451,8 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         final String url = mBrowserToolbar.commitEdit();
+        hideHomePager();
+        hideBrowserSearch();
 
         // Don't do anything if the user entered an empty URL.
         if (TextUtils.isEmpty(url)) {
@@ -1519,13 +1526,13 @@ abstract public class BrowserApp extends GeckoApp
             return false;
         }
 
-        // cancelEdit will call hideHomePager. If we're on web content, this is fine. If we're on
-        // about:home, the HomePager needs to be visible in the end (note that hideHomePager will
-        // not hide the HomePager on about:home). However, filterEditingMode may have hidden the
-        // HomePager so we set it visible here.
-        mHomePager.setVisibility(View.VISIBLE);
-
         mBrowserToolbar.cancelEdit();
+
+        // Resetting the visibility of HomePager, which might have been hidden
+        // by the filterEditingMode().
+        mHomePager.setVisibility(View.VISIBLE);
+        hideHomePager();
+        hideBrowserSearch();
 
         return true;
     }
