@@ -1074,7 +1074,7 @@ class ICStubCompiler
     ICStubSpace *getStubSpace(JSScript *script) {
         if (ICStub::CanMakeCalls(kind))
             return script->baselineScript()->fallbackStubSpace();
-        return script->compartment()->ionCompartment()->optimizedStubSpace();
+        return script->compartment()->jitCompartment()->optimizedStubSpace();
     }
 };
 
