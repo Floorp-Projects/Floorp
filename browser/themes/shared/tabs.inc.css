@@ -151,13 +151,26 @@
   display: -moz-box;
 }
 
-.tab-background-start[selected=true]:-moz-locale-dir(ltr)::before,
-.tab-background-end[selected=true]:-moz-locale-dir(rtl)::before {
+.tab-background-start[selected=true]:-moz-locale-dir(ltr):not(:-moz-lwtheme)::before,
+.tab-background-end[selected=true]:-moz-locale-dir(rtl):not(:-moz-lwtheme)::before {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-selected-start.svg);
+  background-size: 100% 100%;
+}
+
+.tab-background-end[selected=true]:-moz-locale-dir(ltr):not(:-moz-lwtheme)::before,
+.tab-background-start[selected=true]:-moz-locale-dir(rtl):not(:-moz-lwtheme)::before {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-selected-end.svg);
+  background-size: 100% 100%;
+}
+
+/* For lightweight themes, clip the header image on start, middle, and end. */
+.tab-background-start[selected=true]:-moz-locale-dir(ltr):-moz-lwtheme::before,
+.tab-background-end[selected=true]:-moz-locale-dir(rtl):-moz-lwtheme::before {
   clip-path: url(chrome://browser/content/browser.xul#tab-curve-clip-path-start);
 }
 
-.tab-background-end[selected=true]:-moz-locale-dir(ltr)::before,
-.tab-background-start[selected=true]:-moz-locale-dir(rtl)::before {
+.tab-background-end[selected=true]:-moz-locale-dir(ltr):-moz-lwtheme::before,
+.tab-background-start[selected=true]:-moz-locale-dir(rtl):-moz-lwtheme::before {
   clip-path: url(chrome://browser/content/browser.xul#tab-curve-clip-path-end);
 }
 
@@ -169,13 +182,6 @@
 .tab-background-end[selected=true]:-moz-locale-dir(ltr)::after,
 .tab-background-start[selected=true]:-moz-locale-dir(rtl)::after {
   background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end.png);
-}
-
-.tab-background-start[selected=true]::before,
-.tab-background-end[selected=true]::before {
-  background-color: @fgTabBackgroundColor@;
-  background-image: @fgTabTexture@;
-  background-repeat: no-repeat;
 }
 
 .tab-background-middle[selected=true] {
@@ -198,6 +204,7 @@
   background-size: auto 100%, auto 100%, auto auto;
 }
 
+/* These LWT styles are normally overridden by browser-lightweightTheme.css */
 .tab-background-start[selected=true]:-moz-lwtheme::before,
 .tab-background-end[selected=true]:-moz-lwtheme::before {
   background-image: @fgTabTextureLWT@;
