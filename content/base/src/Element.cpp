@@ -2245,11 +2245,11 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
     }
     break;
 
-  case NS_MOUSE_CLICK:
-    if (aVisitor.mEvent->IsLeftClickEvent()) {
-      WidgetInputEvent* inputEvent = aVisitor.mEvent->AsInputEvent();
-      if (inputEvent->IsControl() || inputEvent->IsMeta() ||
-          inputEvent->IsAlt() ||inputEvent->IsShift()) {
+  case NS_MOUSE_CLICK: {
+    WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+    if (mouseEvent->IsLeftClickEvent()) {
+      if (mouseEvent->IsControl() || mouseEvent->IsMeta() ||
+          mouseEvent->IsAlt() ||mouseEvent->IsShift()) {
         break;
       }
 
@@ -2258,7 +2258,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
       if (shell) {
         // single-click
         nsEventStatus status = nsEventStatus_eIgnore;
-        InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
+        InternalUIEvent actEvent(mouseEvent->mFlags.mIsTrusted,
                                  NS_UI_ACTIVATE, 1);
 
         rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
@@ -2268,7 +2268,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
       }
     }
     break;
-
+  }
   case NS_UI_ACTIVATE:
     {
       if (aVisitor.mEvent->originalTarget == this) {
