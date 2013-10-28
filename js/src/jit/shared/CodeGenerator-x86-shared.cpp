@@ -1449,6 +1449,73 @@ CodeGeneratorX86Shared::visitFloor(LFloor *lir)
 }
 
 bool
+CodeGeneratorX86Shared::visitFloorF(LFloorF *lir)
+{
+    FloatRegister input = ToFloatRegister(lir->input());
+    FloatRegister scratch = ScratchFloatReg;
+    Register output = ToRegister(lir->output());
+
+    if (AssemblerX86Shared::HasSSE41()) {
+        // Bail on negative-zero.
+        Assembler::Condition bailCond = masm.testNegativeZeroFloat32(input, output);
+        if (!bailoutIf(bailCond, lir->snapshot()))
+            return false;
+
+        // Round toward -Infinity.
+        masm.roundss(input, scratch, JSC::X86Assembler::RoundDown);
+
+        masm.cvttss2si(scratch, output);
+        masm.cmp32(output, Imm32(INT_MIN));
+        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+            return false;
+    } else {
+        Label negative, end;
+
+        // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
+        masm.xorps(scratch, scratch);
+        masm.branchFloat(Assembler::DoubleLessThan, input, scratch, &negative);
+
+        // Bail on negative-zero.
+        Assembler::Condition bailCond = masm.testNegativeZeroFloat32(input, output);
+        if (!bailoutIf(bailCond, lir->snapshot()))
+            return false;
+
+        // Input is non-negative, so truncation correctly rounds.
+        masm.cvttss2si(input, output);
+        masm.cmp32(output, Imm32(INT_MIN));
+        if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+            return false;
+
+        masm.jump(&end);
+
+        // Input is negative, but isn't -0.
+        // Negative values go on a comparatively expensive path, since no
+        // native rounding mode matches JS semantics. Still better than callVM.
+        masm.bind(&negative);
+        {
+            // Truncate and round toward zero.
+            // This is off-by-one for everything but integer-valued inputs.
+            masm.cvttss2si(input, output);
+            masm.cmp32(output, Imm32(INT_MIN));
+            if (!bailoutIf(Assembler::Equal, lir->snapshot()))
+                return false;
+
+            // Test whether the input double was integer-valued.
+            masm.convertInt32ToFloat32(output, scratch);
+            masm.branchFloat(Assembler::DoubleEqualOrUnordered, input, scratch, &end);
+
+            // Input is not integer-valued, so we rounded off-by-one in the
+            // wrong direction. Correct by subtraction.
+            masm.subl(Imm32(1), output);
+            // Cannot overflow: output was already checked against INT_MIN.
+        }
+
+        masm.bind(&end);
+    }
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitRound(LRound *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());

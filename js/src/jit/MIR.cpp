@@ -30,6 +30,23 @@ using mozilla::DoublesAreIdentical;
 using mozilla::IsFloat32Representable;
 using mozilla::Maybe;
 
+template<size_t Op> static void
+ConvertDefinitionToDouble(MDefinition *def, MInstruction *consumer)
+{
+    MInstruction *replace = MToDouble::New(def);
+    consumer->replaceOperand(Op, replace);
+    consumer->block()->insertBefore(consumer, replace);
+}
+
+static bool
+CheckUsesAreFloat32Consumers(MInstruction *ins)
+{
+    bool allConsumerUses = true;
+    for (MUseDefIterator use(ins); allConsumerUses && use; use++)
+        allConsumerUses &= use.def()->canConsumeFloat32();
+    return allConsumerUses;
+}
+
 void
 MDefinition::PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
 {
@@ -650,6 +667,22 @@ MStringLength::foldsTo(bool useValueNumbers)
     return this;
 }
 
+void
+MFloor::trySpecializeFloat32()
+{
+    // No need to look at the output, as it's an integer (see IonBuilder::inlineMathFloor)
+    if (!input()->canProduceFloat32()) {
+        if (input()->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(input(), this);
+        return;
+    }
+
+    if (type() == MIRType_Double)
+        setResultType(MIRType_Float32);
+
+    setPolicyType(MIRType_Float32);
+}
+
 MTest *
 MTest::New(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
 {
@@ -1234,23 +1267,6 @@ MBinaryArithInstruction::foldsTo(bool useValueNumbers)
         return rhs; // x op id => x
 
     return this;
-}
-
-template<size_t Op> static void
-ConvertDefinitionToDouble(MDefinition *def, MInstruction *consumer)
-{
-    MInstruction *replace = MToDouble::New(def);
-    consumer->replaceOperand(Op, replace);
-    consumer->block()->insertBefore(consumer, replace);
-}
-
-static bool
-CheckUsesAreFloat32Consumers(MInstruction *ins)
-{
-    bool allConsumerUses = true;
-    for (MUseDefIterator use(ins); allConsumerUses && use; use++)
-        allConsumerUses &= use.def()->canConsumeFloat32();
-    return allConsumerUses;
 }
 
 void
