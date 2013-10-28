@@ -8668,11 +8668,11 @@ nsGlobalWindow::ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
     return JS::UndefinedValue();
   }
 
-  JS::Value result;
+  JS::Rooted<JS::Value> result(aCx);
   if (retVal) {
     aError = nsContentUtils::XPConnect()->VariantToJS(aCx,
                                                       FastGetGlobalJSObject(),
-                                                      retVal, &result);
+                                                      retVal, result.address());
   } else {
     result = JS::NullValue();
   }
