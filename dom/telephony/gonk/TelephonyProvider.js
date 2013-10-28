@@ -107,9 +107,30 @@ TelephonyProvider.prototype = {
                                          Ci.nsIGonkTelephonyProvider,
                                          Ci.nsIObserver]),
 
+  // The following attributes/functions are used for acquiring/releasing the
+  // CPU wake lock when the RIL handles the incoming call. Note that we need
+  // a timer to bound the lock's life cycle to avoid exhausting the battery.
   _callRingWakeLock: null,
   _callRingWakeLockTimer: null,
-  _cancelCallRingWakeLockTimer: function _cancelCallRingWakeLockTimer() {
+
+  _acquireCallRingWakeLock: function _acquireCallRingWakeLock() {
+    if (!this._callRingWakeLock) {
+      if (DEBUG) debug("Acquiring a CPU wake lock for handling incoming call.");
+      this._callRingWakeLock = gPowerManagerService.newWakeLock("cpu");
+    }
+    if (!this._callRingWakeLockTimer) {
+      if (DEBUG) debug("Creating a timer for releasing the CPU wake lock.");
+      this._callRingWakeLockTimer =
+        Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    }
+    if (DEBUG) debug("Setting the timer for releasing the CPU wake lock.");
+    this._callRingWakeLockTimer
+        .initWithCallback(this._releaseCallRingWakeLock.bind(this),
+                          CALL_WAKELOCK_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  _releaseCallRingWakeLock: function _releaseCallRingWakeLock() {
+    if (DEBUG) debug("Releasing the CPU wake lock for handling incoming call.");
     if (this._callRingWakeLockTimer) {
       this._callRingWakeLockTimer.cancel();
     }
@@ -465,16 +486,9 @@ TelephonyProvider.prototype = {
    * to start bringing up the Phone app already.
    */
   notifyCallRing: function notifyCallRing() {
-    if (!this._callRingWakeLock) {
-      this._callRingWakeLock = gPowerManagerService.newWakeLock("cpu");
-    }
-    if (!this._callRingWakeLockTimer) {
-      this._callRingWakeLockTimer =
-        Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    }
-    this._callRingWakeLockTimer
-        .initWithCallback(this._cancelCallRingWakeLockTimer.bind(this),
-                          CALL_WAKELOCK_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+    // We need to acquire a CPU wake lock to avoid the system falling into
+    // the sleep mode when the RIL handles the incoming call.
+    this._acquireCallRingWakeLock();
 
     gSystemMessenger.broadcastMessage("telephony-new-call", {});
   },
@@ -503,6 +517,10 @@ TelephonyProvider.prototype = {
   },
 
   notifyCdmaCallWaiting: function notifyCdmaCallWaiting(aNumber) {
+    // We need to acquire a CPU wake lock to avoid the system falling into
+    // the sleep mode when the RIL handles the incoming call.
+    this._acquireCallRingWakeLock();
+
     this._notifyAllListeners("notifyCdmaCallWaiting", [aNumber]);
   },
 
@@ -536,8 +554,8 @@ TelephonyProvider.prototype = {
         break;
 
       case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
-        // Cancel the timer for the call-ring wake lock.
-        this._cancelCallRingWakeLockTimer();
+        // Release the CPU wake lock for handling the incoming call.
+        this._releaseCallRingWakeLock();
 
         Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         break;

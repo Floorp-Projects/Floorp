@@ -2440,7 +2440,10 @@ class IDLValue(IDLObject):
         # We first check for unions to ensure that even if the union is nullable
         # we end up with the right flat member type, not the union's type.
         if type.isUnion():
-            for subtype in type.unroll().memberTypes:
+            # We use the flat member types here, because if we have a nullable
+            # member type, or a nested union, we want the type the value
+            # actually coerces to, not the nullable or nested union type.
+            for subtype in type.unroll().flatMemberTypes:
                 try:
                     coercedValue = self.coerceToType(subtype, location)
                     # Create a new IDLValue to make sure that we have the
@@ -2513,6 +2516,13 @@ class IDLNullValue(IDLObject):
                               [location])
 
         nullValue = IDLNullValue(self.location)
+        if type.isUnion() and not type.nullable() and type.hasDictionaryType:
+            # We're actually a default value for the union's dictionary member.
+            # Use its type.
+            for t in type.flatMemberTypes:
+                if t.isDictionary():
+                    nullValue.type = t
+                    return nullValue
         nullValue.type = type
         return nullValue
 
