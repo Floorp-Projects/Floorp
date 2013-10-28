@@ -227,3 +227,7 @@ addEventListener("ImageContentLoaded", function (aEvent) {
 }, false);
 
 RemoteAddonsChild.init(this);
+
+addMessageListener("History:UseGlobalHistory", function (aMessage) {
+  docShell.useGlobalHistory = aMessage.data.enabled;
+});
