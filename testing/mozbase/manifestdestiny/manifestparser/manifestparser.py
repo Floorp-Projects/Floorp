@@ -676,8 +676,8 @@ class TestManifest(ManifestParser):
     def filter(self, values, tests):
         """
         filter on a specific list tag, e.g.:
-        run-if = os == win linux
-        skip-if = os == mac
+        run-if = os == "win"
+        skip-if = os == "mac"
         """
 
         # tags:
