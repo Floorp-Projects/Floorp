@@ -3688,13 +3688,13 @@ nsGlobalWindow::GetContent(JSContext* aCx, ErrorResult& aError)
     return nullptr;
   }
 
-  JS::Rooted<JS::Value> val(aCx);
+  JS::Rooted<JS::Value> val(aCx, JS::NullValue());
   aError = treeOwner->GetContentWindow(aCx, val.address());
   if (aError.Failed()) {
     return nullptr;
   }
 
-  return &val.toObject();
+  return val.toObjectOrNull();
 }
 
 already_AddRefed<nsIDOMWindow>
