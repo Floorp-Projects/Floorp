@@ -10,7 +10,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsHTMLDocument.h"
 #include "jsapi.h"
-#include "js/GCAPI.h"
+#include "nsWrapperCacheInlines.h"
 
 namespace mozilla {
 namespace dom {

@@ -152,3 +152,6 @@ MSVC_ENABLE_PGO = True
 
 # need static lib for some of the libimg componentry to link properly
 FORCE_STATIC_LIB = True
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    NO_VISIBILITY_FLAGS = True

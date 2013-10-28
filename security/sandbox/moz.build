@@ -4,23 +4,115 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FAIL_ON_WARNINGS = True
+if CONFIG['OS_ARCH'] == 'Linux':
 
-MODULE = 'sandbox'
+    DIRS += ['linux']
 
-EXPORTS.mozilla += [
-    'Sandbox.h',
-]
+elif CONFIG['OS_ARCH'] == 'WINNT':
 
-SOURCES += [
-    'Sandbox.cpp',
-]
+    MODULE = 'sandbox'
+    LIBRARY_NAME = 'sandbox_s'
+    EXPORT_LIBRARY = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'sandbox_s'
-
-EXPORT_LIBRARY = True
-
-include('/ipc/chromium/chromium-config.mozbuild')
+    SOURCES += [
+        'base/at_exit.cc',
+        'base/base_switches.cc',
+        'base/callback_internal.cc',
+        'base/cpu.cc',
+        'base/debug/alias.cc',
+        'base/debug/profiler.cc',
+        'base/lazy_instance.cc',
+        'base/location.cc',
+        'base/memory/ref_counted.cc',
+        'base/memory/singleton.cc',
+        'base/shim/base/logging.cpp',
+        'base/strings/nullable_string16.cc',
+        'base/strings/string_number_conversions.cc',
+        'base/strings/string_piece.cc',
+        'base/strings/string_util_constants.cc',
+        'base/strings/string_util_stripped.cc',
+        'base/strings/stringprintf.cc',
+        'base/strings/utf_string_conversion_utils.cc',
+        'base/strings/utf_string_conversions.cc',
+        'base/synchronization/lock.cc',
+        'base/synchronization/lock_impl_win.cc',
+        'base/third_party/dmg_fp/dtoa.cc',
+        'base/third_party/dmg_fp/g_fmt.cc',
+        'base/third_party/icu/icu_utf.cc',
+        'base/threading/platform_thread_win.cc',
+        'base/threading/thread_collision_warner.cc',
+        'base/threading/thread_id_name_manager.cc',
+        'base/threading/thread_local_win.cc',
+        'base/threading/thread_restrictions.cc',
+        'base/time/time.cc',
+        'base/time/time_win.cc',
+        'base/win/event_trace_provider.cc',
+        'base/win/pe_image.cc',
+        'base/win/registry.cc',
+        'base/win/scoped_handle.cc',
+        'base/win/scoped_process_information.cc',
+        'base/win/startup_information.cc',
+        'base/win/windows_version.cc',
+        'win/src/acl.cc',
+        'win/src/app_container.cc',
+        'win/src/broker_services.cc',
+        'win/src/crosscall_server.cc',
+        'win/src/eat_resolver.cc',
+        'win/src/filesystem_dispatcher.cc',
+        'win/src/filesystem_interception.cc',
+        'win/src/filesystem_policy.cc',
+        'win/src/handle_closer.cc',
+        'win/src/handle_closer_agent.cc',
+        'win/src/handle_dispatcher.cc',
+        'win/src/handle_interception.cc',
+        'win/src/handle_policy.cc',
+        'win/src/handle_table.cc',
+        'win/src/interception.cc',
+        'win/src/interception_agent.cc',
+        'win/src/job.cc',
+        'win/src/named_pipe_dispatcher.cc',
+        'win/src/named_pipe_interception.cc',
+        'win/src/named_pipe_policy.cc',
+        'win/src/policy_broker.cc',
+        'win/src/policy_engine_opcodes.cc',
+        'win/src/policy_engine_processor.cc',
+        'win/src/policy_low_level.cc',
+        'win/src/policy_target.cc',
+        'win/src/process_mitigations.cc',
+        'win/src/process_thread_dispatcher.cc',
+        'win/src/process_thread_interception.cc',
+        'win/src/process_thread_policy.cc',
+        'win/src/registry_dispatcher.cc',
+        'win/src/registry_interception.cc',
+        'win/src/registry_policy.cc',
+        'win/src/resolver.cc',
+        'win/src/resolver_32.cc',
+        'win/src/restricted_token.cc',
+        'win/src/restricted_token_utils.cc',
+        'win/src/sandbox.cc',
+        'win/src/sandbox_nt_util.cc',
+        'win/src/sandbox_policy_base.cc',
+        'win/src/sandbox_utils.cc',
+        'win/src/service_resolver.cc',
+        'win/src/service_resolver_32.cc',
+        'win/src/shared_handles.cc',
+        'win/src/sharedmem_ipc_client.cc',
+        'win/src/sharedmem_ipc_server.cc',
+        'win/src/sid.cc',
+        'win/src/sidestep/ia32_modrm_map.cpp',
+        'win/src/sidestep/ia32_opcode_map.cpp',
+        'win/src/sidestep/mini_disassembler.cpp',
+        'win/src/sidestep/preamble_patcher_with_stub.cpp',
+        'win/src/sidestep_resolver.cc',
+        'win/src/sync_dispatcher.cc',
+        'win/src/sync_interception.cc',
+        'win/src/sync_policy.cc',
+        'win/src/target_interceptions.cc',
+        'win/src/target_process.cc',
+        'win/src/target_services.cc',
+        'win/src/win2k_threadpool.cc',
+        'win/src/win_utils.cc',
+        'win/src/window.cc',
+        'win/src/Wow64.cc',
+    ]
 

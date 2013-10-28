@@ -358,6 +358,9 @@ class TestRecursiveMakeBackend(BackendTester):
                 'SSRCS += baz.S',
                 'SSRCS += foo.S',
             ],
+            'VISIBILITY_FLAGS': [
+                'VISIBILITY_FLAGS :=',
+            ],
         }
 
         for var, val in expected.items():
