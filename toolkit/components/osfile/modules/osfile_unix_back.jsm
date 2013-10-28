@@ -200,6 +200,24 @@
          return ctypes.CDataFinalizer(dir, SysFile._close_dir);
        };
 
+       // Structure |timeval|
+       {
+         let timeval = new SharedAll.HollowStructure(
+           "timeval",
+           Const.OSFILE_SIZEOF_TIMEVAL);
+         timeval.add_field_at(
+           Const.OSFILE_OFFSETOF_TIMEVAL_TV_SEC,
+           "tv_sec",
+           Type.long.implementation);
+         timeval.add_field_at(
+           Const.OSFILE_OFFSETOF_TIMEVAL_TV_USEC,
+           "tv_usec",
+           Type.long.implementation);
+         Type.timeval = timeval.getType();
+         Type.timevals = new SharedAll.Type("two timevals",
+           ctypes.ArrayType(Type.timeval.implementation, 2));
+       }
+
        // Declare libc functions as functions of |OS.Unix.File|
 
        // Finalizer-related functions
@@ -570,6 +588,17 @@
          array[1] = ctypes.CDataFinalizer(_pipebuf[1], SysFile._close);
          return result;
        };
+
+       declareLazyFFI(SysFile, "utimes", libc, "utimes", ctypes.default_abi,
+                      /*return*/     Type.negativeone_or_nothing,
+                      /*path*/       Type.path,
+                      /*timeval[2]*/ Type.timevals.out_ptr
+                      );
+       declareLazyFFI(SysFile, "futimes", libc, "futimes", ctypes.default_abi,
+                      /*return*/     Type.negativeone_or_nothing,
+                      /*fd*/         Type.fd,
+                      /*timeval[2]*/ Type.timevals.out_ptr
+                      );
      };
 
      exports.OS.Unix = {

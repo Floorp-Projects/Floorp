@@ -169,6 +169,33 @@
      };
 
      /**
+      * Set the last access and modification date of the file.
+      * The time stamp resolution is 1 second at best, but might be worse
+      * depending on the platform.
+      *
+      * @param {Date,number=} accessDate The last access date. If numeric,
+      * milliseconds since epoch. If omitted or null, then the current date
+      * will be used.
+      * @param {Date,number=} modificationDate The last modification date. If
+      * numeric, milliseconds since epoch. If omitted or null, then the current
+      * date will be used.
+      *
+      * @throws {TypeError} In case of invalid parameters.
+      * @throws {OS.File.Error} In case of I/O error.
+      */
+     File.prototype.setDates = function setDates(accessDate, modificationDate) {
+       accessDate = normalizeDate("File.prototype.setDates", accessDate);
+       modificationDate = normalizeDate("File.prototype.setDates",
+                                        modificationDate);
+       gTimevals[0].tv_sec = (accessDate / 1000) | 0;
+       gTimevals[0].tv_usec = 0;
+       gTimevals[1].tv_sec = (modificationDate / 1000) | 0;
+       gTimevals[1].tv_usec = 0;
+       throw_on_negative("setDates",
+                         UnixFile.futimes(this.fd, gTimevalsPtr));
+     };
+
+     /**
       * Flushes the file's buffers and causes all buffered data
       * to be written.
       * Disk flushes are very expensive and therefore should be used carefully,
@@ -756,6 +783,8 @@
 
      let gStatData = new Type.stat.implementation();
      let gStatDataPtr = gStatData.address();
+     let gTimevals = new Type.timevals.implementation();
+     let gTimevalsPtr = gTimevals.address();
      let MODE_MASK = 4095 /*= 07777*/;
      File.Info = function Info(stat) {
        let isDir = (stat.st_mode & Const.S_IFMT) == Const.S_IFDIR;
@@ -839,6 +868,33 @@
        return new File.Info(gStatData);
      };
 
+     /**
+      * Set the last access and modification date of the file.
+      * The time stamp resolution is 1 second at best, but might be worse
+      * depending on the platform.
+      *
+      * @param {string} path The full name of the file to set the dates for.
+      * @param {Date,number=} accessDate The last access date. If numeric,
+      * milliseconds since epoch. If omitted or null, then the current date
+      * will be used.
+      * @param {Date,number=} modificationDate The last modification date. If
+      * numeric, milliseconds since epoch. If omitted or null, then the current
+      * date will be used.
+      *
+      * @throws {TypeError} In case of invalid paramters.
+      * @throws {OS.File.Error} In case of I/O error.
+      */
+     File.setDates = function setDates(path, accessDate, modificationDate) {
+       accessDate = normalizeDate("File.setDates", accessDate);
+       modificationDate = normalizeDate("File.setDates", modificationDate);
+       gTimevals[0].tv_sec = (accessDate / 1000) | 0;
+       gTimevals[0].tv_usec = 0;
+       gTimevals[1].tv_sec = (modificationDate / 1000) | 0;
+       gTimevals[1].tv_usec = 0;
+       throw_on_negative("setDates",
+                         UnixFile.utimes(path, gTimevalsPtr));
+     };
+
      File.read = exports.OS.Shared.AbstractFile.read;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
      File.openUnique = exports.OS.Shared.AbstractFile.openUnique;
@@ -910,6 +966,33 @@
        }
        return result;
      }
+
+     /**
+      * Normalize and verify a Date or numeric date value.
+      *
+      * @param {string} fn Function name of the calling function.
+      * @param {Date,number} date The date to normalize. If omitted or null,
+      * then the current date will be used.
+      *
+      * @throws {TypeError} Invalid date provided.
+      *
+      * @return {number} Sanitized, numeric date in milliseconds since epoch.
+      */
+     function normalizeDate(fn, date) {
+       if (typeof date !== "number" && !date) {
+         // |date| was Omitted or null.
+         date = Date.now();
+       } else if (typeof date.getTime === "function") {
+         // Input might be a date or date-like object.
+         date = date.getTime();
+       }
+
+       if (isNaN(date)) {
+         throw new TypeError("|date| parameter of " + fn + " must be a " +
+                             "|Date| instance or number");
+       }
+       return date;
+     };
 
      File.Unix = exports.OS.Unix.File;
      File.Error = SysAll.Error;
