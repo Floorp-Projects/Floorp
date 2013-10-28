@@ -2470,32 +2470,33 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
   nscoord availWidth = psd->mRightEdge - psd->mLeftEdge;
   nscoord remainingWidth = availWidth - aLineBounds.width;
 #ifdef NOISY_HORIZONTAL_ALIGN
-    nsFrame::ListTag(stdout, mBlockReflowState->frame);
-    printf(": availWidth=%d lineWidth=%d delta=%d\n",
-           availWidth, aLineBounds.width, remainingWidth);
+  nsFrame::ListTag(stdout, mBlockReflowState->frame);
+  printf(": availWidth=%d lineWidth=%d delta=%d\n",
+         availWidth, aLineBounds.width, remainingWidth);
 #endif
+
+  // 'text-align-last: auto' is equivalent to the value of the 'text-align'
+  // property except when 'text-align' is set to 'justify', in which case it
+  // is 'justify' when 'text-justify' is 'distribute' and 'start' otherwise.
+  //
+  // XXX: the code below will have to change when we implement text-justify
+  //
   nscoord dx = 0;
-
-  if (remainingWidth > 0 &&
-      !(mBlockReflowState->frame->IsSVGText())) {
-    uint8_t textAlign = mStyleText->mTextAlign;
-
-    /* 
-     * 'text-align-last: auto' is equivalent to the value of the 'text-align'
-     * property except when 'text-align' is set to 'justify', in which case it
-     * is 'justify' when 'text-justify' is 'distribute' and 'start' otherwise.
-     *
-     * XXX: the code below will have to change when we implement text-justify
-     */
-    if (aIsLastLine) {
-      if (mStyleText->mTextAlignLast == NS_STYLE_TEXT_ALIGN_AUTO) {
-        if (textAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY) {
-          textAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
-        }
-      } else {
-        textAlign = mStyleText->mTextAlignLast;
+  uint8_t textAlign = mStyleText->mTextAlign;
+  bool textAlignTrue = mStyleText->mTextAlignTrue;
+  if (aIsLastLine) {
+    textAlignTrue = mStyleText->mTextAlignLastTrue;
+    if (mStyleText->mTextAlignLast == NS_STYLE_TEXT_ALIGN_AUTO) {
+      if (textAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY) {
+        textAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
       }
+    } else {
+      textAlign = mStyleText->mTextAlignLast;
     }
+  }
+
+  if ((remainingWidth > 0 || textAlignTrue) &&
+      !(mBlockReflowState->frame->IsSVGText())) {
 
     switch (textAlign) {
       case NS_STYLE_TEXT_ALIGN_JUSTIFY:
@@ -2549,7 +2550,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
         break;
     }
   }
-  else if (remainingWidth < 0) {
+  else if (remainingWidth < 0 || textAlignTrue) {
     if (NS_STYLE_DIRECTION_RTL == psd->mDirection) {
       dx = remainingWidth;
       psd->mX += dx;
