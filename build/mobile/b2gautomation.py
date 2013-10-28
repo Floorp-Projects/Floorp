@@ -349,25 +349,3 @@ class B2GRemoteAutomation(Automation):
             # this should never happen
             raise Exception("'kill' called on B2GInstance")
 
-
-class B2GDesktopAutomation(Automation):
-
-    def buildCommandLine(self, app, debuggerInfo, profileDir, testURL, extraArgs):
-        """ build the application command line """
-
-        cmd = os.path.abspath(app)
-        args = []
-
-        if debuggerInfo:
-            args.extend(debuggerInfo["args"])
-            args.append(cmd)
-            cmd = os.path.abspath(debuggerInfo["path"])
-
-        if self.IS_MAC:
-            args.append("-foreground")
-
-        profileDirectory = profileDir + "/"
-
-        args.extend(("-profile", profileDirectory))
-        args.extend(extraArgs)
-        return cmd, args
