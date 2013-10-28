@@ -2711,10 +2711,11 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
 }
 
 static nsresult
-JSSizeOfTab(JSObject *obj, size_t *jsObjectsSize, size_t *jsStringsSize,
+JSSizeOfTab(JSObject *objArg, size_t *jsObjectsSize, size_t *jsStringsSize,
             size_t *jsPrivateSize, size_t *jsOtherSize)
 {
     JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+    JS::RootedObject obj(rt, objArg);
 
     TabSizes sizes;
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
