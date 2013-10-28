@@ -9,7 +9,13 @@
 
 enum RTCStatsType {
   "inboundrtp",
-  "outboundrtp"
+  "outboundrtp",
+  "session",
+  "track",
+  "transport",
+  "candidatepair",
+  "localcandidate",
+  "remotecandidate"
 };
 
 dictionary RTCStats {
@@ -70,6 +76,26 @@ dictionary RTCIceComponentStats : RTCStats {
   boolean activeConnection;
 };
 
+enum RTCStatsIceCandidatePairState {
+  "frozen",
+  "waiting",
+  "inprogress",
+  "failed",
+  "succeeded",
+  "cancelled"
+};
+
+dictionary RTCIceCandidatePairStats : RTCStats {
+  DOMString componentId;
+  DOMString localCandidateId;
+  DOMString remoteCandidateId;
+  RTCStatsIceCandidatePairState state;
+  unsigned long long mozPriority;
+  boolean readable;
+  boolean nominated;
+  boolean selected;
+};
+
 enum RTCStatsIceCandidateType {
   "host",
   "serverreflexive",
@@ -105,6 +131,7 @@ dictionary RTCStatsReportInternal {
   sequence<RTCMediaStreamStats>       mediaStreamStats;
   sequence<RTCTransportStats>         transportStats;
   sequence<RTCIceComponentStats>      iceComponentStats;
+  sequence<RTCIceCandidatePairStats>  iceCandidatePairStats;
   sequence<RTCIceCandidateStats>      iceCandidateStats;
   sequence<RTCCodecStats>             codecStats;
 };
