@@ -1077,6 +1077,14 @@ nsIPresShell::SetAuthorStyleDisabled(bool aStyleDisabled)
   if (aStyleDisabled != mStyleSet->GetAuthorStyleDisabled()) {
     mStyleSet->SetAuthorStyleDisabled(aStyleDisabled);
     ReconstructStyleData();
+
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(mDocument,
+                                       "author-style-disabled-changed",
+                                       nullptr);
+    }
   }
 }
 
