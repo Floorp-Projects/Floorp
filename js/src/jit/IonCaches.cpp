@@ -2989,7 +2989,7 @@ EqualStringsHelper(JSString *str1, JSString *str2)
     JS_ASSERT(!str2->isAtom());
     JS_ASSERT(str1->length() == str2->length());
 
-    const jschar *chars = str2->getChars(NULL);
+    const jschar *chars = str2->getChars(nullptr);
     if (!chars)
         return false;
     return mozilla::PodEqual(str1->asAtom().chars(), chars, str1->length());

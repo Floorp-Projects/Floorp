@@ -82,7 +82,9 @@ STATIC_LIBS += \
   $(NULL)
 
 ifdef MOZ_CONTENT_SANDBOX #{
+ifeq ($(OS_ARCH),Linux)
 STATIC_LIBS += sandbox_s
+endif
 endif #}
 
 ifdef MOZ_B2G_RIL #{

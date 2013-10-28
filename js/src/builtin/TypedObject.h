@@ -389,7 +389,7 @@ extern const JSJitInfo ObjectIsTypedObjectJitInfo;
  * Usage: IsAttached(obj)
  *
  * Given a TypedDatum `obj`, returns true if `obj` is
- * "attached" (i.e., its data pointer is NULL).
+ * "attached" (i.e., its data pointer is nullptr).
  */
 bool IsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo IsAttachedJitInfo;

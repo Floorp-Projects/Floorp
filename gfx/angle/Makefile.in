@@ -2,10 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq (WINNT,$(OS_TARGET))
-VISIBILITY_FLAGS =
-endif
-
 # The below is a rough translation of build_angle.gypi:
 DEFINES += -DANGLE_DISABLE_TRACE
 DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1

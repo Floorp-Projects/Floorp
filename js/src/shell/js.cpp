@@ -129,8 +129,8 @@ static bool enableBaseline = true;
 static bool enableAsmJS = true;
 
 static bool printTiming = false;
-static const char *jsCacheDir = NULL;
-static const char *jsCacheAsmJSPath = NULL;
+static const char *jsCacheDir = nullptr;
+static const char *jsCacheAsmJSPath = nullptr;
 mozilla::Atomic<int32_t> jsCacheOpened(false);
 
 static bool
@@ -3673,7 +3673,7 @@ NestedShell(JSContext *cx, unsigned argc, jsval *vp)
     // The first argument to the shell is its path, which we assume is our own
     // argv[0].
     if (sArgc < 1) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_NESTED_FAIL);
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
     }
     if (!argv.append(strdup(sArgv[0])))
@@ -3709,7 +3709,7 @@ NestedShell(JSContext *cx, unsigned argc, jsval *vp)
     pid_t pid = fork();
     switch (pid) {
       case -1:
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_NESTED_FAIL);
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
       case 0:
         (void)execv(sArgv[0], argv.get());
@@ -3723,7 +3723,7 @@ NestedShell(JSContext *cx, unsigned argc, jsval *vp)
 #endif
 
     if (status != 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_NESTED_FAIL);
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_NESTED_FAIL);
         return false;
     }
 
@@ -4031,7 +4031,7 @@ static bool
 IsCachingEnabled(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setBoolean(jsCacheAsmJSPath != NULL);
+    args.rval().setBoolean(jsCacheAsmJSPath != nullptr);
     return true;
 }
 
@@ -5085,7 +5085,7 @@ ShellOpenAsmJSCacheEntryForRead(HandleObject global, size_t *serializedSizeOut,
     void *memory;
 #ifdef XP_WIN
     HANDLE fdOsHandle = (HANDLE)_get_osfhandle(fd);
-    HANDLE fileMapping = CreateFileMapping(fdOsHandle, NULL, PAGE_READWRITE, 0, 0, NULL);
+    HANDLE fileMapping = CreateFileMapping(fdOsHandle, nullptr, PAGE_READWRITE, 0, 0, nullptr);
     if (!fileMapping)
         return false;
 
@@ -5094,7 +5094,7 @@ ShellOpenAsmJSCacheEntryForRead(HandleObject global, size_t *serializedSizeOut,
     if (!memory)
         return false;
 #else
-    memory = mmap(NULL, off, PROT_READ, MAP_SHARED, fd, 0);
+    memory = mmap(nullptr, off, PROT_READ, MAP_SHARED, fd, 0);
     if (memory == MAP_FAILED)
         return false;
 #endif
@@ -5183,7 +5183,7 @@ ShellOpenAsmJSCacheEntryForWrite(HandleObject global, size_t serializedSize,
     void *memory;
 #ifdef XP_WIN
     HANDLE fdOsHandle = (HANDLE)_get_osfhandle(fd);
-    HANDLE fileMapping = CreateFileMapping(fdOsHandle, NULL, PAGE_READWRITE, 0, 0, NULL);
+    HANDLE fileMapping = CreateFileMapping(fdOsHandle, nullptr, PAGE_READWRITE, 0, 0, nullptr);
     if (!fileMapping)
         return false;
 
@@ -5192,7 +5192,7 @@ ShellOpenAsmJSCacheEntryForWrite(HandleObject global, size_t serializedSize,
     if (!memory)
         return false;
 #else
-    memory = mmap(NULL, serializedSize, PROT_WRITE, MAP_SHARED, fd, 0);
+    memory = mmap(nullptr, serializedSize, PROT_WRITE, MAP_SHARED, fd, 0);
     if (memory == MAP_FAILED)
         return false;
 #endif

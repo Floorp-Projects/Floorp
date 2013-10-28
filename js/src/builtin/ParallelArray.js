@@ -791,10 +791,10 @@ function ParallelArrayScatter(targets, defaultValue, conflictFunc, length, mode)
   var targetsLength = std_Math_min(targets.length, self.shape[0]);
 
   if (targetsLength >>> 0 !== targetsLength)
-    ThrowError(JSMSG_BAD_ARRAY_LENGTH, ".prototype.scatter");
+    ThrowError(JSMSG_PAR_ARRAY_BAD_ARG, ".prototype.scatter length");
 
   if (length >>> 0 !== length)
-    ThrowError(JSMSG_BAD_ARRAY_LENGTH, ".prototype.scatter");
+    ThrowError(JSMSG_PAR_ARRAY_BAD_ARG, ".prototype.scatter length");
 
   parallel: for (;;) { // see ParallelArrayBuild() to explain why for(;;) etc
     if (ShouldForceSequential())
