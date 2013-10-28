@@ -5040,6 +5040,10 @@ RIL[REQUEST_SWITCH_HOLDING_AND_ACTIVE] = function REQUEST_SWITCH_HOLDING_AND_ACT
 RIL[REQUEST_CONFERENCE] = function REQUEST_CONFERENCE(length, options) {
   if (options.rilRequestError) {
     this._hasConferenceRequest = false;
+    options = {rilMessageType: "conferenceError",
+               errorName: "addError",
+               errorMsg: RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError]};
+    this.sendChromeMessage(options);
     return;
   }
 };
@@ -5629,7 +5633,15 @@ RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION(length, option
   this.basebandVersion = Buf.readString();
   if (DEBUG) debug("Baseband version: " + this.basebandVersion);
 };
-RIL[REQUEST_SEPARATE_CONNECTION] = null;
+RIL[REQUEST_SEPARATE_CONNECTION] = function REQUEST_SEPARATE_CONNECTION(length, options) {
+  if (options.rilRequestError) {
+    options = {rilMessageType: "conferenceError",
+               errorName: "removeError",
+               errorMsg: RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError]};
+    this.sendChromeMessage(options);
+    return;
+  }
+};
 RIL[REQUEST_SET_MUTE] = null;
 RIL[REQUEST_GET_MUTE] = null;
 RIL[REQUEST_QUERY_CLIP] = function REQUEST_QUERY_CLIP(length, options) {
