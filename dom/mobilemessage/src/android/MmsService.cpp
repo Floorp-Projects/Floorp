@@ -6,7 +6,6 @@
 #include "MobileMessageCallback.h"
 #include "MmsService.h"
 #include "AndroidBridge.h"
-#include "jsapi.h"
 
 namespace mozilla {
 namespace dom {
