@@ -95,6 +95,10 @@ class BackendMakeFile(object):
     def write(self, buf):
         self.fh.write(buf)
 
+    # For compatibility with makeutil.Makefile
+    def add_statement(self, stmt):
+        self.write('%s\n' % stmt)
+
     def close(self):
         if self.xpt_name:
             self.fh.write('XPT_NAME := %s\n' % self.xpt_name)
@@ -340,9 +344,23 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.idls.append(obj)
             backend_file.xpt_name = '%s.xpt' % obj.module
         elif isinstance(obj, VariablePassthru):
+            unified_suffixes = dict(
+                UNIFIED_CSRCS='c',
+                UNIFIED_CPPSRCS='cpp',
+            )
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
-                if isinstance(v, list):
+                if k in unified_suffixes.keys():
+                    self._add_unified_build_rules(backend_file, v,
+                                      backend_file.objdir,
+                                      unified_prefix='Unified_%s_%s' %
+                                      (unified_suffixes[k],
+                                      backend_file.relobjdir.replace('/', '_')),
+                                      unified_suffix=unified_suffixes[k],
+                                      unified_files_makefile_variable=k,
+                                      include_curdir_build_rules=False)
+                    backend_file.write('%s += $(%s)\n' % (k[len('UNIFIED_'):], k))
+                elif isinstance(v, list):
                     for item in v:
                         backend_file.write('%s += %s\n' % (k, item))
                 elif isinstance(v, bool):
@@ -542,6 +560,7 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _add_unified_build_rules(self, makefile, files, output_directory,
                                  unified_prefix='Unified',
+                                 unified_suffix='cpp',
                                  extra_dependencies=[],
                                  unified_files_makefile_variable='unified_files',
                                  include_curdir_build_rules=True):
@@ -552,7 +571,7 @@ class RecursiveMakeBackend(CommonBackend):
             "# together into a single source file.  This cuts down on\n" \
             "# compilation times and debug information size.  %d was chosen as\n" \
             "# a reasonable compromise between clobber rebuild time, incremental\n" \
-            "# rebuild time, and compiler memory usage.\n" % files_per_unified_file
+            "# rebuild time, and compiler memory usage." % files_per_unified_file
         makefile.add_statement(explanation)
 
         def unified_files():
@@ -574,10 +593,10 @@ class RecursiveMakeBackend(CommonBackend):
             for i, unified_group in enumerate(grouper(files_per_unified_file,
                                                       sorted(files))):
                 just_the_filenames = list(filter_out_dummy(unified_group))
-                yield '%s%d.cpp' % (unified_prefix, i), just_the_filenames
+                yield '%s%d.%s' % (unified_prefix, i, unified_suffix), just_the_filenames
 
         all_sources = ' '.join(source for source, _ in unified_files())
-        makefile.add_statement('%s := %s\n' % (unified_files_makefile_variable,
+        makefile.add_statement('%s := %s' % (unified_files_makefile_variable,
                                                all_sources))
 
         for unified_file, source_filenames in unified_files():
@@ -646,7 +665,7 @@ class RecursiveMakeBackend(CommonBackend):
         mk = mozmakeutil.Makefile()
 
         sorted_ipdl_sources = list(sorted(self._ipdl_sources))
-        mk.add_statement('ALL_IPDLSRCS := %s\n' % ' '.join(sorted_ipdl_sources))
+        mk.add_statement('ALL_IPDLSRCS := %s' % ' '.join(sorted_ipdl_sources))
 
         def files_from(ipdl):
             base = os.path.basename(ipdl)
@@ -665,7 +684,7 @@ class RecursiveMakeBackend(CommonBackend):
                                       unified_prefix='UnifiedProtocols',
                                       unified_files_makefile_variable='CPPSRCS')
 
-        mk.add_statement('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
+        mk.add_statement('IPDLDIRS := %s' % ' '.join(sorted(set(os.path.dirname(p)
             for p in self._ipdl_sources))))
 
         with self._write_file(os.path.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
@@ -678,7 +697,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         def write_var(variable, sources):
             files = [os.path.basename(f) for f in sorted(sources)]
-            mk.add_statement('%s += %s\n' % (variable, ' '.join(files)))
+            mk.add_statement('%s += %s' % (variable, ' '.join(files)))
         write_var('webidl_files', self._webidl_sources)
         write_var('generated_events_webidl_files', self._generated_events_webidl_sources)
         write_var('test_webidl_files', self._test_webidl_sources)
