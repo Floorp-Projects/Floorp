@@ -779,8 +779,9 @@ nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
   if (!context) {
     return NS_ERROR_FAILURE;
   }
-  AutoPushJSContext cx(context->GetNativeContext());
-  JS::Rooted<JSObject*> global(cx, unrootedGlobal);
+  JSContext *scriptCx = context->GetNativeContext();
+  JS::Rooted<JSObject*> global(scriptCx, unrootedGlobal);
+  AutoPushJSContext cx(scriptCx);
 
   JS::CompileOptions options(cx);
   FillCompileOptionsForRequest(aRequest, global, &options);
