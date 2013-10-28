@@ -100,6 +100,10 @@ MOCHITEST_FILES := \
   test_CSP_bug916446.html \
   file_CSP_bug916446.html \
   file_CSP_bug916446.html^headers^ \
+  test_policyuri_regression_from_multipolicy.html \
+  file_policyuri_regression_from_multipolicy.html \
+  file_policyuri_regression_from_multipolicy.html^headers^ \
+  file_policyuri_regression_from_multipolicy_policy \
   $(NULL)
 
 MOCHITEST_CHROME_FILES := \
