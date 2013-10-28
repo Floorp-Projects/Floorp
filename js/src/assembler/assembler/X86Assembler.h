@@ -322,6 +322,7 @@ private:
     } TwoByteOpcodeID;
 
     typedef enum {
+        OP3_ROUNDSS_VsdWsd  = 0x0A,
         OP3_ROUNDSD_VsdWsd  = 0x0B,
         OP3_PTEST_VdVd      = 0x17,
         OP3_PINSRD_VsdWsd   = 0x22
@@ -739,6 +740,11 @@ public:
     {
         spew("fstp       %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FSTP, base, offset);
+    }
+    void fstp32_m(int offset, RegisterID base)
+    {
+        spew("fstp32       %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp(OP_FLD32, FPU6_OP_FSTP, base, offset);
     }
 
     void negl_r(RegisterID dst)
@@ -2936,6 +2942,15 @@ public:
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_ROUNDSD_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(mode);
+    }
+
+    void roundss_rr(XMMRegisterID src, XMMRegisterID dst, RoundingMode mode)
+    {
+        spew("roundss    %s, %s, %d",
+             nameFPReg(src), nameFPReg(dst), (int)mode);
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_ROUNDSS_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(mode); // modes are the same for roundsd and roundss
     }
 
     void pinsrd_rr(RegisterID src, XMMRegisterID dst)

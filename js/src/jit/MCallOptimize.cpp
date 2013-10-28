@@ -554,7 +554,6 @@ IonBuilder::inlineMathAbs(CallInfo &callInfo)
 IonBuilder::InliningStatus
 IonBuilder::inlineMathFloor(CallInfo &callInfo)
 {
-
     if (callInfo.constructing())
         return InliningStatus_NotInlined;
 
@@ -571,7 +570,7 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
         return InliningStatus_Inlined;
     }
 
-    if (argType == MIRType_Double && returnType == MIRType_Int32) {
+    if (IsFloatingPointType(argType) && returnType == MIRType_Int32) {
         callInfo.unwrapArgs();
         MFloor *ins = new MFloor(callInfo.getArg(0));
         current->add(ins);
@@ -579,7 +578,7 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
         return InliningStatus_Inlined;
     }
 
-    if (argType == MIRType_Double && returnType == MIRType_Double) {
+    if (IsFloatingPointType(argType) && returnType == MIRType_Double) {
         callInfo.unwrapArgs();
         MMathFunction *ins = MMathFunction::New(callInfo.getArg(0), MMathFunction::Floor, nullptr);
         current->add(ins);
