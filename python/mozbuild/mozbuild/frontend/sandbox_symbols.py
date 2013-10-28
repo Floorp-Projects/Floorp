@@ -78,6 +78,15 @@ VARIABLES = {
         Accepts assembler, C, C++, Objective C/C++.
         """, 'compile'),
 
+    'UNIFIED_SOURCES': (StrictOrderingOnAppendList, list, [],
+        """Source code files that can be compiled together.
+
+        This variable contains a list of source code files to compile,
+        that can be concatenated all together and built as a single source
+        file. This can help make the build faster and reduce the debug info
+        size.
+        """, 'compile'),
+
     'DEFINES': (OrderedDict, dict, OrderedDict(),
         """Dictionary of compiler defines to declare.
 
