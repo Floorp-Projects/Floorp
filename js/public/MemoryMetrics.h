@@ -536,7 +536,7 @@ extern JS_PUBLIC_API(size_t)
 PeakSizeOfTemporary(const JSRuntime *rt);
 
 extern JS_PUBLIC_API(bool)
-AddSizeOfTab(JSRuntime *rt, JSObject *obj, mozilla::MallocSizeOf mallocSizeOf,
+AddSizeOfTab(JSRuntime *rt, JS::HandleObject obj, mozilla::MallocSizeOf mallocSizeOf,
              ObjectPrivateVisitor *opv, TabSizes *sizes);
 
 } // namespace JS
