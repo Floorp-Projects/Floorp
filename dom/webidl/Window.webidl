@@ -332,7 +332,7 @@ partial interface Window {
                                    optional DOMString options = "",
                                    any... extraArguments);
 
-  [Replaceable, Throws] readonly attribute object content;
+  [Replaceable, Throws] readonly attribute object? content;
 };
 
 Window implements TouchEventHandlers;
