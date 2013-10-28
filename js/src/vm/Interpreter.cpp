@@ -1238,16 +1238,18 @@ Interpret(JSContext *cx, RunState &state)
     jsbytecode switchMask = 0;
     jsbytecode switchOp;
 
+#define ADVANCE_AND_DO_OP() goto advanceAndDoOp
 #define DO_OP()            goto do_op
+#define DO_SWITCH()        goto do_switch
 
 #define BEGIN_CASE(OP)     case OP:
 #define END_CASE(OP)                                                          \
     JS_BEGIN_MACRO                                                            \
         len = OP##_LENGTH;                                                    \
-        goto advanceAndDoOp;                                                  \
+        ADVANCE_AND_DO_OP();                                                  \
     JS_END_MACRO;
 
-#define END_VARLEN_CASE    goto advanceAndDoOp;
+#define END_VARLEN_CASE    ADVANCE_AND_DO_OP();
 
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     ((dbl) = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
@@ -1367,8 +1369,8 @@ Interpret(JSContext *cx, RunState &state)
     /*
      * It is important that "op" be initialized before calling DO_OP because
      * it is possible for "op" to be specially assigned during the normal
-     * processing of an opcode while looping. We rely on |advanceAndDoOp:| to
-     * manage "op" correctly in all other cases.
+     * processing of an opcode while looping. We rely on |ADVANCE_AND_DO_OP()|
+     * to manage "op" correctly in all other cases.
      */
     JSOp op;
     int32_t len;
@@ -1456,7 +1458,7 @@ BEGIN_CASE(EnableInterruptsPseudoOpcode)
     switchMask = moreInterrupts ? EnableInterruptsPseudoOpcode : 0;
 
     switchOp = jsbytecode(op);
-    goto do_switch;
+    DO_SWITCH();
 }
 
 /* Various 1-byte no-ops. */
@@ -1505,7 +1507,7 @@ BEGIN_CASE(JSOP_TRY)
 {
     JS_ASSERT(js_CodeSpec[op].length == 1);
     len = 1;
-    goto advanceAndDoOp;
+    ADVANCE_AND_DO_OP();
 }
 
 BEGIN_CASE(JSOP_LOOPHEAD)
@@ -1642,7 +1644,7 @@ BEGIN_CASE(JSOP_STOP)
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
             len = JSOP_CALL_LENGTH;
-            goto advanceAndDoOp;
+            ADVANCE_AND_DO_OP();
         }
 
         /* Increment pc so that |sp - fp->slots == ReconstructStackDepth(pc)|. */
@@ -1686,7 +1688,7 @@ BEGIN_CASE(JSOP_OR)
     bool cond = ToBooleanOp(regs);
     if (cond) {
         len = GET_JUMP_OFFSET(regs.pc);
-        goto advanceAndDoOp;
+        ADVANCE_AND_DO_OP();
     }
 }
 END_CASE(JSOP_OR)
@@ -1696,7 +1698,7 @@ BEGIN_CASE(JSOP_AND)
     bool cond = ToBooleanOp(regs);
     if (!cond) {
         len = GET_JUMP_OFFSET(regs.pc);
-        goto advanceAndDoOp;
+        ADVANCE_AND_DO_OP();
     }
 }
 END_CASE(JSOP_AND)
@@ -1718,7 +1720,7 @@ END_CASE(JSOP_AND)
                 BRANCH(GET_JUMP_OFFSET(regs.pc));                             \
             }                                                                 \
             len = 1 + JSOP_IFEQ_LENGTH;                                       \
-            goto advanceAndDoOp;                                              \
+            ADVANCE_AND_DO_OP();                                              \
         }                                                                     \
     JS_END_MACRO
 
@@ -2469,7 +2471,7 @@ BEGIN_CASE(JSOP_FUNCALL)
         TypeScript::Monitor(cx, script, regs.pc, newsp[-1]);
         regs.sp = newsp;
         len = JSOP_CALL_LENGTH;
-        goto advanceAndDoOp;
+        ADVANCE_AND_DO_OP();
     }
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
@@ -2689,7 +2691,7 @@ BEGIN_CASE(JSOP_TABLESWITCH)
         double d;
         /* Don't use mozilla::DoubleIsInt32; treat -0 (double) as 0. */
         if (!rref.isDouble() || (d = rref.toDouble()) != (i = int32_t(rref.toDouble())))
-            goto advanceAndDoOp;
+            ADVANCE_AND_DO_OP();
     }
 
     pc2 += JUMP_OFFSET_LEN;
@@ -3228,7 +3230,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
     } else {
         /* Another op will pop; nothing to do here. */
         len = JSOP_LEAVEFORLETIN_LENGTH;
-        goto advanceAndDoOp;
+        ADVANCE_AND_DO_OP();
     }
 }
 END_CASE(JSOP_LEAVEBLOCK)
@@ -3341,7 +3343,7 @@ default:
                  * catch block.
                  */
                 len = 0;
-                goto advanceAndDoOp;
+                ADVANCE_AND_DO_OP();
 
               case JSTRY_FINALLY:
                 /*
@@ -3352,7 +3354,7 @@ default:
                 PUSH_COPY(cx->getPendingException());
                 cx->clearPendingException();
                 len = 0;
-                goto advanceAndDoOp;
+                ADVANCE_AND_DO_OP();
 
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
