@@ -254,7 +254,7 @@ public:
 
   // Initialize PeerConnection from an IceConfiguration object (unit-tests)
   nsresult Initialize(PeerConnectionObserver& aObserver,
-                      nsIDOMWindow* aWindow,
+                      nsGlobalWindow* aWindow,
                       const IceConfiguration& aConfiguration,
                       nsIThread* aThread) {
     return Initialize(aObserver, aWindow, &aConfiguration, nullptr, aThread);
@@ -262,12 +262,12 @@ public:
 
   // Initialize PeerConnection from an RTCConfiguration object (JS entrypoint)
   void Initialize(PeerConnectionObserver& aObserver,
-                  nsIDOMWindow* aWindow,
+                  nsGlobalWindow& aWindow,
                   const RTCConfiguration& aConfiguration,
                   nsISupports* aThread,
                   ErrorResult &rv)
   {
-    nsresult r = Initialize(aObserver, aWindow, nullptr, &aConfiguration, aThread);
+    nsresult r = Initialize(aObserver, &aWindow, nullptr, &aConfiguration, aThread);
     if (NS_FAILED(r)) {
       rv.Throw(r);
     }
@@ -447,7 +447,7 @@ private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
   NS_IMETHODIMP Initialize(PeerConnectionObserver& aObserver,
-                           nsIDOMWindow* aWindow,
+                           nsGlobalWindow* aWindow,
                            const IceConfiguration* aConfiguration,
                            const RTCConfiguration* aRTCConfiguration,
                            nsISupports* aThread);

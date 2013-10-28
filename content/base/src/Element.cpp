@@ -84,8 +84,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
 
-#include "jsapi.h"
-
 #include "nsNodeInfoManager.h"
 #include "nsICategoryManager.h"
 #include "nsIDOMDocumentType.h"

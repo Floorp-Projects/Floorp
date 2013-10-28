@@ -506,6 +506,9 @@ protected:
   bool ParsePadding();
   bool ParseQuotes();
   bool ParseSize();
+  bool ParseTextAlign(nsCSSValue& aValue, const int32_t aTable[]);
+  bool ParseTextAlign(nsCSSValue& aValue);
+  bool ParseTextAlignLast(nsCSSValue& aValue);
   bool ParseTextDecoration();
   bool ParseTextDecorationLine(nsCSSValue& aValue);
   bool ParseTextCombineHorizontal(nsCSSValue& aValue);
@@ -6669,6 +6672,10 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
         return ParseImageOrientation(aValue);
       case eCSSProperty_marks:
         return ParseMarks(aValue);
+      case eCSSProperty_text_align:
+        return ParseTextAlign(aValue);
+      case eCSSProperty_text_align_last:
+        return ParseTextAlignLast(aValue);
       case eCSSProperty_text_decoration_line:
         return ParseTextDecorationLine(aValue);
       case eCSSProperty_text_combine_horizontal:
@@ -9712,6 +9719,54 @@ CSSParserImpl::ParseTextDecoration()
   AppendValue(eCSSProperty_text_decoration_style, style);
 
   return true;
+}
+
+bool
+CSSParserImpl::ParseTextAlign(nsCSSValue& aValue, const int32_t aTable[])
+{
+  if (ParseVariant(aValue, VARIANT_INHERIT, nullptr)) {
+    // 'inherit', 'initial' and 'unset' must be alone
+    return true;
+  }
+
+  nsCSSValue left;
+  if (!ParseVariant(left, VARIANT_KEYWORD, aTable)) {
+    return false;
+  }
+
+  if (!nsLayoutUtils::IsTextAlignTrueValueEnabled()) {
+    aValue = left;
+    return true;
+  }
+
+  nsCSSValue right;
+  if (ParseVariant(right, VARIANT_KEYWORD, aTable)) {
+    // 'true' must be combined with some other value than 'true'.
+    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE &&
+        right.GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
+      return false;
+    }
+    aValue.SetPairValue(left, right);
+  } else {
+    // Single value 'true' is not allowed.
+    if (left.GetIntValue() == NS_STYLE_TEXT_ALIGN_TRUE) {
+      return false;
+    }
+    aValue = left;
+  }
+  return true;
+}
+
+bool
+CSSParserImpl::ParseTextAlign(nsCSSValue& aValue)
+{
+  return ParseTextAlign(aValue, nsCSSProps::kTextAlignKTable);
+}
+
+bool
+CSSParserImpl::ParseTextAlignLast(nsCSSValue& aValue)
+{
+  return ParseTextAlign(aValue, nsCSSProps::kTextAlignLastKTable);
 }
 
 bool

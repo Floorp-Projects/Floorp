@@ -122,7 +122,7 @@ interface OnErrorEventHandlerForNodes {
            attribute EventHandler onerror;
 };
 
-//[NoInterfaceObject]
-//interface OnErrorEventHandlerForWindow {
-//           attribute OnErrorEventHandler onerror;
-//};
+[NoInterfaceObject]
+interface OnErrorEventHandlerForWindow {
+           attribute OnErrorEventHandler onerror;
+};

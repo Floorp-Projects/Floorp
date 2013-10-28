@@ -550,7 +550,13 @@ pref("nglayout.debug.paint_flashing_chrome", false);
 // BasicLayers (other layer managers always update the entire widget area)
 pref("nglayout.debug.widget_update_flashing", false);
 
+// Whether image visibility is enabled globally (ie we will try to unlock images
+// that are not visible).
 pref("layout.imagevisibility.enabled", true);
+// Whether image visibility is enabled in documents that are within a browser
+// element as defined by nsDocShell::FrameType and GetInheritedFrameType. This
+// pref only has an effect if layout.imagevisibility.enabled is false.
+pref("layout.imagevisibility.enabled_for_browser_elements_only", false);
 pref("layout.imagevisibility.numscrollportwidths", 0);
 pref("layout.imagevisibility.numscrollportheights", 1);
 
@@ -1879,6 +1885,9 @@ pref("layout.css.sticky.enabled", false);
 #else
 pref("layout.css.sticky.enabled", true);
 #endif
+
+// Is support for CSS "text-align: true X" enabled?
+pref("layout.css.text-align-true-value.enabled", false);
 
 // Is support for the CSS4 image-orientation property enabled?
 pref("layout.css.image-orientation.enabled", true);

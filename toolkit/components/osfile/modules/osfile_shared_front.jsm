@@ -304,29 +304,33 @@ AbstractFile.normalizeOpenMode = function normalizeOpenMode(mode) {
     write: false,
     trunc: false,
     create: false,
-    existing: false
+    existing: false,
+    append: true
   };
   for (let key in mode) {
-    if (!mode[key]) continue; // Only interpret true-ish keys
+    let val = !!mode[key]; // bool cast.
     switch (key) {
     case "read":
-      result.read = true;
+      result.read = val;
       break;
     case "write":
-      result.write = true;
+      result.write = val;
       break;
     case "truncate": // fallthrough
     case "trunc":
-      result.trunc = true;
-      result.write = true;
+      result.trunc = val;
+      result.write |= val;
       break;
     case "create":
-      result.create = true;
-      result.write = true;
+      result.create = val;
+      result.write |= val;
       break;
     case "existing": // fallthrough
     case "exist":
-      result.existing = true;
+      result.existing = val;
+      break;
+    case "append":
+      result.append = val;
       break;
     default:
       throw new TypeError("Mode " + key + " not understood");

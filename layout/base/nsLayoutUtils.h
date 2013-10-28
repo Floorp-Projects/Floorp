@@ -1677,6 +1677,12 @@ public:
   static bool UnsetValueEnabled();
 
   /**
+   * Checks whether support for the CSS text-align (and -moz-text-align-last)
+   * 'true' value is enabled.
+   */
+  static bool IsTextAlignTrueValueEnabled();
+
+  /**
    * Unions the overflow areas of all non-popup children of aFrame with
    * aOverflowAreas.
    */
