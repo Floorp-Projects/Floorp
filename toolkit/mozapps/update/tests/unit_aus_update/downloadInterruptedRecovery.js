@@ -7,14 +7,13 @@
 
 const INC_CONTRACT_ID = "@mozilla.org/network/incremental-download;1";
 
-var gNextRunFunc;
-var gStatusResult;
-var gExpectedStatusResult;
 var gIncrementalDownloadClassID, gIncOldFactory;
-
 // gIncrementalDownloadErrorType is used to loop through each of the connection
 // error types in the Mock incremental downloader.
 var gIncrementalDownloadErrorType = 0;
+
+var gNextRunFunc;
+var gExpectedStatusResult;
 
 function run_test() {
   setupTestCommon(true);
@@ -87,143 +86,11 @@ function check_test_helper_pt1_2() {
   gNextRunFunc();
 }
 
-// The following 3 functions are a workaround for GONK due to Bug 828858 and
-// can be removed after it is fixed and the callers are changed to use the
-// regular helper functions.
-function run_test_helper_bug828858_pt1(aMsg, aExpectedStatusResult, aNextRunFunc) {
-  gUpdates = null;
-  gUpdateCount = null;
-  gStatusResult = null;
-  gCheckFunc = check_test_helper_bug828858_pt1_1;
-  gNextRunFunc = aNextRunFunc;
-  gExpectedStatusResult = aExpectedStatusResult;
-  logTestInfo(aMsg, Components.stack.caller);
-  gUpdateChecker.checkForUpdates(updateCheckListener, true);
-}
-
-function check_test_helper_bug828858_pt1_1() {
-  do_check_eq(gUpdateCount, 1);
-  gCheckFunc = check_test_helper_bug828858_pt1_2;
-  var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
-  var state = gAUS.downloadUpdate(bestUpdate, false);
-  if (state == STATE_NONE || state == STATE_FAILED)
-    do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
-  gAUS.addDownloadListener(downloadListener);
-}
-
-function check_test_helper_bug828858_pt1_2() {
-  if (gStatusResult == AUS_Cr.NS_ERROR_CONTENT_CORRUPTED) {
-    do_check_eq(gStatusResult, AUS_Cr.NS_ERROR_CONTENT_CORRUPTED);
-  } else {
-    do_check_eq(gStatusResult, gExpectedStatusResult);
-  }
-  gAUS.removeDownloadListener(downloadListener);
-  gNextRunFunc();
-}
-
 function setResponseBody(aHashFunction, aHashValue, aSize) {
   var patches = getRemotePatchString(null, null,
                                      aHashFunction, aHashValue, aSize);
   var updates = getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
-}
-
-// mar download with a valid MD5 hash
-function run_test_pt1() {
-  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("mar download with a valid MD5 hash",
-                      AUS_Cr.NS_OK, run_test_pt2);
-}
-
-// mar download with an invalid MD5 hash
-function run_test_pt2() {
-  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("mar download with an invalid MD5 hash",
-                      AUS_Cr.NS_ERROR_CORRUPTED_CONTENT, run_test_pt3);
-}
-
-// mar download with a valid SHA1 hash
-function run_test_pt3() {
-  setResponseBody("SHA1", SHA1_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("mar download with a valid SHA1 hash",
-                      AUS_Cr.NS_OK, run_test_pt4);
-}
-
-// mar download with an invalid SHA1 hash
-function run_test_pt4() {
-  setResponseBody("SHA1", SHA1_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("mar download with an invalid SHA1 hash",
-                      AUS_Cr.NS_ERROR_CORRUPTED_CONTENT, run_test_pt5);
-}
-
-// mar download with a valid SHA256 hash
-function run_test_pt5() {
-  setResponseBody("SHA256", SHA256_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("mar download with a valid SHA256 hash",
-                      AUS_Cr.NS_OK, run_test_pt6);
-}
-
-// mar download with an invalid SHA256 hash
-function run_test_pt6() {
-  setResponseBody("SHA256", SHA256_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("mar download with an invalid SHA256 hash",
-                      AUS_Cr.NS_ERROR_CORRUPTED_CONTENT, run_test_pt7);
-}
-
-// mar download with a valid SHA384 hash
-function run_test_pt7() {
-  setResponseBody("SHA384", SHA384_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("mar download with a valid SHA384 hash",
-                      AUS_Cr.NS_OK, run_test_pt8);
-}
-
-// mar download with an invalid SHA384 hash
-function run_test_pt8() {
-  setResponseBody("SHA384", SHA384_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("mar download with an invalid SHA384 hash",
-                      AUS_Cr.NS_ERROR_CORRUPTED_CONTENT, run_test_pt9);
-}
-
-// mar download with a valid SHA512 hash
-function run_test_pt9() {
-  setResponseBody("SHA512", SHA512_HASH_SIMPLE_MAR);
-  run_test_helper_pt1("mar download with a valid SHA512 hash",
-                      AUS_Cr.NS_OK, run_test_pt10);
-}
-
-// mar download with an invalid SHA384 hash
-function run_test_pt10() {
-  setResponseBody("SHA512", SHA512_HASH_SIMPLE_MAR + "0");
-  run_test_helper_pt1("mar download with an invalid SHA512 hash",
-                      AUS_Cr.NS_ERROR_CORRUPTED_CONTENT, run_test_pt11);
-}
-
-// mar download with the mar not found
-function run_test_pt11() {
-  var patches = getRemotePatchString(null, gURLData + "missing.mar");
-  var updates = getRemoteUpdateString(patches);
-  gResponseBody = getRemoteUpdatesXMLString(updates);
-  run_test_helper_pt1("mar download with the mar not found",
-                      AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt12);
-}
-
-// mar download with a valid MD5 hash but invalid file size
-function run_test_pt12() {
-  const arbitraryFileSize = 1024000;
-  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR, arbitraryFileSize);
-  if (IS_TOOLKIT_GONK) {
-    // There seems to be a race on the web server side when the patchFile is
-    // stored on the SDCard. Sometimes, the webserver will serve up an error
-    // 416 and the contents of the file, and sometimes it will serve up an error
-    // 200 and no contents. This can cause either NS_ERROR_UNEXPECTED or
-    // NS_ERROR_CONTENT_CORRUPTED.
-    // Bug 828858 was filed to follow up on this issue.
-    run_test_helper_bug828858_pt1("mar download with a valid MD5 hash but invalid file size",
-                                  AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt13);
-  } else {
-    run_test_helper_pt1("mar download with a valid MD5 hash but invalid file size",
-                        AUS_Cr.NS_ERROR_UNEXPECTED, run_test_pt13);
-  }
 }
 
 var newFactory = {
@@ -263,7 +130,7 @@ function cleanupMockIncrementalDownload() {
  * interrupts work correctly in updater code.  The implementation of
  * the mock incremental downloader is very simple, it simply copies
  * the file to the destination location.
-*/
+ */
 
 function IncrementalDownload() {
   this.wrappedJSObject = this;
@@ -379,15 +246,15 @@ IncrementalDownload.prototype = {
 }
 
 // Test disconnecting during an update
-function run_test_pt13() {
+function run_test_pt1() {
   initMockIncrementalDownload();
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
   run_test_helper_pt1("mar download with connection interruption",
-                      AUS_Cr.NS_OK, run_test_pt14);
+                      AUS_Cr.NS_OK, run_test_pt2);
 }
 
 // Test disconnecting during an update
-function run_test_pt14() {
+function run_test_pt2() {
   gIncrementalDownloadErrorType = 0;
   Services.prefs.setIntPref(PREF_APP_UPDATE_SOCKET_ERRORS, 2);
   Services.prefs.setIntPref(PREF_APP_UPDATE_RETRY_TIMEOUT, 0);
@@ -404,39 +271,13 @@ function run_test_pt14() {
     expectedResult = AUS_Cr.NS_ERROR_NET_RESET;
   }
   run_test_helper_pt1("mar download with connection interruption without recovery",
-                      expectedResult, run_test_pt15);
+                      expectedResult, run_test_pt3);
 }
 
 // Test entering offline mode while downloading
-function run_test_pt15() {
+function run_test_pt3() {
   gIncrementalDownloadErrorType = 4;
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
   run_test_helper_pt1("mar download with offline mode",
                       AUS_Cr.NS_OK, finish_test);
 }
-
-/* Update download listener - nsIRequestObserver */
-const downloadListener = {
-  onStartRequest: function DL_onStartRequest(request, context) {
-  },
-
-  onProgress: function DL_onProgress(request, context, progress, maxProgress) {
-  },
-
-  onStatus: function DL_onStatus(request, context, status, statusText) {
-  },
-
-  onStopRequest: function DL_onStopRequest(request, context, status) {
-    gStatusResult = status;
-    // Use a timeout to allow the request to complete
-    do_execute_soon(gCheckFunc);
-  },
-
-  QueryInterface: function DL_QueryInterface(iid) {
-    if (!iid.equals(AUS_Ci.nsIRequestObserver) &&
-        !iid.equals(AUS_Ci.nsIProgressEventSink) &&
-        !iid.equals(AUS_Ci.nsISupports))
-      throw AUS_Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
-};
