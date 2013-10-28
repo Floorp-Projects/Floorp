@@ -18,8 +18,7 @@ static bool test_pldhash_Init_capacity_ok()
 {
   // Try the largest allowed capacity.  With PL_DHASH_MAX_SIZE==1<<26, this
   // will allocate 0.5GB of entry store on 32-bit platforms and 1GB on 64-bit
-  // platforms.  Hopefully that's not too much for the test machines to handle
-  // reliably.
+  // platforms.
   PLDHashTable t;
   bool ok = PL_DHashTableInit(&t, PL_DHashGetStubOps(), nullptr,
                               sizeof(PLDHashEntryStub), PL_DHASH_MAX_SIZE);
@@ -114,7 +113,10 @@ static const struct Test {
   DECL_TEST(test_pldhash_Init_capacity_ok),
   DECL_TEST(test_pldhash_Init_capacity_too_large),
   DECL_TEST(test_pldhash_Init_overflow),
+// See bug 931062, we skip this test on Android due to OOM.
+#ifndef MOZ_WIDGET_ANDROID
   DECL_TEST(test_pldhash_grow_to_max_capacity),
+#endif
   { nullptr, nullptr }
 };
 
