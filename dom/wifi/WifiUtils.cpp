@@ -221,12 +221,12 @@ WpaSupplicant::WpaSupplicant()
   mNetUtils = new NetUtils();
 };
 
-void WpaSupplicant::WaitForEvent(nsAString& aEvent)
+void WpaSupplicant::WaitForEvent(nsAString& aEvent, const nsCString& aInterface)
 {
   CHECK_HWLIB()
 
   char buffer[BUFFER_SIZE];
-  int32_t ret = mImpl->do_wifi_wait_for_event("wlan0", buffer, BUFFER_SIZE);
+  int32_t ret = mImpl->do_wifi_wait_for_event(aInterface.get(), buffer, BUFFER_SIZE);
   CheckBuffer(buffer, ret, aEvent);
 }
 
@@ -244,7 +244,8 @@ uint32_t WpaSupplicant::MakeMask(uint32_t len) {
 }
 
 bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
-                                   WifiResultOptions& aResult)
+                                   WifiResultOptions& aResult,
+                                   const nsCString& aInterface)
 {
   CHECK_HWLIB(false)
   if (!mNetUtils->GetSharedLibrary()) {
@@ -258,7 +259,7 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
     size_t len = BUFFER_SIZE - 1;
     char buffer[BUFFER_SIZE];
     NS_ConvertUTF16toUTF8 request(aOptions.mRequest);
-    aResult.mStatus = mImpl->do_wifi_command("wlan0", request.get(), buffer, &len);
+    aResult.mStatus = mImpl->do_wifi_command(aInterface.get(), request.get(), buffer, &len);
     nsString value;
     if (aResult.mStatus == 0) {
       if (buffer[len - 1] == '\n') { // remove trailing new lines.
@@ -269,7 +270,7 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
     }
     aResult.mReply = value;
   } else if (aOptions.mCmd.EqualsLiteral("close_supplicant_connection")) {
-    mImpl->do_wifi_close_supplicant_connection("wlan0");
+    mImpl->do_wifi_close_supplicant_connection(aInterface.get());
   } else if (aOptions.mCmd.EqualsLiteral("load_driver")) {
     aResult.mStatus = mImpl->do_wifi_load_driver();
   } else if (aOptions.mCmd.EqualsLiteral("unload_driver")) {
@@ -279,7 +280,7 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
   } else if (aOptions.mCmd.EqualsLiteral("stop_supplicant")) {
     aResult.mStatus = mImpl->do_wifi_stop_supplicant();
   } else if (aOptions.mCmd.EqualsLiteral("connect_to_supplicant")) {
-    aResult.mStatus = mImpl->do_wifi_connect_to_supplicant("wlan0");
+    aResult.mStatus = mImpl->do_wifi_connect_to_supplicant(aInterface.get());
   } else if (aOptions.mCmd.EqualsLiteral("ifc_enable")) {
     aResult.mStatus = mNetUtils->do_ifc_enable(GET_CHAR(mIfname));
   } else if (aOptions.mCmd.EqualsLiteral("ifc_disable")) {

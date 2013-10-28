@@ -6,7 +6,6 @@
 #include "nsCOMPtr.h"
 #include "nsDOMClassInfo.h"
 #include "nsHashPropertyBag.h"
-#include "jsapi.h"
 #include "nsThread.h"
 #include "DeviceStorage.h"
 #include "mozilla/dom/CameraControlBinding.h"

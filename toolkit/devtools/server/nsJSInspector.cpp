@@ -7,7 +7,6 @@
 #include "nsIXPConnect.h"
 #include "nsThreadUtils.h"
 #include "nsCxPusher.h"
-#include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/OldDebugAPI.h"
 #include "mozilla/ModuleUtils.h"
