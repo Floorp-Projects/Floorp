@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html id="html" style="height:100%">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=921928
+-->
+<head>
+  <title>Test for bug 921928</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #dialer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 50px;
+    background: green;
+  }
+
+  #apps {
+    position: absolute;
+    left: 0;
+    top: 51px;
+    width: 100%;
+    height: 100px;
+    background: blue;
+  }
+
+  .hit {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    z-index: 20;
+    background: red;
+    border: 1px solid red;
+  }
+  </style>
+</head>
+<body id="body" style="margin:0; width:100%; height:100%">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var prefs = [
+  ["ui.mouse.radius.enabled", true],
+  ["ui.mouse.radius.inputSource.touchOnly", false],
+  ["ui.mouse.radius.leftmm", 12],
+  ["ui.mouse.radius.topmm", 8],
+  ["ui.mouse.radius.rightmm", 4],
+  ["ui.mouse.radius.bottommm", 4],
+  ["ui.mouse.radius.visitedweight", 50],
+  ["dom.mozBrowserFramesEnabled", true]
+];
+
+var eventTarget;
+var debugHit = [];
+
+function endTest() {
+  SimpleTest.finish();
+  SpecialPowers.removePermission("browser", location.href);
+  for (var pref in prefs) {
+    SpecialPowers.pushPrefEnv({"clear": pref[0]}, function() {});
+  }
+}
+
+function testMouseClick(idPosition, dx, dy, idTarget, msg, options) {
+  eventTarget = null;
+  synthesizeMouse(document.getElementById(idPosition), dx, dy, options || {});
+  try {
+    is(eventTarget.id, idTarget,
+       "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]");
+  } catch (ex) {
+    ok(false, "checking '" + idPosition + "' offset " + dx + "," + dy + " [" + msg + "]; got " + eventTarget);
+  }
+}
+
+function showDebug() {
+  for (var i = 0; i < debugHit.length; i++) {
+    document.body.appendChild(debugHit[i]);
+  }
+
+  var screenshot = SpecialPowers.snapshotWindow(window, true);
+  dump('IMAGE:' + screenshot.toDataURL() + '\n');
+}
+
+/*
+  Setup the test environment: enabling event fluffing (all ui.* preferences),
+  and enabling remote process.
+*/
+function setupTest(cont) {
+  SpecialPowers.addPermission("browser", true, document);
+  SpecialPowers.pushPrefEnv({"set": prefs}, cont);
+}
+
+function execTest() {
+  /*
+     Creating two iframes that mimics the attention screen behavior on the
+     device:
+       - the 'dialer' iframe is the attention screen you have when a call is
+         in place. it is a green bar, so we copy it as green here too
+       - the 'apps' iframe mimics another application that is being run, be it
+         dialer, sms, ..., anything that the user might want to trigger during
+         a call
+
+     The bug we intent to reproduce here is that in this case, if the user taps
+     onto the top of the 'apps', the event fluffing code will in fact redirect
+     the event to the 'dialer' iframe. In practice, this is bug 921928 where
+     during a call the user wants to place a second call, and while typing the
+     phone number, wants to tap onto the 'delete' key to erase a digit, but ends
+     tapping and activating the dialer.
+   */
+  var dialer = document.createElement('iframe');
+  dialer.id = 'dialer';
+  dialer.src = '';
+  // Force OOP
+  dialer.setAttribute('mozbrowser', 'true');
+  dialer.setAttribute('remote', 'true');
+  document.body.appendChild(dialer);
+
+  var apps = document.createElement('iframe');
+  apps.id = 'apps';
+  apps.src = 'bug921928_event_target_iframe_apps_oop.html';
+  // Force OOP
+  apps.setAttribute('mozbrowser', 'true');
+  apps.setAttribute('remote', 'true');
+  document.body.appendChild(apps);
+
+  var handleEvent = function(event) {
+    eventTarget = event.target;
+
+    // We draw a small red div to show where the event has tapped
+    var hit = document.createElement('div');
+    hit.style.left = (event.clientX - 1.5) + 'px';
+    hit.style.top = (event.clientY - 1.5) + 'px';
+    hit.classList.add('hit');
+    debugHit.push(hit);
+  };
+
+  // In real life, the 'dialer' has a 'mousedown', so we mimic one too,
+  // to reproduce the same behavior
+  dialer.addEventListener('mousedown', function(e) {});
+
+  // This event listener is just here to record what iframe has been hit,
+  // and sets the 'eventTarget' to the iframe's id value so that the
+  // testMouseClick() code can correctly check. We cannot add it on the
+  // 'apps' otherwise it will alter the behavior of the test.
+  document.addEventListener('mousedown', handleEvent);
+
+  // In the following, the coordinates are relative to the iframe
+
+  // First, we check that tapping onto the 'dialer' correctly triggers the
+  // dialer.
+  testMouseClick("dialer", 20, 1, "dialer", "correct hit on dialer with mouse input");
+  testMouseClick("dialer", 20, 1, "dialer", "correct hit on dialer with touch input", {
+    inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+  });
+
+  // Now this is it: we tap inside 'apps', but very close to the border between
+  // 'apps' and 'dialer'. Without the fix from this bug, this test will fail.
+  testMouseClick("apps", 20, 1, "apps", "apps <iframe mozbrowser remote> hit for mouse input");
+  testMouseClick("apps", 20, 1, "apps", "apps <iframe mozbrowser remote> hit for touch input", {
+    inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+  });
+
+  // Show small red spots of where the click happened
+  // showDebug();
+
+  endTest();
+}
+
+function runTest() {
+  setupTest(execTest);
+}
+
+addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
+</script>
+</body>
+</html>
