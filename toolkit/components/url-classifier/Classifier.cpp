@@ -414,11 +414,9 @@ Classifier::ScanStoreDir(nsTArray<nsCString>& aTables)
 
   bool hasMore;
   while (NS_SUCCEEDED(rv = entries->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
-    rv = entries->GetNext(getter_AddRefs(supports));
+    nsCOMPtr<nsIFile> file;
+    rv = entries->GetNext(getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
 
     nsCString leafName;
     rv = file->GetNativeLeafName(leafName);

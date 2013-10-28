@@ -610,9 +610,8 @@ nsresult nsCharsetMenu::RefreshMaileditMenu()
   NS_ENSURE_SUCCESS(res, res);
 
   // clear the menu
-  nsCOMPtr<nsISupports> supports;
-  while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(supports)))) {
-    nsCOMPtr<nsIRDFNode> node = do_QueryInterface(supports);
+  nsCOMPtr<nsIRDFNode> node;
+  while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(node)))) {
 
     res = mInner->Unassert(kNC_MaileditCharsetMenuRoot, kNC_Name, node);
     NS_ENSURE_SUCCESS(res, res);

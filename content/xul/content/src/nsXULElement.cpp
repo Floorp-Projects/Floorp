@@ -2231,9 +2231,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                       rv = tmp;
                     }
                 } else {
-                    nsCOMPtr<nsISupports> supports;
-                    tmp = aStream->ReadObject(true, getter_AddRefs(supports));
-                    script->mSrcURI = do_QueryInterface(supports);
+                    tmp = aStream->ReadObject(true, getter_AddRefs(script->mSrcURI));
                     if (NS_FAILED(tmp)) {
                       rv = tmp;
                     }

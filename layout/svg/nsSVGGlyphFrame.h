@@ -134,10 +134,8 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // These do not use the global transform if NS_STATE_NONDISPLAY_CHILD
-  nsresult GetStartPositionOfChar(uint32_t charnum,
-                                  mozilla::nsISVGPoint **_retval);
-  nsresult GetEndPositionOfChar(uint32_t charnum,
-                                mozilla::nsISVGPoint **_retval);
+  nsresult GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval);
+  nsresult GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval);
   nsresult GetExtentOfChar(uint32_t charnum, dom::SVGIRect **_retval);
   nsresult GetRotationOfChar(uint32_t charnum, float *_retval);
   /**

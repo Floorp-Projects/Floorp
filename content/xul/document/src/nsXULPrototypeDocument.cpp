@@ -234,9 +234,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 {
     nsresult rv;
 
-    nsCOMPtr<nsISupports> supports;
-    rv = aStream->ReadObject(true, getter_AddRefs(supports));
-    mURI = do_QueryInterface(supports);
+    rv = aStream->ReadObject(true, getter_AddRefs(mURI));
 
     uint32_t count, i;
     nsCOMPtr<nsIURI> styleOverlayURI;
@@ -250,19 +248,17 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     }
 
     for (i = 0; i < count; ++i) {
-        tmp = aStream->ReadObject(true, getter_AddRefs(supports));
+        tmp = aStream->ReadObject(true, getter_AddRefs(styleOverlayURI));
         if (NS_FAILED(tmp)) {
           rv = tmp;
         }
-        styleOverlayURI = do_QueryInterface(supports);
         mStyleSheetReferences.AppendObject(styleOverlayURI);
     }
 
 
     // nsIPrincipal mNodeInfoManager->mPrincipal
     nsCOMPtr<nsIPrincipal> principal;
-    tmp = aStream->ReadObject(true, getter_AddRefs(supports));
-    principal = do_QueryInterface(supports);
+    tmp = aStream->ReadObject(true, getter_AddRefs(principal));
     if (NS_FAILED(tmp)) {
       rv = tmp;
     }

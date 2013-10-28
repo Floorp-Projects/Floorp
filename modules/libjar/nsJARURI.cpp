@@ -120,17 +120,10 @@ nsJARURI::Read(nsIObjectInputStream* aInputStream)
 {
     nsresult rv;
 
-    nsCOMPtr<nsISupports> supports;
-    rv = aInputStream->ReadObject(true, getter_AddRefs(supports));
+    rv = aInputStream->ReadObject(true, getter_AddRefs(mJARFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mJARFile = do_QueryInterface(supports, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = aInputStream->ReadObject(true, getter_AddRefs(supports));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mJAREntry = do_QueryInterface(supports);
+    rv = aInputStream->ReadObject(true, getter_AddRefs(mJAREntry));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = aInputStream->ReadCString(mCharsetHint);
