@@ -9,6 +9,7 @@ from abc import (
     abstractmethod,
 )
 
+import errno
 import os
 import sys
 import time
@@ -37,9 +38,6 @@ class BackendConsumeSummary(object):
 
         # The number of derived objects from the read moz.build files.
         self.object_count = 0
-
-        # The number of backend files managed.
-        self.managed_count = 0
 
         # The number of backend files created.
         self.created_count = 0
@@ -234,7 +232,7 @@ class BuildBackend(LoggingMixin):
         """Called when consume() has completed handling all objects."""
 
     @contextmanager
-    def _write_file(self, path):
+    def _write_file(self, path=None, fh=None):
         """Context manager to write a file.
 
         This is a glorified wrapper around FileAvoidWrite with integration to
@@ -246,7 +244,19 @@ class BuildBackend(LoggingMixin):
                 fh.write('hello world')
         """
 
-        fh = FileAvoidWrite(path)
+        if path is not None:
+            assert fh is None
+            fh = FileAvoidWrite(path)
+        else:
+            assert fh is not None
+
+        dirname = os.path.dirname(fh.name)
+        try:
+            os.makedirs(dirname)
+        except OSError as error:
+            if error.errno != errno.EEXIST:
+                raise
+
         yield fh
 
         existed, updated = fh.close()

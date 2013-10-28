@@ -70,7 +70,8 @@ qux =''')
 @bar@
 '''}):
             env = ConfigEnvironment('.', '.', substs = [ ('foo', 'bar baz') ])
-            env.create_config_file('file')
+            with open('file', 'w') as fh:
+                env.create_config_file(fh)
             self.assertEqual(open('file', 'r').read(), '''#ifdef foo
 bar baz
 @bar@
@@ -97,7 +98,8 @@ bar baz
 #endif
 '''}):
             env = ConfigEnvironment('.', '.', defines = [ ('foo', 'baz qux'), ('baz', 1) ])
-            env.create_config_header('file')
+            with open('file', 'w') as fh:
+                env.create_config_header(fh)
             self.assertEqual(open('file','r').read(), '''
 /* Comment */
 #define foo
