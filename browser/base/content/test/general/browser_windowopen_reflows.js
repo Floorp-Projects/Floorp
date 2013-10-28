@@ -19,6 +19,10 @@ const EXPECTED_REFLOWS = [
 
   // Focusing the content area causes a reflow.
   "gBrowserInit._delayedStartup@chrome://browser/content/browser.js|",
+
+  // Sometimes sessionstore collects data during this test, which causes a sync reflow
+  // (https://bugzilla.mozilla.org/show_bug.cgi?id=892154 will fix this)
+  "ssi_getWindowDimension@resource:///modules/sessionstore/SessionStore.jsm",
 ];
 
 if (Services.appinfo.OS == "Darwin") {
