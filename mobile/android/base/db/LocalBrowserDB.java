@@ -1161,26 +1161,18 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Bookmarks.POSITION, position);
         values.put(Bookmarks.IS_DELETED, 0);
 
-        // If this site is already pinned, unpin it
-        cr.delete(mBookmarksUriWithProfile,
-                  Bookmarks.PARENT + " == ? AND " + Bookmarks.URL + " == ?",
-                  new String[] {
-                      String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID),
-                      url
-                  });
-
-        // If something is already pinned in this spot update it
-        int updated = cr.update(mBookmarksUriWithProfile,
-                                values,
-                                Bookmarks.POSITION + " = ? AND " +
-                                Bookmarks.PARENT + " = ?",
-                                new String[] { Integer.toString(position),
-                                               String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) });
-
-        // Otherwise just insert a new item
-        if (updated == 0) {
-            cr.insert(mBookmarksUriWithProfile, values);
-        }
+        // We do an update-and-replace here without deleting any existing pins for the given URL.
+        // That means if the user pins a URL, then edits another thumbnail to use the same URL,
+        // we'll end up with two pins for that site. This is the intended behavior, which
+        // incidentally saves us a delete query.
+        Uri uri = mBookmarksUriWithProfile.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build();
+        cr.update(uri,
+                  values,
+                  Bookmarks.POSITION + " = ? AND " +
+                  Bookmarks.PARENT + " = ?",
+                  new String[] { Integer.toString(position),
+                                 String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID) });
     }
 
     @Override
