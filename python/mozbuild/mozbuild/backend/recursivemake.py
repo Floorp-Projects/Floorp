@@ -4,7 +4,6 @@
 
 from __future__ import unicode_literals
 
-import errno
 import itertools
 import logging
 import os
@@ -51,7 +50,6 @@ from ..util import (
 )
 from ..makeutil import Makefile
 
-
 class BackendMakeFile(object):
     """Represents a generated backend.mk file.
 
@@ -83,13 +81,13 @@ class BackendMakeFile(object):
         self.objdir = objdir
         self.relobjdir = objdir[len(environment.topobjdir) + 1:]
         self.environment = environment
-        self.path = os.path.join(objdir, 'backend.mk')
+        self.name = os.path.join(objdir, 'backend.mk')
 
         # XPIDLFiles attached to this file.
         self.idls = []
         self.xpt_name = None
 
-        self.fh = FileAvoidWrite(self.path)
+        self.fh = FileAvoidWrite(self.name)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
         self.fh.write('\n')
         self.fh.write('MOZBUILD_DERIVED := 1\n')
@@ -271,7 +269,8 @@ class RecursiveMakeBackend(CommonBackend):
 
         def detailed(summary):
             return '{:d} total backend files. {:d} created; {:d} updated; {:d} unchanged'.format(
-                summary.managed_count, summary.created_count,
+                summary.created_count + summary.updated_count +
+                summary.unchanged_count, summary.created_count,
                 summary.updated_count, summary.unchanged_count)
 
         # This is a little kludgy and could be improved with a better API.
@@ -311,16 +310,6 @@ class RecursiveMakeBackend(CommonBackend):
             self._parallel_export = 'no-parallel-export' not in derecurse
             self._no_skip = 'no-skip' in derecurse
 
-    def _update_from_avoid_write(self, result):
-        existed, updated = result
-
-        if not existed:
-            self.summary.created_count += 1
-        elif updated:
-            self.summary.updated_count += 1
-        else:
-            self.summary.unchanged_count += 1
-
     def consume_object(self, obj):
         """Write out build files necessary to build with recursive make."""
 
@@ -329,21 +318,21 @@ class RecursiveMakeBackend(CommonBackend):
         if not isinstance(obj, SandboxDerived):
             return
 
-        backend_file = self._backend_files.get(obj.srcdir,
-            BackendMakeFile(obj.srcdir, obj.objdir, self.get_environment(obj)))
+        if obj.srcdir not in self._backend_files:
+            self._backend_files[obj.srcdir] = \
+                BackendMakeFile(obj.srcdir, obj.objdir, self.get_environment(obj))
+        backend_file = self._backend_files[obj.srcdir]
 
         if isinstance(obj, DirectoryTraversal):
             self._process_directory_traversal(obj, backend_file)
         elif isinstance(obj, ConfigFileSubstitution):
-            self._update_from_avoid_write(
-                backend_file.environment.create_config_file(obj.output_path))
+            with self._write_file(obj.output_path) as fh:
+                backend_file.environment.create_config_file(fh)
             self.backend_input_files.add(obj.input_path)
-            self.summary.managed_count += 1
         elif isinstance(obj, HeaderFileSubstitution):
-            self._update_from_avoid_write(
-                backend_file.environment.create_config_header(obj.output_path))
+            with self._write_file(obj.output_path) as fh:
+                backend_file.environment.create_config_header(fh)
             self.backend_input_files.add(obj.input_path)
-            self.summary.managed_count += 1
         elif isinstance(obj, XPIDLFile):
             backend_file.idls.append(obj)
             backend_file.xpt_name = '%s.xpt' % obj.module
@@ -540,14 +529,13 @@ class RecursiveMakeBackend(CommonBackend):
 
         root_mk.add_statement('$(call include_deps,root-deps.mk)')
 
-        root = FileAvoidWrite(
-            os.path.join(self.environment.topobjdir, 'root.mk'))
-        root_deps = FileAvoidWrite(
-            os.path.join(self.environment.topobjdir, 'root-deps.mk'))
-        root_mk.dump(root, removal_guard=False)
-        root_deps_mk.dump(root_deps, removal_guard=False)
-        self._update_from_avoid_write(root.close())
-        self._update_from_avoid_write(root_deps.close())
+        with self._write_file(
+                os.path.join(self.environment.topobjdir, 'root.mk')) as root:
+            root_mk.dump(root, removal_guard=False)
+
+        with self._write_file(
+                os.path.join(self.environment.topobjdir, 'root-deps.mk')) as root_deps:
+            root_deps_mk.dump(root_deps, removal_guard=False)
 
     def _add_unified_build_rules(self, makefile, files, output_directory,
                                  unified_prefix='Unified',
@@ -599,7 +587,7 @@ class RecursiveMakeBackend(CommonBackend):
             # blown away and we need to regenerate them.  The rule doesn't correctly
             # handle source files being added/removed/renamed.  Therefore, we
             # generate them here also to make sure everything's up-to-date.
-            with FileAvoidWrite(os.path.join(output_directory, unified_file)) as f:
+            with self._write_file(os.path.join(output_directory, unified_file)) as f:
                 f.write('\n'.join(['#include "%s"' % s for s in source_filenames]))
 
         if include_curdir_build_rules:
@@ -616,56 +604,43 @@ class RecursiveMakeBackend(CommonBackend):
         CommonBackend.consume_finished(self)
 
         for srcdir in sorted(self._backend_files.keys()):
-            bf = self._backend_files[srcdir]
+            with self._write_file(fh=self._backend_files[srcdir]) as bf:
+                makefile_in = os.path.join(srcdir, 'Makefile.in')
+                makefile = os.path.join(bf.objdir, 'Makefile')
 
-            if not os.path.exists(bf.objdir):
-                try:
-                    os.makedirs(bf.objdir)
-                except OSError as error:
-                    if error.errno != errno.EEXIST:
-                        raise
+                # If Makefile.in exists, use it as a template. Otherwise,
+                # create a stub.
+                stub = not os.path.exists(makefile_in)
+                if not stub:
+                    self.log(logging.DEBUG, 'substitute_makefile',
+                        {'path': makefile}, 'Substituting makefile: {path}')
 
-            makefile_in = os.path.join(srcdir, 'Makefile.in')
-            makefile = os.path.join(bf.objdir, 'Makefile')
+                    # Adding the Makefile.in here has the desired side-effect
+                    # that if the Makefile.in disappears, this will force
+                    # moz.build traversal. This means that when we remove empty
+                    # Makefile.in files, the old file will get replaced with
+                    # the autogenerated one automatically.
+                    self.backend_input_files.add(makefile_in)
 
-            # If Makefile.in exists, use it as a template. Otherwise, create a
-            # stub.
-            stub = not os.path.exists(makefile_in)
-            if not stub:
-                self.log(logging.DEBUG, 'substitute_makefile',
-                    {'path': makefile}, 'Substituting makefile: {path}')
+                    for skiplist in self._may_skip.values():
+                        if bf.relobjdir in skiplist:
+                            skiplist.remove(bf.relobjdir)
+                else:
+                    self.log(logging.DEBUG, 'stub_makefile',
+                        {'path': makefile}, 'Creating stub Makefile: {path}')
 
-                # Adding the Makefile.in here has the desired side-effect that
-                # if the Makefile.in disappears, this will force moz.build
-                # traversal. This means that when we remove empty Makefile.in
-                # files, the old file will get replaced with the autogenerated
-                # one automatically.
-                self.backend_input_files.add(makefile_in)
+                # Can't skip directories with a jar.mn for the 'libs' tier.
+                if bf.relobjdir in self._may_skip['libs'] and \
+                        os.path.exists(os.path.join(srcdir, 'jar.mn')):
+                    self._may_skip['libs'].remove(bf.relobjdir)
 
-                for skiplist in self._may_skip.values():
-                    if bf.relobjdir in skiplist:
-                        skiplist.remove(bf.relobjdir)
-            else:
-                self.log(logging.DEBUG, 'stub_makefile',
-                    {'path': makefile}, 'Creating stub Makefile: {path}')
-
-            # Can't skip directories with a jar.mn for the 'libs' tier.
-            if bf.relobjdir in self._may_skip['libs'] and \
-                    os.path.exists(os.path.join(srcdir, 'jar.mn')):
-                self._may_skip['libs'].remove(bf.relobjdir)
-
-            self._update_from_avoid_write(
-                bf.environment.create_makefile(makefile, stub=stub))
-            self.summary.managed_count += 1
-
-            self._update_from_avoid_write(bf.close())
-            self.summary.managed_count += 1
+                with self._write_file(makefile) as fh:
+                    bf.environment.create_makefile(fh, stub=stub)
 
         self._fill_root_mk()
 
         # Write out a master list of all IPDL source files.
         ipdl_dir = os.path.join(self.environment.topobjdir, 'ipc', 'ipdl')
-        ipdls = FileAvoidWrite(os.path.join(ipdl_dir, 'ipdlsrcs.mk'))
         mk = mozmakeutil.Makefile()
 
         sorted_ipdl_sources = list(sorted(self._ipdl_sources))
@@ -691,14 +666,11 @@ class RecursiveMakeBackend(CommonBackend):
         mk.add_statement('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
             for p in self._ipdl_sources))))
 
-        mk.dump(ipdls, removal_guard=False)
-
-        self._update_from_avoid_write(ipdls.close())
-        self.summary.managed_count += 1
+        with self._write_file(os.path.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
+            mk.dump(ipdls, removal_guard=False)
 
         # Write out master lists of WebIDL source files.
         bindings_dir = os.path.join(self.environment.topobjdir, 'dom', 'bindings')
-        webidls = FileAvoidWrite(os.path.join(bindings_dir, 'webidlsrcs.mk'))
 
         mk = mozmakeutil.Makefile()
 
@@ -726,28 +698,23 @@ class RecursiveMakeBackend(CommonBackend):
 
         # Assume that Somebody Else has responsibility for correctly
         # specifying removal dependencies for |all_webidl_sources|.
-        mk.dump(webidls, removal_guard=False)
-
-        self._update_from_avoid_write(webidls.close())
-        self.summary.managed_count += 1
+        with self._write_file(os.path.join(bindings_dir, 'webidlsrcs.mk')) as webidls:
+            mk.dump(webidls, removal_guard=False)
 
         # Write out a dependency file used to determine whether a config.status
         # re-run is needed.
         backend_built_path = os.path.join(self.environment.topobjdir,
             'backend.%s.built' % self.__class__.__name__).replace(os.sep, '/')
-        backend_deps = FileAvoidWrite('%s.pp' % backend_built_path)
         inputs = sorted(p.replace(os.sep, '/') for p in self.backend_input_files)
 
         # We need to use $(DEPTH) so the target here matches what's in
         # rules.mk. If they are different, the dependencies don't get pulled in
         # properly.
-        backend_deps.write('$(DEPTH)/backend.RecursiveMakeBackend.built: %s\n' %
-            ' '.join(inputs))
-        for path in inputs:
-            backend_deps.write('%s:\n' % path)
-
-        self._update_from_avoid_write(backend_deps.close())
-        self.summary.managed_count += 1
+        with self._write_file('%s.pp' % backend_built_path) as backend_deps:
+            backend_deps.write('$(DEPTH)/backend.RecursiveMakeBackend.built: %s\n' %
+                ' '.join(inputs))
+            for path in inputs:
+                backend_deps.write('%s:\n' % path)
 
         # Make the master test manifest files.
         for flavor, t in self._test_manifests.items():
@@ -954,12 +921,11 @@ class RecursiveMakeBackend(CommonBackend):
 
         out_path = os.path.join(self.environment.topobjdir, 'config',
             'makefiles', 'xpidl', 'Makefile')
-        result = self.environment.create_config_file(out_path, extra=dict(
-            xpidl_rules='\n'.join(rules),
-            xpidl_modules=' '.join(xpt_modules),
-        ))
-        self._update_from_avoid_write(result)
-        self.summary.managed_count += 1
+        with self._write_file(out_path) as fh:
+            self.environment.create_config_file(fh, extra=dict(
+                xpidl_rules='\n'.join(rules),
+                xpidl_modules=' '.join(xpt_modules),
+            ))
 
         # The Makefile can't regenerate itself because of custom substitution.
         # We need to list it here to ensure changes cause regeneration.
@@ -1039,19 +1005,15 @@ class RecursiveMakeBackend(CommonBackend):
         for k, manifest in manifests.items():
             purger.add(k)
 
-            fh = FileAvoidWrite(os.path.join(man_dir, k))
-            manifest.write(fileobj=fh)
-            self._update_from_avoid_write(fh.close())
+            with self._write_file(os.path.join(man_dir, k)) as fh:
+                manifest.write(fileobj=fh)
 
         purger.purge(man_dir)
 
     def _write_master_test_manifest(self, path, manifests):
-        master = FileAvoidWrite(path)
-        master.write(
-            '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n\n')
+        with self._write_file(path) as master:
+            master.write(
+                '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n\n')
 
-        for manifest in sorted(manifests):
-            master.write('[include:%s]\n' % manifest)
-
-        self._update_from_avoid_write(master.close())
-        self.summary.managed_count += 1
+            for manifest in sorted(manifests):
+                master.write('[include:%s]\n' % manifest)
