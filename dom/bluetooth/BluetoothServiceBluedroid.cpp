@@ -17,6 +17,10 @@
 */
 
 #include "BluetoothServiceBluedroid.h"
+
+#include <hardware/bluetooth.h>
+#include <hardware/hardware.h>
+
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
@@ -27,22 +31,160 @@ using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
+/**
+ *  Classes only used in this file
+ */
+class DistributeBluetoothSignalTask : public nsRunnable {
+public:
+  DistributeBluetoothSignalTask(const BluetoothSignal& aSignal) :
+    mSignal(aSignal)
+  {
+  }
+
+  NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BluetoothService* bs = BluetoothService::Get();
+    bs->DistributeSignal(mSignal);
+
+    return NS_OK;
+  }
+
+private:
+  BluetoothSignal mSignal;
+};
+
+/**
+ *  Static variables
+ */
+
+static bluetooth_device_t* sBtDevice;
+static const bt_interface_t* sBtInterface;
+static bool sIsBtEnabled = false;
+
+/**
+ *  Static callback functions
+ */
+static void
+AdapterStateChangeCallback(bt_state_t aStatus)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  BT_LOGD("Enter: %s, BT_STATE:%d", __FUNCTION__, aStatus);
+  nsAutoString signalName;
+  if (aStatus == BT_STATE_ON) {
+    sIsBtEnabled = true;
+    signalName = NS_LITERAL_STRING("AdapterAdded");
+  } else {
+    sIsBtEnabled = false;
+    signalName = NS_LITERAL_STRING("Disabled");
+  }
+
+  BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER), BluetoothValue(true));
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    NS_WARNING("Failed to dispatch to main thread!");
+  }
+}
+
+bt_callbacks_t sBluetoothCallbacks = {
+  sizeof(sBluetoothCallbacks),
+  AdapterStateChangeCallback
+};
+
+/**
+ *  Static functions
+ */
+static bool
+EnsureBluetoothHalLoad()
+{
+  hw_module_t* module;
+  hw_device_t* device;
+  int err = hw_get_module(BT_HARDWARE_MODULE_ID, (hw_module_t const**)&module);
+  if (err != 0) {
+    BT_LOGR("Error: %s ", strerror(err));
+    return false;
+  }
+  module->methods->open(module, BT_HARDWARE_MODULE_ID, &device);
+  sBtDevice = (bluetooth_device_t *)device;
+  sBtInterface = sBtDevice->get_bluetooth_interface();
+  BT_LOGD("Bluetooth HAL loaded");
+
+  return true;
+}
+
+static nsresult
+StartStopGonkBluetooth(bool aShouldEnable)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  static bool sIsBtInterfaceInitialized = false;
+
+  if (!EnsureBluetoothHalLoad()) {
+    BT_LOGR("Failed to load bluedroid library.\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (sIsBtEnabled == aShouldEnable)
+    return NS_OK;
+
+  if (sBtInterface && !sIsBtInterfaceInitialized) {
+    int ret = sBtInterface->init(&sBluetoothCallbacks);
+    if (ret != BT_STATUS_SUCCESS) {
+      BT_LOGR("Error while setting the callbacks %s", __FUNCTION__);
+      sBtInterface = nullptr;
+      return NS_ERROR_FAILURE;
+    }
+    sIsBtInterfaceInitialized = true;
+  }
+  int ret = aShouldEnable ? sBtInterface->enable() : sBtInterface->disable();
+
+  return (ret == BT_STATUS_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/**
+ *  Member functions
+ */
 nsresult
 BluetoothServiceBluedroid::StartInternal()
 {
-  return NS_OK;
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsresult ret = StartStopGonkBluetooth(true);
+  if (NS_FAILED(ret)) {
+    BT_LOGR("Error: %s", __FUNCTION__);
+  }
+
+  return ret;
 }
 
 nsresult
 BluetoothServiceBluedroid::StopInternal()
 {
-  return NS_OK;
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsresult ret = StartStopGonkBluetooth(false);
+  if (NS_FAILED(ret)) {
+    BT_LOGR("Error: %s", __FUNCTION__);
+  }
+
+  return ret;
 }
 
 bool
 BluetoothServiceBluedroid::IsEnabledInternal()
 {
-  return true;
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  if (!EnsureBluetoothHalLoad()) {
+    NS_ERROR("Failed to load bluedroid library.\n");
+    return false;
+  }
+
+  return sIsBtEnabled;
 }
 
 nsresult
