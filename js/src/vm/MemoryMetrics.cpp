@@ -92,8 +92,7 @@ InefficientNonFlatteningStringHashPolicy::match(const JSString *const &k, const 
 
 } // namespace js
 
-namespace JS
-{
+namespace JS {
 
 NotableStringInfo::NotableStringInfo()
     : bufferSize(0),
@@ -247,6 +246,12 @@ GetCompartmentStats(JSCompartment *comp)
     return static_cast<CompartmentStats *>(comp->compartmentStats);
 }
 
+enum Granularity {
+    FineGrained,    // Corresponds to CollectRuntimeStats()
+    CoarseGrained   // Corresponds to AddSizeOfTab()
+};
+
+template <Granularity granularity>
 static void
 StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKind,
                   size_t thingSize)
@@ -283,16 +288,21 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         size_t strCharsSize = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         MOZ_ASSERT_IF(str->isShort(), strCharsSize == 0);
 
-        size_t shortStringThingSize = str->isShort() ? thingSize : 0;
+        size_t shortStringThingSize  =  str->isShort() ? thingSize : 0;
         size_t normalStringThingSize = !str->isShort() ? thingSize : 0;
 
-        ZoneStats::StringsHashMap::AddPtr p = zStats->strings.lookupForAdd(str);
-        if (!p) {
-            JS::StringInfo info(str->length(), shortStringThingSize,
-                                normalStringThingSize, strCharsSize);
-            zStats->strings.add(p, str, info);
-        } else {
-            p->value.add(shortStringThingSize, normalStringThingSize, strCharsSize);
+        // This string hashing is expensive.  Its results are unused when doing
+        // coarse-grained measurements, and skipping it more than doubles the
+        // profile speed for complex pages such as gmail.com.
+        if (granularity == FineGrained) {
+            ZoneStats::StringsHashMap::AddPtr p = zStats->strings.lookupForAdd(str);
+            if (!p) {
+                JS::StringInfo info(str->length(), shortStringThingSize,
+                                    normalStringThingSize, strCharsSize);
+                zStats->strings.add(p, str, info);
+            } else {
+                p->value.add(shortStringThingSize, normalStringThingSize, strCharsSize);
+            }
         }
 
         zStats->stringsShortGCHeap += shortStringThingSize;
@@ -444,7 +454,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     if (!closure.init())
         return false;
     IterateZonesCompartmentsArenasCells(rt, &closure, StatsZoneCallback, StatsCompartmentCallback,
-                                        StatsArenaCallback, StatsCellCallback);
+                                        StatsArenaCallback, StatsCellCallback<FineGrained>);
 
     // Take the "explicit/js/runtime/" measurements.
     rt->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
@@ -564,7 +574,7 @@ AddSizeOfTab(JSRuntime *rt, JSObject *obj, MallocSizeOf mallocSizeOf, ObjectPriv
         return false;
     IterateZoneCompartmentsArenasCells(rt, zone, &closure, StatsZoneCallback,
                                        StatsCompartmentCallback, StatsArenaCallback,
-                                       StatsCellCallback);
+                                       StatsCellCallback<CoarseGrained>);
 
     JS_ASSERT(rtStats.zoneStatsVector.length() == 1);
     rtStats.zTotals.add(rtStats.zoneStatsVector[0]);
