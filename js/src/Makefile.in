@@ -33,13 +33,6 @@ FORCE_SHARED_LIB = 1
 endif
 DIST_INSTALL = 1
 
-###############################################
-# BEGIN include sources for low-level code shared with mfbt
-#
-MFBT_ROOT = $(srcdir)/../../mfbt
-VPATH += $(MFBT_ROOT)
-include $(MFBT_ROOT)/exported_headers.mk
-
 VPATH		+= \
 		$(srcdir) \
 		$(srcdir)/builtin \
@@ -133,8 +126,6 @@ endif
 
 endif # JS_HAS_CTYPES
 
-LOCAL_INCLUDES += -I$(MFBT_ROOT)/double-conversion
-
 # PerfMeasurement is available regardless of low-level support for it;
 # it just doesn't necessarily do anything useful.  There is one
 # implementation source file per supported operating system, plus a stub
@@ -147,13 +138,6 @@ ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
-endif
-
-ifeq (,$(MOZ_GLUE_PROGRAM_LDFLAGS))
-# When building standalone, we need to include mfbt sources, and to declare
-# "exported" mfbt symbols on its behalf when we use its headers.
-include $(MFBT_ROOT)/sources.mk
-DEFINES += -DIMPL_MFBT
 endif
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
