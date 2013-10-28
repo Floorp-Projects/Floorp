@@ -6,6 +6,7 @@
 
 #include "jit/BaselineIC.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/TemplateLib.h"
 
 #include "jsautooplen.h"
@@ -30,6 +31,8 @@
 #include "vm/Interpreter-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/StringObject-inl.h"
+
+using mozilla::DebugOnly;
 
 namespace js {
 namespace jit {
@@ -561,11 +564,11 @@ ICUpdatedStub::initUpdatingChain(JSContext *cx, ICStubSpace *space)
 IonCode *
 ICStubCompiler::getStubCode()
 {
-    IonCompartment *ion = cx->compartment()->ionCompartment();
+    JitCompartment *comp = cx->compartment()->jitCompartment();
 
     // Check for existing cached stubcode.
     uint32_t stubKey = getKey();
-    IonCode *stubCode = ion->getStubCode(stubKey);
+    IonCode *stubCode = comp->getStubCode(stubKey);
     if (stubCode)
         return stubCode;
 
@@ -575,7 +578,7 @@ ICStubCompiler::getStubCode()
     masm.setSecondScratchReg(BaselineSecondScratchReg);
 #endif
 
-    AutoFlushCache afc("ICStubCompiler::getStubCode", cx->runtime()->ionRuntime());
+    AutoFlushCache afc("ICStubCompiler::getStubCode", cx->runtime()->jitRuntime());
     if (!generateStubCode(masm))
         return nullptr;
     Linker linker(masm);
@@ -592,7 +595,7 @@ ICStubCompiler::getStubCode()
         newStubCode->togglePreBarriers(true);
 
     // Cache newly compiled stubcode.
-    if (!ion->putStubCode(stubKey, newStubCode))
+    if (!comp->putStubCode(stubKey, newStubCode))
         return nullptr;
 
     JS_ASSERT(entersStubFrame_ == ICStub::CanMakeCalls(kind));
@@ -607,7 +610,7 @@ ICStubCompiler::getStubCode()
 bool
 ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
 {
-    IonCode *code = cx->runtime()->ionRuntime()->getVMWrapper(fun);
+    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     if (!code)
         return false;
 
@@ -619,7 +622,7 @@ ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
 bool
 ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 {
-    IonCode *code = cx->runtime()->ionRuntime()->getVMWrapper(fun);
+    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     if (!code)
         return false;
 
@@ -630,7 +633,7 @@ ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 bool
 ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm, uint32_t objectOffset)
 {
-    IonCode *code = cx->runtime()->ionRuntime()->getVMWrapper(DoTypeUpdateFallbackInfo);
+    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(DoTypeUpdateFallbackInfo);
     if (!code)
         return false;
 
@@ -808,7 +811,7 @@ EnsureCanEnterIon(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *frame
 
 //
 // The following data is kept in a temporary heap-allocated buffer, stored in
-// IonRuntime (high memory addresses at top, low at bottom):
+// JitRuntime (high memory addresses at top, low at bottom):
 //
 //     +----->+=================================+  --      <---- High Address
 //     |      |                                 |   |
@@ -853,7 +856,7 @@ PrepareOsrTempData(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
     size_t totalSpace = AlignBytes(frameSpace, sizeof(Value)) +
                         AlignBytes(ionOsrTempDataSpace, sizeof(Value));
 
-    IonOsrTempData *info = (IonOsrTempData *)cx->runtime()->getIonRuntime(cx)->allocateOsrTempData(totalSpace);
+    IonOsrTempData *info = (IonOsrTempData *)cx->runtime()->getJitRuntime(cx)->allocateOsrTempData(totalSpace);
     if (!info)
         return nullptr;
 
@@ -4043,7 +4046,7 @@ ICGetElemNativeCompiler::emitCallScripted(MacroAssembler &masm, Register objReg)
         JS_ASSERT(ArgumentsRectifierReg != code);
 
         IonCode *argumentsRectifier =
-            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->jitRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -4138,8 +4141,8 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler &masm)
         EmitUnstowICValues(masm, 1);
 
         // Extract string from R1 again.
-        Register strExtract2 = masm.extractString(R1, ExtractTemp1);
-        JS_ASSERT(strExtract2 == strExtract);
+        DebugOnly<Register> strExtract2 = masm.extractString(R1, ExtractTemp1);
+        JS_ASSERT(Register(strExtract2) == strExtract);
 
         masm.bind(&skipAtomize);
     }
@@ -6076,7 +6079,7 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<
 {
     CodeOffsetLabel offset(returnOffset_);
     offset.fixup(&masm);
-    cx->compartment()->ionCompartment()->initBaselineGetPropReturnAddr(code->raw() + offset.offset());
+    cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(code->raw() + offset.offset());
     return true;
 }
 
@@ -6289,7 +6292,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != code);
 
         IonCode *argumentsRectifier =
-            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->jitRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -6924,7 +6927,7 @@ ICSetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<
 {
     CodeOffsetLabel offset(returnOffset_);
     offset.fixup(&masm);
-    cx->compartment()->ionCompartment()->initBaselineSetPropReturnAddr(code->raw() + offset.offset());
+    cx->compartment()->jitCompartment()->initBaselineSetPropReturnAddr(code->raw() + offset.offset());
     return true;
 }
 
@@ -7196,7 +7199,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != code);
 
         IonCode *argumentsRectifier =
-            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->jitRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -7951,7 +7954,7 @@ ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<Ion
 {
     CodeOffsetLabel offset(returnOffset_);
     offset.fixup(&masm);
-    cx->compartment()->ionCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset());
+    cx->compartment()->jitCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset());
     return true;
 }
 
@@ -8120,7 +8123,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != argcReg);
 
         IonCode *argumentsRectifier =
-            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->jitRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
@@ -8381,7 +8384,7 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != argcReg);
 
         IonCode *argumentsRectifier =
-            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->jitRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), target);
         masm.loadPtr(Address(target, IonCode::offsetOfCode()), target);
@@ -8492,7 +8495,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
         JS_ASSERT(ArgumentsRectifierReg != argcReg);
 
         IonCode *argumentsRectifier =
-            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
+            cx->runtime()->jitRuntime()->getArgumentsRectifier(SequentialExecution);
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), target);
         masm.loadPtr(Address(target, IonCode::offsetOfCode()), target);

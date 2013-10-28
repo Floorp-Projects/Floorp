@@ -3692,7 +3692,7 @@ CreateGlobalObject(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal,
 // reachable through prinOrSop, a new null principal will be created
 // and used.
 nsresult
-CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop,
+CreateSandboxObject(JSContext *cx, JS::MutableHandleValue vp, nsISupports *prinOrSop,
                     xpc::SandboxOptions& options);
 // Helper for evaluating scripts in a sandbox object created with
 // CreateSandboxObject(). The caller is responsible of ensuring

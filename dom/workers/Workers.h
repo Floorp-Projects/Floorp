@@ -95,11 +95,11 @@ struct JSSettings
   // Settings that change based on chrome/content context.
   struct JSContentChromeSettings
   {
-    uint32_t options;
+    JS::ContextOptions options;
     int32_t maxScriptRuntime;
 
     JSContentChromeSettings()
-    : options(0), maxScriptRuntime(0)
+    : options(), maxScriptRuntime(0)
     { }
   };
 

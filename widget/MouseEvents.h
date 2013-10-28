@@ -108,6 +108,14 @@ public:
     pressure = aEvent.pressure;
     inputSource = aEvent.inputSource;
   }
+
+  /**
+   * Returns true if left click event.
+   */
+  bool IsLeftClickEvent() const
+  {
+    return message == NS_MOUSE_CLICK && button == eLeftButton;
+  }
 };
 
 /******************************************************************************
@@ -220,6 +228,14 @@ public:
     acceptActivation = aEvent.acceptActivation;
     ignoreRootScrollFrame = aEvent.ignoreRootScrollFrame;
     clickCount = aEvent.clickCount;
+  }
+
+  /**
+   * Returns true if the event is a context menu event caused by key.
+   */
+  bool IsContextMenuKeyEvent() const
+  {
+    return message == NS_CONTEXTMENU && context == eContextMenuKey;
   }
 };
 

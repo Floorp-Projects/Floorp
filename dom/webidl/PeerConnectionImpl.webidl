@@ -13,7 +13,6 @@
  *
  */
 
-interface Window;
 interface nsISupports;
 
 /* Must be created first. Observer events will be dispatched on the thread provided */

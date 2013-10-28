@@ -391,7 +391,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
          type == nsIDataType::VTYPE_ARRAY ||
          type == nsIDataType::VTYPE_EMPTY_ARRAY ||
          type == nsIDataType::VTYPE_ID)) {
-        if (!JS_WrapValue(cx, realVal.address()))
+        if (!JS_WrapValue(cx, &realVal))
             return false;
         pJSVal.set(realVal);
         return true;
@@ -403,7 +403,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
                    type == nsIDataType::VTYPE_INTERFACE_IS,
                    "Weird variant");
 
-        if (!JS_WrapValue(cx, realVal.address()))
+        if (!JS_WrapValue(cx, &realVal))
             return false;
         pJSVal.set(realVal);
         return true;

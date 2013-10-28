@@ -24,7 +24,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISelectionController.h"
-#include "jsapi.h"
 #include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 
@@ -533,9 +532,7 @@ HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
     if (button && button->Role() == roles::PUSHBUTTON) {
       nsRefPtr<AccStateChangeEvent> childEvent =
         new AccStateChangeEvent(button, event->GetState(),
-                                event->IsStateEnabled(),
-                                (event->IsFromUserInput() ? eFromUserInput
-                                                          : eNoUserInput));
+                                event->IsStateEnabled(), event->FromUserInput());
       nsEventShell::FireEvent(childEvent);
     }
   }

@@ -10,8 +10,8 @@
 
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
-#include "jit/IonCompartment.h"
 #include "jit/IonSpewer.h"
+#include "jit/JitCompartment.h"
 #include "jit/SnapshotReader.h"
 
 #include "jit/IonFrameIterator-inl.h"

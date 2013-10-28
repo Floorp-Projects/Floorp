@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_IonCompartment_h
-#define jit_IonCompartment_h
+#ifndef jit_JitCompartment_h
+#define jit_JitCompartment_h
 
 #ifdef JS_ION
 
@@ -89,7 +89,7 @@ class ICStubSpace
     }
 };
 
-// Space for optimized stubs. Every IonCompartment has a single
+// Space for optimized stubs. Every JitCompartment has a single
 // OptimizedICStubSpace.
 struct OptimizedICStubSpace : public ICStubSpace
 {
@@ -126,7 +126,7 @@ struct FallbackICStubSpace : public ICStubSpace
 // if signal handlers are being used to implement interrupts.
 class PatchableBackedge : public InlineListNode<PatchableBackedge>
 {
-    friend class IonRuntime;
+    friend class JitRuntime;
 
     CodeLocationJump backedge;
     CodeLocationLabel loopHeader;
@@ -140,9 +140,9 @@ class PatchableBackedge : public InlineListNode<PatchableBackedge>
     {}
 };
 
-class IonRuntime
+class JitRuntime
 {
-    friend class IonCompartment;
+    friend class JitCompartment;
 
     // Executable allocator for all code except the main code in an IonScript.
     // Shared with the runtime.
@@ -196,7 +196,7 @@ class IonRuntime
     VMWrapperMap *functionWrappers_;
 
     // Buffer for OSR from baseline to Ion. To avoid holding on to this for
-    // too long, it's also freed in IonCompartment::mark and in EnterBaseline
+    // too long, it's also freed in JitCompartment::mark and in EnterBaseline
     // (after returning from JIT code).
     uint8_t *osrTempData_;
 
@@ -226,8 +226,8 @@ class IonRuntime
     JSC::ExecutableAllocator *createIonAlloc(JSContext *cx);
 
   public:
-    IonRuntime();
-    ~IonRuntime();
+    JitRuntime();
+    ~JitRuntime();
     bool initialize(JSContext *cx);
 
     uint8_t *allocateOsrTempData(size_t size);
@@ -325,12 +325,12 @@ class IonRuntime
     }
 };
 
-class IonCompartment
+class JitCompartment
 {
     friend class JitActivation;
 
     // Ion state for the compartment's runtime.
-    IonRuntime *rt;
+    JitRuntime *rt;
 
     // Any scripts for which off thread compilation has successfully finished,
     // failed, or been cancelled. All off thread compilations which are started
@@ -352,7 +352,7 @@ class IonCompartment
     OptimizedICStubSpace optimizedStubSpace_;
 
     // Stub to concatenate two strings inline. Note that it can't be
-    // stored in IonRuntime because masm.newGCString bakes in zone-specific
+    // stored in JitRuntime because masm.newGCString bakes in zone-specific
     // pointers. This has to be a weak pointer to avoid keeping the whole
     // compartment alive.
     ReadBarriered<IonCode> stringConcatStub_;
@@ -409,8 +409,8 @@ class IonCompartment
     JSC::ExecutableAllocator *createIonAlloc();
 
   public:
-    IonCompartment(IonRuntime *rt);
-    ~IonCompartment();
+    JitCompartment(JitRuntime *rt);
+    ~JitCompartment();
 
     bool initialize(JSContext *cx);
 
@@ -452,4 +452,4 @@ const unsigned WINDOWS_BIG_FRAME_TOUCH_INCREMENT = 4096 - 1;
 
 #endif // JS_ION
 
-#endif /* jit_IonCompartment_h */
+#endif /* jit_JitCompartment_h */

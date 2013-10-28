@@ -67,7 +67,7 @@ JS::Value
 nsDOMMessageEvent::GetData(JSContext* aCx, ErrorResult& aRv)
 {
   JS::Rooted<JS::Value> data(aCx, mData);
-  if (!JS_WrapValue(aCx, data.address())) {
+  if (!JS_WrapValue(aCx, &data)) {
     aRv.Throw(NS_ERROR_FAILURE);
   }
   return data;

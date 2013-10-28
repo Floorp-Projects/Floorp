@@ -17,7 +17,7 @@ const TEST_FILES = [
   compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0644,
+  originalPerms    : 0o644,
   comparePerms     : null
 }, {
   description      : "Added by update.manifest (add)",
@@ -27,8 +27,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete_precomplete",
   compareFile      : "partial_precomplete",
-  originalPerms    : 0666,
-  comparePerms     : 0644
+  originalPerms    : 0o666,
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginstext0",
@@ -37,8 +37,8 @@ const TEST_FILES = [
   compareContents  : "FromPartial\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0775,
-  comparePerms     : 0644
+  originalPerms    : 0o775,
+  comparePerms     : 0o644
 }, {
   description      : "Patched by update.manifest if the file exists " +
                      "(patch-if)",
@@ -48,8 +48,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "partial.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Patched by update.manifest if the file exists " +
                      "(patch-if)",
@@ -59,8 +59,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "partial.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -71,7 +71,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null,
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Patched by update.manifest if the parent directory " +
                      "exists (patch-if)",
@@ -81,8 +81,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "partial.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Patched by update.manifest if the parent directory " +
                      "exists (patch-if)",
@@ -92,8 +92,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "partial.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -103,8 +103,8 @@ const TEST_FILES = [
   compareContents  : "FromPartial\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0644,
-  comparePerms     : 0644
+  originalPerms    : 0o644,
+  comparePerms     : 0o644
 }, {
   description      : "Patched by update.manifest if the parent directory " +
                      "exists (patch-if)",
@@ -114,8 +114,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "partial.png",
-  originalPerms    : 0644,
-  comparePerms     : 0644
+  originalPerms    : 0o644,
+  comparePerms     : 0o644
 }, {
   description      : "Patched by update.manifest if the parent directory " +
                      "exists (patch-if)",
@@ -125,8 +125,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "partial.png",
-  originalPerms    : 0644,
-  comparePerms     : 0644
+  originalPerms    : 0o644,
+  comparePerms     : 0o644
 }, {
   description      : "Patched by update.manifest (patch)",
   fileName         : "exe0.exe",
@@ -135,8 +135,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "partial.png",
-  originalPerms    : 0755,
-  comparePerms     : 0755
+  originalPerms    : 0o755,
+  comparePerms     : 0o755
 }, {
   description      : "Patched by update.manifest (patch)",
   fileName         : "0exe0.exe",
@@ -145,8 +145,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "partial.png",
-  originalPerms    : 0755,
-  comparePerms     : 0755
+  originalPerms    : 0o755,
+  comparePerms     : 0o755
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text0",
@@ -155,8 +155,8 @@ const TEST_FILES = [
   compareContents  : "FromPartial\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0644,
-  comparePerms     : 0644
+  originalPerms    : 0o644,
+  comparePerms     : 0o644
 }, {
   description      : "Patched by update.manifest (patch)",
   fileName         : "00png0.png",
@@ -165,8 +165,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "complete.png",
   compareFile      : "partial.png",
-  originalPerms    : 0666,
-  comparePerms     : 0666
+  originalPerms    : 0o666,
+  comparePerms     : 0o666
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "20text0",
@@ -176,7 +176,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null,
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "20png0.png",
@@ -186,7 +186,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : "partial.png",
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text2",
@@ -196,7 +196,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null,
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Removed by update.manifest (remove)",
   fileName         : "10text0",
