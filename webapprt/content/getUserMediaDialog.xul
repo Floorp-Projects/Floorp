@@ -14,12 +14,12 @@
 <dialog id="getUserMediaDialog" title="&getUserMediaDialog.title;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel"
-        buttonlabelaccept="&getUserMediaDialog.buttonlabelaccept;"
-        buttonaccesskeyaccept="&getUserMediaDialog.buttonaccesskeyaccept;"
+        buttonlabelaccept="&getUserMediaDialog.button.accept.label;"
+        buttonaccesskeyaccept="&getUserMediaDialog.button.accept.accesskey;"
         onload="onLoad()"
         ondialogaccept="return onOK()"
-        buttonlabelcancel="&getUserMediaDialog.buttonlabelcancel;"
-        buttonaccesskeycancel="&getUserMediaDialog.buttonaccesskeycancel;">
+        buttonlabelcancel="&getUserMediaDialog.button.cancel.label;"
+        buttonaccesskeycancel="&getUserMediaDialog.button.cancel.accesskey;">
 
 <script type="application/javascript"
         src="chrome://webapprt/content/getUserMediaDialog.js"/>
