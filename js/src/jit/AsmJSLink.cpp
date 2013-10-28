@@ -683,7 +683,7 @@ js::IsAsmJSModuleNative(js::Native native)
 }
 
 static bool
-IsMaybeWrappedNativeFunction(const Value &v, Native native, JSFunction **fun = NULL)
+IsMaybeWrappedNativeFunction(const Value &v, Native native, JSFunction **fun = nullptr)
 {
     if (!v.isObject())
         return false;
@@ -717,7 +717,7 @@ js::IsAsmJSModuleLoadedFromCache(JSContext *cx, unsigned argc, Value *vp)
 
     JSFunction *fun;
     if (!args.hasDefined(0) || !IsMaybeWrappedNativeFunction(args[0], LinkAsmJS, &fun)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_USE_ASM_TYPE_FAIL,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_USE_ASM_TYPE_FAIL,
                              "argument passed to isAsmJSModuleLoadedFromCache is not a "
                              "validated asm.js module");
         return false;
