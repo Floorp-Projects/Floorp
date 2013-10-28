@@ -185,7 +185,8 @@ class MochitestRunner(MozbuildObject):
     def run_desktop_test(self, suite=None, test_file=None, debugger=None,
         debugger_args=None, shuffle=False, keep_open=False, rerun_failures=False,
         no_autorun=False, repeat=0, run_until_failure=False, slow=False,
-        chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False):
+        chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False,
+        start_at=None, end_at=None):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -286,6 +287,8 @@ class MochitestRunner(MozbuildObject):
         options.totalChunks = total_chunks
         options.thisChunk = this_chunk
         options.jsdebugger = jsdebugger
+        options.startAt = start_at
+        options.endAt = end_at
 
         options.failureFile = failure_file_path
 
@@ -462,6 +465,14 @@ def B2GCommand(func):
     this_chunk = CommandArgument('--this-chunk', type=int,
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
+
+    start_at = CommandArgument('--start-at', type=str,
+        help='Start running the test sequence at this test.')
+    func = start_at(func)
+
+    end_at = CommandArgument('--end-at', type=str,
+        help='Stop running the test sequence at this test.')
+    func = end_at(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',
