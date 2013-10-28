@@ -11,6 +11,14 @@ LOCAL_INCLUDES += \
 
 DEFINES += -DUNICODE -D_UNICODE -DNS_NO_XPCOM -DSANDBOX_EXPORTS -DNOMINMAX -D_CRT_RAND_S
 
+EXTRA_SDK_DECLS = $(topsrcdir)/security/sandbox/base/shim/sdkdecls.h
+
+ifdef _MSC_VER
+OS_CXXFLAGS += -FI $(EXTRA_SDK_DECLS)
+else
+OS_CXXFLAGS += -include $(EXTRA_SDK_DECLS)
+endif
+
 STL_FLAGS =
 MOZ_GLUE_LDFLAGS =
 endif
