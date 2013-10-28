@@ -374,8 +374,8 @@ ArrayBufferObject::changeContents(JSContext *maybecx, ObjectElements *newHeader)
     }
 
     // The list of views in the old header is reachable if the contents are
-    // being transferred, so NULL it out
-    SetViewList(this, NULL);
+    // being transferred, so null it out
+    SetViewList(this, nullptr);
 
     elements = newHeader->elements();
 
@@ -435,7 +435,7 @@ ArrayBufferObject::getTransferableContents(JSContext *maybecx, bool *callerOwns)
     uint32_t byteLen = byteLength();
     ObjectElements *newheader = AllocateArrayBufferContents(maybecx, byteLen, dataPointer());
     if (!newheader)
-        return NULL;
+        return nullptr;
 
     initElementsHeader(newheader, byteLen);
     *callerOwns = true;
@@ -4025,7 +4025,7 @@ JS_GetArrayBufferData(JSObject *obj)
     if (!obj)
         return nullptr;
     ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
-    if (!buffer.ensureNonInline(NULL))
+    if (!buffer.ensureNonInline(nullptr))
         return nullptr;
     return buffer.dataPointer();
 }

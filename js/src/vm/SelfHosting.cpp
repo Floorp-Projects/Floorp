@@ -83,7 +83,7 @@ js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
 
 #ifdef DEBUG
     const JSErrorFormatString *efs =
-        js_GetLocalizedErrorMessage(cx, NULL, NULL, errorNumber);
+        js_GetLocalizedErrorMessage(cx, nullptr, nullptr, errorNumber);
     JS_ASSERT(efs->argCount == args.length() - 1);
 #endif
 
@@ -997,7 +997,7 @@ js::SelfHostedFunction(JSContext *cx, HandlePropertyName propName)
 {
     RootedValue func(cx);
     if (!cx->global()->getIntrinsicValue(cx, propName, &func))
-        return NULL;
+        return nullptr;
 
     JS_ASSERT(func.isObject());
     JS_ASSERT(func.toObject().is<JSFunction>());
