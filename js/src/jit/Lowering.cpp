@@ -1129,8 +1129,17 @@ LIRGenerator::visitUrsh(MUrsh *ins)
 bool
 LIRGenerator::visitFloor(MFloor *ins)
 {
-    JS_ASSERT(ins->num()->type() == MIRType_Double);
-    LFloor *lir = new LFloor(useRegister(ins->num()));
+    MIRType type = ins->num()->type();
+    JS_ASSERT(IsFloatingPointType(type));
+
+    if (type == MIRType_Double) {
+        LFloor *lir = new LFloor(useRegister(ins->num()));
+        if (!assignSnapshot(lir))
+            return false;
+        return define(lir, ins);
+    }
+
+    LFloorF *lir = new LFloorF(useRegister(ins->num()));
     if (!assignSnapshot(lir))
         return false;
     return define(lir, ins);

@@ -993,6 +993,9 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
         // involves fixing the contacts API and PeerConnection to stop using
         // COWs. This needs to happen, but for now just preserve the old
         // behavior.
+        //
+        // Note that there is an identical hack in getWrapper which should be
+        // removed if this one is.
         if (!inner && MOZ_UNLIKELY(xpc::WrapperFactory::IsCOW(src)))
             inner = js::UncheckedUnwrap(src);
         if (!inner) {

@@ -117,7 +117,7 @@ public:
    * Returns the path of the default adapter, implemented via a platform
    * specific method.
    *
-   * @return Default adapter path/name on success, NULL otherwise
+   * @return NS_OK on success, NS_ERROR_FAILURE otherwise
    */
   virtual nsresult
   GetDefaultAdapterPathInternal(BluetoothReplyRunnable* aRunnable) = 0;
