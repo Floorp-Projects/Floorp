@@ -327,10 +327,10 @@ partial interface Window {
    * arguments, plus any additional arguments are passed on as
    * arguments on the dialog's window object (window.arguments).
    */
-  [Throws] WindowProxy? openDialog(optional DOMString url = "",
-                                   optional DOMString name = "",
-                                   optional DOMString options = "",
-                                   any... extraArguments);
+  [Throws, ChromeOnly] WindowProxy? openDialog(optional DOMString url = "",
+                                               optional DOMString name = "",
+                                               optional DOMString options = "",
+                                               any... extraArguments);
 
   [Replaceable, Throws] readonly attribute object? content;
 };
