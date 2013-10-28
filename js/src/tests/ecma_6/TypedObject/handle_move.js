@@ -145,6 +145,11 @@ function runTests() {
       var h = Point.handle();
       T.Handle.move(h, lines, 22, "to");
     }, TypeError, "No such property: 22");
+
+    assertThrowsInstanceOf(function() {
+      var h = Point.handle();
+      T.Handle.move(h, lines, -100, "to");
+    }, TypeError, "No such property: -100");
   }
   testHandleMoveToIllegalProperty();
 
