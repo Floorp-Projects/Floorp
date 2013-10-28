@@ -238,23 +238,23 @@ CSPRep.ALLOW_DIRECTIVE   = "allow";
   *        string rep of a CSP
   * @param self (optional)
   *        URI representing the "self" source
+  * @param reportOnly (optional)
+  *        whether or not this CSP is report-only (defaults to false)
   * @param docRequest (optional)
   *        request for the parent document which may need to be suspended
   *        while the policy-uri is asynchronously fetched
   * @param csp (optional)
   *        the CSP object to update once the policy has been fetched
-  * @param reportOnly (optional)
-  *        whether or not this CSP is report-only (defaults to false)
   * @returns
   *        an instance of CSPRep
   */
-CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
-  if (typeof reportOnly === 'undefined') reportOnly = false;
+CSPRep.fromString = function(aStr, self, reportOnly, docRequest, csp) {
   var SD = CSPRep.SRC_DIRECTIVES_OLD;
   var UD = CSPRep.URI_DIRECTIVES;
   var aCSPR = new CSPRep();
   aCSPR._originalText = aStr;
   aCSPR._innerWindowID = innerWindowFromRequest(docRequest);
+  if (typeof reportOnly === 'undefined') reportOnly = false;
   aCSPR._reportOnlyMode = reportOnly;
 
   var selfUri = null;
@@ -412,13 +412,13 @@ CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
       // POLICY_URI can only be alone
       if (aCSPR._directives.length > 0 || dirs.length > 1) {
         cspError(aCSPR, CSPLocalizer.getStr("policyURINotAlone"));
-        return CSPRep.fromString("default-src 'none'");
+        return CSPRep.fromString("default-src 'none'", null, reportOnly);
       }
       // if we were called without a reference to the parent document request
       // we won't be able to suspend it while we fetch the policy -> fail closed
       if (!docRequest || !csp) {
         cspError(aCSPR, CSPLocalizer.getStr("noParentRequest"));
-        return CSPRep.fromString("default-src 'none'");
+        return CSPRep.fromString("default-src 'none'", null, reportOnly);
       }
 
       var uri = '';
@@ -427,7 +427,7 @@ CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
       } catch(e) {
         cspError(aCSPR, CSPLocalizer.getFormatStr("policyURIParseError",
                                                   [dirvalue]));
-        return CSPRep.fromString("default-src 'none'");
+        return CSPRep.fromString("default-src 'none'", null, reportOnly);
       }
 
       // Verify that policy URI comes from the same origin
@@ -435,17 +435,17 @@ CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
         if (selfUri.host !== uri.host) {
           cspError(aCSPR, CSPLocalizer.getFormatStr("nonMatchingHost",
                                                     [uri.host]));
-          return CSPRep.fromString("default-src 'none'");
+          return CSPRep.fromString("default-src 'none'", null, reportOnly);
         }
         if (selfUri.port !== uri.port) {
           cspError(aCSPR, CSPLocalizer.getFormatStr("nonMatchingPort",
                                                     [uri.port.toString()]));
-          return CSPRep.fromString("default-src 'none'");
+          return CSPRep.fromString("default-src 'none'", null, reportOnly);
         }
         if (selfUri.scheme !== uri.scheme) {
           cspError(aCSPR, CSPLocalizer.getFormatStr("nonMatchingScheme",
                                                     [uri.scheme]));
-          return CSPRep.fromString("default-src 'none'");
+          return CSPRep.fromString("default-src 'none'", null, reportOnly);
         }
       }
 
@@ -464,12 +464,12 @@ CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
         docRequest.resume();
         cspError(aCSPR, CSPLocalizer.getFormatStr("errorFetchingPolicy",
                                                   [e.toString()]));
-        return CSPRep.fromString("default-src 'none'");
+        return CSPRep.fromString("default-src 'none'", null, reportOnly);
       }
 
       // return a fully-open policy to be used until the contents of the
       // policy-uri come back.
-      return CSPRep.fromString("default-src *");
+      return CSPRep.fromString("default-src *", null, reportOnly);
     }
 
     // UNIDENTIFIED DIRECTIVE /////////////////////////////////////////////
@@ -482,8 +482,7 @@ CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
   // directive to be present.
   if (!aCSPR._directives[SD.DEFAULT_SRC]) {
     cspWarn(aCSPR, CSPLocalizer.getStr("allowOrDefaultSrcRequired"));
-    return CSPRep.fromString("default-src 'none'", selfUri, docRequest, csp,
-                             reportOnly);
+    return CSPRep.fromString("default-src 'none'", null, reportOnly);
   }
   return aCSPR;
 };
@@ -496,26 +495,25 @@ CSPRep.fromString = function(aStr, self, docRequest, csp, reportOnly) {
   *        string rep of a CSP
   * @param self (optional)
   *        URI representing the "self" source
+  * @param reportOnly (optional)
+  *        whether or not this CSP is report-only (defaults to false)
   * @param docRequest (optional)
   *        request for the parent document which may need to be suspended
   *        while the policy-uri is asynchronously fetched
   * @param csp (optional)
   *        the CSP object to update once the policy has been fetched
-  * @param reportOnly (optional)
-  *        whether or not this CSP is report-only (defaults to false)
   * @returns
   *        an instance of CSPRep
   */
 // When we deprecate our original CSP implementation, we rename this to
 // CSPRep.fromString and remove the existing CSPRep.fromString above.
-CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp, reportOnly) {
-  if (typeof reportOnly === 'undefined') reportOnly = false;
-
+CSPRep.fromStringSpecCompliant = function(aStr, self, reportOnly, docRequest, csp) {
   var SD = CSPRep.SRC_DIRECTIVES_NEW;
   var UD = CSPRep.URI_DIRECTIVES;
   var aCSPR = new CSPRep(true);
   aCSPR._originalText = aStr;
   aCSPR._innerWindowID = innerWindowFromRequest(docRequest);
+  if (typeof reportOnly === 'undefined') reportOnly = false;
   aCSPR._reportOnlyMode = reportOnly;
 
   var selfUri = null;
@@ -678,13 +676,13 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp, reportOnl
       // POLICY_URI can only be alone
       if (aCSPR._directives.length > 0 || dirs.length > 1) {
         cspError(aCSPR, CSPLocalizer.getStr("policyURINotAlone"));
-        return CSPRep.fromStringSpecCompliant("default-src 'none'");
+        return CSPRep.fromStringSpecCompliant("default-src 'none'", null, reportOnly);
       }
       // if we were called without a reference to the parent document request
       // we won't be able to suspend it while we fetch the policy -> fail closed
       if (!docRequest || !csp) {
         cspError(aCSPR, CSPLocalizer.getStr("noParentRequest"));
-        return CSPRep.fromStringSpecCompliant("default-src 'none'");
+        return CSPRep.fromStringSpecCompliant("default-src 'none'", null, reportOnly);
       }
 
       var uri = '';
@@ -692,22 +690,22 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp, reportOnl
         uri = gIoService.newURI(dirvalue, null, selfUri);
       } catch(e) {
         cspError(aCSPR, CSPLocalizer.getFormatStr("policyURIParseError", [dirvalue]));
-        return CSPRep.fromStringSpecCompliant("default-src 'none'");
+        return CSPRep.fromStringSpecCompliant("default-src 'none'", null, reportOnly);
       }
 
       // Verify that policy URI comes from the same origin
       if (selfUri) {
         if (selfUri.host !== uri.host){
           cspError(aCSPR, CSPLocalizer.getFormatStr("nonMatchingHost", [uri.host]));
-          return CSPRep.fromStringSpecCompliant("default-src 'none'");
+          return CSPRep.fromStringSpecCompliant("default-src 'none'", null, reportOnly);
         }
         if (selfUri.port !== uri.port){
           cspError(aCSPR, CSPLocalizer.getFormatStr("nonMatchingPort", [uri.port.toString()]));
-          return CSPRep.fromStringSpecCompliant("default-src 'none'");
+          return CSPRep.fromStringSpecCompliant("default-src 'none'", null, reportOnly);
         }
         if (selfUri.scheme !== uri.scheme){
           cspError(aCSPR, CSPLocalizer.getFormatStr("nonMatchingScheme", [uri.scheme]));
-          return CSPRep.fromStringSpecCompliant("default-src 'none'");
+          return CSPRep.fromStringSpecCompliant("default-src 'none'", null, reportOnly);
         }
       }
 
@@ -719,18 +717,18 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, docRequest, csp, reportOnl
         // policy-uri can't be abused for CSRF
         chan.loadFlags |= Components.interfaces.nsIChannel.LOAD_ANONYMOUS;
         chan.loadGroup = docRequest.loadGroup;
-        chan.asyncOpen(new CSPPolicyURIListener(uri, docRequest, csp), null);
+        chan.asyncOpen(new CSPPolicyURIListener(uri, docRequest, csp, reportOnly), null);
       }
       catch (e) {
         // resume the document request and apply most restrictive policy
         docRequest.resume();
         cspError(aCSPR, CSPLocalizer.getFormatStr("errorFetchingPolicy", [e.toString()]));
-        return CSPRep.fromStringSpecCompliant("default-src 'none'");
+        return CSPRep.fromStringSpecCompliant("default-src 'none'", null, reportOnly);
       }
 
       // return a fully-open policy to be used until the contents of the
       // policy-uri come back
-      return CSPRep.fromStringSpecCompliant("default-src *");
+      return CSPRep.fromStringSpecCompliant("default-src *", null, reportOnly);
     }
 
     // UNIDENTIFIED DIRECTIVE /////////////////////////////////////////////
