@@ -787,7 +787,7 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
 
   // Security policy:
   static JSSecurityCallbacks securityCallbacks = {
-    NULL,
+    nullptr,
     ContentSecurityPolicyAllows
   };
   JS_SetSecurityCallbacks(aRuntime, &securityCallbacks);

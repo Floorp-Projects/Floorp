@@ -2392,7 +2392,7 @@ WorkerPrivateParent<Derived>::_finalize(JSFreeOp* aFop)
   // will call Release, and some of our members cannot be released during
   // finalization. Of course, if those members are already gone then we can skip
   // this mess...
-  WorkerPrivateParent<Derived>* extraSelfRef = NULL;
+  WorkerPrivateParent<Derived>* extraSelfRef = nullptr;
 
   if (!mParent && !mMainThreadObjectsForgotten) {
     AssertIsOnMainThread();

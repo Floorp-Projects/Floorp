@@ -111,7 +111,7 @@ TemporaryRef<Volume>
 VolumeManager::FindVolumeByName(const nsCSubstring& aName)
 {
   if (!sVolumeManager) {
-    return NULL;
+    return nullptr;
   }
   VolumeArray::size_type  numVolumes = NumVolumes();
   VolumeArray::index_type volIndex;
@@ -121,7 +121,7 @@ VolumeManager::FindVolumeByName(const nsCSubstring& aName)
       return vol;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 //static
@@ -391,7 +391,7 @@ ShutdownVolumeManagerIOThread()
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
-  sVolumeManager = NULL;
+  sVolumeManager = nullptr;
 }
 
 /**************************************************************************
