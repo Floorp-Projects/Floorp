@@ -1185,12 +1185,5 @@ StopDiskSpaceWatcher()
   PROXY_IF_SANDBOXED(StopDiskSpaceWatcher());
 }
 
-uint32_t
-GetTotalSystemMemory()
-{
-  return hal_impl::GetTotalSystemMemory();
-}
-
-
 } // namespace hal
 } // namespace mozilla

@@ -590,13 +590,6 @@ void StartDiskSpaceWatcher();
  */
 void StopDiskSpaceWatcher();
 
-/**
- * Get total system memory of device being run on in bytes.
- *
- * Returns 0 if we are unable to determine this information from /proc/meminfo.
- */
-uint32_t GetTotalSystemMemory();
-
 } // namespace MOZ_HAL_NAMESPACE
 } // namespace mozilla
 
