@@ -1333,12 +1333,12 @@ class nsGetterAddRefs
         {
           return reinterpret_cast<void**>(mTargetSmartPtr.StartAssignment());
         }
-    /*
+
       operator nsISupports**()
         {
           return reinterpret_cast<nsISupports**>(mTargetSmartPtr.StartAssignment());
         }
-    */
+
       operator T**()
         {
           return mTargetSmartPtr.StartAssignment();

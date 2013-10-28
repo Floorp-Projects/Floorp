@@ -1965,9 +1965,8 @@ Database::Observe(nsISupports *aSubject,
                      getter_AddRefs(e))) && e) {
       bool hasMore = false;
       while (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore) {
-	nsCOMPtr<nsISupports> supports;
-        if (NS_SUCCEEDED(e->GetNext(getter_AddRefs(supports)))) {
-          nsCOMPtr<nsIObserver> observer = do_QueryInterface(supports);
+        nsCOMPtr<nsIObserver> observer;
+        if (NS_SUCCEEDED(e->GetNext(getter_AddRefs(observer)))) {
           (void)observer->Observe(observer, TOPIC_PLACES_INIT_COMPLETE, nullptr);
         }
       }

@@ -458,9 +458,8 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
     nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback(process);
     bool more;
     while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
-      nsCOMPtr<nsISupports> supports;
-      e->GetNext(getter_AddRefs(supports));
-      nsCOMPtr<nsIMemoryReporter> r = do_QueryInterface(supports);
+      nsCOMPtr<nsIMemoryReporter> r;
+      e->GetNext(getter_AddRefs(r));
       r->CollectReports(cb, wrappedReports);
     }
 

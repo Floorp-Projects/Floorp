@@ -97,11 +97,9 @@ nsStreamConverterService::BuildGraph() {
     if (NS_FAILED(rv)) return rv;
 
     // go through each entry to build the graph
-    nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsISupportsCString> entry;
-    rv = entries->GetNext(getter_AddRefs(supports));
+    rv = entries->GetNext(getter_AddRefs(entry));
     while (NS_SUCCEEDED(rv)) {
-        entry = do_QueryInterface(supports);
 
         // get the entry string
         nsAutoCString entryString;
@@ -116,7 +114,7 @@ nsStreamConverterService::BuildGraph() {
         rv = AddAdjacency(contractID.get());
         if (NS_FAILED(rv)) return rv;
 
-        rv = entries->GetNext(getter_AddRefs(supports));
+        rv = entries->GetNext(getter_AddRefs(entry));
     }
 
     return NS_OK;

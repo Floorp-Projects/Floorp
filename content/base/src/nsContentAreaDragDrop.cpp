@@ -672,30 +672,21 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsISupportsString> data;
     uint32_t dataSize;
-    rv = transferable->GetTransferData(kHTMLMime, getter_AddRefs(supports),
-                                       &dataSize);
-    data = do_QueryInterface(supports);
+    rv = transferable->GetTransferData(kHTMLMime, getter_AddRefs(data), &dataSize);
     if (NS_SUCCEEDED(rv)) {
       data->GetData(mHtmlString);
     }
-    rv = transferable->GetTransferData(kHTMLContext, getter_AddRefs(supports),
-                                       &dataSize);
-    data = do_QueryInterface(supports);
+    rv = transferable->GetTransferData(kHTMLContext, getter_AddRefs(data), &dataSize);
     if (NS_SUCCEEDED(rv)) {
       data->GetData(mContextString);
     }
-    rv = transferable->GetTransferData(kHTMLInfo, getter_AddRefs(supports),
-                                       &dataSize);
-    data = do_QueryInterface(supports);
+    rv = transferable->GetTransferData(kHTMLInfo, getter_AddRefs(data), &dataSize);
     if (NS_SUCCEEDED(rv)) {
       data->GetData(mInfoString);
     }
-    rv = transferable->GetTransferData(kUnicodeMime, getter_AddRefs(supports),
-                                       &dataSize);
-    data = do_QueryInterface(supports);
+    rv = transferable->GetTransferData(kUnicodeMime, getter_AddRefs(data), &dataSize);
     NS_ENSURE_SUCCESS(rv, rv); // require plain text at a minimum
     data->GetData(mTitleString);
   }
