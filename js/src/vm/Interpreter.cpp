@@ -370,16 +370,16 @@ static JS_NEVER_INLINE bool
 Interpret(JSContext *cx, RunState &state);
 
 StackFrame *
-InvokeState::pushInterpreterFrame(JSContext *cx, FrameGuard *fg)
+InvokeState::pushInterpreterFrame(JSContext *cx)
 {
-    return cx->runtime()->interpreterStack().pushInvokeFrame(cx, args_, initial_, fg);
+    return cx->runtime()->interpreterStack().pushInvokeFrame(cx, args_, initial_);
 }
 
 StackFrame *
-ExecuteState::pushInterpreterFrame(JSContext *cx, FrameGuard *fg)
+ExecuteState::pushInterpreterFrame(JSContext *cx)
 {
     return cx->runtime()->interpreterStack().pushExecuteFrame(cx, script_, thisv_, scopeChain_,
-                                                              type_, evalInFrame_, fg);
+                                                              type_, evalInFrame_);
 }
 
 bool
@@ -940,23 +940,24 @@ TryNoteIter::settle()
     }
 }
 
-#define PUSH_COPY(v)             do { *regs.sp++ = (v); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
-#define PUSH_COPY_SKIP_CHECK(v)  *regs.sp++ = (v)
-#define PUSH_NULL()              regs.sp++->setNull()
-#define PUSH_UNDEFINED()         regs.sp++->setUndefined()
-#define PUSH_BOOLEAN(b)          regs.sp++->setBoolean(b)
-#define PUSH_DOUBLE(d)           regs.sp++->setDouble(d)
-#define PUSH_INT32(i)            regs.sp++->setInt32(i)
-#define PUSH_STRING(s)           do { regs.sp++->setString(s); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
-#define PUSH_OBJECT(obj)         do { regs.sp++->setObject(obj); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
-#define PUSH_OBJECT_OR_NULL(obj) do { regs.sp++->setObjectOrNull(obj); assertSameCompartmentDebugOnly(cx, regs.sp[-1]); } while (0)
-#define PUSH_HOLE()              regs.sp++->setMagic(JS_ELEMENTS_HOLE)
-#define POP_COPY_TO(v)           (v) = *--regs.sp
-#define POP_RETURN_VALUE()       regs.fp()->setReturnValue(*--regs.sp)
+#define REGS                     (activation.regs())
+#define PUSH_COPY(v)             do { *REGS.sp++ = (v); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
+#define PUSH_COPY_SKIP_CHECK(v)  *REGS.sp++ = (v)
+#define PUSH_NULL()              REGS.sp++->setNull()
+#define PUSH_UNDEFINED()         REGS.sp++->setUndefined()
+#define PUSH_BOOLEAN(b)          REGS.sp++->setBoolean(b)
+#define PUSH_DOUBLE(d)           REGS.sp++->setDouble(d)
+#define PUSH_INT32(i)            REGS.sp++->setInt32(i)
+#define PUSH_STRING(s)           do { REGS.sp++->setString(s); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
+#define PUSH_OBJECT(obj)         do { REGS.sp++->setObject(obj); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
+#define PUSH_OBJECT_OR_NULL(obj) do { REGS.sp++->setObjectOrNull(obj); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
+#define PUSH_HOLE()              REGS.sp++->setMagic(JS_ELEMENTS_HOLE)
+#define POP_COPY_TO(v)           (v) = *--REGS.sp
+#define POP_RETURN_VALUE()       REGS.fp()->setReturnValue(*--REGS.sp)
 
 #define FETCH_OBJECT(cx, n, obj)                                              \
     JS_BEGIN_MACRO                                                            \
-        HandleValue val = regs.stackHandleAt(n);                              \
+        HandleValue val = REGS.stackHandleAt(n);                              \
         obj = ToObjectFromStack((cx), (val));                                 \
         if (!obj)                                                             \
             goto error;                                                       \
@@ -1014,26 +1015,6 @@ js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
         }
     }
     return js_IteratorNext(cx, iterobj, rval);
-}
-
-FrameGuard::FrameGuard(RunState &state, FrameRegs &regs)
-  : state_(state),
-    regs_(regs),
-    stack_(nullptr),
-    fp_(nullptr)
-{ }
-
-FrameGuard::~FrameGuard()
-{
-    if (state_.isGenerator()) {
-        JSGenerator *gen = state_.asGenerator()->gen();
-        gen->fp->unsetPushedSPSFrame();
-        gen->regs = regs_;
-        return;
-    }
-
-    if (fp_)
-        stack_->releaseFrame(fp_);
 }
 
 /*
@@ -1217,25 +1198,7 @@ Interpret(JSContext *cx, RunState &state)
     JS_ASSERT(!cx->compartment()->activeAnalysis);
 
 #define CHECK_PCCOUNT_INTERRUPTS() \
-    JS_ASSERT_IF(script->hasScriptCounts, opMask == EnableInterruptsPseudoOpcode)
-
-    /*
-     * When Debugger puts a script in single-step mode, all js::Interpret
-     * invocations that might be presently running that script must have
-     * interrupts enabled. It's not practical to simply check
-     * script->stepModeEnabled() at each point some callee could have changed
-     * it, because there are so many places js::Interpret could possibly cause
-     * JavaScript to run: each place an object might be coerced to a primitive
-     * or a number, for example. So instead, we expose a simple mechanism to
-     * let Debugger tweak the affected js::Interpret frames when an onStep
-     * handler is added: setting opMask to EnableInterruptsPseudoOpcode will
-     * enable interrupts.
-     */
-    static_assert(EnableInterruptsPseudoOpcode >= JSOP_LIMIT,
-                  "EnableInterruptsPseudoOpcode must be greater than any opcode");
-    static_assert(EnableInterruptsPseudoOpcode == jsbytecode(-1),
-                  "EnableInterruptsPseudoOpcode must be the maximum jsbytecode value");
-    jsbytecode opMask = 0;
+    JS_ASSERT_IF(script->hasScriptCounts, activation.opMask() == EnableInterruptsPseudoOpcode)
 
 /*
  * Define macros for an interpreter loop. Opcode dispatch may be either by a
@@ -1286,17 +1249,32 @@ Interpret(JSContext *cx, RunState &state)
     jsbytecode switchOp;
 #endif
 
+   /*
+    * Shorthand for the common sequence at the end of a fixed-size opcode.
+    */
 #define END_CASE(OP)              ADVANCE_AND_DISPATCH(OP##_LENGTH);
 
     /*
-     * Increment regs.pc by N, load the opcode at that position, and jump to the
-     * code to execute it.
+     * Increment REGS.pc by N, load the opcode at that position,
+     * and jump to the code to execute it.
+     *
+     * When Debugger puts a script in single-step mode, all js::Interpret
+     * invocations that might be presently running that script must have
+     * interrupts enabled. It's not practical to simply check
+     * script->stepModeEnabled() at each point some callee could have changed
+     * it, because there are so many places js::Interpret could possibly cause
+     * JavaScript to run: each place an object might be coerced to a primitive
+     * or a number, for example. So instead, we expose a simple mechanism to
+     * let Debugger tweak the affected js::Interpret frames when an onStep
+     * handler is added: calling activation.enableInterruptsUnconditionally()
+     * will enable interrupts, and activation.opMask() is or'd with the opcode
+     * to implement a simple alternate dispatch.
      */
 #define ADVANCE_AND_DISPATCH(N)                                               \
     JS_BEGIN_MACRO                                                            \
-        regs.pc += (N);                                                       \
+        REGS.pc += (N);                                                       \
         SANITY_CHECKS();                                                      \
-        DISPATCH_TO(*regs.pc | opMask);                                       \
+        DISPATCH_TO(*REGS.pc | activation.opMask());                          \
     JS_END_MACRO
 
     /*
@@ -1323,13 +1301,13 @@ Interpret(JSContext *cx, RunState &state)
     JS_END_MACRO
 
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
-    ((dbl) = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
+    ((dbl) = script->getConst(GET_UINT32_INDEX(REGS.pc + (PCOFF))).toDouble())
 
 #define SET_SCRIPT(s)                                                         \
     JS_BEGIN_MACRO                                                            \
         script = (s);                                                         \
         if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts) \
-            opMask = EnableInterruptsPseudoOpcode; /* Enable interrupts. */   \
+            activation.enableInterruptsUnconditionally();                     \
     JS_END_MACRO
 
 #define SANITY_CHECKS()                                                       \
@@ -1338,27 +1316,15 @@ Interpret(JSContext *cx, RunState &state)
         CHECK_PCCOUNT_INTERRUPTS();                                           \
     JS_END_MACRO
 
-    FrameRegs regs;
-    FrameGuard fg(state, regs);
-
-    StackFrame *entryFrame = state.pushInterpreterFrame(cx, &fg);
+    StackFrame *entryFrame = state.pushInterpreterFrame(cx);
     if (!entryFrame)
         return false;
 
-    if (!state.isGenerator()) {
-        regs.prepareToRun(*entryFrame, state.script());
-        JS_ASSERT(regs.pc == state.script()->code);
-    } else {
-        regs = state.asGenerator()->gen()->regs;
-    }
-
-    JS_ASSERT_IF(entryFrame->isEvalFrame(), state.script()->isActiveEval);
-
-    InterpreterActivation activation(cx, entryFrame, regs, &opMask);
+    InterpreterActivation activation(state, cx, entryFrame);
 
     /* The script is used frequently, so keep a local copy. */
     RootedScript script(cx);
-    SET_SCRIPT(regs.fp()->script());
+    SET_SCRIPT(REGS.fp()->script());
 
 #if JS_TRACE_LOGGING
     TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_START, script);
@@ -1383,16 +1349,16 @@ Interpret(JSContext *cx, RunState &state)
     RootedScript rootScript0(cx);
     DebugOnly<uint32_t> blockDepth;
 
-    if (JS_UNLIKELY(regs.fp()->isGeneratorFrame())) {
-        JS_ASSERT(size_t(regs.pc - script->code) <= script->length);
-        JS_ASSERT(regs.stackDepth() <= script->nslots);
+    if (JS_UNLIKELY(REGS.fp()->isGeneratorFrame())) {
+        JS_ASSERT(size_t(REGS.pc - script->code) <= script->length);
+        JS_ASSERT(REGS.stackDepth() <= script->nslots);
 
         /*
          * To support generator_throw and to catch ignored exceptions,
          * fail if cx->isExceptionPending() is true.
          */
         if (cx->isExceptionPending()) {
-            probes::EnterScript(cx, script, script->function(), regs.fp());
+            probes::EnterScript(cx, script, script->function(), REGS.fp());
             goto error;
         }
     }
@@ -1400,14 +1366,14 @@ Interpret(JSContext *cx, RunState &state)
     /* State communicated between non-local jumps: */
     bool interpReturnOK;
 
-    if (!entryFrame->isGeneratorFrame()) {
-        if (!entryFrame->prologue(cx))
+    if (!activation.entryFrame()->isGeneratorFrame()) {
+        if (!activation.entryFrame()->prologue(cx))
             goto error;
     } else {
-        probes::EnterScript(cx, script, script->function(), entryFrame);
+        probes::EnterScript(cx, script, script->function(), activation.entryFrame());
     }
     if (cx->compartment()->debugMode()) {
-        JSTrapStatus status = ScriptDebugPrologue(cx, entryFrame);
+        JSTrapStatus status = ScriptDebugPrologue(cx, activation.entryFrame());
         switch (status) {
           case JSTRAP_CONTINUE:
             break;
@@ -1423,7 +1389,7 @@ Interpret(JSContext *cx, RunState &state)
     }
 
     if (cx->runtime()->profilingScripts || cx->runtime()->debugHooks.interruptHook)
-        opMask = EnableInterruptsPseudoOpcode; /* Enable interrupts. */
+        activation.enableInterruptsUnconditionally();
 
   enterInterpreterLoop:
     // Enter the interpreter loop starting at the current pc.
@@ -1434,7 +1400,7 @@ INTERPRETER_LOOP() {
 CASE(EnableInterruptsPseudoOpcode)
 {
     bool moreInterrupts = false;
-    jsbytecode op = *regs.pc;
+    jsbytecode op = *REGS.pc;
 
     if (cx->runtime()->profilingScripts) {
         if (!script->hasScriptCounts)
@@ -1443,7 +1409,7 @@ CASE(EnableInterruptsPseudoOpcode)
     }
 
     if (script->hasScriptCounts) {
-        PCCounts counts = script->getPCCounts(regs.pc);
+        PCCounts counts = script->getPCCounts(REGS.pc);
         counts.get(PCCounts::BASE_INTERP)++;
         moreInterrupts = true;
     }
@@ -1453,7 +1419,7 @@ CASE(EnableInterruptsPseudoOpcode)
         RootedValue rval(cx);
         JSTrapStatus status = JSTRAP_CONTINUE;
         if (hook)
-            status = hook(cx, script, regs.pc, rval.address(), cx->runtime()->debugHooks.interruptHookData);
+            status = hook(cx, script, REGS.pc, rval.address(), cx->runtime()->debugHooks.interruptHookData);
         if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
             status = Debugger::onSingleStep(cx, &rval);
         switch (status) {
@@ -1462,7 +1428,7 @@ CASE(EnableInterruptsPseudoOpcode)
           case JSTRAP_CONTINUE:
             break;
           case JSTRAP_RETURN:
-            regs.fp()->setReturnValue(rval);
+            REGS.fp()->setReturnValue(rval);
             interpReturnOK = true;
             goto forced_return;
           case JSTRAP_THROW:
@@ -1476,14 +1442,14 @@ CASE(EnableInterruptsPseudoOpcode)
     if (script->hasAnyBreakpointsOrStepMode())
         moreInterrupts = true;
 
-    if (script->hasBreakpointsAt(regs.pc)) {
+    if (script->hasBreakpointsAt(REGS.pc)) {
         RootedValue rval(cx);
         JSTrapStatus status = Debugger::onTrap(cx, &rval);
         switch (status) {
           case JSTRAP_ERROR:
             goto error;
           case JSTRAP_RETURN:
-            regs.fp()->setReturnValue(rval);
+            REGS.fp()->setReturnValue(rval);
             interpReturnOK = true;
             goto forced_return;
           case JSTRAP_THROW:
@@ -1496,8 +1462,9 @@ CASE(EnableInterruptsPseudoOpcode)
         JS_ASSERT(rval.isInt32() && rval.toInt32() == op);
     }
 
-    JS_ASSERT(opMask == EnableInterruptsPseudoOpcode);
-    opMask = moreInterrupts ? EnableInterruptsPseudoOpcode : 0;
+    JS_ASSERT(activation.opMask() == EnableInterruptsPseudoOpcode);
+    if (!moreInterrupts)
+        activation.clearInterruptsMask();
 
     /* Commence executing the actual opcode. */
     SANITY_CHECKS();
@@ -1577,7 +1544,7 @@ CASE(JSOP_UNUSED223)
 CASE(JSOP_CONDSWITCH)
 CASE(JSOP_TRY)
 {
-    JS_ASSERT(js_CodeSpec[*regs.pc].length == 1);
+    JS_ASSERT(js_CodeSpec[*REGS.pc].length == 1);
     ADVANCE_AND_DISPATCH(1);
 }
 
@@ -1592,11 +1559,11 @@ CASE(JSOP_LOOPENTRY)
 #ifdef JS_ION
     // Attempt on-stack replacement with Baseline code.
     if (jit::IsBaselineEnabled(cx)) {
-        jit::MethodStatus status = jit::CanEnterBaselineAtBranch(cx, regs.fp(), false);
+        jit::MethodStatus status = jit::CanEnterBaselineAtBranch(cx, REGS.fp(), false);
         if (status == jit::Method_Error)
             goto error;
         if (status == jit::Method_Compiled) {
-            jit::IonExecStatus maybeOsr = jit::EnterBaselineAtBranch(cx, regs.fp(), regs.pc);
+            jit::IonExecStatus maybeOsr = jit::EnterBaselineAtBranch(cx, REGS.fp(), REGS.pc);
 
             // We failed to call into baseline at all, so treat as an error.
             if (maybeOsr == jit::IonExec_Aborted)
@@ -1604,7 +1571,7 @@ CASE(JSOP_LOOPENTRY)
 
             interpReturnOK = (maybeOsr == jit::IonExec_Ok);
 
-            if (entryFrame != regs.fp())
+            if (activation.entryFrame() != REGS.fp())
                 goto jit_return_pop_frame;
             goto leave_on_safe_point;
         }
@@ -1624,15 +1591,15 @@ CASE(JSOP_UNDEFINED)
 END_CASE(JSOP_UNDEFINED)
 
 CASE(JSOP_POP)
-    regs.sp--;
+    REGS.sp--;
 END_CASE(JSOP_POP)
 
 CASE(JSOP_POPN)
-    JS_ASSERT(GET_UINT16(regs.pc) <= regs.stackDepth());
-    regs.sp -= GET_UINT16(regs.pc);
+    JS_ASSERT(GET_UINT16(REGS.pc) <= REGS.stackDepth());
+    REGS.sp -= GET_UINT16(REGS.pc);
 #ifdef DEBUG
-    if (StaticBlockObject *block = regs.fp()->maybeBlockChain())
-        JS_ASSERT(regs.stackDepth() >= block->stackDepth() + block->slotCount());
+    if (StaticBlockObject *block = REGS.fp()->maybeBlockChain())
+        JS_ASSERT(REGS.stackDepth() >= block->stackDepth() + block->slotCount());
 #endif
 END_CASE(JSOP_POPN)
 
@@ -1644,9 +1611,9 @@ END_CASE(JSOP_POPV)
 CASE(JSOP_ENTERWITH)
 {
     RootedValue &val = rootValue0;
-    val = regs.sp[-1];
+    val = REGS.sp[-1];
 
-    if (!EnterWith(cx, regs.fp(), val, regs.stackDepth() - 1))
+    if (!EnterWith(cx, REGS.fp(), val, REGS.stackDepth() - 1))
         goto error;
 
     /*
@@ -1658,14 +1625,14 @@ CASE(JSOP_ENTERWITH)
      * We set sp[-1] to the current "with" object to help asserting the
      * enter/leave balance in [leavewith].
      */
-    regs.sp[-1].setObject(*regs.fp()->scopeChain());
+    REGS.sp[-1].setObject(*REGS.fp()->scopeChain());
 }
 END_CASE(JSOP_ENTERWITH)
 
 CASE(JSOP_LEAVEWITH)
-    JS_ASSERT(regs.sp[-1].toObject() == *regs.fp()->scopeChain());
-    regs.fp()->popWith(cx);
-    regs.sp--;
+    JS_ASSERT(REGS.sp[-1].toObject() == *REGS.fp()->scopeChain());
+    REGS.fp()->popWith(cx);
+    REGS.sp--;
 END_CASE(JSOP_LEAVEWITH)
 
 CASE(JSOP_RETURN)
@@ -1682,7 +1649,7 @@ CASE(JSOP_STOP)
     CHECK_BRANCH();
 
     interpReturnOK = true;
-    if (entryFrame != regs.fp())
+    if (activation.entryFrame() != REGS.fp())
   inline_return:
     {
 #if JS_TRACE_LOGGING
@@ -1690,100 +1657,100 @@ CASE(JSOP_STOP)
 #endif
 
         if (cx->compartment()->debugMode())
-            interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
+            interpReturnOK = ScriptDebugEpilogue(cx, REGS.fp(), interpReturnOK);
 
-        if (!regs.fp()->isYielding())
-            regs.fp()->epilogue(cx);
+        if (!REGS.fp()->isYielding())
+            REGS.fp()->epilogue(cx);
         else
-            probes::ExitScript(cx, script, script->function(), regs.fp());
+            probes::ExitScript(cx, script, script->function(), REGS.fp());
 
 #if defined(JS_ION)
   jit_return_pop_frame:
 #endif
 
-        activation.popInlineFrame(regs.fp());
-        SET_SCRIPT(regs.fp()->script());
+        activation.popInlineFrame(REGS.fp());
+        SET_SCRIPT(REGS.fp()->script());
 
 #if defined(JS_ION)
   jit_return:
 #endif
 
-        JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_INVOKE);
+        JS_ASSERT(js_CodeSpec[*REGS.pc].format & JOF_INVOKE);
 
         /* Resume execution in the calling frame. */
         if (JS_LIKELY(interpReturnOK)) {
-            TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+            TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 
             ADVANCE_AND_DISPATCH(JSOP_CALL_LENGTH);
         }
 
         /* Increment pc so that |sp - fp->slots == ReconstructStackDepth(pc)|. */
-        regs.pc += JSOP_CALL_LENGTH;
+        REGS.pc += JSOP_CALL_LENGTH;
         goto error;
     } else {
-        JS_ASSERT(regs.stackDepth() == 0);
+        JS_ASSERT(REGS.stackDepth() == 0);
     }
     interpReturnOK = true;
     goto exit;
 }
 
 CASE(JSOP_DEFAULT)
-    regs.sp--;
+    REGS.sp--;
     /* FALL THROUGH */
 CASE(JSOP_GOTO)
 {
-    BRANCH(GET_JUMP_OFFSET(regs.pc));
+    BRANCH(GET_JUMP_OFFSET(REGS.pc));
 }
 
 CASE(JSOP_IFEQ)
 {
-    bool cond = ToBooleanOp(regs);
-    regs.sp--;
+    bool cond = ToBooleanOp(REGS);
+    REGS.sp--;
     if (!cond)
-        BRANCH(GET_JUMP_OFFSET(regs.pc));
+        BRANCH(GET_JUMP_OFFSET(REGS.pc));
 }
 END_CASE(JSOP_IFEQ)
 
 CASE(JSOP_IFNE)
 {
-    bool cond = ToBooleanOp(regs);
-    regs.sp--;
+    bool cond = ToBooleanOp(REGS);
+    REGS.sp--;
     if (cond)
-        BRANCH(GET_JUMP_OFFSET(regs.pc));
+        BRANCH(GET_JUMP_OFFSET(REGS.pc));
 }
 END_CASE(JSOP_IFNE)
 
 CASE(JSOP_OR)
 {
-    bool cond = ToBooleanOp(regs);
+    bool cond = ToBooleanOp(REGS);
     if (cond)
-        ADVANCE_AND_DISPATCH(GET_JUMP_OFFSET(regs.pc));
+        ADVANCE_AND_DISPATCH(GET_JUMP_OFFSET(REGS.pc));
 }
 END_CASE(JSOP_OR)
 
 CASE(JSOP_AND)
 {
-    bool cond = ToBooleanOp(regs);
+    bool cond = ToBooleanOp(REGS);
     if (!cond)
-        ADVANCE_AND_DISPATCH(GET_JUMP_OFFSET(regs.pc));
+        ADVANCE_AND_DISPATCH(GET_JUMP_OFFSET(REGS.pc));
 }
 END_CASE(JSOP_AND)
 
 #define FETCH_ELEMENT_ID(n, id)                                               \
     JS_BEGIN_MACRO                                                            \
-        if (!ValueToId<CanGC>(cx, regs.stackHandleAt(n), &(id)))              \
+        if (!ValueToId<CanGC>(cx, REGS.stackHandleAt(n), &(id))) \
             goto error;                                                       \
     JS_END_MACRO
 
 #define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(js_CodeSpec[*regs.pc].length == 1);                         \
-        unsigned diff_ = (unsigned) GET_UINT8(regs.pc) - (unsigned) JSOP_IFEQ;\
+        JS_ASSERT(js_CodeSpec[*REGS.pc].length == 1);                         \
+        unsigned diff_ = (unsigned) GET_UINT8(REGS.pc) - (unsigned) JSOP_IFEQ; \
         if (diff_ <= 1) {                                                     \
-            regs.sp -= (spdec);                                               \
+            REGS.sp -= (spdec);                                               \
             if ((cond) == (diff_ != 0)) {                                     \
-                ++regs.pc;                                                    \
-                BRANCH(GET_JUMP_OFFSET(regs.pc));                             \
+                ++REGS.pc;                                                    \
+                BRANCH(GET_JUMP_OFFSET(REGS.pc));                             \
             }                                                                 \
             ADVANCE_AND_DISPATCH(1 + JSOP_IFEQ_LENGTH);                       \
         }                                                                     \
@@ -1791,7 +1758,7 @@ END_CASE(JSOP_AND)
 
 CASE(JSOP_IN)
 {
-    HandleValue rref = regs.stackHandleAt(-1);
+    HandleValue rref = REGS.stackHandleAt(-1);
     if (!rref.isObject()) {
         js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NullPtr());
         goto error;
@@ -1807,16 +1774,16 @@ CASE(JSOP_IN)
     bool cond = prop != nullptr;
     prop = nullptr;
     TRY_BRANCH_AFTER_COND(cond, 2);
-    regs.sp--;
-    regs.sp[-1].setBoolean(cond);
+    REGS.sp--;
+    REGS.sp[-1].setBoolean(cond);
 }
 END_CASE(JSOP_IN)
 
 CASE(JSOP_ITER)
 {
-    JS_ASSERT(regs.stackDepth() >= 1);
-    uint8_t flags = GET_UINT8(regs.pc);
-    MutableHandleValue res = regs.stackHandleAt(-1);
+    JS_ASSERT(REGS.stackDepth() >= 1);
+    uint8_t flags = GET_UINT8(REGS.pc);
+    MutableHandleValue res = REGS.stackHandleAt(-1);
     if (!ValueToIterator(cx, flags, res))
         goto error;
     JS_ASSERT(!res.isPrimitive());
@@ -1825,24 +1792,24 @@ END_CASE(JSOP_ITER)
 
 CASE(JSOP_MOREITER)
 {
-    JS_ASSERT(regs.stackDepth() >= 1);
-    JS_ASSERT(regs.sp[-1].isObject());
+    JS_ASSERT(REGS.stackDepth() >= 1);
+    JS_ASSERT(REGS.sp[-1].isObject());
     PUSH_NULL();
     bool cond;
-    MutableHandleValue res = regs.stackHandleAt(-1);
-    if (!IteratorMore(cx, &regs.sp[-2].toObject(), &cond, res))
+    MutableHandleValue res = REGS.stackHandleAt(-1);
+    if (!IteratorMore(cx, &REGS.sp[-2].toObject(), &cond, res))
         goto error;
-    regs.sp[-1].setBoolean(cond);
+    REGS.sp[-1].setBoolean(cond);
 }
 END_CASE(JSOP_MOREITER)
 
 CASE(JSOP_ITERNEXT)
 {
-    JS_ASSERT(regs.sp[-1].isObject());
+    JS_ASSERT(REGS.sp[-1].isObject());
     PUSH_NULL();
-    MutableHandleValue res = regs.stackHandleAt(-1);
+    MutableHandleValue res = REGS.stackHandleAt(-1);
     RootedObject &obj = rootObject0;
-    obj = &regs.sp[-2].toObject();
+    obj = &REGS.sp[-2].toObject();
     if (!IteratorNext(cx, obj, res))
         goto error;
 }
@@ -1850,11 +1817,11 @@ END_CASE(JSOP_ITERNEXT)
 
 CASE(JSOP_ENDITER)
 {
-    JS_ASSERT(regs.stackDepth() >= 1);
+    JS_ASSERT(REGS.stackDepth() >= 1);
     RootedObject &obj = rootObject0;
-    obj = &regs.sp[-1].toObject();
+    obj = &REGS.sp[-1].toObject();
     bool ok = CloseIterator(cx, obj);
-    regs.sp--;
+    REGS.sp--;
     if (!ok)
         goto error;
 }
@@ -1862,17 +1829,17 @@ END_CASE(JSOP_ENDITER)
 
 CASE(JSOP_DUP)
 {
-    JS_ASSERT(regs.stackDepth() >= 1);
-    const Value &rref = regs.sp[-1];
+    JS_ASSERT(REGS.stackDepth() >= 1);
+    const Value &rref = REGS.sp[-1];
     PUSH_COPY(rref);
 }
 END_CASE(JSOP_DUP)
 
 CASE(JSOP_DUP2)
 {
-    JS_ASSERT(regs.stackDepth() >= 2);
-    const Value &lref = regs.sp[-2];
-    const Value &rref = regs.sp[-1];
+    JS_ASSERT(REGS.stackDepth() >= 2);
+    const Value &lref = REGS.sp[-2];
+    const Value &rref = REGS.sp[-1];
     PUSH_COPY(lref);
     PUSH_COPY(rref);
 }
@@ -1880,33 +1847,33 @@ END_CASE(JSOP_DUP2)
 
 CASE(JSOP_SWAP)
 {
-    JS_ASSERT(regs.stackDepth() >= 2);
-    Value &lref = regs.sp[-2];
-    Value &rref = regs.sp[-1];
+    JS_ASSERT(REGS.stackDepth() >= 2);
+    Value &lref = REGS.sp[-2];
+    Value &rref = REGS.sp[-1];
     lref.swap(rref);
 }
 END_CASE(JSOP_SWAP)
 
 CASE(JSOP_PICK)
 {
-    unsigned i = GET_UINT8(regs.pc);
-    JS_ASSERT(regs.stackDepth() >= i + 1);
-    Value lval = regs.sp[-int(i + 1)];
-    memmove(regs.sp - (i + 1), regs.sp - i, sizeof(Value) * i);
-    regs.sp[-1] = lval;
+    unsigned i = GET_UINT8(REGS.pc);
+    JS_ASSERT(REGS.stackDepth() >= i + 1);
+    Value lval = REGS.sp[-int(i + 1)];
+    memmove(REGS.sp - (i + 1), REGS.sp - i, sizeof(Value) * i);
+    REGS.sp[-1] = lval;
 }
 END_CASE(JSOP_PICK)
 
 CASE(JSOP_SETCONST)
 {
     RootedPropertyName &name = rootName0;
-    name = script->getName(regs.pc);
+    name = script->getName(REGS.pc);
 
     RootedValue &rval = rootValue0;
-    rval = regs.sp[-1];
+    rval = REGS.sp[-1];
 
     RootedObject &obj = rootObject0;
-    obj = &regs.fp()->varObj();
+    obj = &REGS.fp()->varObj();
 
     if (!SetConstOperation(cx, obj, name, rval))
         goto error;
@@ -1917,7 +1884,7 @@ END_CASE(JSOP_SETCONST);
 CASE(JSOP_ENUMCONSTELEM)
 {
     RootedValue &rval = rootValue0;
-    rval = regs.sp[-3];
+    rval = REGS.sp[-3];
 
     RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -2, obj);
@@ -1928,13 +1895,13 @@ CASE(JSOP_ENUMCONSTELEM)
                                  JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
         goto error;
     }
-    regs.sp -= 3;
+    REGS.sp -= 3;
 }
 END_CASE(JSOP_ENUMCONSTELEM)
 #endif
 
 CASE(JSOP_BINDGNAME)
-    PUSH_OBJECT(regs.fp()->global());
+    PUSH_OBJECT(REGS.fp()->global());
 END_CASE(JSOP_BINDGNAME)
 
 CASE(JSOP_BINDINTRINSIC)
@@ -1944,10 +1911,10 @@ END_CASE(JSOP_BINDINTRINSIC)
 CASE(JSOP_BINDNAME)
 {
     RootedObject &scopeChain = rootObject0;
-    scopeChain = regs.fp()->scopeChain();
+    scopeChain = REGS.fp()->scopeChain();
 
     RootedPropertyName &name = rootName0;
-    name = script->getName(regs.pc);
+    name = script->getName(REGS.pc);
 
     /* Assigning to an undeclared name adds a property to the global object. */
     RootedObject &scope = rootObject1;
@@ -1961,13 +1928,13 @@ END_CASE(JSOP_BINDNAME)
 #define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ToInt32(cx, regs.stackHandleAt(-2), &i))                         \
+        if (!ToInt32(cx, REGS.stackHandleAt(-2), &i))                         \
             goto error;                                                       \
-        if (!ToInt32(cx, regs.stackHandleAt(-1), &j))                         \
+        if (!ToInt32(cx, REGS.stackHandleAt(-1), &j))                         \
             goto error;                                                       \
         i = i OP j;                                                           \
-        regs.sp--;                                                            \
-        regs.sp[-1].setInt32(i);                                              \
+        REGS.sp--;                                                            \
+        REGS.sp[-1].setInt32(i);                                              \
     JS_END_MACRO
 
 CASE(JSOP_BITOR)
@@ -1985,31 +1952,31 @@ END_CASE(JSOP_BITAND)
 #undef BITWISE_OP
 
 CASE(JSOP_EQ)
-    if (!LooseEqualityOp<true>(cx, regs))
+    if (!LooseEqualityOp<true>(cx, REGS))
         goto error;
 END_CASE(JSOP_EQ)
 
 CASE(JSOP_NE)
-    if (!LooseEqualityOp<false>(cx, regs))
+    if (!LooseEqualityOp<false>(cx, REGS))
         goto error;
 END_CASE(JSOP_NE)
 
 #define STRICT_EQUALITY_OP(OP, COND)                                          \
     JS_BEGIN_MACRO                                                            \
-        const Value &rref = regs.sp[-1];                                      \
-        const Value &lref = regs.sp[-2];                                      \
+        const Value &rref = REGS.sp[-1];                                      \
+        const Value &lref = REGS.sp[-2];                                      \
         bool equal;                                                           \
         if (!StrictlyEqual(cx, lref, rref, &equal))                           \
             goto error;                                                       \
         (COND) = equal OP true;                                               \
-        regs.sp--;                                                            \
+        REGS.sp--;                                                            \
     JS_END_MACRO
 
 CASE(JSOP_STRICTEQ)
 {
     bool cond;
     STRICT_EQUALITY_OP(==, cond);
-    regs.sp[-1].setBoolean(cond);
+    REGS.sp[-1].setBoolean(cond);
 }
 END_CASE(JSOP_STRICTEQ)
 
@@ -2017,7 +1984,7 @@ CASE(JSOP_STRICTNE)
 {
     bool cond;
     STRICT_EQUALITY_OP(!=, cond);
-    regs.sp[-1].setBoolean(cond);
+    REGS.sp[-1].setBoolean(cond);
 }
 END_CASE(JSOP_STRICTNE)
 
@@ -2026,8 +1993,8 @@ CASE(JSOP_CASE)
     bool cond;
     STRICT_EQUALITY_OP(==, cond);
     if (cond) {
-        regs.sp--;
-        BRANCH(GET_JUMP_OFFSET(regs.pc));
+        REGS.sp--;
+        BRANCH(GET_JUMP_OFFSET(REGS.pc));
     }
 }
 END_CASE(JSOP_CASE)
@@ -2037,65 +2004,65 @@ END_CASE(JSOP_CASE)
 CASE(JSOP_LT)
 {
     bool cond;
-    MutableHandleValue lval = regs.stackHandleAt(-2);
-    MutableHandleValue rval = regs.stackHandleAt(-1);
+    MutableHandleValue lval = REGS.stackHandleAt(-2);
+    MutableHandleValue rval = REGS.stackHandleAt(-1);
     if (!LessThanOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
-    regs.sp[-2].setBoolean(cond);
-    regs.sp--;
+    REGS.sp[-2].setBoolean(cond);
+    REGS.sp--;
 }
 END_CASE(JSOP_LT)
 
 CASE(JSOP_LE)
 {
     bool cond;
-    MutableHandleValue lval = regs.stackHandleAt(-2);
-    MutableHandleValue rval = regs.stackHandleAt(-1);
+    MutableHandleValue lval = REGS.stackHandleAt(-2);
+    MutableHandleValue rval = REGS.stackHandleAt(-1);
     if (!LessThanOrEqualOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
-    regs.sp[-2].setBoolean(cond);
-    regs.sp--;
+    REGS.sp[-2].setBoolean(cond);
+    REGS.sp--;
 }
 END_CASE(JSOP_LE)
 
 CASE(JSOP_GT)
 {
     bool cond;
-    MutableHandleValue lval = regs.stackHandleAt(-2);
-    MutableHandleValue rval = regs.stackHandleAt(-1);
+    MutableHandleValue lval = REGS.stackHandleAt(-2);
+    MutableHandleValue rval = REGS.stackHandleAt(-1);
     if (!GreaterThanOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
-    regs.sp[-2].setBoolean(cond);
-    regs.sp--;
+    REGS.sp[-2].setBoolean(cond);
+    REGS.sp--;
 }
 END_CASE(JSOP_GT)
 
 CASE(JSOP_GE)
 {
     bool cond;
-    MutableHandleValue lval = regs.stackHandleAt(-2);
-    MutableHandleValue rval = regs.stackHandleAt(-1);
+    MutableHandleValue lval = REGS.stackHandleAt(-2);
+    MutableHandleValue rval = REGS.stackHandleAt(-1);
     if (!GreaterThanOrEqualOperation(cx, lval, rval, &cond))
         goto error;
     TRY_BRANCH_AFTER_COND(cond, 2);
-    regs.sp[-2].setBoolean(cond);
-    regs.sp--;
+    REGS.sp[-2].setBoolean(cond);
+    REGS.sp--;
 }
 END_CASE(JSOP_GE)
 
 #define SIGNED_SHIFT_OP(OP)                                                   \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ToInt32(cx, regs.stackHandleAt(-2), &i))                         \
+        if (!ToInt32(cx, REGS.stackHandleAt(-2), &i))                         \
             goto error;                                                       \
-        if (!ToInt32(cx, regs.stackHandleAt(-1), &j))                         \
+        if (!ToInt32(cx, REGS.stackHandleAt(-1), &j))                         \
             goto error;                                                       \
         i = i OP (j & 31);                                                    \
-        regs.sp--;                                                            \
-        regs.sp[-1].setInt32(i);                                              \
+        REGS.sp--;                                                            \
+        REGS.sp[-1].setInt32(i);                                              \
     JS_END_MACRO
 
 CASE(JSOP_LSH)
@@ -2110,72 +2077,72 @@ END_CASE(JSOP_RSH)
 
 CASE(JSOP_URSH)
 {
-    HandleValue lval = regs.stackHandleAt(-2);
-    HandleValue rval = regs.stackHandleAt(-1);
-    if (!UrshOperation(cx, lval, rval, &regs.sp[-2]))
+    HandleValue lval = REGS.stackHandleAt(-2);
+    HandleValue rval = REGS.stackHandleAt(-1);
+    if (!UrshOperation(cx, lval, rval, &REGS.sp[-2]))
         goto error;
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_URSH)
 
 CASE(JSOP_ADD)
 {
-    MutableHandleValue lval = regs.stackHandleAt(-2);
-    MutableHandleValue rval = regs.stackHandleAt(-1);
-    if (!AddOperation(cx, lval, rval, &regs.sp[-2]))
+    MutableHandleValue lval = REGS.stackHandleAt(-2);
+    MutableHandleValue rval = REGS.stackHandleAt(-1);
+    if (!AddOperation(cx, lval, rval, &REGS.sp[-2]))
         goto error;
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_ADD)
 
 CASE(JSOP_SUB)
 {
     RootedValue &lval = rootValue0, &rval = rootValue1;
-    lval = regs.sp[-2];
-    rval = regs.sp[-1];
-    if (!SubOperation(cx, lval, rval, &regs.sp[-2]))
+    lval = REGS.sp[-2];
+    rval = REGS.sp[-1];
+    if (!SubOperation(cx, lval, rval, &REGS.sp[-2]))
         goto error;
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_SUB)
 
 CASE(JSOP_MUL)
 {
     RootedValue &lval = rootValue0, &rval = rootValue1;
-    lval = regs.sp[-2];
-    rval = regs.sp[-1];
-    if (!MulOperation(cx, lval, rval, &regs.sp[-2]))
+    lval = REGS.sp[-2];
+    rval = REGS.sp[-1];
+    if (!MulOperation(cx, lval, rval, &REGS.sp[-2]))
         goto error;
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_MUL)
 
 CASE(JSOP_DIV)
 {
     RootedValue &lval = rootValue0, &rval = rootValue1;
-    lval = regs.sp[-2];
-    rval = regs.sp[-1];
-    if (!DivOperation(cx, lval, rval, &regs.sp[-2]))
+    lval = REGS.sp[-2];
+    rval = REGS.sp[-1];
+    if (!DivOperation(cx, lval, rval, &REGS.sp[-2]))
         goto error;
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_DIV)
 
 CASE(JSOP_MOD)
 {
     RootedValue &lval = rootValue0, &rval = rootValue1;
-    lval = regs.sp[-2];
-    rval = regs.sp[-1];
-    if (!ModOperation(cx, lval, rval, &regs.sp[-2]))
+    lval = REGS.sp[-2];
+    rval = REGS.sp[-1];
+    if (!ModOperation(cx, lval, rval, &REGS.sp[-2]))
         goto error;
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_MOD)
 
 CASE(JSOP_NOT)
 {
-    bool cond = ToBooleanOp(regs);
-    regs.sp--;
+    bool cond = ToBooleanOp(REGS);
+    REGS.sp--;
     PUSH_BOOLEAN(!cond);
 }
 END_CASE(JSOP_NOT)
@@ -2183,25 +2150,25 @@ END_CASE(JSOP_NOT)
 CASE(JSOP_BITNOT)
 {
     int32_t i;
-    HandleValue value = regs.stackHandleAt(-1);
+    HandleValue value = REGS.stackHandleAt(-1);
     if (!BitNot(cx, value, &i))
         goto error;
-    regs.sp[-1].setInt32(i);
+    REGS.sp[-1].setInt32(i);
 }
 END_CASE(JSOP_BITNOT)
 
 CASE(JSOP_NEG)
 {
     RootedValue &val = rootValue0;
-    val = regs.sp[-1];
-    MutableHandleValue res = regs.stackHandleAt(-1);
-    if (!NegOperation(cx, script, regs.pc, val, res))
+    val = REGS.sp[-1];
+    MutableHandleValue res = REGS.stackHandleAt(-1);
+    if (!NegOperation(cx, script, REGS.pc, val, res))
         goto error;
 }
 END_CASE(JSOP_NEG)
 
 CASE(JSOP_POS)
-    if (!ToNumber(cx, regs.stackHandleAt(-1)))
+    if (!ToNumber(cx, REGS.stackHandleAt(-1)))
         goto error;
 END_CASE(JSOP_POS)
 
@@ -2211,13 +2178,13 @@ CASE(JSOP_DELNAME)
     JS_ASSERT(!script->strict);
 
     RootedPropertyName &name = rootName0;
-    name = script->getName(regs.pc);
+    name = script->getName(REGS.pc);
 
     RootedObject &scopeObj = rootObject0;
-    scopeObj = regs.fp()->scopeChain();
+    scopeObj = REGS.fp()->scopeChain();
 
     PUSH_BOOLEAN(true);
-    MutableHandleValue res = regs.stackHandleAt(-1);
+    MutableHandleValue res = REGS.stackHandleAt(-1);
     if (!DeleteNameOperation(cx, name, scopeObj, res))
         goto error;
 }
@@ -2226,7 +2193,7 @@ END_CASE(JSOP_DELNAME)
 CASE(JSOP_DELPROP)
 {
     RootedPropertyName &name = rootName0;
-    name = script->getName(regs.pc);
+    name = script->getName(REGS.pc);
 
     RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -1, obj);
@@ -2238,7 +2205,7 @@ CASE(JSOP_DELPROP)
         obj->reportNotConfigurable(cx, NameToId(name));
         goto error;
     }
-    MutableHandleValue res = regs.stackHandleAt(-1);
+    MutableHandleValue res = REGS.stackHandleAt(-1);
     res.setBoolean(succeeded);
 }
 END_CASE(JSOP_DELPROP)
@@ -2250,7 +2217,7 @@ CASE(JSOP_DELELEM)
     FETCH_OBJECT(cx, -2, obj);
 
     RootedValue &propval = rootValue0;
-    propval = regs.sp[-1];
+    propval = REGS.sp[-1];
 
     bool succeeded;
     if (!JSObject::deleteByValue(cx, obj, propval, &succeeded))
@@ -2266,9 +2233,9 @@ CASE(JSOP_DELELEM)
         goto error;
     }
 
-    MutableHandleValue res = regs.stackHandleAt(-2);
+    MutableHandleValue res = REGS.stackHandleAt(-2);
     res.setBoolean(succeeded);
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_DELELEM)
 
@@ -2280,11 +2247,11 @@ CASE(JSOP_TOID)
      * There must be an object value below the id, which will not be popped.
      */
     RootedValue &objval = rootValue0, &idval = rootValue1;
-    objval = regs.sp[-2];
-    idval = regs.sp[-1];
+    objval = REGS.sp[-2];
+    idval = REGS.sp[-1];
 
-    MutableHandleValue res = regs.stackHandleAt(-1);
-    if (!ToIdOperation(cx, script, regs.pc, objval, idval, res))
+    MutableHandleValue res = REGS.stackHandleAt(-1);
+    if (!ToIdOperation(cx, script, REGS.pc, objval, idval, res))
         goto error;
 }
 END_CASE(JSOP_TOID)
@@ -2292,18 +2259,18 @@ END_CASE(JSOP_TOID)
 CASE(JSOP_TYPEOFEXPR)
 CASE(JSOP_TYPEOF)
 {
-    regs.sp[-1].setString(TypeOfOperation(regs.sp[-1], cx->runtime()));
+    REGS.sp[-1].setString(TypeOfOperation(REGS.sp[-1], cx->runtime()));
 }
 END_CASE(JSOP_TYPEOF)
 
 CASE(JSOP_VOID)
-    regs.sp[-1].setUndefined();
+    REGS.sp[-1].setUndefined();
 END_CASE(JSOP_VOID)
 
 CASE(JSOP_THIS)
-    if (!ComputeThis(cx, regs.fp()))
+    if (!ComputeThis(cx, REGS.fp()))
         goto error;
-    PUSH_COPY(regs.fp()->thisValue());
+    PUSH_COPY(REGS.fp()->thisValue());
 END_CASE(JSOP_THIS)
 
 CASE(JSOP_GETPROP)
@@ -2312,24 +2279,24 @@ CASE(JSOP_LENGTH)
 CASE(JSOP_CALLPROP)
 {
 
-    MutableHandleValue lval = regs.stackHandleAt(-1);
-    if (!GetPropertyOperation(cx, regs.fp(), script, regs.pc, lval, lval))
+    MutableHandleValue lval = REGS.stackHandleAt(-1);
+    if (!GetPropertyOperation(cx, REGS.fp(), script, REGS.pc, lval, lval))
         goto error;
 
-    TypeScript::Monitor(cx, script, regs.pc, lval);
+    TypeScript::Monitor(cx, script, REGS.pc, lval);
     assertSameCompartmentDebugOnly(cx, lval);
 }
 END_CASE(JSOP_GETPROP)
 
 CASE(JSOP_SETINTRINSIC)
 {
-    HandleValue value = regs.stackHandleAt(-1);
+    HandleValue value = REGS.stackHandleAt(-1);
 
-    if (!SetIntrinsicOperation(cx, script, regs.pc, value))
+    if (!SetIntrinsicOperation(cx, script, REGS.pc, value))
         goto error;
 
-    regs.sp[-2] = regs.sp[-1];
-    regs.sp--;
+    REGS.sp[-2] = REGS.sp[-1];
+    REGS.sp--;
 }
 END_CASE(JSOP_SETINTRINSIC)
 
@@ -2337,49 +2304,49 @@ CASE(JSOP_SETGNAME)
 CASE(JSOP_SETNAME)
 {
     RootedObject &scope = rootObject0;
-    scope = &regs.sp[-2].toObject();
+    scope = &REGS.sp[-2].toObject();
 
-    HandleValue value = regs.stackHandleAt(-1);
+    HandleValue value = REGS.stackHandleAt(-1);
 
-    if (!SetNameOperation(cx, script, regs.pc, scope, value))
+    if (!SetNameOperation(cx, script, REGS.pc, scope, value))
         goto error;
 
-    regs.sp[-2] = regs.sp[-1];
-    regs.sp--;
+    REGS.sp[-2] = REGS.sp[-1];
+    REGS.sp--;
 }
 END_CASE(JSOP_SETNAME)
 
 CASE(JSOP_SETPROP)
 {
-    HandleValue lval = regs.stackHandleAt(-2);
-    HandleValue rval = regs.stackHandleAt(-1);
+    HandleValue lval = REGS.stackHandleAt(-2);
+    HandleValue rval = REGS.stackHandleAt(-1);
 
-    if (!SetPropertyOperation(cx, script, regs.pc, lval, rval))
+    if (!SetPropertyOperation(cx, script, REGS.pc, lval, rval))
         goto error;
 
-    regs.sp[-2] = regs.sp[-1];
-    regs.sp--;
+    REGS.sp[-2] = REGS.sp[-1];
+    REGS.sp--;
 }
 END_CASE(JSOP_SETPROP)
 
 CASE(JSOP_GETELEM)
 CASE(JSOP_CALLELEM)
 {
-    MutableHandleValue lval = regs.stackHandleAt(-2);
-    HandleValue rval = regs.stackHandleAt(-1);
-    MutableHandleValue res = regs.stackHandleAt(-2);
+    MutableHandleValue lval = REGS.stackHandleAt(-2);
+    HandleValue rval = REGS.stackHandleAt(-1);
+    MutableHandleValue res = REGS.stackHandleAt(-2);
 
     bool done = false;
-    if (!GetElemOptimizedArguments(cx, regs.fp(), lval, rval, res, &done))
+    if (!GetElemOptimizedArguments(cx, REGS.fp(), lval, rval, res, &done))
         goto error;
 
     if (!done) {
-        if (!GetElementOperation(cx, JSOp(*regs.pc), lval, rval, res))
+        if (!GetElementOperation(cx, JSOp(*REGS.pc), lval, rval, res))
             goto error;
     }
 
-    TypeScript::Monitor(cx, script, regs.pc, res);
-    regs.sp--;
+    TypeScript::Monitor(cx, script, REGS.pc, res);
+    REGS.sp--;
 }
 END_CASE(JSOP_GETELEM)
 
@@ -2389,11 +2356,11 @@ CASE(JSOP_SETELEM)
     FETCH_OBJECT(cx, -3, obj);
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(-2, id);
-    Value &value = regs.sp[-1];
+    Value &value = REGS.sp[-1];
     if (!SetObjectElementOperation(cx, obj, id, value, script->strict))
         goto error;
-    regs.sp[-3] = value;
-    regs.sp -= 2;
+    REGS.sp[-3] = value;
+    REGS.sp -= 2;
 }
 END_CASE(JSOP_SETELEM)
 
@@ -2406,45 +2373,45 @@ CASE(JSOP_ENUMELEM)
     FETCH_OBJECT(cx, -2, obj);
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(-1, id);
-    rval = regs.sp[-3];
+    rval = REGS.sp[-3];
     if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strict))
         goto error;
-    regs.sp -= 3;
+    REGS.sp -= 3;
 }
 END_CASE(JSOP_ENUMELEM)
 
 CASE(JSOP_EVAL)
 {
-    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-    if (IsBuiltinEvalForScope(regs.fp()->scopeChain(), args.calleev())) {
+    CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
+    if (IsBuiltinEvalForScope(REGS.fp()->scopeChain(), args.calleev())) {
         if (!DirectEval(cx, args))
             goto error;
     } else {
         if (!Invoke(cx, args))
             goto error;
     }
-    regs.sp = args.spAfterCall();
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+    REGS.sp = args.spAfterCall();
+    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_EVAL)
 
 CASE(JSOP_SPREADNEW)
 CASE(JSOP_SPREADCALL)
-    if (regs.fp()->hasPushedSPSFrame())
-        cx->runtime()->spsProfiler.updatePC(script, regs.pc);
+    if (REGS.fp()->hasPushedSPSFrame())
+        cx->runtime()->spsProfiler.updatePC(script, REGS.pc);
     /* FALL THROUGH */
 
 CASE(JSOP_SPREADEVAL)
 {
-    JS_ASSERT(regs.stackDepth() >= 3);
+    JS_ASSERT(REGS.stackDepth() >= 3);
     RootedObject &aobj = rootObject0;
-    aobj = &regs.sp[-1].toObject();
+    aobj = &REGS.sp[-1].toObject();
 
     uint32_t length = aobj->as<ArrayObject>().length();
 
     if (length > ARGS_LENGTH_MAX) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                             *regs.pc == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
+                             *REGS.pc == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
                                                         : JSMSG_TOO_MANY_FUN_SPREADARGS);
         goto error;
     }
@@ -2454,13 +2421,13 @@ CASE(JSOP_SPREADEVAL)
     if (!args.init(length))
         return false;
 
-    args.setCallee(regs.sp[-3]);
-    args.setThis(regs.sp[-2]);
+    args.setCallee(REGS.sp[-3]);
+    args.setThis(REGS.sp[-2]);
 
     if (!GetElements(cx, aobj, length, args.array()))
         goto error;
 
-    switch (*regs.pc) {
+    switch (*REGS.pc) {
       case JSOP_SPREADNEW:
         if (!InvokeConstructor(cx, args))
             goto error;
@@ -2470,7 +2437,7 @@ CASE(JSOP_SPREADEVAL)
             goto error;
         break;
       case JSOP_SPREADEVAL:
-        if (IsBuiltinEvalForScope(regs.fp()->scopeChain(), args.calleev())) {
+        if (IsBuiltinEvalForScope(REGS.fp()->scopeChain(), args.calleev())) {
             if (!DirectEval(cx, args))
                 goto error;
         } else {
@@ -2482,16 +2449,16 @@ CASE(JSOP_SPREADEVAL)
         MOZ_ASSUME_UNREACHABLE("bad spread opcode");
     }
 
-    regs.sp -= 2;
-    regs.sp[-1] = args.rval();
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+    REGS.sp -= 2;
+    REGS.sp[-1] = args.rval();
+    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_SPREADCALL)
 
 CASE(JSOP_FUNAPPLY)
 {
-    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-    if (!GuardFunApplyArgumentsOptimization(cx, regs.fp(), args.calleev(), args.array(),
+    CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
+    if (!GuardFunApplyArgumentsOptimization(cx, REGS.fp(), args.calleev(), args.array(),
                                             args.length()))
         goto error;
     /* FALL THROUGH */
@@ -2501,12 +2468,12 @@ CASE(JSOP_NEW)
 CASE(JSOP_CALL)
 CASE(JSOP_FUNCALL)
 {
-    if (regs.fp()->hasPushedSPSFrame())
-        cx->runtime()->spsProfiler.updatePC(script, regs.pc);
-    JS_ASSERT(regs.stackDepth() >= 2 + GET_ARGC(regs.pc));
-    CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+    if (REGS.fp()->hasPushedSPSFrame())
+        cx->runtime()->spsProfiler.updatePC(script, REGS.pc);
+    JS_ASSERT(REGS.stackDepth() >= 2 + GET_ARGC(REGS.pc));
+    CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
 
-    bool construct = (*regs.pc == JSOP_NEW);
+    bool construct = (*REGS.pc == JSOP_NEW);
 
     RootedFunction &fun = rootFunction0;
     RootedScript &funScript = rootScript0;
@@ -2521,7 +2488,7 @@ CASE(JSOP_FUNCALL)
         if (!funScript)
             goto error;
         if (cx->typeInferenceEnabled() && funScript->shouldCloneAtCallsite) {
-            fun = CloneFunctionAtCallsite(cx, fun, script, regs.pc);
+            fun = CloneFunctionAtCallsite(cx, fun, script, REGS.pc);
             if (!fun)
                 goto error;
             args.setCallee(ObjectValue(*fun));
@@ -2538,13 +2505,13 @@ CASE(JSOP_FUNCALL)
                 goto error;
         }
         Value *newsp = args.spAfterCall();
-        TypeScript::Monitor(cx, script, regs.pc, newsp[-1]);
-        regs.sp = newsp;
+        TypeScript::Monitor(cx, script, REGS.pc, newsp[-1]);
+        REGS.sp = newsp;
         ADVANCE_AND_DISPATCH(JSOP_CALL_LENGTH);
     }
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
-    bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
+    bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, REGS.pc);
 
     TypeMonitorCall(cx, args, construct);
 
@@ -2561,7 +2528,7 @@ CASE(JSOP_FUNCALL)
             if (status == jit::Method_Compiled) {
                 jit::IonExecStatus exec = jit::IonCannon(cx, state);
                 CHECK_BRANCH();
-                regs.sp = args.spAfterCall();
+                REGS.sp = args.spAfterCall();
                 interpReturnOK = !IsErrorStatus(exec);
                 goto jit_return;
             }
@@ -2574,7 +2541,7 @@ CASE(JSOP_FUNCALL)
             if (status == jit::Method_Compiled) {
                 jit::IonExecStatus exec = jit::EnterBaselineMethod(cx, state);
                 CHECK_BRANCH();
-                regs.sp = args.spAfterCall();
+                REGS.sp = args.spAfterCall();
                 interpReturnOK = !IsErrorStatus(exec);
                 goto jit_return;
             }
@@ -2587,19 +2554,19 @@ CASE(JSOP_FUNCALL)
         goto error;
 
     if (newType)
-        regs.fp()->setUseNewType();
+        REGS.fp()->setUseNewType();
 
-    SET_SCRIPT(regs.fp()->script());
+    SET_SCRIPT(REGS.fp()->script());
 
 #if JS_TRACE_LOGGING
     TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_START, script);
     TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_INTERPRETER);
 #endif
 
-    if (!regs.fp()->prologue(cx))
+    if (!REGS.fp()->prologue(cx))
         goto error;
     if (cx->compartment()->debugMode()) {
-        switch (ScriptDebugPrologue(cx, regs.fp())) {
+        switch (ScriptDebugPrologue(cx, REGS.fp())) {
           case JSTRAP_CONTINUE:
             break;
           case JSTRAP_RETURN:
@@ -2627,10 +2594,10 @@ END_CASE(JSOP_SETCALL)
 CASE(JSOP_IMPLICITTHIS)
 {
     RootedPropertyName &name = rootName0;
-    name = script->getName(regs.pc);
+    name = script->getName(REGS.pc);
 
     RootedObject &scopeObj = rootObject0;
-    scopeObj = regs.fp()->scopeChain();
+    scopeObj = REGS.fp()->scopeChain();
 
     RootedObject &scope = rootObject1;
     if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
@@ -2650,11 +2617,11 @@ CASE(JSOP_CALLNAME)
 {
     RootedValue &rval = rootValue0;
 
-    if (!NameOperation(cx, regs.fp(), regs.pc, &rval))
+    if (!NameOperation(cx, REGS.fp(), REGS.pc, &rval))
         goto error;
 
     PUSH_COPY(rval);
-    TypeScript::Monitor(cx, script, regs.pc, rval);
+    TypeScript::Monitor(cx, script, REGS.pc, rval);
 }
 END_CASE(JSOP_NAME)
 
@@ -2663,28 +2630,28 @@ CASE(JSOP_CALLINTRINSIC)
 {
     RootedValue &rval = rootValue0;
 
-    if (!GetIntrinsicOperation(cx, regs.pc, &rval))
+    if (!GetIntrinsicOperation(cx, REGS.pc, &rval))
         goto error;
 
     PUSH_COPY(rval);
-    TypeScript::Monitor(cx, script, regs.pc, rval);
+    TypeScript::Monitor(cx, script, REGS.pc, rval);
 }
 END_CASE(JSOP_GETINTRINSIC)
 
 CASE(JSOP_UINT16)
-    PUSH_INT32((int32_t) GET_UINT16(regs.pc));
+    PUSH_INT32((int32_t) GET_UINT16(REGS.pc));
 END_CASE(JSOP_UINT16)
 
 CASE(JSOP_UINT24)
-    PUSH_INT32((int32_t) GET_UINT24(regs.pc));
+    PUSH_INT32((int32_t) GET_UINT24(REGS.pc));
 END_CASE(JSOP_UINT24)
 
 CASE(JSOP_INT8)
-    PUSH_INT32(GET_INT8(regs.pc));
+    PUSH_INT32(GET_INT8(REGS.pc));
 END_CASE(JSOP_INT8)
 
 CASE(JSOP_INT32)
-    PUSH_INT32(GET_INT32(regs.pc));
+    PUSH_INT32(GET_INT32(REGS.pc));
 END_CASE(JSOP_INT32)
 
 CASE(JSOP_DOUBLE)
@@ -2696,11 +2663,11 @@ CASE(JSOP_DOUBLE)
 END_CASE(JSOP_DOUBLE)
 
 CASE(JSOP_STRING)
-    PUSH_STRING(script->getAtom(regs.pc));
+    PUSH_STRING(script->getAtom(REGS.pc));
 END_CASE(JSOP_STRING)
 
 CASE(JSOP_OBJECT)
-    PUSH_OBJECT(*script->getObject(regs.pc));
+    PUSH_OBJECT(*script->getObject(REGS.pc));
 END_CASE(JSOP_OBJECT)
 
 CASE(JSOP_REGEXP)
@@ -2709,8 +2676,8 @@ CASE(JSOP_REGEXP)
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc.
      */
-    uint32_t index = GET_UINT32_INDEX(regs.pc);
-    JSObject *proto = regs.fp()->global().getOrCreateRegExpPrototype(cx);
+    uint32_t index = GET_UINT32_INDEX(REGS.pc);
+    JSObject *proto = REGS.fp()->global().getOrCreateRegExpPrototype(cx);
     if (!proto)
         goto error;
     JSObject *obj = CloneRegExpObject(cx, script->getRegExp(index), proto);
@@ -2742,7 +2709,7 @@ END_CASE(JSOP_TRUE)
 
 CASE(JSOP_TABLESWITCH)
 {
-    jsbytecode *pc2 = regs.pc;
+    jsbytecode *pc2 = REGS.pc;
     int32_t len = GET_JUMP_OFFSET(pc2);
 
     /*
@@ -2750,7 +2717,7 @@ CASE(JSOP_TABLESWITCH)
      * default case if the discriminant isn't already an int jsval.  (This
      * opcode is emitted only for dense int-domain switches.)
      */
-    const Value &rref = *--regs.sp;
+    const Value &rref = *--REGS.sp;
     int32_t i;
     if (rref.isInt32()) {
         i = rref.toInt32();
@@ -2777,11 +2744,11 @@ CASE(JSOP_TABLESWITCH)
 }
 
 CASE(JSOP_ARGUMENTS)
-    JS_ASSERT(!regs.fp()->fun()->hasRest());
+    JS_ASSERT(!REGS.fp()->fun()->hasRest());
     if (!script->analyzedArgsUsage() && !script->ensureRanAnalysis(cx))
         goto error;
     if (script->needsArgsObj()) {
-        ArgumentsObject *obj = ArgumentsObject::createExpected(cx, regs.fp());
+        ArgumentsObject *obj = ArgumentsObject::createExpected(cx, REGS.fp());
         if (!obj)
             goto error;
         PUSH_COPY(ObjectValue(*obj));
@@ -2800,7 +2767,7 @@ END_CASE(JSOP_RUNONCE)
 CASE(JSOP_REST)
 {
     RootedObject &rest = rootObject0;
-    rest = regs.fp()->createRestParameter(cx);
+    rest = REGS.fp()->createRestParameter(cx);
     if (!rest)
         goto error;
     PUSH_COPY(ObjectValue(*rest));
@@ -2810,52 +2777,52 @@ END_CASE(JSOP_REST)
 CASE(JSOP_CALLALIASEDVAR)
 CASE(JSOP_GETALIASEDVAR)
 {
-    ScopeCoordinate sc = ScopeCoordinate(regs.pc);
-    PUSH_COPY(regs.fp()->aliasedVarScope(sc).aliasedVar(sc));
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+    ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
+    PUSH_COPY(REGS.fp()->aliasedVarScope(sc).aliasedVar(sc));
+    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_GETALIASEDVAR)
 
 CASE(JSOP_SETALIASEDVAR)
 {
-    ScopeCoordinate sc = ScopeCoordinate(regs.pc);
-    ScopeObject &obj = regs.fp()->aliasedVarScope(sc);
+    ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
+    ScopeObject &obj = REGS.fp()->aliasedVarScope(sc);
 
     // Avoid computing the name if no type updates are needed, as this may be
     // expensive on scopes with large numbers of variables.
-    PropertyName *name = obj.hasSingletonType() ? ScopeCoordinateName(cx, script, regs.pc)
+    PropertyName *name = obj.hasSingletonType() ? ScopeCoordinateName(cx, script, REGS.pc)
                                                 : nullptr;
 
-    obj.setAliasedVar(cx, sc, name, regs.sp[-1]);
+    obj.setAliasedVar(cx, sc, name, REGS.sp[-1]);
 }
 END_CASE(JSOP_SETALIASEDVAR)
 
 CASE(JSOP_GETARG)
 CASE(JSOP_CALLARG)
 {
-    unsigned i = GET_ARGNO(regs.pc);
+    unsigned i = GET_ARGNO(REGS.pc);
     if (script->argsObjAliasesFormals())
-        PUSH_COPY(regs.fp()->argsObj().arg(i));
+        PUSH_COPY(REGS.fp()->argsObj().arg(i));
     else
-        PUSH_COPY(regs.fp()->unaliasedFormal(i));
+        PUSH_COPY(REGS.fp()->unaliasedFormal(i));
 }
 END_CASE(JSOP_GETARG)
 
 CASE(JSOP_SETARG)
 {
-    unsigned i = GET_ARGNO(regs.pc);
+    unsigned i = GET_ARGNO(REGS.pc);
     if (script->argsObjAliasesFormals())
-        regs.fp()->argsObj().setArg(i, regs.sp[-1]);
+        REGS.fp()->argsObj().setArg(i, REGS.sp[-1]);
     else
-        regs.fp()->unaliasedFormal(i) = regs.sp[-1];
+        REGS.fp()->unaliasedFormal(i) = REGS.sp[-1];
 }
 END_CASE(JSOP_SETARG)
 
 CASE(JSOP_GETLOCAL)
 CASE(JSOP_CALLLOCAL)
 {
-    unsigned i = GET_SLOTNO(regs.pc);
-    PUSH_COPY_SKIP_CHECK(regs.fp()->unaliasedLocal(i));
+    unsigned i = GET_SLOTNO(REGS.pc);
+    PUSH_COPY_SKIP_CHECK(REGS.fp()->unaliasedLocal(i));
 
     /*
      * Skip the same-compartment assertion if the local will be immediately
@@ -2863,15 +2830,15 @@ CASE(JSOP_CALLLOCAL)
      * method JIT, and a GETLOCAL followed by POP is not considered to be
      * a use of the variable.
      */
-    if (regs.pc[JSOP_GETLOCAL_LENGTH] != JSOP_POP)
-        assertSameCompartmentDebugOnly(cx, regs.sp[-1]);
+    if (REGS.pc[JSOP_GETLOCAL_LENGTH] != JSOP_POP)
+        assertSameCompartmentDebugOnly(cx, REGS.sp[-1]);
 }
 END_CASE(JSOP_GETLOCAL)
 
 CASE(JSOP_SETLOCAL)
 {
-    unsigned i = GET_SLOTNO(regs.pc);
-    regs.fp()->unaliasedLocal(i) = regs.sp[-1];
+    unsigned i = GET_SLOTNO(REGS.pc);
+    REGS.fp()->unaliasedLocal(i) = REGS.sp[-1];
 }
 END_CASE(JSOP_SETLOCAL)
 
@@ -2880,17 +2847,17 @@ CASE(JSOP_DEFVAR)
 {
     /* ES5 10.5 step 8 (with subsequent errata). */
     unsigned attrs = JSPROP_ENUMERATE;
-    if (!regs.fp()->isEvalFrame())
+    if (!REGS.fp()->isEvalFrame())
         attrs |= JSPROP_PERMANENT;
-    if (*regs.pc == JSOP_DEFCONST)
+    if (*REGS.pc == JSOP_DEFCONST)
         attrs |= JSPROP_READONLY;
 
     /* Step 8b. */
     RootedObject &obj = rootObject0;
-    obj = &regs.fp()->varObj();
+    obj = &REGS.fp()->varObj();
 
     RootedPropertyName &name = rootName0;
-    name = script->getName(regs.pc);
+    name = script->getName(REGS.pc);
 
     if (!DefVarOrConstOperation(cx, obj, name, attrs))
         goto error;
@@ -2906,9 +2873,9 @@ CASE(JSOP_DEFFUN)
      * at the top level of a function body).
      */
     RootedFunction &fun = rootFunction0;
-    fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
+    fun = script->getFunction(GET_UINT32_INDEX(REGS.pc));
 
-    if (!DefFunOperation(cx, script, regs.fp()->scopeChain(), fun))
+    if (!DefFunOperation(cx, script, REGS.fp()->scopeChain(), fun))
         goto error;
 }
 END_CASE(JSOP_DEFFUN)
@@ -2917,9 +2884,9 @@ CASE(JSOP_LAMBDA)
 {
     /* Load the specified function object literal. */
     RootedFunction &fun = rootFunction0;
-    fun = script->getFunction(GET_UINT32_INDEX(regs.pc));
+    fun = script->getFunction(GET_UINT32_INDEX(REGS.pc));
 
-    JSObject *obj = Lambda(cx, fun, regs.fp()->scopeChain());
+    JSObject *obj = Lambda(cx, fun, REGS.fp()->scopeChain());
     if (!obj)
         goto error;
     JS_ASSERT(obj->getProto());
@@ -2928,8 +2895,8 @@ CASE(JSOP_LAMBDA)
 END_CASE(JSOP_LAMBDA)
 
 CASE(JSOP_CALLEE)
-    JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
-    PUSH_COPY(regs.fp()->calleev());
+    JS_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
+    PUSH_COPY(REGS.fp()->calleev());
 END_CASE(JSOP_CALLEE)
 
 CASE(JSOP_INITPROP_GETTER)
@@ -2939,15 +2906,15 @@ CASE(JSOP_INITPROP_SETTER)
     RootedPropertyName &name = rootName0;
     RootedObject &val = rootObject1;
 
-    JS_ASSERT(regs.stackDepth() >= 2);
-    obj = &regs.sp[-2].toObject();
-    name = script->getName(regs.pc);
-    val = &regs.sp[-1].toObject();
+    JS_ASSERT(REGS.stackDepth() >= 2);
+    obj = &REGS.sp[-2].toObject();
+    name = script->getName(REGS.pc);
+    val = &REGS.sp[-1].toObject();
 
-    if (!InitGetterSetterOperation(cx, regs.pc, obj, name, val))
+    if (!InitGetterSetterOperation(cx, REGS.pc, obj, name, val))
         goto error;
 
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_INITPROP_GETTER)
 
@@ -2958,15 +2925,15 @@ CASE(JSOP_INITELEM_SETTER)
     RootedValue &idval = rootValue0;
     RootedObject &val = rootObject1;
 
-    JS_ASSERT(regs.stackDepth() >= 3);
-    obj = &regs.sp[-3].toObject();
-    idval = regs.sp[-2];
-    val = &regs.sp[-1].toObject();
+    JS_ASSERT(REGS.stackDepth() >= 3);
+    obj = &REGS.sp[-3].toObject();
+    idval = REGS.sp[-2];
+    val = &REGS.sp[-1].toObject();
 
-    if (!InitGetterSetterOperation(cx, regs.pc, obj, idval, val))
+    if (!InitGetterSetterOperation(cx, REGS.pc, obj, idval, val))
         goto error;
 
-    regs.sp -= 2;
+    REGS.sp -= 2;
 }
 END_CASE(JSOP_INITELEM_GETTER)
 
@@ -2976,78 +2943,78 @@ END_CASE(JSOP_HOLE)
 
 CASE(JSOP_NEWINIT)
 {
-    uint8_t i = GET_UINT8(regs.pc);
+    uint8_t i = GET_UINT8(REGS.pc);
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
     RootedObject &obj = rootObject0;
     NewObjectKind newKind;
     if (i == JSProto_Array) {
-        newKind = UseNewTypeForInitializer(script, regs.pc, &ArrayObject::class_);
+        newKind = UseNewTypeForInitializer(script, REGS.pc, &ArrayObject::class_);
         obj = NewDenseEmptyArray(cx, nullptr, newKind);
     } else {
         gc::AllocKind allocKind = GuessObjectGCKind(0);
-        newKind = UseNewTypeForInitializer(script, regs.pc, &JSObject::class_);
+        newKind = UseNewTypeForInitializer(script, REGS.pc, &JSObject::class_);
         obj = NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind);
     }
-    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
+    if (!obj || !SetInitializerObjectType(cx, script, REGS.pc, obj, newKind))
         goto error;
 
     PUSH_OBJECT(*obj);
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_NEWINIT)
 
 CASE(JSOP_NEWARRAY)
 {
-    unsigned count = GET_UINT24(regs.pc);
+    unsigned count = GET_UINT24(REGS.pc);
     RootedObject &obj = rootObject0;
-    NewObjectKind newKind = UseNewTypeForInitializer(script, regs.pc, &ArrayObject::class_);
+    NewObjectKind newKind = UseNewTypeForInitializer(script, REGS.pc, &ArrayObject::class_);
     obj = NewDenseAllocatedArray(cx, count, nullptr, newKind);
-    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
+    if (!obj || !SetInitializerObjectType(cx, script, REGS.pc, obj, newKind))
         goto error;
 
     PUSH_OBJECT(*obj);
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_NEWARRAY)
 
 CASE(JSOP_NEWOBJECT)
 {
     RootedObject &baseobj = rootObject0;
-    baseobj = script->getObject(regs.pc);
+    baseobj = script->getObject(REGS.pc);
 
     RootedObject &obj = rootObject1;
-    NewObjectKind newKind = UseNewTypeForInitializer(script, regs.pc, baseobj->getClass());
+    NewObjectKind newKind = UseNewTypeForInitializer(script, REGS.pc, baseobj->getClass());
     obj = CopyInitializerObject(cx, baseobj, newKind);
-    if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
+    if (!obj || !SetInitializerObjectType(cx, script, REGS.pc, obj, newKind))
         goto error;
 
     PUSH_OBJECT(*obj);
-    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_NEWOBJECT)
 
 CASE(JSOP_ENDINIT)
 {
     /* FIXME remove JSOP_ENDINIT bug 588522 */
-    JS_ASSERT(regs.stackDepth() >= 1);
-    JS_ASSERT(regs.sp[-1].isObject() || regs.sp[-1].isUndefined());
+    JS_ASSERT(REGS.stackDepth() >= 1);
+    JS_ASSERT(REGS.sp[-1].isObject() || REGS.sp[-1].isUndefined());
 }
 END_CASE(JSOP_ENDINIT)
 
 CASE(JSOP_INITPROP)
 {
     /* Load the property's initial value into rval. */
-    JS_ASSERT(regs.stackDepth() >= 2);
+    JS_ASSERT(REGS.stackDepth() >= 2);
     RootedValue &rval = rootValue0;
-    rval = regs.sp[-1];
+    rval = REGS.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
     RootedObject &obj = rootObject0;
-    obj = &regs.sp[-2].toObject();
+    obj = &REGS.sp[-2].toObject();
     JS_ASSERT(obj->is<JSObject>());
 
-    PropertyName *name = script->getName(regs.pc);
+    PropertyName *name = script->getName(REGS.pc);
 
     RootedId &id = rootId0;
     id = NameToId(name);
@@ -3060,67 +3027,67 @@ CASE(JSOP_INITPROP)
         goto error;
     }
 
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_INITPROP);
 
 CASE(JSOP_INITELEM)
 {
-    JS_ASSERT(regs.stackDepth() >= 3);
-    HandleValue val = regs.stackHandleAt(-1);
-    HandleValue id = regs.stackHandleAt(-2);
+    JS_ASSERT(REGS.stackDepth() >= 3);
+    HandleValue val = REGS.stackHandleAt(-1);
+    HandleValue id = REGS.stackHandleAt(-2);
 
     RootedObject &obj = rootObject0;
-    obj = &regs.sp[-3].toObject();
+    obj = &REGS.sp[-3].toObject();
 
     if (!InitElemOperation(cx, obj, id, val))
         goto error;
 
-    regs.sp -= 2;
+    REGS.sp -= 2;
 }
 END_CASE(JSOP_INITELEM)
 
 CASE(JSOP_INITELEM_ARRAY)
 {
-    JS_ASSERT(regs.stackDepth() >= 2);
-    HandleValue val = regs.stackHandleAt(-1);
+    JS_ASSERT(REGS.stackDepth() >= 2);
+    HandleValue val = REGS.stackHandleAt(-1);
 
     RootedObject &obj = rootObject0;
-    obj = &regs.sp[-2].toObject();
+    obj = &REGS.sp[-2].toObject();
 
     JS_ASSERT(obj->is<ArrayObject>());
 
-    uint32_t index = GET_UINT24(regs.pc);
-    if (!InitArrayElemOperation(cx, regs.pc, obj, index, val))
+    uint32_t index = GET_UINT24(REGS.pc);
+    if (!InitArrayElemOperation(cx, REGS.pc, obj, index, val))
         goto error;
 
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_INITELEM_ARRAY)
 
 CASE(JSOP_INITELEM_INC)
 {
-    JS_ASSERT(regs.stackDepth() >= 3);
-    HandleValue val = regs.stackHandleAt(-1);
+    JS_ASSERT(REGS.stackDepth() >= 3);
+    HandleValue val = REGS.stackHandleAt(-1);
 
     RootedObject &obj = rootObject0;
-    obj = &regs.sp[-3].toObject();
+    obj = &REGS.sp[-3].toObject();
 
-    uint32_t index = regs.sp[-2].toInt32();
-    if (!InitArrayElemOperation(cx, regs.pc, obj, index, val))
+    uint32_t index = REGS.sp[-2].toInt32();
+    if (!InitArrayElemOperation(cx, REGS.pc, obj, index, val))
         goto error;
 
-    regs.sp[-2].setInt32(index + 1);
-    regs.sp--;
+    REGS.sp[-2].setInt32(index + 1);
+    REGS.sp--;
 }
 END_CASE(JSOP_INITELEM_INC)
 
 CASE(JSOP_SPREAD)
 {
-    int32_t count = regs.sp[-2].toInt32();
+    int32_t count = REGS.sp[-2].toInt32();
     RootedObject &arr = rootObject0;
-    arr = &regs.sp[-3].toObject();
-    const Value iterable = regs.sp[-1];
+    arr = &REGS.sp[-3].toObject();
+    const Value iterable = REGS.sp[-1];
     ForOfIterator iter(cx);
     RootedValue &iterVal = rootValue0;
     iterVal.set(iterable);
@@ -3141,16 +3108,16 @@ CASE(JSOP_SPREAD)
                                      JSPROP_ENUMERATE))
             goto error;
     }
-    regs.sp[-2].setInt32(count);
-    regs.sp--;
+    REGS.sp[-2].setInt32(count);
+    REGS.sp--;
 }
 END_CASE(JSOP_SPREAD)
 
 CASE(JSOP_GOSUB)
 {
     PUSH_BOOLEAN(false);
-    int32_t i = (regs.pc - script->code) + JSOP_GOSUB_LENGTH;
-    int32_t len = GET_JUMP_OFFSET(regs.pc);
+    int32_t i = (REGS.pc - script->code) + JSOP_GOSUB_LENGTH;
+    int32_t len = GET_JUMP_OFFSET(REGS.pc);
     PUSH_INT32(i);
     ADVANCE_AND_DISPATCH(len);
 }
@@ -3175,14 +3142,14 @@ CASE(JSOP_RETSUB)
     JS_ASSERT(rval.isInt32());
 
     /* Increment the PC by this much. */
-    int32_t len = rval.toInt32() - int32_t(regs.pc - script->code);
+    int32_t len = rval.toInt32() - int32_t(REGS.pc - script->code);
     ADVANCE_AND_DISPATCH(len);
 }
 
 CASE(JSOP_EXCEPTION)
 {
     PUSH_NULL();
-    MutableHandleValue res = regs.stackHandleAt(-1);
+    MutableHandleValue res = REGS.stackHandleAt(-1);
     if (!GetAndClearException(cx, res))
         goto error;
 }
@@ -3214,7 +3181,7 @@ CASE(JSOP_THROW)
 CASE(JSOP_INSTANCEOF)
 {
     RootedValue &rref = rootValue0;
-    rref = regs.sp[-1];
+    rref = REGS.sp[-1];
     if (rref.isPrimitive()) {
         js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, NullPtr());
         goto error;
@@ -3222,10 +3189,10 @@ CASE(JSOP_INSTANCEOF)
     RootedObject &obj = rootObject0;
     obj = &rref.toObject();
     bool cond = false;
-    if (!HasInstance(cx, obj, regs.stackHandleAt(-2), &cond))
+    if (!HasInstance(cx, obj, REGS.stackHandleAt(-2), &cond))
         goto error;
-    regs.sp--;
-    regs.sp[-1].setBoolean(cond);
+    REGS.sp--;
+    REGS.sp[-1].setBoolean(cond);
 }
 END_CASE(JSOP_INSTANCEOF)
 
@@ -3234,7 +3201,7 @@ CASE(JSOP_DEBUGGER)
     JSTrapStatus st = JSTRAP_CONTINUE;
     RootedValue rval(cx);
     if (JSDebuggerHandler handler = cx->runtime()->debugHooks.debuggerHandler)
-        st = handler(cx, script, regs.pc, rval.address(), cx->runtime()->debugHooks.debuggerHandlerData);
+        st = handler(cx, script, REGS.pc, rval.address(), cx->runtime()->debugHooks.debuggerHandlerData);
     if (st == JSTRAP_CONTINUE)
         st = Debugger::onDebuggerStatement(cx, &rval);
     switch (st) {
@@ -3243,7 +3210,7 @@ CASE(JSOP_DEBUGGER)
       case JSTRAP_CONTINUE:
         break;
       case JSTRAP_RETURN:
-        regs.fp()->setReturnValue(rval);
+        REGS.fp()->setReturnValue(rval);
         interpReturnOK = true;
         goto forced_return;
       case JSTRAP_THROW:
@@ -3259,18 +3226,18 @@ CASE(JSOP_ENTERLET0)
 CASE(JSOP_ENTERLET1)
 CASE(JSOP_ENTERLET2)
 {
-    StaticBlockObject &blockObj = script->getObject(regs.pc)->as<StaticBlockObject>();
+    StaticBlockObject &blockObj = script->getObject(REGS.pc)->as<StaticBlockObject>();
 
-    if (*regs.pc == JSOP_ENTERBLOCK) {
-        JS_ASSERT(regs.stackDepth() == blockObj.stackDepth());
-        JS_ASSERT(regs.stackDepth() + blockObj.slotCount() <= script->nslots);
-        Value *vp = regs.sp + blockObj.slotCount();
-        SetValueRangeToUndefined(regs.sp, vp);
-        regs.sp = vp;
+    if (*REGS.pc == JSOP_ENTERBLOCK) {
+        JS_ASSERT(REGS.stackDepth() == blockObj.stackDepth());
+        JS_ASSERT(REGS.stackDepth() + blockObj.slotCount() <= script->nslots);
+        Value *vp = REGS.sp + blockObj.slotCount();
+        SetValueRangeToUndefined(REGS.sp, vp);
+        REGS.sp = vp;
     }
 
     /* Clone block iff there are any closed-over variables. */
-    if (!regs.fp()->pushBlock(cx, blockObj))
+    if (!REGS.fp()->pushBlock(cx, blockObj))
         goto error;
 }
 END_CASE(JSOP_ENTERBLOCK)
@@ -3279,20 +3246,20 @@ CASE(JSOP_LEAVEBLOCK)
 CASE(JSOP_LEAVEFORLETIN)
 CASE(JSOP_LEAVEBLOCKEXPR)
 {
-    blockDepth = regs.fp()->blockChain().stackDepth();
+    blockDepth = REGS.fp()->blockChain().stackDepth();
 
-    regs.fp()->popBlock(cx);
+    REGS.fp()->popBlock(cx);
 
-    if (*regs.pc == JSOP_LEAVEBLOCK) {
+    if (*REGS.pc == JSOP_LEAVEBLOCK) {
         /* Pop the block's slots. */
-        regs.sp -= GET_UINT16(regs.pc);
-        JS_ASSERT(regs.stackDepth() == blockDepth);
-    } else if (*regs.pc == JSOP_LEAVEBLOCKEXPR) {
+        REGS.sp -= GET_UINT16(REGS.pc);
+        JS_ASSERT(REGS.stackDepth() == blockDepth);
+    } else if (*REGS.pc == JSOP_LEAVEBLOCKEXPR) {
         /* Pop the block's slots maintaining the topmost expr. */
-        Value *vp = &regs.sp[-1];
-        regs.sp -= GET_UINT16(regs.pc);
-        JS_ASSERT(regs.stackDepth() == blockDepth + 1);
-        regs.sp[-1] = *vp;
+        Value *vp = &REGS.sp[-1];
+        REGS.sp -= GET_UINT16(REGS.pc);
+        JS_ASSERT(REGS.stackDepth() == blockDepth + 1);
+        REGS.sp[-1] = *vp;
     } else {
         /* Another op will pop; nothing to do here. */
         ADVANCE_AND_DISPATCH(JSOP_LEAVEFORLETIN_LENGTH);
@@ -3303,51 +3270,51 @@ END_CASE(JSOP_LEAVEBLOCK)
 CASE(JSOP_GENERATOR)
 {
     JS_ASSERT(!cx->isExceptionPending());
-    regs.fp()->initGeneratorFrame();
-    regs.pc += JSOP_GENERATOR_LENGTH;
-    JSObject *obj = js_NewGenerator(cx, regs);
+    REGS.fp()->initGeneratorFrame();
+    REGS.pc += JSOP_GENERATOR_LENGTH;
+    JSObject *obj = js_NewGenerator(cx, REGS);
     if (!obj)
         goto error;
-    regs.fp()->setReturnValue(ObjectValue(*obj));
-    regs.fp()->setYielding();
+    REGS.fp()->setReturnValue(ObjectValue(*obj));
+    REGS.fp()->setYielding();
     interpReturnOK = true;
-    if (entryFrame != regs.fp())
+    if (activation.entryFrame() != REGS.fp())
         goto inline_return;
     goto exit;
 }
 
 CASE(JSOP_YIELD)
     JS_ASSERT(!cx->isExceptionPending());
-    JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
+    JS_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
     if (cx->innermostGenerator()->state == JSGEN_CLOSING) {
         RootedValue &val = rootValue0;
-        val.setObject(regs.fp()->callee());
+        val.setObject(REGS.fp()->callee());
         js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK, val, NullPtr());
         goto error;
     }
-    regs.fp()->setReturnValue(regs.sp[-1]);
-    regs.fp()->setYielding();
-    regs.pc += JSOP_YIELD_LENGTH;
+    REGS.fp()->setReturnValue(REGS.sp[-1]);
+    REGS.fp()->setYielding();
+    REGS.pc += JSOP_YIELD_LENGTH;
     interpReturnOK = true;
     goto exit;
 
 CASE(JSOP_ARRAYPUSH)
 {
-    uint32_t slot = GET_UINT16(regs.pc);
+    uint32_t slot = GET_UINT16(REGS.pc);
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
     RootedObject &obj = rootObject0;
-    obj = &regs.fp()->unaliasedLocal(slot).toObject();
-    if (!js_NewbornArrayPush(cx, obj, regs.sp[-1]))
+    obj = &REGS.fp()->unaliasedLocal(slot).toObject();
+    if (!js_NewbornArrayPush(cx, obj, REGS.sp[-1]))
         goto error;
-    regs.sp--;
+    REGS.sp--;
 }
 END_CASE(JSOP_ARRAYPUSH)
 
 DEFAULT()
 {
     char numBuf[12];
-    JS_snprintf(numBuf, sizeof numBuf, "%d", *regs.pc);
+    JS_snprintf(numBuf, sizeof numBuf, "%d", *REGS.pc);
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                          JSMSG_BAD_BYTECODE, numBuf);
     goto error;
@@ -3358,12 +3325,12 @@ DEFAULT()
     MOZ_ASSUME_UNREACHABLE("Interpreter loop exited via fallthrough");
 
   error:
-    JS_ASSERT(uint32_t(regs.pc - script->code) < script->length);
+    JS_ASSERT(uint32_t(REGS.pc - script->code) < script->length);
 
     if (cx->isExceptionPending()) {
         /* Call debugger throw hooks. */
         if (cx->compartment()->debugMode()) {
-            JSTrapStatus status = DebugExceptionUnwind(cx, regs.fp(), regs.pc);
+            JSTrapStatus status = DebugExceptionUnwind(cx, REGS.fp(), REGS.pc);
             switch (status) {
               case JSTRAP_ERROR:
                 goto error;
@@ -3381,22 +3348,22 @@ DEFAULT()
             }
         }
 
-        for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
+        for (TryNoteIter tni(cx, REGS); !tni.done(); ++tni) {
             JSTryNote *tn = *tni;
 
-            UnwindScope(cx, regs.fp(), tn->stackDepth);
+            UnwindScope(cx, REGS.fp(), tn->stackDepth);
 
             /*
              * Set pc to the first bytecode after the the try note to point
              * to the beginning of catch or finally or to [enditer] closing
              * the for-in loop.
              */
-            regs.pc = (script)->main() + tn->start + tn->length;
-            regs.sp = regs.spForStackDepth(tn->stackDepth);
+            REGS.pc = (script)->main() + tn->start + tn->length;
+            REGS.sp = REGS.spForStackDepth(tn->stackDepth);
 
             switch (tn->kind) {
               case JSTRY_CATCH:
-                JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK || *regs.pc == JSOP_EXCEPTION);
+                JS_ASSERT(*REGS.pc == JSOP_ENTERBLOCK || *REGS.pc == JSOP_EXCEPTION);
 
                 /* Catch cannot intercept the closing of a generator. */
                   if (JS_UNLIKELY(cx->getPendingException().isMagic(JS_GENERATOR_CLOSING)))
@@ -3429,11 +3396,11 @@ DEFAULT()
 
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
-                JS_ASSERT(JSOp(*regs.pc) == JSOP_ENDITER);
+                JS_ASSERT(JSOp(*REGS.pc) == JSOP_ENDITER);
                 RootedObject &obj = rootObject0;
-                obj = &regs.sp[-1].toObject();
+                obj = &REGS.sp[-1].toObject();
                 bool ok = UnwindIteratorForException(cx, obj);
-                regs.sp -= 1;
+                REGS.sp -= 1;
                 if (!ok)
                     goto error;
                 break;
@@ -3453,27 +3420,27 @@ DEFAULT()
                         cx->getPendingException().isMagic(JS_GENERATOR_CLOSING))) {
             cx->clearPendingException();
             interpReturnOK = true;
-            regs.fp()->clearReturnValue();
+            REGS.fp()->clearReturnValue();
         }
     } else {
-        UnwindForUncatchableException(cx, regs);
+        UnwindForUncatchableException(cx, REGS);
         interpReturnOK = false;
     }
 
   forced_return:
-    UnwindScope(cx, regs.fp(), 0);
-    regs.setToEndOfScript();
+    UnwindScope(cx, REGS.fp(), 0);
+    REGS.setToEndOfScript();
 
-    if (entryFrame != regs.fp())
+    if (activation.entryFrame() != REGS.fp())
         goto inline_return;
 
   exit:
     if (cx->compartment()->debugMode())
-        interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
-    if (!regs.fp()->isYielding())
-        regs.fp()->epilogue(cx);
+        interpReturnOK = ScriptDebugEpilogue(cx, REGS.fp(), interpReturnOK);
+    if (!REGS.fp()->isYielding())
+        REGS.fp()->epilogue(cx);
     else
-        probes::ExitScript(cx, script, script->function(), regs.fp());
+        probes::ExitScript(cx, script, script->function(), REGS.fp());
 
     gc::MaybeVerifyBarriers(cx, true);
 
@@ -3490,7 +3457,7 @@ DEFAULT()
 #endif
 
     if (interpReturnOK)
-        state.setReturnValue(entryFrame->returnValue());
+        state.setReturnValue(activation.entryFrame()->returnValue());
 
     return interpReturnOK;
 }
