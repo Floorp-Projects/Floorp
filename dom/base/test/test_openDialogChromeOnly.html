@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=931768
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 931768</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 931768 **/
+
+  try {
+    openDialog("chrome://browser/content/browser.xul");
+    ok(false, "Calling openDialog from unprivileged script should throw.");
+  } catch (e) {
+    // FIXME e should be a ReferenceError once we switch Window to new WebIDL bindings
+    ok(e.name == "SecurityError",
+       "openDialog shouldn't be callable to unprivileged script.");
+    todo(e instanceof ReferenceError,
+         "openDialog shouldn't be available to unprivileged script.");
+  }
+</script>
+</body>
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=931768">Mozilla Bug 931768</a>
+<p id="display">
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
