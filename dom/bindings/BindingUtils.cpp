@@ -181,10 +181,12 @@ ErrorResult::ReportJSException(JSContext* cx)
 {
   MOZ_ASSERT(!mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to handle JS exceptions?");
-  if (JS_WrapValue(cx, &mJSException)) {
-    JS::RootedValue exception(cx, mJSException);
+
+  JS::Rooted<JS::Value> exception(cx, mJSException);
+  if (JS_WrapValue(cx, &exception)) {
     JS_SetPendingException(cx, exception);
   }
+  mJSException = exception;
   // If JS_WrapValue failed, not much we can do about it...  No matter
   // what, go ahead and unroot mJSException.
   JS_RemoveValueRoot(cx, &mJSException);
@@ -1563,7 +1565,8 @@ ConcatJSString(JSContext* cx, const char* pre, JS::Handle<JSString*> str, const 
 bool
 NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
                JS::Handle<JSObject*> obj, const char* pre,
-               const char* post, JS::Value* v)
+               const char* post,
+               JS::MutableHandle<JS::Value> v)
 {
   JS::Rooted<JSPropertyDescriptor> toStringDesc(cx);
   toStringDesc.object().set(nullptr);
@@ -1583,7 +1586,7 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
     JSAutoCompartment ac(cx, obj);
     if (toStringDesc.object()) {
       JS::Rooted<JS::Value> toString(cx, toStringDesc.value());
-      if (!JS_WrapValue(cx, toString.address())) {
+      if (!JS_WrapValue(cx, &toString)) {
         return false;
       }
       MOZ_ASSERT(JS_ObjectIsCallable(cx, &toString.toObject()));
@@ -1619,7 +1622,7 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
     return false;
   }
 
-  v->setString(str);
+  v.setString(str);
   return JS_WrapValue(cx, v);
 }
 

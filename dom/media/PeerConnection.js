@@ -225,10 +225,6 @@ function RTCPeerConnection() {
 
   // States
   this._iceGatheringState = this._iceConnectionState = "new";
-
-  // Deprecated callbacks
-  this._ongatheringchange = null;
-  this._onicechange = null;
 }
 RTCPeerConnection.prototype = {
   classDescription: "mozRTCPeerConnection",
@@ -487,28 +483,9 @@ RTCPeerConnection.prototype = {
                           });
   },
 
-  get onicechange()       { return this._onicechange; },
-  get ongatheringchange() { return this._ongatheringchange; },
-
-  set onicechange(cb) {
-    this.deprecated("onicechange");
-    this._onicechange = cb;
-  },
-  set ongatheringchange(cb) {
-    this.deprecated("ongatheringchange");
-    this._ongatheringchange = cb;
-  },
-
-  deprecated: function(name) {
-    this.reportWarning(name + " is deprecated!", null, 0);
-  },
-
   createOffer: function(onSuccess, onError, constraints) {
     if (!constraints) {
       constraints = {};
-    }
-    if (!onError) {
-      this.deprecated("calling createOffer without failureCallback");
     }
     this._mustValidateConstraints(constraints, "createOffer passed invalid constraints");
     this._onCreateOfferSuccess = onSuccess;
@@ -522,9 +499,6 @@ RTCPeerConnection.prototype = {
   },
 
   _createAnswer: function(onSuccess, onError, constraints, provisional) {
-    if (!onError) {
-      this.deprecated("calling createAnswer without failureCallback");
-    }
     this._onCreateAnswerSuccess = onSuccess;
     this._onCreateAnswerFailure = onError;
 
@@ -695,16 +669,6 @@ RTCPeerConnection.prototype = {
     return this._getPC().getRemoteStreams();
   },
 
-  // Backwards-compatible attributes
-  get localStreams() {
-    this.deprecated("localStreams");
-    return this.getLocalStreams();
-  },
-  get remoteStreams() {
-    this.deprecated("remoteStreams");
-    return this.getRemoteStreams();
-  },
-
   get localDescription() {
     this._checkClosed();
     let sdp = this._getPC().localDescription;
@@ -752,35 +716,6 @@ RTCPeerConnection.prototype = {
   changeIceConnectionState: function(state) {
     this._iceConnectionState = state;
     this.dispatchEvent(new this._win.Event("iceconnectionstatechange"));
-  },
-
-  get readyState() {
-    this.deprecated("readyState");
-    // checking for our local pc closed indication
-    // before invoking the pc methods.
-    if(this._closed) {
-      return "closed";
-    }
-
-    var state="undefined";
-    switch (this._getPC().readyState) {
-      case Ci.IPeerConnection.kNew:
-        state = "new";
-        break;
-      case Ci.IPeerConnection.kNegotiating:
-        state = "negotiating";
-        break;
-      case Ci.IPeerConnection.kActive:
-        state = "active";
-        break;
-      case Ci.IPeerConnection.kClosing:
-        state = "closing";
-        break;
-      case Ci.IPeerConnection.kClosed:
-        state = "closed";
-        break;
-    }
-    return state;
   },
 
   getStats: function(selector, onSuccess, onError) {
@@ -1059,13 +994,13 @@ PeerConnectionObserver.prototype = {
       IceGathering:
         { gathering: "gathering" },
       IceWaiting:
-        { connection: "new",  gathering: "complete", legacy: "starting" },
+        { connection: "new",  gathering: "complete" },
       IceChecking:
-        { connection: "checking", legacy: "checking" },
+        { connection: "checking" },
       IceConnected:
-        { connection: "connected", legacy: "connected", success: true },
+        { connection: "connected", success: true },
       IceFailed:
-        { connection: "failed", legacy: "failed", success: false }
+        { connection: "failed", success: false }
     };
     // These are all the allowed inputs.
 
@@ -1076,12 +1011,6 @@ PeerConnectionObserver.prototype = {
     }
     if ("gathering" in transitions) {
       this._dompc.changeIceGatheringState(transitions.gathering);
-      // Handle (old, deprecated) "ongatheringchange" callback
-      this.callCB(this._dompc.ongatheringchange, transitions.gathering);
-    }
-    // Handle deprecated "onicechange" callback
-    if ("legacy" in transitions) {
-      this.callCB(this._onicechange, transitions.legacy);
     }
     if ("success" in transitions) {
       histogram.add(transitions.success);

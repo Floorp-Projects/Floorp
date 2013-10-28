@@ -16,8 +16,8 @@ const TEST_FILES = [
   compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0767,
-  comparePerms     : 0767
+  originalPerms    : 0o767,
+  comparePerms     : 0o767
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "precomplete",
@@ -26,8 +26,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "partial_precomplete",
   compareFile      : "complete_precomplete",
-  originalPerms    : 0666,
-  comparePerms     : 0644
+  originalPerms    : 0o666,
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginstext0",
@@ -36,8 +36,8 @@ const TEST_FILES = [
   compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0775,
-  comparePerms     : 0644
+  originalPerms    : 0o775,
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginspng1.png",
@@ -47,7 +47,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : "complete.png",
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginspng0.png",
@@ -56,8 +56,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "partial.png",
   compareFile      : "complete.png",
-  originalPerms    : 0666,
-  comparePerms     : 0644
+  originalPerms    : 0o666,
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "removed-files",
@@ -66,8 +66,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "partial_removed-files",
   compareFile      : "complete_removed-files",
-  originalPerms    : 0666,
-  comparePerms     : 0644
+  originalPerms    : 0o666,
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -78,7 +78,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null,
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -88,8 +88,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "partial.png",
   compareFile      : "complete.png",
-  originalPerms    : 0666,
-  comparePerms     : 0644
+  originalPerms    : 0o666,
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -100,7 +100,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : "complete.png",
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -111,7 +111,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null,
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -122,7 +122,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : "complete.png",
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -133,7 +133,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : "complete.png",
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "exe0.exe",
@@ -142,8 +142,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "partial.png",
   compareFile      : "complete.png",
-  originalPerms    : 0777,
-  comparePerms     : 0755
+  originalPerms    : 0o777,
+  comparePerms     : 0o755
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "10text0",
@@ -152,8 +152,8 @@ const TEST_FILES = [
   compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0767,
-  comparePerms     : 0644
+  originalPerms    : 0o767,
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "0exe0.exe",
@@ -162,8 +162,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "partial.png",
   compareFile      : "complete.png",
-  originalPerms    : 0777,
-  comparePerms     : 0755
+  originalPerms    : 0o777,
+  comparePerms     : 0o755
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text1",
@@ -172,8 +172,8 @@ const TEST_FILES = [
   compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0677,
-  comparePerms     : 0644
+  originalPerms    : 0o677,
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text0",
@@ -182,8 +182,8 @@ const TEST_FILES = [
   compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0775,
-  comparePerms     : 0644
+  originalPerms    : 0o775,
+  comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00png0.png",
@@ -192,8 +192,8 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : null,
   compareFile      : "complete.png",
-  originalPerms    : 0776,
-  comparePerms     : 0644
+  originalPerms    : 0o776,
+  comparePerms     : 0o644
 }, {
   description      : "Removed by precomplete (remove)",
   fileName         : "20text0",

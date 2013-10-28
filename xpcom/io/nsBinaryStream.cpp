@@ -27,7 +27,6 @@
 #include "nsIURI.h" // for NS_IURI_IID
 #include "mozilla/Endian.h"
 
-#include "jsapi.h"
 #include "jsfriendapi.h"
 
 NS_IMPL_ISUPPORTS3(nsBinaryOutputStream, nsIObjectOutputStream, nsIBinaryOutputStream, nsIOutputStream)

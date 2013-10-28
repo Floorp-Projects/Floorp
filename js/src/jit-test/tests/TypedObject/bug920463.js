@@ -1,5 +1,5 @@
 if (!this.hasOwnProperty("TypedObject"))
-  throw new TypeError();
+  quit();
 
 var StructType = TypedObject.StructType;
 var float64 = TypedObject.float64;

@@ -177,7 +177,7 @@ static nsString sAdapterPath;
 static Atomic<int32_t> sIsPairing(0);
 static int sConnectedDeviceCount = 0;
 static StaticAutoPtr<Monitor> sStopBluetoothMonitor;
-StaticRefPtr<BluetoothProfileController> sController;
+static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 typedef bool (*FilterFunc)(const BluetoothValue&);
@@ -1752,6 +1752,7 @@ BluetoothDBusService::StopInternal()
   sConnectedDeviceCount = 0;
 
   sAuthorizedServiceClass.Clear();
+  sControllerArray.Clear();
 
   StopDBus();
   return NS_OK;
@@ -2559,9 +2560,38 @@ BluetoothDBusService::SetPairingConfirmationInternal(
 }
 
 static void
-DestroyBluetoothProfileController()
+NextBluetoothProfileController()
 {
-  sController = nullptr;
+  sControllerArray[0] = nullptr;
+  sControllerArray.RemoveElementAt(0);
+
+  if (!sControllerArray.IsEmpty()) {
+    sControllerArray[0]->Start();
+  }
+}
+
+static void
+ConnectDisconnect(bool aConnect, const nsAString& aDeviceAddress,
+                  BluetoothReplyRunnable* aRunnable,
+                  uint16_t aServiceUuid, uint32_t aCod = 0)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  BluetoothProfileController* controller =
+    new BluetoothProfileController(aConnect, aDeviceAddress, aRunnable,
+                                   NextBluetoothProfileController,
+                                   aServiceUuid, aCod);
+  sControllerArray.AppendElement(controller);
+
+  /**
+   * If the request is the first element of the quene, start from here. Note
+   * that other request is pushed into the quene and is popped out after the
+   * first one is completed. See NextBluetoothProfileController() for details.
+   */
+  if (sControllerArray.Length() == 1) {
+    sControllerArray[0]->Start();
+  }
 }
 
 void
@@ -2570,26 +2600,7 @@ BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
                               uint16_t aServiceUuid,
                               BluetoothReplyRunnable* aRunnable)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRunnable);
-
-  BluetoothServiceClass serviceClass =
-    BluetoothUuidHelper::GetBluetoothServiceClass(aServiceUuid);
-
-  if (sController) {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
-    return;
-  }
-
-  sController =
-    new BluetoothProfileController(aDeviceAddress, aRunnable,
-                                   DestroyBluetoothProfileController);
-  if (aServiceUuid) {
-    sController->Connect(serviceClass);
-  } else {
-    sController->Connect(aCod);
-  }
+  ConnectDisconnect(true, aDeviceAddress, aRunnable, aServiceUuid, aCod);
 }
 
 void
@@ -2597,26 +2608,7 @@ BluetoothDBusService::Disconnect(const nsAString& aDeviceAddress,
                                  uint16_t aServiceUuid,
                                  BluetoothReplyRunnable* aRunnable)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRunnable);
-
-  BluetoothServiceClass serviceClass =
-    BluetoothUuidHelper::GetBluetoothServiceClass(aServiceUuid);
-
-  if (sController) {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
-    return;
-  }
-
-  sController =
-    new BluetoothProfileController(aDeviceAddress, aRunnable,
-                                   DestroyBluetoothProfileController);
-  if (aServiceUuid) {
-    sController->Disconnect(serviceClass);
-  } else {
-    sController->Disconnect();
-  }
+  ConnectDisconnect(false, aDeviceAddress, aRunnable, aServiceUuid);
 }
 
 bool

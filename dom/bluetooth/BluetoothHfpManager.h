@@ -181,7 +181,6 @@ private:
 
   nsTArray<Call> mCurrentCallArray;
   nsAutoPtr<BluetoothRilListener> mListener;
-  nsRefPtr<BluetoothReplyRunnable> mRunnable;
   nsRefPtr<BluetoothProfileController> mController;
   nsRefPtr<BluetoothReplyRunnable> mScoRunnable;
 
