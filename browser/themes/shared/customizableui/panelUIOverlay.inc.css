@@ -369,6 +369,8 @@ panelview toolbarseparator,
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
+#PanelUI-recentlyClosedWindows > toolbarbutton > .toolbarbutton-icon,
+#PanelUI-recentlyClosedTabs > toolbarbutton > .toolbarbutton-icon,
 #PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
