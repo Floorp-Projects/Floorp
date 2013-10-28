@@ -10,7 +10,7 @@ interface nsIDOMMozCellBroadcastEtwsInfo;
  * MozCellBroadcastMessage encapsulates Cell Broadcast short message service
  * (CBS) messages.
  */
-[scriptable, uuid(cb210e8b-ad9c-4052-b70c-02ec0c25d669)]
+[scriptable, uuid(6abe65de-6729-41f7-906a-3f3a2dbe30ae)]
 interface nsIDOMMozCellBroadcastMessage : nsISupports
 {
   /**
@@ -19,7 +19,7 @@ interface nsIDOMMozCellBroadcastMessage : nsISupports
    *
    * Possible values are: "cell-immediate", "plmn", "location-area" and "cell".
    */
-  readonly attribute DOMString geographicalScope;
+  readonly attribute DOMString gsmGeographicalScope;
 
   /**
    * The Message Code differentiates between messages from the same source and
@@ -59,6 +59,11 @@ interface nsIDOMMozCellBroadcastMessage : nsISupports
    * Additional ETWS-specific info.
    */
   readonly attribute nsIDOMMozCellBroadcastEtwsInfo etws;
+
+  /**
+   * Service Category.
+   */
+  readonly attribute long cdmaServiceCategory;
 };
 
 /**
