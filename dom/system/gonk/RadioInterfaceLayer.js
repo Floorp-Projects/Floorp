@@ -1060,6 +1060,7 @@ RadioInterface.prototype = {
           this.workerMessenger.send("ackSMS", { result: RIL.PDU_FCS_OK });
         }
         return;
+      case "broadcastsms-received":
       case "cellbroadcast-received":
         message.timestamp = Date.now();
         gMessageManager.sendCellBroadcastMessage("RIL:CellBroadcastReceived",

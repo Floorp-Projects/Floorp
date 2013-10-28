@@ -2763,7 +2763,14 @@ this.PDU_CDMA_MSG_USERDATA_MSG_ID = 0x00;           // Message Identifier
 this.PDU_CDMA_MSG_USERDATA_BODY = 0x01;             // User Data Body
 this.PDU_CDMA_MSG_USERDATA_TIMESTAMP = 0x03;        // Message Center Time Stamp
 this.PDU_CDMA_REPLY_OPTION = 0x0A;                  // Reply Option
+this.PDU_CDMA_LANGUAGE_INDICATOR = 0x0D;            // Language Indicator
 this.PDU_CDMA_MSG_USERDATA_CALLBACK_NUMBER = 0x0E;  // Callback Number
+
+// CDMA Language Indicator: Language groups
+// see 3GPP2 C.R1001-F table 9.2-1
+this.CB_CDMA_LANG_GROUP = [
+  null, "en", "fr", "es", "ja", "ko", "zh", "he"
+];
 
 // IS-91 Message Type, as defined in TIA/EIA/IS-91-A, Table 9
 this.PDU_CDMA_MSG_CODING_IS_91_TYPE_VOICEMAIL_STATUS = 0x82;
