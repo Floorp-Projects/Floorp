@@ -29,7 +29,11 @@ nsSimpleNestedURI::Read(nsIObjectInputStream* aStream)
 
     NS_ASSERTION(!mMutable, "How did that happen?");
 
-    rv = aStream->ReadObject(true, getter_AddRefs(mInnerURI));
+    nsCOMPtr<nsISupports> supports;
+    rv = aStream->ReadObject(true, getter_AddRefs(supports));
+    if (NS_FAILED(rv)) return rv;
+
+    mInnerURI = do_QueryInterface(supports, &rv);
     if (NS_FAILED(rv)) return rv;
 
     NS_TryToSetImmutable(mInnerURI);

@@ -35,6 +35,8 @@ protected:
     nsSVGDisplayContainerFrame(aContext) {}
 
 public:
+  typedef mozilla::nsISVGPoint nsISVGPoint;
+
   void NotifyGlyphMetricsChange();
   virtual void GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY);
   virtual void GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy);
@@ -50,8 +52,8 @@ public:
                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
   NS_IMETHOD RemoveFrame(ChildListID aListID, nsIFrame *aOldFrame) MOZ_OVERRIDE;
 
-  NS_IMETHOD GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval);
-  NS_IMETHOD GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval);
+  NS_IMETHOD GetStartPositionOfChar(uint32_t charnum, nsISVGPoint **_retval);
+  NS_IMETHOD GetEndPositionOfChar(uint32_t charnum, nsISVGPoint **_retval);
   NS_IMETHOD GetExtentOfChar(uint32_t charnum, mozilla::dom::SVGIRect **_retval);
   NS_IMETHOD GetRotationOfChar(uint32_t charnum, float *_retval);
 

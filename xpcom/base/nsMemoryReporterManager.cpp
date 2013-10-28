@@ -1037,8 +1037,10 @@ nsMemoryReporterManager::GetExplicit(int64_t* aExplicit)
     nsCOMPtr<nsISimpleEnumerator> e;
     EnumerateReporters(getter_AddRefs(e));
     while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsISupports> supports;
         nsCOMPtr<nsIMemoryReporter> r;
-        e->GetNext(getter_AddRefs(r));
+        e->GetNext(getter_AddRefs(supports));
+        r = do_QueryInterface(supports);
         r->CollectReports(cb, wrappedExplicitSize);
     }
 
@@ -1206,8 +1208,10 @@ RunReporters()
     nsCOMPtr<nsISimpleEnumerator> e;
     mgr->EnumerateReporters(getter_AddRefs(e));
     while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
+        nsCOMPtr<nsISupports> supports;
         nsCOMPtr<nsIMemoryReporter> r;
-        e->GetNext(getter_AddRefs(r));
+        e->GetNext(getter_AddRefs(supports));
+        r = do_QueryInterface(supports);
         r->CollectReports(cb, nullptr);
     }
 }

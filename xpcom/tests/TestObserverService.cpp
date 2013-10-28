@@ -120,7 +120,9 @@ int main(int argc, char *argv[])
           bool loop = true;
           while( NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop) 
           {
-              e->GetNext(getter_AddRefs(observer));
+              nsCOMPtr<nsISupports> supports;
+              e->GetNext(getter_AddRefs(supports));
+              observer = do_QueryInterface(supports);
               printf("Calling observe on enumerated observer ");
               printString(reinterpret_cast<TestObserver*>
                                           (reinterpret_cast<void*>(observer.get()))->mName);

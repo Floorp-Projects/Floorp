@@ -91,7 +91,8 @@ nsSVGTextContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame *aOldFrame)
 }
 
 NS_IMETHODIMP
-nsSVGTextContainerFrame::GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval)
+nsSVGTextContainerFrame::GetStartPositionOfChar(uint32_t charnum,
+                                                nsISVGPoint **_retval)
 {
   *_retval = nullptr;
 
@@ -114,7 +115,8 @@ nsSVGTextContainerFrame::GetStartPositionOfChar(uint32_t charnum, nsISupports **
 }
 
 NS_IMETHODIMP
-nsSVGTextContainerFrame::GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval)
+nsSVGTextContainerFrame::GetEndPositionOfChar(uint32_t charnum,
+                                              nsISVGPoint **_retval)
 {
   *_retval = nullptr;
 
