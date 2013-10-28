@@ -1324,19 +1324,19 @@ abstract public class BrowserApp extends GeckoApp
         return true;
     }
 
-    private void openUrl(String url) {
-        openUrl(url, null, false);
+    private void openUrlAndStopEditing(String url) {
+        openUrlAndStopEditing(url, null, false);
     }
 
-    private void openUrl(String url, boolean newTab) {
-        openUrl(url, null, newTab);
+    private void openUrlAndStopEditing(String url, boolean newTab) {
+        openUrlAndStopEditing(url, null, newTab);
     }
 
-    private void openUrl(String url, String searchEngine) {
-        openUrl(url, searchEngine, false);
+    private void openUrlAndStopEditing(String url, String searchEngine) {
+        openUrlAndStopEditing(url, searchEngine, false);
     }
 
-    private void openUrl(String url, String searchEngine, boolean newTab) {
+    private void openUrlAndStopEditing(String url, String searchEngine, boolean newTab) {
         mBrowserToolbar.setProgressVisibility(true);
 
         int flags = Tabs.LOADURL_NONE;
@@ -2356,7 +2356,7 @@ abstract public class BrowserApp extends GeckoApp
  
         for (String url : urls) {
             if (!maybeSwitchToTab(url, flags)) {
-                openUrl(url, true);
+                openUrlAndStopEditing(url, true);
             }
         }
     }
@@ -2365,7 +2365,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onUrlOpen(String url, EnumSet<OnUrlOpenListener.Flags> flags) {
         if (!maybeSwitchToTab(url, flags)) {
-            openUrl(url);
+            openUrlAndStopEditing(url);
         }
     }
 
@@ -2373,7 +2373,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onSearch(String engineId, String text) {
         recordSearch(engineId, "barsuggest");
-        openUrl(text, engineId);
+        openUrlAndStopEditing(text, engineId);
     }
 
     // BrowserSearch.OnEditSuggestionListener
