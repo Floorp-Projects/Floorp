@@ -257,6 +257,10 @@ VARIABLES = {
         """Whether profile-guided optimization is enabled in this directory.
         """, None),
 
+    'NO_VISIBILITY_FLAGS': (bool, bool, False,
+        """Build sources listed in this file without VISIBILITY_FLAGS.
+        """, None),
+
     'OS_LIBS': (list, list, [],
         """System link libraries.
 

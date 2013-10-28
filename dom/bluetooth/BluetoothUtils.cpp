@@ -111,7 +111,7 @@ BroadcastSystemMessage(const nsAString& aType,
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
       "Shouldn't get here when an exception is pending!");
 
-  JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
+  JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
   if (!obj) {
     BT_WARNING("Failed to new JSObject for system message!");
     return false;

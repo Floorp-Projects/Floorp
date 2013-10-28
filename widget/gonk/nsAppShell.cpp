@@ -83,7 +83,7 @@ using namespace mozilla::services;
 using namespace mozilla::widget;
 
 bool gDrawRequest = false;
-static nsAppShell *gAppShell = NULL;
+static nsAppShell *gAppShell = nullptr;
 static int epollfd = 0;
 static int signalfds[2] = {0};
 static bool sDevInputAudioJack;
@@ -145,7 +145,7 @@ struct UserInputData {
 static void
 sendMouseEvent(uint32_t msg, uint64_t timeMs, int x, int y, bool forwardToChildren)
 {
-    WidgetMouseEvent event(true, msg, NULL,
+    WidgetMouseEvent event(true, msg, nullptr,
                            WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
 
     event.refPoint.x = x;
@@ -198,7 +198,7 @@ sendTouchEvent(UserInputData& data, bool* captured)
         break;
     }
 
-    WidgetTouchEvent event(true, msg, NULL);
+    WidgetTouchEvent event(true, msg, nullptr);
 
     event.time = data.timeMs;
 
@@ -221,7 +221,7 @@ sendKeyEventWithMsg(uint32_t keyCode,
                     uint32_t msg,
                     uint64_t timeMs)
 {
-    WidgetKeyboardEvent event(true, msg, NULL);
+    WidgetKeyboardEvent event(true, msg, nullptr);
     event.keyCode = keyCode;
     event.mKeyNameIndex = keyNameIndex;
     event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
@@ -393,7 +393,7 @@ deviceId)
     virtual void notifyInputDevicesChanged(const android::Vector<InputDeviceInfo>& inputDevices) {};
     virtual sp<KeyCharacterMap> getKeyboardLayoutOverlay(const String8& inputDeviceDescriptor)
     {
-        return NULL;
+        return nullptr;
     };
     virtual String8 getDeviceAlias(const InputDeviceIdentifier& identifier)
     {
@@ -707,7 +707,7 @@ nsAppShell::~nsAppShell()
         if (result)
             LOG("Could not stop reader thread - %d", result);
     }
-    gAppShell = NULL;
+    gAppShell = nullptr;
 }
 
 nsresult

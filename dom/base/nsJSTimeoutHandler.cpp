@@ -93,7 +93,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
         JS_GetObjectFunction(js::UncheckedUnwrap(tmp->mFunction->Callable()));
       if (fun && JS_GetFunctionId(fun)) {
         JSFlatString *funId = JS_ASSERT_STRING_IS_FLAT(JS_GetFunctionId(fun));
-        size_t size = 1 + JS_PutEscapedFlatString(NULL, 0, funId, 0);
+        size_t size = 1 + JS_PutEscapedFlatString(nullptr, 0, funId, 0);
         char *funIdName = new char[size];
         if (funIdName) {
           JS_PutEscapedFlatString(funIdName, size, funId, 0);

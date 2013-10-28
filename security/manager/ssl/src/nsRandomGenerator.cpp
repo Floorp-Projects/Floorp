@@ -30,7 +30,7 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
     return NS_ERROR_OUT_OF_MEMORY;
 
   mozilla::ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-  if (slot == NULL) {
+  if (slot == nullptr) {
     return NS_ERROR_FAILURE;
   }
   SECStatus srv = PK11_GenerateRandomOnSlot(slot, buf, aLength);
