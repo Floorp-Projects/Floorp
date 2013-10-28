@@ -88,7 +88,7 @@ struct nsMyTrustedEVInfo
  *   Remove all whitespaces. If you use multiple lines, make sure that
  *   only the final line will be followed by a comma.
  * - the "Serial DER Base64" (as printed by pp)
- * - a NULL pointer value
+ * - a nullptr value
  *
  * After adding an entry, test it locally against the test site that
  * has been provided by the CA. Note that you must use a version of NSS
