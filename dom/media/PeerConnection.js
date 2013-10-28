@@ -1077,6 +1077,7 @@ PeerConnectionObserver.prototype = {
     appendStats(dict.mediaStreamStats, report);
     appendStats(dict.transportStats, report);
     appendStats(dict.iceComponentStats, report);
+    appendStats(dict.iceCandidatePairStats, report);
     appendStats(dict.iceCandidateStats, report);
     appendStats(dict.codecStats, report);
 
