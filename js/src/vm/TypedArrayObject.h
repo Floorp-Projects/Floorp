@@ -143,7 +143,7 @@ class ArrayBufferObject : public JSObject
     static bool saveArrayBufferList(JSCompartment *c, ArrayBufferVector &vector);
     static void restoreArrayBufferLists(ArrayBufferVector &vector);
 
-    static bool stealContents(JSContext *cx, JSObject *obj, void **contents,
+    static bool stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer, void **contents,
                               uint8_t **data);
 
     static void updateElementsHeader(js::ObjectElements *header, uint32_t bytes) {

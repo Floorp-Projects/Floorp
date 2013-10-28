@@ -374,8 +374,8 @@ ArrayBufferObject::changeContents(JSContext *maybecx, ObjectElements *newHeader)
     }
 
     // The list of views in the old header is reachable if the contents are
-    // being transferred, so NULL it out
-    SetViewList(this, NULL);
+    // being transferred, so null it out
+    SetViewList(this, nullptr);
 
     elements = newHeader->elements();
 
@@ -435,7 +435,7 @@ ArrayBufferObject::getTransferableContents(JSContext *maybecx, bool *callerOwns)
     uint32_t byteLen = byteLength();
     ObjectElements *newheader = AllocateArrayBufferContents(maybecx, byteLen, dataPointer());
     if (!newheader)
-        return NULL;
+        return nullptr;
 
     initElementsHeader(newheader, byteLen);
     *callerOwns = true;
@@ -670,29 +670,29 @@ ArrayBufferObject::createDataViewForThis(JSContext *cx, unsigned argc, Value *vp
 }
 
 bool
-ArrayBufferObject::stealContents(JSContext *cx, JSObject *obj, void **contents, uint8_t **data)
+ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer, void **contents,
+                                 uint8_t **data)
 {
-    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
-
     // Make the data stealable
     bool own;
-    ObjectElements *header = reinterpret_cast<ObjectElements*>(buffer.getTransferableContents(cx, &own));
+    ObjectElements *header = reinterpret_cast<ObjectElements*>(buffer->getTransferableContents(cx, &own));
     if (!header)
         return false;
+    JS_ASSERT(!IsInsideNursery(cx->runtime(), header));
     *contents = header;
     *data = reinterpret_cast<uint8_t *>(header + 1);
 
     // Neuter the views, which may also mprotect(PROT_NONE) the buffer. So do
     // it after copying out the data.
-    if (!buffer.neuterViews(cx))
+    if (!buffer->neuterViews(cx))
         return false;
 
     if (!own) {
         // If header has dynamically allocated elements, revert it back to
         // fixed-element storage before neutering it.
-        buffer.changeContents(cx, ObjectElements::fromElements(buffer.fixedElements()));
+        buffer->changeContents(cx, ObjectElements::fromElements(buffer->fixedElements()));
     }
-    buffer.neuter(cx);
+    buffer->neuter(cx);
 
     return true;
 }
@@ -4025,7 +4025,7 @@ JS_GetArrayBufferData(JSObject *obj)
     if (!obj)
         return nullptr;
     ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
-    if (!buffer.ensureNonInline(NULL))
+    if (!buffer.ensureNonInline(nullptr))
         return nullptr;
     return buffer.dataPointer();
 }
@@ -4088,10 +4088,10 @@ JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents
 }
 
 JS_PUBLIC_API(bool)
-JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents,
-                            uint8_t **data)
+JS_StealArrayBufferContents(JSContext *cx, HandleObject objArg, void **contents, uint8_t **data)
 {
-    if (!(obj = CheckedUnwrap(obj)))
+    JSObject *obj = CheckedUnwrap(objArg);
+    if (!obj)
         return false;
 
     if (!obj->is<ArrayBufferObject>()) {
@@ -4099,7 +4099,8 @@ JS_StealArrayBufferContents(JSContext *cx, JSObject *obj, void **contents,
         return false;
     }
 
-    if (!ArrayBufferObject::stealContents(cx, obj, contents, data))
+    Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
+    if (!ArrayBufferObject::stealContents(cx, buffer, contents, data))
         return false;
 
     return true;

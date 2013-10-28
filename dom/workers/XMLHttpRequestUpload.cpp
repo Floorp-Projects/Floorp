@@ -16,7 +16,7 @@ XMLHttpRequestUpload*
 XMLHttpRequestUpload::Create(JSContext* aCx, XMLHttpRequest* aXHR)
 {
   nsRefPtr<XMLHttpRequestUpload> upload = new XMLHttpRequestUpload(aCx, aXHR);
-  return Wrap(aCx, NULL, upload) ? upload : NULL;
+  return Wrap(aCx, nullptr, upload) ? upload : nullptr;
 }
 
 void

@@ -1306,7 +1306,7 @@ Deserialize(JSContext *cx, unsigned argc, jsval *vp)
 
     RootedValue deserialized(cx);
     if (!JS_ReadStructuredClone(cx, obj->data(), obj->nbytes(),
-                                JS_STRUCTURED_CLONE_VERSION, &deserialized, NULL, NULL)) {
+                                JS_STRUCTURED_CLONE_VERSION, &deserialized, nullptr, nullptr)) {
         return false;
     }
     args.rval().set(deserialized);
