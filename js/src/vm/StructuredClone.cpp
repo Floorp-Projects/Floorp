@@ -1631,13 +1631,17 @@ JS_StructuredClone(JSContext *cx, JS::HandleValue value, JS::MutableHandleValue 
 
     JSAutoStructuredCloneBuffer buf;
     {
-        mozilla::Maybe<AutoCompartment> ac;
+        // If we use Maybe<AutoCompartment> here, G++ can't tell that the
+        // destructor is only called when Maybe::construct was called, and
+        // we get warnings about using uninitialized variables.
         if (value.isObject()) {
-            ac.construct(cx, &value.toObject());
+            AutoCompartment ac(cx, &value.toObject());
+            if (!buf.write(cx, value, callbacks, closure))
+                return false;
+        } else {
+            if (!buf.write(cx, value, callbacks, closure))
+                return false;
         }
-
-        if (!buf.write(cx, value, callbacks, closure))
-            return false;
     }
 
     return buf.read(cx, vp, callbacks, closure);
