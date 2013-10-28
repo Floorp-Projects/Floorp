@@ -513,12 +513,6 @@ Factory::CreateDrawTargetSkiaWithGLContextAndGrGLInterface(GenericRefCountedBase
   RefPtr<DrawTarget> newTarget = newDrawTargetSkia;
   return newTarget;
 }
-
-void
-Factory::SetGlobalSkiaCacheLimits(int aCount, int aSizeInBytes)
-{
-    DrawTargetSkia::SetGlobalCacheLimits(aCount, aSizeInBytes);
-}
 #endif // USE_SKIA_GPU
 
 #ifdef USE_SKIA_FREETYPE
