@@ -21,7 +21,6 @@ class nsIVolumeMountLock;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothReplyRunnable;
 class BluetoothSocket;
 class ObexHeaderSet;
 
@@ -218,7 +217,6 @@ private:
   nsCOMPtr<nsIOutputStream> mOutputStream;
   nsCOMPtr<nsIInputStream> mInputStream;
   nsCOMPtr<nsIVolumeMountLock> mMountLock;
-  nsRefPtr<BluetoothReplyRunnable> mRunnable;
   nsRefPtr<BluetoothProfileController> mController;
   nsRefPtr<DeviceStorageFile> mDsFile;
 
