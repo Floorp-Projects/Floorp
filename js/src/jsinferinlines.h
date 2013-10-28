@@ -612,7 +612,7 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *hint, TYPE
 #ifdef JS_ION
     uint32_t *bytecodeMap = script->baselineScript()->bytecodeTypeMap();
 #else
-    uint32_t *bytecodeMap = NULL;
+    uint32_t *bytecodeMap = nullptr;
     MOZ_CRASH();
 #endif
     uint32_t offset = pc - script->code;
@@ -658,7 +658,7 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
 #ifdef JS_ION
     uint32_t *hint = script->baselineScript()->bytecodeTypeMap() + script->nTypeSets;
 #else
-    uint32_t *hint = NULL;
+    uint32_t *hint = nullptr;
     MOZ_CRASH();
 #endif
     return BytecodeTypes(script, pc, hint, script->types->typeArray());
