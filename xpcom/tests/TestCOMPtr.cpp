@@ -543,7 +543,6 @@ main()
 
 			AnIFooPtrPtrContext( getter_AddRefs(fooP) );
 			AVoidPtrPtrContext( getter_AddRefs(fooP) );
-			AnISupportsPtrPtrContext( getter_AddRefs(fooP) );
 		}
 
 

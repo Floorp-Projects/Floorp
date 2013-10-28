@@ -1223,7 +1223,7 @@ nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, bool aForceGlobalTransfor
 
 nsresult
 nsSVGGlyphFrame::GetStartPositionOfChar(uint32_t charnum,
-                                        nsISupports **_retval)
+                                        nsISVGPoint **_retval)
 {
   *_retval = nullptr;
 
@@ -1237,7 +1237,7 @@ nsSVGGlyphFrame::GetStartPositionOfChar(uint32_t charnum,
 
 nsresult
 nsSVGGlyphFrame::GetEndPositionOfChar(uint32_t charnum,
-                                      nsISupports **_retval)
+                                      nsISVGPoint **_retval)
 {
   *_retval = nullptr;
 

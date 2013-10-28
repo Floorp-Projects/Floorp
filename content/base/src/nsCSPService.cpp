@@ -293,8 +293,10 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   if (!channelPolicy)
     return NS_OK;
 
+  nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  channelPolicy->GetContentSecurityPolicy(getter_AddRefs(csp));
+  channelPolicy->GetContentSecurityPolicy(getter_AddRefs(supports));
+  csp = do_QueryInterface(supports);
   uint32_t loadType;
   channelPolicy->GetLoadType(&loadType);
 

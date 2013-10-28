@@ -196,8 +196,11 @@ nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
 
     nsresult rv;
 
-    if (!mWindowResources.Remove(&key, getter_AddRefs(resource)))
+    nsCOMPtr<nsISupports> supports;
+    if (!mWindowResources.Remove(&key, getter_AddRefs(supports)))
         return NS_ERROR_UNEXPECTED;
+
+    resource = do_QueryInterface(supports);
 
     // make sure we're not shutting down
     if (!mContainer) return NS_OK;
