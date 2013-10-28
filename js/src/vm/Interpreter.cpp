@@ -1191,15 +1191,6 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
 static JS_NEVER_INLINE bool
 Interpret(JSContext *cx, RunState &state)
 {
-    JSAutoResolveFlags rf(cx, RESOLVE_INFER);
-
-    gc::MaybeVerifyBarriers(cx, true);
-
-    JS_ASSERT(!cx->compartment()->activeAnalysis);
-
-#define CHECK_PCCOUNT_INTERRUPTS() \
-    JS_ASSERT_IF(script->hasScriptCounts, activation.opMask() == EnableInterruptsPseudoOpcode)
-
 /*
  * Define macros for an interpreter loop. Opcode dispatch may be either by a
  * switch statement or by indirect goto (aka a threaded interpreter), depending
@@ -1249,11 +1240,6 @@ Interpret(JSContext *cx, RunState &state)
     jsbytecode switchOp;
 #endif
 
-   /*
-    * Shorthand for the common sequence at the end of a fixed-size opcode.
-    */
-#define END_CASE(OP)              ADVANCE_AND_DISPATCH(OP##_LENGTH);
-
     /*
      * Increment REGS.pc by N, load the opcode at that position,
      * and jump to the code to execute it.
@@ -1276,6 +1262,11 @@ Interpret(JSContext *cx, RunState &state)
         SANITY_CHECKS();                                                      \
         DISPATCH_TO(*REGS.pc | activation.opMask());                          \
     JS_END_MACRO
+
+   /*
+    * Shorthand for the common sequence at the end of a fixed-size opcode.
+    */
+#define END_CASE(OP)              ADVANCE_AND_DISPATCH(OP##_LENGTH);
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -1313,8 +1304,14 @@ Interpret(JSContext *cx, RunState &state)
 #define SANITY_CHECKS()                                                       \
     JS_BEGIN_MACRO                                                            \
         js::gc::MaybeVerifyBarriers(cx);                                      \
-        CHECK_PCCOUNT_INTERRUPTS();                                           \
+        JS_ASSERT_IF(script->hasScriptCounts,                                 \
+                     activation.opMask() == EnableInterruptsPseudoOpcode);    \
     JS_END_MACRO
+
+    JSAutoResolveFlags rf(cx, RESOLVE_INFER);
+
+    gc::MaybeVerifyBarriers(cx, true);
+    JS_ASSERT(!cx->compartment()->activeAnalysis);
 
     StackFrame *entryFrame = state.pushInterpreterFrame(cx);
     if (!entryFrame)
