@@ -2366,8 +2366,11 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  nsIMemoryReporterCallback *cb,
                                  nsISupports *closure, size_t *rtTotalOut)
 {
-    nsCOMPtr<amIAddonManager> am =
-      do_GetService("@mozilla.org/addons/integration;1");
+    nsCOMPtr<amIAddonManager> am;
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        // Only try to access the service from the main process.
+        am = do_GetService("@mozilla.org/addons/integration;1");
+    }
     return ReportJSRuntimeExplicitTreeStats(rtStats, rtPath, am.get(), cb,
                                             closure, rtTotalOut);
 }
@@ -2604,8 +2607,11 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
     // callback may be a JS function, and executing JS while getting these
     // stats seems like a bad idea.
 
-    nsCOMPtr<amIAddonManager> addonManager =
-      do_GetService("@mozilla.org/addons/integration;1");
+    nsCOMPtr<amIAddonManager> addonManager;
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        // Only try to access the service from the main process.
+        addonManager = do_GetService("@mozilla.org/addons/integration;1");
+    }
     bool getLocations = !!addonManager;
     XPCJSRuntimeStats rtStats(windowPaths, topWindowPaths, getLocations);
     OrphanReporter orphanReporter(XPCConvert::GetISupportsFromJSObject);
