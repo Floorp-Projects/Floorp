@@ -149,12 +149,12 @@ function test2() {
   let plugin = gTestBrowser.contentDocument.getElementById("test");
   plugin.parentNode.removeChild(plugin);
 
-  runAfterPluginRemoved(() => executeSoon(test3));
+  executeSoon(test3);
 }
 
 function test3() {
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(!popupNotification, "Test 3, Should not have a click-to-play notification");
+  ok(popupNotification, "Test 3, Should still have a click-to-play notification");
 
   finishTest();
 }

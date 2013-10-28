@@ -40,7 +40,7 @@ function pluginBindingAttached() {
     ok(notification, "should have popup notification");
     // We don't set up the action list until the notification is shown
     notification.reshow();
-    is(notification.options.centerActions.length, 1, "should be 1 type of plugin in the popup notification");
+    is(notification.options.centerActions.size, 1, "should be 1 type of plugin in the popup notification");
     XPCNativeWrapper.unwrap(gTestBrowser.contentWindow).addSecondPlugin();
   } else if (gNumPluginBindingsAttached == 2) {
     var doc = gTestBrowser.contentDocument;
@@ -51,7 +51,7 @@ function pluginBindingAttached() {
     var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
     ok(notification, "should have popup notification");
     notification.reshow();
-    is(notification.options.centerActions.length, 2, "should be 2 types of plugin in the popup notification");
+    is(notification.options.centerActions.size, 2, "should be 2 types of plugin in the popup notification");
     finish();
   } else {
     ok(false, "if we've gotten here, something is quite wrong");

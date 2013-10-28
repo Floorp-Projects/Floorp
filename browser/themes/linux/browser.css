@@ -1296,30 +1296,22 @@ toolbar[iconsize="small"] #webrtc-status-button {
 #plugins-notification-icon {
   list-style-image: url(chrome://browser/skin/notification-pluginNormal.png);
 }
-
-#alert-plugins-notification-icon {
+#plugins-notification-icon.plugin-hidden {
   list-style-image: url(chrome://browser/skin/notification-pluginAlert.png);
 }
-
-#blocked-plugins-notification-icon {
+#plugins-notification-icon.plugin-blocked {
   list-style-image: url(chrome://browser/skin/notification-pluginBlocked.png);
 }
 
-#plugins-notification-icon,
-#alert-plugins-notification-icon,
-#blocked-plugins-notification-icon {
+#plugins-notification-icon {
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#plugins-notification-icon:hover,
-#alert-plugins-notification-icon:hover,
-#blocked-plugins-notification-icon:hover {
+#plugins-notification-icon:hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-#plugins-notification-icon:active,
-#alert-plugins-notification-icon:active,
-#blocked-plugins-notification-icon:active {
+#plugins-notification-icon:active {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
@@ -1334,7 +1326,7 @@ toolbar[iconsize="small"] #webrtc-status-button {
   visibility: collapse;
 }
 
-#blocked-plugins-notification-icon[showing] {
+#plugins-notification-icon.plugin-blocked[showing] {
   animation: pluginBlockedNotification 500ms ease 0s 5 alternate both;
 }
 
