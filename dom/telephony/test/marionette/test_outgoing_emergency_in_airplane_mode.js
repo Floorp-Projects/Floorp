@@ -4,93 +4,34 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
+let Promise = SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
+
 const KEY = "ril.radio.disabled";
 
-SpecialPowers.addPermission("telephony", true, document);
-SpecialPowers.addPermission("settings-write", true, document);
-
-// Permission changes can't change existing Navigator.prototype
-// objects, so grab our objects from a new Navigator
-let ifr = document.createElement("iframe");
 let settings;
-let telephony;
 let number = "112";
 let outgoing;
 
-startTest(function() {
-  ifr.onload = function() {
-    settings = ifr.contentWindow.navigator.mozSettings;
-    telephony = ifr.contentWindow.navigator.mozTelephony;
-    getExistingCalls();
-  };
-  document.body.appendChild(ifr);
-});
-
-function getExistingCalls() {
-  emulator.run("gsm list", function(result) {
-    log("Initial call list: " + result);
-    if (result[0] == "OK") {
-      verifyInitialState(false);
-    } else {
-      cancelExistingCalls(result);
-    }
-  });
-}
-
-function cancelExistingCalls(callList) {
-  if (callList.length && callList[0] != "OK") {
-    // Existing calls remain; get rid of the next one in the list
-    nextCall = callList.shift().split(/\s+/)[2].trim();
-    log("Cancelling existing call '" + nextCall +"'");
-    emulator.run("gsm cancel " + nextCall, function(result) {
-      if (result[0] == "OK") {
-        cancelExistingCalls(callList);
-      } else {
-        log("Failed to cancel existing call");
-        cleanUp();
-      }
-    });
-  } else {
-    // No more calls in the list; give time for emulator to catch up
-    waitFor(verifyInitialState, function() {
-      return (telephony.calls.length === 0);
-    });
-  }
-}
-
-function verifyInitialState(confirmNoCalls = true) {
+function setAirplaneMode() {
   log("Turning on airplane mode");
+
+  let deferred = Promise.defer();
 
   let setLock = settings.createLock();
   let obj = {};
   obj[KEY] = false;
+
   let setReq = setLock.set(obj);
   setReq.addEventListener("success", function onSetSuccess() {
     ok(true, "set '" + KEY + "' to " + obj[KEY]);
+    deferred.resolve();
   });
   setReq.addEventListener("error", function onSetError() {
     ok(false, "cannot set '" + KEY + "'");
+    deferred.reject();
   });
 
-  log("Verifying initial state.");
-  ok(telephony);
-  is(telephony.active, null);
-  ok(telephony.calls);
-  is(telephony.calls.length, 0);
-  if (confirmNoCalls) {
-    emulator.run("gsm list", function(result) {
-      log("Initial call list: " + result);
-      is(result[0], "OK");
-      if (result[0] == "OK") {
-        dial();
-      } else {
-        log("Call exists from a previous test, failing out.");
-        cleanUp();
-      }
-    });
-  } else {
-    dial();
-  }
+  return deferred.promise;
 }
 
 function dial() {
@@ -164,7 +105,13 @@ function hangUp() {
 }
 
 function cleanUp() {
-  SpecialPowers.removePermission("telephony", document);
-  SpecialPowers.removePermission("settings-write", document);
   finish();
 }
+
+startTestWithPermissions(['settings-write'], function() {
+  settings = window.navigator.mozSettings;
+  ok(settings);
+  setAirplaneMode()
+    .then(dial)
+    .then(null, cleanUp);
+});
