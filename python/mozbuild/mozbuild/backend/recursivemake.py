@@ -268,10 +268,13 @@ class RecursiveMakeBackend(CommonBackend):
         self._generated_webidl_sources = set()
 
         def detailed(summary):
-            return '{:d} total backend files. {:d} created; {:d} updated; {:d} unchanged'.format(
+            s = '{:d} total backend files. {:d} created; {:d} updated; {:d} unchanged'.format(
                 summary.created_count + summary.updated_count +
                 summary.unchanged_count, summary.created_count,
                 summary.updated_count, summary.unchanged_count)
+            if summary.deleted_count:
+                s+= '; {:d} deleted'.format(summary.deleted_count)
+            return s
 
         # This is a little kludgy and could be improved with a better API.
         self.summary.backend_detailed_summary = types.MethodType(detailed,
@@ -703,16 +706,14 @@ class RecursiveMakeBackend(CommonBackend):
 
         # Write out a dependency file used to determine whether a config.status
         # re-run is needed.
-        backend_built_path = os.path.join(self.environment.topobjdir,
-            'backend.%s.built' % self.__class__.__name__).replace(os.sep, '/')
         inputs = sorted(p.replace(os.sep, '/') for p in self.backend_input_files)
 
         # We need to use $(DEPTH) so the target here matches what's in
         # rules.mk. If they are different, the dependencies don't get pulled in
         # properly.
-        with self._write_file('%s.pp' % backend_built_path) as backend_deps:
-            backend_deps.write('$(DEPTH)/backend.RecursiveMakeBackend.built: %s\n' %
-                ' '.join(inputs))
+        with self._write_file('%s.pp' % self._backend_output_list_file) as backend_deps:
+            backend_deps.write('$(DEPTH)/backend.%s: %s\n' %
+                (self.__class__.__name__, ' '.join(inputs)))
             for path in inputs:
                 backend_deps.write('%s:\n' % path)
 

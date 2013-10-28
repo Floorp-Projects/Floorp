@@ -602,17 +602,17 @@ ifndef MOZBUILD_BACKEND_CHECKED
 # Makefile/backend.mk is updated as a result of backend regeneration, we
 # actually pick up the changes. This should reduce the amount of
 # required clobbers and is thus the lesser evil.
-Makefile: $(DEPTH)/backend.RecursiveMakeBackend.built
+Makefile: $(DEPTH)/backend.RecursiveMakeBackend
 	@$(TOUCH) $@
 
-$(DEPTH)/backend.RecursiveMakeBackend.built:
+$(DEPTH)/backend.RecursiveMakeBackend:
 	@echo "Build configuration changed. Regenerating backend."
 	@cd $(DEPTH) && $(PYTHON) ./config.status
 	@$(TOUCH) $@
 
-include $(DEPTH)/backend.RecursiveMakeBackend.built.pp
+include $(DEPTH)/backend.RecursiveMakeBackend.pp
 
-default:: $(DEPTH)/backend.RecursiveMakeBackend.built
+default:: $(DEPTH)/backend.RecursiveMakeBackend
 
 export MOZBUILD_BACKEND_CHECKED=1
 endif

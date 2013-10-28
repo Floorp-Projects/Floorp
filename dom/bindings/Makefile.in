@@ -250,7 +250,6 @@ GARBAGE += \
   parser.out \
   $(wildcard *-example.h) \
   $(wildcard *-example.cpp) \
-  $(unified_binding_cpp_files) \
   .BindingGen \
   .all-webidl-file-list \
   .generated-events-webidl-files \
