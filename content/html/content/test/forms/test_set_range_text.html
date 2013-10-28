@@ -81,6 +81,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
         ok(true, "select event should be fired for " + aEvent.target.id);
         if (++numOfSelectCalls == expectedNumOfSelectCalls) {
           SimpleTest.finish();
+        } else if (numOfSelectCalls > expectedNumOfSelectCalls) {
+          ok(false, "Too many select events were fired");
         }
       }, false);
 
@@ -97,7 +99,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.selectionEnd, 4, msg + ".selectionEnd == 4");
       elem.setRangeText("mnk");
       is(elem.value, "0mnk6789ABCDEF", msg + ".value == \"0mnk6789ABCDEF\"");
-      expectedNumOfSelectCalls += 3;
+      expectedNumOfSelectCalls += 2;
 
       //test SetRange(replacement, start, end, mode) with start > end
       try {
@@ -159,7 +161,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "0Z23456789", msg + ".value == \"0Z23456789\"");
       is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"preserve\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"preserve\"");
-      expectedNumOfSelectCalls += 2;
+      expectedNumOfSelectCalls += 1;
 
       //subcase: selection{Start|End} < end
       elem.value = "0123456789";
@@ -168,7 +170,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "01QRST9", msg + ".value == \"01QRST9\"");
       is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"preserve\"");
       is(elem.selectionEnd, 6, msg + ".selectionEnd == 6, with \"preserve\"");
-      expectedNumOfSelectCalls += 2;
+      expectedNumOfSelectCalls += 1;
 
       //subcase: selectionStart > end, selectionEnd < end
       elem.value = "0123456789";
@@ -177,7 +179,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "0QRST56789", msg + ".value == \"0QRST56789\"");
       is(elem.selectionStart, 1, msg + ".selectionStart == 1, with \"default\"");
       is(elem.selectionEnd, 5, msg + ".selectionEnd == 5, with \"default\"");
-      expectedNumOfSelectCalls += 2;
+      expectedNumOfSelectCalls += 1;
 
       //subcase: selectionStart < end, selectionEnd > end
       elem.value = "0123456789";
@@ -186,7 +188,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "01QRST6789", msg + ".value == \"01QRST6789\"");
       is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"default\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"default\"");
-      expectedNumOfSelectCalls += 2;
+      expectedNumOfSelectCalls += 1;
     }
   }
 
