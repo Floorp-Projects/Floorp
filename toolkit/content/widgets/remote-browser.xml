@@ -129,6 +129,10 @@
           jsm = "resource://gre/modules/RemoteAddonsParent.jsm";
           let RemoteAddonsParent = Components.utils.import(jsm, {}).RemoteAddonsParent;
           RemoteAddonsParent.init();
+
+          if (!this.hasAttribute("disableglobalhistory")) {
+            this.messageManager.sendAsyncMessage("History:UseGlobalHistory", {enabled:true});
+          }
         ]]>
       </constructor>
 
