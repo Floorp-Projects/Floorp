@@ -96,13 +96,6 @@ public class HomePager extends ViewPager {
         // This is to keep all 4 pages in memory after they are
         // selected in the pager.
         setOffscreenPageLimit(3);
-
-        //  We can call HomePager.requestFocus to steal focus from the URL bar and drop the soft
-        //  keyboard. However, if there are no focusable views (e.g. an empty reading list), the
-        //  URL bar will be refocused. Therefore, we make the HomePager container focusable to
-        //  ensure there is always a focusable view. This would ordinarily be done via an XML
-        //  attribute, but it is not working properly.
-        setFocusableInTouchMode(true);
     }
 
     @Override
@@ -331,7 +324,10 @@ public class HomePager extends ViewPager {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-            // Drop the soft keyboard by stealing focus from the URL bar.
+            // XXX: Drop the soft keyboard by stealing focus. Note that the HomePager (via XML
+            // attr) is focusable after its descendants allowing requestFocus to succeed and drop
+            // the soft keyboard even if there are no other focusable views on the screen (e.g.
+            // the Reading List is empty).
             requestFocus();
         }
 
