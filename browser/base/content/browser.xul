@@ -567,14 +567,14 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="small"
              defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button,social-toolbar-item"
-             customizationtarget="nav-bar-customizationtarget"
+             customizationtarget="nav-bar-customization-target"
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"
              overflowtarget="widget-overflow-list"
              flex="1"
              context="toolbar-context-menu">
 
-      <hbox id="nav-bar-customizationtarget" class="customization-target" flex="1">
+      <hbox id="nav-bar-customization-target" class="customization-target" flex="1">
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      forwarddisabled="true" title="&locationItem.title;" removable="false"
                      cui-areatype="toolbar"

@@ -15,16 +15,16 @@
   transition-timing-function: linear;
 }
 
-#main-window[customizing] .customization-target {
+#nav-bar[customizing] > #nav-bar-customization-target {
   margin: 1px 3px;
 }
 
-#main-window[customizing] .customization-target,
+#nav-bar[customizing] > #nav-bar-customization-target,
 #PanelUI-contents > .panel-customization-placeholder {
   outline: 1px dashed transparent;
 }
 
-#main-window[customizing-movingItem] .customization-target,
+#main-window[customizing-movingItem] #nav-bar-customization-target,
 #main-window[customizing-movingItem] .panel-customization-placeholder {
   outline-color: #bbb;
 }
