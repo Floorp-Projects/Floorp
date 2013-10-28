@@ -85,8 +85,10 @@ public:
   virtual float GetSubStringLength(uint32_t charnum, uint32_t nchars) MOZ_OVERRIDE;
   virtual int32_t GetCharNumAtPosition(mozilla::nsISVGPoint *point) MOZ_OVERRIDE;
 
-  NS_IMETHOD GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval) MOZ_OVERRIDE;
-  NS_IMETHOD GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval) MOZ_OVERRIDE;
+  NS_IMETHOD GetStartPositionOfChar(uint32_t charnum,
+                                    mozilla::nsISVGPoint **_retval) MOZ_OVERRIDE;
+  NS_IMETHOD GetEndPositionOfChar(uint32_t charnum,
+                                  mozilla::nsISVGPoint **_retval) MOZ_OVERRIDE;
   NS_IMETHOD GetExtentOfChar(uint32_t charnum, mozilla::dom::SVGIRect **_retval) MOZ_OVERRIDE;
   NS_IMETHOD GetRotationOfChar(uint32_t charnum, float *_retval) MOZ_OVERRIDE;
 

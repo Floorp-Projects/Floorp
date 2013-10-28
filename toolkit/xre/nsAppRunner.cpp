@@ -2006,9 +2006,10 @@ SetCurrentProfileAsDefault(nsIToolkitProfileService* aProfileSvc,
     return rv;
 
   bool foundMatchingProfile = false;
-  nsCOMPtr<nsIToolkitProfile> profile;
-  rv = profiles->GetNext(getter_AddRefs(profile));
+  nsCOMPtr<nsISupports> supports;
+  rv = profiles->GetNext(getter_AddRefs(supports));
   while (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIToolkitProfile> profile = do_QueryInterface(supports);
     nsCOMPtr<nsIFile> profileRoot;
     profile->GetRootDir(getter_AddRefs(profileRoot));
     profileRoot->Equals(aCurrentProfileRoot, &foundMatchingProfile);
@@ -2018,7 +2019,7 @@ SetCurrentProfileAsDefault(nsIToolkitProfileService* aProfileSvc,
         rv = aProfileSvc->Flush();
       return rv;
     }
-    rv = profiles->GetNext(getter_AddRefs(profile));
+    rv = profiles->GetNext(getter_AddRefs(supports));
   }
   return rv;
 }
