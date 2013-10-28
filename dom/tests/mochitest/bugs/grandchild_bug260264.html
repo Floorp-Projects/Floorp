@@ -9,7 +9,7 @@
       var event = location.hash.split("#").pop();
       send(document.getElementById("nested link"), event, function() {
         var popup = window.open("http://example.com"),
-            grandparent = window.open(null, "parent260264");
+            grandparent = window.open("", "parent260264");
         try { grandparent.report(popup) }
         finally { popup && popup.close() }
       });

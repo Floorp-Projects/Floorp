@@ -14,7 +14,7 @@
 #include "gc/Marking.h"
 #ifdef JS_ION
 #include "jit/BaselineFrame.h"
-#include "jit/IonCompartment.h"
+#include "jit/JitCompartment.h"
 #endif
 
 #include "jit/IonFrameIterator-inl.h"

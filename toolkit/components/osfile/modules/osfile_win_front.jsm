@@ -134,6 +134,11 @@
       * @throws {OS.File.Error} In case of I/O error.
       */
      File.prototype._write = function _write(buffer, nbytes, options) {
+       if (this._appendMode) {
+         // Need to manually seek on Windows, as O_APPEND is not supported.
+         // This is, of course, a race, but there is no real way around this.
+         this.setPosition(0, File.POS_END);
+       }
        // |gBytesWrittenPtr| is a pointer to |gBytesWritten|.
        throw_on_zero("write",
          WinFile.WriteFile(this.fd, buffer, nbytes, gBytesWrittenPtr, null)
@@ -186,6 +191,11 @@
      /**
       * Flushes the file's buffers and causes all buffered data
       * to be written.
+      * Disk flushes are very expensive and therefore should be used carefully,
+      * sparingly and only in scenarios where it is vital that data survives
+      * system crashes. Even though the function will be executed off the
+      * main-thread, it might still affect the overall performance of any
+      * running application.
       *
       * @throws {OS.File.Error} In case of I/O error.
       */
@@ -225,8 +235,11 @@
       *  on the other fields of |mode|.
       * - {bool} write If |true|, the file will be opened for
       *  writing. The file may also be opened for reading, depending
-      *  on the other fields of |mode|. If neither |truncate| nor
-      *  |create| is specified, the file is opened for appending.
+      *  on the other fields of |mode|.
+      * - {bool} append If |true|, the file will be opened for appending,
+      *  meaning the equivalent of |.setPosition(0, POS_END)| is executed
+      *  before each write. The default is |true|, i.e. opening a file for
+      *  appending. Specify |append: false| to open the file in regular mode.
       *
       * If neither |truncate|, |create| or |write| is specified, the file
       * is opened for reading.
@@ -264,6 +277,9 @@
        let template = options.winTemplate ? options.winTemplate._fd : null;
        let access;
        let disposition;
+
+       mode = OS.Shared.AbstractFile.normalizeOpenMode(mode);
+
        if ("winAccess" in options && "winDisposition" in options) {
          access = options.winAccess;
          disposition = options.winDisposition;
@@ -272,7 +288,6 @@
          throw new TypeError("OS.File.open requires either both options " +
            "winAccess and winDisposition or neither");
        } else {
-         mode = OS.Shared.AbstractFile.normalizeOpenMode(mode);
          if (mode.read) {
            access |= Const.GENERIC_READ;
          }
@@ -293,16 +308,18 @@
            disposition = Const.CREATE_NEW;
          } else if (mode.read && !mode.write) {
            disposition = Const.OPEN_EXISTING;
-         } else /*append*/ {
-           if (mode.existing) {
-             disposition = Const.OPEN_EXISTING;
-           } else {
-             disposition = Const.OPEN_ALWAYS;
-           }
+         } else if (mode.existing) {
+           disposition = Const.OPEN_EXISTING;
+         } else {
+           disposition = Const.OPEN_ALWAYS;
          }
        }
+
        let file = error_or_file(WinFile.CreateFile(path,
          access, share, security, disposition, flags, template));
+
+       file._appendMode = !!mode.append;
+
        if (!(mode.trunc && mode.existing)) {
          return file;
        }

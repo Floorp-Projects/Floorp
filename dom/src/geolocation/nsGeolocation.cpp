@@ -15,6 +15,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
+#include "nsContentPermissionHelper.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
 #include "nsPIDOMWindow.h"
@@ -378,17 +379,11 @@ nsGeolocationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
 }
 
 NS_IMETHODIMP
-nsGeolocationRequest::GetType(nsACString & aType)
+nsGeolocationRequest::GetTypes(nsIArray** aTypes)
 {
-  aType = "geolocation";
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGeolocationRequest::GetAccess(nsACString & aAccess)
-{
-  aAccess = "unused";
-  return NS_OK;
+  return CreatePermissionArray(NS_LITERAL_CSTRING("geolocation"),
+                               NS_LITERAL_CSTRING("unused"),
+                               aTypes);
 }
 
 NS_IMETHODIMP
@@ -1445,12 +1440,15 @@ Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
       return false;
     }
 
+    nsTArray<PermissionRequest> permArray;
+    permArray.AppendElement(PermissionRequest(NS_LITERAL_CSTRING("geolocation"),
+                                              NS_LITERAL_CSTRING("unused")));
+
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.
     request->AddRef();
     child->SendPContentPermissionRequestConstructor(request,
-                                                    NS_LITERAL_CSTRING("geolocation"),
-                                                    NS_LITERAL_CSTRING("unused"),
+                                                    permArray,
                                                     IPC::Principal(mPrincipal));
 
     request->Sendprompt();

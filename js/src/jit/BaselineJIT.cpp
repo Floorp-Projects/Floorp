@@ -99,7 +99,7 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
     JS_ASSERT(jit::IsBaselineEnabled(cx));
     JS_ASSERT_IF(data.osrFrame, CheckFrame(data.osrFrame));
 
-    EnterIonCode enter = cx->runtime()->ionRuntime()->enterBaseline();
+    EnterIonCode enter = cx->runtime()->jitRuntime()->enterBaseline();
 
     // Caller must construct |this| before invoking the Ion function.
     JS_ASSERT_IF(data.constructing, data.maxArgv[0].isObject());
@@ -110,7 +110,7 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
         IonContext ictx(cx, nullptr);
         JitActivation activation(cx, data.constructing);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
-        AutoFlushInhibitor afi(cx->runtime()->ionRuntime());
+        AutoFlushInhibitor afi(cx->runtime()->jitRuntime());
 
         if (data.osrFrame)
             data.osrFrame->setRunningInJit();
@@ -132,7 +132,7 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
         data.result = data.maxArgv[0];
 
     // Release temporary buffer used for OSR into Ion.
-    cx->runtime()->getIonRuntime(cx)->freeOsrTempData();
+    cx->runtime()->getJitRuntime(cx)->freeOsrTempData();
 
     JS_ASSERT_IF(data.result.isMagic(), data.result.isMagic(JS_ION_ERROR));
     return data.result.isMagic() ? IonExec_Error : IonExec_Ok;
@@ -230,7 +230,7 @@ jit::BaselineCompile(JSContext *cx, HandleScript script)
     if (!compiler.init())
         return Method_Error;
 
-    AutoFlushCache afc("BaselineJIT", cx->runtime()->ionRuntime());
+    AutoFlushCache afc("BaselineJIT", cx->runtime()->jitRuntime());
     MethodStatus status = compiler.compile();
 
     JS_ASSERT_IF(status == Method_Compiled, script->hasBaselineScript());
@@ -258,7 +258,7 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
     if (script->length > BaselineScript::MAX_JSSCRIPT_LENGTH)
         return Method_CantCompile;
 
-    if (!cx->compartment()->ensureIonCompartmentExists(cx))
+    if (!cx->compartment()->ensureJitCompartmentExists(cx))
         return Method_Error;
 
     if (script->hasBaselineScript())
@@ -750,7 +750,7 @@ BaselineScript::toggleDebugTraps(JSScript *script, jsbytecode *pc)
 
     JSRuntime *rt = script->runtimeFromMainThread();
     IonContext ictx(rt, script->compartment(), nullptr);
-    AutoFlushCache afc("DebugTraps", rt->ionRuntime());
+    AutoFlushCache afc("DebugTraps", rt->jitRuntime());
 
     for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
         PCMappingIndexEntry &entry = pcMappingIndexEntry(i);
@@ -885,7 +885,7 @@ jit::FinishDiscardBaselineScript(FreeOp *fop, JSScript *script)
 }
 
 void
-jit::IonCompartment::toggleBaselineStubBarriers(bool enabled)
+jit::JitCompartment::toggleBaselineStubBarriers(bool enabled)
 {
     for (ICStubCodeMap::Enum e(*stubCodes_); !e.empty(); e.popFront()) {
         IonCode *code = *e.front().value.unsafeGet();

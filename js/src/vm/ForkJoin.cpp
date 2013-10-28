@@ -17,7 +17,7 @@
 
 #if defined(DEBUG) && defined(JS_THREADSAFE) && defined(JS_ION)
 # include "jit/Ion.h"
-# include "jit/IonCompartment.h"
+# include "jit/JitCompartment.h"
 # include "jit/MIR.h"
 # include "jit/MIRGraph.h"
 #endif // DEBUG && THREADSAFE && ION
@@ -1287,7 +1287,7 @@ class ParallelIonInvoke
         IonScript *ion = callee->nonLazyScript()->parallelIonScript();
         IonCode *code = ion->method();
         jitcode_ = code->raw();
-        enter_ = rt->ionRuntime()->enterIon();
+        enter_ = rt->jitRuntime()->enterIon();
         calleeToken_ = CalleeToToken(callee);
     }
 

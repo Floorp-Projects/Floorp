@@ -292,7 +292,7 @@ var DebuggerServer = {
     this.closeListener();
     this.globalActorFactories = {};
     this.tabActorFactories = {};
-    delete this._allowConnection;
+    this._allowConnection = null;
     this._transportInitialized = false;
     this._initialized = false;
 
@@ -1023,7 +1023,7 @@ DebuggerServerConnection.prototype = {
           "error occurred while processing '" + aPacket.type,
           e));
       } finally {
-        delete this.currentPacket;
+        this.currentPacket = undefined;
       }
     } else {
       ret = { error: "unrecognizedPacketType",
