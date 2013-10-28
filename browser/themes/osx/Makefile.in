@@ -5,3 +5,23 @@
 ICON_FILES := icon.png
 ICON_DEST = $(FINAL_TARGET)/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}
 INSTALL_TARGETS += ICON
+
+# By default, the pre-processor used for jar.mn will use "%" as a marker for ".css" files and "#"
+# otherwise. This falls apart when a file using one marker needs to include a file with the other
+# marker since the pre-processor instructions in the included file will not be processed. The
+# following SVG files need to include a file which uses "%" as the marker so we invoke the pre-
+# processor ourselves here with the marker specified. The resulting SVG files will get packaged by
+# the processing of the jar file in this directory.
+tab-selected-svg: $(srcdir)/../shared/tab-selected.svg
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	  --marker "%" -D TAB_SIDE=start \
+	  $(ACDEFINES) \
+	  $(srcdir)/../shared/tab-selected.svg > tab-selected-start.svg
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	  --marker "%" -D TAB_SIDE=end \
+	  $(ACDEFINES) \
+	  $(srcdir)/../shared/tab-selected.svg > tab-selected-end.svg
+
+.PHONY: tab-selected-svg
+
+export:: tab-selected-svg
