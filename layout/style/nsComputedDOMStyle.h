@@ -140,6 +140,11 @@ private:
 
   nsMargin GetAdjustedValuesForBoxSizing();
 
+  // Helper method for DoGetTextAlign[Last].
+  mozilla::dom::CSSValue* CreateTextAlignValue(uint8_t aAlign,
+                                               bool aAlignTrue,
+                                               const int32_t aTable[]);
+
 #define STYLE_STRUCT(name_, checkdata_cb_)                              \
   const nsStyle##name_ * Style##name_() {                               \
     return mStyleContextHolder->Style##name_();                         \
