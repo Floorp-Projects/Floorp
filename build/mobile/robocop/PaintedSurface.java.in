@@ -5,7 +5,12 @@
 
 package @ANDROID_PACKAGE_NAME@;
 
+import android.graphics.Bitmap;
+import android.util.Base64;
+import android.util.Base64OutputStream;
+
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.MappedByteBuffer;
@@ -44,6 +49,15 @@ public class PaintedSurface {
         return mHeight;
     }
 
+    private int pixelAtIndex(int index) {
+        int b1 = mPixelBuffer.get(index) & 0xFF;
+        int b2 = mPixelBuffer.get(index + 1) & 0xFF;
+        int b3 = mPixelBuffer.get(index + 2) & 0xFF;
+        int b4 = mPixelBuffer.get(index + 3) & 0xFF;
+        int value = (b1 << 24) + (b2 << 16) + (b3 << 8) + (b4 << 0);
+        return value;
+    }
+
     public final int getPixelAt(int x, int y) {
         if (mPixelBuffer == null) {
             throw new RoboCopException("Trying to access PaintedSurface with no active PixelBuffer");
@@ -60,12 +74,27 @@ public class PaintedSurface {
         // The rows are reversed so row 0 is at the end and we start with the last row.
         // This is why we do mHeight-y;
         int index = (x + ((mHeight - y - 1) * mWidth)) * 4;
-        int b1 = mPixelBuffer.get(index) & 0xFF;
-        int b2 = mPixelBuffer.get(index + 1) & 0xFF;
-        int b3 = mPixelBuffer.get(index + 2) & 0xFF;
-        int b4 = mPixelBuffer.get(index + 3) & 0xFF;
-        int value = (b1 << 24) + (b2 << 16) + (b3 << 8) + (b4 << 0);
-        return value;
+        return pixelAtIndex(index);
+    }
+
+    public final String asDataUri() {
+        try {
+            Bitmap bm = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
+            for (int y = 0; y < mHeight; y++) {
+                for (int x = 0; x < mWidth; x++) {
+                    int index = (x + ((mHeight - y - 1) * mWidth)) * 4;
+                    bm.setPixel(x, y, pixelAtIndex(index));
+                }
+            }
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            out.write("data:image/png;base64,".getBytes());
+            Base64OutputStream b64 = new Base64OutputStream(out, Base64.NO_WRAP);
+            bm.compress(Bitmap.CompressFormat.PNG, 100, b64);
+            return new String(out.toByteArray());
+        } catch (Exception e) {
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
+            throw new RoboCopException("Unable to convert surface to a PNG data:uri");
+        }
     }
 
     public void close() {
