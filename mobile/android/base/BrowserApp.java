@@ -167,9 +167,6 @@ abstract public class BrowserApp extends GeckoApp
 
     private BrowserHealthReporter mBrowserHealthReporter;
 
-    // The tab to be selected on editing mode exit.
-    private Integer mTargetTabForEditingMode = null;
-
     // The animator used to toggle HomePager visibility has a race where if the HomePager is shown
     // (starting the animation), the HomePager is hidden, and the HomePager animation completes,
     // both the web content and the HomePager will be hidden. This flag is used to prevent the
@@ -490,9 +487,7 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.setOnStopEditingListener(new BrowserToolbar.OnStopEditingListener() {
             public void onStopEditing() {
-                selectTargetTabForEditingMode();
-
-                // Re-enable doorhanger notifications. They may trigger on the selected tab above.
+                // Re-enable doorhanger notifications.
                 mDoorHangerPopup.enable();
             }
         });
@@ -1316,10 +1311,7 @@ abstract public class BrowserApp extends GeckoApp
         if (tabs.isSelectedTabId(tabId)) {
             hideHomePager();
         } else {
-            // Set the target tab to null so it does not get selected (on editing
-            // mode exit) in lieu of the tab we are about to select.
-            mTargetTabForEditingMode = null;
-            Tabs.getInstance().selectTab(tabId);
+            tabs.selectTab(tabId);
         }
 
         hideBrowserSearch();
@@ -1433,9 +1425,6 @@ abstract public class BrowserApp extends GeckoApp
             throw new IllegalArgumentException("Cannot handle null URLs in enterEditingMode");
         }
 
-        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        mTargetTabForEditingMode = (selectedTab != null ? selectedTab.getId() : null);
-
         final PropertyAnimator animator = new PropertyAnimator(250);
         animator.setUseHardwareLayer(false);
 
@@ -1546,22 +1535,6 @@ abstract public class BrowserApp extends GeckoApp
             mHomePager.setVisibility(View.INVISIBLE);
             mBrowserSearch.filter(searchTerm, handler);
         }
-    }
-
-    /**
-     * Selects the target tab for editing mode. This is expected to be the tab selected on editing
-     * mode entry, unless it is subsequently overridden.
-     *
-     * A background tab may be selected while editing mode is active (e.g. popups), causing the
-     * new url to load in the newly selected tab. Call this method on editing mode exit to
-     * mitigate this.
-     */
-    private void selectTargetTabForEditingMode() {
-        if (mTargetTabForEditingMode != null) {
-            Tabs.getInstance().selectTab(mTargetTabForEditingMode);
-        }
-
-        mTargetTabForEditingMode = null;
     }
 
     /**
