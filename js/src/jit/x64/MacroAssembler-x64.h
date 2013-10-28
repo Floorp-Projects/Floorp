@@ -81,7 +81,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     enum Result {
         GENERAL,
-        DOUBLE
+        DOUBLE,
+        FLOAT
     };
 
     typedef MoveResolver::MoveOperand MoveOperand;
@@ -466,6 +467,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     Condition testNegativeZero(const FloatRegister &reg, const Register &scratch);
+    Condition testNegativeZeroFloat32(const FloatRegister &reg, const Register &scratch);
 
     /////////////////////////////////////////////////////////////////
     // Common interface.
