@@ -2,5 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES += \
+    -I$(topsrcdir)/security/sandbox/base/shim \
+    -I$(topsrcdir)/security \
+    -I$(topsrcdir)/nsprpub \
+    $(NULL)
+
+DEFINES += -DUNICODE -D_UNICODE -DNS_NO_XPCOM -DSANDBOX_EXPORTS -DNOMINMAX -D_CRT_RAND_S
+
+STL_FLAGS =
+MOZ_GLUE_LDFLAGS =
+endif
 
 include $(topsrcdir)/config/rules.mk
