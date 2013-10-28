@@ -378,7 +378,7 @@ AutoMounter::UpdateState()
     if (umsAvail) {
       char functionsStr[60];
       if (ReadSysFile(ICS_SYS_USB_FUNCTIONS, functionsStr, sizeof(functionsStr))) {
-        umsEnabled = strstr(functionsStr, "mass_storage") != NULL;
+        umsEnabled = strstr(functionsStr, "mass_storage") != nullptr;
       } else {
         ERR("Error reading file '%s': %s", ICS_SYS_USB_FUNCTIONS, strerror(errno));
         umsEnabled = false;
@@ -556,7 +556,7 @@ ShutdownAutoMounterIOThread()
 {
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
-  sAutoMounter = NULL;
+  sAutoMounter = nullptr;
   ShutdownVolumeManager();
 }
 
@@ -662,11 +662,11 @@ InitVolumeConfig()
       continue;
     }
     if (!strcmp(command, "create")) {
-      if (!(vol_name_cstr = strtok_r(NULL, delim, &save_ptr))) {
+      if (!(vol_name_cstr = strtok_r(nullptr, delim, &save_ptr))) {
         ERR("No vol_name in %s line %d",  filename, n);
         continue;
       }
-      if (!(mount_point_cstr = strtok_r(NULL, delim, &save_ptr))) {
+      if (!(mount_point_cstr = strtok_r(nullptr, delim, &save_ptr))) {
         ERR("No mount point for volume '%s'. %s line %d", vol_name_cstr, filename, n);
         continue;
       }
@@ -739,8 +739,8 @@ SetAutoMounterSharingMode(const nsCString& aVolumeName, bool aAllowSharing)
 void
 ShutdownAutoMounter()
 {
-  sAutoMounterSetting = NULL;
-  sUsbCableObserver = NULL;
+  sAutoMounterSetting = nullptr;
+  sUsbCableObserver = nullptr;
 
   XRE_GetIOMessageLoop()->PostTask(
       FROM_HERE,

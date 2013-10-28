@@ -107,7 +107,7 @@ public:
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto)
   {
     return JS_InitClass(aCx, aObj, aParentProto, Class(), Construct, 0,
-                        sProperties, sFunctions, NULL, NULL);
+                        sProperties, sFunctions, nullptr, nullptr);
   }
 
   using EventTarget::GetEventListener;
@@ -233,8 +233,8 @@ private:
   static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
-                         sClass.name);
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
+                         JSMSG_WRONG_CONSTRUCTOR, sClass.name);
     return false;
   }
 
@@ -322,7 +322,7 @@ private:
     }
 
     if (JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval) &&
-        !JS_CallFunctionName(aCx, event, "preventDefault", 0, NULL,
+        !JS_CallFunctionName(aCx, event, "preventDefault", 0, nullptr,
                              rval.address())) {
       return false;
     }
@@ -757,7 +757,7 @@ public:
   {
     JS::Rooted<JSObject*> proto(aCx,
       JS_InitClass(aCx, aObj, aParentProto, ProtoClass(), Construct, 0,
-                   sProperties, sFunctions, NULL, NULL));
+                   sProperties, sFunctions, nullptr, nullptr));
     if (proto) {
       void* domClass = const_cast<DOMClass *>(DOMClassStruct());
       js::SetReservedSlot(proto, DOM_PROTO_INSTANCE_CLASS_SLOT,
@@ -887,17 +887,17 @@ private:
       return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
     }
 
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
                          JSMSG_INCOMPATIBLE_PROTO, Class()->name, aFunctionName,
                          classPtr->name);
-    return NULL;
+    return nullptr;
   }
 
   static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
-                         Class()->name);
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
+                         JSMSG_WRONG_CONSTRUCTOR, Class()->name);
     return false;
   }
 
@@ -910,7 +910,7 @@ private:
       return false;
     }
 
-    aObjp.set(resolved ? aObj.get() : NULL);
+    aObjp.set(resolved ? aObj.get() : nullptr);
     return true;
   }
 
