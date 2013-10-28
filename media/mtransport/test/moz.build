@@ -10,7 +10,6 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     CPP_UNIT_TESTS += [
         'ice_unittest.cpp',
         'nrappkit_unittest.cpp',
-        'rlogringbuffer_unittest.cpp',
         'runnable_utils_unittest.cpp',
         'sockettransportservice_unittest.cpp',
         'TestSyncRunnable.cpp',
