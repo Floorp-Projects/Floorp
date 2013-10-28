@@ -1217,7 +1217,7 @@ Interpret(JSContext *cx, RunState &state)
     JS_ASSERT(!cx->compartment()->activeAnalysis);
 
 #define CHECK_PCCOUNT_INTERRUPTS() \
-    JS_ASSERT_IF(script->hasScriptCounts, switchMask == EnableInterruptsPseudoOpcode)
+    JS_ASSERT_IF(script->hasScriptCounts, opMask == EnableInterruptsPseudoOpcode)
 
     /*
      * When Debugger puts a script in single-step mode, all js::Interpret
@@ -1228,33 +1228,76 @@ Interpret(JSContext *cx, RunState &state)
      * JavaScript to run: each place an object might be coerced to a primitive
      * or a number, for example. So instead, we expose a simple mechanism to
      * let Debugger tweak the affected js::Interpret frames when an onStep
-     * handler is added: setting switchMask to EnableInterruptsPseudoOpcode
-     * will enable interrupts.
+     * handler is added: setting opMask to EnableInterruptsPseudoOpcode will
+     * enable interrupts.
      */
     static_assert(EnableInterruptsPseudoOpcode >= JSOP_LIMIT,
                   "EnableInterruptsPseudoOpcode must be greater than any opcode");
     static_assert(EnableInterruptsPseudoOpcode == jsbytecode(-1),
                   "EnableInterruptsPseudoOpcode must be the maximum jsbytecode value");
-    jsbytecode switchMask = 0;
+    jsbytecode opMask = 0;
+
+/*
+ * Define macros for an interpreter loop. Opcode dispatch may be either by a
+ * switch statement or by indirect goto (aka a threaded interpreter), depending
+ * on compiler support.
+ *
+ * Threaded interpretation appears to be well-supported by GCC 3 and higher.
+ * IBM's C compiler when run with the right options (e.g., -qlanglvl=extended)
+ * also supports threading. Ditto the SunPro C compiler.
+ */
+#if (__GNUC__ >= 3 ||                                                         \
+     (__IBMC__ >= 700 && defined __IBM_COMPUTED_GOTO) ||                      \
+     __SUNPRO_C >= 0x570)
+// Non-standard but faster indirect-goto-based dispatch.
+# define INTERPRETER_LOOP()
+# define CASE(OP)                 label_##OP:
+# define DEFAULT()                label_default:
+# define DISPATCH_TO(OP)          goto *(LABEL(JSOP_NOP) + offsets[(OP)])
+
+# define LABEL(X)                 ((const char *)&&label_##X)
+# define LABEL_OFFSET(X)          (int32_t((X) - LABEL(JSOP_NOP)))
+
+    // We use offsets instead of absolute addresses to avoid PIC load-time
+    // relocations. See the remark about shared libraries here for more info:
+    // http://gcc.gnu.org/onlinedocs/gcc/Labels-as-Values.html
+    static const int32_t offsets[EnableInterruptsPseudoOpcode + 1] = {
+# define OPDEF(op,v,n,t,l,u,d,f)  LABEL_OFFSET(LABEL(op)),
+# define OPPAD(v)                                                             \
+    LABEL_OFFSET((v) == EnableInterruptsPseudoOpcode ?                        \
+                 LABEL(EnableInterruptsPseudoOpcode) :                        \
+                 LABEL(default)),
+# include "jsopcode.tbl"
+# undef OPDEF
+# undef OPPAD
+    };
+#else
+// Portable switch-based dispatch.
+# define INTERPRETER_LOOP()       the_switch: switch (switchOp)
+# define CASE(OP)                 case OP:
+# define DEFAULT()                default:
+# define DISPATCH_TO(OP)                                                      \
+    JS_BEGIN_MACRO                                                            \
+        switchOp = (OP);                                                      \
+        goto the_switch;                                                      \
+    JS_END_MACRO
+
+    // This variable is effectively a parameter to the_switch.
     jsbytecode switchOp;
+#endif
 
-#define ADVANCE_AND_DO_OP() goto advanceAndDoOp
-#define DO_OP()            goto do_op
-#define DO_SWITCH()        goto do_switch
+#define END_CASE(OP)              ADVANCE_AND_DISPATCH(OP##_LENGTH);
 
-#define CASE(OP)           case OP:
-#define END_CASE(OP)       ADVANCE_AND_DISPATCH(OP##_LENGTH);
-
-#define END_VARLEN_CASE    ADVANCE_AND_DO_OP();
-
+    /*
+     * Increment regs.pc by N, load the opcode at that position, and jump to the
+     * code to execute it.
+     */
 #define ADVANCE_AND_DISPATCH(N)                                               \
     JS_BEGIN_MACRO                                                            \
-        len = (N);                                                            \
-        ADVANCE_AND_DO_OP();                                                  \
-     JS_END_MACRO
-
-#define LOAD_DOUBLE(PCOFF, dbl)                                               \
-    ((dbl) = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
+        regs.pc += (N);                                                       \
+        SANITY_CHECKS();                                                      \
+        DISPATCH_TO(*regs.pc | opMask);                                       \
+    JS_END_MACRO
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -1266,21 +1309,33 @@ Interpret(JSContext *cx, RunState &state)
             goto error;                                                       \
     JS_END_MACRO
 
+    /*
+     * This is a simple wrapper around ADVANCE_AND_DISPATCH which also does
+     * a CHECK_BRANCH() if n is not positive, which possibly indicates that it
+     * is the backedge of a loop.
+     */
 #define BRANCH(n)                                                             \
     JS_BEGIN_MACRO                                                            \
         int32_t nlen = (n);                                                   \
-        regs.pc += nlen;                                                      \
-        op = (JSOp) *regs.pc;                                                 \
         if (nlen <= 0)                                                        \
             CHECK_BRANCH();                                                   \
-        DO_OP();                                                              \
+        ADVANCE_AND_DISPATCH(nlen);                                           \
     JS_END_MACRO
+
+#define LOAD_DOUBLE(PCOFF, dbl)                                               \
+    ((dbl) = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
 
 #define SET_SCRIPT(s)                                                         \
     JS_BEGIN_MACRO                                                            \
         script = (s);                                                         \
         if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts) \
-            switchMask = EnableInterruptsPseudoOpcode; /* Enable interrupts. */ \
+            opMask = EnableInterruptsPseudoOpcode; /* Enable interrupts. */   \
+    JS_END_MACRO
+
+#define SANITY_CHECKS()                                                       \
+    JS_BEGIN_MACRO                                                            \
+        js::gc::MaybeVerifyBarriers(cx);                                      \
+        CHECK_PCCOUNT_INTERRUPTS();                                           \
     JS_END_MACRO
 
     FrameRegs regs;
@@ -1299,7 +1354,7 @@ Interpret(JSContext *cx, RunState &state)
 
     JS_ASSERT_IF(entryFrame->isEvalFrame(), state.script()->isActiveEval);
 
-    InterpreterActivation activation(cx, entryFrame, regs, &switchMask);
+    InterpreterActivation activation(cx, entryFrame, regs, &opMask);
 
     /* The script is used frequently, so keep a local copy. */
     RootedScript script(cx);
@@ -1367,33 +1422,19 @@ Interpret(JSContext *cx, RunState &state)
         }
     }
 
-    /*
-     * It is important that "op" be initialized before calling DO_OP because
-     * it is possible for "op" to be specially assigned during the normal
-     * processing of an opcode while looping. We rely on |ADVANCE_AND_DO_OP()|
-     * to manage "op" correctly in all other cases.
-     */
-    JSOp op;
-    int32_t len;
-    len = 0;
-
     if (cx->runtime()->profilingScripts || cx->runtime()->debugHooks.interruptHook)
-        switchMask = EnableInterruptsPseudoOpcode; /* Enable interrupts. */
+        opMask = EnableInterruptsPseudoOpcode; /* Enable interrupts. */
 
-  advanceAndDoOp:
-    js::gc::MaybeVerifyBarriers(cx);
-    regs.pc += len;
-    op = (JSOp) *regs.pc;
+  enterInterpreterLoop:
+    // Enter the interpreter loop starting at the current pc.
+    ADVANCE_AND_DISPATCH(0);
 
-  do_op:
-    CHECK_PCCOUNT_INTERRUPTS();
-    switchOp = jsbytecode(op) | switchMask;
-  do_switch:
-    switch (switchOp) {
+INTERPRETER_LOOP() {
 
 CASE(EnableInterruptsPseudoOpcode)
 {
     bool moreInterrupts = false;
+    jsbytecode op = *regs.pc;
 
     if (cx->runtime()->profilingScripts) {
         if (!script->hasScriptCounts)
@@ -1455,11 +1496,12 @@ CASE(EnableInterruptsPseudoOpcode)
         JS_ASSERT(rval.isInt32() && rval.toInt32() == op);
     }
 
-    JS_ASSERT(switchMask == EnableInterruptsPseudoOpcode);
-    switchMask = moreInterrupts ? EnableInterruptsPseudoOpcode : 0;
+    JS_ASSERT(opMask == EnableInterruptsPseudoOpcode);
+    opMask = moreInterrupts ? EnableInterruptsPseudoOpcode : 0;
 
-    switchOp = jsbytecode(op);
-    DO_SWITCH();
+    /* Commence executing the actual opcode. */
+    SANITY_CHECKS();
+    DISPATCH_TO(op);
 }
 
 /* Various 1-byte no-ops. */
@@ -1535,7 +1577,7 @@ CASE(JSOP_UNUSED223)
 CASE(JSOP_CONDSWITCH)
 CASE(JSOP_TRY)
 {
-    JS_ASSERT(js_CodeSpec[op].length == 1);
+    JS_ASSERT(js_CodeSpec[*regs.pc].length == 1);
     ADVANCE_AND_DISPATCH(1);
 }
 
@@ -1735,7 +1777,7 @@ END_CASE(JSOP_AND)
 
 #define TRY_BRANCH_AFTER_COND(cond,spdec)                                     \
     JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(js_CodeSpec[op].length == 1);                               \
+        JS_ASSERT(js_CodeSpec[*regs.pc].length == 1);                         \
         unsigned diff_ = (unsigned) GET_UINT8(regs.pc) - (unsigned) JSOP_IFEQ;\
         if (diff_ <= 1) {                                                     \
             regs.sp -= (spdec);                                               \
@@ -2332,7 +2374,7 @@ CASE(JSOP_CALLELEM)
         goto error;
 
     if (!done) {
-        if (!GetElementOperation(cx, op, lval, rval, res))
+        if (!GetElementOperation(cx, JSOp(*regs.pc), lval, rval, res))
             goto error;
     }
 
@@ -2402,8 +2444,8 @@ CASE(JSOP_SPREADEVAL)
 
     if (length > ARGS_LENGTH_MAX) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                             op == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
-                                                  : JSMSG_TOO_MANY_FUN_SPREADARGS);
+                             *regs.pc == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
+                                                        : JSMSG_TOO_MANY_FUN_SPREADARGS);
         goto error;
     }
 
@@ -2418,14 +2460,16 @@ CASE(JSOP_SPREADEVAL)
     if (!GetElements(cx, aobj, length, args.array()))
         goto error;
 
-    if (op == JSOP_SPREADNEW) {
+    switch (*regs.pc) {
+      case JSOP_SPREADNEW:
         if (!InvokeConstructor(cx, args))
             goto error;
-    } else if (op == JSOP_SPREADCALL) {
+        break;
+      case JSOP_SPREADCALL:
         if (!Invoke(cx, args))
             goto error;
-    } else {
-        JS_ASSERT(op == JSOP_SPREADEVAL);
+        break;
+      case JSOP_SPREADEVAL:
         if (IsBuiltinEvalForScope(regs.fp()->scopeChain(), args.calleev())) {
             if (!DirectEval(cx, args))
                 goto error;
@@ -2433,6 +2477,9 @@ CASE(JSOP_SPREADEVAL)
             if (!Invoke(cx, args))
                 goto error;
         }
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("bad spread opcode");
     }
 
     regs.sp -= 2;
@@ -2567,8 +2614,7 @@ CASE(JSOP_FUNCALL)
     }
 
     /* Load first op and dispatch it (safe since JSOP_STOP). */
-    op = (JSOp) *regs.pc;
-    DO_OP();
+    ADVANCE_AND_DISPATCH(0);
 }
 
 CASE(JSOP_SETCALL)
@@ -2697,7 +2743,7 @@ END_CASE(JSOP_TRUE)
 CASE(JSOP_TABLESWITCH)
 {
     jsbytecode *pc2 = regs.pc;
-    len = GET_JUMP_OFFSET(pc2);
+    int32_t len = GET_JUMP_OFFSET(pc2);
 
     /*
      * ECMAv2+ forbids conversion of discriminant, so we will skip to the
@@ -2712,7 +2758,7 @@ CASE(JSOP_TABLESWITCH)
         double d;
         /* Don't use mozilla::DoubleIsInt32; treat -0 (double) as 0. */
         if (!rref.isDouble() || (d = rref.toDouble()) != (i = int32_t(rref.toDouble())))
-            ADVANCE_AND_DO_OP();
+            ADVANCE_AND_DISPATCH(len);
     }
 
     pc2 += JUMP_OFFSET_LEN;
@@ -2727,8 +2773,8 @@ CASE(JSOP_TABLESWITCH)
         if (off)
             len = off;
     }
+    ADVANCE_AND_DISPATCH(len);
 }
-END_VARLEN_CASE
 
 CASE(JSOP_ARGUMENTS)
     JS_ASSERT(!regs.fp()->fun()->hasRest());
@@ -2836,7 +2882,7 @@ CASE(JSOP_DEFVAR)
     unsigned attrs = JSPROP_ENUMERATE;
     if (!regs.fp()->isEvalFrame())
         attrs |= JSPROP_PERMANENT;
-    if (op == JSOP_DEFCONST)
+    if (*regs.pc == JSOP_DEFCONST)
         attrs |= JSPROP_READONLY;
 
     /* Step 8b. */
@@ -3104,10 +3150,10 @@ CASE(JSOP_GOSUB)
 {
     PUSH_BOOLEAN(false);
     int32_t i = (regs.pc - script->code) + JSOP_GOSUB_LENGTH;
-    len = GET_JUMP_OFFSET(regs.pc);
+    int32_t len = GET_JUMP_OFFSET(regs.pc);
     PUSH_INT32(i);
+    ADVANCE_AND_DISPATCH(len);
 }
-END_VARLEN_CASE
 
 CASE(JSOP_RETSUB)
 {
@@ -3129,9 +3175,9 @@ CASE(JSOP_RETSUB)
     JS_ASSERT(rval.isInt32());
 
     /* Increment the PC by this much. */
-    len = rval.toInt32() - int32_t(regs.pc - script->code);
+    int32_t len = rval.toInt32() - int32_t(regs.pc - script->code);
+    ADVANCE_AND_DISPATCH(len);
 }
-END_VARLEN_CASE
 
 CASE(JSOP_EXCEPTION)
 {
@@ -3215,7 +3261,7 @@ CASE(JSOP_ENTERLET2)
 {
     StaticBlockObject &blockObj = script->getObject(regs.pc)->as<StaticBlockObject>();
 
-    if (op == JSOP_ENTERBLOCK) {
+    if (*regs.pc == JSOP_ENTERBLOCK) {
         JS_ASSERT(regs.stackDepth() == blockObj.stackDepth());
         JS_ASSERT(regs.stackDepth() + blockObj.slotCount() <= script->nslots);
         Value *vp = regs.sp + blockObj.slotCount();
@@ -3237,11 +3283,11 @@ CASE(JSOP_LEAVEBLOCKEXPR)
 
     regs.fp()->popBlock(cx);
 
-    if (op == JSOP_LEAVEBLOCK) {
+    if (*regs.pc == JSOP_LEAVEBLOCK) {
         /* Pop the block's slots. */
         regs.sp -= GET_UINT16(regs.pc);
         JS_ASSERT(regs.stackDepth() == blockDepth);
-    } else if (op == JSOP_LEAVEBLOCKEXPR) {
+    } else if (*regs.pc == JSOP_LEAVEBLOCKEXPR) {
         /* Pop the block's slots maintaining the topmost expr. */
         Value *vp = &regs.sp[-1];
         regs.sp -= GET_UINT16(regs.pc);
@@ -3298,16 +3344,16 @@ CASE(JSOP_ARRAYPUSH)
 }
 END_CASE(JSOP_ARRAYPUSH)
 
-default:
+DEFAULT()
 {
     char numBuf[12];
-    JS_snprintf(numBuf, sizeof numBuf, "%d", op);
+    JS_snprintf(numBuf, sizeof numBuf, "%d", *regs.pc);
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                          JSMSG_BAD_BYTECODE, numBuf);
     goto error;
 }
 
-    } /* switch (op) */
+} /* interpreter loop */
 
     MOZ_ASSUME_UNREACHABLE("Interpreter loop exited via fallthrough");
 
@@ -3360,8 +3406,10 @@ default:
                  * Don't clear exceptions to save cx->exception from GC
                  * until it is pushed to the stack via [exception] in the
                  * catch block.
+                 *
+                 * Also, see the comment below about the use of goto here.
                  */
-                ADVANCE_AND_DISPATCH(0);
+                goto enterInterpreterLoop;
 
               case JSTRY_FINALLY:
                 /*
@@ -3371,7 +3419,13 @@ default:
                 PUSH_BOOLEAN(true);
                 PUSH_COPY(cx->getPendingException());
                 cx->clearPendingException();
-                ADVANCE_AND_DISPATCH(0);
+
+                /*
+                 * Leave the scope via a plain goto (and not via
+                 * ADVANCE_AND_DISPATCH, which may be implemented with indirect
+                 * goto) so that the TryNoteIter goes out of scope properly.
+                 */
+                goto enterInterpreterLoop;
 
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
