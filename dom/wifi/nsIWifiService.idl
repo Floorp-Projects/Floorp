@@ -4,17 +4,19 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(e3d54c8d-b1c7-4ed5-b760-e26d3075e3e5)]
+[scriptable, uuid(4d4389e0-1547-11e3-8ffd-0800200c9a66)]
 interface nsIWifiEventListener : nsISupports {
-  void onWaitEvent(in AString event);
-  void onCommand(in jsval result);
+  void onWaitEvent(in AString event, in ACString aInterface);
+  void onCommand(in jsval result, in ACString aInterface);
 };
 
-[scriptable, uuid(ac5ebae6-ec72-4212-89cb-cd25ed5a1b46)]
+[scriptable, uuid(5e2bd8c0-1547-11e3-8ffd-0800200c9a66)]
 interface nsIWifiProxyService : nsISupports {
-  void start(in nsIWifiEventListener listener);
+  void start(in nsIWifiEventListener listener,
+             [array, size_is(aNumOfInterface)] in string aInterfaces,
+             in unsigned long aNumOfInterface);
   void shutdown();
   [implicit_jscontext]
-  void sendCommand(in jsval parameters);
-  void waitForEvent();
+  void sendCommand(in jsval parameters, in ACString aInterface);
+  void waitForEvent(in ACString aInterface);
 };

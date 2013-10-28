@@ -27,7 +27,6 @@
 #include <string.h>
 
 #include "double-conversion.h"
-#include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsdtoa.h"
