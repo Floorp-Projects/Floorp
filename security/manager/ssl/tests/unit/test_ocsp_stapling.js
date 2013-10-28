@@ -76,8 +76,10 @@ function run_test() {
   // SEC_ERROR_OCSP_UNKNOWN_CERT = (SEC_ERROR_BASE + 126)
   add_ocsp_test("ocsp-stapling-unknown.example.com", getXPCOMStatusFromNSS(126), true);
   add_ocsp_test("ocsp-stapling-good-other.example.com", getXPCOMStatusFromNSS(126), true);
+  // If the server doesn't send an OCSP response, we continue as normal.
+  add_ocsp_test("ocsp-stapling-none.example.com", Cr.NS_OK, true);
   // SEC_ERROR_OCSP_MALFORMED_RESPONSE = (SEC_ERROR_BASE + 129)
-  add_ocsp_test("ocsp-stapling-none.example.com", getXPCOMStatusFromNSS(129), true);
+  add_ocsp_test("ocsp-stapling-empty.example.com", getXPCOMStatusFromNSS(129), true);
   // SEC_ERROR_OCSP_OLD_RESPONSE = (SEC_ERROR_BASE + 132)
   add_ocsp_test("ocsp-stapling-expired.example.com", getXPCOMStatusFromNSS(132), true);
   add_ocsp_test("ocsp-stapling-expired-fresh-ca.example.com", getXPCOMStatusFromNSS(132), true);

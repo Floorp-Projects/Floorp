@@ -31,6 +31,7 @@ enum OCSPStapleResponseType
   OSRTExpired,          // the signature on the response has expired
   OSRTExpiredFreshCA,   // fresh signature, but old validity period
   OSRTNone,             // no stapled response
+  OSRTEmpty,            // an empty stapled response
   OSRTMalformed,        // the response from the responder was malformed
   OSRTSrverr,           // the response indicates there was a server error
   OSRTTryLater,         // the responder replied with "try again later"
@@ -54,6 +55,7 @@ const OCSPHost sOCSPHosts[] =
   { "ocsp-stapling-expired.example.com", OSRTExpired },
   { "ocsp-stapling-expired-fresh-ca.example.com", OSRTExpiredFreshCA },
   { "ocsp-stapling-none.example.com", OSRTNone },
+  { "ocsp-stapling-empty.example.com", OSRTEmpty },
   { "ocsp-stapling-malformed.example.com", OSRTMalformed },
   { "ocsp-stapling-srverr.example.com", OSRTSrverr },
   { "ocsp-stapling-trylater.example.com", OSRTTryLater },
@@ -66,6 +68,14 @@ SECItemArray *
 GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
                        PLArenaPool *aArena)
 {
+  if (aOSRT == OSRTNone) {
+    if (gDebugLevel >= DEBUG_WARNINGS) {
+      fprintf(stderr, "GetOCSPResponseForType called with type OSRTNone, "
+                      "which makes no sense.\n");
+    }
+    return nullptr;
+  }
+
   PRTime now = PR_Now();
   ScopedCERTOCSPCertID id(CERT_CreateOCSPCertID(aCert, now));
   if (!id) {
@@ -137,7 +147,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
       otherID.forget(); // owned by sr now
       break;
     }
-    case OSRTNone:
+    case OSRTEmpty:
     case OSRTMalformed:
     case OSRTSrverr:
     case OSRTTryLater:
@@ -148,7 +158,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
       if (gDebugLevel >= DEBUG_ERRORS) {
         fprintf(stderr, "bad ocsp response type: %d\n", aOSRT);
       }
-      break;
+      return nullptr;
   }
 
   ScopedCERTCertificate ca;
@@ -215,7 +225,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
         return nullptr;
       }
       break;
-    case OSRTNone:
+    case OSRTEmpty:
       break;
     default:
       // responses is contained in aArena and will be freed when aArena is
@@ -261,6 +271,11 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
   if (SECSuccess != ConfigSecureServerWithNamedCert(aFd, DEFAULT_CERT_NICKNAME,
                                                     &cert, &certKEA)) {
     return SSL_SNI_SEND_ALERT;
+  }
+
+  // If the OCSP response type is "none", don't staple a response.
+  if (host->mOSRT == OSRTNone) {
+    return 0;
   }
 
   PLArenaPool *arena = PORT_NewArena(1024);
