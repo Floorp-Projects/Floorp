@@ -226,7 +226,7 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
                                           const nsACString& aFeatures,
                                           nsIDOMWindow** aReturnWindow)
 {
-  *aReturnWindow = NULL;
+  *aReturnWindow = nullptr;
 
   // If we call window.open from an <iframe> inside an <iframe mozbrowser>,
   // it's as though the top-level document inside the <iframe mozbrowser>

@@ -518,7 +518,7 @@ private:
   // When a mouse down event process is finished, ESM sets focus to the target
   // content.  Therefore, while DOM event handlers are handling mouse down
   // events, the handlers should be able to steal focus from any elements even
-  // if focus is in chrome content.  So, if this isn't NULL and the caller
+  // if focus is in chrome content.  So, if this isn't nullptr and the caller
   // can access the document node, the caller should succeed in moving focus.
   nsCOMPtr<nsIDocument> mMouseDownEventHandlingDocument;
 
