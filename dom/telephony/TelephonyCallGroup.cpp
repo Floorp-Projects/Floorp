@@ -9,6 +9,7 @@
 
 #include "CallEvent.h"
 #include "CallsList.h"
+#include "mozilla/dom/CallGroupErrorEvent.h"
 #include "Telephony.h"
 
 using namespace mozilla::dom;
@@ -62,6 +63,21 @@ TelephonyCallGroup::RemoveCall(TelephonyCall* aCall)
   mCalls.RemoveElement(aCall);
   aCall->ChangeGroup(nullptr);
   NotifyCallsChanged(aCall);
+}
+
+nsresult
+TelephonyCallGroup::NotifyError(const nsAString& aName, const nsAString& aMessage)
+{
+  CallGroupErrorEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mName = aName;
+  init.mMessage = aMessage;
+
+  nsRefPtr<CallGroupErrorEvent> event =
+    CallGroupErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
+
+  return DispatchTrustedEvent(event);
 }
 
 void
