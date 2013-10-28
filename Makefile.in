@@ -32,9 +32,9 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    .mozconfig.mk
 
 ifndef MOZ_PROFILE_USE
-# We need to explicitly put backend.RecursiveMakeBackend.built here
+# We need to explicitly put backend.RecursiveMakeBackend here
 # otherwise the rule in rules.mk doesn't run early enough.
-libs binaries export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
+libs binaries export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend
 ifndef LIBXUL_SDK
 libs binaries export tools:: js-config-status
 endif
@@ -63,7 +63,7 @@ config.status: $(topsrcdir)/configure
 ifndef LIBXUL_SDK
 .PHONY: js-config-status
 js-config-status:
-	$(call SUBMAKE,backend.RecursiveMakeBackend.built,js/src,1)
+	$(call SUBMAKE,backend.RecursiveMakeBackend,js/src,1)
 endif
 
 install_manifests := bin idl include public private sdk
@@ -71,7 +71,7 @@ install_manifest_depends = \
   CLOBBER \
   $(topsrcdir)/configure \
   config.status \
-  backend.RecursiveMakeBackend.built \
+  backend.RecursiveMakeBackend \
   $(NULL)
 
 ifndef LIBXUL_SDK
