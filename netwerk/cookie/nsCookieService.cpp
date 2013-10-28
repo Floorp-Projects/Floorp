@@ -3973,12 +3973,9 @@ nsCookieService::RemoveCookiesForApp(uint32_t aAppId, bool aOnlyBrowserElement)
 
   bool hasMore;
   while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsICookie> cookie;
-    rv = enumerator->GetNext(getter_AddRefs(supports));
+    rv = enumerator->GetNext(getter_AddRefs(cookie));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    cookie = do_QueryInterface(supports);
 
     nsAutoCString host;
     cookie->GetHost(host);

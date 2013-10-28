@@ -2506,9 +2506,7 @@ ContentParent::RecvShowFilePicker(const int16_t& mode,
         nsCOMPtr<nsIFile> singleFile;
         bool loop = true;
         while (NS_SUCCEEDED(fileIter->HasMoreElements(&loop)) && loop) {
-            nsCOMPtr<nsISupports> supports;
-            fileIter->GetNext(getter_AddRefs(supports));
-            singleFile = do_QueryInterface(supports);
+            fileIter->GetNext(getter_AddRefs(singleFile));
             if (singleFile) {
                 nsAutoString filePath;
                 singleFile->GetPath(filePath);

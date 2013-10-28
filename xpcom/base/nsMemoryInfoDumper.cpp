@@ -822,10 +822,8 @@ DumpProcessMemoryReportsToGZFileWriter(nsIGZFileWriter *aWriter)
   mgr->EnumerateReporters(getter_AddRefs(e));
   nsRefPtr<DumpReporterCallback> cb = new DumpReporterCallback(&isFirst);
   while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
-    nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsIMemoryReporter> r;
-    e->GetNext(getter_AddRefs(supports));
-    r = do_QueryInterface(supports);
+    e->GetNext(getter_AddRefs(r));
     r->CollectReports(cb, aWriter);
   }
 

@@ -1299,10 +1299,8 @@ nsJSURI::Read(nsIObjectInputStream* aStream)
     if (NS_FAILED(rv)) return rv;
 
     if (haveBase) {
-        nsCOMPtr<nsISupports> supports;
-        rv = aStream->ReadObject(true, getter_AddRefs(supports));
+        rv = aStream->ReadObject(true, getter_AddRefs(mBaseURI));
         if (NS_FAILED(rv)) return rv;
-        mBaseURI = do_QueryInterface(supports);
     }
 
     return NS_OK;
