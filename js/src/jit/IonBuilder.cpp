@@ -285,7 +285,7 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
             return false;
 
         RootedScript script(context(), target->nonLazyScript());
-        if (!script->hasBaselineScript()) {
+        if (!script->hasBaselineScript() && script->canBaselineCompile()) {
             MethodStatus status = BaselineCompile(context(), script);
             if (status != Method_Compiled)
                 return false;
