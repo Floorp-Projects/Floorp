@@ -17,7 +17,7 @@
 
 #include "jit/CompileInfo.h"
 #include "jit/IonAllocPolicy.h"
-#include "jit/IonCompartment.h"
+#include "jit/JitCompartment.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
@@ -44,11 +44,11 @@ class MIRGenerator
     bool ensureBallast() {
         return temp().ensureBallast();
     }
-    IonCompartment *ionCompartment() const {
-        return compartment->ionCompartment();
+    JitCompartment *jitCompartment() const {
+        return compartment->jitCompartment();
     }
-    IonRuntime *ionRuntime() const {
-        return GetIonContext()->runtime->ionRuntime();
+    JitRuntime *jitRuntime() const {
+        return GetIonContext()->runtime->jitRuntime();
     }
     CompileInfo &info() {
         return *info_;

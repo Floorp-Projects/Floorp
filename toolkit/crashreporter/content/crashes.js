@@ -5,9 +5,9 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-var reportsDir, submittedDir, pendingDir;
 var reportURL;
 
+Components.utils.import("resource://gre/modules/CrashReports.jsm");
 Components.utils.import("resource://gre/modules/CrashSubmit.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -55,26 +55,6 @@ function submitPendingReport(event) {
   return false;
 }
 
-function findInsertionPoint(reports, date) {
-  if (reports.length == 0)
-    return 0;
-
-  var min = 0;
-  var max = reports.length - 1;
-  while (min < max) {
-    var mid = parseInt((min + max) / 2);
-    if (reports[mid].date < date)
-      max = mid - 1;
-    else if (reports[mid].date > date)
-      min = mid + 1;
-    else
-      return mid;
-  }
-  if (reports[min].date <= date)
-    return min;
-  return min+1;
-}
-
 function populateReportList() {
   var prefService = Cc["@mozilla.org/preferences-service;1"].
                     getService(Ci.nsIPrefBranch);
@@ -92,57 +72,7 @@ function populateReportList() {
     document.getElementById("noConfig").style.display = "block";
     return;
   }
-  var directoryService = Cc["@mozilla.org/file/directory_service;1"].
-                         getService(Ci.nsIProperties);
-
-  reportsDir = directoryService.get("UAppData", Ci.nsIFile);
-  reportsDir.append("Crash Reports");
-
-  submittedDir = directoryService.get("UAppData", Ci.nsIFile);
-  submittedDir.append("Crash Reports");
-  submittedDir.append("submitted");
-
-  var reports = [];
-  if (submittedDir.exists() && submittedDir.isDirectory()) {
-    var entries = submittedDir.directoryEntries;
-    while (entries.hasMoreElements()) {
-      var file = entries.getNext().QueryInterface(Ci.nsIFile);
-      var leaf = file.leafName;
-      if (leaf.substr(0, 3) == "bp-" &&
-          leaf.substr(-4) == ".txt") {
-        var entry = {
-          id: leaf.slice(0, -4),
-          date: file.lastModifiedTime,
-          pending: false
-        };
-        var pos = findInsertionPoint(reports, entry.date);
-        reports.splice(pos, 0, entry);
-      }
-    }
-  }
-
-  pendingDir = directoryService.get("UAppData", Ci.nsIFile);
-  pendingDir.append("Crash Reports");
-  pendingDir.append("pending");
-
-  if (pendingDir.exists() && pendingDir.isDirectory()) {
-    var uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    var entries = pendingDir.directoryEntries;
-    while (entries.hasMoreElements()) {
-      var file = entries.getNext().QueryInterface(Ci.nsIFile);
-      var leaf = file.leafName;
-      var id = leaf.slice(0, -4);
-      if (leaf.substr(-4) == ".dmp" && uuidRegex.test(id)) {
-        var entry = {
-          id: id,
-          date: file.lastModifiedTime,
-          pending: true
-        };
-        var pos = findInsertionPoint(reports, entry.date);
-        reports.splice(pos, 0, entry);
-      }
-    }
-  }
+  let reports = CrashReports.getReports();
 
   if (reports.length == 0) {
     document.getElementById("clear-reports").style.display = "none";
@@ -208,7 +138,7 @@ function clearReports() {
                        bundle.GetStringFromName("deleteconfirm.description")))
     return;
 
-  var entries = submittedDir.directoryEntries;
+  var entries = CrashReports.submittedDir.directoryEntries;
   while (entries.hasMoreElements()) {
     var file = entries.getNext().QueryInterface(Ci.nsIFile);
     var leaf = file.leafName;
@@ -217,7 +147,7 @@ function clearReports() {
       file.remove(false);
     }
   }
-  entries = reportsDir.directoryEntries;
+  entries = CrashReports.reportsDir.directoryEntries;
   var oneYearAgo = Date.now() - 31586000000;
   while (entries.hasMoreElements()) {
     var file = entries.getNext().QueryInterface(Ci.nsIFile);
@@ -228,7 +158,7 @@ function clearReports() {
       file.remove(false);
     }
   }
-  entries = pendingDir.directoryEntries;
+  entries = CrashReports.pendingDir.directoryEntries;
   while (entries.hasMoreElements()) {
     entries.getNext().QueryInterface(Ci.nsIFile).remove(false);
   }

@@ -481,7 +481,7 @@ HandleException(PEXCEPTION_POINTERS exception)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    if (rt->ionRuntime() && rt->ionRuntime()->handleAccessViolation(rt, faultingAddress))
+    if (rt->jitRuntime() && rt->jitRuntime()->handleAccessViolation(rt, faultingAddress))
         return true;
 
     AsmJSActivation *activation = InnermostAsmJSActivation();
@@ -678,7 +678,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
 
     void *faultingAddress = (void*)request.body.code[1];
 
-    if (rt->ionRuntime() && rt->ionRuntime()->handleAccessViolation(rt, faultingAddress))
+    if (rt->jitRuntime() && rt->jitRuntime()->handleAccessViolation(rt, faultingAddress))
         return true;
 
     AsmJSActivation *activation = rt->mainThread.asmJSActivationStackFromAnyThread();
@@ -912,7 +912,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    if (rt->ionRuntime() && rt->ionRuntime()->handleAccessViolation(rt, faultingAddress))
+    if (rt->jitRuntime() && rt->jitRuntime()->handleAccessViolation(rt, faultingAddress))
         return true;
 
     AsmJSActivation *activation = InnermostAsmJSActivation();

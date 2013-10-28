@@ -10,7 +10,6 @@
 # include <valgrind/memcheck.h>
 #endif
 
-#include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jsonparser.h"
@@ -675,7 +674,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
         MarkAtoms(trc);
         rt->staticStrings.trace(trc);
 #ifdef JS_ION
-        jit::IonRuntime::Mark(trc);
+        jit::JitRuntime::Mark(trc);
 #endif
     }
 

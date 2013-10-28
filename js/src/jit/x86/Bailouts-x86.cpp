@@ -8,7 +8,7 @@
 #include "jscompartment.h"
 
 #include "jit/Bailouts.h"
-#include "jit/IonCompartment.h"
+#include "jit/JitCompartment.h"
 
 using namespace js;
 using namespace js::jit;
@@ -86,7 +86,7 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
     // Compute the snapshot offset from the bailout ID.
     JitActivation *activation = activations.activation()->asJit();
     JSRuntime *rt = activation->compartment()->runtimeFromMainThread();
-    IonCode *code = rt->ionRuntime()->getBailoutTable(bailout->frameClass());
+    IonCode *code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
     uintptr_t tableOffset = bailout->tableOffset();
     uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());
 

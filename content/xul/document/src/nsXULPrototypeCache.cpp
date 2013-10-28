@@ -22,7 +22,6 @@
 #include "nsNetUtil.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-#include "jsapi.h"
 #include "js/Tracer.h"
 
 #include "mozilla/Preferences.h"

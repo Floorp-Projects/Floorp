@@ -43,7 +43,7 @@ ok(audio3.mozAudioChannelType == "content", "Default audio3 channel == 'content'
 try {
 audio3.mozAudioChannelType = "foo";
 } catch(e) {}
-ok(audio3.mozAudioChannelType == "normal", "audio3 channel == 'normal'");
+ok(audio3.mozAudioChannelType == "content", "audio3 channel == 'content'");
 audio3.mozAudioChannelType = "alarm";
 ok(audio3.mozAudioChannelType == "alarm", "audio3 channel == 'alarm'");
 

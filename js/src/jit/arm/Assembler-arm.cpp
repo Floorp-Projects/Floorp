@@ -15,7 +15,7 @@
 #include "assembler/jit/ExecutableAllocator.h"
 #include "gc/Marking.h"
 #include "jit/arm/MacroAssembler-arm.h"
-#include "jit/IonCompartment.h"
+#include "jit/JitCompartment.h"
 
 using namespace js;
 using namespace js::jit;

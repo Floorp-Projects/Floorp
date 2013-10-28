@@ -7,7 +7,6 @@
 #include "MobileMessageThread.h"
 #include "MobileMessageService.h"
 #include "SmsSegmentInfo.h"
-#include "jsapi.h"
 
 namespace mozilla {
 namespace dom {
