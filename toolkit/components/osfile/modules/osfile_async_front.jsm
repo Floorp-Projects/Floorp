@@ -485,6 +485,22 @@ File.prototype = {
   setPosition: function setPosition(pos, whence) {
     return Scheduler.post("File_prototype_setPosition",
       [this._fdmsg, pos, whence]);
+  },
+
+  /**
+   * Flushes the file's buffers and causes all buffered data
+   * to be written.
+   * Disk flushes are very expensive and therefore should be used carefully,
+   * sparingly and only in scenarios where it is vital that data survives
+   * system crashes. Even though the function will be executed off the
+   * main-thread, it might still affect the overall performance of any running
+   * application.
+   *
+   * @return {promise}
+   */
+  flush: function flush() {
+    return Scheduler.post("File_prototype_flush",
+      [this._fdmsg]);
   }
 };
 
