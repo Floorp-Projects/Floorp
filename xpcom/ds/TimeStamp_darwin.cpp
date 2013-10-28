@@ -112,18 +112,6 @@ TimeDuration::Resolution()
   return TimeDuration::FromTicks(int64_t(sResolution));
 }
 
-struct TimeStampInitialization
-{
-  TimeStampInitialization() {
-    TimeStamp::Startup();
-  }
-  ~TimeStampInitialization() {
-    TimeStamp::Shutdown();
-  }
-};
-
-static TimeStampInitialization initOnce;
-
 nsresult
 TimeStamp::Startup()
 {
@@ -150,8 +138,6 @@ TimeStamp::Startup()
        sResolutionSigDigs *= 10);
 
   gInitialized = true;
-  sFirstTimeStamp = TimeStamp::Now();
-  sProcessCreation = TimeStamp();
 
   return NS_OK;
 }
