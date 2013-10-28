@@ -1242,7 +1242,7 @@ Interpret(JSContext *cx, RunState &state)
 #define DO_OP()            goto do_op
 #define DO_SWITCH()        goto do_switch
 
-#define BEGIN_CASE(OP)     case OP:
+#define CASE(OP)           case OP:
 #define END_CASE(OP)       ADVANCE_AND_DISPATCH(OP##_LENGTH);
 
 #define END_VARLEN_CASE    ADVANCE_AND_DO_OP();
@@ -1392,7 +1392,7 @@ Interpret(JSContext *cx, RunState &state)
   do_switch:
     switch (switchOp) {
 
-BEGIN_CASE(EnableInterruptsPseudoOpcode)
+CASE(EnableInterruptsPseudoOpcode)
 {
     bool moreInterrupts = false;
 
@@ -1464,60 +1464,60 @@ BEGIN_CASE(EnableInterruptsPseudoOpcode)
 }
 
 /* Various 1-byte no-ops. */
-BEGIN_CASE(JSOP_NOP)
-BEGIN_CASE(JSOP_UNUSED125)
-BEGIN_CASE(JSOP_UNUSED126)
-BEGIN_CASE(JSOP_UNUSED132)
-BEGIN_CASE(JSOP_UNUSED148)
-BEGIN_CASE(JSOP_UNUSED161)
-BEGIN_CASE(JSOP_UNUSED162)
-BEGIN_CASE(JSOP_UNUSED163)
-BEGIN_CASE(JSOP_UNUSED164)
-BEGIN_CASE(JSOP_UNUSED165)
-BEGIN_CASE(JSOP_UNUSED166)
-BEGIN_CASE(JSOP_UNUSED167)
-BEGIN_CASE(JSOP_UNUSED168)
-BEGIN_CASE(JSOP_UNUSED169)
-BEGIN_CASE(JSOP_UNUSED170)
-BEGIN_CASE(JSOP_UNUSED171)
-BEGIN_CASE(JSOP_UNUSED172)
-BEGIN_CASE(JSOP_UNUSED173)
-BEGIN_CASE(JSOP_UNUSED174)
-BEGIN_CASE(JSOP_UNUSED175)
-BEGIN_CASE(JSOP_UNUSED176)
-BEGIN_CASE(JSOP_UNUSED177)
-BEGIN_CASE(JSOP_UNUSED178)
-BEGIN_CASE(JSOP_UNUSED179)
-BEGIN_CASE(JSOP_UNUSED180)
-BEGIN_CASE(JSOP_UNUSED181)
-BEGIN_CASE(JSOP_UNUSED182)
-BEGIN_CASE(JSOP_UNUSED183)
-BEGIN_CASE(JSOP_UNUSED189)
-BEGIN_CASE(JSOP_UNUSED190)
-BEGIN_CASE(JSOP_UNUSED200)
-BEGIN_CASE(JSOP_UNUSED201)
-BEGIN_CASE(JSOP_UNUSED208)
-BEGIN_CASE(JSOP_UNUSED209)
-BEGIN_CASE(JSOP_UNUSED210)
-BEGIN_CASE(JSOP_UNUSED219)
-BEGIN_CASE(JSOP_UNUSED220)
-BEGIN_CASE(JSOP_UNUSED221)
-BEGIN_CASE(JSOP_UNUSED222)
-BEGIN_CASE(JSOP_UNUSED223)
-BEGIN_CASE(JSOP_CONDSWITCH)
-BEGIN_CASE(JSOP_TRY)
+CASE(JSOP_NOP)
+CASE(JSOP_UNUSED125)
+CASE(JSOP_UNUSED126)
+CASE(JSOP_UNUSED132)
+CASE(JSOP_UNUSED148)
+CASE(JSOP_UNUSED161)
+CASE(JSOP_UNUSED162)
+CASE(JSOP_UNUSED163)
+CASE(JSOP_UNUSED164)
+CASE(JSOP_UNUSED165)
+CASE(JSOP_UNUSED166)
+CASE(JSOP_UNUSED167)
+CASE(JSOP_UNUSED168)
+CASE(JSOP_UNUSED169)
+CASE(JSOP_UNUSED170)
+CASE(JSOP_UNUSED171)
+CASE(JSOP_UNUSED172)
+CASE(JSOP_UNUSED173)
+CASE(JSOP_UNUSED174)
+CASE(JSOP_UNUSED175)
+CASE(JSOP_UNUSED176)
+CASE(JSOP_UNUSED177)
+CASE(JSOP_UNUSED178)
+CASE(JSOP_UNUSED179)
+CASE(JSOP_UNUSED180)
+CASE(JSOP_UNUSED181)
+CASE(JSOP_UNUSED182)
+CASE(JSOP_UNUSED183)
+CASE(JSOP_UNUSED189)
+CASE(JSOP_UNUSED190)
+CASE(JSOP_UNUSED200)
+CASE(JSOP_UNUSED201)
+CASE(JSOP_UNUSED208)
+CASE(JSOP_UNUSED209)
+CASE(JSOP_UNUSED210)
+CASE(JSOP_UNUSED219)
+CASE(JSOP_UNUSED220)
+CASE(JSOP_UNUSED221)
+CASE(JSOP_UNUSED222)
+CASE(JSOP_UNUSED223)
+CASE(JSOP_CONDSWITCH)
+CASE(JSOP_TRY)
 {
     JS_ASSERT(js_CodeSpec[op].length == 1);
     ADVANCE_AND_DISPATCH(1);
 }
 
-BEGIN_CASE(JSOP_LOOPHEAD)
+CASE(JSOP_LOOPHEAD)
 END_CASE(JSOP_LOOPHEAD)
 
-BEGIN_CASE(JSOP_LABEL)
+CASE(JSOP_LABEL)
 END_CASE(JSOP_LABEL)
 
-BEGIN_CASE(JSOP_LOOPENTRY)
+CASE(JSOP_LOOPENTRY)
 
 #ifdef JS_ION
     // Attempt on-stack replacement with Baseline code.
@@ -1543,21 +1543,21 @@ BEGIN_CASE(JSOP_LOOPENTRY)
 
 END_CASE(JSOP_LOOPENTRY)
 
-BEGIN_CASE(JSOP_NOTEARG)
+CASE(JSOP_NOTEARG)
 END_CASE(JSOP_NOTEARG)
 
-BEGIN_CASE(JSOP_LINENO)
+CASE(JSOP_LINENO)
 END_CASE(JSOP_LINENO)
 
-BEGIN_CASE(JSOP_UNDEFINED)
+CASE(JSOP_UNDEFINED)
     PUSH_UNDEFINED();
 END_CASE(JSOP_UNDEFINED)
 
-BEGIN_CASE(JSOP_POP)
+CASE(JSOP_POP)
     regs.sp--;
 END_CASE(JSOP_POP)
 
-BEGIN_CASE(JSOP_POPN)
+CASE(JSOP_POPN)
     JS_ASSERT(GET_UINT16(regs.pc) <= regs.stackDepth());
     regs.sp -= GET_UINT16(regs.pc);
 #ifdef DEBUG
@@ -1566,12 +1566,12 @@ BEGIN_CASE(JSOP_POPN)
 #endif
 END_CASE(JSOP_POPN)
 
-BEGIN_CASE(JSOP_SETRVAL)
-BEGIN_CASE(JSOP_POPV)
+CASE(JSOP_SETRVAL)
+CASE(JSOP_POPV)
     POP_RETURN_VALUE();
 END_CASE(JSOP_POPV)
 
-BEGIN_CASE(JSOP_ENTERWITH)
+CASE(JSOP_ENTERWITH)
 {
     RootedValue &val = rootValue0;
     val = regs.sp[-1];
@@ -1592,18 +1592,18 @@ BEGIN_CASE(JSOP_ENTERWITH)
 }
 END_CASE(JSOP_ENTERWITH)
 
-BEGIN_CASE(JSOP_LEAVEWITH)
+CASE(JSOP_LEAVEWITH)
     JS_ASSERT(regs.sp[-1].toObject() == *regs.fp()->scopeChain());
     regs.fp()->popWith(cx);
     regs.sp--;
 END_CASE(JSOP_LEAVEWITH)
 
-BEGIN_CASE(JSOP_RETURN)
+CASE(JSOP_RETURN)
     POP_RETURN_VALUE();
     /* FALL THROUGH */
 
-BEGIN_CASE(JSOP_RETRVAL)    /* fp return value already set */
-BEGIN_CASE(JSOP_STOP)
+CASE(JSOP_RETRVAL)    /* fp return value already set */
+CASE(JSOP_STOP)
 {
     /*
      * When the inlined frame exits with an exception or an error, ok will be
@@ -1657,15 +1657,15 @@ BEGIN_CASE(JSOP_STOP)
     goto exit;
 }
 
-BEGIN_CASE(JSOP_DEFAULT)
+CASE(JSOP_DEFAULT)
     regs.sp--;
     /* FALL THROUGH */
-BEGIN_CASE(JSOP_GOTO)
+CASE(JSOP_GOTO)
 {
     BRANCH(GET_JUMP_OFFSET(regs.pc));
 }
 
-BEGIN_CASE(JSOP_IFEQ)
+CASE(JSOP_IFEQ)
 {
     bool cond = ToBooleanOp(regs);
     regs.sp--;
@@ -1674,7 +1674,7 @@ BEGIN_CASE(JSOP_IFEQ)
 }
 END_CASE(JSOP_IFEQ)
 
-BEGIN_CASE(JSOP_IFNE)
+CASE(JSOP_IFNE)
 {
     bool cond = ToBooleanOp(regs);
     regs.sp--;
@@ -1683,7 +1683,7 @@ BEGIN_CASE(JSOP_IFNE)
 }
 END_CASE(JSOP_IFNE)
 
-BEGIN_CASE(JSOP_OR)
+CASE(JSOP_OR)
 {
     bool cond = ToBooleanOp(regs);
     if (cond)
@@ -1691,7 +1691,7 @@ BEGIN_CASE(JSOP_OR)
 }
 END_CASE(JSOP_OR)
 
-BEGIN_CASE(JSOP_AND)
+CASE(JSOP_AND)
 {
     bool cond = ToBooleanOp(regs);
     if (!cond)
@@ -1719,7 +1719,7 @@ END_CASE(JSOP_AND)
         }                                                                     \
     JS_END_MACRO
 
-BEGIN_CASE(JSOP_IN)
+CASE(JSOP_IN)
 {
     HandleValue rref = regs.stackHandleAt(-1);
     if (!rref.isObject()) {
@@ -1742,7 +1742,7 @@ BEGIN_CASE(JSOP_IN)
 }
 END_CASE(JSOP_IN)
 
-BEGIN_CASE(JSOP_ITER)
+CASE(JSOP_ITER)
 {
     JS_ASSERT(regs.stackDepth() >= 1);
     uint8_t flags = GET_UINT8(regs.pc);
@@ -1753,7 +1753,7 @@ BEGIN_CASE(JSOP_ITER)
 }
 END_CASE(JSOP_ITER)
 
-BEGIN_CASE(JSOP_MOREITER)
+CASE(JSOP_MOREITER)
 {
     JS_ASSERT(regs.stackDepth() >= 1);
     JS_ASSERT(regs.sp[-1].isObject());
@@ -1766,7 +1766,7 @@ BEGIN_CASE(JSOP_MOREITER)
 }
 END_CASE(JSOP_MOREITER)
 
-BEGIN_CASE(JSOP_ITERNEXT)
+CASE(JSOP_ITERNEXT)
 {
     JS_ASSERT(regs.sp[-1].isObject());
     PUSH_NULL();
@@ -1778,7 +1778,7 @@ BEGIN_CASE(JSOP_ITERNEXT)
 }
 END_CASE(JSOP_ITERNEXT)
 
-BEGIN_CASE(JSOP_ENDITER)
+CASE(JSOP_ENDITER)
 {
     JS_ASSERT(regs.stackDepth() >= 1);
     RootedObject &obj = rootObject0;
@@ -1790,7 +1790,7 @@ BEGIN_CASE(JSOP_ENDITER)
 }
 END_CASE(JSOP_ENDITER)
 
-BEGIN_CASE(JSOP_DUP)
+CASE(JSOP_DUP)
 {
     JS_ASSERT(regs.stackDepth() >= 1);
     const Value &rref = regs.sp[-1];
@@ -1798,7 +1798,7 @@ BEGIN_CASE(JSOP_DUP)
 }
 END_CASE(JSOP_DUP)
 
-BEGIN_CASE(JSOP_DUP2)
+CASE(JSOP_DUP2)
 {
     JS_ASSERT(regs.stackDepth() >= 2);
     const Value &lref = regs.sp[-2];
@@ -1808,7 +1808,7 @@ BEGIN_CASE(JSOP_DUP2)
 }
 END_CASE(JSOP_DUP2)
 
-BEGIN_CASE(JSOP_SWAP)
+CASE(JSOP_SWAP)
 {
     JS_ASSERT(regs.stackDepth() >= 2);
     Value &lref = regs.sp[-2];
@@ -1817,7 +1817,7 @@ BEGIN_CASE(JSOP_SWAP)
 }
 END_CASE(JSOP_SWAP)
 
-BEGIN_CASE(JSOP_PICK)
+CASE(JSOP_PICK)
 {
     unsigned i = GET_UINT8(regs.pc);
     JS_ASSERT(regs.stackDepth() >= i + 1);
@@ -1827,7 +1827,7 @@ BEGIN_CASE(JSOP_PICK)
 }
 END_CASE(JSOP_PICK)
 
-BEGIN_CASE(JSOP_SETCONST)
+CASE(JSOP_SETCONST)
 {
     RootedPropertyName &name = rootName0;
     name = script->getName(regs.pc);
@@ -1844,7 +1844,7 @@ BEGIN_CASE(JSOP_SETCONST)
 END_CASE(JSOP_SETCONST);
 
 #if JS_HAS_DESTRUCTURING
-BEGIN_CASE(JSOP_ENUMCONSTELEM)
+CASE(JSOP_ENUMCONSTELEM)
 {
     RootedValue &rval = rootValue0;
     rval = regs.sp[-3];
@@ -1863,15 +1863,15 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
 END_CASE(JSOP_ENUMCONSTELEM)
 #endif
 
-BEGIN_CASE(JSOP_BINDGNAME)
+CASE(JSOP_BINDGNAME)
     PUSH_OBJECT(regs.fp()->global());
 END_CASE(JSOP_BINDGNAME)
 
-BEGIN_CASE(JSOP_BINDINTRINSIC)
+CASE(JSOP_BINDINTRINSIC)
     PUSH_OBJECT(*cx->global()->intrinsicsHolder());
 END_CASE(JSOP_BINDINTRINSIC)
 
-BEGIN_CASE(JSOP_BINDNAME)
+CASE(JSOP_BINDNAME)
 {
     RootedObject &scopeChain = rootObject0;
     scopeChain = regs.fp()->scopeChain();
@@ -1900,26 +1900,26 @@ END_CASE(JSOP_BINDNAME)
         regs.sp[-1].setInt32(i);                                              \
     JS_END_MACRO
 
-BEGIN_CASE(JSOP_BITOR)
+CASE(JSOP_BITOR)
     BITWISE_OP(|);
 END_CASE(JSOP_BITOR)
 
-BEGIN_CASE(JSOP_BITXOR)
+CASE(JSOP_BITXOR)
     BITWISE_OP(^);
 END_CASE(JSOP_BITXOR)
 
-BEGIN_CASE(JSOP_BITAND)
+CASE(JSOP_BITAND)
     BITWISE_OP(&);
 END_CASE(JSOP_BITAND)
 
 #undef BITWISE_OP
 
-BEGIN_CASE(JSOP_EQ)
+CASE(JSOP_EQ)
     if (!LooseEqualityOp<true>(cx, regs))
         goto error;
 END_CASE(JSOP_EQ)
 
-BEGIN_CASE(JSOP_NE)
+CASE(JSOP_NE)
     if (!LooseEqualityOp<false>(cx, regs))
         goto error;
 END_CASE(JSOP_NE)
@@ -1935,7 +1935,7 @@ END_CASE(JSOP_NE)
         regs.sp--;                                                            \
     JS_END_MACRO
 
-BEGIN_CASE(JSOP_STRICTEQ)
+CASE(JSOP_STRICTEQ)
 {
     bool cond;
     STRICT_EQUALITY_OP(==, cond);
@@ -1943,7 +1943,7 @@ BEGIN_CASE(JSOP_STRICTEQ)
 }
 END_CASE(JSOP_STRICTEQ)
 
-BEGIN_CASE(JSOP_STRICTNE)
+CASE(JSOP_STRICTNE)
 {
     bool cond;
     STRICT_EQUALITY_OP(!=, cond);
@@ -1951,7 +1951,7 @@ BEGIN_CASE(JSOP_STRICTNE)
 }
 END_CASE(JSOP_STRICTNE)
 
-BEGIN_CASE(JSOP_CASE)
+CASE(JSOP_CASE)
 {
     bool cond;
     STRICT_EQUALITY_OP(==, cond);
@@ -1964,7 +1964,7 @@ END_CASE(JSOP_CASE)
 
 #undef STRICT_EQUALITY_OP
 
-BEGIN_CASE(JSOP_LT)
+CASE(JSOP_LT)
 {
     bool cond;
     MutableHandleValue lval = regs.stackHandleAt(-2);
@@ -1977,7 +1977,7 @@ BEGIN_CASE(JSOP_LT)
 }
 END_CASE(JSOP_LT)
 
-BEGIN_CASE(JSOP_LE)
+CASE(JSOP_LE)
 {
     bool cond;
     MutableHandleValue lval = regs.stackHandleAt(-2);
@@ -1990,7 +1990,7 @@ BEGIN_CASE(JSOP_LE)
 }
 END_CASE(JSOP_LE)
 
-BEGIN_CASE(JSOP_GT)
+CASE(JSOP_GT)
 {
     bool cond;
     MutableHandleValue lval = regs.stackHandleAt(-2);
@@ -2003,7 +2003,7 @@ BEGIN_CASE(JSOP_GT)
 }
 END_CASE(JSOP_GT)
 
-BEGIN_CASE(JSOP_GE)
+CASE(JSOP_GE)
 {
     bool cond;
     MutableHandleValue lval = regs.stackHandleAt(-2);
@@ -2028,17 +2028,17 @@ END_CASE(JSOP_GE)
         regs.sp[-1].setInt32(i);                                              \
     JS_END_MACRO
 
-BEGIN_CASE(JSOP_LSH)
+CASE(JSOP_LSH)
     SIGNED_SHIFT_OP(<<);
 END_CASE(JSOP_LSH)
 
-BEGIN_CASE(JSOP_RSH)
+CASE(JSOP_RSH)
     SIGNED_SHIFT_OP(>>);
 END_CASE(JSOP_RSH)
 
 #undef SIGNED_SHIFT_OP
 
-BEGIN_CASE(JSOP_URSH)
+CASE(JSOP_URSH)
 {
     HandleValue lval = regs.stackHandleAt(-2);
     HandleValue rval = regs.stackHandleAt(-1);
@@ -2048,7 +2048,7 @@ BEGIN_CASE(JSOP_URSH)
 }
 END_CASE(JSOP_URSH)
 
-BEGIN_CASE(JSOP_ADD)
+CASE(JSOP_ADD)
 {
     MutableHandleValue lval = regs.stackHandleAt(-2);
     MutableHandleValue rval = regs.stackHandleAt(-1);
@@ -2058,7 +2058,7 @@ BEGIN_CASE(JSOP_ADD)
 }
 END_CASE(JSOP_ADD)
 
-BEGIN_CASE(JSOP_SUB)
+CASE(JSOP_SUB)
 {
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
@@ -2069,7 +2069,7 @@ BEGIN_CASE(JSOP_SUB)
 }
 END_CASE(JSOP_SUB)
 
-BEGIN_CASE(JSOP_MUL)
+CASE(JSOP_MUL)
 {
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
@@ -2080,7 +2080,7 @@ BEGIN_CASE(JSOP_MUL)
 }
 END_CASE(JSOP_MUL)
 
-BEGIN_CASE(JSOP_DIV)
+CASE(JSOP_DIV)
 {
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
@@ -2091,7 +2091,7 @@ BEGIN_CASE(JSOP_DIV)
 }
 END_CASE(JSOP_DIV)
 
-BEGIN_CASE(JSOP_MOD)
+CASE(JSOP_MOD)
 {
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
@@ -2102,7 +2102,7 @@ BEGIN_CASE(JSOP_MOD)
 }
 END_CASE(JSOP_MOD)
 
-BEGIN_CASE(JSOP_NOT)
+CASE(JSOP_NOT)
 {
     bool cond = ToBooleanOp(regs);
     regs.sp--;
@@ -2110,7 +2110,7 @@ BEGIN_CASE(JSOP_NOT)
 }
 END_CASE(JSOP_NOT)
 
-BEGIN_CASE(JSOP_BITNOT)
+CASE(JSOP_BITNOT)
 {
     int32_t i;
     HandleValue value = regs.stackHandleAt(-1);
@@ -2120,7 +2120,7 @@ BEGIN_CASE(JSOP_BITNOT)
 }
 END_CASE(JSOP_BITNOT)
 
-BEGIN_CASE(JSOP_NEG)
+CASE(JSOP_NEG)
 {
     RootedValue &val = rootValue0;
     val = regs.sp[-1];
@@ -2130,12 +2130,12 @@ BEGIN_CASE(JSOP_NEG)
 }
 END_CASE(JSOP_NEG)
 
-BEGIN_CASE(JSOP_POS)
+CASE(JSOP_POS)
     if (!ToNumber(cx, regs.stackHandleAt(-1)))
         goto error;
 END_CASE(JSOP_POS)
 
-BEGIN_CASE(JSOP_DELNAME)
+CASE(JSOP_DELNAME)
 {
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
     JS_ASSERT(!script->strict);
@@ -2153,7 +2153,7 @@ BEGIN_CASE(JSOP_DELNAME)
 }
 END_CASE(JSOP_DELNAME)
 
-BEGIN_CASE(JSOP_DELPROP)
+CASE(JSOP_DELPROP)
 {
     RootedPropertyName &name = rootName0;
     name = script->getName(regs.pc);
@@ -2173,7 +2173,7 @@ BEGIN_CASE(JSOP_DELPROP)
 }
 END_CASE(JSOP_DELPROP)
 
-BEGIN_CASE(JSOP_DELELEM)
+CASE(JSOP_DELELEM)
 {
     /* Fetch the left part and resolve it to a non-null object. */
     RootedObject &obj = rootObject0;
@@ -2202,7 +2202,7 @@ BEGIN_CASE(JSOP_DELELEM)
 }
 END_CASE(JSOP_DELELEM)
 
-BEGIN_CASE(JSOP_TOID)
+CASE(JSOP_TOID)
 {
     /*
      * Increment or decrement requires use to lookup the same property twice,
@@ -2219,27 +2219,27 @@ BEGIN_CASE(JSOP_TOID)
 }
 END_CASE(JSOP_TOID)
 
-BEGIN_CASE(JSOP_TYPEOFEXPR)
-BEGIN_CASE(JSOP_TYPEOF)
+CASE(JSOP_TYPEOFEXPR)
+CASE(JSOP_TYPEOF)
 {
     regs.sp[-1].setString(TypeOfOperation(regs.sp[-1], rt));
 }
 END_CASE(JSOP_TYPEOF)
 
-BEGIN_CASE(JSOP_VOID)
+CASE(JSOP_VOID)
     regs.sp[-1].setUndefined();
 END_CASE(JSOP_VOID)
 
-BEGIN_CASE(JSOP_THIS)
+CASE(JSOP_THIS)
     if (!ComputeThis(cx, regs.fp()))
         goto error;
     PUSH_COPY(regs.fp()->thisValue());
 END_CASE(JSOP_THIS)
 
-BEGIN_CASE(JSOP_GETPROP)
-BEGIN_CASE(JSOP_GETXPROP)
-BEGIN_CASE(JSOP_LENGTH)
-BEGIN_CASE(JSOP_CALLPROP)
+CASE(JSOP_GETPROP)
+CASE(JSOP_GETXPROP)
+CASE(JSOP_LENGTH)
+CASE(JSOP_CALLPROP)
 {
 
     MutableHandleValue lval = regs.stackHandleAt(-1);
@@ -2251,7 +2251,7 @@ BEGIN_CASE(JSOP_CALLPROP)
 }
 END_CASE(JSOP_GETPROP)
 
-BEGIN_CASE(JSOP_SETINTRINSIC)
+CASE(JSOP_SETINTRINSIC)
 {
     HandleValue value = regs.stackHandleAt(-1);
 
@@ -2263,8 +2263,8 @@ BEGIN_CASE(JSOP_SETINTRINSIC)
 }
 END_CASE(JSOP_SETINTRINSIC)
 
-BEGIN_CASE(JSOP_SETGNAME)
-BEGIN_CASE(JSOP_SETNAME)
+CASE(JSOP_SETGNAME)
+CASE(JSOP_SETNAME)
 {
     RootedObject &scope = rootObject0;
     scope = &regs.sp[-2].toObject();
@@ -2279,7 +2279,7 @@ BEGIN_CASE(JSOP_SETNAME)
 }
 END_CASE(JSOP_SETNAME)
 
-BEGIN_CASE(JSOP_SETPROP)
+CASE(JSOP_SETPROP)
 {
     HandleValue lval = regs.stackHandleAt(-2);
     HandleValue rval = regs.stackHandleAt(-1);
@@ -2292,8 +2292,8 @@ BEGIN_CASE(JSOP_SETPROP)
 }
 END_CASE(JSOP_SETPROP)
 
-BEGIN_CASE(JSOP_GETELEM)
-BEGIN_CASE(JSOP_CALLELEM)
+CASE(JSOP_GETELEM)
+CASE(JSOP_CALLELEM)
 {
     MutableHandleValue lval = regs.stackHandleAt(-2);
     HandleValue rval = regs.stackHandleAt(-1);
@@ -2313,7 +2313,7 @@ BEGIN_CASE(JSOP_CALLELEM)
 }
 END_CASE(JSOP_GETELEM)
 
-BEGIN_CASE(JSOP_SETELEM)
+CASE(JSOP_SETELEM)
 {
     RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -3, obj);
@@ -2327,7 +2327,7 @@ BEGIN_CASE(JSOP_SETELEM)
 }
 END_CASE(JSOP_SETELEM)
 
-BEGIN_CASE(JSOP_ENUMELEM)
+CASE(JSOP_ENUMELEM)
 {
     RootedObject &obj = rootObject0;
     RootedValue &rval = rootValue0;
@@ -2343,7 +2343,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
 }
 END_CASE(JSOP_ENUMELEM)
 
-BEGIN_CASE(JSOP_EVAL)
+CASE(JSOP_EVAL)
 {
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
     if (IsBuiltinEvalForScope(regs.fp()->scopeChain(), args.calleev())) {
@@ -2358,13 +2358,13 @@ BEGIN_CASE(JSOP_EVAL)
 }
 END_CASE(JSOP_EVAL)
 
-BEGIN_CASE(JSOP_SPREADNEW)
-BEGIN_CASE(JSOP_SPREADCALL)
+CASE(JSOP_SPREADNEW)
+CASE(JSOP_SPREADCALL)
     if (regs.fp()->hasPushedSPSFrame())
         cx->runtime()->spsProfiler.updatePC(script, regs.pc);
     /* FALL THROUGH */
 
-BEGIN_CASE(JSOP_SPREADEVAL)
+CASE(JSOP_SPREADEVAL)
 {
     JS_ASSERT(regs.stackDepth() >= 3);
     RootedObject &aobj = rootObject0;
@@ -2413,7 +2413,7 @@ BEGIN_CASE(JSOP_SPREADEVAL)
 }
 END_CASE(JSOP_SPREADCALL)
 
-BEGIN_CASE(JSOP_FUNAPPLY)
+CASE(JSOP_FUNAPPLY)
 {
     CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
     if (!GuardFunApplyArgumentsOptimization(cx, regs.fp(), args.calleev(), args.array(),
@@ -2422,9 +2422,9 @@ BEGIN_CASE(JSOP_FUNAPPLY)
     /* FALL THROUGH */
 }
 
-BEGIN_CASE(JSOP_NEW)
-BEGIN_CASE(JSOP_CALL)
-BEGIN_CASE(JSOP_FUNCALL)
+CASE(JSOP_NEW)
+CASE(JSOP_CALL)
+CASE(JSOP_FUNCALL)
 {
     if (regs.fp()->hasPushedSPSFrame())
         cx->runtime()->spsProfiler.updatePC(script, regs.pc);
@@ -2543,14 +2543,14 @@ BEGIN_CASE(JSOP_FUNCALL)
     DO_OP();
 }
 
-BEGIN_CASE(JSOP_SETCALL)
+CASE(JSOP_SETCALL)
 {
     JS_ALWAYS_FALSE(SetCallOperation(cx));
     goto error;
 }
 END_CASE(JSOP_SETCALL)
 
-BEGIN_CASE(JSOP_IMPLICITTHIS)
+CASE(JSOP_IMPLICITTHIS)
 {
     RootedPropertyName &name = rootName0;
     name = script->getName(regs.pc);
@@ -2569,10 +2569,10 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
 }
 END_CASE(JSOP_IMPLICITTHIS)
 
-BEGIN_CASE(JSOP_GETGNAME)
-BEGIN_CASE(JSOP_CALLGNAME)
-BEGIN_CASE(JSOP_NAME)
-BEGIN_CASE(JSOP_CALLNAME)
+CASE(JSOP_GETGNAME)
+CASE(JSOP_CALLGNAME)
+CASE(JSOP_NAME)
+CASE(JSOP_CALLNAME)
 {
     RootedValue &rval = rootValue0;
 
@@ -2584,8 +2584,8 @@ BEGIN_CASE(JSOP_CALLNAME)
 }
 END_CASE(JSOP_NAME)
 
-BEGIN_CASE(JSOP_GETINTRINSIC)
-BEGIN_CASE(JSOP_CALLINTRINSIC)
+CASE(JSOP_GETINTRINSIC)
+CASE(JSOP_CALLINTRINSIC)
 {
     RootedValue &rval = rootValue0;
 
@@ -2597,23 +2597,23 @@ BEGIN_CASE(JSOP_CALLINTRINSIC)
 }
 END_CASE(JSOP_GETINTRINSIC)
 
-BEGIN_CASE(JSOP_UINT16)
+CASE(JSOP_UINT16)
     PUSH_INT32((int32_t) GET_UINT16(regs.pc));
 END_CASE(JSOP_UINT16)
 
-BEGIN_CASE(JSOP_UINT24)
+CASE(JSOP_UINT24)
     PUSH_INT32((int32_t) GET_UINT24(regs.pc));
 END_CASE(JSOP_UINT24)
 
-BEGIN_CASE(JSOP_INT8)
+CASE(JSOP_INT8)
     PUSH_INT32(GET_INT8(regs.pc));
 END_CASE(JSOP_INT8)
 
-BEGIN_CASE(JSOP_INT32)
+CASE(JSOP_INT32)
     PUSH_INT32(GET_INT32(regs.pc));
 END_CASE(JSOP_INT32)
 
-BEGIN_CASE(JSOP_DOUBLE)
+CASE(JSOP_DOUBLE)
 {
     double dbl;
     LOAD_DOUBLE(0, dbl);
@@ -2621,15 +2621,15 @@ BEGIN_CASE(JSOP_DOUBLE)
 }
 END_CASE(JSOP_DOUBLE)
 
-BEGIN_CASE(JSOP_STRING)
+CASE(JSOP_STRING)
     PUSH_STRING(script->getAtom(regs.pc));
 END_CASE(JSOP_STRING)
 
-BEGIN_CASE(JSOP_OBJECT)
+CASE(JSOP_OBJECT)
     PUSH_OBJECT(*script->getObject(regs.pc));
 END_CASE(JSOP_OBJECT)
 
-BEGIN_CASE(JSOP_REGEXP)
+CASE(JSOP_REGEXP)
 {
     /*
      * Push a regexp object cloned from the regexp literal object mapped by the
@@ -2646,28 +2646,28 @@ BEGIN_CASE(JSOP_REGEXP)
 }
 END_CASE(JSOP_REGEXP)
 
-BEGIN_CASE(JSOP_ZERO)
+CASE(JSOP_ZERO)
     PUSH_INT32(0);
 END_CASE(JSOP_ZERO)
 
-BEGIN_CASE(JSOP_ONE)
+CASE(JSOP_ONE)
     PUSH_INT32(1);
 END_CASE(JSOP_ONE)
 
-BEGIN_CASE(JSOP_NULL)
+CASE(JSOP_NULL)
     PUSH_NULL();
 END_CASE(JSOP_NULL)
 
-BEGIN_CASE(JSOP_FALSE)
+CASE(JSOP_FALSE)
     PUSH_BOOLEAN(false);
 END_CASE(JSOP_FALSE)
 
-BEGIN_CASE(JSOP_TRUE)
+CASE(JSOP_TRUE)
     PUSH_BOOLEAN(true);
 END_CASE(JSOP_TRUE)
 
 {
-BEGIN_CASE(JSOP_TABLESWITCH)
+CASE(JSOP_TABLESWITCH)
 {
     jsbytecode *pc2 = regs.pc;
     len = GET_JUMP_OFFSET(pc2);
@@ -2704,7 +2704,7 @@ BEGIN_CASE(JSOP_TABLESWITCH)
 END_VARLEN_CASE
 }
 
-BEGIN_CASE(JSOP_ARGUMENTS)
+CASE(JSOP_ARGUMENTS)
     JS_ASSERT(!regs.fp()->fun()->hasRest());
     if (!script->analyzedArgsUsage() && !script->ensureRanAnalysis(cx))
         goto error;
@@ -2718,14 +2718,14 @@ BEGIN_CASE(JSOP_ARGUMENTS)
     }
 END_CASE(JSOP_ARGUMENTS)
 
-BEGIN_CASE(JSOP_RUNONCE)
+CASE(JSOP_RUNONCE)
 {
     if (!RunOnceScriptPrologue(cx, script))
         goto error;
 }
 END_CASE(JSOP_RUNONCE)
 
-BEGIN_CASE(JSOP_REST)
+CASE(JSOP_REST)
 {
     RootedObject &rest = rootObject0;
     rest = regs.fp()->createRestParameter(cx);
@@ -2735,8 +2735,8 @@ BEGIN_CASE(JSOP_REST)
 }
 END_CASE(JSOP_REST)
 
-BEGIN_CASE(JSOP_CALLALIASEDVAR)
-BEGIN_CASE(JSOP_GETALIASEDVAR)
+CASE(JSOP_CALLALIASEDVAR)
+CASE(JSOP_GETALIASEDVAR)
 {
     ScopeCoordinate sc = ScopeCoordinate(regs.pc);
     PUSH_COPY(regs.fp()->aliasedVarScope(sc).aliasedVar(sc));
@@ -2744,7 +2744,7 @@ BEGIN_CASE(JSOP_GETALIASEDVAR)
 }
 END_CASE(JSOP_GETALIASEDVAR)
 
-BEGIN_CASE(JSOP_SETALIASEDVAR)
+CASE(JSOP_SETALIASEDVAR)
 {
     ScopeCoordinate sc = ScopeCoordinate(regs.pc);
     ScopeObject &obj = regs.fp()->aliasedVarScope(sc);
@@ -2758,8 +2758,8 @@ BEGIN_CASE(JSOP_SETALIASEDVAR)
 }
 END_CASE(JSOP_SETALIASEDVAR)
 
-BEGIN_CASE(JSOP_GETARG)
-BEGIN_CASE(JSOP_CALLARG)
+CASE(JSOP_GETARG)
+CASE(JSOP_CALLARG)
 {
     unsigned i = GET_ARGNO(regs.pc);
     if (script->argsObjAliasesFormals())
@@ -2769,7 +2769,7 @@ BEGIN_CASE(JSOP_CALLARG)
 }
 END_CASE(JSOP_GETARG)
 
-BEGIN_CASE(JSOP_SETARG)
+CASE(JSOP_SETARG)
 {
     unsigned i = GET_ARGNO(regs.pc);
     if (script->argsObjAliasesFormals())
@@ -2779,8 +2779,8 @@ BEGIN_CASE(JSOP_SETARG)
 }
 END_CASE(JSOP_SETARG)
 
-BEGIN_CASE(JSOP_GETLOCAL)
-BEGIN_CASE(JSOP_CALLLOCAL)
+CASE(JSOP_GETLOCAL)
+CASE(JSOP_CALLLOCAL)
 {
     unsigned i = GET_SLOTNO(regs.pc);
     PUSH_COPY_SKIP_CHECK(regs.fp()->unaliasedLocal(i));
@@ -2796,15 +2796,15 @@ BEGIN_CASE(JSOP_CALLLOCAL)
 }
 END_CASE(JSOP_GETLOCAL)
 
-BEGIN_CASE(JSOP_SETLOCAL)
+CASE(JSOP_SETLOCAL)
 {
     unsigned i = GET_SLOTNO(regs.pc);
     regs.fp()->unaliasedLocal(i) = regs.sp[-1];
 }
 END_CASE(JSOP_SETLOCAL)
 
-BEGIN_CASE(JSOP_DEFCONST)
-BEGIN_CASE(JSOP_DEFVAR)
+CASE(JSOP_DEFCONST)
+CASE(JSOP_DEFVAR)
 {
     /* ES5 10.5 step 8 (with subsequent errata). */
     unsigned attrs = JSPROP_ENUMERATE;
@@ -2825,7 +2825,7 @@ BEGIN_CASE(JSOP_DEFVAR)
 }
 END_CASE(JSOP_DEFVAR)
 
-BEGIN_CASE(JSOP_DEFFUN)
+CASE(JSOP_DEFFUN)
 {
     /*
      * A top-level function defined in Global or Eval code (see ECMA-262
@@ -2841,7 +2841,7 @@ BEGIN_CASE(JSOP_DEFFUN)
 }
 END_CASE(JSOP_DEFFUN)
 
-BEGIN_CASE(JSOP_LAMBDA)
+CASE(JSOP_LAMBDA)
 {
     /* Load the specified function object literal. */
     RootedFunction &fun = rootFunction0;
@@ -2855,13 +2855,13 @@ BEGIN_CASE(JSOP_LAMBDA)
 }
 END_CASE(JSOP_LAMBDA)
 
-BEGIN_CASE(JSOP_CALLEE)
+CASE(JSOP_CALLEE)
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
     PUSH_COPY(regs.fp()->calleev());
 END_CASE(JSOP_CALLEE)
 
-BEGIN_CASE(JSOP_INITPROP_GETTER)
-BEGIN_CASE(JSOP_INITPROP_SETTER)
+CASE(JSOP_INITPROP_GETTER)
+CASE(JSOP_INITPROP_SETTER)
 {
     RootedObject &obj = rootObject0;
     RootedPropertyName &name = rootName0;
@@ -2879,8 +2879,8 @@ BEGIN_CASE(JSOP_INITPROP_SETTER)
 }
 END_CASE(JSOP_INITPROP_GETTER)
 
-BEGIN_CASE(JSOP_INITELEM_GETTER)
-BEGIN_CASE(JSOP_INITELEM_SETTER)
+CASE(JSOP_INITELEM_GETTER)
+CASE(JSOP_INITELEM_SETTER)
 {
     RootedObject &obj = rootObject0;
     RootedValue &idval = rootValue0;
@@ -2898,11 +2898,11 @@ BEGIN_CASE(JSOP_INITELEM_SETTER)
 }
 END_CASE(JSOP_INITELEM_GETTER)
 
-BEGIN_CASE(JSOP_HOLE)
+CASE(JSOP_HOLE)
     PUSH_HOLE();
 END_CASE(JSOP_HOLE)
 
-BEGIN_CASE(JSOP_NEWINIT)
+CASE(JSOP_NEWINIT)
 {
     uint8_t i = GET_UINT8(regs.pc);
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
@@ -2925,7 +2925,7 @@ BEGIN_CASE(JSOP_NEWINIT)
 }
 END_CASE(JSOP_NEWINIT)
 
-BEGIN_CASE(JSOP_NEWARRAY)
+CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
     RootedObject &obj = rootObject0;
@@ -2939,7 +2939,7 @@ BEGIN_CASE(JSOP_NEWARRAY)
 }
 END_CASE(JSOP_NEWARRAY)
 
-BEGIN_CASE(JSOP_NEWOBJECT)
+CASE(JSOP_NEWOBJECT)
 {
     RootedObject &baseobj = rootObject0;
     baseobj = script->getObject(regs.pc);
@@ -2955,7 +2955,7 @@ BEGIN_CASE(JSOP_NEWOBJECT)
 }
 END_CASE(JSOP_NEWOBJECT)
 
-BEGIN_CASE(JSOP_ENDINIT)
+CASE(JSOP_ENDINIT)
 {
     /* FIXME remove JSOP_ENDINIT bug 588522 */
     JS_ASSERT(regs.stackDepth() >= 1);
@@ -2963,7 +2963,7 @@ BEGIN_CASE(JSOP_ENDINIT)
 }
 END_CASE(JSOP_ENDINIT)
 
-BEGIN_CASE(JSOP_INITPROP)
+CASE(JSOP_INITPROP)
 {
     /* Load the property's initial value into rval. */
     JS_ASSERT(regs.stackDepth() >= 2);
@@ -2992,7 +2992,7 @@ BEGIN_CASE(JSOP_INITPROP)
 }
 END_CASE(JSOP_INITPROP);
 
-BEGIN_CASE(JSOP_INITELEM)
+CASE(JSOP_INITELEM)
 {
     JS_ASSERT(regs.stackDepth() >= 3);
     HandleValue val = regs.stackHandleAt(-1);
@@ -3008,7 +3008,7 @@ BEGIN_CASE(JSOP_INITELEM)
 }
 END_CASE(JSOP_INITELEM)
 
-BEGIN_CASE(JSOP_INITELEM_ARRAY)
+CASE(JSOP_INITELEM_ARRAY)
 {
     JS_ASSERT(regs.stackDepth() >= 2);
     HandleValue val = regs.stackHandleAt(-1);
@@ -3026,7 +3026,7 @@ BEGIN_CASE(JSOP_INITELEM_ARRAY)
 }
 END_CASE(JSOP_INITELEM_ARRAY)
 
-BEGIN_CASE(JSOP_INITELEM_INC)
+CASE(JSOP_INITELEM_INC)
 {
     JS_ASSERT(regs.stackDepth() >= 3);
     HandleValue val = regs.stackHandleAt(-1);
@@ -3043,7 +3043,7 @@ BEGIN_CASE(JSOP_INITELEM_INC)
 }
 END_CASE(JSOP_INITELEM_INC)
 
-BEGIN_CASE(JSOP_SPREAD)
+CASE(JSOP_SPREAD)
 {
     int32_t count = regs.sp[-2].toInt32();
     RootedObject &arr = rootObject0;
@@ -3075,7 +3075,7 @@ BEGIN_CASE(JSOP_SPREAD)
 END_CASE(JSOP_SPREAD)
 
 {
-BEGIN_CASE(JSOP_GOSUB)
+CASE(JSOP_GOSUB)
     PUSH_BOOLEAN(false);
     int32_t i = (regs.pc - script->code) + JSOP_GOSUB_LENGTH;
     len = GET_JUMP_OFFSET(regs.pc);
@@ -3084,7 +3084,7 @@ END_VARLEN_CASE
 }
 
 {
-BEGIN_CASE(JSOP_RETSUB)
+CASE(JSOP_RETSUB)
     /* Pop [exception or hole, retsub pc-index]. */
     Value rval, lval;
     POP_COPY_TO(rval);
@@ -3107,7 +3107,7 @@ BEGIN_CASE(JSOP_RETSUB)
 END_VARLEN_CASE
 }
 
-BEGIN_CASE(JSOP_EXCEPTION)
+CASE(JSOP_EXCEPTION)
 {
     PUSH_NULL();
     MutableHandleValue res = regs.stackHandleAt(-1);
@@ -3116,11 +3116,11 @@ BEGIN_CASE(JSOP_EXCEPTION)
 }
 END_CASE(JSOP_EXCEPTION)
 
-BEGIN_CASE(JSOP_FINALLY)
+CASE(JSOP_FINALLY)
     CHECK_BRANCH();
 END_CASE(JSOP_FINALLY)
 
-BEGIN_CASE(JSOP_THROWING)
+CASE(JSOP_THROWING)
 {
     JS_ASSERT(!cx->isExceptionPending());
     Value v;
@@ -3129,7 +3129,7 @@ BEGIN_CASE(JSOP_THROWING)
 }
 END_CASE(JSOP_THROWING)
 
-BEGIN_CASE(JSOP_THROW)
+CASE(JSOP_THROW)
 {
     CHECK_BRANCH();
     RootedValue &v = rootValue0;
@@ -3139,7 +3139,7 @@ BEGIN_CASE(JSOP_THROW)
     goto error;
 }
 
-BEGIN_CASE(JSOP_INSTANCEOF)
+CASE(JSOP_INSTANCEOF)
 {
     RootedValue &rref = rootValue0;
     rref = regs.sp[-1];
@@ -3157,7 +3157,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
 }
 END_CASE(JSOP_INSTANCEOF)
 
-BEGIN_CASE(JSOP_DEBUGGER)
+CASE(JSOP_DEBUGGER)
 {
     JSTrapStatus st = JSTRAP_CONTINUE;
     RootedValue rval(cx);
@@ -3182,10 +3182,10 @@ BEGIN_CASE(JSOP_DEBUGGER)
 }
 END_CASE(JSOP_DEBUGGER)
 
-BEGIN_CASE(JSOP_ENTERBLOCK)
-BEGIN_CASE(JSOP_ENTERLET0)
-BEGIN_CASE(JSOP_ENTERLET1)
-BEGIN_CASE(JSOP_ENTERLET2)
+CASE(JSOP_ENTERBLOCK)
+CASE(JSOP_ENTERLET0)
+CASE(JSOP_ENTERLET1)
+CASE(JSOP_ENTERLET2)
 {
     StaticBlockObject &blockObj = script->getObject(regs.pc)->as<StaticBlockObject>();
 
@@ -3203,9 +3203,9 @@ BEGIN_CASE(JSOP_ENTERLET2)
 }
 END_CASE(JSOP_ENTERBLOCK)
 
-BEGIN_CASE(JSOP_LEAVEBLOCK)
-BEGIN_CASE(JSOP_LEAVEFORLETIN)
-BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
+CASE(JSOP_LEAVEBLOCK)
+CASE(JSOP_LEAVEFORLETIN)
+CASE(JSOP_LEAVEBLOCKEXPR)
 {
     blockDepth = regs.fp()->blockChain().stackDepth();
 
@@ -3228,7 +3228,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
 }
 END_CASE(JSOP_LEAVEBLOCK)
 
-BEGIN_CASE(JSOP_GENERATOR)
+CASE(JSOP_GENERATOR)
 {
     JS_ASSERT(!cx->isExceptionPending());
     regs.fp()->initGeneratorFrame();
@@ -3244,7 +3244,7 @@ BEGIN_CASE(JSOP_GENERATOR)
     goto exit;
 }
 
-BEGIN_CASE(JSOP_YIELD)
+CASE(JSOP_YIELD)
     JS_ASSERT(!cx->isExceptionPending());
     JS_ASSERT(regs.fp()->isNonEvalFunctionFrame());
     if (cx->innermostGenerator()->state == JSGEN_CLOSING) {
@@ -3259,7 +3259,7 @@ BEGIN_CASE(JSOP_YIELD)
     interpReturnOK = true;
     goto exit;
 
-BEGIN_CASE(JSOP_ARRAYPUSH)
+CASE(JSOP_ARRAYPUSH)
 {
     uint32_t slot = GET_UINT16(regs.pc);
     JS_ASSERT(script->nfixed <= slot);
