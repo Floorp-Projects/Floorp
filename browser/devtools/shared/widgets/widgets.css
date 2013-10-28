@@ -24,6 +24,11 @@
   -moz-user-focus: normal;
 }
 
+.side-menu-widget-group-checkbox .checkbox-label-box,
+.side-menu-widget-item-checkbox .checkbox-label-box {
+  display: none; /* See bug 669507 */
+}
+
 /* VariablesView */
 
 .variables-view-container {
