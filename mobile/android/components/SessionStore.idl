@@ -14,7 +14,7 @@ interface nsIDOMNode;
  * tabs contained in them.
  */
 
-[scriptable, uuid(15152edf-6c99-4277-9020-076be4653c69)]
+[scriptable, uuid(fe116b56-0226-4562-b52a-a623dad07ead)]
 interface nsISessionStore : nsISupports
 {
   /**
