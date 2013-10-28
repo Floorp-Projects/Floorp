@@ -288,6 +288,8 @@ class MochitestUtilsMixin(object):
         logFile -- logs test run to an absolute path
         totalChunks -- how many chunks to split tests into
         thisChunk -- which chunk to run
+        startAt -- name of test to start at
+        endAt -- name of test to end at
         timeout -- per-test timeout in seconds
         repeat -- How many times to repeat the test, ie: repeat=1 will run the test twice.
     """
@@ -314,6 +316,10 @@ class MochitestUtilsMixin(object):
         self.urlOpts.append("thisChunk=%d" % options.thisChunk)
       if options.chunkByDir:
         self.urlOpts.append("chunkByDir=%d" % options.chunkByDir)
+      if options.startAt:
+        self.urlOpts.append("startAt=%s" % options.startAt)
+      if options.endAt:
+        self.urlOpts.append("endAt=%s" % options.endAt)
       if options.shuffle:
         self.urlOpts.append("shuffle=1")
       if "MOZ_HIDE_RESULTS_TABLE" in env and env["MOZ_HIDE_RESULTS_TABLE"] == "1":
