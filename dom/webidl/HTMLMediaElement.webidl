@@ -133,9 +133,39 @@ partial interface HTMLMediaElement {
   readonly attribute double mozFragmentEnd;
 
   // Mozilla extension: an audio channel type for media elements.
-  // Read AudioChannel.webidl for more information about this attribute.
+  // An exception is thrown if the app tries to change the audio channel type
+  // without the permission (manifest file for B2G apps).
+  // The supported values are:
+  // * normal (default value)
+  //   Automatically paused if "notification" or higher priority channel
+  //   is played
+  //   Use case: normal applications
+  // * content
+  //   Automatically paused if "notification" or higher priority channel
+  //   is played. Also paused if another app starts using "content"
+  //   channel. Using this channel never affects applications using
+  //   the "normal" channel.
+  //   Use case: video/audio players
+  // * notification
+  //   Automatically paused if "alarm" or higher priority channel is played.
+  //   Use case: New email, incoming SMS
+  // * alarm
+  //   Automatically paused if "telephony" or higher priority channel is
+  //   played.
+  //   User case: Alarm clock, calendar alarms
+  // * telephony
+  //   Automatically paused if "ringer" or higher priority
+  //   channel is played.
+  //   Use case: dialer, voip
+  // * ringer
+  //   Automatically paused if "publicnotification" or higher priority
+  //   channel is played.
+  //   Use case: dialer, voip
+  // * publicnotification
+  //   Always plays in speaker, even when headphones are plugged in.
+  //   Use case: Camera shutter sound.
   [SetterThrows]
-  attribute AudioChannel mozAudioChannelType;
+  attribute DOMString mozAudioChannelType;
 
   // In addition the media element has this new events:
   // * onmozinterruptbegin - called when the media element is interrupted
