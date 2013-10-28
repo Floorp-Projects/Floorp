@@ -1,16 +1,10 @@
 // |jit-test| allow-oom
-
-(function() {
-   Iterator((function() {
-           switch ((7)) {
-               default:
-                     return (Float32Array).call([], 4300018)
-                         case Proxy.create((function() {
-                                     return {
-                                               e:
-                                                         function() {}
-                                                                 }
-                                                                       })):
-                             }
-                               })())
-   })()
+var size = 1000000;
+var a = [];
+for (var i = 0; i < size; ++i) {
+    a[i] = null;
+}
+gcparam("maxBytes", gcparam("gcBytes") + 4*1024);
+for (var i = 0; i < size; ++i) {
+    a[i] = [];
+}
