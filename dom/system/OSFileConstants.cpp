@@ -514,6 +514,11 @@ static const dom::ConstantSpec gLibcProperties[] =
   // (may not be exact, depending on padding).
   { "OSFILE_SIZEOF_DIRENT_D_NAME", INT_TO_JSVAL(sizeof (struct dirent) - offsetof (struct dirent, d_name)) },
 
+  // Defining |timeval|.
+  { "OSFILE_SIZEOF_TIMEVAL", INT_TO_JSVAL(sizeof (struct timeval)) },
+  { "OSFILE_OFFSETOF_TIMEVAL_TV_SEC", INT_TO_JSVAL(offsetof (struct timeval, tv_sec)) },
+  { "OSFILE_OFFSETOF_TIMEVAL_TV_USEC", INT_TO_JSVAL(offsetof (struct timeval, tv_usec)) },
+
 #if defined(DT_UNKNOWN)
   // Position of field |d_type| in |dirent|
   // Not strictly posix, but seems defined on all platforms
