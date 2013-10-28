@@ -1243,13 +1243,15 @@ Interpret(JSContext *cx, RunState &state)
 #define DO_SWITCH()        goto do_switch
 
 #define BEGIN_CASE(OP)     case OP:
-#define END_CASE(OP)                                                          \
-    JS_BEGIN_MACRO                                                            \
-        len = OP##_LENGTH;                                                    \
-        ADVANCE_AND_DO_OP();                                                  \
-    JS_END_MACRO;
+#define END_CASE(OP)       ADVANCE_AND_DISPATCH(OP##_LENGTH);
 
 #define END_VARLEN_CASE    ADVANCE_AND_DO_OP();
+
+#define ADVANCE_AND_DISPATCH(N)                                               \
+    JS_BEGIN_MACRO                                                            \
+        len = (N);                                                            \
+        ADVANCE_AND_DO_OP();                                                  \
+     JS_END_MACRO
 
 #define LOAD_DOUBLE(PCOFF, dbl)                                               \
     ((dbl) = script->getConst(GET_UINT32_INDEX(regs.pc + (PCOFF))).toDouble())
@@ -1506,8 +1508,7 @@ BEGIN_CASE(JSOP_CONDSWITCH)
 BEGIN_CASE(JSOP_TRY)
 {
     JS_ASSERT(js_CodeSpec[op].length == 1);
-    len = 1;
-    ADVANCE_AND_DO_OP();
+    ADVANCE_AND_DISPATCH(1);
 }
 
 BEGIN_CASE(JSOP_LOOPHEAD)
@@ -1643,8 +1644,7 @@ BEGIN_CASE(JSOP_STOP)
         if (JS_LIKELY(interpReturnOK)) {
             TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 
-            len = JSOP_CALL_LENGTH;
-            ADVANCE_AND_DO_OP();
+            ADVANCE_AND_DISPATCH(JSOP_CALL_LENGTH);
         }
 
         /* Increment pc so that |sp - fp->slots == ReconstructStackDepth(pc)|. */
@@ -1686,20 +1686,16 @@ END_CASE(JSOP_IFNE)
 BEGIN_CASE(JSOP_OR)
 {
     bool cond = ToBooleanOp(regs);
-    if (cond) {
-        len = GET_JUMP_OFFSET(regs.pc);
-        ADVANCE_AND_DO_OP();
-    }
+    if (cond)
+        ADVANCE_AND_DISPATCH(GET_JUMP_OFFSET(regs.pc));
 }
 END_CASE(JSOP_OR)
 
 BEGIN_CASE(JSOP_AND)
 {
     bool cond = ToBooleanOp(regs);
-    if (!cond) {
-        len = GET_JUMP_OFFSET(regs.pc);
-        ADVANCE_AND_DO_OP();
-    }
+    if (!cond)
+        ADVANCE_AND_DISPATCH(GET_JUMP_OFFSET(regs.pc));
 }
 END_CASE(JSOP_AND)
 
@@ -1719,8 +1715,7 @@ END_CASE(JSOP_AND)
                 ++regs.pc;                                                    \
                 BRANCH(GET_JUMP_OFFSET(regs.pc));                             \
             }                                                                 \
-            len = 1 + JSOP_IFEQ_LENGTH;                                       \
-            ADVANCE_AND_DO_OP();                                              \
+            ADVANCE_AND_DISPATCH(1 + JSOP_IFEQ_LENGTH);                       \
         }                                                                     \
     JS_END_MACRO
 
@@ -2470,8 +2465,7 @@ BEGIN_CASE(JSOP_FUNCALL)
         Value *newsp = args.spAfterCall();
         TypeScript::Monitor(cx, script, regs.pc, newsp[-1]);
         regs.sp = newsp;
-        len = JSOP_CALL_LENGTH;
-        ADVANCE_AND_DO_OP();
+        ADVANCE_AND_DISPATCH(JSOP_CALL_LENGTH);
     }
 
     InitialFrameFlags initial = construct ? INITIAL_CONSTRUCT : INITIAL_NONE;
@@ -3229,8 +3223,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCKEXPR)
         regs.sp[-1] = *vp;
     } else {
         /* Another op will pop; nothing to do here. */
-        len = JSOP_LEAVEFORLETIN_LENGTH;
-        ADVANCE_AND_DO_OP();
+        ADVANCE_AND_DISPATCH(JSOP_LEAVEFORLETIN_LENGTH);
     }
 }
 END_CASE(JSOP_LEAVEBLOCK)
@@ -3342,8 +3335,7 @@ default:
                  * until it is pushed to the stack via [exception] in the
                  * catch block.
                  */
-                len = 0;
-                ADVANCE_AND_DO_OP();
+                ADVANCE_AND_DISPATCH(0);
 
               case JSTRY_FINALLY:
                 /*
@@ -3353,8 +3345,7 @@ default:
                 PUSH_BOOLEAN(true);
                 PUSH_COPY(cx->getPendingException());
                 cx->clearPendingException();
-                len = 0;
-                ADVANCE_AND_DO_OP();
+                ADVANCE_AND_DISPATCH(0);
 
               case JSTRY_ITER: {
                 /* This is similar to JSOP_ENDITER in the interpreter loop. */
