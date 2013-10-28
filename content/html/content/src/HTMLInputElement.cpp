@@ -3112,8 +3112,9 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // cause activation of the input.  That is, if we're a click event, or a
   // DOMActivate that was dispatched directly, this will be set, but if we're
   // a DOMActivate dispatched from click handling, it will not be set.
+  WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   bool outerActivateEvent =
-    (aVisitor.mEvent->IsLeftClickEvent() ||
+    ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
      (aVisitor.mEvent->message == NS_UI_ACTIVATE && !mInInternalActivate));
 
   if (outerActivateEvent) {
@@ -3342,14 +3343,18 @@ HTMLInputElement::MaybeInitPickers(nsEventChainPostVisitor& aVisitor)
   // - it's the left mouse button.
   // We do not prevent non-trusted click because authors can already use
   // .click(). However, the pickers will follow the rules of popup-blocking.
-  if (aVisitor.mEvent->IsLeftClickEvent() &&
-      !aVisitor.mEvent->mFlags.mDefaultPrevented) {
-    if (mType == NS_FORM_INPUT_FILE) {
-      return InitFilePicker(FILE_PICKER_FILE);
-    }
-    if (mType == NS_FORM_INPUT_COLOR) {
-      return InitColorPicker();
-    }
+  if (aVisitor.mEvent->mFlags.mDefaultPrevented) {
+    return NS_OK;
+  }
+  WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+  if (!(mouseEvent && mouseEvent->IsLeftClickEvent())) {
+    return NS_OK;
+  }
+  if (mType == NS_FORM_INPUT_FILE) {
+    return InitFilePicker(FILE_PICKER_FILE);
+  }
+  if (mType == NS_FORM_INPUT_COLOR) {
+    return InitColorPicker();
   }
   return NS_OK;
 }
@@ -3395,23 +3400,26 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   // the click event handling, and allow cancellation of DOMActivate to cancel
   // the click.
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
-      !IsSingleLineTextControl(true) &&
-      aVisitor.mEvent->IsLeftClickEvent() &&
-      !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
-    InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
-                             NS_UI_ACTIVATE, 1);
+      !IsSingleLineTextControl(true)) {
+    WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+    if (mouseEvent && mouseEvent->IsLeftClickEvent() &&
+        !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
+      InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
+                               NS_UI_ACTIVATE, 1);
 
-    nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
-    if (shell) {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      mInInternalActivate = true;
-      rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
-      mInInternalActivate = false;
+      nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
+      if (shell) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        mInInternalActivate = true;
+        rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
+        mInInternalActivate = false;
 
-      // If activate is cancelled, we must do the same as when click is
-      // cancelled (revert the checkbox to its original value).
-      if (status == nsEventStatus_eConsumeNoDefault)
-        aVisitor.mEventStatus = status;
+        // If activate is cancelled, we must do the same as when click is
+        // cancelled (revert the checkbox to its original value).
+        if (status == nsEventStatus_eConsumeNoDefault) {
+          aVisitor.mEventStatus = status;
+        }
+      }
     }
   }
 
