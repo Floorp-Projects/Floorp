@@ -120,6 +120,48 @@ let MessageListener = {
   }
 };
 
+/**
+ * If session data must be collected synchronously, we do it via
+ * method calls to this object (rather than via messages to
+ * MessageListener). When using multiple processes, these methods run
+ * in the content process, but the parent synchronously waits on them
+ * using cross-process object wrappers. Without multiple processes, we
+ * still use this code for synchronous collection.
+ */
+let SyncHandler = {
+  init: function () {
+    // Send this object as a CPOW to chrome. In single-process mode,
+    // the synchronous send ensures that the handler object is
+    // available in SessionStore.jsm immediately upon loading
+    // content-sessionStore.js.
+    sendSyncMessage("SessionStore:setupSyncHandler", {}, {handler: this});
+  },
+
+  collectSessionHistory: function (includePrivateData) {
+    let history = SessionHistory.read(docShell);
+    if ("index" in history) {
+      let tabIndex = history.index - 1;
+      TextAndScrollData.updateFrame(history.entries[tabIndex],
+                                    content,
+                                    docShell.isAppTab,
+                                    {includePrivateData: includePrivateData});
+    }
+    return history;
+  },
+
+  collectSessionStorage: function () {
+    return SessionStorage.serialize(docShell);
+  },
+
+  collectDocShellCapabilities: function () {
+    return DocShellCapabilities.collect(docShell);
+  },
+
+  collectPageStyle: function () {
+    return PageStyle.collect(docShell);
+  },
+};
+
 let ProgressListener = {
   init: function() {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -140,4 +182,5 @@ let ProgressListener = {
 
 EventListener.init();
 MessageListener.init();
+SyncHandler.init();
 ProgressListener.init();
