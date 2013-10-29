@@ -822,7 +822,6 @@ pref("gfx.canvas.skiagl.dynamic-cache", true);
 pref("gfx.gralloc.fence-with-readpixels", true);
 
 // Cell Broadcast API
-pref("dom.cellbroadcast.enabled", true);
 pref("ril.cellbroadcast.disabled", false);
 
 // ICC API
