@@ -264,15 +264,10 @@ ThebesLayerComposite::GetCompositionBounds()
                                   parentMetrics.mCompositionBounds.width,
                                   parentMetrics.mCompositionBounds.height);
 
-      // Calculate the scale transform applied to the root layer to determine
-      // the content resolution.
-      Layer* rootLayer = Manager()->GetRoot();
-      const gfx3DMatrix& rootTransform = rootLayer->GetTransform();
-      LayerToCSSScale scale(rootTransform.GetXScale(),
-                            rootTransform.GetYScale());
+      const FrameMetrics& metrics = scrollableLayer->GetFrameMetrics();
+      LayerToCSSScale scale(1 / metrics.mResolution.scale);
 
       // Get the content document bounds, in screen-space.
-      const FrameMetrics& metrics = scrollableLayer->GetFrameMetrics();
       const LayerIntRect content = RoundedToInt(metrics.mScrollableRect / scale);
       // !!! WTF. this code is just wrong. See bug 881451.
       gfx::Point scrollOffset =

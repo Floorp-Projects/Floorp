@@ -1365,6 +1365,55 @@ MArgumentsLength::computeRange()
     setRange(Range::NewUInt32Range(0, SNAPSHOT_MAX_NARGS));
 }
 
+void
+MBoundsCheck::computeRange()
+{
+    // Just transfer the incoming index range to the output. The length() is
+    // also interesting, but it is handled as a bailout check, and we're
+    // computing a pre-bailout range here.
+    setRange(new Range(index()));
+}
+
+void
+MArrayPush::computeRange()
+{
+    // MArrayPush returns the new array length.
+    setRange(Range::NewUInt32Range(0, UINT32_MAX));
+}
+
+void
+MMathFunction::computeRange()
+{
+    Range opRange(getOperand(0));
+    switch (function()) {
+      case Sin:
+      case Cos:
+        if (!opRange.canBeInfiniteOrNaN())
+            setRange(Range::NewDoubleRange(-1.0, 1.0));
+        break;
+      case Sign:
+        if (!opRange.canBeNaN()) {
+            // Note that Math.sign(-0) is -0, and we treat -0 as equal to 0.
+            int32_t lower = -1;
+            int32_t upper = 1;
+            if (opRange.hasInt32LowerBound() && opRange.lower() >= 0)
+                lower = 0;
+            if (opRange.hasInt32UpperBound() && opRange.upper() <= 0)
+                upper = 0;
+            setRange(Range::NewInt32Range(lower, upper));
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void
+MRandom::computeRange()
+{
+    setRange(Range::NewDoubleRange(0.0, 1.0));
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Range Analysis
 ///////////////////////////////////////////////////////////////////////////////
