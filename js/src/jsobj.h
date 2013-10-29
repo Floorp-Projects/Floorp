@@ -155,6 +155,12 @@ DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, bool *succee
 extern bool
 DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded);
 
+extern bool
+Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
+
+extern bool
+Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
+
 } /* namespace js::baseops */
 
 extern const Class IntlClass;
@@ -1089,6 +1095,10 @@ class JSObject : public js::ObjectImpl
                                      js::HandleSpecialId sid, bool *succeeded);
     static bool deleteByValue(JSContext *cx, js::HandleObject obj,
                               const js::Value &property, bool *succeeded);
+
+    static inline bool watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                             JS::HandleObject callable);
+    static inline bool unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
 
     static bool enumerate(JSContext *cx, JS::HandleObject obj, JSIterateOp iterop,
                           JS::MutableHandleValue statep, JS::MutableHandleId idp)
