@@ -127,9 +127,14 @@ endif #}
 
 SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/camera/$(LIB_PREFIX)domcamera_s.$(LIB_SUFFIX)
 
-ifdef MOZ_B2G_RIL #{
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 SHARED_LIBRARY_LIBS	+= \
   $(DEPTH)/dom/system/gonk/$(LIB_PREFIX)domsystemgonk_s.$(LIB_SUFFIX) \
+  $(NULL)
+endif #}
+
+ifdef MOZ_B2G_RIL #{
+SHARED_LIBRARY_LIBS	+= \
   $(DEPTH)/dom/icc/src/$(LIB_PREFIX)dom_icc_s.$(LIB_SUFFIX) \
   $(DEPTH)/dom/cellbroadcast/src/$(LIB_PREFIX)dom_cellbroadcast_s.$(LIB_SUFFIX) \
   $(DEPTH)/dom/voicemail/$(LIB_PREFIX)domvoicemail_s.$(LIB_SUFFIX) \
@@ -326,7 +331,7 @@ ifdef MOZ_GSTREAMER
 LOCAL_INCLUDES	+= $(GSTREAMER_CFLAGS)
 endif
 
-ifdef MOZ_B2G_RIL #{
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/system/gonk
 endif #}
 

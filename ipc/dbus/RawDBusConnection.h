@@ -53,15 +53,6 @@ public:
                      int aTimeout, const char* aPath, const char* aIntf,
                      const char *aFunc, int aFirstArgType, ...);
 
-  /* Legacy interface, don't use in new code */
-  bool SendWithError(DBusMessage** aReply, DBusError* aError, int aTimeout,
-                     DBusMessage* aMessage);
-
-  /* Legacy interface, don't use in new code */
-  bool SendWithError(DBusMessage** aReply, DBusError* aError, int aTimeout,
-                     const char* aPath, const char* aIntf, const char* aFunc,
-                     int aFirstArgType, ...);
-
 protected:
   DBusMessage* BuildDBusMessage(const char* aPath, const char* aIntf,
                                 const char* aFunc, int aFirstArgType,
