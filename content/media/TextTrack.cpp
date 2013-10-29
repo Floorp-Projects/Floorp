@@ -75,7 +75,9 @@ TextTrack::SetDefaultSettings()
 void
 TextTrack::Update(double aTime)
 {
-  mCueList->Update(aTime);
+  if (mCueList) {
+    mCueList->Update(aTime);
+  }
 }
 
 JSObject*
