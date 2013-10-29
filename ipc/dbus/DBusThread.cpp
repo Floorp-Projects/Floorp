@@ -253,18 +253,19 @@ DBusWatcher::Poll()
         }
       } else {
         short events = mPollData[i].revents;
-        unsigned int flags = UnixEventsToDBusFlags(events);
-        dbus_watch_handle(mWatchData[i], flags);
         mPollData[i].revents = 0;
+
+        dbus_watch_handle(mWatchData[i], UnixEventsToDBusFlags(events));
+
+        DBusDispatchStatus dbusDispatchStatus;
+        do {
+          dbusDispatchStatus = dbus_connection_dispatch(GetConnection());
+        } while (dbusDispatchStatus == DBUS_DISPATCH_DATA_REMAINS);
+
         // Break at this point since we don't know if the operation
         // was destructive
         break;
       }
-
-      DBusDispatchStatus dbusDispatchStatus;
-      do {
-        dbusDispatchStatus = dbus_connection_dispatch(GetConnection());
-      } while (dbusDispatchStatus == DBUS_DISPATCH_DATA_REMAINS);
     }
 
     ++i;
