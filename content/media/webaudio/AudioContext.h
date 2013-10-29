@@ -7,7 +7,7 @@
 #ifndef AudioContext_h_
 #define AudioContext_h_
 
-#include "mozilla/dom/AudioContextBinding.h"
+#include "mozilla/dom/AudioChannelBinding.h"
 #include "EnableWebAudioCheck.h"
 #include "MediaBufferDecoder.h"
 #include "mozilla/Attributes.h"

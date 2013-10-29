@@ -27,7 +27,9 @@
     "idle":{},
     "network-events":{},
     "embed-apps":{},
-    "systemXHR":{}
+    "systemXHR":{},
+    "audio-channel-content":{},
+    "audio-channel-alarm":{}
   },
   "locales": {
     "en-US": {
