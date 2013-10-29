@@ -78,6 +78,13 @@ VARIABLES = {
         Accepts assembler, C, C++, Objective C/C++.
         """, 'compile'),
 
+    'GENERATED_SOURCES': (StrictOrderingOnAppendList, list, [],
+        """Generated source code files.
+
+        This variable contains a list of generated source code files to
+        compile. Accepts assembler, C, C++, Objective C/C++.
+        """, 'compile'),
+
     'UNIFIED_SOURCES': (StrictOrderingOnAppendList, list, [],
         """Source code files that can be compiled together.
 
@@ -85,6 +92,15 @@ VARIABLES = {
         that can be concatenated all together and built as a single source
         file. This can help make the build faster and reduce the debug info
         size.
+        """, 'compile'),
+
+    'GENERATED_UNIFIED_SOURCES': (StrictOrderingOnAppendList, list, [],
+        """Generated source code files that can be compiled together.
+
+        This variable contains a list of generated source code files to
+        compile, that can be concatenated all together, with UNIFIED_SOURCES,
+        and built as a single source file. This can help make the build faster
+        and reduce the debug info size.
         """, 'compile'),
 
     'DEFINES': (OrderedDict, dict, OrderedDict(),
