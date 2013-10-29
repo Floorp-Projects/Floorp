@@ -134,7 +134,8 @@ Object.defineProperty(OSError.prototype, "becauseExists", {
  */
 Object.defineProperty(OSError.prototype, "becauseNoSuchFile", {
   get: function becauseNoSuchFile() {
-    return this.winLastError == Const.ERROR_FILE_NOT_FOUND;
+    return this.winLastError == Const.ERROR_FILE_NOT_FOUND ||
+      this.winLastError == Const.ERROR_PATH_NOT_FOUND;
   }
 });
 /**
