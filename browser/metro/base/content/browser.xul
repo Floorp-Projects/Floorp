@@ -238,7 +238,8 @@
                      autocompletesearch="history"
                      autocompletepopup="urlbar-autocomplete"
                      completeselectedindex="true"
-                     placeholder="&urlbar.emptytext;"/>
+                     placeholder="&urlbar.emptytext;"
+                     onclick="SelectionHelperUI.urlbarClick();"/>
 
             <toolbarbutton id="go-button" class="urlbar-button"
                            command="cmd_go"/>
