@@ -222,6 +222,12 @@
             bottom: scrollPaddingRect.bottom - parseFloat(style.paddingBottom)
           };
 
+          // Provide an entry point for derived bindings to adjust these values.
+          if (this._adjustElementStartAndEnd) {
+            [elementStart, elementEnd] =
+              this._adjustElementStartAndEnd(element, elementStart, elementEnd);
+          }
+
           if (elementStart <= (vertical ? scrollContentRect.top : scrollContentRect.left)) {
             elementStart = vertical ? scrollPaddingRect.top : scrollPaddingRect.left;
           }
