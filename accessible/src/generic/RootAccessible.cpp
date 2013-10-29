@@ -467,12 +467,12 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessNode
+// Accessible
 
 void
 RootAccessible::Shutdown()
 {
-  // Called manually or by nsAccessNode::LastRelease()
+  // Called manually or by Accessible::LastRelease()
   if (!PresShell())
     return;  // Already shutdown
 

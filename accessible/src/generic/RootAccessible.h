@@ -29,10 +29,8 @@ public:
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
-  // nsAccessNode
-  virtual void Shutdown();
-
   // Accessible
+  virtual void Shutdown();
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
   virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
   virtual mozilla::a11y::role NativeRole();

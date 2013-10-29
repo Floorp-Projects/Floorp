@@ -38,10 +38,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULTreeAccessible, Accessible)
 
-  // nsAccessNode
-  virtual void Shutdown();
-
   // Accessible
+  virtual void Shutdown();
   virtual void Value(nsString& aValue);
   virtual a11y::role NativeRole();
   virtual uint64_t NativeState();
@@ -155,10 +153,8 @@ public:
   NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
   NS_IMETHOD DoAction(uint8_t aIndex);
 
-  // nsAccessNode
-  virtual void Shutdown();
-
   // Accessible
+  virtual void Shutdown();
   virtual GroupPos GroupPosition();
   virtual uint64_t NativeState();
   virtual uint64_t NativeInteractiveState() const;
@@ -236,10 +232,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULTreeItemAccessible,
                                            XULTreeItemAccessibleBase)
 
-  // nsAccessNode
-  virtual void Shutdown();
-
   // Accessible
+  virtual void Shutdown();
   virtual ENameValueFlag Name(nsString& aName);
   virtual a11y::role NativeRole();
 
