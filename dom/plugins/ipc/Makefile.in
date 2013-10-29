@@ -8,6 +8,12 @@ DEFINES += \
   $(NULL)
 endif
 
+ifdef MOZ_ENABLE_QT
+CPPSRCS += \
+  moc_NestedLoopTimer.cpp \
+  $(NULL)
+endif
+
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base \
   -I$(topsrcdir)/xpcom/base/ \
