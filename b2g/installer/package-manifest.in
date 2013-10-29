@@ -164,10 +164,12 @@
 @BINPATH@/components/dom_audiochannel.xpt
 @BINPATH@/components/dom_base.xpt
 @BINPATH@/components/dom_system.xpt
-#ifdef MOZ_B2G_RIL
-@BINPATH@/components/dom_voicemail.xpt
+#ifdef MOZ_WIDGET_GONK
 @BINPATH@/components/dom_wifi.xpt
 @BINPATH@/components/dom_system_gonk.xpt
+#endif
+#ifdef MOZ_B2G_RIL
+@BINPATH@/components/dom_voicemail.xpt
 @BINPATH@/components/dom_icc.xpt
 @BINPATH@/components/dom_cellbroadcast.xpt
 @BINPATH@/components/dom_wappush.xpt
@@ -399,6 +401,36 @@
 @BINPATH@/components/nsDownloadManagerUI.js
 @BINPATH@/components/nsSidebar.manifest
 @BINPATH@/components/nsSidebar.js
+
+; WiFi, NetworkManager, NetworkStats
+#ifdef MOZ_WIDGET_GONK
+@BINPATH@/components/DOMWifiManager.js
+@BINPATH@/components/DOMWifiManager.manifest
+@BINPATH@/components/NetworkInterfaceListService.js
+@BINPATH@/components/NetworkInterfaceListService.manifest
+@BINPATH@/components/NetworkManager.js
+@BINPATH@/components/NetworkManager.manifest
+@BINPATH@/components/NetworkStatsManager.js
+@BINPATH@/components/NetworkStatsManager.manifest
+@BINPATH@/components/NetworkStatsServiceProxy.js
+@BINPATH@/components/NetworkStatsServiceProxy.manifest
+@BINPATH@/components/WifiWorker.js
+@BINPATH@/components/WifiWorker.manifest
+#endif // MOZ_WIDGET_GONK
+
+; RIL
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+@BINPATH@/components/MmsService.js
+@BINPATH@/components/MmsService.manifest
+@BINPATH@/components/MobileMessageDatabaseService.js
+@BINPATH@/components/MobileMessageDatabaseService.manifest
+@BINPATH@/components/RadioInterfaceLayer.js
+@BINPATH@/components/RadioInterfaceLayer.manifest
+@BINPATH@/components/RILContentHelper.js
+@BINPATH@/components/TelephonyProvider.js
+@BINPATH@/components/TelephonyProvider.manifest
+#endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
+
 #ifndef MOZ_WIDGET_GONK
 @BINPATH@/components/extensions.manifest
 @BINPATH@/components/addonManager.js
@@ -464,29 +496,6 @@
 @BINPATH@/components/webvtt.xpt
 @BINPATH@/components/WebVTT.manifest
 @BINPATH@/components/WebVTTParserWrapper.js
-#ifdef MOZ_B2G_RIL
-@BINPATH@/components/NetworkManager.manifest
-@BINPATH@/components/NetworkManager.js
-@BINPATH@/components/RadioInterfaceLayer.manifest
-@BINPATH@/components/RadioInterfaceLayer.js
-@BINPATH@/components/MmsService.manifest
-@BINPATH@/components/MmsService.js
-@BINPATH@/components/RILContentHelper.js
-@BINPATH@/components/MobileMessageDatabaseService.manifest
-@BINPATH@/components/MobileMessageDatabaseService.js
-@BINPATH@/components/WifiWorker.js
-@BINPATH@/components/WifiWorker.manifest
-@BINPATH@/components/DOMWifiManager.js
-@BINPATH@/components/DOMWifiManager.manifest
-@BINPATH@/components/NetworkStatsManager.js
-@BINPATH@/components/NetworkStatsManager.manifest
-@BINPATH@/components/NetworkInterfaceListService.manifest
-@BINPATH@/components/NetworkInterfaceListService.js
-@BINPATH@/components/TelephonyProvider.manifest
-@BINPATH@/components/TelephonyProvider.js
-@BINPATH@/components/NetworkStatsServiceProxy.manifest
-@BINPATH@/components/NetworkStatsServiceProxy.js
-#endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif

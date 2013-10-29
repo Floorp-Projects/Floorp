@@ -98,12 +98,12 @@ OS_LIBS += -ldbus
 endif
 endif #}
 
-ifneq ($(strip $(MOZ_B2G_RIL)$(MOZ_B2G_BT)),) #{
-STATIC_LIBS += mozipcunixsocket_s mozkeystore_s
+ifneq ($(strip $(MOZ_B2G_RIL)$(MOZ_B2G_BT)$(filter gonk,$(MOZ_WIDGET_TOOLKIT))),) #{
+STATIC_LIBS += mozipcunixsocket_s
 endif #}
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-STATIC_LIBS += moznetd_s
+STATIC_LIBS += moznetd_s mozkeystore_s
 endif
 
 ifdef MOZ_B2G_CAMERA #{
