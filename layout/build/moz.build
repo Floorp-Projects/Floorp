@@ -12,7 +12,7 @@ EXPORTS += [
     'nsLayoutStatics.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsContentDLF.cpp',
     'nsLayoutModule.cpp',
     'nsLayoutStatics.cpp',
@@ -27,4 +27,6 @@ MSVC_ENABLE_PGO = True
 LIBRARY_NAME = 'gklayout'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

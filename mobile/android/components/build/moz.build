@@ -14,14 +14,18 @@ EXPORTS += [
     'nsBrowserComponents.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsBrowserModule.cpp',
     'nsShellService.cpp',
 ]
 
 if CONFIG['MOZ_ANDROID_HISTORY']:
-    CPP_SOURCES += [
+    SOURCES += [
         'nsAndroidHistory.cpp',
+    ]
+    LOCAL_INCLUDES += [
+        '/content/base/src',
+        '/docshell/base',
     ]
 
 LIBRARY_NAME = 'browsercomps'

@@ -10,8 +10,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'cocoa':
 MODULE = 'dom'
 
 EXPORTS += [
-    'PCOMContentPermissionRequestChild.h',
     'nsICachedFileDescriptorListener.h',
+    'PCOMContentPermissionRequestChild.h',
 ]
 
 EXPORTS.mozilla.dom.ipc += [
@@ -39,22 +39,22 @@ EXPORTS.mozilla += [
     'ProcessPriorityManager.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AppProcessChecker.cpp',
     'Blob.cpp',
-    'ContentProcess.cpp',
-    'ContentParent.cpp',
     'ContentChild.cpp',
-    'CrashReporterParent.cpp',
+    'ContentParent.cpp',
+    'ContentProcess.cpp',
     'CrashReporterChild.cpp',
+    'CrashReporterParent.cpp',
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
     'StructuredCloneUtils.cpp',
-    'TabParent.cpp',
     'TabChild.cpp',
     'TabContext.cpp',
     'TabMessageUtils.cpp',
+    'TabParent.cpp',
 ]
 
 IPDL_SOURCES += [
@@ -64,6 +64,7 @@ IPDL_SOURCES += [
     'PBrowser.ipdl',
     'PContent.ipdl',
     'PContentDialog.ipdl',
+    'PContentPermission.ipdlh',
     'PContentPermissionRequest.ipdl',
     'PCrashReporter.ipdl',
     'PDocumentRenderer.ipdl',
@@ -78,4 +79,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'domipc_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -8,7 +8,7 @@ MODULE = 'tremor'
 
 LIBRARY_NAME = 'tremor'
 
-CSRCS += [
+SOURCES += [
     'tremor_block.c',
     'tremor_codebook.c',
     'tremor_floor0.c',
@@ -23,3 +23,4 @@ CSRCS += [
     'tremor_window.c',
 ]
 
+FORCE_STATIC_LIB = True

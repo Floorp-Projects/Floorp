@@ -54,9 +54,9 @@ function testRemembered()
 {
   is(gUI.selectedEditor, gUI.editors[1], "second editor is selected");
 
-  let {line, col} = gUI.selectedEditor.sourceEditor.getCaretPosition();
+  let {line, ch} = gUI.selectedEditor.sourceEditor.getCursor();
   is(line, LINE_NO, "correct line selected");
-  is(col, COL_NO, "correct column selected");
+  is(ch, COL_NO, "correct column selected");
 
   testNewPage();
 }
@@ -80,9 +80,9 @@ function testNotRemembered()
 {
   is(gUI.selectedEditor, gUI.editors[0], "first editor is selected");
 
-  let {line, col} = gUI.selectedEditor.sourceEditor.getCaretPosition();
+  let {line, ch} = gUI.selectedEditor.sourceEditor.getCursor();
   is(line, 0, "first line is selected");
-  is(col, 0, "first column is selected");
+  is(ch, 0, "first column is selected");
 
   gUI = null;
   finish();

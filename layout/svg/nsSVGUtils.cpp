@@ -1652,7 +1652,10 @@ nsSVGUtils::SetupCairoStrokeBBoxGeometry(nsIFrame* aFrame,
   aContext->SetLineWidth(width);
 
   // Apply any stroke-specific transform
-  aContext->Multiply(GetStrokeTransform(aFrame));
+  gfxMatrix strokeTransform = GetStrokeTransform(aFrame);
+  if (!strokeTransform.IsIdentity()) {
+    aContext->Multiply(strokeTransform);
+  }
 
   const nsStyleSVG* style = aFrame->StyleSVG();
   
@@ -1859,7 +1862,15 @@ nsSVGUtils::GetSVGGlyphExtents(Element* aElement,
   if (!svgFrame) {
     return false;
   }
-  *aResult = svgFrame->GetBBoxContribution(aSVGToAppSpace,
+
+  gfxMatrix transform(aSVGToAppSpace);
+  nsIContent* content = frame->GetContent();
+  if (content->IsSVG()) {
+    transform = static_cast<nsSVGElement*>(content)->
+                  PrependLocalTransformsTo(aSVGToAppSpace);
+  }
+
+  *aResult = svgFrame->GetBBoxContribution(transform,
     nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeFillGeometry |
     nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIncludeStrokeGeometry |
     nsSVGUtils::eBBoxIncludeMarkers);

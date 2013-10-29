@@ -372,7 +372,7 @@ nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
   if (!target)
     return nullptr;
 
-  return target->GetListenerManager(true);
+  return target->GetOrCreateListenerManager();
 }
 
 void

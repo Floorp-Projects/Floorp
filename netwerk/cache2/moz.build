@@ -22,15 +22,15 @@ EXPORTS += [
     'CacheStorageService.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AppCacheStorage.cpp',
     'CacheEntriesEnumerator.cpp',
     'CacheEntry.cpp',
     'CacheFile.cpp',
     'CacheFileChunk.cpp',
-    'CacheFileMetadata.cpp',
     'CacheFileInputStream.cpp',
     'CacheFileIOManager.cpp',
+    'CacheFileMetadata.cpp',
     'CacheFileOutputStream.cpp',
     'CacheHashUtils.cpp',
     'CacheIOThread.cpp',

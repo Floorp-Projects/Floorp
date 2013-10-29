@@ -18,8 +18,8 @@
 #elif defined(JS_CPU_ARM)
 # include "jit/arm/MacroAssembler-arm.h"
 #endif
-#include "jit/IonCompartment.h"
 #include "jit/IonInstrumentation.h"
+#include "jit/JitCompartment.h"
 #include "jit/VMFunctions.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
@@ -240,10 +240,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     MacroAssembler(JSContext *cx, IonScript *ion)
       : enoughMemory_(true),
         embedsNurseryPointers_(false),
-        sps_(NULL)
+        sps_(nullptr)
     {
         constructRoot(cx);
-         ionContext_.construct(cx, (js::jit::TempAllocator *)NULL);
+         ionContext_.construct(cx, (js::jit::TempAllocator *)nullptr);
          alloc_.construct(cx);
 #ifdef JS_CPU_ARM
          initWithAllocator();
@@ -647,10 +647,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         Push(PreBarrierReg);
         computeEffectiveAddress(address, PreBarrierReg);
 
-        JSRuntime *runtime = GetIonContext()->runtime;
+        JitRuntime *rt = GetIonContext()->runtime->jitRuntime();
         IonCode *preBarrier = (type == MIRType_Shape)
-                              ? runtime->ionRuntime()->shapePreBarrier()
-                              : runtime->ionRuntime()->valuePreBarrier();
+                              ? rt->shapePreBarrier()
+                              : rt->valuePreBarrier();
 
         call(preBarrier);
         Pop(PreBarrierReg);
@@ -737,10 +737,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     using MacroAssemblerSpecific::extractTag;
     Register extractTag(const TypedOrValueRegister &reg, Register scratch) {
-        if (reg.hasValue()) {
+        if (reg.hasValue())
             return extractTag(reg.valueReg(), scratch);
-        }
-        mov(ImmWord(ValueTypeFromMIRType(reg.type())), scratch);
+        mov(ImmWord(MIRTypeToTag(reg.type())), scratch);
         return scratch;
     }
 
@@ -864,13 +863,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
 
     }
-
-    // Given a js::StackFrame in OsrFrameReg, performs inline on-stack
-    // replacement. The stack frame must be at a valid OSR entry-point.
-    void performOsr();
-
-    // Checks if an OSR frame is the previous frame, and if so, removes it.
-    void maybeRemoveOsrFrame(Register scratch);
 
     // Generates code used to complete a bailout.
     void generateBailoutTail(Register scratch, Register bailoutInfo);

@@ -24,7 +24,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISelectionController.h"
-#include "jsapi.h"
 #include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 
@@ -306,6 +305,21 @@ HTMLTextFieldAccessible::NativeRole()
   return roles::ENTRY;
 }
 
+already_AddRefed<nsIPersistentProperties>
+HTMLTextFieldAccessible::NativeAttributes()
+{
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    HyperTextAccessibleWrap::NativeAttributes();
+
+  // Expose type for text input elements as it gives some useful context,
+  // especially for mobile.
+  nsAutoString type;
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type))
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::textInputType, type);
+
+  return attributes.forget();
+}
+
 ENameValueFlag
 HTMLTextFieldAccessible::NativeName(nsString& aName)
 {
@@ -518,9 +532,7 @@ HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
     if (button && button->Role() == roles::PUSHBUTTON) {
       nsRefPtr<AccStateChangeEvent> childEvent =
         new AccStateChangeEvent(button, event->GetState(),
-                                event->IsStateEnabled(),
-                                (event->IsFromUserInput() ? eFromUserInput
-                                                          : eNoUserInput));
+                                event->IsStateEnabled(), event->FromUserInput());
       nsEventShell::FireEvent(childEvent);
     }
   }
@@ -659,11 +671,11 @@ HTMLGroupboxAccessible::NativeName(nsString& aName)
 }
 
 Relation
-HTMLGroupboxAccessible::RelationByType(uint32_t aType)
+HTMLGroupboxAccessible::RelationByType(RelationType aType)
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
     // No override for label, so use <legend> for this <fieldset>
-  if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
+  if (aType == RelationType::LABELLED_BY)
     rel.AppendTarget(mDoc, GetLegend());
 
   return rel;
@@ -680,10 +692,10 @@ HTMLLegendAccessible::
 }
 
 Relation
-HTMLLegendAccessible::RelationByType(uint32_t aType)
+HTMLLegendAccessible::RelationByType(RelationType aType)
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
-  if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
+  if (aType != RelationType::LABEL_FOR)
     return rel;
 
   Accessible* groupbox = Parent();
@@ -742,10 +754,10 @@ HTMLFigureAccessible::NativeName(nsString& aName)
 }
 
 Relation
-HTMLFigureAccessible::RelationByType(uint32_t aType)
+HTMLFigureAccessible::RelationByType(RelationType aType)
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
-  if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
+  if (aType == RelationType::LABELLED_BY)
     rel.AppendTarget(mDoc, Caption());
 
   return rel;
@@ -782,10 +794,10 @@ HTMLFigcaptionAccessible::NativeRole()
 }
 
 Relation
-HTMLFigcaptionAccessible::RelationByType(uint32_t aType)
+HTMLFigcaptionAccessible::RelationByType(RelationType aType)
 {
   Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
-  if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
+  if (aType != RelationType::LABEL_FOR)
     return rel;
 
   Accessible* figure = Parent();

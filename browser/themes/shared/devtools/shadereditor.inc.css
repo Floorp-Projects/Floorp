@@ -1,0 +1,134 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#body {
+  background: url(background-noise-toolbar.png), hsl(208,11%,27%);
+}
+
+#content {
+  background: #fff;
+}
+
+/* Reload and waiting notices */
+
+.notice-container {
+  background: transparent;
+  margin-top: -50vh;
+  color: #fff;
+}
+
+#reload-notice {
+  font-size: 120%;
+}
+
+#waiting-notice {
+  font-size: 110%;
+}
+
+#waiting-notice::before {
+  display: inline-block;
+  content: "";
+  background: url("chrome://global/skin/icons/loading_16.png") center no-repeat;
+  width: 16px;
+  height: 16px;
+  -moz-margin-end: 6px;
+}
+
+#requests-menu-reload-notice-button {
+  min-height: 2em;
+}
+
+/* Shaders pane */
+
+#shaders-pane {
+  min-width: 150px;
+}
+
+#shaders-pane + .devtools-side-splitter {
+  -moz-border-start-color: transparent;
+}
+
+.side-menu-widget-item-checkbox {
+  -moz-appearance: none;
+  opacity: 0;
+  transition: opacity .15s ease-out 0s;
+}
+
+/* Only show the checkbox when the source is hovered over, is selected, or if it
+ * is not checked. */
+.side-menu-widget-item:hover > .side-menu-widget-item-checkbox,
+.side-menu-widget-item.selected > .side-menu-widget-item-checkbox,
+.side-menu-widget-item-checkbox:not([checked]) {
+  opacity: 1;
+  transition: opacity .15s ease-out 0s;
+}
+
+.side-menu-widget-item-checkbox .checkbox-check {
+  -moz-appearance: none;
+  background: none;
+  background-image: url(itemToggle.png);
+  background-repeat: no-repeat;
+  background-clip: content-box;
+  background-size: 32px 16px;
+  background-position: -16px 0;
+  width: 16px;
+  height: 16px;
+  border: 0;
+}
+
+.side-menu-widget-item-checkbox[checked] .checkbox-check {
+  background-position: 0 0;
+}
+
+.side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents {
+  color: #888;
+}
+
+/* Shader source editors */
+
+#editors-splitter {
+  -moz-border-start-color: rgb(61,69,76);
+}
+
+.editor-label {
+  background: url(background-noise-toolbar.png), hsl(208,11%,27%);
+  border-top: 1px solid #222426;
+  padding: 1px 12px;
+  color: #fff;
+}
+
+.editor-label[selected] {
+  background: linear-gradient(hsl(206,61%,40%), hsl(206,61%,31%)) repeat-x top left;
+  box-shadow: inset 0 1px 0 hsla(210,40%,83%,.15),
+              inset 0 -1px 0 hsla(210,40%,83%,.05);
+}
+
+/* Responsive sidebar */
+
+@media (max-width: 700px) {
+  #shaders-pane {
+    max-height: 60vh;
+  }
+
+  .side-menu-widget-container {
+    box-shadow: none !important;
+  }
+
+  .side-menu-widget-item-arrow {
+    background-image: none !important;
+  }
+
+  .devtools-side-splitter {
+    border-top-color: transparent !important;
+  }
+
+  .editor-label {
+    -moz-box-ordinal-group: 0;
+  }
+
+  .editor-label:not([selected]) {
+    border-top: 1px solid hsla(210,8%,5%,.25);
+    box-shadow: inset 0 1px 0 hsla(210,40%,83%,.15);
+  }
+}

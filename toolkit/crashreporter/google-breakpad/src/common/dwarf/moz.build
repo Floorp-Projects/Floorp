@@ -8,9 +8,12 @@ MODULE = 'breakpad_dwarf'
 
 if CONFIG['MOZ_CRASHREPORTER']:
     HOST_LIBRARY_NAME = 'host_breakpad_dwarf_s'
-    HOST_CPPSRCS += [
+    HOST_SOURCES += [
         'bytereader.cc',
         'dwarf2diehandler.cc',
         'dwarf2reader.cc',
         'functioninfo.cc',
     ]
+
+# need static lib
+FORCE_STATIC_LIB = True

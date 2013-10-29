@@ -631,6 +631,7 @@ public class FaviconCache {
         startWrite();
 
         try {
+            mCurrentSize.set(0);
             mBackingMap.clear();
             mOrdering.clear();
         } finally {

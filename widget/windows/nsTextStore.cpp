@@ -1755,7 +1755,7 @@ nsTextStore::GetText(LONG acpStart,
     return TS_E_INVALIDPOS;
   }
 
-  // Making sure to NULL-terminate string just to be on the safe side
+  // Making sure to null-terminate string just to be on the safe side
   *pcchPlainOut = 0;
   if (pchPlain && cchPlainReq) *pchPlain = 0;
   if (pulRunInfoOut) *pulRunInfoOut = 0;

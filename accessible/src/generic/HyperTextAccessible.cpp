@@ -9,12 +9,14 @@
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
+#include "nsIAccessibleTypes.h"
 #include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 #include "TextAttrs.h"
 #include "TreeWalker.h"
 
+#include "nsCaret.h"
 #include "nsIClipboard.h"
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
@@ -1740,6 +1742,57 @@ HyperTextAccessible::CaretLineNumber()
 
   NS_NOTREACHED("DOM ancestry had this hypertext but frame ancestry didn't");
   return lineNumber;
+}
+
+nsIntRect
+HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
+{
+  *aWidget = nullptr;
+
+  nsRefPtr<nsCaret> caret = mDoc->PresShell()->GetCaret();
+  NS_ENSURE_TRUE(caret, nsIntRect());
+
+  nsISelection* caretSelection = caret->GetCaretDOMSelection();
+  NS_ENSURE_TRUE(caretSelection, nsIntRect());
+
+  bool isVisible = false;
+  caret->GetCaretVisible(&isVisible);
+  if (!isVisible)
+    return nsIntRect();
+
+  nsRect rect;
+  nsIFrame* frame = caret->GetGeometry(caretSelection, &rect);
+  if (!frame || rect.IsEmpty())
+    return nsIntRect();
+
+  nsPoint offset;
+  // Offset from widget origin to the frame origin, which includes chrome
+  // on the widget.
+  *aWidget = frame->GetNearestWidget(offset);
+  NS_ENSURE_TRUE(*aWidget, nsIntRect());
+  rect.MoveBy(offset);
+
+  nsIntRect caretRect;
+  caretRect = rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel());
+  // ((content screen origin) - (content offset in the widget)) = widget origin on the screen
+  caretRect.MoveBy((*aWidget)->WidgetToScreenOffset() - (*aWidget)->GetClientOffset());
+
+  int32_t caretOffset = -1;
+  GetCaretOffset(&caretOffset);
+
+  // Correct for character size, so that caret always matches the size of
+  // the character. This is important for font size transitions, and is
+  // necessary because the Gecko caret uses the previous character's size as
+  // the user moves forward in the text by character.
+  int32_t charX = 0, charY = 0, charWidth = 0, charHeight = 0;
+  if (NS_SUCCEEDED(GetCharacterExtents(caretOffset, &charX, &charY,
+                                       &charWidth, &charHeight,
+                                       nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE))) {
+    caretRect.height -= charY - caretRect.y;
+    caretRect.y = charY;
+  }
+
+  return caretRect;
 }
 
 already_AddRefed<nsFrameSelection>

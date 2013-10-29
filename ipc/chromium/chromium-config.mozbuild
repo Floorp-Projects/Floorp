@@ -1,0 +1,75 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+LOCAL_INCLUDES += [
+    '/ipc/chromium/src',
+    '/ipc/glue',
+]
+
+GENERATED_INCLUDES += [
+    '/ipc/ipdl/_ipdlheaders',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    OS_LIBS += [ '$(call EXPAND_LIBNAME,psapi shell32 dbghelp)' ]
+
+    DEFINES.update({
+        'UNICODE': True,
+        '_UNICODE': True,
+        'NOMINMAX': True,
+        '_CRT_RAND_S': True,
+        'CERT_CHAIN_PARA_HAS_EXTRA_FIELDS': True,
+        '_SECURE_ATL': True,
+        'CHROMIUM_BUILD': True,
+        'U_STATIC_IMPLEMENTATION': True,
+        'OS_WIN': 1,
+        'WIN32': True,
+        '_WIN32': True,
+        '_WINDOWS': True,
+        'WIN32_LEAN_AND_MEAN': True,
+    })
+
+    if CONFIG['_MSC_VER']:
+        DEFINES['COMPILER_MSVC'] = True
+
+else:
+    DEFINES['OS_POSIX'] = 1
+
+    if CONFIG['OS_ARCH'] == 'Darwin':
+        DEFINES['OS_MACOSX'] = 1
+
+    elif CONFIG['OS_ARCH'] == 'DragonFly':
+        OS_LIBS += [ '$(call EXPAND_LIBNAME,kvm)' ]
+        DEFINES.update({
+            'OS_DRAGONFLY': 1,
+            'OS_BSD': 1,
+        })
+
+    elif CONFIG['OS_ARCH'] == 'FreeBSD' or CONFIG['OS_ARCH'] == 'GNU_kFreeBSD':
+        if CONFIG['OS_ARCH'] != 'GNU_kFreeBSD':
+            OS_LIBS += [ '$(call EXPAND_LIBNAME,kvm)' ]
+
+        DEFINES.update({
+            'OS_FREEBSD': 1,
+            'OS_BSD': 1,
+        })
+
+    elif CONFIG['OS_ARCH'] == 'NetBSD':
+        OS_LIBS += [ '$(call EXPAND_LIBNAME,kvm)' ]
+        DEFINES.update({
+            'OS_NETBSD': 1,
+            'OS_BSD': 1,
+        })
+
+    elif CONFIG['OS_ARCH'] == 'OpenBSD':
+        OS_LIBS += [ '$(call EXPAND_LIBNAME,kvm)' ]
+        DEFINES.update({
+            'OS_OPENBSD': 1,
+            'OS_BSD': 1,
+        })
+
+    else:
+        DEFINES['OS_LINUX'] = 1

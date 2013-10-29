@@ -22,8 +22,6 @@ LOCAL_INCLUDES += \
   $(MOZ_PIXMAN_CFLAGS) \
   $(NULL)
 
-include $(topsrcdir)/dom/dom-config.mk
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CXXFLAGS         += $(TK_CFLAGS)

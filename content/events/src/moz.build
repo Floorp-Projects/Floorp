@@ -22,11 +22,9 @@ EXPORTS.mozilla.dom += [
 if CONFIG['MOZ_WEBSPEECH']:
     EXPORTS.mozilla.dom += ['SpeechRecognitionError.h']
 
-CPP_SOURCES += [
+SOURCES += [
     'DOMWheelEvent.cpp',
     'EventTarget.cpp',
-    'TextComposition.cpp',
-    'Touch.cpp',
     'nsAsyncDOMEvent.cpp',
     'nsContentEventHandler.cpp',
     'nsDOMAnimationEvent.cpp',
@@ -62,10 +60,12 @@ CPP_SOURCES += [
     'nsIMEStateManager.cpp',
     'nsPaintRequest.cpp',
     'nsPrivateTextRange.cpp',
+    'TextComposition.cpp',
+    'Touch.cpp',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:
-    CPP_SOURCES += ['SpeechRecognitionError.cpp']
+    SOURCES += ['SpeechRecognitionError.cpp']
 
 FAIL_ON_WARNINGS = True
 
@@ -74,4 +74,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkconevents_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

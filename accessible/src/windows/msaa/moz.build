@@ -16,27 +16,27 @@ EXPORTS.mozilla.a11y += [
     'HyperTextAccessibleWrap.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AccessibleWrap.cpp',
     'ApplicationAccessibleWrap.cpp',
     'ARIAGridAccessibleWrap.cpp',
+    'Compatibility.cpp',
     'DocAccessibleWrap.cpp',
+    'EnumVariant.cpp',
     'HTMLTableAccessibleWrap.cpp',
     'HTMLWin32ObjectAccessible.cpp',
     'HyperTextAccessibleWrap.cpp',
     'ImageAccessibleWrap.cpp',
     'IUnknownImpl.cpp',
     'nsWinUtils.cpp',
-    'Compatibility.cpp',
-    'EnumVariant.cpp',
     'Platform.cpp',
-    'ServiceProvider.cpp',
     'RootAccessibleWrap.cpp',
+    'ServiceProvider.cpp',
     'TextLeafAccessibleWrap.cpp',
 ]
 
 if CONFIG['MOZ_XUL']:
-    CPP_SOURCES += [
+    SOURCES += [
         'XULListboxAccessibleWrap.cpp',
         'XULMenuAccessibleWrap.cpp',
         'XULTreeGridAccessibleWrap.cpp',
@@ -60,4 +60,6 @@ LOCAL_INCLUDES += [
 LIBRARY_NAME = 'accessibility_toolkit_msaa_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -43,6 +43,7 @@
 #include "js/OldDebugAPI.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
+#include "vm/ProxyObject.h"
 #include "vm/RegExpStaticsObject.h"
 #include "vm/Shape.h"
 
@@ -1338,7 +1339,7 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
         NewObjectCache &cache = cx->runtime()->newObjectCache;
         if (proto.isObject() &&
             newKind == GenericObject &&
-            !cx->compartment()->objectMetadataCallback &&
+            !cx->compartment()->hasObjectMetadataCallback() &&
             (!parent || parent == proto.toObject()->getParent()) &&
             !proto.toObject()->is<GlobalObject>())
         {
@@ -1404,7 +1405,7 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
         if (parentArg->is<GlobalObject>() &&
             protoKey != JSProto_Null &&
             newKind == GenericObject &&
-            !cx->compartment()->objectMetadataCallback)
+            !cx->compartment()->hasObjectMetadataCallback())
         {
             if (cache.lookupGlobal(clasp, &parentArg->as<GlobalObject>(), allocKind, &entry)) {
                 JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
@@ -1457,7 +1458,7 @@ NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::Al
     NewObjectCache::EntryIndex entry = -1;
     if (parent == type->proto->getParent() &&
         newKind == GenericObject &&
-        !cx->compartment()->objectMetadataCallback)
+        !cx->compartment()->hasObjectMetadataCallback())
     {
         if (cache.lookupType(&JSObject::class_, type, allocKind, &entry)) {
             JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, &JSObject::class_));
@@ -1571,7 +1572,7 @@ CreateThisForFunctionWithType(JSContext *cx, HandleTypeObject type, JSObject *pa
         if (newKind == SingletonObject) {
             Rooted<TaggedProto> proto(cx, templateObject->getProto());
             if (!res->splicePrototype(cx, &JSObject::class_, proto))
-                return NULL;
+                return nullptr;
         } else {
             res->setType(type);
         }
@@ -3555,6 +3556,10 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
     return true;
 }
 
+static bool
+NativeLookupOwnProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, unsigned flags,
+                        MutableHandle<Shape*> shapep);
+
 bool
 js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
                          PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
@@ -3578,13 +3583,11 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
 
         /*
          * If we are defining a getter whose setter was already defined, or
-         * vice versa, finish the job via obj->changeProperty, and refresh the
-         * property cache line for (obj, id) to map shape.
+         * vice versa, finish the job via obj->changeProperty.
          */
-        RootedObject pobj(cx);
-        if (!baseops::LookupProperty<CanGC>(cx, obj, id, &pobj, &shape))
+        if (!NativeLookupOwnProperty(cx, obj, id, flags, &shape))
             return false;
-        if (shape && pobj == obj) {
+        if (shape) {
             if (IsImplicitDenseElement(shape)) {
                 if (!JSObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
                     return false;
@@ -3604,8 +3607,6 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
             } else {
                 shape = nullptr;
             }
-        } else {
-            shape = nullptr;
         }
     }
 
@@ -3796,6 +3797,20 @@ LookupOwnPropertyWithFlagsInline(ExclusiveContext *cx,
     }
 
     *donep = false;
+    return true;
+}
+
+static bool
+NativeLookupOwnProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, unsigned flags,
+                        MutableHandle<Shape*> shapep)
+{
+    RootedObject pobj(cx);
+    bool done;
+
+    if (!LookupOwnPropertyWithFlagsInline<CanGC>(cx, obj, id, flags, &pobj, shapep, &done))
+        return false;
+    if (!done || pobj != obj)
+        shapep.set(nullptr);
     return true;
 }
 
@@ -5680,8 +5695,24 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Objects
     }
 
     // Other things may be measured in the future if DMD indicates it is worthwhile.
-    // Note that sizes->private_ is measured elsewhere.
-    if (is<ArgumentsObject>()) {
+    if (is<JSFunction>() ||
+        is<JSObject>() ||
+        is<ArrayObject>() ||
+        is<CallObject>() ||
+        is<RegExpObject>() ||
+        is<ProxyObject>())
+    {
+        // Do nothing.  But this function is hot, and we win by getting the
+        // common cases out of the way early.  Some stats on the most common
+        // classes, as measured during a vanilla browser session:
+        // - (53.7%, 53.7%): Function
+        // - (18.0%, 71.7%): Object
+        // - (16.9%, 88.6%): Array
+        // - ( 3.9%, 92.5%): Call
+        // - ( 2.8%, 95.3%): RegExp
+        // - ( 1.0%, 96.4%): Proxy
+
+    } else if (is<ArgumentsObject>()) {
         sizes->mallocHeapArgumentsData += as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
     } else if (is<RegExpStaticsObject>()) {
         sizes->mallocHeapRegExpStatics += as<RegExpStaticsObject>().sizeOfData(mallocSizeOf);

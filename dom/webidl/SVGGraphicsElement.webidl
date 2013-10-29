@@ -16,7 +16,7 @@ interface SVGGraphicsElement : SVGElement {
   readonly attribute SVGElement? nearestViewportElement;
   readonly attribute SVGElement? farthestViewportElement;
 
-  [Creator, Throws]
+  [NewObject, Throws]
   SVGRect getBBox();
   // Not implemented
   // SVGRect getStrokeBBox();

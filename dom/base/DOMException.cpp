@@ -5,7 +5,6 @@
 
 #include "mozilla/dom/DOMException.h"
 
-#include "jsapi.h"
 #include "jsprf.h"
 #include "js/OldDebugAPI.h"
 #include "mozilla/HoldDropJSObjects.h"
@@ -162,6 +161,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Exception)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  tmp->mThrownJSVal.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CI_INTERFACE_GETTER1(Exception, nsIXPCException)

@@ -9,6 +9,19 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+// Cannot use Services.appinfo here, or else xpcshell-tests will blow up, as
+// most tests later register different nsIAppInfo implementations, which
+// wouldn't be reflected in Services.appinfo anymore, as the lazy getter
+// underlying it would have been initialized if we used it here.
+if ("@mozilla.org/xre/app-info;1" in Cc) {
+  let runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
+  if (runtime.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+    // Refuse to run in child processes.
+    throw new Error("You cannot use the AddonManager in child processes!");
+  }
+}
+
+
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";

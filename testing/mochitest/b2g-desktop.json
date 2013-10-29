@@ -198,6 +198,7 @@
     "dom/indexedDB/test/test_lowDiskSpace.html":"this needs probably modification for notifyObserversInParentProcess to be similar as pushPermissions",
 
     "content/base/test/test_object.html":"needs plugin support",
+    "content/base/test/test_bug827160.html": "needs plugin support",
 
     "content/base/test/csp/test_CSP_evalscript.html":"observer not working",
     "content/base/test/csp/test_CSP_evalscript_getCRMFRequest.html":"observer not working",

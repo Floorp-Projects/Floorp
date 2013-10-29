@@ -8,8 +8,8 @@
 
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
-#include "jit/IonCompartment.h"
 #include "jit/IonFrames.h"
+#include "jit/JitCompartment.h"
 #include "jit/MoveEmitter.h"
 
 using namespace js;
@@ -288,7 +288,7 @@ MacroAssemblerX64::handleFailureWithHandler(void *handler)
     passABIArg(rax);
     callWithABI(handler);
 
-    IonCode *excTail = GetIonContext()->runtime->ionRuntime()->getExceptionTail();
+    IonCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
     jmp(excTail);
 }
 
@@ -362,5 +362,13 @@ MacroAssemblerX64::testNegativeZero(const FloatRegister &reg, const Register &sc
 {
     movq(reg, scratch);
     cmpq(scratch, Imm32(1));
+    return Overflow;
+}
+
+Assembler::Condition
+MacroAssemblerX64::testNegativeZeroFloat32(const FloatRegister &reg, const Register &scratch)
+{
+    movd(reg, scratch);
+    cmpl(scratch, Imm32(1));
     return Overflow;
 }

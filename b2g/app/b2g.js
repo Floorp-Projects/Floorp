@@ -728,6 +728,7 @@ pref("font.size.inflation.disabledInMasterProcess", true);
 pref("memory.free_dirty_pages", true);
 
 pref("layout.imagevisibility.enabled", false);
+pref("layout.imagevisibility.enabled_for_browser_elements_only", true);
 pref("layout.imagevisibility.numscrollportwidths", 1);
 pref("layout.imagevisibility.numscrollportheights", 1);
 
@@ -749,7 +750,7 @@ pref("memory_info_dumper.watch_fifo.directory", "/data/local");
 pref("general.useragent.enable_overrides", true);
 // See ua-update.json.in for the packaged UA override list
 pref("general.useragent.updates.enabled", true);
-pref("general.useragent.updates.url", "");
+pref("general.useragent.updates.url", "https://dynamicua.cdn.mozilla.net/0/%APP_ID%");
 pref("general.useragent.updates.interval", 604800); // 1 week
 pref("general.useragent.updates.retry", 86400); // 1 day
 
@@ -813,6 +814,12 @@ pref("devtools.debugger.unix-domain-socket", "/data/local/debugger-socket");
 // falling back to Skia/software for smaller canvases
 pref("gfx.canvas.azure.backends", "skia");
 pref("gfx.canvas.azure.accelerated", true);
+
+// Turn on dynamic cache size for Skia
+pref("gfx.canvas.skiagl.dynamic-cache", true);
+
+// enable fence with readpixels for SurfaceStream
+pref("gfx.gralloc.fence-with-readpixels", true);
 
 // Enable Telephony API
 pref("dom.telephony.enabled", true);

@@ -615,10 +615,9 @@ def main():
         if not os.path.exists(fennec_ids) and options.robocopIds:
             fennec_ids = options.robocopIds
         dm.pushFile(fennec_ids, os.path.join(deviceRoot, "fennec_ids.txt"))
-        options.extraPrefs.append('robocop.logfile="%s/robocop.log"' % deviceRoot)
         options.extraPrefs.append('browser.search.suggest.enabled=true')
         options.extraPrefs.append('browser.search.suggest.prompted=true')
-        options.extraPrefs.append('layout.css.devPixelsPerPx="1.0"')
+        options.extraPrefs.append('layout.css.devPixelsPerPx=1.0')
         options.extraPrefs.append('browser.chrome.dynamictoolbar=false')
 
         if (options.dm_trans == 'adb' and options.robocopApk):
@@ -654,10 +653,6 @@ def main():
                 # Get the OS so we can run the insert in the apropriate database and following the correct table schema
                 osInfo = dm.getInfo("os")
                 devOS = " ".join(osInfo['os'])
-
-                # Bug 900664: stock browser db not available on x86 emulator
-                if ("sdk_x86" in devOS):
-                    continue
 
                 if ("pandaboard" in devOS):
                     delete = ['execsu', 'sqlite3', "/data/data/com.android.browser/databases/browser2.db \'delete from bookmarks where _id > 14;\'"]

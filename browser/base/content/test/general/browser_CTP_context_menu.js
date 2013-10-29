@@ -71,32 +71,43 @@ function test1() {
   let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 1, Plugin should not be activated");
 
-  window.document.addEventListener("popupshown", test2, false);
+  // When the popupshown DOM event is fired, the actual showing of the popup
+  // may still be pending. Clear the event loop before continuing so that
+  // subsequently-opened popups aren't cancelled by accident.
+  let goToNext = function() {
+    window.document.removeEventListener("popupshown", goToNext, false);
+    executeSoon(test2);
+  };
+  window.document.addEventListener("popupshown", goToNext, false);
   EventUtils.synthesizeMouseAtCenter(plugin,
                                      { type: "contextmenu", button: 2 },
                                      gTestBrowser.contentWindow);
 }
 
 function test2() {
-  window.document.removeEventListener("popupshown", test2, false);
   let activate = window.document.getElementById("context-ctp-play");
   ok(activate, "Test 2, Should have a context menu entry for activating the plugin");
+
+  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
+  ok(notification, "Test 2, Should have a click-to-play notification");
+  ok(notification.dismissed, "Test 2, notification should be dismissed");
 
   // Trigger the click-to-play popup
   activate.doCommand();
 
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "Test 2, Should have a click-to-play notification");
-  ok(!notification.dismissed, "Test 2, The click-to-play notification should not be dismissed");
+  waitForCondition(() => !notification.dismissed,
+		   test3, "Test 2, waited too long for context activation");
+}
 
+function test3() {
   // Activate the plugin
   PopupNotifications.panel.firstChild._primaryButton.click();
 
   let plugin = gTestBrowser.contentDocument.getElementById("test");
   let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  waitForCondition(() => objLoadingContent.activated, test3, "Waited too long for plugin to activate");
+  waitForCondition(() => objLoadingContent.activated, test4, "Waited too long for plugin to activate");
 }
 
-function test3() {
+function test4() {
   finishTest();
 }

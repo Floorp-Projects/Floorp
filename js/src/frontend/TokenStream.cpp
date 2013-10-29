@@ -15,7 +15,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsexn.h"
@@ -1123,7 +1122,7 @@ TokenStream::getTokenInternal(Modifier modifier)
 
     // Look for an unambiguous single-char token.
     //
-    if (c1kind < OneChar_Max) {
+    if (c1kind <= OneChar_Max) {
         tp = newToken(-1);
         tp->type = TokenKind(c1kind);
         goto out;

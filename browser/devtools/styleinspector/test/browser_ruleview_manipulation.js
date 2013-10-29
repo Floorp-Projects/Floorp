@@ -20,17 +20,17 @@ function simpleOverride(aInspector, aRuleView)
     is(elementRule.textProps[1], secondProp, "Rules should be in addition order.");
 
     promiseDone(elementRule._applyingModifications.then(() => {
-      is(element.style.getPropertyValue("background-color"), "rgb(0, 0, 255)", "Second property should have been used.");
+      is(element.style.getPropertyValue("background-color"), "blue", "Second property should have been used.");
 
       secondProp.remove();
       return elementRule._applyingModifications;
     }).then(() => {
-      is(element.style.getPropertyValue("background-color"), "rgb(0, 128, 0)", "After deleting second property, first should be used.");
+      is(element.style.getPropertyValue("background-color"), "green", "After deleting second property, first should be used.");
 
       secondProp = elementRule.createProperty("background-color", "blue", "");
       return elementRule._applyingModifications;
     }).then(() => {
-      is(element.style.getPropertyValue("background-color"), "rgb(0, 0, 255)", "New property should be used.");
+      is(element.style.getPropertyValue("background-color"), "blue", "New property should be used.");
 
       is(elementRule.textProps[0], firstProp, "Rules shouldn't have switched places.");
       is(elementRule.textProps[1], secondProp, "Rules shouldn't have switched places.");
@@ -38,7 +38,7 @@ function simpleOverride(aInspector, aRuleView)
       secondProp.setEnabled(false);
       return elementRule._applyingModifications;
     }).then(() => {
-      is(element.style.getPropertyValue("background-color"), "rgb(0, 128, 0)", "After disabling second property, first value should be used");
+      is(element.style.getPropertyValue("background-color"), "green", "After disabling second property, first value should be used");
 
       firstProp.setEnabled(false);
       return elementRule._applyingModifications;
@@ -48,19 +48,19 @@ function simpleOverride(aInspector, aRuleView)
       secondProp.setEnabled(true);
       return elementRule._applyingModifications;
     }).then(() => {
-      is(element.style.getPropertyValue("background-color"), "rgb(0, 0, 255)", "Value should be set correctly after re-enabling");
+      is(element.style.getPropertyValue("background-color"), "blue", "Value should be set correctly after re-enabling");
 
       firstProp.setEnabled(true);
       return elementRule._applyingModifications;
     }).then(() => {
-      is(element.style.getPropertyValue("background-color"), "rgb(0, 0, 255)", "Re-enabling an earlier property shouldn't make it override a later property.");
+      is(element.style.getPropertyValue("background-color"), "blue", "Re-enabling an earlier property shouldn't make it override a later property.");
       is(elementRule.textProps[0], firstProp, "Rules shouldn't have switched places.");
       is(elementRule.textProps[1], secondProp, "Rules shouldn't have switched places.");
 
       firstProp.setValue("purple", "");
       return elementRule._applyingModifications;
     }).then(() => {
-      is(element.style.getPropertyValue("background-color"), "rgb(0, 0, 255)", "Modifying an earlier property shouldn't override a later property.");
+      is(element.style.getPropertyValue("background-color"), "blue", "Modifying an earlier property shouldn't override a later property.");
       finishTest();
     }));
   });

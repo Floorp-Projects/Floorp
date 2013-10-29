@@ -16,13 +16,9 @@ __all__ = ["Webapp", "WebappCollection", "WebappFormatException", "APP_STATUS_NO
            "APP_STATUS_INSTALLED", "APP_STATUS_PRIVILEGED", "APP_STATUS_CERTIFIED"]
 
 from string import Template
+import json
 import os
 import shutil
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
 
 # from http://hg.mozilla.org/mozilla-central/file/add0b94c2c0b/caps/idl/nsIPrincipal.idl#l163
 APP_STATUS_NOT_INSTALLED = 0

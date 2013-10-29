@@ -520,18 +520,27 @@ IonBuilder::inlineMathAbs(CallInfo &callInfo)
 
     MIRType returnType = getInlineReturnType();
     MIRType argType = callInfo.getArg(0)->type();
-    if (argType != MIRType_Int32 && argType != MIRType_Double)
+    if (!IsNumberType(argType))
         return InliningStatus_NotInlined;
 
-    if (argType != returnType && returnType != MIRType_Int32)
+    // Either argType == returnType, or
+    //        argType == Double or Float32, returnType == Int, or
+    //        argType == Float32, returnType == Double
+    if (argType != returnType && !(IsFloatingPointType(argType) && returnType == MIRType_Int32)
+        && !(argType == MIRType_Float32 && returnType == MIRType_Double))
+    {
         return InliningStatus_NotInlined;
+    }
 
     callInfo.unwrapArgs();
 
-    MInstruction *ins = MAbs::New(callInfo.getArg(0), argType);
+    // If the arg is a Float32, we specialize the op as double, it will be specialized
+    // as float32 if necessary later.
+    MIRType absType = (argType == MIRType_Float32) ? MIRType_Double : argType;
+    MInstruction *ins = MAbs::New(callInfo.getArg(0), absType);
     current->add(ins);
 
-    if (argType != returnType) {
+    if (IsFloatingPointType(argType) && returnType == MIRType_Int32) {
         MToInt32 *toInt = MToInt32::New(ins);
         toInt->setCanBeNegativeZero(false);
         current->add(toInt);
@@ -545,7 +554,6 @@ IonBuilder::inlineMathAbs(CallInfo &callInfo)
 IonBuilder::InliningStatus
 IonBuilder::inlineMathFloor(CallInfo &callInfo)
 {
-
     if (callInfo.constructing())
         return InliningStatus_NotInlined;
 
@@ -562,7 +570,7 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
         return InliningStatus_Inlined;
     }
 
-    if (argType == MIRType_Double && returnType == MIRType_Int32) {
+    if (IsFloatingPointType(argType) && returnType == MIRType_Int32) {
         callInfo.unwrapArgs();
         MFloor *ins = new MFloor(callInfo.getArg(0));
         current->add(ins);
@@ -570,7 +578,7 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
         return InliningStatus_Inlined;
     }
 
-    if (argType == MIRType_Double && returnType == MIRType_Double) {
+    if (IsFloatingPointType(argType) && returnType == MIRType_Double) {
         callInfo.unwrapArgs();
         MMathFunction *ins = MMathFunction::New(callInfo.getArg(0), MMathFunction::Floor, nullptr);
         current->add(ins);
@@ -800,9 +808,9 @@ IonBuilder::inlineMathImul(CallInfo &callInfo)
     if (returnType != MIRType_Int32)
         return InliningStatus_NotInlined;
 
-    if (!IsNumberType(callInfo.getArg(0)->type()) || callInfo.getArg(0)->type() == MIRType_Float32)
+    if (!IsNumberType(callInfo.getArg(0)->type()))
         return InliningStatus_NotInlined;
-    if (!IsNumberType(callInfo.getArg(1)->type()) || callInfo.getArg(1)->type() == MIRType_Float32)
+    if (!IsNumberType(callInfo.getArg(1)->type()))
         return InliningStatus_NotInlined;
 
     callInfo.unwrapArgs();

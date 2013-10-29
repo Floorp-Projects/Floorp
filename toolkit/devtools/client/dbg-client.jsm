@@ -195,6 +195,7 @@ const UnsolicitedNotifications = {
   "newSource": "newSource",
   "tabDetached": "tabDetached",
   "tabListChanged": "tabListChanged",
+  "reflowActivity": "reflowActivity",
   "addonListChanged": "addonListChanged",
   "tabNavigated": "tabNavigated",
   "pageError": "pageError",
@@ -240,6 +241,7 @@ this.DebuggerClient = function DebuggerClient(aTransport)
   this.compat = new ProtocolCompatibility(this, [
     new SourcesShim(),
   ]);
+  this.traits = {};
 
   this.request = this.request.bind(this);
   this.localTransport = this._transport.onOutputStreamReady === undefined;
@@ -359,11 +361,12 @@ DebuggerClient.prototype = {
    *        received from the debugging server.
    */
   connect: function DC_connect(aOnConnected) {
-    if (aOnConnected) {
-      this.addOneTimeListener("connected", function(aName, aApplicationType, aTraits) {
+    this.addOneTimeListener("connected", (aName, aApplicationType, aTraits) => {
+      this.traits = aTraits;
+      if (aOnConnected) {
         aOnConnected(aApplicationType, aTraits);
-      });
-    }
+      }
+    });
 
     this._transport.ready();
   },
@@ -645,7 +648,7 @@ DebuggerClient.prototype = {
       ? aPacket
       : this.compat.onPacket(aPacket);
 
-    resolve(packet).then((aPacket) => {
+    resolve(packet).then(aPacket => {
       if (!aPacket.from) {
         let msg = "Server did not specify an actor, dropping packet: " +
                   JSON.stringify(aPacket);
@@ -968,7 +971,7 @@ TabClient.prototype = {
   }, {
     after: function (aResponse) {
       if (this.activeTab === this._client._tabClients[this.actor]) {
-        delete this.activeTab;
+        this.activeTab = undefined;
       }
       delete this._client._tabClients[this.actor];
       return aResponse;
@@ -1120,9 +1123,6 @@ ThreadClient.prototype = {
       // further requests that should only be sent in the paused state.
       this._state = "resuming";
 
-      if (!aPacket.resumeLimit) {
-        delete aPacket.resumeLimit;
-      }
       if (this._pauseOnExceptions) {
         aPacket.pauseOnExceptions = this._pauseOnExceptions;
       }
@@ -1299,7 +1299,7 @@ ThreadClient.prototype = {
   }, {
     after: function (aResponse) {
       if (this.activeThread === this._client._threadClients[this.actor]) {
-        delete this.activeThread;
+        this.activeThread = null;
       }
       delete this._client._threadClients[this.actor];
       return aResponse;
@@ -1977,6 +1977,7 @@ LongStringClient.prototype = {
 function SourceClient(aClient, aForm) {
   this._form = aForm;
   this._isBlackBoxed = aForm.isBlackBoxed;
+  this._isPrettyPrinted = aForm.isPrettyPrinted;
   this._client = aClient;
 }
 
@@ -1984,6 +1985,7 @@ SourceClient.prototype = {
   get _transport() this._client._transport,
   get _activeThread() this._client.activeThread,
   get isBlackBoxed() this._isBlackBoxed,
+  get isPrettyPrinted() this._isPrettyPrinted,
   get actor() this._form.actor,
   get request() this._client.request,
   get url() this._form.url,
@@ -2053,6 +2055,29 @@ SourceClient.prototype = {
       indent: aIndent
     };
     this._client.request(packet, aResponse => {
+      if (!aResponse.error) {
+        this._isPrettyPrinted = true;
+        this._activeThread._clearFrames();
+        this._activeThread.notify("prettyprintchange", this);
+      }
+      this._onSourceResponse(aResponse, aCallback);
+    });
+  },
+
+  /**
+   * Stop pretty printing this source's text.
+   */
+  disablePrettyPrint: function SC_disablePrettyPrint(aCallback) {
+    const packet = {
+      to: this._form.actor,
+      type: "disablePrettyPrint"
+    };
+    this._client.request(packet, aResponse => {
+      if (!aResponse.error) {
+        this._isPrettyPrinted = false;
+        this._activeThread._clearFrames();
+        this._activeThread.notify("prettyprintchange", this);
+      }
       this._onSourceResponse(aResponse, aCallback);
     });
   },
@@ -2175,8 +2200,24 @@ eventSource(EnvironmentClient.prototype);
 this.debuggerSocketConnect = function debuggerSocketConnect(aHost, aPort)
 {
   let s = socketTransportService.createTransport(null, 0, aHost, aPort, null);
-  let transport = new DebuggerTransport(s.openInputStream(0, 0, 0),
-                                        s.openOutputStream(0, 0, 0));
+  // By default the CONNECT socket timeout is very long, 65535 seconds,
+  // so that if we race to be in CONNECT state while the server socket is still
+  // initializing, the connection is stuck in connecting state for 18.20 hours!
+  s.setTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT, 2);
+
+  // openOutputStream may throw NS_ERROR_NOT_INITIALIZED if we hit some race
+  // where the nsISocketTransport gets shutdown in between its instantiation and
+  // the call to this method.
+  let transport;
+  try {
+    transport = new DebuggerTransport(s.openInputStream(0, 0, 0),
+                                      s.openOutputStream(0, 0, 0));
+  } catch(e) {
+    let msg = e + ": " + e.stack;
+    Cu.reportError(msg);
+    dumpn(msg);
+    throw e;
+  }
   return transport;
 }
 

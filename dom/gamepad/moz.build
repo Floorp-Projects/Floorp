@@ -6,11 +6,13 @@
 
 EXPORTS.mozilla.dom += [
     'Gamepad.h',
+    'GamepadButton.h',
     'GamepadService.h',
     ]
 
-CPP_SOURCES = [
+SOURCES = [
     'Gamepad.cpp',
+    'GamepadButton.cpp',
     'GamepadService.cpp',
     ]
 
@@ -19,4 +21,6 @@ FAIL_ON_WARNINGS = True
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domgamepad_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

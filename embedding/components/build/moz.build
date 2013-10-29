@@ -6,7 +6,7 @@
 
 MODULE = 'embedcomponents'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsEmbeddingModule.cpp',
 ]
 

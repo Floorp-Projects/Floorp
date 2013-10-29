@@ -170,7 +170,6 @@ private:
   bool mGCOnDestruction;
   bool mProcessingScriptTag;
 
-  uint32_t mDefaultJSOptions;
   PRTime mOperationCallbackTime;
 
   PRTime mModalStateTime;

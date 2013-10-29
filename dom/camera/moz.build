@@ -22,7 +22,7 @@ EXPORTS += [
     'GonkCameraControl.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'CameraControlImpl.cpp',
     'CameraPreviewMediaStream.cpp',
     'CameraRecorderProfiles.cpp',
@@ -33,18 +33,18 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['MOZ_B2G_CAMERA']:
-    CPP_SOURCES += [
-        'GonkCameraManager.cpp',
+    SOURCES += [
         'GonkCameraControl.cpp',
         'GonkCameraHwMgr.cpp',
-        'GonkRecorder.cpp',
+        'GonkCameraManager.cpp',
         'GonkCameraSource.cpp',
+        'GonkRecorder.cpp',
         'GonkRecorderProfiles.cpp',
     ]
 else:
-    CPP_SOURCES += [
-        'FallbackCameraManager.cpp',
+    SOURCES += [
         'FallbackCameraControl.cpp',
+        'FallbackCameraManager.cpp',
     ]
 
 FAIL_ON_WARNINGS = True
@@ -53,3 +53,8 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domcamera_s'
 
+LOCAL_INCLUDES += [
+    '../base',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')

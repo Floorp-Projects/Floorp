@@ -10,7 +10,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'fastfind'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsTypeAheadFind.cpp',
 ]
 

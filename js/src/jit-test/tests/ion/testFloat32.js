@@ -55,7 +55,7 @@
 setJitCompilerOption("ion.usecount.trigger", 50);
 
 function test(f) {
-    f32[0] = 1;
+    f32[0] = .5;
     for(var n = 110; n; n--)
         f();
 }
@@ -135,6 +135,34 @@ function refuseAddFunctionCall() {
     assertFloat32(res, false);
 }
 test(refuseAddFunctionCall);
+
+function acceptSqrt() {
+    var res = Math.sqrt(f32[0]);
+    assertFloat32(res, true);
+    f32[0] = res;
+}
+test(acceptSqrt);
+
+function refuseSqrt() {
+    var res = Math.sqrt(f32[0]);
+    assertFloat32(res, false);
+    f32[0] = res + 1;
+}
+test(refuseSqrt);
+
+function acceptAbs() {
+    var res = Math.abs(f32[0]);
+    assertFloat32(res, true);
+    f32[0] = res;
+}
+test(acceptAbs);
+
+function refuseAbs() {
+    var res = Math.abs(f32[0]);
+    assertFloat32(res, false);
+    f64[0] = res + 1;
+}
+test(refuseAbs);
 
 function acceptTrigo() {
     var res = Math.cos(f32[0]);

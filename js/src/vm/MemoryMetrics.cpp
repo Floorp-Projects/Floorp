@@ -23,8 +23,9 @@
 #include "vm/WrapperObject.h"
 
 using mozilla::DebugOnly;
-using mozilla::OldMove;
+using mozilla::MallocSizeOf;
 using mozilla::MoveRef;
+using mozilla::OldMove;
 using mozilla::PodEqual;
 
 using namespace js;
@@ -91,8 +92,7 @@ InefficientNonFlatteningStringHashPolicy::match(const JSString *const &k, const 
 
 } // namespace js
 
-namespace JS
-{
+namespace JS {
 
 NotableStringInfo::NotableStringInfo()
     : bufferSize(0),
@@ -246,6 +246,12 @@ GetCompartmentStats(JSCompartment *comp)
     return static_cast<CompartmentStats *>(comp->compartmentStats);
 }
 
+enum Granularity {
+    FineGrained,    // Corresponds to CollectRuntimeStats()
+    CoarseGrained   // Corresponds to AddSizeOfTab()
+};
+
+template <Granularity granularity>
 static void
 StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKind,
                   size_t thingSize)
@@ -268,13 +274,10 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 
         obj->addSizeOfExcludingThis(rtStats->mallocSizeOf_, &cStats->objectsExtra);
 
-        // JSObject::sizeOfExcludingThis() doesn't measure objectsPrivate,
-        // so we do it here.
         if (ObjectPrivateVisitor *opv = closure->opv) {
             nsISupports *iface;
-            if (opv->getISupports_(obj, &iface) && iface) {
+            if (opv->getISupports_(obj, &iface) && iface)
                 cStats->objectsPrivate += opv->sizeOfIncludingThis(iface);
-            }
         }
         break;
       }
@@ -285,16 +288,21 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         size_t strCharsSize = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         MOZ_ASSERT_IF(str->isShort(), strCharsSize == 0);
 
-        size_t shortStringThingSize = str->isShort() ? thingSize : 0;
+        size_t shortStringThingSize  =  str->isShort() ? thingSize : 0;
         size_t normalStringThingSize = !str->isShort() ? thingSize : 0;
 
-        ZoneStats::StringsHashMap::AddPtr p = zStats->strings.lookupForAdd(str);
-        if (!p) {
-            JS::StringInfo info(str->length(), shortStringThingSize,
-                                normalStringThingSize, strCharsSize);
-            zStats->strings.add(p, str, info);
-        } else {
-            p->value.add(shortStringThingSize, normalStringThingSize, strCharsSize);
+        // This string hashing is expensive.  Its results are unused when doing
+        // coarse-grained measurements, and skipping it more than doubles the
+        // profile speed for complex pages such as gmail.com.
+        if (granularity == FineGrained) {
+            ZoneStats::StringsHashMap::AddPtr p = zStats->strings.lookupForAdd(str);
+            if (!p) {
+                JS::StringInfo info(str->length(), shortStringThingSize,
+                                    normalStringThingSize, strCharsSize);
+                zStats->strings.add(p, str, info);
+            } else {
+                p->value.add(shortStringThingSize, normalStringThingSize, strCharsSize);
+            }
         }
 
         zStats->stringsShortGCHeap += shortStringThingSize;
@@ -338,7 +346,6 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         JSScript *script = static_cast<JSScript *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(script->compartment());
         cStats->scriptsGCHeap += thingSize;
-
         cStats->scriptsMallocHeapData += script->sizeOfData(rtStats->mallocSizeOf_);
         cStats->typeInferenceTypeScripts += script->sizeOfTypeScript(rtStats->mallocSizeOf_);
 #ifdef JS_ION
@@ -446,14 +453,12 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     StatsClosure closure(rtStats, opv);
     if (!closure.init())
         return false;
-    rtStats->runtime.scriptSources = 0;
     IterateZonesCompartmentsArenasCells(rt, &closure, StatsZoneCallback, StatsCompartmentCallback,
-                                        StatsArenaCallback, StatsCellCallback);
+                                        StatsArenaCallback, StatsCellCallback<FineGrained>);
 
     // Take the "explicit/js/runtime/" measurements.
     rt->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
 
-    rtStats->gcHeapGCThings = 0;
     for (size_t i = 0; i < rtStats->zoneStatsVector.length(); i++) {
         ZoneStats &zStats = rtStats->zoneStatsVector[i];
 
@@ -530,4 +535,63 @@ JS::PeakSizeOfTemporary(const JSRuntime *rt)
 {
     return rt->tempLifoAlloc.peakSizeOfExcludingThis();
 }
+
+namespace JS {
+
+JS_PUBLIC_API(bool)
+AddSizeOfTab(JSRuntime *rt, JSObject *obj, MallocSizeOf mallocSizeOf, ObjectPrivateVisitor *opv,
+             TabSizes *sizes)
+{
+    class SimpleJSRuntimeStats : public JS::RuntimeStats
+    {
+      public:
+        SimpleJSRuntimeStats(MallocSizeOf mallocSizeOf)
+          : JS::RuntimeStats(mallocSizeOf)
+        {}
+
+        virtual void initExtraZoneStats(JS::Zone *zone, JS::ZoneStats *zStats)
+            MOZ_OVERRIDE
+        {}
+
+        virtual void initExtraCompartmentStats(
+            JSCompartment *c, JS::CompartmentStats *cStats) MOZ_OVERRIDE
+        {}
+    };
+
+    SimpleJSRuntimeStats rtStats(mallocSizeOf);
+
+    JS::Zone *zone = GetObjectZone(obj);
+
+    if (!rtStats.compartmentStatsVector.reserve(zone->compartments.length()))
+        return false;
+
+    if (!rtStats.zoneStatsVector.reserve(1))
+        return false;
+
+    // Take the per-compartment measurements.
+    StatsClosure closure(&rtStats, opv);
+    if (!closure.init())
+        return false;
+    IterateZoneCompartmentsArenasCells(rt, zone, &closure, StatsZoneCallback,
+                                       StatsCompartmentCallback, StatsArenaCallback,
+                                       StatsCellCallback<CoarseGrained>);
+
+    JS_ASSERT(rtStats.zoneStatsVector.length() == 1);
+    rtStats.zTotals.add(rtStats.zoneStatsVector[0]);
+
+    for (size_t i = 0; i < rtStats.compartmentStatsVector.length(); i++) {
+        CompartmentStats &cStats = rtStats.compartmentStatsVector[i];
+        rtStats.cTotals.add(cStats);
+    }
+
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
+        comp->compartmentStats = nullptr;
+
+    rtStats.zTotals.addToTabSizes(sizes);
+    rtStats.cTotals.addToTabSizes(sizes);
+
+    return true;
+}
+
+} // namespace JS
 

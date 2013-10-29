@@ -6,3 +6,5 @@
 
 METRO_CHROME_MANIFESTS += ['tests/mochiperf/metro.ini', 'tests/mochitest/metro.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
+DIST_SUBDIR = 'metro'

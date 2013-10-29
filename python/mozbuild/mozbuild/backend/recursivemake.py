@@ -27,13 +27,17 @@ from ..frontend.data import (
     DirectoryTraversal,
     Exports,
     GeneratedEventWebIDLFile,
+    GeneratedInclude,
     GeneratedWebIDLFile,
+    InstallationTarget,
     IPDLFile,
+    JavaJarData,
     LocalInclude,
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
     Program,
     SandboxDerived,
+    SandboxWrapped,
     TestWebIDLFile,
     VariablePassthru,
     XPIDLFile,
@@ -408,6 +412,21 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, LocalInclude):
             self._process_local_include(obj.path, backend_file)
+
+        elif isinstance(obj, GeneratedInclude):
+            self._process_generated_include(obj.path, backend_file)
+
+        elif isinstance(obj, InstallationTarget):
+            self._process_installation_target(obj, backend_file)
+
+        elif isinstance(obj, SandboxWrapped):
+            # Process a rich build system object from the front-end
+            # as-is.  Please follow precedent and handle CamelCaseData
+            # in a function named _process_camel_case_data.  At some
+            # point in the future, this unwrapping process may be
+            # automated.
+            if isinstance(obj.wrapped, JavaJarData):
+                self._process_java_jar_data(obj.wrapped, backend_file)
 
         self._backend_files[obj.srcdir] = backend_file
 
@@ -873,6 +892,22 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_exports(obj, children[subdir], backend_file,
                 namespace=namespace + subdir)
 
+    def _process_installation_target(self, obj, backend_file):
+        # A few makefiles need to be able to override the following rules via
+        # make XPI_NAME=blah commands, so we default to the lazy evaluation as
+        # much as possible here to avoid breaking things.
+        if obj.xpiname:
+            backend_file.write('XPI_NAME = %s\n' % (obj.xpiname))
+        if obj.subdir:
+            backend_file.write('DIST_SUBDIR = %s\n' % (obj.subdir))
+        if obj.target and not obj.is_custom():
+            backend_file.write('FINAL_TARGET = $(DEPTH)/%s\n' % (obj.target))
+        else:
+            backend_file.write('FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)\n')
+
+        if not obj.enabled:
+            backend_file.write('NO_DIST_INSTALL := 1\n')
+
     def _handle_idl_manager(self, manager):
         build_files = self._install_manifests['xpidl']
 
@@ -943,6 +978,7 @@ class RecursiveMakeBackend(CommonBackend):
         self._install_manifests['dist_include'].add_optional_exists(header)
 
     def _process_test_manifest(self, obj, backend_file):
+        # Much of the logic in this function could be moved to CommonBackend.
         self.backend_input_files.add(os.path.join(obj.topsrcdir,
             obj.manifest_relpath))
 
@@ -971,6 +1007,30 @@ class RecursiveMakeBackend(CommonBackend):
         else:
             path = '$(srcdir)/'
         backend_file.write('LOCAL_INCLUDES += -I%s%s\n' % (path, local_include))
+
+    def _process_generated_include(self, generated_include, backend_file):
+        if generated_include.startswith('/'):
+            path = self.environment.topobjdir.replace('\\', '/')
+        else:
+            path = ''
+        backend_file.write('LOCAL_INCLUDES += -I%s%s\n' % (path, generated_include))
+
+    def _process_java_jar_data(self, jar, backend_file):
+        target = jar.name
+        backend_file.write('JAVA_JAR_TARGETS += %s\n' % target)
+        backend_file.write('%s_DEST := %s.jar\n' % (target, jar.name))
+        if jar.sources:
+            backend_file.write('%s_JAVAFILES := %s\n' %
+                (target, ' '.join(jar.sources)))
+        if jar.generated_sources:
+            backend_file.write('%s_PP_JAVAFILES := %s\n' %
+                (target, ' '.join(jar.generated_sources)))
+        if jar.extra_jars:
+            backend_file.write('%s_EXTRA_JARS := %s\n' %
+                (target, ' '.join(jar.extra_jars)))
+        if jar.javac_flags:
+            backend_file.write('%s_JAVAC_FLAGS := %s\n' %
+                (target, jar.javac_flags))
 
     def _write_manifests(self, dest, manifests):
         man_dir = os.path.join(self.environment.topobjdir, '_build_manifests',

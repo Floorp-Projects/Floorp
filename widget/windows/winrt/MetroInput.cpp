@@ -272,14 +272,14 @@ MetroInput::ProcessInputTypeForGesture(UI::Input::IEdgeGestureEventArgs* aArgs)
   aArgs->get_Kind(&kind);
   switch(kind) {
     case UI::Input::EdgeGestureKind::EdgeGestureKind_Touch:
-      UpdateInputLevel(LEVEL_PRECISE);
+      UpdateInputLevel(LEVEL_IMPRECISE);
       return nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
     break;
     case UI::Input::EdgeGestureKind::EdgeGestureKind_Keyboard:
       return nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
     break;
     case UI::Input::EdgeGestureKind::EdgeGestureKind_Mouse:
-      UpdateInputLevel(LEVEL_IMPRECISE);
+      UpdateInputLevel(LEVEL_PRECISE);
       return nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
     break;
   }

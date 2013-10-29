@@ -292,7 +292,7 @@ var DebuggerServer = {
     this.closeListener();
     this.globalActorFactories = {};
     this.tabActorFactories = {};
-    delete this._allowConnection;
+    this._allowConnection = null;
     this._transportInitialized = false;
     this._initialized = false;
 
@@ -366,6 +366,7 @@ var DebuggerServer = {
     this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
     this.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
     this.registerModule("devtools/server/actors/inspector");
+    this.registerModule("devtools/server/actors/webgl");
     this.registerModule("devtools/server/actors/tracer");
     this.registerModule("devtools/server/actors/device");
   },
@@ -384,6 +385,7 @@ var DebuggerServer = {
       this.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
       this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
       this.registerModule("devtools/server/actors/inspector");
+      this.registerModule("devtools/server/actors/webgl");
     }
     if (!("ContentAppActor" in DebuggerServer)) {
       this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");
@@ -1021,7 +1023,7 @@ DebuggerServerConnection.prototype = {
           "error occurred while processing '" + aPacket.type,
           e));
       } finally {
-        delete this.currentPacket;
+        this.currentPacket = undefined;
       }
     } else {
       ret = { error: "unrecognizedPacketType",

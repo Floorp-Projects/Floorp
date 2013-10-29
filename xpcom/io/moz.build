@@ -14,9 +14,9 @@ XPIDL_SOURCES += [
     'nsIDirectoryEnumerator.idl',
     'nsIDirectoryService.idl',
     'nsIFile.idl',
-    'nsIIOUtil.idl',
     'nsIInputStream.idl',
     'nsIInputStreamTee.idl',
+    'nsIIOUtil.idl',
     'nsILineInputStream.idl',
     'nsILocalFile.idl',
     'nsILocalFileWin.idl',
@@ -49,17 +49,17 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     EXPORTS += ['nsLocalFileOS2.h']
-    CPP_SOURCES += [
+    SOURCES += [
         'nsLocalFileOS2.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += ['nsLocalFileWin.h']
-    CPP_SOURCES += [
+    SOURCES += [
         'nsLocalFileWin.cpp',
     ]
 else:
     EXPORTS += ['nsLocalFileUnix.h']
-    CPP_SOURCES += [
+    SOURCES += [
         'nsLocalFileUnix.cpp',
     ]
 
@@ -68,7 +68,6 @@ XPIDL_MODULE = 'xpcom_io'
 MODULE = 'xpcom'
 
 EXPORTS += [
-    'SpecialSystemDirectory.h',
     'nsAnonymousTemporaryFile.h',
     'nsAppDirectoryServiceDefs.h',
     'nsDirectoryService.h',
@@ -86,22 +85,22 @@ EXPORTS += [
     'nsStringStream.h',
     'nsUnicharInputStream.h',
     'nsWildCard.h',
+    'SpecialSystemDirectory.h',
 ]
 
 EXPORTS.mozilla += [
     'Base64.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'Base64.cpp',
-    'SpecialSystemDirectory.cpp',
     'nsAnonymousTemporaryFile.cpp',
     'nsAppFileLocationProvider.cpp',
     'nsBinaryStream.cpp',
     'nsDirectoryService.cpp',
     'nsEscape.cpp',
-    'nsIOUtil.cpp',
     'nsInputStreamTee.cpp',
+    'nsIOUtil.cpp',
     'nsLinebreakConverter.cpp',
     'nsLocalFileCommon.cpp',
     'nsMultiplexInputStream.cpp',
@@ -115,10 +114,11 @@ CPP_SOURCES += [
     'nsStringStream.cpp',
     'nsUnicharInputStream.cpp',
     'nsWildCard.cpp',
+    'SpecialSystemDirectory.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    CMMSRCS += [
+    SOURCES += [
         'CocoaFileUtils.mm',
     ]
 
@@ -127,4 +127,6 @@ LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'xpcomio_s'
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

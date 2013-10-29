@@ -6,7 +6,6 @@
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CXXFLAGS	+= $(MOZ_QT_CFLAGS) $(GLIB_CFLAGS) $(MOZ_CAIRO_CFLAGS) \
 		$(MOZ_PIXMAN_CFLAGS)

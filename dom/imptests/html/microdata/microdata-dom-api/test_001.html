@@ -387,23 +387,28 @@ test(function () {
 test(function () {
         var elem = makeEl('div',{itemtype:' token1 token2  '});
         elem.itemType.remove('token2');
-        assert_equals( elem.itemType.toString(), ' token1' );
-}, 'itemType.remove must only remove whitespace around removed tokens');
+        assert_equals( elem.itemType.toString(), 'token1' );
+}, 'itemType.remove must remove all useless whitespace');
 test(function () {
-        var elem = makeEl('div',{itemtype:'  token1  token2  token1  '});
+        var elem = makeEl('div',{itemtype:'  token1  token2  token3  '});
         elem.itemType.remove('token2');
-        assert_equals( elem.itemType.toString(), '  token1 token1  ' );
+        assert_equals( elem.itemType.toString(), 'token1 token3' );
 }, 'itemType.remove must collapse multiple whitespace around removed tokens');
 test(function () {
         var elem = makeEl('div',{itemtype:'  token1  token2  token1  '});
-        elem.itemType.remove('token1');
+        elem.itemType.remove('token2');
+        assert_equals( elem.itemType.toString(), 'token1' );
+}, 'itemType.remove must remove duplicates when removing tokens');
+test(function () {
+        var elem = makeEl('div',{itemtype:'  token1  token2  token3  '});
+        elem.itemType.remove('token1', 'token3');
         assert_equals( elem.itemType.toString(), 'token2' );
 }, 'itemType.remove must collapse whitespace when removing multiple tokens');
 test(function () {
-        var elem = makeEl('div',{itemtype:'  token1  token1  '});
+        var elem = makeEl('div',{itemtype:'  token1  token2  '});
         elem.itemType.add('token1');
-        assert_equals( elem.itemType.toString(), '  token1  token1  ' );
-}, 'itemType.add must not affect whitespace when the token already exists');
+        assert_equals( elem.itemType.toString(), 'token1 token2' );
+}, 'itemType.add must remove unused whitespace when the token already exists');
 test(function () {
         var elem = makeEl('div',{itemtype:'FOO'});
         assert_true(elem.itemType.toggle('foo'));
@@ -456,23 +461,23 @@ test(function () {
 test(function () {
         var elem = makeEl('div',{itemtype:'a\t'});
         elem.itemType.add('b');
-        assert_equals(elem.itemType.toString(),'a\tb');
-}, 'itemType.add should treat \\t as a space');
+        assert_equals(elem.itemType.toString(),'a b');
+}, 'itemType.add should normalize \\t as a space');
 test(function () {
         var elem = makeEl('div',{itemtype:'a\r'});
         elem.itemType.add('b');
-        assert_equals(elem.itemType.toString(),'a\rb');
-}, 'itemType.add should treat \\r as a space');
+        assert_equals(elem.itemType.toString(),'a b');
+}, 'itemType.add should normalize \\r as a space');
 test(function () {
         var elem = makeEl('div',{itemtype:'a\n'});
         elem.itemType.add('b');
-        assert_equals(elem.itemType.toString(),'a\nb');
-}, 'itemType.add should treat \\n as a space');
+        assert_equals(elem.itemType.toString(),'a b');
+}, 'itemType.add should normalize \\n as a space');
 test(function () {
         var elem = makeEl('div',{itemtype:'a\f'});
         elem.itemType.add('b');
-        assert_equals(elem.itemType.toString(),'a\fb');
-}, 'itemType.add should treat \\f as a space');
+        assert_equals(elem.itemType.toString(),'a b');
+}, 'itemType.add should normalize \\f as a space');
 test(function () {
         var elem = makeEl('div',{itemtype:'foo'});
         elem.itemType.remove('foo');
@@ -675,25 +680,20 @@ test(function () {
 	assert_equals( elem.itemProp.toString(), 'token1 token3' );
 }, 'itemProp.remove must collapse whitespace around removed tokens');
 test(function () {
-	var elem = makeEl('div',{itemprop:' token1 token2  '});
+	var elem = makeEl('div',{itemprop:'  token1  token2  token3  '});
 	elem.itemProp.remove('token2');
-	assert_equals( elem.itemProp.toString(), ' token1' );
-}, 'itemProp.remove must only remove whitespace around removed tokens');
+	assert_equals( elem.itemProp.toString(), 'token1 token3' );
+}, 'itemProp.remove must remove all useless whitespace');
 test(function () {
-	var elem = makeEl('div',{itemprop:'  token1  token2  token1  '});
-	elem.itemProp.remove('token2');
-	assert_equals( elem.itemProp.toString(), '  token1 token1  ' );
-}, 'itemProp.remove must collapse multiple whitespace around removed tokens');
-test(function () {
-	var elem = makeEl('div',{itemprop:'  token1  token2  token1  '});
-	elem.itemProp.remove('token1');
+	var elem = makeEl('div',{itemprop:'  token1  token2  token3  '});
+	elem.itemProp.remove('token1', 'token3');
 	assert_equals( elem.itemProp.toString(), 'token2' );
-}, 'itemProp.remove must collapse whitespace when removing multiple tokens');
+}, 'itemProp.remove must remove useless whitespace when removing multiple tokens');
 test(function () {
 	var elem = makeEl('div',{itemprop:'  token1  token1  '});
 	elem.itemProp.add('token1');
-	assert_equals( elem.itemProp.toString(), '  token1  token1  ' );
-}, 'itemProp.add must not affect whitespace when the token already exists');
+	assert_equals( elem.itemProp.toString(), 'token1' );
+}, 'itemProp.add must remove useless whitespace and duplicates when the token already exists');
 test(function () {
 	var elem = makeEl('div',{itemprop:'FOO'});
 	assert_true(elem.itemProp.toggle('foo'));
@@ -746,23 +746,23 @@ test(function () {
 test(function () {
 	var elem = makeEl('div',{itemprop:'a\t'});
 	elem.itemProp.add('b');
-	assert_equals(elem.itemProp.toString(),'a\tb');
-}, 'itemProp.add should treat \\t as a space');
+	assert_equals(elem.itemProp.toString(),'a b');
+}, 'itemProp.add should normalize \\t as a space');
 test(function () {
 	var elem = makeEl('div',{itemprop:'a\r'});
 	elem.itemProp.add('b');
-	assert_equals(elem.itemProp.toString(),'a\rb');
-}, 'itemProp.add should treat \\r as a space');
+	assert_equals(elem.itemProp.toString(),'a b');
+}, 'itemProp.add should normalize \\r as a space');
 test(function () {
 	var elem = makeEl('div',{itemprop:'a\n'});
 	elem.itemProp.add('b');
-	assert_equals(elem.itemProp.toString(),'a\nb');
-}, 'itemProp.add should treat \\n as a space');
+	assert_equals(elem.itemProp.toString(),'a b');
+}, 'itemProp.add should normalize \\n as a space');
 test(function () {
 	var elem = makeEl('div',{itemprop:'a\f'});
 	elem.itemProp.add('b');
-	assert_equals(elem.itemProp.toString(),'a\fb');
-}, 'itemProp.add should treat \\f as a space');
+	assert_equals(elem.itemProp.toString(),'a b');
+}, 'itemProp.add should normalize \\f as a space');
 test(function () {
 	var elem = makeEl('div',{itemprop:'foo'});
 	elem.itemProp.remove('foo');
@@ -1009,23 +1009,23 @@ test(function () {
 test(function () {
 	var elem = makeEl('div',{itemref:' token1 token2  '});
 	elem.itemRef.remove('token2');
-	assert_equals( elem.itemRef.toString(), ' token1' );
-}, 'itemRef.remove must only remove whitespace around removed tokens');
+	assert_equals( elem.itemRef.toString(), 'token1' );
+}, 'itemRef.remove must remove useless whitespace when removing tokens');
 test(function () {
-	var elem = makeEl('div',{itemref:'  token1  token2  token1  '});
+	var elem = makeEl('div',{itemref:'  token1  token2  token3  '});
 	elem.itemRef.remove('token2');
-	assert_equals( elem.itemRef.toString(), '  token1 token1  ' );
-}, 'itemRef.remove must collapse multiple whitespace around removed tokens');
+	assert_equals( elem.itemRef.toString(), 'token1 token3' );
+}, 'itemRef.remove must remove useless whitespace when removing tokens');
 test(function () {
-	var elem = makeEl('div',{itemref:'  token1  token2  token1  '});
-	elem.itemRef.remove('token1');
+	var elem = makeEl('div',{itemref:'  token1  token2  token3  '});
+	elem.itemRef.remove('token1', 'token3');
 	assert_equals( elem.itemRef.toString(), 'token2' );
 }, 'itemRef.remove must collapse whitespace when removing multiple tokens');
 test(function () {
 	var elem = makeEl('div',{itemref:'  token1  token1  '});
 	elem.itemRef.add('token1');
-	assert_equals( elem.itemRef.toString(), '  token1  token1  ' );
-}, 'itemRef.add must not affect whitespace when the token already exists');
+	assert_equals( elem.itemRef.toString(), 'token1' );
+}, 'itemRef.add must remove whitespace and duplicate when the token already exists');
 test(function () {
 	var elem = makeEl('div',{itemref:'FOO'});
 	assert_true(elem.itemRef.toggle('foo'));
@@ -1078,23 +1078,23 @@ test(function () {
 test(function () {
 	var elem = makeEl('div',{itemref:'a\t'});
 	elem.itemRef.add('b');
-	assert_equals(elem.itemRef.toString(),'a\tb');
-}, 'itemRef.add should treat \\t as a space');
+	assert_equals(elem.itemRef.toString(),'a b');
+}, 'itemRef.add should normalize \\t as a space');
 test(function () {
 	var elem = makeEl('div',{itemref:'a\r'});
 	elem.itemRef.add('b');
-	assert_equals(elem.itemRef.toString(),'a\rb');
-}, 'itemRef.add should treat \\r as a space');
+	assert_equals(elem.itemRef.toString(),'a b');
+}, 'itemRef.add should normalize \\r as a space');
 test(function () {
 	var elem = makeEl('div',{itemref:'a\n'});
 	elem.itemRef.add('b');
-	assert_equals(elem.itemRef.toString(),'a\nb');
-}, 'itemRef.add should treat \\n as a space');
+	assert_equals(elem.itemRef.toString(),'a b');
+}, 'itemRef.add should normalize \\n as a space');
 test(function () {
 	var elem = makeEl('div',{itemref:'a\f'});
 	elem.itemRef.add('b');
-	assert_equals(elem.itemRef.toString(),'a\fb');
-}, 'itemRef.add should treat \\f as a space');
+	assert_equals(elem.itemRef.toString(),'a b');
+}, 'itemRef.add should normalize \\f as a space');
 test(function () {
 	var elem = makeEl('div',{itemref:'foo'});
 	elem.itemRef.remove('foo');

@@ -98,17 +98,17 @@ if (!("localProfileDir" in SharedAll.Constants.Path)) {
  */
 let clone = SharedAll.clone;
 
-let worker = new PromiseWorker(
-  "resource://gre/modules/osfile/osfile_async_worker.js", LOG);
+let worker = null;
 let Scheduler = {
   /**
    * |true| once we have sent at least one message to the worker.
+   * This field is unaffected by resetting the worker.
    */
   launched: false,
 
   /**
    * |true| once shutdown has begun i.e. we should reject any
-   * message
+   * message, including resets.
    */
   shutdown: false,
 
@@ -118,15 +118,20 @@ let Scheduler = {
   latestPromise: Promise.resolve("OS.File scheduler hasn't been launched yet"),
 
   post: function post(...args) {
+    if (this.shutdown) {
+      LOG("OS.File is not available anymore. The following request has been rejected.", args);
+      return Promise.reject(new Error("OS.File has been shut down."));
+    }
+    if (!worker) {
+      // Either the worker has never been created or it has been reset
+      worker = new PromiseWorker(
+        "resource://gre/modules/osfile/osfile_async_worker.js", LOG);
+    }
     if (!this.launched && SharedAll.Config.DEBUG) {
       // If we have delayed sending SET_DEBUG, do it now.
       worker.post("SET_DEBUG", [true]);
     }
     this.launched = true;
-    if (this.shutdown) {
-      LOG("OS.File is not available anymore. The following request has been rejected.", args);
-      return Promise.reject(new Error("OS.File has been shut down."));
-    }
 
     // By convention, the last argument of any message may be an |options| object.
     let methodArgs = args[1];
@@ -246,14 +251,13 @@ const PREF_OSFILE_TEST_SHUTDOWN_OBSERVER =
  * (including the shutdown warning message) have been answered.
  */
 function warnAboutUnclosedFiles(shutdown = true) {
-  if (!Scheduler.launched) {
+  if (!Scheduler.launched || !worker) {
     // Don't launch the scheduler on our behalf. If no message has been
     // sent to the worker, we can't have any leaking file/directory
     // descriptor.
     return null;
   }
-  // Send a "System_shutdown" message to the worker.
-  let promise = Scheduler.post("System_shutdown");
+  let promise = Scheduler.post("Meta_getUnclosedResources");
 
   // Configure the worker to reject any further message.
   if (shutdown) {
@@ -360,6 +364,20 @@ File.prototype = {
     return Scheduler.post("File_prototype_stat", [this._fdmsg], this).then(
       File.Info.fromMsg
     );
+  },
+
+  /**
+   * Set the last access and modification date of the file.
+   * The time stamp resolution is 1 second at best, but might be worse
+   * depending on the platform.
+   *
+   * @return {promise}
+   * @rejects {TypeError}
+   * @rejects {OS.File.Error}
+   */
+  setDates: function setDates(accessDate, modificationDate) {
+    return Scheduler.post("File_prototype_setDates",
+                          [this._fdmsg, accessDate, modificationDate], this);
   },
 
   /**
@@ -481,6 +499,22 @@ File.prototype = {
   setPosition: function setPosition(pos, whence) {
     return Scheduler.post("File_prototype_setPosition",
       [this._fdmsg, pos, whence]);
+  },
+
+  /**
+   * Flushes the file's buffers and causes all buffered data
+   * to be written.
+   * Disk flushes are very expensive and therefore should be used carefully,
+   * sparingly and only in scenarios where it is vital that data survives
+   * system crashes. Even though the function will be executed off the
+   * main-thread, it might still affect the overall performance of any running
+   * application.
+   *
+   * @return {promise}
+   */
+  flush: function flush() {
+    return Scheduler.post("File_prototype_flush",
+      [this._fdmsg]);
   }
 };
 
@@ -542,6 +576,22 @@ File.stat = function stat(path) {
   return Scheduler.post(
     "stat", [Type.path.toMsg(path)],
     path).then(File.Info.fromMsg);
+};
+
+
+/**
+ * Set the last access and modification date of the file.
+ * The time stamp resolution is 1 second at best, but might be worse
+ * depending on the platform.
+ *
+ * @return {promise}
+ * @rejects {TypeError}
+ * @rejects {OS.File.Error}
+ */
+File.setDates = function setDates(path, accessDate, modificationDate) {
+  return Scheduler.post("setDates",
+                        [Type.path.toMsg(path), accessDate, modificationDate],
+                        this);
 };
 
 /**
@@ -995,6 +1045,44 @@ DirectoryIterator.Entry.fromMsg = function fromMsg(value) {
   return new DirectoryIterator.Entry(value);
 };
 
+/**
+ * Flush all operations currently queued, then kill the underlying
+ * worker to save memory.
+ *
+ * @return {Promise}
+ * @reject {Error} If at least one file or directory iterator instance
+ * is still open and the worker cannot be killed safely.
+ */
+File.resetWorker = function() {
+  if (!Scheduler.launched || Scheduler.shutdown) {
+    // No need to reset
+    return Promise.resolve();
+  }
+  return Scheduler.post("Meta_reset").then(
+    function(wouldLeak) {
+      if (!wouldLeak) {
+        // No resource would leak, the worker was stopped.
+        worker = null;
+        return;
+      }
+      // Otherwise, resetting would be unsafe and has been canceled.
+      // Turn this into an error
+      let msg = "Cannot reset worker: ";
+      let {openedFiles, openedDirectoryIterators} = wouldLeak;
+      if (openedFiles.length > 0) {
+        msg += "The following files are still open:\n" +
+          openedFiles.join("\n");
+      }
+      if (openedDirectoryIterators.length > 0) {
+        msg += "The following directory iterators are still open:\n" +
+          openedDirectoryIterators.join("\n");
+      }
+      throw new Error(msg);
+    }
+  );
+};
+
+
 // Constants
 File.POS_START = SysAll.POS_START;
 File.POS_CURRENT = SysAll.POS_CURRENT;
@@ -1005,9 +1093,9 @@ File.Error = OSError;
 File.DirectoryIterator = DirectoryIterator;
 
 this.OS = {};
-OS.File = File;
-OS.Constants = SharedAll.Constants;
-OS.Shared = {
+this.OS.File = File;
+this.OS.Constants = SharedAll.Constants;
+this.OS.Shared = {
   LOG: SharedAll.LOG,
   Type: SysAll.Type,
   get DEBUG() {
@@ -1017,8 +1105,8 @@ OS.Shared = {
     return SharedAll.Config.DEBUG = x;
   }
 };
-Object.freeze(OS.Shared);
-OS.Path = Path;
+Object.freeze(this.OS.Shared);
+this.OS.Path = Path;
 
 
 // Auto-flush OS.File during profile-before-change. This ensures that any I/O

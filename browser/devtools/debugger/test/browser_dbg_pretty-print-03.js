@@ -41,9 +41,7 @@ function runCodeAndPause() {
 }
 
 function clickPrettyPrintButton() {
-  EventUtils.sendMouseEvent({ type: "click" },
-                            gDebugger.document.getElementById("pretty-print"),
-                            gDebugger);
+  gDebugger.document.getElementById("pretty-print").click();
 }
 
 registerCleanupFunction(function() {

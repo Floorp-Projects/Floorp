@@ -6,9 +6,13 @@
 
 MODULE = 'minidump_file_writer'
 
-CPP_SOURCES += [
+SOURCES += [
     'minidump_file_writer.cc',
 ]
 
 LIBRARY_NAME = 'minidump_file_writer_s'
 
+XPI_NAME = 'crashreporter'
+
+# need static lib
+FORCE_STATIC_LIB = True

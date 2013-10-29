@@ -4,32 +4,9 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-SpecialPowers.addPermission("telephony", true, document);
-
-let telephony = window.navigator.mozTelephony;
 let number = "911";
 let outgoing;
 let calls;
-
-function verifyInitialState() {
-  log("Verifying initial state.");
-  ok(telephony);
-  is(telephony.active, null);
-  ok(telephony.calls);
-  is(telephony.calls.length, 0);
-  calls = telephony.calls;
-
-  emulator.run("gsm list", function(result) {
-    log("Initial call list: " + result);
-    is(result[0], "OK");
-    if (result[0] == "OK") {
-      dial();
-    } else {
-      log("Call exists from a previous test, failing out.");
-      cleanUp();
-    }
-  });
-}
 
 function dial() {
   log("Make an emergency call.");
@@ -103,10 +80,9 @@ function hangUp() {
 }
 
 function cleanUp() {
-  SpecialPowers.removePermission("telephony", document);
   finish();
 }
 
 startTest(function() {
-  verifyInitialState();
+  dial();
 });

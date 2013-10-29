@@ -13,7 +13,7 @@ var InputWidgetHelper = {
   handleClick: function(aTarget) {
     // if we're busy looking at a InputWidget we want to eat any clicks that
     // come to us, but not to process them
-    if (this._uiBusy || !this._isValidInput(aTarget))
+    if (this._uiBusy || !this.hasInputWidget(aTarget))
       return;
 
     this._uiBusy = true;
@@ -60,7 +60,7 @@ var InputWidgetHelper = {
     }).bind(this));
   },
 
-  _isValidInput: function(aElement) {
+  hasInputWidget: function(aElement) {
     if (!aElement instanceof HTMLInputElement)
       return false;
 

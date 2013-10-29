@@ -11,15 +11,14 @@
 function SourcesView() {
   dumpn("SourcesView was instantiated");
 
-  this.prettyPrint = this.prettyPrint.bind(this);
+  this.togglePrettyPrint = this.togglePrettyPrint.bind(this);
   this._onEditorLoad = this._onEditorLoad.bind(this);
   this._onEditorUnload = this._onEditorUnload.bind(this);
-  this._onEditorSelection = this._onEditorSelection.bind(this);
-  this._onEditorContextMenu = this._onEditorContextMenu.bind(this);
+  this._onEditorCursorActivity = this._onEditorCursorActivity.bind(this);
   this._onSourceSelect = this._onSourceSelect.bind(this);
   this._onSourceClick = this._onSourceClick.bind(this);
   this._onBreakpointRemoved = this._onBreakpointRemoved.bind(this);
-  this._onSourceCheck = this._onSourceCheck.bind(this);
+  this.toggleBlackBoxing = this.toggleBlackBoxing.bind(this);
   this._onStopBlackBoxing = this._onStopBlackBoxing.bind(this);
   this._onBreakpointClick = this._onBreakpointClick.bind(this);
   this._onBreakpointCheckboxClick = this._onBreakpointCheckboxClick.bind(this);
@@ -28,6 +27,7 @@ function SourcesView() {
   this._onConditionalPopupHiding = this._onConditionalPopupHiding.bind(this);
   this._onConditionalTextboxInput = this._onConditionalTextboxInput.bind(this);
   this._onConditionalTextboxKeyPress = this._onConditionalTextboxKeyPress.bind(this);
+  this.updateToolbarButtonsState = this.updateToolbarButtonsState.bind(this);
 }
 
 SourcesView.prototype = Heritage.extend(WidgetMethods, {
@@ -38,7 +38,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     dumpn("Initializing the SourcesView");
 
     this.widget = new SideMenuWidget(document.getElementById("sources"), {
-      showItemCheckboxes: true,
       showArrows: true
     });
 
@@ -50,6 +49,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cmPopup = document.getElementById("sourceEditorContextMenu");
     this._cbPanel = document.getElementById("conditional-breakpoint-panel");
     this._cbTextbox = document.getElementById("conditional-breakpoint-panel-textbox");
+    this._blackBoxButton = document.getElementById("black-box");
     this._stopBlackBoxButton = document.getElementById("black-boxed-message-button");
     this._prettyPrintButton = document.getElementById("pretty-print");
 
@@ -61,9 +61,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     window.on(EVENTS.EDITOR_UNLOADED, this._onEditorUnload, false);
     this.widget.addEventListener("select", this._onSourceSelect, false);
     this.widget.addEventListener("click", this._onSourceClick, false);
-    this.widget.addEventListener("check", this._onSourceCheck, false);
     this._stopBlackBoxButton.addEventListener("click", this._onStopBlackBoxing, false);
-    this._prettyPrintButton.addEventListener("click", this.prettyPrint, false);
     this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.addEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -86,9 +84,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     window.off(EVENTS.EDITOR_UNLOADED, this._onEditorUnload, false);
     this.widget.removeEventListener("select", this._onSourceSelect, false);
     this.widget.removeEventListener("click", this._onSourceClick, false);
-    this.widget.removeEventListener("check", this._onSourceCheck, false);
     this._stopBlackBoxButton.removeEventListener("click", this._onStopBlackBoxing, false);
-    this._prettyPrintButton.removeEventListener("click", this.prettyPrint, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false);
@@ -379,9 +375,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Pretty print the selected source.
+   * Toggle the pretty printing of the selected source.
    */
-  prettyPrint: function() {
+  togglePrettyPrint: function() {
     if (this._prettyPrintButton.hasAttribute("disabled")) {
       return;
     }
@@ -392,17 +388,21 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
         DebuggerView.setEditorLocation(url, 0, { force: true });
       }
     };
+
     const printError = ([{ url }, error]) => {
-      let err = DevToolsUtils.safeErrorString(error);
-      let msg = "Couldn't prettify source: " + url + "\n" + err;
-      Cu.reportError(msg);
-      dumpn(msg);
-      return;
-    }
+      DevToolsUtils.reportException("togglePrettyPrint", error);
+    };
 
     DebuggerView.showProgressBar();
     const { source } = this.selectedItem.attachment;
-    DebuggerController.SourceScripts.prettyPrint(source)
+
+    if (gThreadClient.source(source).isPrettyPrinted) {
+      this._prettyPrintButton.removeAttribute("checked");
+    } else {
+      this._prettyPrintButton.setAttribute("checked", true);
+    }
+
+    DebuggerController.SourceScripts.togglePrettyPrint(source)
       .then(resetEditor, printError)
       .then(DebuggerView.showEditor);
   },
@@ -476,7 +476,12 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _hideConditionalPopup: function() {
     this._cbPanel.hidden = true;
-    this._cbPanel.hidePopup();
+
+    // Sometimes this._cbPanel doesn't have hidePopup method which doesn't
+    // break anything but simply outputs an exception to the console.
+    if (this._cbPanel.hidePopup) {
+      this._cbPanel.hidePopup();
+    }
   },
 
   /**
@@ -642,43 +647,32 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * The load listener for the source editor.
    */
   _onEditorLoad: function(aName, aEditor) {
-    aEditor.addEventListener(SourceEditor.EVENTS.SELECTION, this._onEditorSelection, false);
-    aEditor.addEventListener(SourceEditor.EVENTS.CONTEXT_MENU, this._onEditorContextMenu, false);
+    aEditor.on("cursorActivity", this._onEditorCursorActivity);
   },
 
   /**
    * The unload listener for the source editor.
    */
   _onEditorUnload: function(aName, aEditor) {
-    aEditor.removeEventListener(SourceEditor.EVENTS.SELECTION, this._onEditorSelection, false);
-    aEditor.removeEventListener(SourceEditor.EVENTS.CONTEXT_MENU, this._onEditorContextMenu, false);
+    aEditor.off("cursorActivity", this._onEditorCursorActivity);
   },
 
   /**
    * The selection listener for the source editor.
    */
-  _onEditorSelection: function(e) {
-    let { start, end } = e.newValue;
+  _onEditorCursorActivity: function(e) {
+    let editor = DebuggerView.editor;
+    let start  = editor.getCursor("start").line + 1;
+    let end    = editor.getCursor().line + 1;
+    let url    = this.selectedValue;
 
-    let url = this.selectedValue;
-    let lineStart = DebuggerView.editor.getLineAtOffset(start) + 1;
-    let lineEnd = DebuggerView.editor.getLineAtOffset(end) + 1;
-    let location = { url: url, line: lineStart };
+    let location = { url: url, line: start };
 
-    if (this.getBreakpoint(location) && lineStart == lineEnd) {
+    if (this.getBreakpoint(location) && start == end) {
       this.highlightBreakpoint(location, { noEditorUpdate: true });
     } else {
       this.unhighlightBreakpoint();
     }
-  },
-
-  /**
-   * The context menu listener for the source editor.
-   */
-  _onEditorContextMenu: function({ x, y }) {
-    let offset = DebuggerView.editor.getOffsetAtLocation(x, y);
-    let line = DebuggerView.editor.getLineAtOffset(offset);
-    this._editorContextMenuLineNumber = line;
   },
 
   /**
@@ -696,19 +690,29 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", script);
 
     DebuggerView.maybeShowBlackBoxMessage();
-    this._updatePrettyPrintButtonState();
+    this.updateToolbarButtonsState();
   },
 
   /**
-   * Enable or disable the pretty print button depending on whether the selected
-   * source is black boxed or not.
+   * Update the checked/unchecked and enabled/disabled states of the buttons in
+   * the sources toolbar based on the currently selected source's state.
    */
-  _updatePrettyPrintButtonState: function() {
+  updateToolbarButtonsState: function() {
     const { source } = this.selectedItem.attachment;
-    if (gThreadClient.source(source).isBlackBoxed) {
+    const sourceClient = gThreadClient.source(source);
+
+    if (sourceClient.isBlackBoxed) {
       this._prettyPrintButton.setAttribute("disabled", true);
+      this._blackBoxButton.setAttribute("checked", true);
     } else {
       this._prettyPrintButton.removeAttribute("disabled");
+      this._blackBoxButton.removeAttribute("checked");
+    }
+
+    if (sourceClient.isPrettyPrinted) {
+      this._prettyPrintButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("checked");
     }
   },
 
@@ -721,26 +725,30 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * The check listener for the sources container.
+   * Toggle the black boxed state of the selected source.
    */
-  _onSourceCheck: function({ detail: { checked }, target }) {
-    const shouldBlackBox = !checked;
+  toggleBlackBoxing: function() {
+    const { source } = this.selectedItem.attachment;
+    const sourceClient = gThreadClient.source(source);
+    const shouldBlackBox = !sourceClient.isBlackBoxed;
 
-    // Be optimistic that the (un-)black boxing will succeed and enable/disable
-    // the pretty print button immediately. Then, once we actually get the
-    // results from the server, make sure that it is in the correct state again
-    // by calling `_updatePrettyPrintButtonState`.
+    // Be optimistic that the (un-)black boxing will succeed, so enable/disable
+    // the pretty print button and check/uncheck the black box button
+    // immediately. Then, once we actually get the results from the server, make
+    // sure that it is in the correct state again by calling
+    // `updateToolbarButtonsState`.
 
     if (shouldBlackBox) {
       this._prettyPrintButton.setAttribute("disabled", true);
+      this._blackBoxButton.setAttribute("checked", true);
     } else {
       this._prettyPrintButton.removeAttribute("disabled");
+      this._blackBoxButton.removeAttribute("checked");
     }
 
-    const { source } = this.getItemForElement(target).attachment;
     DebuggerController.SourceScripts.blackBox(source, shouldBlackBox)
-      .then(this._updatePrettyPrintButtonState,
-            this._updatePrettyPrintButtonState);
+      .then(this.updateToolbarButtonsState,
+            this.updateToolbarButtonsState);
   },
 
   /**
@@ -748,7 +756,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    */
   _onStopBlackBoxing: function() {
     let sourceForm = this.selectedItem.attachment.source;
-    DebuggerController.SourceScripts.blackBox(sourceForm, false);
+    DebuggerController.SourceScripts.blackBox(sourceForm, false)
+      .then(this.updateToolbarButtonsState,
+            this.updateToolbarButtonsState);
   },
 
   /**
@@ -854,16 +864,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Called when the add breakpoint key sequence was pressed.
    */
   _onCmdAddBreakpoint: function() {
-    // If this command was executed via the context menu, add the breakpoint
-    // on the currently hovered line in the source editor.
-    if (this._editorContextMenuLineNumber >= 0) {
-      DebuggerView.editor.setCaretPosition(this._editorContextMenuLineNumber);
-    }
-    // Avoid placing breakpoints incorrectly when using key shortcuts.
-    this._editorContextMenuLineNumber = -1;
-
     let url = DebuggerView.Sources.selectedValue;
-    let line = DebuggerView.editor.getCaretPosition().line + 1;
+    let line = DebuggerView.editor.getCursor().line + 1;
     let location = { url: url, line: line };
     let breakpointItem = this.getBreakpoint(location);
 
@@ -881,16 +883,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Called when the add conditional breakpoint key sequence was pressed.
    */
   _onCmdAddConditionalBreakpoint: function() {
-    // If this command was executed via the context menu, add the breakpoint
-    // on the currently hovered line in the source editor.
-    if (this._editorContextMenuLineNumber >= 0) {
-      DebuggerView.editor.setCaretPosition(this._editorContextMenuLineNumber);
-    }
-    // Avoid placing breakpoints incorrectly when using key shortcuts.
-    this._editorContextMenuLineNumber = -1;
-
     let url =  DebuggerView.Sources.selectedValue;
-    let line = DebuggerView.editor.getCaretPosition().line + 1;
+    let line = DebuggerView.editor.getCursor().line + 1;
     let location = { url: url, line: line };
     let breakpointItem = this.getBreakpoint(location);
 
@@ -1021,7 +1015,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   _cbPanel: null,
   _cbTextbox: null,
   _selectedBreakpointItem: null,
-  _editorContextMenuLineNumber: -1,
   _conditionalPopupVisible: false
 });
 
@@ -1444,7 +1437,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
   _onCmdAddExpression: function(aText) {
     // Only add a new expression if there's no pending input.
     if (this.getAllStrings().indexOf("") == -1) {
-      this.addExpression(aText || DebuggerView.editor.getSelectedText());
+      this.addExpression(aText || DebuggerView.editor.getSelection());
     }
   },
 
@@ -2088,12 +2081,9 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
 
     let url = sourceResultsItem.instance.url;
     let line = lineResultsItem.instance.line;
-    DebuggerView.setEditorLocation(url, line + 1, { noDebug: true });
 
-    let editor = DebuggerView.editor;
-    let offset = editor.getCaretOffset();
-    let { start, length } = lineResultsItem.lineData.range;
-    editor.setSelection(offset + start, offset + start + length);
+    DebuggerView.setEditorLocation(url, line + 1, { noDebug: true });
+    DebuggerView.editor.extendSelection(lineResultsItem.lineData.range);
   },
 
   /**

@@ -10,9 +10,10 @@ EXPORTS += [
     'WMF.h',
     'WMFDecoder.h',
     'WMFReader.h',
+    'WMFUtils.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'DXVA2Manager.cpp',
     'WMFByteStream.cpp',
     'WMFDecoder.cpp',

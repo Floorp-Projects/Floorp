@@ -515,16 +515,4 @@ AppleMP3Reader::Seek(int64_t aTime,
   return NS_OK;
 }
 
-
-nsresult
-AppleMP3Reader::GetBuffered(dom::TimeRanges* aBuffered,
-                            int64_t aStartTime)
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  GetEstimatedBufferedTimeRanges(mDecoder->GetResource(),
-                                 mDecoder->GetMediaDuration(),
-                                 aBuffered);
-  return NS_OK;
-}
-
 } // namespace mozilla

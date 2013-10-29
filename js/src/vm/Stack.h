@@ -27,7 +27,6 @@ class StackFrame;
 class FrameRegs;
 
 class InvokeFrameGuard;
-class FrameGuard;
 class ExecuteFrameGuard;
 class GeneratorFrameGuard;
 
@@ -929,42 +928,6 @@ class StackFrame
     }
 
   public:
-    static size_t offsetOfFlags() {
-        return offsetof(StackFrame, flags_);
-    }
-
-    static size_t offsetOfExec() {
-        return offsetof(StackFrame, exec);
-    }
-
-    static size_t offsetOfNumActual() {
-        return offsetof(StackFrame, u.nactual);
-    }
-
-    static size_t offsetOfScopeChain() {
-        return offsetof(StackFrame, scopeChain_);
-    }
-
-    static size_t offsetOfArgumentsObject() {
-        return offsetof(StackFrame, argsObj_);
-    }
-
-    static ptrdiff_t offsetOfThis(JSFunction *fun) {
-        return fun == nullptr
-               ? -1 * ptrdiff_t(sizeof(Value))
-               : -(fun->nargs + 1) * ptrdiff_t(sizeof(Value));
-    }
-
-    static ptrdiff_t offsetOfFormalArg(JSFunction *fun, unsigned i) {
-        JS_ASSERT(i < fun->nargs);
-        return (-(int)fun->nargs + i) * sizeof(Value);
-    }
-
-    static size_t offsetOfFixed(unsigned i) {
-        return sizeof(StackFrame) + i * sizeof(Value);
-    }
-
-  public:
     void mark(JSTracer *trc);
     void markValues(JSTracer *trc, Value *sp);
 
@@ -1060,7 +1023,6 @@ class FrameRegs
 
 class InterpreterStack
 {
-    friend class FrameGuard;
     friend class InterpreterActivation;
 
     static const size_t DEFAULT_CHUNK_SIZE = 4 * 1024;
@@ -1095,11 +1057,10 @@ class InterpreterStack
     // For execution of eval or global code.
     StackFrame *pushExecuteFrame(JSContext *cx, HandleScript script, const Value &thisv,
                                  HandleObject scopeChain, ExecuteType type,
-                                 AbstractFramePtr evalInFrame, FrameGuard *fg);
+                                 AbstractFramePtr evalInFrame);
 
     // Called to invoke a function.
-    StackFrame *pushInvokeFrame(JSContext *cx, const CallArgs &args, InitialFrameFlags initial,
-                                FrameGuard *fg);
+    StackFrame *pushInvokeFrame(JSContext *cx, const CallArgs &args, InitialFrameFlags initial);
 
     // The interpreter can push light-weight, "inline" frames without entering a
     // new InterpreterActivation or recursively calling Interpret.
@@ -1131,31 +1092,6 @@ class InvokeArgs : public JS::CallArgs
             return false;
         ImplicitCast<CallArgs>(*this) = CallArgsFromVp(argc, v_.begin());
         return true;
-    }
-};
-
-class RunState;
-
-class FrameGuard
-{
-    friend class InterpreterStack;
-    RunState &state_;
-    FrameRegs &regs_;
-    InterpreterStack *stack_;
-    StackFrame *fp_;
-
-    void setPushed(InterpreterStack &stack, StackFrame *fp) {
-        stack_ = &stack;
-        fp_ = fp;
-    }
-
-  public:
-    FrameGuard(RunState &state, FrameRegs &regs);
-    ~FrameGuard();
-
-    StackFrame *fp() const {
-        JS_ASSERT(fp_);
-        return fp_;
     }
 };
 
@@ -1250,28 +1186,34 @@ class Activation
     void operator=(const Activation &other) MOZ_DELETE;
 };
 
-// The value to assign to InterpreterActivation's *switchMask_ to enable
-// interrupts. This value is greater than the greatest opcode, and is chosen
-// such that the bitwise or of this value with any opcode is this value.
+// This variable holds a special opcode value which is greater than all normal
+// opcodes, and is chosen such that the bitwise or of this value with any
+// opcode is this value.
 static const jsbytecode EnableInterruptsPseudoOpcode = -1;
 
+static_assert(EnableInterruptsPseudoOpcode >= JSOP_LIMIT,
+              "EnableInterruptsPseudoOpcode must be greater than any opcode");
+static_assert(EnableInterruptsPseudoOpcode == jsbytecode(-1),
+              "EnableInterruptsPseudoOpcode must be the maximum jsbytecode value");
+
 class InterpreterFrameIterator;
+class RunState;
 
 class InterpreterActivation : public Activation
 {
     friend class js::InterpreterFrameIterator;
 
-    StackFrame *const entry_; // Entry frame for this activation.
-    FrameRegs &regs_;
-    jsbytecode *const switchMask_; // For debugger interrupts, see js::Interpret.
+    RunState &state_;
+    FrameRegs regs_;
+    StackFrame *entryFrame_;
+    size_t opMask_; // For debugger interrupts, see js::Interpret.
 
 #ifdef DEBUG
     size_t oldFrameCount_;
 #endif
 
   public:
-    inline InterpreterActivation(JSContext *cx, StackFrame *entry, FrameRegs &regs,
-                                 jsbytecode *const switchMask);
+    inline InterpreterActivation(RunState &state, JSContext *cx, StackFrame *entryFrame);
     inline ~InterpreterActivation();
 
     inline bool pushInlineFrame(const CallArgs &args, HandleScript script,
@@ -1281,8 +1223,14 @@ class InterpreterActivation : public Activation
     StackFrame *current() const {
         return regs_.fp();
     }
-    FrameRegs &regs() const {
+    FrameRegs &regs() {
         return regs_;
+    }
+    StackFrame *entryFrame() const {
+        return entryFrame_;
+    }
+    size_t opMask() const {
+        return opMask_;
     }
 
     // If this js::Interpret frame is running |script|, enable interrupts.
@@ -1291,7 +1239,10 @@ class InterpreterActivation : public Activation
             enableInterruptsUnconditionally();
     }
     void enableInterruptsUnconditionally() {
-        *switchMask_ = EnableInterruptsPseudoOpcode;
+        opMask_ = EnableInterruptsPseudoOpcode;
+    }
+    void clearInterruptsMask() {
+        opMask_ = 0;
     }
 };
 
@@ -1417,8 +1368,8 @@ class InterpreterFrameIterator
     {
         if (activation) {
             fp_ = activation->current();
-            pc_ = activation->regs_.pc;
-            sp_ = activation->regs_.sp;
+            pc_ = activation->regs().pc;
+            sp_ = activation->regs().sp;
         }
     }
 

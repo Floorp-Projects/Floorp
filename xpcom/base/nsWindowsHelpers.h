@@ -9,6 +9,26 @@
 #include "nsAutoRef.h"
 #include "nscore.h"
 
+// ----------------------------------------------------------------------------
+// Critical Section helper class
+// ----------------------------------------------------------------------------
+
+class AutoCriticalSection
+{
+public:
+  AutoCriticalSection(LPCRITICAL_SECTION section)
+    : mSection(section)
+  {
+    ::EnterCriticalSection(mSection);
+  }
+  ~AutoCriticalSection()
+  {
+    ::LeaveCriticalSection(mSection);
+  }
+private:
+  LPCRITICAL_SECTION mSection;
+};
+
 template<>
 class nsAutoRefTraits<HKEY>
 {
@@ -105,16 +125,6 @@ typedef nsAutoRef<HMODULE> nsModuleHandle;
 
 namespace
 {
-  bool
-  IsVistaOrLater()
-  {
-    OSVERSIONINFO info;
-    ZeroMemory(&info, sizeof(OSVERSIONINFO));
-    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&info);
-    return info.dwMajorVersion >= 6;
-  }
-
   bool
   IsRunningInWindowsMetro()
   {

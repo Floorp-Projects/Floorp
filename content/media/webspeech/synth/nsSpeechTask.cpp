@@ -167,7 +167,7 @@ nsSpeechTask::SendAudio(const JS::Value& aData, const JS::Value& aLandmarks,
   JS::Rooted<JSObject*> darray(aCx, &aData.toObject());
   JSAutoCompartment ac(aCx, darray);
 
-  JS::Rooted<JSObject*> tsrc(aCx, NULL);
+  JS::Rooted<JSObject*> tsrc(aCx, nullptr);
 
   // Allow either Int16Array or plain JS Array
   if (JS_IsInt16Array(darray)) {

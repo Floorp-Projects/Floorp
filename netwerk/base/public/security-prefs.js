@@ -4,7 +4,6 @@
 
 pref("security.tls.version.min", 0);
 pref("security.tls.version.max", 1);
-pref("security.enable_tls_session_tickets", true);
 pref("security.enable_md5_signatures", false);
 
 pref("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", false);

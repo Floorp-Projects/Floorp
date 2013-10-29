@@ -29,6 +29,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
+#include "nsINetworkSeer.h"
 
 #include "nsIConsoleService.h"
 
@@ -375,6 +376,10 @@ nsUserFontSet::StartLoad(gfxMixedFontFamily* aFamily,
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsIDocument *document = ps->GetDocument();
+  mozilla::net::SeerLearn(aFontFaceSrc->mURI, document->GetDocumentURI(),
+                          nsINetworkSeer::LEARN_LOAD_SUBRESOURCE, loadGroup);
+
   bool inherits = false;
   rv = NS_URIChainHasFlags(aFontFaceSrc->mURI,
                            nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
@@ -622,12 +627,6 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
       case eCSSUnit_URL:
         face->mIsLocal = false;
         face->mURI = val.GetURLValue();
-        if (!face->mURI) {
-          // if URI not valid, omit from src array
-          srcArray.RemoveElementAt(srcArray.Length() - 1);
-          NS_WARNING("null url in @font-face rule");
-          continue;
-        }
         face->mReferrer = val.GetURLStructValue()->mReferrer;
         face->mOriginPrincipal = val.GetURLStructValue()->mOriginPrincipal;
         NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
@@ -662,6 +661,12 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
             face->mFormatFlags |= FLAG_FORMAT_UNKNOWN;
           }
           i++;
+        }
+        if (!face->mURI) {
+          // if URI not valid, omit from src array
+          srcArray.RemoveElementAt(srcArray.Length() - 1);
+          NS_WARNING("null url in @font-face rule");
+          continue;
         }
         break;
       default:

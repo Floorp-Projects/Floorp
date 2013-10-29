@@ -6,13 +6,13 @@
 
 PROGRAM = 'gdb-tests'
 
-CPP_SOURCES += [
+SOURCES += [
     'gdb-tests.cpp',
+    'tests/test-jsid.cpp',
     'tests/test-JSObject.cpp',
     'tests/test-JSString.cpp',
-    'tests/test-Root.cpp',
-    'tests/test-jsid.cpp',
     'tests/test-jsval.cpp',
     'tests/test-prettyprinters.cpp',
+    'tests/test-Root.cpp',
     'tests/typedef-printers.cpp',
 ]

@@ -6,7 +6,7 @@
 
 MODULE = 'chardet'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsChardetModule.cpp',
     'nsCyrillicDetector.cpp',
 ]

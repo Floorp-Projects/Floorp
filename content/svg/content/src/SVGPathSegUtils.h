@@ -7,9 +7,9 @@
 #define MOZILLA_SVGPATHSEGUTILS_H__
 
 #include "gfxPoint.h"
+#include "mozilla/gfx/Point.h"
 #include "nsDebug.h"
 #include "nsMemory.h"
-#include "prtypes.h"
 
 namespace mozilla {
 
@@ -47,6 +47,8 @@ static const unsigned short PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL = 19;
  */
 struct SVGPathTraversalState
 {
+  typedef gfx::Point Point;
+
   enum TraversalMode {
     eUpdateAll,
     eUpdateOnlyStartAndCurrentPos
@@ -63,17 +65,17 @@ struct SVGPathTraversalState
 
   bool ShouldUpdateLengthAndControlPoints() { return mode == eUpdateAll; }
 
-  gfxPoint start; // start point of current sub path (reset each moveto)
+  Point start; // start point of current sub path (reset each moveto)
 
-  gfxPoint pos;   // current position (end point of previous segment)
+  Point pos;   // current position (end point of previous segment)
 
-  gfxPoint cp1;   // quadratic control point - if the previous segment was a
-                  // quadratic bezier curve then this is set to the absolute
-                  // position of its control point, otherwise its set to pos
+  Point cp1;   // quadratic control point - if the previous segment was a
+               // quadratic bezier curve then this is set to the absolute
+               // position of its control point, otherwise its set to pos
 
-  gfxPoint cp2;   // cubic control point - if the previous segment was a cubic
-                  // bezier curve then this is set to the absolute position of
-                  // its second control point, otherwise it's set to pos
+  Point cp2;   // cubic control point - if the previous segment was a cubic
+               // bezier curve then this is set to the absolute position of
+               // its second control point, otherwise it's set to pos
 
   float length;   // accumulated path length
 
@@ -113,13 +115,13 @@ public:
    * can simply do a bitwise uint32_t<->float copy.
    */
   static float EncodeType(uint32_t aType) {
-    PR_STATIC_ASSERT(sizeof(uint32_t) == sizeof(float));
+    static_assert(sizeof(uint32_t) == sizeof(float), "sizeof uint32_t and float must be the same");
     NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
     return *(reinterpret_cast<float*>(&aType));
   }
 
   static uint32_t DecodeType(float aType) {
-    PR_STATIC_ASSERT(sizeof(uint32_t) == sizeof(float));
+    static_assert(sizeof(uint32_t) == sizeof(float), "sizeof uint32_t and float must be the same");
     uint32_t type = *(reinterpret_cast<uint32_t*>(&aType));
     NS_ABORT_IF_FALSE(IsValidType(type), "Seg type not recognized");
     return type;
@@ -150,7 +152,7 @@ public:
       PRUnichar('T'),  // 18 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS
       PRUnichar('t')   // 19 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL
     };
-    PR_STATIC_ASSERT(NS_ARRAY_LENGTH(table) == NS_SVG_PATH_SEG_TYPE_COUNT);
+    static_assert(NS_ARRAY_LENGTH(table) == NS_SVG_PATH_SEG_TYPE_COUNT, "Unexpected table size");
 
     return table[aType];
   }
@@ -180,7 +182,7 @@ public:
       2,  // 18 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS
       2   // 19 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL
     };
-    PR_STATIC_ASSERT(NS_ARRAY_LENGTH(table) == NS_SVG_PATH_SEG_TYPE_COUNT);
+    static_assert(NS_ARRAY_LENGTH(table) == NS_SVG_PATH_SEG_TYPE_COUNT, "Unexpected table size");
 
     return table[aType];
   }
@@ -222,8 +224,8 @@ public:
 
     // When adding a new path segment type, ensure that the returned condition
     // below is still correct.
-    PR_STATIC_ASSERT(NS_SVG_PATH_SEG_LAST_VALID_TYPE ==
-                       PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
+    static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
+                  "Unexpected type");
 
     return aType >= PATHSEG_MOVETO_ABS;
   }
@@ -235,8 +237,8 @@ public:
 
     // When adding a new path segment type, ensure that the returned condition
     // below is still correct.
-    PR_STATIC_ASSERT(NS_SVG_PATH_SEG_LAST_VALID_TYPE ==
-                       PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
+    static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
+                  "Unexpected type");
 
     return aType & 1;
   }
@@ -248,8 +250,8 @@ public:
 
     // When adding a new path segment type, ensure that the returned condition
     // below is still correct.
-    PR_STATIC_ASSERT(NS_SVG_PATH_SEG_LAST_VALID_TYPE ==
-                       PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
+    static_assert(NS_SVG_PATH_SEG_LAST_VALID_TYPE == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
+                  "Unexpected type");
 
     return aType | 1;
   }

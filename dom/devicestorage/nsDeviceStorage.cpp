@@ -49,6 +49,7 @@
 #include "nsIStringBundle.h"
 #include "nsIDocument.h"
 #include <algorithm>
+#include "nsContentPermissionHelper.h"
 
 #include "mozilla/dom/DeviceStorageBinding.h"
 
@@ -762,10 +763,16 @@ DeviceStorageFile::GetRootDirectoryForType(const nsAString& aStorageType,
   // crash reports directory.
   else if (aStorageType.EqualsLiteral(DEVICESTORAGE_CRASHES)) {
     f = sDirs->crashes;
+  } else {
+    // Not a storage type that we recognize. Return null
+    return;
   }
 
-  // in testing, we default all device storage types to a temp directory
-  if (f && sDirs->temp) {
+  // In testing, we default all device storage types to a temp directory.
+  // sDirs->temp will only have been initialized (in InitDirs) if the
+  // preference device.storage.testing was set to true. We can't test the
+  // preference directly here, since we may not be on the main thread.
+  if (sDirs->temp) {
     f = sDirs->temp;
   }
 
@@ -1689,17 +1696,14 @@ nsDOMDeviceStorageCursor::GetStorageType(nsAString & aType)
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorageCursor::GetType(nsACString & aType)
+nsDOMDeviceStorageCursor::GetTypes(nsIArray** aTypes)
 {
-  return DeviceStorageTypeChecker::GetPermissionForType(mFile->mStorageType,
-                                                        aType);
-}
+  nsCString type;
+  nsresult rv =
+    DeviceStorageTypeChecker::GetPermissionForType(mFile->mStorageType, type);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-NS_IMETHODIMP
-nsDOMDeviceStorageCursor::GetAccess(nsACString & aAccess)
-{
-  aAccess = NS_LITERAL_CSTRING("read");
-  return NS_OK;
+  return CreatePermissionArray(type, NS_LITERAL_CSTRING("read"), aTypes);
 }
 
 NS_IMETHODIMP
@@ -2174,8 +2178,10 @@ public:
       if (NS_FAILED(rv)) {
         return rv;
       }
+      nsTArray<PermissionRequest> permArray;
+      permArray.AppendElement(PermissionRequest(type, access));
       child->SendPContentPermissionRequestConstructor(
-        this, type, access, IPC::Principal(mPrincipal));
+        this, permArray, IPC::Principal(mPrincipal));
 
       Sendprompt();
       return NS_OK;
@@ -2189,26 +2195,23 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetType(nsACString & aType)
+  NS_IMETHODIMP GetTypes(nsIArray** aTypes)
   {
     nsCString type;
-    nsresult rv
-      = DeviceStorageTypeChecker::GetPermissionForType(mFile->mStorageType,
-                                                       aType);
+    nsresult rv =
+      DeviceStorageTypeChecker::GetPermissionForType(mFile->mStorageType, type);
     if (NS_FAILED(rv)) {
       return rv;
     }
-    return NS_OK;
-  }
 
-  NS_IMETHOD GetAccess(nsACString & aAccess)
-  {
-    nsresult rv = DeviceStorageTypeChecker::GetAccessForRequest(
-      DeviceStorageRequestType(mRequestType), aAccess);
+    nsCString access;
+    rv = DeviceStorageTypeChecker::GetAccessForRequest(
+      DeviceStorageRequestType(mRequestType), access);
     if (NS_FAILED(rv)) {
       return rv;
     }
-    return NS_OK;
+
+    return CreatePermissionArray(type, access, aTypes);
   }
 
   NS_IMETHOD GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
@@ -3185,8 +3188,10 @@ nsDOMDeviceStorage::EnumerateInternal(const nsAString& aPath,
     if (aRv.Failed()) {
       return nullptr;
     }
-    child->SendPContentPermissionRequestConstructor(r, type,
-                                                    NS_LITERAL_CSTRING("read"),
+    nsTArray<PermissionRequest> permArray;
+    permArray.AppendElement(PermissionRequest(type, NS_LITERAL_CSTRING("read")));
+    child->SendPContentPermissionRequestConstructor(r,
+                                                    permArray,
                                                     IPC::Principal(mPrincipal));
 
     r->Sendprompt();
@@ -3476,9 +3481,15 @@ nsDOMDeviceStorage::DispatchDOMEvent(WidgetEvent* aEvent,
 }
 
 nsEventListenerManager *
-nsDOMDeviceStorage::GetListenerManager(bool aMayCreate)
+nsDOMDeviceStorage::GetOrCreateListenerManager()
 {
-  return nsDOMEventTargetHelper::GetListenerManager(aMayCreate);
+  return nsDOMEventTargetHelper::GetOrCreateListenerManager();
+}
+
+nsEventListenerManager *
+nsDOMDeviceStorage::GetExistingListenerManager() const
+{
+  return nsDOMEventTargetHelper::GetExistingListenerManager();
 }
 
 nsIScriptContext *

@@ -74,7 +74,7 @@ nsMemoryImpl::IsLowMemoryPlatform(bool *result)
             return NS_OK;
         }
         uint64_t mem = 0;
-        int rv = fscanf(fd, "MemTotal: %lu kB", &mem);
+        int rv = fscanf(fd, "MemTotal: %llu kB", &mem);
         if (fclose(fd)) {
             return NS_OK;
         }

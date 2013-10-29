@@ -234,7 +234,7 @@ public: // IUnknown
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
   {
-    *ppUnk = NULL;
+    *ppUnk = nullptr;
     if (IID_IUnknown == riid || IID_ITfRange == riid || IID_ITfRangeACP == riid)
       *ppUnk = static_cast<ITfRangeACP*>(this);
     if (*ppUnk)
@@ -446,7 +446,7 @@ public: // IUnknown
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
   {
-    *ppUnk = NULL;
+    *ppUnk = nullptr;
     if (IID_IUnknown == riid || IID_IEnumTfRanges == riid)
       *ppUnk = static_cast<IEnumTfRanges*>(this);
     if (*ppUnk)
@@ -538,7 +538,7 @@ public: // IUnknown
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
   {
-    *ppUnk = NULL;
+    *ppUnk = nullptr;
     if (IID_IUnknown == riid || IID_ITfDisplayAttributeInfo == riid)
       *ppUnk = static_cast<ITfDisplayAttributeInfo*>(this);
     if (*ppUnk)
@@ -617,7 +617,7 @@ public: // IUnknown
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
   {
-    *ppUnk = NULL;
+    *ppUnk = nullptr;
     if (IID_IUnknown == riid || IID_ITfProperty == riid ||
         IID_ITfReadOnlyProperty == riid)
       *ppUnk = static_cast<ITfProperty*>(this);
@@ -777,7 +777,7 @@ public: // IUnknown
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
   {
-    *ppUnk = NULL;
+    *ppUnk = nullptr;
     if (IID_IUnknown == riid || IID_ITfContext == riid)
       *ppUnk = static_cast<ITfContext*>(this);
     else if (IID_ITextStoreACPSink == riid)
@@ -1005,7 +1005,7 @@ public: // IUnknown
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
   {
-    *ppUnk = NULL;
+    *ppUnk = nullptr;
     if (IID_IUnknown == riid || IID_ITfDocumentMgr == riid)
       *ppUnk = static_cast<ITfDocumentMgr*>(this);
     if (*ppUnk)
@@ -1033,7 +1033,7 @@ public: // ITfDocumentMgr
       mStore->AdviseSink(IID_ITextStoreACPSink,
                          static_cast<ITextStoreACPSink*>(context.get()),
                          TS_AS_ALL_SINKS);
-    if (FAILED(hr)) mStore = NULL;
+    if (FAILED(hr)) mStore = nullptr;
     NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
     (*ppic) = context;
     (*ppic)->AddRef();
@@ -1067,7 +1067,7 @@ public: // ITfDocumentMgr
     if (dwFlags == TF_POPF_ALL) {
       NS_ENSURE_TRUE(mContextBase, E_FAIL);
       mStore->UnadviseSink(static_cast<ITextStoreACPSink*>(mContextBase.get()));
-      mStore = NULL;
+      mStore = nullptr;
       mContextBase = nullptr;
       mContextTop = nullptr;
       return S_OK;
@@ -1136,7 +1136,7 @@ public: // IUnknown
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppUnk)
   {
-    *ppUnk = NULL;
+    *ppUnk = nullptr;
     if (IID_IUnknown == riid || IID_ITfThreadMgr == riid)
       *ppUnk = static_cast<ITfThreadMgr*>(this);
     else if (IID_ITfDisplayAttributeMgr == riid)
@@ -1485,7 +1485,7 @@ TestApp::Init(void)
   if (*threadMgr) {
     (*threadMgr)->Deactivate();
     (*threadMgr)->Release();
-    (*threadMgr) = NULL;
+    (*threadMgr) = nullptr;
   } else {
     // This is only for information. The test does not need TSF to run.
     printf("TSF not initialized properly (TSF is not enabled/installed?)\n");
@@ -1495,13 +1495,13 @@ TestApp::Init(void)
       widget->GetNativeData(NS_NATIVE_TSF_CATEGORY_MGR));
   if (*catMgr) {
     (*catMgr)->Release();
-    (*catMgr) = NULL;
+    (*catMgr) = nullptr;
   }
   ITfDisplayAttributeMgr **daMgr = reinterpret_cast<ITfDisplayAttributeMgr**>(
       widget->GetNativeData(NS_NATIVE_TSF_DISPLAY_ATTR_MGR));
   if (*daMgr) {
     (*daMgr)->Release();
-    (*daMgr) = NULL;
+    (*daMgr) = nullptr;
   }
 
   mMgr = new TSFMgrImpl(this);
@@ -2393,7 +2393,8 @@ TestApp::TestComposition(void)
   hr = mMgr->GetFocusedStore()->InsertTextAtSelection(TF_IAS_NOQUERY,
                                                       insertString1.get(),
                                                       insertString1.Length(),
-                                                      NULL, NULL, &textChange);
+                                                      nullptr, nullptr,
+                                                      &textChange);
   if (!(SUCCEEDED(hr) &&
         sel.acpEnd == textChange.acpStart &&
         sel.acpEnd == textChange.acpOldEnd &&
@@ -2578,7 +2579,7 @@ TestApp::TestNotificationTextChange(nsIWidget* aWidget,
                                     LONG aNewEnd)
 {
   MSG msg;
-  if (::PeekMessageW(&msg, NULL, WM_USER_TSF_TEXTCHANGE,
+  if (::PeekMessageW(&msg, nullptr, WM_USER_TSF_TEXTCHANGE,
                      WM_USER_TSF_TEXTCHANGE, PM_REMOVE))
     ::DispatchMessageW(&msg);
   if (!mMgr->GetFocusedContext()) {
@@ -2588,7 +2589,7 @@ TestApp::TestNotificationTextChange(nsIWidget* aWidget,
   mMgr->GetFocusedContext()->mTextChanged = false;
   nsresult nsr = aWidget->SynthesizeNativeKeyEvent(0, aCode, 0,
                               aCharacter, aCharacter);
-  if (::PeekMessageW(&msg, NULL, WM_USER_TSF_TEXTCHANGE,
+  if (::PeekMessageW(&msg, nullptr, WM_USER_TSF_TEXTCHANGE,
                      WM_USER_TSF_TEXTCHANGE, PM_REMOVE))
     ::DispatchMessageW(&msg);
   return NS_SUCCEEDED(nsr) &&

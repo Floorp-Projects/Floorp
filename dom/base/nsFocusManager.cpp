@@ -145,7 +145,7 @@ static const char* kObservedPrefs[] = {
   "accessibility.tabfocus_applies_to_xul",
   "accessibility.mouse_focuses_formcontrol",
   "focusmanager.testmode",
-  NULL
+  nullptr
 };
 
 nsFocusManager::nsFocusManager()

@@ -770,7 +770,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
         desc.setSetter(JS_StrictPropertyStub);
     }
 
-    if (!JS_WrapValue(cx, desc.value().address()) || !JS_WrapValue(cx, fval.address()))
+    if (!JS_WrapValue(cx, desc.value()) || !JS_WrapValue(cx, &fval))
         return false;
 
     if (desc.hasGetterObject())
@@ -793,7 +793,7 @@ wrappedJSObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, Mutable
 
     vp.set(OBJECT_TO_JSVAL(wrapper));
 
-    return WrapperFactory::WaiveXrayAndWrap(cx, vp.address());
+    return WrapperFactory::WaiveXrayAndWrap(cx, vp);
 }
 
 bool
@@ -1105,7 +1105,7 @@ DOMXrayTraits::call(JSContext *cx, HandleObject wrapper,
         if (!baseInstance.call(cx, wrapper, args))
             return false;
     }
-    return JS_WrapValue(cx, args.rval().address());
+    return JS_WrapValue(cx, args.rval());
 }
 
 bool
@@ -1127,7 +1127,7 @@ DOMXrayTraits::construct(JSContext *cx, HandleObject wrapper,
         if (!baseInstance.construct(cx, wrapper, args))
             return false;
     }
-    if (!args.rval().isObject() || !JS_WrapValue(cx, args.rval().address()))
+    if (!args.rval().isObject() || !JS_WrapValue(cx, args.rval()))
         return false;
     return true;
 }
@@ -1230,9 +1230,16 @@ HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasPro
 } // namespace XrayUtils
 
 static bool
-XrayToString(JSContext *cx, unsigned argc, jsval *vp)
+XrayToString(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedObject  wrapper(cx, JS_THIS_OBJECT(cx, vp));
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.thisv().isObject()) {
+        JS_ReportError(cx, "XrayToString called on an incompatible object");
+        return false;
+    }
+
+    RootedObject wrapper(cx, &args.thisv().toObject());
     if (!wrapper)
         return false;
     if (IsWrapper(wrapper) &&
@@ -1249,7 +1256,7 @@ XrayToString(JSContext *cx, unsigned argc, jsval *vp)
     static const char start[] = "[object XrayWrapper ";
     static const char end[] = "]";
     if (UseDOMXray(obj))
-        return NativeToString(cx, wrapper, obj, start, end, vp);
+        return NativeToString(cx, wrapper, obj, start, end, args.rval());
 
     nsAutoString result;
     result.AppendASCII(start);
@@ -1271,7 +1278,7 @@ XrayToString(JSContext *cx, unsigned argc, jsval *vp)
     if (!str)
         return false;
 
-    *vp = STRING_TO_JSVAL(str);
+    args.rval().setString(str);
     return true;
 }
 

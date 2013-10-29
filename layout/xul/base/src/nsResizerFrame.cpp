@@ -67,9 +67,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     case NS_MOUSE_BUTTON_DOWN: {
       if (aEvent->eventStructType == NS_TOUCH_EVENT ||
           (aEvent->eventStructType == NS_MOUSE_EVENT &&
-        static_cast<WidgetMouseEvent*>(aEvent)->button ==
-          WidgetMouseEvent::eLeftButton))
-      {
+           aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton)) {
         nsCOMPtr<nsIBaseWindow> window;
         nsIPresShell* presShell = aPresContext->GetPresShell();
         nsIContent* contentToResize =
@@ -132,12 +130,9 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
   case NS_TOUCH_END:
   case NS_MOUSE_BUTTON_UP: {
-
-      if (aEvent->eventStructType == NS_TOUCH_EVENT ||
-          (aEvent->eventStructType == NS_MOUSE_EVENT &&
-           static_cast<WidgetMouseEvent*>(aEvent)->button ==
-             WidgetMouseEvent::eLeftButton))
-    {
+    if (aEvent->eventStructType == NS_TOUCH_EVENT ||
+        (aEvent->eventStructType == NS_MOUSE_EVENT &&
+         aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton)) {
       // we're done tracking.
       mTrackingMouseMove = false;
 
@@ -288,18 +283,15 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   }
   break;
 
-  case NS_MOUSE_CLICK:
-    if (aEvent->IsLeftClickEvent())
-    {
-      MouseClicked(aPresContext, aEvent);
+  case NS_MOUSE_CLICK: {
+    WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+    if (mouseEvent->IsLeftClickEvent()) {
+      MouseClicked(aPresContext, mouseEvent);
     }
     break;
-
+  }
   case NS_MOUSE_DOUBLECLICK:
-    if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-        static_cast<WidgetMouseEvent*>(aEvent)->button ==
-          WidgetMouseEvent::eLeftButton)
-    {
+    if (aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
       nsCOMPtr<nsIBaseWindow> window;
       nsIPresShell* presShell = aPresContext->GetPresShell();
       nsIContent* contentToResize =
@@ -544,7 +536,7 @@ nsResizerFrame::GetDirection()
 
 void
 nsResizerFrame::MouseClicked(nsPresContext* aPresContext,
-                             WidgetGUIEvent *aEvent)
+                             WidgetMouseEvent* aEvent)
 {
   // Execute the oncommand event handler.
   nsContentUtils::DispatchXULCommand(mContent,

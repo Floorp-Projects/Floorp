@@ -451,12 +451,15 @@ GetWrapperCache(nsWrapperCache* cache)
 }
 
 inline nsWrapperCache*
-GetWrapperCache(nsGlobalWindow* not_allowed);
+GetWrapperCache(nsGlobalWindow*)
+{
+  return nullptr;
+}
 
 inline nsWrapperCache*
 GetWrapperCache(void* p)
 {
-  return NULL;
+  return nullptr;
 }
 
 // Helper template for smart pointers to resolve ambiguity between

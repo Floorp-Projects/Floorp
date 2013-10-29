@@ -61,6 +61,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool lowerConstantDouble(double d, MInstruction *ins);
     bool lowerConstantFloat32(float d, MInstruction *ins);
     bool lowerTruncateDToInt32(MTruncateToInt32 *ins);
+    bool lowerTruncateFToInt32(MTruncateToInt32 *ins);
     bool lowerDivI(MDiv *div);
     bool lowerModI(MMod *mod);
     bool lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
@@ -84,6 +85,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool visitGuardShape(MGuardShape *ins);
     bool visitGuardObjectType(MGuardObjectType *ins);
     bool visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins);
+    bool visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins);
     bool visitAsmJSLoadHeap(MAsmJSLoadHeap *ins);
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);

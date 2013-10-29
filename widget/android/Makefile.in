@@ -5,7 +5,6 @@
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 #DEFINES += -DDEBUG_WIDGETS
 

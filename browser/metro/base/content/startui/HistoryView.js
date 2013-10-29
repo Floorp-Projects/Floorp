@@ -95,7 +95,6 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
 
     rootNode.containerOpen = false;
     this._set.arrangeItems();
-    this._set.removeAttribute("fade");
     if (this._inBatch > 0)
       this._inBatch--;
   },
@@ -300,6 +299,7 @@ let HistoryStartView = {
   init: function init() {
     this._view = new HistoryView(this._grid, StartUI.maxResultsPerSection, true);
     this._view.populateGrid();
+    this._grid.removeAttribute("fade");
   },
 
   uninit: function uninit() {

@@ -263,6 +263,15 @@ public:
     return DoCompareTreePosition(aFrame1, aFrame2, -1, 1, aCommonAncestor);
   }
 
+  static int32_t CompareTreePosition(nsIFrame* aFrame1,
+                                     nsIFrame* aFrame2,
+                                     nsTArray<nsIFrame*>& aFrame2Ancestors,
+                                     nsIFrame* aCommonAncestor = nullptr)
+  {
+    return DoCompareTreePosition(aFrame1, aFrame2, aFrame2Ancestors,
+                                 -1, 1, aCommonAncestor);
+  }
+
   /*
    * More generic version of |CompareTreePosition|.  |aIf1Ancestor|
    * gives the value to return when 1 is an ancestor of 2, and likewise
@@ -274,6 +283,17 @@ public:
                                        int32_t aIf1Ancestor,
                                        int32_t aIf2Ancestor,
                                        nsIFrame* aCommonAncestor = nullptr);
+
+  static nsIFrame* FillAncestors(nsIFrame* aFrame,
+                                 nsIFrame* aStopAtAncestor,
+                                 nsTArray<nsIFrame*>* aAncestors);
+
+  static int32_t DoCompareTreePosition(nsIFrame* aFrame1,
+                                       nsIFrame* aFrame2,
+                                       nsTArray<nsIFrame*>& aFrame2Ancestors,
+                                       int32_t aIf1Ancestor,
+                                       int32_t aIf2Ancestor,
+                                       nsIFrame* aCommonAncestor);
 
   /**
    * LastContinuationWithChild gets the last continuation in aFrame's chain
@@ -968,9 +988,13 @@ public:
    * and margin.
    */
   enum IntrinsicWidthType { MIN_WIDTH, PREF_WIDTH };
+  enum {
+    IGNORE_PADDING = 0x01
+  };
   static nscoord IntrinsicForContainer(nsRenderingContext* aRenderingContext,
                                        nsIFrame* aFrame,
-                                       IntrinsicWidthType aType);
+                                       IntrinsicWidthType aType,
+                                       uint32_t aFlags = 0);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the
@@ -1651,6 +1675,12 @@ public:
    * Checks whether support for the CSS-wide "unset" value is enabled.
    */
   static bool UnsetValueEnabled();
+
+  /**
+   * Checks whether support for the CSS text-align (and -moz-text-align-last)
+   * 'true' value is enabled.
+   */
+  static bool IsTextAlignTrueValueEnabled();
 
   /**
    * Unions the overflow areas of all non-popup children of aFrame with

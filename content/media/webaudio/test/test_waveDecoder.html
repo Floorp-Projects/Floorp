@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset=utf-8>
+<head>
+  <title>Test that we decode uint8 and sint16 wave files with correct conversion to float64</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var testsDone = 0;
+var tests = ["UklGRjUrAABXQVZFZm10IBAAAAABAAEAESsAABErAAABAAgAZGF0YQMAAAD/AIA=",
+             "UklGRkZWAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQYAAAD/fwCAAAA="];
+
+SimpleTest.waitForExplicitFinish();
+
+function base64ToUint8Buffer(b64) {
+  var str = atob(b64)
+  var u8 = new Uint8Array(str.length);
+  for (var i = 0; i < str.length; ++i) {
+    u8[i] = str.charCodeAt(i);
+  }
+  return u8;
+}
+
+function fixupBufferSampleRate(u8, rate) {
+  u8[24] = (rate & 0x000000ff) >> 0;
+  u8[25] = (rate & 0x0000ff00) >> 8;
+  u8[26] = (rate & 0x00ff0000) >> 16;
+  u8[27] = (rate & 0xff000000) >> 24;
+}
+
+function finishTest() {
+  testsDone += 1;
+  if (testsDone == tests.length) {
+    SimpleTest.finish();
+  }
+}
+
+function decodeComplete(b) {
+  ok(true, "Decoding succeeded.");
+  is(b.numberOfChannels, 1, "Should have 1 channel.");
+  is(b.length, 3, "Should have three samples.");
+  var samples = b.getChannelData(0);
+  ok(samples[0] >  0.99 && samples[0] <  1.01, "Check near  1.0. Got " + samples[0]);
+  ok(samples[1] > -1.01 && samples[1] < -0.99, "Check near -1.0. Got " + samples[1]);
+  ok(samples[2] > -0.01 && samples[2] <  0.01, "Check near  0.0. Got " + samples[2]);
+  finishTest();
+}
+
+function decodeFailed() {
+  ok(false, "Decoding failed.");
+  finishTest();
+}
+
+addLoadEvent(function() {
+  var context = new AudioContext();
+
+  for (var i = 0; i < tests.length; ++i) {
+    var u8 = base64ToUint8Buffer(tests[i]);
+    fixupBufferSampleRate(u8, context.sampleRate);
+    context.decodeAudioData(u8.buffer, decodeComplete, decodeFailed);
+  }
+});
+</script>
+</pre>
+</body>
+</html>

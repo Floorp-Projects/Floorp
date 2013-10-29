@@ -6,6 +6,9 @@ include button/reftest.list
 # legend element
 include legend/reftest.list
 
+# fieldset element
+include fieldset/reftest.list
+
 # placeholder
 include placeholder/reftest.list
 

@@ -181,10 +181,12 @@ ErrorResult::ReportJSException(JSContext* cx)
 {
   MOZ_ASSERT(!mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to handle JS exceptions?");
-  if (JS_WrapValue(cx, &mJSException)) {
-    JS::RootedValue exception(cx, mJSException);
+
+  JS::Rooted<JS::Value> exception(cx, mJSException);
+  if (JS_WrapValue(cx, &exception)) {
     JS_SetPendingException(cx, exception);
   }
+  mJSException = exception;
   // If JS_WrapValue failed, not much we can do about it...  No matter
   // what, go ahead and unroot mJSException.
   JS_RemoveValueRoot(cx, &mJSException);
@@ -261,7 +263,7 @@ DefineConstants(JSContext* cx, JS::Handle<JSObject*> obj,
 {
   for (; cs->name; ++cs) {
     bool ok =
-      JS_DefineProperty(cx, obj, cs->name, cs->value, NULL, NULL,
+      JS_DefineProperty(cx, obj, cs->name, cs->value, nullptr, nullptr,
                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
     if (!ok) {
       return false;
@@ -326,9 +328,9 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JS::Rooted<JSObject*> callee(cx, &args.callee());
 
-  if (!args.computeThis(cx).isObject()) {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
-                         "null", "object");
+  if (!args.thisv().isObject()) {
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                         JSMSG_CANT_CONVERT_TO, "null", "object");
     return false;
   }
 
@@ -341,8 +343,9 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
   size_t length;
   const jschar* name = JS_GetInternedStringCharsAndLength(jsname, &length);
 
-  if (js::GetObjectJSClass(&args.computeThis(cx).toObject()) != clasp) {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+  if (js::GetObjectJSClass(&args.thisv().toObject()) != clasp) {
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                         JSMSG_INCOMPATIBLE_PROTO,
                          NS_ConvertUTF16toUTF8(name).get(), "toString",
                          "object");
     return false;
@@ -427,7 +430,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                                     ctorNargs);
   }
   if (!constructor) {
-    return NULL;
+    return nullptr;
   }
 
   if (constructorClass) {
@@ -439,12 +442,12 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                                      InterfaceObjectToString,
                                      0, 0));
     if (!toString) {
-      return NULL;
+      return nullptr;
     }
 
     JSString *str = ::JS_InternString(cx, name);
     if (!str) {
-      return NULL;
+      return nullptr;
     }
     JSObject* toStringObj = JS_GetFunctionObject(toString);
     js::SetFunctionNativeReserved(toStringObj, TOSTRING_CLASS_RESERVED_SLOT,
@@ -455,7 +458,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
 
     if (!JS_DefineProperty(cx, constructor, "length", JS::Int32Value(ctorNargs),
                            nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT)) {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -495,7 +498,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
   }
 
   if (proto && !JS_LinkConstructorAndPrototype(cx, constructor, proto)) {
-    return NULL;
+    return nullptr;
   }
 
   if (defineOnGlobal && !DefineConstructor(cx, global, name, constructor)) {
@@ -556,7 +559,7 @@ CreateInterfacePrototypeObject(JSContext* cx, JS::Handle<JSObject*> global,
   JS::Rooted<JSObject*> ourProto(cx,
     JS_NewObjectWithUniqueType(cx, protoClass, parentProto, global));
   if (!ourProto) {
-    return NULL;
+    return nullptr;
   }
 
   if (properties) {
@@ -701,8 +704,8 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!XPCConvert::NativeInterface2JSObject(aRetval, NULL, aHelper, aIID,
-                                            NULL, aAllowNativeWrapper, &rv)) {
+  if (!XPCConvert::NativeInterface2JSObject(aRetval, nullptr, aHelper, aIID,
+                                            nullptr, aAllowNativeWrapper, &rv)) {
     // I can't tell if NativeInterface2JSObject throws JS exceptions
     // or not.  This is a sloppy stab at the right semantics; the
     // method really ought to be fixed to behave consistently.
@@ -1563,7 +1566,8 @@ ConcatJSString(JSContext* cx, const char* pre, JS::Handle<JSString*> str, const 
 bool
 NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
                JS::Handle<JSObject*> obj, const char* pre,
-               const char* post, JS::Value* v)
+               const char* post,
+               JS::MutableHandle<JS::Value> v)
 {
   JS::Rooted<JSPropertyDescriptor> toStringDesc(cx);
   toStringDesc.object().set(nullptr);
@@ -1583,7 +1587,7 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
     JSAutoCompartment ac(cx, obj);
     if (toStringDesc.object()) {
       JS::Rooted<JS::Value> toString(cx, toStringDesc.value());
-      if (!JS_WrapValue(cx, toString.address())) {
+      if (!JS_WrapValue(cx, &toString)) {
         return false;
       }
       MOZ_ASSERT(JS_ObjectIsCallable(cx, &toString.toObject()));
@@ -1619,7 +1623,7 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
     return false;
   }
 
-  v->setString(str);
+  v.setString(str);
   return JS_WrapValue(cx, v);
 }
 
@@ -1659,13 +1663,18 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
 
   JSAutoCompartment oldAc(aCx, oldParent);
 
-  if (js::GetObjectCompartment(oldParent) ==
-      js::GetObjectCompartment(newParent)) {
+  JSCompartment* oldCompartment = js::GetObjectCompartment(oldParent);
+  JSCompartment* newCompartment = js::GetObjectCompartment(newParent);
+  if (oldCompartment == newCompartment) {
     if (!JS_SetParent(aCx, aObj, newParent)) {
       MOZ_CRASH();
     }
     return NS_OK;
   }
+
+  // Telemetry.
+  xpc::RecordDonatedNode(oldCompartment);
+  xpc::RecordAdoptedNode(newCompartment);
 
   nsISupports* native = UnwrapDOMObjectToISupports(aObj);
   if (!native) {

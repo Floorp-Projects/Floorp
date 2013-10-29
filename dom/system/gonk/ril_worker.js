@@ -86,6 +86,9 @@ let RILQUIRKS_EXTRA_UINT32_2ND_CALL = libcutils.property_get("ro.moz.ril.extra_i
 // On the emulator we support querying the number of lock retries
 let RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = libcutils.property_get("ro.moz.ril.query_icc_count", "false") == "true";
 
+// Ril quirk to Send STK Profile Download
+let RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD = libcutils.property_get("ro.moz.ril.send_stk_profile_dl", "false") == "true";
+
 // Marker object.
 let PENDING_NETWORK_TYPE = {};
 
@@ -2727,6 +2730,13 @@ let RIL = {
         };
         command.language = command.event.language;
         break;
+      case STK_EVENT_TYPE_BROWSER_TERMINATION:
+        command.deviceId = {
+          sourceId: STK_DEVICE_ID_ME,
+          destinationId: STK_DEVICE_ID_SIM
+        };
+        command.terminationCause = command.event.terminationCause;
+        break;
     }
     this.sendICCEnvelopeCommand(command);
   },
@@ -2746,6 +2756,7 @@ let RIL = {
    * @param [optional] cause
    * @param [optional] timerId
    * @param [optional] timerValue
+   * @param [optional] terminationCause
    */
   sendICCEnvelopeCommand: function sendICCEnvelopeCommand(options) {
     if (DEBUG) {
@@ -2851,6 +2862,14 @@ let RIL = {
     // Language
     if (options.language) {
       ComprehensionTlvHelper.writeLanguageTlv(options.language);
+    }
+
+    // Browser Termination
+    if (options.terminationCause != null) {
+      GsmPDUHelper.writeHexOctet(COMPREHENSIONTLV_TAG_BROWSER_TERMINATION_CAUSE |
+                                 COMPREHENSIONTLV_FLAG_CR);
+      GsmPDUHelper.writeHexOctet(1);
+      GsmPDUHelper.writeHexOctet(options.terminationCause);
     }
 
     // Calculate and write BER length to 2nd mark
@@ -2998,10 +3017,14 @@ let RIL = {
         ICCRecordHelper.readICCPhase();
         ICCRecordHelper.fetchICCRecords();
       } else if (this.appType == CARD_APPTYPE_USIM) {
-        this.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
+        if (RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD) {
+          this.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
+        }
         ICCRecordHelper.fetchICCRecords();
       } else if (this.appType == CARD_APPTYPE_RUIM) {
-        this.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
+        if (RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD) {
+          this.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
+        }
         RuimRecordHelper.fetchRuimRecords();
       }
       this.reportStkServiceIsRunning();
@@ -10366,7 +10389,7 @@ let ComprehensionTlvHelper = {
     } else {
       RIL.sendStkTerminalResponse({
         resultCode: STK_RESULT_CMD_DATA_NOT_UNDERSTOOD});
-      throw new Error("Invalid octet in Comprehension TLV :" + length);
+      throw new Error("Invalid octet in Comprehension TLV :" + temp);
     }
 
     let ctlv = {
@@ -11010,7 +11033,8 @@ let ICCRecordHelper = {
       let phase = GsmPDUHelper.readHexOctet();
       // If EF_phase is coded '03' or greater, an ME supporting STK shall
       // perform the PROFILE DOWNLOAD procedure.
-      if (phase >= ICC_PHASE_2_PROFILE_DOWNLOAD_REQUIRED) {
+      if (RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD &&
+          phase >= ICC_PHASE_2_PROFILE_DOWNLOAD_REQUIRED) {
         RIL.sendStkTerminalProfile(STK_SUPPORTED_TERMINAL_PROFILE);
       }
 

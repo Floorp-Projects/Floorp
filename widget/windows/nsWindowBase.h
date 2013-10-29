@@ -6,9 +6,8 @@
 #ifndef nsWindowBase_h_
 #define nsWindowBase_h_
 
-#include "mozilla/MiscEvents.h"
+#include "mozilla/EventForwards.h"
 #include "nsBaseWidget.h"
-#include "npapi.h"
 #include <windows.h>
 
 /*
@@ -57,24 +56,16 @@ public:
   virtual bool DispatchKeyboardEvent(mozilla::WidgetGUIEvent* aEvent) = 0;
 
   /*
+   * Dispatch a gecko scroll event for this widget. This
+   * is called by ScrollHandler to dispatch gecko events.
+   * Returns true if it's consumed.  Otherwise, false.
+   */
+  virtual bool DispatchScrollEvent(mozilla::WidgetGUIEvent* aEvent) = 0;
+
+  /*
    * Default dispatch of a plugin event.
    */
-  virtual bool DispatchPluginEvent(const MSG &aMsg)
-  {
-    if (!PluginHasFocus()) {
-      return false;
-    }
-    mozilla::WidgetPluginEvent pluginEvent(true, NS_PLUGIN_INPUT_EVENT, this);
-    nsIntPoint point(0, 0);
-    InitEvent(pluginEvent, &point);
-    NPEvent npEvent;
-    npEvent.event = aMsg.message;
-    npEvent.wParam = aMsg.wParam;
-    npEvent.lParam = aMsg.lParam;
-    pluginEvent.pluginEvent = (void *)&npEvent;
-    pluginEvent.retargetToFocusedDocument = true;
-    return DispatchWindowEvent(&pluginEvent);
-  }
+  virtual bool DispatchPluginEvent(const MSG& aMsg);
 
   /*
    * Returns true if a plugin has focus on this widget.  Otherwise, false.

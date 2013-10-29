@@ -16,7 +16,7 @@
 #include "nsAutoPtr.h"
 
 #include "nsBaseWidget.h"
-#include "mozilla/MouseEvents.h"
+#include "mozilla/EventForwards.h"
 
 #include "nsWeakReference.h"
 
@@ -183,12 +183,7 @@ public:
     void DispatchDeactivateEventOnTopLevelWindow(void);
     void DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus);
 
-    nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent* aEvent)
-    {
-        nsEventStatus status;
-        DispatchEvent(aEvent, status);
-        return status;
-    }
+    nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent* aEvent);
 
     // Some of the nsIWidget methods
     virtual bool IsEnabled() const;
@@ -378,35 +373,7 @@ private:
     // event (like a keypress or mouse click).
     void UserActivity();
 
-    inline void ProcessMotionEvent() {
-        if (mPinchEvent.needDispatch) {
-            double distance = DistanceBetweenPoints(mPinchEvent.centerPoint, mPinchEvent.touchPoint);
-            distance *= 2;
-            mPinchEvent.delta = distance - mPinchEvent.prevDistance;
-            nsIntPoint centerPoint(mPinchEvent.centerPoint.x(), mPinchEvent.centerPoint.y());
-            DispatchGestureEvent(NS_SIMPLE_GESTURE_MAGNIFY_UPDATE,
-                                 0, mPinchEvent.delta, centerPoint);
-            mPinchEvent.prevDistance = distance;
-        }
-        if (mMoveEvent.needDispatch) {
-            WidgetMouseEvent event(true, NS_MOUSE_MOVE, this,
-                                   WidgetMouseEvent::eReal);
-
-            event.refPoint.x = nscoord(mMoveEvent.pos.x());
-            event.refPoint.y = nscoord(mMoveEvent.pos.y());
-
-            event.InitBasicModifiers(mMoveEvent.modifiers & Qt::ControlModifier,
-                                     mMoveEvent.modifiers & Qt::AltModifier,
-                                     mMoveEvent.modifiers & Qt::ShiftModifier,
-                                     mMoveEvent.modifiers & Qt::MetaModifier);
-            event.clickCount      = 0;
-
-            DispatchEvent(&event);
-            mMoveEvent.needDispatch = false;
-        }
-
-        mTimerStarted = false;
-    }
+    inline void ProcessMotionEvent();
 
     void DispatchMotionToMainThread() {
         if (!mTimerStarted) {

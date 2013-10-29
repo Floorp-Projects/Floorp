@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <script>
+    function runTest() {
+      var p = document.getElementsByTagName('input')[0];
+      p.value = '#00ff00';
+      document.documentElement.className = '';
+    }
+    window.addEventListener("MozReftestInvalidate", runTest, false);
+  </script>
+  <body>
+    <input type="color" />
+  </body>
+</html>

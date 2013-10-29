@@ -6,17 +6,17 @@
 
 mtransport_lcppsrcs = [
     'dtlsidentity.cpp',
-    'nricectx.cpp',
-    'nricemediastream.cpp',
-    'nriceresolverfake.cpp',
-    'nriceresolver.cpp',
-    'nrinterfaceprioritizer.cpp',
     'nr_socket_prsock.cpp',
     'nr_timer.cpp',
+    'nricectx.cpp',
+    'nricemediastream.cpp',
+    'nriceresolver.cpp',
+    'nriceresolverfake.cpp',
+    'nrinterfaceprioritizer.cpp',
     'transportflow.cpp',
     'transportlayer.cpp',
-    'transportlayerice.cpp',
     'transportlayerdtls.cpp',
+    'transportlayerice.cpp',
     'transportlayerlog.cpp',
     'transportlayerloopback.cpp',
     'transportlayerprsock.cpp',
@@ -27,7 +27,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'gonk_addrs.cpp',
     ]
 
-mtransport_lcppsrcs.sort()
 mtransport_cppsrcs = [ 
-    '%s/media/mtransport/%s' % (TOPSRCDIR, s) for s in mtransport_lcppsrcs
+    '%s/media/mtransport/%s' % (TOPSRCDIR, s) for s in sorted(mtransport_lcppsrcs)
 ]

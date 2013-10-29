@@ -148,6 +148,8 @@
 #include <process.h>
 #include <shlobj.h>
 #include "nsThreadUtils.h"
+#include <comutil.h>
+#include <Wbemidl.h>
 #endif
 
 #ifdef XP_MACOSX
@@ -3218,6 +3220,88 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   return 0;
 }
 
+#ifdef MOZ_CRASHREPORTER
+#ifdef XP_WIN
+/**
+ * Uses WMI to read some manufacturer information that may be useful for
+ * diagnosing hardware-specific crashes. This function is best-effort; failures
+ * shouldn't burden the caller. COM must be initialized before calling.
+ */
+static void AnnotateSystemManufacturer()
+{
+  nsRefPtr<IWbemLocator> locator;
+
+  HRESULT hr = CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_IWbemLocator, getter_AddRefs(locator));
+
+  if (FAILED(hr)) {
+    return;
+  }
+
+  nsRefPtr<IWbemServices> services;
+
+  hr = locator->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), nullptr, nullptr, nullptr,
+                              0, nullptr, nullptr, getter_AddRefs(services));
+
+  if (FAILED(hr)) {
+    return;
+  }
+
+  hr = CoSetProxyBlanket(services, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, nullptr,
+                         RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE,
+                         nullptr, EOAC_NONE);
+
+  if (FAILED(hr)) {
+    return;
+  }
+
+  nsRefPtr<IEnumWbemClassObject> enumerator;
+
+  hr = services->ExecQuery(_bstr_t(L"WQL"), _bstr_t(L"SELECT * FROM Win32_BIOS"),
+                           WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+                           nullptr, getter_AddRefs(enumerator));
+
+  if (FAILED(hr) || !enumerator) {
+    return;
+  }
+
+  nsRefPtr<IWbemClassObject> classObject;
+  ULONG results;
+
+  hr = enumerator->Next(WBEM_INFINITE, 1, getter_AddRefs(classObject), &results);
+
+  if (FAILED(hr) || results == 0) {
+    return;
+  }
+
+  VARIANT value;
+  VariantInit(&value);
+
+  hr = classObject->Get(L"Manufacturer", 0, &value, 0, 0);
+
+  if (SUCCEEDED(hr) && V_VT(&value) == VT_BSTR) {
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("BIOS_Manufacturer"),
+                                       NS_ConvertUTF16toUTF8(V_BSTR(&value)));
+  }
+
+  VariantClear(&value);
+}
+
+static void PR_CALLBACK AnnotateSystemManufacturer_ThreadStart(void*)
+{
+  HRESULT hr = CoInitialize(nullptr);
+
+  if (FAILED(hr)) {
+    return;
+  }
+
+  AnnotateSystemManufacturer();
+
+  CoUninitialize();
+}
+#endif
+#endif
+
 namespace mozilla {
   ShutdownChecksMode gShutdownChecks = SCM_NOTHING;
 }
@@ -3695,6 +3779,12 @@ XREMain::XRE_mainRun()
                                      nsPrintfCString("%.16llx", uint64_t(gMozillaPoisonBase)));
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonSize"),
                                      nsPrintfCString("%lu", uint32_t(gMozillaPoisonSize)));
+
+#ifdef XP_WIN
+  PR_CreateThread(PR_USER_THREAD, AnnotateSystemManufacturer_ThreadStart, 0,
+                  PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+#endif
+
 #endif
 
   if (mStartOffline) {

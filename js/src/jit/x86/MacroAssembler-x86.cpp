@@ -239,6 +239,12 @@ MacroAssemblerX86::callWithABIPost(uint32_t stackAdjust, Result result)
         loadDouble(Operand(esp, 0), ReturnFloatReg);
         freeStack(sizeof(double));
     }
+    if (result == FLOAT) {
+        reserveStack(sizeof(float));
+        fstp32(Operand(esp, 0));
+        loadFloat(Operand(esp, 0), ReturnFloatReg);
+        freeStack(sizeof(float));
+    }
     if (dynamicAlignment_)
         pop(esp);
 
@@ -285,7 +291,7 @@ MacroAssemblerX86::handleFailureWithHandler(void *handler)
     passABIArg(eax);
     callWithABI(handler);
 
-    IonCode *excTail = GetIonContext()->runtime->ionRuntime()->getExceptionTail();
+    IonCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
     jmp(excTail);
 }
 
@@ -400,4 +406,12 @@ MacroAssemblerX86::testNegativeZero(const FloatRegister &reg, const Register &sc
 
     bind(&nonZero);
     return Zero;
+}
+
+Assembler::Condition
+MacroAssemblerX86::testNegativeZeroFloat32(const FloatRegister &reg, const Register &scratch)
+{
+    movd(reg, scratch);
+    cmpl(scratch, Imm32(1));
+    return Overflow;
 }

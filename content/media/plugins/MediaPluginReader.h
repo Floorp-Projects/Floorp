@@ -10,6 +10,7 @@
 #include "MediaResource.h"
 #include "MediaDecoderReader.h"
 #include "ImageContainer.h"
+#include "nsAutoPtr.h"
 #include "mozilla/layers/SharedRGBImage.h"
  
 #include "MPAPI.h"
@@ -38,7 +39,7 @@ class MediaPluginReader : public MediaDecoderReader
   nsIntSize mInitialFrame;
   int64_t mVideoSeekTimeUs;
   int64_t mAudioSeekTimeUs;
-  VideoData *mLastVideoFrame;
+  nsAutoPtr<VideoData> mLastVideoFrame;
 public:
   MediaPluginReader(AbstractMediaDecoder* aDecoder,
                     const nsACString& aContentType);
@@ -64,7 +65,6 @@ public:
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags);
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
-  virtual nsresult GetBuffered(mozilla::dom::TimeRanges* aBuffered, int64_t aStartTime);
   class ImageBufferCallback : public MPAPI::BufferCallback {
     typedef mozilla::layers::Image Image;
   public:

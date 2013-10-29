@@ -193,7 +193,7 @@ GetClosestInterestingAccessible(id anObject)
   if ([attribute isEqualToString:NSAccessibilityTitleAttribute])
     return [self title];
   if ([attribute isEqualToString:NSAccessibilityTitleUIElementAttribute]) {
-    Relation rel = mGeckoAccessible->RelationByType(nsIAccessibleRelation::RELATION_LABELLED_BY);
+    Relation rel = mGeckoAccessible->RelationByType(RelationType::LABELLED_BY);
     Accessible* tempAcc = rel.Next();
     return tempAcc ? GetNativeFromGeckoAccessible(tempAcc) : nil;
   }

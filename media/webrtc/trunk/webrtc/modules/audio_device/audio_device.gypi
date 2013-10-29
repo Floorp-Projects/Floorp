@@ -44,6 +44,14 @@
         'dummy/audio_device_utility_dummy.h',
       ],
       'conditions': [
+        ['build_with_mozilla==1', {
+          'include_dirs': [
+            '$(DIST)/include',
+          ],
+          'cflags_mozilla': [
+            '$(NSPR_CFLAGS)',
+          ],
+        }],
         ['OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1', {
           'include_dirs': [
             'linux',

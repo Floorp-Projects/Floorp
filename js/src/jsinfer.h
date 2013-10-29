@@ -533,7 +533,7 @@ class TypeSet
     static TemporaryTypeSet *unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc);
 
     /* Add a type to this set using the specified allocator. */
-    inline bool addType(Type type, LifoAlloc *alloc, bool *padded = NULL);
+    inline bool addType(Type type, LifoAlloc *alloc, bool *padded = nullptr);
 
     /*
      * Add a type to this set, calling any constraint handlers if this is a new
@@ -1150,12 +1150,6 @@ class TypeScript
     /* Analysis information for the script, cleared on each GC. */
     analyze::ScriptAnalysis *analysis;
 
-    /*
-     * List mapping indexes of bytecode type sets to the offset of the opcode
-     * they correspond to. Cleared on each GC.
-     */
-    uint32_t *bytecodeMap;
-
   public:
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     StackTypeSet *typeArray() const { return (StackTypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
@@ -1227,7 +1221,7 @@ class RecompileInfo;
 // constraints for the compilation. Returns whether the type constraints
 // still hold.
 bool
-FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executionMode,
+FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode executionMode,
                   CompilerConstraintList *constraints, RecompileInfo *precompileInfo);
 
 struct ArrayTableKey;
@@ -1283,7 +1277,7 @@ struct TypeObjectKey
     void watchStateChangeForInlinedCall(CompilerConstraintList *constraints);
     void watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints);
     void watchStateChangeForTypedArrayBuffer(CompilerConstraintList *constraints);
-    HeapTypeSetKey property(jsid id, JSContext *maybecx = NULL);
+    HeapTypeSetKey property(jsid id, JSContext *maybecx = nullptr);
 
     TypeObject *maybeType();
 };
@@ -1309,7 +1303,7 @@ class HeapTypeSetKey
 
   public:
     HeapTypeSetKey()
-      : object_(NULL), id_(JSID_EMPTY), maybeTypes_(NULL)
+      : object_(nullptr), id_(JSID_EMPTY), maybeTypes_(nullptr)
     {}
 
     TypeObjectKey *object() const { return object_; }

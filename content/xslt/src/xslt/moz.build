@@ -6,12 +6,12 @@
 
 MODULE = 'transformiix'
 
-CPP_SOURCES += [
+SOURCES += [
     'txBufferingHandler.cpp',
     'txCurrentFunctionCall.cpp',
     'txDocumentFunctionCall.cpp',
-    'txEXSLTFunctions.cpp',
     'txExecutionState.cpp',
+    'txEXSLTFunctions.cpp',
     'txFormatNumberFunctionCall.cpp',
     'txGenerateIdFunctionCall.cpp',
     'txInstructions.cpp',

@@ -896,16 +896,20 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     }
 
     private void setShadowVisibility() {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (BrowserApp.mBrowserToolbar == null) {
-                    return;
+        try {
+            if (BrowserApp.mBrowserToolbar == null) // this will throw if we don't have BrowserApp
+                return;
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (BrowserApp.mBrowserToolbar == null) {
+                        return;
+                    }
+                    ImmutableViewportMetrics m = mViewportMetrics;
+                    BrowserApp.mBrowserToolbar.setShadowVisibility(m.viewportRectTop >= m.pageRectTop);
                 }
-                ImmutableViewportMetrics m = mViewportMetrics;
-                BrowserApp.mBrowserToolbar.setShadowVisibility(m.viewportRectTop >= m.pageRectTop);
-            }
-        });
+            });
+        } catch (NoClassDefFoundError ex) {}
     }
 
     /** Implementation of PanZoomTarget */

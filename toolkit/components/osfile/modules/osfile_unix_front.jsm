@@ -94,7 +94,7 @@
       * the end of the file has been reached.
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.prototype._read = function _read(buffer, nbytes, options) {
+     File.prototype._read = function _read(buffer, nbytes, options = {}) {
       // Populate the page cache with data from a file so the subsequent reads
       // from that file will not block on disk I/O.
        if (typeof(UnixFile.posix_fadvise) === 'function' &&
@@ -120,7 +120,7 @@
       * @return {number} The number of bytes effectively written.
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.prototype._write = function _write(buffer, nbytes, options) {
+     File.prototype._write = function _write(buffer, nbytes, options = {}) {
        return throw_on_negative("write",
          UnixFile.write(this.fd, buffer, nbytes)
        );
@@ -169,8 +169,40 @@
      };
 
      /**
+      * Set the last access and modification date of the file.
+      * The time stamp resolution is 1 second at best, but might be worse
+      * depending on the platform.
+      *
+      * @param {Date,number=} accessDate The last access date. If numeric,
+      * milliseconds since epoch. If omitted or null, then the current date
+      * will be used.
+      * @param {Date,number=} modificationDate The last modification date. If
+      * numeric, milliseconds since epoch. If omitted or null, then the current
+      * date will be used.
+      *
+      * @throws {TypeError} In case of invalid parameters.
+      * @throws {OS.File.Error} In case of I/O error.
+      */
+     File.prototype.setDates = function setDates(accessDate, modificationDate) {
+       accessDate = normalizeDate("File.prototype.setDates", accessDate);
+       modificationDate = normalizeDate("File.prototype.setDates",
+                                        modificationDate);
+       gTimevals[0].tv_sec = (accessDate / 1000) | 0;
+       gTimevals[0].tv_usec = 0;
+       gTimevals[1].tv_sec = (modificationDate / 1000) | 0;
+       gTimevals[1].tv_usec = 0;
+       throw_on_negative("setDates",
+                         UnixFile.futimes(this.fd, gTimevalsPtr));
+     };
+
+     /**
       * Flushes the file's buffers and causes all buffered data
       * to be written.
+      * Disk flushes are very expensive and therefore should be used carefully,
+      * sparingly and only in scenarios where it is vital that data survives
+      * system crashes. Even though the function will be executed off the
+      * main-thread, it might still affect the overall performance of any
+      * running application.
       *
       * @throws {OS.File.Error} In case of I/O error.
       */
@@ -203,8 +235,11 @@
       *  on the other fields of |mode|.
       * - {bool} write If |true|, the file will be opened for
       *  writing. The file may also be opened for reading, depending
-      *  on the other fields of |mode|. If neither |truncate| nor
-      *  |create| is specified, the file is opened for appending.
+      *  on the other fields of |mode|.
+      * - {bool} append If |true|, the file will be opened for appending,
+      *  meaning the equivalent of |.setPosition(0, POS_END)| is executed
+      *  before each write. The default is |true|, i.e. opening a file for
+      *  appending. Specify |append: false| to open the file in regular mode.
       *
       * If neither |truncate|, |create| or |write| is specified, the file
       * is opened for reading.
@@ -251,12 +286,11 @@
            flags |= Const.O_CREAT | Const.O_EXCL;
          } else if (mode.read && !mode.write) {
            // flags are sufficient
-         } else /*append*/ {
-           if (mode.existing) {
-             flags |= Const.O_APPEND;
-           } else {
-             flags |= Const.O_APPEND | Const.O_CREAT;
-           }
+         } else if (!mode.existing) {
+           flags |= Const.O_CREAT;
+         }
+         if (mode.append) {
+           flags |= Const.O_APPEND;
          }
        }
        return error_or_file(UnixFile.open(path, flags, omode));
@@ -431,6 +465,9 @@
         * @option {number} bufSize A hint regarding the size of the
         * buffer to use for copying. The implementation may decide to
         * ignore this hint.
+        * @option {bool} unixUserland Will force the copy operation to be
+        * caried out in user land, instead of using optimized syscalls such
+        * as splice(2).
         *
         * @throws {OS.File.Error} In case of error.
         */
@@ -545,12 +582,18 @@
          let result;
          try {
            source = File.open(sourcePath);
+           // Need to open the output file with |append:false|, or else |splice|
+           // won't work.
            if (options.noOverwrite) {
-             dest = File.open(destPath, {create:true});
+             dest = File.open(destPath, {create:true, append:false});
            } else {
-             dest = File.open(destPath, {trunc:true});
+             dest = File.open(destPath, {trunc:true, append:false});
            }
-           result = pump(source, dest, options);
+           if (options.unixUserland) {
+             result = pump_userland(source, dest, options);
+           } else {
+             result = pump(source, dest, options);
+           }
          } catch (x) {
            if (dest) {
              dest.close();
@@ -740,6 +783,8 @@
 
      let gStatData = new Type.stat.implementation();
      let gStatDataPtr = gStatData.address();
+     let gTimevals = new Type.timevals.implementation();
+     let gTimevalsPtr = gTimevals.address();
      let MODE_MASK = 4095 /*= 07777*/;
      File.Info = function Info(stat) {
        let isDir = (stat.st_mode & Const.S_IFMT) == Const.S_IFDIR;
@@ -823,6 +868,33 @@
        return new File.Info(gStatData);
      };
 
+     /**
+      * Set the last access and modification date of the file.
+      * The time stamp resolution is 1 second at best, but might be worse
+      * depending on the platform.
+      *
+      * @param {string} path The full name of the file to set the dates for.
+      * @param {Date,number=} accessDate The last access date. If numeric,
+      * milliseconds since epoch. If omitted or null, then the current date
+      * will be used.
+      * @param {Date,number=} modificationDate The last modification date. If
+      * numeric, milliseconds since epoch. If omitted or null, then the current
+      * date will be used.
+      *
+      * @throws {TypeError} In case of invalid paramters.
+      * @throws {OS.File.Error} In case of I/O error.
+      */
+     File.setDates = function setDates(path, accessDate, modificationDate) {
+       accessDate = normalizeDate("File.setDates", accessDate);
+       modificationDate = normalizeDate("File.setDates", modificationDate);
+       gTimevals[0].tv_sec = (accessDate / 1000) | 0;
+       gTimevals[0].tv_usec = 0;
+       gTimevals[1].tv_sec = (modificationDate / 1000) | 0;
+       gTimevals[1].tv_usec = 0;
+       throw_on_negative("setDates",
+                         UnixFile.utimes(path, gTimevalsPtr));
+     };
+
      File.read = exports.OS.Shared.AbstractFile.read;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
      File.openUnique = exports.OS.Shared.AbstractFile.openUnique;
@@ -894,6 +966,33 @@
        }
        return result;
      }
+
+     /**
+      * Normalize and verify a Date or numeric date value.
+      *
+      * @param {string} fn Function name of the calling function.
+      * @param {Date,number} date The date to normalize. If omitted or null,
+      * then the current date will be used.
+      *
+      * @throws {TypeError} Invalid date provided.
+      *
+      * @return {number} Sanitized, numeric date in milliseconds since epoch.
+      */
+     function normalizeDate(fn, date) {
+       if (typeof date !== "number" && !date) {
+         // |date| was Omitted or null.
+         date = Date.now();
+       } else if (typeof date.getTime === "function") {
+         // Input might be a date or date-like object.
+         date = date.getTime();
+       }
+
+       if (isNaN(date)) {
+         throw new TypeError("|date| parameter of " + fn + " must be a " +
+                             "|Date| instance or number");
+       }
+       return date;
+     };
 
      File.Unix = exports.OS.Unix.File;
      File.Error = SysAll.Error;
