@@ -71,7 +71,7 @@
 namespace mozilla {
 namespace ipc {
 
-class DBusWatcher : public RawDBusConnection
+class DBusWatcher
 {
 public:
   DBusWatcher()
@@ -93,17 +93,6 @@ public:
 
   void HandleWatchAdd();
   void HandleWatchRemove();
-
-  // Information about the sockets we're polling. Socket counts
-  // increase/decrease depending on how many add/remove watch signals
-  // we're received via the control sockets.
-  nsTArray<pollfd> mPollData;
-  nsTArray<DBusWatch*> mWatchData;
-
-  // Sockets for receiving dbus control information (watch
-  // add/removes, loop shutdown, etc...)
-  ScopedClose mControlFdR;
-  ScopedClose mControlFdW;
 
 private:
   struct PollFdComparator {
@@ -131,6 +120,19 @@ private:
   static void        DBusWakeupFunction(void* aData);
 
   bool SetUp();
+
+  // Information about the sockets we're polling. Socket counts
+  // increase/decrease depending on how many add/remove watch signals
+  // we're received via the control sockets.
+  nsTArray<pollfd> mPollData;
+  nsTArray<DBusWatch*> mWatchData;
+
+  // Sockets for receiving dbus control information (watch
+  // add/removes, loop shutdown, etc...)
+  ScopedClose mControlFdR;
+  ScopedClose mControlFdW;
+
+  nsRefPtr<RawDBusConnection> mConnection;
 };
 
 bool
@@ -149,12 +151,12 @@ DBusWatcher::CleanUp()
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  dbus_connection_set_wakeup_main_function(mConnection, nullptr,
-                                           nullptr, nullptr);
-  dbus_bool_t success = dbus_connection_set_watch_functions(mConnection,
-                                                            nullptr, nullptr,
-                                                            nullptr, nullptr,
-                                                            nullptr);
+  dbus_connection_set_wakeup_main_function(mConnection->GetConnection(),
+                                           nullptr, nullptr, nullptr);
+  dbus_bool_t success =
+    dbus_connection_set_watch_functions(mConnection->GetConnection(),
+                                        nullptr, nullptr, nullptr,
+                                        nullptr, nullptr);
   if (success != TRUE) {
     NS_WARNING("dbus_connection_set_watch_functions failed");
   }
@@ -258,7 +260,8 @@ DBusWatcher::Poll()
 
         DBusDispatchStatus dbusDispatchStatus;
         do {
-          dbusDispatchStatus = dbus_connection_dispatch(GetConnection());
+          dbusDispatchStatus =
+            dbus_connection_dispatch(mConnection->GetConnection());
         } while (dbusDispatchStatus == DBUS_DISPATCH_DATA_REMAINS);
 
         // Break at this point since we don't know if the operation
@@ -513,21 +516,27 @@ DBusWatcher::SetUp()
 
   mWatchData.AppendElement(static_cast<DBusWatch*>(nullptr));
 
+  nsRefPtr<RawDBusConnection> connection = new RawDBusConnection();
+
   // If we can't establish a connection to dbus, nothing else will work
-  nsresult rv = EstablishDBusConnection();
+  nsresult rv = connection->EstablishDBusConnection();
   if (NS_FAILED(rv)) {
     NS_WARNING("Cannot create DBus Connection for DBus Thread!");
     return false;
   }
 
   dbus_bool_t success =
-    dbus_connection_set_watch_functions(mConnection, AddWatchFunction,
-                                        RemoveWatchFunction,
+    dbus_connection_set_watch_functions(connection->GetConnection(),
+                                        AddWatchFunction, RemoveWatchFunction,
                                         ToggleWatchFunction, this, nullptr);
   NS_ENSURE_TRUE(success == TRUE, false);
 
-  dbus_connection_set_wakeup_main_function(mConnection, DBusWakeupFunction,
+  dbus_connection_set_wakeup_main_function(connection->GetConnection(),
+                                           DBusWakeupFunction,
                                            this, nullptr);
+
+  mConnection = connection;
+
   return true;
 }
 
@@ -565,11 +574,11 @@ public:
   }
 
 private:
-  nsRefPtr<DBusWatcher> mDBusWatcher;
+  nsAutoPtr<DBusWatcher> mDBusWatcher;
 };
 
-static StaticRefPtr<DBusWatcher> gDBusWatcher;
-static StaticRefPtr<nsIThread>   gDBusServiceThread;
+static DBusWatcher*            gDBusWatcher;
+static StaticRefPtr<nsIThread> gDBusServiceThread;
 
 // Startup/Shutdown utility functions
 
@@ -579,7 +588,7 @@ StartDBus()
   MOZ_ASSERT(!NS_IsMainThread());
   NS_ENSURE_TRUE(!gDBusWatcher, true);
 
-  nsRefPtr<DBusWatcher> dbusWatcher(new DBusWatcher());
+  nsAutoPtr<DBusWatcher> dbusWatcher(new DBusWatcher());
 
   bool eventLoopStarted = dbusWatcher->Initialize();
   NS_ENSURE_TRUE(eventLoopStarted, false);
@@ -603,7 +612,7 @@ StartDBus()
   rv = gDBusServiceThread->Dispatch(pollTask, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, false);
 
-  gDBusWatcher = dbusWatcher;
+  gDBusWatcher = dbusWatcher.forget();
 
   return true;
 }
@@ -614,7 +623,7 @@ StopDBus()
   MOZ_ASSERT(!NS_IsMainThread());
   NS_ENSURE_TRUE(gDBusServiceThread, true);
 
-  nsRefPtr<DBusWatcher> dbusWatcher(gDBusWatcher);
+  DBusWatcher* dbusWatcher = gDBusWatcher;
   gDBusWatcher = nullptr;
 
   if (dbusWatcher && !dbusWatcher->Stop()) {
@@ -630,9 +639,9 @@ nsresult
 DispatchToDBusThread(nsIRunnable* event)
 {
   nsRefPtr<nsIThread> dbusServiceThread(gDBusServiceThread);
-  nsRefPtr<DBusWatcher> dbusWatcher(gDBusWatcher);
+  DBusWatcher* dbusWatcher = gDBusWatcher;
 
-  NS_ENSURE_TRUE(dbusServiceThread.get() && dbusWatcher.get(),
+  NS_ENSURE_TRUE(dbusServiceThread.get() && dbusWatcher,
                  NS_ERROR_NOT_INITIALIZED);
 
   nsresult rv = dbusServiceThread->Dispatch(event, NS_DISPATCH_NORMAL);
