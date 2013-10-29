@@ -1419,10 +1419,10 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, JS::Handle<jsid> id, bool *aI
   if (JSID_IS_INT(id)) {
       i = JSID_TO_INT(id);
   } else {
-      jsval idval;
+      JS::RootedValue idval(cx);
       double array_index;
-      if (!::JS_IdToValue(cx, id, &idval) ||
-          !::JS_ValueToNumber(cx, idval, &array_index) ||
+      if (!::JS_IdToValue(cx, id, idval.address()) ||
+          !JS::ToNumber(cx, idval, &array_index) ||
           !::JS_DoubleIsInt32(array_index, &i)) {
         return -1;
       }
@@ -2229,12 +2229,12 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
         nsCOMPtr<nsIDOMWindow> currentWin(do_GetInterface(currentInner));
         rv = WrapNative(cx, obj, currentWin, &NS_GET_IID(nsIDOMWindow),
                         true, argv.handleAt(0), getter_AddRefs(holder));
-        if (!JS_WrapValue(cx, &argv[0]))
+        if (!JS_WrapValue(cx, argv.handleAt(0)))
           return NS_ERROR_FAILURE;
 
         for (size_t i = 1; i < argc; ++i) {
           argv[i] = args[i - 1];
-          if (!JS_WrapValue(cx, &argv[i]))
+          if (!JS_WrapValue(cx, argv.handleAt(i)))
             return NS_ERROR_FAILURE;
         }
 
@@ -2371,7 +2371,7 @@ public:
   {
     JS::Rooted<JS::Value> thisAsVal(cx, aThisAsVal);
     // The 'attrs' argument used to be JSPROP_PERMANENT. See bug 628612.
-    bool ok = JS_WrapValue(cx, thisAsVal.address()) &&
+    bool ok = JS_WrapValue(cx, &thisAsVal) &&
       ::JS_DefineUCProperty(cx, target,
                             reinterpret_cast<const jschar *>(mClassName),
                             NS_strlen(mClassName), thisAsVal, JS_PropertyStub,
@@ -2945,7 +2945,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
   JSAutoCompartment ac(cx, class_obj);
 
   // Per ECMA, the prototype property is {DontEnum, DontDelete, ReadOnly}
-  if (!JS_WrapValue(cx, v.address()) ||
+  if (!JS_WrapValue(cx, &v) ||
       !JS_DefineProperty(cx, class_obj, "prototype", v,
                          JS_PropertyStub, JS_StrictPropertyStub,
                          JSPROP_PERMANENT | JSPROP_READONLY)) {
@@ -3257,7 +3257,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!JS_WrapValue(cx, prop_val.address())) {
+    if (!JS_WrapValue(cx, &prop_val)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -3568,7 +3568,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                     &v, getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool ok = JS_WrapValue(cx, v.address()) &&
+    bool ok = JS_WrapValue(cx, &v) &&
                 JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub,
                                       LocationSetterUnwrapper,
                                       JSPROP_PERMANENT | JSPROP_ENUMERATE);
@@ -3606,7 +3606,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   // Handle resolving if id refers to a name resolved by DOM worker code.
-  JS::Rooted<JSObject*> tmp(cx, NULL);
+  JS::Rooted<JSObject*> tmp(cx, nullptr);
   if (!ResolveWorkerClasses(cx, obj, id, flags, &tmp)) {
     return NS_ERROR_FAILURE;
   }
@@ -3692,7 +3692,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // Unless our object is a native wrapper, in which case we have to
         // define it ourselves.
 
-        *_retval = JS_WrapValue(cx, v.address()) &&
+        *_retval = JS_WrapValue(cx, &v) &&
                    JS_DefineProperty(cx, obj, "document", v,
                                      JS_PropertyStub, JS_StrictPropertyStub,
                                      JSPROP_READONLY | JSPROP_ENUMERATE);

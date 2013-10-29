@@ -12,14 +12,14 @@
 // use iso-8859-1 decoder to interpret us-ascii. Some websites are mistakenly 
 // labeled as us-ascii for iso-8859-1. Be generous here should be fine. 
 
-static const uint16_t g_utMappingTable[] = {
-#include "cp1252.ut"
-};
-
 nsresult
 nsAsciiToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                             void **aResult) 
 {
+  static const uint16_t g_utMappingTable[] = {
+#include "cp1252.ut"
+  };
+
   return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                               aOuter, aIID, aResult);
 }

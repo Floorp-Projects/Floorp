@@ -13,8 +13,8 @@
 
 #include "assembler/jit/ExecutableAllocator.h"
 #include "jit/IonCode.h"
-#include "jit/IonCompartment.h"
 #include "jit/IonMacroAssembler.h"
+#include "jit/JitCompartment.h"
 
 namespace js {
 namespace jit {
@@ -76,7 +76,7 @@ class Linker
     }
 
     IonCode *newCode(JSContext *cx, JSC::CodeKind kind) {
-        return newCode(cx, cx->compartment()->ionCompartment()->execAlloc(), kind);
+        return newCode(cx, cx->compartment()->jitCompartment()->execAlloc(), kind);
     }
 
     IonCode *newCodeForIonScript(JSContext *cx) {
@@ -88,7 +88,7 @@ class Linker
         // as the triggering thread may use the executable allocator below.
         JS_ASSERT(cx->runtime()->currentThreadOwnsOperationCallbackLock());
 
-        JSC::ExecutableAllocator *alloc = cx->runtime()->ionRuntime()->getIonAlloc(cx);
+        JSC::ExecutableAllocator *alloc = cx->runtime()->jitRuntime()->getIonAlloc(cx);
         if (!alloc)
             return nullptr;
 

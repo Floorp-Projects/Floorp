@@ -7,10 +7,10 @@
 MODULE = 'xpconnect'
 
 EXPORTS += [
-    'SandboxPrivate.h',
-    'nsAXPCNativeCallContext.h',
     'nsAutoJSValHolder.h',
+    'nsAXPCNativeCallContext.h',
     'nsTArrayHelpers.h',
+    'SandboxPrivate.h',
     'xpc_map_end.h',
 ]
 

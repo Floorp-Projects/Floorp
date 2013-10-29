@@ -28,7 +28,8 @@ using namespace mozilla;
 const Class TypeRepresentation::class_ = {
     "TypeRepresentation",
     JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_PRIVATE,
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPEREPR_SLOTS),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -222,7 +223,7 @@ StructTypeRepresentation::init(JSContext *cx,
     uint32_t totalSize = 0;
 
     for (size_t i = 0; i < ids.length(); i++) {
-        TypeRepresentation *fieldTypeRepr = fromOwnerObject(typeReprOwners[i]);
+        TypeRepresentation *fieldTypeRepr = fromOwnerObject(*typeReprOwners[i]);
 
         uint32_t alignedSize = alignTo(totalSize, fieldTypeRepr->alignment());
         if (alignedSize < totalSize) {
@@ -285,7 +286,29 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
         js_free(this);
         return nullptr;
     }
+
     ownerObject->setPrivate(this);
+
+    // Assign the various reserved slots:
+    ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_KIND, Int32Value(kind()));
+    ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_SIZE, Int32Value(size()));
+    ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_ALIGNMENT, Int32Value(alignment()));
+
+    switch (kind()) {
+      case Array:
+        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_LENGTH,
+                                      Int32Value(asArray()->length()));
+        break;
+
+      case Scalar:
+        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_TYPE,
+                                      Int32Value(asScalar()->type()));
+        break;
+
+      case Struct:
+        break;
+    }
+
     ownerObject_.init(ownerObject);
     return &*ownerObject;
 }
@@ -389,7 +412,7 @@ TypeRepresentation::mark(JSTracer *trace)
 /*static*/ void
 TypeRepresentation::obj_trace(JSTracer *trace, JSObject *object)
 {
-    fromOwnerObject(object)->traceFields(trace);
+    fromOwnerObject(*object)->traceFields(trace);
 }
 
 void
@@ -434,7 +457,7 @@ ArrayTypeRepresentation::traceArrayFields(JSTracer *trace)
 TypeRepresentation::obj_finalize(js::FreeOp *fop, JSObject *object)
 {
     JSCompartment *comp = object->compartment();
-    TypeRepresentation *typeRepr = fromOwnerObject(object);
+    TypeRepresentation *typeRepr = fromOwnerObject(*object);
     comp->typeReprs.remove(typeRepr);
     js_free(typeRepr);
 }
@@ -550,16 +573,16 @@ StructTypeRepresentation::fieldNamed(jsid id) const
 }
 
 /*static*/ bool
-TypeRepresentation::isTypeRepresentationOwnerObject(JSObject *obj)
+TypeRepresentation::isOwnerObject(JSObject &obj)
 {
-    return obj->getClass() == &class_;
+    return obj.getClass() == &class_;
 }
 
 /*static*/ TypeRepresentation *
-TypeRepresentation::fromOwnerObject(JSObject *obj)
+TypeRepresentation::fromOwnerObject(JSObject &obj)
 {
-    JS_ASSERT(obj->getClass() == &class_);
-    return (TypeRepresentation*) obj->getPrivate();
+    JS_ASSERT(obj.getClass() == &class_);
+    return (TypeRepresentation*) obj.getPrivate();
 }
 
 

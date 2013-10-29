@@ -61,7 +61,6 @@ this.SideMenuWidget = function SideMenuWidget(aNode, aOptions={}) {
   this._list.addEventListener("keypress", e => this.emit("keyPress", e), false);
   this._list.addEventListener("mousedown", e => this.emit("mousePress", e), false);
   this._parent.appendChild(this._list);
-  this._boxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
   // Menu items can optionally be grouped.
   this._groupsByName = new Map(); // Can't use a WeakMap because keys are strings.
@@ -167,7 +166,8 @@ SideMenuWidget.prototype = {
    *        The element associated with the displayed item.
    */
   removeChild: function(aChild) {
-    if (aChild.classList.contains("side-menu-widget-item-contents")) {
+    if (aChild.classList.contains("side-menu-widget-item-contents") &&
+       !aChild.classList.contains("side-menu-widget-item")) {
       // Remove the item itself, not the contents.
       aChild.parentNode.remove();
     } else {
@@ -245,8 +245,9 @@ SideMenuWidget.prototype = {
     }
 
     // Ensure the element is visible but not scrolled horizontally.
-    this._boxObject.ensureElementIsVisible(aElement);
-    this._boxObject.scrollBy(-aElement.clientWidth, 0);
+    let boxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+    boxObject.ensureElementIsVisible(aElement);
+    boxObject.scrollBy(-aElement.clientWidth, 0);
   },
 
   /**
@@ -432,7 +433,6 @@ SideMenuWidget.prototype = {
   _showGroupCheckboxes: false,
   _parent: null,
   _list: null,
-  _boxObject: null,
   _selectedItem: null,
   _groupsByName: null,
   _orderedGroupElementsArray: null,
@@ -487,7 +487,6 @@ function SideMenuGroup(aWidget, aName, aOptions={}) {
     if (aOptions.showCheckbox) {
       let checkbox = this._checkbox = makeCheckbox(title, { description: aName });
       checkbox.className = "side-menu-widget-group-checkbox";
-      checkbox.setAttribute("align", "start");
     }
 
     title.appendChild(name);
@@ -592,7 +591,6 @@ function SideMenuItem(aGroup, aContents, aTooltip, aAttachment={}, aOptions={}) 
     if (aOptions.showCheckbox) {
       let checkbox = this._checkbox = makeCheckbox(container, aAttachment);
       checkbox.className = "side-menu-widget-item-checkbox";
-      checkbox.setAttribute("align", "start");
     }
 
     container.appendChild(target);

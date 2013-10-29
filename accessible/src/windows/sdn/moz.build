@@ -6,7 +6,7 @@
 
 MODULE = 'accessibility'
 
-CPP_SOURCES += [
+SOURCES += [
     'sdnAccessible.cpp',
     'sdnDocAccessible.cpp',
     'sdnTextAccessible.cpp',
@@ -22,6 +22,10 @@ LOCAL_INCLUDES += [
     '../../xul',
     '../msaa',
 ]
+
+# The midl generated code include Windows headers which defines min and max
+# macros which conflicts with std::min/max.  Suppress the macros:
+DEFINES['NOMINMAX'] = True
 
 LIBRARY_NAME = 'accessibility_toolkit_sdn_s'
 

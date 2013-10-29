@@ -23,7 +23,7 @@ PluginStreamParent::PluginStreamParent(PluginInstanceParent* npp,
   if (*result == NPERR_NO_ERROR)
     mStream->pdata = static_cast<AStream*>(this);
   else
-    mStream = NULL;
+    mStream = nullptr;
 }
 
 bool

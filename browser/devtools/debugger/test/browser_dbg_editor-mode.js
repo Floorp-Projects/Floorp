@@ -37,7 +37,7 @@ function testInitialSource() {
   is(gSources.itemCount, 3,
     "Found the expected number of sources.");
 
-  is(gEditor.getMode(), SourceEditor.MODES.TEXT,
+  is(gEditor.getMode().name, "text",
     "Found the expected editor mode.");
   is(gEditor.getText().search(/firstCall/), -1,
     "The first source is not displayed.");
@@ -55,7 +55,7 @@ function testSwitch1() {
   is(gSources.itemCount, 3,
     "Found the expected number of sources.");
 
-  is(gEditor.getMode(), SourceEditor.MODES.JAVASCRIPT,
+  is(gEditor.getMode().name, "javascript",
     "Found the expected editor mode.");
   is(gEditor.getText().search(/firstCall/), 118,
     "The first source is displayed.");
@@ -73,7 +73,7 @@ function testSwitch2() {
   is(gSources.itemCount, 3,
     "Found the expected number of sources.");
 
-  is(gEditor.getMode(), SourceEditor.MODES.HTML,
+  is(gEditor.getMode().name, "htmlmixed",
     "Found the expected editor mode.");
   is(gEditor.getText().search(/firstCall/), -1,
     "The first source is not displayed.");

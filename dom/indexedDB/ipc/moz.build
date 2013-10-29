@@ -13,7 +13,7 @@ EXPORTS.mozilla.dom.indexedDB += [
 # Need to enable these tests sometime soon.
 #XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-CPP_SOURCES += [
+SOURCES += [
     'IndexedDBChild.cpp',
     'IndexedDBParent.cpp',
 ]
@@ -37,4 +37,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'dom_indexeddb_ipc_s'
 
 MOCHITEST_MANIFESTS += ['mochitest.ini']
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -39,10 +39,6 @@ NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
 
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-FINAL_TARGET = $(DIST)/bin/lib
-endif
-
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
 # a console application.
@@ -50,7 +46,6 @@ WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 LDFLAGS += $(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
 

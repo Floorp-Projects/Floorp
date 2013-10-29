@@ -89,7 +89,7 @@
       this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, document)
       ];
 
       this.invoke = function removeSelection_invoke()
@@ -133,8 +133,7 @@
 
       gQueue.push(new addSelection("paragraph", 1, 3));
       gQueue.push(new changeSelection("paragraph", 2, 4));
-      //gQueue.push(new removeSelection("paragraph"));
-      todo(false, "removeSelection doesn't fire text selection changed events, see bug bug 688124.");
+      gQueue.push(new removeSelection("paragraph"));
 
       gQueue.push(new synthFocus("textbox", onfocusEventSeq("textbox")));
       gQueue.push(new changeSelection("textbox", 1, 3));
@@ -155,7 +154,12 @@
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=688126"
      title="nsIAccessibleText::setSelectionBounds doesn't fire text selection changed events in some cases">
-    Mozilla Bug 688126
+    Bug 688126
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=688124"
+     title="no text selection changed event when selection is removed">
+    Bug 688124
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>

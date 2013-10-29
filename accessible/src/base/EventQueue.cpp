@@ -152,6 +152,26 @@ EventQueue::CoalesceEvents()
       break; // eCoalesceStateChange
     }
 
+    case AccEvent::eCoalesceTextSelChange:
+    {
+      // Coalesce older event by newer event for the same selection or target.
+      // Events for same selection may have different targets and vice versa one
+      // target may be pointed by different selections (for latter see
+      // bug 927159).
+      for (uint32_t index = tail - 1; index < tail; index--) {
+        AccEvent* thisEvent = mEvents[index];
+        if (thisEvent->mEventRule != AccEvent::eDoNotEmit &&
+            thisEvent->mEventType == tailEvent->mEventType) {
+          AccTextSelChangeEvent* thisTSCEvent = downcast_accEvent(thisEvent);
+          AccTextSelChangeEvent* tailTSCEvent = downcast_accEvent(tailEvent);
+          if (thisTSCEvent->mSel == tailTSCEvent->mSel ||
+              thisEvent->mAccessible == tailEvent->mAccessible)
+            thisEvent->mEventRule = AccEvent::eDoNotEmit;
+        }
+
+      }
+    } break; // eCoalesceTextSelChange
+
     case AccEvent::eRemoveDupes:
     {
       // Check for repeat events, coalesce newly appended event by more older
@@ -458,21 +478,8 @@ EventQueue::ProcessEventQueue()
       }
 
       // Dispatch caret moved and text selection change events.
-      if (event->mEventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
-        AccCaretMoveEvent* caretMoveEvent = downcast_accEvent(event);
-        HyperTextAccessible* hyperText = target->AsHyperText();
-        if (hyperText &&
-            NS_SUCCEEDED(hyperText->GetCaretOffset(&caretMoveEvent->mCaretOffset))) {
-
-          nsEventShell::FireEvent(caretMoveEvent);
-
-          // There's a selection so fire selection change as well.
-          int32_t selectionCount;
-          hyperText->GetSelectionCount(&selectionCount);
-          if (selectionCount)
-            nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED,
-                                    hyperText);
-        }
+      if (event->mEventType == nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED) {
+        SelectionMgr()->ProcessTextSelChangeEvent(event);
         continue;
       }
 

@@ -3,10 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# For sanity's sake, we compile nsinstall without the wrapped system
-# headers, so that we can use it to set up the wrapped system headers.
-VISIBILITY_FLAGS =
-
 ifneq (WINNT,$(HOST_OS_ARCH))
 HOST_PROGRAM	= nsinstall_real$(HOST_BIN_SUFFIX)
 endif

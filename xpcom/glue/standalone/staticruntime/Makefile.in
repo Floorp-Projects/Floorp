@@ -9,9 +9,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../../build \
 	$(NULL)
 
-# create a static lib
-FORCE_STATIC_LIB = 1
-
 # Statically link to the CRT on Windows
 USE_STATIC_LIBS = 1
 

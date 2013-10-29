@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef RELATION_H_
-#define RELATION_H_
+#ifndef mozilla_a11y_relation_h_
+#define mozilla_a11y_relation_h_
 
 #include "AccIterator.h"
 
@@ -53,13 +53,6 @@ public:
   {
     mFirstIter = aRH.mFirstIter;
     mLastIter = aRH.mLastIter;
-    return *this;
-  }
-
-  Relation& operator = (Relation& aRelation)
-  {
-    mFirstIter = aRelation.mFirstIter;
-    mLastIter = aRelation.mLastIter;
     return *this;
   }
 

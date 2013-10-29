@@ -6,11 +6,15 @@
 
 MODULE = 'handler'
 
-CPP_SOURCES += [
-    'exception_handler.cc',
+SOURCES += [
     '../log/log.cc',
+    'exception_handler.cc',
     'minidump_descriptor.cc',
 ]
 
 LIBRARY_NAME = 'exception_handler_s'
 
+XPI_NAME = 'crashreporter'
+
+# need static lib
+FORCE_STATIC_LIB = True

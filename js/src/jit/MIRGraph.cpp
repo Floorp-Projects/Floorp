@@ -452,13 +452,18 @@ MBasicBlock::linkOsrValues(MStart *start)
         if (i == info().scopeChainSlot()) {
             if (def->isOsrScopeChain())
                 def->toOsrScopeChain()->setResumePoint(res);
+        } else if (i == info().returnValueSlot()) {
+            if (def->isOsrReturnValue())
+                def->toOsrReturnValue()->setResumePoint(res);
         } else if (info().hasArguments() && i == info().argsObjSlot()) {
             JS_ASSERT(def->isConstant() || def->isOsrArgumentsObject());
             JS_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
             if (def->isOsrArgumentsObject())
                 def->toOsrArgumentsObject()->setResumePoint(res);
         } else {
-            JS_ASSERT(def->isOsrValue() || def->isGetArgumentsObjectArg() || def->isConstant());
+            JS_ASSERT(def->isOsrValue() || def->isGetArgumentsObjectArg() || def->isConstant() ||
+                      def->isParameter());
+
             // A constant Undefined can show up here for an argument slot when the function uses
             // a heavyweight argsobj, but the argument in question is stored on the scope chain.
             JS_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
@@ -467,6 +472,8 @@ MBasicBlock::linkOsrValues(MStart *start)
                 def->toOsrValue()->setResumePoint(res);
             else if (def->isGetArgumentsObjectArg())
                 def->toGetArgumentsObjectArg()->setResumePoint(res);
+            else if (def->isParameter())
+                def->toParameter()->setResumePoint(res);
         }
     }
 }

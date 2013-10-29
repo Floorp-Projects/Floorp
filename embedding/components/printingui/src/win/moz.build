@@ -6,11 +6,11 @@
 
 MODULE = 'embedcomponents'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsPrintDialogUtil.cpp',
+    'nsPrintingPromptService.cpp',
     'nsPrintProgress.cpp',
     'nsPrintProgressParams.cpp',
-    'nsPrintingPromptService.cpp',
 ]
 
 LIBRARY_NAME = 'printingui_s'

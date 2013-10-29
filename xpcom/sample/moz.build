@@ -17,7 +17,7 @@ XPIDL_SOURCES += ['nsISample.idl']
 MODULE = 'xpcomsample'
 
 # CPP_SOURCES specifies C++ files to be built into a library.
-CPP_SOURCES += [
+SOURCES += [
     'nsSample.cpp',
     'nsSampleModule.cpp',
 ]

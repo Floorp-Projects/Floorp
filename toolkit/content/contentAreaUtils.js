@@ -3,9 +3,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadLastDir",
+                                  "resource://gre/modules/DownloadLastDir.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 var ContentAreaUtils = {
 
   // this is for backwards compatibility.
@@ -311,15 +326,15 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     // Find a URI to use for determining last-downloaded-to directory
     let relatedURI = aReferrer || sourceURI;
 
-    getTargetFile(fpParams, function(aDialogCancelled) {
-      if (aDialogCancelled)
+    promiseTargetFile(fpParams, aSkipPrompt, relatedURI).then(aDialogAccepted => {
+      if (!aDialogAccepted)
         return;
 
       saveAsType = fpParams.saveAsType;
       file = fpParams.file;
 
       continueSave();
-    }, aSkipPrompt, relatedURI);
+    }).then(null, Components.utils.reportError);
   }
 
   function continueSave() {
@@ -527,10 +542,6 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
  * @param aFpP
  *        A structure (see definition in internalSave(...) method)
  *        containing all the data used within this method.
- * @param aCallback
- *        A callback function that will be called once the function finishes.
- *        The first argument passed to the function will be a boolean that,
- *        when true, indicated that the user dismissed the file picker.
  * @param aSkipPrompt
  *        If true, attempt to save the file automatically to the user's default
  *        download directory, thus skipping the explicit prompt for a file name,
@@ -542,58 +553,59 @@ function initFileInfo(aFI, aURL, aURLCharset, aDocument,
  *        An nsIURI associated with the download. The last used
  *        directory of the picker is retrieved from/stored in the 
  *        Content Pref Service using this URI.
+ * @return Promise
+ * @resolve a boolean. When true, it indicates that the file picker dialog
+ *          is accepted.
  */
-function getTargetFile(aFpP, aCallback, /* optional */ aSkipPrompt, /* optional */ aRelatedURI)
+function promiseTargetFile(aFpP, /* optional */ aSkipPrompt, /* optional */ aRelatedURI)
 {
-  if (!getTargetFile.DownloadLastDir)
-    Components.utils.import("resource://gre/modules/DownloadLastDir.jsm", getTargetFile);
-  var gDownloadLastDir = new getTargetFile.DownloadLastDir(window);
+  return Task.spawn(function() {
+    let downloadLastDir = new DownloadLastDir(window);
+    let prefBranch = Services.prefs.getBranch("browser.download.");
+    let useDownloadDir = prefBranch.getBoolPref("useDownloadDir");
 
-  var prefs = Services.prefs.getBranch("browser.download.");
-  var useDownloadDir = prefs.getBoolPref("useDownloadDir");
-  const nsIFile = Components.interfaces.nsIFile;
+    if (!aSkipPrompt)
+      useDownloadDir = false;
 
-  if (!aSkipPrompt)
-    useDownloadDir = false;
+    // Default to the user's default downloads directory configured
+    // through download prefs.
+    let dirPath = yield Downloads.getPreferredDownloadsDirectory();
+    let dirExists = yield OS.File.exists(dirPath);
+    let dir = new FileUtils.File(dirPath);
 
-  // Default to the user's default downloads directory configured
-  // through download prefs.
-  var dir = Services.downloads.userDownloadsDirectory;
-  var dirExists = dir && dir.exists();
-
-  if (useDownloadDir && dirExists) {
-    dir.append(getNormalizedLeafName(aFpP.fileInfo.fileName,
-                                     aFpP.fileInfo.fileExt));
-    aFpP.file = uniqueFile(dir);
-    aCallback(false);
-    return;
-  }
-
-  // We must prompt for the file name explicitly.
-  // If we must prompt because we were asked to...
-  if (useDownloadDir) {
-    // Keep async behavior in both branches
-    Services.tm.mainThread.dispatch(function() {
-      displayPicker();
-    }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
-  } else {
-    gDownloadLastDir.getFileAsync(aRelatedURI, function getFileAsyncCB(aFile) {
-      if (aFile && aFile.exists()) {
-        dir = aFile;
-        dirExists = true;
-      }
-      displayPicker();
-    });
-  }
-
-  function displayPicker() {
-    if (!dirExists) {
-      // Default to desktop.
-      dir = Services.dirsvc.get("Desk", nsIFile);
+    if (useDownloadDir && dirExists) {
+      dir.append(getNormalizedLeafName(aFpP.fileInfo.fileName,
+                                       aFpP.fileInfo.fileExt));
+      aFpP.file = uniqueFile(dir);
+      throw new Task.Result(true);
     }
 
-    var fp = makeFilePicker();
-    var titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
+    // We must prompt for the file name explicitly.
+    // If we must prompt because we were asked to...
+    let deferred = Promise.defer();
+    if (useDownloadDir) {
+      // Keep async behavior in both branches
+      Services.tm.mainThread.dispatch(function() {
+        deferred.resolve(null);
+      }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+    } else {
+      downloadLastDir.getFileAsync(aRelatedURI, function getFileAsyncCB(aFile) {
+        deferred.resolve(aFile);
+      });
+    }
+    let file = yield deferred.promise;
+    if (file && (yield OS.File.exists(file.path))) {
+      dir = file;
+      dirExists = true;
+    }
+
+    if (!dirExists) {
+      // Default to desktop.
+      dir = Services.dirsvc.get("Desk", Components.interfaces.nsIFile);
+    }
+
+    let fp = makeFilePicker();
+    let titleKey = aFpP.fpTitleKey || "SaveLinkTitle";
     fp.init(window, ContentAreaUtils.stringBundle.GetStringFromName(titleKey),
             Components.interfaces.nsIFilePicker.modeSave);
 
@@ -608,31 +620,35 @@ function getTargetFile(aFpP, aCallback, /* optional */ aSkipPrompt, /* optional 
     // more than one filter in addition to "All Files".
     if (aFpP.saveMode != SAVEMODE_FILEONLY) {
       try {
-        fp.filterIndex = prefs.getIntPref("save_converter_index");
+        fp.filterIndex = prefBranch.getIntPref("save_converter_index");
       }
       catch (e) {
       }
     }
 
-    if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file) {
-      aCallback(true);
-      return;
+    let deferComplete = Promise.defer();
+    fp.open(function(aResult) {
+      deferComplete.resolve(aResult);
+    });
+    let result = yield deferComplete.promise;
+    if (result == Components.interfaces.nsIFilePicker.returnCancel || !fp.file) {
+      throw new Task.Result(false);
     }
 
     if (aFpP.saveMode != SAVEMODE_FILEONLY)
-      prefs.setIntPref("save_converter_index", fp.filterIndex);
+      prefBranch.setIntPref("save_converter_index", fp.filterIndex);
 
     // Do not store the last save directory as a pref inside the private browsing mode
-    var directory = fp.file.parent.QueryInterface(nsIFile);
-    gDownloadLastDir.setFile(aRelatedURI, directory);
+    downloadLastDir.setFile(aRelatedURI, fp.file.parent);
 
     fp.file.leafName = validateFileName(fp.file.leafName);
 
     aFpP.saveAsType = fp.filterIndex;
     aFpP.file = fp.file;
     aFpP.fileURL = fp.fileURL;
-    aCallback(false);
-  }
+
+    throw new Task.Result(true);
+  });
 }
 
 // Since we're automatically downloading, we don't get the file picker's

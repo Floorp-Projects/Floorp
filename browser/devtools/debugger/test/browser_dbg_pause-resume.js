@@ -30,7 +30,7 @@ function testPause() {
 
   is(gResumeButton.getAttribute("tooltiptext"),
      gDebugger.L10N.getFormatStr("pauseButtonTooltip",
-      gDebugger.DevtoolsHelpers.prettyKey(gResumeKey)),
+      gDebugger.ShortcutUtils.prettifyShortcut(gResumeKey)),
     "Button tooltip should be 'pause' when running.");
 
   gDebugger.gThreadClient.addOneTimeListener("paused", () => {
@@ -39,7 +39,7 @@ function testPause() {
 
     is(gResumeButton.getAttribute("tooltiptext"),
        gDebugger.L10N.getFormatStr("resumeButtonTooltip",
-        gDebugger.DevtoolsHelpers.prettyKey(gResumeKey)),
+        gDebugger.ShortcutUtils.prettifyShortcut(gResumeKey)),
       "Button tooltip should be 'resume' when paused.");
 
     is(gFrames.itemCount, 0,
@@ -58,7 +58,7 @@ function testResume() {
 
     is(gResumeButton.getAttribute("tooltiptext"),
        gDebugger.L10N.getFormatStr("pauseButtonTooltip",
-        gDebugger.DevtoolsHelpers.prettyKey(gResumeKey)),
+        gDebugger.ShortcutUtils.prettifyShortcut(gResumeKey)),
       "Button tooltip should be pause when running.");
 
     closeDebuggerAndFinish(gPanel);

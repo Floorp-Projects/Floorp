@@ -7,6 +7,7 @@
 #define __NS_SVGPATHDATAPARSER_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/gfx/Point.h"
 #include "gfxPoint.h"
 #include "nsSVGDataParser.h"
 
@@ -109,20 +110,22 @@ protected:
 
 class nsSVGArcConverter
 {
+  typedef mozilla::gfx::Point Point;
+
 public:
-  nsSVGArcConverter(const gfxPoint &from,
-                    const gfxPoint &to,
-                    const gfxPoint &radii,
+  nsSVGArcConverter(const Point& from,
+                    const Point& to,
+                    const Point& radii,
                     double angle,
                     bool largeArcFlag,
                     bool sweepFlag);
-  bool GetNextSegment(gfxPoint *cp1, gfxPoint *cp2, gfxPoint *to);
+  bool GetNextSegment(Point* cp1, Point* cp2, Point* to);
 protected:
   int32_t mNumSegs, mSegIndex;
   double mTheta, mDelta, mT;
   double mSinPhi, mCosPhi;
   double mRx, mRy;
-  gfxPoint mFrom, mC;
+  Point mFrom, mC;
 };
 
 class nsSVGPathDataParserToInternal : public nsSVGPathDataParser

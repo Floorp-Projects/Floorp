@@ -380,12 +380,12 @@ static inline void*
 GetStubReturnAddress(JSContext *cx, jsbytecode *pc)
 {
     if (IsGetPropPC(pc))
-        return cx->compartment()->ionCompartment()->baselineGetPropReturnAddr();
+        return cx->compartment()->jitCompartment()->baselineGetPropReturnAddr();
     if (IsSetPropPC(pc))
-        return cx->compartment()->ionCompartment()->baselineSetPropReturnAddr();
+        return cx->compartment()->jitCompartment()->baselineSetPropReturnAddr();
     // This should be a call op of some kind, now.
     JS_ASSERT(IsCallPC(pc));
-    return cx->compartment()->ionCompartment()->baselineCallReturnAddr();
+    return cx->compartment()->jitCompartment()->baselineCallReturnAddr();
 }
 
 // For every inline frame, we write out the following data:
@@ -537,6 +537,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // Initialize BaselineFrame's scopeChain and argsObj
     JSObject *scopeChain = nullptr;
+    Value returnValue;
     ArgumentsObject *argsObj = nullptr;
     BailoutKind bailoutKind = iter.bailoutKind();
     if (bailoutKind == Bailout_ArgumentCheck) {
@@ -546,6 +547,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         // which calls |EnsureHasScopeObjects|.
         IonSpew(IonSpew_BaselineBailouts, "      Bailout_ArgumentCheck! (no valid scopeChain)");
         iter.skip();
+
+        // skip |return value|
+        iter.skip();
+        returnValue = UndefinedValue();
 
         // Scripts with |argumentsHasVarBinding| have an extra slot.
         if (script->argumentsHasVarBinding()) {
@@ -582,7 +587,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             }
         }
 
-        // If script maybe has an arguments object, the second slot will hold it.
+        // Second slot holds the return value.
+        returnValue = iter.read();
+
+        // If script maybe has an arguments object, the third slot will hold it.
         if (script->argumentsHasVarBinding()) {
             v = iter.read();
             JS_ASSERT(v.isObject() || v.isUndefined());
@@ -592,6 +600,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     }
     IonSpew(IonSpew_BaselineBailouts, "      ScopeChain=%p", scopeChain);
     blFrame->setScopeChain(scopeChain);
+    IonSpew(IonSpew_BaselineBailouts, "      ReturnValue=%016llx", *((uint64_t *) &returnValue));
+    blFrame->setReturnValue(returnValue);
 
     // Do not need to initialize scratchValue or returnValue fields in BaselineFrame.
 
@@ -1169,7 +1179,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // Push return address into the ArgumentsRectifier code, immediately after the ioncode
     // call.
-    void *rectReturnAddr = cx->runtime()->ionRuntime()->getArgumentsRectifierReturnAddr();
+    void *rectReturnAddr = cx->runtime()->jitRuntime()->getArgumentsRectifierReturnAddr();
     JS_ASSERT(rectReturnAddr);
     if (!builder.writePtr(rectReturnAddr, "ReturnAddr"))
         return false;

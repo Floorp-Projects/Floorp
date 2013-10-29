@@ -6,6 +6,7 @@
 #define nsResizerFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "nsTitleBarFrame.h"
 
 class nsIBaseWindow;
@@ -31,7 +32,7 @@ public:
                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   virtual void MouseClicked(nsPresContext* aPresContext,
-                            mozilla::WidgetGUIEvent* aEvent) MOZ_OVERRIDE;
+                            mozilla::WidgetMouseEvent* aEvent) MOZ_OVERRIDE;
 
 protected:
   nsIContent* GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWindow);

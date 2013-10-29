@@ -61,9 +61,17 @@ MacroAssemblerARM::convertUInt32ToDouble(const Register &src, const FloatRegiste
 {
     // direct conversions aren't possible.
     VFPRegister dest = VFPRegister(dest_);
-    as_vxfer(src, InvalidReg, dest.uintOverlay(),
-             CoreToFloat);
+    as_vxfer(src, InvalidReg, dest.uintOverlay(), CoreToFloat);
     as_vcvt(dest, dest.uintOverlay());
+}
+
+void
+MacroAssemblerARM::convertUInt32ToFloat32(const Register &src, const FloatRegister &dest_)
+{
+    // direct conversions aren't possible.
+    VFPRegister dest = VFPRegister(dest_);
+    as_vxfer(src, InvalidReg, dest.uintOverlay(), CoreToFloat);
+    as_vcvt(VFPRegister(dest).singleOverlay(), dest.uintOverlay());
 }
 
 void MacroAssemblerARM::convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest)
@@ -1426,9 +1434,21 @@ MacroAssemblerARM::ma_vabs(FloatRegister src, FloatRegister dest, Condition cc)
 }
 
 void
+MacroAssemblerARM::ma_vabs_f32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vabs(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
+}
+
+void
 MacroAssemblerARM::ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc)
 {
     as_vsqrt(dest, src, cc);
+}
+
+void
+MacroAssemblerARM::ma_vsqrt_f32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vsqrt(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
 }
 
 union DoublePun
@@ -1524,6 +1544,11 @@ void
 MacroAssemblerARM::ma_vcmpz(FloatRegister src1, Condition cc)
 {
     as_vcmpz(VFPRegister(src1), cc);
+}
+void
+MacroAssemblerARM::ma_vcmpz_f32(FloatRegister src1, Condition cc)
+{
+    as_vcmpz(VFPRegister(src1).singleOverlay(), cc);
 }
 
 void
@@ -3654,7 +3679,7 @@ MacroAssemblerARMCompat::handleFailureWithHandler(void *handler)
     passABIArg(r0);
     callWithABI(handler);
 
-    IonCode *excTail = GetIonContext()->runtime->ionRuntime()->getExceptionTail();
+    IonCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
     branch(excTail);
 }
 
@@ -3796,6 +3821,58 @@ MacroAssemblerARMCompat::floor(FloatRegister input, Register output, Label *bail
     ma_rsb(output, Imm32(0), output, SetCond);
     // Flip the negated input back to its original value.
     ma_vneg(input, input);
+    // If the result looks non-negative, then this value didn't actually fit into
+    // the int range, and special handling is required.
+    // zero is also caught by this case, but floor of a negative number
+    // should never be zero.
+    ma_b(bail, Unsigned);
+
+    bind(&fin);
+}
+
+void
+MacroAssemblerARMCompat::floorf(FloatRegister input, Register output, Label *bail)
+{
+    Label handleZero;
+    Label handleNeg;
+    Label fin;
+    compareFloat(input, InvalidFloatReg);
+    ma_b(&handleZero, Assembler::Equal);
+    ma_b(&handleNeg, Assembler::Signed);
+    // NaN is always a bail condition, just bail directly.
+    ma_b(bail, Assembler::Overflow);
+
+    // The argument is a positive number, truncation is the path to glory;
+    // Since it is known to be > 0.0, explicitly convert to a larger range,
+    // then a value that rounds to INT_MAX is explicitly different from an
+    // argument that clamps to INT_MAX
+    ma_vcvt_F32_U32(input, ScratchFloatReg);
+    ma_vxfer(VFPRegister(ScratchFloatReg).uintOverlay(), output);
+    ma_mov(output, output, SetCond);
+    ma_b(bail, Signed);
+    ma_b(&fin);
+
+    bind(&handleZero);
+    // Move the top word of the double into the output reg, if it is non-zero,
+    // then the original value was -0.0
+    as_vxfer(output, InvalidReg, VFPRegister(input).singleOverlay(), FloatToCore, Always, 0);
+    ma_cmp(output, Imm32(0));
+    ma_b(bail, NonZero);
+    ma_b(&fin);
+
+    bind(&handleNeg);
+    // Negative case, negate, then start dancing
+    ma_vneg_f32(input, input);
+    ma_vcvt_F32_U32(input, ScratchFloatReg);
+    ma_vxfer(VFPRegister(ScratchFloatReg).uintOverlay(), output);
+    ma_vcvt_U32_F32(ScratchFloatReg, ScratchFloatReg);
+    compareFloat(ScratchFloatReg, input);
+    ma_add(output, Imm32(1), output, NoSetCond, NotEqual);
+    // Negate the output.  Since INT_MIN < -INT_MAX, even after adding 1,
+    // the result will still be a negative number
+    ma_rsb(output, Imm32(0), output, SetCond);
+    // Flip the negated input back to its original value.
+    ma_vneg_f32(input, input);
     // If the result looks non-negative, then this value didn't actually fit into
     // the int range, and special handling is required.
     // zero is also caught by this case, but floor of a negative number

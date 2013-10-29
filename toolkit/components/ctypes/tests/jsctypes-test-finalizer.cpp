@@ -2,7 +2,6 @@
 
 #include "jsctypes-test.h"
 #include "jsctypes-test-finalizer.h"
-#include "jsapi.h"
 
 #if defined(XP_WIN)
 #define snprintf _snprintf

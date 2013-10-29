@@ -23,7 +23,6 @@
 #ifndef nsHtml5ArrayCopy_h
 #define nsHtml5ArrayCopy_h
 
-#include "prtypes.h"
 
 class nsString;
 class nsHtml5StackNode;

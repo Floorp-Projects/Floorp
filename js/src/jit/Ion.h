@@ -82,6 +82,13 @@ struct IonOptions
     // Default: false
     bool checkRangeAnalysis;
 
+    // Whether to perform expensive graph-consistency DEBUG-only assertions.
+    // It can be useful to disable this to reduce DEBUG-compile time of large
+    // asm.js programs.
+    //
+    // Default: true
+    bool assertGraphConsistency;
+
     // Toggles whether Unreachable Code Elimination is performed.
     //
     // Default: true
@@ -213,6 +220,7 @@ struct IonOptions
         edgeCaseAnalysis(true),
         rangeAnalysis(true),
         checkRangeAnalysis(false),
+        assertGraphConsistency(true),
         uce(true),
         eaa(true),
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -330,7 +338,7 @@ struct EnterJitData;
 
 bool SetEnterJitData(JSContext *cx, EnterJitData &data, RunState &state, AutoValueVector &vals);
 
-IonExecStatus Cannon(JSContext *cx, RunState &state);
+IonExecStatus IonCannon(JSContext *cx, RunState &state);
 
 // Used to enter Ion from C++ natives like Array.map. Called from FastInvokeGuard.
 IonExecStatus FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args);
@@ -374,6 +382,12 @@ IsIonInlinablePC(jsbytecode *pc) {
     // GETPROP, CALLPROP, and LENGTH. (Inlined Getters)
     // SETPROP, SETNAME, SETGNAME (Inlined Setters)
     return IsCallPC(pc) || IsGetPropPC(pc) || IsSetPropPC(pc);
+}
+
+inline bool
+TooManyArguments(unsigned nargs)
+{
+    return (nargs >= SNAPSHOT_MAX_NARGS || nargs > js_IonOptions.maxStackArgs);
 }
 
 void ForbidCompilation(JSContext *cx, JSScript *script);

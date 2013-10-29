@@ -67,7 +67,7 @@ gfxPlatformMac::gfxPlatformMac()
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA) | (1 << BACKEND_COREGRAPHICS);
-    uint32_t contentMask = (1 << BACKEND_COREGRAPHICS);
+    uint32_t contentMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_COREGRAPHICS);
     InitBackendPrefs(canvasMask, contentMask);
 }
 
@@ -429,12 +429,7 @@ gfxPlatformMac::UseAcceleratedCanvas()
 bool
 gfxPlatformMac::SupportsOffMainThreadCompositing()
 {
-  // 10.6.X has crashes on tinderbox with OMTC, so disable it
-  // for now.
-  if (OSXVersion() >= 0x1070) {
-    return true;
-  }
-  return GetPrefLayersOffMainThreadCompositionForceEnabled();
+  return true;
 }
 
 qcms_profile *

@@ -1,9 +1,9 @@
 
 var config = getBuildConfiguration();
 
-// FIXME: ASAN debug builds run this too slowly for now.  Re-enable
+// FIXME: ASAN and debug builds run this too slowly for now.  Re-enable
 // after bug 919948 lands.
-if (!(config.debug && config.asan)) {
+if (!config.debug && !config.asan) {
     let a = [];
     a.length = getMaxArgs() + 1;
 

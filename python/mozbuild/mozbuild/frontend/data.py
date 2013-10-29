@@ -20,6 +20,7 @@ from __future__ import unicode_literals
 import os
 
 from collections import OrderedDict
+from .sandbox_symbols import compute_final_target
 
 
 class TreeMetadata(object):
@@ -319,6 +320,9 @@ class TestManifest(SandboxDerived):
         # The parsed manifestparser.TestManifest instance.
         'manifest',
 
+        # List of tests. Each element is a dict of metadata.
+        'tests',
+
         # The relative path of the parsed manifest within the srcdir.
         'manifest_relpath',
 
@@ -339,6 +343,7 @@ class TestManifest(SandboxDerived):
         self.manifest_relpath = relpath
         self.dupe_manifest = dupe_manifest
         self.installs = {}
+        self.tests = []
         self.external_installs = set()
 
 
@@ -353,3 +358,89 @@ class LocalInclude(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
 
         self.path = path
+
+class GeneratedInclude(SandboxDerived):
+    """Describes an individual generated include path."""
+
+    __slots__ = (
+        'path',
+    )
+
+    def __init__(self, sandbox, path):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.path = path
+
+
+class SandboxWrapped(SandboxDerived):
+    """Generic sandbox container object for a wrapped rich object.
+
+    Use this wrapper class to shuttle a rich build system object
+    completely defined in moz.build files through the tree metadata
+    emitter to the build backend for processing as-is.
+    """
+
+    __slots__ = (
+        'wrapped',
+    )
+
+    def __init__(self, sandbox, wrapped):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.wrapped = wrapped
+
+
+class JavaJarData(object):
+    """Represents a Java JAR file.
+
+    A Java JAR has the following members:
+        * sources - list of input java sources
+        * generated_sources - list of generated input java sources
+        * extra_jars - list of JAR file dependencies to include on the
+          javac compiler classpath
+        * javac_flags - string containing extra flags passed to the
+          javac compiler
+    """
+
+    __slots__ = (
+        'name',
+        'sources',
+        'generated_sources',
+        'extra_jars',
+        'javac_flags',
+    )
+
+    def __init__(self, name, sources=[], generated_sources=[],
+            extra_jars=[], javac_flags=None):
+        self.name = name
+        self.sources = list(sources)
+        self.generated_sources = list(generated_sources)
+        self.extra_jars = list(extra_jars)
+        self.javac_flags = javac_flags
+
+
+class InstallationTarget(SandboxDerived):
+    """Describes the rules that affect where files get installed to."""
+
+    __slots__ = (
+        'xpiname',
+        'subdir',
+        'target',
+        'enabled'
+    )
+
+    def __init__(self, sandbox):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.xpiname = sandbox.get('XPI_NAME', '')
+        self.subdir = sandbox.get('DIST_SUBDIR', '')
+        self.target = sandbox['FINAL_TARGET']
+        self.enabled = not sandbox.get('NO_DIST_INSTALL', False)
+
+    def is_custom(self):
+        """Returns whether or not the target is not derived from the default
+        given xpiname and subdir."""
+
+        return compute_final_target(dict(
+            XPI_NAME=self.xpiname,
+            DIST_SUBDIR=self.subdir)) == self.target

@@ -639,7 +639,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
 #endif
 
     // Get the wrapper of the VM function.
-    IonCode *wrapper = gen->ionRuntime()->getVMWrapper(fun);
+    IonCode *wrapper = gen->jitRuntime()->getVMWrapper(fun);
     if (!wrapper)
         return false;
 
@@ -676,10 +676,11 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
 {
     FloatRegister src_;
     Register dest_;
+    bool needFloat32Conversion_;
 
   public:
-    OutOfLineTruncateSlow(FloatRegister src, Register dest)
-      : src_(src), dest_(dest)
+    OutOfLineTruncateSlow(FloatRegister src, Register dest, bool needFloat32Conversion = false)
+      : src_(src), dest_(dest), needFloat32Conversion_(needFloat32Conversion)
     { }
 
     bool accept(CodeGeneratorShared *codegen) {
@@ -691,6 +692,10 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
     Register dest() const {
         return dest_;
     }
+    bool needFloat32Conversion() const {
+        return needFloat32Conversion_;
+    }
+
 };
 
 OutOfLineCode *
@@ -715,12 +720,29 @@ CodeGeneratorShared::emitTruncateDouble(const FloatRegister &src, const Register
 }
 
 bool
+CodeGeneratorShared::emitTruncateFloat32(const FloatRegister &src, const Register &dest)
+{
+    OutOfLineTruncateSlow *ool = new OutOfLineTruncateSlow(src, dest, true);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    masm.branchTruncateFloat32(src, dest, ool->entry());
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
 CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
 {
     FloatRegister src = ool->src();
     Register dest = ool->dest();
 
     saveVolatile(dest);
+
+    if (ool->needFloat32Conversion()) {
+        masm.push(src);
+        masm.convertFloatToDouble(src, src);
+    }
 
     masm.setupUnalignedABICall(1, dest);
     masm.passABIArg(src);
@@ -729,6 +751,9 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
     else
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
     masm.storeCallResult(dest);
+
+    if (ool->needFloat32Conversion())
+        masm.pop(src);
 
     restoreVolatile(dest);
 

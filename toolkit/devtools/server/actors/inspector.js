@@ -76,6 +76,10 @@ HELPER_SHEET += ":-moz-devtools-highlighted { outline: 2px dashed #F06!important
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 
+loader.lazyGetter(this, "DOMParser", function() {
+ return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
+});
+
 exports.register = function(handle) {
   handle.addTabActor(InspectorActor, "inspectorActor");
 };
@@ -143,6 +147,11 @@ var NodeActor = protocol.ActorClass({
    */
   get conn() this.walker.conn,
 
+  isDocumentElement: function() {
+    return this.rawNode.ownerDocument &&
+        this.rawNode.ownerDocument.documentElement === this.rawNode;
+  },
+
   // Returns the JSON representation of this object over the wire.
   form: function(detail) {
     if (detail === "actorid") {
@@ -177,8 +186,7 @@ var NodeActor = protocol.ActorClass({
       pseudoClassLocks: this.writePseudoClassLocks(),
     };
 
-    if (this.rawNode.ownerDocument &&
-        this.rawNode.ownerDocument.documentElement === this.rawNode) {
+    if (this.isDocumentElement()) {
       form.isDocumentElement = true;
     }
 
@@ -241,6 +249,47 @@ var NodeActor = protocol.ActorClass({
   }),
 
   /**
+   * Get the node's image data if any (for canvas and img nodes).
+   * Returns a LongStringActor with the image or canvas' image data as png
+   * a data:image/png;base64,.... string
+   * A null return value means the node isn't an image
+   * An empty string return value means the node is an image but image data
+   * could not be retrieved (missing/broken image).
+   */
+  getImageData: method(function() {
+    let isImg = this.rawNode.tagName.toLowerCase() === "img";
+    let isCanvas = this.rawNode.tagName.toLowerCase() === "canvas";
+
+    if (!isImg && !isCanvas) {
+      return null;
+    }
+
+    let imageData;
+    if (isImg) {
+      let canvas = this.rawNode.ownerDocument.createElement("canvas");
+      canvas.width = this.rawNode.naturalWidth;
+      canvas.height = this.rawNode.naturalHeight;
+      let ctx = canvas.getContext("2d");
+      try {
+        // This will fail if the image is missing
+        ctx.drawImage(this.rawNode, 0, 0);
+        imageData = canvas.toDataURL("image/png");
+      } catch (e) {
+        imageData = "";
+      }
+    } else if (isCanvas) {
+      imageData = this.rawNode.toDataURL("image/png");
+    }
+
+    return LongStringActor(this.conn, imageData);
+  }, {
+    request: {},
+    response: {
+      data: RetVal("nullable:longstring")
+    }
+  }),
+
+  /**
    * Modify a node's attributes.  Passed an array of modifications
    * similar in format to "attributes" mutations.
    * {
@@ -275,8 +324,7 @@ var NodeActor = protocol.ActorClass({
       modifications: Arg(0, "array:json")
     },
     response: {}
-  }),
-
+  })
 });
 
 /**
@@ -1544,6 +1592,62 @@ var WalkerActor = protocol.ActorClass({
     },
     response: {
       value: RetVal("longstring")
+    }
+  }),
+
+  /**
+   * Set a node's outerHTML property.
+   */
+  setOuterHTML: method(function(node, value) {
+    let parsedDOM = DOMParser.parseFromString(value, "text/html");
+    let rawNode = node.rawNode;
+    let parentNode = rawNode.parentNode;
+
+    // Special case for head and body.  Setting document.body.outerHTML
+    // creates an extra <head> tag, and document.head.outerHTML creates
+    // an extra <body>.  So instead we will call replaceChild with the
+    // parsed DOM, assuming that they aren't trying to set both tags at once.
+    if (rawNode.tagName === "BODY") {
+      if (parsedDOM.head.innerHTML === "") {
+        parentNode.replaceChild(parsedDOM.body, rawNode);
+      } else {
+        rawNode.outerHTML = value;
+      }
+    } else if (rawNode.tagName === "HEAD") {
+      if (parsedDOM.body.innerHTML === "") {
+        parentNode.replaceChild(parsedDOM.head, rawNode);
+      } else {
+        rawNode.outerHTML = value;
+      }
+    } else if (node.isDocumentElement()) {
+      // Unable to set outerHTML on the document element.  Fall back by
+      // setting attributes manually, then replace the body and head elements.
+      let finalAttributeModifications = [];
+      let attributeModifications = {};
+      for (let attribute of rawNode.attributes) {
+        attributeModifications[attribute.name] = null;
+      }
+      for (let attribute of parsedDOM.documentElement.attributes) {
+        attributeModifications[attribute.name] = attribute.value;
+      }
+      for (let key in attributeModifications) {
+        finalAttributeModifications.push({
+          attributeName: key,
+          newValue: attributeModifications[key]
+        });
+      }
+      node.modifyAttributes(finalAttributeModifications);
+      rawNode.replaceChild(parsedDOM.head, rawNode.querySelector("head"));
+      rawNode.replaceChild(parsedDOM.body, rawNode.querySelector("body"));
+    } else {
+      rawNode.outerHTML = value;
+    }
+  }, {
+    request: {
+      node: Arg(0, "domnode"),
+      value: Arg(1),
+    },
+    response: {
     }
   }),
 

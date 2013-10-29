@@ -1,0 +1,36 @@
+// Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "sandbox/win/src/nt_internals.h"
+#include "sandbox/win/src/sandbox_types.h"
+
+#ifndef SANDBOX_SRC_NAMED_PIPE_INTERCEPTION_H__
+#define SANDBOX_SRC_NAMED_PIPE_INTERCEPTION_H__
+
+namespace sandbox {
+
+extern "C" {
+
+typedef HANDLE (WINAPI *CreateNamedPipeWFunction) (
+    LPCWSTR lpName,
+    DWORD dwOpenMode,
+    DWORD dwPipeMode,
+    DWORD nMaxInstances,
+    DWORD nOutBufferSize,
+    DWORD nInBufferSize,
+    DWORD nDefaultTimeOut,
+    LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+
+// Interception of CreateNamedPipeW in kernel32.dll
+SANDBOX_INTERCEPT HANDLE WINAPI TargetCreateNamedPipeW(
+    CreateNamedPipeWFunction orig_CreateNamedPipeW, LPCWSTR pipe_name,
+    DWORD open_mode, DWORD pipe_mode, DWORD max_instance, DWORD out_buffer_size,
+    DWORD in_buffer_size, DWORD default_timeout,
+    LPSECURITY_ATTRIBUTES security_attributes);
+
+}  // extern "C"
+
+}  // namespace sandbox
+
+#endif  // SANDBOX_SRC_NAMED_PIPE_INTERCEPTION_H__

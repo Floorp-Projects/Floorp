@@ -14,7 +14,7 @@ EXPORTS.mozilla += [
     'BrowserElementParent.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'BrowserElementParent.cpp',
 ]
 
@@ -34,3 +34,9 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'dom_browserelement_s'
 
+LOCAL_INCLUDES += [
+    '../bluetooth',
+    '/content/html/content/src',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')

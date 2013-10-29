@@ -52,6 +52,7 @@ const GSMICCINFO_CID =
 const CDMAICCINFO_CID =
   Components.ID("{39ba3c08-aacc-46d0-8c04-9b619c387061}");
 
+const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kSmsReceivedObserverTopic          = "sms-received";
 const kSilentSmsReceivedObserverTopic    = "silent-sms-received";
@@ -64,14 +65,18 @@ const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
 const kSysClockChangeObserverTopic       = "system-clock-change";
 const kScreenStateChangedTopic           = "screen-state-changed";
-const kClockAutoUpdateEnabled            = "time.clock.automatic-update.enabled";
-const kClockAutoUpdateAvailable          = "time.clock.automatic-update.available";
-const kTimezoneAutoUpdateEnabled         = "time.timezone.automatic-update.enabled";
-const kTimezoneAutoUpdateAvailable       = "time.timezone.automatic-update.available";
-const kCellBroadcastSearchList           = "ril.cellbroadcast.searchlist";
-const kCellBroadcastDisabled             = "ril.cellbroadcast.disabled";
-const kPrefenceChangedObserverTopic      = "nsPref:changed";
-const kClirModePreference                = "ril.clirMode";
+
+const kSettingsCellBroadcastSearchList = "ril.cellbroadcast.searchlist";
+const kSettingsClockAutoUpdateEnabled = "time.clock.automatic-update.enabled";
+const kSettingsClockAutoUpdateAvailable = "time.clock.automatic-update.available";
+const kSettingsTimezoneAutoUpdateEnabled = "time.timezone.automatic-update.enabled";
+const kSettingsTimezoneAutoUpdateAvailable = "time.timezone.automatic-update.available";
+
+const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
+
+const kPrefCellBroadcastDisabled = "ril.cellbroadcast.disabled";
+const kPrefClirModePreference = "ril.clirMode";
+const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 
 const DOM_MOBILE_MESSAGE_DELIVERY_RECEIVED = "received";
 const DOM_MOBILE_MESSAGE_DELIVERY_SENDING  = "sending";
@@ -82,7 +87,6 @@ const RADIO_POWER_OFF_TIMEOUT = 30000;
 const SMS_HANDLED_WAKELOCK_TIMEOUT = 5000;
 
 const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
-  "RIL:GetNumRadioInterfaces",
   "RIL:GetRilContext",
   "RIL:GetAvailableNetworks",
   "RIL:SelectNetwork",
@@ -90,13 +94,13 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SendMMI",
   "RIL:CancelMMI",
   "RIL:RegisterMobileConnectionMsg",
-  "RIL:SetCallForwardingOptions",
-  "RIL:GetCallForwardingOptions",
-  "RIL:SetCallBarringOptions",
-  "RIL:GetCallBarringOptions",
+  "RIL:SetCallForwardingOption",
+  "RIL:GetCallForwardingOption",
+  "RIL:SetCallBarringOption",
+  "RIL:GetCallBarringOption",
   "RIL:ChangeCallBarringPassword",
-  "RIL:SetCallWaitingOptions",
-  "RIL:GetCallWaitingOptions",
+  "RIL:SetCallWaitingOption",
+  "RIL:GetCallWaitingOption",
   "RIL:SetCallingLineIdRestriction",
   "RIL:GetCallingLineIdRestriction",
   "RIL:SetRoamingPreference",
@@ -107,7 +111,6 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
 ];
 
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
-  "RIL:GetNumRadioInterfaces",
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
   "RIL:SendStkTimerExpiration",
@@ -125,13 +128,11 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
 ];
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
-  "RIL:GetNumRadioInterfaces",
   "RIL:RegisterVoicemailMsg",
   "RIL:GetVoicemailInfo"
 ];
 
 const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
-  "RIL:GetNumRadioInterfaces",
   "RIL:RegisterCellBroadcastMsg"
 ];
 
@@ -209,7 +210,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     init: function init(ril) {
       this.ril = ril;
 
-      Services.obs.addObserver(this, "xpcom-shutdown", false);
+      Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
       Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
       this._registerMessageListeners();
     },
@@ -217,7 +218,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     _shutdown: function _shutdown() {
       this.ril = null;
 
-      Services.obs.removeObserver(this, "xpcom-shutdown");
+      Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       this._unregisterMessageListeners();
     },
 
@@ -395,8 +396,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       }
 
       switch (msg.name) {
-        case "RIL:GetNumRadioInterfaces":
-          return this.ril.numRadioInterfaces;
         case "RIL:RegisterMobileConnectionMsg":
           this._registerMessageTarget("mobileconnection", msg.target);
           return null;
@@ -431,7 +430,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           Services.obs.removeObserver(this, kSysMsgListenerReadyObserverTopic);
           this._resendQueuedTargetMessage();
           break;
-        case "xpcom-shutdown":
+        case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
           this._shutdown();
           break;
       }
@@ -466,6 +465,25 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     }
   };
 });
+
+// Initialize shared preference 'ril.numRadioInterfaces' according to system
+// property.
+try {
+  Services.prefs.setIntPref(kPrefRilNumRadioInterfaces, (function () {
+    // When Gonk property "ro.moz.ril.numclients" is not set, return 1; if
+    // explicitly set to any number larger-equal than 0, return num; else, return
+    // 1 for compatibility.
+    try {
+      let numString = libcutils.property_get("ro.moz.ril.numclients", "1");
+      let num = parseInt(numString, 10);
+      if (num >= 0) {
+        return num;
+      }
+    } catch (e) {}
+
+    return 1;
+  })());
+} catch (e) {}
 
 function IccInfo() {}
 IccInfo.prototype = {
@@ -524,11 +542,11 @@ function RadioInterfaceLayer() {
 
   try {
     options.cellBroadcastDisabled =
-      Services.prefs.getBoolPref(kCellBroadcastDisabled);
+      Services.prefs.getBoolPref(kPrefCellBroadcastDisabled);
   } catch(e) {}
 
   try {
-    options.clirMode = Services.prefs.getIntPref(kClirModePreference);
+    options.clirMode = Services.prefs.getIntPref(kPrefClirModePreference);
   } catch(e) {}
 
   let numIfaces = this.numRadioInterfaces;
@@ -568,16 +586,9 @@ RadioInterfaceLayer.prototype = {
 
 XPCOMUtils.defineLazyGetter(RadioInterfaceLayer.prototype,
                             "numRadioInterfaces", function () {
-  // When Gonk property "ro.moz.ril.numclients" is not set, return 1; if
-  // explicitly set to any number larger-equal than 0, return num; else, return
-  // 1 for compatibility.
   try {
-    let numString = libcutils.property_get("ro.moz.ril.numclients", "1");
-    let num = parseInt(numString, 10);
-    if (num >= 0) {
-      return num;
-    }
-  } catch (e) {}
+    return Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
+  } catch(e) {}
 
   return 1;
 });
@@ -781,11 +792,11 @@ function RadioInterface(options) {
 
   // Read the 'time.clock.automatic-update.enabled' setting to see if
   // we need to adjust the system clock time by NITZ or SNTP.
-  lock.get(kClockAutoUpdateEnabled, this);
+  lock.get(kSettingsClockAutoUpdateEnabled, this);
 
   // Read the 'time.timezone.automatic-update.enabled' setting to see if
   // we need to adjust the system timezone by NITZ.
-  lock.get(kTimezoneAutoUpdateEnabled, this);
+  lock.get(kSettingsTimezoneAutoUpdateEnabled, this);
 
   // Set "time.clock.automatic-update.available" to false when starting up.
   this.setClockAutoUpdateAvailable(false);
@@ -795,16 +806,16 @@ function RadioInterface(options) {
 
   // Read the Cell Broadcast Search List setting, string of integers or integer
   // ranges separated by comma, to set listening channels.
-  lock.get(kCellBroadcastSearchList, this);
+  lock.get(kSettingsCellBroadcastSearchList, this);
 
-  Services.obs.addObserver(this, "xpcom-shutdown", false);
+  Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
   Services.obs.addObserver(this, kSysMsgListenerReadyObserverTopic, false);
   Services.obs.addObserver(this, kSysClockChangeObserverTopic, false);
   Services.obs.addObserver(this, kScreenStateChangedTopic, false);
 
   Services.obs.addObserver(this, kNetworkInterfaceStateChangedTopic, false);
-  Services.prefs.addObserver(kCellBroadcastDisabled, this, false);
+  Services.prefs.addObserver(kPrefCellBroadcastDisabled, this, false);
 
   this.portAddressedSmsApps = {};
   this.portAddressedSmsApps[WAP.WDP_PORT_PUSH] = this.handleSmsWdpPortPush.bind(this);
@@ -935,25 +946,25 @@ RadioInterface.prototype = {
       case "RIL:UpdateIccContact":
         this.workerMessenger.sendWithIPCMessage(msg, "updateICCContact");
         break;
-      case "RIL:SetCallForwardingOptions":
-        this.setCallForwardingOptions(msg.target, msg.json.data);
+      case "RIL:SetCallForwardingOption":
+        this.setCallForwardingOption(msg.target, msg.json.data);
         break;
-      case "RIL:GetCallForwardingOptions":
+      case "RIL:GetCallForwardingOption":
         this.workerMessenger.sendWithIPCMessage(msg, "queryCallForwardStatus");
         break;
-      case "RIL:SetCallBarringOptions":
+      case "RIL:SetCallBarringOption":
         this.workerMessenger.sendWithIPCMessage(msg, "setCallBarring");
         break;
-      case "RIL:GetCallBarringOptions":
+      case "RIL:GetCallBarringOption":
         this.workerMessenger.sendWithIPCMessage(msg, "queryCallBarringStatus");
         break;
       case "RIL:ChangeCallBarringPassword":
         this.workerMessenger.sendWithIPCMessage(msg, "changeCallBarringPassword");
         break;
-      case "RIL:SetCallWaitingOptions":
+      case "RIL:SetCallWaitingOption":
         this.workerMessenger.sendWithIPCMessage(msg, "setCallWaiting");
         break;
-      case "RIL:GetCallWaitingOptions":
+      case "RIL:GetCallWaitingOption":
         this.workerMessenger.sendWithIPCMessage(msg, "queryCallWaiting");
         break;
       case "RIL:SetCallingLineIdRestriction":
@@ -1336,7 +1347,7 @@ RadioInterface.prototype = {
                               (function callback(response) {
       if (!response.success) {
         let lock = gSettingsService.createLock();
-        lock.set(kCellBroadcastSearchList,
+        lock.set(kSettingsCellBroadcastSearchList,
                  this._cellBroadcastSearchListStr, null);
       } else {
         this._cellBroadcastSearchListStr = response.searchListStr;
@@ -1752,12 +1763,13 @@ RadioInterface.prototype = {
     });
   },
 
-  // The following attributes/functions are used for acquiring the CPU wake
-  // lock when the RIL handles the received SMS. Note that we need a timer to
-  // bound the lock's life cycle to avoid exhausting the battery.
+  // The following attributes/functions are used for acquiring/releasing the
+  // CPU wake lock when the RIL handles the received SMS. Note that we need
+  // a timer to bound the lock's life cycle to avoid exhausting the battery.
   _smsHandledWakeLock: null,
   _smsHandledWakeLockTimer: null,
-  _cancelSmsHandledWakeLockTimer: function _cancelSmsHandledWakeLockTimer() {
+
+  _releaseSmsHandledWakeLock: function _releaseSmsHandledWakeLock() {
     if (DEBUG) this.debug("Releasing the CPU wake lock for handling SMS.");
     if (this._smsHandledWakeLockTimer) {
       this._smsHandledWakeLockTimer.cancel();
@@ -1785,7 +1797,7 @@ RadioInterface.prototype = {
     }
     if (DEBUG) this.debug("Setting the timer for releasing the CPU wake lock.");
     this._smsHandledWakeLockTimer
-        .initWithCallback(this._cancelSmsHandledWakeLockTimer.bind(this),
+        .initWithCallback(this._releaseSmsHandledWakeLock.bind(this),
                           SMS_HANDLED_WAKELOCK_TIMEOUT,
                           Ci.nsITimer.TYPE_ONE_SHOT);
 
@@ -1968,7 +1980,7 @@ RadioInterface.prototype = {
    * Set the setting value of "time.clock.automatic-update.available".
    */
   setClockAutoUpdateAvailable: function setClockAutoUpdateAvailable(value) {
-    gSettingsService.createLock().set(kClockAutoUpdateAvailable, value, null,
+    gSettingsService.createLock().set(kSettingsClockAutoUpdateAvailable, value, null,
                                       "fromInternalSetting");
   },
 
@@ -1976,7 +1988,7 @@ RadioInterface.prototype = {
    * Set the setting value of "time.timezone.automatic-update.available".
    */
   setTimezoneAutoUpdateAvailable: function setTimezoneAutoUpdateAvailable(value) {
-    gSettingsService.createLock().set(kTimezoneAutoUpdateAvailable, value, null,
+    gSettingsService.createLock().set(kSettingsTimezoneAutoUpdateAvailable, value, null,
                                       "fromInternalSetting");
   },
 
@@ -2152,19 +2164,19 @@ RadioInterface.prototype = {
         let setting = JSON.parse(data);
         this.handleSettingsChange(setting.key, setting.value, setting.message);
         break;
-      case kPrefenceChangedObserverTopic:
-        if (data === kCellBroadcastDisabled) {
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
+        if (data === kPrefCellBroadcastDisabled) {
           let value = false;
           try {
-            value = Services.prefs.getBoolPref(kCellBroadcastDisabled);
+            value = Services.prefs.getBoolPref(kPrefCellBroadcastDisabled);
           } catch(e) {}
           this.workerMessenger.send("setCellBroadcastDisabled",
                                     { disabled: value });
         }
         break;
-      case "xpcom-shutdown":
-        // Cancel the timer of the CPU wake lock for handling the received SMS.
-        this._cancelSmsHandledWakeLockTimer();
+      case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
+        // Release the CPU wake lock for handling the received SMS.
+        this._releaseSmsHandledWakeLock();
 
         // Shutdown all RIL network interfaces
         for each (let apnSetting in this.apnSettings.byAPN) {
@@ -2172,12 +2184,11 @@ RadioInterface.prototype = {
             apnSetting.iface.shutdown();
           }
         }
-        Services.obs.removeObserver(this, "xpcom-shutdown");
+        Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         Services.obs.removeObserver(this, kMozSettingsChangedObserverTopic);
         Services.obs.removeObserver(this, kSysClockChangeObserverTopic);
         Services.obs.removeObserver(this, kScreenStateChangedTopic);
         Services.obs.removeObserver(this, kNetworkInterfaceStateChangedTopic);
-        Services.prefs.removeObserver(kCellBroadcastDisabled, this);
         break;
       case kSysClockChangeObserverTopic:
         let offset = parseInt(data, 10);
@@ -2240,7 +2251,7 @@ RadioInterface.prototype = {
   handleSettingsChange: function handleSettingsChange(aName, aResult, aMessage) {
     // Don't allow any content processes to modify the setting
     // "time.clock.automatic-update.available" except for the chrome process.
-    if (aName === kClockAutoUpdateAvailable &&
+    if (aName === kSettingsClockAutoUpdateAvailable &&
         aMessage !== "fromInternalSetting") {
       let isClockAutoUpdateAvailable = this._lastNitzMessage !== null ||
                                        this._sntp.isAvailable();
@@ -2254,7 +2265,7 @@ RadioInterface.prototype = {
     // Don't allow any content processes to modify the setting
     // "time.timezone.automatic-update.available" except for the chrome
     // process.
-    if (aName === kTimezoneAutoUpdateAvailable &&
+    if (aName === kSettingsTimezoneAutoUpdateAvailable &&
         aMessage !== "fromInternalSetting") {
       let isTimezoneAutoUpdateAvailable = this._lastNitzMessage !== null;
       if (aResult !== isTimezoneAutoUpdateAvailable) {
@@ -2306,7 +2317,7 @@ RadioInterface.prototype = {
           this.updateRILNetworkInterface();
         }
         break;
-      case kClockAutoUpdateEnabled:
+      case kSettingsClockAutoUpdateEnabled:
         this._clockAutoUpdateEnabled = aResult;
         if (!this._clockAutoUpdateEnabled) {
           break;
@@ -2326,7 +2337,7 @@ RadioInterface.prototype = {
           }
         }
         break;
-      case kTimezoneAutoUpdateEnabled:
+      case kSettingsTimezoneAutoUpdateEnabled:
         this._timezoneAutoUpdateEnabled = aResult;
 
         if (this._timezoneAutoUpdateEnabled) {
@@ -2336,9 +2347,9 @@ RadioInterface.prototype = {
           }
         }
         break;
-      case kCellBroadcastSearchList:
+      case kSettingsCellBroadcastSearchList:
         if (DEBUG) {
-          this.debug("'" + kCellBroadcastSearchList + "' is now " + aResult);
+          this.debug("'" + kSettingsCellBroadcastSearchList + "' is now " + aResult);
         }
         this.setCellBroadcastSearchList(aResult);
         break;
@@ -2381,10 +2392,10 @@ RadioInterface.prototype = {
   _updateCallingLineIdRestrictionPref:
     function _updateCallingLineIdRestrictionPref(mode) {
     try {
-      Services.prefs.setIntPref(kClirModePreference, mode);
+      Services.prefs.setIntPref(kPrefClirModePreference, mode);
       Services.prefs.savePrefFile(null);
       if (DEBUG) {
-        this.debug(kClirModePreference + " pref is now " + mode);
+        this.debug(kPrefClirModePreference + " pref is now " + mode);
       }
     } catch (e) {}
   },
@@ -2406,12 +2417,12 @@ RadioInterface.prototype = {
     }).bind(this));
   },
 
-  setCallForwardingOptions: function setCallForwardingOptions(target, message) {
-    if (DEBUG) this.debug("setCallForwardingOptions: " + JSON.stringify(message));
+  setCallForwardingOption: function setCallForwardingOption(target, message) {
+    if (DEBUG) this.debug("setCallForwardingOption: " + JSON.stringify(message));
     message.serviceClass = RIL.ICC_SERVICE_CLASS_VOICE;
     this.workerMessenger.send("setCallForward", message, (function(response) {
       this._sendCfStateChanged(response);
-      target.sendAsyncMessage("RIL:SetCallForwardingOptions", {
+      target.sendAsyncMessage("RIL:SetCallForwardingOption", {
         clientId: this.clientId,
         data: response
       });
@@ -3227,8 +3238,10 @@ RILNetworkInterface.prototype = {
   classInfo: XPCOMUtils.generateCI({classID: RILNETWORKINTERFACE_CID,
                                     classDescription: "RILNetworkInterface",
                                     interfaces: [Ci.nsINetworkInterface,
+                                                 Ci.nsIRilNetworkInterface,
                                                  Ci.nsIRILDataCallback]}),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterface,
+                                         Ci.nsIRilNetworkInterface,
                                          Ci.nsIRILDataCallback]),
 
   // nsINetworkInterface
@@ -3292,6 +3305,15 @@ RILNetworkInterface.prototype = {
 
   get httpProxyPort() {
     return this.apnSetting.port || '';
+  },
+
+  get serviceId() {
+    return this.radioInterface.clientId;
+  },
+
+  get iccId() {
+    let iccInfo = this.radioInterface.rilContext.iccInfo;
+    return iccInfo && iccInfo.iccid;
   },
 
   debug: function debug(s) {

@@ -40,7 +40,7 @@ function test() {
       yield waitForSourceShown(gPanel, JS_URL);
 
       // From this point onward, the source editor's text should never change.
-      once(gEditor, SourceEditor.EVENTS.TEXT_CHANGED).then(() => {
+      gEditor.once("change", () => {
         ok(false, "The source editor text shouldn't have changed.");
       });
 
@@ -53,7 +53,7 @@ function test() {
 
       let { source } = gSources.selectedItem.attachment;
       try {
-        yield gControllerSources.prettyPrint(source);
+        yield gControllerSources.togglePrettyPrint(source);
         ok(false, "The promise for a prettified source should be rejected!");
       } catch ([source, error]) {
         ok(error.contains("prettyPrintError"),
@@ -77,9 +77,7 @@ function test() {
 }
 
 function clickPrettyPrintButton() {
-  EventUtils.sendMouseEvent({ type: "click" },
-    gDebugger.document.getElementById("pretty-print"),
-    gDebugger);
+  gDebugger.document.getElementById("pretty-print").click();
 }
 
 registerCleanupFunction(function() {

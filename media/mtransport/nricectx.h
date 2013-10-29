@@ -81,6 +81,9 @@ namespace mozilla {
 
 class NrIceMediaStream;
 
+const std::string kNrIceTransportUdp("udp");
+const std::string kNrIceTransportTcp("tcp");
+
 class NrIceStunServer {
  public:
   NrIceStunServer(const PRNetAddr& addr) : has_addr_(true) {
@@ -134,7 +137,9 @@ class NrIceTurnServer : public NrIceStunServer {
  public:
   static NrIceTurnServer *Create(const std::string& addr, uint16_t port,
                                  const std::string& username,
-                                 const std::vector<unsigned char>& password) {
+                                 const std::vector<unsigned char>& password,
+                                 const std::string& transport = kNrIceTransportUdp) {
+    // TODO: Bug 906968 - Support TCP
     ScopedDeletePtr<NrIceTurnServer> server(
         new NrIceTurnServer(username, password));
 

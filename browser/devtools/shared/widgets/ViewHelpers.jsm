@@ -974,6 +974,18 @@ this.WidgetMethods = {
   },
 
   /**
+   * Retrieves the attachment of the selected element.
+   * @return string
+   */
+  get selectedAttachment() {
+    let selectedElement = this._widget.selectedItem;
+    if (selectedElement) {
+      return this._itemsByElement.get(selectedElement).attachment;
+    }
+    return null;
+  },
+
+  /**
    * Selects the element with the entangled item in this container.
    * @param Item | function aItem
    */

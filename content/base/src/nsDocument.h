@@ -25,7 +25,6 @@
 #include "nsIDOMStyleSheetList.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
-#include "nsEventListenerManager.h"
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
 #include "nsBindingManager.h"
@@ -68,6 +67,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
 #include "nsIDOMXPathEvaluator.h"
+#include "jsfriendapi.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -773,8 +773,8 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsEventListenerManager*
-    GetListenerManager(bool aCreateIfNotFound) MOZ_OVERRIDE;
+  virtual nsEventListenerManager* GetOrCreateListenerManager() MOZ_OVERRIDE;
+  virtual nsEventListenerManager* GetExistingListenerManager() const MOZ_OVERRIDE;
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE;

@@ -6,10 +6,14 @@
 
 MODULE = 'crash_generation'
 
-CPP_SOURCES += [
+SOURCES += [
     'crash_generation_client.cc',
     'crash_generation_server.cc',
 ]
 
 LIBRARY_NAME = 'crash_generation_s'
 
+XPI_NAME = 'crashreporter'
+
+# need static lib
+FORCE_STATIC_LIB = True

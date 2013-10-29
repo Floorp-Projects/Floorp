@@ -477,8 +477,7 @@ HTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     aVisitor.mItemFlags |= NS_NO_CONTENT_DISPATCH;
   }
   if (aVisitor.mEvent->message == NS_MOUSE_CLICK &&
-      aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+      aVisitor.mEvent->AsMouseEvent()->button ==
         WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
@@ -889,9 +888,6 @@ HTMLTextAreaElement::SetSelectionRange(uint32_t aSelectionStart,
       rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
       if (NS_SUCCEEDED(rv)) {
         rv = textControlFrame->ScrollSelectionIntoView();
-        nsRefPtr<nsAsyncDOMEvent> event =
-          new nsAsyncDOMEvent(this, NS_LITERAL_STRING("select"), true, false);
-        event->PostDOMEvent();
       }
     }
   }
@@ -996,6 +992,11 @@ HTMLTextAreaElement::SetRangeText(const nsAString& aReplacement,
 
   Optional<nsAString> direction;
   SetSelectionRange(aSelectionStart, aSelectionEnd, direction, aRv);
+  if (!aRv.Failed()) {
+    nsRefPtr<nsAsyncDOMEvent> event =
+      new nsAsyncDOMEvent(this, NS_LITERAL_STRING("select"), true, false);
+    event->PostDOMEvent();
+  }
 }
 
 nsresult

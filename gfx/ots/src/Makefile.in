@@ -26,8 +26,6 @@
 
 
 ifeq (WINNT,$(OS_TARGET))
-VISIBILITY_FLAGS =
-FORCE_STATIC_LIB = 1
 endif
 
 CSRCS =   \

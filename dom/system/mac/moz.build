@@ -6,7 +6,7 @@
 
 MODULE = 'dom'
 
-CMMSRCS += ['CoreLocationLocationProvider.mm']
+SOURCES += ['CoreLocationLocationProvider.mm']
 
 FAIL_ON_WARNINGS = True
 
@@ -15,4 +15,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'domsystemmac_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -21,22 +21,22 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla.dom.telephony += [
-    'TelephonyCommon.h',
-    'TelephonyFactory.h',
     'ipc/TelephonyChild.h',
     'ipc/TelephonyParent.h',
+    'TelephonyCommon.h',
+    'TelephonyFactory.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'CallEvent.cpp',
     'CallsList.cpp',
+    'ipc/TelephonyChild.cpp',
+    'ipc/TelephonyIPCProvider.cpp',
+    'ipc/TelephonyParent.cpp',
     'Telephony.cpp',
     'TelephonyCall.cpp',
     'TelephonyCallGroup.cpp',
     'TelephonyFactory.cpp',
-    'ipc/TelephonyChild.cpp',
-    'ipc/TelephonyIPCProvider.cpp',
-    'ipc/TelephonyParent.cpp',
 ]
 
 IPDL_SOURCES += [
@@ -59,3 +59,5 @@ FAIL_ON_WARNINGS = True
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domtelephony_s'
+include('/ipc/chromium/chromium-config.mozbuild')
+

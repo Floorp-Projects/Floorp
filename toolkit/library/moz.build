@@ -19,34 +19,34 @@ else:
 include('/rdf/util/src/objs.mozbuild')
 include('/intl/unicharutil/util/objs.mozbuild')
 
-CPP_SOURCES += intl_unicharutil_util_cppsrcs
-CPP_SOURCES += rdf_util_src_cppsrcs
+SOURCES += intl_unicharutil_util_cppsrcs
+SOURCES += rdf_util_src_cppsrcs
 
-CPP_SOURCES += [
+SOURCES += [
     'nsStaticXULComponents.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    CPP_SOURCES += [
+    SOURCES += [
         'nsDllMain.cpp',
     ]
     if not CONFIG['GNU_CC']:
-        CPP_SOURCES += [
+        SOURCES += [
             'dlldeps-xul.cpp',
             'nsGFXDeps.cpp',
         ]
         if not CONFIG['MOZ_NATIVE_ZLIB']:
-            CPP_SOURCES += [
+            SOURCES += [
                 'dlldeps-zlib.cpp',
             ]
 
 if CONFIG['OS_ARCH'] == 'OS2':
-    CPP_SOURCES += [
+    SOURCES += [
         'dlldeps-xul.cpp',
         'nsGFXDeps.cpp',
     ]
     if not CONFIG['MOZ_NATIVE_ZLIB']:
-        CPP_SOURCES += [
+        SOURCES += [
             'dlldeps-zlib.cpp',
         ]
 

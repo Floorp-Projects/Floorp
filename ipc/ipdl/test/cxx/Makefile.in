@@ -2,56 +2,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-IPDLTESTS = \
-  TestActorPunning \
-  TestBridgeMain \
-  TestCrashCleanup \
-  TestDataStructures \
-  TestDesc \
-  TestFailedCtor \
-  TestHangs \
-  TestJSON \
-  TestLatency \
-  TestManyChildAllocs  \
-  TestMultiMgrs  \
-  TestNestedLoops \
-  TestOpens \
-  TestInterruptErrorCleanup \
-  TestInterruptRaces \
-  TestInterruptShutdownRace \
-  TestRPC \
-  TestRaceDeferral \
-  TestRacyReentry  \
-  TestRacyInterruptReplies  \
-  TestRacyUndefer \
-  TestSanity  \
-  TestSelfManageRoot \
-  TestShmem \
-  TestShutdown \
-  TestStackHooks \
-  TestSyncError \
-  TestSyncHang \
-  TestSyncWakeup \
-  TestBadActor \
-  TestUrgency \
-  $(NULL)
+IPDLTESTSRCS = $(filter Test%,$(CPPSRCS))
+IPDLTESTS = $(IPDLTESTSRCS:.cpp=)
 
-ifeq ($(OS_ARCH),Linux)
-IPDLTESTS += TestSysVShmem
-endif
+CPPSRCS += IPDLUnitTests.cpp
 
 EXTRA_PROTOCOLS = \
   TestBridgeSub \
   $(NULL)
 
-IPDLTESTSRCS = $(addsuffix .cpp,$(IPDLTESTS))
 IPDLTESTHDRS = $(addprefix $(srcdir)/,$(addsuffix .h,$(IPDLTESTS)))
 
 TESTER_TEMPLATE := $(srcdir)/IPDLUnitTests.template.cpp
 GENTESTER := $(srcdir)/genIPDLUnitTests.py
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 
 IPDLUNITTEST_BIN = $(DEPTH)/dist/bin/ipdlunittest$(BIN_SUFFIX)

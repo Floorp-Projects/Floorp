@@ -80,8 +80,9 @@
       <div class="project-errors" template='{"type":"textContent","path":"errors"}'></div>
       <div class="project-warnings" template='{"type":"textContent","path":"warnings"}'></div>
     </div>
-    <div class="manifest-editor">
-      <h2>&projects.manifestEditor;</h2>
+    <div class="manifest-editor" template='{"type":"attribute","path":"type","name":"type"}'>
+      <h2 class="editable" title="&projects.manifestEditorTooltip;">&projects.manifestEditor;</h2>
+      <h2 class="viewable" title="&projects.manifestViewerTooltip;">&projects.manifestViewer;</h2>
     </div>
   </div>
   </template>

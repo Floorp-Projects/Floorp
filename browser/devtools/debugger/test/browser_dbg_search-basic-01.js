@@ -26,6 +26,26 @@ function test() {
 }
 
 function performTest() {
+  setText(gSearchBox, "#html");
+  
+  EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, gDebugger);
+  is(gFiltering.searchData.toSource(), '["#", ["", "html"]]',
+    "The searchbox data wasn't parsed correctly.");
+  ok(isCaretPos(gPanel, 35, 7),
+    "The editor didn't jump to the correct line.");
+
+  EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, gDebugger);
+  is(gFiltering.searchData.toSource(), '["#", ["", "html"]]',
+    "The searchbox data wasn't parsed correctly.");
+  ok(isCaretPos(gPanel, 5, 6),
+    "The editor didn't jump to the correct line.");
+
+  EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, gDebugger);
+  is(gFiltering.searchData.toSource(), '["#", ["", "html"]]',
+    "The searchbox data wasn't parsed correctly.");
+  ok(isCaretPos(gPanel, 3, 15),
+    "The editor didn't jump to the correct line.");
+  
   setText(gSearchBox, ":12");
   is(gFiltering.searchData.toSource(), '[":", ["", 12]]',
     "The searchbox data wasn't parsed correctly.");
@@ -109,7 +129,6 @@ function performTest() {
     "The searchbox data wasn't parsed correctly.");
   ok(isCaretPos(gPanel, 26, 11 + token.length),
     "The editor didn't jump to the correct token (6).");
-
 
   setText(gSearchBox, ":bogus#" + token + ";");
   is(gFiltering.searchData.toSource(), '["#", [":bogus", "debugger;"]]',
@@ -263,7 +282,7 @@ function performTest() {
 
 
   gEditor.focus();
-  gEditor.setSelection(1, 5);
+  gEditor.setSelection.apply(gEditor, gEditor.getPosition(1, 5));
   ok(isCaretPos(gPanel, 1, 6),
     "The editor caret position didn't update after selecting some text.");
 
@@ -274,7 +293,7 @@ function performTest() {
     "The search field has the right initial value (1).");
 
   gEditor.focus();
-  gEditor.setSelection(415, 418);
+  gEditor.setSelection.apply(gEditor, gEditor.getPosition(415, 418));
   ok(isCaretPos(gPanel, 21, 30),
     "The editor caret position didn't update after selecting some number.");
 

@@ -15,7 +15,7 @@ LIBRARY_NAME = 'mozqcms'
 
 LIBXUL_LIBRARY = True
 
-CSRCS += [
+SOURCES += [
     'chain.c',
     'iccread.c',
     'matrix.c',

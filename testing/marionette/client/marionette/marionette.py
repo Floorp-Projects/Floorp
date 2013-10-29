@@ -442,7 +442,6 @@ class Marionette(object):
         self.noWindow = noWindow
         self.logcat_dir = logcat_dir
         self._test_name = None
-        self.symbols_path = symbols_path
         self.timeout = timeout
         self.device_serial = device_serial
 
@@ -471,6 +470,7 @@ class Marionette(object):
                                      logcat_dir=self.logcat_dir,
                                      arch=emulator,
                                      sdcard=sdcard,
+                                     symbols_path=symbols_path,
                                      emulatorBinary=emulatorBinary,
                                      userdata=emulatorImg,
                                      res=emulator_res)
@@ -648,7 +648,7 @@ class Marionette(object):
                 name = 'emulator'
                 crashed = True
 
-            if self.symbols_path and self.emulator.check_for_minidumps(self.symbols_path):
+            if self.emulator.check_for_minidumps():
                 crashed = True
         elif self.instance:
             # In the future, a check for crashed Firefox processes
@@ -1190,6 +1190,14 @@ class Marionette(object):
         with open(js_file, 'r') as f:
             js = f.read()
         return self._send_message('importScript', 'ok', script=js)
+
+    def clear_imported_scripts(self):
+        '''
+        Clears all imported scripts in this context, ie: calling clear_imported_scripts in chrome
+        context will clear only scripts you imported in chrome, and will leave the scripts
+        you imported in content context.
+        '''
+        return self._send_message('clearImportedScripts', 'ok')
 
     def add_cookie(self, cookie):
         """

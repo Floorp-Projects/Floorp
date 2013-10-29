@@ -22,7 +22,7 @@ Tests of DOM Worker transferable objects
 
   function test1(sizes) {
     if (!sizes.length) {
-      SimpleTest.finish();
+      runTests();
       return;
     }
 
@@ -32,8 +32,13 @@ Tests of DOM Worker transferable objects
     worker.onmessage = function(event) {
       ok(event.data.status, event.data.event);
       if (!event.data.status) {
-        SimpleTest.finish();
+        runTests();
         return;
+      }
+
+      if ("notEmpty" in event.data && "byteLength" in event.data.notEmpty) {
+        ok(event.data.notEmpty.byteLength != 0,
+           "P: NotEmpty object received: " + event.data.notEmpty.byteLength);
       }
 
       if (!event.data.last)
@@ -60,14 +65,57 @@ Tests of DOM Worker transferable objects
       ok(true, "P: PostMessage - Exception for duplicate");
     }
 
-    ab = new ArrayBuffer(size);
+    var ab = new ArrayBuffer(size);
     ok(ab.byteLength == size, "P: The size is: " + size + " == " + ab.byteLength);
     worker.postMessage({ data: 0, timeout: 0, ab: ab, cb: ab, size: size }, [ab]);
     ok(ab.byteLength == 0, "P: PostMessage - The size is: 0 == " + ab.byteLength)
   }
 
-  test1([1024 * 1024 * 32, 128, 4]);
+  function test2() {
+    var worker = new Worker("transferable_worker.js");
+    worker.onmessage = function(event) {
+      ok(event.data.status, event.data.event);
+      if (!event.data.status) {
+        runTests();
+        return;
+      }
+
+      if ("notEmpty" in event.data && "byteLength" in event.data.notEmpty) {
+        ok(event.data.notEmpty.byteLength != 0,
+           "P: NotEmpty object received: " + event.data.notEmpty.byteLength);
+      }
+
+      if (event.data.last) {
+        runTests();
+      }
+    }
+    worker.onerror = function(event) {
+      ok(false, "No errors!");
+    }
+
+    var f = new Float32Array([0,1,2,3]);
+    ok(f.byteLength != 0, "P: The size is: " + f.byteLength + " is not 0");
+    worker.postMessage({ event: "P: postMessage with Float32Array", status: true,
+                         size: 4, notEmpty: f, bc: [ f, f, { dd: f } ] }, [f.buffer]);
+    ok(f.byteLength == 0, "P: The size is: " + f.byteLength + " is 0");
+  }
+
+  var tests = [
+    function() { test1([1024 * 1024 * 32, 128, 4]); },
+    test2
+  ];
+  function runTests() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
   SimpleTest.waitForExplicitFinish();
+  runTests();
 
 </script>
 </pre>

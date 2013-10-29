@@ -11,8 +11,11 @@ XPIDL_SOURCES += [
     'nsINavHistoryService.idl',
 ]
 
+MODULE = 'places'
+
 if CONFIG['MOZ_PLACES']:
     LIBXUL_LIBRARY = True
+    EXPORT_LIBRARY = True
     MSVC_ENABLE_PGO = True
     LIBRARY_NAME = 'places'
 
@@ -32,27 +35,31 @@ if CONFIG['MOZ_PLACES']:
     ]
 
     EXPORTS.mozilla.places = [
-        'History.h',
         'Database.h',
+        'History.h',
     ]
 
-    CPP_SOURCES += [
+    SOURCES += [
+        'AsyncFaviconHelpers.cpp',
+        'Database.cpp',
+        'Helpers.cpp',
+        'History.cpp',
         'nsAnnoProtocolHandler.cpp',
         'nsAnnotationService.cpp',
         'nsFaviconService.cpp',
+        'nsMaybeWeakPtr.cpp',
+        'nsNavBookmarks.cpp',
         'nsNavHistory.cpp',
         'nsNavHistoryQuery.cpp',
         'nsNavHistoryResult.cpp',
-        'nsNavBookmarks.cpp',
-        'nsMaybeWeakPtr.cpp',
         'nsPlacesModule.cpp',
-        'SQLFunctions.cpp',
-        'Helpers.cpp',
-        'History.cpp',
-        'AsyncFaviconHelpers.cpp',
         'PlaceInfo.cpp',
+        'SQLFunctions.cpp',
         'VisitInfo.cpp',
-        'Database.cpp',
+    ]
+
+    LOCAL_INCLUDES += [
+        '../build',
     ]
 
     EXTRA_JS_MODULES = [
@@ -69,16 +76,12 @@ if CONFIG['MOZ_PLACES']:
         'PlacesUtils.jsm',
     ]
 
-MODULE = 'places'
-
-
-if CONFIG['MOZ_PLACES']:
     EXTRA_COMPONENTS += [
         'ColorAnalyzer.js',
-        'PlacesCategoriesStarter.js',
         'nsLivemarkService.js',
         'nsPlacesExpiration.js',
         'nsTaggingService.js',
+        'PlacesCategoriesStarter.js',
         'toolkitplaces.manifest',
     ]
     if CONFIG['MOZ_XUL']:
@@ -86,3 +89,5 @@ if CONFIG['MOZ_PLACES']:
             'nsPlacesAutoComplete.js',
             'nsPlacesAutoComplete.manifest',
         ]
+include('/ipc/chromium/chromium-config.mozbuild')
+

@@ -18,7 +18,10 @@ const CONTAINER_FLASHING_DURATION = 500;
 const {UndoStack} = require("devtools/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+const {HTMLEditor} = require("devtools/markupview/html-editor");
+const {OutputParser} = require("devtools/output-parser");
 const promise = require("sdk/core/promise");
+const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
@@ -55,6 +58,8 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
   this._frame = aFrame;
   this.doc = this._frame.contentDocument;
   this._elt = this.doc.querySelector("#root");
+  this._outputParser = new OutputParser();
+  this.htmlEditor = new HTMLEditor(this.doc);
 
   this.layoutHelpers = new LayoutHelpers(this.doc.defaultView);
 
@@ -147,6 +152,7 @@ MarkupView.prototype = {
    * Highlight the inspector selected node.
    */
   _onNewSelection: function() {
+    this.htmlEditor.hide();
     let done = this._inspector.updating("markup-view");
     if (this._inspector.selection.isNode()) {
       this.showNode(this._inspector.selection.nodeFront, true).then(() => {
@@ -334,8 +340,8 @@ MarkupView.prototype = {
     }
 
     let node = aContainer.node;
-    this.markNodeAsSelected(node);
-    this._inspector.selection.setNodeFront(node, "treepanel");
+    this.markNodeAsSelected(node, "treepanel");
+
     // This event won't be fired if the node is the same. But the highlighter
     // need to lock the node if it wasn't.
     this._inspector.selection.emit("new-node");
@@ -369,7 +375,7 @@ MarkupView.prototype = {
       this._elt.appendChild(container.elt);
       this._rootNode = aNode;
     } else {
-      var container = new MarkupContainer(this, aNode);
+      var container = new MarkupContainer(this, aNode, this._inspector);
       if (aFlashNode) {
         container.flashMutation();
       }
@@ -388,6 +394,9 @@ MarkupView.prototype = {
    */
   _mutationObserver: function(aMutations) {
     let requiresLayoutChange = false;
+    let reselectParent;
+    let reselectChildIndex;
+
     for (let mutation of aMutations) {
       let type = mutation.type;
       let target = mutation.target;
@@ -416,20 +425,51 @@ MarkupView.prototype = {
           requiresLayoutChange = true;
         }
       } else if (type === "childList") {
+        let isFromOuterHTML = mutation.removed.some((n) => {
+          return n === this._outerHTMLNode;
+        });
+
+        // Keep track of which node should be reselected after mutations.
+        if (isFromOuterHTML) {
+          reselectParent = target;
+          reselectChildIndex = this._outerHTMLChildIndex;
+
+          delete this._outerHTMLNode;
+          delete this._outerHTMLChildIndex;
+        }
+
         container.childrenDirty = true;
-        // Update the children to take care of changes in the DOM
-        // Passing true as the last parameter asks for mutation flashing of the
-        // new nodes
-        this._updateChildren(container, {flash: true});
+        // Update the children to take care of changes in the markup view DOM.
+        this._updateChildren(container, {flash: !isFromOuterHTML});
       }
     }
 
     if (requiresLayoutChange) {
       this._inspector.immediateLayoutChange();
     }
-    this._waitForChildren().then(() => {
+    this._waitForChildren().then((nodes) => {
       this._flashMutatedNodes(aMutations);
-      this._inspector.emit("markupmutation");
+      this._inspector.emit("markupmutation", aMutations);
+
+      // Since the htmlEditor is absolutely positioned, a mutation may change
+      // the location in which it should be shown.
+      this.htmlEditor.refresh();
+
+      // If a node has had its outerHTML set, the parent node will be selected.
+      // Reselect the original node immediately.
+      if (this._inspector.selection.nodeFront === reselectParent) {
+        this.walker.children(reselectParent).then((o) => {
+          let node = o.nodes[reselectChildIndex];
+          let container = this._containers.get(node);
+          if (node && container) {
+            this.markNodeAsSelected(node, "outerhtml");
+            if (container.hasChildren) {
+              this.expandNode(node);
+            }
+          }
+        });
+
+      }
     });
   },
 
@@ -549,6 +589,94 @@ MarkupView.prototype = {
     container.expanded = false;
   },
 
+  /**
+   * Retrieve the outerHTML for a remote node.
+   * @param aNode The NodeFront to get the outerHTML for.
+   * @returns A promise that will be resolved with the outerHTML.
+   */
+  getNodeOuterHTML: function(aNode) {
+    let def = promise.defer();
+    this.walker.outerHTML(aNode).then(longstr => {
+      longstr.string().then(outerHTML => {
+        longstr.release().then(null, console.error);
+        def.resolve(outerHTML);
+      });
+    });
+    return def.promise;
+  },
+
+  /**
+   * Retrieve the index of a child within its parent's children list.
+   * @param aNode The NodeFront to find the index of.
+   * @returns A promise that will be resolved with the integer index.
+   *          If the child cannot be found, returns -1
+   */
+  getNodeChildIndex: function(aNode) {
+    let def = promise.defer();
+    let parentNode = aNode.parentNode();
+
+    // Node may have been removed from the DOM, instead of throwing an error,
+    // return -1 indicating that it isn't inside of its parent children list.
+    if (!parentNode) {
+      def.resolve(-1);
+    } else {
+      this.walker.children(parentNode).then(children => {
+        def.resolve(children.nodes.indexOf(aNode));
+      });
+    }
+
+    return def.promise;
+  },
+
+  /**
+   * Retrieve the index of a child within its parent's children collection.
+   * @param aNode The NodeFront to find the index of.
+   * @param newValue The new outerHTML to set on the node.
+   * @param oldValue The old outerHTML that will be reverted to find the index of.
+   * @returns A promise that will be resolved with the integer index.
+   *          If the child cannot be found, returns -1
+   */
+  updateNodeOuterHTML: function(aNode, newValue, oldValue) {
+    let container = this._containers.get(aNode);
+    if (!container) {
+      return;
+    }
+
+    this.getNodeChildIndex(aNode).then((i) => {
+      this._outerHTMLChildIndex = i;
+      this._outerHTMLNode = aNode;
+
+      container.undo.do(() => {
+        this.walker.setOuterHTML(aNode, newValue);
+      }, () => {
+        this.walker.setOuterHTML(aNode, oldValue);
+      });
+    });
+  },
+
+  /**
+   * Open an editor in the UI to allow editing of a node's outerHTML.
+   * @param aNode The NodeFront to edit.
+   */
+  beginEditingOuterHTML: function(aNode) {
+    this.getNodeOuterHTML(aNode).then((oldValue)=> {
+      let container = this._containers.get(aNode);
+      if (!container) {
+        return;
+      }
+      this.htmlEditor.show(container.tagLine, oldValue);
+      this.htmlEditor.once("popup-hidden", (e, aCommit, aValue) => {
+        if (aCommit) {
+          this.updateNodeOuterHTML(aNode, aValue, oldValue);
+        }
+      });
+    });
+  },
+
+  /**
+   * Mark the given node expanded.
+   * @param aNode The NodeFront to mark as expanded.
+   */
   setNodeExpanded: function(aNode, aExpanded) {
     if (aExpanded) {
       this.expandNode(aNode);
@@ -558,9 +686,11 @@ MarkupView.prototype = {
   },
 
   /**
-   * Mark the given node selected.
+   * Mark the given node selected, and update the inspector.selection
+   * object's NodeFront to keep consistent state between UI and selection.
+   * @param aNode The NodeFront to mark as selected.
    */
-  markNodeAsSelected: function(aNode) {
+  markNodeAsSelected: function(aNode, reason) {
     let container = this._containers.get(aNode);
     if (this._selectedContainer === container) {
       return false;
@@ -573,6 +703,7 @@ MarkupView.prototype = {
       this._selectedContainer.selected = true;
     }
 
+    this._inspector.selection.setNodeFront(aNode, reason || "nodeselected");
     return true;
   },
 
@@ -777,6 +908,9 @@ MarkupView.prototype = {
   destroy: function() {
     gDevTools.off("pref-changed", this._handlePrefChange);
 
+    this.htmlEditor.destroy();
+    delete this.htmlEditor;
+
     this.undo.destroy();
     delete this.undo;
 
@@ -785,6 +919,8 @@ MarkupView.prototype = {
 
     this._frame.removeEventListener("focus", this._boundFocus, false);
     delete this._boundFocus;
+
+    delete this._outputParser;
 
     if (this._boundUpdatePreview) {
       this._frame.contentWindow.removeEventListener("scroll",
@@ -911,12 +1047,15 @@ MarkupView.prototype = {
  *        The markup view that owns this container.
  * @param DOMNode aNode
  *        The node to display.
+ * @param Inspector aInspector
+ *        The inspector tool container the markup-view
  */
-function MarkupContainer(aMarkupView, aNode) {
+function MarkupContainer(aMarkupView, aNode, aInspector) {
   this.markup = aMarkupView;
   this.doc = this.markup.doc;
   this.undo = this.markup.undo;
   this.node = aNode;
+  this._inspector = aInspector;
 
   if (aNode.nodeType == Ci.nsIDOMNode.TEXT_NODE) {
     this.editor = new TextEditor(this, aNode, "text");
@@ -959,11 +1098,47 @@ function MarkupContainer(aMarkupView, aNode) {
 
   this._onMouseDown = this._onMouseDown.bind(this);
   this.elt.addEventListener("mousedown", this._onMouseDown, false);
+
+  this.tooltip = null;
+  this._attachTooltipIfNeeded();
 }
 
 MarkupContainer.prototype = {
   toString: function() {
     return "[MarkupContainer for " + this.node + "]";
+  },
+
+  _attachTooltipIfNeeded: function() {
+    if (this.node.tagName) {
+      let tagName = this.node.tagName.toLowerCase();
+      let isImage = tagName === "img" &&
+        this.editor.getAttributeElement("src");
+      let isCanvas = tagName && tagName === "canvas";
+
+      // Get the image data for later so that when the user actually hovers over
+      // the element, the tooltip does contain the image
+      if (isImage || isCanvas) {
+        this.tooltip = new Tooltip(this._inspector.panelDoc);
+
+        this.node.getImageData().then(data => {
+          if (data) {
+            data.string().then(str => {
+              this.tooltip.setImageContent(str);
+            });
+          }
+        });
+      }
+
+      // If it's an image, show the tooltip on the src attribute
+      if (isImage) {
+        this.tooltip.startTogglingOnHover(this.editor.getAttributeElement("src"));
+      }
+
+      // If it's a canvas, show it on the tag
+      if (isCanvas) {
+        this.tooltip.startTogglingOnHover(this.editor.tag);
+      }
+    }
   },
 
   /**
@@ -1200,6 +1375,12 @@ MarkupContainer.prototype = {
 
     // Destroy my editor
     this.editor.destroy();
+
+    // Destroy the tooltip if any
+    if (this.tooltip) {
+      this.tooltip.destroy();
+      this.tooltip = null;
+    }
   }
 };
 
@@ -1213,7 +1394,7 @@ function RootContainer(aMarkupView, aNode) {
   this.elt.container = this;
   this.children = this.elt;
   this.node = aNode;
-  this.toString = function() { return "[root container]"}
+  this.toString = () => "[root container]";
 }
 
 RootContainer.prototype = {
@@ -1443,6 +1624,16 @@ ElementEditor.prototype = {
     return this.node.startModifyingAttributes();
   },
 
+  /**
+   * Get the element used for one of the attributes of this element
+   * @param string attrName The name of the attribute to get the element for
+   * @return DOMElement
+   */
+  getAttributeElement: function(attrName) {
+    return this.attrList.querySelector(
+      ".attreditor[data-attr=" + attrName + "] .attr-value");
+  },
+
   _createAttribute: function(aAttr, aBefore = null) {
     // Create the template editor, which will save some variables here.
     let data = {
@@ -1537,18 +1728,88 @@ ElementEditor.prototype = {
 
     this.attrs[aAttr.name] = attr;
 
-    let collapsedValue;
-    if (aAttr.value.match(COLLAPSE_DATA_URL_REGEX)) {
-      collapsedValue = truncateString(aAttr.value, COLLAPSE_DATA_URL_LENGTH);
-    }
-    else {
-      collapsedValue = truncateString(aAttr.value, COLLAPSE_ATTRIBUTE_LENGTH);
-    }
-
     name.textContent = aAttr.name;
-    val.textContent = collapsedValue;
+
+    if (typeof aAttr.value !== "undefined") {
+      let outputParser = this.markup._outputParser;
+      let frag = outputParser.parseHTMLAttribute(aAttr.value);
+      frag = this._truncateFrag(frag);
+      val.appendChild(frag);
+    }
 
     return attr;
+  },
+
+  /**
+   * We truncate HTML attributes to a text length defined by
+   * COLLAPSE_DATA_URL_LENGTH and COLLAPSE_ATTRIBUTE_LENGTH. Because we parse
+   * text into document fragments we need to process each fragment and truncate
+   * according to the fragment's textContent length.
+   *
+   * @param  {DocumentFragment} frag
+   *         The fragment to truncate.
+   * @return {[DocumentFragment]}
+   *         Truncated fragment.
+   */
+  _truncateFrag: function(frag) {
+    let chars = 0;
+    let text = frag.textContent;
+    let maxWidth = text.match(COLLAPSE_DATA_URL_REGEX) ?
+                            COLLAPSE_DATA_URL_LENGTH : COLLAPSE_ATTRIBUTE_LENGTH;
+    let overBy = text.length - maxWidth;
+    let children = frag.childNodes;
+    let croppedNode = null;
+
+    if (overBy <= 0) {
+      return frag;
+    }
+
+    // For fragments containing only one single node we just need to truncate
+    // frag.textContent.
+    if (children.length === 1) {
+      let length = text.length;
+      let start = text.substr(0, maxWidth / 2);
+      let end = text.substr(length - maxWidth / 2, length - 1);
+
+      frag.textContent = start + "…" + end;
+      return frag;
+    }
+
+    // First maxWidth / 2 chars plus &hellip;
+    for (let i = 0; i < children.length; i++) {
+      let node = children[i];
+      let text = node.textContent;
+
+      let numChars = text.length;
+      if (chars + numChars > maxWidth / 2) {
+        node.textContent = text.substr(0, chars + numChars - maxWidth / 2) + "…";
+        croppedNode = node;
+        break;
+      } else {
+        chars += numChars;
+      }
+    }
+
+    // Last maxWidth / two chars.
+    chars = 0;
+    for (let i = children.length - 1; i >= 0; i--) {
+      let node = children[i];
+      let text = node.textContent;
+
+      let numChars = text.length;
+      if (chars + numChars > maxWidth / 2) {
+        if (node !== croppedNode) {
+          node.parentNode.removeChild(node);
+          chars += numChars;
+        } else {
+          break;
+        }
+      } else {
+        chars += numChars;
+      }
+    }
+
+    return frag;
   },
 
   /**

@@ -9,7 +9,8 @@ let prefs = {
   ],
   "css": [
     "csserror",
-    "cssparser"
+    "cssparser",
+    "csslog"
   ],
   "js": [
     "exception",

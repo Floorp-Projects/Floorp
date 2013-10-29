@@ -7,17 +7,17 @@
 NO_DIST_INSTALL = True
 DIRS += ['inject']
 
-CSRCS += [
+SOURCES += [
     'test-array.c',
     'test-ctors.c',
 ]
 
 if not CONFIG['CROSS_COMPILE']:
-    CSRCS += [
+    SOURCES += [
         'dummy.c',
     ]
 
-HOST_CPPSRCS += [
+HOST_SOURCES += [
     'elf.cpp',
     'elfhack.cpp',
 ]

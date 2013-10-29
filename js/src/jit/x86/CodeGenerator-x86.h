@@ -15,6 +15,7 @@ namespace jit {
 
 class OutOfLineLoadTypedArrayOutOfBounds;
 class OutOfLineTruncate;
+class OutOfLineTruncateFloat32;
 
 class CodeGeneratorX86 : public CodeGeneratorX86Shared
 {
@@ -51,7 +52,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitBoxFloatingPoint(LBoxFloatingPoint *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
-    bool visitOsrValue(LOsrValue *value);
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
     bool visitStoreSlotT(LStoreSlotT *store);
@@ -63,7 +63,9 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitCompareV(LCompareV *lir);
     bool visitCompareVAndBranch(LCompareVAndBranch *lir);
     bool visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir);
+    bool visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir);
     bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
+    bool visitTruncateFToInt32(LTruncateFToInt32 *ins);
     bool visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins);
     bool visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins);
     bool visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
@@ -75,6 +77,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
     bool visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool);
     bool visitOutOfLineTruncate(OutOfLineTruncate *ool);
+    bool visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool);
 
     void postAsmJSCall(LAsmJSCall *lir);
 };

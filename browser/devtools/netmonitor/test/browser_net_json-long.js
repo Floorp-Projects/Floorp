@@ -13,7 +13,7 @@ function test() {
     // in a variables view instance. Debug builds are slow.
     requestLongerTimeout(4);
 
-    let { document, L10N, SourceEditor, NetMonitorView } = aMonitor.panelWin;
+    let { document, L10N, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;

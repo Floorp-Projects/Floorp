@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "jscntxt.h"
+#include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsiter.h"
 #include "jsproxy.h"
@@ -18,7 +19,7 @@
 
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "jit/IonCompartment.h"
+#include "jit/JitCompartment.h"
 #endif
 #include "js/RootingAPI.h"
 #include "vm/StopIterationObject.h"
@@ -67,7 +68,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     enumerators(nullptr),
     compartmentStats(nullptr)
 #ifdef JS_ION
-    , ionCompartment_(nullptr)
+    , jitCompartment_(nullptr)
 #endif
 {
     runtime_->numCompartments++;
@@ -76,7 +77,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
 JSCompartment::~JSCompartment()
 {
 #ifdef JS_ION
-    js_delete(ionCompartment_);
+    js_delete(jitCompartment_);
 #endif
 
     js_delete(watchpointMap);
@@ -119,57 +120,59 @@ JSCompartment::init(JSContext *cx)
 }
 
 #ifdef JS_ION
-jit::IonRuntime *
-JSRuntime::createIonRuntime(JSContext *cx)
+jit::JitRuntime *
+JSRuntime::createJitRuntime(JSContext *cx)
 {
     // The runtime will only be created on its owning thread, but reads of a
-    // runtime's ionRuntime() can occur when another thread is triggering an
+    // runtime's jitRuntime() can occur when another thread is triggering an
     // operation callback.
     AutoLockForOperationCallback lock(this);
 
-    JS_ASSERT(!ionRuntime_);
+    JS_ASSERT(!jitRuntime_);
 
-    ionRuntime_ = cx->new_<jit::IonRuntime>();
+    jitRuntime_ = cx->new_<jit::JitRuntime>();
 
-    if (!ionRuntime_)
+    if (!jitRuntime_)
         return nullptr;
 
-    if (!ionRuntime_->initialize(cx)) {
-        js_delete(ionRuntime_);
-        ionRuntime_ = nullptr;
+    if (!jitRuntime_->initialize(cx)) {
+        js_delete(jitRuntime_);
+        jitRuntime_ = nullptr;
+
+        AutoLockForExclusiveAccess atomsLock(cx);
 
         JSCompartment *comp = cx->runtime()->atomsCompartment();
-        if (comp->ionCompartment_) {
-            js_delete(comp->ionCompartment_);
-            comp->ionCompartment_ = nullptr;
+        if (comp->jitCompartment_) {
+            js_delete(comp->jitCompartment_);
+            comp->jitCompartment_ = nullptr;
         }
 
         return nullptr;
     }
 
-    return ionRuntime_;
+    return jitRuntime_;
 }
 
 bool
-JSCompartment::ensureIonCompartmentExists(JSContext *cx)
+JSCompartment::ensureJitCompartmentExists(JSContext *cx)
 {
     using namespace js::jit;
-    if (ionCompartment_)
+    if (jitCompartment_)
         return true;
 
-    IonRuntime *ionRuntime = cx->runtime()->getIonRuntime(cx);
-    if (!ionRuntime)
+    JitRuntime *jitRuntime = cx->runtime()->getJitRuntime(cx);
+    if (!jitRuntime)
         return false;
 
     /* Set the compartment early, so linking works. */
-    ionCompartment_ = cx->new_<IonCompartment>(ionRuntime);
+    jitCompartment_ = cx->new_<JitCompartment>(jitRuntime);
 
-    if (!ionCompartment_)
+    if (!jitCompartment_)
         return false;
 
-    if (!ionCompartment_->initialize(cx)) {
-        js_delete(ionCompartment_);
-        ionCompartment_ = nullptr;
+    if (!jitCompartment_->initialize(cx)) {
+        js_delete(jitCompartment_);
+        jitCompartment_ = nullptr;
         return false;
     }
 
@@ -485,8 +488,8 @@ JSCompartment::mark(JSTracer *trc)
     JS_ASSERT(!trc->runtime->isHeapMinorCollecting());
 
 #ifdef JS_ION
-    if (ionCompartment_)
-        ionCompartment_->mark(trc, this);
+    if (jitCompartment_)
+        jitCompartment_->mark(trc, this);
 #endif
 
     /*
@@ -522,8 +525,8 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
             global_ = nullptr;
 
 #ifdef JS_ION
-        if (ionCompartment_)
-            ionCompartment_->sweep(fop);
+        if (jitCompartment_)
+            jitCompartment_->sweep(fop);
 #endif
 
         /*
@@ -604,7 +607,7 @@ JSCompartment::clearTables()
     JS_ASSERT(crossCompartmentWrappers.empty());
     JS_ASSERT_IF(callsiteClones.initialized(), callsiteClones.empty());
 #ifdef JS_ION
-    JS_ASSERT(!ionCompartment_);
+    JS_ASSERT(!jitCompartment_);
 #endif
     JS_ASSERT(!debugScopes);
     JS_ASSERT(!gcWeakMapList);
@@ -618,6 +621,24 @@ JSCompartment::clearTables()
         newTypeObjects.clear();
     if (lazyTypeObjects.initialized())
         lazyTypeObjects.clear();
+}
+
+void
+JSCompartment::setObjectMetadataCallback(js::ObjectMetadataCallback callback)
+{
+    // Clear any jitcode in the runtime, which behaves differently depending on
+    // whether there is a creation callback.
+    ReleaseAllJITCode(runtime_->defaultFreeOp());
+
+    // Turn off GGC while the metadata hook is present, to prevent
+    // nursery-allocated metadata from being used as a lookup key in
+    // InitialShapeTable entries.
+    if (callback)
+        JS::DisableGenerationalGC(runtime_);
+    else
+        JS::EnableGenerationalGC(runtime_);
+
+    objectMetadataCallback = callback;
 }
 
 bool
@@ -876,9 +897,9 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *regexpCompartment += regExps.sizeOfExcludingThis(mallocSizeOf);
     *debuggeesSet += debuggees.sizeOfExcludingThis(mallocSizeOf);
 #ifdef JS_ION
-    if (ionCompartment()) {
+    if (jitCompartment()) {
         *baselineStubsOptimized +=
-            ionCompartment()->optimizedStubSpace()->sizeOfExcludingThis(mallocSizeOf);
+            jitCompartment()->optimizedStubSpace()->sizeOfExcludingThis(mallocSizeOf);
     }
 #endif
 }

@@ -12,7 +12,7 @@ sources = [
     'OCSPStaplingServer',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     '%s.cpp' % s for s in sources
 ]
 

@@ -9,11 +9,11 @@ if CONFIG['OS_ARCH'] in ('Darwin', 'Linux'):
 
 MODULE = 'breakpad_common'
 
-CSRCS += [
+SOURCES += [
     'convert_UTF.c',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'logging.cc',
     'module.cc',
     'pathname_stripper.cc',
@@ -22,21 +22,21 @@ CPP_SOURCES += [
 ]
 
 if CONFIG['OS_TARGET'] != 'WINNT':
-    CPP_SOURCES += [
-        'md5.cc',
-        'dwarf/bytereader.cc',
-        'dwarf_cfi_to_module.cc',
-        'dwarf/dwarf2reader.cc',
-        'dwarf_cu_to_module.cc',
-        'language.cc',
-        'dwarf/dwarf2diehandler.cc',
-        'dwarf_line_to_module.cc',
+    SOURCES += [
         'arm_ex_reader.cc',
         'arm_ex_to_module.cc',
+        'dwarf/bytereader.cc',
+        'dwarf/dwarf2diehandler.cc',
+        'dwarf/dwarf2reader.cc',
+        'dwarf_cfi_to_module.cc',
+        'dwarf_cu_to_module.cc',
+        'dwarf_line_to_module.cc',
+        'language.cc',
+        'md5.cc',
     ]
 
 if CONFIG['OS_ARCH'] == 'Linux':
-    CPP_SOURCES += [
+    SOURCES += [
         'linux/dump_symbols.cc',
         'linux/elf_symbols_to_module.cc',
     ]
@@ -45,15 +45,15 @@ if CONFIG['OS_TARGET'] == 'Android':
     pass
 else:
     if CONFIG['OS_TARGET'] != 'WINNT':
-        CPP_SOURCES += [
-            'stabs_to_module.cc',
+        SOURCES += [
             'stabs_reader.cc',
+            'stabs_to_module.cc',
         ]
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_CRASHREPORTER']:
-    HOST_CSRCS += CSRCS
+    HOST_SOURCES += [ 'convert_UTF.c' ]
     HOST_LIBRARY_NAME = 'host_breakpad_common_s'
-    HOST_CPPSRCS += [
+    HOST_SOURCES += [
         'arm_ex_reader.cc',
         'arm_ex_to_module.cc',
         'dwarf_cfi_to_module.cc',
@@ -71,16 +71,18 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_CRASHREPORTER']:
     ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':
-    CMMSRCS += [
+    SOURCES += [
         'mac/dump_syms.mm',
     ]
 
 if CONFIG['OS_TARGET'] == 'Android':
-    SSRCS += [
-        'breakpad_getcontext.S',
+    SOURCES += [
+        'android/breakpad_getcontext.S',
     ]
 
 LIBRARY_NAME = 'breakpad_common_s'
 
 MSVC_ENABLE_PGO = True
 
+# need static lib
+FORCE_STATIC_LIB = True

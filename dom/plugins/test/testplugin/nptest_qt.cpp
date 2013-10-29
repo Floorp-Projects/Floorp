@@ -74,8 +74,8 @@ pluginInstanceInit(InstanceData* instanceData)
     return NPERR_OUT_OF_MEMORY_ERROR;
   }
 
-  instanceData->platformData->display = NULL;
-  instanceData->platformData->visual = NULL;
+  instanceData->platformData->display = nullptr;
+  instanceData->platformData->visual = nullptr;
   instanceData->platformData->colormap = None;
 
   return NPERR_NO_ERROR;

@@ -8,12 +8,13 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
 
     LIBXUL_LIBRARY = True
+    EXPORT_LIBRARY = True
 
     MODULE = 'profiler'
     LIBRARY_NAME = 'profiler'
     XPIDL_SOURCES += [
-        'nsIProfileSaveEvent.idl',
         'nsIProfiler.idl',
+        'nsIProfileSaveEvent.idl',
     ]
     EXPORTS += [
         'GeckoProfilerFunc.h',
@@ -25,48 +26,63 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     EXTRA_JS_MODULES = [
         'Profiler.jsm',
     ]
-    CPP_SOURCES += [
-        'platform.cpp',
-        'nsProfilerFactory.cpp',
-        'nsProfiler.cpp',
-        'TableTicker.cpp',
-        'SaveProfileTask.cpp',
+    SOURCES += [
         'BreakpadSampler.cpp',
-        'UnwinderThread2.cpp',
-        'ProfileEntry.cpp',
-        'local_debug_info_symbolizer.cc',
-        'JSObjectBuilder.cpp',
-        'JSCustomObjectBuilder.cpp',
         'IOInterposer.cpp',
+        'JSCustomObjectBuilder.cpp',
+        'JSObjectBuilder.cpp',
+        'local_debug_info_symbolizer.cc',
         'NSPRInterposer.cpp',
+        'nsProfiler.cpp',
+        'nsProfilerFactory.cpp',
+        'platform.cpp',
+        'ProfileEntry.cpp',
         'ProfilerBacktrace.cpp',
         'ProfilerIOInterposeObserver.cpp',
         'ProfilerMarkers.cpp',
+        'SaveProfileTask.cpp',
         'SyncProfile.cpp',
+        'TableTicker.cpp',
+        'UnwinderThread2.cpp',
     ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
-        CPP_SOURCES += [
-            'shared-libraries-linux.cc',
+        SOURCES += [
             'platform-linux.cc',
+            'shared-libraries-linux.cc',
         ]
         if CONFIG['CPU_ARCH'] == 'arm':
-            CPP_SOURCES += [
+            SOURCES += [
                 'EHABIStackWalk.cpp',
             ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
-        CPP_SOURCES += [
-            'shared-libraries-macos.cc',
+        SOURCES += [
             'platform-macos.cc',
+            'shared-libraries-macos.cc',
         ]
-        CMMSRCS += [
+        SOURCES += [
             'shim_mac_dump_syms.mm',
         ]
     elif CONFIG['OS_TARGET'] == 'WINNT':
-        CPP_SOURCES += [
-            'shared-libraries-win32.cc',
+        SOURCES += [
             'platform-win32.cc',
+            'shared-libraries-win32.cc',
         ]
+
+    LOCAL_INCLUDES += [
+        '/ipc/chromium/src',
+        '/mozglue/linker',
+        '/toolkit/crashreporter/google-breakpad/src',
+    ]
+
+    # We need access to Breakpad's getcontext(3) which is suitable for Android
+    if CONFIG['OS_TARGET'] == 'Android':
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+        ]
+
+    if CONFIG['ANDROID_CPU_ARCH'] == 'armeabi':
+        DEFINES['ARCH_ARMV6'] = True
 
 EXPORTS += [
     'GeckoProfiler.h',

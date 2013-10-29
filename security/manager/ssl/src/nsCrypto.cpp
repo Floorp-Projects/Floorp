@@ -1849,7 +1849,7 @@ loser:
 static nsISupports *
 GetISupportsFromContext(JSContext *cx)
 {
-    if (JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+    if (JS::ContextOptionsRef(cx).privateIsNSISupports())
         return static_cast<nsISupports *>(JS_GetContextPrivate(cx));
 
     return nullptr;
@@ -2307,8 +2307,8 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
     //certificates.  Let's keep an array of them around which
     //we pass along to the nsP12Runnable to use.
     certArr = new nsIX509Cert*[numResponses];
-    // If this is NULL, chances are we're gonna fail really soon,
-    // but let's try to keep going just in case.
+    // If this is nullptr, chances are we're gonna fail really
+    // soon, but let's try to keep going just in case.
     if (!certArr)
       aDoForcedBackup = false;
 
@@ -2351,7 +2351,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
       localNick = currCert->nickname;
     }
     else if (!nickname || nickname[0] == '\0') {
-      nsNSSCertificateDB::get_default_nickname(currCert, ctx, localNick);
+      nsNSSCertificateDB::get_default_nickname(currCert, ctx, localNick, locker);
     } else {
       //This is the case where we're getting a brand new
       //cert that doesn't have the same subjectName as a cert
@@ -2407,7 +2407,7 @@ nsCrypto::ImportUserCertificates(const nsAString& aNickname,
            node = CERT_LIST_NEXT(node), i++) {
         derCerts[i] = node->cert->derCert;
       }
-      nsNSSCertificateDB::ImportValidCACerts(numCAs, derCerts, ctx);
+      nsNSSCertificateDB::ImportValidCACerts(numCAs, derCerts, ctx, locker);
       nsMemory::Free(derCerts);
     }
   }

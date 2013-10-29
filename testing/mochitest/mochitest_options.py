@@ -320,6 +320,12 @@ class MochitestOptions(optparse.OptionParser):
           "metavar": "PREF=VALUE",
           "help": "defines an extra user preference",
         }],
+        [["--jsdebugger"],
+        { "action": "store_true",
+          "default": False,
+          "dest": "jsdebugger",
+          "help": "open the browser debugger",
+        }],
     ]
 
     def __init__(self, **kwargs):
@@ -412,6 +418,15 @@ class MochitestOptions(optparse.OptionParser):
 
         if options.webapprtContent and options.webapprtChrome:
             self.error("Only one of --webapprt-content and --webapprt-chrome may be given.")
+
+        if options.jsdebugger:
+            options.extraPrefs += [
+                "devtools.debugger.remote-enabled=true",
+                "devtools.debugger.chrome-enabled=true",
+                "devtools.chrome.enabled=true",
+                "devtools.debugger.prompt-connection=false"
+            ]
+            options.autorun = False
 
         # Try to guess the testing modules directory.
         # This somewhat grotesque hack allows the buildbot machines to find the

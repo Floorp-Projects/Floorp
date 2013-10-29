@@ -451,10 +451,10 @@ HTMLTableAccessible::NativeAttributes()
 // HTMLTableAccessible: nsIAccessible implementation
 
 Relation
-HTMLTableAccessible::RelationByType(uint32_t aType)
+HTMLTableAccessible::RelationByType(RelationType aType)
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
-  if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
+  if (aType == RelationType::LABELLED_BY)
     rel.AppendTarget(Caption());
 
   return rel;
@@ -1118,10 +1118,10 @@ HTMLTableAccessible::IsProbablyLayoutTable()
 ////////////////////////////////////////////////////////////////////////////////
 
 Relation
-HTMLCaptionAccessible::RelationByType(uint32_t aType)
+HTMLCaptionAccessible::RelationByType(RelationType aType)
 {
   Relation rel = HyperTextAccessible::RelationByType(aType);
-  if (aType == nsIAccessibleRelation::RELATION_LABEL_FOR)
+  if (aType == RelationType::LABEL_FOR)
     rel.AppendTarget(Parent());
 
   return rel;

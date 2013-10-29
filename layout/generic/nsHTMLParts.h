@@ -168,6 +168,8 @@ NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewFileControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
+NS_NewColorControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame*
 NS_NewLegendFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);

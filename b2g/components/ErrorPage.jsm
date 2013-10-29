@@ -157,8 +157,12 @@ let ErrorPage = {
   observe: function errorPageObserve(aSubject, aTopic, aData) {
     let frameLoader = aSubject.QueryInterface(Ci.nsIFrameLoader);
     let mm = frameLoader.messageManager;
+
+    // This won't happen from dom/ipc/preload.js in non-OOP builds.
     try {
-      mm.loadFrameScript(kErrorPageFrameScript, true);
+      if (Services.prefs.getBoolPref("dom.ipc.tabs.disabled") === true) {
+        mm.loadFrameScript(kErrorPageFrameScript, true);
+      }
     } catch (e) {
       dump('Error loading ' + kErrorPageFrameScript + ' as frame script: ' + e + '\n');
     }

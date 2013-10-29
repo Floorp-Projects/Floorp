@@ -27,7 +27,25 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::DoublesAreIdentical;
+using mozilla::IsFloat32Representable;
 using mozilla::Maybe;
+
+template<size_t Op> static void
+ConvertDefinitionToDouble(MDefinition *def, MInstruction *consumer)
+{
+    MInstruction *replace = MToDouble::New(def);
+    consumer->replaceOperand(Op, replace);
+    consumer->block()->insertBefore(consumer, replace);
+}
+
+static bool
+CheckUsesAreFloat32Consumers(MInstruction *ins)
+{
+    bool allConsumerUses = true;
+    for (MUseDefIterator use(ins); allConsumerUses && use; use++)
+        allConsumerUses &= use.def()->canConsumeFloat32();
+    return allConsumerUses;
+}
 
 void
 MDefinition::PrintOpcodeName(FILE *fp, MDefinition::Opcode op)
@@ -400,6 +418,14 @@ MConstant::New(const Value &v)
     return new MConstant(v);
 }
 
+MConstant *
+MConstant::NewAsmJS(const Value &v, MIRType type)
+{
+    MConstant *constant = new MConstant(v);
+    constant->setResultType(type);
+    return constant;
+}
+
 types::TemporaryTypeSet *
 jit::MakeSingletonTypeSet(JSObject *obj)
 {
@@ -491,15 +517,6 @@ MConstant::printOpcode(FILE *fp) const
       default:
         MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
-}
-
-// Needs a static function to avoid overzealous optimizations by certain compilers (MSVC).
-static bool
-IsFloat32Representable(double x)
-{
-    float asFloat = static_cast<float>(x);
-    double floatAsDouble = static_cast<double>(asFloat);
-    return floatAsDouble == x;
 }
 
 bool
@@ -650,6 +667,22 @@ MStringLength::foldsTo(bool useValueNumbers)
     return this;
 }
 
+void
+MFloor::trySpecializeFloat32()
+{
+    // No need to look at the output, as it's an integer (see IonBuilder::inlineMathFloor)
+    if (!input()->canProduceFloat32()) {
+        if (input()->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(input(), this);
+        return;
+    }
+
+    if (type() == MIRType_Double)
+        setResultType(MIRType_Float32);
+
+    setPolicyType(MIRType_Float32);
+}
+
 MTest *
 MTest::New(MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
 {
@@ -666,7 +699,7 @@ MCompare *
 MCompare::NewAsmJS(MDefinition *left, MDefinition *right, JSOp op, CompareType compareType)
 {
     JS_ASSERT(compareType == Compare_Int32 || compareType == Compare_UInt32 ||
-              compareType == Compare_Double);
+              compareType == Compare_Double || compareType == Compare_Float32);
     MCompare *comp = new MCompare(left, right, op);
     comp->compareType_ = compareType;
     comp->operandMightEmulateUndefined_ = false;
@@ -1236,23 +1269,6 @@ MBinaryArithInstruction::foldsTo(bool useValueNumbers)
     return this;
 }
 
-template<size_t Op> static void
-ConvertDefinitionToDouble(MDefinition *def, MInstruction *consumer)
-{
-    MInstruction *replace = MToDouble::New(def);
-    consumer->replaceOperand(Op, replace);
-    consumer->block()->insertBefore(consumer, replace);
-}
-
-static bool
-CheckUsesAreFloat32Consumers(MInstruction *ins)
-{
-    bool allConsumerUses = true;
-    for (MUseDefIterator use(ins); allConsumerUses && use; use++)
-        allConsumerUses &= use.def()->canConsumeFloat32();
-    return allConsumerUses;
-}
-
 void
 MBinaryArithInstruction::trySpecializeFloat32()
 {
@@ -1277,6 +1293,19 @@ bool
 MAbs::fallible() const
 {
     return !implicitTruncate_ && (!range() || !range()->hasInt32Bounds());
+}
+
+void
+MAbs::trySpecializeFloat32()
+{
+    if (!input()->canProduceFloat32() || !CheckUsesAreFloat32Consumers(this)) {
+        if (input()->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(input(), this);
+        return;
+    }
+
+    setResultType(MIRType_Float32);
+    specialization_ = MIRType_Float32;
 }
 
 MDefinition *
@@ -1680,6 +1709,8 @@ MCompare::inputType()
       case Compare_DoubleMaybeCoerceLHS:
       case Compare_DoubleMaybeCoerceRHS:
         return MIRType_Double;
+      case Compare_Float32:
+        return MIRType_Float32;
       case Compare_String:
       case Compare_StrictString:
         return MIRType_String;
@@ -2206,6 +2237,7 @@ MCompare::tryFold(bool *result)
             /* FALL THROUGH */
           case MIRType_Int32:
           case MIRType_Double:
+          case MIRType_Float32:
           case MIRType_String:
           case MIRType_Boolean:
             *result = (op == JSOP_NE || op == JSOP_STRICTNE);
@@ -2224,6 +2256,7 @@ MCompare::tryFold(bool *result)
             return false;
           case MIRType_Int32:
           case MIRType_Double:
+          case MIRType_Float32:
           case MIRType_String:
           case MIRType_Object:
           case MIRType_Null:
@@ -2248,6 +2281,7 @@ MCompare::tryFold(bool *result)
           case MIRType_Boolean:
           case MIRType_Int32:
           case MIRType_Double:
+          case MIRType_Float32:
           case MIRType_Object:
           case MIRType_Null:
           case MIRType_Undefined:
@@ -2393,6 +2427,25 @@ MCompare::foldsTo(bool useValueNumbers)
 }
 
 void
+MCompare::trySpecializeFloat32()
+{
+    MDefinition *lhs = getOperand(0);
+    MDefinition *rhs = getOperand(1);
+
+    if (compareType_ == Compare_Float32)
+        return;
+
+    if (lhs->canProduceFloat32() && rhs->canProduceFloat32() && compareType_ == Compare_Double) {
+        compareType_ = Compare_Float32;
+    } else {
+        if (lhs->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(lhs, this);
+        if (rhs->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<1>(rhs, this);
+    }
+}
+
+void
 MNot::infer()
 {
     JS_ASSERT(operandMightEmulateUndefined());
@@ -2423,6 +2476,14 @@ MNot::foldsTo(bool useValueNumbers)
         return MConstant::New(BooleanValue(false));
 
     return this;
+}
+
+void
+MNot::trySpecializeFloat32()
+{
+    MDefinition *in = input();
+    if (!in->canProduceFloat32() && in->type() == MIRType_Float32)
+        ConvertDefinitionToDouble<0>(in, this);
 }
 
 void
@@ -2678,6 +2739,21 @@ MAsmJSUnsignedToDouble::foldsTo(bool useValueNumbers)
     return this;
 }
 
+MDefinition *
+MAsmJSUnsignedToFloat32::foldsTo(bool useValueNumbers)
+{
+    if (input()->isConstant()) {
+        const Value &v = input()->toConstant()->value();
+        if (v.isInt32()) {
+            double dval = double(uint32_t(v.toInt32()));
+            if (IsFloat32Representable(dval))
+                return MConstant::NewAsmJS(JS::Float32Value(float(dval)), MIRType_Float32);
+        }
+    }
+
+    return this;
+}
+
 MAsmJSCall *
 MAsmJSCall::New(Callee callee, const Args &args, MIRType resultType, size_t spIncrement)
 {
@@ -2703,6 +2779,18 @@ MAsmJSCall::New(Callee callee, const Args &args, MIRType resultType, size_t spIn
         call->setOperand(call->numArgs_, callee.dynamic());
 
     return call;
+}
+
+void
+MSqrt::trySpecializeFloat32() {
+    if (!input()->canProduceFloat32() || !CheckUsesAreFloat32Consumers(this)) {
+        if (input()->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(input(), this);
+        return;
+    }
+
+    setResultType(MIRType_Float32);
+    setPolicyType(MIRType_Float32);
 }
 
 bool

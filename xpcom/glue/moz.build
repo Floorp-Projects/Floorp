@@ -18,12 +18,12 @@ EXPORTS += [
     'nsArrayEnumerator.h',
     'nsArrayUtils.h',
     'nsBaseHashtable.h',
-    'nsCOMArray.h',
-    'nsCOMPtr.h',
-    'nsCRTGlue.h',
     'nsCategoryCache.h',
     'nsClassHashtable.h',
+    'nsCOMArray.h',
     'nsComponentManagerUtils.h',
+    'nsCOMPtr.h',
+    'nsCRTGlue.h',
     'nsCycleCollectionNoteChild.h',
     'nsCycleCollectionNoteRootCallback.h',
     'nsCycleCollectionParticipant.h',
@@ -37,10 +37,10 @@ EXPORTS += [
     'nsID.h',
     'nsIInterfaceRequestorUtils.h',
     'nsINIParser.h',
+    'nsInterfaceHashtable.h',
     'nsISupportsImpl.h',
     'nsISupportsUtils.h',
     'nsIWeakReferenceUtils.h',
-    'nsInterfaceHashtable.h',
     'nsJSThingHashtable.h',
     'nsMemory.h',
     'nsProxyRelease.h',
@@ -52,13 +52,13 @@ EXPORTS += [
     'nsTArray-inl.h',
     'nsTArray.h',
     'nsTArrayForwardDeclare.h',
+    'nsTextFormatter.h',
     'nsTHashtable.h',
+    'nsThreadUtils.h',
     'nsTObserverArray.h',
     'nsTPriorityQueue.h',
-    'nsTWeakRef.h',
-    'nsTextFormatter.h',
-    'nsThreadUtils.h',
     'nsTraceRefcnt.h',
+    'nsTWeakRef.h',
     'nsVersionComparator.h',
     'nsVoidArray.h',
     'nsWeakReference.h',
@@ -89,10 +89,10 @@ EXPORTS.mozilla.threads += [
 
 include('objs.mozbuild')
 
-CPP_SOURCES += xpcom_gluens_src_cppsrcs
-CPP_SOURCES += xpcom_glue_src_cppsrcs
+SOURCES += xpcom_gluens_src_cppsrcs
+SOURCES += xpcom_glue_src_cppsrcs
 
-CPP_SOURCES += [
+SOURCES += [
     'GenericModule.cpp',
     'nsStringAPI.cpp',
 ]
@@ -102,3 +102,5 @@ LIBRARY_NAME = 'xpcomglue_s'
 SDK_LIBRARY = [
     "%s%s.%s" % (CONFIG['LIB_PREFIX'], 'xpcomglue_s', CONFIG['LIB_SUFFIX']),
 ]
+
+FORCE_STATIC_LIB = True

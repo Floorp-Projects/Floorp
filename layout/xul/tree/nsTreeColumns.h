@@ -13,6 +13,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
 #include "nsWrapperCache.h"
+#include "nsString.h"
 
 class nsTreeBodyFrame;
 class nsTreeColumns;

@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel='stylesheet' type='text/css'
+          href='file_CSP.sjs?testid=starExternalStylesLoaded&type=text/css' />
+  </head>
+  <body>
+    <p id="inline-style">This should be green</p>
+    <p id="inline-script">This should be black</p>
+    <style>
+      p#inline-style { color:rgb(0, 128, 0); }
+    </style>
+    <script>
+      // Use inline script to set a style attribute
+      document.getElementById("inline-script").style.color = "rgb(0, 128, 0)";
+    </script>
+    <img src="file_CSP.sjs?testid=starExternalImgLoaded&type=img/png" />
+  </body>
+</html>

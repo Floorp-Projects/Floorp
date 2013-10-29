@@ -14,7 +14,7 @@ EXPORTS.mozilla.dom += [
     'TextEncoder.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'EncodingUtils.cpp',
     'TextDecoder.cpp',
     'TextEncoder.cpp',

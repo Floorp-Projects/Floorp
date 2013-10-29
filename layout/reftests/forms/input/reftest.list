@@ -9,3 +9,4 @@ include range/reftest.list
 include text/reftest.list
 include percentage/reftest.list
 include hidden/reftest.list
+include color/reftest.list

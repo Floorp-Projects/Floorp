@@ -16,9 +16,9 @@ class nsEventChainPostVisitor;
 
 #include "mozilla/Attributes.h"
 #include "nsIDOMEventTarget.h"
-#include "nsEventListenerManager.h"
 #include "nsPIWindowRoot.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsAutoPtr.h"
 
 class nsWindowRoot : public nsPIWindowRoot
 {
@@ -28,6 +28,12 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMEVENTTARGET
+
+  virtual nsEventListenerManager*
+  GetExistingListenerManager() const MOZ_OVERRIDE;
+  virtual nsEventListenerManager*
+  GetOrCreateListenerManager() MOZ_OVERRIDE;
+
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 mozilla::dom::EventListener* aListener,

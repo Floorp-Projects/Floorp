@@ -126,7 +126,7 @@ class LinearSum
 };
 
 bool
-AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
+AnalyzeNewScriptProperties(JSContext *cx, HandleFunction fun,
                            types::TypeObject *type, HandleObject baseobj,
                            Vector<types::TypeNewScript::Initializer> *initializerList);
 

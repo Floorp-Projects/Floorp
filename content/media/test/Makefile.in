@@ -172,6 +172,8 @@ endif
 #   test_mixed_principals.html
 # Disabled since we don't play Wave files standalone, for now
 #		test_audioDocumentTitle.html
+# Bug 751539:
+#		test_played.html
 
 # The below tests are disabled on Windows due to frequent timeouts.
 # Bug 832768 and Bug 864682:
@@ -185,8 +187,6 @@ endif
 #		test_seek.html
 # Bug 832768, bug 814533, bug 840742
 #		test_playback_rate.html
-# Bug 751539
-#		test_played.html
 ifneq ($(OS_ARCH), WINNT)
 MOCHITEST_FILES += \
 		test_buffered.html \
@@ -195,7 +195,6 @@ MOCHITEST_FILES += \
 		test_media_selection.html \
 		test_seek.html \
 		test_playback_rate.html \
-		test_played.html \
 		$(NULL)
 endif
 

@@ -10,7 +10,7 @@ EXPORTS += [
     'WrapperFactory.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'AccessCheck.cpp',
     'ChromeObjectWrapper.cpp',
     'FilteringWrapper.cpp',

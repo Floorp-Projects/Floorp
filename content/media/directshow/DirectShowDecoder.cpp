@@ -8,6 +8,9 @@
 #include "DirectShowReader.h"
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/Preferences.h"
+#include "WinUtils.h"
+
+using namespace mozilla::widget;
 
 namespace mozilla {
 
@@ -44,7 +47,8 @@ DirectShowDecoder::GetSupportedCodecs(const nsACString& aType,
 bool
 DirectShowDecoder::IsEnabled()
 {
-  return Preferences::GetBool("media.directshow.enabled");
+  return (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) &&
+          Preferences::GetBool("media.directshow.enabled");
 }
 
 DirectShowDecoder::DirectShowDecoder()

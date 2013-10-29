@@ -899,9 +899,11 @@ class Mochitest(MochitestUtilsMixin):
       self.handleTimeout(timeout, proc, utilityPath, debuggerInfo, browserProcessId)
 
     # record post-test information
-    if not status:
+    if status:
+      log.info("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s", self.lastTestSeen, status)
+    else:
       self.lastTestSeen = 'Main app process exited normally'
-    log.info("INFO | runtests.py | exit %s", status)
+
     log.info("INFO | runtests.py | Application ran for: %s", str(datetime.now() - startTime))
 
     # Do a final check for zombie child processes.
@@ -972,6 +974,9 @@ class Mochitest(MochitestUtilsMixin):
     if options.immersiveMode:
       options.browserArgs.extend(('-firefoxpath', options.app))
       options.app = self.immersiveHelperPath
+
+    if options.jsdebugger:
+      options.browserArgs.extend(['-jsdebugger'])
 
     # Remove the leak detection file so it can't "leak" to the tests run.
     # The file is not there if leak logging was not enabled in the application build.

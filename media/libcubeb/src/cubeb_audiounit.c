@@ -235,7 +235,7 @@ audiounit_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * la
     return CUBEB_ERROR;
   }
 
-  *latency_ms = latency_range.mMinimum * 1000 / params.rate;
+  *latency_ms = (latency_range.mMinimum * 1000 + params.rate - 1) / params.rate;
 
   return CUBEB_OK;
 }

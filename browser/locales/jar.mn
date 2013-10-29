@@ -27,6 +27,8 @@
     locale/browser/devtools/debugger.properties       (%chrome/browser/devtools/debugger.properties)
     locale/browser/devtools/netmonitor.dtd            (%chrome/browser/devtools/netmonitor.dtd)
     locale/browser/devtools/netmonitor.properties     (%chrome/browser/devtools/netmonitor.properties)
+    locale/browser/devtools/shadereditor.dtd          (%chrome/browser/devtools/shadereditor.dtd)
+    locale/browser/devtools/shadereditor.properties   (%chrome/browser/devtools/shadereditor.properties)
     locale/browser/devtools/gcli.properties           (%chrome/browser/devtools/gcli.properties)
     locale/browser/devtools/gclicommands.properties   (%chrome/browser/devtools/gclicommands.properties)
     locale/browser/devtools/webconsole.properties     (%chrome/browser/devtools/webconsole.properties)

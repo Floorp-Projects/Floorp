@@ -33,7 +33,7 @@ BaselineCompiler::BaselineCompiler(JSContext *cx, HandleScript script)
 bool
 BaselineCompiler::init()
 {
-    if (!analysis_.init(cx))
+    if (!analysis_.init(cx->runtime()->gsnCache))
         return false;
 
     if (!labels_.init(script->length))
@@ -74,7 +74,7 @@ BaselineCompiler::compile()
     IonSpew(IonSpew_Codegen, "# Emitting baseline code for script %s:%d",
             script->filename(), script->lineno);
 
-    if (cx->typeInferenceEnabled() && !script->ensureHasBytecodeTypeMap(cx))
+    if (cx->typeInferenceEnabled() && !script->ensureHasTypes(cx))
         return Method_Error;
 
     // Only need to analyze scripts which are marked |argumensHasVarBinding|, to
@@ -87,13 +87,14 @@ BaselineCompiler::compile()
     // Pin analysis info during compilation.
     types::AutoEnterAnalysis autoEnterAnalysis(cx);
 
+    JS_ASSERT(!script->hasBaselineScript());
+
     if (!emitPrologue())
         return Method_Error;
 
     MethodStatus status = emitBody();
     if (status != Method_Compiled)
         return status;
-
 
     if (!emitEpilogue())
         return Method_Error;
@@ -111,7 +112,22 @@ BaselineCompiler::compile()
     if (!code)
         return Method_Error;
 
-    JS_ASSERT(!script->hasBaselineScript());
+    JSObject *templateScope = nullptr;
+    if (script->function()) {
+        RootedFunction fun(cx, script->function());
+        if (fun->isHeavyweight()) {
+            templateScope = CallObject::createTemplateObject(cx, script, gc::TenuredHeap);
+            if (!templateScope)
+                return Method_Error;
+
+            if (fun->isNamedLambda()) {
+                RootedObject declEnvObject(cx, DeclEnvObject::createTemplateObject(cx, fun, gc::TenuredHeap));
+                if (!declEnvObject)
+                    return Method_Error;
+                templateScope->as<ScopeObject>().setEnclosingScope(declEnvObject);
+            }
+        }
+    }
 
     // Encode the pc mapping table. See PCMappingIndexEntry for
     // more information.
@@ -155,15 +171,20 @@ BaselineCompiler::compile()
     prologueOffset_.fixup(&masm);
     spsPushToggleOffset_.fixup(&masm);
 
+    // Note: There is an extra entry in the bytecode type map for the search hint, see below.
+    size_t bytecodeTypeMapEntries = cx->typeInferenceEnabled() ? script->nTypeSets + 1 : 0;
+
     BaselineScript *baselineScript = BaselineScript::New(cx, prologueOffset_.offset(),
                                                          spsPushToggleOffset_.offset(),
                                                          icEntries_.length(),
                                                          pcMappingIndexEntries.length(),
-                                                         pcEntries.length());
+                                                         pcEntries.length(),
+                                                         bytecodeTypeMapEntries);
     if (!baselineScript)
         return Method_Error;
 
     baselineScript->setMethod(code);
+    baselineScript->setTemplateScope(templateScope);
 
     script->setBaselineScript(baselineScript);
 
@@ -209,6 +230,26 @@ BaselineCompiler::compile()
     // All SPS instrumentation is emitted toggled off.  Toggle them on if needed.
     if (cx->runtime()->spsProfiler.enabled())
         baselineScript->toggleSPS(true);
+
+    if (cx->typeInferenceEnabled()) {
+        uint32_t *bytecodeMap = baselineScript->bytecodeTypeMap();
+
+        uint32_t added = 0;
+        for (jsbytecode *pc = script->code; pc < script->code + script->length; pc += GetBytecodeLength(pc)) {
+            JSOp op = JSOp(*pc);
+            if (js_CodeSpec[op].format & JOF_TYPESET) {
+                bytecodeMap[added++] = pc - script->code;
+                if (added == script->nTypeSets)
+                    break;
+            }
+        }
+
+        JS_ASSERT(added == script->nTypeSets);
+
+        // The last entry in the last index found, and is used to avoid binary
+        // searches for the sought entry when queries are in linear order.
+        bytecodeMap[script->nTypeSets] = 0;
+    }
 
     return Method_Compiled;
 }
@@ -578,7 +619,7 @@ BaselineCompiler::emitDebugTrap()
     bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(pc);
 
     // Emit patchable call to debug trap handler.
-    IonCode *handler = cx->runtime()->ionRuntime()->debugTrapHandler(cx);
+    IonCode *handler = cx->runtime()->jitRuntime()->debugTrapHandler(cx);
     mozilla::DebugOnly<CodeOffsetLabel> offset = masm.toggledCall(handler, enabled);
 
 #ifdef DEBUG

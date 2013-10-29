@@ -56,7 +56,6 @@ static MOZ_CONSTEXPR_VAR Register CallTempReg2 = r7;
 static MOZ_CONSTEXPR_VAR Register CallTempReg3 = r8;
 static MOZ_CONSTEXPR_VAR Register CallTempReg4 = r0;
 static MOZ_CONSTEXPR_VAR Register CallTempReg5 = r1;
-static MOZ_CONSTEXPR_VAR Register CallTempReg6 = r2;
 
 static MOZ_CONSTEXPR_VAR Register IntArgReg0 = r0;
 static MOZ_CONSTEXPR_VAR Register IntArgReg1 = r1;
@@ -1821,7 +1820,9 @@ class Assembler
 
     static void updateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
     void processCodeLabels(uint8_t *rawCode);
-
+    bool bailed() {
+        return m_buffer.bail();
+    }
 }; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.

@@ -136,7 +136,7 @@ struct Paths {
 /**
  * System directories.
  */
-Paths* gPaths = NULL;
+Paths* gPaths = nullptr;
 
 }
 
@@ -303,7 +303,7 @@ void CleanupOSFileConstants()
 /**
  * End marker for ConstantSpec
  */
-#define PROP_END { NULL, JS::UndefinedValue() }
+#define PROP_END { nullptr, JS::UndefinedValue() }
 
 
 // Define missing constants for Android
@@ -514,6 +514,11 @@ static const dom::ConstantSpec gLibcProperties[] =
   // (may not be exact, depending on padding).
   { "OSFILE_SIZEOF_DIRENT_D_NAME", INT_TO_JSVAL(sizeof (struct dirent) - offsetof (struct dirent, d_name)) },
 
+  // Defining |timeval|.
+  { "OSFILE_SIZEOF_TIMEVAL", INT_TO_JSVAL(sizeof (struct timeval)) },
+  { "OSFILE_OFFSETOF_TIMEVAL_TV_SEC", INT_TO_JSVAL(offsetof (struct timeval, tv_sec)) },
+  { "OSFILE_OFFSETOF_TIMEVAL_TV_USEC", INT_TO_JSVAL(offsetof (struct timeval, tv_usec)) },
+
 #if defined(DT_UNKNOWN)
   // Position of field |d_type| in |dirent|
   // Not strictly posix, but seems defined on all platforms
@@ -671,18 +676,19 @@ JSObject *GetOrCreateObjectProperty(JSContext *cx, JS::Handle<JSObject*> aObject
 {
   JS::Rooted<JS::Value> val(cx);
   if (!JS_GetProperty(cx, aObject, aProperty, &val)) {
-    return NULL;
+    return nullptr;
   }
   if (!val.isUndefined()) {
     if (val.isObject()) {
       return &val.toObject();
     }
 
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
       JSMSG_UNEXPECTED_TYPE, aProperty, "not an object");
-    return NULL;
+    return nullptr;
   }
-  return JS_DefineObject(cx, aObject, aProperty, NULL, NULL, JSPROP_ENUMERATE);
+  return JS_DefineObject(cx, aObject, aProperty, nullptr, nullptr,
+                         JSPROP_ENUMERATE);
 }
 
 /**
@@ -712,12 +718,12 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
 {
   MOZ_ASSERT(gInitialized);
 
-  if (gPaths == NULL) {
+  if (gPaths == nullptr) {
     // If an initialization error was ignored, we may end up with
-    // |gInitialized == true| but |gPaths == NULL|. We cannot
+    // |gInitialized == true| but |gPaths == nullptr|. We cannot
     // |MOZ_ASSERT| this, as this would kill precompile_cache.js,
     // so we simply return an error.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
       JSMSG_CANT_OPEN, "OSFileConstants", "initialization has failed");
     return false;
   }

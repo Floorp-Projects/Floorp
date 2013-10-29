@@ -172,6 +172,8 @@
 #include "mozilla/HangMonitor.h"
 #include "WinIMEHandler.h"
 
+#include "npapi.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -1515,8 +1517,7 @@ nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
     return NS_ERROR_INVALID_ARG;
   }
 
-  WidgetMouseEvent* mouseEvent = static_cast<WidgetMouseEvent*>(aEvent);
-  if (mouseEvent->button != WidgetMouseEvent::eLeftButton) {
+  if (aEvent->AsMouseEvent()->button != WidgetMouseEvent::eLeftButton) {
     // you can only begin a resize drag with the left mouse button
     return NS_ERROR_INVALID_ARG;
   }
@@ -3674,6 +3675,13 @@ bool nsWindow::DispatchStandardEvent(uint32_t aMsg)
 }
 
 bool nsWindow::DispatchKeyboardEvent(WidgetGUIEvent* event)
+{
+  nsEventStatus status;
+  DispatchEvent(event, status);
+  return ConvertStatus(status);
+}
+
+bool nsWindow::DispatchScrollEvent(WidgetGUIEvent* event)
 {
   nsEventStatus status;
   DispatchEvent(event, status);
@@ -6647,6 +6655,9 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   GetLayerManagerPrefs(&prefs);
 
   if (!prefs.mDisableAcceleration) {
+    if (prefs.mPreferOpenGL) {
+      aHints.AppendElement(LAYERS_OPENGL);
+    }
     if (!prefs.mPreferD3D9) {
       aHints.AppendElement(LAYERS_D3D11);
     }
