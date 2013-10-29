@@ -14,8 +14,9 @@ EXPORTS += [
 ]
 
 if CONFIG['MOZ_WEBRTC']:
-    EXPORTS += ['MediaEngineWebRTC.h']
+    EXPORTS += ['LoadMonitor.h', 'MediaEngineWebRTC.h']
     SOURCES += [
+        'LoadMonitor.cpp',
         'MediaEngineTabVideoSource.cpp',
         'MediaEngineWebRTC.cpp',
         'MediaEngineWebRTCAudio.cpp',

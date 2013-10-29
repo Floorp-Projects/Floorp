@@ -55,6 +55,8 @@ MediaEngineWebRTC::MediaEngineWebRTC()
   if (compMgr) {
     compMgr->IsContractIDRegistered(NS_TABSOURCESERVICE_CONTRACTID, &mHasTabVideoSource);
   }
+  mLoadMonitor = new LoadMonitor();
+  mLoadMonitor->Init(mLoadMonitor);
 }
 #endif
 
@@ -359,6 +361,8 @@ MediaEngineWebRTC::Shutdown()
 
   mVideoEngine = nullptr;
   mVoiceEngine = nullptr;
+
+  mLoadMonitor->Shutdown();
 }
 
 }
