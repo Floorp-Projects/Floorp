@@ -604,6 +604,11 @@ public:
   virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> proxy,
                          JS::AutoIdVector &props) MOZ_OVERRIDE;
 
+  virtual bool watch(JSContext *cx, JS::Handle<JSObject*> proxy,
+                     JS::Handle<jsid> id, JS::Handle<JSObject*> callable) MOZ_OVERRIDE;
+  virtual bool unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
+                       JS::Handle<jsid> id) MOZ_OVERRIDE;
+
   // Derived traps
   virtual bool has(JSContext *cx, JS::Handle<JSObject*> proxy,
                    JS::Handle<jsid> id, bool *bp) MOZ_OVERRIDE;
@@ -951,6 +956,20 @@ nsOuterWindowProxy::AppendIndexedPropertyNames(JSContext *cx, JSObject *proxy,
   }
 
   return true;
+}
+
+bool
+nsOuterWindowProxy::watch(JSContext *cx, JS::Handle<JSObject*> proxy,
+                          JS::Handle<jsid> id, JS::Handle<JSObject*> callable)
+{
+  return js::WatchGuts(cx, proxy, id, callable);
+}
+
+bool
+nsOuterWindowProxy::unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
+                            JS::Handle<jsid> id)
+{
+  return js::UnwatchGuts(cx, proxy, id);
 }
 
 nsOuterWindowProxy
