@@ -91,9 +91,9 @@ public:
 #endif
 
 #if (MOZ_WIDGET_GTK == 2)
-    static void SetGdkDrawable(gfxASurface *target,
+    static void SetGdkDrawable(cairo_surface_t *target,
                                GdkDrawable *drawable);
-    static GdkDrawable *GetGdkDrawable(gfxASurface *target);
+    static GdkDrawable *GetGdkDrawable(cairo_surface_t *target);
 #endif
 
     static int32_t GetDPI();

@@ -1186,7 +1186,7 @@ pref("devtools.webconsole.filter.network", true);
 pref("devtools.webconsole.filter.networkinfo", true);
 pref("devtools.webconsole.filter.netwarn", true);
 pref("devtools.webconsole.filter.csserror", true);
-pref("devtools.webconsole.filter.cssparser", true);
+pref("devtools.webconsole.filter.cssparser", false);
 pref("devtools.webconsole.filter.csslog", false);
 pref("devtools.webconsole.filter.exception", true);
 pref("devtools.webconsole.filter.jswarn", true);

@@ -79,18 +79,18 @@ const NATIVE_CONTROL_RIGHT = 0x0800;
 const NATIVE_META_RIGHT    = 0x8000;
 
 const kTests = [
-  { description: "nsScriptErrorEvent",
+  { description: "InternalScriptErrorEvent",
     targetID: "input-text", eventType: "error",
     dispatchEvent: function () {
       return;
     },
     canRun: function () {
-      todo(false, "nsScriptErrorEvent isn't tested");
+      todo(false, "InternalScriptErrorEvent isn't tested");
       return false;
     },
     todoMismatch: [],
   },
-  { description: "nsScrollPortEvent (overflow, vertical)",
+  { description: "InternalScrollPortEvent (overflow, vertical)",
     targetID: "scrollable-div", eventType: "overflow",
     dispatchEvent: function () {
       document.getElementById("scrolled-div").style.height = "500px";
@@ -100,7 +100,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsScrollPortEvent (overflow, horizontal)",
+  { description: "InternalScrollPortEvent (overflow, horizontal)",
     targetID: "scrollable-div", eventType: "overflow",
     dispatchEvent: function () {
       document.getElementById("scrolled-div").style.width = "500px";
@@ -110,7 +110,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsScrollAreaEvent (MozScrolledAreaChanged, spreading)",
+  { description: "InternalScrollAreaEvent (MozScrolledAreaChanged, spreading)",
     target: function () { return document; }, eventType: "MozScrolledAreaChanged",
     dispatchEvent: function () {
       document.getElementById("scrollable-div").style.width = "50000px";
@@ -121,7 +121,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsScrollAreaEvent (MozScrolledAreaChanged, shrinking)",
+  { description: "InternalScrollAreaEvent (MozScrolledAreaChanged, shrinking)",
     target: function () { return document; }, eventType: "MozScrolledAreaChanged",
     dispatchEvent: function () {
       document.getElementById("scrollable-div").style.width = "30px";
@@ -132,7 +132,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsKeyEvent (keydown of 'a' key without modifiers)",
+  { description: "WidgetKeyboardEvent (keydown of 'a' key without modifiers)",
     targetID: "input-text", eventType: "keydown",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -146,9 +146,9 @@ const kTests = [
     canRun: function () {
       return (kIsMac || kIsWin);
     },
-    todoMismatch: [ "key" ],
+    todoMismatch: [],
   },
-  { description: "nsKeyEvent (keyup of 'a' key without modifiers)",
+  { description: "WidgetKeyboardEvent (keyup of 'a' key without modifiers)",
     targetID: "input-text", eventType: "keydown",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -162,9 +162,9 @@ const kTests = [
     canRun: function () {
       return (kIsMac || kIsWin);
     },
-    todoMismatch: [ "key" ],
+    todoMismatch: [],
   },
-  { description: "nsKeyEvent (keypress of 'b' key with Shift)",
+  { description: "WidgetKeyboardEvent (keypress of 'b' key with Shift)",
     targetID: "input-text", eventType: "keypress",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -179,9 +179,9 @@ const kTests = [
       return (kIsMac || kIsWin);
     },
     // "defaultPrevented" becomes true because the editor consumes the keypress event.
-    todoMismatch: [ "key", "defaultPrevented" ],
+    todoMismatch: [ "defaultPrevented" ],
   },
-  { description: "nsKeyEvent (keypress of 'c' key with Accel)",
+  { description: "WidgetKeyboardEvent (keypress of 'c' key with Accel)",
     targetID: "input-text", eventType: "keypress",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -196,9 +196,9 @@ const kTests = [
       return (kIsMac || kIsWin);
     },
     // "defaultPrevented" becomes true because the editor consumes the keypress event.
-    todoMismatch: [ "key", "defaultPrevented" ],
+    todoMismatch: [ "defaultPrevented" ],
   },
-  { description: "nsMouseEvent (mousedown of left button without modifier)",
+  { description: "WidgetMouseEvent (mousedown of left button without modifier)",
     targetID: "button", eventType: "mousedown",
     dispatchEvent: function () {
       synthesizeMouseAtCenter(document.getElementById(this.targetID),
@@ -209,7 +209,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsMouseEvent (click of middle button with Shift)",
+  { description: "WidgetMouseEvent (click of middle button with Shift)",
     // XXX I'm not sure why middle click event isn't fired on button element.
     targetID: "input-text", eventType: "click",
     dispatchEvent: function () {
@@ -222,7 +222,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsMouseEvent (mouseup of right button with Alt)",
+  { description: "WidgetMouseEvent (mouseup of right button with Alt)",
     targetID: "button", eventType: "mouseup",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -234,18 +234,18 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsDragEvent",
+  { description: "WidgetDragEvent",
     targetID: "input-text", eventType: "dragstart",
     dispatchEvent: function () {
       return;
     },
     canRun: function () {
-      todo(false, "nsDragEvent isn't tested");
+      todo(false, "WidgetDragEvent isn't tested");
       return false;
     },
     todoMismatch: [],
   },
-  { description: "nsTextEvent (text)",
+  { description: "WidgetTextEvent (text)",
     targetID: "input-text", eventType: "text",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -268,7 +268,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsCompositionEvent (compositionupdate)",
+  { description: "WidgetCompositionEvent (compositionupdate)",
     targetID: "input-text", eventType: "compositionupdate",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -291,7 +291,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsMouseScrollEvent (DOMMouseScroll, vertical)",
+  { description: "WidgetMouseScrollEvent (DOMMouseScroll, vertical)",
     targetID: "input-text", eventType: "DOMMouseScroll",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -303,7 +303,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsMouseScrollEvent (DOMMouseScroll, horizontal)",
+  { description: "WidgetMouseScrollEvent (DOMMouseScroll, horizontal)",
     targetID: "input-text", eventType: "DOMMouseScroll",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -315,7 +315,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsMouseScrollEvent (MozMousePixelScroll, vertical)",
+  { description: "WidgetMouseScrollEvent (MozMousePixelScroll, vertical)",
     targetID: "input-text", eventType: "MozMousePixelScroll",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -327,7 +327,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsMouseScrollEvent (MozMousePixelScroll, horizontal)",
+  { description: "WidgetMouseScrollEvent (MozMousePixelScroll, horizontal)",
     targetID: "input-text", eventType: "MozMousePixelScroll",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -339,7 +339,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "WheelEvent (wheel, vertical)",
+  { description: "WidgetWheelEvent (wheel, vertical)",
     targetID: "input-text", eventType: "wheel",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -351,7 +351,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "WheelEvent (wheel, horizontal)",
+  { description: "WidgetWheelEvent (wheel, horizontal)",
     targetID: "input-text", eventType: "wheel",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -363,7 +363,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "WheelEvent (wheel, both)",
+  { description: "WidgetWheelEvent (wheel, both)",
     targetID: "input-text", eventType: "wheel",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
@@ -376,7 +376,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsTouchEvent (touchstart)",
+  { description: "WidgetTouchEvent (touchstart)",
     target: function () { return document; }, eventType: "touchstart",
     dispatchEvent: function () {
       synthesizeTouchAtPoint(1, 2, { id: 10, rx: 4, ry: 3, angle: 0, force: 1, shiftKey: true});
@@ -386,7 +386,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsTouchEvent (touchend)",
+  { description: "WidgetTouchEvent (touchend)",
     target: function () { return document; }, eventType: "touchend",
     dispatchEvent: function () {
       synthesizeTouchAtPoint(4, 6, { id: 5, rx: 1, ry: 2, angle: 0.5, force: 0.8, ctrlKey: true});
@@ -396,7 +396,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsFormEvent (reset)",
+  { description: "InternalFormEvent (reset)",
     targetID: "form", eventType: "reset",
     dispatchEvent: function () {
       document.getElementById("form").reset();
@@ -406,18 +406,18 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsCommandEvent",
+  { description: "WidgetCommandEvent",
     targetID: "input-text", eventType: "",
     dispatchEvent: function () {
       return;
     },
     canRun: function () {
-      todo(false, "nsCommandEvent isn't tested");
+      todo(false, "WidgetCommandEvent isn't tested");
       return false;
     },
     todoMismatch: [],
   },
-  { description: "nsClipboardEvent (copy)",
+  { description: "InternalClipboardEvent (copy)",
     targetID: "input-text", eventType: "copy",
     dispatchEvent: function () {
       document.getElementById("input-text").value = "go to clipboard!";
@@ -430,7 +430,7 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "nsUIEvent (DOMActivate)",
+  { description: "InternalUIEvent (DOMActivate)",
     targetID: "button", eventType: "DOMActivate",
     dispatchEvent: function () {
       synthesizeMouseAtCenter(document.getElementById(this.targetID),
@@ -441,7 +441,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsFocusEvent (focus)",
+  { description: "InternalFocusEvent (focus)",
     targetID: "input-text", eventType: "focus",
     dispatchEvent: function () {
       document.getElementById(this.targetID).focus();
@@ -451,7 +451,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsFocusEvent (blur)",
+  { description: "InternalFocusEvent (blur)",
     targetID: "input-text", eventType: "blur",
     dispatchEvent: function () {
       document.getElementById(this.targetID).blur();
@@ -461,7 +461,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsSimpleGestureEvent",
+  { description: "WidgetSimpleGestureEvent",
     targetID: "", eventType: "",
     dispatchEvent: function () {
       return;
@@ -469,12 +469,12 @@ const kTests = [
     canRun: function () {
       // Simple gesture event may be handled before it comes content.
       // So, we cannot test it in this test.
-      todo(false, "nsSimpleGestureEvent isn't tested");
+      todo(false, "WidgetSimpleGestureEvent isn't tested");
       return false;
     },
     todoMismatch: [],
   },
-  { description: "nsTransitionEvent (transitionend)",
+  { description: "InternalTransitionEvent (transitionend)",
     targetID: "a", eventType: "transitionend",
     dispatchEvent: function () {
       document.getElementById(this.targetID).focus();
@@ -484,7 +484,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsAnimationEvent (animationend)",
+  { description: "InternalAnimationEvent (animationend)",
     targetID: "animated-div", eventType: "animationend",
     dispatchEvent: function () {
       document.getElementById(this.targetID).className = "slidin";
@@ -494,7 +494,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsMutationEvent (DOMAttrModified)",
+  { description: "InternalMutationEvent (DOMAttrModified)",
     targetID: "animated-div", eventType: "DOMAttrModified",
     dispatchEvent: function () {
       document.getElementById(this.targetID).setAttribute("x-data", "foo");
@@ -504,7 +504,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsMutationEvent (DOMNodeInserted)",
+  { description: "InternalMutationEvent (DOMNodeInserted)",
     targetID: "animated-div", eventType: "DOMNodeInserted",
     dispatchEvent: function () {
       var div = document.createElement("div");
@@ -516,7 +516,7 @@ const kTests = [
     },
     todoMismatch: [],
   },
-  { description: "nsMutationEvent (DOMNodeRemoved)",
+  { description: "InternalMutationEvent (DOMNodeRemoved)",
     targetID: "animated-div", eventType: "DOMNodeRemoved",
     dispatchEvent: function () {
       document.getElementById("animated-div").removeChild(document.getElementById("inserted-div"));

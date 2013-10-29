@@ -75,7 +75,9 @@ TextTrack::SetDefaultSettings()
 void
 TextTrack::Update(double aTime)
 {
-  mCueList->Update(aTime);
+  if (mCueList) {
+    mCueList->Update(aTime);
+  }
 }
 
 JSObject*
@@ -182,8 +184,8 @@ void
 TextTrack::SetReadyState(uint16_t aState)
 {
   mReadyState = aState;
-  if (mReadyState == HTMLTrackElement::LOADED ||
-      mReadyState == HTMLTrackElement::ERROR) {
+  if (mMediaElement && (mReadyState == HTMLTrackElement::LOADED ||
+      mReadyState == HTMLTrackElement::ERROR)) {
     mMediaElement->RemoveTextTrack(this, true);
   }
 }

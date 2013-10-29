@@ -163,10 +163,8 @@ public:
   virtual bool IsProbablyLayoutTable();
   virtual Accessible* AsAccessible() { return this; }
 
-  // nsAccessNode
-  virtual void Shutdown();
-
   // Accessible
+  virtual void Shutdown();
   virtual TableAccessible* AsTable() { return this; }
   virtual void Description(nsString& aDescription);
   virtual a11y::role NativeRole();

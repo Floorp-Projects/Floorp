@@ -17,7 +17,7 @@ class PositionOptions;
 
 [ptr] native NamespacedPositionOptions(mozilla::dom::PositionOptions);
 
-[builtinclass, uuid(1bc7d103-c7ae-4467-881c-21a8dfa17938)]
+[builtinclass, uuid(9142ab45-0ab5-418c-9bab-338a6d271d4f)]
 interface nsIDOMGeoGeolocation : nsISupports
 {
   int32_t watchPosition(in nsIDOMGeoPositionCallback callback,

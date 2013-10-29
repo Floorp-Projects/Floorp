@@ -648,3 +648,7 @@ pref("full-screen-api.ignore-widgets", true);
 pref("layout.imagevisibility.enabled", true);
 pref("layout.imagevisibility.numscrollportwidths", 1);
 pref("layout.imagevisibility.numscrollportheights", 1);
+
+// Don't enable <input type=color> yet as we don't have a color picker
+// implemented for Windows Metro (bug 895464)
+pref("dom.forms.color", false);
