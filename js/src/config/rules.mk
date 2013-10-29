@@ -380,14 +380,9 @@ endef
 endif
 endif
 
-# Static directories are largely independent of our build system. But, they
-# could share the same build mechanism (like moz.build files). We need to
-# prevent leaking of our backend state to these independent build systems. This
-# is why MOZBUILD_BACKEND_CHECKED isn't exported to make invocations for static
-# directories.
 define SUBMAKE # $(call SUBMAKE,target,directory,static)
 +@$(UPDATE_TITLE)
-+$(if $(3), MOZBUILD_BACKEND_CHECKED=,) $(MAKE) $(if $(2),-C $(2)) $(1)
++$(MAKE) $(if $(2),-C $(2)) $(1)
 
 endef # The extra line is important here! don't delete it
 
@@ -590,31 +585,22 @@ HOST_OUTOPTION = -o # eol
 endif
 ################################################################################
 
-# Regenerate the build backend if it is out of date. We only check this once
-# per traversal, hence the ifdef and the export. This rule needs to come before
-# other rules for the default target or else it may not run in time.
+# Ensure the build config is up to date. This is done automatically when builds
+# are performed through |mach build|. The check here is to catch people not
+# using mach. If we ever enforce builds through mach, this code can be removed.
 ifndef MOZBUILD_BACKEND_CHECKED
-
-# Since Makefile is listed as a global dependency, this has the
-# unfortunate side-effect of invalidating all targets if it is executed.
-# So e.g. if you are in /dom/bindings and /foo/moz.build changes,
-# /dom/bindings will get invalidated. The upside is if the current
-# Makefile/backend.mk is updated as a result of backend regeneration, we
-# actually pick up the changes. This should reduce the amount of
-# required clobbers and is thus the lesser evil.
-Makefile: $(DEPTH)/backend.RecursiveMakeBackend
-	@$(TOUCH) $@
-
+ifndef MACH
+ifndef TOPLEVEL_BUILD
 $(DEPTH)/backend.RecursiveMakeBackend:
-	@echo "Build configuration changed. Regenerating backend."
-	@cd $(DEPTH) && $(PYTHON) ./config.status
-	@$(TOUCH) $@
+	$(error Build configuration changed. Build with |mach build| or run |mach build-backend| to regenerate build config)
 
 include $(DEPTH)/backend.RecursiveMakeBackend.pp
 
 default:: $(DEPTH)/backend.RecursiveMakeBackend
 
 export MOZBUILD_BACKEND_CHECKED=1
+endif
+endif
 endif
 
 # The root makefile doesn't want to do a plain export/libs, because
