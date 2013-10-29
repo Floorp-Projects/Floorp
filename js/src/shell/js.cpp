@@ -5021,7 +5021,7 @@ dom_constructor(JSContext* cx, unsigned argc, JS::Value *vp)
 }
 
 static bool
-InstanceClassHasProtoAtDepth(HandleObject protoObject, uint32_t protoID, uint32_t depth)
+InstanceClassHasProtoAtDepth(JSObject *protoObject, uint32_t protoID, uint32_t depth)
 {
     /* There's only a single (fake) DOM object in the shell, so just return true. */
     return true;

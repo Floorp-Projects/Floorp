@@ -1105,10 +1105,14 @@ HeapTypeSetKey::knownTypeTag(CompilerConstraintList *constraints)
 }
 
 bool
-HeapTypeSetKey::notEmpty(CompilerConstraintList *constraints)
+HeapTypeSetKey::isOwnProperty(CompilerConstraintList *constraints)
 {
     if (maybeTypes() && !maybeTypes()->empty())
         return true;
+    if (JSObject *obj = object()->singleton()) {
+        if (CanHaveEmptyPropertyTypesForOwnProperty(obj))
+            return true;
+    }
     freeze(constraints);
     return false;
 }
@@ -1962,7 +1966,7 @@ PrototypeHasIndexedProperty(CompilerConstraintList *constraints, JSObject *obj)
         if (type->unknownProperties())
             return true;
         HeapTypeSetKey index = type->property(JSID_VOID);
-        if (index.configured(constraints, type) || index.notEmpty(constraints))
+        if (index.configured(constraints, type) || index.isOwnProperty(constraints))
             return true;
         obj = obj->getProto();
     } while (obj);
@@ -2610,8 +2614,8 @@ TypeCompartment::newTypedObject(JSContext *cx, IdValuePair *properties, size_t n
 /////////////////////////////////////////////////////////////////////
 
 static inline void
-UpdatePropertyType(ExclusiveContext *cx, TypeSet *types, JSObject *obj, Shape *shape,
-                   bool force)
+UpdatePropertyType(ExclusiveContext *cx, HeapTypeSet *types, JSObject *obj, Shape *shape,
+                   bool indexed)
 {
     if (!shape->writable())
         types->setConfiguredProperty(cx);
@@ -2620,13 +2624,17 @@ UpdatePropertyType(ExclusiveContext *cx, TypeSet *types, JSObject *obj, Shape *s
         types->setConfiguredProperty(cx);
         types->addType(cx, Type::UnknownType());
     } else if (shape->hasDefaultGetter() && shape->hasSlot()) {
+        if (!indexed && types->canSetDefinite(shape->slot()))
+            types->setDefinite(shape->slot());
+
         const Value &value = obj->nativeGetSlot(shape->slot());
 
         /*
-         * Don't add initial undefined types for singleton properties that are
-         * not collated into the JSID_VOID property (see propertySet comment).
+         * Don't add initial undefined types for properties of global objects
+         * that are not collated into the JSID_VOID property (see propertySet
+         * comment).
          */
-        if (force || !value.isUndefined()) {
+        if (indexed || !value.isUndefined() || !CanHaveEmptyPropertyTypesForOwnProperty(obj)) {
             Type type = GetValueType(value);
             types->addType(cx, type);
         }
@@ -2706,9 +2714,7 @@ TypeObject::addDefiniteProperties(ExclusiveContext *cx, JSObject *obj)
     RootedShape shape(cx, obj->lastProperty());
     while (!shape->isEmptyShape()) {
         jsid id = IdToTypeId(shape->propid());
-        if (!JSID_IS_VOID(id) && obj->isFixedSlot(shape->slot()) &&
-            shape->slot() <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT))
-        {
+        if (!JSID_IS_VOID(id) && obj->isFixedSlot(shape->slot())) {
             TypeSet *types = getProperty(cx, id);
             if (!types)
                 return false;

@@ -718,8 +718,7 @@ extern JS_FRIEND_API(bool)
 IsContextRunningJS(JSContext *cx);
 
 typedef bool
-(* DOMInstanceClassMatchesProto)(JS::HandleObject protoObject, uint32_t protoID,
-                                 uint32_t depth);
+(* DOMInstanceClassMatchesProto)(JSObject *protoObject, uint32_t protoID, uint32_t depth);
 struct JSDOMCallbacks {
     DOMInstanceClassMatchesProto instanceClassMatchesProto;
 };
