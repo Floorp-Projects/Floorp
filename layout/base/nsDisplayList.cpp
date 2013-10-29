@@ -3308,6 +3308,35 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
+nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame, nsDisplayList* aList,
+                                         uint32_t aFlags)
+    : nsDisplayOwnLayer(aBuilder, aFrame, aList, aFlags) {
+  MOZ_COUNT_CTOR(nsDisplayResolution);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayResolution::~nsDisplayResolution() {
+  MOZ_COUNT_DTOR(nsDisplayResolution);
+}
+#endif
+
+already_AddRefed<Layer>
+nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerParameters& aContainerParameters) {
+  nsIPresShell* presShell = mFrame->PresContext()->PresShell();
+  nsDisplayItem::ContainerParameters containerParameters(
+    presShell->GetXResolution(), presShell->GetYResolution(), nsIntPoint(),
+    aContainerParameters);
+
+  nsRefPtr<Layer> layer = nsDisplayOwnLayer::BuildLayer(
+    aBuilder, aManager, containerParameters);
+  layer->SetPostScale(1.0f / presShell->GetXResolution(),
+                      1.0f / presShell->GetYResolution());
+  return layer.forget();
+}
+
 nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
                                                nsIFrame* aFrame,
                                                nsIFrame* aFixedPosFrame,

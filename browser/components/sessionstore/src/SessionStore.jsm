@@ -65,7 +65,11 @@ const MESSAGES = [
 
   // The content script tells us that a new page just started loading in a
   // browser.
-  "SessionStore:loadStart"
+  "SessionStore:loadStart",
+
+  // The content script gives us a reference to an object that performs
+  // synchronous collection of session data.
+  "SessionStore:setupSyncHandler"
 ];
 
 // These are tab events that we listen to.
@@ -602,6 +606,9 @@ let SessionStoreInternal = {
       case "SessionStore:loadStart":
         TabStateCache.delete(browser);
         break;
+      case "SessionStore:setupSyncHandler":
+        TabState.setSyncHandler(browser, aMessage.objects.handler);
+        break;
       default:
         debug("received unknown message '" + aMessage.name + "'");
         break;
@@ -620,16 +627,22 @@ let SessionStoreInternal = {
       return;
 
     var win = aEvent.currentTarget.ownerDocument.defaultView;
+    let browser;
     switch (aEvent.type) {
       case "load":
         // If __SS_restore_data is set, then we need to restore the document
         // (form data, scrolling, etc.). This will only happen when a tab is
         // first restored.
-        let browser = aEvent.currentTarget;
+        browser = aEvent.currentTarget;
         TabStateCache.delete(browser);
         if (browser.__SS_restore_data)
           this.restoreDocument(win, browser, aEvent);
         this.onTabLoad(win, browser);
+        break;
+      case "SwapDocShells":
+        browser = aEvent.currentTarget;
+        let otherBrowser = aEvent.detail;
+        TabState.onSwapDocShells(browser, otherBrowser);
         break;
       case "TabOpen":
         this.onTabAdd(win, aEvent.originalTarget);
@@ -1203,9 +1216,13 @@ let SessionStoreInternal = {
   onTabAdd: function ssi_onTabAdd(aWindow, aTab, aNoNotification) {
     let browser = aTab.linkedBrowser;
     browser.addEventListener("load", this, true);
+    browser.addEventListener("SwapDocShells", this, true);
 
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.addMessageListener(msg, this));
+
+    // Load the frame script after registering listeners.
+    mm.loadFrameScript("chrome://browser/content/content-sessionStore.js", false);
 
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -1226,6 +1243,7 @@ let SessionStoreInternal = {
   onTabRemove: function ssi_onTabRemove(aWindow, aTab, aNoNotification) {
     let browser = aTab.linkedBrowser;
     browser.removeEventListener("load", this, true);
+    browser.removeEventListener("SwapDocShells", this, true);
 
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
@@ -4208,6 +4226,47 @@ let TabState = {
   // their promises when collecting tab data asynchronously.
   _pendingCollections: new WeakMap(),
 
+  // A map (xul:browser -> handler) that maps a tab to the
+  // synchronous collection handler object for that tab.
+  // See SyncHandler in content-sessionStore.js.
+  _syncHandlers: new WeakMap(),
+
+  /**
+   * Install the sync handler object from a given tab.
+   */
+  setSyncHandler: function (browser, handler) {
+    this._syncHandlers.set(browser, handler);
+  },
+
+  /**
+   * When a docshell swap happens, a xul:browser element will be
+   * associated with a different content-sessionStore.js script
+   * global. In this case, the sync handler for the element needs to
+   * be swapped just like the docshell.
+   */
+  onSwapDocShells: function (browser, otherBrowser) {
+    // Make sure that one or the other of these has a sync handler,
+    // and let it be |browser|.
+    if (!this._syncHandlers.has(browser)) {
+      [browser, otherBrowser] = [otherBrowser, browser];
+      if (!this._syncHandlers.has(browser)) {
+        return;
+      }
+    }
+
+    // At this point, browser is guaranteed to have a sync handler,
+    // although otherBrowser may not. Perform the swap.
+    let handler = this._syncHandlers.get(browser);
+    if (this._syncHandlers.has(otherBrowser)) {
+      let otherHandler = this._syncHandlers.get(otherBrowser);
+      this._syncHandlers.set(browser, otherHandler);
+      this._syncHandlers.set(otherHandler, handler);
+    } else {
+      this._syncHandlers.set(otherBrowser, handler);
+      this._syncHandlers.delete(browser);
+    }
+  },
+
   /**
    * Collect data related to a single tab, asynchronously.
    *
@@ -4226,11 +4285,10 @@ let TabState = {
       return Promise.resolve(TabStateCache.get(tab));
     }
 
-    // If the tab hasn't been restored yet, just return the data we
-    // have saved for it.
-    let browser = tab.linkedBrowser;
-    if (!browser.currentURI || (browser.__SS_data && browser.__SS_tabStillLoading)) {
-      let tabData = new TabData(this._collectBaseTabData(tab));
+    // If the tab was recently added, or if it's being restored, we
+    // just collect basic data about it and skip the cache.
+    if (!this._tabNeedsExtraCollection(tab)) {
+      let tabData = this._collectBaseTabData(tab);
       return Promise.resolve(tabData);
     }
 
@@ -4248,10 +4306,7 @@ let TabState = {
       let pageStyle = yield Messenger.send(tab, "SessionStore:collectPageStyle");
 
       // Collect basic tab data, without session history and storage.
-      let options = {omitSessionHistory: true,
-                     omitSessionStorage: true,
-                     omitDocShellCapabilities: true};
-      let tabData = this._collectBaseTabData(tab, options);
+      let tabData = this._collectBaseTabData(tab);
 
       // Apply collected data.
       tabData.entries = history.entries;
@@ -4308,8 +4363,9 @@ let TabState = {
       return TabStateCache.get(tab);
     }
 
-    let tabData = this._collectBaseTabData(tab);
-    if (this._updateTextAndScrollDataForTab(tab, tabData)) {
+    let tabData = this._collectSyncUncached(tab);
+
+    if (this._tabCachingAllowed(tab)) {
       TabStateCache.set(tab, tabData);
     }
 
@@ -4335,10 +4391,128 @@ let TabState = {
    *                   up-to-date.
    */
   clone: function (tab) {
-    let options = { includePrivateData: true };
-    let tabData = this._collectBaseTabData(tab, options);
-    this._updateTextAndScrollDataForTab(tab, tabData, options);
+    return this._collectSyncUncached(tab, {includePrivateData: true});
+  },
+
+  /**
+   * Synchronously collect all session data for a tab. The
+   * TabStateCache is not consulted, and the resulting data is not put
+   * in the cache.
+   */
+  _collectSyncUncached: function (tab, options = {}) {
+    // Collect basic tab data, without session history and storage.
+    let tabData = this._collectBaseTabData(tab);
+
+    // If we don't need any other data, return what we have.
+    if (!this._tabNeedsExtraCollection(tab)) {
+      return tabData;
+    }
+
+    // In multiprocess Firefox, there is a small window of time after
+    // tab creation when we haven't received a sync handler object. In
+    // this case the tab shouldn't have any history or cookie data, so we
+    // just return the base data already collected.
+    if (!this._syncHandlers.has(tab.linkedBrowser)) {
+      return tabData;
+    }
+
+    let syncHandler = this._syncHandlers.get(tab.linkedBrowser);
+
+    let includePrivateData = options && options.includePrivateData;
+
+    let history, storage, disallow, pageStyle;
+    try {
+      history = syncHandler.collectSessionHistory(includePrivateData);
+      storage = syncHandler.collectSessionStorage();
+      disallow = syncHandler.collectDocShellCapabilities();
+      pageStyle = syncHandler.collectPageStyle();
+    } catch (e) {
+      // This may happen if the tab has crashed.
+      Cu.reportError(e);
+      return tabData;
+    }
+
+    tabData.entries = history.entries;
+    if ("index" in history) {
+      tabData.index = history.index;
+    }
+
+    if (Object.keys(storage).length) {
+      tabData.storage = storage;
+    }
+
+    if (disallow.length > 0) {
+      tabData.disallow = disallow.join(",");
+    }
+
+    if (pageStyle) {
+      tabData.pageStyle = pageStyle;
+    }
+
     return tabData;
+  },
+
+  /*
+   * Returns true if the xul:tab element is newly added (i.e., if it's
+   * showing about:blank with no history).
+   */
+  _tabIsNew: function (tab) {
+    let browser = tab.linkedBrowser;
+    return (!browser || !browser.currentURI);
+  },
+
+  /*
+   * Returns true if the xul:tab element is in the process of being
+   * restored.
+   */
+  _tabIsRestoring: function (tab) {
+    let browser = tab.linkedBrowser;
+    return (browser.__SS_data && browser.__SS_tabStillLoading);
+  },
+
+  /**
+   * This function returns true if we need to collect history, page
+   * style, and text and scroll data from the tab. Normally we do. The
+   * cases when we don't are:
+   * 1. the tab is about:blank with no history, or
+   * 2. the tab is waiting to be restored.
+   *
+   * @param tab   A xul:tab element.
+   * @returns     True if the tab is in the process of being restored.
+   */
+  _tabNeedsExtraCollection: function (tab) {
+    if (this._tabIsNew(tab)) {
+      // Tab is about:blank with no history.
+      return false;
+    }
+
+    if (this._tabIsRestoring(tab)) {
+      // Tab is waiting to be restored.
+      return false;
+    }
+
+    // Otherwise we need the extra data.
+    return true;
+  },
+
+  /*
+   * Returns true if we should cache the tabData for the given the
+   * xul:tab element.
+   */
+  _tabCachingAllowed: function (tab) {
+    if (this._tabIsNew(tab)) {
+      // No point in caching data for newly created tabs.
+      return false;
+    }
+
+    if (this._tabIsRestoring(tab)) {
+      // If the tab is being restored, we just return the data being
+      // restored. This data may be incomplete (if supplied by
+      // setBrowserState, for example), so we don't want to cache it.
+      return false;
+    }
+
+    return true;
   },
 
   /**
@@ -4346,23 +4520,13 @@ let TabState = {
    *
    * @param tab
    *        tabbrowser tab
-   * @param options
-   *        An object that will be passed to session history and session
-   *        storage data collection methods.
-   *        {omitSessionHistory: true} to skip collecting session history data
-   *        {omitSessionStorage: true} to skip collecting session storage data
-   *        {omitDocShellCapabilities: true} to skip collecting docShell allow* attributes
-   *
-   *        The omit* options have been introduced to enable us collecting
-   *        those parts of the tab data asynchronously. We will request basic
-   *        tabData without the parts to omit and fill those holes later when
-   *        the content script has responded.
    *
    * @returns {object} An object with the basic data for this tab.
    */
-  _collectBaseTabData: function (tab, options = {}) {
+  _collectBaseTabData: function (tab) {
     let tabData = {entries: [], lastAccessed: tab.lastAccessed };
     let browser = tab.linkedBrowser;
+
     if (!browser || !browser.currentURI) {
       // can happen when calling this function right after .addTab()
       return tabData;
@@ -4386,11 +4550,6 @@ let TabState = {
       return tabData;
     }
 
-    // Collection session history data.
-    if (!options || !options.omitSessionHistory) {
-      this._collectTabHistory(tab, tabData, options);
-    }
-
     // If there is a userTypedValue set, then either the user has typed something
     // in the URL bar, or a new tab was opened with a URI to load. userTypedClear
     // is used to indicate whether the tab was in some sort of loading state with
@@ -4409,14 +4568,6 @@ let TabState = {
       delete tabData.pinned;
     tabData.hidden = tab.hidden;
 
-    if (!options || !options.omitDocShellCapabilities) {
-      let disallow = DocShellCapabilities.collect(browser.docShell);
-      if (disallow.length > 0)
-        tabData.disallow = disallow.join(",");
-      else if (tabData.disallow)
-        delete tabData.disallow;
-    }
-
     // Save tab attributes.
     tabData.attributes = TabAttributes.get(tab);
 
@@ -4429,104 +4580,7 @@ let TabState = {
     else if (tabData.extData)
       delete tabData.extData;
 
-    // Collect DOMSessionStorage data.
-    if (!options || !options.omitSessionStorage) {
-      this._collectTabSessionStorage(tab, tabData, options);
-    }
-
     return tabData;
-  },
-
-  /**
-   * Collects session history data for a given tab.
-   *
-   * @param tab
-   *        tabbrowser tab
-   * @param tabData
-   *        An object that the session history data will be added to.
-   * @param options
-   *        {includePrivateData: true} to always include private data
-   */
-  _collectTabHistory: function (tab, tabData, options = {}) {
-    let includePrivateData = options && options.includePrivateData;
-    let docShell = tab.linkedBrowser.docShell;
-
-    if (docShell instanceof Ci.nsIDocShell) {
-      let history = SessionHistory.read(docShell, includePrivateData);
-      tabData.entries = history.entries;
-
-      // For blank tabs without any history entries,
-      // there will not be an 'index' property.
-      if ("index" in history) {
-        tabData.index = history.index;
-      }
-    }
-  },
-
-  /**
-   * Collects session history data for a given tab.
-   *
-   * @param tab
-   *        tabbrowser tab
-   * @param tabData
-   *        An object that the session storage data will be added to.
-   * @param options
-   *        {includePrivateData: true} to always include private data
-   */
-  _collectTabSessionStorage: function (tab, tabData, options = {}) {
-    let includePrivateData = options && options.includePrivateData;
-    let docShell = tab.linkedBrowser.docShell;
-
-    if (docShell instanceof Ci.nsIDocShell) {
-      let storageData = SessionStorage.serialize(docShell, includePrivateData)
-      if (Object.keys(storageData).length) {
-        tabData.storage = storageData;
-      }
-    }
-  },
-
-  /**
-   * Go through all frames and store the current scroll positions
-   * and innerHTML content of WYSIWYG editors
-   *
-   * @param tab
-   *        tabbrowser tab
-   * @param tabData
-   *        tabData object to add the information to
-   * @param options
-   *        An optional object that may contain the following field:
-   *        - includePrivateData: always return privacy sensitive data
-   *          (use with care)
-   * @return false if data should not be cached because the tab
-   *        has not been fully initialized yet.
-   */
-  _updateTextAndScrollDataForTab: function (tab, tabData, options = null) {
-    let includePrivateData = options && options.includePrivateData;
-    let window = tab.ownerDocument.defaultView;
-    let browser = tab.linkedBrowser;
-    // we shouldn't update data for incompletely initialized tabs
-    if (!browser.currentURI
-        || (browser.__SS_data && browser.__SS_tabStillLoading)) {
-      return false;
-    }
-
-    let tabIndex = (tabData.index || tabData.entries.length) - 1;
-    // entry data needn't exist for tabs just initialized with an incomplete session state
-    if (!tabData.entries[tabIndex]) {
-      return false;
-    }
-
-    let selectedPageStyle = PageStyle.collect(browser.docShell);
-    if (selectedPageStyle) {
-      tabData.pageStyle = selectedPageStyle;
-    }
-
-    TextAndScrollData.updateFrame(tabData.entries[tabIndex],
-                                  browser.contentWindow,
-                                  !!tabData.pinned,
-                                  {includePrivateData: includePrivateData});
-
-    return true;
   },
 };
 

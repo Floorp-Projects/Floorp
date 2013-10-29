@@ -4,7 +4,46 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['include', 'lib']
-
 MODULE = 'vorbis'
 
+EXPORTS.vorbis += [
+    'include/vorbis/codec.h',
+]
+
+LIBRARY_NAME = 'vorbis'
+
+SOURCES += [
+    'lib/vorbis_analysis.c',
+    'lib/vorbis_bitrate.c',
+    'lib/vorbis_block.c',
+    'lib/vorbis_codebook.c',
+    'lib/vorbis_envelope.c',
+    'lib/vorbis_floor0.c',
+    'lib/vorbis_floor1.c',
+    'lib/vorbis_info.c',
+    'lib/vorbis_lookup.c',
+    'lib/vorbis_lpc.c',
+    'lib/vorbis_lsp.c',
+    'lib/vorbis_mapping0.c',
+    'lib/vorbis_mdct.c',
+    'lib/vorbis_psy.c',
+    'lib/vorbis_registry.c',
+    'lib/vorbis_res0.c',
+    'lib/vorbis_sharedbook.c',
+    'lib/vorbis_smallft.c',
+    'lib/vorbis_synthesis.c',
+    'lib/vorbis_window.c',
+]
+
+if CONFIG['OS_ARCH'] == 'AIX':
+    DEFINES['alloca'] = '__alloca'
+
+if CONFIG['OS_ARCH'] == 'SunOS':
+    DEFINES['HAVE_ALLOCA_H'] = True
+
+MSVC_ENABLE_PGO = True
+
+FORCE_STATIC_LIB = True
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    NO_VISIBILITY_FLAGS = True
