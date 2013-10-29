@@ -10,8 +10,12 @@ EXPORTS += [
     'nsUCvTWCID.h',
 ]
 
-SOURCES += [
-    'UnifiedUCVTW.cpp',
+UNIFIED_SOURCES += [
+    'nsBIG5HKSCSToUnicode.cpp',
+    'nsBIG5ToUnicode.cpp',
+    'nsUnicodeToBIG5.cpp',
+    'nsUnicodeToBIG5HKSCS.cpp',
+    'nsUnicodeToHKSCS.cpp',
 ]
 
 LIBRARY_NAME = 'ucvtw_s'
