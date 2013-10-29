@@ -517,3 +517,37 @@ OPDEF(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  2,  0,  0,  JOF_UINT8)
 
 /* Notes the point at which a value is pushed as an argument. */
 OPDEF(JSOP_NOTEARG,       228, "notearg",      NULL,  1,  0,  0,  JOF_BYTE)
+
+/*
+ * Pad out the unused opcode space to the nearest power-of-two boundary. The
+ * interpreter uses this to construct a table which is a power-of-two size.
+ */
+#ifdef OPPAD
+OPPAD(229)
+OPPAD(230)
+OPPAD(231)
+OPPAD(232)
+OPPAD(233)
+OPPAD(234)
+OPPAD(235)
+OPPAD(236)
+OPPAD(237)
+OPPAD(238)
+OPPAD(239)
+OPPAD(240)
+OPPAD(241)
+OPPAD(242)
+OPPAD(243)
+OPPAD(244)
+OPPAD(245)
+OPPAD(246)
+OPPAD(247)
+OPPAD(248)
+OPPAD(249)
+OPPAD(250)
+OPPAD(251)
+OPPAD(252)
+OPPAD(253)
+OPPAD(254)
+OPPAD(255)
+#endif

@@ -28,7 +28,7 @@ public:
         /* [optional][in] */ VARIANT varChild,
         /* [retval][out] */ BSTR __RPC_FAR *pszValue);
 
-  // nsAccessNode
+  // Accessible
   virtual void Shutdown();
 
   // DocAccessible

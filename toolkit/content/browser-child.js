@@ -114,6 +114,10 @@ let WebNavigation =  {
     addMessageListener("WebNavigation:LoadURI", this);
     addMessageListener("WebNavigation:Reload", this);
     addMessageListener("WebNavigation:Stop", this);
+
+    // Send a CPOW for the sessionHistory object.
+    let history = this._webNavigation.sessionHistory;
+    sendAsyncMessage("WebNavigation:setHistory", {}, {history: history});
   },
 
   receiveMessage: function(message) {
@@ -125,16 +129,16 @@ let WebNavigation =  {
         this.goForward();
         break;
       case "WebNavigation:GotoIndex":
-        this.gotoIndex(message);
+        this.gotoIndex(message.data.index);
         break;
       case "WebNavigation:LoadURI":
-        this.loadURI(message);
+        this.loadURI(message.data.uri, message.data.flags);
         break;
       case "WebNavigation:Reload":
-        this.reload(message);
+        this.reload(message.data.flags);
         break;
       case "WebNavigation:Stop":
-        this.stop(message);
+        this.stop(message.data.flags);
         break;
     }
   },
@@ -149,22 +153,19 @@ let WebNavigation =  {
       this._webNavigation.goForward();
   },
 
-  gotoIndex: function(message) {
-    this._webNavigation.gotoIndex(message.index);
+  gotoIndex: function(index) {
+    this._webNavigation.gotoIndex(index);
   },
 
-  loadURI: function(message) {
-    let flags = message.json.flags || this._webNavigation.LOAD_FLAGS_NONE;
-    this._webNavigation.loadURI(message.json.uri, flags, null, null, null);
+  loadURI: function(uri, flags) {
+    this._webNavigation.loadURI(uri, flags, null, null, null);
   },
 
-  reload: function(message) {
-    let flags = message.json.flags || this._webNavigation.LOAD_FLAGS_NONE;
+  reload: function(flags) {
     this._webNavigation.reload(flags);
   },
 
-  stop: function(message) {
-    let flags = message.json.flags || this._webNavigation.STOP_ALL;
+  stop: function(flags) {
     this._webNavigation.stop(flags);
   }
 };
@@ -227,3 +228,7 @@ addEventListener("ImageContentLoaded", function (aEvent) {
 }, false);
 
 RemoteAddonsChild.init(this);
+
+addMessageListener("History:UseGlobalHistory", function (aMessage) {
+  docShell.useGlobalHistory = aMessage.data.enabled;
+});
