@@ -969,7 +969,7 @@ TryPreserveWrapper(JSObject* obj);
 // Can only be called with the immediate prototype of the instance object. Can
 // only be called on the prototype of an object known to be a DOM instance.
 bool
-InstanceClassHasProtoAtDepth(JS::Handle<JSObject*> protoObject, uint32_t protoID,
+InstanceClassHasProtoAtDepth(JSObject* protoObject, uint32_t protoID,
                              uint32_t depth);
 
 // Only set allowNativeWrapper to false if you really know you need it, if in
