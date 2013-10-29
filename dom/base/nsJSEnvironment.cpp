@@ -1062,7 +1062,7 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget,
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
   } else {
-    funobj = NULL;
+    funobj = nullptr;
   }
 
   aBoundHandler.set(funobj);
@@ -1187,9 +1187,8 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
   }
   JS::Value vargs = OBJECT_TO_JSVAL(args);
 
-  return JS_DefineProperty(mContext, aTarget, aPropName, vargs, NULL, NULL, 0)
-    ? NS_OK
-    : NS_ERROR_FAILURE;
+  return JS_DefineProperty(mContext, aTarget, aPropName, vargs,
+  						   nullptr, nullptr, 0) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -2519,7 +2518,7 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
     if (!sShuttingDown) {
       CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
       sInterSliceGCTimer->InitWithFuncCallback(InterSliceGCTimerFired,
-                                               NULL,
+                                               nullptr,
                                                NS_INTERSLICE_GC_DELAY,
                                                nsITimer::TYPE_ONE_SHOT);
     }

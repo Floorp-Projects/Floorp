@@ -142,6 +142,10 @@ RunSet.runtests = function(e) {
   // Which tests we're going to run
   var my_tests = gTestList;
 
+  if (params.startAt || params.endAt) {
+    my_tests = skipTests(my_tests, params.startAt, params.endAt);
+  }
+
   if (params.totalChunks && params.thisChunk) {
     my_tests = chunkifyTests(my_tests, params.totalChunks, params.thisChunk, params.chunkByDir, TestRunner.logger);
   }

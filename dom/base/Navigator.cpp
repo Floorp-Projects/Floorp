@@ -656,7 +656,7 @@ VibrateWindowListener::HandleEvent(nsIDOMEvent* aEvent)
     nsCOMPtr<nsIDOMWindow> window = do_QueryReferent(mWindow);
     hal::CancelVibrate(window);
     RemoveListener();
-    gVibrateWindowListener = NULL;
+    gVibrateWindowListener = nullptr;
     // Careful: The line above might have deleted |this|!
   }
 

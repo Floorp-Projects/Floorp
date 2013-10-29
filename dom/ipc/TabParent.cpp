@@ -193,7 +193,7 @@ NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrow
 
 TabParent::TabParent(ContentParent* aManager, const TabContext& aContext)
   : TabContext(aContext)
-  , mFrameElement(NULL)
+  , mFrameElement(nullptr)
   , mIMESelectionAnchor(0)
   , mIMESelectionFocus(0)
   , mIMEComposing(false)

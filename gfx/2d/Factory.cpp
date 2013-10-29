@@ -554,6 +554,18 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
   return retVal;
 }
 
+TemporaryRef<SourceSurface>
+Factory::CreateSourceSurfaceForCairoSurface(cairo_surface_t* aSurface,
+                                            SurfaceFormat aFormat)
+{
+  RefPtr<SourceSurface> retVal;
+
+#ifdef USE_CAIRO
+  retVal = DrawTargetCairo::CreateSourceSurfaceForCairoSurface(aSurface, aFormat);
+#endif
+  return retVal;
+}
+
 #ifdef XP_MACOSX
 TemporaryRef<DrawTarget>
 Factory::CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize)

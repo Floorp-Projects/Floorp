@@ -163,6 +163,7 @@ class TestEmitterBasic(unittest.TestCase):
             SHARED_LIBRARY_LIBS=['fans.sll', 'tans.sll'],
             SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
             SSRCS=['bans.S', 'fans.S'],
+            VISIBILITY_FLAGS='',
         )
 
         variables = objs[1].variables

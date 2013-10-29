@@ -157,6 +157,10 @@ public:
 
   static cairo_surface_t *GetDummySurface();
 
+  static TemporaryRef<SourceSurface>
+      CreateSourceSurfaceForCairoSurface(cairo_surface_t* aSurface,
+                                         SurfaceFormat aFormat);
+
 private: // methods
   // Init cairo surface without doing a cairo_surface_reference() call.
   bool InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize& aSize);

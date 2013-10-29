@@ -602,25 +602,20 @@ ifndef MOZBUILD_BACKEND_CHECKED
 # Makefile/backend.mk is updated as a result of backend regeneration, we
 # actually pick up the changes. This should reduce the amount of
 # required clobbers and is thus the lesser evil.
-Makefile: $(DEPTH)/backend.RecursiveMakeBackend.built
+Makefile: $(DEPTH)/backend.RecursiveMakeBackend
 	@$(TOUCH) $@
 
-$(DEPTH)/backend.RecursiveMakeBackend.built:
+$(DEPTH)/backend.RecursiveMakeBackend:
 	@echo "Build configuration changed. Regenerating backend."
 	@cd $(DEPTH) && $(PYTHON) ./config.status
 	@$(TOUCH) $@
 
-include $(DEPTH)/backend.RecursiveMakeBackend.built.pp
+include $(DEPTH)/backend.RecursiveMakeBackend.pp
 
-default:: $(DEPTH)/backend.RecursiveMakeBackend.built
+default:: $(DEPTH)/backend.RecursiveMakeBackend
 
 export MOZBUILD_BACKEND_CHECKED=1
 endif
-
-
-# SUBMAKEFILES: List of Makefiles for next level down.
-#   This is used to update or create the Makefiles before invoking them.
-SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 
 # The root makefile doesn't want to do a plain export/libs, because
 # of the tiers and because of libxul. Suppress the default rules in favor
@@ -649,14 +644,6 @@ everything::
 	$(MAKE) clean
 	$(MAKE) all
 
-# Target to only regenerate makefiles
-makefiles: $(SUBMAKEFILES)
-ifneq (,$(DIRS)$(TOOL_DIRS)$(PARALLEL_DIRS))
-	$(LOOP_OVER_PARALLEL_DIRS)
-	$(LOOP_OVER_DIRS)
-	$(LOOP_OVER_TOOL_DIRS)
-endif
-
 ifneq (,$(filter-out %.$(LIB_SUFFIX),$(SHARED_LIBRARY_LIBS)))
 $(error SHARED_LIBRARY_LIBS must contain .$(LIB_SUFFIX) files only)
 endif
@@ -665,9 +652,6 @@ HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX),$(HOST_LIBS))
 
 # Dependencies which, if modified, should cause everything to rebuild
 GLOBAL_DEPS += Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk
-ifndef NO_MAKEFILE_RULE
-GLOBAL_DEPS += Makefile.in
-endif
 
 ##############################################
 OBJ_TARGETS = $(OBJS) $(PROGOBJS) $(HOST_OBJS) $(HOST_PROGOBJS)
@@ -742,7 +726,7 @@ endif # NO_PROFILE_GUIDED_OPTIMIZE
 checkout:
 	$(MAKE) -C $(topsrcdir) -f client.mk checkout
 
-clean clobber realclean clobber_all:: $(SUBMAKEFILES)
+clean clobber realclean clobber_all::
 	-$(RM) $(ALL_TRASH)
 	-$(RM) -r $(ALL_TRASH_DIRS)
 
@@ -755,7 +739,7 @@ else
 clean clobber realclean clobber_all distclean::
 	$(foreach dir,$(PARALLEL_DIRS) $(DIRS) $(TOOL_DIRS),-$(call SUBMAKE,$@,$(dir)))
 
-distclean:: $(SUBMAKEFILES)
+distclean::
 	$(foreach dir,$(PARALLEL_DIRS) $(DIRS) $(TOOL_DIRS),-$(call SUBMAKE,$@,$(dir)))
 endif
 
@@ -1161,34 +1145,6 @@ endif
 ifneq (,$(JAVAFILES)$(ANDROID_RESFILES)$(ANDROID_APKNAME)$(JAVA_JAR_TARGETS))
   include $(topsrcdir)/config/makefiles/java-build.mk
 endif
-
-###############################################################################
-# Update Files Managed by Build Backend
-###############################################################################
-
-ifndef NO_MAKEFILE_RULE
-Makefile: Makefile.in
-	@$(PYTHON) $(DEPTH)/config.status -n --file=Makefile
-	@$(TOUCH) $@
-endif
-
-ifndef NO_SUBMAKEFILES_RULE
-ifdef SUBMAKEFILES
-# VPATH does not work on some machines in this case, so add $(srcdir)
-$(SUBMAKEFILES): % : $(srcdir)/%.in
-	$(PYTHON) $(DEPTH)$(addprefix /,$(subsrcdir))/config.status -n --file="$@"
-	@$(TOUCH) "$@"
-endif
-endif
-
-ifdef AUTOUPDATE_CONFIGURE
-$(topsrcdir)/configure: $(topsrcdir)/configure.in
-	(cd $(topsrcdir) && $(AUTOCONF)) && $(PYTHON) $(DEPTH)/config.status -n --recheck
-endif
-
-$(DEPTH)/config/autoconf.mk: $(topsrcdir)/config/autoconf.mk.in
-	$(PYTHON) $(DEPTH)/config.status -n --file=$(DEPTH)/config/autoconf.mk
-	$(TOUCH) $@
 
 ###############################################################################
 # Bunch of things that extend the 'export' rule (in order):
@@ -1625,7 +1581,7 @@ FORCE:
 
 tags: TAGS
 
-TAGS: $(SUBMAKEFILES) $(CSRCS) $(CPPSRCS) $(wildcard *.h)
+TAGS: $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
@@ -1642,7 +1598,7 @@ documentation:
 	$(DOXYGEN) $(DEPTH)/config/doxygen.cfg
 
 ifdef ENABLE_TESTS
-check:: $(SUBMAKEFILES)
+check::
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)

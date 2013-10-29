@@ -135,7 +135,7 @@ RoundDown(double aDouble)
 static inline bool
 IsMouseEventReal(WidgetEvent* aEvent)
 {
-  NS_ABORT_IF_FALSE(aEvent->IsMouseDerivedEvent(), "Not a mouse event");
+  NS_ABORT_IF_FALSE(aEvent->AsMouseEvent(), "Not a mouse event");
   // Return true if not synthesized.
   return aEvent->AsMouseEvent()->reason == WidgetMouseEvent::eReal;
 }

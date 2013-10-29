@@ -595,7 +595,7 @@ HTMLComboboxListAccessible::
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// HTMLComboboxAccessible: nsAccessNode
+// HTMLComboboxAccessible: Accessible
 
 nsIFrame*
 HTMLComboboxListAccessible::GetFrame() const
@@ -611,9 +611,6 @@ HTMLComboboxListAccessible::GetFrame() const
 
   return nullptr;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// HTMLComboboxAccessible: Accessible
 
 role
 HTMLComboboxListAccessible::NativeRole()

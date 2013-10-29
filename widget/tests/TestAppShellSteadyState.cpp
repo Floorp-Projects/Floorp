@@ -141,7 +141,7 @@ public:
       fail("Failed to dispatch check runnable");
     }
 
-    if (NS_FAILED(NS_ProcessPendingEvents(NULL))) {
+    if (NS_FAILED(NS_ProcessPendingEvents(nullptr))) {
       fail("Failed to process all pending events");
     }
 
@@ -239,7 +239,7 @@ public:
   {
     if (sWindowUtils) {
       nsCOMPtr<nsIDOMWindowUtils> utils = dont_AddRef(sWindowUtils);
-      sWindowUtils = NULL;
+      sWindowUtils = nullptr;
 
       if (gStableStateEventHasRun) {
         fail("StableStateRunnable ran at wrong time");
@@ -258,7 +258,7 @@ public:
       return;
     }
 
-    KillTimer(NULL, idEvent);
+    KillTimer(nullptr, idEvent);
 
     nsCOMPtr<nsIAppShell> appShell = dont_AddRef(sAppShell);
 
@@ -280,7 +280,7 @@ public:
   ScheduleTimer(nsIDOMWindowUtils* aWindowUtils)
   {
 #ifdef XP_WIN
-    UINT_PTR timerId = SetTimer(NULL, 0, 1000, (TIMERPROC)TimerCallback);
+    UINT_PTR timerId = SetTimer(nullptr, 0, 1000, (TIMERPROC)TimerCallback);
     if (!timerId) {
       fail("SetTimer failed!");
       return false;
@@ -299,8 +299,8 @@ public:
   }
 };
 
-nsIDOMWindowUtils* EventListener::sWindowUtils = NULL;
-nsIAppShell* EventListener::sAppShell = NULL;
+nsIDOMWindowUtils* EventListener::sWindowUtils = nullptr;
+nsIAppShell* EventListener::sAppShell = nullptr;
 
 NS_IMPL_ISUPPORTS1(EventListener, nsIDOMEventListener)
 
@@ -399,7 +399,7 @@ Test4Internal(nsIAppShell* aAppShell)
   }
 
   nsCOMPtr<nsIURI> uri;
-  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), "about:", NULL))) {
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), "about:", nullptr))) {
     fail("Failed to create new uri");
     return false;
   }
@@ -407,7 +407,7 @@ Test4Internal(nsIAppShell* aAppShell)
   uint32_t flags = nsIWebBrowserChrome::CHROME_DEFAULT;
 
   nsCOMPtr<nsIXULWindow> xulWindow;
-  if (NS_FAILED(appService->CreateTopLevelWindow(NULL, uri, flags, 100, 100,
+  if (NS_FAILED(appService->CreateTopLevelWindow(nullptr, uri, flags, 100, 100,
                                                  getter_AddRefs(xulWindow)))) {
     fail("Failed to create new window");
     return false;

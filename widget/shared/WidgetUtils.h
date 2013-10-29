@@ -41,11 +41,11 @@ public:
    * @param aUnshiftedCharCode  CharCode for aKeyCode without Shift key.
    *                            This may be zero if aKeyCode key doesn't input
    *                            a Latin character.
-   *                            Note that must not be NULL.
+   *                            Note that must not be nullptr.
    * @param aShiftedCharCode    CharCode for aKeyCOde with Shift key.
    *                            This is always 0 when aKeyCode isn't
    *                            NS_VK_[A-Z].
-   *                            Note that must not be NULL.
+   *                            Note that must not be nullptr.
    */
   static void GetLatinCharCodeForKeyCode(uint32_t aKeyCode,
                                          bool aIsCapsLock,

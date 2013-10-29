@@ -77,7 +77,7 @@ DocAccessibleWrap::get_accValue(VARIANT aVarChild, BSTR __RPC_FAR* aValue)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessNode
+// Accessible
 
 void
 DocAccessibleWrap::Shutdown()

@@ -27,6 +27,7 @@ interface DummyInterface : EventTarget {
   void WifiOptions(optional WifiCommandOptions arg1,
                    optional WifiResultOptions arg2);
   void AppNotificationServiceOptions(optional AppNotificationServiceOptions arg);
+  void AppInfo(optional AppInfo arg1);
 };
 
 interface DummyInterfaceWorkers {

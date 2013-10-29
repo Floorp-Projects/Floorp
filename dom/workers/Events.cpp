@@ -53,14 +53,14 @@ public:
     if (aMainRuntime) {
       JS::Rooted<JS::Value> windowPropVal(aCx);
       if (!JS_GetProperty(aCx, aObj, sClass.name, &windowPropVal)) {
-        return NULL;
+        return nullptr;
       }
 
       if (!JSVAL_IS_PRIMITIVE(windowPropVal)) {
         JS::Rooted<JS::Value> protoVal(aCx);
         if (!JS_GetProperty(aCx, JSVAL_TO_OBJECT(windowPropVal), "prototype",
                             &protoVal)) {
-          return NULL;
+          return nullptr;
         }
 
         if (!JSVAL_IS_PRIMITIVE(protoVal)) {
@@ -74,17 +74,17 @@ public:
     JS::Rooted<JSObject*> proto(aCx, JS_InitClass(aCx, aObj, parentProto, clasp, Construct, 0,
                                                   sProperties, sFunctions, nullptr, nullptr));
     if (!proto) {
-      return NULL;
+      return nullptr;
     }
 
     JS::Rooted<JSObject*> ctor(aCx, JS_GetConstructor(aCx, proto));
     if (!ctor) {
-      return NULL;
+      return nullptr;
     }
 
     if (!dom::DefineConstants(aCx, ctor, sStaticConstants) ||
         !dom::DefineConstants(aCx, proto, sStaticConstants)) {
-      return NULL;
+      return nullptr;
     }
 
     return proto;
@@ -96,7 +96,7 @@ public:
   {
     const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
-    JSObject* obj = JS_NewObject(aCx, clasp, NULL, aParent);
+    JSObject* obj = JS_NewObject(aCx, clasp, nullptr, aParent);
     if (obj) {
       Event* priv = new Event();
       SetJSPrivateSafeish(obj, priv);
@@ -180,10 +180,10 @@ protected:
     if (priv) {
       return priv;
     }
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
                          JS_GetClass(aObj)->name);
-    return NULL;
+    return nullptr;
   }
 
   static void
@@ -211,7 +211,7 @@ private:
   static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr, JSMSG_WRONG_CONSTRUCTOR,
                          sClass.name);
     return false;
   }
@@ -410,7 +410,7 @@ public:
     const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
     return JS_InitClass(aCx, aObj, aParentProto, clasp, Construct, 0,
-                        sProperties, sFunctions, NULL, NULL);
+                        sProperties, sFunctions, nullptr, nullptr);
   }
 
   static JSObject*
@@ -421,26 +421,26 @@ public:
   {
     JS::Rooted<JSString*> type(aCx, JS_InternString(aCx, "message"));
     if (!type) {
-      return NULL;
+      return nullptr;
     }
 
     const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
-    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, clasp, NULL, aParent));
+    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, clasp, nullptr, aParent));
     if (!obj) {
-      return NULL;
+      return nullptr;
     }
 
     JS::Rooted<JSObject*> ports(aCx, JS_NewArrayObject(aCx, 0, nullptr));
     if (!ports) {
-      return NULL;
+      return nullptr;
     }
 
     MessageEvent* priv = new MessageEvent(aMainRuntime);
     SetJSPrivateSafeish(obj, priv);
 
-    InitMessageEventCommon(aCx, obj, priv, type, false, false, NULL, NULL, NULL,
-                           ports, true);
+    InitMessageEventCommon(aCx, obj, priv, type, false, false, nullptr,
+                           nullptr, nullptr, ports, true);
 
     priv->mBuffer.swap(aData);
     priv->mClonedObjects.SwapElements(aClonedObjects);
@@ -470,7 +470,7 @@ public:
     }
 
     if (!ports) {
-      return NULL;
+      return nullptr;
     }
 
     MessageEvent* priv = new MessageEvent(false);
@@ -513,10 +513,10 @@ private:
       return GetJSPrivateSafeish<MessageEvent>(aObj);
     }
 
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
                          classPtr->name);
-    return NULL;
+    return nullptr;
   }
 
   static void
@@ -540,8 +540,8 @@ private:
   static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
-                         sClass.name);
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
+                         JSMSG_WRONG_CONSTRUCTOR, sClass.name);
     return false;
   }
 
@@ -693,7 +693,7 @@ public:
     const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
     return JS_InitClass(aCx, aObj, aParentProto, clasp, Construct, 0,
-                        sProperties, sFunctions, NULL, NULL);
+                        sProperties, sFunctions, nullptr, nullptr);
   }
 
   static JSObject*
@@ -702,14 +702,14 @@ public:
   {
     JS::Rooted<JSString*> type(aCx, JS_InternString(aCx, "error"));
     if (!type) {
-      return NULL;
+      return nullptr;
     }
 
     const JSClass* clasp = aMainRuntime ? &sMainRuntimeClass : &sClass;
 
-    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, clasp, NULL, aParent));
+    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, clasp, nullptr, aParent));
     if (!obj) {
-      return NULL;
+      return nullptr;
     }
 
     ErrorEvent* priv = new ErrorEvent();
@@ -748,10 +748,10 @@ private:
       return GetJSPrivateSafeish<ErrorEvent>(aObj);
     }
 
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
                          classPtr->name);
-    return NULL;
+    return nullptr;
   }
 
   static void
@@ -770,8 +770,8 @@ private:
   static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
-                         sClass.name);
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
+                         JSMSG_WRONG_CONSTRUCTOR, sClass.name);
     return false;
   }
 
@@ -887,7 +887,7 @@ public:
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto)
   {
     return JS_InitClass(aCx, aObj, aParentProto, &sClass, Construct, 0,
-                        sProperties, NULL, NULL, NULL);
+                        sProperties, nullptr, nullptr, nullptr);
   }
 
   static JSObject*
@@ -896,12 +896,13 @@ public:
   {
     JS::Rooted<JSString*> type(aCx, JS_InternJSString(aCx, aType));
     if (!type) {
-      return NULL;
+      return nullptr;
     }
 
-    JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, &sClass, NULL, aParent));
+    JS::Rooted<JSObject*> obj(aCx,
+                              JS_NewObject(aCx, &sClass, nullptr, aParent));
     if (!obj) {
-      return NULL;
+      return nullptr;
     }
 
     ProgressEvent* priv = new ProgressEvent();
@@ -940,10 +941,10 @@ private:
       return GetJSPrivateSafeish<ProgressEvent>(aObj);
     }
 
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
                          JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
                          classPtr->name);
-    return NULL;
+    return nullptr;
   }
 
   static void
@@ -963,8 +964,8 @@ private:
   static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,
-                         sClass.name);
+    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
+                         JSMSG_WRONG_CONSTRUCTOR, sClass.name);
     return false;
   }
 
@@ -1038,7 +1039,7 @@ Event::GetPrivate(JSObject* aObj)
       return GetJSPrivateSafeish<Event>(aObj);
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 } /* anonymous namespace */

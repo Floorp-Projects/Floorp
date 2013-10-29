@@ -128,7 +128,7 @@ int32_t NetUtils::do_dhcp_do_request(const char *ifname,
     // http://androidxref.com/4.3_r2.1/xref/system/core/libnetutils/dhcp_utils.c#181
     DEFINE_DLFUNC(dhcp_do_request, int32_t, const char*, char*, char*,  uint32_t*, char**, char*, uint32_t*, char*, char*)
     USE_DLFUNC(dhcp_do_request)
-    char *dns[3] = {dns1, dns2, NULL};
+    char *dns[3] = {dns1, dns2, nullptr};
     char domains[PROPERTY_VALUE_MAX];
     ret = dhcp_do_request(ifname, ipaddr, gateway, prefixLength, dns,
                           server, lease, vendorinfo, domains);

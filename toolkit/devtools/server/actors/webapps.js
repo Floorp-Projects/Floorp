@@ -418,12 +418,41 @@ WebappsActor.prototype = {
           zipFile.moveTo(installDir, "application.zip");
 
           let origin = "app://" + id;
+          let manifestURL = origin + "/manifest.webapp";
+
+          // Refresh application.zip content (e.g. reinstall app), as done here:
+          // http://hg.mozilla.org/mozilla-central/annotate/aaefec5d34f8/dom/apps/src/Webapps.jsm#l1125
+          // Do it in parent process for the simulator
+          let jar = installDir.clone();
+          jar.append("application.zip");
+          Services.obs.notifyObservers(jar, "flush-cache-entry", null);
+
+          // And then in app content process
+          // This function will be evaluated in the scope of the content process
+          // frame script. That will flush the jar cache for this app and allow
+          // loading fresh updated resources if we reload its document.
+          let FlushFrameScript = function (path) {
+            let jar = Components.classes["@mozilla.org/file/local;1"]
+                                .createInstance(Components.interfaces.nsILocalFile);
+            jar.initWithPath(path);
+            let obs = Components.classes["@mozilla.org/observer-service;1"]
+                                .getService(Components.interfaces.nsIObserverService);
+            obs.notifyObservers(jar, "flush-cache-entry", null);
+          };
+          for each (let frame in self._appFrames()) {
+            if (frame.getAttribute("mozapp") == manifestURL) {
+              let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+              mm.loadFrameScript("data:," +
+                encodeURIComponent("(" + FlushFrameScript.toString() + ")" +
+                                   "('" + jar.path + "')"), false);
+            }
+          }
 
           // Create a fake app object with the minimum set of properties we need.
           let app = {
             origin: origin,
             installOrigin: origin,
-            manifestURL: origin + "/manifest.webapp",
+            manifestURL: manifestURL,
             appStatus: appType,
             receipts: aReceipts,
           }
@@ -739,6 +768,10 @@ WebappsActor.prototype = {
   },
 
   _appFrames: function () {
+    // For now, we only support app frames on b2g
+    if (Services.appinfo.ID != "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}") {
+      return;
+    }
     // Register the system app
     let chromeWindow = Services.wm.getMostRecentWindow('navigator:browser');
     let systemAppFrame = chromeWindow.shell.contentBrowser;
