@@ -201,7 +201,7 @@ function navigate(aTarget, aUrl) {
 
 function reload(aTarget) {
   let navigated = once(aTarget, "navigate");
-  aTarget.client.activeTab.reload();
+  executeSoon(() => aTarget.client.activeTab.reload());
   return navigated;
 }
 
