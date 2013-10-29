@@ -249,8 +249,6 @@ public:
    */
   static int32_t DefaultInterval();
 
-  bool IsInRefresh() { return mInRefresh; }
-
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
   typedef nsTHashtable<nsISupportsHashKey> RequestTable;
@@ -304,7 +302,6 @@ private:
   bool mTestControllingRefreshes;
   bool mViewManagerFlushIsPending;
   bool mRequestedHighPrecision;
-  bool mInRefresh;
 
   int64_t mMostRecentRefreshEpochTime;
   mozilla::TimeStamp mMostRecentRefresh;
