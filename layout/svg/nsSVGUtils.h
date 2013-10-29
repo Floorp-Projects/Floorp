@@ -507,10 +507,6 @@ public:
   static bool
   CanOptimizeOpacity(nsIFrame *aFrame);
 
-  /* Calculate the maximum expansion of a matrix */
-  static float
-  MaxExpansion(const gfxMatrix &aMatrix);
-
   /**
    * Take the CTM to userspace for an element, and adjust it to a CTM to its
    * object bounding box space if aUnits is SVG_UNIT_TYPE_OBJECTBOUNDINGBOX.

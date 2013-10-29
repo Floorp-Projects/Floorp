@@ -65,7 +65,7 @@ public:
   // 290770).  See bug 290852 for foreignObject complications.
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint)=0;
 
-  // Get bounds in our gfxContext's coordinates space (in app units)
+  // Get bounds in our nsSVGOuterSVGFrame's coordinates space (in app units)
   NS_IMETHOD_(nsRect) GetCoveredRegion()=0;
 
   // Called on SVG child frames (except NS_FRAME_IS_NONDISPLAY frames)
