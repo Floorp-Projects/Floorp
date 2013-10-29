@@ -227,3 +227,41 @@ function otherMath() {
 };
 test(setupComp, otherMath);
 
+function setupFloor() {
+    f32[0] = -5.5;
+    f32[1] = -0.5;
+    f32[2] = 0;
+    f32[3] = 1.5;
+}
+function setupFloorDouble() {
+    f32[4] = NaN;
+    f32[5] = -0;
+    f32[6] = Infinity;
+    f32[7] = -Infinity;
+    f32[8] = Math.pow(2,31); // too big to fit into a int
+}
+function testFloor() {
+    for (var i = 0; i < 4; ++i) {
+        var f = Math.floor(f32[i]);
+        assertFloat32(g, false); // f is an int32
+
+        var g = Math.floor(-0 + f32[i]);
+        assertFloat32(g, false);
+
+        assertEq(f, g);
+    }
+}
+function testFloorDouble() {
+    for (var i = 4; i < 9; ++i) {
+        var f = Math.fround(Math.floor(f32[i]));
+        assertFloat32(f, true);
+
+        var g = Math.floor(-0 + f32[i]);
+        assertFloat32(g, false);
+
+        assertEq(f, g);
+    }
+}
+test(setupFloor, testFloor);
+test(setupFloorDouble, testFloorDouble);
+

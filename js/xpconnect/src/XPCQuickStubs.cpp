@@ -7,6 +7,7 @@
 #include "jsfriendapi.h"
 #include "jsprf.h"
 #include "nsCOMPtr.h"
+#include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "XPCInlines.h"
 #include "XPCQuickStubs.h"
@@ -531,14 +532,28 @@ getWrapper(JSContext *cx,
     // If we pass stopAtOuter == false, we can handle all three with one call
     // to js::CheckedUnwrap.
     if (js::IsWrapper(obj)) {
-        obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+        JSObject* inner = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+
+        // Hack - For historical reasons, wrapped chrome JS objects have been
+        // passable as native interfaces. We'd like to fix this, but it
+        // involves fixing the contacts API and PeerConnection to stop using
+        // COWs. This needs to happen, but for now just preserve the old
+        // behavior.
+        //
+        // Note that there is an identical hack in
+        // XPCConvert::JSObject2NativeInterface which should be removed if this
+        // one is.
+        if (!inner && MOZ_UNLIKELY(xpc::WrapperFactory::IsCOW(obj)))
+            inner = js::UncheckedUnwrap(obj);
 
         // The safe unwrap might have failed if we encountered an object that
         // we're not allowed to unwrap. If it didn't fail though, we should be
         // done with wrappers.
-        if (!obj)
+        if (!inner)
             return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-        MOZ_ASSERT(!js::IsWrapper(obj));
+        MOZ_ASSERT(!js::IsWrapper(inner));
+
+        obj = inner;
     }
 
     // Start with sane values.

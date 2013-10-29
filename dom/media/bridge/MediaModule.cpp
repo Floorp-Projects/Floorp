@@ -26,13 +26,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(PeerConnectionImpl)
 NS_DEFINE_NAMED_CID(PEERCONNECTION_CID);
 
 static const mozilla::Module::CIDEntry kCIDs[] = {
-  { &kPEERCONNECTION_CID, false, NULL, sipcc::PeerConnectionImplConstructor },
-  { NULL }
+  { &kPEERCONNECTION_CID, false, nullptr, sipcc::PeerConnectionImplConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kContracts[] = {
   { PEERCONNECTION_CONTRACTID, &kPEERCONNECTION_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kModule = {

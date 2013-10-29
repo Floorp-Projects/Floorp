@@ -942,8 +942,8 @@ ProcessName(CERTName *name, nsINSSComponent *nssComponent, PRUnichar **value)
   lastRdn = rdns;
   while (*lastRdn) lastRdn++;
   // The above whille loop will put us at the last member
-  // of the array which is a NULL pointer.  So let's back
-  // up one spot so that we have the last non-NULL entry in 
+  // of the array which is a nullptr pointer.  So let's back
+  // up one spot so that we have the last non-nullptr entry in 
   // the array in preparation for traversing the 
   // RDN's (Relative Distinguished Name) in reverse oder.
   lastRdn--;
