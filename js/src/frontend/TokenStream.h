@@ -182,11 +182,7 @@ TokenKindIsAssignment(TokenKind tt)
 inline bool
 TokenKindIsDecl(TokenKind tt)
 {
-#if JS_HAS_BLOCK_SCOPE
     return tt == TOK_VAR || tt == TOK_LET;
-#else
-    return tt == TOK_VAR;
-#endif
 }
 
 struct TokenPos {
