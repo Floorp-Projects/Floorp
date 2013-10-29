@@ -122,14 +122,19 @@ GetValueString(nsAString &aValueAsString, float aValue, uint16_t aUnitType)
 }
 
 static bool
-GetValueFromString(const nsAString& aValueAsString,
+GetValueFromString(const nsAString& aString,
                    float& aValue,
                    uint16_t* aUnitType)
 {
-  nsAutoString units;
-  if (!SVGContentUtils::ParseNumber(aValueAsString, aValue, units)) {
+  RangedPtr<const PRUnichar> iter =
+    SVGContentUtils::GetStartRangedPtr(aString);
+  const RangedPtr<const PRUnichar> end =
+    SVGContentUtils::GetEndRangedPtr(aString);
+
+  if (!SVGContentUtils::ParseNumber(iter, end, aValue)) {
     return false;
   }
+  const nsAString& units = Substring(iter.get(), end.get());
   *aUnitType = GetUnitTypeForString(units);
   return IsValidUnitType(*aUnitType);
 }
