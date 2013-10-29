@@ -12,6 +12,10 @@ SOURCES += [
     'xpcAccessibleTableCell.cpp',
 ]
 
+GENERATED_SOURCES += [
+    'xpcAccEvents.cpp',
+]
+
 LIBRARY_NAME = 'accessibility_xpcom_s'
 
 LIBXUL_LIBRARY = True
