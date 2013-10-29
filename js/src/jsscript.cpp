@@ -1878,10 +1878,9 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
     uint32_t prologLength = bce->prologOffset();
     uint32_t nsrcnotes = uint32_t(bce->countFinalSourceNotes());
     uint32_t natoms = bce->atomIndices->count();
-    uint32_t nblockscopes = 0;
     if (!partiallyInit(cx, script,
                        bce->constList.length(), bce->objectList.length, bce->regexpList.length,
-                       bce->tryNoteList.length(), nblockscopes, bce->typesetCount))
+                       bce->tryNoteList.length(), bce->blockScopeList.length(), bce->typesetCount))
     {
         return false;
     }
@@ -1918,15 +1917,16 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
 
     FunctionBox *funbox = bce->sc->isFunctionBox() ? bce->sc->asFunctionBox() : nullptr;
 
-    // FIXME: Initialize blockScopes here.
-    if (bce->tryNoteList.length() != 0)
-        bce->tryNoteList.finish(script->trynotes());
+    if (bce->constList.length() != 0)
+        bce->constList.finish(script->consts());
     if (bce->objectList.length != 0)
         bce->objectList.finish(script->objects());
     if (bce->regexpList.length != 0)
         bce->regexpList.finish(script->regexps());
-    if (bce->constList.length() != 0)
-        bce->constList.finish(script->consts());
+    if (bce->tryNoteList.length() != 0)
+        bce->tryNoteList.finish(script->trynotes());
+    if (bce->blockScopeList.length() != 0)
+        bce->blockScopeList.finish(script->blockScopes());
     script->strict = bce->sc->strict;
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
