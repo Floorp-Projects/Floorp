@@ -121,7 +121,7 @@ EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-		-DVERSION="$(LIBRARY_NAME)$(MOZILLA_VERSION)" $< > $@
+		-DVERSION="$(LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)" $< > $@
 
 EXTRA_DEPS += symverscript
 endif
