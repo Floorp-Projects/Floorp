@@ -146,7 +146,7 @@ const kTests = [
     canRun: function () {
       return (kIsMac || kIsWin);
     },
-    todoMismatch: [ "key" ],
+    todoMismatch: [],
   },
   { description: "nsKeyEvent (keyup of 'a' key without modifiers)",
     targetID: "input-text", eventType: "keydown",
@@ -162,7 +162,7 @@ const kTests = [
     canRun: function () {
       return (kIsMac || kIsWin);
     },
-    todoMismatch: [ "key" ],
+    todoMismatch: [],
   },
   { description: "nsKeyEvent (keypress of 'b' key with Shift)",
     targetID: "input-text", eventType: "keypress",
@@ -179,7 +179,7 @@ const kTests = [
       return (kIsMac || kIsWin);
     },
     // "defaultPrevented" becomes true because the editor consumes the keypress event.
-    todoMismatch: [ "key", "defaultPrevented" ],
+    todoMismatch: [ "defaultPrevented" ],
   },
   { description: "nsKeyEvent (keypress of 'c' key with Accel)",
     targetID: "input-text", eventType: "keypress",
@@ -196,7 +196,7 @@ const kTests = [
       return (kIsMac || kIsWin);
     },
     // "defaultPrevented" becomes true because the editor consumes the keypress event.
-    todoMismatch: [ "key", "defaultPrevented" ],
+    todoMismatch: [ "defaultPrevented" ],
   },
   { description: "nsMouseEvent (mousedown of left button without modifier)",
     targetID: "button", eventType: "mousedown",
