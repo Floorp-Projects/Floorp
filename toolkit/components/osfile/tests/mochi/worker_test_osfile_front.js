@@ -844,4 +844,16 @@ function test_remove_file()
     OS.File.remove(absent_file_name);
   });
   ok(!exn, "test_remove_file: ignoreAbsent works");
+
+  if (OS.Win) {
+    let file_name = "test_osfile_front_file_to_remove.tmp";
+    let file = OS.File.open(file_name, {write: true});
+    file.close();
+    ok(OS.File.exists(file_name), "test_remove_file: test file exists");
+    OS.Win.File.SetFileAttributes(file_name,
+                                  OS.Constants.Win.FILE_ATTRIBUTE_READONLY);
+    OS.File.remove(file_name);
+    ok(!OS.File.exists(file_name),
+       "test_remove_file: test file has been removed");
+  }
 }
