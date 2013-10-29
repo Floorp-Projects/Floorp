@@ -187,6 +187,7 @@ class TreeMetadataEmitter(LoggingMixin):
             },
             HOST_SOURCES={
                 '.c': 'HOST_CSRCS',
+                '.mm': 'HOST_CMMSRCS',
                 '.cc': 'HOST_CPPSRCS',
                 '.cpp': 'HOST_CPPSRCS',
             },
