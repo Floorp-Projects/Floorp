@@ -81,19 +81,31 @@ struct JSTryNote {
 
 namespace js {
 
+struct BlockScopeNote {
+    uint32_t        index;      // Index of StaticScopeObject in the object array.
+    uint32_t        start;      // Bytecode offset at which this scope starts.
+    uint32_t        length;     // Bytecode length of scope.
+    uint32_t        padding;    // Pad to 64-bit boundary.
+};
+
 struct ConstArray {
     js::HeapValue   *vector;    /* array of indexed constant values */
     uint32_t        length;
 };
 
 struct ObjectArray {
-    js::HeapPtrObject *vector;  /* array of indexed objects */
-    uint32_t        length;     /* count of indexed objects */
+    js::HeapPtrObject *vector;  // Array of indexed objects.
+    uint32_t        length;     // Count of indexed objects.
 };
 
 struct TryNoteArray {
-    JSTryNote       *vector;    /* array of indexed try notes */
-    uint32_t        length;     /* count of indexed try notes */
+    JSTryNote       *vector;    // Array of indexed try notes.
+    uint32_t        length;     // Count of indexed try notes.
+};
+
+struct BlockScopeArray {
+    BlockScopeNote *vector;     // Array of indexed BlockScopeNote records.
+    uint32_t        length;     // Count of indexed try notes.
 };
 
 /*
@@ -552,6 +564,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
         OBJECTS,
         REGEXPS,
         TRYNOTES,
+        BLOCK_SCOPES,
         ARRAY_KIND_BITS
     };
 
@@ -564,7 +577,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     uint8_t         generatorKindBits_:2;
 
     // Unused padding; feel free to steal these if you need them.
-    uint8_t         padToByte_:2;
+    uint8_t         padToByte_:1;
 
     // 1-bit fields.
 
@@ -650,8 +663,9 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     // successfully creating any kind (function or other) of new JSScript.
     // However, callers of fullyInitFromEmitter() do not need to do this.
     static bool partiallyInit(js::ExclusiveContext *cx, JS::Handle<JSScript*> script,
-                              uint32_t nobjects, uint32_t nregexps,
-                              uint32_t ntrynotes, uint32_t nconsts, uint32_t nTypeSets);
+                              uint32_t nconsts, uint32_t nobjects, uint32_t nregexps,
+                              uint32_t ntrynotes, uint32_t nblockscopes,
+                              uint32_t nTypeSets);
     static bool fullyInitFromEmitter(js::ExclusiveContext *cx, JS::Handle<JSScript*> script,
                                      js::frontend::BytecodeEmitter *bce);
     // Initialize a no-op script.
@@ -913,6 +927,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     bool hasObjects()       { return hasArray(OBJECTS);     }
     bool hasRegexps()       { return hasArray(REGEXPS);     }
     bool hasTrynotes()      { return hasArray(TRYNOTES);    }
+    bool hasBlockScopes()   { return hasArray(BLOCK_SCOPES); }
 
     #define OFF(fooOff, hasFoo, t)   (fooOff() + (hasFoo() ? sizeof(t) : 0))
 
@@ -920,6 +935,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     size_t objectsOffset()    { return OFF(constsOffset,     hasConsts,     js::ConstArray);      }
     size_t regexpsOffset()    { return OFF(objectsOffset,    hasObjects,    js::ObjectArray);     }
     size_t trynotesOffset()   { return OFF(regexpsOffset,    hasRegexps,    js::ObjectArray);     }
+    size_t blockScopesOffset(){ return OFF(trynotesOffset,   hasTrynotes,   js::TryNoteArray);    }
 
     js::ConstArray *consts() {
         JS_ASSERT(hasConsts());
@@ -939,6 +955,11 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     js::TryNoteArray *trynotes() {
         JS_ASSERT(hasTrynotes());
         return reinterpret_cast<js::TryNoteArray *>(data + trynotesOffset());
+    }
+
+    js::BlockScopeArray *blockScopes() {
+        JS_ASSERT(hasBlockScopes());
+        return reinterpret_cast<js::BlockScopeArray *>(data + blockScopesOffset());
     }
 
     bool hasLoops();
