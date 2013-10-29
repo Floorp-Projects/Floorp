@@ -151,10 +151,10 @@ class VideoSessionConduit : public MediaSessionConduit
 public:
   /**
    * Factory function to create and initialize a Video Conduit Session
-   * return: Concrete VideoSessionConduitObject or NULL in the case
+   * return: Concrete VideoSessionConduitObject or nullptr in the case
    *         of failure
    */
-  static RefPtr<VideoSessionConduit> Create();
+  static RefPtr<VideoSessionConduit> Create(VideoSessionConduit *aOther);
 
   enum FrameRequestType
   {
@@ -260,8 +260,8 @@ class AudioSessionConduit : public MediaSessionConduit
 public:
 
    /**
-    * Factory function to create and initialize a Video Conduit Session
-    * return: Concrete VideoSessionConduitObject or NULL in the case
+    * Factory function to create and initialize an Audio Conduit Session
+    * return: Concrete AudioSessionConduitObject or nullptr in the case
     *         of failure
     */
   static mozilla::RefPtr<AudioSessionConduit> Create(AudioSessionConduit *aOther);

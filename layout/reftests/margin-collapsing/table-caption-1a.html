@@ -2,9 +2,12 @@
 <html>
 <head>
 <style type="text/css">
-.separator {
+#block1, #block2 {
  height: 20px;
  background-color: green;
+}
+#block1 {
+ margin-bottom: 10px;
 }
 #table {
  display: table;
@@ -12,17 +15,20 @@
 }
 #caption {
  display: table-caption;
- margin: 30px 0;
  height: 20px;
+ margin: 20px 0;
  background-color: blue;
+}
+#block2 {
+ margin-top: 10px;
 }
 </style>
 </head>
 <body>
-<div class="separator"></div>
+<div id="block1"></div>
 <div id="table">
  <div id="caption"></div>
 </div>
-<div class="separator"></div>
+<div id="block2"></div>
 </body>
 </html>

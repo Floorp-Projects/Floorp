@@ -66,7 +66,7 @@ random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 
 # More complex <img> tests
 == img-blobURI-1.html lime100x100-ref.html
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == img-blobURI-2.html lime100x100-ref.html
+random == img-blobURI-2.html lime100x100-ref.html
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
 == img-display-none-1.html about:blank
 == img-dyn-1.html img-dyn-1-ref.html

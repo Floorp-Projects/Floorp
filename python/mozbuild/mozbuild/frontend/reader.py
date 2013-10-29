@@ -40,6 +40,10 @@ from mozbuild.util import (
 
 from mozbuild.backend.configenvironment import ConfigEnvironment
 
+from .data import (
+    JavaJarData,
+)
+
 from .sandbox import (
     SandboxError,
     SandboxExecutionError,
@@ -181,6 +185,10 @@ class MozbuildSandbox(Sandbox):
             for name, func in FUNCTIONS.items():
                 d[name] = getattr(self, func[0])
 
+        # Initialize the exports that we need in the global.
+        extra_vars = self.metadata.get('exports', dict())
+        self._globals.update(extra_vars)
+
     def exec_file(self, path, filesystem_absolute=False):
         """Override exec_file to normalize paths and restrict file loading.
 
@@ -218,6 +226,22 @@ class MozbuildSandbox(Sandbox):
 
         Sandbox.exec_file(self, path)
 
+    def _add_java_jar(self, name):
+        """Add a Java JAR build target."""
+        if not name:
+            raise Exception('Java JAR cannot be registered without a name')
+
+        if '/' in name or '\\' in name or '.jar' in name:
+            raise Exception('Java JAR names must not include slashes or'
+                ' .jar: %s' % name)
+
+        if self['JAVA_JAR_TARGETS'].has_key(name):
+            raise Exception('Java JAR has already been registered: %s' % name)
+
+        jar = JavaJarData(name)
+        self['JAVA_JAR_TARGETS'][name] = jar
+        return jar
+
     def _add_tier_directory(self, tier, reldir, static=False, external=False):
         """Register a tier directory with the build."""
         if isinstance(reldir, text_type):
@@ -241,6 +265,30 @@ class MozbuildSandbox(Sandbox):
                     'tier: %s' % path)
 
             self['TIERS'][tier][key].append(path)
+
+    def _export(self, varname):
+        """Export the variable to all subdirectories of the current path."""
+
+        exports = self.metadata.setdefault('exports', dict())
+        if varname in exports:
+            raise Exception('Variable has already been exported: %s' % varname)
+
+        try:
+            # Doing a regular self._globals[varname] causes a set as a side
+            # effect. By calling the dict method instead, we don't have any
+            # side effects.
+            exports[varname] = dict.__getitem__(self._globals, varname)
+        except KeyError:
+            self.last_name_error = KeyError('global_ns', 'get_unknown', varname)
+            raise self.last_name_error
+
+    def recompute_exports(self):
+        """Recompute the variables to export to subdirectories with the current
+        values in the subdirectory."""
+
+        if 'exports' in self.metadata:
+            for key in self.metadata['exports']:
+                self.metadata['exports'][key] = self[key]
 
     def _include(self, path):
         """Include and exec another file within the context of this one."""
@@ -680,6 +728,9 @@ class BuildReader(object):
                 recurse_info[d] = {'tier': metadata.get('tier', None),
                                    'parent': sandbox['RELATIVEDIR'],
                                    'var': var}
+                if 'exports' in sandbox.metadata:
+                    sandbox.recompute_exports()
+                    recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
 
         # We also have tiers whose members are directories.
         if 'TIERS' in sandbox:

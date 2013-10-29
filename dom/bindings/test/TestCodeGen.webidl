@@ -233,17 +233,17 @@ interface TestInterface {
   void passOptionalSelfWithDefault(optional TestInterface? arg = null);
 
   // Non-wrapper-cache interface types
-  [Creator]
+  [NewObject]
   TestNonWrapperCacheInterface receiveNonWrapperCacheInterface();
-  [Creator]
+  [NewObject]
   TestNonWrapperCacheInterface? receiveNullableNonWrapperCacheInterface();
-  [Creator]
+  [NewObject]
   sequence<TestNonWrapperCacheInterface> receiveNonWrapperCacheInterfaceSequence();
-  [Creator]
+  [NewObject]
   sequence<TestNonWrapperCacheInterface?> receiveNullableNonWrapperCacheInterfaceSequence();
-  [Creator]
+  [NewObject]
   sequence<TestNonWrapperCacheInterface>? receiveNonWrapperCacheInterfaceNullableSequence();
-  [Creator]
+  [NewObject]
   sequence<TestNonWrapperCacheInterface?>? receiveNullableNonWrapperCacheInterfaceNullableSequence();
 
   // Non-castable interface types
@@ -453,6 +453,9 @@ interface TestInterface {
   void passUnion9((object or DOMString or long or boolean) arg);
   void passUnion10(optional (EventInit or long) arg);
   void passUnion11(optional (CustomEventInit or long) arg);
+  void passUnion12(optional (EventInit or long) arg = 5);
+  void passUnion13(optional (object or long?) arg = null);
+  void passUnion14(optional (object or long?) arg = 5);
 #endif
   void passUnionWithNullable((object? or long) arg);
   void passNullableUnion((object or long)? arg);

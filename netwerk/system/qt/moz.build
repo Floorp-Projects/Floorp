@@ -6,7 +6,7 @@
 
 MODULE = 'necko'
 
-CPP_SOURCES += [
+SOURCES += [
     'moc_nsQtNetworkManager.cpp',
     'nsQtNetworkLinkService.cpp',
     'nsQtNetworkManager.cpp',

@@ -209,11 +209,22 @@ endif
 endif
 endif
 
-binaries libs:: $(TARGETS) $(BINARIES_PP)
 # Aggregate all dependency files relevant to a binaries build except in
 # the mozilla top-level directory.
 ifneq (_.,$(recurse_targets)_$(DEPTH))
-	@$(if $(or $(recurse_targets),$^),$(call py_action,link_deps,-o binaries --group-all $(if $(want_abspaths),--abspaths )--topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(BINARIES_PP) $(wildcard $(addsuffix .pp,$(addprefix $(MDDEPDIR)/,$(notdir $(sort $(filter-out $(BINARIES_PP),$^) $(OBJ_TARGETS)))))) $(recurse_targets)))
+ALL_DEP_FILES := \
+  $(BINARIES_PP) \
+  $(addsuffix .pp,$(addprefix $(MDDEPDIR)/,$(sort \
+    $(TARGETS) \
+    $(filter-out $(SOBJS) $(ASOBJS) $(EXCLUDED_OBJS),$(OBJ_TARGETS)) \
+  ))) \
+  $(recurse_targets) \
+  $(NULL)
+endif
+
+binaries libs:: $(TARGETS) $(BINARIES_PP)
+ifneq (_.,$(recurse_targets)_$(DEPTH))
+	@$(if $(or $(recurse_targets),$^),$(call py_action,link_deps,-o binaries --group-all $(if $(want_abspaths),--abspaths )--topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(ALL_DEP_FILES)))
 endif
 
 endif # ifdef MOZ_PSEUDO_DERECURSE

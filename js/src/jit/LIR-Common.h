@@ -1399,6 +1399,27 @@ class LTestDAndBranch : public LControlInstructionHelper<2, 1, 0>
     }
 };
 
+// Takes in either an integer or boolean input and tests it for truthiness.
+class LTestFAndBranch : public LControlInstructionHelper<2, 1, 0>
+{
+  public:
+    LIR_HEADER(TestFAndBranch)
+
+    LTestFAndBranch(const LAllocation &in, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    {
+        setOperand(0, in);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock *ifFalse() const {
+        return getSuccessor(1);
+    }
+};
+
 // Takes an object and tests it for truthiness.  An object is falsy iff it
 // emulates |undefined|; see js::EmulatesUndefined.
 class LTestOAndBranch : public LControlInstructionHelper<2, 1, 1>
@@ -1611,11 +1632,61 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
     }
 };
 
+class LCompareF : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(CompareF)
+    LCompareF(const LAllocation &left, const LAllocation &right) {
+        setOperand(0, left);
+        setOperand(1, right);
+    }
+
+    const LAllocation *left() {
+        return getOperand(0);
+    }
+    const LAllocation *right() {
+        return getOperand(1);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
 class LCompareDAndBranch : public LControlInstructionHelper<2, 2, 0>
 {
   public:
     LIR_HEADER(CompareDAndBranch)
     LCompareDAndBranch(const LAllocation &left, const LAllocation &right,
+                       MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    {
+        setOperand(0, left);
+        setOperand(1, right);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock *ifFalse() const {
+        return getSuccessor(1);
+    }
+    const LAllocation *left() {
+        return getOperand(0);
+    }
+    const LAllocation *right() {
+        return getOperand(1);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
+class LCompareFAndBranch : public LControlInstructionHelper<2, 2, 0>
+{
+  public:
+    LIR_HEADER(CompareFAndBranch)
+    LCompareFAndBranch(const LAllocation &left, const LAllocation &right,
                        MBasicBlock *ifTrue, MBasicBlock *ifFalse)
     {
         setOperand(0, left);
@@ -1949,6 +2020,17 @@ class LNotD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Not operation on a float32.
+class LNotF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(NotF)
+
+    LNotF(const LAllocation &input) {
+        setOperand(0, input);
+    }
+};
+
 // Boolean complement operation on an object.
 class LNotO : public LInstructionHelper<1, 1, 0>
 {
@@ -2222,12 +2304,32 @@ class LAbsD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Absolute value of a float32.
+class LAbsF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(AbsF)
+    LAbsF(const LAllocation &num) {
+        setOperand(0, num);
+    }
+};
+
 // Square root of a double.
 class LSqrtD : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(SqrtD)
     LSqrtD(const LAllocation &num) {
+        setOperand(0, num);
+    }
+};
+
+// Square root of a float32.
+class LSqrtF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(SqrtF)
+    LSqrtF(const LAllocation &num) {
         setOperand(0, num);
     }
 };
@@ -2494,19 +2596,22 @@ class LBinaryV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 };
 
 // Adds two string, returning a string.
-class LConcat : public LInstructionHelper<1, 2, 4>
+class LConcat : public LInstructionHelper<1, 2, 5>
 {
   public:
     LIR_HEADER(Concat)
 
     LConcat(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp1,
-            const LDefinition &temp2, const LDefinition &temp3, const LDefinition &temp4) {
+            const LDefinition &temp2, const LDefinition &temp3, const LDefinition &temp4,
+            const LDefinition &temp5)
+    {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp1);
         setTemp(1, temp2);
         setTemp(2, temp3);
         setTemp(3, temp4);
+        setTemp(4, temp5);
     }
 
     const LAllocation *lhs() {
@@ -2527,15 +2632,19 @@ class LConcat : public LInstructionHelper<1, 2, 4>
     const LDefinition *temp4() {
         return this->getTemp(3);
     }
+    const LDefinition *temp5() {
+        return this->getTemp(4);
+    }
 };
 
-class LConcatPar : public LInstructionHelper<1, 3, 3>
+class LConcatPar : public LInstructionHelper<1, 3, 4>
 {
   public:
     LIR_HEADER(ConcatPar)
 
     LConcatPar(const LAllocation &slice, const LAllocation &lhs, const LAllocation &rhs,
-               const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3)
+               const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3,
+               const LDefinition &temp4)
     {
         setOperand(0, slice);
         setOperand(1, lhs);
@@ -2543,6 +2652,7 @@ class LConcatPar : public LInstructionHelper<1, 3, 3>
         setTemp(0, temp1);
         setTemp(1, temp2);
         setTemp(2, temp3);
+        setTemp(3, temp4);
     }
 
     const LAllocation *forkJoinSlice() {
@@ -2562,6 +2672,9 @@ class LConcatPar : public LInstructionHelper<1, 3, 3>
     }
     const LDefinition *temp3() {
         return this->getTemp(2);
+    }
+    const LDefinition *temp4() {
+        return this->getTemp(3);
     }
 };
 
@@ -2774,6 +2887,24 @@ class LTruncateDToInt32 : public LInstructionHelper<1, 1, 1>
     }
 };
 
+// Convert a float32 to a truncated int32.
+//   Input: floating-point register
+//   Output: 32-bit integer
+class LTruncateFToInt32 : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(TruncateFToInt32)
+
+    LTruncateFToInt32(const LAllocation &in, const LDefinition &temp) {
+        setOperand(0, in);
+        setTemp(0, temp);
+    }
+
+    const LDefinition *tempFloat() {
+        return getTemp(0);
+    }
+};
+
 // Convert an integer hosted on one definition to a string with a function call.
 class LIntToString : public LInstructionHelper<1, 1, 0>
 {
@@ -2873,6 +3004,22 @@ class LOsrScopeChain : public LInstructionHelper<1, 1, 0>
 
     const MOsrScopeChain *mir() {
         return mir_->toOsrScopeChain();
+    }
+};
+
+// Materialize a JSObject scope chain stored in an interpreter frame for OSR.
+class LOsrReturnValue : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(OsrReturnValue)
+
+    LOsrReturnValue(const LAllocation &entry)
+    {
+        setOperand(0, entry);
+    }
+
+    const MOsrReturnValue *mir() {
+        return mir_->toOsrReturnValue();
     }
 };
 
@@ -4219,7 +4366,7 @@ class LStringLength : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Take the floor of a number. Implements Math.floor().
+// Take the floor of a double precision number. Implements Math.floor().
 class LFloor : public LInstructionHelper<1, 1, 0>
 {
   public:
@@ -4228,9 +4375,16 @@ class LFloor : public LInstructionHelper<1, 1, 0>
     LFloor(const LAllocation &num) {
         setOperand(0, num);
     }
+};
 
-    MRound *mir() const {
-        return mir_->toRound();
+// Take the floor of a single precision number. Implements Math.floor().
+class LFloorF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(FloorF)
+
+    LFloorF(const LAllocation &num) {
+        setOperand(0, num);
     }
 };
 

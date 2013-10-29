@@ -5,23 +5,13 @@
 import sys
 from setuptools import setup
 
-PACKAGE_VERSION = '0.12'
+PACKAGE_VERSION = '0.16'
 
 # we only support python 2 right now
 assert sys.version_info[0] == 2
 
 deps = ["ManifestDestiny >= 0.5.4",
-        "mozfile >= 0.6"]
-# version-dependent dependencies
-try:
-    import json
-except ImportError:
-    deps.append('simplejson')
-try:
-    import sqlite3
-except ImportError:
-    deps.append('pysqlite')
-
+        "mozfile >= 0.12"]
 
 setup(name='mozprofile',
       version=PACKAGE_VERSION,
@@ -49,5 +39,7 @@ setup(name='mozprofile',
       # -*- Entry points: -*-
       [console_scripts]
       mozprofile = mozprofile:cli
+      view-profile = mozprofile:view_profile
+      diff-profiles = mozprofile:diff_profiles
       """,
     )

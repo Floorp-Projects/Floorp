@@ -217,7 +217,7 @@ static void nr_stun_client_timer_expired_cb(NR_SOCKET s, int b, void *cb_arg)
     }
 
     if (ctx->request_ct >= ctx->maximum_transmits) {
-        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): Timed out",ctx->label);
+        r_log(NR_LOG_STUN,LOG_INFO,"STUN-CLIENT(%s): Timed out",ctx->label);
         ctx->state=NR_STUN_CLIENT_STATE_TIMED_OUT;
         ABORT(R_FAILED);
     }
@@ -257,7 +257,7 @@ int nr_stun_client_force_retransmit(nr_stun_client_ctx *ctx)
         ABORT(R_NOT_PERMITTED);
 
     if (ctx->request_ct > ctx->maximum_transmits) {
-        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): Too many retransmit attempts",ctx->label);
+        r_log(NR_LOG_STUN,LOG_INFO,"STUN-CLIENT(%s): Too many retransmit attempts",ctx->label);
         ABORT(R_FAILED);
     }
 
@@ -518,7 +518,7 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
         ABORT(r);
 
     if ((r=nr_stun_decode_message(ctx->response, nr_stun_client_get_password, password))) {
-        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): error decoding response",ctx->label);
+        r_log(NR_LOG_STUN,LOG_WARNING,"STUN-CLIENT(%s): error decoding response",ctx->label);
         ABORT(r);
     }
 
@@ -587,7 +587,7 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
         if (! nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_XOR_MAPPED_ADDRESS, 0)) {
             if (nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_MAPPED_ADDRESS, 0)) {
               /* Compensate for a bug in Google's STUN servers where they always respond with MAPPED-ADDRESS */
-              r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): No XOR-MAPPED-ADDRESS but MAPPED-ADDRESS. Falling back (though server is wrong).", ctx->label);
+              r_log(NR_LOG_STUN,LOG_INFO,"STUN-CLIENT(%s): No XOR-MAPPED-ADDRESS but MAPPED-ADDRESS. Falling back (though server is wrong).", ctx->label);
             }
             else {
               ABORT(R_BAD_DATA);

@@ -5,9 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 NO_DIST_INSTALL = True
+# For sanity's sake, we compile nsinstall without the wrapped system
+# headers, so that we can use it to set up the wrapped system headers.
+NO_VISIBILITY_FLAGS = True
 
 if CONFIG['HOST_OS_ARCH'] != 'WINNT':
-    HOST_CSRCS += [
+    HOST_SOURCES += [
         'nsinstall.c',
         'pathsub.c',
     ]

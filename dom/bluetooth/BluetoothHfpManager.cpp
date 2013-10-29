@@ -323,7 +323,7 @@ Call::IsActive()
 /**
  *  BluetoothHfpManager
  */
-BluetoothHfpManager::BluetoothHfpManager()
+BluetoothHfpManager::BluetoothHfpManager() : mController(nullptr)
 {
   Reset();
 }
@@ -366,8 +366,6 @@ BluetoothHfpManager::Reset()
   //
   // Please see Bug 878728 for more information.
   mBSIR = false;
-
-  mController = nullptr;
 
   ResetCallArray();
 }
@@ -561,8 +559,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
   NS_ENSURE_TRUE_VOID(connection);
 
   nsCOMPtr<nsIDOMMozMobileConnectionInfo> voiceInfo;
-  // TODO: Bug 921991 - B2G BT: support multiple sim cards
-  connection->GetVoiceConnectionInfo(0, getter_AddRefs(voiceInfo));
+  connection->GetVoiceConnectionInfo(getter_AddRefs(voiceInfo));
   NS_ENSURE_TRUE_VOID(voiceInfo);
 
   nsString type;
@@ -598,8 +595,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
    * - manual: set mNetworkSelectionMode to 1 (manual)
    */
   nsString mode;
-  // TODO: Bug 921991 - B2G BT: support multiple sim cards
-  connection->GetNetworkSelectionMode(0, mode);
+  connection->GetNetworkSelectionMode(mode);
   if (mode.EqualsLiteral("manual")) {
     mNetworkSelectionMode = 1;
   } else {
@@ -1098,7 +1094,6 @@ BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
 
   mController = aController;
   mSocket->Disconnect();
-  mSocket = nullptr;
 }
 
 void
@@ -1655,6 +1650,8 @@ BluetoothHfpManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
     return;
   }
 
+  MOZ_ASSERT(mSocket);
+
   if (!mSocket->Connect(NS_ConvertUTF16toUTF8(aDeviceAddress), aChannel)) {
     OnConnect(NS_LITERAL_STRING("SocketConnectionError"));
   }
@@ -1817,8 +1814,8 @@ BluetoothHfpManager::OnConnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  mController->OnConnect(aErrorStr);
-  mController = nullptr;
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
+  controller->OnConnect(aErrorStr);
 }
 
 void
@@ -1836,8 +1833,8 @@ BluetoothHfpManager::OnDisconnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  mController->OnDisconnect(aErrorStr);
-  mController = nullptr;
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
+  controller->OnDisconnect(aErrorStr);
 }
 
 NS_IMPL_ISUPPORTS1(BluetoothHfpManager, nsIObserver)

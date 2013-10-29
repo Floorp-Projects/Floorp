@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/Bailouts.h"
-#include "jit/IonCompartment.h"
 #include "jit/IonFrames.h"
 #include "jit/IonLinker.h"
+#include "jit/JitCompartment.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
@@ -30,7 +30,7 @@ static const RegisterSet AllRegs =
  *   ...using standard x64 fastcall calling convention
  */
 IonCode *
-IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
+JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 {
     MacroAssembler masm(cx);
 
@@ -302,12 +302,12 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 }
 
 IonCode *
-IonRuntime::generateInvalidator(JSContext *cx)
+JitRuntime::generateInvalidator(JSContext *cx)
 {
     AutoIonContextAlloc aica(cx);
     MacroAssembler masm(cx);
 
-    // See explanatory comment in x86's IonRuntime::generateInvalidator.
+    // See explanatory comment in x86's JitRuntime::generateInvalidator.
 
     masm.addq(Imm32(sizeof(uintptr_t)), rsp);
 
@@ -337,7 +337,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
     masm.lea(Operand(rsp, rbx, TimesOne, sizeof(InvalidationBailoutStack)), rsp);
 
     // Jump to shared bailout tail. The BailoutInfo pointer has to be in r9.
-    IonCode *bailoutTail = cx->runtime()->ionRuntime()->getBailoutTail();
+    IonCode *bailoutTail = cx->runtime()->jitRuntime()->getBailoutTail();
     masm.jmp(bailoutTail);
 
     Linker linker(masm);
@@ -351,7 +351,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void **returnAddrOut)
+JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void **returnAddrOut)
 {
     // Do not erase the frame pointer in this function.
 
@@ -473,18 +473,18 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     masm.lea(Operand(rsp, rcx, TimesOne, sizeof(void *)), rsp);
 
     // Jump to shared bailout tail. The BailoutInfo pointer has to be in r9.
-    IonCode *bailoutTail = cx->runtime()->ionRuntime()->getBailoutTail();
+    IonCode *bailoutTail = cx->runtime()->jitRuntime()->getBailoutTail();
     masm.jmp(bailoutTail);
 }
 
 IonCode *
-IonRuntime::generateBailoutTable(JSContext *cx, uint32_t frameClass)
+JitRuntime::generateBailoutTable(JSContext *cx, uint32_t frameClass)
 {
     MOZ_ASSUME_UNREACHABLE("x64 does not use bailout tables");
 }
 
 IonCode *
-IonRuntime::generateBailoutHandler(JSContext *cx)
+JitRuntime::generateBailoutHandler(JSContext *cx)
 {
     MacroAssembler masm;
 
@@ -501,7 +501,7 @@ IonRuntime::generateBailoutHandler(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
+JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 {
     typedef MoveResolver::MoveOperand MoveOperand;
 
@@ -688,7 +688,7 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 }
 
 IonCode *
-IonRuntime::generatePreBarrier(JSContext *cx, MIRType type)
+JitRuntime::generatePreBarrier(JSContext *cx, MIRType type)
 {
     MacroAssembler masm;
 
@@ -726,7 +726,7 @@ typedef bool (*HandleDebugTrapFn)(JSContext *, BaselineFrame *, uint8_t *, bool 
 static const VMFunction HandleDebugTrapInfo = FunctionInfo<HandleDebugTrapFn>(HandleDebugTrap);
 
 IonCode *
-IonRuntime::generateDebugTrapHandler(JSContext *cx)
+JitRuntime::generateDebugTrapHandler(JSContext *cx)
 {
     MacroAssembler masm;
 
@@ -747,7 +747,7 @@ IonRuntime::generateDebugTrapHandler(JSContext *cx)
     masm.movePtr(ImmPtr(nullptr), BaselineStubReg);
     EmitEnterStubFrame(masm, scratch3);
 
-    IonCode *code = cx->runtime()->ionRuntime()->getVMWrapper(HandleDebugTrapInfo);
+    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(HandleDebugTrapInfo);
     if (!code)
         return nullptr;
 
@@ -782,7 +782,7 @@ IonRuntime::generateDebugTrapHandler(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateExceptionTailStub(JSContext *cx)
+JitRuntime::generateExceptionTailStub(JSContext *cx)
 {
     MacroAssembler masm;
 
@@ -799,7 +799,7 @@ IonRuntime::generateExceptionTailStub(JSContext *cx)
 }
 
 IonCode *
-IonRuntime::generateBailoutTailStub(JSContext *cx)
+JitRuntime::generateBailoutTailStub(JSContext *cx)
 {
     MacroAssembler masm;
 

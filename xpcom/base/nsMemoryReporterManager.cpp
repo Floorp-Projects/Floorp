@@ -12,7 +12,10 @@
 #include "nsMemoryReporterManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsThreadUtils.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIObserverService.h"
+#include "nsIGlobalObject.h"
 #if defined(XP_LINUX)
 #include "nsMemoryInfoDumper.h"
 #endif
@@ -845,6 +848,7 @@ nsMemoryReporterManager::nsMemoryReporterManager()
     mIsRegistrationBlocked(false)
 {
     PodZero(&mAmountFns);
+    PodZero(&mSizeOfTabFns);
 }
 
 nsMemoryReporterManager::~nsMemoryReporterManager()
@@ -1267,6 +1271,56 @@ nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback,
   return NS_DispatchToMainThread(runnable);
 }
 
+NS_IMETHODIMP
+nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
+                                   int64_t* aJSObjectsSize,
+                                   int64_t* aJSStringsSize,
+                                   int64_t* aJSOtherSize,
+                                   int64_t* aDomSize,
+                                   int64_t* aStyleSize,
+                                   int64_t* aOtherSize,
+                                   int64_t* aTotalSize,
+                                   double*  aJSMilliseconds,
+                                   double*  aNonJSMilliseconds)
+{
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aTopWindow);
+    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aTopWindow);
+    NS_ENSURE_TRUE(!!global && !!piWindow, NS_ERROR_FAILURE);
+
+    TimeStamp t1 = TimeStamp::Now();
+
+    // Measure JS memory consumption (and possibly some non-JS consumption, via
+    // |jsPrivateSize|).
+    size_t jsObjectsSize, jsStringsSize, jsPrivateSize, jsOtherSize;
+    nsresult rv = mSizeOfTabFns.mJS(global->GetGlobalJSObject(),
+                                    &jsObjectsSize, &jsStringsSize,
+                                    &jsPrivateSize, &jsOtherSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    TimeStamp t2 = TimeStamp::Now();
+
+    // Measure non-JS memory consumption.
+    size_t domSize, styleSize, otherSize;
+    mSizeOfTabFns.mNonJS(piWindow, &domSize, &styleSize, &otherSize);
+
+    TimeStamp t3 = TimeStamp::Now();
+
+    *aTotalSize = 0;
+    #define DO(aN, n) { *aN = (n); *aTotalSize += (n); }
+    DO(aJSObjectsSize, jsObjectsSize);
+    DO(aJSStringsSize, jsStringsSize);
+    DO(aJSOtherSize,   jsOtherSize);
+    DO(aDomSize,       jsPrivateSize + domSize);
+    DO(aStyleSize,     styleSize);
+    DO(aOtherSize,     otherSize);
+    #undef DO
+
+    *aJSMilliseconds    = (t2 - t1).ToMilliseconds();
+    *aNonJSMilliseconds = (t3 - t2).ToMilliseconds();
+
+    return NS_OK;
+}
+
 // Most memory reporters don't need thread safety, but some do.  Make them all
 // thread-safe just to be safe.  Memory reporters are created and destroyed
 // infrequently enough that the performance cost should be negligible.
@@ -1294,19 +1348,22 @@ NS_UnregisterMemoryReporter(nsIMemoryReporter* aReporter)
 
 namespace mozilla {
 
+#define GET_MEMORY_REPORTER_MANAGER(mgr)                                      \
+    nsCOMPtr<nsIMemoryReporterManager> imgr =                                 \
+        do_GetService("@mozilla.org/memory-reporter-manager;1");              \
+    nsRefPtr<nsMemoryReporterManager> mgr =                                   \
+        static_cast<nsMemoryReporterManager*>(imgr.get());                    \
+    if (!mgr) {                                                               \
+        return NS_ERROR_FAILURE;                                              \
+    }
+
 // Macro for generating functions that register distinguished amount functions
 // with the memory reporter manager.
 #define DEFINE_REGISTER_DISTINGUISHED_AMOUNT(kind, name)                      \
     nsresult                                                                  \
     Register##name##DistinguishedAmount(kind##AmountFn aAmountFn)             \
     {                                                                         \
-        nsCOMPtr<nsIMemoryReporterManager> imgr =                             \
-            do_GetService("@mozilla.org/memory-reporter-manager;1");          \
-        nsRefPtr<nsMemoryReporterManager> mgr =                               \
-            static_cast<nsMemoryReporterManager*>(imgr.get());                \
-        if (!mgr) {                                                           \
-            return NS_ERROR_FAILURE;                                          \
-        }                                                                     \
+        GET_MEMORY_REPORTER_MANAGER(mgr)                                      \
         mgr->mAmountFns.m##name = aAmountFn;                                  \
         return NS_OK;                                                         \
     }
@@ -1315,13 +1372,7 @@ namespace mozilla {
     nsresult                                                                  \
     Unregister##name##DistinguishedAmount()                                   \
     {                                                                         \
-        nsCOMPtr<nsIMemoryReporterManager> imgr =                             \
-            do_GetService("@mozilla.org/memory-reporter-manager;1");          \
-        nsRefPtr<nsMemoryReporterManager> mgr =                               \
-            static_cast<nsMemoryReporterManager*>(imgr.get());                \
-        if (!mgr) {                                                           \
-            return NS_ERROR_FAILURE;                                          \
-        }                                                                     \
+        GET_MEMORY_REPORTER_MANAGER(mgr)                                      \
         mgr->mAmountFns.m##name = nullptr;                                    \
         return NS_OK;                                                         \
     }
@@ -1343,6 +1394,22 @@ DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, GhostWindows)
 
 #undef DEFINE_REGISTER_DISTINGUISHED_AMOUNT
 #undef DEFINE_UNREGISTER_DISTINGUISHED_AMOUNT
+
+#define DEFINE_REGISTER_SIZE_OF_TAB(name)                                     \
+    nsresult                                                                  \
+    Register##name##SizeOfTab(name##SizeOfTabFn aSizeOfTabFn)                 \
+    {                                                                         \
+        GET_MEMORY_REPORTER_MANAGER(mgr)                                      \
+        mgr->mSizeOfTabFns.m##name = aSizeOfTabFn;                            \
+        return NS_OK;                                                         \
+    }
+
+DEFINE_REGISTER_SIZE_OF_TAB(JS);
+DEFINE_REGISTER_SIZE_OF_TAB(NonJS);
+
+#undef DEFINE_REGISTER_SIZE_OF_TAB
+
+#undef GET_MEMORY_REPORTER_MANAGER
 
 }
 

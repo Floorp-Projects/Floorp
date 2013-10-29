@@ -3946,6 +3946,14 @@ COMPILE_CXXFLAGS=`echo \
 	$_DEPEND_CFLAGS \
     $COMPILE_CXXFLAGS`
 
+HOST_CFLAGS=`echo \
+    $HOST_CFLAGS \
+    $_DEPEND_CFLAGS`
+
+HOST_CXXFLAGS=`echo \
+    $HOST_CXXFLAGS \
+    $_DEPEND_CFLAGS`
+
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 AC_SUBST(MOZ_NATIVE_NSPR)
@@ -4078,8 +4086,9 @@ fi
 
 JS_THREADSAFE=1
 MOZ_ARG_DISABLE_BOOL(threadsafe,
-[  --disable-threadsafe Disable support for multiple threads.],
-    JS_THREADSAFE= )
+[  --disable-threadsafe    Disable support for multiple threads.],
+    JS_THREADSAFE= ,
+    JS_THREADSAFE=1 )
 if test -n "$JS_THREADSAFE"; then
     AC_DEFINE(JS_THREADSAFE)
 fi

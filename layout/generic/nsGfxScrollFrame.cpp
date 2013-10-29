@@ -2352,8 +2352,13 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (scrollRange.width > 0 || scrollRange.height > 0) &&
       ((styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN && mHScrollbarBox) ||
        (styles.mVertical   != NS_STYLE_OVERFLOW_HIDDEN && mVScrollbarBox));
-    // TODO Turn this on for inprocess OMTC
+    // TODO Turn this on for inprocess OMTC on all platforms
     bool wantSubAPZC = (XRE_GetProcessType() == GeckoProcessType_Content);
+#ifdef XP_WIN
+    if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+      wantSubAPZC = true;
+    }
+#endif
     mShouldBuildLayer =
       wantSubAPZC &&
       hasScrollableOverflow &&
@@ -2367,12 +2372,21 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (usingDisplayport) {
       DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-      nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
-      if (mClipAllDescendants) {
-        clipState.ClipContentDescendants(clip);
-      } else {
-        clipState.ClipContainingBlockDescendants(clip);
+
+      // For root scrollframes in documents where the CSS viewport has been
+      // modified, the CSS viewport no longer corresponds to what is visible,
+      // so we don't want to clip the content to it. For root scrollframes
+      // in documents where the CSS viewport is NOT modified, the mScrollPort
+      // is the same as the CSS viewport, modulo scrollbars.
+      if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
+        nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+        if (mClipAllDescendants) {
+          clipState.ClipContentDescendants(clip);
+        } else {
+          clipState.ClipContainingBlockDescendants(clip);
+        }
       }
+
       // Once a displayport is set, assume that scrolling needs to be fast
       // so create a layer with all the content inside. The compositor
       // process will be able to scroll the content asynchronously.

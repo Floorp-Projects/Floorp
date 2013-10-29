@@ -1310,6 +1310,8 @@ struct nsStyleText {
 
   uint8_t mTextAlign;                   // [inherited] see nsStyleConsts.h
   uint8_t mTextAlignLast;               // [inherited] see nsStyleConsts.h
+  bool mTextAlignTrue : 1;              // [inherited] see nsStyleConsts.h
+  bool mTextAlignLastTrue : 1;          // [inherited] see nsStyleConsts.h
   uint8_t mTextTransform;               // [inherited] see nsStyleConsts.h
   uint8_t mWhiteSpace;                  // [inherited] see nsStyleConsts.h
   uint8_t mWordBreak;                   // [inherited] see nsStyleConsts.h
@@ -2420,8 +2422,9 @@ private:
 };
 
 template<>
-struct nsTArray_CopyElements<nsStyleFilter>
-  : public nsTArray_CopyWithConstructors<nsStyleFilter> {};
+struct nsTArray_CopyChooser<nsStyleFilter> {
+  typedef nsTArray_CopyWithConstructors<nsStyleFilter> Type;
+};
 
 struct nsStyleSVGReset {
   nsStyleSVGReset();

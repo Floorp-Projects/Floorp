@@ -823,8 +823,7 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
                             nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
 
-  WidgetGUIEvent *event =
-    static_cast<WidgetGUIEvent*>(aEvent->GetInternalNSEvent());
+  WidgetGUIEvent* event = aEvent->GetInternalNSEvent()->AsGUIEvent();
 
   if (!ShouldScrollForEvent(event)) {
     return NS_OK;
@@ -947,7 +946,7 @@ nsSliderFrame::ShouldScrollForEvent(WidgetGUIEvent* aEvent)
       return true;
     case NS_MOUSE_BUTTON_DOWN:
     case NS_MOUSE_BUTTON_UP: {
-      uint16_t button = static_cast<WidgetMouseEvent*>(aEvent)->button;
+      uint16_t button = aEvent->AsMouseEvent()->button;
       return (button == WidgetMouseEvent::eLeftButton) ||
              (button == WidgetMouseEvent::eMiddleButton && gMiddlePref);
     }
@@ -978,7 +977,7 @@ nsSliderFrame::ShouldScrollToClickForEvent(WidgetGUIEvent* aEvent)
   }
 #endif
 
-  WidgetMouseEvent* mouseEvent = static_cast<WidgetMouseEvent*>(aEvent);
+  WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (mouseEvent->button == WidgetMouseEvent::eLeftButton) {
 #ifdef XP_MACOSX
     bool invertPref = mouseEvent->IsAlt();

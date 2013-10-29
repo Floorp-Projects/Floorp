@@ -10,7 +10,7 @@ EXPORTS.mozilla.browser += [
     'DirectoryProvider.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'DirectoryProvider.cpp',
 ]
 
@@ -19,3 +19,5 @@ LIBRARY_NAME = 'browserdir_s'
 XPCSHELL_TESTS_MANIFESTS += [
     'tests/unit/xpcshell.ini',
 ]
+
+FORCE_STATIC_LIB = True

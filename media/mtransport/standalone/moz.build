@@ -8,7 +8,7 @@ MODULE = 'mtransport_s'
 
 include('../objs.mozbuild')
 
-CPP_SOURCES += mtransport_cppsrcs
+SOURCES += mtransport_cppsrcs
 
 LIBRARY_NAME = 'mtransport_s'
 
@@ -49,3 +49,8 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/win32/include',
     ]
+
+FORCE_STATIC_LIB = True
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    NO_VISIBILITY_FLAGS = True

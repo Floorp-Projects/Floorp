@@ -12,6 +12,7 @@
 
 #include "builtin/Intl.h"
 #include "builtin/ParallelArray.h"
+#include "builtin/TypedObject.h"
 #include "gc/Marking.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
@@ -79,6 +80,12 @@ js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() >= 1);
     uint32_t errorNumber = args[0].toInt32();
+
+#ifdef DEBUG
+    const JSErrorFormatString *efs =
+        js_GetLocalizedErrorMessage(cx, nullptr, nullptr, errorNumber);
+    JS_ASSERT(efs->argCount == args.length() - 1);
+#endif
 
     char *errorArgs[3] = {nullptr, nullptr, nullptr};
     for (unsigned i = 1; i < 4 && i < args.length(); i++) {
@@ -498,6 +505,35 @@ intrinsic_IsArrayIterator(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+intrinsic_NewStringIterator(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 0);
+
+    RootedObject proto(cx, cx->global()->getOrCreateStringIteratorPrototype(cx));
+    if (!proto)
+        return false;
+
+    JSObject *obj = NewObjectWithGivenProto(cx, &StringIteratorObject::class_, proto, cx->global());
+    if (!obj)
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
+}
+
+static bool
+intrinsic_IsStringIterator(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isObject());
+
+    args.rval().setBoolean(args[0].toObject().is<StringIteratorObject>());
+    return true;
+}
+
 /*
  * ParallelTestsShouldPass(): Returns false if we are running in a
  * mode (such as --ion-eager) that is known to cause additional
@@ -581,12 +617,56 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("NewArrayIterator",        intrinsic_NewArrayIterator,        0,0),
     JS_FN("IsArrayIterator",         intrinsic_IsArrayIterator,         1,0),
 
+    JS_FN("NewStringIterator",       intrinsic_NewStringIterator,       0,0),
+    JS_FN("IsStringIterator",        intrinsic_IsStringIterator,        1,0),
+
     JS_FN("ForkJoin",                intrinsic_ForkJoin,                2,0),
     JS_FN("ForkJoinSlices",          intrinsic_ForkJoinSlices,          0,0),
     JS_FN("NewParallelArray",        intrinsic_NewParallelArray,        3,0),
     JS_FN("NewDenseArray",           intrinsic_NewDenseArray,           1,0),
     JS_FN("ShouldForceSequential",   intrinsic_ShouldForceSequential,   0,0),
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
+
+    // See builtin/TypedObject.h for descriptors of the typedobj functions.
+    JS_FN("NewTypedHandle",
+          js::NewTypedHandle,
+          1, 0),
+    JS_FN("NewDerivedTypedDatum",
+          js::NewDerivedTypedDatum,
+          3, 0),
+    JS_FNINFO("AttachHandle",
+              JSNativeThreadSafeWrapper<js::AttachHandle>,
+              &js::AttachHandleJitInfo, 5, 0),
+    JS_FNINFO("ObjectIsTypeObject",
+              JSNativeThreadSafeWrapper<js::ObjectIsTypeObject>,
+              &js::ObjectIsTypeObjectJitInfo, 5, 0),
+    JS_FNINFO("ObjectIsTypeRepresentation",
+              JSNativeThreadSafeWrapper<js::ObjectIsTypeRepresentation>,
+              &js::ObjectIsTypeRepresentationJitInfo, 5, 0),
+    JS_FNINFO("ObjectIsTypedObject",
+              JSNativeThreadSafeWrapper<js::ObjectIsTypedObject>,
+              &js::ObjectIsTypedObjectJitInfo, 5, 0),
+    JS_FNINFO("ObjectIsTypedHandle",
+              JSNativeThreadSafeWrapper<js::ObjectIsTypedHandle>,
+              &js::ObjectIsTypedHandleJitInfo, 5, 0),
+    JS_FN("NewHandle",
+          js::NewTypedHandle,
+          1, 0),
+    JS_FNINFO("ClampToUint8",
+              JSNativeThreadSafeWrapper<js::ClampToUint8>,
+              &js::ClampToUint8JitInfo, 1, 0),
+    JS_FNINFO("Memcpy",
+              JSNativeThreadSafeWrapper<js::Memcpy>,
+              &js::MemcpyJitInfo, 5, 0),
+
+#define LOAD_AND_STORE_FN_DECLS(_constant, _type, _name)                      \
+    JS_FNINFO("Store_" #_name,                                                \
+              JSNativeThreadSafeWrapper<js::StoreScalar##_type::Func>,        \
+              &js::StoreScalar##_type::JitInfo, 3, 0),                        \
+    JS_FNINFO("Load_" #_name,                                                 \
+              JSNativeThreadSafeWrapper<js::LoadScalar##_type::Func>,         \
+              &js::LoadScalar##_type::JitInfo, 3, 0),
+    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(LOAD_AND_STORE_FN_DECLS)
 
     // See builtin/Intl.h for descriptions of the intl_* functions.
     JS_FN("intl_availableCalendars", intl_availableCalendars, 1,0),
@@ -910,4 +990,16 @@ JSRuntime::maybeWrappedSelfHostedFunction(JSContext *cx, HandleId id, MutableHan
     }
 
     return cx->compartment()->wrap(cx, funVal);
+}
+
+JSFunction *
+js::SelfHostedFunction(JSContext *cx, HandlePropertyName propName)
+{
+    RootedValue func(cx);
+    if (!cx->global()->getIntrinsicValue(cx, propName, &func))
+        return nullptr;
+
+    JS_ASSERT(func.isObject());
+    JS_ASSERT(func.toObject().is<JSFunction>());
+    return &func.toObject().as<JSFunction>();
 }

@@ -117,7 +117,11 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
         apzc = container->GetAsyncPanZoomController();
 
-        bool newApzc = (apzc == nullptr);
+        // The APZC we get off the layer may have been destroyed previously if the layer was inactive
+        // or omitted from the layer tree for whatever reason from a layers update. If it later comes
+        // back it will have a reference to a destroyed APZC and so we need to throw that out and make
+        // a new one.
+        bool newApzc = (apzc == nullptr || apzc->IsDestroyed());
         if (newApzc) {
           apzc = new AsyncPanZoomController(aLayersId, this, state->mController,
                                             AsyncPanZoomController::USE_GESTURE_DETECTOR);
@@ -372,8 +376,7 @@ APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
   MultiTouchInput inputForApzc(aEvent);
   ApplyTransform(&(inputForApzc.mTouches[0].mScreenPoint), transformToApzc);
   gfx3DMatrix outTransform = transformToApzc * transformToScreen;
-  ApplyTransform(&(static_cast<WidgetMouseEvent*>(aOutEvent)->refPoint),
-                 outTransform);
+  ApplyTransform(&aOutEvent->refPoint, outTransform);
   return apzc->ReceiveInputEvent(inputForApzc);
 }
 
@@ -418,10 +421,9 @@ APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
     }
     case NS_MOUSE_EVENT: {
       // For b2g emulation
-      const WidgetMouseEvent& mouseEvent =
-        static_cast<const WidgetMouseEvent&>(aEvent);
-      WidgetMouseEvent* outEvent = static_cast<WidgetMouseEvent*>(aOutEvent);
-      return ProcessMouseEvent(mouseEvent, outEvent);
+      const WidgetMouseEvent& mouseEvent = *aEvent.AsMouseEvent();
+      WidgetMouseEvent* outMouseEvent = aOutEvent->AsMouseEvent();
+      return ProcessMouseEvent(mouseEvent, outMouseEvent);
     }
     default: {
       return ProcessEvent(aEvent, aOutEvent);

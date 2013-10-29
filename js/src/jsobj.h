@@ -378,7 +378,7 @@ class JSObject : public js::ObjectImpl
     static void shrinkSlots(js::ThreadSafeContext *cx, js::HandleObject obj, uint32_t oldCount,
                             uint32_t newCount);
 
-    bool hasDynamicSlots() const { return slots != nullptr; }
+    bool hasDynamicSlots() const { return !!slots; }
 
   protected:
     static inline bool updateSlotsForSpan(js::ThreadSafeContext *cx,

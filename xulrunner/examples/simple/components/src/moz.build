@@ -6,7 +6,7 @@
 
 MODULE = 'simple'
 
-CPP_SOURCES += [
+SOURCES += [
     'SimpleTest.cpp',
 ]
 
@@ -19,3 +19,4 @@ EXTRA_COMPONENTS += [
 
 IS_COMPONENT = True
 
+XPI_NAME = 'simple'

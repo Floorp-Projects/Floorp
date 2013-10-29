@@ -73,7 +73,7 @@ StyleEditorUI.prototype = {
       return true;
     }
     return this.editors.some((editor) => {
-      return editor.sourceEditor && editor.sourceEditor.dirty;
+      return editor.sourceEditor && !editor.sourceEditor.isClean();
     });
   },
 
@@ -151,8 +151,8 @@ StyleEditorUI.prototype = {
     // remember selected sheet and line number for next load
     if (this.selectedEditor && this.selectedEditor.sourceEditor) {
       let href = this.selectedEditor.styleSheet.href;
-      let {line, col} = this.selectedEditor.sourceEditor.getCaretPosition();
-      this.selectStyleSheet(href, line, col);
+      let {line, ch} = this.selectedEditor.sourceEditor.getCursor();
+      this.selectStyleSheet(href, line, ch);
     }
 
     this._clearStyleSheetEditors();
@@ -365,7 +365,7 @@ StyleEditorUI.prototype = {
     col = col || 0;
 
     editor.getSourceEditor().then(() => {
-      editor.sourceEditor.setCaretPosition(line, col);
+      editor.sourceEditor.setCursor({line: line, ch: col});
     });
 
     this._view.activeSummary = editor.summary;
@@ -387,6 +387,11 @@ StyleEditorUI.prototype = {
   selectStyleSheet: function(href, line, col)
   {
     let alreadyCalled = !!this._styleSheetToSelect;
+    let originalHref;
+
+    if (alreadyCalled) {
+      originalHref = this._styleSheetToSelect.href;
+    }
 
     this._styleSheetToSelect = {
       href: href,
@@ -395,6 +400,14 @@ StyleEditorUI.prototype = {
     };
 
     if (alreadyCalled) {
+      // Just switch to the correct line and columns if the editor is already
+      // selected for the requested stylesheet.
+      for each (let editor in this.editors) {
+        if (editor.styleSheet.href == originalHref) {
+          editor.sourceEditor.setCursor({line: line, ch: col})
+          break;
+        }
+      }
       return;
     }
 

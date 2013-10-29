@@ -36,9 +36,9 @@ EXPORTS.mozilla += [
     'OSFileConstants.h',
 ]
 
-CPP_SOURCES += [
-    'OSFileConstants.cpp',
+SOURCES += [
     'nsDeviceSensors.cpp',
+    'OSFileConstants.cpp',
 ]
 
 # On Systems that have build in geolocation providers,
@@ -56,4 +56,6 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'domsystem_s'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

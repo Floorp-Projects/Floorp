@@ -13,7 +13,7 @@ XPIDL_SOURCES += [
 
 MODULE = 'cookie'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsCookieModule.cpp',
     'nsCookiePermission.cpp',
     'nsCookiePromptService.cpp',
@@ -29,4 +29,6 @@ MSVC_ENABLE_PGO = True
 LIBRARY_NAME = 'cookie'
 
 EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 

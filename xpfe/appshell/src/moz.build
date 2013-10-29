@@ -8,7 +8,7 @@ PARALLEL_DIRS += ['test']
 
 MODULE = 'appshell'
 
-CPP_SOURCES += [
+SOURCES += [
     'nsAppShellFactory.cpp',
     'nsAppShellService.cpp',
     'nsAppShellWindowEnumerator.cpp',
@@ -17,6 +17,10 @@ CPP_SOURCES += [
     'nsWebShellWindow.cpp',
     'nsWindowMediator.cpp',
     'nsXULWindow.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/dom/base',
 ]
 
 LIBRARY_NAME = 'nsappshell'

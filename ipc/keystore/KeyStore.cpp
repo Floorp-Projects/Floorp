@@ -46,9 +46,6 @@ KeyStoreConnector::Create()
     return -1;
   }
 
-  // Allow access of wpa_supplicant(different user, differnt group)
-  chmod(KEYSTORE_SOCKET_PATH, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
-
   return fd;
 }
 
@@ -75,6 +72,15 @@ KeyStoreConnector::CreateAddr(bool aIsServer,
 bool
 KeyStoreConnector::SetUp(int aFd)
 {
+  return true;
+}
+
+bool
+KeyStoreConnector::SetUpListenSocket(int aFd)
+{
+  // Allow access of wpa_supplicant(different user, differnt group)
+  chmod(KEYSTORE_SOCKET_PATH, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+
   return true;
 }
 
@@ -122,7 +128,7 @@ KeyStore::ResetHandlerInfo()
   mHandlerInfo.state = STATE_IDLE;
   mHandlerInfo.command = 0;
   mHandlerInfo.paramCount = 0;
-  mHandlerInfo.commandPattern = NULL;
+  mHandlerInfo.commandPattern = nullptr;
   for (int i = 0; i < MAX_PARAM; i++) {
     mHandlerInfo.param[i].length = 0;
     memset(mHandlerInfo.param[i].data, 0, VALUE_SIZE);

@@ -11,6 +11,7 @@
 #include "mozilla/MemoryReporting.h"
 
 class nsIRequest;
+class gfxDrawable;
 
 namespace mozilla {
 namespace layers {
@@ -19,10 +20,11 @@ class ImageContainer;
 }
 namespace image {
 
-class SVGDocumentWrapper;
-class SVGRootRenderingObserver;
-class SVGLoadEventListener;
-class SVGParseCompleteListener;
+struct SVGDrawingParameters;
+class  SVGDocumentWrapper;
+class  SVGRootRenderingObserver;
+class  SVGLoadEventListener;
+class  SVGParseCompleteListener;
 
 class VectorImage : public ImageResource,
                     public nsIStreamListener
@@ -81,6 +83,9 @@ protected:
   virtual nsresult StartAnimation();
   virtual nsresult StopAnimation();
   virtual bool     ShouldAnimate();
+
+  void CreateDrawableAndShow(const SVGDrawingParameters& aParams);
+  void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
 private:
   void CancelAllListeners();

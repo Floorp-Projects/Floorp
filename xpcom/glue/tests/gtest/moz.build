@@ -6,8 +6,12 @@
 
 MODULE = 'xpcom_glue_gtest'
 
-CPP_SOURCES += [
+SOURCES += [
     'TestFileUtils.cpp',
+]
+
+LOCAL_INCLUDES = [
+    '../..',
 ]
 
 LIBRARY_NAME = 'xpcom_glue_gtest'

@@ -9,8 +9,8 @@ TEST_DIRS += ['test']
 XPIDL_SOURCES += [
     'amIAddonManager.idl',
     'amIInstallTrigger.idl',
-    'amIWebInstallListener.idl',
     'amIWebInstaller.idl',
+    'amIWebInstallListener.idl',
 ]
 
 MODULE = 'extensions'

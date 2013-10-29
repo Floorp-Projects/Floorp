@@ -114,8 +114,9 @@ DestroyMouseDownPoint(void *    /*aObject*/,
 nsresult
 HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
+  WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   if (mHandlingEvent ||
-      (!aVisitor.mEvent->IsLeftClickEvent() &&
+      (!(mouseEvent && mouseEvent->IsLeftClickEvent()) &&
        aVisitor.mEvent->message != NS_MOUSE_BUTTON_DOWN) ||
       aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
       !aVisitor.mPresContext ||
@@ -131,14 +132,11 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     mHandlingEvent = true;
     switch (aVisitor.mEvent->message) {
       case NS_MOUSE_BUTTON_DOWN:
-        NS_ASSERTION(aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT,
-                     "wrong event struct for event");
-        if (static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-              WidgetMouseEvent::eLeftButton) {
+        if (mouseEvent->button == WidgetMouseEvent::eLeftButton) {
           // We reset the mouse-down point on every event because there is
           // no guarantee we will reach the NS_MOUSE_CLICK code below.
           LayoutDeviceIntPoint* curPoint =
-            new LayoutDeviceIntPoint(aVisitor.mEvent->refPoint);
+            new LayoutDeviceIntPoint(mouseEvent->refPoint);
           SetProperty(nsGkAtoms::labelMouseDownPtProperty,
                       static_cast<void*>(curPoint),
                       DestroyMouseDownPoint);
@@ -146,9 +144,7 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         break;
 
       case NS_MOUSE_CLICK:
-        if (aVisitor.mEvent->IsLeftClickEvent()) {
-          const WidgetMouseEvent* event =
-            static_cast<const WidgetMouseEvent*>(aVisitor.mEvent);
+        if (mouseEvent->IsLeftClickEvent()) {
           LayoutDeviceIntPoint* mouseDownPoint =
             static_cast<LayoutDeviceIntPoint*>(
               GetProperty(nsGkAtoms::labelMouseDownPtProperty));
@@ -158,7 +154,7 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             LayoutDeviceIntPoint dragDistance = *mouseDownPoint;
             DeleteProperty(nsGkAtoms::labelMouseDownPtProperty);
 
-            dragDistance -= aVisitor.mEvent->refPoint;
+            dragDistance -= mouseEvent->refPoint;
             const int CLICK_DISTANCE = 2;
             dragSelect = dragDistance.x > CLICK_DISTANCE ||
                          dragDistance.x < -CLICK_DISTANCE ||
@@ -167,13 +163,13 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           }
           // Don't click the for-content if we did drag-select text or if we
           // have a kbd modifier (which adjusts a selection).
-          if (dragSelect || event->IsShift() || event->IsControl() ||
-              event->IsAlt() || event->IsMeta()) {
+          if (dragSelect || mouseEvent->IsShift() || mouseEvent->IsControl() ||
+              mouseEvent->IsAlt() || mouseEvent->IsMeta()) {
             break;
           }
           // Only set focus on the first click of multiple clicks to prevent
           // to prevent immediate de-focus.
-          if (event->clickCount <= 1) {
+          if (mouseEvent->clickCount <= 1) {
             nsIFocusManager* fm = nsFocusManager::GetFocusManager();
             if (fm) {
               // Use FLAG_BYMOVEFOCUS here so that the label is scrolled to.
@@ -196,12 +192,11 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // will actually create a new event.
           EventFlags eventFlags;
           eventFlags.mMultipleActionsPrevented = true;
-          DispatchClickEvent(aVisitor.mPresContext,
-                             aVisitor.mEvent->AsInputEvent(),
+          DispatchClickEvent(aVisitor.mPresContext, mouseEvent,
                              content, false, &eventFlags, &status);
           // Do we care about the status this returned?  I don't think we do...
           // Don't run another <label> off of this click
-          aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
+          mouseEvent->mFlags.mMultipleActionsPrevented = true;
         }
         break;
     }

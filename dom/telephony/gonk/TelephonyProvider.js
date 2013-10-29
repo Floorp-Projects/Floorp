@@ -18,8 +18,13 @@ const GONK_TELEPHONYPROVIDER_CONTRACTID =
 const GONK_TELEPHONYPROVIDER_CID =
   Components.ID("{67d26434-d063-4d28-9f48-5b3189788155}");
 
-const kPrefenceChangedObserverTopic = "nsPref:changed";
-const kXpcomShutdownObserverTopic   = "xpcom-shutdown";
+const NS_XPCOM_SHUTDOWN_OBSERVER_ID   = "xpcom-shutdown";
+
+const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
+
+const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
+const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
+const kPrefDefaultServiceId = "dom.telephony.defaultServiceId";
 
 const nsIAudioManager = Ci.nsIAudioManager;
 const nsITelephonyProvider = Ci.nsITelephonyProvider;
@@ -83,9 +88,12 @@ function TelephonyProvider() {
   this._listeners = [];
 
   this._updateDebugFlag();
+  this.defaultServiceId = this._getDefaultServiceId();
 
-  Services.obs.addObserver(this, kPrefenceChangedObserverTopic, false);
-  Services.obs.addObserver(this, kXpcomShutdownObserverTopic, false);
+  Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
+  Services.prefs.addObserver(kPrefDefaultServiceId, this, false);
+
+  Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 }
 TelephonyProvider.prototype = {
   classID: GONK_TELEPHONYPROVIDER_CID,
@@ -99,9 +107,30 @@ TelephonyProvider.prototype = {
                                          Ci.nsIGonkTelephonyProvider,
                                          Ci.nsIObserver]),
 
+  // The following attributes/functions are used for acquiring/releasing the
+  // CPU wake lock when the RIL handles the incoming call. Note that we need
+  // a timer to bound the lock's life cycle to avoid exhausting the battery.
   _callRingWakeLock: null,
   _callRingWakeLockTimer: null,
-  _cancelCallRingWakeLockTimer: function _cancelCallRingWakeLockTimer() {
+
+  _acquireCallRingWakeLock: function _acquireCallRingWakeLock() {
+    if (!this._callRingWakeLock) {
+      if (DEBUG) debug("Acquiring a CPU wake lock for handling incoming call.");
+      this._callRingWakeLock = gPowerManagerService.newWakeLock("cpu");
+    }
+    if (!this._callRingWakeLockTimer) {
+      if (DEBUG) debug("Creating a timer for releasing the CPU wake lock.");
+      this._callRingWakeLockTimer =
+        Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    }
+    if (DEBUG) debug("Setting the timer for releasing the CPU wake lock.");
+    this._callRingWakeLockTimer
+        .initWithCallback(this._releaseCallRingWakeLock.bind(this),
+                          CALL_WAKELOCK_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  _releaseCallRingWakeLock: function _releaseCallRingWakeLock() {
+    if (DEBUG) debug("Releasing the CPU wake lock for handling incoming call.");
     if (this._callRingWakeLockTimer) {
       this._callRingWakeLockTimer.cancel();
     }
@@ -265,13 +294,26 @@ TelephonyProvider.prototype = {
   _updateDebugFlag: function _updateDebugFlag() {
     try {
       DEBUG = RIL.DEBUG_RIL ||
-              Services.prefs.getBoolPref("ril.debugging.enabled");
+              Services.prefs.getBoolPref(kPrefRilDebuggingEnabled);
     } catch (e) {}
+  },
+
+  _getDefaultServiceId: function _getDefaultServiceId() {
+    let id = Services.prefs.getIntPref(kPrefDefaultServiceId);
+    let numRil = Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
+
+    if (id >= numRil || id < 0) {
+      id = 0;
+    }
+
+    return id;
   },
 
   /**
    * nsITelephonyProvider interface.
    */
+
+  defaultServiceId: 0,
 
   registerListener: function(aListener) {
     if (this._listeners.indexOf(aListener) >= 0) {
@@ -444,16 +486,9 @@ TelephonyProvider.prototype = {
    * to start bringing up the Phone app already.
    */
   notifyCallRing: function notifyCallRing() {
-    if (!this._callRingWakeLock) {
-      this._callRingWakeLock = gPowerManagerService.newWakeLock("cpu");
-    }
-    if (!this._callRingWakeLockTimer) {
-      this._callRingWakeLockTimer =
-        Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    }
-    this._callRingWakeLockTimer
-        .initWithCallback(this._cancelCallRingWakeLockTimer.bind(this),
-                          CALL_WAKELOCK_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+    // We need to acquire a CPU wake lock to avoid the system falling into
+    // the sleep mode when the RIL handles the incoming call.
+    this._acquireCallRingWakeLock();
 
     gSystemMessenger.broadcastMessage("telephony-new-call", {});
   },
@@ -482,6 +517,10 @@ TelephonyProvider.prototype = {
   },
 
   notifyCdmaCallWaiting: function notifyCdmaCallWaiting(aNumber) {
+    // We need to acquire a CPU wake lock to avoid the system falling into
+    // the sleep mode when the RIL handles the incoming call.
+    this._acquireCallRingWakeLock();
+
     this._notifyAllListeners("notifyCdmaCallWaiting", [aNumber]);
   },
 
@@ -506,18 +545,19 @@ TelephonyProvider.prototype = {
 
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case kPrefenceChangedObserverTopic:
-        if (aData === "ril.debugging.enabled") {
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
+        if (aData === kPrefRilDebuggingEnabled) {
           this._updateDebugFlag();
+	} else if (aData === kPrefDefaultServiceId) {
+          this.defaultServiceId = this._getDefaultServiceId();
         }
         break;
 
-      case kXpcomShutdownObserverTopic:
-        // Cancel the timer for the call-ring wake lock.
-        this._cancelCallRingWakeLockTimer();
+      case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
+        // Release the CPU wake lock for handling the incoming call.
+        this._releaseCallRingWakeLock();
 
-        Services.obs.removeObserver(this, kPrefenceChangedObserverTopic);
-        Services.obs.removeObserver(this, kXpcomShutdownObserverTopic);
+        Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
         break;
     }
   }

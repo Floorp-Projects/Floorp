@@ -13,7 +13,7 @@ EXPORTS += [
 
 LIBRARY_NAME = 'mozexpat_s'
 
-CSRCS += [
+SOURCES += [
     'xmlparse.c',
     'xmlrole.c',
     'xmltok.c',
@@ -21,3 +21,5 @@ CSRCS += [
 
 MSVC_ENABLE_PGO = True
 
+# We want only the static lib, not the shared lib
+FORCE_STATIC_LIB = True

@@ -19,7 +19,7 @@ EXPORTS += [
     'nsCollation.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'nsCharsetAlias.cpp',
     'nsCollation.cpp',
     'nsLanguageAtomService.cpp',

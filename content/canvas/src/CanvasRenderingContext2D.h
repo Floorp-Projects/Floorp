@@ -24,6 +24,7 @@
 #include "gfx2DGlue.h"
 #include "imgIEncoder.h"
 
+class nsGlobalWindow;
 class nsXULElement;
 
 namespace mozilla {
@@ -369,7 +370,7 @@ public:
     }
   }
 
-  void DrawWindow(nsIDOMWindow* window, double x, double y, double w, double h,
+  void DrawWindow(nsGlobalWindow& window, double x, double y, double w, double h,
                   const nsAString& bgColor, uint32_t flags,
                   mozilla::ErrorResult& error);
   void AsyncDrawXULElement(nsXULElement& elem, double x, double y, double w,

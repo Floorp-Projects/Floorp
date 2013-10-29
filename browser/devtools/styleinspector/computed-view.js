@@ -11,7 +11,8 @@ let {CssLogic} = require("devtools/styleinspector/css-logic");
 let {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 let promise = require("sdk/core/promise");
 let {EventEmitter} = require("devtools/shared/event-emitter");
-let {colorUtils} = require("devtools/css-color");
+const {OutputParser} = require("devtools/output-parser");
+const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
@@ -134,6 +135,8 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this.pageStyle = aPageStyle;
   this.propertyViews = [];
 
+  this._outputParser = new OutputParser();
+
   let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
     getService(Ci.nsIXULChromeRegistry);
   this.getRTLAttr = chromeReg.isLocaleRTL("global") ? "rtl" : "ltr";
@@ -165,6 +168,11 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
 
   // The element that we're inspecting, and the document that it comes from.
   this.viewedElement = null;
+
+  // Properties preview tooltip
+  this.tooltip = new Tooltip(this.styleInspector.inspector.panelDoc);
+  this.tooltip.startTogglingOnHover(this.propertyContainer,
+    this._buildTooltipContent.bind(this));
 
   this._buildContextMenu();
   this.createStyleViews();
@@ -488,6 +496,29 @@ CssHtmlTree.prototype = {
   },
 
   /**
+   * Verify that target is indeed a css value we want a tooltip on, and if yes
+   * prepare some content for the tooltip
+   */
+  _buildTooltipContent: function(target)
+  {
+    // If the hovered element is not a property view and is not a background
+    // image, then don't show a tooltip
+    let isPropertyValue = target.classList.contains("property-value");
+    if (!isPropertyValue) {
+      return false;
+    }
+    let propName = target.parentNode.querySelector(".property-name");
+    let isBackgroundImage = propName.textContent === "background-image";
+    if (!isBackgroundImage) {
+      return false;
+    }
+
+    // Fill some content
+    this.tooltip.setCssBackgroundImageContent(target.textContent);
+    return true;
+  },
+
+  /**
    * Create a context menu.
    */
   _buildContextMenu: function()
@@ -613,6 +644,8 @@ CssHtmlTree.prototype = {
   {
     delete this.viewedElement;
 
+    delete this._outputParser;
+
     // Remove event listeners
     this.includeBrowserStylesCheckbox.removeEventListener("command",
       this.includeBrowserStylesChanged);
@@ -642,6 +675,9 @@ CssHtmlTree.prototype = {
       this._contextmenu.parentNode.removeChild(this._contextmenu);
       this._contextmenu = null;
     }
+
+    this.tooltip.stopTogglingOnHover(this.propertyContainer);
+    this.tooltip.destroy();
 
     // Remove bound listeners
     this.styleDocument.removeEventListener("contextmenu", this._onContextMenu);
@@ -676,7 +712,7 @@ PropertyInfo.prototype = {
   get value() {
     if (this.tree._computed) {
       let value = this.tree._computed[this.name].value;
-      return colorUtils.processCSSString(value);
+      return value;
     }
   }
 };
@@ -826,9 +862,8 @@ PropertyView.prototype = {
   {
     let doc = this.tree.styleDocument;
 
-    this.onMatchedToggle = this.onMatchedToggle.bind(this);
-
     // Build the container element
+    this.onMatchedToggle = this.onMatchedToggle.bind(this);
     this.element = doc.createElementNS(HTML_NS, "div");
     this.element.setAttribute("class", this.propertyHeaderClassName);
     this.element.addEventListener("dblclick", this.onMatchedToggle, false);
@@ -853,6 +888,8 @@ PropertyView.prototype = {
     this.matchedExpander.addEventListener("click", this.onMatchedToggle, false);
     this.element.appendChild(this.matchedExpander);
 
+    this.focusElement = () => this.element.focus();
+
     // Build the style name element
     this.nameNode = doc.createElementNS(HTML_NS, "div");
     this.nameNode.setAttribute("class", "property-name theme-fg-color5");
@@ -872,7 +909,6 @@ PropertyView.prototype = {
     // it will be reachable via TABing
     this.valueNode.setAttribute("tabindex", "");
     this.valueNode.setAttribute("dir", "ltr");
-    this.valueNode.textContent = this.valueNode.title = this.value;
     // Make it hand over the focus to the container
     this.valueNode.addEventListener("click", this.onFocus, false);
     this.element.appendChild(this.valueNode);
@@ -914,7 +950,16 @@ PropertyView.prototype = {
     }
 
     this.tree.numVisibleProperties++;
-    this.valueNode.textContent = this.valueNode.title = this.propertyInfo.value;
+
+    let outputParser = this.tree._outputParser;
+    let frag = outputParser.parseCssProperty(this.propertyInfo.name,
+      this.propertyInfo.value,
+      {
+        colorSwatchClass: "computedview-colorswatch"
+      });
+    this.valueNode.innerHTML = "";
+    this.valueNode.appendChild(frag);
+
     this.refreshMatchedSelectors();
   },
 
@@ -1021,7 +1066,7 @@ PropertyView.prototype = {
 };
 
 /**
- * A container to view us easy access to display data from a CssRule
+ * A container to give us easy access to display data from a CssRule
  * @param CssHtmlTree aTree, the owning CssHtmlTree
  * @param aSelectorInfo
  */
@@ -1114,8 +1159,18 @@ SelectorView.prototype = {
 
   get value()
   {
-    let val = this.selectorInfo.value;
-    return colorUtils.processCSSString(val);
+    return this.selectorInfo.value;
+  },
+
+  get outputFragment()
+  {
+    let outputParser = this.tree._outputParser;
+    let frag = outputParser.parseCssProperty(
+      this.selectorInfo.name,
+      this.selectorInfo.value, {
+      colorSwatchClass: "computedview-colorswatch"
+    });
+    return frag;
   },
 
   maybeOpenStyleEditor: function(aEvent)

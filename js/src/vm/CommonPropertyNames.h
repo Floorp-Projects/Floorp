@@ -35,6 +35,7 @@
     macro(configurable, configurable, "configurable") \
     macro(construct, construct, "construct") \
     macro(constructor, constructor, "constructor") \
+    macro(ConvertAndCopyTo, ConvertAndCopyTo, "ConvertAndCopyTo") \
     macro(currency, currency, "currency") \
     macro(currencyDisplay, currencyDisplay, "currencyDisplay") \
     macro(std_iterator, std_iterator, "@@iterator") \
@@ -62,6 +63,7 @@
     macro(fieldOffsets, fieldOffsets, "fieldOffsets") \
     macro(fieldTypes, fieldTypes, "fieldTypes") \
     macro(fileName, fileName, "fileName") \
+    macro(FillTypedArrayWithValue, FillTypedArrayWithValue, "FillTypedArrayWithValue") \
     macro(fix, fix, "fix") \
     macro(float32, float32, "float32") \
     macro(float64, float64, "float64") \
@@ -72,6 +74,7 @@
     macro(getOwnPropertyNames, getOwnPropertyNames, "getOwnPropertyNames") \
     macro(getPropertyDescriptor, getPropertyDescriptor, "getPropertyDescriptor") \
     macro(global, global, "global") \
+    macro(Handle, Handle, "Handle") \
     macro(has, has, "has") \
     macro(hasOwn, hasOwn, "hasOwn") \
     macro(hasOwnProperty, hasOwnProperty, "hasOwnProperty") \
@@ -130,6 +133,7 @@
     macro(propertyIsEnumerable, propertyIsEnumerable, "propertyIsEnumerable") \
     macro(proto, proto, "__proto__") \
     macro(prototype, prototype, "prototype") \
+    macro(Reify, Reify, "Reify") \
     macro(return, return_, "return") \
     macro(sensitivity, sensitivity, "sensitivity") \
     macro(set, set, "set") \

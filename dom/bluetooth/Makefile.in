@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include $(topsrcdir)/dom/dom-config.mk
-
 VPATH += $(srcdir)/ipc
 
 ifneq (,$(MOZ_B2G_BT))
@@ -51,4 +49,3 @@ LOCAL_INCLUDES += $(VPATH:%=-I%)
 endif # MOZ_B2G_BT
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk

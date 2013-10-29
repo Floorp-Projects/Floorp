@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "jsapi.h"
@@ -329,7 +330,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
 
     // If we took the sandbox path above, v might be in the sandbox
     // compartment.
-    if (!JS_WrapValue(cx, v.address())) {
+    if (!JS_WrapValue(cx, &v)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 

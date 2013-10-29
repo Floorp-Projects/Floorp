@@ -8,6 +8,9 @@ MODULE = 'profdirserviceprovider'
 
 include('objs.mozbuild')
 
-CPP_SOURCES += modules_profiledirservice_src_csrcs
+SOURCES += modules_profiledirservice_src_csrcs
 
 LIBRARY_NAME = 'profdirserviceprovider_s'
+
+# we don't want the shared lib
+FORCE_STATIC_LIB = True

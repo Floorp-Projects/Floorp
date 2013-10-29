@@ -12,6 +12,9 @@ MODULE = 'xulrunner'
 # for Mac OS X and 'xulrunner-stub' for all other platforms.
 PROGRAM = CONFIG['XULRUNNER_STUB_NAME']
 
-CPP_SOURCES += [
+SOURCES += [
     'nsXULStub.cpp',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    FINAL_TARGET = 'dist/XUL.framework/Versions/%(MOZILLA_VERSION)s' % CONFIG

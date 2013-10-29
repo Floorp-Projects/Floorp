@@ -12,6 +12,7 @@
 #include "nsICommandLineRunner.h"
 #include "FrameworkView.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "GeckoProfiler.h"
 #include <shellapi.h>
 
 using namespace ABI::Windows::ApplicationModel;
@@ -26,6 +27,8 @@ using namespace Microsoft::WRL::Wrappers;
 // appropriate thread.
 extern nsresult XRE_metroStartup(bool runXREMain);
 extern void XRE_metroShutdown();
+
+static const char* gGeckoThreadName = "GeckoMain";
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gWindowsLog;
@@ -65,6 +68,12 @@ MetroApp::Run()
 {
   LogThread();
 
+  // Name this thread for debugging and register it with the profiler
+  // as the main gecko thread.
+  char aLocal;
+  PR_SetCurrentThreadName(gGeckoThreadName);
+  profiler_register_thread(gGeckoThreadName, &aLocal);
+
   HRESULT hr;
   hr = sCoreApp->add_Suspending(Callback<__FIEventHandler_1_Windows__CApplicationModel__CSuspendingEventArgs_t>(
     this, &MetroApp::OnSuspending).Get(), &mSuspendEvent);
@@ -101,6 +110,9 @@ MetroApp::ShutdownXPCOM()
 
   // Shut down xpcom
   XRE_metroShutdown();
+
+  // Unhook this thread from the profiler
+  profiler_unregister_thread();
 }
 
 // Request a shutdown of the application

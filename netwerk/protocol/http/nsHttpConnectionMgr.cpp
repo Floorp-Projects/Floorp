@@ -318,13 +318,46 @@ nsHttpConnectionMgr::DoShiftReloadConnectionCleanup(nsHttpConnectionInfo *aCI)
     return rv;
 }
 
+class SpeculativeConnectArgs
+{
+public:
+    SpeculativeConnectArgs() { mOverridesOK = false; }
+    virtual ~SpeculativeConnectArgs() {}
+
+    // Added manually so we can use nsRefPtr without inheriting from
+    // nsISupports
+    NS_IMETHOD_(nsrefcnt) AddRef(void);
+    NS_IMETHOD_(nsrefcnt) Release(void);
+
+public: // intentional!
+    nsRefPtr<NullHttpTransaction> mTrans;
+
+    bool mOverridesOK;
+    uint32_t mParallelSpeculativeConnectLimit;
+    bool mIgnoreIdle;
+    bool mIgnorePossibleSpdyConnections;
+
+    // As above, added manually so we can use nsRefPtr without inheriting from
+    // nsISupports
+protected:
+    ::mozilla::ThreadSafeAutoRefCnt mRefCnt;
+    NS_DECL_OWNINGTHREAD
+};
+
+NS_IMPL_ADDREF(SpeculativeConnectArgs)
+NS_IMPL_RELEASE(SpeculativeConnectArgs)
+
 nsresult
 nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
                                         nsIInterfaceRequestor *callbacks,
                                         uint32_t caps)
 {
+    MOZ_ASSERT(NS_IsMainThread(), "nsHttpConnectionMgr::SpeculativeConnect called off main thread!");
+
     LOG(("nsHttpConnectionMgr::SpeculativeConnect [ci=%s]\n",
          ci->HashKey().get()));
+
+    nsRefPtr<SpeculativeConnectArgs> args = new SpeculativeConnectArgs();
 
     // Wrap up the callbacks and the target to ensure they're released on the target
     // thread properly.
@@ -332,13 +365,23 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
     NS_NewInterfaceRequestorAggregation(callbacks, nullptr, getter_AddRefs(wrappedCallbacks));
 
     caps |= ci->GetAnonymous() ? NS_HTTP_LOAD_ANONYMOUS : 0;
-    nsRefPtr<NullHttpTransaction> trans =
-        new NullHttpTransaction(ci, wrappedCallbacks, caps);
+    args->mTrans = new NullHttpTransaction(ci, wrappedCallbacks, caps);
+
+    nsCOMPtr<nsISpeculativeConnectionOverrider> overrider =
+        do_GetInterface(callbacks);
+    if (overrider) {
+        args->mOverridesOK = true;
+        overrider->GetParallelSpeculativeConnectLimit(
+            &args->mParallelSpeculativeConnectLimit);
+        overrider->GetIgnoreIdle(&args->mIgnoreIdle);
+        overrider->GetIgnorePossibleSpdyConnections(
+            &args->mIgnorePossibleSpdyConnections);
+    }
 
     nsresult rv =
-        PostEvent(&nsHttpConnectionMgr::OnMsgSpeculativeConnect, 0, trans);
+        PostEvent(&nsHttpConnectionMgr::OnMsgSpeculativeConnect, 0, args);
     if (NS_SUCCEEDED(rv))
-        trans.forget();
+        args.forget();
     return rv;
 }
 
@@ -1227,7 +1270,8 @@ nsHttpConnectionMgr::ClosePersistentConnectionsCB(const nsACString &key,
 }
 
 bool
-nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
+nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent,
+                                         bool ignorePossibleSpdyConnections)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -1237,7 +1281,8 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
 
     bool doRestrict = ent->mConnInfo->UsingSSL() &&
         gHttpHandler->IsSpdyEnabled() &&
-        (!ent->mTestedSpdy || ent->mUsingSpdy) &&
+        ((!ent->mTestedSpdy && !ignorePossibleSpdyConnections) ||
+         ent->mUsingSpdy) &&
         (ent->mHalfOpens.Length() || ent->mActiveConns.Length());
 
     // If there are no restrictions, we are done
@@ -1246,7 +1291,7 @@ nsHttpConnectionMgr::RestrictConnections(nsConnectionEntry *ent)
 
     // If the restriction is based on a tcp handshake in progress
     // let that connect and then see if it was SPDY or not
-    if (ent->UnconnectedHalfOpens())
+    if (ent->UnconnectedHalfOpens() && !ignorePossibleSpdyConnections)
         return true;
 
     // There is a concern that a host is using a mix of HTTP/1 and SPDY.
@@ -2518,14 +2563,14 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, void *param)
 {
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
-    nsRefPtr<NullHttpTransaction> trans =
-        dont_AddRef(static_cast<NullHttpTransaction *>(param));
+    nsRefPtr<SpeculativeConnectArgs> args =
+        dont_AddRef(static_cast<SpeculativeConnectArgs *>(param));
 
     LOG(("nsHttpConnectionMgr::OnMsgSpeculativeConnect [ci=%s]\n",
-         trans->ConnectionInfo()->HashKey().get()));
+         args->mTrans->ConnectionInfo()->HashKey().get()));
 
     nsConnectionEntry *ent =
-        GetOrCreateConnectionEntry(trans->ConnectionInfo());
+        GetOrCreateConnectionEntry(args->mTrans->ConnectionInfo());
 
     // If spdy has previously made a preferred entry for this host via
     // the ip pooling rules. If so, connect to the preferred host instead of
@@ -2534,10 +2579,22 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, void *param)
     if (preferredEntry)
         ent = preferredEntry;
 
-    if (mNumHalfOpenConns < gHttpHandler->ParallelSpeculativeConnectLimit() &&
-        !ent->mIdleConns.Length() && !RestrictConnections(ent) &&
-        !AtActiveConnectionLimit(ent, trans->Caps())) {
-        CreateTransport(ent, trans, trans->Caps(), true);
+    uint32_t parallelSpeculativeConnectLimit =
+        gHttpHandler->ParallelSpeculativeConnectLimit();
+    bool ignorePossibleSpdyConnections = false;
+    bool ignoreIdle = false;
+
+    if (args->mOverridesOK) {
+        parallelSpeculativeConnectLimit = args->mParallelSpeculativeConnectLimit;
+        ignorePossibleSpdyConnections = args->mIgnorePossibleSpdyConnections;
+        ignoreIdle = args->mIgnoreIdle;
+    }
+
+    if (mNumHalfOpenConns < parallelSpeculativeConnectLimit &&
+        (ignoreIdle || !ent->mIdleConns.Length()) &&
+        !RestrictConnections(ent, ignorePossibleSpdyConnections) &&
+        !AtActiveConnectionLimit(ent, args->mTrans->Caps())) {
+        CreateTransport(ent, args->mTrans, args->mTrans->Caps(), true);
     }
     else {
         LOG(("  Transport not created due to existing connection count\n"));

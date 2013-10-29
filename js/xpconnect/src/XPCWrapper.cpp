@@ -37,7 +37,7 @@ UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
   }
 
   if (AccessCheck::wrapperSubsumes(&v.toObject())) {
-    bool ok = xpc::WrapperFactory::WaiveXrayAndWrap(cx, v.address());
+    bool ok = xpc::WrapperFactory::WaiveXrayAndWrap(cx, &v);
     NS_ENSURE_TRUE(ok, false);
   }
 
@@ -48,18 +48,18 @@ UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 XrayWrapperConstructor(JSContext *cx, unsigned argc, jsval *vp)
 {
-  if (argc == 0) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() == 0) {
     return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
   }
 
-  JS::RootedValue v(cx, JS_ARGV(cx, vp)[0]);
-  if (!v.isObject()) {
-    JS_SET_RVAL(cx, vp, v);
+  if (!args[0].isObject()) {
+    args.rval().set(args[0]);
     return true;
   }
 
-  *vp = JS::ObjectValue(*js::UncheckedUnwrap(&v.toObject()));
-  return JS_WrapValue(cx, vp);
+  args.rval().setObject(*js::UncheckedUnwrap(&args[0].toObject()));
+  return JS_WrapValue(cx, args.rval());
 }
 // static
 bool

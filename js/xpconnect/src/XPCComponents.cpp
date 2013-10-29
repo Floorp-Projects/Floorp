@@ -3011,29 +3011,52 @@ nsXPCComponents_Utils::GetGlobalForObject(const Value& object,
 }
 
 /* jsval createObjectIn(in jsval vobj); */
-NS_IMETHODIMP
-nsXPCComponents_Utils::CreateObjectIn(const Value &vobj, JSContext *cx, Value *rval)
+bool
+xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &options,
+                    MutableHandleValue rval)
 {
-    if (!cx)
-        return NS_ERROR_FAILURE;
+    if (!vobj.isObject()) {
+        JS_ReportError(cx, "Expected an object as the target scope");
+        return false;
+    }
 
-    // first argument must be an object
-    if (vobj.isPrimitive())
-        return NS_ERROR_XPC_BAD_CONVERT_JS;
-
-    RootedObject scope(cx, js::UncheckedUnwrap(&vobj.toObject()));
+    RootedObject scope(cx, js::CheckedUnwrap(&vobj.toObject()));
+    if (!scope) {
+        JS_ReportError(cx, "Permission denied to create object in the target scope");
+        return false;
+    }
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
         obj = JS_NewObject(cx, nullptr, nullptr, scope);
         if (!obj)
-            return NS_ERROR_FAILURE;
+            return false;
+
+        if (!JSID_IS_VOID(options.defineAs) &&
+            !JS_DefinePropertyById(cx, scope, options.defineAs, ObjectValue(*obj),
+                                       JS_PropertyStub, JS_StrictPropertyStub,
+                                       JSPROP_ENUMERATE))
+            return false;
     }
 
     if (!JS_WrapObject(cx, &obj))
+        return false;
+
+    rval.setObject(*obj);
+    return true;
+}
+
+/* jsval createObjectIn(in jsval vobj); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateObjectIn(const Value &vobj, JSContext *cx, Value *rval)
+{
+    CreateObjectInOptions options;
+    RootedValue rvobj(cx, vobj);
+    RootedValue res(cx);
+    if (!xpc::CreateObjectIn(cx, rvobj, options, &res))
         return NS_ERROR_FAILURE;
 
-    *rval = ObjectValue(*obj);
+    *rval = res;
     return NS_OK;
 }
 
@@ -3190,12 +3213,12 @@ nsXPCComponents_Utils::GetComponentsForScope(const jsval &vscope, JSContext *cx,
         return NS_ERROR_INVALID_ARG;
     JSObject *scopeObj = js::UncheckedUnwrap(&vscope.toObject());
     XPCWrappedNativeScope *scope = GetObjectScope(scopeObj);
-    JSObject *components = scope->GetComponentsJSObject();
+    RootedObject components(cx, scope->GetComponentsJSObject());
     if (!components)
         return NS_ERROR_FAILURE;
-    *rval = ObjectValue(*components);
-    if (!JS_WrapValue(cx, rval))
+    if (!JS_WrapObject(cx, &components))
         return NS_ERROR_FAILURE;
+    *rval = ObjectValue(*components);
     return NS_OK;
 }
 
@@ -3211,7 +3234,7 @@ nsXPCComponents_Utils::Dispatch(const jsval &runnableArg, const jsval &scope,
         if (!scopeObj)
             return NS_ERROR_FAILURE;
         ac.construct(cx, scopeObj);
-        if (!JS_WrapValue(cx, runnable.address()))
+        if (!JS_WrapValue(cx, &runnable))
             return NS_ERROR_FAILURE;
     }
 
@@ -3320,9 +3343,10 @@ nsXPCComponents_Utils::IsXrayWrapper(const Value &obj, bool* aRetval)
 NS_IMETHODIMP
 nsXPCComponents_Utils::WaiveXrays(const Value &aVal, JSContext *aCx, jsval *aRetval)
 {
-    *aRetval = aVal;
-    if (!xpc::WrapperFactory::WaiveXrayAndWrap(aCx, aRetval))
+    RootedValue value(aCx, aVal);
+    if (!xpc::WrapperFactory::WaiveXrayAndWrap(aCx, &value))
         return NS_ERROR_FAILURE;
+    *aRetval = value;
     return NS_OK;
 }
 
@@ -3334,9 +3358,10 @@ nsXPCComponents_Utils::UnwaiveXrays(const Value &aVal, JSContext *aCx, jsval *aR
         return NS_OK;
     }
 
-    *aRetval = ObjectValue(*js::UncheckedUnwrap(&aVal.toObject()));
-    if (!JS_WrapValue(aCx, aRetval))
+    RootedObject obj(aCx, js::UncheckedUnwrap(&aVal.toObject()));
+    if (!JS_WrapObject(aCx, &obj))
         return NS_ERROR_FAILURE;
+    *aRetval = ObjectValue(*obj);
     return NS_OK;
 }
 

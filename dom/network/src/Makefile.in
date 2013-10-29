@@ -2,22 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-VPATH            = $(srcdir)
 
-ifdef MOZ_B2G_RIL
-endif
-
-include $(topsrcdir)/dom/dom-config.mk
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 
-ifdef MOZ_B2G_RIL
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/dom/icc/src \
-  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk

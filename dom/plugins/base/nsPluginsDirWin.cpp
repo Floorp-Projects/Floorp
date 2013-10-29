@@ -72,7 +72,7 @@ static char* GetKeyValue(void* verbuf, const WCHAR* key,
   WCHAR keybuf[64]; // plenty for the template below, with the longest key
                     // we use (currently "FileDescription")
   const WCHAR keyFormat[] = L"\\StringFileInfo\\%04X%04X\\%s";
-  WCHAR *buf = NULL;
+  WCHAR *buf = nullptr;
   UINT blen;
 
   if (_snwprintf_s(keybuf, ArrayLength(keybuf), _TRUNCATE,
@@ -135,11 +135,11 @@ static char** MakeStringArray(uint32_t variants, char* data)
   // We should handle such situations gracefully
 
   if ((variants <= 0) || !data)
-    return NULL;
+    return nullptr;
 
   char ** array = (char **)PR_Calloc(variants, sizeof(char *));
   if (!array)
-    return NULL;
+    return nullptr;
 
   char * start = data;
 
@@ -172,7 +172,7 @@ static void FreeStringArray(uint32_t variants, char ** array)
   for (uint32_t i = 0; i < variants; i++) {
     if (array[i]) {
       PL_strfree(array[i]);
-      array[i] = NULL;
+      array[i] = nullptr;
     }
   }
   PR_Free(array);
@@ -184,14 +184,14 @@ static bool CanLoadPlugin(const PRUnichar* aBinaryPath)
   bool canLoad = false;
 
   HANDLE file = CreateFileW(aBinaryPath, GENERIC_READ,
-                            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                            FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
   if (file != INVALID_HANDLE_VALUE) {
-    HANDLE map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0,
-                                    GetFileSize(file, NULL), NULL);
-    if (map != NULL) {
+    HANDLE map = CreateFileMappingW(file, nullptr, PAGE_READONLY, 0,
+                                    GetFileSize(file, nullptr), nullptr);
+    if (map != nullptr) {
       LPVOID mapView = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0);
-      if (mapView != NULL) {
+      if (mapView != nullptr) {
         if (((IMAGE_DOS_HEADER*)mapView)->e_magic == IMAGE_DOS_SIGNATURE) {
           long peImageHeaderStart = (((IMAGE_DOS_HEADER*)mapView)->e_lfanew);
           if (peImageHeaderStart != 0L) {
@@ -300,12 +300,12 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
   }
 
   if (protectCurrentDirectory) {
-    SetDllDirectory(NULL);
+    SetDllDirectory(nullptr);
   }
 
   nsresult rv = mPlugin->Load(outLibrary);
   if (NS_FAILED(rv))
-      *outLibrary = NULL;
+      *outLibrary = nullptr;
 
   if (protectCurrentDirectory) {
     SetDllDirectory(L"");

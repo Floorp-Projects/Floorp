@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Bug 909029 - CSP source-lists ignore some source expressions like 'unsafe-inline' when * or 'none' are used (e.g., style-src, script-src)</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <div id=content style="visibility:hidden">
+      <iframe id=testframe1></iframe>
+      <iframe id=testframe2></iframe>
+    </div>
+    <script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+window.tests = {
+  starExternalStylesLoaded: -1,
+  starExternalImgLoaded: -1,
+  noneExternalStylesBlocked: -1,
+  noneExternalImgLoaded: -1,
+  starInlineStyleAllowed: -1,
+  starInlineScriptBlocked: -1,
+  noneInlineStyleAllowed: -1,
+  noneInlineScriptBlocked: -1
+}
+
+function examiner() {
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if (!SpecialPowers.can_QI(subject))
+      return;
+
+    var testpat = new RegExp("testid=([a-zA-Z]+)");
+
+    if (topic === "http-on-modify-request") {
+      //these things were allowed by CSP
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
+      if (!testpat.test(asciiSpec))
+        return;
+      var testid = testpat.exec(asciiSpec)[1];
+      window.testResult(testid,
+                        /Loaded/.test(testid),
+                        "resource loaded");
+    }
+
+    if(topic === "csp-on-violate-policy") {
+      // these were blocked... record that they were blocked
+      // try because the subject could be an nsIURI or an nsISupportsCString
+      try {
+        var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+        if (!testpat.test(asciiSpec)) return;
+        var testid = testpat.exec(asciiSpec)[1];
+        window.testResult(testid,
+                          /Blocked/.test(testid),
+                          "resource blocked by CSP");
+      } catch(e) {
+        // if that fails, the subject is probably a string. Strings are only
+        // reported for inline and eval violations. Since we are testing those
+        // via the observed effects of script on CSSOM, we can simply ignore
+        // these subjects.
+      }
+    }
+  },
+
+  // must eventually call this to remove the listener,
+  // or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "http-on-modify-request");
+  }
+}
+
+window.examiner = new examiner();
+
+window.testResult = function(testname, result, msg) {
+  //dump("in testResult: testname = " + testname + "\n");
+
+  //test already complete.... forget it... remember the first result.
+  if (window.tests[testname] != -1)
+    return;
+
+  window.tests[testname] = result;
+  is(result, true, testname + ' test: ' + msg);
+
+  // if any test is incomplete, keep waiting
+  for (var v in window.tests)
+    if(tests[v] == -1)
+      return;
+
+  // ... otherwise, finish
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+// Helpers for inline script/style checks
+var black = 'rgb(0, 0, 0)';
+var green = 'rgb(0, 128, 0)';
+function getElementColorById(doc, id) {
+  return window.getComputedStyle(doc.contentDocument.getElementById(id)).color;
+}
+
+function checkInlineWithStar() {
+  var testframe = document.getElementById('testframe1');
+  window.testResult("starInlineStyleAllowed",
+                    getElementColorById(testframe, 'inline-style') === green,
+                    "Inline styles should be allowed (style-src 'unsafe-inline' with star)");
+  window.testResult("starInlineScriptBlocked",
+                    getElementColorById(testframe, 'inline-script') === black,
+                    "Inline scripts should be blocked (style-src 'unsafe-inline' with star)");
+}
+
+function checkInlineWithNone() {
+  // If a directive has 'none' in addition to other sources, 'none' is ignored
+  // and the other sources are used. 'none' is only a valid source if it is
+  // used by itself.
+  var testframe = document.getElementById('testframe2');
+  window.testResult("noneInlineStyleAllowed",
+                    getElementColorById(testframe, 'inline-style') === green,
+                    "Inline styles should be allowed (style-src 'unsafe-inline' with none)");
+  window.testResult("noneInlineScriptBlocked",
+                    getElementColorById(testframe, 'inline-script') === black,
+                    "Inline scripts should be blocked (style-src 'unsafe-inline' with none)");
+}
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true]]},
+  function () {
+    document.getElementById('testframe1').src = 'file_CSP_bug909029_star.html';
+    document.getElementById('testframe1').addEventListener('load', checkInlineWithStar, false);
+    document.getElementById('testframe2').src = 'file_CSP_bug909029_none.html';
+    document.getElementById('testframe2').addEventListener('load', checkInlineWithNone, false);
+  }
+);
+    </script>
+  </body>
+</html>

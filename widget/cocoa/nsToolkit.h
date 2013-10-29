@@ -32,13 +32,13 @@ public:
   static nsresult    SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
                                     bool classMethods = false);
 
+  void               RegisterForAllProcessMouseEvents();
+  void               UnregisterAllProcessMouseEventHandlers();
+
 protected:
 
   nsresult           RegisterForSleepWakeNotifcations();
   void               RemoveSleepWakeNotifcations();
-
-  void               RegisterForAllProcessMouseEvents();
-  void               UnregisterAllProcessMouseEventHandlers();
 
 protected:
 

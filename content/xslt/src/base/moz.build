@@ -6,7 +6,7 @@
 
 MODULE = 'transformiix'
 
-CPP_SOURCES += [
+SOURCES += [
     'txDouble.cpp',
     'txExpandedNameMap.cpp',
     'txList.cpp',

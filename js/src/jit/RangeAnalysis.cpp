@@ -389,14 +389,15 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
     // of 1.5, it may have a range like [0,2] and the max_exponent may be zero.
     // When intersecting such a range with an integer range, the fractional part
     // of the range is dropped, but the max exponent of 0 remains valid.
-    if (lhs->canHaveFractionalPart_ != rhs->canHaveFractionalPart_ &&
-        newExponent < MaxInt32Exponent)
-    {
-        // pow(2, newExponent+1)-1 to compute the maximum value for newExponent.
-        int32_t limit = (uint32_t(1) << (newExponent + 1)) - 1;
-        if (limit != INT32_MIN) {
-            newUpper = Min(newUpper, limit);
-            newLower = Max(newLower, -limit);
+    if (lhs->canHaveFractionalPart_ != rhs->canHaveFractionalPart_) {
+        refineInt32BoundsByExponent(newExponent, &newLower, &newUpper);
+
+        // If we're intersecting two ranges that don't overlap, this could also
+        // push the bounds past each other, since the actual intersection is
+        // the empty set.
+        if (newLower > newUpper) {
+            *emptyRange = true;
+            return nullptr;
         }
     }
 
@@ -978,6 +979,9 @@ MConstant::computeRange()
     if (value().isNumber()) {
         double d = value().toNumber();
         setRange(Range::NewDoubleRange(d, d));
+    } else if (value().isBoolean()) {
+        bool b = value().toBoolean();
+        setRange(Range::NewInt32Range(b, b));
     }
 }
 
@@ -1941,10 +1945,17 @@ Range::clampToInt32()
 void
 Range::wrapAroundToInt32()
 {
-    if (!hasInt32Bounds())
+    if (!hasInt32Bounds()) {
         setInt32(JSVAL_INT_MIN, JSVAL_INT_MAX);
-    else if (canHaveFractionalPart())
+    } else if (canHaveFractionalPart()) {
         canHaveFractionalPart_ = false;
+
+        // Clearing the fractional field may provide an opportunity to refine
+        // lower_ or upper_.
+        refineInt32BoundsByExponent(max_exponent_, &lower_, &upper_);
+
+        assertInvariants();
+    }
 }
 
 void
@@ -2085,20 +2096,6 @@ MToDouble::truncate()
 }
 
 bool
-MToFloat32::truncate()
-{
-    JS_ASSERT(type() == MIRType_Float32);
-
-    // We use the return type to flag that this MToFloat32 sould be replaced by a
-    // MTruncateToInt32 when modifying the graph.
-    setResultType(MIRType_Int32);
-    if (range())
-        range()->wrapAroundToInt32();
-
-    return true;
-}
-
-bool
 MLoadTypedArrayElementStatic::truncate()
 {
     setInfallible();
@@ -2145,14 +2142,6 @@ bool
 MToDouble::isOperandTruncated(size_t index) const
 {
     // The return type is used to flag that we are replacing this Double by a
-    // Truncate of its operand if needed.
-    return type() == MIRType_Int32;
-}
-
-bool
-MToFloat32::isOperandTruncated(size_t index) const
-{
-    // The return type is used to flag that we are replacing this Float32 by a
     // Truncate of its operand if needed.
     return type() == MIRType_Int32;
 }

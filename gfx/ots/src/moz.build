@@ -6,18 +6,17 @@
 
 MODULE = 'ots'
 
-if CONFIG['OS_TARGET'] != 'WINNT':
-    LIBXUL_LIBRARY = True
+if CONFIG['OS_TARGET'] == 'WINNT':
+    FORCE_STATIC_LIB = True
 else:
-    # FORCE_STATIC_LIB = True
-    pass
+    LIBXUL_LIBRARY = True
 
 EXPORTS += [
     '../include/opentype-sanitiser.h',
     '../include/ots-memory-stream.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'cff.cc',
     'cff_type2_charstring.cc',
     'cmap.cc',
@@ -55,3 +54,5 @@ LIBRARY_NAME = 'mozots'
 
 MSVC_ENABLE_PGO = True
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    NO_VISIBILITY_FLAGS = True

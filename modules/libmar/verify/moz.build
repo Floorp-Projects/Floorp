@@ -8,8 +8,9 @@ MODULE = 'verifymar'
 
 LIBRARY_NAME = 'verifymar'
 
-CSRCS += [
+SOURCES += [
     'cryptox.c',
     'mar_verify.c',
 ]
 
+FORCE_STATIC_LIB = True

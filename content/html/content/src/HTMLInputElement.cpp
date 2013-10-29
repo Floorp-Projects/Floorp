@@ -2677,6 +2677,14 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
         OnValueChanged(!mParserCreating);
       }
 
+      // Call parent's SetAttr for color input so its control frame is notified
+      // and updated
+      if (mType == NS_FORM_INPUT_COLOR) {
+        return nsGenericHTMLFormElement::SetAttr(kNameSpaceID_None,
+                                                 nsGkAtoms::value, aValue,
+                                                 true);
+      }
+
       return NS_OK;
     }
 
@@ -3104,8 +3112,9 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // cause activation of the input.  That is, if we're a click event, or a
   // DOMActivate that was dispatched directly, this will be set, but if we're
   // a DOMActivate dispatched from click handling, it will not be set.
+  WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   bool outerActivateEvent =
-    (aVisitor.mEvent->IsLeftClickEvent() ||
+    ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
      (aVisitor.mEvent->message == NS_UI_ACTIVATE && !mInInternalActivate));
 
   if (outerActivateEvent) {
@@ -3172,8 +3181,7 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   }
   if (IsSingleLineTextControl(false) &&
       aVisitor.mEvent->message == NS_MOUSE_CLICK &&
-      aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+      aVisitor.mEvent->AsMouseEvent()->button ==
         WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
@@ -3335,14 +3343,18 @@ HTMLInputElement::MaybeInitPickers(nsEventChainPostVisitor& aVisitor)
   // - it's the left mouse button.
   // We do not prevent non-trusted click because authors can already use
   // .click(). However, the pickers will follow the rules of popup-blocking.
-  if (aVisitor.mEvent->IsLeftClickEvent() &&
-      !aVisitor.mEvent->mFlags.mDefaultPrevented) {
-    if (mType == NS_FORM_INPUT_FILE) {
-      return InitFilePicker(FILE_PICKER_FILE);
-    }
-    if (mType == NS_FORM_INPUT_COLOR) {
-      return InitColorPicker();
-    }
+  if (aVisitor.mEvent->mFlags.mDefaultPrevented) {
+    return NS_OK;
+  }
+  WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+  if (!(mouseEvent && mouseEvent->IsLeftClickEvent())) {
+    return NS_OK;
+  }
+  if (mType == NS_FORM_INPUT_FILE) {
+    return InitFilePicker(FILE_PICKER_FILE);
+  }
+  if (mType == NS_FORM_INPUT_COLOR) {
+    return InitColorPicker();
   }
   return NS_OK;
 }
@@ -3388,23 +3400,26 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   // the click event handling, and allow cancellation of DOMActivate to cancel
   // the click.
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
-      !IsSingleLineTextControl(true) &&
-      aVisitor.mEvent->IsLeftClickEvent() &&
-      !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
-    InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
-                             NS_UI_ACTIVATE, 1);
+      !IsSingleLineTextControl(true)) {
+    WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+    if (mouseEvent && mouseEvent->IsLeftClickEvent() &&
+        !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
+      InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
+                               NS_UI_ACTIVATE, 1);
 
-    nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
-    if (shell) {
-      nsEventStatus status = nsEventStatus_eIgnore;
-      mInInternalActivate = true;
-      rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
-      mInInternalActivate = false;
+      nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
+      if (shell) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        mInInternalActivate = true;
+        rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
+        mInInternalActivate = false;
 
-      // If activate is cancelled, we must do the same as when click is
-      // cancelled (revert the checkbox to its original value).
-      if (status == nsEventStatus_eConsumeNoDefault)
-        aVisitor.mEventStatus = status;
+        // If activate is cancelled, we must do the same as when click is
+        // cancelled (revert the checkbox to its original value).
+        if (status == nsEventStatus_eConsumeNoDefault) {
+          aVisitor.mEventStatus = status;
+        }
+      }
     }
   }
 
@@ -3531,6 +3546,7 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               case NS_FORM_INPUT_RESET:
               case NS_FORM_INPUT_SUBMIT:
               case NS_FORM_INPUT_IMAGE: // Bug 34418
+              case NS_FORM_INPUT_COLOR:
               {
                 WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
                                        NS_MOUSE_CLICK, nullptr,
@@ -3674,11 +3690,9 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         {
           // cancel all of these events for buttons
           //XXXsmaug Why?
-          if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-              (static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-                 WidgetMouseEvent::eMiddleButton ||
-               static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
-                 WidgetMouseEvent::eRightButton)) {
+          WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+          if (mouseEvent->button == WidgetMouseEvent::eMiddleButton ||
+              mouseEvent->button == WidgetMouseEvent::eRightButton) {
             if (mType == NS_FORM_INPUT_BUTTON ||
                 mType == NS_FORM_INPUT_RESET ||
                 mType == NS_FORM_INPUT_SUBMIT) {
@@ -3797,9 +3811,8 @@ HTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor
         break; // ignore
       }
       if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_DOWN) {
-        WidgetMouseEvent* mouseEvent =
-          static_cast<WidgetMouseEvent*>(aVisitor.mEvent);
-        if (mouseEvent->buttons == WidgetMouseEvent::eLeftButtonFlag) {
+        if (aVisitor.mEvent->AsMouseEvent()->buttons ==
+              WidgetMouseEvent::eLeftButtonFlag) {
           StartRangeThumbDrag(inputEvent);
         } else if (mIsDraggingRange) {
           CancelRangeThumbDrag();
@@ -4601,9 +4614,6 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
       aRv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
       if (!aRv.Failed()) {
         aRv = textControlFrame->ScrollSelectionIntoView();
-        nsRefPtr<nsAsyncDOMEvent> event =
-          new nsAsyncDOMEvent(this, NS_LITERAL_STRING("select"), true, false);
-        event->PostDOMEvent();
       }
     }
   }
@@ -4727,6 +4737,11 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
 
   Optional<nsAString> direction;
   SetSelectionRange(aSelectionStart, aSelectionEnd, direction, aRv);
+  if (!aRv.Failed()) {
+    nsRefPtr<nsAsyncDOMEvent> event =
+      new nsAsyncDOMEvent(this, NS_LITERAL_STRING("select"), true, false);
+    event->PostDOMEvent();
+  }
 }
 
 int32_t

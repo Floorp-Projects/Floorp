@@ -12,7 +12,7 @@ MODULE = 'jsdebugger'
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 
-CPP_SOURCES += [
+SOURCES += [
     'JSDebugger.cpp',
 ]
 

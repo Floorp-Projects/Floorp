@@ -113,12 +113,15 @@ class B2GMochitest(MochitestUtilsMixin):
         self.startWebSocketServer(options, None)
         self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
 
-        if options.timeout:
-            timeout = options.timeout + 30
-        elif options.debugger or not options.autorun:
+        if options.debugger or not options.autorun:
             timeout = None
         else:
-            timeout = 330.0 # default JS harness timeout is 300 seconds
+            if not options.timeout:
+                if mozinfo.info['debug']:
+                    options.timeout = 420
+                else:
+                    options.timeout = 300
+            timeout = options.timeout + 30.0
 
         log.info("runtestsb2g.py | Running tests: start.")
         status = 0
@@ -127,6 +130,7 @@ class B2GMochitest(MochitestUtilsMixin):
                             'devicemanager': self._dm,
                             'marionette': self.marionette,
                             'remote_test_root': self.remote_test_root,
+                            'symbols_path': options.symbolsPath,
                             'test_script': self.test_script,
                             'test_script_args': self.test_script_args }
             self.runner = B2GRunner(**runner_args)
@@ -141,6 +145,7 @@ class B2GMochitest(MochitestUtilsMixin):
         except:
             traceback.print_exc()
             log.error("Automation Error: Received unexpected exception while running application\n")
+            self.runner.check_for_crashes()
             status = 1
 
         self.stopWebServer(options)

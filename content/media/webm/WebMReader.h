@@ -221,13 +221,13 @@ protected:
     AUDIO = 1
   };
 
-  // Read a packet from the nestegg file. Returns NULL if all packets for
+  // Read a packet from the nestegg file. Returns nullptr if all packets for
   // the particular track have been read. Pass VIDEO or AUDIO to indicate the
   // type of the packet we want to read.
 #ifdef MOZ_DASH
   nsReturnRef<NesteggPacketHolder> NextPacketInternal(TrackType aTrackType);
 
-  // Read a packet from the nestegg file. Returns NULL if all packets for
+  // Read a packet from the nestegg file. Returns nullptr if all packets for
   // the particular track have been read. Pass VIDEO or AUDIO to indicate the
   // type of the packet we want to read. If the reader reaches a switch access
   // point, this function will get a packet from |mNextReader|.

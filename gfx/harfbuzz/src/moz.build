@@ -6,11 +6,10 @@
 
 MODULE = 'harfbuzz'
 
-if CONFIG['OS_ARCH'] != 'WINNT':
-    LIBXUL_LIBRARY = True
+if CONFIG['OS_ARCH'] == 'WINNT':
+    FORCE_STATIC_LIB = True
 else:
-    # FORCE_STATIC_LIB = True
-    pass
+    LIBXUL_LIBRARY = True
 
 EXPORTS.harfbuzz += [
     'hb-blob.h',
@@ -30,12 +29,12 @@ EXPORTS.harfbuzz += [
     'hb.h',
 ]
 
-CPP_SOURCES += [
+SOURCES += [
     'hb-blob.cc',
     'hb-buffer.cc',
     'hb-common.cc',
-    'hb-fallback-shape.cc',
     'hb-face.cc',
+    'hb-fallback-shape.cc',
     'hb-font.cc',
     'hb-ot-layout.cc',
     'hb-ot-map.cc',

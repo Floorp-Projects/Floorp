@@ -40,7 +40,7 @@ typedef struct ASFinderInfo
 static void append_file(FILE* output, const char* input_name)
 {
   FILE* input = fopen(input_name, "rb");
-  EXIT_IF_FALSE(input != NULL);
+  EXIT_IF_FALSE(input != nullptr);
 
   while (1) {
     char buffer[4096];
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
   }
 
   FILE* output = fopen(argv[2], "wb");
-  if (output == NULL) {
+  if (output == nullptr) {
     printf("%s: can't open file `%s'\n", argv[0], argv[2]);
     exit(5);
   }
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
   memset(&cat_info, 0, sizeof(cat_info));
   EXIT_IF_FALSE(FSGetCatalogInfo(&fsref,
                                  kFSCatInfoGettableInfo,
-                                 &cat_info, NULL, NULL, NULL) == 0);
+                                 &cat_info, nullptr, nullptr, nullptr) == 0);
 
   ASFinderInfo finder_info;
   memcpy(&finder_info.ioFlFndrInfo, &cat_info.finderInfo,

@@ -33,7 +33,7 @@ interface nsIMobileConnectionListener : nsISupports
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(84278a49-0f05-4585-b3f4-c74882ae5719)]
+[scriptable, uuid(c66652e0-0628-11e3-8ffd-0800200c9a66)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -41,71 +41,47 @@ interface nsIMobileConnectionProvider : nsISupports
    * RadioInterfaceLayer in the chrome process. Only a content process that has
    * the 'mobileconnection' permission is allowed to register.
    */
-  void registerMobileConnectionMsg(in unsigned long clientId,
-                                   in nsIMobileConnectionListener listener);
-  void unregisterMobileConnectionMsg(in unsigned long clientId,
-                                     in nsIMobileConnectionListener listener);
+  void registerMobileConnectionMsg(in nsIMobileConnectionListener listener);
+  void unregisterMobileConnectionMsg(in nsIMobileConnectionListener listener);
 
-  nsIDOMMozMobileConnectionInfo getVoiceConnectionInfo(in unsigned long clientId);
-  nsIDOMMozMobileConnectionInfo getDataConnectionInfo(in unsigned long clientId);
-  DOMString getIccId(in unsigned long clientId);
-  DOMString getNetworkSelectionMode(in unsigned long clientId);
+  readonly attribute nsIDOMMozMobileConnectionInfo voiceConnectionInfo;
+  readonly attribute nsIDOMMozMobileConnectionInfo dataConnectionInfo;
+  readonly attribute DOMString networkSelectionMode;
 
-  nsIDOMDOMRequest getNetworks(in unsigned long clientId,
-                               in nsIDOMWindow window);
-  nsIDOMDOMRequest selectNetwork(in unsigned long clientId,
-                                 in nsIDOMWindow window,
-                                 in nsIDOMMozMobileNetworkInfo network);
-  nsIDOMDOMRequest selectNetworkAutomatically(in unsigned long clientId,
-                                              in nsIDOMWindow window);
+  nsIDOMDOMRequest getNetworks(in nsIDOMWindow window);
+  nsIDOMDOMRequest selectNetwork(in nsIDOMWindow window, in nsIDOMMozMobileNetworkInfo network);
+  nsIDOMDOMRequest selectNetworkAutomatically(in nsIDOMWindow window);
 
-  nsIDOMDOMRequest setRoamingPreference(in unsigned long clientId,
-                                        in nsIDOMWindow window,
+  nsIDOMDOMRequest setRoamingPreference(in nsIDOMWindow window,
                                         in DOMString mode);
-  nsIDOMDOMRequest getRoamingPreference(in unsigned long clientId,
-                                        in nsIDOMWindow window);
+  nsIDOMDOMRequest getRoamingPreference(in nsIDOMWindow window);
 
-  nsIDOMDOMRequest setVoicePrivacyMode(in unsigned long clientId,
-                                       in nsIDOMWindow window,
+  nsIDOMDOMRequest setVoicePrivacyMode(in nsIDOMWindow window,
                                        in bool enabled);
-  nsIDOMDOMRequest getVoicePrivacyMode(in unsigned long clientId,
-                                       in nsIDOMWindow window);
+  nsIDOMDOMRequest getVoicePrivacyMode(in nsIDOMWindow window);
 
-  nsIDOMDOMRequest sendMMI(in unsigned long clientId,
-                           in nsIDOMWindow window,
-                           in DOMString mmi);
-  nsIDOMDOMRequest cancelMMI(in unsigned long clientId,
-                             in nsIDOMWindow window);
+  nsIDOMDOMRequest sendMMI(in nsIDOMWindow window, in DOMString mmi);
+  nsIDOMDOMRequest cancelMMI(in nsIDOMWindow window);
 
-  nsIDOMDOMRequest getCallForwardingOption(in unsigned long clientId,
-                                           in nsIDOMWindow window,
+  nsIDOMDOMRequest getCallForwardingOption(in nsIDOMWindow   window,
                                            in unsigned short reason);
-  nsIDOMDOMRequest setCallForwardingOption(in unsigned long clientId,
-                                           in nsIDOMWindow window,
+  nsIDOMDOMRequest setCallForwardingOption(in nsIDOMWindow          window,
                                            in nsIDOMMozMobileCFInfo CFInfo);
 
-  nsIDOMDOMRequest getCallBarringOption(in unsigned long clientId,
-                                        in nsIDOMWindow window,
-                                        in jsval option);
-  nsIDOMDOMRequest setCallBarringOption(in unsigned long clientId,
-                                        in nsIDOMWindow window,
-                                        in jsval option);
-  nsIDOMDOMRequest changeCallBarringPassword(in unsigned long clientId,
-                                             in nsIDOMWindow window,
+  nsIDOMDOMRequest getCallBarringOption(in nsIDOMWindow window,
+                                        in jsval        option);
+  nsIDOMDOMRequest setCallBarringOption(in nsIDOMWindow window,
+                                        in jsval        option);
+  nsIDOMDOMRequest changeCallBarringPassword(in nsIDOMWindow window,
                                              in jsval info);
 
-  nsIDOMDOMRequest setCallWaitingOption(in unsigned long clientId,
-                                        in nsIDOMWindow window,
+  nsIDOMDOMRequest setCallWaitingOption(in nsIDOMWindow   window,
                                         in bool enabled);
-  nsIDOMDOMRequest getCallWaitingOption(in unsigned long clientId,
-                                        in nsIDOMWindow window);
+  nsIDOMDOMRequest getCallWaitingOption(in nsIDOMWindow   window);
 
-  nsIDOMDOMRequest setCallingLineIdRestriction(in unsigned long clientId,
-                                               in nsIDOMWindow window,
+  nsIDOMDOMRequest setCallingLineIdRestriction(in nsIDOMWindow   window,
                                                in unsigned short clirMode);
-  nsIDOMDOMRequest getCallingLineIdRestriction(in unsigned long clientId,
-                                               in nsIDOMWindow window);
+  nsIDOMDOMRequest getCallingLineIdRestriction(in nsIDOMWindow   window);
 
-  nsIDOMDOMRequest exitEmergencyCbMode(in unsigned long clientId,
-                                       in nsIDOMWindow window);
+  nsIDOMDOMRequest exitEmergencyCbMode(in nsIDOMWindow window);
 };

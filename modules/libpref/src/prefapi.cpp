@@ -76,7 +76,7 @@ PLDHashTable        gHashTable = { nullptr };
 static PLArenaPool  gPrefNameArena;
 bool                gDirty = false;
 
-static struct CallbackNode* gCallbacks = NULL;
+static struct CallbackNode* gCallbacks = nullptr;
 static bool         gIsAnyPrefLocked = false;
 // These are only used during the call to pref_DoCallback
 static bool         gCallbacksInProgress = false;
@@ -184,7 +184,7 @@ void PREF_Cleanup()
         free(node);
         node = next_node;
     }
-    gCallbacks = NULL;
+    gCallbacks = nullptr;
 
     PREF_CleanupPrefs();
 }
@@ -215,7 +215,7 @@ static void str_escape(const char * original, nsAFlatCString& aResult)
      */
     const char *p;
 
-    if (original == NULL)
+    if (original == nullptr)
         return;
 
     /* Paranoid worst case all slashes will free quickly */
@@ -709,7 +709,7 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
             PR_ASSERT(newValue.stringVal);
             if (oldValue->stringVal)
                 PL_strfree(oldValue->stringVal);
-            oldValue->stringVal = newValue.stringVal ? PL_strdup(newValue.stringVal) : NULL;
+            oldValue->stringVal = newValue.stringVal ? PL_strdup(newValue.stringVal) : nullptr;
             break;
 
         default:
@@ -902,9 +902,9 @@ PREF_UnregisterCallback(const char *pref_node,
 {
     nsresult rv = NS_ERROR_FAILURE;
     struct CallbackNode* node = gCallbacks;
-    struct CallbackNode* prev_node = NULL;
+    struct CallbackNode* prev_node = nullptr;
 
-    while (node != NULL)
+    while (node != nullptr)
     {
         if ( node->func == callback &&
              node->data == instance_data &&
@@ -946,7 +946,7 @@ static nsresult pref_DoCallback(const char* changed_pref)
     // out the |func| pointer. We release them at the end of this function
     // if we haven't reentered.
 
-    for (node = gCallbacks; node != NULL; node = node->next)
+    for (node = gCallbacks; node != nullptr; node = node->next)
     {
         if ( node->func &&
              PL_strncmp(changed_pref,
@@ -963,10 +963,10 @@ static nsresult pref_DoCallback(const char* changed_pref)
 
     if (gShouldCleanupDeadNodes && !gCallbacksInProgress)
     {
-        struct CallbackNode* prev_node = NULL;
+        struct CallbackNode* prev_node = nullptr;
         node = gCallbacks;
 
-        while (node != NULL)
+        while (node != nullptr)
         {
             if (!node->func)
             {

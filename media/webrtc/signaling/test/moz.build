@@ -13,3 +13,5 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'sdp_unittests.cpp',
         'signaling_unittests.cpp',
     ]
+include('/ipc/chromium/chromium-config.mozbuild')
+

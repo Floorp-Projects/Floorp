@@ -9,7 +9,7 @@ function test() {
   initNetMonitor(POST_DATA_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { document, L10N, SourceEditor, NetMonitorView } = aMonitor.panelWin;
+    let { document, L10N, Editor, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu, NetworkDetails } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
@@ -141,7 +141,7 @@ function test() {
               "The text shown in the source editor is incorrect (3.2).");
             ok(aEditor.getText().contains("Extra data"),
               "The text shown in the source editor is incorrect (4.2).");
-            is(aEditor.getMode(), SourceEditor.MODES.TEXT,
+            is(aEditor.getMode(), Editor.modes.text,
               "The mode active in the source editor is incorrect.");
           });
         }

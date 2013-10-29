@@ -18,12 +18,12 @@ interface IDBKeyRange {
   readonly attribute boolean lowerOpen;
   [Constant]
   readonly attribute boolean upperOpen;
-  [Creator, Throws]
+  [NewObject, Throws]
   static IDBKeyRange only (any value);
-  [Creator, Throws]
+  [NewObject, Throws]
   static IDBKeyRange lowerBound (any lower, optional boolean open = false);
-  [Creator, Throws]
+  [NewObject, Throws]
   static IDBKeyRange upperBound (any upper, optional boolean open = false);
-  [Creator, Throws]
+  [NewObject, Throws]
   static IDBKeyRange bound (any lower, any upper, optional boolean lowerOpen = false, optional boolean upperOpen = false);
 };

@@ -204,6 +204,11 @@ public:
   void Destroy();
 
   /**
+   * Returns true if Destroy() has already been called on this APZC instance.
+   */
+  bool IsDestroyed();
+
+  /**
    * Returns the incremental transformation corresponding to the async pan/zoom
    * in progress. That is, when this transform is multiplied with the layer's
    * existing transform, it will make the layer appear with the desired pan/zoom

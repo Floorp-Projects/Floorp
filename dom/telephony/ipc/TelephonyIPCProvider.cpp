@@ -3,22 +3,52 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ipc/TelephonyIPCProvider.h"
+
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/telephony/TelephonyChild.h"
-#include "ipc/TelephonyIPCProvider.h"
+#include "mozilla/Preferences.h"
 
 USING_TELEPHONY_NAMESPACE
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS2(TelephonyIPCProvider,
+namespace {
+
+const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
+#define kPrefDefaultServiceId "dom.telephony.defaultServiceId"
+const char* kObservedPrefs[] = {
+  kPrefDefaultServiceId,
+  nullptr
+};
+
+uint32_t
+getDefaultServiceId()
+{
+  int32_t id = mozilla::Preferences::GetInt(kPrefDefaultServiceId, 0);
+  int32_t numRil = mozilla::Preferences::GetInt(kPrefRilNumRadioInterfaces, 1);
+
+  if (id >= numRil || id < 0) {
+    id = 0;
+  }
+
+  return id;
+}
+
+} // Anonymous namespace
+
+NS_IMPL_ISUPPORTS3(TelephonyIPCProvider,
                    nsITelephonyProvider,
-                   nsITelephonyListener)
+                   nsITelephonyListener,
+                   nsIObserver)
 
 TelephonyIPCProvider::TelephonyIPCProvider()
 {
   // Deallocated in ContentChild::DeallocPTelephonyChild().
   mPTelephonyChild = new TelephonyChild(this);
   ContentChild::GetSingleton()->SendPTelephonyConstructor(mPTelephonyChild);
+
+  Preferences::AddStrongObservers(this, kObservedPrefs);
+  mDefaultServiceId = getDefaultServiceId();
 }
 
 TelephonyIPCProvider::~TelephonyIPCProvider()
@@ -28,8 +58,36 @@ TelephonyIPCProvider::~TelephonyIPCProvider()
 }
 
 /*
+ * Implementation of nsIObserver.
+ */
+
+NS_IMETHODIMP
+TelephonyIPCProvider::Observe(nsISupports* aSubject,
+                              const char* aTopic,
+                              const PRUnichar* aData)
+{
+  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    nsDependentString data(aData);
+    if (data.EqualsLiteral(kPrefDefaultServiceId)) {
+      mDefaultServiceId = getDefaultServiceId();
+    }
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(false, "TelephonyIPCProvider got unexpected topic!");
+  return NS_ERROR_UNEXPECTED;
+}
+
+/*
  * Implementation of nsITelephonyProvider.
  */
+
+NS_IMETHODIMP
+TelephonyIPCProvider::GetDefaultServiceId(uint32_t* aServiceId)
+{
+  *aServiceId = mDefaultServiceId;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 TelephonyIPCProvider::RegisterListener(nsITelephonyListener *aListener)

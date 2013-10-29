@@ -9,7 +9,7 @@ function test() {
   initNetMonitor(JSONP_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { document, L10N, SourceEditor, NetMonitorView } = aMonitor.panelWin;
+    let { document, L10N, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
