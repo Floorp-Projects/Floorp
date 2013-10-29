@@ -735,6 +735,10 @@ class RecursiveMakeBackend(CommonBackend):
             for path in inputs:
                 backend_deps.write('%s:\n' % path)
 
+        with open(self._backend_output_list_file, 'a'):
+            pass
+        os.utime(self._backend_output_list_file, None)
+
         # Make the master test manifest files.
         for flavor, t in self._test_manifests.items():
             install_prefix, manifests = t
