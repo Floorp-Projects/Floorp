@@ -1,30 +1,13 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
-# Build Fennec
-ac_add_options --enable-application=mobile/android
-
-# Android
-ac_add_options --target=arm-linux-androideabi
-
-if test `uname -m` = 'x86_64'; then
-  ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
-  ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux/platforms/android-16"
-else
-  ac_add_options --with-android-ndk="/tools/android-ndk-r8c"
-  ac_add_options --with-android-sdk="/tools/android-sdk-r16/platforms/android-16"
-fi
-
-ac_add_options --with-android-gnu-compiler-version=4.7
-ac_add_options --with-android-version=9
-ac_add_options --with-system-zlib
 ac_add_options --enable-updater
-ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+
+ac_add_options --with-branding=mobile/android/branding/beta
 
 export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 
 ac_add_options --enable-official-branding
-ac_add_options --with-branding=mobile/android/branding/beta
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
