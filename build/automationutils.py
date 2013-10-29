@@ -470,7 +470,7 @@ def environment(xrePath, env=None, crashreporter=True):
         env["ASAN_OPTIONS"] = "quarantine_size=50331648:redzone=64"
       elif totalMemory <= 1024 * 1024 * 4:
         message = message % 'mid-memory'
-        env["ASAN_OPTIONS"] = "quarantine_size=100663296:redzone=64"
+        env["ASAN_OPTIONS"] = "quarantine_size=80530636:redzone=64"
       else:
         message = message % 'default memory'
     except OSError,err:
