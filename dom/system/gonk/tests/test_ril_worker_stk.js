@@ -342,6 +342,47 @@ add_test(function test_write_length() {
 });
 
 // Test Proactive commands.
+/**
+ * Verify Proactive command helper : searchForNextTag
+ */
+add_test(function test_stk_proactive_command_search_next_tag() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let berHelper = worker.BerTlvHelper;
+  let stkHelper = worker.StkProactiveCmdHelper;
+
+  let tag_test = [
+    0xD0,
+    0x3C,
+    0x85, 0x0A, 0x61, 0x6C, 0x70, 0x68, 0x61, 0x20, 0x69, 0x64, 0x20, 0x31,
+    0x85, 0x0A, 0x61, 0x6C, 0x70, 0x68, 0x61, 0x20, 0x69, 0x64, 0x20, 0x32,
+    0x85, 0x0A, 0x61, 0x6C, 0x70, 0x68, 0x61, 0x20, 0x69, 0x64, 0x20, 0x33,
+    0x85, 0x0A, 0x61, 0x6C, 0x70, 0x68, 0x61, 0x20, 0x69, 0x64, 0x20, 0x34,
+    0x85, 0x0A, 0x61, 0x6C, 0x70, 0x68, 0x61, 0x20, 0x69, 0x64, 0x20, 0x35];
+
+  for (let i = 0; i < tag_test.length; i++) {
+    pduHelper.writeHexOctet(tag_test[i]);
+  }
+
+  let berTlv = berHelper.decode(tag_test.length);
+  let iter = Iterator(berTlv.value);
+  let tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  do_check_eq(tlv.value.identifier, "alpha id 1");
+
+  tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  do_check_eq(tlv.value.identifier, "alpha id 2");
+
+  tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  do_check_eq(tlv.value.identifier, "alpha id 3");
+
+  tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  do_check_eq(tlv.value.identifier, "alpha id 4");
+
+  tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  do_check_eq(tlv.value.identifier, "alpha id 5");
+
+  run_next_test();
+});
 
 /**
  * Verify Proactive Command : Refresh
