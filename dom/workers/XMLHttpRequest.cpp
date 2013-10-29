@@ -1268,7 +1268,7 @@ public:
 
   void Clear()
   {
-    mXMLHttpRequestPrivate = NULL;
+    mXMLHttpRequestPrivate = nullptr;
   }
 
 private:
@@ -1424,7 +1424,7 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 XMLHttpRequest::XMLHttpRequest(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
-: XMLHttpRequestEventTarget(aCx), mJSObject(NULL), mUpload(NULL),
+: XMLHttpRequestEventTarget(aCx), mJSObject(nullptr), mUpload(nullptr),
   mWorkerPrivate(aWorkerPrivate),
   mResponseType(XMLHttpRequestResponseType::Text), mTimeout(0),
   mJSObjectRooted(false), mBackgroundRequest(false),
@@ -1470,7 +1470,7 @@ XMLHttpRequest::Constructor(const GlobalObject& aGlobal,
 
   if (!Wrap(cx, aGlobal.Get(), xhr)) {
     aRv.Throw(NS_ERROR_FAILURE);
-    return NULL;
+    return nullptr;
   }
 
   if (workerPrivate->XHRParamsAllowed()) {
@@ -1890,7 +1890,7 @@ XMLHttpRequest::GetUpload(ErrorResult& aRv)
 
   if (mCanceled) {
     aRv.Throw(UNCATCHABLE_EXCEPTION);
-    return NULL;
+    return nullptr;
   }
 
   if (!mUpload) {
@@ -1899,7 +1899,7 @@ XMLHttpRequest::GetUpload(ErrorResult& aRv)
 
     if (!upload) {
       aRv.Throw(NS_ERROR_FAILURE);
-      return NULL;
+      return nullptr;
     }
 
     mUpload = upload;

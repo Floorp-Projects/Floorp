@@ -322,6 +322,7 @@ private:
     } TwoByteOpcodeID;
 
     typedef enum {
+        OP3_ROUNDSS_VsdWsd  = 0x0A,
         OP3_ROUNDSD_VsdWsd  = 0x0B,
         OP3_PTEST_VdVd      = 0x17,
         OP3_PINSRD_VsdWsd   = 0x22
@@ -521,7 +522,8 @@ public:
 
     void addl_rm(RegisterID src, int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("addl       %s, %s0x%x(%s)",
+             nameIReg(4,src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_ADD_EvGv, src, base, offset);
     }
 
@@ -637,7 +639,8 @@ public:
 
     void andl_rm(RegisterID src, int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("andl       %s, %s0x%x(%s)",
+             nameIReg(4,src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_AND_EvGv, src, base, offset);
     }
 
@@ -740,6 +743,11 @@ public:
         spew("fstp       %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FSTP, base, offset);
     }
+    void fstp32_m(int offset, RegisterID base)
+    {
+        spew("fstp32       %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp(OP_FLD32, FPU6_OP_FSTP, base, offset);
+    }
 
     void negl_r(RegisterID dst)
     {
@@ -774,13 +782,15 @@ public:
 
     void orl_mr(int offset, RegisterID base, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        spew("orl        %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_OR_GvEv, dst, base, offset);
     }
 
     void orl_rm(RegisterID src, int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("orl        %s, %s0x%x(%s)",
+             nameIReg(4,src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_OR_EvGv, src, base, offset);
     }
 
@@ -870,7 +880,8 @@ public:
 
     void subl_rm(RegisterID src, int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("subl       %s, %s0x%x(%s)",
+             nameIReg(4,src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_SUB_EvGv, src, base, offset);
     }
 
@@ -955,13 +966,15 @@ public:
 
     void xorl_mr(int offset, RegisterID base, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        spew("xorl       %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(4,dst));
         m_formatter.oneByteOp(OP_XOR_GvEv, dst, base, offset);
     }
 
     void xorl_rm(RegisterID src, int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("xorl       %s, %s0x%x(%s)",
+             nameIReg(4,src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_XOR_EvGv, src, base, offset);
     }
 
@@ -1588,7 +1601,8 @@ public:
 
     void movl_rm_disp32(RegisterID src, int offset, RegisterID base)
     {
-        FIXME_INSN_PRINTING;
+        spew("movl       %s, %s0x%x(%s)",
+             nameIReg(4,src), PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp_disp32(OP_MOV_EvGv, src, base, offset);
     }
 
@@ -1619,7 +1633,8 @@ public:
 
     void movl_mr_disp32(int offset, RegisterID base, RegisterID dst)
     {
-        FIXME_INSN_PRINTING;
+        spew("movl       %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameIReg(4,dst));
         m_formatter.oneByteOp_disp32(OP_MOV_GvEv, dst, base, offset);
     }
 
@@ -1750,12 +1765,14 @@ public:
 
     void movq_rm(RegisterID src, const void* addr)
     {
+        if (src == X86Registers::eax) {
+            movq_EAXm(addr);
+            return;
+        }
+
         spew("movq       %s, %p",
              nameIReg(8, src), addr);
-        if (src == X86Registers::eax)
-            movq_EAXm(addr);
-        else
-            m_formatter.oneByteOp64(OP_MOV_EvGv, src, addr);
+        m_formatter.oneByteOp64(OP_MOV_EvGv, src, addr);
     }
 
     void movq_mEAX(const void* addr)
@@ -1794,12 +1811,14 @@ public:
 
     void movq_mr(const void* addr, RegisterID dst)
     {
+        if (dst == X86Registers::eax) {
+            movq_mEAX(addr);
+            return;
+        }
+
         spew("movq       %p, %s",
              addr, nameIReg(8, dst));
-        if (dst == X86Registers::eax)
-            movq_mEAX(addr);
-        else
-            m_formatter.oneByteOp64(OP_MOV_GvEv, dst, addr);
+        m_formatter.oneByteOp64(OP_MOV_GvEv, dst, addr);
     }
 
     void leaq_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
@@ -2936,6 +2955,15 @@ public:
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_ROUNDSD_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(mode);
+    }
+
+    void roundss_rr(XMMRegisterID src, XMMRegisterID dst, RoundingMode mode)
+    {
+        spew("roundss    %s, %s, %d",
+             nameFPReg(src), nameFPReg(dst), (int)mode);
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_ROUNDSS_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(mode); // modes are the same for roundsd and roundss
     }
 
     void pinsrd_rr(RegisterID src, XMMRegisterID dst)

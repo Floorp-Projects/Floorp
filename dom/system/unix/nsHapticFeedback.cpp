@@ -50,7 +50,7 @@ nsHapticFeedback::PerformSimpleAction(int32_t aType)
     const char* pattern = "PatternTouchscreen";
     dbus_message_iter_append_basic(&iter, DBUS_TYPE_STRING, &pattern);
 
-    if (dbus_connection_send(connection, msg, NULL)) {
+    if (dbus_connection_send(connection, msg, nullptr)) {
         dbus_connection_flush(connection);
         dbus_message_unref(msg);
     } else {

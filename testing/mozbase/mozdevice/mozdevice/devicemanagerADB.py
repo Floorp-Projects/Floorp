@@ -374,13 +374,13 @@ class DeviceManagerADB(DeviceManager):
         self._checkCmd(acmd)
         return outputFile
 
-    def killProcess(self, appname, forceKill=False):
+    def killProcess(self, appname, sig=None):
         procs = self.getProcessList()
         for (pid, name, user) in procs:
             if name == appname:
                 args = ["shell", "kill"]
-                if forceKill:
-                    args.append("-9")
+                if sig:
+                    args.append("-%d" % sig)
                 args.append(str(pid))
                 p = self._runCmdAs(args)
                 p.communicate()

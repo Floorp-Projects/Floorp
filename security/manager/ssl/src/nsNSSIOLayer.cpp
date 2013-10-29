@@ -2024,9 +2024,9 @@ private:
  * - socket: SSL socket we're dealing with
  * - caNames: list of CA names
  * - pRetCert: returns a pointer to a pointer to a valid certificate if
- *			   successful; otherwise NULL
+ *			   successful; otherwise nullptr
  * - pRetKey: returns a pointer to a pointer to the corresponding key if
- *			  successful; otherwise NULL
+ *			  successful; otherwise nullptr
  * - returns: SECSuccess if successful; error code otherwise
  */
 SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,

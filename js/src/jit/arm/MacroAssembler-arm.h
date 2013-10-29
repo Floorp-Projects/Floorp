@@ -1435,6 +1435,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
             ma_add(dest, Imm32(address.offset), dest, NoSetCond);
     }
     void floor(FloatRegister input, Register output, Label *handleNotAnInt);
+    void floorf(FloatRegister input, Register output, Label *handleNotAnInt);
     void round(FloatRegister input, Register output, Label *handleNotAnInt, FloatRegister tmp);
 
     void clampCheck(Register r, Label *handleNotAnInt) {
