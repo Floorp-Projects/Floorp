@@ -15,10 +15,9 @@
 #include "nsIURI.h"
 #include "nsNodeUtils.h"
 #include "nsWrapperCacheInlines.h"
-#include "nsIFrame.h"
-#include "ActiveLayerTracker.h"
 
-using namespace mozilla;
+namespace css = mozilla::css;
+namespace dom = mozilla::dom;
 
 nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(dom::Element* aElement,
                                                            bool aIsSMILOverride)
@@ -169,20 +168,4 @@ nsDOMCSSAttributeDeclaration::GetParentRule(nsIDOMCSSRule **aParent)
 nsDOMCSSAttributeDeclaration::GetParentObject()
 {
   return mElement;
-}
-
-NS_IMETHODIMP
-nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
-                                               const nsAString& aValue)
-{
-  // Scripted modifications to style.opacity or style.transform
-  // could immediately force us into the animated state if heuristics suggest
-  // this is scripted animation.
-  if (aPropID == eCSSProperty_opacity || aPropID == eCSSProperty_transform) {
-    nsIFrame* frame = mElement->GetPrimaryFrame();
-    if (frame) {
-      ActiveLayerTracker::NotifyInlineStyleRuleModified(frame, aPropID);
-    }
-  }
-  return nsDOMCSSDeclaration::SetPropertyValue(aPropID, aValue);
 }
