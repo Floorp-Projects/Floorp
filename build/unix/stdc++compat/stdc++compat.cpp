@@ -69,6 +69,8 @@ namespace std __attribute__((visibility("default"))) {
 /* Hack to avoid GLIBCXX_3.4.15 symbol versions */
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 15)
         static void swap(_List_node_base& __x, _List_node_base& __y) throw ();
+
+        void reverse() throw();
     };
 
     namespace __detail {
@@ -85,6 +87,8 @@ namespace std __attribute__((visibility("default"))) {
 
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 15)
         static void swap(_List_node_base& __x, _List_node_base& __y) throw ();
+
+	void _M_reverse() throw();
 #endif
     };
 
@@ -115,6 +119,12 @@ namespace std __attribute__((visibility("default"))) {
     {
         std::_List_node_base::swap(*((std::_List_node_base *) &__x),
                                    *((std::_List_node_base *) &__y));
+    }
+
+    void
+    _List_node_base::_M_reverse() throw ()
+    {
+        ((std::_List_node_base *)this)->reverse();
     }
 }
 #endif
