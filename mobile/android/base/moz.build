@@ -202,7 +202,7 @@ gbjar.sources += [
     'TouchEventInterceptor.java',
     'VideoPlayer.java',
     'WebAppAllocator.java',
-    'WebAppImpl.java',
+    'WebApp.java',
     'ZoomConstraints.java',
     'db/BrowserContract.java',
     'db/BrowserProvider.java',
@@ -317,11 +317,9 @@ gbjar.sources += [ thirdparty_source_dir + f for f in [
     'com/googlecode/eyesfree/braille/selfbraille/WriteData.java',
 ] ]
 gbjar.generated_sources += [
-    'App.java',
     'AppConstants.java',
     'R.java',
     'SysInfo.java',
-    'WebApp.java',
     'WebApps.java',
     'widget/GeckoEditText.java',
     'widget/GeckoImageButton.java',
