@@ -35,43 +35,6 @@ endif
 endif
 endif
 
-# IA64 Linux
-ifneq (,$(filter Linux FreeBSD,$(OS_ARCH)))
-ifneq (,$(findstring ia64,$(OS_TEST)))
-ASFILES		:= xptcstubs_asm_ipf64.s xptcinvoke_asm_ipf64.s
-endif
-endif
-#
-# Neutrino/Intel (uses the same unixish_x86 code)
-#
-ifeq ($(OS_TARGET),NTO)
-ifeq ($(OS_TEST),sh)
-ASFILES		:= xptcstubs_asm_shle.s
-endif
-endif
-
-
-######################################################################
-# Solaris/Intel
-######################################################################
-#
-# Solaris/Intel
-#
-ifeq ($(OS_ARCH),SunOS)
-ifeq (x86_64,$(OS_TEST))
-ifndef GNU_CC
-ASFILES		:= xptcstubs_asm_x86_64_solaris_SUNW.s
-endif
-else
-ifeq (86,$(findstring 86,$(OS_TEST)))
-# 28817: if Solaris Intel OS, and native compiler, always build optimised.
-ifndef GNU_CC
-ASFILES		:= xptcinvoke_asm_x86_solaris_SUNW.s xptcstubs_asm_x86_solaris_SUNW.s
-endif
-endif
-endif
-endif
-
 ######################################################################
 # ARM
 ######################################################################
@@ -93,12 +56,6 @@ endif
 # for gas and gcc, check comment in xptcinvoke_asm_pa32.s
 ifeq ($(OS_ARCH),HP-UX)
 ifneq ($(CC),gcc)
-ifneq ($(OS_TEST),ia64)
-ASFILES		:= xptcstubs_asm_pa32.s xptcinvoke_asm_pa32.s
-else
-ASFILES		:= xptcstubs_asm_ipf32.s xptcinvoke_asm_ipf32.s
-endif
-
 # #18875  Building the CPP's (CXX) optimized causes a crash
 CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
 endif
@@ -111,7 +68,6 @@ ifeq ($(OS_ARCH),Linux)
 ifneq (,$(filter hppa hppa2.0 hppa1.1,$(OS_TEST)))
 ifndef GNU_CXX
 else
-ASFILES		:= xptcstubs_asm_parisc_linux.s xptcinvoke_asm_parisc_linux.s
 # #434190 optimized builds crash
 CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
 endif
@@ -125,12 +81,7 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 ifneq (,$(findstring mips, $(OS_TEST)))
-ifneq (,$(findstring mips64, $(OS_TEST)))
-ASFILES		:= xptcinvoke_asm_mips64.s xptcstubs_asm_mips64.s
-else
-ASFILES		:= xptcinvoke_asm_mips.s xptcstubs_asm_mips.s
-endif
-ASFLAGS		+= -I$(DIST)/include -x assembler-with-cpp
+ASFLAGS		+= -I$(DIST)/include
 endif
 endif
 
@@ -141,90 +92,13 @@ endif
 # AIX/PPC
 #
 ifeq ($(OS_ARCH),AIX)
-ifdef HAVE_64BIT_OS
-ASFILES		:= xptcinvoke_asm_ppc_aix64.s xptcstubs_asm_ppc_aix64.s
-else
-ifeq ($(AIX_OBJMODEL),ibm)
-ASFILES		:= xptcinvoke_asm_ppc_ibmobj_aix.s xptcstubs_asm_ppc_aix.s
-else
-ASFILES		:= xptcinvoke_asm_ppc_aix.s xptcstubs_asm_ppc_aix.s
-endif
-endif
-
 # #24617  Building the CPP's (CXX) optimized causes a crash
 CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
-endif
-
-#
-# Linux/PPC
-#
-ifneq (,$(filter Linuxpowerpc FreeBSDpowerpc,$(OS_ARCH)$(OS_TEST)))
-ASFILES		:= xptcinvoke_asm_ppc_linux.s xptcstubs_asm_ppc_linux.s
-AS		:= $(CC) -c -x assembler-with-cpp
-endif
-
-#
-# Linux/PPC64
-#
-ifneq (,$(filter Linuxpowerpc64 FreeBSDpowerpc64,$(OS_ARCH)$(OS_TEST)))
-ASFILES                := xptcinvoke_asm_ppc64_linux.s xptcstubs_asm_ppc64_linux.s
-AS             := $(CC) -c -x assembler-with-cpp
-endif
-
-#
-# NetBSD/PPC
-#
-ifneq (,$(filter NetBSDmacppc NetBSDbebox NetBSDofppc NetBSDprep NetBSDamigappc,$(OS_ARCH)$(OS_TEST)))                           
-ASFILES		:= xptcinvoke_asm_ppc_netbsd.s xptcstubs_asm_ppc_netbsd.s
-endif
-
-#
-# OpenBSD/PPC
-#
-ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDpowerpc)
-ASFILES		:= xptcinvoke_asm_ppc_openbsd.s xptcstubs_asm_ppc_openbsd.s
-AS		:= $(CC) -c -x assembler-with-cpp
-endif
-
-#
-# Darwin/PPC
-#
-ifeq ($(OS_ARCH),Darwin)
-ifeq ($(TARGET_CPU), powerpc)
-ASFLAGS		+= -x assembler-with-cpp   # assumes $(AS) == $(CC)
-ASFILES		:= xptcinvoke_asm_ppc_rhapsody.s xptcstubs_asm_ppc_darwin.s
-endif
 endif
 
 ######################################################################
 # SPARC
 ######################################################################
-#
-# Linux/SPARC
-#
-ifeq ($(OS_ARCH),Linux)
-ifneq (,$(findstring sparc,$(OS_TEST)))
-ASFILES		:= xptcinvoke_asm_sparc_linux_GCC3.s xptcstubs_asm_sparc_solaris.s
-endif
-endif
-#
-# NetBSD/SPARC
-#
-ifeq ($(OS_ARCH)$(OS_TEST),NetBSDsparc)
-ASFILES		:= xptcinvoke_asm_sparc_netbsd.s xptcstubs_asm_sparc_netbsd.s
-endif
-#
-# OpenBSD/SPARC
-#
-ifeq ($(OS_ARCH)$(OS_TEST),OpenBSDsparc)
-ASFILES		:= xptcinvoke_asm_sparc_openbsd.s xptcstubs_asm_sparc_openbsd.s
-endif
-#
-# OpenBSD/SPARC64
-#
-ifneq (,$(filter OpenBSDsparc64 FreeBSDsparc64,$(OS_ARCH)$(OS_TEST)))
-ASFILES		:= xptcinvoke_asm_sparc64_openbsd.s xptcstubs_asm_sparc64_openbsd.s
-endif
 #
 # Solaris/SPARC
 #
@@ -233,18 +107,6 @@ ifneq (86,$(findstring 86,$(OS_TEST)))
 ifdef HAVE_64BIT_OS
 ASFLAGS		+= -xarch=v9
 endif
-
-ifeq ($(GNU_CC),1)
-ASFILES		:= xptcinvoke_asm_sparc_solaris_GCC3.s xptcstubs_asm_sparc_solaris.s
-else
-
-ifdef HAVE_64BIT_OS
-ASFILES		:= xptcinvoke_asm_sparcv9_solaris_SUNW.s xptcstubs_asm_sparcv9_solaris.s
-else
-ASFILES		:= xptcinvoke_asm_sparc_solaris_SUNW.s xptcstubs_asm_sparc_solaris.s
-endif
-endif
-
 endif
 endif
 
@@ -278,47 +140,37 @@ endif
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-xptcstubs_asm_ppc_darwin.o: xptcstubs_asm_ppc_darwin.s.m4 $(DIST)/include/xptcstubsdef.inc Makefile
-	gm4 $(INCLUDES) $< > ./xptcstubs_asm_ppc_darwin.s && \
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_ppc_darwin.s
-	$(RM) -f ./xptcstubs_asm_ppc_darwin.s
+xptcstubs_asm_ppc_darwin.s: xptcstubs_asm_ppc_darwin.s.m4 $(DIST)/include/xptcstubsdef.inc Makefile
+	gm4 $(INCLUDES) $< > $@
 endif
 
 ifeq ($(OS_ARCH),AIX)
 ifdef HAVE_64BIT_OS
-xptcstubs_asm_ppc_aix64.o: xptcstubs_asm_ppc_aix64.s.m4 $(DIST)/include/xptcstubsdef.inc Makefile
-	m4 -DAIX_OBJMODEL=$(AIX_OBJMODEL) $(INCLUDES) -I. $< > ./xptcstubs_asm_ppc_aix64.s && \
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_ppc_aix64.s
-	$(RM) ./xptcstubs_asm_ppc_aix64.s
+xptcstubs_asm_ppc_aix64.s: xptcstubs_asm_ppc_aix64.s.m4 $(DIST)/include/xptcstubsdef.inc Makefile
+	m4 -DAIX_OBJMODEL=$(AIX_OBJMODEL) $(INCLUDES) -I. $< > $@
 else
-xptcstubs_asm_ppc_aix.o: xptcstubs_asm_ppc_aix.s.m4 $(DIST)/include/xptcstubsdef.inc Makefile
-	m4 -DAIX_OBJMODEL=$(AIX_OBJMODEL) $(INCLUDES) -I. $< > ./xptcstubs_asm_ppc_aix.s && \
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_ppc_aix.s
-	$(RM) ./xptcstubs_asm_ppc_aix.s
+xptcstubs_asm_ppc_aix.s: xptcstubs_asm_ppc_aix.s.m4 $(DIST)/include/xptcstubsdef.inc Makefile
+	m4 -DAIX_OBJMODEL=$(AIX_OBJMODEL) $(INCLUDES) -I. $< > $@
 endif
 endif
 
 ifeq ($(OS_ARCH),SunOS)
 ifeq (86,$(findstring 86,$(OS_TEST)))
 ifndef GNU_CC
+xptcstubsdef_asm.solx86: $(DIST)/include/xptcstubsdef.inc
+	sed \
+	  -e 's/^\(STUB_ENTRY\)(\([0-9]\))/\11\(\2\)/' \
+	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9]\))/\12\(\2\)/' \
+	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9][0-9]\))/\13\(\2\)/' \
+	$(DIST)/include/xptcstubsdef.inc > $@
 ifeq (x86_64,$(OS_TEST))
-xptcstubs_asm_x86_64_solaris_SUNW.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_x86_64_solaris_SUNW.s
-	sed \
-	  -e 's/^\(STUB_ENTRY\)(\([0-9]\))/\11\(\2\)/' \
-	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9]\))/\12\(\2\)/' \
-	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9][0-9]\))/\13\(\2\)/' \
-	$(DIST)/include/xptcstubsdef.inc > ./xptcstubsdef_asm.solx86
-	$(AS) -o $@ -xarch=amd64 $(ASFLAGS) $(AS_DASH_C_FLAG) -I./ $(srcdir)/xptcstubs_asm_x86_64_solaris_SUNW.s
+ASFLAGS += -xarch=amd64
+
+xptcstubs_asm_x86_64_solaris_SUNW.$(OBJ_SUFFIX): xptcstubsdef_asm.solx86
 else
-xptcstubs_asm_x86_solaris_SUNW.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_x86_solaris_SUNW.s
-	sed \
-	  -e 's/^\(STUB_ENTRY\)(\([0-9]\))/\11\(\2\)/' \
-	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9]\))/\12\(\2\)/' \
-	  -e 's/^\(STUB_ENTRY\)(\([0-9][0-9][0-9]\))/\13\(\2\)/' \
-	$(DIST)/include/xptcstubsdef.inc > ./xptcstubsdef_asm.solx86
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) -I./ $(srcdir)/xptcstubs_asm_x86_solaris_SUNW.s
+xptcstubs_asm_x86_solaris_SUNW.$(OBJ_SUFFIX): xptcstubsdef_asm.solx86
 endif
-	@rm -f ./xptcstubsdef_asm.solx86
+
 endif
 endif
 endif
