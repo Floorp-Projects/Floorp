@@ -24,6 +24,14 @@ SOURCES += [
     'state.c',
 ]
 
+if CONFIG['OS_TEST'] == 'arm' and CONFIG['GNU_AS']:
+    GENERATED_SOURCES += [ '%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
+        'armbits-gnu',
+        'armfrag-gnu',
+        'armidct-gnu',
+        'armloop-gnu',
+    ]]
+
 MSVC_ENABLE_PGO = True
 
 FORCE_STATIC_LIB = True
