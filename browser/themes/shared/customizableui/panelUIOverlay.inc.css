@@ -65,6 +65,7 @@
   padding: .5em 0;
 }
 
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item) > .toolbarbutton-text,
 #bookmarks-menu-button > toolbarbutton > .toolbarbutton-text,
 #PanelUI-contents > toolbarpaletteitem > toolbaritem > toolbarbutton > .toolbarbutton-text,
 #PanelUI-contents > toolbaritem > toolbarbutton > .toolbarbutton-text,
@@ -114,6 +115,7 @@ panelview:not([mainview]) .toolbarbutton-text,
   margin: 0;
 }
 
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
 #PanelUI-contents toolbarbutton,
 toolbarpaletteitem[place="panel"] > toolbarbutton,
 toolbarpaletteitem[place="palette"] > toolbarbutton,
@@ -171,6 +173,24 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
 
 .panel-combined-button[disabled] > .toolbarbutton-icon {
   opacity: .5;
+}
+
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"] {
+  width: 7em;
+  margin: 0 !important;
+}
+
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-widget) {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"] > iframe {
+  margin: calc(5em / 12) auto;
+}
+
+toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item) > .toolbarbutton-text {
+  text-align: center;
 }
 
 .panel-customization-placeholder-child > .toolbarbutton-icon,
