@@ -134,7 +134,7 @@ XULTreeAccessible::Value(nsString& aValue)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeAccessible: nsAccessNode implementation
+// XULTreeAccessible: Accessible implementation
 
 void
 XULTreeAccessible::Shutdown()
@@ -150,9 +150,6 @@ XULTreeAccessible::Shutdown()
 
   AccessibleWrap::Shutdown();
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeAccessible: Accessible implementation (put methods here)
 
 role
 XULTreeAccessible::NativeRole()
@@ -889,7 +886,7 @@ XULTreeItemAccessibleBase::DoAction(uint8_t aIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeItemAccessibleBase: nsAccessNode implementation
+// XULTreeItemAccessibleBase: Accessible implementation
 
 void
 XULTreeItemAccessibleBase::Shutdown()
@@ -901,10 +898,6 @@ XULTreeItemAccessibleBase::Shutdown()
   AccessibleWrap::Shutdown();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeItemAccessibleBase: Accessible public methods
-
-// nsIAccessible::groupPosition
 GroupPos
 XULTreeItemAccessibleBase::GroupPosition()
 {
@@ -1134,7 +1127,7 @@ XULTreeItemAccessible::Name(nsString& aName)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeItemAccessible: nsAccessNode implementation
+// XULTreeItemAccessible: Accessible implementation
 
 void
 XULTreeItemAccessible::Shutdown()
@@ -1142,9 +1135,6 @@ XULTreeItemAccessible::Shutdown()
   mColumn = nullptr;
   XULTreeItemAccessibleBase::Shutdown();
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeItemAccessible: Accessible implementation
 
 role
 XULTreeItemAccessible::NativeRole()

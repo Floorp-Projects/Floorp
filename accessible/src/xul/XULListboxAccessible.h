@@ -92,10 +92,8 @@ public:
   virtual void UnselectRow(uint32_t aRowIdx);
   virtual Accessible* AsAccessible() { return this; }
 
-  // nsAccessNode
-  virtual void Shutdown();
-
   // Accessible
+  virtual void Shutdown();
   virtual void Value(nsString& aValue);
   virtual TableAccessible* AsTable() { return this; }
   virtual a11y::role NativeRole();

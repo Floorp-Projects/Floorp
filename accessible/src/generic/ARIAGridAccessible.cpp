@@ -40,7 +40,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(ARIAGridAccessible,
                              nsIAccessibleTable)
 
 ////////////////////////////////////////////////////////////////////////////////
-//nsAccessNode
+// Accessible
 
 void
 ARIAGridAccessible::Shutdown()
