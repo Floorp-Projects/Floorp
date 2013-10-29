@@ -583,10 +583,15 @@ BrowserTabActor.prototype = {
     dbg_assert(this.actorID,
                "tab should have an actorID.");
 
+    let windowUtils = this.window
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+
     let response = {
       actor: this.actorID,
       title: this.title,
-      url: this.url
+      url: this.url,
+      outerWindowID: windowUtils.outerWindowID
     };
 
     // Walk over tab actors added by extensions and add them to a new ActorPool.
