@@ -284,6 +284,19 @@
     #toolbar-menubar[autohide=true] {
       background-color: transparent !important;
     }
+
+    /* Render a window top border for lwthemes: */
+    #main-window[tabsintitlebar][sizemode="normal"] #titlebar-content:-moz-lwtheme {
+      background-image: linear-gradient(to bottom,
+            @glassActiveBorderColor@ 0, @glassActiveBorderColor@ 1px,
+            rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
+    }
+
+    #main-window[tabsintitlebar][sizemode="normal"] #titlebar-content:-moz-lwtheme:-moz-window-inactive {
+      background-image: linear-gradient(to bottom,
+            @glassInactiveBorderColor@ 0, @glassInactiveBorderColor@ 1px,
+            rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
+    }
   }
 
   #print-preview-toolbar:not(:-moz-lwtheme) {
