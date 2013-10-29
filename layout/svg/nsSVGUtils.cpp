@@ -1295,22 +1295,6 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   return false;
 }
 
-float
-nsSVGUtils::MaxExpansion(const gfxMatrix &aMatrix)
-{
-  // maximum expansion derivation from
-  // http://lists.cairographics.org/archives/cairo/2004-October/001980.html
-  // and also implemented in cairo_matrix_transformed_circle_major_axis
-  double a = aMatrix.xx;
-  double b = aMatrix.yx;
-  double c = aMatrix.xy;
-  double d = aMatrix.yy;
-  double f = (a * a + b * b + c * c + d * d) / 2;
-  double g = (a * a + b * b - c * c - d * d) / 2;
-  double h = a * c + b * d;
-  return sqrt(f + sqrt(g * g + h * h));
-}
-
 gfxMatrix
 nsSVGUtils::AdjustMatrixForUnits(const gfxMatrix &aMatrix,
                                  nsSVGEnum *aUnits,
