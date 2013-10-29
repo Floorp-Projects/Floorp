@@ -124,6 +124,7 @@ public:
         aKeyName.Assign(NS_LITERAL_STRING(aDOMKeyName)); return;
     switch (aKeyNameIndex) {
 #include "nsDOMKeyNameList.h"
+      case KEY_NAME_INDEX_USE_STRING:
       default:
         aKeyName.Truncate();
         return;
