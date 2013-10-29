@@ -105,7 +105,9 @@
 
       <handler event="blur"><![CDATA[
         let findbar = this.findbar;
-        findbar.browser.finder.removeSelection();
+        // Note: This code used to remove the selection
+        // if it matched an editable.
+        findbar.browser.finder.enableSelection();
       ]]></handler>
 
       <handler event="compositionstart"><![CDATA[
