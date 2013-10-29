@@ -63,7 +63,8 @@
 
 .theme-comment,
 .cm-s-mozilla .cm-meta,
-.cm-s-mozilla .cm-hr { /* grey */
+.cm-s-mozilla .cm-hr,
+.cm-s-mozilla .cm-comment { /* grey */
   color: #5c6773;
 }
 
@@ -79,8 +80,7 @@
 
 .theme-fg-color1,
 .cm-s-mozilla .cm-variable-2,
-.cm-s-mozilla .cm-quote,
-.cm-s-mozilla .CodeMirror-matchingbracket { /* green */
+.cm-s-mozilla .cm-quote { /* green */
   color: #5c9966;
 }
 
@@ -101,8 +101,7 @@
   color: #a673bf;
 }
 
-.theme-fg-color4,
-.cm-s-mozilla .cm-comment { /* purple/violet */
+.theme-fg-color4 { /* purple/violet */
   color: #6270b2;
 }
 
@@ -119,7 +118,6 @@
 }
 
 .theme-fg-color7,
-.cm-s-mozilla .CodeMirror-nonmatchingbracket,
 .cm-s-mozilla .cm-string-2,
 .cm-s-mozilla .cm-error { /* Red */
   color: #bf5656;
@@ -160,12 +158,20 @@
   background: rgb(185, 215, 253);
 }
 
-.dcm-s-mozilla .CodeMirror-selected { /* selected text (unfocused) */
+.cm-s-mozilla .CodeMirror-selected { /* selected text (unfocused) */
   background: rgb(176, 176, 176);
 }
 
 .CodeMirror-activeline-background { /* selected color with alpha */
-  background: rgba(185, 215, 253, .05);
+  background: rgba(185, 215, 253, .15);
+}
+
+.cm-s-mozilla .CodeMirror-linenumber { /* line number text */
+  color: #5f7387;
+}
+
+.cm-s-mozilla .CodeMirror-gutters { /* vertical line next to line numbers */
+  border-right-color: #343c45;
 }
 
 .cm-s-markup-view pre {
