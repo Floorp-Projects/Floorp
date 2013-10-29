@@ -10,6 +10,10 @@
 #include "nsIClassInfoImpl.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#ifdef MOZ_CANARY
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 using namespace mozilla;
 
@@ -56,6 +60,15 @@ nsThreadManager::Init()
     return NS_ERROR_FAILURE;
 
   mLock = new Mutex("nsThreadManager.mLock");
+
+#ifdef MOZ_CANARY
+  const int flags = O_WRONLY | O_APPEND | O_CREAT | O_NONBLOCK;
+  const mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+  char* env_var_flag = getenv("MOZ_KILL_CANARIES");
+  sCanaryOutputFD = env_var_flag ? (env_var_flag[0] ?
+      open(env_var_flag, flags, mode) :
+      STDERR_FILENO) : 0;
+#endif
 
   // Setup "main" thread
   mMainThread = new nsThread(nsThread::MAIN_THREAD, 0);

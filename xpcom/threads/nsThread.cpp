@@ -23,9 +23,7 @@
                       _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&           \
                       !(_POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700)
 
-#if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM \
-  && defined(_GNU_SOURCE)
-# define MOZ_CANARY
+#ifdef MOZ_CANARY
 # include <unistd.h>
 # include <execinfo.h>
 # include <signal.h>
@@ -284,6 +282,10 @@ nsThread::ThreadFunc(void *arg)
 
 //-----------------------------------------------------------------------------
 
+#ifdef MOZ_CANARY
+int sCanaryOutputFD = -1;
+#endif
+
 nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   : mLock("nsThread.mLock")
   , mPriority(PRIORITY_NORMAL)
@@ -498,43 +500,29 @@ class Canary {
 //XXX ToDo: support nested loops
 public:
   Canary() {
-    if (sOutputFD != 0 && EventLatencyIsImportant()) {
-      if (sOutputFD == -1) {
-        const int flags = O_WRONLY | O_APPEND | O_CREAT | O_NONBLOCK;
-        const mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-        char* env_var_flag = getenv("MOZ_KILL_CANARIES");
-        sOutputFD = env_var_flag ? (env_var_flag[0] ?
-                                    open(env_var_flag, flags, mode) :
-                                    STDERR_FILENO) : 0;
-        if (sOutputFD == 0)
-          return;
-      }
+    if (sCanaryOutputFD > 0 && EventLatencyIsImportant()) {
       signal(SIGALRM, canary_alarm_handler);
       ualarm(15000, 0);      
     }
   }
 
   ~Canary() {
-    if (sOutputFD != 0 && EventLatencyIsImportant())
+    if (sCanaryOutputFD != 0 && EventLatencyIsImportant())
       ualarm(0, 0);
   }
 
   static bool EventLatencyIsImportant() {
     return NS_IsMainThread() && XRE_GetProcessType() == GeckoProcessType_Default;
   }
-
-  static int sOutputFD;
 };
-
-int Canary::sOutputFD = -1;
 
 void canary_alarm_handler (int signum)
 {
   void *array[30];
   const char msg[29] = "event took too long to run:\n";
   // use write to be safe in the signal handler
-  write(Canary::sOutputFD, msg, sizeof(msg)); 
-  backtrace_symbols_fd(array, backtrace(array, 30), Canary::sOutputFD);
+  write(sCanaryOutputFD, msg, sizeof(msg)); 
+  backtrace_symbols_fd(array, backtrace(array, 30), sCanaryOutputFD);
 }
 
 #endif
