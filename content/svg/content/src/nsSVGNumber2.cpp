@@ -49,22 +49,28 @@ static nsSVGAttrTearoffTable<nsSVGNumber2, nsSVGNumber2::DOMAnimatedNumber>
   sSVGAnimatedNumberTearoffTable;
 
 static bool
-GetValueFromString(const nsAString& aValueAsString,
+GetValueFromString(const nsAString& aString,
                    bool aPercentagesAllowed,
                    float& aValue)
 {
-  nsAutoString units;
+  RangedPtr<const PRUnichar> iter =
+    SVGContentUtils::GetStartRangedPtr(aString);
+  const RangedPtr<const PRUnichar> end =
+    SVGContentUtils::GetEndRangedPtr(aString);
 
-  if (!SVGContentUtils::ParseNumber(aValueAsString, aValue, units)) {
+  if (!SVGContentUtils::ParseNumber(iter, end, aValue)) {
     return false;
   }
 
-  if (aPercentagesAllowed && units.EqualsLiteral("%")) {
-    aValue /= 100;
-    return true;
+  if (aPercentagesAllowed) {
+    const nsAString& units = Substring(iter.get(), end.get());
+    if (units.EqualsLiteral("%")) {
+      aValue /= 100;
+      return true;
+    }
   }
 
-  return units.IsEmpty();
+  return iter == end;
 }
 
 nsresult

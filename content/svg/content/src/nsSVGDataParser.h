@@ -6,57 +6,32 @@
 #ifndef __NS_SVGDATAPARSER_H__
 #define __NS_SVGDATAPARSER_H__
 
-#include "nsError.h"
+#include "mozilla/RangedPtr.h"
 #include "nsString.h"
 
-//----------------------------------------------------------------------
-// helper macros
-#define ENSURE_MATCHED(exp) { nsresult rv = exp; if (NS_FAILED(rv)) return rv; }
-
 ////////////////////////////////////////////////////////////////////////
-// nsSVGDataParser: a simple abstract class for parsing values
+// nsSVGDataParser: a simple base class for parsing values
 // for path and transform values.
 // 
 class nsSVGDataParser
 {
 public:
-  nsresult Parse(const nsAString &aValue);
+  nsSVGDataParser(const nsAString& aValue);
 
 protected:
-  const char* mInputPos;
-  
-  const char* mTokenPos;
-  enum { DIGIT, WSP, COMMA, POINT, SIGN, LEFT_PAREN, RIGHT_PAREN, OTHER, END } mTokenType;
-  char mTokenVal;
+  static bool IsAlpha(PRUnichar aCh) {
+    // Exclude non-ascii characters before calling isalpha
+    return (aCh & 0x7f) == aCh && isalpha(aCh);
+  }
 
-  // helpers
-  void GetNextToken();
-  void RewindTo(const char* aPos);
-  virtual nsresult Match()=0;
+  // Returns true if there are more characters to read, false otherwise.
+  bool SkipCommaWsp();
 
-  nsresult MatchNumber(float* x);
-  bool IsTokenNumberStarter();
-  
-  nsresult MatchCommaWsp();
-  bool IsTokenCommaWspStarter();
-  
-  nsresult MatchIntegerConst();
-  
-  nsresult MatchFloatingPointConst();
-  
-  nsresult MatchFractConst();
-  
-  nsresult MatchExponent();
-  bool IsTokenExponentStarter();
-  
-  nsresult MatchDigitSeq();
-  bool IsTokenDigitSeqStarter();
-  
-  nsresult MatchWsp();
-  bool IsTokenWspStarter();
+  // Returns true if there are more characters to read, false otherwise.
+  bool SkipWsp();
 
-  nsresult MatchLeftParen();
-  nsresult MatchRightParen();
+  mozilla::RangedPtr<const PRUnichar> mIter;
+  const mozilla::RangedPtr<const PRUnichar> mEnd;
 };
 
 
