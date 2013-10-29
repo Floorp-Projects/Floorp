@@ -179,6 +179,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 '.s': 'ASFILES',
                 '.asm': 'ASFILES',
                 '.c': 'CSRCS',
+                '.m': 'CMSRCS',
                 '.mm': 'CMMSRCS',
                 '.cc': 'CPPSRCS',
                 '.cpp': 'CPPSRCS',
