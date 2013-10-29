@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:set expandtab ts=4 sw=4 sts=4 cin: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set expandtab ts=2 sw=2 sts=2 cin: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -281,6 +281,10 @@ AppProtocolHandler::Create(nsISupports* aOuter,
                            const nsIID& aIID,
                            void* *aResult)
 {
+  // Instantiate the service here since that intializes gJarHandler, which we
+  // use indirectly (via our new JarChannel) in NewChannel.
+  nsCOMPtr<nsIProtocolHandler> jarInitializer(
+    do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar"));
   AppProtocolHandler* ph = new AppProtocolHandler();
   if (ph == nullptr) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -341,10 +345,7 @@ NS_IMETHODIMP
 AppProtocolHandler::NewChannel(nsIURI* aUri, nsIChannel* *aResult)
 {
   NS_ENSURE_ARG_POINTER(aUri);
-  nsJARChannel* channel = new nsJARChannel();
-  if (!channel) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsRefPtr<nsJARChannel> channel = new nsJARChannel();
 
   nsAutoCString host;
   nsresult rv = aUri->GetHost(host);
@@ -363,26 +364,24 @@ AppProtocolHandler::NewChannel(nsIURI* aUri, nsIChannel* *aResult)
       return NS_ERROR_FAILURE;
     }
 
-    JS::Value jsInfo;
-    rv = appsService->GetAppInfo(NS_ConvertUTF8toUTF16(host), &jsInfo);
-    if (NS_FAILED(rv)) {
-      // Return a DummyChannel.
-      delete channel;
-      NS_IF_ADDREF(*aResult = new DummyChannel());
-      return NS_OK;
-    }
-
     mozilla::AutoSafeJSContext cx;
-    appInfo = new mozilla::dom::AppInfo();
-    if (!appInfo->Init(cx, JS::Handle<JS::Value>::fromMarkedLocation(&jsInfo)) ||
-        appInfo->mPath.IsEmpty()) {
-      printf_stderr("!! No appInfo for %s\n", host.get());
+    JS::RootedValue jsInfo(cx);
+    rv = appsService->GetAppInfo(NS_ConvertUTF8toUTF16(host), jsInfo.address());
+    if (NS_FAILED(rv) || !jsInfo.isObject()) {
       // Return a DummyChannel.
-      delete channel;
+      printf_stderr("!! Creating a dummy channel for %s (no appInfo)\n", host.get());
       NS_IF_ADDREF(*aResult = new DummyChannel());
       return NS_OK;
     }
 
+    appInfo = new mozilla::dom::AppInfo();
+    JSAutoCompartment ac(cx, &jsInfo.toObject());
+    if (!appInfo->Init(cx, jsInfo) || appInfo->mPath.IsEmpty()) {
+      // Return a DummyChannel.
+      printf_stderr("!! Creating a dummy channel for %s (invalid appInfo)\n", host.get());
+      NS_IF_ADDREF(*aResult = new DummyChannel());
+      return NS_OK;
+    }
     mAppInfoCache.Put(host, appInfo);
   }
 
@@ -410,7 +409,7 @@ AppProtocolHandler::NewChannel(nsIURI* aUri, nsIChannel* *aResult)
   rv = channel->SetOriginalURI(aUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*aResult = channel);
+  channel.forget(aResult);
   return NS_OK;
 }
 
