@@ -14,7 +14,7 @@ const {AppProjects} = require("devtools/app-manager/app-projects");
 const {AppValidator} = require("devtools/app-manager/app-validator");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
-const {installHosted, installPackaged, getTargetForApp} = require("devtools/app-actor-front");
+const {installHosted, installPackaged, getTargetForApp, reloadApp} = require("devtools/app-actor-front");
 const {EventEmitter} = Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
 const promise = require("sdk/core/promise");
@@ -176,16 +176,26 @@ let UI = {
              return this.install(project);
            }
          })
-        .then(
-         () => {
+        .then(() => {
            button.disabled = false;
-         },
-         (res) => {
-           button.disabled = false;
-           let message = res.error + ": " + res.message;
-           alert(message);
-           this.connection.log(message);
-         });
+           // Finally try to reload the app if it is already opened
+           this.reload(project);
+        },
+        (res) => {
+          button.disabled = false;
+          let message = res.error + ": " + res.message;
+          alert(message);
+          this.connection.log(message);
+        });
+  },
+
+  reload: function (project) {
+    return reloadApp(this.connection.client,
+              this.listTabsResponse.webappsActor,
+              this._getProjectManifestURL(project)).
+      then(() => {
+        this.connection.log("App reloaded");
+      });
   },
 
   remove: function(location, event) {
