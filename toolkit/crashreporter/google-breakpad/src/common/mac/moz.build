@@ -22,6 +22,10 @@ SOURCES += [
 # crash reporter client.  Therefore, we don't need all the srcs in both.
 HOST_SOURCES += SOURCES
 
+HOST_SOURCES += [
+    'dump_syms.mm',
+]
+
 HOST_LIBRARY_NAME = 'host_breakpad_mac_common_s'
 SOURCES += [
     'HTTPMultipartUpload.m',

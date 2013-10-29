@@ -4,10 +4,6 @@
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 
-HOST_CMMSRCS = \
-  dump_syms.mm \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 COMPILE_CMFLAGS += -std=c99
