@@ -71,8 +71,8 @@ SVGPathData::SetValueFromString(const nsAString& aValue)
   // the first error. We still return any error though so that callers know if
   // there's a problem.
 
-  nsSVGPathDataParserToInternal pathParser(this);
-  return pathParser.Parse(aValue);
+  nsSVGPathDataParser pathParser(aValue, this);
+  return pathParser.Parse() ? NS_OK : NS_ERROR_DOM_SYNTAX_ERR;
 }
 
 nsresult
