@@ -777,6 +777,7 @@ private:
     bool DrawArrays_check(GLint first, GLsizei count, GLsizei primcount, const char* info);
     bool DrawElements_check(GLsizei count, GLenum type, WebGLintptr byteOffset,
                             GLsizei primcount, const char* info);
+    bool DrawInstanced_check(const char* info);
     void Draw_cleanup();
 
     void VertexAttrib1fv_base(GLuint idx, uint32_t arrayLength, const GLfloat* ptr);
