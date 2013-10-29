@@ -195,6 +195,15 @@ toolbar[customizing] > .overflow-button {
 
 %endif
 
+/* Rules to help integrate SDK widgets */
+toolbarpaletteitem > toolbaritem[sdkstylewidget="true"] > .toolbarbutton-text {
+  display: -moz-box;
+}
+
+toolbarpaletteitem > toolbaritem[sdkstylewidget="true"] > iframe {
+  display: none;
+}
+
 #bookmarks-toolbar-placeholder,
 toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
 #personal-bookmarks[cui-areatype="menu-panel"] > #PlacesToolbar,
