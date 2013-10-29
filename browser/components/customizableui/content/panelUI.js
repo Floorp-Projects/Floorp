@@ -192,7 +192,10 @@ const PanelUI = {
    * @return a Promise that resolves once the panel is ready to roll.
    */
   ensureReady: function(aCustomizing=false) {
-    return Task.spawn(function() {
+    if (this._readyPromise) {
+      return this._readyPromise;
+    }
+    this._readyPromise = Task.spawn(function() {
       if (!this._scrollWidth) {
         // In order to properly center the contents of the panel, while ensuring
         // that we have enough space on either side to show a scrollbar, we have to
@@ -221,6 +224,8 @@ const PanelUI = {
         this.endBatchUpdate();
       }
     }.bind(this)).then(null, Cu.reportError);
+
+    return this._readyPromise;
   },
 
   /**
