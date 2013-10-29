@@ -13,9 +13,6 @@ EXPORTS += [
 ]
 
 SOURCES += [
-    'moc_moziqwidget.cpp',
-    'moc_mozqwidget.cpp',
-    'moc_nsAppShell.cpp',
     'mozqglwidgetwrapper.cpp',
     'mozqwidget.cpp',
     'mozSwipeGesture.cpp',
@@ -41,13 +38,11 @@ SOURCES += [
 
 if CONFIG['MOZ_ENABLE_CONTENTMANAGER']:
     SOURCES += [
-        'moc_nsMFilePicker.cpp',
         'nsMFilePicker.cpp',
     ]
 
-if CONFIG[' MOZ_ENABLE_QTMOBILITY']:
+if CONFIG['MOZ_ENABLE_QTMOBILITY']:
     SOURCES += [
-        'moc_mozqorientationsensorfilter.cpp',
         'mozqorientationsensorfilter.cpp',
     ]
 
