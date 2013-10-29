@@ -80,9 +80,11 @@ PARALLEL_DIRS += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     PARALLEL_DIRS += ['plugins/ipc/hangui']
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    PARALLEL_DIRS += ['wifi']
+
 if CONFIG['MOZ_B2G_RIL']:
     PARALLEL_DIRS += [
-        'wifi',
         'icc',
         'cellbroadcast',
         'voicemail',
