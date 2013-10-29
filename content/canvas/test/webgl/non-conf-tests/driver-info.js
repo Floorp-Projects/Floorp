@@ -58,6 +58,7 @@ DriverInfo = (function() {
     MESA: 'mesa',
     NVIDIA: 'nvidia',
     ANDROID_X86_EMULATOR: 'android x86 emulator',
+    ANGLE: 'angle',
   };
 
   var kOS = null;
@@ -104,6 +105,8 @@ DriverInfo = (function() {
       kDriver = DRIVER.MESA;
     } else if (glRenderer.contains('Android Emulator')) {
       kDriver = DRIVER.ANDROID_X86_EMULATOR;
+    } else if (glRenderer.contains('ANGLE')) {
+      kDriver = DRIVER.ANGLE;
     } else if (glVendor.contains('NVIDIA')) {
       kDriver = DRIVER.NVIDIA;
     }
