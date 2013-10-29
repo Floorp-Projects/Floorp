@@ -525,9 +525,9 @@ class DeviceManagerSUT(DeviceManager):
             self.fireProcess(cmdline, failIfRunning)
         return outputFile
 
-    def killProcess(self, appname, forceKill=False):
-        if forceKill:
-            self._logger.warn("killProcess(): forceKill parameter unsupported on SUT")
+    def killProcess(self, appname, sig=None):
+        if sig:
+            self._logger.warn("killProcess(): sig parameter unsupported on SUT")
         retries = 0
         while retries < self.retryLimit:
             try:

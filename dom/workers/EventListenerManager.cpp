@@ -35,7 +35,7 @@ struct EventListenerManager::ListenerCollection :
       static_cast<ListenerCollection*>(JS_malloc(aCx,
                                                  sizeof(ListenerCollection)));
     if (!collection) {
-      return NULL;
+      return nullptr;
     }
 
     new (collection) ListenerCollection(aTypeId);
@@ -72,7 +72,7 @@ struct ListenerData : LinkedListElement<ListenerData>
     ListenerData* listenerData =
       static_cast<ListenerData*>(JS_malloc(aCx, sizeof(ListenerData)));
     if (!listenerData) {
-      return NULL;
+      return nullptr;
     }
 
     new (listenerData) ListenerData(aListener, aPhase, aWantsUntrusted);
@@ -283,7 +283,7 @@ EventListenerManager::GetEventListener(const jsid& aType) const
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 bool

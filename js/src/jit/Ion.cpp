@@ -1553,6 +1553,37 @@ OffThreadCompilationAvailable(JSContext *cx)
         && !cx->runtime()->spsProfiler.enabled();
 }
 
+static void
+TrackAllProperties(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->hasSingletonType());
+
+    for (Shape::Range<NoGC> range(obj->lastProperty()); !range.empty(); range.popFront())
+        types::EnsureTrackPropertyTypes(cx, obj, range.front().propid());
+}
+
+static void
+TrackPropertiesForSingletonScopes(JSContext *cx, JSScript *script, BaselineFrame *baselineFrame)
+{
+    // Ensure that all properties of singleton call objects which the script
+    // could access are tracked. These are generally accessed through
+    // ALIASEDVAR operations in baseline and will not be tracked even if they
+    // have been accessed in baseline code.
+    JSObject *environment = script->function() ? script->function()->environment() : NULL;
+
+    while (environment && !environment->is<GlobalObject>()) {
+        if (environment->is<CallObject>() && environment->hasSingletonType())
+            TrackAllProperties(cx, environment);
+        environment = environment->enclosingScope();
+    }
+
+    if (baselineFrame) {
+        JSObject *scope = baselineFrame->scopeChain();
+        if (scope->is<CallObject>() && scope->hasSingletonType())
+            TrackAllProperties(cx, scope);
+    }
+}
+
 static AbortReason
 IonCompile(JSContext *cx, JSScript *script,
            BaselineFrame *baselineFrame, jsbytecode *osrPc, bool constructing,
@@ -1564,6 +1595,8 @@ IonCompile(JSContext *cx, JSScript *script,
                         TraceLogging::ION_COMPILE_STOP,
                         script);
 #endif
+
+    TrackPropertiesForSingletonScopes(cx, script, baselineFrame);
 
     LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     if (!alloc)

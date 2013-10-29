@@ -120,3 +120,6 @@ SOURCES += ['src/compiler/' + src for src in [
 LIBRARY_NAME = 'angle'
 LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    NO_VISIBILITY_FLAGS = True
