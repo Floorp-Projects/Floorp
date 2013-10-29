@@ -201,6 +201,8 @@ class TreeMetadataEmitter(LoggingMixin):
                 '.cpp': 'UNIFIED_CPPSRCS',
             }
         )
+        varmap.update(dict(('GENERATED_%s' % k, v) for k, v in varmap.items()
+                           if k in ('SOURCES', 'UNIFIED_SOURCES')))
         for variable, mapping in varmap.items():
             for f in sandbox[variable]:
                 ext = os.path.splitext(f)[1]
@@ -208,6 +210,9 @@ class TreeMetadataEmitter(LoggingMixin):
                     raise SandboxValidationError('%s has an unknown file type in %s' % (f, sandbox['RELATIVEDIR']))
                 l = passthru.variables.setdefault(mapping[ext], [])
                 l.append(f)
+                if variable.startswith('GENERATED_'):
+                    l = passthru.variables.setdefault('GARBAGE', [])
+                    l.append(f)
 
         if passthru.variables:
             yield passthru
