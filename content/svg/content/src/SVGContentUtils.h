@@ -11,7 +11,6 @@
 #include <math.h>
 
 #include "gfxMatrix.h"
-#include "mozilla/RangedPtr.h"
 
 class nsIContent;
 class nsIDocument;
@@ -133,24 +132,16 @@ public:
                       float aViewboxWidth, float aViewboxHeight,
                       const SVGPreserveAspectRatio &aPreserveAspectRatio);
 
-  static mozilla::RangedPtr<const PRUnichar>
-  GetStartRangedPtr(const nsAString& aString);
-
-  static mozilla::RangedPtr<const PRUnichar>
-  GetEndRangedPtr(const nsAString& aString);
-
   /**
    * Parse a number of the form:
    * number ::= integer ([Ee] integer)? | [+-]? [0-9]* "." [0-9]+ ([Ee] integer)?
    * Parsing fails if the number cannot be represented by a floatType.
-   * If parsing succeeds, aIter is updated so that it points to the character
-   * after the end of the number, otherwise it is left unchanged
+   * Anything after the number is returned in aLeftOver.
    */
   template<class floatType>
   static bool
-  ParseNumber(mozilla::RangedPtr<const PRUnichar>& aIter,
-              const mozilla::RangedPtr<const PRUnichar>& aEnd,
-              floatType& aValue);
+  ParseNumber(const nsAString& aString, floatType& aValue,
+              nsAString& aLeftOver);
 
   /**
    * Parse a number of the form:
