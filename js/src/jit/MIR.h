@@ -9135,15 +9135,15 @@ bool ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefiniti
 bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
                                           MDefinition *obj);
 MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinition *obj);
-bool PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
+bool PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   types::TypeObjectKey *object, PropertyName *name,
                                   types::TemporaryTypeSet *observed, bool updateObserved);
-bool PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
+bool PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   MDefinition *obj, PropertyName *name,
                                   types::TemporaryTypeSet *observed);
-bool PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+bool PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                                              MDefinition *obj, PropertyName *name,
                                              types::TemporaryTypeSet *observed);
 bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,

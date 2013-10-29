@@ -1957,10 +1957,10 @@ AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
                 return true;
         }
 
-        if (baseobj->slotSpan() >= (types::TYPE_FLAG_DEFINITE_MASK >> types::TYPE_FLAG_DEFINITE_SHIFT)) {
-            // Maximum number of definite properties added.
+        // Don't add definite properties to an object which won't fit in its
+        // fixed slots.
+        if (GetGCKindSlots(gc::GetGCObjectKind(baseobj->slotSpan() + 1)) <= baseobj->slotSpan())
             return true;
-        }
 
         // Assignments to new properties must always execute.
         if (!definitelyExecuted)
