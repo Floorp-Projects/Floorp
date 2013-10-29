@@ -382,14 +382,27 @@
       * @throws {OS.File.Error} In case of I/O error.
       */
      File.remove = function remove(path, options = {}) {
-       let result = WinFile.DeleteFile(path);
-       if (!result) {
-         if ((!("ignoreAbsent" in options) || options.ignoreAbsent) &&
-             ctypes.winLastError == Const.ERROR_FILE_NOT_FOUND) {
+       if (WinFile.DeleteFile(path)) {
+         return;
+       }
+
+       if (ctypes.winLastError == Const.ERROR_FILE_NOT_FOUND) {
+         if ((!("ignoreAbsent" in options) || options.ignoreAbsent)) {
            return;
          }
-         throw new File.Error("remove");
+       } else if (ctypes.winLastError == Const.ERROR_ACCESS_DENIED) {
+         let attributes = WinFile.GetFileAttributes(path);
+         if (attributes != Const.INVALID_FILE_ATTRIBUTES &&
+             attributes & Const.FILE_ATTRIBUTE_READONLY) {
+           let newAttributes = attributes & ~Const.FILE_ATTRIBUTE_READONLY;
+           if (WinFile.SetFileAttributes(path, newAttributes) &&
+               WinFile.DeleteFile(path)) {
+             return;
+           }
+         }
        }
+
+       throw new File.Error("remove");
      };
 
      /**
