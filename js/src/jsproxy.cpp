@@ -371,6 +371,19 @@ BaseProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandl
     return true;
 }
 
+bool
+BaseProxyHandler::watch(JSContext *cx, HandleObject proxy, HandleId id, HandleObject callable)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
+                         proxy->getClass()->name);
+    return false;
+}
+
+bool
+BaseProxyHandler::unwatch(JSContext *cx, HandleObject proxy, HandleId id)
+{
+    return true;
+}
 
 bool
 DirectProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
@@ -2747,6 +2760,20 @@ Proxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject pro
 
 JSObject * const Proxy::LazyProto = reinterpret_cast<JSObject *>(0x1);
 
+/* static */ bool
+Proxy::watch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleObject callable)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    return proxy->as<ProxyObject>().handler()->watch(cx, proxy, id, callable);
+}
+
+/* static */ bool
+Proxy::unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    return proxy->as<ProxyObject>().handler()->unwatch(cx, proxy, id);
+}
+
 static JSObject *
 proxy_innerObject(JSContext *cx, HandleObject obj)
 {
@@ -3046,6 +3073,18 @@ proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
     return Proxy::construct(cx, proxy, args);
 }
 
+static bool
+proxy_Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable)
+{
+    return Proxy::watch(cx, obj, id, callable);
+}
+
+static bool
+proxy_Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
+{
+    return Proxy::unwatch(cx, obj, id);
+}
+
 #define PROXY_CLASS_EXT                             \
     {                                               \
         nullptr,             /* outerObject */      \
@@ -3098,6 +3137,7 @@ proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
         proxy_DeleteProperty,                       \
         proxy_DeleteElement,                        \
         proxy_DeleteSpecial,                        \
+        proxy_Watch, proxy_Unwatch,                 \
         nullptr,             /* enumerate       */  \
         nullptr,             /* thisObject      */  \
     }                                               \
@@ -3155,6 +3195,7 @@ const Class js::OuterWindowProxyObject::class_ = {
         proxy_DeleteProperty,
         proxy_DeleteElement,
         proxy_DeleteSpecial,
+        proxy_Watch, proxy_Unwatch,
         nullptr,             /* enumerate       */
         nullptr,             /* thisObject      */
     }
