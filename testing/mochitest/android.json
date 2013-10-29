@@ -241,6 +241,7 @@
  "intl/uconv/tests/test_long_doc.html": "bug 775227", 
  "js/jsd/test/test_bug507448.html": "TIMED_OUT",
  "js/jsd/test/test_bug617870-callhooks.html": "TIMED_OUT",
+ "js/xpconnect/tests/mochitest/test_asmjs.html": "bug 929498",
  "layout/base/tests/test_bug332655-1.html": "",
  "layout/base/tests/test_bug603550.html": "TIMED_OUT",
  "layout/base/tests/test_bug629838.html": "",
