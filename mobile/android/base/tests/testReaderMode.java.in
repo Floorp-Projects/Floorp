@@ -2,11 +2,13 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
+import com.jayway.android.robotium.solo.Condition;
 import com.jayway.android.robotium.solo.Solo;
-import android.widget.ListView;
+import android.graphics.Rect;
 import android.view.View;
-import java.util.ArrayList;
 import android.view.ViewGroup;
+import android.widget.ListView;
+import java.util.ArrayList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,7 +19,8 @@ import org.json.JSONObject;
  * and that the reading list is properly populated after adding or removing reader items
  */
 public class testReaderMode extends AboutHomeTest {
-    int height,width;
+    static final int EVENT_CLEAR_DELAY_MS = 3000;
+    static final int READER_ICON_MAX_WAIT_MS = 15000;
 
     @Override
     protected int getTestType() {
@@ -33,26 +36,27 @@ public class testReaderMode extends AboutHomeTest {
         Actions.RepeatedEventExpecter paintExpecter;
         ListView list;
         View child;
+        View readerIcon;
         String textUrl = getAbsoluteUrl(StringHelper.ROBOCOP_TEXT_PAGE_URL);
         String devType = mDevice.type;
         int childNo;
-        int eventClearDelay = 3000;
+        int height;
+        int width;
 
-        contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
         loadAndPaint(textUrl);
-        contentEventExpecter.blockForEvent();
-        contentEventExpecter.unregisterListener();
 
-        // Add the page to the Reading List using log click on the reader icon
+        // Add the page to the Reading List using long click on the reader icon
+        readerIcon = getReaderIcon();
         contentReaderAddedExpecter = mActions.expectGeckoEvent("Reader:Added");
-        mSolo.clickLongOnView(getReaderIcon());
+        mSolo.clickLongOnView(readerIcon);
         String eventData = contentReaderAddedExpecter.blockForEventData();
         isAdded(eventData);
         contentReaderAddedExpecter.unregisterListener();
 
-        // Try to add the page to the Reading List using log click on the reader icon a second time
+        // Try to add the page to the Reading List using long click on the reader icon a second time
+        readerIcon = getReaderIcon();
         contentReaderAddedExpecter = mActions.expectGeckoEvent("Reader:Added");
-        mSolo.clickLongOnView(getReaderIcon());
+        mSolo.clickLongOnView(readerIcon);
         eventData = contentReaderAddedExpecter.blockForEventData();
         isAdded(eventData);
         contentReaderAddedExpecter.unregisterListener();
@@ -60,8 +64,9 @@ public class testReaderMode extends AboutHomeTest {
         // Waiting for the favicon since is the last element loaded usually
         faviconExpecter = mActions.expectGeckoEvent("Reader:FaviconRequest");
         contentPageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+        readerIcon = getReaderIcon();
         paintExpecter = mActions.expectPaint();
-        mSolo.clickOnView(getReaderIcon());
+        mSolo.clickOnView(readerIcon);
 
         // Changing devices orientation to be sure that all devices are in portrait when will access the reader toolbar
         mSolo.setActivityOrientation(Solo.PORTRAIT);
@@ -69,7 +74,7 @@ public class testReaderMode extends AboutHomeTest {
         faviconExpecter.unregisterListener();
         contentPageShowExpecter.blockForEvent();
         contentPageShowExpecter.unregisterListener();
-        paintExpecter.blockUntilClear(eventClearDelay);
+        paintExpecter.blockUntilClear(EVENT_CLEAR_DELAY_MS);
         paintExpecter.unregisterListener();
         verifyPageTitle("Robocop Text Page");
 
@@ -150,10 +155,27 @@ public class testReaderMode extends AboutHomeTest {
     // Get the reader icon method
     protected View getReaderIcon() {
         View pageActionLayout = mSolo.getView(0x7f070025);
-        ArrayList<String> pageActionLayoutChilds = new ArrayList();
-        View actionLayoutItem = pageActionLayout;
-        ViewGroup actionLayoutEntry = (ViewGroup)actionLayoutItem;
+        final ViewGroup actionLayoutEntry = (ViewGroup)pageActionLayout;
         View icon = actionLayoutEntry.getChildAt(1);
+        if (icon == null || icon.getVisibility() != View.VISIBLE) {
+            // wait for the view to be visible, otherwise it may not respond
+            // to clicks -- see bug 927578
+            mAsserter.dumpLog("reader icon not visible -- waiting for visibility");
+            Condition visibilityCondition = new Condition() {
+                @Override
+                public boolean isSatisfied() {
+                    View conditionIcon = actionLayoutEntry.getChildAt(1);
+                    if (conditionIcon == null || 
+                        conditionIcon.getVisibility() != View.VISIBLE)
+                        return false;
+                    return true;
+                }
+            };
+            waitForCondition(visibilityCondition, READER_ICON_MAX_WAIT_MS);
+            icon = actionLayoutEntry.getChildAt(1);
+            mAsserter.ok(icon != null, "checking reader icon view", "reader icon view not null");
+            mAsserter.ok(icon.getVisibility() == View.VISIBLE, "checking reader icon visible", "reader icon visible");
+        }
         return icon;
     }
 
