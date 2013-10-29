@@ -7,138 +7,201 @@
 #include "mozilla/Util.h"
 
 #include "SVGTransformListParser.h"
-#include "SVGContentUtils.h"
 #include "nsSVGTransform.h"
+#include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIAtom.h"
+#include "plstr.h"
 
 using namespace mozilla;
 
 //----------------------------------------------------------------------
 // private methods
 
-bool
-SVGTransformListParser::Parse()
+nsresult
+SVGTransformListParser::Match()
 {
   mTransforms.Clear();
-  return ParseTransforms();
+  return MatchTransformList();
 }
 
-bool
-SVGTransformListParser::ParseTransforms()
+
+nsresult
+SVGTransformListParser::MatchTransformList()
 {
-  if (!SkipWsp()) {
+  MatchWsp();
+
+  if (IsTokenTransformStarter()) {
+    ENSURE_MATCHED(MatchTransforms());
+  }
+
+  MatchWsp();
+
+  return NS_OK;
+}
+
+
+nsresult
+SVGTransformListParser::MatchTransforms()
+{
+  ENSURE_MATCHED(MatchTransform());
+
+  while (mTokenType != END) {
+    const char* pos = mTokenPos;
+
+    /* Curiously the SVG BNF allows multiple comma-wsp between transforms */
+    while (IsTokenCommaWspStarter()) {
+      ENSURE_MATCHED(MatchCommaWsp());
+    }
+
+    if (IsTokenTransformStarter()) {
+      ENSURE_MATCHED(MatchTransform());
+    } else {
+      if (pos != mTokenPos) RewindTo(pos);
+      break;
+    }
+  }
+
+  return NS_OK;
+}
+
+
+nsresult
+SVGTransformListParser::GetTransformToken(nsIAtom** aKeyAtom,
+                                          bool aAdvancePos)
+{
+  if (mTokenType != OTHER || *mTokenPos == '\0') {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = NS_OK;
+
+  const char* delimiters = "\x20\x9\xD\xA,(";
+  char* delimiterStart = PL_strnpbrk(mTokenPos, delimiters, 11);
+  if (delimiterStart != 0) {
+    /* save this character and null it out */
+    char holdingChar = *delimiterStart;
+    *delimiterStart = '\0';
+
+    uint32_t len;
+    if ((len = strlen(mTokenPos)) > 0) {
+      *aKeyAtom = NS_NewAtom(Substring(mTokenPos, mTokenPos + len)).get();
+
+      if (aAdvancePos) {
+         mInputPos = mTokenPos + len;
+         mTokenPos = mInputPos;
+      }
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
+    /* reset character back to original */
+    *delimiterStart = holdingChar;
+  } else {
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+
+nsresult
+SVGTransformListParser::MatchTransform()
+{
+  nsCOMPtr<nsIAtom> keyatom;
+
+  nsresult rv = GetTransformToken(getter_AddRefs(keyatom), true);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (keyatom == nsGkAtoms::translate) {
+    ENSURE_MATCHED(MatchTranslate());
+  } else if (keyatom == nsGkAtoms::scale) {
+    ENSURE_MATCHED(MatchScale());
+  } else if (keyatom == nsGkAtoms::rotate) {
+    ENSURE_MATCHED(MatchRotate());
+  } else if (keyatom == nsGkAtoms::skewX) {
+    ENSURE_MATCHED(MatchSkewX());
+  } else if (keyatom == nsGkAtoms::skewY) {
+    ENSURE_MATCHED(MatchSkewY());
+  } else if (keyatom == nsGkAtoms::matrix) {
+    ENSURE_MATCHED(MatchMatrix());
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+
+bool
+SVGTransformListParser::IsTokenTransformStarter()
+{
+  nsCOMPtr<nsIAtom> keyatom;
+
+  nsresult rv = GetTransformToken(getter_AddRefs(keyatom), false);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  if (keyatom == nsGkAtoms::translate ||
+      keyatom == nsGkAtoms::scale     ||
+      keyatom == nsGkAtoms::rotate    ||
+      keyatom == nsGkAtoms::skewX     ||
+      keyatom == nsGkAtoms::skewY     ||
+      keyatom == nsGkAtoms::matrix) {
     return true;
   }
 
-  if (!ParseTransform()) {
-    return false;
-  }
-
-  while (SkipWsp()) {
-    // The SVG BNF allows multiple comma-wsp between transforms
-    while (*mIter == ',') {
-      ++mIter;
-      if (!SkipWsp()) {
-        return false;
-      }
-    }
-
-    if (!ParseTransform()) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool
-SVGTransformListParser::ParseTransform()
-{
-  RangedPtr<const PRUnichar> start(mIter);
-  while (IsAlpha(*mIter)) {
-    ++mIter;
-    if (mIter == mEnd) {
-      return false;
-    }
-  }
-
-  if (start == mIter) {
-    // Didn't read anything
-    return false;
-  }
-
-  const nsAString& transform = Substring(start.get(), mIter.get());
-  nsIAtom* keyAtom = NS_GetStaticAtom(transform);
-
-  if (!keyAtom || !SkipWsp()) {
-    return false;
-  }
-
-  if (keyAtom == nsGkAtoms::translate) {
-    return ParseTranslate();
-  }
-  if (keyAtom == nsGkAtoms::scale) {
-    return ParseScale();
-  }
-  if (keyAtom == nsGkAtoms::rotate) {
-    return ParseRotate();
-  }
-  if (keyAtom == nsGkAtoms::skewX) {
-    return ParseSkewX();
-  }
-  if (keyAtom == nsGkAtoms::skewY) {
-    return ParseSkewY();
-  }
-  if (keyAtom == nsGkAtoms::matrix) {
-    return ParseMatrix();
-  }
   return false;
 }
 
-bool
-SVGTransformListParser::ParseArguments(float* aResult,
-                                       uint32_t aMaxCount,
-                                       uint32_t* aParsedCount)
+nsresult
+SVGTransformListParser::MatchNumberArguments(float *aResult,
+                                             uint32_t aMaxNum,
+                                             uint32_t *aParsedNum)
 {
-  if (*mIter != '(') {
-    return false;
-  }
-  ++mIter;
+  *aParsedNum = 0;
 
-  if (!SkipWsp()) {
-    return false;
+  MatchWsp();
+
+  ENSURE_MATCHED(MatchLeftParen());
+
+  MatchWsp();
+
+  ENSURE_MATCHED(MatchNumber(&aResult[0]));
+  *aParsedNum = 1;
+
+  while (IsTokenCommaWspStarter()) {
+    MatchWsp();
+    if (mTokenType == RIGHT_PAREN) {
+      break;
+    }
+    if (*aParsedNum == aMaxNum) {
+      return NS_ERROR_FAILURE;
+    }
+    if (IsTokenCommaWspStarter()) {
+      MatchCommaWsp();
+    }
+    ENSURE_MATCHED(MatchNumber(&aResult[(*aParsedNum)++]));
   }
 
-  if (!SVGContentUtils::ParseNumber(mIter, mEnd, aResult[0])) {
-    return false;
-  }
-  *aParsedCount = 1;
+  MatchWsp();
 
-  while (SkipWsp()) {
-    if (*mIter == ')') {
-      ++mIter;
-      return true;
-    }
-    if (*aParsedCount == aMaxCount) {
-      return false;
-    }
-    SkipCommaWsp();
-    if (!SVGContentUtils::ParseNumber(mIter, mEnd, aResult[(*aParsedCount)++])) {
-      return false;
-    }
-  }
-  return false;
+  ENSURE_MATCHED(MatchRightParen());
+
+  return NS_OK;
 }
 
-bool
-SVGTransformListParser::ParseTranslate()
+nsresult
+SVGTransformListParser::MatchTranslate()
 {
+  GetNextToken();
+
   float t[2];
   uint32_t count;
 
-  if (!ParseArguments(t, ArrayLength(t), &count)) {
-    return false;
-  }
+  ENSURE_MATCHED(MatchNumberArguments(t, ArrayLength(t), &count));
 
   switch (count) {
     case 1:
@@ -147,26 +210,27 @@ SVGTransformListParser::ParseTranslate()
     case 2:
     {
       nsSVGTransform* transform = mTransforms.AppendElement();
-      if (!transform) {
-        return false;
-      }
+      NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
       transform->SetTranslate(t[0], t[1]);
-      return true;
+      break;
     }
+    default:
+      return NS_ERROR_FAILURE;
   }
 
-  return false;
+  return NS_OK;
 }
 
-bool
-SVGTransformListParser::ParseScale()
+
+nsresult
+SVGTransformListParser::MatchScale()
 {
+  GetNextToken();
+
   float s[2];
   uint32_t count;
 
-  if (!ParseArguments(s, ArrayLength(s), &count)) {
-    return false;
-  }
+  ENSURE_MATCHED(MatchNumberArguments(s, ArrayLength(s), &count));
 
   switch (count) {
     case 1:
@@ -175,27 +239,27 @@ SVGTransformListParser::ParseScale()
     case 2:
     {
       nsSVGTransform* transform = mTransforms.AppendElement();
-      if (!transform) {
-        return false;
-      }
+      NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
       transform->SetScale(s[0], s[1]);
-      return true;
+      break;
     }
+    default:
+      return NS_ERROR_FAILURE;
   }
 
-  return false;
+  return NS_OK;
 }
 
 
-bool
-SVGTransformListParser::ParseRotate()
+nsresult
+SVGTransformListParser::MatchRotate()
 {
+  GetNextToken();
+
   float r[3];
   uint32_t count;
 
-  if (!ParseArguments(r, ArrayLength(r), &count)) {
-    return false;
-  }
+  ENSURE_MATCHED(MatchNumberArguments(r, ArrayLength(r), &count));
 
   switch (count) {
     case 1:
@@ -204,70 +268,79 @@ SVGTransformListParser::ParseRotate()
     case 3:
     {
       nsSVGTransform* transform = mTransforms.AppendElement();
-      if (!transform) {
-        return false;
-      }
+      NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
       transform->SetRotate(r[0], r[1], r[2]);
-      return true;
+      break;
     }
+    default:
+      return NS_ERROR_FAILURE;
   }
 
-  return false;
+  return NS_OK;
 }
 
-bool
-SVGTransformListParser::ParseSkewX()
+
+nsresult
+SVGTransformListParser::MatchSkewX()
 {
+  GetNextToken();
+
   float skew;
   uint32_t count;
 
-  if (!ParseArguments(&skew, 1, &count) || count != 1) {
-    return false;
+  ENSURE_MATCHED(MatchNumberArguments(&skew, 1, &count));
+
+  if (count != 1) {
+    return NS_ERROR_FAILURE;
   }
 
   nsSVGTransform* transform = mTransforms.AppendElement();
-  if (!transform) {
-    return false;
-  }
+  NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
   transform->SetSkewX(skew);
 
-  return true;
+  return NS_OK;
 }
 
-bool
-SVGTransformListParser::ParseSkewY()
+
+nsresult
+SVGTransformListParser::MatchSkewY()
 {
+  GetNextToken();
+
   float skew;
   uint32_t count;
 
-  if (!ParseArguments(&skew, 1, &count) || count != 1) {
-    return false;
+  ENSURE_MATCHED(MatchNumberArguments(&skew, 1, &count));
+
+  if (count != 1) {
+    return NS_ERROR_FAILURE;
   }
 
   nsSVGTransform* transform = mTransforms.AppendElement();
-  if (!transform) {
-    return false;
-  }
+  NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
   transform->SetSkewY(skew);
 
-  return true;
+  return NS_OK;
 }
 
-bool
-SVGTransformListParser::ParseMatrix()
+
+nsresult
+SVGTransformListParser::MatchMatrix()
 {
+  GetNextToken();
+
   float m[6];
   uint32_t count;
 
-  if (!ParseArguments(m, ArrayLength(m), &count) || count != 6) {
-    return false;
+  ENSURE_MATCHED(MatchNumberArguments(m, ArrayLength(m), &count));
+
+  if (count != 6) {
+    return NS_ERROR_FAILURE;
   }
 
   nsSVGTransform* transform = mTransforms.AppendElement();
-  if (!transform) {
-    return false;
-  }
+  NS_ENSURE_TRUE(transform, NS_ERROR_OUT_OF_MEMORY);
   transform->SetMatrix(gfxMatrix(m[0], m[1], m[2], m[3], m[4], m[5]));
 
-  return true;
+  return NS_OK;
 }

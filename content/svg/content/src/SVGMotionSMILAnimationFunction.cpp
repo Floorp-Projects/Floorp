@@ -241,13 +241,13 @@ SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr()
 
   // Generate gfxPath from |path| attr
   SVGPathData path;
-  nsSVGPathDataParser pathParser(pathSpec, &path);
+  nsSVGPathDataParserToInternal pathParser(&path);
 
   // We ignore any failure returned from Parse() since the SVG spec says to
   // accept all segments up to the first invalid token. Instead we must
   // explicitly check that the parse produces at least one path segment (if
   // the path data doesn't begin with a valid "M", then it's invalid).
-  pathParser.Parse();
+  pathParser.Parse(pathSpec);
   if (!path.Length()) {
     return;
   }

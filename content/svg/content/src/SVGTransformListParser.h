@@ -12,10 +12,13 @@
 #include "nsTArray.h"
 
 ////////////////////////////////////////////////////////////////////////
-// SVGTransformListParser: A simple recursive descent parser that builds
-// transform lists from transform attributes. The grammar for path data
+// SVGTransformListParser: taken from nsSVGPathDataParser, a simple
+//  recursive descent parser that builds the transform lists from the
+//  transform attributes. The grammar for path data
 // can be found in SVG 1.1,  chapter 7.
 // http://www.w3.org/TR/SVG11/coords.html#TransformAttribute
+
+class nsIAtom;
 
 namespace mozilla {
 
@@ -24,33 +27,36 @@ class nsSVGTransform;
 class SVGTransformListParser : public nsSVGDataParser
 {
 public:
-  SVGTransformListParser(const nsAString& aValue)
-    : nsSVGDataParser(aValue) {}
-  
-  bool Parse();
-
   const nsTArray<nsSVGTransform>& GetTransformList() const {
     return mTransforms;
   }
 
 private:
+  nsTArray<nsSVGTransform> mTransforms;
+
   // helpers
-  bool ParseArguments(float *aResult,
-                      uint32_t aMaxCount,
-                      uint32_t *aParsedCount);
+  virtual nsresult Match() MOZ_OVERRIDE;
 
-  bool ParseTransforms();
+  nsresult MatchNumberArguments(float *aResult,
+                                uint32_t aMaxNum,
+                                uint32_t *aParsedNum);
 
-  bool ParseTransform();
+  nsresult MatchTransformList();
 
-  bool ParseTranslate();
-  bool ParseScale();
-  bool ParseRotate();
-  bool ParseSkewX();
-  bool ParseSkewY();
-  bool ParseMatrix();
+  nsresult GetTransformToken(nsIAtom** aKeyatom, bool aAdvancePos);
+  nsresult MatchTransforms();
 
-  FallibleTArray<nsSVGTransform> mTransforms;
+  nsresult MatchTransform();
+
+  bool IsTokenTransformStarter();
+
+  nsresult MatchTranslate();
+
+  nsresult MatchScale();
+  nsresult MatchRotate();
+  nsresult MatchSkewX();
+  nsresult MatchSkewY();
+  nsresult MatchMatrix();
 };
 
 } // namespace mozilla
