@@ -72,6 +72,21 @@ JSObject::deleteSpecial(JSContext *cx, js::HandleObject obj, js::HandleSpecialId
     return (op ? op : js::baseops::DeleteSpecial)(cx, obj, sid, succeeded);
 }
 
+/* static */ inline bool
+JSObject::watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                JS::HandleObject callable)
+{
+    js::WatchOp op = obj->getOps()->watch;
+    return (op ? op : js::baseops::Watch)(cx, obj, id, callable);
+}
+
+/* static */ inline bool
+JSObject::unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
+{
+    js::UnwatchOp op = obj->getOps()->unwatch;
+    return (op ? op : js::baseops::Unwatch)(cx, obj, id);
+}
+
 inline void
 JSObject::finalize(js::FreeOp *fop)
 {

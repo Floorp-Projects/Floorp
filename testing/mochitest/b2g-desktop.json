@@ -253,6 +253,7 @@
     "content/base/test/test_bug426308.html":"",
     "content/base/test/test_mixed_content_blocker_bug803225.html":"",
     "content/html/document/test/test_non-ascii-cookie.html":"",
+    "content/html/document/test/test_document.watch.html":"expects document.cookie setting to work",
 
     "docshell/test/navigation/test_bug13871.html":"",
     "docshell/test/navigation/test_bug270414.html":"",
