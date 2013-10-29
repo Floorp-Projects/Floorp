@@ -188,6 +188,16 @@ add_test(function test_hawk() {
   do_check_eq(result.artifacts.hash, undefined);
   do_check_eq(result.artifacts.mac, "S3f8E4hAURAqJxOlsYugkPZxLoRYrClgbSQ/3FmKMbY=");
 
+  // Empty payload changes nothing.
+  result = compute(makeURI("http://example.net/path"), method,
+                   { credentials: credentials_sha256,
+                     ts: 1353809207,
+                     nonce: "Ygvqdz",
+                     payload: null,
+                   });
+  do_check_eq(result.artifacts.hash, undefined);
+  do_check_eq(result.artifacts.mac, "S3f8E4hAURAqJxOlsYugkPZxLoRYrClgbSQ/3FmKMbY=");
+
   result = compute(makeURI("http://example.net/path"), method,
                    { credentials: credentials_sha256,
                      ts: 1353809207,
