@@ -9,6 +9,7 @@ MODULE = 'tlsserver'
 FAIL_ON_WARNINGS = True
 
 sources = [
+    'GenerateOCSPResponse',
     'OCSPStaplingServer',
 ]
 
