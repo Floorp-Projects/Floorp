@@ -65,6 +65,7 @@ nsGtkIMModule* nsGtkIMModule::sLastFocusedModule = nullptr;
 nsGtkIMModule::nsGtkIMModule(nsWindow* aOwnerWindow) :
     mOwnerWindow(aOwnerWindow), mLastFocusedWindow(nullptr),
     mContext(nullptr),
+    mSimpleContext(nullptr),
     mDummyContext(nullptr),
     mCompositionStart(UINT32_MAX), mProcessingKeyEvent(nullptr),
     mCompositionState(eCompositionState_NotComposing),
@@ -111,6 +112,28 @@ nsGtkIMModule::Init()
                      G_CALLBACK(nsGtkIMModule::OnStartCompositionCallback),
                      this);
     g_signal_connect(mContext, "preedit_end",
+                     G_CALLBACK(nsGtkIMModule::OnEndCompositionCallback),
+                     this);
+
+    // Simple context
+    mSimpleContext = gtk_im_context_simple_new();
+    gtk_im_context_set_client_window(mSimpleContext, gdkWindow);
+    g_signal_connect(mSimpleContext, "preedit_changed",
+                     G_CALLBACK(&nsGtkIMModule::OnChangeCompositionCallback),
+                     this);
+    g_signal_connect(mSimpleContext, "retrieve_surrounding",
+                     G_CALLBACK(&nsGtkIMModule::OnRetrieveSurroundingCallback),
+                     this);
+    g_signal_connect(mSimpleContext, "delete_surrounding",
+                     G_CALLBACK(&nsGtkIMModule::OnDeleteSurroundingCallback),
+                     this);
+    g_signal_connect(mSimpleContext, "commit",
+                     G_CALLBACK(&nsGtkIMModule::OnCommitCompositionCallback),
+                     this);
+    g_signal_connect(mSimpleContext, "preedit_start",
+                     G_CALLBACK(nsGtkIMModule::OnStartCompositionCallback),
+                     this);
+    g_signal_connect(mSimpleContext, "preedit_end",
                      G_CALLBACK(nsGtkIMModule::OnEndCompositionCallback),
                      this);
 
@@ -166,6 +189,12 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
         gtk_im_context_set_client_window(mContext, nullptr);
         g_object_unref(mContext);
         mContext = nullptr;
+    }
+
+    if (mSimpleContext) {
+        gtk_im_context_set_client_window(mSimpleContext, nullptr);
+        g_object_unref(mSimpleContext);
+        mSimpleContext = nullptr;
     }
 
     if (mDummyContext) {
@@ -548,7 +577,9 @@ nsGtkIMModule::GetContext()
     if (IsEnabled()) {
         return mContext;
     }
-
+    if (mInputContext.mIMEState.mEnabled == IMEState::PASSWORD) {
+        return mSimpleContext;
+    }
     return mDummyContext;
 }
 
@@ -556,7 +587,6 @@ bool
 nsGtkIMModule::IsEnabled()
 {
     return mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
-           mInputContext.mIMEState.mEnabled == IMEState::PASSWORD ||
            mInputContext.mIMEState.mEnabled == IMEState::PLUGIN;
 }
 
