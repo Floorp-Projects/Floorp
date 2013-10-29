@@ -20,7 +20,7 @@
 
 class gfxContext;
 class gfxPath;
-class nsSVGPathDataParserToInternal; // IWYU pragma: keep
+class nsSVGPathDataParser; // IWYU pragma: keep
 
 struct gfxMatrix;
 struct nsSVGMark;
@@ -78,8 +78,8 @@ class SVGPathData
   friend class SVGAnimatedPathSegList;
   friend class DOMSVGPathSegList;
   friend class DOMSVGPathSeg;
-  friend class ::nsSVGPathDataParserToInternal;
-  // nsSVGPathDataParserToInternal will not keep wrappers in sync, so consumers
+  friend class ::nsSVGPathDataParser;
+  // nsSVGPathDataParser will not keep wrappers in sync, so consumers
   // are responsible for that!
 
   typedef gfx::DrawTarget DrawTarget;
