@@ -13,7 +13,9 @@
 
 #include <deque>
 #include <string>
+#include "mozilla/Assertions.h"
 #include "mozilla/Move.h" // Pinch hitting for <utility> and std::move
+#include "mozilla/NullPtr.h"
 #include <vector>
 
 extern "C" {
@@ -41,21 +43,18 @@ namespace mozilla {
 RLogRingBuffer* RLogRingBuffer::instance;
 
 RLogRingBuffer::RLogRingBuffer()
-  : log_limit_(4096),
-    mutex_("RLogRingBuffer::mutex_") {
+  : log_limit_(4096) {
 }
 
 RLogRingBuffer::~RLogRingBuffer() {
 }
 
 void RLogRingBuffer::SetLogLimit(uint32_t new_limit) {
-  mozilla::MutexAutoLock lock(mutex_);
   log_limit_ = new_limit;
   RemoveOld();
 }
 
 void RLogRingBuffer::Log(std::string&& log) {
-  mozilla::MutexAutoLock lock(mutex_);
   log_messages_.push_front(Move(log));
   RemoveOld();
 }
@@ -70,7 +69,7 @@ inline void RLogRingBuffer::RemoveOld() {
 RLogRingBuffer* RLogRingBuffer::CreateInstance() {
   if (!instance) {
     instance = new RLogRingBuffer;
-    r_log_set_extra_destination(LOG_DEBUG, &ringbuffer_vlog);
+    r_log_set_extra_destination(LOG_INFO, &ringbuffer_vlog);
   }
   return instance;
 }
@@ -81,7 +80,7 @@ RLogRingBuffer* RLogRingBuffer::GetInstance() {
 
 void RLogRingBuffer::DestroyInstance() {
   // First param is ignored when passing null
-  r_log_set_extra_destination(LOG_DEBUG, nullptr);
+  r_log_set_extra_destination(LOG_INFO, nullptr);
   delete instance;
   instance = nullptr;
 }
@@ -107,7 +106,6 @@ inline bool AnySubstringMatches(const std::vector<std::string>& substrings,
 void RLogRingBuffer::FilterAny(const std::vector<std::string>& substrings,
                                uint32_t limit,
                                std::deque<std::string>* matching_logs) {
-  mozilla::MutexAutoLock lock(mutex_);
   if (limit == 0) {
     // At a max, all of the log messages.
     limit = log_limit_;
