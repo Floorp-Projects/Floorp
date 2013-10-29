@@ -9,4 +9,3 @@ endif
 ifeq (,$(filter aurora beta release esr,$(MOZ_UPDATE_CHANNEL)))
   A11Y_LOG = 1
 endif
-export A11Y_LOG
