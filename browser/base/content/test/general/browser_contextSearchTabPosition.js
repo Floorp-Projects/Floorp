@@ -47,7 +47,7 @@ function test() {
     let provider = reporter.getProvider("org.mozilla.searches");
     ok(provider, "Searches provider is available.");
 
-    let m = provider.getMeasurement("counts", 2);
+    let m = provider.getMeasurement("counts", 3);
     m.getValues().then(function onValues(data) {
       let now = new Date();
       ok(data.days.hasDay(now), "Have data for today.");
