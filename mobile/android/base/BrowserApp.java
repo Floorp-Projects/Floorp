@@ -76,15 +76,15 @@ import java.net.URLEncoder;
 import java.util.EnumSet;
 import java.util.Vector;
 
-public class BrowserApp extends GeckoApp
-                        implements TabsPanel.TabsLayoutChangeListener,
-                                   PropertyAnimator.PropertyAnimationListener,
-                                   View.OnKeyListener,
-                                   GeckoLayerClient.OnMetricsChangedListener,
-                                   BrowserSearch.OnSearchListener,
-                                   BrowserSearch.OnEditSuggestionListener,
-                                   HomePager.OnNewTabsListener,
-                                   OnUrlOpenListener {
+abstract public class BrowserApp extends GeckoApp
+                                 implements TabsPanel.TabsLayoutChangeListener,
+                                            PropertyAnimator.PropertyAnimationListener,
+                                            View.OnKeyListener,
+                                            GeckoLayerClient.OnMetricsChangedListener,
+                                            BrowserSearch.OnSearchListener,
+                                            BrowserSearch.OnEditSuggestionListener,
+                                            HomePager.OnNewTabsListener,
+                                            OnUrlOpenListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final String PREF_CHROME_DYNAMICTOOLBAR = "browser.chrome.dynamictoolbar";
