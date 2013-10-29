@@ -46,12 +46,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
-XPCOMUtils.defineLazyGetter(this, "gRadioInterface", function () {
-  let ril = Cc["@mozilla.org/ril;1"].getService(Ci["nsIRadioInterfaceLayer"]);
-  // TODO: Bug 923382 - B2G Multi-SIM: support multiple SIM cards for network metering.
-  return ril.getRadioInterface(0);
-});
-
 this.NetworkStatsService = {
   init: function() {
     debug("Service started");
@@ -202,10 +196,13 @@ this.NetworkStatsService = {
 
     let id = '0';
     if (aNetwork.type == NET_TYPE_MOBILE) {
-      // Bug 904542 will provide the serviceId to map the iccId with the
-      // nsINetworkInterface of the NetworkManager. Now, lets assume that
-      // network is mapped with the current iccId of the single SIM.
-      id = gRadioInterface.rilContext.iccInfo.iccid;
+      if (!(aNetwork instanceof Ci.nsIRilNetworkInterface)) {
+        debug("Error! Mobile network should be an nsIRilNetworkInterface!");
+        return null;
+      }
+
+      let rilNetwork = aNetwork.QueryInterface(Ci.nsIRilNetworkInterface);
+      id = rilNetwork.iccId;
     }
 
     let netId = this.getNetworkId(id, aNetwork.type);
