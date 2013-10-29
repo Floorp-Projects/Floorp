@@ -220,7 +220,7 @@ XULTreeGridAccessible::UnselectRow(uint32_t aRowIdx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridAccessible: nsAccessNode implementation
+// XULTreeGridAccessible: Accessible implementation
 
 void
 XULTreeGridAccessible::Shutdown()
@@ -228,9 +228,6 @@ XULTreeGridAccessible::Shutdown()
   mTable = nullptr;
   XULTreeAccessible::Shutdown();
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridAccessible: Accessible implementation
 
 role
 XULTreeGridAccessible::NativeRole()
@@ -291,7 +288,7 @@ NS_IMPL_RELEASE_INHERITED(XULTreeGridRowAccessible,
                           XULTreeItemAccessibleBase)
 
 ////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridRowAccessible: nsAccessNode implementation
+// XULTreeGridRowAccessible: Accessible implementation
 
 void
 XULTreeGridRowAccessible::Shutdown()
@@ -299,9 +296,6 @@ XULTreeGridRowAccessible::Shutdown()
   ClearCache(mAccessibleCache);
   XULTreeItemAccessibleBase::Shutdown();
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// XULTreeGridRowAccessible: Accessible implementation
 
 role
 XULTreeGridRowAccessible::NativeRole()

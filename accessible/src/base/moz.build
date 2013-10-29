@@ -10,8 +10,7 @@ MODULE = 'accessibility'
 
 EXPORTS += [
     'AccEvent.h',
-    'nsAccessibilityService.h',
-    'nsAccessNode.h',
+    'nsAccessibilityService.h'
 ]
 
 EXPORTS.mozilla.a11y += [
@@ -45,7 +44,6 @@ SOURCES += [
     'NotificationController.cpp',
     'nsAccessibilityService.cpp',
     'nsAccessiblePivot.cpp',
-    'nsAccessNode.cpp',
     'nsAccUtils.cpp',
     'nsCoreUtils.cpp',
     'nsEventShell.cpp',
