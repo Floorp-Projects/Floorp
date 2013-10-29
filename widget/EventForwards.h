@@ -36,9 +36,9 @@ typedef uint16_t Modifiers;
 enum KeyNameIndex
 {
 #include "nsDOMKeyNameList.h"
-  // There shouldn't be "," at the end of enum definition, this dummy item
-  // avoids bustage on some platforms.
-  NUMBER_OF_KEY_NAME_INDEX
+  // If a DOM keyboard event is synthesized by script, this is used.  Then,
+  // specified key name should be stored and use it as .key value.
+  KEY_NAME_INDEX_USE_STRING
 };
 
 #undef NS_DEFINE_KEYNAME
