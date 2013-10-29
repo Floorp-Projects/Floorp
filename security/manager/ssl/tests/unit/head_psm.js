@@ -23,6 +23,7 @@ const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
 // Sort in numerical order
 const SEC_ERROR_REVOKED_CERTIFICATE                     = SEC_ERROR_BASE +  12;
 const SEC_ERROR_BAD_DATABASE                            = SEC_ERROR_BASE +  18;
+const SEC_ERROR_UNTRUSTED_ISSUER                        = SEC_ERROR_BASE +  20;
 const SEC_ERROR_OCSP_MALFORMED_REQUEST                  = SEC_ERROR_BASE + 120;
 const SEC_ERROR_OCSP_SERVER_ERROR                       = SEC_ERROR_BASE + 121;
 const SEC_ERROR_OCSP_TRY_SERVER_LATER                   = SEC_ERROR_BASE + 122;
@@ -47,6 +48,8 @@ const certificateUsageVerifyCA               = 0x0100;
 const certificateUsageProtectedObjectSigner  = 0x0200;
 const certificateUsageStatusResponder        = 0x0400;
 const certificateUsageAnyCA                  = 0x0800;
+
+const NO_FLAGS = 0;
 
 function readFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"]

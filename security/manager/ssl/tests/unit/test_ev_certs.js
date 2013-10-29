@@ -9,6 +9,9 @@ do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
 
+const evrootnick = "XPCShell EV Testing (untrustworthy) CA - Mozilla - " +
+                   "EV debug test CA";
+
 // This is the list of certificates needed for the test
 // The certificates prefixed by 'int-' are intermediates
 let certList = [
@@ -55,12 +58,22 @@ function start_ocsp_responder() {
   gHttpServer.start(SERVER_PORT);
 }
 
+function check_cert_err(cert_name, expected_error) {
+  let cert = certdb.findCertByNickname(null, cert_name);
+  let hasEVPolicy = {};
+  let verifiedChain = {};
+  let error = certdb.verifyCertNow(cert, certificateUsageSSLServer,
+                                   NO_FLAGS, verifiedChain, hasEVPolicy);
+  do_check_eq(error,  expected_error);
+}
+
+
 function check_ee_for_ev(cert_name, expected_ev) {
     let cert = certdb.findCertByNickname(null, cert_name);
     let hasEVPolicy = {};
     let verifiedChain = {};
     let error = certdb.verifyCertNow(cert, certificateUsageSSLServer,
-                                     0, verifiedChain, hasEVPolicy);
+                                     NO_FLAGS, verifiedChain, hasEVPolicy);
     if (isDebugBuild) {
       do_check_eq(hasEVPolicy.value, expected_ev);
     } else {
@@ -92,6 +105,20 @@ add_test(function() {
 
 add_test(function() {
   check_ee_for_ev("non-ev-root", false);
+  run_next_test();
+});
+
+// Test for bug 917380
+add_test(function () {
+  const nsIX509Cert = Ci.nsIX509Cert;
+  let evRootCA = certdb.findCertByNickname(null, evrootnick);
+  certdb.setCertTrust(evRootCA, nsIX509Cert.CA_CERT, 0);
+  check_cert_err("ev-valid", SEC_ERROR_UNTRUSTED_ISSUER);
+  certdb.setCertTrust(evRootCA, nsIX509Cert.CA_CERT,
+                      Ci.nsIX509CertDB.TRUSTED_SSL |
+                      Ci.nsIX509CertDB.TRUSTED_EMAIL |
+                      Ci.nsIX509CertDB.TRUSTED_OBJSIGN);
+  check_ee_for_ev("ev-valid", true);
   run_next_test();
 });
 
