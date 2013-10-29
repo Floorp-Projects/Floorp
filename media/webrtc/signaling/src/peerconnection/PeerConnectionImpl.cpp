@@ -1110,7 +1110,8 @@ PeerConnectionImpl::GetTimeSinceEpoch(DOMHighResTimeStamp *result) {
 #endif
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector) {
+PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector,
+                             bool internalStats) {
   PC_AUTO_ENTER_API_CALL(true);
 
 #ifdef MOZILLA_INTERNAL_API
@@ -1123,6 +1124,7 @@ PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector) {
                 WrapRunnable(pc,
                              &PeerConnectionImpl::GetStats_s,
                              track,
+                             internalStats,
                              now),
                 NS_DISPATCH_NORMAL);
 #endif
@@ -1625,6 +1627,7 @@ PeerConnectionImpl::IceStateChange_m(PCImplIceState aState)
 #ifdef MOZILLA_INTERNAL_API
 void PeerConnectionImpl::GetStats_s(
     uint32_t trackId,
+    bool internalStats,
     DOMHighResTimeStamp now) {
 
   nsresult result = NS_OK;
@@ -1642,29 +1645,34 @@ void PeerConnectionImpl::GetStats_s(
       report->mIceCandidateStats.Construct();
       NS_ConvertASCIItoUTF16 componentId(mediaStream->name().c_str());
       for (auto p = candPairs.begin(); p != candPairs.end(); ++p) {
-        RTCIceCandidatePairStats s;
         NS_ConvertASCIItoUTF16 codeword(p->codeword.c_str());
         const nsString localCodeword(
             NS_ConvertASCIItoUTF16("local_") + codeword);
         const nsString remoteCodeword(
             NS_ConvertASCIItoUTF16("remote_") + codeword);
-        s.mId.Construct(codeword);
-        s.mComponentId.Construct(componentId);
-        s.mTimestamp.Construct(now);
-        s.mType.Construct(RTCStatsType::Candidatepair);
+        // Only expose candidate-pair statistics to chrome, until we've thought
+        // through the implications of exposing it to content.
 
-        // Not quite right; we end up with duplicate candidates. Will fix.
-        s.mLocalCandidateId.Construct(localCodeword);
-        s.mRemoteCandidateId.Construct(remoteCodeword);
-        s.mNominated.Construct(p->nominated);
-        s.mMozPriority.Construct(p->priority);
-        s.mSelected.Construct(p->selected);
-        s.mState.Construct(RTCStatsIceCandidatePairState(p->state));
-        report->mIceCandidatePairStats.Value().AppendElement(s);
+        if (internalStats) {
+          RTCIceCandidatePairStats s;
+          s.mId.Construct(codeword);
+          s.mComponentId.Construct(componentId);
+          s.mTimestamp.Construct(now);
+          s.mType.Construct(RTCStatsType::Candidatepair);
+
+          // Not quite right; we end up with duplicate candidates. Will fix.
+          s.mLocalCandidateId.Construct(localCodeword);
+          s.mRemoteCandidateId.Construct(remoteCodeword);
+          s.mNominated.Construct(p->nominated);
+          s.mMozPriority.Construct(p->priority);
+          s.mSelected.Construct(p->selected);
+          s.mState.Construct(RTCStatsIceCandidatePairState(p->state));
+          report->mIceCandidatePairStats.Value().AppendElement(s);
+        }
 
         {
           RTCIceCandidateStats local;
-          local.mId.Construct(s.mLocalCandidateId.Value());
+          local.mId.Construct(localCodeword);
           local.mTimestamp.Construct(now);
           local.mType.Construct(RTCStatsType::Localcandidate);
           local.mCandidateType.Construct(
@@ -1677,7 +1685,7 @@ void PeerConnectionImpl::GetStats_s(
 
         {
           RTCIceCandidateStats remote;
-          remote.mId.Construct(s.mRemoteCandidateId.Value());
+          remote.mId.Construct(remoteCodeword);
           remote.mTimestamp.Construct(now);
           remote.mType.Construct(RTCStatsType::Remotecandidate);
           remote.mCandidateType.Construct(
