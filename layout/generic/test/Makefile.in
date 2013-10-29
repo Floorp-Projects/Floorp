@@ -41,7 +41,6 @@ MOCHITEST_FILES = \
   test_bug424627.html \
   test_bug438840.html \
   test_bug448860.html \
-  test_bug448987.html \
     file_bug448987.html \
     file_bug448987_ref.html \
     file_bug448987_notref.html \
@@ -107,6 +106,9 @@ MOCHITEST_FILES = \
   test_bug841361.html \
   $(srcdir)/../../base/tests/enableTestPlugin.js \
   $(NULL)
+
+# Disabled for being too sensitive to timing changes (bug 932296)
+#  test_bug448987.html \
 
 # Disable the caret movement by word test on Linux because the shortcut keys
 # are defined in system level.  So, it depends on the environment.
