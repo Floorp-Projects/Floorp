@@ -182,22 +182,6 @@ public:
                                const ScreenIntRect& aCompositionBounds);
 
   /**
-   * We are scrolling a subframe, so disable our machinery until we hit
-   * a touch end or a new touch start. This prevents us from accidentally
-   * panning both the subframe and the parent frame.
-   *
-   * XXX/bug 775452: We should eventually be supporting async scrollable
-   * subframes.
-   */
-  void CancelDefaultPanZoom(const ScrollableLayerGuid& aGuid);
-
-  /**
-   * We have found a scrollable subframe, so we need to delay the scrolling
-   * gesture executed and let subframe do the scrolling first.
-   */
-  void DetectScrollableSubframe(const ScrollableLayerGuid& aGuid);
-
-  /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
    * in. The actual animation is done on the compositor thread after being set
    * up. |aRect| must be given in CSS pixels, relative to the document.
