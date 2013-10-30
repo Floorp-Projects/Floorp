@@ -128,87 +128,87 @@ TelephonyIPCProvider::EnumerateCalls(nsITelephonyListener *aListener)
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::Dial(uint32_t aClientId, const nsAString& aNumber,
-                           bool aIsEmergency)
+TelephonyIPCProvider::Dial(const nsAString& aNumber,
+                          bool aIsEmergency)
 {
-  mPTelephonyChild->SendDialCall(aClientId, nsString(aNumber), aIsEmergency);
+  mPTelephonyChild->SendDialCall(nsString(aNumber), aIsEmergency);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::HangUp(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCProvider::HangUp(uint32_t aCallIndex)
 {
-  mPTelephonyChild->SendHangUpCall(aClientId, aCallIndex);
+  mPTelephonyChild->SendHangUpCall(aCallIndex);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::AnswerCall(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCProvider::AnswerCall(uint32_t aCallIndex)
 {
-  mPTelephonyChild->SendAnswerCall(aClientId, aCallIndex);
+  mPTelephonyChild->SendAnswerCall(aCallIndex);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::RejectCall(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCProvider::RejectCall(uint32_t aCallIndex)
 {
-  mPTelephonyChild->SendRejectCall(aClientId, aCallIndex);
+  mPTelephonyChild->SendRejectCall(aCallIndex);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::HoldCall(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCProvider::HoldCall(uint32_t aCallIndex)
 {
-  mPTelephonyChild->SendHoldCall(aClientId, aCallIndex);
+  mPTelephonyChild->SendHoldCall(aCallIndex);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::ResumeCall(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCProvider::ResumeCall(uint32_t aCallIndex)
 {
-  mPTelephonyChild->SendResumeCall(aClientId, aCallIndex);
+  mPTelephonyChild->SendResumeCall(aCallIndex);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::ConferenceCall(uint32_t aClientId)
+TelephonyIPCProvider::ConferenceCall()
 {
-  mPTelephonyChild->SendConferenceCall(aClientId);
+  mPTelephonyChild->SendConferenceCall();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::SeparateCall(uint32_t aClientId, uint32_t aCallIndex)
+TelephonyIPCProvider::SeparateCall(uint32_t aCallIndex)
 {
-  mPTelephonyChild->SendSeparateCall(aClientId, aCallIndex);
+  mPTelephonyChild->SendSeparateCall(aCallIndex);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::HoldConference(uint32_t aClientId)
+TelephonyIPCProvider::HoldConference()
 {
-  mPTelephonyChild->SendHoldConference(aClientId);
+  mPTelephonyChild->SendHoldConference();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::ResumeConference(uint32_t aClientId)
+TelephonyIPCProvider::ResumeConference()
 {
-  mPTelephonyChild->SendResumeConference(aClientId);
+  mPTelephonyChild->SendResumeConference();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::StartTone(uint32_t aClientId, const nsAString& aDtmfChar)
+TelephonyIPCProvider::StartTone(const nsAString& aDtmfChar)
 {
-  mPTelephonyChild->SendStartTone(aClientId, nsString(aDtmfChar));
+  mPTelephonyChild->SendStartTone(nsString(aDtmfChar));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::StopTone(uint32_t aClientId)
+TelephonyIPCProvider::StopTone()
 {
-  mPTelephonyChild->SendStopTone(aClientId);
+  mPTelephonyChild->SendStopTone();
   return NS_OK;
 }
 
@@ -243,17 +243,16 @@ TelephonyIPCProvider::SetSpeakerEnabled(bool aEnabled)
 // nsITelephonyListener
 
 NS_IMETHODIMP
-TelephonyIPCProvider::CallStateChanged(uint32_t aClientId,
-                                       uint32_t aCallIndex,
-                                       uint16_t aCallState,
-                                       const nsAString& aNumber,
-                                       bool aIsActive,
-                                       bool aIsOutgoing,
-                                       bool aIsEmergency,
-                                       bool aIsConference)
+TelephonyIPCProvider::CallStateChanged(uint32_t aCallIndex,
+                                      uint16_t aCallState,
+                                      const nsAString& aNumber,
+                                      bool aIsActive,
+                                      bool aIsOutgoing,
+                                      bool aIsEmergency,
+                                      bool aIsConference)
 {
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
-    mListeners[i]->CallStateChanged(aClientId, aCallIndex, aCallState, aNumber,
+    mListeners[i]->CallStateChanged(aCallIndex, aCallState, aNumber,
                                     aIsActive, aIsOutgoing, aIsEmergency,
                                     aIsConference);
   }
@@ -276,46 +275,42 @@ TelephonyIPCProvider::EnumerateCallStateComplete()
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::EnumerateCallState(uint32_t aClientId,
-                                         uint32_t aCallIndex,
-                                         uint16_t aCallState,
-                                         const nsAString& aNumber,
-                                         bool aIsActive,
-                                         bool aIsOutgoing,
-                                         bool aIsEmergency,
-                                         bool aIsConference)
+TelephonyIPCProvider::EnumerateCallState(uint32_t aCallIndex,
+                                        uint16_t aCallState,
+                                        const nsAString& aNumber,
+                                        bool aIsActive,
+                                        bool aIsOutgoing,
+                                        bool aIsEmergency,
+                                        bool aIsConference)
 {
   MOZ_CRASH("Not a EnumerateCalls request!");
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::NotifyCdmaCallWaiting(uint32_t aClientId,
-                                            const nsAString& aNumber)
+TelephonyIPCProvider::NotifyCdmaCallWaiting(const nsAString& aNumber)
 {
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
-    mListeners[i]->NotifyCdmaCallWaiting(aClientId, aNumber);
+    mListeners[i]->NotifyCdmaCallWaiting(aNumber);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::NotifyError(uint32_t aClientId, int32_t aCallIndex,
-                                  const nsAString& aError)
+TelephonyIPCProvider::NotifyError(int32_t aCallIndex,
+                                 const nsAString& aError)
 {
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
-    mListeners[i]->NotifyError(aClientId, aCallIndex, aError);
+    mListeners[i]->NotifyError(aCallIndex, aError);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::SupplementaryServiceNotification(uint32_t aClientId,
-                                                       int32_t aCallIndex,
-                                                       uint16_t aNotification)
+TelephonyIPCProvider::SupplementaryServiceNotification(int32_t aCallIndex,
+                                                      uint16_t aNotification)
 {
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
-    mListeners[i]->SupplementaryServiceNotification(aClientId, aCallIndex,
-                                                    aNotification);
+    mListeners[i]->SupplementaryServiceNotification(aCallIndex, aNotification);
   }
   return NS_OK;
 }
