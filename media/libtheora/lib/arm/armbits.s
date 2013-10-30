@@ -17,6 +17,12 @@
 
 	AREA	|.text|, CODE, READONLY
 
+	; Explicitly specifying alignment here because some versions of
+	; gas don't align code correctly. See
+	; http://lists.gnu.org/archive/html/bug-binutils/2011-06/msg00199.html
+	; https://bugzilla.mozilla.org/show_bug.cgi?id=920992
+	ALIGN
+
 	EXPORT oc_pack_read_arm
 	EXPORT oc_pack_read1_arm
 	EXPORT oc_huff_token_decode_arm
