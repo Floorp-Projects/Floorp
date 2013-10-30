@@ -18,8 +18,13 @@
 // but we don't want its DLL load protection, because we'll handle it here
 #define XRE_DONT_PROTECT_DLL_LOAD
 #include "nsWindowsWMain.cpp"
-
 #include "nsSetDllDirectory.h"
+#endif
+
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#include "sandbox/base/basictypes.h"
+#include "sandbox/win/src/sandbox.h"
+#include "sandbox/win/src/sandbox_factory.h"
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -93,14 +98,26 @@ main(int argc, char* argv[])
 #endif
 #endif
 
-#if defined(XP_WIN) && defined(DEBUG_bent)
-    MessageBox(nullptr, L"Hi", L"Hi", MB_OK);
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+    sandbox::TargetServices* target_service =
+        sandbox::SandboxFactory::GetTargetServices();
+    if (!target_service) {
+        return 1;
+    }
+
+    sandbox::ResultCode result = target_service->Init();
+    if (result != sandbox::SBOX_ALL_OK) {
+        return 2;
+    }
+
+    // Initialization is finished, switch to the lowered token
+    target_service->LowerToken();
 #endif
 
     // Check for the absolute minimum number of args we need to move
     // forward here. We expect the last arg to be the child process type.
     if (argc < 1)
-      return 1;
+      return 3;
     GeckoProcessType proctype = XRE_StringToChildProcessType(argv[--argc]);
 
 #ifdef XP_WIN
