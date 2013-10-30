@@ -26,6 +26,7 @@
 #include "BasicLayers.h"
 #include "FrameMetrics.h"
 #include "Windows.Graphics.Display.h"
+#include "DisplayInfo_sdk81.h"
 #include "nsNativeDragTarget.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -1315,6 +1316,19 @@ double MetroWidget::GetDefaultScaleInternal()
 {
   // Return the resolution scale factor reported by the metro environment.
   // XXX TODO: also consider the desktop resolution setting, as IE appears to do?
+
+  ComPtr<IDisplayInformationStatics> dispInfoStatics;
+  if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayInformation).Get(),
+                                      dispInfoStatics.GetAddressOf()))) {
+    ComPtr<IDisplayInformation> dispInfo;
+    if (SUCCEEDED(dispInfoStatics->GetForCurrentView(&dispInfo))) {
+      ResolutionScale scale;
+      if (SUCCEEDED(dispInfo->get_ResolutionScale(&scale))) {
+        return (double)scale / 100.0;
+      }
+    }
+  }
+
   ComPtr<IDisplayPropertiesStatics> dispProps;
   if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(),
                                      dispProps.GetAddressOf()))) {
@@ -1323,6 +1337,7 @@ double MetroWidget::GetDefaultScaleInternal()
       return (double)scale / 100.0;
     }
   }
+
   return 1.0;
 }
 
