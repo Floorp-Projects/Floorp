@@ -1668,6 +1668,22 @@ var steps = [
     }
     next();
   },
+  function() {
+    ok(true, "Setting array properties to an empty array should work");
+    var c = new mozContact();
+    function testArrayProp(prop) {
+      is(c[prop], null, "property is initially null");
+      c[prop] = [];
+      ok(Array.isArray(c[prop]), "property is an array after setting");
+      is(c[prop].length, 0, "property has length 0 after setting");
+    }
+    testArrayProp("email");
+    testArrayProp("adr");
+    testArrayProp("tel");
+    testArrayProp("impp");
+    testArrayProp("url");
+    next();
+  },
   function () {
     ok(true, "all done!\n");
     clearTemps();
