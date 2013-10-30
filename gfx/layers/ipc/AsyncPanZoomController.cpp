@@ -369,6 +369,9 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
       (mState == NOTHING || mState == TOUCHING || IsPanningState(mState))) {
     const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
     if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_START) {
+      // Wait for a set timeout or preventDefault info via ContentReceivedTouch
+      // before interacting with content. In the mean time we queue up events
+      // for processing later.
       SetState(WAITING_LISTENERS);
     }
   }
@@ -404,7 +407,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
   if (mDelayPanning && aEvent.mInputType == MULTITOUCH_INPUT) {
     const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
     if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_MOVE) {
-      // Let BrowserElementScrolling perform panning gesture first.
+      // Wait for a set timeout or preventDefault info via ContentReceivedTouch.
       SetState(WAITING_LISTENERS);
       mTouchQueue.AppendElement(multiTouchInput);
 
@@ -1366,6 +1369,9 @@ void AsyncPanZoomController::UpdateCompositionBounds(const ScreenIntRect& aCompo
 
 void AsyncPanZoomController::CancelDefaultPanZoom() {
   mDisableNextTouchBatch = true;
+  mDelayPanning = false;
+  mTouchQueue.Clear();
+  SetState(NOTHING);
   nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
   if (listener) {
     listener->CancelGesture();
@@ -1466,7 +1472,12 @@ void AsyncPanZoomController::ContentReceivedTouch(bool aPreventDefault) {
   }
 
   if (mState == WAITING_LISTENERS) {
-    if (!aPreventDefault) {
+    if (aPreventDefault) {
+      // We're being told that this touch block will be consumed by content,
+      // reset state and block processing until the next touch block.
+      CancelDefaultPanZoom();
+      return;
+    } else {
       // Delayed scrolling gesture is pending at TOUCHING state.
       if (mDelayPanning) {
         SetState(TOUCHING);
