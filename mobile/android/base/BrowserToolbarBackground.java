@@ -7,32 +7,27 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.widget.GeckoLinearLayout;
 
 import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Canvas;
-import android.graphics.Path;
-import android.graphics.PorterDuff.Mode;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
 public class BrowserToolbarBackground extends GeckoLinearLayout {
-    private GeckoActivity mActivity;
+    private final LightweightTheme mTheme;
 
     public BrowserToolbarBackground(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mActivity = (GeckoActivity) context;
+        mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
     }
 
     @Override
     public void onLightweightThemeChanged() {
-        Drawable drawable = mActivity.getLightweightTheme().getDrawable(this);
+        final Drawable drawable = mTheme.getDrawable(this);
         if (drawable == null)
             return;
 
-        StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(new int[] { R.attr.state_private }, new ColorDrawable(mActivity.getResources().getColor(R.color.background_private)));
-        stateList.addState(new int[] {}, drawable);
+        final StateListDrawable stateList = new StateListDrawable();
+        stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.background_private));
+        stateList.addState(EMPTY_STATE_SET, drawable);
 
         setBackgroundDrawable(stateList);
     }
