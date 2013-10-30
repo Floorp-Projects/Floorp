@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 17;
+const DB_VERSION = 18;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
@@ -167,8 +167,10 @@ ContactDB.prototype = {
       let objectStore = aDb.createObjectStore(STORE_NAME, {keyPath: "id"});
       objectStore.createIndex("familyName", "properties.familyName", { multiEntry: true });
       objectStore.createIndex("givenName",  "properties.givenName",  { multiEntry: true });
+      objectStore.createIndex("name",      "properties.name",        { multiEntry: true });
       objectStore.createIndex("familyNameLowerCase", "search.familyName", { multiEntry: true });
       objectStore.createIndex("givenNameLowerCase",  "search.givenName",  { multiEntry: true });
+      objectStore.createIndex("nameLowerCase",       "search.name",       { multiEntry: true });
       objectStore.createIndex("telLowerCase",        "search.tel",        { multiEntry: true });
       objectStore.createIndex("emailLowerCase",      "search.email",      { multiEntry: true });
       objectStore.createIndex("tel", "search.exactTel", { multiEntry: true });
@@ -403,11 +405,11 @@ ContactDB.prototype = {
           objectStore = aTransaction.objectStore(STORE_NAME);
         }
         let names = objectStore.indexNames;
-        let blackList = ["tel", "familyName", "givenName",  "familyNameLowerCase",
+        let whiteList = ["tel", "familyName", "givenName",  "familyNameLowerCase",
                          "givenNameLowerCase", "telLowerCase", "category", "email",
                          "emailLowerCase"];
         for (var i = 0; i < names.length; i++) {
-          if (blackList.indexOf(names[i]) < 0) {
+          if (whiteList.indexOf(names[i]) < 0) {
             objectStore.deleteIndex(names[i]);
           }
         }
@@ -699,6 +701,34 @@ ContactDB.prototype = {
           }
         }
       },
+      function upgrade17to18() {
+        if (DEBUG) {
+          debug("Adding the name index");
+        }
+
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+
+        objectStore.createIndex("name", "properties.name", { multiEntry: true });
+        objectStore.createIndex("nameLowerCase", "search.name", { multiEntry: true });
+
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            let value = cursor.value;
+            value.search.name = [];
+            if (value.properties.name) {
+              value.properties.name.forEach(function addNameIndex(name) {
+                value.search.name.push(name.toLowerCase());
+              });
+            }
+            cursor.update(value);
+          } else {
+            next();
+          }
+        };
+      },
     ];
 
     let index = aOldVersion;
@@ -718,10 +748,21 @@ ContactDB.prototype = {
         return;
       }
     };
-    if (aNewVersion > steps.length) {
-      dump("Contacts DB upgrade error!");
+
+    function fail(why) {
+      why = why || "";
+      if (this.error) {
+        why += " (root cause: " + this.error.name + ")";
+      }
+
+      debug("Contacts DB upgrade error: " + why);
       aTransaction.abort();
     }
+
+    if (aNewVersion > steps.length) {
+      fail("No migration steps for the new version!");
+    }
+
     next();
   },
 
@@ -729,6 +770,7 @@ ContactDB.prototype = {
     let contact = {properties: {}};
 
     contact.search = {
+      name:            [],
       givenName:       [],
       familyName:      [],
       email:           [],
