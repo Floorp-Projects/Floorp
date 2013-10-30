@@ -508,8 +508,9 @@ class Build(MachCommandBase):
     def build_backend(self):
         # When we support multiple build backends (Tup, Visual Studio, etc),
         # this command will be expanded to support choosing what to generate.
+        python = self.virtualenv_manager.python_path
         config_status = os.path.join(self.topobjdir, 'config.status')
-        return self._run_command_in_objdir(args=[config_status],
+        return self._run_command_in_objdir(args=[python, config_status],
             pass_thru=True, ensure_exit_code=False)
 
 
