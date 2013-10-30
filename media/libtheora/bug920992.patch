@@ -1,0 +1,103 @@
+diff --git a/media/libtheora/lib/arm/armbits.s b/media/libtheora/lib/arm/armbits.s
+--- a/media/libtheora/lib/arm/armbits.s
++++ b/media/libtheora/lib/arm/armbits.s
+@@ -12,16 +12,22 @@
+ ;
+ ; function:
+ ;   last mod: $Id: armbits.s 17481 2010-10-03 22:49:42Z tterribe $
+ ;
+ ;********************************************************************
+ 
+ 	AREA	|.text|, CODE, READONLY
+ 
++	; Explicitly specifying alignment here because some versions of
++	; gas don't align code correctly. See
++	; http://lists.gnu.org/archive/html/bug-binutils/2011-06/msg00199.html
++	; https://bugzilla.mozilla.org/show_bug.cgi?id=920992
++	ALIGN
++
+ 	EXPORT oc_pack_read_arm
+ 	EXPORT oc_pack_read1_arm
+ 	EXPORT oc_huff_token_decode_arm
+ 
+ oc_pack_read1_arm PROC
+ 	; r0 = oc_pack_buf *_b
+ 	ADD r12,r0,#8
+ 	LDMIA r12,{r2,r3}      ; r2 = window
+diff --git a/media/libtheora/lib/arm/armfrag.s b/media/libtheora/lib/arm/armfrag.s
+--- a/media/libtheora/lib/arm/armfrag.s
++++ b/media/libtheora/lib/arm/armfrag.s
+@@ -11,16 +11,22 @@
+ ;********************************************************************
+ ; Original implementation:
+ ;  Copyright (C) 2009 Robin Watts for Pinknoise Productions Ltd
+ ; last mod: $Id: armfrag.s 17481 2010-10-03 22:49:42Z tterribe $
+ ;********************************************************************
+ 
+ 	AREA	|.text|, CODE, READONLY
+ 
++	; Explicitly specifying alignment here because some versions of
++	; gas don't align code correctly. See
++	; http://lists.gnu.org/archive/html/bug-binutils/2011-06/msg00199.html
++	; https://bugzilla.mozilla.org/show_bug.cgi?id=920992
++	ALIGN
++
+ 	GET	armopts.s
+ 
+ ; Vanilla ARM v4 versions
+ 	EXPORT	oc_frag_copy_list_arm
+ 	EXPORT	oc_frag_recon_intra_arm
+ 	EXPORT	oc_frag_recon_inter_arm
+ 	EXPORT	oc_frag_recon_inter2_arm
+ 
+diff --git a/media/libtheora/lib/arm/armidct.s b/media/libtheora/lib/arm/armidct.s
+--- a/media/libtheora/lib/arm/armidct.s
++++ b/media/libtheora/lib/arm/armidct.s
+@@ -11,16 +11,22 @@
+ ;********************************************************************
+ ; Original implementation:
+ ;  Copyright (C) 2009 Robin Watts for Pinknoise Productions Ltd
+ ; last mod: $Id: armidct.s 17481 2010-10-03 22:49:42Z tterribe $
+ ;********************************************************************
+ 
+ 	AREA	|.text|, CODE, READONLY
+ 
++	; Explicitly specifying alignment here because some versions of
++	; gas don't align code correctly. See
++	; http://lists.gnu.org/archive/html/bug-binutils/2011-06/msg00199.html
++	; https://bugzilla.mozilla.org/show_bug.cgi?id=920992
++	ALIGN
++
+ 	GET	armopts.s
+ 
+ 	EXPORT	oc_idct8x8_1_arm
+ 	EXPORT	oc_idct8x8_arm
+ 
+ oc_idct8x8_1_arm PROC
+ 	; r0 = ogg_int16_t  *_y
+ 	; r1 = ogg_uint16_t  _dc
+diff --git a/media/libtheora/lib/arm/armloop.s b/media/libtheora/lib/arm/armloop.s
+--- a/media/libtheora/lib/arm/armloop.s
++++ b/media/libtheora/lib/arm/armloop.s
+@@ -11,16 +11,22 @@
+ ;********************************************************************
+ ; Original implementation:
+ ;  Copyright (C) 2009 Robin Watts for Pinknoise Productions Ltd
+ ; last mod: $Id: armloop.s 17481 2010-10-03 22:49:42Z tterribe $
+ ;********************************************************************
+ 
+ 	AREA	|.text|, CODE, READONLY
+ 
++	; Explicitly specifying alignment here because some versions of
++	; gas don't align code correctly. See
++	; http://lists.gnu.org/archive/html/bug-binutils/2011-06/msg00199.html
++	; https://bugzilla.mozilla.org/show_bug.cgi?id=920992
++	ALIGN
++
+ 	GET	armopts.s
+ 
+ 	EXPORT	oc_loop_filter_frag_rows_arm
+ 
+ ; Which bit this is depends on the order of packing within a bitfield.
+ ; Hopefully that doesn't change among any of the relevant compilers.
+ OC_FRAG_CODED_FLAG	*	1
