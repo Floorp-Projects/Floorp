@@ -62,7 +62,7 @@ let tests = {
     };
     SocialService.addProvider(manifest, function (provider2) {
       ok(provider.enabled, "provider is initially enabled");
-      ok(!provider2.enabled, "provider2 is not initially enabled");
+      is(provider2.enabled, Services.prefs.getBoolPref("social.allowMultipleWorkers"), "provider2 is enabled status is correct");
       provider2.enabled = true;
       let port = provider.getWorkerPort();
       let port2 = provider2.getWorkerPort();
