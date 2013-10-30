@@ -4476,6 +4476,9 @@ pref("dom.mms.defaultServiceId", 0);
 // Debug enabler for MMS.
 pref("mms.debugging.enabled", false);
 
+// Request read report while sending MMS.
+pref("dom.mms.requestReadReport", true);
+
 // Number of RadioInterface instances to create.
 pref("ril.numRadioInterfaces", 0);
 
