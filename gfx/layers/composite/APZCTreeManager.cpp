@@ -141,7 +141,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
         apzc->NotifyLayersUpdated(container->GetFrameMetrics(),
                                         aIsFirstPaint && (aLayersId == aFirstPaintLayersId));
 
-        LayerRect visible = ScreenRect(container->GetFrameMetrics().mCompositionBounds) * ScreenToLayerScale(1.0);
+        ScreenRect visible(container->GetFrameMetrics().mCompositionBounds);
         apzc->SetLayerHitTestData(visible, aTransform, aLayer->GetTransform());
         APZC_LOG("Setting rect(%f %f %f %f) as visible region for APZC %p\n", visible.x, visible.y,
                                                                               visible.width, visible.height,
@@ -629,30 +629,42 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
   // comments explain what values are stored in the variables at these two levels. All the comments
   // use standard matrix notation where the leftmost matrix in a multiplication is applied first.
 
-  // ancestorUntransform is OC.Inverse() * NC.Inverse() * MC.Inverse() at recursion level for L,
-  //                    and RC.Inverse() * QC.Inverse()                at recursion level for P.
+  // ancestorUntransform takes points from aApzc's parent APZC's screen coordinates
+  // to aApzc's screen coordinates.
+  // It is OC.Inverse() * NC.Inverse() * MC.Inverse() at recursion level for L,
+  //   and RC.Inverse() * QC.Inverse()                at recursion level for P.
   gfx3DMatrix ancestorUntransform = aApzc->GetAncestorTransform().Inverse();
-  // asyncUntransform is LA.Inverse() at recursion level for L,
-  //                 and PA.Inverse() at recursion level for P.
-  gfx3DMatrix asyncUntransform = gfx3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse();
-  // untransformSinceLastApzc is OC.Inverse() * NC.Inverse() * MC.Inverse() * LA.Inverse() * LC.Inverse() at L,
-  //                         and RC.Inverse() * QC.Inverse() * PA.Inverse() * PC.Inverse()                at P.
-  gfx3DMatrix untransformSinceLastApzc = ancestorUntransform * asyncUntransform * aApzc->GetCSSTransform().Inverse();
-  // untransformed is the user input in L's layer space at L,
-  //                             and in P's layer space at P.
-  gfxPoint untransformed = untransformSinceLastApzc.ProjectPoint(aHitTestPoint);
-  APZC_LOG("Untransformed %f %f to %f %f for APZC %p\n", aHitTestPoint.x, aHitTestPoint.y, untransformed.x, untransformed.y, aApzc);
+
+  // Hit testing for this layer is performed in aApzc's screen coordinates.
+  gfxPoint hitTestPointForThisLayer = ancestorUntransform.ProjectPoint(aHitTestPoint);
+  APZC_LOG("Untransformed %f %f to screen coordinates %f %f for hit-testing APZC %p\n",
+           aHitTestPoint.x, aHitTestPoint.y,
+           hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, aApzc);
+
+  // myUntransform takes points from aApzc's screen coordinates
+  // to aApzc's layer coordinates (which are aApzc's children's screen coordinates).
+  // It is LA.Inverse() * LC.Inverse() at L
+  //   and PA.Inverse() * PC.Inverse() at P.
+  gfx3DMatrix myUntransform = gfx3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse()
+                            * aApzc->GetCSSTransform().Inverse();
+
+  // Hit testing for child layers is performed in aApzc's layer coordinates.
+  gfxPoint hitTestPointForChildLayers = myUntransform.ProjectPoint(hitTestPointForThisLayer);
+  APZC_LOG("Untransformed %f %f to layer coordinates %f %f for APZC %p\n",
+           aHitTestPoint.x, aHitTestPoint.y,
+           hitTestPointForChildLayers.x, hitTestPointForChildLayers.y, aApzc);
 
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
   for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
-    AsyncPanZoomController* match = GetAPZCAtPoint(child, untransformed);
+    AsyncPanZoomController* match = GetAPZCAtPoint(child, hitTestPointForChildLayers);
     if (match) {
       return match;
     }
   }
-  if (aApzc->VisibleRegionContains(LayerPoint(untransformed.x, untransformed.y))) {
-    APZC_LOG("Successfully matched untransformed point %f %f to visible region for APZC %p\n", untransformed.x, untransformed.y, aApzc);
+  if (aApzc->VisibleRegionContains(ScreenPoint(hitTestPointForThisLayer.x, hitTestPointForThisLayer.y))) {
+    APZC_LOG("Successfully matched untransformed point %f %f to visible region for APZC %p\n",
+             hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, aApzc);
     return aApzc;
   }
   return nullptr;
