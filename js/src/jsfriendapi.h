@@ -241,24 +241,6 @@ SetSourceHook(JSRuntime *rt, SourceHook *hook);
 extern JS_FRIEND_API(SourceHook *)
 ForgetSourceHook(JSRuntime *rt);
 
-inline JSRuntime *
-GetRuntime(const JSContext *cx)
-{
-    return ContextFriendFields::get(cx)->runtime_;
-}
-
-inline JSCompartment *
-GetContextCompartment(const JSContext *cx)
-{
-    return ContextFriendFields::get(cx)->compartment_;
-}
-
-inline JS::Zone *
-GetContextZone(const JSContext *cx)
-{
-    return ContextFriendFields::get(cx)->zone_;
-}
-
 extern JS_FRIEND_API(JS::Zone *)
 GetCompartmentZone(JSCompartment *comp);
 

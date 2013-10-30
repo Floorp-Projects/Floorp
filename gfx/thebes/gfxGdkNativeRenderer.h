@@ -76,9 +76,9 @@ public:
 private:
 #ifdef MOZ_X11
     // for gfxXlibNativeRenderer:
-    virtual nsresult DrawWithXlib(gfxXlibSurface* surface,
+    virtual nsresult DrawWithXlib(cairo_surface_t* surface,
                                   nsIntPoint offset,
-                                  nsIntRect* clipRects, uint32_t numClipRects);
+                                  nsIntRect* clipRects, uint32_t numClipRects) MOZ_OVERRIDE;
 
 #if (MOZ_WIDGET_GTK == 2)
     GdkColormap *mColormap;

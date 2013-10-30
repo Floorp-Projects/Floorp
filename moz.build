@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-CONFIGURE_SUBST_FILES += ['tools/update-packaging/Makefile']
+CONFIGURE_SUBST_FILES += [
+    'mozilla-config.h',
+    'tools/update-packaging/Makefile',
+]
 
 if CONFIG['ENABLE_CLANG_PLUGIN']:
   add_tier_dir('base', 'build/clang-plugin', external=True)

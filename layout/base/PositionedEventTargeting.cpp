@@ -174,6 +174,16 @@ IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr)
           tag == nsGkAtoms::label) {
         return true;
       }
+      // Bug 921928: we don't have access to the content of remote iframe.
+      // So fluffing won't go there. We do an optimistic assumption here:
+      // that the content of the remote iframe needs to be a target.
+      if (tag == nsGkAtoms::iframe &&
+          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozbrowser,
+                               nsGkAtoms::_true, eIgnoreCase) &&
+          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
+                               nsGkAtoms::_true, eIgnoreCase)) {
+        return true;
+      }
     } else if (content->IsXUL()) {
       nsIAtom* tag = content->Tag();
       // See nsCSSFrameConstructor::FindXULTagData. This code is not

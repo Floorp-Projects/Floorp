@@ -124,16 +124,21 @@ JOBS = { 'dbs':
               'allFunctions.txt'),
 
          'hazards':
-             (generate_hazards, 'rootingHazards.txt')
-         }
+             (generate_hazards, 'rootingHazards.txt'),
 
+         'explain':
+             (('python', '%(analysis_scriptdir)s/explain.py',
+               '--expect-file=%(analysis_scriptdir)s/expect.json',
+               '%(hazards)s', '%(gcFunctions)s',
+               '[explained_hazards]', '[unnecessary]', '[refs]'),
+              ('hazards.txt', 'unnecessary.txt', 'refs.txt'))
+         }
 
 def out_indexes(command):
     for i in range(len(command)):
         m = re.match(r'^\[(.*)\]$', command[i])
         if m:
             yield (i, m.group(1))
-
 
 def run_job(name, config):
     cmdspec, outfiles = JOBS[name]
@@ -232,7 +237,8 @@ steps = [ 'dbs',
           'gcTypes',
           'gcFunctions',
           'allFunctions',
-          'hazards' ]
+          'hazards',
+          'explain' ]
 
 if args.list:
     for step in steps:
@@ -252,7 +258,7 @@ for step in steps:
         for (i, name) in out_indexes(command):
             data[name] = outfiles[outfile]
             outfile += 1
-        assert len(outfiles) == outfile, 'step %s: mismatched number of output files and params' % step
+        assert len(outfiles) == outfile, 'step \'%s\': mismatched number of output files and params' % step
 
 if args.step:
     steps = steps[steps.index(args.step):]

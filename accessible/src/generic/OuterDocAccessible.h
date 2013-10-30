@@ -33,10 +33,8 @@ public:
   NS_IMETHOD GetActionDescription(uint8_t aIndex, nsAString& aDescription);
   NS_IMETHOD DoAction(uint8_t aIndex);
 
-  // nsAccessNode
-  virtual void Shutdown();
-
   // Accessible
+  virtual void Shutdown();
   virtual mozilla::a11y::role NativeRole();
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild);

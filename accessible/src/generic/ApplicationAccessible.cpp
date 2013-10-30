@@ -265,17 +265,13 @@ ApplicationAccessible::GetPlatformVersion(nsAString& aVersion)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessNode public methods
+// Accessible public methods
 
 void
 ApplicationAccessible::Shutdown()
 {
   mAppInfo = nullptr;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Accessible public methods
 
 void
 ApplicationAccessible::ApplyARIAState(uint64_t* aState) const

@@ -1061,6 +1061,20 @@ DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurf
   return nullptr;
 }
 
+TemporaryRef<SourceSurface>
+DrawTargetCairo::CreateSourceSurfaceForCairoSurface(cairo_surface_t *aSurface,
+                                                    SurfaceFormat aFormat)
+{
+  IntSize size;
+  if (GetCairoSurfaceSize(aSurface, size)) {
+    RefPtr<SourceSurfaceCairo> source =
+      new SourceSurfaceCairo(aSurface, size, aFormat);
+    return source;
+  }
+
+  return nullptr;
+}
+
 TemporaryRef<DrawTarget>
 DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
