@@ -85,8 +85,8 @@ static void nsObjCExceptionLog(NSException* aException)
       unsigned int stackCount = [stackTrace count];
       unsigned int stackIndex = 0;
       for (; stackIndex < stackCount; stackIndex++) {
-        NSUInteger address =
-          [[stackTrace objectAtIndex:stackIndex] unsignedIntegerValue];
+        unsigned long address =
+          [[stackTrace objectAtIndex:stackIndex] unsignedLongValue];
         [args addObject:[NSString stringWithFormat:@"0x%lx", address]];
       }
 
