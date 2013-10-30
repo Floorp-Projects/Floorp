@@ -413,7 +413,11 @@ toolbarbutton.panel-multiview-anchor {
 }
 
 #zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
-  min-width: 4em;
+%ifdef XP_MACOSX
+  min-width: 6ch;
+%else
+  min-width: 7ch;
+%endif
 }
 
 #zoom-controls@inAnyPanel@ > #zoom-reset-button {
