@@ -2060,7 +2060,7 @@ RuntimeService::CreateSharedWorker(JSContext* aCx, nsPIDOMWindow* aWindow,
   if (!workerPrivate) {
     nsRefPtr<WorkerPrivate> newWorkerPrivate =
       WorkerPrivate::Create(aCx, JS::NullPtr(), nullptr, aScriptURL, false,
-                            true, aName, &loadInfo);
+                            WorkerPrivate::WorkerTypeShared, aName, &loadInfo);
     NS_ENSURE_TRUE(newWorkerPrivate, NS_ERROR_FAILURE);
 
     if (!RegisterWorker(aCx, newWorkerPrivate)) {
