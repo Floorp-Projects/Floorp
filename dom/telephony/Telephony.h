@@ -71,6 +71,12 @@ public:
   already_AddRefed<TelephonyCall>
   DialEmergency(const nsAString& aNumber, ErrorResult& aRv);
 
+  void
+  StartTone(const nsAString& aDTMF, ErrorResult& aRv);
+
+  void
+  StopTone(ErrorResult& aRv);
+
   bool
   GetMuted(ErrorResult& aRv) const;
 
@@ -91,12 +97,6 @@ public:
 
   already_AddRefed<TelephonyCallGroup>
   ConferenceGroup() const;
-
-  void
-  StartTone(const nsAString& aDTMF, ErrorResult& aRv);
-
-  void
-  StopTone(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(incoming)
   IMPL_EVENT_HANDLER(callschanged)
@@ -142,6 +142,14 @@ private:
   Telephony();
   ~Telephony();
 
+  void
+  Shutdown();
+
+  already_AddRefed<TelephonyCall>
+  DialInternal(bool isEmergency,
+               const nsAString& aNumber,
+               ErrorResult& aRv);
+
   already_AddRefed<TelephonyCall>
   CreateNewDialingCall(const nsAString& aNumber);
 
@@ -150,11 +158,6 @@ private:
 
   nsresult
   NotifyCallsChanged(TelephonyCall* aCall);
-
-  already_AddRefed<TelephonyCall>
-  DialInternal(bool isEmergency,
-               const nsAString& aNumber,
-               ErrorResult& aRv);
 
   nsresult
   DispatchCallEvent(const nsAString& aType,
@@ -171,9 +174,6 @@ private:
 
   bool
   MoveCall(uint32_t aCallIndex, bool aIsConference);
-
-  void
-  Shutdown();
 };
 
 } // namespace dom
