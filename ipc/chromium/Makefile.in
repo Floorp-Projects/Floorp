@@ -102,12 +102,6 @@ endif # }
 
 OS_CXXFLAGS += $(TK_CFLAGS)
 
-ifdef MOZ_ENABLE_QT
-CPPSRCS += \
-  moc_message_pump_qt.cc \
-  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_NATIVE_LIBEVENT # {

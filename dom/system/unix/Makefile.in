@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifdef MOZ_ENABLE_QTMOBILITY
-CPPSRCS += moc_QTMLocationProvider.cpp
 LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
                    -I$(topsrcdir)/dom/src/geolocation \
                    $(NULL)
