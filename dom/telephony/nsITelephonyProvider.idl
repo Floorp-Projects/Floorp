@@ -4,12 +4,14 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(3aa42e77-7c2b-43a1-b105-7be094b0817a)]
+[scriptable, uuid(707c4c43-a0d7-4093-af52-d4d6a3a333c3)]
 interface nsITelephonyListener : nsISupports
 {
   /**
    * Notified when a telephony call changes state.
    *
+   * @param clientId
+            Indicate the RIL client, 0 ~ (number of client - 1).
    * @param callIndex
    *        Call identifier assigned by the RIL.
    * @param callState
@@ -25,7 +27,8 @@ interface nsITelephonyListener : nsISupports
    * @param isConference
    *        Indicates whether this call is a conference call.
    */
-  void callStateChanged(in unsigned long callIndex,
+  void callStateChanged(in unsigned long clientId,
+                        in unsigned long callIndex,
                         in unsigned short callState,
                         in AString number,
                         in boolean isActive,
@@ -55,6 +58,8 @@ interface nsITelephonyListener : nsISupports
    * telephony call state (nsITelephonyProvider::enumerateCalls). This is
    * called once per call that is currently managed by the RIL.
    *
+   * @param clientId
+            Indicate the RIL client, 0 ~ (number of client - 1).
    * @param callIndex
    *        Call identifier assigned by the RIL.
    * @param callState
@@ -68,7 +73,8 @@ interface nsITelephonyListener : nsISupports
    * @param isConference
    *        Indicates whether this call is a conference call.
    */
-  void enumerateCallState(in unsigned long callIndex,
+  void enumerateCallState(in unsigned long clientId,
+                          in unsigned long callIndex,
                           in unsigned short callState,
                           in AString number,
                           in boolean isActive,
@@ -79,32 +85,40 @@ interface nsITelephonyListener : nsISupports
   /**
    * Notify when RIL receives supplementary service notification.
    *
+   * @param clientId
+            Indicate the RIL client, 0 ~ (number of client - 1).
    * @param callIndex
    *        Call identifier assigned by the RIL. -1 if not specified
    * @param notification
    *        One of the nsITelephonyProvider::NOTIFICATION_* values.
    */
-  void supplementaryServiceNotification(in long callIndex,
+  void supplementaryServiceNotification(in unsigned long clientId,
+                                        in long callIndex,
                                         in unsigned short notification);
 
   /**
    * Called when RIL error occurs.
    *
+   * @param clientId
+            Indicate the RIL client, 0 ~ (number of client - 1).
    * @param callIndex
    *        Call identifier assigned by the RIL. -1 if no connection
    * @param error
    *        Error from RIL.
    */
-  void notifyError(in long callIndex,
+  void notifyError(in unsigned long clientId,
+                   in long callIndex,
                    in AString error);
 
   /**
    * Called when a waiting call comes in CDMA networks.
    *
+   * @param clientId
+            Indicate the RIL client, 0 ~ (number of client - 1).
    * @param number
    *        Number of the other party.
    */
-  void notifyCdmaCallWaiting(in AString number);
+  void notifyCdmaCallWaiting(in unsigned long clientId, in AString number);
 };
 
 %{C++
@@ -118,7 +132,7 @@ interface nsITelephonyListener : nsISupports
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(f7680b82-53fc-42a7-9adf-bc0f2726425c)]
+[scriptable, uuid(4ff3ecb7-b024-4752-9dd6-c3623c6e6b8a)]
 interface nsITelephonyProvider : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -155,22 +169,22 @@ interface nsITelephonyProvider : nsISupports
   /**
    * Functionality for making and managing phone calls.
    */
-  void dial(in DOMString number,
+  void dial(in unsigned long clientId, in DOMString number,
             in boolean isEmergency);
-  void hangUp(in unsigned long callIndex);
+  void hangUp(in unsigned long clientId, in unsigned long callIndex);
 
-  void startTone(in DOMString dtmfChar);
-  void stopTone();
+  void startTone(in unsigned long clientId, in DOMString dtmfChar);
+  void stopTone(in unsigned long clientId);
 
-  void answerCall(in unsigned long callIndex);
-  void rejectCall(in unsigned long callIndex);
-  void holdCall(in unsigned long callIndex);
-  void resumeCall(in unsigned long callIndex);
+  void answerCall(in unsigned long clientId, in unsigned long callIndex);
+  void rejectCall(in unsigned long clientId, in unsigned long callIndex);
+  void holdCall(in unsigned long clientId, in unsigned long callIndex);
+  void resumeCall(in unsigned long clientId, in unsigned long callIndex);
 
-  void conferenceCall();
-  void separateCall(in unsigned long callIndex);
-  void holdConference();
-  void resumeConference();
+  void conferenceCall(in unsigned long clientId);
+  void separateCall(in unsigned long clientId, in unsigned long callIndex);
+  void holdConference(in unsigned long clientId);
+  void resumeConference(in unsigned long clientId);
 
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
