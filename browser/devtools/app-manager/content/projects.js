@@ -72,6 +72,8 @@ let UI = {
     }
   },
 
+  get connected() { return !!this.listTabsResponse; },
+
   _selectFolder: function() {
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, Utils.l10n("project.filePickerTitle"), Ci.nsIFilePicker.modeGetFolder);
@@ -172,14 +174,16 @@ let UI = {
         .then(() => {
            // Install the app to the device if we are connected,
            // and there is no error
-           if (project.errorsCount == 0 && this.listTabsResponse) {
+           if (project.errorsCount == 0 && this.connected) {
              return this.install(project);
            }
          })
         .then(() => {
            button.disabled = false;
            // Finally try to reload the app if it is already opened
-           this.reload(project);
+           if (this.connected) {
+             this.reload(project);
+           }
         },
         (res) => {
           button.disabled = false;
