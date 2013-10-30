@@ -63,3 +63,19 @@ function chunkifyTests(tests, totalChunks, thisChunk, chunkByDir, logger) {
 
   return returnTests;
 }
+
+function skipTests(tests, startTestPattern, endTestPattern) {
+  var startIndex = 0, endIndex = tests.length - 1;
+  for (var i = 0; i < tests.length; ++i) {
+    var test_path = tests[i];
+    if (startTestPattern && test_path.endsWith(startTestPattern)) {
+      startIndex = i;
+    }
+
+    if (endTestPattern && test_path.endsWith(endTestPattern)) {
+      endIndex = i;
+    }
+  }
+
+  return tests.slice(startIndex, endIndex + 1);
+}

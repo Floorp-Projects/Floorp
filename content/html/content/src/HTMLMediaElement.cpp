@@ -3928,5 +3928,41 @@ HTMLMediaElement::PopulatePendingTextTrackList()
   }
 }
 
+AudioChannel
+HTMLMediaElement::MozAudioChannelType() const
+{
+  switch (mAudioChannelType) {
+    case AUDIO_CHANNEL_CONTENT:
+      return AudioChannel::Content;
+
+    case AUDIO_CHANNEL_NOTIFICATION:
+      return AudioChannel::Notification;
+
+    case AUDIO_CHANNEL_ALARM:
+      return AudioChannel::Alarm;
+
+    case AUDIO_CHANNEL_TELEPHONY:
+      return AudioChannel::Telephony;
+
+    case AUDIO_CHANNEL_RINGER:
+      return AudioChannel::Ringer;
+
+    case AUDIO_CHANNEL_PUBLICNOTIFICATION:
+      return AudioChannel::Publicnotification;
+
+    default:
+      return AudioChannel::Normal;
+  }
+}
+
+void
+HTMLMediaElement::SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv)
+{
+  nsString channel;
+  channel.AssignASCII(AudioChannelValues::strings[uint32_t(aValue)].value,
+                      AudioChannelValues::strings[uint32_t(aValue)].length);
+  SetHTMLAttr(nsGkAtoms::mozaudiochannel, channel, aRv);
+}
+
 } // namespace dom
 } // namespace mozilla

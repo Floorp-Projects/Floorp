@@ -369,7 +369,7 @@ DIST_GARBAGE = config.cache config.log config.status* \
    $(JS_CONFIG_NAME) js-config.h js-confdefs.h \
    backend.mk config/backend.mk devtools/backend.mk editline/backend.mk \
    gdb/backend.mk jsapi-tests/backend.mk shell/backend.mk tests/backend.mk \
-   backend.RecursiveMakeBackend.built backend.RecursiveMakeBackend.built.pp \
+   backend.RecursiveMakeBackend backend.RecursiveMakeBackend.pp \
    devtools/rootAnalysis/Makefile
 
 distclean::

@@ -2795,18 +2795,18 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   Visual* visual = DefaultVisualOfScreen(screen);
 
   renderer.Draw(aContext, nsIntSize(window->width, window->height),
-                rendererFlags, screen, visual, nullptr);
+                rendererFlags, screen, visual);
 }
 nsresult
-nsPluginInstanceOwner::Renderer::DrawWithXlib(gfxXlibSurface* xsurface, 
+nsPluginInstanceOwner::Renderer::DrawWithXlib(cairo_surface_t* xsurface,
                                               nsIntPoint offset,
                                               nsIntRect *clipRects, 
                                               uint32_t numClipRects)
 {
-  Screen *screen = cairo_xlib_surface_get_screen(xsurface->CairoSurface());
+  Screen *screen = cairo_xlib_surface_get_screen(xsurface);
   Colormap colormap;
   Visual* visual;
-  if (!xsurface->GetColormapAndVisual(&colormap, &visual)) {
+  if (!gfxXlibSurface::GetColormapAndVisual(xsurface, &colormap, &visual)) {
     NS_ERROR("Failed to get visual and colormap");
     return NS_ERROR_UNEXPECTED;
   }
@@ -2850,10 +2850,10 @@ nsPluginInstanceOwner::Renderer::DrawWithXlib(gfxXlibSurface* xsurface,
     clipRect.height = mWindow->height;
     // Don't ask the plugin to draw outside the drawable.
     // This also ensures that the unsigned clip rectangle offsets won't be -ve.
-    gfxIntSize surfaceSize = xsurface->GetSize();
     clipRect.IntersectRect(clipRect,
                            nsIntRect(0, 0,
-                                     surfaceSize.width, surfaceSize.height));
+                                     cairo_xlib_surface_get_width(xsurface),
+                                     cairo_xlib_surface_get_height(xsurface)));
   }
 
   NPRect newClipRect;
@@ -2906,7 +2906,7 @@ nsPluginInstanceOwner::Renderer::DrawWithXlib(gfxXlibSurface* xsurface,
     // set the drawing info
     exposeEvent.type = GraphicsExpose;
     exposeEvent.display = DisplayOfScreen(screen);
-    exposeEvent.drawable = xsurface->XDrawable();
+    exposeEvent.drawable = cairo_xlib_surface_get_drawable(xsurface);
     exposeEvent.x = dirtyRect.x;
     exposeEvent.y = dirtyRect.y;
     exposeEvent.width  = dirtyRect.width;

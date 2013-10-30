@@ -14,18 +14,19 @@
 
 #if (MOZ_WIDGET_GTK == 2)
 nsresult
-gfxGdkNativeRenderer::DrawWithXlib(gfxXlibSurface* surface,
+gfxGdkNativeRenderer::DrawWithXlib(cairo_surface_t* surface,
                                    nsIntPoint offset,
                                    nsIntRect* clipRects, uint32_t numClipRects)
 {
     GdkDrawable *drawable = gfxPlatformGtk::GetGdkDrawable(surface);
     if (!drawable) {
-        gfxIntSize size = surface->GetSize();
-        int depth = cairo_xlib_surface_get_depth(surface->CairoSurface());
+        int depth = cairo_xlib_surface_get_depth(surface);
         GdkScreen* screen = gdk_colormap_get_screen(mColormap);
         drawable =
-            gdk_pixmap_foreign_new_for_screen(screen, surface->XDrawable(),
-                                              size.width, size.height, depth);
+            gdk_pixmap_foreign_new_for_screen(screen, cairo_xlib_surface_get_drawable(surface),
+                                              cairo_xlib_surface_get_width(surface),
+                                              cairo_xlib_surface_get_height(surface),
+                                              depth);
         if (!drawable)
             return NS_ERROR_FAILURE;
 
@@ -58,7 +59,7 @@ gfxGdkNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
     Screen* screen =
         gdk_x11_screen_get_xscreen(gdk_colormap_get_screen(colormap));
 
-    gfxXlibNativeRenderer::Draw(ctx, size, flags, screen, visual, nullptr);
+    gfxXlibNativeRenderer::Draw(ctx, size, flags, screen, visual);
 }
 
 #else

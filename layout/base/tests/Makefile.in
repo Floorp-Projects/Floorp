@@ -115,6 +115,8 @@ MOCHITEST_FILES =	\
 		test_bug677878.html \
 		test_bug696020.html \
 		test_event_target_radius.html \
+		test_event_target_iframe_oop.html \
+		bug921928_event_target_iframe_apps_oop.html \
 		test_mozPaintCount.html \
 		test_scroll_event_ordering.html \
 		test_scroll_selection_into_view.html \

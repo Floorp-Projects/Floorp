@@ -133,7 +133,7 @@ XULListboxAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//nsAccessNode
+// Accessible
 
 void
 XULListboxAccessible::Shutdown()

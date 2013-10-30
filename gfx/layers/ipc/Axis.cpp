@@ -63,7 +63,7 @@ static float gFlingStoppedThreshold = 0.01f;
  * On touch end we calculate the average velocity in order to compensate
  * touch/mouse drivers misbehaviour.
  */
-static int gMaxVelocityQueueSize = 5;
+static uint32_t gMaxVelocityQueueSize = 5;
 
 static void ReadAxisPrefs()
 {
@@ -72,7 +72,7 @@ static void ReadAxisPrefs()
   Preferences::AddFloatVarCache(&gVelocityThreshold, "apz.velocity_threshold", gVelocityThreshold);
   Preferences::AddFloatVarCache(&gAccelerationMultiplier, "apz.acceleration_multiplier", gAccelerationMultiplier);
   Preferences::AddFloatVarCache(&gFlingStoppedThreshold, "apz.fling_stopped_threshold", gFlingStoppedThreshold);
-  Preferences::AddIntVarCache(&gMaxVelocityQueueSize, "apz.max_velocity_queue_size", gMaxVelocityQueueSize);
+  Preferences::AddUintVarCache(&gMaxVelocityQueueSize, "apz.max_velocity_queue_size", gMaxVelocityQueueSize);
 }
 
 class ReadAxisPref MOZ_FINAL : public nsRunnable {

@@ -78,6 +78,15 @@ VARIABLES = {
         Accepts assembler, C, C++, Objective C/C++.
         """, 'compile'),
 
+    'UNIFIED_SOURCES': (StrictOrderingOnAppendList, list, [],
+        """Source code files that can be compiled together.
+
+        This variable contains a list of source code files to compile,
+        that can be concatenated all together and built as a single source
+        file. This can help make the build faster and reduce the debug info
+        size.
+        """, 'compile'),
+
     'DEFINES': (OrderedDict, dict, OrderedDict(),
         """Dictionary of compiler defines to declare.
 
@@ -348,6 +357,14 @@ VARIABLES = {
         ``{path}.in``. The contents of this file will be read and variable
         patterns like ``@foo@`` will be substituted with the values of the
         ``AC_SUBST`` variables declared during configure.
+        """, None),
+
+    'CONFIGURE_DEFINE_FILES': (StrictOrderingOnAppendList, list, [],
+        """Output files generated from configure/config.status.
+
+        This is a substitute for ``AC_CONFIG_HEADER`` in autoconf. This is very
+        similar to ``CONFIGURE_SUBST_FILES`` except the generation logic takes
+        into account the values of ``AC_DEFINE`` instead of ``AC_SUBST``.
         """, None),
 
     'MODULE': (unicode, unicode, "",

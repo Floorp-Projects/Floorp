@@ -937,6 +937,10 @@ public:
 
   static TemporaryRef<DrawTarget> CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize);
 
+  static TemporaryRef<SourceSurface>
+    CreateSourceSurfaceForCairoSurface(cairo_surface_t* aSurface,
+                                       SurfaceFormat aFormat);
+
   static TemporaryRef<DrawTarget>
     CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
 
