@@ -83,3 +83,4 @@ patch -p3 < ./bug468275-r18219.patch
 patch -p3 < ./bug752139-r18031.patch
 patch -p3 < ./bug752668-r18268.patch
 patch -p3 < ./bug703135.patch
+patch -p3 < ./bug920992.patch
