@@ -102,6 +102,7 @@ var adr2 = {
 };
 
 var properties1 = {
+  // please keep capital letters at the start of these names
   name: ["Test1 TestFamilyName", "Test2 Wagner"],
   familyName: ["TestFamilyName","Wagner"],
   givenName: ["Test1","Test2"],
@@ -518,6 +519,62 @@ var steps = [
     var options = {filterBy: ["givenName"],
                    filterOp: "startsWith",
                    filterValue: properties1.givenName[0].substring(0,3)};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      checkContacts(createResult1, findResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Retrieving by name equality 1");
+    var options = {filterBy: ["name"],
+                   filterOp: "equals",
+                   filterValue: properties1.name[0]};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      checkContacts(createResult1, findResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Retrieving by name equality 2");
+    var options = {filterBy: ["name"],
+                   filterOp: "equals",
+                   filterValue: properties1.name[1]};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      checkContacts(createResult1, findResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Retrieving by name substring 1");
+    var options = {filterBy: ["name"],
+                   filterOp: "startsWith",
+                   filterValue: properties1.name[0].substring(0,3).toLowerCase()};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      checkContacts(createResult1, findResult1);
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Retrieving by name substring 2");
+    var options = {filterBy: ["name"],
+                   filterOp: "startsWith",
+                   filterValue: properties1.name[1].substring(0,3).toLowerCase()};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       is(req.result.length, 1, "Found exactly 1 contact.");
