@@ -81,7 +81,7 @@ public:
   RemoveCall(TelephonyCall* aCall);
 
   already_AddRefed<TelephonyCall>
-  GetCall(uint32_t aCallIndex);
+  GetCall(uint32_t aServiceId, uint32_t aCallIndex);
 
   const nsTArray<nsRefPtr<TelephonyCall> >&
   CallsArray() const
