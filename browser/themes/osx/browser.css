@@ -1405,6 +1405,7 @@ toolbarbutton.bookmark-item > menupopup {
 }
 
 #zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button {
+  min-width: 0;
   margin: 0;
 }
 
