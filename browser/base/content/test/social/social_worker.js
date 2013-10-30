@@ -84,6 +84,8 @@ onconnect = function(e) {
         // For multiprovider tests, we support acting like different providers
         // based on the domain we load from.
         apiPort = port;
+        // purposely fall through and set the profile on initialization
+      case "test-set-profile":
         let profile;
         if (location.href.indexOf("https://test1.example.com") == 0) {
           profile = {
@@ -99,7 +101,7 @@ onconnect = function(e) {
             profileURL: "http://en.wikipedia.org/wiki/Kuma_Lisa"
           };
         }
-        port.postMessage({topic: "social.user-profile", data: profile});
+        apiPort.postMessage({topic: "social.user-profile", data: profile});
         break;
       case "test-ambient-notification":
         apiPort.postMessage({topic: "social.ambient-notification", data: event.data.data});
