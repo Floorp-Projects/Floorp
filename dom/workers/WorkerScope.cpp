@@ -43,6 +43,7 @@
 #include "Location.h"
 #include "Navigator.h"
 #include "Principal.h"
+#include "RuntimeService.h" // For WorkersDumpEnabled().
 #include "ScriptLoader.h"
 #include "Worker.h"
 #include "WorkerPrivate.h"
@@ -587,6 +588,13 @@ private:
   static bool
   Dump(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
+    RuntimeService* runtimeService = RuntimeService::GetService();
+    MOZ_ASSERT(runtimeService);
+
+    if (!runtimeService->WorkersDumpEnabled()) {
+      return true;
+    }
+
     JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
     if (!obj) {
       return false;
