@@ -8,11 +8,19 @@
 interface Telephony : EventTarget {
   [Throws]
   TelephonyCall dial(DOMString number);
+
   [Throws]
   TelephonyCall dialEmergency(DOMString number);
 
   [Throws]
+  void startTone(DOMString tone);
+
+  [Throws]
+  void stopTone();
+
+  [Throws]
   attribute boolean muted;
+
   [Throws]
   attribute boolean speakerEnabled;
 
@@ -21,11 +29,6 @@ interface Telephony : EventTarget {
   // A call is contained either in Telephony or in TelephonyCallGroup.
   readonly attribute CallsList calls;
   readonly attribute TelephonyCallGroup conferenceGroup;
-
-  [Throws]
-  void startTone(DOMString tone);
-  [Throws]
-  void stopTone();
 
   attribute EventHandler onincoming;
   attribute EventHandler oncallschanged;
