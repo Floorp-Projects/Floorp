@@ -6,6 +6,10 @@
 
 #include "GeckoChildProcessHost.h"
 
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#include "sandboxBroker.h"
+#endif
+
 #include "base/command_line.h"
 #include "base/path_service.h"
 #include "base/string_util.h"
@@ -756,7 +760,15 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // Process type
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
 
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+  mozilla::SandboxBroker sandboxBroker;
+  sandboxBroker.LaunchApp(cmdLine.program().c_str(),
+                          cmdLine.command_line_string().c_str(),
+                          &process);
+#else
   base::LaunchApp(cmdLine, false, false, &process);
+#endif
+
 
 #else
 #  error Sorry
