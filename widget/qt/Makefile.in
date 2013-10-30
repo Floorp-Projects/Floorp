@@ -5,24 +5,6 @@
 
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
-ifdef MOZ_ENABLE_CONTENTMANAGER
-CPPSRCS += \
-    moc_nsMFilePicker.cpp \
-    $(NULL)
-endif
-
-ifdef MOZ_ENABLE_QTMOBILITY
-CPPSRCS += \
-    moc_mozqorientationsensorfilter.cpp \
-    $(NULL)
-endif
-
-CPPSRCS += \
-    moc_moziqwidget.cpp \
-    moc_mozqwidget.cpp \
-    moc_nsAppShell.cpp \
-    $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(MOZ_QT_CFLAGS) $(GLIB_CFLAGS) $(MOZ_CAIRO_CFLAGS) \

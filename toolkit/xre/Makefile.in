@@ -107,12 +107,6 @@ SHARED_LIBRARY_LIBS += \
 endif
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += \
-  moc_nsNativeAppSupportQt.cpp \
-  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES += \
