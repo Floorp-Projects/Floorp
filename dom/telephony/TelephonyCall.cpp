@@ -19,9 +19,9 @@ using mozilla::dom::telephony::kOutgoingPlaceholderCallIndex;
 
 // static
 already_AddRefed<TelephonyCall>
-TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
-                      const nsAString& aNumber, uint16_t aCallState,
-                      uint32_t aCallIndex, bool aEmergency, bool aIsConference)
+TelephonyCall::Create(Telephony* aTelephony, const nsAString& aNumber,
+                      uint16_t aCallState, uint32_t aCallIndex,
+                      bool aEmergency, bool aIsConference)
 {
   NS_ASSERTION(aTelephony, "Null pointer!");
   NS_ASSERTION(!aNumber.IsEmpty(), "Empty number!");
@@ -32,7 +32,6 @@ TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
   call->BindToOwner(aTelephony->GetOwner());
 
   call->mTelephony = aTelephony;
-  call->mServiceId = aServiceId;
   call->mNumber = aNumber;
   call->mCallIndex = aCallIndex;
   call->mError = nullptr;
@@ -220,7 +219,7 @@ TelephonyCall::Answer(ErrorResult& aRv)
     return;
   }
 
-  nsresult rv = mTelephony->Provider()->AnswerCall(mServiceId, mCallIndex);
+  nsresult rv = mTelephony->Provider()->AnswerCall(mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -239,8 +238,8 @@ TelephonyCall::HangUp(ErrorResult& aRv)
   }
 
   nsresult rv = mCallState == nsITelephonyProvider::CALL_STATE_INCOMING ?
-                mTelephony->Provider()->RejectCall(mServiceId, mCallIndex) :
-                mTelephony->Provider()->HangUp(mServiceId, mCallIndex);
+                mTelephony->Provider()->RejectCall(mCallIndex) :
+                mTelephony->Provider()->HangUp(mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -262,7 +261,7 @@ TelephonyCall::Hold(ErrorResult& aRv)
     return;
   }
 
-  nsresult rv = mTelephony->Provider()->HoldCall(mServiceId, mCallIndex);
+  nsresult rv = mTelephony->Provider()->HoldCall(mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -291,7 +290,7 @@ TelephonyCall::Resume(ErrorResult& aRv)
     return;
   }
 
-  nsresult rv = mTelephony->Provider()->ResumeCall(mServiceId, mCallIndex);
+  nsresult rv = mTelephony->Provider()->ResumeCall(mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;

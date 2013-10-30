@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_telephony_telephony_h__
 #define mozilla_dom_telephony_telephony_h__
 
-#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/telephony/TelephonyCommon.h"
 
 #include "nsITelephonyProvider.h"
@@ -67,19 +66,10 @@ public:
 
   // WebIDL
   already_AddRefed<TelephonyCall>
-  Dial(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
-       ErrorResult& aRv);
+  Dial(const nsAString& aNumber, ErrorResult& aRv);
 
   already_AddRefed<TelephonyCall>
-  DialEmergency(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
-                ErrorResult& aRv);
-
-  void
-  StartTone(const nsAString& aDTMFChar, const Optional<uint32_t>& aServiceId,
-            ErrorResult& aRv);
-
-  void
-  StopTone(const Optional<uint32_t>& aServiceId, ErrorResult& aRv);
+  DialEmergency(const nsAString& aNumber, ErrorResult& aRv);
 
   bool
   GetMuted(ErrorResult& aRv) const;
@@ -102,6 +92,12 @@ public:
   already_AddRefed<TelephonyCallGroup>
   ConferenceGroup() const;
 
+  void
+  StartTone(const nsAString& aDTMF, ErrorResult& aRv);
+
+  void
+  StopTone(ErrorResult& aRv);
+
   IMPL_EVENT_HANDLER(incoming)
   IMPL_EVENT_HANDLER(callschanged)
   IMPL_EVENT_HANDLER(remoteheld)
@@ -115,7 +111,7 @@ public:
   {
     NS_ASSERTION(!mCalls.Contains(aCall), "Already know about this one!");
     mCalls.AppendElement(aCall);
-    UpdateActiveCall(aCall, IsActiveState(aCall->CallState()));
+    UpdateActiveCall(aCall, true);
     NotifyCallsChanged(aCall);
   }
 
@@ -146,61 +142,38 @@ private:
   Telephony();
   ~Telephony();
 
-  void
-  Shutdown();
-
-  static bool
-  IsValidNumber(const nsAString& aNumber);
-
-  static uint32_t
-  GetNumServices();
-
-  static bool
-  IsValidServiceId(uint32_t aServiceId);
-
-  static bool
-  IsActiveState(uint16_t aCallState);
-
-  uint32_t
-  ProvidedOrDefaultServiceId(const Optional<uint32_t>& aServiceId);
-
-  bool
-  HasDialingCall();
-
-  bool
-  MatchActiveCall(TelephonyCall* aCall);
-
   already_AddRefed<TelephonyCall>
-  DialInternal(uint32_t aServiceId, const nsAString& aNumber,
-               bool isEmergency, ErrorResult& aRv);
-
-  already_AddRefed<TelephonyCall>
-  CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber);
+  CreateNewDialingCall(const nsAString& aNumber);
 
   void
-  NoteDialedCallFromOtherInstance(uint32_t aServiceId,
-                                  const nsAString& aNumber);
+  NoteDialedCallFromOtherInstance(const nsAString& aNumber);
 
   nsresult
   NotifyCallsChanged(TelephonyCall* aCall);
 
+  already_AddRefed<TelephonyCall>
+  DialInternal(bool isEmergency,
+               const nsAString& aNumber,
+               ErrorResult& aRv);
+
   nsresult
-  DispatchCallEvent(const nsAString& aType, TelephonyCall* aCall);
+  DispatchCallEvent(const nsAString& aType,
+                    TelephonyCall* aCall);
 
   void
   EnqueueEnumerationAck();
 
   void
-  UpdateActiveCall(TelephonyCall* aCall, bool aIsActive);
+  UpdateActiveCall(TelephonyCall* aCall, bool aIsAdding);
 
   already_AddRefed<TelephonyCall>
-  GetCall(uint32_t aServiceId, uint32_t aCallIndex);
+  GetCall(uint32_t aCallIndex);
 
-  already_AddRefed<TelephonyCall>
-  GetOutgoingCall();
+  bool
+  MoveCall(uint32_t aCallIndex, bool aIsConference);
 
-  already_AddRefed<TelephonyCall>
-  GetCallFromEverywhere(uint32_t aServiceId, uint32_t aCallIndex);
+  void
+  Shutdown();
 };
 
 } // namespace dom

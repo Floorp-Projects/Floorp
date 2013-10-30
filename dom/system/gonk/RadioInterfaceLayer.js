@@ -1001,24 +1001,22 @@ RadioInterface.prototype = {
         gTelephonyProvider.notifyCallRing();
         break;
       case "callStateChange":
-        gTelephonyProvider.notifyCallStateChanged(this.clientId, message.call);
+        gTelephonyProvider.notifyCallStateChanged(message.call);
         break;
       case "callDisconnected":
-        gTelephonyProvider.notifyCallDisconnected(this.clientId, message.call);
+        gTelephonyProvider.notifyCallDisconnected(message.call);
         break;
       case "conferenceCallStateChanged":
         gTelephonyProvider.notifyConferenceCallStateChanged(message.state);
         break;
       case "cdmaCallWaiting":
-        gTelephonyProvider.notifyCdmaCallWaiting(this.clientId, message.number);
+        gTelephonyProvider.notifyCdmaCallWaiting(message.number);
         break;
       case "callError":
-        gTelephonyProvider.notifyCallError(this.clientId, message.callIndex,
-                                           message.errorMsg);
+        gTelephonyProvider.notifyCallError(message.callIndex, message.errorMsg);
         break;
       case "suppSvcNotification":
-        gTelephonyProvider.notifySupplementaryService(this.clientId,
-                                                      message.callIndex,
+        gTelephonyProvider.notifySupplementaryService(message.callIndex,
                                                       message.notification);
         break;
       case "emergencyCbModeChange":
@@ -3577,3 +3575,4 @@ RILNetworkInterface.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RadioInterfaceLayer]);
+

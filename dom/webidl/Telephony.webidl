@@ -6,31 +6,13 @@
 
 [Pref="dom.telephony.enabled"]
 interface Telephony : EventTarget {
-  /**
-   * There are multiple telephony services in multi-sim architecture. We use
-   * |serviceId| to indicate the target telephony service. If not specified,
-   * the implementation MUST use the default service.
-   *
-   * Possible values of |serviceId| are 0 ~ (number of services - 1), which is
-   * simply the index of a service. Get number of services by acquiring
-   * |navigator.mozMobileConnections.length|.
-   */
-
   [Throws]
-  TelephonyCall dial(DOMString number, optional unsigned long serviceId);
-
+  TelephonyCall dial(DOMString number);
   [Throws]
-  TelephonyCall dialEmergency(DOMString number, optional unsigned long serviceId);
-
-  [Throws]
-  void startTone(DOMString tone, optional unsigned long serviceId);
-
-  [Throws]
-  void stopTone(optional unsigned long serviceId);
+  TelephonyCall dialEmergency(DOMString number);
 
   [Throws]
   attribute boolean muted;
-
   [Throws]
   attribute boolean speakerEnabled;
 
@@ -39,6 +21,11 @@ interface Telephony : EventTarget {
   // A call is contained either in Telephony or in TelephonyCallGroup.
   readonly attribute CallsList calls;
   readonly attribute TelephonyCallGroup conferenceGroup;
+
+  [Throws]
+  void startTone(DOMString tone);
+  [Throws]
+  void stopTone();
 
   attribute EventHandler onincoming;
   attribute EventHandler oncallschanged;
