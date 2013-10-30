@@ -487,7 +487,7 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
     mTouchMoveDefaultPrevented = false;
     mIsFirstTouchMove = true;
     mCancelable = true;
-    mTouchCancelSent = false;
+    mCanceledIds.Clear();
     InitTouchEventTouchList(touchEvent);
     DispatchAsyncTouchEventWithCallback(touchEvent, &MetroInput::OnPointerPressedCallback);
   } else {
@@ -1217,6 +1217,10 @@ MetroInput::DeliverNextQueuedTouchEvent()
    *  a touchcancel to content and do not deliver any additional events there.
    *  (If the apz is doing something with the events we can save ourselves
    *  the overhead of delivering dom events.)
+   *
+   * Notes:
+   * - never rely on the contents of mTouches here, since this is a delayed
+   *   callback. mTouches will likely have been modified.
    */
 
   // Test for chrome vs. content target. To do this we only use the first touch
@@ -1247,10 +1251,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
   WidgetTouchEvent transformedEvent(*event);
   status = mWidget->ApzReceiveInputEvent(event, &transformedEvent);
   if (!mCancelable && status == nsEventStatus_eConsumeNoDefault) {
-    if (!mTouchCancelSent) {
-      mTouchCancelSent = true;
-      DispatchTouchCancel();
-    }
+    DispatchTouchCancel(event);
     return status;
   }
 
@@ -1261,16 +1262,31 @@ MetroInput::DeliverNextQueuedTouchEvent()
 }
 
 void
-MetroInput::DispatchTouchCancel()
+MetroInput::DispatchTouchCancel(WidgetTouchEvent* aEvent)
 {
-  LogFunction();
-  // From the spec: The touch point or points that were removed must be
-  // included in the changedTouches attribute of the TouchEvent, and must
-  // not be included in the touches and targetTouches attributes. 
-  // (We are 'removing' all touch points that have been sent to content
-  // thus far.)
+  MOZ_ASSERT(aEvent);
+  // Send a touchcancel for each pointer id we have a corresponding start
+  // for. Note we can't rely on mTouches here since touchends remove points
+  // from it. The only time we end up in here is if the apz is consuming
+  // events, so this array shouldn't be very large.
   WidgetTouchEvent touchEvent(true, NS_TOUCH_CANCEL, mWidget.Get());
-  InitTouchEventTouchList(&touchEvent);
+  nsTArray< nsRefPtr<dom::Touch> >& touches = aEvent->touches;
+  for (uint32_t i = 0; i < touches.Length(); ++i) {
+    dom::Touch* touch = touches[i];
+    if (!touch) {
+      continue;
+    }
+    int32_t id = touch->Identifier();
+    if (mCanceledIds.Contains(id)) {
+      continue;
+    }
+    mCanceledIds.AppendElement(id);
+    touchEvent.touches.AppendElement(touch);
+  }
+  if (!touchEvent.touches.Length()) {
+    return;
+  }
+
   mWidget->DispatchEvent(&touchEvent, sThrowawayStatus);
 }
 
