@@ -135,6 +135,48 @@ gfxXlibSurface::ReleasePixmap() {
     return mDrawable;
 }
 
+static cairo_user_data_key_t gDestroyPixmapKey;
+
+struct DestroyPixmapClosure {
+    DestroyPixmapClosure(Drawable d, Screen *s) : mPixmap(d), mScreen(s) {}
+    Drawable mPixmap;
+    Screen *mScreen;
+};
+
+static void
+DestroyPixmap(void *data)
+{
+    DestroyPixmapClosure *closure = static_cast<DestroyPixmapClosure*>(data);
+    XFreePixmap(DisplayOfScreen(closure->mScreen), closure->mPixmap);
+    delete closure;
+}
+
+/* static */
+cairo_surface_t *
+gfxXlibSurface::CreateCairoSurface(Screen *screen, Visual *visual,
+                                   const gfxIntSize& size, Drawable relatedDrawable)
+{
+    Drawable drawable =
+        CreatePixmap(screen, size, DepthOfVisual(screen, visual),
+                     relatedDrawable);
+    if (!drawable)
+        return nullptr;
+
+    cairo_surface_t* surface =
+        cairo_xlib_surface_create(DisplayOfScreen(screen), drawable, visual,
+                                  size.width, size.height);
+    if (cairo_surface_status(surface)) {
+        cairo_surface_destroy(surface);
+        XFreePixmap(DisplayOfScreen(screen), drawable);
+        return nullptr;
+    }
+
+    DestroyPixmapClosure *closure = new DestroyPixmapClosure(drawable, screen);
+    cairo_surface_set_user_data(surface, &gDestroyPixmapKey,
+                                closure, DestroyPixmap);
+    return surface;
+}
+
 /* static */
 already_AddRefed<gfxXlibSurface>
 gfxXlibSurface::Create(Screen *screen, Visual *visual,
@@ -401,19 +443,27 @@ DisplayTable::DisplayClosing(Display *display, XExtCodes* codes)
     return 0;
 }
 
+/* static */
+bool
+gfxXlibSurface::GetColormapAndVisual(cairo_surface_t* aXlibSurface,
+                                     Colormap* aColormap, Visual** aVisual)
+{
+    XRenderPictFormat* format =
+        cairo_xlib_surface_get_xrender_format(aXlibSurface);
+    Screen* screen = cairo_xlib_surface_get_screen(aXlibSurface);
+    Visual* visual = cairo_xlib_surface_get_visual(aXlibSurface);
+
+    return DisplayTable::GetColormapAndVisual(screen, format, visual,
+                                              aColormap, aVisual);
+}
+
 bool
 gfxXlibSurface::GetColormapAndVisual(Colormap* aColormap, Visual** aVisual)
 {
     if (!mSurfaceValid)
         return false;
 
-    XRenderPictFormat* format =
-        cairo_xlib_surface_get_xrender_format(CairoSurface());
-    Screen* screen = cairo_xlib_surface_get_screen(CairoSurface());
-    Visual* visual = cairo_xlib_surface_get_visual(CairoSurface());
-
-    return DisplayTable::GetColormapAndVisual(screen, format, visual,
-                                              aColormap, aVisual);
+    return GetColormapAndVisual(CairoSurface(), aColormap, aVisual);
 }
 
 /* static */

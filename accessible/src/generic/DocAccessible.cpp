@@ -552,7 +552,7 @@ DocAccessible::GetAccessible(nsINode* aNode) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessNode
+// Accessible
 
 void
 DocAccessible::Init()

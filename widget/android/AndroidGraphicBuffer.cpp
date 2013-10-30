@@ -6,6 +6,7 @@
 #include <dlfcn.h>
 #include <android/log.h>
 #include <GLES2/gl2.h>
+#include <nsTArray.h>
 #include "AndroidGraphicBuffer.h"
 #include "AndroidBridge.h"
 #include "mozilla/Preferences.h"
@@ -432,21 +433,35 @@ AndroidGraphicBuffer::Bind()
   return ensureNoGLError("glEGLImageTargetTexture2DOES");
 }
 
-static const char* const sAllowedBoards[] = {
-  "venus2",     // Motorola Droid Pro
-  "tuna",       // Galaxy Nexus
-  "omap4sdp",   // Amazon Kindle Fire
-  "droid2",     // Motorola Droid 2
-  "targa",      // Motorola Droid Bionic
-  "spyder",     // Motorola Razr
-  "shadow",     // Motorola Droid X
-  "SGH-I897",   // Samsung Galaxy S
-  "GT-I9100",   // Samsung Galaxy SII
-  "sgh-i997",   // Samsung Infuse 4G
-  "herring",    // Samsung Nexus S
-  "sgh-t839",   // Samsung Sidekick 4G
-  nullptr
-};
+// Build whitelist to check for board type.
+static void InitWhiteList(nsTArray<nsString>& list)
+{
+  nsString ele;
+  ele.AssignASCII("droid2"); // Motorola Droid 2
+  list.AppendElement(ele);
+  ele.AssignASCII("GT-I9100"); // Samsung Galaxy SII
+  list.AppendElement(ele);
+  ele.AssignASCII("herring"); // Samsung Nexus S
+  list.AppendElement(ele);
+  ele.AssignASCII("omap4sdp"); // Amazon Kindle Fire
+  list.AppendElement(ele);
+  ele.AssignASCII("SGH-I897"); // Samsung Galaxy S
+  list.AppendElement(ele);
+  ele.AssignASCII("sgh-i997"); // Samsung Infuse 4G
+  list.AppendElement(ele);
+  ele.AssignASCII("sgh-t839"); // Samsung Sidekick 4G
+  list.AppendElement(ele);
+  ele.AssignASCII("shadow"); // Motorola Droid X
+  list.AppendElement(ele);
+  ele.AssignASCII("spyder"); // Motorola Razr
+  list.AppendElement(ele);
+  ele.AssignASCII("targa"); // Motorola Droid Bionic
+  list.AppendElement(ele);
+  ele.AssignASCII("tuna"); // Galaxy Nexus
+  list.AppendElement(ele);
+  ele.AssignASCII("venus2"); // Motorla Droid Pro
+  list.AppendElement(ele);
+}
 
 bool
 AndroidGraphicBuffer::IsBlacklisted()
@@ -467,12 +482,16 @@ AndroidGraphicBuffer::IsBlacklisted()
     return true;
   }
 
-  // FIXME: (Bug 722605) use something better than a linear search
-  for (int i = 0; sAllowedBoards[i]; i++) {
-    if (board.Find(sAllowedBoards[i]) >= 0) {
-      LOG("allowing board '%s' based on '%s'\n", boardUtf8.get(), sAllowedBoards[i]);
-      return false;
-    }
+  static nsTArray<nsString> sListAllowed;
+  if (sListAllowed.Length() == 0) {
+    InitWhiteList(sListAllowed);
+  }
+  
+  int i = -1;
+  if ((i = sListAllowed.BinaryIndexOf(board)) >= 0) {
+    nsString name = sListAllowed.ElementAt(i);
+    LOG("allowing board '%s' based on '%s'\n", boardUtf8.get(), NS_ConvertUTF16toUTF8(name).get());
+    return false;
   }
 
   LOG("disallowing board: %s\n", boardUtf8.get());
