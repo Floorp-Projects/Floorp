@@ -876,24 +876,6 @@ RenderFrameParent::RecvNotifyCompositorTransaction()
 }
 
 bool
-RenderFrameParent::RecvCancelDefaultPanZoom()
-{
-  if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->CancelDefaultPanZoom(ScrollableLayerGuid(mLayersId));
-  }
-  return true;
-}
-
-bool
-RenderFrameParent::RecvDetectScrollableSubframe()
-{
-  if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->DetectScrollableSubframe(ScrollableLayerGuid(mLayersId));
-  }
-  return true;
-}
-
-bool
 RenderFrameParent::RecvUpdateHitRegion(const nsRegion& aRegion)
 {
   mTouchRegion = aRegion;

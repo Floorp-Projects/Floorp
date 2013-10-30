@@ -468,24 +468,6 @@ APZCTreeManager::UpdateCompositionBounds(const ScrollableLayerGuid& aGuid,
 }
 
 void
-APZCTreeManager::CancelDefaultPanZoom(const ScrollableLayerGuid& aGuid)
-{
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
-  if (apzc) {
-    apzc->CancelDefaultPanZoom();
-  }
-}
-
-void
-APZCTreeManager::DetectScrollableSubframe(const ScrollableLayerGuid& aGuid)
-{
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
-  if (apzc) {
-    apzc->DetectScrollableSubframe();
-  }
-}
-
-void
 APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
                             const CSSRect& aRect)
 {
