@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*-
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /*
 ** Copyright 2006, The Android Open Source Project
@@ -30,6 +30,8 @@
 using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
+
+typedef char bdstr_t[18];
 
 /**
  *  Classes only used in this file
@@ -63,6 +65,11 @@ private:
 static bluetooth_device_t* sBtDevice;
 static const bt_interface_t* sBtInterface;
 static bool sIsBtEnabled = false;
+static bool sAdapterDiscoverable = false;
+static nsString sAdapterBdAddress;
+static nsString sAdapterBdName;
+static uint32_t sAdapterDiscoverableTimeout;
+static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
 
 /**
  *  Static callback functions
@@ -72,7 +79,7 @@ AdapterStateChangeCallback(bt_state_t aStatus)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  BT_LOGD("Enter: %s, BT_STATE:%d", __FUNCTION__, aStatus);
+  BT_LOGD("%s, BT_STATE:%d", __FUNCTION__, aStatus);
   nsAutoString signalName;
   if (aStatus == BT_STATE_ON) {
     sIsBtEnabled = true;
@@ -90,9 +97,85 @@ AdapterStateChangeCallback(bt_state_t aStatus)
   }
 }
 
+static void
+BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
+{
+  uint8_t* addr = aBdAddressType->address;
+  bdstr_t bdstr;
+
+  sprintf((char*)bdstr, "%02x:%02x:%02x:%02x:%02x:%02x",
+          (int)addr[0],(int)addr[1],(int)addr[2],
+          (int)addr[3],(int)addr[4],(int)addr[5]);
+
+  aRetBdAddress = NS_ConvertUTF8toUTF16((char*)bdstr);
+}
+
+static void
+AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
+                                bt_property_t *aProperties)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  BluetoothValue propertyValue;
+  InfallibleTArray<BluetoothNamedValue> propertiesArray;
+
+  for (int i = 0; i < aNumProperties; i++) {
+    bt_property_t p = aProperties[i];
+
+    if (p.type == BT_PROPERTY_BDADDR) {
+      BdAddressTypeToString((bt_bdaddr_t*)p.val, sAdapterBdAddress);
+      propertyValue = sAdapterBdAddress;
+      propertiesArray.AppendElement(
+        BluetoothNamedValue(NS_LITERAL_STRING("Address"), propertyValue));
+    } else if (p.type == BT_PROPERTY_BDNAME) {
+      // Construct nsCString here because Bd name returned from bluedroid
+      // is missing a null terminated character after SetProperty.
+      propertyValue = sAdapterBdName = NS_ConvertUTF8toUTF16(
+        nsCString((char*)p.val, p.len));
+      propertiesArray.AppendElement(
+        BluetoothNamedValue(NS_LITERAL_STRING("Name"), propertyValue));
+    } else if (p.type == BT_PROPERTY_ADAPTER_SCAN_MODE) {
+      propertyValue = sAdapterDiscoverable = *(uint32_t*)p.val;
+      propertiesArray.AppendElement(
+        BluetoothNamedValue(NS_LITERAL_STRING("Discoverable"), propertyValue));
+    } else if (p.type == BT_PROPERTY_ADAPTER_DISCOVERY_TIMEOUT) {
+      propertyValue = sAdapterDiscoverableTimeout = *(uint32_t*)p.val;
+      propertiesArray.AppendElement(
+        BluetoothNamedValue(NS_LITERAL_STRING("DiscoverableTimeout"),
+                            propertyValue));
+    } else if (p.type == BT_PROPERTY_ADAPTER_BONDED_DEVICES) {
+      //FIXME: This will be implemented in the later patchset
+      return;
+    } else if (p.type == BT_PROPERTY_UUIDS) {
+      //FIXME: This will be implemented in the later patchset
+      return;
+    } else {
+      BT_LOGR("Unhandled adapter property type: %d", p.type);
+      return;
+    }
+
+    BluetoothValue value(propertiesArray);
+    BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
+                           NS_LITERAL_STRING(KEY_ADAPTER), value);
+    nsRefPtr<DistributeBluetoothSignalTask>
+      t = new DistributeBluetoothSignalTask(signal);
+    if (NS_FAILED(NS_DispatchToMainThread(t))) {
+      NS_WARNING("Failed to dispatch to main thread!");
+    }
+
+    // bluedroid BTU task was stored in the task queue, see GKI_send_msg
+    if (!sSetPropertyRunnableArray.IsEmpty()) {
+      DispatchBluetoothReply(sSetPropertyRunnableArray[0], BluetoothValue(true),
+                             EmptyString());
+      sSetPropertyRunnableArray.RemoveElementAt(0);
+    }
+  }
+}
+
 bt_callbacks_t sBluetoothCallbacks = {
   sizeof(sBluetoothCallbacks),
-  AdapterStateChangeCallback
+  AdapterStateChangeCallback,
+  AdapterPropertiesChangeCallback
 };
 
 /**
@@ -145,6 +228,32 @@ StartStopGonkBluetooth(bool aShouldEnable)
   return (ret == BT_STATUS_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+static void
+ReplyStatusError(BluetoothReplyRunnable* aBluetoothReplyRunnable,
+                 int aStatusCode, const nsAString& aCustomMsg)
+{
+  MOZ_ASSERT(aBluetoothReplyRunnable, "Reply runnable is nullptr");
+  nsAutoString replyError;
+
+  replyError.Assign(aCustomMsg);
+  if (aStatusCode == BT_STATUS_BUSY) {
+    replyError.AppendLiteral(":BT_STATUS_BUSY");
+  } else if (aStatusCode == BT_STATUS_NOT_READY) {
+    replyError.AppendLiteral(":BT_STATUS_NOT_READY");
+  } else if (aStatusCode == BT_STATUS_DONE) {
+    replyError.AppendLiteral(":BT_STATUS_DONE");
+  } else if (aStatusCode == BT_STATUS_AUTH_FAILURE) {
+    replyError.AppendLiteral(":BT_STATUS_AUTH_FAILURE");
+  } else if (aStatusCode == BT_STATUS_RMT_DEV_DOWN) {
+    replyError.AppendLiteral(":BT_STATUS_RMT_DEV_DOWN");
+  } else if (aStatusCode == BT_STATUS_FAIL) {
+    replyError.AppendLiteral(":BT_STATUS_FAIL");
+  }
+
+  DispatchBluetoothReply(aBluetoothReplyRunnable, BluetoothValue(true),
+                         replyError);
+}
+
 /**
  *  Member functions
  */
@@ -191,6 +300,19 @@ nsresult
 BluetoothServiceBluedroid::GetDefaultAdapterPathInternal(
   BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsRefPtr<BluetoothReplyRunnable> runnable(aRunnable);
+
+  BluetoothValue v = InfallibleTArray<BluetoothNamedValue>();
+  v.get_ArrayOfBluetoothNamedValue().AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("Name"), sAdapterBdName));
+
+  nsAutoString replyError;
+  DispatchBluetoothReply(runnable.get(), v, replyError);
+
+  runnable.forget();
+
   return NS_OK;
 }
 
@@ -235,6 +357,50 @@ BluetoothServiceBluedroid::SetProperty(BluetoothObjectType aType,
                                        const BluetoothNamedValue& aValue,
                                        BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  const nsString propName = aValue.name();
+  bt_property_t prop;
+  nsString str;
+
+  // For Bluedroid, it's necessary to check property name for SetProperty
+  if (propName.EqualsLiteral("Name")) {
+    prop.type = BT_PROPERTY_BDNAME;
+  } else if (propName.EqualsLiteral("Discoverable")) {
+    prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
+  } else if (propName.EqualsLiteral("DiscoverableTimeout")) {
+    prop.type = BT_PROPERTY_ADAPTER_DISCOVERY_TIMEOUT;
+  } else {
+    BT_LOGR("Warning: Property type is not supported yet, type: %d", prop.type);
+  }
+
+  if (aValue.value().type() == BluetoothValue::Tuint32_t) {
+    // Set discoverable timeout
+    prop.val = (void*)aValue.value().get_uint32_t();
+  } else if (aValue.value().type() == BluetoothValue::TnsString) {
+    // Set name
+    str = aValue.value().get_nsString();
+    const char* name = NS_ConvertUTF16toUTF8(str).get();
+    prop.val = (void*)name;
+    prop.len = strlen(name);
+  } else if (aValue.value().type() == BluetoothValue::Tbool) {
+    bt_scan_mode_t mode = aValue.value().get_bool() ?
+                            BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE :
+                            BT_SCAN_MODE_CONNECTABLE;
+    bt_scan_mode_t* sss = &mode;
+    prop.val = (void*)sss;
+    prop.len = sizeof(sss);
+  } else {
+    BT_LOGR("SetProperty but the property cannot be recognized correctly.");
+    return NS_OK;
+  }
+
+  sSetPropertyRunnableArray.AppendElement(aRunnable);
+  int ret = sBtInterface->set_adapter_property(&prop);
+
+  if (ret != BT_STATUS_SUCCESS)
+    ReplyStatusError(aRunnable, ret, NS_LITERAL_STRING("SetProperty"));
+
   return NS_OK;
 }
 

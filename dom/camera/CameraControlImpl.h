@@ -53,7 +53,7 @@ public:
   nsresult StartPreview(DOMCameraPreview* aDOMPreview);
   void StopPreview();
   nsresult AutoFocus(nsICameraAutoFocusCallback* onSuccess, nsICameraErrorCallback* onError);
-  nsresult TakePicture(idl::CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, idl::CameraPosition aPosition, uint64_t aDateTime, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError);
+  nsresult TakePicture(const idl::CameraSize& aSize, int32_t aRotation, const nsAString& aFileFormat, idl::CameraPosition aPosition, uint64_t aDateTime, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError);
   nsresult StartRecording(idl::CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError);
   nsresult StopRecording();
   nsresult GetPreviewStreamVideoMode(idl::CameraRecorderOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError);
@@ -73,6 +73,8 @@ public:
   nsresult Get(nsICameraRecorderStateChange** aOnRecorderStateChange);
   nsresult Set(nsICameraPreviewStateChange* aOnPreviewStateChange);
   nsresult Get(nsICameraPreviewStateChange** aOnPreviewStateChange);
+  nsresult Set(uint32_t aKey, const idl::CameraSize& aSize);
+  nsresult Get(uint32_t aKey, idl::CameraSize& aSize);
 
   nsresult SetFocusAreas(JSContext* aCx, const JS::Value& aValue)
   {
@@ -91,10 +93,12 @@ public:
   virtual const char* GetParameterConstChar(uint32_t aKey) = 0;
   virtual double GetParameterDouble(uint32_t aKey) = 0;
   virtual void GetParameter(uint32_t aKey, nsTArray<idl::CameraRegion>& aRegions) = 0;
+  virtual void GetParameter(uint32_t aKey, idl::CameraSize& aSize) = 0;
   virtual void SetParameter(const char* aKey, const char* aValue) = 0;
   virtual void SetParameter(uint32_t aKey, const char* aValue) = 0;
   virtual void SetParameter(uint32_t aKey, double aValue) = 0;
   virtual void SetParameter(uint32_t aKey, const nsTArray<idl::CameraRegion>& aRegions) = 0;
+  virtual void SetParameter(uint32_t aKey, const idl::CameraSize& aSize) = 0;
   virtual nsresult GetVideoSizes(nsTArray<idl::CameraSize>& aVideoSizes) = 0;
   virtual nsresult PushParameters() = 0;
   virtual void Shutdown();
@@ -372,7 +376,7 @@ protected:
 class TakePictureTask : public nsRunnable
 {
 public:
-  TakePictureTask(CameraControlImpl* aCameraControl, bool aCancel, idl::CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, idl::CameraPosition aPosition, uint64_t aDateTime, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
+  TakePictureTask(CameraControlImpl* aCameraControl, bool aCancel, const idl::CameraSize& aSize, int32_t aRotation, const nsAString& aFileFormat, idl::CameraPosition aPosition, uint64_t aDateTime, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
     : mCameraControl(aCameraControl)
     , mCancel(aCancel)
     , mSize(aSize)

@@ -226,7 +226,7 @@ DBusWatcher::Poll()
       if (mPollData[i].fd == mControlFdR.get()) {
         char data;
         res = TEMP_FAILURE_RETRY(read(mControlFdR.get(), &data, sizeof(data)));
-        NS_ENSURE_TRUE(res > 0, NS_OK);
+        NS_ENSURE_TRUE(res > 0, false);
 
         switch (data) {
           case DBUS_EVENT_LOOP_EXIT:
@@ -253,18 +253,19 @@ DBusWatcher::Poll()
         }
       } else {
         short events = mPollData[i].revents;
-        unsigned int flags = UnixEventsToDBusFlags(events);
-        dbus_watch_handle(mWatchData[i], flags);
         mPollData[i].revents = 0;
+
+        dbus_watch_handle(mWatchData[i], UnixEventsToDBusFlags(events));
+
+        DBusDispatchStatus dbusDispatchStatus;
+        do {
+          dbusDispatchStatus = dbus_connection_dispatch(GetConnection());
+        } while (dbusDispatchStatus == DBUS_DISPATCH_DATA_REMAINS);
+
         // Break at this point since we don't know if the operation
         // was destructive
         break;
       }
-
-      DBusDispatchStatus dbusDispatchStatus;
-      do {
-        dbusDispatchStatus = dbus_connection_dispatch(GetConnection());
-      } while (dbusDispatchStatus == DBUS_DISPATCH_DATA_REMAINS);
     }
 
     ++i;

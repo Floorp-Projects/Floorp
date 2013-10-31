@@ -472,7 +472,14 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   }
 
   [mWindow setBackgroundColor:[NSColor clearColor]];
+#ifdef MOZ_B2G
+  // In B2G, we don't create popups and we need OMTC to work (because out of
+  // process compositing depends on it). Therefore, we don't need our windows
+  // to be transparent.
+  [mWindow setOpaque:YES];
+#else
   [mWindow setOpaque:NO];
+#endif
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
   [mWindow disableCursorRects];
 

@@ -94,13 +94,13 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SendMMI",
   "RIL:CancelMMI",
   "RIL:RegisterMobileConnectionMsg",
-  "RIL:SetCallForwardingOption",
-  "RIL:GetCallForwardingOption",
-  "RIL:SetCallBarringOption",
-  "RIL:GetCallBarringOption",
+  "RIL:SetCallForwardingOptions",
+  "RIL:GetCallForwardingOptions",
+  "RIL:SetCallBarringOptions",
+  "RIL:GetCallBarringOptions",
   "RIL:ChangeCallBarringPassword",
-  "RIL:SetCallWaitingOption",
-  "RIL:GetCallWaitingOption",
+  "RIL:SetCallWaitingOptions",
+  "RIL:GetCallWaitingOptions",
   "RIL:SetCallingLineIdRestriction",
   "RIL:GetCallingLineIdRestriction",
   "RIL:SetRoamingPreference",
@@ -946,25 +946,25 @@ RadioInterface.prototype = {
       case "RIL:UpdateIccContact":
         this.workerMessenger.sendWithIPCMessage(msg, "updateICCContact");
         break;
-      case "RIL:SetCallForwardingOption":
-        this.setCallForwardingOption(msg.target, msg.json.data);
+      case "RIL:SetCallForwardingOptions":
+        this.setCallForwardingOptions(msg.target, msg.json.data);
         break;
-      case "RIL:GetCallForwardingOption":
+      case "RIL:GetCallForwardingOptions":
         this.workerMessenger.sendWithIPCMessage(msg, "queryCallForwardStatus");
         break;
-      case "RIL:SetCallBarringOption":
+      case "RIL:SetCallBarringOptions":
         this.workerMessenger.sendWithIPCMessage(msg, "setCallBarring");
         break;
-      case "RIL:GetCallBarringOption":
+      case "RIL:GetCallBarringOptions":
         this.workerMessenger.sendWithIPCMessage(msg, "queryCallBarringStatus");
         break;
       case "RIL:ChangeCallBarringPassword":
         this.workerMessenger.sendWithIPCMessage(msg, "changeCallBarringPassword");
         break;
-      case "RIL:SetCallWaitingOption":
+      case "RIL:SetCallWaitingOptions":
         this.workerMessenger.sendWithIPCMessage(msg, "setCallWaiting");
         break;
-      case "RIL:GetCallWaitingOption":
+      case "RIL:GetCallWaitingOptions":
         this.workerMessenger.sendWithIPCMessage(msg, "queryCallWaiting");
         break;
       case "RIL:SetCallingLineIdRestriction":
@@ -2200,12 +2200,27 @@ RadioInterface.prototype = {
         break;
       case kNetworkInterfaceStateChangedTopic:
         let network = subject.QueryInterface(Ci.nsINetworkInterface);
-        if (network.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED) {
-          // Check SNTP when we have data connection, this may not take
-          // effect immediately before the setting get enabled.
-          if (this._sntp.isExpired()) {
-            this._sntp.request();
+        if (network.state != Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED) {
+          return;
+        }
+
+        // SNTP can only update when we have mobile or Wifi connections.
+        if (network.type != Ci.nsINetworkInterface.NETWORK_TYPE_WIFI &&
+            network.type != Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+          return;
+        }
+
+        // If the network comes from RIL, make sure the RIL service is matched.
+        if (subject instanceof Ci.nsIRilNetworkInterface) {
+          network = subject.QueryInterface(Ci.nsIRilNetworkInterface);
+          if (network.serviceId != this.clientId) {
+            return;
           }
+        }
+
+        // SNTP won't update unless the SNTP is already expired.
+        if (this._sntp.isExpired()) {
+          this._sntp.request();
         }
         break;
       case kScreenStateChangedTopic:
@@ -2418,12 +2433,12 @@ RadioInterface.prototype = {
     }).bind(this));
   },
 
-  setCallForwardingOption: function setCallForwardingOption(target, message) {
-    if (DEBUG) this.debug("setCallForwardingOption: " + JSON.stringify(message));
+  setCallForwardingOptions: function setCallForwardingOptions(target, message) {
+    if (DEBUG) this.debug("setCallForwardingOptions: " + JSON.stringify(message));
     message.serviceClass = RIL.ICC_SERVICE_CLASS_VOICE;
     this.workerMessenger.send("setCallForward", message, (function(response) {
       this._sendCfStateChanged(response);
-      target.sendAsyncMessage("RIL:SetCallForwardingOption", {
+      target.sendAsyncMessage("RIL:SetCallForwardingOptions", {
         clientId: this.clientId,
         data: response
       });

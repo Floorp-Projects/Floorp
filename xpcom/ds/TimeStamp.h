@@ -366,19 +366,6 @@ private:
    * When using a system clock, a value is system dependent.
    */
   TimeStampValue mValue;
-
-  /**
-   * First timestamp taken when the class static initializers are run. This
-   * timestamp is used to sanitize timestamps coming from different sources.
-   */
-  static TimeStamp sFirstTimeStamp;
-
-  /**
-   * Timestamp representing the time when the process was created. This field
-   * is populated lazily the first time this information is required and is
-   * replaced every time the process is restarted.
-   */
-  static TimeStamp sProcessCreation;
 };
 
 }
