@@ -18,7 +18,7 @@ LOCAL_INCLUDES	+= \
              -I$(srcdir)/../../../layout/xul/tree/ \
              $(NULL)
 
-ifdef MOZ_B2G_RIL
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 LOCAL_INCLUDES += \
               -I$(srcdir)/../../../dom/wifi \
               $(NULL)

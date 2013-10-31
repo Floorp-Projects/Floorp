@@ -9,7 +9,7 @@ MOCHITEST_FILES = \
   test_tcpsocket_enabled_with_perm.html \
   $(NULL)
 
-ifdef MOZ_B2G_RIL
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 MOCHITEST_FILES = \
   test_networkstats_basics.html \
   test_networkstats_disabled.html \
