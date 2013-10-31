@@ -336,8 +336,7 @@ GLScreenBuffer::AssureBlitted()
 
         MOZ_ASSERT(drawFB != 0);
         MOZ_ASSERT(drawFB != readFB);
-        MOZ_ASSERT(mGL->IsExtensionSupported(GLContext::EXT_framebuffer_blit) ||
-                   mGL->IsExtensionSupported(GLContext::ANGLE_framebuffer_blit));
+        MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
         MOZ_ASSERT(mDraw->Size() == mRead->Size());
 
         ScopedBindFramebuffer boundFB(mGL);
