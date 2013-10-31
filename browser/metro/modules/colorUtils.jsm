@@ -4,32 +4,91 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+
 const ColorAnalyzer = Components.classes["@mozilla.org/places/colorAnalyzer;1"]
                 .getService(Components.interfaces.mozIColorAnalyzer);
 
 this.EXPORTED_SYMBOLS = ["ColorUtils"];
 
 let ColorUtils = {
-  /** Takes an icon and a success callback (who is expected to handle foreground color
-   *  & background color as is desired) The first argument to the callback is
-   * the foreground/contrast color, the second is the background/primary/dominant one
-   */
-  getForegroundAndBackgroundIconColors: function getForegroundAndBackgroundIconColors(aIconURI, aSuccessCallback, aErrorCallback) {
-    if (!aIconURI) {
-      return;
-    }
-    let that = this;
-    let wrappedIcon = aIconURI;
-    ColorAnalyzer.findRepresentativeColor(wrappedIcon, function (success, color) {
-      if (!success) {
-        aErrorCallback();
-      } else {
-        let foregroundColor = that.bestTextColorForContrast(color);
-        let backgroundColor = that.convertDecimalToRgbColor(color);
-        aSuccessCallback(foregroundColor, backgroundColor);
-      }
-    }, this);
+  _initialized: false,
+  init: function() {
+    if (this._initialized)
+        return;
+    Services.obs.addObserver(this, "idle-daily", false);
+    Services.obs.addObserver(this, "quit-application", false);
+    this._initialized = true;
   },
+  uninit: function() {
+    Services.obs.removeObserver(this, "idle-daily");
+    Services.obs.removeObserver(this, "quit-application");
+  },
+
+  // default to keeping icon colorInfo for max 1 day
+  iconColorCacheMaxAge: 86400000,
+
+  // in-memory store for favicon color data
+  _uriColorsMap: (function() {
+    let cache = new Map();
+    // remove stale entries
+    cache.purge = function(maxAgeMs = 0) {
+      let cuttoff = Date.now() - (maxAgeMs || ColorUtils.iconColorCacheMaxAge);
+      for (let [key, value] of this) {
+        if (value.timestamp && value.timestamp >= cuttoff) {
+          continue;
+        }
+        this.delete(key);
+      }
+    }
+    return cache;
+  })(),
+  get iconColorCache() {
+    return ColorUtils._uriColorsMap;
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "idle-daily":
+        this.iconColorCache.purge();
+        break;
+      case "quit-application":
+        this.uninit();
+        break;
+    }
+  },
+
+  /** Takes an icon and returns either an object with foreground and background color properties
+   *  or a promise for the same.
+   *  The foreground is the contrast color, the background is the primary/dominant one
+   */
+  getForegroundAndBackgroundIconColors: function getForegroundAndBackgroundIconColors(aIconURI) {
+    let colorKey = aIconURI.spec;
+    let colorInfo = this._uriColorsMap.get(colorKey);
+    if (colorInfo) {
+      return colorInfo;
+    }
+
+    let deferred = Promise.defer();
+    let wrappedIcon = aIconURI;
+    this._uriColorsMap.set(colorKey, deferred.promise);
+
+    ColorAnalyzer.findRepresentativeColor(wrappedIcon, (success, color) => {
+      if (!success) {
+        this._uriColorsMap.delete(colorKey);
+        deferred.reject();
+      } else {
+        colorInfo = {
+          foreground: this.bestTextColorForContrast(color),
+          background: this.convertDecimalToRgbColor(color),
+          timestamp: Date.now()
+        };
+        deferred.resolve(colorInfo);
+      }
+    });
+    return deferred.promise;
+  },
+
   /** returns the best color for text readability on top of aColor
    * return color is in rgb(r,g,b) format, suitable to csss
    * The color bightness algorithm is currently: http://www.w3.org/TR/AERT#color-contrast
@@ -52,7 +111,7 @@ let ColorUtils = {
 
   toCSSRgbColor: function toCSSRgbColor(r, g, b, a) {
     var values = [Math.round(r), Math.round(g), Math.round(b)];
-    if(undefined !== a && a < 1) {
+    if (undefined !== a && a < 1) {
       values.push(a);
       return 'rgba('+values.join(',')+')';
     }
@@ -88,7 +147,7 @@ let ColorUtils = {
     rgb |= (g << 8);
     rgb |= (r << 16);
     // pack alpha value if one is given
-    if(undefined !== a && a < 1)
+    if (undefined !== a && a < 1)
       rgb |= (Math.round(a*255) << 24);
     return rgb;
   },
