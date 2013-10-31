@@ -23,7 +23,7 @@ function test() {
   reporter.onInit().then(function onInit() {
     let provider = reporter.getProvider("org.mozilla.searches");
     ok(provider, "Searches provider is available.");
-    let m = provider.getMeasurement("counts", 2);
+    let m = provider.getMeasurement("counts", 3);
 
     m.getValues().then(function onData(data) {
       let now = new Date();
