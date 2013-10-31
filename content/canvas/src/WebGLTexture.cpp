@@ -428,11 +428,14 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
                         mContext->mPixelStoreUnpackAlignment);
     MOZ_ASSERT(checked_byteLength.isValid()); // should have been checked earlier
     void *zeros = calloc(1, checked_byteLength.value());
-    GLenum error
-        = mContext->CheckedTexImage2D(imageTarget, level, imageInfo.mFormat,
-                                      imageInfo.mWidth, imageInfo.mHeight,
-                                      0, imageInfo.mFormat, imageInfo.mType,
-                                      zeros);
+
+    mContext->UpdateWebGLErrorAndClearGLError();
+    mContext->gl->fTexImage2D(imageTarget, level, imageInfo.mFormat,
+                              imageInfo.mWidth, imageInfo.mHeight,
+                              0, imageInfo.mFormat, imageInfo.mType,
+                              zeros);
+    GLenum error = LOCAL_GL_NO_ERROR;
+    mContext->UpdateWebGLErrorAndClearGLError(&error);
 
     free(zeros);
     SetImageDataStatus(imageTarget, level, WebGLImageDataStatus::InitializedImageData);
