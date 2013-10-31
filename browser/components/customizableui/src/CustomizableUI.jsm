@@ -715,44 +715,48 @@ let CustomizableUIInternal = {
     // Go through each of the nodes associated with this area and move the
     // widget to the requested location.
     for (let areaNode of areaNodes) {
-      let window = areaNode.ownerDocument.defaultView;
-      let showInPrivateBrowsing = gPalette.has(aWidgetId)
-                                ? gPalette.get(aWidgetId).showInPrivateBrowsing
-                                : true;
-
-      if (!showInPrivateBrowsing &&
-          PrivateBrowsingUtils.isWindowPrivate(window)) {
-        continue;
-      }
-
-      let [, widgetNode] = this.getWidgetNode(aWidgetId, window);
-      if (!widgetNode) {
-        ERROR("Widget '" + aWidgetId + "' not found, unable to move");
-        continue;
-      }
-
-      if (isNew) {
-        this.ensureButtonContextMenu(widgetNode, aArea == CustomizableUI.AREA_PANEL);
-        if (widgetNode.localName == "toolbarbutton" && aArea == CustomizableUI.AREA_PANEL) {
-          widgetNode.setAttribute("tabindex", "0");
-          if (!widgetNode.hasAttribute("type")) {
-            widgetNode.setAttribute("type", "wrap");
-          }
-        }
-      }
-
-      let container = areaNode.customizationTarget;
-      let [insertionContainer, nextNode] = this.findInsertionPoints(widgetNode, nextNodeId, areaNode, aArea);
-      this.insertWidgetBefore(widgetNode, nextNode, insertionContainer, aArea);
-
-      if (gAreas.get(aArea).get("type") == CustomizableUI.TYPE_TOOLBAR) {
-        areaNode.setAttribute("currentset", areaNode.currentSet);
-      }
+      this.insertNodeInWindow(aWidgetId, areaNode, nextNodeId, isNew);
     }
   },
 
-  findInsertionPoints: function(aNode, aNextNodeId, aAreaNode, aArea) {
-    let props = gAreas.get(aArea);
+  insertNodeInWindow: function(aWidgetId, aAreaNode, aNextNodeId, isNew) {
+    let window = aAreaNode.ownerDocument.defaultView;
+    let showInPrivateBrowsing = gPalette.has(aWidgetId)
+                              ? gPalette.get(aWidgetId).showInPrivateBrowsing
+                              : true;
+
+    if (!showInPrivateBrowsing && PrivateBrowsingUtils.isWindowPrivate(window)) {
+      return;
+    }
+
+    let [, widgetNode] = this.getWidgetNode(aWidgetId, window);
+    if (!widgetNode) {
+      ERROR("Widget '" + aWidgetId + "' not found, unable to move");
+      return;
+    }
+
+    let areaId = aAreaNode.id;
+    if (isNew) {
+      this.ensureButtonContextMenu(widgetNode, areaId == CustomizableUI.AREA_PANEL);
+      if (widgetNode.localName == "toolbarbutton" && areaId == CustomizableUI.AREA_PANEL) {
+        widgetNode.setAttribute("tabindex", "0");
+        if (!widgetNode.hasAttribute("type")) {
+          widgetNode.setAttribute("type", "wrap");
+        }
+      }
+    }
+
+    let container = aAreaNode.customizationTarget;
+    let [insertionContainer, nextNode] = this.findInsertionPoints(widgetNode, aNextNodeId, aAreaNode);
+    this.insertWidgetBefore(widgetNode, nextNode, insertionContainer, areaId);
+
+    if (gAreas.get(areaId).get("type") == CustomizableUI.TYPE_TOOLBAR) {
+      aAreaNode.setAttribute("currentset", aAreaNode.currentSet);
+    }
+  },
+
+  findInsertionPoints: function(aNode, aNextNodeId, aAreaNode) {
+    let props = gAreas.get(aAreaNode.id);
     if (props.get("type") == CustomizableUI.TYPE_TOOLBAR && props.get("overflowable") &&
         aAreaNode.getAttribute("overflowing") == "true") {
       return aAreaNode.overflowable.getOverflowedInsertionPoints(aNode, aNextNodeId);
@@ -1846,6 +1850,30 @@ let CustomizableUIInternal = {
     return true;
   },
 
+  ensureWidgetPlacedInWindow: function(aWidgetId, aWindow) {
+    let placement = this.getPlacementOfWidget(aWidgetId);
+    if (!placement) {
+      return false;
+    }
+    let areaNodes = gBuildAreas.get(placement.area);
+    if (!areaNodes) {
+      return false;
+    }
+    let container = [...areaNodes].filter((n) => n.ownerDocument.defaultView == aWindow);
+    if (!container.length) {
+      return false;
+    }
+    let existingNode = container[0].querySelector(idToSelector(aWidgetId));
+    if (existingNode) {
+      return true;
+    }
+
+    let placementAry = gPlacements.get(placement.area);
+    let nextNodeId = placementAry[placement.position + 1];
+    this.insertNodeInWindow(aWidgetId, container[0], nextNodeId, true);
+    return true;
+  },
+
   get inDefaultState() {
     for (let [areaId, props] of gAreas) {
       let defaultPlacements = props.get("defaultPlacements");
@@ -1945,6 +1973,9 @@ this.CustomizableUI = {
   },
   moveWidgetWithinArea: function(aWidgetId, aPosition) {
     CustomizableUIInternal.moveWidgetWithinArea(aWidgetId, aPosition);
+  },
+  ensureWidgetPlacedInWindow: function(aWidgetId, aWindow) {
+    return CustomizableUIInternal.ensureWidgetPlacedInWindow(aWidgetId, aWindow);
   },
   beginBatchUpdate: function() {
     CustomizableUIInternal.beginBatchUpdate();
