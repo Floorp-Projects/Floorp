@@ -101,7 +101,9 @@ function waitForProjectsPanel(deferred = promise.defer()) {
   let projectsWindow = getProjectsWindow();
   let projectsUI = projectsWindow.UI;
   if (!projectsUI) {
+    info("projectsUI false");
     projectsWindow.addEventListener("load", function onLoad() {
+      info("got load event");
       projectsWindow.removeEventListener("load", onLoad);
       waitForProjectsPanel(deferred);
     });
@@ -109,10 +111,12 @@ function waitForProjectsPanel(deferred = promise.defer()) {
   }
 
   if (projectsUI.isReady) {
+    info("projectsUI ready");
     deferred.resolve();
     return deferred.promise;
   }
 
+  info("projectsUI not ready");
   projectsUI.once("ready", deferred.resolve);
   return deferred.promise;
 }
