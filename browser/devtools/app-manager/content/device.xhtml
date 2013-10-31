@@ -56,9 +56,9 @@
           <div class="tabpanel permissions permission-table">
             <div class="permission-table-header">
               <div>&device.name;</div>
-              <div>&device.app;</div>
-              <div>&device.privileged;</div>
-              <div>&device.certified;</div>
+              <div title="type:'web'">&device.plain;</div>
+              <div title="type:'privileged'">&device.privileged;</div>
+              <div title="type:'certified'">&device.certified;</div>
             </div>
             <div class="permission-table-body" >
               <section template-loop='{"arrayPath":"device.permissions","childSelector":"#permission-template"}'></section>
