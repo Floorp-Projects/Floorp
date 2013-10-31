@@ -45,7 +45,7 @@ IPDL_SOURCES += [
     'ipc/TelephonyTypes.ipdlh'
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
     XPIDL_SOURCES += [
         'nsIGonkTelephonyProvider.idl',
     ]
