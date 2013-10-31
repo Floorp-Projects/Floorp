@@ -780,8 +780,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                 Favicons.URL + " = ?",
                                 new String[] { faviconUri });
 
-        if (updated == 0)
+        if (updated == 0) {
             cr.insert(mFaviconsUriWithProfile, values);
+        }
     }
 
     @Override
