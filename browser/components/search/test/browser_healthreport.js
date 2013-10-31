@@ -27,14 +27,15 @@ function test() {
     ok(reporter, "Health Reporter available.");
     reporter.onInit().then(function onInit() {
       let provider = reporter.getProvider("org.mozilla.searches");
-      let m = provider.getMeasurement("counts", 2);
+      let m = provider.getMeasurement("counts", 3);
 
       m.getValues().then(function onData(data) {
         let now = new Date();
         let oldCount = 0;
 
-        // Foo engine goes into "other" bucket.
-        let field = "other.searchbar";
+        // Find the right bucket for the "Foo" engine.
+        let engine = Services.search.getEngineByName("Foo");
+        let field = (engine.identifier || "other-Foo") + ".searchbar";
 
         if (data.days.hasDay(now)) {
           let day = data.days.getDay(now);
