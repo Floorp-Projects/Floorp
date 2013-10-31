@@ -1280,6 +1280,20 @@ js::math_hypot(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    // IonMonkey calls the system hypot function directly if two arguments are
+    // given. Do that here as well to get the same results.
+    if (args.length() == 2) {
+        double x, y;
+        if (!ToNumber(cx, args[0], &x))
+            return false;
+        if (!ToNumber(cx, args[1], &y))
+            return false;
+
+        double result = hypot(x, y);
+        args.rval().setNumber(result);
+        return true;
+    }
+
     bool isInfinite = false;
     bool isNaN = false;
 
