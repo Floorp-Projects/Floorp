@@ -261,6 +261,14 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum target,
          textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
         return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: invalid texture target", textarget);
 
+    if (wtex) {
+        bool isTexture2D = wtex->Target() == LOCAL_GL_TEXTURE_2D;
+        bool isTexTarget2D = textarget == LOCAL_GL_TEXTURE_2D;
+        if (isTexture2D != isTexTarget2D) {
+            return mContext->ErrorInvalidOperation("framebufferTexture2D: mismatched texture and texture target");
+        }
+    }
+
     if (level != 0)
         return mContext->ErrorInvalidValue("framebufferTexture2D: level must be 0");
 
