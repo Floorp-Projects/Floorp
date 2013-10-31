@@ -1941,7 +1941,7 @@ ia64*-hpux*)
     no_x=yes
     if test -n "$gonkdir"; then
         _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
-        MOZ_B2G_RIL=1
+        _PLATFORM_HAVE_RIL=1
         MOZ_B2G_FM=1
         MOZ_SYNTH_PICO=1
     else
@@ -7274,9 +7274,14 @@ dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(b2g-ril,
 [  --enable-b2g-ril      Set compile flags necessary for testing B2G Radio Interface Layer via network sockets ],
     MOZ_B2G_RIL=1,
-    MOZ_B2G_RIL= )
+    MOZ_B2G_RIL=,
+    MOZ_B2G_RIL=$_PLATFORM_HAVE_RIL )
 if test -n "$MOZ_B2G_RIL"; then
-    AC_DEFINE(MOZ_B2G_RIL)
+    if test -n "$_PLATFORM_HAVE_RIL"; then
+        AC_DEFINE(MOZ_B2G_RIL)
+    else
+        AC_MSG_ERROR([b2g-ril cannot be enabled because target platform doesn't support it.])
+    fi
 fi
 AC_SUBST(MOZ_B2G_RIL)
 
