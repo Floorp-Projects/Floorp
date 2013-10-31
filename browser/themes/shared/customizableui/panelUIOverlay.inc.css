@@ -65,6 +65,7 @@
   padding: .5em 0;
 }
 
+#bookmarks-menu-button > toolbarbutton > .toolbarbutton-text,
 #PanelUI-contents > toolbarpaletteitem > toolbaritem > toolbarbutton > .toolbarbutton-text,
 #PanelUI-contents > toolbaritem > toolbarbutton > .toolbarbutton-text,
 #PanelUI-contents > toolbarpaletteitem > toolbarbutton > .toolbarbutton-text,
@@ -173,12 +174,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
 }
 
 .panel-customization-placeholder-child > .toolbarbutton-icon,
+#bookmarks-menu-button[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 toolbarbutton[cui-areatype="menu-panel"] > .toolbarbutton-icon,
 toolbaritem[cui-areatype="menu-panel"] > toolbarbutton > .toolbarbutton-icon,
+toolbarpaletteitem[place="palette"] > #bookmarks-menu-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 toolbarpaletteitem[place="palette"] > toolbarbutton > .toolbarbutton-icon,
-toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton > .toolbarbutton-icon,
-toolbarpaletteitem[place="panel"] > toolbarbutton > .toolbarbutton-icon,
-toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton > .toolbarbutton-icon {
+toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton > .toolbarbutton-icon {
   min-width: calc(8em / 3);
   min-height: calc(8em / 3);
   margin: calc(5em / 12);
@@ -385,6 +386,7 @@ toolbarbutton.panel-multiview-anchor {
   color: HighlightText;
 }
 
+toolbarpaletteitem[place="palette"] > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker,
 #bookmarks-menu-button[cui-areatype="menu-panel"] > .toolbarbutton-menubutton-dropmarker {
   display: none;
 }
