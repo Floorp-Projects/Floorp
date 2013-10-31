@@ -20,6 +20,7 @@ import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.text.InputType;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.DisplayMetrics;
 import android.view.inputmethod.InputMethodManager;
@@ -205,13 +206,16 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     protected final void enterUrl(String url) {
+        final EditText urlEditView = (EditText) mSolo.getView(URL_EDIT_TEXT_ID);
+
         focusUrlBar();
 
         // Send the keys for the URL we want to enter
-        mActions.sendKeys(url);
+        mSolo.clearEditText(urlEditView);
+        mSolo.enterText(urlEditView, url);
 
         // Get the URL text from the URL bar EditText view
-        String urlBarText = ((EditText) mSolo.getView(URL_EDIT_TEXT_ID)).getText().toString();
+        final String urlBarText = urlEditView.getText().toString();
         mAsserter.is(url, urlBarText, "URL typed properly");
     }
 
