@@ -10,7 +10,7 @@
 #include "android/MobileMessageDatabaseService.h"
 #include "android/SmsService.h"
 #include "android/MmsService.h"
-#elif defined(MOZ_B2G_RIL)
+#elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
 #include "gonk/SmsService.h"
 #else
 #include "fallback/MmsService.h"
@@ -47,7 +47,7 @@ SmsServicesFactory::CreateMobileMessageDatabaseService()
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     mobileMessageDBService = new SmsIPCService();
   } else {
-#ifdef MOZ_B2G_RIL
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
     mobileMessageDBService = do_GetService(RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
 #else
     mobileMessageDBService = new MobileMessageDatabaseService();
@@ -65,7 +65,7 @@ SmsServicesFactory::CreateMmsService()
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     mmsService = new SmsIPCService();
   } else {
-#ifdef MOZ_B2G_RIL
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
     mmsService = do_CreateInstance(RIL_MMSSERVICE_CONTRACTID);
 #else
     mmsService = new MmsService();

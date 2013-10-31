@@ -125,6 +125,12 @@ MobileConnectionListener::NotifyOtaStatusChanged(const nsAString & status)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MobileConnectionListener::NotifyIccChanged()
+{
+  return NS_OK;
+}
+
 /**
  *  TelephonyListener Implementation
  */
@@ -292,8 +298,9 @@ BluetoothRilListener::StartMobileConnectionListening()
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE(provider, false);
 
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
   nsresult rv = provider->
-                  RegisterMobileConnectionMsg(mMobileConnectionListener);
+                  RegisterMobileConnectionMsg(0, mMobileConnectionListener);
   return NS_SUCCEEDED(rv);
 }
 
@@ -304,8 +311,9 @@ BluetoothRilListener::StopMobileConnectionListening()
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE(provider, false);
 
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
   nsresult rv = provider->
-                  UnregisterMobileConnectionMsg(mMobileConnectionListener);
+                  UnregisterMobileConnectionMsg(0, mMobileConnectionListener);
   return NS_SUCCEEDED(rv);
 }
 

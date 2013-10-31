@@ -66,6 +66,10 @@ public:
   void SetMeteringAreas(JSContext* aCx, JS::Handle<JS::Value> aAreas, ErrorResult& aRv);
   JS::Value GetFocusAreas(JSContext* aCx, ErrorResult& aRv);
   void SetFocusAreas(JSContext* aCx, JS::Handle<JS::Value> aAreas, ErrorResult& aRv);
+  JS::Value GetPictureSize(JSContext* aCx, ErrorResult& aRv);
+  void SetPictureSize(JSContext* aCx, JS::Handle<JS::Value> aSize, ErrorResult& aRv);
+  JS::Value GetThumbnailSize(JSContext* aCx, ErrorResult& aRv);
+  void SetThumbnailSize(JSContext* aCx, JS::Handle<JS::Value> aSize, ErrorResult& aRv);
   double GetFocalLength(ErrorResult& aRv);
   double GetFocusDistanceNear(ErrorResult& aRv);
   double GetFocusDistanceOptimum(ErrorResult& aRv);

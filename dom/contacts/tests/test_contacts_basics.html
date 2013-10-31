@@ -264,7 +264,7 @@ function removeAndroidDefaultCategory(category) {
 
 function checkArrayField(array1, array2, func, msg) {
   if (!!array1 ^ !!array2) {
-    ok(false, "Expected both arrays to be either present or absent");
+    ok(false, "Expected both arrays to be either present or absent: " + JSON.stringify(array1) + " vs. " + JSON.stringify(array2) + ". (" + msg + ")");
     return;
   }
   if (!array1 && !array2)  {
@@ -1523,17 +1523,11 @@ var steps = [
   },
   function () {
     ok(true, "Adding contact with invalid data");
-    var input = document.createElement("input");
     var obj = {
         honorificPrefix: [],
         honorificSuffix: [{foo: "bar"}],
         sex: 17,
-        genderIdentity: 18,
-        email: input,
-        adr: input,
-        tel: input,
-        impp: input,
-        url: input
+        genderIdentity: 18
     };
     obj.honorificPrefix.__defineGetter__('0',(function() {
       var c = 0;
@@ -1666,6 +1660,38 @@ var steps = [
       createResult1[prop] = {type: ["foo"]};
       ok(Array.isArray(createResult1[prop]), prop + " is array");
     }
+    next();
+  },
+  function() {
+    ok(true, "Undefined strings should be treated as null");
+    var c = new mozContact({
+      adr: [{value: undefined}],
+      email: [{value: undefined}],
+      url: [{value: undefined}],
+      impp: [{value: undefined}],
+      tel: [{value: undefined}],
+    });
+    is(c.adr[0].type, null, "adr is null");
+    is(c.email[0].type, null, "email is null");
+    is(c.url[0].type, null, "url is null");
+    is(c.impp[0].type, null, "impp is null");
+    is(c.tel[0].type, null, "tel is null");
+    next();
+  },
+  function() {
+    ok(true, "Setting array properties to an empty array should work");
+    var c = new mozContact();
+    function testArrayProp(prop) {
+      is(c[prop], null, "property is initially null");
+      c[prop] = [];
+      ok(Array.isArray(c[prop]), "property is an array after setting");
+      is(c[prop].length, 0, "property has length 0 after setting");
+    }
+    testArrayProp("email");
+    testArrayProp("adr");
+    testArrayProp("tel");
+    testArrayProp("impp");
+    testArrayProp("url");
     next();
   },
   function () {

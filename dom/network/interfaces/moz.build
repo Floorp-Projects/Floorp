@@ -6,10 +6,8 @@
 
 XPIDL_SOURCES += [
     'nsIDOMConnection.idl',
-    'nsIDOMDataErrorEvent.idl',
     'nsIDOMTCPServerSocket.idl',
     'nsIDOMTCPSocket.idl',
-    'nsIDOMUSSDReceivedEvent.idl',
     'nsIMozNavigatorNetwork.idl',
     'nsITCPServerSocketChild.idl',
     'nsITCPServerSocketParent.idl',
@@ -20,12 +18,18 @@ XPIDL_SOURCES += [
 if CONFIG['MOZ_B2G_RIL']:
     XPIDL_SOURCES += [
         'nsIDOMCFStateChangeEvent.idl',
+        'nsIDOMDataErrorEvent.idl',
         'nsIDOMMobileConnection.idl',
         'nsIDOMMozEmergencyCbModeEvent.idl',
         'nsIDOMMozOtaStatusEvent.idl',
+        'nsIDOMUSSDReceivedEvent.idl',
+        'nsIMobileConnectionProvider.idl',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    XPIDL_SOURCES += [
         'nsIDOMNetworkStats.idl',
         'nsIDOMNetworkStatsManager.idl',
-        'nsIMobileConnectionProvider.idl',
         'nsINetworkStatsServiceProxy.idl',
     ]
 
