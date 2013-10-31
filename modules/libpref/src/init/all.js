@@ -4543,7 +4543,11 @@ pref("dom.mobileconnection.enabled", false);
 #endif
 
 // Voice Mail API
+#ifdef MOZ_B2G_RIL
+pref("dom.voicemail.enabled", true);
+#else
 pref("dom.voicemail.enabled", false);
+#endif
 // Numeric default service id for Voice Mail API calls with |serviceId|
 // parameter omitted.
 pref("dom.voicemail.defaultServiceId", 0);

@@ -468,11 +468,6 @@ if CONFIG['MOZ_GAMEPAD']:
         'Gamepad.webidl',
     ]
 
-if CONFIG['MOZ_B2G_RIL']:
-    WEBIDL_FILES += [
-        'MozVoicemail.webidl',
-    ]
-
 WEBIDL_FILES += [
     'CloseEvent.webidl',
     'CustomEvent.webidl',
@@ -516,6 +511,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'MozEmergencyCbModeEvent.webidl',
         'MozOtaStatusEvent.webidl',
         'MozStkCommandEvent.webidl',
+        'MozVoicemail.webidl',
         'MozVoicemailEvent.webidl',
         'MozWifiConnectionInfoEvent.webidl',
         'MozWifiStatusChangeEvent.webidl',
