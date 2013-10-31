@@ -26,7 +26,7 @@ const PC_STATS_CID = Components.ID("{7fe6e18b-0da3-4056-bf3b-440ef3809e06}");
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
 function GlobalPCList() {
-  this._list = [];
+  this._list = {};
   this._networkdown = false; // XXX Need to query current state somehow
   Services.obs.addObserver(this, "inner-window-destroyed", true);
   Services.obs.addObserver(this, "profile-change-net-teardown", true);
@@ -58,7 +58,7 @@ GlobalPCList.prototype = {
   },
 
   removeNullRefs: function(winID) {
-    if (this._list === undefined || this._list[winID] === undefined) {
+    if (this._list[winID] === undefined) {
       return;
     }
     this._list[winID] = this._list[winID].filter(
@@ -71,19 +71,24 @@ GlobalPCList.prototype = {
   },
 
   observe: function(subject, topic, data) {
-    if (topic == "inner-window-destroyed") {
-      let winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-      if (this._list[winID]) {
-        this._list[winID].forEach(function(pcref) {
-          let pc = pcref.get();
-          if (pc !== null) {
-            pc._pc.close();
-            delete pc._observer;
-            pc._pc = null;
-          }
-        });
-        delete this._list[winID];
+    let cleanupPcRef = function(pcref) {
+      let pc = pcref.get();
+      if (pc) {
+        pc._pc.close();
+        delete pc._observer;
+        pc._pc = null;
       }
+    };
+
+    let cleanupWinId = function(list, winID) {
+      if (list.hasOwnProperty(winID)) {
+        list[winID].forEach(cleanupPcRef);
+        delete list[winID];
+      }
+    };
+
+    if (topic == "inner-window-destroyed") {
+      cleanupWinId(this._list, subject.QueryInterface(Ci.nsISupportsPRUint64).data);
     } else if (topic == "profile-change-net-teardown" ||
                topic == "network:offline-about-to-go-offline") {
       // Delete all peerconnections on shutdown - mostly synchronously (we
@@ -92,17 +97,9 @@ GlobalPCList.prototype = {
       // before we return to here.
       // Also kill them if "Work Offline" is selected - more can be created
       // while offline, but attempts to connect them should fail.
-      let array;
-      while ((array = this._list.pop()) != undefined) {
-        array.forEach(function(pcref) {
-          let pc = pcref.get();
-          if (pc !== null) {
-            pc._pc.close();
-            delete pc._observer;
-            pc._pc = null;
-          }
-        });
-      };
+      for (let winId in this._list) {
+        cleanupWinId(this._list, winId);
+      }
       this._networkdown = true;
     }
     else if (topic == "network:offline-status-changed") {
