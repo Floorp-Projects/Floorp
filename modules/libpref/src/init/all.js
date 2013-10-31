@@ -4529,7 +4529,11 @@ pref("dom.cellbroadcast.enabled", false);
 #endif
 
 // ICC API
+#ifdef MOZ_B2G_RIL
+pref("dom.icc.enabled", true);
+#else
 pref("dom.icc.enabled", false);
+#endif
 
 // Mobile Connection API
 pref("dom.mobileconnection.enabled", false);

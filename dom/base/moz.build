@@ -128,7 +128,6 @@ LIBRARY_NAME = 'jsdombase_s'
 LOCAL_INCLUDES += [
     '../battery',
     '../bluetooth',
-    '../icc/src',
     '../media',
     '../network/src',
     '../src/geolocation',
