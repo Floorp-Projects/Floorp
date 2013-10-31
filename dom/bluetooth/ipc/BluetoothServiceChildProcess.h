@@ -149,6 +149,7 @@ public:
   virtual void
   IsScoConnected(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+#ifdef MOZ_B2G_RIL
   virtual void
   AnswerWaitingCall(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
@@ -157,6 +158,7 @@ public:
 
   virtual void
   ToggleCalls(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+#endif
 
   virtual void
   SendMetaData(const nsAString& aTitle,
