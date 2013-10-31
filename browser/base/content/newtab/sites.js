@@ -133,9 +133,18 @@ Site.prototype = {
       this._updateAttributes(true);
     // Capture the page if the thumbnail is missing, which will cause page.js
     // to be notified and call our refreshThumbnail() method.
-    BackgroundPageThumbs.captureIfMissing(this.url);
+    this.captureIfMissing();
     // but still display whatever thumbnail might be available now.
     this.refreshThumbnail();
+  },
+
+  /**
+   * Captures the site's thumbnail in the background, but only if there's no
+   * existing thumbnail and the page allows background captures.
+   */
+  captureIfMissing: function Site_captureIfMissing() {
+    if (gPage.allowBackgroundCaptures)
+      BackgroundPageThumbs.captureIfMissing(this.url);
   },
 
   /**
