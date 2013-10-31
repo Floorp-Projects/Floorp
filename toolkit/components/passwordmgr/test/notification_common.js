@@ -1,9 +1,27 @@
 /*
+ * Initialization: for each test, remove any prior notifications.
+ */
+function cleanUpPopupNotifications() {
+    var container = getPopupNotifications(window.top);
+    var notes = container._currentNotifications;
+    info(true, "Removing " + notes.length + " popup notifications.");
+    for (var i = notes.length-1; i >= 0; i--) {
+	notes[i].remove();
+    }
+}
+cleanUpPopupNotifications();
+
+/*
  * getPopupNotifications
  *
  * Fetches the popup notification for the specified window.
  */
 function getPopupNotifications(aWindow) {
+    var Ci = SpecialPowers.Ci;
+    var Cc = SpecialPowers.Cc;
+    ok(Ci != null, "Access Ci");
+    ok(Cc != null, "Access Cc");
+
     var chromeWin = SpecialPowers.wrap(aWindow)
                                  .QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIWebNavigation)
