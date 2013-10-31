@@ -45,6 +45,8 @@
   display: none;
 }
 
+/* NB: these would be -moz-margin-start/end if it wasn't for the fact that OS X
+ * doesn't reverse the order of the items in the titlebar in RTL mode. */
 .titlebar-placeholder[type="caption-buttons"],
 #titlebar-buttonbox {
   margin-left: 7px;
