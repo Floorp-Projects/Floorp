@@ -37,9 +37,10 @@ public class Favicons {
     // Number of URL mappings from page URL to Favicon URL to cache in memory.
     public static final int PAGE_URL_MAPPINGS_TO_STORE = 128;
 
-    public static final int NOT_LOADING = 0;
-    public static final int FLAG_PERSIST = 1;
-    public static final int FLAG_SCALE = 2;
+    public static final int NOT_LOADING  = 0;
+    public static final int LOADED       = 1;
+    public static final int FLAG_PERSIST = 2;
+    public static final int FLAG_SCALE   = 4;
 
     protected static Context sContext;
 
@@ -68,17 +69,31 @@ public class Favicons {
     }
 
     private static FaviconCache sFaviconsCache;
-    static void dispatchResult(final String pageUrl, final String faviconURL, final Bitmap image,
+
+    /**
+     * Returns either NOT_LOADING, or LOADED if the onFaviconLoaded call could
+     * be made on the main thread.
+     * If no listener is provided, NOT_LOADING is returned.
+     */
+    static int dispatchResult(final String pageUrl, final String faviconURL, final Bitmap image,
             final OnFaviconLoadedListener listener) {
-        // We want to always run the listener on UI thread
+        if (listener == null) {
+            return NOT_LOADING;
+        }
+
+        if (ThreadUtils.isOnUiThread()) {
+            listener.onFaviconLoaded(pageUrl, faviconURL, image);
+            return LOADED;
+        }
+
+        // We want to always run the listener on UI thread.
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                if (listener != null) {
-                    listener.onFaviconLoaded(pageUrl, faviconURL, image);
-                }
+                listener.onFaviconLoaded(pageUrl, faviconURL, image);
             }
         });
+        return NOT_LOADING;
     }
 
     /**
@@ -93,7 +108,8 @@ public class Favicons {
      * @param targetSize Target size of the returned Favicon
      * @param listener Listener to call with the result of the load operation, if the result is not
      *                  immediately available.
-     * @return The id of the asynchronous task created, NOT_LOADING if none is created.
+     * @return The id of the asynchronous task created, NOT_LOADING if none is created, or
+     *         LOADED if the value could be dispatched on the current thread.
      */
     public static int getFaviconForSize(String pageURL, String faviconURL, int targetSize, int flags, OnFaviconLoadedListener listener) {
         // If there's no favicon URL given, try and hit the cache with the default one.
@@ -104,20 +120,17 @@ public class Favicons {
 
         // If it's something we can't even figure out a default URL for, just give up.
         if (cacheURL == null) {
-            dispatchResult(pageURL, null, sDefaultFavicon, listener);
-            return NOT_LOADING;
+            return dispatchResult(pageURL, null, sDefaultFavicon, listener);
         }
 
         Bitmap cachedIcon = getSizedFaviconFromCache(cacheURL, targetSize);
         if (cachedIcon != null) {
-            dispatchResult(pageURL, cacheURL, cachedIcon, listener);
-            return NOT_LOADING;
+            return dispatchResult(pageURL, cacheURL, cachedIcon, listener);
         }
 
         // Check if favicon has failed.
         if (sFaviconsCache.isFailedFavicon(cacheURL)) {
-            dispatchResult(pageURL, cacheURL, sDefaultFavicon, listener);
-            return NOT_LOADING;
+            return dispatchResult(pageURL, cacheURL, sDefaultFavicon, listener);
         }
 
         // Failing that, try and get one from the database or internet.
@@ -159,16 +172,14 @@ public class Favicons {
         if (targetURL != null) {
             // Check if favicon has failed.
             if (sFaviconsCache.isFailedFavicon(targetURL)) {
-                dispatchResult(pageURL, targetURL, null, callback);
-                return NOT_LOADING;
+                return dispatchResult(pageURL, targetURL, null, callback);
             }
 
             // Do we have a Favicon in the cache for this favicon URL?
             Bitmap result = getSizedFaviconFromCache(targetURL, targetSize);
             if (result != null) {
                 // Victory - immediate response!
-                dispatchResult(pageURL, targetURL, result, callback);
-                return NOT_LOADING;
+                return dispatchResult(pageURL, targetURL, result, callback);
             }
         }
 
