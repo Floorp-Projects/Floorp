@@ -37,21 +37,28 @@ const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kMobileMessageDeletedObserverTopic = "mobile-message-deleted";
 
+const kPrefRilMmsc                       = "ril.mms.mmsc";
+const kPrefRilMmsProxy                   = "ril.mms.mmsproxy";
+const kPrefRilMmsPort                    = "ril.mms.mmsport";
+const kPrefRilRadioDisabled              = "ril.radio.disabled";
+
 // HTTP status codes:
 // @see http://tools.ietf.org/html/rfc2616#page-39
 const HTTP_STATUS_OK = 200;
 
 // Non-standard HTTP status for internal use.
-const _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS = 0;
-const _HTTP_STATUS_USER_CANCELLED = -1;
-const _HTTP_STATUS_RADIO_DISABLED = -2;
-const _HTTP_STATUS_NO_SIM_CARD = -3;
-const _HTTP_STATUS_ACQUIRE_TIMEOUT = 4;
+const _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS  =  0;
+const _HTTP_STATUS_USER_CANCELLED              = -1;
+const _HTTP_STATUS_RADIO_DISABLED              = -2;
+const _HTTP_STATUS_NO_SIM_CARD                 = -3;
+const _HTTP_STATUS_ACQUIRE_TIMEOUT             = -4;
 
 // Non-standard MMS status for internal use.
-const _MMS_ERROR_MESSAGE_DELETED = -1;
-const _MMS_ERROR_RADIO_DISABLED = -2;
-const _MMS_ERROR_NO_SIM_CARD = -3;
+const _MMS_ERROR_MESSAGE_DELETED               = -1;
+const _MMS_ERROR_RADIO_DISABLED                = -2;
+const _MMS_ERROR_NO_SIM_CARD                   = -3;
+const _MMS_ERROR_SHUTDOWN                      = -4;
+const _MMS_ERROR_USER_CANCELLED_NO_REASON      = -5;
 
 const CONFIG_SEND_REPORT_NEVER       = 0;
 const CONFIG_SEND_REPORT_DEFAULT_NO  = 1;
@@ -156,10 +163,10 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
     radioDisabled: false,
 
     proxyInfo: null,
-    settings: ["ril.mms.mmsc",
-               "ril.mms.mmsproxy",
-               "ril.mms.mmsport",
-               "ril.radio.disabled"],
+    settings: [kPrefRilMmsc,
+               kPrefRilMmsProxy,
+               kPrefRilMmsPort,
+               kPrefRilRadioDisabled],
     connected: false,
 
     //A queue to buffer the MMS HTTP requests when the MMS network
@@ -206,9 +213,9 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
       }, this);
 
       try {
-        this.mmsc = Services.prefs.getCharPref("ril.mms.mmsc");
-        this.proxy = Services.prefs.getCharPref("ril.mms.mmsproxy");
-        this.port = Services.prefs.getIntPref("ril.mms.mmsport");
+        this.mmsc = Services.prefs.getCharPref(kPrefRilMmsc);
+        this.proxy = Services.prefs.getCharPref(kPrefRilMmsProxy);
+        this.port = Services.prefs.getIntPref(kPrefRilMmsPort);
         this.updateProxyInfo();
       } catch (e) {
         if (DEBUG) debug("Unable to initialize the MMS proxy settings from " +
@@ -218,7 +225,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
       }
 
       try {
-        this.radioDisabled = Services.prefs.getBoolPref("ril.radio.disabled");
+        this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
       } catch (e) {
         if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
         this.radioDisabled = false;
@@ -373,9 +380,9 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
           break;
         }
         case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
-          if (data == "ril.radio.disabled") {
+          if (data == kPrefRilRadioDisabled) {
             try {
-              this.radioDisabled = Services.prefs.getBoolPref("ril.radio.disabled");
+              this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
             } catch (e) {
               if (DEBUG) debug("Updating preference 'ril.radio.disabled' fails.");
               this.radioDisabled = false;
@@ -385,15 +392,15 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
 
           try {
             switch (data) {
-              case "ril.mms.mmsc":
-                this.mmsc = Services.prefs.getCharPref("ril.mms.mmsc");
+              case kPrefRilMmsc:
+                this.mmsc = Services.prefs.getCharPref(kPrefRilMmsc);
                 break;
-              case "ril.mms.mmsproxy":
-                this.proxy = Services.prefs.getCharPref("ril.mms.mmsproxy");
+              case kPrefRilMmsProxy:
+                this.proxy = Services.prefs.getCharPref(kPrefRilMmsProxy);
                 this.updateProxyInfo();
                 break;
-              case "ril.mms.mmsport":
-                this.port = Services.prefs.getIntPref("ril.mms.mmsport");
+              case kPrefRilMmsPort:
+                this.port = Services.prefs.getIntPref(kPrefRilMmsPort);
                 this.updateProxyInfo();
                 break;
               default:
@@ -671,10 +678,12 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
       return true;
     },
 
-    translateHttpStatusToMmsStatus: function translateHttpStatusToMmsStatus(httpStatus, defaultStatus) {
+    translateHttpStatusToMmsStatus: function translateHttpStatusToMmsStatus(httpStatus,
+                                                                            cancelledReason,
+                                                                            defaultStatus) {
       switch(httpStatus) {
         case _HTTP_STATUS_USER_CANCELLED:
-          return _MMS_ERROR_MESSAGE_DELETED;
+          return cancelledReason;
         case _HTTP_STATUS_RADIO_DISABLED:
           return _MMS_ERROR_RADIO_DISABLED;
         case _HTTP_STATUS_NO_SIM_CARD:
@@ -756,10 +765,13 @@ CancellableTransaction.prototype = {
 
   isObserversAdded: false,
 
+  cancelledReason: _MMS_ERROR_USER_CANCELLED_NO_REASON,
+
   registerRunCallback: function registerRunCallback(callback) {
     if (!this.isObserversAdded) {
       Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
       Services.obs.addObserver(this, kMobileMessageDeletedObserverTopic, false);
+      Services.prefs.addObserver(kPrefRilRadioDisabled, this, false);
       this.isObserversAdded = true;
     }
 
@@ -771,6 +783,7 @@ CancellableTransaction.prototype = {
     if (this.isObserversAdded) {
       Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       Services.obs.removeObserver(this, kMobileMessageDeletedObserverTopic);
+      Services.prefs.removeObserver(kPrefRilRadioDisabled, this);
       this.isObserversAdded = false;
     }
   },
@@ -788,15 +801,16 @@ CancellableTransaction.prototype = {
   // |gMmsTransactionHelper.sendRequest(...)|.
   cancellable: null,
 
-  cancelRunning: function cancelRunning() {
+  cancelRunning: function cancelRunning(reason) {
     this.isCancelled = true;
+    this.cancelledReason = reason;
 
     if (this.timer) {
       // The sending or retrieving process is waiting for the next retry.
       // What we only need to do is to cancel the timer.
       this.timer.cancel();
       this.timer = null;
-      this.runCallbackIfValid(_MMS_ERROR_MESSAGE_DELETED, null);
+      this.runCallbackIfValid(reason, null);
       return;
     }
 
@@ -813,7 +827,7 @@ CancellableTransaction.prototype = {
   observe: function observe(subject, topic, data) {
     switch (topic) {
       case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
-        this.cancelRunning();
+        this.cancelRunning(_MMS_ERROR_SHUTDOWN);
         break;
       }
       case kMobileMessageDeletedObserverTopic: {
@@ -822,7 +836,20 @@ CancellableTransaction.prototype = {
           return;
         }
 
-        this.cancelRunning();
+        this.cancelRunning(_MMS_ERROR_MESSAGE_DELETED);
+        break;
+      }
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
+        if (data == kPrefRilRadioDisabled) {
+          try {
+            let radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
+            if (radioDisabled) {
+              this.cancelRunning(_MMS_ERROR_RADIO_DISABLED);
+            }
+          } catch (e) {
+            if (DEBUG) debug("Failed to get preference of 'ril.radio.disabled'.");
+          }
+        }
         break;
       }
     }
@@ -891,6 +918,7 @@ RetrieveTransaction.prototype = Object.create(CancellableTransaction.prototype, 
                                           (function (httpStatus, data) {
         let mmsStatus = gMmsTransactionHelper
                         .translateHttpStatusToMmsStatus(httpStatus,
+                                                        this.cancelledReason,
                                                         MMS.MMS_PDU_STATUS_DEFERRED);
         if (mmsStatus != MMS.MMS_PDU_ERROR_OK) {
            callback(mmsStatus, null);
@@ -952,7 +980,12 @@ function SendTransaction(cancellableId, msg, requestDeliveryReport) {
   msg.headers["x-mms-message-class"] = "personal";
   msg.headers["x-mms-expiry"] = 7 * 24 * 60 * 60;
   msg.headers["x-mms-priority"] = 129;
-  msg.headers["x-mms-read-report"] = true;
+  try {
+    msg.headers["x-mms-read-report"] =
+      Services.prefs.getBoolPref("dom.mms.requestReadReport");
+  } catch (e) {
+    msg.headers["x-mms-read-report"] = true;
+  }
   msg.headers["x-mms-delivery-report"] = requestDeliveryReport;
 
   if (!gMmsTransactionHelper.checkMaxValuesParameters(msg)) {
@@ -1120,9 +1153,10 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
       this.cancellable =
         gMmsTransactionHelper.sendRequest("POST", gMmsConnection.mmsc,
                                           this.istream,
-                                          function (httpStatus, data) {
+                                          (function (httpStatus, data) {
         let mmsStatus = gMmsTransactionHelper.
                           translateHttpStatusToMmsStatus(httpStatus,
+                            this.cancelledReason,
                             MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE);
         if (httpStatus != HTTP_STATUS_OK) {
           callback(mmsStatus, null);
@@ -1142,7 +1176,7 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
 
         let responseStatus = response.headers["x-mms-response-status"];
         callback(responseStatus, response);
-      });
+      }).bind(this));
     },
     enumerable: true,
     configurable: true,

@@ -95,10 +95,8 @@ static const char* getKeyText(uint32_t aKey)
       return CameraParameters::KEY_FOCUS_DISTANCES;
     case CAMERA_PARAM_EXPOSURECOMPENSATION:
       return CameraParameters::KEY_EXPOSURE_COMPENSATION;
-    case CAMERA_PARAM_THUMBNAILWIDTH:
-      return CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH;
-    case CAMERA_PARAM_THUMBNAILHEIGHT:
-      return CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT;
+    case CAMERA_PARAM_PICTURESIZE:
+      return CameraParameters::KEY_PICTURE_SIZE;
     case CAMERA_PARAM_THUMBNAILQUALITY:
       return CameraParameters::KEY_JPEG_THUMBNAIL_QUALITY;
 
@@ -211,6 +209,8 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId, nsIThread* aCameraT
   , mHeight(0)
   , mLastPictureWidth(0)
   , mLastPictureHeight(0)
+  , mLastThumbnailWidth(0)
+  , mLastThumbnailHeight(0)
 #if !FORCE_PREVIEW_FORMAT_YUV420SP
   , mFormat(PREVIEW_FORMAT_UNKNOWN)
 #else
@@ -290,11 +290,22 @@ nsGonkCameraControl::Init()
   mExposureCompensationStep = mParams.getFloat(mParams.KEY_EXPOSURE_COMPENSATION_STEP);
   mMaxMeteringAreas = mParams.getInt(mParams.KEY_MAX_NUM_METERING_AREAS);
   mMaxFocusAreas = mParams.getInt(mParams.KEY_MAX_NUM_FOCUS_AREAS);
+  mLastThumbnailWidth = mParams.getInt(mParams.KEY_JPEG_THUMBNAIL_WIDTH);
+  mLastThumbnailHeight = mParams.getInt(mParams.KEY_JPEG_THUMBNAIL_HEIGHT);
+
+  int w;
+  int h;
+  mParams.getPictureSize(&w, &h);
+  MOZ_ASSERT(w > 0 && h > 0); // make sure the driver returns sane values
+  mLastPictureWidth = static_cast<uint32_t>(w);
+  mLastPictureHeight = static_cast<uint32_t>(h);
 
   DOM_CAMERA_LOGI(" - minimum exposure compensation: %f\n", mExposureCompensationMin);
   DOM_CAMERA_LOGI(" - exposure compensation step:    %f\n", mExposureCompensationStep);
   DOM_CAMERA_LOGI(" - maximum metering areas:        %d\n", mMaxMeteringAreas);
   DOM_CAMERA_LOGI(" - maximum focus areas:           %d\n", mMaxFocusAreas);
+  DOM_CAMERA_LOGI(" - default picture size:          %u x %u\n", mLastPictureWidth, mLastPictureHeight);
+  DOM_CAMERA_LOGI(" - default thumbnail size:        %u x %u\n", mLastThumbnailWidth, mLastThumbnailHeight);
 
   return NS_OK;
 }
@@ -507,6 +518,40 @@ nsGonkCameraControl::GetParameter(uint32_t aKey,
   return;
 }
 
+void
+nsGonkCameraControl::GetParameter(uint32_t aKey, idl::CameraSize& aSize)
+{
+  if (aKey == CAMERA_PARAM_THUMBNAILSIZE) {
+    // This is a special case--for some reason the thumbnail size
+    // is accessed as two separate values instead of a tuple.
+    RwAutoLockRead lock(mRwLock);
+
+    aSize.width = mParams.getInt(CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH);
+    aSize.height = mParams.getInt(CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT);
+    DOM_CAMERA_LOGI("thumbnail size --> value='%ux%u'\n", aSize.width, aSize.height);
+    return;
+  }
+
+  const char* key = getKeyText(aKey);
+  if (!key) {
+    return;
+  }
+
+  RwAutoLockRead lock(mRwLock);
+
+  const char* value = mParams.get(key);
+  DOM_CAMERA_LOGI("key='%s' --> value='%s'\n", key, value);
+  if (!value) {
+    return;
+  }
+
+  if (sscanf(value, "%ux%u", &aSize.width, &aSize.height) != 2) {
+    DOM_CAMERA_LOGE("%s:%d : size tuple has bad format: '%s'\n", __func__, __LINE__, value);
+    aSize.width = 0;
+    aSize.height = 0;
+  }
+}
+
 nsresult
 nsGonkCameraControl::PushParameters()
 {
@@ -522,7 +567,7 @@ nsGonkCameraControl::PushParameters()
    * we can proceed.
    */
   if (NS_IsMainThread()) {
-    DOM_CAMERA_LOGT("%s:%d - dispatching to main thread\n", __func__, __LINE__);
+    DOM_CAMERA_LOGT("%s:%d - dispatching to camera thread\n", __func__, __LINE__);
     nsCOMPtr<nsIRunnable> pushParametersTask = NS_NewRunnableMethod(this, &nsGonkCameraControl::PushParametersImpl);
     return mCameraThread->Dispatch(pushParametersTask, NS_DISPATCH_NORMAL);
   }
@@ -634,6 +679,39 @@ nsGonkCameraControl::SetParameter(uint32_t aKey, int aValue)
   PushParameters();
 }
 
+void
+nsGonkCameraControl::SetParameter(uint32_t aKey, const idl::CameraSize& aSize)
+{
+  switch (aKey) {
+    case CAMERA_PARAM_PICTURESIZE:
+      DOM_CAMERA_LOGI("setting picture size to %ux%u\n", aSize.width, aSize.height);
+      SetPictureSize(aSize.width, aSize.height);
+      break;
+
+    case CAMERA_PARAM_THUMBNAILSIZE:
+      DOM_CAMERA_LOGI("setting thumbnail size to %ux%u\n", aSize.width, aSize.height);
+      SetThumbnailSize(aSize.width, aSize.height);
+      break;
+
+    default:
+      {
+        const char* key = getKeyText(aKey);
+        if (!key) {
+          return;
+        }
+
+        nsCString s;
+        s.AppendPrintf("%ux%u", aSize.width, aSize.height);
+        DOM_CAMERA_LOGI("setting '%s' to %s\n", key, s.get());
+
+        RwAutoLockWrite lock(mRwLock);
+        mParams.set(key, s.get());
+      }
+      break;
+  }
+  PushParameters();
+}
+
 nsresult
 nsGonkCameraControl::GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStream)
 {
@@ -727,42 +805,143 @@ nsGonkCameraControl::AutoFocusImpl(AutoFocusTask* aAutoFocus)
 }
 
 void
-nsGonkCameraControl::SetupThumbnail(uint32_t aPictureWidth, uint32_t aPictureHeight, uint32_t aPercentQuality)
+nsGonkCameraControl::SetThumbnailSize(uint32_t aWidth, uint32_t aHeight)
 {
   /**
-   * Use the smallest non-0x0 thumbnail size that matches
-   *  the aspect ratio of our parameters...
+   * We keep a copy of the specified size so that if the picture size
+   * changes, we can choose a new thumbnail size close to what was asked for
+   * last time.
    */
-  uint32_t smallestArea = UINT_MAX;
-  uint32_t smallestIndex = UINT_MAX;
-  nsAutoTArray<idl::CameraSize, 8> thumbnailSizes;
-  GetParameter(CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES, thumbnailSizes);
+  mLastThumbnailWidth = aWidth;
+  mLastThumbnailHeight = aHeight;
 
-  for (uint32_t i = 0; i < thumbnailSizes.Length(); ++i) {
-    uint32_t area = thumbnailSizes[i].width * thumbnailSizes[i].height;
+  /**
+   * If either of width or height is zero, set the other to zero as well.
+   * This should disable inclusion of a thumbnail in the final picture.
+   */
+  if (!aWidth || !aHeight) {
+    DOM_CAMERA_LOGW("Requested thumbnail size %ux%u, disabling thumbnail\n", aWidth, aHeight);
+    RwAutoLockWrite write(mRwLock);
+    mParams.set(CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH, 0);
+    mParams.set(CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT, 0);
+    return;
+  }
+
+  /**
+   * Choose the supported thumbnail size that is closest to the specified size.
+   * Some drivers will fail to take a picture if the thumbnail does not have
+   * the same aspect ratio as the set picture size, so we need to enforce that
+   * too.
+   */
+  int smallestDelta = INT_MAX;
+  uint32_t smallestDeltaIndex = UINT32_MAX;
+  int targetArea = aWidth * aHeight;
+
+  nsAutoTArray<idl::CameraSize, 8> supportedSizes;
+  GetParameter(CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES, supportedSizes);
+
+  for (uint32_t i = 0; i < supportedSizes.Length(); ++i) {
+    int area = supportedSizes[i].width * supportedSizes[i].height;
+    int delta = abs(area - targetArea);
+
     if (area != 0
-      && area < smallestArea
-      && thumbnailSizes[i].width * aPictureHeight / thumbnailSizes[i].height == aPictureWidth
+      && delta < smallestDelta
+      && supportedSizes[i].width * mLastPictureHeight / supportedSizes[i].height == mLastPictureWidth
     ) {
-      smallestArea = area;
-      smallestIndex = i;
+      smallestDelta = delta;
+      smallestDeltaIndex = i;
     }
   }
 
-  aPercentQuality = clamped<uint32_t>(aPercentQuality, 1, 100);
-  SetParameter(CAMERA_PARAM_THUMBNAILQUALITY, static_cast<int>(aPercentQuality));
-
-  if (smallestIndex != UINT_MAX) {
-    uint32_t w = thumbnailSizes[smallestIndex].width;
-    uint32_t h = thumbnailSizes[smallestIndex].height;
-    DOM_CAMERA_LOGI("Using thumbnail size: %ux%u, quality: %u %%\n", w, h, aPercentQuality);
-    if (w > INT_MAX || h > INT_MAX) {
-      DOM_CAMERA_LOGE("Thumbnail dimension is too big, will use defaults\n");
-      return;
-    }
-    SetParameter(CAMERA_PARAM_THUMBNAILWIDTH, static_cast<int>(w));
-    SetParameter(CAMERA_PARAM_THUMBNAILHEIGHT, static_cast<int>(h));
+  if (smallestDeltaIndex == UINT32_MAX) {
+    DOM_CAMERA_LOGW("Unable to find a thumbnail size close to %ux%u\n", aWidth, aHeight);
+    return;
   }
+
+  uint32_t w = supportedSizes[smallestDeltaIndex].width;
+  uint32_t h = supportedSizes[smallestDeltaIndex].height;
+  DOM_CAMERA_LOGI("Requested thumbnail size %ux%u --> using supported size %ux%u\n", aWidth, aHeight, w, h);
+  if (w > INT32_MAX || h > INT32_MAX) {
+    DOM_CAMERA_LOGE("Supported thumbnail size is too big, no change\n");
+    return;
+  }
+
+  RwAutoLockWrite write(mRwLock);
+  mParams.set(CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH, static_cast<int>(w));
+  mParams.set(CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT, static_cast<int>(h));
+}
+
+void
+nsGonkCameraControl::UpdateThumbnailSize()
+{
+  SetThumbnailSize(mLastThumbnailWidth, mLastThumbnailHeight);
+}
+
+void
+nsGonkCameraControl::SetPictureSize(uint32_t aWidth, uint32_t aHeight)
+{
+  /**
+   * Some drivers are less friendly about getting one of these set to zero,
+   * so if either is not specified, ignore both and go with current or
+   * default settings.
+   */
+  if (!aWidth || !aHeight) {
+    DOM_CAMERA_LOGW("Ignoring requested picture size of %ux%u\n", aWidth, aHeight);
+    return;
+  }
+
+  if (aWidth == mLastPictureWidth && aHeight == mLastPictureHeight) {
+    DOM_CAMERA_LOGI("Requested picture size %ux%u unchanged\n", aWidth, aHeight);
+    return;
+  }
+
+  /**
+   * Choose the supported picture size that is closest in area to the
+   * specified size. Some drivers will fail to take a picture if the
+   * thumbnail size is not the same aspect ratio, so we update that
+   * as well to a size closest to the last user-requested one.
+   */
+  int smallestDelta = INT_MAX;
+  uint32_t smallestDeltaIndex = UINT32_MAX;
+  int targetArea = aWidth * aHeight;
+  
+  nsAutoTArray<idl::CameraSize, 8> supportedSizes;
+  GetParameter(CAMERA_PARAM_SUPPORTED_PICTURESIZES, supportedSizes);
+
+  for (uint32_t i = 0; i < supportedSizes.Length(); ++i) {
+    int area = supportedSizes[i].width * supportedSizes[i].height;
+    int delta = abs(area - targetArea);
+
+    if (area != 0 && delta < smallestDelta) {
+      smallestDelta = delta;
+      smallestDeltaIndex = i;
+    }
+  }
+
+  if (smallestDeltaIndex == UINT32_MAX) {
+    DOM_CAMERA_LOGW("Unable to find a picture size close to %ux%u\n", aWidth, aHeight);
+    return;
+  }
+
+  uint32_t w = supportedSizes[smallestDeltaIndex].width;
+  uint32_t h = supportedSizes[smallestDeltaIndex].height;
+  DOM_CAMERA_LOGI("Requested picture size %ux%u --> using supported size %ux%u\n", aWidth, aHeight, w, h);
+  if (w > INT32_MAX || h > INT32_MAX) {
+    DOM_CAMERA_LOGE("Supported picture size is too big, no change\n");
+    return;
+  }
+
+  mLastPictureWidth = w;
+  mLastPictureHeight = h;
+
+  {
+    // We must release the write-lock before updating the thumbnail size
+    RwAutoLockWrite write(mRwLock);
+    mParams.setPictureSize(static_cast<int>(w), static_cast<int>(h));
+  }
+
+  // Finally, update the thumbnail size
+  UpdateThumbnailSize();
 }
 
 nsresult
@@ -782,25 +961,7 @@ nsGonkCameraControl::TakePictureImpl(TakePictureTask* aTakePicture)
   // batch-update camera configuration
   mDeferConfigUpdate = true;
 
-  if (aTakePicture->mSize.width != mLastPictureWidth || aTakePicture->mSize.height != mLastPictureHeight) {
-    /**
-     * height and width: some drivers are less friendly about getting one of
-     * these set to zero, so if either is not specified, ignore both and go
-     * with current or default settings.
-     */
-    if (aTakePicture->mSize.width && aTakePicture->mSize.height) {
-      nsCString s;
-      s.AppendPrintf("%ux%u", aTakePicture->mSize.width, aTakePicture->mSize.height);
-      DOM_CAMERA_LOGI("setting picture size to '%s'\n", s.get());
-      SetParameter(CameraParameters::KEY_PICTURE_SIZE, s.get());
-
-      // Choose an appropriate thumbnail size and quality (from 1..100)
-      SetupThumbnail(aTakePicture->mSize.width, aTakePicture->mSize.height, 60);
-    }
-
-    mLastPictureWidth = aTakePicture->mSize.width;
-    mLastPictureHeight = aTakePicture->mSize.height;
-  }
+  SetPictureSize(aTakePicture->mSize.width, aTakePicture->mSize.height);
 
   // Picture format -- need to keep it for the callback.
   mFileFormat = aTakePicture->mFileFormat;
