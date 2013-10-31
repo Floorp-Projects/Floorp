@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIAudioManager.idl',
     'nsINetworkInterfaceListService.idl',
     'nsINetworkManager.idl',
-    'nsIRadioInterfaceLayer.idl',
     'nsISystemWorkerManager.idl',
     'nsIVolume.idl',
     'nsIVolumeMountLock.idl',
@@ -31,54 +30,60 @@ XPIDL_MODULE = 'dom_system_gonk'
 
 MODULE = 'dom'
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    EXPORTS += [
-        'GonkGPSGeolocationProvider.h',
-        'nsVolume.h',
-        'nsVolumeService.h',
-    ]
-    SOURCES += [
-        'AudioChannelManager.cpp',
-        'AudioManager.cpp',
-        'AutoMounter.cpp',
-        'AutoMounterSetting.cpp',
-        'GonkGPSGeolocationProvider.cpp',
-        'nsVolume.cpp',
-        'nsVolumeMountLock.cpp',
-        'nsVolumeService.cpp',
-        'nsVolumeStat.cpp',
-        'OpenFileFinder.cpp',
-        'TimeZoneSettingObserver.cpp',
-        'Volume.cpp',
-        'VolumeCommand.cpp',
-        'VolumeManager.cpp',
-        'VolumeServiceIOThread.cpp',
-        'VolumeServiceTest.cpp',
-    ]
+EXPORTS += [
+    'GonkGPSGeolocationProvider.h',
+    'nsVolume.h',
+    'nsVolumeService.h',
+]
+SOURCES += [
+    'AudioChannelManager.cpp',
+    'AudioManager.cpp',
+    'AutoMounter.cpp',
+    'AutoMounterSetting.cpp',
+    'GonkGPSGeolocationProvider.cpp',
+    'nsVolume.cpp',
+    'nsVolumeMountLock.cpp',
+    'nsVolumeService.cpp',
+    'nsVolumeStat.cpp',
+    'OpenFileFinder.cpp',
+    'SystemWorkerManager.cpp',
+    'TimeZoneSettingObserver.cpp',
+    'Volume.cpp',
+    'VolumeCommand.cpp',
+    'VolumeManager.cpp',
+    'VolumeServiceIOThread.cpp',
+    'VolumeServiceTest.cpp',
+]
 
 if CONFIG['ENABLE_TESTS']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 
-SOURCES += [
-    'SystemWorkerManager.cpp',
-]
-
 EXTRA_COMPONENTS += [
     'NetworkInterfaceListService.js',
     'NetworkInterfaceListService.manifest',
-    'NetworkManager.js',
     'NetworkManager.manifest',
-    'RadioInterfaceLayer.js',
-    'RadioInterfaceLayer.manifest',
-    'RILContentHelper.js',
 ]
-
+EXTRA_PP_COMPONENTS += [
+    'NetworkManager.js',
+]
 EXTRA_JS_MODULES += [
     'net_worker.js',
-    'ril_consts.js',
-    'ril_worker.js',
     'systemlibs.js',
 ]
+
+if CONFIG['MOZ_B2G_RIL']:
+    XPIDL_SOURCES += [
+        'nsIRadioInterfaceLayer.idl',
+    ]
+    EXTRA_COMPONENTS += [
+        'RadioInterfaceLayer.js',
+        'RadioInterfaceLayer.manifest',
+        'RILContentHelper.js',
+    ]
+    EXTRA_JS_MODULES += [
+        'ril_consts.js',
+        'ril_worker.js',
+    ]
 
 FAIL_ON_WARNINGS = True
 
