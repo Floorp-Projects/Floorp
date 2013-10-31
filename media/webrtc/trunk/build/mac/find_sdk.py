@@ -34,30 +34,33 @@ def main():
   (options, args) = parser.parse_args()
   min_sdk_version = args[0]
 
-  job = subprocess.Popen(['xcode-select', '-print-path'],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
-  out, err = job.communicate()
-  if job.returncode != 0:
-    print >>sys.stderr, out
-    print >>sys.stderr, err
-    raise Exception(('Error %d running xcode-select, you might have to run '
-      '|sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer| '
-      'if you are using Xcode 4.') % job.returncode)
-  # The Developer folder moved in Xcode 4.3.
-  xcode43_sdk_path = os.path.join(
+  if sys.platform == 'darwin':
+    job = subprocess.Popen(['xcode-select', '-print-path'],
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT)
+    out, err = job.communicate()
+    if job.returncode != 0:
+      print >>sys.stderr, out
+      print >>sys.stderr, err
+      raise Exception(('Error %d running xcode-select, you might have to run '
+                       '|sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer| '
+                       'if you are using Xcode 4.') % job.returncode)
+    # The Developer folder moved in Xcode 4.3.
+    xcode43_sdk_path = os.path.join(
       out.rstrip(), 'Platforms/MacOSX.platform/Developer/SDKs')
-  if os.path.isdir(xcode43_sdk_path):
-    sdk_dir = xcode43_sdk_path
+    if os.path.isdir(xcode43_sdk_path):
+      sdk_dir = xcode43_sdk_path
+    else:
+      sdk_dir = os.path.join(out.rstrip(), 'SDKs')
+    sdks = [re.findall('^MacOSX(10\.\d+)\.sdk$', s) for s in os.listdir(sdk_dir)]
+    sdks = [s[0] for s in sdks if s]  # [['10.5'], ['10.6']] => ['10.5', '10.6']
+    sdks = [s for s in sdks  # ['10.5', '10.6'] => ['10.6']
+            if parse_version(s) >= parse_version(min_sdk_version)]
+    if not sdks:
+      raise Exception('No %s+ SDK found' % min_sdk_version)
+    best_sdk = sorted(sdks, key=parse_version)[0]
   else:
-    sdk_dir = os.path.join(out.rstrip(), 'SDKs')
-  sdks = [re.findall('^MacOSX(10\.\d+)\.sdk$', s) for s in os.listdir(sdk_dir)]
-  sdks = [s[0] for s in sdks if s]  # [['10.5'], ['10.6']] => ['10.5', '10.6']
-  sdks = [s for s in sdks  # ['10.5', '10.6'] => ['10.6']
-          if parse_version(s) >= parse_version(min_sdk_version)]
-  if not sdks:
-    raise Exception('No %s+ SDK found' % min_sdk_version)
-  best_sdk = sorted(sdks, key=parse_version)[0]
+    best_sdk = ""
 
   if options.verify and best_sdk != min_sdk_version and not options.sdk_path:
     print >>sys.stderr, ''
@@ -77,6 +80,4 @@ def main():
 
 
 if __name__ == '__main__':
-  if sys.platform != 'darwin':
-    raise Exception("This script only runs on Mac")
   print main()
