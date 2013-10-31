@@ -111,7 +111,7 @@ public:
   {
     NS_ASSERTION(!mCalls.Contains(aCall), "Already know about this one!");
     mCalls.AppendElement(aCall);
-    UpdateActiveCall(aCall, true);
+    UpdateActiveCall(aCall, IsActiveState(aCall->CallState()));
     NotifyCallsChanged(aCall);
   }
 
@@ -145,6 +145,18 @@ private:
   void
   Shutdown();
 
+  static bool
+  IsValidNumber(const nsAString& aNumber);
+
+  static bool
+  IsActiveState(uint16_t aCallState);
+
+  bool
+  HasDialingCall();
+
+  bool
+  MatchActiveCall(TelephonyCall* aCall);
+
   already_AddRefed<TelephonyCall>
   DialInternal(bool isEmergency,
                const nsAString& aNumber,
@@ -160,20 +172,22 @@ private:
   NotifyCallsChanged(TelephonyCall* aCall);
 
   nsresult
-  DispatchCallEvent(const nsAString& aType,
-                    TelephonyCall* aCall);
+  DispatchCallEvent(const nsAString& aType, TelephonyCall* aCall);
 
   void
   EnqueueEnumerationAck();
 
   void
-  UpdateActiveCall(TelephonyCall* aCall, bool aIsAdding);
+  UpdateActiveCall(TelephonyCall* aCall, bool aIsActive);
 
   already_AddRefed<TelephonyCall>
   GetCall(uint32_t aCallIndex);
 
-  bool
-  MoveCall(uint32_t aCallIndex, bool aIsConference);
+  already_AddRefed<TelephonyCall>
+  GetOutgoingCall();
+
+  already_AddRefed<TelephonyCall>
+  GetCallFromEverywhere(uint32_t aCallIndex);
 };
 
 } // namespace dom
