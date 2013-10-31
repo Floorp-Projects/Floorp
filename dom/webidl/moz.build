@@ -470,7 +470,6 @@ if CONFIG['MOZ_GAMEPAD']:
 
 if CONFIG['MOZ_B2G_RIL']:
     WEBIDL_FILES += [
-        'MozStkCommandEvent.webidl',
         'MozVoicemail.webidl',
     ]
 
@@ -516,6 +515,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'MozCellBroadcastEvent.webidl',
         'MozEmergencyCbModeEvent.webidl',
         'MozOtaStatusEvent.webidl',
+        'MozStkCommandEvent.webidl',
         'MozVoicemailEvent.webidl',
         'MozWifiConnectionInfoEvent.webidl',
         'MozWifiStatusChangeEvent.webidl',
