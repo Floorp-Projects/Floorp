@@ -133,6 +133,39 @@ public class TopSitesGridItemView extends RelativeLayout {
     }
 
     /**
+     * Updates the title, URL, and pinned state of this view.
+     *
+     * Also resets our loadId to NOT_LOADING.
+     *
+     * Returns true if any fields changed.
+     */
+    public boolean updateState(final String title, final String url, final boolean pinned) {
+        boolean changed = false;
+        if (mUrl == null || !mUrl.equals(url)) {
+            mUrl = url;
+            changed = true;
+        }
+
+        if (mTitle == null || !mTitle.equals(title)) {
+            mTitle = title;
+            changed = true;
+        }
+
+        if (changed) {
+            updateTitleView();
+            setLoadId(Favicons.NOT_LOADING);
+        }
+
+        if (mIsPinned != pinned) {
+            mIsPinned = pinned;
+            mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinned ? R.drawable.pin : 0, 0, 0, 0);
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    /**
      * Display the thumbnail from a resource.
      *
      * @param resId Resource ID of the drawable to show.
@@ -162,6 +195,17 @@ public class TopSitesGridItemView extends RelativeLayout {
         mThumbnailView.setBackgroundDrawable(null);
     }
 
+    public void displayFavicon(Bitmap favicon, String faviconURL, int expectedLoadId) {
+        if (mLoadId != Favicons.NOT_LOADING &&
+            mLoadId != expectedLoadId) {
+            // View recycled.
+            return;
+        }
+
+        // Yes, there's a chance of a race here.
+        displayFavicon(favicon, faviconURL);
+    }
+
     /**
      * Display the thumbnail from a favicon.
      *
@@ -169,6 +213,7 @@ public class TopSitesGridItemView extends RelativeLayout {
      */
     public void displayFavicon(Bitmap favicon, String faviconURL) {
         if (mThumbnail != null) {
+            // Already showing a thumbnail; do nothing.
             return;
         }
 
