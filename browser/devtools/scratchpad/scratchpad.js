@@ -1350,6 +1350,7 @@ var Scratchpad = {
     }
 
     PreferenceObserver.uninit();
+    CloseObserver.uninit();
 
     this.editor.off("change", this._onChanged);
     this.editor.destroy();
@@ -1360,6 +1361,7 @@ var Scratchpad = {
       this._sidebar = null;
     }
 
+    scratchpadTargets = null;
     this.webConsoleClient = null;
     this.debuggerClient = null;
     this.initialized = false;

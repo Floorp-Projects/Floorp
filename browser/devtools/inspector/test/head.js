@@ -188,3 +188,8 @@ function getComputedPropertyValue(aName)
     }
   }
 }
+
+SimpleTest.registerCleanupFunction(function () {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  gDevTools.closeToolbox(target);
+});
