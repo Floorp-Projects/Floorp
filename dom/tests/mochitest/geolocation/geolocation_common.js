@@ -51,11 +51,6 @@ function delay_geolocationProvider(delay, callback)
   SpecialPowers.pushPrefEnv({"set": [["geo.wifi.uri", "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?delay=" + delay]]}, callback);
 }
 
-function send404_geolocationProvider(callback)
-{
-  SpecialPowers.pushPrefEnv({"set": [["geo.wifi.uri", "http://mochi.test:8888/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs?action=send404"]]}, callback);
-}
-
 function check_geolocation(location) {
 
   ok(location, "Check to see if this location is non-null");
