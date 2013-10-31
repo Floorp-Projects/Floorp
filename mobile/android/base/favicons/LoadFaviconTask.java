@@ -169,21 +169,22 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         }
         if (uri.startsWith("jar:jar:")) {
             Log.d(LOGTAG, "Fetching favicon from JAR.");
-            return GeckoJarReader.getBitmap(sContext.getResources(), uri);
+            try {
+                return GeckoJarReader.getBitmap(sContext.getResources(), uri);
+            } catch (Exception e) {
+                // Just about anything could happen here.
+                Log.w(LOGTAG, "Error fetching favicon from JAR.", e);
+                return null;
+            }
         }
         return null;
     }
 
     // Runs in background thread.
+    // Does not attempt to fetch from JARs.
     private Bitmap downloadFavicon(URI targetFaviconURI) {
         if (targetFaviconURI == null) {
             return null;
-        }
-
-        final String uriString = targetFaviconURI.toString();
-        Bitmap image = fetchJARFavicon(uriString);
-        if (image != null) {
-            return image;
         }
 
         // Only get favicons for HTTP/HTTPS.
@@ -191,6 +192,8 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         if (!"http".equals(scheme) && !"https".equals(scheme)) {
             return null;
         }
+
+        Bitmap image = null;
 
         // skia decoder sometimes returns null; workaround is to use BufferedHttpEntity
         // http://groups.google.com/group/android-developers/browse_thread/thread/171b8bf35dbbed96/c3ec5f45436ceec8?lnk=raot
@@ -297,7 +300,7 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         }
 
         image = loadFaviconFromDb();
-        if (image != null && image.getWidth() > 0 && image.getHeight() > 0) {
+        if (imageIsValid(image)) {
             return image;
         }
 
@@ -321,22 +324,48 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
             Log.e(LOGTAG, "Couldn't download favicon.", e);
         }
 
-        // If we're not already trying the default URL, try it now.
-        if (image == null && !isUsingDefaultURL) {
-            try {
-                image = downloadFavicon(new URI(Favicons.guessDefaultFaviconURL(mPageUrl)));
-            } catch (URISyntaxException e){
-                // Not interesting. It was an educated guess, anyway.
-            }
-        }
-
-        if (image != null && image.getWidth() > 0 && image.getHeight() > 0) {
+        if (imageIsValid(image)) {
             saveFaviconToDb(image);
-        } else {
-            Favicons.putFaviconInFailedCache(mFaviconUrl);
+            return image;
         }
 
-        return image;
+        if (isUsingDefaultURL) {
+            Favicons.putFaviconInFailedCache(mFaviconUrl);
+            return null;
+        }
+
+        // If we're not already trying the default URL, try it now.
+        final String guessed = Favicons.guessDefaultFaviconURL(mPageUrl);
+        if (guessed == null) {
+            Favicons.putFaviconInFailedCache(mFaviconUrl);
+            return null;
+        }
+
+        image = fetchJARFavicon(guessed);
+        if (imageIsValid(image)) {
+            // We don't want to put this into the DB.
+            return image;
+        }
+
+        try {
+            image = downloadFavicon(new URI(guessed));
+        } catch (Exception e) {
+            // Not interesting. It was an educated guess, anyway.
+            return null;
+        }
+
+        if (imageIsValid(image)) {
+            saveFaviconToDb(image);
+            return image;
+        }
+
+        return null;
+    }
+
+    private static boolean imageIsValid(final Bitmap image) {
+        return image != null &&
+               image.getWidth() > 0 &&
+               image.getHeight() > 0;
     }
 
     @Override
