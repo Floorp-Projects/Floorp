@@ -3230,10 +3230,22 @@ function OpenBrowserWindow(options)
         doc != document &&
         doc.defaultView == win) {
       Services.obs.removeObserver(newDocumentShown, "document-shown");
+      Services.obs.removeObserver(windowClosed, "domwindowclosed");
       TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
     }
-  };
+  }
+
+  function windowClosed(subject) {
+    if (subject == win) {
+      Services.obs.removeObserver(newDocumentShown, "document-shown");
+      Services.obs.removeObserver(windowClosed, "domwindowclosed");
+    }
+  }
+
+  // Make sure to remove the 'document-shown' observer in case the window
+  // is being closed right after it was opened to avoid leaking.
   Services.obs.addObserver(newDocumentShown, "document-shown", false);
+  Services.obs.addObserver(windowClosed, "domwindowclosed", false);
 
   var charsetArg = new String();
   var handler = Components.classes["@mozilla.org/browser/clh;1"]
