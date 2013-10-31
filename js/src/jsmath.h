@@ -162,6 +162,9 @@ math_asinh(JSContext *cx, unsigned argc, js::Value *vp);
 extern bool
 math_atanh(JSContext *cx, unsigned argc, js::Value *vp);
 
+extern double
+ecmaHypot(double x, double y);
+
 extern bool
 math_hypot(JSContext *cx, unsigned argc, Value *vp);
 
@@ -243,91 +246,82 @@ ecmaPow(double x, double y);
 extern bool
 math_imul(JSContext *cx, unsigned argc, Value *vp);
 
-extern double 
+extern double
 math_log10_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_log10_uncached(double x);
 
-extern double 
+extern double
 math_log2_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_log2_uncached(double x);
 
-extern double 
+extern double
 math_log1p_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_log1p_uncached(double x);
 
-extern double 
+extern double
 math_expm1_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_expm1_uncached(double x);
 
-extern double 
+extern double
 math_cosh_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_cosh_uncached(double x);
 
-extern double 
+extern double
 math_sinh_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_sinh_uncached(double x);
 
-extern double 
+extern double
 math_tanh_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_tanh_uncached(double x);
 
-extern double 
+extern double
 math_acosh_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_acosh_uncached(double x);
 
-extern double 
+extern double
 math_asinh_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_asinh_uncached(double x);
 
-extern double 
+extern double
 math_atanh_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_atanh_uncached(double x);
 
-// Math.hypot is disabled pending the resolution of spec issues (bug 896264).
-#if 0
-extern double 
-math_hypot_impl(double x, double y);
-
-extern double 
-math_hypot_uncached(double x, double y);
-#endif
-
-extern double 
+extern double
 math_trunc_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_trunc_uncached(double x);
 
-extern double 
+extern double
 math_sign_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_sign_uncached(double x);
 
-extern double 
+extern double
 math_cbrt_impl(MathCache *cache, double x);
 
-extern double 
+extern double
 math_cbrt_uncached(double x);
 
 } /* namespace js */
