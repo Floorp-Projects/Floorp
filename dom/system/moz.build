@@ -14,8 +14,7 @@ elif toolkit == 'cocoa':
     DIRS += ['mac']
 elif toolkit == 'android':
     DIRS += ['android']
-
-if CONFIG['MOZ_B2G_RIL']:
+elif toolkit == 'gonk':
     DIRS += ['gonk']
 
 TEST_DIRS += ['tests']
