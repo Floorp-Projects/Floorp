@@ -176,7 +176,22 @@ nsDOMMultipartFile::Initialize(nsISupports* aOwner,
   if (!mIsFile) {
     return InitBlob(aCx, aArgs.length(), aArgs.array(), GetXPConnectNative);
   }
-  return InitFile(aCx, aArgs.length(), aArgs.array());
+
+  if (!nsContentUtils::IsCallerChrome()) {
+    return InitFile(aCx, aArgs.length(), aArgs.array());
+  }
+
+  if (aArgs.length() > 0) {
+    JS::Value* argv = aArgs.array();
+    if (argv[0].isObject()) {
+      JS::Rooted<JSObject*> obj(aCx, &argv[0].toObject());
+      if (JS_IsArrayObject(aCx, obj)) {
+        return InitFile(aCx, aArgs.length(), aArgs.array());
+      }
+    }
+  }
+
+  return InitChromeFile(aCx, aArgs.length(), aArgs.array());
 }
 
 nsresult
@@ -196,63 +211,69 @@ nsDOMMultipartFile::InitBlob(JSContext* aCx,
   }
 
   if (aArgc > 0) {
-    if (!aArgv[0].isObject()) {
-      return NS_ERROR_TYPE_ERR; // We're not interested
-    }
-
-    JS::Rooted<JSObject*> obj(aCx, &aArgv[0].toObject());
-    if (!JS_IsArrayObject(aCx, obj)) {
-      return NS_ERROR_TYPE_ERR; // We're not interested
-    }
-
-    BlobSet blobSet;
-
-    uint32_t length;
-    JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &length));
-    for (uint32_t i = 0; i < length; ++i) {
-      JS::Rooted<JS::Value> element(aCx);
-      if (!JS_GetElement(aCx, obj, i, &element))
-        return NS_ERROR_TYPE_ERR;
-
-      if (element.isObject()) {
-        JS::Rooted<JSObject*> obj(aCx, &element.toObject());
-        nsCOMPtr<nsIDOMBlob> blob = aUnwrapFunc(aCx, obj);
-        if (blob) {
-          // Flatten so that multipart blobs will never nest
-          nsDOMFileBase* file = static_cast<nsDOMFileBase*>(
-              static_cast<nsIDOMBlob*>(blob));
-          const nsTArray<nsCOMPtr<nsIDOMBlob> >*
-              subBlobs = file->GetSubBlobs();
-          if (subBlobs) {
-            blobSet.AppendBlobs(*subBlobs);
-          } else {
-            blobSet.AppendBlob(blob);
-          }
-          continue;
-        }
-        if (JS_IsArrayBufferViewObject(obj)) {
-          blobSet.AppendVoidPtr(JS_GetArrayBufferViewData(obj),
-                                JS_GetArrayBufferViewByteLength(obj));
-          continue;
-        }
-        if (JS_IsArrayBufferObject(obj)) {
-          blobSet.AppendArrayBuffer(obj);
-          continue;
-        }
-        // neither Blob nor ArrayBuffer(View)
-      } else if (element.isString()) {
-        blobSet.AppendString(element.toString(), nativeEOL, aCx);
-        continue;
-      }
-      // coerce it to a string
-      JSString* str = JS_ValueToString(aCx, element);
-      NS_ENSURE_TRUE(str, NS_ERROR_TYPE_ERR);
-      blobSet.AppendString(str, nativeEOL, aCx);
-    }
-
-    mBlobs = blobSet.GetBlobs();
+    return ParseBlobArrayArgument(aCx, aArgv[0], nativeEOL, aUnwrapFunc);
   }
 
+  return NS_OK;
+}
+
+nsresult
+nsDOMMultipartFile::ParseBlobArrayArgument(JSContext* aCx, JS::Value& aValue,
+                                           bool aNativeEOL,
+                                           UnwrapFuncPtr aUnwrapFunc)
+{
+  if (!aValue.isObject()) {
+    return NS_ERROR_TYPE_ERR; // We're not interested
+  }
+
+  JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+  if (!JS_IsArrayObject(aCx, obj)) {
+    return NS_ERROR_TYPE_ERR; // We're not interested
+  }
+
+  BlobSet blobSet;
+
+  uint32_t length;
+  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &length));
+  for (uint32_t i = 0; i < length; ++i) {
+    JS::Rooted<JS::Value> element(aCx);
+    if (!JS_GetElement(aCx, obj, i, &element))
+      return NS_ERROR_TYPE_ERR;
+
+    if (element.isObject()) {
+      JS::Rooted<JSObject*> obj(aCx, &element.toObject());
+      nsCOMPtr<nsIDOMBlob> blob = aUnwrapFunc(aCx, obj);
+      if (blob) {
+        // Flatten so that multipart blobs will never nest
+        nsDOMFileBase* file = static_cast<nsDOMFileBase*>(
+            static_cast<nsIDOMBlob*>(blob));
+        const nsTArray<nsCOMPtr<nsIDOMBlob> >*
+            subBlobs = file->GetSubBlobs();
+        if (subBlobs) {
+          blobSet.AppendBlobs(*subBlobs);
+        } else {
+          blobSet.AppendBlob(blob);
+        }
+        continue;
+      }
+      if (JS_IsArrayBufferViewObject(obj)) {
+        blobSet.AppendVoidPtr(JS_GetArrayBufferViewData(obj),
+                              JS_GetArrayBufferViewByteLength(obj));
+        continue;
+      }
+      if (JS_IsArrayBufferObject(obj)) {
+        blobSet.AppendArrayBuffer(obj);
+        continue;
+      }
+    }
+
+    // coerce it to a string
+    JSString* str = JS_ValueToString(aCx, element);
+    NS_ENSURE_TRUE(str, NS_ERROR_TYPE_ERR);
+    blobSet.AppendString(str, aNativeEOL, aCx);
+  }
+
+  mBlobs = blobSet.GetBlobs();
   return NS_OK;
 }
 
@@ -273,19 +294,15 @@ nsDOMMultipartFile::GetMozFullPathInternal(nsAString &aFilename)
 }
 
 nsresult
-nsDOMMultipartFile::InitFile(JSContext* aCx,
-                             uint32_t aArgc,
-                             JS::Value* aArgv)
+nsDOMMultipartFile::InitChromeFile(JSContext* aCx,
+                                   uint32_t aArgc,
+                                   JS::Value* aArgv)
 {
   nsresult rv;
 
   NS_ASSERTION(!mImmutable, "Something went wrong ...");
   NS_ENSURE_TRUE(!mImmutable, NS_ERROR_UNEXPECTED);
-
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR; // Real short trip
-  }
-
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
   NS_ENSURE_TRUE(aArgc > 0, NS_ERROR_UNEXPECTED);
 
   if (aArgc > 1) {
@@ -365,6 +382,43 @@ nsDOMMultipartFile::InitFile(JSContext* aCx,
   mBlobs = blobSet.GetBlobs();
 
   return NS_OK;
+}
+
+nsresult
+nsDOMMultipartFile::InitFile(JSContext* aCx,
+                             uint32_t aArgc,
+                             JS::Value* aArgv)
+{
+  NS_ASSERTION(!mImmutable, "Something went wrong ...");
+  NS_ENSURE_TRUE(!mImmutable, NS_ERROR_UNEXPECTED);
+
+  if (aArgc < 2) {
+    return NS_ERROR_TYPE_ERR;
+  }
+
+  // File name
+  JSString* str = JS_ValueToString(aCx, aArgv[1]);
+  NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
+
+  nsDependentJSString xpcomStr;
+  if (!xpcomStr.init(aCx, str)) {
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
+  }
+
+  mName = xpcomStr;
+
+  // Optional params
+  bool nativeEOL = false;
+  if (aArgc > 2) {
+    BlobPropertyBag d;
+    if (!d.Init(aCx, JS::Handle<JS::Value>::fromMarkedLocation(&aArgv[2]))) {
+      return NS_ERROR_TYPE_ERR;
+    }
+    mContentType = d.mType;
+    nativeEOL = d.mEndings == EndingTypes::Native;
+  }
+
+  return ParseBlobArrayArgument(aCx, aArgv[0], nativeEOL, GetXPConnectNative);
 }
 
 nsresult

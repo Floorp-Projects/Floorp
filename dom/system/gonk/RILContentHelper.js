@@ -617,15 +617,13 @@ RILContentHelper.prototype = {
    * nsIIccProvider
    */
 
-  get iccInfo() {
-    //TODO: Bug 814637 - WebIccManager API: support multiple sim cards.
-    let context = this.getRilContext(0);
+  getIccInfo: function getIccInfo(clientId) {
+    let context = this.getRilContext(clientId);
     return context && context.iccInfo;
   },
 
-  get cardState() {
-    //TODO: Bug 814637 - WebIccManager API: support multiple sim cards.
-    let context = this.getRilContext(0);
+  getCardState: function getIccInfo(clientId) {
+    let context = this.getRilContext(clientId);
     return context && context.cardState;
   },
 
@@ -836,7 +834,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getCardLockState: function getCardLockState(window, lockType) {
+  getCardLockState: function getCardLockState(clientId, window, lockType) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -846,7 +844,7 @@ RILContentHelper.prototype = {
     this._windowsMap[requestId] = window;
 
     cpmm.sendAsyncMessage("RIL:GetCardLockState", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         lockType: lockType,
         requestId: requestId
@@ -855,7 +853,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  unlockCardLock: function unlockCardLock(window, info) {
+  unlockCardLock: function unlockCardLock(clientId, window, info) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -865,13 +863,13 @@ RILContentHelper.prototype = {
     this._windowsMap[info.requestId] = window;
 
     cpmm.sendAsyncMessage("RIL:UnlockCardLock", {
-      clientId: 0,
+      clientId: clientId,
       data: info
     });
     return request;
   },
 
-  setCardLock: function setCardLock(window, info) {
+  setCardLock: function setCardLock(clientId, window, info) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -881,13 +879,15 @@ RILContentHelper.prototype = {
     this._windowsMap[info.requestId] = window;
 
     cpmm.sendAsyncMessage("RIL:SetCardLock", {
-      clientId: 0,
+      clientId: clientId,
       data: info
     });
     return request;
   },
 
-  getCardLockRetryCount: function getCardLockRetryCount(window, lockType) {
+  getCardLockRetryCount: function getCardLockRetryCount(clientId,
+                                                        window,
+                                                        lockType) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -895,7 +895,7 @@ RILContentHelper.prototype = {
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
     cpmm.sendAsyncMessage("RIL:GetCardLockRetryCount", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         lockType: lockType,
         requestId: requestId
@@ -943,19 +943,20 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  sendStkResponse: function sendStkResponse(window, command, response) {
+  sendStkResponse: function sendStkResponse(clientId, window, command, response) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
     response.command = command;
     cpmm.sendAsyncMessage("RIL:SendStkResponse", {
-      clientId: 0,
+      clientId: clientId,
       data: response
     });
   },
 
-  sendStkMenuSelection: function sendStkMenuSelection(window,
+  sendStkMenuSelection: function sendStkMenuSelection(clientId,
+                                                      window,
                                                       itemIdentifier,
                                                       helpRequested) {
     if (window == null) {
@@ -963,7 +964,7 @@ RILContentHelper.prototype = {
                                   Cr.NS_ERROR_UNEXPECTED);
     }
     cpmm.sendAsyncMessage("RIL:SendStkMenuSelection", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         itemIdentifier: itemIdentifier,
         helpRequested: helpRequested
@@ -971,36 +972,35 @@ RILContentHelper.prototype = {
     });
   },
 
-  sendStkTimerExpiration: function sendStkTimerExpiration(window,
+  sendStkTimerExpiration: function sendStkTimerExpiration(clientId,
+                                                          window,
                                                           timer) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
     cpmm.sendAsyncMessage("RIL:SendStkTimerExpiration", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         timer: timer
       }
     });
   },
 
-  sendStkEventDownload: function sendStkEventDownload(window,
-                                                      event) {
+  sendStkEventDownload: function sendStkEventDownload(clientId, window, event) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
     cpmm.sendAsyncMessage("RIL:SendStkEventDownload", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         event: event
       }
     });
   },
 
-  iccOpenChannel: function iccOpenChannel(window,
-                                          aid) {
+  iccOpenChannel: function iccOpenChannel(clientId, window, aid) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1010,7 +1010,7 @@ RILContentHelper.prototype = {
     let requestId = this.getRequestId(request);
 
     cpmm.sendAsyncMessage("RIL:IccOpenChannel", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         requestId: requestId,
         aid: aid
@@ -1019,9 +1019,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  iccExchangeAPDU: function iccExchangeAPDU(window,
-                                            channel,
-                                            apdu) {
+  iccExchangeAPDU: function iccExchangeAPDU(clientId, window, channel, apdu) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1032,7 +1030,7 @@ RILContentHelper.prototype = {
 
     //Potentially you need serialization here and can't pass the jsval through
     cpmm.sendAsyncMessage("RIL:IccExchangeAPDU", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         requestId: requestId,
         channel: channel,
@@ -1042,8 +1040,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  iccCloseChannel: function iccCloseChannel(window,
-                                            channel) {
+  iccCloseChannel: function iccCloseChannel(clientId, window, channel) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1053,7 +1050,7 @@ RILContentHelper.prototype = {
     let requestId = this.getRequestId(request);
 
     cpmm.sendAsyncMessage("RIL:IccCloseChannel", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         requestId: requestId,
         channel: channel
@@ -1062,7 +1059,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  readContacts: function readContacts(window, contactType) {
+  readContacts: function readContacts(clientId, window, contactType) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1073,7 +1070,7 @@ RILContentHelper.prototype = {
     this._windowsMap[requestId] = window;
 
     cpmm.sendAsyncMessage("RIL:ReadIccContacts", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         requestId: requestId,
         contactType: contactType
@@ -1082,7 +1079,7 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  updateContact: function updateContact(window, contactType, contact, pin2) {
+  updateContact: function updateContact(clientId, window, contactType, contact, pin2) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
@@ -1117,7 +1114,7 @@ RILContentHelper.prototype = {
     iccContact.id = contact.id;
 
     cpmm.sendAsyncMessage("RIL:UpdateIccContact", {
-      clientId: 0,
+      clientId: clientId,
       data: {
         requestId: requestId,
         contactType: contactType,
@@ -1467,16 +1464,14 @@ RILContentHelper.prototype = {
     this.unregisterListener("_cellBroadcastListeners", 0, listener);
   },
 
-  registerIccMsg: function registerIccMsg(listener) {
+  registerIccMsg: function registerIccMsg(clientId, listener) {
     debug("Registering for ICC related messages");
-    //TODO: Bug 814637 - WebIccManager API: support multiple sim cards.
-    this.registerListener("_iccListeners", 0, listener);
+    this.registerListener("_iccListeners", clientId, listener);
     cpmm.sendAsyncMessage("RIL:RegisterIccMsg");
   },
 
-  unregisterIccMsg: function unregisterIccMsg(listener) {
-    //TODO: Bug 814637 - WebIccManager API: support multiple sim cards.
-    this.unregisterListener("_iccListeners", 0, listener);
+  unregisterIccMsg: function unregisterIccMsg(clientId, listener) {
+    this.unregisterListener("_iccListeners", clientId, listener);
   },
 
   // nsIObserver

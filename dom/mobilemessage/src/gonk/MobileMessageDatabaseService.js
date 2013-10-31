@@ -24,7 +24,7 @@ const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 
 const DB_NAME = "sms";
-const DB_VERSION = 12;
+const DB_VERSION = 14;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -218,6 +218,14 @@ MobileMessageDatabaseService.prototype = {
             self.upgradeSchema11(event.target.transaction, next);
             break;
           case 12:
+            if (DEBUG) debug("Upgrade to version 13. Replaced deliveryStatus by deliveryInfo.");
+            self.upgradeSchema12(event.target.transaction, next);
+            break;
+          case 13:
+            if (DEBUG) debug("Upgrade to version 14. Fix the wrong participants.");
+            self.upgradeSchema13(event.target.transaction, next);
+            break;
+          case 14:
             // This will need to be moved for each new version
             if (DEBUG) debug("Upgrade finished.");
             break;
@@ -322,8 +330,8 @@ MobileMessageDatabaseService.prototype = {
           messageRecord.deliveryStatus = DELIVERY_STATUS_ERROR;
         } else {
           // Set delivery status to error.
-          for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
-            messageRecord.deliveryStatus[i] = DELIVERY_STATUS_ERROR;
+          for (let i = 0; i < messageRecord.deliveryInfo.length; i++) {
+            messageRecord.deliveryInfo[i].deliveryStatus = DELIVERY_STATUS_ERROR;
           }
         }
 
@@ -350,9 +358,10 @@ MobileMessageDatabaseService.prototype = {
         }
 
         // Set delivery status to error.
-        if (messageRecord.deliveryStatus.length == 1 &&
-            messageRecord.deliveryStatus[0] == DELIVERY_STATUS_PENDING) {
-          messageRecord.deliveryStatus = [DELIVERY_STATUS_ERROR];
+        let deliveryInfo = messageRecord.deliveryInfo;
+        if (deliveryInfo.length == 1 &&
+            deliveryInfo[0].deliveryStatus == DELIVERY_STATUS_PENDING) {
+          deliveryInfo[0].deliveryStatus = DELIVERY_STATUS_ERROR;
         }
 
         messageCursor.update(messageRecord);
@@ -793,6 +802,270 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
+  /**
+   * Replace deliveryStatus by deliveryInfo.
+   */
+  upgradeSchema12: function upgradeSchema12(transaction, next) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        next();
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      if (messageRecord.type == "mms") {
+        messageRecord.deliveryInfo = [];
+
+        if (messageRecord.deliveryStatus.length == 1 &&
+            (messageRecord.delivery == DELIVERY_NOT_DOWNLOADED ||
+             messageRecord.delivery == DELIVERY_RECEIVED)) {
+          messageRecord.deliveryInfo.push({
+            receiver: null,
+            deliveryStatus: messageRecord.deliveryStatus[0] });
+        } else {
+          for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
+            messageRecord.deliveryInfo.push({
+              receiver: messageRecord.receivers[i],
+              deliveryStatus: messageRecord.deliveryStatus[i] });
+          }
+        }
+        delete messageRecord.deliveryStatus;
+        cursor.update(messageRecord);
+      }
+      cursor.continue();
+    };
+  },
+
+  /**
+   * Fix the wrong participants.
+   */
+  upgradeSchema13: function upgradeSchema13(transaction, next) {
+    let participantStore = transaction.objectStore(PARTICIPANT_STORE_NAME);
+    let threadStore = transaction.objectStore(THREAD_STORE_NAME);
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+    let self = this;
+
+    let isInvalid = function (participantRecord) {
+      let entries = [];
+      for (let addr of participantRecord.addresses) {
+        entries.push({
+          normalized: addr,
+          parsed: PhoneNumberUtils.parseWithMCC(addr, null)
+        })
+      }
+      for (let ix = 0 ; ix < entries.length - 1; ix++) {
+        let entry1 = entries[ix];
+        for (let iy = ix + 1 ; iy < entries.length; iy ++) {
+          let entry2 = entries[iy];
+          if (!self.matchPhoneNumbers(entry1.normalized, entry1.parsed,
+                                      entry2.normalized, entry2.parsed)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    let invalidParticipantIds = [];
+    participantStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (cursor) {
+        let participantRecord = cursor.value;
+        // Check if this participant record is valid
+        if (isInvalid(participantRecord)) {
+          invalidParticipantIds.push(participantRecord.id);
+          cursor.delete();
+        }
+        cursor.continue();
+        return;
+      }
+
+      // Participant store cursor iteration done.
+      if (!invalidParticipantIds.length) {
+        next();
+      }
+
+      // Find affected thread.
+      let wrongThreads = [];
+      threadStore.openCursor().onsuccess = function(event) {
+        let threadCursor = event.target.result;
+        if (threadCursor) {
+          let threadRecord = threadCursor.value;
+          let participantIds = threadRecord.participantIds;
+          let foundInvalid = false;
+          for (let invalidParticipantId of invalidParticipantIds) {
+            if (participantIds.indexOf(invalidParticipantId) != -1) {
+              foundInvalid = true;
+              break;
+            }
+          }
+          if (foundInvalid) {
+            wrongThreads.push(threadRecord.id);
+            threadCursor.delete();
+          }
+          threadCursor.continue();
+          return;
+        }
+
+        if (!wrongThreads.length) {
+          next();
+          return;
+        }
+        // Use recursive function to avoid we add participant twice.
+        (function createUpdateThreadAndParticipant(ix) {
+          let threadId = wrongThreads[ix];
+          let range = IDBKeyRange.bound([threadId, 0], [threadId, ""]);
+          messageStore.index("threadId").openCursor(range).onsuccess = function(event) {
+            let messageCursor = event.target.result;
+            if (!messageCursor) {
+              ix++;
+              if (ix === wrongThreads.length) {
+                next();
+                return;
+              }
+              createUpdateThreadAndParticipant(ix);
+              return;
+            }
+
+            let messageRecord = messageCursor.value;
+            let timestamp = messageRecord.timestamp;
+            let threadParticipants = [];
+            // Recaculate the thread participants of received message.
+            if (messageRecord.delivery === DELIVERY_RECEIVED ||
+                messageRecord.delivery === DELIVERY_NOT_DOWNLOADED) {
+              threadParticipants.push(messageRecord.sender);
+              if (messageRecord.type == "mms") {
+                this.fillReceivedMmsThreadParticipants(messageRecord, threadParticipants);
+              }
+            }
+            // Recaculate the thread participants of sent messages and error
+            // messages. In error sms messages, we don't have error received sms.
+            // In received MMS, we don't update the error to deliver field but
+            // deliverStatus. So we only consider sent message in DELIVERY_ERROR.
+            else if (messageRecord.delivery === DELIVERY_SENT ||
+                messageRecord.delivery === DELIVERY_ERROR) {
+              if (messageRecord.type == "sms") {
+                threadParticipants = [messageRecord.receiver];
+              } else if (messageRecord.type == "mms") {
+                threadParticipants = messageRecord.receivers;
+              }
+            }
+            self.findThreadRecordByParticipants(threadStore, participantStore,
+                                                threadParticipants, true,
+                                                function (threadRecord,
+                                                          participantIds) {
+              if (!participantIds) {
+                debug("participantIds is empty!");
+                return;
+              }
+
+              let timestamp = messageRecord.timestamp;
+              // Setup participantIdsIndex.
+              messageRecord.participantIdsIndex = [];
+              for each (let id in participantIds) {
+                messageRecord.participantIdsIndex.push([id, timestamp]);
+              }
+              if (threadRecord) {
+                let needsUpdate = false;
+
+                if (threadRecord.lastTimestamp <= timestamp) {
+                  threadRecord.lastTimestamp = timestamp;
+                  threadRecord.subject = messageRecord.body;
+                  threadRecord.lastMessageId = messageRecord.id;
+                  threadRecord.lastMessageType = messageRecord.type;
+                  needsUpdate = true;
+                }
+
+                if (!messageRecord.read) {
+                  threadRecord.unreadCount++;
+                  needsUpdate = true;
+                }
+
+                if (needsUpdate) {
+                  threadStore.put(threadRecord);
+                }
+                messageRecord.threadId = threadRecord.id;
+                messageRecord.threadIdIndex = [threadRecord.id, timestamp];
+                messageCursor.update(messageRecord);
+                messageCursor.continue();
+                return;
+              }
+
+              let threadRecord = {
+                participantIds: participantIds,
+                participantAddresses: threadParticipants,
+                lastMessageId: messageRecord.id,
+                lastTimestamp: timestamp,
+                subject: messageRecord.body,
+                unreadCount: messageRecord.read ? 0 : 1,
+                lastMessageType: messageRecord.type
+              };
+              threadStore.add(threadRecord).onsuccess = function (event) {
+                let threadId = event.target.result;
+                // Setup threadId & threadIdIndex.
+                messageRecord.threadId = threadId;
+                messageRecord.threadIdIndex = [threadId, timestamp];
+                messageCursor.update(messageRecord);
+                messageCursor.continue();
+              };
+            });
+          };
+        })(0);
+      };
+    };
+  },
+
+  matchParsedPhoneNumbers: function matchParsedPhoneNumbers(addr1, parsedAddr1,
+                                                            addr2, parsedAddr2) {
+    if ((parsedAddr1.internationalNumber &&
+         parsedAddr1.internationalNumber === parsedAddr2.internationalNumber) ||
+        (parsedAddr1.nationalNumber &&
+         parsedAddr1.nationalNumber === parsedAddr2.nationalNumber)) {
+      return true;
+    }
+
+    if (parsedAddr1.countryName != parsedAddr2.countryName) {
+      return false;
+    }
+
+    let ssPref = "dom.phonenumber.substringmatching." + parsedAddr1.countryName;
+    if (Services.prefs.getPrefType(ssPref) != Ci.nsIPrefBranch.PREF_INT) {
+      return false;
+    }
+
+    let val = Services.prefs.getIntPref(ssPref);
+    return addr1.length > val &&
+           addr2.length > val &&
+           addr1.slice(-val) === addr2.slice(-val);
+  },
+
+  matchPhoneNumbers: function matchPhoneNumbers(addr1, parsedAddr1, addr2, parsedAddr2) {
+    if (parsedAddr1 && parsedAddr2) {
+      return this.matchParsedPhoneNumbers(addr1, parsedAddr1, addr2, parsedAddr2);
+    }
+
+    if (parsedAddr1) {
+      parsedAddr2 = PhoneNumberUtils.parseWithCountryName(addr2, parsedAddr1.countryName);
+      if (parsedAddr2) {
+        return this.matchParsedPhoneNumbers(addr1, parsedAddr1, addr2, parsedAddr2);
+      }
+
+      return false;
+    }
+
+    if (parsedAddr2) {
+      parsedAddr1 = PhoneNumberUtils.parseWithCountryName(addr1, parsedAddr2.countryName);
+      if (parsedAddr1) {
+        return this.matchParsedPhoneNumbers(addr1, parsedAddr1, addr2, parsedAddr2);
+      }
+    }
+
+    return false;
+  },
+
   createDomMessageFromRecord: function createDomMessageFromRecord(aMessageRecord) {
     if (DEBUG) {
       debug("createDomMessageFromRecord: " + JSON.stringify(aMessageRecord));
@@ -855,7 +1128,7 @@ MobileMessageDatabaseService.prototype = {
       return gMobileMessageService.createMmsMessage(aMessageRecord.id,
                                                     aMessageRecord.threadId,
                                                     aMessageRecord.delivery,
-                                                    aMessageRecord.deliveryStatus,
+                                                    aMessageRecord.deliveryInfo,
                                                     aMessageRecord.sender,
                                                     aMessageRecord.receivers,
                                                     aMessageRecord.timestamp,
@@ -942,31 +1215,13 @@ MobileMessageDatabaseService.prototype = {
 
         let participantRecord = cursor.value;
         for (let storedAddress of participantRecord.addresses) {
-          let match = false;
-          if (parsedAddress) {
-            // 2-1) If input number is an international one, then a potential
-            //      participant must be stored as local type.  Then just check
-            //      if stored number ends with the national number(987654321) of
-            //      the input number.
-            if (storedAddress.endsWith(parsedAddress.nationalNumber)) {
-              match = true;
-            }
-          } else {
-            // 2-2) Else if the stored number is an international one, then the
-            //      input number must be local type.  Then just check whether
-            //      does it ends with the national number of the stored number.
-            let parsedStoredAddress =
-              PhoneNumberUtils.parseWithMCC(storedAddress, null);
-            if (parsedStoredAddress
-                && normalizedAddress.endsWith(parsedStoredAddress.nationalNumber)) {
-              match = true;
-            }
-          }
+          let parsedStoredAddress = PhoneNumberUtils.parseWithMCC(storedAddress, null);
+          let match = this.matchPhoneNumbers(normalizedAddress, parsedAddress,
+                                             storedAddress, parsedStoredAddress);
           if (!match) {
             // 3) Else we fail to match current stored participant record.
             continue;
           }
-
           // Match!
           if (aCreate) {
             // In a READ-WRITE transaction, append one more possible address for
@@ -975,6 +1230,7 @@ MobileMessageDatabaseService.prototype = {
               participantRecord.addresses.concat(allPossibleAddresses);
             cursor.update(participantRecord);
           }
+
           if (DEBUG) {
             debug("findParticipantRecordByAddress: match "
                   + JSON.stringify(cursor.value));
@@ -1246,9 +1502,10 @@ MobileMessageDatabaseService.prototype = {
             }
           } else if (messageRecord.type == "mms") {
             if (!receiver) {
-              for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
-                if (messageRecord.deliveryStatus[i] != deliveryStatus) {
-                  messageRecord.deliveryStatus[i] = deliveryStatus;
+              let deliveryInfo = messageRecord.deliveryInfo;
+              for (let i = 0; i < deliveryInfo.length; i++) {
+                if (deliveryInfo[i].deliveryStatus != deliveryStatus) {
+                  deliveryInfo[i].deliveryStatus = deliveryStatus;
                   isRecordUpdated = true;
                 }
               }
@@ -1296,9 +1553,15 @@ MobileMessageDatabaseService.prototype = {
                 }
 
                 found = true;
-                if (messageRecord.deliveryStatus[i] != deliveryStatus) {
-                  messageRecord.deliveryStatus[i] = deliveryStatus;
-                  isRecordUpdated = true;
+                let deliveryInfo = messageRecord.deliveryInfo;
+                for (let j = 0; j < deliveryInfo.length; j++) {
+                  if (deliveryInfo[j].receiver != storedReceiver) {
+                    continue;
+                  }
+                  if (deliveryInfo[j].deliveryStatus != deliveryStatus) {
+                    deliveryInfo[j].deliveryStatus = deliveryStatus;
+                    isRecordUpdated = true;
+                  }
                 }
               }
 
@@ -1336,6 +1599,44 @@ MobileMessageDatabaseService.prototype = {
     });
   },
 
+  fillReceivedMmsThreadParticipants: function fillReceivedMmsThreadParticipants(aMessage, threadParticipants) {
+    let receivers = aMessage.receivers;
+    // If we don't want to disable the MMS grouping for receiving, we need to
+    // add the receivers (excluding the user's own number) to the participants
+    // for creating the thread. Some cases might be investigated as below:
+    //
+    // 1. receivers.length == 0
+    //    This usually happens when receiving an MMS notification indication
+    //    which doesn't carry any receivers.
+    // 2. receivers.length == 1
+    //    If the receivers contain single phone number, we don't need to
+    //    add it into participants because we know that number is our own.
+    // 3. receivers.length >= 2
+    //    If the receivers contain multiple phone numbers, we need to add all
+    //    of them but not the user's own number into participants.
+    if (DISABLE_MMS_GROUPING_FOR_RECEIVING || receivers.length < 2) {
+      return;
+    }
+    let isSuccess = false;
+    let slicedReceivers = receivers.slice();
+    if (aMessage.msisdn) {
+      let found = slicedReceivers.indexOf(aMessage.msisdn);
+      if (found !== -1) {
+        isSuccess = true;
+        slicedReceivers.splice(found, 1);
+      }
+    }
+
+    if (!isSuccess) {
+      // For some SIMs we cannot retrieve the vaild MSISDN (i.e. the user's
+      // own phone number), so we cannot correcly exclude the user's own
+      // number from the receivers, thus wrongly building the thread index.
+      if (DEBUG) debug("Error! Cannot strip out user's own phone number!");
+    }
+
+    threadParticipants = threadParticipants.concat(slicedReceivers);
+  },
+
   /**
    * nsIRilMobileMessageDatabaseService API
    */
@@ -1345,7 +1646,7 @@ MobileMessageDatabaseService.prototype = {
         (aMessage.type == "sms" && aMessage.messageClass == undefined) ||
         (aMessage.type == "mms" && (aMessage.delivery == undefined ||
                                     aMessage.transactionId == undefined ||
-                                    !Array.isArray(aMessage.deliveryStatus) ||
+                                    !Array.isArray(aMessage.deliveryInfo) ||
                                     !Array.isArray(aMessage.receivers))) ||
         aMessage.sender == undefined ||
         aMessage.timestamp == undefined) {
@@ -1355,42 +1656,8 @@ MobileMessageDatabaseService.prototype = {
       return;
     }
     let threadParticipants = [aMessage.sender];
-    if (aMessage.type == "mms" && !DISABLE_MMS_GROUPING_FOR_RECEIVING) {
-      let receivers = aMessage.receivers;
-      // If we don't want to disable the MMS grouping for receiving, we need to
-      // add the receivers (excluding the user's own number) to the participants
-      // for creating the thread. Some cases might be investigated as below:
-      //
-      // 1. receivers.length == 0
-      //    This usually happens when receiving an MMS notification indication
-      //    which doesn't carry any receivers.
-      // 2. receivers.length == 1
-      //    If the receivers contain single phone number, we don't need to
-      //    add it into participants because we know that number is our own.
-      // 3. receivers.length >= 2
-      //    If the receivers contain multiple phone numbers, we need to add all
-      //    of them but not the user's own number into participants.
-      if (receivers.length >= 2) {
-        let isSuccess = false;
-        let slicedReceivers = receivers.slice();
-        if (aMessage.phoneNumber) {
-          let found = slicedReceivers.indexOf(aMessage.phoneNumber);
-          if (found !== -1) {
-            isSuccess = true;
-            slicedReceivers.splice(found, 1);
-          }
-        }
-
-        if (!isSuccess) {
-          // For some SIMs we cannot retrieve the vaild MSISDN or MDN (i.e. the
-          // user's own phone number), so we cannot correcly exclude the user's
-          // own number from the receivers, thus wrongly building the thread
-          // index.
-          if (DEBUG) debug("Error! Cannot strip out user's own phone number!");
-        }
-
-        threadParticipants = threadParticipants.concat(slicedReceivers);
-      }
+    if (aMessage.type == "mms") {
+      this.fillReceivedMmsThreadParticipants(aMessage, threadParticipants);
     }
 
     let timestamp = aMessage.timestamp;
@@ -1443,9 +1710,10 @@ MobileMessageDatabaseService.prototype = {
         }
         return;
       }
-      aMessage.deliveryStatus = [];
+      aMessage.deliveryInfo = [];
       for (let i = 0; i < receivers.length; i++) {
-        aMessage.deliveryStatus.push(deliveryStatus);
+        aMessage.deliveryInfo.push({
+          receiver: receivers[i], deliveryStatus: deliveryStatus });
       }
     }
 

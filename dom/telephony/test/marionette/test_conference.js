@@ -5,685 +5,758 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
 let conference;
-let outNumber = "5555551111";
-let inNumber = "5555552222";
-let inNumber2 = "5555553333";
-let outgoingCall;
-let incomingCall;
-let incomingCall2;
-let gotOriginalConnected = false;
+
+/**
+ * The functions are created to provide the string format of the emulator call
+ * list results.
+ *
+ * Usage:
+ *   let outInfo = OutCallStrPool('911');
+ *   outInfo.ringing == "outbound to 911        : ringing"
+ *   outInfo.active  == "outbound to 911        : active"
+ */
+function CallStrPool(prefix, number) {
+  let padding = "           : ";
+  let numberInfo = prefix + number + padding.substr(number.length);
+
+  let info = {};
+  let states = ['ringing', 'incoming', 'active', 'held'];
+  for (let state of states) {
+    info[state] = numberInfo + state;
+  }
+
+  return info;
+}
+
+function OutCallStrPool(number) {
+  return CallStrPool("outbound to  ", number);
+}
+
+function InCallStrPool(number) {
+  return CallStrPool("inbound from ", number);
+}
+
+function checkInitialState() {
+  log("Verify initial state.");
+  ok(telephony.calls, 'telephony.call');
+  checkTelephonyActiveAndCalls(null, []);
+  ok(conference.calls, 'conference.calls');
+  checkConferenceStateAndCalls('', []);
+}
+
+function checkEventCallState(event, call, state) {
+  is(call, event.call, "event.call");
+  is(call.state, state, "call state");
+}
+
+function checkTelephonyActiveAndCalls(active, calls) {
+  is(telephony.active, active, "telephony.active");
+  is(telephony.calls.length, calls.length, "telephony.calls");
+  for (let i = 0; i < calls.length; ++i) {
+    is(telephony.calls[i], calls[i]);
+  }
+}
+
+function checkConferenceStateAndCalls(state, calls) {
+  is(conference.state, state, "conference.state");
+  is(conference.calls.length, calls.length, "conference.calls");
+  for (let i = 0; i < calls.length; i++) {
+    is(conference.calls[i], calls[i]);
+  }
+}
+
+function checkState(active, calls, conferenceState, conferenceCalls) {
+  checkTelephonyActiveAndCalls(active, calls);
+  checkConferenceStateAndCalls(conferenceState, conferenceCalls);
+}
+
+function checkEmulatorCallList(expectedCallList) {
+  let deferred = Promise.defer();
+
+  emulator.run("gsm list", function(result) {
+    log("Call list is now: " + result);
+    for (let i = 0; i < expectedCallList.length; ++i) {
+      is(result[i], expectedCallList[i], "emulator calllist");
+    }
+    is(result[expectedCallList.length], "OK", "emulator calllist");
+    deferred.resolve();
+  });
+
+  return deferred.promise;
+}
+
+// Promise.
+function checkAll(active, calls, conferenceState, conferenceCalls, callList) {
+  checkState(active, calls, conferenceState, conferenceCalls);
+  return checkEmulatorCallList(callList);
+}
 
 // Make sure there's no pending event before we jump to the next case.
-function receivedPending(received, pending, nextTest) {
+function receivedPending(received, pending, nextAction) {
   let index = pending.indexOf(received);
   if (index != -1) {
     pending.splice(index, 1);
   }
   if (pending.length === 0) {
-    nextTest();
+    nextAction();
   }
 }
 
-function checkState(telephonyActive, telephonyCalls, conferenceState,
-                    conferenceCalls) {
-  is(telephony.active, telephonyActive);
+function dial(number) {
+  log("Make an outgoing call: " + number);
 
-  is(telephony.calls.length, telephonyCalls.length);
-  for (let i = 0; i < telephonyCalls.length; i++) {
-    is(telephony.calls[i], telephonyCalls[i]);
-  }
+  let deferred = Promise.defer();
+  let call = telephony.dial(number);
 
-  is(conference.state, conferenceState);
-  is(conference.calls.length, conferenceCalls.length);
-  for (let i = 0; i < conferenceCalls.length; i++) {
-    is(conference.calls[i], conferenceCalls[i]);
-  }
-}
+  ok(call);
+  is(call.number, number);
+  is(call.state, "dialing");
 
-function dial() {
-  log("Making an outgoing call.");
-  outgoingCall = telephony.dial(outNumber);
-  ok(outgoingCall);
-  is(outgoingCall.number, outNumber);
-  is(outgoingCall.state, "dialing");
-
-  checkState(outgoingCall, [outgoingCall], '', []);
-
-  outgoingCall.onalerting = function(event) {
+  call.onalerting = function onalerting(event) {
+    call.onalerting = null;
     log("Received 'onalerting' call event.");
-
-    outgoingCall.onalerting = null;
-
-    is(outgoingCall, event.call);
-    is(outgoingCall.state, "alerting");
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : ringing");
-      is(result[1], "OK");
-
-      answer();
-    });
+    checkEventCallState(event, call, "alerting");
+    deferred.resolve(call);
   };
+
+  return deferred.promise;
 }
 
-function answer() {
-  log("Answering the outgoing call.");
-
-  // We get no "connecting" event when the remote party answers the call.
-  outgoingCall.onconnected = function(event) {
-    log("Received 'connected' call event for the original outgoing call.");
-
-    outgoingCall.onconnected = null;
-
-    is(outgoingCall, event.call);
-    is(outgoingCall.state, "connected");
-    is(outgoingCall, telephony.active);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : active");
-      is(result[1], "OK");
-
-      if(!gotOriginalConnected){
-        gotOriginalConnected = true;
-        simulateIncoming();
-      } else {
-        // Received connected event for original call multiple times (fail).
-        ok(false,
-           "Received 'connected' event for original call multiple times");
-      }
-    });
-  };
-  emulator.run("gsm accept " + outNumber);
-}
-
-// With one connected call already, simulate an incoming call.
-function simulateIncoming() {
-  log("Simulating an incoming call (with one call already connected).");
-
-  telephony.onincoming = function(event) {
-    log("Received 'incoming' call event.");
-
-    telephony.onincoming = null;
-
-    incomingCall = event.call;
-    ok(incomingCall);
-    is(incomingCall.number, inNumber);
-    is(incomingCall.state, "incoming");
-
-    // Should be two calls now.
-    checkState(outgoingCall, [outgoingCall, incomingCall], '', []);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : active");
-      is(result[1], "inbound from " + inNumber + " : incoming");
-      is(result[2], "OK");
-
-      answerIncoming();
-    });
-  };
-  emulator.run("gsm call " + inNumber);
-}
-
-// Answer incoming call; original outgoing call should be held.
-function answerIncoming() {
+function answer(call) {
   log("Answering the incoming call.");
 
-  let gotConnecting = false;
-  incomingCall.onconnecting = function(event) {
-    log("Received 'connecting' call event for incoming/2nd call.");
+  let deferred = Promise.defer();
 
-    incomingCall.onconnecting = null;
-
-    is(incomingCall, event.call);
-    is(incomingCall.state, "connecting");
-    gotConnecting = true;
+  call.onconnecting = function onconnectingIn(event) {
+    log("Received 'connecting' call event for incoming call.");
+    call.onconnecting = null;
+    checkEventCallState(event, call, "connecting");
   };
 
-  incomingCall.onconnected = function(event) {
-    log("Received 'connected' call event for incoming/2nd call.");
-
-    incomingCall.onconnected = null;
-
-    is(incomingCall, event.call);
-    is(incomingCall.state, "connected");
-    ok(gotConnecting);
-
-    is(outgoingCall.state, "held");
-    checkState(incomingCall, [outgoingCall, incomingCall], '', []);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : held");
-      is(result[1], "inbound from " + inNumber + " : active");
-      is(result[2], "OK");
-
-      conferenceAddTwoCalls();
-    });
+  call.onconnected = function onconnectedIn(event) {
+    log("Received 'connected' call event for incoming call.");
+    call.onconnected = null;
+    checkEventCallState(event, call, "connected");
+    ok(!call.onconnecting);
+    deferred.resolve(call);
   };
-  incomingCall.answer();
+  call.answer();
+
+  return deferred.promise;
 }
 
-// Create a conference call. The calls in conference share the same call state.
-function conferenceAddTwoCalls() {
-  log("Creating a conference call.");
+function remoteDial(number) {
+  log("Simulating an incoming call.");
 
-  let pending = ["conference.oncallschanged", "conference.onconnected",
-                 "outgoingCall.onstatechange", "outgoingCall.ongroupchange",
-                 "incomingCall.onstatechange", "incomingCall.ongroupchange"];
-  let nextTest = conferenceHold;
+  let deferred = Promise.defer();
 
-  // We are expecting to receive conference.oncallschanged two times since
-  // two calls are added into conference.
-  let expected = [outgoingCall, incomingCall];
-  conference.oncallschanged = function(event) {
-    log("Received 'callschanged' event for the conference call.");
+  telephony.onincoming = function onincoming(event) {
+    log("Received 'incoming' call event.");
+    telephony.onimcoming = null;
 
-    let index = expected.indexOf(event.call);
-    ok(index != -1);
-    expected.splice(index, 1);
-    is(conference.calls[conference.calls.length - 1].number, event.call.number);
+    let call = event.call;
 
-    if (expected.length === 0) {
-      conference.oncallschanged = null;
-      receivedPending("conference.oncallschanged", pending, nextTest);
+    ok(call);
+    is(call.number, number);
+    is(call.state, "incoming");
+
+    deferred.resolve(call);
+  };
+  emulator.run("gsm call " + number);
+
+  return deferred.promise;
+}
+
+function remoteAnswer(call) {
+  log("Remote answering the call.");
+
+  let deferred = Promise.defer();
+
+  call.onconnected = function onconnected(event) {
+    log("Received 'connected' call event.");
+    call.onconnected = null;
+    checkEventCallState(event, call, "connected");
+    deferred.resolve(call);
+  };
+  emulator.run("gsm accept " + call.number);
+
+  return deferred.promise;
+}
+
+function remoteHangUp(call) {
+  log("Remote hanging up the call.");
+
+  let deferred = Promise.defer();
+
+  call.ondisconnected = function ondisconnected(event) {
+    log("Received 'disconnected' call event.");
+    call.ondisconnected = null;
+    checkEventCallState(event, call, "disconnected");
+    deferred.resolve(call);
+  };
+  emulator.run("gsm cancel " + call.number);
+
+  return deferred.promise;
+}
+
+function remoteHangUpCalls(calls) {
+  let promise = Promise.resolve();
+
+  for (let call of calls) {
+    promise = promise.then(remoteHangUp.bind(null, call));
+  }
+
+  return promise;
+}
+
+// container might be telephony or conference.
+function check_oncallschanged(container, containerName, expectedCalls,
+                              callback) {
+  container.oncallschanged = function(event) {
+    log("Received 'callschanged' event for the " + containerName);
+    if (event.call) {
+      let index = expectedCalls.indexOf(event.call);
+      ok(index != -1);
+      expectedCalls.splice(index, 1);
+
+      if (expectedCalls.length === 0) {
+        container.oncallschanged = null;
+        callback();
+      }
     }
   };
-
-  conference.onconnected = function(event) {
-    log("Received 'connected' event for the conference call.");
-    conference.onconnected = null;
-
-    ok(!conference.oncallschanged);
-
-    checkState(conference, [], 'connected', [outgoingCall, incomingCall]);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : active");
-      is(result[1], "inbound from " + inNumber + " : active");
-      is(result[2], "OK");
-
-      receivedPending("conference.onconnected", pending, nextTest);
-    });
-  };
-
-  outgoingCall.ongroupchange = function(event) {
-    log("Received 'groupchange' event for the outgoing call.");
-    outgoingCall.ongroupchange = null;
-
-    ok(outgoingCall.group);
-    is(outgoingCall.group, conference);
-
-    receivedPending("outgoingCall.ongroupchange", pending, nextTest);
-  };
-
-  outgoingCall.onstatechange = function(event) {
-    log("Received 'statechange' event for the outgoing call.");
-    outgoingCall.onstatechange = null;
-
-    ok(!outgoingCall.ongroupchange);
-    is(outgoingCall.state, conference.state);
-
-    receivedPending("outgoingCall.onstatechange", pending, nextTest);
-  };
-
-  incomingCall.ongroupchange = function(event) {
-    log("Received 'groupchange' event for the incoming call.");
-    incomingCall.ongroupchange = null;
-
-    ok(incomingCall.group);
-    is(incomingCall.group, conference);
-
-    receivedPending("incomingCall.ongroupchange", pending, nextTest);
-  };
-
-  incomingCall.onstatechange = function(event) {
-    log("Received 'statechange' event for the incoming call.");
-    incomingCall.onstatechange = null;
-
-    ok(!incomingCall.ongroupchange);
-    is(incomingCall.state, conference.state);
-
-    receivedPending("incomingCall.onstatechange", pending, nextTest);
-  };
-
-  conference.add(outgoingCall, incomingCall);
 }
 
-function conferenceHold() {
+function check_ongroupchange(call, callName, group, callback) {
+  call.ongroupchange = function(event) {
+    log("Received 'groupchange' event for the " + callName);
+    call.ongroupchange = null;
+
+    is(call.group, group);
+    callback();
+  };
+}
+
+function check_onstatechange(call, callName, state, callback) {
+  call.onstatechange = function(event) {
+    log("Received 'statechange' event for the " + callName);
+    call.onstatechange = null;
+
+    is(call.state, state);
+    callback();
+  };
+}
+
+function StateEventChecker(state, previousEvent) {
+  let event = 'on' + state;
+
+  return function(call, callName, callback) {
+    call[event] = function() {
+      log("Received '" + state + "' event for the " + callName);
+      call[event] = null;
+
+      if (previousEvent) {
+        // We always clear the event handler when the event is received.
+        // Therefore, if the corresponding handler is not existed, the expected
+        // previous event has been already received.
+        ok(!call[previousEvent]);
+      }
+      is(call.state, state);
+      callback();
+    };
+  };
+}
+
+let check_onholding    = StateEventChecker('holding', null);
+let check_onheld       = StateEventChecker('held', 'onholding');
+let check_onresuming   = StateEventChecker('resuming', null);
+let check_onconnected  = StateEventChecker('connected', 'onresuming');
+
+// The length of callsToAdd should be 1 or 2.
+function addCallsToConference(callsToAdd, connectedCallback) {
+  log("Add " + callsToAdd.length + " calls into conference.");
+
+  let deferred = Promise.defer();
+  let done = function() {
+    deferred.resolve();
+  };
+
+  let pending = ["conference.oncallschanged", "conference.onconnected"];
+  let receive = function(name) {
+    receivedPending(name, pending, done);
+  };
+
+  for (let call of callsToAdd) {
+    let callName = "callToAdd (" + call.number + ')';
+
+    let ongroupchange = callName + ".ongroupchange";
+    pending.push(ongroupchange);
+    check_ongroupchange(call, callName, conference,
+                        receive.bind(null, ongroupchange));
+
+    let onstatechange = callName + ".onstatechange";
+    pending.push(onstatechange);
+    check_onstatechange(call, callName, 'connected',
+                        receive.bind(null, onstatechange));
+  }
+
+  check_oncallschanged(conference, 'conference', callsToAdd,
+                       receive.bind(null, "conference.oncallschanged"));
+
+  check_onconnected(conference, "conference", function() {
+    ok(!conference.oncallschanged);
+    if (typeof connectedCallback === 'function') {
+      connectedCallback();
+    }
+    receive("conference.onconnected");
+  });
+
+  // Cannot use apply() through webidl, so just separate the cases to handle.
+  if (callsToAdd.length == 2) {
+    conference.add(callsToAdd[0], callsToAdd[1]);
+  } else {
+    conference.add(callsToAdd[0]);
+  }
+
+  return deferred.promise;
+}
+
+function holdConference(calls, heldCallback) {
   log("Holding the conference call.");
 
-  let pending = ["conference.onholding", "conference.onheld",
-                 "outgoingCall.onholding", "outgoingCall.onheld",
-                 "incomingCall.onholding", "incomingCall.onheld"];
-  let nextTest = conferenceResume;
-
-  conference.onholding = function(event) {
-    log("Received 'holding' event for the conference call.");
-    conference.onholding = null;
-
-    is(conference.state, 'holding');
-
-    receivedPending("conference.onholding", pending, nextTest);
+  let deferred = Promise.defer();
+  let done = function() {
+    deferred.resolve();
   };
 
-  conference.onheld = function(event) {
-    log("Received 'held' event for the conference call.");
-    conference.onheld = null;
-
-    ok(!conference.onholding);
-    checkState(null, [], 'held', [outgoingCall, incomingCall]);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : held");
-      is(result[1], "inbound from " + inNumber + " : held");
-      is(result[2], "OK");
-
-      receivedPending("conference.onheld", pending, nextTest);
-    });
+  let pending = ["conference.onholding", "conference.onheld"];
+  let receive = function(name) {
+    receivedPending(name, pending, done);
   };
 
-  outgoingCall.onholding = function(event) {
-    log("Received 'holding' event for the outgoing call in conference.");
-    outgoingCall.onholding = null;
+  for (let call of calls) {
+    let callName = "call (" + call.number + ')';
 
-    is(outgoingCall.state, 'holding');
+    let onholding = callName + ".onholding";
+    pending.push(onholding);
+    check_onholding(call, callName, receive.bind(null, onholding));
 
-    receivedPending("outgoingCall.onholding", pending, nextTest);
-  };
+    let onheld = callName + ".onheld";
+    pending.push(onheld);
+    check_onheld(call, callName, receive.bind(null, onheld));
+  }
 
-  outgoingCall.onheld = function(event) {
-    log("Received 'held' event for the outgoing call in conference.");
-    outgoingCall.onheld = null;
+  check_onholding(conference, "conference",
+                  receive.bind(null, "conference.onholding"));
 
-    ok(!outgoingCall.onholding);
-    is(outgoingCall.state, 'held');
-
-    receivedPending("outgoingCall.onheld", pending, nextTest);
-  };
-
-  incomingCall.onholding = function(event) {
-    log("Received 'holding' event for the incoming call in conference.");
-    incomingCall.onholding = null;
-
-    is(incomingCall.state, 'holding');
-
-    receivedPending("incomingCall.onholding", pending, nextTest);
-  };
-
-  incomingCall.onheld = function(event) {
-    log("Received 'held' event for the incoming call in conference.");
-    incomingCall.onheld = null;
-
-    ok(!incomingCall.onholding);
-    is(incomingCall.state, 'held');
-
-    receivedPending("incomingCall.onheld", pending, nextTest);
-  };
+  check_onheld(conference, "conference", function() {
+    if (typeof heldCallback === 'function') {
+      heldCallback();
+    }
+    receive("conference.onheld");
+  });
 
   conference.hold();
+
+  return deferred.promise;
 }
 
-function conferenceResume() {
+function resumeConference(calls, connectedCallback) {
   log("Resuming the held conference call.");
 
-  let pending = ["conference.onresuming", "conference.onconnected",
-                 "outgoingCall.onresuming", "outgoingCall.onconnected",
-                 "incomingCall.onresuming", "incomingCall.onconnected"];
-  let nextTest = simulate2ndIncoming;
-
-  conference.onresuming = function(event) {
-    log("Received 'resuming' event for the conference call.");
-    conference.onresuming = null;
-
-    is(conference.state, 'resuming');
-
-    receivedPending("conference.onresuming", pending, nextTest);
+  let deferred = Promise.defer();
+  let done = function() {
+    deferred.resolve();
   };
 
-  conference.onconnected = function(event) {
-    log("Received 'connected' event for the conference call.");
-    conference.onconnected = null;
-
-    ok(!conference.onresuming);
-    checkState(conference, [], 'connected', [outgoingCall, incomingCall]);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : active");
-      is(result[1], "inbound from " + inNumber + " : active");
-      is(result[2], "OK");
-
-      receivedPending("conference.onconnected", pending, nextTest);
-    });
+  let pending = ["conference.onresuming", "conference.onconnected"];
+  let receive = function(name) {
+    receivedPending(name, pending, done);
   };
 
-  outgoingCall.onresuming = function(event) {
-    log("Received 'resuming' event for the outgoing call in conference.");
-    outgoingCall.onresuming = null;
+  for (let call of calls) {
+    let callName = "call (" + call.number + ')';
 
-    is(outgoingCall.state, 'resuming');
+    let onresuming = callName + ".onresuming";
+    pending.push(onresuming);
+    check_onresuming(call, callName, receive.bind(null, onresuming));
 
-    receivedPending("outgoingCall.onresuming", pending, nextTest);
-  };
+    let onconnected = callName + ".onconnected";
+    pending.push(onconnected);
+    check_onconnected(call, callName, receive.bind(null, onconnected));
+  }
 
-  outgoingCall.onconnected = function(event) {
-    log("Received 'connected' event for the outgoing call in conference.");
-    outgoingCall.onconnected = null;
+  check_onresuming(conference, "conference",
+                   receive.bind(null, "conference.onresuming"));
 
-    ok(!outgoingCall.onresuming);
-    is(outgoingCall.state, 'connected');
-
-    receivedPending("outgoingCall.onconnected", pending, nextTest);
-  };
-
-  incomingCall.onresuming = function(event) {
-    log("Received 'resuming' event for the incoming call in conference.");
-    incomingCall.onresuming = null;
-
-    is(incomingCall.state, 'resuming');
-
-    receivedPending("incomingCall.onresuming", pending, nextTest);
-  };
-
-  incomingCall.onconnected = function(event) {
-    log("Received 'connected' event for the incoming call in conference.");
-    incomingCall.onconnected = null;
-
-    ok(!incomingCall.onresuming);
-    is(incomingCall.state, 'connected');
-
-    receivedPending("incomingCall.onconnected", pending, nextTest);
-  };
+  check_onconnected(conference, "conference", function() {
+    if (typeof connectedCallback === 'function') {
+      connectedCallback();
+    }
+    receive("conference.onconnected");
+  });
 
   conference.resume();
+
+  return deferred.promise;
 }
 
-function simulate2ndIncoming() {
-  log("Simulating 2nd incoming call (with one conference call already).");
-
-  telephony.onincoming = function(event) {
-    log("Received 'incoming' call event.");
-
-    telephony.onincoming = null;
-
-    incomingCall2 = event.call;
-    ok(incomingCall2);
-    is(incomingCall2.number, inNumber2);
-    is(incomingCall2.state, "incoming");
-
-    checkState(conference, [incomingCall2], 'connected', [outgoingCall, incomingCall]);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : active");
-      is(result[1], "inbound from " + inNumber + " : active");
-      is(result[2], "inbound from " + inNumber2 + " : incoming");
-      is(result[3], "OK");
-
-      answer2ndIncoming();
-    });
-  };
-  emulator.run("gsm call " + inNumber2);
-}
-
-function answer2ndIncoming() {
-  log("Answering the 2nd incoming call when there's a connected conference call.");
-
-  let gotConnecting = false;
-  incomingCall2.onconnecting = function(event) {
-    log("Received 'connecting' event for the 2nd incoming call.");
-    incomingCall2.onconnecting = null;
-
-    is(incomingCall2, event.call);
-    is(incomingCall2.state, "connecting");
-    gotConnecting = true;
-  };
-
-  incomingCall2.onconnected = function(event) {
-    incomingCall2.onconnected = null;
-
-    is(incomingCall2, event.call);
-    is(incomingCall2.state, "connected");
-    ok(gotConnecting);
-
-    is(incomingCall2, telephony.active);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : held");
-      is(result[1], "inbound from " + inNumber + " : held");
-      is(result[2], "inbound from " + inNumber2 + " : active");
-      is(result[3], "OK");
-
-      conferenceAddOneCall();
-    });
-  };
-  incomingCall2.answer();
-}
-
-function conferenceAddOneCall() {
-  log("Adding one more call to the conference call.");
-
-  let callToAdd = incomingCall2;
-  let pending = ["conference.oncallschanged", "conference.onconnected",
-                 "callToAdd.ongroupchange", "callToAdd.onconnected"];
-  let nextTest = conferenceRemove;
-
-  ok(!callToAdd.group);
-
-  conference.oncallschanged = function(event) {
-    log("Received 'callschanged' event for the conference call.");
-    conference.oncallschanged = null;
-
-    ok(event.call, callToAdd);
-    is(conference.calls.length, 3);
-    is(conference.calls[2].number, event.call.number);
-
-    receivedPending("conference.oncallschanged", pending, nextTest);
-  };
-
-  conference.onconnected = function(event) {
-    log("Received 'connected' event for the conference call.");
-    conference.oncallschanged = null;
-
-    ok(!conference.oncallschanged);
-
-    checkState(conference, [], 'connected',
-               [outgoingCall, incomingCall, incomingCall2]);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : active");
-      is(result[1], "inbound from " + inNumber + " : active");
-      is(result[2], "inbound from " + inNumber2 + " : active");
-      is(result[3], "OK");
-
-      receivedPending("conference.onconnected", pending, nextTest);
-    });
-  };
-
-  callToAdd.ongroupchange = function(event) {
-    log("Received 'groupchange' event for the call to add.");
-    callToAdd.ongroupchange = null;
-
-    is(callToAdd.group, conference);
-    receivedPending("callToAdd.ongroupchange", pending, nextTest);
-  };
-
-  callToAdd.onconnected = function(event) {
-    log("Received 'connected' event for the call to add.");
-    callToAdd.onconnected = null;
-
-    ok(!callToAdd.ongroupchange);
-    is(callToAdd.state, 'connected');
-
-    receivedPending("callToAdd.onconnected", pending, nextTest);
-  };
-  conference.add(callToAdd);
-}
-
-// Remove a call from the conference. The state of that call remains 'connected'
-// while the state of the conference becomes 'held.'
-function conferenceRemove() {
+// The length of autoRemovedCalls should be 0 or 1.
+function removeCallInConference(callToRemove, autoRemovedCalls, remainedCalls,
+                                statechangeCallback) {
   log("Removing a participant from the conference call.");
 
   is(conference.state, 'connected');
 
-  let callToRemove = conference.calls[0];
+  let deferred = Promise.defer();
+  let done = function() {
+    deferred.resolve();
+  };
+
   let pending = ["callToRemove.ongroupchange", "telephony.oncallschanged",
                  "conference.oncallschanged", "conference.onstatechange"];
-  let nextTest = emptyConference;
+  let receive = function(name) {
+    receivedPending(name, pending, done);
+  };
 
-  callToRemove.ongroupchange = function(event) {
-    log("Received 'groupchange' event for the call to remove.");
-    callToRemove.ongroupchange = null;
+  // Remained call in conference will be held.
+  for (let call of remainedCalls) {
+    let callName = "remainedCall (" + call.number + ')';
 
-    ok(!callToRemove.group);
+    let onstatechange = callName + ".onstatechange";
+    pending.push(onstatechange);
+    check_onstatechange(call, callName, 'held',
+                        receive.bind(null, onstatechange));
+  }
+
+  // When a call is removed from conference with 2 calls, another one will be
+  // automatically removed from group and be put on hold.
+  for (let call of autoRemovedCalls) {
+    let callName = "autoRemovedCall (" + call.number + ')';
+
+    let ongroupchange = callName + ".ongroupchange";
+    pending.push(ongroupchange);
+    check_ongroupchange(call, callName, null,
+                        receive.bind(null, ongroupchange));
+
+    let onstatechange = callName + ".onstatechange";
+    pending.push(onstatechange);
+    check_onstatechange(call, callName, 'held',
+                        receive.bind(null, onstatechange));
+  }
+
+  check_ongroupchange(callToRemove, "callToRemove", null, function() {
     is(callToRemove.state, 'connected');
+    receive("callToRemove.ongroupchange");
+  });
 
-    receivedPending("callToRemove.ongroupchange", pending, nextTest);
-  };
+  check_oncallschanged(telephony, 'telephony',
+                       autoRemovedCalls.concat(callToRemove),
+                       receive.bind(null, "telephony.oncallschanged"));
 
-  telephony.oncallschanged = function(event) {
-    log("Received 'callschanged' event for telephony.");
-    if (event.call) {
-      // Bug 823958 triggers one more callschanged event without carrying a
-      // call object.
-      telephony.oncallschanged = null;
+  check_oncallschanged(conference, 'conference',
+                       autoRemovedCalls.concat(callToRemove), function() {
+    is(conference.calls.length, remainedCalls.length);
+    receive("conference.oncallschanged");
+  });
 
-      is(event.call.number, callToRemove.number);
-      is(telephony.calls.length, 1);
-      is(telephony.calls[0].number, event.call.number);
-
-      receivedPending("telephony.oncallschanged", pending, nextTest);
-    }
-  };
-
-  conference.oncallschanged = function(event) {
-    log("Received 'callschanged' event for the conference.");
-    conference.oncallschanged = null;
-
-    is(event.call.number, callToRemove.number);
-    is(conference.calls.length, 2);
-
-    receivedPending("conference.oncallschanged", pending, nextTest);
-  };
-
-  conference.onstatechange = function(event) {
-    log("Received 'statechange' event for the conference.");
-    conference.onstatechange = null;
-
+  check_onstatechange(conference, 'conference',
+                      (remainedCalls.length ? 'held' : ''), function() {
     ok(!conference.oncallschanged);
-
-    checkState(callToRemove, [callToRemove], 'held',
-               [incomingCall, incomingCall2]);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : active");
-      is(result[1], "inbound from " + inNumber + " : held");
-      is(result[2], "inbound from " + inNumber2 + " : held");
-      is(result[3], "OK");
-
-      receivedPending("conference.onstatechange", pending, nextTest);
-    });
-  };
+    if (typeof statechangeCallback === 'function') {
+      statechangeCallback();
+    }
+    receive("conference.onstatechange");
+  });
 
   conference.remove(callToRemove);
+
+  return deferred.promise;
 }
 
-// We first release a call in telephony, then release a call in conference.
-// The only call left in conference will be automatically moved from conference
-// to the calls list of telephony.
-function emptyConference() {
+// The length of autoRemovedCalls should be 0 or 1.
+function hangUpCallInConference(callToHangUp, autoRemovedCalls, remainedCalls,
+                                statechangeCallback) {
   log("Release one call in conference.");
 
-  outgoingCall.ondisconnected = function(event) {
-    log("Received 'disconnected' event for the outgoing call.");
-    outgoingCall.ondisconnected = null;
-
-    checkState(null, [], 'held',
-               [incomingCall, incomingCall2]);
-
-    // We are going to release incomingCall. Once released, incomingCall2
-    // is going to be moved out of the conference call automatically.
-    emulator.run("gsm cancel " + inNumber);
+  let deferred = Promise.defer();
+  let done = function() {
+    deferred.resolve();
   };
 
-  let pending = ["conference.oncallschanged", "conference.onstatechange",
-                 "incomingCall2.ongroupchange"];
-  let nextTest = hangUpLastCall;
-
-  incomingCall2.ongroupchange = function(event) {
-    log("Received 'groupchange' event for the outgoing call.");
-    incomingCall2.ongroupchange = null;
-
-    ok(!incomingCall2.group);
-    is(incomingCall2.state, 'held');
-
-    receivedPending("incomingCall2.ongroupchange", pending, nextTest);
+  let pending = ["conference.oncallschanged", "remoteHangUp"];
+  let receive = function(name) {
+    receivedPending(name, pending, done);
   };
 
-  // We are expecting to receive conference.oncallschanged two times since
-  // two calls are removed from conference.
-  let expected = [incomingCall, incomingCall2];
-  conference.oncallschanged = function(event) {
-    log("Received 'callschanged' event for the conference call.");
+  // When a call is hang up from conference with 2 calls, another one will be
+  // automatically removed from group.
+  for (let call of autoRemovedCalls) {
+    let callName = "autoRemovedCall (" + call.number + ')';
 
-    let index = expected.indexOf(event.call);
-    ok(index != -1);
-    expected.splice(index, 1);
+    let ongroupchange = callName + ".ongroupchange";
+    pending.push(ongroupchange);
+    check_ongroupchange(call, callName, null,
+                        receive.bind(null, ongroupchange));
+  }
 
-    if (expected.length === 0) {
-      conference.oncallschanged = null;
-      is(conference.calls.length, 0);
-      receivedPending("conference.oncallschanged", pending, nextTest);
-    }
-  };
+  if (autoRemovedCalls.length) {
+    pending.push("telephony.oncallschanged");
+    check_oncallschanged(telephony, 'telephony',
+                         autoRemovedCalls,
+                         receive.bind(null, "telephony.oncallschanged"));
+  }
 
-  conference.onstatechange = function(event) {
-    log("Received 'statechange' event for the conference call.");
-    conference.onstatechange = null;
+  check_oncallschanged(conference, 'conference',
+                       autoRemovedCalls.concat(callToHangUp), function() {
+    is(conference.calls.length, remainedCalls.length);
+    receive("conference.oncallschanged");
+  });
 
-    ok(!conference.oncallschanged);
-    checkState(null, [incomingCall2], '', []);
-
-    receivedPending("conference.onstatechange", pending, nextTest);
-  };
-
-  emulator.run("gsm cancel " + outNumber);
-}
-
-function hangUpLastCall() {
-  log("Going to leave the test. Hanging up the last call.");
-
-  incomingCall2.ondisconnected = function(event) {
-    incomingCall2.ondisconnected = null;
-
-    checkState(null, [], '', []);
-
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "OK");
-
-      cleanUp();
+  if (remainedCalls.length === 0) {
+    pending.push("conference.onstatechange");
+    check_onstatechange(conference, 'conference', '', function() {
+      ok(!conference.oncallschanged);
+      if (typeof statechangeCallback === 'function') {
+        statechangeCallback();
+      }
+      receive("conference.onstatechange");
     });
-  };
+  }
 
-  emulator.run("gsm cancel " + inNumber2);
+  remoteHangUp(callToHangUp)
+    .then(receive.bind(null, "remoteHangUp"));
+
+  return deferred.promise;
 }
 
-function cleanUp() {
-  finish();
+/**
+ * Setup a conference with an outgoing call and an incoming call.
+ *
+ * @return Promise<[outCall, inCall]>
+ */
+function setupConferenceTwoCalls(outNumber, inNumber) {
+  log('Create conference with two calls.');
+
+  let outCall;
+  let inCall;
+  let outInfo = OutCallStrPool(outNumber);
+  let inInfo = InCallStrPool(inNumber);
+
+  return Promise.resolve()
+    .then(checkInitialState)
+    .then(() => dial(outNumber))
+    .then(call => { outCall = call; })
+    .then(() => checkAll(outCall, [outCall], '', [], [outInfo.ringing]))
+    .then(() => remoteAnswer(outCall))
+    .then(() => checkAll(outCall, [outCall], '', [], [outInfo.active]))
+    .then(() => remoteDial(inNumber))
+    .then(call => { inCall = call; })
+    .then(() => checkAll(outCall, [outCall, inCall], '', [],
+                         [outInfo.active, inInfo.incoming]))
+    .then(() => answer(inCall))
+    .then(() => checkAll(inCall, [outCall, inCall], '', [],
+                         [outInfo.held, inInfo.active]))
+    .then(() => addCallsToConference([outCall, inCall], function() {
+      checkState(conference, [], 'connected', [outCall, inCall]);
+    }))
+    .then(() => checkAll(conference, [], 'connected', [outCall, inCall],
+                         [outInfo.active, inInfo.active]))
+    .then(() => {
+      return [outCall, inCall];
+    });
 }
 
+/**
+ * Setup a conference with an outgoing call and two incoming calls.
+ *
+ * @return Promise<[outCall, inCall, inCall2]>
+ */
+function setupConferenceThreeCalls(outNumber, inNumber, inNumber2) {
+  log('Create conference with three calls.');
+
+  let outCall;
+  let inCall;
+  let inCall2;
+  let outInfo = OutCallStrPool(outNumber);
+  let inInfo = InCallStrPool(inNumber);
+  let inInfo2 = InCallStrPool(inNumber2);
+
+  return Promise.resolve()
+    .then(() => setupConferenceTwoCalls(outNumber, inNumber))
+    .then(calls => {
+      outCall = calls[0];
+      inCall = calls[1];
+    })
+    .then(() => remoteDial(inNumber2))
+    .then(call => { inCall2 = call; })
+    .then(() => checkAll(conference, [inCall2], 'connected', [outCall, inCall],
+                         [outInfo.active, inInfo.active, inInfo2.incoming]))
+    .then(() => answer(inCall2))
+    .then(() => checkAll(inCall2, [inCall2], 'held', [outCall, inCall],
+                         [outInfo.held, inInfo.held, inInfo2.active]))
+    .then(() => addCallsToConference([inCall2], function() {
+      checkState(conference, [], 'connected', [outCall, inCall, inCall2]);
+    }))
+    .then(() => checkAll(conference, [],
+                         'connected', [outCall, inCall, inCall2],
+                         [outInfo.active, inInfo.active, inInfo2.active]))
+    .then(() => {
+      return [outCall, inCall, inCall2];
+    });
+}
+
+function testConferenceTwoCalls() {
+  log('= testConferenceTwoCalls =');
+
+  let outCall;
+  let inCall;
+  let outNumber = "5555550101";
+  let inNumber  = "5555550201";
+
+  return Promise.resolve()
+    .then(() => setupConferenceTwoCalls(outNumber, inNumber))
+    .then(calls => {
+      [outCall, inCall] = calls;
+    })
+    .then(() => remoteHangUpCalls([outCall, inCall]));
+}
+
+function testConferenceHoldAndResume() {
+  log('= testConferenceHoldAndResume =');
+
+  let outCall;
+  let inCall;
+  let outNumber = "5555550101";
+  let inNumber  = "5555550201";
+  let outInfo = OutCallStrPool(outNumber);
+  let inInfo = InCallStrPool(inNumber);
+
+  return Promise.resolve()
+    .then(() => setupConferenceTwoCalls(outNumber, inNumber))
+    .then(calls => {
+      [outCall, inCall] = calls;
+    })
+    .then(() => holdConference([outCall, inCall], function() {
+      checkState(null, [], 'held', [outCall, inCall]);
+    }))
+    .then(() => checkAll(null, [], 'held', [outCall, inCall],
+                         [outInfo.held, inInfo.held]))
+    .then(() => resumeConference([outCall, inCall], function() {
+      checkState(conference, [], 'connected', [outCall, inCall]);
+    }))
+    .then(() => checkAll(conference, [], 'connected', [outCall, inCall],
+                         [outInfo.active, inInfo.active]))
+    .then(() => remoteHangUpCalls([outCall, inCall]));
+}
+
+function testConferenceThreeAndRemoveOne() {
+  log('= testConferenceThreeAndRemoveOne =');
+
+  let outCall;
+  let inCall;
+  let inCall2;
+  let outNumber = "5555550101";
+  let inNumber  = "5555550201";
+  let inNumber2 = "5555550202";
+  let outInfo = OutCallStrPool(outNumber);
+  let inInfo = InCallStrPool(inNumber);
+  let inInfo2 = InCallStrPool(inNumber2);
+
+  return Promise.resolve()
+    .then(() => setupConferenceThreeCalls(outNumber, inNumber, inNumber2))
+    .then(calls => {
+      [outCall, inCall, inCall2] = calls;
+    })
+    .then(() => removeCallInConference(outCall, [], [inCall, inCall2],
+                                       function() {
+        checkState(outCall, [outCall], 'held', [inCall, inCall2]);
+    }))
+    .then(() => checkAll(outCall, [outCall], 'held', [inCall, inCall2],
+                         [outInfo.active, inInfo.held, inInfo2.held]))
+    .then(() => remoteHangUpCalls([outCall, inCall, inCall2]));
+}
+
+function testConferenceThreeAndHangupOne() {
+  log('= testConferenceThreeAndHangupOne =');
+
+  let outCall;
+  let inCall;
+  let inCall2;
+  let outNumber = "5555550101";
+  let inNumber  = "5555550201";
+  let inNumber2 = "5555550202";
+  let inInfo = InCallStrPool(inNumber);
+  let inInfo2 = InCallStrPool(inNumber2);
+
+  return Promise.resolve()
+    .then(() => setupConferenceThreeCalls(outNumber, inNumber, inNumber2))
+    .then(calls => {
+      [outCall, inCall, inCall2] = calls;
+    })
+    .then(() => hangUpCallInConference(outCall, [], [inCall, inCall2]))
+    .then(() => checkAll(conference, [], 'connected', [inCall, inCall2],
+                         [inInfo.active, inInfo2.active]))
+    .then(() => remoteHangUpCalls([inCall, inCall2]));
+}
+
+function testConferenceTwoAndRemoveOne() {
+  log('= testConferenceTwoAndRemoveOne =');
+
+  let outCall;
+  let inCall;
+  let outNumber = "5555550101";
+  let inNumber  = "5555550201";
+  let outInfo = OutCallStrPool(outNumber);
+  let inInfo = InCallStrPool(inNumber);
+
+  return Promise.resolve()
+    .then(() => setupConferenceTwoCalls(outNumber, inNumber))
+    .then(calls => {
+      [outCall, inCall] = calls;
+    })
+    .then(() => removeCallInConference(outCall, [inCall], [], function() {
+      checkState(outCall, [outCall, inCall], '', []);
+    }))
+    .then(() => checkAll(outCall, [outCall, inCall], '', [],
+                         [outInfo.active, inInfo.held]))
+    .then(() => remoteHangUpCalls([outCall, inCall]));
+}
+
+function testConferenceTwoAndHangupOne() {
+  log('= testConferenceTwoAndHangupOne =');
+
+  let outCall;
+  let inCall;
+  let outNumber = "5555550101";
+  let inNumber  = "5555550201";
+  let inInfo = InCallStrPool(inNumber);
+
+  return Promise.resolve()
+    .then(() => setupConferenceTwoCalls(outNumber, inNumber))
+    .then(calls => {
+      [outCall, inCall] = calls;
+    })
+    .then(() => hangUpCallInConference(outCall, [inCall], [], function() {
+      checkState(inCall, [inCall], '', []);
+    }))
+    .then(() => checkAll(inCall, [inCall], '', [], [inInfo.active]))
+    .then(() => remoteHangUpCalls([inCall]));
+}
+
+// Start the test
 startTest(function() {
   conference = telephony.conferenceGroup;
   ok(conference);
-  dial();
+
+  testConferenceTwoCalls()
+    .then(testConferenceHoldAndResume)
+    .then(testConferenceThreeAndRemoveOne)
+    .then(testConferenceThreeAndHangupOne)
+    .then(testConferenceTwoAndRemoveOne)
+    .then(testConferenceTwoAndHangupOne)
+    .then(null, error => {
+      ok(false, 'promise rejects during test.');
+    })
+    .then(finish);
 });

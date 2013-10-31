@@ -18,6 +18,10 @@
 #include "nsFtpControlConnection.h"
 #include "nsIProtocolProxyCallback.h"
 
+#ifdef MOZ_WIDGET_GONK
+#include "nsINetworkManager.h"
+#endif
+
 // ftp server types
 #define FTP_GENERIC_TYPE     0
 #define FTP_UNIX_TYPE        1
@@ -239,7 +243,7 @@ private:
     nsCOMPtr<nsIRequest>    mUploadRequest;
     bool                    mAddressChecked;
     bool                    mServerIsIPv6;
-    
+
     static uint32_t         mSessionStartTime;
 
     mozilla::net::NetAddr   mServerAddress;
@@ -250,11 +254,28 @@ private:
 
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     bool                    mDoomCache;
-    
+
     nsCString mSuppliedEntityID;
 
     nsCOMPtr<nsICancelable>  mProxyRequest;
     bool                     mDeferredCallbackPending;
+
+// These members are used for network per-app metering (bug 855948)
+// Currently, they are only available on gonk.
+public:
+    const static uint64_t NETWORK_STATS_THRESHOLD = 65536;
+
+private:
+    uint64_t                           mCountRecv;
+#ifdef MOZ_WIDGET_GONK
+    nsCOMPtr<nsINetworkInterface>      mActiveNetwork;
+#endif
+    nsresult                           SaveNetworkStats(bool);
+    void                               CountRecvBytes(uint64_t recvBytes)
+    {
+        mCountRecv += recvBytes;
+        SaveNetworkStats(false);
+    }
 };
 
 #endif //__nsFtpState__h_

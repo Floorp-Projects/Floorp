@@ -17,15 +17,16 @@ sync protocol PTelephony {
   manages PTelephonyRequest;
 
 child:
-  NotifyCallError(int32_t aCallIndex, nsString aError);
+  NotifyCallError(uint32_t aClientId, int32_t aCallIndex, nsString aError);
 
-  NotifyCallStateChanged(IPCCallStateData aData);
+  NotifyCallStateChanged(uint32_t aClientId, IPCCallStateData aData);
 
-  NotifyCdmaCallWaiting(nsString aNumber);
+  NotifyCdmaCallWaiting(uint32_t aClientId, nsString aNumber);
 
   NotifyConferenceCallStateChanged(uint16_t aCallState);
 
-  NotifySupplementaryService(int32_t aCallIndex, uint16_t aNotification);
+  NotifySupplementaryService(uint32_t aClientId, int32_t aCallIndex,
+                             uint16_t aNotification);
 
 parent:
   /**
@@ -43,29 +44,29 @@ parent:
 
   UnregisterListener();
 
-  DialCall(nsString aNumber, bool aIsEmergency);
+  DialCall(uint32_t aClientId, nsString aNumber, bool aIsEmergency);
 
-  HangUpCall(uint32_t aCallIndex);
+  HangUpCall(uint32_t aClientId, uint32_t aCallIndex);
 
-  AnswerCall(uint32_t aCallIndex);
+  AnswerCall(uint32_t aClientId, uint32_t aCallIndex);
 
-  RejectCall(uint32_t aCallIndex);
+  RejectCall(uint32_t aClientId, uint32_t aCallIndex);
 
-  HoldCall(uint32_t aCallIndex);
+  HoldCall(uint32_t aClientId, uint32_t aCallIndex);
 
-  ResumeCall(uint32_t aCallIndex);
+  ResumeCall(uint32_t aClientId, uint32_t aCallIndex);
 
-  ConferenceCall();
+  ConferenceCall(uint32_t aClientId);
 
-  SeparateCall(uint32_t aCallIndex);
+  SeparateCall(uint32_t aClientId, uint32_t aCallIndex);
 
-  HoldConference();
+  HoldConference(uint32_t aClientId);
 
-  ResumeConference();
+  ResumeConference(uint32_t aClientId);
 
-  StartTone(nsString aTone);
+  StartTone(uint32_t aClientId, nsString aTone);
 
-  StopTone();
+  StopTone(uint32_t aClientId);
 
   sync GetMicrophoneMuted()
     returns (bool aMuted);

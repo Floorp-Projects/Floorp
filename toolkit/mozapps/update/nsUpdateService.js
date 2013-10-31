@@ -118,6 +118,7 @@ const STATE_PENDING         = "pending";
 const STATE_PENDING_SVC     = "pending-service";
 const STATE_APPLYING        = "applying";
 const STATE_APPLIED         = "applied";
+const STATE_APPLIED_OS      = "applied-os";
 const STATE_APPLIED_SVC     = "applied-service";
 const STATE_SUCCEEDED       = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
@@ -155,6 +156,8 @@ const FOTA_UNKNOWN_ERROR                            = 45;
 const WRITE_ERROR_SHARING_VIOLATION_SIGNALED        = 46;
 const WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID = 47;
 const WRITE_ERROR_SHARING_VIOLATION_NOPID           = 48;
+const FOTA_FILE_OPERATION_ERROR                     = 49;
+const FOTA_RECOVERY_ERROR                           = 50;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -1418,6 +1421,8 @@ function readStringFromFile(file) {
 function handleUpdateFailure(update, errorCode) {
   update.errorCode = parseInt(errorCode);
   if (update.errorCode == FOTA_GENERAL_ERROR ||
+      update.errorCode == FOTA_FILE_OPERATION_ERROR ||
+      update.errorCode == FOTA_RECOVERY_ERROR ||
       update.errorCode == FOTA_UNKNOWN_ERROR) {
     // In the case of FOTA update errors, don't reset the state to pending. This
     // causes the FOTA update path to try again, which is not necessarily what
@@ -2171,7 +2176,13 @@ UpdateService.prototype = {
     }
 
 #ifdef MOZ_WIDGET_GONK
+    // The update is only applied but not selected to be installed
     if (status == STATE_APPLIED && update && update.isOSUpdate) {
+      LOG("UpdateService:_postUpdateProcessing - update staged as applied found");
+      return;
+    }
+
+    if (status == STATE_APPLIED_OS && update && update.isOSUpdate) {
       // In gonk, we need to check for OS update status after startup, since
       // the recovery partition won't write to update.status for us
       var recoveryService = Cc["@mozilla.org/recovery-service;1"].
@@ -3139,6 +3150,52 @@ UpdateService.prototype = {
     return this._downloader && this._downloader.isBusy;
   },
 
+  /**
+   * See nsIUpdateService.idl
+   */
+  applyOsUpdate: function AUS_applyOsUpdate(aUpdate) {
+    if (!aUpdate.isOSUpdate || aUpdate.state != STATE_APPLIED) {
+      aUpdate.statusText = "fota-state-error";
+      throw Cr.NS_ERROR_FAILURE;
+    }
+
+    let osApplyToDir;
+    try {
+      aUpdate.QueryInterface(Ci.nsIWritablePropertyBag);
+      osApplyToDir = aUpdate.getProperty("osApplyToDir");
+    } catch (e) {}
+
+    if (!osApplyToDir) {
+      LOG("UpdateService:applyOsUpdate - Error: osApplyToDir is not defined" +
+          "in the nsIUpdate!");
+      handleUpdateFailure(aUpdate, FOTA_FILE_OPERATION_ERROR);
+      return;
+    }
+
+    let updateFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    updateFile.initWithPath(osApplyToDir + "/update.zip");
+    if (!updateFile.exists()) {
+      LOG("UpdateService:applyOsUpdate - Error: OS update is not found at " +
+          updateFile.path);
+      handleUpdateFailure(aUpdate, FOTA_FILE_OPERATION_ERROR);
+      return;
+    }
+
+    writeStatusFile(getUpdatesDir(), aUpdate.state = STATE_APPLIED_OS);
+    LOG("UpdateService:applyOsUpdate - Rebooting into recovery to apply " +
+        "FOTA update: " + updateFile.path);
+    try {
+      let recoveryService = Cc["@mozilla.org/recovery-service;1"]
+                            .getService(Ci.nsIRecoveryService);
+      recoveryService.installFotaUpdate(updateFile.path);
+    } catch (e) {
+      LOG("UpdateService:applyOsUpdate - Error: Couldn't reboot into recovery" +
+          " to apply FOTA update " + updateFile.path);
+      writeStatusFile(getUpdatesDir(), aUpdate.state = STATE_APPLIED);
+      handleUpdateFailure(aUpdate, FOTA_RECOVERY_ERROR);
+    }
+  },
+
   classID: UPDATESERVICE_CID,
   classInfo: XPCOMUtils.generateCI({classID: UPDATESERVICE_CID,
                                     contractID: UPDATESERVICE_CONTRACTID,
@@ -3948,6 +4005,9 @@ Downloader.prototype = {
       case STATE_APPLYING:
         LOG("Downloader:_selectPatch - resuming interrupted apply");
         return selectedPatch;
+      case STATE_APPLIED:
+        LOG("Downloader:_selectPatch - already downloaded and staged");
+        return null;
 #else
       case STATE_PENDING_SVC:
       case STATE_PENDING:
@@ -4633,6 +4693,8 @@ UpdatePrompt.prototype = {
          update.errorCode == WRITE_ERROR_CALLBACK_APP ||
          update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
          update.errorCode == FOTA_GENERAL_ERROR ||
+         update.errorCode == FOTA_FILE_OPERATION_ERROR ||
+         update.errorCode == FOTA_RECOVERY_ERROR ||
          update.errorCode == FOTA_UNKNOWN_ERROR)) {
       var title = gUpdateBundle.GetStringFromName("updaterIOErrorTitle");
       var text = gUpdateBundle.formatStringFromName("updaterIOErrorMsg",

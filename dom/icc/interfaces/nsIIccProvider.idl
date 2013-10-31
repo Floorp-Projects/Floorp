@@ -20,7 +20,7 @@ interface nsIIccListener : nsISupports
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(52fa6780-c913-11e2-8b8b-0800200c9a66)]
+[scriptable, uuid(7c67ab92-52a3-4e11-995c-c0ad2f66c4cb)]
 interface nsIIccProvider : nsISupports
 {
   /**
@@ -28,48 +28,62 @@ interface nsIIccProvider : nsISupports
    * RadioInterfaceLayer in the chrome process. Only a content process that has
    * the 'mobileconnection' permission is allowed to register.
    */
-  void registerIccMsg(in nsIIccListener listener);
-  void unregisterIccMsg(in nsIIccListener listener);
+  void registerIccMsg(in unsigned long clientId, in nsIIccListener listener);
+  void unregisterIccMsg(in unsigned long clientId, in nsIIccListener listener);
 
   /**
    * UICC Information
    */
-  readonly attribute nsIDOMMozIccInfo iccInfo;
+  nsIDOMMozIccInfo getIccInfo(in unsigned long clientId);
 
   /**
    * Card State
    */
-  readonly attribute DOMString cardState;
+  DOMString getCardState(in unsigned long clientId);
 
   /**
    * STK interfaces.
    */
-  void sendStkResponse(in nsIDOMWindow window,
-                       in jsval        command,
-                       in jsval        response);
-  void sendStkMenuSelection(in nsIDOMWindow   window,
+  void sendStkResponse(in unsigned long clientId,
+                       in nsIDOMWindow window,
+                       in jsval command,
+                       in jsval response);
+  void sendStkMenuSelection(in unsigned long clientId,
+                            in nsIDOMWindow window,
                             in unsigned short itemIdentifier,
-                            in boolean        helpRequested);
-  void sendStkTimerExpiration(in nsIDOMWindow window,
-                              in jsval        timer);
-  void sendStkEventDownload(in nsIDOMWindow window,
-                            in jsval        event);
+                            in boolean helpRequested);
+  void sendStkTimerExpiration(in unsigned long clientId,
+                              in nsIDOMWindow window,
+                              in jsval timer);
+  void sendStkEventDownload(in unsigned long clientId,
+                            in nsIDOMWindow window,
+                            in jsval event);
 
   /**
    * Card lock interfaces.
    */
-  nsIDOMDOMRequest getCardLockState(in nsIDOMWindow window, in DOMString lockType);
-  nsIDOMDOMRequest unlockCardLock(in nsIDOMWindow window, in jsval info);
-  nsIDOMDOMRequest setCardLock(in nsIDOMWindow window, in jsval info);
-  nsIDOMDOMRequest getCardLockRetryCount(in nsIDOMWindow window, in DOMString lockType);
+  nsIDOMDOMRequest getCardLockState(in unsigned long clientId,
+                                    in nsIDOMWindow window,
+                                    in DOMString lockType);
+  nsIDOMDOMRequest unlockCardLock(in unsigned long clientId,
+                                  in nsIDOMWindow window,
+                                  in jsval info);
+  nsIDOMDOMRequest setCardLock(in unsigned long clientId,
+                               in nsIDOMWindow window,
+                               in jsval info);
+  nsIDOMDOMRequest getCardLockRetryCount(in unsigned long clientId,
+                                         in nsIDOMWindow window,
+                                         in DOMString lockType);
 
   /**
    * Phonebook interfaces.
    */
-  nsIDOMDOMRequest readContacts(in nsIDOMWindow window,
+  nsIDOMDOMRequest readContacts(in unsigned long clientId,
+                                in nsIDOMWindow window,
                                 in DOMString contactType);
 
-  nsIDOMDOMRequest updateContact(in nsIDOMWindow window,
+  nsIDOMDOMRequest updateContact(in unsigned long clientId,
+                                 in nsIDOMWindow window,
                                  in DOMString contactType,
                                  in jsval contact,
                                  in DOMString pin2);
@@ -77,13 +91,16 @@ interface nsIIccProvider : nsISupports
   /**
    * Secure Card Icc communication channel
    */
-  nsIDOMDOMRequest iccOpenChannel(in nsIDOMWindow window,
+  nsIDOMDOMRequest iccOpenChannel(in unsigned long clientId,
+                                  in nsIDOMWindow window,
                                   in DOMString aid);
 
-  nsIDOMDOMRequest iccExchangeAPDU(in nsIDOMWindow window,
+  nsIDOMDOMRequest iccExchangeAPDU(in unsigned long clientId,
+                                   in nsIDOMWindow window,
                                    in long channel,
                                    in jsval apdu);
 
-  nsIDOMDOMRequest iccCloseChannel(in nsIDOMWindow window,
+  nsIDOMDOMRequest iccCloseChannel(in unsigned long clientId,
+                                   in nsIDOMWindow window,
                                    in long channel);
 };
