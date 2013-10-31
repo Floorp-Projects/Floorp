@@ -168,6 +168,15 @@ abstract public class BrowserApp extends GeckoApp
 
     private BrowserHealthReporter mBrowserHealthReporter;
 
+    // The tab to be selected on editing mode exit.
+    private Integer mTargetTabForEditingMode = null;
+
+    // The animator used to toggle HomePager visibility has a race where if the HomePager is shown
+    // (starting the animation), the HomePager is hidden, and the HomePager animation completes,
+    // both the web content and the HomePager will be hidden. This flag is used to prevent the
+    // race by determining if the web content should be hidden at the animation's end.
+    private boolean mHideWebContentOnAnimationEnd = false;
+
     private SiteIdentityPopup mSiteIdentityPopup;
 
     public SiteIdentityPopup getSiteIdentityPopup() {
@@ -482,7 +491,11 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.setOnStopEditingListener(new BrowserToolbar.OnStopEditingListener() {
             public void onStopEditing() {
-                // Re-enable doorhanger notifications.
+                selectTargetTabForEditingMode();
+                hideHomePager();
+                hideBrowserSearch();
+
+                // Re-enable doorhanger notifications. They may trigger on the selected tab above.
                 mDoorHangerPopup.enable();
             }
         });
@@ -1302,32 +1315,29 @@ abstract public class BrowserApp extends GeckoApp
             return false;
         }
 
-        // If this tab is already selected, just hide the home pager.
-        if (tabs.isSelectedTabId(tabId)) {
-            hideHomePager();
-        } else {
-            tabs.selectTab(tabId);
-        }
+        // Set the target tab to null so it does not get selected (on editing
+        // mode exit) in lieu of the tab we are about to select.
+        mTargetTabForEditingMode = null;
+        Tabs.getInstance().selectTab(tabId);
 
-        hideBrowserSearch();
         mBrowserToolbar.cancelEdit();
 
         return true;
     }
 
-    private void openUrl(String url) {
-        openUrl(url, null, false);
+    private void openUrlAndStopEditing(String url) {
+        openUrlAndStopEditing(url, null, false);
     }
 
-    private void openUrl(String url, boolean newTab) {
-        openUrl(url, null, newTab);
+    private void openUrlAndStopEditing(String url, boolean newTab) {
+        openUrlAndStopEditing(url, null, newTab);
     }
 
-    private void openUrl(String url, String searchEngine) {
-        openUrl(url, searchEngine, false);
+    private void openUrlAndStopEditing(String url, String searchEngine) {
+        openUrlAndStopEditing(url, searchEngine, false);
     }
 
-    private void openUrl(String url, String searchEngine, boolean newTab) {
+    private void openUrlAndStopEditing(String url, String searchEngine, boolean newTab) {
         mBrowserToolbar.setProgressVisibility(true);
 
         int flags = Tabs.LOADURL_NONE;
@@ -1337,7 +1347,6 @@ abstract public class BrowserApp extends GeckoApp
 
         Tabs.getInstance().loadUrl(url, searchEngine, -1, flags);
 
-        hideBrowserSearch();
         mBrowserToolbar.cancelEdit();
     }
 
@@ -1420,6 +1429,9 @@ abstract public class BrowserApp extends GeckoApp
             throw new IllegalArgumentException("Cannot handle null URLs in enterEditingMode");
         }
 
+        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        mTargetTabForEditingMode = (selectedTab != null ? selectedTab.getId() : null);
+
         final PropertyAnimator animator = new PropertyAnimator(250);
         animator.setUseHardwareLayer(false);
 
@@ -1435,8 +1447,6 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         final String url = mBrowserToolbar.commitEdit();
-        hideHomePager();
-        hideBrowserSearch();
 
         // Don't do anything if the user entered an empty URL.
         if (TextUtils.isEmpty(url)) {
@@ -1513,13 +1523,13 @@ abstract public class BrowserApp extends GeckoApp
             return false;
         }
 
-        mBrowserToolbar.cancelEdit();
-
-        // Resetting the visibility of HomePager, which might have been hidden
-        // by the filterEditingMode().
+        // cancelEdit will call hideHomePager. If we're on web content, this is fine. If we're on
+        // about:home, the HomePager needs to be visible in the end (note that hideHomePager will
+        // not hide the HomePager on about:home). However, filterEditingMode may have hidden the
+        // HomePager so we set it visible here.
         mHomePager.setVisibility(View.VISIBLE);
-        hideHomePager();
-        hideBrowserSearch();
+
+        mBrowserToolbar.cancelEdit();
 
         return true;
     }
@@ -1533,6 +1543,22 @@ abstract public class BrowserApp extends GeckoApp
             mHomePager.setVisibility(View.INVISIBLE);
             mBrowserSearch.filter(searchTerm, handler);
         }
+    }
+
+    /**
+     * Selects the target tab for editing mode. This is expected to be the tab selected on editing
+     * mode entry, unless it is subsequently overridden.
+     *
+     * A background tab may be selected while editing mode is active (e.g. popups), causing the
+     * new url to load in the newly selected tab. Call this method on editing mode exit to
+     * mitigate this.
+     */
+    private void selectTargetTabForEditingMode() {
+        if (mTargetTabForEditingMode != null) {
+            Tabs.getInstance().selectTab(mTargetTabForEditingMode);
+        }
+
+        mTargetTabForEditingMode = null;
     }
 
     /**
@@ -1578,7 +1604,38 @@ abstract public class BrowserApp extends GeckoApp
             final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
             mHomePager = (HomePager) homePagerStub.inflate();
         }
+
         mHomePager.show(getSupportFragmentManager(), page, animator);
+
+        // Hide the web content so it cannot be focused by screen readers.
+        hideWebContentOnPropertyAnimationEnd(animator);
+    }
+
+    private void hideWebContentOnPropertyAnimationEnd(final PropertyAnimator animator) {
+        if (animator == null) {
+            hideWebContent();
+            return;
+        }
+
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() {
+                mHideWebContentOnAnimationEnd = true;
+            }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                if (mHideWebContentOnAnimationEnd) {
+                    hideWebContent();
+                }
+            }
+        });
+    }
+
+    private void hideWebContent() {
+        // The view is set to INVISIBLE, rather than GONE, to avoid
+        // the additional requestLayout() call.
+        mLayerView.setVisibility(View.INVISIBLE);
     }
 
     private void hideHomePager() {
@@ -1590,6 +1647,12 @@ abstract public class BrowserApp extends GeckoApp
         if (tab != null && isAboutHome(tab)) {
             return;
         }
+
+        // Prevent race in hiding web content - see declaration for more info.
+        mHideWebContentOnAnimationEnd = false;
+
+        // Display the previously hidden web content (which prevented screen reader access).
+        mLayerView.setVisibility(View.VISIBLE);
 
         if (mHomePager != null) {
             mHomePager.hide();
@@ -2297,7 +2360,7 @@ abstract public class BrowserApp extends GeckoApp
  
         for (String url : urls) {
             if (!maybeSwitchToTab(url, flags)) {
-                openUrl(url, true);
+                openUrlAndStopEditing(url, true);
             }
         }
     }
@@ -2306,7 +2369,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onUrlOpen(String url, EnumSet<OnUrlOpenListener.Flags> flags) {
         if (!maybeSwitchToTab(url, flags)) {
-            openUrl(url);
+            openUrlAndStopEditing(url);
         }
     }
 
@@ -2314,7 +2377,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onSearch(SearchEngine engine, String text) {
         recordSearch(engine, "barsuggest");
-        openUrl(text, engine.name);
+        openUrlAndStopEditing(text, engine.name);
     }
 
     // BrowserSearch.OnEditSuggestionListener
