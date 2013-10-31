@@ -132,6 +132,10 @@ this.PhoneNumberUtils = {
     return PhoneNumber.Parse(aNumber, countryName);
   },
 
+  parseWithCountryName: function(aNumber, countryName) {
+    return PhoneNumber.Parse(aNumber, countryName);
+  },
+
   isPlainPhoneNumber: function isPlainPhoneNumber(aNumber) {
     var isPlain = PhoneNumber.IsPlain(aNumber);
     if (DEBUG) debug("isPlain(" + aNumber + ") " + isPlain);
