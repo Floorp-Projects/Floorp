@@ -399,6 +399,14 @@
 @BINPATH@/components/nsDownloadManagerUI.js
 @BINPATH@/components/nsSidebar.manifest
 @BINPATH@/components/nsSidebar.js
+
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+@BINPATH@/components/MmsService.js
+@BINPATH@/components/MmsService.manifest
+@BINPATH@/components/MobileMessageDatabaseService.js
+@BINPATH@/components/MobileMessageDatabaseService.manifest
+#endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
+
 #ifndef MOZ_WIDGET_GONK
 @BINPATH@/components/extensions.manifest
 @BINPATH@/components/addonManager.js
@@ -469,11 +477,7 @@
 @BINPATH@/components/NetworkManager.js
 @BINPATH@/components/RadioInterfaceLayer.manifest
 @BINPATH@/components/RadioInterfaceLayer.js
-@BINPATH@/components/MmsService.manifest
-@BINPATH@/components/MmsService.js
 @BINPATH@/components/RILContentHelper.js
-@BINPATH@/components/MobileMessageDatabaseService.manifest
-@BINPATH@/components/MobileMessageDatabaseService.js
 @BINPATH@/components/WifiWorker.js
 @BINPATH@/components/WifiWorker.manifest
 @BINPATH@/components/DOMWifiManager.js
