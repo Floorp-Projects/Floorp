@@ -16,16 +16,13 @@ namespace ipc {
 class RilConsumer : public mozilla::ipc::UnixSocketConsumer
 {
 public:
-  virtual ~RilConsumer() { }
-
-  static nsresult Register(unsigned int aClientId,
-                           mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
-  static void Shutdown();
-
-private:
   RilConsumer(unsigned long aClientId,
               mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
+  virtual ~RilConsumer() { }
 
+  void Shutdown();
+
+private:
   virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage);
 
   virtual void OnConnectSuccess();

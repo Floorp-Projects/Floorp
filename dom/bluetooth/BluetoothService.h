@@ -266,7 +266,6 @@ public:
   virtual void
   IsScoConnected(BluetoothReplyRunnable* aRunnable) = 0;
 
-#ifdef MOZ_B2G_RIL
   virtual void
   AnswerWaitingCall(BluetoothReplyRunnable* aRunnable) = 0;
 
@@ -275,7 +274,6 @@ public:
 
   virtual void
   ToggleCalls(BluetoothReplyRunnable* aRunnable) = 0;
-#endif
 
   virtual void
   SendMetaData(const nsAString& aTitle,

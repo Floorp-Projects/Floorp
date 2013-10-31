@@ -226,14 +226,12 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DisconnectScoRequest());
     case Request::TIsScoConnectedRequest:
       return actor->DoRequest(aRequest.get_IsScoConnectedRequest());
-#ifdef MOZ_B2G_RIL
     case Request::TAnswerWaitingCallRequest:
       return actor->DoRequest(aRequest.get_AnswerWaitingCallRequest());
     case Request::TIgnoreWaitingCallRequest:
       return actor->DoRequest(aRequest.get_IgnoreWaitingCallRequest());
     case Request::TToggleCallsRequest:
       return actor->DoRequest(aRequest.get_ToggleCallsRequest());
-#endif
     case Request::TSendMetaDataRequest:
       return actor->DoRequest(aRequest.get_SendMetaDataRequest());
     case Request::TSendPlayStatusRequest:
@@ -583,7 +581,6 @@ BluetoothRequestParent::DoRequest(const IsScoConnectedRequest& aRequest)
   return true;
 }
 
-#ifdef MOZ_B2G_RIL
 bool
 BluetoothRequestParent::DoRequest(const AnswerWaitingCallRequest& aRequest)
 {
@@ -616,7 +613,6 @@ BluetoothRequestParent::DoRequest(const ToggleCallsRequest& aRequest)
 
   return true;
 }
-#endif // MOZ_B2G_RIL
 
 bool
 BluetoothRequestParent::DoRequest(const SendMetaDataRequest& aRequest)

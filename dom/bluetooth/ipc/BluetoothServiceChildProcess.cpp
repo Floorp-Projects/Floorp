@@ -328,7 +328,6 @@ BluetoothServiceChildProcess::IsScoConnected(BluetoothReplyRunnable* aRunnable)
   SendRequest(aRunnable, IsScoConnectedRequest());
 }
 
-#ifdef MOZ_B2G_RIL
 void
 BluetoothServiceChildProcess::AnswerWaitingCall(
   BluetoothReplyRunnable* aRunnable)
@@ -349,7 +348,6 @@ BluetoothServiceChildProcess::ToggleCalls(
 {
   SendRequest(aRunnable, ToggleCallsRequest());
 }
-#endif // MOZ_B2G_RIL
 
 void
 BluetoothServiceChildProcess::SendMetaData(const nsAString& aTitle,
