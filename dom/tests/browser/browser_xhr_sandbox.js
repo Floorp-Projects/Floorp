@@ -34,6 +34,7 @@ function test() {
     let workerWindow = frame.contentWindow;
     workerWindow.addEventListener("message", function(evt) {
       is(evt.data.result, "ok", "check the sandbox code was happy");
+      frame.remove();
       finish();
     }, true);
     let sandbox = new Cu.Sandbox(workerWindow);
