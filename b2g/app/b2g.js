@@ -821,9 +821,6 @@ pref("gfx.canvas.skiagl.dynamic-cache", true);
 // enable fence with readpixels for SurfaceStream
 pref("gfx.gralloc.fence-with-readpixels", true);
 
-// Enable Telephony API
-pref("dom.telephony.enabled", true);
-
 // Cell Broadcast API
 pref("dom.cellbroadcast.enabled", true);
 pref("ril.cellbroadcast.disabled", false);
