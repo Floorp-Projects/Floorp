@@ -47,6 +47,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathSqrt(callInfo);
     if (native == math_atan2)
         return inlineMathAtan2(callInfo);
+    if (native == js::math_hypot)
+        return inlineMathHypot(callInfo);
     if (native == js_math_max)
         return inlineMathMinMax(callInfo, true /* max */);
     if (native == js_math_min)
@@ -673,6 +675,32 @@ IonBuilder::inlineMathAtan2(CallInfo &callInfo)
     MAtan2 *atan2 = MAtan2::New(callInfo.getArg(0), callInfo.getArg(1));
     current->add(atan2);
     current->push(atan2);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathHypot(CallInfo &callInfo)
+{
+    if (callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (callInfo.argc() != 2)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Double)
+        return InliningStatus_NotInlined;
+
+    MIRType argType0 = callInfo.getArg(0)->type();
+    MIRType argType1 = callInfo.getArg(1)->type();
+
+    if (!IsNumberType(argType0) || !IsNumberType(argType1))
+        return InliningStatus_NotInlined;
+
+    callInfo.unwrapArgs();
+
+    MHypot *hypot = MHypot::New(callInfo.getArg(0), callInfo.getArg(1));
+    current->add(hypot);
+    current->push(hypot);
     return InliningStatus_Inlined;
 }
 
