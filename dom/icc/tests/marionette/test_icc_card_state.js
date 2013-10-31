@@ -41,14 +41,12 @@ taskHelper.push(function testCardStateChange() {
     // Expect to get card state changing to null.
     if (icc.cardState === null) {
       icc.removeEventListener("cardstatechange", oncardstatechange);
-      // We should restore radio status and wait for the cardstatechange event.
+      // We should restore radio status and expect to get iccdetected event.
       setRadioEnabled(true);
-      icc.addEventListener("cardstatechange", function oncardstatechange(evt) {
-        log("card state changes to " + icc.cardState);
-        if (icc.cardState === 'ready') {
-          icc.removeEventListener("cardstatechange", oncardstatechange);
-          taskHelper.runNext();
-        }
+      iccManager.addEventListener("iccdetected", function oniccdetected(evt) {
+        log("icc iccdetected: " + evt.iccId);
+        iccManager.removeEventListener("iccdetected", oniccdetected);
+        taskHelper.runNext();
       });
     }
   });
