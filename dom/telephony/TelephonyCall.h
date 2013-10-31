@@ -21,6 +21,7 @@ class TelephonyCall MOZ_FINAL : public nsDOMEventTargetHelper
   nsRefPtr<Telephony> mTelephony;
   nsRefPtr<TelephonyCallGroup> mGroup;
 
+  uint32_t mServiceId;
   nsString mNumber;
   nsString mSecondNumber;
   nsString mState;
@@ -107,7 +108,8 @@ public:
   IMPL_EVENT_HANDLER(groupchange)
 
   static already_AddRefed<TelephonyCall>
-  Create(Telephony* aTelephony, const nsAString& aNumber, uint16_t aCallState,
+  Create(Telephony* aTelephony, uint32_t aServiceId,
+         const nsAString& aNumber, uint16_t aCallState,
          uint32_t aCallIndex = telephony::kOutgoingPlaceholderCallIndex,
          bool aEmergency = false, bool aIsConference = false);
 
@@ -115,6 +117,12 @@ public:
   ChangeState(uint16_t aCallState)
   {
     ChangeStateInternal(aCallState, true);
+  }
+
+  uint32_t
+  ServiceId() const
+  {
+    return mServiceId;
   }
 
   uint32_t
