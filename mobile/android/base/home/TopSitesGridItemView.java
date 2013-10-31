@@ -132,6 +132,16 @@ public class TopSitesGridItemView extends RelativeLayout {
         mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinned ? R.drawable.pin : 0, 0, 0, 0);
     }
 
+    public void blankOut() {
+        mUrl = "";
+        mTitle = "";
+        mIsPinned = false;
+        updateTitleView();
+        mTitleView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        setLoadId(Favicons.NOT_LOADING);
+        displayThumbnail(R.drawable.top_site_add);
+    }
+
     /**
      * Updates the title, URL, and pinned state of this view.
      *
@@ -139,7 +149,7 @@ public class TopSitesGridItemView extends RelativeLayout {
      *
      * Returns true if any fields changed.
      */
-    public boolean updateState(final String title, final String url, final boolean pinned) {
+    public boolean updateState(final String title, final String url, final boolean pinned, final Bitmap thumbnail) {
         boolean changed = false;
         if (mUrl == null || !mUrl.equals(url)) {
             mUrl = url;
@@ -149,6 +159,14 @@ public class TopSitesGridItemView extends RelativeLayout {
         if (mTitle == null || !mTitle.equals(title)) {
             mTitle = title;
             changed = true;
+        }
+
+        if (thumbnail != null) {
+            displayThumbnail(thumbnail);
+        } else if (changed) {
+            // Because we'll have a new favicon or thumbnail arriving shortly, and
+            // we need to not reject it because we already had a thumbnail.
+            mThumbnail = null;
         }
 
         if (changed) {
