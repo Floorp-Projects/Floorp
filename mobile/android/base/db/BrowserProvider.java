@@ -2851,9 +2851,12 @@ public class BrowserProvider extends ContentProvider {
         if (updated > 0)
             return updated;
 
-        insertBookmark(uri, values);
+        if (0 <= insertBookmark(uri, values)) {
+            // We 'updated' one row.
+            return 1;
+        }
 
-        // Return 0 if we added a new row
+        // If something went wrong, then we updated zero rows.
         return 0;
     }
 
@@ -2930,9 +2933,10 @@ public class BrowserProvider extends ContentProvider {
         if (!values.containsKey(History.TITLE))
             values.put(History.TITLE, values.getAsString(History.URL));
 
-        insertHistory(uri, values);
+        if (0 <= insertHistory(uri, values)) {
+            return 1;
+        }
 
-        // Return 0 if we added a new row
         return 0;
     }
 
