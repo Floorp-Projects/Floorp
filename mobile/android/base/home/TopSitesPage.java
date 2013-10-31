@@ -558,9 +558,10 @@ public class TopSitesPage extends HomeFragment {
             }
 
             final TopSitesGridItemView view = (TopSitesGridItemView) bindView;
-            view.setTitle(title);
-            view.setUrl(url);
-            view.setPinned(pinned);
+
+            // Debounce bindView calls to avoid redundant redraws and favicon
+            // fetches.
+            final boolean updated = view.updateState(title, url, pinned);
 
             // If there is no url, then show "add bookmark".
             if (TextUtils.isEmpty(url)) {
@@ -570,21 +571,47 @@ public class TopSitesPage extends HomeFragment {
                 Bitmap thumbnail = (mThumbnails != null ? mThumbnails.get(url) : null);
                 if (thumbnail != null) {
                     view.displayThumbnail(thumbnail);
-                } else {
-                    // If we have no thumbnail, attempt to show a Favicon instead.
-                    view.setLoadId(Favicons.getSizedFaviconForPageFromLocal(url, new OnFaviconLoadedListener() {
-                        @Override
-                        public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-                            view.displayFavicon(favicon, faviconURL);
-                        }
-                    }));
+                    return;
                 }
+
+                // Thumbnails are delivered late, so we can't short-circuit any
+                // sooner than this. But we can avoid a duplicate favicon
+                // fetch...
+                if (!updated) {
+                    Log.d(LOGTAG, "bindView called twice for same values; short-circuiting.");
+                    return;
+                }
+
+                // If we have no thumbnail, attempt to show a Favicon instead.
+                LoadIDAwareFaviconLoadedListener listener = new LoadIDAwareFaviconLoadedListener(view);
+                final int loadId = Favicons.getSizedFaviconForPageFromLocal(url, listener);
+
+                // Give each side enough information to shake hands later.
+                listener.setLoadId(loadId);
+                view.setLoadId(loadId);
             }
         }
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
             return new TopSitesGridItemView(context);
+        }
+    }
+
+    private class LoadIDAwareFaviconLoadedListener implements OnFaviconLoadedListener {
+        private volatile int loadId = Favicons.NOT_LOADING;
+        private final TopSitesGridItemView view;
+        public LoadIDAwareFaviconLoadedListener(TopSitesGridItemView view) {
+            this.view = view;
+        }
+
+        public void setLoadId(int id) {
+            this.loadId = id;
+        }
+
+        @Override
+        public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
+            this.view.displayFavicon(favicon, faviconURL, this.loadId);
         }
     }
 
