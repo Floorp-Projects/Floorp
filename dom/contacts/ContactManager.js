@@ -176,18 +176,18 @@ function validateArrayField(data, createCb) {
     }
   };
 
-  if (data) {
-    data = Array.isArray(data) ? data : [data];
-    let filtered = [];
-    for (let i = 0, n = data.length; i < n; ++i) {
+  if (data === null || data === undefined) {
+    return undefined;
+  }
+
+  data = Array.isArray(data) ? data : [data];
+  let filtered = [];
+  for (let i = 0, n = data.length; i < n; ++i) {
+    if (data[i]) {
       filtered.push(createCb(data[i]));
     }
-    if (filtered.length === 0) {
-      return undefined;
-    }
-    return new Proxy(filtered, ArrayPropertyHandler);
   }
-  return undefined;
+  return new Proxy(filtered, ArrayPropertyHandler);
 }
 
 // We need this to create a copy of the mozContact object in ContactManager.save

@@ -53,59 +53,16 @@ protected:
   DBusMessageRefPtr mMessage;
 };
 
-class DBusConnectionSendSyncRunnable : public DBusConnectionSendRunnableBase
-{
-public:
-  bool WaitForCompletion()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    MonitorAutoLock autoLock(mCompletedMonitor);
-    while (!mCompleted) {
-      mCompletedMonitor.Wait();
-    }
-    return mSuccess;
-  }
-
-protected:
-  DBusConnectionSendSyncRunnable(DBusConnection* aConnection,
-                                 DBusMessage* aMessage)
-  : DBusConnectionSendRunnableBase(aConnection, aMessage),
-    mCompletedMonitor("DBusConnectionSendSyncRunnable.mCompleted"),
-    mCompleted(false),
-    mSuccess(false)
-  { }
-
-  virtual ~DBusConnectionSendSyncRunnable()
-  { }
-
-  // Call this function at the end of Run() to notify waiting
-  // threads.
-  void Completed(bool aSuccess)
-  {
-    MonitorAutoLock autoLock(mCompletedMonitor);
-    MOZ_ASSERT(!mCompleted);
-    mSuccess = aSuccess;
-    mCompleted = true;
-    mCompletedMonitor.Notify();
-  }
-
-private:
-  Monitor mCompletedMonitor;
-  bool    mCompleted;
-  bool    mSuccess;
-};
-
 //
 // Sends a message and returns the message's serial number to the
 // disaptching thread. Only run it in DBus thread.
 //
-class DBusConnectionSendRunnable : public DBusConnectionSendSyncRunnable
+class DBusConnectionSendRunnable : public DBusConnectionSendRunnableBase
 {
 public:
   DBusConnectionSendRunnable(DBusConnection* aConnection,
                              DBusMessage* aMessage)
-  : DBusConnectionSendSyncRunnable(aConnection, aMessage)
+  : DBusConnectionSendRunnableBase(aConnection, aMessage)
   { }
 
   NS_IMETHOD Run()
@@ -113,7 +70,6 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
 
     dbus_bool_t success = dbus_connection_send(mConnection, mMessage, nullptr);
-    Completed(success == TRUE);
 
     NS_ENSURE_TRUE(success == TRUE, NS_ERROR_FAILURE);
 
@@ -220,95 +176,6 @@ private:
   int               mTimeout;
 };
 
-//
-// Legacy interface, don't use in new code
-//
-// Sends a message and waits for the reply. Only run it in DBus thread.
-//
-class DBusConnectionSendAndBlockRunnable : public DBusConnectionSendSyncRunnable
-{
-private:
-  static void Notify(DBusPendingCall* aCall, void* aData)
-  {
-    DBusConnectionSendAndBlockRunnable* runnable(
-        static_cast<DBusConnectionSendAndBlockRunnable*>(aData));
-
-    runnable->mReply = dbus_pending_call_steal_reply(aCall);
-
-    bool success = !!runnable->mReply;
-
-    if (runnable->mError) {
-      success = success && !dbus_error_is_set(runnable->mError);
-
-      if (!dbus_set_error_from_message(runnable->mError, runnable->mReply)) {
-        dbus_error_init(runnable->mError);
-      }
-    }
-
-    dbus_pending_call_cancel(aCall);
-    dbus_pending_call_unref(aCall);
-
-    runnable->Completed(success);
-  }
-
-public:
-  DBusConnectionSendAndBlockRunnable(DBusConnection* aConnection,
-                                     DBusMessage* aMessage,
-                                     int aTimeout,
-                                     DBusError* aError)
-  : DBusConnectionSendSyncRunnable(aConnection, aMessage),
-    mError(aError),
-    mReply(nullptr),
-    mTimeout(aTimeout)
-  { }
-
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    DBusPendingCall* call = nullptr;
-
-    dbus_bool_t success = dbus_connection_send_with_reply(mConnection,
-                                                          mMessage,
-                                                          &call,
-                                                          mTimeout);
-    if (success == TRUE) {
-      success = dbus_pending_call_set_notify(call, Notify, this, nullptr);
-    } else {
-      if (mError) {
-        if (!call) {
-          dbus_set_error(mError, DBUS_ERROR_DISCONNECTED, "Connection is closed");
-        } else {
-          dbus_error_init(mError);
-        }
-      }
-    }
-
-    dbus_message_unref(mMessage);
-
-    if (!success) {
-      Completed(false);
-      NS_ENSURE_TRUE(success == TRUE, NS_ERROR_FAILURE);
-    }
-
-    return NS_OK;
-  }
-
-  DBusMessage* GetReply()
-  {
-    return mReply;
-  }
-
-protected:
-  ~DBusConnectionSendAndBlockRunnable()
-  { }
-
-private:
-  DBusError*   mError;
-  DBusMessage* mReply;
-  int          mTimeout;
-};
-
 }
 }
 
@@ -412,58 +279,6 @@ bool RawDBusConnection::SendWithReply(DBusReplyCallback aCallback,
   }
 
   return SendWithReply(aCallback, aData, aTimeout, msg);
-}
-
-bool RawDBusConnection::SendWithError(DBusMessage** aReply,
-                                      DBusError* aError,
-                                      int aTimeout,
-                                      DBusMessage* aMessage)
-{
-  nsRefPtr<DBusConnectionSendAndBlockRunnable> t(
-    new DBusConnectionSendAndBlockRunnable(mConnection, aMessage,
-                                           aTimeout, aError));
-  MOZ_ASSERT(t);
-
-  nsresult rv = DispatchToDBusThread(t);
-
-  if (NS_FAILED(rv)) {
-    if (aMessage) {
-      dbus_message_unref(aMessage);
-    }
-    return false;
-  }
-
-  if (!t->WaitForCompletion()) {
-    return false;
-  }
-
-  if (aReply) {
-    *aReply = t->GetReply();
-  }
-
-  return true;
-}
-
-bool RawDBusConnection::SendWithError(DBusMessage** aReply,
-                                      DBusError* aError,
-                                      int aTimeout,
-                                      const char* aPath,
-                                      const char* aIntf,
-                                      const char* aFunc,
-                                      int aFirstArgType, ...)
-{
-  va_list args;
-
-  va_start(args, aFirstArgType);
-  DBusMessage* msg = BuildDBusMessage(aPath, aIntf, aFunc,
-                                      aFirstArgType, args);
-  va_end(args);
-
-  if (!msg) {
-    return false;
-  }
-
-  return SendWithError(aReply, aError, aTimeout, msg);
 }
 
 DBusMessage* RawDBusConnection::BuildDBusMessage(const char* aPath,
