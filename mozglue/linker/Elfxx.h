@@ -16,6 +16,10 @@
 #endif
 #include <endian.h>
 
+#if defined(__ARM_EABI__) && !defined(PT_ARM_EXIDX)
+#define PT_ARM_EXIDX 0x70000001
+#endif
+
 /**
  * Generic ELF macros for the target system
  */
