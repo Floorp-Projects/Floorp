@@ -443,6 +443,7 @@ TabTarget.prototype = {
 
     if (this._inspector) {
       this._inspector.destroy();
+      this._inspector = null;
     }
 
     // First of all, do cleanup tasks that pertain to both remoted and
