@@ -506,7 +506,7 @@ OS_LIBS += \
   -framework SystemConfiguration \
   -framework QTKit \
   -framework IOKit \
-  -F/System/Library/PrivateFrameworks -framework CoreUI \
+  -F$(MACOS_PRIVATE_FRAMEWORKS_DIR) -framework CoreUI \
   $(TK_LIBS) \
   $(NULL)
 endif

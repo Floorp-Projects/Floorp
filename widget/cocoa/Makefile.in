@@ -40,9 +40,3 @@ LOCAL_INCLUDES	= \
 	-I$(topsrcdir)/layout/generic \
 	-I$(topsrcdir)/layout/xul/base/src \
 	$(NULL)
-
-LDFLAGS	+= \
-	-framework QuickTime \
-	-framework IOKit \
-	-F/System/Library/PrivateFrameworks -framework CoreUI \
-	$(NULL)

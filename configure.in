@@ -810,9 +810,26 @@ MOZ_ARG_WITH_STRING(macos-sdk,
 [  --with-macos-sdk=dir    Location of platform SDK to use (Mac OS X only)],
     MACOS_SDK_DIR=$withval)
 
+MACOS_PRIVATE_FRAMEWORKS_DIR_DEFAULTED=
+MOZ_ARG_WITH_STRING(macos-private-frameworks,
+[  --with-macos-private-frameworks=dir    Location of private frameworks to use (Mac OS X only)],
+    MACOS_PRIVATE_FRAMEWORKS_DIR=$withval,
+    MACOS_PRIVATE_FRAMEWORKS_DIR=/System/Library/PrivateFrameworks
+    MACOS_PRIVATE_FRAMEWORKS_DEFAULTED=1)
+
+if test -z "${MACOS_PRIVATE_FRAMEWORKS_DEFAULTED}"; then
+  if test -z "$CROSS_COMPILE"; then
+    AC_MSG_WARN([You should only be using --with-macos-private-frameworks when cross-compiling.])
+  fi
+  if test ! -d "$MACOS_PRIVATE_FRAMEWORKS_DIR"; then
+    AC_MSG_ERROR([PrivateFrameworks directory not found.])
+  fi
+fi
+
 dnl MACOS_SDK_DIR will be set to the SDK location whenever one is in use.
 dnl NEXT_ROOT will be set and exported only if it's needed.
 AC_SUBST(MACOS_SDK_DIR)
+AC_SUBST(MACOS_PRIVATE_FRAMEWORKS_DIR)
 AC_SUBST(NEXT_ROOT)
 
 if test "$MACOS_SDK_DIR"; then
