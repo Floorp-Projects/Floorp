@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_telephony_telephony_h__
 #define mozilla_dom_telephony_telephony_h__
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/telephony/TelephonyCommon.h"
 
 #include "nsITelephonyProvider.h"
@@ -66,16 +67,19 @@ public:
 
   // WebIDL
   already_AddRefed<TelephonyCall>
-  Dial(const nsAString& aNumber, ErrorResult& aRv);
+  Dial(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
+       ErrorResult& aRv);
 
   already_AddRefed<TelephonyCall>
-  DialEmergency(const nsAString& aNumber, ErrorResult& aRv);
+  DialEmergency(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
+                ErrorResult& aRv);
 
   void
-  StartTone(const nsAString& aDTMF, ErrorResult& aRv);
+  StartTone(const nsAString& aDTMFChar, const Optional<uint32_t>& aServiceId,
+            ErrorResult& aRv);
 
   void
-  StopTone(ErrorResult& aRv);
+  StopTone(const Optional<uint32_t>& aServiceId, ErrorResult& aRv);
 
   bool
   GetMuted(ErrorResult& aRv) const;
@@ -148,8 +152,17 @@ private:
   static bool
   IsValidNumber(const nsAString& aNumber);
 
+  static uint32_t
+  GetNumServices();
+
+  static bool
+  IsValidServiceId(uint32_t aServiceId);
+
   static bool
   IsActiveState(uint16_t aCallState);
+
+  uint32_t
+  ProvidedOrDefaultServiceId(const Optional<uint32_t>& aServiceId);
 
   bool
   HasDialingCall();
@@ -158,15 +171,15 @@ private:
   MatchActiveCall(TelephonyCall* aCall);
 
   already_AddRefed<TelephonyCall>
-  DialInternal(bool isEmergency,
-               const nsAString& aNumber,
-               ErrorResult& aRv);
+  DialInternal(uint32_t aServiceId, const nsAString& aNumber,
+               bool isEmergency, ErrorResult& aRv);
 
   already_AddRefed<TelephonyCall>
-  CreateNewDialingCall(const nsAString& aNumber);
+  CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber);
 
   void
-  NoteDialedCallFromOtherInstance(const nsAString& aNumber);
+  NoteDialedCallFromOtherInstance(uint32_t aServiceId,
+                                  const nsAString& aNumber);
 
   nsresult
   NotifyCallsChanged(TelephonyCall* aCall);
@@ -181,13 +194,13 @@ private:
   UpdateActiveCall(TelephonyCall* aCall, bool aIsActive);
 
   already_AddRefed<TelephonyCall>
-  GetCall(uint32_t aCallIndex);
+  GetCall(uint32_t aServiceId, uint32_t aCallIndex);
 
   already_AddRefed<TelephonyCall>
   GetOutgoingCall();
 
   already_AddRefed<TelephonyCall>
-  GetCallFromEverywhere(uint32_t aCallIndex);
+  GetCallFromEverywhere(uint32_t aServiceId, uint32_t aCallIndex);
 };
 
 } // namespace dom
