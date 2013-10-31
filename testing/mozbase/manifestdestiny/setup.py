@@ -5,7 +5,7 @@
 from setuptools import setup
 
 PACKAGE_NAME = "ManifestDestiny"
-PACKAGE_VERSION = '0.5.7'
+PACKAGE_VERSION = '0.6'
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,

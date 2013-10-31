@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import os
 import shutil
 import tempfile
@@ -10,7 +14,7 @@ from StringIO import StringIO
 
 here = os.path.dirname(os.path.abspath(__file__))
 
-class TestManifestparser(unittest.TestCase):
+class TestManifestParser(unittest.TestCase):
     """
     Test the manifest parser
 
@@ -86,7 +90,7 @@ class TestManifestparser(unittest.TestCase):
         self.assertEqual(parser.get(name='flowers')[0]['yellow'],
                          'submarine')
 
-        # You can query multiple times if you need to::
+        # You can query multiple times if you need to:
         flowers = parser.get(foo='bar')
         self.assertEqual(len(flowers), 2)
 
@@ -94,7 +98,7 @@ class TestManifestparser(unittest.TestCase):
         self.assertEqual(parser.get('name', inverse=True, tags=['red']),
                          ['crash-handling', 'fleem'])
 
-        # All of the included tests actually exist::
+        # All of the included tests actually exist:
         self.assertEqual([i['name'] for i in parser.missing()], [])
 
         # Write the output to a manifest:
@@ -102,49 +106,6 @@ class TestManifestparser(unittest.TestCase):
         parser.write(fp=buffer, global_kwargs={'foo': 'bar'})
         self.assertEqual(buffer.getvalue().strip(),
                          '[DEFAULT]\nfoo = bar\n\n[fleem]\n\n[include/flowers]\nblue = ocean\nred = roses\nyellow = submarine')
-
-
-    def test_directory_to_manifest(self):
-        """
-        Test our ability to convert a static directory structure to a
-        manifest.
-        """
-
-        # First, stub out a directory with files in it::
-        def create_stub():
-            directory = tempfile.mkdtemp()
-            for i in 'foo', 'bar', 'fleem':
-                file(os.path.join(directory, i), 'w').write(i)
-            subdir = os.path.join(directory, 'subdir')
-            os.mkdir(subdir)
-            file(os.path.join(subdir, 'subfile'), 'w').write('baz')
-            return directory
-        stub = create_stub()
-        self.assertTrue(os.path.exists(stub) and os.path.isdir(stub))
-
-        # Make a manifest for it:
-        self.assertEqual(convert([stub]),
-                         """[bar]
-[fleem]
-[foo]
-[subdir/subfile]""")
-        shutil.rmtree(stub) # cleanup
-
-        # Now do the same thing but keep the manifests in place:
-        stub = create_stub()
-        convert([stub], write='manifest.ini')
-        self.assertEqual(sorted(os.listdir(stub)),
-                         ['bar', 'fleem', 'foo', 'manifest.ini', 'subdir'])
-        parser = ManifestParser()
-        parser.read(os.path.join(stub, 'manifest.ini'))
-        self.assertEqual([i['name'] for i in parser.tests],
-                         ['subfile', 'bar', 'fleem', 'foo'])
-        parser = ManifestParser()
-        parser.read(os.path.join(stub, 'subdir', 'manifest.ini'))
-        self.assertEqual(len(parser.tests), 1)
-        self.assertEqual(parser.tests[0]['name'], 'subfile')
-        shutil.rmtree(stub)
-
 
     def test_copy(self):
         """Test our ability to copy a set of manifests"""
@@ -163,49 +124,6 @@ class TestManifestparser(unittest.TestCase):
         self.assertEqual(to_manifest.get('name'), from_manifest.get('name'))
         shutil.rmtree(tempdir)
 
-
-    def test_update(self):
-        """
-        Test our ability to update tests from a manifest and a directory of
-        files
-        """
-
-        # boilerplate
-        tempdir = tempfile.mkdtemp()
-        for i in range(10):
-            file(os.path.join(tempdir, str(i)), 'w').write(str(i))
-
-        # First, make a manifest:
-        manifest = convert([tempdir])
-        newtempdir = tempfile.mkdtemp()
-        manifest_file = os.path.join(newtempdir, 'manifest.ini')
-        file(manifest_file,'w').write(manifest)
-        manifest = ManifestParser(manifests=(manifest_file,))
-        self.assertEqual(manifest.get('name'),
-                         [str(i) for i in range(10)])
-
-        # All of the tests are initially missing:
-        self.assertEqual([i['name'] for i in manifest.missing()],
-                         [str(i) for i in range(10)])
-
-        # But then we copy one over:
-        self.assertEqual(manifest.get('name', name='1'), ['1'])
-        manifest.update(tempdir, name='1')
-        self.assertEqual(sorted(os.listdir(newtempdir)),
-                         ['1', 'manifest.ini'])
-
-        # Update that one file and copy all the "tests":
-        file(os.path.join(tempdir, '1'), 'w').write('secret door')
-        manifest.update(tempdir)
-        self.assertEqual(sorted(os.listdir(newtempdir)),
-                         ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'manifest.ini'])
-        self.assertEqual(file(os.path.join(newtempdir, '1')).read().strip(),
-                         'secret door')
-
-        # clean up:
-        shutil.rmtree(tempdir)
-        shutil.rmtree(newtempdir)
-
     def test_path_override(self):
         """You can override the path in the section too.
         This shows that you can use a relative path"""
@@ -214,6 +132,28 @@ class TestManifestparser(unittest.TestCase):
         self.assertEqual(manifest.tests[0]['path'],
                          os.path.join(here, 'fleem'))
 
+    def test_relative_path(self):
+        """
+        Relative test paths are correctly calculated.
+        """
+        relative_path = os.path.join(here, 'relative-path.ini')
+        manifest = ManifestParser(manifests=(relative_path,))
+        self.assertEqual(manifest.tests[0]['path'],
+                         os.path.join(os.path.dirname(here), 'fleem'))
+        self.assertEqual(manifest.tests[0]['relpath'],
+                         os.path.join('..', 'fleem'))
+        self.assertEqual(manifest.tests[1]['relpath'],
+                         os.path.join('..', 'testsSIBLING', 'example'))
+
+    def test_path_from_fd(self):
+        """
+        Test paths are left untouched when manifest is a file-like object.
+        """
+        fp = StringIO("[section]\npath=fleem")
+        manifest = ManifestParser(manifests=(fp,))
+        self.assertEqual(manifest.tests[0]['path'], 'fleem')
+        self.assertEqual(manifest.tests[0]['relpath'], 'fleem')
+        self.assertEqual(manifest.tests[0]['manifest'], None)
 
     def test_comments(self):
         """
@@ -225,6 +165,30 @@ class TestManifestparser(unittest.TestCase):
         self.assertEqual(len(manifest.tests), 8)
         names = [i['name'] for i in manifest.tests]
         self.assertFalse('test_0202_app_launch_apply_update_dirlocked.js' in names)
+
+    def test_verifyDirectory(self):
+
+        directory = os.path.join(here, 'verifyDirectory')
+
+        # correct manifest
+        manifest_path = os.path.join(directory, 'verifyDirectory.ini')
+        manifest = ManifestParser(manifests=(manifest_path,))
+        missing = manifest.verifyDirectory(directory, extensions=('.js',))
+        self.assertEqual(missing, (set(), set()))
+
+        # manifest is missing test_1.js
+        test_1 = os.path.join(directory, 'test_1.js')
+        manifest_path = os.path.join(directory, 'verifyDirectory_incomplete.ini')
+        manifest = ManifestParser(manifests=(manifest_path,))
+        missing = manifest.verifyDirectory(directory, extensions=('.js',))
+        self.assertEqual(missing, (set(), set([test_1])))
+
+        # filesystem is missing test_notappearinginthisfilm.js
+        missing_test = os.path.join(directory, 'test_notappearinginthisfilm.js')
+        manifest_path = os.path.join(directory, 'verifyDirectory_toocomplete.ini')
+        manifest = ManifestParser(manifests=(manifest_path,))
+        missing = manifest.verifyDirectory(directory, extensions=('.js',))
+        self.assertEqual(missing, (set([missing_test]), set()))
 
 if __name__ == '__main__':
     unittest.main()
