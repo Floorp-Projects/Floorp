@@ -73,9 +73,4 @@ public class TestEnvironmentBuilder extends FakeProfileTestCase {
     assertFalse(EnvironmentBuilder.getCurrentEnvironment(cache).getHash()
                                   .equals(environment.getHash()));
   }
-
-  @Override
-  protected String getCacheSuffix() {
-    return System.currentTimeMillis() + Math.random() + ".foo";
-  }
 }
