@@ -353,26 +353,14 @@ UpdatePrompt.prototype = {
       this.restartProcess();
       return;
     }
-
-    let osApplyToDir;
+ 
     try {
-      this._update.QueryInterface(Ci.nsIWritablePropertyBag);
-      osApplyToDir = this._update.getProperty("osApplyToDir");
-    } catch (e) {}
-
-    if (!osApplyToDir) {
-      log("Error: Update has no osApplyToDir");
-      return;
+      Services.aus.applyOsUpdate(this._update);
     }
-
-    let updateFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    updateFile.initWithPath(osApplyToDir + "/update.zip");
-    if (!updateFile.exists()) {
-      log("Error: FOTA update not found at " + updateFile.path);
-      return;
+    catch (e) {
+      this._update.errorCode = Cr.NS_ERROR_FAILURE;
+      this.showUpdateError(this._update);
     }
-
-    this.finishOSUpdate(updateFile.path);
   },
 
   restartProcess: function UP_restartProcess() {
@@ -388,25 +376,6 @@ UpdatePrompt.prototype = {
                     .getService(Ci.nsIPowerManagerService);
     pmService.restart();
 #endif
-  },
-
-  finishOSUpdate: function UP_finishOSUpdate(aOsUpdatePath) {
-    log("Rebooting into recovery to apply FOTA update: " + aOsUpdatePath);
-
-    try {
-      let recoveryService = Cc["@mozilla.org/recovery-service;1"]
-                            .getService(Ci.nsIRecoveryService);
-      recoveryService.installFotaUpdate(aOsUpdatePath);
-    } catch(e) {
-      log("Error: Couldn't reboot into recovery to apply FOTA update " +
-          aOsUpdatePath);
-      aUpdate = Services.um.activeUpdate;
-      if (aUpdate) {
-        aUpdate.errorCode = Cr.NS_ERROR_FAILURE;
-        aUpdate.statusText = "fota-reboot-failed";
-        this.showUpdateError(aUpdate);
-      }
-    }
   },
 
   forceUpdateCheck: function UP_forceUpdateCheck() {
