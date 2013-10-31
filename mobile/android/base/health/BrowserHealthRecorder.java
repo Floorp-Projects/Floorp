@@ -741,90 +741,12 @@ public class BrowserHealthRecorder implements GeckoEventListener {
      */
 
     public static final String MEASUREMENT_NAME_SEARCH_COUNTS = "org.mozilla.searches.counts";
-    public static final int MEASUREMENT_VERSION_SEARCH_COUNTS = 4;
+    public static final int MEASUREMENT_VERSION_SEARCH_COUNTS = 5;
 
     public static final String[] SEARCH_LOCATIONS = {
         "barkeyword",
         "barsuggest",
         "bartext",
-    };
-
-    // See services/healthreport/providers.jsm. Sorry for the duplication.
-    // THIS LIST MUST BE SORTED per java.lang.Comparable<String>.
-    private static final String[] SEARCH_PROVIDERS = {
-        "amazon-co-uk",
-        "amazon-de",
-        "amazon-en-GB",
-        "amazon-france",
-        "amazon-it",
-        "amazon-jp",
-        "amazondotcn",
-        "amazondotcom",
-        "amazondotcom-de",
-
-        "aol-en-GB",
-        "aol-web-search",
-
-        "bing",
-
-        "eBay",
-        "eBay-de",
-        "eBay-en-GB",
-        "eBay-es",
-        "eBay-fi",
-        "eBay-france",
-        "eBay-hu",
-        "eBay-in",
-        "eBay-it",
-
-        "google",
-        "google-jp",
-        "google-ku",
-        "google-maps-zh-TW",
-
-        "mailru",
-
-        "mercadolibre-ar",
-        "mercadolibre-cl",
-        "mercadolibre-mx",
-
-        "seznam-cz",
-
-        "twitter",
-        "twitter-de",
-        "twitter-ja",
-
-        "wikipedia",            // Manually added.
-
-        "yahoo",
-        "yahoo-NO",
-        "yahoo-answer-zh-TW",
-        "yahoo-ar",
-        "yahoo-bid-zh-TW",
-        "yahoo-br",
-        "yahoo-ch",
-        "yahoo-cl",
-        "yahoo-de",
-        "yahoo-en-GB",
-        "yahoo-es",
-        "yahoo-fi",
-        "yahoo-france",
-        "yahoo-fy-NL",
-        "yahoo-id",
-        "yahoo-in",
-        "yahoo-it",
-        "yahoo-jp",
-        "yahoo-jp-auctions",
-        "yahoo-mx",
-        "yahoo-sv-SE",
-        "yahoo-zh-TW",
-
-        "yandex",
-        "yandex-ru",
-        "yandex-slovari",
-        "yandex-tr",
-        "yandex.by",
-        "yandex.ru-be",
     };
 
     private void initializeSearchProvider() {
@@ -855,29 +777,12 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     }
 
     /**
-     * Return the field key for the search provider. This turns null and
-     * non-partner providers into "other".
-     *
-     * @param engine an engine identifier, such as "yandex"
-     * @return the key to use, such as "other" or "yandex".
-     */
-    protected String getEngineKey(final String engine) {
-        if (engine == null) {
-            return "other";
-        }
-
-        // This is inefficient. Optimize if necessary.
-        boolean found = (0 <= java.util.Arrays.binarySearch(SEARCH_PROVIDERS, engine));
-        return found ? engine : "other";
-    }
-
-    /**
      * Record a search.
      *
-     * @param engine the string identifier for the engine, or null if it's not a partner.
+     * @param engineID the string identifier for the engine. Can be <code>null</code>.
      * @param location one of a fixed set of locations: see {@link #SEARCH_LOCATIONS}.
      */
-    public void recordSearch(final String engine, final String location) {
+    public void recordSearch(final String engineID, final String location) {
         if (this.state != State.INITIALIZED) {
             Log.d(LOG_TAG, "Not initialized: not recording search. (" + this.state + ")");
             return;
@@ -889,7 +794,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
         final int day = storage.getDay();
         final int env = this.env;
-        final String key = getEngineKey(engine);
+        final String key = (engineID == null) ? "other" : engineID;
         final BrowserHealthRecorder self = this;
 
         ThreadUtils.postToBackgroundThread(new Runnable() {
