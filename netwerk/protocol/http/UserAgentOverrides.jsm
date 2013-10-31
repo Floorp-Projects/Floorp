@@ -9,14 +9,20 @@ this.EXPORTED_SYMBOLS = [ "UserAgentOverrides" ];
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/UserAgentUpdates.jsm");
 
+const OVERRIDE_MESSAGE = "Useragent:GetOverride";
 const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
 const DEFAULT_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
                      .getService(Ci.nsIHttpProtocolHandler)
                      .userAgent;
 const MAX_OVERRIDE_FOR_HOST_CACHE_SIZE = 250;
+
+XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
+                                  "@mozilla.org/parentprocessmessagemanager;1",
+                                  "nsIMessageListenerManager");  // Might have to make this broadcast?
 
 var gPrefBranch;
 var gOverrides = new Map;
@@ -35,6 +41,7 @@ this.UserAgentOverrides = {
     gPrefBranch = Services.prefs.getBranch("general.useragent.override.");
     gPrefBranch.addObserver("", buildOverrides, false);
 
+    ppmm.addMessageListener(OVERRIDE_MESSAGE, this);
     Services.prefs.addObserver(PREF_OVERRIDES_ENABLED, buildOverrides, false);
 
     try {
@@ -61,12 +68,12 @@ this.UserAgentOverrides = {
   },
 
   getOverrideForURI: function uao_getOverrideForURI(aURI) {
+    let host = aURI.asciiHost;
     if (!gInitialized ||
         (!gOverrides.size && !gUpdatedOverrides) ||
-        !(aURI instanceof Ci.nsIStandardURL))
+        !(host)) {
       return null;
-
-    let host = aURI.asciiHost;
+    }
 
     let override = gOverrideForHostCache.get(host);
     if (override !== undefined)
@@ -108,6 +115,17 @@ this.UserAgentOverrides = {
     Services.prefs.removeObserver(PREF_OVERRIDES_ENABLED, buildOverrides);
 
     Services.obs.removeObserver(HTTP_on_modify_request, "http-on-modify-request");
+  },
+
+  receiveMessage: function(aMessage) {
+    let name = aMessage.name;
+    switch (name) {
+      case OVERRIDE_MESSAGE:
+        let uri = aMessage.data.uri;
+        return this.getOverrideForURI(uri);
+      default:
+        throw("Wrong Message in UserAgentOverride: " + name);
+    }
   }
 };
 

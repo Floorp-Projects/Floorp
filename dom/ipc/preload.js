@@ -30,10 +30,6 @@ const BrowserElementIsPreloaded = true;
   Cu.import("resource://gre/modules/SettingsDB.jsm");
   Cu.import("resource://gre/modules/SettingsQueue.jsm");
   Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-  if (Services.prefs.getBoolPref("general.useragent.enable_overrides")) {
-    Cu.import('resource://gre/modules/UserAgentOverrides.jsm');
-    UserAgentOverrides.init();
-  }
 
   Cc["@mozilla.org/appshell/appShellService;1"].getService(Ci["nsIAppShellService"]);
   Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci["nsIWindowMediator"]);
