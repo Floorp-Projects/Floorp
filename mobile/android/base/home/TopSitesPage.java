@@ -515,6 +515,7 @@ public class TopSitesPage extends HomeFragment {
 
     public class TopSitesGridAdapter extends CursorAdapter {
         // Cache to store the thumbnails.
+        // Ensure that this is only accessed from the UI thread.
         private Map<String, Bitmap> mThumbnails;
 
         public TopSitesGridAdapter(Context context, Cursor cursor) {
