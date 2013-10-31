@@ -496,6 +496,8 @@ InspectorPanel.prototype = {
       this.highlighter.destroy();
     }
 
+    delete this.onLockStateChanged;
+
     if (this.walker) {
       this.walker.off("new-root", this.onNewRoot);
       this._destroyPromise = this.walker.release().then(null, console.error);
@@ -529,6 +531,7 @@ InspectorPanel.prototype = {
     this.nodemenu.removeEventListener("popuphiding", this._resetNodeMenu, true);
     this.breadcrumbs.destroy();
     this.searchSuggestions.destroy();
+    delete this.searchBox;
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("before-new-node", this.onBeforeNewSelection);
     this.selection.off("before-new-node-front", this.onBeforeNewSelection);
