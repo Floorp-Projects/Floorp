@@ -174,7 +174,7 @@ function testIncrement( aEditor, aOptions )
 
 function finishTest()
 {
-  doc = null;
+  doc = view = inspector = null;
   gBrowser.removeCurrentTab();
   finish();
 }

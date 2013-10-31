@@ -75,6 +75,7 @@ function createDummyDocument() {
   eventTarget.addEventListener("DOMContentLoaded", function handler(event) {
     eventTarget.removeEventListener("DOMContentLoaded", handler, false);
     deferred.resolve(window.document);
+    frame.remove();
   }, false);
   gDummyPromise = deferred.promise;
   return gDummyPromise;
@@ -1251,6 +1252,7 @@ CssRuleView.prototype = {
   {
     this.clear();
 
+    gDummyPromise = null;
     gDevTools.off("pref-changed", this._handlePrefChange);
 
     this.element.removeEventListener("copy", this._onCopy);

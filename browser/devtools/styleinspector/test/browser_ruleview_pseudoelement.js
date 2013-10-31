@@ -301,7 +301,7 @@ function testNode(node, cb)
 
 function finishTest()
 {
-  doc = null;
+  doc = inspector = view = null;
   gBrowser.removeCurrentTab();
   finish();
 }

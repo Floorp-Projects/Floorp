@@ -908,6 +908,7 @@ Toolbox.prototype = {
       // Free _host after the call to destroyed in order to let a chance
       // to destroyed listeners to still query toolbox attributes
       this._host = null;
-    });
+      this._toolPanels.clear();
+    }).then(null, console.error);
   }
 };

@@ -18,6 +18,11 @@ const DeviceStore = require("devtools/app-manager/device-store");
 const simulatorsStore = require("devtools/app-manager/simulators-store");
 const adbStore = require("devtools/app-manager/builtin-adb-store");
 
+window.addEventListener("unload", function onUnload() {
+  window.removeEventListener("unload", onUnload);
+  UI.destroy();
+});
+
 let UI = {
   init: function() {
     this.useFloatingScrollbarsIfNeeded();
@@ -54,16 +59,25 @@ let UI = {
     let pre = document.querySelector("#logs > pre");
     pre.textContent = this.connection.logs;
     pre.scrollTop = pre.scrollTopMax;
-    this.connection.on(Connection.Events.NEW_LOG, (event, str) => {
-      pre.textContent += "\n" + str;
-      pre.scrollTop = pre.scrollTopMax;
-    });
+    this.connection.on(Connection.Events.NEW_LOG, this._onNewLog);
 
     this.template = new Template(document.body, this.store, Utils.l10n);
     this.template.start();
 
     this._onSimulatorConnected = this._onSimulatorConnected.bind(this);
     this._onSimulatorDisconnected = this._onSimulatorDisconnected.bind(this);
+  },
+
+  destroy: function() {
+    this.store.destroy();
+    this.connection.off(Connection.Events.NEW_LOG, this._onNewLog);
+    this.template.destroy();
+  },
+
+  _onNewLog: function(event, str) {
+    let pre = document.querySelector("#logs > pre");
+    pre.textContent += "\n" + str;
+    pre.scrollTop = pre.scrollTopMax;
   },
 
   useFloatingScrollbarsIfNeeded: function() {

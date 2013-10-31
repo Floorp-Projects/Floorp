@@ -2367,6 +2367,11 @@ var InspectorFront = exports.InspectorFront = protocol.FrontClass(InspectorActor
     this.manage(this);
   },
 
+  destroy: function() {
+    delete this.walker;
+    protocol.Front.prototype.destroy.call(this);
+  },
+
   getWalker: protocol.custom(function() {
     return this._getWalker().then(walker => {
       this.walker = walker;

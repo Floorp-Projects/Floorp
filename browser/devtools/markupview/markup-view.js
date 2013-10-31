@@ -950,7 +950,7 @@ MarkupView.prototype = {
 
     delete this._elt;
 
-    for ([key, container] of this._containers) {
+    for (let [key, container] of this._containers) {
       container.destroy();
     }
     delete this._containers;
