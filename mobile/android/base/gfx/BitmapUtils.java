@@ -61,6 +61,11 @@ public final class BitmapUtils {
                             return GeckoJarReader.getBitmapDrawable(context.getResources(), data);
                         }
 
+                        // Don't attempt to validate the JAR signature when loading an add-on icon
+                        if (data.startsWith("jar:file")) {
+                            return GeckoJarReader.getBitmapDrawable(context.getResources(), Uri.decode(data));
+                        }
+
                         URL url = new URL(data);
                         InputStream is = (InputStream) url.getContent();
                         try {
