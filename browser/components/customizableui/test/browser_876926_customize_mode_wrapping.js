@@ -100,7 +100,7 @@ function checkPalette(id, method) {
   ok(CustomizableUI.inDefaultState, "Should end in default state");
   let visibleChildren = gCustomizeMode.visiblePalette.children;
   let expectedChild = method == "dragToItem" ? visibleChildren[0] : visibleChildren[visibleChildren.length - 1];
-  is(expectedChild.firstChild.id, id, "Widget " + id + " should now be wrapped in palette in customizing window.");
+  is(expectedChild.firstChild.id, id, "Widget " + id + " was moved using " + method + " and should now be wrapped in palette in customizing window.");
   if (id == kXULWidgetId) {
     ok(otherWin.gNavToolbox.palette.querySelector("#" + id), "Widget " + id + " should be in invisible palette in other window.");
   }
