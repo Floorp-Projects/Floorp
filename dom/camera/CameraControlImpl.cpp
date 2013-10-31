@@ -254,6 +254,20 @@ CameraControlImpl::Get(nsICameraPreviewStateChange** aOnPreviewStateChange)
   return NS_OK;
 }
 
+nsresult
+CameraControlImpl::Set(uint32_t aKey, const idl::CameraSize& aSize)
+{
+  SetParameter(aKey, aSize);
+  return NS_OK;
+}
+
+nsresult
+CameraControlImpl::Get(uint32_t aKey, idl::CameraSize& aSize)
+{
+  GetParameter(aKey, aSize);
+  return NS_OK;
+}
+
 already_AddRefed<RecorderProfileManager>
 CameraControlImpl::GetRecorderProfileManager()
 {
@@ -407,7 +421,7 @@ CameraControlImpl::AutoFocus(nsICameraAutoFocusCallback* onSuccess, nsICameraErr
 }
 
 nsresult
-CameraControlImpl::TakePicture(CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, CameraPosition aPosition, uint64_t aDateTime, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
+CameraControlImpl::TakePicture(const CameraSize& aSize, int32_t aRotation, const nsAString& aFileFormat, CameraPosition aPosition, uint64_t aDateTime, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError)
 {
   MOZ_ASSERT(NS_IsMainThread());
   bool cancel = false;

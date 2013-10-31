@@ -7,11 +7,11 @@
 [ChromeOnly, Constructor, JSImplementation="@mozilla.org/contactAddress;1"]
 interface ContactAddress {
   attribute object?    type; // DOMString[]
-  attribute DOMString? streetAddress;
-  attribute DOMString? locality;
-  attribute DOMString? region;
-  attribute DOMString? postalCode;
-  attribute DOMString? countryName;
+  [TreatUndefinedAs=Null] attribute DOMString? streetAddress;
+  [TreatUndefinedAs=Null] attribute DOMString? locality;
+  [TreatUndefinedAs=Null] attribute DOMString? region;
+  [TreatUndefinedAs=Null] attribute DOMString? postalCode;
+  [TreatUndefinedAs=Null] attribute DOMString? countryName;
   attribute boolean?   pref;
 
   [ChromeOnly]
@@ -26,19 +26,19 @@ interface ContactAddress {
 
 dictionary ContactAddressInit {
   sequence<DOMString>? type;
-  DOMString?           streetAddress;
-  DOMString?           locality;
-  DOMString?           region;
-  DOMString?           postalCode;
-  DOMString?           countryName;
-  boolean?             pref;
+  DOMString? streetAddress;
+  DOMString? locality;
+  DOMString? region;
+  DOMString? postalCode;
+  DOMString? countryName;
+  boolean? pref;
 };
 
 
 [ChromeOnly, Constructor, JSImplementation="@mozilla.org/contactField;1"]
 interface ContactField {
   attribute object?    type; // DOMString[]
-  attribute DOMString? value;
+  [TreatUndefinedAs=Null] attribute DOMString? value;
   attribute boolean?   pref;
 
   [ChromeOnly]
@@ -56,7 +56,7 @@ dictionary ContactFieldInit {
 
 [ChromeOnly, Constructor, JSImplementation="@mozilla.org/contactTelField;1"]
 interface ContactTelField : ContactField {
-  attribute DOMString? carrier;
+  [TreatUndefinedAs=Null] attribute DOMString? carrier;
 
   [ChromeOnly]
   void initialize(optional sequence<DOMString>? type,
@@ -111,8 +111,8 @@ interface mozContact {
            attribute Date?        bday;
            attribute Date?        anniversary;
 
-           attribute DOMString?   sex;
-           attribute DOMString?   genderIdentity;
+  [TreatUndefinedAs=Null] attribute DOMString? sex;
+  [TreatUndefinedAs=Null] attribute DOMString? genderIdentity;
 
            attribute object?      photo;
 

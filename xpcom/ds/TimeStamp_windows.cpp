@@ -438,18 +438,6 @@ TimeDuration::Resolution()
   return TimeDuration::FromTicks(int64_t(sResolution));
 }
 
-struct TimeStampInitialization
-{
-  TimeStampInitialization() {
-    TimeStamp::Startup();
-  }
-  ~TimeStampInitialization() {
-    TimeStamp::Shutdown();
-  }
-};
-
-static TimeStampInitialization initOnce;
-
 static bool
 HasStableTSC()
 {
@@ -515,8 +503,6 @@ TimeStamp::Startup()
 
   InitThresholds();
   InitResolution();
-  sFirstTimeStamp = TimeStamp::Now();
-  sProcessCreation = TimeStamp();
 
   return NS_OK;
 }
