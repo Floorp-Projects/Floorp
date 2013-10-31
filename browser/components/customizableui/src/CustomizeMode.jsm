@@ -14,6 +14,7 @@ const kPaletteId = "customization-palette";
 const kAboutURI = "about:customizing";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kPlaceholderClass = "panel-customization-placeholder";
+const kWidePanelItemClass = "panel-wide-item";
 // TODO(bug 885574): Merge this constant with the one in CustomizableWidgets.jsm,
 //                   maybe just use a pref for this.
 const kColumnsInMenuPanel = 3;
@@ -774,6 +775,12 @@ CustomizeMode.prototype = {
     dt.mozSetDataAt(kDragDataTypePrefix + documentId, draggedItem.id, 0);
     dt.effectAllowed = "move";
 
+    let itemRect = draggedItem.getBoundingClientRect();
+    let itemCenter = {x: itemRect.left + itemRect.width / 2,
+                      y: itemRect.top + itemRect.height / 2};
+    this._dragOffset = {x: aEvent.clientX - itemCenter.x,
+                        y: aEvent.clientY - itemCenter.y};
+
     // Hack needed so that the dragimage will still show the
     // item as it appeared before it was hidden.
     let win = aEvent.target.ownerDocument.defaultView;
@@ -824,8 +831,7 @@ CustomizeMode.prototype = {
       return;
     }
 
-    let targetNode = this._getDragOverNode(aEvent.target, targetArea);
-    let targetParent = targetNode.parentNode;
+    let targetNode = this._getDragOverNode(aEvent, targetArea);
 
     // We need to determine the place that the widget is being dropped in
     // the target.
@@ -836,6 +842,7 @@ CustomizeMode.prototype = {
       dragOverItem = targetNode.lastChild || targetNode;
       dragValue = "after";
     } else {
+      let targetParent = targetNode.parentNode;
       let position = Array.indexOf(targetParent.children, targetNode);
       if (position == -1) {
         dragOverItem = targetParent.lastChild;
@@ -1232,7 +1239,6 @@ CustomizeMode.prototype = {
       return width;
 
     // Calculate width of the item when it'd be dropped in this position.
-    let window = aDragOverNode.ownerDocument.defaultView;
     let currentParent = aDraggedItem.parentNode;
     let currentSibling = aDraggedItem.nextSibling;
 
@@ -1278,13 +1284,27 @@ CustomizeMode.prototype = {
     return null;
   },
 
-  _getDragOverNode: function(aElement, aAreaElement) {
+  _getDragOverNode: function(aEvent, aAreaElement) {
     let expectedParent = aAreaElement.customizationTarget || aAreaElement;
-    let targetNode = aElement;
+    // Our tests are stupid. Cope:
+    if (!aEvent.clientX  && !aEvent.clientY) {
+      return aEvent.target;
+    }
+    // Offset the drag event's position with the offset to the center of
+    // the thing we're dragging
+    let dragX = aEvent.clientX - this._dragOffset.x;
+    let dragY = aEvent.clientY - this._dragOffset.y;
+
+    // Ensure this is within the container
+    let bounds = expectedParent.getBoundingClientRect();
+    dragX = Math.min(bounds.right, Math.max(dragX, bounds.left));
+    dragY = Math.min(bounds.bottom, Math.max(dragY, bounds.top));
+
+    let targetNode = aAreaElement.ownerDocument.elementFromPoint(dragX, dragY);
     while (targetNode && targetNode.parentNode != expectedParent) {
       targetNode = targetNode.parentNode;
     }
-    return targetNode || aElement;
+    return targetNode || aEvent.target;
   },
 
   _onMouseDown: function(aEvent) {
@@ -1320,7 +1340,6 @@ CustomizeMode.prototype = {
     this._removePanelCustomizationPlaceholders();
     let doc = this.document;
     let contents = this.panelUIContents;
-    const kWidePanelItemClass = "panel-wide-item";
     let visibleWideItems = contents.querySelectorAll("toolbarpaletteitem:not([hidden]) > ." + kWidePanelItemClass);
     let visibleChildren = contents.querySelectorAll("toolbarpaletteitem:not([hidden])");
     // TODO(bug 885578): Still doesn't handle a hole when there is a wide
