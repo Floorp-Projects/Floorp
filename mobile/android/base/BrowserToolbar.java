@@ -1561,12 +1561,17 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
     }
 
-    public void updateBackButton(boolean enabled) {
-         Drawable drawable = mBack.getDrawable();
-         if (drawable != null)
-             drawable.setAlpha(enabled ? 255 : 77);
+    public void setButtonEnabled(ImageButton button, boolean enabled) {
+        final Drawable drawable = button.getDrawable();
+        if (drawable != null) {
+            drawable.setAlpha(enabled ? 255 : 61);
+        }
 
-         mBack.setEnabled(enabled);
+        button.setEnabled(enabled);
+    }
+
+    public void updateBackButton(boolean enabled) {
+        setButtonEnabled(mBack, enabled);
     }
 
     public void updateForwardButton(final boolean enabled) {
