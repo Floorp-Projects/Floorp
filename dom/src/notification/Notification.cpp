@@ -61,7 +61,6 @@ public:
                     JSContext* aCx)
   {
     MOZ_ASSERT(!aID.IsEmpty());
-    MOZ_ASSERT(!aTitle.IsEmpty());
 
     NotificationOptions options;
     options.mDir = Notification::StringToDirection(nsString(aDir));

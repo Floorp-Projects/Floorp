@@ -13,15 +13,41 @@
 
 namespace mozilla {
 
-TimeStamp TimeStamp::sFirstTimeStamp;
-TimeStamp TimeStamp::sProcessCreation;
+/**
+ * Wrapper class used to initialize static data used by the TimeStamp class
+ */
+struct TimeStampInitialization {
+  /**
+   * First timestamp taken when the class static initializers are run. This
+   * timestamp is used to sanitize timestamps coming from different sources.
+   */
+  TimeStamp mFirstTimeStamp;
+
+  /**
+   * Timestamp representing the time when the process was created. This field
+   * is populated lazily the first time this information is required and is
+   * replaced every time the process is restarted.
+   */
+  TimeStamp mProcessCreation;
+
+  TimeStampInitialization() {
+    TimeStamp::Startup();
+    mFirstTimeStamp = TimeStamp::Now();
+  };
+
+  ~TimeStampInitialization() {
+    TimeStamp::Shutdown();
+  };
+};
+
+static TimeStampInitialization sInitOnce;
 
 TimeStamp
 TimeStamp::ProcessCreation(bool& aIsInconsistent)
 {
   aIsInconsistent = false;
 
-  if (sProcessCreation.IsNull()) {
+  if (sInitOnce.mProcessCreation.IsNull()) {
     char *mozAppRestart = PR_GetEnv("MOZ_APP_RESTART");
     TimeStamp ts;
 
@@ -31,32 +57,32 @@ TimeStamp::ProcessCreation(bool& aIsInconsistent)
     if (mozAppRestart && (strcmp(mozAppRestart, "") != 0)) {
       /* Firefox was restarted, use the first time-stamp we've taken as the new
        * process startup time. */
-      ts = sFirstTimeStamp;
+      ts = sInitOnce.mFirstTimeStamp;
     } else {
       TimeStamp now = Now();
       uint64_t uptime = ComputeProcessUptime();
 
       ts = now - TimeDuration::FromMicroseconds(uptime);
 
-      if ((ts > sFirstTimeStamp) || (uptime == 0)) {
+      if ((ts > sInitOnce.mFirstTimeStamp) || (uptime == 0)) {
         /* If the process creation timestamp was inconsistent replace it with
          * the first one instead and notify that a telemetry error was
          * detected. */
         aIsInconsistent = true;
-        ts = sFirstTimeStamp;
+        ts = sInitOnce.mFirstTimeStamp;
       }
     }
 
-    sProcessCreation = ts;
+    sInitOnce.mProcessCreation = ts;
   }
 
-  return sProcessCreation;
+  return sInitOnce.mProcessCreation;
 }
 
 void
 TimeStamp::RecordProcessRestart()
 {
-  sProcessCreation = TimeStamp();
+  sInitOnce.mProcessCreation = TimeStamp();
 }
 
 } // namespace mozilla
