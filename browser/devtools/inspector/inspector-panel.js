@@ -675,6 +675,8 @@ InspectorPanel.prototype = {
       this._markupFrame.parentNode.removeChild(this._markupFrame);
       delete this._markupFrame;
     }
+
+    this._markupBox = null;
   },
 
   /**
