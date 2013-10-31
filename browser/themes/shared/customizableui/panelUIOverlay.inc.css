@@ -394,8 +394,13 @@ toolbarbutton.panel-multiview-anchor {
   -moz-box-flex: 1;
 }
 
-#search-container@inAnyPanel@ {
+#search-container[cui-areatype="menu-panel"] {
   width: @menuPanelWidth@;
+}
+
+toolbarpaletteitem[place="palette"] > #search-container {
+  min-width: 7em;
+  width: 7em;
 }
 
 #edit-controls@inAnyPanel@ > toolbarbutton,
