@@ -306,7 +306,20 @@ TabTarget.prototype = {
       this._client.connect((aType, aTraits) => {
         this._client.listTabs(aResponse => {
           this._root = aResponse;
-          this._form = aResponse.tabs[aResponse.selected];
+
+          let windowUtils = this.window
+            .QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils);
+          let outerWindow = windowUtils.outerWindowID;
+          aResponse.tabs.some((tab) => {
+            if (tab.outerWindowID === outerWindow) {
+              this._form = tab;
+              return true;
+            }
+          });
+          if (!this._form) {
+            this._form = aResponse.tabs[aResponse.selected];
+          }
           attachTab();
         });
       });
