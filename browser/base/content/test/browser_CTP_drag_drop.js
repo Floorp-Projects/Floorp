@@ -98,5 +98,6 @@ function part8() {
   ok(objLoadingContent.activated, "plugin should be activated now");
 
   gNewWindow.close();
+  gNewWindow = null;
   finish();
 }

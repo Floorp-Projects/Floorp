@@ -44,7 +44,14 @@ function finishTest() {
   getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   gBrowser.removeCurrentTab();
-  finish();
+
+  gPageInfo = null;
+  gNextTest = null;
+  gTestBrowser = null;
+  gPluginHost = null;
+  gPermissionManager = null;
+
+  executeSoon(finish);
 }
 
 function test() {
