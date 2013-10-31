@@ -176,32 +176,6 @@ Telephony::Create(nsPIDOMWindow* aOwner, ErrorResult& aRv)
 }
 
 already_AddRefed<TelephonyCall>
-Telephony::CreateNewDialingCall(const nsAString& aNumber)
-{
-  nsRefPtr<TelephonyCall> call =
-    TelephonyCall::Create(this, aNumber,
-                          nsITelephonyProvider::CALL_STATE_DIALING);
-  NS_ASSERTION(call, "This should never fail!");
-
-  NS_ASSERTION(mCalls.Contains(call), "Should have auto-added new call!");
-
-  return call.forget();
-}
-
-void
-Telephony::NoteDialedCallFromOtherInstance(const nsAString& aNumber)
-{
-  // We don't need to hang on to this call object, it is held alive by mCalls.
-  nsRefPtr<TelephonyCall> call = CreateNewDialingCall(aNumber);
-}
-
-nsresult
-Telephony::NotifyCallsChanged(TelephonyCall* aCall)
-{
-  return DispatchCallEvent(NS_LITERAL_STRING("callschanged"), aCall);
-}
-
-already_AddRefed<TelephonyCall>
 Telephony::DialInternal(bool isEmergency,
                         const nsAString& aNumber,
                         ErrorResult& aRv)
@@ -241,6 +215,32 @@ Telephony::DialInternal(bool isEmergency,
   }
 
   return call.forget();
+}
+
+already_AddRefed<TelephonyCall>
+Telephony::CreateNewDialingCall(const nsAString& aNumber)
+{
+  nsRefPtr<TelephonyCall> call =
+    TelephonyCall::Create(this, aNumber,
+                          nsITelephonyProvider::CALL_STATE_DIALING);
+  NS_ASSERTION(call, "This should never fail!");
+
+  NS_ASSERTION(mCalls.Contains(call), "Should have auto-added new call!");
+
+  return call.forget();
+}
+
+void
+Telephony::NoteDialedCallFromOtherInstance(const nsAString& aNumber)
+{
+  // We don't need to hang on to this call object, it is held alive by mCalls.
+  nsRefPtr<TelephonyCall> call = CreateNewDialingCall(aNumber);
+}
+
+nsresult
+Telephony::NotifyCallsChanged(TelephonyCall* aCall)
+{
+  return DispatchCallEvent(NS_LITERAL_STRING("callschanged"), aCall);
 }
 
 void
@@ -344,6 +344,28 @@ Telephony::DialEmergency(const nsAString& aNumber, ErrorResult& aRv)
   return call.forget();
 }
 
+void
+Telephony::StartTone(const nsAString& aDTMFChar, ErrorResult& aRv)
+{
+  if (aDTMFChar.IsEmpty()) {
+    NS_WARNING("Empty tone string will be ignored");
+    return;
+  }
+
+  if (aDTMFChar.Length() > 1) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  aRv = mProvider->StartTone(aDTMFChar);
+}
+
+void
+Telephony::StopTone(ErrorResult& aRv)
+{
+  aRv = mProvider->StopTone();
+}
+
 bool
 Telephony::GetMuted(ErrorResult& aRv) const
 {
@@ -398,28 +420,6 @@ Telephony::ConferenceGroup() const
 {
   nsRefPtr<TelephonyCallGroup> group = mGroup;
   return group.forget();
-}
-
-void
-Telephony::StartTone(const nsAString& aDTMFChar, ErrorResult& aRv)
-{
-  if (aDTMFChar.IsEmpty()) {
-    NS_WARNING("Empty tone string will be ignored");
-    return;
-  }
-
-  if (aDTMFChar.Length() > 1) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
-
-  aRv = mProvider->StartTone(aDTMFChar);
-}
-
-void
-Telephony::StopTone(ErrorResult& aRv)
-{
-  aRv = mProvider->StopTone();
 }
 
 // EventTarget
