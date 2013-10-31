@@ -4512,42 +4512,22 @@ pref("dom.mozInputMethod.enabled", false);
 pref("dom.datastore.enabled", false);
 
 // Telephony API
-#ifdef MOZ_B2G_RIL
-pref("dom.telephony.enabled", true);
-#else
 pref("dom.telephony.enabled", false);
-#endif
 // Numeric default service id for WebTelephony API calls with |serviceId|
 // parameter omitted.
 pref("dom.telephony.defaultServiceId", 0);
 
 // Cell Broadcast API
-#ifdef MOZ_B2G_RIL
-pref("dom.cellbroadcast.enabled", true);
-#else
 pref("dom.cellbroadcast.enabled", false);
-#endif
 
 // ICC API
-#ifdef MOZ_B2G_RIL
-pref("dom.icc.enabled", true);
-#else
 pref("dom.icc.enabled", false);
-#endif
 
 // Mobile Connection API
-#ifdef MOZ_B2G_RIL
-pref("dom.mobileconnection.enabled", true);
-#else
 pref("dom.mobileconnection.enabled", false);
-#endif
 
 // Voice Mail API
-#ifdef MOZ_B2G_RIL
-pref("dom.voicemail.enabled", true);
-#else
 pref("dom.voicemail.enabled", false);
-#endif
 // Numeric default service id for Voice Mail API calls with |serviceId|
 // parameter omitted.
 pref("dom.voicemail.defaultServiceId", 0);

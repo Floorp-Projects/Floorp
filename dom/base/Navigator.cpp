@@ -29,7 +29,6 @@
 #include "nsIDOMWakeLock.h"
 #include "nsIPowerManagerService.h"
 #include "mozilla/dom/MobileMessageManager.h"
-#include "mozilla/dom/Telephony.h"
 #include "mozilla/Hal.h"
 #include "nsISiteSpecificUserAgent.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -39,8 +38,9 @@
 #include "nsGlobalWindow.h"
 #ifdef MOZ_B2G_RIL
 #include "mozilla/dom/IccManager.h"
+#include "MobileConnection.h"
 #include "mozilla/dom/CellBroadcast.h"
-#include "mozilla/dom/network/MobileConnection.h"
+#include "mozilla/dom/Telephony.h"
 #include "mozilla/dom/Voicemail.h"
 #endif
 #include "nsIIdleObserver.h"
@@ -138,12 +138,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPowerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileMessageManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
 #ifdef MOZ_B2G_RIL
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileConnection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCellBroadcast)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVoicemail)
 #endif
 #ifdef MOZ_B2G_BT
@@ -209,10 +209,6 @@ Navigator::Invalidate()
     mMobileMessageManager = nullptr;
   }
 
-  if (mTelephony) {
-    mTelephony = nullptr;
-  }
-
   if (mConnection) {
     mConnection->Shutdown();
     mConnection = nullptr;
@@ -231,6 +227,10 @@ Navigator::Invalidate()
   if (mIccManager) {
     mIccManager->Shutdown();
     mIccManager = nullptr;
+  }
+
+  if (mTelephony) {
+    mTelephony = nullptr;
   }
 
   if (mVoicemail) {
@@ -1165,20 +1165,6 @@ Navigator::GetMozMobileMessage()
   return mMobileMessageManager;
 }
 
-Telephony*
-Navigator::GetMozTelephony(ErrorResult& aRv)
-{
-  if (!mTelephony) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    mTelephony = Telephony::Create(mWindow, aRv);
-  }
-
-  return mTelephony;
-}
-
 #ifdef MOZ_B2G_RIL
 
 CellBroadcast*
@@ -1193,6 +1179,20 @@ Navigator::GetMozCellBroadcast(ErrorResult& aRv)
   }
 
   return mCellBroadcast;
+}
+
+Telephony*
+Navigator::GetMozTelephony(ErrorResult& aRv)
+{
+  if (!mTelephony) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    mTelephony = Telephony::Create(mWindow, aRv);
+  }
+
+  return mTelephony;
 }
 
 Voicemail*
@@ -1699,6 +1699,15 @@ Navigator::HasMobileMessageSupport(JSContext* /* unused */, JSObject* aGlobal)
 
 /* static */
 bool
+Navigator::HasCameraSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && nsDOMCameraManager::CheckPermission(win);
+}
+
+#ifdef MOZ_B2G_RIL
+/* static */
+bool
 Navigator::HasTelephonySupport(JSContext* /* unused */, JSObject* aGlobal)
 {
   // First of all, the general pref has to be turned on.
@@ -1710,15 +1719,6 @@ Navigator::HasTelephonySupport(JSContext* /* unused */, JSObject* aGlobal)
   return win && CheckPermission(win, "telephony");
 }
 
-/* static */
-bool
-Navigator::HasCameraSupport(JSContext* /* unused */, JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && nsDOMCameraManager::CheckPermission(win);
-}
-
-#ifdef MOZ_B2G_RIL
 /* static */
 bool
 Navigator::HasMobileConnectionSupport(JSContext* /* unused */,
