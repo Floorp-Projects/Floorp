@@ -2,8 +2,8 @@
 <meta charset=utf-8>
 <title>Range.surroundContents() tests</title>
 <link rel=author title="Aryeh Gregor" href=ayg@aryeh.name>
-<p>To debug test failures, add a query parameter with the test id (like
-"?5,16").  Only that test will be run.  Then you can look at the resulting
+<p>To debug test failures, add a query parameter "subtest" with the test id (like
+"?subtest=5,16").  Only that test will be run.  Then you can look at the resulting
 iframes in the DOM.
 <div id=log></div>
 <script src=/resources/testharness.js></script>
@@ -306,8 +306,8 @@ var iStop = testRangesShort.length;
 var jStart = 0;
 var jStop = testNodesShort.length;
 
-if (/[0-9]+,[0-9]+/.test(location.search)) {
-	var matches = /([0-9]+),([0-9]+)/.exec(location.search);
+if (/subtest=[0-9]+,[0-9]+/.test(location.search)) {
+	var matches = /subtest=([0-9]+),([0-9]+)/.exec(location.search);
 	iStart = Number(matches[1]);
 	iStop = Number(matches[1]) + 1;
 	jStart = Number(matches[2]) + 0;
