@@ -16,7 +16,7 @@ protocol PTelephonyRequest
   manager PTelephony;
 
 child:
-  NotifyEnumerateCallState(IPCCallStateData aData);
+  NotifyEnumerateCallState(uint32_t aClientId, IPCCallStateData aData);
 
   /**
    * Sent when the asynchronous request has completed. It's currently only for

@@ -15,7 +15,13 @@ dictionary MmsAttachment
                       // for text should always be "utf-8".
 };
 
-[scriptable, builtinclass, uuid(2e5e1c16-b7af-11e2-af04-8f4b1610a600)]
+dictionary MmsDeliveryInfo
+{
+  DOMString? receiver;
+  DOMString? deliveryStatus;
+};
+
+[scriptable, builtinclass, uuid(494bbca1-ac7c-47d2-9e90-4e7d07e1cb4f)]
 interface nsIDOMMozMmsMessage : nsISupports
 {
   /**
@@ -33,7 +39,7 @@ interface nsIDOMMozMmsMessage : nsISupports
   readonly attribute DOMString delivery;
 
   [implicit_jscontext]
-  readonly attribute jsval     deliveryStatus; // DOMString[]
+  readonly attribute jsval     deliveryInfo;   // MmsDeliveryInfo[]
 
   readonly attribute DOMString sender;
 

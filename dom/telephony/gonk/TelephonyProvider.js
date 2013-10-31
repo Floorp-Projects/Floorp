@@ -9,6 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
@@ -64,6 +65,10 @@ XPCOMUtils.defineLazyGetter(this, "gAudioManager", function getAudioManager() {
   }
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "gRadioInterfaceLayer",
+                                   "@mozilla.org/ril;1",
+                                   "nsIRadioInterfaceLayer");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gPowerManagerService",
                                    "@mozilla.org/power/powermanagerservice;1",
                                    "nsIPowerManagerService");
@@ -72,12 +77,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
 
-XPCOMUtils.defineLazyGetter(this, "gRadioInterface", function () {
-  let ril = Cc["@mozilla.org/ril;1"].getService(Ci["nsIRadioInterfaceLayer"]);
-  // TODO: Bug 854326 - B2G Multi-SIM: support multiple SIM cards for SMS/MMS
-  return ril.getRadioInterface(0);
-});
-
 XPCOMUtils.defineLazyGetter(this, "gPhoneNumberUtils", function () {
   let ns = {};
   Cu.import("resource://gre/modules/PhoneNumberUtils.jsm", ns);
@@ -85,8 +84,8 @@ XPCOMUtils.defineLazyGetter(this, "gPhoneNumberUtils", function () {
 });
 
 function TelephonyProvider() {
+  this._numClients = gRadioInterfaceLayer.numRadioInterfaces;
   this._listeners = [];
-
   this._updateDebugFlag();
   this.defaultServiceId = this._getDefaultServiceId();
 
@@ -140,6 +139,10 @@ TelephonyProvider.prototype = {
     }
   },
 
+  _getClient: function _getClient(aClientId) {
+    return gRadioInterfaceLayer.getRadioInterface(aClientId);
+  },
+
   // An array of nsITelephonyListener instances.
   _listeners: null,
   _notifyAllListeners: function _notifyAllListeners(aMethodName, aArgs) {
@@ -157,6 +160,16 @@ TelephonyProvider.prototype = {
         debug("listener for " + aMethodName + " threw an exception: " + e);
       }
     }
+  },
+
+  _matchActiveCall: function _matchActiveCall(aCall) {
+    if (this._activeCall &&
+        this._activeCall.callIndex == aCall.callIndex &&
+        this._activeCall.clientId == aCall.clientId) {
+      return true;
+    }
+
+    return false;
   },
 
   /**
@@ -186,7 +199,7 @@ TelephonyProvider.prototype = {
     }
 
     if (aCall.isConference) {
-      if (this._activeCall && this._activeCall.callIndex == aCall.callIndex) {
+      if (this._matchActiveCall(aCall)) {
         this._activeCall = null;
       }
       return;
@@ -225,8 +238,7 @@ TelephonyProvider.prototype = {
       case nsITelephonyProvider.CALL_STATE_HELD: // Fall through...
       case nsITelephonyProvider.CALL_STATE_DISCONNECTED:
         aCall.isActive = false;
-        if (this._activeCall &&
-            this._activeCall.callIndex == aCall.callIndex) {
+        if (this._matchActiveCall(aCall)) {
           // Previously active call is not active now.
           this._activeCall = null;
         }
@@ -332,26 +344,45 @@ TelephonyProvider.prototype = {
     this._listeners.splice(index, 1);
   },
 
-  enumerateCalls: function(aListener) {
-    if (DEBUG) debug("Requesting enumeration of calls for callback");
-    gRadioInterface.sendWorkerMessage("enumerateCalls", null,
-                                      (function(response) {
-      for (let call of response.calls) {
-        call.state = this._convertRILCallState(call.state);
-        call.isActive = this._activeCall ?
-          (call.callIndex == this._activeCall.callIndex) : false;
+  _enumerateCallsForClient: function _enumerateCallsForClient(aClientId,
+                                                              aListener) {
+    if (DEBUG) debug("Enumeration of calls for client " + aClientId);
 
-        aListener.enumerateCallState(call.callIndex, call.state, call.number,
+    let deferred = Promise.defer();
+
+    this._getClient(aClientId).sendWorkerMessage("enumerateCalls", null,
+                                                 (function(response) {
+      for (let call of response.calls) {
+        call.clienId = aClientId;
+        call.state = this._convertRILCallState(call.state);
+        call.isActive = this._matchActiveCall(call);
+
+        aListener.enumerateCallState(call.clientId, call.callIndex,
+                                     call.state, call.number,
                                      call.isActive, call.isOutgoing,
                                      call.isEmergency, call.isConference);
       }
-      aListener.enumerateCallStateComplete();
+      deferred.resolve();
 
       return false;
     }).bind(this));
+
+    return deferred.promise;
   },
 
-  dial: function(aNumber, aIsEmergency) {
+  enumerateCalls: function(aListener) {
+    if (DEBUG) debug("Requesting enumeration of calls for callback");
+
+    let promise = Promise.resolve();
+    for (let i = 0; i < this._numClients; ++i) {
+      promise = promise.then(this._enumerateCallsForClient.bind(this, i, aListener));
+    }
+    promise.then(function() {
+      aListener.enumerateCallStateComplete();
+    });
+  },
+
+  dial: function(aClientId, aNumber, aIsEmergency) {
     if (DEBUG) debug("Dialing " + (aIsEmergency ? "emergency " : "") + aNumber);
     // we don't try to be too clever here, as the phone is probably in the
     // locked state. Let's just check if it's a number without normalizing
@@ -359,53 +390,55 @@ TelephonyProvider.prototype = {
       aNumber = gPhoneNumberUtils.normalize(aNumber);
     }
     if (this._validateNumber(aNumber)) {
-      gRadioInterface.sendWorkerMessage("dial", { number: aNumber,
-                                                  isDialEmergency: aIsEmergency });
+      this._getClient(aClientId).sendWorkerMessage("dial", {
+        number: aNumber,
+        isDialEmergency: aIsEmergency
+      });
     }
   },
 
-  hangUp: function(aCallIndex) {
-    gRadioInterface.sendWorkerMessage("hangUp", { callIndex: aCallIndex });
+  hangUp: function(aClientId, aCallIndex) {
+    this._getClient(aClientId).sendWorkerMessage("hangUp", { callIndex: aCallIndex });
   },
 
-  startTone: function(aDtmfChar) {
-    gRadioInterface.sendWorkerMessage("startTone", { dtmfChar: aDtmfChar });
+  startTone: function(aClientId, aDtmfChar) {
+    this._getClient(aClientId).sendWorkerMessage("startTone", { dtmfChar: aDtmfChar });
   },
 
-  stopTone: function() {
-    gRadioInterface.sendWorkerMessage("stopTone");
+  stopTone: function(aClientId) {
+    this._getClient(aClientId).sendWorkerMessage("stopTone");
   },
 
-  answerCall: function(aCallIndex) {
-    gRadioInterface.sendWorkerMessage("answerCall", { callIndex: aCallIndex });
+  answerCall: function(aClientId, aCallIndex) {
+    this._getClient(aClientId).sendWorkerMessage("answerCall", { callIndex: aCallIndex });
   },
 
-  rejectCall: function(aCallIndex) {
-    gRadioInterface.sendWorkerMessage("rejectCall", { callIndex: aCallIndex });
+  rejectCall: function(aClientId, aCallIndex) {
+    this._getClient(aClientId).sendWorkerMessage("rejectCall", { callIndex: aCallIndex });
   },
 
-  holdCall: function(aCallIndex) {
-    gRadioInterface.sendWorkerMessage("holdCall", { callIndex: aCallIndex });
+  holdCall: function(aClientId, aCallIndex) {
+    this._getClient(aClientId).sendWorkerMessage("holdCall", { callIndex: aCallIndex });
   },
 
-  resumeCall: function(aCallIndex) {
-    gRadioInterface.sendWorkerMessage("resumeCall", { callIndex: aCallIndex });
+  resumeCall: function(aClientId, aCallIndex) {
+    this._getClient(aClientId).sendWorkerMessage("resumeCall", { callIndex: aCallIndex });
   },
 
-  conferenceCall: function conferenceCall() {
-    gRadioInterface.sendWorkerMessage("conferenceCall");
+  conferenceCall: function conferenceCall(aClientId) {
+    this._getClient(aClientId).sendWorkerMessage("conferenceCall");
   },
 
-  separateCall: function separateCall(aCallIndex) {
-    gRadioInterface.sendWorkerMessage("separateCall", { callIndex: aCallIndex });
+  separateCall: function separateCall(aClientId, aCallIndex) {
+    this._getClient(aClientId).sendWorkerMessage("separateCall", { callIndex: aCallIndex });
   },
 
-  holdConference: function holdConference() {
-    gRadioInterface.sendWorkerMessage("holdConference");
+  holdConference: function holdConference(aClientId) {
+    this._getClient(aClientId).sendWorkerMessage("holdConference");
   },
 
-  resumeConference: function resumeConference() {
-    gRadioInterface.sendWorkerMessage("resumeConference");
+  resumeConference: function resumeConference(aClientId) {
+    this._getClient(aClientId).sendWorkerMessage("resumeConference");
   },
 
   get microphoneMuted() {
@@ -448,7 +481,7 @@ TelephonyProvider.prototype = {
   /**
    * Handle call disconnects by updating our current state and the audio system.
    */
-  notifyCallDisconnected: function notifyCallDisconnected(aCall) {
+  notifyCallDisconnected: function notifyCallDisconnected(aClientId, aCall) {
     if (DEBUG) debug("handleCallDisconnected: " + JSON.stringify(aCall));
 
     aCall.state = nsITelephonyProvider.CALL_STATE_DISCONNECTED;
@@ -463,7 +496,8 @@ TelephonyProvider.prototype = {
 
     this._updateCallAudioState(aCall, null);
 
-    this._notifyAllListeners("callStateChanged", [aCall.callIndex,
+    this._notifyAllListeners("callStateChanged", [aClientId,
+                                                  aCall.callIndex,
                                                   aCall.state,
                                                   aCall.number,
                                                   aCall.isActive,
@@ -475,8 +509,8 @@ TelephonyProvider.prototype = {
   /**
    * Handle call error.
    */
-  notifyCallError: function notifyCallError(aCallIndex, aErrorMsg) {
-    this._notifyAllListeners("notifyError", [aCallIndex, aErrorMsg]);
+  notifyCallError: function notifyCallError(aClientId, aCallIndex, aErrorMsg) {
+    this._notifyAllListeners("notifyError", [aClientId, aCallIndex, aErrorMsg]);
   },
 
   /**
@@ -497,7 +531,7 @@ TelephonyProvider.prototype = {
    * Handle call state changes by updating our current state and the audio
    * system.
    */
-  notifyCallStateChanged: function notifyCallStateChanged(aCall) {
+  notifyCallStateChanged: function notifyCallStateChanged(aClientId, aCall) {
     if (DEBUG) debug("handleCallStateChange: " + JSON.stringify(aCall));
 
     aCall.state = this._convertRILCallState(aCall.state);
@@ -507,7 +541,8 @@ TelephonyProvider.prototype = {
 
     this._updateCallAudioState(aCall, null);
 
-    this._notifyAllListeners("callStateChanged", [aCall.callIndex,
+    this._notifyAllListeners("callStateChanged", [aClientId,
+                                                  aCall.callIndex,
                                                   aCall.state,
                                                   aCall.number,
                                                   aCall.isActive,
@@ -516,19 +551,19 @@ TelephonyProvider.prototype = {
                                                   aCall.isConference]);
   },
 
-  notifyCdmaCallWaiting: function notifyCdmaCallWaiting(aNumber) {
+  notifyCdmaCallWaiting: function notifyCdmaCallWaiting(aClientId, aNumber) {
     // We need to acquire a CPU wake lock to avoid the system falling into
     // the sleep mode when the RIL handles the incoming call.
     this._acquireCallRingWakeLock();
 
-    this._notifyAllListeners("notifyCdmaCallWaiting", [aNumber]);
+    this._notifyAllListeners("notifyCdmaCallWaiting", [aClientId, aNumber]);
   },
 
-  notifySupplementaryService: function notifySupplementaryService(aCallIndex,
-                                                                  aNotification) {
+  notifySupplementaryService:
+      function notifySupplementaryService(aClientId, aCallIndex, aNotification) {
     let notification = this._convertRILSuppSvcNotification(aNotification);
     this._notifyAllListeners("supplementaryServiceNotification",
-                             [aCallIndex, notification]);
+                             [aClientId, aCallIndex, notification]);
   },
 
   notifyConferenceCallStateChanged: function notifyConferenceCallStateChanged(aState) {

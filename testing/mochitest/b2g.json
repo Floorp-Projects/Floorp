@@ -352,6 +352,7 @@
     "dom/tests/mochitest/geolocation/test_cancelWatch.html":"",
     "dom/tests/mochitest/geolocation/test_clearWatch.html":"",
     "dom/tests/mochitest/geolocation/test_clearWatch_invalid.html":"",
+    "dom/tests/mochitest/geolocation/test_errorcheck.html": "",
     "dom/tests/mochitest/geolocation/test_handlerSpinsEventLoop.html": "showmodaldialog",
     "dom/tests/mochitest/geolocation/test_manyCurrentConcurrent.html":"",
     "dom/tests/mochitest/geolocation/test_manyCurrentSerial.html":"",

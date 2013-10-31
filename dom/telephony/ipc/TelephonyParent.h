@@ -47,41 +47,40 @@ protected:
   RecvUnregisterListener() MOZ_OVERRIDE;
 
   virtual bool
-  RecvDialCall(const nsString& aNumber,
-               const bool& aIsEmergency) MOZ_OVERRIDE;
+  RecvDialCall(const uint32_t& aClientId, const nsString& aNumber, const bool& aIsEmergency) MOZ_OVERRIDE;
 
   virtual bool
-  RecvHangUpCall(const uint32_t& aCallIndex) MOZ_OVERRIDE;
+  RecvHangUpCall(const uint32_t& aClientId, const uint32_t& aCallIndex) MOZ_OVERRIDE;
 
   virtual bool
-  RecvAnswerCall(const uint32_t& aCallIndex) MOZ_OVERRIDE;
+  RecvAnswerCall(const uint32_t& aClientId, const uint32_t& aCallIndex) MOZ_OVERRIDE;
 
   virtual bool
-  RecvRejectCall(const uint32_t& aCallIndex) MOZ_OVERRIDE;
+  RecvRejectCall(const uint32_t& aClientId, const uint32_t& aCallIndex) MOZ_OVERRIDE;
 
   virtual bool
-  RecvHoldCall(const uint32_t& aCallIndex) MOZ_OVERRIDE;
+  RecvHoldCall(const uint32_t& aClientId, const uint32_t& aCallIndex) MOZ_OVERRIDE;
 
   virtual bool
-  RecvResumeCall(const uint32_t& aCallIndex) MOZ_OVERRIDE;
+  RecvResumeCall(const uint32_t& aClientId, const uint32_t& aCallIndex) MOZ_OVERRIDE;
 
   virtual bool
-  RecvConferenceCall() MOZ_OVERRIDE;
+  RecvConferenceCall(const uint32_t& aClientId) MOZ_OVERRIDE;
 
   virtual bool
-  RecvSeparateCall(const uint32_t& callIndex) MOZ_OVERRIDE;
+  RecvSeparateCall(const uint32_t& aClientId, const uint32_t& callIndex) MOZ_OVERRIDE;
 
   virtual bool
-  RecvHoldConference() MOZ_OVERRIDE;
+  RecvHoldConference(const uint32_t& aClientId) MOZ_OVERRIDE;
 
   virtual bool
-  RecvResumeConference() MOZ_OVERRIDE;
+  RecvResumeConference(const uint32_t& aClientId) MOZ_OVERRIDE;
 
   virtual bool
-  RecvStartTone(const nsString& aTone) MOZ_OVERRIDE;
+  RecvStartTone(const uint32_t& aClientId, const nsString& aTone) MOZ_OVERRIDE;
 
   virtual bool
-  RecvStopTone() MOZ_OVERRIDE;
+  RecvStopTone(const uint32_t& aClientId) MOZ_OVERRIDE;
 
   virtual bool
   RecvGetMicrophoneMuted(bool* aMuted) MOZ_OVERRIDE;

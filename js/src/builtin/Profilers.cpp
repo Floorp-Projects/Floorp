@@ -23,6 +23,11 @@
 #endif
 #endif
 
+#ifdef XP_WIN
+# include <process.h>
+# define getpid _getpid
+#endif
+
 #include "vm/Probes.h"
 
 #include "jscntxtinlines.h"
@@ -57,7 +62,7 @@ JS_UnsafeGetLastProfilingError()
 
 #ifdef __APPLE__
 static bool
-StartOSXProfiling(const char *profileName = nullptr)
+StartOSXProfiling(const char *profileName, pid_t pid)
 {
     bool ok = true;
     const char* profiler = nullptr;
@@ -66,7 +71,7 @@ StartOSXProfiling(const char *profileName = nullptr)
     profiler = "Shark";
 #endif
 #ifdef MOZ_INSTRUMENTS
-    ok = Instruments::Start();
+    ok = Instruments::Start(pid);
     profiler = "Instruments";
 #endif
     if (!ok) {
@@ -81,11 +86,11 @@ StartOSXProfiling(const char *profileName = nullptr)
 #endif
 
 JS_PUBLIC_API(bool)
-JS_StartProfiling(const char *profileName)
+JS_StartProfiling(const char *profileName, pid_t pid)
 {
     bool ok = true;
 #ifdef __APPLE__
-    ok = StartOSXProfiling(profileName);
+    ok = StartOSXProfiling(profileName, pid);
 #endif
 #ifdef __linux__
     if (!js_StartPerf())
@@ -226,14 +231,25 @@ StartProfiling(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
-        args.rval().setBoolean(JS_StartProfiling(nullptr));
+        args.rval().setBoolean(JS_StartProfiling(nullptr, getpid()));
         return true;
     }
 
     RequiredStringArg profileName(cx, args, 0, "startProfiling");
     if (!profileName)
         return false;
-    args.rval().setBoolean(JS_StartProfiling(profileName.mBytes));
+
+    if (args.length() == 1) {
+        args.rval().setBoolean(JS_StartProfiling(profileName.mBytes, getpid()));
+        return true;
+    }
+
+    if (!args[1].isInt32()) {
+        JS_ReportError(cx, "startProfiling: invalid arguments (int expected)");
+        return false;
+    }
+    pid_t pid = static_cast<pid_t>(args[1].toInt32());
+    args.rval().setBoolean(JS_StartProfiling(profileName.mBytes, pid));
     return true;
 }
 

@@ -133,6 +133,8 @@ MobileConnectionListener::NotifyIccChanged()
 
 /**
  *  TelephonyListener Implementation
+ *
+ *  TODO: Bug 921991 - B2G BT: support multiple sim cards
  */
 class TelephonyListener : public nsITelephonyListener
 {
@@ -146,7 +148,8 @@ public:
 NS_IMPL_ISUPPORTS1(TelephonyListener, nsITelephonyListener)
 
 NS_IMETHODIMP
-TelephonyListener::CallStateChanged(uint32_t aCallIndex,
+TelephonyListener::CallStateChanged(uint32_t aServiceId,
+                                    uint32_t aCallIndex,
                                     uint16_t aCallState,
                                     const nsAString& aNumber,
                                     bool aIsActive,
@@ -162,7 +165,8 @@ TelephonyListener::CallStateChanged(uint32_t aCallIndex,
 }
 
 NS_IMETHODIMP
-TelephonyListener::EnumerateCallState(uint32_t aCallIndex,
+TelephonyListener::EnumerateCallState(uint32_t aServiceId,
+                                      uint32_t aCallIndex,
                                       uint16_t aCallState,
                                       const nsAString_internal& aNumber,
                                       bool aIsActive,
@@ -177,7 +181,8 @@ TelephonyListener::EnumerateCallState(uint32_t aCallIndex,
 }
 
 NS_IMETHODIMP
-TelephonyListener::NotifyError(int32_t aCallIndex,
+TelephonyListener::NotifyError(uint32_t aServiceId,
+                               int32_t aCallIndex,
                                const nsAString& aError)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
@@ -211,14 +216,16 @@ TelephonyListener::EnumerateCallStateComplete()
 }
 
 NS_IMETHODIMP
-TelephonyListener::SupplementaryServiceNotification(int32_t aCallIndex,
+TelephonyListener::SupplementaryServiceNotification(uint32_t aServiceId,
+                                                    int32_t aCallIndex,
                                                     uint16_t aNotification)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyListener::NotifyCdmaCallWaiting(const nsAString& aNumber)
+TelephonyListener::NotifyCdmaCallWaiting(uint32_t aServiceId,
+                                         const nsAString& aNumber)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
   hfp->UpdateSecondNumber(aNumber);
@@ -276,7 +283,8 @@ BluetoothRilListener::StartIccListening()
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE(provider, false);
 
-  nsresult rv = provider->RegisterIccMsg(mIccListener);
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
+  nsresult rv = provider->RegisterIccMsg(0, mIccListener);
   return NS_SUCCEEDED(rv);
 }
 
@@ -287,7 +295,8 @@ BluetoothRilListener::StopIccListening()
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE(provider, false);
 
-  nsresult rv = provider->UnregisterIccMsg(mIccListener);
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
+  nsresult rv = provider->UnregisterIccMsg(0, mIccListener);
   return NS_SUCCEEDED(rv);
 }
 
