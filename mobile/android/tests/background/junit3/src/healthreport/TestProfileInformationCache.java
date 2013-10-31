@@ -177,9 +177,4 @@ public class TestProfileInformationCache extends FakeProfileTestCase {
     cache.completeInitialization();
     assertEquals(ProfileInformationCache.FORMAT_VERSION, cache.readJSON().getInt("version"));
   }
-
-  @Override
-  protected String getCacheSuffix() {
-    return System.currentTimeMillis() + Math.random() + ".foo";
-  }
 }

@@ -99,7 +99,7 @@ public class TestUtils extends AndroidSyncTestCase {
     }
   }
 
-  public void testDeleteDirectory() throws Exception {
+  public void testDeleteDirectoryRecursively() throws Exception {
     final String TEST_DIR = getApplicationContext().getCacheDir().getAbsolutePath() +
         "-testDeleteDirectory-" + System.currentTimeMillis();
 
