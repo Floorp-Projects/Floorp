@@ -12,14 +12,18 @@ __all__ = ['read_ini', # .ini reader
            'ManifestParser', 'TestManifest', 'convert', # manifest handling
            'parse', 'ParseError', 'ExpressionParser'] # conditional expression parser
 
+import fnmatch
 import os
 import re
 import shutil
 import sys
-from fnmatch import fnmatch
+
 from optparse import OptionParser
+from StringIO import StringIO
 
 relpath = os.path.relpath
+string = (basestring,)
+
 
 # expr.py
 # from:
@@ -134,13 +138,45 @@ for index, rank in enumerate(precedence):
         token.lbp = index # lbp = lowest left binding power
 
 class ParseError(Exception):
-    """errror parsing conditional expression"""
+    """error parsing conditional expression"""
 
 class ExpressionParser(object):
+    """
+    A parser for a simple expression language.
+
+    The expression language can be described as follows::
+
+        EXPRESSION ::= LITERAL | '(' EXPRESSION ')' | '!' EXPRESSION | EXPRESSION OP EXPRESSION
+        OP ::= '==' | '!=' | '&&' | '||'
+        LITERAL ::= BOOL | INT | IDENT | STRING
+        BOOL ::= 'true' | 'false'
+        INT ::= [0-9]+
+        IDENT ::= [a-zA-Z_]\w*
+        STRING ::= '"' [^\"] '"' | ''' [^\'] '''
+
+    At its core, expressions consist of booleans, integers, identifiers and.
+    strings. Booleans are one of *true* or *false*. Integers are a series
+    of digits. Identifiers are a series of English letters and underscores.
+    Strings are a pair of matching quote characters (single or double) with
+    zero or more characters inside.
+
+    Expressions can be combined with operators: the equals (==) and not
+    equals (!=) operators compare two expressions and produce a boolean. The
+    and (&&) and or (||) operators take two expressions and produce the logical
+    AND or OR value of them, respectively. An expression can also be prefixed
+    with the not (!) operator, which produces its logical negation.
+
+    Finally, any expression may be contained within parentheses for grouping.
+
+    Identifiers take their values from the mapping provided.
+    """
     def __init__(self, text, valuemapping, strict=False):
         """
-        Initialize the parser with input |text|, and |valuemapping| as
-        a dict mapping identifier names to values.
+        Initialize the parser
+        :param text: The expression to parse as a string.
+        :param valuemapping: A dict mapping identifier names to values.
+        :param strict: If true, referencing an identifier that was not
+                       provided in :valuemapping: will raise an error.
         """
         self.text = text
         self.valuemapping = valuemapping
@@ -164,6 +200,7 @@ class ExpressionParser(object):
         def not_(scanner, t): return not_op_token()
 
         scanner = re.Scanner([
+            # Note: keep these in sync with the class docstring above.
             (r"true|false", bool_),
             (r"[a-zA-Z_]\w*", identifier),
             (r"[0-9]+", integer),
@@ -232,11 +269,17 @@ class ExpressionParser(object):
 
 def parse(text, **values):
     """
-    Parse and evaluate a boolean expression in |text|. Use |values| to look
-    up the value of identifiers referenced in the expression. Returns the final
-    value of the expression. A ParseError will be raised if parsing fails.
+    Parse and evaluate a boolean expression.
+    :param text: The expression to parse, as a string.
+    :param values: A dict containing a name to value mapping for identifiers
+                   referenced in *text*.
+    :rtype: the final value of the expression.
+    :raises: :py:exc::ParseError: will be raised if parsing fails.
     """
     return ExpressionParser(text, values).parse()
+
+
+### path normalization
 
 def normalize_path(path):
     """normalize a relative path"""
@@ -251,6 +294,8 @@ def denormalize_path(path):
     return path
 
 
+### .ini reader
+
 def read_ini(fp, variables=None, default='DEFAULT',
              comments=';#', separators=('=', ':'),
              strict=True):
@@ -264,15 +309,13 @@ def read_ini(fp, variables=None, default='DEFAULT',
     - strict : whether to be strict about parsing
     """
 
-    if variables is None:
-        variables = {}
-
-    if isinstance(fp, basestring):
-        fp = file(fp)
-
+    # variables
+    variables = variables or {}
     sections = []
     key = value = None
-    section_names = set([])
+    section_names = set()
+    if isinstance(fp, basestring):
+        fp = file(fp)
 
     # read the lines
     for line in fp.readlines():
@@ -354,8 +397,6 @@ def read_ini(fp, variables=None, default='DEFAULT',
 class ManifestParser(object):
     """read .ini manifests"""
 
-    ### methods for reading manifests
-
     def __init__(self, manifests=(), defaults=None, strict=True):
         self._defaults = defaults or {}
         self.tests = []
@@ -368,14 +409,30 @@ class ManifestParser(object):
     def getRelativeRoot(self, root):
         return root
 
+    ### methods for reading manifests
+
     def _read(self, root, filename, defaults):
 
-        # get directory of this file
-        here = os.path.dirname(os.path.abspath(filename))
+        # get directory of this file if not file-like object
+        if isinstance(filename, string):
+            filename = os.path.abspath(filename)
+            fp = open(filename)
+            here = os.path.dirname(filename)
+        else:
+            fp = filename
+            filename = here = None
         defaults['here'] = here
 
+        # Rootdir is needed for relative path calculation. Precompute it for
+        # the microoptimization used below.
+        if self.rootdir is None:
+            rootdir = ""
+        else:
+            assert os.path.isabs(self.rootdir)
+            rootdir = self.rootdir + os.path.sep
+
         # read the configuration
-        sections = read_ini(fp=filename, variables=defaults, strict=self.strict)
+        sections = read_ini(fp=fp, variables=defaults, strict=self.strict)
 
         # get the tests
         for section, data in sections:
@@ -389,9 +446,11 @@ class ManifestParser(object):
                 if not os.path.isabs(include_file):
                     include_file = os.path.join(self.getRelativeRoot(here), include_file)
                 if not os.path.exists(include_file):
+                    message = "Included file '%s' does not exist" % include_file
                     if self.strict:
-                        raise IOError("File '%s' does not exist" % include_file)
+                        raise IOError(message)
                     else:
+                        sys.stderr.write("%s\n" % message)
                         continue
                 include_defaults = data.copy()
                 self._read(root, include_file, include_defaults)
@@ -400,16 +459,34 @@ class ManifestParser(object):
             # otherwise an item
             test = data
             test['name'] = section
-            test['manifest'] = os.path.abspath(filename)
+
+            # Will be None if the manifest being read is a file-like object.
+            test['manifest'] = filename
 
             # determine the path
             path = test.get('path', section)
             _relpath = path
             if '://' not in path: # don't futz with URLs
                 path = normalize_path(path)
-                if not os.path.isabs(path):
-                    path = os.path.join(here, path)
-                _relpath = relpath(path, self.rootdir)
+                if here and not os.path.isabs(path):
+                    path = os.path.normpath(os.path.join(here, path))
+
+                # Microoptimization, because relpath is quite expensive.
+                # We know that rootdir is an absolute path or empty. If path
+                # starts with rootdir, then path is also absolute and the tail
+                # of the path is the relative path (possibly non-normalized,
+                # when here is unknown).
+                # For this to work rootdir needs to be terminated with a path
+                # separator, so that references to sibling directories with
+                # a common prefix don't get misscomputed (e.g. /root and
+                # /rootbeer/file).
+                # When the rootdir is unknown, the relpath needs to be left
+                # unchanged. We use an empty string as rootdir in that case,
+                # which leaves relpath unchanged after slicing.
+                if path.startswith(rootdir):
+                    _relpath = path[len(rootdir):]
+                else:
+                    _relpath = relpath(path, rootdir)
 
             test['path'] = path
             test['relpath'] = _relpath
@@ -418,20 +495,32 @@ class ManifestParser(object):
             self.tests.append(test)
 
     def read(self, *filenames, **defaults):
+        """
+        read and add manifests from file paths or file-like objects
+
+        filenames -- file paths or file-like objects to read as manifests
+        defaults -- default variables
+        """
 
         # ensure all files exist
-        missing = [ filename for filename in filenames
-                    if not os.path.exists(filename) ]
+        missing = [filename for filename in filenames
+                   if isinstance(filename, string) and not os.path.exists(filename) ]
         if missing:
             raise IOError('Missing files: %s' % ', '.join(missing))
+
+        # default variables
+        _defaults = defaults.copy() or self._defaults.copy()
+        _defaults.setdefault('here', None)
 
         # process each file
         for filename in filenames:
 
             # set the per file defaults
-            defaults = defaults.copy() or self._defaults.copy()
-            here = os.path.dirname(os.path.abspath(filename))
-            defaults['here'] = here
+            defaults = _defaults.copy()
+            here = None
+            if isinstance(filename, string):
+                here = os.path.dirname(os.path.abspath(filename))
+                defaults['here'] = here # directory of master .ini file
 
             if self.rootdir is None:
                 # set the root directory
@@ -439,6 +528,7 @@ class ManifestParser(object):
                 self.rootdir = here
 
             self._read(here, filename, defaults)
+
 
     ### methods for querying manifests
 
@@ -499,13 +589,6 @@ class ManifestParser(object):
         # return the tests
         return tests
 
-    def missing(self, tests=None):
-        """return list of tests that do not exist on the filesystem"""
-        if tests is None:
-            tests = self.tests
-        return [test for test in tests
-                if not os.path.exists(test['path'])]
-
     def manifests(self, tests=None):
         """
         return manifests in order in which they appear in the tests
@@ -521,7 +604,52 @@ class ManifestParser(object):
                 manifests.append(manifest)
         return manifests
 
-    ### methods for outputting from manifests
+    def paths(self):
+        return [i['path'] for i in self.tests]
+
+
+    ### methods for auditing
+
+    def missing(self, tests=None):
+        """return list of tests that do not exist on the filesystem"""
+        if tests is None:
+            tests = self.tests
+        return [test for test in tests
+                if not os.path.exists(test['path'])]
+
+    def verifyDirectory(self, directories, pattern=None, extensions=None):
+        """
+        checks what is on the filesystem vs what is in a manifest
+        returns a 2-tuple of sets:
+        (missing_from_filesystem, missing_from_manifest)
+        """
+
+        files = set([])
+        if isinstance(directories, basestring):
+            directories = [directories]
+
+        # get files in directories
+        for directory in directories:
+            for dirpath, dirnames, filenames in os.walk(directory, topdown=True):
+
+                # only add files that match a pattern
+                if pattern:
+                    filenames = fnmatch.filter(filenames, pattern)
+
+                # only add files that have one of the extensions
+                if extensions:
+                    filenames = [filename for filename in filenames
+                                 if os.path.splitext(filename)[-1] in extensions]
+
+                files.update([os.path.join(dirpath, filename) for filename in filenames])
+
+        paths = set(self.paths())
+        missing_from_filesystem = paths.difference(files)
+        missing_from_manifest = files.difference(paths)
+        return (missing_from_filesystem, missing_from_manifest)
+
+
+    ### methods for output
 
     def write(self, fp=sys.stdout, rootdir=None,
               global_tags=None, global_kwargs=None,
@@ -532,6 +660,12 @@ class ManifestParser(object):
         globals will be written to the top of the file
         locals (if given) will be written per test
         """
+
+        # open file if `fp` given as string
+        close = False
+        if isinstance(fp, string):
+            fp = file(fp, 'w')
+            close = True
 
         # root directory
         if rootdir is None:
@@ -585,6 +719,16 @@ class ManifestParser(object):
                     continue
                 print >> fp, '%s = %s' % (key, test[key])
             print >> fp
+
+        if close:
+            # close the created file
+            fp.close()
+
+    def __str__(self):
+        fp = StringIO()
+        self.write(fp=fp)
+        value = fp.getvalue()
+        return value
 
     def copy(self, directory, rootdir=None, *tags, **kwargs):
         """
@@ -666,6 +810,220 @@ class ManifestParser(object):
                 destination = os.path.join(rootdir, _relpath)
                 shutil.copy(source, destination)
 
+    ### directory importers
+
+    @classmethod
+    def _walk_directories(cls, directories, function, pattern=None, ignore=()):
+        """
+        internal function to import directories
+        """
+
+        class FilteredDirectoryContents(object):
+            """class to filter directory contents"""
+
+            sort = sorted
+
+            def __init__(self, pattern=pattern, ignore=ignore, cache=None):
+                if pattern is None:
+                    pattern = set()
+                if isinstance(pattern, basestring):
+                    pattern = [pattern]
+                self.patterns = pattern
+                self.ignore = set(ignore)
+
+                # cache of (dirnames, filenames) keyed on directory real path
+                # assumes volume is frozen throughout scope
+                self._cache = cache or {}
+
+            def __call__(self, directory):
+                """returns 2-tuple: dirnames, filenames"""
+                directory = os.path.realpath(directory)
+                if directory not in self._cache:
+                    dirnames, filenames = self.contents(directory)
+
+                    # filter out directories without progeny
+                    # XXX recursive: should keep track of seen directories
+                    dirnames = [ dirname for dirname in dirnames
+                                 if not self.empty(os.path.join(directory, dirname)) ]
+
+                    self._cache[directory] = (tuple(dirnames), filenames)
+
+                # return cached values
+                return self._cache[directory]
+
+            def empty(self, directory):
+                """
+                returns if a directory and its descendents are empty
+                """
+                return self(directory) == ((), ())
+
+            def contents(self, directory, sort=None):
+                """
+                return directory contents as (dirnames, filenames)
+                with `ignore` and `pattern` applied
+                """
+
+                if sort is None:
+                    sort = self.sort
+
+                # split directories and files
+                dirnames = []
+                filenames = []
+                for item in os.listdir(directory):
+                    path = os.path.join(directory, item)
+                    if os.path.isdir(path):
+                        dirnames.append(item)
+                    else:
+                        # XXX not sure what to do if neither a file or directory
+                        # (if anything)
+                        assert os.path.isfile(path)
+                        filenames.append(item)
+
+                # filter contents;
+                # this could be done in situ re the above for loop
+                # but it is really disparate in intent
+                # and could conceivably go to a separate method
+                dirnames = [dirname for dirname in dirnames
+                            if dirname not in self.ignore]
+                filenames = set(filenames)
+                # we use set functionality to filter filenames
+                if self.patterns:
+                    matches = set()
+                    matches.update(*[fnmatch.filter(filenames, pattern)
+                                     for pattern in self.patterns])
+                    filenames = matches
+
+                if sort is not None:
+                    # sort dirnames, filenames
+                    dirnames = sort(dirnames)
+                    filenames = sort(filenames)
+
+                return (tuple(dirnames), tuple(filenames))
+
+        # make a filtered directory object
+        directory_contents = FilteredDirectoryContents(pattern=pattern, ignore=ignore)
+
+        # walk the directories, generating manifests
+        for index, directory in enumerate(directories):
+
+            for dirpath, dirnames, filenames in os.walk(directory):
+
+                # get the directory contents from the caching object
+                _dirnames, filenames = directory_contents(dirpath)
+                # filter out directory names
+                dirnames[:] = _dirnames
+
+                # call callback function
+                function(directory, dirpath, dirnames, filenames)
+
+    @classmethod
+    def populate_directory_manifests(cls, directories, filename, pattern=None, ignore=(), overwrite=False):
+        """
+        walks directories and writes manifests of name `filename` in-place; returns `cls` instance populated
+        with the given manifests
+
+        filename -- filename of manifests to write
+        pattern -- shell pattern (glob) or patterns of filenames to match
+        ignore -- directory names to ignore
+        overwrite -- whether to overwrite existing files of given name
+        """
+
+        manifest_dict = {}
+        seen = [] # top-level directories seen
+
+        if os.path.basename(filename) != filename:
+            raise IOError("filename should not include directory name")
+
+        # no need to hit directories more than once
+        _directories = directories
+        directories = []
+        for directory in _directories:
+            if directory not in directories:
+                directories.append(directory)
+
+        def callback(directory, dirpath, dirnames, filenames):
+            """write a manifest for each directory"""
+
+            manifest_path = os.path.join(dirpath, filename)
+            if (dirnames or filenames) and not (os.path.exists(manifest_path) and overwrite):
+                with file(manifest_path, 'w') as manifest:
+                    for dirname in dirnames:
+                        print >> manifest, '[include:%s]' % os.path.join(dirname, filename)
+                    for _filename in filenames:
+                        print >> manifest, '[%s]' % _filename
+
+                # add to list of manifests
+                manifest_dict.setdefault(directory, manifest_path)
+
+        # walk the directories to gather files
+        cls._walk_directories(directories, callback, pattern=pattern, ignore=ignore)
+        # get manifests
+        manifests = [manifest_dict[directory] for directory in _directories]
+
+        # create a `cls` instance with the manifests
+        return cls(manifests=manifests)
+
+    @classmethod
+    def from_directories(cls, directories, pattern=None, ignore=(), write=None, relative_to=None):
+        """
+        convert directories to a simple manifest; returns ManifestParser instance
+
+        pattern -- shell pattern (glob) or patterns of filenames to match
+        ignore -- directory names to ignore
+        write -- filename or file-like object of manifests to write;
+                 if `None` then a StringIO instance will be created
+        relative_to -- write paths relative to this path;
+                       if false then the paths are absolute
+        """
+
+
+        # determine output
+        opened_manifest_file = None # name of opened manifest file
+        absolute = not relative_to # whether to output absolute path names as names
+        if isinstance(write, string):
+            opened_manifest_file = write
+            write = file(write, 'w')
+        if write is None:
+            write = StringIO()
+
+        # walk the directories, generating manifests
+        def callback(directory, dirpath, dirnames, filenames):
+
+            # absolute paths
+            filenames = [os.path.join(dirpath, filename)
+                         for filename in filenames]
+            # ensure new manifest isn't added
+            filenames = [filename for filename in filenames
+                         if filename != opened_manifest_file]
+            # normalize paths
+            if not absolute and relative_to:
+                filenames = [relpath(filename, relative_to)
+                             for filename in filenames]
+
+            # write to manifest
+            print >> write, '\n'.join(['[%s]' % denormalize_path(filename)
+                                               for filename in filenames])
+
+
+        cls._walk_directories(directories, callback, pattern=pattern, ignore=ignore)
+
+        if opened_manifest_file:
+            # close file
+            write.close()
+            manifests = [opened_manifest_file]
+        else:
+            # manifests/write is a file-like object;
+            # rewind buffer
+            write.flush()
+            write.seek(0)
+            manifests = [write]
+
+
+        # make a ManifestParser instance
+        return cls(manifests=manifests)
+
+convert = ManifestParser.from_directories
+
 
 class TestManifest(ManifestParser):
     """
@@ -676,8 +1034,8 @@ class TestManifest(ManifestParser):
     def filter(self, values, tests):
         """
         filter on a specific list tag, e.g.:
-        run-if = os == "win"
-        skip-if = os == "mac"
+        run-if = os == win linux
+        skip-if = os == mac
         """
 
         # tags:
@@ -742,56 +1100,6 @@ class TestManifest(ManifestParser):
     def test_paths(self):
         return [test['path'] for test in self.active_tests()]
 
-
-### utility function(s); probably belongs elsewhere
-
-def convert(directories, pattern=None, ignore=(), write=None):
-    """
-    convert directories to a simple manifest
-    """
-
-    retval = []
-    include = []
-    for directory in directories:
-        for dirpath, dirnames, filenames in os.walk(directory):
-
-            # filter out directory names
-            dirnames = [ i for i in dirnames if i not in ignore ]
-            dirnames.sort()
-
-            # reference only the subdirectory
-            _dirpath = dirpath
-            dirpath = dirpath.split(directory, 1)[-1].strip(os.path.sep)
-
-            if dirpath.split(os.path.sep)[0] in ignore:
-                continue
-
-            # filter by glob
-            if pattern:
-                filenames = [filename for filename in filenames
-                             if fnmatch(filename, pattern)]
-
-            filenames.sort()
-
-            # write a manifest for each directory
-            if write and (dirnames or filenames):
-                manifest = file(os.path.join(_dirpath, write), 'w')
-                for dirname in dirnames:
-                    print >> manifest, '[include:%s]' % os.path.join(dirname, write)
-                for filename in filenames:
-                    print >> manifest, '[%s]' % filename
-                manifest.close()
-
-            # add to the list
-            retval.extend([denormalize_path(os.path.join(dirpath, filename))
-                           for filename in filenames])
-
-    if write:
-        return # the manifests have already been written!
-
-    retval.sort()
-    retval = ['[%s]' % filename for filename in retval]
-    return '\n'.join(retval)
 
 ### command line attributes
 
