@@ -98,8 +98,9 @@ static bool test_pldhash_grow_to_max_capacity()
     numInserted++;
   }
 
-  // We stop when the element count is 75% of PL_DHASH_MAX_SIZE.
-  return numInserted == PL_DHASH_MAX_SIZE - (PL_DHASH_MAX_SIZE >> 2);
+  // We stop when the element count is 96.875% of PL_DHASH_MAX_SIZE (see
+  // MaxLoadOnGrowthFailure()).
+  return numInserted == PL_DHASH_MAX_SIZE - (PL_DHASH_MAX_SIZE >> 5);
 }
 
 //----

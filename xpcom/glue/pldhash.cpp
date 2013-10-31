@@ -240,10 +240,17 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
 }
 
 /*
- * Compute max and min load numbers (entry counts).
+ * Compute max and min load numbers (entry counts).  We have a secondary max
+ * that allows us to overload a table reasonably if it cannot be grown further
+ * (i.e. if ChangeTable() fails).  The table slows down drastically if the
+ * secondary max is too close to 1, but 0.96875 gives only a slight slowdown
+ * while allowing 1.3x more elements.
  */
 static inline uint32_t MaxLoad(uint32_t size) {
     return size - (size >> 2);  // == size * 0.75
+}
+static inline uint32_t MaxLoadOnGrowthFailure(uint32_t size) {
+    return size - (size >> 5);  // == size * 0.96875
 }
 static inline uint32_t MinLoad(uint32_t size) {
     return size >> 2;           // == size * 0.25
@@ -559,8 +566,15 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
                 deltaLog2 = 1;
             }
 
-            /* Grow or compress table, returning null if ChangeTable fails. */
-            if (!ChangeTable(table, deltaLog2)) {
+            /*
+             * Grow or compress table.  If ChangeTable() fails, allow
+             * overloading up to the secondary max.  Once we hit the secondary
+             * max, return null.
+             */
+            if (!ChangeTable(table, deltaLog2) &&
+                table->entryCount + table->removedCount >=
+                    MaxLoadOnGrowthFailure(size))
+            {
                 METER(table->stats.addFailures++);
                 entry = nullptr;
                 break;
