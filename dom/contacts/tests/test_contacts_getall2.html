@@ -285,111 +285,85 @@ let steps = [
     next();
   },
   clearDatabase,
+  function() {
+    // add a contact
+    createResult1 = new mozContact({});
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function() {
+      next();
+    };
+    req.onerror = onFailure;
+  },
+
+  getOne(),
+  getOne("Retrieving one contact with getAll - cached"),
+
+  clearDatabase,
   addContacts,
 
+  getAll(),
+  getAll("Retrieving 40 contacts with getAll - cached"),
+
   function() {
-    ok(true, "Delete the current contact while iterating");
+    ok(true, "Deleting one contact");
+    req = mozContacts.remove(createResult1);
+    req.onsuccess = function() {
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Test cache invalidation");
     req = mozContacts.getAll({});
     let count = 0;
-    let previousId = null;
-    req.onsuccess = function() {
+    req.onsuccess = function(event) {
+      ok(true, "on success");
       if (req.result) {
-        ok(true, "on success");
-        if (previousId) {
-          isnot(previousId, req.result.id, "different contacts returned");
-        }
-        previousId = req.result.id;
+        ok(true, "result is valid");
         count++;
-        let delReq = mozContacts.remove(req.result);
-        delReq.onsuccess = function() {
-          ok(true, "deleted current contact");
-          req.continue();
-        };
+        req.continue();
       } else {
-        is(count, 40, "returned 40 contacts");
+        is(count, 39, "last contact - 39 contacts returned");
         next();
       }
     };
+    req.onerror = onFailure;
   },
 
   clearDatabase,
   addContacts,
 
   function() {
-    ok(true, "Iterating through the contact list inside a cursor callback");
-    let count1 = 0, count2 = 0;
-    let req1 = mozContacts.getAll({});
-    let req2;
-    req1.onsuccess = function() {
-      if (count1 == 0) {
-        count1++;
-        req2 = mozContacts.getAll({});
-        req2.onsuccess = function() {
-          if (req2.result) {
-            count2++;
-            req2.continue();
-          } else {
-            is(count2, 40, "inner cursor returned 40 contacts");
-            req1.continue();
-          }
-        };
-      } else {
-        if (req1.result) {
-          count1++;
-          req1.continue();
-        } else {
-          is(count1, 40, "outer cursor returned 40 contacts");
-          next();
-        }
-      }
-    };
-  },
-
-  clearDatabase,
-  addContacts,
-
-  function() {
-    ok(true, "20 concurrent cursors");
-    const NUM_CURSORS = 20;
-    let completed = 0;
-    for (let i = 0; i < NUM_CURSORS; ++i) {
-      mozContacts.getAll({}).onsuccess = (function(i) {
-        let count = 0;
-        return function(event) {
-          let req = event.target;
+    ok(true, "Test cache consistency when deleting contact during getAll");
+    req = mozContacts.find({});
+    req.onsuccess = function(e) {
+      let lastContact = e.target.result[e.target.result.length-1];
+      req = mozContacts.getAll({});
+      let count = 0;
+      let firstResult = true;
+      req.onsuccess = function(event) {
+        ok(true, "on success");
+        if (firstResult) {
           if (req.result) {
+            count++;
+          }
+          let delReq = mozContacts.remove(lastContact);
+          delReq.onsuccess = function() {
+            firstResult = false;
+            req.continue();
+          };
+        } else {
+          if (req.result) {
+            ok(true, "result is valid");
             count++;
             req.continue();
           } else {
-            is(count, 40, "cursor " + i + " returned 40 contacts");
-            if (++completed == NUM_CURSORS) {
-              next();
-            }
+            is(count, 40, "last contact - 40 contacts returned");
+            next();
           }
-        };
-      })(i);
-    }
-  },
-
-  clearDatabase,
-  addContacts,
-
-  function() {
-    if (!SpecialPowers.isMainProcess()) {
-      // We stop calling continue() intentionally here to see if the cursor gets
-      // cleaned up properly in the parent.
-      ok(true, "Leaking a cursor");
-      req = mozContacts.getAll({
-        sortBy: "familyName",
-        sortOrder: "ascending"
-      });
-      req.onsuccess = function(event) {
-        next();
+        }
       };
-      req.onerror = onFailure;
-    } else {
-      next();
-    }
+    };
   },
 
   clearDatabase,

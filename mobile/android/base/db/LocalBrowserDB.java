@@ -600,14 +600,14 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         // Restore deleted record if possible
         values.put(Bookmarks.IS_DELETED, 0);
 
-        int updated = cr.update(mBookmarksUriWithProfile,
-                                values,
-                                Bookmarks.URL + " = ? AND " +
-                                Bookmarks.PARENT + " = ?",
-                                new String[] { uri, String.valueOf(folderId) });
-
-        if (updated == 0)
-            cr.insert(mBookmarksUriWithProfile, values);
+        final Uri bookmarksWithInsert = mBookmarksUriWithProfile.buildUpon()
+                                          .appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true")
+                                          .build();
+        cr.update(bookmarksWithInsert,
+                  values,
+                  Bookmarks.URL + " = ? AND " +
+                  Bookmarks.PARENT + " = " + folderId,
+                  new String[] { uri });
 
         // Bump parent modified time using its ID.
         debug("Bumping parent modified time for addition to: " + folderId);
@@ -617,7 +617,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         ContentValues bumped = new ContentValues();
         bumped.put(Bookmarks.DATE_MODIFIED, now);
 
-        updated = cr.update(mBookmarksUriWithProfile, bumped, where, args);
+        final int updated = cr.update(mBookmarksUriWithProfile, bumped, where, args);
         debug("Updated " + updated + " rows to new modified time.");
     }
 
@@ -775,13 +775,10 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         Uri faviconsUri = getAllFaviconsUri().buildUpon().
                 appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build();
 
-        int updated = cr.update(faviconsUri,
-                                values,
-                                Favicons.URL + " = ?",
-                                new String[] { faviconUri });
-
-        if (updated == 0)
-            cr.insert(mFaviconsUriWithProfile, values);
+        cr.update(faviconsUri,
+                  values,
+                  Favicons.URL + " = ?",
+                  new String[] { faviconUri });
     }
 
     @Override
@@ -801,13 +798,12 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         values.put(Thumbnails.DATA, data);
         values.put(Thumbnails.URL, uri);
 
-        int updated = cr.update(mThumbnailsUriWithProfile,
-                                values,
-                                Thumbnails.URL + " = ?",
-                                new String[] { uri });
-
-        if (updated == 0)
-            cr.insert(mThumbnailsUriWithProfile, values);
+        Uri thumbnailsUri = mThumbnailsUriWithProfile.buildUpon().
+                appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build();
+        cr.update(thumbnailsUri,
+                  values,
+                  Thumbnails.URL + " = ?",
+                  new String[] { uri });
     }
 
     @Override

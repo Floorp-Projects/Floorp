@@ -1480,11 +1480,18 @@ this.PushService = {
       let nm = Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
       if (nm.active && nm.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
         let icc = Cc["@mozilla.org/ril/content-helper;1"].getService(Ci.nsIIccProvider);
-        if (icc.iccInfo) {
+        // TODO: Bug 927721 - PushService for multi-sim
+        // In Multi-sim, there is more than one client in iccProvider. Each
+        // client represents a icc service. To maintain backward compatibility
+        // with single sim, we always use client 0 for now. Adding support
+        // for multiple sim will be addressed in bug 927721, if needed.
+        let clientId = 0;
+        let iccInfo = icc.getIccInfo(clientId);
+        if (iccInfo) {
           debug("Running on mobile data");
           return {
-            mcc: icc.iccInfo.mcc,
-            mnc: icc.iccInfo.mnc,
+            mcc: iccInfo.mcc,
+            mnc: iccInfo.mnc,
             ip:  nm.active.ip
           }
         }

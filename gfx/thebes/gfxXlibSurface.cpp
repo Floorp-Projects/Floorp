@@ -17,6 +17,7 @@
 #include "nsAlgorithm.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
+#include "mozilla/CheckedInt.h"
 
 using namespace mozilla;
 
@@ -121,10 +122,22 @@ gfxXlibSurface::TakePixmap()
     NS_ASSERTION(!mPixmapTaken, "I already own the Pixmap!");
     mPixmapTaken = true;
 
+    // The bit depth returned from Cairo is technically int, but this is
+    // the last place we'd be worried about that scenario.
+    unsigned int bitDepth = cairo_xlib_surface_get_depth(CairoSurface());
+    MOZ_ASSERT((bitDepth % 8) == 0, "Memory used not recorded correctly");
+
     // Divide by 8 because surface_get_depth gives us the number of *bits* per
     // pixel.
-    RecordMemoryUsed(mSize.width * mSize.height *
-        cairo_xlib_surface_get_depth(CairoSurface()) / 8);
+    CheckedInt32 totalBytes = CheckedInt32(mSize.width) * CheckedInt32(mSize.height) * (bitDepth/8);
+
+    // Don't do anything in the "else" case.  We could add INT32_MAX, but that
+    // would overflow the memory used counter.  It would also mean we tried for
+    // a 2G image.  For now, we'll just assert,
+    MOZ_ASSERT(totalBytes.isValid(),"Did not expect to exceed 2Gb image");
+    if (totalBytes.isValid()) {
+        RecordMemoryUsed(totalBytes.value());
+    }
 }
 
 Drawable
