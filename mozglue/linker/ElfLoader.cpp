@@ -33,6 +33,11 @@ inline int sigaltstack(const stack_t *ss, stack_t *oss) {
 #endif /* __ANDROID_API__ */
 #endif /* ANDROID */
 
+#ifdef __ARM_EABI__
+extern "C" const void *
+__gnu_Unwind_Find_exidx(void *pc, int *pcount) __attribute__((weak));
+#endif
+
 using namespace mozilla;
 
 /**
@@ -124,6 +129,20 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
   }
   return 0;
 }
+
+#ifdef __ARM_EABI__
+const void *
+__wrap___gnu_Unwind_Find_exidx(void *pc, int *pcount)
+{
+  RefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(pc);
+  if (handle)
+    return handle->FindExidx(pcount);
+  if (__gnu_Unwind_Find_exidx)
+    return __gnu_Unwind_Find_exidx(pc, pcount);
+  *pcount = 0;
+  return NULL;
+}
+#endif
 
 /**
  * faulty.lib public API
@@ -285,6 +304,17 @@ SystemElf::GetMappable() const
 
   return MappableFile::Create(path);
 }
+
+#ifdef __ARM_EABI__
+const void *
+SystemElf::FindExidx(int *pcount) const
+{
+  /* TODO: properly implement when ElfLoader::GetHandleByPtr
+     does return SystemElf handles */
+  *pcount = 0;
+  return NULL;
+}
+#endif
 
 /**
  * ElfLoader
