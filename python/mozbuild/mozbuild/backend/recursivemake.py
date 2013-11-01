@@ -38,6 +38,7 @@ from ..frontend.data import (
     Program,
     SandboxDerived,
     SandboxWrapped,
+    SimpleProgram,
     TestWebIDLFile,
     VariablePassthru,
     XPIDLFile,
@@ -412,6 +413,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
+
+        elif isinstance(obj, SimpleProgram):
+            self._process_simple_program(obj.program, backend_file)
 
         elif isinstance(obj, TestManifest):
             self._process_test_manifest(obj, backend_file)
@@ -967,6 +971,9 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_program(self, program, backend_file):
         backend_file.write('PROGRAM = %s\n' % program)
+
+    def _process_simple_program(self, program, backend_file):
+        backend_file.write('SIMPLE_PROGRAMS += %s\n' % program)
 
     def _process_webidl_basename(self, basename):
         header = 'mozilla/dom/%sBinding.h' % os.path.splitext(basename)[0]
