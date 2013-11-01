@@ -31,6 +31,10 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 
+#ifdef XP_MACOSX
+#include "MacIOSurfaceImage.h"
+#endif
+
 #if defined(OS_WIN)
 #include <windowsx.h>
 #include "gfxWindowsPlatform.h"
@@ -713,26 +717,16 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 
 #ifdef XP_MACOSX
     if (ioSurface) {
-        ImageFormat format = SHARED_TEXTURE;
+        ImageFormat format = MAC_IOSURFACE;
         nsRefPtr<Image> image = container->CreateImage(&format, 1);
         if (!image) {
             return NS_ERROR_FAILURE;
         }
 
-        NS_ASSERTION(image->GetFormat() == SHARED_TEXTURE, "Wrong format?");
+        NS_ASSERTION(image->GetFormat() == MAC_IOSURFACE, "Wrong format?");
 
-        SharedTextureImage::Data data;
-        data.mShareType = gl::SameProcess;
-        data.mHandle = GLContextProviderCGL::CreateSharedHandle(data.mShareType,
-                                                                ioSurface,
-                                                                gl::IOSurface);
-        data.mInverted = false;
-        // Use the device pixel size of the IOSurface, since layers handles resolution scaling
-        // already.
-        data.mSize = gfxIntSize(ioSurface->GetDevicePixelWidth(), ioSurface->GetDevicePixelHeight());
-
-        SharedTextureImage* pluginImage = static_cast<SharedTextureImage*>(image.get());
-        pluginImage->SetData(data);
+        MacIOSurfaceImage* pluginImage = static_cast<MacIOSurfaceImage*>(image.get());
+        pluginImage->SetSurface(ioSurface);
 
         container->SetCurrentImageInTransaction(pluginImage);
 
