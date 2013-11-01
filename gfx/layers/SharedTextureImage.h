@@ -36,8 +36,8 @@ public:
 
   gfxIntSize GetSize() { return mData.mSize; }
 
-  virtual already_AddRefed<gfxASurface> GetAsSurface() { 
-    return gl::GLContextProvider::GetSharedHandleAsSurface(mData.mShareType, mData.mHandle);
+  virtual already_AddRefed<gfxASurface> GetAsSurface() {
+    return nullptr;
   }
 
   SharedTextureImage() : Image(nullptr, SHARED_TEXTURE) {}
