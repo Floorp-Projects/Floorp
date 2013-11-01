@@ -484,6 +484,8 @@ public:
   static void DisplayReflowShutdown();
 #endif
 
+  static void ShutdownLayerActivityTimer();
+
   /**
    * Adds display items for standard CSS background if necessary.
    * Does not check IsVisibleForPainting.
