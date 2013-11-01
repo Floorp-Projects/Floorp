@@ -5,9 +5,9 @@
 <window title="Nested Context Menu Tests"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
-  <script type="application/javascript" src="popup_shared.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="popup_shared.js"></script>
 
 <menupopup id="outercontext">
   <menuitem label="Context One"/>
