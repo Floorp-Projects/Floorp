@@ -8,3 +8,12 @@ MODULE = 'accessibility'
 
 LIBRARY_NAME = 'AccessibleMarshal'
 
+GENERATED_SOURCES += [
+    'dlldata.c',
+    'ISimpleDOMDocument_i.c',
+    'ISimpleDOMDocument_p.c',
+    'ISimpleDOMNode_i.c',
+    'ISimpleDOMNode_p.c',
+    'ISimpleDOMText_i.c',
+    'ISimpleDOMText_p.c',
+]

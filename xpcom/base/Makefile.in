@@ -4,13 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOZILLA_INTERNAL_API =1
-ifeq ($(OS_ARCH),WINNT)
-
-ifdef MOZ_DEBUG
-CSRCS		+= pure_api.c
-endif
-
-endif #if OS_ARCH == WINNT
 
 INSTALL_TARGETS += errorlist
 errorlist_FILES := \

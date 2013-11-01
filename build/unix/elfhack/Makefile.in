@@ -18,7 +18,7 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DELFHACK_BUILD
 
-test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX) elfhack $(filter inject/%,$(CSRCS:.c=.$(OBJ_SUFFIX)))
+test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX) elfhack
 	$(MKSHLIB) $(LDFLAGS) $< -nostartfiles
 	@echo ===
 	@echo === If you get failures below, please file a bug describing the error

@@ -9,40 +9,11 @@ endif
 endif
 
 
-ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CSRCS += cairo-deflate-stream.c
-endif
-
-# cairo-type1-subset.c should be here, but it's only supported on freetype platforms
-
-PSPDF_BASE_CSRCS = \
-	cairo-base85-stream.c \
-	cairo-type1-fallback.c \
-	cairo-type3-glyph-surface.c \
-	cairo-truetype-subset.c \
-	cairo-cff-subset.c \
-	$(NULL)
-
-PDF_CSRCS = \
-	cairo-pdf-surface.c \
-	cairo-pdf-operators.c \
-	$(NULL)
-
-PS_CSRCS = cairo-ps-surface.c
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DEFINES += -DDISABLE_SOME_FLOATING_POINT
-CSRCS	+=	cairo-win32-surface.c
-
-CSRCS	+=	cairo-win32-font.c
-
-ifdef NS_PRINTING
-CSRCS   += cairo-win32-printing-surface.c
-else
+ifndef NS_PRINTING
 DEFINES += -DCAIRO_OMIT_WIN32_PRINTING
 endif
-
-CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -50,37 +21,17 @@ DEFINES += -DOS2_USE_PLATFORM_ALLOC
 ifdef MOZ_OS2_HIGH_MEMORY
 DEFINES += -DOS2_HIGH_MEMORY
 endif
-CSRCS   += cairo-os2-surface.c
-CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CSRCS   += cairo-quartz-surface.c cairo-quartz-image-surface.c cairo-quartz-font.c
-endif
-
-ifdef MOZ_WIDGET_GTK
-CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) $(PS_CSRCS)
-endif
-
-ifneq (,$(filter android gonk,$(MOZ_WIDGET_TOOLKIT)))
-CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS) 
 OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 
 ifdef MOZ_X11
-CSRCS   += cairo-xlib-surface.c \
-	   cairo-xlib-screen.c \
-	   cairo-xlib-visual.c \
-	   cairo-xlib-display.c
 OS_INCLUDES += $(XCFLAGS)
 endif
 
 ifdef MOZ_ENABLE_CAIRO_FT
-CSRCS   += cairo-ft-font.c cairo-type1-subset.c
 OS_INCLUDES += $(CAIRO_FT_CFLAGS)
 endif
 
