@@ -6532,9 +6532,9 @@ IonBuilder::getElemTryScalarElemOfTypedObject(bool *emitted,
     JS_ASSERT(objTypeReprs.allOfArrayKind());
 
     // Must always be loading the same scalar type
-    if (elemTypeReprs.length() != 1)
+    if (!elemTypeReprs.singleton())
         return true;
-    ScalarTypeRepresentation *elemTypeRepr = elemTypeReprs.get(0)->asScalar();
+    ScalarTypeRepresentation *elemTypeRepr = elemTypeReprs.getTypeRepresentation()->asScalar();
 
     // Get the length.
     size_t lenOfAll = objTypeReprs.arrayLength();
@@ -8231,9 +8231,9 @@ IonBuilder::getPropTryScalarPropOfTypedObject(bool *emitted,
                                               types::TemporaryTypeSet *resultTypes)
 {
     // Must always be loading the same scalar type
-    if (fieldTypeReprs.length() != 1)
+    if (!fieldTypeReprs.singleton())
         return true;
-    ScalarTypeRepresentation *fieldTypeRepr = fieldTypeReprs.get(0)->asScalar();
+    ScalarTypeRepresentation *fieldTypeRepr = fieldTypeReprs.getTypeRepresentation()->asScalar();
 
     // OK!
     *emitted = true;
@@ -8756,9 +8756,10 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
     }
 
     // Must always be storing the same scalar type
-    if (fieldTypeReprs.length() != 1)
+    if (!fieldTypeReprs.singleton())
         return true;
-    ScalarTypeRepresentation *fieldTypeRepr = fieldTypeReprs.get(0)->asScalar();
+    ScalarTypeRepresentation *fieldTypeRepr =
+        fieldTypeReprs.getTypeRepresentation()->asScalar();
 
     // OK!
     *emitted = true;
