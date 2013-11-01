@@ -5,11 +5,6 @@
 #ifndef BASE_MESSAGE_PUMP_QT_H_
 #define BASE_MESSAGE_PUMP_QT_H_
 
-#ifdef mozilla_mozalloc_macro_wrappers_h
-/* The "anti-header" */
-#  include "mozilla/mozalloc_undef_macro_wrappers.h"
-#endif
- 
 #include <qobject.h>
 
 #include "base/message_pump.h"
