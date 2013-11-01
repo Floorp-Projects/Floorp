@@ -5494,24 +5494,6 @@ IonBuilder::jsop_initelem_array()
    return true;
 }
 
-static bool
-CanEffectlesslyCallLookupGenericOnObject(JSContext *cx, JSObject *obj, PropertyName *name)
-{
-    while (obj) {
-        if (!obj->isNative())
-            return false;
-        if (obj->getClass()->ops.lookupGeneric)
-            return false;
-        if (obj->nativeLookup(cx, NameToId(name)))
-            return true;
-        if (obj->getClass()->resolve != JS_ResolveStub &&
-            obj->getClass()->resolve != (JSResolveOp)fun_resolve)
-            return false;
-        obj = obj->getProto();
-    }
-    return true;
-}
-
 bool
 IonBuilder::jsop_initprop(PropertyName *name)
 {
@@ -5950,6 +5932,22 @@ IonBuilder::maybeInsertResume()
     return resumeAfter(ins);
 }
 
+static bool
+ClassHasEffectlessLookup(JSCompartment *comp, const Class *clasp, PropertyName *name)
+{
+    if (!clasp->isNative() || clasp->ops.lookupGeneric)
+        return false;
+    if (clasp->resolve != JS_ResolveStub &&
+        // Note: str_resolve only resolves integers, not names.
+        clasp->resolve != (JSResolveOp)str_resolve &&
+        (clasp->resolve != (JSResolveOp)fun_resolve ||
+         FunctionHasResolveHook(comp->runtimeFromAnyThread(), name)))
+    {
+        return false;
+    }
+    return true;
+}
+
 bool
 IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyName *name)
 {
@@ -5968,8 +5966,7 @@ IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyNa
     // property will change and trigger invalidation.
 
     while (obj) {
-        const Class *clasp = obj->getClass();
-        if (!clasp->isNative() || clasp->ops.lookupGeneric)
+        if (!ClassHasEffectlessLookup(compartment, obj->getClass(), name))
             return false;
 
         types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
@@ -5982,9 +5979,6 @@ IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyNa
                 return property.singleton(constraints()) == singleton;
             return false;
         }
-
-        if (clasp->resolve != JS_ResolveStub && clasp->resolve != (JSResolveOp)fun_resolve)
-            return false;
 
         obj = obj->getProto();
     }
@@ -7574,177 +7568,70 @@ IonBuilder::jsop_not()
     return true;
 }
 
-static inline bool
-TestClassHasAccessorHook(const Class *clasp, bool isGetter)
-{
-    if (isGetter && clasp->ops.getGeneric)
-        return true;
-    if (!isGetter && clasp->ops.setGeneric)
-        return true;
-    return false;
-}
-
-static inline bool
-TestTypeHasOwnProperty(types::TypeObjectKey *typeObj, PropertyName *name, bool &cont)
-{
-    cont = true;
-    types::HeapTypeSetKey propSet = typeObj->property(NameToId(name));
-    if (propSet.maybeTypes() && !propSet.maybeTypes()->empty())
-        cont = false;
-    if (JSObject *obj = typeObj->singleton()) {
-        // Global objects may have undefined singleton properties without associated
-        // type information.
-        if (types::CanHaveEmptyPropertyTypesForOwnProperty(obj))
-            cont = false;
-    }
-    // Note: Callers must explicitly freeze the property type set later on if optimizing.
-    return true;
-}
-
-static inline bool
-TestCommonAccessorProtoChain(JSContext *cx, PropertyName *name,
-                             bool isGetter, JSObject *foundProto,
-                             JSObject *obj, bool &cont)
-{
-    cont = false;
-    JSObject *curObj = obj;
-    JSObject *stopAt = foundProto->getProto();
-    while (curObj != stopAt) {
-        // Don't optimize if we have a hook that would have to be called.
-        if (TestClassHasAccessorHook(curObj->getClass(), isGetter))
-            return true;
-
-        // Check here to make sure that everyone has Type Objects with known
-        // properties between them and the proto we found the accessor on. We
-        // need those to add freezes safely. NOTE: We do not do this above, as
-        // we may be able to freeze all the types up to where we found the
-        // property, even if there are unknown types higher in the prototype
-        // chain.
-        if (curObj != foundProto) {
-            types::TypeObjectKey *typeObj = types::TypeObjectKey::get(curObj);
-            if (typeObj->unknownProperties())
-                return true;
-
-            // Check here to make sure that nobody on the prototype chain is
-            // marked as having the property as an "own property". This can
-            // happen in cases of |delete| having been used, or cases with
-            // watched objects. If TI ever decides to be more accurate about
-            // |delete| handling, this should go back to curObj->watched().
-
-            // Even though we are not directly accessing the properties on the whole
-            // prototype chain, we need to fault in the sets anyway, as we need
-            // to freeze on them.
-            bool lcont;
-            if (!TestTypeHasOwnProperty(typeObj, name, lcont))
-                return false;
-            if (!lcont)
-                return true;
-        }
-
-        curObj = curObj->getProto();
-    }
-    cont = true;
-    return true;
-}
-
-static inline bool
-SearchCommonPropFunc(JSContext *cx, types::TemporaryTypeSet *types,
-                     PropertyName *name, bool isGetter,
-                     JSObject *&found, JSObject *&foundProto, bool &cont)
-{
-    cont = false;
-    for (unsigned i = 0; i < types->getObjectCount(); i++) {
-        RootedObject curObj(cx, types->getSingleObject(i));
-
-        // Non-Singleton type
-        if (!curObj) {
-            types::TypeObjectKey *typeObj = types->getObject(i);
-            if (!typeObj)
-                continue;
-
-            if (typeObj->unknownProperties())
-                return true;
-
-            // If the class of the object has a hook, we can't
-            // inline, as we would need to call the hook.
-            if (TestClassHasAccessorHook(typeObj->clasp(), isGetter))
-                return true;
-
-            // If the type has an own property, we can't be sure we don't shadow
-            // the chain.
-            bool lcont;
-            if (!TestTypeHasOwnProperty(typeObj, name, lcont))
-                return false;
-            if (!lcont)
-                return true;
-
-            // Otherwise try using the prototype.
-            curObj = typeObj->proto().toObjectOrNull();
-        } else {
-            // We can't optimize setters on watched singleton objects. A getter
-            // on an own property can be protected with the prototype
-            // shapeguard, though.
-            if (!isGetter && curObj->watched())
-                return true;
-        }
-
-        // Turns out that we need to check for a property lookup op, else we
-        // will end up calling it mid-compilation.
-        if (!CanEffectlesslyCallLookupGenericOnObject(cx, curObj, name))
-            return true;
-
-        RootedId idRoot(cx, NameToId(name));
-        RootedObject proto(cx);
-        RootedShape shape(cx);
-        if (!JSObject::lookupGeneric(cx, curObj, idRoot, &proto, &shape))
-            return false;
-
-        if (!shape)
-            return true;
-
-        // We want to optimize specialized getters/setters. The defaults will
-        // hit the slot optimization.
-        if (isGetter) {
-            if (shape->hasDefaultGetter() || !shape->hasGetterValue())
-                return true;
-        } else {
-            if (shape->hasDefaultSetter() || !shape->hasSetterValue())
-                return true;
-        }
-
-        JSObject * curFound = isGetter ? shape->getterObject():
-                                         shape->setterObject();
-
-        // Save the first seen, or verify uniqueness.
-        if (!found) {
-            if (!curFound->is<JSFunction>())
-                return true;
-            found = curFound;
-        } else if (found != curFound) {
-            return true;
-        }
-
-        // We only support cases with a single prototype shared. This is
-        // overwhelmingly more likely than having multiple different prototype
-        // chains with the same custom property function.
-        if (!foundProto)
-            foundProto = proto;
-        else if (foundProto != proto)
-            return true;
-
-        bool lcont;
-        if (!TestCommonAccessorProtoChain(cx, name, isGetter, foundProto, curObj, lcont))
-            return false;
-        if (!lcont)
-            return true;
-    }
-    cont = true;
-    return true;
-}
-
 bool
-IonBuilder::freezePropTypeSets(types::TemporaryTypeSet *types,
-                               JSObject *foundProto, PropertyName *name)
+IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyName *name,
+                                       bool isGetter, JSObject *foundProto)
+{
+    // With foundProto a prototype with a getter or setter for name, return
+    // whether looking up name on any object in |types| will go through
+    // foundProto, i.e. all the objects have foundProto on their prototype
+    // chain and do not have a property for name before reaching foundProto.
+
+    // No sense looking if we don't know what's going on.
+    if (!types || types->unknownObject())
+        return false;
+
+    for (unsigned i = 0; i < types->getObjectCount(); i++) {
+        if (types->getSingleObject(i) == foundProto)
+            continue;
+
+        types::TypeObjectKey *type = types->getObject(i);
+        if (!type)
+            continue;
+
+        while (type) {
+            if (type->unknownProperties())
+                return false;
+
+            const Class *clasp = type->clasp();
+            if (!ClassHasEffectlessLookup(compartment, clasp, name))
+                return false;
+
+            // Look for a getter/setter on the class itself which may need
+            // to be called.
+            if (isGetter && clasp->ops.getGeneric)
+                return false;
+            if (!isGetter && clasp->ops.setGeneric)
+                return false;
+
+            // Note: freezePropertiesForCommonPropFunc will freeze the property
+            // type sets later on if optimizing.
+            types::HeapTypeSetKey property = type->property(NameToId(name));
+            if (property.maybeTypes() && !property.maybeTypes()->empty())
+                return false;
+            if (JSObject *obj = type->singleton()) {
+                if (types::CanHaveEmptyPropertyTypesForOwnProperty(obj))
+                    return false;
+            }
+
+            JSObject *proto = type->proto().toObjectOrNull();
+            if (proto == foundProto)
+                break;
+            if (!proto) {
+                // The foundProto being searched for did not show up on the
+                // object's prototype chain.
+                return false;
+            }
+            type = types::TypeObjectKey::get(type->proto().toObjectOrNull());
+        }
+    }
+
+    return true;
+}
+
+void
+IonBuilder::freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, PropertyName *name,
+                                               JSObject *foundProto)
 {
     for (unsigned i = 0; i < types->getObjectCount(); i++) {
         // If we found a Singleton object's own-property, there's nothing to
@@ -7756,8 +7643,6 @@ IonBuilder::freezePropTypeSets(types::TemporaryTypeSet *types,
         if (!type)
             continue;
 
-        // Walk the prototype chain. Everyone has to have the property, since we
-        // just checked, so propSet cannot be nullptr.
         while (true) {
             types::HeapTypeSetKey property = type->property(NameToId(name));
             JS_ALWAYS_TRUE(!property.isOwnProperty(constraints()));
@@ -7770,37 +7655,20 @@ IonBuilder::freezePropTypeSets(types::TemporaryTypeSet *types,
             type = types::TypeObjectKey::get(type->proto().toObjectOrNull());
         }
     }
-    return true;
 }
 
-inline bool
-IonBuilder::testCommonPropFunc(JSContext *cx, types::TemporaryTypeSet *types, PropertyName *name,
-                               JSFunction **funcp, bool isGetter, bool *isDOM,
-                               MDefinition **guardOut)
+inline MDefinition *
+IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName *name,
+                                   bool isGetter, JSObject *foundProto, Shape *lastProperty)
 {
-    JSObject *found = nullptr;
-    JSObject *foundProto = nullptr;
+    // Check if all objects being accessed will lookup the name through foundProto.
+    if (!objectsHaveCommonPrototype(types, name, isGetter, foundProto))
+        return nullptr;
 
-    *funcp = nullptr;
-    *isDOM = false;
-
-    // No sense looking if we don't know what's going on.
-    if (!types || types->unknownObject())
-        return true;
-
-    // Iterate down all the types to see if they all have the same getter or
-    // setter.
-    bool cont;
-    if (!SearchCommonPropFunc(cx, types, name, isGetter, found, foundProto, cont))
-        return false;
-    if (!cont)
-        return true;
-
-    // No need to add a freeze if we didn't find anything
-    if (!found)
-        return true;
-
-    JS_ASSERT(foundProto);
+    // We can optimize the getter/setter, so freeze all involved properties to
+    // ensure there isn't a lower shadowing getter or setter installed in the
+    // future.
+    freezePropertiesForCommonPrototype(types, name, foundProto);
 
     // Add a shape guard on the prototype we found the property on. The rest of
     // the prototype chain is guarded by TI freezes. Note that a shape guard is
@@ -7808,23 +7676,8 @@ IonBuilder::testCommonPropFunc(JSContext *cx, types::TemporaryTypeSet *types, Pr
     // are no lookup hooks for this property.
     MInstruction *wrapper = MConstant::New(ObjectValue(*foundProto));
     current->add(wrapper);
-    wrapper = addShapeGuard(wrapper, foundProto->lastProperty(), Bailout_ShapeGuard);
 
-    // Pass the guard back so it can be an operand.
-    if (guardOut) {
-        JS_ASSERT(wrapper->isGuardShape());
-        *guardOut = wrapper;
-    }
-
-    // Now we have to freeze all the property typesets to ensure there isn't a
-    // lower shadowing getter or setter installed in the future.
-    if (!freezePropTypeSets(types, foundProto, name))
-        return false;
-
-    *funcp = &found->as<JSFunction>();
-    *isDOM = types->isDOMClass();
-
-    return true;
+    return addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
 }
 
 bool
@@ -8283,21 +8136,20 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, PropertyName *name,
                                    types::TemporaryTypeSet *types)
 {
     JS_ASSERT(*emitted == false);
-    JSFunction *commonGetter;
-    bool isDOM;
-    MDefinition *guard;
+
+    Shape *lastProperty = NULL;
+    JSFunction *commonGetter = NULL;
+    JSObject *foundProto = inspector->commonGetPropFunction(pc, &lastProperty, &commonGetter);
+    if (!foundProto)
+        return true;
 
     types::TemporaryTypeSet *objTypes = current->peek(-1)->resultTypeSet();
-
-    if (!testCommonPropFunc(cx, objTypes, name, &commonGetter, true, &isDOM, &guard))
-        return false;
-    if (!commonGetter)
+    MDefinition *guard = testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
+                                                foundProto, lastProperty);
+    if (!guard)
         return true;
 
-#ifdef JSGC_GENERATIONAL
-    if (GetIonContext()->runtime->gcNursery.isInside(commonGetter))
-        return true;
-#endif
+    bool isDOM = objTypes->isDOMClass();
 
     MDefinition *obj = current->pop();
 
@@ -8564,15 +8416,19 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
 {
     JS_ASSERT(*emitted == false);
 
-    JSFunction *commonSetter;
-    bool isDOM;
+    Shape *lastProperty = NULL;
+    JSFunction *commonSetter = NULL;
+    JSObject *foundProto = inspector->commonSetPropFunction(pc, &lastProperty, &commonSetter);
+    if (!foundProto)
+        return true;
 
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
-    if (!testCommonPropFunc(cx, objTypes, name, &commonSetter, false, &isDOM, nullptr))
-        return false;
-
-    if (!commonSetter)
+    MDefinition *guard = testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
+                                                foundProto, lastProperty);
+    if (!guard)
         return true;
+
+    bool isDOM = objTypes->isDOMClass();
 
     // Emit common setter.
 
