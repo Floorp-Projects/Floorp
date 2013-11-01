@@ -80,15 +80,18 @@ protected:
   void SanityCheckAnonymousFlexItems() const;
 #endif // DEBUG
 
+  FlexItem GenerateFlexItemForChild(nsPresContext* aPresContext,
+                                    nsIFrame* aChildFrame,
+                                    const nsHTMLReflowState& aParentReflowState,
+                                    const FlexboxAxisTracker& aAxisTracker);
 
-  // Returns nsresult because we might have to reflow aChildFrame (to get its
-  // vertical intrinsic size in a vertical flexbox), and if that reflow fails
-  // (returns a failure nsresult), we want to bail out.
-  nsresult AppendFlexItemForChild(nsPresContext* aPresContext,
-                                  nsIFrame* aChildFrame,
-                                  const nsHTMLReflowState& aParentReflowState,
-                                  const FlexboxAxisTracker& aAxisTracker,
-                                  nsTArray<FlexItem>& aFlexItems);
+  // Returns nsresult because we might have to reflow aFlexItem.Frame() (to
+  // get its vertical intrinsic size in a vertical flexbox), and if that
+  // reflow fails (returns a failure nsresult), we want to bail out.
+  nsresult ResolveFlexItemMaxContentSizing(nsPresContext* aPresContext,
+                                           FlexItem& aFlexItem,
+                                           const nsHTMLReflowState& aParentReflowState,
+                                           const FlexboxAxisTracker& aAxisTracker);
 
   // Runs the "resolve the flexible lengths" algorithm, distributing
   // |aFlexContainerMainSize| among the |aItems| and freezing them.
