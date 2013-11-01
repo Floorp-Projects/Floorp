@@ -521,14 +521,6 @@ Factory::SetGlobalSkiaCacheLimits(int aCount, int aSizeInBytes)
 }
 #endif // USE_SKIA_GPU
 
-void
-Factory::PurgeTextureCaches()
-{
-#ifdef USE_SKIA_GPU
-  DrawTargetSkia::PurgeTextureCaches();
-#endif
-}
-
 #ifdef USE_SKIA_FREETYPE
 TemporaryRef<GlyphRenderingOptions>
 Factory::CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting)

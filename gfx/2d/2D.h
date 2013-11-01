@@ -1007,8 +1007,6 @@ public:
     SetGlobalSkiaCacheLimits(int aCount, int aSizeInBytes);
 #endif
 
-  static void PurgeTextureCaches();
-
 #if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
   static TemporaryRef<GlyphRenderingOptions>
     CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting);
