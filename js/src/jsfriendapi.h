@@ -483,6 +483,16 @@ GetObjectParentMaybeScope(JSObject *obj);
 JS_FRIEND_API(JSObject *)
 GetGlobalForObjectCrossCompartment(JSObject *obj);
 
+JS_FRIEND_API(void)
+AssertSameCompartment(JSContext *cx, JSObject *obj);
+
+#ifdef DEBUG
+JS_FRIEND_API(void)
+AssertSameCompartment(JSObject *objA, JSObject *objB);
+#else
+inline void AssertSameCompartment(JSObject *objA, JSObject *objB) {}
+#endif
+
 // For legacy consumers only. This whole concept is going away soon.
 JS_FRIEND_API(JSObject *)
 DefaultObjectForContextOrNull(JSContext *cx);
