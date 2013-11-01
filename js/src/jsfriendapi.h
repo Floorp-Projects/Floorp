@@ -173,8 +173,22 @@ extern JS_FRIEND_API(void)
 js_DumpChars(const jschar *s, size_t n);
 #endif
 
+/*
+ * Copies all own properties from |obj| to |target|. |obj| must be a "native"
+ * object (that is to say, normal-ish - not an Array or a Proxy).
+ *
+ * On entry, |cx| must be in the compartment of |target|.
+ */
 extern JS_FRIEND_API(bool)
 JS_CopyPropertiesFrom(JSContext *cx, JSObject *target, JSObject *obj);
+
+/*
+ * Single-property version of the above. This function asserts that an |own|
+ * property of the given name exists on |obj|.
+ */
+extern JS_FRIEND_API(bool)
+JS_CopyPropertyFrom(JSContext *cx, JS::HandleId id, JS::HandleObject target,
+                    JS::HandleObject obj);
 
 extern JS_FRIEND_API(bool)
 JS_WrapPropertyDescriptor(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc);

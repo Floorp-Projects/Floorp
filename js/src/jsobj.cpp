@@ -1756,11 +1756,54 @@ JSObject::deleteByValue(JSContext *cx, HandleObject obj, const Value &property, 
     return deleteProperty(cx, obj, propname, succeeded);
 }
 
+static bool
+CopyProperty(JSContext *cx, HandleObject target, HandleObject obj,
+             HandleShape shape)
+{
+    // |shape| and |obj| are generally not same-compartment with |target| and
+    // |cx| here.
+    assertSameCompartment(cx, target);
+
+    unsigned attrs = shape->attributes();
+    PropertyOp getter = shape->getter();
+    StrictPropertyOp setter = shape->setter();
+    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
+    if ((attrs & JSPROP_GETTER) && !cx->compartment()->wrap(cx, &getter))
+        return false;
+    if ((attrs & JSPROP_SETTER) && !cx->compartment()->wrap(cx, &setter))
+        return false;
+    RootedValue v(cx, shape->hasSlot() ? obj->getSlot(shape->slot())
+                                       : UndefinedValue());
+    if (!cx->compartment()->wrap(cx, &v))
+        return false;
+    RootedId id(cx, shape->propid());
+    return JSObject::defineGeneric(cx, target, id, v, getter,
+                                   setter, attrs);
+}
+
+JS_FRIEND_API(bool)
+JS_CopyPropertyFrom(JSContext *cx, HandleId id, HandleObject target,
+                    HandleObject obj)
+{
+    assertSameCompartment(cx, target);
+    MOZ_ASSERT(obj->isNative());
+    RootedObject obj2(cx);
+    RootedShape shape(cx);
+    {
+        AutoCompartment ac(cx, obj);
+        if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &shape))
+            return false;
+    }
+    MOZ_ASSERT(shape && obj == obj2);
+    return CopyProperty(cx, target, obj, shape);
+}
+
 JS_FRIEND_API(bool)
 JS_CopyPropertiesFrom(JSContext *cx, JSObject *targetArg, JSObject *objArg)
 {
     RootedObject target(cx, targetArg);
     RootedObject obj(cx, objArg);
+    assertSameCompartment(cx, target);
 
     // If we're not native, then we cannot copy properties.
     JS_ASSERT(target->isNative() == obj->isNative());
@@ -1773,25 +1816,11 @@ JS_CopyPropertiesFrom(JSContext *cx, JSObject *targetArg, JSObject *objArg)
             return false;
     }
 
-    RootedShape shape(cx);
-    RootedValue v(cx);
-    RootedId id(cx);
     size_t n = shapes.length();
+    RootedShape shape(cx);
     while (n > 0) {
         shape = shapes[--n];
-        unsigned attrs = shape->attributes();
-        PropertyOp getter = shape->getter();
-        StrictPropertyOp setter = shape->setter();
-        AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
-        if ((attrs & JSPROP_GETTER) && !cx->compartment()->wrap(cx, &getter))
-            return false;
-        if ((attrs & JSPROP_SETTER) && !cx->compartment()->wrap(cx, &setter))
-            return false;
-        v = shape->hasSlot() ? obj->getSlot(shape->slot()) : UndefinedValue();
-        if (!cx->compartment()->wrap(cx, &v))
-            return false;
-        id = shape->propid();
-        if (!JSObject::defineGeneric(cx, target, id, v, getter, setter, attrs))
+        if (!CopyProperty(cx, target, obj, shape))
             return false;
     }
     return true;
