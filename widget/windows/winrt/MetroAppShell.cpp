@@ -281,7 +281,7 @@ MetroAppShell::ProcessOneNativeEventIfPresent()
     // Calling into ProcessNativeEvents is harmless, but won't actually process any
     // native events. So we log here so we can spot this and get a handle on the
     // corner cases where this can happen.
-    Log("WARNING: Reentrant call into process events detected, returning early.");
+    WinUtils::Log("WARNING: Reentrant call into process events detected, returning early.");
     return false;
   }
 
@@ -395,7 +395,7 @@ MetroAppShell::Observe(nsISupports *subject, const char *topic,
     NS_ENSURE_ARG_POINTER(topic);
     if (!strcmp(topic, "dl-start")) {
       if (mPowerRequestCount++ == 0) {
-        Log("Download started - Disallowing suspend");
+        WinUtils::Log("Download started - Disallowing suspend");
         REASON_CONTEXT context;
         context.Version = POWER_REQUEST_CONTEXT_VERSION;
         context.Flags = POWER_REQUEST_CONTEXT_SIMPLE_STRING;
@@ -408,7 +408,7 @@ MetroAppShell::Observe(nsISupports *subject, const char *topic,
                !strcmp(topic, "dl-cancel") ||
                !strcmp(topic, "dl-failed")) {
       if (--mPowerRequestCount == 0 && mPowerRequest) {
-        Log("All downloads ended - Allowing suspend");
+        WinUtils::Log("All downloads ended - Allowing suspend");
         PowerClearRequestDyn(mPowerRequest, PowerRequestExecutionRequired); 
         mPowerRequest.reset();
       }
