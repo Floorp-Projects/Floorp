@@ -32,17 +32,33 @@ window.addEventListener("message", function(event) {
   } catch(e) {
     Cu.reportError(e);
   }
-}, false);
+});
+
+window.addEventListener("unload", function onUnload() {
+  window.removeEventListener("unload", onUnload);
+  UI.destroy();
+});
 
 let UI = {
   init: function() {
     this.showFooterIfNeeded();
-    this._onConnectionStatusChange = this._onConnectionStatusChange.bind(this);
     this.setTab("apps");
     if (this.connection) {
       this.onNewConnection();
     } else {
       this.hide();
+    }
+  },
+
+  destroy: function() {
+    if (this.connection) {
+      this.connection.off(Connection.Events.STATUS_CHANGED, this._onConnectionStatusChange);
+    }
+    if (this.store) {
+      this.store.destroy();
+    }
+    if (this.template) {
+      this.template.destroy();
     }
   },
 
@@ -73,6 +89,9 @@ let UI = {
       "apps": new WebappsStore(this.connection),
     });
 
+    if (this.template) {
+      this.template.destroy();
+    }
     this.template = new Template(document.body, this.store, Utils.l10n);
 
     this.template.start();
@@ -189,3 +208,7 @@ let UI = {
     return deferred.promise;
   },
 }
+
+// This must be bound immediately, as it might be used via the message listener
+// before UI.init() has been called.
+UI._onConnectionStatusChange = UI._onConnectionStatusChange.bind(UI);
