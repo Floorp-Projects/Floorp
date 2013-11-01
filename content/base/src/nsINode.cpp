@@ -2521,6 +2521,29 @@ nsINode::QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aReturn)
   return rv.ErrorCode();
 }
 
+Element*
+nsINode::GetElementById(const nsAString& aId)
+{
+  MOZ_ASSERT(IsElement() || IsNodeOfType(eDOCUMENT_FRAGMENT),
+             "Bogus this object for GetElementById call");
+  if (IsInDoc()) {
+    ElementHolder holder;
+    FindMatchingElementsWithId<true>(aId, this, nullptr, holder);
+    return holder.mElement;
+  }
+
+  for (nsIContent* kid = GetFirstChild(); kid; kid = kid->GetNextNode(this)) {
+    if (!kid->IsElement()) {
+      continue;
+    }
+    nsIAtom* id = kid->AsElement()->GetID();
+    if (id && id->Equals(aId)) {
+      return kid->AsElement();
+    }
+  }
+  return nullptr;
+}
+
 JSObject*
 nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
