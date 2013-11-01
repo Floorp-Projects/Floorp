@@ -368,6 +368,20 @@ public:
   // Setters
   // =======
 
+  // This sets our flex base size, and then updates the main size to the
+  // base size clamped to our main-axis [min,max] constraints.
+  void SetFlexBaseSizeAndMainSize(nscoord aNewFlexBaseSize)
+  {
+    MOZ_ASSERT(!mIsFrozen,
+               "flex base size shouldn't change after we're frozen");
+    mFlexBaseSize = aNewFlexBaseSize;
+
+    // Before we've resolved flexible lengths, we keep mMainSize set to
+    // the 'hypothetical main size', which is the flex base size, clamped
+    // to the [min,max] range:
+    mMainSize = NS_CSS_MINMAX(mFlexBaseSize, mMainMinSize, mMainMaxSize);
+  }
+
   // Setters used while we're resolving flexible lengths
   // ---------------------------------------------------
 
@@ -463,7 +477,7 @@ protected:
   const nsMargin mBorderPadding;
   nsMargin mMargin; // non-const because we need to resolve auto margins
 
-  const nscoord mFlexBaseSize;
+  nscoord mFlexBaseSize;
 
   const nscoord mMainMinSize;
   const nscoord mMainMaxSize;
@@ -847,14 +861,10 @@ FlexItem::FlexItem(nsIFrame* aChildFrame,
     mFlexShrink(aFlexShrink),
     mBorderPadding(aBorderPadding),
     mMargin(aMargin),
-    mFlexBaseSize(aFlexBaseSize),
     mMainMinSize(aMainMinSize),
     mMainMaxSize(aMainMaxSize),
     mCrossMinSize(aCrossMinSize),
     mCrossMaxSize(aCrossMaxSize),
-    // Init main-size to 'hypothetical main size', which is flex base size
-    // clamped to [min,max] range:
-    mMainSize(NS_CSS_MINMAX(aFlexBaseSize, aMainMinSize, aMainMaxSize)),
     mMainPosn(0),
     mCrossSize(0),
     mCrossPosn(0),
@@ -868,6 +878,8 @@ FlexItem::FlexItem(nsIFrame* aChildFrame,
     mAlignSelf(aChildFrame->StylePosition()->mAlignSelf)
 {
   MOZ_ASSERT(aChildFrame, "expecting a non-null child frame");
+
+  SetFlexBaseSizeAndMainSize(aFlexBaseSize);
 
   // Assert that any "auto" margin components are set to 0.
   // (We'll resolve them later; until then, we want to treat them as 0-sized.)
