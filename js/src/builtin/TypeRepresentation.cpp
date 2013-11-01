@@ -12,6 +12,7 @@
 #include "jsnum.h"
 #include "jsutil.h"
 
+#include "builtin/TypedObject.h"
 #include "js/HashTable.h"
 #include "vm/Runtime.h"
 #include "vm/StringBuffer.h"
@@ -109,7 +110,7 @@ TypeRepresentationHasher::matchStructs(StructTypeRepresentation *key1,
         return false;
 
     for (size_t i = 0; i < key1->fieldCount(); i++) {
-        if (key1->field(i).id != key2->field(i).id)
+        if (key1->field(i).propertyName != key2->field(i).propertyName)
             return false;
 
         if (key1->field(i).typeRepr != key2->field(i).typeRepr)
@@ -184,7 +185,7 @@ TypeRepresentationHasher::hashStruct(StructTypeRepresentation *key)
 {
     HashNumber hash = HashGeneric(key->kind());
     for (HashNumber i = 0; i < key->fieldCount(); i++) {
-        hash = AddToHash(hash, JSID_BITS(key->field(i).id.get()));
+        hash = AddToHash(hash, key->field(i).propertyName.get());
         hash = AddToHash(hash, key->field(i).typeRepr);
     }
     return hash;
@@ -282,11 +283,11 @@ static inline size_t alignTo(size_t address, size_t align) {
 }
 
 StructField::StructField(size_t index,
-                         jsid &id,
+                         PropertyName *propertyName,
                          SizedTypeRepresentation *typeRepr,
                          size_t offset)
   : index(index),
-    id(id),
+    propertyName(propertyName),
     typeRepr(typeRepr),
     offset(offset)
 {}
@@ -300,11 +301,11 @@ StructTypeRepresentation::StructTypeRepresentation()
 
 bool
 StructTypeRepresentation::init(JSContext *cx,
-                               AutoIdVector &ids,
+                               AutoPropertyNameVector &names,
                                AutoObjectVector &typeReprOwners)
 {
-    JS_ASSERT(ids.length() == typeReprOwners.length());
-    fieldCount_ = ids.length();
+    JS_ASSERT(names.length() == typeReprOwners.length());
+    fieldCount_ = names.length();
 
     // We compute alignment into the field `align_` directly in the
     // loop below, but not `size_` because we have to very careful
@@ -316,7 +317,7 @@ StructTypeRepresentation::init(JSContext *cx,
     alignment_ = 1;
     opaque_ = false;
 
-    for (size_t i = 0; i < ids.length(); i++) {
+    for (size_t i = 0; i < names.length(); i++) {
         SizedTypeRepresentation *fieldTypeRepr =
             fromOwnerObject(*typeReprOwners[i])->asSized();
 
@@ -330,7 +331,8 @@ StructTypeRepresentation::init(JSContext *cx,
             return false;
         }
 
-        new(fields() + i) StructField(i, ids[i], fieldTypeRepr, alignedSize);
+        new(fields() + i) StructField(i, names[i],
+                                      fieldTypeRepr, alignedSize);
         alignment_ = js::Max(alignment_, fieldTypeRepr->alignment());
 
         uint32_t incrementedSize = alignedSize + fieldTypeRepr->size();
@@ -362,9 +364,25 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
                                      TypeRepresentationHash::AddPtr &p)
 {
     JS_ASSERT(!ownerObject_);
-
+    Rooted<GlobalObject*> global(cx, cx->global());
     JSCompartment *comp = cx->compartment();
 
+    // First, try to create the typed object to associate with this
+    // type representation. Since nothing is in the table yet, if this
+    // fails we can just return and pretend this whole endeavor was
+    // just a bad dream.
+    RootedObject proto(cx);
+    const Class *clasp;
+    if (!global->getTypedObjectModule().getSuitableClaspAndProto(cx, kind(),
+                                                                 &clasp, &proto))
+    {
+        return nullptr;
+    }
+    RootedTypeObject typeObject(cx, comp->types.newTypeObject(cx, clasp, proto));
+    if (!typeObject)
+        return nullptr;
+
+    // Next, attempt to add the type representation to the table.
     if (!comp->typeReprs.add(p, this)) {
         js_ReportOutOfMemory(cx);
         js_free(this); // do not finalize, not present in the table
@@ -426,6 +444,7 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
     }
 
     ownerObject_.init(ownerObject);
+    typeObject_.init(typeObject);
     return &*ownerObject;
 }
 
@@ -552,10 +571,10 @@ UnsizedArrayTypeRepresentation::Create(JSContext *cx,
 /*static*/
 JSObject *
 StructTypeRepresentation::Create(JSContext *cx,
-                                 AutoIdVector &ids,
+                                 AutoPropertyNameVector &names,
                                  AutoObjectVector &typeReprOwners)
 {
-    size_t count = ids.length();
+    size_t count = names.length();
     JSCompartment *comp = cx->compartment();
 
     // Note: cannot use cx->new_ because constructor is private.
@@ -563,7 +582,7 @@ StructTypeRepresentation::Create(JSContext *cx,
     StructTypeRepresentation *ptr =
         (StructTypeRepresentation *) cx->malloc_(size);
     new(ptr) StructTypeRepresentation();
-    if (!ptr->init(cx, ids, typeReprOwners))
+    if (!ptr->init(cx, names, typeReprOwners))
         return nullptr;
 
     TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(ptr);
@@ -586,6 +605,7 @@ TypeRepresentation::mark(JSTracer *trace)
     // contents. This is the typical scheme for marking objects.  See
     // gc/Marking.cpp for more details.
     gc::MarkObject(trace, &ownerObject_, "typeRepresentation_ownerObject");
+    gc::MarkTypeObject(trace, &typeObject_, "typeRepresentation_typeObject");
 }
 
 /*static*/ void
@@ -623,7 +643,7 @@ void
 StructTypeRepresentation::traceStructFields(JSTracer *trace)
 {
     for (size_t i = 0; i < fieldCount(); i++) {
-        gc::MarkId(trace, &fields()[i].id, "typerepr_field_id");
+        gc::MarkString(trace, &fields()[i].propertyName, "typerepr_field_propertyName");
         fields()[i].typeRepr->mark(trace);
     }
 }
@@ -794,7 +814,7 @@ StructTypeRepresentation::appendStringStruct(JSContext *cx, StringBuffer &conten
         if (i > 0)
             contents.append(", ");
 
-        RootedString idString(cx, IdToString(cx, fld.id));
+        RootedString idString(cx, fld.propertyName);
         if (!idString)
             return false;
 
@@ -1001,8 +1021,18 @@ SizedTypeRepresentation::traceInstance(JSTracer *trace,
 const StructField *
 StructTypeRepresentation::fieldNamed(jsid id) const
 {
+    if (!JSID_IS_ATOM(id))
+        return nullptr;
+
+    uint32_t unused;
+    JSAtom *atom = JSID_TO_ATOM(id);
+    if (atom->isIndex(&unused))
+        return nullptr;
+
+    PropertyName *name = atom->asPropertyName();
+
     for (size_t i = 0; i < fieldCount(); i++) {
-        if (field(i).id.get() == id)
+        if (field(i).propertyName.get() == name)
             return &field(i);
     }
     return nullptr;
