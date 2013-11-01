@@ -324,6 +324,12 @@ bool OmxDecoder::Init(sp<MediaExtractor>& extractor) {
   }
 #endif
 
+  const char* extractorMime;
+  sp<MetaData> meta = extractor->getMetaData();
+  if (meta->findCString(kKeyMIMEType, &extractorMime) && !strcasecmp(extractorMime, AUDIO_MP3)) {
+    mIsMp3 = true;
+  }
+
   ssize_t audioTrackIndex = -1;
   ssize_t videoTrackIndex = -1;
 
