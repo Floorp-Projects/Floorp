@@ -3,11 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef MOZ_LOGGING
-// so we can get logging even in release builds
-#define FORCE_PR_LOG 1
-#endif
-
 #include "MetroUtils.h"
 #include <windows.h>
 #include "nsICommandLineRunner.h"
@@ -39,10 +34,6 @@ using namespace ABI::Windows::Graphics::Display;
 
 // File-scoped statics (unnamed namespace)
 namespace {
-#ifdef PR_LOGGING
-  PRLogModuleInfo* metroWidgetLog = PR_NewLogModule("MetroWidget");
-#endif
-
   FLOAT LogToPhysFactor() {
     ComPtr<IDisplayPropertiesStatics> dispProps;
     if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(),
@@ -67,75 +58,6 @@ namespace {
     return 1.0f;
   }
 };
-
-void LogW(const wchar_t *fmt, ...)
-{
-  va_list args = nullptr;
-  if(!lstrlenW(fmt))
-    return;
-  va_start(args, fmt);
-  int buflen = _vscwprintf(fmt, args);
-  wchar_t* buffer = new wchar_t[buflen+1];
-  if (!buffer) {
-    va_end(args);
-    return;
-  }
-  vswprintf(buffer, buflen, fmt, args);
-  va_end(args);
-
-  // MSVC, including remote debug sessions
-  OutputDebugStringW(buffer);
-  OutputDebugStringW(L"\n");
-
-  int len = wcslen(buffer);
-  if (len) {
-    char* utf8 = new char[len+1];
-    memset(utf8, 0, sizeof(utf8));
-    if (WideCharToMultiByte(CP_ACP, 0, buffer,
-                            -1, utf8, len+1, nullptr,
-                            nullptr) > 0) {
-      // desktop console
-      printf("%s\n", utf8);
-#ifdef PR_LOGGING
-      NS_ASSERTION(metroWidgetLog, "Called MetroUtils Log() but MetroWidget "
-                                   "log module doesn't exist!");
-      PR_LOG(metroWidgetLog, PR_LOG_ALWAYS, (utf8));
-#endif
-    }
-    delete[] utf8;
-  }
-  delete[] buffer;
-}
-
-void Log(const char *fmt, ...)
-{
-  va_list args = nullptr;
-  if(!strlen(fmt))
-    return;
-  va_start(args, fmt);
-  int buflen = _vscprintf(fmt, args);
-  char* buffer = new char[buflen+1];
-  if (!buffer) {
-    va_end(args);
-    return;
-  }
-  vsprintf(buffer, fmt, args);
-  va_end(args);
-
-  // MSVC, including remote debug sessions
-  OutputDebugStringA(buffer);
-  OutputDebugStringW(L"\n");
-
-  // desktop console
-  printf("%s\n", buffer);
-
-#ifdef PR_LOGGING
-  NS_ASSERTION(metroWidgetLog, "Called MetroUtils Log() but MetroWidget "
-                               "log module doesn't exist!");
-  PR_LOG(metroWidgetLog, PR_LOG_ALWAYS, (buffer));
-#endif
-  delete[] buffer;
-}
 
 // Conversion between logical and physical coordinates
 int32_t

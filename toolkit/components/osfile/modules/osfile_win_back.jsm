@@ -345,6 +345,17 @@
           "FlushFileBuffers", ctypes.winapi_abi,
                      /*return*/ Type.zero_or_nothing,
                      /*file*/   Type.HANDLE);
+
+        declareLazyFFI(SysFile, "GetFileAttributes", libc,
+          "GetFileAttributesW", ctypes.winapi_abi,
+                     /*return*/   Type.DWORD,
+                     /*fileName*/ Type.path);
+
+        declareLazyFFI(SysFile, "SetFileAttributes", libc,
+          "SetFileAttributesW", ctypes.winapi_abi,
+                     /*return*/         Type.zero_or_nothing,
+                     /*fileName*/       Type.path,
+                     /*fileAttributes*/ Type.DWORD);
      };
 
      exports.OS.Win = {

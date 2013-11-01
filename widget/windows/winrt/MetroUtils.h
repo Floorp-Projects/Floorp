@@ -9,21 +9,13 @@
 #include "nsThreadUtils.h"
 #include "nsString.h"
 #include "nsPoint.h"
+#include "WinUtils.h"
 
 #include "mozwrlbase.h"
 
 #include <stdio.h>
 #include <windows.foundation.h>
 #include <windows.ui.viewmanagement.h>
-
-void Log(const char *fmt, ...);
-void LogW(const wchar_t *fmt, ...);
-
-#define LogFunction() Log(__FUNCTION__)
-#define LogThread() Log("%s: IsMainThread:%d ThreadId:%X", __FUNCTION__, NS_IsMainThread(), GetCurrentThreadId())
-#define LogThis() Log("[%X] %s", this, __FUNCTION__)
-#define LogException(e) Log("%s Exception:%s", __FUNCTION__, e->ToString()->Data())
-#define LogHRESULT(hr) Log("%s hr=%X", __FUNCTION__, hr)
 
 // HRESULT checkers, these warn on failure in debug builds
 #ifdef DEBUG

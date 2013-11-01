@@ -181,6 +181,10 @@ Tooltip.prototype = {
       this.stopTogglingOnHover();
     }
 
+    // If no targetNodeCb callback is provided, then we need to hide the tooltip
+    // on mouseleave since baseNode is the target node itself
+    this._hideOnMouseLeave = !targetNodeCb;
+
     this._basedNode = baseNode;
     this._showDelay = showDelay;
     this._targetNodeCb = targetNodeCb || (() => true);
@@ -221,7 +225,7 @@ Tooltip.prototype = {
   },
 
   _showOnHover: function(target) {
-    if (this._targetNodeCb && this._targetNodeCb(target, this)) {
+    if (this._targetNodeCb(target, this)) {
       this.show(target);
       this._lastHovered = target;
     }
@@ -230,6 +234,9 @@ Tooltip.prototype = {
   _onBaseNodeMouseLeave: function() {
     clearNamedTimeout(this.uid);
     this._lastHovered = null;
+    if (this._hideOnMouseLeave) {
+      this.hide();
+    }
   },
 
   /**

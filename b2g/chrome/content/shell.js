@@ -981,7 +981,7 @@ var WebappsHelper = {
         });
         break;
       case "webapps-close":
-        shell.sendEvent(shell.getContentWindow(), "webapps-close",
+        shell.sendEvent(getContentWindow(), "webapps-close",
           {
             __exposedProps__: { "manifestURL": "r" },
             "manifestURL": json.manifestURL
