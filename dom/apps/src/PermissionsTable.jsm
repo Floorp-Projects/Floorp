@@ -302,11 +302,6 @@ this.PermissionsTable =  { geolocation: {
                              privileged: PROMPT_ACTION,
                              certified: PROMPT_ACTION
                            },
-                           "video-capture": {
-                             app: PROMPT_ACTION,
-                             privileged: PROMPT_ACTION,
-                             certified: PROMPT_ACTION
-                           },
                          };
 
 /**
