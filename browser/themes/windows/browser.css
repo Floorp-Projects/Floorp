@@ -2380,11 +2380,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   width: 16px;
 }
 
-#identity-popup-help-icon:-moz-focusring {
-  outline: 1px dotted;
-  outline-offset: 1px;
-}
-
 #identity-popup-more-info-button {
   margin-top: 6px;
   margin-bottom: 0;
