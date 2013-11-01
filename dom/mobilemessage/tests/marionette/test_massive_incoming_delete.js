@@ -146,6 +146,7 @@ tasks.push(function init() {
     is(incomingSms.sender, SENDER, "sender");
     is(incomingSms.messageClass, "normal", "messageClass");
     ok(incomingSms.timestamp instanceof Date, "timestamp is istanceof date");
+    ok(incomingSms.deliveryTimestamp === null, "deliveryTimestamp is null");
 
     verifySmsExists(incomingSms);
   };

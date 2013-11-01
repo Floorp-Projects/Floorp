@@ -1833,7 +1833,7 @@ bool Navigator::HasInputMethodSupport(JSContext* /* unused */,
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return Preferences::GetBool("dom.mozInputMethod.testing", false) ||
          (Preferences::GetBool("dom.mozInputMethod.enabled", false) &&
-          win && CheckPermission(win, "keyboard"));
+          win && CheckPermission(win, "input"));
 }
 
 /* static */
