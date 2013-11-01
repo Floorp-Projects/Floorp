@@ -46,6 +46,11 @@ enum ImageFormat {
   CAIRO_SURFACE,
 
   /**
+   * A MacIOSurface object.
+   */
+  MAC_IOSURFACE,
+
+  /**
    * An bitmap image that can be shared with a remote process.
    */
   REMOTE_IMAGE_BITMAP,
