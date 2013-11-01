@@ -43,6 +43,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           is(bound.primitiveField, undefined, "Xrays don't show fields");
           is(bound.wrappedJSObject.primitiveField, 2, "Waiving Xrays show fields");
 
+          // Check exposure behavior.
+          is(typeof bound.unexposedMethod, 'function',
+             "Unexposed method should be visible to XBL");
+          is(typeof bound.wrappedJSObject.unexposedMethod, 'undefined',
+             "Unexposed method should not be defined in content");
+          is(typeof bound.unexposedProperty, 'number',
+             "Unexposed property should be visible to XBL");
+          is(typeof bound.wrappedJSObject.unexposedProperty, 'undefined',
+             "Unexposed property should not be defined in content");
+
           // Check that here document.QueryInterface works
           ok("QueryInterface" in document,
              "Should have a document.QueryInterface here");
@@ -65,6 +75,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           win.go();
         </constructor>
         <field name="primitiveField">2</field>
+        <method name="unexposedMethod"><body></body></method>
+        <property name="unexposedProperty" onget="return 2;" readonly="true"></property>
         <method name="method" exposeToUntrustedContent="true">
           <parameter name="arg" />
           <body>
