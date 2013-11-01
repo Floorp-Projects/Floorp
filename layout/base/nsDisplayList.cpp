@@ -2277,14 +2277,20 @@ nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuil
   const nsStyleDisplay* disp = mFrame->StyleDisplay();
   mAppearance = disp->mAppearance;
   mFrame->IsThemed(disp, &mThemeTransparency);
+
   // Perform necessary RegisterThemeGeometry
-  if (mAppearance == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
-      mAppearance == NS_THEME_TOOLBAR ||
-      mAppearance == NS_THEME_WINDOW_TITLEBAR) {
-    RegisterThemeGeometry(aBuilder, aFrame);
-  } else if (mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
-             mAppearance == NS_THEME_WIN_GLASS) {
-    aBuilder->SetGlassDisplayItem(this);
+  switch (disp->mAppearance) {
+    case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
+    case NS_THEME_TOOLBAR:
+    case NS_THEME_WINDOW_TITLEBAR:
+    case NS_THEME_WINDOW_BUTTON_BOX:
+    case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:
+      RegisterThemeGeometry(aBuilder, aFrame);
+      break;
+    case NS_THEME_WIN_BORDERLESS_GLASS:
+    case NS_THEME_WIN_GLASS:
+      aBuilder->SetGlassDisplayItem(this);
+      break;
   }
 
   mBounds = GetBoundsInternal();
