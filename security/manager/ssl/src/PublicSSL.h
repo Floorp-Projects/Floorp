@@ -15,6 +15,7 @@ namespace psm {
 
 void InitializeSSLServerCertVerificationThreads();
 void StopSSLServerCertVerificationThreads();
+nsresult InitializeCipherSuite();
 
 } //namespace psm
 } // namespace mozilla
