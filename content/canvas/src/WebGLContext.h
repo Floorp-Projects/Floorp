@@ -188,9 +188,6 @@ public:
                     int32_t x, int32_t y, int32_t w, int32_t h)
                     { return NS_ERROR_NOT_IMPLEMENTED; }
 
-    bool Resize(size_t width, size_t height);
-    bool ResizeAndWarn(size_t width, size_t height);
-
     bool LoseContext();
     bool RestoreContext();
 
@@ -1134,12 +1131,6 @@ protected:
     GLfloat mColorClearValue[4];
     GLint mStencilClearValue;
     GLfloat mDepthClearValue;
-
-    GLint mViewportX;
-    GLint mViewportY;
-    GLsizei mViewportWidth;
-    GLsizei mViewportHeight;
-    bool mAlreadyWarnedAboutViewportLargerThanDest;
 
     nsCOMPtr<nsITimer> mContextRestorer;
     bool mAllowRestore;

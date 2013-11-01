@@ -3062,11 +3062,6 @@ WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
     MakeContextCurrent();
     gl->fViewport(x, y, width, height);
-
-    mViewportX = x;
-    mViewportY = y;
-    mViewportWidth = width;
-    mViewportHeight = height;
 }
 
 void
