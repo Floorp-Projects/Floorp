@@ -1303,6 +1303,41 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     /**
+     * Disables and dims all toolbar elements which are not
+     * related to editing mode.
+     */
+    private void updateChildrenForEditing() {
+        // This is for the tablet UI only
+        if (!HardwareUtils.isTablet()) {
+            return;
+        }
+
+        // Disable toolbar elemens while in editing mode
+        final boolean enabled = !mIsEditing;
+
+        // This alpha value has to be in sync with the one used
+        // in setButtonEnabled().
+        final float alpha = (enabled ? 1.0f : 0.24f);
+
+        mTabs.setEnabled(enabled);
+        ViewHelper.setAlpha(mTabsCounter, alpha);
+        mMenu.setEnabled(enabled);
+        ViewHelper.setAlpha(mMenuIcon, alpha);
+
+        final int actionItemsCount = mActionItemBar.getChildCount();
+        for (int i = 0; i < actionItemsCount; i++) {
+            mActionItemBar.getChildAt(i).setEnabled(enabled);
+        }
+        ViewHelper.setAlpha(mActionItemBar, alpha);
+
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            setButtonEnabled(mBack, enabled && tab.canDoBack());
+            setButtonEnabled(mForward, enabled && tab.canDoForward());
+        }
+    }
+
+    /**
      * Returns whether or not the URL bar is in editing mode (url bar is expanded, hiding the new
      * tab button). Note that selection state is independent of editing mode.
      */
@@ -1317,6 +1352,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mUrlEditText.setText(url != null ? url : "");
         mIsEditing = true;
+
+        updateChildrenForEditing();
 
         if (mStartEditingListener != null) {
             mStartEditingListener.onStartEditing();
@@ -1429,6 +1466,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
             return url;
         }
         mIsEditing = false;
+
+        updateChildrenForEditing();
 
         if (mStopEditingListener != null) {
             mStopEditingListener.onStopEditing();
@@ -1591,12 +1630,19 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
     }
 
-    public void updateBackButton(boolean enabled) {
-         Drawable drawable = mBack.getDrawable();
-         if (drawable != null)
-             drawable.setAlpha(enabled ? 255 : 77);
+    public void setButtonEnabled(ImageButton button, boolean enabled) {
+        final Drawable drawable = button.getDrawable();
+        if (drawable != null) {
+            // This alpha value has to be in sync with the one used
+            // in updateChildrenForEditing().
+            drawable.setAlpha(enabled ? 255 : 61);
+        }
 
-         mBack.setEnabled(enabled);
+        button.setEnabled(enabled);
+    }
+
+    public void updateBackButton(boolean enabled) {
+        setButtonEnabled(mBack, enabled);
     }
 
     public void updateForwardButton(final boolean enabled) {
@@ -1605,7 +1651,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         // Save the state on the forward button so that we can skip animations
         // when there's nothing to change
-        mForward.setEnabled(enabled);
+        setButtonEnabled(mForward, enabled);
 
         if (mForward.getVisibility() != View.VISIBLE)
             return;
