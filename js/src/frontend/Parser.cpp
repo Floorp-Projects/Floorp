@@ -3278,8 +3278,6 @@ Parser<ParseHandler>::pushLexicalScope(StmtInfoPC *stmt)
     return pushLexicalScope(blockObj, stmt);
 }
 
-#if JS_HAS_BLOCK_SCOPE
-
 struct AddLetDecl
 {
     uint32_t blockid;
@@ -3407,8 +3405,6 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
     }
     return pnlet;
 }
-
-#endif /* JS_HAS_BLOCK_SCOPE */
 
 template <typename ParseHandler>
 static bool
@@ -3590,7 +3586,6 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
     return pn;
 }
 
-#if JS_HAS_BLOCK_SCOPE
 template <>
 ParseNode *
 Parser<FullParseHandler>::letStatement()
@@ -3711,8 +3706,6 @@ Parser<SyntaxParseHandler>::letStatement()
     JS_ALWAYS_FALSE(abortIfSyntaxParser());
     return SyntaxParseHandler::NodeFailure;
 }
-
-#endif // JS_HAS_BLOCK_SCOPE
 
 template <typename ParseHandler>
 typename ParseHandler::Node
@@ -3936,7 +3929,6 @@ Parser<FullParseHandler>::forStatement()
                 tokenStream.consumeKnownToken(tt);
                 pn1 = variables(tt == TOK_VAR ? PNK_VAR : PNK_CONST);
             }
-#if JS_HAS_BLOCK_SCOPE
             else if (tt == TOK_LET) {
                 handler.disableSyntaxParser();
                 (void) tokenStream.getToken();
@@ -3950,7 +3942,6 @@ Parser<FullParseHandler>::forStatement()
                     pn1 = variables(PNK_LET, nullptr, blockObj, DontHoistVars);
                 }
             }
-#endif
             else {
                 pn1 = expr();
             }
@@ -4188,10 +4179,8 @@ Parser<FullParseHandler>::forStatement()
     if (!body)
         return null();
 
-#if JS_HAS_BLOCK_SCOPE
     if (blockObj)
         PopStatementPC(tokenStream, pc);
-#endif
     PopStatementPC(tokenStream, pc);
 
     ParseNode *forLoop = handler.newForStatement(begin, forHead, body, iflags);
@@ -4265,12 +4254,10 @@ Parser<SyntaxParseHandler>::forStatement()
                 tokenStream.consumeKnownToken(tt);
                 lhsNode = variables(tt == TOK_VAR ? PNK_VAR : PNK_CONST, &simpleForDecl);
             }
-#if JS_HAS_BLOCK_SCOPE
             else if (tt == TOK_CONST || tt == TOK_LET) {
                 JS_ALWAYS_FALSE(abortIfSyntaxParser());
                 return null();
             }
-#endif
             else {
                 lhsNode = expr();
             }
@@ -4997,11 +4984,8 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
         return pn;
       }
 
-#if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
         return letStatement();
-#endif
-
       case TOK_SEMI:
         return handler.newEmptyStatement(pos());
       case TOK_IF:
@@ -6809,10 +6793,8 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
       case TOK_LC:
         return objectLiteral();
 
-#if JS_HAS_BLOCK_SCOPE
       case TOK_LET:
         return letBlock(LetExpresion);
-#endif
 
       case TOK_LP:
       {

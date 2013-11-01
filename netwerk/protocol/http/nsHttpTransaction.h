@@ -15,6 +15,11 @@
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "TimingStruct.h"
+#include "nsProxyRelease.h"
+
+#ifdef MOZ_WIDGET_GONK
+#include "nsINetworkManager.h"
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -332,6 +337,31 @@ private:
     bool mPassedRatePacing;
     bool mSynchronousRatePaceRequest;
     nsCOMPtr<nsICancelable> mTokenBucketCancel;
+
+// These members are used for network per-app metering (bug 746073)
+// Currently, they are only available on gonk.
+public:
+    const static uint64_t NETWORK_STATS_THRESHOLD = 65536;
+
+private:
+    uint64_t                           mCountRecv;
+    uint64_t                           mCountSent;
+    uint32_t                           mAppId;
+#ifdef MOZ_WIDGET_GONK
+    nsMainThreadPtrHandle<nsINetworkInterface> mActiveNetwork;
+#endif
+    nsresult                           SaveNetworkStats(bool);
+    void                               GetActiveNetwork();
+    void                               CountRecvBytes(uint64_t recvBytes)
+    {
+        mCountRecv += recvBytes;
+        SaveNetworkStats(false);
+    }
+    void                               CountSentBytes(uint64_t sentBytes)
+    {
+        mCountSent += sentBytes;
+        SaveNetworkStats(false);
+    }
 };
 
 #endif // nsHttpTransaction_h__

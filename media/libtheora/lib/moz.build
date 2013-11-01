@@ -24,6 +24,41 @@ SOURCES += [
     'state.c',
 ]
 
+if CONFIG['OS_TEST'] == 'arm' and CONFIG['GNU_AS']:
+    GENERATED_SOURCES += [ '%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
+        'armbits-gnu',
+        'armfrag-gnu',
+        'armidct-gnu',
+        'armloop-gnu',
+    ]]
+
+if '86' in CONFIG['OS_TEST']:
+    if CONFIG['_MSC_VER']:
+        if '64' not in CONFIG['OS_TEST']:
+            SOURCES += [
+                'x86_vc/mmxfrag.c',
+                'x86_vc/mmxidct.c',
+                'x86_vc/mmxstate.c',
+                'x86_vc/x86cpu.c',
+                'x86_vc/x86state.c',
+            ]
+    else:
+        SOURCES += [
+            'x86/mmxfrag.c',
+            'x86/mmxidct.c',
+            'x86/mmxstate.c',
+            'x86/sse2idct.c',
+            'x86/x86cpu.c',
+            'x86/x86state.c',
+        ]
+
+if CONFIG['GNU_AS']:
+    if 'arm' in CONFIG['OS_TEST']:
+        SOURCES += [
+            'arm/armcpu.c',
+            'arm/armstate.c',
+        ]
+
 MSVC_ENABLE_PGO = True
 
 FORCE_STATIC_LIB = True

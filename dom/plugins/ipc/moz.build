@@ -61,8 +61,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
 
 if CONFIG['MOZ_ENABLE_QT']:
-    SOURCES += [
+    GENERATED_SOURCES += [
         'moc_NestedLoopTimer.cpp',
+    ]
+    SOURCES += [
         'NestedLoopTimer.cpp',
     ]
 

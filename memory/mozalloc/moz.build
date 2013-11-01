@@ -11,9 +11,7 @@ EXPORTS.mozilla += [
     'fallible.h',
     'mozalloc.h',
     'mozalloc_abort.h',
-    'mozalloc_macro_wrappers.h',
     'mozalloc_oom.h',
-    'mozalloc_undef_macro_wrappers.h',
 ]
 
 if CONFIG['MOZ_MSVC_STL_WRAP__RAISE'] or CONFIG['MOZ_MSVC_STL_WRAP__Throw']:

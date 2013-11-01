@@ -123,6 +123,29 @@ if os_win:
         'src/chrome/common/process_watcher_win.cc',
         'src/chrome/common/transport_dib_win.cc',
     ]
+else:
+    SOURCES += [
+        'src/third_party/libevent/buffer.c',
+        'src/third_party/libevent/bufferevent.c',
+        'src/third_party/libevent/bufferevent_ratelim.c',
+        'src/third_party/libevent/bufferevent_sock.c',
+        'src/third_party/libevent/evdns.c',
+        'src/third_party/libevent/event.c',
+        'src/third_party/libevent/event_tagging.c',
+        'src/third_party/libevent/evmap.c',
+        'src/third_party/libevent/evrpc.c',
+        'src/third_party/libevent/evthread.c',
+        'src/third_party/libevent/evthread_pthread.c',
+        'src/third_party/libevent/evutil.c',
+        'src/third_party/libevent/evutil_rand.c',
+        'src/third_party/libevent/http.c',
+        'src/third_party/libevent/listener.c',
+        'src/third_party/libevent/log.c',
+        'src/third_party/libevent/poll.c',
+        'src/third_party/libevent/select.c',
+        'src/third_party/libevent/signal.c',
+        'src/third_party/libevent/strlcpy.c',
+    ]
 
 if os_posix:
     SOURCES += [
@@ -180,6 +203,9 @@ if os_macosx:
         'src/chrome/common/chrome_paths_mac.mm',
         'src/chrome/common/mach_ipc_mac.mm',
     ]
+    SOURCES += [
+        'src/third_party/libevent/kqueue.c',
+    ]
 
 if os_linux:
     SOURCES += [
@@ -197,8 +223,17 @@ if os_linux:
     if CONFIG['MOZ_ENABLE_QT']:
         SOURCES += [
             'src/base/message_pump_qt.cc',
+        ]
+        GENERATED_SOURCES += [
             'src/base/moc_message_pump_qt.cc',
         ]
+    if CONFIG['OS_TARGET'] != 'Android':
+        SOURCES += [
+            'src/third_party/libevent/epoll_sub.c',
+        ]
+    SOURCES += [
+        'src/third_party/libevent/epoll.c',
+    ]
 
 if os_bsd:
     SOURCES += [
@@ -220,8 +255,13 @@ if os_bsd:
     if CONFIG['MOZ_ENABLE_QT']:
         SOURCES += [
             'src/base/message_pump_qt.cc',
+        ]
+        GENERATED_SOURCES += [
             'src/base/moc_message_pump_qt.cc',
         ]
+    SOURCES += [
+        'src/third_party/libevent/kqueue.c',
+    ]
 
 if CONFIG['_MSC_VER']:
     SOURCES += [

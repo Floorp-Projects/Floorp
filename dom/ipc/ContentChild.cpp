@@ -383,10 +383,26 @@ ContentChild::SetProcessName(const nsAString& aName)
     mozilla::ipc::SetThisProcessName(NS_LossyConvertUTF16toASCII(aName).get());
 }
 
-const void
+void
 ContentChild::GetProcessName(nsAString& aName)
 {
     aName.Assign(mProcessName);
+}
+
+void
+ContentChild::GetProcessName(nsACString& aName)
+{
+    aName.Assign(NS_ConvertUTF16toUTF8(mProcessName));
+}
+
+/* static */ void
+ContentChild::AppendProcessId(nsACString& aName)
+{
+    if (!aName.IsEmpty()) {
+        aName.AppendLiteral(" ");
+    }
+    unsigned pid = getpid();
+    aName.Append(nsPrintfCString("(pid %u)", pid));
 }
 
 void
@@ -469,7 +485,9 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
 
     InfallibleTArray<MemoryReport> reports;
 
-    nsPrintfCString process("Content (%d)", getpid());
+    nsCString process;
+    GetProcessName(process);
+    AppendProcessId(process);
 
     // Run each reporter.  The callback will turn each measurement into a
     // MemoryReport.

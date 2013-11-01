@@ -56,8 +56,8 @@ ContentPermissionPrompt.prototype = {
     return chromeWin.Browser.getNotificationBox(request.element);
   },
 
-  handleExistingPermission: function handleExistingPermission(request, type) {
-    let result = Services.perms.testExactPermissionFromPrincipal(request.principal, type);
+  handleExistingPermission: function handleExistingPermission(request) {
+    let result = Services.perms.testExactPermissionFromPrincipal(request.principal, request.type);
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       request.allow();
       return true;
@@ -70,28 +70,20 @@ ContentPermissionPrompt.prototype = {
   },
 
   prompt: function(request) {
-    // Only allow exactly one permission rquest here.
-    let types = request.types.QueryInterface(Ci.nsIArray);
-    if (types.length != 1) {
-      request.cancel();
-      return;
-    }
-    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
-
     // returns true if the request was handled
-    if (this.handleExistingPermission(request, perm.type))
+    if (this.handleExistingPermission(request))
        return;
 
     let pm = Services.perms;
     let notificationBox = this.getNotificationBoxForRequest(request);
     let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
     
-    let notification = notificationBox.getNotificationWithValue(perm.type);
+    let notification = notificationBox.getNotificationWithValue(request.type);
     if (notification)
       return;
 
-    let entityName = kEntities[perm.type];
-    let icon = kIcons[perm.type] || "";
+    let entityName = kEntities[request.type];
+    let icon = kIcons[request.type] || "";
 
     let buttons = [{
       label: browserBundle.GetStringFromName(entityName + ".allow"),
@@ -104,7 +96,7 @@ ContentPermissionPrompt.prototype = {
       label: browserBundle.GetStringFromName("contentPermissions.alwaysForSite"),
       accessKey: "",
       callback: function(notification) {
-        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.ALLOW_ACTION);
+        Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.ALLOW_ACTION);
         request.allow();
       }
     },
@@ -112,7 +104,7 @@ ContentPermissionPrompt.prototype = {
       label: browserBundle.GetStringFromName("contentPermissions.neverForSite"),
       accessKey: "",
       callback: function(notification) {
-        Services.perms.addFromPrincipal(request.principal, perm.type, Ci.nsIPermissionManager.DENY_ACTION);
+        Services.perms.addFromPrincipal(request.principal, request.type, Ci.nsIPermissionManager.DENY_ACTION);
         request.cancel();
       }
     }];
@@ -120,12 +112,12 @@ ContentPermissionPrompt.prototype = {
     let message = browserBundle.formatStringFromName(entityName + ".wantsTo",
                                                      [request.principal.URI.host], 1);
     let newBar = notificationBox.appendNotification(message,
-                                                    perm.type,
+                                                    request.type,
                                                     icon,
                                                     notificationBox.PRIORITY_WARNING_MEDIUM,
                                                     buttons);
 
-    if (perm.type == "geolocation") {
+    if (request.type == "geolocation") {
       // Add the "learn more" link.
       let link = newBar.ownerDocument.createElement("label");
       link.setAttribute("value", browserBundle.GetStringFromName("geolocation.learnMore"));

@@ -10,7 +10,6 @@ DEFINES += \
   -DGAIA_PATH=L\"$(subst /,\\\\,$(GAIA_PATH))\" \
   $(NULL)
 else # Non-windows machines use the same wrapper program
-CSRCS = run-b2g.c
 DEFINES += \
   -DB2G_NAME=\"$(MOZ_APP_NAME)-bin$(BIN_SUFFIX)\" \
   -DGAIA_PATH=\"$(GAIA_PATH)\" \

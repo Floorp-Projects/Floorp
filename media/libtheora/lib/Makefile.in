@@ -17,44 +17,8 @@ endif
 endif
 endif
 
-VPATH := $(srcdir)
-
-ifeq ($(findstring 86,$(OS_TEST)), 86)
-ifdef _MSC_VER
-ifneq (64,$(findstring 64,$(OS_TEST)))
-VPATH += $(srcdir)/x86_vc
-
-CSRCS += \
-  mmxidct.c \
-  mmxfrag.c \
-  mmxstate.c \
-  x86state.c \
-  x86cpu.c \
-  $(NULL)
-endif
-else
-VPATH += $(srcdir)/x86
-
-CSRCS += \
-  mmxidct.c \
-  mmxfrag.c \
-  mmxstate.c \
-  sse2idct.c \
-  x86state.c \
-  x86cpu.c \
-  $(NULL)
-endif
-endif
-
 ifdef GNU_AS
 ifeq ($(findstring arm,$(OS_TEST)), arm)
-
-VPATH += $(srcdir)/arm
-
-CSRCS += \
-  armcpu.c \
-  armstate.c \
-  $(NULL)
 
 DEFINES += -DOC_ARM_ASM -DOC_ARM_ASM_EDSP -DOC_ARM_ASM_MEDIA -DOC_ARM_ASM_NEON
 
@@ -74,18 +38,12 @@ armloop-gnu.$(ASM_SUFFIX): armopts-gnu.S
 
 # armopts needs a specific rule, because arm2gnu.pl will always add the .S
 # suffix when translating the files that include it.
-armopts-gnu.S: armopts.s
+armopts-gnu.S: arm/armopts.s
 	$(PERL) $(srcdir)/arm/arm2gnu.pl < $< > $@
 # For all others, we can use an implicit rule with the configured $(ASM_SUFFIX).
-%-gnu.$(ASM_SUFFIX): %.s
+%-gnu.$(ASM_SUFFIX): arm/%.s
 	$(PERL) $(srcdir)/arm/arm2gnu.pl < $< > $@
 
-ASFILES += $(addsuffix .$(ASM_SUFFIX), \
-  armbits-gnu \
-  armfrag-gnu \
-  armidct-gnu \
-  armloop-gnu \
-)
 endif
 endif
 

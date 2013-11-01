@@ -52,7 +52,7 @@ function run_test()
   // Test sync XHR sending
   cu.evalInSandbox('var createXHR = ' + createXHR.toString(), sb);
   var res = cu.evalInSandbox('var sync = createXHR("4444/simple"); sync.send(null); sync', sb);
-  checkResults(res);
+  do_check_true(checkResults(res));
 
   // negative test sync XHR sending (to ensure that the xhr do not have chrome caps, see bug 779821)
   try {

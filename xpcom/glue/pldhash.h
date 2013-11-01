@@ -186,6 +186,13 @@ struct PLDHashTable {
     const PLDHashTableOps *ops;         /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
     int16_t             hashShift;      /* multiplicative hash shift */
+    /*
+     * |recursionLevel| is only used in debug builds, but is present in opt
+     * builds to avoid binary compatibility problems when mixing DEBUG and
+     * non-DEBUG components.  (Actually, even if it were removed,
+     * sizeof(PLDHashTable) wouldn't change, due to struct padding.)
+     */
+    uint16_t            recursionLevel; /* used to detect unsafe re-entry */
     uint32_t            entrySize;      /* number of bytes in an entry */
     uint32_t            entryCount;     /* number of entries in table */
     uint32_t            removedCount;   /* removed entry sentinels in table */
