@@ -29,8 +29,9 @@ using mozilla::DebugOnly;
 
 using namespace js;
 
-const Class js::TypedObjectClass = {
+const Class js::TypedObjectModuleObject::class_ = {
     "TypedObject",
+    JSCLASS_HAS_RESERVED_SLOTS(SlotCount) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_TypedObject),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
@@ -903,6 +904,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     if (!GetPropertyNames(cx, fields, JSITER_OWNONLY, &ids))
         return false;
 
+    AutoPropertyNameVector fieldNames(cx);
     AutoValueVector fieldTypeObjs(cx);
     AutoObjectVector fieldTypeReprObjs(cx);
 
@@ -911,15 +913,21 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     for (unsigned int i = 0; i < ids.length(); i++) {
         id = ids[i];
 
-        if (!JSObject::getGeneric(cx, fields, fields, id, &fieldTypeVal))
-            return false;
-
-        uint32_t index;
-        if (js_IdIsIndex(id, &index)) {
+        // Check that all the property names are non-numeric strings.
+        uint32_t unused;
+        if (!JSID_IS_ATOM(id) || JSID_TO_ATOM(id)->isIndex(&unused)) {
             RootedValue idValue(cx, IdToJsval(id));
             ReportCannotConvertTo(cx, idValue, "StructType field name");
             return false;
         }
+
+        if (!fieldNames.append(JSID_TO_ATOM(id)->asPropertyName())) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+
+        if (!JSObject::getGeneric(cx, fields, fields, id, &fieldTypeVal))
+            return false;
 
         RootedObject fieldType(cx, ToObjectIfObject(fieldTypeVal));
         if (!fieldType || !IsSizedTypeObject(*fieldType)) {
@@ -939,8 +947,8 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
     }
 
     // Construct the `TypeRepresentation*`.
-    RootedObject typeReprObj(
-        cx, StructTypeRepresentation::Create(cx, ids, fieldTypeReprObjs));
+    RootedObject typeReprObj(cx);
+    typeReprObj = StructTypeRepresentation::Create(cx, fieldNames, fieldTypeReprObjs);
     if (!typeReprObj)
         return false;
     StructTypeRepresentation *typeRepr =
@@ -986,7 +994,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
         cx, NewObjectWithClassProto(cx, &JSObject::class_, nullptr, nullptr));
     for (size_t i = 0; i < typeRepr->fieldCount(); i++) {
         const StructField &field = typeRepr->field(i);
-        RootedId fieldId(cx, field.id);
+        RootedId fieldId(cx, NameToId(field.propertyName));
 
         // fieldOffsets[id] = offset
         RootedValue offset(cx, NumberValue(field.offset));
@@ -1348,7 +1356,9 @@ X4Type::call(JSContext *cx, unsigned argc, Value *vp)
 template<typename T>
 static JSObject *
 DefineMetaTypeObject(JSContext *cx,
-                     Handle<GlobalObject*> global)
+                     Handle<GlobalObject*> global,
+                     HandleObject module,
+                     TypedObjectModuleObject::Slot protoSlot)
 {
     RootedAtom className(cx, Atomize(cx, T::class_.name,
                                      strlen(T::class_.name)));
@@ -1402,11 +1412,34 @@ DefineMetaTypeObject(JSContext *cx,
         return nullptr;
     }
 
+    module->initReservedSlot(protoSlot, ObjectValue(*proto));
+
     return ctor;
 }
 
+bool
+GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
+{
+    RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
+    if (!objProto)
+        return false;
+
+    RootedObject module(cx, NewObjectWithClassProto(cx, &TypedObjectModuleObject::class_,
+                                                    objProto, global));
+    if (!module)
+        return false;
+
+    if (!JS_DefineFunctions(cx, module, TypedObjectMethods))
+        return false;
+
+    RootedValue moduleValue(cx, ObjectValue(*module));
+
+    global->setConstructor(JSProto_TypedObject, moduleValue);
+    return true;
+}
+
 JSObject *
-js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
+js_InitTypedObjectModuleObject(JSContext *cx, HandleObject obj)
 {
     /*
      * The initialization strategy for TypedObjects is mildly unusual
@@ -1419,16 +1452,8 @@ js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
     JS_ASSERT(obj->is<GlobalObject>());
     Rooted<GlobalObject *> global(cx, &obj->as<GlobalObject>());
 
-    RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
-    if (!objProto)
-        return nullptr;
-
-    RootedObject module(cx, NewObjectWithGivenProto(cx, &JSObject::class_,
-                                                    objProto, global));
+    RootedObject module(cx, global->getOrCreateTypedObjectModule(cx));
     if (!module)
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, module, TypedObjectMethods))
         return nullptr;
 
     // Define TypedObject global.
@@ -1485,7 +1510,9 @@ js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
 
     // ArrayType.
 
-    RootedObject arrayType(cx, DefineMetaTypeObject<ArrayType>(cx, global));
+    RootedObject arrayType(cx);
+    arrayType = DefineMetaTypeObject<ArrayType>(
+        cx, global, module, TypedObjectModuleObject::ArrayTypePrototype);
     if (!arrayType)
         return nullptr;
 
@@ -1498,7 +1525,9 @@ js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
 
     // StructType.
 
-    RootedObject structType(cx, DefineMetaTypeObject<StructType>(cx, global));
+    RootedObject structType(cx);
+    structType = DefineMetaTypeObject<StructType>(
+        cx, global, module, TypedObjectModuleObject::StructTypePrototype);
     if (!structType)
         return nullptr;
 
@@ -1508,15 +1537,6 @@ js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
                                   nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
         return nullptr;
-
-    // Everything is setup, install module on the global object:
-    if (!JSObject::defineProperty(cx, global, cx->names().TypedObject,
-                                  moduleValue,
-                                  nullptr, nullptr,
-                                  0))
-        return nullptr;
-    global->setConstructor(JSProto_TypedObject, moduleValue);
-    global->setArrayType(arrayType);
 
     //  Handle
 
@@ -1536,6 +1556,13 @@ js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
         return nullptr;
     }
 
+    // Everything is setup, install module on the global object:
+    if (!JSObject::defineProperty(cx, global, cx->names().TypedObject,
+                                  moduleValue,
+                                  nullptr, nullptr,
+                                  0))
+        return nullptr;
+
     return module;
 }
 
@@ -1549,6 +1576,47 @@ js_InitTypedObjectDummy(JSContext *cx, HandleObject obj)
      */
 
     MOZ_ASSUME_UNREACHABLE("shouldn't be initializing TypedObject via the JSProtoKey initializer mechanism");
+}
+
+bool
+TypedObjectModuleObject::getSuitableClaspAndProto(JSContext *cx,
+                                                  TypeRepresentation::Kind kind,
+                                                  const Class **clasp,
+                                                  MutableHandleObject proto)
+{
+    switch (kind) {
+      case TypeRepresentation::Scalar:
+        *clasp = &ScalarType::class_;
+        proto.set(global().getOrCreateFunctionPrototype(cx));
+        break;
+
+      case TypeRepresentation::Reference:
+        *clasp = &ReferenceType::class_;
+        proto.set(global().getOrCreateFunctionPrototype(cx));
+        break;
+
+      case TypeRepresentation::X4:
+        *clasp = &X4Type::class_;
+        proto.set(global().getOrCreateFunctionPrototype(cx));
+        break;
+
+      case TypeRepresentation::Struct:
+        *clasp = &StructType::class_;
+        proto.set(&getSlot(StructTypePrototype).toObject());
+        break;
+
+      case TypeRepresentation::SizedArray:
+        *clasp = &ArrayType::class_;
+        proto.set(&getSlot(ArrayTypePrototype).toObject());
+        break;
+
+      case TypeRepresentation::UnsizedArray:
+        *clasp = &ArrayType::class_;
+        proto.set(&getSlot(ArrayTypePrototype).toObject());
+        break;
+    }
+
+    return !!proto;
 }
 
 /******************************************************************************
@@ -1617,8 +1685,12 @@ TypedDatum::createUnattachedWithClass(JSContext *cx,
         RootedTypeObject typeObj(cx, obj->getType(cx));
         if (typeObj) {
             TypeRepresentation *typeRepr = typeRepresentation(*type);
-            if (!typeObj->addTypedObjectAddendum(cx, typeRepr))
+            if (!typeObj->addTypedObjectAddendum(cx,
+                                                 types::TypeTypedObject::Datum,
+                                                 typeRepr))
+            {
                 return nullptr;
+            }
         }
     }
 
@@ -2367,7 +2439,7 @@ TypedDatum::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
             index = static_cast<uint32_t>(statep.toInt32());
 
             if (index < typeRepr->asStruct()->fieldCount()) {
-                idp.set(typeRepr->asStruct()->field(index).id);
+                idp.set(NameToId(typeRepr->asStruct()->field(index).propertyName));
                 statep.setInt32(index + 1);
             } else {
                 statep.setNull();
@@ -2787,11 +2859,11 @@ const JSJitInfo js::MemcpyJitInfo =
         JSParallelNativeThreadSafeWrapper<js::Memcpy>);
 
 bool
-js::StandardTypeObjectDescriptors(JSContext *cx, unsigned argc, Value *vp)
+js::GetTypedObjectModule(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<GlobalObject*> global(cx, cx->global());
-    args.rval().setObject(global->getTypedObject());
+    args.rval().setObject(global->getTypedObjectModule());
     return true;
 }
 
