@@ -98,7 +98,7 @@ FrameworkView::Run()
   mMetroApp->Run();
 
   // Gecko is completely shut down at this point.
-  Log("Exiting FrameworkView::Run()");
+  WinUtils::Log("Exiting FrameworkView::Run()");
 
   return S_OK;
 }
@@ -463,10 +463,9 @@ FrameworkView::OnAutomationProviderRequested(ICoreWindow* aSender,
   LogFunction();
   if (!EnsureAutomationProviderCreated())
     return E_FAIL;
-  Log("OnAutomationProviderRequested %X", mAutomationProvider.Get());
   HRESULT hr = aArgs->put_AutomationProvider(mAutomationProvider.Get());
   if (FAILED(hr)) {
-    Log("put failed? %X", hr);
+    WinUtils::Log("put failed? %X", hr);
   }
   return S_OK;
 }
