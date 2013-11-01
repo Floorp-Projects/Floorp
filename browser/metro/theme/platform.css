@@ -565,46 +565,6 @@ notificationbox[count="3"] .notification-layer[anonid="layer2"] {
   border: none;
 }
 
-/* Arrowbox ---------------------------------------------------------------- */
-
-arrowbox {
-  -moz-appearance: none;
-  background: transparent;
-  border: none;
-}
-
-.arrowbox-dark .panel-arrowcontent {
-  color: white;
-  background: @panel_dark_color@;
-}
-
-.arrowbox-dark .panel-arrowcontent {
-  border: @border_width_large@ solid white;
-  border-radius: @border_radius_normal@;
-  box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
-}
-
-.panel-arrow[side="top"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
-  margin-bottom: -@margin_normal@;
-}
-
-.panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
-  margin-top: -@margin_normal@;
-}
-
-.panel-arrow[side="left"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-right: -@margin_normal@;
-  transform: scaleX(-1);
-}
-
-.panel-arrow[side="right"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-left: -@margin_normal@;
-}
-
 /*.meta -------------------------------------------------------------------- */
 
 .meta {
