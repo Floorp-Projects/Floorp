@@ -157,6 +157,11 @@ static const struct arabic_state_table_entry {
 
 
 static void
+nuke_joiners (const hb_ot_shape_plan_t *plan,
+	      hb_font_t *font,
+	      hb_buffer_t *buffer);
+
+static void
 arabic_fallback_shape (const hb_ot_shape_plan_t *plan,
 		       hb_font_t *font,
 		       hb_buffer_t *buffer);
@@ -175,6 +180,8 @@ collect_features_arabic (hb_ot_shape_planner_t *plan)
    *
    * TODO: Add test cases for these two.
    */
+
+  map->add_gsub_pause (nuke_joiners);
 
   map->add_global_bool_feature (HB_TAG('c','c','m','p'));
   map->add_global_bool_feature (HB_TAG('l','o','c','l'));
@@ -273,7 +280,8 @@ arabic_joining (hb_buffer_t *buffer)
     const arabic_state_table_entry *entry = &arabic_state_table[state][this_type];
 
     if (entry->prev_action != NONE && prev != (unsigned int) -1)
-      buffer->info[prev].arabic_shaping_action() = entry->prev_action;
+      for (; prev < i; prev++)
+	buffer->info[prev].arabic_shaping_action() = entry->prev_action;
 
     buffer->info[i].arabic_shaping_action() = entry->curr_action;
 
@@ -312,6 +320,17 @@ setup_masks_arabic (const hb_ot_shape_plan_t *plan,
     buffer->info[i].mask |= arabic_plan->mask_array[buffer->info[i].arabic_shaping_action()];
 }
 
+
+static void
+nuke_joiners (const hb_ot_shape_plan_t *plan HB_UNUSED,
+	      hb_font_t *font HB_UNUSED,
+	      hb_buffer_t *buffer)
+{
+  unsigned int count = buffer->len;
+  for (unsigned int i = 0; i < count; i++)
+    if (_hb_glyph_info_is_zwj (&buffer->info[i]))
+      _hb_glyph_info_flip_joiners (&buffer->info[i]);
+}
 
 static void
 arabic_fallback_shape (const hb_ot_shape_plan_t *plan,

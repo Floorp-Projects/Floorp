@@ -7,6 +7,7 @@
 #ifndef gc_Zone_h
 #define gc_Zone_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
@@ -225,7 +226,9 @@ struct Zone : public JS::shadow::Zone,
         return gcState == Finished;
     }
 
-    volatile size_t              gcBytes;
+    /* This is updated by both the main and GC helper threads. */
+    mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes;
+
     size_t                       gcTriggerBytes;
     size_t                       gcMaxMallocBytes;
     double                       gcHeapGrowthFactor;
