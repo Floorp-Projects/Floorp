@@ -334,6 +334,8 @@ public:
    */
   float ComputeRenderIntegrity();
 
+  gfx3DMatrix mProjMatrix;
+
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;
@@ -410,11 +412,6 @@ private:
    * Copies the content of our backbuffer to the set transaction target.
    */
   void CopyToTarget(gfxContext *aTarget);
-
-  /**
-   * Updates all layer programs with a new projection matrix.
-   */
-  void SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix);
 
   /**
    * Helper method for Initialize, creates all valid variations of a program

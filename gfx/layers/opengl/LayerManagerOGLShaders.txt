@@ -149,9 +149,7 @@ precision lowp float;
 @define LAYER_FRAGMENT<>
 $FRAGMENT_SHADER_HEADER$
 
-#ifndef NO_LAYER_OPACITY
 uniform float uLayerOpacity;
-#endif
 
 #ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range
 varying mediump vec2 vTexCoord;
@@ -333,7 +331,59 @@ $FRAGMENT_CALC_MASK<mask>$
 }
 @end
 
-// Three textures, representing YCbCr planes of a video image.
+@shader sUnifiedLayerVS
+/* Vertex Shader */
+
+uniform mat4 uMatrixProj;
+uniform mat4 uLayerQuadTransform;
+uniform mat4 uLayerTransform;
+uniform vec4 uRenderTargetOffset;
+
+attribute vec4 aVertexCoord;
+
+#ifndef ENABLE_RENDER_COLOR
+uniform mat4 uTextureTransform;
+attribute vec2 aTexCoord;
+
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range
+varying mediump vec2 vTexCoord;
+#else
+varying vec2 vTexCoord;
+#endif
+#endif
+
+#ifdef ENABLE_MASK
+uniform mat4 uMaskQuadTransform;
+varying vec3 vMaskCoord;
+#endif
+
+void main()
+{
+  vec4 finalPosition = aVertexCoord;
+  finalPosition = uLayerQuadTransform * finalPosition;
+  finalPosition = uLayerTransform * finalPosition;
+  finalPosition.xyz /= finalPosition.w;
+
+#ifdef ENABLE_MASK
+  vMaskCoord.xy = (uMaskQuadTransform * vec4(finalPosition.xyz, 1.0)).xy;
+  // correct for perspective correct interpolation, see comment in D3D10 shader
+  vMaskCoord.z = 1.0;
+  vMaskCoord *= finalPosition.w;
+#endif
+
+  finalPosition = finalPosition - uRenderTargetOffset;
+  finalPosition.xyz *= finalPosition.w;
+  finalPosition = uMatrixProj * finalPosition;
+
+#ifndef ENABLE_RENDER_COLOR
+  vTexCoord = (uTextureTransform * vec4(aTexCoord.x, aTexCoord.y, 0.0, 1.0)).xy;
+#endif
+
+  gl_Position = finalPosition;
+}
+@end
+
+// Layer fragment shader
 //
 // Some older versions of the Tegra 2 android driver have a bug
 // where arithmetic ops on a texture read are just ignored.  So,
@@ -342,22 +392,76 @@ $FRAGMENT_CALC_MASK<mask>$
 // rendering -- see bug 765150.  Doing them separately like below
 // makes it all OK.  We don't know if this is special to constants,
 // special to 0.5, special to addition/subtraction, etc.
-@shader sYCbCrTextureLayer<mask:,Mask>FS
-$LAYER_FRAGMENT<mask>$
+@shader sUnifiedLayerFS
 #ifdef GL_ES
-precision mediump float;
+precision lowp float;
 #endif
+
+#ifdef ENABLE_RENDER_COLOR
+uniform vec4 uRenderColor;
+#else
+#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range
+varying mediump vec2 vTexCoord;
+#else
+varying vec2 vTexCoord;
+#endif
+#ifdef ENABLE_OPACITY
+uniform float uLayerOpacity;
+#endif
+#endif
+
+#ifdef ENABLE_TEXTURE_RECT
+#extension GL_ARB_texture_rectangle : require
+#define sampler2D sampler2DRect
+#define texture2D texture2DRect
+#endif
+
+#ifdef ENABLE_TEXTURE_EXTERNAL
+#extension GL_OES_EGL_image_external : require
+#define sampler2D samplerExternalOES
+#endif
+
+#ifdef ENABLE_TEXTURE_YCBCR
 uniform sampler2D uYTexture;
 uniform sampler2D uCbTexture;
 uniform sampler2D uCrTexture;
+#else
+#ifdef ENABLE_TEXTURE_COMPONENT_ALPHA
+uniform sampler2D uBlackTexture;
+uniform sampler2D uWhiteTexture;
+uniform bool uTexturePass2;
+#else
+uniform sampler2D uTexture;
+#endif
+#endif
 
-void main()
+#ifdef ENABLE_BLUR
+uniform bool uBlurAlpha;
+uniform vec2 uBlurRadius;
+uniform vec2 uBlurOffset;
+#define GAUSSIAN_KERNEL_HALF_WIDTH 11
+#define GAUSSIAN_KERNEL_STEP 0.2
+uniform float uBlurGaussianKernel[GAUSSIAN_KERNEL_HALF_WIDTH];
+#endif
+
+#ifdef ENABLE_COLOR_MATRIX
+uniform mat4 uColorMatrix;
+uniform vec4 uColorMatrixVector;
+#endif
+
+#ifdef ENABLE_MASK
+varying vec3 vMaskCoord;
+uniform sampler2D uMaskTexture;
+#endif
+
+vec4 sample(vec2 coord)
 {
   vec4 color;
 
-  float y = texture2D(uYTexture, vTexCoord).r;
-  float cb = texture2D(uCbTexture, vTexCoord).r;
-  float cr = texture2D(uCrTexture, vTexCoord).r;
+#ifdef ENABLE_TEXTURE_YCBCR
+  float y = texture2D(uYTexture, coord).r;
+  float cb = texture2D(uCbTexture, coord).r;
+  float cr = texture2D(uCrTexture, coord).r;
 
   y = (y - 0.0625) * 1.164;
   cb = cb - 0.5;
@@ -367,8 +471,77 @@ void main()
   color.g = y - 0.813 * cr - 0.391 * cb;
   color.b = y + cb * 2.018;
   color.a = 1.0;
-$FRAGMENT_CALC_MASK<mask>$
-  gl_FragColor = color * uLayerOpacity * mask;
+#else
+#ifdef ENABLE_TEXTURE_COMPONENT_ALPHA
+  vec3 onBlack = texture2D(uBlackTexture, coord).rgb;
+  vec3 onWhite = texture2D(uWhiteTexture, coord).rgb;
+  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+  if (uTexturePass2)
+    color = vec4(onBlack, alphas.a);
+  else
+    color = alphas;
+#else
+  color = texture2D(uTexture, coord);
+#endif
+#endif
+#ifdef ENABLE_TEXTURE_RB_SWAP
+  color = color.bgra;
+#endif
+#ifdef ENABLE_TEXTURE_NO_ALPHA
+  color = vec4(color.rgb, 1.0);
+#endif
+  return color;
+}
+
+#ifdef ENABLE_BLUR
+vec4 sampleAtRadius(vec2 coord, float radius) {
+  coord += uBlurOffset;
+  coord += radius * uBlurRadius;
+  if (coord.x < 0. || coord.y < 0. || coord.x > 1. || coord.y > 1.)
+    return vec4(0, 0, 0, 0);
+  return sample(coord);
+}
+
+vec4 blur(vec4 color, vec2 coord) {
+  vec4 total = color * uBlurGaussianKernel[0];
+  for (int i = 1; i < GAUSSIAN_KERNEL_HALF_WIDTH; ++i) {
+    float r = float(i) * GAUSSIAN_KERNEL_STEP;
+    float k = uBlurGaussianKernel[i];
+    total += sampleAtRadius(coord, r) * k;
+    total += sampleAtRadius(coord, -r) * k;
+  }
+  if (uBlurAlpha) {
+    color *= total.a;
+  } else {
+    color = total;
+  }
+  return color;
+}
+#endif
+
+void main()
+{
+  vec4 color;
+#ifdef ENABLE_RENDER_COLOR
+  color = uRenderColor;
+#else
+  color = sample(vTexCoord);
+#ifdef ENABLE_BLUR
+  color = blur(color, vTexCoord);
+#endif
+#ifdef ENABLE_COLOR_MATRIX
+  color = uColorMatrix * vec4(color.rgb / color.a, color.a) + uColorMatrixVector;
+  color.rgb *= color.a;
+#endif
+#ifdef ENABLE_OPACITY
+  color *= uLayerOpacity;
+#endif
+#endif
+#ifdef ENABLE_MASK
+  vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;
+  color *= texture2D(uMaskTexture, maskCoords).r;
+#endif
+  gl_FragColor = color;
 }
 @end
 

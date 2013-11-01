@@ -261,6 +261,7 @@ ImageLayerOGL::RenderLayer(int,
                                                         GetMaskLayer());
 
     program->Activate();
+    program->SetProjectionMatrix(mOGLManager->mProjMatrix);
     program->SetLayerQuadRect(nsIntRect(0, 0,
                                         yuvImage->GetSize().width,
                                         yuvImage->GetSize().height));
@@ -320,6 +321,7 @@ ImageLayerOGL::RenderLayer(int,
     gl()->ApplyFilterToBoundTexture(mFilter);
 
     program->Activate();
+    program->SetProjectionMatrix(mOGLManager->mProjMatrix);
     program->SetLayerQuadRect(nsIntRect(0, 0, 
                                         cairoImage->GetSize().width, 
                                         cairoImage->GetSize().height));
@@ -347,6 +349,7 @@ ImageLayerOGL::RenderLayer(int,
     ShaderProgramOGL* program = mOGLManager->GetProgram(programType, GetMaskLayer());
 
     program->Activate();
+    program->SetProjectionMatrix(mOGLManager->mProjMatrix);
     if (programType == RGBARectLayerProgramType) {
       // 2DRect case, get the multiplier right for a sampler2DRect
       program->SetTexCoordMultiplier(data->mSize.width, data->mSize.height);
