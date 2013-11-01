@@ -353,10 +353,10 @@ enum {
         TYPE_FLAG_OBJECT_COUNT_MASK >> TYPE_FLAG_OBJECT_COUNT_SHIFT,
 
     /* Whether the contents of this type set are totally unknown. */
-    TYPE_FLAG_UNKNOWN             = 0x00010000,
+    TYPE_FLAG_UNKNOWN             = 0x00002000,
 
     /* Mask of normal type flags on a type set. */
-    TYPE_FLAG_BASE_MASK           = 0x000100ff,
+    TYPE_FLAG_BASE_MASK           = 0x000020ff,
 
     /*
      * Flags describing the kind of type set this is.
@@ -372,8 +372,8 @@ enum {
      * - TemporaryTypeSet are created during compilation and do not outlive
      *   that compilation.
      */
-    TYPE_FLAG_STACK_SET           = 0x00020000,
-    TYPE_FLAG_HEAP_SET            = 0x00040000,
+    TYPE_FLAG_STACK_SET           = 0x00004000,
+    TYPE_FLAG_HEAP_SET            = 0x00008000,
 
     /* Additional flags for HeapTypeSet sets. */
 
@@ -382,19 +382,19 @@ enum {
      * differently from a normal native property (e.g. made non-writable or
      * given a scripted getter or setter).
      */
-    TYPE_FLAG_CONFIGURED_PROPERTY = 0x00080000,
+    TYPE_FLAG_CONFIGURED_PROPERTY = 0x00010000,
 
     /*
      * Whether the property is definitely in a particular slot on all objects
      * from which it has not been deleted or reconfigured. For singletons
      * this may be a fixed or dynamic slot, and for other objects this will be
      * a fixed slot.
+     *
+     * If the property is definite, mask and shift storing the slot + 1.
+     * Otherwise these bits are clear.
      */
-    TYPE_FLAG_DEFINITE_PROPERTY   = 0x00100000,
-
-    /* If the property is definite, mask and shift storing the slot. */
-    TYPE_FLAG_DEFINITE_MASK       = 0xffe00000,
-    TYPE_FLAG_DEFINITE_SHIFT      = 21
+    TYPE_FLAG_DEFINITE_MASK       = 0xfffe0000,
+    TYPE_FLAG_DEFINITE_SHIFT      = 17
 };
 typedef uint32_t TypeFlags;
 
@@ -524,10 +524,10 @@ class TypeSet
     bool configuredProperty() const {
         return flags & TYPE_FLAG_CONFIGURED_PROPERTY;
     }
-    bool definiteProperty() const { return flags & TYPE_FLAG_DEFINITE_PROPERTY; }
+    bool definiteProperty() const { return flags & TYPE_FLAG_DEFINITE_MASK; }
     unsigned definiteSlot() const {
         JS_ASSERT(definiteProperty());
-        return flags >> TYPE_FLAG_DEFINITE_SHIFT;
+        return (flags >> TYPE_FLAG_DEFINITE_SHIFT) - 1;
     }
 
     /* Join two type sets into a new set. The result should not be modified further. */
@@ -567,11 +567,11 @@ class TypeSet
         flags |= TYPE_FLAG_CONFIGURED_PROPERTY;
     }
     bool canSetDefinite(unsigned slot) {
-        return slot <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT);
+        return (slot + 1) <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT);
     }
     void setDefinite(unsigned slot) {
         JS_ASSERT(canSetDefinite(slot));
-        flags |= TYPE_FLAG_DEFINITE_PROPERTY | (slot << TYPE_FLAG_DEFINITE_SHIFT);
+        flags |= ((slot + 1) << TYPE_FLAG_DEFINITE_SHIFT);
     }
 
     bool isStackSet() {
