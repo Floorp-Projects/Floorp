@@ -1060,9 +1060,9 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
   *aImageBuffer = nullptr;
   *aFormat = 0;
 
-  EnsureTarget();
-  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
-  if (!snapshot) {
+  nsRefPtr<gfxASurface> surface;
+  nsresult rv = GetThebesSurface(getter_AddRefs(surface));
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -1072,24 +1072,26 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
     return;
   }
 
-  RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(mTarget->GetType(),
-                                     imageBuffer,
-                                     IntSize(mWidth, mHeight),
-                                     mWidth * 4,
-                                     FORMAT_B8G8R8A8);
-  if (!dt) {
+  nsRefPtr<gfxImageSurface> imgsurf =
+    new gfxImageSurface(imageBuffer,
+                        gfxIntSize(mWidth, mHeight),
+                        mWidth * 4,
+                        gfxImageFormatARGB32);
+
+  if (!imgsurf || imgsurf->CairoStatus()) {
     delete[] imageBuffer;
     return;
   }
 
-  IntSize size = snapshot->GetSize();
-  dt->DrawSurface(snapshot,
-                  mgfx::Rect(0, 0, mWidth, mHeight),
-                  mgfx::Rect(0, 0, size.width, size.height),
-                  DrawSurfaceOptions(),
-                  DrawOptions(1.0f, OP_SOURCE));
-  dt->Flush();
+  nsRefPtr<gfxContext> ctx = new gfxContext(imgsurf);
+  if (!ctx || ctx->HasError()) {
+    delete[] imageBuffer;
+    return;
+  }
+
+  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+  ctx->SetSource(surface, gfxPoint(0, 0));
+  ctx->Paint();
 
   *aImageBuffer = imageBuffer;
   *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
