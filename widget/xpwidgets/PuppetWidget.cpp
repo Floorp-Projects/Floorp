@@ -324,8 +324,11 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
 #endif
     if (!mLayerManager) {
       mLayerManager = new ClientLayerManager(this);
-      mLayerManager->AsShadowForwarder()->SetShadowManager(aShadowManager);
     }
+  }
+  ShadowLayerForwarder* lf = mLayerManager->AsShadowForwarder();
+  if (!lf->HasShadowManager() && aShadowManager) {
+    lf->SetShadowManager(aShadowManager);
   }
   if (aAllowRetaining) {
     *aAllowRetaining = true;
