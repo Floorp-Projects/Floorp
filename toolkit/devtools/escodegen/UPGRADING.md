@@ -27,6 +27,8 @@ loader:
 5. Prepend `module.exports = ` to the package.json file contents, so that the
 JSON data is exported, and we can load package.json as a module.
 
+   Bug 933482: Note, this is a workaround for Bug 910594, which will allow the SDK loader to require JSON files. To remove ambiguity, comment out the `require('./package.json').version` line in `escodegen.js` so that when Bug 910594 is uplifted into central, it does not attempt to look for `package.json`, rather than `package.json.js`. This is a temporary workaround, and once Bug 933500 is solved, either `package.json` or `package.json.js` will work.
+
 6. Copy the estraverse.js that escodegen depends on into our tree:
 
        $ cp node_modules/estraverse/estraverse.js /path/to/mozilla-central/devtools/escodegen/estraverse.js
