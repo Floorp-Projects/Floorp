@@ -666,11 +666,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   GetChannel()->CloseClientFileDescriptor();
 
 #ifdef MOZ_WIDGET_COCOA
-  if (!process) {
-    SetErrorState();
-    return false;
-  }
-
   // Wait for the child process to send us its 'task_t' data.
   const int kTimeoutMs = 10000;
 
@@ -680,20 +675,17 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   if (err != KERN_SUCCESS) {
     std::string errString = StringPrintf("0x%x %s", err, mach_error_string(err));
     LOG(ERROR) << "parent WaitForMessage() failed: " << errString;
-    SetErrorState();
     return false;
   }
 
   task_t child_task = child_message.GetTranslatedPort(0);
   if (child_task == MACH_PORT_NULL) {
     LOG(ERROR) << "parent GetTranslatedPort(0) failed.";
-    SetErrorState();
     return false;
   }
 
   if (child_message.GetTranslatedPort(1) == MACH_PORT_NULL) {
     LOG(ERROR) << "parent GetTranslatedPort(1) failed.";
-    SetErrorState();
     return false;
   }
   MachPortSender parent_sender(child_message.GetTranslatedPort(1));
@@ -701,7 +693,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   MachSendMessage parent_message(/* id= */0);
   if (!parent_message.AddDescriptor(bootstrap_port)) {
     LOG(ERROR) << "parent AddDescriptor(" << bootstrap_port << ") failed.";
-    SetErrorState();
     return false;
   }
 
@@ -709,7 +700,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   if (err != KERN_SUCCESS) {
     std::string errString = StringPrintf("0x%x %s", err, mach_error_string(err));
     LOG(ERROR) << "parent SendMessage() failed: " << errString;
-    SetErrorState();
     return false;
   }
 #endif
@@ -770,13 +760,14 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 
 #else
 #  error Sorry
-#endif // OS_POSIX
+#endif
 
   if (!process) {
-    SetErrorState();
+    MonitorAutoLock lock(mMonitor);
+    mProcessState = PROCESS_ERROR;
+    lock.Notify();
     return false;
   }
-
   // NB: on OS X, we block much longer than we need to in order to
   // reach this call, waiting for the child process's task_t.  The
   // best way to fix that is to refactor this file, hard.
