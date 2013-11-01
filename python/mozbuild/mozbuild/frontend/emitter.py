@@ -34,6 +34,7 @@ from .data import (
     Program,
     ReaderSummary,
     SandboxWrapped,
+    SimpleProgram,
     TestWebIDLFile,
     TestManifest,
     VariablePassthru,
@@ -164,7 +165,6 @@ class TreeMetadataEmitter(LoggingMixin):
             OS_LIBS='OS_LIBS',
             SDK_LIBRARY='SDK_LIBRARY',
             SHARED_LIBRARY_LIBS='SHARED_LIBRARY_LIBS',
-            SIMPLE_PROGRAMS='SIMPLE_PROGRAMS',
         )
         for mak, moz in varmap.items():
             if sandbox[moz]:
@@ -231,6 +231,9 @@ class TreeMetadataEmitter(LoggingMixin):
         program = sandbox.get('PROGRAM')
         if program:
             yield Program(sandbox, program, sandbox['CONFIG']['BIN_SUFFIX'])
+
+        for program in sandbox['SIMPLE_PROGRAMS']:
+            yield SimpleProgram(sandbox, program, sandbox['CONFIG']['BIN_SUFFIX'])
 
         simple_lists = [
             ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
