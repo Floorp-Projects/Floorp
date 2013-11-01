@@ -29,91 +29,142 @@
 
     function traverseTextByLines(aQueue, aID, aLines)
     {
-      var baseInvoker = new synthFocus(aID);
-      var baseInvokerID = "move to last line end";
-
       var wholeText = "";
       for (var i = 0; i < aLines.length ; i++)
         wholeText += aLines[i][0] + aLines[i][1];
 
-      for (var i = aLines.length - 1; i >= 0 ; i--) {
-        var cLine = new line(wholeText, aLines, i);
-        var pLine = cLine.prevLine;
-        var ppLine = pLine.prevLine;
-        var nLine = cLine.nextLine;
-        var nnLine = nLine.nextLine;
-
-        // Shared line tests.
-        var lineTests = [
-          [ testTextBeforeOffset, BOUNDARY_LINE_START, pLine.start, cLine.start],
-          [ testTextBeforeOffset, BOUNDARY_LINE_END, ppLine.end, pLine.end],
-          [ testTextAtOffset, BOUNDARY_LINE_START, cLine.start, nLine.start],
-          [ testTextAtOffset, BOUNDARY_LINE_END, pLine.end, cLine.end],
-          [ testTextAfterOffset, BOUNDARY_LINE_START, nLine.start, nnLine.start],
-          [ testTextAfterOffset, BOUNDARY_LINE_END, cLine.end, nLine.end]
-        ];
-
-        // Word tests for "caret at the end of the line".
-        var lastWord = cLine.lastWord;
-        var pLastWord = lastWord.prevWord;
-        var ppLastWord = pLastWord.prevWord;
-        var nLastWord = lastWord.nextWord;
-        var nnLastWord = nLastWord.nextWord;
-        var isAtEnd = (cLine.end == wholeText.length);
-        var isAtWordEnd = (cLine.end = lastWord.end);
-
-        var lineEndWordTests = [
-          [ testTextBeforeOffset, BOUNDARY_WORD_START, pLastWord.start, lastWord.start ],
-          [ testTextBeforeOffset, BOUNDARY_WORD_END, ppLastWord.end, pLastWord.end ],
-          [ testTextAtOffset, BOUNDARY_WORD_START, lastWord.start, nLastWord.start ],
-          [ testTextAtOffset, BOUNDARY_WORD_END,
-            (isAtEnd ? pLastWord : lastWord).end,
-            (isAtEnd ? lastWord : nLastWord).end ],
-          [ testTextAfterOffset, BOUNDARY_WORD_START, nLastWord.start, nnLastWord.start ],
-          [ testTextAfterOffset, BOUNDARY_WORD_END,
-            (isAtWordEnd ? lastWord : nLastWord).end,
-            (isAtWordEnd ? nLastWord : nnLastWord).end ]
-        ];
-
-        // Add "caret at the end of the line" tests.
-        aQueue.push(new tmpl_moveTo(aID, baseInvoker, baseInvokerID, wholeText,
-                                    lineTests.concat(lineEndWordTests),
-                                    cLine.lineEndFailures));
-
-        // Word tests for "caret at the end of the line".
-        var firstWord = cLine.firstWord;
-        var pFirstWord = firstWord.prevWord;
-        var ppFirstWord = pFirstWord.prevWord;
-        var nFirstWord = firstWord.nextWord;
-        var nnFirstWord = nFirstWord.nextWord;
-        var isAtWordBegin = (cLine.start == firstWord.start);
-        var lineStartWordTests = [
-          [ testTextBeforeOffset, BOUNDARY_WORD_START,
-            (isAtWordBegin ? pFirstWord : ppFirstWord).start, 
-            (isAtWordBegin ? firstWord : pFirstWord).start ],
-          [ testTextBeforeOffset, BOUNDARY_WORD_END, ppFirstWord.end, pFirstWord.end ],
-          [ testTextAtOffset, BOUNDARY_WORD_START, 
-            (isAtWordBegin ? firstWord : pFirstWord).start,
-            (isAtWordBegin ?  nFirstWord : firstWord).start ],
-          [ testTextAtOffset, BOUNDARY_WORD_END, pFirstWord.end, firstWord.end ],
-          [ testTextAfterOffset, BOUNDARY_WORD_START,
-            (isAtWordBegin ? nFirstWord : firstWord).start,
-            (isAtWordBegin ? nnFirstWord : nFirstWord).start ],
-          [ testTextAfterOffset, BOUNDARY_WORD_END, firstWord.end, nFirstWord.end ],
-        ];
-
-        baseInvoker = new moveToLineStart(aID, cLine.start);
-        baseInvokerID = "move to " + i + "th line start";
-
-        // Add "caret at the start of the line" tests.
-        aQueue.push(new tmpl_moveTo(aID, baseInvoker, baseInvokerID, wholeText,
-                                    lineTests.concat(lineStartWordTests),
-                                    cLine.lineStartFailures));
-
-        // Next loop invoker to move caret at the end of prev line.
-        baseInvoker = new moveToPrevLineEnd(aID, pLine.end);
-        baseInvokerID = "move to " + (i - 1) + "th line end";
+      var baseInvokerFunc = synthClick;
+      var charIter = new charIterator(wholeText, aLines);
+      //charIter.debugOffset = 0;
+      while (charIter.next()) {
+        aQueue.push(new tmpl_moveTo(aID, baseInvokerFunc, wholeText, charIter));
+        baseInvokerFunc = synthRightKey;
       }
+    }
+
+    /**
+     * Used to get test list for each traversed character.
+     */
+    function charIterator(aWholeText, aLines)
+    {
+      this.next = function charIterator_next()
+      {
+        // Don't increment offset if we are at end of the wrapped line
+        // (offset is shared between end of this line and start of next line).
+        if (this.mAtWrappedLineEnd) {
+          this.mAtWrappedLineEnd = false;
+          this.mLine = this.mLine.nextLine;
+          return true;
+        }
+
+        this.mOffset++;
+        if (this.mOffset > aWholeText.length)
+          return false;
+
+        var nextLine = this.mLine.nextLine;
+        if (!nextLine.isFakeLine() && this.mOffset == nextLine.start) {
+          if (nextLine.start == this.mLine.end)
+            this.mAtWrappedLineEnd = true;
+          else
+            this.mLine = nextLine;
+        }
+
+        return true;
+      }
+
+      Object.defineProperty(this, "offset", { get: function()
+        { return this.mOffset; }
+      });
+
+      Object.defineProperty(this, "offsetDescr", { get: function()
+        {
+          return this.mOffset + " offset (" + this.mLine.number + " line, " +
+            (this.mOffset - this.mLine.start) + " offset on the line)";
+        }
+      });
+
+      Object.defineProperty(this, "tests", { get: function()
+        {
+          // Line boundary tests.
+          var cLine = this.mLine;
+          var pLine = cLine.prevLine;
+          var ppLine = pLine.prevLine;
+          var nLine = cLine.nextLine;
+          var nnLine = nLine.nextLine;
+
+          var lineTests = [
+            [ testTextBeforeOffset, BOUNDARY_LINE_START, pLine.start, cLine.start],
+            [ testTextBeforeOffset, BOUNDARY_LINE_END, ppLine.end, pLine.end],
+            [ testTextAtOffset, BOUNDARY_LINE_START, cLine.start, nLine.start],
+            [ testTextAtOffset, BOUNDARY_LINE_END, pLine.end, cLine.end],
+            [ testTextAfterOffset, BOUNDARY_LINE_START, nLine.start, nnLine.start],
+            [ testTextAfterOffset, BOUNDARY_LINE_END, cLine.end, nLine.end]
+          ];
+
+          // Word boundary tests.
+          var cWord = this.mLine.firstWord;
+          var nWord = cWord.nextWord, pWord = cWord.prevWord;
+
+          // The current word is a farthest word starting at or after the offset.
+          if (this.mOffset >= nWord.start) {
+            while (this.mOffset >= nWord.start && !this.mLine.isLastWord(cWord)) {
+              cWord = nWord;
+              nWord = nWord.nextWord;
+            }
+            pWord = cWord.prevWord;
+
+          } else if (this.mOffset < cWord.start) {
+            while (this.mOffset < cWord.start) {
+              cWord = pWord;
+              pWord = pWord.prevWord;
+            }
+            nWord = cWord.nextWord;
+          }
+
+          var nnWord = nWord.nextWord, ppWord = pWord.prevWord;
+
+          var isAfterWordEnd =
+            this.mOffset > cWord.end || cWord.line != this.mLine;
+          var isAtOrAfterWordEnd = (this.mOffset >= cWord.end);
+          var useNextWordForAtWordEnd =
+            isAtOrAfterWordEnd && this.mOffset != aWholeText.length;
+
+          var wordTests = [
+            [ testTextBeforeOffset, BOUNDARY_WORD_START,
+              pWord.start, cWord.start ],
+            [ testTextBeforeOffset, BOUNDARY_WORD_END,
+              (isAfterWordEnd ? pWord : ppWord).end,
+              (isAfterWordEnd ? cWord : pWord).end ],
+            [ testTextAtOffset, BOUNDARY_WORD_START,
+              cWord.start, nWord.start ],
+            [ testTextAtOffset, BOUNDARY_WORD_END,
+              (useNextWordForAtWordEnd ? cWord : pWord).end,
+              (useNextWordForAtWordEnd ? nWord : cWord).end ],
+            [ testTextAfterOffset, BOUNDARY_WORD_START,
+              nWord.start, nnWord.start ],
+            [ testTextAfterOffset, BOUNDARY_WORD_END,
+              (isAfterWordEnd ? nWord : cWord).end,
+              (isAfterWordEnd ? nnWord : nWord).end ]
+          ];
+
+          return lineTests.concat(wordTests);
+        }
+      });
+
+      Object.defineProperty(this, "failures", { get: function()
+        {
+          if (this.mOffset == this.mLine.start)
+            return this.mLine.lineStartFailures;
+          if (this.mOffset == this.mLine.end)
+            return this.mLine.lineEndFailures;
+          return [];
+        }
+      });
+
+      this.mOffset = -1;
+      this.mLine = new line(aWholeText, aLines, 0);
+      this.mAtWrappedLineEnd = false;
+      this.mWord = this.mLine.firstWord;
     }
 
     /**
@@ -155,6 +206,17 @@
         }
       });
 
+      Object.defineProperty(this, "number", { get: function()
+        { return aIndex; }
+      });
+      Object.defineProperty(this, "wholeText", { get: function()
+        { return aWholeText; }
+      });
+      this.isFakeLine = function line_isFakeLine()
+      {
+        return aIndex < 0 || aIndex >= aLines.length;
+      }
+
       Object.defineProperty(this, "lastWord", { get: function()
         {
           if (aIndex < 0)
@@ -177,6 +239,12 @@
           return new word(this, words, 0);
         }
       });
+
+      this.isLastWord = function line_isLastWord(aWord)
+      {
+        var lastWord = this.lastWord;
+        return lastWord.start == aWord.start && lastWord.end == aWord.end;
+      }
 
       Object.defineProperty(this, "lineStartFailures", { get: function()
         {
@@ -212,7 +280,6 @@
           return prevLineLastWord;
         }
       });
-
       Object.defineProperty(this, "nextWord", { get: function()
         {
           if (aIndex + 2 < aWords.length)
@@ -224,6 +291,8 @@
           return nextLineFirstWord;
         }
       });
+
+      Object.defineProperty(this, "line", { get: function() { return aLine; } });
 
       Object.defineProperty(this, "start", { get: function()
         {
@@ -244,6 +313,13 @@
         }
       });
 
+      this.toString = function word_toString()
+      {
+        var start = this.start, end = this.end;
+        return "'" + aLine.wholeText.substring(start, end) +
+          "' at [" + start + ", " + end + "]";
+      }
+
       this.isFakeStartWord = function() { return aIndex < 0; }
       this.isFakeEndWord = function() { return aIndex >= aWords.length; }
     }
@@ -251,23 +327,28 @@
     /**
      * A template invoker to move through the text.
      */
-    function tmpl_moveTo(aID, aInvoker, aInvokerID, aWholeText, aTests,
-                         aFailures)
+    function tmpl_moveTo(aID, aInvokerFunc, aWholeText, aCharIter)
     {
-      this.__proto__ = aInvoker;
+      this.offset = aCharIter.offset;
+
+      var checker = new caretMoveChecker(this.offset, aID);
+      this.__proto__ = new (aInvokerFunc)(aID, checker);
 
       this.finalCheck = function genericMoveTo_finalCheck()
       {
-        for (var i = 0; i < aTests.length; i++) {
-          var func = aTests[i][0];
-          var boundary = aTests[i][1];
-          var startOffset = aTests[i][2];
-          var endOffset = aTests[i][3];
+        if (this.noTests())
+          return;
+
+        for (var i = 0; i < this.tests.length; i++) {
+          var func = this.tests[i][0];
+          var boundary = this.tests[i][1];
+          var startOffset = this.tests[i][2];
+          var endOffset = this.tests[i][3];
           var text = aWholeText.substring(startOffset, endOffset);
 
           var isOk1 = kOk, isOk2 = kOk, isOk3 = kOk;
-          for (var fIdx = 0; fIdx < aFailures.length; fIdx++) {
-            var failure = aFailures[fIdx];
+          for (var fIdx = 0; fIdx < this.failures.length; fIdx++) {
+            var failure = this.failures[fIdx];
             if (func.name.indexOf(failure[0]) != -1 && boundary == failure[1]) {
               isOk1 = failure[2];
               isOk2 = failure[3];
@@ -282,8 +363,18 @@
 
       this.getID = function genericMoveTo_getID()
       {
-        return aInvokerID;
+        return "move to " + this.offsetDescr;
       }
+
+      this.noTests = function tmpl_moveTo_noTests()
+      {
+        return ("debugOffset" in aCharIter) &&
+          (aCharIter.debugOffset != this.offset);
+      }
+
+      this.offsetDescr = aCharIter.offsetDescr;
+      this.tests = this.noTests() ? null : aCharIter.tests;
+      this.failures = aCharIter.failures;
     }
 
     var gQueue = null;
