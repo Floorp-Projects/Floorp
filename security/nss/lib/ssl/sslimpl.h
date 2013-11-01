@@ -817,6 +817,10 @@ typedef struct SSL3HandshakeStateStr {
      * SSL 3.0 - TLS 1.1 use both |md5| and |sha|. |md5| is used for MD5 and
      * |sha| for SHA-1.
      * TLS 1.2 and later use only |sha|, for SHA-256. */
+    /* NOTE: On the client side, TLS 1.2 and later use |md5| as a backup
+     * handshake hash for generating client auth signatures. Confusingly, the
+     * backup hash function is SHA-1. */
+#define backupHash md5
     PK11Context *         md5;
     PK11Context *         sha;
 
@@ -855,6 +859,8 @@ const ssl3CipherSuiteDef *suite_def;
     /* Shared state between ssl3_HandleFinished and ssl3_FinishHandshake */
     PRBool                cacheSID;
 
+    PRBool                canFalseStart;   /* Can/did we False Start */
+
     /* clientSigAndHash contains the contents of the signature_algorithms
      * extension (if any) from the client. This is only valid for TLS 1.2
      * or later. */
@@ -881,8 +887,6 @@ const ssl3CipherSuiteDef *suite_def;
     PRUint32              rtTimeoutMs;     /* The length of the current timeout
 					    * used for backoff (in ms) */
     PRUint32              rtRetries;       /* The retry counter */
-    PRBool                canFalseStart;   /* Can/did we False Start */
-
 } SSL3HandshakeState;
 
 
@@ -1131,10 +1135,10 @@ struct sslSocketStr {
     unsigned long    clientAuthRequested;
     unsigned long    delayDisabled;       /* Nagle delay disabled */
     unsigned long    firstHsDone;         /* first handshake is complete. */
-    unsigned long    enoughFirstHsDone;   /* enough of the handshake is done
-					   * for callbacks to be able to
+    unsigned long    enoughFirstHsDone;   /* enough of the first handshake is
+					   * done for callbacks to be able to
 					   * retrieve channel security
-					   * parameters from callback functions. */
+					   * parameters from the SSL socket. */
     unsigned long    handshakeBegun;     
     unsigned long    lastWriteBlocked;   
     unsigned long    recvdCloseNotify;    /* received SSL EOF. */
@@ -1378,6 +1382,19 @@ extern PRBool    ssl_SocketIsBlocking(sslSocket *ss);
 extern void      ssl3_SetAlwaysBlock(sslSocket *ss);
 
 extern SECStatus ssl_EnableNagleDelay(sslSocket *ss, PRBool enabled);
+
+extern void      ssl_FinishHandshake(sslSocket *ss);
+
+/* Returns PR_TRUE if we are still waiting for the server to respond to our
+ * client second round. Once we've received any part of the server's second
+ * round then we don't bother trying to false start since it is almost always
+ * the case that the NewSessionTicket, ChangeCipherSoec, and Finished messages
+ * were sent in the same packet and we want to process them all at the same
+ * time. If we were to try to false start in the middle of the server's second
+ * round, then we would increase the number of I/O operations
+ * (SSL_ForceHandshake/PR_Recv/PR_Send/etc.) needed to finish the handshake.
+ */
+extern PRBool    ssl3_WaitingForStartOfServerSecondRound(sslSocket *ss);
 
 extern SECStatus
 ssl3_CompressMACEncryptRecord(ssl3CipherSpec *   cwSpec,
