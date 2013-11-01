@@ -777,7 +777,6 @@ ANDROID_RESFILES += [
     'resources/drawable/bookmark_folder.xml',
     'resources/drawable/divider_horizontal.xml',
     'resources/drawable/divider_vertical.xml',
-    'resources/drawable/favicon_bg.xml',
     'resources/drawable/handle_end_level.xml',
     'resources/drawable/handle_start_level.xml',
     'resources/drawable/home_banner.xml',
