@@ -420,7 +420,7 @@ let CustomizableUIInternal = {
         // (eg, titlebar-placeholder elements).
         if (node.id && node.getAttribute("skipintoolbarset") != "true") {
           if (this.isWidgetRemovable(node)) {
-            if (palette) {
+            if (palette && !this.isSpecialWidget(node.id)) {
               palette.appendChild(node);
               this.removeLocationAttributes(node);
             } else {
