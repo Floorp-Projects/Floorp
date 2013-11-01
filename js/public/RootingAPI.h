@@ -167,19 +167,23 @@ struct JS_PUBLIC_API(NullPtr)
 };
 
 /*
- * The Heap<T> class is a C/C++ heap-stored reference to a JS GC thing.  All
- * members of heap classes that refer to GC thing should use Heap<T> (or
- * possibly TenuredHeap<T>, described below).
+ * The Heap<T> class is a heap-stored reference to a JS GC thing. All members of
+ * heap classes that refer to GC things should use Heap<T> (or possibly
+ * TenuredHeap<T>, described below).
  *
- * Heap<T> wraps the complex mechanisms required to ensure GC safety for the
- * contained reference into a C++ class that behaves similarly to a normal
- * pointer.
+ * Heap<T> is an abstraction that hides some of the complexity required to
+ * maintain GC invariants for the contained reference. It uses operator
+ * overloading to provide a normal pointer interface, but notifies the GC every
+ * time the value it contains is updated. This is necessary for generational GC,
+ * which keeps track of all pointers into the nursery.
  *
- * GC references stored on the C/C++ stack must use Rooted/Handle/MutableHandle
- * instead.
+ * Heap<T> instances must be traced when their containing object is traced to
+ * keep the pointed-to GC thing alive.
  *
- * Requirements for type T:
- *  - Must be one of: Value, jsid, JSObject*, JSString*, JSScript*
+ * Heap<T> objects should only be used on the heap. GC references stored on the
+ * C/C++ stack must use Rooted/Handle/MutableHandle instead.
+ *
+ * Type T must be one of: JS::Value, jsid, JSObject*, JSString*, JSScript*
  */
 template <typename T>
 class Heap : public js::HeapBase<T>
