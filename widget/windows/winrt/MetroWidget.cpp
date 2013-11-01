@@ -120,20 +120,20 @@ namespace {
     for (uint32_t i = 0; i < aExtraInputsLen; i++) {
       inputs[keySequence.Length()+i] = aExtraInputs[i];
     }
-    Log("  Sending inputs");
+    WinUtils::Log("  Sending inputs");
     for (uint32_t i = 0; i < len; i++) {
       if (inputs[i].type == INPUT_KEYBOARD) {
-        Log("    Key press: 0x%x %s",
+        WinUtils::Log("    Key press: 0x%x %s",
             inputs[i].ki.wVk,
             inputs[i].ki.dwFlags & KEYEVENTF_KEYUP
             ? "UP"
             : "DOWN");
       } else if(inputs[i].type == INPUT_MOUSE) {
-        Log("    Mouse input: 0x%x 0x%x",
+        WinUtils::Log("    Mouse input: 0x%x 0x%x",
             inputs[i].mi.dwFlags,
             inputs[i].mi.mouseData);
       } else {
-        Log("    Unknown input type!");
+        WinUtils::Log("    Unknown input type!");
       }
     }
     ::SendInput(len, inputs, sizeof(INPUT));
@@ -143,7 +143,7 @@ namespace {
     // waiting to be processed by our event loop.  Now we manually pump
     // those messages so that, upon our return, all the inputs have been
     // processed.
-    Log("  Inputs sent. Waiting for input messages to clear");
+    WinUtils::Log("  Inputs sent. Waiting for input messages to clear");
     MSG msg;
     while (WinUtils::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
       if (nsTextStore::ProcessRawKeyMessage(msg)) {
@@ -151,16 +151,13 @@ namespace {
       }
       ::TranslateMessage(&msg);
       ::DispatchMessage(&msg);
-      Log("    Dispatched 0x%x 0x%x 0x%x", msg.message, msg.wParam, msg.lParam);
+      WinUtils::Log("    Dispatched 0x%x 0x%x 0x%x", msg.message, msg.wParam, msg.lParam);
     }
-    Log("  No more input messages");
+    WinUtils::Log("  No more input messages");
   }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(MetroWidget, nsBaseWidget)
-
-
-nsRefPtr<mozilla::layers::APZCTreeManager> MetroWidget::sAPZC;
 
 MetroWidget::MetroWidget() :
   mTransparencyMode(eTransparencyOpaque),
@@ -188,7 +185,7 @@ MetroWidget::~MetroWidget()
 
   // Global shutdown
   if (!gInstanceCount) {
-    MetroWidget::sAPZC = nullptr;
+    APZController::sAPZC = nullptr;
     nsTextStore::Terminate();
   } // !gInstanceCount
 }
@@ -217,20 +214,20 @@ MetroWidget::Create(nsIWidget *aParent,
   if (mWindowType != eWindowType_toplevel) {
     switch(mWindowType) {
       case eWindowType_dialog:
-      Log("eWindowType_dialog window requested, returning failure.");
+      WinUtils::Log("eWindowType_dialog window requested, returning failure.");
       break;
       case eWindowType_child:
-      Log("eWindowType_child window requested, returning failure.");
+      WinUtils::Log("eWindowType_child window requested, returning failure.");
       break;
       case eWindowType_popup:
-      Log("eWindowType_popup window requested, returning failure.");
+      WinUtils::Log("eWindowType_popup window requested, returning failure.");
       break;
       case eWindowType_plugin:
-      Log("eWindowType_plugin window requested, returning failure.");
+      WinUtils::Log("eWindowType_plugin window requested, returning failure.");
       break;
       // we should support toolkit's eWindowType_invisible at some point.
       case eWindowType_invisible:
-      Log("eWindowType_invisible window requested, this doesn't actually exist!");
+      WinUtils::Log("eWindowType_invisible window requested, this doesn't actually exist!");
       return NS_OK;
     }
     NS_WARNING("Invalid window type requested.");
@@ -271,7 +268,7 @@ MetroWidget::Destroy()
 {
   if (mOnDestroyCalled)
     return NS_OK;
-  Log("[%X] %s mWnd=%X type=%d", this, __FUNCTION__, mWnd, mWindowType);
+  WinUtils::Log("[%X] %s mWnd=%X type=%d", this, __FUNCTION__, mWnd, mWindowType);
   mOnDestroyCalled = true;
 
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
@@ -280,7 +277,7 @@ MetroWidget::Destroy()
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
-      observerService->RemoveObserver(this, "scroll-offset-changed");
+      observerService->RemoveObserver(this, "apzc-scroll-offset-changed");
     }
   }
 
@@ -520,7 +517,7 @@ MetroWidget::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                         uint32_t aNativeMessage,
                                         uint32_t aModifierFlags)
 {
-  Log("ENTERED SynthesizeNativeMouseEvent");
+  WinUtils::Log("ENTERED SynthesizeNativeMouseEvent");
 
   INPUT inputs[2];
   memset(inputs, 0, 2*sizeof(INPUT));
@@ -535,7 +532,7 @@ MetroWidget::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
   inputs[1].mi.dwFlags = aNativeMessage;
   SendInputs(aModifierFlags, inputs, 2);
 
-  Log("Exiting SynthesizeNativeMouseEvent");
+  WinUtils::Log("Exiting SynthesizeNativeMouseEvent");
   return NS_OK;
 }
 
@@ -814,7 +811,7 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
             return res;
           }
           NS_ASSERTION(res, "UiaReturnRawElementProvider failed!");
-          Log("UiaReturnRawElementProvider failed! GetLastError=%X", GetLastError());
+          WinUtils::Log("UiaReturnRawElementProvider failed! GetLastError=%X", GetLastError());
         }
       }
       break;
@@ -941,22 +938,34 @@ MetroWidget::ShouldUseAPZC()
          Preferences::GetBool(kPrefName, false);
 }
 
+void
+MetroWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener)
+{
+  mWidgetListener = aWidgetListener;
+  if (mController) {
+    mController->SetWidgetListener(aWidgetListener);
+  }
+}
+
 CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
 {
   CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
 
   if (ShouldUseAPZC()) {
     mRootLayerTreeId = compositor->RootLayerTreeId();
+
     mController = new APZController();
+    mController->SetWidgetListener(mWidgetListener);
+
     CompositorParent::SetControllerForLayerTree(mRootLayerTreeId, mController);
 
-    MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
-    MetroWidget::sAPZC->SetDPI(GetDPI());
+    APZController::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
+    APZController::sAPZC->SetDPI(GetDPI());
 
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
-      observerService->AddObserver(this, "scroll-offset-changed", false);
+      observerService->AddObserver(this, "apzc-scroll-offset-changed", false);
     }
   }
 
@@ -967,29 +976,29 @@ void
 MetroWidget::ApzContentConsumingTouch()
 {
   LogFunction();
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return;
   }
-  MetroWidget::sAPZC->ContentReceivedTouch(mRootLayerTreeId, true);
+  APZController::sAPZC->ContentReceivedTouch(mRootLayerTreeId, true);
 }
 
 void
 MetroWidget::ApzContentIgnoringTouch()
 {
   LogFunction();
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return;
   }
-  MetroWidget::sAPZC->ContentReceivedTouch(mRootLayerTreeId, false);
+  APZController::sAPZC->ContentReceivedTouch(mRootLayerTreeId, false);
 }
 
 bool
 MetroWidget::HitTestAPZC(ScreenPoint& pt)
 {
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return false;
   }
-  return MetroWidget::sAPZC->HitTestAPZC(pt);
+  return APZController::sAPZC->HitTestAPZC(pt);
 }
 
 nsEventStatus
@@ -997,10 +1006,10 @@ MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
 
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  return MetroWidget::sAPZC->ReceiveInputEvent(*aEvent->AsInputEvent());
+  return APZController::sAPZC->ReceiveInputEvent(*aEvent->AsInputEvent());
 }
 
 nsEventStatus
@@ -1010,11 +1019,11 @@ MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aInEvent,
   MOZ_ASSERT(aInEvent);
   MOZ_ASSERT(aOutEvent);
 
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  return MetroWidget::sAPZC->ReceiveInputEvent(*aInEvent->AsInputEvent(),
-                                               aOutEvent);
+  return APZController::sAPZC->ReceiveInputEvent(*aInEvent->AsInputEvent(),
+                                                 aOutEvent);
 }
 
 LayerManager*
@@ -1517,7 +1526,7 @@ NS_IMETHODIMP
 MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
 {
   NS_ENSURE_ARG_POINTER(topic);
-  if (!strcmp(topic, "scroll-offset-changed")) {
+  if (!strcmp(topic, "apzc-scroll-offset-changed")) {
     uint64_t scrollId;
     int32_t presShellId;
     CSSIntPoint scrollOffset;
@@ -1531,11 +1540,11 @@ MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *d
       NS_WARNING("Malformed scroll-offset-changed message");
       return NS_ERROR_UNEXPECTED;
     }
-    if (MetroWidget::sAPZC) {
-      MetroWidget::sAPZC->UpdateScrollOffset(
-          ScrollableLayerGuid(mRootLayerTreeId, presShellId, scrollId),
-          scrollOffset);
+    if (!mController) {
+      return NS_ERROR_UNEXPECTED;
     }
+    mController->UpdateScrollOffset(ScrollableLayerGuid(mRootLayerTreeId, presShellId, scrollId),
+                                    scrollOffset);
   }
   return NS_OK;
 }

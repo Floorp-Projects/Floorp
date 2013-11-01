@@ -2055,7 +2055,7 @@
 
     FORMAT_DEFAULTS = getDefaultOptions().format;
 
-    exports.version = require('./package.json').version;
+    // exports.version = require('./package.json').version;
     exports.generate = generate;
     exports.attachComments = estraverse.attachComments;
     exports.browser = false;
