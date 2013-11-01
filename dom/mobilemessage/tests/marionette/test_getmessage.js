@@ -79,6 +79,7 @@ function sendSms() {
     is(sentSms.messageClass, "normal", "messageClass");
     ok(sentSms.timestamp instanceof Date, "timestamp is instanceof date");  
     outSmsTimeStamp = sentSms.timestamp;
+    ok(sentSms.deliveryTimestamp === null, "deliveryTimestamp is null");
 
     if (gotSmsOnsent && gotReqOnsuccess) { getReceivedSms(); }
   };
