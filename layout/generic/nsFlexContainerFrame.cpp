@@ -433,7 +433,8 @@ public:
 
   // Sets the cross-size of our flex item's content-box.
   void SetCrossSize(nscoord aCrossSize) {
-    MOZ_ASSERT(mIsFrozen, "main size should be resolved before this");
+    MOZ_ASSERT(!mIsStretched,
+               "Cross size shouldn't be modified after it's been stretched");
     mCrossSize = aCrossSize;
   }
 
@@ -821,6 +822,13 @@ nsFlexContainerFrame::
                               -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
   childRSForMeasuringHeight.Init(aPresContext);
+
+  aFlexItem.ResolveStretchedCrossSize(aParentReflowState.ComputedWidth(),
+                                      aAxisTracker);
+  if (aFlexItem.IsStretched()) {
+    childRSForMeasuringHeight.SetComputedWidth(aFlexItem.GetCrossSize());
+    childRSForMeasuringHeight.mFlags.mHResize = true;
+  }
 
   // If this item is flexible (vertically), then we assume that the
   // computed-height we're reflowing with now could be different
@@ -2239,20 +2247,24 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   for (uint32_t i = 0; i < items.Length(); ++i) {
     FlexItem& curItem = items[i];
 
-    nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                       curItem.Frame(),
-                                       nsSize(aReflowState.ComputedWidth(),
-                                              NS_UNCONSTRAINEDSIZE));
-    // Override computed main-size
-    if (IsAxisHorizontal(axisTracker.GetMainAxis())) {
-      childReflowState.SetComputedWidth(curItem.GetMainSize());
-    } else {
-      childReflowState.SetComputedHeight(curItem.GetMainSize());
-    }
+    // (If the item's already been stretched, then it already knows its
+    // cross size.  Don't bother trying to recalculate it.)
+    if (!curItem.IsStretched()) {
+      nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+                                         curItem.Frame(),
+                                         nsSize(aReflowState.ComputedWidth(),
+                                                NS_UNCONSTRAINEDSIZE));
+      // Override computed main-size
+      if (IsAxisHorizontal(axisTracker.GetMainAxis())) {
+        childReflowState.SetComputedWidth(curItem.GetMainSize());
+      } else {
+        childReflowState.SetComputedHeight(curItem.GetMainSize());
+      }
 
-    nsresult rv = SizeItemInCrossAxis(aPresContext, axisTracker,
-                                      childReflowState, curItem);
-    NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = SizeItemInCrossAxis(aPresContext, axisTracker,
+                                        childReflowState, curItem);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // Calculate the cross size of our (single) flex line:
