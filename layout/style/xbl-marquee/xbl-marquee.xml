@@ -17,7 +17,7 @@
     </resources>
     <implementation>
 
-      <property name="scrollAmount">
+      <property name="scrollAmount" exposeToUntrustedContent="true">
         <getter>
           <![CDATA[
           var val = parseInt(this.getAttribute("scrollamount"));
@@ -33,7 +33,7 @@
         </setter>
       </property>
 
-      <property name="scrollDelay">
+      <property name="scrollDelay" exposeToUntrustedContent="true">
         <getter>
           <![CDATA[
           var val = parseInt(this.getAttribute("scrolldelay"));
@@ -49,7 +49,7 @@
         </setter>
       </property>
 
-      <property name="trueSpeed">
+      <property name="trueSpeed" exposeToUntrustedContent="true">
         <getter>
           <![CDATA[
           if (!this.hasAttribute("truespeed"))
@@ -68,7 +68,7 @@
         </setter>
       </property>
 
-      <property name="direction">
+      <property name="direction" exposeToUntrustedContent="true">
         <getter>
           return this.getAttribute("direction");
         </getter>
@@ -77,7 +77,7 @@
         </setter>
       </property>
 
-      <property name="behavior">
+      <property name="behavior" exposeToUntrustedContent="true">
         <getter>
           return this._behavior;
         </getter>
@@ -87,7 +87,7 @@
       </property>
 
 
-      <property name="loop">
+      <property name="loop" exposeToUntrustedContent="true">
         <getter>
           <![CDATA[
           var val = parseInt(this.getAttribute('loop'));
@@ -104,7 +104,7 @@
       </property>
 
 
-      <property name="onstart">
+      <property name="onstart" exposeToUntrustedContent="true">
         <getter>
           return this.getAttribute("onstart");
         </getter>
@@ -114,7 +114,7 @@
         </setter>
       </property>
 
-      <property name="onfinish">
+      <property name="onfinish" exposeToUntrustedContent="true">
         <getter>
           return this.getAttribute("onfinish");
         </getter>
@@ -124,7 +124,7 @@
         </setter>
       </property>
 
-      <property name="onbounce">
+      <property name="onbounce" exposeToUntrustedContent="true">
         <getter>
           return this.getAttribute("onbounce");
         </getter>
@@ -142,12 +142,12 @@
         onget="return document.getAnonymousElementByAttribute(this, 'class', 'innerDiv');"
       />
 
-      <property name="height"
+      <property name="height" exposeToUntrustedContent="true"
         onget="return this.getAttribute('height');"
         onset="this.setAttribute('height', val);"
       />
 
-      <property name="width"
+      <property name="width" exposeToUntrustedContent="true"
         onget="return this.getAttribute('width');"
         onset="this.setAttribute('width', val);"
       />
@@ -303,7 +303,7 @@
         </body>
       </method>
 
-      <method name="start">
+      <method name="start" exposeToUntrustedContent="true">
         <body>
         <![CDATA[
           if (this.runId == 0) {
@@ -316,7 +316,7 @@
         </body>
       </method>
 
-      <method name="stop">
+      <method name="stop" exposeToUntrustedContent="true">
         <body>
         <![CDATA[
           if (this.runId != 0) {
