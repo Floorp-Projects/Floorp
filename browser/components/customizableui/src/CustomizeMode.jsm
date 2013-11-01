@@ -115,8 +115,6 @@ CustomizeMode.prototype = {
       let window = this.window;
       let document = this.document;
 
-      CustomizableUI.addListener(this);
-
       // Add a mousedown listener to the tab-view-deck and a keypress one to the
       // document so that we can quickly exit customization mode when pressing
       // ESC or clicking on the blueprint outside the customization container.
@@ -155,6 +153,7 @@ CustomizeMode.prototype = {
       yield window.PanelUI.ensureReady(true);
 
       this._showPanelCustomizationPlaceholders();
+      CustomizableUI.addListener(this);
 
       yield this._wrapToolbarItems();
       yield this.populatePalette();
