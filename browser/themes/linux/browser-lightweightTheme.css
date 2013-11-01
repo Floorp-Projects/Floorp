@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include linuxShared.inc
+%filter substitution
+
+/*
+ * LightweightThemeListener will append the current lightweight theme's header
+ * image to the background-image for each of the following rulesets.
+ */
+
+/* Lightweight theme on tabs */
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-start[selected=true]:-moz-lwtheme::before,
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-end[selected=true]:-moz-lwtheme::before {
+  background-attachment: scroll, fixed;
+  background-color: transparent;
+  background-image: @fgTabTextureLWT@;/*, lwtHeader;*/
+  background-position: 0 0, right top;
+}
+
+#tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
+  background-attachment: scroll, scroll, fixed;
+  background-color: transparent;
+  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
+                    @fgTabTextureLWT@;/*,
+                    lwtHeader;*/
+  background-position: 0 0, 0 0, right top;
+}
