@@ -345,8 +345,6 @@ else
 VPX_OIE_FORMAT := gas
 endif
 
-HOST_PROGRAM = host_obj_int_extract$(HOST_BIN_SUFFIX)
-
 CSRCS += asm_com_offsets.c
 
 GARBAGE += asm_com_offsets.$(OBJ_SUFFIX) asm_com_offsets.asm

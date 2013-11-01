@@ -3,13 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Preserve until HOST_SIMPLE_PROGRAMS has been converted.
-host_cppsrcs	= \
-		ListCSSProperties.cpp \
-		$(NULL)
-
-HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(host_cppsrcs:.cpp=$(HOST_BIN_SUFFIX)))
-
 # ParseCSS.cpp used to be built as a test program, but it was not
 # being used for anything, and recent changes to the CSS loader have
 # made it fail to link.  Further changes are planned which should make
