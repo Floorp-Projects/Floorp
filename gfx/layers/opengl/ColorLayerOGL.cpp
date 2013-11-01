@@ -40,6 +40,7 @@ RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
   ShaderProgramOGL *program = aManager->GetProgram(ColorLayerProgramType,
                                                    aLayer->GetMaskLayer());
   program->Activate();
+  program->SetProjectionMatrix(aManager->mProjMatrix);
   program->SetLayerQuadRect(aLayer->GetBounds());
   program->SetLayerTransform(aLayer->GetEffectiveTransform());
   program->SetRenderOffset(aOffset);

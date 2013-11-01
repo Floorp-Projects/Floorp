@@ -31,6 +31,7 @@
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType
 #include "nscore.h"                     // for NS_IMETHOD
 #include "VBOArena.h"                   // for gl::VBOArena
+#include <map>
 
 class gfx3DMatrix;
 class nsIWidget;
@@ -54,13 +55,45 @@ struct Effect;
 struct EffectChain;
 struct FPSState;
 
+class ShaderConfigOGL
+{
+public:
+  ShaderConfigOGL() :
+    mFeatures(0) {}
+
+  void SetRenderColor(bool aEnabled);
+  void SetTextureTarget(GLenum aTarget);
+  void SetRBSwap(bool aEnabled);
+  void SetNoAlpha(bool aEnabled);
+  void SetOpacity(bool aEnabled);
+  void SetYCbCr(bool aEnabled);
+  void SetComponentAlpha(bool aEnabled);
+  void SetColorMatrix(bool aEnabled);
+  void SetBlur(bool aEnabled);
+  void SetMask(bool aEnabled);
+
+  bool operator< (const ShaderConfigOGL& other) const {
+    return mFeatures < other.mFeatures;
+  }
+
+public:
+  void SetFeature(int aBitmask, bool aState) {
+    if (aState)
+      mFeatures |= aBitmask;
+    else
+      mFeatures &= (~aBitmask);
+  }
+
+  int mFeatures;
+};
+
 class CompositorOGL : public Compositor
 {
   typedef mozilla::gl::GLContext GLContext;
-  typedef ShaderProgramType ProgramType;
   
   friend class GLManagerCompositor;
 
+  std::map<ShaderConfigOGL, ShaderProgramOGL*> mPrograms;
 public:
   CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth = -1, int aSurfaceHeight = -1,
                 bool aUseExternalSurfaceSize = false);
@@ -150,10 +183,6 @@ public:
   }
 
   GLContext* gl() const { return mGLContext; }
-  ShaderProgramType GetFBOLayerProgramType() const {
-    return mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB ?
-           RGBARectLayerProgramType : RGBALayerProgramType;
-  }
   gfx::SurfaceFormat GetFBOFormat() const {
     return gfx::FORMAT_R8G8B8A8;
   }
@@ -168,6 +197,10 @@ public:
    * (see https://wiki.mozilla.org/Platform/GFX/Gralloc)
    */
   GLuint GetTemporaryTexture(GLenum aUnit);
+
+  const gfx3DMatrix& GetProjMatrix() const {
+    return mProjMatrix;
+  }
 private:
   /** 
    * Context target, nullptr when drawing directly to our swap chain.
@@ -178,6 +211,7 @@ private:
   nsIWidget *mWidget;
   nsIntSize mWidgetSize;
   nsRefPtr<GLContext> mGLContext;
+  gfx3DMatrix mProjMatrix;
 
   /** The size of the surface we are rendering to */
   nsIntSize mSurfaceSize;
@@ -191,19 +225,6 @@ private:
   };
 
   already_AddRefed<mozilla::gl::GLContext> CreateContext();
-
-  /** Shader Programs */
-  struct ShaderProgramVariations {
-    nsAutoTArray<nsAutoPtr<ShaderProgramOGL>, NumMaskTypes> mVariations;
-    ShaderProgramVariations() {
-      MOZ_COUNT_CTOR(ShaderProgramVariations);
-      mVariations.SetLength(NumMaskTypes);
-    }
-    ~ShaderProgramVariations() {
-      MOZ_COUNT_DTOR(ShaderProgramVariations);
-    }
-  };
-  nsTArray<ShaderProgramVariations> mPrograms;
 
   /** Texture target to use for FBOs */
   GLenum mFBOTextureTarget;
@@ -248,24 +269,9 @@ private:
                           gfx::Rect *aRenderBoundsOut = nullptr) MOZ_OVERRIDE;
 
   ShaderProgramType GetProgramTypeForEffect(Effect* aEffect) const;
-
-  /**
-   * Updates all layer programs with a new projection matrix.
-   */
-  void SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix);
-
-  /**
-   * Helper method for Initialize, creates all valid variations of a program
-   * and adds them to mPrograms
-   */
-  void AddPrograms(ShaderProgramType aType);
-
-  ShaderProgramOGL* GetProgram(ShaderProgramType aType,
-                               MaskType aMask = MaskNone) {
-    MOZ_ASSERT(ProgramProfileOGL::ProgramExists(aType, aMask),
-               "Invalid program type.");
-    return mPrograms[aType].mVariations[aMask];
-  }
+  ShaderConfigOGL GetShaderConfigFor(GLenum aTarget, gfx::SurfaceFormat aFormat) const;
+  ShaderConfigOGL GetShaderConfigFor(Effect *aEffect, MaskType aMask = MaskNone) const;
+  ShaderProgramOGL* GetShaderProgramFor(const ShaderConfigOGL &aConfig);
 
   /**
    * Create a FBO backed by a texture.
@@ -307,6 +313,8 @@ private:
    * Records the passed frame timestamp and returns the current estimated FPS.
    */
   double AddFrameAndGetFps(const TimeStamp& timestamp);
+  void DrawFPS();
+  GLuint mFPSTexture;
 
   bool mDestroyed;
 

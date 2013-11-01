@@ -197,6 +197,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
       }
 
       alphaProgram->Activate();
+      alphaProgram->SetProjectionMatrix(aManager->mProjMatrix);
       alphaProgram->SetBlackTextureUnit(0);
       alphaProgram->SetWhiteTextureUnit(1);
       program = alphaProgram;
@@ -208,6 +209,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
                              mLayer->GetMaskLayer());
 
       basicProgram->Activate();
+      basicProgram->SetProjectionMatrix(aManager->mProjMatrix);
       basicProgram->SetTextureUnit(0);
       program = basicProgram;
     }

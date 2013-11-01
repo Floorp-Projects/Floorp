@@ -172,15 +172,16 @@ CompositorD3D9::SetRenderTarget(CompositingRenderTarget *aRenderTarget)
 }
 
 static DeviceManagerD3D9::ShaderMode
-ShaderModeForEffectType(EffectTypes aEffectType)
+ShaderModeForEffectType(EffectTypes aEffectType, gfx::SurfaceFormat aFormat)
 {
   switch (aEffectType) {
   case EFFECT_SOLID_COLOR:
     return DeviceManagerD3D9::SOLIDCOLORLAYER;
-  case EFFECT_BGRA:
   case EFFECT_RENDER_TARGET:
     return DeviceManagerD3D9::RGBALAYER;
-  case EFFECT_BGRX:
+  case EFFECT_RGB:
+    if (aFormat == FORMAT_B8G8R8A8 || aFormat == FORMAT_R8G8B8A8)
+      return DeviceManagerD3D9::RGBALAYER;
     return DeviceManagerD3D9::RGBLAYER;
   case EFFECT_YCBCR:
     return DeviceManagerD3D9::YCBCRLAYER;
@@ -259,8 +260,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
     }
     break;
   case EFFECT_RENDER_TARGET:
-  case EFFECT_BGRX:
-  case EFFECT_BGRA:
+  case EFFECT_RGB:
     {
       TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
@@ -280,7 +280,8 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
       device()->SetTexture(0, source->GetD3D9Texture());
 
       maskTexture = mDeviceManager
-        ->SetShaderMode(ShaderModeForEffectType(aEffectChain.mPrimaryEffect->mType),
+        ->SetShaderMode(ShaderModeForEffectType(aEffectChain.mPrimaryEffect->mType,
+                                                texturedEffect->mTexture->GetFormat()),
                         maskType);
 
       isPremultiplied = texturedEffect->mPremultiplied;

@@ -347,6 +347,7 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
   gl()->ApplyFilterToBoundTexture(mFilter);
 
   program->Activate();
+  program->SetProjectionMatrix(mOGLManager->mProjMatrix);
   if (mLayerProgram == RGBARectLayerProgramType ||
       mLayerProgram == RGBXRectLayerProgramType) {
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
