@@ -65,13 +65,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           win.go();
         </constructor>
         <field name="primitiveField">2</field>
-        <method name="method">
+        <method name="method" exposeToUntrustedContent="true">
           <parameter name="arg" />
           <body>
             return "method:" + arg;
           </body>
         </method>
-        <method name="passMeAJSObject">
+        <method name="passMeAJSObject" exposeToUntrustedContent="true">
           <parameter name="arg" />
           <body>
             is(typeof arg.prop, 'undefined', "No properties");
@@ -85,7 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
             is(typeof arg.foo, 'undefined', "Shouldn't place props");
           </body>
         </method>
-        <property name="prop">
+        <property name="prop" exposeToUntrustedContent="true">
           <getter>return this._prop;</getter>
           <setter>this._prop = "set:" + val;</setter>
         </property>
