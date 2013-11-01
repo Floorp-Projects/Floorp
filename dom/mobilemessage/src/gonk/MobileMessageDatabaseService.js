@@ -24,7 +24,7 @@ const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 
 const DB_NAME = "sms";
-const DB_VERSION = 14;
+const DB_VERSION = 15;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -226,6 +226,10 @@ MobileMessageDatabaseService.prototype = {
             self.upgradeSchema13(event.target.transaction, next);
             break;
           case 14:
+            if (DEBUG) debug("Upgrade to version 15. Add deliveryTimestamp.");
+            self.upgradeSchema14(event.target.transaction, next);
+            break;
+          case 15:
             // This will need to be moved for each new version
             if (DEBUG) debug("Upgrade finished.");
             break;
@@ -1018,6 +1022,33 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
+  /**
+   * Add deliveryTimestamp.
+   */
+  upgradeSchema14: function upgradeSchema14(transaction, next) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        next();
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      if (messageRecord.type == "sms") {
+        messageRecord.deliveryTimestamp = 0;
+      } else if (messageRecord.type == "mms") {
+        let deliveryInfo = messageRecord.deliveryInfo;
+        for (let i = 0; i < deliveryInfo.length; i++) {
+          deliveryInfo[i].deliveryTimestamp = 0;
+        }
+      }
+      cursor.update(messageRecord);
+      cursor.continue();
+    };
+  },
+
   matchParsedPhoneNumbers: function matchParsedPhoneNumbers(addr1, parsedAddr1,
                                                             addr2, parsedAddr2) {
     if ((parsedAddr1.internationalNumber &&
@@ -1080,6 +1111,7 @@ MobileMessageDatabaseService.prototype = {
                                                     aMessageRecord.body,
                                                     aMessageRecord.messageClass,
                                                     aMessageRecord.timestamp,
+                                                    aMessageRecord.deliveryTimestamp,
                                                     aMessageRecord.read);
     } else if (aMessageRecord.type == "mms") {
       let headers = aMessageRecord["headers"];
@@ -1498,6 +1530,12 @@ MobileMessageDatabaseService.prototype = {
           if (messageRecord.type == "sms") {
             if (messageRecord.deliveryStatus != deliveryStatus) {
               messageRecord.deliveryStatus = deliveryStatus;
+
+              // Update the delivery timestamp if it's successfully delivered.
+              if (deliveryStatus == DELIVERY_STATUS_SUCCESS) {
+                messageRecord.deliveryTimestamp = Date.now();
+              }
+
               isRecordUpdated = true;
             }
           } else if (messageRecord.type == "mms") {
@@ -1674,6 +1712,11 @@ MobileMessageDatabaseService.prototype = {
     if (aMessage.type == "sms") {
       aMessage.delivery = DELIVERY_RECEIVED;
       aMessage.deliveryStatus = DELIVERY_STATUS_SUCCESS;
+
+      // If |deliveryTimestamp| is not specified, use 0 as default.
+      if (aMessage.deliveryTimestamp == undefined) {
+        aMessage.deliveryTimestamp = 0;
+      }
     }
     aMessage.deliveryIndex = [aMessage.delivery, timestamp];
 
@@ -1699,6 +1742,10 @@ MobileMessageDatabaseService.prototype = {
                        : DELIVERY_STATUS_NOT_APPLICABLE;
     if (aMessage.type == "sms") {
       aMessage.deliveryStatus = deliveryStatus;
+      // If |deliveryTimestamp| is not specified, use 0 as default.
+      if (aMessage.deliveryTimestamp == undefined) {
+        aMessage.deliveryTimestamp = 0;
+      }
     } else if (aMessage.type == "mms") {
       let receivers = aMessage.receivers
       if (!Array.isArray(receivers)) {
