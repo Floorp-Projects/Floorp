@@ -22,6 +22,8 @@ interface ContactAddress {
                   optional DOMString postalCode,
                   optional DOMString countryName,
                   optional boolean pref);
+
+  object toJSON();
 };
 
 dictionary ContactAddressInit {
@@ -45,6 +47,8 @@ interface ContactField {
   void initialize(optional sequence<DOMString>? type,
                   optional DOMString value,
                   optional boolean pref);
+
+  object toJSON();
 };
 
 dictionary ContactFieldInit {
@@ -63,6 +67,8 @@ interface ContactTelField : ContactField {
                   optional DOMString value,
                   optional DOMString? carrier,
                   optional boolean pref);
+
+  object toJSON();
 };
 
 dictionary ContactTelFieldInit : ContactFieldInit {
@@ -140,7 +146,7 @@ interface mozContact {
   [ChromeOnly]
   void setMetadata(DOMString id, Date? published, Date? updated);
 
-  jsonifier;
+  object toJSON();
 };
 
 dictionary ContactFindSortOptions {
