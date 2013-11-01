@@ -166,6 +166,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     ]
     SOURCES += [
         'ipc/ShadowLayerUtilsMac.cpp',
+        'MacIOSurfaceImage.cpp',
         'opengl/GLManager.cpp',
     ]
 
