@@ -175,24 +175,46 @@ class TreeMetadataEmitter(LoggingMixin):
             passthru.variables['VISIBILITY_FLAGS'] = ''
 
         varmap = dict(
-            ASFILES=('SOURCES', ('.s', '.asm')),
-            CSRCS=('SOURCES', '.c'),
-            CMMSRCS=('SOURCES', '.mm'),
-            CPPSRCS=('SOURCES', ('.cc', '.cpp')),
-            SSRCS=('SOURCES', '.S'),
-            HOST_CPPSRCS=('HOST_SOURCES', ('.cc', '.cpp')),
-            HOST_CSRCS=('HOST_SOURCES', '.c'),
-            GTEST_CMMSRCS=('GTEST_SOURCES', '.mm'),
-            GTEST_CPPSRCS=('GTEST_SOURCES', ('.cc', '.cpp')),
-            GTEST_CSRCS=('GTEST_SOURCES', '.c'),
-            UNIFIED_CSRCS=('UNIFIED_SOURCES', '.c'),
-            UNIFIED_CPPSRCS=('UNIFIED_SOURCES', ('.cc', '.cpp')),
+            SOURCES={
+                '.s': 'ASFILES',
+                '.asm': 'ASFILES',
+                '.c': 'CSRCS',
+                '.m': 'CMSRCS',
+                '.mm': 'CMMSRCS',
+                '.cc': 'CPPSRCS',
+                '.cpp': 'CPPSRCS',
+                '.S': 'SSRCS',
+            },
+            HOST_SOURCES={
+                '.c': 'HOST_CSRCS',
+                '.mm': 'HOST_CMMSRCS',
+                '.cc': 'HOST_CPPSRCS',
+                '.cpp': 'HOST_CPPSRCS',
+            },
+            GTEST_SOURCES={
+                '.c': 'GTEST_CSRCS',
+                '.mm': 'GTEST_CMMSRCS',
+                '.cc': 'GTEST_CPPSRCS',
+                '.cpp': 'GTEST_CPPSRCS',
+            },
+            UNIFIED_SOURCES={
+                '.c': 'UNIFIED_CSRCS',
+                '.cc': 'UNIFIED_CPPSRCS',
+                '.cpp': 'UNIFIED_CPPSRCS',
+            }
         )
-        for mak, (moz, ext) in varmap.items():
-            if sandbox[moz]:
-                filtered = [f for f in sandbox[moz] if f.endswith(ext)]
-                if filtered:
-                    passthru.variables[mak] = filtered
+        varmap.update(dict(('GENERATED_%s' % k, v) for k, v in varmap.items()
+                           if k in ('SOURCES', 'UNIFIED_SOURCES')))
+        for variable, mapping in varmap.items():
+            for f in sandbox[variable]:
+                ext = os.path.splitext(f)[1]
+                if ext not in mapping:
+                    raise SandboxValidationError('%s has an unknown file type in %s' % (f, sandbox['RELATIVEDIR']))
+                l = passthru.variables.setdefault(mapping[ext], [])
+                l.append(f)
+                if variable.startswith('GENERATED_'):
+                    l = passthru.variables.setdefault('GARBAGE', [])
+                    l.append(f)
 
         if passthru.variables:
             yield passthru

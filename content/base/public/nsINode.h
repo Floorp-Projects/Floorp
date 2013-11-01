@@ -1533,6 +1533,10 @@ public:
     return ReplaceOrInsertBefore(true, &aNode, &aChild, aError);
   }
   nsINode* RemoveChild(nsINode& aChild, mozilla::ErrorResult& aError);
+  already_AddRefed<nsINode> CloneNode(mozilla::ErrorResult& aError)
+  {
+    return CloneNode(true, aError);
+  }
   already_AddRefed<nsINode> CloneNode(bool aDeep, mozilla::ErrorResult& aError);
   bool IsEqualNode(nsINode* aNode);
   void GetNamespaceURI(nsAString& aNamespaceURI) const

@@ -2293,7 +2293,6 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     defaultOffset = -1;
 
     pn2 = pn->pn_right;
-#if JS_HAS_BLOCK_SCOPE
     /*
      * If there are hoisted let declarations, their stack slots go under the
      * discriminant's value so push their slots now and enter the block later.
@@ -2306,26 +2305,20 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return false;
         }
     }
-#endif
 
     /* Push the discriminant. */
     if (!EmitTree(cx, bce, pn->pn_left))
         return false;
 
-#if JS_HAS_BLOCK_SCOPE
     if (pn2->isKind(PNK_LEXICALSCOPE)) {
         PushBlockScopeBCE(bce, &stmtInfo, pn2->pn_objbox->object->as<StaticBlockObject>(), -1);
         stmtInfo.type = STMT_SWITCH;
         if (!EmitEnterBlock(cx, bce, pn2, JSOP_ENTERLET1))
             return false;
     }
-#endif
 
     /* Switch bytecodes run from here till end of final case. */
     top = bce->offset();
-#if !JS_HAS_BLOCK_SCOPE
-    PushStatementBCE(bce, &stmtInfo, STMT_SWITCH, top);
-#else
     if (pn2->isKind(PNK_STATEMENTLIST)) {
         PushStatementBCE(bce, &stmtInfo, STMT_SWITCH, top);
     } else {
@@ -2338,7 +2331,6 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         /* Advance pn2 to refer to the switch case list. */
         pn2 = pn2->expr();
     }
-#endif
 
     uint32_t caseCount = pn2->pn_count;
     uint32_t tableLength = 0;
@@ -2614,10 +2606,8 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!PopStatementBCE(cx, bce))
         return false;
 
-#if JS_HAS_BLOCK_SCOPE
     if (pn->pn_right->isKind(PNK_LEXICALSCOPE))
         EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObjCount);
-#endif
 
     return true;
 }
@@ -4155,7 +4145,6 @@ EmitIf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return PopStatementBCE(cx, bce);
 }
 
-#if JS_HAS_BLOCK_SCOPE
 /*
  * pnLet represents one of:
  *
@@ -4228,7 +4217,6 @@ EmitLet(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
 
     return PopStatementBCE(cx, bce);
 }
-#endif
 
 /*
  * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
@@ -6455,13 +6443,12 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitLexicalScope(cx, bce, pn);
         break;
 
-#if JS_HAS_BLOCK_SCOPE
       case PNK_LET:
         ok = pn->isArity(PN_BINARY)
              ? EmitLet(cx, bce, pn)
              : EmitVariables(cx, bce, pn, InitializeVars);
         break;
-#endif /* JS_HAS_BLOCK_SCOPE */
+
       case PNK_ARRAYPUSH: {
         int slot;
 

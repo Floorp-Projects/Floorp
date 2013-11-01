@@ -3410,6 +3410,7 @@ TreeMatchContext::InitAncestors(Element *aElement)
 {
   MOZ_ASSERT(!mAncestorFilter.mFilter);
   MOZ_ASSERT(mAncestorFilter.mHashes.IsEmpty());
+  MOZ_ASSERT(mStyleScopes.IsEmpty());
 
   mAncestorFilter.mFilter = new AncestorFilter::Filter();
 
@@ -3434,6 +3435,32 @@ TreeMatchContext::InitAncestors(Element *aElement)
     // Now push them in reverse order.
     for (uint32_t i = ancestors.Length(); i-- != 0; ) {
       mAncestorFilter.PushAncestor(ancestors[i]);
+      PushStyleScope(ancestors[i]);
+    }
+  }
+}
+
+void
+TreeMatchContext::InitStyleScopes(Element* aElement)
+{
+  MOZ_ASSERT(mStyleScopes.IsEmpty());
+
+  if (MOZ_LIKELY(aElement)) {
+    // Collect up the ancestors
+    nsAutoTArray<Element*, 50> ancestors;
+    Element* cur = aElement;
+    do {
+      ancestors.AppendElement(cur);
+      nsINode* parent = cur->GetParentNode();
+      if (!parent || !parent->IsElement()) {
+        break;
+      }
+
+      cur = parent->AsElement();
+    } while (true);
+
+    // Now push them in reverse order.
+    for (uint32_t i = ancestors.Length(); i-- != 0; ) {
       PushStyleScope(ancestors[i]);
     }
   }

@@ -7,10 +7,6 @@
 
 MOZILLA_INTERNAL_API = 1
 
-ifeq (Darwin, $(OS_ARCH))
-CSRCS = mach_override.c
-endif
-
 SHARED_LIBRARY_LIBS = \
 		$(DEPTH)/chrome/src/$(LIB_PREFIX)chrome_s.$(LIB_SUFFIX) \
 		../ds/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
