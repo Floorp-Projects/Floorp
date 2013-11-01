@@ -307,10 +307,14 @@ VARIABLES = {
         """, None),
 
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
-        """Generate a list of binaries from source.
+        """Compile a list of executable names.
 
-        A list of sources, one per program, to compile & link with libs
-        into standalone programs.
+        Each name in this variable corresponds to an executable built from the
+        corresponding source file with the same base name.
+
+        If the configuration token ``BIN_SUFFIX`` is set, its value will be
+        automatically appended to each name. If a name already ends with
+        ``BIN_SUFFIX``, the name will remain unchanged.
         """, 'binaries'),
 
     'TOOL_DIRS': (list, list, [],

@@ -9,5 +9,5 @@ SOURCES += [
 ]
 
 SIMPLE_PROGRAMS += [
-    "windbgdlg%s" % (CONFIG['BIN_SUFFIX'])
+    'windbgdlg'
 ]
