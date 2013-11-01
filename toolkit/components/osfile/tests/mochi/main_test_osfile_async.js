@@ -151,7 +151,6 @@ let test = maketest("Main", function main(test) {
     SimpleTest.waitForExplicitFinish();
     yield test_constants();
     yield test_path();
-    yield test_open();
     yield test_stat();
     yield test_debug();
     yield test_info_features_detect();
@@ -196,50 +195,6 @@ let test_path = maketest("path",  function path(test) {
     test.is(OS.Constants.Path.tmpDir, Services.dirsvc.get("TmpD", Components.interfaces.nsIFile).path, "OS.Constants.Path.tmpDir is correct");
     test.is(OS.Constants.Path.profileDir, Services.dirsvc.get("ProfD", Components.interfaces.nsIFile).path, "OS.Constants.Path.profileDir is correct");
     test.is(OS.Constants.Path.localProfileDir, Services.dirsvc.get("ProfLD", Components.interfaces.nsIFile).path, "OS.Constants.Path.localProfileDir is correct");
-  });
-});
-
-/**
- * Test OS.File.open for reading:
- * - with an existing file (should succeed);
- * - with a non-existing file (should fail);
- * - with inconsistent arguments (should fail).
- */
-let test_open = maketest("open",  function open(test) {
-  return Task.spawn(function() {
-    // Attempt to open a file that does not exist, ensure that it yields the
-    // appropriate error.
-    try {
-      let fd = yield OS.File.open(OS.Path.join(".", "This file does not exist"));
-      test.ok(false, "File opening 1 succeeded (it should fail)" + fd);
-    } catch (err) {
-      test.ok(true, "File opening 1 failed " + err);
-      test.ok(err instanceof OS.File.Error, "File opening 1 returned a file error");
-      test.ok(err.becauseNoSuchFile, "File opening 1 informed that the file does not exist");
-    }
-
-    // Attempt to open a file with the wrong args, so that it fails before
-    // serialization, ensure that it yields the appropriate error.
-    test.info("Attempting to open a file with wrong arguments");
-    try {
-      let fd = yield OS.File.open(1, 2, 3);
-      test.ok(false, "File opening 2 succeeded (it should fail)" + fd);
-    } catch (err) {
-      test.ok(true, "File opening 2 failed " + err);
-      test.ok(!(err instanceof OS.File.Error), "File opening 2 returned something that is not a file error");
-      test.ok(err.constructor.name == "TypeError", "File opening 2 returned a TypeError");
-    }
-
-    // Attempt to open a file correctly
-    test.info("Attempting to open a file correctly");
-    let openedFile = yield OS.File.open(EXISTING_FILE);
-    test.ok(true, "File opened correctly");
-
-    test.info("Attempting to close a file correctly");
-    yield openedFile.close();
-
-    test.info("Attempting to close a file again");
-    yield openedFile.close();
   });
 });
 
