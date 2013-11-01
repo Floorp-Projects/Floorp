@@ -93,7 +93,7 @@
     real(DataView,              35,     js_InitTypedArrayClasses,  OCLASP(DataView)) \
 IF_PJS(real,imaginary)  (ParallelArray,         36,     js_InitParallelArrayClass, OCLASP(ParallelArray)) \
 IF_INTL(real,imaginary) (Intl,                  37,     js_InitIntlClass,          CLASP(Intl)) \
-IF_BDATA(real,imaginary)(TypedObject,           38,     js_InitTypedObjectClass,   CLASP(TypedObject)) \
+IF_BDATA(real,imaginary)(TypedObject,           38,     js_InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
     imaginary(GeneratorFunction,     39,     js_InitIteratorClasses, dummy) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)

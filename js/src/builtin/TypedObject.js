@@ -282,7 +282,7 @@ TypedObjectPointer.prototype.getReference = function() {
 
 TypedObjectPointer.prototype.getX4 = function() {
   var type = REPR_TYPE(this.typeRepr);
-  var T = StandardTypeObjectDescriptors();
+  var T = GetTypedObjectModule();
   switch (type) {
   case JS_X4TYPEREPR_FLOAT32:
     var x = Load_float32(this.datum, this.offset + 0);
@@ -781,7 +781,7 @@ function ArrayShorthand(...dims) {
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS,
                "this", "typed object");
 
-  var T = StandardTypeObjectDescriptors();
+  var T = GetTypedObjectModule();
 
   if (dims.length == 0)
     return new T.ArrayType(this);
@@ -799,11 +799,11 @@ function TypeOfTypedDatum(obj) {
 
   // Note: Do not create bindings for `Any`, `String`, etc in
   // Utilities.js, but rather access them through
-  // `StandardTypeObjectDescriptors()`. The reason is that bindings
+  // `GetTypedObjectModule()`. The reason is that bindings
   // you create in Utilities.js are part of the self-hosted global,
   // vs the user-accessible global, and hence should not escape to
   // user script.
-  var T = StandardTypeObjectDescriptors();
+  var T = GetTypedObjectModule();
   switch (typeof obj) {
     case "object": return T.Object;
     case "function": return T.Object;

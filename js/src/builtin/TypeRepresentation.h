@@ -8,51 +8,62 @@
 #define builtin_TypeRepresentation_h
 
 /*
-
-  Type Representations are the way that the compiler stores
-  information about binary data types that the user defines.  They are
-  always interned into a hashset in the compartment (typeReprs),
-  meaning that you can compare two type representations for equality
-  just using `==`.
-
-  # Creation and canonicalization:
-
-  Each kind of `TypeRepresentation` object includes a `New` method
-  that will create a canonical instance of it. So, for example, you
-  can do `ScalarTypeRepresentation::Create(Uint8)` to get the
-  canonical representation of uint8. The object that is returned is
-  designed to be immutable, and the API permits only read access.
-
-  # Memory management:
-
-  Each TypeRepresentations has a representative JSObject, called its
-  owner object. When this object is finalized, the TypeRepresentation*
-  will be freed (and removed from the interning table, see
-  below). Therefore, if you reference a TypeRepresentation*, you must
-  ensure this owner object is traced. In type objects, this is done by
-  invoking TypeRepresentation::mark(); in binary data type descriptors,
-  the owner object for the type is stored in `SLOT_TYPE_REPR`.
-
-  The canonicalization table maintains *weak references* to the
-  TypeRepresentation* pointers. That is, the table is not traced.
-  Instead, whenever an object is created, it is paired with its owner
-  object, and the finalizer of the owner object removes the pointer
-  from the table and then frees the pointer.
-
-  # Opacity
-
-  A type representation is considered "opaque" if it contains
-  references (strings, objects, any). In those cases we have to be
-  more limited with respect to aliasing etc to preserve portability
-  across engines (for example, we don't want to expose sizeof(Any))
-  and memory safety.
-
-  # Future plans:
-
-  The owner object will eventually be exposed to self-hosted script
-  and will offer methods for querying and manipulating the binary data
-  it describes.
-
+ *  Type Representations are canonical versions of user-defined type
+ *  descriptors. Using the typed objects API, users are free to define
+ *  new type descriptors representing C-like type definitions. Each such
+ *  type descriptor has a distinct prototype and identity, even if it
+ *  describes the same logical type as another type
+ *  descriptor. Generally speaking, though, the only thing the compiler
+ *  cares about is the binary data layout implied by a type descriptor.
+ *
+ *  Therefore, we link each such type descriptor to one canonical *type
+ *  representation*. The type representation is itself an object, but
+ *  this object is never exposed to user code (it is used by self-hosted
+ *  code). Type representations are interned into a hashset in the
+ *  compartment (typeReprs), meaning that you can compare two type
+ *  representations for equality just using `==`. If they are equal,
+ *  it means that they represent the same binary layout.
+ *
+ *  # Creation and canonicalization:
+ *
+ *  Each kind of `TypeRepresentation` object includes a `New` method
+ *  that will create a canonical instance of it. So, for example, you
+ *  can do `ScalarTypeRepresentation::Create(Uint8)` to get the
+ *  canonical representation of uint8. The object that is returned is
+ *  designed to be immutable, and the API permits only read access.
+ *
+ *  # Integration with TI:
+ *
+ *  Each TypeRepresentation has an associated Type Object. This Type
+ *  Object is used as the type object for all type descriptors with this
+ *  representation. The type object has an associated addendum linking
+ *  to the type representation, thus allowing the jit to deduce
+ *  information about type descriptors that appear in expressions.
+ *
+ *  # Memory management:
+ *
+ *  Each TypeRepresentations has an associated JSObject, called its
+ *  owned object. When this object is finalized, the TypeRepresentation*
+ *  will be freed (and removed from the interning table, see
+ *  below). Therefore, if you reference a TypeRepresentation*, you must
+ *  ensure this owner object is traced. In type objects, this is done by
+ *  invoking TypeRepresentation::mark(); in binary data type
+ *  descriptors, the owner object for the type is stored in
+ *  `SLOT_TYPE_REPR`.
+ *
+ *  The canonicalization table maintains *weak references* to the
+ *  TypeRepresentation* pointers. That is, the table is not traced.
+ *  Instead, whenever an object is created, it is paired with its owner
+ *  object, and the finalizer of the owner object removes the pointer
+ *  from the table and then frees the pointer.
+ *
+ *  # Opacity
+ *
+ *  A type representation is considered "opaque" if it contains
+ *  references (strings, objects, any). In those cases we have to be
+ *  more limited with respect to aliasing etc to preserve portability
+ *  across engines (for example, we don't want to expose sizeof(Any))
+ *  and memory safety.
  */
 
 #include "jsalloc.h"
@@ -139,6 +150,7 @@ class TypeRepresentation {
     static void obj_finalize(js::FreeOp *fop, JSObject *object);
 
     HeapPtrObject ownerObject_;
+    HeapPtrTypeObject typeObject_;
     void traceFields(JSTracer *tracer);
 
   public:
@@ -146,6 +158,7 @@ class TypeRepresentation {
     bool opaque() const { return opaque_; }
     bool transparent() const { return !opaque_; }
     JSObject *ownerObject() const { return ownerObject_.get(); }
+    types::TypeObject *typeObject() const { return typeObject_.get(); }
 
     // Appends a stringified form of this type representation onto
     // buffer, for use in error messages and the like.
@@ -421,12 +434,12 @@ class SizedArrayTypeRepresentation : public SizedTypeRepresentation {
 
 struct StructField {
     size_t index;
-    HeapId id;
+    HeapPtrPropertyName propertyName;
     SizedTypeRepresentation *typeRepr;
     size_t offset;
 
     explicit StructField(size_t index,
-                         jsid &id,
+                         PropertyName *propertyName,
                          SizedTypeRepresentation *typeRepr,
                          size_t offset);
 };
@@ -449,7 +462,7 @@ class StructTypeRepresentation : public SizedTypeRepresentation {
 
     StructTypeRepresentation();
     bool init(JSContext *cx,
-              AutoIdVector &ids,
+              AutoPropertyNameVector &names,
               AutoObjectVector &typeReprOwners);
 
     // See TypeRepresentation::traceFields()
@@ -470,11 +483,12 @@ class StructTypeRepresentation : public SizedTypeRepresentation {
 
     const StructField *fieldNamed(jsid id) const;
 
-    // Creates a struct type containing fields with names from `ids`
-    // and types from `typeReprOwners`. The latter should be the owner
-    // objects of a set of sized type representations.
+    // Creates a struct type from two parallel arrays:
+    // - `names`: the names of the struct type fields.
+    // - `typeReprOwners`: the types of each field, which are assumed
+    //   to be the owner objects for sized type representations.
     static JSObject *Create(JSContext *cx,
-                            AutoIdVector &ids,
+                            AutoPropertyNameVector &names,
                             AutoObjectVector &typeReprOwners);
 };
 
