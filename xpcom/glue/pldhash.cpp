@@ -18,9 +18,6 @@
 #include "mozilla/MemoryReporting.h"
 
 #ifdef PL_DHASHMETER
-# if defined MOZILLA_CLIENT && defined DEBUG_XXXbrendan
-#  include "nsTraceMalloc.h"
-# endif
 # define METER(x)       x
 #else
 # define METER(x)       /* nothing */
@@ -296,18 +293,6 @@ PL_DHashTableFinish(PLDHashTable *table)
     char *entryAddr, *entryLimit;
     uint32_t entrySize;
     PLDHashEntryHdr *entry;
-
-#ifdef DEBUG_XXXbrendan
-    static FILE *dumpfp = nullptr;
-    if (!dumpfp) dumpfp = fopen("/tmp/pldhash.bigdump", "w");
-    if (dumpfp) {
-#ifdef MOZILLA_CLIENT
-        NS_TraceStack(1, dumpfp);
-#endif
-        PL_DHashTableDumpMeter(table, nullptr, dumpfp);
-        fputc('\n', dumpfp);
-    }
-#endif
 
     INCREMENT_RECURSION_LEVEL(table);
 
