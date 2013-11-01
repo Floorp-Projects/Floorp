@@ -14,6 +14,10 @@
 
 #ifdef XP_WIN
 #include <windows.h>
+#include <winioctl.h>
+#include "base/scoped_handle_win.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #endif
 
 #ifdef MOZ_WIDGET_GTK
@@ -33,6 +37,82 @@ extern "C" {
 NS_EXPORT int android_sdk_version;
 }
 #endif
+
+#if defined(XP_WIN)
+namespace {
+nsresult GetProfileHDDInfo(nsAutoCString& aModel, nsAutoCString& aRevision)
+{
+    aModel.Truncate();
+    aRevision.Truncate();
+
+    nsCOMPtr<nsIFile> profDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                         getter_AddRefs(profDir));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsAutoString profDirPath;
+    rv = profDir->GetPath(profDirPath);
+    NS_ENSURE_SUCCESS(rv, rv);
+    wchar_t volumeMountPoint[MAX_PATH] = {L'\\', L'\\', L'.', L'\\'};
+    const size_t PREFIX_LEN = 4;
+    if (!::GetVolumePathNameW(profDirPath.get(), volumeMountPoint + PREFIX_LEN,
+                              mozilla::ArrayLength(volumeMountPoint) -
+                              PREFIX_LEN)) {
+        return NS_ERROR_UNEXPECTED;
+    }
+    size_t volumeMountPointLen = wcslen(volumeMountPoint);
+    // Since we would like to open a drive and not a directory, we need to
+    // remove any trailing backslash. A drive handle is valid for
+    // DeviceIoControl calls, a directory handle is not.
+    if (volumeMountPoint[volumeMountPointLen - 1] == L'\\') {
+      volumeMountPoint[volumeMountPointLen - 1] = L'\0';
+    }
+    ScopedHandle handle(::CreateFileW(volumeMountPoint, 0,
+                                      FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                                      OPEN_EXISTING, 0, NULL));
+    if (!handle.IsValid()) {
+        return NS_ERROR_UNEXPECTED;
+    }
+    STORAGE_PROPERTY_QUERY queryParameters = {StorageDeviceProperty,
+                                              PropertyStandardQuery};
+    STORAGE_DEVICE_DESCRIPTOR outputHeader = {sizeof(STORAGE_DEVICE_DESCRIPTOR)};
+    DWORD bytesRead = 0;
+    if (!::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
+                           &queryParameters, sizeof(queryParameters),
+                           &outputHeader, sizeof(outputHeader), &bytesRead,
+                           nullptr)) {
+        return NS_ERROR_FAILURE;
+    }
+    PSTORAGE_DEVICE_DESCRIPTOR deviceOutput =
+                          (PSTORAGE_DEVICE_DESCRIPTOR)malloc(outputHeader.Size);
+    if (!::DeviceIoControl(handle, IOCTL_STORAGE_QUERY_PROPERTY,
+                           &queryParameters, sizeof(queryParameters),
+                           deviceOutput, outputHeader.Size, &bytesRead,
+                           nullptr)) {
+        free(deviceOutput);
+        return NS_ERROR_FAILURE;
+    }
+    // Some HDDs are including product ID info in the vendor field. Since PNP
+    // IDs include vendor info and product ID concatenated together, we'll do
+    // that here and interpret the result as a unique ID for the HDD model.
+    if (deviceOutput->VendorIdOffset) {
+        aModel = reinterpret_cast<char*>(deviceOutput) +
+                     deviceOutput->VendorIdOffset;
+    }
+    if (deviceOutput->ProductIdOffset) {
+        aModel += reinterpret_cast<char*>(deviceOutput) +
+                      deviceOutput->ProductIdOffset;
+    }
+    aModel.CompressWhitespace();
+    if (deviceOutput->ProductRevisionOffset) {
+        aRevision = reinterpret_cast<char*>(deviceOutput) +
+                        deviceOutput->ProductRevisionOffset;
+        aRevision.CompressWhitespace();
+    }
+    free(deviceOutput);
+    return NS_OK;
+}
+} // anonymous namespace
+#endif // defined(XP_WIN)
 
 using namespace mozilla;
 
@@ -111,6 +191,14 @@ nsSystemInfo::Init()
     NS_WARN_IF_FALSE(gotWow64Value, "IsWow64Process failed");
     if (gotWow64Value) {
       rv = SetPropertyAsBool(NS_LITERAL_STRING("isWow64"), !!isWow64);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    nsAutoCString hddModel, hddRevision;
+    if (NS_SUCCEEDED(GetProfileHDDInfo(hddModel, hddRevision))) {
+      rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDModel"), hddModel);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = SetPropertyAsACString(NS_LITERAL_STRING("profileHDDRevision"),
+                                 hddRevision);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 #endif
