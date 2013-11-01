@@ -59,7 +59,6 @@ interface SVGSVGElement : SVGGraphicsElement {
   SVGTransform createSVGTransform();
   [NewObject]
   SVGTransform createSVGTransformFromMatrix(SVGMatrix matrix);
-  Element? getElementById(DOMString elementId);
 };
 
 /*SVGSVGElement implements ViewCSS;

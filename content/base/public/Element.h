@@ -736,6 +736,9 @@ public:
   void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
                           ErrorResult& aError);
 
+  // Make sure bindings can see our superclass' protected GetElementById method.
+  using nsINode::GetElementById;
+
   //----------------------------------------
 
   /**
