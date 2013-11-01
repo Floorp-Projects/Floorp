@@ -107,6 +107,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             ["http://example.com", "URL entry"]
           ]
         }, {
+          accOrElmOrID: "textInput",
+          expected: [["entry", "This is text."], ["This is text.", "entry"]]
+        }, {
           // Test pivot to list from li_one.
           accOrElmOrID: "list",
           oldAccOrElmOrID: "li_one",
@@ -303,6 +306,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <input id="search" type="search" value="This is a search" />
       <input id="tel" type="tel" value="555-5555" />
       <input id="url" type="url" value="http://example.com" />
+      <input id="textInput" type="text" value="This is text." />
     </div>
   </body>
 </html>
