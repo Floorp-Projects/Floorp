@@ -162,7 +162,11 @@ ActiveLayerTracker::IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty)
 {
   LayerActivity* layerActivity = GetLayerActivity(aFrame);
   if (layerActivity) {
-    if (layerActivity->RestyleCountForProperty(aProperty) >= 2) {
+    // XXX should we really treat a single change to transform as animation?
+    uint8_t minStyleChangesToBeConsideredAnimation =
+        aProperty == eCSSProperty_opacity ? 2 : 1;
+    if (layerActivity->RestyleCountForProperty(aProperty) >=
+        minStyleChangesToBeConsideredAnimation) {
       return true;
     }
   }
