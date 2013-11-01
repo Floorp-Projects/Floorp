@@ -221,8 +221,6 @@ MetroInput::MetroInput(MetroWidget* aWidget,
   mTokenEdgeStarted.value = 0;
   mTokenEdgeCanceled.value = 0;
   mTokenEdgeCompleted.value = 0;
-  mTokenManipulationStarted.value = 0;
-  mTokenManipulationUpdated.value = 0;
   mTokenManipulationCompleted.value = 0;
   mTokenTapped.value = 0;
   mTokenRightTapped.value = 0;
@@ -491,8 +489,7 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
 
   if (mTouches.Count() == 1) {
     // If this is the first touchstart of a touch session reset some
-    // tracking flags and dispatch the event with a custom callback
-    // so we can check preventDefault result.
+    // tracking flags.
     mContentConsumingTouch = false;
     mRecognizerWantsEvents = true;
     mIsFirstTouchMove = true;
@@ -803,108 +800,6 @@ MetroInput::OnPointerExited(UI::Core::ICoreWindow* aSender,
   return S_OK;
 }
 
-/**
- * This helper function is called by our processing of "manipulation events".
- * Manipulation events are how Windows sends us information about swipes,
- * magnification gestures, and rotation gestures.
- *
- * @param aDelta the gesture change since the last update
- * @param aPosition the position at which the gesture is taking place
- * @param aMagEventType the event type of the gecko magnification gesture to
- *                      send
- * @param aRotEventType the event type of the gecko rotation gesture to send
- */
-void
-MetroInput::ProcessManipulationDelta(
-                            UI::Input::ManipulationDelta const& aDelta,
-                            Foundation::Point const& aPosition,
-                            uint32_t aMagEventType,
-                            uint32_t aRotEventType) {
-  // If we ONLY have translation (no rotation, no expansion), then this
-  // gesture isn't a two-finger gesture.  We ignore it here, since the only
-  // thing it could eventually be is a swipe, and we deal with swipes in
-  // OnManipulationCompleted.
-  if ((aDelta.Translation.X != 0.0f
-    || aDelta.Translation.Y != 0.0f)
-   && (aDelta.Rotation == 0.0f
-    && aDelta.Expansion == 0.0f)) {
-    return;
-  }
-
-  // Send a gecko event indicating the magnification since the last update.
-  WidgetSimpleGestureEvent* magEvent =
-    new WidgetSimpleGestureEvent(true, aMagEventType, mWidget.Get(), 0, 0.0);
-
-  magEvent->delta = aDelta.Expansion;
-  magEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  magEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(aPosition));
-  DispatchAsyncEventIgnoreStatus(magEvent);
-
-  // Send a gecko event indicating the rotation since the last update.
-  WidgetSimpleGestureEvent* rotEvent =
-    new WidgetSimpleGestureEvent(true, aRotEventType, mWidget.Get(), 0, 0.0);
-
-  rotEvent->delta = aDelta.Rotation;
-  rotEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-  rotEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(aPosition));
-  if (rotEvent->delta >= 0) {
-    rotEvent->direction = nsIDOMSimpleGestureEvent::ROTATION_COUNTERCLOCKWISE;
-  } else {
-    rotEvent->direction = nsIDOMSimpleGestureEvent::ROTATION_CLOCKWISE;
-  }
-  DispatchAsyncEventIgnoreStatus(rotEvent);
-}
-
-// This event is raised when a gesture is detected to have started.  The
-// data that is in "aArgs->Cumulative" represents the initial update, so
-// it is equivalent to what we will receive later during ManipulationUpdated
-// events.
-HRESULT
-MetroInput::OnManipulationStarted(
-                      UI::Input::IGestureRecognizer* aSender,
-                      UI::Input::IManipulationStartedEventArgs* aArgs)
-{
-#ifdef DEBUG_INPUT
-  LogFunction();
-#endif
-  UI::Input::ManipulationDelta delta;
-  Foundation::Point position;
-
-  aArgs->get_Cumulative(&delta);
-  aArgs->get_Position(&position);
-
-  ProcessManipulationDelta(delta,
-                           position,
-                           NS_SIMPLE_GESTURE_MAGNIFY_START,
-                           NS_SIMPLE_GESTURE_ROTATE_START);
-  return S_OK;
-}
-
-// This event is raised to inform us of changes in the gesture
-// that is occurring.  We simply pass "aArgs->Delta" (which gives us the
-// changes since the last update or start event), and "aArgs->Position"
-// to our helper function.
-HRESULT
-MetroInput::OnManipulationUpdated(
-                        UI::Input::IGestureRecognizer* aSender,
-                        UI::Input::IManipulationUpdatedEventArgs* aArgs)
-{
-#ifdef DEBUG_INPUT
-  LogFunction();
-#endif
-  UI::Input::ManipulationDelta delta;
-  Foundation::Point position;
-
-  aArgs->get_Delta(&delta);
-  aArgs->get_Position(&position);
-
-  ProcessManipulationDelta(delta,
-                           position,
-                           NS_SIMPLE_GESTURE_MAGNIFY_UPDATE,
-                           NS_SIMPLE_GESTURE_ROTATE_UPDATE);
-  return S_OK;
-}
-
 // Gecko expects a "finished" event to be sent that has the cumulative
 // changes since the gesture began.  The idea is that consumers could hook
 // only this last event and still effectively support magnification and
@@ -922,38 +817,22 @@ MetroInput::OnManipulationCompleted(
   LogFunction();
 #endif
 
-  UI::Input::ManipulationDelta delta;
-  Foundation::Point position;
   Devices::Input::PointerDeviceType deviceType;
-
-  aArgs->get_Position(&position);
-  aArgs->get_Cumulative(&delta);
   aArgs->get_PointerDeviceType(&deviceType);
-
-  // Send the "finished" events.  Note that we are setting
-  // delta to the cumulative ManipulationDelta.
-  ProcessManipulationDelta(delta,
-                           position,
-                           NS_SIMPLE_GESTURE_MAGNIFY,
-                           NS_SIMPLE_GESTURE_ROTATE);
-
-  // If any rotation or expansion has occurred, we know we're not dealing
-  // with a swipe gesture, so let's bail early.  Also, the GestureRecognizer
-  // will send us Manipulation events even for mouse input under certain
-  // conditions.  I was able to initiate swipe events consistently by
-  // clicking as I threw the mouse from one side of the screen to the other.
-  // Thus the check for mouse input here.
-  if (delta.Rotation != 0.0f
-   || delta.Expansion != 0.0f
-   || deviceType ==
+  if (deviceType ==
               Devices::Input::PointerDeviceType::PointerDeviceType_Mouse) {
     return S_OK;
   }
 
-  // No rotation or expansion occurred, so it is possible that we have a
-  // swipe gesture.  We must check that the distance the user's finger
-  // traveled and the velocity with which it traveled exceed our thresholds
-  // for classifying the movement as a swipe.
+  UI::Input::ManipulationDelta delta;
+  Foundation::Point position;
+
+  aArgs->get_Position(&position);
+  aArgs->get_Cumulative(&delta);
+
+  // We check that the distance the user's finger traveled and the
+  // velocity with which it traveled exceed our thresholds for
+  // classifying the movement as a swipe.
   UI::Input::ManipulationVelocities velocities;
   aArgs->get_Velocities(&velocities);
 
@@ -1377,8 +1256,6 @@ MetroInput::UnregisterInputEvents() {
   // Unregistering from the gesture recognizer events probably isn't as
   // necessary since we're about to destroy the gesture recognizer, but
   // it can't hurt.
-  mGestureRecognizer->remove_ManipulationStarted(mTokenManipulationStarted);
-  mGestureRecognizer->remove_ManipulationUpdated(mTokenManipulationUpdated);
   mGestureRecognizer->remove_ManipulationCompleted(
                                         mTokenManipulationCompleted);
   mGestureRecognizer->remove_Tapped(mTokenTapped);
@@ -1427,9 +1304,7 @@ MetroInput::RegisterInputEvents()
           | UI::Input::GestureSettings::GestureSettings_RightTap
           | UI::Input::GestureSettings::GestureSettings_Hold
           | UI::Input::GestureSettings::GestureSettings_ManipulationTranslateX
-          | UI::Input::GestureSettings::GestureSettings_ManipulationTranslateY
-          | UI::Input::GestureSettings::GestureSettings_ManipulationScale
-          | UI::Input::GestureSettings::GestureSettings_ManipulationRotate);
+          | UI::Input::GestureSettings::GestureSettings_ManipulationTranslateY);
 
   // Register for the pointer events on our Window
   mWindow->add_PointerPressed(
@@ -1474,18 +1349,6 @@ MetroInput::RegisterInputEvents()
         this,
         &MetroInput::OnRightTapped).Get(),
       &mTokenRightTapped);
-
-  mGestureRecognizer->add_ManipulationStarted(
-      WRL::Callback<ManipulationStartedEventHandler>(
-       this,
-       &MetroInput::OnManipulationStarted).Get(),
-     &mTokenManipulationStarted);
-
-  mGestureRecognizer->add_ManipulationUpdated(
-      WRL::Callback<ManipulationUpdatedEventHandler>(
-        this,
-        &MetroInput::OnManipulationUpdated).Get(),
-      &mTokenManipulationUpdated);
 
   mGestureRecognizer->add_ManipulationCompleted(
       WRL::Callback<ManipulationCompletedEventHandler>(
