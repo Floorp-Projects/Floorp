@@ -2291,8 +2291,7 @@ ParseSelectorList(nsINode* aNode,
                   const nsAString& aSelectorString,
                   nsCSSSelectorList** aSelectorList)
 {
-  NS_ENSURE_ARG(aNode);
-
+  MOZ_ASSERT(aNode);
   nsIDocument* doc = aNode->OwnerDoc();
   nsCSSParser parser(doc->CSSLoader());
 
@@ -2345,22 +2344,32 @@ FindMatchingElements(nsINode* aRoot, const nsAString& aSelector, T &aList)
 
   nsIDocument* doc = aRoot->OwnerDoc();
   nsIDocument::SelectorCache& cache = doc->GetSelectorCache();
-  nsCSSSelectorList* selectorList = cache.GetList(aSelector);
+  nsCSSSelectorList* selectorList = nullptr;
+  bool haveCachedList = cache.GetList(aSelector, &selectorList);
 
-  if (!selectorList) {
-    nsresult rv = ParseSelectorList(aRoot, aSelector,
-                                    &selectorList);
+  if (!haveCachedList) {
+    nsresult rv = ParseSelectorList(aRoot, aSelector, &selectorList);
     if (NS_FAILED(rv)) {
-      delete selectorList;
+      MOZ_ASSERT(!selectorList);
+      MOZ_ASSERT(rv == NS_ERROR_DOM_SYNTAX_ERR,
+                 "Unexpected error, so cached version won't return it");
       // We hit this for syntax errors, which are quite common, so don't
       // use NS_ENSURE_SUCCESS.  (For example, jQuery has an extended set
       // of selectors, but it sees if we can parse them first.)
-      return rv;
+    } else if (!selectorList) {
+      // This is the "only pseudo-element selectors" case, which is
+      // not common, so just don't worry about caching it.  That way a
+      // null cached value can always indicate an invalid selector.
+      // Also don't try to do any matching, of course.
+      return NS_OK;
     }
 
-    NS_ENSURE_TRUE(selectorList, NS_OK);
-
     cache.CacheList(aSelector, selectorList);
+  }
+
+  if (!selectorList) {
+    // Invalid selector, since we've already handled the pseudo-element case.
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
   NS_ASSERTION(selectorList->mSelectors,
