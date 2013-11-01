@@ -37,12 +37,6 @@ namespace OT {
 
 struct SingleSubstFormat1
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -121,12 +115,6 @@ struct SingleSubstFormat1
 
 struct SingleSubstFormat2
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -263,13 +251,6 @@ struct SingleSubst
 
 struct Sequence
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    /* For len==0 we don't do anything, so it's harmless. */
-    return TRACE_RETURN (substitute.len <= 1);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -291,8 +272,8 @@ struct Sequence
     TRACE_APPLY (this);
     if (unlikely (!substitute.len)) return TRACE_RETURN (false);
 
-    unsigned int klass = c->buffer->cur().glyph_props() &
-			 HB_OT_LAYOUT_GLYPH_PROPS_LIGATURE ? HB_OT_LAYOUT_GLYPH_PROPS_BASE_GLYPH : 0;
+    unsigned int klass = _hb_glyph_info_is_ligature (&c->buffer->cur()) ?
+			 HB_OT_LAYOUT_GLYPH_PROPS_BASE_GLYPH : 0;
     unsigned int count = substitute.len;
     if (count == 1) /* Special-case to make it in-place. */
     {
@@ -301,7 +282,7 @@ struct Sequence
     else
     {
       for (unsigned int i = 0; i < count; i++) {
-	set_lig_props_for_component (c->buffer->cur(), i);
+	_hb_glyph_info_set_lig_props_for_component (&c->buffer->cur(), i);
 	c->output_glyph (substitute.array[i], klass);
       }
       c->buffer->skip_glyph ();
@@ -334,18 +315,6 @@ struct Sequence
 
 struct MultipleSubstFormat1
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    /* Some tools generate MultipleSubst with each substitute having length 1!
-     * So, check them. */
-    unsigned int count = sequence.len;
-    for (unsigned int i = 0; i < count; i++)
-	if (!(this+sequence[i]).is_inplace (c))
-	  return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -471,12 +440,6 @@ typedef ArrayOf<GlyphID> AlternateSet;	/* Array of alternate GlyphIDs--in
 
 struct AlternateSubstFormat1
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -663,27 +626,26 @@ struct Ligature
     unsigned int count = component.len;
     if (unlikely (count < 1)) return TRACE_RETURN (false);
 
-    unsigned int end_offset = 0;
     bool is_mark_ligature = false;
     unsigned int total_component_count = 0;
+
+    unsigned int match_length = 0;
+    unsigned int match_positions[MAX_CONTEXT_LENGTH];
 
     if (likely (!match_input (c, count,
 			      &component[1],
 			      match_glyph,
 			      NULL,
-			      &end_offset,
+			      &match_length,
+			      match_positions,
 			      &is_mark_ligature,
 			      &total_component_count)))
       return TRACE_RETURN (false);
 
-    /* Deal, we are forming the ligature. */
-    c->buffer->merge_clusters (c->buffer->idx, c->buffer->idx + end_offset);
-
     ligate_input (c,
 		  count,
-		  &component[1],
-		  match_glyph,
-		  NULL,
+		  match_positions,
+		  match_length,
 		  ligGlyph,
 		  is_mark_ligature,
 		  total_component_count);
@@ -797,12 +759,6 @@ struct LigatureSet
 
 struct LigatureSubstFormat1
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    return TRACE_RETURN (false);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -951,12 +907,6 @@ struct ExtensionSubst : Extension<ExtensionSubst>
 
 struct ReverseChainSingleSubstFormat1
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -1038,7 +988,9 @@ struct ReverseChainSingleSubstFormat1
 			 1))
     {
       c->replace_glyph_inplace (substitute[index]);
-      c->buffer->idx--; /* Reverse! */
+      /* Note: We DON'T decrease buffer->idx.  The main loop does it
+       * for us.  This is useful for preventing surprises if someone
+       * calls us through a Context lookup. */
       return TRACE_RETURN (true);
     }
 
@@ -1192,13 +1144,6 @@ struct SubstLookup : Lookup
     if (unlikely (type == SubstLookupSubTable::Extension))
       return CastR<ExtensionSubst> (get_subtable(0)).is_reverse ();
     return lookup_type_is_reverse (type);
-  }
-
-  inline hb_is_inplace_context_t::return_t is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    c->set_recurse_func (dispatch_recurse_func<hb_is_inplace_context_t>);
-    return TRACE_RETURN (dispatch (c));
   }
 
   inline hb_closure_context_t::return_t closure (hb_closure_context_t *c) const
@@ -1373,15 +1318,15 @@ struct GSUB : GSUBGPOS
 void
 GSUB::substitute_start (hb_font_t *font, hb_buffer_t *buffer)
 {
-  HB_BUFFER_ALLOCATE_VAR (buffer, glyph_props);
-  HB_BUFFER_ALLOCATE_VAR (buffer, lig_props);
-  HB_BUFFER_ALLOCATE_VAR (buffer, syllable);
+  _hb_buffer_allocate_gsubgpos_vars (buffer);
 
   const GDEF &gdef = *hb_ot_layout_from_face (font->face)->gdef;
   unsigned int count = buffer->len;
-  for (unsigned int i = 0; i < count; i++) {
-    buffer->info[i].lig_props() = buffer->info[i].syllable() = 0;
-    buffer->info[i].glyph_props() = gdef.get_glyph_props (buffer->info[i].codepoint);
+  for (unsigned int i = 0; i < count; i++)
+  {
+    _hb_glyph_info_set_glyph_props (&buffer->info[i], gdef.get_glyph_props (buffer->info[i].codepoint));
+    _hb_glyph_info_clear_lig_props (&buffer->info[i]);
+    buffer->info[i].syllable() = 0;
   }
 }
 
