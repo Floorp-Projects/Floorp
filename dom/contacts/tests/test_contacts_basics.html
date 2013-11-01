@@ -1054,6 +1054,12 @@ var steps = [
     };
     req.onerror = onFailure;
   },
+  function() {
+    ok(true, "Test JSON.stringify output for mozContact objects");
+    var json = JSON.parse(JSON.stringify(new mozContact(properties1)));
+    checkContacts(json, properties1);
+    next();
+  },
   function () {
     ok(true, "all done!\n");
     clearTemps();
