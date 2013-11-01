@@ -13,8 +13,7 @@ browser.jar:
 #endif
 %  overlay chrome://global/content/viewSource.xul chrome://browser/content/viewSourceOverlay.xul
 %  overlay chrome://global/content/viewPartialSource.xul chrome://browser/content/viewSourceOverlay.xul
-%  style chrome://global/content/customizeToolbar.xul chrome://browser/content/browser.css
-%  style chrome://global/content/customizeToolbar.xul chrome://browser/skin/
+
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/aboutDialog.js                (content/aboutDialog.js)
         content/browser/aboutDialog.css               (content/aboutDialog.css)
