@@ -64,7 +64,7 @@
     numUpdates++;
     if (numUpdates == numRemotes) {
       // All the remote processes have reported back.  Check reports.
-      let vsizes = {};
+      let residents = {};
 
       // Get all the reports.
       let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
@@ -73,10 +73,10 @@
       while (e.hasMoreElements()) {
         let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
         r.collectReports(function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
-          if (aPath === "vsize") {
+          if (aPath === "resident") {
             ok(100 * 1000 <= aAmount && aAmount <= 10 * 1000 * 1000 * 1000,
-               "vsize is reasonable");
-            vsizes[aProcess] = aAmount;
+               "resident is reasonable");
+            residents[aProcess] = aAmount;
           }
         }, null);
       }
@@ -88,8 +88,8 @@
 
       // Check the results.
 
-      let processes = Object.keys(vsizes);
-      ok(processes.length == numRemotes + 1, "correct vsize count");
+      let processes = Object.keys(residents);
+      ok(processes.length == numRemotes + 1, "correct resident count");
 
       let numEmptyProcesses = 0, numNonEmptyProcesses = 0;
       for (let i = 0; i < processes.length; i++) {
