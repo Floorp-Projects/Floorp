@@ -12,10 +12,13 @@ EXPORTS += [
     'nsQtKeyUtils.h',
 ]
 
-SOURCES += [
+GENERATED_SOURCES += [
     'moc_moziqwidget.cpp',
     'moc_mozqwidget.cpp',
     'moc_nsAppShell.cpp',
+]
+
+SOURCES += [
     'mozqglwidgetwrapper.cpp',
     'mozqwidget.cpp',
     'mozSwipeGesture.cpp',
@@ -41,14 +44,18 @@ SOURCES += [
 
 if CONFIG['MOZ_ENABLE_CONTENTMANAGER']:
     SOURCES += [
-        'moc_nsMFilePicker.cpp',
         'nsMFilePicker.cpp',
+    ]
+    GENERATED_SOURCES += [
+        'moc_nsMFilePicker.cpp',
     ]
 
 if CONFIG[' MOZ_ENABLE_QTMOBILITY']:
     SOURCES += [
-        'moc_mozqorientationsensorfilter.cpp',
         'mozqorientationsensorfilter.cpp',
+    ]
+    GENERATED_SOURCES += [
+        'moc_mozqorientationsensorfilter.cpp',
     ]
 
 LIBXUL_LIBRARY = True
