@@ -1704,6 +1704,12 @@ Btoa(JSContext *cx, unsigned argc, jsval *vp)
     return xpc::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
+bool
+IsXrayWrapper(JSObject *obj)
+{
+    return WrapperFactory::IsXrayWrapper(obj);
+}
+
 } // namespace xpc
 
 namespace mozilla {
