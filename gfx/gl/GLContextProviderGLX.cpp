@@ -1426,21 +1426,6 @@ GLContextProviderGLX::CreateOffscreen(const gfxIntSize& size,
     return glContext.forget();
 }
 
-SharedTextureHandle
-GLContextProviderGLX::CreateSharedHandle(SharedTextureShareType shareType,
-                                         void* buffer,
-                                         SharedTextureBufferType bufferType)
-{
-  return 0;
-}
-
-already_AddRefed<gfxASurface>
-GLContextProviderGLX::GetSharedHandleAsSurface(SharedTextureShareType shareType,
-                                               SharedTextureHandle sharedHandle)
-{
-  return nullptr;
-}
-
 static nsRefPtr<GLContext> gGlobalContext[GLXLibrary::LIBS_MAX];
 // TODO move that out of static initializaion
 static bool gUseContextSharing = getenv("MOZ_DISABLE_CONTEXT_SHARING_GLX") == 0;
