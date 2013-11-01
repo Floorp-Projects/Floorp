@@ -757,14 +757,20 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
   let make_string_rejection = function make_string_rejection() {
     let salt = (Math.random() * ( Math.pow(2, 24) - 1 ));
     let string = "This is an uncaught rejection " + salt;
-    return {mustFind: [string], error: string};
+    // Our error is not Error-like nor an nsIException, so the stack will
+    // include the closure doing the actual rejection.
+    return {mustFind: ["test_rejection_closure", string], error: string};
   };
   let make_num_rejection = function make_num_rejection() {
     let salt = (Math.random() * ( Math.pow(2, 24) - 1 ));
-    return {mustFind: [salt], error: salt};
+    // Our error is not Error-like nor an nsIException, so the stack will
+    // include the closure doing the actual rejection.
+    return {mustFind: ["test_rejection_closure", salt], error: salt};
   };
   let make_undefined_rejection = function make_undefined_rejection() {
-    return {mustFind: [], error: undefined};
+    // Our error is not Error-like nor an nsIException, so the stack will
+    // include the closure doing the actual rejection.
+    return {mustFind: ["test_rejection_closure"], error: undefined};
   };
   let make_error_rejection = function make_error_rejection() {
     let salt = (Math.random() * ( Math.pow(2, 24) - 1 ));
@@ -774,16 +780,26 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
       error: error
     };
   };
+  let make_exception_rejection = function make_exception_rejection() {
+    let salt = (Math.random() * ( Math.pow(2, 24) - 1 ));
+    let exn = new Components.Exception("This is an uncaught exception " + salt,
+                                       Components.results.NS_ERROR_NOT_AVAILABLE);
+    return {
+      mustFind: [exn.message, exn.filename, exn.lineNumber, exn.location.toString()],
+      error: exn
+    };
+  };
   for (let make_rejection of [make_string_rejection,
     make_num_rejection,
     make_undefined_rejection,
-    make_error_rejection]) {
+    make_error_rejection,
+    make_exception_rejection]) {
       let {mustFind, error} = make_rejection();
       let name = make_rejection.name;
       tests.push(make_promise_test(function test_uncaught_is_reported() {
         do_print("Testing with rejection " + name);
         let promise = wait_for_uncaught(mustFind);
-        (function() {
+        (function test_rejection_closure() {
           // For the moment, we cannot be absolutely certain that a value is
           // garbage-collected, even if it is not referenced anymore, due to
           // the conservative stack-scanning algorithm.

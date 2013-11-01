@@ -49,7 +49,7 @@
             <button id="requests-menu-status-button"
                     class="requests-menu-header-button requests-menu-status"
                     onclick="NetMonitorView.RequestsMenu.sortBy('status')"
-                    label="&netmonitorUI.toolbar.status;">
+                    label="&netmonitorUI.toolbar.status2;">
             </button>
             <button id="requests-menu-method-button"
                     class="requests-menu-header-button requests-menu-method"
