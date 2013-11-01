@@ -21,6 +21,4 @@ interface ParentNode {
   // Not implemented yet
   // void prepend((Node or DOMString)... nodes);
   // void append((Node or DOMString)... nodes);
-
-  Element? getElementById(DOMString elementId);
 };
