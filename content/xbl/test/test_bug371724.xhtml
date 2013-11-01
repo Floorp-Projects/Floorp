@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=371724
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="rd">
       <implementation>
-        <property name="hallo" onget="return true;" readonly="true"/>
+        <property name="hallo" onget="return true;" readonly="true" exposeToUntrustedContent="true"/>
       </implementation>
     </binding>
   </bindings>
