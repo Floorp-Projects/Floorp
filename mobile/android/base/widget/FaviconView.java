@@ -199,7 +199,7 @@ public class FaviconView extends ImageView {
     }
 
     private void showNoImage() {
-        setImageBitmap(null);
+        setImageDrawable(null);
         mDominantColor = 0;
     }
 
