@@ -26,7 +26,7 @@
 #endif
 
 #include "mozilla/Util.h"
-#include "mozilla/AutoRestore.h"
+
 #include "nsRefreshDriver.h"
 #include "nsITimer.h"
 #include "nsLayoutUtils.h"
@@ -685,8 +685,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     mThrottled(false),
     mTestControllingRefreshes(false),
     mViewManagerFlushIsPending(false),
-    mRequestedHighPrecision(false),
-    mInRefresh(false)
+    mRequestedHighPrecision(false)
 {
   mMostRecentRefreshEpochTime = JS_Now();
   mMostRecentRefresh = TimeStamp::Now();
@@ -1062,9 +1061,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
   profiler_tracing("Paint", "RD", TRACING_INTERVAL_START);
 
-  AutoRestore<bool> restoreInRefresh(mInRefresh);
-  mInRefresh = true;
-
   /*
    * The timer holds a reference to |this| while calling |Notify|.
    * However, implementations of |WillRefresh| are permitted to destroy
@@ -1224,8 +1220,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     mPostRefreshObservers[i]->DidRefresh();
   }
   profiler_tracing("Paint", "RD", TRACING_INTERVAL_END);
-
-  NS_ASSERTION(mInRefresh, "Still in refresh");
 }
 
 /* static */ PLDHashOperator
