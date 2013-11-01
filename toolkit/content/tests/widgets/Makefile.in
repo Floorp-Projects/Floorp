@@ -4,10 +4,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_FILES =	\
-		test_contextmenu_nested.xul \
 		tree_shared.js \
 		test_mousecapture_area.html \
-		popup_shared.js \
 		test_videocontrols.html \
 		test_videocontrols_audio.html \
 		test_videocontrols_video_direction.html \
@@ -32,15 +30,3 @@ MOCHITEST_FILES =	\
 		videomask.css \
 		test_bug898940.html \
 		$(NULL)
-
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-MOCHITEST_FILES += test_menubar.xul \
-               window_menubar.xul
-endif
-
-# popup anchor tests don't work on android.
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-MOCHITEST_FILES += \
-		test_popupanchor.xul \
-		$(NULL)
-endif

@@ -13,7 +13,7 @@
          noautohide="true">
   </panel>
 
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <script>
 <![CDATA[
