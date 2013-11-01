@@ -696,10 +696,12 @@ public:
 
       // We do not call MarkUsed because it would just slow down lookups and
       // because we're OK expiring things after a few seconds even if they're
-      // being used.
-      nsCSSSelectorList* GetList(const nsAString& aSelector)
+      // being used.  Returns whether we actually had an entry for aSelector.
+      // If we have an entry and *aList is null, that indicates that aSelector
+      // has already been parsed and is not a syntactically valid selector.
+      bool GetList(const nsAString& aSelector, nsCSSSelectorList** aList)
       {
-        return mTable.Get(aSelector);
+        return mTable.Get(aSelector, aList);
       }
 
       ~SelectorCache()
