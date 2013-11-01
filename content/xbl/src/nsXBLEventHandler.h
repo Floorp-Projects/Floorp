@@ -85,6 +85,12 @@ public:
   {
     mIsBoundToChrome = aIsBoundToChrome;
   }
+
+  void SetUsingXBLScope(bool aUsingXBLScope)
+  {
+    mUsingXBLScope = aUsingXBLScope;
+  }
+
 private:
   nsXBLKeyEventHandler();
   bool ExecuteMatchedHandlers(nsIDOMKeyEvent* aEvent, uint32_t aCharCode,
@@ -95,6 +101,7 @@ private:
   uint8_t mPhase;
   uint8_t mType;
   bool mIsBoundToChrome;
+  bool mUsingXBLScope;
 };
 
 nsresult
