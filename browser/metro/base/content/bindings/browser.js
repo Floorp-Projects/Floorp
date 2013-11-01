@@ -552,7 +552,6 @@ let ContentScroll =  {
   _scrollOffset: { x: 0, y: 0 },
 
   init: function() {
-    addMessageListener("Content:SetDisplayPort", this);
     addMessageListener("Content:SetWindowSize", this);
 
     if (Services.prefs.getBoolPref("layers.async-pan-zoom.enabled")) {
@@ -575,77 +574,9 @@ let ContentScroll =  {
     return { x: aElement.scrollLeft, y: aElement.scrollTop };
   },
 
-  setScrollOffsetForElement: function(aElement, aLeft, aTop) {
-    if (aElement.parentNode == aElement.ownerDocument) {
-      aElement.ownerDocument.defaultView.scrollTo(aLeft, aTop);
-    } else {
-      aElement.scrollLeft = aLeft;
-      aElement.scrollTop = aTop;
-    }
-  },
-
   receiveMessage: function(aMessage) {
     let json = aMessage.json;
     switch (aMessage.name) {
-      // Sent to us from chrome when the the apz has requested that the
-      // display port be updated and that content should repaint.
-      case "Content:SetDisplayPort": {
-        // Set resolution for root view
-        let rootCwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        if (json.id == 1) {
-          rootCwu.setResolution(json.scale, json.scale);
-          if (!WebProgressListener._firstPaint)
-            break;
-        }
-
-        let displayport = new Rect(json.x, json.y, json.w, json.h);
-        if (displayport.isEmpty())
-          break;
-
-        // Map ID to element
-        let element = null;
-        try {
-          element = rootCwu.findElementWithViewId(json.id);
-        } catch(e) {
-          // This could give NS_ERROR_NOT_AVAILABLE. In that case, the
-          // presshell is not available because the page is reloading.
-        }
-
-        if (!element)
-          break;
-
-        let binding = element.ownerDocument.getBindingParent(element);
-        if (binding instanceof Ci.nsIDOMHTMLInputElement && binding.mozIsTextField(false))
-          break;
-
-        // Set the scroll offset for this element if specified
-        if (json.scrollX >= 0 || json.scrollY >= 0) {
-          this.setScrollOffsetForElement(element, json.scrollX, json.scrollY);
-          if (element == content.document.documentElement) {
-            // scrollTo can make some small adjustments to the offset before
-            // actually scrolling the document.  To ensure that _scrollOffset
-            // actually matches the offset stored in the window, re-query it.
-            this._scrollOffset = this.getScrollOffset(content);
-          }
-        }
-
-        // Set displayport. We want to set this after setting the scroll offset, because
-        // it is calculated based on the scroll offset.
-        let scrollOffset = this.getScrollOffsetForElement(element);
-        let x = displayport.x - scrollOffset.x;
-        let y = displayport.y - scrollOffset.y;
-
-        if (json.id == 1) {
-          x = Math.round(x * json.scale) / json.scale;
-          y = Math.round(y * json.scale) / json.scale;
-        }
-
-        let win = element.ownerDocument.defaultView;
-        let winCwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        winCwu.setDisplayPortForElement(x, y, displayport.width, displayport.height, element);
-        break;
-      }
-
       case "Content:SetWindowSize": {
         let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         cwu.setCSSViewport(json.width, json.height);
@@ -704,8 +635,7 @@ let ContentScroll =  {
       if (target == content.document) {
         if (this._scrollOffset.x == scrollOffset.x && this._scrollOffset.y == scrollOffset.y) {
           // Don't send a scroll message back to APZC if it's the same as the
-          // last one set by APZC.  We use this to avoid sending APZC back an
-          // event that it originally triggered.
+          // last one.
           return;
         }
         this._scrollOffset = scrollOffset;
