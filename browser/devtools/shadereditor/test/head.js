@@ -133,6 +133,19 @@ function once(aTarget, aEventName, aUseCapture = false) {
   return deferred.promise;
 }
 
+function observe(aNotificationName, aOwnsWeak = false) {
+  info("Waiting for observer notification: '" + aNotificationName + ".");
+
+  let deferred = promise.defer();
+
+  Services.obs.addObserver(function onNotification(...aArgs) {
+    Services.obs.removeObserver(onNotification, aNotificationName);
+    deferred.resolve.apply(deferred, aArgs);
+  }, aNotificationName, aOwnsWeak);
+
+  return deferred.promise;
+}
+
 function waitForFrame(aDebuggee) {
   let deferred = promise.defer();
   aDebuggee.requestAnimationFrame(deferred.resolve);
@@ -193,16 +206,19 @@ function ensurePixelIs(aDebuggee, aPosition, aColor, aWaitFlag = false, aSelecto
   return promise.reject(null);
 }
 
-function navigate(aTarget, aUrl) {
-  let navigated = once(aTarget, "navigate");
-  aTarget.client.activeTab.navigateTo(aUrl);
-  return navigated;
+function navigateInHistory(aTarget, aDirection, aWaitForTargetEvent = "navigate") {
+  executeSoon(() => content.history[aDirection]());
+  return once(aTarget, aWaitForTargetEvent);
 }
 
-function reload(aTarget) {
-  let navigated = once(aTarget, "navigate");
+function navigate(aTarget, aUrl, aWaitForTargetEvent = "navigate") {
+  executeSoon(() => aTarget.client.activeTab.navigateTo(aUrl));
+  return once(aTarget, aWaitForTargetEvent);
+}
+
+function reload(aTarget, aWaitForTargetEvent = "navigate") {
   executeSoon(() => aTarget.client.activeTab.reload());
-  return navigated;
+  return once(aTarget, aWaitForTargetEvent);
 }
 
 function initBackend(aUrl) {
