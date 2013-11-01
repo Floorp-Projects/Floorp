@@ -150,6 +150,18 @@ AppendRoundedRectToPath(PathBuilder* aPathBuilder,
   aPathBuilder->Close();
 }
 
+void
+AppendEllipseToPath(PathBuilder* aPathBuilder,
+                    const Point& aCenter,
+                    const Size& aDimensions)
+{
+  Size halfDim = aDimensions / 2.0;
+  Rect rect(aCenter - Point(halfDim.width, halfDim.height), aDimensions);
+  Size radii[] = { halfDim, halfDim, halfDim, halfDim };
+
+  AppendRoundedRectToPath(aPathBuilder, rect, radii);
+}
+
 } // namespace gfx
 } // namespace mozilla
 
