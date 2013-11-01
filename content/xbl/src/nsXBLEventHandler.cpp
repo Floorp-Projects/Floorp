@@ -70,7 +70,8 @@ nsXBLKeyEventHandler::nsXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase,
   : mEventType(aEventType),
     mPhase(aPhase),
     mType(aType),
-    mIsBoundToChrome(false)
+    mIsBoundToChrome(false),
+    mUsingXBLScope(false)
 {
 }
 
@@ -96,7 +97,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(nsIDOMKeyEvent* aKeyEvent,
     bool hasAllowUntrustedAttr = handler->HasAllowUntrustedAttr();
     if ((trustedEvent ||
         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
-        (!hasAllowUntrustedAttr && !mIsBoundToChrome)) &&
+        (!hasAllowUntrustedAttr && !mIsBoundToChrome && !mUsingXBLScope)) &&
         handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreShiftKey)) {
       handler->ExecuteHandler(target, aKeyEvent);
       executed = true;

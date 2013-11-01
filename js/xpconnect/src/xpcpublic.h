@@ -54,6 +54,13 @@ GetXBLScope(JSContext *cx, JSObject *contentScope);
 bool
 AllowXBLScope(JSCompartment *c);
 
+// Returns whether we will use an XBL scope for this compartment. This is
+// semantically equivalent to comparing global != GetXBLScope(global), but it
+// does not have the side-effect of eagerly creating the XBL scope if it does
+// not already exist.
+bool
+UseXBLScope(JSCompartment *c);
+
 bool
 IsSandboxPrototypeProxy(JSObject *obj);
 

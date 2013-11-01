@@ -298,6 +298,13 @@ bool AllowXBLScope(JSCompartment *c)
   XPCWrappedNativeScope *scope = EnsureCompartmentPrivate(c)->scope;
   return scope && scope->AllowXBLScope();
 }
+
+bool UseXBLScope(JSCompartment *c)
+{
+  XPCWrappedNativeScope *scope = EnsureCompartmentPrivate(c)->scope;
+  return scope && scope->UseXBLScope();
+}
+
 } /* namespace xpc */
 
 XPCWrappedNativeScope::~XPCWrappedNativeScope()
