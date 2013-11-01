@@ -951,7 +951,8 @@ let gHistorySwipeAnimation = {
     let ctx = canvas.getContext("2d");
     let zoom = browser.markupDocumentViewer.fullZoom;
     ctx.scale(zoom, zoom);
-    ctx.drawWindow(browser.contentWindow, 0, 0, r.width, r.height, "white",
+    ctx.drawWindow(browser.contentWindow,
+                   0, 0, r.width / zoom, r.height / zoom, "white",
                    ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_VIEW |
                    ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
                    ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
