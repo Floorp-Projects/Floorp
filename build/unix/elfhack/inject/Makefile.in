@@ -6,21 +6,6 @@
 INTERNAL_TOOLS = 1
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 
-ifneq (,$(filter %86,$(TARGET_CPU)))
-CPU := x86
-else
-ifneq (,$(filter arm%,$(TARGET_CPU)))
-CPU := arm
-else
-CPU := $(TARGET_CPU)
-endif
-endif
-
-CSRCS := \
-  $(CPU).c \
-  $(CPU)-noinit.c \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 export:: $(CSRCS:.c=.$(OBJ_SUFFIX))
@@ -33,4 +18,4 @@ GARBAGE += $(CSRCS)
 DEFINES += -DELFHACK_BUILD
 
 CFLAGS := -O2 -fno-stack-protector $(filter -m% -I%,$(CFLAGS))
-$(CPU)-noinit.$(OBJ_SUFFIX): DEFINES += -DNOINIT
+%-noinit.$(OBJ_SUFFIX): DEFINES += -DNOINIT

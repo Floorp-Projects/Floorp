@@ -63,13 +63,13 @@ EXPORTS += [
     'nsWeakPtr.h',
 ]
 
-if CONFIG['MOZ_DEBUG']:
-    EXPORTS += ['pure.h']
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS += [
         'nsWindowsHelpers.h',
     ]
+    if CONFIG['MOZ_DEBUG']:
+        EXPORTS += ['pure.h']
+        SOURCES += ['pure_api.c']
 
 EXPORTS.mozilla += [
     'AvailableMemoryTracker.h',
