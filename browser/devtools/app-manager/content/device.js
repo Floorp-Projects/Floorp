@@ -9,9 +9,11 @@ Cu.import("resource:///modules/devtools/gDevTools.jsm");
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
 
-const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
+const {ConnectionManager, Connection}
+  = require("devtools/client/connection-manager");
 const {getDeviceFront} = require("devtools/server/actors/device");
-const {getTargetForApp} = require("devtools/app-actor-front");
+const {getTargetForApp, launchApp, closeApp}
+  = require("devtools/app-actor-front");
 const DeviceStore = require("devtools/app-manager/device-store");
 const WebappsStore = require("devtools/app-manager/webapps-store");
 const promise = require("sdk/core/promise");
@@ -123,6 +125,8 @@ let UI = {
     }
   },
 
+  get connected() { return !!this.listTabsResponse; },
+
   setTab: function(name) {
     var tab = document.querySelector(".tab.selected");
     var panel = document.querySelector(".tabpanel.selected");
@@ -138,9 +142,9 @@ let UI = {
   },
 
   screenshot: function() {
-    if (!this.listTabsResponse)
+    if (!this.connected) {
       return;
-
+    }
     let front = getDeviceFront(this.connection.client, this.listTabsResponse);
     front.screenshotToBlob().then(blob => {
       let topWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -155,8 +159,9 @@ let UI = {
   },
 
   openToolbox: function(manifest) {
-    if (!this.listTabsResponse)
+    if (!this.connected) {
       return;
+    }
     getTargetForApp(this.connection.client,
                     this.listTabsResponse.webappsActor,
                     manifest).then((target) => {
@@ -171,41 +176,21 @@ let UI = {
   },
 
   startApp: function(manifest) {
-    let deferred = promise.defer();
-
-    if (!this.listTabsResponse) {
-      deferred.reject();
-    } else {
-      let actor = this.listTabsResponse.webappsActor;
-      let request = {
-        to: actor,
-        type: "launch",
-        manifestURL: manifest,
-      }
-      this.connection.client.request(request, (res) => {
-        deferred.resolve()
-      });
+    if (!this.connected) {
+      return promise.reject();
     }
-    return deferred.promise;
+    return launchApp(this.connection.client,
+                     this.listTabsResponse.webappsActor,
+                     manifest);
   },
 
   stopApp: function(manifest) {
-    let deferred = promise.defer();
-
-    if (!this.listTabsResponse) {
-      deferred.reject();
-    } else {
-      let actor = this.listTabsResponse.webappsActor;
-      let request = {
-        to: actor,
-        type: "close",
-        manifestURL: manifest,
-      }
-      this.connection.client.request(request, (res) => {
-        deferred.resolve()
-      });
+    if (!this.connected) {
+      return promise.reject();
     }
-    return deferred.promise;
+    return closeApp(this.connection.client,
+                    this.listTabsResponse.webappsActor,
+                    manifest);
   },
 }
 
