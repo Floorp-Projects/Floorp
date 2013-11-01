@@ -291,9 +291,9 @@ GetObjectAllocKindForCopy(JSRuntime *rt, JSObject *obj)
         return obj->as<JSFunction>().getAllocKind();
 
     AllocKind kind = GetGCObjectFixedSlotsKind(obj->numFixedSlots());
-    if (CanBeFinalizedInBackground(kind, obj->getClass()))
-        kind = GetBackgroundAllocKind(kind);
-    return kind;
+    JS_ASSERT(!IsBackgroundFinalized(kind));
+    JS_ASSERT(CanBeFinalizedInBackground(kind, obj->getClass()));
+    return GetBackgroundAllocKind(kind);
 }
 
 void *
