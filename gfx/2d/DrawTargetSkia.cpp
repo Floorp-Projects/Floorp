@@ -128,28 +128,6 @@ DrawTargetSkia::SetGlobalCacheLimits(int aCount, int aSizeInBytes)
 
   DrawTargetSkia::RebalanceCacheLimits();
 }
-
-void
-DrawTargetSkia::PurgeCache()
-{
-  if (mGrContext) {
-    mGrContext->purgeCache();
-  }
-}
-
-/* static */ void
-DrawTargetSkia::PurgeTextureCaches()
-{
-  std::vector<DrawTargetSkia*>& targets = GLDrawTargets();
-  uint32_t targetCount = targets.size();
-  if (targetCount == 0)
-    return;
-
-  for (uint32_t i = 0; i < targetCount; i++) {
-    targets[i]->PurgeCache();
-  }
-}
-
 #endif
 
 DrawTargetSkia::DrawTargetSkia()

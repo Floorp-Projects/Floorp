@@ -106,11 +106,8 @@ public:
                                          SurfaceFormat aFormat) MOZ_OVERRIDE;
 
   void SetCacheLimits(int aCount, int aSizeInBytes);
-  void PurgeCache();
-
   static void SetGlobalCacheLimits(int aCount, int aSizeInBytes);
   static void RebalanceCacheLimits();
-  static void PurgeTextureCaches();
 #endif
 
   operator std::string() const {
