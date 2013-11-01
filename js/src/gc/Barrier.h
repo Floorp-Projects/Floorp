@@ -332,6 +332,11 @@ class EncapsulatedPtr
     void pre() { T::writeBarrierPre(value); }
 };
 
+/*
+ * A pre- and post-barriered heap pointer, for use inside the JS engine.
+ *
+ * Not to be confused with JS::Heap<T>.
+ */
 template <class T, class Unioned = uintptr_t>
 class HeapPtr : public EncapsulatedPtr<T, Unioned>
 {
@@ -635,6 +640,11 @@ class EncapsulatedValue : public ValueOperations<EncapsulatedValue>
     const Value * extract() const { return &value; }
 };
 
+/*
+ * A pre- and post-barriered heap JS::Value, for use inside the JS engine.
+ *
+ * Not to be confused with JS::Heap<JS::Value>.
+ */
 class HeapValue : public EncapsulatedValue
 {
   public:
@@ -1019,6 +1029,11 @@ class RelocatableId : public EncapsulatedId
     }
 };
 
+/*
+ * A pre- and post-barriered heap jsid, for use inside the JS engine.
+ *
+ * Not to be confused with JS::Heap<jsid>.
+ */
 class HeapId : public EncapsulatedId
 {
   public:
