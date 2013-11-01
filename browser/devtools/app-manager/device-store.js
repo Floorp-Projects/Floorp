@@ -25,21 +25,27 @@ module.exports = DeviceStore = function(connection) {
 
   this._resetStore();
 
-  this._destroy = this._destroy.bind(this);
+  this.destroy = this.destroy.bind(this);
   this._onStatusChanged = this._onStatusChanged.bind(this);
 
   this._connection = connection;
-  this._connection.once(Connection.Events.DESTROYED, this._destroy);
+  this._connection.once(Connection.Events.DESTROYED, this.destroy);
   this._connection.on(Connection.Events.STATUS_CHANGED, this._onStatusChanged);
   this._onStatusChanged();
   return this;
 }
 
 DeviceStore.prototype = {
-  _destroy: function() {
-    this._connection.off(Connection.Events.STATUS_CHANGED, this._onStatusChanged);
-    _knownDeviceStores.delete(this._connection);
-    this._connection = null;
+  destroy: function() {
+    if (this._connection) {
+      // While this.destroy is bound using .once() above, that event may not
+      // have occurred when the DeviceStore client calls destroy, so we
+      // manually remove it here.
+      this._connection.off(Connection.Events.DESTROYED, this.destroy);
+      this._connection.off(Connection.Events.STATUS_CHANGED, this._onStatusChanged);
+      _knownDeviceStores.delete(this._connection);
+      this._connection = null;
+    }
   },
 
   _resetStore: function() {
