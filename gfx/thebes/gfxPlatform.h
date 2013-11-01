@@ -716,6 +716,7 @@ private:
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;
     nsCOMPtr<nsIObserver> mOrientationSyncPrefsObserver;
+    nsCOMPtr<nsIObserver> mMemoryPressureObserver;
 
     // The preferred draw target backend to use for canvas
     mozilla::gfx::BackendType mPreferredCanvasBackend;
