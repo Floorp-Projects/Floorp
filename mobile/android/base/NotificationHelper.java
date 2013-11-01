@@ -44,18 +44,20 @@ public final class NotificationHelper implements GeckoEventListener {
     private static final String LIGHT_ATTR = "light";
     private static final String ONGOING_ATTR = "ongoing";
     private static final String WHEN_ATTR = "when";
+    private static final String PRIORITY_ATTR = "priority";
     private static final String LARGE_ICON_ATTR = "largeIcon";
-    private static final String COOKIE_ATTR = "cookie";
     private static final String EVENT_TYPE_ATTR = "eventType";
     private static final String ACTIONS_ATTR = "actions";
-    private static final String ACTION_ATTR = "actionKind";
+    private static final String ACTION_ID_ATTR = "buttonId";
     private static final String ACTION_TITLE_ATTR = "title";
     private static final String ACTION_ICON_ATTR = "icon";
 
     private static final String NOTIFICATION_SCHEME = "moz-notification";
 
+    private static final String BUTTON_EVENT = "notification-button-clicked";
     private static final String CLICK_EVENT = "notification-clicked";
     private static final String CLEARED_EVENT = "notification-cleared";
+    private static final String CLOSED_EVENT = "notification-closed";
 
     private static Context mContext;
     private static Set<String> mShowing;
@@ -127,50 +129,78 @@ public final class NotificationHelper implements GeckoEventListener {
             mShowing.remove(id);
         }
 
-        // If the notification was clicked, we are closing it.
-        if (CLICK_EVENT.equals(notificationType) && !i.getBooleanExtra(ONGOING_ATTR, false)) {
-            hideNotification(id);
-        }
-        String cookie = data.getQueryParameter(COOKIE_ATTR);
-
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             JSONObject args = new JSONObject();
             try {
-                args.put(NOTIFICATION_ID, id);
-                if (cookie != null) {
-                    args.put(COOKIE_ATTR, cookie);
-                }
+                args.put(ID_ATTR, id);
                 args.put(EVENT_TYPE_ATTR, notificationType);
+
+                if (BUTTON_EVENT.equals(notificationType)) {
+                    final String actionName = data.getQueryParameter(ACTION_ID_ATTR);
+                    args.put(ACTION_ID_ATTR, actionName);
+                }
+
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Event", args.toString()));
             } catch (JSONException e) {
                 Log.w(LOGTAG, "Error building JSON notification arguments.", e);
             }
         }
+        // If the notification was clicked, we are closing it. This must be executed after
+        // sending the event to js side because when the notification is canceled no event can be
+        // handled.
+        if (CLICK_EVENT.equals(notificationType) && !i.getBooleanExtra(ONGOING_ATTR, false)) {
+            hideNotification(id);
+        }
+
     }
 
-    private PendingIntent buildNotificationPendingIntent(JSONObject message, String type) {
-        Intent notificationIntent = new Intent(HELPER_BROADCAST_ACTION);
-        final boolean ongoing = message.optBoolean(ONGOING_ATTR);
-        notificationIntent.putExtra(ONGOING_ATTR, ongoing);
-
+    private Uri.Builder getNotificationBuilder(JSONObject message, String type) {
         Uri.Builder b = new Uri.Builder();
         b.scheme(NOTIFICATION_SCHEME).appendQueryParameter(EVENT_TYPE_ATTR, type);
 
         try {
             final String id = message.getString(ID_ATTR);
             b.appendQueryParameter(ID_ATTR, id);
-            if (message.has(COOKIE_ATTR)) {
-                b.appendQueryParameter(COOKIE_ATTR,
-                                       message.getString(COOKIE_ATTR));
+        } catch (JSONException ex) {
+            Log.i(LOGTAG, "buildNotificationPendingIntent, error parsing", ex);
+        }
+        return b;
+    }
+
+    private Intent buildNotificationIntent(JSONObject message, Uri.Builder builder) {
+        Intent notificationIntent = new Intent(HELPER_BROADCAST_ACTION);
+        final boolean ongoing = message.optBoolean(ONGOING_ATTR);
+        notificationIntent.putExtra(ONGOING_ATTR, ongoing);
+
+        final Uri dataUri = builder.build();
+        notificationIntent.setData(dataUri);
+        notificationIntent.putExtra(HELPER_NOTIFICATION, true);
+        return notificationIntent;
+    }
+
+    private PendingIntent buildNotificationPendingIntent(JSONObject message, String type) {
+        Uri.Builder builder = getNotificationBuilder(message, type);
+        final Intent notificationIntent = buildNotificationIntent(message, builder);
+        PendingIntent pi = PendingIntent.getBroadcast(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return pi;
+    }
+
+    private PendingIntent buildButtonClickPendingIntent(JSONObject message, JSONObject action) {
+        Uri.Builder builder = getNotificationBuilder(message, BUTTON_EVENT);
+        try {
+            // Action name must be in query uri, otherwise buttons pending intents
+            // would be collapsed.
+            if(action.has(ACTION_ID_ATTR)) {
+                builder.appendQueryParameter(ACTION_ID_ATTR, action.getString(ACTION_ID_ATTR));
+            } else {
+                Log.i(LOGTAG, "button event with no name");
             }
         } catch (JSONException ex) {
             Log.i(LOGTAG, "buildNotificationPendingIntent, error parsing", ex);
         }
-        final Uri dataUri = b.build();
-        notificationIntent.setData(dataUri);
-        notificationIntent.putExtra(HELPER_NOTIFICATION, true);
-        PendingIntent pi = PendingIntent.getBroadcast(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        return pi;
+        final Intent notificationIntent = buildNotificationIntent(message, builder);
+        PendingIntent res = PendingIntent.getBroadcast(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return res;
     }
 
     private void showNotification(JSONObject message) {
@@ -209,6 +239,11 @@ public final class NotificationHelper implements GeckoEventListener {
             builder.setWhen(when);
         }
 
+        if (message.has(PRIORITY_ATTR)) {
+            int priority = message.optInt(PRIORITY_ATTR);
+            builder.setPriority(priority);
+        }
+
         if (message.has(LARGE_ICON_ATTR)) {
             Bitmap b = BitmapUtils.getBitmapFromDataURI(message.optString(LARGE_ICON_ATTR));
             builder.setLargeIcon(b);
@@ -230,7 +265,7 @@ public final class NotificationHelper implements GeckoEventListener {
             try {
                 for (int i = 0; i < actions.length(); i++) {
                     JSONObject action = actions.getJSONObject(i);
-                    final PendingIntent pending = buildNotificationPendingIntent(message, action.getString(ACTION_ATTR));
+                    final PendingIntent pending = buildButtonClickPendingIntent(message, action);
                     final String actionTitle = action.getString(ACTION_TITLE_ATTR);
                     final Uri actionImage = Uri.parse(action.optString(ACTION_ICON_ATTR));
                     builder.addAction(BitmapUtils.getResource(actionImage, R.drawable.ic_status_logo),
@@ -265,9 +300,24 @@ public final class NotificationHelper implements GeckoEventListener {
         hideNotification(id);
     }
 
+    private void sendNotificationWasClosed(String id) {
+        if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+            return;
+        }
+        JSONObject args = new JSONObject();
+        try {
+            args.put(ID_ATTR, id);
+            args.put(EVENT_TYPE_ATTR, CLOSED_EVENT);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Event", args.toString()));
+        } catch (JSONException ex) {
+            Log.w(LOGTAG, "sendNotificationWasClosed: error building JSON notification arguments.", ex);
+        }
+    }
+
     public void hideNotification(String id) {
         GeckoAppShell.sNotificationClient.remove(id.hashCode());
         mShowing.remove(id);
+        sendNotificationWasClosed(id);
     }
 
     private void clearAll() {
