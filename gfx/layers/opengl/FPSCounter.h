@@ -68,14 +68,10 @@ private:
 };
 
 struct FPSState {
-  GLuint mTexture;
   FPSCounter mCompositionFps;
   FPSCounter mTransactionFps;
-  gl::VBOArena mVBOs;
 
-  FPSState() : mTexture(0) { }
-
-  void DrawFPS(TimeStamp, unsigned, gl::GLContext*, ShaderProgramOGL*);
+  FPSState() { }
 
   void NotifyShadowTreeTransaction() {
     mTransactionFps.AddFrame(TimeStamp::Now());
