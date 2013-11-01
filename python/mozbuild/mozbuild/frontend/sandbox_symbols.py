@@ -317,6 +317,17 @@ VARIABLES = {
         ``BIN_SUFFIX``, the name will remain unchanged.
         """, 'binaries'),
 
+    'HOST_SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
+        """Compile a list of host executable names.
+
+        Each name in this variable corresponds to a hosst executable built
+        from the corresponding source file with the same base name.
+
+        If the configuration token ``HOST_BIN_SUFFIX`` is set, its value will
+        be automatically appended to each name. If a name already ends with
+        ``HOST_BIN_SUFFIX``, the name will remain unchanged.
+        """, 'binaries'),
+
     'TOOL_DIRS': (list, list, [],
         """Like DIRS but for tools.
 
@@ -416,6 +427,14 @@ VARIABLES = {
         If the configuration token ``BIN_SUFFIX`` is set, its value will be
         automatically appended to ``PROGRAM``. If ``PROGRAM`` already ends with
         ``BIN_SUFFIX``, ``PROGRAM`` will remain unchanged.
+        """, 'binaries'),
+
+    'HOST_PROGRAM' : (unicode, unicode, "",
+        """Compiled host executable name.
+
+        If the configuration token ``HOST_BIN_SUFFIX`` is set, its value will be
+        automatically appended to ``HOST_PROGRAM``. If ``HOST_PROGRAM`` already
+        ends with ``HOST_BIN_SUFFIX``, ``HOST_PROGRAM`` will remain unchanged.
         """, 'binaries'),
 
     'NO_DIST_INSTALL': (bool, bool, False,

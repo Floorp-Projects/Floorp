@@ -369,4 +369,8 @@ HOST_SOURCES += [
     'jsoplengen.cpp',
 ]
 
+HOST_SIMPLE_PROGRAMS += [
+    'host_%s' % f.replace('.cpp', '') for f in HOST_SOURCES
+]
+
 FORCE_STATIC_LIB = True

@@ -21,4 +21,6 @@ HOST_SOURCES += [
     'szip.cpp',
 ]
 
+HOST_PROGRAM = 'szip'
+
 FORCE_STATIC_LIB = True
