@@ -61,7 +61,6 @@ extern PRLogModuleInfo* gWindowsLog;
 static uint32_t gInstanceCount = 0;
 const PRUnichar* kMetroSubclassThisProp = L"MetroSubclassThisProp";
 HWND MetroWidget::sICoreHwnd = nullptr;
-nsRefPtr<mozilla::layers::APZCTreeManager> MetroWidget::sAPZC;
 
 namespace mozilla {
 namespace widget {
@@ -186,7 +185,7 @@ MetroWidget::~MetroWidget()
 
   // Global shutdown
   if (!gInstanceCount) {
-    MetroWidget::sAPZC = nullptr;
+    APZController::sAPZC = nullptr;
     nsTextStore::Terminate();
   } // !gInstanceCount
 }
@@ -278,7 +277,7 @@ MetroWidget::Destroy()
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
-      observerService->RemoveObserver(this, "scroll-offset-changed");
+      observerService->RemoveObserver(this, "apzc-scroll-offset-changed");
     }
   }
 
@@ -939,22 +938,34 @@ MetroWidget::ShouldUseAPZC()
          Preferences::GetBool(kPrefName, false);
 }
 
+void
+MetroWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener)
+{
+  mWidgetListener = aWidgetListener;
+  if (mController) {
+    mController->SetWidgetListener(aWidgetListener);
+  }
+}
+
 CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
 {
   CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
 
   if (ShouldUseAPZC()) {
     mRootLayerTreeId = compositor->RootLayerTreeId();
+
     mController = new APZController();
+    mController->SetWidgetListener(mWidgetListener);
+
     CompositorParent::SetControllerForLayerTree(mRootLayerTreeId, mController);
 
-    MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
-    MetroWidget::sAPZC->SetDPI(GetDPI());
+    APZController::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
+    APZController::sAPZC->SetDPI(GetDPI());
 
     nsresult rv;
     nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
-      observerService->AddObserver(this, "scroll-offset-changed", false);
+      observerService->AddObserver(this, "apzc-scroll-offset-changed", false);
     }
   }
 
@@ -965,29 +976,29 @@ void
 MetroWidget::ApzContentConsumingTouch()
 {
   LogFunction();
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return;
   }
-  MetroWidget::sAPZC->ContentReceivedTouch(mRootLayerTreeId, true);
+  APZController::sAPZC->ContentReceivedTouch(mRootLayerTreeId, true);
 }
 
 void
 MetroWidget::ApzContentIgnoringTouch()
 {
   LogFunction();
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return;
   }
-  MetroWidget::sAPZC->ContentReceivedTouch(mRootLayerTreeId, false);
+  APZController::sAPZC->ContentReceivedTouch(mRootLayerTreeId, false);
 }
 
 bool
 MetroWidget::HitTestAPZC(ScreenPoint& pt)
 {
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return false;
   }
-  return MetroWidget::sAPZC->HitTestAPZC(pt);
+  return APZController::sAPZC->HitTestAPZC(pt);
 }
 
 nsEventStatus
@@ -995,10 +1006,10 @@ MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
 
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  return MetroWidget::sAPZC->ReceiveInputEvent(*aEvent->AsInputEvent());
+  return APZController::sAPZC->ReceiveInputEvent(*aEvent->AsInputEvent());
 }
 
 nsEventStatus
@@ -1008,11 +1019,11 @@ MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aInEvent,
   MOZ_ASSERT(aInEvent);
   MOZ_ASSERT(aOutEvent);
 
-  if (!MetroWidget::sAPZC) {
+  if (!APZController::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  return MetroWidget::sAPZC->ReceiveInputEvent(*aInEvent->AsInputEvent(),
-                                               aOutEvent);
+  return APZController::sAPZC->ReceiveInputEvent(*aInEvent->AsInputEvent(),
+                                                 aOutEvent);
 }
 
 LayerManager*
@@ -1515,7 +1526,7 @@ NS_IMETHODIMP
 MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
 {
   NS_ENSURE_ARG_POINTER(topic);
-  if (!strcmp(topic, "scroll-offset-changed")) {
+  if (!strcmp(topic, "apzc-scroll-offset-changed")) {
     uint64_t scrollId;
     int32_t presShellId;
     CSSIntPoint scrollOffset;
@@ -1529,11 +1540,11 @@ MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *d
       NS_WARNING("Malformed scroll-offset-changed message");
       return NS_ERROR_UNEXPECTED;
     }
-    if (MetroWidget::sAPZC) {
-      MetroWidget::sAPZC->UpdateScrollOffset(
-          ScrollableLayerGuid(mRootLayerTreeId, presShellId, scrollId),
-          scrollOffset);
+    if (!mController) {
+      return NS_ERROR_UNEXPECTED;
     }
+    mController->UpdateScrollOffset(ScrollableLayerGuid(mRootLayerTreeId, presShellId, scrollId),
+                                    scrollOffset);
   }
   return NS_OK;
 }
