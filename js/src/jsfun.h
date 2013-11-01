@@ -489,9 +489,12 @@ DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
                gc::AllocKind allocKind = JSFunction::FinalizeKind,
                NewObjectKind newKind = GenericObject);
 
+bool
+FunctionHasResolveHook(JSRuntime *rt, PropertyName *name);
+
 extern bool
-fun_resolve(JSContext *cx, js::HandleObject obj, js::HandleId id,
-            unsigned flags, js::MutableHandleObject objp);
+fun_resolve(JSContext *cx, HandleObject obj, HandleId id,
+            unsigned flags, MutableHandleObject objp);
 
 // ES6 9.2.5 IsConstructor
 bool IsConstructor(const Value &v);
