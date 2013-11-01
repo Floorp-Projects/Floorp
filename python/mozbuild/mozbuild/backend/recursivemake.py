@@ -563,7 +563,8 @@ class RecursiveMakeBackend(CommonBackend):
                                  unified_suffix='cpp',
                                  extra_dependencies=[],
                                  unified_files_makefile_variable='unified_files',
-                                 include_curdir_build_rules=True):
+                                 include_curdir_build_rules=True,
+                                 poison_windows_h=False):
         files_per_unified_file = 16
 
         explanation = "\n" \
@@ -609,7 +610,15 @@ class RecursiveMakeBackend(CommonBackend):
             # handle source files being added/removed/renamed.  Therefore, we
             # generate them here also to make sure everything's up-to-date.
             with self._write_file(os.path.join(output_directory, unified_file)) as f:
-                f.write('\n'.join(['#include "%s"' % s for s in source_filenames]))
+                includeTemplate = '#include "%(cppfile)s"'
+                if poison_windows_h:
+                    includeTemplate += (
+                        '\n'
+                        '#ifdef _WINDOWS_\n'
+                        '#error "%(cppfile)s included windows.h"\n'
+                        "#endif")
+                f.write('\n'.join(includeTemplate % { "cppfile": s } for
+                                  s in source_filenames))
 
         if include_curdir_build_rules:
             makefile.add_statement('\n'
@@ -715,7 +724,8 @@ class RecursiveMakeBackend(CommonBackend):
         self._add_unified_build_rules(mk, all_webidl_sources,
                                       bindings_dir,
                                       unified_prefix='UnifiedBindings',
-                                      unified_files_makefile_variable='unified_binding_cpp_files')
+                                      unified_files_makefile_variable='unified_binding_cpp_files',
+                                      poison_windows_h=True)
 
         # Assume that Somebody Else has responsibility for correctly
         # specifying removal dependencies for |all_webidl_sources|.
