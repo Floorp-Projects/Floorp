@@ -421,6 +421,12 @@ IsXBLScope(JSCompartment *compartment)
 }
 
 bool
+IsInXBLScope(JSObject *obj)
+{
+    return IsXBLScope(js::GetObjectCompartment(obj));
+}
+
+bool
 IsUniversalXPConnectEnabled(JSCompartment *compartment)
 {
     CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
