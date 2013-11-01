@@ -6565,7 +6565,12 @@ IonBuilder::getElemTryString(bool *emitted, MDefinition *obj, MDefinition *index
 {
     JS_ASSERT(*emitted == false);
 
-    if (obj->type() != MIRType_String)
+    if (obj->type() != MIRType_String || !IsNumberType(index->type()))
+        return true;
+
+    // If the index is expected to be out-of-bounds, don't optimize to avoid
+    // frequent bailouts.
+    if (bytecodeTypes(pc)->hasType(types::Type::UndefinedType()))
         return true;
 
     // Emit fast path for string[index].
