@@ -810,6 +810,7 @@ public:
     , mListener(aListener)
     , mPrefs(aPrefs)
     , mDeviceChosen(false)
+    , mBackend(nullptr)
     , mManager(MediaManager::GetInstance())
   {}
 
@@ -843,7 +844,10 @@ public:
   {
     NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-    mBackend = mManager->GetBackend(mWindowID);
+    // Was a backend provided?
+    if (!mBackend) {
+      mBackend = mManager->GetBackend(mWindowID);
+    }
 
     // Was a device provided?
     if (!mDeviceChosen) {
@@ -1302,7 +1306,7 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
   if (c.mFake) {
     // Fake stream from default backend.
     gUMRunnable = new GetUserMediaRunnable(c, onSuccess.forget(),
-      onError.forget(), windowID, listener, mPrefs, GetBackend(windowID, true));
+      onError.forget(), windowID, listener, mPrefs, new MediaEngineDefault());
   } else {
     // Stream from default device from WebRTC backend.
     gUMRunnable = new GetUserMediaRunnable(c, onSuccess.forget(),
@@ -1383,26 +1387,22 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
 }
 
 MediaEngine*
-MediaManager::GetBackend(uint64_t aWindowId, bool aFake)
+MediaManager::GetBackend(uint64_t aWindowId)
 {
   // Plugin backends as appropriate. The default engine also currently
   // includes picture support for Android.
   // This IS called off main-thread.
   MutexAutoLock lock(mMutex);
-  if (!mBackend) {
-    if (aFake) {
-      mBackend = new MediaEngineDefault();
-    } else {
+if (!mBackend) {
 #if defined(MOZ_WEBRTC)
 #ifndef MOZ_B2G_CAMERA
-      mBackend = new MediaEngineWebRTC();
+    mBackend = new MediaEngineWebRTC();
 #else
-      mBackend = new MediaEngineWebRTC(mCameraManager, aWindowId);
+    mBackend = new MediaEngineWebRTC(mCameraManager, aWindowId);
 #endif
 #else
-      mBackend = new MediaEngineDefault();
+    mBackend = new MediaEngineDefault();
 #endif
-    }
   }
   return mBackend;
 }
