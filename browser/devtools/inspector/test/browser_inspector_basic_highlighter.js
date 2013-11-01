@@ -84,6 +84,7 @@ function test() {
   function finishUp() {
     let h = require("devtools/inspector/highlighter");
     h._forceBasic.value = false;
+    inspector = doc = null;
     gBrowser.removeCurrentTab();
     finish();
   }

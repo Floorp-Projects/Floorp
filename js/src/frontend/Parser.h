@@ -513,9 +513,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node tryStatement();
     Node debuggerStatement();
 
-#if JS_HAS_BLOCK_SCOPE
     Node letStatement();
-#endif
     Node expressionStatement();
     Node variables(ParseNodeKind kind, bool *psimple = nullptr,
                    StaticBlockObject *blockObj = nullptr,

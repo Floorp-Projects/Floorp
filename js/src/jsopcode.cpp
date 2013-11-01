@@ -323,6 +323,378 @@ js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
 #endif
 }
 
+/////////////////////////////////////////////////////////////////////
+// Bytecode Parser
+/////////////////////////////////////////////////////////////////////
+
+// Ensure that script analysis reports the same stack depth.
+static void
+AssertStackDepth(JSScript *script, uint32_t offset, uint32_t stackDepth) {
+    /*
+     * If this assertion fails, run the failing test case under gdb and use the
+     * following gdb command to understand the execution path of this function.
+     *
+     *     call js_DumpScriptDepth(cx, script, pc)
+     */
+    JS_ASSERT_IF(script->hasAnalysis() && script->analysis()->maybeCode(offset),
+                 script->analysis()->getCode(offset).stackDepth == stackDepth);
+}
+
+namespace {
+
+class BytecodeParser
+{
+    class Bytecode
+    {
+      public:
+        Bytecode() { mozilla::PodZero(this); }
+
+        // Whether this instruction has been analyzed to get its output defines
+        // and stack.
+        bool parsed : 1;
+
+        // Stack depth before this opcode.
+        uint32_t stackDepth;
+
+        // Pointer to array of |stackDepth| offsets.  An element at position N
+        // in the array is the offset of the opcode that defined the
+        // corresponding stack slot.  The top of the stack is at position
+        // |stackDepth - 1|.
+        uint32_t *offsetStack;
+
+        bool captureOffsetStack(LifoAlloc &alloc, const uint32_t *stack, uint32_t depth) {
+            stackDepth = depth;
+            offsetStack = alloc.newArray<uint32_t>(stackDepth);
+            if (stackDepth) {
+                if (!offsetStack)
+                    return false;
+                for (uint32_t n = 0; n < stackDepth; n++)
+                    offsetStack[n] = stack[n];
+            }
+            return true;
+        }
+
+        // When control-flow merges, intersect the stacks, marking slots that
+        // are defined by different offsets with the UINT32_MAX sentinel.
+        // This is sufficient for forward control-flow.  It doesn't grok loops
+        // -- for that you would have to iterate to a fixed point -- but there
+        // shouldn't be operands on the stack at a loop back-edge anyway.
+        void mergeOffsetStack(const uint32_t *stack, uint32_t depth) {
+            JS_ASSERT(depth == stackDepth);
+            for (uint32_t n = 0; n < stackDepth; n++)
+                if (offsetStack[n] != stack[n])
+                    offsetStack[n] = UINT32_MAX;
+        }
+    };
+
+    JSContext *cx_;
+    LifoAllocScope allocScope_;
+    JSScript *script_;
+
+    Bytecode **codeArray_;
+
+  public:
+    BytecodeParser(JSContext *cx, JSScript *script)
+      : cx_(cx),
+        allocScope_(&cx->tempLifoAlloc()),
+        script_(script),
+        codeArray_(nullptr) { }
+
+    bool parse();
+
+    uint32_t stackDepthAtPC(uint32_t offset) {
+        // Sometimes the code generator in debug mode asks about the stack depth
+        // of unreachable code (bug 932180 comment 22).  Assume that unreachable
+        // code has no operands on the stack.
+        Bytecode *code = maybeCode(offset);
+        return code ? code->stackDepth : 0;
+    }
+    uint32_t stackDepthAtPC(const jsbytecode *pc) { return stackDepthAtPC(pc - script_->code); }
+
+    uint32_t offsetForStackOperand(uint32_t offset, int operand) {
+        Bytecode &code = getCode(offset);
+        if (operand < 0) {
+            operand += code.stackDepth;
+            JS_ASSERT(operand >= 0);
+        }
+        JS_ASSERT(uint32_t(operand) < code.stackDepth);
+        return code.offsetStack[operand];
+    }
+    jsbytecode *pcForStackOperand(jsbytecode *pc, int operand) {
+        uint32_t offset = offsetForStackOperand(pc - script_->code, operand);
+        if (offset == UINT32_MAX)
+            return nullptr;
+        return script_->code + offsetForStackOperand(pc - script_->code, operand);
+    }
+
+  private:
+    LifoAlloc &alloc() {
+        return allocScope_.alloc();
+    }
+
+    void reportOOM() {
+        allocScope_.releaseEarly();
+        js_ReportOutOfMemory(cx_);
+    }
+
+    uint32_t numSlots() {
+        return 1 + (script_->function() ? script_->function()->nargs : 0) + script_->nfixed;
+    }
+
+    uint32_t maximumStackDepth() {
+        return script_->nslots - script_->nfixed;
+    }
+
+    Bytecode& getCode(uint32_t offset) {
+        JS_ASSERT(offset < script_->length);
+        JS_ASSERT(codeArray_[offset]);
+        return *codeArray_[offset];
+    }
+    Bytecode& getCode(const jsbytecode *pc) { return getCode(pc - script_->code); }
+
+    Bytecode* maybeCode(uint32_t offset) {
+        JS_ASSERT(offset < script_->length);
+        return codeArray_[offset];
+    }
+    Bytecode* maybeCode(const jsbytecode *pc) { return maybeCode(pc - script_->code); }
+
+    uint32_t simulateOp(JSOp op, uint32_t offset, uint32_t *offsetStack, uint32_t stackDepth);
+
+    inline bool addJump(uint32_t offset, uint32_t *currentOffset,
+                        uint32_t stackDepth, const uint32_t *offsetStack);
+};
+
+}  // anonymous namespace
+
+uint32_t
+BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t *offsetStack, uint32_t stackDepth)
+{
+    uint32_t nuses = GetUseCount(script_, offset);
+    uint32_t ndefs = GetDefCount(script_, offset);
+
+    JS_ASSERT(stackDepth >= nuses);
+    stackDepth -= nuses;
+    JS_ASSERT(stackDepth + ndefs <= maximumStackDepth());
+
+    // Mark the current offset as defining its values on the offset stack,
+    // unless it just reshuffles the stack.  In that case we want to preserve
+    // the opcode that generated the original value.
+    switch (op) {
+      default:
+        for (uint32_t n = 0; n != ndefs; ++n)
+            offsetStack[stackDepth + n] = offset;
+        break;
+
+      case JSOP_CASE:
+        /* Keep the switch value. */
+        JS_ASSERT(ndefs == 1);
+        break;
+
+      case JSOP_DUP:
+        JS_ASSERT(ndefs == 2);
+        if (offsetStack)
+            offsetStack[stackDepth + 1] = offsetStack[stackDepth];
+        break;
+
+      case JSOP_DUP2:
+        JS_ASSERT(ndefs == 4);
+        if (offsetStack) {
+            offsetStack[stackDepth + 2] = offsetStack[stackDepth];
+            offsetStack[stackDepth + 3] = offsetStack[stackDepth + 1];
+        }
+        break;
+
+      case JSOP_SWAP:
+        JS_ASSERT(ndefs == 2);
+        if (offsetStack) {
+            uint32_t tmp = offsetStack[stackDepth + 1];
+            offsetStack[stackDepth + 1] = offsetStack[stackDepth];
+            offsetStack[stackDepth] = tmp;
+        }
+        break;
+    }
+    stackDepth += ndefs;
+    return stackDepth;
+}
+
+bool
+BytecodeParser::addJump(uint32_t offset, uint32_t *currentOffset,
+                        uint32_t stackDepth, const uint32_t *offsetStack)
+{
+    JS_ASSERT(offset < script_->length);
+
+    Bytecode *&code = codeArray_[offset];
+    if (!code) {
+        code = alloc().new_<Bytecode>();
+        if (!code)
+            return false;
+        AssertStackDepth(script_, offset, stackDepth);
+        if (!code->captureOffsetStack(alloc(), offsetStack, stackDepth)) {
+            reportOOM();
+            return false;
+        }
+    } else {
+        code->mergeOffsetStack(offsetStack, stackDepth);
+    }
+
+    if (offset < *currentOffset && !code->parsed) {
+        // Backedge in a while/for loop, whose body has not been parsed due
+        // to a lack of fallthrough at the loop head. Roll back the offset
+        // to analyze the body.
+        *currentOffset = offset;
+    }
+
+    return true;
+}
+
+bool
+BytecodeParser::parse()
+{
+    JS_ASSERT(!codeArray_);
+
+    uint32_t length = script_->length;
+    codeArray_ = alloc().newArray<Bytecode*>(length);
+
+    if (!codeArray_) {
+        reportOOM();
+        return false;
+    }
+
+    mozilla::PodZero(codeArray_, length);
+
+    // Fill in stack depth and definitions at initial bytecode.
+    Bytecode *startcode = alloc().new_<Bytecode>();
+    if (!startcode) {
+        reportOOM();
+        return false;
+    }
+
+    // Fill in stack depth and definitions at initial bytecode.
+    uint32_t *offsetStack = alloc().newArray<uint32_t>(maximumStackDepth());
+    if (maximumStackDepth() && !offsetStack) {
+        reportOOM();
+        return false;
+    }
+
+    startcode->stackDepth = 0;
+    codeArray_[0] = startcode;
+
+    uint32_t offset, nextOffset = 0;
+    while (nextOffset < length) {
+        offset = nextOffset;
+
+        Bytecode *code = maybeCode(offset);
+        jsbytecode *pc = script_->code + offset;
+
+        JSOp op = (JSOp)*pc;
+        JS_ASSERT(op < JSOP_LIMIT);
+
+        // Immediate successor of this bytecode.
+        uint32_t successorOffset = offset + GetBytecodeLength(pc);
+
+        // Next bytecode to analyze.  This is either the successor, or is an
+        // earlier bytecode if this bytecode has a loop backedge.
+        nextOffset = successorOffset;
+
+        if (!code) {
+            // Haven't found a path by which this bytecode is reachable.
+            continue;
+        }
+
+        if (code->parsed) {
+            // No need to reparse.
+            continue;
+        }
+
+        code->parsed = true;
+
+        uint32_t stackDepth = simulateOp(op, offset, offsetStack, code->stackDepth);
+
+        switch (op) {
+          case JSOP_TABLESWITCH: {
+            uint32_t defaultOffset = offset + GET_JUMP_OFFSET(pc);
+            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
+            int32_t low = GET_JUMP_OFFSET(pc2);
+            pc2 += JUMP_OFFSET_LEN;
+            int32_t high = GET_JUMP_OFFSET(pc2);
+            pc2 += JUMP_OFFSET_LEN;
+
+            if (!addJump(defaultOffset, &nextOffset, stackDepth, offsetStack))
+                return false;
+
+            for (int32_t i = low; i <= high; i++) {
+                uint32_t targetOffset = offset + GET_JUMP_OFFSET(pc2);
+                if (targetOffset != offset) {
+                    if (!addJump(targetOffset, &nextOffset, stackDepth, offsetStack))
+                        return false;
+                }
+                pc2 += JUMP_OFFSET_LEN;
+            }
+            break;
+          }
+
+          case JSOP_TRY: {
+            // Everything between a try and corresponding catch or finally is conditional.
+            // Note that there is no problem with code which is skipped by a thrown
+            // exception but is not caught by a later handler in the same function:
+            // no more code will execute, and it does not matter what is defined.
+            JSTryNote *tn = script_->trynotes()->vector;
+            JSTryNote *tnlimit = tn + script_->trynotes()->length;
+            for (; tn < tnlimit; tn++) {
+                uint32_t startOffset = script_->mainOffset + tn->start;
+                if (startOffset == offset + 1) {
+                    uint32_t catchOffset = startOffset + tn->length;
+                    if (tn->kind != JSTRY_ITER && tn->kind != JSTRY_LOOP) {
+                        if (!addJump(catchOffset, &nextOffset, stackDepth, offsetStack))
+                            return false;
+                    }
+                }
+            }
+            break;
+          }
+
+          default:
+            break;
+        }
+
+        // Check basic jump opcodes, which may or may not have a fallthrough.
+        if (IsJumpOpcode(op)) {
+            // Case instructions do not push the lvalue back when branching.
+            uint32_t newStackDepth = stackDepth;
+            if (op == JSOP_CASE)
+                newStackDepth--;
+
+            uint32_t targetOffset = offset + GET_JUMP_OFFSET(pc);
+            if (!addJump(targetOffset, &nextOffset, newStackDepth, offsetStack))
+                return false;
+        }
+
+        // Handle any fallthrough from this opcode.
+        if (BytecodeFallsThrough(op)) {
+            JS_ASSERT(successorOffset < script_->length);
+
+            Bytecode *&nextcode = codeArray_[successorOffset];
+
+            if (!nextcode) {
+                nextcode = alloc().new_<Bytecode>();
+                if (!nextcode) {
+                    reportOOM();
+                    return false;
+                }
+                AssertStackDepth(script_, successorOffset, stackDepth);
+                if (!nextcode->captureOffsetStack(alloc(), offsetStack, stackDepth)) {
+                    reportOOM();
+                    return false;
+                }
+            } else {
+                nextcode->mergeOffsetStack(offsetStack, stackDepth);
+            }
+        }
+    }
+
+    return true;
+}
+
 #ifdef DEBUG
 
 /*
@@ -1039,14 +1411,6 @@ js_QuoteString(ExclusiveContext *cx, JSString *str, jschar quote)
 
 /************************************************************************/
 
-static int ReconstructPCStack(JSContext*, JSScript*, jsbytecode*, jsbytecode**);
-
-static unsigned
-StackDepth(JSScript *script)
-{
-    return script->nslots - script->nfixed;
-}
-
 static JSObject *
 GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
@@ -1092,51 +1456,6 @@ GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
     return blockChain;
 }
 
-namespace {
-
-class PCStack
-{
-    jsbytecode **stack;
-    int depth_;
-
-  public:
-    PCStack() : stack(nullptr), depth_(0) {}
-    ~PCStack();
-    bool init(JSContext *cx, JSScript *script, jsbytecode *pc);
-    int depth() const { return depth_; }
-    jsbytecode *operator[](int i) const;
-};
-
-} /* anonymous namespace */
-
-PCStack::~PCStack()
-{
-    js_free(stack);
-}
-
-bool
-PCStack::init(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    stack = cx->pod_malloc<jsbytecode*>(StackDepth(script));
-    if (!stack)
-        return false;
-    depth_ = ReconstructPCStack(cx, script, pc, stack);
-    JS_ASSERT(depth_ >= 0);
-    return true;
-}
-
-/* Indexes the pcstack. */
-jsbytecode *
-PCStack::operator[](int i) const
-{
-    if (i < 0) {
-        i += depth_;
-        JS_ASSERT(i >= 0);
-    }
-    JS_ASSERT(i < depth_);
-    return stack[i];
-}
-
 /*
  * The expression decompiler is invoked by error handling code to produce a
  * string representation of the erroring expression. As it's only a debugging
@@ -1150,8 +1469,8 @@ PCStack::operator[](int i) const
  * argument. Otherwise, we search backwards down the stack for the offending
  * value.
  *
- * 2. Call ReconstructPCStack with the current frame's pc. This creates a stack
- * of pcs parallel to the interpreter stack; given an interpreter stack
+ * 2. Instantiate and run a BytecodeParser for the current frame. This creates a
+ * stack of pcs parallel to the interpreter stack; given an interpreter stack
  * location, the corresponding pc stack location contains the opcode that pushed
  * the value in the interpreter. Now, with the result of step 1, we have the
  * opcode responsible for pushing the value we want to decompile.
@@ -1175,6 +1494,7 @@ struct ExpressionDecompiler
     RootedScript script;
     RootedFunction fun;
     BindingVector *localNames;
+    BytecodeParser parser;
     Sprinter sprinter;
 
     ExpressionDecompiler(JSContext *cx, JSScript *script, JSFunction *fun)
@@ -1182,10 +1502,12 @@ struct ExpressionDecompiler
           script(cx, script),
           fun(cx, fun),
           localNames(nullptr),
+          parser(cx, script),
           sprinter(cx)
     {}
     ~ExpressionDecompiler();
     bool init();
+    bool decompilePCForStackOperand(jsbytecode *pc, int i);
     bool decompilePC(jsbytecode *pc);
     JSAtom *getVar(unsigned slot);
     JSAtom *getArg(unsigned slot);
@@ -1198,13 +1520,18 @@ struct ExpressionDecompiler
 };
 
 bool
+ExpressionDecompiler::decompilePCForStackOperand(jsbytecode *pc, int i)
+{
+    pc = parser.pcForStackOperand(pc, i);
+    if (!pc)
+        return write("(intermediate value)");
+    return decompilePC(pc);
+}
+
+bool
 ExpressionDecompiler::decompilePC(jsbytecode *pc)
 {
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
-
-    PCStack pcstack;
-    if (!pcstack.init(cx, script, pc))
-        return false;
 
     JSOp op = (JSOp)*pc;
 
@@ -1215,18 +1542,18 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
             jssrcnote *sn = js_GetSrcNote(cx, script, pc);
             if (!sn || SN_TYPE(sn) != SRC_ASSIGNOP)
                 return write("(") &&
-                       decompilePC(pcstack[-2]) &&
+                       decompilePCForStackOperand(pc, -2) &&
                        write(" ") &&
                        write(token) &&
                        write(" ") &&
-                       decompilePC(pcstack[-1]) &&
+                       decompilePCForStackOperand(pc, -1) &&
                        write(")");
             break;
           }
           case 1:
             return write(token) &&
                    write("(") &&
-                   decompilePC(pcstack[-1]) &&
+                   decompilePCForStackOperand(pc, -1) &&
                    write(")");
           default:
             break;
@@ -1251,10 +1578,10 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
         JSAtom *atom;
         if (i >= script->nfixed) {
             i -= script->nfixed;
-            JS_ASSERT(i < unsigned(pcstack.depth()));
+            JS_ASSERT(i < unsigned(parser.stackDepthAtPC(pc)));
             atom = findLetVar(pc, i);
             if (!atom)
-                return decompilePC(pcstack[i]); // Destructing temporary
+                return decompilePCForStackOperand(pc, i); // Destructing temporary
         } else {
             atom = getVar(i);
         }
@@ -1271,7 +1598,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_GETPROP:
       case JSOP_CALLPROP: {
         RootedAtom prop(cx, (op == JSOP_LENGTH) ? cx->names().length : loadAtom(pc));
-        if (!decompilePC(pcstack[-1]))
+        if (!decompilePCForStackOperand(pc, -1))
             return false;
         if (IsIdentifier(prop)) {
             return write(".") &&
@@ -1283,9 +1610,9 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       }
       case JSOP_GETELEM:
       case JSOP_CALLELEM:
-        return decompilePC(pcstack[-2]) &&
+        return decompilePCForStackOperand(pc, -2) &&
                write("[") &&
-               decompilePC(pcstack[-1]) &&
+               decompilePCForStackOperand(pc, -1) &&
                write("]");
       case JSOP_NULL:
         return write(js_null_str);
@@ -1310,10 +1637,10 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
         return write(js_this_str);
       case JSOP_CALL:
       case JSOP_FUNCALL:
-        return decompilePC(pcstack[-int32_t(GET_ARGC(pc) + 2)]) &&
+        return decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 2)) &&
                write("(...)");
       case JSOP_SPREADCALL:
-        return decompilePC(pcstack[-int32_t(3)]) &&
+        return decompilePCForStackOperand(pc, -int32_t(3)) &&
                write("(...)");
       case JSOP_NEWARRAY:
         return write("[]");
@@ -1352,6 +1679,9 @@ ExpressionDecompiler::init()
         return false;
     RootedScript script_(cx, script);
     if (!FillBindingVector(script_, localNames))
+        return false;
+
+    if (!parser.parse())
         return false;
 
     return true;
@@ -1445,29 +1775,24 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
         return true;
 
     /*
-     * Fall back on *valuepc as start pc if this frame is calling .apply and
-     * the methodjit has "splatted" the arguments array, bumping the caller's
-     * stack pointer and skewing it from what static analysis in pcstack.init
-     * would compute.
-     *
-     * FIXME: also fall back if iter.isIon(), since the stack snapshot may be
-     * for the previous pc (see bug 831120).
+     * FIXME: Fall back if iter.isIon(), since the stack snapshot may be for the
+     * previous pc (see bug 831120).
      */
     if (iter.isIon())
         return true;
 
     *valuepc = nullptr;
 
-    PCStack pcstack;
-    if (!pcstack.init(cx, iter.script(), current))
+    BytecodeParser parser(cx, iter.script());
+    if (!parser.parse())
         return false;
 
-    if (spindex < 0 && spindex + pcstack.depth() < 0)
+    if (spindex < 0 && spindex + int(parser.stackDepthAtPC(current)) < 0)
         spindex = JSDVG_SEARCH_STACK;
 
     if (spindex == JSDVG_SEARCH_STACK) {
         size_t index = iter.numFrameSlots();
-        JS_ASSERT(index >= size_t(pcstack.depth()));
+        JS_ASSERT(index >= size_t(parser.stackDepthAtPC(current)));
 
         // We search from fp->sp to base to find the most recently calculated
         // value matching v under assumption that it is the value that caused
@@ -1480,14 +1805,16 @@ FindStartPC(JSContext *cx, ScriptFrameIter &iter, int spindex, int skipStackHits
             s = iter.frameSlotValue(--index);
         } while (s != v || stackHits++ != skipStackHits);
 
-        // If index is out of bounds in pcstack, the blamed value must be one
-        // pushed by the current bytecode, so restore *valuepc.
-        if (index < size_t(pcstack.depth()))
-            *valuepc = pcstack[index];
-        else
-            *valuepc = current;
+        // If the current PC has fewer values on the stack than the index we are
+        // looking for, the blamed value must be one pushed by the current
+        // bytecode, so restore *valuepc.
+        jsbytecode *pc = nullptr;
+        if (index < size_t(parser.stackDepthAtPC(current)))
+            pc = parser.pcForStackOperand(current, index);
+        *valuepc = pc ? pc : current;
     } else {
-        *valuepc = pcstack[spindex];
+        jsbytecode *pc = parser.pcForStackOperand(current, spindex);
+        *valuepc = pc ? pc : current;
     }
     return true;
 }
@@ -1615,19 +1942,19 @@ DecompileArgumentFromStack(JSContext *cx, int formalIndex, char **res)
     if (JSOp(*current) != JSOP_CALL || static_cast<unsigned>(formalIndex) >= GET_ARGC(current))
         return true;
 
-    PCStack pcStack;
-    if (!pcStack.init(cx, script, current))
+    BytecodeParser parser(cx, script);
+    if (!parser.parse())
         return false;
 
-    int formalStackIndex = pcStack.depth() - GET_ARGC(current) + formalIndex;
+    int formalStackIndex = parser.stackDepthAtPC(current) - GET_ARGC(current) + formalIndex;
     JS_ASSERT(formalStackIndex >= 0);
-    if (formalStackIndex >= pcStack.depth())
+    if (uint32_t(formalStackIndex) >= parser.stackDepthAtPC(current))
         return true;
 
     ExpressionDecompiler ed(cx, script, fun);
     if (!ed.init())
         return false;
-    if (!ed.decompilePC(pcStack[formalStackIndex]))
+    if (!ed.decompilePCForStackOperand(current, formalStackIndex))
         return false;
 
     return ed.getOutput(res);
@@ -1661,348 +1988,12 @@ js::DecompileArgument(JSContext *cx, int formalIndex, HandleValue v)
 unsigned
 js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    return ReconstructPCStack(cx, script, pc, nullptr);
+    BytecodeParser parser(cx, script);
+    if (!parser.parse())
+        return 0;
+    return parser.stackDepthAtPC(pc);
 }
 
-#define LOCAL_ASSERT_CUSTOM(expr, BAD_EXIT)                                   \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(expr);                                                      \
-        if (!(expr)) { BAD_EXIT; }                                            \
-    JS_END_MACRO
-#define LOCAL_ASSERT_RV(expr, rv)                                             \
-    LOCAL_ASSERT_CUSTOM(expr, return (rv))
-#define LOCAL_ASSERT(expr)      LOCAL_ASSERT_RV(expr, -1);
-
-static int
-SimulateOp(JSScript *script, JSOp op, const JSCodeSpec *cs,
-           jsbytecode *pc, jsbytecode **pcstack, unsigned &pcdepth)
-{
-    unsigned nuses = StackUses(script, pc);
-    unsigned ndefs = StackDefs(script, pc);
-    LOCAL_ASSERT(pcdepth >= nuses);
-    pcdepth -= nuses;
-    LOCAL_ASSERT(pcdepth + ndefs <= StackDepth(script));
-
-    /*
-     * Fill the slots that the opcode defines withs its pc unless it just
-     * reshuffles the stack. In the latter case we want to preserve the
-     * opcode that generated the original value.
-     */
-    switch (op) {
-      default:
-        if (pcstack) {
-            for (unsigned i = 0; i != ndefs; ++i)
-                pcstack[pcdepth + i] = pc;
-        }
-        break;
-
-      case JSOP_CASE:
-        /* Keep the switch value. */
-        JS_ASSERT(ndefs == 1);
-        break;
-
-      case JSOP_DUP:
-        JS_ASSERT(ndefs == 2);
-        if (pcstack)
-            pcstack[pcdepth + 1] = pcstack[pcdepth];
-        break;
-
-      case JSOP_DUP2:
-        JS_ASSERT(ndefs == 4);
-        if (pcstack) {
-            pcstack[pcdepth + 2] = pcstack[pcdepth];
-            pcstack[pcdepth + 3] = pcstack[pcdepth + 1];
-        }
-        break;
-
-      case JSOP_SWAP:
-        JS_ASSERT(ndefs == 2);
-        if (pcstack) {
-            jsbytecode *tmp = pcstack[pcdepth + 1];
-            pcstack[pcdepth + 1] = pcstack[pcdepth];
-            pcstack[pcdepth] = tmp;
-        }
-        break;
-    }
-    pcdepth += ndefs;
-    return pcdepth;
-}
-
-/* Ensure that script analysis reports the same stack depth. */
-static void
-AssertPCDepth(JSScript *script, jsbytecode *pc, unsigned pcdepth) {
-    /*
-     * If this assertion fails, run the failing test case under gdb and use the
-     * following gdb command to understand the execution path of this function.
-     *
-     *     call js_DumpScriptDepth(cx, script, pc)
-     */
-    JS_ASSERT_IF(script->hasAnalysis() && script->analysis()->maybeCode(pc),
-                 script->analysis()->getCode(pc).stackDepth == pcdepth);
-}
-
-static int
-ReconstructPCStack(JSContext *cx, JSScript *script, jsbytecode *target, jsbytecode **pcstack)
-{
-    /*
-     * Walk forward from script->code and compute the stack depth and stack of
-     * operand-generating opcode PCs in pcstack.
-     *
-     * Every instruction has a statically computable stack depth before and
-     * after. This function returns the stack depth before the target
-     * instruction.
-     *
-     * The stack depth can be computed from these three common-sense rules...
-     *
-     *   - The stack depth before the first instruction of the script is 0.
-     *
-     *   - The stack depth after an instruction is always simply the stack
-     *     depth before, plus whatever effect of the instruction has.
-     *     SimulateOp computes this.
-     *
-     *   - Except for three specific cases listed below, the stack depth before
-     *     an instruction is simply the stack depth after the preceding one.
-     *
-     *  ... and these three less obvious rules:
-     *
-     *   - Special case 1: break, continue, or return statements that exit
-     *     certain kinds of blocks.
-     *
-     *     Rule: The stack depth before the next instruction (following the
-     *     GOTO/RETRVAL) equals the stack depth before the first SRC_HIDDEN
-     *     instruction.
-     *
-     *   - Special case 2: The rethrow at the end of conditional catch blocks.
-     *
-     *     Rule: The stack depth before the next rethrow instruction of a
-     *     conditional catch block equals the stack depth at the end of the IFEQ
-     *     of the catch condition (which is jumping to this re-throw).
-     *
-     *   - Special case 3: Conditional expressions (A ? B : C).
-     *
-     *     Rule: The code for B and C are pushing a result on the stack, so the
-     *     stack depth before C equals the stack depth before B, which is one
-     *     less than the stack depth after the GOTO ending B.
-     */
-
-    LOCAL_ASSERT(script->code <= target && target < script->code + script->length);
-
-    /*
-     * Save depth of hidden instructions to recover the depth if a branch is not
-     * taken.
-     */
-    unsigned hpcdepth = unsigned(-1);
-
-    /*
-     * Save depth of catch instructions to recover it in the rethrow path, at
-     * the end of a conditional catch.
-     */
-    unsigned cpcdepth = unsigned(-1);
-
-    jsbytecode *pc;
-    unsigned pcdepth;
-    ptrdiff_t oplen;
-    for (pc = script->code, pcdepth = 0; ; pc += oplen) {
-        JSOp op = JSOp(*pc);
-        oplen = GetBytecodeLength(pc);
-        const JSCodeSpec *cs = &js_CodeSpec[op];
-        jssrcnote *sn = js_GetSrcNote(cx, script, pc);
-
-        /*
-         * *** Special case 1.a ***
-         *
-         * Hidden instructions are used to pop scoped variables (leaveblock) in
-         * early-exit paths and are not supposed to affect the stack depth when
-         * they are not taken. However, when the target is in an early-exit
-         * path, hidden instructions need to be taken into account.
-         *
-         * As we are not following any branch, we need to restore the stack
-         * depth after any instruction which is breaking the flow of the
-         * program. Sequences of hidden instructions are *included* in the
-         * following grammar:
-         *
-         *   ExitSequence:
-         *     EarlyExit                      // return / break / continue
-         *   | ConditionalCatchExit           // conditional catch-block exit
-         *
-         *   EarlyExit:
-         *     setrval; ExitSegment* retrval; // return stmt
-         *   | ExitSegment* goto;             // break/continue stmt
-         *
-         *   ConditionalCatchExit:
-         *     ExitSegment* hidden goto; CatchRethrow
-         *
-         *   CatchRethrow:
-         *     hidden throw; end-brace nop;   // last catch-block
-         *   | hidden throw; finally;         // followed by a finally
-         *   | hidden throwing; hidden leaveblock; catch enterblock;
-         *                                    // followed by a catch-block
-         *
-         *   ExitSegment:
-         *     hidden leaveblock;             // leave let-block or
-         *                                    // leave catch-block
-         *   | hidden leavewith;              // leave with-block
-         *   | hidden gosub;                  // leave try or
-         *                                    // leave catch-block with finally
-         *   | hidden enditer;                // leave for-in/of block
-         *   | hidden leaveforletin; hidden enditer; hidden popn;
-         *                                    // leave for-let-in/of block
-         *
-         * The following code save the depth of the first hidden
-         * instruction. When we hit either the last instruction of the EarlyExit
-         * (retrval/goto) or the goto of a ConditionalCacthExit, we restore (see
-         * Special case 1.b) the depth after the execution of the instruction.
-         *
-         * In case of a ConditionalCacthExit, we keep the hidden depth after the
-         * hidden goto to again restore (see Special case 1.b) the depth after
-         * the throw/throwing instruction of the CatchRethrow.
-         *
-         * Note: The last instructions of the EarlyExit, such as break, continue
-         * and return are not hidden as they are part of the original sources,
-         * so we need to consider them as-if they were hidden instruction (do
-         * not reset the depth) and restore the depth after their execution.  It
-         * is important to restore them after their execution, and not at the
-         * next instruction, because they might be followed by another sequence
-         * of hidden instruction.
-         */
-        bool exitPath =
-            op == JSOP_GOTO ||
-            op == JSOP_RETRVAL ||
-            op == JSOP_THROW;
-
-        bool isConditionalCatchExit = false;
-
-        if (sn && SN_TYPE(sn) == SRC_HIDDEN) {
-            /* Only ConditionalCatchExit's goto are hidden.  */
-            isConditionalCatchExit = op == JSOP_GOTO;
-            if (hpcdepth == unsigned(-1))
-                hpcdepth = pcdepth;
-        } else if (!exitPath) {
-            hpcdepth = unsigned(-1);
-        }
-
-
-        /*
-         * *** Special case 2 ***
-         *
-         * The catch depth is used to restore the depth expected in case of
-         * rethrow or in case of guard failure.  The depth expected by throw and
-         * throwing instructions correspond to the result of enterblock and
-         * exception instructions.
-         *
-         *     enterblock depth d    <-- depth += d
-         *     exception             <-- depth += 1
-         *
-         * This is not a problem, except with conditional catch staements.
-         * Conditional catch statements are looking like:
-         *
-         *     ifeq +...             <-- jump to the rethrow path.
-         *     pop                   <-- pop the exception value.
-         *
-         * Unfortunately, we iterate linearly over the bytecode, so we cannot
-         * use a stack to save the depth for each catch statement that we
-         * encounter. The trick done here is to save the stack depth before we
-         * unwind the scoped variables with leaveblock, and restore the stack
-         * depth plus one to account for the missing exception value.
-         *
-         *     {Catch}  leaveblock d <-- save depth
-         *   (          gosub ... )?
-         *     {Hidden} goto ...
-         *   ( {Hidden} throw )?     <-- restore depth + 1
-         *
-         * If there is no rethrow, then we should expect an end-brace nop or a
-         * finally.
-         */
-        if (op == JSOP_LEAVEBLOCK && sn && SN_TYPE(sn) == SRC_CATCH) {
-            LOCAL_ASSERT(cpcdepth == unsigned(-1));
-            cpcdepth = pcdepth;
-        } else if (sn && SN_TYPE(sn) == SRC_HIDDEN &&
-                   (op == JSOP_THROW || op == JSOP_THROWING))
-        {
-            /*
-             * The current catch block is conditional, we compensate for the pop
-             * of the exception added after the ifeq by adding 1 to the restored
-             * depth.  This fake slot might not contain the right value, but
-             * it will be eliminated with the throw or throwing instruction.
-             */
-            LOCAL_ASSERT(cpcdepth != unsigned(-1));
-            pcdepth = cpcdepth + 1;
-            cpcdepth = unsigned(-1);
-        } else if (!(op == JSOP_GOTO && sn && SN_TYPE(sn) == SRC_HIDDEN) &&
-                   !(op == JSOP_GOSUB && cpcdepth != unsigned(-1)))
-        {
-            /*
-             * We need to ignore gosub and goto when we exit a catch block.
-             * Otherwise we might reset the catch depth before hitting the throw
-             * or throwing instruction.
-             *
-             *     {Catch}  leaveblock d
-             *   (          gosub ... )?
-             *     {Hidden} goto ...
-             *   ( {Hidden} throw )?
-             *              finally
-             *
-             * If there is no rethrow, the end-brace nop or the finally
-             * instruction will reset the saved depth.
-             */
-            if (cpcdepth != unsigned(-1))
-                LOCAL_ASSERT(op == JSOP_NOP || op == JSOP_FINALLY);
-            cpcdepth = unsigned(-1);
-        }
-
-        /* At this point, pcdepth is the stack depth *before* the insn at pc. */
-        AssertPCDepth(script, pc, pcdepth);
-        if (pc >= target)
-            break;
-
-        /* Simulate the instruction at pc. */
-        if (SimulateOp(script, op, cs, pc, pcstack, pcdepth) < 0)
-            return -1;
-
-        /* At this point, pcdepth is the stack depth *after* the insn at pc. */
-
-        /*
-         * *** Special case 1.b ***
-         *
-         * Restore the stack depth after the execution of an EarlyExit or the
-         * goto of the ConditionalCatchExit.
-         */
-        if (exitPath && hpcdepth != unsigned(-1)) {
-            pcdepth = hpcdepth;
-
-            /* Keep the depth if we are on the ConditionalCatchExit path. */
-            if (!isConditionalCatchExit)
-                hpcdepth = unsigned(-1);
-        }
-
-        /*
-         * *** Special case 3 ***
-         *
-         * A (C ? T : E) expression requires skipping T if target is in E or
-         * after the whole expression, because this expression is pushing a
-         * result on the stack and the goto cannot be skipped.
-         *
-         * 09 001 pc   :  ifeq +11
-         *    000 pc+ 5:  null
-         *    001 pc+ 6:  goto +... <-- The stack after the goto
-         *    000 pc+11:  ...       <-- does not have the same depth.
-         *
-         */
-        if (sn && SN_TYPE(sn) == SRC_COND) {
-            ptrdiff_t jmplen = GET_JUMP_OFFSET(pc);
-            if (pc + jmplen <= target) {
-                /* Target does not lie in T. */
-                oplen = jmplen;
-            }
-        }
-    }
-    LOCAL_ASSERT(pc == target);
-    AssertPCDepth(script, pc, pcdepth);
-    return pcdepth;
-}
-
-#undef LOCAL_ASSERT
-#undef LOCAL_ASSERT_RV
 
 bool
 js::CallResultEscapes(jsbytecode *pc)

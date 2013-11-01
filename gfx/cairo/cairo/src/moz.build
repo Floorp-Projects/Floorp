@@ -17,9 +17,24 @@ EXPORTS.cairo += [
     'cairo.h',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('cocoa', 'uikit'):
     EXPORTS.cairo += [
         'cairo-pdf.h',
+    ]
+    SOURCES += [
+        'cairo-base85-stream.c',
+        'cairo-cff-subset.c',
+        'cairo-deflate-stream.c',
+        'cairo-pdf-operators.c',
+        'cairo-pdf-surface.c',
+        'cairo-truetype-subset.c',
+        # cairo-type1-subset.c should be here, but it's only supported on freetype platforms
+        'cairo-type1-fallback.c',
+        'cairo-type3-glyph-surface.c',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXPORTS.cairo += [
         'cairo-win32.h',
     ]
     if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
@@ -30,16 +45,31 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         SOURCES += [
             'cairo-d2d-surface.cpp',
         ]
+    SOURCES += [
+        'cairo-win32-font.c',
+        'cairo-win32-surface.c',
+    ]
+    if CONFIG['NS_PRINTING']:
+        SOURCES += [
+            'cairo-win32-printing-surface.c',
+        ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     EXPORTS.cairo += [
         'cairo-os2-private.h',
         'cairo-os2.h',
-        'cairo-pdf.h',
+    ]
+    SOURCES += [
+        'cairo-os2-surface.c',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.cairo += [
         'cairo-quartz-image.h',
         'cairo-quartz.h',
+    ]
+    SOURCES += [
+        'cairo-quartz-font.c',
+        'cairo-quartz-image-surface.c',
+        'cairo-quartz-surface.c',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'beos':
     EXPORTS.cairo += [
@@ -50,16 +80,13 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'beos':
     ]
 elif CONFIG['MOZ_WIDGET_GTK']:
     EXPORTS.cairo += [
-        'cairo-pdf.h',
         'cairo-ps.h',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
-    EXPORTS.cairo += [
-        'cairo-pdf.h',
+    SOURCES += [
+        'cairo-ps-surface.c',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS.cairo += [
-        'cairo-pdf.h',
         'cairo-qt.h',
     ]
     SOURCES += [
@@ -71,10 +98,20 @@ if CONFIG['MOZ_X11']:
         'cairo-xlib-xrender.h',
         'cairo-xlib.h',
     ]
+    SOURCES += [
+        'cairo-xlib-display.c',
+        'cairo-xlib-screen.c',
+        'cairo-xlib-surface.c',
+        'cairo-xlib-visual.c',
+    ]
 
 if CONFIG['MOZ_ENABLE_CAIRO_FT']:
     EXPORTS.cairo += [
         'cairo-ft.h',
+    ]
+    SOURCES += [
+        'cairo-ft-font.c',
+        'cairo-type1-subset.c',
     ]
 
 LIBRARY_NAME = 'mozcairo'

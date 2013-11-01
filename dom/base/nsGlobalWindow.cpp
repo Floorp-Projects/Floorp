@@ -36,16 +36,6 @@
 #include "nsIScriptTimeoutHandler.h"
 #include "nsIController.h"
 
-#ifdef XP_WIN
-// Thanks so much, Microsoft! :(
-#ifdef GetClassName
-#undef GetClassName
-#endif // GetClassName
-#ifdef CreateEvent
-#undef CreateEvent
-#endif
-#endif // XP_WIN
-
 // Helper Classes
 #include "nsJSUtils.h"
 #include "jsapi.h"              // for JSAutoRequest
@@ -75,6 +65,18 @@
 #include "nsIWidgetListener.h"
 #include "nsIBaseWindow.h"
 #include "nsDeviceSensors.h"
+
+#ifdef XP_WIN
+// Thanks so much, Microsoft and the people who pull in windows.h via
+// random silly headers! :(
+#ifdef GetClassName
+#undef GetClassName
+#endif // GetClassName
+#ifdef CreateEvent
+#undef CreateEvent
+#endif
+#endif // XP_WIN
+
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocCharset.h"
