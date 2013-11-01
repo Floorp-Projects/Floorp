@@ -50,6 +50,7 @@ html|*.highlighter-nodeinfobar-pseudo-classes {
 
 .highlighter-nodeinfobar-button {
   -moz-appearance: none;
+  border-width: 0;
   padding: 0;
   width: 26px;
   min-height: 26px;
