@@ -104,6 +104,14 @@ CreateTextureHostOGL(uint64_t aID,
                                         desc.inverted());
       break;
     }
+#ifdef XP_MACOSX
+    case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
+      const SurfaceDescriptorMacIOSurface& desc =
+        aDesc.get_SurfaceDescriptorMacIOSurface();
+      result = new MacIOSurfaceTextureHostOGL(aID, aFlags, desc);
+      break;
+    }
+#endif
 #ifdef MOZ_WIDGET_GONK
     case SurfaceDescriptor::TNewSurfaceDescriptorGralloc: {
       const NewSurfaceDescriptorGralloc& desc =
@@ -428,6 +436,63 @@ SharedTextureHostOGL::GetFormat() const
   MOZ_ASSERT(mTextureSource);
   return mTextureSource->GetFormat();
 }
+
+#ifdef XP_MACOSX
+MacIOSurfaceTextureHostOGL::MacIOSurfaceTextureHostOGL(uint64_t aID,
+                                                       TextureFlags aFlags,
+                                                       const SurfaceDescriptorMacIOSurface& aDescriptor)
+  : TextureHost(aID, aFlags)
+{
+  mSurface = MacIOSurface::LookupSurface(aDescriptor.surface(),
+                                         aDescriptor.scaleFactor(),
+                                         aDescriptor.hasAlpha());
+}
+
+bool
+MacIOSurfaceTextureHostOGL::Lock()
+{
+  if (!mCompositor) {
+    return false;
+  }
+
+  if (!mTextureSource) {
+    mTextureSource = new MacIOSurfaceTextureSourceOGL(mCompositor, mSurface);
+  }
+  return true;
+}
+
+void
+MacIOSurfaceTextureHostOGL::SetCompositor(Compositor* aCompositor)
+{
+  CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
+  mCompositor = glCompositor;
+  if (mTextureSource) {
+    mTextureSource->SetCompositor(glCompositor);
+  }
+}
+
+void
+MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit)
+{
+  if (!gl()) {
+    NS_WARNING("Trying to bind a texture without a GLContext");
+    return;
+  }
+  GLuint tex = mCompositor->GetTemporaryTexture(aTextureUnit);
+
+  gl()->fActiveTexture(aTextureUnit);
+  gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
+  void *nativeGL = gl()->GetNativeData(gl::GLContext::NativeGLContext);
+  mSurface->CGLTexImageIOSurface2D(nativeGL);
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+}
+
+gl::GLContext*
+MacIOSurfaceTextureSourceOGL::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+#endif
 
 TextureImageDeprecatedTextureHostOGL::~TextureImageDeprecatedTextureHostOGL()
 {
