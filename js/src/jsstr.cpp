@@ -1788,8 +1788,14 @@ class MOZ_STACK_CLASS StringRegExpGuard
         if (!regExpIsObject())
             return true;
 
-        // Don't use RegExpObject::setLastIndex, because that ignores the
-        // writability of "lastIndex" on this user-controlled RegExp object.
+        // Use a fast path for same-global RegExp objects with writable
+        // lastIndex.
+        if (obj_->is<RegExpObject>() && obj_->nativeLookup(cx, cx->names().lastIndex)->writable()) {
+            obj_->as<RegExpObject>().zeroLastIndex();
+            return true;
+        }
+
+        // Handle everything else generically (including throwing if .lastIndex is non-writable).
         RootedValue zero(cx, Int32Value(0));
         return JSObject::setProperty(cx, obj_, obj_, cx->names().lastIndex, &zero, true);
     }
