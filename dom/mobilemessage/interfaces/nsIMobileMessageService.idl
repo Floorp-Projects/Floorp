@@ -14,7 +14,7 @@ interface nsIDOMMozSmsSegmentInfo;
 #define MOBILE_MESSAGE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/mobilemessageservice;1"
 %}
 
-[scriptable, builtinclass, uuid(2a231e8d-761d-47a9-8928-93de7b0cbaac)]
+[scriptable, builtinclass, uuid(11b7bda8-414b-11e3-8781-1b737e7958ae)]
 interface nsIMobileMessageService : nsISupports
 {
   [implicit_jscontext]
@@ -27,6 +27,7 @@ interface nsIMobileMessageService : nsISupports
                                        in DOMString body,
                                        in DOMString messageClass,
                                        in jsval     timestamp,
+                                       in jsval     deliveryTimestamp,
                                        in bool      read);
 
   [implicit_jscontext]
