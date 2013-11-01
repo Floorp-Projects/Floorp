@@ -24,21 +24,28 @@
 #endif
 
 /*
- * The following DEBUG-only code is used to assert that calls to one of
- * table->ops or to an enumerator do not cause re-entry into a call that
- * can mutate the table.
+ * The following code is used to ensure that calls to one of table->ops or to
+ * an enumerator do not cause re-entry into a call that can mutate the table.
+ * Any check that fails will cause an immediate abort, even in non-debug
+ * builds.
  */
-#ifdef DEBUG
 
 /*
- * Most callers that assert about the recursion level don't care about
- * this magical value because they are asserting that mutation is
- * allowed (and therefore the level is 0 or 1, depending on whether they
- * incremented it).
+ * Most callers that check the recursion level don't care about this magical
+ * value because they are checking that mutation is allowed (and therefore the
+ * level is 0 or 1, depending on whether they incremented it).
  *
  * Only PL_DHashTableFinish needs to allow this special value.
  */
-#define IMMUTABLE_RECURSION_LEVEL ((uint16_t)-1)
+#define IMMUTABLE_RECURSION_LEVEL ((uint32_t)-1)
+
+/* This aborts in all builds. */
+#define ABORT_UNLESS(condition)                                               \
+    do {                                                                      \
+        if (!(condition)) {                                                   \
+          NS_RUNTIMEABORT("recursion level error in pldhash");                \
+        }                                                                     \
+    } while (0)
 
 #define RECURSION_LEVEL_SAFE_TO_FINISH(table_)                                \
     (table_->recursionLevel == 0 ||                                           \
@@ -48,21 +55,14 @@
     do {                                                                      \
         if (table_->recursionLevel != IMMUTABLE_RECURSION_LEVEL)              \
             ++table_->recursionLevel;                                         \
-    } while(0)
+    } while (0)
 #define DECREMENT_RECURSION_LEVEL(table_)                                     \
     do {                                                                      \
         if (table->recursionLevel != IMMUTABLE_RECURSION_LEVEL) {             \
-            MOZ_ASSERT(table->recursionLevel > 0);                            \
+            ABORT_UNLESS(table->recursionLevel > 0);                          \
             --table->recursionLevel;                                          \
         }                                                                     \
-    } while(0)
-
-#else
-
-#define INCREMENT_RECURSION_LEVEL(table_)   do { } while(0)
-#define DECREMENT_RECURSION_LEVEL(table_)   do { } while(0)
-
-#endif /* defined(DEBUG) */
+    } while (0)
 
 using namespace mozilla;
 
@@ -225,9 +225,7 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
     memset(table->entryStore, 0, nbytes);
     METER(memset(&table->stats, 0, sizeof table->stats));
 
-#ifdef DEBUG
     table->recursionLevel = 0;
-#endif
 
     return true;
 }
@@ -305,7 +303,7 @@ PL_DHashTableFinish(PLDHashTable *table)
     }
 
     DECREMENT_RECURSION_LEVEL(table);
-    MOZ_ASSERT(RECURSION_LEVEL_SAFE_TO_FINISH(table));
+    ABORT_UNLESS(RECURSION_LEVEL_SAFE_TO_FINISH(table));
 
     /* Free entry storage last. */
     table->ops->freeTable(table, table->entryStore);
@@ -448,9 +446,7 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
         return false;
 
     /* We can't fail from here on, so update table parameters. */
-#ifdef DEBUG
     uint32_t recursionLevel = table->recursionLevel;
-#endif
     table->hashShift = PL_DHASH_BITS - newLog2;
     table->removedCount = 0;
     table->generation++;
@@ -461,9 +457,7 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
     oldEntryAddr = oldEntryStore = table->entryStore;
     table->entryStore = newEntryStore;
     PLDHashMoveEntry moveEntry = table->ops->moveEntry;
-#ifdef DEBUG
     table->recursionLevel = recursionLevel;
-#endif
 
     /* Copy only live entries, leaving removed ones behind. */
     uint32_t oldCapacity = 1u << oldLog2;
@@ -489,7 +483,7 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
 {
     PLDHashEntryHdr *entry;
 
-    MOZ_ASSERT(op == PL_DHASH_LOOKUP || table->recursionLevel == 0);
+    ABORT_UNLESS(op == PL_DHASH_LOOKUP || table->recursionLevel == 0);
     INCREMENT_RECURSION_LEVEL(table);
 
     PLDHashNumber keyHash = table->ops->hashKey(table, key);
@@ -597,7 +591,7 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
 void
 PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-    MOZ_ASSERT(table->recursionLevel != IMMUTABLE_RECURSION_LEVEL);
+    ABORT_UNLESS(table->recursionLevel != IMMUTABLE_RECURSION_LEVEL);
 
     NS_ASSERTION(PL_DHASH_ENTRY_IS_LIVE(entry),
                  "PL_DHASH_ENTRY_IS_LIVE(entry)");
@@ -641,7 +635,7 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
         entryAddr += entrySize;
     }
 
-    MOZ_ASSERT(!didRemove || table->recursionLevel == 1);
+    ABORT_UNLESS(!didRemove || table->recursionLevel == 1);
 
     /*
      * Shrink or compress if a quarter or more of all entries are removed, or
@@ -716,13 +710,11 @@ PL_DHashTableSizeOfIncludingThis(const PLDHashTable *table,
                                             mallocSizeOf, arg);
 }
 
-#ifdef DEBUG
 void
 PL_DHashMarkTableImmutable(PLDHashTable *table)
 {
     table->recursionLevel = IMMUTABLE_RECURSION_LEVEL;
 }
-#endif
 
 #ifdef PL_DHASHMETER
 #include <math.h>

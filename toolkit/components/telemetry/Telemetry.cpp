@@ -956,10 +956,8 @@ mFailedLockCount(0)
   for (size_t i = 0; i < ArrayLength(trackedDBs); i++)
     mTrackedDBs.PutEntry(nsDependentCString(trackedDBs[i]));
 
-#ifdef DEBUG
   // Mark immutable to prevent asserts on simultaneous access from multiple threads
   mTrackedDBs.MarkImmutable();
-#endif
   mReporter = new TelemetryReporter();
   NS_RegisterMemoryReporter(mReporter);
 }

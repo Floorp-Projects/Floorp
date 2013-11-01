@@ -275,7 +275,6 @@ public:
     return PL_DHashTableSizeOfExcludingThis(&mTable, nullptr, mallocSizeOf);
   }
 
-#ifdef DEBUG
   /**
    * Mark the table as constant after initialization.
    *
@@ -288,7 +287,6 @@ public:
 
     PL_DHashMarkTableImmutable(&mTable);
   }
-#endif
 
 protected:
   PLDHashTable mTable;

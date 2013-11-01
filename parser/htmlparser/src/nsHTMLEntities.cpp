@@ -127,10 +127,8 @@ nsHTMLEntities::AddRefTable(void)
       if (!entry->node)
         entry->node = node;
     }
-#ifdef DEBUG
     PL_DHashMarkTableImmutable(&gUnicodeToEntity);
     PL_DHashMarkTableImmutable(&gEntityToUnicode);
-#endif
   }
   ++gTableRefCnt;
   return NS_OK;
