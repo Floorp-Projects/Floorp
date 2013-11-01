@@ -396,6 +396,14 @@ def MochitestCommand(func):
         help='Delay execution between tests.')
     func = slow(func)
 
+    end_at = CommandArgument('--end-at', type=str,
+        help='Stop running the test sequence at this test.')
+    func = end_at(func)
+
+    start_at = CommandArgument('--start-at', type=str,
+        help='Start running the test sequence at this test.')
+    func = start_at(func)
+
     chunk_dir = CommandArgument('--chunk-by-dir', type=int,
         help='Group tests together in chunks by this many top directories.')
     func = chunk_dir(func)
@@ -465,14 +473,6 @@ def B2GCommand(func):
     this_chunk = CommandArgument('--this-chunk', type=int,
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
-
-    start_at = CommandArgument('--start-at', type=str,
-        help='Start running the test sequence at this test.')
-    func = start_at(func)
-
-    end_at = CommandArgument('--end-at', type=str,
-        help='Stop running the test sequence at this test.')
-    func = end_at(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',
