@@ -3005,7 +3005,7 @@ RadioInterface.prototype = {
                                            context.sms.delivery,
                                            response.deliveryStatus,
                                            null,
-                                           function notifyResult(rv, domMessage) {
+                                           (function notifyResult(rv, domMessage) {
             // TODO bug 832140 handle !Components.isSuccessCode(rv)
 
             let topic = (response.deliveryStatus ==
@@ -3020,7 +3020,7 @@ RadioInterface.prototype = {
 
             // Notifying observers the delivery status is updated.
             Services.obs.notifyObservers(domMessage, topic, null);
-          });
+          }).bind(this));
 
           // Send transaction has ended completely.
           return false;
