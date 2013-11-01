@@ -788,6 +788,7 @@ nsXBLContentSink::ConstructProperty(const PRUnichar **aAtts, uint32_t aLineNumbe
   const PRUnichar* readonly = nullptr;
   const PRUnichar* onget    = nullptr;
   const PRUnichar* onset    = nullptr;
+  bool exposeToUntrustedContent = false;
 
   nsCOMPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
@@ -812,15 +813,21 @@ nsXBLContentSink::ConstructProperty(const PRUnichar **aAtts, uint32_t aLineNumbe
     else if (localName == nsGkAtoms::onset) {
       onset = aAtts[1];
     }
+    else if (localName == nsGkAtoms::exposeToUntrustedContent &&
+             nsDependentString(aAtts[1]).EqualsLiteral("true"))
+    {
+      exposeToUntrustedContent = true;
+    }
   }
 
   if (name) {
     // All of our pointers are now filled in. Construct our property with all of
     // these parameters.
     mProperty = new nsXBLProtoImplProperty(name, onget, onset, readonly, aLineNumber);
-    if (mProperty) {
-      AddMember(mProperty);
+    if (exposeToUntrustedContent) {
+      mProperty->SetExposeToUntrustedContent(true);
     }
+    AddMember(mProperty);
   }
 }
 
@@ -830,8 +837,14 @@ nsXBLContentSink::ConstructMethod(const PRUnichar **aAtts)
   mMethod = nullptr;
 
   const PRUnichar* name = nullptr;
+  const PRUnichar* expose = nullptr;
   if (FindValue(aAtts, nsGkAtoms::name, &name)) {
     mMethod = new nsXBLProtoImplMethod(name);
+    if (FindValue(aAtts, nsGkAtoms::exposeToUntrustedContent, &expose) &&
+        nsDependentString(expose).EqualsLiteral("true"))
+    {
+      mMethod->SetExposeToUntrustedContent(true);
+    }
   }
 
   if (mMethod) {
