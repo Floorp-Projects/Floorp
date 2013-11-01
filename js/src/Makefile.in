@@ -414,14 +414,18 @@ CFLAGS += -fp:precise
 
 ifeq ($(CPU_ARCH),x86)
 # Workaround compiler bug on PGO (Bug 721284)
-MonoIC.$(OBJ_SUFFIX): CXXFLAGS += -GL-
-Compiler.$(OBJ_SUFFIX): CXXFLAGS += -GL-
+NO_PROFILE_GUIDED_OPTIMIZE := \
+  MonoIC.cpp \
+  Compiler.cpp \
+  $(NULL)
 # Ditto (Bug 772303)
-RegExp.$(OBJ_SUFFIX): CXXFLAGS += -GL-
+NO_PROFILE_GUIDED_OPTIMIZE += RegExp.cpp
 endif
 # Ditto (Bug 810661)
 ifeq ($(CPU_ARCH),x86_64)
-CTypes.$(OBJ_SUFFIX): CXXFLAGS += -GL-
+NO_PROFILE_GUIDED_OPTIMIZE := \
+  CTypes.cpp \
+  $(NULL)
 endif
 endif # _MSC_VER
 
