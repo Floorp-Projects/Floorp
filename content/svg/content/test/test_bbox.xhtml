@@ -16,8 +16,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=449327
 <iframe id="svg" src="bbox-helper.svg"></iframe>
 
 <pre id="test">
-<script class="testbody" type="application/javascript">
+<script class="testbody" type="application/javascript">//<![CDATA[
+
 SimpleTest.waitForExplicitFinish();
+
+function fuzzyEq(a, b) {
+  var epsilon = 0.0002;
+  return Math.abs(a - b) < epsilon;
+}
 
 function run()
 {
@@ -38,7 +44,7 @@ function run()
     var bbox2 = getBBox(id2);
     is(bbox1.x, bbox2.x, id1 + ".getBBox().x");
     is(bbox1.y, bbox2.y, id1 + ".getBBox().y");
-    is(bbox1.width, bbox2.width, id1 + ".getBBox().width");
+    ok(fuzzyEq(bbox1.width, bbox2.width), id1 + ".getBBox().width");
     is(bbox1.height, bbox2.height, id1 + ".getBBox().height");
   }
   function compareBBoxHeight(id1, id2) {
@@ -60,7 +66,8 @@ function run()
 }
 
 window.addEventListener("load", run, false);
-</script>
+
+//]]></script>
 </pre>
 </body>
 </html>
