@@ -4,7 +4,6 @@
 
 #include "LayerManagerOGLProgram.h"
 #include <stdint.h>                     // for uint32_t
-#include <sstream>                      // for ostringstream
 #include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPoint.h"                   // for gfxIntSize, gfxPoint, etc
 #include "gfxRect.h"                    // for gfxRect
@@ -23,8 +22,6 @@ struct gfxRGBA;
 namespace mozilla {
 namespace layers {
 
-using namespace std;
-
 typedef ProgramProfileOGL::Argument Argument;
 
 // helper methods for GetProfileFor
@@ -34,6 +31,7 @@ AddCommonArgs(ProgramProfileOGL& aProfile)
   aProfile.mUniforms.AppendElement(Argument("uLayerTransform"));
   aProfile.mUniforms.AppendElement(Argument("uLayerQuadTransform"));
   aProfile.mUniforms.AppendElement(Argument("uMatrixProj"));
+  aProfile.mHasMatrixProj = true;
   aProfile.mUniforms.AppendElement(Argument("uRenderTargetOffset"));
   aProfile.mAttributes.AppendElement(Argument("aVertexCoord"));
 }
@@ -46,12 +44,6 @@ AddCommonTextureArgs(ProgramProfileOGL& aProfile)
   aProfile.mAttributes.AppendElement(Argument("aTexCoord"));
 }
 
-void
-AddConfig(ProgramProfileOGL& aProfile, const char *aConfig)
-{
-  aProfile.mDefines.AppendElement(aConfig);
-}
-
 /* static */ ProgramProfileOGL
 ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
                                  MaskType aMask)
@@ -60,21 +52,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
   ProgramProfileOGL result;
 
   switch (aType) {
-  case YCbCrLayerProgramType:
-    result.mVertexShaderString = sUnifiedLayerVS;
-    result.mFragmentShaderString = sUnifiedLayerFS;
-    AddCommonArgs(result);
-    AddConfig(result, "#define ENABLE_TEXTURE_YCBCR");
-    if (aMask != MaskNone)
-      AddConfig(result, "#define ENABLE_MASK");
-    result.mUniforms.AppendElement(Argument("uLayerOpacity"));
-    result.mUniforms.AppendElement(Argument("uYTexture"));
-    result.mUniforms.AppendElement(Argument("uCbTexture"));
-    result.mUniforms.AppendElement(Argument("uCrTexture"));
-    result.mUniforms.AppendElement(Argument("uTextureTransform"));
-    result.mAttributes.AppendElement(Argument("aTexCoord"));
-    result.mTextureCount = 3;
-    break;
   case RGBALayerProgramType:
     if (aMask == Mask3d) {
       result.mVertexShaderString = sLayerMask3DVS;
@@ -139,7 +116,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     }
     AddCommonArgs(result);
     AddCommonTextureArgs(result);
-    result.mUniforms.AppendElement(Argument("uTexCoordMultiplier"));
     result.mTextureCount = 1;
     break;
   case RGBXRectLayerProgramType:
@@ -155,7 +131,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     }
     AddCommonArgs(result);
     AddCommonTextureArgs(result);
-    result.mUniforms.AppendElement(Argument("uTexCoordMultiplier"));
     result.mTextureCount = 1;
     break;
   case BGRARectLayerProgramType:
@@ -164,7 +139,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     result.mFragmentShaderString = sBGRARectTextureLayerFS;
     AddCommonArgs(result);
     AddCommonTextureArgs(result);
-    result.mUniforms.AppendElement(Argument("uTexCoordMultiplier"));
     result.mTextureCount = 1;
     break;
   case RGBAExternalLayerProgramType:
@@ -192,6 +166,23 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     }
     AddCommonArgs(result);
     result.mUniforms.AppendElement(Argument("uRenderColor"));
+    break;
+  case YCbCrLayerProgramType:
+    if (aMask == Mask2d) {
+      result.mVertexShaderString = sLayerMaskVS;
+      result.mFragmentShaderString = sYCbCrTextureLayerMaskFS;
+    } else {
+      result.mVertexShaderString = sLayerVS;
+      result.mFragmentShaderString = sYCbCrTextureLayerFS;
+    }
+    AddCommonArgs(result);
+    result.mUniforms.AppendElement(Argument("uLayerOpacity"));
+    result.mUniforms.AppendElement(Argument("uYTexture"));
+    result.mUniforms.AppendElement(Argument("uCbTexture"));
+    result.mUniforms.AppendElement(Argument("uCrTexture"));
+    result.mUniforms.AppendElement(Argument("uTextureTransform"));
+    result.mAttributes.AppendElement(Argument("aTexCoord"));
+    result.mTextureCount = 3;
     break;
   case ComponentAlphaPass1ProgramType:
     if (aMask == Mask2d) {
@@ -273,7 +264,6 @@ ProgramProfileOGL::GetProfileFor(ShaderProgramType aType,
     result.mFragmentShaderString = sCopy2DRectFS;
     result.mUniforms.AppendElement(Argument("uTexture"));
     result.mUniforms.AppendElement(Argument("uTextureTransform"));
-    result.mUniforms.AppendElement(Argument("uTexCoordMultiplier"));
     result.mAttributes.AppendElement(Argument("aVertexCoord"));
     result.mAttributes.AppendElement(Argument("aTexCoord"));
     result.mTextureCount = 1;
@@ -295,7 +285,8 @@ const char* const ShaderProgramOGL::VertexCoordAttrib = "aVertexCoord";
 const char* const ShaderProgramOGL::TexCoordAttrib = "aTexCoord";
 
 ShaderProgramOGL::ShaderProgramOGL(GLContext* aGL, const ProgramProfileOGL& aProfile)
-  : mGL(aGL)
+  : mIsProjectionMatrixStale(false)
+  , mGL(aGL)
   , mProgram(0)
   , mProfile(aProfile)
   , mProgramState(STATE_NEW)
@@ -320,15 +311,8 @@ ShaderProgramOGL::Initialize()
 {
   NS_ASSERTION(mProgramState == STATE_NEW, "Shader program has already been initialised");
 
-  ostringstream vs, fs;
-  for (uint32_t i = 0; i < mProfile.mDefines.Length(); ++i) {
-    vs << mProfile.mDefines[i] << endl;
-    fs << mProfile.mDefines[i] << endl;
-  }
-  vs << mProfile.mVertexShaderString << endl;
-  fs << mProfile.mFragmentShaderString << endl;
-
-  if (!CreateProgram(vs.str().c_str(), fs.str().c_str())) {
+  if (!CreateProgram(mProfile.mVertexShaderString,
+                     mProfile.mFragmentShaderString)) {
     mProgramState = STATE_ERROR;
     return false;
   }
@@ -346,6 +330,10 @@ ShaderProgramOGL::Initialize()
       mGL->fGetAttribLocation(mProgram, mProfile.mAttributes[i].mName);
     NS_ASSERTION(mProfile.mAttributes[i].mLocation >= 0, "Bad attribute location.");
   }
+
+  // this is a one-off that's present in the 2DRect versions of some shaders.
+  mTexCoordMultiplierUniformLocation =
+    mGL->fGetUniformLocation(mProgram, "uTexCoordMultiplier");
 
   return true;
 }
@@ -499,6 +487,10 @@ ShaderProgramOGL::Activate()
 #if CHECK_CURRENT_PROGRAM
   mGL->SetUserData(&sCurrentProgramKey, this);
 #endif
+  // check and set the projection matrix
+  if (mIsProjectionMatrixStale) {
+    SetProjectionMatrix(mProjectionMatrix);
+  }
 }
 
 

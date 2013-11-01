@@ -113,17 +113,56 @@ struct EffectRenderTarget : public TexturedEffect
   RefPtr<CompositingRenderTarget> mRenderTarget;
 };
 
-struct EffectRGB : public TexturedEffect
+struct EffectBGRX : public TexturedEffect
 {
-  EffectRGB(TextureSource *aTexture,
-            bool aPremultiplied,
-            gfx::Filter aFilter,
-            bool aFlipped = false)
-    : TexturedEffect(EFFECT_RGB, aTexture, aPremultiplied, aFilter)
+  EffectBGRX(TextureSource *aBGRXTexture,
+             bool aPremultiplied,
+             gfx::Filter aFilter,
+             bool aFlipped = false)
+    : TexturedEffect(EFFECT_BGRX, aBGRXTexture, aPremultiplied, aFilter)
   {}
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "EffectRGB"; }
+  virtual const char* Name() { return "EffectBGRX"; }
+#endif
+};
+
+struct EffectRGBX : public TexturedEffect
+{
+  EffectRGBX(TextureSource *aRGBXTexture,
+             bool aPremultiplied,
+             gfx::Filter aFilter)
+    : TexturedEffect(EFFECT_RGBX, aRGBXTexture, aPremultiplied, aFilter)
+  {}
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() { return "EffectRGBX"; }
+#endif
+};
+
+struct EffectBGRA : public TexturedEffect
+{
+  EffectBGRA(TextureSource *aBGRATexture,
+             bool aPremultiplied,
+             gfx::Filter aFilter)
+    : TexturedEffect(EFFECT_BGRA, aBGRATexture, aPremultiplied, aFilter)
+  {}
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() { return "EffectBGRA"; }
+#endif
+};
+
+struct EffectRGBA : public TexturedEffect
+{
+  EffectRGBA(TextureSource *aRGBATexture,
+             bool aPremultiplied,
+             gfx::Filter aFilter)
+    : TexturedEffect(EFFECT_RGBA, aRGBATexture, aPremultiplied, aFilter)
+  {}
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() { return "EffectRGBA"; }
 #endif
 };
 
@@ -193,12 +232,20 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
   MOZ_ASSERT(aSource);
   RefPtr<TexturedEffect> result;
   switch (aFormat) {
-  case gfx::FORMAT_R8G8B8A8:
-  case gfx::FORMAT_R8G8B8X8:
   case gfx::FORMAT_B8G8R8A8:
+    result = new EffectBGRA(aSource, true, aFilter);
+    break;
   case gfx::FORMAT_B8G8R8X8:
+    result = new EffectBGRX(aSource, true, aFilter);
+    break;
+  case gfx::FORMAT_R8G8B8X8:
+    result = new EffectRGBX(aSource, true, aFilter);
+    break;
   case gfx::FORMAT_R5G6B5:
-    result = new EffectRGB(aSource, true, aFilter);
+    result = new EffectRGBX(aSource, true, aFilter);
+    break;
+  case gfx::FORMAT_R8G8B8A8:
+    result = new EffectRGBA(aSource, true, aFilter);
     break;
   case gfx::FORMAT_YUV:
     result = new EffectYCbCr(aSource, aFilter);

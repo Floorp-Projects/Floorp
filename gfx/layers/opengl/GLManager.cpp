@@ -23,35 +23,6 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
-inline ShaderProgramType
-GetProgramTypeForSurfaceFormat(GLenum aTarget, gfx::SurfaceFormat aFormat)
-{
-  if (aTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB) {
-    switch (aFormat) {
-    case gfx::FORMAT_R8G8B8X8:
-    case gfx::FORMAT_R5G6B5:
-      return RGBXRectLayerProgramType;
-    case gfx::FORMAT_R8G8B8A8:
-      return RGBARectLayerProgramType;
-    default:
-      MOZ_CRASH("unhandled program type");
-    }
-  }
-  switch (aFormat) {
-  case gfx::FORMAT_B8G8R8A8:
-    return BGRALayerProgramType;
-  case gfx::FORMAT_B8G8R8X8:
-    return BGRXLayerProgramType;
-  case gfx::FORMAT_R8G8B8X8:
-  case gfx::FORMAT_R5G6B5:
-    return RGBXLayerProgramType;
-  case gfx::FORMAT_R8G8B8A8:
-    return RGBALayerProgramType;
-  default:
-    MOZ_CRASH("unhandled program type");
-  }
-}
-
 class GLManagerLayerManager : public GLManager
 {
 public:
@@ -64,14 +35,9 @@ public:
     return mImpl->gl();
   }
 
-  virtual ShaderProgramOGL* GetProgram(GLenum aTarget, gfx::SurfaceFormat aFormat) MOZ_OVERRIDE
+  virtual ShaderProgramOGL* GetProgram(ShaderProgramType aType) MOZ_OVERRIDE
   {
-    return mImpl->GetProgram(GetProgramTypeForSurfaceFormat(aTarget, aFormat));
-  }
-
-  virtual gfx3DMatrix& GetProjMatrix() const MOZ_OVERRIDE
-  {
-    return mImpl->mProjMatrix;
+    return mImpl->GetProgram(aType);
   }
 
   virtual void BindAndDrawQuad(ShaderProgramOGL *aProg) MOZ_OVERRIDE
@@ -95,15 +61,9 @@ public:
     return mImpl->gl();
   }
 
-  virtual ShaderProgramOGL* GetProgram(GLenum aTarget, gfx::SurfaceFormat aFormat) MOZ_OVERRIDE
+  virtual ShaderProgramOGL* GetProgram(ShaderProgramType aType) MOZ_OVERRIDE
   {
-    ShaderConfigOGL config = mImpl->GetShaderConfigFor(aTarget, aFormat);
-    return mImpl->GetShaderProgramFor(config);
-  }
-
-  virtual const gfx3DMatrix& GetProjMatrix() const MOZ_OVERRIDE
-  {
-    return mImpl->GetProjMatrix();
+    return mImpl->GetProgram(aType);
   }
 
   virtual void BindAndDrawQuad(ShaderProgramOGL *aProg) MOZ_OVERRIDE
