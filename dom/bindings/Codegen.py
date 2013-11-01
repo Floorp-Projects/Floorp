@@ -53,6 +53,14 @@ def toStringBool(arg):
 def toBindingNamespace(arg):
     return re.sub("((_workers)?$)", "Binding\\1", arg);
 
+def isTypeCopyConstructible(type):
+    # Nullable and sequence stuff doesn't affect copy/constructibility
+    type = type.unroll()
+    return (type.isPrimitive() or type.isString() or type.isEnum() or
+            (type.isUnion() and CGUnionStruct.isUnionCopyConstructible(type)) or
+            (type.isDictionary() and
+             CGDictionary.isDictionaryCopyConstructible(type.inner)))
+
 class CGThing():
     """
     Abstract base class for things that spit out code.
@@ -6318,6 +6326,10 @@ class CGUnionStruct(CGThing):
         enumValues = ["eUninitialized"]
         toJSValCases = [CGCase("eUninitialized", CGGeneric("return false;"))]
         destructorCases = [CGCase("eUninitialized", None)]
+        assignmentCases = [
+            CGCase("eUninitialized",
+                   CGGeneric('MOZ_ASSERT(mType == eUninitialized,\n'
+                             '           "We need to destroy ourselves?");'))]
         traceCases = []
         unionValues = []
         if self.type.hasNullableType:
@@ -6329,6 +6341,8 @@ class CGUnionStruct(CGThing):
                                        body="mType = eNull;",
                                        bodyInHeader=True))
             destructorCases.append(CGCase("eNull", None))
+            assignmentCases.append(CGCase("eNull",
+                                          CGGeneric("mType = eNull;")))
             toJSValCases.append(CGCase("eNull", CGGeneric("rval.setNull();\n"
                                                           "return true;")))
 
@@ -6396,6 +6410,10 @@ class CGUnionStruct(CGThing):
             destructorCases.append(CGCase("e" + vars["name"],
                                           CGGeneric("Destroy%s();"
                                                      % vars["name"])))
+            assignmentCases.append(
+                CGCase("e" + vars["name"],
+                       CGGeneric("SetAs%s() = aOther.GetAs%s();" %
+                                 (vars["name"], vars["name"]))))
             if self.ownsMembers and typeNeedsRooting(t):
                 if t.isObject():
                     traceCases.append(
@@ -6424,6 +6442,8 @@ class CGUnionStruct(CGThing):
         ], body=CGSwitch("mType", toJSValCases,
                          default=CGGeneric("return false;")).define(), const=True))
 
+        constructors = [ctor]
+        selfName = ("Owning" if self.ownsMembers else "") + str(self.type)
         if self.ownsMembers:
             if len(traceCases):
                 traceBody = CGSwitch("mType", traceCases,
@@ -6433,13 +6453,30 @@ class CGUnionStruct(CGThing):
             methods.append(ClassMethod("TraceUnion", "void",
                                        [Argument("JSTracer*", "trc")],
                                        body=traceBody))
+            if CGUnionStruct.isUnionCopyConstructible(self.type):
+                constructors.append(
+                    ClassConstructor([Argument("const %s&" % selfName,
+                                               "aOther")],
+                                     bodyInHeader=True,
+                                     visibility="public",
+                                     explicit=True,
+                                     body="*this = aOther;"))
+                methods.append(ClassMethod(
+                        "operator=", "void",
+                        [Argument("const %s&" % selfName, "aOther")],
+                        body=CGSwitch("aOther.mType", assignmentCases).define()))
+                disallowCopyConstruction = False
+            else:
+                disallowCopyConstruction = True
+        else:
+            disallowCopyConstruction = True
 
         friend="  friend class %sArgument;\n" % str(self.type) if not self.ownsMembers else ""
-        return CGClass(("Owning" if self.ownsMembers else "") + str(self.type),
+        return CGClass(selfName,
                        members=members,
-                       constructors=[ctor],
+                       constructors=constructors,
                        methods=methods,
-                       disallowCopyConstruction=True,
+                       disallowCopyConstruction=disallowCopyConstruction,
                        extradeclarations=friend,
                        destructor=ClassDestructor(visibility="public",
                                                   body=dtor,
@@ -6460,6 +6497,10 @@ class CGUnionStruct(CGThing):
                 "typedArraysAreStructs": True
                 })
         return CGGeneric(wrapCode)
+
+    @staticmethod
+    def isUnionCopyConstructible(type):
+        return all(isTypeCopyConstructible(t) for t in type.flatMemberTypes)
 
 class CGUnionConversionStruct(CGThing):
     def __init__(self, type, descriptorProvider):
@@ -8754,12 +8795,6 @@ if (""",
 
     @staticmethod
     def isDictionaryCopyConstructible(dictionary):
-        def isTypeCopyConstructible(type):
-            # Nullable and sequence stuff doesn't affect copy/constructibility
-            type = type.unroll()
-            return (type.isPrimitive() or type.isString() or type.isEnum() or
-                    (type.isDictionary() and
-                     CGDictionary.isDictionaryCopyConstructible(type.inner)))
         if (dictionary.parent and
             not CGDictionary.isDictionaryCopyConstructible(dictionary.parent)):
             return False
