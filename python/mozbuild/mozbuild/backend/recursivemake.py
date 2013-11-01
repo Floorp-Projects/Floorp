@@ -29,6 +29,8 @@ from ..frontend.data import (
     GeneratedInclude,
     GeneratedWebIDLFile,
     HeaderFileSubstitution,
+    HostProgram,
+    HostSimpleProgram,
     InstallationTarget,
     IPDLFile,
     JavaJarData,
@@ -414,8 +416,14 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
 
+        elif isinstance(obj, HostProgram):
+            self._process_host_program(obj.program, backend_file)
+
         elif isinstance(obj, SimpleProgram):
             self._process_simple_program(obj.program, backend_file)
+
+        elif isinstance(obj, HostSimpleProgram):
+            self._process_host_simple_program(obj.program, backend_file)
 
         elif isinstance(obj, TestManifest):
             self._process_test_manifest(obj, backend_file)
@@ -972,8 +980,14 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_program(self, program, backend_file):
         backend_file.write('PROGRAM = %s\n' % program)
 
+    def _process_host_program(self, program, backend_file):
+        backend_file.write('HOST_PROGRAM = %s\n' % program)
+
     def _process_simple_program(self, program, backend_file):
         backend_file.write('SIMPLE_PROGRAMS += %s\n' % program)
+
+    def _process_host_simple_program(self, program, backend_file):
+        backend_file.write('HOST_SIMPLE_PROGRAMS += %s\n' % program)
 
     def _process_webidl_basename(self, basename):
         header = 'mozilla/dom/%sBinding.h' % os.path.splitext(basename)[0]

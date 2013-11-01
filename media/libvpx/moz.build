@@ -36,6 +36,8 @@ if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
         'build/make/obj_int_extract.c',
     ]
 
+    HOST_PROGRAM = 'host_obj_int_extract'
+
 LIBRARY_NAME = 'vpx'
 
 SOURCES += [

@@ -303,8 +303,16 @@ class Program(BaseProgram):
     """Sandbox container object for PROGRAM"""
 
 
+class HostProgram(BaseProgram):
+    """Sandbox container object for HOST_PROGRAM"""
+
+
 class SimpleProgram(BaseProgram):
     """Sandbox container object for each program in SIMPLE_PROGRAMS"""
+
+
+class HostSimpleProgram(BaseProgram):
+    """Sandbox container object for each program in HOST_SIMPLE_PROGRAMS"""
 
 
 class TestManifest(SandboxDerived):
