@@ -99,8 +99,8 @@ function updateList() {
   request.onsuccess = function() {
     for (let i = 0; i < request.result.length; i++)
       addApplication(request.result[i]);
-    if (!request.result.length)
-      document.getElementById("noapps").className = "";
+    if (request.result.length)
+      document.getElementById("main-container").classList.remove("hidden");
   }
 }
 
