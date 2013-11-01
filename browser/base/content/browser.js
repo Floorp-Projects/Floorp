@@ -4259,7 +4259,7 @@ var TabsInTitlebar = {
   _update: function (aForce=false) {
     function $(id) document.getElementById(id);
     function rect(ele) ele.getBoundingClientRect();
-    function verticalMargins(cstyle) parseInt(cstyle.marginBottom, 10) + parseInt(cstyle.marginTop, 10);
+    function verticalMargins(cstyle) parseFloat(cstyle.marginBottom) + parseFloat(cstyle.marginTop);
 
     if (!this._initialized || window.fullScreen)
       return;
@@ -4318,7 +4318,7 @@ var TabsInTitlebar = {
 
       // If the navbar overlaps the tabbar using negative margins, we need to take those into
       // account so we don't overlap it
-      let navbarMarginTop = parseInt(window.getComputedStyle($("nav-bar")).marginTop, 10);
+      let navbarMarginTop = parseFloat(window.getComputedStyle($("nav-bar")).marginTop);
       navbarMarginTop = Math.min(navbarMarginTop, 0);
 
       // And get the height of what's in the titlebar:
@@ -4331,7 +4331,7 @@ var TabsInTitlebar = {
       let customizePadding = 0;
       if (areCustomizing) {
         let deckStyle = window.getComputedStyle($("tab-view-deck"));
-        customizePadding = parseInt(deckStyle.paddingTop, 10);
+        customizePadding = parseFloat(deckStyle.paddingTop);
       }
 
       // Begin setting CSS properties which will cause a reflow
@@ -4349,12 +4349,12 @@ var TabsInTitlebar = {
           // If there is already padding on the menubar, we need to add that
           // to the difference so the total padding is correct:
           if ((paddingBottom = menuStyles.paddingBottom)) {
-            menuTitlebarDelta += parseInt(paddingBottom, 10);
+            menuTitlebarDelta += parseFloat(paddingBottom);
           }
           menubar.style.paddingBottom = menuTitlebarDelta + "px";
         // The menubar is bigger, but has bottom padding we can remove:
         } else if (menuTitlebarDelta < 0 && (paddingBottom = menuStyles.paddingBottom)) {
-          let existingPadding = parseInt(paddingBottom, 10);
+          let existingPadding = parseFloat(paddingBottom);
           // menuTitlebarDelta is negative; work out what's left, but don't set negative padding:
           let desiredPadding = Math.max(0, existingPadding + menuTitlebarDelta);
           menubar.style.paddingBottom = desiredPadding + "px";
