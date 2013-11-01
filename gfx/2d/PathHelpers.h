@@ -81,7 +81,24 @@ void ArcToBezier(T* aSink, const Point &aOrigin, float aRadius, float aStartAngl
   }
 }
 
-}
-}
+/**
+ * Appends a path represending a rounded rectangle to the path being built by
+ * aPathBuilder.
+ *
+ * aRect           The rectangle to append.
+ * aCornerRadii    Contains the radii of the top-left, top-right, bottom-right
+ *                 and bottom-left corners, in that order.
+ * aDrawClockwise  If set to true, the path will start at the left of the top
+ *                 left edge and draw clockwise. If set to false the path will
+ *                 start at the right of the top left edge and draw counter-
+ *                 clockwise.
+ */
+GFX2D_API void AppendRoundedRectToPath(PathBuilder* aPathBuilder,
+                                       const Rect& aRect,
+                                       const Size(& aCornerRadii)[4],
+                                       bool aDrawClockwise = true);
+
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_PATHHELPERS_H_ */
