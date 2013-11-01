@@ -1464,7 +1464,7 @@ MmsService.prototype = {
    */
   broadcastSentMessageEvent: function broadcastSentMessageEvent(aDomMessage) {
     // Broadcasting a 'sms-sent' system message to open apps.
-    this.broadcastMmsSystemMessage("sms-sent", aDomMessage);
+    this.broadcastMmsSystemMessage(kSmsSentObserverTopic, aDomMessage);
 
     // Notifying observers an MMS message is sent.
     Services.obs.notifyObservers(aDomMessage, kSmsSentObserverTopic, null);
@@ -1479,7 +1479,7 @@ MmsService.prototype = {
    */
   broadcastReceivedMessageEvent :function broadcastReceivedMessageEvent(aDomMessage) {
     // Broadcasting a 'sms-received' system message to open apps.
-    this.broadcastMmsSystemMessage("sms-received", aDomMessage);
+    this.broadcastMmsSystemMessage(kSmsReceivedObserverTopic, aDomMessage);
 
     // Notifying observers an MMS message is received.
     Services.obs.notifyObservers(aDomMessage, kSmsReceivedObserverTopic, null);
@@ -1714,10 +1714,12 @@ MmsService.prototype = {
       let topic;
       if (mmsStatus === MMS.MMS_PDU_STATUS_RETRIEVED) {
         topic = kSmsDeliverySuccessObserverTopic;
+
+        // Broadcasting a 'sms-delivery-success' system message to open apps.
+        this.broadcastMmsSystemMessage(topic, aDomMessage);
       } else if (mmsStatus === MMS.MMS_PDU_STATUS_REJECTED) {
         topic = kSmsDeliveryErrorObserverTopic;
-      }
-      if (!topic) {
+      } else {
         if (DEBUG) debug("Needn't fire event for this MMS status. Returning.");
         return;
       }
