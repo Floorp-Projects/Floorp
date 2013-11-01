@@ -688,21 +688,6 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& size,
     return glContext.forget();
 }
 
-SharedTextureHandle
-GLContextProviderWGL::CreateSharedHandle(SharedTextureShareType shareType,
-                                         void* buffer,
-                                         SharedTextureBufferType bufferType)
-{
-  return 0;
-}
-
-already_AddRefed<gfxASurface>
-GLContextProviderWGL::GetSharedHandleAsSurface(SharedTextureShareType shareType,
-                                               SharedTextureHandle sharedHandle)
-{
-  return nullptr;
-}
-
 static nsRefPtr<GLContextWGL> gGlobalContext[WGLLibrary::LIBS_MAX];
 
 GLContext *
