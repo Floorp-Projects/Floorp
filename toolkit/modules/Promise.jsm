@@ -177,14 +177,62 @@ let PendingErrors = {
       lineNumber: null
     };
     try { // Defend against non-enumerable values
-      if (typeof error == "object" && error) {
+      if (error && error instanceof Ci.nsIException) {
+        // nsIException does things a little differently.
+        try {
+          // For starters |.toString()| does not only contain the message, but
+          // also the top stack frame, and we don't really want that.
+          value.message = error.message;
+        } catch (ex) {
+          // Ignore field
+        }
+        try {
+          // All lowercase filename. ;)
+          value.fileName = error.filename;
+        } catch (ex) {
+          // Ignore field
+        }
+        try {
+          value.lineNumber = error.lineNumber;
+        } catch (ex) {
+          // Ignore field
+        }
+      } else if (typeof error == "object" && error) {
         for (let k of ["fileName", "stack", "lineNumber"]) {
           try { // Defend against fallible getters and string conversions
             let v = error[k];
-            value[k] = v ? ("" + v):null;
+            value[k] = v ? ("" + v) : null;
           } catch (ex) {
             // Ignore field
           }
+        }
+      }
+
+      if (!value.stack) {
+        // |error| is not an Error (or Error-alike). Try to figure out the stack.
+        let stack = null;
+        if (error && error.location &&
+            error.location instanceof Ci.nsIStackFrame) {
+          // nsIException has full stack frames in the |.location| member.
+          stack = error.location;
+        } else {
+          // Components.stack to the rescue!
+          stack  = Components.stack;
+          // Remove those top frames that refer to Promise.jsm.
+          while (stack) {
+            if (!stack.filename.endsWith("/Promise.jsm")) {
+              break;
+            }
+            stack = stack.caller;
+          }
+        }
+        if (stack) {
+          let frames = [];
+          while (stack) {
+            frames.push(stack);
+            stack = stack.caller;
+          }
+          value.stack = frames.join("\n");
         }
       }
     } catch (ex) {
