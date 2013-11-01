@@ -14,19 +14,19 @@ printStatus (summary);
 
 if (typeof window != 'undefined')
 {
-  var s = self;
+  var d = document;
 
-  document.writeln(uneval(self));
-  self = 1;
-  document.writeln(uneval(self));
+  d.writeln(uneval(document));
+  document = 1;
+  d.writeln(uneval(document));
 
   if (1)
-    function self() { return 1; }
+    function document() { return 1; }
 
-  document.writeln(uneval(self));
+  d.writeln(uneval(document));
 
-  // The test harness might rely on self having its original value: restore it.
-  self = s;
+  // The test harness relies on document having its original value: restore it.
+  document = d;
 }
 else
 {
