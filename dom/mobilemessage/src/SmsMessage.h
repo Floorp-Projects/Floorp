@@ -30,6 +30,7 @@ public:
              const nsString& aBody,
              mobilemessage::MessageClass aMessageClass,
              uint64_t aTimestamp,
+             uint64_t aDeliveryTimestamp,
              bool aRead);
   SmsMessage(const mobilemessage::SmsMessageData& aData);
 
@@ -42,6 +43,7 @@ public:
                          const nsAString& aBody,
                          const nsAString& aMessageClass,
                          const JS::Value& aTimestamp,
+                         const JS::Value& aDeliveryTimestamp,
                          const bool aRead,
                          JSContext* aCx,
                          nsIDOMMozSmsMessage** aMessage);
