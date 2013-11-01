@@ -125,7 +125,7 @@ browser.jar:
 #endif
         skin/classic/browser/preferences/saveFile.png                (preferences/saveFile.png)
 *       skin/classic/browser/preferences/preferences.css             (preferences/preferences.css)
-*       skin/classic/browser/preferences/in-content/preferences.css  (preferences/in-content/preferences.css)
+        skin/classic/browser/preferences/in-content/preferences.css  (preferences/in-content/preferences.css)
         skin/classic/browser/preferences/applications.css            (preferences/applications.css)
         skin/classic/browser/preferences/aboutPermissions.css        (preferences/aboutPermissions.css)
         skin/classic/browser/social/services-16.png                  (social/services-16.png)
@@ -402,7 +402,7 @@ browser.jar:
 #endif
         skin/classic/aero/browser/preferences/saveFile.png           (preferences/saveFile-aero.png)
 *       skin/classic/aero/browser/preferences/preferences.css        (preferences/preferences.css)
-*       skin/classic/aero/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
+        skin/classic/aero/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
         skin/classic/aero/browser/preferences/applications.css       (preferences/applications.css)
         skin/classic/aero/browser/preferences/aboutPermissions.css   (preferences/aboutPermissions.css)
         skin/classic/aero/browser/social/services-16.png             (social/services-16.png)

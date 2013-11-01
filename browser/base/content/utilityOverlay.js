@@ -473,37 +473,8 @@ function openAboutDialog() {
 
 function openPreferences(paneID, extraArgs)
 {
-  function switchToAdvancedSubPane(doc) {
-    if (extraArgs && extraArgs["advancedTab"]) {
-      let advancedPaneTabs = doc.getElementById("advancedPrefs");
-      advancedPaneTabs.selectedTab = doc.getElementById(extraArgs["advancedTab"]);
-    }
-  }
-
-  if (getBoolPref("browser.preferences.inContent")) {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    if (!win) {
-      return;
-    }
-
-    let newLoad = !win.switchToTabHavingURI("about:preferences", true);
-    let browser = win.gBrowser.selectedBrowser;
-
-    function switchToPane() {
-      if (paneID) {
-        browser.contentWindow.selectCategory(paneID);
-      }
-      switchToAdvancedSubPane(browser.contentDocument);
-    }
-
-    if (newLoad) {
-      browser.addEventListener("load", function onload() {
-        browser.removeEventListener("load", onload, true);
-        switchToPane();
-      }, true);
-    } else {
-      switchToPane();
-    }
+  if (Services.prefs.getBoolPref("browser.preferences.inContent")) {
+    openUILinkIn("about:preferences", "tab");
   } else {
     var instantApply = getBoolPref("browser.preferences.instantApply", false);
     var features = "chrome,titlebar,toolbar,centerscreen" + (instantApply ? ",dialog=no" : ",modal");
@@ -516,11 +487,16 @@ function openPreferences(paneID, extraArgs)
         win.document.documentElement.showPane(pane);
       }
 
-      switchToAdvancedSubPane(win.document);
-    } else {
-      openDialog("chrome://browser/content/preferences/preferences.xul",
-                 "Preferences", features, paneID, extraArgs);
+      if (extraArgs && extraArgs["advancedTab"]) {
+        var advancedPaneTabs = win.document.getElementById("advancedPrefs");
+        advancedPaneTabs.selectedTab = win.document.getElementById(extraArgs["advancedTab"]);
+      }
+
+     return;
     }
+
+    openDialog("chrome://browser/content/preferences/preferences.xul",
+               "Preferences", features, paneID, extraArgs);
   }
 }
 
