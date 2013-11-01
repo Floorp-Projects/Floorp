@@ -9,8 +9,8 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <title>Popup Tests</title>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
-  <script type="application/javascript" src="popup_shared.js"></script>      
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="popup_shared.js"></script>
 
 <!--
   Need to investigate these tests a bit more. Some of the accessibility events
