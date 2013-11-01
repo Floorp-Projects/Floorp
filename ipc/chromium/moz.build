@@ -223,6 +223,8 @@ if os_linux:
     if CONFIG['MOZ_ENABLE_QT']:
         SOURCES += [
             'src/base/message_pump_qt.cc',
+        ]
+        GENERATED_SOURCES += [
             'src/base/moc_message_pump_qt.cc',
         ]
     if CONFIG['OS_TARGET'] != 'Android':
@@ -253,6 +255,8 @@ if os_bsd:
     if CONFIG['MOZ_ENABLE_QT']:
         SOURCES += [
             'src/base/message_pump_qt.cc',
+        ]
+        GENERATED_SOURCES += [
             'src/base/moc_message_pump_qt.cc',
         ]
     SOURCES += [
