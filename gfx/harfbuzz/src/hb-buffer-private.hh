@@ -103,6 +103,8 @@ struct hb_buffer_t {
 
   inline unsigned int backtrack_len (void) const
   { return have_output? out_len : idx; }
+  inline unsigned int lookahead_len (void) const
+  { return len - idx; }
   inline unsigned int next_serial (void) { return serial++; }
 
   HB_INTERNAL void allocate_var (unsigned int byte_i, unsigned int count, const char *owner);
@@ -134,6 +136,7 @@ struct hb_buffer_t {
   HB_INTERNAL void output_info (const hb_glyph_info_t &glyph_info);
   /* Copies glyph at idx to output but doesn't advance idx */
   HB_INTERNAL void copy_glyph (void);
+  HB_INTERNAL bool move_to (unsigned int i); /* i is output-buffer index. */
   /* Copies glyph at idx to output and advance idx.
    * If there's no output, just advance idx. */
   inline void
@@ -181,6 +184,7 @@ struct hb_buffer_t {
   { return likely (size < allocated) ? true : enlarge (size); }
 
   HB_INTERNAL bool make_room_for (unsigned int num_in, unsigned int num_out);
+  HB_INTERNAL bool shift_forward (unsigned int count);
 
   HB_INTERNAL void *get_scratch_buffer (unsigned int *size);
 

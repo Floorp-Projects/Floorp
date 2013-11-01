@@ -795,9 +795,9 @@ public:
                                                                   SurfaceFormat aFormat) const = 0;
 
   /*
-   * Create a SourceSurface optimized for use with this DrawTarget from
-   * an arbitrary other SourceSurface. This may return aSourceSurface or some
-   * other existing surface.
+   * Create a SourceSurface optimized for use with this DrawTarget from an
+   * arbitrary SourceSurface type supported by this backend. This may return
+   * aSourceSurface or some other existing surface.
    */
   virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const = 0;
 

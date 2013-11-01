@@ -279,9 +279,6 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
     /* Unicode-3.0 additions */
     case HB_SCRIPT_SINHALA:
 
-    /* Unicode-4.1 additions */
-    case HB_SCRIPT_BUGINESE:
-
     /* Unicode-5.0 additions */
     case HB_SCRIPT_BALINESE:
 
@@ -336,6 +333,7 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
 	return &_hb_ot_complex_shaper_default;
 
     /* Unicode-4.1 additions */
+    case HB_SCRIPT_BUGINESE:
     case HB_SCRIPT_NEW_TAI_LUE:
 
     /* Unicode-5.1 additions */

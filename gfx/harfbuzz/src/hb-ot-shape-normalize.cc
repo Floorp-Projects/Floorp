@@ -132,17 +132,19 @@ static inline unsigned int
 decompose (const hb_ot_shape_normalize_context_t *c, bool shortest, hb_codepoint_t ab)
 {
   hb_codepoint_t a, b, a_glyph, b_glyph;
+  hb_buffer_t * const buffer = c->buffer;
+  hb_font_t * const font = c->font;
 
   if (!c->decompose (c, ab, &a, &b) ||
-      (b && !c->font->get_glyph (b, 0, &b_glyph)))
+      (b && !font->get_glyph (b, 0, &b_glyph)))
     return 0;
 
-  bool has_a = c->font->get_glyph (a, 0, &a_glyph);
+  bool has_a = font->get_glyph (a, 0, &a_glyph);
   if (shortest && has_a) {
     /* Output a and b */
-    output_char (c->buffer, a, a_glyph);
+    output_char (buffer, a, a_glyph);
     if (likely (b)) {
-      output_char (c->buffer, b, b_glyph);
+      output_char (buffer, b, b_glyph);
       return 2;
     }
     return 1;
@@ -151,16 +153,16 @@ decompose (const hb_ot_shape_normalize_context_t *c, bool shortest, hb_codepoint
   unsigned int ret;
   if ((ret = decompose (c, shortest, a))) {
     if (b) {
-      output_char (c->buffer, b, b_glyph);
+      output_char (buffer, b, b_glyph);
       return ret + 1;
     }
     return ret;
   }
 
   if (has_a) {
-    output_char (c->buffer, a, a_glyph);
+    output_char (buffer, a, a_glyph);
     if (likely (b)) {
-      output_char (c->buffer, b, b_glyph);
+      output_char (buffer, b, b_glyph);
       return 2;
     }
     return 1;
@@ -214,34 +216,35 @@ static inline void
 handle_variation_selector_cluster (const hb_ot_shape_normalize_context_t *c, unsigned int end)
 {
   hb_buffer_t * const buffer = c->buffer;
+  hb_font_t * const font = c->font;
   for (; buffer->idx < end - 1;) {
     if (unlikely (buffer->unicode->is_variation_selector (buffer->cur(+1).codepoint))) {
       /* The next two lines are some ugly lines... But work. */
-      if (c->font->get_glyph (buffer->cur().codepoint, buffer->cur(+1).codepoint, &buffer->cur().glyph_index()))
+      if (font->get_glyph (buffer->cur().codepoint, buffer->cur(+1).codepoint, &buffer->cur().glyph_index()))
       {
 	buffer->replace_glyphs (2, 1, &buffer->cur().codepoint);
       }
       else
       {
         /* Just pass on the two characters separately, let GSUB do its magic. */
-	set_glyph (buffer->cur(), c->font);
+	set_glyph (buffer->cur(), font);
 	buffer->next_glyph ();
-	set_glyph (buffer->cur(), c->font);
+	set_glyph (buffer->cur(), font);
 	buffer->next_glyph ();
       }
       /* Skip any further variation selectors. */
       while (buffer->idx < end && unlikely (buffer->unicode->is_variation_selector (buffer->cur().codepoint)))
       {
-	set_glyph (buffer->cur(), c->font);
+	set_glyph (buffer->cur(), font);
 	buffer->next_glyph ();
       }
     } else {
-      set_glyph (buffer->cur(), c->font);
+      set_glyph (buffer->cur(), font);
       buffer->next_glyph ();
     }
   }
   if (likely (buffer->idx < end)) {
-    set_glyph (buffer->cur(), c->font);
+    set_glyph (buffer->cur(), font);
     buffer->next_glyph ();
   }
 }

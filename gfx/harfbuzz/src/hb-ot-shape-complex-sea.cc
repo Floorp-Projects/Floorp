@@ -266,7 +266,7 @@ initial_reordering_syllable (const hb_ot_shape_plan_t *plan,
   switch (syllable_type) {
   case consonant_syllable:	initial_reordering_consonant_syllable  (plan, face, buffer, start, end); return;
   case broken_cluster:		initial_reordering_broken_cluster      (plan, face, buffer, start, end); return;
-  case non_sea_cluster:	initial_reordering_non_sea_cluster (plan, face, buffer, start, end); return;
+  case non_sea_cluster:		initial_reordering_non_sea_cluster     (plan, face, buffer, start, end); return;
   }
 }
 

@@ -947,7 +947,7 @@ TextRenderedRun::GetFrameUserSpaceRect(nsPresContext* aContext,
     return r;
   }
   gfxMatrix m = GetTransformFromRunUserSpaceToFrameUserSpace(aContext);
-  return m.TransformBounds(r);
+  return m.TransformBounds(r.ToThebesRect());
 }
 
 SVGBBox
@@ -963,7 +963,7 @@ TextRenderedRun::GetUserSpaceRect(nsPresContext* aContext,
   if (aAdditionalTransform) {
     m.Multiply(*aAdditionalTransform);
   }
-  return m.TransformBounds(r);
+  return m.TransformBounds(r.ToThebesRect());
 }
 
 void
@@ -3394,7 +3394,7 @@ nsSVGTextFrame2::FindCloserFrameForSelection(
                      TextRenderedRun::eNoHorizontalOverflow;
     SVGBBox userRect = run.GetUserSpaceRect(presContext, flags);
     if (!userRect.IsEmpty()) {
-      nsRect rect = nsSVGUtils::ToCanvasBounds(userRect,
+      nsRect rect = nsSVGUtils::ToCanvasBounds(userRect.ToThebesRect(),
                                                GetCanvasTM(FOR_HIT_TESTING),
                                                presContext);
 
@@ -3690,7 +3690,7 @@ nsSVGTextFrame2::GetFrameForPoint(const nsPoint& aPoint)
     gfxPoint pointInRunUserSpace = m.Transform(pointInOuterSVGUserUnits);
     gfxRect frameRect =
       run.GetRunUserSpaceRect(presContext, TextRenderedRun::eIncludeFill |
-                                           TextRenderedRun::eIncludeStroke);
+                                           TextRenderedRun::eIncludeStroke).ToThebesRect();
 
     if (Inside(frameRect, pointInRunUserSpace) &&
         nsSVGUtils::HitTestClip(this, aPoint)) {
@@ -3750,7 +3750,7 @@ nsSVGTextFrame2::ReflowSVG()
     mRect.SetEmpty();
   } else {
     mRect =
-      nsLayoutUtils::RoundGfxRectToAppRect(r, presContext->AppUnitsPerCSSPixel());
+      nsLayoutUtils::RoundGfxRectToAppRect(r.ToThebesRect(), presContext->AppUnitsPerCSSPixel());
 
     // Due to rounding issues when we have a transform applied, we sometimes
     // don't include an additional row of pixels.  For now, just inflate our
@@ -5325,7 +5325,7 @@ nsSVGTextFrame2::TransformFramePointToTextChild(const gfxPoint& aPoint,
     uint32_t flags = TextRenderedRun::eIncludeFill |
                      TextRenderedRun::eIncludeStroke |
                      TextRenderedRun::eNoHorizontalOverflow;
-    gfxRect runRect = run.GetRunUserSpaceRect(presContext, flags);
+    gfxRect runRect = run.GetRunUserSpaceRect(presContext, flags).ToThebesRect();
 
     gfxPoint pointInRunUserSpace =
       run.GetTransformFromRunUserSpaceToUserSpace(presContext).Invert().
@@ -5414,7 +5414,7 @@ nsSVGTextFrame2::TransformFrameRectToTextChild(const gfxRect& aRect,
       continue;
     }
     gfxRect runIntersectionInFrameUserSpace =
-      incomingRectInFrameUserSpace.Intersect(runRectInFrameUserSpace);
+      incomingRectInFrameUserSpace.Intersect(runRectInFrameUserSpace.ToThebesRect());
 
     if (!runIntersectionInFrameUserSpace.IsEmpty()) {
       // Take the font size scale into account.
@@ -5476,7 +5476,7 @@ nsSVGTextFrame2::TransformFrameRectFromTextChild(const nsRect& aRect,
     uint32_t flags = TextRenderedRun::eIncludeFill |
                      TextRenderedRun::eIncludeStroke;
     rectInFrameUserSpace.IntersectRect
-      (rectInFrameUserSpace, run.GetFrameUserSpaceRect(presContext, flags));
+      (rectInFrameUserSpace, run.GetFrameUserSpaceRect(presContext, flags).ToThebesRect());
 
     if (!rectInFrameUserSpace.IsEmpty()) {
       // Transform it up to user space of the <text>, also taking into

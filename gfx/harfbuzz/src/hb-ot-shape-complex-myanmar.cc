@@ -60,6 +60,16 @@ other_features[] =
   HB_TAG('p','s','t','s'),
   /* Positioning features, though we don't care about the types. */
   HB_TAG('d','i','s','t'),
+  /* Pre-release version of Windows 8 Myanmar font had abvm,blwm
+   * features.  The released Windows 8 version of the font (as well
+   * as the released spec) used 'mark' instead.  The Windows 8
+   * shaper however didn't apply 'mark' but did apply 'mkmk'.
+   * Perhaps it applied abvm/blwm.  This was fixed in a Windows 8
+   * update, so now it applies mark/mkmk.  We are guessing that
+   * it still applies abvm/blwm too.
+   */
+  HB_TAG('a','b','v','m'),
+  HB_TAG('b','l','w','m'),
 };
 
 static void
@@ -141,7 +151,7 @@ static inline bool
 is_one_of (const hb_glyph_info_t &info, unsigned int flags)
 {
   /* If it ligated, all bets are off. */
-  if (is_a_ligature (info)) return false;
+  if (_hb_glyph_info_ligated (&info)) return false;
   return !!(FLAG (info.myanmar_category()) & flags);
 }
 

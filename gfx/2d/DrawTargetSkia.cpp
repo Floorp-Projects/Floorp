@@ -602,9 +602,9 @@ DrawTargetSkia::Mask(const Pattern &aSource,
 
 TemporaryRef<SourceSurface>
 DrawTargetSkia::CreateSourceSurfaceFromData(unsigned char *aData,
-                                             const IntSize &aSize,
-                                             int32_t aStride,
-                                             SurfaceFormat aFormat) const
+                                            const IntSize &aSize,
+                                            int32_t aStride,
+                                            SurfaceFormat aFormat) const
 {
   RefPtr<SourceSurfaceSkia> newSurf = new SourceSurfaceSkia();
 
@@ -629,7 +629,20 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
 TemporaryRef<SourceSurface>
 DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
-  return nullptr;
+  if (aSurface->GetType() == SURFACE_SKIA) {
+    return aSurface;
+  }
+
+  if (aSurface->GetType() != SURFACE_DATA) {
+    return nullptr;
+  }
+
+  RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+  RefPtr<SourceSurface> surface = CreateSourceSurfaceFromData(data->GetData(),
+                                                              data->GetSize(),
+                                                              data->Stride(),
+                                                              data->GetFormat());
+  return data.forget();
 }
 
 TemporaryRef<SourceSurface>
@@ -644,13 +657,13 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
                             const IntPoint &aDestination)
 {
   //TODO: We could just use writePixels() here if the sourceRect is the entire source
-  
+
   if (aSurface->GetType() != SURFACE_SKIA) {
     return;
   }
 
   MarkChanged();
-  
+
   const SkBitmap& bitmap = static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
 
   mCanvas->save();
