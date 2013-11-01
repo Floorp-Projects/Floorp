@@ -678,12 +678,6 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     return CUBEB_ERROR;
   }
 
-  /* 30ms in shared mode is the minimum we can get when using WASAPI */
-  if (latency < 30) {
-    LOG("Latency too low: got %u (30ms minimum)", latency);
-    return CUBEB_ERROR_INVALID_PARAMETER;
-  }
-
   cubeb_stream * stm = (cubeb_stream *)calloc(1, sizeof(cubeb_stream));
 
   assert(stm);
