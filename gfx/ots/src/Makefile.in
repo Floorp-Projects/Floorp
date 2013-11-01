@@ -28,9 +28,6 @@
 ifeq (WINNT,$(OS_TARGET))
 endif
 
-CSRCS =   \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DPACKAGE_VERSION="\"moz\""

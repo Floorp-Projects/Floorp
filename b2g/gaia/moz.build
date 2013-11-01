@@ -10,3 +10,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'run-b2g.cpp',
     ]
+else:
+    SOURCES += [
+        'run-b2g.c',
+    ]
