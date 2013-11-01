@@ -42,7 +42,6 @@ SettingsLock.prototype = {
 
   process: function process() {
     let lock = this;
-    lock._open = false;
     let store = lock._transaction.objectStore(SETTINGSSTORE_NAME);
 
     while (!lock._requests.isEmpty()) {
@@ -143,7 +142,6 @@ SettingsLock.prototype = {
           break;
       }
     }
-    lock._open = true;
   },
 
   createTransactionAndProcess: function() {
