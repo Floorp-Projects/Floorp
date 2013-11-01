@@ -322,6 +322,9 @@ var shell = {
     ppmm.addMessageListener("mail-handler", this);
     ppmm.addMessageListener("app-notification-send", AlertsHelper);
     ppmm.addMessageListener("file-picker", this);
+    ppmm.addMessageListener("getProfD", function(message) {
+      return Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+    });
   },
 
   stop: function shell_stop() {
