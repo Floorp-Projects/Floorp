@@ -9,23 +9,59 @@
 
   <body onload="run()">
     <script class="testbody" type="application/javascript">
+      "use strict";
+
       SimpleTest.waitForExplicitFinish();
       setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
       setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
 
+      function findPlugin(pluginName) {
+          for (var i = 0; i < navigator.plugins.length; i++) {
+            var plugin = navigator.plugins[i];
+            if (plugin.name === pluginName) {
+              return plugin;
+            }
+          }
+          return null;
+      }
+
+      function findMimeType(mimeTypeType) {
+          for (var i = 0; i < navigator.mimeTypes.length; i++) {
+            var mimeType = navigator.mimeTypes[i];
+            if (mimeType.type === mimeTypeType) {
+              return mimeType;
+            }
+          }
+          return null;
+      }
+
       function run() {
-        var foundFirstPlugin = false;
-        var foundSecondPlugin = false;
-        for (var index in navigator.plugins) {
-          var plugin = navigator.plugins[index];
-          if (plugin.name == "Test Plug-in") foundFirstPlugin = true;
-          if (plugin.name == "Second Test Plug-in") foundSecondPlugin = true;
-        }
-        ok(foundFirstPlugin, "Should have a plugin named 'Test Plug-in'");
-        ok(foundSecondPlugin, "Should have a plugin named 'Second Test Plug-in'");
+        // Add "Test Plug-in" (but not "Second Test Plug-in") to the list of
+        // unhidden plugins. This test must modify the "plugins.enumerable_names"
+        // pref BEFORE accessing the navigator.plugins or navigator.mimeTypes
+        // arrays because they only read the pref when they first initialize
+        // their internal arrays!
+        var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"].getService(SpecialPowers.Ci.nsIPrefBranch);
+        var defaultEnumerableNamesPref = prefs.getCharPref("plugins.enumerable_names");
+        prefs.setCharPref("plugins.enumerable_names", defaultEnumerableNamesPref + ",Test Plug-in");
 
         var pluginElement = document.getElementById("plugin");
         is(pluginElement.identifierToStringTest("foo"), "foo", "Should be able to call a function provided by the plugin");
+
+        ok(navigator.plugins["Test Plug-in"], "Should have queried a non-hidden plugin named 'Test Plug-in'");
+        ok(navigator.plugins["Second Test Plug-in"], "Should have queried a hidden plugin named 'Test Plug-in'");
+
+        ok(findPlugin("Test Plug-in"), "Should have found a non-hidden plugin named 'Test Plug-in'");
+        ok(!findPlugin("Second Test Plug-in"), "Should NOT found a hidden plugin named 'Test Plug-in'");
+
+        ok(navigator.mimeTypes["application/x-test"], "Should have queried a non-hidden MIME type named 'application/x-test'");
+        ok(navigator.mimeTypes["application/x-second-test"], "Should have queried a MIME type named 'application/x-second-test'");
+
+        ok(findMimeType("application/x-test"), "Should have found a non-hidden MIME type named 'application/x-test'");
+        ok(!findMimeType("application/x-second-test"), "Should NOT have found a MIME type named 'application/x-second-test'");
+
+        // Restore original pref to hide "Test Plug-in" and "Second Test Plug-in".
+        prefs.setCharPref("plugins.enumerable_names", defaultEnumerableNamesPref);
 
         SimpleTest.finish();
       }
