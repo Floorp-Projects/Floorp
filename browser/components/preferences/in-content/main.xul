@@ -223,8 +223,7 @@
                  preference="browser.download.folderList"
                  preference-editable="true"
                  aria-labelledby="saveTo"
-                 onsyncfrompreference="return gMainPane.displayDownloadDirPref();"
-                 onsynctopreference="return gMainPane.getFolderListPref()"/>
+                 onsyncfrompreference="return gMainPane.displayDownloadDirPref();"/>
       <button id="chooseFolder"
 #ifdef XP_MACOSX
               accesskey="&chooseFolderMac.accesskey;"
@@ -233,8 +232,7 @@
               accesskey="&chooseFolderWin.accesskey;"
               label="&chooseFolderWin.label;"
 #endif
-              preference="browser.download.folderList"
-              onsynctopreference="return gMainPane.getFolderListPref();"/>
+      />
     </hbox>
     <hbox>
       <radio id="alwaysAsk"
