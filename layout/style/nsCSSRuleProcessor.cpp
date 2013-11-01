@@ -3410,6 +3410,7 @@ TreeMatchContext::InitAncestors(Element *aElement)
 {
   MOZ_ASSERT(!mAncestorFilter.mFilter);
   MOZ_ASSERT(mAncestorFilter.mHashes.IsEmpty());
+  MOZ_ASSERT(mStyleScopes.IsEmpty());
 
   mAncestorFilter.mFilter = new AncestorFilter::Filter();
 
