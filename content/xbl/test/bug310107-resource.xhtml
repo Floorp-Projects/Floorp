@@ -8,7 +8,8 @@
     <bindings xmlns="http://www.mozilla.org/xbl">
       <binding id="binding">
         <implementation>
-          <property name="prop" readonly="true" onget="return 2;"/>
+          <property name="prop" readonly="true" exposeToUntrustedContent="true"
+            onget="return 2;"/>
         </implementation>
       </binding>
     </bindings>

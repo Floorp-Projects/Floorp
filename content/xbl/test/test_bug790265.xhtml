@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=790265
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="binding">
       <implementation>
-        <method name="foo">
+        <method name="foo" exposeToUntrustedContent="true">
           <body><![CDATA[
             return this;
           ]]></body>
