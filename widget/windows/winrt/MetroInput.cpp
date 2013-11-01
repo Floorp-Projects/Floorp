@@ -1161,6 +1161,55 @@ MetroInput::DispatchAsyncTouchEvent(WidgetTouchEvent* aEvent)
   NS_DispatchToCurrentThread(runnable);
 }
 
+static void DumpTouchIds(const char* aTarget, WidgetTouchEvent* aEvent)
+{
+  // comment out for touch moves
+  if (aEvent->message == NS_TOUCH_MOVE) {
+    return;
+  }
+  switch(aEvent->message) {
+    case NS_TOUCH_START:
+    WinUtils::Log("DumpTouchIds: NS_TOUCH_START block");
+    break;
+    case NS_TOUCH_MOVE:
+    WinUtils::Log("DumpTouchIds: NS_TOUCH_MOVE block");
+    break;
+    case NS_TOUCH_END:
+    WinUtils::Log("DumpTouchIds: NS_TOUCH_END block");
+    break;
+    case NS_TOUCH_CANCEL:
+    WinUtils::Log("DumpTouchIds: NS_TOUCH_CANCEL block");
+    break;
+  }
+  nsTArray< nsRefPtr<dom::Touch> >& touches = aEvent->touches;
+  for (uint32_t i = 0; i < touches.Length(); ++i) {
+    dom::Touch* touch = touches[i];
+    if (!touch) {
+      continue;
+    }
+    int32_t id = touch->Identifier();
+    WinUtils::Log("   id=%d target=%s", id, aTarget);
+  }
+}
+
+/*
+ * nsPreShell's processing of WidgetTouchEvent events:
+ *
+ * NS_TOUCH_START:
+ *  Interprets a single touch point as the first touch point of a block and will reset its
+ *  queue when it receives this. For multiple touch points it sets all points in its queue
+ *  and marks new points as changed.
+ * NS_TOUCH_MOVE:
+ *  Uses the equality tests in dom::Touch to test if a touch point has changed (moved).
+ *  If a point has moved, keeps this touch point in the event, otherwise it removes
+ *  the touch point. Note if no points have changed, it exits without sending a dom event.
+ * NS_TOUCH_CANCEL/NS_TOUCH_END
+ *  Assumes any point in touchEvent->touches has been removed or canceled.
+*/
+
+//#define DUMP_TOUCH_IDS(aTarget, aEvent) DumpTouchIds(aTarget, aEvent)
+#define DUMP_TOUCH_IDS(...)
+
 void
 MetroInput::DeliverNextQueuedTouchEvent()
 {
@@ -1205,6 +1254,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
   // If this event is destined for chrome, deliver it directly there bypassing
   // the apz.
   if (!mCancelable && mChromeHitTestCacheForTouch) {
+    DUMP_TOUCH_IDS("DOM(1)", event);
     mWidget->DispatchEvent(event, status);
     return;
   }
@@ -1214,7 +1264,9 @@ MetroInput::DeliverNextQueuedTouchEvent()
   // give content the option of saying it wants to consume touch for both events.
   if (mCancelable) {
     WidgetTouchEvent transformedEvent(*event);
+    DUMP_TOUCH_IDS("APZC(1)", event);
     mWidget->ApzReceiveInputEvent(event, &transformedEvent);
+    DUMP_TOUCH_IDS("DOM(2)", event);
     mWidget->DispatchEvent(mChromeHitTestCacheForTouch ? event : &transformedEvent, status);
     if (event->message == NS_TOUCH_START) {
       mContentConsumingTouch = (nsEventStatus_eConsumeNoDefault == status);
@@ -1250,12 +1302,15 @@ MetroInput::DeliverNextQueuedTouchEvent()
     // ContentReceivedTouch has already been called in the mCancelable block
     // above so this shouldn't cause the apz to react. We still need to
     // transform our coordinates though.
+    DUMP_TOUCH_IDS("APZC(2)", event);
     mWidget->ApzReceiveInputEvent(event);
+    DUMP_TOUCH_IDS("DOM(3)", event);
     mWidget->DispatchEvent(event, status);
     return;
   }
 
   // Forward event data to apz.
+  DUMP_TOUCH_IDS("APZC(3)", event);
   mWidget->ApzReceiveInputEvent(event);
 }
 
@@ -1285,6 +1340,7 @@ MetroInput::DispatchTouchCancel(WidgetTouchEvent* aEvent)
     return;
   }
 
+  DUMP_TOUCH_IDS("DOM(4)", &touchEvent);
   mWidget->DispatchEvent(&touchEvent, sThrowawayStatus);
 }
 
