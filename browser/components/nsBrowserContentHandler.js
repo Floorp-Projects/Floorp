@@ -452,10 +452,8 @@ nsBrowserContentHandler.prototype = {
     var chromeParam = cmdLine.handleFlagWithParam("chrome", false);
     if (chromeParam) {
 
-      // Handle old preference dialog URLs.
-      if (chromeParam == "chrome://browser/content/pref/pref.xul" ||
-          (Services.prefs.getBoolPref("browser.preferences.inContent") &&
-           chromeParam == "chrome://browser/content/preferences/preferences.xul")) {
+      // Handle the old preference dialog URL separately (bug 285416)
+      if (chromeParam == "chrome://browser/content/pref/pref.xul") {
         openPreferences();
         cmdLine.preventDefault = true;
       } else try {

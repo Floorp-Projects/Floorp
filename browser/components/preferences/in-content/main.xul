@@ -92,8 +92,13 @@
 #endif
 </preferences>
 
+<hbox class="heading" data-category="paneGeneral" hidden="true">
+  <image class="preference-icon" type="general"/>
+  <html:h1>&paneGeneral.title;</html:h1>
+</hbox>
+
 <!-- Startup -->
-<groupbox id="startupGroup" data-category="paneGeneral">
+<groupbox id="startupGroup" data-category="paneGeneral" hidden="true">
   <caption label="&startup.label;"/>
 
   <hbox align="center">
@@ -152,7 +157,7 @@
 </groupbox>
 
 <!-- Downloads -->
-<groupbox id="downloadsGroup" data-category="paneGeneral">
+<groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
   <caption label="&downloads.label;"/>
 
   <checkbox id="showWhenDownloading"
@@ -204,7 +209,7 @@
 </groupbox>
 
 <!-- Tab preferences -->
-<groupbox data-category="paneGeneral">
+<groupbox data-category="paneGeneral" hidden="true">
     <caption label="&tabsGroup.label;"/>
     <checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
               accesskey="&newWindowsAsTabs.accesskey;"
