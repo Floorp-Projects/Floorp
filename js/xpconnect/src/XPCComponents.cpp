@@ -1845,7 +1845,7 @@ struct MOZ_STACK_CLASS ExceptionArgParser
     }
 
     bool parseResult(HandleValue v) {
-        return JS_ValueToECMAUint32(cx, v, (uint32_t*) &eResult);
+        return JS::ToUint32(cx, v, (uint32_t*) &eResult);
     }
 
     bool parseStack(HandleValue v) {
@@ -3687,8 +3687,9 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
         return NS_ERROR_FAILURE;
 
     if (id == rt->GetStringID(XPCJSRuntime::IDX_RETURN_CODE)) {
+        RootedValue v(cx, *vp);
         nsresult rv;
-        if (JS_ValueToECMAUint32(cx, *vp, (uint32_t*)&rv)) {
+        if (ToUint32(cx, v, (uint32_t*)&rv)) {
             xpcc->SetPendingResult(rv);
             xpcc->SetLastResult(rv);
             return NS_SUCCESS_I_DID_SOMETHING;
