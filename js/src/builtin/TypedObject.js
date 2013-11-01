@@ -136,7 +136,7 @@ TypedObjectPointer.prototype.moveToElem = function(index) {
   assert(TO_INT32(index) === index,
          "moveToElem invoked with non-integer index");
   assert(index >= 0 && index < REPR_LENGTH(this.typeRepr),
-         "moveToElem invoked with out-of-bounds index");
+         "moveToElem invoked with out-of-bounds index: " + index);
 
   var elementTypeObj = this.typeObj.elementType;
   var elementTypeRepr = TYPE_TYPE_REPR(elementTypeObj);
@@ -268,11 +268,13 @@ TypedObjectPointer.prototype.set = function(fromValue) {
       break;
 
     // Adapt each element.
-    var tempPtr = this.copy().moveToElem(0);
-    var size = REPR_SIZE(tempPtr.typeRepr);
-    for (var i = 0; i < length; i++) {
-      tempPtr.set(fromValue[i]);
-      tempPtr.offset += size;
+    if (length > 0) {
+      var tempPtr = this.copy().moveToElem(0);
+      var size = REPR_SIZE(tempPtr.typeRepr);
+      for (var i = 0; i < length; i++) {
+        tempPtr.set(fromValue[i]);
+        tempPtr.offset += size;
+      }
     }
     return;
 
