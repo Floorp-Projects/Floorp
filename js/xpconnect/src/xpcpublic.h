@@ -59,6 +59,9 @@ IsSandboxPrototypeProxy(JSObject *obj);
 
 bool
 IsReflector(JSObject *obj);
+
+bool
+IsXrayWrapper(JSObject *obj);
 } /* namespace xpc */
 
 namespace JS {
