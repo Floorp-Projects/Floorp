@@ -402,12 +402,16 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
         PresentScreenBuffer();
 
         // ResizeOffscreen scraps the current prod buffer before making a new one.
-        gl->ResizeOffscreen(gfxIntSize(width, height)); // Doesn't matter if it succeeds (soft-fail)
-        // It's unlikely that we'll get a proper-sized context if we recreate if we didn't on resize
+        if (!ResizeAndWarn(width, height)) {
+            // Shouldn't matter if it succeeds (soft-fail)
+            // It's unlikely that we'll get a proper-sized context if we recreate if we didn't on resize
+            GenerateWarning("Requested size %dx%d was too large, and reduction failed. "
+                            "Using the old backbuffer.",
+                            width, height);
+            // We should probably consider losing the context in this case.
+        }
 
         // everything's good, we're done here
-        mWidth = gl->OffscreenSize().width;
-        mHeight = gl->OffscreenSize().height;
         mResetLayer = true;
 
         ClearScreen();
@@ -538,12 +542,14 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     }
 #endif
 
-    gfxIntSize size(width, height);
+    mWidth = 1;
+    mHeight = 1;
+    gfxIntSize initSize(mWidth, mHeight);
 
 #ifdef XP_WIN
     // if we want EGL, try it now
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
-        gl = gl::GLContextProviderEGL::CreateOffscreen(size, caps);
+        gl = gl::GLContextProviderEGL::CreateOffscreen(initSize, caps);
         if (!gl || !InitAndValidateGL()) {
             GenerateWarning("Error during ANGLE OpenGL ES initialization");
             return NS_ERROR_FAILURE;
@@ -556,7 +562,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
         gl::ContextFlags flag = useMesaLlvmPipe
                                 ? gl::ContextFlagsMesaLLVMPipe
                                 : gl::ContextFlagsNone;
-        gl = gl::GLContextProvider::CreateOffscreen(size, caps, flag);
+        gl = gl::GLContextProvider::CreateOffscreen(initSize, caps, flag);
         if (gl && !InitAndValidateGL()) {
             GenerateWarning("Error during %s initialization",
                             useMesaLlvmPipe ? "Mesa LLVMpipe" : "OpenGL");
@@ -575,10 +581,12 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
     }
 #endif
 
-    mWidth = width;
-    mHeight = height;
-    mViewportWidth = width;
-    mViewportHeight = height;
+    if (!ResizeAndWarn(width, height)) {
+        GenerateWarning("Can't get a usable WebGL context (initial resize failed)");
+        return NS_ERROR_FAILURE;
+    }
+        
+    
     mResetLayer = true;
     mOptionsFrozen = true;
 
@@ -594,6 +602,11 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 #endif
 
     MakeContextCurrent();
+
+    // Set our initial viewport.
+    mViewportWidth = mWidth;
+    mViewportHeight = mHeight;
+    gl->fViewport(0, 0, mViewportWidth, mViewportHeight);
 
     // Make sure that we clear this out, otherwise
     // we'll end up displaying random memory
@@ -616,6 +629,45 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 
     reporter.SetSuccessful();
     return NS_OK;
+}
+
+bool
+WebGLContext::ResizeAndWarn(size_t width, size_t height)
+{
+    if (!Resize(width, height))
+        return false;
+    
+    if (mWidth != width ||
+        mHeight != height)
+    {
+        // Requested size was too large.
+        GenerateWarning("Requested size %dx%d was too large, reduced successfully to %dx%d.",
+                        width, height,
+                        mWidth, mHeight);
+    }
+
+    return true;
+}
+
+bool
+WebGLContext::Resize(size_t width, size_t height)
+{
+    while (width && height) {
+        if (!gl->ResizeOffscreen(gfxIntSize(width, height))) {
+            // Just halve it each time.
+            width /= 2;
+            height /= 2;
+            continue;
+        }
+
+        MOZ_ASSERT((size_t)gl->OffscreenSize().width == width);
+        MOZ_ASSERT((size_t)gl->OffscreenSize().height == height);
+        mWidth = gl->OffscreenSize().width;
+        mHeight = gl->OffscreenSize().height;
+        return true;
+    }
+
+    return false;
 }
 
 NS_IMETHODIMP

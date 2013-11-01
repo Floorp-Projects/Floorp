@@ -188,6 +188,9 @@ public:
                     int32_t x, int32_t y, int32_t w, int32_t h)
                     { return NS_ERROR_NOT_IMPLEMENTED; }
 
+    bool Resize(size_t width, size_t height);
+    bool ResizeAndWarn(size_t width, size_t height);
+
     bool LoseContext();
     bool RestoreContext();
 
