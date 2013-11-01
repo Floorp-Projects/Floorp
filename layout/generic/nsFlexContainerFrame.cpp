@@ -465,6 +465,9 @@ public:
     MarginComponentForSide(mMargin, aSide) = aLength;
   }
 
+  void ResolveStretchedCrossSize(nscoord aLineCrossSize,
+                                 const FlexboxAxisTracker& aAxisTracker);
+
   uint32_t GetNumAutoMarginsInAxis(AxisOrientationType aAxis) const;
 
 protected:
@@ -1083,7 +1086,6 @@ public:
     mLineCrossSize = aNewLineCrossSize;
   }
 
-  void ResolveStretchedCrossSize(FlexItem& aItem);
   void ResolveAutoMarginsInCrossAxis(FlexItem& aItem);
 
   void EnterAlignPackingSpace(const FlexItem& aItem);
@@ -1758,32 +1760,36 @@ SingleLineCrossAxisPositionTracker::
 }
 
 void
-SingleLineCrossAxisPositionTracker::
-  ResolveStretchedCrossSize(FlexItem& aItem)
+FlexItem::ResolveStretchedCrossSize(nscoord aLineCrossSize,
+                                    const FlexboxAxisTracker& aAxisTracker)
 {
+  AxisOrientationType crossAxis = aAxisTracker.GetCrossAxis();
   // We stretch IFF we are align-self:stretch, have no auto margins in
   // cross axis, and have cross-axis size property == "auto". If any of those
-  // conditions don't hold up, we can just return.
-  if (aItem.GetAlignSelf() != NS_STYLE_ALIGN_ITEMS_STRETCH ||
-      aItem.GetNumAutoMarginsInAxis(mAxis) != 0 ||
-      GetSizePropertyForAxis(aItem.Frame(), mAxis).GetUnit() !=
-        eStyleUnit_Auto) {
+  // conditions don't hold up, we won't stretch.
+  if (mAlignSelf != NS_STYLE_ALIGN_ITEMS_STRETCH ||
+      GetNumAutoMarginsInAxis(crossAxis) != 0 ||
+      eStyleUnit_Auto != GetSizePropertyForAxis(mFrame, crossAxis).GetUnit()) {
+    return;
+  }
+
+  // If we've already been stretched, we can bail out early, too.
+  // No need to redo the calculation.
+  if (mIsStretched) {
     return;
   }
 
   // Reserve space for margins & border & padding, and then use whatever
   // remains as our item's cross-size (clamped to its min/max range).
-  nscoord stretchedSize = mLineCrossSize -
-    aItem.GetMarginBorderPaddingSizeInAxis(mAxis);
+  nscoord stretchedSize = aLineCrossSize -
+    GetMarginBorderPaddingSizeInAxis(crossAxis);
 
-  stretchedSize = NS_CSS_MINMAX(stretchedSize,
-                                aItem.GetCrossMinSize(),
-                                aItem.GetCrossMaxSize());
+  stretchedSize = NS_CSS_MINMAX(stretchedSize, mCrossMinSize, mCrossMaxSize);
 
   // Update the cross-size & make a note that it's stretched, so we know to
   // override the reflow state's computed cross-size in our final reflow.
-  aItem.SetCrossSize(stretchedSize);
-  aItem.SetIsStretched();
+  SetCrossSize(stretchedSize);
+  mIsStretched = true;
 }
 
 void
@@ -2141,8 +2147,6 @@ nsFlexContainerFrame::PositionItemInCrossAxis(
   MOZ_ASSERT(aLineCrossAxisPosnTracker.GetPosition() == 0,
              "per-line cross-axis position tracker wasn't correctly reset");
 
-  // Resolve any to-be-stretched cross-sizes & auto margins in cross axis.
-  aLineCrossAxisPosnTracker.ResolveStretchedCrossSize(aItem);
   aLineCrossAxisPosnTracker.ResolveAutoMarginsInCrossAxis(aItem);
 
   // Compute the cross-axis position of this item
@@ -2321,6 +2325,11 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // Cross-Axis Alignment - Flexbox spec section 9.6
   // ===============================================
   for (uint32_t i = 0; i < items.Length(); ++i) {
+    // Resolve stretched cross-size, if appropriate
+    nscoord lineCrossSize = lineCrossAxisPosnTracker.GetLineCrossSize();
+    items[i].ResolveStretchedCrossSize(lineCrossSize, axisTracker);
+
+    // ...and position.
     PositionItemInCrossAxis(crossAxisPosnTracker.GetPosition(),
                             lineCrossAxisPosnTracker, items[i]);
   }
