@@ -61,6 +61,7 @@ extern PRLogModuleInfo* gWindowsLog;
 static uint32_t gInstanceCount = 0;
 const PRUnichar* kMetroSubclassThisProp = L"MetroSubclassThisProp";
 HWND MetroWidget::sICoreHwnd = nullptr;
+nsRefPtr<mozilla::layers::APZCTreeManager> MetroWidget::sAPZC;
 
 namespace mozilla {
 namespace widget {
@@ -120,20 +121,20 @@ namespace {
     for (uint32_t i = 0; i < aExtraInputsLen; i++) {
       inputs[keySequence.Length()+i] = aExtraInputs[i];
     }
-    Log("  Sending inputs");
+    WinUtils::Log("  Sending inputs");
     for (uint32_t i = 0; i < len; i++) {
       if (inputs[i].type == INPUT_KEYBOARD) {
-        Log("    Key press: 0x%x %s",
+        WinUtils::Log("    Key press: 0x%x %s",
             inputs[i].ki.wVk,
             inputs[i].ki.dwFlags & KEYEVENTF_KEYUP
             ? "UP"
             : "DOWN");
       } else if(inputs[i].type == INPUT_MOUSE) {
-        Log("    Mouse input: 0x%x 0x%x",
+        WinUtils::Log("    Mouse input: 0x%x 0x%x",
             inputs[i].mi.dwFlags,
             inputs[i].mi.mouseData);
       } else {
-        Log("    Unknown input type!");
+        WinUtils::Log("    Unknown input type!");
       }
     }
     ::SendInput(len, inputs, sizeof(INPUT));
@@ -143,7 +144,7 @@ namespace {
     // waiting to be processed by our event loop.  Now we manually pump
     // those messages so that, upon our return, all the inputs have been
     // processed.
-    Log("  Inputs sent. Waiting for input messages to clear");
+    WinUtils::Log("  Inputs sent. Waiting for input messages to clear");
     MSG msg;
     while (WinUtils::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
       if (nsTextStore::ProcessRawKeyMessage(msg)) {
@@ -151,16 +152,13 @@ namespace {
       }
       ::TranslateMessage(&msg);
       ::DispatchMessage(&msg);
-      Log("    Dispatched 0x%x 0x%x 0x%x", msg.message, msg.wParam, msg.lParam);
+      WinUtils::Log("    Dispatched 0x%x 0x%x 0x%x", msg.message, msg.wParam, msg.lParam);
     }
-    Log("  No more input messages");
+    WinUtils::Log("  No more input messages");
   }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(MetroWidget, nsBaseWidget)
-
-
-nsRefPtr<mozilla::layers::APZCTreeManager> MetroWidget::sAPZC;
 
 MetroWidget::MetroWidget() :
   mTransparencyMode(eTransparencyOpaque),
@@ -217,20 +215,20 @@ MetroWidget::Create(nsIWidget *aParent,
   if (mWindowType != eWindowType_toplevel) {
     switch(mWindowType) {
       case eWindowType_dialog:
-      Log("eWindowType_dialog window requested, returning failure.");
+      WinUtils::Log("eWindowType_dialog window requested, returning failure.");
       break;
       case eWindowType_child:
-      Log("eWindowType_child window requested, returning failure.");
+      WinUtils::Log("eWindowType_child window requested, returning failure.");
       break;
       case eWindowType_popup:
-      Log("eWindowType_popup window requested, returning failure.");
+      WinUtils::Log("eWindowType_popup window requested, returning failure.");
       break;
       case eWindowType_plugin:
-      Log("eWindowType_plugin window requested, returning failure.");
+      WinUtils::Log("eWindowType_plugin window requested, returning failure.");
       break;
       // we should support toolkit's eWindowType_invisible at some point.
       case eWindowType_invisible:
-      Log("eWindowType_invisible window requested, this doesn't actually exist!");
+      WinUtils::Log("eWindowType_invisible window requested, this doesn't actually exist!");
       return NS_OK;
     }
     NS_WARNING("Invalid window type requested.");
@@ -271,7 +269,7 @@ MetroWidget::Destroy()
 {
   if (mOnDestroyCalled)
     return NS_OK;
-  Log("[%X] %s mWnd=%X type=%d", this, __FUNCTION__, mWnd, mWindowType);
+  WinUtils::Log("[%X] %s mWnd=%X type=%d", this, __FUNCTION__, mWnd, mWindowType);
   mOnDestroyCalled = true;
 
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
@@ -520,7 +518,7 @@ MetroWidget::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
                                         uint32_t aNativeMessage,
                                         uint32_t aModifierFlags)
 {
-  Log("ENTERED SynthesizeNativeMouseEvent");
+  WinUtils::Log("ENTERED SynthesizeNativeMouseEvent");
 
   INPUT inputs[2];
   memset(inputs, 0, 2*sizeof(INPUT));
@@ -535,7 +533,7 @@ MetroWidget::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
   inputs[1].mi.dwFlags = aNativeMessage;
   SendInputs(aModifierFlags, inputs, 2);
 
-  Log("Exiting SynthesizeNativeMouseEvent");
+  WinUtils::Log("Exiting SynthesizeNativeMouseEvent");
   return NS_OK;
 }
 
@@ -814,7 +812,7 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
             return res;
           }
           NS_ASSERTION(res, "UiaReturnRawElementProvider failed!");
-          Log("UiaReturnRawElementProvider failed! GetLastError=%X", GetLastError());
+          WinUtils::Log("UiaReturnRawElementProvider failed! GetLastError=%X", GetLastError());
         }
       }
       break;
