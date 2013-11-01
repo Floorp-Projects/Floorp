@@ -98,6 +98,17 @@ GFX2D_API void AppendRoundedRectToPath(PathBuilder* aPathBuilder,
                                        const Size(& aCornerRadii)[4],
                                        bool aDrawClockwise = true);
 
+/**
+ * Appends a path represending an ellipse to the path being built by
+ * aPathBuilder.
+ *
+ * The ellipse extends aDimensions.width / 2.0 in the horizontal direction
+ * from aCenter, and aDimensions.height / 2.0 in the vertical direction.
+ */
+GFX2D_API void AppendEllipseToPath(PathBuilder* aPathBuilder,
+                                   const Point& aCenter,
+                                   const Size& aDimensions);
+
 } // namespace gfx
 } // namespace mozilla
 
