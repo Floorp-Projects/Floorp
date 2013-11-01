@@ -34,7 +34,8 @@ struct SmsMessageData
   nsString       receiver;
   nsString       body;
   MessageClass   messageClass;
-  uint64_t       timestamp; // ms since epoch.
+  uint64_t       timestamp;         // ms since epoch.
+  uint64_t       deliveryTimestamp; // ms since epoch.
   bool           read;
 };
 

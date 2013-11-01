@@ -46,6 +46,10 @@ protected:
   RecvNotifyConferenceCallStateChanged(const uint16_t& aCallState) MOZ_OVERRIDE;
 
   virtual bool
+  RecvNotifyConferenceError(const nsString& aName,
+                            const nsString& aMessage) MOZ_OVERRIDE;
+
+  virtual bool
   RecvNotifySupplementaryService(const uint32_t& aClientId,
                                  const int32_t& aCallIndex,
                                  const uint16_t& aNotification) MOZ_OVERRIDE;
