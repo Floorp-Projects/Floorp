@@ -44,7 +44,7 @@ MozKeyboard.prototype = {
     let principal = win.document.nodePrincipal;
     // Limited the deprecated mozKeyboard API to certified apps only
     let perm = Services.perms.testExactPermissionFromPrincipal(principal,
-                                                               "inputmethod-manage");
+                                                               "input-manage");
     if (perm != Ci.nsIPermissionManager.ALLOW_ACTION) {
       dump("No permission to use the keyboard API for " +
            principal.origin + "\n");

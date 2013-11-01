@@ -56,6 +56,10 @@ const kEventConstructors = {
                                                           return new CallEvent(aName, aProps);
                                                        },
                                              },
+  CallGroupErrorEvent:                       { create: function (aName, aProps) {
+                                                          return new CallGroupErrorEvent(aName, aProps);
+                                                       },
+                                             },
   CFStateChangeEvent:                        { create: function (aName, aProps) {
                                                           return new CFStateChangeEvent(aName, aProps);
                                                        },
