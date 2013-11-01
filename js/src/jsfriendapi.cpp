@@ -385,6 +385,20 @@ js::GetGlobalForObjectCrossCompartment(JSObject *obj)
     return &obj->global();
 }
 
+JS_FRIEND_API(void)
+js::AssertSameCompartment(JSContext *cx, JSObject *obj)
+{
+    assertSameCompartment(cx, obj);
+}
+
+#ifdef DEBUG
+JS_FRIEND_API(void)
+js::AssertSameCompartment(JSObject *objA, JSObject *objB)
+{
+    JS_ASSERT(objA->compartment() == objB->compartment());
+}
+#endif
+
 JS_FRIEND_API(JSObject *)
 js::DefaultObjectForContextOrNull(JSContext *cx)
 {
