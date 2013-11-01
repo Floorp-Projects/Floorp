@@ -3210,6 +3210,12 @@ for (uint32_t i = 0; i < length; ++i) {
                            isMember or
                            isCallbackReturnValue)
 
+        if forceOwningType and descriptor.nativeOwnership == 'owned':
+            raise TypeError("Interface %s has 'owned' nativeOwnership, so we "
+                            "don't know how to keep it alive in %s" %
+                             (descriptor.interface.identifier.name,
+                              sourceDescription))
+
         typeName = descriptor.nativeType
         typePtr = typeName + "*"
 
