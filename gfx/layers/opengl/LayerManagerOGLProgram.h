@@ -31,8 +31,6 @@ namespace layers {
 class Layer;
 
 enum ShaderProgramType {
-  ColorLayerProgramType,
-  YCbCrLayerProgramType,
   RGBALayerProgramType,
   BGRALayerProgramType,
   RGBXLayerProgramType,
@@ -41,6 +39,8 @@ enum ShaderProgramType {
   RGBXRectLayerProgramType,
   BGRARectLayerProgramType,
   RGBAExternalLayerProgramType,
+  ColorLayerProgramType,
+  YCbCrLayerProgramType,
   ComponentAlphaPass1ProgramType,
   ComponentAlphaPass1RGBProgramType,
   ComponentAlphaPass2ProgramType,
@@ -186,12 +186,12 @@ struct ProgramProfileOGL
 
   nsTArray<Argument> mUniforms;
   nsTArray<Argument> mAttributes;
-  nsTArray<const char *> mDefines;
   uint32_t mTextureCount;
-
-  ProgramProfileOGL(const char *aVS = nullptr, const char *aFS = nullptr) :
-    mVertexShaderString(aVS), mFragmentShaderString(aFS), mTextureCount(0)
-  {}
+  bool mHasMatrixProj;
+private:
+  ProgramProfileOGL() :
+    mTextureCount(0),
+    mHasMatrixProj(false) {}
 };
 
 
@@ -243,6 +243,10 @@ public:
     return mProfile.LookupAttributeLocation(aName);
   }
 
+  GLint GetTexCoordMultiplierUniformLocation() {
+    return mTexCoordMultiplierUniformLocation;
+  }
+
   /**
    * aLayer is the mask layer to use for rendering, or null, if there is no
    * mask layer.
@@ -292,8 +296,18 @@ public:
     SetMatrixUniform(mProfile.LookupUniformLocation("uLayerQuadTransform"), m);
   }
 
+  // activates this program and sets its projection matrix, if the program uses one
+  void CheckAndSetProjectionMatrix(const gfx3DMatrix& aMatrix)
+  {
+    if (mProfile.mHasMatrixProj) {
+      mIsProjectionMatrixStale = true;
+      mProjectionMatrix = aMatrix;
+    }
+  }
+
   void SetProjectionMatrix(const gfx3DMatrix& aMatrix) {
     SetMatrixUniform(mProfile.LookupUniformLocation("uMatrixProj"), aMatrix);
+    mIsProjectionMatrixStale = false;
   }
 
   // sets this program's texture transform, if it uses one
@@ -360,20 +374,9 @@ public:
     SetUniform(mProfile.LookupUniformLocation("uRenderColor"), aColor);
   }
 
-  bool HasTexCoordMultiplier() {
-    return mProfile.LookupUniformLocation("uTexCoordMultiplier") != -1;
-  }
-
   void SetTexCoordMultiplier(float aWidth, float aHeight) {
     float f[] = {aWidth, aHeight};
-    SetUniform(mProfile.LookupUniformLocation("uTexCoordMultiplier"), 2, f);
-  }
-
-  // Set whether we want the component alpha shader to return the color
-  // vector (pass 1, false) or the alpha vector (pass 2, true). With support
-  // for multiple render targets we wouldn't need two passes here.
-  void SetTexturePass2(bool aFlag) {
-    SetUniform(mProfile.LookupUniformLocation("uTexturePass2"), aFlag ? 1 : 0);
+    SetUniform(mTexCoordMultiplierUniformLocation, 2, f);
   }
 
   // the names of attributes
@@ -381,6 +384,10 @@ public:
   static const char* const TexCoordAttrib;
 
 protected:
+  gfx3DMatrix mProjectionMatrix;
+  // true if the projection matrix needs setting
+  bool mIsProjectionMatrixStale;
+
   RefPtr<GLContext> mGL;
   // the OpenGL id of the program
   GLuint mProgram;
@@ -391,6 +398,7 @@ protected:
     STATE_ERROR
   } mProgramState;
 
+  GLint mTexCoordMultiplierUniformLocation;
 #ifdef CHECK_CURRENT_PROGRAM
   static int sCurrentProgramKey;
 #endif

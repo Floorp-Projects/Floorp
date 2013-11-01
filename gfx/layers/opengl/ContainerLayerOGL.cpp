@@ -216,7 +216,6 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
         mOGLManager->GetFBOLayerProgram(maskType);
 
       rgb->Activate();
-      rgb->SetProjectionMatrix(mOGLManager->mProjMatrix);
       rgb->SetLayerQuadRect(visibleRect);
       rgb->SetLayerTransform(transform);
       rgb->SetTextureTransform(gfx3DMatrix());
@@ -225,7 +224,8 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
       rgb->SetTextureUnit(0);
       rgb->LoadMask(GetMaskLayer());
 
-      if (rgb->HasTexCoordMultiplier()) {
+      if (rgb->GetTexCoordMultiplierUniformLocation() != -1) {
+        // 2DRect case, get the multiplier right for a sampler2DRect
         rgb->SetTexCoordMultiplier(visibleRect.width, visibleRect.height);
       }
 
