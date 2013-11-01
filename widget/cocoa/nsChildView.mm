@@ -338,15 +338,10 @@ public:
   virtual ~GLPresenter();
 
   virtual GLContext* gl() const MOZ_OVERRIDE { return mGLContext; }
-  virtual ShaderProgramOGL* GetProgram(GLenum aTarget, gfx::SurfaceFormat aFormat) MOZ_OVERRIDE
+  virtual ShaderProgramOGL* GetProgram(ShaderProgramType aType) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(aTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB);
-    MOZ_ASSERT(aFormat == gfx::FORMAT_R8G8B8A8);
+    MOZ_ASSERT(aType == RGBARectLayerProgramType, "unexpected program type");
     return mRGBARectProgram;
-  }
-  virtual const gfx3DMatrix& GetProjMatrix() const MOZ_OVERRIDE
-  {
-    return mProjMatrix;
   }
   virtual void BindAndDrawQuad(ShaderProgramOGL *aProg) MOZ_OVERRIDE;
 
@@ -362,7 +357,6 @@ public:
 protected:
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
   nsAutoPtr<mozilla::layers::ShaderProgramOGL> mRGBARectProgram;
-  gfx3DMatrix mProjMatrix;
   GLuint mQuadVBO;
 };
 
@@ -2623,20 +2617,17 @@ RectTextureImage::Draw(GLManager* aManager,
                        const nsIntPoint& aLocation,
                        const gfx3DMatrix& aTransform)
 {
-  ShaderProgramOGL* program = aManager->GetProgram(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                                                   gfx::FORMAT_R8G8B8A8);
+  ShaderProgramOGL* program = aManager->GetProgram(RGBARectLayerProgramType);
 
   aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, mTexture);
 
   program->Activate();
-  program->SetProjectionMatrix(aManager->GetProjMatrix());
   program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mUsedSize));
   program->SetLayerTransform(aTransform * gfx3DMatrix::Translation(aLocation.x, aLocation.y, 0));
-  program->SetTextureTransform(gfx3DMatrix::ScalingMatrix(mUsedSize.width, mUsedSize.height, 1.0f));
+  program->SetTextureTransform(gfx3DMatrix());
+  program->SetLayerOpacity(1.0);
   program->SetRenderOffset(nsIntPoint(0, 0));
-  if (program->HasTexCoordMultiplier()) {
-    program->SetTexCoordMultiplier(1.0f, 1.0f);
-  }
+  program->SetTexCoordMultiplier(mUsedSize.width, mUsedSize.height);
   program->SetTextureUnit(0);
 
   aManager->BindAndDrawQuad(program);
@@ -2678,7 +2669,7 @@ GLPresenter::~GLPresenter()
 }
 
 void
-GLPresenter::BindAndDrawQuad(ShaderProgramOGL *aProgram)
+GLPresenter::BindAndDrawQuad(ShaderProgramOGL* aProgram)
 {
   mGLContext->MakeCurrent();
 
@@ -2716,7 +2707,7 @@ GLPresenter::BeginFrame(nsIntSize aRenderSize)
   gfx3DMatrix matrix3d = gfx3DMatrix::From2D(viewMatrix);
   matrix3d._33 = 0.0f;
 
-  mProjMatrix = matrix3d;
+  mRGBARectProgram->CheckAndSetProjectionMatrix(matrix3d);
 
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,

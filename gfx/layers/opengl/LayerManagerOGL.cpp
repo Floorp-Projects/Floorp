@@ -896,9 +896,7 @@ LayerManagerOGL::Render()
   }
 
   if (mFPS) {
-    // Disabled due to a refactoring in CompositorOGL.cpp. This file is about to be
-    // deleted anyway.
-    // mFPS->DrawFPS(TimeStamp::Now(), 0, mGLContext, GetProgram(Copy2DProgramType));
+    mFPS->DrawFPS(TimeStamp::Now(), 0, mGLContext, GetProgram(Copy2DProgramType));
   }
 
   if (mGLContext->IsDoubleBuffered()) {
@@ -921,10 +919,9 @@ LayerManagerOGL::Render()
   mGLContext->fBindTexture(mFBOTextureTarget, mBackBufferTexture);
 
   copyprog->Activate();
-  copyprog->SetProjectionMatrix(mProjMatrix);
   copyprog->SetTextureUnit(0);
 
-  if (copyprog->HasTexCoordMultiplier()) {
+  if (copyprog->GetTexCoordMultiplierUniformLocation() != -1) {
     copyprog->SetTexCoordMultiplier(width, height);
   }
 
@@ -1057,7 +1054,7 @@ LayerManagerOGL::SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTra
   gfx3DMatrix matrix3d = gfx3DMatrix::From2D(viewMatrix);
   matrix3d._33 = 0.0f;
 
-  mProjMatrix = matrix3d;
+  SetLayerProgramProjectionMatrix(matrix3d);
 }
 
 void
@@ -1159,6 +1156,18 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
   aTarget->SetMatrix(glToCairoTransform);
   aTarget->SetSource(imageSurface);
   aTarget->Paint();
+}
+
+void
+LayerManagerOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
+{
+  for (unsigned int i = 0; i < mPrograms.Length(); ++i) {
+    for (uint32_t mask = MaskNone; mask < NumMaskTypes; ++mask) {
+      if (mPrograms[i].mVariations[mask]) {
+        mPrograms[i].mVariations[mask]->CheckAndSetProjectionMatrix(aMatrix);
+      }
+    }
+  }
 }
 
 static GLenum

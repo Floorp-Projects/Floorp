@@ -370,7 +370,10 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
                      DrawOptions(aOpacity));
       break;
     }
-    case EFFECT_RGB: {
+    case EFFECT_BGRA:
+    case EFFECT_BGRX:
+    case EFFECT_RGBA:
+    case EFFECT_RGBX: {
       TexturedEffect* texturedEffect =
           static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceBasic* source = texturedEffect->mTexture->AsSourceBasic();

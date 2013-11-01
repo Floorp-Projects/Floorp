@@ -121,7 +121,10 @@ enum EffectTypes
 {
   EFFECT_MASK,
   EFFECT_MAX_SECONDARY, // sentinel for the count of secondary effect types
-  EFFECT_RGB,
+  EFFECT_BGRX,
+  EFFECT_RGBX,
+  EFFECT_BGRA,
+  EFFECT_RGBA,
   EFFECT_YCBCR,
   EFFECT_COMPONENT_ALPHA,
   EFFECT_SOLID_COLOR,
