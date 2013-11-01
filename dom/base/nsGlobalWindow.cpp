@@ -9562,7 +9562,7 @@ nsGlobalWindow::FireHashchange(const nsAString &aOldURL,
     return NS_OK;
 
   // Get a presentation shell for use in creating the hashchange event.
-  NS_ENSURE_STATE(mDoc);
+  NS_ENSURE_STATE(IsCurrentInnerWindow());
 
   nsIPresShell *shell = mDoc->GetShell();
   nsRefPtr<nsPresContext> presContext;
@@ -10119,7 +10119,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
 void
 nsGlobalWindow::FireOfflineStatusEvent()
 {
-  if (!mDoc)
+  if (!IsCurrentInnerWindow())
     return;
   nsAutoString name;
   if (NS_IsOffline()) {
@@ -10841,6 +10841,11 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 #ifdef MOZ_B2G
   if (!nsCRT::strcmp(aTopic, NS_NETWORK_ACTIVITY_BLIP_UPLOAD_TOPIC) ||
       !nsCRT::strcmp(aTopic, NS_NETWORK_ACTIVITY_BLIP_DOWNLOAD_TOPIC)) {
+    MOZ_ASSERT(IsInnerWindow());
+    if (!IsCurrentInnerWindow()) {
+      return NS_OK;
+    }
+
     nsCOMPtr<nsIDOMEvent> event;
     NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
     nsresult rv = event->InitEvent(
