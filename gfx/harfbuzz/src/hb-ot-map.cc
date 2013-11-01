@@ -40,6 +40,9 @@ hb_ot_map_t::add_lookups (hb_face_t    *face,
 {
   unsigned int lookup_indices[32];
   unsigned int offset, len;
+  unsigned int table_lookup_count;
+
+  table_lookup_count = hb_ot_layout_table_get_lookup_count (face, table_tags[table_index]);
 
   offset = 0;
   do {
@@ -50,7 +53,10 @@ hb_ot_map_t::add_lookups (hb_face_t    *face,
 				      offset, &len,
 				      lookup_indices);
 
-    for (unsigned int i = 0; i < len; i++) {
+    for (unsigned int i = 0; i < len; i++)
+    {
+      if (lookup_indices[i] >= table_lookup_count)
+	continue;
       hb_ot_map_t::lookup_map_t *lookup = lookups[table_index].push ();
       if (unlikely (!lookup))
         return;
@@ -175,7 +181,7 @@ hb_ot_map_builder_t::compile (hb_ot_map_t &m)
       continue; /* Feature disabled, or not enough bits. */
 
 
-    bool found = false;
+    hb_bool_t found = false;
     unsigned int feature_index[2];
     for (unsigned int table_index = 0; table_index < 2; table_index++)
       found |= hb_ot_layout_language_find_feature (face,
