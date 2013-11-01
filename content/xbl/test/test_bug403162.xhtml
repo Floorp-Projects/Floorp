@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=403162
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="test">
       <handlers>
-        <handler event="foo" action="XPCNativeWrapper.unwrap(window).triggerCount++"/>
+        <handler event="foo" action="XPCNativeWrapper.unwrap(window).triggerCount++" allowuntrusted="true"/>
       </handlers>
     </binding>
   </bindings>
