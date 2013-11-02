@@ -291,6 +291,7 @@ nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
     pair.nominated = p1->peer_nominated || p1->nominated;
     pair.selected = p1->local->component &&
                     p1->local->component->active == p1;
+    pair.codeword = p1->codeword;
 
     if (!ToNrIceCandidate(*(p1->local), &pair.local) ||
         !ToNrIceCandidate(*(p1->remote), &pair.remote)) {

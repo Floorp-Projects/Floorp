@@ -958,13 +958,13 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
         w = gCheckboxWidget;
     }
 
-    NS_ASSERTION(rect->width == indicator_size,
+    // XXX we should assert rect->height >= indicator_size too
+    // after bug 369581 is fixed.
+    NS_ASSERTION(rect->width >= indicator_size,
                  "GetMinimumWidgetSize was ignored");
-    /*
-     * vertically center in the box, since XUL sometimes ignores our
-     * GetMinimumWidgetSize in the vertical dimension
-     */
-    x = rect->x;
+
+    // Paint it center aligned in the rect.
+    x = rect->x + (rect->width - indicator_size) / 2;
     y = rect->y + (rect->height - indicator_size) / 2;
     width = indicator_size;
     height = indicator_size;

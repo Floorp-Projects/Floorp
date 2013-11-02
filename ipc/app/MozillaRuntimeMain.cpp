@@ -70,14 +70,16 @@ InitializeBinder(void *aDummy) {
 int
 main(int argc, char* argv[])
 {
-#ifdef MOZ_NUWA_PROCESS
     bool isNuwa = false;
+    bool isSandboxEnabled = false;
     for (int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-nuwa") == 0) {
-            PrepareNuwaProcess();
-            isNuwa = true;
-            break;
-        }
+        isNuwa |= strcmp(argv[i], "-nuwa") == 0;
+        isSandboxEnabled |= strcmp(argv[i], "-sandbox") == 0;
+    }
+
+#ifdef MOZ_NUWA_PROCESS
+    if (isNuwa) {
+        PrepareNuwaProcess();
     }
 #endif
 
@@ -99,19 +101,21 @@ main(int argc, char* argv[])
 #endif
 
 #if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-    sandbox::TargetServices* target_service =
-        sandbox::SandboxFactory::GetTargetServices();
-    if (!target_service) {
-        return 1;
-    }
+    if (isSandboxEnabled) {
+        sandbox::TargetServices* target_service =
+            sandbox::SandboxFactory::GetTargetServices();
+        if (!target_service) {
+            return 1;
+        }
 
-    sandbox::ResultCode result = target_service->Init();
-    if (result != sandbox::SBOX_ALL_OK) {
-        return 2;
-    }
+        sandbox::ResultCode result = target_service->Init();
+        if (result != sandbox::SBOX_ALL_OK) {
+            return 2;
+        }
 
-    // Initialization is finished, switch to the lowered token
-    target_service->LowerToken();
+        // Initialization is finished, switch to the lowered token
+        target_service->LowerToken();
+    }
 #endif
 
     // Check for the absolute minimum number of args we need to move

@@ -16,6 +16,7 @@
 #include "nsSVGPathDataParser.h"
 #include "nsSVGPathGeometryElement.h" // for nsSVGMark
 #include <stdarg.h>
+#include "nsStyleConsts.h"
 #include "SVGContentUtils.h"
 #include "SVGPathSegUtils.h"
 #include "gfxContext.h"
@@ -217,18 +218,51 @@ SVGPathData::GetPathSegAtLength(float aDistance) const
  *
  * Cairo only does this for |stroke-linecap: round| and not for
  * |stroke-linecap: square| (since that's what Adobe Acrobat has always done).
+ * Most likely the other backends that DrawTarget uses have the same behavior.
  *
  * To help us conform to the SVG spec we have this helper function to draw an
  * approximation of square caps for zero length subpaths. It does this by
- * inserting a subpath containing a single axis aligned straight line that is
- * as small as it can be without cairo throwing it away for being too small to
- * affect rendering. Cairo will then draw stroke caps for this axis aligned
- * line, creating an axis aligned rectangle (approximating the square that
- * would ideally be drawn).
+ * inserting a subpath containing a single user space axis aligned straight
+ * line that is as small as it can be while minimizing the risk of it being
+ * thrown away by the DrawTarget's backend for being too small to affect
+ * rendering. The idea is that we'll then get stroke caps drawn for this axis
+ * aligned line, creating an axis aligned rectangle that approximates the
+ * square that would ideally be drawn.
+ *
+ * Since we don't have any information about transforms from user space to
+ * device space, we choose the length of the small line that we insert by
+ * making it a small percentage of the stroke width of the path. This should
+ * hopefully allow us to make the line as long as possible (to avoid rounding
+ * issues in the backend resulting in the backend seeing it as having zero
+ * length) while still avoiding the small rectangle being noticably different
+ * from a square.
  *
  * Note that this function inserts a subpath into the current gfx path that
  * will be present during both fill and stroke operations.
  */
+static void
+ApproximateZeroLengthSubpathSquareCaps(PathBuilder* aPB,
+                                       const Point& aPoint,
+                                       Float aStrokeWidth)
+{
+  // Note that caps are proportional to stroke width, so if stroke width is
+  // zero it's actually fine for |tinyLength| below to end up being zero.
+  // However, it would be a waste to inserting a LineTo in that case, so better
+  // not to.
+  MOZ_ASSERT(aStrokeWidth > 0.0f,
+             "Make the caller check for this, or check it here");
+
+  // The fraction of the stroke width that we choose for the length of the
+  // line is rather arbitrary, other than being chosen to meet the requirements
+  // described in the comment above.
+
+  Float tinyLength = aStrokeWidth / 32;
+
+  aPB->MoveTo(aPoint);
+  aPB->LineTo(aPoint + Point(tinyLength, 0));
+  aPB->MoveTo(aPoint);
+}
+
 static void
 ApproximateZeroLengthSubpathSquareCaps(const gfxPoint &aPoint, gfxContext *aCtx)
 {
@@ -244,32 +278,12 @@ ApproximateZeroLengthSubpathSquareCaps(const gfxPoint &aPoint, gfxContext *aCtx)
   aCtx->MoveTo(aPoint);
 }
 
-static void
-ApproximateZeroLengthSubpathSquareCaps(const Point& aPoint,
-                                       DrawTarget* aDT,
-                                       PathBuilder* aPB)
-{
-  // Cairo's fixed point fractional part is 8 bits wide, so its device space
-  // coordinate granularity is 1/256 pixels. However, to prevent user space
-  // |aPoint| and |aPoint + tinyAdvance| being rounded to the same device
-  // coordinates, we double this for |tinyAdvance|:
-
-  Matrix currentTransform = aDT->GetTransform();
-  currentTransform.Invert();
-  Size tinyAdvance = currentTransform * Size(2.0/256.0, 0.0);
-
-  aPB->MoveTo(aPoint);
-  aPB->LineTo(aPoint + Point(tinyAdvance.width, tinyAdvance.height));
-  aPB->MoveTo(aPoint);
-}
-
 #define MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT               \
   do {                                                                        \
-    if (capsAreSquare && !subpathHasLength && subpathContainsNonArc &&        \
-        SVGPathSegUtils::IsValidType(prevSegType) &&                          \
-        (!IsMoveto(prevSegType) ||                                            \
-         segType == PATHSEG_CLOSEPATH)) {                                     \
-      ApproximateZeroLengthSubpathSquareCaps(segStart, aDT, builder);         \
+    if (capsAreSquare && !subpathHasLength && aStrokeWidth > 0 &&             \
+        subpathContainsNonArc && SVGPathSegUtils::IsValidType(prevSegType) && \
+        (!IsMoveto(prevSegType) || segType == PATHSEG_CLOSEPATH)) {           \
+      ApproximateZeroLengthSubpathSquareCaps(builder, segStart, aStrokeWidth);\
     }                                                                         \
   } while(0)
 
@@ -284,17 +298,23 @@ ApproximateZeroLengthSubpathSquareCaps(const Point& aPoint,
   } while(0)
 
 TemporaryRef<Path>
-SVGPathData::ConstructPath(DrawTarget *aDT,
-                           FillRule aFillRule,
-                           CapStyle aCapStyle) const
+SVGPathData::BuildPath(FillRule aFillRule,
+                       uint8_t aStrokeLineCap,
+                       Float aStrokeWidth) const
 {
   if (mData.IsEmpty() || !IsMoveto(SVGPathSegUtils::DecodeType(mData[0]))) {
     return nullptr; // paths without an initial moveto are invalid
   }
 
-  RefPtr<PathBuilder> builder = aDT->CreatePathBuilder(aFillRule);
+  RefPtr<DrawTarget> drawTarget =
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+  NS_ASSERTION(gfxPlatform::GetPlatform()->
+                 SupportsAzureContentForDrawTarget(drawTarget),
+               "Should support Moz2D content drawing");
 
-  bool capsAreSquare = aCapStyle == CAP_SQUARE;
+  RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder(aFillRule);
+
+  bool capsAreSquare = aStrokeLineCap == NS_STYLE_STROKE_LINECAP_SQUARE;
   bool subpathHasLength = false;  // visual length
   bool subpathContainsNonArc = false;
 

@@ -1421,6 +1421,7 @@ ContentParent::ContentParent(mozIApplication* aApp,
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content,
                                             aOSPrivileges);
+    mSubprocess->SetSandboxEnabled(ShouldSandboxContentProcesses());
 
     IToplevelProtocol::SetTransport(mSubprocess->GetChannel());
 
@@ -3280,6 +3281,16 @@ ContentParent::ShouldContinueFromReplyTimeout()
   // timeouts should only ever occur in electrolysis-enabled sessions.
   MOZ_ASSERT(Preferences::GetBool("browser.tabs.remote", false));
   return false;
+}
+
+bool
+ContentParent::ShouldSandboxContentProcesses()
+{
+#ifdef MOZ_CONTENT_SANDBOX
+  return !PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX");
+#else
+  return true;
+#endif
 }
 
 } // namespace dom

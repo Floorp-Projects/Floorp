@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Testcase for bug 932506</title>
+  <style>
+
+input { outline:1px solid black; }
+
+</style>
+</head>
+<body>
+
+<div style="overflow:hidden; width:160px;">
+  <div style="float:left; width:799px; border:1px solid blue;">
+    <input type="checkbox" checked style="width:400px; outline:none;">
+    <input type="checkbox" checked style="width:400px; height:100px; outline:none;">
+  </div>
+</div>
+
+<input type="checkbox" checked style="width:400px; height:1px;"><br>
+<input type="checkbox" checked style="width:1px; height:100px;"><br>
+<input type="checkbox" checked style="width:1px; height:1px;"><br>
+
+<input type="checkbox" checked style="width:400px; height:0;"><br>
+<input type="checkbox" checked style="width:0; height:100px;"><br>
+<input type="checkbox" checked style="width:0; height:0;"><br>
+
+</body>
+</html>
