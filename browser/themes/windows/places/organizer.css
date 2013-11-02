@@ -18,11 +18,11 @@
 }
 
 #back-button {
-  -moz-image-region: rect(0, 18px, 18px, 0);
+  -moz-image-region: rect(0, 54px, 18px, 36px);
 }
 
 #forward-button {
-  -moz-image-region: rect(0, 36px, 18px, 18px);
+  -moz-image-region: rect(0, 72px, 18px, 54px);
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
