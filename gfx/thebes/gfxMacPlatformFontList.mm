@@ -830,7 +830,7 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
     bool cantUseFallbackFont = false;
 
     if (!mDefaultFont) {
-        mDefaultFont = ::CTFontCreateWithName(CFSTR("Lucida Grande"), 12.f,
+        mDefaultFont = ::CTFontCreateWithName(CFSTR("LucidaGrande"), 12.f,
                                               NULL);
     }
 
