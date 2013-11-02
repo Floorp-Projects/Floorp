@@ -63,7 +63,8 @@ NS_IMPL_ADDREF(SmsMessage)
 NS_IMPL_RELEASE(SmsMessage)
 
 SmsMessage::SmsMessage(int32_t aId,
-                       const uint64_t aThreadId,
+                       uint64_t aThreadId,
+                       const nsString& aIccId,
                        DeliveryState aDelivery,
                        DeliveryStatus aDeliveryStatus,
                        const nsString& aSender,
@@ -73,8 +74,9 @@ SmsMessage::SmsMessage(int32_t aId,
                        uint64_t aTimestamp,
                        uint64_t aDeliveryTimestamp,
                        bool aRead)
-  : mData(aId, aThreadId, aDelivery, aDeliveryStatus, aSender, aReceiver, aBody,
-          aMessageClass, aTimestamp, aDeliveryTimestamp, aRead)
+  : mData(aId, aThreadId, aIccId, aDelivery, aDeliveryStatus,
+          aSender, aReceiver, aBody, aMessageClass, aTimestamp,
+          aDeliveryTimestamp, aRead)
 {
 }
 
@@ -85,7 +87,8 @@ SmsMessage::SmsMessage(const SmsMessageData& aData)
 
 /* static */ nsresult
 SmsMessage::Create(int32_t aId,
-                   const uint64_t aThreadId,
+                   uint64_t aThreadId,
+                   const nsAString& aIccId,
                    const nsAString& aDelivery,
                    const nsAString& aDeliveryStatus,
                    const nsAString& aSender,
@@ -105,6 +108,7 @@ SmsMessage::Create(int32_t aId,
   SmsMessageData data;
   data.id() = aId;
   data.threadId() = aThreadId;
+  data.iccId() = nsString(aIccId);
   data.sender() = nsString(aSender);
   data.receiver() = nsString(aReceiver);
   data.body() = nsString(aBody);
@@ -191,7 +195,7 @@ SmsMessage::GetThreadId(uint64_t* aThreadId)
 NS_IMETHODIMP
 SmsMessage::GetIccId(nsAString& aIccId)
 {
-  // TODO
+  aIccId = mData.iccId();
   return NS_OK;
 }
 

@@ -1104,6 +1104,7 @@ MobileMessageDatabaseService.prototype = {
     if (aMessageRecord.type == "sms") {
       return gMobileMessageService.createSmsMessage(aMessageRecord.id,
                                                     aMessageRecord.threadId,
+                                                    null, // TODO
                                                     aMessageRecord.delivery,
                                                     aMessageRecord.deliveryStatus,
                                                     aMessageRecord.sender,
@@ -1159,6 +1160,7 @@ MobileMessageDatabaseService.prototype = {
       }
       return gMobileMessageService.createMmsMessage(aMessageRecord.id,
                                                     aMessageRecord.threadId,
+                                                    null, // TODO
                                                     aMessageRecord.delivery,
                                                     aMessageRecord.deliveryInfo,
                                                     aMessageRecord.sender,

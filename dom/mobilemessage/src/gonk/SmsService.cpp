@@ -103,12 +103,15 @@ SmsService::GetSegmentInfoForText(const nsAString& aText,
 }
 
 NS_IMETHODIMP
-SmsService::Send(const nsAString& aNumber,
+SmsService::Send(uint32_t         aServiceId,
+                 const nsAString& aNumber,
                  const nsAString& aMessage,
                  const bool       aSilent,
                  nsIMobileMessageCallback* aRequest)
 {
   NS_ENSURE_TRUE(mRadioInterface, NS_ERROR_FAILURE);
+
+  // TODO Send SMS based on aServiceId.
 
   return mRadioInterface->SendSMS(aNumber, aMessage, aSilent, aRequest);
 }
