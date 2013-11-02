@@ -123,11 +123,17 @@ public:
    */
   void Join();
 
+  void SetSandboxEnabled(bool aSandboxEnabled) {
+    mSandboxEnabled = aSandboxEnabled;
+  }
+
 protected:
   GeckoProcessType mProcessType;
+  bool mSandboxEnabled;
   ChildPrivileges mPrivileges;
   Monitor mMonitor;
   FilePath mProcessPath;
+
   // This value must be accessed while holding mMonitor.
   enum {
     // This object has been constructed, but the OS process has not
