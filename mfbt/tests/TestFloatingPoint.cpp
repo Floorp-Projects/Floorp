@@ -9,6 +9,8 @@
 
 using mozilla::DoublesAreIdentical;
 using mozilla::DoubleExponentBias;
+using mozilla::DoubleEqualsInt32;
+using mozilla::DoubleIsInt32;
 using mozilla::ExponentComponent;
 using mozilla::IsFinite;
 using mozilla::IsInfinite;
@@ -164,6 +166,28 @@ TestPredicates()
   MOZ_ASSERT(!IsNegativeZero(0.0));
   MOZ_ASSERT(!IsNegativeZero(-1.0));
   MOZ_ASSERT(!IsNegativeZero(1.0));
+
+  int32_t i;
+  MOZ_ASSERT(DoubleIsInt32(0.0, &i)); MOZ_ASSERT(i == 0);
+  MOZ_ASSERT(!DoubleIsInt32(-0.0, &i));
+  MOZ_ASSERT(DoubleEqualsInt32(0.0, &i)); MOZ_ASSERT(i == 0);
+  MOZ_ASSERT(DoubleEqualsInt32(-0.0, &i)); MOZ_ASSERT(i == 0);
+  MOZ_ASSERT(DoubleIsInt32(INT32_MIN, &i)); MOZ_ASSERT(i == INT32_MIN);
+  MOZ_ASSERT(DoubleIsInt32(INT32_MAX, &i)); MOZ_ASSERT(i == INT32_MAX);
+  MOZ_ASSERT(DoubleEqualsInt32(INT32_MIN, &i)); MOZ_ASSERT(i == INT32_MIN);
+  MOZ_ASSERT(DoubleEqualsInt32(INT32_MAX, &i)); MOZ_ASSERT(i == INT32_MAX);
+  MOZ_ASSERT(!DoubleIsInt32(0.5, &i));
+  MOZ_ASSERT(!DoubleIsInt32(double(INT32_MAX) + 0.1, &i));
+  MOZ_ASSERT(!DoubleIsInt32(double(INT32_MIN) - 0.1, &i));
+  MOZ_ASSERT(!DoubleIsInt32(NegativeInfinity(), &i));
+  MOZ_ASSERT(!DoubleIsInt32(PositiveInfinity(), &i));
+  MOZ_ASSERT(!DoubleIsInt32(UnspecifiedNaN(), &i));
+  MOZ_ASSERT(!DoubleEqualsInt32(0.5, &i));
+  MOZ_ASSERT(!DoubleEqualsInt32(double(INT32_MAX) + 0.1, &i));
+  MOZ_ASSERT(!DoubleEqualsInt32(double(INT32_MIN) - 0.1, &i));
+  MOZ_ASSERT(!DoubleEqualsInt32(NegativeInfinity(), &i));
+  MOZ_ASSERT(!DoubleEqualsInt32(PositiveInfinity(), &i));
+  MOZ_ASSERT(!DoubleEqualsInt32(UnspecifiedNaN(), &i));
 }
 
 int
