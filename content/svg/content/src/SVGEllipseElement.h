@@ -32,6 +32,7 @@ public:
 
   // nsSVGPathGeometryElement methods:
   virtual void ConstructPath(gfxContext *aCtx) MOZ_OVERRIDE;
+  virtual TemporaryRef<Path> BuildPath() MOZ_OVERRIDE;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 

@@ -5,9 +5,12 @@
 
 #include "mozilla/dom/SVGLineElement.h"
 #include "mozilla/dom/SVGLineElementBinding.h"
+#include "mozilla/gfx/2D.h"
 #include "gfxContext.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Line)
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -113,6 +116,20 @@ SVGLineElement::ConstructPath(gfxContext *aCtx)
 
   aCtx->MoveTo(gfxPoint(x1, y1));
   aCtx->LineTo(gfxPoint(x2, y2));
+}
+
+TemporaryRef<Path>
+SVGLineElement::BuildPath()
+{
+  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+
+  float x1, y1, x2, y2;
+  GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
+
+  pathBuilder->MoveTo(Point(x1, y1));
+  pathBuilder->LineTo(Point(x2, y2));
+
+  return pathBuilder->Finish();
 }
 
 } // namespace dom
