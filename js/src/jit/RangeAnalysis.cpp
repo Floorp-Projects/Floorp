@@ -2407,3 +2407,9 @@ MBoundsCheckLower::collectRangeInfo()
     Range indexRange(index());
     fallible_ = !indexRange.hasInt32LowerBound() || indexRange.lower() < minimum_;
 }
+
+void
+MCompare::collectRangeInfo()
+{
+    operandsAreNeverNaN_ = !Range(lhs()).canBeNaN() && !Range(rhs()).canBeNaN();
+}
