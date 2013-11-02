@@ -1864,7 +1864,8 @@ MmsService.prototype = {
 
   mmsDefaultServiceId: 0,
 
-  send: function send(aParams, aRequest) {
+  send: function send(aServiceId, aParams, aRequest) {
+    // TODO Send MMS based on aServiceId.
     if (DEBUG) debug("send: aParams: " + JSON.stringify(aParams));
 
     // Note that the following sanity checks for |aParams| should be consistent
