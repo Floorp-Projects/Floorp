@@ -12,7 +12,7 @@ function ifWebGLSupported() {
   let navigated = once(target, "navigate");
   let linked = once(front, "program-linked");
 
-  yield front.setup();
+  yield front.setup({ reload: true });
   ok(true, "The front was setup up successfully.");
 
   yield navigated;

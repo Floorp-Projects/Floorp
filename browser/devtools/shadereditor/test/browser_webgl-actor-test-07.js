@@ -7,7 +7,7 @@
 
 function ifWebGLSupported() {
   let [target, debuggee, front] = yield initBackend(SIMPLE_CANVAS_URL);
-  front.setup();
+  front.setup({ reload: true });
 
   let programActor = yield once(front, "program-linked");
   let vertexShader = yield programActor.getVertexShader();

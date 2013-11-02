@@ -184,7 +184,9 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
     this._onGlobalCreated = this._onGlobalCreated.bind(this);
+    this._onGlobalDestroyed = this._onGlobalDestroyed.bind(this);
     this._onProgramLinked = this._onProgramLinked.bind(this);
+    this._programActorsCache = [];
   },
   destroy: function(conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
@@ -198,7 +200,7 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
    *
    * See ContentObserver and WebGLInstrumenter for more details.
    */
-  setup: method(function() {
+  setup: method(function({ reload }) {
     if (this._initialized) {
       return;
     }
@@ -206,10 +208,14 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
     this._contentObserver = new ContentObserver(this.tabActor);
     this._webglObserver = new WebGLObserver();
     on(this._contentObserver, "global-created", this._onGlobalCreated);
+    on(this._contentObserver, "global-destroyed", this._onGlobalDestroyed);
     on(this._webglObserver, "program-linked", this._onProgramLinked);
 
-    this.tabActor.window.location.reload();
+    if (reload) {
+      this.tabActor.window.location.reload();
+    }
   }, {
+    request: { reload: Option(0, "boolean") },
     oneway: true
   }),
 
@@ -225,9 +231,21 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
     this._initialized = false;
     this._contentObserver.stopListening();
     off(this._contentObserver, "global-created", this._onGlobalCreated);
+    off(this._contentObserver, "global-destroyed", this._onGlobalDestroyed);
     off(this._webglObserver, "program-linked", this._onProgramLinked);
   }, {
    oneway: true
+  }),
+
+  /**
+   * Gets an array of cached program actors for the current tab actor's window.
+   * This is useful for dealing with bfcache, when no new programs are linked.
+   */
+  getPrograms: method(function() {
+    let id = getInnerWindowID(this.tabActor.window);
+    return this._programActorsCache.filter(e => e.owner == id).map(e => e.actor);
+  }, {
+    response: { programs: RetVal("array:gl-program") }
   }),
 
   /**
@@ -246,6 +264,14 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
    */
   _onGlobalCreated: function(window) {
     WebGLInstrumenter.handle(window, this._webglObserver);
+  },
+
+  /**
+   * Invoked whenever the current tab actor's inner window is destroyed.
+   */
+  _onGlobalDestroyed: function(id) {
+    this._programActorsCache =
+      this._programActorsCache.filter(e => e.owner != id);
   },
 
   /**
@@ -275,6 +301,11 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
     programActor.program = program;
     programActor.shadersData = shadersData;
 
+    this._programActorsCache.push({
+      owner: getInnerWindowID(this.tabActor.window),
+      actor: programActor
+    });
+
     events.emit(this, "program-linked", programActor);
   }
 });
@@ -297,8 +328,9 @@ let WebGLFront = exports.WebGLFront = protocol.FrontClass(WebGLActor, {
  * instrument the HTMLCanvasElement with the appropriate inspection methods.
  */
 function ContentObserver(tabActor) {
-  this._contentWindow = tabActor.browser.contentWindow;
+  this._contentWindow = tabActor.window;
   this._onContentGlobalCreated = this._onContentGlobalCreated.bind(this);
+  this._onInnerWindowDestroyed = this._onInnerWindowDestroyed.bind(this);
   this.startListening();
 }
 
@@ -309,6 +341,8 @@ ContentObserver.prototype = {
   startListening: function() {
     Services.obs.addObserver(
       this._onContentGlobalCreated, "content-document-global-created", false);
+    Services.obs.addObserver(
+      this._onInnerWindowDestroyed, "inner-window-destroyed", false);
   },
 
   /**
@@ -317,6 +351,8 @@ ContentObserver.prototype = {
   stopListening: function() {
     Services.obs.removeObserver(
       this._onContentGlobalCreated, "content-document-global-created", false);
+    Services.obs.removeObserver(
+      this._onInnerWindowDestroyed, "inner-window-destroyed", false);
   },
 
   /**
@@ -326,6 +362,14 @@ ContentObserver.prototype = {
     if (subject == this._contentWindow) {
       emit(this, "global-created", subject);
     }
+  },
+
+  /**
+   * Fired when an inner window is removed from the backward/forward cache.
+   */
+  _onInnerWindowDestroyed: function(subject, topic, data) {
+    let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    emit(this, "global-destroyed", id);
   }
 };
 
@@ -849,3 +893,10 @@ WebGLProxy.prototype = {
     return result;
   }
 };
+
+function getInnerWindowID(window) {
+  return window
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindowUtils)
+    .currentInnerWindowID;
+}
