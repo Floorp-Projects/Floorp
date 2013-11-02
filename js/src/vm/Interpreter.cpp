@@ -57,6 +57,7 @@ using namespace js::gc;
 using namespace js::types;
 
 using mozilla::DebugOnly;
+using mozilla::DoubleEqualsInt32;
 using mozilla::PodCopy;
 
 /*
@@ -2717,9 +2718,8 @@ CASE(JSOP_TABLESWITCH)
     if (rref.isInt32()) {
         i = rref.toInt32();
     } else {
-        double d;
-        /* Don't use mozilla::DoubleIsInt32; treat -0 (double) as 0. */
-        if (!rref.isDouble() || (d = rref.toDouble()) != (i = int32_t(rref.toDouble())))
+        /* Use mozilla::DoubleEqualsInt32 to treat -0 (double) as 0. */
+        if (!rref.isDouble() || !DoubleEqualsInt32(rref.toDouble(), &i))
             ADVANCE_AND_DISPATCH(len);
     }
 

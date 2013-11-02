@@ -85,6 +85,7 @@ using namespace js;
 using namespace js::cli;
 
 using mozilla::ArrayLength;
+using mozilla::DoubleEqualsInt32;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 
@@ -597,8 +598,9 @@ Version(JSContext *cx, unsigned argc, jsval *vp)
             v = args[0].toInt32();
         } else if (args[0].isDouble()) {
             double fv = args[0].toDouble();
-            if (int32_t(fv) == fv)
-                v = int32_t(fv);
+            int32_t fvi;
+            if (DoubleEqualsInt32(fv, &fvi))
+                v = fvi;
         }
         if (v < 0 || v > JSVERSION_LATEST) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "version");
