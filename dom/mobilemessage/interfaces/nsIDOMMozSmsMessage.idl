@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(407b6d98-4140-11e3-9ec2-238ca8916558)]
+[scriptable, builtinclass, uuid(db9ff254-2745-11e3-aa37-8793b90fc643)]
 interface nsIDOMMozSmsMessage : nsISupports
 {
   /**
@@ -15,6 +15,13 @@ interface nsIDOMMozSmsMessage : nsISupports
   readonly attribute long      id;
 
   readonly attribute unsigned long long threadId;
+
+  /**
+   * Integrated Circuit Card Identifier.
+   *
+   * Will be null if ICC is not available.
+   */
+  readonly attribute DOMString iccId;
 
   /**
    * Should be "received", "sending", "sent" or "error".

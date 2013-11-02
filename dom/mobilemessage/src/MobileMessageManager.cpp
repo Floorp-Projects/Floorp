@@ -150,58 +150,70 @@ MobileMessageManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
 }
 
 NS_IMETHODIMP
-MobileMessageManager::Send(const JS::Value& aNumber_, const nsAString& aMessage, JS::Value* aReturn)
+MobileMessageManager::Send(const JS::Value& aNumber_,
+                           const nsAString& aMessage,
+                           const JS::Value& aSendParams,
+                           JSContext* aCx,
+                           uint8_t aArgc,
+                           JS::Value* aReturn)
 {
-  nsresult rv;
-  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-  NS_ENSURE_STATE(sc);
-  AutoPushJSContext cx(sc->GetNativeContext());
-  NS_ASSERTION(cx, "Failed to get a context!");
+  // TODO Send SMS based on |aSendParams.serviceId|.
 
-  JS::Rooted<JS::Value> aNumber(cx, aNumber_);
+  JS::Rooted<JS::Value> aNumber(aCx, aNumber_);
   if (!aNumber.isString() &&
-      !(aNumber.isObject() && JS_IsArrayObject(cx, &aNumber.toObject()))) {
+      !(aNumber.isObject() && JS_IsArrayObject(aCx, &aNumber.toObject()))) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  JS::Rooted<JSObject*> global(cx, sc->GetWindowProxy());
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(sc);
+
+  JS::Rooted<JSObject*> global(aCx, sc->GetWindowProxy());
   NS_ASSERTION(global, "Failed to get global object!");
 
-  JSAutoCompartment ac(cx, global);
+  JSAutoCompartment ac(aCx, global);
 
   if (aNumber.isString()) {
-    JS::Rooted<JSString*> str(cx, aNumber.toString());
-    return Send(cx, global, str, aMessage, aReturn);
+    JS::Rooted<JSString*> str(aCx, aNumber.toString());
+    return Send(aCx, global, str, aMessage, aReturn);
   }
 
   // Must be an array then.
-  JS::Rooted<JSObject*> numbers(cx, &aNumber.toObject());
+  JS::Rooted<JSObject*> numbers(aCx, &aNumber.toObject());
 
   uint32_t size;
-  JS_ALWAYS_TRUE(JS_GetArrayLength(cx, numbers, &size));
+  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, numbers, &size));
 
   JS::Value* requests = new JS::Value[size];
 
-  JS::Rooted<JS::Value> number(cx);
+  JS::Rooted<JS::Value> number(aCx);
   for (uint32_t i=0; i<size; ++i) {
-    if (!JS_GetElement(cx, numbers, i, &number)) {
+    if (!JS_GetElement(aCx, numbers, i, &number)) {
       return NS_ERROR_INVALID_ARG;
     }
 
-    JS::Rooted<JSString*> str(cx, number.toString());
-    nsresult rv = Send(cx, global, str, aMessage, &requests[i]);
+    JS::Rooted<JSString*> str(aCx, number.toString());
+    nsresult rv = Send(aCx, global, str, aMessage, &requests[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  aReturn->setObjectOrNull(JS_NewArrayObject(cx, size, requests));
+  aReturn->setObjectOrNull(JS_NewArrayObject(aCx, size, requests));
   NS_ENSURE_TRUE(aReturn->isObject(), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MobileMessageManager::SendMMS(const JS::Value& aParams, nsIDOMDOMRequest** aRequest)
+MobileMessageManager::SendMMS(const JS::Value& aParams,
+                              const JS::Value& aSendParams,
+                              JSContext* aCx,
+                              uint8_t aArgc,
+                              nsIDOMDOMRequest** aRequest)
 {
+  // TODO Send MMS based on |aSendParams.serviceId|.
+
   nsCOMPtr<nsIMmsService> mmsService = do_GetService(MMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(mmsService, NS_ERROR_FAILURE);
 
