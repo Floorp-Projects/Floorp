@@ -35,7 +35,7 @@ interface PeerConnectionImpl  {
 
   /* Stats call */
   [Throws]
-  void getStats(MediaStreamTrack? selector, boolean internalStats);
+  void getStats(MediaStreamTrack? selector);
 
   /* Adds the stream created by GetUserMedia */
   [Throws]
