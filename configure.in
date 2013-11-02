@@ -9129,7 +9129,7 @@ MOZ_ARG_WITH_STRING(intl-api,
     but doesn't use ICU or expose the API to script.  The third doesn't build
     ICU at all.],
     WITH_INTL="--with-intl-api=$withval"
-])
+)
 if test -z "$WITH_INTL"; then
 if test "$MOZ_BUILD_APP" = "browser"; then
     WITH_INTL="--with-intl-api"
