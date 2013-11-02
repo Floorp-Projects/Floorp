@@ -214,6 +214,14 @@ var gPluginHandler = {
 
   handleEvent : function(event) {
     let eventType = event.type;
+
+    if (eventType == "PluginRemoved") {
+      let doc = event.target;
+      let browser = gBrowser.getBrowserForDocument(doc.defaultView.top.document);
+      this._setPluginNotificationIcon(browser);
+      return;
+    }
+
     let plugin = event.target;
     let doc = plugin.ownerDocument;
 
@@ -313,6 +321,7 @@ var gPluginHandler = {
 
         plugin.addEventListener("overflow", function(event) {
           overlay.style.visibility = "hidden";
+          gPluginHandler._setPluginNotificationIcon(browser);
         });
         plugin.addEventListener("underflow", function(event) {
           // this is triggered if only one dimension underflows,
@@ -320,6 +329,7 @@ var gPluginHandler = {
           if (!gPluginHandler.isTooSmall(plugin, overlay)) {
             overlay.style.visibility = "visible";
           }
+          gPluginHandler._setPluginNotificationIcon(browser);
         });
       }
     }
@@ -784,14 +794,6 @@ var gPluginHandler = {
         continue;
       }
 
-      // Assume that plugins are hidden and then set override later
-      pluginInfo.hidden = true;
-
-      let overlay = this.getPluginUI(plugin, "main");
-      if (overlay && overlay.style.visibility != "hidden" && overlay.style.visibility != "") {
-        pluginInfo.hidden = false;
-      }
-
       let permissionObj = Services.perms.
         getPermissionObject(principal, pluginInfo.permissionString, false);
       if (permissionObj) {
@@ -819,26 +821,6 @@ var gPluginHandler = {
       centerActions.set(pluginInfo.permissionString, pluginInfo);
     }
 
-    let pluginBlocked = false;
-    let pluginHidden = false;
-    for (let pluginInfo of centerActions.values()) {
-      let fallbackType = pluginInfo.fallbackType;
-      if (fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE ||
-          fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE ||
-          fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_BLOCKLISTED) {
-        pluginBlocked = true;
-        pluginHidden = false;
-        break;
-      }
-      if (fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY && pluginInfo.hidden) {
-        pluginHidden = true;
-      }
-    }
-
-    let iconClasses = document.getElementById("plugins-notification-icon").classList;
-    iconClasses.toggle("plugin-blocked", pluginBlocked);
-    iconClasses.toggle("plugin-hidden", pluginHidden);
-
     let primaryPluginPermission = null;
     if (aShowNow) {
       primaryPluginPermission = this._getPluginInfo(aPlugin).permissionString;
@@ -850,6 +832,7 @@ var gPluginHandler = {
       if (aShowNow) {
         notification.options.primaryPlugin = primaryPluginPermission;
         notification.reshow();
+        setTimeout(() => { this._setPluginNotificationIcon(aBrowser); }, 0);
       }
       return;
     }
@@ -863,6 +846,63 @@ var gPluginHandler = {
     PopupNotifications.show(aBrowser, "click-to-play-plugins",
                             "", "plugins-notification-icon",
                             null, null, options);
+    setTimeout(() => { this._setPluginNotificationIcon(aBrowser); }, 0);
+  },
+
+  _setPluginNotificationIcon : function PH_setPluginNotificationIcon(aBrowser) {
+    // Because this is called on a timeout, sanity-check before continuing
+    if (!aBrowser.docShell || !aBrowser.contentWindow) {
+      return;
+    }
+
+    let notification = PopupNotifications.getNotification("click-to-play-plugins", aBrowser);
+    if (!notification)
+      return;
+
+    let iconClasses = document.getElementById("plugins-notification-icon").classList;
+
+    // Make a copy so we can remove visible plugins
+    let actions = new Map(notification.options.centerActions);
+
+    for (let pluginInfo of actions.values()) {
+      let fallbackType = pluginInfo.fallbackType;
+      if (fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE ||
+          fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE ||
+          fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_BLOCKLISTED) {
+        iconClasses.add("plugin-blocked");
+        iconClasses.remove("plugin-hidden");
+        return;
+      }
+    }
+
+    iconClasses.remove("plugin-blocked");
+
+    let contentWindow = aBrowser.contentWindow;
+    let contentDoc = aBrowser.contentDocument;
+    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+    for (let plugin of cwu.plugins) {
+      let fallbackType = plugin.pluginFallbackType;
+      if (fallbackType != Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY) {
+        continue;
+      }
+      let info = this._getPluginInfo(plugin);
+      if (!actions.has(info.permissionString)) {
+        continue;
+      }
+      let overlay = this.getPluginUI(plugin, "main");
+      if (!overlay) {
+        continue;
+      }
+      if (!this.isTooSmall(plugin, overlay)) {
+        actions.delete(info.permissionString);
+        if (actions.size == 0) {
+          break;
+        }
+      }
+    }
+
+    iconClasses.toggle("plugin-hidden", actions.size != 0);
   },
 
   // Crashed-plugin observer. Notified once per plugin crash, before events
