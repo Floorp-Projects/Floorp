@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Web Console throw tests</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Web Console throw tests</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+  attachConsole([], onAttach, true);
+}
+
+function onAttach(aState, aResponse)
+{
+  let tests = [];
+
+  let falsyValues = ["-0", "null", "undefined", "Infinity", "-Infinity", "NaN"];
+  falsyValues.forEach(function(value) {
+    tests.push(function() {
+      aState.client.evaluateJS("throw " + value + ";", function(aResponse) {
+        let type = aResponse.exception.type;
+        is(type, value, "exception.type for throw " + value);
+        nextTest();
+      });
+    });
+  });
+
+  let identityTestValues = [false, 0];
+  identityTestValues.forEach(function(value) {
+    tests.push(function() {
+      aState.client.evaluateJS("throw " + value + ";", function(aResponse) {
+        let exception = aResponse.exception;
+        ise(exception, value, "response.exception for throw " + value);
+        nextTest();
+      });
+    });
+  });
+
+  let longString = Array(DebuggerServer.LONG_STRING_LENGTH + 1).join("a"),
+      shortedString = longString.substring(0,
+                        DebuggerServer.LONG_STRING_INITIAL_LENGTH
+                      );
+  tests.push(function() {
+    aState.client.evaluateJS("throw '" + longString + "';", function(aResponse) {
+      is(aResponse.exception.initial, shortedString,
+        "exception.initial for throw longString"
+      );
+      nextTest();
+    });
+  });
+
+  runTests(tests, endTest.bind(null, aState));
+}
+
+function endTest(aState)
+{
+  closeDebugger(aState, function() {
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
