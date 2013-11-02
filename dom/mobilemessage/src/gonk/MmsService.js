@@ -156,18 +156,40 @@ MmsConnection.prototype = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
     /** MMS proxy settings. */
-    mmsc: null,
-    proxy: null,
-    port: null,
+    mmsc:     "",
+    mmsProxy: "",
+    mmsPort:  -1,
+
+    setApnSetting: function setApnSetting(network) {
+      this.mmsc = network.mmsc;
+      this.mmsProxy = network.mmsProxy;
+      this.mmsPort = network.mmsPort;
+    },
+
+    get proxyInfo() {
+      if (!this.mmsProxy) {
+        if (DEBUG) debug("getProxyInfo: MMS proxy is not available.");
+        return null;
+      }
+
+      let port = this.mmsPort;
+      if (port == -1) {
+        port = 80;
+        if (DEBUG) debug("getProxyInfo: port is not valid. Set to defult (80).");
+      }
+
+      let proxyInfo =
+        gpps.newProxyInfo("http", this.mmsProxy, port,
+                          Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST,
+                          -1, null);
+      if (DEBUG) debug("getProxyInfo: " + JSON.stringify(proxyInfo));
+
+      return proxyInfo;
+    },
 
     // For keeping track of the radio status.
     radioDisabled: false,
-
-    proxyInfo: null,
-    settings: [kPrefRilMmsc,
-               kPrefRilMmsProxy,
-               kPrefRilMmsPort,
-               kPrefRilRadioDisabled],
+    settings: ["ril.radio.disabled"],
     connected: false,
 
     //A queue to buffer the MMS HTTP requests when the MMS network
@@ -212,18 +234,6 @@ MmsConnection.prototype = {
       this.settings.forEach(function(name) {
         Services.prefs.addObserver(name, this, false);
       }, this);
-
-      try {
-        this.mmsc = Services.prefs.getCharPref(kPrefRilMmsc);
-        this.proxy = Services.prefs.getCharPref(kPrefRilMmsProxy);
-        this.port = Services.prefs.getIntPref(kPrefRilMmsPort);
-        this.updateProxyInfo();
-      } catch (e) {
-        if (DEBUG) debug("Unable to initialize the MMS proxy settings from " +
-                         "the preference. This could happen at the first-run. " +
-                         "Should be available later.");
-        this.clearMmsProxySettings();
-      }
 
       try {
         this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
@@ -301,8 +311,9 @@ MmsConnection.prototype = {
      *
      * @param callback
      *        Callback function when either the connection setup is done,
-     *        timeout, or failed. Accepts a boolean value that indicates
-     *        whether the connection is ready.
+     *        timeout, or failed. Parameters are:
+     *        - A boolean value indicates whether the connection is ready.
+     *        - Acquire connection status: _HTTP_STATUS_ACQUIRE_*.
      *
      * @return true if the callback for MMS network connection is done; false
      *         otherwise.
@@ -369,37 +380,6 @@ MmsConnection.prototype = {
       }
     },
 
-    /**
-     * Update the MMS proxy info.
-     */
-    updateProxyInfo: function updateProxyInfo() {
-      if (this.proxy === null || this.port === null) {
-        if (DEBUG) debug("updateProxyInfo: proxy or port is not yet decided." );
-        return;
-      }
-
-      if (!this.port) {
-        this.port = 80;
-        if (DEBUG) debug("updateProxyInfo: port is 0. Set to defult port 80.");
-      }
-
-      this.proxyInfo =
-        gpps.newProxyInfo("http", this.proxy, this.port,
-                          Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST,
-                          -1, null);
-      if (DEBUG) debug("updateProxyInfo: " + JSON.stringify(this.proxyInfo));
-    },
-
-    /**
-     * Clear the MMS proxy settings.
-     */
-    clearMmsProxySettings: function clearMmsProxySettings() {
-      this.mmsc = null;
-      this.proxy = null;
-      this.port = null;
-      this.proxyInfo = null;
-    },
-
     shutdown: function shutdown() {
       Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       Services.obs.removeObserver(this, kNetworkInterfaceStateChangedTopic);
@@ -434,6 +414,10 @@ MmsConnection.prototype = {
             return;
           }
 
+          // Set up the MMS APN setting based on the network, which is going to
+          // be used for the HTTP requests later.
+          this.setApnSetting(network);
+
           if (DEBUG) debug("Got the MMS network connected! Resend the buffered " +
                            "MMS requests: number: " + this.pendingCallbacks.length);
           this.connectTimer.cancel();
@@ -449,28 +433,6 @@ MmsConnection.prototype = {
               this.radioDisabled = false;
             }
             return;
-          }
-
-          try {
-            switch (data) {
-              case kPrefRilMmsc:
-                this.mmsc = Services.prefs.getCharPref(kPrefRilMmsc);
-                break;
-              case kPrefRilMmsProxy:
-                this.proxy = Services.prefs.getCharPref(kPrefRilMmsProxy);
-                this.updateProxyInfo();
-                break;
-              case kPrefRilMmsPort:
-                this.port = Services.prefs.getIntPref(kPrefRilMmsPort);
-                this.updateProxyInfo();
-                break;
-              default:
-                break;
-            }
-          } catch (e) {
-            if (DEBUG) debug("Failed to update the MMS proxy settings from the" +
-                             "preference.");
-            this.clearMmsProxySettings();
           }
           break;
         }
@@ -541,7 +503,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
      * @param method
      *        "GET" or "POST".
      * @param url
-     *        Target url string.
+     *        Target url string or null to be replaced by mmsc url.
      * @param istream
      *        An nsIInputStream instance as data source to be sent or null.
      * @param callback
@@ -602,6 +564,11 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
                              _HTTP_STATUS_USER_CANCELLED : errorCode, null);
           }
           return;
+        }
+
+        // MMSC is available after an MMS connection is successfully acquired.
+        if (!url) {
+          url = mmsConnection.mmsc;
         }
 
         if (DEBUG) debug("sendRequest: register proxy filter to " + url);
@@ -766,9 +733,10 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
       return true;
     },
 
-    translateHttpStatusToMmsStatus: function translateHttpStatusToMmsStatus(httpStatus,
-                                                                            cancelledReason,
-                                                                            defaultStatus) {
+    translateHttpStatusToMmsStatus:
+      function translateHttpStatusToMmsStatus(httpStatus,
+                                              cancelledReason,
+                                              defaultStatus) {
       switch(httpStatus) {
         case _HTTP_STATUS_USER_CANCELLED:
           return cancelledReason;
@@ -833,7 +801,7 @@ NotifyResponseTransaction.prototype = {
     }
     gMmsTransactionHelper.sendRequest(this.mmsConnection,
                                       "POST",
-                                      this.mmsConnection.mmsc,
+                                      null,
                                       this.istream,
                                       requestCallback);
   }
@@ -1253,11 +1221,12 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
       this.cancellable =
         gMmsTransactionHelper.sendRequest(this.mmsConnection,
                                           "POST",
-                                          this.mmsConnection.mmsc,
+                                          null,
                                           this.istream,
                                           (function (httpStatus, data) {
         let mmsStatus = gMmsTransactionHelper.
-                          translateHttpStatusToMmsStatus(httpStatus,
+                          translateHttpStatusToMmsStatus(
+                            httpStatus,
                             this.cancelledReason,
                             MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE);
         if (httpStatus != HTTP_STATUS_OK) {
@@ -1328,7 +1297,7 @@ AcknowledgeTransaction.prototype = {
     }
     gMmsTransactionHelper.sendRequest(this.mmsConnection,
                                       "POST",
-                                      this.mmsConnection.mmsc,
+                                      null,
                                       this.istream,
                                       requestCallback);
   }
