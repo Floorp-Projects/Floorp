@@ -747,13 +747,14 @@ function RadioInterface(options) {
     roamingEnabled: false
   };
 
-  // apnSettings is used to keep all APN settings.
-  // byApn[] makes it easier to get the APN settings via APN, user
-  // name, and password.
-  // byType[] makes it easier to get the APN settings via APN types.
+  // This matrix is used to keep all the APN settings.
+  //   - |byApn| object makes it easier to get the corresponding APN setting
+  //     via a given set of APN, user name and password.
+  //   - |byType| object makes it easier to get the corresponding APN setting
+  //     via a given APN type.
   this.apnSettings = {
-      byType: {},
-      byAPN: {}
+    byType: {},
+    byApn: {}
   };
 
   this.rilContext = {
@@ -1547,7 +1548,7 @@ RadioInterface.prototype = {
    */
   powerOffRadioSafely: function powerOffRadioSafely() {
     let dataDisconnecting = false;
-    for each (let apnSetting in this.apnSettings.byAPN) {
+    for each (let apnSetting in this.apnSettings.byApn) {
       for each (let type in apnSetting.types) {
         if (this.getDataCallStateByType(type) ==
             RIL.GECKO_NETWORK_STATE_CONNECTED) {
@@ -1569,23 +1570,22 @@ RadioInterface.prototype = {
 
   /**
    * This function will do the following steps:
-   * 1. Clear the old APN settings.
-   * 2. Combine APN, user name, and password as the key of byAPN{} and store
-   *    corresponding APN setting into byApn{}, which makes it easiler to get
-   *    the APN setting.
-   * 3. Use APN type as the index of byType{} and store the link of
-   *    corresponding APN setting into byType{}, which makes it easier to get
-   *    the APN setting via APN types.
+   *   1. Clear the cached APN settings in the RIL.
+   *   2. Combine APN, user name, and password as the key of |byApn| object to
+   *      refer to the corresponding APN setting.
+   *   3. Use APN type as the index of |byType| object to refer to the
+   *      corresponding APN setting.
+   *   4. Create RilNetworkInterface for each APN setting created at step 2.
    */
   updateApnSettings: function updateApnSettings(allApnSettings) {
-    let thisSimApnSettings = allApnSettings[this.clientId];
-    if (!thisSimApnSettings) {
+    let simApnSettings = allApnSettings[this.clientId];
+    if (!simApnSettings) {
       return;
     }
 
-    // Clear old APN settings.
-    for each (let apnSetting in this.apnSettings.byAPN) {
-      // Clear all connections of this APN settings.
+    // Clear the cached APN settings in the RIL.
+    for each (let apnSetting in this.apnSettings.byApn) {
+      // Clear all existing connections based on APN types.
       for each (let type in apnSetting.types) {
         if (this.getDataCallStateByType(type) ==
             RIL.GECKO_NETWORK_STATE_CONNECTED) {
@@ -1598,32 +1598,39 @@ RadioInterface.prototype = {
       this.unregisterDataCallCallback(apnSetting.iface);
       delete apnSetting.iface;
     }
-    this.apnSettings.byAPN = {};
+    this.apnSettings.byApn = {};
     this.apnSettings.byType = {};
 
-    // Create new APN settings.
-    for (let apnIndex = 0; thisSimApnSettings[apnIndex]; apnIndex++) {
-      let inputApnSetting = thisSimApnSettings[apnIndex];
+    // Cache the APN settings by APNs and by types in the RIL.
+    for (let i = 0; simApnSettings[i]; i++) {
+      let inputApnSetting = simApnSettings[i];
       if (!this.validateApnSetting(inputApnSetting)) {
         continue;
       }
 
-      // Combine APN, user name, and password as the key of byAPN{} to get
-      // the corresponding APN setting.
-      let apnKey = inputApnSetting.apn + (inputApnSetting.user || '') +
+      // Combine APN, user name, and password as the key of |byApn| object to
+      // refer to the corresponding APN setting.
+      let apnKey = inputApnSetting.apn +
+                   (inputApnSetting.user || '') +
                    (inputApnSetting.password || '');
-      if (!this.apnSettings.byAPN[apnKey]) {
-        this.apnSettings.byAPN[apnKey] = {};
-        this.apnSettings.byAPN[apnKey] = inputApnSetting;
-        this.apnSettings.byAPN[apnKey].iface =
-          new RILNetworkInterface(this, this.apnSettings.byAPN[apnKey]);
+
+      if (!this.apnSettings.byApn[apnKey]) {
+        this.apnSettings.byApn[apnKey] = inputApnSetting;
       } else {
-        this.apnSettings.byAPN[apnKey].types.push(inputApnSetting.types);
+        this.apnSettings.byApn[apnKey].types =
+          this.apnSettings.byApn[apnKey].types.concat(inputApnSetting.types);
       }
+
+      // Use APN type as the index of |byType| object to refer to the
+      // corresponding APN setting.
       for each (let type in inputApnSetting.types) {
-        this.apnSettings.byType[type] = {};
-        this.apnSettings.byType[type] = this.apnSettings.byAPN[apnKey];
+        this.apnSettings.byType[type] = this.apnSettings.byApn[apnKey];
       }
+    }
+
+    // Create RilNetworkInterface for each APN setting that just cached.
+    for each (let apnSetting in this.apnSettings.byApn) {
+      apnSetting.iface = new RILNetworkInterface(this, apnSetting);
     }
   },
 
@@ -2000,7 +2007,7 @@ RadioInterface.prototype = {
     if (datacall.state == RIL.GECKO_NETWORK_STATE_UNKNOWN &&
         this._changingRadioPower) {
       let anyDataConnected = false;
-      for each (let apnSetting in this.apnSettings.byAPN) {
+      for each (let apnSetting in this.apnSettings.byApn) {
         for each (let type in apnSetting.types) {
           if (this.getDataCallStateByType(type) == RIL.GECKO_NETWORK_STATE_CONNECTED) {
             anyDataConnected = true;
@@ -2230,7 +2237,7 @@ RadioInterface.prototype = {
         this._releaseSmsHandledWakeLock();
 
         // Shutdown all RIL network interfaces
-        for each (let apnSetting in this.apnSettings.byAPN) {
+        for each (let apnSetting in this.apnSettings.byApn) {
           if (apnSetting.iface) {
             apnSetting.iface.shutdown();
           }
@@ -2420,7 +2427,7 @@ RadioInterface.prototype = {
     this.dataCallSettings.roamingEnabled = false;
     this.apnSettings = {
       byType: {},
-      byAPN: {},
+      byApn: {},
     };
   },
 
