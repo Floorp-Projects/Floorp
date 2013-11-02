@@ -152,295 +152,294 @@ function MmsConnection(aServiceId) {
 };
 
 MmsConnection.prototype = {
-    // To Vicamo: for your convenience of reviewing, I will align the following codes before landing.
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-    /** MMS proxy settings. */
-    mmsc:     "",
-    mmsProxy: "",
-    mmsPort:  -1,
+  /** MMS proxy settings. */
+  mmsc:     "",
+  mmsProxy: "",
+  mmsPort:  -1,
 
-    setApnSetting: function setApnSetting(network) {
-      this.mmsc = network.mmsc;
-      this.mmsProxy = network.mmsProxy;
-      this.mmsPort = network.mmsPort;
-    },
+  setApnSetting: function setApnSetting(network) {
+    this.mmsc = network.mmsc;
+    this.mmsProxy = network.mmsProxy;
+    this.mmsPort = network.mmsPort;
+  },
 
-    get proxyInfo() {
-      if (!this.mmsProxy) {
-        if (DEBUG) debug("getProxyInfo: MMS proxy is not available.");
-        return null;
+  get proxyInfo() {
+    if (!this.mmsProxy) {
+      if (DEBUG) debug("getProxyInfo: MMS proxy is not available.");
+      return null;
+    }
+
+    let port = this.mmsPort;
+    if (port == -1) {
+      port = 80;
+      if (DEBUG) debug("getProxyInfo: port is not valid. Set to defult (80).");
+    }
+
+    let proxyInfo =
+      gpps.newProxyInfo("http", this.mmsProxy, port,
+                        Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST,
+                        -1, null);
+    if (DEBUG) debug("getProxyInfo: " + JSON.stringify(proxyInfo));
+
+    return proxyInfo;
+  },
+
+  // For keeping track of the radio status.
+  radioDisabled: false,
+  settings: ["ril.radio.disabled"],
+  connected: false,
+
+  //A queue to buffer the MMS HTTP requests when the MMS network
+  //is not yet connected. The buffered requests will be cleared
+  //if the MMS network fails to be connected within a timer.
+  pendingCallbacks: [],
+
+  /** MMS network connection reference count. */
+  refCount: 0,
+
+  connectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+
+  disconnectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+
+  /**
+   * Callback when |connectTimer| is timeout or cancelled by shutdown.
+   */
+  flushPendingCallbacks: function flushPendingCallbacks(status) {
+    if (DEBUG) debug("flushPendingCallbacks: " + this.pendingCallbacks.length
+                     + " pending callbacks with status: " + status);
+    while (this.pendingCallbacks.length) {
+      let callback = this.pendingCallbacks.shift();
+      let connected = (status == _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS);
+      callback(connected, status);
+    }
+  },
+
+  /**
+   * Callback when |disconnectTimer| is timeout or cancelled by shutdown.
+   */
+  onDisconnectTimerTimeout: function onDisconnectTimerTimeout() {
+    if (DEBUG) debug("onDisconnectTimerTimeout: deactivate the MMS data call.");
+    if (this.connected) {
+      this.radioInterface.deactivateDataCallByType("mms");
+    }
+  },
+
+  init: function init() {
+    Services.obs.addObserver(this, kNetworkInterfaceStateChangedTopic,
+                             false);
+    Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    this.settings.forEach(function(name) {
+      Services.prefs.addObserver(name, this, false);
+    }, this);
+
+    try {
+      this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
+    } catch (e) {
+      if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
+      this.radioDisabled = false;
+    }
+
+    this.connected = this.radioInterface.getDataCallStateByType("mms") ==
+      Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+  },
+
+  /**
+   * Return the roaming status of voice call.
+   *
+   * @return true if voice call is roaming.
+   */
+  isVoiceRoaming: function isVoiceRoaming() {
+    let isRoaming = this.radioInterface.rilContext.voice.roaming;
+    if (DEBUG) debug("isVoiceRoaming = " + isRoaming);
+    return isRoaming;
+  },
+
+  /**
+   * Get phone number from iccInfo.
+   *
+   * If the icc card is gsm card, the phone number is in msisdn.
+   * @see nsIDOMMozGsmIccInfo
+   *
+   * Otherwise, the phone number is in mdn.
+   * @see nsIDOMMozCdmaIccInfo
+   */
+  getPhoneNumber: function getPhoneNumber() {
+    let iccInfo = this.radioInterface.rilContext.iccInfo;
+
+    if (!iccInfo) {
+      return null;
+    }
+
+    let number = (iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)
+               ? iccInfo.msisdn : iccInfo.mdn;
+
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (number === undefined || number === "undefined") {
+      return null;
+    }
+
+    return number;
+  },
+
+  /**
+  * A utility function to get the ICC ID of the SIM card (if installed).
+  */
+  getIccId: function getIccId() {
+    let iccInfo = this.radioInterface.rilContext.iccInfo;
+
+    if (!iccInfo || !(iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)) {
+      return null;
+    }
+
+    let iccId = iccInfo.iccid;
+
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (iccId === undefined || iccId === "undefined") {
+      return null;
+    }
+
+    return iccId;
+  },
+
+  /**
+   * Acquire the MMS network connection.
+   *
+   * @param callback
+   *        Callback function when either the connection setup is done,
+   *        timeout, or failed. Parameters are:
+   *        - A boolean value indicates whether the connection is ready.
+   *        - Acquire connection status: _HTTP_STATUS_ACQUIRE_*.
+   *
+   * @return true if the callback for MMS network connection is done; false
+   *         otherwise.
+   */
+  acquire: function acquire(callback) {
+    this.refCount++;
+    this.connectTimer.cancel();
+    this.disconnectTimer.cancel();
+
+    // If the MMS network is not yet connected, buffer the
+    // MMS request and try to setup the MMS network first.
+    if (!this.connected) {
+      this.pendingCallbacks.push(callback);
+
+      let errorStatus;
+      if (this.radioDisabled) {
+        if (DEBUG) debug("Error! Radio is disabled when sending MMS.");
+        errorStatus = _HTTP_STATUS_RADIO_DISABLED;
+      } else if (this.radioInterface.rilContext.cardState != "ready") {
+        if (DEBUG) debug("Error! SIM card is not ready when sending MMS.");
+        errorStatus = _HTTP_STATUS_NO_SIM_CARD;
+      }
+      if (errorStatus != null) {
+        this.flushPendingCallbacks(errorStatus);
+        return true;
       }
 
-      let port = this.mmsPort;
-      if (port == -1) {
-        port = 80;
-        if (DEBUG) debug("getProxyInfo: port is not valid. Set to defult (80).");
+      if (DEBUG) debug("acquire: buffer the MMS request and setup the MMS data call.");
+      this.radioInterface.setupDataCallByType("mms");
+
+      // Set a timer to clear the buffered MMS requests if the
+      // MMS network fails to be connected within a time period.
+      this.connectTimer.
+        initWithCallback(this.flushPendingCallbacks.bind(this, _HTTP_STATUS_ACQUIRE_TIMEOUT),
+                         TIME_TO_BUFFER_MMS_REQUESTS,
+                         Ci.nsITimer.TYPE_ONE_SHOT);
+      return false;
+    }
+
+    callback(true, _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS);
+    return true;
+  },
+
+  /**
+   * Release the MMS network connection.
+   */
+  release: function release() {
+    this.refCount--;
+    if (this.refCount <= 0) {
+      this.refCount = 0;
+
+      // The waiting is too small, just skip the timer creation.
+      if (PREF_TIME_TO_RELEASE_MMS_CONNECTION < 1000) {
+        this.onDisconnectTimerTimeout();
+        return;
       }
 
-      let proxyInfo =
-        gpps.newProxyInfo("http", this.mmsProxy, port,
-                          Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST,
-                          -1, null);
-      if (DEBUG) debug("getProxyInfo: " + JSON.stringify(proxyInfo));
+      // Set a timer to delay the release of MMS network connection,
+      // since the MMS requests often come consecutively in a short time.
+      this.disconnectTimer.
+        initWithCallback(this.onDisconnectTimerTimeout.bind(this),
+                         PREF_TIME_TO_RELEASE_MMS_CONNECTION,
+                         Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+  },
 
-      return proxyInfo;
-    },
+  shutdown: function shutdown() {
+    Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    Services.obs.removeObserver(this, kNetworkInterfaceStateChangedTopic);
 
-    // For keeping track of the radio status.
-    radioDisabled: false,
-    settings: ["ril.radio.disabled"],
-    connected: false,
+    this.connectTimer.cancel();
+    this.flushPendingCallbacks(_HTTP_STATUS_RADIO_DISABLED);
+    this.disconnectTimer.cancel();
+    this.onDisconnectTimerTimeout();
+  },
 
-    //A queue to buffer the MMS HTTP requests when the MMS network
-    //is not yet connected. The buffered requests will be cleared
-    //if the MMS network fails to be connected within a timer.
-    pendingCallbacks: [],
+  // nsIObserver
 
-    /** MMS network connection reference count. */
-    refCount: 0,
-
-    connectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
-
-    disconnectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
-
-    /**
-     * Callback when |connectTimer| is timeout or cancelled by shutdown.
-     */
-    flushPendingCallbacks: function flushPendingCallbacks(status) {
-      if (DEBUG) debug("flushPendingCallbacks: " + this.pendingCallbacks.length
-                       + " pending callbacks with status: " + status);
-      while (this.pendingCallbacks.length) {
-        let callback = this.pendingCallbacks.shift();
-        let connected = (status == _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS);
-        callback(connected, status);
-      }
-    },
-
-    /**
-     * Callback when |disconnectTimer| is timeout or cancelled by shutdown.
-     */
-    onDisconnectTimerTimeout: function onDisconnectTimerTimeout() {
-      if (DEBUG) debug("onDisconnectTimerTimeout: deactivate the MMS data call.");
-      if (this.connected) {
-        this.radioInterface.deactivateDataCallByType("mms");
-      }
-    },
-
-    init: function init() {
-      Services.obs.addObserver(this, kNetworkInterfaceStateChangedTopic,
-                               false);
-      Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-      this.settings.forEach(function(name) {
-        Services.prefs.addObserver(name, this, false);
-      }, this);
-
-      try {
-        this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
-      } catch (e) {
-        if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
-        this.radioDisabled = false;
-      }
-
-      this.connected = this.radioInterface.getDataCallStateByType("mms") ==
-        Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
-    },
-
-    /**
-     * Return the roaming status of voice call.
-     *
-     * @return true if voice call is roaming.
-     */
-    isVoiceRoaming: function isVoiceRoaming() {
-      let isRoaming = this.radioInterface.rilContext.voice.roaming;
-      if (DEBUG) debug("isVoiceRoaming = " + isRoaming);
-      return isRoaming;
-    },
-
-    /**
-     * Get phone number from iccInfo.
-     *
-     * If the icc card is gsm card, the phone number is in msisdn.
-     * @see nsIDOMMozGsmIccInfo
-     *
-     * Otherwise, the phone number is in mdn.
-     * @see nsIDOMMozCdmaIccInfo
-     */
-    getPhoneNumber: function getPhoneNumber() {
-      let iccInfo = this.radioInterface.rilContext.iccInfo;
-
-      if (!iccInfo) {
-        return null;
-      }
-
-      let number = (iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)
-                 ? iccInfo.msisdn : iccInfo.mdn;
-
-      // Workaround an xpconnect issue with undefined string objects.
-      // See bug 808220
-      if (number === undefined || number === "undefined") {
-        return null;
-      }
-
-      return number;
-    },
-
-    /**
-    * A utility function to get the ICC ID of the SIM card (if installed).
-    */
-    getIccId: function getIccId() {
-      let iccInfo = this.radioInterface.rilContext.iccInfo;
-
-      if (!iccInfo || !(iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)) {
-        return null;
-      }
-
-      let iccId = iccInfo.iccid;
-
-      // Workaround an xpconnect issue with undefined string objects.
-      // See bug 808220
-      if (iccId === undefined || iccId === "undefined") {
-        return null;
-      }
-
-      return iccId;
-    },
-
-    /**
-     * Acquire the MMS network connection.
-     *
-     * @param callback
-     *        Callback function when either the connection setup is done,
-     *        timeout, or failed. Parameters are:
-     *        - A boolean value indicates whether the connection is ready.
-     *        - Acquire connection status: _HTTP_STATUS_ACQUIRE_*.
-     *
-     * @return true if the callback for MMS network connection is done; false
-     *         otherwise.
-     */
-    acquire: function acquire(callback) {
-      this.refCount++;
-      this.connectTimer.cancel();
-      this.disconnectTimer.cancel();
-
-      // If the MMS network is not yet connected, buffer the
-      // MMS request and try to setup the MMS network first.
-      if (!this.connected) {
-        this.pendingCallbacks.push(callback);
-
-        let errorStatus;
-        if (this.radioDisabled) {
-          if (DEBUG) debug("Error! Radio is disabled when sending MMS.");
-          errorStatus = _HTTP_STATUS_RADIO_DISABLED;
-        } else if (this.radioInterface.rilContext.cardState != "ready") {
-          if (DEBUG) debug("Error! SIM card is not ready when sending MMS.");
-          errorStatus = _HTTP_STATUS_NO_SIM_CARD;
-        }
-        if (errorStatus != null) {
-          this.flushPendingCallbacks(errorStatus);
-          return true;
-        }
-
-        if (DEBUG) debug("acquire: buffer the MMS request and setup the MMS data call.");
-        this.radioInterface.setupDataCallByType("mms");
-
-        // Set a timer to clear the buffered MMS requests if the
-        // MMS network fails to be connected within a time period.
-        this.connectTimer.
-          initWithCallback(this.flushPendingCallbacks.bind(this, _HTTP_STATUS_ACQUIRE_TIMEOUT),
-                           TIME_TO_BUFFER_MMS_REQUESTS,
-                           Ci.nsITimer.TYPE_ONE_SHOT);
-        return false;
-      }
-
-      callback(true, _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS);
-      return true;
-    },
-
-    /**
-     * Release the MMS network connection.
-     */
-    release: function release() {
-      this.refCount--;
-      if (this.refCount <= 0) {
-        this.refCount = 0;
-
-        // The waiting is too small, just skip the timer creation.
-        if (PREF_TIME_TO_RELEASE_MMS_CONNECTION < 1000) {
-          this.onDisconnectTimerTimeout();
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case kNetworkInterfaceStateChangedTopic: {
+        // The network for MMS connection must be nsIRilNetworkInterface.
+        if (!(subject instanceof Ci.nsIRilNetworkInterface)) {
           return;
         }
 
-        // Set a timer to delay the release of MMS network connection,
-        // since the MMS requests often come consecutively in a short time.
-        this.disconnectTimer.
-          initWithCallback(this.onDisconnectTimerTimeout.bind(this),
-                           PREF_TIME_TO_RELEASE_MMS_CONNECTION,
-                           Ci.nsITimer.TYPE_ONE_SHOT);
+        // Check if the network state change belongs to this service.
+        let network = subject.QueryInterface(Ci.nsIRilNetworkInterface);
+        if (network.serviceId != this.serviceId) {
+          return;
+        }
+
+        this.connected =
+          this.radioInterface.getDataCallStateByType("mms") ==
+            Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+
+        if (!this.connected) {
+          return;
+        }
+
+        // Set up the MMS APN setting based on the network, which is going to
+        // be used for the HTTP requests later.
+        this.setApnSetting(network);
+
+        if (DEBUG) debug("Got the MMS network connected! Resend the buffered " +
+                         "MMS requests: number: " + this.pendingCallbacks.length);
+        this.connectTimer.cancel();
+        this.flushPendingCallbacks(_HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS)
+        break;
       }
-    },
-
-    shutdown: function shutdown() {
-      Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      Services.obs.removeObserver(this, kNetworkInterfaceStateChangedTopic);
-
-      this.connectTimer.cancel();
-      this.flushPendingCallbacks(_HTTP_STATUS_RADIO_DISABLED);
-      this.disconnectTimer.cancel();
-      this.onDisconnectTimerTimeout();
-    },
-
-    // nsIObserver
-
-    observe: function observe(subject, topic, data) {
-      switch (topic) {
-        case kNetworkInterfaceStateChangedTopic: {
-          // The network for MMS connection must be nsIRilNetworkInterface.
-          if (!(subject instanceof Ci.nsIRilNetworkInterface)) {
-            return;
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
+        if (data == kPrefRilRadioDisabled) {
+          try {
+            this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
+          } catch (e) {
+            if (DEBUG) debug("Updating preference 'ril.radio.disabled' fails.");
+            this.radioDisabled = false;
           }
-
-          // Check if the network state change belongs to this service.
-          let network = subject.QueryInterface(Ci.nsIRilNetworkInterface);
-          if (network.serviceId != this.serviceId) {
-            return;
-          }
-
-          this.connected =
-            this.radioInterface.getDataCallStateByType("mms") ==
-              Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
-
-          if (!this.connected) {
-            return;
-          }
-
-          // Set up the MMS APN setting based on the network, which is going to
-          // be used for the HTTP requests later.
-          this.setApnSetting(network);
-
-          if (DEBUG) debug("Got the MMS network connected! Resend the buffered " +
-                           "MMS requests: number: " + this.pendingCallbacks.length);
-          this.connectTimer.cancel();
-          this.flushPendingCallbacks(_HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS)
-          break;
+          return;
         }
-        case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
-          if (data == kPrefRilRadioDisabled) {
-            try {
-              this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
-            } catch (e) {
-              if (DEBUG) debug("Updating preference 'ril.radio.disabled' fails.");
-              this.radioDisabled = false;
-            }
-            return;
-          }
-          break;
-        }
-        case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
-          this.shutdown();
-        }
+        break;
+      }
+      case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
+        this.shutdown();
       }
     }
+  }
 };
 
 XPCOMUtils.defineLazyGetter(this, "gMmsConnections", function () {
