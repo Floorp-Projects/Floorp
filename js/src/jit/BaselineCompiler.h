@@ -188,6 +188,13 @@ class BaselineCompiler : public BaselineCompilerSpecific
         return &labels_[pc - script->code];
     }
 
+    // If a script has more |nslots| than this, then emit code to do an
+    // early stack check.
+    static const unsigned EARLY_STACK_CHECK_SLOT_COUNT = 128;
+    bool needsEarlyStackCheck() const {
+        return script->nslots > EARLY_STACK_CHECK_SLOT_COUNT;
+    }
+
   public:
     BaselineCompiler(JSContext *cx, HandleScript script);
     bool init();
@@ -210,7 +217,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
         return emitIC(stub, false);
     }
 
-    bool emitStackCheck();
+    bool emitStackCheck(bool earlyCheck=false);
     bool emitInterruptCheck();
     bool emitUseCountIncrement();
     bool emitArgumentTypeChecks();

@@ -20,8 +20,15 @@ TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
 MODULE = 'js'
 
+mfbt_root = '../../mfbt'
+LOCAL_INCLUDES += ['%s/double-conversion' % mfbt_root]
+
 if CONFIG['JS_STANDALONE']:
     LIBRARY_NAME = 'mozjs-%s' % CONFIG['MOZILLA_SYMBOLVERSION']
+
+    # When building standalone, we need to include mfbt sources, and to declare
+    # "exported" mfbt symbols on its behalf when we use its headers.
+    include('%s/common.mozbuild' % mfbt_root)
 else:
     LIBRARY_NAME = 'mozjs'
 
@@ -360,6 +367,10 @@ MSVC_ENABLE_PGO = True
 HOST_SOURCES += [
     'jskwgen.cpp',
     'jsoplengen.cpp',
+]
+
+HOST_SIMPLE_PROGRAMS += [
+    'host_%s' % f.replace('.cpp', '') for f in HOST_SOURCES
 ]
 
 FORCE_STATIC_LIB = True
