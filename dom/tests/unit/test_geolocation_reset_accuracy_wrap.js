@@ -32,6 +32,7 @@ var provider = {
     this._isHigh = enable;
     if (enable) {
       this._seenHigh = true;
+      do_send_remote_message('high_acc_enabled');
     }
   },
   _isHigh: false,
