@@ -3324,8 +3324,6 @@ RILNetworkInterface.prototype = {
   NETWORK_STATE_DISCONNECTING: Ci.nsINetworkInterface.DISCONNECTING,
   NETWORK_STATE_DISCONNECTED:  Ci.nsINetworkInterface.DISCONNECTED,
 
-  state: Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
-
   NETWORK_TYPE_WIFI:        Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,
   NETWORK_TYPE_MOBILE:      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
   NETWORK_TYPE_MOBILE_MMS:  Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS,
@@ -3345,6 +3343,12 @@ RILNetworkInterface.prototype = {
 
   // Event timer for connection retries
   timer: null,
+
+  /**
+   * nsINetworkInterface Implementation
+   */
+
+  state: Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN,
 
   get type() {
     if (this.connectedTypes.indexOf("default") != -1) {
@@ -3379,6 +3383,10 @@ RILNetworkInterface.prototype = {
     return this.apnSetting.port || '';
   },
 
+  /**
+   * nsIRilNetworkInterface Implementation
+   */
+
   get serviceId() {
     return this.radioInterface.clientId;
   },
@@ -3386,6 +3394,60 @@ RILNetworkInterface.prototype = {
   get iccId() {
     let iccInfo = this.radioInterface.rilContext.iccInfo;
     return iccInfo && iccInfo.iccid;
+  },
+
+  get mmsc() {
+    if (!this.inConnectedTypes("mms")) {
+      if (DEBUG) this.debug("Error! Only MMS network can get MMSC.");
+      throw Cr.NS_ERROR_UNEXPECTED;
+    }
+
+    let mmsc = this.apnSetting.mmsc;
+    if (!mmsc) {
+      try {
+        mmsc = Services.prefs.getCharPref("ril.mms.mmsc");
+      } catch (e) {
+        mmsc = "";
+      }
+    }
+
+    return mmsc;
+  },
+
+  get mmsProxy() {
+    if (!this.inConnectedTypes("mms")) {
+      if (DEBUG) this.debug("Error! Only MMS network can get MMS proxy.");
+      throw Cr.NS_ERROR_UNEXPECTED;
+    }
+
+    let proxy = this.apnSetting.mmsproxy;
+    if (!proxy) {
+      try {
+        proxy = Services.prefs.getCharPref("ril.mms.mmsproxy");
+      } catch (e) {
+        proxy = "";
+      }
+    }
+
+    return proxy;
+  },
+
+  get mmsPort() {
+    if (!this.inConnectedTypes("mms")) {
+      if (DEBUG) this.debug("Error! Only MMS network can get MMS port.");
+      throw Cr.NS_ERROR_UNEXPECTED;
+    }
+
+    let port = this.apnSetting.mmsport;
+    if (!port) {
+      try {
+        port = Services.prefs.getIntPref("ril.mms.mmsport");
+      } catch (e) {
+        port = -1;
+      }
+    }
+
+    return port;
   },
 
   debug: function debug(s) {
