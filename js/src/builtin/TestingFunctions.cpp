@@ -773,13 +773,9 @@ OOMAfterAllocations(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    int32_t count;
-    if (!JS_ValueToInt32(cx, args[0], &count))
+    uint32_t count;
+    if (!JS::ToUint32(cx, args[0], &count))
         return false;
-    if (count <= 0) {
-        JS_ReportError(cx, "count argument must be positive");
-        return false;
-    }
 
     OOM_maxAllocations = OOM_counter + count;
     return true;
