@@ -388,6 +388,13 @@ MmsMessage::GetThreadId(uint64_t* aThreadId)
 }
 
 NS_IMETHODIMP
+MmsMessage::GetIccId(nsAString& aIccId)
+{
+  // TODO
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 MmsMessage::GetDelivery(nsAString& aDelivery)
 {
   switch (mDelivery) {
