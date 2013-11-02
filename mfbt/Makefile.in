@@ -3,16 +3,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 STL_FLAGS =
-
-# exported_headers.mk defines the headers exported by mfbt.  It is included by
-# mfbt itself and by the JS engine, which, when built standalone, must do the
-# work to install mfbt's exported headers itself.
-include $(srcdir)/exported_headers.mk
-
-# sources.mk defines the source files built for mfbt. It is included by mfbt
-# itself and by the JS engine, which, when built standalone, must do the work
-# to build mfbt sources itself.
-MFBT_ROOT = $(srcdir)
-include $(MFBT_ROOT)/sources.mk
-
-DEFINES += -DIMPL_MFBT

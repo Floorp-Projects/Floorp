@@ -186,7 +186,7 @@ interface nsIAccessiblePivotObserver : nsISupports
                       in PivotMoveReason aReason);
 };
 
-[scriptable, uuid(366fe92b-44c9-4769-ae40-7c2a075d3b16)]
+[scriptable, uuid(4d9c4352-20f5-4c54-9580-0c77bb6b1115)]
 interface nsIAccessibleTraversalRule : nsISupports
 {
   /* Ignore this accessible object */
@@ -201,6 +201,7 @@ interface nsIAccessibleTraversalRule : nsISupports
   const unsigned long PREFILTER_OFFSCREEN     = 0x00000002;
   const unsigned long PREFILTER_NOT_FOCUSABLE = 0x00000004;
   const unsigned long PREFILTER_ARIA_HIDDEN   = 0x00000008;
+  const unsigned long PREFILTER_TRANSPARENT   = 0x00000010;
 
   /**
    * Pre-filter bitfield to filter out obviously ignorable nodes and lighten

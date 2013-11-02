@@ -345,8 +345,6 @@ else
 VPX_OIE_FORMAT := gas
 endif
 
-HOST_PROGRAM = host_obj_int_extract$(HOST_BIN_SUFFIX)
-
 CSRCS += asm_com_offsets.c
 
 GARBAGE += asm_com_offsets.$(OBJ_SUFFIX) asm_com_offsets.asm
@@ -407,7 +405,7 @@ ifdef VPX_NEED_OBJ_INT_EXTRACT
 
 # only for MSVC
 ifdef _MSC_VER
-asm_com_offsets.$(OBJ_SUFFIX): CFLAGS += -GL-
+NO_PROFILE_GUIDED_OPTIMIZE := asm_com_offsets.c
 endif
 
 asm_com_offsets.asm: asm_com_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
@@ -421,7 +419,7 @@ OBJS := $(filter-out asm_com_offsets.$(OBJ_SUFFIX),$(OBJS))
 ifdef MOZ_VP8_ENCODER
 
 ifdef _MSC_VER
-asm_enc_offsets.$(OBJ_SUFFIX): CFLAGS += -GL-
+NO_PROFILE_GUIDED_OPTIMIZE += asm_enc_offsets.c
 endif
 
 asm_enc_offsets.asm: asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)

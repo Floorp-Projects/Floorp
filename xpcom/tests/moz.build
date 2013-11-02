@@ -23,7 +23,7 @@ EXPORTS.testing += [
     'TestHarness.h',
 ]
 
-sources = [
+SIMPLE_PROGRAMS = [
     'nsIFileEnumerator',
     'TestArguments',
     'TestBlockingProcess',
@@ -39,22 +39,17 @@ sources = [
 ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    sources += [
+    SIMPLE_PROGRAMS += [
         'TestBase64',
     ]
 
 if CONFIG['WRAP_STL_INCLUDES']:
-    sources += [
+    SIMPLE_PROGRAMS += [
         'TestSTLWrappers',
     ]
 
 SOURCES += [
-    '%s.cpp' % s for s in sorted(sources)
-]
-
-bin_suffix = CONFIG['BIN_SUFFIX']
-SIMPLE_PROGRAMS += [
-    '%s%s' % (s, bin_suffix) for s in sorted(sources)
+    '%s.cpp' % s for s in sorted(SIMPLE_PROGRAMS)
 ]
 
 MODULE = 'xpcom'

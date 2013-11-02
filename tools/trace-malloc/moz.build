@@ -27,10 +27,7 @@ SOURCES += [
     'tmreader.c',
 ]
 
-SIMPLE_PROGRAMS += [
-    '%s%s' % (s, bin_suffix) for s in simple_c_sources
-]
-
+SIMPLE_PROGRAMS += simple_c_sources
 
 simple_cpp_sources = [
     'bloatblame',
@@ -41,7 +38,4 @@ SOURCES += [
     '%s.cpp' % s for s in simple_cpp_sources
 ]
 
-SIMPLE_PROGRAMS += [
-    '%s%s' % (s, bin_suffix) for s in simple_cpp_sources
-]
-
+SIMPLE_PROGRAMS += simple_cpp_sources

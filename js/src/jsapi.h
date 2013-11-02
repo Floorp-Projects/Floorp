@@ -1108,13 +1108,6 @@ extern JS_PUBLIC_API(uint32_t)
 JS_DoubleToUint32(double d);
 
 /*
- * Convert a value to a number, then to an int32_t, according to the ECMA rules
- * for ToInt32.
- */
-extern JS_PUBLIC_API(bool)
-JS_ValueToECMAInt32(JSContext *cx, jsval v, int32_t *ip);
-
-/*
  * Convert a value to a number, then to an int64_t, according to the WebIDL
  * rules for ToInt64: http://dev.w3.org/2006/webapi/WebIDL/#es-long-long
  */
@@ -1222,13 +1215,6 @@ ToUint64(JSContext *cx, JS::Handle<JS::Value> v, uint64_t *out)
 
 
 } /* namespace JS */
-
-/*
- * Convert a value to a number, then to a uint32_t, according to the ECMA rules
- * for ToUint32.
- */
-extern JS_PUBLIC_API(bool)
-JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32_t *ip);
 
 /*
  * Convert a value to a number, then to an int32_t if it fits by rounding to
