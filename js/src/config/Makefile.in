@@ -3,10 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifneq (WINNT,$(HOST_OS_ARCH))
-HOST_PROGRAM	= nsinstall_real$(HOST_BIN_SUFFIX)
-endif
-
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the Perl scripts.
 ifdef NSBUILDROOT

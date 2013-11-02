@@ -132,6 +132,11 @@
             'trace_win.h',
           ],
         }],
+        ['enable_lazy_trace_alloc==0', {
+          'defines': [
+            'WEBRTC_LAZY_TRACE_ALLOC',
+	  ],
+	}],
         ['OS=="android" or moz_widget_toolkit_gonk==1', {
           'defines': [
             'WEBRTC_THREAD_RR',

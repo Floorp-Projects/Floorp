@@ -21,6 +21,8 @@
     'use_system_libvpx': 0,
     'build_libjpeg': 0,
     'build_libvpx': 0,
+    # saves 4MB when webrtc_trace is off
+    'enable_lazy_trace_alloc': 1,
 
     # turn off mandatory use of NEON and instead use NEON detection
     'arm_neon': 0,

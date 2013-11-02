@@ -254,7 +254,7 @@ var MetroDownloadsView = {
                                .replace("#1", this._downloadCount)
     } else {
       let runButtonText =
-        Strings.browser.GetStringFromName("downloadRun");
+        Strings.browser.GetStringFromName("downloadOpen");
       message = Strings.browser.formatStringFromName("alertDownloadsDone2",
         [this._lastDownload.displayName], 1);
 
@@ -299,7 +299,7 @@ var MetroDownloadsView = {
     } else {
       title = Strings.browser.formatStringFromName("alertDownloadsDone",
         [this._lastDownload.displayName], 1);
-      msg = Strings.browser.GetStringFromName("downloadRunNow");
+      msg = Strings.browser.GetStringFromName("downloadOpenNow");
       observer = {
         observe: function (aSubject, aTopic, aData) {
           switch (aTopic) {

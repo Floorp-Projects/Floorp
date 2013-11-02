@@ -68,7 +68,7 @@ HelperAppLauncherDialog.prototype = {
     let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
     let runButtonText =
-              browserBundle.GetStringFromName("downloadRun");
+              browserBundle.GetStringFromName("downloadOpen");
     let saveButtonText =
               browserBundle.GetStringFromName("downloadSave");
     let cancelButtonText =
@@ -105,7 +105,7 @@ HelperAppLauncherDialog.prototype = {
     let document = notificationBox.ownerDocument;
     downloadSize = this._getDownloadSize(aLauncher.contentLength);
 
-    let msg = browserBundle.GetStringFromName("alertDownloadSave");
+    let msg = browserBundle.GetStringFromName("alertDownloadSave2");
 
     let fragment =  ContentUtil.populateFragmentFromString(
                       document.createDocumentFragment(),

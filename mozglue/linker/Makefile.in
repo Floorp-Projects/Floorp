@@ -4,8 +4,6 @@
 
 STL_FLAGS =
 
-HOST_PROGRAM = szip
-
 HOST_LIBS = -lz
 
 DEFINES += -DIMPL_MFBT

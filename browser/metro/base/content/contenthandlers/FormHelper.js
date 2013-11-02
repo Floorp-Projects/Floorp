@@ -35,14 +35,12 @@ function FormAssistant() {
    * a key is entered on device
    */
   addEventListener("text", this, false);
-  addEventListener("keypress", this, true);
-  addEventListener("keyup", this, false);
   addEventListener("focus", this, true);
   addEventListener("blur", this, true);
   addEventListener("pageshow", this, false);
   addEventListener("pagehide", this, false);
   addEventListener("submit", this, false);
-};
+}
 
 FormAssistant.prototype = {
   _els: Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService),
@@ -103,8 +101,8 @@ FormAssistant.prototype = {
         return false;
       }
       // Don't fire mouse events on selects; see bug 685197.
-      aEvent.preventDefault()
-      aEvent.stopPropagation()
+      aEvent.preventDefault();
+      aEvent.stopPropagation();
     }
 
     // The form assistant will close if a click happen:
@@ -128,6 +126,11 @@ FormAssistant.prototype = {
     if (!this._isSelectElement(aElement) &&
         !this._isAutocomplete(aElement)) {
       return this.close();
+    }
+
+    // Don't re-open when navigating to avoid repopulating list when changing selection.
+    if (this._isAutocomplete(aElement) && this._open && this._isNavigationKey(aEvent)) {
+      return false;
     }
 
     // Enable the assistant
@@ -167,6 +170,7 @@ FormAssistant.prototype = {
       case "FormAssist:ChoiceChange": {
         // ChoiceChange could happened once we have move to another element or
         // to nothing, so we should keep the used wrapper in mind.
+        this._selectWrapper = getWrapperForElement(currentElement);
         this._selectWrapper.fireOnChange();
 
         // New elements can be shown when a select is updated so we need to
@@ -286,21 +290,23 @@ FormAssistant.prototype = {
           this._sendJsonMsgWrapper("FormAssist:AutoComplete");
         }
         break;
-
-      case "keyup":
-        // There is no need to handle keys if there is not element currently
-        // used by the form assistant
-        if (!currentElement)
-          return;
-
-        if (this._isAutocomplete(aEvent.target)) {
-          this._sendJsonMsgWrapper("FormAssist:AutoComplete");
-        }
-
-        let caretRect = this._getCaretRect();
-        if (!caretRect.isEmpty())
-          sendAsyncMessage("FormAssist:Update", { caretRect: caretRect });
     }
+  },
+
+  _isNavigationKey: function (aEvent) {
+    // Ignore navigation keys
+    if (aEvent.keyCode) {
+      let navigationKeys = [
+        aEvent.DOM_VK_DOWN,
+        aEvent.DOM_VK_UP,
+        aEvent.DOM_VK_LEFT,
+        aEvent.DOM_VK_RIGHT,
+        aEvent.DOM_VK_PAGE_UP,
+        aEvent.DOM_VK_PAGE_DOWN];
+
+      return navigationKeys.indexOf(aEvent.keyCode) != -1;
+    }
+    return false;
   },
 
   _executeDelayed: function formHelperExecuteSoon(aCallback) {
@@ -640,7 +646,7 @@ function getListForElement(aElement) {
   }
 
   return result;
-};
+}
 
 
 function SelectWrapper(aControl) {

@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE = 'omxplugingb'
-NO_DIST_INSTALL = True
 
 SOURCES += [
     'OmxPlugin236.cpp',

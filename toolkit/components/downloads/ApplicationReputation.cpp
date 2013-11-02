@@ -199,12 +199,6 @@ PendingLookup::SendRemoteQuery() {
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // See bug 887044 for finalizing the user agent.
-  const nsCString userAgent = NS_LITERAL_CSTRING("CsdTesting/Mozilla");
-  rv = httpChannel->SetRequestHeader(
-    NS_LITERAL_CSTRING("User-Agent"), userAgent, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Upload the protobuf to the application reputation service.
   nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(channel, &rv);
   NS_ENSURE_SUCCESS(rv, rv);

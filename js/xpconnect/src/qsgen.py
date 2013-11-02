@@ -385,7 +385,7 @@ def substitute(template, vals):
 argumentUnboxingTemplates = {
     'octet':
         "    uint32_t ${name}_u32;\n"
-        "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
+        "    if (!JS::ToUint32(cx, ${argVal}, &${name}_u32))\n"
         "        return false;\n"
         "    uint8_t ${name} = (uint8_t) ${name}_u32;\n",
 
@@ -397,7 +397,7 @@ argumentUnboxingTemplates = {
 
     'unsigned short':
         "    uint32_t ${name}_u32;\n"
-        "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}_u32))\n"
+        "    if (!JS::ToUint32(cx, ${argVal}, &${name}_u32))\n"
         "        return false;\n"
         "    uint16_t ${name} = (uint16_t) ${name}_u32;\n",
 
@@ -408,7 +408,7 @@ argumentUnboxingTemplates = {
 
     'unsigned long':
         "    uint32_t ${name};\n"
-        "    if (!JS_ValueToECMAUint32(cx, ${argVal}, &${name}))\n"
+        "    if (!JS::ToUint32(cx, ${argVal}, &${name}))\n"
         "        return false;\n",
 
     'long long':

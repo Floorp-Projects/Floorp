@@ -4305,7 +4305,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
             return false;
         if (!v.isUndefined()) {
             uint32_t lineno;
-            if (!JS_ValueToECMAUint32(cx, v, &lineno))
+            if (!ToUint32(cx, v, &lineno))
                 return false;
             lineNumber = lineno;
         }

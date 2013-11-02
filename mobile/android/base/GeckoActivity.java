@@ -93,8 +93,4 @@ public class GeckoActivity extends FragmentActivity implements GeckoActivityStat
         MemoryMonitor.getInstance().onTrimMemory(level);
         super.onTrimMemory(level);
     }
-
-    public LightweightTheme getLightweightTheme() {
-        return ((GeckoApplication) getApplication()).getLightweightTheme();
-    }
 }

@@ -169,6 +169,9 @@ void
 SelectionManager::ProcessSelectionChanged(nsISelection* aSelection)
 {
   Selection* selection = static_cast<Selection*>(aSelection);
+  if (!selection->GetPresShell())
+    return;
+
   const nsRange* range = selection->GetAnchorFocusRange();
   nsINode* cntrNode = nullptr;
   if (range)

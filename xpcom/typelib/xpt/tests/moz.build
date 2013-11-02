@@ -6,16 +6,11 @@
 
 MODULE = 'xpcom'
 
-sources = [
+SIMPLE_PROGRAMS = [
     'PrimitiveTest',
     'SimpleTypeLib',
 ]
 
 SOURCES += [
-    '%s.c' % s for s in sources
-]
-
-bin_suffix = CONFIG['BIN_SUFFIX']
-SIMPLE_PROGRAMS += [
-    '%s%s' % (s, bin_suffix) for s in sources
+    '%s.c' % s for s in SIMPLE_PROGRAMS
 ]
