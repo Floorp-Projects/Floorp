@@ -81,7 +81,35 @@ void ArcToBezier(T* aSink, const Point &aOrigin, float aRadius, float aStartAngl
   }
 }
 
-}
-}
+/**
+ * Appends a path represending a rounded rectangle to the path being built by
+ * aPathBuilder.
+ *
+ * aRect           The rectangle to append.
+ * aCornerRadii    Contains the radii of the top-left, top-right, bottom-right
+ *                 and bottom-left corners, in that order.
+ * aDrawClockwise  If set to true, the path will start at the left of the top
+ *                 left edge and draw clockwise. If set to false the path will
+ *                 start at the right of the top left edge and draw counter-
+ *                 clockwise.
+ */
+GFX2D_API void AppendRoundedRectToPath(PathBuilder* aPathBuilder,
+                                       const Rect& aRect,
+                                       const Size(& aCornerRadii)[4],
+                                       bool aDrawClockwise = true);
+
+/**
+ * Appends a path represending an ellipse to the path being built by
+ * aPathBuilder.
+ *
+ * The ellipse extends aDimensions.width / 2.0 in the horizontal direction
+ * from aCenter, and aDimensions.height / 2.0 in the vertical direction.
+ */
+GFX2D_API void AppendEllipseToPath(PathBuilder* aPathBuilder,
+                                   const Point& aCenter,
+                                   const Size& aDimensions);
+
+} // namespace gfx
+} // namespace mozilla
 
 #endif /* MOZILLA_GFX_PATHHELPERS_H_ */

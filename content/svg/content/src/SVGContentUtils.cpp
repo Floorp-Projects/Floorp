@@ -565,3 +565,25 @@ SVGContentUtils::ParseInteger(const nsAString& aString,
                            int64_t(std::numeric_limits<int32_t>::max())));
   return true;
 }
+
+float
+SVGContentUtils::CoordToFloat(nsPresContext *aPresContext,
+                              nsSVGElement *aContent,
+                              const nsStyleCoord &aCoord)
+{
+  switch (aCoord.GetUnit()) {
+  case eStyleUnit_Factor:
+    // user units
+    return aCoord.GetFactorValue();
+
+  case eStyleUnit_Coord:
+    return nsPresContext::AppUnitsToFloatCSSPixels(aCoord.GetCoordValue());
+
+  case eStyleUnit_Percent: {
+    SVGSVGElement* ctx = aContent->GetCtx();
+    return ctx ? aCoord.GetPercentValue() * ctx->GetLength(SVGContentUtils::XY) : 0.0f;
+  }
+  default:
+    return 0.0f;
+  }
+}

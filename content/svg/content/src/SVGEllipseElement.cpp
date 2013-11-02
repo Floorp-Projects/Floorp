@@ -5,9 +5,13 @@
 
 #include "mozilla/dom/SVGEllipseElement.h"
 #include "mozilla/dom/SVGEllipseElementBinding.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PathHelpers.h"
 #include "gfxContext.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Ellipse)
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -98,6 +102,21 @@ SVGEllipseElement::ConstructPath(gfxContext *aCtx)
   if (rx > 0.0f && ry > 0.0f) {
     aCtx->Ellipse(gfxPoint(x, y), gfxSize(2.0*rx, 2.0*ry));
   }
+}
+
+TemporaryRef<Path>
+SVGEllipseElement::BuildPath()
+{
+  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+
+  float x, y, rx, ry;
+  GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
+
+  if (rx > 0.0f && ry > 0.0f) {
+    AppendEllipseToPath(pathBuilder, Point(x, y), Size(2.0*rx, 2.0*ry));
+  }
+
+  return pathBuilder->Finish();
 }
 
 } // namespace dom

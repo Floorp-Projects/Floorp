@@ -61,6 +61,7 @@
 #include "DOMStorageObserver.h"
 #include "CacheObserver.h"
 #include "DisplayItemClip.h"
+#include "ActiveLayerTracker.h"
 
 #include "AudioChannelService.h"
 
@@ -311,7 +312,7 @@ nsLayoutStatics::Shutdown()
   nsFrame::DisplayReflowShutdown();
 #endif
   nsCellMap::Shutdown();
-  nsFrame::ShutdownLayerActivityTimer();
+  ActiveLayerTracker::Shutdown();
 
   // Release all of our atoms
   nsColorNames::ReleaseTable();

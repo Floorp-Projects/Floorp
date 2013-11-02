@@ -506,7 +506,7 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
     return NS_ERROR_FAILURE;
   }
 
-  static_cast<mozilla::SourceMediaStream*>(stream->GetStream())->SetPullEnabled(true);
+  static_cast<SourceMediaStream*>(stream->GetStream())->SetPullEnabled(true);
 
   nsRefPtr<RemoteSourceStreamInfo> remote;
   remote = new RemoteSourceStreamInfo(stream.forget(), mMedia);
@@ -756,7 +756,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   return NS_OK;
 }
 
-mozilla::RefPtr<DtlsIdentity> const
+RefPtr<DtlsIdentity> const
 PeerConnectionImpl::GetIdentity() {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   return mIdentity;
@@ -822,7 +822,7 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aNumstreams)
     // and we increase the number of streams dynamically as needed.
     return NS_OK;
   }
-  mDataConnection = new mozilla::DataChannelConnection(this);
+  mDataConnection = new DataChannelConnection(this);
   if (!mDataConnection->Init(5000, aNumstreams, true)) {
     CSFLogError(logTag,"%s DataConnection Init Failed",__FUNCTION__);
     return NS_ERROR_FAILURE;
@@ -897,9 +897,9 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
   MOZ_ASSERT(aRetval);
 
 #ifdef MOZILLA_INTERNAL_API
-  nsRefPtr<mozilla::DataChannel> dataChannel;
-  mozilla::DataChannelConnection::Type theType =
-    static_cast<mozilla::DataChannelConnection::Type>(aType);
+  nsRefPtr<DataChannel> dataChannel;
+  DataChannelConnection::Type theType =
+    static_cast<DataChannelConnection::Type>(aType);
 
   nsresult rv = EnsureDataConnection(WEBRTC_DATACHANNEL_STREAMS_DEFAULT);
   if (NS_FAILED(rv)) {
@@ -908,8 +908,8 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
   dataChannel = mDataConnection->Open(
     NS_ConvertUTF16toUTF8(aLabel), NS_ConvertUTF16toUTF8(aProtocol), theType,
     !outOfOrderAllowed,
-    aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_REXMIT ? aMaxNum :
-    (aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_TIMED ? aMaxTime : 0),
+    aType == DataChannelConnection::PARTIAL_RELIABLE_REXMIT ? aMaxNum :
+    (aType == DataChannelConnection::PARTIAL_RELIABLE_TIMED ? aMaxTime : 0),
     nullptr, nullptr, aExternalNegotiated, aStream
   );
   NS_ENSURE_TRUE(dataChannel,NS_ERROR_FAILURE);
@@ -987,7 +987,7 @@ static void NotifyDataChannel_m(nsRefPtr<nsIDOMDataChannel> aChannel,
 #endif
 
 void
-PeerConnectionImpl::NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aChannel)
+PeerConnectionImpl::NotifyDataChannel(already_AddRefed<DataChannel> aChannel)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aChannel.get());
@@ -1110,7 +1110,8 @@ PeerConnectionImpl::GetTimeSinceEpoch(DOMHighResTimeStamp *result) {
 #endif
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetStats(mozilla::dom::MediaStreamTrack *aSelector) {
+PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector,
+                             bool internalStats) {
   PC_AUTO_ENTER_API_CALL(true);
 
 #ifdef MOZILLA_INTERNAL_API
@@ -1118,12 +1119,12 @@ PeerConnectionImpl::GetStats(mozilla::dom::MediaStreamTrack *aSelector) {
   DOMHighResTimeStamp now;
   nsresult rv = GetTimeSinceEpoch(&now);
   NS_ENSURE_SUCCESS(rv, rv);
-
   nsRefPtr<PeerConnectionImpl> pc(this);
   RUN_ON_THREAD(mSTSThread,
                 WrapRunnable(pc,
                              &PeerConnectionImpl::GetStats_s,
                              track,
+                             internalStats,
                              now),
                 NS_DISPATCH_NORMAL);
 #endif
@@ -1399,7 +1400,7 @@ PeerConnectionImpl::ShutdownMedia()
 #ifdef MOZILLA_INTERNAL_API
   // End of call to be recorded in Telemetry
   if (!mStartTime.IsNull()){
-    mozilla::TimeDuration timeDelta = mozilla::TimeStamp::Now() - mStartTime;
+    TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
     Telemetry::Accumulate(Telemetry::WEBRTC_CALL_DURATION, timeDelta.ToSeconds());
   }
 #endif
@@ -1626,6 +1627,7 @@ PeerConnectionImpl::IceStateChange_m(PCImplIceState aState)
 #ifdef MOZILLA_INTERNAL_API
 void PeerConnectionImpl::GetStats_s(
     uint32_t trackId,
+    bool internalStats,
     DOMHighResTimeStamp now) {
 
   nsresult result = NS_OK;
@@ -1633,6 +1635,70 @@ void PeerConnectionImpl::GetStats_s(
   if (!report) {
     result = NS_ERROR_FAILURE;
   }
+  if (mMedia) {
+    RefPtr<NrIceMediaStream> mediaStream(
+        mMedia->ice_media_stream(trackId));
+    if (mediaStream) {
+      std::vector<NrIceCandidatePair> candPairs;
+      mediaStream->GetCandidatePairs(&candPairs);
+      report->mIceCandidatePairStats.Construct();
+      report->mIceCandidateStats.Construct();
+      NS_ConvertASCIItoUTF16 componentId(mediaStream->name().c_str());
+      for (auto p = candPairs.begin(); p != candPairs.end(); ++p) {
+        NS_ConvertASCIItoUTF16 codeword(p->codeword.c_str());
+        const nsString localCodeword(
+            NS_ConvertASCIItoUTF16("local_") + codeword);
+        const nsString remoteCodeword(
+            NS_ConvertASCIItoUTF16("remote_") + codeword);
+        // Only expose candidate-pair statistics to chrome, until we've thought
+        // through the implications of exposing it to content.
+
+        if (internalStats) {
+          RTCIceCandidatePairStats s;
+          s.mId.Construct(codeword);
+          s.mComponentId.Construct(componentId);
+          s.mTimestamp.Construct(now);
+          s.mType.Construct(RTCStatsType::Candidatepair);
+
+          // Not quite right; we end up with duplicate candidates. Will fix.
+          s.mLocalCandidateId.Construct(localCodeword);
+          s.mRemoteCandidateId.Construct(remoteCodeword);
+          s.mNominated.Construct(p->nominated);
+          s.mMozPriority.Construct(p->priority);
+          s.mSelected.Construct(p->selected);
+          s.mState.Construct(RTCStatsIceCandidatePairState(p->state));
+          report->mIceCandidatePairStats.Value().AppendElement(s);
+        }
+
+        {
+          RTCIceCandidateStats local;
+          local.mId.Construct(localCodeword);
+          local.mTimestamp.Construct(now);
+          local.mType.Construct(RTCStatsType::Localcandidate);
+          local.mCandidateType.Construct(
+              RTCStatsIceCandidateType(p->local.type));
+          local.mIpAddress.Construct(
+              NS_ConvertASCIItoUTF16(p->local.host.c_str()));
+          local.mPortNumber.Construct(p->local.port);
+          report->mIceCandidateStats.Value().AppendElement(local);
+        }
+
+        {
+          RTCIceCandidateStats remote;
+          remote.mId.Construct(remoteCodeword);
+          remote.mTimestamp.Construct(now);
+          remote.mType.Construct(RTCStatsType::Remotecandidate);
+          remote.mCandidateType.Construct(
+              RTCStatsIceCandidateType(p->remote.type));
+          remote.mIpAddress.Construct(
+              NS_ConvertASCIItoUTF16(p->remote.host.c_str()));
+          remote.mPortNumber.Construct(p->remote.port);
+          report->mIceCandidateStats.Value().AppendElement(remote);
+        }
+      }
+    }
+  }
+
   nsRefPtr<PeerConnectionImpl> pc(this);
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pc,
@@ -1646,7 +1712,7 @@ void PeerConnectionImpl::GetStats_s(
 void PeerConnectionImpl::OnStatsReport_m(
     uint32_t trackId,
     nsresult result,
-    nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report) {
+    nsAutoPtr<RTCStatsReportInternal> report) {
   PeerConnectionObserver* pco = mPCObserver.MayGet();
   if (pco) {
     JSErrorResult rv;
@@ -1696,7 +1762,7 @@ PeerConnectionImpl::GetSdpParseErrors() {
 void
 PeerConnectionImpl::startCallTelem() {
   // Start time for calls
-  mStartTime = mozilla::TimeStamp::Now();
+  mStartTime = TimeStamp::Now();
 
   // Increment session call counter
 #ifdef MOZILLA_INTERNAL_API
@@ -1709,7 +1775,7 @@ PeerConnectionImpl::startCallTelem() {
 #endif
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetLocalStreams(nsTArray<nsRefPtr<mozilla::DOMMediaStream > >& result)
+PeerConnectionImpl::GetLocalStreams(nsTArray<nsRefPtr<DOMMediaStream > >& result)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 #ifdef MOZILLA_INTERNAL_API
@@ -1725,7 +1791,7 @@ PeerConnectionImpl::GetLocalStreams(nsTArray<nsRefPtr<mozilla::DOMMediaStream > 
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetRemoteStreams(nsTArray<nsRefPtr<mozilla::DOMMediaStream > >& result)
+PeerConnectionImpl::GetRemoteStreams(nsTArray<nsRefPtr<DOMMediaStream > >& result)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 #ifdef MOZILLA_INTERNAL_API
