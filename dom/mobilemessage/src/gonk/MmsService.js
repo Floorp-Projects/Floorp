@@ -247,6 +247,55 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
     },
 
     /**
+     * Get phone number from iccInfo.
+     *
+     * If the icc card is gsm card, the phone number is in msisdn.
+     * @see nsIDOMMozGsmIccInfo
+     *
+     * Otherwise, the phone number is in mdn.
+     * @see nsIDOMMozCdmaIccInfo
+     */
+    getPhoneNumber: function getPhoneNumber() {
+      let iccInfo = gRadioInterface.rilContext.iccInfo;
+
+      if (!iccInfo) {
+        return null;
+      }
+
+      let number = (iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)
+                 ? iccInfo.msisdn : iccInfo.mdn;
+
+      // Workaround an xpconnect issue with undefined string objects.
+      // See bug 808220
+      if (number === undefined || number === "undefined") {
+        return null;
+      }
+
+      return number;
+    },
+
+    /**
+    * A utility function to get the ICC ID of the SIM card (if installed).
+    */
+    getIccId: function getIccId() {
+      let iccInfo = gRadioInterface.rilContext.iccInfo;
+
+      if (!iccInfo || !(iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)) {
+        return null;
+      }
+
+      let iccId = iccInfo.iccid;
+
+      // Workaround an xpconnect issue with undefined string objects.
+      // See bug 808220
+      if (iccId === undefined || iccId === "undefined") {
+        return null;
+      }
+
+      return iccId;
+    },
+
+    /**
      * Acquire the MMS network connection.
      *
      * @param callback
@@ -1283,33 +1332,6 @@ MmsService.prototype = {
   },
 
   /**
-   * Get phone number from iccInfo.
-   *
-   * If the icc card is gsm card, the phone number is in msisdn.
-   * @see nsIDOMMozGsmIccInfo
-   *
-   * Otherwise, the phone number is in mdn.
-   * @see nsIDOMMozCdmaIccInfo
-   */
-  getPhoneNumber: function getPhoneNumber() {
-    let iccInfo = gRadioInterface.rilContext.iccInfo;
-
-    if (!iccInfo) {
-      return null;
-    }
-
-    let number = (iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)
-               ? iccInfo.msisdn : iccInfo.mdn;
-
-    // Workaround an xpconnect issue with undefined string objects.
-    // See bug 808220
-    if (number === undefined || number === "undefined") {
-      return null;
-    }
-    return number;
-  },
-
-  /**
    * Convert intermediate message to indexedDB savable object.
    *
    * @param retrievalMode
@@ -1354,7 +1376,8 @@ MmsService.prototype = {
       intermediate.sender = "anonymous";
     }
     intermediate.receivers = [];
-    intermediate.phoneNumber = this.getPhoneNumber();
+    intermediate.phoneNumber = gMmsConnection.getPhoneNumber();
+    intermediate.iccId = gMmsConnection.getIccId();
     return intermediate;
   },
 
@@ -1368,7 +1391,8 @@ MmsService.prototype = {
    *        The indexedDB savable MMS message, which is going to be
    *        merged with the extra retrieval confirmation.
    */
-  mergeRetrievalConfirmation: function mergeRetrievalConfirmation(intermediate, savable) {
+  mergeRetrievalConfirmation: function mergeRetrievalConfirmation(intermediate,
+                                                                  savable) {
     savable.timestamp = Date.now();
     if (intermediate.headers.from) {
       savable.sender = intermediate.headers.from.address;
@@ -1644,7 +1668,8 @@ MmsService.prototype = {
         retrievalMode = Services.prefs.getCharPref(kPrefRetrievalMode);
       } catch (e) {}
 
-      let savableMessage = this.convertIntermediateToSavable(notification, retrievalMode);
+      let savableMessage = this.convertIntermediateToSavable(notification,
+                                                             retrievalMode);
 
       gMobileMessageDatabaseService
         .saveReceivedMessage(savableMessage,
@@ -1845,7 +1870,8 @@ MmsService.prototype = {
     aMessage["type"] = "mms";
     aMessage["timestamp"] = Date.now();
     aMessage["receivers"] = receivers;
-    aMessage["sender"] = this.getPhoneNumber();
+    aMessage["sender"] = gMmsConnection.getPhoneNumber();
+    aMessage["iccId"] = gMmsConnection.getIccId();
     try {
       aMessage["deliveryStatusRequested"] =
         Services.prefs.getBoolPref("dom.mms.requestStatusReport");
