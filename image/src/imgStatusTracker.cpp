@@ -626,7 +626,6 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
 
   MOZ_ASSERT(!mIsMultipart || aOther->mIsMultipart, "mIsMultipart should be monotonic");
   diff.foundIsMultipart = !mIsMultipart && aOther->mIsMultipart;
-  MOZ_ASSERT(!mHadLastPart || aOther->mHadLastPart, "mHadLastPart should be monotonic");
   diff.foundLastPart = !mHadLastPart && aOther->mHadLastPart;
 
   diff.gotDecoded = !mHasBeenDecoded && aOther->mHasBeenDecoded;
