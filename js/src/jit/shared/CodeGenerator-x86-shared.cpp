@@ -234,9 +234,15 @@ CodeGeneratorX86Shared::visitNotD(LNotD *ins)
 {
     FloatRegister opd = ToFloatRegister(ins->input());
 
+    // Not returns true if the input is a NaN. We don't have to worry about
+    // it if we know the input is never NaN though.
+    Assembler::NaNCond nanCond = Assembler::NaN_IsTrue;
+    if (ins->mir()->operandIsNeverNaN())
+        nanCond = Assembler::NaN_HandledByCond;
+
     masm.xorpd(ScratchFloatReg, ScratchFloatReg);
     masm.compareDouble(Assembler::DoubleEqualOrUnordered, opd, ScratchFloatReg);
-    masm.emitSet(Assembler::Equal, ToRegister(ins->output()), Assembler::NaN_IsTrue);
+    masm.emitSet(Assembler::Equal, ToRegister(ins->output()), nanCond);
     return true;
 }
 
@@ -245,9 +251,15 @@ CodeGeneratorX86Shared::visitNotF(LNotF *ins)
 {
     FloatRegister opd = ToFloatRegister(ins->input());
 
+    // Not returns true if the input is a NaN. We don't have to worry about
+    // it if we know the input is never NaN though.
+    Assembler::NaNCond nanCond = Assembler::NaN_IsTrue;
+    if (ins->mir()->operandIsNeverNaN())
+        nanCond = Assembler::NaN_HandledByCond;
+
     masm.xorps(ScratchFloatReg, ScratchFloatReg);
     masm.compareFloat(Assembler::DoubleEqualOrUnordered, opd, ScratchFloatReg);
-    masm.emitSet(Assembler::Equal, ToRegister(ins->output()), Assembler::NaN_IsTrue);
+    masm.emitSet(Assembler::Equal, ToRegister(ins->output()), nanCond);
     return true;
 }
 
