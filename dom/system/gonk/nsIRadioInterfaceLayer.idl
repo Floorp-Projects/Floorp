@@ -125,10 +125,15 @@ interface nsIRadioInterface : nsISupports
               [optional] in nsIRilSendWorkerMessageCallback callback);
 };
 
-[scriptable, uuid(44b03951-1444-4c03-bd37-0bcb3a01b56f)]
+[scriptable, uuid(70d3a18c-4063-11e3-89de-0f9ec19fd803)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   readonly attribute unsigned long numRadioInterfaces;
 
-  nsIRadioInterface getRadioInterface(in long clientId);
+  nsIRadioInterface getRadioInterface(in unsigned long clientId);
+
+  /**
+   * If not available, throws exception; otherwise, a valid number.
+   */
+  unsigned long getClientIdByIccId(in DOMString iccId);
 };

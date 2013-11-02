@@ -581,6 +581,21 @@ RadioInterfaceLayer.prototype = {
 
   getRadioInterface: function getRadioInterface(clientId) {
     return this.radioInterfaces[clientId];
+  },
+
+  getClientIdByIccId: function getClientIdByIccId(iccId) {
+    if (!iccId) {
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    for (let clientId = 0; clientId < this.numRadioInterfaces; clientId++) {
+      let radioInterface = this.radioInterfaces[clientId];
+      if (radioInterface.rilContext.iccInfo.iccid == iccId) {
+        return clientId;
+      }
+    }
+
+    throw Cr.NS_ERROR_NOT_AVAILABLE;
   }
 };
 
@@ -1757,6 +1772,7 @@ RadioInterface.prototype = {
       sourcePort: message.header.originatorPort,
       destinationAddress: this.rilContext.iccInfo.msisdn,
       destinationPort: message.header.destinationPort,
+      serviceId: this.clientId
     };
     WAP.WapPushManager.receiveWdpPDU(message.fullData, message.fullData.length,
                                      0, options);
