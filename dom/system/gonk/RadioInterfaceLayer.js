@@ -1144,7 +1144,29 @@ RadioInterface.prototype = {
     if (number === undefined || number === "undefined") {
       return null;
     }
+
     return number;
+  },
+
+  /**
+   * A utility function to get the ICC ID of the SIM card (if installed).
+   */
+  getIccId: function getIccId() {
+    let iccInfo = this.rilContext.iccInfo;
+
+    if (!iccInfo || !(iccInfo instanceof GsmIccInfo)) {
+      return null;
+    }
+
+    let iccId = iccInfo.iccid;
+
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (iccId === undefined || iccId === "undefined") {
+      return null;
+    }
+
+    return iccId;
   },
 
   updateNetworkInfo: function updateNetworkInfo(message) {
@@ -1835,6 +1857,7 @@ RadioInterface.prototype = {
     message.receiver = this.getPhoneNumber();
     message.body = message.fullBody = message.fullBody || null;
     message.timestamp = Date.now();
+    message.iccId = this.getIccId();
 
     if (gSmsService.isSilentNumber(message.sender)) {
       message.id = -1;
@@ -1846,7 +1869,7 @@ RadioInterface.prototype = {
       let domMessage =
         gMobileMessageService.createSmsMessage(message.id,
                                                message.threadId,
-                                               null, // TODO
+                                               message.iccId,
                                                message.delivery,
                                                message.deliveryStatus,
                                                message.sender,
@@ -1912,7 +1935,7 @@ RadioInterface.prototype = {
       let domMessage =
         gMobileMessageService.createSmsMessage(message.id,
                                                message.threadId,
-                                               null, // TODO
+                                               message.iccId,
                                                message.delivery,
                                                message.deliveryStatus,
                                                message.sender,
@@ -3022,7 +3045,7 @@ RadioInterface.prototype = {
           context.request.notifyMessageSent(
             gMobileMessageService.createSmsMessage(sms.id,
                                                    sms.threadId,
-                                                   null, // TODO
+                                                   sms.iccId,
                                                    DOM_MOBILE_MESSAGE_DELIVERY_SENT,
                                                    sms.deliveryStatus,
                                                    sms.sender,
@@ -3065,7 +3088,8 @@ RadioInterface.prototype = {
       receiver: number,
       body: message,
       deliveryStatusRequested: options.requestStatusReport,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      iccId: this.getIccId()
     };
 
     if (silent) {
@@ -3074,7 +3098,7 @@ RadioInterface.prototype = {
       let domMessage =
         gMobileMessageService.createSmsMessage(-1, // id
                                                0,  // threadId
-                                               null, // TODO
+                                               sendingMessage.iccId,
                                                delivery,
                                                deliveryStatus,
                                                sendingMessage.sender,
