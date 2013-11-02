@@ -860,7 +860,8 @@ class ModuleChars
         uint32_t parseBeginOffset = parser.pc->maybeFunction->pn_pos.begin;
         const jschar *parseBegin = parser.tokenStream.rawBase() + parseBeginOffset;
         const jschar *parseLimit = parser.tokenStream.rawLimit();
-        if (parseLimit - parseBegin < length_)
+        JS_ASSERT(parseLimit >= parseBegin);
+        if (uint32_t(parseLimit - parseBegin) < length_)
             return false;
         if (!PodEqual(begin_, parseBegin, length_))
             return false;
