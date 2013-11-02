@@ -32,8 +32,6 @@ SDK_LIBRARY += ['fans.sdk', 'tans.sdk']
 
 SHARED_LIBRARY_LIBS += ['fans.sll', 'tans.sll']
 
-SIMPLE_PROGRAMS += ['fans.x', 'tans.x']
-
 SOURCES += ['fans.c', 'tans.c']
 
 SOURCES += ['fans.mm', 'tans.mm']

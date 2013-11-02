@@ -36,7 +36,9 @@ public abstract class DBProviderTestCase<T extends ContentProvider> extends
     return resolver;
   }
 
-  protected abstract String getCacheSuffix();
+  protected String getCacheSuffix() {
+    return this.getClass().getName() + "-" + System.currentTimeMillis();
+  }
 
   @Override
   protected void setUp() throws Exception {

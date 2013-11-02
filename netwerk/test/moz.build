@@ -16,7 +16,7 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
-sources = [
+SIMPLE_PROGRAMS = [
     'PropertiesTest',
     'ReadNTLM',
     'TestBlockingSocket',
@@ -36,7 +36,7 @@ sources = [
 ]
 
 # XXX Make this work in libxul builds.
-#sources += [
+#SIMPLE_PROGRAMS += [
 #    TestIDN',
 #    TestIOThreads',
 #    TestPerf',
@@ -48,12 +48,7 @@ sources = [
 #]
 
 SOURCES += [
-    '%s.cpp' % s for s in sources
-]
-
-bin_suffix = CONFIG['BIN_SUFFIX']
-SIMPLE_PROGRAMS += [
-    '%s%s' % (s, bin_suffix) for s in sources
+    '%s.cpp' % s for s in SIMPLE_PROGRAMS
 ]
 
 CPP_UNIT_TESTS += [

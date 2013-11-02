@@ -189,10 +189,6 @@ dialog.content-dialog {
   -moz-binding: none;
 }
 
-arrowbox {
-  -moz-binding: url("chrome://browser/content/bindings/arrowbox.xml#arrowbox");
-}
-
 /* Disable context menus in textboxes */
 .textbox-input-box,
 .textbox-input-box[spellcheck="true"] {

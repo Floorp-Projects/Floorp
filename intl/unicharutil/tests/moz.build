@@ -13,7 +13,6 @@ SOURCES += [
     'UnicharSelfTest.cpp',
 ]
 
-bin_suffix = CONFIG['BIN_SUFFIX']
 SIMPLE_PROGRAMS += [
-    "%s%s" % (fyl[0:-4], bin_suffix) for fyl in SOURCES
+    "%s" % (fyl[0:-4]) for fyl in SOURCES
 ]

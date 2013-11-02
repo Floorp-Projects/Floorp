@@ -8,7 +8,6 @@ let prefs = Components.classes["@mozilla.org/preferences-service;1"].
       getService(Components.interfaces.nsIPrefBranch);
 
 Cu.import("resource://gre/modules/PageThumbs.jsm");
-Cu.import("resource:///modules/colorUtils.jsm");
 
 function TopSitesView(aGrid, aMaxSites) {
   View.call(this, aGrid);

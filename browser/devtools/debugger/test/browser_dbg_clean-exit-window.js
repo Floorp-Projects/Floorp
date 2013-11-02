@@ -18,23 +18,21 @@ function test() {
       gDebugger = gPanel.panelWin;
       gWindow = aWindow;
 
-      return testCleanExit(gWindow);
+      return testCleanExit();
     })
     .then(null, aError => {
       ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
     });
 }
 
-function testCleanExit(aWindow) {
+function testCleanExit() {
   let deferred = promise.defer();
 
-  gWindow = aWindow;
   ok(!!gWindow, "Second window created.");
 
   gWindow.focus();
 
-  let topWindow = Services.wm.getMostRecentWindow("navigator:browser");
-  is(topWindow, gWindow,
+  is(Services.wm.getMostRecentWindow("navigator:browser"), gWindow,
     "The second window is on top.");
 
   let isActive = promise.defer();
@@ -67,8 +65,7 @@ function testCleanExit(aWindow) {
     isActive.resolve();
   }
 
-  let contentLocation = gWindow.content.location.href;
-  if (contentLocation != TAB_URL) {
+  if (gWindow.content.location.href != TAB_URL) {
     gWindow.document.addEventListener("load", function onLoad(aEvent) {
       if (aEvent.target.documentURI != TAB_URL) {
         return;

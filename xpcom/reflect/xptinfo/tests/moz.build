@@ -11,5 +11,5 @@ SOURCES += [
 ]
 
 SIMPLE_PROGRAMS += [
-    "TestInterfaceInfo%s" % (CONFIG['BIN_SUFFIX']),
+    'TestInterfaceInfo'
 ]

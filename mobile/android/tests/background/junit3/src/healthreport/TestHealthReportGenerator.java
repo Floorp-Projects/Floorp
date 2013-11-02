@@ -416,7 +416,6 @@ public class TestHealthReportGenerator extends FakeProfileTestCase {
     return File.separator + "health-" + System.currentTimeMillis() + ".profile";
   }
 
-
   public void testEnvironmentDiffing() throws JSONException {
     // Manually insert a v1 environment.
     final MockHealthReportDatabaseStorage storage = new MockHealthReportDatabaseStorage(context, fakeProfileDirectory);

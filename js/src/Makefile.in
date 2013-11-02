@@ -33,13 +33,6 @@ FORCE_SHARED_LIB = 1
 endif
 DIST_INSTALL = 1
 
-###############################################
-# BEGIN include sources for low-level code shared with mfbt
-#
-MFBT_ROOT = $(srcdir)/../../mfbt
-VPATH += $(MFBT_ROOT)
-include $(MFBT_ROOT)/exported_headers.mk
-
 VPATH		+= \
 		$(srcdir) \
 		$(srcdir)/builtin \
@@ -133,8 +126,6 @@ endif
 
 endif # JS_HAS_CTYPES
 
-LOCAL_INCLUDES += -I$(MFBT_ROOT)/double-conversion
-
 # PerfMeasurement is available regardless of low-level support for it;
 # it just doesn't necessarily do anything useful.  There is one
 # implementation source file per supported operating system, plus a stub
@@ -149,21 +140,12 @@ else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
-ifeq (,$(MOZ_GLUE_PROGRAM_LDFLAGS))
-# When building standalone, we need to include mfbt sources, and to declare
-# "exported" mfbt symbols on its behalf when we use its headers.
-include $(MFBT_ROOT)/sources.mk
-DEFINES += -DIMPL_MFBT
-endif
-
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 # Define keyword generator before rules.mk, see bug 323979 comment 50
 
-HOST_SIMPLE_PROGRAMS += host_jskwgen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautokw.h host_jskwgen$(HOST_BIN_SUFFIX)
 
-HOST_SIMPLE_PROGRAMS += host_jsoplengen$(HOST_BIN_SUFFIX)
 GARBAGE += jsautooplen.h host_jsoplengen$(HOST_BIN_SUFFIX)
 
 GARBAGE += selfhosted.out.h
@@ -430,14 +412,18 @@ CFLAGS += -fp:precise
 
 ifeq ($(CPU_ARCH),x86)
 # Workaround compiler bug on PGO (Bug 721284)
-MonoIC.$(OBJ_SUFFIX): CXXFLAGS += -GL-
-Compiler.$(OBJ_SUFFIX): CXXFLAGS += -GL-
+NO_PROFILE_GUIDED_OPTIMIZE := \
+  MonoIC.cpp \
+  Compiler.cpp \
+  $(NULL)
 # Ditto (Bug 772303)
-RegExp.$(OBJ_SUFFIX): CXXFLAGS += -GL-
+NO_PROFILE_GUIDED_OPTIMIZE += RegExp.cpp
 endif
 # Ditto (Bug 810661)
 ifeq ($(CPU_ARCH),x86_64)
-CTypes.$(OBJ_SUFFIX): CXXFLAGS += -GL-
+NO_PROFILE_GUIDED_OPTIMIZE := \
+  CTypes.cpp \
+  $(NULL)
 endif
 endif # _MSC_VER
 

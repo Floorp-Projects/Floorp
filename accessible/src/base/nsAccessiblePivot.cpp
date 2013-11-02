@@ -875,6 +875,15 @@ RuleCache::ApplyFilter(Accessible* aAccessible, uint16_t* aResult)
         return NS_OK;
       }
     }
+
+    if ((nsIAccessibleTraversalRule::PREFILTER_TRANSPARENT & mPreFilter) &&
+        !(state & states::OPAQUE1)) {
+      nsIFrame* frame = aAccessible->GetFrame();
+      if (frame->StyleDisplay()->mOpacity == 0.0f) {
+        *aResult |= nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE;
+        return NS_OK;
+      }
+    }
   }
 
   if (mAcceptRolesLength > 0) {

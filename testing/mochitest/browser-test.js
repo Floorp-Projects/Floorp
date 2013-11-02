@@ -601,6 +601,12 @@ function testResult(aCondition, aName, aDiag, aIsTodo, aStack) {
       this.result = "TEST-UNEXPECTED-PASS";
     else
       this.result = "TEST-UNEXPECTED-FAIL";
+
+    if (gConfig.debugOnFailure) {
+      // You've hit this line because you requested to break into the
+      // debugger upon a testcase failure on your test run.
+      debugger;
+    }
   }
 }
 

@@ -19,3 +19,4 @@ if CONFIG['HOST_OS_ARCH'] != 'WINNT':
         'nsinstall.c',
         'pathsub.c',
     ]
+    HOST_PROGRAM = 'nsinstall_real'

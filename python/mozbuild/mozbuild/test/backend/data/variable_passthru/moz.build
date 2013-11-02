@@ -32,8 +32,6 @@ SDK_LIBRARY = ['bar.sdk', 'foo.sdk']
 
 SHARED_LIBRARY_LIBS += ['bar.sll', 'foo.sll']
 
-SIMPLE_PROGRAMS = ['bar.x', 'foo.x']
-
 SOURCES += ['bar.c', 'foo.c']
 
 SOURCES += ['bar.mm', 'foo.mm']

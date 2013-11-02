@@ -3,7 +3,6 @@
 
 package org.mozilla.gecko.background.healthreport;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import org.json.JSONException;
@@ -30,11 +29,6 @@ public class TestHealthReportDatabaseStorage extends FakeProfileTestCase {
     "events_integer",
     "events_textual"
   };
-
-  @Override
-  protected String getCacheSuffix() {
-    return File.separator + "health-" + System.currentTimeMillis() + ".profile";
-  }
 
   public static class MockMeasurementFields implements MeasurementFields {
     @Override
@@ -386,7 +380,7 @@ public class TestHealthReportDatabaseStorage extends FakeProfileTestCase {
     db.insertOrThrow("events_integer", null, v);
     db.insertOrThrow("events_integer", null, v);
     assertEquals(16, getTotalEventCount(storage));
-    final int nonExistentEnvID = (int) DBHelpers.getNonExistentID(db, "environments");
+    final int nonExistentEnvID = DBHelpers.getNonExistentID(db, "environments");
     assertEquals(1, storage.deleteDataBefore(storage.getGivenDaysAgoMillis(8), nonExistentEnvID));
     assertEquals(14, getTotalEventCount(storage));
 
@@ -436,7 +430,7 @@ public class TestHealthReportDatabaseStorage extends FakeProfileTestCase {
     db.insertOrThrow("events_integer", null, v);
     db.insertOrThrow("events_integer", null, v);
     assertEquals(16, getTotalEventCount(storage));
-    final int nonExistentEnvID = (int) DBHelpers.getNonExistentID(db, "environments");
+    final int nonExistentEnvID = DBHelpers.getNonExistentID(db, "environments");
     assertEquals(1, storage.deleteEnvAndEventsBefore(storage.getGivenDaysAgoMillis(8), nonExistentEnvID));
     assertEquals(14, getTotalEventCount(storage));
 
