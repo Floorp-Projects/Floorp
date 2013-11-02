@@ -26,8 +26,8 @@ this.UITour = {
 
   highlightEffects: ["wobble", "zoom", "color"],
   targets: new Map([
-    ["backforward", "#unified-back-forward-button"],
-    ["appmenu", "#appmenu-button"],
+    ["backforward", "#back-button"],
+    ["appmenu", "#PanelUI-menu-button"],
     ["home", "#home-button"],
     ["urlbar", "#urlbar"],
     ["bookmarks", "#bookmarks-menu-button"],
@@ -384,7 +384,7 @@ this.UITour = {
     }
 
     if (aMenuName == "appmenu")
-      openMenuButton("appmenu-button");
+      aWindow.PanelUI.show();
     else if (aMenuName == "bookmarks")
       openMenuButton("bookmarks-menu-button");
   },
