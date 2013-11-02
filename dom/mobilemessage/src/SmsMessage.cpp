@@ -189,6 +189,13 @@ SmsMessage::GetThreadId(uint64_t* aThreadId)
 }
 
 NS_IMETHODIMP
+SmsMessage::GetIccId(nsAString& aIccId)
+{
+  // TODO
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 SmsMessage::GetDelivery(nsAString& aDelivery)
 {
   switch (mData.delivery()) {

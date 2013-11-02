@@ -11,18 +11,42 @@ interface nsIDOMDOMCursor;
 interface nsIDOMDOMRequest;
 interface nsIDOMBlob;
 
-[scriptable, builtinclass, uuid(3f81dcbc-00cf-11e3-ae66-538115636543)]
+[scriptable, builtinclass, uuid(d1e35354-3d21-11e3-86da-77253f4c5683)]
 interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
 {
   nsIDOMDOMRequest getSegmentInfoForText(in DOMString text);
 
-  // The first parameter can be either a DOMString (only one number) or an array
-  // of DOMStrings.
-  // The method returns a DOMRequest object if one number has been passed.
-  // An array of DOMRequest objects otherwise.
-  jsval send(in jsval number, in DOMString message);
 
-  nsIDOMDOMRequest sendMMS(in jsval parameters /* MmsParameters */);
+  /**
+   * Function to send SMS.
+   *
+   * @param number
+   *        Either a DOMString (only one number) or an array of numbers.
+   * @param message
+   *        The text message to be sent.
+   * @param sendParameters
+   *        An SmsSendParameters object.
+   * @param return
+   *        A DOMRequest object indicating the sending result if one number
+   *        has been passed; an array of DOMRequest objects otherwise.
+   */
+  [implicit_jscontext, optional_argc]
+  jsval send(in jsval number, in DOMString message,
+             [optional] in jsval sendParameters);
+
+  /**
+   * Function to send MMS.
+   *
+   * @param parameters
+   *        An MmsParameters object.
+   * @param sendParameters
+   *        An MmsSendParameters object.
+   * @param return
+   *        A DOMRequest object indicating the sending result.
+   */
+  [implicit_jscontext, optional_argc]
+  nsIDOMDOMRequest sendMMS(in jsval parameters,
+                           [optional] in jsval sendParameters);
 
   [binaryname(GetMessageMoz)]
   nsIDOMDOMRequest getMessage(in long id);
@@ -33,7 +57,7 @@ interface nsIDOMMozMobileMessageManager : nsIDOMEventTarget
   // Iterates through nsIDOMMoz{Mms,Sms}Message.
   nsIDOMDOMCursor getMessages(in nsIDOMMozSmsFilter filter, in boolean reverse);
 
-  nsIDOMDOMRequest markMessageRead(in long id, in boolean aValue);
+  nsIDOMDOMRequest markMessageRead(in long id, in boolean value);
 
   // Iterates through nsIDOMMozMobileMessageThread.
   nsIDOMDOMCursor getThreads();

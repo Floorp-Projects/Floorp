@@ -19,6 +19,8 @@ interface DummyInterface : EventTarget {
   void funcDNSLookupDict(optional DNSLookupDict arg);
   void funcConnStatusDict(optional ConnStatusDict arg);
   void frameRequestCallback(FrameRequestCallback arg);
+  void SmsSendParameters(optional SmsSendParameters arg);
+  void MmsSendParameters(optional MmsSendParameters arg);
   void MmsParameters(optional MmsParameters arg);
   void MmsAttachment(optional MmsAttachment arg);
   void AsyncScrollEventDetail(optional AsyncScrollEventDetail arg);
