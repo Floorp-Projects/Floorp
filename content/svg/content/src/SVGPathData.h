@@ -12,6 +12,7 @@
 #include "nsINode.h"
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Types.h"
 #include "mozilla/RefPtr.h"
 #include "nsSVGElement.h"
 #include "nsTArray.h"
@@ -85,6 +86,7 @@ class SVGPathData
   typedef gfx::DrawTarget DrawTarget;
   typedef gfx::Path Path;
   typedef gfx::FillRule FillRule;
+  typedef gfx::Float Float;
   typedef gfx::CapStyle CapStyle;
 
 public:
@@ -161,9 +163,9 @@ public:
   ToPath(const gfxMatrix& aMatrix) const;
 
   void ConstructPath(gfxContext *aCtx) const;
-  TemporaryRef<Path> ConstructPath(DrawTarget* aDT,
-                                   FillRule aFillRule,
-                                   CapStyle aCapStyle) const;
+  TemporaryRef<Path> BuildPath(FillRule aFillRule,
+                               uint8_t aCapStyle,
+                               Float aStrokeWidth) const;
 
   const_iterator begin() const { return mData.Elements(); }
   const_iterator end() const { return mData.Elements() + mData.Length(); }

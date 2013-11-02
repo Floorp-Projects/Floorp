@@ -146,14 +146,14 @@ function isFeedType(t) {
  * This object wraps nsIHandlerInfo with some additional functionality
  * the Applications prefpane needs to display and allow modification of
  * the list of handled types.
- * 
+ *
  * We create an instance of this wrapper for each entry we might display
  * in the prefpane, and we compose the instances from various sources,
- * including navigator.plugins and the handler service.
+ * including plugins and the handler service.
  *
  * We don't implement all the original nsIHandlerInfo functionality,
  * just the stuff that the prefpane needs.
- * 
+ *
  * In theory, all of the custom functionality in this wrapper should get
  * pushed down into nsIHandlerInfo eventually.
  */
@@ -263,7 +263,7 @@ HandlerInfoWrapper.prototype = {
   // What to do with content of this type.
   get preferredAction() {
     // If we have an enabled plugin, then the action is to use that plugin.
-    if (this.plugin && !this.isDisabledPluginType)
+    if (this.pluginName && !this.isDisabledPluginType)
       return kActionUsePlugin;
 
     // If the action is to use a helper app, but we don't have a preferred
@@ -299,7 +299,7 @@ HandlerInfoWrapper.prototype = {
     // of any user configuration, and the default in that case is to always ask,
     // even though we never ask for content handled by a plugin, so special case
     // plugin-handled types by returning false here.
-    if (this.plugin && this.handledOnlyByPlugin)
+    if (this.pluginName && this.handledOnlyByPlugin)
       return false;
 
     // If this is a protocol type and the preferred action is "save to disk",
@@ -1079,10 +1079,17 @@ var gApplicationsPane = {
    * check the pref ourselves to find out if it's enabled.
    */
   _loadPluginHandlers: function() {
-    for (let i = 0; i < navigator.plugins.length; ++i) {
-      let plugin = navigator.plugins[i];
-      for (let j = 0; j < plugin.length; ++j) {
-        let type = plugin[j].type;
+    "use strict";
+
+    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+    let pluginTags = pluginHost.getPluginTags();
+
+    for (let i = 0; i < pluginTags.length; ++i) {
+      let pluginTag = pluginTags[i];
+
+      let mimeTypes = pluginTag.getMimeTypes();
+      for (let j = 0; j < mimeTypes.length; ++j) {
+        let type = mimeTypes[j];
 
         let handlerInfoWrapper;
         if (type in this._handledTypes)
@@ -1095,7 +1102,7 @@ var gApplicationsPane = {
           this._handledTypes[type] = handlerInfoWrapper;
         }
 
-        handlerInfoWrapper.plugin = plugin;
+        handlerInfoWrapper.pluginName = pluginTag.name;
       }
     }
   },
@@ -1289,7 +1296,7 @@ var gApplicationsPane = {
 
       case kActionUsePlugin:
         return this._prefsBundle.getFormattedString("usePluginIn",
-                                                    [aHandlerInfo.plugin.name,
+                                                    [aHandlerInfo.pluginName,
                                                      this._brandShortName]);
     }
   },
@@ -1471,11 +1478,11 @@ var gApplicationsPane = {
     }
 
     // Create a menu item for the plugin.
-    if (handlerInfo.plugin) {
+    if (handlerInfo.pluginName) {
       var pluginMenuItem = document.createElement("menuitem");
       pluginMenuItem.setAttribute("action", kActionUsePlugin);
       let label = this._prefsBundle.getFormattedString("usePluginIn",
-                                                       [handlerInfo.plugin.name,
+                                                       [handlerInfo.pluginName,
                                                         this._brandShortName]);
       pluginMenuItem.setAttribute("label", label);
       pluginMenuItem.setAttribute("tooltiptext", label);
@@ -1638,7 +1645,7 @@ var gApplicationsPane = {
       // Set the plugin state if we're enabling or disabling a plugin.
       if (action == kActionUsePlugin)
         handlerInfo.enablePluginType();
-      else if (handlerInfo.plugin && !handlerInfo.isDisabledPluginType)
+      else if (handlerInfo.pluginName && !handlerInfo.isDisabledPluginType)
         handlerInfo.disablePluginType();
 
       // Set the preferred application handler.

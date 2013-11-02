@@ -33,6 +33,7 @@
 #include "nsMathUtils.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
+#include "ActiveLayerTracker.h"
 
 #ifdef MOZ_WEBGL
 #include "../canvas/src/WebGL2Context.h"
@@ -835,7 +836,7 @@ HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect)
   if (!frame)
     return;
 
-  frame->MarkLayersActive(nsChangeHint(0));
+  ActiveLayerTracker::NotifyContentChange(frame);
 
   Layer* layer = nullptr;
   if (damageRect) {
