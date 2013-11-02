@@ -10,7 +10,7 @@ function ifWebGLSupported() {
   let [target, debuggee, front] = yield initBackend(SIMPLE_CANVAS_URL);
 
   let linked = once(front, "program-linked");
-  yield front.setup();
+  front.setup({ reload: true });
   yield linked;
   ok(true, "Canvas was correctly instrumented on the first navigation.");
 
