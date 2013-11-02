@@ -111,6 +111,8 @@
         'include_tests%': 0,
 
         'enable_tracing%': 0,
+	 # lazily allocate the ~4MB of trace message buffers if set
+        'enable_lazy_trace_alloc%': 0,
 
         'enable_android_opensl%': 0,
       }, {  # Settings for the standalone (not-in-Chromium) build.

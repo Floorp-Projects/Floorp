@@ -978,7 +978,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         if (!JSVAL_IS_VOID(v)) {
             uint32_t u;
-            if (!JS_ValueToECMAUint32(cx, v, &u))
+            if (!ToUint32(cx, v, &u))
                 return false;
             lineNumber = u;
         }
@@ -1663,28 +1663,26 @@ static bool
 LineToPC(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedScript script(cx);
-    int32_t lineArg = 0;
-    uint32_t lineno;
-    jsbytecode *pc;
 
     if (args.length() == 0) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_LINE2PC_USAGE);
         return false;
     }
-    script = GetTopScript(cx);
-    jsval v = args[0];
-    if (!JSVAL_IS_PRIMITIVE(v) &&
-        JS_GetClass(&v.toObject()) == Jsvalify(&JSFunction::class_))
-    {
-        script = ValueToScript(cx, v);
+
+    RootedScript script(cx, GetTopScript(cx));
+    int32_t lineArg = 0;
+    if (args[0].isObject() && args[0].toObject().is<JSFunction>()) {
+        script = ValueToScript(cx, args[0]);
         if (!script)
             return false;
         lineArg++;
     }
-    if (!JS_ValueToECMAUint32(cx, args[lineArg], &lineno))
-        return false;
-    pc = JS_LineNumberToPC(cx, script, lineno);
+
+    uint32_t lineno;
+    if (!ToUint32(cx, args.get(lineArg), &lineno))
+         return false;
+
+    jsbytecode *pc = JS_LineNumberToPC(cx, script, lineno);
     if (!pc)
         return false;
     args.rval().setInt32(pc - script->code);
@@ -2190,107 +2188,76 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    jsval v;
-    void* startThing;
-    JSGCTraceKind startTraceKind;
-    const char *badTraceArg;
-    void *thingToFind;
-    size_t maxDepth;
-    void *thingToIgnore;
-    FILE *dumpFile;
-    bool ok;
+    JSAutoByteString fileName;
+    if (args.hasDefined(0)) {
+        RootedString str(cx, JS_ValueToString(cx, args[0]));
+        if (!str)
+            return false;
 
-    const char *fileName = nullptr;
-    JSAutoByteString fileNameBytes;
-    if (args.length() > 0) {
-        v = args[0];
-        if (!v.isNull()) {
-            JSString *str;
-
-            str = JS_ValueToString(cx, v);
-            if (!str)
-                return false;
-            args[0].setString(str);
-            if (!fileNameBytes.encodeLatin1(cx, str))
-                return false;
-            fileName = fileNameBytes.ptr();
-        }
+        if (!fileName.encodeLatin1(cx, str))
+            return false;
     }
 
-    // Grab the depth param first, because JS_ValueToECMAUint32 can GC, and
-    // there's no easy way to root the traceable void* parameters below.
-    maxDepth = (size_t)-1;
-    if (args.length() > 3) {
-        v = args[3];
-        if (!v.isNull()) {
-            uint32_t depth;
-
-            if (!JS_ValueToECMAUint32(cx, v, &depth))
-                return false;
-            maxDepth = depth;
+    RootedValue startThing(cx);
+    if (args.hasDefined(1)) {
+        if (!args[1].isGCThing()) {
+            JS_ReportError(cx, "dumpHeap: Second argument not a GC thing!");
+            return false;
         }
+        startThing = args[1];
     }
 
-    startThing = nullptr;
-    startTraceKind = JSTRACE_OBJECT;
-    if (args.length() > 1) {
-        v = args[1];
-        if (v.isMarkable()) {
-            startThing = JSVAL_TO_TRACEABLE(v);
-            startTraceKind = v.gcKind();
-        } else if (!v.isNull()) {
-            badTraceArg = "start";
-            goto not_traceable_arg;
+    RootedValue thingToFind(cx);
+    if (args.hasDefined(2)) {
+        if (!args[2].isGCThing()) {
+            JS_ReportError(cx, "dumpHeap: Third argument not a GC thing!");
+            return false;
         }
+        thingToFind = args[2];
     }
 
-    thingToFind = nullptr;
-    if (args.length() > 2) {
-        v = args[2];
-        if (v.isMarkable()) {
-            thingToFind = JSVAL_TO_TRACEABLE(v);
-        } else if (!v.isNull()) {
-            badTraceArg = "toFind";
-            goto not_traceable_arg;
-        }
+    size_t maxDepth = size_t(-1);
+    if (args.hasDefined(3)) {
+        uint32_t depth;
+        if (!ToUint32(cx, args[3], &depth))
+            return false;
+        maxDepth = depth;
     }
 
-    thingToIgnore = nullptr;
-    if (args.length() > 4) {
-        v = args[4];
-        if (v.isMarkable()) {
-            thingToIgnore = JSVAL_TO_TRACEABLE(v);
-        } else if (!v.isNull()) {
-            badTraceArg = "toIgnore";
-            goto not_traceable_arg;
+    RootedValue thingToIgnore(cx);
+    if (args.hasDefined(4)) {
+        if (!args[2].isGCThing()) {
+            JS_ReportError(cx, "dumpHeap: Fifth argument not a GC thing!");
+            return false;
         }
+        thingToIgnore = args[4];
     }
 
-    if (!fileName) {
-        dumpFile = stdout;
-    } else {
-        dumpFile = fopen(fileName, "w");
+
+    FILE *dumpFile = stdout;
+    if (fileName.length()) {
+        dumpFile = fopen(fileName.ptr(), "w");
         if (!dumpFile) {
-            JS_ReportError(cx, "can't open %s: %s", fileName, strerror(errno));
+            JS_ReportError(cx, "dumpHeap: can't open %s: %s\n",
+                          fileName.ptr(), strerror(errno));
             return false;
         }
     }
 
-    ok = JS_DumpHeap(JS_GetRuntime(cx), dumpFile, startThing, startTraceKind, thingToFind,
-                     maxDepth, thingToIgnore);
+    bool ok = JS_DumpHeap(JS_GetRuntime(cx), dumpFile,
+                          startThing.isUndefined() ? nullptr : startThing.toGCThing(),
+                          startThing.isUndefined() ? JSTRACE_OBJECT : startThing.get().gcKind(),
+                          thingToFind.isUndefined() ? nullptr : thingToFind.toGCThing(),
+                          maxDepth,
+                          thingToIgnore.isUndefined() ? nullptr : thingToIgnore.toGCThing());
+
     if (dumpFile != stdout)
         fclose(dumpFile);
-    if (!ok) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-    args.rval().setUndefined();
-    return true;
 
-  not_traceable_arg:
-    JS_ReportError(cx, "argument '%s' is not null or a heap-allocated thing",
-                   badTraceArg);
-    return false;
+    if (!ok)
+        JS_ReportOutOfMemory(cx);
+
+    return ok;
 }
 
 static bool

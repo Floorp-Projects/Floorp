@@ -128,14 +128,36 @@ CheckOverRecursed(JSContext *cx)
     return true;
 }
 
+// This function can get called in two contexts.  In the usual context, it's
+// called with ealyCheck=false, after the scope chain has been initialized on
+// a baseline frame.  In this case, it's ok to throw an exception, so a failed
+// stack check returns false, and a successful stack check promps a check for
+// an interrupt from the runtime, which may also cause a false return.
+//
+// In the second case, it's called with earlyCheck=true, prior to frame
+// initialization.  An exception cannot be thrown in this instance, so instead
+// an error flag is set on the frame and true returned.
 bool
-CheckOverRecursedWithExtra(JSContext *cx, uint32_t extra)
+CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
+                           uint32_t extra, uint32_t earlyCheck)
 {
+    JS_ASSERT_IF(earlyCheck, !frame->overRecursed());
+
     // See |CheckOverRecursed| above.  This is a variant of that function which
     // accepts an argument holding the extra stack space needed for the Baseline
     // frame that's about to be pushed.
     uint8_t spDummy;
     uint8_t *checkSp = (&spDummy) - extra;
+    if (earlyCheck) {
+        JS_CHECK_RECURSION_WITH_SP(cx, checkSp, frame->setOverRecursed());
+        return true;
+    }
+
+    // The OVERRECURSED flag may have already been set on the frame by an
+    // early over-recursed check.  If so, throw immediately.
+    if (frame->overRecursed())
+        return false;
+
     JS_CHECK_RECURSION_WITH_SP(cx, checkSp, return false);
 
     if (cx->runtime()->interrupt)

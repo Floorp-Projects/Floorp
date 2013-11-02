@@ -2970,6 +2970,19 @@ MOZ_ARG_HEADER(Application)
 
 ENABLE_TESTS=1
 
+dnl ========================================================
+dnl Tell the build system that ../../mfbt exists outside
+dnl the source tree, but files from there are included from
+dnl inside the tree.
+dnl
+dnl This should probably be a --with-external-source-dir
+dnl option, like the root mozilla-central configure, but
+dnl then anyone building the standalone js shell would need
+dnl to remember to pass it, and it is only used in one file.
+dnl ========================================================
+EXTERNAL_SOURCE_DIR=../../mfbt
+AC_SUBST(EXTERNAL_SOURCE_DIR)
+
 USE_ARM_KUSER=
 
 case "${target}" in
