@@ -258,7 +258,6 @@ FrameworkView::UpdateWidgetSizeAndPosition()
   NS_ASSERTION(mWindow, "SetWindow must be called before UpdateWidgetSizeAndPosition!");
   NS_ASSERTION(mWidget, "SetWidget must be called before UpdateWidgetSizeAndPosition!");
 
-  UpdateBounds();
   mWidget->Move(0, 0);
   mWidget->Resize(0, 0, mWindowBounds.width, mWindowBounds.height, true);
   mWidget->SizeModeChanged();
@@ -285,32 +284,19 @@ void FrameworkView::SetDpi(float aDpi)
     LogFunction();
 
     mDPI = aDpi;
+    // Often a DPI change implies a window size change.
+    NS_ASSERTION(mWindow, "SetWindow must be called before SetDpi!");
+    Rect logicalBounds;
+    mWindow->get_Bounds(&logicalBounds);
+
+    // convert to physical (device) pixels
+    mWindowBounds = MetroUtils::LogToPhys(logicalBounds);
 
     // notify the widget that dpi has changed
     if (mWidget) {
       mWidget->ChangedDPI();
-      UpdateBounds();
     }
   }
-}
-
-void
-FrameworkView::UpdateBounds()
-{
-  if (!mWidget)
-    return;
-
-  RECT winRect;
-  GetClientRect(mWidget->GetICoreWindowHWND(), &winRect);
-
-  Rect logicalBounds;
-  logicalBounds.X = winRect.left;
-  logicalBounds.Y = winRect.top;
-  logicalBounds.Width = winRect.right - winRect.left; 
-  logicalBounds.Height = winRect.bottom - winRect.top;
-
-  // convert to physical (device) pixels
-  mWindowBounds = MetroUtils::LogToPhys(logicalBounds);
 }
 
 void
@@ -321,7 +307,6 @@ FrameworkView::SetWidget(MetroWidget* aWidget)
   LogFunction();
   mWidget = aWidget;
   mWidget->FindMetroWindow();
-  UpdateBounds();
 }
 
 ////////////////////////////////////////////////////
@@ -408,6 +393,11 @@ FrameworkView::OnWindowSizeChanged(ICoreWindow* aSender, IWindowSizeChangedEvent
   if (mShuttingDown) {
     return S_OK;
   }
+
+  NS_ASSERTION(mWindow, "SetWindow must be called before OnWindowSizeChanged!");
+  Rect logicalBounds;
+  mWindow->get_Bounds(&logicalBounds);
+  mWindowBounds = MetroUtils::LogToPhys(logicalBounds);
 
   UpdateWidgetSizeAndPosition();
   return S_OK;
