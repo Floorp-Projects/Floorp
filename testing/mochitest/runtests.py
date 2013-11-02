@@ -342,6 +342,8 @@ class MochitestUtilsMixin(object):
         self.urlOpts.append("failureFile=%s" % self.getFullPath(options.failureFile))
       if options.runSlower:
         self.urlOpts.append("runSlower=true")
+      if options.debugOnFailure:
+        self.urlOpts.append("debugOnFailure=true")
 
   def buildTestPath(self, options):
     """ Build the url path to the specific test harness and test file or directory

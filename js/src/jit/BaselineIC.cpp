@@ -9236,6 +9236,8 @@ ICUpdatedStub *
 ICSetElemDenseAddCompiler::getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes)
 {
     RootedTypeObject objType(cx, obj_->getType(cx));
+    if (!objType)
+        return nullptr;
     Rooted<IonCode *> stubCode(cx, getStubCode());
     return ICSetElem_DenseAddImpl<ProtoChainDepth>::New(space, stubCode, objType, shapes);
 }

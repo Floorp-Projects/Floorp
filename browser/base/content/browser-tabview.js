@@ -151,6 +151,15 @@ let TabView = {
         "SSWindowStateReady", this._SSWindowStateReadyListener, false);
 
     this._initialized = false;
+
+    if (this._window) {
+      this._window = null;
+    }
+
+    if (this._iframe) {
+      this._iframe.remove();
+      this._iframe = null;
+    }
   },
 
   // ----------
@@ -253,10 +262,9 @@ let TabView = {
 
   // ----------
   hide: function TabView_hide() {
-    if (!this.isVisible())
-      return;
-
-    this._window.UI.exit();
+    if (this.isVisible() && this._window) {
+      this._window.UI.exit();
+    }
   },
 
   // ----------

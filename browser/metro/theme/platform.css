@@ -197,16 +197,6 @@ menulist {
   font-weight: 600;
 }
 
-.menu-popup richlistitem:not([disabled]):hover {
-  background-color: #ccc;
-  color: black;
-}
-
-.menu-popup richlistitem:not([disabled]):active {
-  background-color: black;
-  color: white;
-}
-
 .menu-popup > richlistbox > richlistitem {
   padding-right: 50px;
 }
@@ -249,16 +239,6 @@ menulist {
   font-weight: bold;
   font-style: italic;
   pointer-events: none;
-}
-
-.option-command:not([disabled]):hover {
-  background-color: #f0f0f0;
-  color: black;
-}
-
-.option-command:not([disabled]):active {
-  background-color: #d3d3d3;
-  color: black;
 }
 
 .select-popup > richlistbox > scrollbox {
@@ -404,13 +384,14 @@ richlistitem description.normal-bold {
   font-weight: bold;
 }
 
-richlistitem[selected] {
-  color: black;
-  background-color: white;
+richlistitem[selected],
+richlistitem:not([disabled]):not([selected]):active {
+  background-color: @metro_orange@;
+  color: #fff;
 }
 
-richlistitem:hover:active:not([selected]) {
-  background-color: #8db8d8;
+richlistitem:not([disabled]):not([selected]):hover {
+  background-color: #ccc;
 }
 
 richlistitem.section-header,
@@ -582,46 +563,6 @@ notificationbox[count="3"] .notification-layer[anonid="layer2"] {
   background-color: transparent;
   padding: 0;
   border: none;
-}
-
-/* Arrowbox ---------------------------------------------------------------- */
-
-arrowbox {
-  -moz-appearance: none;
-  background: transparent;
-  border: none;
-}
-
-.arrowbox-dark .panel-arrowcontent {
-  color: white;
-  background: @panel_dark_color@;
-}
-
-.arrowbox-dark .panel-arrowcontent {
-  border: @border_width_large@ solid white;
-  border-radius: @border_radius_normal@;
-  box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
-}
-
-.panel-arrow[side="top"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-up.png");
-  margin-bottom: -@margin_normal@;
-}
-
-.panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-down.png");
-  margin-top: -@margin_normal@;
-}
-
-.panel-arrow[side="left"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-right: -@margin_normal@;
-  transform: scaleX(-1);
-}
-
-.panel-arrow[side="right"] {
-  list-style-image: url("chrome://browser/skin/images/arrowbox-horiz.png");
-  margin-left: -@margin_normal@;
 }
 
 /*.meta -------------------------------------------------------------------- */

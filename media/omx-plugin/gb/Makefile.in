@@ -40,8 +40,3 @@ INCLUDES        += \
                 -I$(srcdir)/../include/gb \
                 -I$(srcdir)/../include/gb/media/stagefright/openmax \
                 $(NULL)
-
-libs::	$(DLL_PREFIX)$(LIBRARY_NAME)$(DLL_SUFFIX)
-	$(INSTALL) $< $(DEPTH)/dist/bin
-
-libs:: $(PROGRAMS)

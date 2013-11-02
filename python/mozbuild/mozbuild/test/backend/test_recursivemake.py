@@ -346,10 +346,6 @@ class TestRecursiveMakeBackend(BackendTester):
                 'SHARED_LIBRARY_LIBS += bar.sll',
                 'SHARED_LIBRARY_LIBS += foo.sll',
             ],
-            'SIMPLE_PROGRAMS': [
-                'SIMPLE_PROGRAMS += bar.x',
-                'SIMPLE_PROGRAMS += foo.x',
-            ],
             'SSRCS': [
                 'SSRCS += baz.S',
                 'SSRCS += foo.S',

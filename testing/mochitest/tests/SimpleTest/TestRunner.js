@@ -213,6 +213,12 @@ TestRunner.error = function(msg) {
     } else {
         dump(msg + "\n");
     }
+
+    if (TestRunner.debugOnFailure) {
+      // You've hit this line because you requested to break into the
+      // debugger upon a testcase failure on your test run.
+      debugger;
+    }
 };
 
 /**

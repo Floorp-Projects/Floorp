@@ -22,7 +22,8 @@ extern __attribute__((visibility("hidden"))) void original_init(int argc, char *
 extern __attribute__((visibility("hidden"))) Elf32_Rel relhack[];
 extern __attribute__((visibility("hidden"))) Elf_Ehdr elf_header;
 
-int init(int argc, char **argv, char **env)
+static inline __attribute__((always_inline))
+void do_relocations(void)
 {
     Elf32_Rel *rel;
     Elf_Addr *ptr, *start;
@@ -31,10 +32,20 @@ int init(int argc, char **argv, char **env)
         for (ptr = start; ptr < &start[rel->r_info]; ptr++)
             *ptr += (intptr_t)&elf_header;
     }
+}
 
-#ifndef NOINIT
+__attribute__((section(".text._init_noinit")))
+int init_noinit(int argc, char **argv, char **env)
+{
+    do_relocations();
+    return 0;
+}
+
+__attribute__((section(".text._init")))
+int init(int argc, char **argv, char **env)
+{
+    do_relocations();
     original_init(argc, argv, env);
-#endif
     // Ensure there is no tail-call optimization, avoiding the use of the
     // B.W instruction in Thumb for the call above.
     return 0;
