@@ -83,7 +83,6 @@ extern "C" {
 #include "nricemediastream.h"
 #include "nr_socket_prsock.h"
 #include "nrinterfaceprioritizer.h"
-#include "rlogringbuffer.h"
 
 namespace mozilla {
 
@@ -335,13 +334,11 @@ void NrIceCtx::trickle_cb(void *arg, nr_ice_ctx *ice_ctx,
 RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                                   bool offerer,
                                   bool set_interface_priorities) {
-
   RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer);
 
-  // Initialize the crypto callbacks and logging stuff
+  // Initialize the crypto callbacks
   if (!initialized) {
     NR_reg_init(NR_REG_MODE_LOCAL);
-    RLogRingBuffer::CreateInstance();
     nr_crypto_vtbl = &nr_ice_crypto_nss_vtbl;
     initialized = true;
 
