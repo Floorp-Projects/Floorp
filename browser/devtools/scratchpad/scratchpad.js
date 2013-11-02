@@ -1375,6 +1375,7 @@ var Scratchpad = {
       this._sidebar = null;
     }
 
+    scratchpadTargets = null;
     this.webConsoleClient = null;
     this.debuggerClient = null;
     this.initialized = false;
