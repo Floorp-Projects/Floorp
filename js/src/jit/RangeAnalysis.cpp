@@ -2413,3 +2413,9 @@ MCompare::collectRangeInfo()
 {
     operandsAreNeverNaN_ = !Range(lhs()).canBeNaN() && !Range(rhs()).canBeNaN();
 }
+
+void
+MNot::collectRangeInfo()
+{
+    operandIsNeverNaN_ = !Range(operand()).canBeNaN();
+}

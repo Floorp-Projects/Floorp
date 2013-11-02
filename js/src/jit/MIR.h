@@ -5159,11 +5159,13 @@ class MNot
     public TestPolicy
 {
     bool operandMightEmulateUndefined_;
+    bool operandIsNeverNaN_;
 
   public:
     MNot(MDefinition *input)
       : MUnaryInstruction(input),
-        operandMightEmulateUndefined_(true)
+        operandMightEmulateUndefined_(true),
+        operandIsNeverNaN_(false)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -5189,6 +5191,9 @@ class MNot
     bool operandMightEmulateUndefined() const {
         return operandMightEmulateUndefined_;
     }
+    bool operandIsNeverNaN() const {
+        return operandIsNeverNaN_;
+    }
 
     MDefinition *operand() const {
         return getOperand(0);
@@ -5200,6 +5205,7 @@ class MNot
     TypePolicy *typePolicy() {
         return this;
     }
+    void collectRangeInfo();
 
     void trySpecializeFloat32();
     bool isFloat32Commutative() const { return true; }
