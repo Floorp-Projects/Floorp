@@ -1526,7 +1526,7 @@ GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScrip
             intarg++;
         }
         if (argc > intarg) {
-            if (!JS_ValueToInt32(cx, argv[intarg], ip))
+            if (!JS::ToInt32(cx, HandleValue::fromMarkedLocation(&argv[intarg]), ip))
                 return false;
             if ((uint32_t)*ip >= script->length) {
                 JS_ReportError(cx, "Invalid PC");
@@ -2428,17 +2428,6 @@ GetSLX(JSContext *cx, unsigned argc, jsval *vp)
     if (!script)
         return false;
     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(js_GetScriptLineExtent(script)));
-    return true;
-}
-
-static bool
-ToInt32(JSContext *cx, unsigned argc, jsval *vp)
-{
-    int32_t i;
-
-    if (!JS_ValueToInt32(cx, argc == 0 ? UndefinedValue() : vp[2], &i))
-        return false;
-    JS_SET_RVAL(cx, vp, JS_NumberValue(i));
     return true;
 }
 
@@ -4171,10 +4160,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("getslx", GetSLX, 1, 0,
 "getslx(obj)",
 "  Get script line extent."),
-
-    JS_FN_HELP("toint32", ToInt32, 1, 0,
-"toint32(n)",
-"  Testing hook for JS_ValueToInt32."),
 
     JS_FN_HELP("evalcx", EvalInContext, 1, 0,
 "evalcx(s[, o])",
