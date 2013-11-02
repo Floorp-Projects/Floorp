@@ -5941,7 +5941,7 @@ ClassHasEffectlessLookup(const Class *clasp)
 static bool
 ClassHasResolveHook(JSCompartment *comp, const Class *clasp, PropertyName *name)
 {
-    if (clasp->resolve != JS_ResolveStub)
+    if (clasp->resolve == JS_ResolveStub)
         return false;
 
     if (clasp->resolve == (JSResolveOp)str_resolve) {
