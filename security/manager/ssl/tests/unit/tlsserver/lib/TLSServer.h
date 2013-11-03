@@ -53,8 +53,10 @@ GetHostForSNI(const SECItem *aSrvNameArr, uint32_t aSrvNameArrSize,
 {
   for (uint32_t i = 0; i < aSrvNameArrSize; i++) {
     for (const Host *host = hosts; host->mHostName; ++host) {
-      // TODO: is aSrvNameArr[i].data guaranteed to be null-terminated?
-      if (!strcmp(host->mHostName, (const char *) aSrvNameArr[i].data)) {
+      SECItem hostName;
+      hostName.data = reinterpret_cast<uint8_t*>(const_cast<char*>(host->mHostName));
+      hostName.len = strlen(host->mHostName);
+      if (SECITEM_ItemsAreEqual(&hostName, &aSrvNameArr[i])) {
         if (gDebugLevel >= DEBUG_VERBOSE) {
           fprintf(stderr, "found pre-defined host '%s'\n", host->mHostName);
         }
