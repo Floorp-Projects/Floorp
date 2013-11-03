@@ -347,10 +347,10 @@ enum {
                           TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE | TYPE_FLAG_STRING,
 
     /* Mask/shift for the number of objects in objectSet */
-    TYPE_FLAG_OBJECT_COUNT_MASK   = 0x1f00,
+    TYPE_FLAG_OBJECT_COUNT_LIMIT  = 7,
     TYPE_FLAG_OBJECT_COUNT_SHIFT  = 8,
-    TYPE_FLAG_OBJECT_COUNT_LIMIT  =
-        TYPE_FLAG_OBJECT_COUNT_MASK >> TYPE_FLAG_OBJECT_COUNT_SHIFT,
+    TYPE_FLAG_OBJECT_COUNT_MASK   = /* = 0x700 */
+        TYPE_FLAG_OBJECT_COUNT_LIMIT << TYPE_FLAG_OBJECT_COUNT_SHIFT,
 
     /* Whether the contents of this type set are totally unknown. */
     TYPE_FLAG_UNKNOWN             = 0x00002000,
