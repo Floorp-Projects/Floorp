@@ -11,27 +11,25 @@ include protocol PPluginStream;
 include protocol PStreamNotify;
 include protocol PPluginSurface;
 
-include "mozilla/plugins/PluginMessageUtils.h";
-include "ipc/nsGUIEventIPC.h";
-include "gfxTypes.h";
+include "mozilla/GfxMessageUtils.h";
 
-using NPError;
-using NPRemoteWindow;
-using NPRemoteEvent;
-using NPRect;
-using NPImageFormat;
-using NPNURLVariable;
-using NPCoordinateSpace;
-using NPNVariable;
-using mozilla::plugins::NativeWindowHandle;
-using gfxSurfaceType;
-using gfxIntSize;
-using mozilla::null_t;
-using mozilla::plugins::WindowsSharedMemoryHandle;
-using mozilla::plugins::DXGISharedSurfaceHandle;
-using mozilla::CrossProcessMutexHandle;
-using SurfaceDescriptorX11;
-using nsIntRect;
+using NPError from "npapi.h";
+using struct mozilla::plugins::NPRemoteWindow from "mozilla/plugins/PluginMessageUtils.h";
+using struct mozilla::plugins::NPRemoteEvent from "mozilla/plugins/PluginMessageUtils.h";
+using NPRect from "npapi.h";
+using NPImageFormat from "npapi.h";
+using NPNURLVariable from "npapi.h";
+using NPCoordinateSpace from "npapi.h";
+using NPNVariable from "npapi.h";
+using mozilla::plugins::NativeWindowHandle from "mozilla/plugins/PluginMessageUtils.h";
+using gfxSurfaceType from "gfxTypes.h";
+using gfxIntSize from "nsSize.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMessageUtils.h";
+using mozilla::plugins::DXGISharedSurfaceHandle from "mozilla/plugins/PluginMessageUtils.h";
+using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
+using struct SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
+using struct nsIntRect from "nsRect.h";
 
 namespace mozilla {
 namespace plugins {

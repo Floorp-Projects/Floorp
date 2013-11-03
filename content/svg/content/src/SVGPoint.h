@@ -8,6 +8,7 @@
 
 #include "nsDebug.h"
 #include "gfxPoint.h"
+#include "mozilla/gfx/Point.h"
 
 namespace mozilla {
 
@@ -18,6 +19,8 @@ namespace mozilla {
  */
 class SVGPoint
 {
+  typedef mozilla::gfx::Point Point;
+
 public:
 
   SVGPoint()
@@ -55,6 +58,10 @@ public:
 
   operator gfxPoint() const {
     return gfxPoint(mX, mY);
+  }
+
+  operator Point() const {
+    return Point(mX, mY);
   }
 
 #ifdef DEBUG

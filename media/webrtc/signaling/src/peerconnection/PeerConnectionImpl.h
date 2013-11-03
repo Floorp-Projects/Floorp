@@ -301,9 +301,10 @@ public:
   }
 
   NS_IMETHODIMP_TO_ERRORRESULT(GetStats, ErrorResult &rv,
-                               mozilla::dom::MediaStreamTrack *aSelector)
+                               mozilla::dom::MediaStreamTrack *aSelector,
+                               bool internalStats)
   {
-    rv = GetStats(aSelector);
+    rv = GetStats(aSelector, internalStats);
   }
 
   NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
@@ -486,6 +487,7 @@ private:
 #ifdef MOZILLA_INTERNAL_API
   // Fills in an RTCStatsReportInternal. Must be run on STS.
   void GetStats_s(uint32_t trackId,
+                  bool internalStats,
                   DOMHighResTimeStamp now);
 
   // Sends an RTCStatsReport to JS. Must run on main thread.

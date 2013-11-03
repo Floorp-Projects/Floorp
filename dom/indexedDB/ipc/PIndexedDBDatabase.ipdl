@@ -7,9 +7,9 @@ include protocol PIndexedDBTransaction;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
 
-using mozilla::dom::indexedDB::DatabaseInfoGuts;
-using mozilla::dom::indexedDB::ObjectStoreInfoGuts;
-using mozilla::dom::indexedDB::IDBTransaction::Mode;
+using struct mozilla::dom::indexedDB::DatabaseInfoGuts from "mozilla/dom/indexedDB/DatabaseInfo.h";
+using struct mozilla::dom::indexedDB::ObjectStoreInfoGuts from "mozilla/dom/indexedDB/DatabaseInfo.h";
+using mozilla::dom::indexedDB::IDBTransaction::Mode from "mozilla/dom/indexedDB/IDBTransaction.h";
 
 namespace mozilla {
 namespace dom {

@@ -139,4 +139,23 @@ ocsp_GetResponderLocation(CERTCertDBHandle *handle,
 PRBool
 ocsp_FetchingFailureIsVerificationFailure(void);
 
+size_t
+ocsp_UrlEncodeBase64Buf(const char *base64Buf, char *outputBuf);
+
+SECStatus
+ocsp_GetVerifiedSingleResponseForCertID(CERTCertDBHandle *handle, 
+                                        CERTOCSPResponse *response, 
+                                        CERTOCSPCertID   *certID,
+                                        CERTCertificate  *signerCert,
+                                        PRTime            time,
+                                        CERTOCSPSingleResponse **pSingleResponse);
+
+SECStatus
+ocsp_CertHasGoodStatus(ocspCertStatus *status, PRTime time);
+
+void
+ocsp_CacheSingleResponse(CERTOCSPCertID *certID,
+			 CERTOCSPSingleResponse *single,
+			 PRBool *certIDWasConsumed);
+
 #endif /* _OCSPI_H_ */

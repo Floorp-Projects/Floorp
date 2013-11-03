@@ -24,6 +24,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "PCOMContentPermissionRequestChild.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 
 class nsIPrincipal;
 
