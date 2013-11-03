@@ -6,7 +6,6 @@
 #pragma once
 
 #include "2D.h"
-#include "mozilla/mozalloc.h"
 
 namespace mozilla {
 namespace gfx {
@@ -46,8 +45,8 @@ SurfaceToPackedBGRA(SourceSurface *aSurface)
   }
 
   IntSize size = data->GetSize();
-  static const fallible_t fallible = fallible_t();
-  uint8_t* imageBuffer = new (fallible) uint8_t[size.width * size.height * sizeof(uint32_t)];
+
+  uint8_t* imageBuffer = new (std::nothrow) uint8_t[size.width * size.height * sizeof(uint32_t)];
   if (!imageBuffer) {
     return nullptr;
   }
