@@ -1171,18 +1171,22 @@ CK_RV NSC_DecryptUpdate(CK_SESSION_HANDLE hSession,
 		|| context->padDataLength == context->blockSize);
 
 
+    if (context->doPad) {
+	/* Check the data length for block ciphers. If we are padding,
+	 * then we must be using a block cipher. In the non-padding case
+	 * the error will be returned by the underlying decryption
+	 * function when we do the actual decrypt. We need to do the
+	 * check here to avoid returning a negative length to the caller
+	 * or reading before the beginning of the pEncryptedPart buffer.
+ 	 */
+	if ((ulEncryptedPartLen == 0) ||
+	    (ulEncryptedPartLen % context->blockSize) != 0) {
+	    return CKR_ENCRYPTED_DATA_LEN_RANGE;
+	}
+    }
+
     if (!pPart) {
 	if (context->doPad) {
-	    /* we can check the data length here because if we are padding,
-	     * then we must be using a block cipher. In the non-padding case
-	     * the error will be returned by the underlying decryption
-	     * function when do do the actual decrypt. We need to do the
-	     * check here to avoid returning a negative length to the caller.
- 	     */
-	    if ((ulEncryptedPartLen == 0) ||
-		(ulEncryptedPartLen % context->blockSize) != 0) {
-		return CKR_ENCRYPTED_DATA_LEN_RANGE;
-	    }
 	    *pulPartLen = 
 		ulEncryptedPartLen + context->padDataLength - context->blockSize;
 	    return CKR_OK;

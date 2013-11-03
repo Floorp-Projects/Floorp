@@ -4,11 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGCircleElement.h"
+#include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
 #include "gfxContext.h"
 #include "mozilla/dom/SVGCircleElementBinding.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Circle)
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -88,6 +91,21 @@ SVGCircleElement::ConstructPath(gfxContext *aCtx)
 
   if (r > 0.0f)
     aCtx->Arc(gfxPoint(x, y), r, 0, 2*M_PI);
+}
+
+TemporaryRef<Path>
+SVGCircleElement::BuildPath()
+{
+  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+
+  float x, y, r;
+  GetAnimatedLengthValues(&x, &y, &r, nullptr);
+
+  if (r > 0.0f) {
+    pathBuilder->Arc(Point(x, y), r, 0, Float(2*M_PI));
+  }
+
+  return pathBuilder->Finish();
 }
 
 } // namespace dom

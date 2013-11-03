@@ -391,28 +391,6 @@ nsSVGUtils::ComputeAlphaMask(uint8_t *aData,
   }
 }
 
-float
-nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
-                         nsSVGElement *aContent,
-                         const nsStyleCoord &aCoord)
-{
-  switch (aCoord.GetUnit()) {
-  case eStyleUnit_Factor:
-    // user units
-    return aCoord.GetFactorValue();
-
-  case eStyleUnit_Coord:
-    return nsPresContext::AppUnitsToFloatCSSPixels(aCoord.GetCoordValue());
-
-  case eStyleUnit_Percent: {
-      SVGSVGElement* ctx = aContent->GetCtx();
-      return ctx ? aCoord.GetPercentValue() * ctx->GetLength(SVGContentUtils::XY) : 0.0f;
-    }
-  default:
-    return 0.0f;
-  }
-}
-
 nsSVGDisplayContainerFrame*
 nsSVGUtils::GetNearestSVGViewport(nsIFrame *aFrame)
 {
@@ -1621,8 +1599,8 @@ nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
 
   nsSVGElement *ctx = static_cast<nsSVGElement*>(content);
 
-  return CoordToFloat(aFrame->PresContext(), ctx,
-                      style->mStrokeWidth);
+  return SVGContentUtils::CoordToFloat(aFrame->PresContext(), ctx,
+                                       style->mStrokeWidth);
 }
 
 void
@@ -1713,9 +1691,9 @@ GetStrokeDashData(nsIFrame* aFrame,
     const nsStyleCoord *dasharray = style->mStrokeDasharray;
 
     for (uint32_t i = 0; i < count; i++) {
-      aDashes[i] = nsSVGUtils::CoordToFloat(presContext,
-                                            ctx,
-                                            dasharray[i]) * pathScale;
+      aDashes[i] = SVGContentUtils::CoordToFloat(presContext,
+                                                 ctx,
+                                                 dasharray[i]) * pathScale;
       if (aDashes[i] < 0.0) {
         return false;
       }
@@ -1726,9 +1704,9 @@ GetStrokeDashData(nsIFrame* aFrame,
   if (aContextPaint && style->mStrokeDashoffsetFromObject) {
     *aDashOffset = aContextPaint->GetStrokeDashOffset();
   } else {
-    *aDashOffset = nsSVGUtils::CoordToFloat(presContext,
-                                            ctx,
-                                            style->mStrokeDashoffset);
+    *aDashOffset = SVGContentUtils::CoordToFloat(presContext,
+                                                 ctx,
+                                                 style->mStrokeDashoffset);
   }
   
   return (totalLength > 0.0);

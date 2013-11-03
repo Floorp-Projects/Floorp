@@ -8,7 +8,7 @@ from copy import deepcopy
 import ipdl.ast
 import ipdl.builtin
 from ipdl.cxx.ast import *
-from ipdl.type import Actor, ActorType, ProcessGraph, TypeVisitor
+from ipdl.type import Actor, ActorType, ProcessGraph, TypeVisitor, builtinHeaderIncludes
 
 # FIXME/cjones: the chromium Message logging code doesn't work on
 # gcc/POSIX, because it wprintf()s across the chromium/mozilla
@@ -239,8 +239,8 @@ def _shmemRevokeRights(shmemexpr):
 def _lookupShmem(idexpr):
     return ExprCall(ExprVar('LookupSharedMemory'), args=[ idexpr ])
 
-def _makeForwardDeclForQClass(clsname, quals):
-    fd = ForwardDecl(clsname, cls=1)
+def _makeForwardDeclForQClass(clsname, quals, cls=1, struct=0):
+    fd = ForwardDecl(clsname, cls=cls, struct=struct)
     if 0 == len(quals):
         return fd
 
@@ -1418,6 +1418,38 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         hf.addthings(_includeGuardStart(hf))
         hf.addthing(Whitespace.NL)
 
+        for inc in builtinHeaderIncludes:
+            self.visitBuiltinCxxInclude(inc)
+
+        # Compute the set of includes we need for declared structure/union
+        # classes for this protocol.
+        typesToIncludes = {}
+        for using in tu.using:
+            typestr = str(using.type.spec)
+            assert typestr not in typesToIncludes
+            typesToIncludes[typestr] = using.header
+
+        aggregateTypeIncludes = set()
+        for su in tu.structsAndUnions:
+            typedeps = _ComputeTypeDeps(su.decl.type, True)
+            if isinstance(su, ipdl.ast.StructDecl):
+                for f in su.fields:
+                    f.ipdltype.accept(typedeps)
+            elif isinstance(su, ipdl.ast.UnionDecl):
+                for c in su.components:
+                    c.ipdltype.accept(typedeps)
+
+            for typename in [t.fromtype.name for t in typedeps.usingTypedefs]:
+                if typename in typesToIncludes:
+                    aggregateTypeIncludes.add(typesToIncludes[typename])
+
+        if len(aggregateTypeIncludes) != 0:
+            hf.addthing(Whitespace.NL)
+            hf.addthings([ Whitespace("// Headers for typedefs"), Whitespace.NL ])
+
+            for headername in sorted(iter(aggregateTypeIncludes)):
+                hf.addthing(CppDirective('include', '"' + headername + '"'))
+            
         ipdl.ast.Visitor.visitTranslationUnit(self, tu)
         if tu.filetype == 'header':
             self.cppIncludeHeaders.append(_ipdlhHeaderName(tu))
@@ -1444,7 +1476,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         cf.addthings(self.structUnionDefns)
 
 
-    def visitCxxInclude(self, inc):
+    def visitBuiltinCxxInclude(self, inc):
         self.hdrfile.addthing(CppDirective('include', '"'+ inc.file +'"'))
 
     def visitInclude(self, inc):
@@ -1840,14 +1872,15 @@ class _ComputeTypeDeps(TypeVisitor):
 types that need forward declaration; (ii) types that need a |using|
 stmt.  Some types generate both kinds.'''
 
-    def __init__(self, fortype):
+    def __init__(self, fortype, unqualifiedTypedefs=False):
         ipdl.type.TypeVisitor.__init__(self)
         self.usingTypedefs = [ ]
         self.forwardDeclStmts = [ ]
         self.fortype = fortype
+        self.unqualifiedTypedefs = unqualifiedTypedefs
 
     def maybeTypedef(self, fqname, name):
-        if fqname != name:
+        if fqname != name or self.unqualifiedTypedefs:
             self.usingTypedefs.append(Typedef(Type(fqname), name))
         
     def visitBuiltinCxxType(self, t):
@@ -2453,6 +2486,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.includedActorTypedefs = [ ]
         self.includedActorUsings = [ ]
         self.protocolCxxIncludes = [ ]
+        self.actorForwardDecls = [ ]
+        self.usingDecls = [ ]
+        self.externalIncludes = set()
+        self.nonForwardDeclaredHeaders = set()
 
     def lower(self, tu, clsname, cxxHeaderFile, cxxFile):
         self.clsname = clsname
@@ -2494,6 +2531,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         for inc in tu.includes:
             inc.accept(self)
+        for inc in tu.cxxIncludes:
+            inc.accept(self)
+
+        for using in tu.using:
+            using.accept(self)
 
         # this generates the actor's full impl in self.cls
         tu.protocol.accept(self)
@@ -2507,6 +2549,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 if stmt.decl.ret and stmt.decl.ret.name == 'Result':
                     stmt.decl.ret.name = clsdecl.name +'::'+ stmt.decl.ret.name
 
+        def setToIncludes(s):
+            return [ CppDirective('include', '"%s"' % i)
+                     for i in sorted(iter(s)) ]
+
         def makeNamespace(p, file):
             if 0 == len(p.namespaces):
                 return file
@@ -2514,6 +2560,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             outerns = _putInNamespaces(ns, p.namespaces[:-1])
             file.addthing(outerns)
             return ns
+
+        if len(self.nonForwardDeclaredHeaders) != 0:
+            self.hdrfile.addthings(
+                [ Whitespace('// Headers for things that cannot be forward declared'),
+                  Whitespace.NL ]
+                + setToIncludes(self.nonForwardDeclaredHeaders)
+                + [ Whitespace.NL ]
+            )
+        self.hdrfile.addthings(self.actorForwardDecls)
+        self.hdrfile.addthings(self.usingDecls)
 
         hdrns = makeNamespace(self.protocol, self.hdrfile)
         hdrns.addstmts([
@@ -2542,8 +2598,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL,
             CppDirective(
                 'include',
-                '"'+ _protocolHeaderName(self.protocol, self.side) +'.h"')
-        ])
+                '"'+ _protocolHeaderName(self.protocol, self.side) +'.h"') ]
+            + setToIncludes(self.externalIncludes))
              
         if self.protocol.decl.type.isToplevel():
             cf.addthings([
@@ -2571,13 +2627,32 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL
         ])
 
+    def visitUsingStmt(self, using):
+        if using.header is None:
+            return
+
+        if using.canBeForwardDeclared():
+            spec = using.type.spec
+
+            self.usingDecls.extend([
+                _makeForwardDeclForQClass(spec.baseid, spec.quals,
+                                          cls=using.isClass(),
+                                          struct=using.isStruct()),
+                Whitespace.NL
+            ])
+            self.externalIncludes.add(using.header)
+        else:
+            self.nonForwardDeclaredHeaders.add(using.header)
+
+    def visitCxxInclude(self, inc):
+        self.nonForwardDeclaredHeaders.add(inc.file)
 
     def visitInclude(self, inc):
         ip = inc.tu.protocol
         if not ip:
             return
 
-        self.hdrfile.addthings([
+        self.actorForwardDecls.extend([
             _makeForwardDeclForActor(ip.decl.type, self.side),
             Whitespace.NL
         ])
@@ -2645,8 +2720,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         friends.discard(ptype)
 
         for friend in friends:
-            self.hdrfile.addthings([
-                Whitespace.NL,
+            self.actorForwardDecls.extend([
                 _makeForwardDeclForActor(friend, self.prettyside),
                 Whitespace.NL
             ])

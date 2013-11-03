@@ -2146,12 +2146,14 @@ class MCompare
     CompareType compareType_;
     JSOp jsop_;
     bool operandMightEmulateUndefined_;
+    bool operandsAreNeverNaN_;
 
     MCompare(MDefinition *left, MDefinition *right, JSOp jsop)
       : MBinaryInstruction(left, right),
         compareType_(Compare_Unknown),
         jsop_(jsop),
-        operandMightEmulateUndefined_(true)
+        operandMightEmulateUndefined_(true),
+        operandsAreNeverNaN_(false)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -2195,6 +2197,9 @@ class MCompare
     bool operandMightEmulateUndefined() const {
         return operandMightEmulateUndefined_;
     }
+    bool operandsAreNeverNaN() const {
+        return operandsAreNeverNaN_;
+    }
     AliasSet getAliasSet() const {
         // Strict equality is never effectful.
         if (jsop_ == JSOP_STRICTEQ || jsop_ == JSOP_STRICTNE)
@@ -2206,6 +2211,7 @@ class MCompare
     }
 
     void printOpcode(FILE *fp) const;
+    void collectRangeInfo();
 
     void trySpecializeFloat32();
     bool isFloat32Commutative() const { return true; }
@@ -5153,11 +5159,13 @@ class MNot
     public TestPolicy
 {
     bool operandMightEmulateUndefined_;
+    bool operandIsNeverNaN_;
 
   public:
     MNot(MDefinition *input)
       : MUnaryInstruction(input),
-        operandMightEmulateUndefined_(true)
+        operandMightEmulateUndefined_(true),
+        operandIsNeverNaN_(false)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -5183,6 +5191,9 @@ class MNot
     bool operandMightEmulateUndefined() const {
         return operandMightEmulateUndefined_;
     }
+    bool operandIsNeverNaN() const {
+        return operandIsNeverNaN_;
+    }
 
     MDefinition *operand() const {
         return getOperand(0);
@@ -5194,6 +5205,7 @@ class MNot
     TypePolicy *typePolicy() {
         return this;
     }
+    void collectRangeInfo();
 
     void trySpecializeFloat32();
     bool isFloat32Commutative() const { return true; }

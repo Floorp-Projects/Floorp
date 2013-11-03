@@ -384,9 +384,6 @@ JSRuntime::init(uint32_t maxbytes)
     if (!scriptDataTable_.init())
         return false;
 
-    if (!threadPool.init())
-        return false;
-
     if (!evalCache.init())
         return false;
 

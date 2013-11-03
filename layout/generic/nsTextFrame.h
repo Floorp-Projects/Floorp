@@ -31,6 +31,12 @@ typedef nsFrame nsTextFrameBase;
 class nsDisplayTextGeometry;
 class nsDisplayText;
 
+class nsTextFrameTextRunCache {
+public:
+  static void Init();
+  static void Shutdown();
+};
+
 class nsTextFrame : public nsTextFrameBase {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTextFrame)

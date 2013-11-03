@@ -228,17 +228,18 @@ DumpXPC(JSContext *cx,
         unsigned argc,
         JS::Value *vp)
 {
-    int32_t depth = 2;
+    JS::CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc > 0) {
-        if (!JS_ValueToInt32(cx, JS_ARGV(cx, vp)[0], &depth))
+    uint16_t depth = 2;
+    if (args.length() > 0) {
+        if (!JS::ToUint16(cx, args[0], &depth))
             return false;
     }
 
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-    if(xpc)
+    if (xpc)
         xpc->DebugDump(int16_t(depth));
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    args.rval().setUndefined();
     return true;
 }
 
