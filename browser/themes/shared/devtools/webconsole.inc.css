@@ -66,21 +66,30 @@ a {
 
 .message > .location {
   -moz-margin-start: 6px;
+  display: flex;
   flex: 0 0 auto;
   align-self: flex-start;
+  justify-content: flex-end;
   width: 10em;
   margin-top: 4px;
-  text-align: end;
   color: -moz-nativehyperlinktext;
-  text-overflow: ellipsis;
   text-decoration: none;
-  overflow: hidden;
-  white-space: nowrap;
 }
 
 .message > .location:hover,
 .message > .location:focus {
   text-decoration: underline;
+}
+
+.message > .location > .filename {
+  text-overflow: ellipsis;
+  text-align: end;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.message > .location > .line-number {
+  flex: 0 0 auto;
 }
 
 .jsterm-input-container {
