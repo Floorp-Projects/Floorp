@@ -1158,10 +1158,10 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
 }
 
 static void
-InitAncestorsIfInStyleScope(TreeMatchContext& aTreeContext, Element* aElement)
+InitStyleScopes(TreeMatchContext& aTreeContext, Element* aElement)
 {
   if (aElement->IsElementInStyleScope()) {
-    aTreeContext.InitAncestors(aElement->GetParentElement());
+    aTreeContext.InitStyleScopes(aElement->GetParentElement());
   }
 }
 
@@ -1171,7 +1171,7 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
 {
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                                aElement->OwnerDoc());
-  InitAncestorsIfInStyleScope(treeContext, aElement);
+  InitStyleScopes(treeContext, aElement);
   return ResolveStyleFor(aElement, aParentContext, treeContext);
 }
 
@@ -1347,7 +1347,7 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                                aParentElement->OwnerDoc());
-  InitAncestorsIfInStyleScope(treeContext, aParentElement);
+  InitStyleScopes(treeContext, aParentElement);
   PseudoElementRuleProcessorData data(PresContext(), aParentElement,
                                       &ruleWalker, aType, treeContext,
                                       aPseudoElement);
@@ -1392,7 +1392,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
 {
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                                aParentElement->OwnerDoc());
-  InitAncestorsIfInStyleScope(treeContext, aParentElement);
+  InitStyleScopes(treeContext, aParentElement);
   return ProbePseudoElementStyle(aParentElement, aType, aParentContext,
                                  treeContext);
 }
@@ -1533,7 +1533,7 @@ nsStyleSet::ResolveXULTreePseudoStyle(Element* aParentElement,
   nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                                aParentElement->OwnerDoc());
-  InitAncestorsIfInStyleScope(treeContext, aParentElement);
+  InitStyleScopes(treeContext, aParentElement);
   XULTreeRuleProcessorData data(PresContext(), aParentElement, &ruleWalker,
                                 aPseudoTag, aComparator, treeContext);
   FileRules(EnumRulesMatching<XULTreeRuleProcessorData>, &data, aParentElement,
@@ -1896,7 +1896,7 @@ nsStyleSet::HasDocumentStateDependentStyle(nsPresContext* aPresContext,
 
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aContent->OwnerDoc());
-  InitAncestorsIfInStyleScope(treeContext, aContent->AsElement());
+  InitStyleScopes(treeContext, aContent->AsElement());
   StatefulData data(aPresContext, aContent->AsElement(), aStateMask,
                     treeContext);
   WalkRuleProcessors(SheetHasDocumentStateStyle, &data, true);
@@ -1920,7 +1920,7 @@ nsStyleSet::HasStateDependentStyle(nsPresContext*       aPresContext,
 {
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aElement->OwnerDoc());
-  InitAncestorsIfInStyleScope(treeContext, aElement);
+  InitStyleScopes(treeContext, aElement);
   StatefulData data(aPresContext, aElement, aStateMask, treeContext);
   WalkRuleProcessors(SheetHasStatefulStyle, &data, false);
   return data.mHint;
@@ -1956,7 +1956,7 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
 {
   TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
                                aElement->OwnerDoc());
-  InitAncestorsIfInStyleScope(treeContext, aElement);
+  InitStyleScopes(treeContext, aElement);
   AttributeData data(aPresContext, aElement, aAttribute,
                      aModType, aAttrHasChanged, treeContext);
   WalkRuleProcessors(SheetHasAttributeStyle, &data, false);
