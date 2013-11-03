@@ -75,7 +75,7 @@ private:
 };
 
 // Shuts down a thread asynchronously.
-class ShutdownThreadEvent : public nsRunnable 
+class ShutdownThreadEvent : public nsRunnable
 {
 public:
   ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
@@ -90,12 +90,9 @@ private:
 };
 
 class MediaResource;
-} // namespace mozilla
 
-namespace mozilla {
 namespace dom {
 class TimeRanges;
-}
 }
 
 // Estimates the buffered ranges of a MediaResource using a simple
@@ -149,5 +146,9 @@ void ScaleDisplayByAspectRatio(nsIntSize& aDisplay, float aAspectRatio);
 // All other platforms use their system defaults.
 #define MEDIA_THREAD_STACK_SIZE nsIThreadManager::DEFAULT_STACK_SIZE
 #endif
+
+bool IsVideoContentType(const nsCString& aContentType);
+
+} // end namespace mozilla
 
 #endif
