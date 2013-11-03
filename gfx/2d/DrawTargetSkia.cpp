@@ -25,6 +25,7 @@
 #include "Logging.h"
 #include "HelpersSkia.h"
 #include "Tools.h"
+#include "DataSurfaceHelpers.h"
 #include <algorithm>
 
 namespace mozilla {

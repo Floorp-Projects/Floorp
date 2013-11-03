@@ -75,6 +75,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/ipc/PDocumentRendererParent.h"
 #include "mozilla/MathAlgorithms.h"
@@ -1060,40 +1061,20 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
   *aImageBuffer = nullptr;
   *aFormat = 0;
 
-  nsRefPtr<gfxASurface> surface;
-  nsresult rv = GetThebesSurface(getter_AddRefs(surface));
-  if (NS_FAILED(rv)) {
+  EnsureTarget();
+  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+  if (!snapshot) {
     return;
   }
 
-  static const fallible_t fallible = fallible_t();
-  uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
-  if (!imageBuffer) {
+  RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+  if (!data) {
     return;
   }
 
-  nsRefPtr<gfxImageSurface> imgsurf =
-    new gfxImageSurface(imageBuffer,
-                        gfxIntSize(mWidth, mHeight),
-                        mWidth * 4,
-                        gfxImageFormatARGB32);
+  MOZ_ASSERT(data->GetSize() == IntSize(mWidth, mHeight));
 
-  if (!imgsurf || imgsurf->CairoStatus()) {
-    delete[] imageBuffer;
-    return;
-  }
-
-  nsRefPtr<gfxContext> ctx = new gfxContext(imgsurf);
-  if (!ctx || ctx->HasError()) {
-    delete[] imageBuffer;
-    return;
-  }
-
-  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  ctx->SetSource(surface, gfxPoint(0, 0));
-  ctx->Paint();
-
-  *aImageBuffer = imageBuffer;
+  *aImageBuffer = SurfaceToPackedBGRA(data);
   *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
 }
 
