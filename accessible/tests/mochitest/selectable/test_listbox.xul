@@ -41,20 +41,20 @@
       var select = getAccessible(id, [nsIAccessibleSelectable]);
       testSelectableSelection(select, [ ]);
 
-      select.addChildToSelection(1);
-      testSelectableSelection(select, [ "lb1_item2" ], "addChildToSelect(1): ");
+      select.addItemToSelection(1);
+      testSelectableSelection(select, [ "lb1_item2" ], "addItemToSelect(1): ");
 
-      select.removeChildFromSelection(1);
+      select.removeItemFromSelection(1);
       testSelectableSelection(select, [ ],
-                              "removeChildFromSelection(1): ");
+                              "removeItemFromSelection(1): ");
 
-      todo(select.selectAllSelection() == false,
+      todo(select.selectAll() == false,
            "No way to select all items in listbox '" + id + "'");
-      testSelectableSelection(select, [ "lb1_item1" ], "selectAllSelection: ");
+      testSelectableSelection(select, [ "lb1_item1" ], "selectAll: ");
 
-      select.addChildToSelection(1);
-      select.clearSelection();
-      testSelectableSelection(select, [ ], "clearSelection: ");
+      select.addItemToSelection(1);
+      select.unselectAll();
+      testSelectableSelection(select, [ ], "unselectAll: ");
 
       //////////////////////////////////////////////////////////////////////////
       // multiple selectable listbox
@@ -66,30 +66,30 @@
       var select = getAccessible(id, [nsIAccessibleSelectable]);
       testSelectableSelection(select, [ ]);
 
-      select.addChildToSelection(1);
-      testSelectableSelection(select, [ "lb2_item2" ], "addChildToSelect(1): ");
+      select.addItemToSelection(1);
+      testSelectableSelection(select, [ "lb2_item2" ], "addItemToSelect(1): ");
 
-      select.removeChildFromSelection(1);
+      select.removeItemFromSelection(1);
       testSelectableSelection(select, [ ],
-                              "removeChildFromSelection(1): ");
+                              "removeItemFromSelection(1): ");
 
-      is(select.selectAllSelection(), true,
+      is(select.selectAll(), true,
          "All items should be selected in listbox '" + id + "'");
       testSelectableSelection(select, [ "lb2_item1", "lb2_item2" ],
-                              "selectAllSelection: ");
+                              "selectAll: ");
 
-      select.clearSelection();
-      testSelectableSelection(select, [ ], "clearSelection: ");
+      select.unselectAll();
+      testSelectableSelection(select, [ ], "unselectAll: ");
 
       //////////////////////////////////////////////////////////////////////////
       // listbox with headers
 
-      // XXX: addChildToSelection/removeChildFromSelection don't work correctly
+      // XXX: addItemToSelection/removeItemFromSelection don't work correctly
       // on listboxes with headers because header is inserted into hierarchy
       // and child indexes that are used in these methods are shifted (see bug
       // 591939).
       todo(false,
-           "Fix addChildToSelection/removeChildFromSelection on listboxes with headers.");
+           "Fix addItemToSelection/removeItemFromSelection on listboxes with headers.");
 
       SimpleTest.finish();
     }
