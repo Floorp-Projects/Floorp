@@ -2606,29 +2606,28 @@ WebConsoleFrame.prototype = {
   createLocationNode: function WCF_createLocationNode(aSourceURL, aSourceLine)
   {
     let locationNode = this.document.createElementNS(XHTML_NS, "a");
+    let filenameNode = this.document.createElementNS(XHTML_NS, "span");
 
     // Create the text, which consists of an abbreviated version of the URL
-    // plus an optional line number. Scratchpad URLs should not be abbreviated.
-    let displayLocation;
+    // Scratchpad URLs should not be abbreviated.
+    let filename;
     let fullURL;
     let isScratchpad = false;
 
     if (/^Scratchpad\/\d+$/.test(aSourceURL)) {
-      displayLocation = aSourceURL;
+      filename = aSourceURL;
       fullURL = aSourceURL;
       isScratchpad = true;
     }
     else {
       fullURL = aSourceURL.split(" -> ").pop();
-      displayLocation = WebConsoleUtils.abbreviateSourceURL(fullURL);
+      filename = WebConsoleUtils.abbreviateSourceURL(fullURL);
     }
 
-    if (aSourceLine) {
-      displayLocation += ":" + aSourceLine;
-      locationNode.sourceLine = aSourceLine;
-    }
+    filenameNode.className = "filename";
+    filenameNode.textContent = " " + filename;
+    locationNode.appendChild(filenameNode);
 
-    locationNode.textContent = " " + displayLocation;
     locationNode.href = isScratchpad ? "#" : fullURL;
     locationNode.draggable = false;
     locationNode.setAttribute("title", aSourceURL);
@@ -2650,6 +2649,14 @@ WebConsoleFrame.prototype = {
         this.owner.viewSource(fullURL, aSourceLine);
       }
     });
+
+    if (aSourceLine) {
+      let lineNumberNode = this.document.createElementNS(XHTML_NS, "span");
+      lineNumberNode.className = "line-number";
+      lineNumberNode.textContent = ":" + aSourceLine;
+      locationNode.appendChild(lineNumberNode);
+      locationNode.sourceLine = aSourceLine;
+    }
 
     return locationNode;
   },

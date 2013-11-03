@@ -150,7 +150,6 @@ protected:
   void UpdateLogicalDPI();
   void FireViewStateObservers();
   void ProcessLaunchArguments();
-  void UpdateBounds();
 
   // Printing and preview
   void CreatePrintControl(IPrintDocumentPackageTarget* aDocPackageTarget, 
