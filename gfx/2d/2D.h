@@ -74,23 +74,19 @@ struct NativeFont {
  * mCompositionOp - The operator that indicates how the source and destination
  *                  patterns are blended.
  * mAntiAliasMode - The AntiAlias mode used for this drawing operation.
- * mSnapping      - Whether this operation is snapped to pixel boundaries.
  */
 struct DrawOptions {
   DrawOptions(Float aAlpha = 1.0f,
               CompositionOp aCompositionOp = OP_OVER,
-              AntialiasMode aAntialiasMode = AA_DEFAULT,
-              Snapping aSnapping = SNAP_NONE)
+              AntialiasMode aAntialiasMode = AA_DEFAULT)
     : mAlpha(aAlpha)
     , mCompositionOp(aCompositionOp)
     , mAntialiasMode(aAntialiasMode)
-    , mSnapping(aSnapping)
   {}
 
   Float mAlpha;
   CompositionOp mCompositionOp : 8;
   AntialiasMode mAntialiasMode : 3;
-  Snapping mSnapping : 1;
 };
 
 /*
