@@ -352,7 +352,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     JSTrapStatus fireDebuggerStatement(JSContext *cx, MutableHandleValue vp);
     JSTrapStatus fireExceptionUnwind(JSContext *cx, MutableHandleValue vp);
-    JSTrapStatus fireEnterFrame(JSContext *cx, MutableHandleValue vp);
+    JSTrapStatus fireEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp);
     JSTrapStatus fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, MutableHandleValue vp);
 
     /*
@@ -480,8 +480,29 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      */
     bool unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 
-    /* Store the Debugger.Frame object for iter in *vp. */
-    bool getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, MutableHandleValue vp);
+    /*
+     * Store the Debugger.Frame object for frame in *vp.
+     *
+     * Use this if you have already access to a frame pointer without having
+     * to incur the cost of walking the stack.
+     */
+    bool getScriptFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp);
+
+    /*
+     * Store the Debugger.Frame object for iter in *vp. Eagerly copies a
+     * ScriptFrameIter::Data.
+     *
+     * Use this if you had to make a ScriptFrameIter to get the required
+     * frame, in which case the cost of walking the stack has already been
+     * paid.
+     */
+    bool getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, MutableHandleValue vp) {
+        AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();
+        if (!data || !getScriptFrame(cx, iter.abstractFramePtr(), vp))
+            return false;
+        vp.toObject().setPrivate(data.raw());
+        return true;
+    }
 
     /*
      * Set |*status| and |*value| to a (JSTrapStatus, Value) pair reflecting a
