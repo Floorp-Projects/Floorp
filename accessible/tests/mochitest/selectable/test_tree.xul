@@ -53,13 +53,13 @@
         if (seltype != "single" && seltype != "cell" && seltype != "text")
           isTreeMultiSelectable = true;
 
-        // selectAllSelection
+        // selectAll
         var accSelectable = getAccessible(this.DOMNode,
                                           [nsIAccessibleSelectable]);
         ok(accSelectable, "tree is not selectable!");
         if (accSelectable) {
-          is(accSelectable.selectAllSelection(), isTreeMultiSelectable,
-             "SelectAllSelection is not correct for seltype: " + seltype);
+          is(accSelectable.selectAll(), isTreeMultiSelectable,
+             "SelectAll is not correct for seltype: " + seltype);
         }
 
         var selectedChildren = [];
@@ -72,29 +72,29 @@
           }
         }
         testSelectableSelection(accSelectable, selectedChildren,
-                                "selectAllSelection test. ");
+                                "selectAll test. ");
 
-        // clearSelection
-        accSelectable.clearSelection();
-        testSelectableSelection(accSelectable, [], "clearSelection test. ");
+        // unselectAll
+        accSelectable.unselectAll();
+        testSelectableSelection(accSelectable, [], "unselectAll test. ");
 
-        // addChildToSelection
-        accSelectable.addChildToSelection(1);
-        accSelectable.addChildToSelection(3);
+        // addItemToSelection
+        accSelectable.addItemToSelection(1);
+        accSelectable.addItemToSelection(3);
 
         selectedChildren = isTreeMultiSelectable ?
           [ accSelectable.getChildAt(2), accSelectable.getChildAt(4) ] :
           [ accSelectable.getChildAt(2) ];
         testSelectableSelection(accSelectable, selectedChildren,
-                                "addChildToSelection test. ");
+                                "addItemToSelection test. ");
 
-        // removeChildFromSelection
-        accSelectable.removeChildFromSelection(1);
+        // removeItemFromSelection
+        accSelectable.removeItemFromSelection(1);
 
         selectedChildren = isTreeMultiSelectable ?
           [ accSelectable.getChildAt(4) ] : [ ];
         testSelectableSelection(accSelectable, selectedChildren,
-                                "removeChildFromSelection test. ");
+                                "removeItemFromSelection test. ");
       }
 
       this.getID = function getID()
