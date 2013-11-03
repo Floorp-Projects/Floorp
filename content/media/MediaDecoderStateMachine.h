@@ -129,7 +129,7 @@ public:
   };
 
   State GetState() {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
     return mState;
   }
 
@@ -227,14 +227,14 @@ public:
   // This is called on the state machine thread and audio thread.
   // The decoder monitor must be obtained before calling this.
   bool HasAudio() const {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
     return mInfo.HasAudio();
   }
 
   // This is called on the state machine thread and audio thread.
   // The decoder monitor must be obtained before calling this.
   bool HasVideo() const {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
     return mInfo.HasVideo();
   }
 
@@ -243,14 +243,14 @@ public:
 
   // Must be called with the decode monitor held.
   bool IsBuffering() const {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
 
     return mState == DECODER_STATE_BUFFERING;
   }
 
   // Must be called with the decode monitor held.
   bool IsSeeking() const {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
 
     return mState == DECODER_STATE_SEEKING;
   }
@@ -277,17 +277,17 @@ public:
   void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
   int64_t GetEndMediaTime() const {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
     return mEndTime;
   }
 
   bool IsTransportSeekable() {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
     return mTransportSeekable;
   }
 
   bool IsMediaSeekable() {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
     return mMediaSeekable;
   }
 
@@ -347,6 +347,8 @@ public:
 
 protected:
   virtual uint32_t GetAmpleVideoFrames() { return mAmpleVideoFrames; }
+
+  void AssertCurrentThreadInMonitor() const { mDecoder->GetReentrantMonitor().AssertCurrentThreadIn(); }
 
 private:
   class WakeDecoderRunnable : public nsRunnable {
@@ -528,7 +530,7 @@ private:
   // not start at 0. Note this is different to the value returned
   // by GetCurrentTime(), which is in the range [0,duration].
   int64_t GetMediaTime() const {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
     return mStartTime + mCurrentFrameTime;
   }
 
@@ -571,7 +573,7 @@ private:
   nsresult RunStateMachine();
 
   bool IsStateMachineScheduled() const {
-    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    AssertCurrentThreadInMonitor();
     return !mTimeout.IsNull() || mRunAgain;
   }
 
