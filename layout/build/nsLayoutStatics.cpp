@@ -43,7 +43,7 @@
 #include "txMozillaXSLTProcessor.h"
 #include "nsTreeSanitizer.h"
 #include "nsCellMap.h"
-#include "nsTextFrameTextRunCache.h"
+#include "nsTextFrame.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
