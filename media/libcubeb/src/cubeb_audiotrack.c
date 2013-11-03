@@ -233,12 +233,13 @@ audiotrack_init(cubeb ** context, char const * context_name)
   DLSYM_DLERROR("_ZNK7android10AudioTrack7latencyEv", ctx->klass.latency, ctx->library);
   DLSYM_DLERROR("_ZNK7android10AudioTrack9initCheckEv", ctx->klass.check, ctx->library);
 
+  DLSYM_DLERROR("_ZN7android11AudioSystem21getOutputSamplingRateEPii", ctx->klass.get_output_samplingrate, ctx->library);
+
   /* |getMinFrameCount| is not available on Froyo, and is available on
    * gingerbread and ICS with a different signature. */
   if (audiotrack_version_is_froyo(ctx)) {
     DLSYM_DLERROR("_ZN7android11AudioSystem19getOutputFrameCountEPii", ctx->klass.get_output_frame_count, ctx->library);
     DLSYM_DLERROR("_ZN7android11AudioSystem16getOutputLatencyEPji", ctx->klass.get_output_latency, ctx->library);
-    DLSYM_DLERROR("_ZN7android11AudioSystem21getOutputSamplingRateEPii", ctx->klass.get_output_samplingrate, ctx->library);
   } else {
     DLSYM_DLERROR("_ZN7android10AudioTrack16getMinFrameCountEPi19audio_stream_type_tj", ctx->klass.get_min_frame_count, ctx->library);
     if (!ctx->klass.get_min_frame_count) {
