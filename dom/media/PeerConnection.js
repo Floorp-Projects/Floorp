@@ -16,7 +16,7 @@ const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
 const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
 
-const PC_CID = Components.ID("{fc684a5c-c729-42c7-aa82-3c10dc4398f3}");
+const PC_CID = Components.ID("{00e0e20d-1494-4776-8e0e-0f0acbea3c79}");
 const PC_OBS_CID = Components.ID("{1d44a18e-4545-4ff3-863d-6dbd6234a583}");
 const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
@@ -719,18 +719,26 @@ RTCPeerConnection.prototype = {
   },
 
   getStats: function(selector, onSuccess, onError) {
-    this._onGetStatsSuccess = onSuccess;
-    this._onGetStatsFailure = onError;
-
     this._queueOrRun({
       func: this._getStats,
-      args: [selector],
+      args: [selector, onSuccess, onError, false],
       wait: true
     });
   },
 
-  _getStats: function(selector) {
-    this._getPC().getStats(selector);
+  getStatsInternal: function(selector, onSuccess, onError) {
+    this._queueOrRun({
+      func: this._getStats,
+      args: [selector, onSuccess, onError, true],
+      wait: true
+    });
+  },
+
+  _getStats: function(selector, onSuccess, onError, internal) {
+    this._onGetStatsSuccess = onSuccess;
+    this._onGetStatsFailure = onError;
+
+    this._getPC().getStats(selector, internal);
   },
 
   createDataChannel: function(label, dict) {
@@ -1077,6 +1085,7 @@ PeerConnectionObserver.prototype = {
     appendStats(dict.mediaStreamStats, report);
     appendStats(dict.transportStats, report);
     appendStats(dict.iceComponentStats, report);
+    appendStats(dict.iceCandidatePairStats, report);
     appendStats(dict.iceCandidateStats, report);
     appendStats(dict.codecStats, report);
 

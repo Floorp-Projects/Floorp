@@ -5933,18 +5933,25 @@ IonBuilder::maybeInsertResume()
 }
 
 static bool
-ClassHasEffectlessLookup(JSCompartment *comp, const Class *clasp, PropertyName *name)
+ClassHasEffectlessLookup(const Class *clasp)
 {
-    if (!clasp->isNative() || clasp->ops.lookupGeneric)
+    return clasp->isNative() && !clasp->ops.lookupGeneric;
+}
+
+static bool
+ClassHasResolveHook(JSCompartment *comp, const Class *clasp, PropertyName *name)
+{
+    if (clasp->resolve == JS_ResolveStub)
         return false;
-    if (clasp->resolve != JS_ResolveStub &&
-        // Note: str_resolve only resolves integers, not names.
-        clasp->resolve != (JSResolveOp)str_resolve &&
-        (clasp->resolve != (JSResolveOp)fun_resolve ||
-         FunctionHasResolveHook(comp->runtimeFromAnyThread(), name)))
-    {
+
+    if (clasp->resolve == (JSResolveOp)str_resolve) {
+        // str_resolve only resolves integers, not names.
         return false;
     }
+
+    if (clasp->resolve == (JSResolveOp)fun_resolve)
+        return FunctionHasResolveHook(comp->runtimeFromAnyThread(), name);
+
     return true;
 }
 
@@ -5966,7 +5973,7 @@ IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyNa
     // property will change and trigger invalidation.
 
     while (obj) {
-        if (!ClassHasEffectlessLookup(compartment, obj->getClass(), name))
+        if (!ClassHasEffectlessLookup(obj->getClass()))
             return false;
 
         types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
@@ -5979,6 +5986,9 @@ IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyNa
                 return property.singleton(constraints()) == singleton;
             return false;
         }
+
+        if (ClassHasResolveHook(compartment, obj->getClass(), name))
+            return false;
 
         obj = obj->getProto();
     }
@@ -7604,7 +7614,7 @@ IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyN
                 return false;
 
             const Class *clasp = type->clasp();
-            if (!ClassHasEffectlessLookup(compartment, clasp, name))
+            if (!ClassHasEffectlessLookup(clasp) || ClassHasResolveHook(compartment, clasp, name))
                 return false;
 
             // Look for a getter/setter on the class itself which may need

@@ -3810,9 +3810,8 @@ nsSVGTextFrame2::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   NS_ASSERTION(GetFirstPrincipalChild(), "must have a child frame");
 
   SVGBBox bbox;
-  nsIFrame* kid = GetFirstPrincipalChild();
-  if (kid && NS_SUBTREE_DIRTY(kid)) {
-    // Return an empty bbox if our kid's subtree is dirty. This may be called
+  if (NS_SUBTREE_DIRTY(this)) {
+    // Return an empty bbox if this frame's subtree is dirty. This may be called
     // in that situation, e.g. when we're building a display list after an
     // interrupted reflow. This can also be called during reflow before we've
     // been reflowed, e.g. if an earlier sibling is calling FinishAndStoreOverflow and
@@ -5058,9 +5057,9 @@ nsSVGTextFrame2::ShouldRenderAsPath(nsRenderingContext* aContext,
   // Text has a stroke.
   if (!(style->mStroke.mType == eStyleSVGPaintType_None ||
         style->mStrokeOpacity == 0 ||
-        nsSVGUtils::CoordToFloat(PresContext(),
-                                 static_cast<nsSVGElement*>(mContent),
-                                 style->mStrokeWidth) == 0)) {
+        SVGContentUtils::CoordToFloat(PresContext(),
+                                      static_cast<nsSVGElement*>(mContent),
+                                      style->mStrokeWidth) == 0)) {
     return true;
   }
 

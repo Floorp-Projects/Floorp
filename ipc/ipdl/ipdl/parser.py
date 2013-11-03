@@ -121,9 +121,11 @@ reserved = set((
         'bridges',
         'call',
         'child',
+        'class',
         'compress',
         '__delete__',
         'delete',                       # reserve 'delete' to prevent its use
+        'from',
         'goto',
         'include',
         'intr',
@@ -267,13 +269,29 @@ def p_IncludeStmt(p):
     if path is None:
         raise ParseError(loc, "can't locate include file `%s'"% (
                 inc.file))
-    
+
     inc.tu = Parser(type, id).parse(open(path).read(), path, Parser.current.includedirs, Parser.current.errout)
     p[0] = inc
 
 def p_UsingStmt(p):
-    """UsingStmt : USING CxxType"""
-    p[0] = UsingStmt(locFromTok(p, 1), p[2])
+    """UsingStmt : USING CxxType FROM STRING
+                 | USING CLASS CxxType FROM STRING
+                 | USING STRUCT CxxType FROM STRING"""
+    if 6 == len(p):
+        header = p[5]
+    elif 5 == len(p):
+        header = p[4]
+    else:
+        header = None
+    if 6 == len(p):
+        kind = p[2]
+    else:
+        kind = None
+    if 6 == len(p):
+        cxxtype = p[3]
+    else:
+        cxxtype = p[2]
+    p[0] = UsingStmt(locFromTok(p, 1), cxxtype, header, kind)
 
 ##--------------------
 ## Namespaced stuff

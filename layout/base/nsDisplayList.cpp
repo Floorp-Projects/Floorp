@@ -47,6 +47,7 @@
 #include "StickyScrollContainer.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
+#include "ActiveLayerTracker.h"
 
 #include <stdint.h>
 #include <algorithm>
@@ -3056,7 +3057,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerParameters& aContainerParameters) {
   if (mFrame->StyleDisplay()->mOpacity == 0 && mFrame->GetContent() &&
-      !nsLayoutUtils::HasAnimationsForCompositor(mFrame->GetContent(), eCSSProperty_opacity)) {
+      !nsLayoutUtils::HasAnimations(mFrame->GetContent(), eCSSProperty_opacity)) {
     return nullptr;
   }
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
@@ -3090,7 +3091,7 @@ nsDisplayItem::LayerState
 nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
                                 const ContainerParameters& aParameters) {
-  if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateOpacityLayer) &&
+  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_opacity) &&
       !IsItemTooSmallForActiveLayer(this))
     return LAYER_ACTIVE;
   if (mFrame->GetContent()) {
@@ -4213,7 +4214,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
 bool
 nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 {
-  if (Frame()->AreLayersMarkedActive(nsChangeHint_UpdateOpacityLayer)) {
+  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_opacity)) {
     return true;
   }
 
@@ -4243,7 +4244,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   // have a compositor-animated transform, can be prerendered. An element
   // might have only just had its transform animated in which case
   // nsChangeHint_UpdateTransformLayer will not be present yet.
-  if (!aFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer) &&
+  if (!ActiveLayerTracker::IsStyleAnimated(aFrame, eCSSProperty_transform) &&
       (!aFrame->GetContent() ||
        !nsLayoutUtils::HasAnimationsForCompositor(aFrame->GetContent(),
                                                   eCSSProperty_transform))) {
@@ -4393,7 +4394,7 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
   }
   // Here we check if the *post-transform* bounds of this item are big enough
   // to justify an active layer.
-  if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer) &&
+  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_transform) &&
       !IsItemTooSmallForActiveLayer(this))
     return LAYER_ACTIVE;
   if (mFrame->GetContent()) {

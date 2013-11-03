@@ -65,8 +65,6 @@ public:
   void PostOverflowEvent();
   void Destroy();
 
-  bool ShouldBuildLayer() const;
-
   void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                         const nsRect&           aDirtyRect,
                         const nsDisplayListSet& aLists);
@@ -268,7 +266,7 @@ public:
   nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState);
   bool IsLTR() const;
   bool IsScrollbarOnRight() const;
-  bool IsScrollingActive() const { return mScrollingActive || ShouldBuildLayer(); }
+  bool IsScrollingActive() const { return mScrollingActive || mShouldBuildScrollableLayer; }
   void ResetScrollPositionForLayerPixelAlignment()
   {
     mScrollPosForLayerPixelAlignment = GetScrollPosition();
@@ -386,9 +384,9 @@ public:
   // If true, the resizer is collapsed and not displayed
   bool mCollapsedResizer:1;
 
-  // If true, the layer should always be active because we always build a layer.
-  // Used for asynchronous scrolling.
-  bool mShouldBuildLayer:1;
+  // If true, the layer should always be active because we always build a
+  // scrollable layer. Used for asynchronous scrolling.
+  bool mShouldBuildScrollableLayer:1;
 
   // True if this frame has been scrolled at least once
   bool mHasBeenScrolled:1;
