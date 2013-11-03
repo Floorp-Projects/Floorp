@@ -835,6 +835,14 @@ function test24d() {
   function() {
     clearAllPluginPermissions();
     resetBlocklist();
-    finishTest();
+    prepareTest(test25, gTestRoot + "plugin_syncRemoved.html");
   });
+}
+
+function test25() {
+  let notification = PopupNotifications.getNotification("click-to-play-plugins");
+  ok(notification, "Test 25: There should be a plugin notification even if the plugin was immediately removed");
+  ok(notification.dismissed, "Test 25: The notification should be dismissed by default");
+
+  finishTest();
 }
