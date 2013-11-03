@@ -2,71 +2,63 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "nsISupports.idl"
-#include "nsIAccessible.idl"
-#include "nsIArray.idl"
+
+interface nsIAccessible;
+interface nsIArray;
 
 /**
- * An interface for the accessibility module and in-process accessibility clients
- * for dealing with getting and changing the selection of accessible nodes.
+ * An accessibility interface for selectable widgets.
  */
-[scriptable, uuid(34d268d6-1dd2-11b2-9d63-83a5e0ada290)]
+[scriptable, uuid(3e507fc4-4fcc-4223-a674-a095f591eba1)]
 interface nsIAccessibleSelectable : nsISupports
 {
-    const unsigned long eSelection_Add = 0;
-    const unsigned long eSelection_Remove = 1;
-    const unsigned long eSelection_GetState = 2;
+  /**
+   * Return an nsIArray of selected items within the widget.
+   */
+  readonly attribute nsIArray selectedItems;
 
-    /**
-     * Return an nsIArray of selected nsIAccessible children 
-     */
-    nsIArray GetSelectedChildren();
-    
-    /**
-     * Returns the number of accessible children currently selected.
-     */
-    readonly attribute long selectionCount;
+  /**
+   * Return the number of currently selected items.
+   */
+  readonly attribute unsigned long selectedItemCount;
 
-    /**
-     * Adds the specified accessible child of the object to the
-     * object's selection.
-     * If the specified object is already selected, then it does nothing.
-     * @throws NS_ERROR_FAILURE if the specified object is not selectable.
-     */
-    void addChildToSelection(in long index);
+  /**
+   * Return a nth selected item within the widget.
+   */
+  nsIAccessible getSelectedItemAt(in unsigned long index);
 
-    /**
-     * Removes the specified child of the object from the object's selection.
-     * If the specified object was not selected, then it does nothing.
-     * @throws NS_ERROR_FAILURE if the specified object is not selectable.
-     */
-    void removeChildFromSelection(in long index);
+  /**
+   * Return true if the given item is selected.
+   */
+  [binaryname(ScriptableIsItemSelected)]
+  boolean isItemSelected(in unsigned long index);
 
-    /**
-     * Clears the selection in the object so that no children in the object
-     * are selected.
-     */
-    void clearSelection();
+  /**
+   * Adds the specified item to the widget's selection.
+   */
+  [binaryname(ScriptableAddItemToSelection)]
+  void addItemToSelection(in unsigned long index);
 
-    /**
-     * Returns a reference to the accessible object representing the specified
-     * selected child of the object.
-     * @param index Zero-based selected accessible child index 
-     * @return The nth selected accessible child
-     */
-    nsIAccessible refSelection(in long index);
+  /**
+   * Removes the specified item from the widget's selection.
+   */
+  [binaryname(ScriptableRemoveItemFromSelection)]
+  void removeItemFromSelection(in unsigned long index);
 
-    /**
-      * Determines if the current child of this object is selected
-      * @param The zero-based accessible child index
-      * @return Returns true if the child is selected, false if not.
-      */
-    boolean isChildSelected(in long index);
+  /**
+   * Select all items.
+   *
+   * @return false if the object does not accept multiple selection,
+   *         otherwise true.
+   */
+  [binaryname(ScriptableSelectAll)]
+  boolean selectAll();
 
-    /**
-     * Select all children
-     * @return If the object does not accept multiple selection, return false.
-     *         Otherwise, returns true.
-     */
-    boolean selectAllSelection();
+  /**
+   * Unselect all items.
+   */
+  [binaryname(ScriptableUnselectAll)]
+  void unselectAll();
 };
