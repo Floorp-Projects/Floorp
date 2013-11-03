@@ -1,0 +1,28 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<hbox id="customization-container" flex="1" hidden="true">
+  <vbox flex="1" id="customization-palette-container">
+    <label id="customization-header" value="&customizeMode.menuAndToolbars.header;"/>
+    <vbox id="customization-palette" flex="1"/>
+    <hbox pack="start">
+      <button id="customization-reset-button" oncommand="gCustomizeMode.reset();" label="&customizeMode.restoreDefaults;" class="customizationmode-button"/>
+    </hbox>
+  </vbox>
+  <vbox id="customization-panel-container">
+    <vbox id="customization-panelWrapper">
+      <html:style html:type="text/html" scoped="scoped">
+        @import url(chrome://global/skin/popup.css);
+      </html:style>
+      <box class="panel-arrowbox">
+        <box flex="1"/>
+        <image class="panel-arrow" side="top"/>
+      </box>
+      <box class="panel-arrowcontent" side="top" flex="1">
+        <hbox id="customization-panelHolder"/>
+        <box class="panel-inner-arrowcontentfooter" hidden="true"/>
+      </box>
+    </vbox>
+  </vbox>
+</hbox>
