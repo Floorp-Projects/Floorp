@@ -10,12 +10,14 @@ MODULE = 'dom'
 
 EXPORTS.mozilla.dom += [
     'EncodingUtils.h',
+    'FallbackEncoding.h',
     'TextDecoder.h',
     'TextEncoder.h',
 ]
 
 SOURCES += [
     'EncodingUtils.cpp',
+    'FallbackEncoding.cpp',
     'TextDecoder.cpp',
     'TextEncoder.cpp',
 ]
