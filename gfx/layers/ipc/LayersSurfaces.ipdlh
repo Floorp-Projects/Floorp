@@ -100,7 +100,7 @@ struct SurfaceDescriptorGralloc {
    * that GraphicBuffer's size and actual video's size are different.
    * Extra size member is necessary. See Bug 850566.
    */
-  IntSize size;
+  nsIntSize size;
 
   /**
    * We can have one source producing gralloc buffers and sharing them
@@ -144,7 +144,7 @@ struct RGBImage {
 
 struct MemoryImage {
   uintptr_t data;
-  IntSize size;
+  gfxIntSize size;
   uint32_t stride;
   uint32_t format;
 };

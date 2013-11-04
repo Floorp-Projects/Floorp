@@ -208,8 +208,8 @@ public:
     virtual bool RecvCacheFileDescriptor(const nsString& aPath,
                                          const FileDescriptor& aFileDescriptor)
                                          MOZ_OVERRIDE;
-    virtual bool RecvShow(const ScreenIntSize& size);
-    virtual bool RecvUpdateDimensions(const nsRect& rect, const ScreenIntSize& size, const ScreenOrientation& orientation);
+    virtual bool RecvShow(const nsIntSize& size);
+    virtual bool RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const ScreenOrientation& orientation);
     virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
     virtual bool RecvHandleDoubleTap(const CSSIntPoint& aPoint);
     virtual bool RecvHandleSingleTap(const CSSIntPoint& aPoint);
@@ -246,7 +246,7 @@ public:
     AllocPDocumentRendererChild(const nsRect& documentRect, const gfxMatrix& transform,
                                 const nsString& bgcolor,
                                 const uint32_t& renderFlags, const bool& flushLayout,
-                                const gfx::IntSize& renderSize);
+                                const nsIntSize& renderSize);
     virtual bool DeallocPDocumentRendererChild(PDocumentRendererChild* actor);
     virtual bool RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                                   const nsRect& documentRect,
@@ -254,7 +254,7 @@ public:
                                                   const nsString& bgcolor,
                                                   const uint32_t& renderFlags,
                                                   const bool& flushLayout,
-                                                  const gfx::IntSize& renderSize);
+                                                  const nsIntSize& renderSize);
 
     virtual PContentDialogChild* AllocPContentDialogChild(const uint32_t&,
                                                           const nsCString&,
@@ -407,7 +407,7 @@ private:
     void SetProcessNameToAppName();
     bool ProcessUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics);
 
-    // Call RecvShow(ScreenIntSize(0, 0)) and block future calls to RecvShow().
+    // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
     void DoFakeShow();
 
     // Wrapper for nsIDOMWindowUtils.setCSSViewport(). This updates some state

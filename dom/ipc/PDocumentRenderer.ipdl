@@ -7,7 +7,7 @@ include protocol PBrowser;
 
 include "mozilla/GfxMessageUtils.h";
 
-using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
+using struct nsIntSize from "nsSize.h";
 
 namespace mozilla {
 namespace ipc {
@@ -18,7 +18,7 @@ protocol PDocumentRenderer
 
 parent:
     // Returns the width and height, in pixels, of the returned ARGB32 data.
-    __delete__(IntSize renderedSize, nsCString data);
+    __delete__(nsIntSize renderedSize, nsCString data);
 };
 
 } // namespace ipc
