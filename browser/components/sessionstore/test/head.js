@@ -232,11 +232,11 @@ function waitForTopic(aTopic, aTimeout, aCallback) {
  * Note that this does not wait for the disk write to be complete.
  *
  * @param {function} aCallback If sessionstore-state-write is sent
- * within buffering interval + 100 ms, the callback is passed |true|,
+ * within buffering interval + 1000 ms, the callback is passed |true|,
  * otherwise, it is passed |false|.
  */
 function waitForSaveState(aCallback) {
-  let timeout = 100 +
+  let timeout = 1000 +
     Services.prefs.getIntPref("browser.sessionstore.interval");
   return waitForTopic("sessionstore-state-write", timeout, aCallback);
 }
