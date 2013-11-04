@@ -25,7 +25,7 @@ interface nsIDOMNode;
  * |gBrowser.tabContainer| such as e.g. |gBrowser.selectedTab|.
  */
 
-[scriptable, uuid(700756cc-f5c7-11e2-b842-59d9dc830245)]
+[scriptable, uuid(9a5a77f2-80bf-40c5-b341-485a736abb4c)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -99,20 +99,6 @@ interface nsISessionStore : nsISupports
    */
   nsIDOMNode duplicateTab(in nsIDOMWindow aWindow, in nsIDOMNode aTab,
                           [optional] in long aDelta);
-
-  /**
-   * Set the number of tabs that was closed during the last close-tabs
-   * operation. This helps us keep track of batch-close operations so
-   * we can restore multiple tabs at once.
-   */
-  void setNumberOfTabsClosedLast(in nsIDOMWindow aWindow, in unsigned long aNumber);
-
-  /**
-   * Get the number of tabs that was closed during the last close-tabs
-   * operation. This helps us keep track of batch-close operations so
-   * we can restore multiple tabs at once.
-   */
-  unsigned long getNumberOfTabsClosedLast(in nsIDOMWindow aWindow);
 
   /**
    * Get the number of restore-able tabs for a browser window
