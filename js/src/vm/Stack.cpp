@@ -123,7 +123,7 @@ StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
             HeapValue::writeBarrierPost(*dst, dst);
     }
 
-    if (cx->compartment()->debugMode())
+    if (JS_UNLIKELY(cx->compartment()->debugMode()))
         DebugScopes::onGeneratorFrameChange(otherfp, this, cx);
 }
 
@@ -304,7 +304,7 @@ StackFrame::epilogue(JSContext *cx)
     if (isEvalFrame()) {
         if (isStrictEvalFrame()) {
             JS_ASSERT_IF(hasCallObj(), scopeChain()->as<CallObject>().isForEval());
-            if (cx->compartment()->debugMode())
+            if (JS_UNLIKELY(cx->compartment()->debugMode()))
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
             if (isDebuggerFrame())
@@ -340,7 +340,7 @@ StackFrame::epilogue(JSContext *cx)
     else
         AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
 
-    if (cx->compartment()->debugMode())
+    if (JS_UNLIKELY(cx->compartment()->debugMode()))
         DebugScopes::onPopCall(this, cx);
 
     if (isConstructing() && thisValue().isObject() && returnValue().isPrimitive())
@@ -374,7 +374,7 @@ StackFrame::popBlock(JSContext *cx)
 {
     JS_ASSERT(hasBlockChain());
 
-    if (cx->compartment()->debugMode())
+    if (JS_UNLIKELY(cx->compartment()->debugMode()))
         DebugScopes::onPopBlock(cx, this);
 
     if (blockChain_->needsClone()) {
@@ -388,7 +388,7 @@ StackFrame::popBlock(JSContext *cx)
 void
 StackFrame::popWith(JSContext *cx)
 {
-    if (cx->compartment()->debugMode())
+    if (JS_UNLIKELY(cx->compartment()->debugMode()))
         DebugScopes::onPopWith(this);
 
     JS_ASSERT(scopeChain()->is<WithObject>());
@@ -464,8 +464,8 @@ FrameRegs::setToEndOfScript()
 {
     JSScript *script = fp()->script();
     sp = fp()->base();
-    pc = script->code + script->length - JSOP_STOP_LENGTH;
-    JS_ASSERT(*pc == JSOP_STOP);
+    pc = script->code + script->length - JSOP_RETRVAL_LENGTH;
+    JS_ASSERT(*pc == JSOP_RETRVAL);
 }
 
 /*****************************************************************************/

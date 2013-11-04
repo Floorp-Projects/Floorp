@@ -350,7 +350,7 @@ main(int argc, char **argv)
 
   if (!greFound) {
 #ifdef XP_MACOSX
-    // Check for <bundle>/Contents/Frameworks/XUL.framework/libxpcom.dylib
+    // Check for <bundle>/Contents/Frameworks/XUL.framework/Versions/Current/libmozglue.dylib
     CFURLRef fwurl = CFBundleCopyPrivateFrameworksURL(appBundle);
     CFURLRef absfwurl = nullptr;
     if (fwurl) {
@@ -361,13 +361,13 @@ main(int argc, char **argv)
     if (absfwurl) {
       CFURLRef xulurl =
         CFURLCreateCopyAppendingPathComponent(nullptr, absfwurl,
-                                              CFSTR("XUL.framework"),
+                                              CFSTR("XUL.framework/Versions/Current"),
                                               true);
 
       if (xulurl) {
         CFURLRef xpcomurl =
           CFURLCreateCopyAppendingPathComponent(nullptr, xulurl,
-                                                CFSTR("libxpcom.dylib"),
+                                                CFSTR("libmozglue.dylib"),
                                                 false);
 
         if (xpcomurl) {
