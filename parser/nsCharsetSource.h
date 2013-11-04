@@ -7,7 +7,7 @@
 
 // note: the value order defines the priority; higher numbers take priority
 #define kCharsetUninitialized           0
-#define kCharsetFromWeakDocTypeDefault  1
+#define kCharsetFromFallback            1
 #define kCharsetFromDocTypeDefault      2 // This and up confident for XHR
 #define kCharsetFromCache               3
 #define kCharsetFromParentFrame         4

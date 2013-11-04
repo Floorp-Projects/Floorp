@@ -23,11 +23,6 @@ LIBS += \
   $(MOZ_ALSA_LIBS) \
   $(NULL)
 endif
-ifdef MOZ_PULSEAUDIO
-LIBS += \
-  $(MOZ_PULSEAUDIO_LIBS) \
-  $(NULL)
-endif
 endif
 
 ifeq ($(OS_TARGET),Android)

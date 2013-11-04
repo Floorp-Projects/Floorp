@@ -2561,6 +2561,10 @@ let SessionStoreInternal = {
         Object.keys(tabData.attributes).forEach(a => TabAttributes.persist(a));
       }
 
+      // Any data that's in the process of being collected for this tab will be
+      // out of date now that we're restoring it.
+      TabState.dropPendingCollections(tab);
+
       browser.__SS_tabStillLoading = true;
 
       // keep the data around to prevent dataloss in case
@@ -4374,9 +4378,21 @@ let TabState = {
     // can't expect to retrieve different data than the sync call. That's why
     // we just fill the cache with the data collected from the sync call and
     // discard any data collected asynchronously.
-    this._pendingCollections.delete(tab);
+    this.dropPendingCollections(tab);
 
     return tabData;
+  },
+
+  /**
+   * Drop any pending calls to TabState.collect. These calls will
+   * continue to run, but they won't store their results in the
+   * TabStateCache.
+   *
+   * @param tab
+   *        tabbrowser tab
+   */
+  dropPendingCollections: function (tab) {
+    this._pendingCollections.delete(tab);
   },
 
   /**
@@ -4532,8 +4548,10 @@ let TabState = {
       return tabData;
     }
     if (browser.__SS_data && browser.__SS_tabStillLoading) {
-      // use the data to be restored when the tab hasn't been completely loaded
-      tabData = browser.__SS_data;
+      // Use the data to be restored when the tab hasn't been
+      // completely loaded. We clone the data, since we're updating it
+      // here and the caller may update it further.
+      tabData = JSON.parse(JSON.stringify(browser.__SS_data));
       if (tab.pinned)
         tabData.pinned = true;
       else

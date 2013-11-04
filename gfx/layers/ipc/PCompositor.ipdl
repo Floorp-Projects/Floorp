@@ -8,12 +8,11 @@
 include LayersSurfaces;
 include protocol PGrallocBuffer;
 include protocol PLayerTransaction;
-include "mozilla/layers/CompositorTypes.h";
 include "mozilla/GfxMessageUtils.h";
 
-using mozilla::null_t;
-using mozilla::layers::TextureFactoryIdentifier;
-using mozilla::layers::LayersBackend;
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace layers {

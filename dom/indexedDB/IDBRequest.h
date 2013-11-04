@@ -46,21 +46,17 @@ public:
                                                          IDBWrapperCache)
 
   static
-  already_AddRefed<IDBRequest> Create(IDBWrapperCache* aOwnerCache,
+  already_AddRefed<IDBRequest> Create(IDBDatabase* aDatabase,
                                       IDBTransaction* aTransaction);
 
   static
   already_AddRefed<IDBRequest> Create(IDBObjectStore* aSource,
-                                      IDBWrapperCache* aOwnerCache,
+                                      IDBDatabase* aDatabase,
                                       IDBTransaction* aTransaction);
 
   static
   already_AddRefed<IDBRequest> Create(IDBIndex* aSource,
-                                      IDBWrapperCache* aOwnerCache,
-                                      IDBTransaction* aTransaction);
-  static
-  already_AddRefed<IDBRequest> Create(IDBCursor* aSource,
-                                      IDBWrapperCache* aOwnerCache,
+                                      IDBDatabase* aDatabase,
                                       IDBTransaction* aTransaction);
 
   // nsIDOMEventTarget

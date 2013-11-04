@@ -22,7 +22,9 @@
 
 struct gfxMatrix;
 class nsFrameLoader;
+class nsIContent;
 class nsIURI;
+class nsIWidget;
 class CpowHolder;
 
 namespace mozilla {

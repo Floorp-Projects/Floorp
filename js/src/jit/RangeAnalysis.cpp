@@ -23,7 +23,7 @@ using namespace js::jit;
 
 using mozilla::Abs;
 using mozilla::CountLeadingZeroes32;
-using mozilla::DoubleIsInt32;
+using mozilla::DoubleEqualsInt32;
 using mozilla::ExponentComponent;
 using mozilla::IsInfinite;
 using mozilla::IsFinite;
@@ -206,7 +206,7 @@ RangeAnalysis::addBetaNodes()
             // For integers, if x < c, the upper bound of x is c-1.
             if (val->type() == MIRType_Int32) {
                 int32_t intbound;
-                if (DoubleIsInt32(bound, &intbound) && SafeSub(intbound, 1, &intbound))
+                if (DoubleEqualsInt32(bound, &intbound) && SafeSub(intbound, 1, &intbound))
                     bound = intbound;
             }
             comp.setDouble(conservativeLower, bound);
@@ -218,7 +218,7 @@ RangeAnalysis::addBetaNodes()
             // For integers, if x > c, the lower bound of x is c+1.
             if (val->type() == MIRType_Int32) {
                 int32_t intbound;
-                if (DoubleIsInt32(bound, &intbound) && SafeAdd(intbound, 1, &intbound))
+                if (DoubleEqualsInt32(bound, &intbound) && SafeAdd(intbound, 1, &intbound))
                     bound = intbound;
             }
             comp.setDouble(bound, conservativeUpper);
@@ -2406,4 +2406,16 @@ MBoundsCheckLower::collectRangeInfo()
 {
     Range indexRange(index());
     fallible_ = !indexRange.hasInt32LowerBound() || indexRange.lower() < minimum_;
+}
+
+void
+MCompare::collectRangeInfo()
+{
+    operandsAreNeverNaN_ = !Range(lhs()).canBeNaN() && !Range(rhs()).canBeNaN();
+}
+
+void
+MNot::collectRangeInfo()
+{
+    operandIsNeverNaN_ = !Range(operand()).canBeNaN();
 }

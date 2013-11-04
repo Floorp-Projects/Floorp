@@ -6,27 +6,22 @@
 
 include protocol PContent;
 include protocol PBrowser;
-include "prtime.h";
-include "mozilla/HalSensor.h";
-include "mozilla/HalTypes.h";
-include "mozilla/dom/ScreenOrientation.h";
-include "nsRect.h";
 
-using mozilla::dom::ScreenOrientation;
-using mozilla::hal::FlashMode;
-using mozilla::hal::LightType;
-using mozilla::hal::LightMode;
-using mozilla::hal::SensorType;
-using mozilla::hal::SensorAccuracyType;
-using mozilla::hal::WakeLockControl;
-using mozilla::hal::SwitchState;
-using mozilla::hal::SwitchDevice;
-using mozilla::hal::ProcessPriority;
-using nsIntRect;
-using PRTime;
-using mozilla::hal::FMRadioCountry;
-using mozilla::hal::FMRadioOperation;
-using mozilla::hal::FMRadioOperationStatus;
+using mozilla::dom::ScreenOrientation from "mozilla/dom/ScreenOrientation.h";
+using mozilla::hal::FlashMode from "mozilla/HalTypes.h";
+using mozilla::hal::LightType from "mozilla/HalTypes.h";
+using mozilla::hal::LightMode from "mozilla/HalTypes.h";
+using mozilla::hal::SensorType from "mozilla/HalSensor.h";
+using mozilla::hal::SensorAccuracyType from "mozilla/HalSensor.h";
+using mozilla::hal::WakeLockControl from "mozilla/HalTypes.h";
+using mozilla::hal::SwitchState from "mozilla/HalTypes.h";
+using mozilla::hal::SwitchDevice from "mozilla/HalTypes.h";
+using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
+using struct nsIntRect from "nsRect.h";
+using PRTime from "prtime.h";
+using mozilla::hal::FMRadioCountry from "mozilla/HalTypes.h";
+using mozilla::hal::FMRadioOperation from "mozilla/HalTypes.h";
+using mozilla::hal::FMRadioOperationStatus from "mozilla/HalTypes.h";
 
 namespace mozilla {
 
