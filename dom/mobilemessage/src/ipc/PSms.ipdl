@@ -62,6 +62,7 @@ struct MarkMessageReadRequest
 {
   int32_t messageId;
   bool value;
+  bool sendReadReport;
 };
 
 struct GetSegmentInfoForTextRequest
