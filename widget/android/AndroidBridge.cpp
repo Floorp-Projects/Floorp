@@ -193,14 +193,11 @@ AndroidBridge::Init(JNIEnv *jEnv)
     jSurfaceClass = getClassGlobalRef("android/view/Surface");
     if (mAPIVersion <= 8 /* Froyo */) {
         jSurfacePointerField = getField("mSurface", "I");
-    } else {
+    } else if (mAPIVersion > 8 && mAPIVersion < 19 /* KitKat */) {
         jSurfacePointerField = getField("mNativeSurface", "I");
-
-        // Apparently mNativeSurface doesn't exist in Key Lime Pie, so just clear the
-        // exception if we have one and move on.
-        if (jEnv->ExceptionCheck()) {
-            jEnv->ExceptionClear();
-        }
+    } else {
+        // We don't know how to get this, just set it to 0
+        jSurfacePointerField = 0;
     }
 
     jclass eglClass = getClassGlobalRef("com/google/android/gles_jni/EGLSurfaceImpl");
