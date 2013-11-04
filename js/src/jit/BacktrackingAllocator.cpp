@@ -368,6 +368,8 @@ BacktrackingAllocator::groupAndQueueRegisters()
         if (!reg.numIntervals())
             continue;
 
+        // Disable this for now; see bugs 906858, 931487, and 932465.
+#if 0
         // Eagerly set the canonical spill slot for registers which are preset
         // for that slot, and reuse it for other registers in the group.
         LDefinition *def = reg.def();
@@ -376,6 +378,7 @@ BacktrackingAllocator::groupAndQueueRegisters()
             if (reg.group() && reg.group()->spill.isUse())
                 reg.group()->spill = *def->output();
         }
+#endif
 
         // Place all intervals for this register on the allocation queue.
         // During initial queueing use single queue items for groups of
