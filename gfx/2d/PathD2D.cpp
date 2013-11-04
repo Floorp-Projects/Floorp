@@ -332,35 +332,37 @@ PathD2D::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
 Rect
 PathD2D::GetBounds(const Matrix &aTransform) const
 {
-  D2D1_RECT_F bounds;
+  D2D1_RECT_F d2dBounds;
 
-  HRESULT hr = mGeometry->GetBounds(D2DMatrix(aTransform), &bounds);
+  HRESULT hr = mGeometry->GetBounds(D2DMatrix(aTransform), &d2dBounds);
 
-  if (FAILED(hr)) {
+  Rect bounds = ToRect(d2dBounds);
+  if (FAILED(hr) || !bounds.IsFinite()) {
     gfxWarning() << "Failed to get stroked bounds for path. Code: " << hr;
-    bounds.bottom = bounds.left = bounds.right = bounds.top = 0;
+    return Rect();
   }
 
-  return ToRect(bounds);
+  return bounds;
 }
 
 Rect
 PathD2D::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
                           const Matrix &aTransform) const
 {
-  D2D1_RECT_F bounds;
+  D2D1_RECT_F d2dBounds;
 
   RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
   HRESULT hr =
     mGeometry->GetWidenedBounds(aStrokeOptions.mLineWidth, strokeStyle,
-                                D2DMatrix(aTransform), &bounds);
+                                D2DMatrix(aTransform), &d2dBounds);
 
-  if (FAILED(hr)) {
+  Rect bounds = ToRect(d2dBounds);
+  if (FAILED(hr) || !bounds.IsFinite()) {
     gfxWarning() << "Failed to get stroked bounds for path. Code: " << hr;
-    bounds.bottom = bounds.left = bounds.right = bounds.top = 0;
+    return Rect();
   }
 
-  return ToRect(bounds);
+  return bounds;
 }
 
 }

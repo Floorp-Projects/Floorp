@@ -41,7 +41,6 @@
 #include "nsPlaceholderFrame.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextRunTransformations.h"
-#include "nsTextFrameTextRunCache.h"
 #include "nsExpirationTracker.h"
 #include "nsUnicodeProperties.h"
 

@@ -83,10 +83,37 @@ namespace jit {
     class BaselineFrame;
 }
 
-/* Pointer to either a StackFrame or a baseline JIT frame. */
+/*
+ * Pointer to either a ScriptFrameIter::Data, a StackFrame, or a baseline JIT
+ * frame.
+ *
+ * The Debugger may cache ScriptFrameIter::Data as a bookmark to reconstruct a
+ * ScriptFrameIter without doing a full stack walk.
+ *
+ * There is no way to directly create such an AbstractFramePtr. To do so, the
+ * user must call ScriptFrameIter::copyDataAsAbstractFramePtr().
+ *
+ * ScriptFrameIter::abstractFramePtr() will never return an AbstractFramePtr
+ * that is in fact a ScriptFrameIter::Data.
+ *
+ * To recover a ScriptFrameIter settled at the location pointed to by an
+ * AbstractFramePtr, use the THIS_FRAME_ITER macro in Debugger.cpp. As an
+ * aside, no asScriptFrameIterData() is provided because C++ is stupid and
+ * cannot forward declare inner classes.
+ */
+
 class AbstractFramePtr
 {
+    friend class ScriptFrameIter;
+
     uintptr_t ptr_;
+
+    enum {
+        Tag_ScriptFrameIterData = 0x0,
+        Tag_StackFrame = 0x1,
+        Tag_BaselineFrame = 0x2,
+        TagMask = 0x3
+    };
 
   public:
     AbstractFramePtr()
@@ -94,15 +121,15 @@ class AbstractFramePtr
     {}
 
     AbstractFramePtr(StackFrame *fp)
-        : ptr_(fp ? uintptr_t(fp) | 0x1 : 0)
+      : ptr_(fp ? uintptr_t(fp) | Tag_StackFrame : 0)
     {
-        JS_ASSERT((uintptr_t(fp) & 1) == 0);
+        MOZ_ASSERT(asStackFrame() == fp);
     }
 
     AbstractFramePtr(jit::BaselineFrame *fp)
-      : ptr_(uintptr_t(fp))
+      : ptr_(fp ? uintptr_t(fp) | Tag_BaselineFrame : 0)
     {
-        JS_ASSERT((uintptr_t(fp) & 1) == 0);
+        MOZ_ASSERT(asBaselineFrame() == fp);
     }
 
     explicit AbstractFramePtr(JSAbstractFramePtr frame)
@@ -110,21 +137,30 @@ class AbstractFramePtr
     {
     }
 
+    static AbstractFramePtr FromRaw(void *raw) {
+        AbstractFramePtr frame;
+        frame.ptr_ = uintptr_t(raw);
+        return frame;
+    }
+
+    bool isScriptFrameIterData() const {
+        return !!ptr_ && (ptr_ & TagMask) == Tag_ScriptFrameIterData;
+    }
     bool isStackFrame() const {
-        return ptr_ & 0x1;
+        return ptr_ & Tag_StackFrame;
     }
     StackFrame *asStackFrame() const {
         JS_ASSERT(isStackFrame());
-        StackFrame *res = (StackFrame *)(ptr_ & ~0x1);
+        StackFrame *res = (StackFrame *)(ptr_ & ~TagMask);
         JS_ASSERT(res);
         return res;
     }
     bool isBaselineFrame() const {
-        return ptr_ && !isStackFrame();
+        return ptr_ & Tag_BaselineFrame;
     }
     jit::BaselineFrame *asBaselineFrame() const {
         JS_ASSERT(isBaselineFrame());
-        jit::BaselineFrame *res = (jit::BaselineFrame *)ptr_;
+        jit::BaselineFrame *res = (jit::BaselineFrame *)(ptr_ & ~TagMask);
         JS_ASSERT(res);
         return res;
     }
@@ -171,6 +207,7 @@ class AbstractFramePtr
 
     inline Value *argv() const;
 
+    inline bool hasArgs() const;
     inline bool hasArgsObj() const;
     inline ArgumentsObject &argsObj() const;
     inline void initArgsObj(ArgumentsObject &argsobj) const;
@@ -1465,11 +1502,13 @@ class ScriptFrameIter
     ScriptFrameIter(JSContext *cx, ContextOption, SavedOption);
     ScriptFrameIter(const ScriptFrameIter &iter);
     ScriptFrameIter(const Data &data);
+    ScriptFrameIter(AbstractFramePtr frame);
 
     bool done() const { return data_.state_ == DONE; }
     ScriptFrameIter &operator++();
 
     Data *copyData() const;
+    AbstractFramePtr copyDataAsAbstractFramePtr() const;
 
     JSCompartment *compartment() const;
 

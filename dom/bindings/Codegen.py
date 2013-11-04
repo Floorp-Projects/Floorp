@@ -466,21 +466,25 @@ class CGWrapper(CGThing):
             return ''
         decl = self.child.declare()
         if self.reindent:
-            # We don't use lineStartDetector because we don't want to
-            # insert whitespace at the beginning of our _first_ line.
-            decl = stripTrailingWhitespace(
-                decl.replace("\n", "\n" + (" " * len(self.declarePre))))
+            decl = self.reindentString(decl, self.declarePre)
         return self.declarePre + decl + self.declarePost
     def define(self):
         if self.declareOnly:
             return ''
         defn = self.child.define()
         if self.reindent:
-            # We don't use lineStartDetector because we don't want to
-            # insert whitespace at the beginning of our _first_ line.
-            defn = stripTrailingWhitespace(
-                defn.replace("\n", "\n" + (" " * len(self.definePre))))
+            defn = self.reindentString(defn, self.definePre)
         return self.definePre + defn + self.definePost
+
+    @staticmethod
+    def reindentString(stringToIndent, widthString):
+        # We don't use lineStartDetector because we don't want to
+        # insert whitespace at the beginning of our _first_ line.
+        # Use the length of the last line of width string, in case
+        # it is a multiline string.
+        lastLineWidth = len(widthString.splitlines()[-1])
+        return stripTrailingWhitespace(
+            stringToIndent.replace("\n", "\n" + (" " * lastLineWidth)))
 
     def deps(self):
         return self.child.deps()
@@ -2955,6 +2959,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(dictionaryMemberTypes) == 1
             name = dictionaryMemberTypes[0].inner.identifier.name
             setDictionary = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            names.append(name)
         else:
             setDictionary = None
 
@@ -2963,6 +2968,7 @@ for (uint32_t i = 0; i < length; ++i) {
             assert len(objectMemberTypes) == 1
             object = CGGeneric("%s.SetToObject(cx, argObj);\n"
                                "done = true;" % unionArgumentObj)
+            names.append(objectMemberTypes[0].name)
         else:
             object = None
 

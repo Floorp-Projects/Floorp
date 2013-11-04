@@ -1,5 +1,5 @@
-using mozilla::void_t;
-using mozilla::void_t;
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 protocol multipleUsingCxxTypes {
 child:

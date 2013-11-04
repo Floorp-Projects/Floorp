@@ -68,19 +68,20 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsPluginArray,
                                         mPlugins)
 
 void
-nsPluginArray::GetPlugins(nsTArray<nsRefPtr<nsPluginElement> >& aPlugins)
+nsPluginArray::GetMimeTypes(nsTArray<nsRefPtr<nsMimeType> >& aMimeTypes)
 {
-  aPlugins.Clear();
+  aMimeTypes.Clear();
 
   if (!AllowPlugins()) {
     return;
   }
 
-  if (mPlugins.IsEmpty()) {
-    EnsurePlugins();
-  }
+  EnsurePlugins();
 
-  aPlugins = mPlugins;
+  for (uint32_t i = 0; i < mPlugins.Length(); ++i) {
+    nsPluginElement *plugin = mPlugins[i];
+    aMimeTypes.AppendElements(plugin->MimeTypes());
+  }
 }
 
 nsPluginElement*
@@ -151,9 +152,7 @@ nsPluginArray::IndexedGetter(uint32_t aIndex, bool &aFound)
     return nullptr;
   }
 
-  if (mPlugins.IsEmpty()) {
-    EnsurePlugins();
-  }
+  EnsurePlugins();
 
   aFound = aIndex < mPlugins.Length();
 
@@ -179,9 +178,7 @@ nsPluginArray::NamedGetter(const nsAString& aName, bool &aFound)
     return nullptr;
   }
 
-  if (mPlugins.IsEmpty()) {
-    EnsurePlugins();
-  }
+  EnsurePlugins();
 
   for (uint32_t i = 0; i < mPlugins.Length(); ++i) {
     nsAutoString pluginName;
@@ -205,9 +202,7 @@ nsPluginArray::Length()
     return 0;
   }
 
-  if (mPlugins.IsEmpty()) {
-    EnsurePlugins();
-  }
+  EnsurePlugins();
 
   return mPlugins.Length();
 }
@@ -250,11 +245,14 @@ nsPluginArray::AllowPlugins() const
 void
 nsPluginArray::EnsurePlugins()
 {
+  if (!mPlugins.IsEmpty()) {
+    // We already have an array of plugin elements.
+    return;
+  }
+
   nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-
-  if (!mPlugins.IsEmpty() || !pluginHost) {
-    // We already have an array of plugin elements, or no plugin host
-
+  if (!pluginHost) {
+    // We have no plugin host.
     return;
   }
 
@@ -327,7 +325,7 @@ nsPluginElement::GetName(nsString& retval) const
 nsMimeType*
 nsPluginElement::Item(uint32_t aIndex)
 {
-  EnsureMimeTypes();
+  EnsurePluginMimeTypes();
 
   return mMimeTypes.SafeElementAt(aIndex);
 }
@@ -342,7 +340,7 @@ nsPluginElement::NamedItem(const nsAString& aName)
 nsMimeType*
 nsPluginElement::IndexedGetter(uint32_t aIndex, bool &aFound)
 {
-  EnsureMimeTypes();
+  EnsurePluginMimeTypes();
 
   aFound = aIndex < mMimeTypes.Length();
 
@@ -352,7 +350,7 @@ nsPluginElement::IndexedGetter(uint32_t aIndex, bool &aFound)
 nsMimeType*
 nsPluginElement::NamedGetter(const nsAString& aName, bool &aFound)
 {
-  EnsureMimeTypes();
+  EnsurePluginMimeTypes();
 
   aFound = false;
 
@@ -370,7 +368,7 @@ nsPluginElement::NamedGetter(const nsAString& aName, bool &aFound)
 uint32_t
 nsPluginElement::Length()
 {
-  EnsureMimeTypes();
+  EnsurePluginMimeTypes();
 
   return mMimeTypes.Length();
 }
@@ -378,7 +376,7 @@ nsPluginElement::Length()
 void
 nsPluginElement::GetSupportedNames(nsTArray< nsString >& retval)
 {
-  EnsureMimeTypes();
+  EnsurePluginMimeTypes();
 
   for (uint32_t i = 0; i < mMimeTypes.Length(); ++i) {
     retval.AppendElement(mMimeTypes[i]->Type());
@@ -388,13 +386,13 @@ nsPluginElement::GetSupportedNames(nsTArray< nsString >& retval)
 nsTArray<nsRefPtr<nsMimeType> >&
 nsPluginElement::MimeTypes()
 {
-  EnsureMimeTypes();
+  EnsurePluginMimeTypes();
 
   return mMimeTypes;
 }
 
 void
-nsPluginElement::EnsureMimeTypes()
+nsPluginElement::EnsurePluginMimeTypes()
 {
   if (!mMimeTypes.IsEmpty()) {
     return;

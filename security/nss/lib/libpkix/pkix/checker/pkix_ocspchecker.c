@@ -200,12 +200,18 @@ cleanup:
  * either (a) the default Responder has been set and enabled, and a Check
  * request is received with no responder specified, or (b) a Check request is
  * received with a specified responder. A request message is constructed and
- * given to the HttpClient. If non-blocking I/O is used the client may return
- * with WOULDBLOCK, in which case the OCSPChecker returns the WOULDBLOCK
- * condition to its caller in turn. On a subsequent call the I/O is resumed.
- * When a response is received it is decoded and the results provided to the
- * caller.
+ * given to the HttpClient. When a response is received it is decoded and the
+ * results provided to the caller.
  *
+ * During the most recent enhancement of this function, it has been found that
+ * it doesn't correctly implement non-blocking I/O.
+ * 
+ * The nbioContext is used in two places, for "response-obtaining" and
+ * for "response-verification".
+ * 
+ * However, if this function gets called to resume, it always
+ * repeats the "request creation" and "response fetching" steps!
+ * As a result, the earlier operation is never resumed.
  */
 PKIX_Error *
 pkix_OcspChecker_CheckExternal(
@@ -230,6 +236,8 @@ pkix_OcspChecker_CheckExternal(
         PKIX_PL_Date *validity = NULL;
         PKIX_RevocationStatus revStatus = PKIX_RevStatus_NoInfo;
         void *nbioContext = NULL;
+        enum { stageGET, stagePOST } currentStage;
+        PRBool retry = PR_FALSE;
 
         PKIX_ENTER(OCSPCHECKER, "pkix_OcspChecker_CheckExternal");
 
@@ -258,58 +266,136 @@ pkix_OcspChecker_CheckExternal(
             goto cleanup;
         }
 
-        /* send request and create a response object */
-        PKIX_CHECK(
-            pkix_pl_OcspResponse_Create(request, NULL,
-                                        checker->certVerifyFcn,
-                                        &nbioContext,
-                                        &response,
-                                        plContext),
-            PKIX_OCSPRESPONSECREATEFAILED);
-        if (nbioContext != 0) {
-            *pNBIOContext = nbioContext;
-            goto cleanup;
-        }
-        
-        PKIX_CHECK(
-            pkix_pl_OcspResponse_Decode(response, &passed,
-                                        &resultCode, plContext),
-            PKIX_OCSPRESPONSEDECODEFAILED);
-        if (passed == PKIX_FALSE) {
-            goto cleanup;
-        }
-        
-        PKIX_CHECK(
-            pkix_pl_OcspResponse_GetStatus(response, &passed,
-                                           &resultCode, plContext),
-            PKIX_OCSPRESPONSEGETSTATUSRETURNEDANERROR);
-        if (passed == PKIX_FALSE) {
-            goto cleanup;
-        }
-
-        PKIX_CHECK(
-            pkix_pl_OcspResponse_VerifySignature(response, cert,
-                                                 procParams, &passed, 
-                                                 &nbioContext, plContext),
-            PKIX_OCSPRESPONSEVERIFYSIGNATUREFAILED);
-       	if (nbioContext != 0) {
-               	*pNBIOContext = nbioContext;
-                goto cleanup;
-        }
-        if (passed == PKIX_FALSE) {
-                goto cleanup;
-        }
-
-        PKIX_CHECK(
-            pkix_pl_OcspResponse_GetStatusForCert(cid, response, date,
-                                                  &passed, &resultCode,
-                                                  plContext),
-            PKIX_OCSPRESPONSEGETSTATUSFORCERTFAILED);
-        if (passed == PKIX_FALSE) {
-            revStatus = pkix_OcspChecker_MapResultCodeToRevStatus(resultCode);
+        if (methodFlags & CERT_REV_M_FORCE_POST_METHOD_FOR_OCSP) {
+            /* Do not try HTTP GET, only HTTP POST */
+            currentStage = stagePOST;
         } else {
-            revStatus = PKIX_RevStatus_Success;
+            /* Try HTTP GET first, falling back to POST */
+            currentStage = stageGET;
         }
+
+        do {
+                const char *mechanism;
+                passed = PKIX_TRUE;
+
+                retry = PR_FALSE;
+                if (currentStage == stageGET) {
+                        mechanism = "GET";
+                } else if (currentStage == stagePOST) {
+                        mechanism = "POST";
+                } else {
+                        PORT_Assert(0); /* our code is flawed */
+                }
+
+                /* send request and create a response object */
+                PKIX_CHECK_NO_GOTO(
+                    pkix_pl_OcspResponse_Create(request, mechanism, NULL,
+                                                checker->certVerifyFcn,
+                                                &nbioContext,
+                                                &response,
+                                                plContext),
+                    PKIX_OCSPRESPONSECREATEFAILED);
+
+                if (pkixErrorResult) {
+                    passed = PKIX_FALSE;
+                }
+
+                if (passed && nbioContext != 0) {
+                        *pNBIOContext = nbioContext;
+                        goto cleanup;
+                }
+
+                if (passed){
+                        PKIX_CHECK_NO_GOTO(
+                            pkix_pl_OcspResponse_Decode(response, &passed,
+                                                        &resultCode, plContext),
+                            PKIX_OCSPRESPONSEDECODEFAILED);
+                        if (pkixErrorResult) {
+                            passed = PKIX_FALSE;
+                        }
+                }
+                
+                if (passed){
+                        PKIX_CHECK_NO_GOTO(
+                            pkix_pl_OcspResponse_GetStatus(response, &passed,
+                                                           &resultCode, plContext),
+                            PKIX_OCSPRESPONSEGETSTATUSRETURNEDANERROR);
+                        if (pkixErrorResult) {
+                            passed = PKIX_FALSE;
+                        }
+                }
+
+                if (passed){
+                        PKIX_CHECK_NO_GOTO(
+                            pkix_pl_OcspResponse_VerifySignature(response, cert,
+                                                                 procParams, &passed, 
+                                                                 &nbioContext, plContext),
+                            PKIX_OCSPRESPONSEVERIFYSIGNATUREFAILED);
+                        if (pkixErrorResult) {
+                            passed = PKIX_FALSE;
+                        } else {
+                                if (nbioContext != 0) {
+                                        *pNBIOContext = nbioContext;
+                                        goto cleanup;
+                                }
+                        }
+                }
+
+                if (!passed && currentStage == stagePOST) {
+                        /* We won't retry a POST failure, so it's final.
+                         * Because the following block with its call to
+                         *   pkix_pl_OcspResponse_GetStatusForCert
+                         * will take care of caching good or bad state,
+                         * but we only execute that next block if there hasn't
+                         * been a failure yet, we must cache the POST
+                         * failure now.
+                         */
+                         
+                        if (cid && cid->certID) {
+                                /* Caching MIGHT consume the cid. */
+                                PKIX_Error *err;
+                                err = PKIX_PL_OcspCertID_RememberOCSPProcessingFailure(
+                                        cid, plContext);
+                                if (err) {
+                                        PKIX_PL_Object_DecRef((PKIX_PL_Object*)err, plContext);
+                                }
+                        }
+                }
+
+                if (passed){
+                        PKIX_Boolean allowCachingOfFailures =
+                                (currentStage == stagePOST) ? PKIX_TRUE : PKIX_FALSE;
+                        
+                        PKIX_CHECK_NO_GOTO(
+                            pkix_pl_OcspResponse_GetStatusForCert(cid, response,
+                                                                  allowCachingOfFailures,
+                                                                  date,
+                                                                  &passed, &resultCode,
+                                                                  plContext),
+                            PKIX_OCSPRESPONSEGETSTATUSFORCERTFAILED);
+                        if (pkixErrorResult) {
+                            passed = PKIX_FALSE;
+                        } else if (passed == PKIX_FALSE) {
+                                revStatus = pkix_OcspChecker_MapResultCodeToRevStatus(resultCode);
+                        } else {
+                                revStatus = PKIX_RevStatus_Success;
+                        }
+                }
+
+                if (currentStage == stageGET && revStatus != PKIX_RevStatus_Success &&
+                                                revStatus != PKIX_RevStatus_Revoked) {
+                        /* we'll retry */
+                        PKIX_DECREF(response);
+                        retry = PR_TRUE;
+                        currentStage = stagePOST;
+                        revStatus = PKIX_RevStatus_NoInfo;
+                        if (pkixErrorResult) {
+                                PKIX_PL_Object_DecRef((PKIX_PL_Object*)pkixErrorResult,
+                                                      plContext);
+                                pkixErrorResult = NULL;
+                        }
+                }
+        } while (retry);
 
 cleanup:
         if (revStatus == PKIX_RevStatus_NoInfo && (uriFound || 
@@ -319,23 +405,11 @@ cleanup:
         }
         *pRevStatus = revStatus;
 
-        /* ocsp carries only tree statuses: good, bad, and unknown.
+        /* ocsp carries only three statuses: good, bad, and unknown.
          * revStatus is used to pass them. reasonCode is always set
          * to be unknown. */
         *pReasonCode = crlEntryReasonUnspecified;
 
-        if (!passed && cid && cid->certID) {
-                /* We still own the certID object, which means that 
-                 * it did not get consumed to create a cache entry.
-                 * Let's make sure there is one.
-                 */
-                PKIX_Error *err;
-                err = PKIX_PL_OcspCertID_RememberOCSPProcessingFailure(
-                        cid, plContext);
-                if (err) {
-                        PKIX_PL_Object_DecRef((PKIX_PL_Object*)err, plContext);
-                }
-        }
         PKIX_DECREF(cid);
         PKIX_DECREF(request);
         PKIX_DECREF(response);

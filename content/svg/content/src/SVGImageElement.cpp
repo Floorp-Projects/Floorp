@@ -6,6 +6,7 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/SVGImageElement.h"
+#include "mozilla/gfx/2D.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -15,6 +16,8 @@
 #include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Image)
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -234,6 +237,29 @@ SVGImageElement::ConstructPath(gfxContext *aCtx)
     return;
 
   aCtx->Rectangle(gfxRect(x, y, width, height));
+}
+
+TemporaryRef<Path>
+SVGImageElement::BuildPath()
+{
+  // We get called in order to get bounds for this element, and for
+  // hit-testing against it. For that we just pretend to be a rectangle.
+
+  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+
+  float x, y, width, height;
+  GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
+
+  if (width <= 0 || height <= 0) {
+    Rect r(x, y, width, height);
+    pathBuilder->MoveTo(r.TopLeft());
+    pathBuilder->LineTo(r.TopRight());
+    pathBuilder->LineTo(r.BottomRight());
+    pathBuilder->LineTo(r.BottomLeft());
+    pathBuilder->Close();
+  }
+
+  return pathBuilder->Finish();
 }
 
 //----------------------------------------------------------------------

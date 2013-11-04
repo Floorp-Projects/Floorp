@@ -17,6 +17,7 @@
 #include "nsSerializationHelper.h"
 #include "nsIProgressEventSink.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "SerializedLoadContext.h"
 
 using namespace mozilla::ipc;
 

@@ -1633,6 +1633,12 @@ public:
                                          nsCSSProperty aProperty);
 
   /**
+   * Returns true if the content node has animations or transitions for the
+   * property.
+   */
+  static bool HasAnimations(nsIContent* aContent, nsCSSProperty aProperty);
+
+  /**
    * Checks if off-main-thread animations are enabled.
    */
   static bool AreAsyncAnimationsEnabled();

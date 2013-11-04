@@ -1106,6 +1106,11 @@ typedef enum {
 #define CERT_REV_M_STOP_TESTING_ON_FRESH_INFO        0UL
 #define CERT_REV_M_CONTINUE_TESTING_ON_FRESH_INFO    32UL
 
+/* When this flag is used, libpkix will never attempt to use the GET HTTP
+ * method for OCSP requests; it will always use POST.
+ */
+#define CERT_REV_M_FORCE_POST_METHOD_FOR_OCSP 64UL
+
 /*
  * The following flags are supposed to be used to control bits in
  *     CERTRevocationTests.cert_rev_method_independent_flags
