@@ -81,10 +81,13 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
     mTLSEnabled(false),
     mHandshakePending(true),
     mHasCleartextPhase(false),
+    mHandshakeInProgress(false),
+    mAllowTLSIntoleranceTimeout(true),
     mRememberClientAuthCertificate(false),
     mPreliminaryHandshakeDone(false),
+    mHandshakeStartTime(0),
+    mFirstServerHelloReceived(false),
     mNPNCompleted(false),
-    mIsFullHandshake(false),
     mHandshakeCompleted(false),
     mJoined(false),
     mSentClientCert(false),
@@ -149,6 +152,20 @@ NS_IMETHODIMP
 nsNSSSocketInfo::SetSymmetricCipherExpected(int16_t aSymmetricCipher)
 {
   mSymmetricCipherExpected = aSymmetricCipher;
+  return NS_OK;
+}
+
+nsresult
+nsNSSSocketInfo::GetHandshakePending(bool *aHandshakePending)
+{
+  *aHandshakePending = mHandshakePending;
+  return NS_OK;
+}
+
+nsresult
+nsNSSSocketInfo::SetHandshakePending(bool aHandshakePending)
+{
+  mHandshakePending = aHandshakePending;
   return NS_OK;
 }
 
@@ -270,8 +287,6 @@ nsNSSSocketInfo::SetHandshakeCompleted(bool aResumedSession)
 
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("[%p] nsNSSSocketInfo::SetHandshakeCompleted\n", (void*)mFd));
-
-    mIsFullHandshake = false; // reset for next handshake on this connection
   }
 }
 
@@ -530,9 +545,50 @@ nsNSSSocketInfo::SetCertVerificationResult(PRErrorCode errorCode,
   mCertVerificationState = after_cert_verification;
 }
 
+void nsNSSSocketInfo::SetHandshakeInProgress(bool aIsIn)
+{
+  mHandshakeInProgress = aIsIn;
+
+  if (mHandshakeInProgress && !mHandshakeStartTime)
+  {
+    mHandshakeStartTime = PR_IntervalNow();
+  }
+}
+
+void nsNSSSocketInfo::SetAllowTLSIntoleranceTimeout(bool aAllow)
+{
+  mAllowTLSIntoleranceTimeout = aAllow;
+}
+
 SharedSSLState& nsNSSSocketInfo::SharedState()
 {
   return mSharedState;
+}
+
+bool nsNSSSocketInfo::HandshakeTimeout()
+{
+  if (!mAllowTLSIntoleranceTimeout)
+    return false;
+
+  if (!mHandshakeInProgress)
+    return false; // have not even sent client hello yet
+
+  if (mFirstServerHelloReceived)
+    return false;
+
+  // Now we know we are in the first handshake, and haven't received the
+  // ServerHello+Certificate sequence or the
+  // ServerHello+ChangeCipherSpec+Finished sequence.
+  //
+  // XXX: Bug 754356 - waiting to receive the Certificate or Finished messages
+  // may cause us to time out in cases where we shouldn't.
+
+  static const PRIntervalTime handshakeTimeoutInterval
+    = PR_SecondsToInterval(25);
+
+  PRIntervalTime now = PR_IntervalNow();
+  bool result = (now - mHandshakeStartTime) > handshakeTimeoutInterval;
+  return result;
 }
 
 void nsSSLIOLayerHelpers::Cleanup()
@@ -950,12 +1006,25 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
   // there are enough broken servers out there that such a gross work-around
   // is necessary.  :(
 
+  // Additional comment added in August 2006:
+  // When we begun to use TLS hello extensions, we encountered a new class of
+  // broken server, which simply stall for a very long time.
+  // We would like to shorten the timeout, but limit this shorter timeout 
+  // to the handshake phase.
+  // When we arrive here for the first time (for a given socket),
+  // we know the connection is established, and the application code
+  // tried the first read or write. This triggers the beginning of the
+  // SSL handshake phase at the SSL FD level.
+  // We'll make a note of the current time,
+  // and use this to measure the elapsed time since handshake begin.
+
   // Do NOT assume TLS intolerance on a closed connection after bad cert ui was shown.
   // Simply retry.
   // This depends on the fact that Cert UI will not be shown again,
   // should the user override the bad cert.
 
-  bool handleHandshakeResultNow = socketInfo->IsHandshakePending();
+  bool handleHandshakeResultNow;
+  socketInfo->GetHandshakePending(&handleHandshakeResultNow);
 
   bool wantRetry = false;
 
@@ -964,6 +1033,7 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
 
     if (handleHandshakeResultNow) {
       if (PR_WOULD_BLOCK_ERROR == err) {
+        socketInfo->SetHandshakeInProgress(true);
         return bytesTransfered;
       }
 
@@ -1016,7 +1086,8 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
   // set the HandshakePending attribute to false so that we don't try the logic
   // above again in a subsequent transfer.
   if (handleHandshakeResultNow) {
-    socketInfo->SetHandshakeNotPending();
+    socketInfo->SetHandshakePending(false);
+    socketInfo->SetHandshakeInProgress(false);
   }
   
   return bytesTransfered;
@@ -1062,6 +1133,17 @@ nsSSLIOLayerPoll(PRFileDesc * fd, int16_t in_flags, int16_t *out_flags)
             ?  "[%p] polling SSL socket during certificate verification using lower %d\n"
             :  "[%p] poll SSL socket using lower %d\n",
          fd, (int) in_flags));
+
+  // See comments in HandshakeTimeout before moving and/or changing this block
+  if (socketInfo->HandshakeTimeout()) {
+    NS_WARNING("SSL handshake timed out");
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] handshake timed out\n", fd));
+    NS_ASSERTION(in_flags & PR_POLL_EXCEPT,
+                 "caller did not poll for EXCEPT (handshake timeout)");
+    *out_flags = in_flags | PR_POLL_EXCEPT;
+    socketInfo->SetCanceled(PR_CONNECT_RESET_ERROR, PlainErrorMessage);
+    return in_flags;
+  }
 
   // We want the handshake to continue during certificate validation, so we
   // don't need to do anything special here. libssl automatically blocks when
@@ -2532,6 +2614,8 @@ nsSSLIOLayerSetOptions(PRFileDesc *fd, bool forSTARTTLS,
   if (infoObject->SharedState().IOLayerHelpers().isKnownAsIntolerantSite(key)) {
     if (SECSuccess != SSL_OptionSet(fd, SSL_ENABLE_TLS, false))
       return NS_ERROR_FAILURE;
+
+    infoObject->SetAllowTLSIntoleranceTimeout(false);
       
     // We assume that protocols that use the STARTTLS mechanism should support
     // modern hellos. For other protocols, if we suspect a site 
@@ -2664,7 +2748,7 @@ nsSSLIOLayerAddToSocket(int32_t family,
 
   // We are going use a clear connection first //
   if (forSTARTTLS || proxyHost) {
-    infoObject->SetHandshakeNotPending();
+    infoObject->SetHandshakePending(false);
   }
 
   infoObject->SharedState().NoteSocketCreated();
