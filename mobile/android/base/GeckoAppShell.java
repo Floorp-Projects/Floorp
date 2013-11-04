@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.GfxInfoThread;
@@ -255,6 +256,21 @@ public class GeckoAppShell
     public static native SurfaceBits getSurfaceBits(Surface surface);
 
     public static native void onFullScreenPluginHidden(View view);
+
+    public static class CreateShortcutFaviconLoadedListener implements OnFaviconLoadedListener {
+        private final String title;
+        private final String url;
+
+        public CreateShortcutFaviconLoadedListener(final String url, final String title) {
+            this.url = url;
+            this.title = title;
+        }
+
+        @Override
+        public void onFaviconLoaded(String pageUrl, String faviconURL, Bitmap favicon) {
+            GeckoAppShell.createShortcut(title, url, url, favicon, "");
+        }
+    }
 
     private static final class GeckoMediaScannerClient implements MediaScannerConnectionClient {
         private final String mFile;
