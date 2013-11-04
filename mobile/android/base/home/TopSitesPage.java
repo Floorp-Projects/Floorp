@@ -624,7 +624,7 @@ public class TopSitesPage extends HomeFragment {
         }
     }
 
-    private class LoadIDAwareFaviconLoadedListener implements OnFaviconLoadedListener {
+    private static class LoadIDAwareFaviconLoadedListener implements OnFaviconLoadedListener {
         private volatile int loadId = Favicons.NOT_LOADING;
         private final TopSitesGridItemView view;
         public LoadIDAwareFaviconLoadedListener(TopSitesGridItemView view) {
