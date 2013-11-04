@@ -85,8 +85,9 @@ abstract class HomeFragment extends Fragment {
 
         menu.setHeaderTitle(info.getDisplayTitle());
 
-        // Hide the "Edit" menuitem if this item isn't a bookmark.
-        if (info.bookmarkId < 0) {
+        // Hide the "Edit" menuitem if this item isn't a bookmark,
+        // or if this is a reading list item.
+        if (info.bookmarkId < 0 || info.inReadingList) {
             menu.findItem(R.id.home_edit_bookmark).setVisible(false);
         }
 
