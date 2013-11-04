@@ -30,6 +30,10 @@ public class TopSitesGridItemView extends RelativeLayout {
     // Empty state, to denote there is no valid url.
     private static final int[] STATE_EMPTY = { android.R.attr.state_empty };
 
+    private static final ScaleType SCALE_TYPE_FAVICON   = ScaleType.CENTER;
+    private static final ScaleType SCALE_TYPE_RESOURCE  = ScaleType.CENTER;
+    private static final ScaleType SCALE_TYPE_THUMBNAIL = ScaleType.CENTER_CROP;
+    
     // Child views.
     private final TextView mTitleView;
     private final ImageView mThumbnailView;
@@ -189,7 +193,7 @@ public class TopSitesGridItemView extends RelativeLayout {
      * @param resId Resource ID of the drawable to show.
      */
     public void displayThumbnail(int resId) {
-        mThumbnailView.setScaleType(ScaleType.CENTER);
+        mThumbnailView.setScaleType(SCALE_TYPE_RESOURCE);
         mThumbnailView.setImageResource(resId);
         mThumbnailView.setBackgroundColor(0x0);
     }
@@ -208,7 +212,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         mThumbnail = thumbnail;
         Favicons.cancelFaviconLoad(mLoadId);
 
-        mThumbnailView.setScaleType(ScaleType.CENTER_CROP);
+        mThumbnailView.setScaleType(SCALE_TYPE_THUMBNAIL);
         mThumbnailView.setImageBitmap(thumbnail);
         mThumbnailView.setBackgroundDrawable(null);
     }
@@ -245,7 +249,7 @@ public class TopSitesGridItemView extends RelativeLayout {
             mFaviconURL = faviconURL;
         }
 
-        mThumbnailView.setScaleType(ScaleType.CENTER);
+        mThumbnailView.setScaleType(SCALE_TYPE_FAVICON);
         mThumbnailView.setImageBitmap(favicon);
 
         if (mFaviconURL != null) {
