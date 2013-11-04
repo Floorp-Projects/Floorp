@@ -83,7 +83,6 @@
 #include "nsBidiUtils.h"
 
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/FallbackEncoding.h"
 #include "nsIEditingSession.h"
 #include "nsIEditor.h"
 #include "nsNodeInfoManager.h"
@@ -446,13 +445,26 @@ nsHTMLDocument::TryParentCharset(nsIDocShell*  aDocShell,
 }
 
 void
-nsHTMLDocument::TryFallback(int32_t& aCharsetSource, nsACString& aCharset)
+nsHTMLDocument::TryWeakDocTypeDefault(int32_t& aCharsetSource,
+                                      nsACString& aCharset)
 {
-  if (kCharsetFromFallback <= aCharsetSource)
+  if (kCharsetFromWeakDocTypeDefault <= aCharsetSource)
     return;
 
-  aCharsetSource = kCharsetFromFallback;
-  FallbackEncoding::FromLocale(aCharset);
+  const nsAdoptingCString& defCharset =
+    Preferences::GetLocalizedCString("intl.charset.default");
+
+  // Don't let the user break things by setting intl.charset.default to
+  // not a rough ASCII superset
+  nsAutoCString canonical;
+  if (EncodingUtils::FindEncodingForLabel(defCharset, canonical) &&
+      EncodingUtils::IsAsciiCompatible(canonical)) {
+    aCharset = canonical;
+  } else {
+    aCharset.AssignLiteral("windows-1252");
+  }
+  aCharsetSource = kCharsetFromWeakDocTypeDefault;
+  return;
 }
 
 void
@@ -630,7 +642,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   if (!IsHTML() || !docShell) { // no docshell for text/html XHR
-    charsetSource = IsHTML() ? kCharsetFromFallback
+    charsetSource = IsHTML() ? kCharsetFromWeakDocTypeDefault
                              : kCharsetFromDocTypeDefault;
     charset.AssignLiteral("UTF-8");
     TryChannelCharset(aChannel, charsetSource, charset, executor);
@@ -671,7 +683,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       TryCacheCharset(cachingChan, charsetSource, charset);
     }
 
-    TryFallback(charsetSource, charset);
+    TryWeakDocTypeDefault(charsetSource, charset);
 
     if (wyciwygChannel) {
       // We know for sure that the parser needs to be using UTF16.
