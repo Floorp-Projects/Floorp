@@ -4548,8 +4548,10 @@ let TabState = {
       return tabData;
     }
     if (browser.__SS_data && browser.__SS_tabStillLoading) {
-      // use the data to be restored when the tab hasn't been completely loaded
-      tabData = browser.__SS_data;
+      // Use the data to be restored when the tab hasn't been
+      // completely loaded. We clone the data, since we're updating it
+      // here and the caller may update it further.
+      tabData = JSON.parse(JSON.stringify(browser.__SS_data));
       if (tab.pinned)
         tabData.pinned = true;
       else
