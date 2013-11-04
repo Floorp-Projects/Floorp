@@ -22,10 +22,6 @@
 
 <!ENTITY downloads.label     "Downloads">
 
-<!ENTITY showWhenDownloading.label     "Show the Downloads window when downloading a file">
-<!ENTITY showWhenDownloading.accesskey "D">
-<!ENTITY closeWhenDone.label "Close it when all downloads are finished">
-<!ENTITY closeWhenDone.accesskey "w">
 <!ENTITY saveTo.label "Save files to">
 <!ENTITY saveTo.accesskey "v">
 <!ENTITY chooseFolderWin.label        "Browse…">
