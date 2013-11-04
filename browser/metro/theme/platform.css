@@ -219,6 +219,11 @@ menulist {
   width: 100%;
 }
 
+/* ensure click events are dispatched targetting the select option not the label */
+#select-commands > .option-command > label {
+  pointer-events: none;
+}
+
 /* listcell element doesn't have flex="1" so we need to force it */
 .option-command > listcell {
   -moz-box-flex: 1 !important;
