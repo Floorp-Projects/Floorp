@@ -32,6 +32,7 @@ const EVENTS = {
 
 const STRINGS_URI = "chrome://browser/locale/devtools/shadereditor.properties"
 const HIGHLIGHT_COLOR = [1, 0, 0, 1];
+const BLACKBOX_COLOR = [0, 0, 0, 0];
 const TYPING_MAX_DELAY = 500;
 const SHADERS_AUTOGROW_ITEMS = 4;
 const DEFAULT_EDITOR_CONFIG = {
@@ -173,25 +174,25 @@ let ShadersListView = Heritage.extend(WidgetMethods, {
       showItemCheckboxes: true
     });
 
-    this._onProgramSelect = this._onProgramSelect.bind(this);
-    this._onProgramCheck = this._onProgramCheck.bind(this);
-    this._onProgramMouseEnter = this._onProgramMouseEnter.bind(this);
-    this._onProgramMouseLeave = this._onProgramMouseLeave.bind(this);
+    this._onShaderSelect = this._onShaderSelect.bind(this);
+    this._onShaderCheck = this._onShaderCheck.bind(this);
+    this._onShaderMouseEnter = this._onShaderMouseEnter.bind(this);
+    this._onShaderMouseLeave = this._onShaderMouseLeave.bind(this);
 
-    this.widget.addEventListener("select", this._onProgramSelect, false);
-    this.widget.addEventListener("check", this._onProgramCheck, false);
-    this.widget.addEventListener("mouseenter", this._onProgramMouseEnter, true);
-    this.widget.addEventListener("mouseleave", this._onProgramMouseLeave, true);
+    this.widget.addEventListener("select", this._onShaderSelect, false);
+    this.widget.addEventListener("check", this._onShaderCheck, false);
+    this.widget.addEventListener("mouseenter", this._onShaderMouseEnter, true);
+    this.widget.addEventListener("mouseleave", this._onShaderMouseLeave, true);
   },
 
   /**
    * Destruction function, called when the tool is closed.
    */
   destroy: function() {
-    this.widget.removeEventListener("select", this._onProgramSelect, false);
-    this.widget.removeEventListener("check", this._onProgramCheck, false);
-    this.widget.removeEventListener("mouseenter", this._onProgramMouseEnter, true);
-    this.widget.removeEventListener("mouseleave", this._onProgramMouseLeave, true);
+    this.widget.removeEventListener("select", this._onShaderSelect, false);
+    this.widget.removeEventListener("check", this._onShaderCheck, false);
+    this.widget.removeEventListener("mouseenter", this._onShaderMouseEnter, true);
+    this.widget.removeEventListener("mouseleave", this._onShaderMouseLeave, true);
   },
 
   /**
@@ -247,9 +248,9 @@ let ShadersListView = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * The select listener for the programs container.
+   * The select listener for the sources container.
    */
-  _onProgramSelect: function({ detail: sourceItem }) {
+  _onShaderSelect: function({ detail: sourceItem }) {
     if (!sourceItem) {
       return;
     }
@@ -279,19 +280,19 @@ let ShadersListView = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * The check listener for the programs container.
+   * The check listener for the sources container.
    */
-  _onProgramCheck: function({ detail: { checked }, target }) {
+  _onShaderCheck: function({ detail: { checked }, target }) {
     let sourceItem = this.getItemForElement(target);
     let attachment = sourceItem.attachment;
     attachment.isBlackBoxed = !checked;
-    attachment.programActor[checked ? "unblackbox" : "blackbox"]();
+    attachment.programActor[checked ? "unhighlight" : "highlight"](BLACKBOX_COLOR);
   },
 
   /**
-   * The mouseenter listener for the programs container.
+   * The mouseenter listener for the sources container.
    */
-  _onProgramMouseEnter: function(e) {
+  _onShaderMouseEnter: function(e) {
     let sourceItem = this.getItemForElement(e.target, { noSiblings: true });
     if (sourceItem && !sourceItem.attachment.isBlackBoxed) {
       sourceItem.attachment.programActor.highlight(HIGHLIGHT_COLOR);
@@ -304,9 +305,9 @@ let ShadersListView = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * The mouseleave listener for the programs container.
+   * The mouseleave listener for the sources container.
    */
-  _onProgramMouseLeave: function(e) {
+  _onShaderMouseLeave: function(e) {
     let sourceItem = this.getItemForElement(e.target, { noSiblings: true });
     if (sourceItem && !sourceItem.attachment.isBlackBoxed) {
       sourceItem.attachment.programActor.unhighlight();
