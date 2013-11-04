@@ -96,18 +96,24 @@ public final class ThumbnailHelper {
     }
 
     public void setThumbnailWidth(int width) {
-        mPendingWidth.set(IntSize.nextPowerOfTwo(width));
+        // Check inverted for safety: Bug 803299 Comment 34.
+        if (GeckoAppShell.getScreenDepth() == 24) {
+            mPendingWidth.set(width);
+        } else {
+            // Bug 776906: on 16-bit screens we need to ensure an even width.
+            mPendingWidth.set((width & 1) == 0 ? width : width + 1);
+        }
     }
 
     private void updateThumbnailSize() {
-        // Apply any pending width updates
+        // Apply any pending width updates.
         mWidth = mPendingWidth.get();
 
-        mWidth &= ~0x1; // Ensure the width is always an even number (bug 776906)
         mHeight = Math.round(mWidth * THUMBNAIL_ASPECT_RATIO);
 
         int pixelSize = (GeckoAppShell.getScreenDepth() == 24) ? 4 : 2;
         int capacity = mWidth * mHeight * pixelSize;
+        Log.d(LOGTAG, "Using new thumbnail size: " + capacity + " (width " + mWidth + ")");
         if (mBuffer == null || mBuffer.capacity() != capacity) {
             if (mBuffer != null) {
                 mBuffer = DirectBufferAllocator.free(mBuffer);
@@ -139,6 +145,7 @@ public final class ThumbnailHelper {
             return;
         }
 
+        Log.d(LOGTAG, "Sending thumbnail event: " + mWidth + ", " + mHeight);
         GeckoEvent e = GeckoEvent.createThumbnailEvent(tab.getId(), mWidth, mHeight, mBuffer);
         GeckoAppShell.sendEventToGecko(e);
     }
@@ -172,6 +179,7 @@ public final class ThumbnailHelper {
     }
 
     private void handleThumbnailData(Tab tab, ByteBuffer data) {
+        Log.d(LOGTAG, "handleThumbnailData: " + data.capacity());
         if (data != mBuffer) {
             // This should never happen, but log it and recover gracefully
             Log.e(LOGTAG, "handleThumbnailData called with an unexpected ByteBuffer!");
