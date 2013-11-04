@@ -35,7 +35,7 @@ public class TopSitesGridView extends GridView {
 
     // Listener for editing pinned sites.
     public static interface OnEditPinnedSiteListener {
-        public void onEditPinnedSite(int position);
+        public void onEditPinnedSite(int position, String searchTerm);
     }
 
     // Max number of top sites that needs to be shown.
@@ -115,7 +115,7 @@ public class TopSitesGridView extends GridView {
                     }
                 } else {
                     if (mEditPinnedSiteListener != null) {
-                        mEditPinnedSiteListener.onEditPinnedSite(position);
+                        mEditPinnedSiteListener.onEditPinnedSite(position, "");
                     }
                 }
             }
