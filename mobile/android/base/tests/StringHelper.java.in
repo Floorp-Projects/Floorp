@@ -129,10 +129,4 @@ class StringHelper {
     public static final String BOOKMARK_REMOVED_LABEL = "Bookmark removed";
     public static final String BOOKMARK_UPDATED_LABEL = "Bookmark updated";
     public static final String BOOKMARK_OPTIONS_LABEL = "Options";
-
-    // Bookmark Options Context Menu items
-    public static final String[] BOOKMARKS_OPTIONS_CONTEXTMENU_ITEMS = new String[] {
-    "Edit",
-    "Add to Home Screen"
-    };
 }
