@@ -579,7 +579,7 @@ install:: $(LIBRARY_NAME).pc
 install::
 	$(call py_action,process_install_manifest,--no-remove $(DESTDIR)$(includedir)/$(LIBRARY_NAME) _build_manifests/install/dist_include)
 
-install:: $(EXPORTS_mozilla)
+install:: $(EXPORTS_mozilla_FILES)
 	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)/mozilla
 
 #
