@@ -33,7 +33,7 @@ public class TopSitesGridItemView extends RelativeLayout {
     private static final ScaleType SCALE_TYPE_FAVICON   = ScaleType.CENTER;
     private static final ScaleType SCALE_TYPE_RESOURCE  = ScaleType.CENTER;
     private static final ScaleType SCALE_TYPE_THUMBNAIL = ScaleType.CENTER_CROP;
-    
+
     // Child views.
     private final TextView mTitleView;
     private final ImageView mThumbnailView;
