@@ -22,10 +22,7 @@ public:
   static void Shutdown();
 
   /*
-   * We track style changes to selected styles:
-   *   eCSSProperty_transform
-   *   eCSSProperty_opacity
-   *   eCSSProperty_left, eCSSProperty_top, eCSSProperty_right, eCSSProperty_bottom
+   * We track eCSSProperty_transform and eCSSProperty_opacity style changes
    * and use that information to guess whether style changes are animated.
    */
 
@@ -36,12 +33,6 @@ public:
    * @param aProperty the property that has changed
    */
   static void NotifyRestyle(nsIFrame* aFrame, nsCSSProperty aProperty);
-  /**
-   * Notify aFrame's left/top/right/bottom properties as having (maybe)
-   * changed due to a restyle, and therefore possibly wanting an active layer
-   * to render that style. Any such marking will time out after a short period.
-   */
-  static void NotifyOffsetRestyle(nsIFrame* aFrame);
   /**
    * Mark aFrame as being known to have an animation of aProperty.
    * Any such marking will time out after a short period.
@@ -59,11 +50,6 @@ public:
    * for constructing active layers.
    */
   static bool IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty);
-  /**
-   * Return true if any of aFrame's offset property styles should be considered
-   * as being animated for constructing active layers.
-   */
-  static bool IsOffsetStyleAnimated(nsIFrame* aFrame);
 
   /*
    * We track modifications to the content of certain frames (i.e. canvas frames)
