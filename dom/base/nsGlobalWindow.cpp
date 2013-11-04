@@ -1509,6 +1509,7 @@ nsGlobalWindow::FreeInnerObjects()
   }
 
   // Remove our reference to the document and the document principal.
+  mDoc = nullptr;
   mFocusedNode = nullptr;
 
   if (mApplicationCache) {
@@ -8910,9 +8911,6 @@ NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsGlobalWindow)
 NS_IMETHODIMP
 nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 {
-  MOZ_ASSERT(!IsInnerWindow() || IsCurrentInnerWindow(),
-             "We should only fire events on the current inner window.");
-
   FORWARD_TO_INNER(DispatchEvent, (aEvent, aRetVal), NS_OK);
 
   if (!mDoc) {
@@ -9042,7 +9040,10 @@ nsIScriptContext*
 nsGlobalWindow::GetContextForEventHandlers(nsresult* aRv)
 {
   *aRv = NS_ERROR_UNEXPECTED;
-  NS_ENSURE_TRUE(!IsInnerWindow() || IsCurrentInnerWindow(), nullptr);
+  if (IsInnerWindow()) {
+    nsPIDOMWindow* outer = GetOuterWindow();
+    NS_ENSURE_TRUE(outer && outer->GetCurrentInnerWindow() == this, nullptr);
+  }
 
   nsIScriptContext* scx;
   if ((scx = GetContext())) {
@@ -9562,7 +9563,7 @@ nsGlobalWindow::FireHashchange(const nsAString &aOldURL,
     return NS_OK;
 
   // Get a presentation shell for use in creating the hashchange event.
-  NS_ENSURE_STATE(IsCurrentInnerWindow());
+  NS_ENSURE_STATE(mDoc);
 
   nsIPresShell *shell = mDoc->GetShell();
   nsRefPtr<nsPresContext> presContext;
@@ -10119,7 +10120,7 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
 void
 nsGlobalWindow::FireOfflineStatusEvent()
 {
-  if (!IsCurrentInnerWindow())
+  if (!mDoc)
     return;
   nsAutoString name;
   if (NS_IsOffline()) {
@@ -10698,7 +10699,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       // need to fire only one idle event while the window is frozen.
       mNotifyIdleObserversIdleOnThaw = true;
       mNotifyIdleObserversActiveOnThaw = false;
-    } else if (IsCurrentInnerWindow()) {
+    } else if (mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this) {
       HandleIdleActiveEvent();
     }
     return NS_OK;
@@ -10709,17 +10710,13 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     if (IsFrozen()) {
       mNotifyIdleObserversActiveOnThaw = true;
       mNotifyIdleObserversIdleOnThaw = false;
-    } else if (IsCurrentInnerWindow()) {
+    } else if (mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this) {
       ScheduleActiveTimerCallback();
     }
     return NS_OK;
   }
 
-  if (!nsCRT::strcmp(aTopic, "dom-storage2-changed")) {
-    if (!IsInnerWindow() || !IsCurrentInnerWindow()) {
-      return NS_OK;
-    }
-
+  if (IsInnerWindow() && !nsCRT::strcmp(aTopic, "dom-storage2-changed")) {
     nsIPrincipal *principal;
     nsresult rv;
 
@@ -10841,11 +10838,6 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 #ifdef MOZ_B2G
   if (!nsCRT::strcmp(aTopic, NS_NETWORK_ACTIVITY_BLIP_UPLOAD_TOPIC) ||
       !nsCRT::strcmp(aTopic, NS_NETWORK_ACTIVITY_BLIP_DOWNLOAD_TOPIC)) {
-    MOZ_ASSERT(IsInnerWindow());
-    if (!IsCurrentInnerWindow()) {
-      return NS_OK;
-    }
-
     nsCOMPtr<nsIDOMEvent> event;
     NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
     nsresult rv = event->InitEvent(
