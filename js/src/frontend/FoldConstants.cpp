@@ -126,7 +126,7 @@ FoldBinaryNumeric(ExclusiveContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
         i = ToInt32(d);
         j = ToInt32(d2);
         j &= 31;
-        d = (op == JSOP_LSH) ? i << j : i >> j;
+        d = int32_t((op == JSOP_LSH) ? uint32_t(i) << j : i >> j);
         break;
 
       case JSOP_URSH:
