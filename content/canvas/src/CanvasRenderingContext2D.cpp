@@ -3282,6 +3282,9 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   Matrix matrix = mTarget->GetTransform();
   double sw = matrix._11 * w;
   double sh = matrix._22 * h;
+  if (!sw || !sh) {
+    return;
+  }
   nsRefPtr<gfxContext> thebes;
   nsRefPtr<gfxASurface> drawSurf;
   RefPtr<DrawTarget> drawDT;
@@ -3342,6 +3345,11 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
                                              data->GetSize(),
                                              data->Stride(),
                                              data->GetFormat());
+    }
+
+    if (!source) {
+      error.Throw(NS_ERROR_FAILURE);
+      return;
     }
 
     mgfx::Rect destRect(0, 0, w, h);
