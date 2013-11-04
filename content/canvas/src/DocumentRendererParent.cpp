@@ -6,7 +6,6 @@
 #include "gfxImageSurface.h"
 #include "gfxPattern.h"
 #include "nsICanvasRenderingContextInternal.h"
-#include "gfx2DGlue.h"
 
 using namespace mozilla::ipc;
 
@@ -23,7 +22,7 @@ void DocumentRendererParent::SetCanvasContext(nsICanvasRenderingContextInternal*
     mCanvasContext = ctx;
 }
 
-void DocumentRendererParent::DrawToCanvas(const gfx::IntSize& aSize,
+void DocumentRendererParent::DrawToCanvas(const nsIntSize& aSize,
                                           const nsCString& aData)
 {
     if (!mCanvas || !mCanvasContext)
@@ -31,7 +30,7 @@ void DocumentRendererParent::DrawToCanvas(const gfx::IntSize& aSize,
 
     nsRefPtr<gfxImageSurface> surf =
         new gfxImageSurface(reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aData).BeginWriting()),
-                            ThebesIntSize(aSize),
+                            gfxIntSize(aSize.width, aSize.height),
                             aSize.width * 4,
                             gfxImageFormatARGB32);
     nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
@@ -50,7 +49,7 @@ void DocumentRendererParent::DrawToCanvas(const gfx::IntSize& aSize,
 }
 
 bool
-DocumentRendererParent::Recv__delete__(const gfx::IntSize& renderedSize,
+DocumentRendererParent::Recv__delete__(const nsIntSize& renderedSize,
                                        const nsCString& data)
 {
     DrawToCanvas(renderedSize, data);

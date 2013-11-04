@@ -32,6 +32,7 @@ using class mozilla::WidgetCompositionEvent from "ipc/nsGUIEventIPC.h";
 using struct nsIMEUpdatePreference from "nsIWidget.h";
 using struct nsIntPoint from "nsPoint.h";
 using struct nsIntRect from "nsRect.h";
+using struct nsIntSize from "nsSize.h";
 using class mozilla::WidgetKeyboardEvent from "ipc/nsGUIEventIPC.h";
 using class mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
 using class mozilla::WidgetWheelEvent from "ipc/nsGUIEventIPC.h";
@@ -42,10 +43,8 @@ using class mozilla::WidgetTouchEvent from "ipc/nsGUIEventIPC.h";
 using struct mozilla::dom::RemoteDOMEvent from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::ScreenOrientation from "mozilla/dom/ScreenOrientation.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
-using CSSIntPoint from "Units.h";
-using CSSToScreenScale from "Units.h";
-using ScreenIntSize from "Units.h";
-using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
+using mozilla::CSSIntPoint from "Units.h";
+using mozilla::CSSToScreenScale from "Units.h";
 
 namespace mozilla {
 namespace dom {
@@ -318,13 +317,13 @@ child:
      * content processes always render to a virtual <0, 0> top-left
      * point.
      */
-    Show(ScreenIntSize size);
+    Show(nsIntSize size);
 
     LoadURL(nsCString uri);
 
     CacheFileDescriptor(nsString path, FileDescriptor fd);
 
-    UpdateDimensions(nsRect rect, ScreenIntSize size, ScreenOrientation orientation) compress;
+    UpdateDimensions(nsRect rect, nsIntSize size, ScreenOrientation orientation) compress;
 
     UpdateFrame(FrameMetrics frame) compress;
 
@@ -413,7 +412,7 @@ child:
     PDocumentRenderer(nsRect documentRect, gfxMatrix transform,
                       nsString bgcolor,
                       uint32_t renderFlags, bool flushLayout,
-                      IntSize renderSize);
+                      nsIntSize renderSize);
 
     /**
      * Sent by the chrome process when it no longer wants this remote
