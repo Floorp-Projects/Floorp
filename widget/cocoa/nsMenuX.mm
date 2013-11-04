@@ -834,7 +834,7 @@ nsresult nsMenuX::SetupIcon()
   if (rollupListener) {
     nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
     if (rollupWidget) {
-      rollupListener->Rollup(0, nullptr);
+      rollupListener->Rollup(0, nullptr, nullptr);
       [menu cancelTracking];
       return;
     }
