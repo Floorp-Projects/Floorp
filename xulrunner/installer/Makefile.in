@@ -94,7 +94,6 @@ GARBAGE += debian/changelog
 
 DEBDESTDIR=debian/$(MOZ_BUILD_APP)
 
-GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
 GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
 MOZ_DEB_TIMESTAMP = "$(shell date  +"%a, %d  %b %Y %T %z" )"
 
