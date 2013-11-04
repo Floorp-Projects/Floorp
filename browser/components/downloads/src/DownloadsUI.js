@@ -1,15 +1,12 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ts=2 et sw=2 tw=80 filetype=javascript: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
  * This component implements the nsIDownloadManagerUI interface and opens the
- * downloads panel in the most recent browser window when requested.
- *
- * If a specific preference is set, this component transparently forwards all
- * calls to the original implementation in Toolkit, that shows the window UI.
+ * Downloads view for the most recent browser window when requested.
  */
 
 "use strict";
@@ -40,11 +37,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 
 function DownloadsUI()
 {
-  XPCOMUtils.defineLazyGetter(this, "_toolkitUI", function () {
-    // Create Toolkit's nsIDownloadManagerUI implementation.
-    return Components.classesByID["{7dfdf0d1-aff6-4a34-bad1-d0fe74601642}"]
-                     .getService(Ci.nsIDownloadManagerUI);
-  });
 }
 
 DownloadsUI.prototype = {
@@ -62,11 +54,6 @@ DownloadsUI.prototype = {
 
   show: function DUI_show(aWindowContext, aDownload, aReason, aUsePrivateUI)
   {
-    if (DownloadsCommon.useToolkitUI) {
-      this._toolkitUI.show(aWindowContext, aDownload, aReason, aUsePrivateUI);
-      return;
-    }
-
     if (!aReason) {
       aReason = Ci.nsIDownloadManagerUI.REASON_USER_INTERACTED;
     }
@@ -92,27 +79,17 @@ DownloadsUI.prototype = {
     }
   },
 
-  get visible()
-  {
-    // If we're still using the toolkit downloads manager, delegate the call
-    // to it. Otherwise, return true for now, until we decide on how we want
-    // to indicate that a new download has started if a browser window is
-    // not available or minimized.
-    return DownloadsCommon.useToolkitUI ? this._toolkitUI.visible : true;
-  },
+  get visible() true,
 
-  getAttention: function DUI_getAttention()
-  {
-    if (DownloadsCommon.useToolkitUI) {
-      this._toolkitUI.getAttention();
-    }
-  },
+  getAttention: function () {},
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// Private
 
   /**
    * Helper function that opens the download manager UI.
    */
-  _showDownloadManagerUI:
-  function DUI_showDownloadManagerUI(aWindowContext, aUsePrivateUI)
+  _showDownloadManagerUI: function (aWindowContext, aUsePrivateUI)
   {
     // If we weren't given a window context, try to find a browser window
     // to use as our parent - and if that doesn't work, error out and give up.
