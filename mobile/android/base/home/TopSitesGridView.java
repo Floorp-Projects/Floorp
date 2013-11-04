@@ -34,7 +34,7 @@ public class TopSitesGridView extends GridView {
 
     // Listener for pinning sites.
     public static interface OnPinSiteListener {
-        public void onPinSite(int position);
+        public void onPinSite(int position, String searchTerm);
     }
 
     // Max number of top sites that needs to be shown.
@@ -114,7 +114,7 @@ public class TopSitesGridView extends GridView {
                     }
                 } else {
                     if (mPinSiteListener != null) {
-                        mPinSiteListener.onPinSite(position);
+                        mPinSiteListener.onPinSite(position, "");
                     }
                 }
             }
