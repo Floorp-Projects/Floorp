@@ -23,10 +23,10 @@ public:
 
     void SetCanvasContext(nsICanvasRenderingContextInternal* aCanvas,
 			  gfxContext* ctx);
-    void DrawToCanvas(const nsIntSize& renderedSize,
+    void DrawToCanvas(const gfx::IntSize& renderedSize,
 		      const nsCString& aData);
 
-    virtual bool Recv__delete__(const nsIntSize& renderedSize,
+    virtual bool Recv__delete__(const gfx::IntSize& renderedSize,
                                 const nsCString& data);
 
 private:
