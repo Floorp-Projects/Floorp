@@ -186,10 +186,7 @@ ThreadPoolWorker::terminate()
 // them down when requested.
 
 ThreadPool::ThreadPool(JSRuntime *rt)
-  :
-#if defined(JS_THREADSAFE) || defined(DEBUG)
-    runtime_(rt)
-#endif
+  : runtime_(rt)
 {
 }
 

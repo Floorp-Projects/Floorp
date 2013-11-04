@@ -1806,7 +1806,7 @@ JSScript::fullyInitTrivial(ExclusiveContext *cx, Handle<JSScript*> script)
     if (!ssd)
         return false;
 
-    ssd->data[0] = JSOP_STOP;
+    ssd->data[0] = JSOP_RETRVAL;
     ssd->data[1] = SRC_NULL;
     script->length = 1;
     return SaveSharedScriptData(cx, script, ssd, 1);

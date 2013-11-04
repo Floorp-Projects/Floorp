@@ -45,7 +45,7 @@ OPDEF(JSOP_NOP,       0,  "nop",        NULL,         1,  0,  0, JOF_BYTE)
 
 /* Long-standing JavaScript bytecodes. */
 OPDEF(JSOP_UNDEFINED, 1,  js_undefined_str, "",       1,  0,  1, JOF_BYTE)
-OPDEF(JSOP_POPV,      2,  "popv",       NULL,         1,  1,  0, JOF_BYTE)
+OPDEF(JSOP_UNUSED2,   2,  "unused2",    NULL,         1,  1,  0, JOF_BYTE)
 OPDEF(JSOP_ENTERWITH, 3,  "enterwith",  NULL,         1,  1,  1, JOF_BYTE)
 OPDEF(JSOP_LEAVEWITH, 4,  "leavewith",  NULL,         1,  1,  0, JOF_BYTE)
 OPDEF(JSOP_RETURN,    5,  "return",     NULL,         1,  1,  0, JOF_BYTE)
@@ -353,9 +353,14 @@ OPDEF(JSOP_UNUSED150,     150,"unused150", NULL,      1,  0,  0,  JOF_BYTE)
 /* Set pending exception from the stack, to trigger rethrow. */
 OPDEF(JSOP_THROWING,      151,"throwing", NULL,       1,  1,  0,  JOF_BYTE)
 
-/* Set and get return value pseudo-register in stack frame. */
-OPDEF(JSOP_SETRVAL,       152,"setrval",  NULL,       1,  1,  0,  JOF_BYTE)
-OPDEF(JSOP_RETRVAL,       153,"retrval",  NULL,       1,  0,  0,  JOF_BYTE)
+/* Set the return value pseudo-register in stack frame. */
+OPDEF(JSOP_SETRVAL,       152,"setrval",    NULL,       1,  1,  0,  JOF_BYTE)
+/*
+ * Stop interpretation and return value set by JSOP_SETRVAL. When not set,
+ * returns UndefinedValue. Also emitted at end of script so interpreter
+ * don't need to check if opcode is still in script range.
+ */
+OPDEF(JSOP_RETRVAL,       153,"retrval",    NULL,       1,  0,  0,  JOF_BYTE)
 
 /* Free variable references that must either be found on the global or a ReferenceError */
 OPDEF(JSOP_GETGNAME,      154,"getgname",  NULL,       5,  0,  1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME)
@@ -415,11 +420,7 @@ OPDEF(JSOP_UNUSED192,     192,"unused192",   NULL,    1,  0,  0,  JOF_BYTE)
 
 OPDEF(JSOP_CALLELEM,      193, "callelem",   NULL,    1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC)
 
-/*
- * Stop interpretation, emitted at end of script to save the threaded bytecode
- * interpreter an extra branch test on every DO_NEXT_OP (see jsinterp.c).
- */
-OPDEF(JSOP_STOP,          194,"stop",        NULL,    1,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_UNUSED194,     194,"unused194",   NULL,    1,  0,  0,  JOF_BYTE)
 
 /*
  * Get an extant property value, throwing ReferenceError if the identified
