@@ -409,7 +409,7 @@ function getTestList(params, callback) {
   }
 
   var config = readConfig();
-  for (p in params) {
+  for (var p in params) {
     if (params[p] == 1) {
       config[p] = true;
     } else if (params[p] == 0) {
