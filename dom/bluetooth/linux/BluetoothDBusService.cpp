@@ -609,6 +609,7 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
   propertyName.AssignASCII(aPropertyTypes[i].name);
   *aPropIndex = i;
 
+  // Preprocessing
   dbus_message_iter_recurse(&aIter, &prop_val);
   expectedType = aPropertyTypes[*aPropIndex].type;
   receivedType = dbus_message_iter_get_arg_type(&prop_val);
@@ -621,6 +622,7 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
   bool convert = false;
   if (propertyName.EqualsLiteral("Connected") &&
       receivedType == DBUS_TYPE_ARRAY) {
+    MOZ_ASSERT(aPropertyTypes == sDeviceProperties);
     convert = true;
   }
 
@@ -631,6 +633,7 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
     return false;
   }
 
+  // Extract data
   BluetoothValue propertyValue;
   switch (receivedType) {
     case DBUS_TYPE_STRING:
@@ -682,11 +685,21 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
       NS_NOTREACHED("Cannot find dbus message type!");
   }
 
+  // Postprocessing
   if (convert) {
     MOZ_ASSERT(propertyValue.type() == BluetoothValue::TArrayOfuint8_t);
 
     bool b = propertyValue.get_ArrayOfuint8_t()[0];
     propertyValue = BluetoothValue(b);
+  } else if (propertyName.EqualsLiteral("Devices")) {
+    MOZ_ASSERT(aPropertyTypes == sAdapterProperties);
+    MOZ_ASSERT(propertyValue.type() == BluetoothValue::TArrayOfnsString);
+
+    uint32_t length = propertyValue.get_ArrayOfnsString().Length();
+    for (uint32_t i= 0; i < length; i++) {
+      nsString& data = propertyValue.get_ArrayOfnsString()[i];
+      data = GetAddressFromObjectPath(data);
+    }
   }
 
   aProperties.AppendElement(BluetoothNamedValue(propertyName, propertyValue));
@@ -838,7 +851,7 @@ public:
 
     InfallibleTArray<BluetoothNamedValue>& properties =
       deviceProperties.get_ArrayOfBluetoothNamedValue();
-    InfallibleTArray<BluetoothNamedValue>::size_type i;
+    uint32_t i;
     for (i = 0; i < properties.Length(); i++) {
       if (properties[i].name().EqualsLiteral("Name")) {
         properties[i].name().AssignLiteral("name");
@@ -966,8 +979,8 @@ AgentEventFilter(DBusConnection *conn, DBusMessage *msg, void *data)
     }
 
     DBusMessage* reply = nullptr;
-    int i;
-    int length = sAuthorizedServiceClass.Length();
+    uint32_t length = sAuthorizedServiceClass.Length();
+    uint32_t i;
     for (i = 0; i < length; i++) {
       if (serviceClass == sAuthorizedServiceClass[i]) {
         reply = dbus_message_new_method_return(msg);
@@ -1412,7 +1425,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                             GetObjectPathFromAddress(signalPath, address)));
 
       if (!ContainsIcon(properties)) {
-        for (uint8_t i = 0; i < properties.Length(); i++) {
+        for (uint32_t i = 0; i < properties.Length(); i++) {
           // It is possible that property Icon missed due to CoD of major
           // class is TOY but service class is "Audio", we need to assign
           // Icon as audio-card. This is for PTS test TC_AG_COD_BV_02_I.
@@ -2091,8 +2104,7 @@ public:
     // As HFP specification defined that
     // service class is "Audio" can be considered as HFP AG.
     if (!ContainsIcon(devicePropertiesArray)) {
-      InfallibleTArray<BluetoothNamedValue>::size_type j;
-      for (j = 0; j < devicePropertiesArray.Length(); ++j) {
+      for (uint32_t j = 0; j < devicePropertiesArray.Length(); ++j) {
         BluetoothNamedValue& deviceProperty = devicePropertiesArray[j];
         if (deviceProperty.name().EqualsLiteral("Class")) {
           if (HasAudioService(deviceProperty.value().get_uint32_t())) {

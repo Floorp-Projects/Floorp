@@ -346,6 +346,12 @@ class MochitestOptions(optparse.OptionParser):
           "dest": "debugOnFailure",
           "help": "breaks execution and enters the JS debugger on a test failure. Should be used together with --jsdebugger."
         }],
+        [["--e10s"],
+        { "action": "store_true",
+          "default": False,
+          "dest": "e10s",
+          "help": "Run tests with electrolysis preferences and test filtering enabled.",
+        }],
     ]
 
     def __init__(self, **kwargs):

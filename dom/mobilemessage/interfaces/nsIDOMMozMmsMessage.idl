@@ -21,7 +21,7 @@ dictionary MmsDeliveryInfo
   DOMString? deliveryStatus;
 };
 
-[scriptable, builtinclass, uuid(494bbca1-ac7c-47d2-9e90-4e7d07e1cb4f)]
+[scriptable, builtinclass, uuid(35d88c5e-2746-11e3-9d7b-83ca2203a291)]
 interface nsIDOMMozMmsMessage : nsISupports
 {
   /**
@@ -32,6 +32,13 @@ interface nsIDOMMozMmsMessage : nsISupports
   readonly attribute long      id;
 
   readonly attribute unsigned long long threadId;
+
+  /**
+   * Integrated Circuit Card Identifier.
+   *
+   * Will be null if ICC is not available.
+   */
+  readonly attribute DOMString iccId;
 
   /**
    * Should be "not-downloaded", "received", "sending", "sent" or "error".

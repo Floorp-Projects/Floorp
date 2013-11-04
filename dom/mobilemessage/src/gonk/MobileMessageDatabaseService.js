@@ -24,7 +24,7 @@ const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 
 const DB_NAME = "sms";
-const DB_VERSION = 15;
+const DB_VERSION = 16;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -230,6 +230,10 @@ MobileMessageDatabaseService.prototype = {
             self.upgradeSchema14(event.target.transaction, next);
             break;
           case 15:
+            if (DEBUG) debug("Upgrade to version 15. Add ICC ID for each message.");
+            self.upgradeSchema15(event.target.transaction, next);
+            break;
+          case 16:
             // This will need to be moved for each new version
             if (DEBUG) debug("Upgrade finished.");
             break;
@@ -1049,6 +1053,25 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
+  /**
+   * Add ICC ID.
+   */
+  upgradeSchema15: function upgradeSchema15(transaction, next) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        next();
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      messageRecord.iccId = null;
+      cursor.update(messageRecord);
+      cursor.continue();
+    };
+  },
+
   matchParsedPhoneNumbers: function matchParsedPhoneNumbers(addr1, parsedAddr1,
                                                             addr2, parsedAddr2) {
     if ((parsedAddr1.internationalNumber &&
@@ -1104,6 +1127,7 @@ MobileMessageDatabaseService.prototype = {
     if (aMessageRecord.type == "sms") {
       return gMobileMessageService.createSmsMessage(aMessageRecord.id,
                                                     aMessageRecord.threadId,
+                                                    aMessageRecord.iccId,
                                                     aMessageRecord.delivery,
                                                     aMessageRecord.deliveryStatus,
                                                     aMessageRecord.sender,
@@ -1159,6 +1183,7 @@ MobileMessageDatabaseService.prototype = {
       }
       return gMobileMessageService.createMmsMessage(aMessageRecord.id,
                                                     aMessageRecord.threadId,
+                                                    aMessageRecord.iccId,
                                                     aMessageRecord.delivery,
                                                     aMessageRecord.deliveryInfo,
                                                     aMessageRecord.sender,

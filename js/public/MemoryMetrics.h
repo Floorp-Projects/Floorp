@@ -92,7 +92,7 @@ struct InefficientNonFlatteningStringHashPolicy
 #define ZERO_SIZE(kind, gc, mSize)                      mSize(0),
 #define COPY_OTHER_SIZE(kind, gc, mSize)                mSize(other.mSize),
 #define ADD_OTHER_SIZE(kind, gc, mSize)                 mSize += other.mSize;
-#define ADD_SIZE_TO_N_IF_LIVE_GC_THING(kind, gc, mSize) n += (js::gc == js::IsLiveGCThing) ? mSize : 0;
+#define ADD_SIZE_TO_N_IF_LIVE_GC_THING(kind, gc, mSize) n += (js::gc) ? mSize : 0;
 #define ADD_TO_TAB_SIZES(kind, gc, mSize)               sizes->add(JS::TabSizes::kind, mSize);
 
 // Used to annotate which size_t fields measure live GC things and which don't.
