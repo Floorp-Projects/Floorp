@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -19,6 +20,7 @@ import android.accounts.OnAccountsUpdateListener;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.ContentObserver;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
@@ -278,6 +280,9 @@ public class Tabs implements GeckoEventListener {
     }
 
     public synchronized Tab getTab(int id) {
+        if (id == -1)
+            return null;
+
         if (mTabs.size() == 0)
             return null;
 
@@ -469,6 +474,24 @@ public class Tabs implements GeckoEventListener {
             }
         } catch (Exception e) {
             Log.w(LOGTAG, "handleMessage threw for " + event, e);
+        }
+    }
+
+    /**
+     * Set the favicon for any tabs loaded with this page URL.
+     */
+    public void updateFaviconForURL(String pageURL, Bitmap favicon) {
+        // The tab might be pointing to another URL by the time the
+        // favicon is finally loaded, in which case we won't find the tab.
+        // See also: Bug 920331.
+        for (Tab tab : mOrder) {
+            String tabURL = tab.getURL();
+            if (pageURL.equals(tabURL)) {
+                tab.setFaviconLoadId(Favicons.NOT_LOADING);
+                if (tab.updateFavicon(favicon)) {
+                    notifyListeners(tab, TabEvents.FAVICON);
+                }
+            }
         }
     }
 

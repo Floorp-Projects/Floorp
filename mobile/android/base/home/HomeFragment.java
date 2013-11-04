@@ -7,7 +7,6 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
@@ -134,13 +133,7 @@ abstract class HomeFragment extends Fragment {
             }
 
             // Fetch the largest cacheable icon size.
-            Favicons.getLargestFaviconForPage(info.url, new OnFaviconLoadedListener() {
-                @Override
-                public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-                    GeckoAppShell.createShortcut(info.getDisplayTitle(), info.url, favicon, "");
-                }
-            });
-
+            Favicons.getLargestFaviconForPage(info.url, new GeckoAppShell.CreateShortcutFaviconLoadedListener(info.url, info.getDisplayTitle()));
             return true;
         }
 
