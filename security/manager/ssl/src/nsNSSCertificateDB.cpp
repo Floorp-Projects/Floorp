@@ -1387,6 +1387,10 @@ NS_IMETHODIMP
 nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
                                             nsIX509Cert **_retval)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   NS_ENSURE_ARG_POINTER(_retval);
 
   // sure would be nice to have a smart pointer class for PL_ allocations
@@ -1410,10 +1414,6 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char *base64,
       lengthDER--;
   }
 
-  nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   SECItem secitem_cert;
   secitem_cert.type = siDERCertBuffer;
