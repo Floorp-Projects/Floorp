@@ -141,14 +141,6 @@ public class TwoLinePageRow extends LinearLayout
         mUrl.setCompoundDrawablesWithIntrinsicBounds(mUrlIconId, 0, mBookmarkIconId, 0);
     }
 
-    private void setFaviconWithUrl(Bitmap favicon, String url) {
-        if (favicon == null) {
-            mFavicon.showDefaultFavicon();
-        } else {
-            mFavicon.updateImage(favicon, url);
-        }
-    }
-
     private void setBookmarkIcon(int bookmarkIconId) {
         if (mBookmarkIconId == bookmarkIconId) {
             return;
