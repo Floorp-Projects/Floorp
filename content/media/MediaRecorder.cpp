@@ -61,8 +61,10 @@ NS_IMPL_RELEASE_INHERITED(MediaRecorder, nsDOMEventTargetHelper)
  * 2) A Session is destroyed in DestroyRunnable after MediaRecorder::Stop being called
  *    _and_ all encoded media data been passed to OnDataAvailable handler.
  */
-class MediaRecorder::Session
+class MediaRecorder::Session: public nsIObserver
 {
+  NS_DECL_THREADSAFE_ISUPPORTS
+
   // Main thread task.
   // Create a blob event and send back to client.
   class PushBlobRunnable : public nsRunnable
@@ -114,7 +116,7 @@ class MediaRecorder::Session
   class DestroyRunnable : public nsRunnable
   {
   public:
-    DestroyRunnable(Session *aSession)
+    DestroyRunnable(const already_AddRefed<Session> &aSession)
       : mSession(aSession) {}
 
     NS_IMETHODIMP Run()
@@ -122,12 +124,16 @@ class MediaRecorder::Session
       MOZ_ASSERT(NS_IsMainThread() && mSession.get());
       MediaRecorder *recorder = mSession->mRecorder;
 
-      // If MediaRecoder is not in Inactive mode, call MediaRecoder::Stop
-      // and dispatch DestroyRunnable again.
+      // SourceMediaStream is ended, and send out TRACK_EVENT_END notification.
+      // Read Thread will be terminate soon.
+      // We need to switch MediaRecorder to "Stop" state first to make sure
+      // MediaRecorder is not associated with this Session anymore, then, it's
+      // safe to delete this Session.
       if (recorder->mState != RecordingState::Inactive) {
         ErrorResult result;
         recorder->Stop(result);
         NS_DispatchToMainThread(new DestroyRunnable(mSession.forget()));
+
         return NS_OK;
       }
 
@@ -135,14 +141,12 @@ class MediaRecorder::Session
       recorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
       recorder->SetMimeType(NS_LITERAL_STRING(""));
 
-      // Delete session object.
-      mSession = nullptr;
-
       return NS_OK;
     }
 
   private:
-    nsAutoPtr<Session> mSession;
+    // Call mSession::Release automatically while DestroyRunnable be destroy.
+    nsRefPtr<Session> mSession;
   };
 
   friend class PushBlobRunnable;
@@ -156,21 +160,16 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
+    AddRef();
     mEncodedBufferCache = new EncodedBufferCache(MAX_ALLOW_MEMORY_BUFFER);
   }
 
   // Only DestroyRunnable is allowed to delete Session object.
-  ~Session()
+  virtual ~Session()
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (mInputPort.get()) {
-      mInputPort->Destroy();
-    }
-
-    if (mTrackUnionStream.get()) {
-      mTrackUnionStream->Destroy();
-    }
+    CleanupStreams();
   }
 
   void Start()
@@ -183,16 +182,15 @@ public:
     if (!mReadThread) {
       nsresult rv = NS_NewNamedThread("Media Encoder", getter_AddRefs(mReadThread));
       if (NS_FAILED(rv)) {
-        if (mInputPort.get()) {
-          mInputPort->Destroy();
-        }
-        if (mTrackUnionStream.get()) {
-          mTrackUnionStream->Destroy();
-        }
+        CleanupStreams();
         mRecorder->NotifyError(rv);
         return;
       }
     }
+
+    // In case source media stream does not notify track end, recieve
+    // shutdown notification and stop Read Thread.
+    nsContentUtils::RegisterShutdownObserver(this);
 
     mReadThread->Dispatch(new ExtractRunnable(this), NS_DISPATCH_NORMAL);
   }
@@ -201,18 +199,8 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    // Shutdown mEncoder to stop Session::Extract
-    if (mInputPort.get())
-    {
-      mInputPort->Destroy();
-      mInputPort = nullptr;
-    }
-
-    if (mTrackUnionStream.get())
-    {
-      mTrackUnionStream->Destroy();
-      mTrackUnionStream = nullptr;
-    }
+    CleanupStreams();
+    nsContentUtils::UnregisterShutdownObserver(this);
   }
 
   void Pause()
@@ -233,6 +221,7 @@ public:
   {
     nsString mimeType;
     mRecorder->GetMimeType(mimeType);
+
     return mEncodedBufferCache->ExtractBlob(mimeType);
   }
 
@@ -273,7 +262,7 @@ private:
     NS_DispatchToMainThread(new PushBlobRunnable(this));
 
     // Destroy this session object in main thread.
-    NS_DispatchToMainThread(new DestroyRunnable(this));
+    NS_DispatchToMainThread(new DestroyRunnable(already_AddRefed<Session>(this)));
   }
 
   // Bind media source with MediaEncoder to receive raw media data.
@@ -281,15 +270,17 @@ private:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
+    // Create a Track Union Stream
     MediaStreamGraph* gm = mRecorder->mStream->GetStream()->Graph();
     mTrackUnionStream = gm->CreateTrackUnionStream(nullptr);
     MOZ_ASSERT(mTrackUnionStream, "CreateTrackUnionStream failed");
 
     mTrackUnionStream->SetAutofinish(true);
 
+    // Bind this Track Union Stream with Source Media
     mInputPort = mTrackUnionStream->AllocateInputPort(mRecorder->mStream->GetStream(), MediaInputPort::FLAG_BLOCK_OUTPUT);
 
-    // Allocate encoder and bind with union stream.
+    // Allocate encoder and bind with the Track Union Stream.
     mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(""));
     MOZ_ASSERT(mEncoder, "CreateEncoder failed");
 
@@ -298,11 +289,37 @@ private:
     }
   }
 
+  void CleanupStreams()
+  {
+    if (mInputPort.get()) {
+      mInputPort->Destroy();
+      mInputPort = nullptr;
+    }
+
+    if (mTrackUnionStream.get()) {
+      mTrackUnionStream->Destroy();
+      mTrackUnionStream = nullptr;
+    }
+  }
+
+  NS_IMETHODIMP Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+      // Force stop Session to terminate Read Thread.
+      Stop();
+    }
+
+    return NS_OK;
+  }
+
 private:
   // Hold a reference to MediaRecoder to make sure MediaRecoder be
   // destroyed after all session object dead.
   nsRefPtr<MediaRecorder> mRecorder;
 
+  // Receive track data from source and dispatch to Encoder.
   // Pause/ Resume controller.
   nsRefPtr<ProcessedMediaStream> mTrackUnionStream;
   nsRefPtr<MediaInputPort> mInputPort;
@@ -319,6 +336,8 @@ private:
   // by calling requestData API.
   const int32_t mTimeSlice;
 };
+
+NS_IMPL_ISUPPORTS1(MediaRecorder::Session, nsIObserver)
 
 MediaRecorder::~MediaRecorder()
 {
