@@ -35,6 +35,15 @@ MmsService::Retrieve(int32_t aId, nsIMobileMessageCallback *aRequest)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+MmsService::SendReadReport(const nsAString & messageID,
+                           const nsAString & toAddress,
+                           const nsAString & iccId)
+{
+  NS_NOTYETIMPLEMENTED("Implement me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 } // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

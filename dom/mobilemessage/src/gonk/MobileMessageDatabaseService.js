@@ -24,7 +24,7 @@ const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 
 const DB_NAME = "sms";
-const DB_VERSION = 16;
+const DB_VERSION = 17;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -65,6 +65,9 @@ const COLLECT_TIMESTAMP_UNUSED = 0;
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
                                    "@mozilla.org/mobilemessage/mobilemessageservice;1",
                                    "nsIMobileMessageService");
+XPCOMUtils.defineLazyServiceGetter(this, "gMMSService",
+                                   "@mozilla.org/mms/rilmmsservice;1",
+                                   "nsIMmsService");
 
 /**
  * MobileMessageDatabaseService
@@ -230,10 +233,14 @@ MobileMessageDatabaseService.prototype = {
             self.upgradeSchema14(event.target.transaction, next);
             break;
           case 15:
-            if (DEBUG) debug("Upgrade to version 15. Add ICC ID for each message.");
+            if (DEBUG) debug("Upgrade to version 16. Add ICC ID for each message.");
             self.upgradeSchema15(event.target.transaction, next);
             break;
           case 16:
+            if (DEBUG) debug("Upgrade to version 17. Add isReadReportSent for incoming MMS.");
+            self.upgradeSchema16(event.target.transaction, next);
+            break;
+          case 17:
             // This will need to be moved for each new version
             if (DEBUG) debug("Upgrade finished.");
             break;
@@ -1072,6 +1079,29 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
+  /**
+   * Add isReadReportSent for incoming MMS.
+   */
+  upgradeSchema16: function upgradeSchema16(transaction, next) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+
+    // Update type attributes.
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        next();
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      if (messageRecord.type == "mms") {
+        messageRecord.isReadReportSent = false;
+        cursor.update(messageRecord);
+      }
+      cursor.continue();
+    };
+  },
+
   matchParsedPhoneNumbers: function matchParsedPhoneNumbers(addr1, parsedAddr1,
                                                             addr2, parsedAddr2) {
     if ((parsedAddr1.internationalNumber &&
@@ -1181,6 +1211,7 @@ MobileMessageDatabaseService.prototype = {
       if (headers["x-mms-expiry"] != undefined) {
         expiryDate = aMessageRecord.timestamp + headers["x-mms-expiry"] * 1000;
       }
+      let isReadReportRequested = headers["x-mms-read-report"] || false;
       return gMobileMessageService.createMmsMessage(aMessageRecord.id,
                                                     aMessageRecord.threadId,
                                                     aMessageRecord.iccId,
@@ -1193,7 +1224,8 @@ MobileMessageDatabaseService.prototype = {
                                                     subject,
                                                     smil,
                                                     attachments,
-                                                    expiryDate);
+                                                    expiryDate,
+                                                    isReadReportRequested);
     }
   },
 
@@ -1732,6 +1764,7 @@ MobileMessageDatabaseService.prototype = {
 
     if (aMessage.type == "mms") {
       aMessage.transactionIdIndex = aMessage.transactionId;
+      aMessage.isReadReportSent = false;
     }
 
     if (aMessage.type == "sms") {
@@ -2059,7 +2092,7 @@ MobileMessageDatabaseService.prototype = {
     return cursor;
   },
 
-  markMessageRead: function markMessageRead(messageId, value, aRequest) {
+  markMessageRead: function markMessageRead(messageId, value, aSendReadReport, aRequest) {
     if (DEBUG) debug("Setting message " + messageId + " read to " + value);
     this.newTxn(READ_WRITE, function (error, txn, stores) {
       if (error) {
@@ -2067,10 +2100,12 @@ MobileMessageDatabaseService.prototype = {
         aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
+
       txn.onerror = function onerror(event) {
         if (DEBUG) debug("Caught error on transaction ", event.target.errorCode);
         aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
       };
+
       let messageStore = stores[0];
       let threadStore = stores[1];
       messageStore.get(messageId).onsuccess = function onsuccess(event) {
@@ -2080,6 +2115,7 @@ MobileMessageDatabaseService.prototype = {
           aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR);
           return;
         }
+
         if (messageRecord.id != messageId) {
           if (DEBUG) {
             debug("Retrieve message ID (" + messageId + ") is " +
@@ -2088,6 +2124,7 @@ MobileMessageDatabaseService.prototype = {
           aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.UNKNOWN_ERROR);
           return;
         }
+
         // If the value to be set is the same as the current message `read`
         // value, we just notify successfully.
         if (messageRecord.read == value) {
@@ -2095,8 +2132,22 @@ MobileMessageDatabaseService.prototype = {
           aRequest.notifyMessageMarkedRead(messageRecord.read);
           return;
         }
+
         messageRecord.read = value ? FILTER_READ_READ : FILTER_READ_UNREAD;
         messageRecord.readIndex = [messageRecord.read, messageRecord.timestamp];
+        let readReportMessageId, readReportTo;
+        if (aSendReadReport &&
+            messageRecord.type == "mms" &&
+            messageRecord.delivery == DELIVERY_RECEIVED &&
+            messageRecord.read == FILTER_READ_READ &&
+            !messageRecord.isReadReportSent) {
+          messageRecord.isReadReportSent = true;
+
+          let from = messageRecord.headers["from"];
+          readReportTo = from && from.address;
+          readReportMessageId = messageRecord.headers["message-id"];
+        }
+
         if (DEBUG) debug("Message.read set to: " + value);
         messageStore.put(messageRecord).onsuccess = function onsuccess(event) {
           if (DEBUG) {
@@ -2118,6 +2169,11 @@ MobileMessageDatabaseService.prototype = {
                      " -> " + threadRecord.unreadCount);
             }
             threadStore.put(threadRecord).onsuccess = function(event) {
+              if(readReportMessageId && readReportTo) {
+                gMMSService.sendReadReport(readReportMessageId,
+                                           readReportTo,
+                                           messageRecord.iccId);
+              }
               aRequest.notifyMessageMarkedRead(messageRecord.read);
             };
           };
