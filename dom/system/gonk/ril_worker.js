@@ -5893,7 +5893,7 @@ RIL[REQUEST_CDMA_SUBSCRIPTION] = function REQUEST_CDMA_SUBSCRIPTION(length, opti
   this.iccInfo.mdn = result[0];
   // The result[1] is Home SID. (Already be handled in readCDMAHome())
   // The result[2] is Home NID. (Already be handled in readCDMAHome())
-  this.iccInfo.min = result[3];
+  // The result[3] is MIN.
   // The result[4] is PRL version.
 
   ICCUtilsHelper.handleICCInfoChange();

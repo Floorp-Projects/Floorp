@@ -55,16 +55,11 @@ interface nsIDOMMozGsmIccInfo : nsIDOMMozIccInfo
   readonly attribute DOMString msisdn;
 };
 
-[scriptable, uuid(013e973e-8b56-4525-b634-d23166b86edb)]
+[scriptable, uuid(10b89660-2988-443a-a6f0-4ed3618fee41)]
 interface nsIDOMMozCdmaIccInfo : nsIDOMMozIccInfo
 {
   /**
    * Mobile Directory Number (MDN) of the subscriber, aka his phone number.
    */
   readonly attribute DOMString mdn;
-
-  /**
-   * Mobile Identification Number (MIN) of the subscriber.
-   */
-  readonly attribute DOMString min;
 };
