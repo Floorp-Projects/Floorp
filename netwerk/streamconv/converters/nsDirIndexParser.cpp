@@ -13,9 +13,7 @@
 #include "nsEscape.h"
 #include "nsIInputStream.h"
 #include "nsCRT.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefLocalizedString.h"
+#include "mozilla/dom/FallbackEncoding.h"
 #include "nsITextToSubURI.h"
 #include "nsIDirIndex.h"
 #include "nsServiceManagerUtils.h"
@@ -35,24 +33,7 @@ nsDirIndexParser::Init() {
   mLineStart = 0;
   mHasDescription = false;
   mFormat = nullptr;
-
-  // get default charset to be used for directory listings (fallback to
-  // ISO-8859-1 if pref is unavailable).
-  NS_NAMED_LITERAL_CSTRING(kFallbackEncoding, "ISO-8859-1");
-  nsXPIDLString defCharset;
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefs) {
-    nsCOMPtr<nsIPrefLocalizedString> prefVal;
-    prefs->GetComplexValue("intl.charset.default",
-                           NS_GET_IID(nsIPrefLocalizedString),
-                           getter_AddRefs(prefVal));
-    if (prefVal)
-      prefVal->ToString(getter_Copies(defCharset));
-  }
-  if (!defCharset.IsEmpty())
-    LossyCopyUTF16toASCII(defCharset, mEncoding); // charset labels are always ASCII
-  else
-    mEncoding.Assign(kFallbackEncoding);
+  mozilla::dom::FallbackEncoding::FromLocale(mEncoding);
  
   nsresult rv;
   // XXX not threadsafe
