@@ -277,6 +277,21 @@ var ContextCommands = {
     return null;
   },
 
+  getPageSource: function cc_getPageSource() {
+    let uri = Services.io.newURI(Browser.selectedBrowser.currentURI.spec, null, null);
+    if (!uri.schemeIs("view-source")) {
+      return "view-source:" + Browser.selectedBrowser.currentURI.spec;
+    }
+    return null;
+  },
+
+  viewPageSource: function cc_viewPageSource() {
+    let uri = this.getPageSource();
+    if (uri) {
+      BrowserUI.addAndShowTab(uri);
+    }
+  },
+
   /*
    * Utilities
    */
