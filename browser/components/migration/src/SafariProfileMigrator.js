@@ -342,29 +342,6 @@ Preferences.prototype = {
         this._set("WebKitDisplayImagesKey", "permissions.default.image",
                   function(webkitVal) webkitVal ? 1 : 2);
 
-        // Default charset migration
-        this._set("WebKitDefaultTextEncodingName", "intl.charset.default",
-          function(webkitCharset) {
-            // We don't support x-mac-korean (see bug 713516), but it mostly matches
-            // EUC-KR.
-            if (webkitCharset == "x-mac-korean")
-              return "EUC-KR";
-
-            // getCharsetAlias throws if an invalid value is passed in.
-            try {
-              return Cc["@mozilla.org/charset-converter-manager;1"].
-                     getService(Ci.nsICharsetConverterManager).
-                     getCharsetAlias(webkitCharset);
-            }
-            catch(ex) {
-              Cu.reportError("Could not convert webkit charset '" + webkitCharset +
-                             "' to a supported charset");
-            }
-            // Don't set the preference if we could not get the corresponding
-            // charset.
-            return undefined;
-          });
-
 #ifdef XP_WIN
         // Cookie-accept policy.
         // For the OS X version, see WebFoundationCookieBehavior.
