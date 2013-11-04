@@ -325,7 +325,8 @@ void PeerConnectionCtx::onDeviceEvent(ccapi_device_event_e aDeviceEvent,
 
   switch (aDeviceEvent) {
     case CCAPI_DEVICE_EV_STATE:
-      CSFLogDebug(logTag, "%s - %d : %d", __FUNCTION__, state, currentSipccState);
+      CSFLogDebug(logTag, "%s - %d : %d", __FUNCTION__, state,
+                  static_cast<uint32_t>(currentSipccState));
 
       if (CC_STATE_INS == state) {
         // SIPCC is up

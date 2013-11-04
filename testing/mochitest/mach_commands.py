@@ -186,7 +186,7 @@ class MochitestRunner(MozbuildObject):
         debugger_args=None, shuffle=False, keep_open=False, rerun_failures=False,
         no_autorun=False, repeat=0, run_until_failure=False, slow=False,
         chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False,
-        debug_on_failure=False, start_at=None, end_at=None):
+        debug_on_failure=False, start_at=None, end_at=None, e10s=False):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -290,6 +290,8 @@ class MochitestRunner(MozbuildObject):
         options.debugOnFailure = debug_on_failure
         options.startAt = start_at
         options.endAt = end_at
+        options.e10s = e10s
+        mozinfo.update({"e10s": e10s}) # for test manifest parsing.
 
         options.failureFile = failure_file_path
 
@@ -425,6 +427,10 @@ def MochitestCommand(func):
     jsdebugger = CommandArgument('--jsdebugger', action='store_true',
         help='Start the browser JS debugger before running the test. Implies --no-autorun.')
     func = jsdebugger(func)
+
+    this_chunk = CommandArgument('--e10s', action='store_true',
+        help='Run tests with electrolysis preferences and test filtering enabled.')
+    func = this_chunk(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',

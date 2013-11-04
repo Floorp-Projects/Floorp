@@ -12,6 +12,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
+#include "mozilla/dom/MobileMessageManagerBinding.h"
+#include "mozilla/dom/MozMmsMessageBinding.h"
 #include "nsIDOMMozSmsEvent.h"
 #include "nsIDOMMozMmsEvent.h"
 #include "nsIDOMMozSmsMessage.h"
@@ -118,8 +120,10 @@ MobileMessageManager::GetSegmentInfoForText(const nsAString& aText,
 
 nsresult
 MobileMessageManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+                           uint32_t aServiceId,
                            JS::Handle<JSString*> aNumber,
-                           const nsAString& aMessage, JS::Value* aRequest)
+                           const nsAString& aMessage,
+                           JS::Value* aRequest)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, NS_ERROR_FAILURE);
@@ -132,7 +136,8 @@ MobileMessageManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
     new MobileMessageCallback(request);
 
   // By default, we don't send silent messages via MobileMessageManager.
-  nsresult rv = smsService->Send(number, aMessage, false, msgCallback);
+  nsresult rv = smsService->Send(aServiceId, number, aMessage,
+                                 false, msgCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JSObject*> global(aCx, aGlobal);
@@ -150,64 +155,107 @@ MobileMessageManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
 }
 
 NS_IMETHODIMP
-MobileMessageManager::Send(const JS::Value& aNumber_, const nsAString& aMessage, JS::Value* aReturn)
+MobileMessageManager::Send(const JS::Value& aNumber_,
+                           const nsAString& aMessage,
+                           const JS::Value& aSendParams,
+                           JSContext* aCx,
+                           uint8_t aArgc,
+                           JS::Value* aReturn)
 {
-  nsresult rv;
-  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-  NS_ENSURE_STATE(sc);
-  AutoPushJSContext cx(sc->GetNativeContext());
-  NS_ASSERTION(cx, "Failed to get a context!");
-
-  JS::Rooted<JS::Value> aNumber(cx, aNumber_);
+  JS::Rooted<JS::Value> aNumber(aCx, aNumber_);
   if (!aNumber.isString() &&
-      !(aNumber.isObject() && JS_IsArrayObject(cx, &aNumber.toObject()))) {
+      !(aNumber.isObject() && JS_IsArrayObject(aCx, &aNumber.toObject()))) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  JS::Rooted<JSObject*> global(cx, sc->GetWindowProxy());
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(sc);
+
+  JS::Rooted<JSObject*> global(aCx, sc->GetWindowProxy());
   NS_ASSERTION(global, "Failed to get global object!");
 
-  JSAutoCompartment ac(cx, global);
+  JSAutoCompartment ac(aCx, global);
+
+  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(smsService, NS_ERROR_FAILURE);
+
+  // Use the default one unless |aSendParams.serviceId| is available.
+  uint32_t serviceId;
+  rv = smsService->GetSmsDefaultServiceId(&serviceId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aArgc == 3) {
+    JS::Rooted<JS::Value> param(aCx, aSendParams);
+    RootedDictionary<SmsSendParameters> sendParams(aCx);
+    if (!sendParams.Init(aCx, param)) {
+      return NS_ERROR_TYPE_ERR;
+    }
+    if (sendParams.mServiceId.WasPassed()) {
+      serviceId = sendParams.mServiceId.Value();
+    }
+  }
 
   if (aNumber.isString()) {
-    JS::Rooted<JSString*> str(cx, aNumber.toString());
-    return Send(cx, global, str, aMessage, aReturn);
+    JS::Rooted<JSString*> str(aCx, aNumber.toString());
+    return Send(aCx, global, serviceId, str, aMessage, aReturn);
   }
 
   // Must be an array then.
-  JS::Rooted<JSObject*> numbers(cx, &aNumber.toObject());
+  JS::Rooted<JSObject*> numbers(aCx, &aNumber.toObject());
 
   uint32_t size;
-  JS_ALWAYS_TRUE(JS_GetArrayLength(cx, numbers, &size));
+  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, numbers, &size));
 
   JS::Value* requests = new JS::Value[size];
 
-  JS::Rooted<JS::Value> number(cx);
-  for (uint32_t i=0; i<size; ++i) {
-    if (!JS_GetElement(cx, numbers, i, &number)) {
+  JS::Rooted<JS::Value> number(aCx);
+  for (uint32_t i = 0; i < size; ++i) {
+    if (!JS_GetElement(aCx, numbers, i, &number)) {
       return NS_ERROR_INVALID_ARG;
     }
 
-    JS::Rooted<JSString*> str(cx, number.toString());
-    nsresult rv = Send(cx, global, str, aMessage, &requests[i]);
+    JS::Rooted<JSString*> str(aCx, number.toString());
+    nsresult rv = Send(aCx, global, serviceId, str, aMessage, &requests[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  aReturn->setObjectOrNull(JS_NewArrayObject(cx, size, requests));
+  aReturn->setObjectOrNull(JS_NewArrayObject(aCx, size, requests));
   NS_ENSURE_TRUE(aReturn->isObject(), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MobileMessageManager::SendMMS(const JS::Value& aParams, nsIDOMDOMRequest** aRequest)
+MobileMessageManager::SendMMS(const JS::Value& aParams,
+                              const JS::Value& aSendParams,
+                              JSContext* aCx,
+                              uint8_t aArgc,
+                              nsIDOMDOMRequest** aRequest)
 {
   nsCOMPtr<nsIMmsService> mmsService = do_GetService(MMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(mmsService, NS_ERROR_FAILURE);
 
+  // Use the default one unless |aSendParams.serviceId| is available.
+  uint32_t serviceId;
+  nsresult rv = mmsService->GetMmsDefaultServiceId(&serviceId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aArgc == 2) {
+    JS::Rooted<JS::Value> param(aCx, aSendParams);
+    RootedDictionary<MmsSendParameters> sendParams(aCx);
+    if (!sendParams.Init(aCx, param)) {
+      return NS_ERROR_TYPE_ERR;
+    }
+    if (sendParams.mServiceId.WasPassed()) {
+      serviceId = sendParams.mServiceId.Value();
+    }
+  }
+
   nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
   nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
-  nsresult rv = mmsService->Send(aParams, msgCallback);
+  rv = mmsService->Send(serviceId, aParams, msgCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(aRequest);

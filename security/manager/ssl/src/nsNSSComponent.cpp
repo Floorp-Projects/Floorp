@@ -18,6 +18,8 @@
 #include "nsICertOverrideService.h"
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
+#include "mozilla/PublicSSL.h"
+#include "mozilla/StaticPtr.h"
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "nsIDOMNode.h"
@@ -896,6 +898,90 @@ setNonPkixOcspEnabled(int32_t ocspEnabled)
 #define USE_NSS_LIBPKIX_DEFAULT false
 #define OCSP_STAPLING_ENABLED_DEFAULT true
 
+static const bool SUPPRESS_WARNING_PREF_DEFAULT = false;
+static const bool MD5_ENABLED_DEFAULT = false;
+static const bool REQUIRE_SAFE_NEGOTIATION_DEFAULT = false;
+static const bool ALLOW_UNRESTRICTED_RENEGO_DEFAULT = false;
+static const bool FALSE_START_ENABLED_DEFAULT = true;
+static const bool CIPHER_ENABLED_DEFAULT = false;
+
+namespace {
+
+class CipherSuiteChangeObserver : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  virtual ~CipherSuiteChangeObserver() {}
+  static nsresult StartObserve();
+  static nsresult StopObserve();
+
+private:
+  static StaticRefPtr<CipherSuiteChangeObserver> sObserver;
+  CipherSuiteChangeObserver() {}
+};
+
+NS_IMPL_ISUPPORTS1(CipherSuiteChangeObserver, nsIObserver)
+
+// static
+StaticRefPtr<CipherSuiteChangeObserver> CipherSuiteChangeObserver::sObserver;
+
+// static
+nsresult
+CipherSuiteChangeObserver::StartObserve()
+{
+  NS_ASSERTION(NS_IsMainThread(), "CipherSuiteChangeObserver::StartObserve() can only be accessed in main thread");
+  if (!sObserver) {
+    nsRefPtr<CipherSuiteChangeObserver> observer = new CipherSuiteChangeObserver();
+    nsresult rv = Preferences::AddStrongObserver(observer.get(), "security.");
+    if (NS_FAILED(rv)) {
+      sObserver = nullptr;
+      return rv;
+    }
+    sObserver = observer;
+  }
+  return NS_OK;
+}
+
+// static
+nsresult
+CipherSuiteChangeObserver::StopObserve()
+{
+  NS_ASSERTION(NS_IsMainThread(), "CipherSuiteChangeObserver::StopObserve() can only be accessed in main thread");
+  if (sObserver) {
+    nsresult rv = Preferences::RemoveObserver(sObserver.get(), "security.");
+    sObserver = nullptr;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+CipherSuiteChangeObserver::Observe(nsISupports *aSubject,
+                                   const char *aTopic,
+                                   const PRUnichar *someData)
+{
+  NS_ASSERTION(NS_IsMainThread(), "CipherSuiteChangeObserver::Observe can only be accessed in main thread");
+  if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
+    NS_ConvertUTF16toUTF8  prefName(someData);
+    /* Look through the cipher table and set according to pref setting */
+    for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
+      if (prefName.Equals(cp->pref)) {
+        bool cipherEnabled = Preferences::GetBool(cp->pref, CIPHER_ENABLED_DEFAULT);
+        SSL_CipherPrefSetDefault(cp->id, cipherEnabled);
+        SSL_ClearSessionCache();
+        break;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+} // anonymous namespace
+
 // Caller must hold a lock on nsNSSComponent::mutex when calling this function
 void nsNSSComponent::setValidationOptions()
 {
@@ -1026,33 +1112,6 @@ nsNSSComponent::SkipOcspOff()
 
   return NS_OK;
 }
-
-static void configureMD5(bool enabled)
-{
-  if (enabled) { // set flags
-    NSS_SetAlgorithmPolicy(SEC_OID_MD5, 
-        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
-        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
-        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
-  }
-  else { // clear flags
-    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
-        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
-        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
-        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-  }
-}
-
-static const bool SUPPRESS_WARNING_PREF_DEFAULT = false;
-static const bool MD5_ENABLED_DEFAULT = false;
-static const bool REQUIRE_SAFE_NEGOTIATION_DEFAULT = false;
-static const bool ALLOW_UNRESTRICTED_RENEGO_DEFAULT = false;
-static const bool FALSE_START_ENABLED_DEFAULT = true;
-static const bool CIPHER_ENABLED_DEFAULT = false;
 
 nsresult
 nsNSSComponent::InitializeNSS(bool showWarningBox)
@@ -1186,8 +1245,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
       mNSSInitialized = true;
 
-      ::NSS_SetDomesticPolicy();
-
       PK11_SetPasswordFunc(PK11PasswordPrompt);
 
       SharedSSLState::GlobalInit();
@@ -1206,7 +1263,7 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
       bool md5Enabled = Preferences::GetBool("security.enable_md5_signatures",
                                              MD5_ENABLED_DEFAULT);
-      configureMD5(md5Enabled);
+      ConfigureMD5(md5Enabled);
 
       SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
 
@@ -1228,29 +1285,10 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 //                                                  FALSE_START_ENABLED_DEFAULT);
       SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, false);
 
-      // Disable any ciphers that NSS might have enabled by default
-      for (uint16_t i = 0; i < SSL_NumImplementedCiphers; ++i)
-      {
-        uint16_t cipher_id = SSL_ImplementedCiphers[i];
-        SSL_CipherPrefSetDefault(cipher_id, false);
+      if (NS_FAILED(InitializeCipherSuite())) {
+        PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
+        return NS_ERROR_FAILURE;
       }
-
-      bool cipherEnabled;
-      // Now only set SSL/TLS ciphers we knew about at compile time
-      for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
-        cipherEnabled = Preferences::GetBool(cp->pref, CIPHER_ENABLED_DEFAULT);
-        SSL_CipherPrefSetDefault(cp->id, cipherEnabled);
-      }
-
-      // Enable ciphers for PKCS#12
-      SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
-      SEC_PKCS12EnableCipher(PKCS12_RC4_128, 1);
-      SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
-      SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
-      SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
-      SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
-      SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
-      PORT_SetUCS2_ASCIIConversionFunction(pip_ucs2_ascii_conversion_fn);
 
       // dynamic options from prefs
       setValidationOptions();
@@ -1300,6 +1338,9 @@ nsNSSComponent::ShutdownNSS()
     mHttpForNSS.unregisterHttpClient();
 
     Preferences::RemoveObserver(this, "security.");
+    if (NS_FAILED(CipherSuiteChangeObserver::StopObserve())) {
+      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("nsNSSComponent::ShutdownNSS cannot stop observing cipher suite change\n"));
+    }
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
     ShutdownSmartCardThreads();
@@ -1638,7 +1679,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     } else if (prefName.Equals("security.enable_md5_signatures")) {
       bool md5Enabled = Preferences::GetBool("security.enable_md5_signatures",
                                              MD5_ENABLED_DEFAULT);
-      configureMD5(md5Enabled);
+      ConfigureMD5(md5Enabled);
       clearSessionCache = true;
     } else if (prefName.Equals("security.ssl.require_safe_negotiation")) {
       bool requireSafeNegotiation =
@@ -1672,17 +1713,6 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       bool sendLM = Preferences::GetBool("network.ntlm.send-lm-response",
                                          SEND_LM_DEFAULT);
       nsNTLMAuthModule::SetSendLM(sendLM);
-    } else {
-      /* Look through the cipher table and set according to pref setting */
-      bool cipherEnabled;
-      for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
-        if (prefName.Equals(cp->pref)) {
-          cipherEnabled = Preferences::GetBool(cp->pref, CIPHER_ENABLED_DEFAULT);
-          SSL_CipherPrefSetDefault(cp->id, cipherEnabled);
-          clearSessionCache = true;
-          break;
-        }
-      }
     }
     if (clearSessionCache)
       SSL_ClearSessionCache();
@@ -1970,3 +2000,64 @@ setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
  loser:
   return rv;
 }
+
+namespace mozilla {
+namespace psm {
+
+void ConfigureMD5(bool enabled)
+{
+  if (enabled) { // set flags
+    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
+        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
+        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
+        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
+  }
+  else { // clear flags
+    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
+        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
+        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
+        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+  }
+}
+
+nsresult InitializeCipherSuite()
+{
+  NS_ASSERTION(NS_IsMainThread(), "InitializeCipherSuite() can only be accessed in main thread");
+
+  if (NSS_SetDomesticPolicy() != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Disable any ciphers that NSS might have enabled by default
+  for (uint16_t i = 0; i < SSL_NumImplementedCiphers; ++i) {
+    uint16_t cipher_id = SSL_ImplementedCiphers[i];
+    SSL_CipherPrefSetDefault(cipher_id, false);
+  }
+
+  bool cipherEnabled;
+  // Now only set SSL/TLS ciphers we knew about at compile time
+  for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
+    cipherEnabled = Preferences::GetBool(cp->pref, CIPHER_ENABLED_DEFAULT);
+    SSL_CipherPrefSetDefault(cp->id, cipherEnabled);
+  }
+
+  // Enable ciphers for PKCS#12
+  SEC_PKCS12EnableCipher(PKCS12_RC4_40, 1);
+  SEC_PKCS12EnableCipher(PKCS12_RC4_128, 1);
+  SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_40, 1);
+  SEC_PKCS12EnableCipher(PKCS12_RC2_CBC_128, 1);
+  SEC_PKCS12EnableCipher(PKCS12_DES_56, 1);
+  SEC_PKCS12EnableCipher(PKCS12_DES_EDE3_168, 1);
+  SEC_PKCS12SetPreferredCipher(PKCS12_DES_EDE3_168, 1);
+  PORT_SetUCS2_ASCIIConversionFunction(pip_ucs2_ascii_conversion_fn);
+
+  // Observe preference change around cipher suite setting.
+  return CipherSuiteChangeObserver::StartObserve();
+}
+
+} // namespace psm
+} // namespace mozilla

@@ -9,6 +9,9 @@ function debug(msg) {
 }
 
 let Cu = Components.utils;
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 

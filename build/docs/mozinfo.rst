@@ -66,6 +66,13 @@ crashreporter
 
    Always defined.
 
+datareporting
+  Whether data reporting (MOZ_DATA_REPORTING) is enabled for this build.
+
+   Values are ``true`` and ``false``.
+
+   Always defined.
+
 debug
    Whether this is a debug build.
 

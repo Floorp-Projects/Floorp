@@ -1713,7 +1713,8 @@ gfxContext::PointInFill(const gfxPoint& pt)
   if (mCairo) {
     return cairo_in_fill(mCairo, pt.x, pt.y);
   } else {
-    return mPath->ContainsPoint(ToPoint(pt), mTransform);
+    EnsurePath();
+    return mPath->ContainsPoint(ToPoint(pt), Matrix());
   }
 }
 
@@ -1723,9 +1724,10 @@ gfxContext::PointInStroke(const gfxPoint& pt)
   if (mCairo) {
     return cairo_in_stroke(mCairo, pt.x, pt.y);
   } else {
+    EnsurePath();
     return mPath->StrokeContainsPoint(CurrentState().strokeOptions,
                                       ToPoint(pt),
-                                      mTransform);
+                                      Matrix());
   }
 }
 
@@ -1737,6 +1739,7 @@ gfxContext::GetUserPathExtent()
     cairo_path_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
   } else {
+    EnsurePath();
     return ThebesRect(mPath->GetBounds());
   }
 }
@@ -1749,6 +1752,7 @@ gfxContext::GetUserFillExtent()
     cairo_fill_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
   } else {
+    EnsurePath();
     return ThebesRect(mPath->GetBounds());
   }
 }
@@ -1761,6 +1765,7 @@ gfxContext::GetUserStrokeExtent()
     cairo_stroke_extents(mCairo, &xmin, &ymin, &xmax, &ymax);
     return gfxRect(xmin, ymin, xmax - xmin, ymax - ymin);
   } else {
+    EnsurePath();
     return ThebesRect(mPath->GetStrokedBounds(CurrentState().strokeOptions, mTransform));
   }
 }
