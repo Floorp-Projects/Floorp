@@ -524,7 +524,7 @@ nsJSObjWrapper::NP_Invalidate(NPObject *npobj)
 
   if (jsnpobj && jsnpobj->mJSObj) {
     // Unroot the object's JSObject
-    js_RemoveRoot(sJSRuntime, &jsnpobj->mJSObj);
+    JS_RemoveObjectRootRT(sJSRuntime, &jsnpobj->mJSObj);
 
     if (sJSObjWrappers.ops) {
       // Remove the wrapper from the hash
