@@ -1980,11 +1980,6 @@ JS_RemoveObjectRootRT(JSRuntime *rt, JSObject **rp);
 extern JS_PUBLIC_API(void)
 JS_RemoveScriptRootRT(JSRuntime *rt, JSScript **rp);
 
-/* TODO: remove these APIs */
-
-extern JS_FRIEND_API(void)
-js_RemoveRoot(JSRuntime *rt, void *rp);
-
 /*
  * C-compatible version of the Anchor class. It should be called after the last
  * use of the variable it protects.
