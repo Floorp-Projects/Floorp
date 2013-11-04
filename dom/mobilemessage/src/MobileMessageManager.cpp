@@ -397,7 +397,6 @@ MobileMessageManager::GetMessages(nsIDOMMozSmsFilter* aFilter,
 
 NS_IMETHODIMP
 MobileMessageManager::MarkMessageRead(int32_t aId, bool aValue,
-                                      bool aSendReadReport,
                                       nsIDOMDOMRequest** aRequest)
 {
   nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService =
@@ -406,9 +405,7 @@ MobileMessageManager::MarkMessageRead(int32_t aId, bool aValue,
 
   nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
   nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
-  nsresult rv = mobileMessageDBService->MarkMessageRead(aId, aValue,
-                                                        aSendReadReport,
-                                                        msgCallback);
+  nsresult rv = mobileMessageDBService->MarkMessageRead(aId, aValue, msgCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(aRequest);
