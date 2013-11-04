@@ -1,0 +1,120 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>WebGL editor test page</title>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+      precision lowp float;
+      attribute vec3 aVertexPosition;
+      uniform float uDepth;
+
+      void main(void) {
+        gl_Position = vec4(aVertexPosition, uDepth);
+      }
+    </script>
+
+    <script id="shader-fs-0" type="x-shader/x-fragment">
+      precision lowp float;
+
+      void main(void) {
+        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+      }
+    </script>
+
+    <script id="shader-fs-1" type="x-shader/x-fragment">
+      precision lowp float;
+
+      void main(void) {
+        gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+      }
+    </script>
+  </head>
+
+  <body>
+    <canvas id="canvas" width="128" height="128"></canvas>
+
+    <script type="text/javascript;version=1.8">
+      "use strict";
+
+      let canvas, gl;
+      let program = [];
+      let squareVerticesPositionBuffer;
+      let vertexPositionAttribute = [];
+      let depthUniform = [];
+
+      window.onload = function() {
+        canvas = document.querySelector("canvas");
+        gl = canvas.getContext("webgl");
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+        initProgram(0);
+        initProgram(1);
+        initBuffers();
+        drawScene();
+      }
+
+      function initProgram(i) {
+        let vertexShader = getShader("shader-vs");
+        let fragmentShader = getShader("shader-fs-" + i);
+
+        program[i] = gl.createProgram();
+        gl.attachShader(program[i], vertexShader);
+        gl.attachShader(program[i], fragmentShader);
+        gl.linkProgram(program[i]);
+
+        vertexPositionAttribute[i] = gl.getAttribLocation(program[i], "aVertexPosition");
+        gl.enableVertexAttribArray(vertexPositionAttribute[i]);
+
+        depthUniform[i] = gl.getUniformLocation(program[i], "uDepth");
+      }
+
+      function getShader(id) {
+        let script = document.getElementById(id);
+        let source = script.textContent;
+        let shader;
+
+        if (script.type == "x-shader/x-fragment") {
+          shader = gl.createShader(gl.FRAGMENT_SHADER);
+        } else if (script.type == "x-shader/x-vertex") {
+          shader = gl.createShader(gl.VERTEX_SHADER);
+        }
+
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+
+        return shader;
+      }
+
+      function initBuffers() {
+        squareVerticesPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesPositionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+           1.0,  1.0, 0.0,
+          -1.0,  1.0, 0.0,
+           1.0, -1.0, 0.0,
+          -1.0, -1.0, 0.0
+        ]), gl.STATIC_DRAW);
+      }
+
+      function drawScene() {
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        for (let i = 0; i < 2; i++) {
+          gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesPositionBuffer);
+          gl.vertexAttribPointer(vertexPositionAttribute[i], 3, gl.FLOAT, false, 0, 0);
+
+          gl.useProgram(program[i]);
+          gl.uniform1f(depthUniform[i], i + 1);
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        }
+
+        window.requestAnimationFrame(drawScene);
+      }
+    </script>
+  </body>
+
+</html>

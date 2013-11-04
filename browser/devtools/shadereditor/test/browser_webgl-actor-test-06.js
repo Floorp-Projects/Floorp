@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that the highlight/unhighlight operations on program actors
- * work as expected.
+ * Tests that the highlight/unhighlight and blackbox/unblackbox operations on
+ * program actors work as expected.
  */
 
 function ifWebGLSupported() {
@@ -17,19 +17,31 @@ function ifWebGLSupported() {
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
   yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
   yield checkShaderSource("The shader sources are correct before highlighting.");
-  ok(true, "The top left pixel color was correct before highlighting.");
+  ok(true, "The corner pixel colors are correct before highlighting.");
 
   yield programActor.highlight([0, 0, 1, 1]);
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 255, a: 255 }, true);
   yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 0, b: 255, a: 255 }, true);
   yield checkShaderSource("The shader sources are preserved after highlighting.");
-  ok(true, "The top left pixel color is correct after highlighting.");
+  ok(true, "The corner pixel colors are correct after highlighting.");
 
   yield programActor.unhighlight();
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
   yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
   yield checkShaderSource("The shader sources are correct after unhighlighting.");
-  ok(true, "The top left pixel color is correct after unhighlighting.");
+  ok(true, "The corner pixel colors are correct after unhighlighting.");
+
+  yield programActor.blackbox();
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield checkShaderSource("The shader sources are preserved after blackboxing.");
+  ok(true, "The corner pixel colors are correct after blackboxing.");
+
+  yield programActor.unblackbox();
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+  yield checkShaderSource("The shader sources are correct after unblackboxing.");
+  ok(true, "The corner pixel colors are correct after unblackboxing.");
 
   function checkShaderSource(aMessage) {
     return Task.spawn(function() {

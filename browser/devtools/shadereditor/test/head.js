@@ -27,6 +27,7 @@ const EXAMPLE_URL = "http://example.com/browser/browser/devtools/shadereditor/te
 const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
 const SHADER_ORDER_URL = EXAMPLE_URL + "doc_shader-order.html";
 const MULTIPLE_CONTEXTS_URL = EXAMPLE_URL + "doc_multiple-contexts.html";
+const OVERLAPPING_GEOMETRY_CANVAS_URL = EXAMPLE_URL + "doc_overlapping-geometry.html";
 
 // All tests are asynchronous.
 waitForExplicitFinish();
