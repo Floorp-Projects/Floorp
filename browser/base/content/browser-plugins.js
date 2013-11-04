@@ -72,12 +72,15 @@ var gPluginHandler = {
     if (aName == "Shockwave Flash")
       return "Adobe Flash";
 
-    // Clean up the plugin name by stripping off any trailing version numbers
-    // or "plugin". EG, "Foo Bar Plugin 1.23_02" --> "Foo Bar"
+    // Clean up the plugin name by stripping off parenthetical clauses,
+    // trailing version numbers or "plugin".
+    // EG, "Foo Bar (Linux) Plugin 1.23_02" --> "Foo Bar"
     // Do this by first stripping the numbers, etc. off the end, and then
     // removing "Plugin" (and then trimming to get rid of any whitespace).
     // (Otherwise, something like "Java(TM) Plug-in 1.7.0_07" gets mangled)
-    let newName = aName.replace(/[\s\d\.\-\_\(\)]+$/, "").replace(/\bplug-?in\b/i, "").trim();
+    let newName = aName.replace(/\(.*?\)/g, "").
+                        replace(/[\s\d\.\-\_\(\)]+$/, "").
+                        replace(/\bplug-?in\b/i, "").trim();
     return newName;
   },
 
