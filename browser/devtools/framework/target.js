@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
   "resource://gre/modules/devtools/dbg-client.jsm");
 
-loader.lazyGetter(this, "InspectorFront", () => require("devtools/server/actors/inspector").InspectorFront);
-
 const targets = new WeakMap();
 const promiseTargets = new WeakMap();
 
@@ -253,17 +251,6 @@ TabTarget.prototype = {
     return !!this._isThreadPaused;
   },
 
-  get inspector() {
-    if (!this.form) {
-      throw new Error("Target.inspector requires an initialized remote actor.");
-    }
-    if (this._inspector) {
-      return this._inspector;
-    }
-    this._inspector = InspectorFront(this.client, this.form);
-    return this._inspector;
-  },
-
   /**
    * Adds remote protocol capabilities to the target, so that it can be used
    * for tools that support the Remote Debugging Protocol even for local
@@ -440,11 +427,6 @@ TabTarget.prototype = {
 
     // Before taking any action, notify listeners that destruction is imminent.
     this.emit("close");
-
-    if (this._inspector) {
-      this._inspector.destroy();
-      this._inspector = null;
-    }
 
     // First of all, do cleanup tasks that pertain to both remoted and
     // non-remoted targets.

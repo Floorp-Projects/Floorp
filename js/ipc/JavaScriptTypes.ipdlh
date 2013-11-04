@@ -7,7 +7,7 @@
 
 include DOMTypes;
 
-using mozilla::void_t;
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace jsipc {

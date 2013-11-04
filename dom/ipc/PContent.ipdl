@@ -30,32 +30,21 @@ include PTabContext;
 include URIParams;
 include ProtocolTypes;
 
-include "mozilla/chrome/RegistryMessageUtils.h";
-include "mozilla/dom/PermissionMessageUtils.h";
-include "mozilla/dom/TabMessageUtils.h";
-include "mozilla/HalTypes.h";
-include "mozilla/layout/RenderFrameUtils.h";
-include "mozilla/net/NeckoMessageUtils.h";
-include "nsGeoPositionIPCSerialiser.h";
-include "gfxPoint.h";
+using GeoPosition from "nsGeoPositionIPCSerialiser.h";
 
-using GeoPosition;
-using PrefTuple;
-
-using ChromePackage;
-using ResourceMapping;
-using OverrideMapping;
-using base::ChildPrivileges;
-using IPC::Permission;
-using IPC::Principal;
-using mozilla::null_t;
-using mozilla::void_t;
-using mozilla::dom::AudioChannelType;
-using mozilla::dom::AudioChannelState;
-using mozilla::dom::BlobConstructorParams;
-using mozilla::dom::NativeThreadId;
-using mozilla::hal::ProcessPriority;
-using gfxIntSize;
+using struct ChromePackage from "mozilla/chrome/RegistryMessageUtils.h";
+using struct ResourceMapping from "mozilla/chrome/RegistryMessageUtils.h";
+using struct OverrideMapping from "mozilla/chrome/RegistryMessageUtils.h";
+using base::ChildPrivileges from "base/process_util.h";
+using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
+using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using mozilla::dom::AudioChannelType from "AudioChannelCommon.h";
+using mozilla::dom::AudioChannelState from "AudioChannelCommon.h";
+using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
+using gfxIntSize from "nsSize.h";
 
 namespace mozilla {
 namespace dom {

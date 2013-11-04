@@ -1186,7 +1186,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
       // Include space for the indicator and the padding around it.
       aResult->width = indicator_size;
       aResult->height = indicator_size;
-      *aIsOverridable = false;
     }
     break;
   case NS_THEME_TOOLBAR_BUTTON_DROPDOWN:

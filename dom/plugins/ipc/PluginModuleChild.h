@@ -31,6 +31,7 @@
 #include "mozilla/plugins/PPluginModuleChild.h"
 #include "mozilla/plugins/PluginInstanceChild.h"
 #include "mozilla/plugins/PluginIdentifierChild.h"
+#include "mozilla/plugins/PluginMessageUtils.h"
 
 // NOTE: stolen from nsNPAPIPlugin.h
 

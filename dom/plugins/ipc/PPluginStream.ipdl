@@ -5,11 +5,10 @@
 
 include protocol PPluginInstance;
 
-include "mozilla/plugins/PluginMessageUtils.h";
 
-using mozilla::plugins::Buffer;
-using NPError;
-using NPReason;
+using mozilla::plugins::Buffer from "mozilla/plugins/PluginMessageUtils.h";
+using NPError from "npapi.h";
+using NPReason from "npapi.h";
 
 namespace mozilla {
 namespace plugins {

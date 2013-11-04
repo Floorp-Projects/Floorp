@@ -38,6 +38,9 @@ public:
 
   virtual nsINode* GetParentObject() MOZ_OVERRIDE;
 
+  NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,
+                              const nsAString& aValue);
+
 protected:
   virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl) MOZ_OVERRIDE;
   virtual nsIDocument* DocToUpdate() MOZ_OVERRIDE;

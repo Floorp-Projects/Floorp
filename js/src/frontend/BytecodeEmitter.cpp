@@ -1140,17 +1140,6 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
      * resolving upvar accesses within the inner function.
      */
     if (bce->emitterMode == BytecodeEmitter::LazyFunction) {
-        // The only statements within a lazy function which can push lexical
-        // scopes are try/catch blocks. Use generic ops in this case.
-        for (StmtInfoBCE *stmt = bce->topStmt; stmt; stmt = stmt->down) {
-            switch (stmt->type) {
-              case STMT_TRY:
-              case STMT_FINALLY:
-                return true;
-              default:;
-            }
-        }
-
         size_t hops = 0;
         FunctionBox *funbox = bce->sc->asFunctionBox();
         if (funbox->hasExtensibleScope())
@@ -2700,10 +2689,10 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
     }
 
     /*
-     * Always end the script with a JSOP_STOP. Some other parts of the codebase
+     * Always end the script with a JSOP_RETRVAL. Some other parts of the codebase
      * depend on this opcode, e.g. js_InternalInterpret.
      */
-    if (Emit1(cx, bce, JSOP_STOP) < 0)
+    if (Emit1(cx, bce, JSOP_RETRVAL) < 0)
         return false;
 
     if (!JSScript::fullyInitFromEmitter(cx, bce->script, bce))
@@ -3162,7 +3151,7 @@ MaybeEmitGroupAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp prolog
 {
     JS_ASSERT(pn->isKind(PNK_ASSIGN));
     JS_ASSERT(pn->isOp(JSOP_NOP));
-    JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_POPV);
+    JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_SETRVAL);
 
     ParseNode *lhs = pn->pn_left;
     ParseNode *rhs = pn->pn_right;
@@ -3194,7 +3183,7 @@ MaybeEmitLetGroupDecl(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
 {
     JS_ASSERT(pn->isKind(PNK_ASSIGN));
     JS_ASSERT(pn->isOp(JSOP_NOP));
-    JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_POPV);
+    JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_SETRVAL);
 
     ParseNode *lhs = pn->pn_left;
     ParseNode *rhs = pn->pn_right;
@@ -5309,7 +5298,7 @@ EmitStatement(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * that it appears useless to the compiler.
      *
      * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
-     * calling JS_Compile* to suppress JSOP_POPV.
+     * calling JS_Compile* to suppress JSOP_SETRVAL.
      */
     bool wantval = false;
     bool useful = false;
@@ -5339,7 +5328,7 @@ EmitStatement(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     if (useful) {
-        JSOp op = wantval ? JSOP_POPV : JSOP_POP;
+        JSOp op = wantval ? JSOP_SETRVAL : JSOP_POP;
         JS_ASSERT_IF(pn2->isKind(PNK_ASSIGN), pn2->isOp(JSOP_NOP));
 #if JS_HAS_DESTRUCTURING
         if (!wantval &&

@@ -209,6 +209,11 @@ If this option is not used, the validity check defaults to the current system ti
       </varlistentry>
 
       <varlistentry>
+        <term>--email email-address</term>
+        <listitem><para>Specify the email address of a certificate to list. Used with the -L command option.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>-f password-file</term>
         <listitem><para>Specify a file that will automatically supply the password to include in a certificate 
  or to access a certificate database. This is a plain-text file containing one password. Be sure to prevent 

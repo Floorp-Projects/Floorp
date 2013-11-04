@@ -12,30 +12,30 @@ include protocol PGrallocBuffer;
 include protocol PLayer;
 include protocol PRenderFrame;
 
-include "mozilla/WidgetUtils.h";
-include "mozilla/TimeStamp.h";
-include "mozilla/dom/ScreenOrientation.h";
-include "nsCSSProperty.h";
 include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/GfxMessageUtils.h";
 include "ImageLayers.h";
-include "mozilla/layers/CompositorTypes.h";
 
-using gfxPoint3D;
-using nscoord;
-using nsRect;
-using nsPoint;
-using mozilla::TimeDuration;
-using mozilla::TimeStamp;
-using mozilla::ScreenRotation;
-using nsCSSProperty;
-using mozilla::dom::ScreenOrientation;
-using mozilla::layers::TextureInfo;
-using mozilla::LayerMargin;
-using mozilla::LayerPoint;
-using mozilla::LayerRect;
-using mozilla::layers::ScaleMode;
-using mozilla::layers::DiagnosticTypes;
+using mozilla::GraphicsFilterType from "mozilla/GfxMessageUtils.h";
+using struct gfxRGBA from "gfxColor.h";
+using struct gfxPoint3D from "gfxPoint3D.h";
+using class gfx3DMatrix from "gfx3DMatrix.h";
+using nscoord from "nsCoord.h";
+using struct nsIntPoint from "nsPoint.h";
+using struct nsRect from "nsRect.h";
+using struct nsPoint from "nsPoint.h";
+using class mozilla::TimeDuration from "mozilla/TimeStamp.h";
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using mozilla::ScreenRotation from "mozilla/WidgetUtils.h";
+using nsCSSProperty from "nsCSSProperty.h";
+using mozilla::dom::ScreenOrientation from "mozilla/dom/ScreenOrientation.h";
+using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
+using mozilla::LayerMargin from "Units.h";
+using mozilla::LayerPoint from "Units.h";
+using mozilla::LayerRect from "Units.h";
+using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
+using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 
 namespace mozilla {
 namespace layers {
