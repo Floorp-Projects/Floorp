@@ -1368,7 +1368,7 @@ Interpret(JSContext *cx, RunState &state)
     } else {
         probes::EnterScript(cx, script, script->function(), activation.entryFrame());
     }
-    if (cx->compartment()->debugMode()) {
+    if (JS_UNLIKELY(cx->compartment()->debugMode())) {
         JSTrapStatus status = ScriptDebugPrologue(cx, activation.entryFrame());
         switch (status) {
           case JSTRAP_CONTINUE:
@@ -1652,7 +1652,7 @@ CASE(JSOP_RETRVAL)
         TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_STOP);
 #endif
 
-        if (cx->compartment()->debugMode())
+        if (JS_UNLIKELY(cx->compartment()->debugMode()))
             interpReturnOK = ScriptDebugEpilogue(cx, REGS.fp(), interpReturnOK);
 
         if (!REGS.fp()->isYielding())
@@ -2561,7 +2561,7 @@ CASE(JSOP_FUNCALL)
 
     if (!REGS.fp()->prologue(cx))
         goto error;
-    if (cx->compartment()->debugMode()) {
+    if (JS_UNLIKELY(cx->compartment()->debugMode())) {
         switch (ScriptDebugPrologue(cx, REGS.fp())) {
           case JSTRAP_CONTINUE:
             break;
@@ -3324,7 +3324,7 @@ DEFAULT()
 
     if (cx->isExceptionPending()) {
         /* Call debugger throw hooks. */
-        if (cx->compartment()->debugMode()) {
+        if (JS_UNLIKELY(cx->compartment()->debugMode())) {
             JSTrapStatus status = DebugExceptionUnwind(cx, REGS.fp(), REGS.pc);
             switch (status) {
               case JSTRAP_ERROR:
@@ -3430,7 +3430,7 @@ DEFAULT()
         goto inline_return;
 
   exit:
-    if (cx->compartment()->debugMode())
+    if (JS_UNLIKELY(cx->compartment()->debugMode()))
         interpReturnOK = ScriptDebugEpilogue(cx, REGS.fp(), interpReturnOK);
     if (!REGS.fp()->isYielding())
         REGS.fp()->epilogue(cx);
