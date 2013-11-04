@@ -542,7 +542,7 @@ SmsRequestParent::DoRequest(const MarkMessageReadRequest& aRequest)
     do_GetService(MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
   if (dbService) {
     rv = dbService->MarkMessageRead(aRequest.messageId(), aRequest.value(),
-                                    this);
+                                    aRequest.sendReadReport(), this);
   }
 
   if (NS_FAILED(rv)) {

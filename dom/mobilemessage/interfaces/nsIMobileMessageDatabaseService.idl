@@ -16,7 +16,7 @@ interface nsIDOMMozSmsFilter;
 interface nsIMobileMessageCallback;
 interface nsIMobileMessageCursorCallback;
 
-[scriptable, uuid(ea6f49ae-3a4c-47eb-a489-15578e634100)]
+[scriptable, uuid(8439916f-abc1-4c67-aa45-8a276a0a7855)]
 interface nsIMobileMessageDatabaseService : nsISupports
 {
   [binaryname(GetMessageMoz)]
@@ -33,6 +33,7 @@ interface nsIMobileMessageDatabaseService : nsISupports
 
   void markMessageRead(in long messageId,
                        in boolean value,
+                       in boolean sendReadReport,
                        in nsIMobileMessageCallback request);
 
   nsICursorContinueCallback createThreadCursor(in nsIMobileMessageCursorCallback callback);
