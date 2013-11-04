@@ -354,7 +354,8 @@ public class TopSitesPage extends HomeFragment {
         }
 
         if (itemId == R.id.top_sites_edit) {
-            mPinSiteListener.onPinSite(info.position);
+            // Decode "user-entered" URLs before showing them.
+            mPinSiteListener.onPinSite(info.position, decodeUserEnteredUrl(info.url));
             return true;
         }
 
@@ -398,7 +399,7 @@ public class TopSitesPage extends HomeFragment {
         private int mPosition;
 
         @Override
-        public void onPinSite(int position) {
+        public void onPinSite(int position, String searchTerm) {
             mPosition = position;
 
             final FragmentManager manager = getActivity().getSupportFragmentManager();
@@ -408,6 +409,7 @@ public class TopSitesPage extends HomeFragment {
             }
 
             dialog.setOnSiteSelectedListener(this);
+            dialog.setSearchTerm(searchTerm);
             dialog.show(manager, TAG_PIN_SITE);
         }
 
