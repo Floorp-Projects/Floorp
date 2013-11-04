@@ -167,12 +167,14 @@ SmsIPCService::GetSegmentInfoForText(const nsAString& aText,
 }
 
 NS_IMETHODIMP
-SmsIPCService::Send(const nsAString& aNumber,
+SmsIPCService::Send(uint32_t aServiceId,
+                    const nsAString& aNumber,
                     const nsAString& aMessage,
                     const bool aSilent,
                     nsIMobileMessageCallback* aRequest)
 {
-  return SendRequest(SendMessageRequest(SendSmsMessageRequest(nsString(aNumber),
+  return SendRequest(SendMessageRequest(SendSmsMessageRequest(aServiceId,
+                                                              nsString(aNumber),
                                                               nsString(aMessage),
                                                               aSilent)),
                      aRequest);
@@ -255,7 +257,8 @@ SmsIPCService::CreateThreadCursor(nsIMobileMessageCursorCallback* aCursorCallbac
 }
 
 bool
-GetSendMmsMessageRequestFromParams(const JS::Value& aParam,
+GetSendMmsMessageRequestFromParams(uint32_t aServiceId,
+                                   const JS::Value& aParam,
                                    SendMmsMessageRequest& request) {
   if (aParam.isUndefined() || aParam.isNull() || !aParam.isObject()) {
     return false;
@@ -296,6 +299,9 @@ GetSendMmsMessageRequestFromParams(const JS::Value& aParam,
   request.smil() = params.mSmil;
   request.subject() = params.mSubject;
 
+  // Set service ID.
+  request.serviceId() = aServiceId;
+
   return true;
 }
 
@@ -311,11 +317,12 @@ SmsIPCService::GetMmsDefaultServiceId(uint32_t* aServiceId)
 }
 
 NS_IMETHODIMP
-SmsIPCService::Send(const JS::Value& aParameters,
+SmsIPCService::Send(uint32_t aServiceId,
+                    const JS::Value& aParameters,
                     nsIMobileMessageCallback *aRequest)
 {
   SendMmsMessageRequest req;
-  if (!GetSendMmsMessageRequestFromParams(aParameters, req)) {
+  if (!GetSendMmsMessageRequestFromParams(aServiceId, aParameters, req)) {
     return NS_ERROR_INVALID_ARG;
   }
   return SendRequest(SendMessageRequest(req), aRequest);

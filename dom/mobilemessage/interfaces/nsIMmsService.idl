@@ -12,12 +12,13 @@ interface nsIDOMBlob;
 #define MMS_SERVICE_CONTRACTID "@mozilla.org/mms/mmsservice;1"
 %}
 
-[scriptable, uuid(5dc8b3bc-c3a9-45ea-8ee0-7562b0e57257)]
+[scriptable, uuid(544bfa56-3d60-11e3-8b69-2383ccac8c81)]
 interface nsIMmsService : nsISupports
 {
   readonly attribute unsigned long mmsDefaultServiceId;
 
-  void send(in jsval parameters /* MmsParameters */,
+  void send(in unsigned long serviceId,
+            in jsval parameters /* MmsParameters */,
             in nsIMobileMessageCallback request);
 
   void retrieve(in long id,
