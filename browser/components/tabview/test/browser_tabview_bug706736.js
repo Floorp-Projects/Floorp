@@ -20,7 +20,7 @@ function test() {
     whenTabViewIsHidden(function() {
       win.gBrowser.removeTab(win.gBrowser.selectedTab);
       executeSoon(function() {
-        win.undoCloseTab(0);
+        win.undoCloseTab();
 
         groupItemTwo.addSubscriber("childAdded", function onChildAdded(data) {
           groupItemTwo.removeSubscriber("childAdded", onChildAdded);
