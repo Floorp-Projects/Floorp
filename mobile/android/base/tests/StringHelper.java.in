@@ -40,11 +40,6 @@ class StringHelper {
         "Bookmark Link"
     };
 
-    public static final String[] BOOKMARKS_OPTIONS_CONTEXTMENU_ITEMS = new String[] {
-        "Edit",
-        "Add to Home Screen"
-    };
-
     public static final String TITLE_PLACE_HOLDER = "Enter Search or Address";
 
     // Robocop page urls
