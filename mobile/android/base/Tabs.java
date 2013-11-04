@@ -101,6 +101,7 @@ public class Tabs implements GeckoEventListener {
         registerEventListener("Link:Favicon");
         registerEventListener("Link:Feed");
         registerEventListener("DesktopMode:Changed");
+        registerEventListener("Tab:ViewportMetadata");
     }
 
     public synchronized void attachToContext(Context context) {
@@ -466,6 +467,10 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("DesktopMode:Changed")) {
                 tab.setDesktopMode(message.getBoolean("desktopMode"));
                 notifyListeners(tab, TabEvents.DESKTOP_MODE_CHANGE);
+            } else if (event.equals("Tab:ViewportMetadata")) {
+                tab.setZoomConstraints(new ZoomConstraints(message));
+                tab.setIsRTL(message.getBoolean("isRTL"));
+                notifyListeners(tab, TabEvents.VIEWPORT_CHANGE);
             }
         } catch (Exception e) {
             Log.w(LOGTAG, "handleMessage threw for " + event, e);
@@ -519,7 +524,8 @@ public class Tabs implements GeckoEventListener {
         LINK_FEED,
         SECURITY_CHANGE,
         READER_ENABLED,
-        DESKTOP_MODE_CHANGE
+        DESKTOP_MODE_CHANGE,
+        VIEWPORT_CHANGE
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {
