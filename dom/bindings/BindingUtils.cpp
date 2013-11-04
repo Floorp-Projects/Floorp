@@ -532,23 +532,17 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
 }
 
 bool
-DefineWebIDLBindingPropertiesOnXPCObject(JSContext* cx,
-                                         JS::Handle<JSObject*> obj,
-                                         const NativeProperties* properties,
-                                         bool defineUnforgeableAttributes)
+DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx,
+                                        JS::Handle<JSObject*> proto,
+                                        const NativeProperties* properties)
 {
   if (properties->methods &&
-      !DefinePrefable(cx, obj, properties->methods)) {
+      !DefinePrefable(cx, proto, properties->methods)) {
     return false;
   }
 
   if (properties->attributes &&
-      !DefinePrefable(cx, obj, properties->attributes)) {
-    return false;
-  }
-
-  if (defineUnforgeableAttributes && properties->unforgeableAttributes &&
-      !DefinePrefable(cx, obj, properties->unforgeableAttributes)) {
+      !DefinePrefable(cx, proto, properties->attributes)) {
     return false;
   }
 

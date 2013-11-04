@@ -401,10 +401,9 @@ DefineUnforgeableAttributes(JSContext* cx, JS::Handle<JSObject*> obj,
                             const Prefable<const JSPropertySpec>* props);
 
 bool
-DefineWebIDLBindingPropertiesOnXPCObject(JSContext* cx,
-                                         JS::Handle<JSObject*> obj,
-                                         const NativeProperties* properties,
-                                         bool defineUnforgeableAttributes);
+DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx,
+                                        JS::Handle<JSObject*> proto,
+                                        const NativeProperties* properties);
 
 #ifdef _MSC_VER
 #define HAS_MEMBER_CHECK(_name)                                           \

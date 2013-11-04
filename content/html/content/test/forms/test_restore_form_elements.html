@@ -62,8 +62,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=737851
 <pre id="test">
 <script type="text/javascript">
 
-var frameElem = document.getElementById("frame");
-var frame = frameElem.contentWindow;
+var frameElement = document.getElementById("frame");
+var frame = frameElement.contentWindow;
 
 
 /* -- Main test run -- */
@@ -73,7 +73,7 @@ SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   shuffle();
   fill();
-  frameElem.addEventListener("load", function() {
+  frameElement.addEventListener("load", function() {
     shuffle();
     checkAllFields();
     SimpleTest.finish();
