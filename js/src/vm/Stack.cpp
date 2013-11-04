@@ -464,8 +464,8 @@ FrameRegs::setToEndOfScript()
 {
     JSScript *script = fp()->script();
     sp = fp()->base();
-    pc = script->code + script->length - JSOP_STOP_LENGTH;
-    JS_ASSERT(*pc == JSOP_STOP);
+    pc = script->code + script->length - JSOP_RETRVAL_LENGTH;
+    JS_ASSERT(*pc == JSOP_RETRVAL);
 }
 
 /*****************************************************************************/
