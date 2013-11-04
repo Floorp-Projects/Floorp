@@ -13,6 +13,7 @@
 #include "gfxPlatform.h"
 
 #include "gfxSharedQuartzSurface.h"
+#include "gfx2DGlue.h"
 
 using namespace mozilla::gl;
 
@@ -41,7 +42,7 @@ ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
 
     nsRefPtr<gfxASurface> surf =
       new gfxQuartzSurface((unsigned char*)image.data(),
-                           image.size(),
+                           ThebesIntSize(image.size()),
                            image.stride(),
                            format);
     return surf.forget();
