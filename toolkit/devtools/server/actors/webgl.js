@@ -141,24 +141,6 @@ let ProgramActor = protocol.ActorClass({
   }),
 
   /**
-   * Prevents any geometry from being rendered using this program.
-   */
-  blackbox: method(function() {
-    this.observer.cache.blackboxedPrograms.add(this.program);
-  }, {
-    oneway: true
-  }),
-
-  /**
-   * Allows geometry to be rendered using this program.
-   */
-  unblackbox: method(function() {
-    this.observer.cache.blackboxedPrograms.delete(this.program);
-  }, {
-    oneway: true
-  }),
-
-  /**
    * Returns a cached ShaderActor instance based on the required shader type.
    *
    * @param string type
@@ -510,15 +492,6 @@ let WebGLInstrumenter = {
       "uniform1fv", "uniform2fv", "uniform3fv", "uniform4fv",
       "uniformMatrix2fv", "uniformMatrix3fv", "uniformMatrix4fv"
     ]
-  }, {
-    timing: "after",
-    functions: ["useProgram"]
-  }, {
-    timing: "before",
-    callback: "draw_",
-    functions: [
-      "drawArrays", "drawElements"
-    ]
   }]
   // TODO: It'd be a good idea to handle other functions as well:
   //   - getActiveUniform
@@ -604,7 +577,7 @@ WebGLObserver.prototype = {
    */
   toggleVertexAttribArray: function(gl, glArgs) {
     glArgs[0] = this.cache.call("getCurrentAttributeLocation", glArgs[0]);
-    return glArgs[0] < 0; // Return true to break original function call.
+    return glArgs[0] < 0;
   },
 
   /**
@@ -617,7 +590,7 @@ WebGLObserver.prototype = {
    */
   attribute_: function(gl, glArgs) {
     glArgs[0] = this.cache.call("getCurrentAttributeLocation", glArgs[0]);
-    return glArgs[0] < 0; // Return true to break original function call.
+    return glArgs[0] < 0;
   },
 
   /**
@@ -630,38 +603,7 @@ WebGLObserver.prototype = {
    */
   uniform_: function(gl, glArgs) {
     glArgs[0] = this.cache.call("getCurrentUniformLocation", glArgs[0]);
-    return !glArgs[0]; // Return true to break original function call.
-  },
-
-  /**
-   * Called immediately *after* 'useProgram' is requested in the context.
-   *
-   * @param WebGLRenderingContext gl
-   *        The WebGL context initiating this call.
-   * @param array glArgs
-   *        Overridable arguments with which the function is called.
-   * @param void glResult
-   *        The returned value of the original function call.
-   */
-  useProgram: function(gl, glArgs, glResult) {
-    // Manually keeping a cache and not using gl.getParameter(CURRENT_PROGRAM)
-    // because gl.get* functions are slow as potatoes.
-    this.cache.currentProgram = glArgs[0];
-  },
-
-  /**
-   * Called immediately *before* 'drawArrays' or 'drawElements' is requested
-   * in the context.
-   *
-   * @param WebGLRenderingContext gl
-   *        The WebGL context initiating this call.
-   * @param array glArgs
-   *        Overridable arguments with which the function is called.
-   */
-  draw_: function(gl, glArgs) {
-    if (this.cache.blackboxedPrograms.has(this.cache.currentProgram)) {
-      return true; // Return true to break original function call.
-    }
+    return !glArgs[0];
   },
 
   /**
@@ -692,9 +634,6 @@ WebGLObserver.prototype = {
 function WebGLCache(observer) {
   this._observer = observer;
 
-  this.currentProgram = null;
-  this.blackboxedPrograms = new Set();
-
   this._shaders = new Map();
   this._attributes = [];
   this._uniforms = [];
@@ -703,16 +642,6 @@ function WebGLCache(observer) {
 }
 
 WebGLCache.prototype = {
-  /**
-   * The current program in the observed WebGL context.
-   */
-  currentProgram: null,
-
-  /**
-   * A set of blackboxed programs in the observed WebGL context.
-   */
-  blackboxedPrograms: null,
-
   /**
    * Adds shader information to the cache.
    *
