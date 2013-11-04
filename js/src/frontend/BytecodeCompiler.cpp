@@ -385,10 +385,10 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     }
 
     /*
-     * Nowadays the threaded interpreter needs a stop instruction, so we
+     * Nowadays the threaded interpreter needs a last return instruction, so we
      * do have to emit that here.
      */
-    if (Emit1(cx, &bce, JSOP_STOP) < 0)
+    if (Emit1(cx, &bce, JSOP_RETRVAL) < 0)
         return nullptr;
 
     if (!JSScript::fullyInitFromEmitter(cx, script, &bce))
