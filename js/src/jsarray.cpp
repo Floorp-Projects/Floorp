@@ -1200,7 +1200,7 @@ InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned co
     if (cx->typeInferenceEnabled() && !type->unknownProperties()) {
         AutoEnterAnalysis enter(cx);
 
-        TypeSet *types = type->getProperty(cx, JSID_VOID);
+        HeapTypeSet *types = type->getProperty(cx, JSID_VOID);
         if (!types)
             return false;
 
