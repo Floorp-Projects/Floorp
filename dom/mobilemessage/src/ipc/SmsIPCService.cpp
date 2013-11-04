@@ -243,9 +243,10 @@ SmsIPCService::CreateMessageCursor(nsIDOMMozSmsFilter* aFilter,
 NS_IMETHODIMP
 SmsIPCService::MarkMessageRead(int32_t aMessageId,
                                bool aValue,
+                               bool aSendReadReport,
                                nsIMobileMessageCallback* aRequest)
 {
-  return SendRequest(MarkMessageReadRequest(aMessageId, aValue), aRequest);
+  return SendRequest(MarkMessageReadRequest(aMessageId, aValue, aSendReadReport), aRequest);
 }
 
 NS_IMETHODIMP
@@ -332,4 +333,13 @@ NS_IMETHODIMP
 SmsIPCService::Retrieve(int32_t aId, nsIMobileMessageCallback *aRequest)
 {
   return SendRequest(RetrieveMessageRequest(aId), aRequest);
+}
+
+NS_IMETHODIMP
+SmsIPCService::SendReadReport(const nsAString & messageID,
+                              const nsAString & toAddress,
+                              const nsAString & iccId)
+{
+  NS_ERROR("We should not be here!");
+  return NS_OK;
 }

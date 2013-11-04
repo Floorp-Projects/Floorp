@@ -138,6 +138,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gRil",
+                                   "@mozilla.org/ril;1",
+                                   "nsIRadioInterfaceLayer");
+
 XPCOMUtils.defineLazyGetter(this, "MMS", function () {
   let MMS = {};
   Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
@@ -146,9 +150,7 @@ XPCOMUtils.defineLazyGetter(this, "MMS", function () {
 
 function MmsConnection(aServiceId) {
   this.serviceId = aServiceId;
-  let ril = Cc["@mozilla.org/ril;1"]
-              .getService(Ci["nsIRadioInterfaceLayer"]);
-  this.radioInterface = ril.getRadioInterface(aServiceId);
+  this.radioInterface = gRil.getRadioInterface(aServiceId);
 };
 
 MmsConnection.prototype = {
@@ -1314,6 +1316,47 @@ function getDefaultServiceId() {
 }
 
 /**
+ * Return M-Read-Rec.ind back to MMSC
+ *
+ * @param messageID
+ *        Message-ID of the message.
+ * @param toAddress
+ *        The address of the recipient of the Read Report, i.e. the originator
+ *        of the original multimedia message.
+ *
+ * @see OMA-TS-MMS_ENC-V1_3-20110913-A section 6.7.2
+ */
+function ReadRecTransaction(mmsConnection, messageID, toAddress) {
+  this.mmsConnection = mmsConnection;
+  let headers = {};
+
+  // Mandatory fields
+  headers["x-mms-message-type"] = MMS.MMS_PDU_TYPE_READ_REC_IND;
+  headers["x-mms-mms-version"] = MMS.MMS_VERSION;
+  headers["message-id"] = messageID;
+  let type = MMS.Address.resolveType(toAddress);
+  let to = {address: toAddress,
+            type: type}
+  headers["to"] = to;
+  headers["from"] = null;
+  headers["x-mms-read-status"] = true;
+
+  this.istream = MMS.PduHelper.compose(null, {headers: headers});
+  if (!this.istream) {
+    throw Cr.NS_ERROR_FAILURE;
+  }
+}
+ReadRecTransaction.prototype = {
+  run: function() {
+    gMmsTransactionHelper.sendRequest(this.mmsConnection,
+                                      "POST",
+                                      null,
+                                      this.istream,
+                                      null);
+  }
+};
+
+/**
  * MmsService
  */
 function MmsService() {
@@ -2135,11 +2178,9 @@ MmsService.prototype = {
 
       // Get the RIL service ID based on the saved MMS message record's ICC ID,
       // which could fail when the corresponding SIM card isn't installed.
-      let ril = Cc["@mozilla.org/ril;1"]
-                  .getService(Ci["nsIRadioInterfaceLayer"]);
       let serviceId;
       try {
-        serviceId = ril.getClientIdByIccId(aMessageRecord.iccId);
+        serviceId = gRil.getClientIdByIccId(aMessageRecord.iccId);
       } catch (e) {
         if (DEBUG) debug("RIL service is not available for ICC ID.");
         aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR);
@@ -2256,6 +2297,32 @@ MmsService.prototype = {
                                aDomMessage);
         }).bind(this));
     }).bind(this));
+  },
+
+  sendReadReport: function sendReadReport(messageID, toAddress, iccId) {
+    if (DEBUG) {
+      debug("messageID: " + messageID + " toAddress: " +
+            JSON.stringify(toAddress));
+    }
+
+    // Get the RIL service ID based on the saved MMS message record's ICC ID,
+    // which could fail when the corresponding SIM card isn't installed.
+    let serviceId;
+    try {
+      serviceId = gRil.getClientIdByIccId(iccId);
+    } catch (e) {
+      if (DEBUG) debug("RIL service is not available for ICC ID.");
+      return;
+    }
+
+    let mmsConnection = gMmsConnections.getConnByServiceId(serviceId);
+    try {
+      let transaction =
+        new ReadRecTransaction(mmsConnection, messageID, toAddress);
+      transaction.run();
+    } catch (e) {
+      if (DEBUG) debug("sendReadReport fail. e = " + e);
+    }
   },
 
   // nsIWapPushApplication
