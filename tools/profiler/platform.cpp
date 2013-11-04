@@ -427,7 +427,7 @@ void set_tls_stack_top(void* stackTop)
 }
 
 bool is_main_thread_name(const char* aName) {
-  if (aName) {
+  if (!aName) {
     return false;
   }
   return strcmp(aName, gGeckoThreadName) == 0;
