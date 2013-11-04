@@ -24,10 +24,6 @@ extern "C" {
 #define PL_DHASH_FASTCALL
 #endif
 
-#ifdef DEBUG_XXXbrendan
-#define PL_DHASHMETER 1
-#endif
-
 /*
  * Table size limit; do not exceed.  The max capacity used to be 1<<23 but that
  * occasionally that wasn't enough.  Making it much bigger than 1<<26 probably

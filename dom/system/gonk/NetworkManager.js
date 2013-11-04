@@ -166,10 +166,14 @@ function NetworkManager() {
 
   // Default values for internal and external interfaces.
   this._tetheringInterface = Object.create(null);
-  this._tetheringInterface[TETHERING_TYPE_USB] = {externalInterface: DEFAULT_3G_INTERFACE_NAME,
-                                                  internalInterface: DEFAULT_USB_INTERFACE_NAME};
-  this._tetheringInterface[TETHERING_TYPE_WIFI] = {externalInterface: DEFAULT_3G_INTERFACE_NAME,
-                                                   internalInterface: DEFAULT_WIFI_INTERFACE_NAME};
+  this._tetheringInterface[TETHERING_TYPE_USB] = {
+    externalInterface: DEFAULT_3G_INTERFACE_NAME,
+    internalInterface: DEFAULT_USB_INTERFACE_NAME
+  };
+  this._tetheringInterface[TETHERING_TYPE_WIFI] = {
+    externalInterface: DEFAULT_3G_INTERFACE_NAME,
+    internalInterface: DEFAULT_WIFI_INTERFACE_NAME
+  };
 
   this.initTetheringSettings();
 
@@ -249,8 +253,8 @@ NetworkManager.prototype = {
 #ifdef MOZ_B2G_RIL
             // Update data connection when Wifi connected/disconnected
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              for (let i = 0; i < this.mRIL.numRadioInterfaces; i++) {
-                this.mRIL.getRadioInterface(i).updateRILNetworkInterface();
+              for (let i = 0; i < this.mRil.numRadioInterfaces; i++) {
+                this.mRil.getRadioInterface(i).updateRILNetworkInterface();
               }
             }
 #endif
@@ -258,7 +262,8 @@ NetworkManager.prototype = {
             this.onConnectionChanged(network);
 
             // Probing the public network accessibility after routing table is ready
-            CaptivePortalDetectionHelper.notify(CaptivePortalDetectionHelper.EVENT_CONNECT, this.active);
+            CaptivePortalDetectionHelper
+              .notify(CaptivePortalDetectionHelper.EVENT_CONNECT, this.active);
             break;
           case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
 #ifdef MOZ_B2G_RIL
@@ -279,14 +284,16 @@ NetworkManager.prototype = {
               this.removeDefaultRoute(network.name);
 #endif
             }
+
             // Abort ongoing captive portal detection on the wifi interface
-            CaptivePortalDetectionHelper.notify(CaptivePortalDetectionHelper.EVENT_DISCONNECT, network);
+            CaptivePortalDetectionHelper
+              .notify(CaptivePortalDetectionHelper.EVENT_DISCONNECT, network);
             this.setAndConfigureActive();
 #ifdef MOZ_B2G_RIL
             // Update data connection when Wifi connected/disconnected
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
-              for (let i = 0; i < this.mRIL.numRadioInterfaces; i++) {
-                this.mRIL.getRadioInterface(i).updateRILNetworkInterface();
+              for (let i = 0; i < this.mRil.numRadioInterfaces; i++) {
+                this.mRil.getRadioInterface(i).updateRILNetworkInterface();
               }
             }
 #endif
@@ -519,20 +526,44 @@ NetworkManager.prototype = {
 #ifdef MOZ_B2G_RIL
   setExtraHostRoute: function setExtraHostRoute(network) {
     if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
-      debug("Network '" + network.name + "' registered, adding mmsproxy and/or mmsc route");
-      let mmsHosts = this.resolveHostname(
-                       [Services.prefs.getCharPref("ril.mms.mmsproxy"),
-                        Services.prefs.getCharPref("ril.mms.mmsc")]);
+      if (!(network instanceof Ci.nsIRilNetworkInterface)) {
+        debug("Network for MMS must be an instance of nsIRilNetworkInterface");
+        return;
+      }
+
+      network = network.QueryInterface(Ci.nsIRilNetworkInterface);
+
+      debug("Network '" + network.name + "' registered, " +
+            "adding mmsproxy and/or mmsc route");
+
+      let mmsHosts = this.resolveHostname([network.mmsProxy, network.mmsc]);
+      if (mmsHosts.length == 0) {
+        debug("No valid hostnames can be added. Stop adding host route.");
+        return;
+      }
+
       this.addHostRouteWithResolve(network, mmsHosts);
     }
   },
 
   removeExtraHostRoute: function removeExtraHostRoute(network) {
     if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
-      debug("Network '" + network.name + "' unregistered, removing mmsproxy and/or mmsc route");
-      let mmsHosts = this.resolveHostname(
-                       [Services.prefs.getCharPref("ril.mms.mmsproxy"),
-                        Services.prefs.getCharPref("ril.mms.mmsc")]);
+      if (!(network instanceof Ci.nsIRilNetworkInterface)) {
+        debug("Network for MMS must be an instance of nsIRilNetworkInterface");
+        return;
+      }
+
+      network = network.QueryInterface(Ci.nsIRilNetworkInterface);
+
+      debug("Network '" + network.name + "' unregistered, " +
+            "removing mmsproxy and/or mmsc route");
+
+      let mmsHosts = this.resolveHostname([network.mmsProxy, network.mmsc]);
+      if (mmsHosts.length == 0) {
+        debug("No valid hostnames can be removed. Stop removing host route.");
+        return;
+      }
+
       this.removeHostRouteWithResolve(network, mmsHosts);
     }
   },
@@ -705,11 +736,18 @@ NetworkManager.prototype = {
     let retval = [];
 
     for (let hostname of hosts) {
+      // Sanity check for null, undefined and empty string... etc.
+      if (!hostname) {
+        continue;
+      }
+
       try {
         let uri = Services.io.newURI(hostname, null, null);
         hostname = uri.host;
       } catch (e) {}
 
+      // An extra check for hostnames that cannot be made by newURI(...).
+      // For example, an IP address like "10.1.1.1".
       if (hostname.match(this.REGEXP_IPV4) ||
           hostname.match(this.REGEXP_IPV6)) {
         retval.push(hostname);
@@ -1146,7 +1184,8 @@ NetworkManager.prototype = {
 
     if (!isError(code)) {
       // Update the external interface.
-      this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = data.current.externalIfname;
+      this._tetheringInterface[TETHERING_TYPE_USB]
+          .externalInterface = data.current.externalIfname;
       debug("Change the interface name to " + data.current.externalIfname);
     }
   },
@@ -1202,7 +1241,8 @@ let CaptivePortalDetectionHelper = (function() {
   let _ongoingInterface = null;
   let _available = ("nsICaptivePortalDetector" in Ci);
   let getService = function () {
-    return Cc['@mozilla.org/toolkit/captive-detector;1'].getService(Ci.nsICaptivePortalDetector);
+    return Cc['@mozilla.org/toolkit/captive-detector;1']
+             .getService(Ci.nsICaptivePortalDetector);
   };
 
   let _performDetection = function (interfaceName, callback) {
@@ -1269,7 +1309,7 @@ let CaptivePortalDetectionHelper = (function() {
 }());
 
 #ifdef MOZ_B2G_RIL
-XPCOMUtils.defineLazyServiceGetter(NetworkManager.prototype, "mRIL",
+XPCOMUtils.defineLazyServiceGetter(NetworkManager.prototype, "mRil",
                                    "@mozilla.org/ril;1",
                                    "nsIRadioInterfaceLayer");
 #endif

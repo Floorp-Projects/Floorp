@@ -131,16 +131,6 @@ WMFReader::InitializeDXVA()
   return mDXVA2Manager != nullptr;
 }
 
-static bool
-IsVideoContentType(const nsCString& aContentType)
-{
-  NS_NAMED_LITERAL_CSTRING(video, "video");
-  if (FindInReadable(video, aContentType)) {
-    return true;
-  }
-  return false;
-}
-
 nsresult
 WMFReader::Init(MediaDecoderReader* aCloneDonor)
 {

@@ -33,6 +33,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *   - |type| DOMString: "sms" or "mms"
    *   - |sender| DOMString: the phone number of sender
    *   - |timestamp| Number: the timestamp of received message
+   *   - |iccId| DOMString: the ICC ID of the SIM for receiving message
    *
    *   - If |type| == "sms", we also need:
    *     - |messageClass| DOMString: the message class of received message
@@ -57,6 +58,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *   - |sender| DOMString: the phone number of sender
    *   - |timestamp| Number: the timestamp of sending message
    *   - |deliveryStatusRequested| Bool: true when the delivery report is requested.
+   *   - |iccId| DOMString: the ICC ID of the SIM for sending message
    *
    *   - If |type| == "sms", we also need:
    *     - |receiver| DOMString: the phone number of receiver

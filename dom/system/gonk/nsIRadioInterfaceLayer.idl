@@ -9,11 +9,16 @@ interface nsIDOMMozIccInfo;
 interface nsIDOMMozMobileConnectionInfo;
 interface nsIMobileMessageCallback;
 
-[scriptable, uuid(a15769f1-538e-4b4b-81da-c52866d38f88)]
+[scriptable, uuid(6e0f45b8-410e-11e3-8c8e-b715b2cd0128)]
 interface nsIRilNetworkInterface : nsINetworkInterface
 {
   readonly attribute unsigned long serviceId;
   readonly attribute DOMString iccId;
+
+  /* The following attributes are for MMS proxy settings. */
+  readonly attribute DOMString mmsc;     // Empty string if not set.
+  readonly attribute DOMString mmsProxy; // Empty string if not set.
+  readonly attribute long      mmsPort;  // -1 if not set.
 };
 
 [scriptable, uuid(1e602d20-d066-4399-8997-daf36b3158ef)]
@@ -125,10 +130,15 @@ interface nsIRadioInterface : nsISupports
               [optional] in nsIRilSendWorkerMessageCallback callback);
 };
 
-[scriptable, uuid(44b03951-1444-4c03-bd37-0bcb3a01b56f)]
+[scriptable, uuid(70d3a18c-4063-11e3-89de-0f9ec19fd803)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   readonly attribute unsigned long numRadioInterfaces;
 
-  nsIRadioInterface getRadioInterface(in long clientId);
+  nsIRadioInterface getRadioInterface(in unsigned long clientId);
+
+  /**
+   * If not available, throws exception; otherwise, a valid number.
+   */
+  unsigned long getClientIdByIccId(in DOMString iccId);
 };

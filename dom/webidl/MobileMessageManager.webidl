@@ -12,3 +12,13 @@ dictionary MmsParameters {
 };
 
 // If we start using MmsParameters here, remove it from DummyBinding.
+
+dictionary SmsSendParameters {
+  unsigned long serviceId; // The ID of the RIL service which needs to be
+                           // specified under the multi-sim scenario.
+};
+
+dictionary MmsSendParameters {
+  unsigned long serviceId; // The ID of the RIL service which needs to be
+                           // specified under the multi-sim scenario.
+};
