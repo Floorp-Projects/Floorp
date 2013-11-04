@@ -451,8 +451,9 @@ SmsRequestParent::DoRequest(const SendMessageRequest& aRequest)
       nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
       NS_ENSURE_TRUE(smsService, true);
 
-      const SendSmsMessageRequest &data = aRequest.get_SendSmsMessageRequest();
-      smsService->Send(data.number(), data.message(), data.silent(), this);
+      const SendSmsMessageRequest &req = aRequest.get_SendSmsMessageRequest();
+      smsService->Send(req.serviceId(), req.number(), req.message(),
+                       req.silent(), this);
     }
     break;
   case SendMessageRequest::TSendMmsMessageRequest: {
@@ -461,14 +462,14 @@ SmsRequestParent::DoRequest(const SendMessageRequest& aRequest)
 
       AutoJSContext cx;
       JS::Rooted<JS::Value> params(cx);
-      if (!GetParamsFromSendMmsMessageRequest(
-              cx,
-              aRequest.get_SendMmsMessageRequest(),
-              params.address())) {
+      const SendMmsMessageRequest &req = aRequest.get_SendMmsMessageRequest();
+      if (!GetParamsFromSendMmsMessageRequest(cx,
+                                              req,
+                                              params.address())) {
         NS_WARNING("SmsRequestParent: Fail to build MMS params.");
         return true;
       }
-      mmsService->Send(params, this);
+      mmsService->Send(req.serviceId(), params, this);
     }
     break;
   default:

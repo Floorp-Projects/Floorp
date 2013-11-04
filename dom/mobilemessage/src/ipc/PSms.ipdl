@@ -16,6 +16,7 @@ namespace mobilemessage {
 
 struct SendMmsMessageRequest
 {
+  uint32_t serviceId;
   nsString[] receivers;
   nsString subject;
   nsString smil;
@@ -24,6 +25,7 @@ struct SendMmsMessageRequest
 
 struct SendSmsMessageRequest
 {
+  uint32_t serviceId;
   nsString number;
   nsString message;
   bool     silent;
