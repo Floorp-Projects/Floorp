@@ -1626,6 +1626,12 @@ const MMS_PDU_TYPES = (function () {
   add(MMS_PDU_TYPE_ACKNOWLEDGE_IND, false, ["x-mms-message-type",
                                             "x-mms-transaction-id",
                                             "x-mms-mms-version"]);
+  add(MMS_PDU_TYPE_READ_REC_IND, false, ["x-mms-message-type",
+                                         "message-id",
+                                         "x-mms-mms-version",
+                                         "to",
+                                         "from",
+                                         "x-mms-read-status"]);
 
   return pdus;
 })();
@@ -1672,7 +1678,7 @@ const MMS_HEADER_FIELDS = (function () {
   add("x-mms-transaction-id",                    0x18, WSP.TextString);
   add("x-mms-retrieve-status",                   0x19, RetrieveStatusValue);
   add("x-mms-retrieve-text",                     0x1A, EncodedStringValue);
-  //add("x-mms-read-status", 0x1B);
+  add("x-mms-read-status",                       0x1B, BooleanValue);
   add("x-mms-reply-charging",                    0x1C, ReplyChargingValue);
   add("x-mms-reply-charging-deadline",           0x1D, ExpiryValue);
   add("x-mms-reply-charging-id",                 0x1E, WSP.TextString);
