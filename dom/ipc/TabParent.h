@@ -183,8 +183,8 @@ public:
     // XXX/cjones: it's not clear what we gain by hiding these
     // message-sending functions under a layer of indirection and
     // eating the return values
-    void Show(const nsIntSize& size);
-    void UpdateDimensions(const nsRect& rect, const nsIntSize& size);
+    void Show(const ScreenIntSize& size);
+    void UpdateDimensions(const nsRect& rect, const ScreenIntSize& size);
     void UpdateFrame(const layers::FrameMetrics& aFrameMetrics);
     void HandleDoubleTap(const CSSIntPoint& aPoint);
     void HandleSingleTap(const CSSIntPoint& aPoint);
@@ -211,7 +211,7 @@ public:
     AllocPDocumentRendererParent(const nsRect& documentRect, const gfxMatrix& transform,
                                  const nsString& bgcolor,
                                  const uint32_t& renderFlags, const bool& flushLayout,
-                                 const nsIntSize& renderSize);
+                                 const gfx::IntSize& renderSize);
     virtual bool DeallocPDocumentRendererParent(PDocumentRendererParent* actor);
 
     virtual PContentPermissionRequestParent*
@@ -318,7 +318,7 @@ protected:
     int32_t mEventCaptureDepth;
 
     nsRect mRect;
-    nsIntSize mDimensions;
+    ScreenIntSize mDimensions;
     ScreenOrientation mOrientation;
     float mDPI;
     CSSToLayoutDeviceScale mDefaultScale;

@@ -70,6 +70,7 @@
 #include "APZCCallbackHelper.h"
 #include "nsILoadContext.h"
 #include "ipc/nsGUIEventIPC.h"
+#include "gfx2DGlue.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
@@ -1407,12 +1408,12 @@ TabChild::CancelCachedFileDescriptorCallback(
 void
 TabChild::DoFakeShow()
 {
-  RecvShow(nsIntSize(0, 0));
+  RecvShow(ScreenIntSize(0, 0));
   mDidFakeShow = true;
 }
 
 bool
-TabChild::RecvShow(const nsIntSize& size)
+TabChild::RecvShow(const ScreenIntSize& size)
 {
 
     if (mDidFakeShow) {
@@ -1439,7 +1440,7 @@ TabChild::RecvShow(const nsIntSize& size)
 }
 
 bool
-TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const ScreenOrientation& orientation)
+TabChild::RecvUpdateDimensions(const nsRect& rect, const ScreenIntSize& size, const ScreenOrientation& orientation)
 {
     if (!mRemoteFrame) {
         return true;
@@ -1451,8 +1452,7 @@ TabChild::RecvUpdateDimensions(const nsRect& rect, const nsIntSize& size, const 
     mOuterRect.height = rect.height;
 
     mOrientation = orientation;
-    mInnerSize = ScreenIntSize::FromUnknownSize(
-      gfx::IntSize(size.width, size.height));
+    mInnerSize = size;
     mWidget->Resize(0, 0, size.width, size.height,
                     true);
 
@@ -1927,7 +1927,7 @@ TabChild::AllocPDocumentRendererChild(const nsRect& documentRect,
                                       const nsString& bgcolor,
                                       const uint32_t& renderFlags,
                                       const bool& flushLayout,
-                                      const nsIntSize& renderSize)
+                                      const gfx::IntSize& renderSize)
 {
     return new DocumentRendererChild();
 }
@@ -1946,7 +1946,7 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                            const nsString& bgcolor,
                                            const uint32_t& renderFlags,
                                            const bool& flushLayout,
-                                           const nsIntSize& renderSize)
+                                           const gfx::IntSize& renderSize)
 {
     DocumentRendererChild *render = static_cast<DocumentRendererChild *>(actor);
 
@@ -1965,7 +1965,7 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                       documentRect, transform,
                                       bgcolor,
                                       renderFlags, flushLayout,
-                                      renderSize, data);
+                                      ThebesIntSize(renderSize), data);
     if (!ret)
         return true; // silently ignore
 
