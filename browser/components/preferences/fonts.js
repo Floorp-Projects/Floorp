@@ -98,18 +98,6 @@ var gFontsDialog = {
     return defaultValue;
   },
   
-  _charsetMenuInitialized: false,
-  readDefaultCharset: function ()
-  {
-    if (!this._charsetMenuInitialized) {
-      var os = Components.classes["@mozilla.org/observer-service;1"]
-                         .getService(Components.interfaces.nsIObserverService);
-      os.notifyObservers(null, "charsetmenu-selected", "other");
-      this._charsetMenuInitialized = true;
-    }
-    return undefined;
-  },
-  
   readUseDocumentFonts: function ()
   {
     var preference = document.getElementById("browser.display.use_document_fonts");
