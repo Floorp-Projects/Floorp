@@ -136,6 +136,8 @@ class MochitestRunner(MozbuildObject):
                 print('Specified test path does not exist: %s' % test_root_file)
                 return 1
             options.testPath = test_path
+        elif conditions.is_b2g_desktop:
+            options.testManifest = 'b2g-desktop.json'
         else:
             options.testManifest = 'b2g.json'
 
