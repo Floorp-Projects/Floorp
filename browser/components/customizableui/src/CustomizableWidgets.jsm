@@ -38,6 +38,20 @@ function setAttributes(aNode, aAttrs) {
   }
 }
 
+function updateCombinedWidgetStyle(aArea, aModifyAutoclose) {
+  let inPanel = (aArea == CustomizableUI.AREA_PANEL);
+  let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+  if (!aArea)
+    cls = null;
+  let attrs = {class: cls};
+  if (aModifyAutoclose) {
+    attrs.noautoclose = inPanel ? true : null;
+  }
+  for (let i = 0, l = node.childNodes.length; i < l; ++i) {
+    setAttributes(node.childNodes[i], attrs);
+  }
+}
+
 const CustomizableWidgets = [{
     id: "history-panelmenu",
     type: "view",
@@ -349,25 +363,14 @@ const CustomizableWidgets = [{
         updateZoomResetButton();
       }
 
-      function updateWidgetStyle(aArea) {
-        let inPanel = (aArea == CustomizableUI.AREA_PANEL);
-        let attrs = {
-          noautoclose: inPanel ? "true" : null,
-          class: inPanel ? "panel-combined-button" : aArea ? "toolbarbutton-1" : null
-        };
-        for (let i = 0, l = node.childNodes.length; i < l; ++i) {
-          setAttributes(node.childNodes[i], attrs);
-        }
-
-        updateZoomResetButton();
-      }
-
       let listener = {
         onWidgetAdded: function(aWidgetId, aArea, aPosition) {
           if (aWidgetId != this.id)
             return;
 
-          updateWidgetStyle(aArea);
+          updateCombinedWidgetStyle(aArea, true);
+          updateZoomResetButton();
+
           if (aArea == CustomizableUI.AREA_PANEL) {
             let panel = aDocument.getElementById(kPanelId);
             panel.addEventListener("popupshowing", updateZoomResetButton);
@@ -385,19 +388,22 @@ const CustomizableWidgets = [{
 
           // When a widget is demoted to the palette ('removed'), it's visual
           // style should change.
-          updateWidgetStyle();
+          updateCombinedWidgetStyle(null, true);
+          updateZoomResetButton();
         }.bind(this),
 
         onWidgetReset: function(aWidgetId) {
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(this.currentArea);
+          updateCombinedWidgetStyle(this.currentArea, true);
+          updateZoomResetButton();
         }.bind(this),
 
         onWidgetMoved: function(aWidgetId, aArea) {
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(aArea);
+          updateCombinedWidgetStyle(aArea, true);
+          updateZoomResetButton();
         }.bind(this),
 
         onWidgetInstanceRemoved: function(aWidgetId, aDoc) {
@@ -415,7 +421,7 @@ const CustomizableWidgets = [{
           if (aWidgetId != this.id)
             return;
           aArea = aArea || this.currentArea;
-          updateWidgetStyle(aArea);
+          updateCombinedWidgetStyle(aArea, true);
         }.bind(this)
       };
       CustomizableUI.addListener(listener);
@@ -471,22 +477,11 @@ const CustomizableWidgets = [{
         node.appendChild(btnNode);
       });
 
-      function updateWidgetStyle(aArea) {
-        let inPanel = (aArea == CustomizableUI.AREA_PANEL);
-        let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
-        if (!aArea)
-          cls = null;
-        let attrs = {class: cls};
-        for (let i = 0, l = node.childNodes.length; i < l; ++i) {
-          setAttributes(node.childNodes[i], attrs);
-        }
-      }
-
       let listener = {
         onWidgetAdded: function(aWidgetId, aArea, aPosition) {
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(aArea);
+          updateCombinedWidgetStyle(aArea);
         }.bind(this),
 
         onWidgetRemoved: function(aWidgetId, aPrevArea) {
@@ -494,19 +489,19 @@ const CustomizableWidgets = [{
             return;
           // When a widget is demoted to the palette ('removed'), it's visual
           // style should change.
-          updateWidgetStyle();
+          updateCombinedWidgetStyle();
         }.bind(this),
 
         onWidgetReset: function(aWidgetId) {
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(this.currentArea);
+          updateCombinedWidgetStyle(this.currentArea);
         }.bind(this),
 
         onWidgetMoved: function(aWidgetId, aArea) {
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(aArea);
+          updateCombinedWidgetStyle(aArea);
         }.bind(this),
 
         onWidgetInstanceRemoved: function(aWidgetId, aDoc) {
@@ -519,7 +514,7 @@ const CustomizableWidgets = [{
           if (aWidgetId != this.id)
             return;
           aArea = aArea || this.currentArea;
-          updateWidgetStyle(aArea);
+          updateCombinedWidgetStyle(aArea);
         }.bind(this)
       };
       CustomizableUI.addListener(listener);
