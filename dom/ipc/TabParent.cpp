@@ -56,7 +56,6 @@
 #include "JavaScriptParent.h"
 #include "TabChild.h"
 #include "nsNetCID.h"
-#include "gfx2DGlue.h"
 #include <algorithm>
 
 using namespace mozilla::dom;
@@ -449,7 +448,7 @@ TabParent::LoadURL(nsIURI* aURI)
 }
 
 void
-TabParent::Show(const ScreenIntSize& size)
+TabParent::Show(const nsIntSize& size)
 {
     // sigh
     mShown = true;
@@ -460,7 +459,7 @@ TabParent::Show(const ScreenIntSize& size)
 }
 
 void
-TabParent::UpdateDimensions(const nsRect& rect, const ScreenIntSize& size)
+TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
 {
   if (mIsDestroyed) {
     return;
@@ -478,7 +477,8 @@ TabParent::UpdateDimensions(const nsRect& rect, const ScreenIntSize& size)
 
     unused << SendUpdateDimensions(mRect, mDimensions, mOrientation);
     if (RenderFrameParent* rfp = GetRenderFrame()) {
-      rfp->NotifyDimensionsChanged(mDimensions);
+      rfp->NotifyDimensionsChanged(ScreenIntSize::FromUnknownSize(
+        gfx::IntSize(mDimensions.width, mDimensions.height)));
     }
   }
 }
@@ -557,7 +557,7 @@ TabParent::AllocPDocumentRendererParent(const nsRect& documentRect,
                                         const nsString& bgcolor,
                                         const uint32_t& renderFlags,
                                         const bool& flushLayout,
-                                        const gfx::IntSize& renderSize)
+                                        const nsIntSize& renderSize)
 {
     return new DocumentRendererParent();
 }
@@ -1578,8 +1578,9 @@ TabParent::RecvPRenderFrameConstructor(PRenderFrameParent* actor,
                                        uint64_t* layersId)
 {
   RenderFrameParent* rfp = GetRenderFrame();
-  if (mDimensions != ScreenIntSize() && rfp) {
-    rfp->NotifyDimensionsChanged(mDimensions);
+  if (mDimensions != nsIntSize() && rfp) {
+    rfp->NotifyDimensionsChanged(ScreenIntSize::FromUnknownSize(
+      gfx::IntSize(mDimensions.width, mDimensions.height)));
   }
 
   return true;

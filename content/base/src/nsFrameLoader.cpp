@@ -441,7 +441,7 @@ nsFrameLoader::ReallyStartLoadingInternal()
       }
     }
 
-    if (mRemoteBrowserShown || ShowRemoteFrame(ScreenIntSize(0, 0))) {
+    if (mRemoteBrowserShown || ShowRemoteFrame(nsIntSize(0, 0))) {
       // FIXME get error codes from child
       mRemoteBrowser->LoadURL(mURIToLoad);
     } else {
@@ -828,7 +828,7 @@ nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
 
   nsIntSize size = frame->GetSubdocumentSize();
   if (mRemoteFrame) {
-    return ShowRemoteFrame(ScreenIntSize(size.width, size.height), frame);
+    return ShowRemoteFrame(size, frame);
   }
 
   nsView* view = frame->EnsureInnerView();
@@ -918,7 +918,7 @@ nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
 }
 
 bool
-nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
+nsFrameLoader::ShowRemoteFrame(const nsIntSize& size,
                                nsSubDocumentFrame *aFrame)
 {
   NS_ASSERTION(mRemoteFrame, "ShowRemote only makes sense on remote frames.");
@@ -1839,8 +1839,7 @@ nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame *aIFrame)
       nsIntSize size = aIFrame->GetSubdocumentSize();
       nsRect dimensions;
       NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), NS_ERROR_FAILURE);
-      mRemoteBrowser->UpdateDimensions(dimensions,
-                                       ScreenIntSize(size.width, size.height));
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
     return NS_OK;
   }
@@ -2457,7 +2456,7 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   mRemoteFrame = true;
   mRemoteBrowser = static_cast<TabParent*>(aTabParent);
   mChildID = mRemoteBrowser ? mRemoteBrowser->Manager()->ChildID() : 0;
-  ShowRemoteFrame(ScreenIntSize(0, 0));
+  ShowRemoteFrame(nsIntSize(0, 0));
 }
 
 void

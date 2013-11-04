@@ -431,42 +431,6 @@ struct ParamTraits< mozilla::gfx::IntPointTyped<T> >
   }
 };
 
-template<class T>
-struct ParamTraits< mozilla::gfx::SizeTyped<T> >
-{
-  typedef mozilla::gfx::SizeTyped<T> paramType;
-
-  static void Write(Message* msg, const paramType& param)
-  {
-    WriteParam(msg, param.width);
-    WriteParam(msg, param.height);
-  }
-
-  static bool Read(const Message* msg, void** iter, paramType* result)
-  {
-    return (ReadParam(msg, iter, &result->width) &&
-            ReadParam(msg, iter, &result->height));
-  }
-};
-
-template<class T>
-struct ParamTraits< mozilla::gfx::IntSizeTyped<T> >
-{
-  typedef mozilla::gfx::IntSizeTyped<T> paramType;
-
-  static void Write(Message* msg, const paramType& param)
-  {
-    WriteParam(msg, param.width);
-    WriteParam(msg, param.height);
-  }
-
-  static bool Read(const Message* msg, void** iter, paramType* result)
-  {
-    return (ReadParam(msg, iter, &result->width) &&
-            ReadParam(msg, iter, &result->height));
-  }
-};
-
 template<>
 struct ParamTraits<mozilla::gfx::Size>
 {
