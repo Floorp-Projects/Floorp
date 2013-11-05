@@ -42,7 +42,14 @@ function finishTest() {
   gPermissionManager.remove("127.0.0.1:8888", gSecondTestPermissionString);
   Services.prefs.clearUserPref("plugins.click_to_play");
   gBrowser.removeCurrentTab();
-  finish();
+
+  gPageInfo = null;
+  gNextTest = null;
+  gTestBrowser = null;
+  gPluginHost = null;
+  gPermissionManager = null;
+
+  executeSoon(finish);
 }
 
 function test() {

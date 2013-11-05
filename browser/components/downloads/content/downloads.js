@@ -134,14 +134,9 @@ const DownloadsPanel = {
 
     window.addEventListener("unload", this.onWindowUnload, false);
 
-    // Ensure that the Download Manager service is running.  This resumes
-    // active downloads if required.  If there are downloads to be shown in the
-    // panel, starting the service will make us load their data asynchronously.
-    if (DownloadsCommon.useJSTransfer) {
-      DownloadsCommon.initializeAllDataLinks();
-    } else {
-      Services.downloads;
-    }
+    // Load and resume active downloads if required.  If there are downloads to
+    // be shown in the panel, they will be loaded asynchronously.
+    DownloadsCommon.initializeAllDataLinks();
 
     // Now that data loading has eventually started, load the required XUL
     // elements and initialize our views.
@@ -787,26 +782,6 @@ const DownloadsView = {
     // Notify the panel that all the initially available downloads have been
     // loaded.  This ensures that the interface is visible, if still required.
     DownloadsPanel.onViewLoadCompleted();
-  },
-
-  /**
-   * Called when the downloads database becomes unavailable (for example,
-   * entering Private Browsing Mode).  References to existing data should be
-   * discarded.
-   */
-  onDataInvalidated: function DV_onDataInvalidated()
-  {
-    DownloadsCommon.log("Downloads data has been invalidated. Cleaning up",
-                        "DownloadsView.");
-
-    DownloadsPanel.terminate();
-
-    // Clear the list by replacing with a shallow copy.
-    let emptyView = this.richListBox.cloneNode(false);
-    this.richListBox.parentNode.replaceChild(emptyView, this.richListBox);
-    this.richListBox = emptyView;
-    this._viewItems = {};
-    this._dataItems = [];
   },
 
   /**
@@ -1486,7 +1461,8 @@ DownloadsViewItemController.prototype = {
 
     downloadsCmd_open: function DVIC_downloadsCmd_open()
     {
-      this.dataItem.openLocalFile(window);
+      this.dataItem.openLocalFile();
+
       // We explicitly close the panel here to give the user the feedback that
       // their click has been received, and we're handling the action.
       // Otherwise, we'd have to wait for the file-type handler to execute

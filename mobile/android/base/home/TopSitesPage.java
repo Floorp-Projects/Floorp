@@ -338,7 +338,8 @@ public class TopSitesPage extends HomeFragment {
         }
 
         if (itemId == R.id.top_sites_edit) {
-            mEditPinnedSiteListener.onEditPinnedSite(info.position);
+            // Decode "user-entered" URLs before showing them.
+            mEditPinnedSiteListener.onEditPinnedSite(info.position, decodeUserEnteredUrl(info.url));
             return true;
         }
 
@@ -382,7 +383,7 @@ public class TopSitesPage extends HomeFragment {
         private int mPosition;
 
         @Override
-        public void onEditPinnedSite(int position) {
+        public void onEditPinnedSite(int position, String searchTerm) {
             mPosition = position;
 
             final FragmentManager manager = getActivity().getSupportFragmentManager();
@@ -392,6 +393,7 @@ public class TopSitesPage extends HomeFragment {
             }
 
             dialog.setOnSiteSelectedListener(this);
+            dialog.setSearchTerm(searchTerm);
             dialog.show(manager, TAG_PIN_SITE);
         }
 
@@ -607,7 +609,7 @@ public class TopSitesPage extends HomeFragment {
         }
     }
 
-    private class LoadIDAwareFaviconLoadedListener implements OnFaviconLoadedListener {
+    private static class LoadIDAwareFaviconLoadedListener implements OnFaviconLoadedListener {
         private volatile int loadId = Favicons.NOT_LOADING;
         private final TopSitesGridItemView view;
         public LoadIDAwareFaviconLoadedListener(TopSitesGridItemView view) {

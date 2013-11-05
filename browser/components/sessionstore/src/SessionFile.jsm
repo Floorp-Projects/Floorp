@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["_SessionFile"];
+this.EXPORTED_SYMBOLS = ["SessionFile"];
 
 /**
  * Implementation of all the disk I/O required by the session store.
@@ -49,7 +49,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
   "resource://gre/modules/Deprecated.jsm");
 
-this._SessionFile = {
+this.SessionFile = {
   /**
    * Read the contents of the session file, asynchronously.
    */
@@ -100,7 +100,7 @@ this._SessionFile = {
   }
 };
 
-Object.freeze(_SessionFile);
+Object.freeze(SessionFile);
 
 /**
  * Utilities for dealing with promises and Task.jsm
@@ -224,7 +224,7 @@ let SessionFileInternal = {
 
   write: function (aData) {
     if (this._isClosed) {
-      return Promise.reject(new Error("_SessionFile is closed"));
+      return Promise.reject(new Error("SessionFile is closed"));
     }
     let refObj = {};
 
@@ -311,5 +311,5 @@ let SessionWorker = (function () {
 AsyncShutdown.profileBeforeChange.addBlocker(
   "SessionFile: Finish writing the latest sessionstore.js",
   function() {
-    return _SessionFile._latestWrite;
+    return SessionFile._latestWrite;
   });
