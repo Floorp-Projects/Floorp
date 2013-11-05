@@ -56,6 +56,7 @@
 #include "mozilla/dom/workers/Workers.h"
 #include "nsJSPrincipals.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Debug.h"
 #include "mozilla/MouseEvents.h"
 
 // Interfaces Needed
@@ -64,19 +65,7 @@
 #include "nsIWidget.h"
 #include "nsIWidgetListener.h"
 #include "nsIBaseWindow.h"
-#include "nsDeviceSensors.h"
-
-#ifdef XP_WIN
-// Thanks so much, Microsoft and the people who pull in windows.h via
-// random silly headers! :(
-#ifdef GetClassName
-#undef GetClassName
-#endif // GetClassName
-#ifdef CreateEvent
-#undef CreateEvent
-#endif
-#endif // XP_WIN
-
+#include "nsIDeviceSensors.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocCharset.h"
@@ -219,7 +208,7 @@
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "mozilla/dom/TabChild.h"
+#include "nsITabChild.h"
 #include "nsIDOMMediaQueryList.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -5679,9 +5668,7 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 
   if (cstr) {
 #ifdef XP_WIN
-    if (IsDebuggerPresent()) {
-      OutputDebugStringA(cstr);
-    }
+    PrintToDebugger(cstr);
 #endif
 #ifdef ANDROID
     __android_log_write(ANDROID_LOG_INFO, "GeckoDump", cstr);
@@ -6228,7 +6215,7 @@ nsGlobalWindow::Focus(ErrorResult& aError)
     }
     return;
   }
-  if (TabChild *child = TabChild::GetFrom(this)) {
+  if (nsCOMPtr<nsITabChild> child = do_GetInterface(mDocShell)) {
     child->SendRequestFocus(canFocus);
     return;
   }
@@ -12564,13 +12551,13 @@ nsGlobalWindow::SetHasGamepadEventListener(bool aHasGamepad/* = true*/)
 void
 nsGlobalWindow::EnableTimeChangeNotifications()
 {
-  nsSystemTimeChangeObserver::AddWindowListener(this);
+  mozilla::time::AddWindowListener(this);
 }
 
 void
 nsGlobalWindow::DisableTimeChangeNotifications()
 {
-  nsSystemTimeChangeObserver::RemoveWindowListener(this);
+  mozilla::time::RemoveWindowListener(this);
 }
 
 static PLDHashOperator
@@ -13212,3 +13199,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 #undef BEFOREUNLOAD_EVENT
 #undef ERROR_EVENT
 #undef EVENT
+
+#ifdef _WINDOWS_
+#error "Never include windows.h in this file!"
+#endif
