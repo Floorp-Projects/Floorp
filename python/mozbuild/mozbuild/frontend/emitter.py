@@ -37,6 +37,7 @@ from .data import (
     PreprocessedWebIDLFile,
     Program,
     ReaderSummary,
+    Resources,
     SandboxWrapped,
     SimpleProgram,
     TestWebIDLFile,
@@ -308,6 +309,10 @@ class TreeMetadataEmitter(LoggingMixin):
         defines = sandbox.get('DEFINES')
         if defines:
             yield Defines(sandbox, defines)
+
+        resources = sandbox.get('RESOURCE_FILES')
+        if resources:
+            yield Resources(sandbox, resources, defines)
 
         program = sandbox.get('PROGRAM')
         if program:
