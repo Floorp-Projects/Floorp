@@ -681,16 +681,18 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   metrics.mScrollId = aScrollId;
 
+  // Only the root scrollable frame for a given presShell should pick up
+  // the presShell's resolution. All the other frames are 1.0.
   nsIPresShell* presShell = presContext->GetPresShell();
-  if (metrics.mScrollId == FrameMetrics::ROOT_SCROLL_ID) {
+  if (aScrollFrame == presShell->GetRootScrollFrame()) {
     metrics.mResolution = ParentLayerToLayerScale(presShell->GetXResolution(),
                                                   presShell->GetYResolution());
   } else {
-    // Only the root scrollable frame for a given presShell should pick up
-    // the presShell's resolution. All the other subframes are 1.0.
     metrics.mResolution = ParentLayerToLayerScale(1.0f);
   }
 
+  // For the cumulateive resolution, multiply the resolutions of all the
+  // presShells back up to the root
   metrics.mCumulativeResolution = LayoutDeviceToLayerScale(1.0f);
   nsIPresShell* curPresShell = presShell;
   while (curPresShell != nullptr) {
