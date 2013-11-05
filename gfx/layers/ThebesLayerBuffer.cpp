@@ -50,6 +50,27 @@ RotatedBuffer::GetQuadrantRectangle(XSide aXSide, YSide aYSide) const
   return mBufferRect + quadrantTranslation;
 }
 
+Rect
+RotatedBuffer::GetSourceRectangle(XSide aXSide, YSide aYSide) const
+{
+  Rect result;
+  if (aXSide == LEFT) {
+    result.x = 0;
+    result.width = mBufferRotation.x;
+  } else {
+    result.x = mBufferRotation.x;
+    result.width = mBufferRect.width - mBufferRotation.x;
+  }
+  if (aYSide == TOP) {
+    result.y = 0;
+    result.height = mBufferRotation.y;
+  } else {
+    result.y = mBufferRotation.y;
+    result.height = mBufferRect.height - mBufferRotation.y;
+  }
+  return result;
+}
+
 /**
  * @param aXSide LEFT means we draw from the left side of the buffer (which
  * is drawn on the right side of mBufferRect). RIGHT means we draw from
@@ -178,6 +199,19 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
 
   gfx::Point quadrantTranslation(quadrantRect.x, quadrantRect.y);
 
+  MOZ_ASSERT(aOperator == OP_OVER || aOperator == OP_SOURCE);
+  // direct2d is much slower when using OP_SOURCE so use OP_OVER and
+  // (maybe) a clear instead. Normally we need to draw in a single operation
+  // (to avoid flickering) but direct2d is ok since it defers rendering.
+  // We should try abstract this logic in a helper when we have other use
+  // cases.
+  if (aTarget->GetType() == BACKEND_DIRECT2D && aOperator == OP_SOURCE) {
+    aOperator = OP_OVER;
+    if (mDTBuffer->GetFormat() == FORMAT_B8G8R8A8) {
+      aTarget->ClearRect(ToRect(fillRect));
+    }
+  }
+
   RefPtr<SourceSurface> snapshot;
   if (aSource == BUFFER_BLACK) {
     snapshot = mDTBuffer->Snapshot();
@@ -185,16 +219,6 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     MOZ_ASSERT(aSource == BUFFER_WHITE);
     snapshot = mDTBufferOnWhite->Snapshot();
   }
-
-  // Transform from user -> buffer space.
-  Matrix transform;
-  transform.Translate(quadrantTranslation.x, quadrantTranslation.y);
-
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  SurfacePattern source(snapshot, EXTEND_CLAMP, transform, FILTER_POINT);
-#else
-  SurfacePattern source(snapshot, EXTEND_CLAMP, transform);
-#endif
 
   if (aOperator == OP_SOURCE) {
     // OP_SOURCE is unbounded in Azure, and we really don't want that behaviour here.
@@ -205,14 +229,30 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
   }
 
   if (aMask) {
+    // Transform from user -> buffer space.
+    Matrix transform;
+    transform.Translate(quadrantTranslation.x, quadrantTranslation.y);
+
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    SurfacePattern source(snapshot, EXTEND_CLAMP, transform, FILTER_POINT);
+#else
+    SurfacePattern source(snapshot, EXTEND_CLAMP, transform);
+#endif
+
     Matrix oldTransform = aTarget->GetTransform();
     aTarget->SetTransform(*aMaskTransform);
     aTarget->MaskSurface(source, aMask, Point(0, 0), DrawOptions(aOpacity, aOperator));
     aTarget->SetTransform(oldTransform);
   } else {
-    aTarget->FillRect(gfx::Rect(fillRect.x, fillRect.y,
-                                fillRect.width, fillRect.height),
-                      source, DrawOptions(aOpacity, aOperator));
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    DrawSurfaceOptions options(FILTER_POINT);
+#else
+    DrawSurfaceOptions options;
+#endif
+    aTarget->DrawSurface(snapshot, ToRect(fillRect),
+                         GetSourceRectangle(aXSide, aYSide),
+                         options,
+                         DrawOptions(aOpacity, aOperator));
   }
 
   if (aOperator == OP_SOURCE) {

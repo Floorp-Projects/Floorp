@@ -12,6 +12,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "nsIObserver.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Endian.h"
 #include "mozilla/MemoryReporting.h"
@@ -963,55 +964,31 @@ public:
     {
     }
 
-    virtual ~gfxFontInfoLoader() {}
+    virtual ~gfxFontInfoLoader();
 
     // start timer with an initial delay, then call Run method at regular intervals
-    void StartLoader(uint32_t aDelay, uint32_t aInterval) {
-        mInterval = aInterval;
-
-        // sanity check
-        if (mState != stateInitial && mState != stateTimerOff)
-            CancelLoader();
-
-        // set up timer
-        if (!mTimer) {
-            mTimer = do_CreateInstance("@mozilla.org/timer;1");
-            if (!mTimer) {
-                NS_WARNING("Failure to create font info loader timer");
-                return;
-            }
-        }
-
-        // need an initial delay?
-        uint32_t timerInterval;
-
-        if (aDelay) {
-            mState = stateTimerOnDelay;
-            timerInterval = aDelay;
-        } else {
-            mState = stateTimerOnInterval;
-            timerInterval = mInterval;
-        }
-
-        InitLoader();
-
-        // start timer
-        mTimer->InitWithFuncCallback(LoaderTimerCallback, this, timerInterval,
-                                     nsITimer::TYPE_REPEATING_SLACK);
-    }
+    void StartLoader(uint32_t aDelay, uint32_t aInterval);
 
     // cancel the timer and cleanup
-    void CancelLoader() {
-        if (mState == stateInitial)
-            return;
-        mState = stateTimerOff;
-        if (mTimer) {
-            mTimer->Cancel();
-        }
-        FinishLoader();
-    }
+    void CancelLoader();
 
 protected:
+    class ShutdownObserver : public nsIObserver
+    {
+    public:
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIOBSERVER
+
+        ShutdownObserver(gfxFontInfoLoader *aLoader)
+            : mLoader(aLoader)
+        { }
+
+        virtual ~ShutdownObserver()
+        { }
+
+    protected:
+        gfxFontInfoLoader *mLoader;
+    };
 
     // Init - initialization at start time after initial delay
     virtual void InitLoader() = 0;
@@ -1022,25 +999,18 @@ protected:
     // Finish - cleanup after done
     virtual void FinishLoader() = 0;
 
+    // Timer interval callbacks
     static void LoaderTimerCallback(nsITimer *aTimer, void *aThis) {
         gfxFontInfoLoader *loader = static_cast<gfxFontInfoLoader*>(aThis);
         loader->LoaderTimerFire();
     }
 
-    // start the timer, interval callbacks
-    void LoaderTimerFire() {
-        if (mState == stateTimerOnDelay) {
-            mState = stateTimerOnInterval;
-            mTimer->SetDelay(mInterval);
-        }
+    void LoaderTimerFire();
 
-        bool done = RunLoader();
-        if (done) {
-            CancelLoader();
-        }
-    }
+    void RemoveShutdownObserver();
 
     nsCOMPtr<nsITimer> mTimer;
+    nsCOMPtr<nsIObserver> mObserver;
     uint32_t mInterval;
     TimerState mState;
 };
