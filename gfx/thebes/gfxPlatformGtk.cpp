@@ -93,7 +93,8 @@ gfxPlatformGtk::gfxPlatformGtk()
 #endif
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
     uint32_t contentMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
-    InitBackendPrefs(canvasMask, contentMask);
+    InitBackendPrefs(canvasMask, BACKEND_CAIRO,
+                     contentMask, BACKEND_CAIRO);
 }
 
 gfxPlatformGtk::~gfxPlatformGtk()
