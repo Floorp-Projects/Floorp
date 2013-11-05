@@ -389,7 +389,7 @@ class BytecodeParser
 
     JSContext *cx_;
     LifoAllocScope allocScope_;
-    JSScript *script_;
+    RootedScript script_;
 
     Bytecode **codeArray_;
 
@@ -397,7 +397,7 @@ class BytecodeParser
     BytecodeParser(JSContext *cx, JSScript *script)
       : cx_(cx),
         allocScope_(&cx->tempLifoAlloc()),
-        script_(script),
+        script_(cx, script),
         codeArray_(nullptr) { }
 
     bool parse();
