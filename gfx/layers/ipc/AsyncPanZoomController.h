@@ -655,7 +655,7 @@ private:
    * hit-testing to see which APZC instance should handle touch events.
    */
 public:
-  void SetLayerHitTestData(const LayerRect& aRect, const gfx3DMatrix& aTransformToLayer,
+  void SetLayerHitTestData(const ScreenRect& aRect, const gfx3DMatrix& aTransformToLayer,
                            const gfx3DMatrix& aTransformForLayer) {
     mVisibleRect = aRect;
     mAncestorTransform = aTransformToLayer;
@@ -670,16 +670,15 @@ public:
     return mCSSTransform;
   }
 
-  bool VisibleRegionContains(const LayerPoint& aPoint) const {
+  bool VisibleRegionContains(const ScreenPoint& aPoint) const {
     return mVisibleRect.Contains(aPoint);
   }
 
 private:
-  /* This is the viewport of the layer that this APZC corresponds to, in
-   * layer pixels. It position here does not account for any transformations
-   * applied to any layers, whether they are CSS transforms or async
-   * transforms. */
-  LayerRect mVisibleRect;
+  /* This is the visible region of the layer that this APZC corresponds to, in
+   * that layer's screen pixels (the same coordinate system in which this APZC
+   * receives events in ReceiveInputEvent()). */
+  ScreenRect mVisibleRect;
   /* This is the cumulative CSS transform for all the layers between the parent
    * APZC and this one (not inclusive) */
   gfx3DMatrix mAncestorTransform;

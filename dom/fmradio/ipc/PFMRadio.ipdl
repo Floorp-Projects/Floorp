@@ -86,6 +86,11 @@ parent:
    * is more error prone.
    */
   PFMRadioRequest(FMRadioRequestArgs requestType);
+
+  /**
+   * Enable/Disable audio
+   */
+  EnableAudio(bool audioEnabled);
 };
 
 } // namespace dom

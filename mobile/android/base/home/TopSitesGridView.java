@@ -18,6 +18,7 @@ import android.database.Cursor;
 import android.graphics.Rect;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View;
 import android.widget.AbsListView;
@@ -35,7 +36,7 @@ public class TopSitesGridView extends GridView {
 
     // Listener for editing pinned sites.
     public static interface OnEditPinnedSiteListener {
-        public void onEditPinnedSite(int position);
+        public void onEditPinnedSite(int position, String searchTerm);
     }
 
     // Max number of top sites that needs to be shown.
@@ -115,7 +116,7 @@ public class TopSitesGridView extends GridView {
                     }
                 } else {
                     if (mEditPinnedSiteListener != null) {
-                        mEditPinnedSiteListener.onEditPinnedSite(position);
+                        mEditPinnedSiteListener.onEditPinnedSite(position, "");
                     }
                 }
             }
@@ -179,13 +180,10 @@ public class TopSitesGridView extends GridView {
             return;
         }
 
-        final int childWidth = getColumnWidth();
-
-        // Set the column width as the thumbnail width.
-        ThumbnailHelper.getInstance().setThumbnailWidth(childWidth);
+        final int columnWidth = getColumnWidth();
 
         // Get the first child from the adapter.
-        final View child = new TopSitesGridItemView(getContext());
+        final TopSitesGridItemView child = new TopSitesGridItemView(getContext());
 
         // Set a default LayoutParams on the child, if it doesn't have one on its own.
         AbsListView.LayoutParams params = (AbsListView.LayoutParams) child.getLayoutParams();
@@ -197,10 +195,15 @@ public class TopSitesGridView extends GridView {
 
         // Measure the exact width of the child, and the height based on the width.
         // Note: the child (and TopSitesThumbnailView) takes care of calculating its height.
-        int childWidthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY);
+        int childWidthSpec = MeasureSpec.makeMeasureSpec(columnWidth, MeasureSpec.EXACTLY);
         int childHeightSpec = MeasureSpec.makeMeasureSpec(0,  MeasureSpec.UNSPECIFIED);
         child.measure(childWidthSpec, childHeightSpec);
         final int childHeight = child.getMeasuredHeight();
+
+        // This is the maximum width of the contents of each child in the grid.
+        // Use this as the target width for thumbnails.
+        final int thumbnailWidth = child.getMeasuredWidth() - child.getPaddingLeft() - child.getPaddingRight();
+        ThumbnailHelper.getInstance().setThumbnailWidth(thumbnailWidth);
 
         // Number of rows required to show these top sites.
         final int rows = (int) Math.ceil((double) mMaxSites / mNumColumns);
