@@ -8,6 +8,10 @@
 #ifndef mozilla_AppProcessChecker_h
 #define mozilla_AppProcessChecker_h
 
+#include <stdint.h>
+
+class nsIPrincipal;
+
 namespace mozilla {
 
 namespace dom {
@@ -65,6 +69,21 @@ AssertAppProcess(mozilla::hal_sandbox::PHalParent* aActor,
 //   bool AppProcessHasCapability(PNeckoParent* aActor, AssertAppProcessType aType) {
 //     return AssertAppProcess(aActor->Manager(), aType);
 //   }
+
+bool
+AssertAppPrincipal(mozilla::dom::PContentParent* aParent,
+                   nsIPrincipal* aPrincipal);
+
+/**
+ * Check if the specified principal is valid, and return the saved permission
+ * value for permission `aPermission' on that principal.
+ * See nsIPermissionManager.idl for possible return values.
+ *
+ * nsIPermissionManager::UNKNOWN_ACTION is retuned if the principal is invalid.
+ */
+uint32_t
+CheckPermission(mozilla::dom::PContentParent* aParent,
+                nsIPrincipal* aPrincipal, const char* aPermission);
 
 /**
  * Inline function for asserting the process's permission.

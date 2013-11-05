@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=932937
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 932937</title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+
+const promise = devtools.require("sdk/core/promise");
+const inspector = devtools.require("devtools/server/actors/inspector");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+var gWalker = null;
+
+addTest(function setup() {
+  let url = document.getElementById("inspectorContent").href;
+  attachURL(url, function(err, client, tab, doc) {
+    let {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+    let inspector = InspectorFront(client, tab);
+
+    promiseDone(inspector.getWalker().then(walker => {
+      gWalker = walker;
+    }).then(runNextTest));
+  });
+});
+
+addTest(function testLargeImage() {
+  // Select the image node from the test page
+  gWalker.querySelector(gWalker.rootNode, ".big-horizontal").then(img => {
+    ok(img, "Image node found in the test page");
+    ok(img.getImageData, "Image node has the getImageData function");
+
+    img.getImageData(100).then(imageData => {
+      ok(imageData.data, "Image data actor was sent back");
+      ok(imageData.size, "Image size info was sent back too");
+      is(imageData.size.naturalWidth, 5333, "Natural width of the image correct");
+      is(imageData.size.naturalHeight, 3000, "Natural width of the image correct");
+      is(imageData.size.width, 100, "Resized image width correct");
+      is(imageData.size.height, 56, "Resized image height correct");
+      ok(imageData.size.resized, "Image was resized");
+
+      imageData.data.string().then(str => {
+        ok(str, "We have an image data string!");
+        runNextTest();
+      });
+    });
+  });
+});
+
+addTest(function testLargeCanvas() {
+  // Select the canvas node from the test page
+  gWalker.querySelector(gWalker.rootNode, ".big-vertical").then(canvas => {
+    ok(canvas, "Image node found in the test page");
+    ok(canvas.getImageData, "Image node has the getImageData function");
+
+    canvas.getImageData(350).then(imageData => {
+      ok(imageData.data, "Image data actor was sent back");
+      ok(imageData.size, "Image size info was sent back too");
+      is(imageData.size.naturalWidth, 1000, "Natural width of the image correct");
+      is(imageData.size.naturalHeight, 2000, "Natural width of the image correct");
+      is(imageData.size.width, 175, "Resized image width correct");
+      is(imageData.size.height, 350, "Resized image height correct");
+      ok(imageData.size.resized, "Image was resized");
+
+      imageData.data.string().then(str => {
+        ok(str, "We have an image data string!");
+        runNextTest();
+      });
+    });
+  });
+});
+
+addTest(function testSmallImage() {
+  // Select the small image node from the test page
+  gWalker.querySelector(gWalker.rootNode, ".small").then(img => {
+    ok(img, "Image node found in the test page");
+    ok(img.getImageData, "Image node has the getImageData function");
+
+    img.getImageData().then(imageData => {
+      ok(imageData.data, "Image data actor was sent back");
+      ok(imageData.size, "Image size info was sent back too");
+      is(imageData.size.naturalWidth, 245, "Natural width of the image correct");
+      is(imageData.size.naturalHeight, 240, "Natural width of the image correct");
+      is(imageData.size.width, 245, "Resized image width correct");
+      is(imageData.size.height, 240, "Resized image height correct");
+      ok(!imageData.size.resized, "Image was NOT resized");
+
+      imageData.data.string().then(str => {
+        ok(str, "We have an image data string!");
+        runNextTest();
+      });
+    });
+  });
+});
+
+addTest(function cleanup() {
+  delete gWalker;
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=932937">Mozilla Bug 932937</a>
+<a id="inspectorContent" target="_blank" href="inspector_getImageData.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -274,9 +274,8 @@ class MochitestOptions(optparse.OptionParser):
         [["--run-until-failure"],
         { "action": "store_true",
           "dest": "runUntilFailure",
-          "help": "Run a test repeatedly and stops on the first time the test fails. "
-                "Only available when running a single test. Default cap is 30 runs, "
-                "which can be overwritten with the --repeat parameter.",
+          "help": "Run tests repeatedly and stops on the first time a test fails. "
+                "Default cap is 30 runs, which can be overwritten with the --repeat parameter.",
           "default": False,
         }],
         [["--run-only-tests"],
@@ -495,8 +494,6 @@ class MochitestOptions(optparse.OptionParser):
                            mochitest.immersiveHelperPath)
 
         if options.runUntilFailure:
-            if not os.path.isfile(os.path.join(mochitest.oldcwd, os.path.dirname(__file__), mochitest.getTestRoot(options), options.testPath)):
-                self.error("--run-until-failure can only be used together with --test-path specifying a single test.")
             if not options.repeat:
                 options.repeat = 29
 
