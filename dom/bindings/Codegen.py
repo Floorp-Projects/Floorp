@@ -61,6 +61,10 @@ def isTypeCopyConstructible(type):
             (type.isDictionary() and
              CGDictionary.isDictionaryCopyConstructible(type.inner)))
 
+def wantsAddProperty(desc):
+    return desc.concrete and not desc.nativeOwnership == 'worker' and \
+           desc.wrapperCache and not desc.customWrapperManagement
+
 class CGThing():
     """
     Abstract base class for things that spit out code.
@@ -215,7 +219,7 @@ static const DOMJSClass Class = {
 };
 """ % (self.descriptor.interface.identifier.name,
        classFlags,
-       ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.nativeOwnership == 'worker' and self.descriptor.wrapperCache else 'JS_PropertyStub',
+       ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'JS_PropertyStub',
        enumerateHook, newResolveHook, FINALIZE_HOOK_NAME, callHook, traceHook,
        CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
 
@@ -707,9 +711,16 @@ class CGHeaders(CGWrapper):
             if desc.interface.isExternal():
                 continue
             def addHeaderForFunc(func):
+                if func is None:
+                    return
                 # Include the right class header, which we can only do
                 # if this is a class member function.
-                if func is not None and "::" in func:
+                if not desc.headerIsDefault:
+                    # An explicit header file was provided, assume that we know
+                    # what we're doing.
+                    return
+
+                if "::" in func:
                     # Strip out the function name and convert "::" to "/"
                     bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
             for m in desc.interface.members:
@@ -8144,7 +8155,7 @@ class CGDescriptor(CGThing):
             cgThings.append(CGConstructNavigatorObject(descriptor))
 
         if descriptor.concrete and not descriptor.proxy:
-            if not descriptor.nativeOwnership == 'worker' and descriptor.wrapperCache:
+            if wantsAddProperty(descriptor):
                 cgThings.append(CGAddPropertyHook(descriptor))
 
             # Always have a finalize hook, regardless of whether the class
