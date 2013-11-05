@@ -178,6 +178,19 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
 
   gfx::Point quadrantTranslation(quadrantRect.x, quadrantRect.y);
 
+  MOZ_ASSERT(aOperator == OP_OVER || aOperator == OP_SOURCE);
+  // direct2d is much slower when using OP_SOURCE so use OP_OVER and
+  // (maybe) a clear instead. Normally we need to draw in a single operation
+  // (to avoid flickering) but direct2d is ok since it defers rendering.
+  // We should try abstract this logic in a helper when we have other use
+  // cases.
+  if (aTarget->GetType() == BACKEND_DIRECT2D && aOperator == OP_SOURCE) {
+    aOperator = OP_OVER;
+    if (mDTBuffer->GetFormat() == FORMAT_B8G8R8A8) {
+      aTarget->ClearRect(ToRect(fillRect));
+    }
+  }
+
   RefPtr<SourceSurface> snapshot;
   if (aSource == BUFFER_BLACK) {
     snapshot = mDTBuffer->Snapshot();
