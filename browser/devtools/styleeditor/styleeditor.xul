@@ -75,9 +75,9 @@
 
     <div id="splitview-templates" hidden="true">
       <li id="splitview-tpl-summary-stylesheet" tabindex="0">
-        <a class="stylesheet-enabled" tabindex="0" href="#"
-          title="&visibilityToggle.tooltip;"
-          accesskey="&saveButton.accesskey;"></a>
+        <xul:label class="stylesheet-enabled" tabindex="0"
+          tooltiptext="&visibilityToggle.tooltip;"
+          accesskey="&saveButton.accesskey;"></xul:label>
         <hgroup class="stylesheet-info">
           <h1><a class="stylesheet-name" tabindex="0"><xul:label crop="start"/></a></h1>
           <div class="stylesheet-more">
@@ -85,9 +85,9 @@
             <h3 class="stylesheet-rule-count"></h3>
             <h3 class="stylesheet-error-message"></h3>
             <xul:spacer/>
-            <h3><a class="stylesheet-saveButton"
-                  title="&saveButton.tooltip;"
-                  accesskey="&saveButton.accesskey;">&saveButton.label;</a></h3>
+            <h3><xul:label class="stylesheet-saveButton"
+                  tooltiptext="&saveButton.tooltip;"
+                  accesskey="&saveButton.accesskey;">&saveButton.label;</xul:label></h3>
           </div>
         </hgroup>
       </li>
