@@ -288,7 +288,6 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
 }
 
 /*
- *
  * Expected type of the arguments and the return value:
  * function exportFunction(function funToExport,
  *                         object targetScope,
@@ -428,37 +427,13 @@ CloneNonReflectors(JSContext *cx, MutableHandleValue val)
     return true;
 }
 
-/*
- * Similar to evalInSandbox except this one is used to eval a script in the
- * scope of a window. Also note, that the return value and the possible exceptions
- * in the script are structured cloned, unless they are natives (then they are just
- * wrapped).
- * Principal of the caller must subsume the target's.
- *
- * Expected type of the arguments:
- * value evalInWindow(string script,
- *                    object window)
- */
-static bool
-EvalInWindow(JSContext *cx, unsigned argc, jsval *vp)
+namespace xpc {
+
+bool
+EvalInWindow(JSContext *cx, const nsAString &source, HandleObject scope, MutableHandleValue rval)
 {
-    MOZ_ASSERT(cx);
-    if (argc < 2) {
-        JS_ReportError(cx, "Function requires two arguments");
-        return false;
-    }
-
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args[0].isString() || !args[1].isObject()) {
-        JS_ReportError(cx, "Invalid arguments");
-        return false;
-    }
-
-    RootedString srcString(cx, args[0].toString());
-    RootedObject targetScope(cx, &args[1].toObject());
-
     // If we cannot unwrap we must not eval in it.
-    targetScope = CheckedUnwrap(targetScope);
+    RootedObject targetScope(cx, CheckedUnwrap(scope));
     if (!targetScope) {
         JS_ReportError(cx, "Permission denied to eval in target scope");
         return false;
@@ -496,9 +471,6 @@ EvalInWindow(JSContext *cx, unsigned argc, jsval *vp)
         lineNo = 0;
     }
 
-    nsDependentJSString srcDepString;
-    srcDepString.init(cx, srcString);
-
     {
         // CompileOptions must be created from the context
         // we will execute this script in.
@@ -513,11 +485,11 @@ EvalInWindow(JSContext *cx, unsigned argc, jsval *vp)
         evaluateOptions.setReportUncaught(false);
 
         nsresult rv = nsJSUtils::EvaluateString(wndCx,
-                                                srcDepString,
+                                                source,
                                                 targetScope,
                                                 compileOptions,
                                                 evaluateOptions,
-                                                args.rval().address());
+                                                rval.address());
 
         if (NS_FAILED(rv)) {
             // If there was an exception we get it as a return value, if
@@ -525,16 +497,16 @@ EvalInWindow(JSContext *cx, unsigned argc, jsval *vp)
             // exception is raised.
             MOZ_ASSERT(!JS_IsExceptionPending(wndCx),
                        "Exception should be delivered as return value.");
-            if (args.rval().isUndefined()) {
+            if (rval.isUndefined()) {
                 MOZ_ASSERT(rv == NS_ERROR_OUT_OF_MEMORY);
                 return false;
             }
 
             // If there was an exception thrown we should set it
             // on the calling context.
-            RootedValue exn(wndCx, args.rval());
+            RootedValue exn(wndCx, rval);
             // First we should reset the return value.
-            args.rval().set(UndefinedValue());
+            rval.set(UndefinedValue());
 
             // Then clone the exception.
             if (CloneNonReflectors(cx, &exn))
@@ -545,15 +517,45 @@ EvalInWindow(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     // Let's clone the return value back to the callers compartment.
-    if (!CloneNonReflectors(cx, args.rval())) {
-        args.rval().set(UndefinedValue());
+    if (!CloneNonReflectors(cx, rval)) {
+        rval.set(UndefinedValue());
         return false;
     }
 
     return true;
 }
 
-namespace xpc {
+/*
+ * Expected type of the arguments:
+ * value evalInWindow(string script,
+ *                    object window)
+ */
+static bool
+EvalInWindow(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 2) {
+        JS_ReportError(cx, "Function requires two arguments");
+        return false;
+    }
+
+    if (!args[0].isString() || !args[1].isObject()) {
+        JS_ReportError(cx, "Invalid arguments");
+        return false;
+    }
+
+    RootedString srcString(cx, args[0].toString());
+    RootedObject targetScope(cx, &args[1].toObject());
+
+    nsDependentJSString srcDepString;
+    if (!srcDepString.init(cx, srcString)) {
+        JS_ReportError(cx, "Source string is invalid");
+        return false;
+    }
+
+    return EvalInWindow(cx, srcDepString, targetScope, args.rval());
+}
+
 static bool
 CreateObjectIn(JSContext *cx, unsigned argc, jsval *vp)
 {
