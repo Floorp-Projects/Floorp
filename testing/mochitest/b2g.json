@@ -100,6 +100,7 @@
     "content/base/test/test_child_process_shutdown_message.html":"specialpowers.wrap issue, NS_ERROR_XPC_GS_RETURNED_FAILURE",
     "content/base/test/test_messagemanager_assertpermission.html":"specialpowers.wrap issue, NS_ERROR_XPC_GS_RETURNED_FAILURE",
 
+    "content/canvas/test/test_canvas_focusring.html":"specialpowers.wrap",
 
     "content/html/content/test/test_formSubmission.html":"NS_ERROR_FILE_TARGET_DOES_NOT_EXIST",
 
@@ -353,6 +354,7 @@
     "dom/tests/mochitest/geolocation/test_cancelWatch.html":"",
     "dom/tests/mochitest/geolocation/test_clearWatch.html":"",
     "dom/tests/mochitest/geolocation/test_clearWatch_invalid.html":"",
+    "dom/tests/mochitest/geolocation/test_errorcheck.html": "",
     "dom/tests/mochitest/geolocation/test_handlerSpinsEventLoop.html": "showmodaldialog",
     "dom/tests/mochitest/geolocation/test_manyCurrentConcurrent.html":"",
     "dom/tests/mochitest/geolocation/test_manyCurrentSerial.html":"",
