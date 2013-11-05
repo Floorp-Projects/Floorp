@@ -849,6 +849,14 @@ DrawTargetCairo::Fill(const Path *aPath,
 }
 
 void
+DrawTargetCairo::SetPermitSubpixelAA(bool aPermitSubpixelAA)
+{
+  DrawTarget::SetPermitSubpixelAA(aPermitSubpixelAA);
+  cairo_surface_set_subpixel_antialiasing(mSurface,
+    aPermitSubpixelAA ? CAIRO_SUBPIXEL_ANTIALIASING_ENABLED : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
+}
+
+void
 DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
                             const GlyphBuffer &aBuffer,
                             const Pattern &aPattern,
@@ -1119,6 +1127,13 @@ DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize&
   mSurface = aSurface;
   mSize = aSize;
   mFormat = CairoContentToGfxFormat(cairo_surface_get_content(aSurface));
+
+  if (mFormat == FORMAT_B8G8R8A8 ||
+      mFormat == FORMAT_R8G8B8A8) {
+    SetPermitSubpixelAA(false);
+  } else {
+    SetPermitSubpixelAA(true);
+  }
 
   return true;
 }
