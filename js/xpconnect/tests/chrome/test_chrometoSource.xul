@@ -52,5 +52,11 @@ ns = {};
 Services.scriptloader.loadSubScript(resolvedBase + "utf8_subscript.js", ns, "UTF-8");
 src = ns.f.toSource();
 isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
+
+ns = {};
+Services.scriptloader.loadSubScriptWithOptions(resolvedBase + "utf8_subscript.js",
+                                               {target: ns, charset: "UTF-8", ignoreCache: true});
+src = ns.f.toSource();
+isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
   ]]></script>
 </window>
