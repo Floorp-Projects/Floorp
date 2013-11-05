@@ -234,10 +234,6 @@
   pointer-events: none;
 }
 
-/* Allow pointer-events on ::before of the ends of selected tabs
-   since they are clipped to the curve shape. */
-.tab-background-start[selected=true]::before,
-.tab-background-end[selected=true]::before,
 .tab-background-middle,
 .tabs-newtab-button,
 .tab-close-button {
