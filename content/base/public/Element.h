@@ -538,6 +538,8 @@ protected:
   }
 
 public:
+  bool HasAttrs() const { return mAttrsAndChildren.HasAttrs(); }
+
   inline bool GetAttr(const nsAString& aName, DOMString& aResult) const
   {
     MOZ_ASSERT(aResult.HasStringBuffer() && aResult.StringBufferLength() == 0,
@@ -1190,7 +1192,7 @@ inline const mozilla::dom::Element* nsINode::AsElement() const
 
 inline bool nsINode::HasAttributes() const
 {
-  return IsElement() && AsElement()->GetAttrCount() > 0;
+  return IsElement() && AsElement()->HasAttrs();
 }
 
 /**
