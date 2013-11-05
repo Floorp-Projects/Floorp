@@ -139,7 +139,6 @@
            footertype="promobox"
            orient="vertical"
            ignorekeys="true"
-           consumeoutsideclicks="true"
            hidden="true"
            onpopupshown="StarUI.panelShown(event);"
            aria-labelledby="editBookmarkPanelTitle">
@@ -188,7 +187,6 @@
     <panel id="UITourTooltip"
            type="arrow"
            hidden="true"
-           consumeoutsideclicks="false"
            noautofocus="true"
            align="start"
            orient="vertical"
@@ -203,7 +201,6 @@
     <panel id="socialActivatedNotification"
            type="arrow"
            hidden="true"
-           consumeoutsideclicks="true"
            align="start"
            orient="horizontal"
            role="alert">
@@ -234,7 +231,6 @@
            orient="horizontal"
            onpopupshowing="SocialShare.onShowing()"
            onpopuphidden="SocialShare.onHidden()"
-           consumeoutsideclicks="true"
            hidden="true">
       <vbox class="social-share-toolbar">
         <vbox id="social-share-provider-buttons" flex="1"/>
@@ -255,7 +251,6 @@
            hidden="true"
            flip="slide"
            rolluponmousewheel="true"
-           consumeoutsideclicks="false"
            noautofocus="true"
            position="topcenter topright"/>
 
@@ -313,7 +308,6 @@
            type="arrow"
            hidden="true"
            noautofocus="true"
-           consumeoutsideclicks="true"
            onpopupshown="if (event.target == this)
                            gIdentityHandler.onPopupShown(event);"
            orient="vertical"

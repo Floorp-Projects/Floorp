@@ -6520,7 +6520,7 @@ void nsWindow::OnDestroy()
   }
   if (this == rollupWidget) {
     if ( rollupListener )
-      rollupListener->Rollup(0, nullptr);
+      rollupListener->Rollup(0, nullptr, nullptr);
     CaptureRollupEvents(nullptr, false);
   }
 
@@ -7342,9 +7342,21 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
     else if (rollup) {
       // only need to deal with the last rollup for left mouse down events.
       NS_ASSERTION(!mLastRollup, "mLastRollup is null");
-      bool consumeRollupEvent =
-        rollupListener->Rollup(popupsToRollup, inMsg == WM_LBUTTONDOWN ? &mLastRollup : nullptr);
-      NS_IF_ADDREF(mLastRollup);
+
+      bool consumeRollupEvent;
+      if (inMsg == WM_LBUTTONDOWN) {
+        POINT pt;
+        pt.x = GET_X_LPARAM(inLParam);
+        pt.y = GET_Y_LPARAM(inLParam);
+        ::ClientToScreen(inWnd, &pt);
+        nsIntPoint pos(pt.x, pt.y);
+
+        consumeRollupEvent = rollupListener->Rollup(popupsToRollup, &pos, &mLastRollup);
+        NS_IF_ADDREF(mLastRollup);
+      }
+      else {
+        consumeRollupEvent = rollupListener->Rollup(popupsToRollup, nullptr, nullptr);
+      }
 
       // Tell hook to stop processing messages
       sProcessHook = false;

@@ -313,7 +313,7 @@
   </binding>
 
   <binding id="arrowpanel" extends="chrome://global/content/bindings/popup.xml#panel">
-    <content flip="both" side="top" position="bottomcenter topleft">
+    <content flip="both" side="top" position="bottomcenter topleft" consumeoutsideclicks="false">
       <xul:box anonid="container" class="panel-arrowcontainer" flex="1"
                xbl:inherits="side,panelopen">
         <xul:box anonid="arrowbox" class="panel-arrowbox">

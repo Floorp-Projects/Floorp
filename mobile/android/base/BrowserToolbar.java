@@ -1148,7 +1148,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             image = Bitmap.createScaledBitmap(image, mFaviconSize, mFaviconSize, false);
             mFavicon.setImageBitmap(image);
         } else {
-            mFavicon.setImageBitmap(null);
+            mFavicon.setImageDrawable(null);
         }
     }
     

@@ -10,6 +10,8 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.mozglue.GeneratableAndroidBridgeTarget;
@@ -49,7 +51,7 @@ import java.util.ArrayList;
  *
  * Note that LayerView is accessed by Robocop via reflection.
  */
-public class LayerView extends FrameLayout {
+public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener {
     private static String LOGTAG = "GeckoLayerView";
 
     private GeckoLayerClient mLayerClient;
@@ -109,6 +111,7 @@ public class LayerView extends FrameLayout {
 
         mTouchInterceptors = new ArrayList<TouchEventInterceptor>();
         mOverscroll = new Overscroll(this);
+        Tabs.registerOnTabsChangedListener(this);
     }
 
     public void initializeView(EventDispatcher eventDispatcher) {
@@ -657,5 +660,13 @@ public class LayerView extends FrameLayout {
 
     public boolean isFullScreen() {
         return mFullScreen;
+    }
+
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        if (msg == Tabs.TabEvents.VIEWPORT_CHANGE && Tabs.getInstance().isSelectedTab(tab)) {
+            setZoomConstraints(tab.getZoomConstraints());
+            setIsRTL(tab.getIsRTL());
+        }
     }
 }
