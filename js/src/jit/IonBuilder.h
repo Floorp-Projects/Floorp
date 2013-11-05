@@ -435,11 +435,24 @@ class IonBuilder : public MIRGenerator
     // jsop_getelem() helpers.
     bool getElemTryDense(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *index);
-    bool getElemTryTyped(bool *emitted, MDefinition *obj, MDefinition *index);
+    bool getElemTryTypedArray(bool *emitted, MDefinition *obj, MDefinition *index);
+    bool getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryString(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryArguments(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryArgumentsInlined(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index);
+    bool getElemTryScalarElemOfTypedObject(bool *emitted,
+                                           MDefinition *obj,
+                                           MDefinition *index,
+                                           TypeRepresentationSet objTypeReprs,
+                                           TypeRepresentationSet elemTypeReprs,
+                                           size_t elemSize);
+    bool getElemTryComplexElemOfTypedObject(bool *emitted,
+                                            MDefinition *obj,
+                                            MDefinition *index,
+                                            TypeRepresentationSet objTypeReprs,
+                                            TypeRepresentationSet elemTypeReprs,
+                                            size_t elemSize);
 
     // Typed array helpers.
     MInstruction *getTypedArrayLength(MDefinition *obj);
