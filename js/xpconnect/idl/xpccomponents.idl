@@ -341,7 +341,8 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * Returns an object created in |vobj|'s compartment.
      * If defineAs property on the options object is a non-null ID,
-     * the new object will be added to vobj as a property.
+     * the new object will be added to vobj as a property. Also, the
+     * returned new object is always automatically waived (see waiveXrays).
      */
     [implicit_jscontext]
     jsval createObjectIn(in jsval vobj, [optional] in jsval voptions);

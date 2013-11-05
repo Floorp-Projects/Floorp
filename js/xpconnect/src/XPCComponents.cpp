@@ -3025,6 +3025,7 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
         JS_ReportError(cx, "Permission denied to create object in the target scope");
         return false;
     }
+
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
@@ -3034,15 +3035,15 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
 
         if (!JSID_IS_VOID(options.defineAs) &&
             !JS_DefinePropertyById(cx, scope, options.defineAs, ObjectValue(*obj),
-                                       JS_PropertyStub, JS_StrictPropertyStub,
-                                       JSPROP_ENUMERATE))
+                                   JS_PropertyStub, JS_StrictPropertyStub,
+                                   JSPROP_ENUMERATE))
             return false;
     }
 
-    if (!JS_WrapObject(cx, &obj))
+    rval.setObject(*obj);
+    if (!WrapperFactory::WaiveXrayAndWrap(cx, rval))
         return false;
 
-    rval.setObject(*obj);
     return true;
 }
 
