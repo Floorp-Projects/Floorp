@@ -215,6 +215,8 @@
 #include "mozilla/dom/XPathEvaluator.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIStructuredCloneContainer.h"
+#include "nsIMutableArray.h"
+#include "nsContentPermissionHelper.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -10647,17 +10649,11 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsPointerLockPermissionRequest,
                              nsIContentPermissionRequest)
 
 NS_IMETHODIMP
-nsPointerLockPermissionRequest::GetType(nsACString& aType)
+nsPointerLockPermissionRequest::GetTypes(nsIArray** aTypes)
 {
-  aType = "pointerLock";
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPointerLockPermissionRequest::GetAccess(nsACString& aAccess)
-{
-  aAccess = "unused";
-  return NS_OK;
+  return CreatePermissionArray(NS_LITERAL_CSTRING("pointerLock"),
+                               NS_LITERAL_CSTRING("unused"),
+                               aTypes);
 }
 
 NS_IMETHODIMP
@@ -11328,57 +11324,6 @@ nsDocument::Evaluate(const nsAString& aExpression, nsIDOMNode* aContextNode,
   return XPathEvaluator()->Evaluate(aExpression, aContextNode, aResolver, aType,
                                     aInResult, aResult);
 } 
-
-// This is just a hack around the fact that window.document is not
-// [Unforgeable] yet.
-JSObject*
-nsIDocument::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
-{
-  MOZ_ASSERT(IsDOMBinding());
-
-  JS::Rooted<JSObject*> obj(aCx, nsINode::WrapObject(aCx, aScope));
-  if (!obj) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(GetInnerWindow());
-  if (!win) {
-    // No window, nothing else to do here
-    return obj;
-  }
-
-  if (this != win->GetExtantDoc()) {
-    // We're not the current document; we're also done here
-    return obj;
-  }
-
-  JSAutoCompartment ac(aCx, obj);
-
-  JS::Rooted<JS::Value> winVal(aCx);
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsresult rv = nsContentUtils::WrapNative(aCx, obj, win,
-                                           &NS_GET_IID(nsIDOMWindow),
-                                           &winVal,
-                                           getter_AddRefs(holder),
-                                           false);
-  if (NS_FAILED(rv)) {
-    Throw(aCx, rv);
-    return nullptr;
-  }
-
-  NS_NAMED_LITERAL_STRING(doc_str, "document");
-
-  if (!JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(winVal),
-                           reinterpret_cast<const jschar *>
-                                           (doc_str.get()),
-                           doc_str.Length(), JS::ObjectValue(*obj),
-                           JS_PropertyStub, JS_StrictPropertyStub,
-                           JSPROP_READONLY | JSPROP_ENUMERATE)) {
-    return nullptr;
-  }
-
-  return obj;
-}
 
 XPathEvaluator*
 nsIDocument::XPathEvaluator()

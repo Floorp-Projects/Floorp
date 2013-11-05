@@ -154,26 +154,6 @@ protected:
   static int32_t GetArrayIndexFromId(JSContext *cx, JS::Handle<jsid> id,
                                      bool *aIsNumber = nullptr);
 
-  static inline bool IsReadonlyReplaceable(jsid id)
-  {
-    return (id == sParent_id       ||
-            id == sScrollbars_id   ||
-            id == sContent_id      ||
-            id == sMenubar_id      ||
-            id == sToolbar_id      ||
-            id == sLocationbar_id  ||
-            id == sPersonalbar_id  ||
-            id == sStatusbar_id    ||
-            id == sControllers_id  ||
-            id == sScrollX_id      ||
-            id == sScrollY_id      ||
-            id == sScrollMaxX_id   ||
-            id == sScrollMaxY_id   ||
-            id == sLength_id       ||
-            id == sFrames_id       ||
-            id == sSelf_id);
-  }
-
   static nsIXPConnect *sXPConnect;
   static nsIScriptSecurityManager *sSecMan;
 
@@ -183,31 +163,15 @@ protected:
   static bool sIsInitialized;
 
 public:
-  static jsid sParent_id;
-  static jsid sScrollbars_id;
   static jsid sLocation_id;
   static jsid sConstructor_id;
   static jsid s_content_id;
-  static jsid sContent_id;
-  static jsid sMenubar_id;
-  static jsid sToolbar_id;
-  static jsid sLocationbar_id;
-  static jsid sPersonalbar_id;
-  static jsid sStatusbar_id;
-  static jsid sControllers_id;
   static jsid sLength_id;
-  static jsid sScrollX_id;
-  static jsid sScrollY_id;
-  static jsid sScrollMaxX_id;
-  static jsid sScrollMaxY_id;
   static jsid sItem_id;
   static jsid sNamedItem_id;
   static jsid sEnumerate_id;
   static jsid sTop_id;
   static jsid sDocument_id;
-  static jsid sFrames_id;
-  static jsid sSelf_id;
-  static jsid sJava_id;
   static jsid sWrappedJSObject_id;
 };
 
@@ -299,23 +263,8 @@ public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj) MOZ_OVERRIDE;
   NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto) MOZ_OVERRIDE;
-#ifdef DEBUG
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj) MOZ_OVERRIDE
-  {
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
-
-    NS_ASSERTION(!sgo || sgo->GetGlobalJSObject() == nullptr,
-                 "Multiple wrappers created for global object!");
-
-    return NS_OK;
-  }
-  virtual uint32_t GetScriptableFlags() MOZ_OVERRIDE
-  {
-    return nsDOMGenericSH::GetScriptableFlags() |
-           nsIXPCScriptable::WANT_POSTCREATE;
-  }
-#endif
+                        JSObject *obj) MOZ_OVERRIDE;
   NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, bool *_retval) MOZ_OVERRIDE;
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
