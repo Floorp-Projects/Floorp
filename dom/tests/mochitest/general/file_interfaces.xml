@@ -9,7 +9,7 @@
         var is = win.is;
         var todo_is = win.todo_is;
         var ok = win.ok;
-        var excludedNames = win.excludedNames;
+        var legacyMozPrefixedInterfaces = win.legacyMozPrefixedInterfaces;
         var createInterfaceMap = win.createInterfaceMap;
         eval(win.runTest.toString());
         runTest(true);

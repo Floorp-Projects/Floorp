@@ -489,10 +489,6 @@ public:
     // Retrieve the resolution that a low precision buffer should render at.
     static float GetLowPrecisionResolution();
 
-    // Retain some invalid tiles when the valid region of a layer changes and
-    // excludes previously valid tiles.
-    static bool UseReusableTileStore();
-
     static bool OffMainThreadCompositingEnabled();
 
     /** Use gfxPlatform::GetPref* methods instead of direct calls to Preferences

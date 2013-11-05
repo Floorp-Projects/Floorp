@@ -6,33 +6,43 @@
 #ifndef mozilla_dom_workers_xmlhttprequestupload_h__
 #define mozilla_dom_workers_xmlhttprequestupload_h__
 
-#include "mozilla/dom/workers/bindings/XMLHttpRequestEventTarget.h"
+#include "nsXMLHttpRequest.h"
 
 BEGIN_WORKERS_NAMESPACE
 
 class XMLHttpRequest;
 
-class XMLHttpRequestUpload : public XMLHttpRequestEventTarget
+class XMLHttpRequestUpload MOZ_FINAL : public nsXHREventTarget
 {
-  XMLHttpRequest* mXHR;
+  nsRefPtr<XMLHttpRequest> mXHR;
 
-protected:
-  XMLHttpRequestUpload(JSContext* aCx, XMLHttpRequest* aXHR)
-  : XMLHttpRequestEventTarget(aCx), mXHR(aXHR)
-  { }
+  XMLHttpRequestUpload(XMLHttpRequest* aXHR);
 
-  virtual ~XMLHttpRequestUpload()
-  { }
+  ~XMLHttpRequestUpload();
 
 public:
-  static XMLHttpRequestUpload*
-  Create(JSContext* aCx, XMLHttpRequest* aXHR);
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  virtual void
-  _trace(JSTracer* aTrc) MOZ_OVERRIDE;
+  static already_AddRefed<XMLHttpRequestUpload>
+  Create(XMLHttpRequest* aXHR);
 
-  virtual void
-  _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLHttpRequestUpload, nsXHREventTarget)
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsISupports*
+  GetParentObject() const
+  {
+    // There's only one global on a worker, so we don't need to specify.
+    return nullptr;
+  }
+
+  bool
+  HasListeners()
+  {
+    return mListenerManager && mListenerManager->HasListeners();
+  }
 };
 
 END_WORKERS_NAMESPACE
