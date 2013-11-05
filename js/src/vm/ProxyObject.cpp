@@ -43,7 +43,7 @@ ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, Tag
     NewObjectKind newKind =
         (clasp == &OuterWindowProxyObject::class_ || options.singleton()) ? SingletonObject : GenericObject;
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
-    if (!options.forceForegroundFinalization() && handler->finalizeInBackground(priv))
+    if (handler->finalizeInBackground(priv))
         allocKind = GetBackgroundAllocKind(allocKind);
     RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind));
     if (!obj)

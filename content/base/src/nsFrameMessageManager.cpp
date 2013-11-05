@@ -53,7 +53,7 @@ using namespace mozilla::dom::ipc;
 
 static PLDHashOperator
 CycleCollectorTraverseListeners(const nsAString& aKey,
-                                nsTArray<nsMessageListenerInfo>* aListeners,
+                                nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
                                 void* aCb)
 {
   nsCycleCollectionTraversalCallback* cb =
@@ -61,7 +61,7 @@ CycleCollectorTraverseListeners(const nsAString& aKey,
   uint32_t count = aListeners->Length();
   for (uint32_t i = 0; i < count; ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "listeners[i] mStrongListener");
-    cb->NoteXPCOMChild((*aListeners)[i].mStrongListener.get());
+    cb->NoteXPCOMChild(aListeners->ElementAt(i).mStrongListener.get());
   }
   return PL_DHASH_NEXT;
 }
@@ -258,14 +258,15 @@ NS_IMETHODIMP
 nsFrameMessageManager::AddMessageListener(const nsAString& aMessage,
                                           nsIMessageListener* aListener)
 {
-  nsTArray<nsMessageListenerInfo>* listeners = mListeners.Get(aMessage);
+  nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
+    mListeners.Get(aMessage);
   if (!listeners) {
-    listeners = new nsTArray<nsMessageListenerInfo>();
+    listeners = new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
     mListeners.Put(aMessage, listeners);
   } else {
     uint32_t len = listeners->Length();
     for (uint32_t i = 0; i < len; ++i) {
-      if ((*listeners)[i].mStrongListener == aListener) {
+      if (listeners->ElementAt(i).mStrongListener == aListener) {
         return NS_OK;
       }
     }
@@ -281,14 +282,15 @@ NS_IMETHODIMP
 nsFrameMessageManager::RemoveMessageListener(const nsAString& aMessage,
                                              nsIMessageListener* aListener)
 {
-  nsTArray<nsMessageListenerInfo>* listeners = mListeners.Get(aMessage);
+  nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
+    mListeners.Get(aMessage);
   if (!listeners) {
     return NS_OK;
   }
 
   uint32_t len = listeners->Length();
   for (uint32_t i = 0; i < len; ++i) {
-    if ((*listeners)[i].mStrongListener == aListener) {
+    if (listeners->ElementAt(i).mStrongListener == aListener) {
       listeners->RemoveElementAt(i);
       return NS_OK;
     }
@@ -305,7 +307,7 @@ typedef struct
 
 static PLDHashOperator
 CanonicalChecker(const nsAString& aKey,
-                 nsTArray<nsMessageListenerInfo>* aListeners,
+                 nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
                  void* aParams)
 {
   CanonicalCheckerParams* params =
@@ -313,13 +315,13 @@ CanonicalChecker(const nsAString& aKey,
 
   uint32_t count = aListeners->Length();
   for (uint32_t i = 0; i < count; i++) {
-    if (!(*aListeners)[i].mWeakListener) {
+    if (!aListeners->ElementAt(i).mWeakListener) {
       continue;
     }
     nsCOMPtr<nsISupports> otherCanonical =
-      do_QueryReferent((*aListeners)[i].mWeakListener);
+      do_QueryReferent(aListeners->ElementAt(i).mWeakListener);
     MOZ_ASSERT((params->mCanonical == otherCanonical) ==
-               (params->mWeak == (*aListeners)[i].mWeakListener));
+               (params->mWeak == aListeners->ElementAt(i).mWeakListener));
   }
   return PL_DHASH_NEXT;
 }
@@ -344,14 +346,15 @@ nsFrameMessageManager::AddWeakMessageListener(const nsAString& aMessage,
   mListeners.EnumerateRead(CanonicalChecker, (void*)&params);
 #endif
 
-  nsTArray<nsMessageListenerInfo>* listeners = mListeners.Get(aMessage);
+  nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
+    mListeners.Get(aMessage);
   if (!listeners) {
-    listeners = new nsTArray<nsMessageListenerInfo>();
+    listeners = new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
     mListeners.Put(aMessage, listeners);
   } else {
     uint32_t len = listeners->Length();
     for (uint32_t i = 0; i < len; ++i) {
-      if ((*listeners)[i].mWeakListener == weak) {
+      if (listeners->ElementAt(i).mWeakListener == weak) {
         return NS_OK;
       }
     }
@@ -369,14 +372,15 @@ nsFrameMessageManager::RemoveWeakMessageListener(const nsAString& aMessage,
   nsWeakPtr weak = do_GetWeakReference(aListener);
   NS_ENSURE_TRUE(weak, NS_OK);
 
-  nsTArray<nsMessageListenerInfo>* listeners = mListeners.Get(aMessage);
+  nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
+    mListeners.Get(aMessage);
   if (!listeners) {
     return NS_OK;
   }
 
   uint32_t len = listeners->Length();
   for (uint32_t i = 0; i < len; ++i) {
-    if ((*listeners)[i].mWeakListener == weak) {
+    if (listeners->ElementAt(i).mWeakListener == weak) {
       listeners->RemoveElementAt(i);
       return NS_OK;
     }
@@ -840,18 +844,22 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       InfallibleTArray<nsString>* aJSONRetVal)
 {
   AutoSafeJSContext ctx;
-  nsTArray<nsMessageListenerInfo>* listeners = mListeners.Get(aMessage);
+  nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
+    mListeners.Get(aMessage);
   if (listeners) {
 
     MMListenerRemover lr(this);
 
-    for (uint32_t i = 0; i < listeners->Length(); ++i) {
+    nsAutoTObserverArray<nsMessageListenerInfo, 1>::EndLimitedIterator
+      iter(*listeners);
+    while(iter.HasMore()) {
+      nsMessageListenerInfo& listener = iter.GetNext();
       // Remove mListeners[i] if it's an expired weak listener.
       nsCOMPtr<nsISupports> weakListener;
-      if ((*listeners)[i].mWeakListener) {
-        weakListener = do_QueryReferent((*listeners)[i].mWeakListener);
+      if (listener.mWeakListener) {
+        weakListener = do_QueryReferent(listener.mWeakListener);
         if (!weakListener) {
-          listeners->RemoveElementAt(i--);
+          listeners->RemoveElement(listener);
           continue;
         }
       }
@@ -860,7 +868,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       if (weakListener) {
         wrappedJS = do_QueryInterface(weakListener);
       } else {
-        wrappedJS = do_QueryInterface((*listeners)[i].mStrongListener);
+        wrappedJS = do_QueryInterface(listener.mStrongListener);
       }
 
       if (!wrappedJS) {
@@ -1088,7 +1096,7 @@ NS_IMPL_ISUPPORTS1(MessageManagerReporter, nsIMemoryReporter)
 
 static PLDHashOperator
 CollectMessageListenerData(const nsAString& aKey,
-                           nsTArray<nsMessageListenerInfo>* aListeners,
+                           nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
                            void* aData)
 {
   MessageManagerReferentCount* referentCount =
@@ -1112,7 +1120,8 @@ CollectMessageListenerData(const nsAString& aKey,
   }
 
   for (uint32_t i = 0; i < listenerCount; ++i) {
-    const nsMessageListenerInfo& listenerInfo = (*aListeners)[i];
+    const nsMessageListenerInfo& listenerInfo =
+      aListeners->ElementAt(i);
     if (listenerInfo.mWeakListener) {
       nsCOMPtr<nsISupports> referent =
         do_QueryReferent(listenerInfo.mWeakListener);
@@ -1779,13 +1788,13 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
 
 static PLDHashOperator
 CycleCollectorMarkListeners(const nsAString& aKey,
-                            nsTArray<nsMessageListenerInfo>* aListeners,
+                            nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
                             void* aData)
 {
   uint32_t count = aListeners->Length();
   for (uint32_t i = 0; i < count; i++) {
-    if ((*aListeners)[i].mStrongListener) {
-      xpc_TryUnmarkWrappedGrayObject((*aListeners)[i].mStrongListener);
+    if (aListeners->ElementAt(i).mStrongListener) {
+      xpc_TryUnmarkWrappedGrayObject(aListeners->ElementAt(i).mStrongListener);
     }
   }
   return PL_DHASH_NEXT;

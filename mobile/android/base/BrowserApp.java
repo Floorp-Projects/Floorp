@@ -37,7 +37,6 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -1472,15 +1471,6 @@ abstract public class BrowserApp extends GeckoApp
                 // using the default search engine.
                 if (TextUtils.isEmpty(keywordUrl)) {
                     Tabs.getInstance().loadUrl(url, Tabs.LOADURL_USER_ENTERED);
-                    return;
-                }
-
-                // If the keywordUrl is in ReadingList, convert the url to an about:reader url and load it.
-                final ContentResolver cr = getContentResolver();
-                final boolean inReadingList = BrowserDB.isReadingListItem(cr, keywordUrl);
-                if (inReadingList) {
-                    final String readerUrl = ReaderModeUtils.getAboutReaderForUrl(keywordUrl);
-                    Tabs.getInstance().loadUrl(readerUrl, Tabs.LOADURL_USER_ENTERED);
                     return;
                 }
 

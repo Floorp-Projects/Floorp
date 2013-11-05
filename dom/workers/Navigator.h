@@ -38,7 +38,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WorkerNavigator)
 
   static already_AddRefed<WorkerNavigator>
-  Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+  Create();
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

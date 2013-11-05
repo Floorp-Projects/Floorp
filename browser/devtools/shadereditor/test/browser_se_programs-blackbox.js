@@ -55,9 +55,9 @@ function ifWebGLSupported() {
   is(getBlackBoxCheckbox(panel, 1).checked, true,
     "The second blackbox checkbox should still be checked.");
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
   yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
   ok(true, "The first program was correctly blackboxed.");
 
@@ -72,35 +72,35 @@ function ifWebGLSupported() {
   is(getBlackBoxCheckbox(panel, 1).checked, false,
     "The second blackbox checkbox should now be unchecked.");
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas2");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas2");
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas2");
   ok(true, "The second program was correctly blackboxed.");
 
-  ShadersListView._onShaderMouseEnter({ target: getItemLabel(panel, 0) });
+  ShadersListView._onProgramMouseEnter({ target: getItemLabel(panel, 0) });
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas2");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas2");
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas2");
   ok(true, "Highlighting didn't work while blackboxed (1).");
 
-  ShadersListView._onShaderMouseLeave({ target: getItemLabel(panel, 0) });
-  ShadersListView._onShaderMouseEnter({ target: getItemLabel(panel, 1) });
+  ShadersListView._onProgramMouseLeave({ target: getItemLabel(panel, 0) });
+  ShadersListView._onProgramMouseEnter({ target: getItemLabel(panel, 1) });
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas2");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas2");
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas2");
   ok(true, "Highlighting didn't work while blackboxed (2).");
 
-  ShadersListView._onShaderMouseLeave({ target: getItemLabel(panel, 1) });
+  ShadersListView._onProgramMouseLeave({ target: getItemLabel(panel, 1) });
 
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas2");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas1");
-  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 0 }, true, "#canvas2");
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas2");
+  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas1");
+  yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 0, b: 0, a: 255 }, true, "#canvas2");
   ok(true, "Highlighting didn't work while blackboxed (3).");
 
   getBlackBoxCheckbox(panel, 0).click();
@@ -121,7 +121,7 @@ function ifWebGLSupported() {
   yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
   ok(true, "The two programs were correctly unblackboxed.");
 
-  ShadersListView._onShaderMouseEnter({ target: getItemLabel(panel, 0) });
+  ShadersListView._onProgramMouseEnter({ target: getItemLabel(panel, 0) });
 
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true, "#canvas1");
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
@@ -129,8 +129,8 @@ function ifWebGLSupported() {
   yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
   ok(true, "The first program was correctly highlighted.");
 
-  ShadersListView._onShaderMouseLeave({ target: getItemLabel(panel, 0) });
-  ShadersListView._onShaderMouseEnter({ target: getItemLabel(panel, 1) });
+  ShadersListView._onProgramMouseLeave({ target: getItemLabel(panel, 0) });
+  ShadersListView._onProgramMouseEnter({ target: getItemLabel(panel, 1) });
 
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true, "#canvas2");
@@ -138,7 +138,7 @@ function ifWebGLSupported() {
   yield ensurePixelIs(debuggee, { x: 127, y: 127 }, { r: 255, g: 0, b: 0, a: 255 }, true, "#canvas2");
   ok(true, "The second program was correctly highlighted.");
 
-  ShadersListView._onShaderMouseLeave({ target: getItemLabel(panel, 1) });
+  ShadersListView._onProgramMouseLeave({ target: getItemLabel(panel, 1) });
 
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 255, b: 0, a: 255 }, true, "#canvas1");
   yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");

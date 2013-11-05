@@ -8,9 +8,6 @@
 #define mozilla_dom_TabChild_h
 
 #include "mozilla/dom/PBrowserChild.h"
-#ifdef DEBUG
-#include "PCOMContentPermissionRequestChild.h"
-#endif /* DEBUG */
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -270,15 +267,10 @@ public:
                                nsIDialogParamBlock* aParams);
 
 #ifdef DEBUG
-    virtual PContentPermissionRequestChild* SendPContentPermissionRequestConstructor(PContentPermissionRequestChild* aActor,
-                                                                                     const InfallibleTArray<PermissionRequest>& aRequests,
-                                                                                     const IPC::Principal& aPrincipal)
-    {
-      PCOMContentPermissionRequestChild* child = static_cast<PCOMContentPermissionRequestChild*>(aActor);
-      PContentPermissionRequestChild* request = PBrowserChild::SendPContentPermissionRequestConstructor(aActor, aRequests, aPrincipal);
-      child->mIPCOpen = true;
-      return request;
-    }
+    virtual PContentPermissionRequestChild*
+    SendPContentPermissionRequestConstructor(PContentPermissionRequestChild* aActor,
+                                             const InfallibleTArray<PermissionRequest>& aRequests,
+                                             const IPC::Principal& aPrincipal);
 #endif /* DEBUG */
 
     virtual PContentPermissionRequestChild* AllocPContentPermissionRequestChild(const InfallibleTArray<PermissionRequest>& aRequests,

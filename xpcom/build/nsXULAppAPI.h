@@ -453,7 +453,7 @@ XRE_API(void,
         XRE_InitOmnijar, (nsIFile* greOmni,
                           nsIFile* appOmni))
 XRE_API(void,
-        XRE_DisableWritePoisoning, (void))
+        XRE_StopLateWriteChecks, (void))
 
 #ifdef XP_WIN
 /**
