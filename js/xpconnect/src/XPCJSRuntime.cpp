@@ -588,25 +588,32 @@ GetJunkScopeGlobal()
 }
 
 nsGlobalWindow*
-WindowGlobalOrNull(JSObject *aObj)
+WindowOrNull(JSObject *aObj)
 {
     MOZ_ASSERT(aObj);
-    JSObject *glob = js::GetGlobalForObjectCrossCompartment(aObj);
-    MOZ_ASSERT(glob);
 
     // This will always return null until we have Window on WebIDL bindings,
     // at which point it will do the right thing.
-    if (!IS_WN_CLASS(js::GetObjectClass(glob))) {
+    if (!IS_WN_CLASS(js::GetObjectClass(aObj))) {
         nsGlobalWindow* win = nullptr;
-        UNWRAP_OBJECT(Window, glob, win);
+        UNWRAP_OBJECT(Window, aObj, win);
         return win;
     }
 
-    nsISupports* supports = XPCWrappedNative::Get(glob)->GetIdentityObject();
+    nsISupports* supports = XPCWrappedNative::Get(aObj)->GetIdentityObject();
     nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(supports);
     if (!piWin)
         return nullptr;
     return static_cast<nsGlobalWindow*>(piWin.get());
+}
+
+nsGlobalWindow*
+WindowGlobalOrNull(JSObject *aObj)
+{
+    MOZ_ASSERT(aObj);
+    JSObject *glob = js::GetGlobalForObjectCrossCompartment(aObj);
+
+    return WindowOrNull(glob);
 }
 
 }
