@@ -415,6 +415,8 @@ WEBIDL_FILES = [
     'WebSocket.webidl',
     'WheelEvent.webidl',
     'WifiOptions.webidl',
+    'Window.webidl',
+    'Worker.webidl',
     'WorkerLocation.webidl',
     'WorkerMessagePort.webidl',
     'WorkerNavigator.webidl',
