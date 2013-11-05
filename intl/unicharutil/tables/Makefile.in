@@ -5,19 +5,7 @@
 
 include $(topsrcdir)/config/rules.mk
 
-_PROP_TABLES = \
-	htmlEntityVersions.properties \
-	html40Latin1.properties \
-	html40Symbols.properties \
-	html40Special.properties \
-	transliterate.properties \
-	mathml20.properties \
-	$(NULL)
-
 ifeq ($(MOZ_WIDGET_TOOLKIT), qt)
 CFLAGS          += $(MOZ_QT_CFLAGS)
 CXXFLAGS        += $(MOZ_QT_CFLAGS)
 endif
-
-libs:: $(_PROP_TABLES)
-	$(INSTALL) $^ $(DIST)/bin/res/entityTables

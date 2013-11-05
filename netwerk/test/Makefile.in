@@ -17,12 +17,6 @@ include $(topsrcdir)/config/rules.mk
 check::
 	$(RUN_TEST_PROGRAM) $(DIST)/bin/TestCookie$(BIN_SUFFIX)
 
-_RES_FILES 	= urlparse.dat \
-		  urlparse_unx.dat \
-		  $(NULL)
-libs:: $(_RES_FILES)
-	$(INSTALL) $^ $(DIST)/bin/res
-
 # One of the xpcshell unit tests needs this file, so make sure it winds
 #  up in the test directory.
 libs::

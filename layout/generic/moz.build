@@ -127,3 +127,7 @@ LOCAL_INCLUDES += [
 ]
 
 JAR_MANIFESTS += ['jar.mn']
+
+RESOURCE_FILES.html = [
+    'folder.png',
+]

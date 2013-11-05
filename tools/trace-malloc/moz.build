@@ -39,3 +39,7 @@ SOURCES += [
 ]
 
 SIMPLE_PROGRAMS += simple_cpp_sources
+
+RESOURCE_FILES += [
+    'spacetrace.css'
+]
