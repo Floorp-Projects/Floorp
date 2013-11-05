@@ -12,16 +12,13 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource:///modules/sessionstore/Utils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource:///modules/sessionstore/PrivacyLevel.jsm");
 
 // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision.
 const MAX_EXPIRY = Math.pow(2, 62);
-
-// Creates a new nsIURI object.
-function makeURI(uri) {
-  return Services.io.newURI(uri, null, null);
-}
 
 /**
  * The external API implemented by the SessionCookies module.
@@ -172,7 +169,7 @@ let SessionCookiesInternal = {
     // urls in which case we don't need to do anything.
     if (!host && !scheme) {
       try {
-        let uri = makeURI(entry.url);
+        let uri = Utils.makeURI(entry.url);
         host = uri.host;
         scheme = uri.scheme;
         this._extractHostsFromHostScheme(host, scheme, hosts, checkPrivacy, isPinned);

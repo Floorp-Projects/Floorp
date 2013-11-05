@@ -23,23 +23,10 @@ var gMainPane = {
 
     this.updateBrowserStartupLastSession();
 
-    this.setupDownloadsWindowOptions();
-
     // Notify observers that the UI is now ready
     Components.classes["@mozilla.org/observer-service;1"]
               .getService(Components.interfaces.nsIObserverService)
               .notifyObservers(window, "main-pane-loaded", null);
-  },
-
-  setupDownloadsWindowOptions: function ()
-  {
-    let showWhenDownloading = document.getElementById("showWhenDownloading");
-    let closeWhenDone = document.getElementById("closeWhenDone");
-
-    // These radio buttons should be hidden when the Downloads Panel is enabled.
-    let shouldHide = !DownloadsCommon.useToolkitUI;
-    showWhenDownloading.hidden = shouldHide;
-    closeWhenDone.hidden = shouldHide;
   },
 
   // HOME PAGE
@@ -185,12 +172,6 @@ var gMainPane = {
   /*
    * Preferences:
    * 
-   * browser.download.showWhenStarting - bool
-   *   True if the Download Manager should be opened when a download is
-   *   started, false if it shouldn't be opened.
-   * browser.download.closeWhenDone - bool
-   *   True if the Download Manager should be closed when all downloads
-   *   complete, false if it should be left open.
    * browser.download.useDownloadDir - bool
    *   True - Save files directly to the folder configured via the
    *   browser.download.folderList preference.
@@ -217,30 +198,6 @@ var gMainPane = {
    * browser.download.defaultFolder
    *   deprecated.
    */
-
-  /**
-   * Updates preferences which depend upon the value of the preference which
-   * determines whether the Downloads manager is opened at the start of a
-   * download.
-   */
-  readShowDownloadsWhenStarting: function ()
-  {
-    this.showDownloadsWhenStartingPrefChanged();
-
-    // don't override the preference's value in UI
-    return undefined;
-  },
-
-  /**
-   * Enables or disables the "close Downloads manager when downloads finished"
-   * preference element, consequently updating the associated UI.
-   */
-  showDownloadsWhenStartingPrefChanged: function ()
-  {
-    var showWhenStartingPref = document.getElementById("browser.download.manager.showWhenStarting");
-    var closeWhenDonePref = document.getElementById("browser.download.manager.closeWhenDone");
-    closeWhenDonePref.disabled = !showWhenStartingPref.value;
-  },
 
   /**
    * Enables/disables the folder field and Browse button based on whether a

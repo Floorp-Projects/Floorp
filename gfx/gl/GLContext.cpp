@@ -116,6 +116,10 @@ static const char *sExtensionNames[] = {
     "GL_EXT_transform_feedback",
     "GL_NV_transform_feedback",
     "GL_ANGLE_depth_texture",
+    "GL_EXT_sRGB",
+    "GL_EXT_texture_sRGB",
+    "GL_ARB_framebuffer_sRGB",
+    "GL_EXT_framebuffer_sRGB",
     "GL_KHR_debug",
     nullptr
 };
@@ -599,7 +603,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (Renderer() == RendererAdrenoTM320) {
                 MarkUnsupported(GLFeature::standard_derivatives);
             }
-            
+
 #ifdef XP_MACOSX
             // The Mac Nvidia driver, for versions up to and including 10.8, don't seem
             // to properly support this.  See 814839
@@ -1203,6 +1207,29 @@ GLContext::CanUploadSubTextures()
 
     return true;
 }
+
+
+bool
+GLContext::CanReadSRGBFromFBOTexture()
+{
+    if (!mWorkAroundDriverBugs)
+        return true;
+
+#ifdef XP_MACOSX
+    // Bug 843668:
+    // MacOSX 10.6 reports to support EXT_framebuffer_sRGB and
+    // EXT_texture_sRGB but fails to convert from sRGB to linear
+    // when writing to an sRGB texture attached to an FBO.
+    SInt32 major, minor;
+    ::Gestalt(gestaltSystemVersionMajor, &major);
+    ::Gestalt(gestaltSystemVersionMinor, &minor);
+    if (major == 10 && minor <= 6) {
+        return false;
+    }
+#endif // XP_MACOSX
+    return true;
+}
+
 
 bool GLContext::sPowerOfTwoForced = false;
 bool GLContext::sPowerOfTwoPrefCached = false;

@@ -13,11 +13,15 @@ MODULE = 'components'
 # metro/components.manifest
 EXTRA_COMPONENTS += [
     'AlertsService.js',
+    'BrowserStartup.js',
     'ContentDispatchChooser.js',
     'ContentPermissionPrompt.js',
+    'DirectoryProvider.js',
     'DownloadManagerUI.js',
+    'HelperAppDialog.js',
     'LoginManagerPrompter.js',
     'PromptService.js',
+    'Sidebar.js',
 ]
 
 if CONFIG['MOZ_SAFE_BROWSING']:
@@ -28,10 +32,6 @@ if CONFIG['MOZ_SAFE_BROWSING']:
 EXTRA_PP_COMPONENTS += [
     'AboutRedirector.js',
     'BrowserCLH.js',
-    'BrowserStartup.js',
     'components.manifest',
-    'DirectoryProvider.js',
-    'HelperAppDialog.js',
     'SessionStore.js',
-    'Sidebar.js',
 ]
