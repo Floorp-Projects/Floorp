@@ -10,8 +10,6 @@ MOCHITEST_BROWSER_FILES = \
   data.json \
   echo.sjs \
   worker_xhr.js \
-  browser_frameworker.js \
-  browser_frameworker_sandbox.js \
   worker_relative.js \
   relative_import.js \
   browser_workerAPI.js \
@@ -22,5 +20,13 @@ MOCHITEST_BROWSER_FILES = \
   eventsource.resource \
   eventsource.resource^headers^ \
   $(NULL)
+
+ifndef MOZ_ASAN
+# These tests are currently unreliable on ASAN builds with remote frameworkers.
+MOCHITEST_BROWSER_FILES += \
+  browser_frameworker.js \
+  browser_frameworker_sandbox.js \
+  $(NULL)
+endif
 
 endif
