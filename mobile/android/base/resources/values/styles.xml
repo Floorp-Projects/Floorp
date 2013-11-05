@@ -536,6 +536,7 @@
         <item name="android:textAppearance">?android:textAppearanceSmall</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxWidth">160dp</item>
         <item name="android:textColor">#fff</item>
         <item name="android:layout_gravity">center_vertical</item>
     </style>
