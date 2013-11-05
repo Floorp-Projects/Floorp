@@ -143,26 +143,29 @@ struct nsContentListKey
                    const nsAString& aTagname)
     : mRootNode(aRootNode),
       mMatchNameSpaceId(aMatchNameSpaceId),
-      mTagname(aTagname)
+      mTagname(aTagname),
+      mHash(mozilla::AddToHash(mozilla::HashString(aTagname), mRootNode,
+                               mMatchNameSpaceId))
   {
   }
 
   nsContentListKey(const nsContentListKey& aContentListKey)
     : mRootNode(aContentListKey.mRootNode),
       mMatchNameSpaceId(aContentListKey.mMatchNameSpaceId),
-      mTagname(aContentListKey.mTagname)
+      mTagname(aContentListKey.mTagname),
+      mHash(aContentListKey.mHash)
   {
   }
 
   inline uint32_t GetHash(void) const
   {
-    uint32_t hash = mozilla::HashString(mTagname);
-    return mozilla::AddToHash(hash, mRootNode, mMatchNameSpaceId);
+    return mHash;
   }
   
   nsINode* const mRootNode; // Weak ref
   const int32_t mMatchNameSpaceId;
   const nsAString& mTagname;
+  const uint32_t mHash;
 };
 
 /**
