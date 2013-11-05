@@ -18,8 +18,7 @@ endif
 xpcAccEvents.cpp: $(srcdir)/AccEvents.conf \
                      $(srcdir)/AccEventGen.py \
                      $(LIBXUL_DIST)/sdk/bin/header.py \
-                     $(LIBXUL_DIST)/sdk/bin/xpidl.py \
-                     $(DEPTH)/js/src/js-confdefs.h
+                     $(LIBXUL_DIST)/sdk/bin/xpidl.py
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/AccEventGen.py \

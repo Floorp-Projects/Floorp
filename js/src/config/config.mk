@@ -195,9 +195,8 @@ MOZ_PSEUDO_DERECURSE :=
 endif
 endif
 
-# Disable MOZ_PSEUDO_DERECURSE on the second PGO pass until it's widely
-# tested.
-ifdef MOZ_PROFILE_USE
+# Disable MOZ_PSEUDO_DERECURSE on PGO builds until it's fixed.
+ifneq (,$(MOZ_PROFILE_USE)$(MOZ_PROFILE_GENERATE))
 MOZ_PSEUDO_DERECURSE :=
 endif
 

@@ -16,6 +16,12 @@ int min_log_level = 0;
 namespace logging
 {
 
+DcheckState g_dcheck_state = DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS;
+
+DcheckState get_dcheck_state() {
+  return g_dcheck_state;
+}
+
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
                        int ctr) :
   line_(line)

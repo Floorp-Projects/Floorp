@@ -57,6 +57,8 @@ namespace JS {
 class Value;
 template <typename T> class Handle;
 template <typename T> class MutableHandle;
+template <typename T> class Rooted;
+template <typename T> class PersistentRooted;
 
 typedef Handle<JSFunction*> HandleFunction;
 typedef Handle<jsid>        HandleId;
@@ -71,6 +73,20 @@ typedef MutableHandle<JSObject*>   MutableHandleObject;
 typedef MutableHandle<JSScript*>   MutableHandleScript;
 typedef MutableHandle<JSString*>   MutableHandleString;
 typedef MutableHandle<Value>       MutableHandleValue;
+
+typedef Rooted<JSObject*>       RootedObject;
+typedef Rooted<JSFunction*>     RootedFunction;
+typedef Rooted<JSScript*>       RootedScript;
+typedef Rooted<JSString*>       RootedString;
+typedef Rooted<jsid>            RootedId;
+typedef Rooted<JS::Value>       RootedValue;
+
+typedef PersistentRooted<JSFunction*> PersistentRootedFunction;
+typedef PersistentRooted<jsid>        PersistentRootedId;
+typedef PersistentRooted<JSObject*>   PersistentRootedObject;
+typedef PersistentRooted<JSScript*>   PersistentRootedScript;
+typedef PersistentRooted<JSString*>   PersistentRootedString;
+typedef PersistentRooted<Value>       PersistentRootedValue;
 
 } // namespace JS
 

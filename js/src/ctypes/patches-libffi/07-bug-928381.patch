@@ -1,0 +1,31 @@
+# HG changeset patch
+# User Landry Breuil <landry@openbsd.org>
+# Date 1382105758 -7200
+#      Fri Oct 18 16:15:58 2013 +0200
+# Node ID 5f82dae8c495a7fddf5ed935eb2a8be7f47b9bd8
+# Parent  d50df2233e95f4d45b35eddbfbe84bcdda6a11e2
+Bug 928381 - ctypes/libffi: Fix stack alignment on *BSD/i386 r=glandium
+
+diff --git a/js/src/ctypes/libffi/src/x86/freebsd.S b/js/src/ctypes/libffi/src/x86/freebsd.S
+--- a/js/src/ctypes/libffi/src/x86/freebsd.S
++++ b/js/src/ctypes/libffi/src/x86/freebsd.S
+@@ -44,16 +44,19 @@ ffi_call_SYSV:
+         pushl %ebp
+ .LCFI0:
+         movl  %esp,%ebp
+ .LCFI1:
+ 	/* Make room for all of the new args.  */
+ 	movl  16(%ebp),%ecx
+ 	subl  %ecx,%esp
+ 
++	/* Align the stack pointer to 16-bytes */
++	andl  $0xfffffff0, %esp
++
+ 	movl  %esp,%eax
+ 
+ 	/* Place all of the ffi_prep_args in position  */
+ 	pushl 12(%ebp)
+ 	pushl %eax
+ 	call  *8(%ebp)
+ 
+ 	/* Return stack to previous state and call the function  */

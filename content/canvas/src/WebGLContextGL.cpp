@@ -584,7 +584,7 @@ WebGLContext::CopyTexImage2D(GLenum target,
 
         sizeMayChange = width != imageInfo.Width() ||
                         height != imageInfo.Height() ||
-                        internalformat != imageInfo.Format() ||
+                        internalformat != imageInfo.InternalFormat() ||
                         type != imageInfo.Type();
     }
 
@@ -661,7 +661,7 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
     if (yoffset + height > texHeight || yoffset + height < 0)
       return ErrorInvalidValue("copyTexSubImage2D: yoffset+height is too large");
 
-    GLenum format = imageInfo.Format();
+    GLenum format = imageInfo.InternalFormat();
     bool texFormatRequiresAlpha = format == LOCAL_GL_RGBA ||
                                   format == LOCAL_GL_ALPHA ||
                                   format == LOCAL_GL_LUMINANCE_ALPHA;
@@ -1045,7 +1045,7 @@ WebGLContext::BindFakeBlackTexturesHelper(
         }
 
         bool alpha = s == WebGLTextureFakeBlackStatus::UninitializedImageData &&
-                     FormatHasAlpha(boundTexturesArray[i]->ImageInfoBase().Format());
+                     FormatHasAlpha(boundTexturesArray[i]->ImageInfoBase().InternalFormat());
         ScopedDeletePtr<FakeBlackTexture>&
             blackTexturePtr = alpha
                               ? transparentTextureScopedPtr
@@ -1205,7 +1205,7 @@ WebGLContext::GenerateMipmap(GLenum target)
     if (!tex->IsFirstImagePowerOfTwo())
         return ErrorInvalidOperation("generateMipmap: Level zero of texture does not have power-of-two width and height.");
 
-    GLenum format = tex->ImageInfoAt(imageTarget, 0).Format();
+    GLenum format = tex->ImageInfoAt(imageTarget, 0).InternalFormat();
     if (IsTextureFormatCompressed(format))
         return ErrorInvalidOperation("generateMipmap: Texture data at level zero is compressed.");
 
@@ -1415,6 +1415,15 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
 
     if (fba.Renderbuffer()) {
         switch (pname) {
+            case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
+                if (IsExtensionEnabled(EXT_sRGB)) {
+                    const GLenum internalFormat = fba.Renderbuffer()->InternalFormat();
+                    return (internalFormat == LOCAL_GL_SRGB_EXT ||
+                            internalFormat == LOCAL_GL_SRGB_ALPHA_EXT ||
+                            internalFormat == LOCAL_GL_SRGB8_ALPHA8_EXT) ?
+                        JS::NumberValue(uint32_t(LOCAL_GL_SRGB_EXT)) :
+                        JS::NumberValue(uint32_t(LOCAL_GL_LINEAR));
+                }
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
                 return JS::NumberValue(uint32_t(LOCAL_GL_RENDERBUFFER));
 
@@ -1429,6 +1438,16 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         }
     } else if (fba.Texture()) {
         switch (pname) {
+             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
+                if (IsExtensionEnabled(EXT_sRGB)) {
+                    const GLenum internalFormat =
+                        fba.Texture()->ImageInfoBase().InternalFormat();
+                    return (internalFormat == LOCAL_GL_SRGB_EXT ||
+                            internalFormat == LOCAL_GL_SRGB_ALPHA_EXT) ?
+                        JS::NumberValue(uint32_t(LOCAL_GL_SRGB_EXT)) :
+                        JS::NumberValue(uint32_t(LOCAL_GL_LINEAR));
+                }
+
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
                 return JS::NumberValue(uint32_t(LOCAL_GL_TEXTURE));
 
@@ -2492,6 +2511,8 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
     case LOCAL_GL_DEPTH_STENCIL:
         // We emulate this in WebGLRenderbuffer if we don't have the requisite extension.
         internalformatForGL = LOCAL_GL_DEPTH24_STENCIL8;
+        break;
+    case LOCAL_GL_SRGB8_ALPHA8_EXT:
         break;
     default:
         return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", internalformat);
@@ -3679,7 +3700,7 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
         const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(target, level);
         sizeMayChange = width != imageInfo.Width() ||
                         height != imageInfo.Height() ||
-                        format != imageInfo.Format() ||
+                        format != imageInfo.InternalFormat() ||
                         type != imageInfo.Type();
     }
     
@@ -3708,18 +3729,8 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
         return;
     }
 
-    switch (format) {
-        case LOCAL_GL_RGB:
-        case LOCAL_GL_RGBA:
-        case LOCAL_GL_ALPHA:
-        case LOCAL_GL_LUMINANCE:
-        case LOCAL_GL_LUMINANCE_ALPHA:
-        case LOCAL_GL_DEPTH_COMPONENT:
-        case LOCAL_GL_DEPTH_STENCIL:
-            break;
-        default:
-            return ErrorInvalidEnumInfo("texImage2D: internal format", internalformat);
-    }
+    if (!ValidateTexImage2DFormat(format, "texImage2D: format"))
+        return;
 
     if (format != internalformat)
         return ErrorInvalidOperation("texImage2D: format does not match internalformat");
@@ -3791,6 +3802,23 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
     // format == internalformat, as checked above and as required by ES.
     internalformat = InternalFormatForFormatAndType(format, type, gl->IsGLES2());
 
+    // Handle ES2 and GL differences when supporting sRGB internal formats. GL ES
+    // requires that format == internalformat, but GL will fail in this case.
+    // GL requires:
+    //      format  ->  internalformat
+    //      GL_RGB      GL_SRGB_EXT
+    //      GL_RGBA     GL_SRGB_ALPHA_EXT
+    if (!gl->IsGLES2()) {
+        switch (internalformat) {
+            case LOCAL_GL_SRGB_EXT:
+                format = LOCAL_GL_RGB;
+                break;
+            case LOCAL_GL_SRGB_ALPHA_EXT:
+                format = LOCAL_GL_RGBA;
+                break;
+        }
+    }
+
     GLenum error = LOCAL_GL_NO_ERROR;
 
     WebGLImageDataStatus imageInfoStatusIfSuccess = WebGLImageDataStatus::NoImageData;
@@ -3839,7 +3867,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
     // have NoImageData at this point.
     MOZ_ASSERT(imageInfoStatusIfSuccess != WebGLImageDataStatus::NoImageData);
 
-    tex->SetImageInfo(target, level, width, height, format, type, imageInfoStatusIfSuccess);
+    tex->SetImageInfo(target, level, width, height, internalformat, type, imageInfoStatusIfSuccess);
 
     ReattachTextureToAnyFramebufferToWorkAroundBugs(tex, level);
 }
@@ -3959,7 +3987,7 @@ WebGLContext::TexSubImage2D_base(GLenum target, GLint level,
         return ErrorInvalidValue("texSubImage2D: subtexture rectangle out of bounds");
     
     // Require the format and type in texSubImage2D to match that of the existing texture as created by texImage2D
-    if (imageInfo.Format() != format || imageInfo.Type() != type)
+    if (imageInfo.InternalFormat() != format || imageInfo.Type() != type)
         return ErrorInvalidOperation("texSubImage2D: format or type doesn't match the existing texture");
 
     if (imageInfo.HasUninitializedImageData()) {
@@ -4157,8 +4185,10 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
     if (type == LOCAL_GL_UNSIGNED_BYTE) {
         switch (format) {
             case LOCAL_GL_RGBA:
+            case LOCAL_GL_SRGB_ALPHA_EXT:
                 return WebGLTexelFormat::RGBA8;
             case LOCAL_GL_RGB:
+            case LOCAL_GL_SRGB_EXT:
                 return WebGLTexelFormat::RGB8;
             case LOCAL_GL_ALPHA:
                 return WebGLTexelFormat::A8;

@@ -136,7 +136,6 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_pointer-events.html \
 		file_position_sticky.html \
 		test_position_sticky.html \
-		test_property_database.html \
 		test_priority_preservation.html \
 		test_property_syntax_errors.html \
 		test_redundant_font_download.html \
@@ -180,7 +179,6 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_visited_pref.html \
 		test_visited_reftests.html \
 		animation_utils.js \
-		css_properties.js \
 		property_database.js \
 		descriptor_database.js \
 		unstyled.xml \
@@ -217,7 +215,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		viewport_units_iframe.html \
 		$(NULL)
 
-_VISITED_REFTEST_FILES = \
+VISITED_REFTEST_FILES = \
 		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \
 		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02.svg \
 		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02-ref.svg \
@@ -225,10 +223,16 @@ _VISITED_REFTEST_FILES = \
 		$(topsrcdir)/layout/reftests/svg/as-image/svg-image-visited-1-helper.svg \
 		$(topsrcdir)/layout/reftests/svg/as-image/svg-image-visited-2-helper.svg \
 		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
+VISITED_REFTEST_DEST = $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/css-visited/
+INSTALL_TARGETS += VISITED_REFTEST
 
 DEFINES += -DMOZILLA_INTERNAL_API
+
+ifdef COMPILE_ENVIRONMENT
+MOCHITEST_FILES += \
+		test_property_database.html \
+		css_properties.js \
+		$(NULL)
 
 css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_longhand.js Makefile
 	$(RM) $@
@@ -236,6 +240,4 @@ css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_
 	cat $(srcdir)/css_properties_like_longhand.js >> $@
 
 GARBAGE += css_properties.js
-
-libs:: $(_VISITED_REFTEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/css-visited/
+endif
