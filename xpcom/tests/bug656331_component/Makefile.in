@@ -7,7 +7,11 @@
 
 FORCE_SHARED_LIB = 1
 
-MANIFEST_FILE = bug656331.manifest
+unittestlocation = xpcom/tests/unit
+
+MANIFEST = bug656331.manifest
+MANIFEST_PATH = $(testxpcobjdir)/$(unittestlocation)
+PP_TARGETS += MANIFEST
 
 EXTRA_DSO_LDOPTS = \
   $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
@@ -22,14 +26,8 @@ EXTRA_DSO_LDOPTS += \
   $(NULL)
 endif
 
-include $(topsrcdir)/config/rules.mk
-
 DEFINES += -DLIBRARY_FILENAME="$(SHARED_LIBRARY)"
 
-unittestlocation = xpcom/tests/unit
-
-libs:: $(SHARED_LIBRARY)
-	$(INSTALL) $^ $(testxpcobjdir)/$(unittestlocation)
-
-libs:: $(MANIFEST_FILE)
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $< > $(testxpcobjdir)/$(unittestlocation)/$(<F)
+LIB_FILES = $(SHARED_LIBRARY)
+LIB_DEST = $(testxpcobjdir)/$(unittestlocation)
+INSTALL_TARGETS += LIB
