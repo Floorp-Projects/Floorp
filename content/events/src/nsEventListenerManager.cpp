@@ -981,7 +981,11 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   }
 
   nsAutoTObserverArray<nsListenerStruct, 2>::EndLimitedIterator iter(mListeners);
-  nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
+  Maybe<nsAutoPopupStatePusher> popupStatePusher;
+  if (mIsMainThreadELM) {
+    popupStatePusher.construct(nsDOMEvent::GetEventPopupControlState(aEvent));
+  }
+
   bool hasListener = false;
   while (iter.HasMore()) {
     if (aEvent->mFlags.mImmediatePropagationStopped) {

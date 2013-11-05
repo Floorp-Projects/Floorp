@@ -1946,6 +1946,8 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
 PopupControlState
 PushPopupControlState(PopupControlState aState, bool aForce)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   PopupControlState oldState = gPopupControlState;
 
   if (aState < gPopupControlState || aForce) {
@@ -1958,6 +1960,8 @@ PushPopupControlState(PopupControlState aState, bool aForce)
 void
 PopPopupControlState(PopupControlState aState)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   gPopupControlState = aState;
 }
 
@@ -1977,6 +1981,7 @@ nsGlobalWindow::PopPopupControlState(PopupControlState aState) const
 PopupControlState
 nsGlobalWindow::GetPopupControlState() const
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return gPopupControlState;
 }
 
