@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(190257e4-64ad-4a5a-8c99-a1166aeaf7a1)]
+[scriptable, uuid(7d3bd945-a9af-497a-97c0-7f69e2d9cd71)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -306,6 +306,25 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     jsval getGlobalForObject(in jsval obj);
+
+    /*
+     * To be called from JS only.
+     *
+     * Instead of simply wrapping a function into another compartment,
+     * this helper function creates a native function in the target
+     * compartment and forwards the call to the original function.
+     * That call will be different than a regular JS function call in
+     * that, the |this| is left unbound, and all the non-native JS
+     * object arguments will be cloned using the structured clone
+     * algorithm.
+     * The return value is the new forwarder function, wrapped into
+     * the caller's compartment.
+     * The 3rd argument is the name of the property that will
+     * be set on the target scope, with the forwarder function as
+     * the value.
+     */
+    [implicit_jscontext]
+    jsval exportFunction(in jsval vfunction, in jsval vscope, in jsval vname);
 
     /*
      * To be called from JS only.
