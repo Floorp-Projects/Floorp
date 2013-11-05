@@ -50,10 +50,13 @@ li.unsaved > hgroup > h1 > .stylesheet-name:before {
 
 .stylesheet-enabled {
   display: -moz-box;
+  cursor: pointer;
 }
 
 .stylesheet-saveButton {
   display: none;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 .stylesheet-rule-count,
