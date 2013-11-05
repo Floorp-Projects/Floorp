@@ -329,6 +329,9 @@ InspectorPanel.prototype = {
 
       this._initMarkup();
       this.once("markuploaded", () => {
+        if (this._destroyPromise) {
+          return;
+        }
         this.markup.expandNode(this.selection.nodeFront);
         this.setupSearchBox();
       });
