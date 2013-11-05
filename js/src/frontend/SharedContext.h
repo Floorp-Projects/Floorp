@@ -13,7 +13,6 @@
 #include "jsscript.h"
 #include "jstypes.h"
 
-#include "builtin/Module.h"
 #include "frontend/ParseMaps.h"
 #include "frontend/ParseNode.h"
 #include "frontend/TokenStream.h"
@@ -189,10 +188,8 @@ class SharedContext
 
     virtual ObjectBox *toObjectBox() = 0;
     inline bool isGlobalSharedContext() { return toObjectBox() == nullptr; }
-    inline bool isModuleBox() { return toObjectBox() && toObjectBox()->isModuleBox(); }
     inline bool isFunctionBox() { return toObjectBox() && toObjectBox()->isFunctionBox(); }
     inline GlobalSharedContext *asGlobalSharedContext();
-    inline ModuleBox *asModuleBox();
     inline FunctionBox *asFunctionBox();
 
     bool hasExplicitUseStrict()        const { return anyCxFlags.hasExplicitUseStrict; }
@@ -230,24 +227,6 @@ SharedContext::asGlobalSharedContext()
 {
     JS_ASSERT(isGlobalSharedContext());
     return static_cast<GlobalSharedContext*>(this);
-}
-
-class ModuleBox : public ObjectBox, public SharedContext
-{
-  public:
-    Bindings bindings;
-
-    ModuleBox(ExclusiveContext *cx, ObjectBox *traceListHead, Module *module,
-              ParseContext<FullParseHandler> *pc, bool extraWarnings);
-    ObjectBox *toObjectBox() { return this; }
-    Module *module() const { return &object->as<Module>(); }
-};
-
-inline ModuleBox *
-SharedContext::asModuleBox()
-{
-    JS_ASSERT(isModuleBox());
-    return static_cast<ModuleBox*>(this);
 }
 
 class FunctionBox : public ObjectBox, public SharedContext

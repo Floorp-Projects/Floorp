@@ -408,7 +408,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
      * cx->tempLifoAlloc.
      */
     ObjectBox *newObjectBox(JSObject *obj);
-    ModuleBox *newModuleBox(Module *module, ParseContext<ParseHandler> *pc);
     FunctionBox *newFunctionBox(Node fn, JSFunction *fun, ParseContext<ParseHandler> *pc,
                                 Directives directives, GeneratorKind generatorKind);
 
@@ -493,7 +492,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
      * Some parsers have two versions:  an always-inlined version (with an 'i'
      * suffix) and a never-inlined version (with an 'n' suffix).
      */
-    Node moduleDecl();
     Node functionStmt();
     Node functionExpr();
     Node statements();
