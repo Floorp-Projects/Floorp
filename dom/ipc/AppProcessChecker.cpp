@@ -6,26 +6,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AppProcessChecker.h"
-#include "nsIPermissionManager.h"
 #ifdef MOZ_CHILD_PERMISSIONS
 #include "ContentParent.h"
 #include "mozIApplication.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
-#include "nsIAppsService.h"
-#include "nsIPrincipal.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIURI.h"
-#include "nsServiceManagerUtils.h"
 #include "TabParent.h"
-
-#include <algorithm>
 
 using namespace mozilla::dom;
 using namespace mozilla::hal_sandbox;
 using namespace mozilla::services;
-#else
-class PContentParent;
-class nsIPrincipal;
 #endif
 
 namespace mozilla {
@@ -137,101 +126,6 @@ AssertAppProcess(PHalParent* aActor,
   return AssertAppProcess(aActor->Manager(), aType, aCapability);
 }
 
-bool
-AssertAppPrincipal(PContentParent* aActor,
-                   nsIPrincipal* aPrincipal)
-{
-  if (!aPrincipal) {
-    NS_WARNING("Principal is invalid, killing app process");
-    static_cast<ContentParent*>(aActor)->KillHard();
-    return false;
-  }
-
-  uint32_t principalAppId = aPrincipal->GetAppId();
-  bool inBrowserElement = aPrincipal->GetIsInBrowserElement();
-
-  // Check if the permission's appId matches a child we manage.
-  const InfallibleTArray<PBrowserParent*>& browsers =
-    aActor->ManagedPBrowserParent();
-  for (uint32_t i = 0; i < browsers.Length(); ++i) {
-    TabParent* tab = static_cast<TabParent*>(browsers[i]);
-    if (tab->OwnOrContainingAppId() == principalAppId) {
-      // If the child only runs inBrowserElement content and the principal claims
-      // it's not in a browser element, it's lying.
-      if (!tab->IsBrowserElement() || inBrowserElement) {
-        return true;
-      }
-      break;
-    }
-  }
-
-  NS_WARNING("Principal is invalid, killing app process");
-  static_cast<ContentParent*>(aActor)->KillHard();
-  return false;
-}
-
-already_AddRefed<nsIPrincipal>
-GetAppPrincipal(uint32_t aAppId)
-{
-  nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-
-  nsIURI* uri;
-  nsresult rv = appsService->GetManifestURLByLocalId(aAppId);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-
-  nsIPrincipal* appPrincipal;
-  rv = secMan->GetAppCodebasePrincipal(uri, aAppId, false, &appPrincipal);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  return appPrincipal;
-}
-
-uint32_t
-CheckPermission(PContentParent* aActor,
-                nsIPrincipal* aPrincipal,
-                const char* aPermission)
-{
-  if (!AssertAppPrincipal(aActor, aPrincipal)) {
-    return nsIPermissionManager::DENY_ACTION;
-  }
-
-  nsCOMPtr<nsIPermissionManager> pm =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(pm, nsIPermissionManager::DENY_ACTION);
-
-  // Make sure that `aPermission' is an app permission before checking the origin.
-  nsCOMPtr<nsIPrincipal> appPrincipal = GetAppPrincipal(aPrincipal->GetAppId());
-  uint32_t appPerm = nsIPermissionManager::UNKNOWN_ACTION;
-  nsresult rv = pm->TestExactPermissionFromPrincipal(appPrincipal, aPermission, &appPerm);
-  NS_ENSURE_SUCCESS(rv, nsIPermissionManager::UNKNOWN_ACTION);
-  if (appPerm == nsIPermissionManager::UNKNOWN_ACTION ||
-      appPerm == nsIPermissionManager::DENY_ACTION) {
-    return appPerm;
-  }
-
-  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
-  rv = pm->TestExactPermissionFromPrincipal(aPrincipal, aPermission, &permission);
-  NS_ENSURE_SUCCESS(rv, nsIPermissionManager::UNKNOWN_ACTION);
-  if (permission == nsIPermissionManager::UNKNOWN_ACTION ||
-      permission == nsIPermissionManager::DENY_ACTION) {
-    return permission;
-  }
-
-  if (appPerm == nsIPermissionManager::PROMPT_ACTION ||
-      permission == nsIPermissionManager::PROMPT_ACTION) {
-    return nsIPermissionManager::PROMPT_ACTION;
-  }
-
-  if (appPerm == nsIPermissionManager::ALLOW_ACTION ||
-      permission == nsIPermissionManager::ALLOW_ACTION) {
-    return nsIPermissionManager::ALLOW_ACTION;
-  }
-
-  NS_RUNTIMEABORT("Invalid permission value");
-}
-
 #else
 
 bool
@@ -271,21 +165,6 @@ AssertAppProcess(mozilla::hal_sandbox::PHalParent* aActor,
                  const char* aCapability)
 {
   return true;
-}
-
-bool
-AssertAppPrincipal(PContentParent* aActor,
-                   nsIPrincipal* aPrincipal)
-{
-  return true;
-}
-
-uint32_t
-CheckPermission(PContentParent*,
-                nsIPrincipal*,
-                const char*)
-{
-  return nsIPermissionManager::ALLOW_ACTION;
 }
 
 #endif
