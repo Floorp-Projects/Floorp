@@ -164,4 +164,4 @@ exports['test that malformed uri is not an addon-page'] = function(assert, done)
   });
 };
 
-require('test').run(exports);
+require('sdk/test/runner').runTestsFromModule(module);

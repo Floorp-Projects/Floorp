@@ -5,8 +5,9 @@
 
 const { XMLHttpRequest } = require('sdk/net/xhr');
 const { LoaderWithHookedConsole } = require('sdk/test/loader');
-const { data } = require('sdk/self');
 const { set: setPref } = require("sdk/preferences/service");
+const data = require("./fixtures");
+
 const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
 
 exports.testAPIExtension = function(assert) {

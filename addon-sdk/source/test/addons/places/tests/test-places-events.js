@@ -23,7 +23,7 @@ const {
   invalidResolve, invalidReject, createTree, createBookmark,
   compareWithHost, addVisits, resetPlaces, createBookmarkItem,
   removeVisits
-} = require('./places-helper');
+} = require('../places-helper');
 const { save, MENU, UNSORTED } = require('sdk/places/bookmarks');
 const { promisedEmitter } = require('sdk/places/utils');
 
@@ -289,4 +289,3 @@ function makeCompleted (done, countTo) {
     if (++count === countTo) done();
   };
 }
-require('sdk/test').run(exports);
