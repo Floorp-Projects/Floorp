@@ -69,6 +69,23 @@ var ecmaGlobals =
   ];
 // IMPORTANT: Do not change this list without review from a JavaScript Engine peer!
 
+// IMPORTANT: Do not change this list without review from a DOM peer, except to
+//            remove items from it!
+//
+// This is a list of interfaces that were prefixed with 'moz' instead of 'Moz'.
+// We should never to that again, interfaces in the DOM start with an uppercase
+// letter. If you think you need to add an interface here, DON'T. Rename your
+// interface.
+var legacyMozPrefixedInterfaces =
+  [
+    "mozContact",
+    "mozRTCIceCandidate",
+    "mozRTCPeerConnection",
+    "mozRTCSessionDescription",
+  ];
+// IMPORTANT: Do not change this list without review from a DOM peer, except to
+//            remove items from it!
+
 // IMPORTANT: Do not change this list without review from a DOM peer!
 var interfaceNamesInGlobalScope =
   [
@@ -312,6 +329,7 @@ var interfaceNamesInGlobalScope =
     "MediaStreamEvent",
     "MediaStreamTrack",
     "MessageEvent",
+    "MessagePort",
     "MimeType",
     "MimeTypeArray",
     "ModalContentWindow",
@@ -576,6 +594,7 @@ var interfaceNamesInGlobalScope =
     "WheelEvent",
     "Window",
     "WindowUtils",
+    "Worker",
     "XMLDocument",
     "XMLHttpRequest",
     "XMLHttpRequestUpload",
@@ -642,7 +661,9 @@ function runTest(isXBLScope) {
   var interfaceMap = createInterfaceMap(isXBLScope);
   for (var name of Object.getOwnPropertyNames(window)) {
     // An interface name should start with an upper case character.
-    if (!/^(moz)?[A-Z]/.test(name)) {
+    // However, we have a couple of legacy interfaces that start with 'moz', so
+    // we want to allow those until we can remove them.
+    if (!/^[A-Z]/.test(name) && legacyMozPrefixedInterfaces.indexOf(name) < 0) {
       continue;
     }
     ok(interfaceMap[name],

@@ -295,15 +295,16 @@ public class GeckoSmsManager
    * dom/mobilemessage/src/Types.h
    * The error code are owned by the DOM.
    */
-  public final static int kNoError             = 0;
-  public final static int kNoSignalError       = 1;
-  public final static int kNotFoundError       = 2;
-  public final static int kUnknownError        = 3;
-  public final static int kInternalError       = 4;
-  public final static int kNoSimCardError      = 5;
-  public final static int kRadioDisabledError  = 6;
-  public final static int kInvalidAddressError = 7;
-  public final static int kFdnCheckError       = 8;
+  public final static int kNoError               = 0;
+  public final static int kNoSignalError         = 1;
+  public final static int kNotFoundError         = 2;
+  public final static int kUnknownError          = 3;
+  public final static int kInternalError         = 4;
+  public final static int kNoSimCardError        = 5;
+  public final static int kRadioDisabledError    = 6;
+  public final static int kInvalidAddressError   = 7;
+  public final static int kFdnCheckError         = 8;
+  public final static int kNonActiveSimCardError = 9;
 
   private final static int kMaxMessageSize    = 160;
 

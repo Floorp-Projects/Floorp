@@ -9900,6 +9900,26 @@ let StkCommandParamsFactory = {
     }
 
     return timer;
+  },
+
+   /**
+    * Construct a param for BIP commands.
+    *
+    * @param cmdDetails
+    *        The value object of CommandDetails TLV.
+    * @param ctlvs
+    *        The all TLVs in this proactive command.
+    */
+  processBipMessage: function processBipMessage(cmdDetails, ctlvs) {
+    let bipMsg = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+    if (ctlv) {
+      bipMsg.text = ctlv.value.identifier;
+    }
+
+    return bipMsg;
   }
 };
 StkCommandParamsFactory[STK_CMD_REFRESH] = function STK_CMD_REFRESH(cmdDetails, ctlvs) {
@@ -9958,6 +9978,18 @@ StkCommandParamsFactory[STK_CMD_PLAY_TONE] = function STK_CMD_PLAY_TONE(cmdDetai
 };
 StkCommandParamsFactory[STK_CMD_TIMER_MANAGEMENT] = function STK_CMD_TIMER_MANAGEMENT(cmdDetails, ctlvs) {
   return this.processTimerManagement(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_OPEN_CHANNEL] = function STK_CMD_OPEN_CHANNEL(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_CLOSE_CHANNEL] = function STK_CMD_CLOSE_CHANNEL(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_RECEIVE_DATA] = function STK_CMD_RECEIVE_DATA(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SEND_DATA] = function STK_CMD_SEND_DATA(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
 };
 
 let StkProactiveCmdHelper = {

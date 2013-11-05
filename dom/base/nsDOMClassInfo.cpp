@@ -141,9 +141,6 @@
 // Drag and drop
 #include "nsIDOMDataTransfer.h"
 
-// Workers
-#include "mozilla/dom/workers/Workers.h"
-
 #include "nsIDOMFile.h"
 #include "nsDOMBlobBuilder.h" // nsDOMMultipartFile
 
@@ -187,6 +184,8 @@
 #include "mozilla/Likely.h"
 #include "WindowNamedPropertiesHandler.h"
 #include "nsIInterfaceInfoManager.h"
+#include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/WindowBinding.h"
 
 #ifdef MOZ_TIME_MANAGER
 #include "TimeManager.h"
@@ -194,7 +193,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::dom::workers::ResolveWorkerClasses;
 
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -203,6 +201,7 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 #define WINDOW_SCRIPTABLE_FLAGS                                               \
  (nsIXPCScriptable::WANT_PRECREATE |                                          \
+  nsIXPCScriptable::WANT_POSTCREATE |                                         \
   nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_ENUMERATE |                                          \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
@@ -585,30 +584,15 @@ nsIScriptSecurityManager *nsDOMClassInfo::sSecMan = nullptr;
 bool nsDOMClassInfo::sIsInitialized = false;
 
 
-jsid nsDOMClassInfo::sParent_id          = JSID_VOID;
-jsid nsDOMClassInfo::sScrollbars_id      = JSID_VOID;
 jsid nsDOMClassInfo::sLocation_id        = JSID_VOID;
 jsid nsDOMClassInfo::sConstructor_id     = JSID_VOID;
 jsid nsDOMClassInfo::s_content_id        = JSID_VOID;
-jsid nsDOMClassInfo::sContent_id         = JSID_VOID;
-jsid nsDOMClassInfo::sMenubar_id         = JSID_VOID;
-jsid nsDOMClassInfo::sToolbar_id         = JSID_VOID;
-jsid nsDOMClassInfo::sLocationbar_id     = JSID_VOID;
-jsid nsDOMClassInfo::sPersonalbar_id     = JSID_VOID;
-jsid nsDOMClassInfo::sStatusbar_id       = JSID_VOID;
-jsid nsDOMClassInfo::sControllers_id     = JSID_VOID;
 jsid nsDOMClassInfo::sLength_id          = JSID_VOID;
-jsid nsDOMClassInfo::sScrollX_id         = JSID_VOID;
-jsid nsDOMClassInfo::sScrollY_id         = JSID_VOID;
-jsid nsDOMClassInfo::sScrollMaxX_id      = JSID_VOID;
-jsid nsDOMClassInfo::sScrollMaxY_id      = JSID_VOID;
 jsid nsDOMClassInfo::sItem_id            = JSID_VOID;
 jsid nsDOMClassInfo::sNamedItem_id       = JSID_VOID;
 jsid nsDOMClassInfo::sEnumerate_id       = JSID_VOID;
 jsid nsDOMClassInfo::sTop_id             = JSID_VOID;
 jsid nsDOMClassInfo::sDocument_id        = JSID_VOID;
-jsid nsDOMClassInfo::sFrames_id          = JSID_VOID;
-jsid nsDOMClassInfo::sSelf_id            = JSID_VOID;
 jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
 
 static const JSClass *sObjectClass = nullptr;
@@ -733,30 +717,15 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   else                                                                        \
       return NS_ERROR_OUT_OF_MEMORY;
 
-  SET_JSID_TO_STRING(sParent_id,          cx, "parent");
-  SET_JSID_TO_STRING(sScrollbars_id,      cx, "scrollbars");
   SET_JSID_TO_STRING(sLocation_id,        cx, "location");
   SET_JSID_TO_STRING(sConstructor_id,     cx, "constructor");
   SET_JSID_TO_STRING(s_content_id,        cx, "_content");
-  SET_JSID_TO_STRING(sContent_id,         cx, "content");
-  SET_JSID_TO_STRING(sMenubar_id,         cx, "menubar");
-  SET_JSID_TO_STRING(sToolbar_id,         cx, "toolbar");
-  SET_JSID_TO_STRING(sLocationbar_id,     cx, "locationbar");
-  SET_JSID_TO_STRING(sPersonalbar_id,     cx, "personalbar");
-  SET_JSID_TO_STRING(sStatusbar_id,       cx, "statusbar");
-  SET_JSID_TO_STRING(sControllers_id,     cx, "controllers");
   SET_JSID_TO_STRING(sLength_id,          cx, "length");
-  SET_JSID_TO_STRING(sScrollX_id,         cx, "scrollX");
-  SET_JSID_TO_STRING(sScrollY_id,         cx, "scrollY");
-  SET_JSID_TO_STRING(sScrollMaxX_id,      cx, "scrollMaxX");
-  SET_JSID_TO_STRING(sScrollMaxY_id,      cx, "scrollMaxY");
   SET_JSID_TO_STRING(sItem_id,            cx, "item");
   SET_JSID_TO_STRING(sNamedItem_id,       cx, "namedItem");
   SET_JSID_TO_STRING(sEnumerate_id,       cx, "enumerateProperties");
   SET_JSID_TO_STRING(sTop_id,             cx, "top");
   SET_JSID_TO_STRING(sDocument_id,        cx, "document");
-  SET_JSID_TO_STRING(sFrames_id,          cx, "frames");
-  SET_JSID_TO_STRING(sSelf_id,            cx, "self");
   SET_JSID_TO_STRING(sWrappedJSObject_id, cx, "wrappedJSObject");
 
   return NS_OK;
@@ -2001,29 +1970,14 @@ nsDOMClassInfo::ShutDown()
     }
   }
 
-  sParent_id          = JSID_VOID;
-  sScrollbars_id      = JSID_VOID;
   sLocation_id        = JSID_VOID;
   sConstructor_id     = JSID_VOID;
   s_content_id        = JSID_VOID;
-  sContent_id         = JSID_VOID;
-  sMenubar_id         = JSID_VOID;
-  sToolbar_id         = JSID_VOID;
-  sLocationbar_id     = JSID_VOID;
-  sPersonalbar_id     = JSID_VOID;
-  sStatusbar_id       = JSID_VOID;
-  sControllers_id     = JSID_VOID;
   sLength_id          = JSID_VOID;
-  sScrollX_id         = JSID_VOID;
-  sScrollY_id         = JSID_VOID;
-  sScrollMaxX_id      = JSID_VOID;
-  sScrollMaxY_id      = JSID_VOID;
   sItem_id            = JSID_VOID;
   sEnumerate_id       = JSID_VOID;
   sTop_id             = JSID_VOID;
   sDocument_id        = JSID_VOID;
-  sFrames_id          = JSID_VOID;
-  sSelf_id            = JSID_VOID;
   sWrappedJSObject_id = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
@@ -2078,6 +2032,28 @@ nsWindowSH::PostCreatePrototype(JSContext* aCx, JSObject* aProto)
   // once it is on WebIDL bindings.
   WindowNamedPropertiesHandler::Install(aCx, proto);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
+                       JSContext *cx, JSObject *obj)
+{
+#ifdef DEBUG
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
+
+  NS_ASSERTION(sgo && sgo->GetGlobalJSObject() == nullptr,
+               "Multiple wrappers created for global object!");
+#endif
+
+  const NativeProperties* windowProperties =
+    WindowBinding::sNativePropertyHooks->mNativeProperties.regular;
+  const NativeProperties* eventTargetProperties =
+    EventTargetBinding::sNativePropertyHooks->mNativeProperties.regular;
+
+  JS::Rooted<JSObject*> window(cx, obj);
+  return DefineWebIDLBindingPropertiesOnXPCObject(cx, window, windowProperties, true) &&
+         DefineWebIDLBindingPropertiesOnXPCObject(cx, window, eventTargetProperties, true) ?
+         NS_OK : NS_ERROR_FAILURE;
 }
 
 static nsHTMLDocument*
@@ -3605,21 +3581,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  // Handle resolving if id refers to a name resolved by DOM worker code.
-  JS::Rooted<JSObject*> tmp(cx, nullptr);
-  if (!ResolveWorkerClasses(cx, obj, id, flags, &tmp)) {
-    return NS_ERROR_FAILURE;
-  }
-  if (tmp) {
-    *objp = tmp;
-    return NS_OK;
-  }
-
-  // Check for names managed by the script namespace manager.  Call
-  // GlobalResolve() after we call FindChildWithName() so that named child
-  // frames will override external properties which have been registered with
-  // the script namespace manager -- pages must be able to depend on frame
-  // names working no matter how Gecko's been configured.
   bool did_resolve = false;
   nsresult rv = GlobalResolve(win, cx, obj, id, &did_resolve);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -3658,23 +3619,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  if (flags & JSRESOLVE_ASSIGNING) {
-    if (IsReadonlyReplaceable(id)) {
-      // A readonly "replaceable" property is being set.  Define the property
-      // on obj with the value undefined to override the predefined property.
-      // This isn't quite what WebIDL requires for [Replaceable] properties,
-      // but it'll do until we move Window over to the new DOM bindings.
-
-      if (!::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, JS_PropertyStub,
-                                   JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
-        return NS_ERROR_FAILURE;
-      }
-      *objp = obj;
-
-      return NS_OK;
-    }
-  } else {
-    if (sDocument_id == id) {
+  if (!(flags & JSRESOLVE_ASSIGNING) && sDocument_id == id) {
+    if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
       nsCOMPtr<nsIDocument> document = win->GetDoc();
       JS::Rooted<JS::Value> v(cx);
       nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
@@ -3683,26 +3629,18 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       false);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // The PostCreate hook for the document will handle defining the
-      // property
       *objp = obj;
 
-      // NB: We need to do this for any Xray wrapper.
-      if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
-        // Unless our object is a native wrapper, in which case we have to
-        // define it ourselves.
-
-        *_retval = JS_WrapValue(cx, &v) &&
-                   JS_DefineProperty(cx, obj, "document", v,
-                                     JS_PropertyStub, JS_StrictPropertyStub,
-                                     JSPROP_READONLY | JSPROP_ENUMERATE);
-        if (!*_retval) {
-          return NS_ERROR_UNEXPECTED;
-        }
+      *_retval = JS_WrapValue(cx, &v) &&
+                 JS_DefineProperty(cx, obj, "document", v,
+                                   JS_PropertyStub, JS_StrictPropertyStub,
+                                   JSPROP_READONLY | JSPROP_ENUMERATE);
+      if (!*_retval) {
+        return NS_ERROR_UNEXPECTED;
       }
-
-      return NS_OK;
     }
+
+    return NS_OK;
   }
 
   return nsDOMGenericSH::NewResolve(wrapper, cx, obj, id, flags, objp,

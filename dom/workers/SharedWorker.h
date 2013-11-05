@@ -9,6 +9,7 @@
 #include "Workers.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/workers/bindings/MessagePort.h"
 #include "nsDOMEventTargetHelper.h"
 
 class nsIDOMEvent;
@@ -28,7 +29,7 @@ class SharedWorker MOZ_FINAL : public nsDOMEventTargetHelper
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;
 
-  WorkerPrivate* mWorkerPrivate;
+  nsRefPtr<WorkerPrivate> mWorkerPrivate;
   nsRefPtr<MessagePort> mMessagePort;
   nsTArray<nsCOMPtr<nsIDOMEvent>> mSuspendedEvents;
   uint64_t mSerial;
@@ -81,9 +82,16 @@ public:
   virtual nsresult
   PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
+  WorkerPrivate*
+  GetWorkerPrivate() const
+  {
+    return mWorkerPrivate;
+  }
+
 private:
   // This class can only be created from the RuntimeService.
-  SharedWorker(nsPIDOMWindow* aWindow, WorkerPrivate* aWorkerPrivate);
+  SharedWorker(nsPIDOMWindow* aWindow,
+               WorkerPrivate* aWorkerPrivate);
 
   // This class is reference-counted and will be destroyed from Release().
   ~SharedWorker();

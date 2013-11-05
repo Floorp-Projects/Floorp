@@ -143,9 +143,7 @@ public:
   private:
     int32_t ObjectAt(int32_t aIndex) {
       void* v = nsDeque::ObjectAt(aIndex);
-      // Ugly hack to work around "casting 64bit void* to 32bit int loses precision"
-      // error on 64bit Linux.
-      return *(reinterpret_cast<int32_t*>(&v));
+      return reinterpret_cast<uintptr_t>(v);
     }
   };
 
