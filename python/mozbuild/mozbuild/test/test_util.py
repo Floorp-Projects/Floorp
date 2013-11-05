@@ -23,6 +23,7 @@ from mozbuild.util import (
     resolve_target_to_make,
     MozbuildDeletionError,
     HierarchicalStringList,
+    HierarchicalStringListWithFlagsFactory,
     StrictOrderingOnAppendList,
     StrictOrderingOnAppendListWithFlagsFactory,
     UnsortedError,
@@ -354,6 +355,65 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
 
         with self.assertRaises(AttributeError):
             l['b'].baz = False
+
+
+class TestHierarchicalStringListWithFlagsFactory(unittest.TestCase):
+    def test_hierarchical_string_list_with_flags_factory(self):
+        cls = HierarchicalStringListWithFlagsFactory({
+            'foo': bool,
+            'bar': int,
+        })
+
+        l = cls()
+        l += ['a', 'b']
+
+        with self.assertRaises(Exception):
+            l['a'] = 'foo'
+
+        with self.assertRaises(Exception):
+            c = l['c']
+
+        self.assertEqual(l['a'].foo, False)
+        l['a'].foo = True
+        self.assertEqual(l['a'].foo, True)
+
+        with self.assertRaises(TypeError):
+            l['a'].bar = 'bar'
+
+        self.assertEqual(l['a'].bar, 0)
+        l['a'].bar = 42
+        self.assertEqual(l['a'].bar, 42)
+
+        l['b'].foo = True
+        self.assertEqual(l['b'].foo, True)
+
+        with self.assertRaises(AttributeError):
+            l['b'].baz = False
+
+        l.x += ['x', 'y']
+
+        with self.assertRaises(Exception):
+            l.x['x'] = 'foo'
+
+        with self.assertRaises(Exception):
+            c = l.x['c']
+
+        self.assertEqual(l.x['x'].foo, False)
+        l.x['x'].foo = True
+        self.assertEqual(l.x['x'].foo, True)
+
+        with self.assertRaises(TypeError):
+            l.x['x'].bar = 'bar'
+
+        self.assertEqual(l.x['x'].bar, 0)
+        l.x['x'].bar = 42
+        self.assertEqual(l.x['x'].bar, 42)
+
+        l.x['y'].foo = True
+        self.assertEqual(l.x['y'].foo, True)
+
+        with self.assertRaises(AttributeError):
+            l.x['y'].baz = False
 
 
 if __name__ == '__main__':
