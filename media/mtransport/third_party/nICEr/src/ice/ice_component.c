@@ -243,6 +243,8 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           if(ctx->stun_servers[j].transport!=IPPROTO_UDP)
             continue;
 
+          /* Ensure id is set (nr_ice_ctx_set_stun_servers does not) */
+          ctx->stun_servers[j].id = j;
           if(r=nr_ice_candidate_create(ctx,component,
             isock,sock,SERVER_REFLEXIVE,0,
             &ctx->stun_servers[j],component->component_id,&cand))
@@ -272,6 +274,8 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           continue;
 
         if (!(ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY)) {
+          /* Ensure id is set with a unique value */
+          ctx->turn_servers[j].turn_server.id = j + ctx->stun_server_ct;
           /* srvrflx */
           if(r=nr_ice_candidate_create(ctx,component,
             isock,sock,SERVER_REFLEXIVE,0,
