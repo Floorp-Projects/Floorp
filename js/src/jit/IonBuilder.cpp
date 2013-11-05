@@ -6433,13 +6433,16 @@ IonBuilder::jsop_getelem()
 
     bool emitted = false;
 
+    if (!getElemTryTypedObject(&emitted, obj, index) || emitted)
+        return emitted;
+
     if (!getElemTryDense(&emitted, obj, index) || emitted)
         return emitted;
 
     if (!getElemTryTypedStatic(&emitted, obj, index) || emitted)
         return emitted;
 
-    if (!getElemTryTyped(&emitted, obj, index) || emitted)
+    if (!getElemTryTypedArray(&emitted, obj, index) || emitted)
         return emitted;
 
     if (!getElemTryString(&emitted, obj, index) || emitted)
@@ -6468,6 +6471,213 @@ IonBuilder::jsop_getelem()
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
     return pushTypeBarrier(ins, types, true);
+}
+
+bool
+IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *index)
+{
+    JS_ASSERT(*emitted == false);
+
+    TypeRepresentationSet objTypeReprs;
+    if (!lookupTypeRepresentationSet(obj, &objTypeReprs))
+        return false;
+
+    if (!objTypeReprs.allOfArrayKind())
+        return true;
+
+    TypeRepresentationSet elemTypeReprs;
+    if (!objTypeReprs.arrayElementType(*this, &elemTypeReprs))
+        return false;
+
+    size_t elemSize;
+    if (!elemTypeReprs.allHaveSameSize(&elemSize))
+        return true;
+
+    switch (elemTypeReprs.kind()) {
+    case TypeRepresentation::Struct:
+    case TypeRepresentation::Array:
+        return getElemTryComplexElemOfTypedObject(emitted,
+                                                  obj,
+                                                  index,
+                                                  objTypeReprs,
+                                                  elemTypeReprs,
+                                                  elemSize);
+    case TypeRepresentation::Scalar:
+        return getElemTryScalarElemOfTypedObject(emitted,
+                                                 obj,
+                                                 index,
+                                                 objTypeReprs,
+                                                 elemTypeReprs,
+                                                 elemSize);
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Bad kind");
+}
+
+static MIRType
+MIRTypeForTypedArrayRead(ScalarTypeRepresentation::Type arrayType,
+                         bool observedDouble);
+
+bool
+IonBuilder::getElemTryScalarElemOfTypedObject(bool *emitted,
+                                              MDefinition *obj,
+                                              MDefinition *index,
+                                              TypeRepresentationSet objTypeReprs,
+                                              TypeRepresentationSet elemTypeReprs,
+                                              size_t elemSize)
+{
+    JS_ASSERT(objTypeReprs.allOfArrayKind());
+
+    // Must always be loading the same scalar type
+    if (elemTypeReprs.length() != 1)
+        return true;
+    ScalarTypeRepresentation *elemTypeRepr = elemTypeReprs.get(0)->asScalar();
+
+    // Get the length.
+    size_t lenOfAll = objTypeReprs.arrayLength();
+    if (lenOfAll >= size_t(INT_MAX)) // int32 max is bound
+        return true;
+    MInstruction *length = MConstant::New(Int32Value(int32_t(lenOfAll)));
+
+    *emitted = true;
+    current->add(length);
+
+    // Ensure index is an integer.
+    MInstruction *idInt32 = MToInt32::New(index);
+    current->add(idInt32);
+    index = idInt32;
+
+    // Typed-object accesses usually in bounds (bail out otherwise).
+    index = addBoundsCheck(index, length);
+
+    // Find location within the owner object.
+    MDefinition *owner;
+    MDefinition *indexFromOwner;
+    if (obj->isNewDerivedTypedObject()) {
+        MNewDerivedTypedObject *ins = obj->toNewDerivedTypedObject();
+        MDefinition *ownerOffset = ins->offset();
+
+        // Typed array offsets are expressed in units of the (array)
+        // element alignment.  The binary data uses byte units for
+        // offsets (such as the owner offset here).
+
+        MConstant *alignment = MConstant::New(Int32Value(elemTypeRepr->alignment()));
+        current->add(alignment);
+
+        MDiv *scaledOffset = MDiv::NewAsmJS(ownerOffset, alignment, MIRType_Int32);
+        current->add(scaledOffset);
+
+        MAdd *scaledOffsetPlusIndex = MAdd::NewAsmJS(scaledOffset, index,
+                                                     MIRType_Int32);
+        current->add(scaledOffsetPlusIndex);
+
+        owner = ins->owner();
+        indexFromOwner = scaledOffsetPlusIndex;
+    } else {
+        owner = obj;
+        indexFromOwner = index;
+    }
+
+    // Load the element data.
+    MTypedObjectElements *elements = MTypedObjectElements::New(owner);
+    current->add(elements);
+
+    // Load the element.
+    MLoadTypedArrayElement *load = MLoadTypedArrayElement::New(elements, indexFromOwner, elemTypeRepr->type());
+    current->add(load);
+    current->push(load);
+
+    // If we are reading in-bounds elements, we can use knowledge about
+    // the array type to determine the result type, even if the opcode has
+    // never executed. The known pushed type is only used to distinguish
+    // uint32 reads that may produce either doubles or integers.
+    types::TemporaryTypeSet *resultTypes = bytecodeTypes(pc);
+    bool allowDouble = resultTypes->hasType(types::Type::DoubleType());
+    MIRType knownType = MIRTypeForTypedArrayRead(elemTypeRepr->type(), allowDouble);
+    // Note: we can ignore the type barrier here, we know the type must
+    // be valid and unbarriered.
+    load->setResultType(knownType);
+    load->setResultTypeSet(resultTypes);
+
+    return true;
+}
+
+bool
+IonBuilder::getElemTryComplexElemOfTypedObject(bool *emitted,
+                                               MDefinition *obj,
+                                               MDefinition *index,
+                                               TypeRepresentationSet objTypeReprs,
+                                               TypeRepresentationSet elemTypeReprs,
+                                               size_t elemSize)
+{
+    JS_ASSERT(objTypeReprs.allOfArrayKind());
+
+    MDefinition *type = loadTypedObjectType(obj);
+    MInstruction *elemType = MLoadFixedSlot::New(type, JS_TYPEOBJ_SLOT_ARRAY_ELEM_TYPE);
+    current->add(elemType);
+
+    // Get the length.
+    size_t lenOfAll = objTypeReprs.arrayLength();
+    if (lenOfAll >= size_t(INT_MAX)) // int32 max is bound
+        return true;
+    MInstruction *length = MConstant::New(Int32Value(int32_t(lenOfAll)));
+
+    *emitted = true;
+    current->add(length);
+
+    // Ensure index is an integer.
+    MInstruction *idInt32 = MToInt32::New(index);
+    current->add(idInt32);
+    index = idInt32;
+
+    // Typed-object accesses usually in bounds (bail out otherwise).
+    index = addBoundsCheck(index, length);
+
+    // Convert array index to element data offset.
+    MConstant *alignment = MConstant::New(Int32Value(elemSize));
+    current->add(alignment);
+
+    // Since we passed the bounds check, it is impossible for the
+    // result of multiplication to overflow; so enable imul path.
+    MMul *indexAsByteOffset = MMul::New(index, alignment, MIRType_Int32,
+                                        MMul::Integer);
+    current->add(indexAsByteOffset);
+
+    // Find location within the owner object.
+    MDefinition *owner;
+    MDefinition *indexAsByteOffsetFromOwner;
+    if (obj->isNewDerivedTypedObject()) {
+        MNewDerivedTypedObject *ins = obj->toNewDerivedTypedObject();
+        MDefinition *ownerOffset = ins->offset();
+
+        MAdd *offsetPlusScaledIndex = MAdd::NewAsmJS(ownerOffset,
+                                                     indexAsByteOffset,
+                                                     MIRType_Int32);
+        current->add(offsetPlusScaledIndex);
+
+        owner = ins->owner();
+        indexAsByteOffsetFromOwner = offsetPlusScaledIndex;
+    } else {
+        owner = obj;
+        indexAsByteOffsetFromOwner = indexAsByteOffset;
+    }
+
+    // Load the element data.
+    MTypedObjectElements *elements = MTypedObjectElements::New(owner);
+    current->add(elements);
+
+    // Create the derived type object.
+    MInstruction *derived = new MNewDerivedTypedObject(elemTypeReprs,
+                                                       elemType,
+                                                       owner,
+                                                       indexAsByteOffsetFromOwner);
+
+    types::TemporaryTypeSet *resultTypes = bytecodeTypes(pc);
+    derived->setResultTypeSet(resultTypes);
+    current->add(derived);
+    current->push(derived);
+
+    return true;
 }
 
 bool
@@ -6558,7 +6768,7 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
 }
 
 bool
-IonBuilder::getElemTryTyped(bool *emitted, MDefinition *obj, MDefinition *index)
+IonBuilder::getElemTryTypedArray(bool *emitted, MDefinition *obj, MDefinition *index)
 {
     JS_ASSERT(*emitted == false);
 
