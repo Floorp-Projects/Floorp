@@ -3,9 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-CHROME_DEPS = buildconfig.html
-
 USE_RCS_MK := 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 

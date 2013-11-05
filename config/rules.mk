@@ -1331,7 +1331,7 @@ endif
 endif
 endif
 
-libs realchrome:: $(CHROME_DEPS) $(FINAL_TARGET)/chrome
+libs realchrome:: $(FINAL_TARGET)/chrome
 	$(call py_action,jar_maker,\
 	  $(QUIET) -j $(FINAL_TARGET)/chrome \
 	  $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \

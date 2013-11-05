@@ -97,5 +97,12 @@ FMRadioParent::Notify(const FMRadioEventType& aType)
   }
 }
 
+bool
+FMRadioParent::RecvEnableAudio(const bool& aAudioEnabled)
+{
+  IFMRadioService::Singleton()->EnableAudio(aAudioEnabled);
+  return true;
+}
+
 END_FMRADIO_NAMESPACE
 

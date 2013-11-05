@@ -296,8 +296,6 @@ struct AutoPaintSetup {
       mPaint.setAntiAlias(false);
     }
 
-    MOZ_ASSERT(aOptions.mSnapping == SNAP_NONE, "Pixel snapping not supported yet!");
-    
     // TODO: We could skip the temporary for operator_source and just
     // clear the clip rect. The other operators would be harder
     // but could be worth it to skip pushing a group.

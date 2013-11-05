@@ -11,7 +11,6 @@ ifdef MOZILLA_OFFICIAL
 DEFINES += -DMOZILLA_OFFICIAL
 endif
 
-GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null || tail -1 $(topsrcdir)/config/milestone.txt)
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 

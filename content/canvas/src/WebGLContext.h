@@ -890,6 +890,7 @@ protected:
     // -------------------------------------------------------------------------
     // WebGL extensions (implemented in WebGLContextExtensions.cpp)
     enum WebGLExtensionID {
+        EXT_sRGB,
         EXT_texture_filter_anisotropic,
         OES_element_index_uint,
         OES_standard_derivatives,
@@ -952,7 +953,7 @@ protected:
     bool ValidateGLSLVariableName(const nsAString& name, const char *info);
     bool ValidateGLSLCharacter(PRUnichar c);
     bool ValidateGLSLString(const nsAString& string, const char *info);
-
+    bool ValidateTexImage2DFormat(GLenum format, const char* info);
     bool ValidateTexImage2DTarget(GLenum target, GLsizei width, GLsizei height, const char* info);
     bool ValidateCompressedTextureSize(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, uint32_t byteLength, const char* info);
     bool ValidateLevelWidthHeightForTarget(GLenum target, GLint level, GLsizei width, GLsizei height, const char* info);

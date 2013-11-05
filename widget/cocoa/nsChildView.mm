@@ -3826,7 +3826,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
       }
 
       if (shouldRollup) {
-        consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, nullptr);
+        if ([theEvent type] == NSLeftMouseDown) {
+          NSPoint point = [NSEvent mouseLocation];
+          FlipCocoaScreenCoordinate(point);
+          nsIntPoint pos(point.x, point.y);
+          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, &pos, nullptr);
+        }
+        else {
+          consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, nullptr, nullptr);
+        }
       }
     }
   }

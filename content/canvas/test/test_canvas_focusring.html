@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<title>Canvas Tests</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+const Cc = SpecialPowers.Cc;
+const Cr = SpecialPowers.Cr;
+SpecialPowers.setBoolPref("canvas.focusring.enabled", true);
+</script>
+
+<p>Canvas test: drawCustomFocusRing</p>
+<canvas id="c688" class="output" width="100" height="50">+
+    <input id="button1" type="range" min="1" max="12"></input>
+    <input id="button2" type="range" min="1" max="12"></input>
+</canvas>
+<script type="text/javascript">
+function test_drawCustomFocusRing_canvas() {
+   var c = document.getElementById("c688");
+   var ctx = c.getContext("2d");
+   ctx.beginPath();
+   var b1 = document.getElementById('button1');
+   var b2 = document.getElementById('button2');
+   ok(!ctx.drawCustomFocusRing(b1), "button 1 is focused");
+   ok(!ctx.drawCustomFocusRing(b2), "button 2 is focused");
+   b1.focus();
+   ok(ctx.drawCustomFocusRing(b1), "button 1 should not be focused");
+}
+</script>
+
+<p>Canvas test: drawSystemFocusRing</p>
+<canvas id="c689" class="output" width="50" height="25">
+    <input id="button3" type="range" min="1" max="12"></input>
+    <input id="button4" type="range" min="1" max="12"></input>
+</canvas>
+<script type="text/javascript">
+function isEmptyCanvas(ctx, w, h) {
+  var imgdata = ctx.getImageData(0, 0, w, h);
+  for(var x = 0; x < w*h*4; x++)
+    if(imgdata.data[x] != 0)
+      return false;
+  return true;
+}
+
+function test_drawSystemFocusRing_canvas() {
+  var c = document.getElementById("c689");
+  var ctx = c.getContext("2d");
+  var b1 = document.getElementById('button3');
+  var b2 = document.getElementById('button4');
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.beginPath();
+  ctx.rect(10, 10, 30, 30);
+  ctx.drawSystemFocusRing(b1);
+  ok(isEmptyCanvas(ctx, ctx.canvas.width, ctx.canvas.height), "focus of button 1 is drawn");
+
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.beginPath();
+  ctx.rect(50, 10, 30, 30);
+  ctx.drawSystemFocusRing(b2);
+  ctx.rect(50, 10, 30, 30);
+  ctx.drawSystemFocusRing(b2);
+  ok(isEmptyCanvas(ctx, ctx.canvas.width, ctx.canvas.height), "focus of button 2 is drawn");
+
+  b1.focus();
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.beginPath();
+  ctx.rect(10, 10, 30, 30);
+  ctx.drawSystemFocusRing(b1);
+  ok(!isEmptyCanvas(ctx, ctx.canvas.width, ctx.canvas.height) , "focus of button 1 is not drawn");
+}
+</script>
+
+
+<script>
+
+function runTests() {
+ try {
+  test_drawCustomFocusRing_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_drawCustomFocusRing_canvas");
+ }
+  try {
+  test_drawSystemFocusRing_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_drawSystemFocusRing_canvas");
+ }
+
+ SpecialPowers.setBoolPref("canvas.focusring.enabled", false);
+ SimpleTest.finish();
+}
+
+addLoadEvent(runTests);
+
+</script>

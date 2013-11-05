@@ -651,7 +651,7 @@ js::Int32ToAtom<NoGC>(ExclusiveContext *cx, int32_t si);
 static char *
 IntToCString(ToCStringBuf *cbuf, int i, size_t *len, int base = 10)
 {
-    unsigned u = (i < 0) ? -i : i;
+    unsigned u = (i < 0) ? -unsigned(i) : i;
 
     RangedPtr<char> cp(cbuf->sbuf + ToCStringBuf::sbufSize - 1, cbuf->sbuf, ToCStringBuf::sbufSize);
     char *end = cp.get();

@@ -97,7 +97,7 @@ static void RollUpPopups()
   nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
   if (!rollupWidget)
     return;
-  rollupListener->Rollup(0, nullptr);
+  rollupListener->Rollup(0, nullptr, nullptr);
 }
 
 nsCocoaWindow::nsCocoaWindow()

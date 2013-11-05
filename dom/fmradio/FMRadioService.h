@@ -117,6 +117,9 @@ public:
   virtual void AddObserver(FMRadioEventObserver* aObserver) = 0;
   virtual void RemoveObserver(FMRadioEventObserver* aObserver) = 0;
 
+  // Enable/Disable FMRadio
+  virtual void EnableAudio(bool aAudioEnabled) = 0;
+
   /**
    * Static method to return the singleton instance. If it's in the child
    * process, we will get an object of FMRadioChild.
@@ -163,6 +166,8 @@ public:
 
   virtual void AddObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
   virtual void RemoveObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
+
+  virtual void EnableAudio(bool aAudioEnabled) MOZ_OVERRIDE;
 
   /* FMRadioObserver */
   void Notify(const hal::FMRadioOperationInformation& aInfo) MOZ_OVERRIDE;
