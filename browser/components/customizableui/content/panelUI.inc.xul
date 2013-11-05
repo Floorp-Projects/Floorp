@@ -7,7 +7,6 @@
        type="arrow"
        level="top"
        hidden="true"
-       consumeoutsideclicks="true"
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
     <panelview id="PanelUI-mainView" contextmenu="customizationPanelContextMenu">
