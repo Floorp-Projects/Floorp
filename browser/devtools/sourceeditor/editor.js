@@ -340,7 +340,7 @@ Editor.prototype = {
    * Replaces contents of a text area within the from/to {line, ch}
    * range. If neither from nor to arguments are provided works
    * exactly like setText. If only from object is provided, inserts
-   * text at that point.
+   * text at that point, *overwriting* as many characters as needed.
    */
   replaceText: function (value, from, to) {
     let cm = editors.get(this);
@@ -357,6 +357,15 @@ Editor.prototype = {
   },
 
   /**
+   * Inserts text at the specified {line, ch} position, shifting existing
+   * contents as necessary.
+   */
+  insertText: function (value, at) {
+    let cm = editors.get(this);
+    cm.replaceRange(value, at, at);
+  },
+
+  /**
    * Deselects contents of the text area.
    */
   dropSelection: function () {
@@ -370,7 +379,7 @@ Editor.prototype = {
    * Marks the contents as clean and returns the current
    * version number.
    */
-  markClean: function () {
+  setClean: function () {
     let cm = editors.get(this);
     this.version = cm.changeGeneration();
     return this.version;
@@ -517,6 +526,120 @@ Editor.prototype = {
     // Bringing down the topLine to total lines in the editor if exceeding.
     topLine = Math.min(topLine, this.lineCount());
     this.setFirstVisibleLine(topLine);
+  },
+
+  /**
+   * Returns whether a marker of a specified class exists in a line's gutter.
+   */
+  hasMarker: function (line, gutterName, markerClass) {
+    let cm = editors.get(this);
+    let info = cm.lineInfo(line);
+    if (!info)
+      return false;
+
+    let gutterMarkers = info.gutterMarkers;
+    if (!gutterMarkers)
+      return false;
+
+    let marker = gutterMarkers[gutterName];
+    if (!marker)
+      return false;
+
+    return marker.classList.contains(markerClass);
+  },
+
+  /**
+   * Adds a marker with a specified class to a line's gutter. If another marker
+   * exists on that line, the new marker class is added to its class list.
+   */
+  addMarker: function (line, gutterName, markerClass) {
+    let cm = editors.get(this);
+    let info = cm.lineInfo(line);
+    if (!info)
+      return;
+
+    let gutterMarkers = info.gutterMarkers;
+    if (gutterMarkers) {
+      let marker = gutterMarkers[gutterName];
+      if (marker) {
+        marker.classList.add(markerClass);
+        return;
+      }
+    }
+
+    let marker = cm.getWrapperElement().ownerDocument.createElement("div");
+    marker.className = markerClass;
+    cm.setGutterMarker(info.line, gutterName, marker);
+  },
+
+  /**
+   * The reverse of addMarker. Removes a marker of a specified class from a
+   * line's gutter.
+   */
+  removeMarker: function (line, gutterName, markerClass) {
+    if (!this.hasMarker(line, gutterName, markerClass))
+      return;
+
+    let cm = editors.get(this);
+    cm.lineInfo(line).gutterMarkers[gutterName].classList.remove(markerClass);
+  },
+
+  /**
+   * Remove all gutter markers in the gutter with the given name.
+   */
+  removeAllMarkers: function (gutterName) {
+    let cm = editors.get(this);
+    cm.clearGutter(gutterName);
+  },
+
+  /**
+   * Handles attaching a set of events listeners on a marker. They should
+   * be passed as an object literal with keys as event names and values as
+   * function listeners. The line number, marker node and optional data
+   * will be passed as arguments to the function listener.
+   *
+   * You don't need to worry about removing these event listeners.
+   * They're automatically orphaned when clearing markers.
+   */
+  setMarkerListeners: function(line, gutterName, markerClass, events, data) {
+    if (!this.hasMarker(line, gutterName, markerClass))
+      return;
+
+    let cm = editors.get(this);
+    let marker = cm.lineInfo(line).gutterMarkers[gutterName];
+
+    for (let name in events) {
+      let listener = events[name].bind(this, line, marker, data);
+      marker.addEventListener(name, listener);
+    }
+  },
+
+  /**
+   * Returns whether a line is decorated using the specified class name.
+   */
+  hasLineClass: function (line, className) {
+    let cm = editors.get(this);
+    let info = cm.lineInfo(line);
+    if (!info)
+      return false;
+
+    return info.wrapClass == className;
+  },
+
+  /**
+   * Set a CSS class name for the given line, including the text and gutter.
+   */
+  addLineClass: function (line, className) {
+    let cm = editors.get(this);
+    cm.addLineClass(line, "wrap", className);
+  },
+
+  /**
+   * The reverse of addLineClass.
+   */
+  removeLineClass: function (line, className) {
+    let cm = editors.get(this);
+    cm.removeLineClass(line, "wrap", className);
   },
 
   destroy: function () {

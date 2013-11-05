@@ -376,7 +376,7 @@ StyleSheetEditor.prototype = {
         if (callback) {
           callback(returnFile);
         }
-        this.sourceEditor.markClean();
+        this.sourceEditor.setClean();
       }.bind(this));
     };
 
