@@ -167,7 +167,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_ERROR_FAILURE;
 
   if (mHandler.Type() == nsEventHandler::eOnError) {
-    MOZ_ASSERT(mEventName == nsGkAtoms::onerror);
+    MOZ_ASSERT_IF(mEventName, mEventName == nsGkAtoms::onerror);
 
     nsString errorMsg, file;
     EventOrString msgOrEvent;

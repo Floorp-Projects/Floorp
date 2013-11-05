@@ -172,7 +172,6 @@
 #include "GeneratedEvents.h"
 #include "GeneratedEventClasses.h"
 #include "mozIThirdPartyUtil.h"
-
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
 #define FORCE_PR_LOG 1
@@ -7477,7 +7476,7 @@ PostMessageReadStructuredClone(JSContext* cx,
   if (MessageChannel::PrefEnabled() && tag == SCTAG_DOM_MESSAGEPORT) {
     NS_ASSERTION(!data, "Data should be empty");
 
-    MessagePort* port;
+    MessagePortBase* port;
     if (JS_ReadBytes(reader, &port, sizeof(port))) {
       JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
       if (global) {
@@ -7531,10 +7530,14 @@ PostMessageWriteStructuredClone(JSContext* cx,
   }
 
   if (MessageChannel::PrefEnabled()) {
-    MessagePort* port = nullptr;
+    MessagePortBase* port = nullptr;
     nsresult rv = UNWRAP_OBJECT(MessagePort, cx, obj, port);
     if (NS_SUCCEEDED(rv) && scInfo->subsumes) {
-      nsRefPtr<MessagePort> newPort = port->Clone();
+      nsRefPtr<MessagePortBase> newPort = port->Clone();
+
+      if (!newPort) {
+        return false;
+      }
 
       return JS_WriteUint32Pair(writer, SCTAG_DOM_MESSAGEPORT, 0) &&
              JS_WriteBytes(writer, &newPort, sizeof(newPort)) &&
