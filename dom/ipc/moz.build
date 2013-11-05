@@ -64,6 +64,7 @@ IPDL_SOURCES += [
     'PBrowser.ipdl',
     'PContent.ipdl',
     'PContentDialog.ipdl',
+    'PContentPermission.ipdlh',
     'PContentPermissionRequest.ipdl',
     'PCrashReporter.ipdl',
     'PDocumentRenderer.ipdl',
