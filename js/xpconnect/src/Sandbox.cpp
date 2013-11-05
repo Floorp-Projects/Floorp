@@ -215,44 +215,20 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-/*
- * Instead of simply wrapping a function into another compartment,
- * this helper function creates a native function in the target
- * compartment and forwards the call to the original function.
- * That call will be different than a regular JS function call in
- * that, the |this| is left unbound, and all the non-native JS
- * object arguments will be cloned using the structured clone
- * algorithm.
- * The return value is the new forwarder function, wrapped into
- * the caller's compartment.
- * The 3rd argument is the name of the property that will
- * be set on the target scope, with the forwarder function as
- * the value.
- * The principal of the caller must subsume that of the target.
- *
- * Expected type of the arguments and the return value:
- * function exportFunction(function funToExport,
- *                         object targetScope,
- *                         string name)
- */
-static bool
-ExportFunction(JSContext *cx, unsigned argc, jsval *vp)
-{
-    MOZ_ASSERT(cx);
-    if (argc < 3) {
-        JS_ReportError(cx, "Function requires at least 3 arguments");
-        return false;
-    }
+namespace xpc {
 
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args[0].isObject() || !args[1].isObject() || !args[2].isString()) {
+bool
+ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleValue vname,
+               MutableHandleValue rval)
+{
+    if (!vscope.isObject() || !vfunction.isObject() || !vname.isString()) {
         JS_ReportError(cx, "Invalid argument");
         return false;
     }
 
-    RootedObject funObj(cx, &args[0].toObject());
-    RootedObject targetScope(cx, &args[1].toObject());
-    RootedString funName(cx, args[2].toString());
+    RootedObject funObj(cx, &vfunction.toObject());
+    RootedObject targetScope(cx, &vscope.toObject());
+    RootedString funName(cx, vname.toString());
 
     // We can only export functions to scopes those are transparent for us,
     // so if there is a security wrapper around targetScope we must throw.
@@ -286,30 +262,51 @@ ExportFunction(JSContext *cx, unsigned argc, jsval *vp)
             return false;
 
         RootedId id(cx);
-        if (!JS_ValueToId(cx, args[2], id.address()))
+        if (!JS_ValueToId(cx, vname, id.address()))
             return false;
 
         // And now, let's create the forwarder function in the target compartment
         // for the function the be exported.
-        if (!NewFunctionForwarder(cx, id, funObj, /* doclone = */ true, args.rval())) {
+        if (!NewFunctionForwarder(cx, id, funObj, /* doclone = */ true, rval)) {
             JS_ReportError(cx, "Exporting function failed");
             return false;
         }
 
         // We have the forwarder function in the target compartment, now
         // we have to add it to the target scope as a property.
-        if (!JS_DefinePropertyById(cx, targetScope, id, args.rval(),
+        if (!JS_DefinePropertyById(cx, targetScope, id, rval,
                                    JS_PropertyStub, JS_StrictPropertyStub,
                                    JSPROP_ENUMERATE))
             return false;
     }
 
     // Finally we have to re-wrap the exported function back to the caller compartment.
-    if (!JS_WrapValue(cx, args.rval()))
+    if (!JS_WrapValue(cx, rval))
         return false;
 
     return true;
 }
+
+/*
+ *
+ * Expected type of the arguments and the return value:
+ * function exportFunction(function funToExport,
+ *                         object targetScope,
+ *                         string name)
+ */
+static bool
+ExportFunction(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 3) {
+        JS_ReportError(cx, "Function requires at least 3 arguments");
+        return false;
+    }
+
+    return ExportFunction(cx, args[0], args[1],
+                          args[2], args.rval());
+}
+} /* namespace xpc */
 
 static bool
 GetFilenameAndLineNumber(JSContext *cx, nsACString &filename, unsigned &lineno)
