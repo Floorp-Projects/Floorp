@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(08a49c33-0704-4b88-bebb-9a0cf1309f30)]
+[scriptable, uuid(190257e4-64ad-4a5a-8c99-a1166aeaf7a1)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -311,9 +311,11 @@ interface nsIXPCComponents_Utils : nsISupports
      * To be called from JS only.
      *
      * Returns an object created in |vobj|'s compartment.
+     * If defineAs property on the options object is a non-null ID,
+     * the new object will be added to vobj as a property.
      */
     [implicit_jscontext]
-    jsval createObjectIn(in jsval vobj);
+    jsval createObjectIn(in jsval vobj, [optional] in jsval voptions);
 
     /*
      * To be called from JS only.
