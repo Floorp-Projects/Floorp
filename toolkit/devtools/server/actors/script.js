@@ -1561,19 +1561,18 @@ ThreadActor.prototype = {
 
   /**
    * Get the script and source lists from the debugger.
-   *
-   * TODO bug 637572: we should be dealing with sources directly, not inferring
-   * them through scripts.
    */
   _discoverSources: function TA__discoverSources() {
     // Only get one script per url.
-    let scriptsByUrl = {};
+    const sourcesToScripts = new Map();
     for (let s of this.dbg.findScripts()) {
-      scriptsByUrl[s.url] = s;
+      if (s.source) {
+        sourcesToScripts.set(s.source, s);
+      }
     }
 
-    return all([this.sources.sourcesForScript(scriptsByUrl[s])
-                for (s of Object.keys(scriptsByUrl))]);
+    return all([this.sources.sourcesForScript(script)
+                for (script of sourcesToScripts.values())]);
   },
 
   onSources: function TA_onSources(aRequest) {
