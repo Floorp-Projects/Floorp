@@ -1148,12 +1148,11 @@ TabChild::ArraysToParams(const InfallibleTArray<int>& aIntParams,
 #ifdef DEBUG
 PContentPermissionRequestChild*
 TabChild:: SendPContentPermissionRequestConstructor(PContentPermissionRequestChild* aActor,
-                                                    const nsCString& aType,
-                                                    const nsCString& aAccess,
+                                                    const InfallibleTArray<PermissionRequest>& aRequests,
                                                     const IPC::Principal& aPrincipal)
 {
   PCOMContentPermissionRequestChild* child = static_cast<PCOMContentPermissionRequestChild*>(aActor);
-  PContentPermissionRequestChild* request = PBrowserChild::SendPContentPermissionRequestConstructor(aActor, aType, aAccess, aPrincipal);
+  PContentPermissionRequestChild* request = PBrowserChild::SendPContentPermissionRequestConstructor(aActor, aRequests, aPrincipal);
   child->mIPCOpen = true;
   return request;
 }
