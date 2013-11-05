@@ -25,8 +25,8 @@ ParseNode::name() const
 inline JSAtom *
 ParseNode::atom() const
 {
-    JS_ASSERT(isKind(PNK_MODULE) || isKind(PNK_STRING));
-    return isKind(PNK_MODULE) ? pn_modulebox->module()->atom() : pn_atom;
+    JS_ASSERT(isKind(PNK_STRING));
+    return pn_atom;
 }
 
 } /* namespace frontend */
