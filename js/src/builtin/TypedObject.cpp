@@ -1249,6 +1249,8 @@ js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
 
     RootedObject module(cx, NewObjectWithClassProto(cx, &JSObject::class_,
                                                     objProto, global));
+    if (!module)
+        return nullptr;
 
     // Define TypedObject global.
 
