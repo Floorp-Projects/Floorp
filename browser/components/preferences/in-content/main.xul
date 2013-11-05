@@ -31,13 +31,6 @@
                 onchange="gMainPane.updateBrowserStartupLastSession();"/>
 
     <!-- Downloads -->
-    <preference id="browser.download.manager.showWhenStarting"
-                name="browser.download.manager.showWhenStarting"
-                type="bool"
-                onchange="gMainPane.showDownloadsWhenStartingPrefChanged();"/>
-    <preference id="browser.download.manager.closeWhenDone"
-                name="browser.download.manager.closeWhenDone"
-                type="bool"/>
     <preference id="browser.download.useDownloadDir"
                 name="browser.download.useDownloadDir"
                 type="bool"/>
@@ -159,19 +152,6 @@
 <!-- Downloads -->
 <groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
   <caption label="&downloads.label;"/>
-
-  <checkbox id="showWhenDownloading"
-            label="&showWhenDownloading.label;"
-            accesskey="&showWhenDownloading.accesskey;"
-            preference="browser.download.manager.showWhenStarting"
-            onsyncfrompreference="return gMainPane.readShowDownloadsWhenStarting();"/>
-  <checkbox id="closeWhenDone"
-            label="&closeWhenDone.label;"
-            accesskey="&closeWhenDone.accesskey;"
-            class="indent"
-            preference="browser.download.manager.closeWhenDone"/>
-
-  <separator class="thin"/>
 
   <radiogroup id="saveWhere"
               preference="browser.download.useDownloadDir"

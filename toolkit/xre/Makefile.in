@@ -167,7 +167,6 @@ ifdef MOZ_SOURCE_STAMP
 
 endif # MOZ_SOURCE_STAMP
 
-GRE_MILESTONE := $(strip $(lastword $(shell cat $(milestone_txt) 2>/dev/null)))
 GRE_BUILDID   := $(strip $(firstword $(shell cat $(DEPTH)/config/buildid 2>/dev/null)))
 $(call errorIfEmpty,GRE_MILESTONE GRE_BUILDID)
 
