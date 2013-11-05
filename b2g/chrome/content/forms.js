@@ -344,6 +344,12 @@ let FormAssistant = {
           break;
         }
 
+        // Only handle events from our direct descendants
+        if (!(target instanceof content.window.Node) ||
+            !content.document.body.contains(target)) {
+          break;
+        }
+
         if (isContentEditable(target)) {
           this.showKeyboard(this.getTopLevelEditable(target));
           this.updateSelection();
