@@ -116,7 +116,7 @@ public class ButtonToast {
         mMessageView.setText(t.message);
         mButton.setText(t.buttonMessage);
         mButton.setCompoundDrawablePadding(mView.getContext().getResources().getDimensionPixelSize(R.dimen.toast_button_padding));
-        mButton.setCompoundDrawablesWithIntrinsicBounds(null, null, t.buttonDrawable, null);
+        mButton.setCompoundDrawablesWithIntrinsicBounds(t.buttonDrawable, null, null, null);
 
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, TOAST_DURATION);
