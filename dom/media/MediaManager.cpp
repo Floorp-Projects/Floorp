@@ -43,7 +43,7 @@
 #include "MediaEngineWebRTC.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G
 #include "MediaPermissionGonk.h"
 #endif
 
@@ -810,7 +810,6 @@ public:
     , mListener(aListener)
     , mPrefs(aPrefs)
     , mDeviceChosen(false)
-    , mBackendChosen(false)
     , mManager(MediaManager::GetInstance())
   {}
 
@@ -832,15 +831,11 @@ public:
     , mListener(aListener)
     , mPrefs(aPrefs)
     , mDeviceChosen(false)
-    , mBackendChosen(true)
     , mBackend(aBackend)
     , mManager(MediaManager::GetInstance())
   {}
 
   ~GetUserMediaRunnable() {
-    if (mBackendChosen) {
-      delete mBackend;
-    }
   }
 
   NS_IMETHOD
@@ -848,10 +843,7 @@ public:
   {
     NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-    // Was a backend provided?
-    if (!mBackendChosen) {
-      mBackend = mManager->GetBackend(mWindowID);
-    }
+    mBackend = mManager->GetBackend(mWindowID);
 
     // Was a device provided?
     if (!mDeviceChosen) {
@@ -1038,7 +1030,6 @@ private:
   MediaEnginePrefs mPrefs;
 
   bool mDeviceChosen;
-  bool mBackendChosen;
 
   MediaEngine* mBackend;
   nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
@@ -1256,10 +1247,10 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
     // Force MediaManager to startup before we try to access it from other threads
     // Hack: should init singleton earlier unless it's expensive (mem or CPU)
     (void) MediaManager::Get();
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G
     // Initialize MediaPermissionManager before send out any permission request.
     (void) MediaPermissionManager::GetInstance();
-#endif //MOZ_WIDGET_GONK
+#endif //MOZ_B2G
   }
 
   // Store the WindowID in a hash table and mark as active. The entry is removed
@@ -1311,7 +1302,7 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
   if (c.mFake) {
     // Fake stream from default backend.
     gUMRunnable = new GetUserMediaRunnable(c, onSuccess.forget(),
-      onError.forget(), windowID, listener, mPrefs, new MediaEngineDefault());
+      onError.forget(), windowID, listener, mPrefs, GetBackend(windowID, true));
   } else {
     // Stream from default device from WebRTC backend.
     gUMRunnable = new GetUserMediaRunnable(c, onSuccess.forget(),
@@ -1392,22 +1383,26 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
 }
 
 MediaEngine*
-MediaManager::GetBackend(uint64_t aWindowId)
+MediaManager::GetBackend(uint64_t aWindowId, bool aFake)
 {
   // Plugin backends as appropriate. The default engine also currently
   // includes picture support for Android.
   // This IS called off main-thread.
   MutexAutoLock lock(mMutex);
   if (!mBackend) {
+    if (aFake) {
+      mBackend = new MediaEngineDefault();
+    } else {
 #if defined(MOZ_WEBRTC)
-  #ifndef MOZ_B2G_CAMERA
-    mBackend = new MediaEngineWebRTC();
-  #else
-    mBackend = new MediaEngineWebRTC(mCameraManager, aWindowId);
-  #endif
+#ifndef MOZ_B2G_CAMERA
+      mBackend = new MediaEngineWebRTC();
 #else
-    mBackend = new MediaEngineDefault();
+      mBackend = new MediaEngineWebRTC(mCameraManager, aWindowId);
 #endif
+#else
+      mBackend = new MediaEngineDefault();
+#endif
+    }
   }
   return mBackend;
 }
