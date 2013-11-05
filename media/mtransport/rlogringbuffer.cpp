@@ -15,6 +15,7 @@
 #include <string>
 #include "mozilla/Assertions.h"
 #include "mozilla/Move.h" // Pinch hitting for <utility> and std::move
+#include "mozilla/Mutex.h"
 #include "mozilla/NullPtr.h"
 #include <vector>
 
@@ -43,18 +44,21 @@ namespace mozilla {
 RLogRingBuffer* RLogRingBuffer::instance;
 
 RLogRingBuffer::RLogRingBuffer()
-  : log_limit_(4096) {
+  : log_limit_(4096),
+    mutex_("RLogRingBuffer::mutex_") {
 }
 
 RLogRingBuffer::~RLogRingBuffer() {
 }
 
 void RLogRingBuffer::SetLogLimit(uint32_t new_limit) {
+  OffTheBooksMutexAutoLock lock(mutex_);
   log_limit_ = new_limit;
   RemoveOld();
 }
 
 void RLogRingBuffer::Log(std::string&& log) {
+  OffTheBooksMutexAutoLock lock(mutex_);
   log_messages_.push_front(Move(log));
   RemoveOld();
 }
@@ -106,6 +110,7 @@ inline bool AnySubstringMatches(const std::vector<std::string>& substrings,
 void RLogRingBuffer::FilterAny(const std::vector<std::string>& substrings,
                                uint32_t limit,
                                std::deque<std::string>* matching_logs) {
+  OffTheBooksMutexAutoLock lock(mutex_);
   if (limit == 0) {
     // At a max, all of the log messages.
     limit = log_limit_;
