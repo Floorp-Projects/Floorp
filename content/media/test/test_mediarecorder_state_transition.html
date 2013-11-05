@@ -1,0 +1,170 @@
+﻿﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder State Transition</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+// List of operation tests for media recorder objects to verify if running
+// these operations should result in an exception or not
+var operationTests = [
+  {
+    operations: ['stop'],
+    isValid: false
+  },
+  {
+    operations: ['requestData'],
+    isValid: false
+  },
+  {
+    operations: ['pause'],
+    isValid: false
+  },
+  {
+    operations: ['resume'],
+    isValid: false
+  },
+  {
+    operations: ['start'],
+    isValid: true
+  },
+  {
+    operations: ['start'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'pause'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'resume'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'stop'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'stop'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'requestData'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'requestData'],
+    isValid: true,
+    timeSlice: 200
+  },
+  {
+    operations: ['start', 'pause', 'stop'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'start'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'pause', 'pause'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'pause', 'requestData'],
+    isValid: false
+  },
+  {
+    operations: ['start', 'pause', 'resume'],
+    isValid: true
+  },
+  {
+    operations: ['start', 'pause', 'resume'],
+    isValid: true,
+    timeSlice: 200
+  }
+];
+
+/**
+ * Runs through each available state transition test by running all
+ * available operations on a media recorder object. Then, we report
+ * back if the test was expected through an exception or not.
+ *
+ * @param {MediaStream} testStream the media stream used for media recorder
+ *                                 operation tests
+ */
+function runStateTransitionTests(testStream) {
+  for (operationTest of operationTests) {
+    var mediaRecorder = new MediaRecorder(testStream);
+    var operationsString = operationTest.operations.toString();
+
+    try {
+      for (operation of operationTest.operations) {
+        if (operationTest.timeSlice && operation === 'start') {
+          operationsString += ' with timeslice ' + operationTest.timeSlice;
+          mediaRecorder[operation](operationTest.timeSlice);
+        } else {
+          mediaRecorder[operation]();
+        }
+      }
+
+      if (operationTest.isValid) {
+        ok(true, 'Successful transitions for ' + operationsString);
+      } else {
+        ok(false, 'Failed transitions for ' + operationsString);
+      }
+    } catch (err) {
+      if (!operationTest.isValid && err.name === 'InvalidStateError') {
+        ok(true, 'InvalidStateError fired for ' + operationsString);
+      } else {
+        ok(false, 'No InvalidStateError for ' + operationsString);
+      }
+    }
+  }
+}
+
+/**
+ * Starts a test on every media recorder file included to check that various
+ * state transition flows that can happen in the media recorder object throw
+ * exceptions when they are expected to and vice versa.
+ */
+function startTest(test, token) {
+  var element = document.createElement('audio');
+  var expectedMimeType = test.type.substring(0, test.type.indexOf(';'));
+
+  element.token = token;
+  manager.started(token);
+
+  element.src = test.name;
+  element.test = test;
+  element.stream = element.mozCaptureStream();
+
+  element.oncanplaythrough = function () {
+    runStateTransitionTests(element.stream);
+    manager.finished(token);
+  };
+
+  element.play();
+}
+
+manager.runTests(gMediaRecorderTests, startTest);
+</script>
+</pre>
+</body>
+</html>

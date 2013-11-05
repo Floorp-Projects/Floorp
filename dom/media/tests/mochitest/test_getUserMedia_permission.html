@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=853356
+-->
+<head>
+  <meta charset="utf-8">
+  <title>mozGetUserMedia Permission Test</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=853356">Display camera/microphone permission acquisition prompt</a>
+<script type="application/javascript">
+var MockPermissionPrompt = SpecialPowers.MockPermissionPrompt;
+MockPermissionPrompt.init();
+
+var gCount = 0;
+var gTests = [
+  {
+    constraints: {video: true, audio: false}
+  }
+  ,
+  {
+    constraints: {video: false, audio: true}
+  }
+  ,
+  {
+    constraints: {video: true, audio: true},
+  }
+  ];
+
+function gUM(data) {
+  var gum_success = function (stream) {
+    SimpleTest.info("TEST-INFO | Got succss callback for " + JSON.stringify(data.constraints));
+
+    var hasAudioTrack = stream.getAudioTracks().length > 0;
+    var hasVideoTrack = stream.getVideoTracks().length > 0;
+
+    is(data.constraints.audio, hasAudioTrack, "Request audio track:" +
+                  data.constraints.audio + " contain audio track:" + hasAudioTrack);
+    is(data.constraints.video, hasVideoTrack, "Request video track:" +
+                  data.constraints.video + " contain audio track:" + hasVideoTrack);
+    gCount++;
+    if (gCount < gTests.length) {
+      gUM(gTests[gCount]);
+    } else {
+      SimpleTest.finish();
+    }
+  }
+
+  var gum_fail = function () {
+    ok(false, "permission not granted for " + JSON.stringify(data.constraints));
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.info("TEST-INFO | Call getUserMedia for " + JSON.stringify(data.constraints));
+  navigator.mozGetUserMedia(data.constraints, gum_success, gum_fail);
+}
+
+SpecialPowers.pushPrefEnv({"set": [["media.navigator.permission.disabled", false]]},
+  function () {
+    SpecialPowers.addPermission('video-capture',
+                                Ci.nsIPermissionManager.ALLOW_ACTION, document);
+    SpecialPowers.addPermission('audio-capture',
+                                Ci.nsIPermissionManager.ALLOW_ACTION, document);
+
+    gUM(gTests[gCount]);
+  });
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

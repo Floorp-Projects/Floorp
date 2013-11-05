@@ -99,7 +99,7 @@
         let validator = createHosted("wrong-launch-path");
         validator.validate().then(() => {
             is(validator.errors.length, 1, "app with non-existant launch path got an error");
-            is(validator.errors[0], strings.formatStringFromName("validator.invalidLaunchPathBadHttpCode", [origin + "wrong-path.html", 404], 2),
+            is(validator.errors[0], strings.formatStringFromName("validator.accessFailedLaunchPathBadHttpCode", [origin + "wrong-path.html", 404], 2),
                "with the right error message");
             is(validator.warnings.length, 0, "but no warning");
             next();
@@ -112,7 +112,7 @@
             let file = nsFile(validator.project.location);
             file.append("wrong-path.html");
             let url = Services.io.newFileURI(file);
-            is(validator.errors[0], strings.formatStringFromName("validator.invalidLaunchPath", [url.spec], 1),
+            is(validator.errors[0], strings.formatStringFromName("validator.accessFailedLaunchPath", [url.spec], 1),
                "with the expected message");
             is(validator.warnings.length, 0, "but no warning");
 

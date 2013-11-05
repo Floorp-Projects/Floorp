@@ -30,13 +30,10 @@
 
 </preferences>
 
-<hbox class="heading" data-category="paneSecurity" hidden="true">
-  <image class="preference-icon" type="security"/>
-  <html:h1>&paneSecurity.title;</html:h1>
-</hbox>
-
 <!-- addons, forgery (phishing) UI -->
 <groupbox id="addonsPhishingGroup" data-category="paneSecurity" hidden="true">
+  <caption label="&general.label;"/>
+
   <hbox id="addonInstallBox">
     <checkbox id="warnAddonInstall" flex="1"
               label="&warnAddonInstall.label;"
