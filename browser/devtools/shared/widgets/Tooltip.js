@@ -288,10 +288,21 @@ Tooltip.prototype = {
 
   /**
    * Fill the tooltip with an image, displayed over a tiled background useful
-   * for transparent images.
-   * Also adds the image dimension as a label at the bottom.
+   * for transparent images. Also adds the image dimension as a label at the
+   * bottom.
+   * @param {string} imageUrl
+   *        The url to load the image from
+   * @param {Object} options
+   *        The following options are supported:
+   *        - resized : whether or not the image identified by imageUrl has been
+   *        resized before this function was called.
+   *        - naturalWidth/naturalHeight : the original size of the image before
+   *        it was resized, if if was resized before this function was called.
+   *        If not provided, will be measured on the loaded image.
+   *        - maxDim : if the image should be resized before being shown, pass
+   *        a number here
    */
-  setImageContent: function(imageUrl, maxDim=400) {
+  setImageContent: function(imageUrl, options={}) {
     // Main container
     let vbox = this.doc.createElement("vbox");
     vbox.setAttribute("align", "center")
@@ -308,9 +319,9 @@ Tooltip.prototype = {
     // Display the image
     let image = this.doc.createElement("image");
     image.setAttribute("src", imageUrl);
-    if (maxDim) {
-      image.style.maxWidth = maxDim + "px";
-      image.style.maxHeight = maxDim + "px";
+    if (options.maxDim) {
+      image.style.maxWidth = options.maxDim + "px";
+      image.style.maxHeight = options.maxDim + "px";
     }
     tiles.appendChild(image);
 
@@ -323,11 +334,9 @@ Tooltip.prototype = {
       imgObj.onload = null;
 
       // Display dimensions
-      label.textContent = imgObj.naturalWidth + " x " + imgObj.naturalHeight;
-      if (imgObj.naturalWidth > maxDim ||
-        imgObj.naturalHeight > maxDim) {
-        label.textContent += " *";
-      }
+      let w = options.naturalWidth || imgObj.naturalWidth;
+      let h = options.naturalHeight || imgObj.naturalHeight;
+      label.textContent = w + " x " + h;
     }
   },
 
@@ -338,7 +347,9 @@ Tooltip.prototype = {
   setCssBackgroundImageContent: function(cssBackground, sheetHref, maxDim=400) {
     let uri = getBackgroundImageUri(cssBackground, sheetHref);
     if (uri) {
-      this.setImageContent(uri, maxDim);
+      this.setImageContent(uri, {
+        maxDim: maxDim
+      });
     }
   },
 
