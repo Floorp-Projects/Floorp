@@ -95,6 +95,15 @@ this.SystemMessagePermissionsTable = {
   "cdma-info-rec-received": {
     "mobileconnection": []
   },
+  "nfc-manager-tech-discovered": {
+    "nfc-manager": []
+  },
+  "nfc-manager-tech-lost": {
+    "nfc-manager": []
+  },
+  "nfc-powerlevel-change": {
+    "settings": ["read", "write"]
+  }
 };
 
 this.SystemMessagePermissionsChecker = {
