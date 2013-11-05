@@ -11,6 +11,7 @@
  * JS public API typedefs.
  */
 
+#include "mozilla/LinkedList.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/PodOperations.h"
 
@@ -173,9 +174,12 @@ typedef bool                    (*JSInitCallback)(void);
 typedef void
 (* JSTraceDataOp)(JSTracer *trc, void *data);
 
+void js_FinishGC(JSRuntime *rt);
+
 namespace js {
 namespace gc {
 class StoreBuffer;
+void MarkPersistentRootedChains(JSTracer *);
 }
 }
 
@@ -224,7 +228,48 @@ struct Runtime
     static JS::shadow::Runtime *asShadowRuntime(JSRuntime *rt) {
         return reinterpret_cast<JS::shadow::Runtime*>(rt);
     }
+
+    /* Allow inlining of PersistentRooted constructors and destructors. */
+  private:
+    template <typename Referent> friend class JS::PersistentRooted;
+    friend void js::gc::MarkPersistentRootedChains(JSTracer *);
+    friend void ::js_FinishGC(JSRuntime *rt);
+
+    mozilla::LinkedList<PersistentRootedFunction> functionPersistentRooteds;
+    mozilla::LinkedList<PersistentRootedId>       idPersistentRooteds;
+    mozilla::LinkedList<PersistentRootedObject>   objectPersistentRooteds;
+    mozilla::LinkedList<PersistentRootedScript>   scriptPersistentRooteds;
+    mozilla::LinkedList<PersistentRootedString>   stringPersistentRooteds;
+    mozilla::LinkedList<PersistentRootedValue>    valuePersistentRooteds;
+
+    /* Specializations of this return references to the appropriate list. */
+    template<typename Referent>
+    inline mozilla::LinkedList<PersistentRooted<Referent> > &getPersistentRootedList();
 };
+
+template<>
+inline mozilla::LinkedList<PersistentRootedFunction>
+&Runtime::getPersistentRootedList<JSFunction *>() { return functionPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<PersistentRootedId>
+&Runtime::getPersistentRootedList<jsid>() { return idPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<PersistentRootedObject>
+&Runtime::getPersistentRootedList<JSObject *>() { return objectPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<PersistentRootedScript>
+&Runtime::getPersistentRootedList<JSScript *>() { return scriptPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<PersistentRootedString>
+&Runtime::getPersistentRootedList<JSString *>() { return stringPersistentRooteds; }
+
+template<>
+inline mozilla::LinkedList<PersistentRootedValue>
+&Runtime::getPersistentRootedList<Value>() { return valuePersistentRooteds; }
 
 } /* namespace shadow */
 } /* namespace JS */

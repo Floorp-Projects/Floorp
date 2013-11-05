@@ -142,7 +142,8 @@ public:
       // mLeftOverData != INT_MIN means that the panning model was HRTF and a
       // tail-time reference was added.  Even if the model is now equalpower,
       // the reference will need to be removed.
-      if (mLeftOverData > 0) {
+      if (mLeftOverData > 0 &&
+          mPanningModelFunction == &PannerNodeEngine::HRTFPanningFunction) {
         mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
       } else {
         if (mLeftOverData != INT_MIN) {

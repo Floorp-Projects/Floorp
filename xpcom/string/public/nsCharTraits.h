@@ -100,7 +100,7 @@ struct nsCharTraits<PRUnichar>
     typedef uint16_t  unsigned_char_type;
     typedef char      incompatible_char_type;
 
-    static char_type *sEmptyBuffer;
+    static char_type * const sEmptyBuffer;
 
     static
     void
@@ -326,7 +326,7 @@ struct nsCharTraits<char>
     typedef unsigned char  unsigned_char_type;
     typedef PRUnichar      incompatible_char_type;
 
-    static char_type *sEmptyBuffer;
+    static char_type *const sEmptyBuffer;
 
     static
     void

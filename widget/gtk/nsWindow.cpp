@@ -633,7 +633,7 @@ nsWindow::Destroy(void)
     if (rollupListener) {
         nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
         if (static_cast<nsIWidget *>(this) == rollupWidget) {
-            rollupListener->Rollup(0, nullptr);
+            rollupListener->Rollup(0, nullptr, nullptr);
         }
     }
 
@@ -4784,7 +4784,9 @@ nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY,
         } // if rollup listener knows about menus
 
         // if we've determined that we should still rollup, do it.
-        if (rollup && rollupListener->Rollup(popupsToRollup, nullptr)) {
+        bool usePoint = !aIsWheel && !aAlwaysRollup;
+        nsIntPoint point(aMouseX, aMouseY);
+        if (rollup && rollupListener->Rollup(popupsToRollup, usePoint ? &point : nullptr, nullptr)) {
             retVal = true;
         }
     }

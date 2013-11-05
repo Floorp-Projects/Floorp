@@ -15,6 +15,9 @@ namespace js {
 namespace gc {
 
 void
+MarkPersistentRootedChains(JSTracer *trc);
+
+void
 MarkRuntime(JSTracer *trc, bool useSavedRoots = false);
 
 void

@@ -164,7 +164,7 @@ public:
    * Hide the dropdown menu and stop capturing mouse events.
    * @note This method might destroy |this|.
    */
-  virtual bool Rollup(uint32_t aCount, nsIContent** aLastRolledUp) MOZ_OVERRIDE;
+  virtual bool Rollup(uint32_t aCount, const nsIntPoint* pos, nsIContent** aLastRolledUp) MOZ_OVERRIDE;
   virtual void NotifyGeometryChange() MOZ_OVERRIDE;
 
   /**

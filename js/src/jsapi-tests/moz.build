@@ -50,6 +50,7 @@ SOURCES += [
     'testOps.cpp',
     'testOriginPrincipals.cpp',
     'testParseJSON.cpp',
+    'testPersistentRooted.cpp',
     'testProfileStrings.cpp',
     'testPropCache.cpp',
     'testRegExp.cpp',

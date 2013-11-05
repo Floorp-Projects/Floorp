@@ -53,8 +53,8 @@
 
 /* BSDs */
 #elif defined(JS_HAVE_MACHINE_ENDIAN_H)
-# include <machine/endian.h>
 # include <sys/types.h>
+# include <machine/endian.h>
 
 # if defined(_BYTE_ORDER)
 #  if _BYTE_ORDER == _LITTLE_ENDIAN

@@ -195,7 +195,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         /*
          * XXX_occlusion_query_boolean provide ANY_SAMPLES_PASSED_CONSERVATIVE,
          * but EXT_occlusion_query_boolean is only a OpenGL ES extension. But
-         * it is supported on desktop if ARB_ES3_compatibility because 
+         * it is supported on desktop if ARB_ES3_compatibility because
          * EXT_occlusion_query_boolean (added in OpenGL ES 3.0).
          */
     },
@@ -246,6 +246,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
         {
             GLContext::ARB_robustness,
             GLContext::EXT_robustness,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "sRGB",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::EXT_sRGB,
             GLContext::Extensions_End
         }
     },
@@ -387,6 +396,18 @@ GLContext::InitFeatures()
             }
         }
     }
+
+    // Bug 843668: Work around limitation of the feature system.
+    // For sRGB support under OpenGL to match OpenGL ES spec, check for both
+    // EXT_texture_sRGB and EXT_framebuffer_sRGB is required.
+    const bool aresRGBExtensionsAvailable =
+        IsExtensionSupported(EXT_texture_sRGB) &&
+        (IsExtensionSupported(ARB_framebuffer_sRGB) ||
+         IsExtensionSupported(EXT_framebuffer_sRGB));
+
+    mAvailableFeatures[GLFeature::sRGB] =
+        aresRGBExtensionsAvailable &&
+        CanReadSRGBFromFBOTexture();
 }
 
 void
