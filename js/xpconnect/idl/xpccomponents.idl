@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(7d3bd945-a9af-497a-97c0-7f69e2d9cd71)]
+[scriptable, uuid(90019271-a0d1-439f-911c-967f8e85cd5b)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -306,6 +306,16 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     jsval getGlobalForObject(in jsval obj);
+
+    /*
+     * Similar to evalInSandbox except this one is used to eval a script in the
+     * scope of a window. Also note, that the return value and the possible exceptions
+     * in the script are structured cloned, unless they are natives (then they are just
+     * wrapped).
+     * Principal of the caller must subsume the target's.
+     */
+    [implicit_jscontext]
+    jsval evalInWindow(in AString source, in jsval window);
 
     /*
      * To be called from JS only.

@@ -3726,6 +3726,10 @@ CreateObjectIn(JSContext *cx, JS::HandleValue vobj, CreateObjectInOptions &optio
                JS::MutableHandleValue rval);
 
 bool
+EvalInWindow(JSContext *cx, const nsAString &source, JS::HandleObject scope,
+             JS::MutableHandleValue rval);
+
+bool
 ExportFunction(JSContext *cx, JS::HandleValue vscope, JS::HandleValue vfunction,
                JS::HandleValue vname, JS::MutableHandleValue rval);
 
