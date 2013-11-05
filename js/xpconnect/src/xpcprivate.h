@@ -3725,6 +3725,10 @@ bool
 CreateObjectIn(JSContext *cx, JS::HandleValue vobj, CreateObjectInOptions &options,
                JS::MutableHandleValue rval);
 
+bool
+ExportFunction(JSContext *cx, JS::HandleValue vscope, JS::HandleValue vfunction,
+               JS::HandleValue vname, JS::MutableHandleValue rval);
+
 } /* namespace xpc */
 
 
