@@ -28,7 +28,10 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
+#include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Util.h"
@@ -46,9 +49,7 @@
 #include "OSFileConstants.h"
 #include "xpcpublic.h"
 
-#include "Events.h"
 #include "SharedWorker.h"
-#include "Worker.h"
 #include "WorkerPrivate.h"
 
 #ifdef MOZ_NUWA_PROCESS
@@ -94,7 +95,6 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define MAX_IDLE_THREADS 20
 
 #define PREF_WORKERS_PREFIX "dom.workers."
-#define PREF_WORKERS_ENABLED PREF_WORKERS_PREFIX "enabled"
 #define PREF_WORKERS_MAX_PER_DOMAIN PREF_WORKERS_PREFIX "maxPerDomain"
 
 #define PREF_MAX_SCRIPT_RUN_TIME_CONTENT "dom.max_script_run_time"
@@ -162,9 +162,9 @@ jsid gStringIDs[ID_COUNT] = { JSID_VOID };
 const char* gStringChars[] = {
   "Worker",
   "ChromeWorker",
-  "WorkerEvent",
-  "WorkerMessageEvent",
-  "WorkerErrorEvent"
+  "Event",
+  "MessageEvent",
+  "ErrorEvent"
 
   // XXX Don't care about ProgressEvent since it should never leak to the main
   // thread.
@@ -982,12 +982,13 @@ public:
 
 BEGIN_WORKERS_NAMESPACE
 
-// Entry point for the DOM.
+// Entry point for main thread non-window globals.
 bool
 ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
                      unsigned aFlags, JS::MutableHandle<JSObject*> aObjp)
 {
   AssertIsOnMainThread();
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
   // Make sure our strings are interned.
   if (JSID_IS_VOID(gStringIDs[0])) {
@@ -1003,51 +1004,28 @@ ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid
     }
   }
 
-  bool isChrome = false;
   bool shouldResolve = false;
 
   for (uint32_t i = 0; i < ID_COUNT; i++) {
     if (gStringIDs[i] == aId) {
-      isChrome = nsContentUtils::IsCallerChrome();
-
-      // Don't resolve if this is ChromeWorker and we're not chrome. Otherwise
-      // always resolve.
-      shouldResolve = gStringIDs[ID_ChromeWorker] == aId ? isChrome : true;
+      shouldResolve = true;
       break;
     }
   }
 
-  if (shouldResolve) {
-    // Don't do anything if workers are disabled.
-    if (!isChrome && !Preferences::GetBool(PREF_WORKERS_ENABLED)) {
-      aObjp.set(nullptr);
-      return true;
-    }
-
-    JSObject* eventTarget = EventTargetBinding_workers::GetProtoObject(aCx, aObj);
-    if (!eventTarget) {
-      return false;
-    }
-
-    JSObject* worker = worker::InitClass(aCx, aObj, eventTarget, true);
-    if (!worker) {
-      return false;
-    }
-
-    if (isChrome && !chromeworker::InitClass(aCx, aObj, worker, true)) {
-      return false;
-    }
-
-    if (!events::InitClasses(aCx, aObj, true)) {
-      return false;
-    }
-
-    aObjp.set(aObj);
+  if (!shouldResolve) {
+    aObjp.set(nullptr);
     return true;
   }
 
-  // Not resolved.
-  aObjp.set(nullptr);
+  if (!WorkerBinding::GetConstructorObject(aCx, aObj) ||
+      !ChromeWorkerBinding::GetConstructorObject(aCx, aObj) ||
+      !ErrorEventBinding::GetConstructorObject(aCx, aObj) ||
+      !MessageEventBinding::GetConstructorObject(aCx, aObj)) {
+    return false;
+  }
+
+  aObjp.set(aObj);
   return true;
 }
 
@@ -2021,17 +1999,20 @@ RuntimeService::ResumeWorkersForWindow(nsPIDOMWindow* aWindow)
 }
 
 nsresult
-RuntimeService::CreateSharedWorker(JSContext* aCx, nsPIDOMWindow* aWindow,
+RuntimeService::CreateSharedWorker(const GlobalObject& aGlobal,
                                    const nsAString& aScriptURL,
                                    const nsAString& aName,
                                    SharedWorker** aSharedWorker)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aCx);
-  MOZ_ASSERT(aWindow);
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(window);
+
+  JSContext* cx = aGlobal.GetContext();
 
   WorkerPrivate::LoadInfo loadInfo;
-  nsresult rv = WorkerPrivate::GetLoadInfo(aCx, aWindow, nullptr, aScriptURL,
+  nsresult rv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL,
                                            false, &loadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2041,7 +2022,7 @@ RuntimeService::CreateSharedWorker(JSContext* aCx, nsPIDOMWindow* aWindow,
   rv = loadInfo.mResolvedScriptURI->GetSpec(scriptSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  WorkerPrivate* workerPrivate = nullptr;
+  nsRefPtr<WorkerPrivate> workerPrivate;
   {
     MutexAutoLock lock(mMutex);
 
@@ -2058,26 +2039,22 @@ RuntimeService::CreateSharedWorker(JSContext* aCx, nsPIDOMWindow* aWindow,
   bool created = false;
 
   if (!workerPrivate) {
-    nsRefPtr<WorkerPrivate> newWorkerPrivate =
-      WorkerPrivate::Create(aCx, JS::NullPtr(), nullptr, aScriptURL, false,
-                            WorkerPrivate::WorkerTypeShared, aName, &loadInfo);
-    NS_ENSURE_TRUE(newWorkerPrivate, NS_ERROR_FAILURE);
-
-    if (!RegisterWorker(aCx, newWorkerPrivate)) {
-      NS_WARNING("Failed to register worker!");
-      return NS_ERROR_FAILURE;
-    }
+    ErrorResult rv;
+    workerPrivate =
+      WorkerPrivate::Constructor(aGlobal, aScriptURL, false,
+                                 WorkerPrivate::WorkerTypeShared, aName,
+                                 &loadInfo, rv);
+    NS_ENSURE_TRUE(workerPrivate, rv.ErrorCode());
 
     created = true;
-    newWorkerPrivate.forget(&workerPrivate);
   }
 
   MOZ_ASSERT(workerPrivate->IsSharedWorker());
 
   nsRefPtr<SharedWorker> sharedWorker =
-    new SharedWorker(aWindow, workerPrivate);
+    new SharedWorker(window, workerPrivate);
 
-  if (!workerPrivate->RegisterSharedWorker(aCx, sharedWorker)) {
+  if (!workerPrivate->RegisterSharedWorker(cx, sharedWorker)) {
     NS_WARNING("Worker is unreachable, this shouldn't happen!");
     sharedWorker->Close();
     return NS_ERROR_FAILURE;
@@ -2087,9 +2064,9 @@ RuntimeService::CreateSharedWorker(JSContext* aCx, nsPIDOMWindow* aWindow,
   // worker already existed.
   if (!created) {
     nsTArray<WorkerPrivate*>* windowArray;
-    if (!mWindowMap.Get(aWindow, &windowArray)) {
+    if (!mWindowMap.Get(window, &windowArray)) {
       windowArray = new nsTArray<WorkerPrivate*>(1);
-      mWindowMap.Put(aWindow, windowArray);
+      mWindowMap.Put(window, windowArray);
     }
 
     if (!windowArray->Contains(workerPrivate)) {

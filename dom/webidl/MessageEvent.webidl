@@ -41,7 +41,6 @@ interface MessageEvent : Event {
    * the similarly-named method on the nsIDOMEvent interface, also setting the
    * data, origin, source, and lastEventId attributes of this appropriately.
    */
-  [Pref="dom.messageChannel.enabled"]
   readonly attribute MessagePortList? ports;
 };
 

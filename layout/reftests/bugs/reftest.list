@@ -1485,9 +1485,13 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 skip-if(B2G) fuzzy-if(Android&&AndroidVersion>=15,12,300) == 551463-1.html 551463-1-ref.html
 == 551699-1.html 551699-1-ref.html
 == 552334-1.html 552334-1-ref.html
-# 553571 depends on MS Indic shaping behavior and Win7 font support;
-# not expected to be reliable on XP or non-Windows platforms
-random-if(!winWidget) random-if(/^Windows\x20NT\x205/.test(http.oscpu)) != 553571-1.html 553571-1-notref.html # expect dotted circle in test, not in ref
+# Bug 553571 was specific to MS Indic shaping behavior and Win7 font support;
+# the test is not currently relevant under harfbuzz shaping.
+# Keeping it here for the record, and because we may evolve HB's dotted-circle
+# behavior further in the future, which could make this become relevant again.
+# Marked "random" rather than "fails" because it may (spuriously) appear to pass
+# on B2G or Android devices that completely lack any Sinhala font support.
+random != 553571-1.html 553571-1-notref.html # expect dotted circle in test, not in ref: "fails" under harfbuzz, which doesn't consider the sequence invalid
 fuzzy-if(!contentSameGfxBackendAsCanvas,128,91) random-if(d2d) skip-if(azureSkiaGL) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
 skip-if(B2G) fails-if(Android) == 557087-1.html 557087-ref.html
