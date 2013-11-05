@@ -190,10 +190,14 @@ PostMessageWriteStructuredClone(JSContext* cx,
     }
   }
 
-  MessagePort* port = nullptr;
+  MessagePortBase* port = nullptr;
   nsresult rv = UNWRAP_OBJECT(MessagePort, cx, obj, port);
   if (NS_SUCCEEDED(rv)) {
-    nsRefPtr<MessagePort> newPort = port->Clone();
+    nsRefPtr<MessagePortBase> newPort = port->Clone();
+
+    if (!newPort) {
+      return false;
+    }
 
     return JS_WriteUint32Pair(writer, SCTAG_DOM_MESSAGEPORT, 0) &&
            JS_WriteBytes(writer, &newPort, sizeof(newPort)) &&
@@ -282,6 +286,17 @@ PostMessageRunnable::Run()
   return status ? NS_OK : NS_ERROR_FAILURE;
 }
 
+MessagePortBase::MessagePortBase(nsPIDOMWindow* aWindow)
+  : nsDOMEventTargetHelper(aWindow)
+{
+  // SetIsDOMBinding() is called by nsDOMEventTargetHelper's ctor.
+}
+
+MessagePortBase::MessagePortBase()
+{
+  SetIsDOMBinding();
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(MessagePort)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessagePort,
@@ -326,16 +341,14 @@ NS_IMPL_ADDREF_INHERITED(MessagePort, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MessagePort, nsDOMEventTargetHelper)
 
 MessagePort::MessagePort(nsPIDOMWindow* aWindow)
-  : nsDOMEventTargetHelper(aWindow)
+  : MessagePortBase(aWindow)
   , mMessageQueueEnabled(false)
 {
-  MOZ_COUNT_CTOR(MessagePort);
   SetIsDOMBinding();
 }
 
 MessagePort::~MessagePort()
 {
-  MOZ_COUNT_DTOR(MessagePort);
   Close();
 }
 
@@ -346,9 +359,9 @@ MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 void
-MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                         const Optional<JS::Handle<JS::Value> >& aTransfer,
-                         ErrorResult& aRv)
+MessagePort::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                            const Optional<Sequence<JS::Value>>& aTransferable,
+                            ErrorResult& aRv)
 {
   nsRefPtr<PostMessageRunnable> event = new PostMessageRunnable();
 
@@ -359,9 +372,18 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   scInfo.mEvent = event;
   scInfo.mPort = this;
 
-  JS::Handle<JS::Value> transferable = aTransfer.WasPassed()
-                                       ? aTransfer.Value()
-                                       : JS::UndefinedHandleValue;
+  JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
+  if (aTransferable.WasPassed()) {
+    const Sequence<JS::Value>& realTransferable = aTransferable.Value();
+    JSObject* array =
+      JS_NewArrayObject(aCx, realTransferable.Length(),
+                        const_cast<JS::Value*>(realTransferable.Elements()));
+    if (!array) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    transferable.setObject(*array);
+  }
 
   if (!buffer.write(aCx, aMessage, transferable, &kPostMessageCallbacks,
                     &scInfo)) {
@@ -454,7 +476,7 @@ MessagePort::Entangle(MessagePort* aMessagePort)
   mEntangledPort = aMessagePort;
 }
 
-already_AddRefed<MessagePort>
+already_AddRefed<MessagePortBase>
 MessagePort::Clone()
 {
   nsRefPtr<MessagePort> newPort = new MessagePort(nullptr);

@@ -31,7 +31,7 @@
 #endif
 
 #include "mozilla/BlockingResourceBase.h"
-#include "mozilla/mozPoisonWrite.h"
+#include "mozilla/PoisonIOInterposer.h"
 
 #ifdef HAVE_DLOPEN
 #include <dlfcn.h>
