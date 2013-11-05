@@ -28,7 +28,7 @@ const {
   invalidResolve, invalidReject, createTree,
   compareWithHost, createBookmark, createBookmarkItem,
   createBookmarkTree, addVisits, resetPlaces
-} = require('./places-helper');
+} = require('../places-helper');
 const { promisedEmitter } = require('sdk/places/utils');
 const bmsrv = Cc['@mozilla.org/browser/nav-bookmarks-service;1'].
                     getService(Ci.nsINavBookmarksService);
@@ -963,5 +963,3 @@ function delayed (value, ms) {
   setTimeout(() => resolve(value), ms || 10);
   return promise;
 }
-
-require('test').run(exports);

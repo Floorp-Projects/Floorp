@@ -16,10 +16,10 @@ const tabs = require('sdk/tabs');
 const open = tabs.open;
 const port = 8099;
 const host = 'http://localhost:' + port;
-const { onFaviconChange, serve, binFavicon } = require('./favicon-helpers');
+const { onFaviconChange, serve, binFavicon } = require('../favicon-helpers');
 const { once } = require('sdk/system/events');
 const { defer } = require('sdk/core/promise');
-const { resetPlaces } = require('./places-helper');
+const { resetPlaces } = require('../places-helper');
 const faviconService = Cc["@mozilla.org/browser/favicon-service;1"].
                          getService(Ci.nsIFaviconService);
 
@@ -186,5 +186,3 @@ function complete(tab, srv, done) {
     });
   });
 }
-
-require("test").run(exports);

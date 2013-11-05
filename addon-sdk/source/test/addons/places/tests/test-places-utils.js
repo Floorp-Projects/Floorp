@@ -77,5 +77,3 @@ exports['test async walk'] = function (assert, done) {
     done();
   });
 };
-
-require('test').run(exports);

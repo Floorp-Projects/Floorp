@@ -33,8 +33,20 @@ const Subject = Class({
 });
 
 function emit(type, event) {
-  let subject = 'subject' in event ? Subject(event.subject) : null;
-  let data = 'data' in event ? event.data : null;
+  // From bug 910599
+  // We must test to see if 'subject' or 'data' is a defined property
+  // of the event object, but also allow primitives to be passed in,
+  // which the `in` operator breaks, yet `null` is an object, hence
+  // the long conditional
+  let subject = event && typeof event === 'object' && 'subject' in event ?
+    Subject(event.subject) :
+    null;
+  let data = event && typeof event === 'object' ?
+    // An object either returns its `data` property or null
+    ('data' in event ? event.data : null) :
+    // All other types return themselves (and cast to strings/null
+    // via observer service)
+    event;
   notifyObservers(subject, type, data);
 }
 exports.emit = emit;
