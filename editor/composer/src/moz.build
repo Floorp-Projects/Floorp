@@ -18,3 +18,25 @@ UNIFIED_SOURCES += [
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
+RESOURCE_FILES += [
+    'res/EditorOverride.css',
+    'res/grabber.gif',
+    'res/table-add-column-after-active.gif',
+    'res/table-add-column-after-hover.gif',
+    'res/table-add-column-after.gif',
+    'res/table-add-column-before-active.gif',
+    'res/table-add-column-before-hover.gif',
+    'res/table-add-column-before.gif',
+    'res/table-add-row-after-active.gif',
+    'res/table-add-row-after-hover.gif',
+    'res/table-add-row-after.gif',
+    'res/table-add-row-before-active.gif',
+    'res/table-add-row-before-hover.gif',
+    'res/table-add-row-before.gif',
+    'res/table-remove-column-active.gif',
+    'res/table-remove-column-hover.gif',
+    'res/table-remove-column.gif',
+    'res/table-remove-row-active.gif',
+    'res/table-remove-row-hover.gif',
+    'res/table-remove-row.gif',
+]

@@ -81,3 +81,50 @@ LOCAL_INCLUDES += [
     '/layout/xul',
 ]
 
+RESOURCE_FILES.cursors += [
+    'cursors/arrowN.png',
+    'cursors/arrowN@2x.png',
+    'cursors/arrowS.png',
+    'cursors/arrowS@2x.png',
+    'cursors/cell.png',
+    'cursors/cell@2x.png',
+    'cursors/colResize.png',
+    'cursors/colResize@2x.png',
+    'cursors/help.png',
+    'cursors/help@2x.png',
+    'cursors/move.png',
+    'cursors/move@2x.png',
+    'cursors/rowResize.png',
+    'cursors/rowResize@2x.png',
+    'cursors/sizeNE.png',
+    'cursors/sizeNE@2x.png',
+    'cursors/sizeNESW.png',
+    'cursors/sizeNESW@2x.png',
+    'cursors/sizeNS.png',
+    'cursors/sizeNS@2x.png',
+    'cursors/sizeNW.png',
+    'cursors/sizeNW@2x.png',
+    'cursors/sizeNWSE.png',
+    'cursors/sizeNWSE@2x.png',
+    'cursors/sizeSE.png',
+    'cursors/sizeSE@2x.png',
+    'cursors/sizeSW.png',
+    'cursors/sizeSW@2x.png',
+    'cursors/vtIBeam.png',
+    'cursors/vtIBeam@2x.png',
+    'cursors/zoomIn.png',
+    'cursors/zoomIn@2x.png',
+    'cursors/zoomOut.png',
+    'cursors/zoomOut@2x.png',
+]
+
+# These resources go in $(DIST)/bin/res/MainMenu.nib, but we can't use a magic
+# RESOURCE_FILES.MainMenu.nib attribute, since that would put the files in
+# $(DIST)/bin/res/MainMenu/nib. Instead, we call __setattr__ directly to create
+# an attribute with the correct name.
+RESOURCE_FILES.__setattr__('MainMenu.nib', [
+    'resources/MainMenu.nib/classes.nib',
+    'resources/MainMenu.nib/info.nib',
+    'resources/MainMenu.nib/keyedobjects.nib',
+])
+
