@@ -8,6 +8,7 @@
 #define js_RootingAPI_h
 
 #include "mozilla/GuardObjects.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/TypeTraits.h"
 
@@ -143,6 +144,7 @@ struct Cell;
 namespace JS {
 
 template <typename T> class Rooted;
+template <typename T> class PersistentRooted;
 
 /* This is exposing internal state of the GC for inlining purposes. */
 JS_FRIEND_API(bool) isGCEnabled();
@@ -440,6 +442,11 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
     Handle(const Rooted<S> &root,
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
+    template <typename S>
+    inline
+    Handle(const PersistentRooted<S> &root,
+           typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
+
     /* Construct a read only handle from a mutable handle. */
     template <typename S>
     inline
@@ -484,6 +491,7 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
 {
   public:
     inline MutableHandle(Rooted<T> *root);
+    inline MutableHandle(PersistentRooted<T> *root);
     MutableHandle(int) MOZ_DELETE;
 #ifdef MOZ_HAVE_CXX11_NULLPTR
     MutableHandle(decltype(nullptr)) MOZ_DELETE;
@@ -797,13 +805,6 @@ template <>
 class Rooted<JSStableString *>;
 #endif
 
-typedef Rooted<JSObject*>                   RootedObject;
-typedef Rooted<JSFunction*>                 RootedFunction;
-typedef Rooted<JSScript*>                   RootedScript;
-typedef Rooted<JSString*>                   RootedString;
-typedef Rooted<jsid>                        RootedId;
-typedef Rooted<JS::Value>                   RootedValue;
-
 } /* namespace JS */
 
 namespace js {
@@ -1026,6 +1027,14 @@ Handle<T>::Handle(const Rooted<S> &root,
 
 template <typename T> template <typename S>
 inline
+Handle<T>::Handle(const PersistentRooted<S> &root,
+                  typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy)
+{
+    ptr = reinterpret_cast<const T *>(root.address());
+}
+
+template <typename T> template <typename S>
+inline
 Handle<T>::Handle(MutableHandle<S> &root,
                   typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy)
 {
@@ -1040,6 +1049,123 @@ MutableHandle<T>::MutableHandle(Rooted<T> *root)
                   "MutableHandle must be binary compatible with T*.");
     ptr = root->address();
 }
+
+template <typename T>
+inline
+MutableHandle<T>::MutableHandle(PersistentRooted<T> *root)
+{
+    static_assert(sizeof(MutableHandle<T>) == sizeof(T *),
+                  "MutableHandle must be binary compatible with T*.");
+    ptr = root->address();
+}
+
+
+/*
+ * A copyable, assignable global GC root type with arbitrary lifetime, an
+ * infallible constructor, and automatic unrooting on destruction.
+ *
+ * These roots can be used in heap-allocated data structures, so they are not
+ * associated with any particular JSContext or stack. They are registered with
+ * the JSRuntime itself, without locking, so they require a full JSContext to be
+ * constructed, not one of its more restricted superclasses.
+ *
+ * Note that you must not use an PersistentRooted in an object owned by a JS
+ * object:
+ *
+ * Whenever one object whose lifetime is decided by the GC refers to another
+ * such object, that edge must be traced only if the owning JS object is traced.
+ * This applies not only to JS objects (which obviously are managed by the GC)
+ * but also to C++ objects owned by JS objects.
+ *
+ * If you put a PersistentRooted in such a C++ object, that is almost certainly
+ * a leak. When a GC begins, the referent of the PersistentRooted is treated as
+ * live, unconditionally (because a PersistentRooted is a *root*), even if the
+ * JS object that owns it is unreachable. If there is any path from that
+ * referent back to the JS object, then the C++ object containing the
+ * PersistentRooted will not be destructed, and the whole blob of objects will
+ * not be freed, even if there are no references to them from the outside.
+ *
+ * In the context of Firefox, this is a severe restriction: almost everything in
+ * Firefox is owned by some JS object or another, so using PersistentRooted in
+ * such objects would introduce leaks. For these kinds of edges, Heap<T> or
+ * TenuredHeap<T> would be better types. It's up to the implementor of the type
+ * containing Heap<T> or TenuredHeap<T> members to make sure their referents get
+ * marked when the object itself is marked.
+ */
+template<typename T>
+class PersistentRooted : public mozilla::LinkedListElement<PersistentRooted<T> > {
+    typedef mozilla::LinkedList<PersistentRooted> List;
+    typedef mozilla::LinkedListElement<PersistentRooted> Element;
+
+    void registerWithRuntime(JSRuntime *rt) {
+        JS::shadow::Runtime *srt = JS::shadow::Runtime::asShadowRuntime(rt);
+        srt->getPersistentRootedList<T>().insertBack(this);
+    }
+
+  public:
+    PersistentRooted(JSContext *cx) : ptr(js::GCMethods<T>::initial())
+    {
+        registerWithRuntime(js::GetRuntime(cx));
+    }
+
+    PersistentRooted(JSContext *cx, T initial) : ptr(initial)
+    {
+        registerWithRuntime(js::GetRuntime(cx));
+    }
+
+    PersistentRooted(JSRuntime *rt) : ptr(js::GCMethods<T>::initial())
+    {
+        registerWithRuntime(rt);
+    }
+
+    PersistentRooted(JSRuntime *rt, T initial) : ptr(initial)
+    {
+        registerWithRuntime(rt);
+    }
+
+    PersistentRooted(PersistentRooted &rhs) : ptr(rhs.ptr)
+    {
+        /*
+         * Copy construction takes advantage of the fact that the original
+         * is already inserted, and simply adds itself to whatever list the
+         * original was on - no JSRuntime pointer needed.
+         */
+        rhs.setNext(this);
+    }
+
+    /*
+     * Important: Return a reference here so passing a Rooted<T> to
+     * something that takes a |const T&| is not a GC hazard.
+     */
+    operator const T&() const { return ptr; }
+    T operator->() const { return ptr; }
+    T *address() { return &ptr; }
+    const T *address() const { return &ptr; }
+    T &get() { return ptr; }
+    const T &get() const { return ptr; }
+
+    T &operator=(T value) {
+        JS_ASSERT(!js::GCMethods<T>::poisoned(value));
+        ptr = value;
+        return ptr;
+    }
+
+    T &operator=(const PersistentRooted &value) {
+        ptr = value;
+        return ptr;
+    }
+
+    void set(T value) {
+        JS_ASSERT(!js::GCMethods<T>::poisoned(value));
+        ptr = value;
+    }
+
+    bool operator!=(const T &other) const { return ptr != other; }
+    bool operator==(const T &other) const { return ptr == other; }
+
+  private:
+    T ptr;
+};
 
 } /* namespace JS */
 

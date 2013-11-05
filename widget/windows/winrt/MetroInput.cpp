@@ -762,6 +762,7 @@ MetroInput::OnPointerEntered(UI::Core::ICoreWindow* aSender,
     UpdateInputLevel(LEVEL_PRECISE);
     InitGeckoMouseEventFromPointerPoint(event, currentPoint.Get());
     DispatchAsyncEventIgnoreStatus(event);
+    return S_OK;
   }
   UpdateInputLevel(LEVEL_IMPRECISE);
   return S_OK;
@@ -795,6 +796,7 @@ MetroInput::OnPointerExited(UI::Core::ICoreWindow* aSender,
     UpdateInputLevel(LEVEL_PRECISE);
     InitGeckoMouseEventFromPointerPoint(event, currentPoint.Get());
     DispatchAsyncEventIgnoreStatus(event);
+    return S_OK;
   }
   UpdateInputLevel(LEVEL_IMPRECISE);
   return S_OK;

@@ -123,7 +123,7 @@ if os_win:
         'src/chrome/common/process_watcher_win.cc',
         'src/chrome/common/transport_dib_win.cc',
     ]
-else:
+elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
     SOURCES += [
         'src/third_party/libevent/buffer.c',
         'src/third_party/libevent/bufferevent.c',
@@ -203,9 +203,10 @@ if os_macosx:
         'src/chrome/common/chrome_paths_mac.mm',
         'src/chrome/common/mach_ipc_mac.mm',
     ]
-    SOURCES += [
-        'src/third_party/libevent/kqueue.c',
-    ]
+    if not CONFIG['MOZ_NATIVE_LIBEVENT']:
+        SOURCES += [
+            'src/third_party/libevent/kqueue.c',
+        ]
 
 if os_linux:
     SOURCES += [
@@ -227,13 +228,14 @@ if os_linux:
         GENERATED_SOURCES += [
             'src/base/moc_message_pump_qt.cc',
         ]
-    if CONFIG['OS_TARGET'] != 'Android':
+    if not CONFIG['MOZ_NATIVE_LIBEVENT']:
+        if CONFIG['OS_TARGET'] != 'Android':
+            SOURCES += [
+                'src/third_party/libevent/epoll_sub.c',
+            ]
         SOURCES += [
-            'src/third_party/libevent/epoll_sub.c',
+            'src/third_party/libevent/epoll.c',
         ]
-    SOURCES += [
-        'src/third_party/libevent/epoll.c',
-    ]
 
 if os_bsd:
     SOURCES += [
@@ -259,9 +261,10 @@ if os_bsd:
         GENERATED_SOURCES += [
             'src/base/moc_message_pump_qt.cc',
         ]
-    SOURCES += [
-        'src/third_party/libevent/kqueue.c',
-    ]
+    if not CONFIG['MOZ_NATIVE_LIBEVENT']:
+        SOURCES += [
+            'src/third_party/libevent/kqueue.c',
+        ]
 
 if CONFIG['_MSC_VER']:
     SOURCES += [

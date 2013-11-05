@@ -8,6 +8,7 @@
 
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
 XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 /**
  * Browser-specific actors.
@@ -861,8 +862,6 @@ BrowserTabActor.prototype.requestTypes = {
   "reload": BrowserTabActor.prototype.onReload,
   "navigateTo": BrowserTabActor.prototype.onNavigateTo
 };
-
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 function BrowserAddonList(aConnection)
 {

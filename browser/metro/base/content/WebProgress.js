@@ -163,9 +163,11 @@ const WebProgress = {
 
   _showProgressBar: function (aTab) {
     // display the track
-    Elements.progressContainer.removeAttribute("collapsed");
-    Elements.progress.style.width = aTab._progressCount + "%";
-    Elements.progress.removeAttribute("fade");
+    if (aTab == Browser.selectedTab) {
+      Elements.progressContainer.removeAttribute("collapsed");
+      Elements.progress.style.width = aTab._progressCount + "%";
+      Elements.progress.removeAttribute("fade");
+    }
 
     // Create a pulse timer to keep things moving even if we don't
     // collect any state changes.
@@ -190,7 +192,9 @@ const WebProgress = {
     if (!aTab._progressActive)
       return;
     this._stepProgressCount(aTab);
-    Elements.progress.style.width = aTab._progressCount + "%";
+    if (aTab == Browser.selectedTab) {
+      Elements.progress.style.width = aTab._progressCount + "%";
+    }
   },
 
   _progressStepTimer: function _progressStepTimer(aTab) {
@@ -206,8 +210,10 @@ const WebProgress = {
   _progressStop: function _progressStop(aJson, aTab) {
     aTab._progressActive = false;
     // 'Whoosh out' and fade
-    Elements.progress.style.width = "100%";
-    Elements.progress.setAttribute("fade", true);
+    if (aTab == Browser.selectedTab) {
+      Elements.progress.style.width = "100%";
+      Elements.progress.setAttribute("fade", true);
+    }
   },
 
   _progressTransEnd: function _progressTransEnd(aEvent) {
