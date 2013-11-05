@@ -149,7 +149,7 @@ AppValidator.prototype.validateLaunchPath = function (manifest) {
   try {
     indexURL = Services.io.newURI(path, null, Services.io.newURI(origin, null, null)).spec;
   } catch(e) {
-    this.error(strings.formatStringFromName("validator.invalidLaunchPath", [origin + path], 1));
+    this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [origin + path], 1));
     deferred.resolve();
     return deferred.promise;
   }
@@ -158,25 +158,25 @@ AppValidator.prototype.validateLaunchPath = function (manifest) {
   try {
     req.open("HEAD", indexURL, true);
   } catch(e) {
-    this.error(strings.formatStringFromName("validator.invalidLaunchPath", [indexURL], 1));
+    this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL], 1));
     deferred.resolve();
     return deferred.promise;
   }
   req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
   req.onload = () => {
     if (req.status >= 400)
-      this.error(strings.formatStringFromName("validator.invalidLaunchPathBadHttpCode", [indexURL, req.status], 2));
+      this.error(strings.formatStringFromName("validator.accessFailedLaunchPathBadHttpCode", [indexURL, req.status], 2));
     deferred.resolve();
   };
   req.onerror = () => {
-    this.error(strings.formatStringFromName("validator.invalidLaunchPath", [indexURL], 1));
+    this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL], 1));
     deferred.resolve();
   };
 
   try {
     req.send(null);
   } catch(e) {
-    this.error(strings.formatStringFromName("validator.invalidLaunchPath", [indexURL], 1));
+    this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [indexURL], 1));
     deferred.resolve();
   }
 
