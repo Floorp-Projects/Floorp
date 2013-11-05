@@ -859,13 +859,14 @@ let CustomizableUIInternal = {
         parent = parent.parentNode;
       }
 
-      if ((parent && parent.customizationTarget == node.parentNode &&
-           gBuildWindows.get(aWindow).has(parent.toolbox)) ||
-          (parent && parent.localName == "toolbarpaletteitem")) {
+      if (parent && ((parent.customizationTarget == node.parentNode &&
+                      gBuildWindows.get(aWindow).has(parent.toolbox)) ||
+                     parent.localName == "toolbarpaletteitem")) {
         // Normalize the removable attribute. For backwards compat, if
         // the widget is not defined in a toolbox palette then absence
         // of the "removable" attribute means it is not removable.
         if (!node.hasAttribute("removable")) {
+          parent = parent.localName == "toolbarpaletteitem" ? parent.parentNode : parent;
           // If we first see this in customization mode, it may be in the
           // customization palette instead of the toolbox palette.
           node.setAttribute("removable", !parent.customizationTarget);
