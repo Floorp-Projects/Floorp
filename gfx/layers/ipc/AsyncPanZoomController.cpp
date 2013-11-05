@@ -1532,6 +1532,10 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
 
 void AsyncPanZoomController::UpdateScrollOffset(const CSSPoint& aScrollOffset)
 {
+  APZC_LOG("Updating scroll offset from (%f, %f) to (%f, %f)\n",
+    mFrameMetrics.mScrollOffset.x, mFrameMetrics.mScrollOffset.y,
+    aScrollOffset.x, aScrollOffset.y);
+
   ReentrantMonitorAutoEnter lock(mMonitor);
   mFrameMetrics.mScrollOffset = aScrollOffset;
 }
