@@ -123,7 +123,7 @@
 #include <stdio.h>
 
 #include "mozilla/Likely.h"
-#include "mozilla/mozPoisonWrite.h"
+#include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadLocal.h"
 
