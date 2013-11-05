@@ -68,8 +68,10 @@ static bool sAdapterDiscoverable = false;
 static nsString sAdapterBdAddress;
 static nsString sAdapterBdName;
 static uint32_t sAdapterDiscoverableTimeout;
+static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeDiscoveryRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
+static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
 
 /**
  *  Static callback functions
@@ -197,6 +199,24 @@ IsReady()
   return true;
 }
 
+static void
+StringToBdAddressType(const nsAString& aBdAddress,
+                      bt_bdaddr_t *aRetBdAddressType)
+{
+  const char* str = NS_ConvertUTF16toUTF8(aBdAddress).get();
+
+  for (int i = 0; i < 6; i++) {
+    aRetBdAddressType->address[i] = (uint8_t) strtoul(str, (char **)&str, 16);
+    str++;
+  }
+}
+
+/**
+ * AdapterPropertiesChangeCallback will be called after enable() but before
+ * AdapterStateChangeCallback sIsBtEnabled get updated.
+ * At that moment, both BluetoothManager/BluetoothAdapter does not register
+ * observer yet.
+ */
 static void
 AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
                                 bt_property_t *aProperties)
@@ -355,6 +375,120 @@ DiscoveryStateChangedCallback(bt_discovery_state_t aState)
   }
 }
 
+static void
+PinRequestCallback(bt_bdaddr_t* aRemoteBdAddress,
+                   bt_bdname_t* aRemoteBdName, uint32_t aRemoteClass)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  InfallibleTArray<BluetoothNamedValue> propertiesArray;
+  nsAutoString remoteAddress;
+  BdAddressTypeToString(aRemoteBdAddress, remoteAddress);
+
+  propertiesArray.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("address"), remoteAddress));
+  propertiesArray.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("method"),
+                        NS_LITERAL_STRING("pincode")));
+  propertiesArray.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("name"),
+                        NS_ConvertUTF8toUTF16(
+                          (const char*)aRemoteBdName->name)));
+
+  BluetoothValue value = propertiesArray;
+  BluetoothSignal signal(NS_LITERAL_STRING("RequestPinCode"),
+                         NS_LITERAL_STRING(KEY_LOCAL_AGENT), value);
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    NS_WARNING("Failed to dispatch to main thread!");
+  }
+}
+
+static void
+SspRequestCallback(bt_bdaddr_t* aRemoteBdAddress, bt_bdname_t* aRemoteBdName,
+                   uint32_t aRemoteClass, bt_ssp_variant_t aPairingVariant,
+                   uint32_t aPasskey)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  InfallibleTArray<BluetoothNamedValue> propertiesArray;
+  nsAutoString remoteAddress;
+  BdAddressTypeToString(aRemoteBdAddress, remoteAddress);
+
+  propertiesArray.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("address"), remoteAddress));
+  propertiesArray.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("method"),
+                        NS_LITERAL_STRING("confirmation")));
+  propertiesArray.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("name"),
+                        NS_ConvertUTF8toUTF16(
+                          (const char*)aRemoteBdName->name)));
+  propertiesArray.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("passkey"), aPasskey));
+
+  BluetoothValue value = propertiesArray;
+  BluetoothSignal signal(NS_LITERAL_STRING("RequestConfirmation"),
+                         NS_LITERAL_STRING(KEY_LOCAL_AGENT), value);
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    NS_WARNING("Failed to dispatch to main thread!");
+  }
+}
+
+static void
+BondStateChangedCallback(bt_status_t aStatus, bt_bdaddr_t* aRemoteBdAddress,
+                         bt_bond_state_t aState)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  if (aState == BT_BOND_STATE_BONDING) {
+    //We don't need to handle bonding state
+    return;
+  }
+
+  bool bonded = (aState == BT_BOND_STATE_BONDED);
+  nsAutoString remoteAddress;
+  BdAddressTypeToString(aRemoteBdAddress, remoteAddress);
+  InfallibleTArray<BluetoothNamedValue> propertiesArray;
+  propertiesArray.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("address"), remoteAddress));
+  propertiesArray.AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("status"), bonded));
+
+  BluetoothSignal newSignal(NS_LITERAL_STRING(PAIRED_STATUS_CHANGED_ID),
+                            NS_LITERAL_STRING(KEY_ADAPTER),
+                            BluetoothValue(propertiesArray));
+  NS_DispatchToMainThread(new DistributeBluetoothSignalTask(newSignal));
+
+  if (bonded && !sBondingRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sBondingRunnableArray[0],
+                           BluetoothValue(true), EmptyString());
+
+    sBondingRunnableArray.RemoveElementAt(0);
+  } else if (!bonded && !sUnbondingRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sUnbondingRunnableArray[0],
+                           BluetoothValue(true), EmptyString());
+
+    sUnbondingRunnableArray.RemoveElementAt(0);
+  }
+}
+
+static void
+AclStateChangedCallback(bt_status_t aStatus, bt_bdaddr_t* aRemoteBdAddress,
+                        bt_acl_state_t aState)
+{
+  //FIXME: This will be implemented in the later patchset
+}
+
+static void
+CallbackThreadEvent(bt_cb_thread_evt evt)
+{
+  //FIXME: This will be implemented in the later patchset
+}
+
 bt_callbacks_t sBluetoothCallbacks =
 {
   sizeof(sBluetoothCallbacks),
@@ -362,7 +496,12 @@ bt_callbacks_t sBluetoothCallbacks =
   AdapterPropertiesChangeCallback,
   RemoteDevicePropertiesChangeCallback,
   DeviceFoundCallback,
-  DiscoveryStateChangedCallback
+  DiscoveryStateChangedCallback,
+  PinRequestCallback,
+  SspRequestCallback,
+  BondStateChangedCallback,
+  AclStateChangedCallback,
+  CallbackThreadEvent
 };
 
 /**
@@ -515,6 +654,8 @@ nsresult
 BluetoothServiceBluedroid::GetPairedDevicePropertiesInternal(
   const nsTArray<nsString>& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   return NS_OK;
 }
 
@@ -700,14 +841,50 @@ BluetoothServiceBluedroid::CreatePairedDeviceInternal(
   const nsAString& aDeviceAddress, int aTimeout,
   BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!IsReady()) {
+    NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), errorStr);
+    return NS_OK;
+  }
+
+  bt_bdaddr_t remoteAddress;
+  StringToBdAddressType(aDeviceAddress, &remoteAddress);
+
+  int ret = sBtInterface->create_bond(&remoteAddress);
+  if (ret != BT_STATUS_SUCCESS) {
+    ReplyStatusError(aRunnable, ret, NS_LITERAL_STRING("CreatedPairedDevice"));
+  } else {
+    sBondingRunnableArray.AppendElement(aRunnable);
+  }
+
   return NS_OK;
 }
 
 nsresult
 BluetoothServiceBluedroid::RemoveDeviceInternal(
-  const nsAString& aDeviceObjectPath,
-  BluetoothReplyRunnable* aRunnable)
+  const nsAString& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!IsReady()) {
+    NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), errorStr);
+    return NS_OK;
+  }
+
+  bt_bdaddr_t remoteAddress;
+  StringToBdAddressType(aDeviceAddress, &remoteAddress);
+
+  int ret = sBtInterface->remove_bond(&remoteAddress);
+  if (ret != BT_STATUS_SUCCESS) {
+    ReplyStatusError(aRunnable, ret,
+                     NS_LITERAL_STRING("RemoveDevice"));
+  } else {
+    sUnbondingRunnableArray.AppendElement(aRunnable);
+  }
+
   return NS_OK;
 }
 
@@ -716,6 +893,27 @@ BluetoothServiceBluedroid::SetPinCodeInternal(
   const nsAString& aDeviceAddress, const nsAString& aPinCode,
   BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!IsReady()) {
+    NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), errorStr);
+    return false;
+  }
+
+  bt_bdaddr_t remoteAddress;
+  StringToBdAddressType(aDeviceAddress, &remoteAddress);
+
+  int ret = sBtInterface->pin_reply(
+      &remoteAddress, true, aPinCode.Length(),
+      (bt_pin_code_t*)NS_ConvertUTF16toUTF8(aPinCode).get());
+
+  if (ret != BT_STATUS_SUCCESS) {
+    ReplyStatusError(aRunnable, ret, NS_LITERAL_STRING("SetPinCode"));
+  } else {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
+  }
+
   return true;
 }
 
@@ -732,6 +930,26 @@ BluetoothServiceBluedroid::SetPairingConfirmationInternal(
   const nsAString& aDeviceAddress, bool aConfirm,
   BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!IsReady()) {
+    NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), errorStr);
+    return false;
+  }
+
+  bt_bdaddr_t remoteAddress;
+  StringToBdAddressType(aDeviceAddress, &remoteAddress);
+
+  int ret = sBtInterface->ssp_reply(&remoteAddress, (bt_ssp_variant_t)0,
+                                    aConfirm, 0);
+  if (ret != BT_STATUS_SUCCESS) {
+    ReplyStatusError(aRunnable, ret,
+                     NS_LITERAL_STRING("SetPairingConfirmation"));
+  } else {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
+  }
+
   return true;
 }
 
