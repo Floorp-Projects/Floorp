@@ -50,6 +50,7 @@ struct MmsDeliveryInfoData
 {
   nsString        receiver;
   DeliveryStatus  deliveryStatus;
+  uint64_t        deliveryTimestamp;
 };
 
 struct MmsMessageData
