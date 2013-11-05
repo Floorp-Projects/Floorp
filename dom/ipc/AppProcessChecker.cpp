@@ -219,12 +219,14 @@ CheckPermission(PContentParent* aActor,
     return permission;
   }
 
-  if (appPerm == PROMPT_ACTION || permission == PROMPT_ACTION) {
-    return PROMPT_ACTION;
+  if (appPerm == nsIPermissionManager::PROMPT_ACTION ||
+      permission == nsIPermissionManager::PROMPT_ACTION) {
+    return nsIPermissionManager::PROMPT_ACTION;
   }
 
-  if (appPerm == ALLOW_ACTION || permission == ALLOW_ACTION) {
-    return ALLOW_ACTION;
+  if (appPerm == nsIPermissionManager::ALLOW_ACTION ||
+      permission == nsIPermissionManager::ALLOW_ACTION) {
+    return nsIPermissionManager::ALLOW_ACTION;
   }
 
   NS_RUNTIMEABORT("Invalid permission value");
