@@ -134,6 +134,21 @@ PodArrayCopy(T (&dst)[N], const T (&src)[N])
 }
 
 /**
+ * Copy the memory for |nelem| T elements from |src| to |dst|.  If the two
+ * memory ranges overlap, then the effect is as if the |nelem| elements are
+ * first copied from |src| to a temporary array, and then from the temporary
+ * array to |dst|.
+ */
+template<typename T>
+MOZ_ALWAYS_INLINE static void
+PodMove(T* dst, const T* src, size_t nelem)
+{
+  MOZ_ASSERT(nelem <= SIZE_MAX / sizeof(T),
+             "trying to move an impossible number of elements");
+  memmove(dst, src, nelem * sizeof(T));
+}
+
+/**
  * Determine whether the |len| elements at |one| are memory-identical to the
  * |len| elements at |two|.
  */
