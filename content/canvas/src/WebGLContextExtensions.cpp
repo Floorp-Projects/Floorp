@@ -17,6 +17,7 @@ using namespace mozilla::gl;
 
 // must match WebGLContext::WebGLExtensionID
 static const char *sExtensionNames[] = {
+    "EXT_sRGB",
     "EXT_texture_filter_anisotropic",
     "OES_element_index_uint",
     "OES_standard_derivatives",
@@ -113,6 +114,8 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
                    gl->IsExtensionSupported(GLContext::ANGLE_depth_texture);
         case ANGLE_instanced_arrays:
             return WebGLExtensionInstancedArrays::IsSupported(this);
+        case EXT_sRGB:
+            return WebGLExtensionSRGB::IsSupported(this);
         default:
             // For warnings-as-errors.
             break;
@@ -256,6 +259,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
             break;
         case ANGLE_instanced_arrays:
             obj = new WebGLExtensionInstancedArrays(this);
+            break;
+        case EXT_sRGB:
+            obj = new WebGLExtensionSRGB(this);
             break;
         default:
             MOZ_ASSERT(false, "should not get there.");
