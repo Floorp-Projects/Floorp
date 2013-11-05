@@ -385,13 +385,16 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     UpdateRenderMode();
 
-    mGPUAdapterReporter = new GPUAdapterReporter();
-    NS_RegisterMemoryReporter(mGPUAdapterReporter);
+    // This reporter is disabled because it frequently gives bogus values.  See
+    // bug 917496.
+    //mGPUAdapterReporter = new GPUAdapterReporter();
+    //NS_RegisterMemoryReporter(mGPUAdapterReporter);
+    mGPUAdapterReporter = nullptr;
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
-    NS_UnregisterMemoryReporter(mGPUAdapterReporter);
+    //NS_UnregisterMemoryReporter(mGPUAdapterReporter);
 
     mDeviceManager = nullptr;
 
