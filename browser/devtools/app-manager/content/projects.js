@@ -14,7 +14,8 @@ const {AppProjects} = require("devtools/app-manager/app-projects");
 const {AppValidator} = require("devtools/app-manager/app-validator");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
-const {installHosted, installPackaged, getTargetForApp, reloadApp} = require("devtools/app-actor-front");
+const {installHosted, installPackaged, getTargetForApp,
+       reloadApp, launchApp, closeApp} = require("devtools/app-actor-front");
 const {EventEmitter} = Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
 const promise = require("sdk/core/promise");
@@ -206,6 +207,9 @@ let UI = {
   },
 
   reload: function (project) {
+    if (!this.connected) {
+      return promise.reject();
+    }
     return reloadApp(this.connection.client,
               this.listTabsResponse.webappsActor,
               this._getProjectManifestURL(project)).
@@ -253,6 +257,9 @@ let UI = {
   },
 
   install: function(project) {
+    if (!this.connected) {
+      return promise.reject();
+    }
     this.connection.log("Installing the " + project.manifest.name + " app...");
     let installPromise;
     if (project.type == "packaged") {
@@ -285,36 +292,30 @@ let UI = {
   },
 
   start: function(project) {
-    let deferred = promise.defer();
-    let request = {
-      to: this.listTabsResponse.webappsActor,
-      type: "launch",
-      manifestURL: this._getProjectManifestURL(project)
-    };
-    this.connection.client.request(request, (res) => {
-      if (res.error)
-        deferred.reject(res.error);
-      else
-        deferred.resolve(res);
-    });
-    return deferred.promise;
+    if (!this.connected) {
+      return promise.reject();
+    }
+    let manifestURL = this._getProjectManifestURL(project);
+    return launchApp(this.connection.client,
+                     this.listTabsResponse.webappsActor,
+                     manifestURL);
   },
 
   stop: function(location) {
+    if (!this.connected) {
+      return promise.reject();
+    }
     let project = AppProjects.get(location);
-    let deferred = promise.defer();
-    let request = {
-      to: this.listTabsResponse.webappsActor,
-      type: "close",
-      manifestURL: this._getProjectManifestURL(project)
-    };
-    this.connection.client.request(request, (res) => {
-      promive.resolve(res);
-    });
-    return deferred.promise;
+    let manifestURL = this._getProjectManifestURL(project);
+    return closeApp(this.connection.client,
+                    this.listTabsResponse.webappsActor,
+                    manifestURL);
   },
 
   debug: function(button, location) {
+    if (!this.connected) {
+      return promise.reject();
+    }
     button.disabled = true;
     let project = AppProjects.get(location);
 

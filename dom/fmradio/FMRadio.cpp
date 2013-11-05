@@ -14,6 +14,10 @@
 #include "mozilla/dom/PFMRadioChild.h"
 #include "mozilla/dom/FMRadioService.h"
 #include "DOMRequest.h"
+#include "nsDOMClassInfo.h"
+#include "nsIDocShell.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIAudioManager.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("FMRadio", args)
@@ -110,6 +114,27 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
     mHeadphoneState = GetCurrentSwitchState(SWITCH_HEADPHONES);
     RegisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
+
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+  NS_ENSURE_TRUE_VOID(target);
+  target->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
+                                 /* useCapture = */ true,
+                                 /* wantsUntrusted = */ false);
+
+  mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1");
+  if (!mAudioChannelAgent) {
+    return;
+  }
+
+  mAudioChannelAgent->InitWithWeakCallback(nsIAudioChannelAgent::AUDIO_AGENT_CHANNEL_CONTENT,
+                                           this);
+
+  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
+  if (docshell) {
+    bool isActive = false;
+    docshell->GetIsActive(&isActive);
+    mAudioChannelAgent->SetVisibilityState(isActive);
+  }
 }
 
 void
@@ -120,6 +145,11 @@ FMRadio::Shutdown()
   if (!mHasInternalAntenna) {
     UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
+
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+  NS_ENSURE_TRUE_VOID(target);
+  target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
+                                    /* useCapture = */ true);
 
   mIsShutdown = true;
 }
@@ -151,8 +181,14 @@ FMRadio::Notify(const FMRadioEventType& aType)
       break;
     case EnabledChanged:
       if (Enabled()) {
+        int32_t playingState = 0;
+        mAudioChannelAgent->StartPlaying(&playingState);
+        SetCanPlay(playingState == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+
         DispatchTrustedEvent(NS_LITERAL_STRING("enabled"));
       } else {
+        mAudioChannelAgent->StopPlaying();
+
         DispatchTrustedEvent(NS_LITERAL_STRING("disabled"));
       }
       break;
@@ -284,8 +320,43 @@ FMRadio::CancelSeek()
   return r.forget();
 }
 
+NS_IMETHODIMP
+FMRadio::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsAutoString type;
+  aEvent->GetType(type);
+
+  if (!type.EqualsLiteral("visibilitychange")) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
+  NS_ENSURE_TRUE(docshell, NS_ERROR_FAILURE);
+
+  bool isActive = false;
+  docshell->GetIsActive(&isActive);
+
+  mAudioChannelAgent->SetVisibilityState(isActive);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FMRadio::CanPlayChanged(int32_t aCanPlay)
+{
+  SetCanPlay(aCanPlay == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+  return NS_OK;
+}
+
+void
+FMRadio::SetCanPlay(bool aCanPlay)
+{
+  IFMRadioService::Singleton()->EnableAudio(aCanPlay);
+}
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FMRadio)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgentCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(FMRadio, nsDOMEventTargetHelper)

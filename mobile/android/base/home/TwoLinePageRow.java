@@ -26,6 +26,8 @@ import android.view.LayoutInflater;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
+
 public class TwoLinePageRow extends LinearLayout
                             implements Tabs.OnTabsChangedListener {
     private static final int NO_ICON = 0;
@@ -39,13 +41,33 @@ public class TwoLinePageRow extends LinearLayout
     private boolean mShowIcons;
     private int mLoadFaviconJobId = Favicons.NOT_LOADING;
 
-    // Listener for handling Favicon loads.
-    private final OnFaviconLoadedListener mFaviconListener = new OnFaviconLoadedListener() {
+    // Only holds a reference to the FaviconView itself, so if the row gets
+    // discarded while a task is outstanding, we'll leak less memory.
+    private static class UpdateViewFaviconLoadedListener implements OnFaviconLoadedListener {
+        private final WeakReference<FaviconView> view;
+        public UpdateViewFaviconLoadedListener(FaviconView view) {
+            this.view = new WeakReference<FaviconView>(view);
+        }
+
         @Override
         public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-            setFaviconWithUrl(favicon, faviconURL);
+            FaviconView v = view.get();
+            if (v == null) {
+                // Guess we stuck around after the TwoLinePageRow went away.
+                return;
+            }
+
+            if (favicon == null) {
+                v.showDefaultFavicon();
+                return;
+            }
+
+            v.updateImage(favicon, url);
         }
-    };
+    }
+
+    // Listener for handling Favicon loads.
+    private final OnFaviconLoadedListener mFaviconListener;
 
     // The URL for the page corresponding to this view.
     private String mPageUrl;
@@ -67,6 +89,7 @@ public class TwoLinePageRow extends LinearLayout
         mTitle = (TextView) findViewById(R.id.title);
         mUrl = (TextView) findViewById(R.id.url);
         mFavicon = (FaviconView) findViewById(R.id.favicon);
+        mFaviconListener = new UpdateViewFaviconLoadedListener(mFavicon);
     }
 
     @Override
@@ -116,14 +139,6 @@ public class TwoLinePageRow extends LinearLayout
 
         mUrlIconId = urlIconId;
         mUrl.setCompoundDrawablesWithIntrinsicBounds(mUrlIconId, 0, mBookmarkIconId, 0);
-    }
-
-    private void setFaviconWithUrl(Bitmap favicon, String url) {
-        if (favicon == null) {
-            mFavicon.showDefaultFavicon();
-        } else {
-            mFavicon.updateImage(favicon, url);
-        }
     }
 
     private void setBookmarkIcon(int bookmarkIconId) {
