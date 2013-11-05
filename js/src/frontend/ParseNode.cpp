@@ -6,7 +6,6 @@
 
 #include "frontend/ParseNode-inl.h"
 
-#include "builtin/Module.h"
 #include "frontend/Parser.h"
 
 #include "jscntxtinlines.h"
@@ -385,9 +384,6 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
 #define NULLCHECK(e)    JS_BEGIN_MACRO if (!(e)) return nullptr; JS_END_MACRO
 
       case PN_CODE:
-        if (pn->getKind() == PNK_MODULE) {
-            MOZ_ASSUME_UNREACHABLE("module nodes cannot be cloned");
-        }
         NULLCHECK(pn->pn_funbox = newFunctionBox(pn, opn->pn_funbox->function(), pc,
                                                  Directives(/* strict = */ opn->pn_funbox->strict),
                                                  opn->pn_funbox->generatorKind()));
@@ -767,26 +763,11 @@ ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
     JS_ASSERT(asFunctionBox()->function() == function);
 }
 
-ModuleBox *
-ObjectBox::asModuleBox()
-{
-    JS_ASSERT(isModuleBox());
-    return static_cast<ModuleBox *>(this);
-}
-
 FunctionBox *
 ObjectBox::asFunctionBox()
 {
     JS_ASSERT(isFunctionBox());
     return static_cast<FunctionBox *>(this);
-}
-
-ObjectBox::ObjectBox(Module *module, ObjectBox* traceLink)
-  : object(module),
-    traceLink(traceLink),
-    emitLink(nullptr)
-{
-    JS_ASSERT(object->is<Module>());
 }
 
 void
@@ -795,8 +776,6 @@ ObjectBox::trace(JSTracer *trc)
     ObjectBox *box = this;
     while (box) {
         MarkObjectRoot(trc, &box->object, "parser.object");
-        if (box->isModuleBox())
-            box->asModuleBox()->bindings.trace(trc);
         if (box->isFunctionBox())
             box->asFunctionBox()->bindings.trace(trc);
         box = box->traceLink;
