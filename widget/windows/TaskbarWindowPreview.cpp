@@ -154,7 +154,9 @@ TaskbarWindowPreview::SetProgressState(nsTaskbarProgressState aState,
                                        uint64_t aCurrentValue,
                                        uint64_t aMaxValue)
 {
-  NS_ENSURE_ARG_RANGE(aState, 0, ArrayLength(sNativeStates) - 1);
+  NS_ENSURE_ARG_RANGE(aState,
+                      nsTaskbarProgressState(0),
+                      nsTaskbarProgressState(ArrayLength(sNativeStates) - 1));
 
   TBPFLAG nativeState = sNativeStates[aState];
   if (nativeState == TBPF_NOPROGRESS || nativeState == TBPF_INDETERMINATE) {

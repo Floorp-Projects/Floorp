@@ -6,97 +6,115 @@
 
 @namespace html "http://www.w3.org/1999/xhtml";
 
-#preferences-home {
-  display: block;
-}
-
 #header {
   margin-bottom: 18px;
 }
 
-.landingButton {
-  -moz-box-align: center;
-  -moz-box-orient: vertical;
-  border: none;
-  background: none;
-  box-shadow: none;
-}
-
-.landingButton:hover {
-  cursor: pointer;
-}
-
-.landingButton-label {
-  margin-top: 4px;
-}
-
-.landingButton-icon {
-  display: block;
-  width: 32px;
-  height: 32px;
-  background-image: url("chrome://browser/skin/preferences/Options.png");
-  background-repeat: no-repeat;
-}
-
-.preference-icon {
-  display: block;
-  width: 32px;
-  height: 32px;
-  background-image: url("chrome://browser/skin/preferences/Options.png");
-  background-repeat: no-repeat;
-  margin: 0 20px;
-}
-
-.preference-icon[type="general"],
-.landingButton-icon[type="general"] {
-  background-position: 0 0;
-}
-
-.preference-icon[type="content"],
-.landingButton-icon[type="content"] {
-  background-position: -64px 0;
-}
-
-.preference-icon[type="applications"],
-.landingButton-icon[type="applications"] {
-  background-position: -96px 0;
-}
-
-.preference-icon[type="privacy"],
-.landingButton-icon[type="privacy"] {
-  background-position: -128px 0;
-}
-
-.preference-icon[type="security"],
-.landingButton-icon[type="security"] {
-  background-position: -160px 0;
-}
-
-.preference-icon[type="advanced"],
-.landingButton-icon[type="advanced"] {
-  background-position: -192px 0;
-}
-
-.preference-icon[type="sync"],
-.landingButton-icon[type="sync"] {
-  background-image: url("chrome://browser/skin/preferences/Options-sync.png");
-}
-
 caption {
-  font-size: 20px;
+  font-size: 1.667rem;
 }
 
-.heading {
-  height: 50px;
-  background-color: rgba(192,199,210,0.7);
-  border-radius: 5px 5px 0 0;
-  margin-bottom: 15px;
-  -moz-box-align: center;
+.main-content {
+  max-width: 800px;
 }
 
 prefpane > .content-box {
   overflow: auto;
 }
+
+/* Category List */
+
+#categories {
+  -moz-appearance: none;
+  border: none;
+  -moz-margin-end: -1px;
+  background-color: transparent;
+  position: relative;
+  margin-top: 31px;
+}
+
+.category {
+  -moz-appearance: none;
+  background-color: transparent;
+  color: #252F3B;
+  padding: 10px 4px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+  -moz-padding-end: 8px;
+  -moz-box-align: center;
+  overflow: hidden;
+  min-height: 0;
+  height: 52px;
+}
+
+.category:-moz-locale-dir(ltr) {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.category:-moz-locale-dir(rtl) {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.category[selected] {
+  background-color: rgba(255, 255, 255, 0.4);
+  color: #252F3B;
+  border-color: #C3CEDF;
+  -moz-border-end-color: #E2E9F2;
+}
+
+.category-name {
+  font-size: 1.5rem;
+  -moz-padding-end: 24px;
+}
+
+/* Maximize the size of the viewport when the window is small */
+@media (max-width: 800px) {
+  .category-name {
+    display: none;
+  }
+}
+
+.category-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0 6px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
+  list-style-image: url("chrome://browser/skin/preferences/Options.png");
+}
+
+#category-general > .category-icon {
+  -moz-image-region: rect(0, 32px, 32px, 0);
+}
+
+#category-content > .category-icon {
+  -moz-image-region: rect(0, 96px,  32px, 64px)
+}
+
+#category-application > .category-icon {
+  -moz-image-region: rect(0, 128px,  32px, 96px)
+}
+
+#category-privacy > .category-icon {
+  -moz-image-region: rect(0, 160px,  32px, 128px)
+}
+
+#category-security > .category-icon {
+  -moz-image-region: rect(0, 192px,  32px, 160px)
+}
+
+#category-advanced > .category-icon {
+  -moz-image-region: rect(0, 224px, 32px, 192px)
+}
+
+%ifdef MOZ_SERVICES_SYNC
+#category-sync > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/Options-sync.png");
+}
+%endif
 
 /* Applications Pane Styles */
 

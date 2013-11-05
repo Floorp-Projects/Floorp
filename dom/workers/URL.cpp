@@ -6,8 +6,6 @@
 #include "URL.h"
 #include "File.h"
 
-#include "nsTraceRefcnt.h"
-
 #include "WorkerPrivate.h"
 #include "nsThreadUtils.h"
 
@@ -19,8 +17,8 @@
 #include "nsIDocument.h"
 #include "nsIDOMFile.h"
 
-#include "DOMBindingInlines.h"
 #include "mozilla/dom/URL.h"
+#include "mozilla/dom/URLBinding.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 
@@ -559,14 +557,7 @@ URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
     return nullptr;
   }
 
-  nsRefPtr<URL> url = new URL(workerPrivate, proxy);
-
-  if (!Wrap(aGlobal.GetContext(), aGlobal.Get(), url)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  return url;
+  return new URL(workerPrivate, proxy);
 }
 
 // static
@@ -590,25 +581,20 @@ URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
     return nullptr;
   }
 
-  nsRefPtr<URL> url = new URL(workerPrivate, proxy);
-
-  if (!Wrap(aGlobal.GetContext(), aGlobal.Get(), url)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  return url;
+  return new URL(workerPrivate, proxy);
 }
 
 URL::URL(WorkerPrivate* aWorkerPrivate, URLProxy* aURLProxy)
-  : DOMBindingBase(aWorkerPrivate->GetJSContext())
-  , mWorkerPrivate(aWorkerPrivate)
+  : mWorkerPrivate(aWorkerPrivate)
   , mURLProxy(aURLProxy)
 {
+  MOZ_COUNT_CTOR(workers::URL);
 }
 
 URL::~URL()
 {
+  MOZ_COUNT_DTOR(workers::URL);
+
   if (mURLProxy) {
     nsRefPtr<TeardownRunnable> runnable = new TeardownRunnable(mURLProxy);
     mURLProxy = nullptr;
@@ -619,16 +605,11 @@ URL::~URL()
   }
 }
 
-void
-URL::_trace(JSTracer* aTrc)
+JSObject*
+URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope,
+                bool* aTookOwnership)
 {
-  DOMBindingBase::_trace(aTrc);
-}
-
-void
-URL::_finalize(JSFreeOp* aFop)
-{
-  DOMBindingBase::_finalize(aFop);
+  return URLBinding_workers::Wrap(aCx, aScope, this, aTookOwnership);
 }
 
 void
