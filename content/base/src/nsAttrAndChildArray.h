@@ -71,6 +71,11 @@ public:
   already_AddRefed<nsIContent> TakeChildAt(uint32_t aPos);
   int32_t IndexOfChild(const nsINode* aPossibleChild) const;
 
+  bool HasAttrs() const
+  {
+    return MappedAttrCount() || (AttrSlotCount() && AttrSlotIsTaken(0));
+  }
+
   uint32_t AttrCount() const;
   const nsAttrValue* GetAttr(nsIAtom* aLocalName,
                              int32_t aNamespaceID = kNameSpaceID_None) const;
