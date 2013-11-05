@@ -844,6 +844,14 @@ DrawTargetCairo::Fill(const Path *aPath,
 }
 
 void
+DrawTargetCairo::SetPermitSubpixelAA(bool aPermitSubpixelAA)
+{
+  DrawTarget::SetPermitSubpixelAA(aPermitSubpixelAA);
+  cairo_surface_set_subpixel_antialiasing(mSurface,
+    aPermitSubpixelAA ? CAIRO_SUBPIXEL_ANTIALIASING_ENABLED : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
+}
+
+void
 DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
                             const GlyphBuffer &aBuffer,
                             const Pattern &aPattern,
