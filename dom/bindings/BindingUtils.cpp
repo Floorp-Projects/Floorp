@@ -2153,10 +2153,38 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
 }
 
 bool
-ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj) {
+ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj)
+{
   using mozilla::dom::workers::GetWorkerPrivateFromContext;
   return NS_IsMainThread() ? xpc::AccessCheck::isChrome(aObj):
                              GetWorkerPrivateFromContext(aCx)->IsChromeWorker();
+}
+
+void
+TraceGlobal(JSTracer* aTrc, JSObject* aObj)
+{
+  MOZ_ASSERT(js::GetObjectClass(aObj)->flags & JSCLASS_DOM_GLOBAL);
+  mozilla::dom::TraceProtoAndIfaceCache(aTrc, aObj);
+}
+
+bool
+ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
+              JS::MutableHandle<jsid> aId, unsigned aFlags,
+              JS::MutableHandle<JSObject*> aObjp)
+{
+  bool resolved;
+  if (!JS_ResolveStandardClass(aCx, aObj, aId, &resolved)) {
+    return false;
+  }
+
+  aObjp.set(resolved ? aObj.get() : nullptr);
+  return true;
+}
+
+bool
+EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj)
+{
+  return JS_EnumerateStandardClasses(aCx, aObj);
 }
 
 } // namespace dom

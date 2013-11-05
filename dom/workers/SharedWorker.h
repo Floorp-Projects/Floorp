@@ -9,6 +9,7 @@
 #include "Workers.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/workers/bindings/MessagePort.h"
 #include "nsDOMEventTargetHelper.h"
 
 class nsIDOMEvent;
@@ -80,6 +81,12 @@ public:
 
   virtual nsresult
   PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+
+  WorkerPrivate*
+  GetWorkerPrivate() const
+  {
+    return mWorkerPrivate;
+  }
 
 private:
   // This class can only be created from the RuntimeService.

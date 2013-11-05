@@ -891,41 +891,32 @@ LoadWorkerScript(JSContext* aCx)
   return LoadAllScripts(aCx, worker, loadInfos, true);
 }
 
-bool
-Load(JSContext* aCx, unsigned aURLCount, jsval* aURLs)
+void
+Load(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+     const Sequence<nsString>& aScriptURLs, ErrorResult& aRv)
 {
-  WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
-  NS_ASSERTION(worker, "This should never be null!");
+  const uint32_t urlCount = aScriptURLs.Length();
 
-  if (!aURLCount) {
-    return true;
+  if (!urlCount) {
+    return;
   }
 
-  if (aURLCount > MAX_CONCURRENT_SCRIPTS) {
-    JS_ReportError(aCx, "Cannot load more than %d scripts at one time!",
-                   MAX_CONCURRENT_SCRIPTS);
-    return false;
+  if (urlCount > MAX_CONCURRENT_SCRIPTS) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
   }
 
   nsTArray<ScriptLoadInfo> loadInfos;
-  loadInfos.SetLength(uint32_t(aURLCount));
+  loadInfos.SetLength(urlCount);
 
-  for (unsigned index = 0; index < aURLCount; index++) {
-    JSString* str = JS_ValueToString(aCx, aURLs[index]);
-    if (!str) {
-      return false;
-    }
-
-    size_t length;
-    const jschar* buffer = JS_GetStringCharsAndLength(aCx, str, &length);
-    if (!buffer) {
-      return false;
-    }
-
-    loadInfos[index].mURL.Assign(buffer, length);
+  for (uint32_t index = 0; index < urlCount; index++) {
+    loadInfos[index].mURL = aScriptURLs[index];
   }
 
-  return LoadAllScripts(aCx, worker, loadInfos, false);
+  if (!LoadAllScripts(aCx, aWorkerPrivate, loadInfos, false)) {
+    // LoadAllScripts can fail if we're shutting down.
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 } // namespace scriptloader
