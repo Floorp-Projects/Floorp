@@ -64,6 +64,27 @@ UnwrapArg(JSContext* cx, JS::Handle<JS::Value> v, Interface** ppArg,
   return rv;
 }
 
+inline const ErrNum
+GetInvalidThisErrorForMethod(bool aSecurityError)
+{
+  return aSecurityError ? MSG_METHOD_THIS_UNWRAPPING_DENIED :
+                          MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
+}
+
+inline const ErrNum
+GetInvalidThisErrorForGetter(bool aSecurityError)
+{
+  return aSecurityError ? MSG_GETTER_THIS_UNWRAPPING_DENIED :
+                          MSG_GETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
+}
+
+inline const ErrNum
+GetInvalidThisErrorForSetter(bool aSecurityError)
+{
+  return aSecurityError ? MSG_SETTER_THIS_UNWRAPPING_DENIED :
+                          MSG_SETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
+}
+
 bool
 ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                  const ErrNum aErrorNumber,
@@ -969,7 +990,7 @@ TryPreserveWrapper(JSObject* obj);
 // Can only be called with the immediate prototype of the instance object. Can
 // only be called on the prototype of an object known to be a DOM instance.
 bool
-InstanceClassHasProtoAtDepth(JS::Handle<JSObject*> protoObject, uint32_t protoID,
+InstanceClassHasProtoAtDepth(JSObject* protoObject, uint32_t protoID,
                              uint32_t depth);
 
 // Only set allowNativeWrapper to false if you really know you need it, if in

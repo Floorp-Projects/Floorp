@@ -43,7 +43,7 @@ public:
   void Init();
   void Invalidate();
 
-  void GetPlugins(nsTArray<nsRefPtr<nsPluginElement> >& aPlugins);
+  void GetMimeTypes(nsTArray<nsRefPtr<nsMimeType> >& aMimeTypes);
 
   // PluginArray WebIDL methods
 
@@ -97,7 +97,7 @@ public:
   nsTArray<nsRefPtr<nsMimeType> >& MimeTypes();
 
 protected:
-  void EnsureMimeTypes();
+  void EnsurePluginMimeTypes();
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsRefPtr<nsPluginTag> mPluginTag;

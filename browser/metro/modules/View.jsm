@@ -8,6 +8,7 @@ this.EXPORTED_SYMBOLS = ["View"];
 Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
 Components.utils.import("resource:///modules/colorUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Task.jsm");
 
 // --------------------------------
 // module helpers
@@ -31,7 +32,7 @@ function View(aSet) {
     observe: (aSubject, aTopic, aData) => this._adjustDOMforViewState(aData)
   };
   Services.obs.addObserver(this.viewStateObserver, "metro_viewstate_changed", false);
-
+  ColorUtils.init();
   this._adjustDOMforViewState();
 }
 
@@ -87,7 +88,13 @@ View.prototype = {
     aItem.iconSrc = aIconUri.spec;
     let faviconURL = (PlacesUtils.favicons.getFaviconLinkForIcon(aIconUri)).spec;
     let xpFaviconURI = makeURI(faviconURL.replace("moz-anno:favicon:",""));
-    let successAction = function(foreground, background) {
+
+    Task.spawn(function() {
+      let colorInfo = yield ColorUtils.getForegroundAndBackgroundIconColors(xpFaviconURI);
+      if (!(colorInfo && colorInfo.background && colorInfo.foreground)) {
+        return;
+      }
+      let { background, foreground } = colorInfo;
       aItem.style.color = foreground; //color text
       aItem.setAttribute("customColor", background);
       let matteColor =  0xffffff; // white
@@ -100,9 +107,7 @@ View.prototype = {
       if ('color' in aItem) {
         aItem.color = background;
       }
-    };
-    let failureAction = function() {};
-    ColorUtils.getForegroundAndBackgroundIconColors(xpFaviconURI, successAction, failureAction);
+    });
   }
 
 };

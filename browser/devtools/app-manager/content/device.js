@@ -9,9 +9,11 @@ Cu.import("resource:///modules/devtools/gDevTools.jsm");
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
 
-const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
+const {ConnectionManager, Connection}
+  = require("devtools/client/connection-manager");
 const {getDeviceFront} = require("devtools/server/actors/device");
-const {getTargetForApp} = require("devtools/app-actor-front");
+const {getTargetForApp, launchApp, closeApp}
+  = require("devtools/app-actor-front");
 const DeviceStore = require("devtools/app-manager/device-store");
 const WebappsStore = require("devtools/app-manager/webapps-store");
 const promise = require("sdk/core/promise");
@@ -32,17 +34,33 @@ window.addEventListener("message", function(event) {
   } catch(e) {
     Cu.reportError(e);
   }
-}, false);
+});
+
+window.addEventListener("unload", function onUnload() {
+  window.removeEventListener("unload", onUnload);
+  UI.destroy();
+});
 
 let UI = {
   init: function() {
     this.showFooterIfNeeded();
-    this._onConnectionStatusChange = this._onConnectionStatusChange.bind(this);
     this.setTab("apps");
     if (this.connection) {
       this.onNewConnection();
     } else {
       this.hide();
+    }
+  },
+
+  destroy: function() {
+    if (this.connection) {
+      this.connection.off(Connection.Events.STATUS_CHANGED, this._onConnectionStatusChange);
+    }
+    if (this.store) {
+      this.store.destroy();
+    }
+    if (this.template) {
+      this.template.destroy();
     }
   },
 
@@ -73,6 +91,9 @@ let UI = {
       "apps": new WebappsStore(this.connection),
     });
 
+    if (this.template) {
+      this.template.destroy();
+    }
     this.template = new Template(document.body, this.store, Utils.l10n);
 
     this.template.start();
@@ -104,6 +125,8 @@ let UI = {
     }
   },
 
+  get connected() { return !!this.listTabsResponse; },
+
   setTab: function(name) {
     var tab = document.querySelector(".tab.selected");
     var panel = document.querySelector(".tabpanel.selected");
@@ -119,9 +142,9 @@ let UI = {
   },
 
   screenshot: function() {
-    if (!this.listTabsResponse)
+    if (!this.connected) {
       return;
-
+    }
     let front = getDeviceFront(this.connection.client, this.listTabsResponse);
     front.screenshotToBlob().then(blob => {
       let topWindow = Services.wm.getMostRecentWindow("navigator:browser");
@@ -136,8 +159,9 @@ let UI = {
   },
 
   openToolbox: function(manifest) {
-    if (!this.listTabsResponse)
+    if (!this.connected) {
       return;
+    }
     getTargetForApp(this.connection.client,
                     this.listTabsResponse.webappsActor,
                     manifest).then((target) => {
@@ -152,40 +176,24 @@ let UI = {
   },
 
   startApp: function(manifest) {
-    let deferred = promise.defer();
-
-    if (!this.listTabsResponse) {
-      deferred.reject();
-    } else {
-      let actor = this.listTabsResponse.webappsActor;
-      let request = {
-        to: actor,
-        type: "launch",
-        manifestURL: manifest,
-      }
-      this.connection.client.request(request, (res) => {
-        deferred.resolve()
-      });
+    if (!this.connected) {
+      return promise.reject();
     }
-    return deferred.promise;
+    return launchApp(this.connection.client,
+                     this.listTabsResponse.webappsActor,
+                     manifest);
   },
 
   stopApp: function(manifest) {
-    let deferred = promise.defer();
-
-    if (!this.listTabsResponse) {
-      deferred.reject();
-    } else {
-      let actor = this.listTabsResponse.webappsActor;
-      let request = {
-        to: actor,
-        type: "close",
-        manifestURL: manifest,
-      }
-      this.connection.client.request(request, (res) => {
-        deferred.resolve()
-      });
+    if (!this.connected) {
+      return promise.reject();
     }
-    return deferred.promise;
+    return closeApp(this.connection.client,
+                    this.listTabsResponse.webappsActor,
+                    manifest);
   },
 }
+
+// This must be bound immediately, as it might be used via the message listener
+// before UI.init() has been called.
+UI._onConnectionStatusChange = UI._onConnectionStatusChange.bind(UI);

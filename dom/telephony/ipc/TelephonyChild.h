@@ -31,20 +31,27 @@ protected:
   DeallocPTelephonyRequestChild(PTelephonyRequestChild* aActor) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyCallError(const int32_t& aCallIndex,
+  RecvNotifyCallError(const uint32_t& aClientId, const int32_t& aCallIndex,
                       const nsString& aError) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyCallStateChanged(const IPCCallStateData& aData) MOZ_OVERRIDE;
+  RecvNotifyCallStateChanged(const uint32_t& aClientId,
+                             const IPCCallStateData& aData) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyCdmaCallWaiting(const nsString& aNumber) MOZ_OVERRIDE;
+  RecvNotifyCdmaCallWaiting(const uint32_t& aClientId,
+                            const nsString& aNumber) MOZ_OVERRIDE;
 
   virtual bool
   RecvNotifyConferenceCallStateChanged(const uint16_t& aCallState) MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifySupplementaryService(const int32_t& aCallIndex,
+  RecvNotifyConferenceError(const nsString& aName,
+                            const nsString& aMessage) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvNotifySupplementaryService(const uint32_t& aClientId,
+                                 const int32_t& aCallIndex,
                                  const uint16_t& aNotification) MOZ_OVERRIDE;
 
 private:
@@ -66,7 +73,8 @@ protected:
   Recv__delete__() MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotifyEnumerateCallState(const IPCCallStateData& aData) MOZ_OVERRIDE;
+  RecvNotifyEnumerateCallState(const uint32_t& aClientId,
+                               const IPCCallStateData& aData) MOZ_OVERRIDE;
 
 private:
   nsCOMPtr<nsITelephonyListener> mListener;

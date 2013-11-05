@@ -43,14 +43,22 @@ this.PhoneNumberUtils = {
     let countryName;
 
 #ifdef MOZ_B2G_RIL
+    // TODO: Bug 926740 - PhoneNumberUtils for multisim
+    // In Multi-sim, there is more than one client in 
+    // iccProvider/mobileConnectionProvider. Each client represents a
+    // icc/mobileConnection service. To maintain the backward compatibility with
+    // single sim, we always use client 0 for now. Adding support for multiple
+    // sim will be addressed in bug 926740, if needed.
+    let clientId = 0;
+
     // Get network mcc
-    let voice = mobileConnection.voiceConnectionInfo;
+    let voice = mobileConnection.getVoiceConnectionInfo(clientId);
     if (voice && voice.network && voice.network.mcc) {
       mcc = voice.network.mcc;
     }
 
     // Get SIM mcc
-    let iccInfo = icc.iccInfo;
+    let iccInfo = icc.getIccInfo(clientId);
     if (!mcc && iccInfo && iccInfo.mcc) {
       mcc = iccInfo.mcc;
     }
@@ -121,6 +129,10 @@ this.PhoneNumberUtils = {
   parseWithMCC: function(aNumber, aMCC) {
     let countryName = MCC_ISO3166_TABLE[aMCC];
     if (DEBUG) debug("found country name: " + countryName);
+    return PhoneNumber.Parse(aNumber, countryName);
+  },
+
+  parseWithCountryName: function(aNumber, countryName) {
     return PhoneNumber.Parse(aNumber, countryName);
   },
 

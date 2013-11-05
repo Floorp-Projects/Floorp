@@ -4147,12 +4147,6 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 	} else
 		memset(ret, 0, size);
 
-#ifdef MOZ_TEMP_INVESTIGATION
-	if (size == 72) {
-		memset(ret, 0xe5, size);
-	}
-#endif
-
 	return (ret);
 }
 
@@ -4508,11 +4502,6 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 #ifdef MALLOC_FILL
 	if (opt_junk)
 		memset(ptr, 0x5a, size);
-#endif
-#ifdef MOZ_TEMP_INVESTIGATION
-	if (size == 72) {
-		memset(ptr, 0x75, size);
-	}
 #endif
 
 	arena_run_reg_dalloc(run, bin, ptr, size);

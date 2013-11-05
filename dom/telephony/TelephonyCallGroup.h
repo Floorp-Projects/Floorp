@@ -70,6 +70,7 @@ public:
   IMPL_EVENT_HANDLER(held)
   IMPL_EVENT_HANDLER(resuming)
   IMPL_EVENT_HANDLER(callschanged)
+  IMPL_EVENT_HANDLER(error)
 
   static already_AddRefed<TelephonyCallGroup>
   Create(Telephony* aTelephony);
@@ -81,7 +82,7 @@ public:
   RemoveCall(TelephonyCall* aCall);
 
   already_AddRefed<TelephonyCall>
-  GetCall(uint32_t aCallIndex);
+  GetCall(uint32_t aServiceId, uint32_t aCallIndex);
 
   const nsTArray<nsRefPtr<TelephonyCall> >&
   CallsArray() const
@@ -97,6 +98,9 @@ public:
   {
     return mCallState;
   }
+
+  nsresult
+  NotifyError(const nsAString& aName, const nsAString& aMessage);
 
 private:
   TelephonyCallGroup();

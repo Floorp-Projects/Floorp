@@ -34,15 +34,20 @@ SVGLength::GetValueAsString(nsAString &aValue) const
 }
 
 bool
-SVGLength::SetValueFromString(const nsAString &aValueAsString)
+SVGLength::SetValueFromString(const nsAString &aString)
 {
-  nsAutoString units;
+  RangedPtr<const PRUnichar> iter =
+    SVGContentUtils::GetStartRangedPtr(aString);
+  const RangedPtr<const PRUnichar> end =
+    SVGContentUtils::GetEndRangedPtr(aString);
+
   float value;
 
-  if (!SVGContentUtils::ParseNumber(aValueAsString, value, units)) {
+  if (!SVGContentUtils::ParseNumber(iter, end, value)) {
     return false;
   }
 
+  const nsAString& units = Substring(iter.get(), end.get());
   uint16_t unitType = GetUnitTypeForString(units);
   if (!IsValidUnitType(unitType)) {
     return false;

@@ -7,7 +7,7 @@ Cu.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
   do_get_profile();
-  Cu.import("resource:///modules/sessionstore/_SessionFile.jsm", toplevel);
+  Cu.import("resource:///modules/sessionstore/SessionFile.jsm", toplevel);
   pathStore = OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js");
   run_next_test();
 }
@@ -19,7 +19,7 @@ function pathBackup(ext) {
 
 // Ensure that things proceed smoothly if there is no file to back up
 add_task(function test_nothing_to_backup() {
-  yield _SessionFile.createBackupCopy("");
+  yield SessionFile.createBackupCopy("");
 });
 
 // Create a file, back it up, remove it
@@ -29,14 +29,14 @@ add_task(function test_do_backup() {
   yield OS.File.writeAtomic(pathStore, content, {tmpPath: pathStore + ".tmp"});
 
   do_print("Ensuring that the backup is created");
-  yield _SessionFile.createBackupCopy(ext);
+  yield SessionFile.createBackupCopy(ext);
   do_check_true((yield OS.File.exists(pathBackup(ext))));
 
   let data = yield OS.File.read(pathBackup(ext));
   do_check_eq((new TextDecoder()).decode(data), content);
 
   do_print("Ensuring that we can remove the backup");
-  yield _SessionFile.removeBackupCopy(ext);
+  yield SessionFile.removeBackupCopy(ext);
   do_check_false((yield OS.File.exists(pathBackup(ext))));
 });
 

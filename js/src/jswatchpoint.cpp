@@ -50,31 +50,6 @@ class AutoEntryHolder {
 
 } /* anonymous namespace */
 
-/*
- * Watchpoint contains a RelocatablePtrObject member, which is conceptually a
- * heap-only class. It's preferable not to allocate these on the stack as they
- * cause unnecessary adding and removal of store buffer entries, so
- * WatchpointStackValue can be used instead.
- */
-struct js::WatchpointStackValue {
-    JSWatchPointHandler handler;
-    HandleObject closure;
-    bool held;
-
-    WatchpointStackValue(JSWatchPointHandler handler, HandleObject closure, bool held)
-      : handler(handler), closure(closure), held(held) {}
-};
-
-inline js::Watchpoint::Watchpoint(const js::WatchpointStackValue& w)
-  : handler(w.handler), closure(w.closure), held(w.held) {}
-
-inline js::Watchpoint &js::Watchpoint::operator=(const js::WatchpointStackValue& w) {
-    handler = w.handler;
-    closure = w.closure;
-    held = w.held;
-    return *this;
-}
-
 bool
 WatchpointMap::init()
 {
@@ -90,7 +65,7 @@ WatchpointMap::watch(JSContext *cx, HandleObject obj, HandleId id,
     if (!obj->setWatched(cx))
         return false;
 
-    WatchpointStackValue w(handler, closure, false);
+    Watchpoint w(handler, closure, false);
     if (!map.put(WatchKey(obj, id), w)) {
         js_ReportOutOfMemory(cx);
         return false;

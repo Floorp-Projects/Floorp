@@ -112,22 +112,6 @@ public:
   void UpdateCompositionBounds(const ScreenIntRect& aCompositionBounds);
 
   /**
-   * We are scrolling a subframe, so disable our machinery until we hit
-   * a touch end or a new touch start. This prevents us from accidentally
-   * panning both the subframe and the parent frame.
-   *
-   * XXX/bug 775452: We should eventually be supporting async scrollable
-   * subframes.
-   */
-  void CancelDefaultPanZoom();
-
-  /**
-   * We have found a scrollable subframe, so we need to delay the scrolling
-   * gesture executed and let subframe do the scrolling first.
-   */
-  void DetectScrollableSubframe();
-
-  /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
    * in. The actual animation is done on the compositor thread after being set
    * up.
@@ -615,21 +599,11 @@ private:
   // ensures the last mozbrowserasyncscroll event is always been fired.
   CancelableTask* mAsyncScrollTimeoutTask;
 
-  // Flag used to determine whether or not we should disable handling of the
-  // next batch of touch events. This is used for sync scrolling of subframes.
-  bool mDisableNextTouchBatch;
-
   // Flag used to determine whether or not we should try to enter the
   // WAITING_LISTENERS state. This is used in the case that we are processing a
   // queued up event block. If set, this means that we are handling this queue
   // and we don't want to queue the events back up again.
   bool mHandlingTouchQueue;
-
-  // Flag used to determine whether or not we should try scrolling by
-  // BrowserElementScrolling first.  If set, we delay delivering
-  // touchmove events to GestureListener until BrowserElementScrolling
-  // decides whether it wants to handle panning for this touch series.
-  bool mDelayPanning;
 
   friend class Axis;
 
@@ -681,7 +655,7 @@ private:
    * hit-testing to see which APZC instance should handle touch events.
    */
 public:
-  void SetLayerHitTestData(const LayerRect& aRect, const gfx3DMatrix& aTransformToLayer,
+  void SetLayerHitTestData(const ScreenRect& aRect, const gfx3DMatrix& aTransformToLayer,
                            const gfx3DMatrix& aTransformForLayer) {
     mVisibleRect = aRect;
     mAncestorTransform = aTransformToLayer;
@@ -696,16 +670,15 @@ public:
     return mCSSTransform;
   }
 
-  bool VisibleRegionContains(const LayerPoint& aPoint) const {
+  bool VisibleRegionContains(const ScreenPoint& aPoint) const {
     return mVisibleRect.Contains(aPoint);
   }
 
 private:
-  /* This is the viewport of the layer that this APZC corresponds to, in
-   * layer pixels. It position here does not account for any transformations
-   * applied to any layers, whether they are CSS transforms or async
-   * transforms. */
-  LayerRect mVisibleRect;
+  /* This is the visible region of the layer that this APZC corresponds to, in
+   * that layer's screen pixels (the same coordinate system in which this APZC
+   * receives events in ReceiveInputEvent()). */
+  ScreenRect mVisibleRect;
   /* This is the cumulative CSS transform for all the layers between the parent
    * APZC and this one (not inclusive) */
   gfx3DMatrix mAncestorTransform;

@@ -231,6 +231,7 @@ interface nsIUpdate : nsISupports
    *   "pending-service"    The update is ready to be applied with the service.
    *   "applying"           The update is being applied.
    *   "applied"            The update is ready to be switched to.
+   *   "applied-os"         The update is OS update and to be installed.
    *   "applied-service"    The update is ready to be switched to with the service.
    *   "succeeded"          The update was successfully applied.
    *   "download-failed"    The update failed to be downloaded.
@@ -351,7 +352,7 @@ interface nsIUpdateChecker : nsISupports
  * background update checks and provides utilities for selecting and
  * downloading update patches.
  */
-[scriptable, uuid(579ef84b-3e66-46fb-aeb4-799db5ade506)]
+[scriptable, uuid(9f9b51f5-340e-47ce-85ae-9eb077c6cd39)]
 interface nsIApplicationUpdateService : nsISupports
 {
   /**
@@ -398,6 +399,14 @@ interface nsIApplicationUpdateService : nsISupports
    *
    */
   AString downloadUpdate(in nsIUpdate update, in boolean background);
+
+  /**
+   * Apply the OS update which has been downloaded and staged as applied.
+   * @param   update 
+   *          The update has been downloaded and staged as applied.
+   * @throws  if the update object is not an OS update.
+   */
+  void applyOsUpdate(in nsIUpdate update);
 
   /**
    * Get the Active Updates directory

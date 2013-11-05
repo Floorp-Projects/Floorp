@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<body>
+<style scoped>span { color: red; }</style>
+<div><span></span></div>
+<script>
+var div = document.querySelector("div");
+div.parentNode.removeChild(div);
+getComputedStyle(div.firstChild, "").color;
+</script>

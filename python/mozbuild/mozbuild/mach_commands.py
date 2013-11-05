@@ -355,6 +355,16 @@ class Build(MachCommandBase):
                              'instead of {target_pairs}.')
                     target_pairs = new_pairs
 
+                # Ensure build backend is up to date. The alternative is to
+                # have rules in the invoked Makefile to rebuild the build
+                # backend. But that involves make reinvoking itself and there
+                # are undesired side-effects of this. See bug 877308 for a
+                # comprehensive history lesson.
+                self._run_make(directory=self.topobjdir,
+                    target='backend.RecursiveMakeBackend',
+                    force_pymake=pymake, line_handler=output.on_line,
+                    log=False, print_directory=False)
+
                 # Build target pairs.
                 for make_dir, make_target in target_pairs:
                     # We don't display build status messages during partial
@@ -492,6 +502,16 @@ class Build(MachCommandBase):
                     return 1
 
             raise
+
+    @Command('build-backend', category='build',
+        description='Generate a backend used to build the tree.')
+    def build_backend(self):
+        # When we support multiple build backends (Tup, Visual Studio, etc),
+        # this command will be expanded to support choosing what to generate.
+        python = self.virtualenv_manager.python_path
+        config_status = os.path.join(self.topobjdir, 'config.status')
+        return self._run_command_in_objdir(args=[python, config_status],
+            pass_thru=True, ensure_exit_code=False)
 
 
 @CommandProvider

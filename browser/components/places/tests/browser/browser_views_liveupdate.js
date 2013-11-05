@@ -205,7 +205,7 @@ var bookmarksObserver = {
     }
   },
 
-  onItemRemoved: function PSB_onItemRemoved(aItemId, aFolder, aIndex,
+  onItemRemoved: function PSB_onItemRemoved(aItemId, aFolderId, aIndex,
                                             aItemType) {
     var views = getViewsForFolder(aFolderId);
     ok(views.length > 0, "Found affected views (" + views.length + "): " + views);

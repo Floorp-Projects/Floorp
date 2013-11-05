@@ -97,7 +97,7 @@ function elementStyleInherit()
 
 function finishTest()
 {
-  doc = null;
+  doc = inspector = view = null;
   gBrowser.removeCurrentTab();
   finish();
 }

@@ -2018,6 +2018,10 @@ class LNotD : public LInstructionHelper<1, 1, 0>
     LNotD(const LAllocation &input) {
         setOperand(0, input);
     }
+
+    MNot *mir() {
+        return mir_->toNot();
+    }
 };
 
 // Not operation on a float32.
@@ -2028,6 +2032,10 @@ class LNotF : public LInstructionHelper<1, 1, 0>
 
     LNotF(const LAllocation &input) {
         setOperand(0, input);
+    }
+
+    MNot *mir() {
+        return mir_->toNot();
     }
 };
 

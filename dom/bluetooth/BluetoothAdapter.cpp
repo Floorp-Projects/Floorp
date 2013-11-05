@@ -260,11 +260,6 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
   } else if (name.EqualsLiteral("Devices")) {
     mDeviceAddresses = value.get_ArrayOfnsString();
 
-    uint32_t length = mDeviceAddresses.Length();
-    for (int i = 0; i < length; i++) {
-      mDeviceAddresses[i] = GetAddressFromObjectPath(mDeviceAddresses[i]);
-    }
-
     nsresult rv;
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
     NS_ENSURE_SUCCESS_VOID(rv);
@@ -881,6 +876,7 @@ BluetoothAdapter::IsScoConnected(ErrorResult& aRv)
 already_AddRefed<DOMRequest>
 BluetoothAdapter::AnswerWaitingCall(ErrorResult& aRv)
 {
+#ifdef MOZ_B2G_RIL
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -899,11 +895,16 @@ BluetoothAdapter::AnswerWaitingCall(ErrorResult& aRv)
   bs->AnswerWaitingCall(results);
 
   return request.forget();
+#else
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+#endif // MOZ_B2G_RIL
 }
 
 already_AddRefed<DOMRequest>
 BluetoothAdapter::IgnoreWaitingCall(ErrorResult& aRv)
 {
+#ifdef MOZ_B2G_RIL
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -922,11 +923,16 @@ BluetoothAdapter::IgnoreWaitingCall(ErrorResult& aRv)
   bs->IgnoreWaitingCall(results);
 
   return request.forget();
+#else
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+#endif // MOZ_B2G_RIL
 }
 
 already_AddRefed<DOMRequest>
 BluetoothAdapter::ToggleCalls(ErrorResult& aRv)
 {
+#ifdef MOZ_B2G_RIL
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -945,6 +951,10 @@ BluetoothAdapter::ToggleCalls(ErrorResult& aRv)
   bs->ToggleCalls(results);
 
   return request.forget();
+#else
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+#endif // MOZ_B2G_RIL
 }
 
 already_AddRefed<DOMRequest>

@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import('resource://gre/modules/UserAgentOverrides.jsm');
 Cu.import('resource://gre/modules/Keyboard.jsm');
 Cu.import('resource://gre/modules/ErrorPage.jsm');
-#ifdef MOZ_B2G_RIL
+#ifdef MOZ_WIDGET_GONK
 Cu.import('resource://gre/modules/NetworkStatsService.jsm');
 #endif
 
@@ -322,6 +322,9 @@ var shell = {
     ppmm.addMessageListener("mail-handler", this);
     ppmm.addMessageListener("app-notification-send", AlertsHelper);
     ppmm.addMessageListener("file-picker", this);
+    ppmm.addMessageListener("getProfD", function(message) {
+      return Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+    });
   },
 
   stop: function shell_stop() {
@@ -611,7 +614,7 @@ var shell = {
 
     this.sendEvent(window, 'ContentStart');
 
-#ifdef MOZ_B2G_RIL
+#ifdef MOZ_WIDGET_GONK
     Cu.import('resource://gre/modules/OperatorApps.jsm');
 #endif
 
@@ -978,7 +981,7 @@ var WebappsHelper = {
         });
         break;
       case "webapps-close":
-        shell.sendEvent(shell.getContentWindow(), "webapps-close",
+        shell.sendEvent(getContentWindow(), "webapps-close",
           {
             __exposedProps__: { "manifestURL": "r" },
             "manifestURL": json.manifestURL

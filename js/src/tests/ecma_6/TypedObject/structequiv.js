@@ -1,5 +1,5 @@
 // |reftest| skip-if(!this.hasOwnProperty("TypedObject"))
-var BUGNUMBER = 578700;
+var BUGNUMBER = 922216;
 var summary = 'TypedObjects Equivalent StructTypes';
 
 var ArrayType = TypedObject.ArrayType;

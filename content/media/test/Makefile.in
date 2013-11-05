@@ -175,6 +175,16 @@ endif
 # Bug 751539:
 #		test_played.html
 
+# Disabled since it causes random memory corruption, bug 921622, so
+# the best-case scenario is that it results in random crashes while it
+# runs, like bug 918417, bug 920827, bug 923996, bug 928225, bug 929521
+# bug 930982, bug 932193. Worst-case but quite likely, it causes random
+# crashes and failures in other tests which run after it. Don't even think
+# about reenabling it on any platform unless you *know* that you have fixed
+# that. Then don't think about reenabling it on Windows until you know that
+# you have fixed the timeouts of bug 832768, bug 814533, bug 840742
+#		test_playback_rate.html \
+
 # The below tests are disabled on Windows due to frequent timeouts.
 # Bug 832768 and Bug 864682:
 #		test_buffered.html
@@ -185,8 +195,6 @@ endif
 #		test_media_selection.html
 # Bug 832678, bug 795271, and bug 857424
 #		test_seek.html
-# Bug 832768, bug 814533, bug 840742
-#		test_playback_rate.html
 ifneq ($(OS_ARCH), WINNT)
 MOCHITEST_FILES += \
 		test_buffered.html \
@@ -194,7 +202,6 @@ MOCHITEST_FILES += \
 		test_bug493187.html \
 		test_media_selection.html \
 		test_seek.html \
-		test_playback_rate.html \
 		$(NULL)
 endif
 

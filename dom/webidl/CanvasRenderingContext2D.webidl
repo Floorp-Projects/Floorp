@@ -73,20 +73,20 @@ interface CanvasRenderingContext2D {
 
   // path API (see also CanvasPathMethods)
   void beginPath();
-  void fill([TreatUndefinedAs=Missing] optional CanvasWindingRule winding = "nonzero");
+  void fill(optional CanvasWindingRule winding = "nonzero");
 // NOT IMPLEMENTED  void fill(Path path);
   void stroke();
 // NOT IMPLEMENTED  void stroke(Path path);
-// NOT IMPLEMENTED  void drawSystemFocusRing(Element element);
-// NOT IMPLEMENTED  void drawSystemFocusRing(Path path, Element element);
-// NOT IMPLEMENTED  boolean drawCustomFocusRing(Element element);
-// NOT IMPLEMENTED  boolean drawCustomFocusRing(Path path, Element element);
+  [Pref="canvas.focusring.enabled"] void drawSystemFocusRing(Element element);
+// NOT IMPLEMENTED  void drawSystemFocusRing(Path path, HTMLElement element);
+  [Pref="canvas.focusring.enabled"] boolean drawCustomFocusRing(Element element);
+// NOT IMPLEMENTED  boolean drawCustomFocusRing(Path path, HTMLElement element);
 // NOT IMPLEMENTED  void scrollPathIntoView();
 // NOT IMPLEMENTED  void scrollPathIntoView(Path path);
-  void clip([TreatUndefinedAs=Missing] optional CanvasWindingRule winding = "nonzero");
+  void clip(optional CanvasWindingRule winding = "nonzero");
 // NOT IMPLEMENTED  void clip(Path path);
 // NOT IMPLEMENTED  void resetClip();
-  boolean isPointInPath(unrestricted double x, unrestricted double y, [TreatUndefinedAs=Missing] optional CanvasWindingRule winding = "nonzero");
+  boolean isPointInPath(unrestricted double x, unrestricted double y, optional CanvasWindingRule winding = "nonzero");
 // NOT IMPLEMENTED  boolean isPointInPath(Path path, unrestricted double x, unrestricted double y);
   boolean isPointInStroke(double x, double y);
 

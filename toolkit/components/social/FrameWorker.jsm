@@ -128,7 +128,8 @@ WorkerHandle.prototype = {
     this._worker.ports.clear();
     this._worker.ports = null;
     this._worker.browserPromise.then(browser => {
-      browser.parentNode.removeChild(browser);
+      let iframe = browser.ownerDocument.defaultView.frameElement;
+      iframe.parentNode.removeChild(iframe);
     });
     // wipe things out just incase other reference have snuck out somehow...
     this._worker.browserPromise = null;

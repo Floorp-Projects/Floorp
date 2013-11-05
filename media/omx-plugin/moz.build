@@ -15,7 +15,6 @@
 # limitations under the License.
 
 MODULE = 'omxplugin'
-NO_DIST_INSTALL = True
 
 SOURCES += [
     'OmxPlugin.cpp',

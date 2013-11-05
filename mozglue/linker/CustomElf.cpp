@@ -118,6 +118,9 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
   const Phdr *first_phdr = reinterpret_cast<const Phdr *>(
                            reinterpret_cast<const char *>(ehdr) + ehdr->e_phoff);
   const Phdr *end_phdr = &first_phdr[ehdr->e_phnum];
+#ifdef __ARM_EABI__
+  const Phdr *arm_exidx_phdr = NULL;
+#endif
 
   for (const Phdr *phdr = first_phdr; phdr < end_phdr; phdr++) {
     switch (phdr->p_type) {
@@ -155,6 +158,13 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
         }
 #endif
         break;
+#ifdef __ARM_EABI__
+      case PT_ARM_EXIDX:
+        /* We cannot initialize arm_exidx here
+           because we don't have a base yet */
+        arm_exidx_phdr = phdr;
+        break;
+#endif
       default:
         DEBUG_LOG("%s: Warning: program header type #%d not handled",
                   elf->GetPath(), phdr->p_type);
@@ -209,6 +219,12 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
 
   if (!elf->InitDyn(dyn))
     return NULL;
+
+#ifdef __ARM_EABI__
+  if (arm_exidx_phdr)
+    elf->arm_exidx.InitSize(elf->GetPtr(arm_exidx_phdr->p_vaddr),
+                            arm_exidx_phdr->p_memsz);
+#endif
 
   elf->stats("oneLibLoaded");
   DEBUG_LOG("CustomElf::Load(\"%s\", 0x%x) = %p", path, flags,
@@ -299,6 +315,10 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
       return const_cast<CustomElf *>(this);
     if (strcmp(symbol + 2, "moz_linker_stats") == 0)
       return FunctionPtr(&ElfLoader::stats);
+#ifdef __ARM_EABI__
+    if (strcmp(symbol + 2, "gnu_Unwind_Find_exidx") == 0)
+      return FunctionPtr(__wrap___gnu_Unwind_Find_exidx);
+#endif
   }
 
   void *sym;
@@ -360,6 +380,19 @@ CustomElf::Contains(void *addr) const
 {
   return base.Contains(addr);
 }
+
+#ifdef __ARM_EABI__
+const void *
+CustomElf::FindExidx(int *pcount) const
+{
+  if (arm_exidx) {
+    *pcount = arm_exidx.numElements();
+    return arm_exidx;
+  }
+  *pcount = 0;
+  return NULL;
+}
+#endif
 
 void
 CustomElf::stats(const char *when) const

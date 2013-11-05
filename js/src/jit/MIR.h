@@ -2146,12 +2146,14 @@ class MCompare
     CompareType compareType_;
     JSOp jsop_;
     bool operandMightEmulateUndefined_;
+    bool operandsAreNeverNaN_;
 
     MCompare(MDefinition *left, MDefinition *right, JSOp jsop)
       : MBinaryInstruction(left, right),
         compareType_(Compare_Unknown),
         jsop_(jsop),
-        operandMightEmulateUndefined_(true)
+        operandMightEmulateUndefined_(true),
+        operandsAreNeverNaN_(false)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -2195,6 +2197,9 @@ class MCompare
     bool operandMightEmulateUndefined() const {
         return operandMightEmulateUndefined_;
     }
+    bool operandsAreNeverNaN() const {
+        return operandsAreNeverNaN_;
+    }
     AliasSet getAliasSet() const {
         // Strict equality is never effectful.
         if (jsop_ == JSOP_STRICTEQ || jsop_ == JSOP_STRICTNE)
@@ -2206,6 +2211,7 @@ class MCompare
     }
 
     void printOpcode(FILE *fp) const;
+    void collectRangeInfo();
 
     void trySpecializeFloat32();
     bool isFloat32Commutative() const { return true; }
@@ -3664,6 +3670,8 @@ class MRandom : public MNullaryInstruction
     bool possiblyCalls() const {
         return true;
     }
+
+    void computeRange();
 };
 
 class MMathFunction
@@ -3751,6 +3759,7 @@ class MMathFunction
                || function_ == ASin || function_ == ACos || function_ == Floor;
     }
     void trySpecializeFloat32();
+    void computeRange();
 };
 
 class MAdd : public MBinaryArithInstruction
@@ -5150,11 +5159,13 @@ class MNot
     public TestPolicy
 {
     bool operandMightEmulateUndefined_;
+    bool operandIsNeverNaN_;
 
   public:
     MNot(MDefinition *input)
       : MUnaryInstruction(input),
-        operandMightEmulateUndefined_(true)
+        operandMightEmulateUndefined_(true),
+        operandIsNeverNaN_(false)
     {
         setResultType(MIRType_Boolean);
         setMovable();
@@ -5180,6 +5191,9 @@ class MNot
     bool operandMightEmulateUndefined() const {
         return operandMightEmulateUndefined_;
     }
+    bool operandIsNeverNaN() const {
+        return operandIsNeverNaN_;
+    }
 
     MDefinition *operand() const {
         return getOperand(0);
@@ -5191,6 +5205,7 @@ class MNot
     TypePolicy *typePolicy() {
         return this;
     }
+    void collectRangeInfo();
 
     void trySpecializeFloat32();
     bool isFloat32Commutative() const { return true; }
@@ -5258,6 +5273,7 @@ class MBoundsCheck
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    void computeRange();
 };
 
 // Bailout if index < minimum.
@@ -5615,6 +5631,7 @@ class MArrayPush
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
     }
+    void computeRange();
 };
 
 // Array.prototype.concat on two dense arrays.
@@ -9130,15 +9147,15 @@ bool ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefiniti
 bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
                                           MDefinition *obj);
 MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinition *obj);
-bool PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
+bool PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   types::TypeObjectKey *object, PropertyName *name,
                                   types::TemporaryTypeSet *observed, bool updateObserved);
-bool PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
+bool PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   MDefinition *obj, PropertyName *name,
                                   types::TemporaryTypeSet *observed);
-bool PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+bool PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                                              MDefinition *obj, PropertyName *name,
                                              types::TemporaryTypeSet *observed);
 bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,

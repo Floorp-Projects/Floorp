@@ -23,7 +23,7 @@
 #include "nsGlobalWindow.h"
 #include "nsDOMJSUtils.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsContentPermissionHelper.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 #ifdef MOZ_B2G
 #include "nsIDOMDesktopNotification.h"
 #endif
@@ -61,7 +61,6 @@ public:
                     JSContext* aCx)
   {
     MOZ_ASSERT(!aID.IsEmpty());
-    MOZ_ASSERT(!aTitle.IsEmpty());
 
     NotificationOptions options;
     options.mDir = Notification::StringToDirection(nsString(aDir));
@@ -268,11 +267,9 @@ NotificationPermissionRequest::Run()
     // Corresponding release occurs in DeallocPContentPermissionRequest.
     AddRef();
 
-    nsTArray<PermissionRequest> permArray;
-    permArray.AppendElement(PermissionRequest(
-                            NS_LITERAL_CSTRING("desktop-notification"),
-                            NS_LITERAL_CSTRING("unused")));
-    child->SendPContentPermissionRequestConstructor(this, permArray,
+    NS_NAMED_LITERAL_CSTRING(type, "desktop-notification");
+    NS_NAMED_LITERAL_CSTRING(access, "unused");
+    child->SendPContentPermissionRequestConstructor(this, type, access,
                                                     IPC::Principal(mPrincipal));
 
     Sendprompt();
@@ -345,11 +342,17 @@ NotificationPermissionRequest::CallCallback()
 }
 
 NS_IMETHODIMP
-NotificationPermissionRequest::GetTypes(nsIArray** aTypes)
+NotificationPermissionRequest::GetAccess(nsACString& aAccess)
 {
-  return CreatePermissionArray(NS_LITERAL_CSTRING("desktop-notification"),
-                               NS_LITERAL_CSTRING("unused"),
-                               aTypes);
+  aAccess.AssignLiteral("unused");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NotificationPermissionRequest::GetType(nsACString& aType)
+{
+  aType.AssignLiteral("desktop-notification");
+  return NS_OK;
 }
 
 bool

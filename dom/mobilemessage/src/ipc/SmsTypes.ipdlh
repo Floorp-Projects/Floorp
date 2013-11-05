@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include "mozilla/dom/mobilemessage/Types.h";
 include protocol PBlob;
 
-using DeliveryState;
-using DeliveryStatus;
-using MessageClass;
-using ReadState;
-using MessageType;
+using DeliveryState from "mozilla/dom/mobilemessage/Types.h";
+using DeliveryStatus from "mozilla/dom/mobilemessage/Types.h";
+using MessageClass from "mozilla/dom/mobilemessage/Types.h";
+using ReadState from "mozilla/dom/mobilemessage/Types.h";
+using MessageType from "mozilla/dom/mobilemessage/Types.h";
 
 namespace mozilla {
 namespace dom {
@@ -28,13 +27,15 @@ struct SmsMessageData
 {
   int32_t        id;
   uint64_t       threadId;
+  nsString       iccId;
   DeliveryState  delivery;
   DeliveryStatus deliveryStatus;
   nsString       sender;
   nsString       receiver;
   nsString       body;
   MessageClass   messageClass;
-  uint64_t       timestamp; // ms since epoch.
+  uint64_t       timestamp;         // ms since epoch.
+  uint64_t       deliveryTimestamp; // ms since epoch.
   bool           read;
 };
 
@@ -45,20 +46,28 @@ struct MmsAttachmentData
   PBlob content;
 };
 
+struct MmsDeliveryInfoData
+{
+  nsString        receiver;
+  DeliveryStatus  deliveryStatus;
+};
+
 struct MmsMessageData
 {
-  int32_t             id;
-  uint64_t            threadId;
-  DeliveryState       delivery;
-  DeliveryStatus[]    deliveryStatus;
-  nsString            sender;
-  nsString[]          receivers;
-  uint64_t            timestamp;
-  bool                read;
-  nsString            subject;
-  nsString            smil;
-  MmsAttachmentData[] attachments;
-  uint64_t            expiryDate;
+  int32_t               id;
+  uint64_t              threadId;
+  nsString              iccId;
+  DeliveryState         delivery;
+  MmsDeliveryInfoData[] deliveryInfo;
+  nsString              sender;
+  nsString[]            receivers;
+  uint64_t              timestamp;
+  bool                  read;
+  nsString              subject;
+  nsString              smil;
+  MmsAttachmentData[]   attachments;
+  uint64_t              expiryDate;
+  bool                  isReadReportRequested;
 };
 
 union MobileMessageData

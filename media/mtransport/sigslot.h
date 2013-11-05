@@ -94,14 +94,20 @@
 // On our copy of sigslot.h, we set single threading as default.
 #define SIGSLOT_DEFAULT_MT_POLICY single_threaded
 
+// For now, this avoids windows.h in bindings (PeerConnectionImpl.h) on WIN32
+// TODO: wrap win32 crit section and move to another file instead (Bug 932570)
+#define SIGSLOT_LEAVE_OUT_MULTITHREADING 1
+
 #if defined(SIGSLOT_PURE_ISO) || (!defined(WIN32) && !defined(__GNUG__) && !defined(SIGSLOT_USE_POSIX_THREADS))
 #	define _SIGSLOT_SINGLE_THREADED
 #elif defined(WIN32)
 #	define _SIGSLOT_HAS_WIN32_THREADS
-#	if !defined(WIN32_LEAN_AND_MEAN)
-#		define WIN32_LEAN_AND_MEAN
+#	ifndef SIGSLOT_LEAVE_OUT_MULTITHREADING
+#		if !defined(WIN32_LEAN_AND_MEAN)
+#			define WIN32_LEAN_AND_MEAN
+#		endif
+#		include "windows.h"
 #	endif
-#	include "windows.h"
 #elif defined(__GNUG__) || defined(SIGSLOT_USE_POSIX_THREADS)
 #	define _SIGSLOT_HAS_POSIX_THREADS
 #	include <pthread.h>
@@ -144,7 +150,9 @@ namespace sigslot {
 		}
 	};
 
-#ifdef _SIGSLOT_HAS_WIN32_THREADS
+#ifndef SIGSLOT_LEAVE_OUT_MULTITHREADING
+# ifdef _SIGSLOT_HAS_WIN32_THREADS
+
 	// The multi threading policies only get compiled in if they are enabled.
 	class multi_threaded_global
 	{
@@ -219,9 +227,9 @@ namespace sigslot {
 	private:
 		CRITICAL_SECTION m_critsec;
 	};
-#endif // _SIGSLOT_HAS_WIN32_THREADS
+# endif // _SIGSLOT_HAS_WIN32_THREADS
 
-#ifdef _SIGSLOT_HAS_POSIX_THREADS
+# ifdef _SIGSLOT_HAS_POSIX_THREADS
 	// The multi threading policies only get compiled in if they are enabled.
 	class multi_threaded_global
 	{
@@ -290,7 +298,8 @@ namespace sigslot {
 	private:
 		pthread_mutex_t m_mutex;
 	};
-#endif // _SIGSLOT_HAS_POSIX_THREADS
+# endif // _SIGSLOT_HAS_POSIX_THREADS
+#endif  // SIGSLOT_LEAVE_OUT_MULTITHREADING
 
 	template<class mt_policy>
 	class lock_block

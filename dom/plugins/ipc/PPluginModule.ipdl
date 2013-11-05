@@ -8,15 +8,12 @@ include protocol PPluginInstance;
 include protocol PPluginScriptableObject;
 include protocol PCrashReporter;
 
-include "npapi.h";
-include "mozilla/plugins/PluginMessageUtils.h";
-include "mozilla/dom/TabMessageUtils.h";
 
-using NPError;
-using NPNVariable;
-using mozilla::dom::NativeThreadId;
-using mac_plugin_interposing::NSCursorInfo;
-using nsID;
+using NPError from "npapi.h";
+using NPNVariable from "npapi.h";
+using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+using class mac_plugin_interposing::NSCursorInfo from "mozilla/plugins/PluginMessageUtils.h";
+using struct nsID from "nsID.h";
 
 namespace mozilla {
 namespace plugins {

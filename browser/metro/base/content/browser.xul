@@ -792,6 +792,9 @@
           <richlistitem id="context-msmetadata" type="ms-meta-data" onclick="ContextCommands.openWindowsStoreLink();">
             <label value="&appbarMSMetaData2.label;"/>
           </richlistitem>
+          <richlistitem id="context-viewpagesource" type="view-page-source" onclick="ContextCommands.viewPageSource();">
+            <label value="&appbarViewPageSource.label;"/>
+          </richlistitem>
         </richlistbox>
       </vbox>
     </box>

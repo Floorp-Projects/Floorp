@@ -636,7 +636,7 @@ let FormAssistant = {
   },
 
   showKeyboard: function fa_showKeyboard(target) {
-    if (this.isKeyboardOpened)
+    if (this.focusedElement === target)
       return;
 
     if (target instanceof HTMLOptionElement)

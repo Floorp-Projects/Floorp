@@ -42,32 +42,8 @@ LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/include
 DEFINES += -DHAVE_CONFIG_H
 
-CSRCS += \
-  buffer.c \
-  bufferevent.c \
-  bufferevent_sock.c \
-  bufferevent_ratelim.c \
-  evdns.c \
-  event.c \
-  event_tagging.c \
-  evmap.c \
-  evthread.c \
-  evthread_pthread.c \
-  evrpc.c \
-  evutil.c \
-  evutil_rand.c \
-  http.c \
-  listener.c \
-  log.c \
-  poll.c \
-  select.c \
-  signal.c \
-  strlcpy.c \
-  $(NULL)
-
 ifeq ($(OS_ARCH),Darwin) # (OS_MACOSX) {
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/mac
-CSRCS += kqueue.c
 
 else # } else {
 
@@ -76,13 +52,7 @@ ifeq ($(OS_TARGET),Android) # {
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/android
 else # } else {
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/linux
-CSRCS += \
-  epoll_sub.c \
-  $(NULL)
 endif # }
-CSRCS += \
-  epoll.c \
-  $(NULL)
 
 else # } else (OS_BSD)  {
 
@@ -90,7 +60,6 @@ ifneq (,$(filter DragonFly FreeBSD,$(OS_ARCH))) # (not OS_DRAGONFLY and not OS_F
 DEFINES += -D_EVENT_HAVE_SENDFILE
 endif # }
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/bsd
-CSRCS += kqueue.c
 
 endif # }
 

@@ -35,8 +35,9 @@ struct CharacterPosition {
   bool draw;
 };
 
-static gfxContext* MakeTmpCtx() {
-  return new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+static already_AddRefed<gfxContext> MakeTmpCtx() {
+  nsRefPtr<gfxContext> ctx = new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+  return ctx.forget();
 }
 
 /**
@@ -520,7 +521,7 @@ nsSVGGlyphFrame::ReflowSVG()
   if ((hitTestFlags & SVG_HIT_TEST_STROKE)) {
    flags |= nsSVGUtils::eBBoxIncludeStrokeGeometry;
   }
-  gfxRect extent = GetBBoxContribution(gfxMatrix(), flags);
+  gfxRect extent = GetBBoxContribution(gfxMatrix(), flags).ToThebesRect();
 
   if (!extent.IsEmpty()) {
     mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent, 

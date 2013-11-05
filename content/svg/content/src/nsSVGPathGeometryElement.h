@@ -6,6 +6,7 @@
 #ifndef __NS_SVGPATHGEOMETRYELEMENT_H__
 #define __NS_SVGPATHGEOMETRYELEMENT_H__
 
+#include "mozilla/gfx/2D.h"
 #include "SVGGraphicsElement.h"
 
 class gfxPath;
@@ -33,6 +34,12 @@ typedef mozilla::dom::SVGGraphicsElement nsSVGPathGeometryElementBase;
 
 class nsSVGPathGeometryElement : public nsSVGPathGeometryElementBase
 {
+protected:
+  typedef mozilla::gfx::FillRule FillRule;
+  typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::Path Path;
+  typedef mozilla::gfx::PathBuilder PathBuilder;
+
 public:
   nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);
 
@@ -52,7 +59,34 @@ public:
   virtual bool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx) = 0;
+
+  /**
+   * Returns a Path that can be used to paint, hit-test or calculate bounds for
+   * this element.
+   */
+  virtual mozilla::TemporaryRef<Path> BuildPath() = 0;
+
   virtual already_AddRefed<gfxPath> GetPath(const gfxMatrix &aMatrix);
+
+  /**
+   * Returns a PathBuilder object created using the current computed value of
+   * the CSS property 'fill-rule' for this element.
+   */
+  mozilla::TemporaryRef<PathBuilder> CreatePathBuilder();
+
+  /**
+   * Returns the current computed value of the CSS property 'fill-rule' for
+   * this element.
+   */
+  FillRule GetFillRule();
+
+  /**
+   * Returns the current computed value of the CSS property 'stroke-width' for
+   * this element. (I.e. this does NOT take account of the value of the
+   * 'stroke' and 'stroke-opacity' properties to, say, return zero if they are
+   * "none" or "0", respectively.)
+   */
+  Float GetStrokeWidth();
 };
 
 #endif

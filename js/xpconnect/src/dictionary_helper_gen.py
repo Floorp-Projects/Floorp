@@ -287,14 +287,14 @@ def write_getter(a, iface, fd):
         fd.write("    aDict.%s = b;\n" % a.name)
     elif realtype.count("uint16_t"):
         fd.write("    uint32_t u;\n")
-        fd.write("    NS_ENSURE_STATE(JS_ValueToECMAUint32(aCx, v, &u));\n")
+        fd.write("    NS_ENSURE_STATE(JS::ToUint32(aCx, v, &u));\n")
         fd.write("    aDict.%s = u;\n" % a.name)
     elif realtype.count("int16_t"):
         fd.write("    int32_t i;\n")
         fd.write("    NS_ENSURE_STATE(JS::ToInt32(aCx, v, &i));\n")
         fd.write("    aDict.%s = i;\n" % a.name)
     elif realtype.count("uint32_t"):
-        fd.write("    NS_ENSURE_STATE(JS_ValueToECMAUint32(aCx, v, &aDict.%s));\n" % a.name)
+        fd.write("    NS_ENSURE_STATE(JS::ToUint32(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("int32_t"):
         fd.write("    NS_ENSURE_STATE(JS::ToInt32(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("uint64_t"):

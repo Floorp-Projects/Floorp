@@ -9,9 +9,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=403162
   <bindings xmlns="http://www.mozilla.org/xbl">
     <binding id="test">
       <handlers>
-        <handler event="DOMMouseScroll" action="XPCNativeWrapper.unwrap(window).triggerCount++"/>
-        <handler event="DOMMouseScroll" modifiers="shift" action="XPCNativeWrapper.unwrap(window).shiftCount++"/>
-        <handler event="DOMMouseScroll" modifiers="control" action="XPCNativeWrapper.unwrap(window).controlCount++"/>
+        <handler event="DOMMouseScroll" action="XPCNativeWrapper.unwrap(window).triggerCount++" allowuntrusted="true"/>
+        <handler event="DOMMouseScroll" modifiers="shift" action="XPCNativeWrapper.unwrap(window).shiftCount++" allowuntrusted="true"/>
+        <handler event="DOMMouseScroll" modifiers="control" action="XPCNativeWrapper.unwrap(window).controlCount++" allowuntrusted="true"/>
       </handlers>
     </binding>
   </bindings>

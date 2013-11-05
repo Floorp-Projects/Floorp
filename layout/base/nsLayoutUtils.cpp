@@ -251,9 +251,9 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 
 template <class AnimationsOrTransitions>
 static AnimationsOrTransitions*
-HasAnimationOrTransition(nsIContent* aContent,
-                         nsIAtom* aAnimationProperty,
-                         nsCSSProperty aProperty)
+HasAnimationOrTransitionForCompositor(nsIContent* aContent,
+                                      nsIAtom* aAnimationProperty,
+                                      nsCSSProperty aProperty)
 {
   AnimationsOrTransitions* animations =
     static_cast<AnimationsOrTransitions*>(aContent->GetProperty(aAnimationProperty));
@@ -275,12 +275,40 @@ nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
 {
   if (!aContent->MayHaveAnimations())
     return false;
-  if (HasAnimationOrTransition<ElementAnimations>
-        (aContent, nsGkAtoms::animationsProperty, aProperty)) {
-    return true;
+  return HasAnimationOrTransitionForCompositor<ElementAnimations>
+            (aContent, nsGkAtoms::animationsProperty, aProperty) ||
+         HasAnimationOrTransitionForCompositor<ElementTransitions>
+            (aContent, nsGkAtoms::transitionsProperty, aProperty);
+}
+
+template <class AnimationsOrTransitions>
+static AnimationsOrTransitions*
+HasAnimationOrTransition(nsIContent* aContent,
+                         nsIAtom* aAnimationProperty,
+                         nsCSSProperty aProperty)
+{
+  AnimationsOrTransitions* animations =
+    static_cast<AnimationsOrTransitions*>(aContent->GetProperty(aAnimationProperty));
+  if (animations) {
+    bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
+    if (propertyMatches) {
+      return animations;
+    }
   }
-  return HasAnimationOrTransition<ElementTransitions>
-    (aContent, nsGkAtoms::transitionsProperty, aProperty);
+
+  return nullptr;
+}
+
+bool
+nsLayoutUtils::HasAnimations(nsIContent* aContent,
+                             nsCSSProperty aProperty)
+{
+  if (!aContent->MayHaveAnimations())
+    return false;
+  return HasAnimationOrTransition<ElementAnimations>
+            (aContent, nsGkAtoms::animationsProperty, aProperty) ||
+         HasAnimationOrTransition<ElementTransitions>
+            (aContent, nsGkAtoms::transitionsProperty, aProperty);
 }
 
 static gfxSize
@@ -323,7 +351,7 @@ gfxSize
 nsLayoutUtils::GetMaximumAnimatedScale(nsIContent* aContent)
 {
   gfxSize result;
-  ElementAnimations* animations = HasAnimationOrTransition<ElementAnimations>
+  ElementAnimations* animations = HasAnimationOrTransitionForCompositor<ElementAnimations>
     (aContent, nsGkAtoms::animationsProperty, eCSSProperty_transform);
   if (animations) {
     for (uint32_t animIdx = animations->mAnimations.Length(); animIdx-- != 0; ) {
@@ -346,7 +374,7 @@ nsLayoutUtils::GetMaximumAnimatedScale(nsIContent* aContent)
       }
     }
   }
-  ElementTransitions* transitions = HasAnimationOrTransition<ElementTransitions>
+  ElementTransitions* transitions = HasAnimationOrTransitionForCompositor<ElementTransitions>
     (aContent, nsGkAtoms::transitionsProperty, eCSSProperty_transform);
   if (transitions) {
     for (uint32_t i = 0, i_end = transitions->mPropertyTransitions.Length();
@@ -749,11 +777,7 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
                    "Unexpected parent");
 #endif // DEBUG
 
-      // XXX FIXME: Bug 350740
-      // Return here, because the postcondition for this function actually
-      // fails for this case, since the popups are not in a "real" frame list
-      // in the popup set.
-      return nsIFrame::kPopupList;
+      id = nsIFrame::kPopupList;
 #endif // MOZ_XUL
     } else {
       NS_ASSERTION(aChildFrame->IsFloating(), "not a floated frame");
@@ -764,17 +788,24 @@ nsLayoutUtils::GetChildListNameFor(nsIFrame* aChildFrame)
     nsIAtom* childType = aChildFrame->GetType();
     if (nsGkAtoms::menuPopupFrame == childType) {
       nsIFrame* parent = aChildFrame->GetParent();
-      nsIFrame* firstPopup = (parent)
-                             ? parent->GetFirstChild(nsIFrame::kPopupList)
-                             : nullptr;
-      NS_ASSERTION(!firstPopup || !firstPopup->GetNextSibling(),
-                   "We assume popupList only has one child, but it has more.");
-      id = firstPopup == aChildFrame
-             ? nsIFrame::kPopupList
-             : nsIFrame::kPrincipalList;
+      MOZ_ASSERT(parent, "nsMenuPopupFrame can't be the root frame");
+      if (parent) {
+        if (parent->GetType() == nsGkAtoms::popupSetFrame) {
+          id = nsIFrame::kPopupList;
+        } else {
+          nsIFrame* firstPopup = parent->GetFirstChild(nsIFrame::kPopupList);
+          MOZ_ASSERT(!firstPopup || !firstPopup->GetNextSibling(),
+                     "We assume popupList only has one child, but it has more.");
+          id = firstPopup == aChildFrame
+                 ? nsIFrame::kPopupList
+                 : nsIFrame::kPrincipalList;
+        }
+      } else {
+        id = nsIFrame::kPrincipalList;
+      }
     } else if (nsGkAtoms::tableColGroupFrame == childType) {
       id = nsIFrame::kColGroupList;
-    } else if (nsGkAtoms::tableCaptionFrame == aChildFrame->GetType()) {
+    } else if (nsGkAtoms::tableCaptionFrame == childType) {
       id = nsIFrame::kCaptionList;
     } else {
       id = nsIFrame::kPrincipalList;

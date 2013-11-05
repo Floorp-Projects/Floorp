@@ -11,6 +11,11 @@
 #include "nsIDOMMouseEvent.h"
 #include "mozilla/Preferences.h"
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif // MOZ_LOGGING
+#include "prlog.h"
+
 #include "nsString.h"
 #include "nsDirectoryServiceUtils.h"
 #include "imgIContainer.h"
@@ -34,6 +39,10 @@
 #include <textstor.h>
 #include "nsTextStore.h"
 #endif // #ifdef NS_ENABLE_TSF
+
+#ifdef PR_LOGGING
+PRLogModuleInfo* gWindowsLog = nullptr;
+#endif
 
 namespace mozilla {
 namespace widget {
@@ -75,6 +84,11 @@ WinUtils::DwmGetCompositionTimingInfoProc WinUtils::dwmGetCompositionTimingInfoP
 void
 WinUtils::Initialize()
 {
+#ifdef PR_LOGGING
+  if (!gWindowsLog) {
+    gWindowsLog = PR_NewLogModule("Widget");
+  }
+#endif
   if (!sDwmDll && WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
     sDwmDll = ::LoadLibraryW(kDwmLibraryName);
 
@@ -126,6 +140,81 @@ WinUtils::GetWindowsServicePackVersion(UINT& aOutMajor, UINT& aOutMinor)
   aOutMinor = osInfo.wServicePackMinor;
 
   return true;
+}
+
+// static
+void
+WinUtils::LogW(const wchar_t *fmt, ...)
+{
+  va_list args = NULL;
+  if(!lstrlenW(fmt)) {
+    return;
+  }
+  va_start(args, fmt);
+  int buflen = _vscwprintf(fmt, args);
+  wchar_t* buffer = new wchar_t[buflen+1];
+  if (!buffer) {
+    va_end(args);
+    return;
+  }
+  vswprintf(buffer, buflen, fmt, args);
+  va_end(args);
+
+  // MSVC, including remote debug sessions
+  OutputDebugStringW(buffer);
+  OutputDebugStringW(L"\n");
+
+  int len = wcslen(buffer);
+  if (len) {
+    char* utf8 = new char[len+1];
+    memset(utf8, 0, sizeof(utf8));
+    if (WideCharToMultiByte(CP_ACP, 0, buffer,
+                            -1, utf8, len+1, NULL,
+                            NULL) > 0) {
+      // desktop console
+      printf("%s\n", utf8);
+#ifdef PR_LOGGING
+      NS_ASSERTION(gWindowsLog, "Called WinUtils Log() but Widget "
+                                   "log module doesn't exist!");
+      PR_LOG(gWindowsLog, PR_LOG_ALWAYS, (utf8));
+#endif
+    }
+    delete[] utf8;
+  }
+  delete[] buffer;
+}
+
+// static
+void
+WinUtils::Log(const char *fmt, ...)
+{
+  va_list args = NULL;
+  if(!strlen(fmt)) {
+    return;
+  }
+  va_start(args, fmt);
+  int buflen = _vscprintf(fmt, args);
+  char* buffer = new char[buflen+1];
+  if (!buffer) {
+    va_end(args);
+    return;
+  }
+  vsprintf(buffer, fmt, args);
+  va_end(args);
+
+  // MSVC, including remote debug sessions
+  OutputDebugStringA(buffer);
+  OutputDebugStringW(L"\n");
+
+  // desktop console
+  printf("%s\n", buffer);
+
+#ifdef PR_LOGGING
+  NS_ASSERTION(gWindowsLog, "Called WinUtils Log() but Widget "
+                               "log module doesn't exist!");
+  PR_LOG(gWindowsLog, PR_LOG_ALWAYS, (buffer));
+#endif
+  delete[] buffer;
 }
 
 /* static */

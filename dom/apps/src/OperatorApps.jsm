@@ -62,11 +62,17 @@ let iccListener = {
   notifyCardStateChanged: function() {},
 
   notifyIccInfoChanged: function() {
-    let iccInfo = iccProvider.iccInfo;
+    // TODO: Bug 927709 - OperatorApps for multi-sim
+    // In Multi-sim, there is more than one client in iccProvider. Each
+    // client represents a icc service. To maintain the backward compatibility
+    // with single sim, we always use client 0 for now. Adding support for
+    // multiple sim will be addressed in bug 927709, if needed.
+    let clientId = 0;
+    let iccInfo = iccProvider.getIccInfo(clientId);
     if (iccInfo && iccInfo.mcc && iccInfo.mnc) {
       debug("******* iccListener cardIccInfo MCC-MNC: " + iccInfo.mcc +
             "-" + iccInfo.mnc);
-      iccProvider.unregisterIccMsg(this);
+      iccProvider.unregisterIccMsg(clientId, this);
       OperatorAppsRegistry._installOperatorApps(iccInfo.mcc, iccInfo.mnc);
     }
   }
@@ -82,18 +88,25 @@ this.OperatorAppsRegistry = {
 #ifdef MOZ_B2G_RIL
     if (isFirstRunWithSIM()) {
       debug("First Run with SIM");
+      // TODO: Bug 927709 - OperatorApps for multi-sim
+      // In Multi-sim, there is more than one client in iccProvider. Each
+      // client represents a icc service. To maintain the backward compatibility
+      // with single sim, we always use client 0 for now. Adding support for
+      // multiple sim will be addressed in bug 927709, if needed.
+      let clientId = 0;
+      let iccInfo = iccProvider.getIccInfo(clientId);
       let mcc = 0;
       let mnc = 0;
-      if (iccProvider.iccInfo && iccProvider.iccInfo.mcc) {
-        mcc = iccProvider.iccInfo.mcc;
+      if (iccInfo && iccInfo.mcc) {
+        mcc = iccInfo.mcc;
       }
-      if (iccProvider.iccInfo && iccProvider.iccInfo.mnc) {
-        mnc = iccProvider.iccInfo.mnc;
+      if (iccInfo && iccInfo.mnc) {
+        mnc = iccInfo.mnc;
       }
       if (mcc && mnc) {
         this._installOperatorApps(mcc, mnc);
       } else {
-        iccProvider.registerIccMsg(iccListener);
+        iccProvider.registerIccMsg(clientId, iccListener);
       }
     } else {
       debug("No First Run with SIM");

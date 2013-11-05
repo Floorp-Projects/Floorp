@@ -68,6 +68,9 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
     const LAllocation *type() {
         return getOperand(1);
     }
+    const char *extraName() const {
+        return StringFromMIRType(mir()->type());
+    }
 };
 
 class LUnboxFloatingPoint : public LInstructionHelper<1, 2, 0>

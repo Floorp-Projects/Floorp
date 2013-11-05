@@ -6,6 +6,10 @@
 
 #include "GeckoChildProcessHost.h"
 
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#include "sandboxBroker.h"
+#endif
+
 #include "base/command_line.h"
 #include "base/path_service.h"
 #include "base/string_util.h"
@@ -83,6 +87,7 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
                                              ChildPrivileges aPrivileges)
   : ChildProcessHost(RENDER_PROCESS), // FIXME/cjones: we should own this enum
     mProcessType(aProcessType),
+    mSandboxEnabled(true),
     mPrivileges(aPrivileges),
     mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
     mProcessState(CREATING_CHANNEL),
@@ -735,6 +740,13 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     }
   }
 
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+  if (mSandboxEnabled) {
+    // Tell the process that it should lower its rights after initialization.
+    cmdLine.AppendLooseValue(UTF8ToWide("-sandbox"));
+  }
+#endif
+
   // Add the application directory path (-appdir path)
   AddAppDirToCommandLine(cmdLine);
 
@@ -756,7 +768,18 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // Process type
   cmdLine.AppendLooseValue(UTF8ToWide(childProcessType));
 
-  base::LaunchApp(cmdLine, false, false, &process);
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+  if (mSandboxEnabled) {
+
+    mozilla::SandboxBroker sandboxBroker;
+    sandboxBroker.LaunchApp(cmdLine.program().c_str(),
+                            cmdLine.command_line_string().c_str(),
+                            &process);
+  } else
+#endif
+  {
+    base::LaunchApp(cmdLine, false, false, &process);
+  }
 
 #else
 #  error Sorry

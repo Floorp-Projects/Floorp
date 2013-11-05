@@ -43,13 +43,14 @@
 #include "txMozillaXSLTProcessor.h"
 #include "nsTreeSanitizer.h"
 #include "nsCellMap.h"
-#include "nsTextFrameTextRunCache.h"
+#include "nsTextFrame.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsHtml5Module.h"
+#include "mozilla/dom/FallbackEncoding.h"
 #include "nsFocusManager.h"
 #include "nsListControlFrame.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -61,6 +62,7 @@
 #include "DOMStorageObserver.h"
 #include "CacheObserver.h"
 #include "DisplayItemClip.h"
+#include "ActiveLayerTracker.h"
 
 #include "AudioChannelService.h"
 
@@ -257,6 +259,7 @@ nsLayoutStatics::Initialize()
 
   nsContentSink::InitializeStatics();
   nsHtml5Module::InitializeStatics();
+  mozilla::dom::FallbackEncoding::Initialize();
   nsLayoutUtils::Initialize();
   nsIPresShell::InitializeStatics();
   nsRefreshDriver::InitializeStatics();
@@ -311,7 +314,7 @@ nsLayoutStatics::Shutdown()
   nsFrame::DisplayReflowShutdown();
 #endif
   nsCellMap::Shutdown();
-  nsFrame::ShutdownLayerActivityTimer();
+  ActiveLayerTracker::Shutdown();
 
   // Release all of our atoms
   nsColorNames::ReleaseTable();
@@ -382,6 +385,8 @@ nsLayoutStatics::Shutdown()
   nsTreeSanitizer::ReleaseStatics();
 
   nsHtml5Module::ReleaseStatics();
+
+  mozilla::dom::FallbackEncoding::Shutdown();
 
   nsRegion::ShutdownStatic();
 

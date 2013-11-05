@@ -54,11 +54,21 @@ GetXBLScope(JSContext *cx, JSObject *contentScope);
 bool
 AllowXBLScope(JSCompartment *c);
 
+// Returns whether we will use an XBL scope for this compartment. This is
+// semantically equivalent to comparing global != GetXBLScope(global), but it
+// does not have the side-effect of eagerly creating the XBL scope if it does
+// not already exist.
+bool
+UseXBLScope(JSCompartment *c);
+
 bool
 IsSandboxPrototypeProxy(JSObject *obj);
 
 bool
 IsReflector(JSObject *obj);
+
+bool
+IsXrayWrapper(JSObject *obj);
 } /* namespace xpc */
 
 namespace JS {
@@ -266,6 +276,7 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 nsIPrincipal *GetCompartmentPrincipal(JSCompartment *compartment);
 
 bool IsXBLScope(JSCompartment *compartment);
+bool IsInXBLScope(JSObject *obj);
 
 void SetLocationForGlobal(JSObject *global, const nsACString& location);
 void SetLocationForGlobal(JSObject *global, nsIURI *locationURI);

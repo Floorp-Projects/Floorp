@@ -150,7 +150,7 @@ function failedClipboard(aExpectedPattern, aCallback)
 function finishup()
 {
   gBrowser.removeCurrentTab();
-  doc = inspector = null;
+  doc = inspector = win = null;
   finish();
 }
 

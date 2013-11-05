@@ -6,8 +6,22 @@
 
 MODULE = 'uconv'
 
-SOURCES += [
-    'UnifiedUCV.cpp',
+UNIFIED_SOURCES += [
+    'nsCharsetConverterManager.cpp',
+    'nsConverterInputStream.cpp',
+    'nsConverterOutputStream.cpp',
+    'nsCP1252ToUnicode.cpp',
+    'nsISO88591ToUnicode.cpp',
+    'nsMacRomanToUnicode.cpp',
+    'nsScriptableUConv.cpp',
+    'nsTextToSubURI.cpp',
+    'nsUConvModule.cpp',
+    'nsUnicodeToCP1252.cpp',
+    'nsUnicodeToISO88591.cpp',
+    'nsUnicodeToMacRoman.cpp',
+    'nsUnicodeToUTF8.cpp',
+    'nsUTF8ConverterService.cpp',
+    'nsUTF8ToUnicode.cpp',
 ]
 
 if CONFIG['INTEL_ARCHITECTURE']:

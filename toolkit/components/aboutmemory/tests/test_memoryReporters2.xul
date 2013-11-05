@@ -96,7 +96,7 @@
         if (processes[i] == "") {
           numEmptyProcesses++;
         } else {
-          ok(processes[i].startsWith("Content ("),
+          ok(processes[i].startsWith("Browser ("),
              "correct non-empty process name prefix");
           numNonEmptyProcesses++;
         }

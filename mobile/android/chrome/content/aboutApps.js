@@ -99,8 +99,8 @@ function updateList() {
   request.onsuccess = function() {
     for (let i = 0; i < request.result.length; i++)
       addApplication(request.result[i]);
-    if (!request.result.length)
-      document.getElementById("noapps").className = "";
+    if (request.result.length)
+      document.getElementById("main-container").classList.remove("hidden");
   }
 }
 
@@ -118,6 +118,9 @@ function addApplication(aApp) {
   let img = document.createElement("img");
   let origin = Services.io.newURI(aApp.origin, null, null);
   img.src = gChromeWin.WebappsUI.getBiggestIcon(manifest.icons, origin);
+  img.onerror = function() {
+      img.src = "chrome://browser/skin/images/default-app-icon.png";
+  }
   img.setAttribute("title", manifest.name);
 
   let title = document.createElement("div");

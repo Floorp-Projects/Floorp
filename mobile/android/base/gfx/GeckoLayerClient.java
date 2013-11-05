@@ -470,7 +470,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // Always abort updates if the resolution has changed. There's no use
         // in drawing at the incorrect resolution.
         if (!FloatUtils.fuzzyEquals(resolution, viewportMetrics.zoomFactor)) {
-            Log.d(LOGTAG, "Aborting draw due to resolution change");
+            Log.d(LOGTAG, "Aborting draw due to resolution change: " + resolution + " != " + viewportMetrics.zoomFactor);
             mProgressiveUpdateData.abort = true;
             return mProgressiveUpdateData;
         }

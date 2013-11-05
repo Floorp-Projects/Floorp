@@ -176,7 +176,8 @@ let gGestureSupport = {
   },
 
   /**
-   * Sets up the history swipe animations for a swipe gesture event, if enabled.
+   * Sets up swipe gestures. This includes setting up swipe animations for the
+   * gesture, if enabled.
    *
    * @param aEvent
    *        The swipe gesture start event.
@@ -189,18 +190,22 @@ let gGestureSupport = {
     }
 
     let isVerticalSwipe = false;
-    if (gHistorySwipeAnimation.active) {
-      if (aEvent.direction == aEvent.DIRECTION_UP) {
-        if (content.pageYOffset > 0) {
-          return false;
-        }
-        isVerticalSwipe = true;
-      } else if (aEvent.direction == aEvent.DIRECTION_DOWN) {
-        if (content.pageYOffset < content.scrollMaxY) {
-          return false;
-        }
-        isVerticalSwipe = true;
+    if (aEvent.direction == aEvent.DIRECTION_UP) {
+      if (content.pageYOffset > 0) {
+        return false;
       }
+      isVerticalSwipe = true;
+    } else if (aEvent.direction == aEvent.DIRECTION_DOWN) {
+      if (content.pageYOffset < content.scrollMaxY) {
+        return false;
+      }
+      isVerticalSwipe = true;
+    }
+    if (isVerticalSwipe && !gHistorySwipeAnimation.active) {
+      // Unlike horizontal swipes (which can navigate history even when
+      // swipe animations are turned off) vertical swipes should not be tracked
+      // if animations (bounce effect) aren't enabled.
+      return false;
     }
 
     let canGoBack = gHistorySwipeAnimation.canGoBack();
@@ -946,7 +951,8 @@ let gHistorySwipeAnimation = {
     let ctx = canvas.getContext("2d");
     let zoom = browser.markupDocumentViewer.fullZoom;
     ctx.scale(zoom, zoom);
-    ctx.drawWindow(browser.contentWindow, 0, 0, r.width, r.height, "white",
+    ctx.drawWindow(browser.contentWindow,
+                   0, 0, r.width / zoom, r.height / zoom, "white",
                    ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_VIEW |
                    ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
                    ctx.DRAWWINDOW_USE_WIDGET_LAYERS);

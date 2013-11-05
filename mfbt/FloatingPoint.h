@@ -202,15 +202,35 @@ MinDoubleValue()
   return BitwiseCast<double>(uint64_t(1));
 }
 
+/**
+ * If d is equal to some int32_t value, set *i to that value and return true;
+ * otherwise return false.
+ *
+ * Note that negative zero is "equal" to zero here. To test whether a value can
+ * be losslessly converted to int32_t and back, use DoubleIsInt32 instead.
+ */
 static MOZ_ALWAYS_INLINE bool
-DoubleIsInt32(double d, int32_t* i)
+DoubleEqualsInt32(double d, int32_t* i)
 {
   /*
    * XXX Casting a double that doesn't truncate to int32_t, to int32_t, induces
    *     undefined behavior.  We should definitely fix this (bug 744965), but as
    *     apparently it "works" in practice, it's not a pressing concern now.
    */
-  return !IsNegativeZero(d) && d == (*i = int32_t(d));
+  return d == (*i = int32_t(d));
+}
+
+/**
+ * If d can be converted to int32_t and back to an identical double value,
+ * set *i to that value and return true; otherwise return false.
+ *
+ * The difference between this and DoubleEqualsInt32 is that this method returns
+ * false for negative zero.
+ */
+static MOZ_ALWAYS_INLINE bool
+DoubleIsInt32(double d, int32_t* i)
+{
+  return !IsNegativeZero(d) && DoubleEqualsInt32(d, i);
 }
 
 /**

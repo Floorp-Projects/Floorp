@@ -42,6 +42,8 @@
 
 #include "nsIScriptContext.h"
 #include "nsBindingManager.h"
+#include "xpcpublic.h"
+#include "jswrapper.h"
 #include "nsCxPusher.h"
 
 #include "nsThreadUtils.h"
@@ -731,16 +733,29 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       if (!context)
         return NS_NOINTERFACE;
 
-      AutoPushJSContext jscontext(context->GetNativeContext());
-      if (!jscontext)
+      AutoPushJSContext cx(context->GetNativeContext());
+      if (!cx)
         return NS_NOINTERFACE;
 
       nsIXPConnect *xpConnect = nsContentUtils::XPConnect();
 
-      JSObject* jsobj = aContent->GetWrapper();
+      JS::Rooted<JSObject*> jsobj(cx, aContent->GetWrapper());
       NS_ENSURE_TRUE(jsobj, NS_NOINTERFACE);
 
-      nsresult rv = xpConnect->WrapJSAggregatedToNative(aContent, jscontext,
+      // If we're using an XBL scope, we need to use the Xray view to the bound
+      // content in order to view the full array of methods defined in the
+      // binding, some of which may not be exposed on the prototype of
+      // untrusted content.
+      //
+      // If there's no separate XBL scope, we'll end up with the global of the
+      // reflector, and this will all be a no-op.
+      JS::Rooted<JSObject*> xblScope(cx, xpc::GetXBLScope(cx, jsobj));
+      JSAutoCompartment ac(cx, xblScope);
+      bool ok = JS_WrapObject(cx, &jsobj);
+      NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+      MOZ_ASSERT_IF(js::IsWrapper(jsobj), xpc::IsXrayWrapper(jsobj));
+
+      nsresult rv = xpConnect->WrapJSAggregatedToNative(aContent, cx,
                                                         jsobj, aIID, aResult);
       if (NS_FAILED(rv))
         return rv;

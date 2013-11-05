@@ -810,9 +810,26 @@ MOZ_ARG_WITH_STRING(macos-sdk,
 [  --with-macos-sdk=dir    Location of platform SDK to use (Mac OS X only)],
     MACOS_SDK_DIR=$withval)
 
+MACOS_PRIVATE_FRAMEWORKS_DIR_DEFAULTED=
+MOZ_ARG_WITH_STRING(macos-private-frameworks,
+[  --with-macos-private-frameworks=dir    Location of private frameworks to use (Mac OS X only)],
+    MACOS_PRIVATE_FRAMEWORKS_DIR=$withval,
+    MACOS_PRIVATE_FRAMEWORKS_DIR=/System/Library/PrivateFrameworks
+    MACOS_PRIVATE_FRAMEWORKS_DEFAULTED=1)
+
+if test -z "${MACOS_PRIVATE_FRAMEWORKS_DEFAULTED}"; then
+  if test -z "$CROSS_COMPILE"; then
+    AC_MSG_WARN([You should only be using --with-macos-private-frameworks when cross-compiling.])
+  fi
+  if test ! -d "$MACOS_PRIVATE_FRAMEWORKS_DIR"; then
+    AC_MSG_ERROR([PrivateFrameworks directory not found.])
+  fi
+fi
+
 dnl MACOS_SDK_DIR will be set to the SDK location whenever one is in use.
 dnl NEXT_ROOT will be set and exported only if it's needed.
 AC_SUBST(MACOS_SDK_DIR)
+AC_SUBST(MACOS_PRIVATE_FRAMEWORKS_DIR)
 AC_SUBST(NEXT_ROOT)
 
 if test "$MACOS_SDK_DIR"; then
@@ -1748,6 +1765,7 @@ fi
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`
+MOZILLA_SYMBOLVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -symbolversion`
 
 dnl Get version of various core apps from the version files.
 FIREFOX_VERSION=`cat $_topsrcdir/browser/config/version.txt`
@@ -1759,6 +1777,7 @@ fi
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
+AC_DEFINE_UNQUOTED(MOZILLA_SYMBOLVERSION,"$MOZILLA_SYMBOLVERSION")
 
 MOZ_DOING_LTO(lto_is_enabled)
 
@@ -1941,7 +1960,7 @@ ia64*-hpux*)
     no_x=yes
     if test -n "$gonkdir"; then
         _PLATFORM_DEFAULT_TOOLKIT=cairo-gonk
-        MOZ_B2G_RIL=1
+        _PLATFORM_HAVE_RIL=1
         MOZ_B2G_FM=1
         MOZ_SYNTH_PICO=1
     else
@@ -3154,13 +3173,10 @@ AC_LANG_C
 
 dnl **********************
 dnl *** va_copy checks ***
-dnl **********************
-dnl we currently check for all three va_copy possibilities, so we get
-dnl all results in config.log for bug reports.
-AC_MSG_CHECKING(for an implementation of va_copy())
-AC_CACHE_VAL(ac_cv_va_copy,[
-    AC_TRY_RUN([
-        #include <stdarg.h>
+AC_CACHE_CHECK([for an implementation of va_copy()],
+               ac_cv_va_copy,
+    [AC_TRY_COMPILE([#include <stdarg.h>
+                     #include <stdlib.h>
         void f (int i, ...) {
             va_list args1, args2;
             va_start (args1, i);
@@ -3168,37 +3184,16 @@ AC_CACHE_VAL(ac_cv_va_copy,[
             if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
                 exit (1);
             va_end (args1); va_end (args2);
-        }
-        int main() { f (0, 42); return 0; }],
-        ac_cv_va_copy=yes,
-        ac_cv_va_copy=no,
-        ac_cv_va_copy=no
-    )
-])
-AC_MSG_RESULT($ac_cv_va_copy)
-AC_MSG_CHECKING(for an implementation of __va_copy())
-AC_CACHE_VAL(ac_cv___va_copy,[
-    AC_TRY_RUN([
-        #include <stdarg.h>
-        void f (int i, ...) {
-            va_list args1, args2;
-            va_start (args1, i);
-            __va_copy (args2, args1);
-            if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-                exit (1);
-            va_end (args1); va_end (args2);
-        }
-        int main() { f (0, 42); return 0; }],
-        ac_cv___va_copy=yes,
-        ac_cv___va_copy=no,
-        ac_cv___va_copy=no
-    )
-])
-AC_MSG_RESULT($ac_cv___va_copy)
-AC_MSG_CHECKING(whether va_lists can be copied by value)
-AC_CACHE_VAL(ac_cv_va_val_copy,[
-    AC_TRY_RUN([
-        #include <stdarg.h>
+        }],
+        [f(0, 42); return 0],
+        [ac_cv_va_copy=yes],
+        [ac_cv_va_copy=no]
+    )]
+)
+AC_CACHE_CHECK([whether va_list can be copied by value],
+               ac_cv_va_val_copy,
+    [AC_TRY_COMPILE([#include <stdarg.h>
+                     #include <stdlib.h>
         void f (int i, ...) {
             va_list args1, args2;
             va_start (args1, i);
@@ -3206,25 +3201,20 @@ AC_CACHE_VAL(ac_cv_va_val_copy,[
             if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
                 exit (1);
             va_end (args1); va_end (args2);
-        }
-        int main() { f (0, 42); return 0; }],
-        ac_cv_va_val_copy=yes,
-        ac_cv_va_val_copy=no,
-        ac_cv_va_val_copy=yes
-    )
-])
+        }],
+        [f(0, 42); return 0],
+        [ac_cv_va_val_copy=yes],
+        [ac_cv_va_val_copy=no],
+    )]
+)
 if test "x$ac_cv_va_copy" = "xyes"; then
     AC_DEFINE(VA_COPY, va_copy)
-    AC_DEFINE(HAVE_VA_COPY)
-elif test "x$ac_cv___va_copy" = "xyes"; then
-    AC_DEFINE(VA_COPY, __va_copy)
     AC_DEFINE(HAVE_VA_COPY)
 fi
 
 if test "x$ac_cv_va_val_copy" = "xno"; then
    AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)
 fi
-AC_MSG_RESULT($ac_cv_va_val_copy)
 
 dnl ===================================================================
 dnl ========================================================
@@ -5526,19 +5516,19 @@ if test -n "$MOZ_OPUS"; then
     AC_DEFINE(MOZ_OPUS)
 fi
 
-dnl ========================================================
-dnl = Check alsa availability on Linux if using sydneyaudio
-dnl ========================================================
+dnl ====================================================
+dnl = Check alsa availability on Linux if using libcubeb
+dnl ====================================================
 
-dnl If using sydneyaudio with Linux, ensure that the alsa library is available
+dnl If using libcubeb with Linux, ensure that the alsa library is available
 if test -n "$MOZ_CUBEB" -a "$OS_TARGET" = "Linux"; then
     MOZ_ALSA=1
 fi
 
 MOZ_ARG_ENABLE_BOOL(alsa,
 [  --enable-alsa          Enable Alsa support (default on Linux)],
-MOZ_ALSA=1,
-MOZ_ALSA=)
+   MOZ_ALSA=1,
+   MOZ_ALSA=)
 
 if test -n "$MOZ_ALSA"; then
     AC_DEFINE(MOZ_CUBEB)
@@ -5552,13 +5542,18 @@ AC_SUBST(MOZ_ALSA_CFLAGS)
 AC_SUBST(MOZ_ALSA_LIBS)
 
 dnl ========================================================
-dnl = Enable PulseAudio
+dnl = Disable PulseAudio
 dnl ========================================================
 
-MOZ_ARG_ENABLE_BOOL(pulseaudio,
-[  --enable-pulseaudio          Enable PulseAudio support (experimental)],
-MOZ_PULSEAUDIO=1,
-MOZ_PULSEAUDIO=)
+dnl If using libcubeb with Linux, ensure that the PA library is available
+if test -n "$MOZ_CUBEB" -a "$OS_TARGET" = "Linux" -a -z "$MOZ_B2G"; then
+    MOZ_PULSEAUDIO=1
+fi
+
+MOZ_ARG_DISABLE_BOOL(pulseaudio,
+[  --disable-pulseaudio          Disable PulseAudio support],
+   MOZ_PULSEAUDIO=,
+   MOZ_PULSEAUDIO=1)
 
 if test -n "$MOZ_PULSEAUDIO"; then
     AC_DEFINE(MOZ_CUBEB)
@@ -5568,13 +5563,11 @@ if test -n "$MOZ_PULSEAUDIO"; then
               AC_MSG_ERROR([pulseaudio audio backend requires libpulse development package])])
     else
         MOZ_PULSEAUDIO_CFLAGS="-I$gonkdir/external/pulseaudio/pulseaudio/src"
-        MOZ_PULSEAUDIO_LIBS="-lpulse"
     fi
 fi
 
 AC_SUBST(MOZ_PULSEAUDIO)
 AC_SUBST(MOZ_PULSEAUDIO_CFLAGS)
-AC_SUBST(MOZ_PULSEAUDIO_LIBS)
 
 dnl ========================================================
 dnl = Enable GStreamer
@@ -7274,9 +7267,14 @@ dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(b2g-ril,
 [  --enable-b2g-ril      Set compile flags necessary for testing B2G Radio Interface Layer via network sockets ],
     MOZ_B2G_RIL=1,
-    MOZ_B2G_RIL= )
+    MOZ_B2G_RIL=,
+    MOZ_B2G_RIL=$_PLATFORM_HAVE_RIL )
 if test -n "$MOZ_B2G_RIL"; then
-    AC_DEFINE(MOZ_B2G_RIL)
+    if test -n "$_PLATFORM_HAVE_RIL"; then
+        AC_DEFINE(MOZ_B2G_RIL)
+    else
+        AC_MSG_ERROR([b2g-ril cannot be enabled because target platform doesn't support it.])
+    fi
 fi
 AC_SUBST(MOZ_B2G_RIL)
 
@@ -9134,7 +9132,7 @@ MOZ_ARG_WITH_STRING(intl-api,
     but doesn't use ICU or expose the API to script.  The third doesn't build
     ICU at all.],
     WITH_INTL="--with-intl-api=$withval"
-])
+)
 if test -z "$WITH_INTL"; then
 if test "$MOZ_BUILD_APP" = "browser"; then
     WITH_INTL="--with-intl-api"

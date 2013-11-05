@@ -38,6 +38,7 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsDisplayList.h"
+#include "nsFocusManager.h"
 
 #include "nsTArray.h"
 
@@ -75,6 +76,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/ipc/PDocumentRendererParent.h"
 #include "mozilla/MathAlgorithms.h"
@@ -1060,40 +1062,20 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
   *aImageBuffer = nullptr;
   *aFormat = 0;
 
-  nsRefPtr<gfxASurface> surface;
-  nsresult rv = GetThebesSurface(getter_AddRefs(surface));
-  if (NS_FAILED(rv)) {
+  EnsureTarget();
+  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+  if (!snapshot) {
     return;
   }
 
-  static const fallible_t fallible = fallible_t();
-  uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
-  if (!imageBuffer) {
+  RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+  if (!data) {
     return;
   }
 
-  nsRefPtr<gfxImageSurface> imgsurf =
-    new gfxImageSurface(imageBuffer,
-                        gfxIntSize(mWidth, mHeight),
-                        mWidth * 4,
-                        gfxImageFormatARGB32);
+  MOZ_ASSERT(data->GetSize() == IntSize(mWidth, mHeight));
 
-  if (!imgsurf || imgsurf->CairoStatus()) {
-    delete[] imageBuffer;
-    return;
-  }
-
-  nsRefPtr<gfxContext> ctx = new gfxContext(imgsurf);
-  if (!ctx || ctx->HasError()) {
-    delete[] imageBuffer;
-    return;
-  }
-
-  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  ctx->SetSource(surface, gfxPoint(0, 0));
-  ctx->Paint();
-
-  *aImageBuffer = imageBuffer;
+  *aImageBuffer = SurfaceToPackedBGRA(data);
   *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
 }
 
@@ -1729,6 +1711,90 @@ CanvasRenderingContext2D::Stroke()
            strokeOptions, DrawOptions(state.globalAlpha, UsedOperation()));
 
   Redraw();
+}
+
+void CanvasRenderingContext2D::DrawSystemFocusRing(mozilla::dom::Element& aElement)
+{
+  EnsureUserSpacePath();
+
+  if (!mPath) {
+    return;
+  }
+
+  if(DrawCustomFocusRing(aElement)) {
+    Save();
+
+    // set state to conforming focus state
+    ContextState& state = CurrentState();
+    state.globalAlpha = 1.0;
+    state.shadowBlur = 0;
+    state.shadowOffset.x = 0;
+    state.shadowOffset.y = 0;
+    state.op = mozilla::gfx::OP_OVER;
+
+    state.lineCap = CAP_BUTT;
+    state.lineJoin = mozilla::gfx::JOIN_MITER_OR_BEVEL;
+    state.lineWidth = 1;
+    CurrentState().dash.Clear();
+
+    // color and style of the rings is the same as for image maps
+    // set the background focus color
+    CurrentState().SetColorStyle(STYLE_STROKE, NS_RGBA(255, 255, 255, 255));
+    // draw the focus ring
+    Stroke();
+
+    // set dashing for foreground
+    FallibleTArray<mozilla::gfx::Float>& dash = CurrentState().dash;
+    dash.AppendElement(1);
+    dash.AppendElement(1);
+
+    // set the foreground focus color
+    CurrentState().SetColorStyle(STYLE_STROKE, NS_RGBA(0,0,0, 255));
+    // draw the focus ring
+    Stroke();
+
+    Restore();
+  }
+}
+
+bool CanvasRenderingContext2D::DrawCustomFocusRing(mozilla::dom::Element& aElement)
+{
+  EnsureUserSpacePath();
+
+  HTMLCanvasElement* canvas = GetCanvas();
+
+  if (!canvas|| !nsContentUtils::ContentIsDescendantOf(&aElement, canvas)) {
+    return false;
+  }
+
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    // check that the element i focused
+    nsCOMPtr<nsIDOMElement> focusedElement;
+    fm->GetFocusedElement(getter_AddRefs(focusedElement));
+    if (SameCOMIdentity(aElement.AsDOMNode(), focusedElement)) {
+      // get the bounds of the current path
+      mgfx::Rect bounds;
+      bounds = mPath->GetBounds(mTarget->GetTransform());
+
+      // and set them as the accessible area
+      nsRect rect(canvas->ClientLeft() + bounds.x, canvas->ClientTop() + bounds.y,
+               bounds.width, bounds.height);
+      rect.x *= AppUnitsPerCSSPixel();
+      rect.y *= AppUnitsPerCSSPixel();
+      rect.width *= AppUnitsPerCSSPixel();
+      rect.height *= AppUnitsPerCSSPixel();
+
+      nsIFrame* frame = aElement.GetPrimaryFrame();
+      if(frame) {
+        frame->SetRect(rect);
+      }
+
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void
@@ -2578,7 +2644,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   GetAppUnitsValues(&processor.mAppUnitsPerDevPixel, nullptr);
   processor.mPt = gfxPoint(aX, aY);
   processor.mThebes =
-    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
 
   // If we don't have a target then we don't have a transform. A target won't
   // be needed in the case where we're measuring the text size. This allows
@@ -3301,6 +3367,9 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   Matrix matrix = mTarget->GetTransform();
   double sw = matrix._11 * w;
   double sh = matrix._22 * h;
+  if (!sw || !sh) {
+    return;
+  }
   nsRefPtr<gfxContext> thebes;
   nsRefPtr<gfxASurface> drawSurf;
   RefPtr<DrawTarget> drawDT;
@@ -3361,6 +3430,11 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
                                              data->GetSize(),
                                              data->Stride(),
                                              data->GetFormat());
+    }
+
+    if (!source) {
+      error.Throw(NS_ERROR_FAILURE);
+      return;
     }
 
     mgfx::Rect destRect(0, 0, w, h);

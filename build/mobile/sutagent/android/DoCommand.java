@@ -3511,23 +3511,14 @@ private void CancelNotification()
         prgIntent.setPackage(sArgs[0]);
         prgIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
+        // Get the main activity for this package
         try {
-            PackageInfo pi = pm.getPackageInfo(sArgs[0], PackageManager.GET_ACTIVITIES | PackageManager.GET_INTENT_FILTERS);
-            ActivityInfo [] ai = pi.activities;
-            for (int i = 0; i < ai.length; i++)
-                {
-                ActivityInfo a = ai[i];
-                if (a.name.length() > 0)
-                    {
-                    prgIntent.setClassName(a.packageName, a.name);
-                    break;
-                    }
-                }
-            }
-        catch (NameNotFoundException e)
-            {
+            final ComponentName c = pm.getLaunchIntentForPackage(sArgs[0]).getComponent();
+            prgIntent.setClassName(c.getPackageName(), c.getClassName());
+        } catch (Exception e) {
             e.printStackTrace();
-            }
+            return "Unable to find main activity for package: " + sArgs[0];
+        }
 
         if (sArgs.length > 1)
             {

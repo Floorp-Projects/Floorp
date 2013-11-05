@@ -6,13 +6,19 @@
 
 MODULE = 'faststartupqt'
 
-SOURCES += [
+GENERATED_SOURCES += [
     'moc_moziqwidget.cpp',
     'moc_nsFastStartupQt.cpp',
-    'mozqglwidgetwrapper.cpp',
     'mozqwidgetfast.cpp',
+]
+
+SOURCES += [
+    TOPSRCDIR + '/toolkit/xre/nsQAppInstance.cpp',
+    TOPSRCDIR + '/widget/qt/mozqglwidgetwrapper.cpp',
+]
+
+SOURCES += [
     'nsFastStartupQt.cpp',
-    'nsQAppInstance.cpp',
 ]
 
 LIBRARY_NAME = 'faststartupqt'

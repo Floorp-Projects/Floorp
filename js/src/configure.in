@@ -235,10 +235,12 @@ dnl Get mozilla version from central milestone file
 dnl ==============================================================
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`
+MOZILLA_SYMBOLVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -symbolversion`
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
+AC_DEFINE_UNQUOTED(MOZILLA_SYMBOLVERSION,"$MOZILLA_SYMBOLVERSION")
 
 # Separate version into components for use in shared object naming etc
 changequote(,)
@@ -2561,12 +2563,10 @@ AC_LANG_C
 dnl **********************
 dnl *** va_copy checks ***
 dnl **********************
-dnl we currently check for all three va_copy possibilities, so we get
-dnl all results in config.log for bug reports.
-AC_MSG_CHECKING(for an implementation of va_copy())
-AC_CACHE_VAL(ac_cv_va_copy,[
-    AC_TRY_RUN([
-        #include <stdarg.h>
+AC_CACHE_CHECK([for an implementation of va_copy()],
+               ac_cv_va_copy,
+    [AC_TRY_COMPILE([#include <stdarg.h>
+                     #include <stdlib.h>
         void f (int i, ...) {
             va_list args1, args2;
             va_start (args1, i);
@@ -2574,37 +2574,16 @@ AC_CACHE_VAL(ac_cv_va_copy,[
             if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
                 exit (1);
             va_end (args1); va_end (args2);
-        }
-        int main() { f (0, 42); return 0; }],
-        ac_cv_va_copy=yes,
-        ac_cv_va_copy=no,
-        ac_cv_va_copy=no
-    )
-])
-AC_MSG_RESULT($ac_cv_va_copy)
-AC_MSG_CHECKING(for an implementation of __va_copy())
-AC_CACHE_VAL(ac_cv___va_copy,[
-    AC_TRY_RUN([
-        #include <stdarg.h>
-        void f (int i, ...) {
-            va_list args1, args2;
-            va_start (args1, i);
-            __va_copy (args2, args1);
-            if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-                exit (1);
-            va_end (args1); va_end (args2);
-        }
-        int main() { f (0, 42); return 0; }],
-        ac_cv___va_copy=yes,
-        ac_cv___va_copy=no,
-        ac_cv___va_copy=no
-    )
-])
-AC_MSG_RESULT($ac_cv___va_copy)
-AC_MSG_CHECKING(whether va_lists can be copied by value)
-AC_CACHE_VAL(ac_cv_va_val_copy,[
-    AC_TRY_RUN([
-        #include <stdarg.h>
+        }],
+        [f(0, 42); return 0],
+        [ac_cv_va_copy=yes],
+        [ac_cv_va_copy=no]
+    )]
+)
+AC_CACHE_CHECK([whether va_list can be copied by value],
+               ac_cv_va_val_copy,
+    [AC_TRY_COMPILE([#include <stdarg.h>
+                     #include <stdlib.h>
         void f (int i, ...) {
             va_list args1, args2;
             va_start (args1, i);
@@ -2612,25 +2591,20 @@ AC_CACHE_VAL(ac_cv_va_val_copy,[
             if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
                 exit (1);
             va_end (args1); va_end (args2);
-        }
-        int main() { f (0, 42); return 0; }],
-        ac_cv_va_val_copy=yes,
-        ac_cv_va_val_copy=no,
-        ac_cv_va_val_copy=yes
-    )
-])
+        }],
+        [f(0, 42); return 0],
+        [ac_cv_va_val_copy=yes],
+        [ac_cv_va_val_copy=no],
+    )]
+)
 if test "x$ac_cv_va_copy" = "xyes"; then
     AC_DEFINE(VA_COPY, va_copy)
-    AC_DEFINE(HAVE_VA_COPY)
-elif test "x$ac_cv___va_copy" = "xyes"; then
-    AC_DEFINE(VA_COPY, __va_copy)
     AC_DEFINE(HAVE_VA_COPY)
 fi
 
 if test "x$ac_cv_va_val_copy" = "xno"; then
    AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)
 fi
-AC_MSG_RESULT($ac_cv_va_val_copy)
 
 dnl ===================================================================
 dnl ========================================================
@@ -2995,6 +2969,19 @@ dnl ========================================================
 MOZ_ARG_HEADER(Application)
 
 ENABLE_TESTS=1
+
+dnl ========================================================
+dnl Tell the build system that ../../mfbt exists outside
+dnl the source tree, but files from there are included from
+dnl inside the tree.
+dnl
+dnl This should probably be a --with-external-source-dir
+dnl option, like the root mozilla-central configure, but
+dnl then anyone building the standalone js shell would need
+dnl to remember to pass it, and it is only used in one file.
+dnl ========================================================
+EXTERNAL_SOURCE_DIR=../../mfbt
+AC_SUBST(EXTERNAL_SOURCE_DIR)
 
 USE_ARM_KUSER=
 

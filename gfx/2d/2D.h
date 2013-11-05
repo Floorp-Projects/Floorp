@@ -74,23 +74,19 @@ struct NativeFont {
  * mCompositionOp - The operator that indicates how the source and destination
  *                  patterns are blended.
  * mAntiAliasMode - The AntiAlias mode used for this drawing operation.
- * mSnapping      - Whether this operation is snapped to pixel boundaries.
  */
 struct DrawOptions {
   DrawOptions(Float aAlpha = 1.0f,
               CompositionOp aCompositionOp = OP_OVER,
-              AntialiasMode aAntialiasMode = AA_DEFAULT,
-              Snapping aSnapping = SNAP_NONE)
+              AntialiasMode aAntialiasMode = AA_DEFAULT)
     : mAlpha(aAlpha)
     , mCompositionOp(aCompositionOp)
     , mAntialiasMode(aAntialiasMode)
-    , mSnapping(aSnapping)
   {}
 
   Float mAlpha;
   CompositionOp mCompositionOp : 8;
   AntialiasMode mAntialiasMode : 3;
-  Snapping mSnapping : 1;
 };
 
 /*
@@ -795,9 +791,9 @@ public:
                                                                   SurfaceFormat aFormat) const = 0;
 
   /*
-   * Create a SourceSurface optimized for use with this DrawTarget from
-   * an arbitrary other SourceSurface. This may return aSourceSurface or some
-   * other existing surface.
+   * Create a SourceSurface optimized for use with this DrawTarget from an
+   * arbitrary SourceSurface type supported by this backend. This may return
+   * aSourceSurface or some other existing surface.
    */
   virtual TemporaryRef<SourceSurface> OptimizeSourceSurface(SourceSurface *aSurface) const = 0;
 
@@ -1006,6 +1002,8 @@ public:
   static void
     SetGlobalSkiaCacheLimits(int aCount, int aSizeInBytes);
 #endif
+
+  static void PurgeTextureCaches();
 
 #if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
   static TemporaryRef<GlyphRenderingOptions>

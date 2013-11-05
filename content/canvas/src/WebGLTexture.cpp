@@ -48,7 +48,7 @@ int64_t
 WebGLTexture::ImageInfo::MemoryUsage() const {
     if (mImageDataStatus == WebGLImageDataStatus::NoImageData)
         return 0;
-    int64_t texelSizeInBits = WebGLContext::GetBitsPerTexel(mFormat, mType);
+    int64_t texelSizeInBits = WebGLContext::GetBitsPerTexel(mInternalFormat, mType);
     return int64_t(mWidth) * int64_t(mHeight) * texelSizeInBits / 8;
 }
 
@@ -418,7 +418,7 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
     mContext->MakeContextCurrent();
     gl::ScopedBindTexture autoBindTex(mContext->gl, GLName(), mTarget);
 
-    WebGLTexelFormat texelformat = GetWebGLTexelFormat(imageInfo.mFormat, imageInfo.mType);
+    WebGLTexelFormat texelformat = GetWebGLTexelFormat(imageInfo.mInternalFormat, imageInfo.mType);
     uint32_t texelsize = WebGLTexelConversions::TexelBytesForFormat(texelformat);
     CheckedUint32 checked_byteLength
         = WebGLContext::GetImageSize(
@@ -428,11 +428,14 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
                         mContext->mPixelStoreUnpackAlignment);
     MOZ_ASSERT(checked_byteLength.isValid()); // should have been checked earlier
     void *zeros = calloc(1, checked_byteLength.value());
-    GLenum error
-        = mContext->CheckedTexImage2D(imageTarget, level, imageInfo.mFormat,
-                                      imageInfo.mWidth, imageInfo.mHeight,
-                                      0, imageInfo.mFormat, imageInfo.mType,
-                                      zeros);
+
+    mContext->UpdateWebGLErrorAndClearGLError();
+    mContext->gl->fTexImage2D(imageTarget, level, imageInfo.mInternalFormat,
+                              imageInfo.mWidth, imageInfo.mHeight,
+                              0, imageInfo.mInternalFormat, imageInfo.mType,
+                              zeros);
+    GLenum error = LOCAL_GL_NO_ERROR;
+    mContext->UpdateWebGLErrorAndClearGLError(&error);
 
     free(zeros);
     SetImageDataStatus(imageTarget, level, WebGLImageDataStatus::InitializedImageData);

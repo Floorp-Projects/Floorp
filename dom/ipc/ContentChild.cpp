@@ -28,7 +28,7 @@
 #include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_UNIX)
+#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_UNIX) && !defined(XP_MACOSX)
 #include "mozilla/Sandbox.h"
 #endif
 #include "mozilla/unused.h"
@@ -117,6 +117,7 @@
 #include "AudioChannelService.h"
 #include "JavaScriptChild.h"
 #include "mozilla/dom/telephony/PTelephonyChild.h"
+#include "mozilla/net/NeckoMessageUtils.h"
 
 using namespace base;
 using namespace mozilla;
@@ -383,10 +384,26 @@ ContentChild::SetProcessName(const nsAString& aName)
     mozilla::ipc::SetThisProcessName(NS_LossyConvertUTF16toASCII(aName).get());
 }
 
-const void
+void
 ContentChild::GetProcessName(nsAString& aName)
 {
     aName.Assign(mProcessName);
+}
+
+void
+ContentChild::GetProcessName(nsACString& aName)
+{
+    aName.Assign(NS_ConvertUTF16toUTF8(mProcessName));
+}
+
+/* static */ void
+ContentChild::AppendProcessId(nsACString& aName)
+{
+    if (!aName.IsEmpty()) {
+        aName.AppendLiteral(" ");
+    }
+    unsigned pid = getpid();
+    aName.Append(nsPrintfCString("(pid %u)", pid));
 }
 
 void
@@ -469,7 +486,9 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
 
     InfallibleTArray<MemoryReport> reports;
 
-    nsPrintfCString process("Content (%d)", getpid());
+    nsCString process;
+    GetProcessName(process);
+    AppendProcessId(process);
 
     // Run each reporter.  The callback will turn each measurement into a
     // MemoryReport.
@@ -553,7 +572,7 @@ ContentChild::RecvSetProcessPrivileges(const ChildPrivileges& aPrivs)
                           aPrivs;
   // If this fails, we die.
   SetCurrentProcessPrivileges(privs);
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_UNIX)
+#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_UNIX) && !defined(XP_MACOSX)
   // SetCurrentProcessSandbox should be moved close to process initialization
   // time if/when possible. SetCurrentProcessPrivileges should probably be
   // moved as well. Right now this is set ONLY if we receive the

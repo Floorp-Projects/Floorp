@@ -1287,15 +1287,47 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     const UI_VERSION = 14;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
+
+    let wasCustomizedAndOnAustralis = Services.prefs.prefHasUserValue("browser.uiCustomization.state");
     let currentUIVersion = 0;
     try {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
     } catch(ex) {}
-    if (currentUIVersion >= UI_VERSION)
+    if (!wasCustomizedAndOnAustralis && currentUIVersion >= UI_VERSION)
       return;
 
     this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
     this._dataSource = this._rdf.GetDataSource("rdf:local-store");
+
+    // No version check for this as this code should run until we have Australis everywhere:
+    if (wasCustomizedAndOnAustralis) {
+      // This profile's been on australis! If it's missing the back/fwd button
+      // or go/stop/reload button, then put them back:
+      let currentsetResource = this._rdf.GetResource("currentset");
+      let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
+      let currentset = this._getPersist(toolbarResource, currentsetResource);
+      if (currentset.indexOf("unified-back-forward-button") == -1) {
+        currentset = currentset.replace("urlbar-container",
+                                        "unified-back-forward-button,urlbar-container");
+      }
+      if (currentset.indexOf("reload-button") == -1) {
+        currentset = currentset.replace("urlbar-container", "urlbar-container,reload-button");
+      }
+      if (currentset.indexOf("stop-button") == -1) {
+        currentset = currentset.replace("reload-button", "reload-button,stop-button");
+      }
+      this._setPersist(toolbarResource, currentsetResource, currentset);
+      Services.prefs.clearUserPref("browser.uiCustomization.state");
+
+      // If we don't have anything else to do, we can bail here:
+      if (currentUIVersion >= UI_VERSION) {
+        delete this._rdf;
+        delete this._dataSource;
+        return;
+      }
+    }
+
+
     this._dirty = false;
 
     if (currentUIVersion < 2) {
@@ -1963,21 +1995,13 @@ ContentPermissionPrompt.prototype = {
 
   prompt: function CPP_prompt(request) {
 
-    // Only allow exactly one permission rquest here.
-    let types = request.types.QueryInterface(Ci.nsIArray);
-    if (types.length != 1) {
-      request.cancel();
-      return;
-    }
-    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
-
     const kFeatureKeys = { "geolocation" : "geo",
                            "desktop-notification" : "desktop-notification",
                            "pointerLock" : "pointerLock",
                          };
 
     // Make sure that we support the request.
-    if (!(perm.type in kFeatureKeys)) {
+    if (!(request.type in kFeatureKeys)) {
         return;
     }
 
@@ -1989,7 +2013,7 @@ ContentPermissionPrompt.prototype = {
       return;
 
     var autoAllow = false;
-    var permissionKey = kFeatureKeys[perm.type];
+    var permissionKey = kFeatureKeys[request.type];
     var result = Services.perms.testExactPermissionFromPrincipal(requestingPrincipal, permissionKey);
 
     if (result == Ci.nsIPermissionManager.DENY_ACTION) {
@@ -2000,14 +2024,14 @@ ContentPermissionPrompt.prototype = {
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       autoAllow = true;
       // For pointerLock, we still want to show a warning prompt.
-      if (perm.type != "pointerLock") {
+      if (request.type != "pointerLock") {
         request.allow();
         return;
       }
     }
 
     // Show the prompt.
-    switch (perm.type) {
+    switch (request.type) {
     case "geolocation":
       this._promptGeo(request);
       break;

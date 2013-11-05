@@ -180,7 +180,7 @@ nsXULPopupManager::GetInstance()
 }
 
 bool
-nsXULPopupManager::Rollup(uint32_t aCount, nsIContent** aLastRolledUp)
+nsXULPopupManager::Rollup(uint32_t aCount, const nsIntPoint* pos, nsIContent** aLastRolledUp)
 {
   bool consume = false;
 
@@ -202,6 +202,20 @@ nsXULPopupManager::Rollup(uint32_t aCount, nsIContent** aLastRolledUp)
     }
 
     consume = item->Frame()->ConsumeOutsideClicks();
+    // If the click was over the anchor, always consume the click. This way,
+    // clicking on a menu doesn't reopen the menu.
+    if (!consume && pos) {
+      nsCOMPtr<nsIContent> anchor = item->Frame()->GetAnchor();
+      if (anchor && anchor->GetPrimaryFrame()) {
+        // It's possible that some other element is above the anchor at the same
+        // position, but the only thing that would happen is that the mouse
+        // event will get consumed, so here only a quick coordinates check is
+        // done rather than a slower complete check of what is at that location.
+        if (anchor->GetPrimaryFrame()->GetScreenRect().Contains(*pos)) {
+          consume = true;
+        }
+      }
+    }
 
     // if a number of popups to close has been specified, determine the last
     // popup to close
@@ -2005,7 +2019,7 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
 #endif
       // close popups or deactivate menubar when Tab or F10 are pressed
       if (aTopVisibleMenuItem) {
-        Rollup(0, nullptr);
+        Rollup(0, nullptr, nullptr);
       } else if (mActiveMenuBar) {
         mActiveMenuBar->MenuClosed();
       }
@@ -2240,7 +2254,7 @@ nsXULPopupManager::KeyDown(nsIDOMKeyEvent* aKeyEvent)
         // The access key just went down and no other
         // modifiers are already down.
         if (mPopups)
-          Rollup(0, nullptr);
+          Rollup(0, nullptr, nullptr);
         else if (mActiveMenuBar)
           mActiveMenuBar->MenuClosed();
       }

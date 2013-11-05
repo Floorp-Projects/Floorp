@@ -63,8 +63,3 @@ INCLUDES        += \
                 -I$(srcdir)/include/ics/media/stagefright/openmax \
                 $(NULL)
 endif
-
-libs::	$(DLL_PREFIX)$(LIBRARY_NAME)$(DLL_SUFFIX)
-	$(INSTALL) $< $(DEPTH)/dist/bin
-
-libs:: $(PROGRAMS)

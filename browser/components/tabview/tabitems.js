@@ -804,6 +804,8 @@ let TabItems = {
       AllTabs.unregister(name, this._eventListeners[name]);
     }
     this.items.forEach(function(tabItem) {
+      delete tabItem.tab._tabViewTabItem;
+
       for (let x in tabItem) {
         if (typeof tabItem[x] == "object")
           tabItem[x] = null;

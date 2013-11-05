@@ -228,17 +228,18 @@ DumpXPC(JSContext *cx,
         unsigned argc,
         JS::Value *vp)
 {
-    int32_t depth = 2;
+    JS::CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc > 0) {
-        if (!JS_ValueToInt32(cx, JS_ARGV(cx, vp)[0], &depth))
+    uint16_t depth = 2;
+    if (args.length() > 0) {
+        if (!JS::ToUint16(cx, args[0], &depth))
             return false;
     }
 
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-    if(xpc)
+    if (xpc)
         xpc->DebugDump(int16_t(depth));
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    args.rval().setUndefined();
     return true;
 }
 
@@ -258,110 +259,18 @@ GC(JSContext *cx,
 
 #ifdef JS_GC_ZEAL
 static bool
-GCZeal(JSContext *cx, 
-       unsigned argc,
-       JS::Value *vp)
+GCZeal(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JS::Value* argv = JS_ARGV(cx, vp);
+  CallArgs args = CallArgsFromVp(argc, vp);
 
   uint32_t zeal;
-  if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
+  if (!ToUint32(cx, args.get(0), &zeal))
     return false;
 
   JS_SetGCZeal(cx, uint8_t(zeal), JS_DEFAULT_ZEAL_FREQ);
   return true;
 }
 #endif
-
-#ifdef DEBUG
-
-static bool
-DumpHeap(JSContext *cx,
-         unsigned argc,
-         JS::Value *vp)
-{
-    JSAutoByteString fileName;
-    void* startThing = nullptr;
-    JSGCTraceKind startTraceKind = JSTRACE_OBJECT;
-    void *thingToFind = nullptr;
-    size_t maxDepth = (size_t)-1;
-    void *thingToIgnore = nullptr;
-    FILE *dumpFile;
-    bool ok;
-
-    JS::Value *argv = JS_ARGV(cx, vp);
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-
-    vp = argv + 0;
-    if (argc > 0 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
-        JSString *str;
-
-        str = JS_ValueToString(cx, *vp);
-        if (!str)
-            return false;
-        *vp = STRING_TO_JSVAL(str);
-        if (!fileName.encodeLatin1(cx, str))
-            return false;
-    }
-
-    vp = argv + 1;
-    if (argc > 1 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
-        if (!JSVAL_IS_TRACEABLE(*vp))
-            goto not_traceable_arg;
-        startThing = JSVAL_TO_TRACEABLE(*vp);
-        startTraceKind = JSVAL_TRACE_KIND(*vp);
-    }
-
-    vp = argv + 2;
-    if (argc > 2 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
-        if (!JSVAL_IS_TRACEABLE(*vp))
-            goto not_traceable_arg;
-        thingToFind = JSVAL_TO_TRACEABLE(*vp);
-    }
-
-    vp = argv + 3;
-    if (argc > 3 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
-        uint32_t depth;
-
-        if (!JS_ValueToECMAUint32(cx, *vp, &depth))
-            return false;
-        maxDepth = depth;
-    }
-
-    vp = argv + 4;
-    if (argc > 4 && *vp != JSVAL_NULL && *vp != JSVAL_VOID) {
-        if (!JSVAL_IS_TRACEABLE(*vp))
-            goto not_traceable_arg;
-        thingToIgnore = JSVAL_TO_TRACEABLE(*vp);
-    }
-
-    if (!fileName) {
-        dumpFile = stdout;
-    } else {
-        dumpFile = fopen(fileName.ptr(), "w");
-        if (!dumpFile) {
-            fprintf(stderr, "dumpHeap: can't open %s: %s\n",
-                    fileName.ptr(), strerror(errno));
-            return false;
-        }
-    }
-
-    ok = JS_DumpHeap(JS_GetRuntime(cx), dumpFile, startThing, startTraceKind, thingToFind,
-                     maxDepth, thingToIgnore);
-    if (dumpFile != stdout)
-        fclose(dumpFile);
-    if (!ok)
-        JS_ReportOutOfMemory(cx);
-    return ok;
-
-  not_traceable_arg:
-    fprintf(stderr,
-            "dumpHeap: argument %u is not null or a heap-allocated thing\n",
-            (unsigned)(vp - argv));
-    return false;
-}
-
-#endif /* DEBUG */
 
 const JSFunctionSpec gGlobalFunctions[] =
 {
@@ -375,9 +284,6 @@ const JSFunctionSpec gGlobalFunctions[] =
     JS_FS("gc",              GC,             0,0),
  #ifdef JS_GC_ZEAL
     JS_FS("gczeal",          GCZeal,         1,0),
- #endif
- #ifdef DEBUG
-    JS_FS("dumpHeap",        DumpHeap,       5,0),
  #endif
     JS_FS_END
 };

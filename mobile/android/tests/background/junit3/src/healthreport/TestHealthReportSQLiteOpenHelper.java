@@ -3,8 +3,6 @@
 
 package org.mozilla.gecko.background.healthreport;
 
-import java.io.File;
-
 import org.mozilla.gecko.background.helpers.DBHelpers;
 import org.mozilla.gecko.background.helpers.FakeProfileTestCase;
 
@@ -37,11 +35,6 @@ public class TestHealthReportSQLiteOpenHelper extends FakeProfileTestCase {
 
   private MockHealthReportSQLiteOpenHelper createHelper(String name, int version) {
     return new MockHealthReportSQLiteOpenHelper(context, fakeProfileDirectory, name, version);
-  }
-
-  @Override
-  protected String getCacheSuffix() {
-    return File.separator + "testHealth";
   }
 
   public void testOpening() {
