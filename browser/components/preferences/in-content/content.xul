@@ -21,12 +21,9 @@
 <script type="application/javascript" 
         src="chrome://browser/content/preferences/in-content/content.js"/>
 
-<hbox class="heading" data-category="paneContent" hidden="true">
-  <image class="preference-icon" type="content"/>
-  <html:h1>&paneContent.title;</html:h1>
-</hbox>
-
 <groupbox id="miscGroup" data-category="paneContent" hidden="true">
+  <caption label="&popups.label;"/>
+
   <grid id="contentGrid">
     <columns>
       <column flex="1"/>

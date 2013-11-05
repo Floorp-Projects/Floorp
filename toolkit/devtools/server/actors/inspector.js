@@ -110,6 +110,13 @@ function delayedResolve(value) {
   return deferred.promise;
 }
 
+types.addDictType("imageData", {
+  // The image data
+  data: "nullable:longstring",
+  // The original image dimensions
+  size: "json"
+});
+
 /**
  * We only send nodeValue up to a certain size by default.  This stuff
  * controls that size.
@@ -255,8 +262,12 @@ var NodeActor = protocol.ActorClass({
    * A null return value means the node isn't an image
    * An empty string return value means the node is an image but image data
    * could not be retrieved (missing/broken image).
+   *
+   * Accepts a maxDim request parameter to resize images that are larger. This
+   * is important as the resizing occurs server-side so that image-data being
+   * transfered in the longstring back to the client will be that much smaller
    */
-  getImageData: method(function() {
+  getImageData: method(function(maxDim) {
     let isImg = this.rawNode.tagName.toLowerCase() === "img";
     let isCanvas = this.rawNode.tagName.toLowerCase() === "canvas";
 
@@ -264,29 +275,44 @@ var NodeActor = protocol.ActorClass({
       return null;
     }
 
-    let imageData;
-    if (isImg) {
-      let canvas = this.rawNode.ownerDocument.createElement("canvas");
-      canvas.width = this.rawNode.naturalWidth;
-      canvas.height = this.rawNode.naturalHeight;
-      let ctx = canvas.getContext("2d");
-      try {
-        // This will fail if the image is missing
-        ctx.drawImage(this.rawNode, 0, 0);
-        imageData = canvas.toDataURL("image/png");
-      } catch (e) {
-        imageData = "";
-      }
-    } else if (isCanvas) {
-      imageData = this.rawNode.toDataURL("image/png");
+    // Get the image resize ratio if a maxDim was provided
+    let resizeRatio = 1;
+    let imgWidth = isImg ? this.rawNode.naturalWidth : this.rawNode.width;
+    let imgHeight = isImg ? this.rawNode.naturalHeight : this.rawNode.height;
+    let imgMax = Math.max(imgWidth, imgHeight);
+    if (maxDim && imgMax > maxDim) {
+      resizeRatio = maxDim / imgMax;
     }
 
-    return LongStringActor(this.conn, imageData);
-  }, {
-    request: {},
-    response: {
-      data: RetVal("nullable:longstring")
+    // Create a canvas to copy the rawNode into and get the imageData from
+    let canvas = this.rawNode.ownerDocument.createElement("canvas");
+    canvas.width = imgWidth * resizeRatio;
+    canvas.height = imgHeight * resizeRatio;
+    let ctx = canvas.getContext("2d");
+
+    // Copy the rawNode image or canvas in the new canvas and extract data
+    let imageData;
+    // This may fail if the image is missing
+    try {
+      ctx.drawImage(this.rawNode, 0, 0, canvas.width, canvas.height);
+      imageData = canvas.toDataURL("image/png");
+    } catch (e) {
+      imageData = "";
     }
+
+    return {
+      data: LongStringActor(this.conn, imageData),
+      size: {
+        naturalWidth: imgWidth,
+        naturalHeight: imgHeight,
+        width: canvas.width,
+        height: canvas.height,
+        resized: resizeRatio !== 1
+      }
+    }
+  }, {
+    request: {maxDim: Arg(0, "nullable:number")},
+    response: RetVal("imageData")
   }),
 
   /**
