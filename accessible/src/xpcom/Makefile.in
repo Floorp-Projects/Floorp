@@ -9,8 +9,6 @@ xpcaccevents_FILES := xpcAccEvents.h
 xpcaccevents_DEST = $(DIST)/include
 xpcaccevents_TARGET := export
 
-CPPSRCS += xpcAccEvents.cpp
-
 include $(topsrcdir)/config/rules.mk
 
 ifneq ($(A11Y_LOG),0)
@@ -20,8 +18,7 @@ endif
 xpcAccEvents.cpp: $(srcdir)/AccEvents.conf \
                      $(srcdir)/AccEventGen.py \
                      $(LIBXUL_DIST)/sdk/bin/header.py \
-                     $(LIBXUL_DIST)/sdk/bin/xpidl.py \
-                     $(DEPTH)/js/src/js-confdefs.h
+                     $(LIBXUL_DIST)/sdk/bin/xpidl.py
 	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  -I$(LIBXUL_DIST)/sdk/bin \
 	  $(srcdir)/AccEventGen.py \

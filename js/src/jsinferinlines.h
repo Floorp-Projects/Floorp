@@ -441,6 +441,15 @@ EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
 }
 
 inline bool
+CanHaveEmptyPropertyTypesForOwnProperty(JSObject *obj)
+{
+    // Per the comment on TypeSet::propertySet, property type sets for global
+    // objects may be empty for 'own' properties if the global property still
+    // has its initial undefined value.
+    return obj->is<GlobalObject>();
+}
+
+inline bool
 HasTypePropertyId(JSObject *obj, jsid id, Type type)
 {
     if (obj->hasLazyType())
@@ -844,7 +853,8 @@ TypeCompartment::compartment()
 }
 
 inline void
-TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *source, Type type)
+TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint,
+                            ConstraintTypeSet *source, Type type)
 {
     JS_ASSERT(this == &cx->compartment()->types);
     JS_ASSERT(!cx->runtime()->isHeapBusy());
@@ -1189,15 +1199,12 @@ TypeSet::addType(Type type, LifoAlloc *alloc, bool *padded)
 }
 
 inline void
-TypeSet::addType(ExclusiveContext *cxArg, Type type)
+ConstraintTypeSet::addType(ExclusiveContext *cxArg, Type type)
 {
     JS_ASSERT(cxArg->compartment()->activeAnalysis);
 
-    // Temporary type sets use a separate LifoAlloc for storage.
-    JS_ASSERT(isStackSet() || isHeapSet());
-
     bool added = false;
-    if (!addType(type, &cxArg->typeLifoAlloc(), &added)) {
+    if (!TypeSet::addType(type, &cxArg->typeLifoAlloc(), &added)) {
         cxArg->compartment()->types.setPendingNukeTypes(cxArg);
         return;
     }
@@ -1222,7 +1229,7 @@ TypeSet::addType(ExclusiveContext *cxArg, Type type)
 }
 
 inline void
-TypeSet::setConfiguredProperty(ExclusiveContext *cxArg)
+HeapTypeSet::setConfiguredProperty(ExclusiveContext *cxArg)
 {
     if (flags & TYPE_FLAG_CONFIGURED_PROPERTY)
         return;

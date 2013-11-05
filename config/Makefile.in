@@ -8,10 +8,6 @@
 # libstdc++-compat is not built yet.
 MOZ_LIBSTDCXX_HOST_VERSION =
 
-ifneq (WINNT,$(HOST_OS_ARCH))
-HOST_PROGRAM	= nsinstall_real$(HOST_BIN_SUFFIX)
-endif
-
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
 export:: elf-dynstr-gc

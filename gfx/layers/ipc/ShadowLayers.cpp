@@ -319,7 +319,8 @@ ShadowLayerForwarder::CheckSurfaceDescriptor(const SurfaceDescriptor* aDescripto
   if (aDescriptor->type() == SurfaceDescriptor::TShmem) {
     const mozilla::ipc::Shmem& shmem = aDescriptor->get_Shmem();
     shmem.AssertInvariants();
-    MOZ_ASSERT(mShadowManager->IsTrackingSharedMemory(shmem.mSegment));
+    MOZ_ASSERT(mShadowManager &&
+               mShadowManager->IsTrackingSharedMemory(shmem.mSegment));
   }
 }
 #endif
@@ -568,7 +569,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool
   if (mTxn->mSwapRequired) {
     MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
     RenderTraceScope rendertrace3("Forward Transaction", "000093");
-    if (!mShadowManager->SendUpdate(cset, targetConfig, mIsFirstPaint,
+    if (!HasShadowManager() ||
+        !mShadowManager->SendUpdate(cset, targetConfig, mIsFirstPaint,
                                     aReplies)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
@@ -578,7 +580,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool
     // assumes that aReplies is empty (DEBUG assertion)
     MOZ_LAYERS_LOG(("[LayersForwarder] sending no swap transaction..."));
     RenderTraceScope rendertrace3("Forward NoSwap Transaction", "000093");
-    if (!mShadowManager->SendUpdateNoSwap(cset, targetConfig, mIsFirstPaint)) {
+    if (!HasShadowManager() ||
+        !mShadowManager->SendUpdateNoSwap(cset, targetConfig, mIsFirstPaint)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
@@ -595,6 +598,7 @@ ShadowLayerForwarder::AllocShmem(size_t aSize,
                                  ipc::SharedMemory::SharedMemoryType aType,
                                  ipc::Shmem* aShmem)
 {
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no shadow manager");
   return mShadowManager->AllocShmem(aSize, aType, aShmem);
 }
 bool
@@ -602,11 +606,13 @@ ShadowLayerForwarder::AllocUnsafeShmem(size_t aSize,
                                           ipc::SharedMemory::SharedMemoryType aType,
                                           ipc::Shmem* aShmem)
 {
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no shadow manager");
   return mShadowManager->AllocUnsafeShmem(aSize, aType, aShmem);
 }
 void
 ShadowLayerForwarder::DeallocShmem(ipc::Shmem& aShmem)
 {
+  NS_ABORT_IF_FALSE(HasShadowManager(), "no shadow manager");
   mShadowManager->DeallocShmem(aShmem);
 }
 
@@ -715,6 +721,11 @@ ShadowLayerForwarder::CloseDescriptor(const SurfaceDescriptor& aDescriptor)
   // There's no "close" needed for Shmem surfaces.
 }
 
+/**
+  * We bail out when we have no shadow manager. That can happen when the
+  * layer manager is created by the preallocated process.
+  * See bug 914843 for details.
+  */
 PLayerChild*
 ShadowLayerForwarder::ConstructShadowFor(ShadowableLayer* aLayer)
 {
@@ -865,6 +876,7 @@ ShadowLayerForwarder::Connect(CompositableClient* aCompositable)
   printf("ShadowLayerForwarder::Connect(Compositable)\n");
 #endif
   MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(mShadowManager);
   CompositableChild* child = static_cast<CompositableChild*>(
     mShadowManager->SendPCompositableConstructor(aCompositable->GetTextureInfo()));
   MOZ_ASSERT(child);

@@ -122,7 +122,7 @@ interface nsIMemoryReporterCallback : nsISupports
    */
   void callback(in ACString process, in AUTF8String path, in int32_t kind,
                 in int32_t units, in int64_t amount,
-                in AUTF8String description, in nsISupports closure);
+                in AUTF8String description, in nsISupports data);
 };
 
 /*
@@ -161,7 +161,7 @@ interface nsIMemoryReporter : nsISupports
    * Run the reporter.
    */
   void collectReports(in nsIMemoryReporterCallback callback,
-                      in nsISupports closure);
+                      in nsISupports data);
 
   /*
    * Kinds.  See the |kind| comment in nsIMemoryReporterCallback.
@@ -494,14 +494,14 @@ public:
   }
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCallback,
-                            nsISupports* aClosure)
+                            nsISupports* aData)
   {
     int64_t amount;
     nsresult rv = GetAmount(&amount);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return aCallback->Callback(EmptyCString(), mNameAndPath, mKind, mUnits,
-                               amount, mDescription, aClosure);
+                               amount, mDescription, aData);
   }
 
 protected:

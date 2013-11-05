@@ -49,8 +49,6 @@ let Svc = {};
 XPCOMUtils.defineLazyServiceGetter(Svc, 'mime',
                                    '@mozilla.org/mime;1', 'nsIMIMEService');
 
-let profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
-
 function getBoolPref(pref, def) {
   try {
     return Services.prefs.getBoolPref(pref);
@@ -222,7 +220,10 @@ ChromeActions.prototype = {
     });
   },
   addProfilerMarker: function (marker) {
-    profiler.AddMarker(marker);
+    if ('nsIProfiler' in Ci) {
+      let profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
+      profiler.AddMarker(marker);
+    }
   },
   getPluginParams: function getPluginParams() {
     return JSON.stringify({

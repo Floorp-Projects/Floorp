@@ -22,91 +22,43 @@ class SVGPathData;
 
 class nsSVGPathDataParser : public nsSVGDataParser
 {
-protected:
-  // Path data storage
-  virtual nsresult StoreMoveTo(bool absCoords, float x, float y) = 0;
-  virtual nsresult StoreClosePath() = 0;
-  virtual nsresult StoreLineTo(bool absCoords, float x, float y) = 0;
-  virtual nsresult StoreHLineTo(bool absCoords, float x) = 0;
-  virtual nsresult StoreVLineTo(bool absCoords, float y) = 0;
-  virtual nsresult StoreCurveTo(bool absCoords, float x, float y,
-                                float x1, float y1, float x2, float y2) = 0;
-  virtual nsresult StoreSmoothCurveTo(bool absCoords, float x, float y,
-                                      float x2, float y2) = 0;
-  virtual nsresult StoreQuadCurveTo(bool absCoords, float x, float y,
-                                    float x1, float y1) = 0;
-  virtual nsresult StoreSmoothQuadCurveTo(bool absCoords,
-                                          float x, float y) = 0;
-  virtual nsresult StoreEllipticalArc(bool absCoords, float x, float y,
-                                      float r1, float r2, float angle,
-                                      bool largeArcFlag, bool sweepFlag) = 0;
-  virtual nsresult Match() MOZ_OVERRIDE;
- 
-  nsresult MatchCoordPair(float* aX, float* aY);
-  bool IsTokenCoordPairStarter();
+public:
+  nsSVGPathDataParser(const nsAString& aValue,
+                      mozilla::SVGPathData* aList)
+    : nsSVGDataParser(aValue),
+      mPathSegList(aList)
+  {
+    MOZ_ASSERT(aList, "null path data");
+  }
 
-  nsresult MatchCoord(float* aX);
-  bool IsTokenCoordStarter();
+  bool Parse();
 
-  nsresult MatchFlag(bool* f);
+private:
 
-  nsresult MatchSvgPath();
-  
-  nsresult MatchSubPaths();
-  bool IsTokenSubPathsStarter();
-  
-  nsresult MatchSubPath();
-  bool IsTokenSubPathStarter();
-  
-  nsresult MatchSubPathElements();
-  bool IsTokenSubPathElementsStarter();
+  bool ParseCoordPair(float& aX, float& aY);
+  bool ParseFlag(bool& aFlag);
 
-  nsresult MatchSubPathElement();
-  bool IsTokenSubPathElementStarter();
+  bool ParsePath();
+  bool IsStartOfSubPath() const;
+  bool ParseSubPath();
+  
+  bool ParseSubPathElements();
+  bool ParseSubPathElement(PRUnichar aCommandType,
+                           bool aAbsCoords);
 
-  nsresult MatchMoveto();
-  nsresult MatchMovetoArgSeq(bool absCoords);
-  
-  nsresult MatchClosePath();
-  
-  nsresult MatchLineto();
-  
-  nsresult MatchLinetoArgSeq(bool absCoords);
-  bool IsTokenLinetoArgSeqStarter();
-  
-  nsresult MatchHorizontalLineto();
-  nsresult MatchHorizontalLinetoArgSeq(bool absCoords);
-  
-  nsresult MatchVerticalLineto();
-  nsresult MatchVerticalLinetoArgSeq(bool absCoords);
-  
-  nsresult MatchCurveto();
-  nsresult MatchCurvetoArgSeq(bool absCoords);
-  nsresult MatchCurvetoArg(float* x, float* y, float* x1,
-                           float* y1, float* x2, float* y2);
-  bool IsTokenCurvetoArgStarter();
-  
-  nsresult MatchSmoothCurveto();
-  nsresult MatchSmoothCurvetoArgSeq(bool absCoords);
-  nsresult MatchSmoothCurvetoArg(float* x, float* y, float* x2, float* y2);
-  bool IsTokenSmoothCurvetoArgStarter();
-  
-  nsresult MatchQuadBezierCurveto();
-  nsresult MatchQuadBezierCurvetoArgSeq(bool absCoords);  
-  nsresult MatchQuadBezierCurvetoArg(float* x, float* y, float* x1, float* y1);
-  bool IsTokenQuadBezierCurvetoArgStarter();
-  
-  nsresult MatchSmoothQuadBezierCurveto();  
-  nsresult MatchSmoothQuadBezierCurvetoArgSeq(bool absCoords);
-  
-  nsresult MatchEllipticalArc();  
-  nsresult MatchEllipticalArcArgSeq(bool absCoords);
-  nsresult MatchEllipticalArcArg(float* x, float* y,
-                                 float* r1, float* r2, float* angle,
-                                 bool* largeArcFlag, bool* sweepFlag);
-  bool IsTokenEllipticalArcArgStarter();
-  
- };
+  bool ParseMoveto();
+  bool ParseClosePath();
+  bool ParseLineto(bool aAbsCoords);
+  bool ParseHorizontalLineto(bool aAbsCoords);
+  bool ParseVerticalLineto(bool aAbsCoords);
+  bool ParseCurveto(bool aAbsCoords);
+  bool ParseSmoothCurveto(bool aAbsCoords);
+  bool ParseQuadBezierCurveto(bool aAbsCoords);
+  bool ParseSmoothQuadBezierCurveto(bool aAbsCoords);  
+  bool ParseEllipticalArc(bool aAbsCoords);  
+
+  mozilla::SVGPathData * const mPathSegList;
+};
 
 class nsSVGArcConverter
 {
@@ -126,36 +78,6 @@ protected:
   double mSinPhi, mCosPhi;
   double mRx, mRy;
   Point mFrom, mC;
-};
-
-class nsSVGPathDataParserToInternal : public nsSVGPathDataParser
-{
-public:
-  nsSVGPathDataParserToInternal(mozilla::SVGPathData *aList)
-    : mPathSegList(aList)
-  {}
-  nsresult Parse(const nsAString &aValue);
-
-protected:
-  virtual nsresult StoreMoveTo(bool absCoords, float x, float y) MOZ_OVERRIDE;
-  virtual nsresult StoreClosePath() MOZ_OVERRIDE;
-  virtual nsresult StoreLineTo(bool absCoords, float x, float y) MOZ_OVERRIDE;
-  virtual nsresult StoreHLineTo(bool absCoords, float x) MOZ_OVERRIDE;
-  virtual nsresult StoreVLineTo(bool absCoords, float y) MOZ_OVERRIDE;
-  virtual nsresult StoreCurveTo(bool absCoords, float x, float y,
-                                float x1, float y1, float x2, float y2) MOZ_OVERRIDE;
-  virtual nsresult StoreSmoothCurveTo(bool absCoords, float x, float y,
-                                      float x2, float y2) MOZ_OVERRIDE;
-  virtual nsresult StoreQuadCurveTo(bool absCoords, float x, float y,
-                                    float x1, float y1) MOZ_OVERRIDE;
-  virtual nsresult StoreSmoothQuadCurveTo(bool absCoords,
-                                          float x, float y) MOZ_OVERRIDE;
-  virtual nsresult StoreEllipticalArc(bool absCoords, float x, float y,
-                                      float r1, float r2, float angle,
-                                      bool largeArcFlag, bool sweepFlag) MOZ_OVERRIDE;
-
-private:
-  mozilla::SVGPathData *mPathSegList;
 };
 
 #endif // __NS_SVGPATHDATAPARSER_H__

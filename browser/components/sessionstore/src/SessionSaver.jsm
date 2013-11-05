@@ -18,8 +18,8 @@ Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "_SessionFile",
-  "resource:///modules/sessionstore/_SessionFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
+  "resource:///modules/sessionstore/SessionFile.jsm");
 
 // Minimal interval between two save operations (in milliseconds).
 XPCOMUtils.defineLazyGetter(this, "gInterval", function () {
@@ -290,7 +290,7 @@ let SessionSaverInternal = {
     // Write (atomically) to a session file, using a tmp file. Once the session
     // file is successfully updated, save the time stamp of the last save and
     // notify the observers.
-    _SessionFile.write(data).then(() => {
+    SessionFile.write(data).then(() => {
       this.updateLastSaveTime();
       notify(null, "sessionstore-state-write-complete");
     }, Cu.reportError);

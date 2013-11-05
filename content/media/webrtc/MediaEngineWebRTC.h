@@ -26,6 +26,7 @@
 #include "AudioSegment.h"
 #include "StreamBuffer.h"
 #include "MediaStreamGraph.h"
+#include "LoadMonitor.h"
 
 // WebRTC library includes follow
 
@@ -356,6 +357,8 @@ public:
     , mHasTabVideoSource(false)
   {
     AsyncLatencyLogger::Get(true)->AddRef();
+    mLoadMonitor = new LoadMonitor();
+    mLoadMonitor->Init(mLoadMonitor);
   }
 #else
   MediaEngineWebRTC();
@@ -402,6 +405,8 @@ private:
   nsDOMCameraManager* mCameraManager;
   uint64_t mWindowId;
 #endif
+
+   nsRefPtr<LoadMonitor> mLoadMonitor;
 };
 
 }

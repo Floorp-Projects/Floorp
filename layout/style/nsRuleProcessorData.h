@@ -139,9 +139,15 @@ struct MOZ_STACK_CLASS TreeMatchContext {
    * Initialize the ancestor filter and list of style scopes.  If aElement is
    * not null, it and all its ancestors will be passed to
    * mAncestorFilter.PushAncestor and PushStyleScope, starting from the root and
-   * going down the tree.
+   * going down the tree.  Must only be called for elements in a document.
    */
   void InitAncestors(mozilla::dom::Element *aElement);
+
+  /**
+   * Like InitAncestors, but only initializes the style scope list, not the
+   * ancestor filter.  May be called for elements outside a document.
+   */
+  void InitStyleScopes(mozilla::dom::Element* aElement);
 
   void PushStyleScope(mozilla::dom::Element* aElement)
   {
@@ -176,20 +182,13 @@ struct MOZ_STACK_CLASS TreeMatchContext {
 #ifdef DEBUG
   void AssertHasAllStyleScopes(mozilla::dom::Element* aElement)
   {
-    int32_t i = mStyleScopes.Length() - 1;
-    nsINode* node = aElement->GetParentNode();
-    while (node && i != -1) {
-      if (node->IsScopedStyleRoot()) {
-        MOZ_ASSERT(mStyleScopes[i] == node);
-        --i;
+    nsINode* cur = aElement->GetParentNode();
+    while (cur) {
+      if (cur->IsScopedStyleRoot()) {
+        MOZ_ASSERT(mStyleScopes.Contains(cur));
       }
-      node = node->GetParentNode();
+      cur = cur->GetParentNode();
     }
-    while (node) {
-      MOZ_ASSERT(!node->IsScopedStyleRoot());
-      node = node->GetParentNode();
-    }
-    MOZ_ASSERT(i == -1);
   }
 #endif
 

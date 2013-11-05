@@ -829,23 +829,41 @@ var tests = [
       });
     }
   },
-  { // Test #28 - location change in embedded frame removes notification
+  { // Test #28 - location change in an embedded frame should not remove a notification
     run: function () {
-      loadURI("data:text/html,<iframe id='iframe' src='http://example.com/'>", function () {
-        let notifyObj = new basicNotification();
-        notifyObj.options.eventCallback = function (eventName) {
+      loadURI("data:text/html;charset=utf8,<iframe id='iframe' src='http://example.com/'>", function () {
+        this.notifyObj = new basicNotification();
+        this.notifyObj.options.eventCallback = function (eventName) {
           if (eventName == "removed") {
-            ok(true, "Notification removed in background tab after reloading");
-            executeSoon(goNext);
+            ok(false, "Test 28: Notification removed from browser when subframe navigated");
           }
         };
-        showNotification(notifyObj);
-        executeSoon(function () {
-          content.document.getElementById("iframe")
-                          .setAttribute("src", "http://example.org/");
-        });
-      });
-    }
+        showNotification(this.notifyObj);
+      }.bind(this));
+    },
+    onShown: function (popup) {
+      let self = this;
+      let progressListener = {
+        onLocationChange: function onLocationChange(aBrowser) {
+          if (aBrowser != gBrowser.selectedBrowser) {
+            return;
+          }
+          let notification = PopupNotifications.getNotification(self.notifyObj.id,
+                                                                self.notifyObj.browser);
+          ok(notification != null, "Test 28: Notification remained when subframe navigated");
+          self.notifyObj.options.eventCallback = undefined;
+
+          notification.remove();
+          gBrowser.removeTabsProgressListener(progressListener);
+        },
+      };
+
+      info("Test 28: Adding progress listener and performing navigation");
+      gBrowser.addTabsProgressListener(progressListener);
+      content.document.getElementById("iframe")
+                      .setAttribute("src", "http://example.org/");
+    },
+    onHidden: function () {}
   },
   { // Test #29 - Popup Notifications should catch exceptions from callbacks
     run: function () {

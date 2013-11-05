@@ -351,8 +351,13 @@ class IonBuilder : public MIRGenerator
     bool invalidatedIdempotentCache();
 
     bool hasStaticScopeObject(ScopeCoordinate sc, JSObject **pcall);
+    bool loadSlot(MDefinition *obj, size_t slot, size_t nfixed, MIRType rvalType,
+                  bool barrier, types::TemporaryTypeSet *types);
     bool loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType,
                   bool barrier, types::TemporaryTypeSet *types);
+    bool storeSlot(MDefinition *obj, size_t slot, size_t nfixed,
+                   MDefinition *value, bool needsBarrier,
+                   MIRType slotType = MIRType_None);
     bool storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier,
                    MIRType slotType = MIRType_None);
 
@@ -612,7 +617,7 @@ class IonBuilder : public MIRGenerator
                                   MTypeObjectDispatch *dispatch, MGetPropertyCache *cache,
                                   MBasicBlock **fallbackTarget);
 
-    bool testNeedsArgumentCheck(JSContext *cx, JSFunction *target, CallInfo &callInfo);
+    bool testNeedsArgumentCheck(JSFunction *target, CallInfo &callInfo);
 
     MDefinition *makeCallsiteClone(JSFunction *target, MDefinition *fun);
     MCall *makeCallHelper(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsite);
@@ -621,22 +626,23 @@ class IonBuilder : public MIRGenerator
     MDefinition *patchInlinedReturn(CallInfo &callInfo, MBasicBlock *exit, MBasicBlock *bottom);
     MDefinition *patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasicBlock *bottom);
 
-    inline bool testCommonPropFunc(JSContext *cx, types::TemporaryTypeSet *types,
-                                   PropertyName *name, JSFunction **funcp,
-                                   bool isGetter, bool *isDOM,
-                                   MDefinition **guardOut);
+    bool objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyName *name,
+                                    bool isGetter, JSObject *foundProto);
+    void freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, PropertyName *name,
+                                            JSObject *foundProto);
+    MDefinition *testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName *name,
+                                        bool isGetter, JSObject *foundProto, Shape *lastProperty);
+    bool testShouldDOMCall(types::TypeSet *inTypes,
+                           JSFunction *func, JSJitInfo::OpType opType);
 
     bool annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetPropertyCache *getPropCache,
                                   types::TemporaryTypeSet *objTypes, types::TemporaryTypeSet *pushedTypes);
 
     MGetPropertyCache *getInlineableGetPropertyCache(CallInfo &callInfo);
 
-    bool testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyName *name,
-                               bool *isKnownConstant);
-    bool testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton,
-                                    JSObject *globalObj, PropertyName *name,
-                                    bool *isKnownConstant, bool *testObject,
-                                    bool *testString);
+    bool testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyName *name);
+    bool testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, PropertyName *name,
+                                    bool *testObject, bool *testString);
     bool getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name,
                          types::HeapTypeSetKey *property);
     bool freezePropTypeSets(types::TemporaryTypeSet *types,

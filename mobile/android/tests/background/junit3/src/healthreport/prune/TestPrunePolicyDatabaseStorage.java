@@ -86,11 +86,6 @@ public class TestPrunePolicyDatabaseStorage extends FakeProfileTestCase {
     super.tearDown();
   }
 
-  @Override
-  protected String getCacheSuffix() {
-    return "health-" + System.currentTimeMillis() + ".profile";
-  }
-
   public void testPruneEvents() throws Exception {
     policyStorage.pruneEvents(0);
     assertTrue(policyStorage.storage.wasPruneEventsCalled);

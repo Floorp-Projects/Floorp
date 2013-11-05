@@ -40,6 +40,13 @@ SHARED_LIBRARY_LIBS += \
   $(NULL)
 endif
 
+ifdef MOZ_CONTENT_SANDBOX
+ifeq ($(OS_ARCH),WINNT)
+  LOCAL_INCLUDES += -I$(srcdir)/../sandboxbroker
+  SHARED_LIBRARY_LIBS += ../../security/sandbox/win/src/sandboxbroker/$(LIB_PREFIX)sandboxbroker.$(LIB_SUFFIX)
+endif
+endif
+
 ifdef MOZ_XUL
 SHARED_LIBRARY_LIBS += $(DEPTH)/accessible/src/xul/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
 endif
@@ -98,12 +105,12 @@ OS_LIBS += -ldbus
 endif
 endif #}
 
-ifneq ($(strip $(MOZ_B2G_RIL)$(MOZ_B2G_BT)),) #{
-STATIC_LIBS += mozipcunixsocket_s mozkeystore_s
+ifneq ($(strip $(MOZ_B2G_RIL)$(MOZ_B2G_BT)$(filter gonk,$(MOZ_WIDGET_TOOLKIT))),) #{
+STATIC_LIBS += mozipcunixsocket_s
 endif #}
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-STATIC_LIBS += moznetd_s
+STATIC_LIBS += moznetd_s mozkeystore_s
 endif
 
 ifdef MOZ_B2G_CAMERA #{
@@ -121,7 +128,7 @@ EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-		-DVERSION="$(LIBRARY_NAME)$(MOZILLA_VERSION)" $< > $@
+		-DVERSION="$(LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)" $< > $@
 
 EXTRA_DEPS += symverscript
 endif
@@ -435,9 +442,6 @@ ifdef MOZ_CUBEB
 ifdef MOZ_ALSA
 EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
 endif
-ifdef MOZ_PULSEAUDIO
-EXTRA_DSO_LDOPTS += $(MOZ_PULSEAUDIO_LIBS)
-endif
 endif
 
 ifdef HAVE_CLOCK_MONOTONIC
@@ -499,7 +503,7 @@ OS_LIBS += \
   -framework SystemConfiguration \
   -framework QTKit \
   -framework IOKit \
-  -F/System/Library/PrivateFrameworks -framework CoreUI \
+  -F$(MACOS_PRIVATE_FRAMEWORKS_DIR) -framework CoreUI \
   $(TK_LIBS) \
   $(NULL)
 endif

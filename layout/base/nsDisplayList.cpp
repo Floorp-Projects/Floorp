@@ -47,6 +47,7 @@
 #include "StickyScrollContainer.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
+#include "ActiveLayerTracker.h"
 
 #include <stdint.h>
 #include <algorithm>
@@ -643,8 +644,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                                nsRect* aDisplayPort,
                                nsRect* aCriticalDisplayPort,
                                ViewID aScrollId,
-                               const nsDisplayItem::ContainerParameters& aContainerParameters,
-                               bool aMayHaveTouchListeners) {
+                               const nsDisplayItem::ContainerParameters& aContainerParameters) {
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
   LayoutDeviceToLayerScale resolution(aContainerParameters.mXScale, aContainerParameters.mYScale);
@@ -719,7 +719,16 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   metrics.mZoom = metrics.mCumulativeResolution * metrics.mDevPixelsPerCSSPixel
                 * layerToScreenScale;
 
-  metrics.mMayHaveTouchListeners = aMayHaveTouchListeners;
+  if (presShell) {
+    nsIDocument* document = nullptr;
+    document = presShell->GetDocument();
+    if (document) {
+      nsCOMPtr<nsPIDOMWindow> innerWin(document->GetInnerWindow());
+      if (innerWin) {
+        metrics.mMayHaveTouchListeners = innerWin->HasTouchEventListeners();
+      }
+    }
+  }
 
   // Calculate the composition bounds as the size of the scroll frame and
   // its origin relative to the reference frame.
@@ -1248,14 +1257,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  bool mayHaveTouchListeners = false;
-  if (document) {
-    nsCOMPtr<nsPIDOMWindow> innerWin(document->GetInnerWindow());
-    if (innerWin) {
-      mayHaveTouchListeners = innerWin->HasTouchEventListeners();
-    }
-  }
-
   nsRect viewport(aBuilder->ToReferenceFrame(aForFrame), aForFrame->GetSize());
 
   RecordFrameMetrics(aForFrame, rootScrollFrame,
@@ -1263,7 +1264,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                      root, mVisibleRect, viewport,
                      (usingDisplayport ? &displayport : nullptr),
                      (usingCriticalDisplayport ? &criticalDisplayport : nullptr),
-                     id, containerParameters, mayHaveTouchListeners);
+                     id, containerParameters);
   if (usingDisplayport &&
       !(root->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
     // See bug 693938, attachment 567017
@@ -3056,7 +3057,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerParameters& aContainerParameters) {
   if (mFrame->StyleDisplay()->mOpacity == 0 && mFrame->GetContent() &&
-      !nsLayoutUtils::HasAnimationsForCompositor(mFrame->GetContent(), eCSSProperty_opacity)) {
+      !nsLayoutUtils::HasAnimations(mFrame->GetContent(), eCSSProperty_opacity)) {
     return nullptr;
   }
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
@@ -3090,7 +3091,7 @@ nsDisplayItem::LayerState
 nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
                                 const ContainerParameters& aParameters) {
-  if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateOpacityLayer) &&
+  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_opacity) &&
       !IsItemTooSmallForActiveLayer(this))
     return LAYER_ACTIVE;
   if (mFrame->GetContent()) {
@@ -3305,6 +3306,35 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (mFlags & GENERATE_SUBDOC_INVALIDATIONS) {
     mFrame->PresContext()->SetNotifySubDocInvalidationData(layer);
   }
+  return layer.forget();
+}
+
+nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame, nsDisplayList* aList,
+                                         uint32_t aFlags)
+    : nsDisplayOwnLayer(aBuilder, aFrame, aList, aFlags) {
+  MOZ_COUNT_CTOR(nsDisplayResolution);
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayResolution::~nsDisplayResolution() {
+  MOZ_COUNT_DTOR(nsDisplayResolution);
+}
+#endif
+
+already_AddRefed<Layer>
+nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
+                                LayerManager* aManager,
+                                const ContainerParameters& aContainerParameters) {
+  nsIPresShell* presShell = mFrame->PresContext()->PresShell();
+  nsDisplayItem::ContainerParameters containerParameters(
+    presShell->GetXResolution(), presShell->GetYResolution(), nsIntPoint(),
+    aContainerParameters);
+
+  nsRefPtr<Layer> layer = nsDisplayOwnLayer::BuildLayer(
+    aBuilder, aManager, containerParameters);
+  layer->SetPostScale(1.0f / presShell->GetXResolution(),
+                      1.0f / presShell->GetYResolution());
   return layer.forget();
 }
 
@@ -3576,7 +3606,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                      mVisibleRect, viewport,
                      (usingDisplayport ? &displayport : nullptr),
                      (usingCriticalDisplayport ? &criticalDisplayport : nullptr),
-                     scrollId, aContainerParameters, false);
+                     scrollId, aContainerParameters);
 
   return layer.forget();
 }
@@ -4184,7 +4214,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
 bool
 nsDisplayOpacity::CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder)
 {
-  if (Frame()->AreLayersMarkedActive(nsChangeHint_UpdateOpacityLayer)) {
+  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_opacity)) {
     return true;
   }
 
@@ -4214,7 +4244,7 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   // have a compositor-animated transform, can be prerendered. An element
   // might have only just had its transform animated in which case
   // nsChangeHint_UpdateTransformLayer will not be present yet.
-  if (!aFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer) &&
+  if (!ActiveLayerTracker::IsStyleAnimated(aFrame, eCSSProperty_transform) &&
       (!aFrame->GetContent() ||
        !nsLayoutUtils::HasAnimationsForCompositor(aFrame->GetContent(),
                                                   eCSSProperty_transform))) {
@@ -4364,7 +4394,7 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
   }
   // Here we check if the *post-transform* bounds of this item are big enough
   // to justify an active layer.
-  if (mFrame->AreLayersMarkedActive(nsChangeHint_UpdateTransformLayer) &&
+  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_transform) &&
       !IsItemTooSmallForActiveLayer(this))
     return LAYER_ACTIVE;
   if (mFrame->GetContent()) {

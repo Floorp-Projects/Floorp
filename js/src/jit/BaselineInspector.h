@@ -116,6 +116,9 @@ class BaselineInspector
 
     DeclEnvObject *templateDeclEnvObject();
     CallObject *templateCallObject();
+
+    JSObject *commonGetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonGetter);
+    JSObject *commonSetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonSetter);
 };
 
 } // namespace jit

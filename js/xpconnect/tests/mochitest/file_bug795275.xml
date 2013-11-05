@@ -3,13 +3,14 @@
           xmlns:html="http://www.w3.org/1999/xhtml">
 <binding id="xbltest">
 <implementation>
-<method name="testMethod">
+<method name="testMethod" exposeToUntrustedContent="true">
 <body>
   Components.interfaces;
 </body>
 </method>
 <property name="testProp" readonly="true"
-          onget="Components; return 3;" />
+          onget="Components; return 3;"
+          exposeToUntrustedContent="true" />
 <constructor>
   var foo = Components;
 </constructor>

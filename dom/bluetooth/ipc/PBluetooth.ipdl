@@ -12,7 +12,7 @@ include BluetoothTypes;
 
 include "mozilla/dom/bluetooth/ipc/BluetoothMessageUtils.h";
 
-using mozilla::dom::bluetooth::BluetoothObjectType;
+using mozilla::dom::bluetooth::BluetoothObjectType from "mozilla/dom/bluetooth/BluetoothCommon.h";
 
 namespace mozilla {
 namespace dom {

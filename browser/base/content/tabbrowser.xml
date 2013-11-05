@@ -2253,6 +2253,10 @@
             // Make sure to unregister any open URIs.
             this._swapRegisteredOpenURIs(ourBrowser, aOtherBrowser);
 
+            // Give others a chance to swap state.
+            let event = new CustomEvent("SwapDocShells", {"detail": aOtherBrowser});
+            ourBrowser.dispatchEvent(event);
+
             // Swap the docshells
             ourBrowser.swapDocShells(aOtherBrowser);
 

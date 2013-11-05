@@ -139,6 +139,25 @@ sub getMilestoneAB {
 }
 
 #
+# Usage:  getMilestoneABWithNum($milestoneFile)
+# Returns the alpha and beta tag with its number (a1, a2, b3, ...)
+#
+sub getMilestoneABWithNum {
+  my $milestoneABNum;
+  if (defined($Moz::Milestone::milestone)) {
+    $milestoneABNum = $Moz::Milestone::milestone;
+  } else {
+    $milestoneABNum = $_[0];
+  }
+
+  if ($milestoneABNum =~ /([ab]\d+)/) {
+    return $1;
+  } else {
+    return "";
+  }
+}
+
+#
 # build_file($template_file,$output_file)
 #
 sub build_file($$) {

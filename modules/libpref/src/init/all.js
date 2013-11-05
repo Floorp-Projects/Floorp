@@ -232,6 +232,7 @@ pref("media.navigator.video.default_fps",30);
 pref("media.navigator.video.default_minfps",10);
 pref("media.navigator.video.max_fs", 0); // unrestricted
 pref("media.navigator.video.max_fr", 0); // unrestricted
+pref("media.navigator.load_adapt", false);
 pref("media.peerconnection.enabled", true);
 pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.default_iceservers", "[{\"url\": \"stun:stun.services.mozilla.com\"}]");
@@ -419,6 +420,9 @@ pref("ui.scrollToClick", 0);
 // Only on mac tabfocus is expected to handle UI widgets as well as web content
 pref("accessibility.tabfocus_applies_to_xul", true);
 #endif
+
+// provide ability to turn on support for canvas focus rings
+pref("canvas.focusring.enabled", false);
 
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug
@@ -1519,7 +1523,7 @@ pref("intl.charsetmenu.mailview.cache",     "");
 pref("intl.charsetmenu.composer.cache",     "");
 pref("intl.charsetmenu.browser.cache.size", 5);
 pref("intl.charset.detector",               "chrome://global/locale/intl.properties");
-pref("intl.charset.default",                "chrome://global-platform/locale/intl.properties");
+pref("intl.charset.fallback.override",      "");
 pref("intl.ellipsis",                       "chrome://global-platform/locale/intl.properties");
 pref("intl.locale.matchOS",                 false);
 // fallback charset list for Unicode conversion (converting from Unicode)
@@ -2751,12 +2755,12 @@ pref("font.name-list.serif.ja", "Hiragino Mincho ProN,Hiragino Mincho Pro");
 pref("font.name-list.sans-serif.ja", "Hiragino Kaku Gothic ProN,Hiragino Kaku Gothic Pro");
 pref("font.name-list.monospace.ja", "Osaka-Mono"); 
 
-pref("font.name.serif.ko", "AppleMyungjo"); 
-pref("font.name.sans-serif.ko", "AppleGothic"); 
-pref("font.name.monospace.ko", "AppleGothic"); 
-pref("font.name-list.serif.ko", "AppleMyungjo"); 
-pref("font.name-list.sans-serif.ko", "AppleGothic"); 
-pref("font.name-list.monospace.ko", "AppleGothic"); 
+pref("font.name.serif.ko", "AppleMyungjo");
+pref("font.name.sans-serif.ko", "Apple SD Gothic Neo");
+pref("font.name.monospace.ko", "Apple SD Gothic Neo");
+pref("font.name-list.serif.ko", "AppleMyungjo");
+pref("font.name-list.sans-serif.ko", "Apple SD Gothic Neo,AppleGothic");
+pref("font.name-list.monospace.ko", "Apple SD Gothic Neo,AppleGothic");
 
 pref("font.name.serif.th", "Thonburi");
 pref("font.name.sans-serif.th", "Thonburi");
@@ -4476,6 +4480,9 @@ pref("dom.mms.defaultServiceId", 0);
 // Debug enabler for MMS.
 pref("mms.debugging.enabled", false);
 
+// Request read report while sending MMS.
+pref("dom.mms.requestReadReport", true);
+
 // Number of RadioInterface instances to create.
 pref("ril.numRadioInterfaces", 0);
 
@@ -4513,22 +4520,42 @@ pref("dom.mozInputMethod.enabled", false);
 pref("dom.datastore.enabled", false);
 
 // Telephony API
+#ifdef MOZ_B2G_RIL
+pref("dom.telephony.enabled", true);
+#else
 pref("dom.telephony.enabled", false);
+#endif
 // Numeric default service id for WebTelephony API calls with |serviceId|
 // parameter omitted.
 pref("dom.telephony.defaultServiceId", 0);
 
 // Cell Broadcast API
+#ifdef MOZ_B2G_RIL
+pref("dom.cellbroadcast.enabled", true);
+#else
 pref("dom.cellbroadcast.enabled", false);
+#endif
 
 // ICC API
+#ifdef MOZ_B2G_RIL
+pref("dom.icc.enabled", true);
+#else
 pref("dom.icc.enabled", false);
+#endif
 
 // Mobile Connection API
+#ifdef MOZ_B2G_RIL
+pref("dom.mobileconnection.enabled", true);
+#else
 pref("dom.mobileconnection.enabled", false);
+#endif
 
 // Voice Mail API
+#ifdef MOZ_B2G_RIL
+pref("dom.voicemail.enabled", true);
+#else
 pref("dom.voicemail.enabled", false);
+#endif
 // Numeric default service id for Voice Mail API calls with |serviceId|
 // parameter omitted.
 pref("dom.voicemail.defaultServiceId", 0);

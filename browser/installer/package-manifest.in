@@ -698,6 +698,11 @@
 @BINPATH@/components/pipnss.xpt
 @BINPATH@/components/pippki.xpt
 
+; For content sandboxing
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+@BINPATH@/@DLL_PREFIX@sandboxbroker@DLL_SUFFIX@
+#endif
+
 ; for Solaris SPARC
 #ifdef SOLARIS
 bin/libfreebl_32fpu_3.so

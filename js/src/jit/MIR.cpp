@@ -2878,7 +2878,7 @@ jit::DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinit
 }
 
 static bool
-PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                              types::TypeObjectKey *object, PropertyName *name,
                              types::TypeSet *observed)
 {
@@ -2896,16 +2896,13 @@ PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *const
     if (property.maybeTypes() && !TypeSetIncludes(observed, MIRType_Value, property.maybeTypes()))
         return true;
 
-    // Type information for singleton objects is not required to reflect the
-    // initial 'undefined' value for native properties, in particular global
+    // Type information for global objects is not required to reflect the
+    // initial 'undefined' value for properties, in particular global
     // variables declared with 'var'. Until the property is assigned a value
     // other than undefined, a barrier is required.
-    if (name && object->singleton() && object->singleton()->isNative()) {
-        Shape *shape = object->singleton()->nativeLookup(cx, name);
-        if (shape &&
-            shape->hasSlot() &&
-            shape->hasDefaultGetter() &&
-            object->singleton()->nativeGetSlot(shape->slot()).isUndefined())
+    if (JSObject *obj = object->singleton()) {
+        if (name && types::CanHaveEmptyPropertyTypesForOwnProperty(obj) &&
+            (!property.maybeTypes() || property.maybeTypes()->empty()))
         {
             return true;
         }
@@ -2916,7 +2913,7 @@ PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *const
 }
 
 bool
-jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
+jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   types::TypeObjectKey *object, PropertyName *name,
                                   types::TemporaryTypeSet *observed, bool updateObserved)
@@ -2949,11 +2946,11 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
         }
     }
 
-    return PropertyReadNeedsTypeBarrier(cx, constraints, object, name, observed);
+    return PropertyReadNeedsTypeBarrier(constraints, object, name, observed);
 }
 
 bool
-jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
+jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   MDefinition *obj, PropertyName *name,
                                   types::TemporaryTypeSet *observed)
@@ -2969,7 +2966,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObjectKey *object = types->getObject(i);
         if (object) {
-            if (PropertyReadNeedsTypeBarrier(cx, propertycx, constraints, object, name,
+            if (PropertyReadNeedsTypeBarrier(propertycx, constraints, object, name,
                                              observed, updateObserved))
             {
                 return true;
@@ -2981,7 +2978,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
 }
 
 bool
-jit::PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+jit::PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                                              MDefinition *obj, PropertyName *name,
                                              types::TemporaryTypeSet *observed)
 {
@@ -2998,7 +2995,7 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, types::CompilerConst
             continue;
         while (object->proto().isObject()) {
             object = types::TypeObjectKey::get(object->proto().toObject());
-            if (PropertyReadNeedsTypeBarrier(cx, constraints, object, name, observed))
+            if (PropertyReadNeedsTypeBarrier(constraints, object, name, observed))
                 return true;
         }
     }

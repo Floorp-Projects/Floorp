@@ -114,7 +114,7 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
     // the type *object*; this is because some type objects represent
     // unsized arrays and hence do not have a length.
     var index = TO_INT32(propName);
-    if (index === propName && index < REPR_LENGTH(this.typeRepr))
+    if (index === propName && index >= 0 && index < REPR_LENGTH(this.typeRepr))
       return this.moveToElem(index);
     break;
 
@@ -133,7 +133,9 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
 TypedObjectPointer.prototype.moveToElem = function(index) {
   assert(this.kind() == JS_TYPEREPR_ARRAY_KIND,
          "moveToElem invoked on non-array");
-  assert(index < REPR_LENGTH(this.typeRepr),
+  assert(TO_INT32(index) === index,
+         "moveToElem invoked with non-integer index");
+  assert(index >= 0 && index < REPR_LENGTH(this.typeRepr),
          "moveToElem invoked with out-of-bounds index");
 
   var elementTypeObj = this.typeObj.elementType;
@@ -402,6 +404,15 @@ function FillTypedArrayWithValue(destArray, fromValue) {
   var totalSize = length * elementSize;
   for (var offset = elementSize; offset < totalSize; offset += elementSize)
     Memcpy(destArray, offset, destArray, 0, elementSize);
+}
+
+// Warning: user exposed!
+function TypeObjectEquivalent(otherTypeObj) {
+  if (!IsObject(this) || !ObjectIsTypeObject(this))
+    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
+  if (!IsObject(otherTypeObj) || !ObjectIsTypeObject(otherTypeObj))
+    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "1", "type object");
+  return TYPE_TYPE_REPR(this) === TYPE_TYPE_REPR(otherTypeObj);
 }
 
 ///////////////////////////////////////////////////////////////////////////

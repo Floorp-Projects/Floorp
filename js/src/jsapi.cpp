@@ -245,19 +245,16 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             *va_arg(ap, bool *) = ToBoolean(*sp);
             break;
           case 'c':
-            if (!JS_ValueToUint16(cx, *sp, va_arg(ap, uint16_t *)))
+            if (!ToUint16(cx, arg, va_arg(ap, uint16_t *)))
                 return false;
             break;
           case 'i':
+          case 'j': // "j" was broken, you should not use it.
             if (!ToInt32(cx, arg, va_arg(ap, int32_t *)))
                 return false;
             break;
           case 'u':
-            if (!JS_ValueToECMAUint32(cx, *sp, va_arg(ap, uint32_t *)))
-                return false;
-            break;
-          case 'j':
-            if (!JS_ValueToInt32(cx, *sp, va_arg(ap, int32_t *)))
+            if (!ToUint32(cx, arg, va_arg(ap, uint32_t *)))
                 return false;
             break;
           case 'd':
@@ -445,66 +442,6 @@ JS_PUBLIC_API(uint32_t)
 JS_DoubleToUint32(double d)
 {
     return ToUint32(d);
-}
-
-
-JS_PUBLIC_API(bool)
-JS_ValueToECMAUint32(JSContext *cx, jsval valueArg, uint32_t *ip)
-{
-    RootedValue value(cx, valueArg);
-    return JS::ToUint32(cx, value, ip);
-}
-
-JS_PUBLIC_API(bool)
-JS_ValueToInt64(JSContext *cx, jsval valueArg, int64_t *ip)
-{
-    RootedValue value(cx, valueArg);
-    return JS::ToInt64(cx, value, ip);
-}
-
-JS_PUBLIC_API(bool)
-JS_ValueToUint64(JSContext *cx, jsval valueArg, uint64_t *ip)
-{
-    RootedValue value(cx, valueArg);
-    return JS::ToUint64(cx, value, ip);
-}
-
-JS_PUBLIC_API(bool)
-JS_ValueToInt32(JSContext *cx, jsval vArg, int32_t *ip)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-
-    RootedValue v(cx, vArg);
-    assertSameCompartment(cx, v);
-
-    if (v.isInt32()) {
-        *ip = v.toInt32();
-        return true;
-    }
-
-    double d;
-    if (v.isDouble()) {
-        d = v.toDouble();
-    } else if (!ToNumberSlow(cx, v, &d)) {
-        return false;
-    }
-
-    if (mozilla::IsNaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
-        js_ReportValueError(cx, JSMSG_CANT_CONVERT,
-                            JSDVG_SEARCH_STACK, v, NullPtr());
-        return false;
-    }
-
-    *ip = (int32_t) floor(d + 0.5);  /* Round to nearest */
-    return true;
-}
-
-JS_PUBLIC_API(bool)
-JS_ValueToUint16(JSContext *cx, jsval valueArg, uint16_t *ip)
-{
-    RootedValue value(cx, valueArg);
-    return ToUint16(cx, value, ip);
 }
 
 JS_PUBLIC_API(bool)
@@ -1717,52 +1654,52 @@ JS_PUBLIC_API(void)
 JS_RemoveValueRoot(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    js_RemoveRoot(cx->runtime(), (void *)vp);
+    RemoveRoot(cx->runtime(), (void *)vp);
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveStringRoot(JSContext *cx, JSString **rp)
 {
     CHECK_REQUEST(cx);
-    js_RemoveRoot(cx->runtime(), (void *)rp);
+    RemoveRoot(cx->runtime(), (void *)rp);
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveObjectRoot(JSContext *cx, JSObject **rp)
 {
     CHECK_REQUEST(cx);
-    js_RemoveRoot(cx->runtime(), (void *)rp);
+    RemoveRoot(cx->runtime(), (void *)rp);
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveScriptRoot(JSContext *cx, JSScript **rp)
 {
     CHECK_REQUEST(cx);
-    js_RemoveRoot(cx->runtime(), (void *)rp);
+    RemoveRoot(cx->runtime(), (void *)rp);
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveValueRootRT(JSRuntime *rt, jsval *vp)
 {
-    js_RemoveRoot(rt, (void *)vp);
+    RemoveRoot(rt, (void *)vp);
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveStringRootRT(JSRuntime *rt, JSString **rp)
 {
-    js_RemoveRoot(rt, (void *)rp);
+    RemoveRoot(rt, (void *)rp);
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveObjectRootRT(JSRuntime *rt, JSObject **rp)
 {
-    js_RemoveRoot(rt, (void *)rp);
+    RemoveRoot(rt, (void *)rp);
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveScriptRootRT(JSRuntime *rt, JSScript **rp)
 {
-    js_RemoveRoot(rt, (void *)rp);
+    RemoveRoot(rt, (void *)rp);
 }
 
 JS_NEVER_INLINE JS_PUBLIC_API(void)
@@ -4416,25 +4353,6 @@ JS::CanCompileOffThread(JSContext *cx, const CompileOptions &options)
     // barriers itself.
     if (cx->runtime()->activeGCInAtomsZone())
         return false;
-
-    // Blacklist filenames which cause mysterious assertion failures in
-    // graphics code on OS X. These seem to tickle some preexisting race
-    // condition unrelated to off thread compilation. See bug 897655.
-    static const char *blacklist[] = {
-#ifdef XP_MACOSX
-        "chrome://browser/content/places/editBookmarkOverlay.js",
-        "chrome://browser/content/nsContextMenu.js",
-        "chrome://browser/content/newtab/newTab.js",
-        "chrome://browser/content/places/browserPlacesViews.js",
-#endif
-        nullptr
-    };
-
-    const char *filename = options.filename;
-    for (const char **ptest = blacklist; *ptest; ptest++) {
-        if (!strcmp(*ptest, filename))
-            return false;
-    }
 
     return true;
 #else

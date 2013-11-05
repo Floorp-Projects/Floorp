@@ -245,8 +245,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 
   bool isHit = false;
 
-  nsRefPtr<gfxContext> tmpCtx =
-    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+  nsRefPtr<gfxContext> tmpCtx = new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
 
   GeneratePath(tmpCtx, canvasTM);
   gfxPoint userSpacePoint =
@@ -329,7 +328,7 @@ nsSVGPathGeometryFrame::ReflowSVG()
   if (applyScaling) {
     scaling.Scale(scaleFactors.width, scaleFactors.height);
   }
-  gfxRect extent = GetBBoxContribution(scaling, flags);
+  gfxRect extent = GetBBoxContribution(scaling, flags).ToThebesRect();
   if (applyScaling) {
     extent.Scale(1 / scaleFactors.width, 1 / scaleFactors.height);
   }
@@ -408,8 +407,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     return bbox;
   }
 
-  nsRefPtr<gfxContext> tmpCtx =
-    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+  nsRefPtr<gfxContext> tmpCtx = new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
 
   GeneratePath(tmpCtx, aToBBoxUserspace);
   tmpCtx->IdentityMatrix();

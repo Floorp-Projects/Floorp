@@ -136,6 +136,22 @@ interface CameraControl {
     attribute CameraRecorderStateChange? onRecorderStateChange;
     attribute CameraPreviewStateChange? onPreviewStateChange;
 
+    /* the size of the picture to be returned by a call to takePicture();
+       an object with 'height' and 'width' properties that corresponds to
+       one of the options returned by capabilities.pictureSizes. */
+    [Throws]
+    attribute any pictureSize;
+
+    /* the size of the thumbnail to be included in the picture returned
+       by a call to takePicture(), assuming the chose fileFormat supports
+       one; an object with 'height' and 'width' properties that corresponds
+       to one of the options returned by capabilities.pictureSizes.
+       
+       this setting should be considered a hint: the implementation will
+       respect it when possible, and override it if necessary. */
+    [Throws]
+    attribute any thumbnailSize;
+
     /* tell the camera to attempt to focus the image */
     [Throws]
     void autoFocus(CameraAutoFocusCallback onSuccess, optional CameraErrorCallback onError);

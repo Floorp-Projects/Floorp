@@ -136,6 +136,8 @@ class MochitestRunner(MozbuildObject):
                 print('Specified test path does not exist: %s' % test_root_file)
                 return 1
             options.testPath = test_path
+        elif conditions.is_b2g_desktop:
+            options.testManifest = 'b2g-desktop.json'
         else:
             options.testManifest = 'b2g.json'
 
@@ -186,7 +188,7 @@ class MochitestRunner(MozbuildObject):
         debugger_args=None, shuffle=False, keep_open=False, rerun_failures=False,
         no_autorun=False, repeat=0, run_until_failure=False, slow=False,
         chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False,
-        start_at=None, end_at=None):
+        debug_on_failure=False, start_at=None, end_at=None, e10s=False):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -287,8 +289,11 @@ class MochitestRunner(MozbuildObject):
         options.totalChunks = total_chunks
         options.thisChunk = this_chunk
         options.jsdebugger = jsdebugger
+        options.debugOnFailure = debug_on_failure
         options.startAt = start_at
         options.endAt = end_at
+        options.e10s = e10s
+        mozinfo.update({"e10s": e10s}) # for test manifest parsing.
 
         options.failureFile = failure_file_path
 
@@ -396,6 +401,14 @@ def MochitestCommand(func):
         help='Delay execution between tests.')
     func = slow(func)
 
+    end_at = CommandArgument('--end-at', type=str,
+        help='Stop running the test sequence at this test.')
+    func = end_at(func)
+
+    start_at = CommandArgument('--start-at', type=str,
+        help='Start running the test sequence at this test.')
+    func = start_at(func)
+
     chunk_dir = CommandArgument('--chunk-by-dir', type=int,
         help='Group tests together in chunks by this many top directories.')
     func = chunk_dir(func)
@@ -408,9 +421,18 @@ def MochitestCommand(func):
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
 
+    debug_on_failure = CommandArgument('--debug-on-failure', action='store_true',
+        help='Breaks execution and enters the JS debugger on a test failure. ' \
+             'Should be used together with --jsdebugger.')
+    func = debug_on_failure(func)
+
     jsdebugger = CommandArgument('--jsdebugger', action='store_true',
         help='Start the browser JS debugger before running the test. Implies --no-autorun.')
     func = jsdebugger(func)
+
+    this_chunk = CommandArgument('--e10s', action='store_true',
+        help='Run tests with electrolysis preferences and test filtering enabled.')
+    func = this_chunk(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',
@@ -465,14 +487,6 @@ def B2GCommand(func):
     this_chunk = CommandArgument('--this-chunk', type=int,
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
-
-    start_at = CommandArgument('--start-at', type=str,
-        help='Start running the test sequence at this test.')
-    func = start_at(func)
-
-    end_at = CommandArgument('--end-at', type=str,
-        help='Stop running the test sequence at this test.')
-    func = end_at(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',

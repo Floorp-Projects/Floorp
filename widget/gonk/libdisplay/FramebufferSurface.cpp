@@ -54,7 +54,8 @@ FramebufferSurface::FramebufferSurface(int disp, uint32_t width, uint32_t height
     ConsumerBase(new BufferQueue(true, alloc)),
     mDisplayType(disp),
     mCurrentBufferSlot(-1),
-    mCurrentBuffer(0)
+    mCurrentBuffer(0),
+    lastHandle(0)
 {
     mName = "FramebufferSurface";
     mBufferQueue->setConsumerName(mName);

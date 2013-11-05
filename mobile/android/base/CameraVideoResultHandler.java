@@ -7,8 +7,14 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.util.ActivityResultHandler;
 
 import android.app.Activity;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -40,19 +46,37 @@ class CameraVideoResultHandler implements ActivityResultHandler {
     }
 
     @Override
-    public void onActivityResult(int resultCode, Intent data) {
-        if (data == null || resultCode != Activity.RESULT_OK) {
+    public void onActivityResult(int resultCode, final Intent data) {
+        // Intent.getData() can return null. Avoid a crash. See bug 904551.
+        if (data == null || data.getData() == null || resultCode != Activity.RESULT_OK) {
             sendResult("");
             return;
         }
 
-        Cursor cursor = GeckoAppShell.getGeckoInterface().getActivity().managedQuery(data.getData(),
-                new String[] { MediaStore.Video.Media.DATA },
-                null,
-                null,
-                null);
-        cursor.moveToFirst();
+        final FragmentActivity fa = (FragmentActivity) GeckoAppShell.getGeckoInterface().getActivity();
+        final LoaderManager lm = fa.getSupportLoaderManager();
+        lm.initLoader(data.hashCode(), null, new LoaderCallbacks<Cursor>() {
+            @Override
+            public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+                return new CursorLoader(fa,
+                                        data.getData(),
+                                        new String[] { MediaStore.Video.Media.DATA },
+                                        null,  // selection
+                                        null,  // selectionArgs
+                                        null); // sortOrder
+            }
 
-        sendResult(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)));
+            @Override
+            public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+                if (cursor.moveToFirst()) {
+                    sendResult(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)));
+                } else {
+                    sendResult("");
+                }
+            }
+
+            @Override
+            public void onLoaderReset(Loader<Cursor> loader) { }
+        });
     }
 }

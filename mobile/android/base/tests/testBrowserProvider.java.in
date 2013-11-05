@@ -1273,7 +1273,9 @@ public class testBrowserProvider extends ContentProviderTest {
 
         @Override
         public void test() throws Exception {
-            Uri updateHistoryUriWithProfile = mHistoryUri.buildUpon().
+            Uri updateHistoryUri = mHistoryUri.buildUpon().
+                appendQueryParameter("increment_visits", "true").build();
+            Uri updateOrInsertHistoryUri = mHistoryUri.buildUpon().
                 appendQueryParameter("insert_if_needed", "true").
                 appendQueryParameter("increment_visits", "true").build();
 
@@ -1281,13 +1283,22 @@ public class testBrowserProvider extends ContentProviderTest {
             ContentValues values = new ContentValues();
             values.put(mHistoryUrlCol, TEST_URL_1);
 
-            int updated = mProvider.update(updateHistoryUriWithProfile, values,
+            int updated = mProvider.update(updateHistoryUri, values,
                                            mHistoryUrlCol + " = ?",
                                            new String[] { TEST_URL_1 });
-            mAsserter.is((updated == 0), true, "History entry was inserted, not updated");
+            mAsserter.is((updated == 0), true, "History entry was not updated");
+            Cursor c = mProvider.query(mHistoryUri, null, null, null, null);
+            mAsserter.is(c.moveToFirst(), false, "History entry was not inserted");
+            c.close();
+
+            // Now let's try with update-or-insert.
+            updated = mProvider.update(updateOrInsertHistoryUri, values,
+                                           mHistoryUrlCol + " = ?",
+                                           new String[] { TEST_URL_1 });
+            mAsserter.is((updated == 1), true, "History entry was inserted");
 
             long id = getHistoryEntryIdByUrl(TEST_URL_1);
-            Cursor c = getHistoryEntryById(id);
+            c = getHistoryEntryById(id);
             mAsserter.is(c.moveToFirst(), true, "History entry was inserted");
 
             long dateCreated = c.getLong(c.getColumnIndex(mHistoryDateCreatedCol));
@@ -1303,7 +1314,7 @@ public class testBrowserProvider extends ContentProviderTest {
             values.put(mHistoryLastVisitedCol, System.currentTimeMillis());
             values.put(mHistoryTitleCol, TEST_TITLE);
 
-            updated = mProvider.update(updateHistoryUriWithProfile, values,
+            updated = mProvider.update(updateOrInsertHistoryUri, values,
                                        mHistoryIdCol + " = ?",
                                        new String[] { String.valueOf(id) });
             mAsserter.is((updated == 1), true, "Inserted history entry was updated");
@@ -1326,10 +1337,10 @@ public class testBrowserProvider extends ContentProviderTest {
             values.put(mHistoryTitleCol, TEST_TITLE);
             values.put(mHistoryVisitsCol, 10);
 
-            updated = mProvider.update(updateHistoryUriWithProfile, values,
+            updated = mProvider.update(updateOrInsertHistoryUri, values,
                                            mHistoryUrlCol + " = ?",
                                            new String[] { values.getAsString(mHistoryUrlCol) });
-            mAsserter.is((updated == 0), true, "History entry was inserted, not updated");
+            mAsserter.is((updated == 1), true, "History entry was inserted");
 
             id = getHistoryEntryIdByUrl(TEST_URL_2);
             c = getHistoryEntryById(id);
@@ -1347,7 +1358,7 @@ public class testBrowserProvider extends ContentProviderTest {
             values = new ContentValues();
             values.put(mHistoryVisitsCol, 10);
 
-            updated = mProvider.update(updateHistoryUriWithProfile, values,
+            updated = mProvider.update(updateOrInsertHistoryUri, values,
                                        mHistoryIdCol + " = ?",
                                        new String[] { String.valueOf(id) });
             mAsserter.is((updated == 1), true, "Inserted history entry was updated");

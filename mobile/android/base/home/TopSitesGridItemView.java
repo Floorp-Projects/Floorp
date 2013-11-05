@@ -30,6 +30,10 @@ public class TopSitesGridItemView extends RelativeLayout {
     // Empty state, to denote there is no valid url.
     private static final int[] STATE_EMPTY = { android.R.attr.state_empty };
 
+    private static final ScaleType SCALE_TYPE_FAVICON   = ScaleType.CENTER;
+    private static final ScaleType SCALE_TYPE_RESOURCE  = ScaleType.CENTER;
+    private static final ScaleType SCALE_TYPE_THUMBNAIL = ScaleType.CENTER_CROP;
+
     // Child views.
     private final TextView mTitleView;
     private final ImageView mThumbnailView;
@@ -39,7 +43,7 @@ public class TopSitesGridItemView extends RelativeLayout {
     private String mUrl;
     private String mFaviconURL;
 
-    private Bitmap mThumbnail;
+    private boolean mThumbnailSet;
 
     // Pinned state.
     private boolean mIsPinned = false;
@@ -132,15 +136,67 @@ public class TopSitesGridItemView extends RelativeLayout {
         mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinned ? R.drawable.pin : 0, 0, 0, 0);
     }
 
+    public void blankOut() {
+        mUrl = "";
+        mTitle = "";
+        mIsPinned = false;
+        updateTitleView();
+        mTitleView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        setLoadId(Favicons.NOT_LOADING);
+        displayThumbnail(R.drawable.top_site_add);
+    }
+
+    /**
+     * Updates the title, URL, and pinned state of this view.
+     *
+     * Also resets our loadId to NOT_LOADING.
+     *
+     * Returns true if any fields changed.
+     */
+    public boolean updateState(final String title, final String url, final boolean pinned, final Bitmap thumbnail) {
+        boolean changed = false;
+        if (mUrl == null || !mUrl.equals(url)) {
+            mUrl = url;
+            changed = true;
+        }
+
+        if (mTitle == null || !mTitle.equals(title)) {
+            mTitle = title;
+            changed = true;
+        }
+
+        if (thumbnail != null) {
+            displayThumbnail(thumbnail);
+        } else if (changed) {
+            // Because we'll have a new favicon or thumbnail arriving shortly, and
+            // we need to not reject it because we already had a thumbnail.
+            mThumbnailSet = false;
+        }
+
+        if (changed) {
+            updateTitleView();
+            setLoadId(Favicons.NOT_LOADING);
+        }
+
+        if (mIsPinned != pinned) {
+            mIsPinned = pinned;
+            mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinned ? R.drawable.pin : 0, 0, 0, 0);
+            changed = true;
+        }
+
+        return changed;
+    }
+
     /**
      * Display the thumbnail from a resource.
      *
      * @param resId Resource ID of the drawable to show.
      */
     public void displayThumbnail(int resId) {
-        mThumbnailView.setScaleType(ScaleType.CENTER);
+        mThumbnailView.setScaleType(SCALE_TYPE_RESOURCE);
         mThumbnailView.setImageResource(resId);
         mThumbnailView.setBackgroundColor(0x0);
+        mThumbnailSet = false;
     }
 
     /**
@@ -154,12 +210,23 @@ public class TopSitesGridItemView extends RelativeLayout {
             displayThumbnail(R.drawable.favicon);
             return;
         }
-        mThumbnail = thumbnail;
+        mThumbnailSet = true;
         Favicons.cancelFaviconLoad(mLoadId);
 
-        mThumbnailView.setScaleType(ScaleType.CENTER_CROP);
+        mThumbnailView.setScaleType(SCALE_TYPE_THUMBNAIL);
         mThumbnailView.setImageBitmap(thumbnail);
         mThumbnailView.setBackgroundDrawable(null);
+    }
+
+    public void displayFavicon(Bitmap favicon, String faviconURL, int expectedLoadId) {
+        if (mLoadId != Favicons.NOT_LOADING &&
+            mLoadId != expectedLoadId) {
+            // View recycled.
+            return;
+        }
+
+        // Yes, there's a chance of a race here.
+        displayFavicon(favicon, faviconURL);
     }
 
     /**
@@ -168,7 +235,8 @@ public class TopSitesGridItemView extends RelativeLayout {
      * @param favicon The favicon to show as thumbnail.
      */
     public void displayFavicon(Bitmap favicon, String faviconURL) {
-        if (mThumbnail != null) {
+        if (mThumbnailSet) {
+            // Already showing a thumbnail; do nothing.
             return;
         }
 
@@ -182,7 +250,7 @@ public class TopSitesGridItemView extends RelativeLayout {
             mFaviconURL = faviconURL;
         }
 
-        mThumbnailView.setScaleType(ScaleType.CENTER);
+        mThumbnailView.setScaleType(SCALE_TYPE_FAVICON);
         mThumbnailView.setImageBitmap(favicon);
 
         if (mFaviconURL != null) {

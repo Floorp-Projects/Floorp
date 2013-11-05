@@ -1,9 +1,9 @@
 <!doctype html>
 <title>Range.deleteContents() tests</title>
 <link rel=author title="Aryeh Gregor" href=ayg@aryeh.name>
-<p>To debug test failures, look at the URL of the hidden iframes corresponding
-to the test at the end of the document, load those individually, and use your
-browser's debugging tools.
+<p>To debug test failures, add a query parameter "subtest" with the test id (like
+"?subtest=5").  Only that test will be run.  Then you can look at the resulting
+iframe in the DOM.
 <div id=log></div>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
@@ -12,6 +12,43 @@ browser's debugging tools.
 "use strict";
 
 testDiv.parentNode.removeChild(testDiv);
+
+var actualIframe = document.createElement("iframe");
+actualIframe.style.display = "none";
+document.body.appendChild(actualIframe);
+
+var expectedIframe = document.createElement("iframe");
+expectedIframe.style.display = "none";
+document.body.appendChild(expectedIframe);
+
+function restoreIframe(iframe, i) {
+	// Most of this function is designed to work around the fact that Opera
+	// doesn't let you add a doctype to a document that no longer has one, in
+	// any way I can figure out.  I eventually compromised on something that
+	// will still let Opera pass most tests that don't actually involve
+	// doctypes.
+	while (iframe.contentDocument.firstChild
+	&& iframe.contentDocument.firstChild.nodeType != Node.DOCUMENT_TYPE_NODE) {
+		iframe.contentDocument.removeChild(iframe.contentDocument.firstChild);
+	}
+
+	while (iframe.contentDocument.lastChild
+	&& iframe.contentDocument.lastChild.nodeType != Node.DOCUMENT_TYPE_NODE) {
+		iframe.contentDocument.removeChild(iframe.contentDocument.lastChild);
+	}
+
+	if (!iframe.contentDocument.firstChild) {
+		// This will throw an exception in Opera if we reach here, which is why
+		// I try to avoid it.  It will never happen in a browser that obeys the
+		// spec, so it's really just insurance.  I don't think it actually gets
+		// hit by anything.
+		iframe.contentDocument.appendChild(iframe.contentDocument.implementation.createDocumentType("html", "", ""));
+	}
+	iframe.contentDocument.appendChild(referenceDoc.documentElement.cloneNode(true));
+	iframe.contentWindow.setupRangeTests();
+	iframe.contentWindow.testRangeInput = testRanges[i];
+	iframe.contentWindow.run();
+}
 
 function myDeleteContents(range) {
 	// "If the context object's start and end are the same, abort this method."
@@ -109,33 +146,17 @@ function myDeleteContents(range) {
 }
 
 function testDeleteContents(i) {
-	// We only load the expected once the actual is finished, to avoid race
-	// conditions.  First set the onload to null and the src to the empty
-	// string, so that when we set the src for real we're not just changing the
-	// hash -- otherwise the load event won't fire.  We never do anything after
-	// a src set except in an onload handler, to avoid race conditions.
-	var actual = actualIframes[i];
-	actual.id = i + "-actual";
-	actual.onload = function() { onLoadActual(i); };
-	actual.src = "Range-test-iframe.html#" + testRanges[i];
-}
+	restoreIframe(actualIframe, i);
+	restoreIframe(expectedIframe, i);
 
-function onLoadActual(i) {
-	var expected = expectedIframes[i];
-	expected.id = i + "-expected";
-	expected.onload = function() { onLoadExpected(i); };
-	expected.src = "Range-test-iframe.html#" + testRanges[i];
-}
-
-function onLoadExpected(i) {
-	var actualRange = actualIframes[i].contentWindow.testRange;
-	var expectedRange = expectedIframes[i].contentWindow.testRange;
+	var actualRange = actualIframe.contentWindow.testRange;
+	var expectedRange = expectedIframe.contentWindow.testRange;
 	var actualRoots, expectedRoots;
 
 	domTests[i].step(function() {
-		assert_equals(actualIframes[i].contentWindow.unexpectedException, null,
+		assert_equals(actualIframe.contentWindow.unexpectedException, null,
 			"Unexpected exception thrown when setting up Range for actual deleteContents()");
-		assert_equals(expectedIframes[i].contentWindow.unexpectedException, null,
+		assert_equals(expectedIframe.contentWindow.unexpectedException, null,
 			"Unexpected exception thrown when setting up Range for simulated deleteContents()");
 		assert_equals(typeof actualRange, "object",
 			"typeof Range produced in actual iframe");
@@ -220,9 +241,9 @@ function onLoadExpected(i) {
 	domTests[i].done();
 
 	positionTests[i].step(function() {
-		assert_equals(actualIframes[i].contentWindow.unexpectedException, null,
+		assert_equals(actualIframe.contentWindow.unexpectedException, null,
 			"Unexpected exception thrown when setting up Range for actual deleteContents()");
-		assert_equals(expectedIframes[i].contentWindow.unexpectedException, null,
+		assert_equals(expectedIframe.contentWindow.unexpectedException, null,
 			"Unexpected exception thrown when setting up Range for simulated deleteContents()");
 		assert_equals(typeof actualRange, "object",
 			"typeof Range produced in actual iframe");
@@ -278,22 +299,34 @@ test(function() {
 	range.deleteContents();
 }, "Detached Range");
 
+var iStart = 0;
+var iStop = testRanges.length;
+
+if (/subtest=[0-9]+/.test(location.search)) {
+	var matches = /subtest=([0-9]+)/.exec(location.search);
+	iStart = Number(matches[1]);
+	iStop = Number(matches[1]) + 1;
+}
+
 var domTests = [];
 var positionTests = [];
-var actualIframes = [];
-var expectedIframes = [];
-for (var i = 0; i < testRanges.length; i++) {
-	domTests.push(async_test("Resulting DOM for range " + i + " " + testRanges[i]));
-	positionTests.push(async_test("Resulting cursor position for range " + i + " " + testRanges[i]));
 
-	actualIframes.push(document.createElement("iframe"));
-	actualIframes[i].style.display = "none";
-	document.body.appendChild(actualIframes[i]);
-
-	expectedIframes.push(document.createElement("iframe"));
-	expectedIframes[i].style.display = "none";
-	document.body.appendChild(expectedIframes[i]);
-
-	testDeleteContents(i);
+for (var i = iStart; i < iStop; i++) {
+	domTests[i] = async_test("Resulting DOM for range " + i + " " + testRanges[i]);
+	positionTests[i] = async_test("Resulting cursor position for range " + i + " " + testRanges[i]);
 }
+
+var referenceDoc = document.implementation.createHTMLDocument("");
+referenceDoc.removeChild(referenceDoc.documentElement);
+
+actualIframe.onload = function() {
+	expectedIframe.onload = function() {
+		for (var i = iStart; i < iStop; i++) {
+			testDeleteContents(i);
+		}
+	}
+	expectedIframe.src = "Range-test-iframe.html";
+	referenceDoc.appendChild(actualIframe.contentDocument.documentElement.cloneNode(true));
+}
+actualIframe.src = "Range-test-iframe.html";
 </script>

@@ -433,24 +433,19 @@ TEST(AsyncPanZoomController, OverScrollPanning) {
   EXPECT_EQ(pointOut, ScreenPoint(0, 90));
 }
 
+// Layer tree for HitTesting1
 static already_AddRefed<mozilla::layers::Layer>
-CreateTestLayerTree(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<Layer> >& aLayers) {
-  const char* layerTreeSyntax = "c(ttccc(c(c)))";
-  // LayerID                     0 12345 6 7
+CreateTestLayerTree1(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<Layer> >& aLayers) {
+  const char* layerTreeSyntax = "c(ttcc)";
+  // LayerID                     0 1234
   nsIntRegion layerVisibleRegion[] = {
     nsIntRegion(nsIntRect(0,0,100,100)),
     nsIntRegion(nsIntRect(0,0,100,100)),
     nsIntRegion(nsIntRect(10,10,20,20)),
     nsIntRegion(nsIntRect(10,10,20,20)),
     nsIntRegion(nsIntRect(5,5,20,20)),
-    nsIntRegion(nsIntRect(10,10,40,40)),
-    nsIntRegion(nsIntRect(10,10,40,40)),
-    nsIntRegion(nsIntRect(10,10,40,40)),
   };
   gfx3DMatrix transforms[] = {
-    gfx3DMatrix(),
-    gfx3DMatrix(),
-    gfx3DMatrix(),
     gfx3DMatrix(),
     gfx3DMatrix(),
     gfx3DMatrix(),
@@ -460,8 +455,31 @@ CreateTestLayerTree(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<Lay
   return CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, aLayerManager, aLayers);
 }
 
+// Layer Tree for HitTesting2
+static already_AddRefed<mozilla::layers::Layer>
+CreateTestLayerTree2(nsRefPtr<LayerManager>& aLayerManager, nsTArray<nsRefPtr<Layer> >& aLayers) {
+  const char* layerTreeSyntax = "c(cc(c))";
+  // LayerID                     0 12 3
+  nsIntRegion layerVisibleRegion[] = {
+    nsIntRegion(nsIntRect(0,0,100,100)),
+    nsIntRegion(nsIntRect(10,10,40,40)),
+    nsIntRegion(nsIntRect(10,60,40,40)),
+    nsIntRegion(nsIntRect(10,60,40,40)),
+  };
+  gfx3DMatrix transforms[] = {
+    gfx3DMatrix(),
+    gfx3DMatrix(),
+    gfx3DMatrix(),
+    gfx3DMatrix(),
+  };
+  return CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, aLayerManager, aLayers);
+}
+
 static void
-SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId, MockContentController* mcc)
+SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
+                          // The scrollable rect is only used in HitTesting2,
+                          // HitTesting1 doesn't care about it.
+                          CSSRect aScrollableRect = CSSRect(-1, -1, -1, -1))
 {
   ContainerLayer* container = aLayer->AsContainerLayer();
   FrameMetrics metrics;
@@ -469,8 +487,8 @@ SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId, MockCon
   nsIntRect layerBound = aLayer->GetVisibleRegion().GetBounds();
   metrics.mCompositionBounds = ScreenIntRect(layerBound.x, layerBound.y,
                                              layerBound.width, layerBound.height);
-  metrics.mViewport = CSSRect(layerBound.x, layerBound.y,
-                              layerBound.width, layerBound.height);
+  metrics.mScrollableRect = aScrollableRect;
+  metrics.mScrollOffset = CSSPoint(0, 0);
   container->SetFrameMetrics(metrics);
 }
 
@@ -490,19 +508,20 @@ NudgeToIntegers(const gfxPoint& aPoint)
 
 static already_AddRefed<AsyncPanZoomController>
 GetTargetAPZC(APZCTreeManager* manager, const ScreenPoint& aPoint,
-              gfx3DMatrix& aTransformToApzcOut, gfx3DMatrix& aTransformToScreenOut)
+              gfx3DMatrix& aTransformToApzcOut, gfx3DMatrix& aTransformToGeckoOut)
 {
   nsRefPtr<AsyncPanZoomController> hit = manager->GetTargetAPZC(aPoint);
   if (hit) {
-    manager->GetInputTransforms(hit.get(), aTransformToApzcOut, aTransformToScreenOut);
+    manager->GetInputTransforms(hit.get(), aTransformToApzcOut, aTransformToGeckoOut);
   }
   return hit.forget();
 }
 
-TEST(APZCTreeManager, GetAPZCAtPoint) {
+// A simple hit testing test that doesn't involve any transforms on layers.
+TEST(APZCTreeManager, HitTesting1) {
   nsTArray<nsRefPtr<Layer> > layers;
   nsRefPtr<LayerManager> lm;
-  nsRefPtr<Layer> root = CreateTestLayerTree(lm, layers);
+  nsRefPtr<Layer> root = CreateTestLayerTree1(lm, layers);
 
   TimeStamp testStartTime = TimeStamp::Now();
   AsyncPanZoomController::SetFrameTime(testStartTime);
@@ -511,115 +530,171 @@ TEST(APZCTreeManager, GetAPZCAtPoint) {
 
   nsRefPtr<APZCTreeManager> manager = new TestAPZCTreeManager();
   gfx3DMatrix transformToApzc;
-  gfx3DMatrix transformToScreen;
+  gfx3DMatrix transformToGecko;
 
   // No APZC attached so hit testing will return no APZC at (20,20)
-  nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(manager, ScreenPoint(20, 20), transformToApzc, transformToScreen);
+  nsRefPtr<AsyncPanZoomController> hit = GetTargetAPZC(manager, ScreenPoint(20, 20), transformToApzc, transformToGecko);
   AsyncPanZoomController* nullAPZC = nullptr;
   EXPECT_EQ(nullAPZC, hit.get());
   EXPECT_EQ(gfx3DMatrix(), transformToApzc);
-  EXPECT_EQ(gfx3DMatrix(), transformToScreen);
+  EXPECT_EQ(gfx3DMatrix(), transformToGecko);
 
   // Now we have a root APZC that will match the page
-  SetScrollableFrameMetrics(root, FrameMetrics::ROOT_SCROLL_ID, mcc);
-  manager->UpdatePanZoomControllerTree(nullptr, root, 0, false);
-  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToScreen);
+  SetScrollableFrameMetrics(root, FrameMetrics::ROOT_SCROLL_ID);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0);
+  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
   EXPECT_EQ(root->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
   // expect hit point at LayerIntPoint(15, 15)
   EXPECT_EQ(gfxPoint(15, 15), transformToApzc.Transform(gfxPoint(15, 15)));
-  EXPECT_EQ(gfxPoint(15, 15), transformToScreen.Transform(gfxPoint(15, 15)));
+  EXPECT_EQ(gfxPoint(15, 15), transformToGecko.Transform(gfxPoint(15, 15)));
 
   // Now we have a sub APZC with a better fit
-  SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID, mcc);
-  manager->UpdatePanZoomControllerTree(nullptr, root, 0, false);
+  SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0);
   EXPECT_NE(root->AsContainerLayer()->GetAsyncPanZoomController(), layers[3]->AsContainerLayer()->GetAsyncPanZoomController());
-  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToScreen);
+  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
   EXPECT_EQ(layers[3]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
   // expect hit point at LayerIntPoint(15, 15)
   EXPECT_EQ(gfxPoint(15, 15), transformToApzc.Transform(gfxPoint(15, 15)));
-  EXPECT_EQ(gfxPoint(15, 15), transformToScreen.Transform(gfxPoint(15, 15)));
+  EXPECT_EQ(gfxPoint(15, 15), transformToGecko.Transform(gfxPoint(15, 15)));
 
   // Now test hit testing when we have two scrollable layers
-  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToScreen);
+  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
   EXPECT_EQ(layers[3]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
-  SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 1, mcc);
-  manager->UpdatePanZoomControllerTree(nullptr, root, 0, false);
-  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToScreen);
+  SetScrollableFrameMetrics(layers[4], FrameMetrics::START_SCROLL_ID + 1);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0);
+  hit = GetTargetAPZC(manager, ScreenPoint(15, 15), transformToApzc, transformToGecko);
   EXPECT_EQ(layers[4]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
   // expect hit point at LayerIntPoint(15, 15)
   EXPECT_EQ(gfxPoint(15, 15), transformToApzc.Transform(gfxPoint(15, 15)));
-  EXPECT_EQ(gfxPoint(15, 15), transformToScreen.Transform(gfxPoint(15, 15)));
+  EXPECT_EQ(gfxPoint(15, 15), transformToGecko.Transform(gfxPoint(15, 15)));
 
   // Hit test ouside the reach of layer[3,4] but inside root
-  hit = GetTargetAPZC(manager, ScreenPoint(90, 90), transformToApzc, transformToScreen);
+  hit = GetTargetAPZC(manager, ScreenPoint(90, 90), transformToApzc, transformToGecko);
   EXPECT_EQ(root->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
   // expect hit point at LayerIntPoint(90, 90)
   EXPECT_EQ(gfxPoint(90, 90), transformToApzc.Transform(gfxPoint(90, 90)));
-  EXPECT_EQ(gfxPoint(90, 90), transformToScreen.Transform(gfxPoint(90, 90)));
+  EXPECT_EQ(gfxPoint(90, 90), transformToGecko.Transform(gfxPoint(90, 90)));
 
   // Hit test ouside the reach of any layer
-  hit = GetTargetAPZC(manager, ScreenPoint(1000, 10), transformToApzc, transformToScreen);
+  hit = GetTargetAPZC(manager, ScreenPoint(1000, 10), transformToApzc, transformToGecko);
   EXPECT_EQ(nullAPZC, hit.get());
   EXPECT_EQ(gfx3DMatrix(), transformToApzc);
-  EXPECT_EQ(gfx3DMatrix(), transformToScreen);
-  hit = GetTargetAPZC(manager, ScreenPoint(-1000, 10), transformToApzc, transformToScreen);
+  EXPECT_EQ(gfx3DMatrix(), transformToGecko);
+  hit = GetTargetAPZC(manager, ScreenPoint(-1000, 10), transformToApzc, transformToGecko);
   EXPECT_EQ(nullAPZC, hit.get());
   EXPECT_EQ(gfx3DMatrix(), transformToApzc);
-  EXPECT_EQ(gfx3DMatrix(), transformToScreen);
-
-  // Test layer transform
-  gfx3DMatrix transform;
-  transform.ScalePost(0.1, 0.1, 1);
-  root->SetBaseTransform(transform);
-  manager->UpdatePanZoomControllerTree(nullptr, root, 0, false);
-  hit = GetTargetAPZC(manager, ScreenPoint(50, 50), transformToApzc, transformToScreen); // This point is now outside the root layer
-  EXPECT_EQ(nullAPZC, hit.get());
-  EXPECT_EQ(gfx3DMatrix(), transformToApzc);
-  EXPECT_EQ(gfx3DMatrix(), transformToScreen);
-
-  // This hit test will hit both layers[3] and layers[4]; layers[4] is later in the tree so
-  // it is a better match
-  hit = GetTargetAPZC(manager, ScreenPoint(2, 2), transformToApzc, transformToScreen);
-  EXPECT_EQ(layers[4]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
-  // expect hit point at LayerPoint(20, 20)
-  EXPECT_EQ(gfxPoint(20, 20), NudgeToIntegers(transformToApzc.Transform(gfxPoint(2, 2))));
-  EXPECT_EQ(gfxPoint(2, 2), NudgeToIntegers(transformToScreen.Transform(gfxPoint(20, 20))));
-
-  // Scale layer[4] outside the range
-  layers[4]->SetBaseTransform(transform);
-  // layer 4 effective visible screenrect: (0.05, 0.05, 0.2, 0.2)
-  // Does not contain (2, 2)
-  manager->UpdatePanZoomControllerTree(nullptr, root, 0, false);
-  hit = GetTargetAPZC(manager, ScreenPoint(2, 2), transformToApzc, transformToScreen);
-  EXPECT_EQ(layers[3]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
-  // expect hit point at LayerPoint(20, 20)
-  EXPECT_EQ(gfxPoint(20, 20), NudgeToIntegers(transformToApzc.Transform(gfxPoint(2, 2))));
-  EXPECT_EQ(gfxPoint(2, 2), NudgeToIntegers(transformToScreen.Transform(gfxPoint(20, 20))));
-
-  // Transformation chain to layer 7
-  SetScrollableFrameMetrics(layers[7], FrameMetrics::START_SCROLL_ID + 2, mcc);
-
-  gfx3DMatrix translateTransform;
-  translateTransform.Translate(gfxPoint3D(10, 10, 0));
-  layers[5]->SetBaseTransform(translateTransform);
-
-  gfx3DMatrix translateTransform2;
-  translateTransform2.Translate(gfxPoint3D(-20, 0, 0));
-  layers[6]->SetBaseTransform(translateTransform2);
-
-  gfx3DMatrix translateTransform3;
-  translateTransform3.ScalePost(1,15,1);
-  layers[7]->SetBaseTransform(translateTransform3);
-
-  manager->UpdatePanZoomControllerTree(nullptr, root, 0, false);
-  // layer 7 effective visible screenrect (0,16,4,60) but clipped by parent layers
-  hit = GetTargetAPZC(manager, ScreenPoint(1, 45), transformToApzc, transformToScreen);
-  EXPECT_EQ(layers[7]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
-  // expect hit point at LayerPoint(20, 440), which is CSSPoint(20, 29)
-  EXPECT_EQ(gfxPoint(20, 440), NudgeToIntegers(transformToApzc.Transform(gfxPoint(1, 45))));
-  EXPECT_EQ(gfxPoint(1, 45), NudgeToIntegers(transformToScreen.Transform(gfxPoint(20, 440))));
+  EXPECT_EQ(gfx3DMatrix(), transformToGecko);
 
   manager->ClearTree();
 }
 
+// A more involved hit testing test that involves css and async transforms.
+TEST(APZCTreeManager, HitTesting2) {
+  nsTArray<nsRefPtr<Layer> > layers;
+  nsRefPtr<LayerManager> lm;
+  nsRefPtr<Layer> root = CreateTestLayerTree2(lm, layers);
 
+  TimeStamp testStartTime = TimeStamp::Now();
+  AsyncPanZoomController::SetFrameTime(testStartTime);
+  nsRefPtr<MockContentController> mcc = new MockContentController();
+  ScopedLayerTreeRegistration controller(0, root, mcc);
+
+  nsRefPtr<APZCTreeManager> manager = new TestAPZCTreeManager();
+  nsRefPtr<AsyncPanZoomController> hit;
+  gfx3DMatrix transformToApzc;
+  gfx3DMatrix transformToGecko;
+
+  // Set a CSS transform on one of the layers.
+  gfx3DMatrix transform;
+  transform.ScalePost(2, 1, 1);
+  layers[2]->SetBaseTransform(transform);
+
+  // Make some other layers scrollable.
+  SetScrollableFrameMetrics(root, FrameMetrics::ROOT_SCROLL_ID, CSSRect(0, 0, 200, 200));
+  SetScrollableFrameMetrics(layers[1], FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 80, 80));
+  SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 1, CSSRect(0, 0, 80, 80));
+
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0);
+
+  // At this point, the following holds (all coordinates in screen pixels):
+  // layers[0] has content from (0,0)-(200,200), clipped by composition bounds (0,0)-(100,100)
+  // layers[1] has content from (10,10)-(90,90), clipped by composition bounds (10,10)-(50,50)
+  // layers[2] has content from (20,60)-(100,100). no clipping as it's not a scrollable layer
+  // layers[3] has content from (20,60)-(180,140), clipped by composition bounds (20,60)-(100,100)
+
+  AsyncPanZoomController* apzcroot = root->AsContainerLayer()->GetAsyncPanZoomController();
+  AsyncPanZoomController* apzc1 = layers[1]->AsContainerLayer()->GetAsyncPanZoomController();
+  AsyncPanZoomController* apzc3 = layers[3]->AsContainerLayer()->GetAsyncPanZoomController();
+
+  // Hit an area that's clearly on the root layer but not any of the child layers.
+  hit = GetTargetAPZC(manager, ScreenPoint(75, 25), transformToApzc, transformToGecko);
+  EXPECT_EQ(apzcroot, hit.get());
+  EXPECT_EQ(gfxPoint(75, 25), transformToApzc.Transform(gfxPoint(75, 25)));
+  EXPECT_EQ(gfxPoint(75, 25), transformToGecko.Transform(gfxPoint(75, 25)));
+
+  // Hit an area on the root that would be on layers[3] if layers[2]
+  // weren't transformed.
+  // Note that if layers[2] were scrollable, then this would hit layers[2]
+  // because its composition bounds would be at (10,60)-(50,100) (and the
+  // scale-only transform that we set on layers[2] would be invalid because
+  // it would place the layer into overscroll, as its composition bounds
+  // start at x=10 but its content at x=20).
+  hit = GetTargetAPZC(manager, ScreenPoint(15, 75), transformToApzc, transformToGecko);
+  EXPECT_EQ(apzcroot, hit.get());
+  EXPECT_EQ(gfxPoint(15, 75), transformToApzc.Transform(gfxPoint(15, 75)));
+  EXPECT_EQ(gfxPoint(15, 75), transformToGecko.Transform(gfxPoint(15, 75)));
+
+  // Hit an area on layers[1].
+  hit = GetTargetAPZC(manager, ScreenPoint(25, 25), transformToApzc, transformToGecko);
+  EXPECT_EQ(apzc1, hit.get());
+  EXPECT_EQ(gfxPoint(25, 25), transformToApzc.Transform(gfxPoint(25, 25)));
+  EXPECT_EQ(gfxPoint(25, 25), transformToGecko.Transform(gfxPoint(25, 25)));
+
+  // Hit an area on layers[3].
+  hit = GetTargetAPZC(manager, ScreenPoint(25, 75), transformToApzc, transformToGecko);
+  EXPECT_EQ(apzc3, hit.get());
+  // transformToApzc should unapply layers[2]'s transform
+  EXPECT_EQ(gfxPoint(12.5, 75), transformToApzc.Transform(gfxPoint(25, 75)));
+  // and transformToGecko should reapply it
+  EXPECT_EQ(gfxPoint(25, 75), transformToGecko.Transform(gfxPoint(12.5, 75)));
+
+  // Hit an area on layers[3] that would be on the root if layers[2]
+  // weren't transformed.
+  hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);
+  EXPECT_EQ(apzc3, hit.get());
+  // transformToApzc should unapply layers[2]'s transform
+  EXPECT_EQ(gfxPoint(37.5, 75), transformToApzc.Transform(gfxPoint(75, 75)));
+  // and transformToGecko should reapply it
+  EXPECT_EQ(gfxPoint(75, 75), transformToGecko.Transform(gfxPoint(37.5, 75)));
+
+  // Pan the root layer upward by 50 pixels.
+  // This causes layers[1] to scroll out of view, and an async transform
+  // of -50 to be set on the root layer.
+  int time = 0;
+  // Silence GMock warnings about "uninteresting mock function calls".
+  EXPECT_CALL(*mcc, PostDelayedTask(_,_)).Times(1);
+  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(2);
+  EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
+  ApzcPan(apzcroot, time, 100, 50);
+
+  // Hit where layers[3] used to be. It should now hit the root.
+  hit = GetTargetAPZC(manager, ScreenPoint(75, 75), transformToApzc, transformToGecko);
+  EXPECT_EQ(apzcroot, hit.get());
+  // transformToApzc doesn't unapply the root's own async transform
+  EXPECT_EQ(gfxPoint(75, 75), transformToApzc.Transform(gfxPoint(75, 75)));
+  // but transformToGecko does
+  EXPECT_EQ(gfxPoint(75, 125), transformToGecko.Transform(gfxPoint(75, 75)));
+
+  // Hit where layers[1] used to be and where layers[3] should now be.
+  hit = GetTargetAPZC(manager, ScreenPoint(25, 25), transformToApzc, transformToGecko);
+  EXPECT_EQ(apzc3, hit.get());
+  // transformToApzc unapplies both layers[2]'s css transform and the root's
+  // async trasnform
+  EXPECT_EQ(gfxPoint(12.5, 75), transformToApzc.Transform(gfxPoint(25, 25)));
+  // transformToGecko reapplies the css transform only (since Gecko doesn't
+  // know about async transforms)
+  EXPECT_EQ(gfxPoint(25, 75), transformToGecko.Transform(gfxPoint(12.5, 75)));
+
+  manager->ClearTree();
+}

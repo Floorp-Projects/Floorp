@@ -227,7 +227,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
         switch (op) {
 
           case JSOP_RETURN:
-          case JSOP_STOP:
+          case JSOP_RETRVAL:
             numReturnSites_++;
             break;
 
@@ -1221,7 +1221,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
           case JSOP_THROW:
           case JSOP_RETURN:
-          case JSOP_STOP:
           case JSOP_RETRVAL:
             mergeAllExceptionTargets(cx, values, exceptionTargets);
             break;

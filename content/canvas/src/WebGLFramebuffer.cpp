@@ -48,7 +48,7 @@ bool
 WebGLFramebuffer::Attachment::HasAlpha() const {
     GLenum format = 0;
     if (Texture() && Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
-        format = Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).Format();
+        format = Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).InternalFormat();
     else if (Renderbuffer())
         format = Renderbuffer()->InternalFormat();
     return FormatHasAlpha(format);
@@ -105,6 +105,26 @@ WebGLFramebuffer::Attachment::HasSameDimensionsAs(const Attachment& other) const
            thisRect->HasSameDimensionsAs(*otherRect);
 }
 
+static inline bool
+IsValidAttachedTextureColorFormat(GLenum format) {
+    return (
+        /* linear 8-bit formats */
+        format == LOCAL_GL_ALPHA ||
+        format == LOCAL_GL_LUMINANCE ||
+        format == LOCAL_GL_LUMINANCE_ALPHA ||
+        format == LOCAL_GL_RGB ||
+        format == LOCAL_GL_RGBA ||
+        /* sRGB 8-bit formats */
+        format == LOCAL_GL_SRGB_EXT ||
+        format == LOCAL_GL_SRGB_ALPHA_EXT ||
+        /* linear float32 formats */
+        format ==  LOCAL_GL_ALPHA32F_ARB ||
+        format ==  LOCAL_GL_LUMINANCE32F_ARB ||
+        format ==  LOCAL_GL_LUMINANCE_ALPHA32F_ARB ||
+        format ==  LOCAL_GL_RGB32F_ARB ||
+        format ==  LOCAL_GL_RGBA32F_ARB);
+}
+
 bool
 WebGLFramebuffer::Attachment::IsComplete() const {
     const WebGLRectangleObject *thisRect = RectangleObject();
@@ -118,7 +138,7 @@ WebGLFramebuffer::Attachment::IsComplete() const {
         if (!mTexturePtr->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
             return false;
 
-        GLenum format = mTexturePtr->ImageInfoAt(mTexImageTarget, mTexImageLevel).Format();
+        GLenum format = mTexturePtr->ImageInfoAt(mTexImageTarget, mTexImageLevel).InternalFormat();
 
         if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT) {
             return format == LOCAL_GL_DEPTH_COMPONENT;
@@ -128,11 +148,7 @@ WebGLFramebuffer::Attachment::IsComplete() const {
         }
         else if (mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0 &&
                  mAttachmentPoint < GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + WebGLContext::sMaxColorAttachments)) {
-            return (format == LOCAL_GL_ALPHA ||
-                    format == LOCAL_GL_LUMINANCE ||
-                    format == LOCAL_GL_LUMINANCE_ALPHA ||
-                    format == LOCAL_GL_RGB ||
-                    format == LOCAL_GL_RGBA);
+            return IsValidAttachedTextureColorFormat(format);
         }
         MOZ_CRASH("Invalid WebGL attachment poin?");
     }
@@ -153,7 +169,8 @@ WebGLFramebuffer::Attachment::IsComplete() const {
                  mAttachmentPoint < GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + WebGLContext::sMaxColorAttachments)) {
             return (format == LOCAL_GL_RGB565 ||
                     format == LOCAL_GL_RGB5_A1 ||
-                    format == LOCAL_GL_RGBA4);
+                    format == LOCAL_GL_RGBA4 ||
+                    format == LOCAL_GL_SRGB8_ALPHA8_EXT);
         }
         MOZ_CRASH("Invalid WebGL attachment poin?");
     }
@@ -260,6 +277,14 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum target,
         (textarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
          textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
         return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: invalid texture target", textarget);
+
+    if (wtex) {
+        bool isTexture2D = wtex->Target() == LOCAL_GL_TEXTURE_2D;
+        bool isTexTarget2D = textarget == LOCAL_GL_TEXTURE_2D;
+        if (isTexture2D != isTexTarget2D) {
+            return mContext->ErrorInvalidOperation("framebufferTexture2D: mismatched texture and texture target");
+        }
+    }
 
     if (level != 0)
         return mContext->ErrorInvalidValue("framebufferTexture2D: level must be 0");

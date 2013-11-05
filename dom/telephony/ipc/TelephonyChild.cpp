@@ -37,21 +37,24 @@ TelephonyChild::DeallocPTelephonyRequestChild(PTelephonyRequestChild* aActor)
 }
 
 bool
-TelephonyChild::RecvNotifyCallError(const int32_t& aCallIndex,
+TelephonyChild::RecvNotifyCallError(const uint32_t& aClientId,
+                                    const int32_t& aCallIndex,
                                     const nsString& aError)
 {
   MOZ_ASSERT(mListener);
 
-  mListener->NotifyError(aCallIndex, aError);
+  mListener->NotifyError(aClientId, aCallIndex, aError);
   return true;
 }
 
 bool
-TelephonyChild::RecvNotifyCallStateChanged(const IPCCallStateData& aData)
+TelephonyChild::RecvNotifyCallStateChanged(const uint32_t& aClientId,
+                                           const IPCCallStateData& aData)
 {
   MOZ_ASSERT(mListener);
 
-  mListener->CallStateChanged(aData.callIndex(),
+  mListener->CallStateChanged(aClientId,
+                              aData.callIndex(),
                               aData.callState(),
                               aData.number(),
                               aData.isActive(),
@@ -62,11 +65,12 @@ TelephonyChild::RecvNotifyCallStateChanged(const IPCCallStateData& aData)
 }
 
 bool
-TelephonyChild::RecvNotifyCdmaCallWaiting(const nsString& aNumber)
+TelephonyChild::RecvNotifyCdmaCallWaiting(const uint32_t& aClientId,
+                                          const nsString& aNumber)
 {
   MOZ_ASSERT(mListener);
 
-  mListener->NotifyCdmaCallWaiting(aNumber);
+  mListener->NotifyCdmaCallWaiting(aClientId, aNumber);
   return true;
 }
 
@@ -80,12 +84,24 @@ TelephonyChild::RecvNotifyConferenceCallStateChanged(const uint16_t& aCallState)
 }
 
 bool
-TelephonyChild::RecvNotifySupplementaryService(const int32_t& aCallIndex,
+TelephonyChild::RecvNotifyConferenceError(const nsString& aName,
+                                          const nsString& aMessage)
+{
+  MOZ_ASSERT(mListener);
+
+  mListener->NotifyConferenceError(aName, aMessage);
+  return true;
+}
+
+bool
+TelephonyChild::RecvNotifySupplementaryService(const uint32_t& aClientId,
+                                               const int32_t& aCallIndex,
                                                const uint16_t& aNotification)
 {
   MOZ_ASSERT(mListener);
 
-  mListener->SupplementaryServiceNotification(aCallIndex, aNotification);
+  mListener->SupplementaryServiceNotification(aClientId, aCallIndex,
+                                              aNotification);
   return true;
 }
 
@@ -115,11 +131,13 @@ TelephonyRequestChild::Recv__delete__()
 }
 
 bool
-TelephonyRequestChild::RecvNotifyEnumerateCallState(const IPCCallStateData& aData)
+TelephonyRequestChild::RecvNotifyEnumerateCallState(const uint32_t& aClientId,
+                                                    const IPCCallStateData& aData)
 {
   MOZ_ASSERT(mListener);
 
-  mListener->EnumerateCallState(aData.callIndex(),
+  mListener->EnumerateCallState(aClientId,
+                                aData.callIndex(),
                                 aData.callState(),
                                 aData.number(),
                                 aData.isActive(),

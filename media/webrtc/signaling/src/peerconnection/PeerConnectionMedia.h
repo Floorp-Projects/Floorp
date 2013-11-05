@@ -99,7 +99,7 @@ class Fake_VideoGenerator {
 
     // Make a track
     mozilla::VideoSegment *segment = new mozilla::VideoSegment();
-    mStream->GetStream()->AsSourceStream()->AddTrack(1, USECS_PER_S, 0, segment);
+    mStream->GetStream()->AsSourceStream()->AddTrack(1, mozilla::USECS_PER_S, 0, segment);
     mStream->GetStream()->AsSourceStream()->AdvanceKnownTracksTime(mozilla::STREAM_TIME_MAX);
 
     // Set the timer. Set to 10 fps.
@@ -149,7 +149,7 @@ class Fake_VideoGenerator {
     // AddTrack takes ownership of segment
     mozilla::VideoSegment *segment = new mozilla::VideoSegment();
     // 10 fps.
-    segment->AppendFrame(image.forget(), USECS_PER_S / 10, gfxIntSize(WIDTH, HEIGHT));
+    segment->AppendFrame(image.forget(), mozilla::USECS_PER_S / 10, gfxIntSize(WIDTH, HEIGHT));
 
     gen->mStream->GetStream()->AsSourceStream()->AppendToTrack(1, segment);
   }

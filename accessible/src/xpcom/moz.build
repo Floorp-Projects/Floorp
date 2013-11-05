@@ -6,10 +6,19 @@
 
 MODULE = 'accessibility'
 
+EXPORTS += [
+    'xpcAccessibleSelectable.h',
+]
+
 SOURCES += [
     'nsAccessibleRelation.cpp',
+    'xpcAccessibleSelectable.cpp',
     'xpcAccessibleTable.cpp',
     'xpcAccessibleTableCell.cpp',
+]
+
+GENERATED_SOURCES += [
+    'xpcAccEvents.cpp',
 ]
 
 LIBRARY_NAME = 'accessibility_xpcom_s'

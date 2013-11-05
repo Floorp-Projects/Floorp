@@ -1027,6 +1027,13 @@ js_FinishGC(JSRuntime *rt)
     rt->gcChunkPool.expireAndFree(rt, true);
 
     rt->gcRootsHash.clear();
+
+    rt->functionPersistentRooteds.clear();
+    rt->idPersistentRooteds.clear();
+    rt->objectPersistentRooteds.clear();
+    rt->scriptPersistentRooteds.clear();
+    rt->stringPersistentRooteds.clear();
+    rt->valuePersistentRooteds.clear();
 }
 
 template <typename T> struct BarrierOwner {};
@@ -1104,11 +1111,11 @@ js_AddObjectRoot(JSRuntime *rt, JSObject **objp)
 extern JS_FRIEND_API(void)
 js_RemoveObjectRoot(JSRuntime *rt, JSObject **objp)
 {
-    js_RemoveRoot(rt, objp);
+    RemoveRoot(rt, objp);
 }
 
-JS_FRIEND_API(void)
-js_RemoveRoot(JSRuntime *rt, void *rp)
+void
+js::RemoveRoot(JSRuntime *rt, void *rp)
 {
     rt->gcRootsHash.remove(rp);
     rt->gcPoke = true;

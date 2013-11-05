@@ -64,16 +64,15 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     typedef typename Base::Enum Enum;
     typedef typename Base::Lookup Lookup;
 
+    /* Expose WeakMap public interface */
+
+    using Base::clearWithoutCallingDestructors;
+    using Base::lookupForAdd;
+    using Base::all;
+    using Base::trace;
+
     bool init(uint32_t len = 16) {
         return Base::init(len) && zoneCounts.init();
-    }
-
-    void clearWithoutCallingDestructors() {
-        Base::clearWithoutCallingDestructors();
-    }
-
-    AddPtr lookupForAdd(const Lookup &l) const {
-        return Base::lookupForAdd(l);
     }
 
     template<typename KeyInput, typename ValueInput>
@@ -87,19 +86,9 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
         return ok;
     }
 
-    Range all() const {
-        return Base::all();
-    }
-
     void remove(const Lookup &l) {
         Base::remove(l);
         decZoneCount(l->zone());
-    }
-
-  public:
-    /* Expose WeakMap public interface*/
-    void trace(JSTracer *tracer) {
-        Base::trace(tracer);
     }
 
   public:
@@ -352,7 +341,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     JSTrapStatus fireDebuggerStatement(JSContext *cx, MutableHandleValue vp);
     JSTrapStatus fireExceptionUnwind(JSContext *cx, MutableHandleValue vp);
-    JSTrapStatus fireEnterFrame(JSContext *cx, MutableHandleValue vp);
+    JSTrapStatus fireEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp);
     JSTrapStatus fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, MutableHandleValue vp);
 
     /*
@@ -480,8 +469,29 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      */
     bool unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 
-    /* Store the Debugger.Frame object for iter in *vp. */
-    bool getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, MutableHandleValue vp);
+    /*
+     * Store the Debugger.Frame object for frame in *vp.
+     *
+     * Use this if you have already access to a frame pointer without having
+     * to incur the cost of walking the stack.
+     */
+    bool getScriptFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp);
+
+    /*
+     * Store the Debugger.Frame object for iter in *vp. Eagerly copies a
+     * ScriptFrameIter::Data.
+     *
+     * Use this if you had to make a ScriptFrameIter to get the required
+     * frame, in which case the cost of walking the stack has already been
+     * paid.
+     */
+    bool getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, MutableHandleValue vp) {
+        AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();
+        if (!data || !getScriptFrame(cx, iter.abstractFramePtr(), vp))
+            return false;
+        vp.toObject().setPrivate(data.raw());
+        return true;
+    }
 
     /*
      * Set |*status| and |*value| to a (JSTrapStatus, Value) pair reflecting a

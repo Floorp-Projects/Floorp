@@ -8,9 +8,8 @@
 include protocol PBrowser;
 include protocol PLayerTransaction;
 
-include "nsRegion.h";
 
-using nsRegion;
+using class nsRegion from "nsRegion.h";
 
 namespace mozilla {
 namespace layout {
@@ -44,9 +43,6 @@ parent:
     async PLayerTransaction();
 
     async NotifyCompositorTransaction();
-
-    async CancelDefaultPanZoom();
-    async DetectScrollableSubframe();
 
     async UpdateHitRegion(nsRegion aRegion);
 

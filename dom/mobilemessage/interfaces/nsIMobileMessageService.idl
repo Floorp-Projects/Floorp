@@ -14,12 +14,13 @@ interface nsIDOMMozSmsSegmentInfo;
 #define MOBILE_MESSAGE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/mobilemessageservice;1"
 %}
 
-[scriptable, builtinclass, uuid(bea56ecf-472d-4b6b-b462-66753f3c1179)]
+[scriptable, builtinclass, uuid(7a39eeb4-827e-4c70-9804-288f94174ebe)]
 interface nsIMobileMessageService : nsISupports
 {
   [implicit_jscontext]
   nsIDOMMozSmsMessage createSmsMessage(in long      id,
                                        in unsigned long long threadId,
+                                       in DOMString iccId,
                                        in DOMString delivery,
                                        in DOMString deliveryStatus,
                                        in DOMString sender,
@@ -27,13 +28,15 @@ interface nsIMobileMessageService : nsISupports
                                        in DOMString body,
                                        in DOMString messageClass,
                                        in jsval     timestamp,
+                                       in jsval     deliveryTimestamp,
                                        in bool      read);
 
   [implicit_jscontext]
   nsIDOMMozMmsMessage createMmsMessage(in long      id,
                                        in unsigned long long threadId,
+                                       in DOMString iccId,
                                        in DOMString delivery,
-                                       in jsval     deliveryStatus,
+                                       in jsval     deliveryInfo,
                                        in DOMString sender,
                                        in jsval     receivers,
                                        in jsval     timestamp,
@@ -41,7 +44,8 @@ interface nsIMobileMessageService : nsISupports
                                        in DOMString subject,
                                        in DOMString smil,
                                        in jsval     attachments,
-                                       in jsval     expiryDate);
+                                       in jsval     expiryDate,
+                                       in boolean   isReadReportRequested);
 
   nsIDOMMozSmsSegmentInfo createSmsSegmentInfo(in long segments,
                                                in long charsPerSegment,

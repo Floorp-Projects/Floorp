@@ -69,6 +69,7 @@
 #include "JavaScriptChild.h"
 #include "APZCCallbackHelper.h"
 #include "nsILoadContext.h"
+#include "ipc/nsGUIEventIPC.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
@@ -88,10 +89,8 @@ NS_IMPL_ISUPPORTS1(ContentListener, nsIDOMEventListener)
 
 static const CSSSize kDefaultViewportSize(980, 480);
 
-static const char CANCEL_DEFAULT_PAN_ZOOM[] = "cancel-default-pan-zoom";
 static const char BROWSER_ZOOM_TO_RECT[] = "browser-zoom-to-rect";
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
-static const char DETECT_SCROLLABLE_SUBFRAME[] = "detect-scrollable-subframe";
 
 static bool sCpowsEnabled = false;
 
@@ -354,13 +353,7 @@ TabChild::Observe(nsISupports *aSubject,
                   const char *aTopic,
                   const PRUnichar *aData)
 {
-  if (!strcmp(aTopic, CANCEL_DEFAULT_PAN_ZOOM)) {
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
-    nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
-    if (tabChild == this) {
-      mRemoteFrame->CancelDefaultPanZoom();
-    }
-  } else if (!strcmp(aTopic, BROWSER_ZOOM_TO_RECT)) {
+  if (!strcmp(aTopic, BROWSER_ZOOM_TO_RECT)) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
     nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
     if (tabChild == this) {
@@ -408,12 +401,6 @@ TabChild::Observe(nsISupports *aSubject,
 
         HandlePossibleViewportChange();
       }
-    }
-  } else if (!strcmp(aTopic, DETECT_SCROLLABLE_SUBFRAME)) {
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
-    nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
-    if (tabChild == this) {
-      mRemoteFrame->DetectScrollableSubframe();
     }
   }
 
@@ -2003,8 +1990,7 @@ TabChild::DeallocPContentDialogChild(PContentDialogChild* aDialog)
 }
 
 PContentPermissionRequestChild*
-TabChild::AllocPContentPermissionRequestChild(const InfallibleTArray<PermissionRequest>& aRequests,
-                                              const IPC::Principal& aPrincipal)
+TabChild::AllocPContentPermissionRequestChild(const nsCString& aType, const nsCString& aAccess, const IPC::Principal&)
 {
   NS_RUNTIMEABORT("unused");
   return nullptr;
@@ -2120,10 +2106,8 @@ TabChild::RecvDestroy()
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
 
-  observerService->RemoveObserver(this, CANCEL_DEFAULT_PAN_ZOOM);
   observerService->RemoveObserver(this, BROWSER_ZOOM_TO_RECT);
   observerService->RemoveObserver(this, BEFORE_FIRST_PAINT);
-  observerService->RemoveObserver(this, DETECT_SCROLLABLE_SUBFRAME);
 
   const InfallibleTArray<PIndexedDBChild*>& idbActors =
     ManagedPIndexedDBChild();
@@ -2259,16 +2243,10 @@ TabChild::InitRenderingState()
 
     if (observerService) {
         observerService->AddObserver(this,
-                                     CANCEL_DEFAULT_PAN_ZOOM,
-                                     false);
-        observerService->AddObserver(this,
                                      BROWSER_ZOOM_TO_RECT,
                                      false);
         observerService->AddObserver(this,
                                      BEFORE_FIRST_PAINT,
-                                     false);
-        observerService->AddObserver(this,
-                                     DETECT_SCROLLABLE_SUBFRAME,
                                      false);
     }
 

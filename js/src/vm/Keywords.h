@@ -9,29 +9,15 @@
 #ifndef vm_Keywords_h
 #define vm_Keywords_h
 
-#if JS_HAS_CONST
-#  define FOR_CONST_KEYWORD(macro) \
-      macro(const, const_, TOK_CONST, JSVERSION_DEFAULT)
-#else
-#  define FOR_CONST_KEYWORD(macro) \
-      macro(const, const_, TOK_RESERVED, JSVERSION_DEFAULT)
-#endif
-#if JS_HAS_BLOCK_SCOPE
-#  define FOR_LET_KEYWORD(macro) \
-      macro(let, let, TOK_LET, JSVERSION_1_7)
-#else
-#  define FOR_LET_KEYWORD(macro) \
-      macro(let, let, TOK_STRICT_RESERVED, JSVERSION_1_7)
-#endif
-
 #define FOR_EACH_JAVASCRIPT_KEYWORD(macro) \
     macro(false, false_, TOK_FALSE, JSVERSION_DEFAULT) \
     macro(true, true_, TOK_TRUE, JSVERSION_DEFAULT) \
     macro(null, null, TOK_NULL, JSVERSION_DEFAULT) \
-    /* ES5 Keywords. */ \
+    /* Keywords. */ \
     macro(break, break_, TOK_BREAK, JSVERSION_DEFAULT) \
     macro(case, case_, TOK_CASE, JSVERSION_DEFAULT) \
     macro(catch, catch_, TOK_CATCH, JSVERSION_DEFAULT) \
+    macro(const, const_, TOK_CONST, JSVERSION_DEFAULT) \
     macro(continue, continue_, TOK_CONTINUE, JSVERSION_DEFAULT) \
     macro(debugger, debugger, TOK_DEBUGGER, JSVERSION_DEFAULT) \
     macro(default, default_, TOK_DEFAULT, JSVERSION_DEFAULT) \
@@ -55,14 +41,14 @@
     macro(void, void_, TOK_VOID, JSVERSION_DEFAULT) \
     macro(while, while_, TOK_WHILE, JSVERSION_DEFAULT) \
     macro(with, with, TOK_WITH, JSVERSION_DEFAULT) \
-    /* ES5 reserved keywords reserved in all code. */ \
+    /* Reserved keywords. */ \
     macro(class, class_, TOK_RESERVED, JSVERSION_DEFAULT) \
     macro(enum, enum_, TOK_RESERVED, JSVERSION_DEFAULT) \
     macro(export, export, TOK_RESERVED, JSVERSION_DEFAULT) \
     macro(extends, extends, TOK_RESERVED, JSVERSION_DEFAULT) \
     macro(import, import, TOK_RESERVED, JSVERSION_DEFAULT) \
     macro(super, super, TOK_RESERVED, JSVERSION_DEFAULT) \
-    /* ES5 future reserved keywords in strict mode. */ \
+    /* Future reserved keywords, but only in strict mode. */ \
     macro(implements, implements, TOK_STRICT_RESERVED, JSVERSION_DEFAULT) \
     macro(interface, interface, TOK_STRICT_RESERVED, JSVERSION_DEFAULT) \
     macro(package, package, TOK_STRICT_RESERVED, JSVERSION_DEFAULT) \
@@ -71,13 +57,15 @@
     macro(public, public_, TOK_STRICT_RESERVED, JSVERSION_DEFAULT) \
     macro(static, static_, TOK_STRICT_RESERVED, JSVERSION_DEFAULT) \
     /* \
-     * ES5 future reserved keyword in strict mode, keyword in JS1.7 even when \
-     * not strict, keyword inside function* in all versions.  Punt logic to \
-     * parser. \
+     * Yield is a token inside function*.  Outside of a function*, it is a \
+     * future reserved keyword in strict mode, but a keyword in JS1.7 even \
+     * when strict.  Punt logic to parser. \
      */ \
     macro(yield, yield, TOK_YIELD, JSVERSION_DEFAULT) \
-    /* Various conditional keywords. */ \
-    FOR_CONST_KEYWORD(macro) \
-    FOR_LET_KEYWORD(macro)
+    /* \
+     * Let is a future reserved keyword in strict mode, and a keyword in \
+     * JS1.7. \
+     */ \
+    macro(let, let, TOK_LET, JSVERSION_1_7)
 
 #endif /* vm_Keywords_h */

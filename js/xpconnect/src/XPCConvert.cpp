@@ -986,6 +986,11 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
         // If we're looking at a security wrapper, see now if we're allowed to
         // pass it to C++. If we are, then fall through to the code below. If
         // we aren't, throw an exception eagerly.
+        //
+        // NB: It's very important that we _don't_ unwrap in the aOuter case,
+        // because the caller may explicitly want to create the XPCWrappedJS
+        // around a security wrapper. XBL does this with Xrays from the XBL
+        // scope - see nsBindingManager::GetBindingImplementation.
         JSObject* inner = js::CheckedUnwrap(src, /* stopAtOuter = */ false);
 
         // Hack - For historical reasons, wrapped chrome JS objects have been

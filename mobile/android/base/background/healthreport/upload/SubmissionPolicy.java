@@ -387,7 +387,7 @@ public class SubmissionPolicy {
       return this;
     }
 
-    // Forensics only.
+    // Authoritative.
     public Editor setLastUploadRequested(long localTime) {
       editor.putLong(HealthReportConstants.PREF_LAST_UPLOAD_REQUESTED, localTime);
       return this;
@@ -424,7 +424,7 @@ public class SubmissionPolicy {
     }
   }
 
-  // Forensics only.
+  // Authoritative.
   public long getLastUploadRequested() {
     return getSharedPreferences().getLong(HealthReportConstants.PREF_LAST_UPLOAD_REQUESTED, -1);
   }

@@ -10,6 +10,7 @@
 #include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/HalTypes.h"
 #include "base/basictypes.h"
+#include "mozilla/Observer.h"
 #include "mozilla/Types.h"
 #include "nsTArray.h"
 #include "prlog.h"
@@ -18,6 +19,7 @@
 #include "mozilla/dom/power/Types.h"
 #include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/dom/ScreenOrientation.h"
+#include "mozilla/HalScreenConfiguration.h"
 
 /*
  * Hal.h contains the public Hal API.
@@ -38,13 +40,9 @@ class nsIDOMWindow;
 
 namespace mozilla {
 
-template <class T>
-class Observer;
-
 namespace hal {
 
 typedef Observer<void_t> AlarmObserver;
-typedef Observer<ScreenConfiguration> ScreenConfigurationObserver;
 
 class WindowIdentifier;
 

@@ -34,6 +34,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsContentUtils.h"
 #include "nsIFrameInlines.h"
+#include "ActiveLayerTracker.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -224,7 +225,8 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       // FIXME/bug 796697: we can get away with empty transactions for
       // opacity updates in many cases.
       needInvalidatingPaint = true;
-      aFrame->MarkLayersActive(nsChangeHint_UpdateOpacityLayer);
+
+      ActiveLayerTracker::NotifyRestyle(aFrame, eCSSProperty_opacity);
       if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame)) {
         // SVG effects paints the opacity without using
         // nsDisplayOpacity. We need to invalidate manually.
@@ -233,7 +235,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     }
     if ((aChange & nsChangeHint_UpdateTransformLayer) &&
         aFrame->IsTransformed()) {
-      aFrame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
+      ActiveLayerTracker::NotifyRestyle(aFrame, eCSSProperty_transform);
       // If we're not already going to do an invalidating paint, see
       // if we can get away with only updating the transform on a
       // layer for this frame, and not scheduling an invalidating
@@ -247,7 +249,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       nsIFrame* childFrame =
         GetFrameForChildrenOnlyTransformHint(aFrame)->GetFirstPrincipalChild();
       for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
-        childFrame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
+        ActiveLayerTracker::NotifyRestyle(childFrame, eCSSProperty_transform);
       }
     }
     aFrame->SchedulePaint(needInvalidatingPaint ?
@@ -384,59 +386,60 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
     return true;
   }
 
-  // For absolute positioning, the width can potentially change if width is
-  // auto and either of left or right are not.  The height can also potentially
-  // change if height is auto and either of top or bottom are not.  In these
-  // cases we fall back to a reflow, and in all other cases, we attempt to
-  // move the frame here.
-  // Note that it is possible for the dimensions to not change in the above
-  // cases, so we should be a little smarter here and only fall back to reflow
-  // when the dimensions will really change (bug 745485).
-  const nsStylePosition* position = aFrame->StylePosition();
-  if (position->mWidth.GetUnit() != eStyleUnit_Auto &&
-      position->mHeight.GetUnit() != eStyleUnit_Auto) {
-    // For the absolute positioning case, set up a fake HTML reflow state for
-    // the frame, and then get the offsets from it.
-    nsRefPtr<nsRenderingContext> rc = aFrame->PresContext()->GetPresShell()->
-      GetReferenceRenderingContext();
+  // For the absolute positioning case, set up a fake HTML reflow state for
+  // the frame, and then get the offsets and size from it. If the frame's size
+  // doesn't need to change, we can simply update the frame position. Otherwise
+  // we fall back to a reflow.
+  nsRefPtr<nsRenderingContext> rc = aFrame->PresContext()->GetPresShell()->
+    GetReferenceRenderingContext();
 
-    // Construct a bogus parent reflow state so that there's a usable
-    // containing block reflow state.
-    nsIFrame* parentFrame = aFrame->GetParent();
-    nsSize parentSize = parentFrame->GetSize();
+  // Construct a bogus parent reflow state so that there's a usable
+  // containing block reflow state.
+  nsIFrame* parentFrame = aFrame->GetParent();
+  nsSize parentSize = parentFrame->GetSize();
 
-    nsFrameState savedState = parentFrame->GetStateBits();
-    nsHTMLReflowState parentReflowState(aFrame->PresContext(), parentFrame,
-                                        rc, parentSize);
-    parentFrame->RemoveStateBits(~nsFrameState(0));
-    parentFrame->AddStateBits(savedState);
+  nsFrameState savedState = parentFrame->GetStateBits();
+  nsHTMLReflowState parentReflowState(aFrame->PresContext(), parentFrame,
+                                      rc, parentSize);
+  parentFrame->RemoveStateBits(~nsFrameState(0));
+  parentFrame->AddStateBits(savedState);
 
-    NS_WARN_IF_FALSE(parentSize.width != NS_INTRINSICSIZE &&
-                     parentSize.height != NS_INTRINSICSIZE,
-                     "parentSize should be valid");
-    parentReflowState.SetComputedWidth(std::max(parentSize.width, 0));
-    parentReflowState.SetComputedHeight(std::max(parentSize.height, 0));
-    parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
-    parentSize.height = NS_AUTOHEIGHT;
+  NS_WARN_IF_FALSE(parentSize.width != NS_INTRINSICSIZE &&
+                   parentSize.height != NS_INTRINSICSIZE,
+                   "parentSize should be valid");
+  parentReflowState.SetComputedWidth(std::max(parentSize.width, 0));
+  parentReflowState.SetComputedHeight(std::max(parentSize.height, 0));
+  parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
 
-    parentReflowState.mComputedPadding = parentFrame->GetUsedPadding();
-    parentReflowState.mComputedBorderPadding =
-      parentFrame->GetUsedBorderAndPadding();
+  parentReflowState.mComputedPadding = parentFrame->GetUsedPadding();
+  parentReflowState.mComputedBorderPadding =
+    parentFrame->GetUsedBorderAndPadding();
+  nsSize availSize(parentSize.width, NS_INTRINSICSIZE);
 
-    nsSize availSize(parentSize.width, NS_INTRINSICSIZE);
-
-    nsSize size = aFrame->GetSize();
-    ViewportFrame* viewport = do_QueryFrame(parentFrame);
-    nsSize cbSize = viewport ?
-      viewport->AdjustReflowStateAsContainingBlock(&parentReflowState).Size()
-      : aFrame->GetContainingBlock()->GetSize();
-    const nsMargin& parentBorder =
-      parentReflowState.mStyleBorder->GetComputedBorder();
-    cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
-    nsHTMLReflowState reflowState(aFrame->PresContext(), parentReflowState,
-                                  aFrame, availSize, cbSize.width,
-                                  cbSize.height);
-
+  ViewportFrame* viewport = do_QueryFrame(parentFrame);
+  nsSize cbSize = viewport ?
+    viewport->AdjustReflowStateAsContainingBlock(&parentReflowState).Size()
+    : aFrame->GetContainingBlock()->GetSize();
+  const nsMargin& parentBorder =
+    parentReflowState.mStyleBorder->GetComputedBorder();
+  cbSize -= nsSize(parentBorder.LeftRight(), parentBorder.TopBottom());
+  nsHTMLReflowState reflowState(aFrame->PresContext(), parentReflowState,
+                                aFrame, availSize, cbSize.width,
+                                cbSize.height);
+  nsSize computedSize(reflowState.ComputedWidth(), reflowState.ComputedHeight());
+  computedSize.width += reflowState.mComputedBorderPadding.LeftRight();
+  if (computedSize.height != NS_INTRINSICSIZE) {
+    computedSize.height += reflowState.mComputedBorderPadding.TopBottom();
+  }
+  nsSize size = aFrame->GetSize();
+  // The RecomputePosition hint is not used if any offset changed between auto
+  // and non-auto. If computedSize.height == NS_INTRINSICSIZE then the new
+  // element height will be its intrinsic height, and since 'top' and 'bottom''s
+  // auto-ness hasn't changed, the old height must also be its intrinsic
+  // height, which we can assume hasn't changed (or reflow would have
+  // been triggered).
+  if (computedSize.width == size.width &&
+      (computedSize.height == NS_INTRINSICSIZE || computedSize.height == size.height)) {
     // If we're solving for 'left' or 'top', then compute it here, in order to
     // match the reflow code path.
     if (NS_AUTOOFFSET == reflowState.mComputedOffsets.left) {

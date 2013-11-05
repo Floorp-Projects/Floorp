@@ -874,13 +874,13 @@ public class BrowserSearch extends HomeFragment
         }
 
         @Override
-        public boolean onInterceptTouchEvent(MotionEvent event) {
+        public boolean onTouchEvent(MotionEvent event) {
             if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
                 // Dismiss the soft keyboard.
                 requestFocus();
             }
 
-            return super.onInterceptTouchEvent(event);
+            return super.onTouchEvent(event);
         }
     }
 }

@@ -55,6 +55,10 @@ class LUnbox : public LUnboxBase {
     LUnbox(const LAllocation &input)
       : LUnboxBase(input)
     { }
+
+    const char *extraName() const {
+        return StringFromMIRType(mir()->type());
+    }
 };
 
 class LUnboxFloatingPoint : public LUnboxBase {

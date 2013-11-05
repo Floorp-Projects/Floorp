@@ -70,10 +70,8 @@ SVGTransformList::GetValueAsString(nsAString& aValue) const
 nsresult
 SVGTransformList::SetValueFromString(const nsAString& aValue)
 {
-  SVGTransformListParser parser;
-  nsresult rv = parser.Parse(aValue);
-
-  if (NS_FAILED(rv)) {
+  SVGTransformListParser parser(aValue);
+  if (!parser.Parse()) {
     // there was a parse error.
     return NS_ERROR_DOM_SYNTAX_ERR;
   }

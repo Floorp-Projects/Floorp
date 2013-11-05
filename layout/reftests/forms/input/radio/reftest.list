@@ -5,3 +5,4 @@
 != checked-notref.html about:blank
 != checked-native.html about:blank
 != checked-native-notref.html about:blank
+skip-if(!gtk2Widget) == gtk-theme-width-height.html gtk-theme-width-height-ref.html

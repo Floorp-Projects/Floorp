@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ipc/Ril.h"
+
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -18,8 +20,8 @@
 #endif
 
 #include "jsfriendapi.h"
+#include "nsTArray.h"
 #include "nsThreadUtils.h" // For NS_IsMainThread.
-#include "Ril.h"
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla::ipc;
@@ -32,17 +34,130 @@ const char* RIL_SOCKET_NAME = "/dev/socket/rilproxy";
 // desktop development.
 const uint32_t RIL_TEST_PORT = 6200;
 
-class DispatchRILEvent : public WorkerTask
+nsTArray<nsRefPtr<mozilla::ipc::RilConsumer> > sRilConsumers;
+
+class ConnectWorkerToRIL : public WorkerTask
 {
 public:
-    DispatchRILEvent(UnixSocketRawData* aMessage)
-      : mMessage(aMessage)
+    ConnectWorkerToRIL()
     { }
 
     virtual bool RunTask(JSContext *aCx);
+};
+
+class SendRilSocketDataTask : public nsRunnable
+{
+public:
+    SendRilSocketDataTask(unsigned long aClientId,
+                          UnixSocketRawData *aRawData)
+        : mRawData(aRawData)
+        , mClientId(aClientId)
+    { }
+
+    NS_IMETHOD Run()
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+
+        if (sRilConsumers.Length() <= mClientId ||
+            !sRilConsumers[mClientId] ||
+            sRilConsumers[mClientId]->GetConnectionStatus() != SOCKET_CONNECTED) {
+            // Probably shuting down.
+            delete mRawData;
+            return NS_OK;
+        }
+
+        sRilConsumers[mClientId]->SendSocketData(mRawData);
+        return NS_OK;
+    }
 
 private:
-    nsAutoPtr<UnixSocketRawData> mMessage;
+    UnixSocketRawData *mRawData;
+    unsigned long mClientId;
+};
+
+bool
+PostToRIL(JSContext *aCx,
+          unsigned aArgc,
+          JS::Value *aArgv)
+{
+    NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
+
+    if (aArgc != 2) {
+        JS_ReportError(aCx, "Expecting two arguments with the RIL message");
+        return false;
+    }
+
+    JS::Value cv = JS_ARGV(aCx, aArgv)[0];
+    int clientId = cv.toInt32();
+
+    JS::Value v = JS_ARGV(aCx, aArgv)[1];
+
+    JSAutoByteString abs;
+    void *data;
+    size_t size;
+    if (JSVAL_IS_STRING(v)) {
+        JSString *str = JSVAL_TO_STRING(v);
+        if (!abs.encodeUtf8(aCx, str)) {
+            return false;
+        }
+
+        data = abs.ptr();
+        size = abs.length();
+    } else if (!JSVAL_IS_PRIMITIVE(v)) {
+        JSObject *obj = JSVAL_TO_OBJECT(v);
+        if (!JS_IsTypedArrayObject(obj)) {
+            JS_ReportError(aCx, "Object passed in wasn't a typed array");
+            return false;
+        }
+
+        uint32_t type = JS_GetArrayBufferViewType(obj);
+        if (type != js::ArrayBufferView::TYPE_INT8 &&
+            type != js::ArrayBufferView::TYPE_UINT8 &&
+            type != js::ArrayBufferView::TYPE_UINT8_CLAMPED) {
+            JS_ReportError(aCx, "Typed array data is not octets");
+            return false;
+        }
+
+        size = JS_GetTypedArrayByteLength(obj);
+        data = JS_GetArrayBufferViewData(obj);
+    } else {
+        JS_ReportError(aCx,
+                       "Incorrect argument. Expecting a string or a typed array");
+        return false;
+    }
+
+    UnixSocketRawData* raw = new UnixSocketRawData(data, size);
+
+    nsRefPtr<SendRilSocketDataTask> task =
+        new SendRilSocketDataTask(clientId, raw);
+    NS_DispatchToMainThread(task);
+    return true;
+}
+
+bool
+ConnectWorkerToRIL::RunTask(JSContext *aCx)
+{
+    // Set up the postRILMessage on the function for worker -> RIL thread
+    // communication.
+    NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
+    NS_ASSERTION(!JS_IsRunning(aCx), "Are we being called somehow?");
+    JSObject *workerGlobal = JS::CurrentGlobalOrNull(aCx);
+
+    return !!JS_DefineFunction(aCx, workerGlobal,
+                               "postRILMessage", PostToRIL, 1, 0);
+}
+
+class DispatchRILEvent : public WorkerTask
+{
+public:
+        DispatchRILEvent(UnixSocketRawData* aMessage)
+            : mMessage(aMessage)
+        { }
+
+        virtual bool RunTask(JSContext *aCx);
+
+private:
+        nsAutoPtr<UnixSocketRawData> mMessage;
 };
 
 bool
@@ -192,11 +307,45 @@ RilConsumer::RilConsumer(unsigned long aClientId,
     ConnectSocket(new RilConnector(mClientId), mAddress.get());
 }
 
+nsresult
+RilConsumer::Register(unsigned int aClientId,
+                      WorkerCrossThreadDispatcher* aDispatcher)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    sRilConsumers.EnsureLengthAtLeast(aClientId + 1);
+
+    if (sRilConsumers[aClientId]) {
+        NS_WARNING("RilConsumer already registered");
+        return NS_ERROR_FAILURE;
+    }
+
+    nsRefPtr<ConnectWorkerToRIL> connection = new ConnectWorkerToRIL();
+    if (!aDispatcher->PostTask(connection)) {
+        NS_WARNING("Failed to connect worker to ril");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Now that we're set up, connect ourselves to the RIL thread.
+    sRilConsumers[aClientId] = new RilConsumer(aClientId, aDispatcher);
+    return NS_OK;
+}
+
 void
 RilConsumer::Shutdown()
 {
-    mShutdown = true;
-    CloseSocket();
+    MOZ_ASSERT(NS_IsMainThread());
+
+    for (unsigned long i = 0; i < sRilConsumers.Length(); i++) {
+        nsRefPtr<RilConsumer>& instance = sRilConsumers[i];
+        if (!instance) {
+            continue;
+        }
+
+        instance->mShutdown = true;
+        instance->CloseSocket();
+        instance = nullptr;
+    }
 }
 
 void
@@ -212,20 +361,20 @@ void
 RilConsumer::OnConnectSuccess()
 {
     // Nothing to do here.
-    LOG("RIL[%u]: %s\n", mClientId, __FUNCTION__);
+    LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
 }
 
 void
 RilConsumer::OnConnectError()
 {
-    LOG("RIL[%u]: %s\n", mClientId, __FUNCTION__);
+    LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
     CloseSocket();
 }
 
 void
 RilConsumer::OnDisconnect()
 {
-    LOG("RIL[%u]: %s\n", mClientId, __FUNCTION__);
+    LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
     if (!mShutdown) {
         ConnectSocket(new RilConnector(mClientId), mAddress.get(), 1000);
     }
