@@ -74,14 +74,14 @@ let Agent = {
   backupPath: OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.bak"),
 
   /**
-   * This method is only intended to be called by _SessionFile.syncRead() and
+   * This method is only intended to be called by SessionFile.syncRead() and
    * can be removed when we're not supporting synchronous SessionStore
    * initialization anymore. When sessionstore.js is read from disk
    * synchronously the state string must be supplied to the worker manually by
    * calling this method.
    */
   setInitialState: function (aState) {
-    // _SessionFile.syncRead() should not be called after startup has finished.
+    // SessionFile.syncRead() should not be called after startup has finished.
     // Thus we also don't support any setInitialState() calls after we already
     // wrote the loadState to disk.
     if (this.hasWrittenLoadStateOnce) {
@@ -89,7 +89,7 @@ let Agent = {
     }
 
     // Initial state might have been filled by read() already but yet we might
-    // be called by _SessionFile.syncRead() before SessionStore.jsm had a chance
+    // be called by SessionFile.syncRead() before SessionStore.jsm had a chance
     // to call writeLoadStateOnceAfterStartup(). It's safe to ignore
     // setInitialState() calls if this happens.
     if (!this.initialState) {

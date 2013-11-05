@@ -6,7 +6,7 @@ Cu.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
   let profd = do_get_profile();
-  Cu.import("resource:///modules/sessionstore/_SessionFile.jsm", toplevel);
+  Cu.import("resource:///modules/sessionstore/SessionFile.jsm", toplevel);
   decoder = new TextDecoder();
   pathStore = OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js");
   pathBackup = OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.bak");
@@ -25,7 +25,7 @@ add_task(function test_first_write_backup() {
   let initial_content = decoder.decode(yield OS.File.read(pathStore));
 
   do_check_true(!(yield OS.File.exists(pathBackup)));
-  yield _SessionFile.write(content);
+  yield SessionFile.write(content);
   do_check_true(yield OS.File.exists(pathBackup));
 
   let backup_content = decoder.decode(yield OS.File.read(pathBackup));
@@ -38,7 +38,7 @@ add_task(function test_second_write_no_backup() {
   let initial_content = decoder.decode(yield OS.File.read(pathStore));
   let initial_backup_content = decoder.decode(yield OS.File.read(pathBackup));
 
-  yield _SessionFile.write(content);
+  yield SessionFile.write(content);
 
   let written_content = decoder.decode(yield OS.File.read(pathStore));
   do_check_eq(content, written_content);

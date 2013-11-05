@@ -99,41 +99,32 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
 XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
   "@mozilla.org/gfx/screenmanager;1", "nsIScreenManager");
 
-/**
- * Get nsIURI from string
- * @param string
- * @returns nsIURI
- */
-function makeURI(aString) {
-  return Services.io.newURI(aString, null, null);
-}
-
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
   "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
-  "resource:///modules/sessionstore/DocumentUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
   "resource:///modules/sessionstore/Messenger.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageStyle",
   "resource:///modules/sessionstore/PageStyle.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
-  "resource:///modules/sessionstore/PrivacyLevel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionSaver",
   "resource:///modules/sessionstore/SessionSaver.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionCookies",
   "resource:///modules/sessionstore/SessionCookies.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
-  "resource:///modules/sessionstore/SessionHistory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TextAndScrollData",
   "resource:///modules/sessionstore/TextAndScrollData.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "_SessionFile",
-  "resource:///modules/sessionstore/_SessionFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
+  "resource:///modules/sessionstore/SessionFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TabAttributes",
+  "resource:///modules/sessionstore/TabAttributes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TabState",
+  "resource:///modules/sessionstore/TabState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource:///modules/sessionstore/Utils.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -499,12 +490,12 @@ let SessionStoreInternal = {
     return Task.spawn(function task() {
       try {
         // Perform background backup
-        yield _SessionFile.createBackupCopy("-" + buildID);
+        yield SessionFile.createBackupCopy("-" + buildID);
 
         this._prefBranch.setCharPref(PREF_UPGRADE, buildID);
 
         // In case of success, remove previous backup.
-        yield _SessionFile.removeBackupCopy("-" + latestBackup);
+        yield SessionFile.removeBackupCopy("-" + latestBackup);
       } catch (ex) {
         debug("Could not perform upgrade backup " + ex);
         debug(ex.stack);
@@ -746,7 +737,7 @@ let SessionStoreInternal = {
           // _loadState changed from "stopped" to "running". Save the session's
           // load state immediately so that crashes happening during startup
           // are correctly counted.
-          _SessionFile.writeLoadStateOnceAfterStartup(STATE_RUNNING_STR);
+          SessionFile.writeLoadStateOnceAfterStartup(STATE_RUNNING_STR);
         }
       }
       else {
@@ -1082,7 +1073,7 @@ let SessionStoreInternal = {
    * On purge of session history
    */
   onPurgeSessionHistory: function ssi_onPurgeSessionHistory() {
-    _SessionFile.wipe();
+    SessionFile.wipe();
     // If the browser is shutting down, simply return after clearing the
     // session data on disk as this notification fires after the
     // quit-application notification so the browser is about to exit.
@@ -1129,12 +1120,9 @@ let SessionStoreInternal = {
   onPurgeDomainData: function ssi_onPurgeDomainData(aData) {
     // does a session history entry contain a url for the given domain?
     function containsDomain(aEntry) {
-      try {
-        if (makeURI(aEntry.url).host.hasRootDomain(aData)) {
-          return true;
-        }
+      if (Utils.hasRootDomain(aEntry.url, aData)) {
+        return true;
       }
-      catch (ex) { /* url had no host at all */ }
       return aEntry.children && aEntry.children.some(containsDomain, this);
     }
     // remove all closed tabs containing a reference to the given domain
@@ -2600,7 +2588,7 @@ let SessionStoreInternal = {
       // the tab is restored. We'll reset this to about:blank when we try to
       // restore the tab to ensure that docshell doeesn't get confused.
       if (uri) {
-        browser.docShell.setCurrentURI(makeURI(uri));
+        browser.docShell.setCurrentURI(Utils.makeURI(uri));
       }
 
       // If the page has a title, set it.
@@ -2776,7 +2764,7 @@ let SessionStoreInternal = {
     // Reset currentURI.  This creates a new session history entry with a new
     // doc identifier, so we need to explicitly save and restore the old doc
     // identifier (corresponding to the SHEntry at activeIndex) below.
-    browser.webNavigation.setCurrentURI(makeURI("about:blank"));
+    browser.webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
     // Attach data that will be restored on "load" event, after tab is restored.
     if (activeIndex > -1) {
       // restore those aspects of the currently active documents which are not
@@ -2868,7 +2856,7 @@ let SessionStoreInternal = {
     var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
                   createInstance(Ci.nsISHEntry);
 
-    shEntry.setURI(makeURI(aEntry.url));
+    shEntry.setURI(Utils.makeURI(aEntry.url));
     shEntry.setTitle(aEntry.title || aEntry.url);
     if (aEntry.subframe)
       shEntry.setIsSubFrame(aEntry.subframe || false);
@@ -2876,7 +2864,7 @@ let SessionStoreInternal = {
     if (aEntry.contentType)
       shEntry.contentType = aEntry.contentType;
     if (aEntry.referrer)
-      shEntry.referrerURI = makeURI(aEntry.referrer);
+      shEntry.referrerURI = Utils.makeURI(aEntry.referrer);
     if (aEntry.isSrcdocEntry)
       shEntry.srcdocData = aEntry.srcdocData;
 
@@ -4088,52 +4076,6 @@ let DirtyWindows = {
 // batch tab-closing operations.
 let NumberOfTabsClosedLastPerWindow = new WeakMap();
 
-// A set of tab attributes to persist. We will read a given list of tab
-// attributes when collecting tab data and will re-set those attributes when
-// the given tab data is restored to a new tab.
-let TabAttributes = {
-  _attrs: new Set(),
-
-  // We never want to directly read or write those attributes.
-  // 'image' should not be accessed directly but handled by using the
-  //         gBrowser.getIcon()/setIcon() methods.
-  // 'pending' is used internal by sessionstore and managed accordingly.
-  _skipAttrs: new Set(["image", "pending"]),
-
-  persist: function (name) {
-    if (this._attrs.has(name) || this._skipAttrs.has(name)) {
-      return false;
-    }
-
-    this._attrs.add(name);
-    return true;
-  },
-
-  get: function (tab) {
-    let data = {};
-
-    for (let name of this._attrs) {
-      if (tab.hasAttribute(name)) {
-        data[name] = tab.getAttribute(name);
-      }
-    }
-
-    return data;
-  },
-
-  set: function (tab, data = {}) {
-    // Clear attributes.
-    for (let name of this._attrs) {
-      tab.removeAttribute(name);
-    }
-
-    // Set attributes.
-    for (let name in data) {
-      tab.setAttribute(name, data[name]);
-    }
-  }
-};
-
 // This is used to help meter the number of restoring tabs. This is the control
 // point for telling the next tab to restore. It gets attached to each gBrowser
 // via gBrowser.addTabsProgressListener
@@ -4194,413 +4136,6 @@ SessionStoreSHistoryListener.prototype = {
     return false;
   }
 }
-
-// see nsPrivateBrowsingService.js
-String.prototype.hasRootDomain = function hasRootDomain(aDomain) {
-  let index = this.indexOf(aDomain);
-  if (index == -1)
-    return false;
-
-  if (this == aDomain)
-    return true;
-
-  let prevChar = this[index - 1];
-  return (index == (this.length - aDomain.length)) &&
-         (prevChar == "." || prevChar == "/");
-};
-
-function TabData(obj = null) {
-  if (obj) {
-    if (obj instanceof TabData) {
-      // FIXME: Can we get rid of this?
-      return obj;
-    }
-    for (let [key, value] in Iterator(obj)) {
-      this[key] = value;
-    }
-  }
-  return this;
-}
-
-/**
- * Module that contains tab state collection methods.
- */
-let TabState = {
-  // A map (xul:tab -> promise) that keeps track of tabs and
-  // their promises when collecting tab data asynchronously.
-  _pendingCollections: new WeakMap(),
-
-  // A map (xul:browser -> handler) that maps a tab to the
-  // synchronous collection handler object for that tab.
-  // See SyncHandler in content-sessionStore.js.
-  _syncHandlers: new WeakMap(),
-
-  /**
-   * Install the sync handler object from a given tab.
-   */
-  setSyncHandler: function (browser, handler) {
-    this._syncHandlers.set(browser, handler);
-  },
-
-  /**
-   * When a docshell swap happens, a xul:browser element will be
-   * associated with a different content-sessionStore.js script
-   * global. In this case, the sync handler for the element needs to
-   * be swapped just like the docshell.
-   */
-  onSwapDocShells: function (browser, otherBrowser) {
-    // Make sure that one or the other of these has a sync handler,
-    // and let it be |browser|.
-    if (!this._syncHandlers.has(browser)) {
-      [browser, otherBrowser] = [otherBrowser, browser];
-      if (!this._syncHandlers.has(browser)) {
-        return;
-      }
-    }
-
-    // At this point, browser is guaranteed to have a sync handler,
-    // although otherBrowser may not. Perform the swap.
-    let handler = this._syncHandlers.get(browser);
-    if (this._syncHandlers.has(otherBrowser)) {
-      let otherHandler = this._syncHandlers.get(otherBrowser);
-      this._syncHandlers.set(browser, otherHandler);
-      this._syncHandlers.set(otherHandler, handler);
-    } else {
-      this._syncHandlers.set(otherBrowser, handler);
-      this._syncHandlers.delete(browser);
-    }
-  },
-
-  /**
-   * Collect data related to a single tab, asynchronously.
-   *
-   * @param tab
-   *        tabbrowser tab
-   *
-   * @returns {Promise} A promise that will resolve to a TabData instance.
-   */
-  collect: function (tab) {
-    if (!tab) {
-      throw new TypeError("Expecting a tab");
-    }
-
-    // Don't collect if we don't need to.
-    if (TabStateCache.has(tab)) {
-      return Promise.resolve(TabStateCache.get(tab));
-    }
-
-    // If the tab was recently added, or if it's being restored, we
-    // just collect basic data about it and skip the cache.
-    if (!this._tabNeedsExtraCollection(tab)) {
-      let tabData = this._collectBaseTabData(tab);
-      return Promise.resolve(tabData);
-    }
-
-    let promise = Task.spawn(function task() {
-      // Collect session history data asynchronously. Also collects
-      // text and scroll data.
-      let history = yield Messenger.send(tab, "SessionStore:collectSessionHistory");
-
-      // Collected session storage data asynchronously.
-      let storage = yield Messenger.send(tab, "SessionStore:collectSessionStorage");
-
-      // Collect docShell capabilities asynchronously.
-      let disallow = yield Messenger.send(tab, "SessionStore:collectDocShellCapabilities");
-
-      let pageStyle = yield Messenger.send(tab, "SessionStore:collectPageStyle");
-
-      // Collect basic tab data, without session history and storage.
-      let tabData = this._collectBaseTabData(tab);
-
-      // Apply collected data.
-      tabData.entries = history.entries;
-      if ("index" in history) {
-        tabData.index = history.index;
-      }
-
-      if (Object.keys(storage).length) {
-        tabData.storage = storage;
-      }
-
-      if (disallow.length > 0) {
-        tabData.disallow = disallow.join(",");
-      }
-
-      if (pageStyle) {
-        tabData.pageStyle = pageStyle;
-      }
-
-      // If we're still the latest async collection for the given tab and
-      // the cache hasn't been filled by collect() in the meantime, let's
-      // fill the cache with the data we received.
-      if (this._pendingCollections.get(tab) == promise) {
-        TabStateCache.set(tab, tabData);
-        this._pendingCollections.delete(tab);
-      }
-
-      throw new Task.Result(tabData);
-    }.bind(this));
-
-    // Save the current promise as the latest asynchronous collection that is
-    // running. This will be used to check whether the collected data is still
-    // valid and will be used to fill the tab state cache.
-    this._pendingCollections.set(tab, promise);
-
-    return promise;
-  },
-
-  /**
-   * Collect data related to a single tab, synchronously.
-   *
-   * @param tab
-   *        tabbrowser tab
-   *
-   * @returns {TabData} An object with the data for this tab.  If the
-   * tab has not been invalidated since the last call to
-   * collectSync(aTab), the same object is returned.
-   */
-  collectSync: function (tab) {
-    if (!tab) {
-      throw new TypeError("Expecting a tab");
-    }
-    if (TabStateCache.has(tab)) {
-      return TabStateCache.get(tab);
-    }
-
-    let tabData = this._collectSyncUncached(tab);
-
-    if (this._tabCachingAllowed(tab)) {
-      TabStateCache.set(tab, tabData);
-    }
-
-    // Prevent all running asynchronous collections from filling the cache.
-    // Every asynchronous data collection started before a collectSync() call
-    // can't expect to retrieve different data than the sync call. That's why
-    // we just fill the cache with the data collected from the sync call and
-    // discard any data collected asynchronously.
-    this.dropPendingCollections(tab);
-
-    return tabData;
-  },
-
-  /**
-   * Drop any pending calls to TabState.collect. These calls will
-   * continue to run, but they won't store their results in the
-   * TabStateCache.
-   *
-   * @param tab
-   *        tabbrowser tab
-   */
-  dropPendingCollections: function (tab) {
-    this._pendingCollections.delete(tab);
-  },
-
-  /**
-   * Collect data related to a single tab, including private data.
-   * Use with caution.
-   *
-   * @param tab
-   *        tabbrowser tab
-   *
-   * @returns {object} An object with the data for this tab. This data is never
-   *                   cached, it will always be read from the tab and thus be
-   *                   up-to-date.
-   */
-  clone: function (tab) {
-    return this._collectSyncUncached(tab, {includePrivateData: true});
-  },
-
-  /**
-   * Synchronously collect all session data for a tab. The
-   * TabStateCache is not consulted, and the resulting data is not put
-   * in the cache.
-   */
-  _collectSyncUncached: function (tab, options = {}) {
-    // Collect basic tab data, without session history and storage.
-    let tabData = this._collectBaseTabData(tab);
-
-    // If we don't need any other data, return what we have.
-    if (!this._tabNeedsExtraCollection(tab)) {
-      return tabData;
-    }
-
-    // In multiprocess Firefox, there is a small window of time after
-    // tab creation when we haven't received a sync handler object. In
-    // this case the tab shouldn't have any history or cookie data, so we
-    // just return the base data already collected.
-    if (!this._syncHandlers.has(tab.linkedBrowser)) {
-      return tabData;
-    }
-
-    let syncHandler = this._syncHandlers.get(tab.linkedBrowser);
-
-    let includePrivateData = options && options.includePrivateData;
-
-    let history, storage, disallow, pageStyle;
-    try {
-      history = syncHandler.collectSessionHistory(includePrivateData);
-      storage = syncHandler.collectSessionStorage();
-      disallow = syncHandler.collectDocShellCapabilities();
-      pageStyle = syncHandler.collectPageStyle();
-    } catch (e) {
-      // This may happen if the tab has crashed.
-      Cu.reportError(e);
-      return tabData;
-    }
-
-    tabData.entries = history.entries;
-    if ("index" in history) {
-      tabData.index = history.index;
-    }
-
-    if (Object.keys(storage).length) {
-      tabData.storage = storage;
-    }
-
-    if (disallow.length > 0) {
-      tabData.disallow = disallow.join(",");
-    }
-
-    if (pageStyle) {
-      tabData.pageStyle = pageStyle;
-    }
-
-    return tabData;
-  },
-
-  /*
-   * Returns true if the xul:tab element is newly added (i.e., if it's
-   * showing about:blank with no history).
-   */
-  _tabIsNew: function (tab) {
-    let browser = tab.linkedBrowser;
-    return (!browser || !browser.currentURI);
-  },
-
-  /*
-   * Returns true if the xul:tab element is in the process of being
-   * restored.
-   */
-  _tabIsRestoring: function (tab) {
-    let browser = tab.linkedBrowser;
-    return (browser.__SS_data && browser.__SS_tabStillLoading);
-  },
-
-  /**
-   * This function returns true if we need to collect history, page
-   * style, and text and scroll data from the tab. Normally we do. The
-   * cases when we don't are:
-   * 1. the tab is about:blank with no history, or
-   * 2. the tab is waiting to be restored.
-   *
-   * @param tab   A xul:tab element.
-   * @returns     True if the tab is in the process of being restored.
-   */
-  _tabNeedsExtraCollection: function (tab) {
-    if (this._tabIsNew(tab)) {
-      // Tab is about:blank with no history.
-      return false;
-    }
-
-    if (this._tabIsRestoring(tab)) {
-      // Tab is waiting to be restored.
-      return false;
-    }
-
-    // Otherwise we need the extra data.
-    return true;
-  },
-
-  /*
-   * Returns true if we should cache the tabData for the given the
-   * xul:tab element.
-   */
-  _tabCachingAllowed: function (tab) {
-    if (this._tabIsNew(tab)) {
-      // No point in caching data for newly created tabs.
-      return false;
-    }
-
-    if (this._tabIsRestoring(tab)) {
-      // If the tab is being restored, we just return the data being
-      // restored. This data may be incomplete (if supplied by
-      // setBrowserState, for example), so we don't want to cache it.
-      return false;
-    }
-
-    return true;
-  },
-
-  /**
-   * Collects basic tab data for a given tab.
-   *
-   * @param tab
-   *        tabbrowser tab
-   *
-   * @returns {object} An object with the basic data for this tab.
-   */
-  _collectBaseTabData: function (tab) {
-    let tabData = {entries: [], lastAccessed: tab.lastAccessed };
-    let browser = tab.linkedBrowser;
-
-    if (!browser || !browser.currentURI) {
-      // can happen when calling this function right after .addTab()
-      return tabData;
-    }
-    if (browser.__SS_data && browser.__SS_tabStillLoading) {
-      // Use the data to be restored when the tab hasn't been
-      // completely loaded. We clone the data, since we're updating it
-      // here and the caller may update it further.
-      tabData = JSON.parse(JSON.stringify(browser.__SS_data));
-      if (tab.pinned)
-        tabData.pinned = true;
-      else
-        delete tabData.pinned;
-      tabData.hidden = tab.hidden;
-
-      // If __SS_extdata is set then we'll use that since it might be newer.
-      if (tab.__SS_extdata)
-        tabData.extData = tab.__SS_extdata;
-      // If it exists but is empty then a key was likely deleted. In that case just
-      // delete extData.
-      if (tabData.extData && !Object.keys(tabData.extData).length)
-        delete tabData.extData;
-      return tabData;
-    }
-
-    // If there is a userTypedValue set, then either the user has typed something
-    // in the URL bar, or a new tab was opened with a URI to load. userTypedClear
-    // is used to indicate whether the tab was in some sort of loading state with
-    // userTypedValue.
-    if (browser.userTypedValue) {
-      tabData.userTypedValue = browser.userTypedValue;
-      tabData.userTypedClear = browser.userTypedClear;
-    } else {
-      delete tabData.userTypedValue;
-      delete tabData.userTypedClear;
-    }
-
-    if (tab.pinned)
-      tabData.pinned = true;
-    else
-      delete tabData.pinned;
-    tabData.hidden = tab.hidden;
-
-    // Save tab attributes.
-    tabData.attributes = TabAttributes.get(tab);
-
-    // Store the tab icon.
-    let tabbrowser = tab.ownerDocument.defaultView.gBrowser;
-    tabData.image = tabbrowser.getIcon(tab);
-
-    if (tab.__SS_extdata)
-      tabData.extData = tab.__SS_extdata;
-    else if (tabData.extData)
-      delete tabData.extData;
-
-    return tabData;
-  },
-};
 
 // The state from the previous session (after restoring pinned tabs). This
 // state is persisted and passed through to the next session during an app
