@@ -21,12 +21,12 @@
   -moz-margin-end: 3px;
 }
 
-richlistitem label {
+#handlersView > richlistitem label {
   -moz-margin-start: 1px;
   margin-top: 2px;
 }
 
-richlistitem {
+#handlersView > richlistitem {
   min-height: 22px;
 }
 
