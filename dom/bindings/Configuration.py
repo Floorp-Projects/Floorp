@@ -165,6 +165,10 @@ class Configuration:
             if d.workers == workers:
                 return d
 
+        if workers:
+            for d in self.descriptorsByName[interfaceName]:
+                return d
+
         raise NoSuchDescriptorError("For " + interfaceName + " found no matches");
     def getDescriptorProvider(self, workers):
         """
@@ -414,7 +418,7 @@ class Descriptor(DescriptorProvider):
         self.prototypeChain = []
         parent = interface
         while parent:
-            self.prototypeChain.insert(0, make_name(parent.identifier.name))
+            self.prototypeChain.insert(0, parent.identifier.name)
             parent = parent.parent
         config.maxProtoChainLength = max(config.maxProtoChainLength,
                                          len(self.prototypeChain))
