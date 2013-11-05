@@ -9,7 +9,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMEventListener;
 interface nsIDOMMozIccInfo;
 
-[scriptable, builtinclass, uuid(b403e307-e4ff-47a0-ac1e-c97b042b4595)]
+[scriptable, builtinclass, uuid(50782fe0-4185-4471-a374-e362b73febdb)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -50,6 +50,10 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_CMD_PROVIDE_LOCAL_INFO    = 0x26;
   const unsigned short STK_CMD_TIMER_MANAGEMENT      = 0x27;
   const unsigned short STK_CMD_SET_UP_IDLE_MODE_TEXT = 0x28;
+  const unsigned short STK_CMD_OPEN_CHANNEL          = 0x30;
+  const unsigned short STK_CMD_CLOSE_CHANNEL         = 0x31;
+  const unsigned short STK_CMD_RECEIVE_DATA          = 0x32;
+  const unsigned short STK_CMD_SEND_DATA             = 0x33;
 
   /**
    * STK Result code.

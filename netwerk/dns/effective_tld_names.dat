@@ -6173,7 +6173,7 @@ k12.pa.us
 k12.pr.us
 k12.ri.us
 k12.sc.us
-k12.sd.us
+// k12.sd.us  Bug 934131 - South Dakota has a centralized hosting
 k12.tn.us
 k12.tx.us
 k12.ut.us
