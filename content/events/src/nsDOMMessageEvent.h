@@ -9,10 +9,12 @@
 #include "nsIDOMMessageEvent.h"
 #include "nsDOMEvent.h"
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/dom/MessageEventBinding.h"
 
 namespace mozilla {
 namespace dom {
+class MessageEventInit;
+class MessagePort;
+class MessagePortBase;
 class MessagePortList;
 class OwningWindowProxyOrMessagePort;
 }
@@ -44,10 +46,7 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
-  {
-    return mozilla::dom::MessageEventBinding::Wrap(aCx, aScope, this);
-  }
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   JS::Value GetData(JSContext* aCx, mozilla::ErrorResult& aRv);
 
@@ -57,6 +56,8 @@ public:
   {
     return mPorts;
   }
+
+  void SetPorts(mozilla::dom::MessagePortList* aPorts);
 
   static already_AddRefed<nsDOMMessageEvent>
   Constructor(const mozilla::dom::GlobalObject& aGlobal, JSContext* aCx,
@@ -69,7 +70,7 @@ private:
   nsString mOrigin;
   nsString mLastEventId;
   nsCOMPtr<nsIDOMWindow> mWindowSource;
-  nsCOMPtr<mozilla::dom::MessagePort> mPortSource;
+  nsCOMPtr<mozilla::dom::MessagePortBase> mPortSource;
   nsRefPtr<mozilla::dom::MessagePortList> mPorts;
 };
 

@@ -1698,11 +1698,19 @@ MmsService.prototype = {
 
     this.broadcastReceivedMessageEvent(domMessage);
 
-    // In roaming environment, we send notify response only in
+    // In the roaming environment, we send notify response only for the
     // automatic retrieval mode.
     if ((retrievalMode !== RETRIEVAL_MODE_AUTOMATIC) &&
         mmsConnection.isVoiceRoaming()) {
       return;
+    }
+
+    // Under the "automatic" retrieval mode, for the non-active SIM, we have to
+    // download the MMS as if it is downloaded by the "manual" retrieval mode.
+    if ((retrievalMode == RETRIEVAL_MODE_AUTOMATIC ||
+         retrievalMode == RETRIEVAL_MODE_AUTOMATIC_HOME) &&
+        mmsConnection.serviceId != this.mmsDefaultServiceId) {
+      retrievalMode = RETRIEVAL_MODE_MANUAL;
     }
 
     if (RETRIEVAL_MODE_MANUAL === retrievalMode ||
@@ -1722,6 +1730,7 @@ MmsService.prototype = {
       transaction.run();
       return;
     }
+
     let url = savableMessage.headers["x-mms-content-location"].uri;
 
     // For RETRIEVAL_MODE_AUTOMATIC or RETRIEVAL_MODE_AUTOMATIC_HOME but not
@@ -2184,6 +2193,15 @@ MmsService.prototype = {
       } catch (e) {
         if (DEBUG) debug("RIL service is not available for ICC ID.");
         aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR);
+        return;
+      }
+
+      // To support DSDS, we have to stop users retrieving MMS when the needed
+      // SIM is not active, thus avoiding the data disconnection of the current
+      // SIM. Users have to manually swith the default SIM before retrieving.
+      if (serviceId != this.mmsDefaultServiceId) {
+        if (DEBUG) debug("RIL service is not active to retrieve MMS.");
+        aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NON_ACTIVE_SIM_CARD_ERROR);
         return;
       }
 

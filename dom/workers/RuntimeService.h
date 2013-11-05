@@ -145,8 +145,9 @@ public:
   ResumeWorkersForWindow(nsPIDOMWindow* aWindow);
 
   nsresult
-  CreateSharedWorker(JSContext* aCx, nsPIDOMWindow* aWindow,
-                     const nsAString& aScriptURL, const nsAString& aName,
+  CreateSharedWorker(const GlobalObject& aGlobal,
+                     const nsAString& aScriptURL,
+                     const nsAString& aName,
                      SharedWorker** aSharedWorker);
 
   void

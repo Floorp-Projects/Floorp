@@ -96,7 +96,6 @@ SOURCES += [
     'builtin/Eval.cpp',
     'builtin/Intl.cpp',
     'builtin/MapObject.cpp',
-    'builtin/Module.cpp',
     'builtin/Object.cpp',
     'builtin/ParallelArray.cpp',
     'builtin/Profilers.cpp',

@@ -6,10 +6,11 @@
 #include "domstubs.idl"
 interface nsIContentFrameMessageManager;
 
-// Sole purpose is to be able to identify the concrete class nsTabChild
-[uuid(bf1eddf9-731b-4a4b-bd65-9a712a892832)]
+[uuid( 60146bc6-31d8-450b-a9eb-4000b6403d5c)]
 interface nsITabChild : nsISupports
 {
   readonly attribute nsIContentFrameMessageManager messageManager;
+
+  [notxpcom] void sendRequestFocus(in boolean canFocus);
 };
 

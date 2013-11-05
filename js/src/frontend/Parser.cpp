@@ -551,39 +551,6 @@ Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction *fun, ParseContext<Pars
     return funbox;
 }
 
-ModuleBox::ModuleBox(ExclusiveContext *cx, ObjectBox *traceListHead, Module *module,
-                     ParseContext<FullParseHandler> *pc, bool extraWarnings)
-  : ObjectBox(module, traceListHead),
-      SharedContext(cx, Directives(/* strict = */ true), extraWarnings)
-{
-}
-
-template <>
-ModuleBox *
-Parser<FullParseHandler>::newModuleBox(Module *module, ParseContext<FullParseHandler> *outerpc)
-{
-    JS_ASSERT(module && !IsPoisonedPtr(module));
-
-    /*
-     * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
-     * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
-     * arenas containing the entries must be alive until we are done with
-     * scanning, parsing and code generation for the whole script or top-level
-     * function.
-     */
-    ModuleBox *modulebox =
-        alloc.new_<ModuleBox>(context, traceListHead, module, outerpc,
-                              options().extraWarningsOption);
-    if (!modulebox) {
-        js_ReportOutOfMemory(context);
-        return nullptr;
-    }
-
-    traceListHead = modulebox;
-
-    return modulebox;
-}
-
 template <typename ParseHandler>
 void
 Parser<ParseHandler>::trace(JSTracer *trc)
@@ -2343,52 +2310,6 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
 #endif
 
     return finishFunctionDefinition(pn, funbox, prelude, body);
-}
-
-template <>
-ParseNode *
-Parser<FullParseHandler>::moduleDecl()
-{
-    JS_ASSERT(tokenStream.currentName() == context->names().module);
-    if (!((pc->sc->isGlobalSharedContext() || pc->sc->isModuleBox()) && pc->atBodyLevel()))
-    {
-        report(ParseError, false, nullptr, JSMSG_MODULE_STATEMENT);
-        return nullptr;
-    }
-
-    ParseNode *pn = CodeNode::create(PNK_MODULE, &handler);
-    if (!pn)
-        return nullptr;
-    JS_ALWAYS_TRUE(tokenStream.matchToken(TOK_STRING));
-    RootedAtom atom(context, tokenStream.currentToken().atom());
-    Module *module = Module::create(context, atom);
-    if (!module)
-        return nullptr;
-    ModuleBox *modulebox = newModuleBox(module, pc);
-    if (!modulebox)
-        return nullptr;
-    pn->pn_modulebox = modulebox;
-
-    ParseContext<FullParseHandler> modulepc(this, pc, /* function = */ nullptr, modulebox,
-                                            /* newDirectives = */ nullptr, pc->staticLevel + 1,
-                                            pc->blockidGen);
-    if (!modulepc.init(tokenStream))
-        return nullptr;
-    MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_MODULE);
-    pn->pn_body = statements();
-    if (!pn->pn_body)
-        return nullptr;
-    MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_MODULE);
-
-    return pn;
-}
-
-template <>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::moduleDecl()
-{
-    JS_ALWAYS_FALSE(abortIfSyntaxParser());
-    return SyntaxParseHandler::NodeFailure;
 }
 
 template <typename ParseHandler>
@@ -5047,11 +4968,6 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
       case TOK_NAME:
         if (tokenStream.peekToken() == TOK_COLON)
             return labeledStatement();
-        if (tokenStream.currentName() == context->names().module
-            && tokenStream.peekTokenSameLine() == TOK_STRING)
-        {
-            return moduleDecl();
-        }
         return expressionStatement();
 
       default:

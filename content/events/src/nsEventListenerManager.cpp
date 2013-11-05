@@ -525,7 +525,8 @@ nsEventListenerManager::ListenerCanHandle(nsListenerStruct* aLs,
     }
     return aLs->mTypeString.Equals(aEvent->typeString);
   }
-  MOZ_ASSERT(mIsMainThreadELM);
+  MOZ_ASSERT_IF(aEvent->eventStructType != NS_SCRIPT_ERROR_EVENT,
+                mIsMainThreadELM);
   return aLs->mEventType == aEvent->message;
 }
 
@@ -595,6 +596,10 @@ nsEventListenerManager::SetEventHandlerInternal(nsIScriptContext *aContext,
     nsCOMPtr<nsIJSEventListener> scriptListener;
     NS_NewJSEventListener(aContext, aScopeObject, mTarget, aName,
                           aHandler, getter_AddRefs(scriptListener));
+
+    if (!aName && aTypeString.EqualsLiteral("error")) {
+      eventType = NS_LOAD_ERROR;
+    }
 
     EventListenerHolder holder(scriptListener);
     AddEventListenerInternal(holder, eventType, aName, aTypeString, flags,
@@ -981,7 +986,11 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   }
 
   nsAutoTObserverArray<nsListenerStruct, 2>::EndLimitedIterator iter(mListeners);
-  nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
+  Maybe<nsAutoPopupStatePusher> popupStatePusher;
+  if (mIsMainThreadELM) {
+    popupStatePusher.construct(nsDOMEvent::GetEventPopupControlState(aEvent));
+  }
+
   bool hasListener = false;
   while (iter.HasMore()) {
     if (aEvent->mFlags.mImmediatePropagationStopped) {
@@ -1241,17 +1250,28 @@ nsEventListenerManager::SetEventHandler(nsIAtom* aEventName,
 void
 nsEventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
 {
-  if (!aHandler) {
-    RemoveEventHandler(nsGkAtoms::onerror, EmptyString());
-    return;
-  }
+  if (mIsMainThreadELM) {
+    if (!aHandler) {
+      RemoveEventHandler(nsGkAtoms::onerror, EmptyString());
+      return;
+    }
 
-  // Untrusted events are always permitted for non-chrome script
-  // handlers.
-  SetEventHandlerInternal(nullptr, JS::NullPtr(), nsGkAtoms::onerror,
-                          EmptyString(), nsEventHandler(aHandler),
-                          !mIsMainThreadELM ||
-                          !nsContentUtils::IsCallerChrome());
+    // Untrusted events are always permitted for non-chrome script
+    // handlers.
+    SetEventHandlerInternal(nullptr, JS::NullPtr(), nsGkAtoms::onerror,
+                            EmptyString(), nsEventHandler(aHandler),
+                            !nsContentUtils::IsCallerChrome());
+  } else {
+    if (!aHandler) {
+      RemoveEventHandler(nullptr, NS_LITERAL_STRING("error"));
+      return;
+    }
+
+    // Untrusted events are always permitted.
+    SetEventHandlerInternal(nullptr, JS::NullPtr(), nullptr,
+                            NS_LITERAL_STRING("error"),
+                            nsEventHandler(aHandler), true);
+  }
 }
 
 void

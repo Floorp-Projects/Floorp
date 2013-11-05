@@ -401,6 +401,14 @@ dictionary MozStkTimer
   unsigned short timerAction;
 };
 
+dictionary MozStkBipMessage
+{
+  /**
+   * Text String
+   */
+  DOMString text;
+};
+
 dictionary MozStkCommand
 {
   /**
@@ -467,6 +475,13 @@ dictionary MozStkCommand
    * When typeOfCommand is
    * - STK_CMD_TIMER_MANAGEMENT
    * option is MozStkTimer
+   *
+   * When typeOfCommand is
+   * - STK_CMD_OPEN_CHANNEL
+   * - STK_CMD_CLOSE_CHANNEL
+   * - STK_CMD_SEND_DATA
+   * - STK_CMD_RECEIVE_DATA
+   * options is MozStkBipMessage
    *
    * When typeOfCommand is
    * - STK_CMD_POLL_OFF
