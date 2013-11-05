@@ -21,7 +21,7 @@ const {
 const {
   invalidResolve, invalidReject, createTree,
   compareWithHost, addVisits, resetPlaces
-} = require('./places-helper');
+} = require('../places-helper');
 const { promisedEmitter } = require('sdk/places/utils');
 
 exports.testEmptyQuery = function (assert, done) {
@@ -247,5 +247,3 @@ function searchP () {
 
 before(exports, (name, assert, done) => resetPlaces(done));
 after(exports, (name, assert, done) => resetPlaces(done));
-
-require('test').run(exports);

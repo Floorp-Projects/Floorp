@@ -276,6 +276,21 @@ exports['test promised error handleing'] = function(assert, done) {
   })
 }
 
+exports['test errors in promise resolution handlers are propagated'] = function(assert, done) {
+  var expected = Error('Boom');
+  var { promise, resolve } = defer();
+
+  promise.then(function() {
+    throw expected;
+  }).then(function() {
+    return undefined;
+  }).then(null, function(actual) {
+    assert.equal(actual, expected, 'rejected as expected');
+  }).then(done, assert.fail);
+
+  resolve({});
+}
+
 exports['test return promise form promised'] = function(assert, done) {
   var f = promised(function() {
     return resolve(17)
