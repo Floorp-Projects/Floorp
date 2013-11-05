@@ -4951,6 +4951,9 @@ class ICSetPropNativeAddCompiler : public ICStubCompiler {
     ICUpdatedStub *getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes)
     {
         RootedTypeObject type(cx, obj_->getType(cx));
+        if (!type)
+            return nullptr;
+
         RootedShape newShape(cx, obj_->lastProperty());
 
         return ICSetProp_NativeAddImpl<ProtoChainDepth>::New(
