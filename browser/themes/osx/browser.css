@@ -4000,7 +4000,7 @@ window > chatbox {
 }
 
 #main-window[customizing] #tab-view-deck {
-  padding: 28px 2em 2em;
+  padding: 0 2em 2em;
 }
 
 #main-window[customizing] #tab-view-deck,
@@ -4027,6 +4027,7 @@ window > chatbox {
 }
 
 #main-window[customizing] #TabsToolbar {
+  margin-top: 9px;
   background-clip: padding-box;
   border-right: 3px solid transparent;
   border-left: 3px solid transparent;
