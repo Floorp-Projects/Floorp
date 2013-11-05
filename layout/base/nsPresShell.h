@@ -756,6 +756,8 @@ protected:
   // The `performance.now()` value when we last started to process reflows.
   DOMHighResTimeStamp       mLastReflowStart;
 
+  mozilla::TimeStamp        mLoadBegin;  // used to time loads
+
   // Information needed to properly handle scrolling content into view if the
   // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is
   // non-null between the initial scroll attempt and the first time we finish

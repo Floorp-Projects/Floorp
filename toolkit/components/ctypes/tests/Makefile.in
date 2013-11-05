@@ -11,38 +11,37 @@ LOCAL_INCLUDES = \
 
 EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)
 
-# should be MOCHITEST_CHROME_FILES, see bug 770938
-MOCHITEST_CHROME_TESTS = \
-  xpcshellTestHarnessAdaptor.js \
-  ctypes_worker.js \
-  test_ctypes.xul \
-  $(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
 xpctestdir = $(testxpcobjdir)/$(relativesrcdir)/unit
 
 chrometestdir = \
   $(DEPTH)/_tests/testing/mochitest/chrome/toolkit/components/$(relativesrcdir)
 
-# preprocess and install our unit test into the appropriate directory,
-# and install the test library as well. the xpcshell test rules will
-# install the .js.in from the tests srcdir, so remove it when we're done.
-libs:: unit/test_jsctypes.js.in
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-	  $^ > $(xpctestdir)/test_jsctypes.js
-	$(INSTALL) $(SHARED_LIBRARY) $(xpctestdir)
-	$(INSTALL) $(SHARED_LIBRARY) $(DEPTH)/_tests/testing/mochitest/chrome/libraries
-	$(INSTALL) $(xpctestdir)/test_jsctypes.js $(chrometestdir)
-	$(INSTALL) $(xpctestdir)/$(SHARED_LIBRARY) $(chrometestdir)
-	$(RM) $(xpctestdir)/test_jsctypes.js.in
+# should be MOCHITEST_CHROME_FILES, see bug 770938
+MOCHITEST_CHROME_TESTS_FILES = \
+  xpcshellTestHarnessAdaptor.js \
+  ctypes_worker.js \
+  test_ctypes.xul \
+  $(NULL)
 
-libs:: $(MOCHITEST_CHROME_TESTS)
-	$(INSTALL) $(foreach f,$^,"$f") $(chrometestdir)
+MOCHITEST_CHROME_TESTS_DEST = $(chrometestdir)
+INSTALL_TARGETS += MOCHITEST_CHROME_TESTS
 
-GARBAGE += \
-    $(xpctestdir)/test_jsctypes.js \
-    $(xpctestdir)/$(SHARED_LIBRARY) \
-    $(chrometestdir)/test_jsctypes.js \
-    $(chrometestdir)/$(SHARED_LIBRARY) \
-    $(NULL)
+TEST_JS_CTYPES = unit/test_jsctypes.js.in
+TEST_JS_CTYPES_PATH = $(xpctestdir)
+PP_TARGETS += TEST_JS_CTYPES
+
+TEST_JS_CTYPES_2_FILES = $(xpctestdir)/test_jsctypes.js
+TEST_JS_CTYPES_2_DEST = $(chrometestdir)
+INSTALL_TARGETS += TEST_JS_CTYPES_2
+
+LIB_1_FILES = $(SHARED_LIBRARY)
+LIB_1_DEST = $(xpctestdir)
+INSTALL_TARGETS += LIB_1
+
+LIB_2_FILES = $(SHARED_LIBRARY)
+LIB_2_DEST = $(DEPTH)/_tests/testing/mochitest/chrome/libraries
+INSTALL_TARGETS += LIB_2
+
+LIB_3_FILES = $(SHARED_LIBRARY)
+LIB_3_DEST = $(chrometestdir)
+INSTALL_TARGETS += LIB_3
