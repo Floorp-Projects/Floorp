@@ -94,6 +94,14 @@ using JS::RootedScript;
 using JS::RootedString;
 using JS::RootedValue;
 
+using JS::PersistentRooted;
+using JS::PersistentRootedFunction;
+using JS::PersistentRootedId;
+using JS::PersistentRootedObject;
+using JS::PersistentRootedScript;
+using JS::PersistentRootedString;
+using JS::PersistentRootedValue;
+
 using JS::Handle;
 using JS::HandleFunction;
 using JS::HandleId;
