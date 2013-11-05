@@ -121,9 +121,27 @@
   background: #eee;
   border-radius: 3px;
 }
+
 .devtools-tooltip.devtools-tooltip-panel .panel-arrowcontent {
   /* If the tooltip uses a <panel> XUL element instead */
   padding: 4px;
+}
+
+.devtools-tooltip-simple-text {
+  background: linear-gradient(1deg, transparent 0%, rgba(94,136,176,0.1) 100%);
+  max-width: 400px;
+  margin: 0 -4px; /* Compensate for the .panel-arrowcontent padding. */
+  padding: 8px 12px;
+  text-shadow: 0 1px 0 #fff;
+  white-space: pre-wrap;
+}
+
+.devtools-tooltip-simple-text:first-child {
+  margin-top: -4px;
+}
+
+.devtools-tooltip-simple-text:last-child {
+  margin-bottom: -4px;
 }
 
 .devtools-tooltip-tiles {

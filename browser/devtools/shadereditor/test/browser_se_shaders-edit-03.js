@@ -2,7 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests if editing a vertex and a fragment shader works properly.
+ * Tests if editing a vertex and a fragment shader would permanently store
+ * their new source on the backend and reshow it in the frontend when required.
  */
 
 function ifWebGLSupported() {
