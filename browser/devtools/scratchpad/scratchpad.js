@@ -159,7 +159,7 @@ var Scratchpad = {
   {
     this._dirty = aValue;
     if (!aValue && this.editor)
-      this.editor.markClean();
+      this.editor.setClean();
     this._updateTitle();
   },
 
