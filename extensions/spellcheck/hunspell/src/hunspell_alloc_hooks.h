@@ -47,9 +47,6 @@
  * allocated using C memory allocation functions.
  */
 
-// Prevent the standard macros from being redefined
-#define mozilla_mozalloc_macro_wrappers_h
-
 #include "mozilla/mozalloc.h"
 
 extern void HunspellReportMemoryAllocation(void*);

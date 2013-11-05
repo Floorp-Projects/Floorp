@@ -15,7 +15,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-#include "nsContentPermissionHelper.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
 #include "nsPIDOMWindow.h"
@@ -25,6 +24,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "PCOMContentPermissionRequestChild.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 
 class nsIPrincipal;
 
@@ -80,6 +80,7 @@ class nsGeolocationRequest
   void SendLocation(nsIDOMGeoPosition* location);
   bool WantsHighAccuracy() {return !mShutdown && mOptions && mOptions->mEnableHighAccuracy;}
   void SetTimeoutTimer();
+  void NotifyErrorAndShutdown(uint16_t);
   nsIPrincipal* GetPrincipal();
 
   ~nsGeolocationRequest();
@@ -351,6 +352,13 @@ NS_IMPL_CYCLE_COLLECTION_3(nsGeolocationRequest, mCallback, mErrorCallback, mLoc
 NS_IMETHODIMP
 nsGeolocationRequest::Notify(nsITimer* aTimer)
 {
+  NotifyErrorAndShutdown(nsIDOMGeoPositionError::TIMEOUT);
+  return NS_OK;
+}
+
+void
+nsGeolocationRequest::NotifyErrorAndShutdown(uint16_t aErrorCode)
+{
   MOZ_ASSERT(!mShutdown, "timeout after shutdown");
 
   if (!mIsWatchPositionRequest) {
@@ -358,13 +366,11 @@ nsGeolocationRequest::Notify(nsITimer* aTimer)
     mLocator->RemoveRequest(this);
   }
 
-  NotifyError(nsIDOMGeoPositionError::TIMEOUT);
+  NotifyError(aErrorCode);
 
   if (!mShutdown) {
     SetTimeoutTimer();
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -379,11 +385,17 @@ nsGeolocationRequest::GetPrincipal(nsIPrincipal * *aRequestingPrincipal)
 }
 
 NS_IMETHODIMP
-nsGeolocationRequest::GetTypes(nsIArray** aTypes)
+nsGeolocationRequest::GetType(nsACString & aType)
 {
-  return CreatePermissionArray(NS_LITERAL_CSTRING("geolocation"),
-                               NS_LITERAL_CSTRING("unused"),
-                               aTypes);
+  aType = "geolocation";
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeolocationRequest::GetAccess(nsACString & aAccess)
+{
+  aAccess = "unused";
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1134,13 +1146,13 @@ Geolocation::NotifyError(uint16_t aErrorCode)
   }
 
   for (uint32_t i = mPendingCallbacks.Length(); i > 0; i--) {
-    mPendingCallbacks[i-1]->NotifyError(aErrorCode);
-    RemoveRequest(mPendingCallbacks[i-1]);
+    mPendingCallbacks[i-1]->NotifyErrorAndShutdown(aErrorCode);
+    //NotifyErrorAndShutdown() removes the request from the array
   }
 
   // notify everyone that is watching
   for (uint32_t i = 0; i < mWatchingCallbacks.Length(); i++) {
-    mWatchingCallbacks[i]->NotifyError(aErrorCode);
+    mWatchingCallbacks[i]->NotifyErrorAndShutdown(aErrorCode);
   }
 
   return NS_OK;
@@ -1440,15 +1452,12 @@ Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request)
       return false;
     }
 
-    nsTArray<PermissionRequest> permArray;
-    permArray.AppendElement(PermissionRequest(NS_LITERAL_CSTRING("geolocation"),
-                                              NS_LITERAL_CSTRING("unused")));
-
     // Retain a reference so the object isn't deleted without IPDL's knowledge.
     // Corresponding release occurs in DeallocPContentPermissionRequest.
     request->AddRef();
     child->SendPContentPermissionRequestConstructor(request,
-                                                    permArray,
+                                                    NS_LITERAL_CSTRING("geolocation"),
+                                                    NS_LITERAL_CSTRING("unused"),
                                                     IPC::Principal(mPrincipal));
 
     request->Sendprompt();

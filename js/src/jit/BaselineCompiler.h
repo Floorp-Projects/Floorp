@@ -164,11 +164,9 @@ namespace jit {
     _(JSOP_ITERNEXT)           \
     _(JSOP_ENDITER)            \
     _(JSOP_CALLEE)             \
-    _(JSOP_POPV)               \
     _(JSOP_SETRVAL)            \
-    _(JSOP_RETURN)             \
-    _(JSOP_STOP)               \
-    _(JSOP_RETRVAL)
+    _(JSOP_RETRVAL)            \
+    _(JSOP_RETURN)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {
@@ -186,6 +184,13 @@ class BaselineCompiler : public BaselineCompilerSpecific
 
     Label *labelOf(jsbytecode *pc) {
         return &labels_[pc - script->code];
+    }
+
+    // If a script has more |nslots| than this, then emit code to do an
+    // early stack check.
+    static const unsigned EARLY_STACK_CHECK_SLOT_COUNT = 128;
+    bool needsEarlyStackCheck() const {
+        return script->nslots > EARLY_STACK_CHECK_SLOT_COUNT;
     }
 
   public:
@@ -210,7 +215,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
         return emitIC(stub, false);
     }
 
-    bool emitStackCheck();
+    bool emitStackCheck(bool earlyCheck=false);
     bool emitInterruptCheck();
     bool emitUseCountIncrement();
     bool emitArgumentTypeChecks();

@@ -248,6 +248,22 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
 }
 
 bool
+js::FunctionHasResolveHook(JSRuntime *rt, PropertyName *name)
+{
+    if (name == rt->atomState.prototype || name == rt->atomState.length || name == rt->atomState.name)
+        return true;
+
+    for (unsigned i = 0; i < ArrayLength(poisonPillProps); i++) {
+        const uint16_t offset = poisonPillProps[i];
+
+        if (name == OFFSET_TO_NAME(rt, offset))
+            return true;
+    }
+
+    return false;
+}
+
+bool
 js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                 MutableHandleObject objp)
 {

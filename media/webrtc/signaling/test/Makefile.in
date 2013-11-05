@@ -23,11 +23,6 @@ LIBS += \
   $(MOZ_ALSA_LIBS) \
   $(NULL)
 endif
-ifdef MOZ_PULSEAUDIO
-LIBS += \
-  $(MOZ_PULSEAUDIO_LIBS) \
-  $(NULL)
-endif
 endif
 
 ifeq ($(OS_TARGET),Android)
@@ -102,7 +97,7 @@ LIBS += \
   -framework Security \
   -framework SystemConfiguration \
   -framework IOKit \
-  -F/System/Library/PrivateFrameworks -framework CoreUI \
+  -F$(MACOS_PRIVATE_FRAMEWORKS_DIR) -framework CoreUI \
   $(TK_LIBS) \
   $(NULL)
 endif

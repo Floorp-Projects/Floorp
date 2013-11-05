@@ -36,7 +36,7 @@ dictionary CameraPosition {
     double timestamp;
 };
 
-[scriptable, uuid(177472c9-f83d-48b5-8782-03b43b27f25d)]
+[scriptable, uuid(0711a4af-73c2-481d-85bc-0ba3ec36c004)]
 interface nsICameraCapabilities : nsISupports
 {
     /* an array of objects with 'height' and 'width' properties
@@ -48,6 +48,11 @@ interface nsICameraCapabilities : nsISupports
        supported for picture taking */
     [implicit_jscontext]
     readonly attribute jsval        pictureSizes;
+
+    /* an array of objects with 'height' and 'width' properties
+       supported for thumbnail sizes in taken pictures */
+    [implicit_jscontext]
+    readonly attribute jsval        thumbnailSizes;
 
     /* an array of strings, e.g. [ "jpeg", "rgb565" ] */
     [implicit_jscontext]

@@ -12,7 +12,7 @@ LOCAL_INCLUDES += -I$(srcdir)/../../../../xptinfo/src
 ifneq ($(TARGET_CPU),x86_64)
 ifndef GNU_CXX
 # FIXME: bug 413019
-OS_COMPILE_CXXFLAGS += -GL-
+NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif #!GNU_CXX
 endif #!x86_64
 

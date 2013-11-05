@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <mozilla/Assertions.h>
+#include <mozilla/FloatingPoint.h>
 #include <algorithm>
 
 namespace mozilla {
@@ -59,10 +60,10 @@ struct BaseRect {
   // "Finite" means not inf and not NaN
   bool IsFinite() const
   {
-    return (std::isfinite(x) &&
-            std::isfinite(y) &&
-            std::isfinite(width) &&
-            std::isfinite(height));
+    return (mozilla::IsFinite(x) &&
+            mozilla::IsFinite(y) &&
+            mozilla::IsFinite(width) &&
+            mozilla::IsFinite(height));
   }
 
   // Returns true if this rectangle contains the interior of aRect. Always

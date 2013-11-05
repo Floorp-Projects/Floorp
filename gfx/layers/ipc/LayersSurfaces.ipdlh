@@ -4,29 +4,21 @@
 
 include protocol PGrallocBuffer;
 
-include "gfxipc/ShadowLayerUtils.h";
-include "mozilla/gfx/Types.h";
-include "nsRegion.h";
 
-using gfx3DMatrix;
-using gfxIntSize;
-using gfxPoint;
-using gfxRGBA;
-using nsIntPoint;
-using nsIntRect;
-using nsIntRegion;
-using nsIntSize;
-using mozilla::GraphicsFilterType;
-using mozilla::layers::FrameMetrics;
-using mozilla::layers::MagicGrallocBufferHandle;
-using mozilla::layers::SurfaceDescriptorX11;
-using mozilla::null_t;
-using mozilla::WindowsHandle;
-using mozilla::gl::SharedTextureHandle;
-using mozilla::gl::SharedTextureShareType;
-using mozilla::gfx::SurfaceStreamHandle;
-using mozilla::gfx::SurfaceFormat;
-using mozilla::gfx::IntSize;
+using gfxIntSize from "nsSize.h";
+using struct gfxPoint from "gfxPoint.h";
+using struct nsIntRect from "nsRect.h";
+using nsIntRegion from "nsRegion.h";
+using struct nsIntSize from "nsSize.h";
+using struct mozilla::layers::MagicGrallocBufferHandle from "gfxipc/ShadowLayerUtils.h";
+using struct mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
+using mozilla::gl::SharedTextureHandle from "GLContextTypes.h";
+using mozilla::gl::SharedTextureShareType from "GLContextTypes.h";
+using mozilla::gfx::SurfaceStreamHandle from "SurfaceTypes.h";
+using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 
 namespace mozilla {
 namespace layers {
@@ -48,6 +40,12 @@ struct SurfaceDescriptorDIB {
 
 struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
+  bool hasAlpha;
+};
+
+struct SurfaceDescriptorMacIOSurface {
+  uint32_t surface;
+  double scaleFactor;
   bool hasAlpha;
 };
 
@@ -176,6 +174,7 @@ union SurfaceDescriptor {
   SurfaceDescriptorX11;
   SharedTextureDescriptor;
   SurfaceStreamDescriptor;
+  SurfaceDescriptorMacIOSurface;
   NewSurfaceDescriptorGralloc;
   YCbCrImage;                 // XXX - deprecated
   SurfaceDescriptorGralloc;   // XXX - deprecated

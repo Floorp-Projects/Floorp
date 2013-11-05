@@ -1,11 +1,11 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.e11c30b59cef.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.e00ebeed2477.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "http://hg.mozilla.org/build/talos",
-        "talos_revision": "e11c30b59cef"
+        "talos_revision": "e00ebeed2477"
     },
     "suites": {
         "chromez": {
@@ -51,6 +51,29 @@
                 "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\"",
                 "C:/slave/talos-data/talos/xperf.config"
             ]
+        },
+        "svgr-metro": {
+            "tests": ["tsvgx", "tsvgr_opacity"],
+            "metro_mode": true
+        },
+        "other-metro": {
+            "tests": ["a11yr", "ts_paint"],
+            "metro_mode": true
+        },
+        "dromaeojs-metro": {
+            "tests": ["dromaeo_css", "dromaeo_dom", "kraken", "v8_7"],
+            "metro_mode": true
+        },
+        "tp5o-metro": {
+            "tests": ["tp5o"],
+            "metro_mode": true,
+            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
+            "pagesets_parent_dir_path": "talos/page_load_test/",
+            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest",
+            "plugins": {
+                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
+                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
+            }
         }
     },
     "mobile-suites": {

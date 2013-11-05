@@ -196,7 +196,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame) {
 
   let principal = this._frameElement.ownerDocument.nodePrincipal;
   let perm = Services.perms
-             .testExactPermissionFromPrincipal(principal, "inputmethod-manage");
+             .testExactPermissionFromPrincipal(principal, "input-manage");
   if (perm === Ci.nsIPermissionManager.ALLOW_ACTION) {
     defineMethod('setInputMethodActive', this._setInputMethodActive);
   }

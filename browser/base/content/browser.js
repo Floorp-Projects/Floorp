@@ -756,6 +756,7 @@ var gBrowserInit = {
     gBrowser.addEventListener("PluginCrashed",         gPluginHandler, true);
     gBrowser.addEventListener("PluginOutdated",        gPluginHandler, true);
     gBrowser.addEventListener("PluginInstantiated",    gPluginHandler, true);
+    gBrowser.addEventListener("PluginRemoved",         gPluginHandler, true);
 
     gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
 
@@ -764,7 +765,6 @@ var gBrowserInit = {
     window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
     messageManager.loadFrameScript("chrome://browser/content/content.js", true);
-    messageManager.loadFrameScript("chrome://browser/content/content-sessionStore.js", true);
 
     // initialize observers and listeners
     // and give C++ access to gBrowser
@@ -1084,24 +1084,13 @@ var gBrowserInit = {
     // auto-resume downloads begin (such as after crashing or quitting with
     // active downloads) and speeds up the first-load of the download manager UI.
     // If the user manually opens the download manager before the timeout, the
-    // downloads will start right away, and getting the service again won't hurt.
+    // downloads will start right away, and initializing again won't hurt.
     setTimeout(function() {
       try {
-        let DownloadsCommon =
-          Cu.import("resource:///modules/DownloadsCommon.jsm", {}).DownloadsCommon;
-        if (DownloadsCommon.useJSTransfer) {
-          // Open the data link without initalizing nsIDownloadManager.
-          DownloadsCommon.initializeAllDataLinks();
-          let DownloadsTaskbar =
-            Cu.import("resource:///modules/DownloadsTaskbar.jsm", {}).DownloadsTaskbar;
-          DownloadsTaskbar.registerIndicator(window);
-        } else {
-          // Initalizing nsIDownloadManager will trigger the data link.
-          Services.downloads;
-          let DownloadTaskbarProgress =
-            Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm", {}).DownloadTaskbarProgress;
-          DownloadTaskbarProgress.onBrowserWindowLoad(window);
-        }
+        Cu.import("resource:///modules/DownloadsCommon.jsm", {})
+          .DownloadsCommon.initializeAllDataLinks();
+        Cu.import("resource:///modules/DownloadsTaskbar.jsm", {})
+          .DownloadsTaskbar.registerIndicator(window);
       } catch (ex) {
         Cu.reportError(ex);
       }
@@ -3243,10 +3232,22 @@ function OpenBrowserWindow(options)
         doc != document &&
         doc.defaultView == win) {
       Services.obs.removeObserver(newDocumentShown, "document-shown");
+      Services.obs.removeObserver(windowClosed, "domwindowclosed");
       TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
     }
-  };
+  }
+
+  function windowClosed(subject) {
+    if (subject == win) {
+      Services.obs.removeObserver(newDocumentShown, "document-shown");
+      Services.obs.removeObserver(windowClosed, "domwindowclosed");
+    }
+  }
+
+  // Make sure to remove the 'document-shown' observer in case the window
+  // is being closed right after it was opened to avoid leaking.
   Services.obs.addObserver(newDocumentShown, "document-shown", false);
+  Services.obs.addObserver(windowClosed, "domwindowclosed", false);
 
   var charsetArg = new String();
   var handler = Components.classes["@mozilla.org/browser/clh;1"]
@@ -4207,6 +4208,10 @@ var TabsProgressListener = {
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)
       return;
 
+    // Filter out location changes in sub documents.
+    if (!aWebProgress.isTopLevel)
+      return;
+
     // Only need to call locationChange if the PopupNotifications object
     // for this window has already been initialized (i.e. its getter no
     // longer exists)
@@ -4215,10 +4220,7 @@ var TabsProgressListener = {
 
     gBrowser.getNotificationBox(aBrowser).removeTransientNotifications();
 
-    // Filter out location changes in sub documents.
-    if (aWebProgress.isTopLevel) {
-      FullZoom.onLocationChange(aLocationURI, false, aBrowser);
-    }
+    FullZoom.onLocationChange(aLocationURI, false, aBrowser);
   },
 
   onRefreshAttempted: function (aBrowser, aWebProgress, aURI, aDelay, aSameURI) {

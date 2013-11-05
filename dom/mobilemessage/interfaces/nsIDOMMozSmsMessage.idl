@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(b755a401-d5cb-4d35-a93e-47c89d2e15ca)]
+[scriptable, builtinclass, uuid(db9ff254-2745-11e3-aa37-8793b90fc643)]
 interface nsIDOMMozSmsMessage : nsISupports
 {
   /**
@@ -15,6 +15,13 @@ interface nsIDOMMozSmsMessage : nsISupports
   readonly attribute long      id;
 
   readonly attribute unsigned long long threadId;
+
+  /**
+   * Integrated Circuit Card Identifier.
+   *
+   * Will be null if ICC is not available.
+   */
+  readonly attribute DOMString iccId;
 
   /**
    * Should be "received", "sending", "sent" or "error".
@@ -43,6 +50,12 @@ interface nsIDOMMozSmsMessage : nsISupports
   readonly attribute DOMString messageClass;
 
   [implicit_jscontext]
-  readonly attribute jsval     timestamp; // jsval is for Date.
+  readonly attribute jsval     timestamp; // Date object.
+
+  [implicit_jscontext]
+  readonly attribute jsval     deliveryTimestamp;
+                               // Date object; null if not available (e.g.,
+                               // |delivery| = "received" or not yet delivered).
+
   readonly attribute boolean   read;
 };

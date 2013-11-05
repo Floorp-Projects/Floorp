@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<title>WebGL test: Drawing without attrib arrays</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+<script id="vs-no-attrib" type="x-shader/x-vertex">
+
+void main(void) {
+  gl_PointSize = 64.0;
+  gl_Position = vec4(vec3(0.0), 1.0);
+}
+
+</script>
+<script id="vs-attrib" type="x-shader/x-vertex">
+
+attribute vec3 aPosition;
+
+void main(void) {
+  gl_PointSize = 64.0;
+  gl_Position = vec4(aPosition, 1.0);
+}
+
+</script>
+<script id="fs" type="x-shader/x-fragment">
+
+precision mediump float;
+
+void main(void) {
+  gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+}
+
+</script>
+<body>
+<canvas id="c" width="64" height="64"></canvas>
+<script>
+
+// Give ourselves a scope to return early from:
+(function() {
+  var gl = WebGLUtil.getWebGL('c');
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+
+  function errorFunc(str) {
+    ok(false, 'Error: ' + str);
+  }
+  WebGLUtil.setErrorFunc(errorFunc);
+  WebGLUtil.setWarningFunc(errorFunc);
+
+  var attribProg   = WebGLUtil.createProgramByIds(gl, 'vs-attrib',    'fs');
+  var noAttribProg = WebGLUtil.createProgramByIds(gl, 'vs-no-attrib', 'fs');
+  if (!attribProg || !noAttribProg) {
+    ok(false, 'Program linking should succeed.');
+    return;
+  }
+
+  attribProg.aPosition = gl.getAttribLocation(attribProg, "aPosition");
+  ok(attribProg.aPosition >= 0, '`aPosition` should be valid.');
+
+  function isScreenBlack() {
+    var pixels = gl.drawingBufferWidth * gl.drawingBufferHeight;
+    var data = Uint8Array(4 * pixels);
+    gl.readPixels(0, 0,
+                  gl.drawingBufferWidth, gl.drawingBufferHeight,
+                  gl.RGBA, gl.UNSIGNED_BYTE,
+                  data);
+
+    var accum = 0;
+    for (var i = 0; i < pixels; i++) {
+      accum += data[4*i + 0];
+      accum += data[4*i + 1];
+      accum += data[4*i + 2];
+    }
+
+    return accum == 0;
+  }
+
+  function checkGLError(func, info) {
+    var error = gl.getError();
+    func(!error, '[' + info + '] gl.getError should be 0, was 0x' + error.toString(16) + '.');
+  }
+
+  function testDrawing(info) {
+    var cruelNumber = 1024*1024;
+    // Really, we should test for INT32_MAX-1 here, but we don't gracefully chunk these calls,
+    // and so try to create a VBO of size INT32_MAX-1 to pretend that vert attrib 0 is an array.
+    // (INT32_MAX-1 because we check that `first+count` is a valid GLsizei, which is int32_t)
+    var UINT16_MAX  = 0xffff;
+    var INT32_MAX   = 0x7fffffff;
+    var UINT32_MAX  = 0xffffffff;
+
+    // `first` needs room for `first+count` <= sizeof(GLsizei) == INT32_MAX
+    var hugeFirst = Math.min(cruelNumber, INT32_MAX-1);
+    var hugeIndex = Math.min(cruelNumber, UINT32_MAX);
+
+    var indexType = gl.UNSIGNED_SHORT;
+    var indexStride = 2;
+    var indexArr = Uint16Array([0, 1, Math.min(hugeIndex, UINT16_MAX)]);
+    if (gl.getExtension('OES_element_index_uint')) {
+      indexType = gl.UNSIGNED_INT;
+      indexStride = 4;
+      indexArr = Uint32Array([0, 1, hugeIndex]);
+    }
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.POINTS, 0, 1);
+    ok(!isScreenBlack(), '[' + info + '] drawArrays should color pixels.');
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.POINTS, hugeFirst, 1);
+    ok(!isScreenBlack(), '[' + info + '] drawArrays[huge first] should color pixels.');
+
+    checkGLError(ok, info);
+
+    var elemTestFunc = todo; // We fail on most implementations.
+    if (DriverInfo.getDriver() == DriverInfo.DRIVER.ANGLE ||
+        DriverInfo.getOS() == DriverInfo.OS.ANDROID)
+    {
+      // ANGLE and Android slaves seem to work fine.
+      elemTestFunc = ok;
+    }
+
+    // Now for drawElements:
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArr, gl.STATIC_DRAW);
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawElements(gl.POINTS, 1, indexType, 0);
+    elemTestFunc(!isScreenBlack(), '[' + info + '] drawElements[0] should color pixels.');
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawElements(gl.POINTS, 1, indexType, 1*indexStride);
+    elemTestFunc(!isScreenBlack(), '[' + info + '] drawElements[1] should color pixels.');
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawElements(gl.POINTS, 1, indexType, 2*indexStride);
+    elemTestFunc(!isScreenBlack(), '[' + info + '] drawElements[huge offset] should color pixels.');
+
+    checkGLError(elemTestFunc, info);
+  }
+
+  // Begin drawing
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.disable(gl.DEPTH_TEST);
+
+  // No-attrib prog:
+  gl.useProgram(noAttribProg);
+  testDrawing('no-attrib');
+
+  // One-attrib, no-array prog:
+  gl.useProgram(attribProg);
+  gl.disableVertexAttribArray(attribProg.aPosition);
+  gl.vertexAttrib3fv(attribProg.aPosition, [0.0, 0.0, 0.0]);
+  testDrawing('one-attrib, no-array');
+})();
+
+</script>
+

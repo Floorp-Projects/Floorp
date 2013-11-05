@@ -46,6 +46,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 #include "nsILocaleService.h"
+#include "nsIObserverService.h"
 
 #include "nsWeakReference.h"
 
@@ -204,6 +205,25 @@ OrientationSyncPrefsObserver::Observe(nsISupports *aSubject,
     return NS_OK;
 }
 
+class MemoryPressureObserver MOZ_FINAL : public nsIObserver
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+};
+
+NS_IMPL_ISUPPORTS1(MemoryPressureObserver, nsIObserver)
+
+NS_IMETHODIMP
+MemoryPressureObserver::Observe(nsISupports *aSubject,
+                                const char *aTopic,
+                                const PRUnichar *someData)
+{
+    NS_ASSERTION(strcmp(aTopic, "memory-pressure") == 0, "unexpected event topic");
+    Factory::PurgeTextureCaches();
+    return NS_OK;
+}
+
 // this needs to match the list of pref font.default.xx entries listed in all.js!
 // the order *must* match the order in eFontPrefLang
 static const char *gPrefLangNames[] = {
@@ -278,10 +298,6 @@ gfxPlatform::gfxPlatform()
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
     uint32_t contentMask = 1 << BACKEND_CAIRO;
     InitBackendPrefs(canvasMask, contentMask);
-
-#ifdef USE_SKIA
-    InitializeSkiaCaches();
-#endif
 }
 
 gfxPlatform*
@@ -446,6 +462,17 @@ gfxPlatform::Init()
                                           false);
 
     CreateCMSOutputProfile();
+
+#ifdef USE_SKIA
+    gPlatform->InitializeSkiaCaches();
+#endif
+
+    // Listen to memory pressure event so we can purge DrawTarget caches
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        gPlatform->mMemoryPressureObserver = new MemoryPressureObserver();
+        obs->AddObserver(gPlatform->mMemoryPressureObserver, "memory-pressure", false);
+    }
 }
 
 void
@@ -474,6 +501,14 @@ gfxPlatform::Shutdown()
         NS_ASSERTION(gPlatform->mFontPrefsObserver, "mFontPrefsObserver has alreay gone");
         Preferences::RemoveObservers(gPlatform->mFontPrefsObserver, kObservedPrefs);
         gPlatform->mFontPrefsObserver = nullptr;
+
+        NS_ASSERTION(gPlatform->mMemoryPressureObserver, "mMemoryPressureObserver has already gone");
+        nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+        if (obs) {
+            obs->RemoveObserver(gPlatform->mMemoryPressureObserver, "memory-pressure");
+        }
+
+        gPlatform->mMemoryPressureObserver = nullptr;
     }
 
 #ifdef MOZ_WIDGET_ANDROID

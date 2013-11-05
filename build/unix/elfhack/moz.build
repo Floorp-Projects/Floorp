@@ -21,3 +21,5 @@ HOST_SOURCES += [
     'elf.cpp',
     'elfhack.cpp',
 ]
+
+HOST_PROGRAM = 'elfhack'

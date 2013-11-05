@@ -37,21 +37,28 @@ const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kMobileMessageDeletedObserverTopic = "mobile-message-deleted";
 
+const kPrefRilMmsc                       = "ril.mms.mmsc";
+const kPrefRilMmsProxy                   = "ril.mms.mmsproxy";
+const kPrefRilMmsPort                    = "ril.mms.mmsport";
+const kPrefRilRadioDisabled              = "ril.radio.disabled";
+
 // HTTP status codes:
 // @see http://tools.ietf.org/html/rfc2616#page-39
 const HTTP_STATUS_OK = 200;
 
 // Non-standard HTTP status for internal use.
-const _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS = 0;
-const _HTTP_STATUS_USER_CANCELLED = -1;
-const _HTTP_STATUS_RADIO_DISABLED = -2;
-const _HTTP_STATUS_NO_SIM_CARD = -3;
-const _HTTP_STATUS_ACQUIRE_TIMEOUT = 4;
+const _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS  =  0;
+const _HTTP_STATUS_USER_CANCELLED              = -1;
+const _HTTP_STATUS_RADIO_DISABLED              = -2;
+const _HTTP_STATUS_NO_SIM_CARD                 = -3;
+const _HTTP_STATUS_ACQUIRE_TIMEOUT             = -4;
 
 // Non-standard MMS status for internal use.
-const _MMS_ERROR_MESSAGE_DELETED = -1;
-const _MMS_ERROR_RADIO_DISABLED = -2;
-const _MMS_ERROR_NO_SIM_CARD = -3;
+const _MMS_ERROR_MESSAGE_DELETED               = -1;
+const _MMS_ERROR_RADIO_DISABLED                = -2;
+const _MMS_ERROR_NO_SIM_CARD                   = -3;
+const _MMS_ERROR_SHUTDOWN                      = -4;
+const _MMS_ERROR_USER_CANCELLED_NO_REASON      = -5;
 
 const CONFIG_SEND_REPORT_NEVER       = 0;
 const CONFIG_SEND_REPORT_DEFAULT_NO  = 1;
@@ -119,12 +126,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
-XPCOMUtils.defineLazyGetter(this, "gRadioInterface", function () {
-  let ril = Cc["@mozilla.org/ril;1"].getService(Ci["nsIRadioInterfaceLayer"]);
-  // TODO: Bug 854326 - B2G Multi-SIM: support multiple SIM cards for SMS/MMS
-  return ril.getRadioInterface(0);
-});
-
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageDatabaseService",
                                    "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1",
                                    "nsIRilMobileMessageDatabaseService");
@@ -137,287 +138,334 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gRil",
+                                   "@mozilla.org/ril;1",
+                                   "nsIRadioInterfaceLayer");
+
 XPCOMUtils.defineLazyGetter(this, "MMS", function () {
   let MMS = {};
   Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
   return MMS;
 });
 
-XPCOMUtils.defineLazyGetter(this, "gMmsConnection", function () {
-  let conn = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+function MmsConnection(aServiceId) {
+  this.serviceId = aServiceId;
+  this.radioInterface = gRil.getRadioInterface(aServiceId);
+};
 
-    /** MMS proxy settings. */
-    mmsc: null,
-    proxy: null,
-    port: null,
+MmsConnection.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-    // For keeping track of the radio status.
-    radioDisabled: false,
+  /** MMS proxy settings. */
+  mmsc:     "",
+  mmsProxy: "",
+  mmsPort:  -1,
 
-    proxyInfo: null,
-    settings: ["ril.mms.mmsc",
-               "ril.mms.mmsproxy",
-               "ril.mms.mmsport",
-               "ril.radio.disabled"],
-    connected: false,
+  setApnSetting: function setApnSetting(network) {
+    this.mmsc = network.mmsc;
+    this.mmsProxy = network.mmsProxy;
+    this.mmsPort = network.mmsPort;
+  },
 
-    //A queue to buffer the MMS HTTP requests when the MMS network
-    //is not yet connected. The buffered requests will be cleared
-    //if the MMS network fails to be connected within a timer.
-    pendingCallbacks: [],
+  get proxyInfo() {
+    if (!this.mmsProxy) {
+      if (DEBUG) debug("getProxyInfo: MMS proxy is not available.");
+      return null;
+    }
 
-    /** MMS network connection reference count. */
-    refCount: 0,
+    let port = this.mmsPort;
+    if (port == -1) {
+      port = 80;
+      if (DEBUG) debug("getProxyInfo: port is not valid. Set to defult (80).");
+    }
 
-    connectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+    let proxyInfo =
+      gpps.newProxyInfo("http", this.mmsProxy, port,
+                        Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST,
+                        -1, null);
+    if (DEBUG) debug("getProxyInfo: " + JSON.stringify(proxyInfo));
 
-    disconnectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+    return proxyInfo;
+  },
 
-    /**
-     * Callback when |connectTimer| is timeout or cancelled by shutdown.
-     */
-    flushPendingCallbacks: function flushPendingCallbacks(status) {
-      if (DEBUG) debug("flushPendingCallbacks: " + this.pendingCallbacks.length
-                       + " pending callbacks with status: " + status);
-      while (this.pendingCallbacks.length) {
-        let callback = this.pendingCallbacks.shift();
-        let connected = (status == _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS);
-        callback(connected, status);
+  // For keeping track of the radio status.
+  radioDisabled: false,
+  settings: ["ril.radio.disabled"],
+  connected: false,
+
+  //A queue to buffer the MMS HTTP requests when the MMS network
+  //is not yet connected. The buffered requests will be cleared
+  //if the MMS network fails to be connected within a timer.
+  pendingCallbacks: [],
+
+  /** MMS network connection reference count. */
+  refCount: 0,
+
+  connectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+
+  disconnectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+
+  /**
+   * Callback when |connectTimer| is timeout or cancelled by shutdown.
+   */
+  flushPendingCallbacks: function flushPendingCallbacks(status) {
+    if (DEBUG) debug("flushPendingCallbacks: " + this.pendingCallbacks.length
+                     + " pending callbacks with status: " + status);
+    while (this.pendingCallbacks.length) {
+      let callback = this.pendingCallbacks.shift();
+      let connected = (status == _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS);
+      callback(connected, status);
+    }
+  },
+
+  /**
+   * Callback when |disconnectTimer| is timeout or cancelled by shutdown.
+   */
+  onDisconnectTimerTimeout: function onDisconnectTimerTimeout() {
+    if (DEBUG) debug("onDisconnectTimerTimeout: deactivate the MMS data call.");
+    if (this.connected) {
+      this.radioInterface.deactivateDataCallByType("mms");
+    }
+  },
+
+  init: function init() {
+    Services.obs.addObserver(this, kNetworkInterfaceStateChangedTopic,
+                             false);
+    Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    this.settings.forEach(function(name) {
+      Services.prefs.addObserver(name, this, false);
+    }, this);
+
+    try {
+      this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
+    } catch (e) {
+      if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
+      this.radioDisabled = false;
+    }
+
+    this.connected = this.radioInterface.getDataCallStateByType("mms") ==
+      Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+  },
+
+  /**
+   * Return the roaming status of voice call.
+   *
+   * @return true if voice call is roaming.
+   */
+  isVoiceRoaming: function isVoiceRoaming() {
+    let isRoaming = this.radioInterface.rilContext.voice.roaming;
+    if (DEBUG) debug("isVoiceRoaming = " + isRoaming);
+    return isRoaming;
+  },
+
+  /**
+   * Get phone number from iccInfo.
+   *
+   * If the icc card is gsm card, the phone number is in msisdn.
+   * @see nsIDOMMozGsmIccInfo
+   *
+   * Otherwise, the phone number is in mdn.
+   * @see nsIDOMMozCdmaIccInfo
+   */
+  getPhoneNumber: function getPhoneNumber() {
+    let iccInfo = this.radioInterface.rilContext.iccInfo;
+
+    if (!iccInfo) {
+      return null;
+    }
+
+    let number = (iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)
+               ? iccInfo.msisdn : iccInfo.mdn;
+
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (number === undefined || number === "undefined") {
+      return null;
+    }
+
+    return number;
+  },
+
+  /**
+  * A utility function to get the ICC ID of the SIM card (if installed).
+  */
+  getIccId: function getIccId() {
+    let iccInfo = this.radioInterface.rilContext.iccInfo;
+
+    if (!iccInfo || !(iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)) {
+      return null;
+    }
+
+    let iccId = iccInfo.iccid;
+
+    // Workaround an xpconnect issue with undefined string objects.
+    // See bug 808220
+    if (iccId === undefined || iccId === "undefined") {
+      return null;
+    }
+
+    return iccId;
+  },
+
+  /**
+   * Acquire the MMS network connection.
+   *
+   * @param callback
+   *        Callback function when either the connection setup is done,
+   *        timeout, or failed. Parameters are:
+   *        - A boolean value indicates whether the connection is ready.
+   *        - Acquire connection status: _HTTP_STATUS_ACQUIRE_*.
+   *
+   * @return true if the callback for MMS network connection is done; false
+   *         otherwise.
+   */
+  acquire: function acquire(callback) {
+    this.refCount++;
+    this.connectTimer.cancel();
+    this.disconnectTimer.cancel();
+
+    // If the MMS network is not yet connected, buffer the
+    // MMS request and try to setup the MMS network first.
+    if (!this.connected) {
+      this.pendingCallbacks.push(callback);
+
+      let errorStatus;
+      if (this.radioDisabled) {
+        if (DEBUG) debug("Error! Radio is disabled when sending MMS.");
+        errorStatus = _HTTP_STATUS_RADIO_DISABLED;
+      } else if (this.radioInterface.rilContext.cardState != "ready") {
+        if (DEBUG) debug("Error! SIM card is not ready when sending MMS.");
+        errorStatus = _HTTP_STATUS_NO_SIM_CARD;
       }
-    },
-
-    /**
-     * Callback when |disconnectTimer| is timeout or cancelled by shutdown.
-     */
-    onDisconnectTimerTimeout: function onDisconnectTimerTimeout() {
-      if (DEBUG) debug("onDisconnectTimerTimeout: deactivate the MMS data call.");
-      if (this.connected) {
-        gRadioInterface.deactivateDataCallByType("mms");
-      }
-    },
-
-    init: function init() {
-      Services.obs.addObserver(this, kNetworkInterfaceStateChangedTopic,
-                               false);
-      Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-      this.settings.forEach(function(name) {
-        Services.prefs.addObserver(name, this, false);
-      }, this);
-
-      try {
-        this.mmsc = Services.prefs.getCharPref("ril.mms.mmsc");
-        this.proxy = Services.prefs.getCharPref("ril.mms.mmsproxy");
-        this.port = Services.prefs.getIntPref("ril.mms.mmsport");
-        this.updateProxyInfo();
-      } catch (e) {
-        if (DEBUG) debug("Unable to initialize the MMS proxy settings from " +
-                         "the preference. This could happen at the first-run. " +
-                         "Should be available later.");
-        this.clearMmsProxySettings();
+      if (errorStatus != null) {
+        this.flushPendingCallbacks(errorStatus);
+        return true;
       }
 
-      try {
-        this.radioDisabled = Services.prefs.getBoolPref("ril.radio.disabled");
-      } catch (e) {
-        if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
-        this.radioDisabled = false;
-      }
+      if (DEBUG) debug("acquire: buffer the MMS request and setup the MMS data call.");
+      this.radioInterface.setupDataCallByType("mms");
 
-      this.connected = gRadioInterface.getDataCallStateByType("mms") ==
-        Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
-    },
+      // Set a timer to clear the buffered MMS requests if the
+      // MMS network fails to be connected within a time period.
+      this.connectTimer.
+        initWithCallback(this.flushPendingCallbacks.bind(this, _HTTP_STATUS_ACQUIRE_TIMEOUT),
+                         TIME_TO_BUFFER_MMS_REQUESTS,
+                         Ci.nsITimer.TYPE_ONE_SHOT);
+      return false;
+    }
 
-    /**
-     * Return the roaming status of voice call.
-     *
-     * @return true if voice call is roaming.
-     */
-    isVoiceRoaming: function isVoiceRoaming() {
-      let isRoaming = gRadioInterface.rilContext.voice.roaming;
-      if (DEBUG) debug("isVoiceRoaming = " + isRoaming);
-      return isRoaming;
-    },
+    callback(true, _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS);
+    return true;
+  },
 
-    /**
-     * Acquire the MMS network connection.
-     *
-     * @param callback
-     *        Callback function when either the connection setup is done,
-     *        timeout, or failed. Accepts a boolean value that indicates
-     *        whether the connection is ready.
-     *
-     * @return true if the callback for MMS network connection is done; false
-     *         otherwise.
-     */
-    acquire: function acquire(callback) {
-      this.refCount++;
-      this.connectTimer.cancel();
-      this.disconnectTimer.cancel();
+  /**
+   * Release the MMS network connection.
+   */
+  release: function release() {
+    this.refCount--;
+    if (this.refCount <= 0) {
+      this.refCount = 0;
 
-      // If the MMS network is not yet connected, buffer the
-      // MMS request and try to setup the MMS network first.
-      if (!this.connected) {
-        this.pendingCallbacks.push(callback);
-
-        let errorStatus;
-        if (this.radioDisabled) {
-          if (DEBUG) debug("Error! Radio is disabled when sending MMS.");
-          errorStatus = _HTTP_STATUS_RADIO_DISABLED;
-        } else if (gRadioInterface.rilContext.cardState != "ready") {
-          if (DEBUG) debug("Error! SIM card is not ready when sending MMS.");
-          errorStatus = _HTTP_STATUS_NO_SIM_CARD;
-        }
-        if (errorStatus != null) {
-          this.flushPendingCallbacks(errorStatus);
-          return true;
-        }
-
-        if (DEBUG) debug("acquire: buffer the MMS request and setup the MMS data call.");
-        gRadioInterface.setupDataCallByType("mms");
-
-        // Set a timer to clear the buffered MMS requests if the
-        // MMS network fails to be connected within a time period.
-        this.connectTimer.
-          initWithCallback(this.flushPendingCallbacks.bind(this, _HTTP_STATUS_ACQUIRE_TIMEOUT),
-                           TIME_TO_BUFFER_MMS_REQUESTS,
-                           Ci.nsITimer.TYPE_ONE_SHOT);
-        return false;
-      }
-
-      callback(true, _HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS);
-      return true;
-    },
-
-    /**
-     * Release the MMS network connection.
-     */
-    release: function release() {
-      this.refCount--;
-      if (this.refCount <= 0) {
-        this.refCount = 0;
-
-        // The waiting is too small, just skip the timer creation.
-        if (PREF_TIME_TO_RELEASE_MMS_CONNECTION < 1000) {
-          this.onDisconnectTimerTimeout();
-          return;
-        }
-
-        // Set a timer to delay the release of MMS network connection,
-        // since the MMS requests often come consecutively in a short time.
-        this.disconnectTimer.
-          initWithCallback(this.onDisconnectTimerTimeout.bind(this),
-                           PREF_TIME_TO_RELEASE_MMS_CONNECTION,
-                           Ci.nsITimer.TYPE_ONE_SHOT);
-      }
-    },
-
-    /**
-     * Update the MMS proxy info.
-     */
-    updateProxyInfo: function updateProxyInfo() {
-      if (this.proxy === null || this.port === null) {
-        if (DEBUG) debug("updateProxyInfo: proxy or port is not yet decided." );
+      // The waiting is too small, just skip the timer creation.
+      if (PREF_TIME_TO_RELEASE_MMS_CONNECTION < 1000) {
+        this.onDisconnectTimerTimeout();
         return;
       }
 
-      if (!this.port) {
-        this.port = 80;
-        if (DEBUG) debug("updateProxyInfo: port is 0. Set to defult port 80.");
+      // Set a timer to delay the release of MMS network connection,
+      // since the MMS requests often come consecutively in a short time.
+      this.disconnectTimer.
+        initWithCallback(this.onDisconnectTimerTimeout.bind(this),
+                         PREF_TIME_TO_RELEASE_MMS_CONNECTION,
+                         Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+  },
+
+  shutdown: function shutdown() {
+    Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    Services.obs.removeObserver(this, kNetworkInterfaceStateChangedTopic);
+
+    this.connectTimer.cancel();
+    this.flushPendingCallbacks(_HTTP_STATUS_RADIO_DISABLED);
+    this.disconnectTimer.cancel();
+    this.onDisconnectTimerTimeout();
+  },
+
+  // nsIObserver
+
+  observe: function observe(subject, topic, data) {
+    switch (topic) {
+      case kNetworkInterfaceStateChangedTopic: {
+        // The network for MMS connection must be nsIRilNetworkInterface.
+        if (!(subject instanceof Ci.nsIRilNetworkInterface)) {
+          return;
+        }
+
+        // Check if the network state change belongs to this service.
+        let network = subject.QueryInterface(Ci.nsIRilNetworkInterface);
+        if (network.serviceId != this.serviceId) {
+          return;
+        }
+
+        this.connected =
+          this.radioInterface.getDataCallStateByType("mms") ==
+            Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+
+        if (!this.connected) {
+          return;
+        }
+
+        // Set up the MMS APN setting based on the network, which is going to
+        // be used for the HTTP requests later.
+        this.setApnSetting(network);
+
+        if (DEBUG) debug("Got the MMS network connected! Resend the buffered " +
+                         "MMS requests: number: " + this.pendingCallbacks.length);
+        this.connectTimer.cancel();
+        this.flushPendingCallbacks(_HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS)
+        break;
       }
-
-      this.proxyInfo =
-        gpps.newProxyInfo("http", this.proxy, this.port,
-                          Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST,
-                          -1, null);
-      if (DEBUG) debug("updateProxyInfo: " + JSON.stringify(this.proxyInfo));
-    },
-
-    /**
-     * Clear the MMS proxy settings.
-     */
-    clearMmsProxySettings: function clearMmsProxySettings() {
-      this.mmsc = null;
-      this.proxy = null;
-      this.port = null;
-      this.proxyInfo = null;
-    },
-
-    shutdown: function shutdown() {
-      Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      Services.obs.removeObserver(this, kNetworkInterfaceStateChangedTopic);
-
-      this.connectTimer.cancel();
-      this.flushPendingCallbacks(_HTTP_STATUS_RADIO_DISABLED);
-      this.disconnectTimer.cancel();
-      this.onDisconnectTimerTimeout();
-    },
-
-    // nsIObserver
-
-    observe: function observe(subject, topic, data) {
-      switch (topic) {
-        case kNetworkInterfaceStateChangedTopic: {
-          this.connected =
-            gRadioInterface.getDataCallStateByType("mms") ==
-              Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
-
-          if (!this.connected) {
-            return;
-          }
-
-          if (DEBUG) debug("Got the MMS network connected! Resend the buffered " +
-                           "MMS requests: number: " + this.pendingCallbacks.length);
-          this.connectTimer.cancel();
-          this.flushPendingCallbacks(_HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS)
-          break;
-        }
-        case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
-          if (data == "ril.radio.disabled") {
-            try {
-              this.radioDisabled = Services.prefs.getBoolPref("ril.radio.disabled");
-            } catch (e) {
-              if (DEBUG) debug("Updating preference 'ril.radio.disabled' fails.");
-              this.radioDisabled = false;
-            }
-            return;
-          }
-
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
+        if (data == kPrefRilRadioDisabled) {
           try {
-            switch (data) {
-              case "ril.mms.mmsc":
-                this.mmsc = Services.prefs.getCharPref("ril.mms.mmsc");
-                break;
-              case "ril.mms.mmsproxy":
-                this.proxy = Services.prefs.getCharPref("ril.mms.mmsproxy");
-                this.updateProxyInfo();
-                break;
-              case "ril.mms.mmsport":
-                this.port = Services.prefs.getIntPref("ril.mms.mmsport");
-                this.updateProxyInfo();
-                break;
-              default:
-                break;
-            }
+            this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
           } catch (e) {
-            if (DEBUG) debug("Failed to update the MMS proxy settings from the" +
-                             "preference.");
-            this.clearMmsProxySettings();
+            if (DEBUG) debug("Updating preference 'ril.radio.disabled' fails.");
+            this.radioDisabled = false;
           }
-          break;
+          return;
         }
-        case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
-          this.shutdown();
-        }
+        break;
+      }
+      case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
+        this.shutdown();
       }
     }
-  };
-  conn.init();
+  }
+};
 
-  return conn;
+XPCOMUtils.defineLazyGetter(this, "gMmsConnections", function () {
+  return {
+    _connections: null,
+    getConnByServiceId: function (id) {
+      if (!this._connections) {
+        this._connections = [];
+      }
+
+      let conn = this._connections[id];
+      if (conn) {
+        return conn;
+      }
+
+      conn = this._connections[id] = new MmsConnection(id);
+      conn.init();
+      return conn;
+    },
+  };
 });
 
-function MmsProxyFilter(url) {
+function MmsProxyFilter(mmsConnection, url) {
+  this.mmsConnection = mmsConnection;
   this.uri = Services.io.newURI(url, null, null);
 }
 MmsProxyFilter.prototype = {
@@ -432,11 +480,17 @@ MmsProxyFilter.prototype = {
                        " is not matched with uri = " + JSON.stringify(uri) + " .");
       return proxyInfo;
     }
+
     // Fall-through, reutrn the MMS proxy info.
-    if (DEBUG) debug("applyFilter: MMSC/Content Location is matched with: " +
-                     JSON.stringify({ uri: JSON.stringify(this.uri),
-                                      proxyInfo: gMmsConnection.proxyInfo }));
-    return gMmsConnection.proxyInfo ? gMmsConnection.proxyInfo : proxyInfo;
+    let mmsProxyInfo = this.mmsConnection.proxyInfo;
+
+    if (DEBUG) {
+      debug("applyFilter: MMSC/Content Location is matched with: " +
+            JSON.stringify({ uri: JSON.stringify(this.uri),
+                             mmsProxyInfo: mmsProxyInfo }));
+    }
+
+    return mmsProxyInfo ? mmsProxyInfo : proxyInfo;
   }
 };
 
@@ -445,17 +499,20 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
     /**
      * Send MMS request to MMSC.
      *
+     * @param mmsConnection
+     *        The MMS connection.
      * @param method
      *        "GET" or "POST".
      * @param url
-     *        Target url string.
+     *        Target url string or null to be replaced by mmsc url.
      * @param istream
      *        An nsIInputStream instance as data source to be sent or null.
      * @param callback
      *        A callback function that takes two arguments: one for http
      *        status, the other for wrapped PDU data for further parsing.
      */
-    sendRequest: function sendRequest(method, url, istream, callback) {
+    sendRequest: function sendRequest(mmsConnection, method, url, istream,
+                                      callback) {
       // TODO: bug 810226 - Support GPRS bearer for MMS transmission and reception.
       let cancellable = {
         callback: callback,
@@ -473,7 +530,7 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
           if (this.isAcquiringConn) {
             // We cannot cancel data connection setup here, so we invoke done()
             // here and handle |cancellable.isDone| in callback function of
-            // |gMmsConnection.acquire|.
+            // |mmsConnection.acquire|.
             this.done(_HTTP_STATUS_USER_CANCELLED, null);
           } else if (this.xhr) {
             // Client has already sent the HTTP request. Try to abort it.
@@ -496,12 +553,12 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
       };
 
       cancellable.isAcquiringConn =
-        !gMmsConnection.acquire((function (connected, errorCode) {
+        !mmsConnection.acquire((function (connected, errorCode) {
 
         cancellable.isAcquiringConn = false;
 
         if (!connected || cancellable.isCancelled) {
-          gMmsConnection.release();
+          mmsConnection.release();
 
           if (!cancellable.isDone) {
             cancellable.done(cancellable.isCancelled ?
@@ -510,23 +567,29 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
           return;
         }
 
+        // MMSC is available after an MMS connection is successfully acquired.
+        if (!url) {
+          url = mmsConnection.mmsc;
+        }
+
         if (DEBUG) debug("sendRequest: register proxy filter to " + url);
-        let proxyFilter = new MmsProxyFilter(url);
+        let proxyFilter = new MmsProxyFilter(mmsConnection, url);
         gpps.registerFilter(proxyFilter, 0);
 
-        cancellable.xhr = this.sendHttpRequest(method, url, istream, proxyFilter,
+        cancellable.xhr = this.sendHttpRequest(mmsConnection, method,
+                                               url, istream, proxyFilter,
                                                cancellable.done.bind(cancellable));
       }).bind(this));
 
       return cancellable;
     },
 
-    sendHttpRequest: function sendHttpRequest(method, url, istream, proxyFilter,
-                                              callback) {
+    sendHttpRequest: function sendHttpRequest(mmsConnection, method, url,
+                                              istream, proxyFilter, callback) {
       let releaseMmsConnectionAndCallback = function (httpStatus, data) {
         gpps.unregisterFilter(proxyFilter);
         // Always release the MMS network connection before callback.
-        gMmsConnection.release();
+        mmsConnection.release();
         callback(httpStatus, data);
       };
 
@@ -671,10 +734,13 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
       return true;
     },
 
-    translateHttpStatusToMmsStatus: function translateHttpStatusToMmsStatus(httpStatus, defaultStatus) {
+    translateHttpStatusToMmsStatus:
+      function translateHttpStatusToMmsStatus(httpStatus,
+                                              cancelledReason,
+                                              defaultStatus) {
       switch(httpStatus) {
         case _HTTP_STATUS_USER_CANCELLED:
-          return _MMS_ERROR_MESSAGE_DELETED;
+          return cancelledReason;
         case _HTTP_STATUS_RADIO_DISABLED:
           return _MMS_ERROR_RADIO_DISABLED;
         case _HTTP_STATUS_NO_SIM_CARD:
@@ -693,6 +759,8 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
 /**
  * Send M-NotifyResp.ind back to MMSC.
  *
+ * @param mmsConnection
+ *        The MMS connection.
  * @param transactionId
  *        X-Mms-Transaction-ID of the message.
  * @param status
@@ -702,7 +770,9 @@ XPCOMUtils.defineLazyGetter(this, "gMmsTransactionHelper", function () {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A section 6.2
  */
-function NotifyResponseTransaction(transactionId, status, reportAllowed) {
+function NotifyResponseTransaction(mmsConnection, transactionId, status,
+                                   reportAllowed) {
+  this.mmsConnection = mmsConnection;
   let headers = {};
 
   // Mandatory fields
@@ -730,8 +800,11 @@ NotifyResponseTransaction.prototype = {
         callback(httpStatus);
       };
     }
-    gMmsTransactionHelper.sendRequest("POST", gMmsConnection.mmsc,
-                                      this.istream, requestCallback);
+    gMmsTransactionHelper.sendRequest(this.mmsConnection,
+                                      "POST",
+                                      null,
+                                      this.istream,
+                                      requestCallback);
   }
 };
 
@@ -756,10 +829,13 @@ CancellableTransaction.prototype = {
 
   isObserversAdded: false,
 
+  cancelledReason: _MMS_ERROR_USER_CANCELLED_NO_REASON,
+
   registerRunCallback: function registerRunCallback(callback) {
     if (!this.isObserversAdded) {
       Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
       Services.obs.addObserver(this, kMobileMessageDeletedObserverTopic, false);
+      Services.prefs.addObserver(kPrefRilRadioDisabled, this, false);
       this.isObserversAdded = true;
     }
 
@@ -771,6 +847,7 @@ CancellableTransaction.prototype = {
     if (this.isObserversAdded) {
       Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       Services.obs.removeObserver(this, kMobileMessageDeletedObserverTopic);
+      Services.prefs.removeObserver(kPrefRilRadioDisabled, this);
       this.isObserversAdded = false;
     }
   },
@@ -788,15 +865,16 @@ CancellableTransaction.prototype = {
   // |gMmsTransactionHelper.sendRequest(...)|.
   cancellable: null,
 
-  cancelRunning: function cancelRunning() {
+  cancelRunning: function cancelRunning(reason) {
     this.isCancelled = true;
+    this.cancelledReason = reason;
 
     if (this.timer) {
       // The sending or retrieving process is waiting for the next retry.
       // What we only need to do is to cancel the timer.
       this.timer.cancel();
       this.timer = null;
-      this.runCallbackIfValid(_MMS_ERROR_MESSAGE_DELETED, null);
+      this.runCallbackIfValid(reason, null);
       return;
     }
 
@@ -813,7 +891,7 @@ CancellableTransaction.prototype = {
   observe: function observe(subject, topic, data) {
     switch (topic) {
       case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
-        this.cancelRunning();
+        this.cancelRunning(_MMS_ERROR_SHUTDOWN);
         break;
       }
       case kMobileMessageDeletedObserverTopic: {
@@ -822,7 +900,20 @@ CancellableTransaction.prototype = {
           return;
         }
 
-        this.cancelRunning();
+        this.cancelRunning(_MMS_ERROR_MESSAGE_DELETED);
+        break;
+      }
+      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
+        if (data == kPrefRilRadioDisabled) {
+          try {
+            let radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
+            if (radioDisabled) {
+              this.cancelRunning(_MMS_ERROR_RADIO_DISABLED);
+            }
+          } catch (e) {
+            if (DEBUG) debug("Failed to get preference of 'ril.radio.disabled'.");
+          }
+        }
         break;
       }
     }
@@ -835,7 +926,9 @@ CancellableTransaction.prototype = {
  * @param contentLocation
  *        X-Mms-Content-Location of the message.
  */
-function RetrieveTransaction(cancellableId, contentLocation) {
+function RetrieveTransaction(mmsConnection, cancellableId, contentLocation) {
+  this.mmsConnection = mmsConnection;
+
   // Call |CancellableTransaction| constructor.
   CancellableTransaction.call(this, cancellableId);
 
@@ -887,10 +980,12 @@ RetrieveTransaction.prototype = Object.create(CancellableTransaction.prototype, 
       this.timer = null;
 
       this.cancellable =
-        gMmsTransactionHelper.sendRequest("GET", this.contentLocation, null,
+        gMmsTransactionHelper.sendRequest(this.mmsConnection,
+                                          "GET", this.contentLocation, null,
                                           (function (httpStatus, data) {
         let mmsStatus = gMmsTransactionHelper
                         .translateHttpStatusToMmsStatus(httpStatus,
+                                                        this.cancelledReason,
                                                         MMS.MMS_PDU_STATUS_DEFERRED);
         if (mmsStatus != MMS.MMS_PDU_ERROR_OK) {
            callback(mmsStatus, null);
@@ -933,7 +1028,9 @@ RetrieveTransaction.prototype = Object.create(CancellableTransaction.prototype, 
  *   Class for sending M-Send.req to MMSC, which inherits CancellableTransaction.
  *   @throws Error("Check max values parameters fail.")
  */
-function SendTransaction(cancellableId, msg, requestDeliveryReport) {
+function SendTransaction(mmsConnection, cancellableId, msg, requestDeliveryReport) {
+  this.mmsConnection = mmsConnection;
+
   // Call |CancellableTransaction| constructor.
   CancellableTransaction.call(this, cancellableId);
 
@@ -952,7 +1049,12 @@ function SendTransaction(cancellableId, msg, requestDeliveryReport) {
   msg.headers["x-mms-message-class"] = "personal";
   msg.headers["x-mms-expiry"] = 7 * 24 * 60 * 60;
   msg.headers["x-mms-priority"] = 129;
-  msg.headers["x-mms-read-report"] = true;
+  try {
+    msg.headers["x-mms-read-report"] =
+      Services.prefs.getBoolPref("dom.mms.requestReadReport");
+  } catch (e) {
+    msg.headers["x-mms-read-report"] = true;
+  }
   msg.headers["x-mms-delivery-report"] = requestDeliveryReport;
 
   if (!gMmsTransactionHelper.checkMaxValuesParameters(msg)) {
@@ -1118,11 +1220,15 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
       this.timer = null;
 
       this.cancellable =
-        gMmsTransactionHelper.sendRequest("POST", gMmsConnection.mmsc,
+        gMmsTransactionHelper.sendRequest(this.mmsConnection,
+                                          "POST",
+                                          null,
                                           this.istream,
-                                          function (httpStatus, data) {
+                                          (function (httpStatus, data) {
         let mmsStatus = gMmsTransactionHelper.
-                          translateHttpStatusToMmsStatus(httpStatus,
+                          translateHttpStatusToMmsStatus(
+                            httpStatus,
+                            this.cancelledReason,
                             MMS.MMS_PDU_ERROR_TRANSIENT_FAILURE);
         if (httpStatus != HTTP_STATUS_OK) {
           callback(mmsStatus, null);
@@ -1142,7 +1248,7 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
 
         let responseStatus = response.headers["x-mms-response-status"];
         callback(responseStatus, response);
-      });
+      }).bind(this));
     },
     enumerable: true,
     configurable: true,
@@ -1153,6 +1259,8 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
 /**
  * Send M-acknowledge.ind back to MMSC.
  *
+ * @param mmsConnection
+ *        The MMS connection.
  * @param transactionId
  *        X-Mms-Transaction-ID of the message.
  * @param reportAllowed
@@ -1160,7 +1268,8 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A section 6.4
  */
-function AcknowledgeTransaction(transactionId, reportAllowed) {
+function AcknowledgeTransaction(mmsConnection, transactionId, reportAllowed) {
+  this.mmsConnection = mmsConnection;
   let headers = {};
 
   // Mandatory fields
@@ -1187,8 +1296,11 @@ AcknowledgeTransaction.prototype = {
         callback(httpStatus);
       };
     }
-    gMmsTransactionHelper.sendRequest("POST", gMmsConnection.mmsc,
-                                      this.istream, requestCallback);
+    gMmsTransactionHelper.sendRequest(this.mmsConnection,
+                                      "POST",
+                                      null,
+                                      this.istream,
+                                      requestCallback);
   }
 };
 
@@ -1202,6 +1314,47 @@ function getDefaultServiceId() {
 
   return id;
 }
+
+/**
+ * Return M-Read-Rec.ind back to MMSC
+ *
+ * @param messageID
+ *        Message-ID of the message.
+ * @param toAddress
+ *        The address of the recipient of the Read Report, i.e. the originator
+ *        of the original multimedia message.
+ *
+ * @see OMA-TS-MMS_ENC-V1_3-20110913-A section 6.7.2
+ */
+function ReadRecTransaction(mmsConnection, messageID, toAddress) {
+  this.mmsConnection = mmsConnection;
+  let headers = {};
+
+  // Mandatory fields
+  headers["x-mms-message-type"] = MMS.MMS_PDU_TYPE_READ_REC_IND;
+  headers["x-mms-mms-version"] = MMS.MMS_VERSION;
+  headers["message-id"] = messageID;
+  let type = MMS.Address.resolveType(toAddress);
+  let to = {address: toAddress,
+            type: type}
+  headers["to"] = to;
+  headers["from"] = null;
+  headers["x-mms-read-status"] = true;
+
+  this.istream = MMS.PduHelper.compose(null, {headers: headers});
+  if (!this.istream) {
+    throw Cr.NS_ERROR_FAILURE;
+  }
+}
+ReadRecTransaction.prototype = {
+  run: function() {
+    gMmsTransactionHelper.sendRequest(this.mmsConnection,
+                                      "POST",
+                                      null,
+                                      this.istream,
+                                      null);
+  }
+};
 
 /**
  * MmsService
@@ -1249,60 +1402,40 @@ MmsService.prototype = {
   },
 
   /**
-   * Get phone number from iccInfo.
-   *
-   * If the icc card is gsm card, the phone number is in msisdn.
-   * @see nsIDOMMozGsmIccInfo
-   *
-   * Otherwise, the phone number is in mdn.
-   * @see nsIDOMMozCdmaIccInfo
-   */
-  getPhoneNumber: function getPhoneNumber() {
-    let iccInfo = gRadioInterface.rilContext.iccInfo;
-
-    if (!iccInfo) {
-      return null;
-    }
-
-    let number = (iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)
-               ? iccInfo.msisdn : iccInfo.mdn;
-
-    // Workaround an xpconnect issue with undefined string objects.
-    // See bug 808220
-    if (number === undefined || number === "undefined") {
-      return null;
-    }
-    return number;
-  },
-
-  /**
    * Convert intermediate message to indexedDB savable object.
    *
+   * @param mmsConnection
+   *        The MMS connection.
    * @param retrievalMode
    *        Retrieval mode for MMS receiving setting.
    * @param intermediate
    *        Intermediate MMS message parsed from PDU.
    */
-  convertIntermediateToSavable: function convertIntermediateToSavable(intermediate,
+  convertIntermediateToSavable: function convertIntermediateToSavable(mmsConnection,
+                                                                      intermediate,
                                                                       retrievalMode) {
     intermediate.type = "mms";
     intermediate.delivery = DELIVERY_NOT_DOWNLOADED;
+    // As a receiver, we don't need to care about the delivery status of others.
+    let deliveryInfo = intermediate.deliveryInfo = [{
+      receiver: mmsConnection.getPhoneNumber(),
+      deliveryStatus: DELIVERY_STATUS_NOT_APPLICABLE }];
 
-    switch(retrievalMode) {
+    switch (retrievalMode) {
       case RETRIEVAL_MODE_MANUAL:
-        intermediate.deliveryStatus = [DELIVERY_STATUS_MANUAL];
+        deliveryInfo[0].deliveryStatus = DELIVERY_STATUS_MANUAL;
         break;
       case RETRIEVAL_MODE_NEVER:
-        intermediate.deliveryStatus = [DELIVERY_STATUS_REJECTED];
+        deliveryInfo[0].deliveryStatus = DELIVERY_STATUS_REJECTED;
         break;
       case RETRIEVAL_MODE_AUTOMATIC:
-        intermediate.deliveryStatus = [DELIVERY_STATUS_PENDING];
+        deliveryInfo[0].deliveryStatus = DELIVERY_STATUS_PENDING;
         break;
       case RETRIEVAL_MODE_AUTOMATIC_HOME:
-        if (gMmsConnection.isVoiceRoaming()) {
-          intermediate.deliveryStatus = [DELIVERY_STATUS_MANUAL];
+        if (mmsConnection.isVoiceRoaming()) {
+          deliveryInfo[0].deliveryStatus = DELIVERY_STATUS_MANUAL;
         } else {
-          intermediate.deliveryStatus = [DELIVERY_STATUS_PENDING];
+          deliveryInfo[0].deliveryStatus = DELIVERY_STATUS_PENDING;
         }
         break;
     }
@@ -1316,21 +1449,26 @@ MmsService.prototype = {
       intermediate.sender = "anonymous";
     }
     intermediate.receivers = [];
-    intermediate.phoneNumber = this.getPhoneNumber();
+    intermediate.phoneNumber = mmsConnection.getPhoneNumber();
+    intermediate.iccId = mmsConnection.getIccId();
     return intermediate;
   },
 
   /**
    * Merge the retrieval confirmation into the savable message.
    *
+   * @param mmsConnection
+   *        The MMS connection.
    * @param intermediate
    *        Intermediate MMS message parsed from PDU, which carries
-            the retrieval confirmation.
+   *        the retrieval confirmation.
    * @param savable
    *        The indexedDB savable MMS message, which is going to be
    *        merged with the extra retrieval confirmation.
    */
-  mergeRetrievalConfirmation: function mergeRetrievalConfirmation(intermediate, savable) {
+  mergeRetrievalConfirmation: function mergeRetrievalConfirmation(mmsConnection,
+                                                                  intermediate,
+                                                                  savable) {
     savable.timestamp = Date.now();
     if (intermediate.headers.from) {
       savable.sender = intermediate.headers.from.address;
@@ -1343,7 +1481,7 @@ MmsService.prototype = {
       if (intermediate.headers[type]) {
         if (intermediate.headers[type] instanceof Array) {
           for (let index in intermediate.headers[type]) {
-            savable.receivers.push(intermediate.headers[type][index].address)
+            savable.receivers.push(intermediate.headers[type][index].address);
           }
         } else {
           savable.receivers.push(intermediate.headers[type].address);
@@ -1352,7 +1490,10 @@ MmsService.prototype = {
     }
 
     savable.delivery = DELIVERY_RECEIVED;
-    savable.deliveryStatus = [DELIVERY_STATUS_SUCCESS];
+    // As a receiver, we don't need to care about the delivery status of others.
+    savable.deliveryInfo = [{
+      receiver: mmsConnection.getPhoneNumber(),
+      deliveryStatus: DELIVERY_STATUS_SUCCESS }];
     for (let field in intermediate.headers) {
       savable.headers[field] = intermediate.headers[field];
     }
@@ -1366,6 +1507,8 @@ MmsService.prototype = {
   },
 
   /**
+   * @param aMmsConnection
+   *        The MMS connection.
    * @param aContentLocation
    *        X-Mms-Content-Location of the message.
    * @param aCallback [optional]
@@ -1374,11 +1517,14 @@ MmsService.prototype = {
    * @param aDomMessage
    *        The nsIDOMMozMmsMessage object.
    */
-  retrieveMessage: function retrieveMessage(aContentLocation, aCallback, aDomMessage) {
+  retrieveMessage: function retrieveMessage(aMmsConnection, aContentLocation,
+                                            aCallback, aDomMessage) {
     // Notifying observers an MMS message is retrieving.
     Services.obs.notifyObservers(aDomMessage, kSmsRetrievingObserverTopic, null);
 
-    let transaction = new RetrieveTransaction(aDomMessage.id, aContentLocation);
+    let transaction = new RetrieveTransaction(aMmsConnection,
+                                              aDomMessage.id,
+                                              aContentLocation);
     transaction.run(aCallback);
   },
 
@@ -1402,7 +1548,7 @@ MmsService.prototype = {
       id:             aDomMessage.id,
       threadId:       aDomMessage.threadId,
       delivery:       aDomMessage.delivery,
-      deliveryStatus: aDomMessage.deliveryStatus,
+      deliveryInfo:   aDomMessage.deliveryInfo,
       sender:         aDomMessage.sender,
       receivers:      aDomMessage.receivers,
       timestamp:      aDomMessage.timestamp,
@@ -1423,7 +1569,7 @@ MmsService.prototype = {
    */
   broadcastSentMessageEvent: function broadcastSentMessageEvent(aDomMessage) {
     // Broadcasting a 'sms-sent' system message to open apps.
-    this.broadcastMmsSystemMessage("sms-sent", aDomMessage);
+    this.broadcastMmsSystemMessage(kSmsSentObserverTopic, aDomMessage);
 
     // Notifying observers an MMS message is sent.
     Services.obs.notifyObservers(aDomMessage, kSmsSentObserverTopic, null);
@@ -1438,7 +1584,7 @@ MmsService.prototype = {
    */
   broadcastReceivedMessageEvent :function broadcastReceivedMessageEvent(aDomMessage) {
     // Broadcasting a 'sms-received' system message to open apps.
-    this.broadcastMmsSystemMessage("sms-received", aDomMessage);
+    this.broadcastMmsSystemMessage(kSmsReceivedObserverTopic, aDomMessage);
 
     // Notifying observers an MMS message is received.
     Services.obs.notifyObservers(aDomMessage, kSmsReceivedObserverTopic, null);
@@ -1447,7 +1593,8 @@ MmsService.prototype = {
   /**
    * Callback for retrieveMessage.
    */
-  retrieveMessageCallback: function retrieveMessageCallback(wish,
+  retrieveMessageCallback: function retrieveMessageCallback(mmsConnection,
+                                                            wish,
                                                             savableMessage,
                                                             mmsStatus,
                                                             retrievedMessage) {
@@ -1469,7 +1616,8 @@ MmsService.prototype = {
     if (MMS.MMS_PDU_STATUS_RETRIEVED !== mmsStatus) {
       if (mmsStatus != _MMS_ERROR_RADIO_DISABLED &&
           mmsStatus != _MMS_ERROR_NO_SIM_CARD) {
-        let transaction = new NotifyResponseTransaction(transactionId,
+        let transaction = new NotifyResponseTransaction(mmsConnection,
+                                                        transactionId,
                                                         mmsStatus,
                                                         reportAllowed);
         transaction.run();
@@ -1488,7 +1636,8 @@ MmsService.prototype = {
       return;
     }
 
-    savableMessage = this.mergeRetrievalConfirmation(retrievedMessage,
+    savableMessage = this.mergeRetrievalConfirmation(mmsConnection,
+                                                     retrievedMessage,
                                                      savableMessage);
     let transactionId = savableMessage.headers["x-mms-transaction-id"];
 
@@ -1502,7 +1651,8 @@ MmsService.prototype = {
       // Client has successfully retrieved the MM prior to sending the
       // NotifyResp.ind response PDU.
       let transaction =
-        new NotifyResponseTransaction(transactionId,
+        new NotifyResponseTransaction(mmsConnection,
+                                      transactionId,
                                       success ? MMS.MMS_PDU_STATUS_RETRIEVED
                                               : MMS.MMS_PDU_STATUS_DEFERRED,
                                       reportAllowed);
@@ -1524,7 +1674,8 @@ MmsService.prototype = {
   /**
    * Callback for saveReceivedMessage.
    */
-  saveReceivedMessageCallback: function saveReceivedMessageCallback(retrievalMode,
+  saveReceivedMessageCallback: function saveReceivedMessageCallback(mmsConnection,
+                                                                    retrievalMode,
                                                                     savableMessage,
                                                                     rv,
                                                                     domMessage) {
@@ -1550,7 +1701,7 @@ MmsService.prototype = {
     // In roaming environment, we send notify response only in
     // automatic retrieval mode.
     if ((retrievalMode !== RETRIEVAL_MODE_AUTOMATIC) &&
-        gMmsConnection.isVoiceRoaming()) {
+        mmsConnection.isVoiceRoaming()) {
       return;
     }
 
@@ -1564,7 +1715,8 @@ MmsService.prototype = {
       let reportAllowed = this.getReportAllowed(this.confSendDeliveryReport,
                                                 wish);
 
-      let transaction = new NotifyResponseTransaction(transactionId,
+      let transaction = new NotifyResponseTransaction(mmsConnection,
+                                                      transactionId,
                                                       mmsStatus,
                                                       reportAllowed);
       transaction.run();
@@ -1574,8 +1726,10 @@ MmsService.prototype = {
 
     // For RETRIEVAL_MODE_AUTOMATIC or RETRIEVAL_MODE_AUTOMATIC_HOME but not
     // roaming, proceed to retrieve MMS.
-    this.retrieveMessage(url,
+    this.retrieveMessage(mmsConnection,
+                         url,
                          this.retrieveMessageCallback.bind(this,
+                                                           mmsConnection,
                                                            wish,
                                                            savableMessage),
                          domMessage);
@@ -1584,10 +1738,13 @@ MmsService.prototype = {
   /**
    * Handle incoming M-Notification.ind PDU.
    *
+   * @param serviceId
+   *        The ID of the service for receiving the PDU data.
    * @param notification
    *        The parsed MMS message object.
    */
-  handleNotificationIndication: function handleNotificationIndication(notification) {
+  handleNotificationIndication: function handleNotificationIndication(serviceId,
+                                                                      notification) {
     let transactionId = notification.headers["x-mms-transaction-id"];
     gMobileMessageDatabaseService.getMessageRecordByTransactionId(transactionId,
         (function (aRv, aMessageRecord) {
@@ -1603,11 +1760,15 @@ MmsService.prototype = {
         retrievalMode = Services.prefs.getCharPref(kPrefRetrievalMode);
       } catch (e) {}
 
-      let savableMessage = this.convertIntermediateToSavable(notification, retrievalMode);
+      let mmsConnection = gMmsConnections.getConnByServiceId(serviceId);
+      let savableMessage = this.convertIntermediateToSavable(mmsConnection,
+                                                             notification,
+                                                             retrievalMode);
 
       gMobileMessageDatabaseService
         .saveReceivedMessage(savableMessage,
                              this.saveReceivedMessageCallback.bind(this,
+                                                                   mmsConnection,
                                                                    retrievalMode,
                                                                    savableMessage));
     }).bind(this));
@@ -1666,30 +1827,34 @@ MmsService.prototype = {
                                       address,
                                       null,
                                       deliveryStatus,
-                                      function notifySetDeliveryResult(aRv, aDomMessage) {
+                                      (function notifySetDeliveryResult(aRv, aDomMessage) {
       if (DEBUG) debug("Marking the delivery status is done.");
       // TODO bug 832140 handle !Components.isSuccessCode(aRv)
 
       let topic;
       if (mmsStatus === MMS.MMS_PDU_STATUS_RETRIEVED) {
         topic = kSmsDeliverySuccessObserverTopic;
+
+        // Broadcasting a 'sms-delivery-success' system message to open apps.
+        this.broadcastMmsSystemMessage(topic, aDomMessage);
       } else if (mmsStatus === MMS.MMS_PDU_STATUS_REJECTED) {
         topic = kSmsDeliveryErrorObserverTopic;
-      }
-      if (!topic) {
+      } else {
         if (DEBUG) debug("Needn't fire event for this MMS status. Returning.");
         return;
       }
 
       // Notifying observers the delivery status is updated.
       Services.obs.notifyObservers(aDomMessage, topic, null);
-    });
+    }).bind(this));
   },
 
   /**
    * A utility function to convert the MmsParameters dictionary object
    * to a database-savable message.
    *
+   * @param aMmsConnection
+   *        The MMS connection.
    * @param aParams
    *        The MmsParameters dictionay object.
    * @param aMessage (output)
@@ -1707,7 +1872,8 @@ MmsService.prototype = {
    * name-parameter of Content-Type header nor filename parameter of Content-Disposition
    * header is available, Content-Location header SHALL be used if available.
    */
-  createSavableFromParams: function createSavableFromParams(aParams, aMessage) {
+  createSavableFromParams: function createSavableFromParams(aMmsConnection,
+                                                            aParams, aMessage) {
     if (DEBUG) debug("createSavableFromParams: aParams: " + JSON.stringify(aParams));
 
     let isAddrValid = true;
@@ -1802,7 +1968,8 @@ MmsService.prototype = {
     aMessage["type"] = "mms";
     aMessage["timestamp"] = Date.now();
     aMessage["receivers"] = receivers;
-    aMessage["sender"] = this.getPhoneNumber();
+    aMessage["sender"] = aMmsConnection.getPhoneNumber();
+    aMessage["iccId"] = aMmsConnection.getIccId();
     try {
       aMessage["deliveryStatusRequested"] =
         Services.prefs.getBoolPref("dom.mms.requestStatusReport");
@@ -1821,7 +1988,7 @@ MmsService.prototype = {
 
   mmsDefaultServiceId: 0,
 
-  send: function send(aParams, aRequest) {
+  send: function send(aServiceId, aParams, aRequest) {
     if (DEBUG) debug("send: aParams: " + JSON.stringify(aParams));
 
     // Note that the following sanity checks for |aParams| should be consistent
@@ -1907,8 +2074,11 @@ MmsService.prototype = {
       });
     };
 
+    let mmsConnection = gMmsConnections.getConnByServiceId(aServiceId);
+
     let savableMessage = {};
-    let errorCode = this.createSavableFromParams(aParams, savableMessage);
+    let errorCode = this.createSavableFromParams(mmsConnection, aParams,
+                                                 savableMessage);
     gMobileMessageDatabaseService
       .saveSendingMessage(savableMessage,
                           function notifySendingResult(aRv, aDomMessage) {
@@ -1927,7 +2097,7 @@ MmsService.prototype = {
       let sendTransaction;
       try {
         sendTransaction =
-          new SendTransaction(aDomMessage.id, savableMessage,
+          new SendTransaction(mmsConnection, aDomMessage.id, savableMessage,
                               savableMessage["deliveryStatusRequested"]);
       } catch (e) {
         if (DEBUG) debug("Exception: fail to create a SendTransaction instance.");
@@ -2006,6 +2176,19 @@ MmsService.prototype = {
         }
       }
 
+      // Get the RIL service ID based on the saved MMS message record's ICC ID,
+      // which could fail when the corresponding SIM card isn't installed.
+      let serviceId;
+      try {
+        serviceId = gRil.getClientIdByIccId(aMessageRecord.iccId);
+      } catch (e) {
+        if (DEBUG) debug("RIL service is not available for ICC ID.");
+        aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR);
+        return;
+      }
+
+      let mmsConnection = gMmsConnections.getConnByServiceId(serviceId);
+
       let url =  aMessageRecord.headers["x-mms-content-location"].uri;
       // For X-Mms-Report-Allowed
       let wish = aMessageRecord.headers["x-mms-delivery-report"];
@@ -2057,7 +2240,10 @@ MmsService.prototype = {
                                                   wish);
 
         if (DEBUG) debug("retrievedMsg = " + JSON.stringify(retrievedMsg));
-        aMessageRecord = this.mergeRetrievalConfirmation(retrievedMsg, aMessageRecord);
+        aMessageRecord = this.mergeRetrievalConfirmation(mmsConnection,
+                                                         retrievedMsg,
+                                                         aMessageRecord);
+
         gMobileMessageDatabaseService.saveReceivedMessage(aMessageRecord,
                                                           (function (rv, domMessage) {
           let success = Components.isSuccessCode(rv);
@@ -2082,10 +2268,13 @@ MmsService.prototype = {
           // with an M-Acknowledge.ind PDU to the MMS Proxy-Relay that supports
           // the specific MMS Client. The M-Acknowledge.ind PDU confirms
           // successful message retrieval to the MMS Proxy Relay.
-          let transaction = new AcknowledgeTransaction(transactionId, reportAllowed);
+          let transaction = new AcknowledgeTransaction(mmsConnection,
+                                                       transactionId,
+                                                       reportAllowed);
           transaction.run();
         }).bind(this));
       };
+
       // Update the delivery status to pending in DB.
       gMobileMessageDatabaseService
         .setMessageDeliveryByMessageId(aMessageId,
@@ -2102,11 +2291,38 @@ MmsService.prototype = {
             return;
           }
 
-          this.retrieveMessage(url,
+          this.retrieveMessage(mmsConnection,
+                               url,
                                responseNotify.bind(this),
                                aDomMessage);
         }).bind(this));
     }).bind(this));
+  },
+
+  sendReadReport: function sendReadReport(messageID, toAddress, iccId) {
+    if (DEBUG) {
+      debug("messageID: " + messageID + " toAddress: " +
+            JSON.stringify(toAddress));
+    }
+
+    // Get the RIL service ID based on the saved MMS message record's ICC ID,
+    // which could fail when the corresponding SIM card isn't installed.
+    let serviceId;
+    try {
+      serviceId = gRil.getClientIdByIccId(iccId);
+    } catch (e) {
+      if (DEBUG) debug("RIL service is not available for ICC ID.");
+      return;
+    }
+
+    let mmsConnection = gMmsConnections.getConnByServiceId(serviceId);
+    try {
+      let transaction =
+        new ReadRecTransaction(mmsConnection, messageID, toAddress);
+      transaction.run();
+    } catch (e) {
+      if (DEBUG) debug("sendReadReport fail. e = " + e);
+    }
   },
 
   // nsIWapPushApplication
@@ -2121,7 +2337,7 @@ MmsService.prototype = {
 
     switch (msg.type) {
       case MMS.MMS_PDU_TYPE_NOTIFICATION_IND:
-        this.handleNotificationIndication(msg);
+        this.handleNotificationIndication(options.serviceId, msg);
         break;
       case MMS.MMS_PDU_TYPE_DELIVERY_IND:
         this.handleDeliveryIndication(msg);

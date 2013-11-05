@@ -141,7 +141,8 @@ partial interface Element {
   DOMRect getBoundingClientRect();
 
   // scrolling
-  void scrollIntoView(optional boolean top = true);
+  void scrollIntoView();
+  void scrollIntoView(boolean top);
   // None of the CSSOM attributes are [Pure], because they flush
            attribute long scrollTop;   // scroll on setting
            attribute long scrollLeft;  // scroll on setting

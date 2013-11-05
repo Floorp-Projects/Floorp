@@ -133,6 +133,7 @@ function checkDBContacts(dbContact1, dbContact2) {
   checkStrArray(contact1.familyNameLowerCase, contact2.familyNameLowerCase, "Same familyNameLowerCase index");
   checkStrArray(contact1.givenName, contact2.givenName, "Same givenName index");
   checkStrArray(contact1.givenNameLowerCase, contact2.givenNameLowerCase, "Same givenNameLowerCase index");
+  checkStrArray(contact1.name, contact2.name, "Same name index");
   checkStrArray(contact1.tel, contact2.tel, "Same tel index");
   checkStrArray(contact1.telLowerCase, contact2.telLowerCase, "Same telLowerCase index");
   checkStrArray(contact1.telMatch, contact2.telMatch, "Same telMatch index");
@@ -154,7 +155,7 @@ cdb.init();
 let CONTACT_PROPS = {
   id: "ab74671e36be41b680f8f030e7e24ea2",
   properties: {
-    name: ["magnificentest foo bar the third"],
+    name: ["Magnificentest foo bar the third"],
     givenName: ["foo"],
     familyName: ["bar"],
     honorificPrefix: ["magnificentest"],

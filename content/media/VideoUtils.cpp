@@ -10,6 +10,8 @@
 
 #include <stdint.h>
 
+namespace mozilla {
+
 // Converts from number of audio frames to microseconds, given the specified
 // audio rate.
 CheckedInt64 FramesToUsecs(int64_t aFrames, uint32_t aRate) {
@@ -89,3 +91,14 @@ void GetEstimatedBufferedTimeRanges(mozilla::MediaResource* aStream,
   return;
 }
 
+bool
+IsVideoContentType(const nsCString& aContentType)
+{
+  NS_NAMED_LITERAL_CSTRING(video, "video");
+  if (FindInReadable(video, aContentType)) {
+    return true;
+  }
+  return false;
+}
+
+} // end namespace mozilla

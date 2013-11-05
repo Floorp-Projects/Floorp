@@ -8,7 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Hal.h"
+#include "mozilla/HalScreenConfiguration.h"
 #include "nsIDOMScreen.h"
 #include "nsCOMPtr.h"
 #include "nsDOMEventTargetHelper.h"

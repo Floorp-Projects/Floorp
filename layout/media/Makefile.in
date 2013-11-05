@@ -25,15 +25,15 @@ endif
 
 ifdef MOZ_VORBIS
 SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/media/libvorbis/lib/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
-	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libvorbis/$(LIB_PREFIX)vorbis.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libogg/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
 ifdef MOZ_TREMOR
 SHARED_LIBRARY_LIBS	+= \
 	$(DEPTH)/media/libtremor/lib/$(LIB_PREFIX)tremor.$(LIB_SUFFIX) \
-	$(DEPTH)/media/libogg/src/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
+	$(DEPTH)/media/libogg/$(LIB_PREFIX)ogg.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 

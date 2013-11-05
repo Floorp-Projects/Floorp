@@ -986,7 +986,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::gc::ChunkPool   gcChunkPool;
 
     js::RootedValueMap  gcRootsHash;
-    volatile size_t     gcBytes;
+
+    /* This is updated by both the main and GC helper threads. */
+    mozilla::Atomic<size_t, mozilla::ReleaseAcquire> gcBytes;
+
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
 

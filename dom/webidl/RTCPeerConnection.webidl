@@ -125,6 +125,11 @@ interface mozRTCPeerConnection : EventTarget  {
                  RTCStatsCallback successCallback,
                  RTCPeerConnectionErrorCallback failureCallback);
 
+  [ChromeOnly]
+  void getStatsInternal (MediaStreamTrack? selector,
+                         RTCStatsCallback successCallback,
+                         RTCPeerConnectionErrorCallback failureCallback);
+
   // Data channel.
   RTCDataChannel createDataChannel (DOMString label,
                                     optional RTCDataChannelInit dataChannelDict);

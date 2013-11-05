@@ -2611,6 +2611,25 @@ private:
 };
 
 /**
+ * A display item for subdocuments to capture the resolution from the presShell
+ * and ensure that it gets applied to all the right elements. This item creates
+ * a container layer.
+ */
+class nsDisplayResolution : public nsDisplayOwnLayer {
+public:
+  nsDisplayResolution(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                     nsDisplayList* aList, uint32_t aFlags);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayResolution();
+#endif
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+  NS_DISPLAY_DECL_NAME("Resolution", TYPE_RESOLUTION)
+};
+
+/**
  * A display item used to represent fixed position elements. This will ensure
  * the contents gets its own layer, and that the built layer will have
  * position-related metadata set on it.

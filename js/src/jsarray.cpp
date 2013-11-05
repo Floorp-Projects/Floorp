@@ -1200,7 +1200,7 @@ InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned co
     if (cx->typeInferenceEnabled() && !type->unknownProperties()) {
         AutoEnterAnalysis enter(cx);
 
-        TypeSet *types = type->getProperty(cx, JSID_VOID);
+        HeapTypeSet *types = type->getProperty(cx, JSID_VOID);
         if (!types)
             return false;
 
@@ -2043,32 +2043,41 @@ js::array_push(JSContext *cx, unsigned argc, Value *vp)
     if (!obj)
         return false;
 
-    /* Fast path for the fully-dense case. */
-    if (obj->is<ArrayObject>()) {
-        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-        if (arr->lengthIsWritable() && !ObjectMayHaveExtraIndexedProperties(arr)) {
-            uint32_t length = arr->length();
-            uint32_t argCount = args.length();
-            JSObject::EnsureDenseResult result = arr->ensureDenseElements(cx, length, argCount);
-            if (result == JSObject::ED_FAILED)
-                return false;
-
-            if (result == JSObject::ED_OK) {
-                arr->setLengthInt32(length + argCount);
-                for (uint32_t i = 0, index = length; i < argCount; index++, i++)
-                    JSObject::setDenseElementWithType(cx, arr, index, args[i]);
-                args.rval().setNumber(arr->length());
-                return true;
-            }
-
-            MOZ_ASSERT(result == JSObject::ED_SPARSE);
-        }
-    }
-
     /* Steps 2-3. */
     uint32_t length;
     if (!GetLengthProperty(cx, obj, &length))
         return false;
+
+    /* Fast path for native objects with dense elements. */
+    do {
+        if (!obj->isNative())
+            break;
+
+        if (obj->is<ArrayObject>() && !obj->as<ArrayObject>().lengthIsWritable())
+            break;
+
+        if (ObjectMayHaveExtraIndexedProperties(obj))
+            break;
+
+        uint32_t argCount = args.length();
+        JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, length, argCount);
+        if (result == JSObject::ED_FAILED)
+            return false;
+
+        if (result == JSObject::ED_OK) {
+            for (uint32_t i = 0, index = length; i < argCount; index++, i++)
+                JSObject::setDenseElementWithType(cx, obj, index, args[i]);
+            uint32_t newlength = length + argCount;
+            args.rval().setNumber(newlength);
+            if (obj->is<ArrayObject>()) {
+                obj->as<ArrayObject>().setLengthInt32(newlength);
+                return true;
+            }
+            return SetLengthProperty(cx, obj, newlength);
+        }
+
+        MOZ_ASSERT(result == JSObject::ED_SPARSE);
+    } while (false);
 
     /* Steps 4-5. */
     if (!InitArrayElements(cx, obj, length, args.length(), args.array(), UpdateTypes))
@@ -2959,6 +2968,8 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("findIndex",   "ArrayFindIndex",   1,0),
 
     JS_SELF_HOSTED_FN("@@iterator",  "ArrayValues",      0,0),
+    JS_SELF_HOSTED_FN("entries",     "ArrayEntries",     0,0),
+    JS_SELF_HOSTED_FN("keys",        "ArrayKeys",        0,0),
     JS_FS_END
 };
 

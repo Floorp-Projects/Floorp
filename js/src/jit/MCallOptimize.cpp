@@ -325,7 +325,7 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
     bool needsHoleCheck = thisTypes->hasObjectFlags(constraints(), types::OBJECT_FLAG_NON_PACKED);
     bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
 
-    bool barrier = PropertyReadNeedsTypeBarrier(cx, context(), constraints(),
+    bool barrier = PropertyReadNeedsTypeBarrier(context(), constraints(),
                                                 callInfo.thisArg(), nullptr, returnTypes);
     if (barrier)
         returnType = MIRType_Value;

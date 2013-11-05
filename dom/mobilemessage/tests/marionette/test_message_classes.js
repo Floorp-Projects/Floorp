@@ -49,8 +49,8 @@ function checkMessage(message, id, threadId, messageClass) {
   is(message.sender, "+1", "message.sender");
   is(message.body, "A", "message.body");
   is(message.messageClass, messageClass, "message.messageClass");
-  ok(message.timestamp instanceof Date,
-     "message.timestamp is instanceof " + message.timestamp.constructor);
+  ok(message.timestamp instanceof Date, "timestamp is instanceof Date");
+  ok(message.deliveryTimestamp === null, "deliveryTimestamp is null");
   is(message.read, false, "message.read");
 }
 

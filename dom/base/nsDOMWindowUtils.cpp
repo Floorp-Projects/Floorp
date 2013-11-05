@@ -3422,7 +3422,7 @@ nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMNode* aNode,
       if (layer) {
         float value;
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
-        if (forwarder) {
+        if (forwarder && forwarder->HasShadowManager()) {
           forwarder->GetShadowManager()->SendGetOpacity(layer->AsShadowableLayer()->GetShadow(), &value);
           cssValue = new nsROCSSPrimitiveValue;
           cssValue->SetNumber(value);
@@ -3433,7 +3433,7 @@ nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMNode* aNode,
       if (layer) {
         gfx3DMatrix matrix;
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
-        if (forwarder) {
+        if (forwarder && forwarder->HasShadowManager()) {
           forwarder->GetShadowManager()->SendGetTransform(layer->AsShadowableLayer()->GetShadow(), &matrix);
           cssValue = nsComputedDOMStyle::MatrixToCSSValue(matrix);
         }

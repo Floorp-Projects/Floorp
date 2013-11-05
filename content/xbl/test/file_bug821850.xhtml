@@ -43,6 +43,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           is(bound.primitiveField, undefined, "Xrays don't show fields");
           is(bound.wrappedJSObject.primitiveField, 2, "Waiving Xrays show fields");
 
+          // Check exposure behavior.
+          is(typeof bound.unexposedMethod, 'function',
+             "Unexposed method should be visible to XBL");
+          is(typeof bound.wrappedJSObject.unexposedMethod, 'undefined',
+             "Unexposed method should not be defined in content");
+          is(typeof bound.unexposedProperty, 'number',
+             "Unexposed property should be visible to XBL");
+          is(typeof bound.wrappedJSObject.unexposedProperty, 'undefined',
+             "Unexposed property should not be defined in content");
+
           // Check that here document.QueryInterface works
           ok("QueryInterface" in document,
              "Should have a document.QueryInterface here");
@@ -65,13 +75,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
           win.go();
         </constructor>
         <field name="primitiveField">2</field>
-        <method name="method">
+        <method name="unexposedMethod"><body></body></method>
+        <property name="unexposedProperty" onget="return 2;" readonly="true"></property>
+        <method name="method" exposeToUntrustedContent="true">
           <parameter name="arg" />
           <body>
             return "method:" + arg;
           </body>
         </method>
-        <method name="passMeAJSObject">
+        <method name="passMeAJSObject" exposeToUntrustedContent="true">
           <parameter name="arg" />
           <body>
             is(typeof arg.prop, 'undefined', "No properties");
@@ -85,13 +97,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
             is(typeof arg.foo, 'undefined', "Shouldn't place props");
           </body>
         </method>
-        <property name="prop">
+        <property name="prop" exposeToUntrustedContent="true">
           <getter>return this._prop;</getter>
           <setter>this._prop = "set:" + val;</setter>
         </property>
       </implementation>
       <handlers>
-        <handler event="testevent" action="ok(true, 'called event handler'); finish();"/>
+        <handler event="testevent" action="ok(true, 'called event handler'); finish();" allowuntrusted="true"/>
+        <handler event="testtrusted" action="ok(true, 'called trusted handler'); window.wrappedJSObject.triggeredTrustedHandler = true;"/>
+        <handler event="keyup" action="ok(true, 'called untrusted key handler'); window.wrappedJSObject.triggeredUntrustedKeyHandler = true;" allowuntrusted="true"/>
+        <handler event="keydown" action="ok(true, 'called trusted key handler'); window.wrappedJSObject.triggeredTrustedKeyHandler = true;"/>
       </handlers>
     </binding>
   </bindings>
@@ -193,6 +208,58 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     Object.defineProperty(bound, 'method', {value: function() { return "hah" }});
     Object.defineProperty(bound, 'prop', {value: "redefined"});
     bound.primitiveField = 321;
+
+    // We need a chrome window to create trusted events. This isn't really doable
+    // in child processes, so let's just skip if that's the case.
+    if (SpecialPowers.isMainProcess()) {
+      var Ci = SpecialPowers.Ci;
+      var chromeWin = SpecialPowers.wrap(window.top)
+                                   .QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIWebNavigation)
+                                   .QueryInterface(Ci.nsIDocShell)
+                                   .chromeEventHandler.ownerDocument.defaultView;
+
+      // Untrusted events should not trigger event handlers without
+      // exposeToUntrustedContent=true.
+      window.triggeredTrustedHandler = false;
+      var untrustedEvent = new CustomEvent('testtrusted');
+      ok(!untrustedEvent.isTrusted, "Created an untrusted event");
+      bound.dispatchEvent(untrustedEvent);
+      ok(!window.triggeredTrustedHandler, "untrusted events should not trigger trusted handler");
+      var trustedEvent = new chromeWin.CustomEvent('testtrusted');
+      ok(trustedEvent.isTrusted, "Created a trusted event");
+      SpecialPowers.wrap(bound).dispatchEvent(trustedEvent);
+      ok(window.triggeredTrustedHandler, "trusted events should trigger trusted handler");
+
+      //
+      // We check key events as well, since they're implemented differently.
+      //
+      // NB: We don't check isTrusted on the events we create here, because
+      // according to smaug, old-style event initialization doesn't mark the
+      // event as trusted until it's dispatched.
+      //
+
+      window.triggeredUntrustedKeyHandler = false;
+      window.triggeredTrustedKeyHandler = false;
+
+      // Untrusted event, permissive handler.
+      var untrustedKeyEvent = document.createEvent('KeyboardEvent');
+      untrustedKeyEvent.initEvent('keyup', true, true);
+      bound.dispatchEvent(untrustedKeyEvent);
+      ok(window.triggeredUntrustedKeyHandler, "untrusted key events should trigger untrusted handler");
+
+      // Untrusted event, strict handler.
+      var fakeTrustedKeyEvent = document.createEvent('KeyboardEvent');
+      fakeTrustedKeyEvent.initEvent('keydown', true, true);
+      bound.dispatchEvent(fakeTrustedKeyEvent);
+      ok(!window.triggeredTrustedKeyHandler, "untrusted key events should not trigger trusted handler");
+
+      // Trusted event, strict handler.
+      var trustedKeyEvent = chromeWin.document.createEvent('KeyboardEvent');
+      trustedKeyEvent.initEvent('keydown', true, true);
+      SpecialPowers.wrap(bound).dispatchEvent(trustedKeyEvent);
+      ok(window.triggeredTrustedKeyHandler, "trusted key events should trigger trusted handler");
+    }
 
     // Hand control back to the XBL scope by dispatching an event on the bound element.
     bound.dispatchEvent(new CustomEvent('testevent'));

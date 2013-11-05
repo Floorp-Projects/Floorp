@@ -36,16 +36,6 @@
 #include "nsIScriptTimeoutHandler.h"
 #include "nsIController.h"
 
-#ifdef XP_WIN
-// Thanks so much, Microsoft! :(
-#ifdef GetClassName
-#undef GetClassName
-#endif // GetClassName
-#ifdef CreateEvent
-#undef CreateEvent
-#endif
-#endif // XP_WIN
-
 // Helper Classes
 #include "nsJSUtils.h"
 #include "jsapi.h"              // for JSAutoRequest
@@ -75,6 +65,18 @@
 #include "nsIWidgetListener.h"
 #include "nsIBaseWindow.h"
 #include "nsDeviceSensors.h"
+
+#ifdef XP_WIN
+// Thanks so much, Microsoft and the people who pull in windows.h via
+// random silly headers! :(
+#ifdef GetClassName
+#undef GetClassName
+#endif // GetClassName
+#ifdef CreateEvent
+#undef CreateEvent
+#endif
+#endif // XP_WIN
+
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocCharset.h"
@@ -3688,13 +3690,13 @@ nsGlobalWindow::GetContent(JSContext* aCx, ErrorResult& aError)
     return nullptr;
   }
 
-  JS::Rooted<JS::Value> val(aCx);
+  JS::Rooted<JS::Value> val(aCx, JS::NullValue());
   aError = treeOwner->GetContentWindow(aCx, val.address());
   if (aError.Failed()) {
     return nullptr;
   }
 
-  return &val.toObject();
+  return val.toObjectOrNull();
 }
 
 already_AddRefed<nsIDOMWindow>
@@ -3760,7 +3762,7 @@ nsGlobalWindow::GetScriptableContent(JSContext* aCx, JS::Value* aVal)
   ErrorResult rv;
   JS::Rooted<JSObject*> content(aCx, GetContent(aCx, rv));
   if (!rv.Failed()) {
-    *aVal = JS::ObjectValue(*content);
+    *aVal = JS::ObjectOrNullValue(content);
   }
 
   return rv.ErrorCode();
@@ -8668,11 +8670,11 @@ nsGlobalWindow::ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
     return JS::UndefinedValue();
   }
 
-  JS::Value result;
+  JS::Rooted<JS::Value> result(aCx);
   if (retVal) {
     aError = nsContentUtils::XPConnect()->VariantToJS(aCx,
                                                       FastGetGlobalJSObject(),
-                                                      retVal, &result);
+                                                      retVal, result.address());
   } else {
     result = JS::NullValue();
   }

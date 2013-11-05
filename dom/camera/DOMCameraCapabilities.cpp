@@ -199,6 +199,13 @@ DOMCameraCapabilities::GetPictureSizes(JSContext* cx, JS::Value* aPictureSizes)
   return DimensionListToNewObject(cx, aPictureSizes, CAMERA_PARAM_SUPPORTED_PICTURESIZES);
 }
 
+/* readonly attribute jsval thumbnailSizes; */
+NS_IMETHODIMP
+DOMCameraCapabilities::GetThumbnailSizes(JSContext* cx, JS::Value* aThumbnailSizes)
+{
+  return DimensionListToNewObject(cx, aThumbnailSizes, CAMERA_PARAM_SUPPORTED_JPEG_THUMBNAIL_SIZES);
+}
+
 /* readonly attribute jsval fileFormats; */
 NS_IMETHODIMP
 DOMCameraCapabilities::GetFileFormats(JSContext* cx, JS::Value* aFileFormats)

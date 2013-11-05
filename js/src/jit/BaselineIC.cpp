@@ -3321,7 +3321,7 @@ IsCacheableGetPropReadSlot(JSObject *obj, JSObject *holder, Shape *shape, bool i
 }
 
 static bool
-IsCacheableGetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isScripted,
+IsCacheableGetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *shape, bool *isScripted,
                        bool isDOMProxy=false)
 {
     JS_ASSERT(isScripted);
@@ -3343,6 +3343,14 @@ IsCacheableGetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isSc
         return false;
 
     JSFunction *func = &shape->getterObject()->as<JSFunction>();
+
+#ifdef JSGC_GENERATIONAL
+    // Information from get prop call ICs may be used directly from Ion code,
+    // and should not be nursery allocated.
+    if (cx->runtime()->gcNursery.isInside(holder) || cx->runtime()->gcNursery.isInside(func))
+        return false;
+#endif
+
     if (func->isNative()) {
         *isScripted = false;
         return true;
@@ -3433,7 +3441,7 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
 }
 
 static bool
-IsCacheableSetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isScripted)
+IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *shape, bool *isScripted)
 {
     JS_ASSERT(isScripted);
 
@@ -3454,6 +3462,14 @@ IsCacheableSetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isSc
         return false;
 
     JSFunction *func = &shape->setterObject()->as<JSFunction>();
+
+#ifdef JSGC_GENERATIONAL
+    // Information from set prop call ICs may be used directly from Ion code,
+    // and should not be nursery allocated.
+    if (cx->runtime()->gcNursery.isInside(holder) || cx->runtime()->gcNursery.isInside(func))
+        return false;
+#endif
+
     if (func->isNative()) {
         *isScripted = false;
         return true;
@@ -3688,7 +3704,7 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbyt
     }
 
     bool getterIsScripted = false;
-    if (IsCacheableGetPropCall(obj, holder, shape, &getterIsScripted, /*isDOMProxy=*/false)) {
+    if (IsCacheableGetPropCall(cx, obj, holder, shape, &getterIsScripted, /*isDOMProxy=*/false)) {
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
 
         // If a suitable stub already exists, nothing else to do.
@@ -5822,7 +5838,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     bool isScripted = false;
-    bool cacheableCall = IsCacheableGetPropCall(obj, holder, shape, &isScripted, isDOMProxy);
+    bool cacheableCall = IsCacheableGetPropCall(cx, obj, holder, shape, &isScripted, isDOMProxy);
 
     // Try handling scripted getters.
     if (cacheableCall && isScripted && !isDOMProxy) {
@@ -6765,7 +6781,7 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
     }
 
     bool isScripted = false;
-    bool cacheableCall = IsCacheableSetPropCall(obj, holder, shape, &isScripted);
+    bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape, &isScripted);
 
     // Try handling scripted setters.
     if (cacheableCall && isScripted) {
@@ -9220,6 +9236,8 @@ ICUpdatedStub *
 ICSetElemDenseAddCompiler::getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes)
 {
     RootedTypeObject objType(cx, obj_->getType(cx));
+    if (!objType)
+        return nullptr;
     Rooted<IonCode *> stubCode(cx, getStubCode());
     return ICSetElem_DenseAddImpl<ProtoChainDepth>::New(space, stubCode, objType, shapes);
 }

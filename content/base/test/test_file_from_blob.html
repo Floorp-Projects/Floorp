@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=819900
+-->
+    <head>
+<title>Test for crash caused by unloading and reloading srcdoc iframes</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=819900">Mozilla Bug 819900</a>
+
+<pre id="test">
+<script>
+
+  var b = new Blob(['1234567890']);
+  ok(b, 'Blob created');
+  is(b.size, 10, 'Blob has the right size');
+
+  var status = false;
+  try {
+    f = new File(b);
+  } catch(e) {
+    status = true;
+  }
+  ok(status, "File throws if the second argument is missing");
+
+  status = false;
+  try {
+    f = new File(42, 'foobar.txt');
+  } catch(e) {
+    status = true;
+  }
+  ok(status, "File throws if the argument is not an array");
+
+  status = false;
+  try {
+    f = new File({}, 'foobar.txt');
+  } catch(e) {
+    status = true;
+  }
+  ok(status, "File throws if the argument is not an array");
+
+  status = false;
+  try {
+    f = new File("hello world", 'foobar.txt');
+  } catch(e) {
+    status = true;
+  }
+  ok(status, "File throws if the argument is not an array");
+
+  f = new File(['1234567890'], '');
+  ok(f, 'File created');
+  is(f.size, 10, 'File has the right size');
+  is(f.name, '');
+  is(f.type, '');
+
+  f = new File(['1234567890'], 42);
+  ok(f, 'File created');
+  is(f.size, 10, 'File has the right size');
+  is(f.name, '42');
+  is(f.type, '');
+
+  f = new File(['1234567890'], 'text.txt');
+  ok(f, 'File created');
+  is(f.size, 10, 'File has the right size');
+  is(f.name, 'text.txt');
+  is(f.type, '');
+
+  f = new File(['1234567890'], 'text.txt', { type: 'plain/text' });
+  ok(f, 'File created');
+  is(f.size, 10, 'File has the right size');
+  is(f.name, 'text.txt');
+  is(f.type, 'plain/text');
+
+  f = new File([b], 'text.txt');
+  ok(f, 'File created');
+  is(f.name, 'text.txt');
+  is(f.type, '');
+  is(f.size, b.size);
+
+  f = new File([b], 'test.txt', { type: 'plain/text' });
+  ok(f, 'File created');
+  is(f.name, 'test.txt');
+  is(f.type, 'plain/text');
+  is(f.size, b.size);
+
+  f = new File([b, b], 'test.txt', { type: 'plain/text' });
+  ok(f, 'File created');
+  is(f.name, 'test.txt');
+  is(f.type, 'plain/text');
+  is(f.size, b.size * 2);
+
+  var f2 = new File([f, f], 'test.txt', { type: 'plain/text' });
+  ok(f2, 'File created');
+  is(f2.name, 'test.txt');
+  is(f2.type, 'plain/text');
+  is(f2.size, f.size * 2);
+
+  var f2 = new File([f, f], 'test.txt', b);
+  ok(f2, 'File created');
+  is(f2.name, 'test.txt');
+  is(f2.type, b.type);
+  is(f2.size, f.size * 2);
+
+</script>
+</pre>
+</body>
+</html>
+

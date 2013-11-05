@@ -122,6 +122,12 @@ public:
     return resultMatrix;
   }
 
+  Matrix& operator*=(const Matrix &aMatrix)
+  {
+    Matrix resultMatrix = *this * aMatrix;
+    return *this = resultMatrix;
+  }
+
   /* Returns true if the other matrix is fuzzy-equal to this matrix.
    * Note that this isn't a cheap comparison!
    */
@@ -157,6 +163,13 @@ public:
     return _11 == 1.0f && _12 == 0.0f &&
            _21 == 0.0f && _22 == 1.0f &&
            _31 == 0.0f && _32 == 0.0f;
+  }
+
+  /* Returns true if the matrix is singular.
+   */
+  bool IsSingular() const
+  {
+    return Determinant() == 0;
   }
 
   GFX2D_API void NudgeToIntegers();

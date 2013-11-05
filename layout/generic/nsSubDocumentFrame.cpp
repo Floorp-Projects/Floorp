@@ -372,8 +372,10 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   nsIScrollableFrame *sf = presShell->GetRootScrollFrameAsScrollable();
+  bool constructResolutionItem = subdocRootFrame &&
+    (presShell->GetXResolution() != 1.0 || presShell->GetYResolution() != 1.0);
   bool constructZoomItem = subdocRootFrame && parentAPD != subdocAPD;
-  bool needsOwnLayer = constructZoomItem ||
+  bool needsOwnLayer = constructResolutionItem || constructZoomItem ||
     presContext->IsRootContentDocument() || (sf && sf->IsScrollingActive());
 
   nsDisplayList childItems;
@@ -423,13 +425,25 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
   }
 
+  // Generate a resolution and/or zoom item if needed. If one or both of those is
+  // created, we don't need to create a separate nsDisplayOwnLayer.
+
+  if (constructResolutionItem) {
+    nsDisplayResolution* resolutionItem =
+      new (aBuilder) nsDisplayResolution(aBuilder, subdocRootFrame, &childItems,
+                                         nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
+    childItems.AppendToTop(resolutionItem);
+    needsOwnLayer = false;
+  }
   if (constructZoomItem) {
     nsDisplayZoom* zoomItem =
       new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
                                    subdocAPD, parentAPD,
                                    nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
     childItems.AppendToTop(zoomItem);
-  } else if (needsOwnLayer) {
+    needsOwnLayer = false;
+  }
+  if (needsOwnLayer) {
     // We always want top level content documents to be in their own layer.
     nsDisplayOwnLayer* layerItem = new (aBuilder) nsDisplayOwnLayer(
       aBuilder, subdocRootFrame ? subdocRootFrame : this,

@@ -391,28 +391,6 @@ nsSVGUtils::ComputeAlphaMask(uint8_t *aData,
   }
 }
 
-float
-nsSVGUtils::CoordToFloat(nsPresContext *aPresContext,
-                         nsSVGElement *aContent,
-                         const nsStyleCoord &aCoord)
-{
-  switch (aCoord.GetUnit()) {
-  case eStyleUnit_Factor:
-    // user units
-    return aCoord.GetFactorValue();
-
-  case eStyleUnit_Coord:
-    return nsPresContext::AppUnitsToFloatCSSPixels(aCoord.GetCoordValue());
-
-  case eStyleUnit_Percent: {
-      SVGSVGElement* ctx = aContent->GetCtx();
-      return ctx ? aCoord.GetPercentValue() * ctx->GetLength(SVGContentUtils::XY) : 0.0f;
-    }
-  default:
-    return 0.0f;
-  }
-}
-
 nsSVGDisplayContainerFrame*
 nsSVGUtils::GetNearestSVGViewport(nsIFrame *aFrame)
 {
@@ -1241,7 +1219,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
       matrix = element->PrependLocalTransformsTo(matrix,
                           nsSVGElement::eChildToUserSpace);
     }
-    return svg->GetBBoxContribution(matrix, aFlags);
+    return svg->GetBBoxContribution(matrix, aFlags).ToThebesRect();
   }
   return nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
 }
@@ -1293,22 +1271,6 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
     return true;
   }
   return false;
-}
-
-float
-nsSVGUtils::MaxExpansion(const gfxMatrix &aMatrix)
-{
-  // maximum expansion derivation from
-  // http://lists.cairographics.org/archives/cairo/2004-October/001980.html
-  // and also implemented in cairo_matrix_transformed_circle_major_axis
-  double a = aMatrix.xx;
-  double b = aMatrix.yx;
-  double c = aMatrix.xy;
-  double d = aMatrix.yy;
-  double f = (a * a + b * b + c * c + d * d) / 2;
-  double g = (a * a + b * b - c * c - d * d) / 2;
-  double h = a * c + b * d;
-  return sqrt(f + sqrt(g * g + h * h));
 }
 
 gfxMatrix
@@ -1637,8 +1599,8 @@ nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
 
   nsSVGElement *ctx = static_cast<nsSVGElement*>(content);
 
-  return CoordToFloat(aFrame->PresContext(), ctx,
-                      style->mStrokeWidth);
+  return SVGContentUtils::CoordToFloat(aFrame->PresContext(), ctx,
+                                       style->mStrokeWidth);
 }
 
 void
@@ -1729,9 +1691,9 @@ GetStrokeDashData(nsIFrame* aFrame,
     const nsStyleCoord *dasharray = style->mStrokeDasharray;
 
     for (uint32_t i = 0; i < count; i++) {
-      aDashes[i] = nsSVGUtils::CoordToFloat(presContext,
-                                            ctx,
-                                            dasharray[i]) * pathScale;
+      aDashes[i] = SVGContentUtils::CoordToFloat(presContext,
+                                                 ctx,
+                                                 dasharray[i]) * pathScale;
       if (aDashes[i] < 0.0) {
         return false;
       }
@@ -1742,9 +1704,9 @@ GetStrokeDashData(nsIFrame* aFrame,
   if (aContextPaint && style->mStrokeDashoffsetFromObject) {
     *aDashOffset = aContextPaint->GetStrokeDashOffset();
   } else {
-    *aDashOffset = nsSVGUtils::CoordToFloat(presContext,
-                                            ctx,
-                                            style->mStrokeDashoffset);
+    *aDashOffset = SVGContentUtils::CoordToFloat(presContext,
+                                                 ctx,
+                                                 style->mStrokeDashoffset);
   }
   
   return (totalLength > 0.0);
@@ -1873,7 +1835,7 @@ nsSVGUtils::GetSVGGlyphExtents(Element* aElement,
   *aResult = svgFrame->GetBBoxContribution(transform,
     nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeFillGeometry |
     nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIncludeStrokeGeometry |
-    nsSVGUtils::eBBoxIncludeMarkers);
+    nsSVGUtils::eBBoxIncludeMarkers).ToThebesRect();
   return true;
 }
 

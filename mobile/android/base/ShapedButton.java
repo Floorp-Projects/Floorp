@@ -7,30 +7,28 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.widget.GeckoImageButton;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Path;
 import android.graphics.PorterDuff.Mode;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
 public class ShapedButton extends GeckoImageButton
                           implements CanvasDelegate.DrawManager {
-    protected GeckoActivity mActivity;
+    protected final LightweightTheme mTheme;
 
-    private Path mPath;
-    private CurveTowards mSide;
+    private final Path mPath;
+    private final CurveTowards mSide;
 
-    protected CanvasDelegate mCanvasDelegate;
+    protected final CanvasDelegate mCanvasDelegate;
 
     private enum CurveTowards { NONE, LEFT, RIGHT };
 
     public ShapedButton(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mActivity = (GeckoActivity) context;
+        mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.BrowserToolbarCurve);
         int curveTowards = a.getInt(R.styleable.BrowserToolbarCurve_curveTowards, 0x00);
@@ -57,9 +55,9 @@ public class ShapedButton extends GeckoImageButton
         if (mSide == CurveTowards.NONE)
             return;
 
-        int width = getMeasuredWidth();
-        int height = getMeasuredHeight();
-        int curve = (int) (height * 1.125f);
+        final int width = getMeasuredWidth();
+        final int height = getMeasuredHeight();
+        final int curve = (int) (height * 1.125f);
 
         mPath.reset();
 
@@ -97,20 +95,19 @@ public class ShapedButton extends GeckoImageButton
     // The drawable is constructed as per @drawable/shaped_button.
     @Override
     public void onLightweightThemeChanged() {
-        int background = mActivity.getResources().getColor(R.color.background_tabs);
-        LightweightThemeDrawable lightWeight = mActivity.getLightweightTheme().getColorDrawable(this, background);
+        final int background = getResources().getColor(R.color.background_tabs);
+        final LightweightThemeDrawable lightWeight = mTheme.getColorDrawable(this, background);
 
         if (lightWeight == null)
             return;
 
         lightWeight.setAlpha(34, 34);
 
-        Resources resources = this.getContext().getResources();
-        StateListDrawable stateList = new StateListDrawable();
-        stateList.addState(new int[] { android.R.attr.state_pressed }, new ColorDrawable(resources.getColor(R.color.highlight_shaped)));
-        stateList.addState(new int[] { android.R.attr.state_focused }, new ColorDrawable(resources.getColor(R.color.highlight_shaped_focused)));
-        stateList.addState(new int[] { R.attr.state_private }, new ColorDrawable(resources.getColor(R.color.background_tabs)));
-        stateList.addState(new int[] {}, lightWeight);
+        final StateListDrawable stateList = new StateListDrawable();
+        stateList.addState(PRESSED_ENABLED_STATE_SET, getColorDrawable(R.color.highlight_shaped));
+        stateList.addState(FOCUSED_STATE_SET, getColorDrawable(R.color.highlight_shaped_focused));
+        stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.background_tabs));
+        stateList.addState(EMPTY_STATE_SET, lightWeight);
 
         setBackgroundDrawable(stateList);
     }
@@ -140,11 +137,6 @@ public class ShapedButton extends GeckoImageButton
 
     @Override
     public void setBackgroundResource(int resId) {
-        if (getBackground() == null || resId == 0) {
-            super.setBackgroundResource(resId);
-            return;
-        }
-
-        setBackgroundDrawable(getContext().getResources().getDrawable(resId));
+        setBackgroundDrawable(getResources().getDrawable(resId));
     }
 }

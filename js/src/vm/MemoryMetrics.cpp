@@ -539,7 +539,7 @@ JS::PeakSizeOfTemporary(const JSRuntime *rt)
 namespace JS {
 
 JS_PUBLIC_API(bool)
-AddSizeOfTab(JSRuntime *rt, JSObject *obj, MallocSizeOf mallocSizeOf, ObjectPrivateVisitor *opv,
+AddSizeOfTab(JSRuntime *rt, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectPrivateVisitor *opv,
              TabSizes *sizes)
 {
     class SimpleJSRuntimeStats : public JS::RuntimeStats

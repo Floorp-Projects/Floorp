@@ -180,6 +180,11 @@ hb_ot_layout_feature_get_lookups (hb_face_t    *face,
 				  unsigned int *lookup_count /* IN/OUT */,
 				  unsigned int *lookup_indexes /* OUT */);
 
+unsigned int
+hb_ot_layout_table_get_lookup_count (hb_face_t    *face,
+				     hb_tag_t      table_tag);
+
+
 void
 hb_ot_layout_collect_lookups (hb_face_t      *face,
 			      hb_tag_t        table_tag,

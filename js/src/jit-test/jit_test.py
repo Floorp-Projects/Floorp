@@ -196,7 +196,6 @@ def main(argv):
         prolog = posixpath.join(options.remote_test_root, 'jit-tests', 'jit-tests', 'lib', 'prolog.js')
 
     prefix += ['-f', prolog]
-    prefix += ['--js-cache', jittests.JS_CACHE_DIR]
 
     # Avoid racing on the cache by having the js shell create a new cache
     # subdir for each process. The js shell takes care of deleting these

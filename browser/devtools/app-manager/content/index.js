@@ -40,13 +40,25 @@ window.addEventListener("message", function(event) {
   }
 }, false);
 
+window.addEventListener("unload", function onUnload() {
+  window.removeEventListener("unload", onUnload);
+  if (connection) {
+    connection.off(Connection.Status.CONNECTED, onConnected);
+    connection.off(Connection.Status.DISCONNECTED, onDisconnected);
+  }
+});
+
 function onNewConnection() {
-  connection.on(Connection.Status.CONNECTED, () => {
-    document.querySelector("#content").classList.add("connected");
-  });
-  connection.on(Connection.Status.DISCONNECTED, () => {
-    document.querySelector("#content").classList.remove("connected");
-  });
+  connection.on(Connection.Status.CONNECTED, onConnected);
+  connection.on(Connection.Status.DISCONNECTED, onDisconnected);
+}
+
+function onConnected() {
+  document.querySelector("#content").classList.add("connected");
+}
+
+function onDisconnected() {
+  document.querySelector("#content").classList.remove("connected");
 }
 
 function selectTab(id) {

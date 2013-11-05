@@ -92,135 +92,142 @@ TelephonyParent::RecvUnregisterListener()
 }
 
 bool
-TelephonyParent::RecvDialCall(const nsString& aNumber,
+TelephonyParent::RecvDialCall(const uint32_t& aClientId,
+                              const nsString& aNumber,
                               const bool& aIsEmergency)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->Dial(aNumber, aIsEmergency);
+  provider->Dial(aClientId, aNumber, aIsEmergency);
   return true;
 }
 
 bool
-TelephonyParent::RecvHangUpCall(const uint32_t& aCallIndex)
+TelephonyParent::RecvHangUpCall(const uint32_t& aClientId,
+                                const uint32_t& aCallIndex)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->HangUp(aCallIndex);
+  provider->HangUp(aClientId, aCallIndex);
   return true;
 }
 
 bool
-TelephonyParent::RecvAnswerCall(const uint32_t& aCallIndex)
+TelephonyParent::RecvAnswerCall(const uint32_t& aClientId,
+                                const uint32_t& aCallIndex)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->AnswerCall(aCallIndex);
+  provider->AnswerCall(aClientId, aCallIndex);
   return true;
 }
 
 bool
-TelephonyParent::RecvRejectCall(const uint32_t& aCallIndex)
+TelephonyParent::RecvRejectCall(const uint32_t& aClientId,
+                                const uint32_t& aCallIndex)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->RejectCall(aCallIndex);
+  provider->RejectCall(aClientId, aCallIndex);
   return true;
 }
 
 bool
-TelephonyParent::RecvHoldCall(const uint32_t& aCallIndex)
+TelephonyParent::RecvHoldCall(const uint32_t& aClientId,
+                              const uint32_t& aCallIndex)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->HoldCall(aCallIndex);
+  provider->HoldCall(aClientId, aCallIndex);
   return true;
 }
 
 bool
-TelephonyParent::RecvResumeCall(const uint32_t& aCallIndex)
+TelephonyParent::RecvResumeCall(const uint32_t& aClientId,
+                                const uint32_t& aCallIndex)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->ResumeCall(aCallIndex);
+  provider->ResumeCall(aClientId, aCallIndex);
   return true;
 }
 
 bool
-TelephonyParent::RecvConferenceCall()
+TelephonyParent::RecvConferenceCall(const uint32_t& aClientId)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->ConferenceCall();
+  provider->ConferenceCall(aClientId);
   return true;
 }
 
 bool
-TelephonyParent::RecvSeparateCall(const uint32_t& aCallState)
+TelephonyParent::RecvSeparateCall(const uint32_t& aClientId,
+                                  const uint32_t& aCallIndex)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->SeparateCall(aCallState);
+  provider->SeparateCall(aClientId, aCallIndex);
   return true;
 }
 
 bool
-TelephonyParent::RecvHoldConference()
+TelephonyParent::RecvHoldConference(const uint32_t& aClientId)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->HoldConference();
+  provider->HoldConference(aClientId);
   return true;
 }
 
 bool
-TelephonyParent::RecvResumeConference()
+TelephonyParent::RecvResumeConference(const uint32_t& aClientId)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->ResumeConference();
+  provider->ResumeConference(aClientId);
   return true;
 }
 
 bool
-TelephonyParent::RecvStartTone(const nsString& aTone)
+TelephonyParent::RecvStartTone(const uint32_t& aClientId, const nsString& aTone)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->StartTone(aTone);
+  provider->StartTone(aClientId, aTone);
   return true;
 }
 
 bool
-TelephonyParent::RecvStopTone()
+TelephonyParent::RecvStopTone(const uint32_t& aClientId)
 {
   nsCOMPtr<nsITelephonyProvider> provider =
     do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
   NS_ENSURE_TRUE(provider, true);
 
-  provider->StopTone();
+  provider->StopTone(aClientId);
   return true;
 }
 
@@ -275,7 +282,8 @@ TelephonyParent::RecvSetSpeakerEnabled(const bool& aEnabled)
 // nsITelephonyListener
 
 NS_IMETHODIMP
-TelephonyParent::CallStateChanged(uint32_t aCallIndex,
+TelephonyParent::CallStateChanged(uint32_t aClientId,
+                                  uint32_t aCallIndex,
                                   uint16_t aCallState,
                                   const nsAString& aNumber,
                                   bool aIsActive,
@@ -285,9 +293,9 @@ TelephonyParent::CallStateChanged(uint32_t aCallIndex,
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  IPCCallStateData data(aCallIndex, aCallState, nsString(aNumber), aIsActive,
-                        aIsOutgoing, aIsEmergency, aIsConference);
-  return SendNotifyCallStateChanged(data) ? NS_OK : NS_ERROR_FAILURE;
+  IPCCallStateData data(aCallIndex, aCallState, nsString(aNumber),
+                        aIsActive, aIsOutgoing, aIsEmergency, aIsConference);
+  return SendNotifyCallStateChanged(aClientId, data) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -306,7 +314,8 @@ TelephonyParent::EnumerateCallStateComplete()
 }
 
 NS_IMETHODIMP
-TelephonyParent::EnumerateCallState(uint32_t aCallIndex,
+TelephonyParent::EnumerateCallState(uint32_t aClientId,
+                                    uint32_t aCallIndex,
                                     uint16_t aCallState,
                                     const nsAString& aNumber,
                                     bool aIsActive,
@@ -318,32 +327,45 @@ TelephonyParent::EnumerateCallState(uint32_t aCallIndex,
 }
 
 NS_IMETHODIMP
-TelephonyParent::NotifyCdmaCallWaiting(const nsAString& aNumber)
+TelephonyParent::NotifyCdmaCallWaiting(uint32_t aClientId,
+                                       const nsAString& aNumber)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  return SendNotifyCdmaCallWaiting(nsString(aNumber)) ? NS_OK
-                                                      : NS_ERROR_FAILURE;
+  return SendNotifyCdmaCallWaiting(aClientId, nsString(aNumber))
+      ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-TelephonyParent::NotifyError(int32_t aCallIndex,
+TelephonyParent::NotifyConferenceError(const nsAString& aName,
+                                       const nsAString& aMessage)
+{
+  NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
+
+  return SendNotifyConferenceError(nsString(aName), nsString(aMessage)) ? NS_OK
+                                                                        : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+TelephonyParent::NotifyError(uint32_t aClientId,
+                             int32_t aCallIndex,
                              const nsAString& aError)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  return SendNotifyCallError(aCallIndex, nsString(aError)) ? NS_OK
-                                                           : NS_ERROR_FAILURE;
+  return SendNotifyCallError(aClientId, aCallIndex, nsString(aError))
+      ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-TelephonyParent::SupplementaryServiceNotification(int32_t aCallIndex,
+TelephonyParent::SupplementaryServiceNotification(uint32_t aClientId,
+                                                  int32_t aCallIndex,
                                                   uint16_t aNotification)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  return SendNotifySupplementaryService(aCallIndex, aNotification)
-    ? NS_OK : NS_ERROR_FAILURE;
+  return SendNotifySupplementaryService(aClientId, aCallIndex, aNotification)
+      ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /*******************************************************************************
@@ -387,7 +409,8 @@ TelephonyRequestParent::DoRequest()
 // nsITelephonyListener
 
 NS_IMETHODIMP
-TelephonyRequestParent::CallStateChanged(uint32_t aCallIndex,
+TelephonyRequestParent::CallStateChanged(uint32_t aClientId,
+                                         uint32_t aCallIndex,
                                          uint16_t aCallState,
                                          const nsAString& aNumber,
                                          bool aIsActive,
@@ -413,7 +436,8 @@ TelephonyRequestParent::EnumerateCallStateComplete()
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::EnumerateCallState(uint32_t aCallIndex,
+TelephonyRequestParent::EnumerateCallState(uint32_t aClientId,
+                                           uint32_t aCallIndex,
                                            uint16_t aCallState,
                                            const nsAString& aNumber,
                                            bool aIsActive,
@@ -423,26 +447,37 @@ TelephonyRequestParent::EnumerateCallState(uint32_t aCallIndex,
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  IPCCallStateData data(aCallIndex, aCallState, nsString(aNumber), aIsActive,
-                        aIsOutgoing, aIsEmergency, aIsConference);
-  return SendNotifyEnumerateCallState(data) ? NS_OK : NS_ERROR_FAILURE;
+  IPCCallStateData data(aCallIndex, aCallState, nsString(aNumber),
+                        aIsActive, aIsOutgoing, aIsEmergency, aIsConference);
+  return SendNotifyEnumerateCallState(aClientId, data) ? NS_OK
+                                                       : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyCdmaCallWaiting(const nsAString& aNumber)
+TelephonyRequestParent::NotifyCdmaCallWaiting(uint32_t aClientId,
+                                              const nsAString& aNumber)
 {
   MOZ_CRASH("Not a TelephonyParent!");
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyError(int32_t aCallIndex,
+TelephonyRequestParent::NotifyConferenceError(const nsAString& aName,
+                                              const nsAString& aMessage)
+{
+  MOZ_CRASH("Not a TelephonyParent!");
+}
+
+NS_IMETHODIMP
+TelephonyRequestParent::NotifyError(uint32_t aClientId,
+                                    int32_t aCallIndex,
                                     const nsAString& aError)
 {
   MOZ_CRASH("Not a TelephonyParent!");
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::SupplementaryServiceNotification(int32_t aCallIndex,
+TelephonyRequestParent::SupplementaryServiceNotification(uint32_t aClientId,
+                                                         int32_t aCallIndex,
                                                          uint16_t aNotification)
 {
   MOZ_CRASH("Not a TelephonyParent!");

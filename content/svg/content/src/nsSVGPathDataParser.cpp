@@ -7,827 +7,391 @@
 
 #include "mozilla/gfx/Point.h"
 #include "nsSVGDataParser.h"
+#include "SVGContentUtils.h"
 #include "SVGPathData.h"
 #include "SVGPathSegUtils.h"
-#include <stdlib.h>
-#include <math.h>
 
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-nsresult nsSVGPathDataParser::Match()
+static inline PRUnichar ToUpper(PRUnichar aCh)
 {
-  return MatchSvgPath();
+  return aCh >= 'a' && aCh <= 'z' ? aCh - 'a' + 'A' : aCh;
+}
+
+bool
+nsSVGPathDataParser::Parse()
+{
+  mPathSegList->Clear();
+  return ParsePath();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchCoordPair(float* aX, float* aY)
+bool
+nsSVGPathDataParser::ParseCoordPair(float& aX, float& aY)
 {
-  ENSURE_MATCHED(MatchCoord(aX));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-
-  ENSURE_MATCHED(MatchCoord(aY));
-
-  return NS_OK;
+  return SVGContentUtils::ParseNumber(mIter, mEnd, aX) &&
+         SkipCommaWsp() &&
+         SVGContentUtils::ParseNumber(mIter, mEnd, aY);
 }
 
-bool nsSVGPathDataParser::IsTokenCoordPairStarter()
+bool
+nsSVGPathDataParser::ParseFlag(bool& aFlag)
 {
-  return IsTokenCoordStarter();
+  if (mIter == mEnd || (*mIter != '0' && *mIter != '1')) {
+    return false;
+  }
+  aFlag = (*mIter == '1');
+
+  ++mIter;
+  return true;
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchCoord(float* aX)
+bool
+nsSVGPathDataParser::ParsePath()
 {
-  ENSURE_MATCHED(MatchNumber(aX));
-
-  return NS_OK;
-}
-
-bool nsSVGPathDataParser::IsTokenCoordStarter()
-{
-  return IsTokenNumberStarter();
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::MatchFlag(bool* f)
-{
-  switch (mTokenVal) {
-    case '0':
-      *f = false;
-      break;
-    case '1':
-      *f = true;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-  GetNextToken();
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::MatchSvgPath()
-{
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  if (IsTokenSubPathsStarter()) {
-    ENSURE_MATCHED(MatchSubPaths());
-  }
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-  
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::MatchSubPaths()
-{
-  ENSURE_MATCHED(MatchSubPath());
-
-  while (1) {
-    const char* pos = mTokenPos;
-
-    while (IsTokenWspStarter()) {
-      ENSURE_MATCHED(MatchWsp());
-    }
-
-    if (IsTokenSubPathStarter()) {
-      ENSURE_MATCHED(MatchSubPath());
-    }
-    else {
-      if (pos != mTokenPos) RewindTo(pos);
-      break;
-    }
-  }
-  
-  return NS_OK;
-}
-
-bool nsSVGPathDataParser::IsTokenSubPathsStarter()
-{
-  return IsTokenSubPathStarter();
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::MatchSubPath()
-{
-  ENSURE_MATCHED(MatchMoveto());
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  if (IsTokenSubPathElementsStarter())
-    ENSURE_MATCHED(MatchSubPathElements());
-  
-  return NS_OK;
-}
-
-bool nsSVGPathDataParser::IsTokenSubPathStarter()
-{
-  return (tolower(mTokenVal) == 'm');
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::MatchSubPathElements()
-{
-  ENSURE_MATCHED(MatchSubPathElement());
-
-  while (1) {
-    const char* pos = mTokenPos;
-
-    while (IsTokenWspStarter()) {
-      ENSURE_MATCHED(MatchWsp());
-    }
-
-
-    if (IsTokenSubPathElementStarter()) {
-        ENSURE_MATCHED(MatchSubPathElement());
-    }
-    else {
-      if (pos != mTokenPos) RewindTo(pos);
-      return NS_OK;
-    }
-  }
-  
-  return NS_OK;
-}
-
-bool nsSVGPathDataParser::IsTokenSubPathElementsStarter()
-{
-  return IsTokenSubPathElementStarter();
-}
-
-//----------------------------------------------------------------------
-
-nsresult nsSVGPathDataParser::MatchSubPathElement()
-{
-  switch (tolower(mTokenVal)) {
-    case 'z':
-      ENSURE_MATCHED(MatchClosePath());
-      break;
-    case 'l':
-      ENSURE_MATCHED(MatchLineto());
-      break;      
-    case 'h':
-      ENSURE_MATCHED(MatchHorizontalLineto());
-      break;
-    case 'v':
-      ENSURE_MATCHED(MatchVerticalLineto());
-      break;
-    case 'c':
-      ENSURE_MATCHED(MatchCurveto());
-      break;      
-    case 's':
-      ENSURE_MATCHED(MatchSmoothCurveto());
-      break;
-    case 'q':
-      ENSURE_MATCHED(MatchQuadBezierCurveto());
-      break;
-    case 't':
-      ENSURE_MATCHED(MatchSmoothQuadBezierCurveto());
-      break;
-    case 'a':
-      ENSURE_MATCHED(MatchEllipticalArc());
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-      break;
-  }
-  return NS_OK;
-}
-
-bool nsSVGPathDataParser::IsTokenSubPathElementStarter()
-{
-  switch (tolower(mTokenVal)) {
-    case 'z': case 'l': case 'h': case 'v': case 'c':
-    case 's': case 'q': case 't': case 'a':
-      return true;
-      break;
-    default:
+  while (SkipWsp()) {
+    if (!ParseSubPath()) {
       return false;
-      break;
+    }
+  }
+
+  return true;
+}
+
+//----------------------------------------------------------------------
+
+bool
+nsSVGPathDataParser::ParseSubPath()
+{
+  return ParseMoveto() && ParseSubPathElements();
+}
+
+bool
+nsSVGPathDataParser::ParseSubPathElements()
+{
+  while (SkipWsp() && !IsStartOfSubPath()) {
+    PRUnichar commandType = ToUpper(*mIter);
+
+    // Upper case commands have absolute co-ordinates,
+    // lower case commands have relative co-ordinates.
+    bool absCoords = commandType == *mIter;
+
+    ++mIter;
+    SkipWsp();
+
+    if (!ParseSubPathElement(commandType, absCoords)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool
+nsSVGPathDataParser::ParseSubPathElement(PRUnichar aCommandType,
+                                         bool aAbsCoords)
+{
+  switch (aCommandType) {
+    case 'Z':
+      return ParseClosePath();
+    case 'L':
+      return ParseLineto(aAbsCoords);
+    case 'H':
+      return ParseHorizontalLineto(aAbsCoords);
+    case 'V':
+      return ParseVerticalLineto(aAbsCoords);
+    case 'C':
+      return ParseCurveto(aAbsCoords);
+    case 'S':
+      return ParseSmoothCurveto(aAbsCoords);
+    case 'Q':
+      return ParseQuadBezierCurveto(aAbsCoords);
+    case 'T':
+      return ParseSmoothQuadBezierCurveto(aAbsCoords);
+    case 'A':
+      return ParseEllipticalArc(aAbsCoords);
   }
   return false;
-}  
+}
+
+bool
+nsSVGPathDataParser::IsStartOfSubPath() const
+{
+  return *mIter == 'm' || *mIter == 'M';
+}
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchMoveto()
+bool
+nsSVGPathDataParser::ParseMoveto()
 {
-  bool absCoords;
-  
-  switch (mTokenVal) {
-    case 'M':
-      absCoords = true;
-      break;
-    case 'm':
-      absCoords = false;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
+  if (!IsStartOfSubPath()) {
+    return false;
   }
 
-  GetNextToken();
+  bool absCoords = (*mIter == 'M');
 
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
+  ++mIter;
+  SkipWsp();
 
-  ENSURE_MATCHED(MatchMovetoArgSeq(absCoords));
-  
-  return NS_OK;
-}
-
-nsresult nsSVGPathDataParser::MatchMovetoArgSeq(bool absCoords)
-{
-  
   float x, y;
-  ENSURE_MATCHED(MatchCoordPair(&x, &y));
-
-  nsresult rv = StoreMoveTo(absCoords, x, y);
-  NS_ENSURE_SUCCESS(rv, rv);
-    
-  const char* pos = mTokenPos;
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
+  if (!ParseCoordPair(x, y)) {
+    return false;
   }
 
-  if (IsTokenLinetoArgSeqStarter()) {
-    ENSURE_MATCHED(MatchLinetoArgSeq(absCoords));
+  if (NS_FAILED(mPathSegList->AppendSeg(
+                  absCoords ? PATHSEG_MOVETO_ABS : PATHSEG_MOVETO_REL,
+                  x, y))) {
+    return false;
   }
-  else {
-    if (pos != mTokenPos) RewindTo(pos);
+
+  if (!SkipWsp() || IsAlpha(*mIter)) {
+    // End of data, or start of a new command
+    return true;
   }
-  
-  return NS_OK;
+
+  // Per SVG 1.1 Section 8.3.2
+  // If a moveto is followed by multiple pairs of coordinates,
+  // the subsequent pairs are treated as implicit lineto commands
+  return ParseLineto(absCoords);
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchClosePath()
+bool
+nsSVGPathDataParser::ParseClosePath()
 {
-  switch (mTokenVal) {
-    case 'Z':
-    case 'z':
-      GetNextToken();
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-
-  return StoreClosePath();
+  return NS_SUCCEEDED(mPathSegList->AppendSeg(PATHSEG_CLOSEPATH));
 }
 
 //----------------------------------------------------------------------
-  
-nsresult nsSVGPathDataParser::MatchLineto()
+
+bool
+nsSVGPathDataParser::ParseLineto(bool aAbsCoords)
 {
-  bool absCoords;
-  
-  switch (mTokenVal) {
-    case 'L':
-      absCoords = true;
-      break;
-    case 'l':
-      absCoords = false;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-
-  GetNextToken();
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  ENSURE_MATCHED(MatchLinetoArgSeq(absCoords));
-  
-  return NS_OK;
-}
-
-nsresult nsSVGPathDataParser::MatchLinetoArgSeq(bool absCoords)
-{
-  while(1) {
+  while (true) {
     float x, y;
-    ENSURE_MATCHED(MatchCoordPair(&x, &y));
-    
-    nsresult rv = StoreLineTo(absCoords, x, y);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    const char* pos = mTokenPos;
-
-    if (IsTokenCommaWspStarter()) {
-      ENSURE_MATCHED(MatchCommaWsp());
+    if (!ParseCoordPair(x, y)) {
+      return false;
     }
 
-    if (!IsTokenCoordPairStarter()) {
-      if (pos != mTokenPos) RewindTo(pos);
-      return NS_OK;
+    if (NS_FAILED(mPathSegList->AppendSeg(
+                   aAbsCoords ? PATHSEG_LINETO_ABS : PATHSEG_LINETO_REL,
+                   x, y))) {
+      return false;
     }
+
+    if (!SkipWsp() || IsAlpha(*mIter)) {
+      // End of data, or start of a new command
+      return true;
+    }
+    SkipCommaWsp();
   }
-  
-  return NS_OK;  
-}
-
-bool nsSVGPathDataParser::IsTokenLinetoArgSeqStarter()
-{
-  return IsTokenCoordPairStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchHorizontalLineto()
+bool
+nsSVGPathDataParser::ParseHorizontalLineto(bool aAbsCoords)
 {
-  bool absCoords;
-  
-  switch (mTokenVal) {
-    case 'H':
-      absCoords = true;
-      break;
-    case 'h':
-      absCoords = false;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-
-  GetNextToken();
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  ENSURE_MATCHED(MatchHorizontalLinetoArgSeq(absCoords));
-  
-  return NS_OK;
-}
-  
-nsresult nsSVGPathDataParser::MatchHorizontalLinetoArgSeq(bool absCoords)
-{
-  while(1) {
+  while (true) {
     float x;
-    ENSURE_MATCHED(MatchCoord(&x));
-    
-    nsresult rv = StoreHLineTo(absCoords, x);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    const char* pos = mTokenPos;
-
-    if (IsTokenCommaWspStarter()) {
-      ENSURE_MATCHED(MatchCommaWsp());
+    if (!SVGContentUtils::ParseNumber(mIter, mEnd, x)) {
+      return false;
     }
 
-    if (!IsTokenCoordStarter()) {
-      if (pos != mTokenPos) RewindTo(pos);
-      return NS_OK;
+    if (NS_FAILED(mPathSegList->AppendSeg(
+                    aAbsCoords ? PATHSEG_LINETO_HORIZONTAL_ABS : PATHSEG_LINETO_HORIZONTAL_REL,
+                    x))) {
+      return false;
     }
+
+    if (!SkipWsp() || IsAlpha(*mIter)) {
+      // End of data, or start of a new command
+      return true;
+    }
+    SkipCommaWsp();
   }
-  
-  return NS_OK;    
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchVerticalLineto()
+bool
+nsSVGPathDataParser::ParseVerticalLineto(bool aAbsCoords)
 {
-  bool absCoords;
-  
-  switch (mTokenVal) {
-    case 'V':
-      absCoords = true;
-      break;
-    case 'v':
-      absCoords = false;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-
-  GetNextToken();
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  ENSURE_MATCHED(MatchVerticalLinetoArgSeq(absCoords));
-  
-  return NS_OK;
-}
-
-nsresult nsSVGPathDataParser::MatchVerticalLinetoArgSeq(bool absCoords)
-{
-  while(1) {
+  while (true) {
     float y;
-    ENSURE_MATCHED(MatchCoord(&y));
-    
-    nsresult rv = StoreVLineTo(absCoords, y);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    const char* pos = mTokenPos;
-
-    if (IsTokenCommaWspStarter()) {
-      ENSURE_MATCHED(MatchCommaWsp());
+    if (!SVGContentUtils::ParseNumber(mIter, mEnd, y)) {
+      return false;
     }
 
-    if (!IsTokenCoordStarter()) {
-      if (pos != mTokenPos) RewindTo(pos);
-      return NS_OK;
+    if (NS_FAILED(mPathSegList->AppendSeg(
+                    aAbsCoords ? PATHSEG_LINETO_VERTICAL_ABS : PATHSEG_LINETO_VERTICAL_REL,
+                    y))) {
+      return false;
     }
+
+    if (!SkipWsp() || IsAlpha(*mIter)) {
+      // End of data, or start of a new command
+      return true;
+    }
+    SkipCommaWsp();
   }
-  
-  return NS_OK;      
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchCurveto()
+bool
+nsSVGPathDataParser::ParseCurveto(bool aAbsCoords)
 {
-  bool absCoords;
-  
-  switch (mTokenVal) {
-    case 'C':
-      absCoords = true;
-      break;
-    case 'c':
-      absCoords = false;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
+  while (true) {
+    float x1, y1, x2, y2, x, y;
 
-  GetNextToken();
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  ENSURE_MATCHED(MatchCurvetoArgSeq(absCoords));
-  
-  return NS_OK;
-}
-
-
-nsresult nsSVGPathDataParser::MatchCurvetoArgSeq(bool absCoords)
-{
-  while(1) {
-    float x, y, x1, y1, x2, y2;
-    ENSURE_MATCHED(MatchCurvetoArg(&x, &y, &x1, &y1, &x2, &y2));
-
-    nsresult rv = StoreCurveTo(absCoords, x, y, x1, y1, x2, y2);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    const char* pos = mTokenPos;
-
-    if (IsTokenCommaWspStarter()) {
-      ENSURE_MATCHED(MatchCommaWsp());
+    if (!(ParseCoordPair(x1, y1) &&
+          SkipCommaWsp() &&
+          ParseCoordPair(x2, y2) &&
+          SkipCommaWsp() &&
+          ParseCoordPair(x, y))) {
+      return false;
     }
 
-    if (!IsTokenCurvetoArgStarter()) {
-      if (pos != mTokenPos) RewindTo(pos);
-      return NS_OK;
+    if (NS_FAILED(mPathSegList->AppendSeg(
+                    aAbsCoords ? PATHSEG_CURVETO_CUBIC_ABS : PATHSEG_CURVETO_CUBIC_REL,
+                    x1, y1, x2, y2, x, y))) {
+      return false;
     }
+
+    if (!SkipWsp() || IsAlpha(*mIter)) {
+      // End of data, or start of a new command
+      return true;
+    }
+    SkipCommaWsp();
   }
-  
-  return NS_OK;      
-}
-
-nsresult
-nsSVGPathDataParser::MatchCurvetoArg(float* x, float* y, float* x1,
-                                     float* y1, float* x2, float* y2)
-{
-  ENSURE_MATCHED(MatchCoordPair(x1, y1));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-
-  ENSURE_MATCHED(MatchCoordPair(x2, y2));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-
-  ENSURE_MATCHED(MatchCoordPair(x, y));
-
-  return NS_OK;
-}
-
-bool nsSVGPathDataParser::IsTokenCurvetoArgStarter()
-{
-  return IsTokenCoordPairStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchSmoothCurveto()
+bool
+nsSVGPathDataParser::ParseSmoothCurveto(bool aAbsCoords)
 {
-  bool absCoords;
-  
-  switch (mTokenVal) {
-    case 'S':
-      absCoords = true;
-      break;
-    case 's':
-      absCoords = false;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-
-  GetNextToken();
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  ENSURE_MATCHED(MatchSmoothCurvetoArgSeq(absCoords));
-  
-  return NS_OK;
-}
-
-nsresult nsSVGPathDataParser::MatchSmoothCurvetoArgSeq(bool absCoords)
-{
-  while(1) {
-    float x, y, x2, y2;
-    ENSURE_MATCHED(MatchSmoothCurvetoArg(&x, &y, &x2, &y2));
-    
-    nsresult rv = StoreSmoothCurveTo(absCoords, x, y, x2, y2);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    const char* pos = mTokenPos;
-
-    if (IsTokenCommaWspStarter()) {
-      ENSURE_MATCHED(MatchCommaWsp());
+  while (true) {
+    float x2, y2, x, y;
+    if (!(ParseCoordPair(x2, y2) &&
+          SkipCommaWsp() &&
+          ParseCoordPair(x, y))) {
+      return false;
     }
 
-    if (!IsTokenSmoothCurvetoArgStarter()) {
-      if (pos != mTokenPos) RewindTo(pos);
-      return NS_OK;
+    if (NS_FAILED(mPathSegList->AppendSeg(
+                    aAbsCoords ? PATHSEG_CURVETO_CUBIC_SMOOTH_ABS : PATHSEG_CURVETO_CUBIC_SMOOTH_REL,
+                    x2, y2, x, y))) {
+      return false;
     }
+
+    if (!SkipWsp() || IsAlpha(*mIter)) {
+      // End of data, or start of a new command
+      return true;
+    }
+    SkipCommaWsp();
   }
-  
-  return NS_OK;        
-}
-
-nsresult nsSVGPathDataParser::MatchSmoothCurvetoArg(float* x, float* y, float* x2, float* y2)
-{
-  ENSURE_MATCHED(MatchCoordPair(x2, y2));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-
-  ENSURE_MATCHED(MatchCoordPair(x, y));
-
-  return NS_OK;
-}
-
-bool nsSVGPathDataParser::IsTokenSmoothCurvetoArgStarter()
-{
-  return IsTokenCoordPairStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchQuadBezierCurveto()
+bool
+nsSVGPathDataParser::ParseQuadBezierCurveto(bool aAbsCoords)
 {
-  bool absCoords;
-  
-  switch (mTokenVal) {
-    case 'Q':
-      absCoords = true;
-      break;
-    case 'q':
-      absCoords = false;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-
-  GetNextToken();
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  ENSURE_MATCHED(MatchQuadBezierCurvetoArgSeq(absCoords));
-  
-  return NS_OK;
-}
-
-nsresult nsSVGPathDataParser::MatchQuadBezierCurvetoArgSeq(bool absCoords)
-{
-  while(1) {
-    float x, y, x1, y1;
-    ENSURE_MATCHED(MatchQuadBezierCurvetoArg(&x, &y, &x1, &y1));
-
-    nsresult rv = StoreQuadCurveTo(absCoords, x, y, x1, y1);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    const char* pos = mTokenPos;
-
-    if (IsTokenCommaWspStarter()) {
-      ENSURE_MATCHED(MatchCommaWsp());
+  while (true) {
+    float x1, y1, x, y;
+    if (!(ParseCoordPair(x1, y1) &&
+         SkipCommaWsp() &&
+         ParseCoordPair(x, y))) {
+      return false;
     }
 
-    if (!IsTokenQuadBezierCurvetoArgStarter()) {
-      if (pos != mTokenPos) RewindTo(pos);
-      return NS_OK;
+    if (NS_FAILED(mPathSegList->AppendSeg(
+                    aAbsCoords ? PATHSEG_CURVETO_QUADRATIC_ABS : PATHSEG_CURVETO_QUADRATIC_REL,
+                    x1, y1, x, y))) {
+      return false;
     }
+
+    if (!SkipWsp() || IsAlpha(*mIter)) {
+      // Start of a new command
+      return true;
+    }
+    SkipCommaWsp();
   }
-  
-  return NS_OK;        
-}
-
-nsresult nsSVGPathDataParser::MatchQuadBezierCurvetoArg(float* x, float* y, float* x1, float* y1)
-{
-  ENSURE_MATCHED(MatchCoordPair(x1, y1));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-
-  ENSURE_MATCHED(MatchCoordPair(x, y));
-
-  return NS_OK;  
-}
-
-bool nsSVGPathDataParser::IsTokenQuadBezierCurvetoArgStarter()
-{
-  return IsTokenCoordPairStarter();
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurveto()
+bool
+nsSVGPathDataParser::ParseSmoothQuadBezierCurveto(bool aAbsCoords)
 {
-  bool absCoords;
-  
-  switch (mTokenVal) {
-    case 'T':
-      absCoords = true;
-      break;
-    case 't':
-      absCoords = false;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-
-  GetNextToken();
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  ENSURE_MATCHED(MatchSmoothQuadBezierCurvetoArgSeq(absCoords));
-  
-  return NS_OK;
-}
-
-nsresult nsSVGPathDataParser::MatchSmoothQuadBezierCurvetoArgSeq(bool absCoords)
-{
-  while(1) {
+  while (true) {
     float x, y;
-    ENSURE_MATCHED(MatchCoordPair(&x, &y));
-   
-    nsresult rv = StoreSmoothQuadCurveTo(absCoords, x, y);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    const char* pos = mTokenPos;
-
-    if (IsTokenCommaWspStarter()) {
-      ENSURE_MATCHED(MatchCommaWsp());
+    if (!ParseCoordPair(x, y)) {
+      return false;
     }
 
-    if (!IsTokenCoordPairStarter()) {
-      if (pos != mTokenPos) RewindTo(pos);
-      return NS_OK;
+    if (NS_FAILED(mPathSegList->AppendSeg(
+                    aAbsCoords ? PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS : PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL,
+                    x, y))) {
+      return false;
     }
+
+    if (!SkipWsp() || IsAlpha(*mIter)) {
+      // End of data, or start of a new command
+      return true;
+    }
+    SkipCommaWsp();
   }
-  
-  return NS_OK;        
 }
 
 //----------------------------------------------------------------------
 
-nsresult nsSVGPathDataParser::MatchEllipticalArc()
+bool
+nsSVGPathDataParser::ParseEllipticalArc(bool aAbsCoords)
 {
-  bool absCoords;
-  
-  switch (mTokenVal) {
-    case 'A':
-      absCoords = true;
-      break;
-    case 'a':
-      absCoords = false;
-      break;
-    default:
-      return NS_ERROR_FAILURE;
-  }
-
-  GetNextToken();
-
-  while (IsTokenWspStarter()) {
-    ENSURE_MATCHED(MatchWsp());
-  }
-
-  ENSURE_MATCHED(MatchEllipticalArcArgSeq(absCoords));
-  
-  return NS_OK;
-}
-
-
-nsresult nsSVGPathDataParser::MatchEllipticalArcArgSeq(bool absCoords)
-{
-  while(1) {
-    float x, y, r1, r2, angle;
+  while (true) {
+    float r1, r2, angle, x, y;
     bool largeArcFlag, sweepFlag;
-    
-    ENSURE_MATCHED(MatchEllipticalArcArg(&x, &y, &r1, &r2, &angle, &largeArcFlag, &sweepFlag));
 
-    nsresult rv = StoreEllipticalArc(absCoords, x, y, r1, r2, angle,
-                                     largeArcFlag, sweepFlag);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    const char* pos = mTokenPos;
-
-    if (IsTokenCommaWspStarter()) {
-      ENSURE_MATCHED(MatchCommaWsp());
+    if (!(SVGContentUtils::ParseNumber(mIter, mEnd, r1) &&
+          SkipCommaWsp() &&
+          SVGContentUtils::ParseNumber(mIter, mEnd, r2) &&
+          SkipCommaWsp() &&
+          SVGContentUtils::ParseNumber(mIter, mEnd, angle)&&
+          SkipCommaWsp() &&
+          ParseFlag(largeArcFlag) &&
+          SkipCommaWsp() &&
+          ParseFlag(sweepFlag) &&
+          SkipCommaWsp() &&
+          ParseCoordPair(x, y))) {
+      return false;
     }
 
-    if (!IsTokenEllipticalArcArgStarter()) {
-      if (pos != mTokenPos) RewindTo(pos);
-      return NS_OK;
+    // We can only pass floats after 'type', and per the SVG spec for arc,
+    // non-zero args are treated at 'true'.
+    if (NS_FAILED(mPathSegList->AppendSeg(
+                    aAbsCoords ? PATHSEG_ARC_ABS : PATHSEG_ARC_REL,
+                    r1, r2, angle,
+                    largeArcFlag ? 1.0f : 0.0f,
+                    sweepFlag ? 1.0f : 0.0f,
+                    x, y))) {
+      return false;
     }
+
+    if (!SkipWsp() || IsAlpha(*mIter)) {
+      // End of data, or start of a new command
+      return true;
+    }
+    SkipCommaWsp();
   }
-  
-  return NS_OK;        
 }
-
-nsresult nsSVGPathDataParser::MatchEllipticalArcArg(float* x, float* y,
-                                                    float* r1, float* r2, float* angle,
-                                                    bool* largeArcFlag, bool* sweepFlag)
-{
-  ENSURE_MATCHED(MatchNumber(r1));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-
-  ENSURE_MATCHED(MatchNumber(r2));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-
-  ENSURE_MATCHED(MatchNumber(angle));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-  
-  ENSURE_MATCHED(MatchFlag(largeArcFlag));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-
-  ENSURE_MATCHED(MatchFlag(sweepFlag));
-
-  if (IsTokenCommaWspStarter()) {
-    ENSURE_MATCHED(MatchCommaWsp());
-  }
-
-  ENSURE_MATCHED(MatchCoordPair(x, y));
-  
-  return NS_OK;  
-  
-}
-
-bool nsSVGPathDataParser::IsTokenEllipticalArcArgStarter()
-{
-  return IsTokenNumberStarter();
-}
-
 
 //-----------------------------------------------------------------------
 
@@ -947,97 +511,3 @@ nsSVGArcConverter::GetNextSegment(Point* cp1, Point* cp2, Point* to)
 
   return true;
 }
-
-
-// ---------------------------------------------------------------
-// nsSVGPathDataParserToInternal
-
-nsresult
-nsSVGPathDataParserToInternal::Parse(const nsAString &aValue)
-{
-  mPathSegList->Clear();
-  return nsSVGPathDataParser::Parse(aValue);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreMoveTo(bool absCoords, float x, float y)
-{
-  return mPathSegList->AppendSeg(absCoords ? PATHSEG_MOVETO_ABS : PATHSEG_MOVETO_REL, x, y);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreClosePath()
-{
-  return mPathSegList->AppendSeg(PATHSEG_CLOSEPATH);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreLineTo(bool absCoords, float x, float y)
-{
-  return mPathSegList->AppendSeg(absCoords ? PATHSEG_LINETO_ABS : PATHSEG_LINETO_REL, x, y);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreHLineTo(bool absCoords, float x)
-{
-  return mPathSegList->AppendSeg(absCoords ? PATHSEG_LINETO_HORIZONTAL_ABS : PATHSEG_LINETO_HORIZONTAL_REL, x);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreVLineTo(bool absCoords, float y)
-{
-  return mPathSegList->AppendSeg(absCoords ? PATHSEG_LINETO_VERTICAL_ABS : PATHSEG_LINETO_VERTICAL_REL, y);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreCurveTo(bool absCoords,
-                                            float x, float y,
-                                            float x1, float y1,
-                                            float x2, float y2)
-{
-  return mPathSegList->AppendSeg(absCoords ? PATHSEG_CURVETO_CUBIC_ABS : PATHSEG_CURVETO_CUBIC_REL,
-                                 x1, y1, x2, y2, x, y);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreSmoothCurveTo(bool absCoords,
-                                                  float x, float y,
-                                                  float x2, float y2)
-{
-  return mPathSegList->AppendSeg(absCoords ? PATHSEG_CURVETO_CUBIC_SMOOTH_ABS : PATHSEG_CURVETO_CUBIC_SMOOTH_REL,
-                                 x2, y2, x, y);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreQuadCurveTo(bool absCoords,
-                                                float x, float y,
-                                                float x1, float y1)
-{
-  return mPathSegList->AppendSeg(absCoords ? PATHSEG_CURVETO_QUADRATIC_ABS : PATHSEG_CURVETO_QUADRATIC_REL,
-                                 x1, y1, x, y);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreSmoothQuadCurveTo(bool absCoords,
-                                                      float x, float y)
-{
-  return mPathSegList->AppendSeg(absCoords ? PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS : PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, x, y);
-}
-
-nsresult
-nsSVGPathDataParserToInternal::StoreEllipticalArc(bool absCoords,
-                                                  float x, float y,
-                                                  float r1, float r2,
-                                                  float angle,
-                                                  bool largeArcFlag,
-                                                  bool sweepFlag)
-{
-  // We can only pass floats after 'type', and per the SVG spec for arc,
-  // non-zero args are treated at 'true'.
-  return mPathSegList->AppendSeg(absCoords ? PATHSEG_ARC_ABS : PATHSEG_ARC_REL,
-                                 r1, r2, angle,
-                                 largeArcFlag ? 1.0f : 0.0f,
-                                 sweepFlag ? 1.0f : 0.0f,
-                                 x, y);
-}
-

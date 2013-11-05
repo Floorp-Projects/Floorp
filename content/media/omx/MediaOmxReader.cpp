@@ -87,7 +87,9 @@ nsresult MediaOmxReader::InitOmxDecoder()
     dataSource->initCheck();
 
     sp<MediaExtractor> extractor = MediaExtractor::Create(dataSource);
-
+    if (!extractor.get()) {
+      return NS_ERROR_FAILURE;
+    }
     mOmxDecoder = new OmxDecoder(mDecoder->GetResource(), mDecoder);
     if (!mOmxDecoder->Init(extractor)) {
       return NS_ERROR_FAILURE;

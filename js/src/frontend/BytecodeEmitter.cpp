@@ -1140,17 +1140,6 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
      * resolving upvar accesses within the inner function.
      */
     if (bce->emitterMode == BytecodeEmitter::LazyFunction) {
-        // The only statements within a lazy function which can push lexical
-        // scopes are try/catch blocks. Use generic ops in this case.
-        for (StmtInfoBCE *stmt = bce->topStmt; stmt; stmt = stmt->down) {
-            switch (stmt->type) {
-              case STMT_TRY:
-              case STMT_FINALLY:
-                return true;
-              default:;
-            }
-        }
-
         size_t hops = 0;
         FunctionBox *funbox = bce->sc->asFunctionBox();
         if (funbox->hasExtensibleScope())
@@ -2293,7 +2282,6 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     defaultOffset = -1;
 
     pn2 = pn->pn_right;
-#if JS_HAS_BLOCK_SCOPE
     /*
      * If there are hoisted let declarations, their stack slots go under the
      * discriminant's value so push their slots now and enter the block later.
@@ -2306,26 +2294,20 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return false;
         }
     }
-#endif
 
     /* Push the discriminant. */
     if (!EmitTree(cx, bce, pn->pn_left))
         return false;
 
-#if JS_HAS_BLOCK_SCOPE
     if (pn2->isKind(PNK_LEXICALSCOPE)) {
         PushBlockScopeBCE(bce, &stmtInfo, pn2->pn_objbox->object->as<StaticBlockObject>(), -1);
         stmtInfo.type = STMT_SWITCH;
         if (!EmitEnterBlock(cx, bce, pn2, JSOP_ENTERLET1))
             return false;
     }
-#endif
 
     /* Switch bytecodes run from here till end of final case. */
     top = bce->offset();
-#if !JS_HAS_BLOCK_SCOPE
-    PushStatementBCE(bce, &stmtInfo, STMT_SWITCH, top);
-#else
     if (pn2->isKind(PNK_STATEMENTLIST)) {
         PushStatementBCE(bce, &stmtInfo, STMT_SWITCH, top);
     } else {
@@ -2338,7 +2320,6 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         /* Advance pn2 to refer to the switch case list. */
         pn2 = pn2->expr();
     }
-#endif
 
     uint32_t caseCount = pn2->pn_count;
     uint32_t tableLength = 0;
@@ -2614,10 +2595,8 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!PopStatementBCE(cx, bce))
         return false;
 
-#if JS_HAS_BLOCK_SCOPE
     if (pn->pn_right->isKind(PNK_LEXICALSCOPE))
         EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObjCount);
-#endif
 
     return true;
 }
@@ -2710,10 +2689,10 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
     }
 
     /*
-     * Always end the script with a JSOP_STOP. Some other parts of the codebase
+     * Always end the script with a JSOP_RETRVAL. Some other parts of the codebase
      * depend on this opcode, e.g. js_InternalInterpret.
      */
-    if (Emit1(cx, bce, JSOP_STOP) < 0)
+    if (Emit1(cx, bce, JSOP_RETRVAL) < 0)
         return false;
 
     if (!JSScript::fullyInitFromEmitter(cx, bce->script, bce))
@@ -3172,7 +3151,7 @@ MaybeEmitGroupAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp prolog
 {
     JS_ASSERT(pn->isKind(PNK_ASSIGN));
     JS_ASSERT(pn->isOp(JSOP_NOP));
-    JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_POPV);
+    JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_SETRVAL);
 
     ParseNode *lhs = pn->pn_left;
     ParseNode *rhs = pn->pn_right;
@@ -3204,7 +3183,7 @@ MaybeEmitLetGroupDecl(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn,
 {
     JS_ASSERT(pn->isKind(PNK_ASSIGN));
     JS_ASSERT(pn->isOp(JSOP_NOP));
-    JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_POPV);
+    JS_ASSERT(*pop == JSOP_POP || *pop == JSOP_SETRVAL);
 
     ParseNode *lhs = pn->pn_left;
     ParseNode *rhs = pn->pn_right;
@@ -4155,7 +4134,6 @@ EmitIf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return PopStatementBCE(cx, bce);
 }
 
-#if JS_HAS_BLOCK_SCOPE
 /*
  * pnLet represents one of:
  *
@@ -4228,7 +4206,6 @@ EmitLet(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
 
     return PopStatementBCE(cx, bce);
 }
-#endif
 
 /*
  * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
@@ -5321,7 +5298,7 @@ EmitStatement(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * that it appears useless to the compiler.
      *
      * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
-     * calling JS_Compile* to suppress JSOP_POPV.
+     * calling JS_Compile* to suppress JSOP_SETRVAL.
      */
     bool wantval = false;
     bool useful = false;
@@ -5351,7 +5328,7 @@ EmitStatement(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     if (useful) {
-        JSOp op = wantval ? JSOP_POPV : JSOP_POP;
+        JSOp op = wantval ? JSOP_SETRVAL : JSOP_POP;
         JS_ASSERT_IF(pn2->isKind(PNK_ASSIGN), pn2->isOp(JSOP_NOP));
 #if JS_HAS_DESTRUCTURING
         if (!wantval &&
@@ -6455,13 +6432,12 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitLexicalScope(cx, bce, pn);
         break;
 
-#if JS_HAS_BLOCK_SCOPE
       case PNK_LET:
         ok = pn->isArity(PN_BINARY)
              ? EmitLet(cx, bce, pn)
              : EmitVariables(cx, bce, pn, InitializeVars);
         break;
-#endif /* JS_HAS_BLOCK_SCOPE */
+
       case PNK_ARRAYPUSH: {
         int slot;
 

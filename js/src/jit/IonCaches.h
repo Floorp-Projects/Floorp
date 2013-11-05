@@ -603,7 +603,6 @@ class GetPropertyIC : public RepatchIonCache
 
     // Helpers for CanAttachNativeGetProp
     typedef JSContext * Context;
-    bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const;
     bool allowArrayLength(Context cx, HandleObject obj) const;
 
     // Attach the proper stub, if possible

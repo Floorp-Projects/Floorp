@@ -22,7 +22,6 @@
 #endif
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/CompositorParent.h"
-#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "nsDeque.h"
 #include "APZController.h"
@@ -85,6 +84,7 @@ public:
 
   // nsBaseWidget
   virtual CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight);
+  virtual void SetWidgetListener(nsIWidgetListener* aWidgetListener);
 
   // nsIWidget interface
   NS_IMETHOD    Create(nsIWidget *aParent,
@@ -235,10 +235,6 @@ protected:
   void DispatchAsyncScrollEvent(DispatchMsg* aEvent);
   void DeliverNextScrollEvent();
   void DeliverNextKeyboardEvent();
-  DispatchMsg* CreateDispatchMsg(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
-
-public:
-  static nsRefPtr<mozilla::layers::APZCTreeManager> sAPZC;
 
 protected:
   OleInitializeWrapper mOleInitializeWrapper;

@@ -20,7 +20,7 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 16;
+const DB_VERSION = 18;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
@@ -167,8 +167,10 @@ ContactDB.prototype = {
       let objectStore = aDb.createObjectStore(STORE_NAME, {keyPath: "id"});
       objectStore.createIndex("familyName", "properties.familyName", { multiEntry: true });
       objectStore.createIndex("givenName",  "properties.givenName",  { multiEntry: true });
+      objectStore.createIndex("name",      "properties.name",        { multiEntry: true });
       objectStore.createIndex("familyNameLowerCase", "search.familyName", { multiEntry: true });
       objectStore.createIndex("givenNameLowerCase",  "search.givenName",  { multiEntry: true });
+      objectStore.createIndex("nameLowerCase",       "search.name",       { multiEntry: true });
       objectStore.createIndex("telLowerCase",        "search.tel",        { multiEntry: true });
       objectStore.createIndex("emailLowerCase",      "search.email",      { multiEntry: true });
       objectStore.createIndex("tel", "search.exactTel", { multiEntry: true });
@@ -403,11 +405,11 @@ ContactDB.prototype = {
           objectStore = aTransaction.objectStore(STORE_NAME);
         }
         let names = objectStore.indexNames;
-        let blackList = ["tel", "familyName", "givenName",  "familyNameLowerCase",
+        let whiteList = ["tel", "familyName", "givenName",  "familyNameLowerCase",
                          "givenNameLowerCase", "telLowerCase", "category", "email",
                          "emailLowerCase"];
         for (var i = 0; i < names.length; i++) {
-          if (blackList.indexOf(names[i]) < 0) {
+          if (whiteList.indexOf(names[i]) < 0) {
             objectStore.deleteIndex(names[i]);
           }
         }
@@ -555,7 +557,7 @@ ContactDB.prototype = {
       function upgrade14to15() {
         if (DEBUG) debug("Fix array properties saved as scalars");
         if (!objectStore) {
-         objectStore = aTransaction.objectStore(STORE_NAME);
+          objectStore = aTransaction.objectStore(STORE_NAME);
         }
         const ARRAY_PROPERTIES = ["photo", "adr", "email", "url", "impp", "tel",
                                  "name", "honorificPrefix", "givenName",
@@ -597,7 +599,7 @@ ContactDB.prototype = {
       function upgrade15to16() {
         if (DEBUG) debug("Fix Date properties");
         if (!objectStore) {
-         objectStore = aTransaction.objectStore(STORE_NAME);
+          objectStore = aTransaction.objectStore(STORE_NAME);
         }
         const DATE_PROPERTIES = ["bday", "anniversary"];
         objectStore.openCursor().onsuccess = function(event) {
@@ -620,6 +622,113 @@ ContactDB.prototype = {
           }
         };
       },
+      function upgrade16to17() {
+        if (DEBUG) debug("Fix array with null values");
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+        const ARRAY_PROPERTIES = ["photo", "adr", "email", "url", "impp", "tel",
+                                 "name", "honorificPrefix", "givenName",
+                                 "additionalName", "familyName", "honorificSuffix",
+                                 "nickname", "category", "org", "jobTitle",
+                                 "note", "key"];
+
+        const PROPERTIES_WITH_TYPE = ["adr", "email", "url", "impp", "tel"];
+
+        const DATE_PROPERTIES = ["bday", "anniversary"];
+
+        objectStore.openCursor().onsuccess = function(event) {
+          function filterInvalidValues(val) {
+            let shouldKeep = val != null; // null or undefined
+            if (!shouldKeep) {
+              changed = true;
+            }
+            return shouldKeep;
+          }
+
+          function filteredArray(array) {
+            return array.filter(filterInvalidValues);
+          }
+
+          let cursor = event.target.result;
+          let changed = false;
+          if (cursor) {
+            let props = cursor.value.properties;
+
+            for (let prop of ARRAY_PROPERTIES) {
+
+              // properties that were empty strings weren't converted to arrays
+              // in upgrade14to15
+              if (props[prop] != null && !Array.isArray(props[prop])) {
+                props[prop] = [props[prop]];
+                changed = true;
+              }
+
+              if (props[prop] && props[prop].length) {
+                props[prop] = filteredArray(props[prop]);
+
+                if (PROPERTIES_WITH_TYPE.indexOf(prop) !== -1) {
+                  let subprop = props[prop];
+
+                  for (let i = 0; i < subprop.length; ++i) {
+                    let curSubprop = subprop[i];
+                    // upgrade14to15 transformed type props into an array
+                    // without checking invalid values
+                    if (curSubprop.type) {
+                      curSubprop.type = filteredArray(curSubprop.type);
+                    }
+                  }
+                }
+              }
+            }
+
+            for (let prop of DATE_PROPERTIES) {
+              if (props[prop] != null && !(props[prop] instanceof Date)) {
+                // props[prop] is probably '' and wasn't converted
+                // in upgrade15to16
+                props[prop] = null;
+                changed = true;
+              }
+            }
+
+            if (changed) {
+              cursor.value.properties = props;
+              cursor.update(cursor.value);
+            }
+            cursor.continue();
+          } else {
+           next();
+          }
+        }
+      },
+      function upgrade17to18() {
+        if (DEBUG) {
+          debug("Adding the name index");
+        }
+
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+
+        objectStore.createIndex("name", "properties.name", { multiEntry: true });
+        objectStore.createIndex("nameLowerCase", "search.name", { multiEntry: true });
+
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            let value = cursor.value;
+            value.search.name = [];
+            if (value.properties.name) {
+              value.properties.name.forEach(function addNameIndex(name) {
+                value.search.name.push(name.toLowerCase());
+              });
+            }
+            cursor.update(value);
+          } else {
+            next();
+          }
+        };
+      },
     ];
 
     let index = aOldVersion;
@@ -639,10 +748,21 @@ ContactDB.prototype = {
         return;
       }
     };
-    if (aNewVersion > steps.length) {
-      dump("Contacts DB upgrade error!");
+
+    function fail(why) {
+      why = why || "";
+      if (this.error) {
+        why += " (root cause: " + this.error.name + ")";
+      }
+
+      debug("Contacts DB upgrade error: " + why);
       aTransaction.abort();
     }
+
+    if (aNewVersion > steps.length) {
+      fail("No migration steps for the new version!");
+    }
+
     next();
   },
 
@@ -650,6 +770,7 @@ ContactDB.prototype = {
     let contact = {properties: {}};
 
     contact.search = {
+      name:            [],
       givenName:       [],
       familyName:      [],
       email:           [],
