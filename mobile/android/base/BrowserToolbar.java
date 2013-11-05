@@ -741,6 +741,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
     // have no autocomplete results
     @Override
     public void onAutocomplete(final String result) {
+        if (!isEditing()) {
+            return;
+        }
+
         final String text = mUrlEditText.getText().toString();
 
         if (result == null) {
@@ -759,6 +763,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     @Override
     public void afterTextChanged(final Editable s) {
+        if (!isEditing()) {
+            return;
+        }
+
         final String text = s.toString();
         boolean useHandler = false;
         boolean reuseAutocomplete = false;
