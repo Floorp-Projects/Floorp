@@ -1940,6 +1940,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
     context = new gfxContext(surf);
   }
 #endif
+  basic->BeginTransaction();
   basic->SetTarget(context);
 
   if (aItem->GetType() == nsDisplayItem::TYPE_SVG_EFFECTS) {
@@ -2345,7 +2346,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
 {
   ThebesDisplayItemLayerUserData* thebesData =
     static_cast<ThebesDisplayItemLayerUserData*>(aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
-  nsRefPtr<LayerManager> tempManager;
+  nsRefPtr<BasicLayerManager> tempManager;
   nsIntRect intClip;
   bool hasClip = false;
   if (aLayerState != LAYER_NONE) {
@@ -2415,6 +2416,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
 
       tempManager->SetRoot(layer);
       layerBuilder->WillEndTransaction();
+      tempManager->AbortTransaction();
 
       nsIntPoint offset = GetLastPaintOffset(aLayer) - GetTranslationForThebesLayer(aLayer);
       props->MoveBy(-offset);
@@ -2504,13 +2506,7 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
 FrameLayerBuilder::ClippedDisplayItem::~ClippedDisplayItem()
 {
   if (mInactiveLayerManager) {
-    // We always start a transaction during layer construction for all inactive
-    // layers, but we don't necessarily call EndTransaction during painting.
-    // If the transaaction is still open, end it to avoid assertions.
     BasicLayerManager* basic = static_cast<BasicLayerManager*>(mInactiveLayerManager.get());
-    if (basic->InTransaction()) {
-      basic->EndTransaction(nullptr, nullptr);
-    }
     basic->SetUserData(&gLayerManagerLayerBuilder, nullptr);
   }
 }
@@ -2521,7 +2517,7 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
                                        const DisplayItemClip& aClip,
                                        LayerState aLayerState,
                                        const nsPoint& aTopLeft,
-                                       LayerManager* aManager,
+                                       BasicLayerManager* aManager,
                                        nsAutoPtr<nsDisplayItemGeometry> aGeometry)
 {
   if (aLayer->Manager() != mRetainingManager)
