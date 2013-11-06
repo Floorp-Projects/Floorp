@@ -295,6 +295,16 @@ class FullParseHandler
         return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, pos, (ParseNode *) nullptr);
     }
 
+    ParseNode *newImportDeclaration(ParseNode *importSpecSet,
+                                    ParseNode *moduleSpec, const TokenPos &pos)
+    {
+        ParseNode *pn = new_<BinaryNode>(PNK_IMPORT, JSOP_NOP, pos,
+                                         importSpecSet, moduleSpec);
+        if (!pn)
+            return null();
+        return pn;
+    }
+
     ParseNode *newExprStatement(ParseNode *expr, uint32_t end) {
         JS_ASSERT(expr->pn_pos.end <= end);
         return new_<UnaryNode>(PNK_SEMI, JSOP_NOP, TokenPos(expr->pn_pos.begin, end), expr);
