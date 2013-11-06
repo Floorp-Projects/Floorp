@@ -2410,7 +2410,7 @@ class FunctionCompiler
         MBasicBlock *body;
         if (!newBlock(curBlock_, &body, bodyPn))
             return false;
-        if (cond->isConstant() && ToBoolean(cond->toConstant()->value())) {
+        if (cond->isConstant() && cond->toConstant()->valueToBoolean()) {
             *afterLoop = nullptr;
             curBlock_->end(MGoto::New(body));
         } else {
@@ -2468,7 +2468,7 @@ class FunctionCompiler
         if (curBlock_) {
             JS_ASSERT(curBlock_->loopDepth() == loopStack_.length() + 1);
             if (cond->isConstant()) {
-                if (ToBoolean(cond->toConstant()->value())) {
+                if (cond->toConstant()->valueToBoolean()) {
                     curBlock_->end(MGoto::New(loopEntry));
                     if (!loopEntry->setBackedgeAsmJS(curBlock_))
                         return false;

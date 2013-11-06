@@ -3584,11 +3584,37 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
       // that is creating us in order for us to use relative URIs later on.
       JS::RootedScript script(aCx);
       if (JS_DescribeScriptedCaller(aCx, &script, nullptr)) {
-        rv = NS_NewURI(getter_AddRefs(loadInfo.mBaseURI),
-                       JS_GetScriptFilename(aCx, script));
-        NS_ENSURE_SUCCESS(rv, rv);
+        const char* fileName = JS_GetScriptFilename(aCx, script);
+
+        // In most cases, fileName is URI. In a few other cases
+        // (e.g. xpcshell), fileName is a file path. Ideally, we would
+        // prefer testing whether fileName parses as an URI and fallback
+        // to file path in case of error, but Windows file paths have
+        // the interesting property that they can be parsed as bogus
+        // URIs (e.g. C:/Windows/Tmp is interpreted as scheme "C",
+        // hostname "Windows", path "Tmp"), which defeats this algorithm.
+        // Therefore, we adopt the opposite convention.
+        nsCOMPtr<nsIFile> scriptFile =
+          do_CreateInstance("@mozilla.org/file/local;1", &rv);
+        if (NS_FAILED(rv)) {
+          return rv;
         }
 
+        rv = scriptFile->InitWithPath(NS_ConvertUTF8toUTF16(fileName));
+        if (NS_SUCCEEDED(rv)) {
+          rv = NS_NewFileURI(getter_AddRefs(loadInfo.mBaseURI),
+                             scriptFile);
+        }
+        if (NS_FAILED(rv)) {
+          // As expected, fileName is not a path, so proceed with
+          // a uri.
+          rv = NS_NewURI(getter_AddRefs(loadInfo.mBaseURI),
+                         fileName);
+        }
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+      }
       loadInfo.mXHRParamsAllowed = true;
     }
 
