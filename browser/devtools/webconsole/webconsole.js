@@ -31,6 +31,7 @@ loader.lazyImporter(this, "ObjectClient", "resource://gre/modules/devtools/dbg-c
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
+loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -198,6 +199,7 @@ function WebConsoleFrame(aWebConsoleOwner)
   this.output = new ConsoleOutput(this);
 
   this._toggleFilter = this._toggleFilter.bind(this);
+  this._onPanelSelected = this._onPanelSelected.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
 
   this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -554,6 +556,21 @@ WebConsoleFrame.prototype = {
 
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
+    this.jsterm.inputNode.focus();
+
+    let toolbox = gDevTools.getToolbox(this.owner.target);
+    if (toolbox) {
+      toolbox.on("webconsole-selected", this._onPanelSelected);
+    }
+  },
+
+  /**
+   * Sets the focus to JavaScript input field when the web console tab is
+   * selected.
+   * @private
+   */
+  _onPanelSelected: function WCF__onPanelSelected()
+  {
     this.jsterm.inputNode.focus();
   },
 
@@ -2825,6 +2842,11 @@ WebConsoleFrame.prototype = {
     }
 
     this._destroyer = promise.defer();
+
+    let toolbox = gDevTools.getToolbox(this.owner.target);
+    if (toolbox) {
+      toolbox.off("webconsole-selected", this._onPanelSelected);
+    }
 
     this._repeatNodes = {};
     this._outputQueue = [];
