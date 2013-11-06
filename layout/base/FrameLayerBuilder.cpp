@@ -23,6 +23,7 @@
 
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/gfx/2D.h"
 
 #include <algorithm>
 
@@ -3235,6 +3236,31 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
   }
 }
 
+/**
+ * Returns true if it is preferred to draw the list of display
+ * items separately for each rect in the visible region rather
+ * than clipping to a complex region.
+ */
+static bool ShouldDrawRectsSeparately(gfxContext* aContext, DrawRegionClip aClip)
+{
+  if (aContext->IsCairo() || aClip == CLIP_NONE) {
+    return false;
+  }
+  DrawTarget *dt = aContext->GetDrawTarget();
+  return dt->GetType() == BACKEND_DIRECT2D;
+}
+
+static void DrawForcedBackgroundColor(gfxContext* aContext, Layer* aLayer, nscolor aBackgroundColor)
+{
+  if (NS_GET_A(aBackgroundColor) > 0) {
+    nsIntRect r = aLayer->GetVisibleRegion().GetBounds();
+    aContext->NewPath();
+    aContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
+    aContext->SetColor(gfxRGBA(aBackgroundColor));
+    aContext->Fill();
+  }
+}
+
 /*
  * A note on residual transforms:
  *
@@ -3276,12 +3302,6 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   nsDisplayListBuilder* builder = static_cast<nsDisplayListBuilder*>
     (aCallbackData);
 
-  if (aClip == CLIP_DRAW_SNAPPED) {
-    gfxUtils::ClipToRegionSnapped(aContext, aRegionToDraw);
-  } else if (aClip == CLIP_DRAW) {
-    gfxUtils::ClipToRegion(aContext, aRegionToDraw);
-  }
-
   FrameLayerBuilder *layerBuilder = aLayer->Manager()->GetLayerBuilder();
   NS_ASSERTION(layerBuilder, "Unexpectedly null layer builder!");
 
@@ -3294,27 +3314,28 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     return;
   }
 
+
   ThebesDisplayItemLayerUserData* userData =
     static_cast<ThebesDisplayItemLayerUserData*>
       (aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
   NS_ASSERTION(userData, "where did our user data go?");
-  if (NS_GET_A(userData->mForcedBackgroundColor) > 0) {
-    nsIntRect r = aLayer->GetVisibleRegion().GetBounds();
-    aContext->NewPath();
-    aContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
-    aContext->SetColor(gfxRGBA(userData->mForcedBackgroundColor));
-    aContext->Fill();
+
+  bool shouldDrawRectsSeparately = ShouldDrawRectsSeparately(aContext, aClip);
+
+  if (!shouldDrawRectsSeparately) {
+    if (aClip == CLIP_DRAW_SNAPPED) {
+      gfxUtils::ClipToRegionSnapped(aContext, aRegionToDraw);
+    } else if (aClip == CLIP_DRAW) {
+      gfxUtils::ClipToRegion(aContext, aRegionToDraw);
+    }
+
+    DrawForcedBackgroundColor(aContext, aLayer, userData->mForcedBackgroundColor);
   }
 
   // make the origin of the context coincide with the origin of the
   // ThebesLayer
   gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
   nsIntPoint offset = GetTranslationForThebesLayer(aLayer);
-  // Apply the residual transform if it has been enabled, to ensure that
-  // snapping when we draw into aContext exactly matches the ideal transform.
-  // See above for why this is OK.
-  aContext->Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y));
-  aContext->Scale(userData->mXScale, userData->mYScale);
 
   nsPresContext* presContext = entry->mContainerLayerFrame->PresContext();
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
@@ -3326,8 +3347,37 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
   rc->Init(presContext->DeviceContext(), aContext);
 
-  layerBuilder->PaintItems(entry->mItems, aContext, rc,
-                           builder, presContext, entry->mCommonClipCount);
+  if (shouldDrawRectsSeparately) {
+    nsIntRegionRectIterator it(aRegionToDraw);
+    while (const nsIntRect* iterRect = it.Next()) {
+      gfxContextAutoSaveRestore save(aContext);
+      aContext->NewPath();
+      aContext->Rectangle(*iterRect, aClip == CLIP_DRAW_SNAPPED);
+      aContext->Clip();
+
+      DrawForcedBackgroundColor(aContext, aLayer, userData->mForcedBackgroundColor);
+
+      // Apply the residual transform if it has been enabled, to ensure that
+      // snapping when we draw into aContext exactly matches the ideal transform.
+      // See above for why this is OK.
+      aContext->Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y));
+      aContext->Scale(userData->mXScale, userData->mYScale);
+
+      layerBuilder->PaintItems(entry->mItems, aContext, rc,
+                               builder, presContext,
+                               entry->mCommonClipCount);
+    }
+  } else {
+    // Apply the residual transform if it has been enabled, to ensure that
+    // snapping when we draw into aContext exactly matches the ideal transform.
+    // See above for why this is OK.
+    aContext->Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y));
+    aContext->Scale(userData->mXScale, userData->mYScale);
+
+    layerBuilder->PaintItems(entry->mItems, aContext, rc,
+                             builder, presContext,
+                             entry->mCommonClipCount);
+  }
 
   if (presContext->GetPaintFlashing()) {
     FlashPaint(aContext);
