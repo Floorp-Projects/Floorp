@@ -5,7 +5,7 @@
  * Test that acorn's lenient parser gives something usable.
  */
 
-const acorn_loose = require("acorn_loose");
+const acorn_loose = require("acorn/acorn_loose");
 
 function run_test() {
   let actualAST = acorn_loose.parse_dammit("let x = 10");
