@@ -492,7 +492,6 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
     // tracking flags.
     mContentConsumingTouch = false;
     mRecognizerWantsEvents = true;
-    mIsFirstTouchMove = true;
     mCancelable = true;
     mCanceledIds.Clear();
   }
@@ -560,22 +559,13 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
     return S_OK;
   }
 
+  AddPointerMoveDataToRecognizer(aArgs);
+
   // If the point hasn't moved, filter it out per the spec. Pres shell does
   // this as well, but we need to know when our first touchmove is going to
   // get delivered so we can check the result.
   if (!HasPointMoved(touch, currentPoint.Get())) {
-    // The recognizer needs the intermediate data otherwise it acts flaky
-    AddPointerMoveDataToRecognizer(aArgs);
     return S_OK;
-  }
-
-  // If we've accumulated a batch of pointer moves and we're now on a new batch
-  // at a new position send the previous batch. (perf opt)
-  if (!mIsFirstTouchMove && touch->mChanged) {
-    WidgetTouchEvent* touchEvent =
-      new WidgetTouchEvent(true, NS_TOUCH_MOVE, mWidget.Get());
-    InitTouchEventTouchList(touchEvent);
-    DispatchAsyncTouchEvent(touchEvent);
   }
 
   touch = CreateDOMTouch(currentPoint.Get());
@@ -585,15 +575,8 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
 
   WidgetTouchEvent* touchEvent =
     new WidgetTouchEvent(true, NS_TOUCH_MOVE, mWidget.Get());
-
-  // If this is the first touch move of our session, dispatch it now.
-  if (mIsFirstTouchMove) {
-    InitTouchEventTouchList(touchEvent);
-    DispatchAsyncTouchEvent(touchEvent);
-    mIsFirstTouchMove = false;
-  }
-
-  AddPointerMoveDataToRecognizer(aArgs);
+  InitTouchEventTouchList(touchEvent);
+  DispatchAsyncTouchEvent(touchEvent);
 
   return S_OK;
 }
