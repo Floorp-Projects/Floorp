@@ -749,8 +749,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest
 @BINPATH@/components/B2GComponents.manifest
-@BINPATH@/components/B2GComponents.xpt
-@BINPATH@/components/CameraContent.js
 @BINPATH@/@DLL_PREFIX@omxplugin@DLL_SUFFIX@
 #ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@
