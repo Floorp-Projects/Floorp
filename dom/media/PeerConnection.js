@@ -259,7 +259,9 @@ RTCPeerConnection.prototype = {
     this.makeGetterSetterEH("oniceconnectionstatechange");
 
     this._pc = new this._win.PeerConnectionImpl();
-    this._observer = new this._win.PeerConnectionObserver(this);
+
+    this.__DOM_IMPL__._innerObject = this;
+    this._observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
     this._winID = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 
@@ -845,7 +847,7 @@ PeerConnectionObserver.prototype = {
   init: function(win) { this._win = win; },
 
   __init: function(dompc) {
-    this._dompc = dompc;
+    this._dompc = dompc._innerObject;
   },
 
   dispatchEvent: function(event) {

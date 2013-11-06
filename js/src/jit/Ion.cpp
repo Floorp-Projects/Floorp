@@ -711,7 +711,6 @@ IonScript::IonScript()
     invalidateEpilogueOffset_(0),
     invalidateEpilogueDataOffset_(0),
     numBailouts_(0),
-    numExceptionBailouts_(0),
     hasUncompiledCallTarget_(false),
     hasSPSInstrumentation_(false),
     runtimeData_(0),
