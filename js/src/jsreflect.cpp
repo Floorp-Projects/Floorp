@@ -562,6 +562,10 @@ class NodeBuilder
 
     bool letStatement(NodeVector &head, HandleValue stmt, TokenPos *pos, MutableHandleValue dst);
 
+    bool importDeclaration(NodeVector &elts, HandleValue moduleSpec, TokenPos *pos, MutableHandleValue dst);
+
+    bool importSpecifier(HandleValue importName, HandleValue bindingName, TokenPos *pos, MutableHandleValue dst);
+
     /*
      * expressions
      */
@@ -1354,6 +1358,38 @@ NodeBuilder::letStatement(NodeVector &head, HandleValue stmt, TokenPos *pos, Mut
 }
 
 bool
+NodeBuilder::importDeclaration(NodeVector &elts, HandleValue moduleSpec, TokenPos *pos,
+                               MutableHandleValue dst)
+{
+    RootedValue array(cx);
+    if (!newArray(elts, &array))
+        return false;
+
+    RootedValue cb(cx, callbacks[AST_IMPORT_DECL]);
+    if (!cb.isNull())
+        return callback(cb, array, moduleSpec, pos, dst);
+
+    return newNode(AST_IMPORT_DECL, pos,
+                   "specifiers", array,
+                   "source", moduleSpec,
+                   dst);
+}
+
+bool
+NodeBuilder::importSpecifier(HandleValue importName, HandleValue bindingName, TokenPos *pos,
+                             MutableHandleValue dst)
+{
+    RootedValue cb(cx, callbacks[AST_IMPORT_SPEC]);
+    if (!cb.isNull())
+        return callback(cb, importName, bindingName, pos, dst);
+
+    return newNode(AST_IMPORT_SPEC, pos,
+                   "id", importName,
+                   "name", bindingName,
+                   dst);
+}
+
+bool
 NodeBuilder::variableDeclaration(NodeVector &elts, VarDeclKind kind, TokenPos *pos,
                                  MutableHandleValue dst)
 {
@@ -1520,6 +1556,8 @@ class ASTSerializer
     bool variableDeclaration(ParseNode *pn, bool let, MutableHandleValue dst);
     bool variableDeclarator(ParseNode *pn, VarDeclKind *pkind, MutableHandleValue dst);
     bool let(ParseNode *pn, bool expr, MutableHandleValue dst);
+    bool importDeclaration(ParseNode *pn, MutableHandleValue dst);
+    bool importSpecifier(ParseNode *pn, MutableHandleValue dst);
 
     bool optStatement(ParseNode *pn, MutableHandleValue dst) {
         if (!pn) {
@@ -1884,6 +1922,41 @@ ASTSerializer::let(ParseNode *pn, bool expr, MutableHandleValue dst)
 }
 
 bool
+ASTSerializer::importDeclaration(ParseNode *pn, MutableHandleValue dst)
+{
+    JS_ASSERT(pn->isKind(PNK_IMPORT));
+    JS_ASSERT(pn->pn_left->isKind(PNK_IMPORT_SPEC_LIST));
+    JS_ASSERT(pn->pn_right->isKind(PNK_STRING));
+
+    NodeVector elts(cx);
+    if (!elts.reserve(pn->pn_count))
+        return false;
+
+    for (ParseNode *next = pn->pn_left->pn_head; next; next = next->pn_next) {
+        RootedValue elt(cx);
+        if (!importSpecifier(next, &elt))
+            return false;
+        elts.infallibleAppend(elt);
+    }
+
+    RootedValue moduleSpec(cx);
+    return literal(pn->pn_right, &moduleSpec) &&
+           builder.importDeclaration(elts, moduleSpec, &pn->pn_pos, dst);
+}
+
+bool
+ASTSerializer::importSpecifier(ParseNode *pn, MutableHandleValue dst)
+{
+    JS_ASSERT(pn->isKind(PNK_IMPORT_SPEC));
+
+    RootedValue importName(cx);
+    RootedValue bindingName(cx);
+    return identifier(pn->pn_left, &importName) &&
+           identifier(pn->pn_right, &bindingName) &&
+           builder.importSpecifier(importName, bindingName, &pn->pn_pos, dst);
+}
+
+bool
 ASTSerializer::switchCase(ParseNode *pn, MutableHandleValue dst)
 {
     JS_ASSERT_IF(pn->pn_left, pn->pn_pos.encloses(pn->pn_left->pn_pos));
@@ -2037,6 +2110,9 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
         return pn->isArity(PN_BINARY)
                ? let(pn, false, dst)
                : declaration(pn, dst);
+
+      case PNK_IMPORT:
+        return importDeclaration(pn, dst);
 
       case PNK_NAME:
         LOCAL_ASSERT(pn->isUsed());
