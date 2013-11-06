@@ -3620,17 +3620,19 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (!(flags & JSRESOLVE_ASSIGNING) && sDocument_id == id) {
+    nsCOMPtr<nsIDocument> document = win->GetDoc();
+    JS::Rooted<JS::Value> v(cx);
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), document, document,
+                    &NS_GET_IID(nsIDOMDocument), &v, getter_AddRefs(holder),
+                    false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // nsIDocument::WrapObject will handle defining the property.
+    *objp = obj;
+
+    // NB: We need to do this for any Xray wrapper.
     if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
-      nsCOMPtr<nsIDocument> document = win->GetDoc();
-      JS::Rooted<JS::Value> v(cx);
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), document, document,
-                      &NS_GET_IID(nsIDOMDocument), &v, getter_AddRefs(holder),
-                      false);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      *objp = obj;
-
       *_retval = JS_WrapValue(cx, &v) &&
                  JS_DefineProperty(cx, obj, "document", v,
                                    JS_PropertyStub, JS_StrictPropertyStub,
