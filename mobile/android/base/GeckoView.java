@@ -91,6 +91,8 @@ public class GeckoView extends LayerView
         GeckoAppShell.registerEventListener("Content:PageShow", this);
         GeckoAppShell.registerEventListener("DOMTitleChanged", this);
         GeckoAppShell.registerEventListener("Link:Favicon", this);
+        GeckoAppShell.registerEventListener("Prompt:Show", this);
+        GeckoAppShell.registerEventListener("Prompt:ShowTop", this);
 
         ThreadUtils.setUiThread(Thread.currentThread(), new Handler());
         initializeView(GeckoAppShell.getEventDispatcher());
@@ -183,6 +185,8 @@ public class GeckoView extends LayerView
                         GeckoView.this.handleTitleChanged(message);
                     } else if (event.equals("Link:Favicon")) {
                         GeckoView.this.handleLinkFavicon(message);
+                    } else if (event.equals("Prompt:Show") || event.equals("Prompt:ShowTop")) {
+                        GeckoView.this.handlePrompt(message);
                     }
                 } catch (Exception e) {
                     Log.w(LOGTAG, "handleMessage threw for " + event, e);
@@ -249,6 +253,25 @@ public class GeckoView extends LayerView
         if (mContentDelegate != null) {
             int id = message.getInt("tabID");
             mContentDelegate.onReceivedFavicon(GeckoView.this, new Browser(id), message.getString("href"), message.getInt("size"));
+        }
+    }
+
+    private void handlePrompt(final JSONObject message) throws JSONException {
+        if (mChromeDelegate != null) {
+            String hint = message.optString("hint");
+            if ("alert".equals(hint)) {
+                String text = message.optString("text");
+                mChromeDelegate.onAlert(GeckoView.this, null, text, new PromptResult(message.optString("guid")));
+            } else if ("confirm".equals(hint)) {
+                String text = message.optString("text");
+                mChromeDelegate.onConfirm(GeckoView.this, null, text, new PromptResult(message.optString("guid")));
+            } else if ("prompt".equals(hint)) {
+                String text = message.optString("text");
+                String defaultValue = message.optString("textbox0");
+                mChromeDelegate.onPrompt(GeckoView.this, null, text, defaultValue, new PromptResult(message.optString("guid")));
+            } else if ("remotedebug".equals(hint)) {
+                mChromeDelegate.onDebugRequest(GeckoView.this, new PromptResult(message.optString("guid")));
+            }
         }
     }
 
@@ -384,12 +407,103 @@ public class GeckoView extends LayerView
         }
     }
 
+    /* Provides a means for the client to indicate whether a JavaScript
+     * dialog request should proceed. An instance of this class is passed to
+     * various GeckoViewChrome callback actions.
+     */
+    public class PromptResult {
+        private final int RESULT_OK = 0;
+        private final int RESULT_CANCEL = 1;
+
+        private final String mGUID;
+
+        public PromptResult(String guid) {
+            mGUID = guid;
+        }
+
+        private JSONObject makeResult(int resultCode) {
+            JSONObject result = new JSONObject();
+            try {
+                result.put("guid", mGUID);
+                result.put("button", resultCode);
+            } catch(JSONException ex) { }
+            return result;
+        }
+
+        /**
+        * Handle a confirmation response from the user.
+        */
+        public void confirm() {
+            JSONObject result = makeResult(RESULT_OK);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Prompt:Reply", result.toString()));
+        }
+
+        /**
+        * Handle a confirmation response from the user.
+        * @param value String value to return to the browser context.
+        */
+        public void confirmWithValue(String value) {
+            JSONObject result = makeResult(RESULT_OK);
+            try {
+                result.put("textbox0", value);
+            } catch(JSONException ex) { }
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Prompt:Reply", result.toString()));
+        }
+
+        /**
+        * Handle a cancellation response from the user.
+        */
+        public void cancel() {
+            JSONObject result = makeResult(RESULT_CANCEL);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Prompt:Reply", result.toString()));
+        }
+    }
+
     public interface ChromeDelegate {
         /**
         * Tell the host application that Gecko is ready to handle requests.
         * @param view The GeckoView that initiated the callback.
         */
         public void onReady(GeckoView view);
+
+        /**
+        * Tell the host application to display an alert dialog.
+        * @param view The GeckoView that initiated the callback.
+        * @param browser The Browser that is loading the content.
+        * @param message The string to display in the dialog.
+        * @param result A PromptResult used to send back the result without blocking.
+        * Defaults to cancel requests.
+        */
+        public void onAlert(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result);
+    
+        /**
+        * Tell the host application to display a confirmation dialog.
+        * @param view The GeckoView that initiated the callback.
+        * @param browser The Browser that is loading the content.
+        * @param message The string to display in the dialog.
+        * @param result A PromptResult used to send back the result without blocking.
+        * Defaults to cancel requests.
+        */
+        public void onConfirm(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result);
+    
+        /**
+        * Tell the host application to display an input prompt dialog.
+        * @param view The GeckoView that initiated the callback.
+        * @param browser The Browser that is loading the content.
+        * @param message The string to display in the dialog.
+        * @param defaultValue The string to use as default input.
+        * @param result A PromptResult used to send back the result without blocking.
+        * Defaults to cancel requests.
+        */
+        public void onPrompt(GeckoView view, GeckoView.Browser browser, String message, String defaultValue, GeckoView.PromptResult result);
+    
+        /**
+        * Tell the host application to display a remote debugging request dialog.
+        * @param view The GeckoView that initiated the callback.
+        * @param result A PromptResult used to send back the result without blocking.
+        * Defaults to cancel requests.
+        */
+        public void onDebugRequest(GeckoView view, GeckoView.PromptResult result);
     }
 
     public interface ContentDelegate {
