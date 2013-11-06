@@ -530,10 +530,13 @@ protected:
                                           float aYScale);
 
   void PaintItems(nsTArray<ClippedDisplayItem>& aItems,
+                  const nsIntRect& aRect,
                   gfxContext* aContext,
                   nsRenderingContext* aRC,
                   nsDisplayListBuilder* aBuilder,
                   nsPresContext* aPresContext,
+                  const nsIntPoint& aOffset,
+                  float aXScale, float aYScale,
                   int32_t aCommonClipCount);
 
   /**
