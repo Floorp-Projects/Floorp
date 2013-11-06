@@ -92,6 +92,7 @@ struct ThreadData
   uint64_t id;
   nsString[] participants;
   uint64_t timestamp;
+  nsString lastMessageSubject;
   nsString body;
   uint64_t unreadCount;
   MessageType lastMessageType;
