@@ -5,10 +5,11 @@
 #include "mozilla/dom/IccManager.h"
 
 #include "GeneratedEvents.h"
-#include "mozilla/dom/StkCommandEvent.h"
+#include "mozilla/dom/MozStkCommandEvent.h"
 #include "mozilla/Services.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMIccInfo.h"
+#include "nsJSON.h"
 #include "SimToolKit.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
@@ -264,10 +265,30 @@ NS_IMPL_EVENT_HANDLER(IccManager, iccinfochange)
 NS_IMETHODIMP
 IccManager::NotifyStkCommand(const nsAString& aMessage)
 {
-  nsRefPtr<StkCommandEvent> event = StkCommandEvent::Create(this, aMessage);
-  NS_ASSERTION(event, "This should never fail!");
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return event->Dispatch(this, NS_LITERAL_STRING("stkcommand"));
+  AutoPushJSContext cx(sc->GetNativeContext());
+  JS::Rooted<JS::Value> value(cx);
+
+  if (!aMessage.IsEmpty()) {
+    nsCOMPtr<nsIJSON> json(new nsJSON());
+    nsresult rv = json->DecodeToJSVal(aMessage, cx, value.address());
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    value = JSVAL_VOID;
+  }
+
+  MozStkCommandEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mCommand = value;
+
+  nsRefPtr<MozStkCommandEvent> event =
+    MozStkCommandEvent::Constructor(this, NS_LITERAL_STRING("stkcommand"), init);
+
+  return DispatchTrustedEvent(event);
 }
 
 NS_IMETHODIMP

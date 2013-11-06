@@ -46,6 +46,7 @@ const CM_SCRIPTS  = [
   "chrome://browser/content/devtools/codemirror/xml.js",
   "chrome://browser/content/devtools/codemirror/css.js",
   "chrome://browser/content/devtools/codemirror/htmlmixed.js",
+  "chrome://browser/content/devtools/codemirror/clike.js",
   "chrome://browser/content/devtools/codemirror/activeline.js"
 ];
 
@@ -66,8 +67,9 @@ const CM_IFRAME   =
 const CM_MAPPING = [
   "focus",
   "hasFocus",
-  "getCursor",
+  "lineCount",
   "somethingSelected",
+  "getCursor",
   "setSelection",
   "getSelection",
   "replaceSelection",
@@ -76,7 +78,6 @@ const CM_MAPPING = [
   "clearHistory",
   "openDialog",
   "cursorCoords",
-  "lineCount",
   "refresh"
 ];
 
@@ -91,9 +92,11 @@ const editors = new WeakMap();
 
 Editor.modes = {
   text: { name: "text" },
-  js:   { name: "javascript" },
   html: { name: "htmlmixed" },
-  css:  { name: "css" }
+  css:  { name: "css" },
+  js:   { name: "javascript" },
+  vs:   { name: "x-shader/x-vertex" },
+  fs:   { name: "x-shader/x-fragment" }
 };
 
 function ctrl(k) {
@@ -250,63 +253,12 @@ Editor.prototype = {
   },
 
   /**
-   * Returns true if there's something to undo and false otherwise.
+   * Returns the currently active highlighting mode.
+   * See Editor.modes for the list of all suppoert modes.
    */
-  canUndo: function () {
+  getMode: function () {
     let cm = editors.get(this);
-    return cm.historySize().undo > 0;
-  },
-
-  /**
-   * Returns true if there's something to redo and false otherwise.
-   */
-  canRedo: function () {
-    let cm = editors.get(this);
-    return cm.historySize().redo > 0;
-  },
-
-  /**
-   * Calculates and returns one or more {line, ch} objects for
-   * a zero-based index who's value is relative to the start of
-   * the editor's text.
-   *
-   * If only one argument is given, this method returns a single
-   * {line,ch} object. Otherwise it returns an array.
-   */
-  getPosition: function (...args) {
-    let cm = editors.get(this);
-    let res = args.map((ind) => cm.posFromIndex(ind));
-    return args.length === 1 ? res[0] : res;
-  },
-
-  /**
-   * The reverse of getPosition. Similarly to getPosition this
-   * method returns a single value if only one argument was given
-   * and an array otherwise.
-   */
-  getOffset: function (...args) {
-    let cm = editors.get(this);
-    let res = args.map((pos) => cm.indexFromPos(pos));
-    return args.length > 1 ? res : res[0];
-  },
-
-  /**
-   * Returns text from the text area. If line argument is provided
-   * the method returns only that line.
-   */
-  getText: function (line) {
-    let cm = editors.get(this);
-    return line == null ?
-      cm.getValue() : (cm.lineInfo(line) ? cm.lineInfo(line).text : "");
-  },
-
-  /**
-   * Replaces whatever is in the text area with the contents of
-   * the 'value' argument.
-   */
-  setText: function (value) {
-    let cm = editors.get(this);
-    cm.setValue(value);
+    return cm.getOption("mode");
   },
 
   /**
@@ -319,20 +271,26 @@ Editor.prototype = {
   },
 
   /**
-   * Returns the currently active highlighting mode.
-   * See Editor.modes for the list of all suppoert modes.
+   * Returns text from the text area. If line argument is provided
+   * the method returns only that line.
    */
-  getMode: function () {
+  getText: function (line) {
     let cm = editors.get(this);
-    return cm.getOption("mode");
+
+    if (line == null)
+      return cm.getValue();
+
+    let info = cm.lineInfo(line);
+    return info ? cm.lineInfo(line).text : "";
   },
 
   /**
-   * True if the editor is in the read-only mode, false otherwise.
+   * Replaces whatever is in the text area with the contents of
+   * the 'value' argument.
    */
-  isReadOnly: function () {
+  setText: function (value) {
     let cm = editors.get(this);
-    return cm.getOption("readOnly");
+    cm.setValue(value);
   },
 
   /**
@@ -375,57 +333,6 @@ Editor.prototype = {
   },
 
   /**
-   * Marks the contents as clean and returns the current
-   * version number.
-   */
-  setClean: function () {
-    let cm = editors.get(this);
-    this.version = cm.changeGeneration();
-    return this.version;
-  },
-
-  /**
-   * Returns true if contents of the text area are
-   * clean i.e. no changes were made since the last version.
-   */
-  isClean: function () {
-    let cm = editors.get(this);
-    return cm.isClean(this.version);
-  },
-
-  /**
-   * Displays a context menu at the point x:y. The first
-   * argument, container, should be a DOM node that contains
-   * a context menu element specified by the ID from
-   * config.contextMenu.
-   */
-  showContextMenu: function (container, x, y) {
-    if (this.config.contextMenu == null)
-      return;
-
-    let popup = container.getElementById(this.config.contextMenu);
-    popup.openPopupAtScreen(x, y, true);
-  },
-
-  /**
-   * This method opens an in-editor dialog asking for a line to
-   * jump to. Once given, it changes cursor to that line.
-   */
-  jumpToLine: function () {
-    this.openDialog(CM_JUMP_DIALOG, (line) =>
-      this.setCursor({ line: line - 1, ch: 0 }));
-  },
-
-  /**
-   * Returns a {line, ch} object that corresponds to the
-   * left, top coordinates.
-   */
-  getPositionFromCoords: function (left, top) {
-    let cm = editors.get(this);
-    return cm.coordsChar({ left: left, top: top });
-  },
-
-  /**
    * Extends the current selection to the position specified
    * by the provided {line, ch} object.
    */
@@ -435,35 +342,6 @@ Editor.prototype = {
     let anchor = cm.posFromIndex(cursor + pos.start);
     let head   = cm.posFromIndex(cursor + pos.start + pos.length);
     cm.setSelection(anchor, head);
-  },
-
-  /**
-   * Extends an instance of the Editor object with additional
-   * functions. Each function will be called with context as
-   * the first argument. Context is a {ed, cm} object where
-   * 'ed' is an instance of the Editor object and 'cm' is an
-   * instance of the CodeMirror object. Example:
-   *
-   * function hello(ctx, name) {
-   *   let { cm, ed } = ctx;
-   *   cm;   // CodeMirror instance
-   *   ed;   // Editor instance
-   *   name; // 'Mozilla'
-   * }
-   *
-   * editor.extend({ hello: hello });
-   * editor.hello('Mozilla');
-   */
-  extend: function (funcs) {
-    Object.keys(funcs).forEach((name) => {
-      let cm  = editors.get(this);
-      let ctx = { ed: this, cm: cm };
-
-      if (name === "initialize")
-        return void funcs[name](ctx);
-
-      this[name] = funcs[name].bind(null, ctx);
-    });
   },
 
   /**
@@ -639,6 +517,135 @@ Editor.prototype = {
   removeLineClass: function (line, className) {
     let cm = editors.get(this);
     cm.removeLineClass(line, "wrap", className);
+  },
+
+  /**
+   * Calculates and returns one or more {line, ch} objects for
+   * a zero-based index who's value is relative to the start of
+   * the editor's text.
+   *
+   * If only one argument is given, this method returns a single
+   * {line,ch} object. Otherwise it returns an array.
+   */
+  getPosition: function (...args) {
+    let cm = editors.get(this);
+    let res = args.map((ind) => cm.posFromIndex(ind));
+    return args.length === 1 ? res[0] : res;
+  },
+
+  /**
+   * The reverse of getPosition. Similarly to getPosition this
+   * method returns a single value if only one argument was given
+   * and an array otherwise.
+   */
+  getOffset: function (...args) {
+    let cm = editors.get(this);
+    let res = args.map((pos) => cm.indexFromPos(pos));
+    return args.length > 1 ? res : res[0];
+  },
+
+  /**
+   * Returns a {line, ch} object that corresponds to the
+   * left, top coordinates.
+   */
+  getPositionFromCoords: function (left, top) {
+    let cm = editors.get(this);
+    return cm.coordsChar({ left: left, top: top });
+  },
+
+  /**
+   * Returns true if there's something to undo and false otherwise.
+   */
+  canUndo: function () {
+    let cm = editors.get(this);
+    return cm.historySize().undo > 0;
+  },
+
+  /**
+   * Returns true if there's something to redo and false otherwise.
+   */
+  canRedo: function () {
+    let cm = editors.get(this);
+    return cm.historySize().redo > 0;
+  },
+
+  /**
+   * Marks the contents as clean and returns the current
+   * version number.
+   */
+  setClean: function () {
+    let cm = editors.get(this);
+    this.version = cm.changeGeneration();
+    return this.version;
+  },
+
+  /**
+   * Returns true if contents of the text area are
+   * clean i.e. no changes were made since the last version.
+   */
+  isClean: function () {
+    let cm = editors.get(this);
+    return cm.isClean(this.version);
+  },
+
+  /**
+   * True if the editor is in the read-only mode, false otherwise.
+   */
+  isReadOnly: function () {
+    let cm = editors.get(this);
+    return cm.getOption("readOnly");
+  },
+
+  /**
+   * Displays a context menu at the point x:y. The first
+   * argument, container, should be a DOM node that contains
+   * a context menu element specified by the ID from
+   * config.contextMenu.
+   */
+  showContextMenu: function (container, x, y) {
+    if (this.config.contextMenu == null)
+      return;
+
+    let popup = container.getElementById(this.config.contextMenu);
+    popup.openPopupAtScreen(x, y, true);
+  },
+
+  /**
+   * This method opens an in-editor dialog asking for a line to
+   * jump to. Once given, it changes cursor to that line.
+   */
+  jumpToLine: function () {
+    this.openDialog(CM_JUMP_DIALOG, (line) =>
+      this.setCursor({ line: line - 1, ch: 0 }));
+  },
+
+  /**
+   * Extends an instance of the Editor object with additional
+   * functions. Each function will be called with context as
+   * the first argument. Context is a {ed, cm} object where
+   * 'ed' is an instance of the Editor object and 'cm' is an
+   * instance of the CodeMirror object. Example:
+   *
+   * function hello(ctx, name) {
+   *   let { cm, ed } = ctx;
+   *   cm;   // CodeMirror instance
+   *   ed;   // Editor instance
+   *   name; // 'Mozilla'
+   * }
+   *
+   * editor.extend({ hello: hello });
+   * editor.hello('Mozilla');
+   */
+  extend: function (funcs) {
+    Object.keys(funcs).forEach((name) => {
+      let cm  = editors.get(this);
+      let ctx = { ed: this, cm: cm };
+
+      if (name === "initialize")
+        return void funcs[name](ctx);
+
+      this[name] = funcs[name].bind(null, ctx);
+    });
   },
 
   destroy: function () {
