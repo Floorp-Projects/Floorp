@@ -529,9 +529,10 @@ class GlobalObject : public JSObject
     bool getIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue value) {
         if (maybeGetIntrinsicValue(name, value.address()))
             return true;
+        Rooted<GlobalObject*> self(cx, this);
         if (!cx->runtime()->cloneSelfHostedValue(cx, name, value))
             return false;
-        RootedObject holder(cx, intrinsicsHolder());
+        RootedObject holder(cx, self->intrinsicsHolder());
         RootedId id(cx, NameToId(name));
         return JS_DefinePropertyById(cx, holder, id, value, nullptr, nullptr, 0);
     }
