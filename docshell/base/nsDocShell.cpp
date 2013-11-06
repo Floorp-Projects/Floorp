@@ -194,11 +194,6 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #define DEBUG_PAGE_CACHE
 #endif
 
-#ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -800,11 +795,8 @@ nsDocShell::nsDocShell():
   // We're counting the number of |nsDocShells| to help find leaks
   ++gNumberOfDocShells;
   if (!PR_GetEnv("MOZ_QUIET")) {
-      printf_stderr("++DOCSHELL %p == %ld [pid = %d] [id = %llu]\n",
-                    (void*) this,
-                    gNumberOfDocShells,
-                    getpid(),
-                    SafeCast<unsigned long long>(mHistoryID));
+      printf("++DOCSHELL %p == %ld [id = %llu]\n", (void*) this,
+             gNumberOfDocShells, SafeCast<unsigned long long>(mHistoryID));
   }
 #endif
 }
@@ -832,11 +824,8 @@ nsDocShell::~nsDocShell()
     // We're counting the number of |nsDocShells| to help find leaks
     --gNumberOfDocShells;
     if (!PR_GetEnv("MOZ_QUIET")) {
-        printf_stderr("--DOCSHELL %p == %ld [pid = %d] [id = %llu]\n",
-                      (void*) this,
-                      gNumberOfDocShells,
-                      getpid(),
-                      SafeCast<unsigned long long>(mHistoryID));
+        printf("--DOCSHELL %p == %ld [id = %llu]\n", (void*) this,
+               gNumberOfDocShells, SafeCast<unsigned long long>(mHistoryID));
     }
 #endif
 }
