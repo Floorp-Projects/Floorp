@@ -1248,8 +1248,8 @@ JS_GetArrayBufferViewBuffer(JSObject *obj);
 /*
  * Set an ArrayBuffer's length to 0 and neuter all of its views.
  */
-extern JS_FRIEND_API(void)
-JS_NeuterArrayBuffer(JSObject *obj, JSContext *cx);
+extern JS_FRIEND_API(bool)
+JS_NeuterArrayBuffer(JSContext *cx, JS::HandleObject obj);
 
 /*
  * Check whether obj supports JS_GetDataView* APIs.

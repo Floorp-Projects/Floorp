@@ -207,70 +207,63 @@ typedef HRESULT (WINAPI*D3D11CreateDeviceFunc)(
   ID3D11DeviceContext *ppImmediateContext
 );
 
-class GPUAdapterReporter : public nsIMemoryReporter {
-
+class GPUAdapterReporter : public MemoryMultiReporter
+{
     // Callers must Release the DXGIAdapter after use or risk mem-leak
     static bool GetDXGIAdapter(IDXGIAdapter **DXGIAdapter)
     {
         ID3D10Device1 *D2D10Device;
         IDXGIDevice *DXGIDevice;
         bool result = false;
-        
+
         if (D2D10Device = mozilla::gfx::Factory::GetDirect3D10Device()) {
             if (D2D10Device->QueryInterface(__uuidof(IDXGIDevice), (void **)&DXGIDevice) == S_OK) {
                 result = (DXGIDevice->GetAdapter(DXGIAdapter) == S_OK);
                 DXGIDevice->Release();
             }
         }
-        
+
         return result;
     }
-    
-public:
-    NS_DECL_ISUPPORTS
 
-    // nsIMemoryReporter abstract method implementation
-    NS_IMETHOD
-    GetName(nsACString &aName)
-    {
-        aName.AssignLiteral("gpuadapter");
-        return NS_OK;
-    }
-    
-    // nsIMemoryReporter abstract method implementation
+public:
+    GPUAdapterReporter()
+      : MemoryMultiReporter("gpu-adapter")
+    {}
+
     NS_IMETHOD
     CollectReports(nsIMemoryReporterCallback* aCb,
                    nsISupports* aClosure)
     {
         int32_t winVers, buildNum;
         HANDLE ProcessHandle = GetCurrentProcess();
-        
+
         int64_t dedicatedBytesUsed = 0;
         int64_t sharedBytesUsed = 0;
         int64_t committedBytesUsed = 0;
         IDXGIAdapter *DXGIAdapter;
-        
+
         HMODULE gdi32Handle;
         PFND3DKMTQS queryD3DKMTStatistics;
-        
+
         winVers = gfxWindowsPlatform::WindowsOSVersion(&buildNum);
-        
+
         // GPU memory reporting is not available before Windows 7
-        if (winVers < gfxWindowsPlatform::kWindows7) 
+        if (winVers < gfxWindowsPlatform::kWindows7)
             return NS_OK;
-        
+
         if (gdi32Handle = LoadLibrary(TEXT("gdi32.dll")))
             queryD3DKMTStatistics = (PFND3DKMTQS)GetProcAddress(gdi32Handle, "D3DKMTQueryStatistics");
-        
+
         if (queryD3DKMTStatistics && GetDXGIAdapter(&DXGIAdapter)) {
             // Most of this block is understood thanks to wj32's work on Process Hacker
-            
+
             DXGI_ADAPTER_DESC adapterDesc;
             D3DKMTQS queryStatistics;
-            
+
             DXGIAdapter->GetDesc(&adapterDesc);
             DXGIAdapter->Release();
-            
+
             memset(&queryStatistics, 0, sizeof(D3DKMTQS));
             queryStatistics.Type = D3DKMTQS_PROCESS;
             queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
@@ -278,29 +271,29 @@ public:
             if (NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
                 committedBytesUsed = queryStatistics.QueryResult.ProcessInfo.SystemMemory.BytesAllocated;
             }
-            
+
             memset(&queryStatistics, 0, sizeof(D3DKMTQS));
             queryStatistics.Type = D3DKMTQS_ADAPTER;
             queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
             if (NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
                 ULONG i;
                 ULONG segmentCount = queryStatistics.QueryResult.AdapterInfo.NbSegments;
-                
+
                 for (i = 0; i < segmentCount; i++) {
                     memset(&queryStatistics, 0, sizeof(D3DKMTQS));
                     queryStatistics.Type = D3DKMTQS_SEGMENT;
                     queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
                     queryStatistics.QuerySegment.SegmentId = i;
-                    
+
                     if (NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
                         bool aperture;
-                        
+
                         // SegmentInformation has a different definition in Win7 than later versions
                         if (winVers < gfxWindowsPlatform::kWindows8)
                             aperture = queryStatistics.QueryResult.SegmentInfoWin7.Aperture;
                         else
                             aperture = queryStatistics.QueryResult.SegmentInfoWin8.Aperture;
-                        
+
                         memset(&queryStatistics, 0, sizeof(D3DKMTQS));
                         queryStatistics.Type = D3DKMTQS_PROCESS_SEGMENT;
                         queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
@@ -320,9 +313,9 @@ public:
                 }
             }
         }
-        
+
         FreeLibrary(gdi32Handle);
-        
+
 #define REPORT(_path, _amount, _desc)                                         \
     do {                                                                      \
       nsresult rv;                                                            \
@@ -342,13 +335,12 @@ public:
 
         REPORT("gpu-shared", sharedBytesUsed,
                "In-process memory that is shared with the GPU.");
-        
+
 #undef REPORT
 
         return NS_OK;
     }
 };
-NS_IMPL_ISUPPORTS1(GPUAdapterReporter, nsIMemoryReporter)
 
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
@@ -385,13 +377,16 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     UpdateRenderMode();
 
-    mGPUAdapterReporter = new GPUAdapterReporter();
-    NS_RegisterMemoryReporter(mGPUAdapterReporter);
+    // This reporter is disabled because it frequently gives bogus values.  See
+    // bug 917496.
+    //mGPUAdapterReporter = new GPUAdapterReporter();
+    //NS_RegisterMemoryReporter(mGPUAdapterReporter);
+    mGPUAdapterReporter = nullptr;
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
-    NS_UnregisterMemoryReporter(mGPUAdapterReporter);
+    //NS_UnregisterMemoryReporter(mGPUAdapterReporter);
 
     mDeviceManager = nullptr;
 

@@ -397,6 +397,8 @@ BaselineInspector::getTemplateObject(jsbytecode *pc)
             return stub->toNewArray_Fallback()->templateObject();
           case ICStub::NewObject_Fallback:
             return stub->toNewObject_Fallback()->templateObject();
+          case ICStub::Rest_Fallback:
+            return stub->toRest_Fallback()->templateObject();
           case ICStub::Call_Scripted:
             if (JSObject *obj = stub->toCall_Scripted()->templateObject())
                 return obj;
