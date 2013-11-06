@@ -11,6 +11,12 @@ var ignoreIndirectCalls = {
     "__convf" : true,
     "prerrortable.c:callback_newtable" : true,
     "mozalloc_oom.cpp:void (* gAbortHandler)(size_t)" : true,
+
+    // I don't know why these are getting truncated
+    "nsTraceRefcntImpl.cpp:void (* leakyLogAddRef)(void*": true,
+    "nsTraceRefcntImpl.cpp:void (* leakyLogAddRef)(void*, int, int)": true,
+    "nsTraceRefcntImpl.cpp:void (* leakyLogRelease)(void*": true,
+    "nsTraceRefcntImpl.cpp:void (* leakyLogRelease)(void*, int, int)": true,
 };
 
 function indirectCallCannotGC(caller, name)
@@ -63,8 +69,6 @@ var ignoreCallees = {
     "js::Class.trace" : true,
     "js::Class.finalize" : true,
     "JSRuntime.destroyPrincipals" : true,
-    "nsISupports.AddRef" : true,
-    "nsISupports.Release" : true, // makes me a bit nervous; this is a bug but can happen
     "nsIGlobalObject.GetGlobalJSObject" : true, // virtual but no implementation can GC
     "nsAXPCNativeCallContext.GetJSContext" : true,
     "js::jit::MDefinition.op" : true, // macro generated virtuals just return a constant
@@ -142,6 +146,19 @@ var ignoreFunctions = {
     "JSObject* js::GetWeakmapKeyDelegate(JSObject*)" : true, // FIXME: mark with AutoAssertNoGC instead
     "uint8 NS_IsMainThread()" : true,
 
+    // FIXME!
+    "NS_LogInit": true,
+    "NS_LogTerm": true,
+    "NS_LogAddRef": true,
+    "NS_LogRelease": true,
+    "NS_LogCtor": true,
+    "NS_LogDtor": true,
+    "NS_LogCOMPtrAddRef": true,
+    "NS_LogCOMPtrRelease": true,
+
+    // FIXME!
+    "NS_DebugBreak": true,
+
     // These are a little overzealous -- these destructors *can* GC if they end
     // up wrapping a pending exception. See bug 898815 for the heavyweight fix.
     "void js::AutoCompartment::~AutoCompartment(int32)" : true,
@@ -170,6 +187,8 @@ function ignoreGCFunction(fun)
 function isRootedTypeName(name)
 {
     if (name == "mozilla::ErrorResult" ||
+        name == "JSErrorResult" ||
+        name == "WrappableJSErrorResult" ||
         name == "js::frontend::TokenStream" ||
         name == "js::frontend::TokenStream::Position" ||
         name == "ModuleCompiler")
