@@ -46,6 +46,7 @@ const CM_SCRIPTS  = [
   "chrome://browser/content/devtools/codemirror/xml.js",
   "chrome://browser/content/devtools/codemirror/css.js",
   "chrome://browser/content/devtools/codemirror/htmlmixed.js",
+  "chrome://browser/content/devtools/codemirror/clike.js",
   "chrome://browser/content/devtools/codemirror/activeline.js"
 ];
 
@@ -91,9 +92,11 @@ const editors = new WeakMap();
 
 Editor.modes = {
   text: { name: "text" },
-  js:   { name: "javascript" },
   html: { name: "htmlmixed" },
-  css:  { name: "css" }
+  css:  { name: "css" },
+  js:   { name: "javascript" },
+  vs:   { name: "x-shader/x-vertex" },
+  fs:   { name: "x-shader/x-fragment" }
 };
 
 function ctrl(k) {
