@@ -628,6 +628,27 @@ var shell = {
 
       Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
 
+#ifndef MOZ_WIDGET_GONK
+      let require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {})
+                      .devtools.require;
+      let { TouchEventHandler } = require("devtools/touch-events");
+      let frame = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShell).chromeEventHandler;
+      let scope = {
+        addEventListener:
+          function(type, fun, capture) {
+            frame.addEventListener(type, fun, capture);
+          },
+        removeEventListener:
+          function(type, fun) {
+            frame.removeEventListener(type, fun);
+          }
+      };
+      let touchEventHandler = new TouchEventHandler(scope);
+      touchEventHandler.start();
+#endif
+
       if ('pendingChromeEvents' in shell) {
         shell.pendingChromeEvents.forEach((shell.sendChromeEvent).bind(shell));
       }
