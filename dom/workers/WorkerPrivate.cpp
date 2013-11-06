@@ -1950,7 +1950,7 @@ struct WorkerPrivate::TimeoutInfo
   bool mCanceled;
 };
 
-class WorkerPrivate::MemoryReporter MOZ_FINAL : public nsIMemoryReporter
+class WorkerPrivate::MemoryReporter MOZ_FINAL : public MemoryMultiReporter
 {
   friend class WorkerPrivate;
 
@@ -1960,10 +1960,9 @@ class WorkerPrivate::MemoryReporter MOZ_FINAL : public nsIMemoryReporter
   bool mAlreadyMappedToAddon;
 
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   MemoryReporter(WorkerPrivate* aWorkerPrivate)
-  : mMutex(aWorkerPrivate->mMutex), mWorkerPrivate(aWorkerPrivate),
+  : MemoryMultiReporter("workers"),
+    mMutex(aWorkerPrivate->mMutex), mWorkerPrivate(aWorkerPrivate),
     mAlreadyMappedToAddon(false)
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -1981,13 +1980,6 @@ public:
               escapedDomain + NS_LITERAL_CSTRING(")/worker(") +
               escapedURL + NS_LITERAL_CSTRING(", ") + addressString +
               NS_LITERAL_CSTRING(")/");
-  }
-
-  NS_IMETHOD
-  GetName(nsACString& aName)
-  {
-    aName.AssignLiteral("workers");
-    return NS_OK;
   }
 
   NS_IMETHOD
@@ -2071,8 +2063,6 @@ private:
     mRtPath.Insert(addonId, explicitLength);
   }
 };
-
-NS_IMPL_ISUPPORTS1(WorkerPrivate::MemoryReporter, nsIMemoryReporter)
 
 template <class Derived>
 WorkerPrivateParent<Derived>::WorkerPrivateParent(

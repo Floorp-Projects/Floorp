@@ -667,19 +667,12 @@ private:
 namespace mozilla {
 namespace dmd {
 
-class DMDReporter MOZ_FINAL : public nsIMemoryReporter
+class DMDReporter MOZ_FINAL : public MemoryMultiReporter
 {
 public:
   DMDReporter()
+    : MemoryMultiReporter("dmd")
   {}
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetName(nsACString& aName)
-  {
-    aName.Assign("dmd");
-    return NS_OK;
-  }
 
   NS_IMETHOD CollectReports(nsIHandleReport* aHandleReport,
                             nsISupports* aData)
@@ -720,8 +713,6 @@ public:
     return NS_OK;
   }
 };
-
-NS_IMPL_ISUPPORTS1(DMDReporter, nsIMemoryReporter)
 
 } // namespace dmd
 } // namespace mozilla
@@ -1542,6 +1533,7 @@ nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
 // thread-safe just to be safe.  Memory reporters are created and destroyed
 // infrequently enough that the performance cost should be negligible.
 NS_IMPL_ISUPPORTS1(MemoryUniReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(MemoryMultiReporter, nsIMemoryReporter)
 
 nsresult
 NS_RegisterMemoryReporter(nsIMemoryReporter* aReporter)
