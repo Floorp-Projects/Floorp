@@ -405,7 +405,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEDIAMANAGERSERVICE
 
-  MediaEngine* GetBackend(uint64_t aWindowId = 0, bool aFake = false);
+  MediaEngine* GetBackend(uint64_t aWindowId = 0);
   StreamListeners *GetWindowListeners(uint64_t aWindowId) {
     NS_ASSERTION(NS_IsMainThread(), "Only access windowlist on main thread");
 
@@ -469,7 +469,7 @@ private:
 
   static StaticRefPtr<MediaManager> sSingleton;
 
-#ifdef MOZ_B2G_CAMERA
+#ifdef MOZ_WIDGET_GONK
   nsRefPtr<nsDOMCameraManager> mCameraManager;
 #endif
 };
