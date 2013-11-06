@@ -7473,23 +7473,14 @@ IonBuilder::jsop_arguments_length()
     return pushConstant(Int32Value(inlineCallInfo_->argv().length()));
 }
 
-static JSObject *
-CreateRestArgumentsTemplateObject(JSContext *cx, unsigned length)
-{
-    JSObject *templateObject = NewDenseUnallocatedArray(cx, length, nullptr, TenuredObject);
-    if (templateObject)
-        types::FixRestArgumentsType(cx, templateObject);
-    return templateObject;
-}
-
 bool
 IonBuilder::jsop_rest()
 {
-    // We don't know anything about the callee.
+    JSObject *templateObject = inspector->getTemplateObject(pc);
+    JS_ASSERT(templateObject->is<ArrayObject>());
+
     if (inliningDepth_ == 0) {
-        JSObject *templateObject = CreateRestArgumentsTemplateObject(cx, 0);
-        if (!templateObject)
-            return false;
+        // We don't know anything about the callee.
         MArgumentsLength *numActuals = MArgumentsLength::New();
         current->add(numActuals);
 
@@ -7505,9 +7496,6 @@ IonBuilder::jsop_rest()
     unsigned numActuals = inlineCallInfo_->argv().length();
     unsigned numFormals = info().nargs() - 1;
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
-    JSObject *templateObject = CreateRestArgumentsTemplateObject(cx, numRest);
-    if (!templateObject)
-        return false;
 
     MNewArray *array = new MNewArray(numRest, templateObject, MNewArray::NewArray_Allocating);
     current->add(array);
