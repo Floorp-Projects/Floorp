@@ -513,7 +513,7 @@ WebappsApplication.prototype = {
     this._onprogress = null;
     cpmm.sendAsyncMessage("Webapps:UnregisterForMessages", [
       "Webapps:FireEvent",
-      "Webapps:PackageEvent"
+      "Webapps:UpdateState"
     ]);
 
     manifestCache.evict(this.manifestURL, this.innerWindowID);

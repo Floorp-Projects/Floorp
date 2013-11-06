@@ -11,9 +11,19 @@
 namespace mozilla
 {
 
-SandboxBroker::SandboxBroker() :
-  mBrokerService(nullptr)
+sandbox::BrokerServices *SandboxBroker::sBrokerService = nullptr;
+
+SandboxBroker::SandboxBroker()
 {
+  if (!sBrokerService) {
+    sBrokerService = sandbox::SandboxFactory::GetBrokerServices();
+    if (sBrokerService) {
+      sandbox::ResultCode result = sBrokerService->Init();
+      if (result != sandbox::SBOX_ALL_OK) {
+        sBrokerService = nullptr;
+      }
+    }
+  }
 }
 
 bool
@@ -21,26 +31,16 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
                            const wchar_t *aArguments,
                            void **aProcessHandle)
 {
-  sandbox::ResultCode result;
-
   // If the broker service isn't already initialized, do it now
-  if (!mBrokerService) {
-    mBrokerService = sandbox::SandboxFactory::GetBrokerServices();
-    if (!mBrokerService) {
-      return false;
-    }
-
-    result = mBrokerService->Init();
-    if (result != sandbox::SBOX_ALL_OK) {
-      return false;
-    }
+  if (!sBrokerService) {
+    return false;
   }
 
   // Setup the sandbox policy, this is initially:
   // Medium integrity, unrestricted, in the same window station, within the
   // same desktop, and has no job object.
   // We'll start to increase the restrictions over time.
-  sandbox::TargetPolicy *policy = mBrokerService->CreatePolicy();
+  sandbox::TargetPolicy *policy = sBrokerService->CreatePolicy();
   policy->SetJobLevel(sandbox::JOB_NONE, 0);
   policy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
                         sandbox::USER_RESTRICTED_SAME_ACCESS);
@@ -48,7 +48,8 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
 
   // Ceate the sandboxed process
   PROCESS_INFORMATION targetInfo;
-  result = mBrokerService->SpawnTarget(aPath, aArguments, policy, &targetInfo);
+  sandbox::ResultCode result;
+  result = sBrokerService->SpawnTarget(aPath, aArguments, policy, &targetInfo);
 
   // The sandboxed process is started in a suspended state, resumeit now that
   // we'eve set things up.

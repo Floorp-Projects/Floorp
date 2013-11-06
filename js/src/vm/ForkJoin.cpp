@@ -7,10 +7,10 @@
 #include "vm/ForkJoin.h"
 
 #include "jscntxt.h"
+#include "jslock.h"
+#include "jsprf.h"
 
 #ifdef JS_THREADSAFE
-# include "prprf.h"
-# include "prthread.h"
 # include "jit/BaselineJIT.h"
 # include "vm/Monitor.h"
 #endif
@@ -1966,17 +1966,17 @@ class ParallelSpewer
         char buf[BufferSize];
 
         if (ForkJoinSlice *slice = ForkJoinSlice::Current()) {
-            PR_snprintf(buf, BufferSize, "[%sParallel:%u%s] ",
+            JS_snprintf(buf, BufferSize, "[%sParallel:%u%s] ",
                         sliceColor(slice->sliceId), slice->sliceId, reset());
         } else {
-            PR_snprintf(buf, BufferSize, "[Parallel:M] ");
+            JS_snprintf(buf, BufferSize, "[Parallel:M] ");
         }
 
         for (uint32_t i = 0; i < depth; i++)
-            PR_snprintf(buf + strlen(buf), BufferSize, "  ");
+            JS_snprintf(buf + strlen(buf), BufferSize, "  ");
 
-        PR_vsnprintf(buf + strlen(buf), BufferSize, fmt, ap);
-        PR_snprintf(buf + strlen(buf), BufferSize, "\n");
+        JS_vsnprintf(buf + strlen(buf), BufferSize, fmt, ap);
+        JS_snprintf(buf + strlen(buf), BufferSize, "\n");
 
         fprintf(stderr, "%s", buf);
     }
@@ -2097,7 +2097,7 @@ class ParallelSpewer
             return;
 
         char buf[BufferSize];
-        PR_vsnprintf(buf, BufferSize, fmt, ap);
+        JS_vsnprintf(buf, BufferSize, fmt, ap);
 
         JSScript *script = mir->block()->info().script();
         spew(SpewCompile, "%s%s%s: %s (%s:%u)", cyan(), mir->opName(), reset(), buf,
