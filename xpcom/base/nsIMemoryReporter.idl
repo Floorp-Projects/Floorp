@@ -179,13 +179,19 @@ interface nsIMemoryReporter : nsISupports
   const int32_t UNITS_PERCENTAGE = 3;
 };
 
-[scriptable, builtinclass, uuid(4db7040a-16f9-4249-879b-fe72729c7ef5)]
+[scriptable, function, uuid(548b3909-c04d-4ca6-8466-b8bee3837457)]
+interface nsIFinishReportingCallback : nsISupports
+{
+  void callback(in nsISupports data);
+};
+
+[scriptable, builtinclass, uuid(a1292276-726b-4ef5-a017-5a455d6664dd)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
-   * Return an enumerator of nsIMemoryReporters that are currently registered.
+   * Initialize.
    */
-  nsISimpleEnumerator enumerateReporters();
+  void init();
 
   /*
    * Register the given nsIMemoryReporter.  After a reporter is registered,
@@ -207,9 +213,30 @@ interface nsIMemoryReporterManager : nsISupports
   void registerReporterEvenIfBlocked(in nsIMemoryReporter aReporter);
 
   /*
-   * Initialize.
+   * Return an enumerator of nsIMemoryReporters that are currently registered
+   * in the current process.  WARNING: this does not do anything with child
+   * processes.  Use getReports() if you want measurements from child
+   * processes.
    */
-  void init();
+  nsISimpleEnumerator enumerateReporters();
+
+  /*
+   * Get memory reports for the current process and all child processes.
+   * |handleReport| is called for each report, and |finishReporting| is called
+   * once all reports have been handled.
+   *
+   * |finishReporting| is called even if, for example, some child processes
+   * fail to report back.  However, calls to this method will silently and
+   * immediately abort -- and |finishReporting| will not be called -- if a
+   * previous getReports() call is still in flight, i.e. if it has not yet
+   * finished invoking |finishReporting|.  The silent abort is because the
+   * in-flight request will finish soon, and the caller would very likely just
+   * catch and ignore any error anyway.
+   */
+  void getReports(in nsIMemoryReporterCallback handleReport,
+                  in nsISupports handleReportData,
+                  in nsIFinishReportingCallback finishReporting,
+                  in nsISupports finishReportingData);
 
   /*
    * The memory reporter manager, for the most part, treats reporters
@@ -332,8 +359,13 @@ interface nsIMemoryReporterManager : nsISupports
 
 #include "js/TypeDecls.h"
 #include "nsStringGlue.h"
+#include "nsTArray.h"
 
 class nsPIDOMWindow;
+
+// nsIHandleReportCallback is a better name, but keep nsIMemoryReporterCallback
+// around for backwards compatibility.
+typedef nsIMemoryReporterCallback nsIHandleReportCallback;
 
 // Note that the memory reporters are held in an nsCOMArray, which means
 // that individual reporters should be referenced with |nsIMemoryReporter *|
@@ -396,8 +428,9 @@ nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
 #if defined(MOZ_DMD)
 namespace mozilla {
 namespace dmd {
-// This runs all the memory reporters but does nothing with the results;  i.e.
-// it does the minimal amount of work possible for DMD to do its thing.
+// This runs all the memory reporters in the current process but does nothing
+// with the results;  i.e. it does the minimal amount of work possible for DMD
+// to do its thing.  It does nothing with child processes.
 void RunReporters();
 }
 }
@@ -459,18 +492,18 @@ namespace mozilla {
 // memory uni-reporters.  You just need to provide the following.
 // - The constant values: nameAndPath (which serves as both the reporters name,
 //   and the path in its single report), kind, units, and description.  They
-//   are passed to the MemoryUniReporter constructor.
-// - A (private) Amount() or (public) GetAmount() method.  It can use the
+//   are arguments to the MemoryUniReporter constructor.
+// - A private Amount() or public GetAmount() method.  It can use the
 //   MallocSizeOf method if necessary.  (There is also
 //   MallocSizeOfOn{Alloc,Free}, which can be useful.)  Use Amount() if the
 //   reporter is infallible, and GetAmount() otherwise.  (If you fail to
 //   provide one or the other, you'll get assertion failures when the memory
 //   reporter runs.)
 //
-// The class name of subclasses should match the path, minus the "explicit"
-// (if present), and with "Reporter" at the end.  For example:
-// - "explicit/dom/xyzzy"     --> DOMXyzzyReporter
-// - "js-compartments/system" --> JSCompartmentsSystemReporter
+// The class name of subclasses should match the nameAndPath, minus the
+// "explicit" (if present), and with "Reporter" at the end.  For example:
+// - nameAndPath == "explicit/dom/xyzzy"     --> DOMXyzzyReporter
+// - nameAndPath == "js-compartments/system" --> JSCompartmentsSystemReporter
 //
 class MemoryUniReporter : public nsIMemoryReporter
 {
@@ -526,6 +559,46 @@ protected:
   const int32_t   mKind;
   const int32_t   mUnits;
   const nsCString mDescription;
+};
+
+// The following base class reduces the amount of boilerplate code required for
+// memory multi-reporters.  You just need to provide the following.
+// - The constant value: name.  It is an argument to the MemoryMultiReporter
+//   constructor.  The name of each multi-reporter should be unique.
+// - A public CollectReports() method.  It can use the MallocSizeOf method if
+//   necessary.  (There is also MallocSizeOfOn{Alloc,Free}, which can be
+//   useful.)
+//
+// The class name of subclasses should match the name, with "Reporter" at
+// the end.  For example:
+// - name == "foo" --> FooMultiReporter
+//
+class MemoryMultiReporter : public nsIMemoryReporter
+{
+public:
+  MemoryMultiReporter(const char* aName)
+    : mName(aName)
+  {}
+
+  virtual ~MemoryMultiReporter() {}
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  NS_IMETHOD GetName(nsACString& aName)
+  {
+    aName.Assign(mName);
+    return NS_OK;
+  }
+
+  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
+                            nsISupports* aClosure) = 0;
+
+protected:
+  NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MallocSizeOf)
+  NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(MallocSizeOfOnAlloc)
+  NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(MallocSizeOfOnFree)
+
+  const nsCString mName;
 };
 
 } // namespace mozilla

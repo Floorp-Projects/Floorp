@@ -110,9 +110,10 @@ JSCompartment::sweepCallsiteClones()
 }
 
 JSFunction *
-js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript script, jsbytecode *pc)
+js::ExistingCloneFunctionAtCallsite(JSCompartment *comp, JSFunction *fun,
+                                    JSScript *script, jsbytecode *pc)
 {
-    JS_ASSERT(cx->typeInferenceEnabled());
+    JS_ASSERT(comp->zone()->types.inferenceEnabled);
     JS_ASSERT(fun->nonLazyScript()->shouldCloneAtCallsite);
     JS_ASSERT(!fun->nonLazyScript()->enclosingStaticScope());
     JS_ASSERT(types::UseNewTypeForClone(fun));
@@ -126,23 +127,25 @@ js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript scri
     typedef CallsiteCloneKey Key;
     typedef CallsiteCloneTable Table;
 
-    Table &table = cx->compartment()->callsiteClones;
-    if (!table.initialized() && !table.init())
+    Table &table = comp->callsiteClones;
+    if (!table.initialized())
         return nullptr;
 
-    uint32_t offset = pc - script->code;
-    void* originalScript = script;
-    void* originalFun = fun;
-    SkipRoot skipScript(cx, &originalScript);
-    SkipRoot skipFun(cx, &originalFun);
-
-    Table::AddPtr p = table.lookupForAdd(Key(fun, script, offset));
-    SkipRoot skipHash(cx, &p); /* Prevent the hash from being poisoned. */
+    Table::Ptr p = table.lookup(Key(fun, script, pc - script->code));
     if (p)
         return p->value;
 
+    return nullptr;
+}
+
+JSFunction *
+js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript script, jsbytecode *pc)
+{
+    if (JSFunction *clone = ExistingCloneFunctionAtCallsite(cx->compartment(), fun, script, pc))
+        return clone;
+
     RootedObject parent(cx, fun->environment());
-    RootedFunction clone(cx, CloneFunctionObject(cx, fun, parent));
+    JSFunction *clone = CloneFunctionObject(cx, fun, parent);
     if (!clone)
         return nullptr;
 
@@ -154,15 +157,14 @@ js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript scri
     clone->nonLazyScript()->isCallsiteClone = true;
     clone->nonLazyScript()->setOriginalFunctionObject(fun);
 
-    Key key(fun, script, offset);
+    typedef CallsiteCloneKey Key;
+    typedef CallsiteCloneTable Table;
 
-    /* Recalculate the hash if script or fun have been moved. */
-    if (script != originalScript || fun != originalFun) {
-        p = table.lookupForAdd(key);
-        JS_ASSERT(!p);
-    }
+    Table &table = cx->compartment()->callsiteClones;
+    if (!table.initialized() && !table.init())
+        return nullptr;
 
-    if (!table.relookupOrAdd(p, key, clone.get()))
+    if (!table.putNew(Key(fun, script, pc - script->code), clone))
         return nullptr;
 
     return clone;

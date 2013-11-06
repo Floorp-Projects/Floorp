@@ -9,7 +9,7 @@ const { isNil, isObject, isString } = require('../../lang/type');
 
 exports.contract = contract({
   id: {
-  	is: [ 'string' ],
+  	is: [ 'string', 'undefined' ],
   	ok: v => /^[a-z0-9-_]+$/i.test(v),
     msg: 'The option "id" must be a valid alphanumeric id (hyphens and ' +
          'underscores are allowed).'
@@ -22,6 +22,6 @@ exports.contract = contract({
     is: [ 'string' ],
     ok: v => isLocalURL(v),
     map: function(v) v.toString(),
-    msg: 'The option "url" must be a valid URI.'
+    msg: 'The option "url" must be a valid local URI.'
   }
 });

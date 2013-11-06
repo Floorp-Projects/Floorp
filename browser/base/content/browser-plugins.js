@@ -903,12 +903,19 @@ var gPluginHandler = {
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
     for (let plugin of cwu.plugins) {
-      let fallbackType = plugin.pluginFallbackType;
-      if (fallbackType != Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY) {
-        continue;
-      }
       let info = this._getPluginInfo(plugin);
       if (!actions.has(info.permissionString)) {
+        continue;
+      }
+      let fallbackType = info.fallbackType;
+      if (fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+        actions.delete(info.permissionString);
+        if (actions.size == 0) {
+          break;
+        }
+        continue;
+      }
+      if (fallbackType != Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY) {
         continue;
       }
       let overlay = this.getPluginUI(plugin, "main");

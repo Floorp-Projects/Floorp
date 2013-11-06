@@ -2387,20 +2387,13 @@ nsCycleCollector::CollectWhite()
 // Memory reporter
 ////////////////////////
 
-class CycleCollectorReporter MOZ_FINAL : public nsIMemoryReporter
+class CycleCollectorReporter MOZ_FINAL : public MemoryMultiReporter
 {
   public:
     CycleCollectorReporter(nsCycleCollector* aCollector)
-      : mCollector(aCollector)
+        : MemoryMultiReporter("cycle-collector"),
+          mCollector(aCollector)
     {}
-
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetName(nsACString& name)
-    {
-        name.AssignLiteral("cycle-collector");
-        return NS_OK;
-    }
 
     NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
                               nsISupports* aClosure)
@@ -2460,8 +2453,6 @@ class CycleCollectorReporter MOZ_FINAL : public nsIMemoryReporter
 
     nsCycleCollector* mCollector;
 };
-
-NS_IMPL_ISUPPORTS1(CycleCollectorReporter, nsIMemoryReporter)
 
 
 ////////////////////////////////////////////////////////////////////////

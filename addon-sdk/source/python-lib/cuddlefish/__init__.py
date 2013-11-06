@@ -172,7 +172,7 @@ parser_groups = (
         (("", "--strip-sdk",), dict(dest="bundle_sdk",
                                     help=("Do not ship SDK modules in the xpi"),
                                     action="store_false",
-                                    default=True,
+                                    default=False,
                                     cmds=['run', 'test', 'testex', 'testpkgs',
                                           'testall', 'xpi'])),
         (("", "--force-use-bundled-sdk",), dict(dest="force_use_bundled_sdk",
@@ -554,7 +554,7 @@ def initializer(env_root, args, out=sys.stdout, err=sys.stderr):
     jid = create_jid()
     print >>out, '* generated jID automatically:', jid
     open(os.path.join(path,'package.json'),'w').write(PACKAGE_JSON % {'name':addon.lower(),
-                                                   'fullName':addon,
+                                                   'title':addon,
                                                    'id':jid })
     print >>out, '* package.json written'
     open(os.path.join(path,'test','test-main.js'),'w').write(TEST_MAIN_JS)
@@ -568,7 +568,7 @@ def initializer(env_root, args, out=sys.stdout, err=sys.stderr):
         print >>out, 'Do "cfx test" to test it and "cfx run" to try it.  Have fun!'
     else:
         print >>out, '\nYour sample add-on is now ready in the \'' + args[1] +  '\' directory.'
-        print >>out, 'Change to that directory, then do "cfx test" to test it, \nand "cfx run" to try it.  Have fun!' 
+        print >>out, 'Change to that directory, then do "cfx test" to test it, \nand "cfx run" to try it.  Have fun!'
     return {"result":0, "jid":jid}
 
 def buildJID(target_cfg):
@@ -597,7 +597,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     (options, args) = parse_args(**parser_kwargs)
 
     config_args = get_config_args(options.config, env_root);
-    
+
     # reparse configs with arguments from local.json
     if config_args:
         parser_kwargs['arguments'] += config_args

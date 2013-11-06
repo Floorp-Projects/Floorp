@@ -9,6 +9,7 @@ chrome.jar:
 
 * content/about.xhtml                  (content/about.xhtml)
   content/config.xhtml                 (content/config.xhtml)
+  content/config.js                    (content/config.js)
   content/aboutAddons.xhtml            (content/aboutAddons.xhtml)
   content/aboutAddons.js               (content/aboutAddons.js)
   content/aboutCertError.xhtml         (content/aboutCertError.xhtml)

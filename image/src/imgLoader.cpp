@@ -50,21 +50,12 @@ using namespace mozilla::image;
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ImagesMallocSizeOf)
 
-class imgMemoryReporter MOZ_FINAL :
-  public nsIMemoryReporter
+class imgMemoryReporter MOZ_FINAL : public MemoryMultiReporter
 {
 public:
   imgMemoryReporter()
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetName(nsACString &name)
-  {
-    name.Assign("images");
-    return NS_OK;
-  }
+    : MemoryMultiReporter("images")
+  {}
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *callback,
                             nsISupports *closure)
@@ -222,8 +213,6 @@ private:
     return PL_DHASH_NEXT;
   }
 };
-
-NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryReporter)
 
 NS_IMPL_ISUPPORTS3(nsProgressNotificationProxy,
                      nsIProgressEventSink,

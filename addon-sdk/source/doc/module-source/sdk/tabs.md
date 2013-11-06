@@ -126,6 +126,10 @@ content (see the
       });
     });
 
+Note that `tab.attach` is tab-centric: if the user navigates to a new
+page in the same tab, then the worker and content scripts will be
+reattached to the new page.
+
 ## Private Windows ##
 
 If your add-on has not opted into private browsing, then you won't see any
@@ -346,7 +350,10 @@ Returns thumbnail data URI of the page currently loaded in this tab.
 
 <api name="attach">
 @method
-  Create a page mod and attach it to the document in the tab.
+  Create a [Worker](modules/sdk/content/worker.html) and attach it to
+  every document loaded in the tab. Note that this is tab-centric: if
+  the user navigates to a new page in the same tab, then the worker and
+  content scripts will be reattached to the new page.
 
 **Example**
 
@@ -360,20 +367,22 @@ Returns thumbnail data URI of the page currently loaded in this tab.
     });
 
 @param options {object}
-  Options for the page mod, with the following keys:
+  Options for the worker, with the following keys:
 
 @prop [contentScriptFile] {string,array}
     The local file URLs of content scripts to load.  Content scripts specified
     by this option are loaded *before* those specified by the `contentScript`
     option. Optional.
 @prop [contentScript] {string,array}
-    The texts of content scripts to load.  Content scripts specified by this
-    option are loaded *after* those specified by the `contentScriptFile` option.
+    A string or an array of strings of code to be evaluated in the context.
+    Content scripts specified by this option are loaded *after*
+    those specified by the `contentScriptFile` option.
     Optional.
 @prop [onMessage] {function}
-    A function called when the page mod receives a message from content scripts.
-    Listeners are passed a single argument, the message posted from the
-    content script. Optional.
+    A function called when the content worker receives a message from
+    content scripts. Listeners are passed a single argument, the
+    message posted from the content script.
+    Optional.
 
 @returns {Worker}
   The [Worker](modules/sdk/content/worker.html#Worker) object can be used to

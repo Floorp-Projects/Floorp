@@ -9463,5 +9463,41 @@ ICGetProp_DOMProxyShadowed::ICGetProp_DOMProxyShadowed(IonCode *stubCode,
     pcOffset_(pcOffset)
 { }
 
+//
+// Rest_Fallback
+//
+
+static bool DoRestFallback(JSContext *cx, ICRest_Fallback *stub,
+                           BaselineFrame *frame, MutableHandleValue res)
+{
+    unsigned numFormals = frame->numFormalArgs() - 1;
+    unsigned numActuals = frame->numActualArgs();
+    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
+    Value *rest = frame->argv() + numFormals;
+
+    JSObject *obj = NewDenseCopiedArray(cx, numRest, rest, nullptr);
+    if (!obj)
+        return false;
+    types::FixRestArgumentsType(cx, obj);
+    res.setObject(*obj);
+    return true;
+}
+
+typedef bool (*DoRestFallbackFn)(JSContext *, ICRest_Fallback *, BaselineFrame *,
+                                 MutableHandleValue);
+static const VMFunction DoRestFallbackInfo =
+    FunctionInfo<DoRestFallbackFn>(DoRestFallback);
+
+bool
+ICRest_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    EmitRestoreTailCallReg(masm);
+
+    masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    masm.push(BaselineStubReg);
+
+    return tailCallVM(DoRestFallbackInfo, masm);
+}
+
 } // namespace jit
 } // namespace js

@@ -1,0 +1,9 @@
+{
+    "name": "a long none",
+    "license": "MPL 2.0",
+    "author": "",
+    "version": "0.1",
+
+    "id": "jid1-80123",
+    "description": "test addon name falls back all the way to the 'name' key"
+}
