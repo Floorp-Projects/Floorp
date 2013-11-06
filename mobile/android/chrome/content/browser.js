@@ -6617,6 +6617,7 @@ var SearchEngines = {
   PREF_SUGGEST_PROMPTED: "browser.search.suggest.prompted",
 
   init: function init() {
+    Services.obs.addObserver(this, "SearchEngines:Add", false);
     Services.obs.addObserver(this, "SearchEngines:Get", false);
     Services.obs.addObserver(this, "SearchEngines:GetVisible", false);
     Services.obs.addObserver(this, "SearchEngines:SetDefault", false);
@@ -6631,6 +6632,7 @@ var SearchEngines = {
   },
 
   uninit: function uninit() {
+    Services.obs.removeObserver(this, "SearchEngines:Add");
     Services.obs.removeObserver(this, "SearchEngines:Get");
     Services.obs.removeObserver(this, "SearchEngines:GetVisible");
     Services.obs.removeObserver(this, "SearchEngines:SetDefault");
@@ -6712,6 +6714,9 @@ var SearchEngines = {
   observe: function observe(aSubject, aTopic, aData) {
     let engine;
     switch(aTopic) {
+      case "SearchEngines:Add":
+        this.displaySearchEnginesList(aData);
+        break;
       case "SearchEngines:GetVisible":
         Services.search.init(this._handleSearchEnginesGetVisible.bind(this));
         break;
@@ -6736,6 +6741,50 @@ var SearchEngines = {
         dump("Unexpected message type observed: " + aTopic);
         break;
     }
+  },
+
+  // Display context menu listing names of the search engines available to be added.
+  displaySearchEnginesList: function displaySearchEnginesList(aData) {
+    let data = JSON.parse(aData);
+    let tab = BrowserApp.getTabForId(data.tabId);
+
+    if (!tab)
+      return;
+
+    let browser = tab.browser;
+    let engines = browser.engines;
+
+    let p = new Prompt({
+      window: browser.contentWindow
+    }).setSingleChoiceItems(engines.map(function(e) {
+      return { label: e.title };
+    })).show((function(data) {
+      if (data.button == -1)
+        return;
+
+      this.addOpenSearchEngine(engines[data.button]);
+      engines.splice(data.button, 1);
+
+      if (engines.length < 1) {
+        // Broadcast message that there are no more add-able search engines.
+        let newEngineMessage = {
+          type: "Link:OpenSearch",
+          tabID: tab.id,
+          visible: false
+        };
+
+        sendMessageToJava(newEngineMessage);
+      }
+    }).bind(this));
+  },
+
+  addOpenSearchEngine: function addOpenSearchEngine(engine) {
+    Services.search.addEngine(engine.url, Ci.nsISearchEngine.DATA_XML, engine.iconURL, false, {
+      onSuccess: function() {
+        // Display a toast confirming addition of new search engine.
+        NativeWindow.toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [engine.title], 1), "long");
+      }
+    });
   },
 
   addEngine: function addEngine(aElement) {
