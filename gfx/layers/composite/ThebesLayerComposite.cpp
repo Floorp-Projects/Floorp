@@ -130,10 +130,7 @@ ThebesLayerComposite::RenderLayer(const nsIntPoint& aOffset,
     // calculating these things can be a little expensive, so don't
     // do them if we don't have to
     tiledLayerProps.mVisibleRegion = visibleRegion;
-    tiledLayerProps.mDisplayPort = GetDisplayPort();
     tiledLayerProps.mEffectiveResolution = GetEffectiveResolution();
-    tiledLayerProps.mCompositionBounds = GetCompositionBounds();
-    tiledLayerProps.mRetainTiles = !(mIsFixedPosition || mStickyPositionData);
     tiledLayerProps.mValidRegion = mValidRegion;
   }
 
@@ -192,102 +189,6 @@ ThebesLayerComposite::GetEffectiveResolution()
   }
 
   return resolution;
-}
-
-gfxRect
-ThebesLayerComposite::GetDisplayPort()
-{
-  // We use GetTransform instead of GetEffectiveTransform in this function
-  // as we want the transform of the shadowable layers and not that of the
-  // shadow layers, which may have been modified due to async scrolling/
-  // zooming.
-  gfx3DMatrix transform = GetTransform();
-
-  // Find out the area of the nearest display-port to invalidate retained
-  // tiles.
-  gfxRect displayPort;
-  gfxSize parentResolution = GetEffectiveResolution();
-  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
-    const FrameMetrics& metrics = parent->GetFrameMetrics();
-    if (displayPort.IsEmpty()) {
-      if (!metrics.mDisplayPort.IsEmpty()) {
-          // We use the bounds to cut down on complication/computation time.
-          // This will be incorrect when the transform involves rotation, but
-          // it'd be quite hard to retain invalid tiles correctly in this
-          // situation anyway.
-          displayPort = gfxRect(metrics.mDisplayPort.x,
-                                metrics.mDisplayPort.y,
-                                metrics.mDisplayPort.width,
-                                metrics.mDisplayPort.height);
-          displayPort.ScaleRoundOut(parentResolution.width, parentResolution.height);
-      }
-      parentResolution.width /= metrics.mResolution.scale;
-      parentResolution.height /= metrics.mResolution.scale;
-    }
-    if (parent->UseIntermediateSurface()) {
-      transform.PreMultiply(parent->GetTransform());
-    }
-  }
-
-  // If no display port was found, use the widget size from the layer manager.
-  if (displayPort.IsEmpty()) {
-    LayerManagerComposite* manager = static_cast<LayerManagerComposite*>(Manager());
-    const nsIntSize& widgetSize = manager->GetWidgetSize();
-    displayPort.width = widgetSize.width;
-    displayPort.height = widgetSize.height;
-  }
-
-  // Transform the display port into layer space.
-  displayPort = transform.Inverse().TransformBounds(displayPort);
-
-  return displayPort;
-}
-
-gfxRect
-ThebesLayerComposite::GetCompositionBounds()
-{
-  // Walk up the tree, looking for a display-port - if we find one, we know
-  // that this layer represents a content node and we can use its first
-  // scrollable child, in conjunction with its content area and viewport offset
-  // to establish the screen coordinates to which the content area will be
-  // rendered.
-  gfxRect compositionBounds;
-  ContainerLayer* scrollableLayer = nullptr;
-  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
-    const FrameMetrics& parentMetrics = parent->GetFrameMetrics();
-    if (parentMetrics.IsScrollable())
-      scrollableLayer = parent;
-    if (!parentMetrics.mDisplayPort.IsEmpty() && scrollableLayer) {
-      // Get the composition bounds, so as not to waste rendering time.
-      compositionBounds = gfxRect(parentMetrics.mCompositionBounds.x,
-                                  parentMetrics.mCompositionBounds.y,
-                                  parentMetrics.mCompositionBounds.width,
-                                  parentMetrics.mCompositionBounds.height);
-
-      const FrameMetrics& metrics = scrollableLayer->GetFrameMetrics();
-      LayerToCSSScale scale(1 / metrics.mResolution.scale);
-
-      // Get the content document bounds, in screen-space.
-      const LayerIntRect content = RoundedToInt(metrics.mScrollableRect / scale);
-      // !!! WTF. this code is just wrong. See bug 881451.
-      gfx::Point scrollOffset =
-        gfx::Point((metrics.mScrollOffset.x * metrics.LayersPixelsPerCSSPixel().scale) / scale.scale,
-                   (metrics.mScrollOffset.y * metrics.LayersPixelsPerCSSPixel().scale) / scale.scale);
-      const nsIntPoint contentOrigin(
-        content.x - NS_lround(scrollOffset.x),
-        content.y - NS_lround(scrollOffset.y));
-      gfxRect contentRect = gfxRect(contentOrigin.x, contentOrigin.y,
-                                    content.width, content.height);
-      gfxRect contentBounds = scrollableLayer->GetEffectiveTransform().
-        TransformBounds(contentRect);
-
-      // Clip the composition bounds to the content bounds
-      compositionBounds.IntersectRect(compositionBounds, contentBounds);
-      break;
-    }
-  }
-
-  return compositionBounds;
 }
 
 #ifdef MOZ_LAYERS_HAVE_LOG

@@ -205,11 +205,6 @@ jit::CheckFrequentBailouts(JSContext *cx, JSScript *script)
 
             if (!Invalidate(cx, script))
                 return false;
-        } else {
-            // If we keep bailing out to handle exceptions, invalidate and
-            // forbid compilation.
-            if (ionScript->numExceptionBailouts() >= js_IonOptions.exceptionBailoutThreshold)
-                ForbidCompilation(cx, script);
         }
     }
 

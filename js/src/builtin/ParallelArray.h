@@ -40,6 +40,7 @@ class ParallelArrayObject : public JSObject
     static JSObject *newInstance(JSContext *cx, NewObjectKind newKind = GenericObject);
 
     // Get the constructor function for argc number of arguments.
+    static JSFunction *maybeGetConstructor(GlobalObject *global, unsigned argc);
     static JSFunction *getConstructor(JSContext *cx, unsigned argc);
 
     static JSObject *initClass(JSContext *cx, HandleObject obj);
