@@ -1,0 +1,9 @@
+{
+    "name": "empty",
+    "license": "MPL 2.0",
+    "author": "",
+    "version": "0.1",
+    "title": "a long title",
+    "id": "jid1-80123",
+    "description": "test addon name comes from the 'title' key"
+}

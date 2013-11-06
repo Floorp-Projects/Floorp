@@ -421,7 +421,9 @@ public class FennecNativeActions implements Actions {
                     // success
                     break;
                 }
+
                 // we got a notify() before we could wait long enough, so we need to start over
+                // Note, moving the goal post might have us race against a "drawFinished" flood
                 startTime = endTime;
             }
         }

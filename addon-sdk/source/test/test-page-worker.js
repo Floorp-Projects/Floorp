@@ -8,7 +8,8 @@ const { Loader } = require('sdk/test/loader');
 const Pages = require("sdk/page-worker");
 const Page = Pages.Page;
 const { URL } = require("sdk/url");
-const testURI = require("sdk/self").data.url("test.html");
+const fixtures = require("./fixtures");
+const testURI = fixtures.url("test.html");
 
 const ERR_DESTROYED =
   "Couldn't find the worker to receive this message. " +
@@ -264,8 +265,8 @@ exports.testLoadContentPage = function(assert, done) {
         return done();
       assert[msg].apply(assert, message);
     },
-    contentURL: require("sdk/self").data.url("test-page-worker.html"),
-    contentScriptFile: require("sdk/self").data.url("test-page-worker.js"),
+    contentURL: fixtures.url("test-page-worker.html"),
+    contentScriptFile: fixtures.url("test-page-worker.js"),
     contentScriptWhen: "ready"
   });
 }
