@@ -28,7 +28,7 @@ public:
   virtual ~SandboxBroker();
 
 private:
-  sandbox::BrokerServices *mBrokerService;
+  static sandbox::BrokerServices *sBrokerService;
 };
 
 } // mozilla
