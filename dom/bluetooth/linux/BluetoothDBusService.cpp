@@ -1249,6 +1249,7 @@ private:
     nsRefPtr<RegisterAgentReplyHandler> handler =
       new RegisterAgentReplyHandler(aAgentVTable);
     MOZ_ASSERT(handler.get());
+    MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
     bool success = threadConnection->SendWithReply(
       RegisterAgentReplyHandler::Callback, handler.get(), -1,
@@ -1686,17 +1687,22 @@ BluetoothDBusService::StartInternal()
     sPairingReqTable = new nsDataHashtable<nsStringHashKey, DBusMessage* >;
   }
 
-  // Normally we'll receive the signal 'AdapterAdded' for the default
-  // adapter from the DBus daemon during start up. If we restart after
-  // a crash, the default adapter might already be available, so we ask
-  // the daemon explicitly here.
-  bool success = mConnection->SendWithReply(OnDefaultAdapterReply, nullptr,
-                                            1000, "/",
-                                            DBUS_ADAPTER_IFACE,
-                                            "DefaultAdapter",
-                                            DBUS_TYPE_INVALID);
-  if (!success) {
-    BT_WARNING("Failed to query default adapter!");
+  /**
+   * Normally we'll receive the signal 'AdapterAdded' with the adapter object
+   * path from the DBus daemon during start up. So, there's no need to query
+   * the object path of default adapter here. However, if we restart from a
+   * crash, the default adapter might already be available, so we ask the daemon
+   * explicitly here.
+   */
+  if (sAdapterPath.IsEmpty()) {
+    bool success = mConnection->SendWithReply(OnDefaultAdapterReply, nullptr,
+                                              1000, "/",
+                                              DBUS_MANAGER_IFACE,
+                                              "DefaultAdapter",
+                                              DBUS_TYPE_INVALID);
+    if (!success) {
+      BT_WARNING("Failed to query default adapter!");
+    }
   }
 
   return NS_OK;
@@ -1941,6 +1947,7 @@ BluetoothDBusService::SendDiscoveryMessage(const char* aMessageName,
                                            BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
   if (!IsReady()) {
     NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
@@ -1978,6 +1985,7 @@ BluetoothDBusService::SendInputMessage(const nsAString& aDeviceAddress,
     return NS_ERROR_FAILURE;
   }
 
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
   nsString objectPath = GetObjectPathFromAddress(sAdapterPath, aDeviceAddress);
   return SendAsyncDBusMessage(objectPath, DBUS_INPUT_IFACE, aMessage, callback);
 }
@@ -2030,6 +2038,7 @@ BluetoothDBusService::SendSinkMessage(const nsAString& aDeviceAddress,
     return NS_ERROR_FAILURE;
   }
 
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
   nsString objectPath = GetObjectPathFromAddress(sAdapterPath, aDeviceAddress);
   return SendAsyncDBusMessage(objectPath, DBUS_SINK_IFACE, aMessage, callback);
 }
@@ -2143,6 +2152,7 @@ protected:
   bool SendNextGetProperties()
   {
     MOZ_ASSERT(mProcessedDeviceAddresses < mDeviceAddresses.Length());
+    MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
     // cache object path for reply
     mObjectPath = GetObjectPathFromAddress(sAdapterPath,
@@ -2256,6 +2266,7 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
   }
 
   MOZ_ASSERT(aType < ArrayLength(sBluetoothDBusIfaces));
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
   const char* interface = sBluetoothDBusIfaces[aType];
 
   /* Compose the command */
@@ -2363,6 +2374,7 @@ BluetoothDBusService::CreatePairedDeviceInternal(
   sIsPairing++;
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
   // Then send CreatePairedDevice, it will register a temp device agent then
   // unregister it after pairing process is over
@@ -2411,6 +2423,7 @@ BluetoothDBusService::RemoveDeviceInternal(const nsAString& aDeviceAddress,
     return NS_OK;
   }
 
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
   nsCString deviceObjectPath =
     NS_ConvertUTF16toUTF8(GetObjectPathFromAddress(sAdapterPath,
                                                    aDeviceAddress));
@@ -2785,6 +2798,7 @@ BluetoothDBusService::GetServiceChannel(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
   nsString objectPath(GetObjectPathFromAddress(sAdapterPath, aDeviceAddress));
 
 #ifdef MOZ_WIDGET_GONK
@@ -2841,6 +2855,7 @@ BluetoothDBusService::UpdateSdpRecords(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aDeviceAddress.IsEmpty());
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(mConnection);
 
@@ -3025,6 +3040,7 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
     return;
   }
 
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
   nsAutoString address;
   a2dp->GetAddress(address);
   nsString objectPath =
@@ -3157,6 +3173,7 @@ BluetoothDBusService::SendPlayStatus(int64_t aDuration,
     UpdateNotification(ControlEventId::EVENT_PLAYBACK_POS_CHANGED, aPosition);
   }
 
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
   nsAutoString address;
   a2dp->GetAddress(address);
   nsString objectPath =
@@ -3204,6 +3221,7 @@ BluetoothDBusService::UpdatePlayStatus(uint32_t aDuration,
   NS_ENSURE_TRUE_VOID(a2dp);
   MOZ_ASSERT(a2dp->IsConnected());
   MOZ_ASSERT(a2dp->IsAvrcpConnected());
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
   nsAutoString address;
   a2dp->GetAddress(address);
@@ -3234,6 +3252,7 @@ BluetoothDBusService::UpdateNotification(ControlEventId aEventId,
   NS_ENSURE_TRUE_VOID(a2dp);
   MOZ_ASSERT(a2dp->IsConnected());
   MOZ_ASSERT(a2dp->IsAvrcpConnected());
+  MOZ_ASSERT(!sAdapterPath.IsEmpty());
 
   nsAutoString address;
   a2dp->GetAddress(address);
