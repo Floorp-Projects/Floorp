@@ -1588,7 +1588,7 @@ MobileMessageDatabaseService.prototype = {
             if (messageRecord.deliveryStatus != deliveryStatus) {
               messageRecord.deliveryStatus = deliveryStatus;
 
-              // Update the delivery timestamp if it's successfully delivered.
+              // Update |deliveryTimestamp| if it's successfully delivered.
               if (deliveryStatus == DELIVERY_STATUS_SUCCESS) {
                 messageRecord.deliveryTimestamp = Date.now();
               }
@@ -1601,6 +1601,12 @@ MobileMessageDatabaseService.prototype = {
               for (let i = 0; i < deliveryInfo.length; i++) {
                 if (deliveryInfo[i].deliveryStatus != deliveryStatus) {
                   deliveryInfo[i].deliveryStatus = deliveryStatus;
+
+                  // Update |deliveryTimestamp| if it's successfully delivered.
+                  if (deliveryStatus == DELIVERY_STATUS_SUCCESS) {
+                    deliveryInfo[i].deliveryTimestamp = Date.now();
+                  }
+
                   isRecordUpdated = true;
                 }
               }
@@ -1655,6 +1661,12 @@ MobileMessageDatabaseService.prototype = {
                   }
                   if (deliveryInfo[j].deliveryStatus != deliveryStatus) {
                     deliveryInfo[j].deliveryStatus = deliveryStatus;
+
+                    // Update |deliveryTimestamp| if it's successfully delivered.
+                    if (deliveryStatus == DELIVERY_STATUS_SUCCESS) {
+                      deliveryInfo[j].deliveryTimestamp = Date.now();
+                    }
+
                     isRecordUpdated = true;
                   }
                 }
@@ -1765,6 +1777,14 @@ MobileMessageDatabaseService.prototype = {
     if (aMessage.type == "mms") {
       aMessage.transactionIdIndex = aMessage.transactionId;
       aMessage.isReadReportSent = false;
+
+      // If |deliveryTimestamp| is not specified, use 0 as default.
+      let deliveryInfo = aMessage.deliveryInfo;
+      for (let i = 0; i < deliveryInfo.length; i++) {
+        if (deliveryInfo[i].deliveryTimestamp == undefined) {
+          deliveryInfo[i].deliveryTimestamp = 0;
+        }
+      }
     }
 
     if (aMessage.type == "sms") {
@@ -1818,7 +1838,9 @@ MobileMessageDatabaseService.prototype = {
       aMessage.deliveryInfo = [];
       for (let i = 0; i < receivers.length; i++) {
         aMessage.deliveryInfo.push({
-          receiver: receivers[i], deliveryStatus: deliveryStatus });
+          receiver: receivers[i],
+          deliveryStatus: deliveryStatus,
+          deliveryTimestamp: 0 });
       }
     }
 

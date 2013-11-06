@@ -15,6 +15,7 @@
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 #include "mozilla/dom/mobilemessage/SmsTypes.h"
 #include "nsDOMFile.h"
+#include "nsCxPusher.h"
 
 using namespace mozilla::idl;
 using namespace mozilla::dom::mobilemessage;
@@ -100,8 +101,11 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
   for (uint32_t i = 0; i < len; i++) {
     MmsDeliveryInfo info;
     const MmsDeliveryInfoData &infoData = aData.deliveryInfo()[i];
+
+    // Prepare |info.receiver|.
     info.receiver = infoData.receiver();
 
+    // Prepare |info.deliveryStatus|.
     nsString statusStr;
     switch (infoData.deliveryStatus()) {
       case eDeliveryStatus_NotApplicable:
@@ -127,6 +131,20 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
         MOZ_CRASH("We shouldn't get any other delivery status!");
     }
     info.deliveryStatus = statusStr;
+
+    // Prepare |info.deliveryTimestamp|.
+    info.deliveryTimestamp = JSVAL_NULL;
+    if (infoData.deliveryTimestamp() != 0) {
+      AutoJSContext cx;
+      JS::Rooted<JSObject*>
+        dateObj(cx, JS_NewDateObjectMsec(cx, infoData.deliveryTimestamp()));
+      if (!dateObj) {
+        NS_WARNING("MmsMessage: Unable to create Date for deliveryTimestamp.");
+      } else {
+        info.deliveryTimestamp = OBJECT_TO_JSVAL(dateObj);
+      }
+    }
+
     mDeliveryInfo.AppendElement(info);
   }
 }
@@ -327,8 +345,11 @@ MmsMessage::GetData(ContentParent* aParent,
   for (uint32_t i = 0; i < mDeliveryInfo.Length(); i++) {
     MmsDeliveryInfoData infoData;
     const MmsDeliveryInfo &info = mDeliveryInfo[i];
+
+    // Prepare |infoData.receiver|.
     infoData.receiver().Assign(info.receiver);
 
+    // Prepare |infoData.deliveryStatus|.
     DeliveryStatus status;
     if (info.deliveryStatus.Equals(DELIVERY_STATUS_NOT_APPLICABLE)) {
       status = eDeliveryStatus_NotApplicable;
@@ -346,6 +367,15 @@ MmsMessage::GetData(ContentParent* aParent,
       return false;
     }
     infoData.deliveryStatus() = status;
+
+    // Prepare |infoData.deliveryTimestamp|.
+    if (info.deliveryTimestamp == JSVAL_NULL) {
+      infoData.deliveryTimestamp() = 0;
+    } else {
+      AutoJSContext cx;
+      convertTimeToInt(cx, info.deliveryTimestamp, infoData.deliveryTimestamp());
+    }
+
     aData.deliveryInfo().AppendElement(infoData);
   }
 
@@ -480,6 +510,13 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::Value* aDeliveryInfo)
 
     tmpJsVal.setString(tmpJsStr);
     if (!JS_DefineProperty(aCx, infoJsObj, "deliveryStatus", tmpJsVal,
+                           NULL, NULL, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Get |info.deliveryTimestamp|.
+    if (!JS_DefineProperty(aCx, infoJsObj,
+                           "deliveryTimestamp", info.deliveryTimestamp,
                            NULL, NULL, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
