@@ -3702,6 +3702,22 @@ Tab.prototype = {
         return;
       }
 
+      // Clear page-specific opensearch engines and feeds for a new request.
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START && aRequest && aWebProgress.isTopLevel) {
+          this.browser.engines = null;
+
+          // Send message to clear search engine option in context menu.
+          let newEngineMessage = {
+            type: "Link:OpenSearch",
+            tabID: this.id,
+            visible: false
+          };
+
+          sendMessageToJava(newEngineMessage);
+
+          this.browser.feeds = null;
+      }
+
       // Check to see if we restoring the content from a previous presentation (session)
       // since there should be no real network activity
       let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
