@@ -6,6 +6,7 @@
 const { Cc, Ci } = require('chrome');
 const { Symbiont } = require('sdk/content/symbiont');
 const self = require('sdk/self');
+const fixtures = require("./fixtures");
 const { close } = require('sdk/window/helpers');
 const app = require("sdk/system/xul-app");
 
@@ -27,7 +28,7 @@ function makeWindow() {
 
 exports['test:constructing symbiont && validating API'] = function(assert) {
   let contentScript = ["1;", "2;"];
-  let contentScriptFile = self.data.url("test-content-symbiont.js");
+  let contentScriptFile = fixtures.url("test-content-symbiont.js");
 
   // We can avoid passing a `frame` argument. Symbiont will create one
   // by using HiddenFrame module
@@ -74,6 +75,8 @@ exports["test:communication with worker global scope"] = function(assert, done) 
 
   let window = makeWindow();
   let contentSymbiont;
+
+  console.log(window)
 
   function onMessage1(message) {
     assert.equal(message, 1, "Program gets message via onMessage.");
@@ -151,35 +154,6 @@ exports["test:document element present on 'start'"] = function(assert, done) {
         assert.pass("document element not necessarily present on 'start'");
       done();
     }
-  });
-};
-
-exports["test:direct communication with trusted document"] = function(assert, done) {
-  let worker = Symbiont({
-    contentURL: require("sdk/self").data.url("test-trusted-document.html")
-  });
-
-  worker.port.on('document-to-addon', function (arg) {
-    assert.equal(arg, "ok", "Received an event from the document");
-    worker.destroy();
-    done();
-  });
-  worker.port.emit('addon-to-document', 'ok');
-};
-
-exports["test:`addon` is not available when a content script is set"] = function(assert, done) {
-  let worker = Symbiont({
-    contentURL: require("sdk/self").data.url("test-trusted-document.html"),
-    contentScript: "new " + function ContentScriptScope() {
-      self.port.emit("cs-to-addon", "addon" in unsafeWindow);
-    }
-  });
-
-  worker.port.on('cs-to-addon', function (hasAddon) {
-    assert.equal(hasAddon, false,
-      "`addon` is not available");
-    worker.destroy();
-    done();
   });
 };
 

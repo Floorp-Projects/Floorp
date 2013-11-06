@@ -34,7 +34,6 @@ const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesV
 const require   = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 const promise   = require("sdk/core/promise");
 const Telemetry = require("devtools/shared/telemetry");
-const escodegen = require("escodegen/escodegen");
 const Editor    = require("devtools/sourceeditor/editor");
 const TargetFactory = require("devtools/framework/target").TargetFactory;
 
@@ -516,25 +515,61 @@ var Scratchpad = {
     return deferred.promise;
   },
 
+  _prettyPrintWorker: null,
+
+  /**
+   * Get or create the worker that handles pretty printing.
+   */
+  get prettyPrintWorker() {
+    if (!this._prettyPrintWorker) {
+      this._prettyPrintWorker = new ChromeWorker(
+        "resource://gre/modules/devtools/server/actors/pretty-print-worker.js");
+
+      this._prettyPrintWorker.addEventListener("error", ({ message, filename, lineno }) => {
+        DevToolsUtils.reportException(message + " @ " + filename + ":" + lineno);
+      }, false);
+    }
+    return this._prettyPrintWorker;
+  },
+
   /**
    * Pretty print the source text inside the scratchpad.
+   *
+   * @return Promise
+   *         A promise resolved with the pretty printed code, or rejected with
+   *         an error.
    */
   prettyPrint: function SP_prettyPrint() {
     const uglyText = this.getText();
     const tabsize = Services.prefs.getIntPref("devtools.editor.tabsize");
-    try {
-      const ast = Reflect.parse(uglyText);
-      const prettyText = escodegen.generate(ast, {
-        format: {
-          indent: {
-            style: " ".repeat(tabsize)
-          }
-        }
-      });
-      this.editor.setText(prettyText);
-    } catch (e) {
-      this.writeAsErrorComment(DevToolsUtils.safeErrorString(e));
-    }
+    const id = Math.random();
+    const deferred = promise.defer();
+
+    const onReply = ({ data }) => {
+      if (data.id !== id) {
+        return;
+      }
+      this.prettyPrintWorker.removeEventListener("message", onReply, false);
+
+      if (data.error) {
+        let errorString = DevToolsUtils.safeErrorString(data.error);
+        this.writeAsErrorComment(errorString);
+        deferred.reject(errorString);
+      } else {
+        this.editor.setText(data.code);
+        deferred.resolve(data.code);
+      }
+    };
+
+    this.prettyPrintWorker.addEventListener("message", onReply, false);
+    this.prettyPrintWorker.postMessage({
+      id: id,
+      url: "(scratchpad)",
+      indent: tabsize,
+      source: uglyText
+    });
+
+    return deferred.promise;
   },
 
   /**
@@ -1373,6 +1408,11 @@ var Scratchpad = {
     if (this._sidebar) {
       this._sidebar.destroy();
       this._sidebar = null;
+    }
+
+    if (this._prettyPrintWorker) {
+      this._prettyPrintWorker.terminate();
+      this._prettyPrintWorker = null;
     }
 
     scratchpadTargets = null;
