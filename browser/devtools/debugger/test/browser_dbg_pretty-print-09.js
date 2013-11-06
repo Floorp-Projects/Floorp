@@ -55,9 +55,10 @@ function runCode({ error }) {
 
 function testDbgStatement(event, { frame, why }) {
   is(why.type, "debuggerStatement");
-  const { url, line } = frame.where;
+  const { url, line, column } = frame.where;
   is(url, B_URL);
   is(line, 2);
+  is(column, 2);
 
   disablePrettyPrint();
 }

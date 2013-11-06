@@ -80,9 +80,10 @@ function testStepping() {
 function testHitBreakpoint() {
   gClient.addOneTimeListener("paused", (event, { why, frame }) => {
     is(why.type, "breakpoint");
-    const { url, line } = frame.where;
+    const { url, line, column } = frame.where;
     is(url, CODE_URL);
     is(line, BP_LOCATION.line);
+    is(column, BP_LOCATION.column);
 
     resumeDebuggerThenCloseAndFinish(gPanel);
   });

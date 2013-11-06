@@ -8,11 +8,11 @@
  * This file is meant to be loaded as a ChromeWorker. It accepts messages which
  * have data of the form:
  *
- *     { id, url, indent, source }
+ *     { id, url, indent, ast }
  *
  * Where `id` is a unique ID to identify this request, `url` is the url of the
  * source being pretty printed, `indent` is the number of spaces to indent the
- * code by, and `source` is the source text.
+ * code by, and `ast` is the source's abstract syntax tree.
  *
  * On success, the worker responds with a message of the form:
  *
@@ -20,23 +20,25 @@
  *
  * Where `id` is the same unique ID from the request, `code` is the pretty
  * printed source text, and `mappings` is an array or source mappings from the
- * pretty printed code back to the ugly source text.
+ * pretty printed code to the AST's source locations.
  *
  * In the case of an error, the worker responds with a message of the form:
  *
- *     { id, error }
+ *     { error }
  */
 
-importScripts("resource://gre/modules/devtools/acorn.js");
-importScripts("resource://gre/modules/devtools/source-map.js");
-importScripts("resource://gre/modules/devtools/pretty-fast.js");
+importScripts("resource://gre/modules/devtools/escodegen/escodegen.worker.js");
 
-self.onmessage = (event) => {
-  const { data: { id, url, indent, source } } = event;
+self.onmessage = ({ data: { id, url, indent, ast } }) => {
   try {
-    const prettified = prettyFast(source, {
-      url: url,
-      indent: " ".repeat(indent)
+    const prettified = escodegen.generate(ast, {
+      format: {
+        indent: {
+          style: " ".repeat(indent)
+        }
+      },
+      sourceMap: url,
+      sourceMapWithCode: true
     });
 
     self.postMessage({
@@ -46,7 +48,6 @@ self.onmessage = (event) => {
     });
   } catch (e) {
     self.postMessage({
-      id: id,
       error: e.message + "\n" + e.stack
     });
   }
