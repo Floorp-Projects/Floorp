@@ -76,7 +76,7 @@ def write_histogram_table(histograms):
 
     strtab_name = "gHistogramStringTable"
     table.writeDefinition(sys.stdout, strtab_name)
-    static_assert("sizeof(%s) <= UINT16_MAX" % strtab_name,
+    static_assert("sizeof(%s) <= UINT32_MAX" % strtab_name,
                   "index overflow")
 
 # Write out static asserts for histogram data.  We'd prefer to perform
