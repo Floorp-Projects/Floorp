@@ -107,14 +107,16 @@ SVGEllipseElement::ConstructPath(gfxContext *aCtx)
 TemporaryRef<Path>
 SVGEllipseElement::BuildPath()
 {
-  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
-
   float x, y, rx, ry;
   GetAnimatedLengthValues(&x, &y, &rx, &ry, nullptr);
 
-  if (rx > 0.0f && ry > 0.0f) {
-    AppendEllipseToPath(pathBuilder, Point(x, y), Size(2.0*rx, 2.0*ry));
+  if (rx <= 0.0f || ry <= 0.0f) {
+    return nullptr;
   }
+
+  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+
+  AppendEllipseToPath(pathBuilder, Point(x, y), Size(2.0*rx, 2.0*ry));
 
   return pathBuilder->Finish();
 }
