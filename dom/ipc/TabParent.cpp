@@ -8,6 +8,7 @@
 
 #include "TabParent.h"
 
+#include "AppProcessChecker.h"
 #include "IDBFactory.h"
 #include "IndexedDBParent.h"
 #include "mozIApplication.h"
@@ -770,8 +771,14 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
                            const IPC::Principal& aPrincipal,
                            InfallibleTArray<nsString>* aJSONRetVal)
 {
+  nsIPrincipal* principal = aPrincipal;
+  ContentParent* parent = static_cast<ContentParent*>(Manager());
+  if (principal && !AssertAppPrincipal(parent, principal)) {
+    return false;
+  }
+
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CpowIdHolder cpows(static_cast<ContentParent*>(Manager())->GetCPOWManager(), aCpows);
+  CpowIdHolder cpows(parent->GetCPOWManager(), aCpows);
   return ReceiveMessage(aMessage, true, &cloneData, &cpows, aPrincipal, aJSONRetVal);
 }
 
@@ -782,8 +789,14 @@ TabParent::AnswerRpcMessage(const nsString& aMessage,
                             const IPC::Principal& aPrincipal,
                             InfallibleTArray<nsString>* aJSONRetVal)
 {
+  nsIPrincipal* principal = aPrincipal;
+  ContentParent* parent = static_cast<ContentParent*>(Manager());
+  if (principal && !AssertAppPrincipal(parent, principal)) {
+    return false;
+  }
+
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CpowIdHolder cpows(static_cast<ContentParent*>(Manager())->GetCPOWManager(), aCpows);
+  CpowIdHolder cpows(parent->GetCPOWManager(), aCpows);
   return ReceiveMessage(aMessage, true, &cloneData, &cpows, aPrincipal, aJSONRetVal);
 }
 
@@ -793,8 +806,14 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const InfallibleTArray<CpowEntry>& aCpows,
                             const IPC::Principal& aPrincipal)
 {
+  nsIPrincipal* principal = aPrincipal;
+  ContentParent* parent = static_cast<ContentParent*>(Manager());
+  if (principal && !AssertAppPrincipal(parent, principal)) {
+    return false;
+  }
+
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CpowIdHolder cpows(static_cast<ContentParent*>(Manager())->GetCPOWManager(), aCpows);
+  CpowIdHolder cpows(parent->GetCPOWManager(), aCpows);
   return ReceiveMessage(aMessage, false, &cloneData, &cpows, aPrincipal, nullptr);
 }
 

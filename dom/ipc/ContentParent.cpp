@@ -2868,6 +2868,11 @@ ContentParent::RecvSyncMessage(const nsString& aMsg,
                                const IPC::Principal& aPrincipal,
                                InfallibleTArray<nsString>* aRetvals)
 {
+  nsIPrincipal* principal = aPrincipal;
+  if (principal && !AssertAppPrincipal(this, principal)) {
+    return false;
+  }
+
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
@@ -2886,6 +2891,11 @@ ContentParent::AnswerRpcMessage(const nsString& aMsg,
                                 const IPC::Principal& aPrincipal,
                                 InfallibleTArray<nsString>* aRetvals)
 {
+  nsIPrincipal* principal = aPrincipal;
+  if (principal && !AssertAppPrincipal(this, principal)) {
+    return false;
+  }
+
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
@@ -2902,6 +2912,11 @@ ContentParent::RecvAsyncMessage(const nsString& aMsg,
                                 const InfallibleTArray<CpowEntry>& aCpows,
                                 const IPC::Principal& aPrincipal)
 {
+  nsIPrincipal* principal = aPrincipal;
+  if (principal && !AssertAppPrincipal(this, principal)) {
+    return false;
+  }
+
   nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
