@@ -433,8 +433,7 @@ argumentUnboxingTemplates = {
         "        return false;\n",
 
     'boolean':
-        "    bool ${name};\n"
-        "    JS_ValueToBoolean(cx, ${argVal}, &${name});\n",
+        "    bool ${name} = JS::ToBoolean(${argVal});\n",
 
     '[astring]':
         "    xpc_qsAString ${name}(cx, ${argVal}, ${argPtr}, ${notPassed});\n"

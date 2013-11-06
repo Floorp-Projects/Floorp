@@ -363,6 +363,11 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
 
           case JSTRY_CATCH:
             if (cx->isExceptionPending()) {
+                // Ion can compile try-catch, but bailing out to catch
+                // exceptions is slow. Reset the use count so that if we
+                // catch many exceptions we won't Ion-compile the script.
+                script->resetUseCount();
+
                 // Bailout at the start of the catch block.
                 jsbytecode *catchPC = script->main() + tn->start + tn->length;
 
@@ -477,6 +482,11 @@ HandleExceptionBaseline(JSContext *cx, const IonFrameIterator &frame, ResumeFrom
         switch (tn->kind) {
           case JSTRY_CATCH:
             if (cx->isExceptionPending()) {
+                // Ion can compile try-catch, but bailing out to catch
+                // exceptions is slow. Reset the use count so that if we
+                // catch many exceptions we won't Ion-compile the script.
+                script->resetUseCount();
+
                 // Resume at the start of the catch block.
                 rfe->kind = ResumeFromException::RESUME_CATCH;
                 jsbytecode *catchPC = script->main() + tn->start + tn->length;
