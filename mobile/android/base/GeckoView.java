@@ -13,6 +13,7 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
@@ -39,6 +40,7 @@ public class GeckoView extends LayerView
     private static final String LOGTAG = "GeckoView";
 
     private ChromeDelegate mChromeDelegate;
+    private ContentDelegate mContentDelegate;
 
     public GeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -82,7 +84,13 @@ public class GeckoView extends LayerView
             Tabs tabs = Tabs.getInstance();
             tabs.attachToContext(context);
         }
+
         GeckoAppShell.registerEventListener("Gecko:Ready", this);
+        GeckoAppShell.registerEventListener("Content:StateChange", this);
+        GeckoAppShell.registerEventListener("Content:LoadError", this);
+        GeckoAppShell.registerEventListener("Content:PageShow", this);
+        GeckoAppShell.registerEventListener("DOMTitleChanged", this);
+        GeckoAppShell.registerEventListener("Link:Favicon", this);
 
         ThreadUtils.setUiThread(Thread.currentThread(), new Handler());
         initializeView(GeckoAppShell.getEventDispatcher());
@@ -158,13 +166,32 @@ public class GeckoView extends LayerView
     /**
     * Not part of the public API. Ignore.
     */
-    public void handleMessage(String event, JSONObject message) {
-        if (event.equals("Gecko:Ready")) {
-            handleReady();
-        }
+    public void handleMessage(final String event, final JSONObject message) {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (event.equals("Gecko:Ready")) {
+                        GeckoView.this.handleReady(message);
+                    } else if (event.equals("Content:StateChange")) {
+                        GeckoView.this.handleStateChange(message);
+                    } else if (event.equals("Content:LoadError")) {
+                        GeckoView.this.handleLoadError(message);
+                    } else if (event.equals("Content:PageShow")) {
+                        GeckoView.this.handlePageShow(message);
+                    } else if (event.equals("DOMTitleChanged")) {
+                        GeckoView.this.handleTitleChanged(message);
+                    } else if (event.equals("Link:Favicon")) {
+                        GeckoView.this.handleLinkFavicon(message);
+                    }
+                } catch (Exception e) {
+                    Log.w(LOGTAG, "handleMessage threw for " + event, e);
+                }
+            }
+        });
     }
 
-    private void handleReady() {
+    private void handleReady(final JSONObject message) {
         GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoRunning);
         Tab selectedTab = Tabs.getInstance().getSelectedTab();
         if (selectedTab != null)
@@ -180,6 +207,51 @@ public class GeckoView extends LayerView
         }
     }
 
+    private void handleStateChange(final JSONObject message) throws JSONException {
+        int state = message.getInt("state");
+        if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
+            if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
+                if (mContentDelegate != null) {
+                    int id = message.getInt("tabID");
+                    mContentDelegate.onPageStart(this, new Browser(id), message.getString("uri"));
+                }
+            } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
+                if (mContentDelegate != null) {
+                    int id = message.getInt("tabID");
+                    mContentDelegate.onPageStop(this, new Browser(id), message.getBoolean("success"));
+                }
+            }
+        }
+    }
+
+    private void handleLoadError(final JSONObject message) throws JSONException {
+        if (mContentDelegate != null) {
+            int id = message.getInt("tabID");
+            mContentDelegate.onPageStop(GeckoView.this, new Browser(id), false);
+        }
+    }
+
+    private void handlePageShow(final JSONObject message) throws JSONException {
+        if (mContentDelegate != null) {
+            int id = message.getInt("tabID");
+            mContentDelegate.onPageShow(GeckoView.this, new Browser(id));
+        }
+    }
+
+    private void handleTitleChanged(final JSONObject message) throws JSONException {
+        if (mContentDelegate != null) {
+            int id = message.getInt("tabID");
+            mContentDelegate.onReceivedTitle(GeckoView.this, new Browser(id), message.getString("title"));
+        }
+    }
+
+    private void handleLinkFavicon(final JSONObject message) throws JSONException {
+        if (mContentDelegate != null) {
+            int id = message.getInt("tabID");
+            mContentDelegate.onReceivedFavicon(GeckoView.this, new Browser(id), message.getString("href"), message.getInt("size"));
+        }
+    }
+
     /**
     * Set the chrome callback handler.
     * This will replace the current handler.
@@ -187,6 +259,15 @@ public class GeckoView extends LayerView
     */
     public void setChromeDelegate(ChromeDelegate chrome) {
         mChromeDelegate = chrome;
+    }
+
+    /**
+    * Set the content callback handler.
+    * This will replace the current handler.
+    * @param content An implementation of ContentDelegate.
+    */
+    public void setContentDelegate(ContentDelegate content) {
+        mContentDelegate = content;
     }
 
     public static void setGeckoInterface(final BaseGeckoInterface geckoInterface) {
@@ -310,4 +391,50 @@ public class GeckoView extends LayerView
         */
         public void onReady(GeckoView view);
     }
+
+    public interface ContentDelegate {
+        /**
+        * A Browser has started loading content from the network.
+        * @param view The GeckoView that initiated the callback.
+        * @param browser The Browser that is loading the content.
+        * @param url The resource being loaded.
+        */
+        public void onPageStart(GeckoView view, GeckoView.Browser browser, String url);
+    
+        /**
+        * A Browser has finished loading content from the network.
+        * @param view The GeckoView that initiated the callback.
+        * @param browser The Browser that was loading the content.
+        * @param success Whether the page loaded successfully or an error occured.
+        */
+        public void onPageStop(GeckoView view, GeckoView.Browser browser, boolean success);
+    
+        /**
+        * A Browser is displaying content. This page could have been loaded via
+        * network or from the session history.
+        * @param view The GeckoView that initiated the callback.
+        * @param browser The Browser that is showing the content.
+        */
+        public void onPageShow(GeckoView view, GeckoView.Browser browser);
+    
+        /**
+        * A page title was discovered in the content or updated after the content
+        * loaded.
+        * @param view The GeckoView that initiated the callback.
+        * @param browser The Browser that is showing the content.
+        * @param title The title sent from the content.
+        */
+        public void onReceivedTitle(GeckoView view, GeckoView.Browser browser, String title);
+    
+        /**
+        * A link element was discovered in the content or updated after the content
+        * loaded that specifies a favicon.
+        * @param view The GeckoView that initiated the callback.
+        * @param browser The Browser that is showing the content.
+        * @param url The href of the link element specifying the favicon.
+        * @param size The maximum size specified for the favicon, or -1 for any size.
+        */
+        public void onReceivedFavicon(GeckoView view, GeckoView.Browser browser, String url, int size);
+    }
+
 }
