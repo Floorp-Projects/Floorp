@@ -520,6 +520,21 @@ protected:
     uint32_t mContainerLayerGeneration;
   };
 
+  static void RecomputeVisibilityForItems(nsTArray<ClippedDisplayItem>& aItems,
+                                          nsDisplayListBuilder* aBuilder,
+                                          const nsIntRegion& aRegionToDraw,
+                                          const nsIntPoint& aOffset,
+                                          int32_t aAppUnitsPerDevPixel,
+                                          float aXScale,
+                                          float aYScale);
+
+  void PaintItems(nsTArray<ClippedDisplayItem>& aItems,
+                  gfxContext* aContext,
+                  nsRenderingContext* aRC,
+                  nsDisplayListBuilder* aBuilder,
+                  nsPresContext* aPresContext,
+                  int32_t aCommonClipCount);
+
   /**
    * We accumulate ClippedDisplayItem elements in a hashtable during
    * the paint process. This is the hashentry for that hashtable.
