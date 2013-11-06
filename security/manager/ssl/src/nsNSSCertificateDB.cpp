@@ -520,11 +520,11 @@ ImportCertsIntoPermanentStorage(const ScopedCERTCertList &certChain, const SECCe
        chainNode = CERT_LIST_NEXT(chainNode), i++) {
     rawArray[i] = &chainNode->cert->derCert;
   }
-  CERT_ImportCerts(certdb, usage, chainLen,
-                   rawArray,  nullptr, true, caOnly, nullptr);
+  SECStatus srv = CERT_ImportCerts(certdb, usage, chainLen, rawArray,
+                                   nullptr, true, caOnly, nullptr);
 
-  PORT_Free(rawArray);   
-  return SECSuccess;
+  PORT_Free(rawArray);
+  return srv;
 } 
 
 
@@ -800,7 +800,10 @@ nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfac
       continue;
     }
 
-    ImportCertsIntoPermanentStorage(certChain, certUsageAnyCA, true);
+    rv = ImportCertsIntoPermanentStorage(certChain, certUsageAnyCA, true);
+    if (rv != SECSuccess) {
+      return NS_ERROR_FAILURE;
+    }
   }
   
   return NS_OK;
