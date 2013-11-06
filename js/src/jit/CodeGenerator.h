@@ -179,7 +179,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitSetPropertyPolymorphicT(LSetPropertyPolymorphicT *ins);
     bool visitAbsI(LAbsI *lir);
     bool visitAtan2D(LAtan2D *lir);
-    bool visitHypot(LHypot *lir);
     bool visitPowI(LPowI *lir);
     bool visitPowD(LPowD *lir);
     bool visitRandom(LRandom *lir);

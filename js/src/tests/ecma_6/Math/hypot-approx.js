@@ -1,5 +1,3 @@
-loadRelativeToScript("../../../tests/ecma_6/Math/shell.js");
-
 for (var i = -20; i < 20; i++) {
     assertEq(Math.hypot(+0, i), Math.abs(i));
     assertEq(Math.hypot(-0, i), Math.abs(i));
@@ -23,3 +21,5 @@ assertNear(Math.hypot(1e3, 1e-3, 1e3, 1e-3), 1414.2135623738021555);
 
 for (var i = 1, j = 1; i < 2; i += 0.05, j += 0.05)
     assertNear(Math.hypot(i, j), Math.sqrt(i * i + j * j));
+
+reportCompare(0, 0, "ok");

@@ -105,7 +105,6 @@
     _(SqrtD)                        \
     _(SqrtF)                        \
     _(Atan2D)                       \
-    _(Hypot)                        \
     _(PowI)                         \
     _(PowD)                         \
     _(Random)                       \
