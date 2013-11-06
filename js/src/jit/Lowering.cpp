@@ -657,13 +657,13 @@ LIRGenerator::visitTest(MTest *test)
 
     // Constant Double operand.
     if (opd->type() == MIRType_Double && opd->isConstant()) {
-        bool result = ToBoolean(opd->toConstant()->value());
+        bool result = opd->toConstant()->valueToBoolean();
         return add(new LGoto(result ? ifTrue : ifFalse));
     }
 
     // Constant Float32 operand.
     if (opd->type() == MIRType_Float32 && opd->isConstant()) {
-        bool result = ToBoolean(opd->toConstant()->value());
+        bool result = opd->toConstant()->valueToBoolean();
         return add(new LGoto(result ? ifTrue : ifFalse));
     }
 
