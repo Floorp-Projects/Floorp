@@ -237,11 +237,6 @@ class nsIScriptTimeoutHandler;
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
 
-#ifdef XP_WIN
-#include <process.h>
-#define getpid _getpid
-#endif
-
 static const char kStorageEnabled[] = "dom.storage.enabled";
 
 using namespace mozilla;
@@ -1126,12 +1121,10 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
 #ifdef DEBUG
   if (!PR_GetEnv("MOZ_QUIET")) {
-    printf_stderr("++DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p]\n",
-                  gRefCnt,
-                  static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-                  getpid(),
-                  gSerialCounter,
-                  static_cast<void*>(static_cast<nsIScriptGlobalObject*>(aOuterWindow)));
+    printf("++DOMWINDOW == %d (%p) [serial = %d] [outer = %p]\n", gRefCnt,
+           static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
+           gSerialCounter,
+           static_cast<void*>(static_cast<nsIScriptGlobalObject*>(aOuterWindow)));
   }
 #endif
 
@@ -1204,13 +1197,9 @@ nsGlobalWindow::~nsGlobalWindow()
     }
 
     nsGlobalWindow* outer = static_cast<nsGlobalWindow*>(mOuterWindow.get());
-    printf_stderr("--DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p] [url = %s]\n",
-                  gRefCnt,
-                  static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
-                  getpid(),
-                  mSerial,
-                  static_cast<void*>(static_cast<nsIScriptGlobalObject*>(outer)),
-                  url.get());
+    printf("--DOMWINDOW == %d (%p) [serial = %d] [outer = %p] [url = %s]\n",
+           gRefCnt, static_cast<void*>(static_cast<nsIScriptGlobalObject*>(this)),
+           mSerial, static_cast<void*>(static_cast<nsIScriptGlobalObject*>(outer)), url.get());
   }
 #endif
 
