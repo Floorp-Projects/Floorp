@@ -1277,7 +1277,7 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
 }
 
 /*
- * Helper that tries to get a property form the options object.
+ * Helper that tries to get a property from the options object.
  */
 bool
 OptionsBase::ParseValue(const char *name, MutableHandleValue prop, bool *aFound)
@@ -1296,7 +1296,7 @@ OptionsBase::ParseValue(const char *name, MutableHandleValue prop, bool *aFound)
 }
 
 /*
- * Helper that tries to get a boolean property form the options object.
+ * Helper that tries to get a boolean property from the options object.
  */
 bool
 OptionsBase::ParseBoolean(const char *name, bool *prop)
@@ -1320,7 +1320,7 @@ OptionsBase::ParseBoolean(const char *name, bool *prop)
 }
 
 /*
- * Helper that tries to get an object property form the options object.
+ * Helper that tries to get an object property from the options object.
  */
 bool
 OptionsBase::ParseObject(const char *name, MutableHandleObject prop)
@@ -1342,7 +1342,7 @@ OptionsBase::ParseObject(const char *name, MutableHandleObject prop)
 }
 
 /*
- * Helper that tries to get a string property form the options object.
+ * Helper that tries to get a string property from the options object.
  */
 bool
 OptionsBase::ParseString(const char *name, nsCString &prop)
@@ -1367,7 +1367,32 @@ OptionsBase::ParseString(const char *name, nsCString &prop)
 }
 
 /*
- * Helper that tries to get jsid property form the options object.
+ * Helper that tries to get a string property from the options object.
+ */
+bool
+OptionsBase::ParseString(const char *name, nsString &prop)
+{
+    RootedValue value(mCx);
+    bool found;
+    bool ok = ParseValue(name, &value, &found);
+    NS_ENSURE_TRUE(ok, false);
+
+    if (!found)
+        return true;
+
+    if (!value.isString()) {
+        JS_ReportError(mCx, "Expected a string value for property %s", name);
+        return false;
+    }
+
+    nsDependentJSString strVal;
+    strVal.init(mCx, value.toString());
+    prop = strVal;
+    return true;
+}
+
+/*
+ * Helper that tries to get jsid property from the options object.
  */
 bool
 OptionsBase::ParseId(const char *name, MutableHandleId prop)

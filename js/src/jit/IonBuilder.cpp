@@ -6371,11 +6371,8 @@ IonBuilder::jsop_intrinsic(PropertyName *name)
     }
 
     // Bake in the intrinsic. Make sure that TI agrees with us on the type.
-    RootedPropertyName nameRoot(cx, name);
-    RootedValue vp(cx, UndefinedValue());
-    if (!cx->global()->getIntrinsicValue(cx, nameRoot, &vp))
-        return false;
-
+    Value vp;
+    JS_ALWAYS_TRUE(script()->global().maybeGetIntrinsicValue(name, &vp));
     JS_ASSERT(types->hasType(types::GetValueType(vp)));
 
     MConstant *ins = MConstant::New(vp);

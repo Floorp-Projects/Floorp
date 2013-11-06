@@ -4730,8 +4730,10 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         if (CanOptimizeDenseSetElem(cx, obj, index.toInt32(), oldShape, oldCapacity, oldInitLength,
                                     &addingCase, &protoDepth))
         {
-            RootedTypeObject type(cx, obj->getType(cx));
             RootedShape shape(cx, obj->lastProperty());
+            RootedTypeObject type(cx, obj->getType(cx));
+            if (!type)
+                return false;
 
             if (addingCase && !DenseSetElemStubExists(cx, ICStub::SetElem_DenseAdd, stub, obj)) {
                 IonSpew(IonSpew_BaselineIC,
@@ -9328,6 +9330,9 @@ ICUpdatedStub *
 ICSetProp_Native::Compiler::getStub(ICStubSpace *space)
 {
     RootedTypeObject type(cx, obj_->getType(cx));
+    if (!type)
+        return nullptr;
+
     RootedShape shape(cx, obj_->lastProperty());
     ICUpdatedStub *stub = ICSetProp_Native::New(space, getStubCode(), type, shape, offset_);
     if (!stub || !stub->initUpdatingChain(cx, space))
