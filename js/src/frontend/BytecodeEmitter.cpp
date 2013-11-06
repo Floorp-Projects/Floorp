@@ -1140,6 +1140,17 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
      * resolving upvar accesses within the inner function.
      */
     if (bce->emitterMode == BytecodeEmitter::LazyFunction) {
+        // The only statements within a lazy function which can push lexical
+        // scopes are try/catch blocks. Use generic ops in this case.
+        for (StmtInfoBCE *stmt = bce->topStmt; stmt; stmt = stmt->down) {
+            switch (stmt->type) {
+              case STMT_TRY:
+              case STMT_FINALLY:
+                return true;
+              default:;
+            }
+        }
+
         size_t hops = 0;
         FunctionBox *funbox = bce->sc->asFunctionBox();
         if (funbox->hasExtensibleScope())
@@ -6876,48 +6887,19 @@ CGConstList::finish(ConstArray *array)
 /*
  * We should try to get rid of offsetBias (always 0 or 1, where 1 is
  * JSOP_{NOP,POP}_LENGTH), which is used only by SRC_FOR.
- *
- * FIXME: Generate this using a higher-order macro.  Bug 922070.
  */
 const JSSrcNoteSpec js_SrcNoteSpec[] = {
-/*  0 */ {"null",           0},
-
-/*  1 */ {"if",             0},
-/*  2 */ {"if-else",        1},
-/*  3 */ {"cond",           1},
-
-/*  4 */ {"for",            3},
-
-/*  5 */ {"while",          1},
-/*  6 */ {"for-in",         1},
-/*  7 */ {"for-of",         1},
-/*  8 */ {"continue",       0},
-/*  9 */ {"break",          0},
-/* 10 */ {"break2label",    0},
-/* 11 */ {"switchbreak",    0},
-
-/* 12 */ {"tableswitch",    1},
-/* 13 */ {"condswitch",     2},
-
-/* 14 */ {"nextcase",       1},
-
-/* 15 */ {"assignop",       0},
-
-/* 16 */ {"hidden",         0},
-
-/* 17 */ {"catch",          0},
-
-/* 18 */ {"try",            1},
-
-/* 19 */ {"colspan",        1},
-/* 20 */ {"newline",        0},
-/* 21 */ {"setline",        1},
-
-/* 22 */ {"unused22",       0},
-/* 23 */ {"unused23",       0},
-
-/* 24 */ {"xdelta",         0},
+#define DEFINE_SRC_NOTE_SPEC(sym, name, arity) { name, arity },
+    FOR_EACH_SRC_NOTE_TYPE(DEFINE_SRC_NOTE_SPEC)
+#undef DEFINE_SRC_NOTE_SPEC
 };
+
+static int
+SrcNoteArity(jssrcnote *sn)
+{
+    JS_ASSERT(SN_TYPE(sn) < SRC_LAST);
+    return js_SrcNoteSpec[SN_TYPE(sn)].arity;
+}
 
 JS_FRIEND_API(unsigned)
 js_SrcNoteLength(jssrcnote *sn)
@@ -6925,7 +6907,7 @@ js_SrcNoteLength(jssrcnote *sn)
     unsigned arity;
     jssrcnote *base;
 
-    arity = (int)js_SrcNoteSpec[SN_TYPE(sn)].arity;
+    arity = SrcNoteArity(sn);
     for (base = sn++; arity; sn++, arity--) {
         if (*sn & SN_3BYTE_OFFSET_FLAG)
             sn += 2;
@@ -6938,7 +6920,7 @@ js_GetSrcNoteOffset(jssrcnote *sn, unsigned which)
 {
     /* Find the offset numbered which (i.e., skip exactly which offsets). */
     JS_ASSERT(SN_TYPE(sn) != SRC_XDELTA);
-    JS_ASSERT((int) which < js_SrcNoteSpec[SN_TYPE(sn)].arity);
+    JS_ASSERT((int) which < SrcNoteArity(sn));
     for (sn++; which; sn++, which--) {
         if (*sn & SN_3BYTE_OFFSET_FLAG)
             sn += 2;
