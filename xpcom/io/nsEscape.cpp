@@ -181,15 +181,7 @@ int32_t nsUnescapeCount(char * str)
         }
     }
 
-    /* The string may belong to a nsCString with an unallocated buffer.
-       In such a situation the buffer points to a const char, so attempting
-       to write to it will crash.  This can be avoided by only null-terminating
-       when needed.  The above while loop is safe as it won't iterate when this
-       occurs.
-     */
-    if (*dst) {
-        *dst = 0;
-    }
+    *dst = 0;
     return (int)(dst - str);
 
 } /* NET_UnEscapeCnt */
