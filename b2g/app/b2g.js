@@ -287,14 +287,10 @@ pref("image.mem.min_discard_timeout_ms", 86400000); /* 24h, we rely on the out o
 pref("image.mem.max_decoded_image_kb", 30000); /* 30MB seems reasonable */
 pref("image.onload.decode.limit", 24); /* don't decode more than 24 images eagerly */
 
-// XXX this isn't a good check for "are touch events supported", but
-// we don't really have a better one at the moment.
-#ifdef MOZ_WIDGET_GONK
 // enable touch events interfaces
 pref("dom.w3c_touch_events.enabled", 1);
 pref("dom.w3c_touch_events.safetyX", 0); // escape borders in units of 1/240"
 pref("dom.w3c_touch_events.safetyY", 120); // escape borders in units of 1/240"
-#endif
 
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless this pref is set
