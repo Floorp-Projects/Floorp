@@ -104,7 +104,12 @@ Selection.prototype = {
       this.emit("pseudoclass");
     }
     if (detached) {
-      this.emit("detached", parentNode ? parentNode.rawNode() : null);
+      let rawNode = null;
+      if (parentNode && parentNode.isLocal_toBeDeprecated()) {
+        rawNode = parentNode.rawNode();
+      }
+
+      this.emit("detached", rawNode, null);
       this.emit("detached-front", parentNode);
     }
   },
@@ -156,7 +161,10 @@ Selection.prototype = {
   setNodeFront: function(value, reason="unknown") {
     this.reason = reason;
     if (value !== this._nodeFront) {
-      let rawValue = value ? value.rawNode() : value;
+      let rawValue = null;
+      if (value && value.isLocal_toBeDeprecated()) {
+        rawValue = value.rawNode();
+      }
       this.emit("before-new-node", rawValue, reason);
       this.emit("before-new-node-front", value, reason);
       let previousNode = this._node;
@@ -208,7 +216,10 @@ Selection.prototype = {
 
     // As long as there are still tools going around
     // accessing node.rawNode, this needs to stay.
-    let rawNode = node.rawNode();
+    let rawNode = null;
+    if (node.isLocal_toBeDeprecated()) {
+      rawNode = node.rawNode();
+    }
     if (rawNode) {
       try {
         let doc = this.document;
