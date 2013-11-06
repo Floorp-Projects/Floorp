@@ -38,6 +38,8 @@ public class GeckoView extends LayerView
 
     private static final String LOGTAG = "GeckoView";
 
+    private ChromeDelegate mChromeDelegate;
+
     public GeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GeckoView);
@@ -158,16 +160,33 @@ public class GeckoView extends LayerView
     */
     public void handleMessage(String event, JSONObject message) {
         if (event.equals("Gecko:Ready")) {
-            GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoRunning);
-            Tab selectedTab = Tabs.getInstance().getSelectedTab();
-            if (selectedTab != null)
-                Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
-            geckoConnected();
-            GeckoAppShell.setLayerClient(getLayerClient());
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
-            show();
-            requestRender();
+            handleReady();
         }
+    }
+
+    private void handleReady() {
+        GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoRunning);
+        Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        if (selectedTab != null)
+            Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
+        geckoConnected();
+        GeckoAppShell.setLayerClient(getLayerClient());
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
+        show();
+        requestRender();
+
+        if (mChromeDelegate != null) {
+            mChromeDelegate.onReady(this);
+        }
+    }
+
+    /**
+    * Set the chrome callback handler.
+    * This will replace the current handler.
+    * @param chrome An implementation of GeckoViewChrome.
+    */
+    public void setChromeDelegate(ChromeDelegate chrome) {
+        mChromeDelegate = chrome;
     }
 
     public static void setGeckoInterface(final BaseGeckoInterface geckoInterface) {
@@ -282,5 +301,13 @@ public class GeckoView extends LayerView
                 tab.doForward();
             }
         }
+    }
+
+    public interface ChromeDelegate {
+        /**
+        * Tell the host application that Gecko is ready to handle requests.
+        * @param view The GeckoView that initiated the callback.
+        */
+        public void onReady(GeckoView view);
     }
 }
