@@ -11,6 +11,14 @@
 
 using mozilla::Mutex;
 
+class nsITimer;
+
+namespace mozilla {
+namespace dom {
+class MemoryReport;
+}
+}
+
 class nsMemoryReporterManager : public nsIMemoryReporterManager
 {
 public:
@@ -19,6 +27,93 @@ public:
 
   nsMemoryReporterManager();
   virtual ~nsMemoryReporterManager();
+
+  // Gets the memory reporter manager service.
+  static nsMemoryReporterManager* GetOrCreate()
+  {
+    nsCOMPtr<nsIMemoryReporterManager> imgr =
+      do_GetService("@mozilla.org/memory-reporter-manager;1");
+    return static_cast<nsMemoryReporterManager*>(imgr.get());
+  }
+
+  void IncrementNumChildProcesses();
+  void DecrementNumChildProcesses();
+
+  // Inter-process memory reporting proceeds as follows.
+  //
+  // - GetReports() (declared within NS_DECL_NSIMEMORYREPORTERMANAGER)
+  //   synchronously gets memory reports for the current process, tells all
+  //   child processes to get memory reports, and sets up some state
+  //   (mGetReportsState) for when the child processes report back, including a
+  //   timer.  Control then returns to the main event loop.
+  //
+  // - HandleChildReports() is called (asynchronously) once per child process
+  //   that reports back.  If all child processes report back before time-out,
+  //   the timer is cancelled.  (The number of child processes is part of the
+  //   saved request state.)
+  //
+  // - TimeoutCallback() is called (asynchronously) if all the child processes
+  //   don't respond within the time threshold.
+  //
+  // - FinishReporting() finishes things off.  It is *always* called -- either
+  //   from HandleChildReports() (if all child processes have reported back) or
+  //   from TimeoutCallback() (if time-out occurs).
+  //
+  // All operations occur on the main thread.
+  //
+  // The above sequence of steps is a "request".  A partially-completed request
+  // is described as "in flight".
+  //
+  // Each request has a "generation", a unique number that identifies it.  This
+  // is used to ensure that each reports from a child process corresponds to
+  // the appropriate request from the parent process.  (It's easier to
+  // implement a generation system than to implement a child report request
+  // cancellation mechanism.)
+  //
+  // Failures are mostly ignored, because it's (a) typically the most sensible
+  // thing to do, and (b) often hard to do anything else.  The following are
+  // the failure cases of note.
+  //
+  // - If a request is made while the previous request is in flight, the new
+  //   request is ignored, as per getReports()'s specification.  No error is
+  //   reported, because the previous request will complete soon enough.
+  //
+  // - If one or more child processes fail to respond within the time limit,
+  //   things will proceed as if they don't exist.  No error is reported,
+  //   because partial information is better than nothing.
+  //
+  // - If a child process reports after the time-out occurs, it is ignored.
+  //   (Generation checking will ensure it is ignored even if a subsequent
+  //   request is in flight;  this is the main use of generations.)  No error
+  //   is reported, because there's nothing sensible to be done about it at
+  //   this late stage.
+  //
+  // Now, what what happens if a child process is created/destroyed in the
+  // middle of a request?  Well, GetReportsState contains a copy of
+  // mNumChildProcesses which it uses to determine finished-ness.  So...
+  //
+  // - If a process is created, it won't have received the request for reports,
+  //   and the GetReportsState's mNumChildProcesses won't account for it.  So
+  //   the reported data will reflect how things were when the request began.
+  //
+  // - If a process is destroyed before reporting back, we'll just hit the
+  //   time-out, because we'll have received reports (barring other errors)
+  //   from N-1 child process.  So the reported data will reflect how things
+  //   are when the request ends.
+  //
+  // - If a process is destroyed after reporting back, but before all other
+  //   child processes have reported back, it will be included in the reported
+  //   data.  So the reported data will reflect how things were when the
+  //   request began.
+  //
+  // The inconsistencies between these three cases are unfortunate but
+  // difficult to avoid.  It's enough of an edge case to not be worth doing
+  // more.
+  //
+  void HandleChildReports(
+    const uint32_t& generation,
+    const InfallibleTArray<mozilla::dom::MemoryReport>& aChildReports);
+  void FinishReporting();
 
   // Functions that (a) implement distinguished amounts, and (b) are outside of
   // this module.
@@ -36,6 +131,8 @@ public:
     mozilla::InfallibleAmountFn mLowMemoryEventsPhysical;
 
     mozilla::InfallibleAmountFn mGhostWindows;
+
+    AmountFns() { mozilla::PodZero(this); }
   };
   AmountFns mAmountFns;
 
@@ -43,15 +140,55 @@ public:
   struct SizeOfTabFns {
     mozilla::JSSizeOfTabFn    mJS;
     mozilla::NonJSSizeOfTabFn mNonJS;
+
+    SizeOfTabFns() { mozilla::PodZero(this); }
   };
   SizeOfTabFns mSizeOfTabFns;
 
 private:
-  nsresult RegisterReporterHelper(nsIMemoryReporter *aReporter, bool aForce);
+  nsresult RegisterReporterHelper(nsIMemoryReporter* aReporter, bool aForce);
+
+  static void TimeoutCallback(nsITimer* aTimer, void* aData);
+  static const uint32_t kTimeoutLengthMS = 5000;
 
   nsTHashtable<nsISupportsHashKey> mReporters;
   Mutex mMutex;
   bool mIsRegistrationBlocked;
+
+  uint32_t mNumChildProcesses;
+  uint32_t mNextGeneration;
+
+  struct GetReportsState {
+    uint32_t                             mGeneration;
+    nsCOMPtr<nsITimer>                   mTimer;
+    uint32_t                             mNumChildProcesses;
+    uint32_t                             mNumChildProcessesCompleted;
+    nsCOMPtr<nsIHandleReportCallback>    mHandleReport;
+    nsCOMPtr<nsISupports>                mHandleReportData;
+    nsCOMPtr<nsIFinishReportingCallback> mFinishReporting;
+    nsCOMPtr<nsISupports>                mFinishReportingData;
+
+    GetReportsState(uint32_t aGeneration, nsITimer* aTimer,
+                    uint32_t aNumChildProcesses,
+                    nsIHandleReportCallback* aHandleReport,
+                    nsISupports* aHandleReportData,
+                    nsIFinishReportingCallback* aFinishReporting,
+                    nsISupports* aFinishReportingData)
+      : mGeneration(aGeneration),
+        mTimer(aTimer),
+        mNumChildProcesses(aNumChildProcesses),
+        mNumChildProcessesCompleted(0),
+        mHandleReport(aHandleReport),
+        mHandleReportData(aHandleReportData),
+        mFinishReporting(aFinishReporting),
+        mFinishReportingData(aFinishReportingData)
+    {}
+  };
+
+  // When this is non-null, a request is in flight.  Note: We use manual
+  // new/delete for this because its lifetime doesn't match block scope or
+  // anything like that.
+  GetReportsState* mGetReportsState;
 };
 
 #define NS_MEMORY_REPORTER_MANAGER_CID \

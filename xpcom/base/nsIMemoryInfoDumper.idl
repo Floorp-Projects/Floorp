@@ -5,13 +5,18 @@
 
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(3FFA5113-2A10-43BB-923B-6A2FAF67BE97)]
+[scriptable, function, uuid(2dea18fc-fbfa-4bf7-ad45-0efaf5495f5e)]
+interface nsIFinishDumpingCallback : nsISupports
+{
+  void callback(in nsISupports data);
+};
+
+[scriptable, builtinclass, uuid(fd5de30a-e3d6-4965-8244-86709e1ed23b)]
 interface nsIMemoryInfoDumper : nsISupports
 {
   /**
-   * This dumps gzipped memory reports for this process.  If a file of the
-   * given name exists, it will be overwritten.  Nothing is done for any child
-   * processes (and their children, recursively).  
+   * This dumps gzipped memory reports for this process and its child
+   * processes.  If a file of the given name exists, it will be overwritten.
    *
    * @param aFilename The output file.
    *
@@ -83,17 +88,19 @@ interface nsIMemoryInfoDumper : nsISupports
    *   }
    * }
    */
-  void dumpMemoryReportsToNamedFile(in AString aFilename);
+  void dumpMemoryReportsToNamedFile(in AString aFilename,
+                                    in nsIFinishDumpingCallback aFinishDumping,
+                                    in nsISupports aFinishDumpingData);
 
   /**
    * Similar to dumpMemoryReportsToNamedFile, this method dumps gzipped memory
-   * reports for this process and possibly our child processes (and their
+   * reports for this process and possibly its child processes (and their
    * children, recursively) to a file in the tmp directory called
    * memory-reports-<identifier>-<pid>.json.gz (or something similar, such as
    * memory-reports-<identifier>-<pid>-1.json.gz; no existing file will be
    * overwritten).
    *
-   * If DMD is enabled, this method also dump gzipped DMD output to a file in
+   * If DMD is enabled, this method also dumps gzipped DMD output to a file in
    * the tmp directory called dmd-<identifier>-<pid>.txt.gz (or something
    * similar; again, no existing file will be overwritten).
    *

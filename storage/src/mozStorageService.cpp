@@ -59,7 +59,7 @@ StorageSQLiteDistinguishedAmount()
   return ::sqlite3_memory_used();
 }
 
-class StorageSQLiteReporter MOZ_FINAL : public nsIMemoryReporter
+class StorageSQLiteReporter MOZ_FINAL : public MemoryMultiReporter
 {
 private:
   Service *mService;    // a weakref because Service contains a strongref to this
@@ -68,10 +68,9 @@ private:
   nsCString mSchemaDesc;
 
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
   StorageSQLiteReporter(Service *aService)
-  : mService(aService)
+  : MemoryMultiReporter("storage-sqlite")
+  , mService(aService)
   {
     mStmtDesc = NS_LITERAL_CSTRING(
       "Memory (approximate) used by all prepared statements used by "
@@ -84,12 +83,6 @@ public:
     mSchemaDesc = NS_LITERAL_CSTRING(
       "Memory (approximate) used to store the schema for all databases "
       "associated with connections to this database.");
-  }
-
-  NS_IMETHOD GetName(nsACString &aName)
-  {
-      aName.AssignLiteral("storage-sqlite-multi");
-      return NS_OK;
   }
 
   // Warning: To get a Connection's measurements requires holding its lock.
@@ -203,11 +196,6 @@ private:
     return NS_OK;
   }
 };
-
-NS_IMPL_ISUPPORTS1(
-  StorageSQLiteReporter,
-  nsIMemoryReporter
-)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Service
