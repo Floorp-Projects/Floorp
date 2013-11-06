@@ -386,8 +386,8 @@ struct TelemetryHistogram {
   uint32_t max;
   uint32_t bucketCount;
   uint32_t histogramType;
-  uint16_t id_offset;
-  uint16_t comment_offset;
+  uint32_t id_offset;
+  uint32_t comment_offset;
   bool extendedStatisticsOK;
 
   const char *id() const;
