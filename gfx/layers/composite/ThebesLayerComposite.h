@@ -85,9 +85,7 @@ protected:
 #endif
 
 private:
-  gfxRect GetDisplayPort();
   gfxSize GetEffectiveResolution();
-  gfxRect GetCompositionBounds();
 
   RefPtr<ContentHost> mBuffer;
   bool mRequiresTiledProperties;
