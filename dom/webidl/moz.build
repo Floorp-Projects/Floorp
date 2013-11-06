@@ -522,6 +522,14 @@ if CONFIG['MOZ_B2G_RIL']:
         'USSDReceivedEvent.webidl',
     ]
 
+if CONFIG['MOZ_NFC']:
+    WEBIDL_FILES += [
+         'MozNdefRecord.webidl',
+         'MozNfc.webidl',
+         'MozNFCPeer.webidl',
+         'MozNFCTag.webidl',
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     WEBIDL_FILES += [
         'MozWifiConnectionInfoEvent.webidl',
