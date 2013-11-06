@@ -3108,6 +3108,132 @@ static void DebugPaintItem(nsRenderingContext* aDest, nsDisplayItem *aItem, nsDi
 }
 #endif
 
+/* static */ void
+FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<ClippedDisplayItem>& aItems,
+                                               nsDisplayListBuilder *aBuilder,
+                                               const nsIntRegion& aRegionToDraw,
+                                               const nsIntPoint& aOffset,
+                                               int32_t aAppUnitsPerDevPixel,
+                                               float aXScale,
+                                               float aYScale)
+{
+  uint32_t i;
+  // Update visible regions. We need perform visibility analysis again
+  // because we may be asked to draw into part of a ThebesLayer that
+  // isn't actually visible in the window (e.g., because a ThebesLayer
+  // expanded its visible region to a rectangle internally), in which
+  // case the mVisibleRect stored in the display item may be wrong.
+  nsRegion visible = aRegionToDraw.ToAppUnits(aAppUnitsPerDevPixel);
+  visible.MoveBy(NSIntPixelsToAppUnits(aOffset.x, aAppUnitsPerDevPixel),
+                 NSIntPixelsToAppUnits(aOffset.y, aAppUnitsPerDevPixel));
+  visible.ScaleInverseRoundOut(aXScale, aYScale);
+
+  for (i = aItems.Length(); i > 0; --i) {
+    ClippedDisplayItem* cdi = &aItems[i - 1];
+    const DisplayItemClip& clip = cdi->mItem->GetClip();
+
+    NS_ASSERTION(AppUnitsPerDevPixel(cdi->mItem) == aAppUnitsPerDevPixel,
+                 "a thebes layer should contain items only at the same zoom");
+
+    NS_ABORT_IF_FALSE(clip.HasClip() ||
+                      clip.GetRoundedRectCount() == 0,
+                      "If we have rounded rects, we must have a clip rect");
+
+    if (!clip.IsRectAffectedByClip(visible.GetBounds())) {
+      cdi->mItem->RecomputeVisibility(aBuilder, &visible);
+      continue;
+    }
+
+    // Do a little dance to account for the fact that we're clipping
+    // to cdi->mClipRect
+    nsRegion clipped;
+    clipped.And(visible, clip.NonRoundedIntersection());
+    nsRegion finalClipped = clipped;
+    cdi->mItem->RecomputeVisibility(aBuilder, &finalClipped);
+    // If we have rounded clip rects, don't subtract from the visible
+    // region since we aren't displaying everything inside the rect.
+    if (clip.GetRoundedRectCount() == 0) {
+      nsRegion removed;
+      removed.Sub(clipped, finalClipped);
+      nsRegion newVisible;
+      newVisible.Sub(visible, removed);
+      // Don't let the visible region get too complex.
+      if (newVisible.GetNumRects() <= 15) {
+        visible = newVisible;
+      }
+    }
+  }
+}
+
+void
+FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
+                              gfxContext *aContext,
+                              nsRenderingContext *aRC,
+                              nsDisplayListBuilder* aBuilder,
+                              nsPresContext* aPresContext,
+                              int32_t aCommonClipCount)
+{
+  DisplayItemClip currentClip;
+  bool currentClipIsSetInContext = false;
+  DisplayItemClip tmpClip;
+
+  for (uint32_t i = 0; i < aItems.Length(); ++i) {
+    ClippedDisplayItem* cdi = &aItems[i];
+
+    if (cdi->mItem->GetVisibleRect().IsEmpty())
+      continue;
+
+    // If the new desired clip state is different from the current state,
+    // update the clip.
+    const DisplayItemClip* clip = &cdi->mItem->GetClip();
+    if (clip->GetRoundedRectCount() > 0 &&
+        !clip->IsRectClippedByRoundedCorner(cdi->mItem->GetVisibleRect())) {
+      tmpClip = *clip;
+      tmpClip.RemoveRoundedCorners();
+      clip = &tmpClip;
+    }
+    if (currentClipIsSetInContext != clip->HasClip() ||
+        (clip->HasClip() && *clip != currentClip)) {
+      if (currentClipIsSetInContext) {
+        aContext->Restore();
+      }
+      currentClipIsSetInContext = clip->HasClip();
+      if (currentClipIsSetInContext) {
+        currentClip = *clip;
+        aContext->Save();
+        NS_ASSERTION(aCommonClipCount < 100,
+          "Maybe you really do have more than a hundred clipping rounded rects, or maybe something has gone wrong.");
+        currentClip.ApplyTo(aContext, aPresContext, aCommonClipCount);
+        aContext->NewPath();
+      }
+    }
+
+    if (cdi->mInactiveLayerManager) {
+      PaintInactiveLayer(aBuilder, cdi->mInactiveLayerManager, cdi->mItem, aContext, aRC);
+    } else {
+      nsIFrame* frame = cdi->mItem->Frame();
+      frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
+#ifdef MOZ_DUMP_PAINTING
+
+      if (gfxUtils::sDumpPainting) {
+        DebugPaintItem(aRC, cdi->mItem, aBuilder);
+      } else {
+#else
+      {
+#endif
+        cdi->mItem->Paint(aBuilder, aRC);
+      }
+    }
+
+    if (CheckDOMModified())
+      break;
+  }
+
+  if (currentClipIsSetInContext) {
+    aContext->Restore();
+  }
+}
+
 /*
  * A note on residual transforms:
  *
@@ -3154,21 +3280,9 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   if (layerBuilder->CheckDOMModified())
     return;
 
-  nsTArray<ClippedDisplayItem> items;
-  uint32_t commonClipCount;
-  nsIFrame* containerLayerFrame;
-  {
-    ThebesLayerItemsEntry* entry = layerBuilder->mThebesLayerItems.GetEntry(aLayer);
-    NS_ASSERTION(entry, "We shouldn't be drawing into a layer with no items!");
-    items.SwapElements(entry->mItems);
-    commonClipCount = entry->mCommonClipCount;
-    containerLayerFrame = entry->mContainerLayerFrame;
-    // Later after this point, due to calls to DidEndTransaction
-    // for temporary layer managers, mThebesLayerItems can change,
-    // so 'entry' could become invalid.
-  }
-
-  if (!containerLayerFrame) {
+  ThebesLayerItemsEntry* entry = layerBuilder->mThebesLayerItems.GetEntry(aLayer);
+  NS_ASSERTION(entry, "We shouldn't be drawing into a layer with no items!");
+  if (!entry->mContainerLayerFrame) {
     return;
   }
 
@@ -3194,123 +3308,18 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   aContext->Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y));
   aContext->Scale(userData->mXScale, userData->mYScale);
 
-  nsPresContext* presContext = containerLayerFrame->PresContext();
+  nsPresContext* presContext = entry->mContainerLayerFrame->PresContext();
   int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
 
-  uint32_t i;
-  // Update visible regions. We need perform visibility analysis again
-  // because we may be asked to draw into part of a ThebesLayer that
-  // isn't actually visible in the window (e.g., because a ThebesLayer
-  // expanded its visible region to a rectangle internally), in which
-  // case the mVisibleRect stored in the display item may be wrong.
-  nsRegion visible = aRegionToDraw.ToAppUnits(appUnitsPerDevPixel);
-  visible.MoveBy(NSIntPixelsToAppUnits(offset.x, appUnitsPerDevPixel),
-                 NSIntPixelsToAppUnits(offset.y, appUnitsPerDevPixel));
-  visible.ScaleInverseRoundOut(userData->mXScale, userData->mYScale);
-
-  for (i = items.Length(); i > 0; --i) {
-    ClippedDisplayItem* cdi = &items[i - 1];
-    const DisplayItemClip& clip = cdi->mItem->GetClip();
-
-    NS_ASSERTION(AppUnitsPerDevPixel(cdi->mItem) == appUnitsPerDevPixel,
-                 "a thebes layer should contain items only at the same zoom");
-
-    NS_ABORT_IF_FALSE(clip.HasClip() ||
-                      clip.GetRoundedRectCount() == 0,
-                      "If we have rounded rects, we must have a clip rect");
-
-    if (!clip.IsRectAffectedByClip(visible.GetBounds())) {
-      cdi->mItem->RecomputeVisibility(builder, &visible);
-      continue;
-    }
-
-    // Do a little dance to account for the fact that we're clipping
-    // to cdi->mClipRect
-    nsRegion clipped;
-    clipped.And(visible, clip.NonRoundedIntersection());
-    nsRegion finalClipped = clipped;
-    cdi->mItem->RecomputeVisibility(builder, &finalClipped);
-    // If we have rounded clip rects, don't subtract from the visible
-    // region since we aren't displaying everything inside the rect.
-    if (clip.GetRoundedRectCount() == 0) {
-      nsRegion removed;
-      removed.Sub(clipped, finalClipped);
-      nsRegion newVisible;
-      newVisible.Sub(visible, removed);
-      // Don't let the visible region get too complex.
-      if (newVisible.GetNumRects() <= 15) {
-        visible = newVisible;
-      }
-    }
-  }
+  RecomputeVisibilityForItems(entry->mItems, builder, aRegionToDraw,
+                              offset, appUnitsPerDevPixel,
+                              userData->mXScale, userData->mYScale);
 
   nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
   rc->Init(presContext->DeviceContext(), aContext);
 
-  DisplayItemClip currentClip;
-  bool currentClipIsSetInContext = false;
-  DisplayItemClip tmpClip;
-
-  for (i = 0; i < items.Length(); ++i) {
-    ClippedDisplayItem* cdi = &items[i];
-
-    if (cdi->mItem->GetVisibleRect().IsEmpty())
-      continue;
-
-    // If the new desired clip state is different from the current state,
-    // update the clip.
-    const DisplayItemClip* clip = &cdi->mItem->GetClip();
-    if (clip->GetRoundedRectCount() > 0 &&
-        !clip->IsRectClippedByRoundedCorner(cdi->mItem->GetVisibleRect())) {
-      tmpClip = *clip;
-      tmpClip.RemoveRoundedCorners();
-      clip = &tmpClip;
-    }
-    if (currentClipIsSetInContext != clip->HasClip() ||
-        (clip->HasClip() && *clip != currentClip)) {
-      if (currentClipIsSetInContext) {
-        aContext->Restore();
-      }
-      currentClipIsSetInContext = clip->HasClip();
-      if (currentClipIsSetInContext) {
-        currentClip = *clip;
-        aContext->Save();
-        NS_ASSERTION(commonClipCount < 100,
-          "Maybe you really do have more than a hundred clipping rounded rects, or maybe something has gone wrong.");
-        currentClip.ApplyTo(aContext, presContext, commonClipCount);
-      }
-    }
-
-    if (cdi->mInactiveLayerManager) {
-      PaintInactiveLayer(builder, cdi->mInactiveLayerManager, cdi->mItem, aContext, rc);
-    } else {
-      nsIFrame* frame = cdi->mItem->Frame();
-      frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
-#ifdef MOZ_DUMP_PAINTING
-
-      if (gfxUtils::sDumpPainting) {
-        DebugPaintItem(rc, cdi->mItem, builder);
-      } else {
-#else
-      {
-#endif
-        cdi->mItem->Paint(builder, rc);
-      }
-    }
-
-    if (layerBuilder->CheckDOMModified())
-      break;
-  }
-
-  {
-    ThebesLayerItemsEntry* entry =
-      layerBuilder->mThebesLayerItems.GetEntry(aLayer);
-    items.SwapElements(entry->mItems);
-  }
-
-  if (currentClipIsSetInContext) {
-    aContext->Restore();
-  }
+  layerBuilder->PaintItems(entry->mItems, aContext, rc,
+                           builder, presContext, entry->mCommonClipCount);
 
   if (presContext->GetPaintFlashing()) {
     FlashPaint(aContext);
