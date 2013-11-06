@@ -69,18 +69,6 @@ private:
     return static_cast<ClientLayerManager*>(mManager);
   }
 
-  // BasicImplData
-  virtual void
-  PaintBuffer(gfxContext* aContext,
-              const nsIntRegion& aRegionToDraw,
-              const nsIntRegion& aExtendedRegionToDraw,
-              const nsIntRegion& aRegionToInvalidate,
-              bool aDidSelfCopy,
-              LayerManager::DrawThebesLayerCallback aCallback,
-              void* aCallbackData)
-  { NS_RUNTIMEABORT("Not reached."); }
-
-
   /**
    * For the initial PaintThebes of a transaction, calculates all the data
    * needed for that paint and any repeated transactions.

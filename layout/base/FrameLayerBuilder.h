@@ -244,6 +244,7 @@ public:
   static void DrawThebesLayer(ThebesLayer* aLayer,
                               gfxContext* aContext,
                               const nsIntRegion& aRegionToDraw,
+                              mozilla::layers::DrawRegionClip aClip,
                               const nsIntRegion& aRegionToInvalidate,
                               void* aCallbackData);
 
