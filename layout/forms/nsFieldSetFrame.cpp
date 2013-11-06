@@ -99,8 +99,6 @@ public:
 
 protected:
 
-  void ReparentFrameList(const nsFrameList& aFrameList);
-
   /**
    * Return the anonymous frame that contains all descendants except
    * the legend frame.  This is currently always a block frame with
@@ -651,9 +649,8 @@ NS_IMETHODIMP
 nsFieldSetFrame::AppendFrames(ChildListID    aListID,
                               nsFrameList&   aFrameList)
 {
-  // aFrameList is not allowed to contain "the legend" for this fieldset
-  ReparentFrameList(aFrameList);
-  return GetInner()->AppendFrames(aListID, aFrameList);
+  MOZ_CRASH("nsFieldSetFrame::AppendFrames not supported");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -661,25 +658,16 @@ nsFieldSetFrame::InsertFrames(ChildListID    aListID,
                               nsIFrame*      aPrevFrame,
                               nsFrameList&   aFrameList)
 {
-  NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this ||
-               aPrevFrame->GetParent() == GetInner(),
-               "inserting after sibling frame with different parent");
-
-  // aFrameList is not allowed to contain "the legend" for this fieldset
-  ReparentFrameList(aFrameList);
-  if (MOZ_UNLIKELY(aPrevFrame == GetLegend())) {
-    aPrevFrame = nullptr;
-  }
-  return GetInner()->InsertFrames(aListID, aPrevFrame, aFrameList);
+  MOZ_CRASH("nsFieldSetFrame::InsertFrames not supported");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFieldSetFrame::RemoveFrame(ChildListID    aListID,
                              nsIFrame*      aOldFrame)
 {
-  // For reference, see bug 70648, bug 276104 and bug 236071.
-  NS_ASSERTION(aOldFrame != GetLegend(), "Cannot remove legend here");
-  return GetInner()->RemoveFrame(aListID, aOldFrame);
+  MOZ_CRASH("nsFieldSetFrame::RemoveFrame not supported");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #ifdef ACCESSIBILITY
@@ -689,19 +677,6 @@ nsFieldSetFrame::AccessibleType()
   return a11y::eHTMLGroupboxType;
 }
 #endif
-
-void
-nsFieldSetFrame::ReparentFrameList(const nsFrameList& aFrameList)
-{
-  RestyleManager* restyleManager = PresContext()->RestyleManager();
-  nsIFrame* inner = GetInner();
-  for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-    NS_ASSERTION(GetLegend() || e.get()->GetType() != nsGkAtoms::legendFrame,
-                 "The fieldset's legend is not allowed in this list");
-    e.get()->SetParent(inner);
-    restyleManager->ReparentStyleContext(e.get());
-  }
-}
 
 nscoord
 nsFieldSetFrame::GetBaseline() const
