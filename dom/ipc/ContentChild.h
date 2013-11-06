@@ -188,7 +188,8 @@ public:
 
     virtual bool RecvAsyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
-                                  const InfallibleTArray<CpowEntry>& aCpows);
+                                  const InfallibleTArray<CpowEntry>& aCpows,
+                                  const IPC::Principal& aPrincipal);
 
     virtual bool RecvGeolocationUpdate(const GeoPosition& somewhere);
 
