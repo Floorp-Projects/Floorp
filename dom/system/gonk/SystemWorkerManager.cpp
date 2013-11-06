@@ -31,6 +31,9 @@
 #ifdef MOZ_B2G_RIL
 #include "mozilla/ipc/Ril.h"
 #endif
+#ifdef MOZ_NFC
+#include "mozilla/ipc/Nfc.h"
+#endif
 #include "mozilla/ipc/KeyStore.h"
 #include "nsIObserverService.h"
 #include "nsCxPusher.h"
@@ -275,6 +278,10 @@ SystemWorkerManager::Shutdown()
   RilConsumer::Shutdown();
 #endif
 
+#ifdef MOZ_NFC
+  NfcConsumer::Shutdown();
+#endif
+
   StopNetd();
   mNetdWorker = nullptr;
 
@@ -359,6 +366,28 @@ SystemWorkerManager::RegisterRilWorker(unsigned int aClientId,
 
   return RilConsumer::Register(aClientId, wctd);
 #endif // MOZ_B2G_RIL
+}
+
+nsresult
+SystemWorkerManager::RegisterNfcWorker(const JS::Value& aWorker,
+                                       JSContext* aCx)
+{
+#ifndef MOZ_NFC
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  NS_ENSURE_TRUE(!JSVAL_IS_PRIMITIVE(aWorker), NS_ERROR_UNEXPECTED);
+
+  JSAutoCompartment ac(aCx, JSVAL_TO_OBJECT(aWorker));
+
+  WorkerCrossThreadDispatcher* wctd =
+    GetWorkerCrossThreadDispatcher(aCx, aWorker);
+  if (!wctd) {
+    NS_WARNING("Failed to GetWorkerCrossThreadDispatcher for nfc");
+    return NS_ERROR_FAILURE;
+  }
+
+  return NfcConsumer::Register(wctd);
+#endif // MOZ_NFC
 }
 
 nsresult
