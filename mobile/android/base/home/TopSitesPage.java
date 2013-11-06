@@ -120,6 +120,21 @@ public class TopSitesPage extends HomeFragment {
         mUrlOpenListener = null;
     }
 
+    private static boolean logDebug = Log.isLoggable(LOGTAG, Log.DEBUG);
+    private static boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
+
+    private static void debug(final String message) {
+        if (logDebug) {
+            Log.d(LOGTAG, message);
+        }
+    }
+
+    private static void trace(final String message) {
+        if (logVerbose) {
+            Log.v(LOGTAG, message);
+        }
+    }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -478,7 +493,7 @@ public class TopSitesPage extends HomeFragment {
 
         @Override
         public Cursor loadCursor() {
-            Log.d(LOGTAG, "TopSitesLoader.loadCursor()");
+            trace("TopSitesLoader.loadCursor()");
             return BrowserDB.getTopSites(getContext().getContentResolver(), mMaxGridEntries, SEARCH_LIMIT);
         }
     }
@@ -581,7 +596,7 @@ public class TopSitesPage extends HomeFragment {
             // sooner than this. But we can avoid a duplicate favicon
             // fetch...
             if (!updated) {
-                Log.d(LOGTAG, "bindView called twice for same values; short-circuiting.");
+                debug("bindView called twice for same values; short-circuiting.");
                 return;
             }
 
@@ -627,7 +642,7 @@ public class TopSitesPage extends HomeFragment {
     private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            Log.d(LOGTAG, "Creating TopSitesLoader: " + id);
+            trace("Creating TopSitesLoader: " + id);
             return new TopSitesLoader(getActivity());
         }
 
@@ -643,7 +658,7 @@ public class TopSitesPage extends HomeFragment {
          */
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            Log.d(LOGTAG, "onLoadFinished: " + c.getCount() + " rows.");
+            debug("onLoadFinished: " + c.getCount() + " rows.");
 
             mListAdapter.swapCursor(c);
             mGridAdapter.swapCursor(c);
