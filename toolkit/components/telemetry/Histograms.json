@@ -2696,12 +2696,12 @@
     "n_buckets": 20,
     "description": "Firefox: Time in ms spent on switching tabs in response to a tab click"
   },
-  "FX_APP_MENU_OPEN_MS": {
+  "FX_IDENTITY_POPUP_OPEN_MS": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 10,
     "extended_statistics_ok": true,
-    "description": "Firefox: Time taken by the app-menu opening in milliseconds"
+    "description": "Firefox: Time taken by the identity popup to open in milliseconds"
   },
   "FX_BOOKMARKS_TOOLBAR_INIT_MS": {
     "kind": "exponential",
