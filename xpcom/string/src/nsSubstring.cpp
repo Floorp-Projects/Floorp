@@ -29,12 +29,10 @@ using mozilla::Atomic;
 
 // ---------------------------------------------------------------------------
 
-static const PRUnichar gNullChar = 0;
+static PRUnichar gNullChar = 0;
 
-char* const      nsCharTraits<char>     ::sEmptyBuffer = 
-  (char*) const_cast<PRUnichar*>(&gNullChar);
-PRUnichar* const nsCharTraits<PRUnichar>::sEmptyBuffer = 
-  const_cast<PRUnichar*>(&gNullChar);
+char*      nsCharTraits<char>     ::sEmptyBuffer = (char*) &gNullChar;
+PRUnichar* nsCharTraits<PRUnichar>::sEmptyBuffer =         &gNullChar;
 
 // ---------------------------------------------------------------------------
 

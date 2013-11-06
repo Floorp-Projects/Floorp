@@ -13,7 +13,7 @@ const windowUtils = require("sdk/deprecated/window-utils");
 const timer = require("sdk/timers");
 const { Cc, Ci } = require("chrome");
 const { Loader } = require("sdk/test/loader");
-const { open, getFrames, getWindowTitle, onFocus } = require('sdk/window/utils');
+const { open, getFrames, getWindowTitle, onFocus, windows } = require('sdk/window/utils');
 const { close } = require('sdk/window/helpers');
 const { fromIterator: toArray } = require('sdk/util/array');
 
@@ -294,6 +294,31 @@ exports.testWindowIterator = function(assert, done) {
 
     // Wait for the window unload before ending test
     close(window).then(done);
+  }, false);
+};
+
+exports.testIgnoreClosingWindow = function(assert, done) {
+  assert.equal(windows().length, 1, "Only one window open");
+
+  // make a new window
+  let window = makeEmptyWindow();
+
+  assert.equal(windows().length, 2, "Two windows open");
+
+  window.addEventListener("load", function onload() {
+    window.addEventListener("load", onload, false);
+
+    assert.equal(windows().length, 2, "Two windows open");
+
+    // Wait for the window unload before ending test
+    let checked = false;
+
+    close(window).then(function() {
+      assert.ok(checked, 'the test is finished');
+    }).then(done, assert.fail)
+
+    assert.equal(windows().length, 1, "Only one window open");
+    checked = true;
   }, false);
 };
 

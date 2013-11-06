@@ -2398,15 +2398,12 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 
 } // namespace xpc
 
-class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
+class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public MemoryMultiReporter
 {
   public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-
-    NS_IMETHOD GetName(nsACString &name) {
-        name.AssignLiteral("js-main-runtime-compartments");
-        return NS_OK;
-    }
+    JSMainRuntimeCompartmentsReporter()
+      : MemoryMultiReporter("js-main-runtime-compartments")
+    {}
 
     typedef js::Vector<nsCString, 0, js::SystemAllocPolicy> Paths;
 
@@ -2444,8 +2441,6 @@ class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
         return NS_OK;
     }
 };
-
-NS_IMPL_ISUPPORTS1(JSMainRuntimeCompartmentsReporter, nsIMemoryReporter)
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(OrphanMallocSizeOf)
 

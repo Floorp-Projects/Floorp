@@ -844,5 +844,32 @@ function test25() {
   ok(notification, "Test 25: There should be a plugin notification even if the plugin was immediately removed");
   ok(notification.dismissed, "Test 25: The notification should be dismissed by default");
 
-  finishTest();
+  prepareTest(() => executeSoon(test26), gTestRoot + "plugin_small.html");
+}
+
+function test26() {
+  let notification = PopupNotifications.getNotification("click-to-play-plugins");
+  ok(notification, "Test 26: There should be a plugin notification");
+
+  waitForCondition(() => gBrowser.ownerDocument.
+      getElementById("plugins-notification-icon").classList.
+      contains("plugin-hidden"),
+    () => {
+      // Don't use setTestPluginEnabledState here because we already saved the
+      // prior value
+      getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
+      prepareTest(test27, gTestRoot + "plugin_small.html");
+    },
+    "Test 26, expected the plugin notification icon to be highlighted");
+}
+
+function test27() {
+  let notification = PopupNotifications.getNotification("click-to-play-plugins");
+  ok(notification, "Test 27: There should be a plugin notification");
+
+  waitForCondition(() => !gBrowser.ownerDocument.
+      getElementById("plugins-notification-icon").classList.
+      contains("plugin-hidden"),
+    finishTest,
+    "Test 27, expected the plugin notification icon to not be highlighted");
 }

@@ -7,7 +7,7 @@ const { create: makeFrame } = require("sdk/frame/utils");
 const { window } = require("sdk/addon/window");
 const { Loader } = require('sdk/test/loader');
 const { URL } = require("sdk/url");
-const testURI = require("sdk/self").data.url("test.html");
+const testURI = require("./fixtures").url("test.html");
 const testHost = URL(testURI).scheme + '://' + URL(testURI).host;
 
 /*

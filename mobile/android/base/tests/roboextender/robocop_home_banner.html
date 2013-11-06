@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <title>HomeBanner test page</title>
+    <meta name="viewport" content="initial-scale=1.0"/>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script type="application/javascript">
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Home.jsm");
+
+function sendMessageToJava(msg) {
+  return Services.androidBridge.handleGeckoMessage(JSON.stringify(msg));
+}
+
+const TEXT = "The quick brown fox jumps over the lazy dog.";
+
+function start() {
+  var test = location.hash.substring(1);
+  window[test]();
+}
+
+function addMessage() {
+  Home.banner.add({
+    text: TEXT,
+    onclick: function() {
+      sendMessageToJava({ type: "TestHomeBanner:MessageClicked" });
+    },
+    onshown: function() {
+      sendMessageToJava({ type: "TestHomeBanner:MessageShown" });
+    }
+  });
+  sendMessageToJava({ type: "TestHomeBanner:MessageAdded" });
+}
+
+    </script>
+  </head>
+  <body onload="start();">
+  </body>
+</html>

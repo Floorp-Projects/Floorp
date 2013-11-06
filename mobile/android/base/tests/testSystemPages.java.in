@@ -32,7 +32,7 @@ public class testSystemPages extends PixelTest {
 
         /* Verify that the search field is not in the focus by pressing back. That will load the previous
            about: page if there is no the keyboard to dismiss, meaning that the search field was not in focus */
-        loadAndPaint("about:config");
+        loadAndPaint("about:about");
 
         // Press back to verify if the keyboard is dismissed or the previous about: page loads
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);

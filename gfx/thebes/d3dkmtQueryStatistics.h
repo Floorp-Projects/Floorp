@@ -6,6 +6,9 @@
  * Windows 8 RC SDK. The work for this file itself was based on the one in ProcessHacker at
  * http://processhacker.svn.sourceforge.net/viewvc/processhacker/2.x/trunk/plugins/ExtendedTools/d3dkmt.h?revision=4758&view=markup
  * For more details see Mozilla Bug 689870.
+ * [Bug 917496 indicates that some of these structs may not match reality, and
+ * therefore should not be trusted.  See the reference to bug 917496 in
+ * gfxWindowsPlatform.cpp.]
  */
 
 typedef struct _D3DKMTQS_COUNTER

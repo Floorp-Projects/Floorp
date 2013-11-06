@@ -35,7 +35,7 @@ such, will only return favicon URLs for visited sites.
       console.log(url); // http://mozorg.cdn.mozilla.net/media/img/favicon.ico
     });
 
-@param object {string, tab}
+@param object {string|tab}
   A value that represents the URL of the page to get the favicon URL from.
   Can be a URL `String` or a [`Tab`](modules/sdk/tabs.html#Tab).
 
