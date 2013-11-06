@@ -203,6 +203,7 @@ private:
   //   For example, a set of mousemove, mousedown, and mouseup events might
   //   be sent if a tap is detected.
   bool mContentConsumingTouch;
+  bool mApzConsumingTouch;
   bool mCancelable;
   bool mRecognizerWantsEvents;
   nsTArray<uint32_t> mCanceledIds;
