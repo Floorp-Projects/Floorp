@@ -123,8 +123,7 @@ UnreachableCodeElimination::optimizableSuccessor(MBasicBlock *block)
     if (!v->isConstant())
         return nullptr;
 
-    const Value &val = v->toConstant()->value();
-    BranchDirection bdir = ToBoolean(val) ? TRUE_BRANCH : FALSE_BRANCH;
+    BranchDirection bdir = v->toConstant()->valueToBoolean() ? TRUE_BRANCH : FALSE_BRANCH;
     return testIns->branchSuccessor(bdir);
 }
 

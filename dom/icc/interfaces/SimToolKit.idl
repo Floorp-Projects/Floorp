@@ -494,16 +494,6 @@ dictionary MozStkCommand
   jsval options;
 };
 
-[scriptable, builtinclass, uuid(21cd2f25-ebea-43f8-8255-eaa4e1182858)]
-interface nsIDOMMozStkCommandEvent : nsIDOMEvent
-{
-  /**
-   * See nsIDOMMozStkCommand for the detail of command.
-   */
-  [implicit_jscontext]
-  readonly attribute jsval command;
-};
-
 dictionary MozStkResponse
 {
   /**

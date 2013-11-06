@@ -8580,6 +8580,10 @@ already_AddRefed<nsIVariant>
 nsGlobalWindow::ShowModalDialog(const nsAString& aUrl, nsIVariant* aArgument,
                                 const nsAString& aOptions, ErrorResult& aError)
 {
+  if (mDoc) {
+    mDoc->WarnOnceAbout(nsIDocument::eShowModalDialog);
+  }
+
   FORWARD_TO_OUTER_OR_THROW(ShowModalDialog,
                             (aUrl, aArgument, aOptions, aError), aError,
                             nullptr);
