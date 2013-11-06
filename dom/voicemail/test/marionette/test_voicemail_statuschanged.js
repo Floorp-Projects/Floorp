@@ -4,6 +4,8 @@
 SpecialPowers.addPermission("voicemail", true, document);
 
 let voicemail = window.navigator.mozVoicemail;
+let serviceId = 0;
+
 ok(voicemail instanceof MozVoicemail);
 is(voicemail.status, null);
 
@@ -42,10 +44,13 @@ function sendIndicatorPDU(pdu, listener, nextTest) {
 // See RadioInterfaceLayer.js / Bug #768441
 
 function isVoicemailStatus(status) {
-  is(voicemail.status.hasMessages, status.hasMessages);
-  is(voicemail.status.messageCount, status.messageCount);
-  is(voicemail.status.returnNumber, status.returnNumber);
-  is(voicemail.status.returnMessage, status.returnMessage);
+  is(voicemail.getStatus(), status);
+  is(voicemail.getStatus(serviceId), status);
+
+  is(voicemail.getStatus().hasMessages, status.hasMessages);
+  is(voicemail.getStatus().messageCount, status.messageCount);
+  is(voicemail.getStatus().returnNumber, status.returnNumber);
+  is(voicemail.getStatus().returnMessage, status.returnMessage);
 }
 
 const MWI_PDU_PREFIX = "0000";
@@ -80,7 +85,7 @@ function testLevel1Indicator() {
     // TODO: bug 905228 - MozVoicemailStatus is not defined.
     //ok(status instanceof MozVoicemailStatus);
     is(status.hasMessages, true);
-    is(status.messageCount, status.MESSAGE_COUNT_UNKNOWN);
+    is(status.messageCount, -1);
     is(status.returnNumber, MWI_LEVEL1_SENDER);
     is(status.returnMessage, MWI_DEFAULT_BODY);
     isVoicemailStatus(status);
