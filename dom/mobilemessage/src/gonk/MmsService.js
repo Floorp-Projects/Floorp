@@ -1544,19 +1544,19 @@ MmsService.prototype = {
     // because the system message mechamism will rewrap the object
     // based on the content window, which needs to know the properties.
     gSystemMessenger.broadcastMessage(aName, {
-      type:           aDomMessage.type,
-      id:             aDomMessage.id,
-      threadId:       aDomMessage.threadId,
-      delivery:       aDomMessage.delivery,
-      deliveryInfo:   aDomMessage.deliveryInfo,
-      sender:         aDomMessage.sender,
-      receivers:      aDomMessage.receivers,
-      timestamp:      aDomMessage.timestamp,
-      read:           aDomMessage.read,
-      subject:        aDomMessage.subject,
-      smil:           aDomMessage.smil,
-      attachments:    aDomMessage.attachments,
-      expiryDate:     aDomMessage.expiryDate
+      type:         aDomMessage.type,
+      id:           aDomMessage.id,
+      threadId:     aDomMessage.threadId,
+      delivery:     aDomMessage.delivery,
+      deliveryInfo: aDomMessage.deliveryInfo,
+      sender:       aDomMessage.sender,
+      receivers:    aDomMessage.receivers,
+      timestamp:    aDomMessage.timestamp,
+      read:         aDomMessage.read,
+      subject:      aDomMessage.subject,
+      smil:         aDomMessage.smil,
+      attachments:  aDomMessage.attachments,
+      expiryDate:   aDomMessage.expiryDate
     });
   },
 
