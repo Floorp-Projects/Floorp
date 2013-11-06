@@ -969,6 +969,10 @@ class MConstant : public MNullaryInstruction
     const js::Value *vp() const {
         return &value_;
     }
+    const bool valueToBoolean() const {
+        // A hack to avoid this wordy pattern everywhere in the JIT.
+        return ToBoolean(HandleValue::fromMarkedLocation(&value_));
+    }
 
     void printOpcode(FILE *fp) const;
 
@@ -5769,7 +5773,7 @@ class MLoadTypedArrayElementHole
 // Load a value fallibly or infallibly from a statically known typed array.
 class MLoadTypedArrayElementStatic
   : public MUnaryInstruction,
-    public IntPolicy<0>
+    public ConvertToInt32Policy<0>
 {
     MLoadTypedArrayElementStatic(TypedArrayObject *typedArray, MDefinition *ptr)
       : MUnaryInstruction(ptr), typedArray_(typedArray), fallible_(true)
