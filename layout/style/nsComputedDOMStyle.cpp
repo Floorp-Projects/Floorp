@@ -672,10 +672,14 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
       while (topWithPseudoElementData->GetParent()->HasPseudoElementData()) {
         topWithPseudoElementData = topWithPseudoElementData->GetParent();
       }
-      NS_ASSERTION(nsCSSPseudoElements::PseudoElementContainsElements(
-                     topWithPseudoElementData->GetPseudo()),
-                   "we should be in a pseudo-element that is expected to "
-                   "contain elements");
+      nsIAtom* pseudo = topWithPseudoElementData->GetPseudo();
+      nsAutoString assertMsg =
+        NS_LITERAL_STRING("we should be in a pseudo-element that is expected "
+                          "to contain elements (") +
+        nsDependentString(pseudo->GetUTF16String()) +
+        NS_LITERAL_STRING(")");
+      NS_ASSERTION(nsCSSPseudoElements::PseudoElementContainsElements(pseudo),
+                   NS_LossyConvertUTF16toASCII(assertMsg).get());
     }
 #endif
     // Need to resolve a style context
