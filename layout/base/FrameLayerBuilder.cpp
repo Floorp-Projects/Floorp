@@ -3168,12 +3168,21 @@ FrameLayerBuilder::RecomputeVisibilityForItems(nsTArray<ClippedDisplayItem>& aIt
 
 void
 FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
+                              const nsIntRect& aRect,
                               gfxContext *aContext,
                               nsRenderingContext *aRC,
                               nsDisplayListBuilder* aBuilder,
                               nsPresContext* aPresContext,
+                              const nsIntPoint& aOffset,
+                              float aXScale, float aYScale,
                               int32_t aCommonClipCount)
 {
+  int32_t appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
+  nsRect boundRect = aRect.ToAppUnits(appUnitsPerDevPixel);
+  boundRect.MoveBy(NSIntPixelsToAppUnits(aOffset.x, appUnitsPerDevPixel),
+                 NSIntPixelsToAppUnits(aOffset.y, appUnitsPerDevPixel));
+  boundRect.ScaleInverseRoundOut(aXScale, aYScale);
+
   DisplayItemClip currentClip;
   bool currentClipIsSetInContext = false;
   DisplayItemClip tmpClip;
@@ -3181,7 +3190,8 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
   for (uint32_t i = 0; i < aItems.Length(); ++i) {
     ClippedDisplayItem* cdi = &aItems[i];
 
-    if (cdi->mItem->GetVisibleRect().IsEmpty())
+    nsRect paintRect = cdi->mItem->GetVisibleRect().Intersect(boundRect);
+    if (paintRect.IsEmpty())
       continue;
 
     // If the new desired clip state is different from the current state,
@@ -3362,8 +3372,9 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
       aContext->Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y));
       aContext->Scale(userData->mXScale, userData->mYScale);
 
-      layerBuilder->PaintItems(entry->mItems, aContext, rc,
+      layerBuilder->PaintItems(entry->mItems, *iterRect, aContext, rc,
                                builder, presContext,
+                               offset, userData->mXScale, userData->mYScale,
                                entry->mCommonClipCount);
     }
   } else {
@@ -3373,8 +3384,9 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     aContext->Translate(aLayer->GetResidualTranslation() - gfxPoint(offset.x, offset.y));
     aContext->Scale(userData->mXScale, userData->mYScale);
 
-    layerBuilder->PaintItems(entry->mItems, aContext, rc,
+    layerBuilder->PaintItems(entry->mItems, aRegionToDraw.GetBounds(), aContext, rc,
                              builder, presContext,
+                             offset, userData->mXScale, userData->mYScale,
                              entry->mCommonClipCount);
   }
 
