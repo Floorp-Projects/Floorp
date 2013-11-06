@@ -1,0 +1,14 @@
+{
+  "name": "Jetpack Loader Test",
+  "version": "1.0.1",
+  "dependencies": {
+    "async": "*",
+    "underscore": "*"
+  },
+  "contributors": [
+    "ash nazg durbatulûk",
+    "ash nazg gimbatul",
+    "ash nazg thrakatulûk",
+    "agh burzum-ishi krimpatul"
+  ]
+}

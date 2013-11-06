@@ -4300,16 +4300,9 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
     ac_configure_args="$ac_configure_args --with-pic"
   fi
   if test "$CROSS_COMPILE"; then
-    case "$target" in
-    *-android*|*-linuxandroid*)
-      export AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS CFLAGS LDFLAGS
+    export AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS CFLAGS LDFLAGS
 
-      ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\""
-      ;;
-    *)
-      ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
-      ;;
-    esac
+    ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\""
   fi
   if test "$_MSC_VER"; then
     # Use a wrapper script for cl and ml that looks more like gcc.

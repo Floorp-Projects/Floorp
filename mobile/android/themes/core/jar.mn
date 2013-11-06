@@ -31,12 +31,17 @@ chrome.jar:
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
 
+  skin/images/search.png                    (images/search.png)
+  skin/images/lock.png                      (images/lock.png)
+  skin/images/textfield.png                 (images/textfield.png)
+
   skin/images/5stars.png                    (images/5stars.png)
   skin/images/addons-32.png                 (images/addons-32.png)
   skin/images/amo-logo.png                  (images/amo-logo.png)
   skin/images/arrowleft-16.png              (images/arrowleft-16.png)
   skin/images/arrowright-16.png             (images/arrowright-16.png)
   skin/images/arrowdown-16.png              (images/arrowdown-16.png)
+  skin/images/arrowup-16.png                (images/arrowup-16.png)
   skin/images/blocked-warning.png           (images/blocked-warning.png)
   skin/images/checkbox_checked.png          (images/checkbox_checked.png)
   skin/images/checkbox_checked_disabled.png (images/checkbox_checked_disabled.png)

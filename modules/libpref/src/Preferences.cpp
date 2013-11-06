@@ -208,28 +208,22 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
   return n;
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(PreferencesMallocSizeOf)
-
-class PreferencesReporter MOZ_FINAL : public nsIMemoryReporter
+class PreferenceServiceReporter MOZ_FINAL : public MemoryMultiReporter
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMEMORYREPORTER
+  PreferenceServiceReporter()
+    : MemoryMultiReporter("preference-service")
+  {}
+
+  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCallback,
+                            nsISupports* aData);
+
 protected:
   static const uint32_t kSuspectReferentCount = 1000;
   static PLDHashOperator CountReferents(PrefCallback* aKey,
                                         nsAutoPtr<PrefCallback>& aCallback,
                                         void* aClosure);
 };
-
-NS_IMPL_ISUPPORTS1(PreferencesReporter, nsIMemoryReporter)
-
-NS_IMETHODIMP
-PreferencesReporter::GetName(nsACString& aName)
-{
-  aName.AssignLiteral("preference-service");
-  return NS_OK;
-}
 
 struct PreferencesReferentCount {
   PreferencesReferentCount() : numStrong(0), numWeakAlive(0), numWeakDead(0) {}
@@ -242,9 +236,9 @@ struct PreferencesReferentCount {
 };
 
 PLDHashOperator
-PreferencesReporter::CountReferents(PrefCallback* aKey,
-                                    nsAutoPtr<PrefCallback>& aCallback,
-                                    void* aClosure)
+PreferenceServiceReporter::CountReferents(PrefCallback* aKey,
+                                          nsAutoPtr<PrefCallback>& aCallback,
+                                          void* aClosure)
 {
   PreferencesReferentCount* referentCount =
     static_cast<PreferencesReferentCount*>(aClosure);
@@ -279,8 +273,8 @@ PreferencesReporter::CountReferents(PrefCallback* aKey,
 }
 
 NS_IMETHODIMP
-PreferencesReporter::CollectReports(nsIMemoryReporterCallback* aCb,
-                                    nsISupports* aClosure)
+PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
+                                          nsISupports* aClosure)
 {
 #define REPORT(_path, _kind, _units, _amount, _desc)                          \
     do {                                                                      \
@@ -293,7 +287,7 @@ PreferencesReporter::CollectReports(nsIMemoryReporterCallback* aCb,
 
   REPORT(NS_LITERAL_CSTRING("explicit/preferences"),
          nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-         Preferences::SizeOfIncludingThisAndOtherStuff(PreferencesMallocSizeOf),
+         Preferences::SizeOfIncludingThisAndOtherStuff(MallocSizeOf),
          "Memory used by the preferences system.");
 
   nsPrefBranch* rootBranch =
@@ -347,7 +341,7 @@ class AddPreferencesMemoryReporterRunnable : public nsRunnable
 {
   NS_IMETHOD Run()
   {
-    return NS_RegisterMemoryReporter(new PreferencesReporter());
+    return NS_RegisterMemoryReporter(new PreferenceServiceReporter());
   }
 };
 } // anonymous namespace

@@ -84,6 +84,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
             "table with 1 column and 1 row"
           ]]
         }, {
+          accOrElmOrID: "date",
+          expected: [["date entry", "2011-09-29"], ["2011-09-29", "date entry"]]
+        }, {
           accOrElmOrID: "email",
           expected: [
             ["e-mail entry", "test@example.com"],
@@ -302,6 +305,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <label id="label4">Points:
         <input id="input4" type="range" name="points" min="1" max="10" value="3">
       </label>
+      <input id="date" type="date" value="2011-09-29" />
       <input id="email" type="email" value="test@example.com" />
       <input id="search" type="search" value="This is a search" />
       <input id="tel" type="tel" value="555-5555" />

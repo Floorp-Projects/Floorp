@@ -48,7 +48,7 @@ struct NS_GFX nsFont {
 
   // Force this font to not be considered a 'generic' font, even if
   // the name is the same as a CSS generic font family.
-  uint8_t systemFont;
+  bool systemFont;
 
   // The variant of the font (normal, small-caps)
   uint8_t variant;

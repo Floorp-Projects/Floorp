@@ -4031,12 +4031,12 @@ JS_GetArrayBufferData(JSObject *obj)
 }
 
 JS_FRIEND_API(bool)
-JS_NeuterArrayBuffer(JSContext *cx, JSObject *obj)
+JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
 {
-    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
-    if (!buffer.neuterViews(cx))
+    Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
+    if (!buffer->neuterViews(cx))
         return false;
-    buffer.neuter(cx);
+    buffer->neuter(cx);
     return true;
 }
 

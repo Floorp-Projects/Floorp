@@ -122,7 +122,7 @@ def gen_manifest(template_root_dir, target_cfg, jid,
     manifest.set("em:version",
                  target_cfg.get('version', '1.0'))
     manifest.set("em:name",
-                 target_cfg.get('fullName', target_cfg['name']))
+                 target_cfg.get('title', target_cfg.get('fullName', target_cfg['name'])))
     manifest.set("em:description",
                  target_cfg.get("description", ""))
     manifest.set("em:creator",

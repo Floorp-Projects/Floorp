@@ -64,6 +64,10 @@ typedef HashMap<CallsiteCloneKey,
                 CallsiteCloneKey,
                 SystemAllocPolicy> CallsiteCloneTable;
 
+JSFunction *
+ExistingCloneFunctionAtCallsite(JSCompartment *comp, JSFunction *fun,
+                                JSScript *script, jsbytecode *pc);
+
 JSFunction *CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun,
                                     HandleScript script, jsbytecode *pc);
 
