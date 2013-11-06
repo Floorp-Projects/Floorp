@@ -390,6 +390,12 @@ class GlobalObject : public JSObject
         return &self->getPrototype(JSProto_RegExp).toObject();
     }
 
+    JSObject *maybeGetRegExpPrototype() {
+        if (regexpClassInitialized())
+            return &getPrototype(JSProto_RegExp).toObject();
+        return nullptr;
+    }
+
     JSObject *getOrCreateArrayBufferPrototype(JSContext *cx) {
         if (arrayBufferClassInitialized())
             return &getPrototype(JSProto_ArrayBuffer).toObject();
