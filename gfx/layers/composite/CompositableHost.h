@@ -266,6 +266,9 @@ public:
       SetCompositor(nullptr);
       mAttached = false;
       mKeepAttached = false;
+      if (mBackendData) {
+        mBackendData->ClearData();
+      }
     }
   }
   bool IsAttached() { return mAttached; }

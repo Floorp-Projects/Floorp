@@ -1209,19 +1209,18 @@ Engine.prototype = {
 
     fileInStream.init(this._file, MODE_RDONLY, PERMS_FILE, false);
 
-    switch (this._dataType) {
-      case SEARCH_DATA_XML:
-        var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                        createInstance(Ci.nsIDOMParser);
-        var doc = domParser.parseFromStream(fileInStream, "UTF-8",
-                                            this._file.fileSize,
-                                            "text/xml");
+    if (this._dataType == SEARCH_DATA_XML) {
+      var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
+                      createInstance(Ci.nsIDOMParser);
+      var doc = domParser.parseFromStream(fileInStream, "UTF-8",
+                                          this._file.fileSize,
+                                          "text/xml");
 
-        this._data = doc.documentElement;
-        break;
-      default:
-        ERROR("Unsuppored engine _dataType in _initFromFile: \"" + this._dataType + "\"",
-              Cr.NS_ERROR_UNEXPECTED);
+      this._data = doc.documentElement;
+    } else {
+      ERROR("Unsuppored engine _dataType in _initFromFile: \"" +
+            this._dataType + "\"",
+            Cr.NS_ERROR_UNEXPECTED);
     }
     fileInStream.close();
 
@@ -1230,14 +1229,41 @@ Engine.prototype = {
   },
 
   /**
-   * Retrieves the engine data from a URI.
+   * Retrieves the data from the engine's file asynchronously. If the engine's
+   * dataType is XML, the document element is placed in the engine's data field.
+   *
+   * @returns {Promise} A promise, resolved successfully if initializing from
+   * data succeeds, rejected if it fails.
    */
-  _initFromURI: function SRCH_ENG_initFromURI() {
+  _asyncInitFromFile: function SRCH_ENG__asyncInitFromFile() {
+    return TaskUtils.spawn(function() {
+      if (!this._file || !(yield OS.File.exists(this._file.path)))
+        FAIL("File must exist before calling initFromFile!", Cr.NS_ERROR_UNEXPECTED);
+
+      if (this._dataType == SEARCH_DATA_XML) {
+        let fileURI = NetUtil.ioService.newFileURI(this._file);
+        yield this._retrieveSearchXMLData(fileURI.spec);
+      } else {
+        ERROR("Unsuppored engine _dataType in _initFromFile: \"" +
+              this._dataType + "\"",
+              Cr.NS_ERROR_UNEXPECTED);
+      }
+
+      // Now that the data is loaded, initialize the engine object
+      this._initFromData();
+    }.bind(this));
+  },
+
+  /**
+   * Retrieves the engine data from a URI. Initializes the engine, flushes to
+   * disk, and notifies the search service once initialization is complete.
+   */
+  _initFromURIAndLoad: function SRCH_ENG_initFromURIAndLoad() {
     ENSURE_WARN(this._uri instanceof Ci.nsIURI,
-                "Must have URI when calling _initFromURI!",
+                "Must have URI when calling _initFromURIAndLoad!",
                 Cr.NS_ERROR_UNEXPECTED);
 
-    LOG("_initFromURI: Downloading engine from: \"" + this._uri.spec + "\".");
+    LOG("_initFromURIAndLoad: Downloading engine from: \"" + this._uri.spec + "\".");
 
     var chan = NetUtil.ioService.newChannelFromURI(this._uri);
 
@@ -1251,7 +1277,47 @@ Engine.prototype = {
     chan.notificationCallbacks = listener;
     chan.asyncOpen(listener, null);
   },
-  
+
+  /**
+   * Retrieves the engine data from a URI asynchronously and initializes it.
+   *
+   * @returns {Promise} A promise, resolved successfully if retrieveing data
+   * succeeds.
+   */
+  _asyncInitFromURI: function SRCH_ENG__asyncInitFromURI() {
+    return TaskUtils.spawn(function() {
+      LOG("_asyncInitFromURI: Loading engine from: \"" + this._uri.spec + "\".");
+      yield this._retrieveSearchXMLData(this._uri.spec);
+      // Now that the data is loaded, initialize the engine object
+      this._initFromData();
+    }.bind(this));
+  },
+
+  /**
+   * Retrieves the engine data for a given URI asynchronously.
+   *
+   * @returns {Promise} A promise, resolved successfully if retrieveing data
+   * succeeds.
+   */
+  _retrieveSearchXMLData: function SRCH_ENG__retrieveSearchXMLData(aURL) {
+    let deferred = Promise.defer();
+    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                    createInstance(Ci.nsIXMLHttpRequest);
+    request.overrideMimeType("text/xml");
+    request.onload = (aEvent) => {
+      let responseXML = aEvent.target.responseXML;
+      this._data = responseXML.documentElement;
+      deferred.resolve();
+    };
+    request.onerror = function(aEvent) {
+      deferred.resolve();
+    };
+    request.open("GET", aURL, true);
+    request.send();
+
+    return deferred.promise;
+  },
+
   _initFromURISync: function SRCH_ENG_initFromURISync() {
     ENSURE_WARN(this._uri instanceof Ci.nsIURI,
                 "Must have URI when calling _initFromURISync!",
@@ -1575,7 +1641,6 @@ Engine.prototype = {
    * Initialize this Engine object from the collected data.
    */
   _initFromData: function SRCH_ENG_initFromData() {
-
     ENSURE_WARN(this._data, "Can't init an engine with no data!",
                 Cr.NS_ERROR_UNEXPECTED);
 
@@ -2642,6 +2707,26 @@ function executeSoon(func) {
   Services.tm.mainThread.dispatch(func, Ci.nsIThread.DISPATCH_NORMAL);
 }
 
+/**
+ * Check for sync initialization has completed or not.
+ *
+ * @param {aPromise} A promise.
+ *
+ * @returns the value returned by the invoked method.
+ * @throws NS_ERROR_ALREADY_INITIALIZED if sync initialization has completed.
+ */
+function checkForSyncCompletion(aPromise) {
+  return aPromise.then(function(aValue) {
+    if (gInitialized) {
+      throw Components.Exception("Synchronous fallback was called and has " +
+                                 "finished so no need to pursue asynchronous " +
+                                 "initialization",
+                                 Cr.NS_ERROR_ALREADY_INITIALIZED);
+    }
+    return aValue;
+  });
+}
+
 // nsIBrowserSearchService
 function SearchService() {
   // Replace empty LOG function with the useful one if the log pref is set.
@@ -2657,6 +2742,9 @@ SearchService.prototype = {
   // The current status of initialization. Note that it does not determine if
   // initialization is complete, only if an error has been encountered so far.
   _initRV: Cr.NS_OK,
+
+  // The boolean indicates that the initialization has started or not.
+  _initStarted: null,
 
   // If initialization has not been completed yet, perform synchronous
   // initialization.
@@ -2687,9 +2775,10 @@ SearchService.prototype = {
 
   // Synchronous implementation of the initializer.
   // Used by |_ensureInitialized| as a fallback if initialization is not
-  // complete. In this implementation, it is also used by |init|.
+  // complete.
   _syncInit: function SRCH_SVC__syncInit() {
     LOG("_syncInit start");
+    this._initStarted = true;
     try {
       this._syncLoadEngines();
     } catch (ex) {
@@ -2706,6 +2795,30 @@ SearchService.prototype = {
 
     LOG("_syncInit end");
   },
+
+  /**
+   * Asynchronous implementation of the initializer.
+   *
+   * @returns {Promise} A promise, resolved successfully if the initialization
+   * succeeds.
+   */
+  _asyncInit: function SRCH_SVC__asyncInit() {
+    return TaskUtils.spawn(function() {
+      LOG("_asyncInit start");
+      try {
+        yield checkForSyncCompletion(this._asyncLoadEngines());
+      } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
+        this._initRV = Cr.NS_ERROR_FAILURE;
+        LOG("_asyncInit: failure loading engines: " + ex);
+      }
+      this._addObservers();
+      gInitialized = true;
+      this._initObservers.resolve(this._initRV);
+      Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
+      LOG("_asyncInit: Completed _asyncInit");
+    }.bind(this));
+  },
+
 
   _engines: { },
   __sortedEngines: null,
@@ -2880,6 +2993,115 @@ SearchService.prototype = {
     LOG("_loadEngines: done");
   },
 
+  /**
+   * Loads engines asynchronously.
+   *
+   * @returns {Promise} A promise, resolved successfully if loading data
+   * succeeds.
+   */
+  _asyncLoadEngines: function SRCH_SVC__asyncLoadEngines() {
+    return TaskUtils.spawn(function() {
+      LOG("_asyncLoadEngines: start");
+      // See if we have a cache file so we don't have to parse a bunch of XML.
+      let cache = {};
+      let cacheEnabled = getBoolPref(BROWSER_SEARCH_PREF + "cache.enabled", true);
+      if (cacheEnabled) {
+        let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
+        cache = yield checkForSyncCompletion(this._asyncReadCacheFile(cacheFilePath));
+      }
+
+      // Add all the non-empty directories of NS_APP_SEARCH_DIR_LIST to
+      // loadDirs.
+      let loadDirs = [];
+      let locations = getDir(NS_APP_SEARCH_DIR_LIST, Ci.nsISimpleEnumerator);
+      while (locations.hasMoreElements()) {
+        let dir = locations.getNext().QueryInterface(Ci.nsIFile);
+        let iterator = new OS.File.DirectoryIterator(dir.path,
+                                                     { winPattern: "*.xml" });
+        try {
+          // Add dir to loadDirs if it contains any files.
+          yield checkForSyncCompletion(iterator.next());
+          loadDirs.push(dir);
+        } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
+          // Catch for StopIteration exception.
+        } finally {
+          iterator.close();
+        }
+      }
+
+      let loadFromJARs = getBoolPref(BROWSER_SEARCH_PREF + "loadFromJars", false);
+      let chromeURIs = [];
+      let chromeFiles = [];
+      if (loadFromJARs) {
+        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "find-jar-engines");
+        [chromeFiles, chromeURIs] =
+          yield checkForSyncCompletion(this._asyncFindJAREngines());
+      }
+
+      let toLoad = chromeFiles.concat(loadDirs);
+      function hasModifiedDir(aList) {
+        return TaskUtils.spawn(function() {
+          let modifiedDir = false;
+
+          for (let dir of aList) {
+            if (!cache.directories || !cache.directories[dir.path]) {
+              modifiedDir = true;
+              break;
+            }
+
+            let info = yield OS.File.stat(dir.path);
+            if (cache.directories[dir.path].lastModifiedTime !=
+                info.lastModificationDate.getTime()) {
+              modifiedDir = true;
+              break;
+            }
+          }
+          throw new Task.Result(modifiedDir);
+        });
+      }
+
+      function notInCachePath(aPathToLoad)
+        cachePaths.indexOf(aPathToLoad.path) == -1;
+
+      let buildID = Services.appinfo.platformBuildID;
+      let cachePaths = [path for (path in cache.directories)];
+
+      let rebuildCache = !cache.directories ||
+                         cache.version != CACHE_VERSION ||
+                         cache.locale != getLocale() ||
+                         cache.buildID != buildID ||
+                         cachePaths.length != toLoad.length ||
+                         toLoad.some(notInCachePath) ||
+                         (yield checkForSyncCompletion(hasModifiedDir(toLoad)));
+
+      if (!cacheEnabled || rebuildCache) {
+        LOG("_asyncLoadEngines: Absent or outdated cache. Loading engines from disk.");
+        let engines = [];
+        for (let loadDir of loadDirs) {
+          let enginesFromDir =
+            yield checkForSyncCompletion(this._asyncLoadEnginesFromDir(loadDir));
+          engines = engines.concat(enginesFromDir);
+        }
+        let enginesFromURLs =
+           yield checkForSyncCompletion(this._asyncLoadFromChromeURLs(chromeURIs));
+        engines = engines.concat(enginesFromURLs);
+
+        for (let engine of engines) {
+          this._addEngineToStore(engine);
+        }
+        if (cacheEnabled)
+          this._buildCache();
+        return;
+      }
+
+      LOG("_asyncLoadEngines: loading from cache directories");
+      for each (let dir in cache.directories)
+        this._loadEnginesFromCache(dir);
+
+      LOG("_asyncLoadEngines: done");
+    }.bind(this));
+  },
+
   _readCacheFile: function SRCH_SVC__readCacheFile(aFile) {
     let stream = Cc["@mozilla.org/network/file-input-stream;1"].
                  createInstance(Ci.nsIFileInputStream);
@@ -2894,6 +3116,28 @@ SearchService.prototype = {
       stream.close();
     }
     return false;
+  },
+
+  /**
+   * Read from a given cache file asynchronously.
+   *
+   * @param aPath the file path.
+   *
+   * @returns {Promise} A promise, resolved successfully if retrieveing data
+   * succeeds.
+   */
+  _asyncReadCacheFile: function SRCH_SVC__asyncReadCacheFile(aPath) {
+    return TaskUtils.spawn(function() {
+      let json;
+      try {
+        let bytes = yield OS.File.read(aPath);
+        json = JSON.parse(new TextDecoder().decode(bytes));
+      } catch (ex) {
+        LOG("_asyncReadCacheFile: Error reading cache file: " + ex);
+        json = {};
+      }
+      throw new Task.Result(json);
+    });
   },
 
   _batchTimer: null,
@@ -3042,20 +3286,94 @@ SearchService.prototype = {
     }
   },
 
+  /**
+   * Loads engines from a given directory asynchronously.
+   *
+   * @param aDir the directory.
+   *
+   * @returns {Promise} A promise, resolved successfully if retrieveing data
+   * succeeds.
+   */
+  _asyncLoadEnginesFromDir: function SRCH_SVC__asyncLoadEnginesFromDir(aDir) {
+    LOG("_asyncLoadEnginesFromDir: Searching in " + aDir.path + " for search engines.");
+
+    // Check whether aDir is the user profile dir
+    let isInProfile = aDir.equals(getDir(NS_APP_USER_SEARCH_DIR));
+    let iterator = new OS.File.DirectoryIterator(aDir.path);
+    return TaskUtils.spawn(function() {
+      let osfiles = yield iterator.nextBatch();
+      iterator.close();
+
+      let engines = [];
+      for (let osfile of osfiles) {
+        if (osfile.isDir || osfile.isSymLink)
+          continue;
+
+        let fileInfo = yield OS.File.stat(osfile.path);
+        if (fileInfo.size == 0)
+          continue;
+
+        let parts = osfile.path.split(".");
+        if (parts.length <= 1 || (parts.pop()).toLowerCase() != "xml") {
+          // Not an engine
+          continue;
+        }
+
+        let addedEngine = null;
+        try {
+          let file = new FileUtils.File(osfile.path);
+          let isWritable = isInProfile;
+          addedEngine = new Engine(file, SEARCH_DATA_XML, !isWritable);
+          yield checkForSyncCompletion(addedEngine._asyncInitFromFile());
+        } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
+          LOG("_asyncLoadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
+          continue;
+        }
+        engines.push(addedEngine);
+      }
+      throw new Task.Result(engines);
+    }.bind(this));
+  },
+
   _loadFromChromeURLs: function SRCH_SVC_loadFromChromeURLs(aURLs) {
     aURLs.forEach(function (url) {
       try {
         LOG("_loadFromChromeURLs: loading engine from chrome url: " + url);
 
         let engine = new Engine(makeURI(url), SEARCH_DATA_XML, true);
-  
+
         engine._initFromURISync();
-  
+
         this._addEngineToStore(engine);
       } catch (ex) {
         LOG("_loadFromChromeURLs: failed to load engine: " + ex);
       }
     }, this);
+  },
+
+  /**
+   * Loads engines from Chrome URLs asynchronously.
+   *
+   * @param aURLs a list of URLs.
+   *
+   * @returns {Promise} A promise, resolved successfully if loading data
+   * succeeds.
+   */
+  _asyncLoadFromChromeURLs: function SRCH_SVC__asyncLoadFromChromeURLs(aURLs) {
+    return TaskUtils.spawn(function() {
+      let engines = [];
+      for (let url of aURLs) {
+        try {
+          LOG("_asyncLoadFromChromeURLs: loading engine from chrome url: " + url);
+          let engine = new Engine(NetUtil.newURI(url), SEARCH_DATA_XML, true);
+          yield checkForSyncCompletion(engine._asyncInitFromURI());
+          engines.push(engine);
+        } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
+          LOG("_asyncLoadFromChromeURLs: failed to load engine: " + ex);
+        }
+      }
+      throw new Task.Result(engines);
+    }.bind(this));
   },
 
   _findJAREngines: function SRCH_SVC_findJAREngines() {
@@ -3118,6 +3436,77 @@ SearchService.prototype = {
     
     return [chromeFiles, uris];
   },
+
+  /**
+   * Loads jar engines asynchronously.
+   *
+   * @returns {Promise} A promise, resolved successfully if finding jar engines
+   * succeeds.
+   */
+  _asyncFindJAREngines: function SRCH_SVC__asyncFindJAREngines() {
+    return TaskUtils.spawn(function() {
+      LOG("_asyncFindJAREngines: looking for engines in JARs")
+
+      let rootURIPref = "";
+      try {
+        rootURIPref = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "jarURIs");
+      } catch (ex) {}
+
+      if (!rootURIPref) {
+        LOG("_asyncFindJAREngines: no JAR URIs were specified");
+        throw new Task.Result([[], []]);
+      }
+
+      let rootURIs = rootURIPref.split(",");
+      let uris = [];
+      let chromeFiles = [];
+
+      for (let root of rootURIs) {
+        // Find the underlying JAR file for this chrome package (_loadEngines uses
+        // it to determine whether it needs to invalidate the cache)
+        let chromeFile;
+        try {
+          let chromeURI = gChromeReg.convertChromeURL(makeURI(root));
+          let fileURI = chromeURI; // flat packaging
+          while (fileURI instanceof Ci.nsIJARURI)
+            fileURI = fileURI.JARFile; // JAR packaging
+          fileURI.QueryInterface(Ci.nsIFileURL);
+          chromeFile = fileURI.file;
+        } catch (ex) {
+          LOG("_asyncFindJAREngines: failed to get chromeFile for " + root + ": " + ex);
+        }
+
+        if (!chromeFile) {
+          return;
+        }
+
+        chromeFiles.push(chromeFile);
+
+        // Read list.txt from the chrome package to find the engines we need to
+        // load
+        let listURL = root + "list.txt";
+        let deferred = Promise.defer();
+        let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                        createInstance(Ci.nsIXMLHttpRequest);
+        request.onload = function(aEvent) {
+          deferred.resolve(aEvent.target.responseText);
+        };
+        request.onerror = function(aEvent) {
+          LOG("_asyncFindJAREngines: failed to retrieve list.txt from " + listURL);
+          deferred.resolve("");
+        };
+        request.open("GET", NetUtil.newURI(listURL).spec, true);
+        request.send();
+        let list = yield deferred.promise;
+
+        let names = [];
+        names = list.split("\n").filter(function (n) !!n);
+        names.forEach(function (n) uris.push(root + n + ".xml"));
+      }
+      throw new Task.Result([chromeFiles, uris]);
+    });
+  },
+
 
   _saveSortedEngineList: function SRCH_SVC_saveSortedEngineList() {
     LOG("SRCH_SVC_saveSortedEngineList: starting");
@@ -3262,17 +3651,13 @@ SearchService.prototype = {
       this._initStarted = true;
       TaskUtils.spawn(function task() {
         try {
-          yield engineMetadataService.init();
-          if (gInitialized) {
-            // No need to pursue asynchronous initialization,
-            // synchronous fallback had to be called and has finished.
-            return;
-          }
-          // Complete initialization. In the current implementation,
-          // this is done by calling the synchronous initializer.
-          // Future versions might introduce an actually synchronous
-          // implementation.
-          self._syncInit();
+          yield checkForSyncCompletion(engineMetadataService.init());
+          // Complete initialization by calling asynchronous initializer.
+          yield self._asyncInit();
+          TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
+        } catch (ex if ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {
+          // No need to pursue asynchronous because synchronous fallback was
+          // called and has finished.
           TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
         } catch (ex) {
           self._initObservers.reject(ex);
@@ -3428,7 +3813,7 @@ SearchService.prototype = {
           engine._installCallback = null;
         };
       }
-      engine._initFromURI();
+      engine._initFromURIAndLoad();
     } catch (ex) {
       // Drop the reference to the callback, if set
       if (engine)
@@ -3855,6 +4240,9 @@ var engineMetadataService = {
    */
   syncInit: function epsSyncInit() {
     LOG("metadata syncInit start");
+    if (this._initState == engineMetadataService._InitStates.FINISHED_SUCCESS) {
+      return;
+    }
     switch (this._initState) {
       case engineMetadataService._InitStates.NOT_STARTED:
         let jsonFile = new FileUtils.File(this._jsonFile);
@@ -4065,7 +4453,7 @@ var engineUpdateService = {
       ULOG("updating " + engine.name + " from " + updateURI.spec);
       testEngine = new Engine(updateURI, dataType, false);
       testEngine._engineToUpdate = engine;
-      testEngine._initFromURI();
+      testEngine._initFromURIAndLoad();
     } else
       ULOG("invalid updateURI");
 

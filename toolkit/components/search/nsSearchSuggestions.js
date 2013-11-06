@@ -315,7 +315,13 @@ SuggestAutoComplete.prototype = {
 
     this._clearServerErrors();
 
-    var serverResults = JSON.parse(responseText);
+    try {
+      var serverResults = JSON.parse(responseText);
+    } catch(ex) {
+      Components.utils.reportError("Failed to parse JSON from " + this._suggestURI.spec + ": " + ex);
+      return;
+    }
+
     var searchString = serverResults[0] || "";
     var results = serverResults[1] || [];
 

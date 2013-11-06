@@ -15,6 +15,7 @@ To confirm the functionality run mochitests for the following components:
  * scratchpad
  * debugger
  * styleditor
+ * netmonitor
 
 The sourceeditor component contains imported CodeMirror tests [3]. Some
 tests were commented out because we don't use that functionality within
@@ -38,7 +39,10 @@ in the LICENSE file:
  * comment.js
  * dialog/dialog.css
  * dialog/dialog.js
+ * xml.js
+ * css.js
  * javascript.js
+ * clike.js
  * matchbrackets.js
  * closebrackets.js
  * search/match-highlighter.js

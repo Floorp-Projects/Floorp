@@ -2772,16 +2772,18 @@ this.PDU_CDMA_MSG_CODING_7BITS_GSM = 0x09;    // GSM 7-bit default alphabet(7-bi
 this.PDU_CDMA_MSG_CODING_GSM_DCS = 0x0A;      // GSM Data-Coding-Scheme, Not supported
 
 // SMS Message Type, as defined in 3GPP2 C.S0015-A v2.0, Table 4.5.1-1
-this.PDU_CDMA_MSG_TYPE_DELIVER = 0x01;        // Receive
-this.PDU_CDMA_MSG_TYPE_SUBMIT = 0x02;         // Send
+this.PDU_CDMA_MSG_TYPE_DELIVER     = 0x01;         // Deliver
+this.PDU_CDMA_MSG_TYPE_SUBMIT      = 0x02;         // Submit
+this.PDU_CDMA_MSG_TYPE_DELIVER_ACK = 0x04;         // Delivery Acknowledgment
 
 // SMS User Data Subparameters, as defined in 3GPP2 C.S0015-A v2.0, Table 4.5-1
-this.PDU_CDMA_MSG_USERDATA_MSG_ID = 0x00;           // Message Identifier
-this.PDU_CDMA_MSG_USERDATA_BODY = 0x01;             // User Data Body
-this.PDU_CDMA_MSG_USERDATA_TIMESTAMP = 0x03;        // Message Center Time Stamp
-this.PDU_CDMA_REPLY_OPTION = 0x0A;                  // Reply Option
-this.PDU_CDMA_LANGUAGE_INDICATOR = 0x0D;            // Language Indicator
+this.PDU_CDMA_MSG_USERDATA_MSG_ID          = 0x00;  // Message Identifier
+this.PDU_CDMA_MSG_USERDATA_BODY            = 0x01;  // User Data Body
+this.PDU_CDMA_MSG_USERDATA_TIMESTAMP       = 0x03;  // Message Center Time Stamp
+this.PDU_CDMA_MSG_USERDATA_REPLY_OPTION    = 0x0A;  // Reply Option
+this.PDU_CDMA_LANGUAGE_INDICATOR           = 0x0D;  // Language Indicator
 this.PDU_CDMA_MSG_USERDATA_CALLBACK_NUMBER = 0x0E;  // Callback Number
+this.PDU_CDMA_MSG_USER_DATA_MSG_STATUS     = 0x14;  // Message Status
 
 // CDMA Language Indicator: Language groups
 // see 3GPP2 C.R1001-F table 9.2-1

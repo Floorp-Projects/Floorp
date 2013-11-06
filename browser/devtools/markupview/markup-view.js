@@ -1570,7 +1570,9 @@ function ElementEditor(aContainer, aNode) {
   // Create the main editor
   this.template("element", this);
 
-  this.rawNode = aNode.rawNode();
+  if (aNode.isLocal_toBeDeprecated()) {
+    this.rawNode = aNode.rawNode();
+  }
 
   // Make the tag name editable (unless this is a remote node or
   // a document element)

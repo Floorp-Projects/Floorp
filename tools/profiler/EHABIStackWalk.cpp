@@ -524,7 +524,9 @@ EHTable::EHTable(const void *aELF, size_t aSize, const std::string &aName)
       file.e_ident[EI_DATA] != hostEndian ||
       file.e_ident[EI_VERSION] != EV_CURRENT ||
       file.e_ident[EI_OSABI] != ELFOSABI_SYSV ||
+#ifdef EI_ABIVERSION
       file.e_ident[EI_ABIVERSION] != 0 ||
+#endif
       file.e_machine != EM_ARM ||
       file.e_version != EV_CURRENT)
     // e_flags?
