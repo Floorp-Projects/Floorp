@@ -3267,6 +3267,7 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
 FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
                                    gfxContext* aContext,
                                    const nsIntRegion& aRegionToDraw,
+                                   DrawRegionClip aClip,
                                    const nsIntRegion& aRegionToInvalidate,
                                    void* aCallbackData)
 {
@@ -3274,6 +3275,12 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
 
   nsDisplayListBuilder* builder = static_cast<nsDisplayListBuilder*>
     (aCallbackData);
+
+  if (aClip == CLIP_DRAW_SNAPPED) {
+    gfxUtils::ClipToRegionSnapped(aContext, aRegionToDraw);
+  } else if (aClip == CLIP_DRAW) {
+    gfxUtils::ClipToRegion(aContext, aRegionToDraw);
+  }
 
   FrameLayerBuilder *layerBuilder = aLayer->Manager()->GetLayerBuilder();
   NS_ASSERTION(layerBuilder, "Unexpectedly null layer builder!");
