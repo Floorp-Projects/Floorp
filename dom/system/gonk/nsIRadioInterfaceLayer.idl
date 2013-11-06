@@ -97,7 +97,7 @@ interface nsIRilSendWorkerMessageCallback : nsISupports
   boolean handleResponse(in jsval response);
 };
 
-[scriptable, uuid(61a8ca67-6113-4cd0-b443-e045f09863ed)]
+[scriptable, uuid(5b14cf79-2846-4226-b07f-9b9977b525fe)]
 interface nsIRadioInterface : nsISupports
 {
   readonly attribute nsIRilContext rilContext;
@@ -128,6 +128,8 @@ interface nsIRadioInterface : nsISupports
   void sendWorkerMessage(in DOMString type,
               [optional] in jsval message,
               [optional] in nsIRilSendWorkerMessageCallback callback);
+
+  void getSmscAddress(in nsIMobileMessageCallback request);
 };
 
 [scriptable, uuid(70d3a18c-4063-11e3-89de-0f9ec19fd803)]

@@ -51,6 +51,7 @@ public final class NotificationHelper implements GeckoEventListener {
     private static final String ACTION_ID_ATTR = "buttonId";
     private static final String ACTION_TITLE_ATTR = "title";
     private static final String ACTION_ICON_ATTR = "icon";
+    private static final String PERSISTENT_ATTR = "persistent";
 
     private static final String NOTIFICATION_SCHEME = "moz-notification";
 
@@ -60,7 +61,7 @@ public final class NotificationHelper implements GeckoEventListener {
     private static final String CLOSED_EVENT = "notification-closed";
 
     private static Context mContext;
-    private static Set<String> mShowing;
+    private static Set<String> mClearableNotifications;
     private static BroadcastReceiver mReceiver;
     private static NotificationHelper mInstance;
 
@@ -73,7 +74,7 @@ public final class NotificationHelper implements GeckoEventListener {
         }
         mInstance = new NotificationHelper();
         mContext = context;
-        mShowing = new HashSet<String>();
+        mClearableNotifications = new HashSet<String>();
         registerEventListener("Notification:Show");
         registerEventListener("Notification:Hide");
         registerReceiver(context);
@@ -126,7 +127,7 @@ public final class NotificationHelper implements GeckoEventListener {
         // In case the user swiped out the notification, we empty the id
         // set.
         if (CLEARED_EVENT.equals(notificationType)) {
-            mShowing.remove(id);
+            mClearableNotifications.remove(id);
         }
 
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
@@ -283,8 +284,12 @@ public final class NotificationHelper implements GeckoEventListener {
         builder.setDeleteIntent(deletePendingIntent);
 
         GeckoAppShell.sNotificationClient.add(id.hashCode(), builder.build());
-        if (!mShowing.contains(id)) {
-            mShowing.add(id);
+
+        boolean persistent = message.optBoolean(PERSISTENT_ATTR);
+        // We add only not persistent notifications to the list since we want to purge only
+        // them when geckoapp is destroyed.
+        if (!persistent && !mClearableNotifications.contains(id)) {
+            mClearableNotifications.add(id);
         }
     }
 
@@ -316,13 +321,19 @@ public final class NotificationHelper implements GeckoEventListener {
 
     public void hideNotification(String id) {
         GeckoAppShell.sNotificationClient.remove(id.hashCode());
-        mShowing.remove(id);
+        mClearableNotifications.remove(id);
         sendNotificationWasClosed(id);
     }
 
     private void clearAll() {
-        for (String id : mShowing) {
+        for (String id : mClearableNotifications) {
             hideNotification(id);
+        }
+    }
+
+    public static void destroy() {
+        if (mInstance != null) {
+            mInstance.clearAll();
         }
     }
 }

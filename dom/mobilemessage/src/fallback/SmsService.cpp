@@ -68,6 +68,14 @@ SmsService::RemoveSilentNumber(const nsAString& aNumber)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+SmsService::GetSmscAddress(uint32_t aServiceId,
+                           nsIMobileMessageCallback *aRequest)
+{
+  NS_ERROR("We should not be here!");
+  return NS_OK;
+}
+
 } // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

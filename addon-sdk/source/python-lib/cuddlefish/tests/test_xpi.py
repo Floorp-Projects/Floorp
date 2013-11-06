@@ -49,7 +49,7 @@ class PrefsTests(unittest.TestCase):
 
         xulNamespacePrefix = \
             "{http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul}"
-        
+
         settings = root.findall(xulNamespacePrefix + 'setting')
 
         def assertPref(setting, name, prefType, title):
@@ -74,7 +74,7 @@ class PrefsTests(unittest.TestCase):
         def assertOption(option, value, label):
             self.failUnlessEqual(option.get('value'), value)
             self.failUnlessEqual(option.get('label'), label)
-        
+
         assertOption(menuItems[0], "0", "label1")
         assertOption(menuItems[1], "1", "label2")
         assertOption(radios[0], "red", "rouge")
@@ -257,7 +257,6 @@ class SmallXPI(unittest.TestCase):
                     "defaults/preferences/prefs.js",
                     "resources/",
                     "resources/addon-sdk/",
-                    "resources/addon-sdk/data/",
                     "resources/addon-sdk/lib/",
                     "resources/addon-sdk/lib/sdk/",
                     "resources/addon-sdk/lib/sdk/self.js",

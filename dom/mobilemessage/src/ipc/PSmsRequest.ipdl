@@ -73,6 +73,16 @@ struct ReplyGetSegmentInfoForTextFail
   int32_t error;
 };
 
+struct ReplyGetSmscAddress
+{
+  nsString smscAddress;
+};
+
+struct ReplyGetSmscAddressFail
+{
+  int32_t error;
+};
+
 union MessageReply
 {
   ReplyMessageSend;
@@ -85,6 +95,8 @@ union MessageReply
   ReplyMarkeMessageReadFail;
   ReplyGetSegmentInfoForText;
   ReplyGetSegmentInfoForTextFail;
+  ReplyGetSmscAddress;
+  ReplyGetSmscAddressFail;
 };
 
 } // namespace mobilemessage
