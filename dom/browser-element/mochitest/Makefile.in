@@ -228,7 +228,6 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_BackForward.html \
 		test_browserElement_oop_Reload.html \
 		test_browserElement_oop_Stop.html \
-		test_browserElement_oop_ContextmenuEvents.html \
 		test_browserElement_oop_ScrollEvent.html \
 		test_browserElement_oop_Auth.html \
 		test_browserElement_oop_RemoveBrowserElement.html \
@@ -242,6 +241,9 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_VisibilityChange.html \
 		test_browserElement_oop_BrowserWindowResize.html \
 	$(NULL)
+
+# Disabled until bug 930449 makes it stop timing out
+#		test_browserElement_oop_ContextmenuEvents.html \
 
 # Disabled until bug 924771 makes it stop timing out
 # 		test_browserElement_oop_CloseFromOpener.html \
