@@ -125,15 +125,17 @@ nsSVGPolyElement::ConstructPath(gfxContext *aCtx)
 TemporaryRef<Path>
 nsSVGPolyElement::BuildPath()
 {
-  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
-
   const SVGPointList &points = mPoints.GetAnimValue();
 
-  if (!points.IsEmpty()) {
-    pathBuilder->MoveTo(points[0]);
-    for (uint32_t i = 1; i < points.Length(); ++i) {
-      pathBuilder->LineTo(points[i]);
-    }
+  if (points.IsEmpty()) {
+    return nullptr;
+  }
+
+  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
+
+  pathBuilder->MoveTo(points[0]);
+  for (uint32_t i = 1; i < points.Length(); ++i) {
+    pathBuilder->LineTo(points[i]);
   }
 
   return pathBuilder->Finish();
