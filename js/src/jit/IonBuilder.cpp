@@ -4963,19 +4963,17 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     }
     JS_ASSERT_IF(gotLambda, originals.length() <= 1);
 
-    // If any call targets need to be cloned, clone them. Keep track of the
-    // originals as we need to case on them for poly inline.
+    // If any call targets need to be cloned, look for existing clones to use.
+    // Keep track of the originals as we need to case on them for poly inline.
     bool hasClones = false;
     ObjectVector targets;
-    RootedFunction fun(cx);
-    RootedScript scriptRoot(cx, script());
     for (uint32_t i = 0; i < originals.length(); i++) {
-        fun = &originals[i]->as<JSFunction>();
+        JSFunction *fun = &originals[i]->as<JSFunction>();
         if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite) {
-            fun = CloneFunctionAtCallsite(cx, fun, scriptRoot, pc);
-            if (!fun)
-                return false;
-            hasClones = true;
+            if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment, fun, script(), pc)) {
+                fun = clone;
+                hasClones = true;
+            }
         }
         if (!targets.append(fun))
             return false;
