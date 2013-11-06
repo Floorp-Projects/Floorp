@@ -80,10 +80,10 @@ Notification.prototype = {
     else
       this._cookie = null;
 
-    if ("light" in aOptions && aOptions.light != null)
-      this._light = aOptions.light;
+    if ("persistent" in aOptions && aOptions.persistent != null)
+      this._persistent = aOptions.persistent;
     else
-      this._light = null;
+      this._persistent = false;
   },
 
   show: function() {
@@ -93,7 +93,8 @@ Notification.prototype = {
         title: this._title,
         smallIcon: this._icon,
         ongoing: this._ongoing,
-        when: this._when
+        when: this._when,
+        persistent: this._persistent
     };
 
     if (this._message)
