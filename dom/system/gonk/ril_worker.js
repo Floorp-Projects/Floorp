@@ -4307,6 +4307,46 @@ let RIL = {
   },
 
   /**
+   * Helper for processing CDMA SMS Delivery Acknowledgment Message
+   *
+   * @param message
+   *        decoded SMS Delivery ACK message from CdmaPDUHelper.
+   *
+   * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
+   */
+  _processCdmaSmsStatusReport: function _processCdmaSmsStatusReport(message) {
+    let options = this._pendingSentSmsMap[message.msgId];
+    if (!options) {
+      if (DEBUG) debug("no pending SMS-SUBMIT message");
+      return PDU_FCS_OK;
+    }
+
+    if (message.errorClass === 2) {
+      if (DEBUG) debug("SMS-STATUS-REPORT: delivery still pending, msgStatus: " + message.msgStatus);
+      return PDU_FCS_OK;
+    }
+
+    delete this._pendingSentSmsMap[message.msgId];
+
+    if (message.errorClass === -1 && message.body) {
+      // Process as normal incoming SMS, if errorClass is invalid
+      // but message body is available.
+      return this._processSmsMultipart(message);
+    }
+
+    let deliveryStatus = (message.errorClass === 0)
+                       ? GECKO_SMS_DELIVERY_STATUS_SUCCESS
+                       : GECKO_SMS_DELIVERY_STATUS_ERROR;
+    this.sendChromeMessage({
+      rilMessageType: options.rilMessageType,
+      rilMessageToken: options.rilMessageToken,
+      deliveryStatus: deliveryStatus
+    });
+
+    return PDU_FCS_OK;
+  },
+
+  /**
    * Helper for processing received multipart SMS.
    *
    * @return null for handled segments, and an object containing full message
@@ -5893,7 +5933,7 @@ RIL[REQUEST_CDMA_SUBSCRIPTION] = function REQUEST_CDMA_SUBSCRIPTION(length, opti
   this.iccInfo.mdn = result[0];
   // The result[1] is Home SID. (Already be handled in readCDMAHome())
   // The result[2] is Home NID. (Already be handled in readCDMAHome())
-  this.iccInfo.min = result[3];
+  // The result[3] is MIN.
   // The result[4] is PRL version.
 
   ICCUtilsHelper.handleICCInfoChange();
@@ -6206,7 +6246,11 @@ RIL[UNSOLICITED_RESPONSE_CDMA_NEW_SMS] = function UNSOLICITED_RESPONSE_CDMA_NEW_
   let [message, result] = CdmaPDUHelper.processReceivedSms(length);
 
   if (message) {
-    result = this._processSmsMultipart(message);
+    if (message.subMsgType === PDU_CDMA_MSG_TYPE_DELIVER_ACK) {
+      result = this._processCdmaSmsStatusReport(message);
+    } else {
+      result = this._processSmsMultipart(message);
+    }
   }
 
   if (result == PDU_FCS_RESERVED || result == MOZ_FCS_WAIT_FOR_EXPLICIT_ACK) {
@@ -8667,6 +8711,9 @@ let CdmaPDUHelper = {
     // User Data
     this.encodeUserDataMsg(options);
 
+    // Reply Option
+    this.encodeUserDataReplyOption(options);
+
     return userDataBuffer;
   },
 
@@ -8792,6 +8839,21 @@ let CdmaPDUHelper = {
   },
 
   /**
+   * User data subparameter encoder : Reply Option
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.11 Reply Option
+   */
+  encodeUserDataReplyOption: function cdma_encodeUserDataReplyOption(options) {
+    if (options.requestStatusReport) {
+      BitBufferHelper.writeBits(PDU_CDMA_MSG_USERDATA_REPLY_OPTION, 8);
+      BitBufferHelper.writeBits(1, 8);
+      BitBufferHelper.writeBits(0, 1); // USER_ACK_REQ
+      BitBufferHelper.writeBits(1, 1); // DAK_REQ
+      BitBufferHelper.flushWithPadding();
+    }
+  },
+
+  /**
    * Entry point for SMS decoding, the returned object is made compatible
    * with existing readMessage() of GsmPDUHelper
    */
@@ -8838,38 +8900,55 @@ let CdmaPDUHelper = {
       message.sender += String.fromCharCode(addrDigit);
     }
 
-    // User Data
+    // Bearer Data
     this.decodeUserData(message);
+
+    // Bearer Data Sub-Parameter: User Data
+    let userData = message[PDU_CDMA_MSG_USERDATA_BODY];
+    [message.header, message.body, message.encoding] =
+      (userData)? [userData.header, userData.body, userData.encoding]
+                : [null, null, null];
+
+    // Bearer Data Sub-Parameter: Message Status
+    // Success Delivery (0) if both Message Status and User Data are absent.
+    // Message Status absent (-1) if only User Data is available.
+    let msgStatus = message[PDU_CDMA_MSG_USER_DATA_MSG_STATUS];
+    [message.errorClass, message.msgStatus] =
+      (msgStatus)? [msgStatus.errorClass, msgStatus.msgStatus]
+                 : ((message.body)? [-1, -1]: [0, 0]);
 
     // Transform message to GSM msg
     let msg = {
-      SMSC:            "",
-      mti:             0,
-      udhi:            0,
-      sender:          message.sender,
-      recipient:       null,
-      pid:             PDU_PID_DEFAULT,
-      epid:            PDU_PID_DEFAULT,
-      dcs:             0,
-      mwi:             null, //message[PDU_CDMA_MSG_USERDATA_BODY].header ? message[PDU_CDMA_MSG_USERDATA_BODY].header.mwi : null,
-      replace:         false,
-      header:          message[PDU_CDMA_MSG_USERDATA_BODY].header,
-      body:            message[PDU_CDMA_MSG_USERDATA_BODY].body,
-      data:            null,
-      timestamp:       message[PDU_CDMA_MSG_USERDATA_TIMESTAMP],
-      language:        message[PDU_CDMA_LANGUAGE_INDICATOR],
-      status:          null,
-      scts:            null,
-      dt:              null,
-      encoding:        message[PDU_CDMA_MSG_USERDATA_BODY].encoding,
-      messageClass:    GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL],
-      messageType:     message.messageType,
-      serviceCategory: message.service
+      SMSC:             "",
+      mti:              0,
+      udhi:             0,
+      sender:           message.sender,
+      recipient:        null,
+      pid:              PDU_PID_DEFAULT,
+      epid:             PDU_PID_DEFAULT,
+      dcs:              0,
+      mwi:              null,
+      replace:          false,
+      header:           message.header,
+      body:             message.body,
+      data:             null,
+      timestamp:        message[PDU_CDMA_MSG_USERDATA_TIMESTAMP],
+      language:         message[PDU_CDMA_LANGUAGE_INDICATOR],
+      status:           null,
+      scts:             null,
+      dt:               null,
+      encoding:         message.encoding,
+      messageClass:     GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL],
+      messageType:      message.messageType,
+      serviceCategory:  message.service,
+      subMsgType:       message[PDU_CDMA_MSG_USERDATA_MSG_ID].msgType,
+      msgId:            message[PDU_CDMA_MSG_USERDATA_MSG_ID].msgId,
+      errorClass:       message.errorClass,
+      msgStatus:        message.msgStatus
     };
 
     return msg;
   },
-
 
   /**
    * Helper for processing received SMS parcel data.
@@ -8963,14 +9042,17 @@ let CdmaPDUHelper = {
         case PDU_CDMA_MSG_USERDATA_TIMESTAMP:
           message[id] = this.decodeUserDataTimestamp();
           break;
-        case PDU_CDMA_REPLY_OPTION:
-          message[id] = this.decodeUserDataReplyAction();
+        case PDU_CDMA_MSG_USERDATA_REPLY_OPTION:
+          message[id] = this.decodeUserDataReplyOption();
           break;
         case PDU_CDMA_LANGUAGE_INDICATOR:
           message[id] = this.decodeLanguageIndicator();
           break;
         case PDU_CDMA_MSG_USERDATA_CALLBACK_NUMBER:
           message[id] = this.decodeUserDataCallbackNumber();
+          break;
+        case PDU_CDMA_MSG_USER_DATA_MSG_STATUS:
+          message[id] = this.decodeUserDataMsgStatus();
           break;
       }
 
@@ -9338,7 +9420,7 @@ let CdmaPDUHelper = {
    *
    * @see 3GGP2 C.S0015-B 2.0, 4.5.11 Reply Option
    */
-  decodeUserDataReplyAction: function cdma_decodeUserDataReplyAction() {
+  decodeUserDataReplyOption: function cdma_decodeUserDataReplyOption() {
     let replyAction = BitBufferHelper.readBits(4),
         result = { userAck: (replyAction & 0x8) ? true : false,
                    deliverAck: (replyAction & 0x4) ? true : false,
@@ -9382,6 +9464,20 @@ let CdmaPDUHelper = {
         result += String.fromCharCode(addrDigit);
       }
     }
+
+    return result;
+  },
+
+  /**
+   * User data subparameter decoder : Message Status
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.21 Message Status
+   */
+  decodeUserDataMsgStatus: function cdma_decodeUserDataMsgStatus() {
+    let result = {
+      errorClass: BitBufferHelper.readBits(2),
+      msgStatus: BitBufferHelper.readBits(6)
+    };
 
     return result;
   },
