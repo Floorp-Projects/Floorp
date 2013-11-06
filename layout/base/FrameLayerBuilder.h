@@ -24,6 +24,7 @@ namespace mozilla {
 namespace layers {
 class ContainerLayer;
 class LayerManager;
+class BasicLayerManager;
 class ThebesLayer;
 }
 
@@ -95,6 +96,7 @@ public:
   typedef layers::ThebesLayer ThebesLayer;
   typedef layers::ImageLayer ImageLayer;
   typedef layers::LayerManager LayerManager;
+  typedef layers::BasicLayerManager BasicLayerManager;
 
   FrameLayerBuilder() :
     mRetainingManager(nullptr),
@@ -273,7 +275,7 @@ public:
                            const DisplayItemClip& aClip,
                            LayerState aLayerState,
                            const nsPoint& aTopLeft,
-                           LayerManager* aManager,
+                           BasicLayerManager* aManager,
                            nsAutoPtr<nsDisplayItemGeometry> aGeometry);
 
   /**
@@ -420,7 +422,7 @@ public:
     LayerManagerData* mParent;
     nsRefPtr<Layer> mLayer;
     nsRefPtr<Layer> mOptLayer;
-    nsRefPtr<LayerManager> mInactiveManager;
+    nsRefPtr<BasicLayerManager> mInactiveManager;
     nsAutoTArray<nsIFrame*, 1> mFrameList;
     nsAutoPtr<nsDisplayItemGeometry> mGeometry;
     DisplayItemClip mClip;
