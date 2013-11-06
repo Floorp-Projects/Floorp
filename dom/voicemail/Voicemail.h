@@ -52,19 +52,28 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   already_AddRefed<nsIDOMMozVoicemailStatus>
-  GetStatus(ErrorResult& aRv) const;
+  GetStatus(const Optional<uint32_t>& aServiceId, ErrorResult& aRv) const;
 
   void
-  GetNumber(nsString& aNumber, ErrorResult& aRv) const;
+  GetNumber(const Optional<uint32_t>& aServiceId, nsString& aNumber,
+            ErrorResult& aRv) const;
 
   void
-  GetDisplayName(nsString& aDisplayName, ErrorResult& aRv) const;
+  GetDisplayName(const Optional<uint32_t>& aServiceId, nsString& aDisplayName,
+                 ErrorResult& aRv) const;
 
   IMPL_EVENT_HANDLER(statuschanged)
 
 private:
   nsCOMPtr<nsIVoicemailProvider> mProvider;
   nsRefPtr<Listener> mListener;
+
+  bool
+  IsValidServiceId(uint32_t aServiceId) const;
+
+  bool
+  PassedOrDefaultServiceId(const Optional<uint32_t>& aServiceId,
+                           uint32_t& aResult) const;
 };
 
 } // namespace dom

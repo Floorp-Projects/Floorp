@@ -74,6 +74,11 @@ struct CreateThreadCursorRequest
 {
 };
 
+struct GetSmscAddressRequest
+{
+  uint32_t serviceId;
+};
+
 union IPCSmsRequest
 {
   SendMessageRequest;
@@ -82,6 +87,7 @@ union IPCSmsRequest
   DeleteMessageRequest;
   MarkMessageReadRequest;
   GetSegmentInfoForTextRequest;
+  GetSmscAddressRequest;
 };
 
 union IPCMobileMessageCursor
