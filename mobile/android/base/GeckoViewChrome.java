@@ -11,4 +11,51 @@ public class GeckoViewChrome implements GeckoView.ChromeDelegate {
     * @param view The GeckoView that initiated the callback.
     */
     public void onReady(GeckoView view) {}
+
+    /**
+    * Tell the host application to display an alert dialog.
+    * @param view The GeckoView that initiated the callback.
+    * @param browser The Browser that is loading the content.
+    * @param message The string to display in the dialog.
+    * @param result A PromptResult used to send back the result without blocking.
+    * Defaults to cancel requests.
+    */
+    public void onAlert(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result) {
+        result.cancel();
+    }
+
+    /**
+    * Tell the host application to display a confirmation dialog.
+    * @param view The GeckoView that initiated the callback.
+    * @param browser The Browser that is loading the content.
+    * @param message The string to display in the dialog.
+    * @param result A PromptResult used to send back the result without blocking.
+    * Defaults to cancel requests.
+    */
+    public void onConfirm(GeckoView view, GeckoView.Browser browser, String message, GeckoView.PromptResult result) {
+        result.cancel();
+    }
+
+    /**
+    * Tell the host application to display an input prompt dialog.
+    * @param view The GeckoView that initiated the callback.
+    * @param browser The Browser that is loading the content.
+    * @param message The string to display in the dialog.
+    * @param defaultValue The string to use as default input.
+    * @param result A PromptResult used to send back the result without blocking.
+    * Defaults to cancel requests.
+    */
+    public void onPrompt(GeckoView view, GeckoView.Browser browser, String message, String defaultValue, GeckoView.PromptResult result) {
+        result.cancel();
+    }
+
+    /**
+    * Tell the host application to display a remote debugging request dialog.
+    * @param view The GeckoView that initiated the callback.
+    * @param result A PromptResult used to send back the result without blocking.
+    * Defaults to cancel requests.
+    */
+    public void onDebugRequest(GeckoView view, GeckoView.PromptResult result) {
+        result.cancel();
+    }
 }
