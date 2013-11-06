@@ -79,6 +79,11 @@ Notification.prototype = {
       this._cookie = aOptions.cookie;
     else
       this._cookie = null;
+
+    if ("light" in aOptions && aOptions.light != null)
+      this._light = aOptions.light;
+    else
+      this._light = null;
   },
 
   show: function() {
@@ -115,6 +120,9 @@ Notification.prototype = {
         msg.actions.push(obj);
       }
     }
+
+    if (this._light)
+      msg.light = this._light;
 
     Services.androidBridge.handleGeckoMessage(JSON.stringify(msg));
     return this;
