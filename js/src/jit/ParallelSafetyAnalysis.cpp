@@ -153,7 +153,6 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(Abs)
     SAFE_OP(Sqrt)
     UNSAFE_OP(Atan2)
-    UNSAFE_OP(Hypot)
     CUSTOM_OP(MathFunction)
     SPECIALIZED_OP(Add, PERMIT_NUMERIC)
     SPECIALIZED_OP(Sub, PERMIT_NUMERIC)

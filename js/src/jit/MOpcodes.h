@@ -59,7 +59,6 @@ namespace jit {
     _(Abs)                                                                  \
     _(Sqrt)                                                                 \
     _(Atan2)                                                                \
-    _(Hypot)                                                                \
     _(Pow)                                                                  \
     _(PowHalf)                                                              \
     _(Random)                                                               \
