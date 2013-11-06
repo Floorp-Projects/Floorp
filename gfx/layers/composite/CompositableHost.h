@@ -41,10 +41,7 @@ struct TiledLayerProperties
 {
   nsIntRegion mVisibleRegion;
   nsIntRegion mValidRegion;
-  gfxRect mDisplayPort;
   gfxSize mEffectiveResolution;
-  gfxRect mCompositionBounds;
-  bool mRetainTiles;
 };
 
 class Layer;
