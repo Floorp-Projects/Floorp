@@ -969,6 +969,10 @@ class MConstant : public MNullaryInstruction
     const js::Value *vp() const {
         return &value_;
     }
+    const bool valueToBoolean() const {
+        // A hack to avoid this wordy pattern everywhere in the JIT.
+        return ToBoolean(HandleValue::fromMarkedLocation(&value_));
+    }
 
     void printOpcode(FILE *fp) const;
 
