@@ -29,6 +29,10 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class GeckoView extends LayerView
     implements GeckoEventListener, ContextGetter {
 
@@ -90,14 +94,68 @@ public class GeckoView extends LayerView
         }
     }
 
-    public void loadUrl(String uri) {
-        Tabs.getInstance().loadUrl(uri);
+    /**
+    * Add a Browser to the GeckoView container.
+    * @param url The URL resource to load into the new Browser.
+    */
+    public Browser addBrowser(String url) {
+        Tab tab = Tabs.getInstance().loadUrl(url, Tabs.LOADURL_NEW_TAB);
+        if (tab != null) {
+            return new Browser(tab.getId());
+        }
+        return null;
     }
 
-    public void loadUrlInNewTab(String uri) {
-        Tabs.getInstance().loadUrl(uri, Tabs.LOADURL_NEW_TAB);
-     }
+    /**
+    * Remove a Browser from the GeckoView container.
+    * @param browser The Browser to remove.
+    */
+    public void removeBrowser(Browser browser) {
+        Tab tab = Tabs.getInstance().getTab(browser.getId());
+        if (tab != null) {
+            Tabs.getInstance().closeTab(tab);
+        }
+    }
 
+    /**
+    * Set the active/visible Browser.
+    * @param browser The Browser to make selected.
+    */
+    public void setCurrentBrowser(Browser browser) {
+        Tab tab = Tabs.getInstance().getTab(browser.getId());
+        if (tab != null) {
+            Tabs.getInstance().selectTab(tab.getId());
+        }
+    }
+
+    /**
+    * Get the active/visible Browser.
+    * @return The current selected Browser.
+    */
+    public Browser getCurrentBrowser() {
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            return new Browser(tab.getId());
+        }
+        return null;
+    }
+
+    /**
+    * Get the list of current Browsers in the GeckoView container.
+    * @return An unmodifiable List of Browser objects.
+    */
+    public List<Browser> getBrowsers() {
+        ArrayList<Browser> browsers = new ArrayList<Browser>();
+        Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
+        for (Tab tab : tabs) {
+            browsers.add(new Browser(tab.getId()));
+        }
+        return Collections.unmodifiableList(browsers);
+    }
+
+    /**
+    * Not part of the public API. Ignore.
+    */
     public void handleMessage(String event, JSONObject message) {
         if (event.equals("Gecko:Ready")) {
             GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoRunning);
@@ -118,5 +176,111 @@ public class GeckoView extends LayerView
 
     public static GeckoAppShell.GeckoInterface getGeckoInterface() {
         return GeckoAppShell.getGeckoInterface();
+    }
+
+    /**
+    * Wrapper for a browser in the GeckoView container. Associated with a browser
+    * element in the Gecko system.
+    */
+    public class Browser {
+        private final int mId;
+        private Browser(int Id) {
+            mId = Id;
+        }
+
+        /**
+        * Get the ID of the Browser. This is the same ID used by Gecko for it's underlying
+        * browser element.
+        * @return The integer ID of the Browser.
+        */
+        private int getId() {
+            return mId;
+        }
+
+        /**
+        * Load a URL resource into the Browser.
+        * @param url The URL string.
+        */
+        public void loadUrl(String url) {
+            JSONObject args = new JSONObject();
+            try {
+                args.put("url", url);
+                args.put("parentId", -1);
+                args.put("newTab", false);
+                args.put("tabID", mId);
+            } catch (Exception e) {
+                Log.w(LOGTAG, "Error building JSON arguments for loadUrl.", e);
+            }
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
+        }
+
+        /**
+        * Reload the current URL resource into the Browser. The URL is force loaded from the
+        * network and is not pulled from cache.
+        */
+        public void reload() {
+            Tab tab = Tabs.getInstance().getTab(mId);
+            if (tab != null) {
+                tab.doReload();
+            }
+        }
+
+        /**
+        * Stop the current loading operation.
+        */
+        public void stop() {
+            Tab tab = Tabs.getInstance().getTab(mId);
+            if (tab != null) {
+                tab.doStop();
+            }
+        }
+
+        /**
+        * Check to see if the Browser has session history and can go back to a
+        * previous page.
+        * @return A boolean flag indicating if previous session exists.
+        * This method will likely be removed and replaced by a callback in GeckoViewContent
+        */
+        public boolean canGoBack() {
+            Tab tab = Tabs.getInstance().getTab(mId);
+            if (tab != null) {
+                return tab.canDoBack();
+            }
+            return false;
+        }
+
+        /**
+        * Move backward in the session history, if that's possible.
+        */
+        public void goBack() {
+            Tab tab = Tabs.getInstance().getTab(mId);
+            if (tab != null) {
+                tab.doBack();
+            }
+        }
+
+        /**
+        * Check to see if the Browser has session history and can go forward to a
+        * new page.
+        * @return A boolean flag indicating if forward session exists.
+        * This method will likely be removed and replaced by a callback in GeckoViewContent
+        */
+        public boolean canGoForward() {
+            Tab tab = Tabs.getInstance().getTab(mId);
+            if (tab != null) {
+                return tab.canDoForward();
+            }
+            return false;
+        }
+
+        /**
+        * Move forward in the session history, if that's possible.
+        */
+        public void goForward() {
+            Tab tab = Tabs.getInstance().getTab(mId);
+            if (tab != null) {
+                tab.doForward();
+            }
+        }
     }
 }
