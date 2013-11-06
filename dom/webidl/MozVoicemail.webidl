@@ -11,28 +11,26 @@ interface MozVoicemailStatus;
 interface MozVoicemail : EventTarget
 {
   /**
-   * The current voicemail status of a specified service, or null when the
-   * status is unknown.
+   * The current voicemail status, or null when the status is unknown
    */
-  [Throws]
-  MozVoicemailStatus getStatus(optional unsigned long serviceId);
+  [GetterThrows]
+  readonly attribute MozVoicemailStatus? status;
 
   /**
-   * The voicemail box dialing number of a specified service, or null if one
-   * wasn't found.
+   * The voicemail box dialing number, or null if one wasn't found
    */
-  [Throws]
-  DOMString getNumber(optional unsigned long serviceId);
+  [GetterThrows]
+  readonly attribute DOMString? number;
 
   /**
-   * The display name of the voicemail box dialing number of a specified service,
-   * or null if one wasn't found.
+   * The display name of the voicemail box dialing number, or null if one
+   * wasn't found
    */
-  [Throws]
-  DOMString getDisplayName(optional unsigned long serviceId);
+  [GetterThrows]
+  readonly attribute DOMString? displayName;
 
   /**
-   * The current voicemail status has changed.
+   * The current voicemail status has changed
    */
   attribute EventHandler onstatuschanged;
 };
