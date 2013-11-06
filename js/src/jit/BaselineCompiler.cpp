@@ -2908,38 +2908,22 @@ BaselineCompiler::emit_JSOP_RUNONCE()
     return callVM(RunOnceScriptPrologueInfo);
 }
 
-static bool
-DoCreateRestParameter(JSContext *cx, BaselineFrame *frame, MutableHandleValue res)
-{
-    unsigned numFormals = frame->numFormalArgs() - 1;
-    unsigned numActuals = frame->numActualArgs();
-    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
-    Value *rest = frame->argv() + numFormals;
-
-    JSObject *obj = NewDenseCopiedArray(cx, numRest, rest, nullptr);
-    if (!obj)
-        return false;
-    types::FixRestArgumentsType(cx, obj);
-    res.setObject(*obj);
-    return true;
-}
-
-typedef bool(*DoCreateRestParameterFn)(JSContext *cx, BaselineFrame *, MutableHandleValue);
-static const VMFunction DoCreateRestParameterInfo =
-    FunctionInfo<DoCreateRestParameterFn>(DoCreateRestParameter);
-
 bool
 BaselineCompiler::emit_JSOP_REST()
 {
     frame.syncStack(0);
 
-    prepareVMCall();
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-    pushArg(R0.scratchReg());
+    JSObject *templateObject = NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject);
+    if (!templateObject)
+        return false;
+    types::FixRestArgumentsType(cx, templateObject);
 
-    if (!callVM(DoCreateRestParameterInfo))
+    // Call IC.
+    ICRest_Fallback::Compiler compiler(cx, templateObject);
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
+    // Mark R0 as pushed stack value.
     frame.push(R0);
     return true;
 }
