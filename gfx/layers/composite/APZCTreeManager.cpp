@@ -392,7 +392,6 @@ APZCTreeManager::ProcessEvent(const WidgetInputEvent& aEvent,
   gfx3DMatrix transformToApzc;
   gfx3DMatrix transformToGecko;
   GetInputTransforms(apzc, transformToApzc, transformToGecko);
-  ApplyTransform(&(aOutEvent->refPoint), transformToApzc);
   gfx3DMatrix outTransform = transformToApzc * transformToGecko;
   ApplyTransform(&(aOutEvent->refPoint), outTransform);
   return nsEventStatus_eIgnore;
