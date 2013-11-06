@@ -5733,7 +5733,11 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         for (uint32_t i = 0; i < info().nargs(); i++) {
             uint32_t slot = needsArgsObj ? info().argSlotUnchecked(i) : info().argSlot(i);
 
-            if (needsArgsObj) {
+            // Only grab arguments from the arguments object if the arguments object
+            // aliases formals.  If the argsobj does not alias formals, then the
+            // formals may have been assigned to during interpretation, and that change
+            // will not be reflected in the argsobj.
+            if (needsArgsObj && info().argsObjAliasesFormals()) {
                 JS_ASSERT(argsObj && argsObj->isOsrArgumentsObject());
                 // If this is an aliased formal, then the arguments object
                 // contains a hole at this index.  Any references to this
