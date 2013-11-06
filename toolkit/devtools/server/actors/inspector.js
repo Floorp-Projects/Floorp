@@ -584,6 +584,17 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   },
 
   /**
+   * Do we use a local target?
+   * Useful to know if a rawNode is available or not.
+   *
+   * This will, one day, be removed. External code should
+   * not need to know if the target is remote or not.
+   */
+  isLocal_toBeDeprecated: function() {
+    return !!this.conn._transport._serverConnection;
+  },
+
+  /**
    * Get an nsIDOMNode for the given node front.  This only works locally,
    * and is only intended as a stopgap during the transition to the remote
    * protocol.  If you depend on this you're likely to break soon.
