@@ -427,6 +427,22 @@ template bool IntPolicy<2>::staticAdjustInputs(MInstruction *def);
 
 template <unsigned Op>
 bool
+ConvertToInt32Policy<Op>::staticAdjustInputs(MInstruction *def)
+{
+    MDefinition *in = def->getOperand(Op);
+    if (in->type() == MIRType_Int32)
+        return true;
+
+    MToInt32 *replace = MToInt32::New(in);
+    def->block()->insertBefore(def, replace);
+    def->replaceOperand(Op, replace);
+    return true;
+}
+
+template bool ConvertToInt32Policy<0>::staticAdjustInputs(MInstruction *def);
+
+template <unsigned Op>
+bool
 DoublePolicy<Op>::staticAdjustInputs(MInstruction *def)
 {
     MDefinition *in = def->getOperand(Op);
@@ -742,7 +758,7 @@ StoreTypedArrayElementStaticPolicy::adjustInputs(MInstruction *ins)
 {
     MStoreTypedArrayElementStatic *store = ins->toStoreTypedArrayElementStatic();
 
-    return IntPolicy<0>::staticAdjustInputs(ins) &&
+    return ConvertToInt32Policy<0>::staticAdjustInputs(ins) &&
         adjustValueInput(ins, store->viewType(), store->value(), 1);
 }
 

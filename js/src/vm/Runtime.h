@@ -1379,6 +1379,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache_ ? mathCache_ : createMathCache(cx);
     }
+    js::MathCache *maybeGetMathCache() {
+        return mathCache_;
+    }
 
     js::GSNCache        gsnCache;
     js::NewObjectCache  newObjectCache;
