@@ -210,6 +210,28 @@ MobileMessageCallback::NotifyGetSegmentInfoForTextFailed(int32_t aError)
   return NotifyError(aError, true);
 }
 
+NS_IMETHODIMP
+MobileMessageCallback::NotifyGetSmscAddress(const nsAString& aSmscAddress)
+{
+  AutoJSContext cx;
+  JSString* smsc = JS_NewUCStringCopyN(cx,
+                                       static_cast<const jschar *>(aSmscAddress.BeginReading()),
+                                       aSmscAddress.Length());
+
+  if (!smsc) {
+    return NotifyError(nsIMobileMessageCallback::INTERNAL_ERROR);
+  }
+
+  JS::Rooted<JS::Value> val(cx, STRING_TO_JSVAL(smsc));
+  return NotifySuccess(val);
+}
+
+NS_IMETHODIMP
+MobileMessageCallback::NotifyGetSmscAddressFailed(int32_t aError)
+{
+  return NotifyError(aError);
+}
+
 } // namesapce mobilemessage
 } // namespace dom
 } // namespace mozilla

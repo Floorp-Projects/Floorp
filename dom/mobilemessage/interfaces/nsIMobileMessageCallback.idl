@@ -14,7 +14,7 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, uuid(58780660-4080-11e3-8397-a7bb1b58cf12)]
+[scriptable, uuid(0ee2ada1-fa98-40f1-adb3-0d7fd6df3f48)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -54,4 +54,10 @@ interface nsIMobileMessageCallback : nsISupports
 
   void notifySegmentInfoForTextGot(in nsIDOMMozSmsSegmentInfo info);
   void notifyGetSegmentInfoForTextFailed(in long error);
+
+  /**
+   *  SMSC Address get/set result
+   */
+  void notifyGetSmscAddress(in DOMString aSmscAddress);
+  void notifyGetSmscAddressFailed(in long error);
 };
