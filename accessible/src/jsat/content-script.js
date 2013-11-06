@@ -331,6 +331,23 @@ function scroll(aMessage) {
   }
 }
 
+function adjustRange(aMessage) {
+  function sendUpDownKey(aAccessible) {
+    let evt = content.document.createEvent('KeyboardEvent');
+    let keycode = aMessage.json.direction == 'forward' ?
+      content.KeyEvent.DOM_VK_DOWN : content.KeyEvent.DOM_VK_UP;
+    evt.initKeyEvent(
+      "keypress", false, true, null, false, false, false, false, keycode, 0);
+    if (aAccessible.DOMNode) {
+      aAccessible.DOMNode.dispatchEvent(evt);
+    }
+  }
+
+  let position = Utils.getVirtualCursor(content.document).position;
+  if (!forwardToChild(aMessage, adjustRange, position)) {
+    sendUpDownKey(position);
+  }
+}
 addMessageListener(
   'AccessFu:Start',
   function(m) {
@@ -344,6 +361,7 @@ addMessageListener(
     addMessageListener('AccessFu:Activate', activateCurrent);
     addMessageListener('AccessFu:ContextMenu', activateContextMenu);
     addMessageListener('AccessFu:Scroll', scroll);
+    addMessageListener('AccessFu:AdjustRange', adjustRange);
     addMessageListener('AccessFu:MoveCaret', moveCaret);
     addMessageListener('AccessFu:MoveByGranularity', moveByGranularity);
 
