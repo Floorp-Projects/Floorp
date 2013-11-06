@@ -49,7 +49,7 @@ function processCSU(csuName, csu)
     }
 }
 
-function findVirtualFunctions(csu, field)
+function findVirtualFunctions(csu, field, suppressed)
 {
     var worklist = [csu];
 
@@ -60,8 +60,10 @@ function findVirtualFunctions(csu, field)
     while (worklist.length) {
         var csu = worklist.pop();
         if (csu == "nsISupports") {
-            if (field == "AddRef" || field == "Release")
+            if (field == "AddRef" || field == "Release") {
+                suppressed[0] = true;
                 return [];
+            }
             return null;
         }
         if (csu in superclasses) {
@@ -132,8 +134,16 @@ function getCallees(edge)
             var fieldName = field.Name[0];
             var csuName = field.FieldCSU.Type.Name;
             var functions = null;
-            if ("FieldInstanceFunction" in field)
-                functions = findVirtualFunctions(csuName, fieldName);
+            if ("FieldInstanceFunction" in field) {
+                var suppressed = [ false ];
+                functions = findVirtualFunctions(csuName, fieldName, suppressed);
+                if (suppressed[0]) {
+                    // Field call known to not GC; mark it as suppressed so
+                    // direct invocations will be ignored
+                    callees.push({'kind': "field", 'csu': csuName, 'field': fieldName,
+                                  'suppressed': true});
+                }
+            }
             if (functions) {
                 // Known set of virtual call targets.
                 for (var name of functions)
@@ -173,14 +183,15 @@ function processBody(caller, body)
     for (var edge of body.PEdge) {
         if (edge.Kind != "Call")
             continue;
-        var suppressText = "";
+        var edgeSuppressed = false;
         var seen = seenCallees;
         if (edge.Index[0] in body.suppressed) {
-            suppressText = "SUPPRESS_GC ";
+            edgeSuppressed = true;
             seen = seenSuppressedCallees;
         }
-        var prologue = suppressText + memo(caller) + " ";
         for (var callee of getCallees(edge)) {
+            var prologue = (edgeSuppressed || callee.suppressed) ? "SUPPRESS_GC " : "";
+            prologue += memo(caller) + " ";
             if (callee.kind == 'direct') {
                 if (!(callee.name in seen)) {
                     seen[name] = true;

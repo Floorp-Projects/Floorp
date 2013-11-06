@@ -301,8 +301,12 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mForward.setEnabled(false); // initialize the forward button to not be enabled
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
-        if (Build.VERSION.SDK_INT >= 16)
-            mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        if (Build.VERSION.SDK_INT >= 11) {
+            if (Build.VERSION.SDK_INT >= 16) {
+                mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            }
+            mFavicon.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        }
         mFaviconSize = Math.round(res.getDimension(R.dimen.browser_toolbar_favicon_size));
 
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
@@ -737,6 +741,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
     // have no autocomplete results
     @Override
     public void onAutocomplete(final String result) {
+        if (!isEditing()) {
+            return;
+        }
+
         final String text = mUrlEditText.getText().toString();
 
         if (result == null) {
@@ -755,6 +763,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     @Override
     public void afterTextChanged(final Editable s) {
+        if (!isEditing()) {
+            return;
+        }
+
         final String text = s.toString();
         boolean useHandler = false;
         boolean reuseAutocomplete = false;

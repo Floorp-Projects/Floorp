@@ -46,11 +46,23 @@ class Configuration:
             if not isinstance(entry, list):
                 assert isinstance(entry, dict)
                 entry = [entry]
-            elif len(entry) == 1 and entry[0].get("workers", False):
-                # List with only a workers descriptor means we should
-                # infer a mainthread descriptor.  If you want only
-                # workers bindings, don't use a list here.
-                entry.append({})
+            elif len(entry) == 1:
+                if entry[0].get("workers", False):
+                    # List with only a workers descriptor means we should
+                    # infer a mainthread descriptor.  If you want only
+                    # workers bindings, don't use a list here.
+                    entry.append({})
+                else:
+                    raise TypeError("Don't use a single-element list for "
+                                    "non-worker-only interface " + iface.identifier.name +
+                                    " in Bindings.conf")
+            elif len(entry) == 2:
+                if entry[0].get("workers", False) == entry[1].get("workers", False):
+                    raise TypeError("The two entries for interface " + iface.identifier.name +
+                                    " in Bindings.conf should not have the same value for 'workers'")
+            else:
+                raise TypeError("Interface " + iface.identifier.name +
+                                " should have no more than two entries in Bindings.conf")
             self.descriptors.extend([Descriptor(self, iface, x) for x in entry])
 
         # Keep the descriptor list sorted for determinism.

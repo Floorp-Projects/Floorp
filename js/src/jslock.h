@@ -9,11 +9,19 @@
 
 #ifdef JS_THREADSAFE
 
+#ifdef JS_POSIX_NSPR
+
+#include "vm/PosixNSPR.h"
+
+#else /* JS_POSIX_NSPR */
+
 # include "pratom.h"
 # include "prcvar.h"
 # include "prinit.h"
 # include "prlock.h"
 # include "prthread.h"
+
+#endif
 
 # define JS_ATOMIC_INCREMENT(p)      PR_ATOMIC_INCREMENT((int32_t *)(p))
 # define JS_ATOMIC_DECREMENT(p)      PR_ATOMIC_DECREMENT((int32_t *)(p))

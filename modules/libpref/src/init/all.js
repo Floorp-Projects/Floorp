@@ -374,13 +374,10 @@ pref("gfx.font_rendering.opentype_svg.enabled", true);
 // e.g., pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
 pref("gfx.canvas.azure.backends", "direct2d,skia,cairo");
 pref("gfx.content.azure.backends", "direct2d,cairo");
-pref("gfx.content.azure.enabled", true);
 #else
-pref("gfx.content.azure.enabled", false);
 #ifdef XP_MACOSX
 pref("gfx.content.azure.backends", "cg");
 pref("gfx.canvas.azure.backends", "cg");
-pref("gfx.content.azure.enabled", true);
 // Accelerated cg canvas where available (10.7+)
 pref("gfx.canvas.azure.accelerated", false);
 #else
@@ -390,13 +387,11 @@ pref("gfx.content.azure.backends", "cairo");
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
-pref("gfx.content.azure.enabled", true);
 pref("gfx.content.azure.backends", "cairo");
 #endif
 #ifdef ANDROID
 pref("gfx.textures.poweroftwo.force-enabled", false);
 pref("gfx.content.azure.backends", "cairo");
-pref("gfx.content.azure.enabled", true);
 #endif
 
 pref("gfx.work-around-driver-bugs", true);
