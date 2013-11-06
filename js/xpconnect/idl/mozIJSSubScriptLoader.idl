@@ -6,14 +6,14 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(837d0211-c448-4bb8-a9bf-922ba33b9d37)]
+[scriptable, uuid(b21f1579-d994-4e99-a85d-a685140f3ec1)]
 interface mozIJSSubScriptLoader : nsISupports
 {
     /**
      * This method should only be called from JS!
      * In JS, the signature looks like:
      * rv loadSubScript (url [, obj] [, charset]);
-     * @param url the url if the sub-script, it MUST be either a file:,
+     * @param url the url of the sub-script, it MUST be either a file:,
      *            resource:, or chrome: url, and MUST be local.
      * @param obj an optional object to evaluate the script onto, it
      *            defaults to the global object of the caller.
@@ -24,4 +24,19 @@ interface mozIJSSubScriptLoader : nsISupports
      */
     [implicit_jscontext]
     jsval loadSubScript(in AString url, [optional] in jsval obj, [optional] in AString charset);
+
+    /**
+     * This method should only be called from JS!
+     * In JS, the signature looks like:
+     * rv = loadSubScript (url, optionsObject)
+     * @param url the url of the sub-script, it MUST be either a file:,
+     *            resource:, or chrome: url, and MUST be local.
+     * @param optionsObject an object with parameters. Valid parameters are:
+     *                      - charset: specifying the character encoding of the file (default: ASCII)
+     *                      - target:  an object to evaluate onto (default: global object of the caller)
+     *                      - ignoreCache: if set to true, will bypass the cache for reading the file.
+     * @retval rv the value returned by the sub-script
+     */
+    [implicit_jscontext]
+    jsval loadSubScriptWithOptions(in AString url, in jsval options);
 };
