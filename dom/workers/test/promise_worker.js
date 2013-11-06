@@ -1,20 +1,17 @@
-<!--
-  Any copyright is dedicated to the Public Domain.
-  http://creativecommons.org/publicdomain/zero/1.0/
--->
-<html>
-<head>
-  <title>Basic Promise Test</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<p id="display"></p>
-<div id="content" style="display: none">
+function ok(a, msg) {
+  dump("OK: " + !!a + "  =>  " + a + " " + msg + "\n");
+  postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
+}
 
-</div>
-<pre id="test">
-<script type="application/javascript"><!--
+function is(a, b, msg) {
+  dump("IS: " + (a===b) + "  =>  " + a + " | " + b + " " + msg + "\n");
+  postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
+}
+
+function isnot(a, b, msg) {
+  dump("ISNOT: " + (a!==b) + "  =>  " + a + " | " + b + " " + msg + "\n");
+  postMessage({type: 'status', status: a !== b, msg: a + " !== " + b + ": " + msg });
+}
 
 function promiseResolve() {
   ok(Promise, "Promise object should exist");
@@ -33,6 +30,7 @@ function promiseResolve() {
     runTest();
   });
 }
+
 
 function promiseReject() {
   var promise = new Promise(function(resolve, reject) {
@@ -58,24 +56,6 @@ function promiseException() {
     is(what, 42, "RejectCb received 42");
     runTest();
   });
-}
-
-function promiseGC() {
-  var resolve;
-  var promise = new Promise(function(r1, r2) {
-    resolve = r1;
-  }).then(function(what) {
-    ok(true, "Then - promise is still alive");
-    runTest();
-  });
-
-  promise = null;
-
-  SpecialPowers.gc();
-  SpecialPowers.forceGC();
-  SpecialPowers.forceCC();
-
-  resolve(42);
 }
 
 function promiseAsync() {
@@ -127,7 +107,7 @@ function promiseThenException() {
     ok(true, "Then.resolve has been called");
     throw "booh";
   }).catch(function(e) {
-    ok(true, "window.onerror has been called!");
+    ok(true, "Catch has been called!");
     runTest();
   });
 }
@@ -377,24 +357,32 @@ function promiseRejectNoHandler() {
   runTest();
 }
 
-var tests = [ promiseResolve, promiseReject,
-              promiseException, promiseGC, promiseAsync,
-              promiseDoubleThen, promiseThenException,
-              promiseThenCatchThen, promiseRejectThenCatchThen,
-              promiseRejectThenCatchThen2,
-              promiseRejectThenCatchExceptionThen,
-              promiseThenCatchOrderingResolve,
-              promiseThenCatchOrderingReject,
-              promiseNestedPromise, promiseNestedNestedPromise,
-              promiseWrongNestedPromise, promiseLoop,
-              promiseStaticReject, promiseStaticResolve,
-              promiseResolveNestedPromise,
-              promiseRejectNoHandler,
-            ];
+var tests = [
+    promiseResolve,
+    promiseReject,
+    promiseException,
+    promiseAsync,
+    promiseDoubleThen,
+    promiseThenException,
+    promiseThenCatchThen,
+    promiseRejectThenCatchThen,
+    promiseRejectThenCatchThen2,
+    promiseRejectThenCatchExceptionThen,
+    promiseThenCatchOrderingResolve,
+    promiseThenCatchOrderingReject,
+    promiseNestedPromise,
+    promiseNestedNestedPromise,
+    promiseWrongNestedPromise,
+    promiseLoop,
+    promiseStaticReject,
+    promiseStaticResolve,
+    promiseResolveNestedPromise,
+    promiseRejectNoHandler,
+];
 
 function runTest() {
   if (!tests.length) {
-    SimpleTest.finish();
+    postMessage({ type: 'finish' });
     return;
   }
 
@@ -402,16 +390,6 @@ function runTest() {
   test();
 }
 
-var p = SpecialPowers.getBoolPref("dom.promise.enabled");
-SpecialPowers.setBoolPref("dom.promise.enabled", false);
-ok(!("Promise" in window), "Promise object should not exist if disabled by pref");
-SpecialPowers.setBoolPref("dom.promise.enabled", p);
-
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
-// -->
-</script>
-</pre>
-</body>
-</html>
-
+onmessage = function() {
+  runTest();
+}
