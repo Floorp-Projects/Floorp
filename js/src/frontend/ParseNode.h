@@ -128,9 +128,6 @@ class UpvarCookie
     F(ARRAYPUSH) \
     F(LEXICALSCOPE) \
     F(LET) \
-    F(IMPORT) \
-    F(IMPORT_SPEC_LIST) \
-    F(IMPORT_SPEC) \
     F(SEQ) \
     F(FORIN) \
     F(FOROF) \
