@@ -64,7 +64,9 @@
           <div class="project-title">
             <h1 template='{"type":"textContent","path":"manifest.name"}'></h1>
             <div class="project-status" template='{"type":"attribute","path":"validationStatus","name":"status"}'>
-              <p class="project-validation" template='{"type":"textContent","path":"validationStatus"}'></p>
+              <p class="project-validation valid">&projects.valid;</p>
+              <p class="project-validation warning">&projects.warning;</p>
+              <p class="project-validation error">&projects.error;</p>
               <p class="project-type" template='{"type":"textContent","path":"type"}'></p>
             </div>
           </div>

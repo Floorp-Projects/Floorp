@@ -173,6 +173,10 @@ let UI = {
           project.errorsCount = 0;
         }
 
+        if (project.warningsCount && project.errorsCount) {
+          project.validationStatus = "error warning";
+        }
+
       });
 
   },
