@@ -479,12 +479,6 @@ AudioManager::SetPhoneState(int32_t aState)
     obs->NotifyObservers(nullptr, "phone-state-changed", state.get());
   }
 
-  // follow the switch audio path logic for android, Bug 897364
-  int usage;
-  GetForceForUse(nsIAudioManager::USE_COMMUNICATION, &usage);
-  if (aState == PHONE_STATE_NORMAL && usage == nsIAudioManager::FORCE_BT_SCO) {
-    SetForceForUse(nsIAudioManager::USE_COMMUNICATION, nsIAudioManager::FORCE_NONE);
-  }
 #if ANDROID_VERSION < 17
   if (AudioSystem::setPhoneState(aState)) {
 #else

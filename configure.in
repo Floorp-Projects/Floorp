@@ -2498,9 +2498,10 @@ esac
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
+else
+    MOZ_COMPILER_OPTS
 fi
 
-MOZ_COMPILER_OPTS
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
@@ -3928,7 +3929,6 @@ MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
 MOZ_OPUS=1
 MOZ_WEBM=1
-MOZ_DASH=
 MOZ_DIRECTSHOW=
 MOZ_WMF=
 MOZ_WEBRTC=1
@@ -7179,7 +7179,7 @@ if test "$USE_ELF_HACK" = 1; then
     esac
 fi
 
-if test -n "$USE_ELF_HACK"; then
+if test -n "$COMPILE_ENVIRONMENT" -a -n "$USE_ELF_HACK"; then
     dnl PT_GNU_RELRO segment makes the dynamic linker set a read-only flag on
     dnl memory addresses it maps to. The result is that by the time elfhack
     dnl kicks in, it is not possible to apply relocations because of that,
@@ -7874,7 +7874,9 @@ AC_SUBST(MOZ_PIXMAN_CFLAGS)
 AC_SUBST(MOZ_PIXMAN_LIBS)
 
 # Check for headers defining standard int types.
-MOZ_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+if test -n "$COMPILE_ENVIRONMENT"; then
+    MOZ_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+fi
 
 if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
@@ -8630,7 +8632,6 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
-AC_SUBST(MOZ_DASH)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
@@ -8661,6 +8662,7 @@ AC_SUBST(MOZ_FOLD_LIBS)
 AC_SUBST(MOZ_ENABLE_SZIP)
 AC_SUBST(MOZ_SZIP_FLAGS)
 
+if test -n "$COMPILE_ENVIRONMENT"; then
 AC_MSG_CHECKING([for posix_fallocate])
 AC_TRY_LINK([#define _XOPEN_SOURCE 600
   #include <fcntl.h>],
@@ -8676,7 +8678,6 @@ else
 fi
 
 dnl Check for missing components
-if test "$COMPILE_ENVIRONMENT"; then
 if test "$MOZ_X11"; then
     if test "$WITHOUT_X11"; then
         AC_MSG_ERROR([--without-x specified and MOZ_X11 still defined])

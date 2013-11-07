@@ -21,6 +21,3 @@ endif
 
 libs:: $(_PROP_TABLES)
 	$(INSTALL) $^ $(DIST)/bin/res/entityTables
-
-install:: $(_PROP_TABLES)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/entityTables

@@ -35,6 +35,3 @@ endif
 
 libs::
 	$(INSTALL) $(RESOURCES_HTML) $(DIST)/bin/res/html
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(RESOURCES_HTML) $(DESTDIR)$(mozappdir)/res/html
