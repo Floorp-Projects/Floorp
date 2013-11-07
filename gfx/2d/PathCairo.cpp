@@ -237,6 +237,35 @@ PathCairo::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
 }
 
 void
+PathCairo::StreamToSink(PathSink *aSink) const
+{
+  for (size_t i = 0; i < mPathData.size(); i++) {
+    switch (mPathData[i].header.type) {
+    case CAIRO_PATH_MOVE_TO:
+      i++;
+      aSink->MoveTo(Point(mPathData[i].point.x, mPathData[i].point.y));
+      break;
+    case CAIRO_PATH_LINE_TO:
+      i++;
+      aSink->LineTo(Point(mPathData[i].point.x, mPathData[i].point.y));
+      break;
+    case CAIRO_PATH_CURVE_TO:
+      aSink->BezierTo(Point(mPathData[i + 1].point.x, mPathData[i + 1].point.y),
+                      Point(mPathData[i + 2].point.x, mPathData[i + 2].point.y),
+                      Point(mPathData[i + 3].point.x, mPathData[i + 3].point.y));
+      i += 3;
+      break;
+    case CAIRO_PATH_CLOSE_PATH:
+      aSink->Close();
+      break;
+    default:
+      // Corrupt path data!
+      MOZ_ASSERT(false);
+    }
+  }
+}
+
+void
 PathCairo::EnsureContainingContext() const
 {
   if (mContainingContext) {
