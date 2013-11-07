@@ -21,6 +21,9 @@ public class testReaderMode extends AboutHomeTest {
     static final int EVENT_CLEAR_DELAY_MS = 3000;
     static final int READER_ICON_MAX_WAIT_MS = 15000;
 
+    // IDs for UI views.
+    private static final String PAGE_ACTION_LAYOUT_ID = "page_action_layout";
+
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
@@ -153,7 +156,7 @@ public class testReaderMode extends AboutHomeTest {
 
     // Get the reader icon method
     protected View getReaderIcon() {
-        View pageActionLayout = mSolo.getView(0x7f070025);
+        View pageActionLayout = mSolo.getView(PAGE_ACTION_LAYOUT_ID);
         final ViewGroup actionLayoutEntry = (ViewGroup)pageActionLayout;
         View icon = actionLayoutEntry.getChildAt(1);
         if (icon == null || icon.getVisibility() != View.VISIBLE) {
