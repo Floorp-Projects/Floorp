@@ -1739,14 +1739,6 @@ MediaDecoder::IsMediaPluginsEnabled()
 }
 #endif
 
-#ifdef MOZ_DASH
-bool
-MediaDecoder::IsDASHEnabled()
-{
-  return Preferences::GetBool("media.dash.enabled");
-}
-#endif
-
 #ifdef MOZ_WMF
 bool
 MediaDecoder::IsWMFEnabled()

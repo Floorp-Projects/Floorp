@@ -381,26 +381,6 @@ MOCHITEST_FILES += \
 		$(NULL)
 endif
 
-ifdef MOZ_DASH
-MOCHITEST_FILES += \
-    test_can_play_type_dash.html \
-    dash/dash-manifest.mpd \
-    dash/dash-manifest-sjs.mpd \
-    test_dash_detect_stream_switch.html \
-    dash_detect_stream_switch.sjs \
-    dash/dash-webm-video-320x180.webm \
-    dash/dash-webm-video-428x240.webm \
-    dash/dash-webm-audio-128k.webm \
-    dash/dash-manifest-garbled.mpd \
-    dash/dash-manifest-garbled-webm.mpd \
-    dash/garbled.webm \
-    $(NULL)
-else
-MOCHITEST_FILES += \
-    test_can_play_type_no_dash.html \
-    $(NULL)
-endif
-
 ifdef MOZ_WAVE
 MOCHITEST_FILES += \
 		test_can_play_type_wave.html \
