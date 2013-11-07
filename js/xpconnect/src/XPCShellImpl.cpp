@@ -287,22 +287,14 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
     if (!str)
         return false;
 
-    size_t length;
-    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
-    if (!chars)
+    JSAutoByteString bytes(cx, str);
+    if (!bytes)
         return false;
 
-    NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const PRUnichar*>(chars),
-                                  length);
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", bytes.ptr());
 #endif
-#ifdef XP_WIN
-    if (IsDebuggerPresent()) {
-      OutputDebugStringW(reinterpret_cast<const PRUnichar*>(chars));
-    }
-#endif
-    fputs(utf8str.get(), gOutFile);
+    fputs(bytes.ptr(), gOutFile);
     fflush(gOutFile);
     return true;
 }
