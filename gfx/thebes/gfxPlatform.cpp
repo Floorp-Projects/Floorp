@@ -938,7 +938,7 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
   }
 
   IntSize size = data->GetSize();
-  gfxImageFormat format = OptimalFormatForContent(ContentForFormat(data->GetFormat()));
+  gfxImageFormat format = SurfaceFormatToImageFormat(data->GetFormat());
 
 
   nsRefPtr<gfxASurface> surf =

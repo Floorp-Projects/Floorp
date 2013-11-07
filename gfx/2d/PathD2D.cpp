@@ -91,6 +91,70 @@ private:
   bool mNeedsFigureEnded;
 };
 
+class StreamingGeometrySink : public ID2D1SimplifiedGeometrySink
+{
+public:
+  StreamingGeometrySink(PathSink *aSink)
+    : mSink(aSink)
+  {
+  }
+
+  HRESULT STDMETHODCALLTYPE QueryInterface(const IID &aIID, void **aPtr)
+  {
+    if (!aPtr) {
+      return E_POINTER;
+    }
+
+    if (aIID == IID_IUnknown) {
+      *aPtr = static_cast<IUnknown*>(this);
+      return S_OK;
+    } else if (aIID == IID_ID2D1SimplifiedGeometrySink) {
+      *aPtr = static_cast<ID2D1SimplifiedGeometrySink*>(this);
+      return S_OK;
+    }
+
+    return E_NOINTERFACE;
+  }
+
+  ULONG STDMETHODCALLTYPE AddRef()
+  {
+    return 1;
+  }
+
+  ULONG STDMETHODCALLTYPE Release()
+  {
+    return 1;
+  }
+
+  // We ignore SetFillMode, this depends on the destination sink.
+  STDMETHOD_(void, SetFillMode)(D2D1_FILL_MODE aMode)
+  { return; }
+  STDMETHOD_(void, BeginFigure)(D2D1_POINT_2F aPoint, D2D1_FIGURE_BEGIN aBegin)
+  { mSink->MoveTo(ToPoint(aPoint)); }
+  STDMETHOD_(void, AddLines)(const D2D1_POINT_2F *aLines, UINT aCount)
+  { for (UINT i = 0; i < aCount; i++) { mSink->LineTo(ToPoint(aLines[i])); } }
+  STDMETHOD_(void, AddBeziers)(const D2D1_BEZIER_SEGMENT *aSegments, UINT aCount)
+  {
+    for (UINT i = 0; i < aCount; i++) {
+      mSink->BezierTo(ToPoint(aSegments[i].point1), ToPoint(aSegments[i].point2), ToPoint(aSegments[i].point3));
+    }
+  }
+  STDMETHOD(Close)()
+  { /* Should never be called! */ return S_OK; }
+  STDMETHOD_(void, SetSegmentFlags)(D2D1_PATH_SEGMENT aFlags)
+  { /* Should never be called! */ }
+
+  STDMETHOD_(void, EndFigure)(D2D1_FIGURE_END aEnd)
+  {
+    if (aEnd == D2D1_FIGURE_END_CLOSED) {
+      return mSink->Close();
+    }
+  }
+private:
+
+  PathSink *mSink;
+};
+
 PathBuilderD2D::~PathBuilderD2D()
 {
 }
@@ -292,6 +356,22 @@ PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) 
   return pathBuilder;
 }
 
+void
+PathD2D::StreamToSink(PathSink *aSink) const
+{
+  HRESULT hr;
+
+  StreamingGeometrySink sink(aSink);
+
+  hr = mGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
+                           D2D1::IdentityMatrix(), &sink);
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to stream D2D path to sink. Code: " << hr;
+    return;
+  }
+}
+ 
 bool
 PathD2D::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
 {

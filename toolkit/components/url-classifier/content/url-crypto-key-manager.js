@@ -353,46 +353,29 @@ PROT_UrlCryptoKeyManager.prototype.onNewKey = function(callback)
  *          loading old key
  */
 PROT_UrlCryptoKeyManager.prototype.maybeLoadOldKey = function() {
-  
-  var oldKey = null;
-  try {  
-    var keyfile = Cc["@mozilla.org/file/directory_service;1"]
-                 .getService(Ci.nsIProperties)
-                 .get("ProfD", Ci.nsILocalFile); /* profile directory */
-    keyfile.append(this.keyFilename_);
-    if (keyfile.exists()) {
-      try {
-        var fis = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
-        fis.init(keyfile, 0x01 /* PR_RDONLY */, 0444, 0);
-        var stream = Cc["@mozilla.org/scriptableinputstream;1"]
-                     .createInstance(Ci.nsIScriptableInputStream);
-        stream.init(fis);
-        oldKey = stream.read(stream.available());
-      } finally {
-        if (stream)
-          stream.close();
-      }
+  let keypath = OS.Path.join(OS.Constants.Path.profileDir, this.keyFilename_);
+
+  let decoder = new TextDecoder();
+  let promise = OS.File.read(keypath);
+  return promise.then(array => {
+    let oldKey = decoder.decode(array);
+    if (!oldKey) {
+      G_Debug(this, "Couldn't find old key.");
+      return false;
     }
-  } catch(e) {
+
+    oldKey = (new G_Protocol4Parser).parse(oldKey);
+    var clientKey = oldKey[this.CLIENT_KEY_NAME];
+    var wrappedKey = oldKey[this.WRAPPED_KEY_NAME];
+
+    if (oldKey && clientKey && wrappedKey && !this.hasKey()) {
+      G_Debug(this, "Read old key from disk.");
+      return this.replaceKey_(clientKey, wrappedKey);
+    }
+  }, e => {
     G_Debug(this, "Caught " + e + " trying to read keyfile");
-    return Promise.resolve(false);
-  }
-
-  if (!oldKey) {
-    G_Debug(this, "Couldn't find old key.");
-    return Promise.resolve(false);
-  }
-
-  oldKey = (new G_Protocol4Parser).parse(oldKey);
-  var clientKey = oldKey[this.CLIENT_KEY_NAME];
-  var wrappedKey = oldKey[this.WRAPPED_KEY_NAME];
-
-  if (oldKey && clientKey && wrappedKey && !this.hasKey()) {
-    G_Debug(this, "Read old key from disk.");
-    return this.replaceKey_(clientKey, wrappedKey);
-  }
-  return Promise.resolve(false);
+    return false;
+  });
 }
 
 PROT_UrlCryptoKeyManager.prototype.shutdown = function() {

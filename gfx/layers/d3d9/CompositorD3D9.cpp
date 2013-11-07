@@ -98,14 +98,15 @@ CompositorD3D9::CreateRenderTarget(const gfx::IntRect &aRect,
   }
 
   RefPtr<CompositingRenderTargetD3D9> rt =
-    new CompositingRenderTargetD3D9(texture, aInit, IntSize(aRect.width, aRect.height));
+    new CompositingRenderTargetD3D9(texture, aInit, aRect);
 
   return rt;
 }
 
 TemporaryRef<CompositingRenderTarget>
 CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
-                                             const CompositingRenderTarget *aSource)
+                                             const CompositingRenderTarget *aSource,
+                                             const gfx::IntPoint &aSourcePoint)
 {
   RefPtr<IDirect3DTexture9> texture;
   HRESULT hr = device()->CreateTexture(aRect.width, aRect.height, 1,
@@ -130,10 +131,10 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
 
     if (sourceSurface && destSurface) {
       RECT sourceRect;
-      sourceRect.left = aRect.x;
-      sourceRect.right = aRect.XMost();
-      sourceRect.top = aRect.y;
-      sourceRect.bottom = aRect.YMost();
+      sourceRect.left = aSourcePoint.x;
+      sourceRect.right = aSourcePoint.x + aRect.width;
+      sourceRect.top = aSourcePoint.y;
+      sourceRect.bottom = aSourcePoint.y + aRect.height;
       RECT destRect;
       destRect.left = 0;
       destRect.right = aRect.width;
@@ -156,7 +157,7 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
   RefPtr<CompositingRenderTargetD3D9> rt =
     new CompositingRenderTargetD3D9(texture,
                                     INIT_MODE_NONE,
-                                    IntSize(aRect.width, aRect.height));
+                                    aRect);
 
   return rt;
 }
@@ -190,15 +191,17 @@ ShaderModeForEffectType(EffectTypes aEffectType)
 }
 
 void
-CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
+CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
+                         const gfx::Rect &aClipRect,
                          const EffectChain &aEffectChain,
-                         gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform,
-                         const gfx::Point &aOffset)
+                         gfx::Float aOpacity,
+                         const gfx::Matrix4x4 &aTransform)
 {
   MOZ_ASSERT(mCurrentRT, "No render target");
   device()->SetVertexShaderConstantF(CBmLayerTransform, &aTransform._11, 4);
 
-  float renderTargetOffset[] = { aOffset.x, aOffset.y, 0, 0 };
+  IntPoint origin = mCurrentRT->GetOrigin();
+  float renderTargetOffset[] = { origin.x, origin.y, 0, 0 };
   device()->SetVertexShaderConstantF(CBvRenderTargetOffset,
                                      renderTargetOffset,
                                      1);
@@ -475,7 +478,7 @@ CompositorD3D9::BeginFrame(const Rect *aClipRectIn,
   nsRefPtr<IDirect3DSurface9> backBuffer = mSwapChain->GetBackBuffer();
   mDefaultRT = new CompositingRenderTargetD3D9(backBuffer,
                                                INIT_MODE_CLEAR,
-                                               IntSize(mSize.width, mSize.height));
+                                               IntRect(0, 0, mSize.width, mSize.height));
   SetRenderTarget(mDefaultRT);
 }
 

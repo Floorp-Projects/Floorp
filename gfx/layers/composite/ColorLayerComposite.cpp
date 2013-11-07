@@ -22,8 +22,7 @@ namespace mozilla {
 namespace layers {
 
 void
-ColorLayerComposite::RenderLayer(const nsIntPoint& aOffset,
-                                 const nsIntRect& aClipRect)
+ColorLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 {
   EffectChain effects;
   gfxRGBA color(GetColor());
@@ -46,11 +45,10 @@ ColorLayerComposite::RenderLayer(const nsIntPoint& aOffset,
   gfx::Matrix4x4 transform;
   ToMatrix4x4(GetEffectiveTransform(), transform);
 
-  mCompositor->DrawQuad(rect, clipRect, effects, opacity,
-                        transform, gfx::Point(aOffset.x, aOffset.y));
+  mCompositor->DrawQuad(rect, clipRect, effects, opacity, transform);
   mCompositor->DrawDiagnostics(DIAGNOSTIC_COLOR,
                                rect, clipRect,
-                               transform, gfx::Point(aOffset.x, aOffset.y));
+                               transform);
 }
 
 } /* layers */

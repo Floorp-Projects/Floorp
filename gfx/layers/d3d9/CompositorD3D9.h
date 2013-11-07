@@ -44,7 +44,8 @@ public:
 
   virtual TemporaryRef<CompositingRenderTarget>
     CreateRenderTargetFromSource(const gfx::IntRect &aRect,
-                                 const CompositingRenderTarget *aSource) MOZ_OVERRIDE;
+                                 const CompositingRenderTarget *aSource,
+                                 const gfx::IntPoint &aSourcePoint) MOZ_OVERRIDE;
 
   virtual void SetRenderTarget(CompositingRenderTarget *aSurface);
   virtual CompositingRenderTarget* GetCurrentRenderTarget() MOZ_OVERRIDE
@@ -54,10 +55,11 @@ public:
 
   virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) MOZ_OVERRIDE {}
 
-  virtual void DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
+  virtual void DrawQuad(const gfx::Rect &aRect,
+                        const gfx::Rect &aClipRect,
                         const EffectChain &aEffectChain,
-                        gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform,
-                        const gfx::Point &aOffset) MOZ_OVERRIDE;
+                        gfx::Float aOpacity,
+                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
 
   virtual void BeginFrame(const gfx::Rect *aClipRectIn,
                           const gfxMatrix& aTransform,

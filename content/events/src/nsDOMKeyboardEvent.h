@@ -43,6 +43,7 @@ public:
     return GetModifierStateInternal(aKey);
   }
 
+  bool Repeat();
   uint32_t CharCode();
   uint32_t KeyCode();
   virtual uint32_t Which() MOZ_OVERRIDE;

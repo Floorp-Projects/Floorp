@@ -250,20 +250,20 @@ void BasicCompositor::Destroy()
 TemporaryRef<CompositingRenderTarget>
 BasicCompositor::CreateRenderTarget(const IntRect& aRect, SurfaceInitMode aInit)
 {
-  MOZ_ASSERT(aInit != INIT_MODE_COPY);
   RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), FORMAT_B8G8R8A8);
 
-  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect.Size());
+  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect);
 
   return rt.forget();
 }
 
 TemporaryRef<CompositingRenderTarget>
 BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
-                                              const CompositingRenderTarget *aSource)
+                                              const CompositingRenderTarget *aSource,
+                                              const IntPoint &aSourcePoint)
 {
   RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), FORMAT_B8G8R8A8);
-  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect.Size());
+  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect);
 
   DrawTarget *source;
   if (aSource) {
@@ -276,7 +276,8 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
 
   RefPtr<SourceSurface> snapshot = source->Snapshot();
 
-  rt->mDrawTarget->CopySurface(snapshot, aRect, IntPoint(0, 0));
+  IntRect sourceRect(aSourcePoint, aRect.Size());
+  rt->mDrawTarget->CopySurface(snapshot, sourceRect, IntPoint(0, 0));
   return rt.forget();
 }
 
@@ -330,12 +331,13 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
 }
 
 void
-BasicCompositor::DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
+BasicCompositor::DrawQuad(const gfx::Rect& aRect,
+                          const gfx::Rect& aClipRect,
                           const EffectChain &aEffectChain,
-                          gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform,
-                          const gfx::Point& aOffset)
+                          gfx::Float aOpacity,
+                          const gfx::Matrix4x4 &aTransform)
 {
-  DrawTarget *dest = mRenderTarget ? mRenderTarget->mDrawTarget : mDrawTarget;
+  DrawTarget *dest = mRenderTarget->mDrawTarget;
 
   if (!aTransform.Is2D()) {
     NS_WARNING("Can't handle 3D transforms yet!");
@@ -346,7 +348,8 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
 
   Matrix oldTransform = dest->GetTransform();
   Matrix newTransform = aTransform.As2D();
-  newTransform.Translate(-aOffset.x, -aOffset.y);
+  IntPoint offset = mRenderTarget->GetOrigin();
+  newTransform.Translate(-offset.x, -offset.y);
   dest->SetTransform(newTransform);
 
   RefPtr<SourceSurface> sourceMask;
