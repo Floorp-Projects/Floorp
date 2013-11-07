@@ -278,9 +278,12 @@ gfxPlatformGtk::SupportsOffMainThreadCompositing()
 #endif
 }
 
-qcms_profile *
-gfxPlatformGtk::GetPlatformCMSOutputProfile()
+void
+gfxPlatformGtk::GetPlatformCMSOutputProfile(void *&mem, size_t &size)
 {
+    mem = nullptr;
+    size = 0;
+
 #ifdef MOZ_X11
     const char EDID1_ATOM_NAME[] = "XFree86_DDC_EDID1_RAWDATA";
     const char ICC_PROFILE_ATOM_NAME[] = "_ICC_PROFILE";
@@ -289,11 +292,10 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
     Display *dpy = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     // In xpcshell tests, we never initialize X and hence don't have a Display.
     // In this case, there's no output colour management to be done, so we just
-    // return nullptr.
-    if (!dpy) {
-        return nullptr;
-    }
-
+    // return with nullptr.
+    if (!dpy)
+        return;
+ 
     Window root = gdk_x11_get_default_root_xwindow();
 
     Atom retAtom;
@@ -309,20 +311,24 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
                                           False, AnyPropertyType,
                                           &retAtom, &retFormat, &retLength,
                                           &retAfter, &retProperty)) {
-            qcms_profile* profile = nullptr;
 
-            if (retLength > 0)
-                profile = qcms_profile_from_memory(retProperty, retLength);
+            if (retLength > 0) {
+                void *buffer = malloc(retLength);
+                if (buffer) {
+                    memcpy(buffer, retProperty, retLength);
+                    mem = buffer;
+                    size = retLength;
+                }
+            }
 
             XFree(retProperty);
-
-            if (profile) {
+            if (size > 0) {
 #ifdef DEBUG_tor
                 fprintf(stderr,
                         "ICM profile read from %s successfully\n",
                         ICC_PROFILE_ATOM_NAME);
 #endif
-                return profile;
+                return;
             }
         }
     }
@@ -341,7 +347,7 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
 #ifdef DEBUG_tor
                 fprintf(stderr, "Short EDID data\n");
 #endif
-                return nullptr;
+                return;
             }
 
             // Format documented in "VESA E-EDID Implementation Guide"
@@ -383,23 +389,18 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
                     primaries.Blue.x, primaries.Blue.y, primaries.Blue.Y);
 #endif
 
-            qcms_profile* profile =
-                qcms_profile_create_rgb_with_gamma(whitePoint, primaries, gamma);
+            qcms_data_create_rgb_with_gamma(whitePoint, primaries, gamma, &mem, &size);
 
 #ifdef DEBUG_tor
-            if (profile) {
+            if (size > 0) {
                 fprintf(stderr,
                         "ICM profile read from %s successfully\n",
                         EDID1_ATOM_NAME);
             }
 #endif
-
-            return profile;
         }
     }
 #endif
-
-    return nullptr;
 }
 
 
