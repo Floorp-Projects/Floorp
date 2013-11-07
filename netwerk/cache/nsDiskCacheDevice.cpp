@@ -399,12 +399,12 @@ nsDiskCacheDevice::nsDiskCacheDevice()
     , mReporter(nullptr)
 {
     mReporter = new NetworkDiskCacheReporter(this);
-    NS_RegisterMemoryReporter(mReporter);
+    RegisterWeakMemoryReporter(mReporter);
 }
 
 nsDiskCacheDevice::~nsDiskCacheDevice()
 {
-    NS_UnregisterMemoryReporter(mReporter);
+    UnregisterWeakMemoryReporter(mReporter);
     Shutdown();
 }
 
