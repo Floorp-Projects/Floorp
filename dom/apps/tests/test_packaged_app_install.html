@@ -95,6 +95,12 @@ var steps = [
     PackagedTestHelper.setAppVersion(0, PackagedTestHelper.next);
   },
   function() {
+    // Bug 927699 - navigator.mozApps.install(url) lets NS_ERROR_FAILURE onto
+    //              the web.
+    ok(true, "== TEST == INVALID_URL");
+    checkAppInstallError("", "INVALID_URL");
+  },
+  function() {
     // Test network error.
     ok(true, "== TEST == Network error");
     checkAppInstallError("http://notvalidurl", "NETWORK_ERROR");
