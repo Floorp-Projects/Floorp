@@ -649,6 +649,11 @@ of the attribute codes:
       </varlistentry>
 
       <varlistentry>
+        <term>--empty-password</term>
+        <listitem><para>Use empty password when creating new certificate database with -N.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>--keyAttrFlags attrflags</term>
         <listitem><para>
 PKCS #11 key Attributes. Comma separated list of key attribute flags, selected from the following list of choices: {token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}</para></listitem>
