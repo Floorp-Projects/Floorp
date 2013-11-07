@@ -10,6 +10,7 @@ let promise = require("sdk/core/promise");
 let EventEmitter = require("devtools/shared/event-emitter");
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
 
 /**
  * A toolbox host represents an object that contains a toolbox (e.g. the
@@ -23,7 +24,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 exports.Hosts = {
   "bottom": BottomHost,
   "side": SidebarHost,
-  "window": WindowHost
+  "window": WindowHost,
+  "custom": CustomHost
 }
 
 /**
@@ -61,17 +63,17 @@ BottomHost.prototype = {
     this._nbox.appendChild(this.frame);
 
     let frameLoad = function() {
-      this.frame.removeEventListener("DOMContentLoaded", frameLoad, true);
       this.emit("ready", this.frame);
-
       deferred.resolve(this.frame);
     }.bind(this);
 
     this.frame.tooltip = "aHTMLTooltip";
-    this.frame.addEventListener("DOMContentLoaded", frameLoad, true);
 
     // we have to load something so we can switch documents if we have to
     this.frame.setAttribute("src", "about:blank");
+
+    let domHelper = new DOMHelpers(this.frame.contentWindow);
+    domHelper.onceDOMReady(frameLoad);
 
     focusTab(this.hostTab);
 
@@ -268,6 +270,59 @@ WindowHost.prototype = {
       this._window.close();
     }
 
+    return promise.resolve(null);
+  }
+}
+
+/**
+ * Host object for the toolbox in its own tab
+ */
+function CustomHost(hostTab, options) {
+  this.frame = options.customIframe;
+  this.uid = options.uid;
+  EventEmitter.decorate(this);
+}
+
+CustomHost.prototype = {
+  type: "custom",
+
+  _sendMessageToTopWindow: function CH__sendMessageToTopWindow(msg) {
+    // It's up to the custom frame owner (parent window) to honor
+    // "close" or "raise" instructions.
+    let topWindow = this.frame.ownerDocument.defaultView;
+    let json = {name:"toolbox-" + msg, uid: this.uid}
+    topWindow.postMessage(JSON.stringify(json), "*");
+  },
+
+  /**
+   * Create a new xul window to contain the toolbox.
+   */
+  create: function CH_create() {
+    return promise.resolve(this.frame);
+  },
+
+  /**
+   * Raise the host.
+   */
+  raise: function CH_raise() {
+    this._sendMessageToTopWindow("raise");
+  },
+
+  /**
+   * Set the toolbox title.
+   */
+  setTitle: function CH_setTitle(title) {
+    // Not supported
+  },
+
+  /**
+   * Destroy the window.
+   */
+  destroy: function WH_destroy() {
+    if (!this._destroyed) {
+      this._destroyed = true;
+      this._sendMessageToTopWindow("close");
+    }
     return promise.resolve(null);
   }
 }
