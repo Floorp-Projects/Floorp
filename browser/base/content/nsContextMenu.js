@@ -986,16 +986,15 @@ nsContextMenu.prototype = {
   },
 
   saveVideoFrameAsImage: function () {
-    urlSecurityCheck(this.mediaURL,
-                     this._unremotePrincipal(this.browser.contentPrincipal),
-                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     let name = "";
-    try {
-      let uri = makeURI(this.mediaURL);
-      let url = uri.QueryInterface(Ci.nsIURL);
-      if (url.fileBaseName)
-        name = decodeURI(url.fileBaseName) + ".jpg";
-    } catch (e) { }
+    if (this.mediaURL) {
+      try {
+        let uri = makeURI(this.mediaURL);
+        let url = uri.QueryInterface(Ci.nsIURL);
+        if (url.fileBaseName)
+          name = decodeURI(url.fileBaseName) + ".jpg";
+      } catch (e) { }
+    }
     if (!name)
       name = "snapshot.jpg";
     var video = this.target;
