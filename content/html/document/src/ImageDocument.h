@@ -94,6 +94,8 @@ protected:
   void ResetZoomLevel();
   float GetZoomLevel();
 
+  void UpdateSizeFromLayout();
+
   enum eModeClasses {
     eNone,
     eShrinkToFit,
