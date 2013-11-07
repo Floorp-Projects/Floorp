@@ -80,7 +80,7 @@
         // Notify browser-plugins.js that we were attached, on a delay because
         // this binding doesn't complete layout until the constructor
         // completes.
-        setTimeout(() => { this.dispatchEvent(new CustomEvent("PluginBindingAttached")) }, 0);
+        this.dispatchEvent(new CustomEvent("PluginBindingAttached"));
       </constructor>
     </implementation>
 </binding>
