@@ -47,6 +47,9 @@ protected:
                                                        const uint16_t& aBacklog,
                                                        const nsString& aBinaryType);
   virtual bool DeallocPTCPServerSocketChild(PTCPServerSocketChild*);
+  virtual PUDPSocketChild* AllocPUDPSocketChild(const nsCString& aHost,
+                                                const uint16_t& aPort);
+  virtual bool DeallocPUDPSocketChild(PUDPSocketChild*);
   virtual PRemoteOpenFileChild* AllocPRemoteOpenFileChild(const URIParams&,
                                                           const OptionalURIParams&);
   virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*);

@@ -13,6 +13,7 @@ XPIDL_SOURCES += [
     'nsITCPServerSocketParent.idl',
     'nsITCPSocketChild.idl',
     'nsITCPSocketParent.idl',
+    'nsIUDPSocketChild.idl',
 ]
 
 if CONFIG['MOZ_B2G_RIL']:

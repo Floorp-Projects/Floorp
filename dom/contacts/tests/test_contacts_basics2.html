@@ -1009,19 +1009,21 @@ var steps = [
     next();
   },
   function() {
-    ok(true, "Undefined strings should be treated as null");
+    ok(true, "Undefined properties of fields should be treated correctly");
     var c = new mozContact({
-      adr: [{value: undefined}],
+      adr: [{streetAddress: undefined}],
       email: [{value: undefined}],
       url: [{value: undefined}],
       impp: [{value: undefined}],
       tel: [{value: undefined}],
     });
-    is(c.adr[0].type, null, "adr is null");
-    is(c.email[0].type, null, "email is null");
-    is(c.url[0].type, null, "url is null");
-    is(c.impp[0].type, null, "impp is null");
-    is(c.tel[0].type, null, "tel is null");
+    ise(c.adr[0].streetAddress, null, "adr.streetAddress is null");
+    ise(c.adr[0].locality, null, "adr.locality is null");
+    ise(c.adr[0].pref, null, "adr.pref is null");
+    ise(c.email[0].value, null, "email.value is null");
+    ise(c.url[0].value, null, "url.value is null");
+    ise(c.impp[0].value, null, "impp.value is null");
+    ise(c.tel[0].value, null, "tel.value is null");
     next();
   },
   function() {

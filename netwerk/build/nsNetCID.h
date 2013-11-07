@@ -335,10 +335,10 @@
     {0xab, 0x1d, 0x5e, 0x68, 0xa9, 0xf4, 0x5f, 0x08} \
 }
 
-// component implementing nsIUDPServerSocket
-#define NS_UDPSERVERSOCKET_CONTRACTID \
-    "@mozilla.org/network/server-socket-udp;1"
-#define NS_UDPSERVERSOCKET_CID                       \
+// component implementing nsIUDPSocket
+#define NS_UDPSOCKET_CONTRACTID \
+    "@mozilla.org/network/udp-socket;1"
+#define NS_UDPSOCKET_CID                             \
 { /* c9f74572-7b8e-4fec-bb4a-03c0d3021bd6 */         \
     0xc9f74572,                                      \
     0x7b8e,                                          \
