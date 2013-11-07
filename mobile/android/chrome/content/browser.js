@@ -1397,10 +1397,17 @@ var BrowserApp = {
         if (!shouldShowProgress(url))
           params.showProgress = false;
 
-        if (data.newTab)
+        if (data.newTab) {
           this.addTab(url, params);
-        else
+        } else {
+          if (data.tabId) {
+            // Use a specific browser instead of the selected browser, if it exists
+            let specificBrowser = this.getTabForId(data.tabId).browser;
+            if (specificBrowser)
+              browser = specificBrowser;
+          }
           this.loadURI(url, browser, params);
+        }
         break;
       }
 
@@ -3487,6 +3494,60 @@ Tab.prototype = {
             };
             sendMessageToJava(json);
           } catch (e) {}
+        } else if (list.indexOf("[search]" != -1)) {
+          let type = target.type && target.type.toLowerCase();
+
+          // Replace all starting or trailing spaces or spaces before "*;" globally w/ "".
+          type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
+
+          // Check that type matches opensearch.
+          let isOpenSearch = (type == "application/opensearchdescription+xml");
+          if (isOpenSearch && target.title && /^(?:https?|ftp):/i.test(target.href)) {
+            let visibleEngines = Services.search.getVisibleEngines();
+            // NOTE: Engines are currently identified by name, but this can be changed
+            // when Engines are identified by URL (see bug 335102).
+            if (visibleEngines.some(function(e) {
+              return e.name == target.title;
+            })) {
+              // This engine is already present, do nothing.
+              return;
+            }
+
+            if (this.browser.engines) {
+              // This engine has already been handled, do nothing.
+              if (this.browser.engines.some(function(e) {
+                return e.url == target.href;
+              })) {
+                  return;
+              }
+            } else {
+              this.browser.engines = [];
+            }
+
+            // Get favicon.
+            let iconURL = target.ownerDocument.documentURIObject.prePath + "/favicon.ico";
+
+            let newEngine = {
+              title: target.title,
+              url: target.href,
+              iconURL: iconURL
+            };
+
+            this.browser.engines.push(newEngine);
+
+            // Don't send a message to display engines if we've already handled an engine.
+            if (this.browser.engines.length > 1)
+              return;
+
+            // Broadcast message that this tab contains search engines that should be visible.
+            let newEngineMessage = {
+              type: "Link:OpenSearch",
+              tabID: this.id,
+              visible: true
+            };
+
+            sendMessageToJava(newEngineMessage);
+          }
         }
         break;
       }
@@ -3639,6 +3700,22 @@ Tab.prototype = {
         // We may receive a document stop event while a document is still loading
         // (such as when doing URI fixup). Don't notify Java UI in these cases.
         return;
+      }
+
+      // Clear page-specific opensearch engines and feeds for a new request.
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START && aRequest && aWebProgress.isTopLevel) {
+          this.browser.engines = null;
+
+          // Send message to clear search engine option in context menu.
+          let newEngineMessage = {
+            type: "Link:OpenSearch",
+            tabID: this.id,
+            visible: false
+          };
+
+          sendMessageToJava(newEngineMessage);
+
+          this.browser.feeds = null;
       }
 
       // Check to see if we restoring the content from a previous presentation (session)
@@ -6556,6 +6633,7 @@ var SearchEngines = {
   PREF_SUGGEST_PROMPTED: "browser.search.suggest.prompted",
 
   init: function init() {
+    Services.obs.addObserver(this, "SearchEngines:Add", false);
     Services.obs.addObserver(this, "SearchEngines:Get", false);
     Services.obs.addObserver(this, "SearchEngines:GetVisible", false);
     Services.obs.addObserver(this, "SearchEngines:SetDefault", false);
@@ -6570,6 +6648,7 @@ var SearchEngines = {
   },
 
   uninit: function uninit() {
+    Services.obs.removeObserver(this, "SearchEngines:Add");
     Services.obs.removeObserver(this, "SearchEngines:Get");
     Services.obs.removeObserver(this, "SearchEngines:GetVisible");
     Services.obs.removeObserver(this, "SearchEngines:SetDefault");
@@ -6651,6 +6730,9 @@ var SearchEngines = {
   observe: function observe(aSubject, aTopic, aData) {
     let engine;
     switch(aTopic) {
+      case "SearchEngines:Add":
+        this.displaySearchEnginesList(aData);
+        break;
       case "SearchEngines:GetVisible":
         Services.search.init(this._handleSearchEnginesGetVisible.bind(this));
         break;
@@ -6675,6 +6757,50 @@ var SearchEngines = {
         dump("Unexpected message type observed: " + aTopic);
         break;
     }
+  },
+
+  // Display context menu listing names of the search engines available to be added.
+  displaySearchEnginesList: function displaySearchEnginesList(aData) {
+    let data = JSON.parse(aData);
+    let tab = BrowserApp.getTabForId(data.tabId);
+
+    if (!tab)
+      return;
+
+    let browser = tab.browser;
+    let engines = browser.engines;
+
+    let p = new Prompt({
+      window: browser.contentWindow
+    }).setSingleChoiceItems(engines.map(function(e) {
+      return { label: e.title };
+    })).show((function(data) {
+      if (data.button == -1)
+        return;
+
+      this.addOpenSearchEngine(engines[data.button]);
+      engines.splice(data.button, 1);
+
+      if (engines.length < 1) {
+        // Broadcast message that there are no more add-able search engines.
+        let newEngineMessage = {
+          type: "Link:OpenSearch",
+          tabID: tab.id,
+          visible: false
+        };
+
+        sendMessageToJava(newEngineMessage);
+      }
+    }).bind(this));
+  },
+
+  addOpenSearchEngine: function addOpenSearchEngine(engine) {
+    Services.search.addEngine(engine.url, Ci.nsISearchEngine.DATA_XML, engine.iconURL, false, {
+      onSuccess: function() {
+        // Display a toast confirming addition of new search engine.
+        NativeWindow.toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [engine.title], 1), "long");
+      }
+    });
   },
 
   addEngine: function addEngine(aElement) {
@@ -7118,6 +7244,7 @@ var RemoteDebugger = {
     // Make prompt. Note: button order is in reverse.
     let prompt = new Prompt({
       window: null,
+      hint: "remotedebug",
       title: title,
       message: msg,
       buttons: [ agree, cancel, disable ],
