@@ -12,6 +12,7 @@
 #include "mozilla/EventForwards.h"
 
 #include <gdk/gdk.h>
+#include <X11/XKBlib.h>
 
 namespace mozilla {
 namespace widget {
@@ -206,9 +207,35 @@ protected:
     int mXKBBaseEventCode;
 
     /**
+     * Only auto_repeats[] stores valid value.  If you need to use other
+     * members, you need to listen notification events for them.
+     * See a call of XkbSelectEventDetails() with XkbControlsNotify in
+     * InitXKBExtension().
+     */
+    XKeyboardState mKeyboardState;
+
+    /**
      * Pointer of the singleton instance.
      */
     static KeymapWrapper* sInstance;
+
+    /**
+     * Auto key repeat management.
+     */
+    static guint sLastRepeatableHardwareKeyCode;
+    enum RepeatState
+    {
+        NOT_PRESSED,
+        FIRST_PRESS,
+        REPEATING
+    };
+    static RepeatState sRepeatState;
+
+    /**
+     * IsAutoRepeatableKey() returns true if the key supports auto repeat.
+     * Otherwise, false.
+     */
+    bool IsAutoRepeatableKey(guint aHardwareKeyCode);
 
     /**
      * Signal handlers.
@@ -295,6 +322,15 @@ protected:
      */
     void InitKeypressEvent(WidgetKeyboardEvent& aKeyEvent,
                            GdkEventKey* aGdkKeyEvent);
+
+    /**
+     * FilterEvents() listens all events on all our windows.
+     * Be careful, this may make damage to performance if you add expensive
+     * code in this method.
+     */
+    static GdkFilterReturn FilterEvents(GdkXEvent* aXEvent,
+                                        GdkEvent* aGdkEvent,
+                                        gpointer aData);
 };
 
 } // namespace widget
