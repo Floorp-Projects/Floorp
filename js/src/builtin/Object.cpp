@@ -552,13 +552,6 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
-    if (!GlobalObject::warnOnceAboutWatch(cx, obj))
-        return false;
-
     if (args.length() <= 1) {
         js_ReportMissingArg(cx, args.calleev(), 1);
         return false;
@@ -570,6 +563,10 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
 
     RootedId propid(cx);
     if (!ValueToId<CanGC>(cx, args[0], &propid))
+        return false;
+
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
+    if (!obj)
         return false;
 
     RootedValue tmp(cx);
@@ -592,23 +589,15 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
-
-    if (!GlobalObject::warnOnceAboutWatch(cx, obj))
-        return false;
-
+    args.rval().setUndefined();
     RootedId id(cx);
-    if (args.length() != 0) {
+    if (argc != 0) {
         if (!ValueToId<CanGC>(cx, args[0], &id))
             return false;
     } else {
         id = JSID_VOID;
     }
-
-    if (!JSObject::unwatch(cx, obj, id))
-        return false;
-
-    args.rval().setUndefined();
-    return true;
+    return JSObject::unwatch(cx, obj, id);
 }
 
 #endif /* JS_HAS_OBJ_WATCHPOINT */
