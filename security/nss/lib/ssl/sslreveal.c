@@ -93,7 +93,7 @@ SSL_HandshakeNegotiatedExtension(PRFileDesc * socket,
   *pYes = PR_FALSE;
 
   /* according to public API SSL_GetChannelInfo, this doesn't need a lock */
-  if (sslsocket->opt.useSecurity && sslsocket->enoughFirstHsDone) {
+  if (sslsocket->opt.useSecurity) {
     if (sslsocket->ssl3.initialized) { /* SSL3 and TLS */
       /* now we know this socket went through ssl3_InitState() and
        * ss->xtnData got initialized, which is the only member accessed by
