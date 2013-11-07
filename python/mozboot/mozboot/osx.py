@@ -27,7 +27,7 @@ MACPORTS_URL = {'8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.
                 '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.7-Lion.pkg',
                 '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.6-SnowLeopard.pkg',}
 
-MACPORTS_CLANG_PACKAGE = 'clang-3.2'
+MACPORTS_CLANG_PACKAGE = 'clang-3.3'
 
 RE_CLANG_VERSION = re.compile('Apple (?:clang|LLVM) version (\d+\.\d+)')
 

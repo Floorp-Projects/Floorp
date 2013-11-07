@@ -15,6 +15,7 @@
     macro(anonymous, anonymous, "anonymous") \
     macro(apply, apply, "apply") \
     macro(arguments, arguments, "arguments") \
+    macro(as, as, "as") \
     macro(ArrayType, ArrayType, "ArrayType") \
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
@@ -43,6 +44,7 @@
     macro(DateTimeFormatFormatGet, DateTimeFormatFormatGet, "Intl_DateTimeFormat_format_get") \
     macro(decodeURI, decodeURI, "decodeURI") \
     macro(decodeURIComponent, decodeURIComponent, "decodeURIComponent") \
+    macro(default_, default_, "default") \
     macro(defineProperty, defineProperty, "defineProperty") \
     macro(defineGetter, defineGetter, "__defineGetter__") \
     macro(defineSetter, defineSetter, "__defineSetter__") \
@@ -68,6 +70,7 @@
     macro(float32, float32, "float32") \
     macro(float64, float64, "float64") \
     macro(format, format, "format") \
+    macro(from, from, "from") \
     macro(get, get, "get") \
     macro(getInternals, getInternals, "getInternals") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \

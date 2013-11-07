@@ -58,6 +58,12 @@ enum BufferMode {
   BUFFER_BUFFERED
 };
 
+enum DrawRegionClip {
+  CLIP_DRAW,
+  CLIP_DRAW_SNAPPED,
+  CLIP_NONE,
+};
+
 // LayerRenderState for Composer2D
 // We currently only support Composer2D using gralloc. If we want to be backed
 // by other surfaces we will need a more generic LayerRenderState.

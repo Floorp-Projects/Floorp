@@ -4129,10 +4129,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "intern(str)",
 "  Internalize str in the atom table."),
 
-    JS_FN_HELP("clone", Clone, 1, 0,
-"clone(fun[, scope])",
-"  Clone function object."),
-
     JS_FN_HELP("getpda", GetPDA, 1, 0,
 "getpda(obj)",
 "  Get the property descriptors for obj."),
@@ -4277,6 +4273,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 };
 
 static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
+    JS_FN_HELP("clone", Clone, 1, 0,
+"clone(fun[, scope])",
+"  Clone function object."),
+
     JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"

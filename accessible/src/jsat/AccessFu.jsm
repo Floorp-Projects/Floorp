@@ -735,6 +735,12 @@ var Input = {
       case 'swipeleft1':
         this.moveCursor('movePrevious', 'Simple', 'gesture');
         break;
+      case 'swipeup1':
+        this.contextAction('backward');
+        break;
+      case 'swipedown1':
+        this.contextAction('forward');
+        break;
       case 'exploreend1':
         this.activateCurrent(null, true);
         break;
@@ -857,6 +863,12 @@ var Input = {
     mm.sendAsyncMessage('AccessFu:MoveCursor',
                         {action: aAction, rule: aRule,
                          origin: 'top', inputType: aInputType});
+  },
+
+  contextAction: function contextAction(aDirection) {
+    // XXX: For now, the only supported context action is adjusting a range.
+    let mm = Utils.getMessageManager(Utils.CurrentBrowser);
+    mm.sendAsyncMessage('AccessFu:AdjustRange', {direction: aDirection});
   },
 
   moveByGranularity: function moveByGranularity(aDetails) {

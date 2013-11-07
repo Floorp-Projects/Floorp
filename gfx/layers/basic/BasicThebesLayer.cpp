@@ -131,7 +131,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
         groupContext = aContext;
       }
       SetAntialiasingFlags(this, groupContext);
-      aCallback(this, groupContext, toDraw, nsIntRegion(), aCallbackData);
+      aCallback(this, groupContext, toDraw, CLIP_NONE, nsIntRegion(), aCallbackData);
       if (needsGroup) {
         BasicManager()->PopGroupToSourceWithCachedSurface(aContext, groupContext);
         if (needsClipToVisibleRegion) {
@@ -236,6 +236,7 @@ BasicThebesLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
     PaintBuffer(state.mContext,
                 state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
                 state.mDidSelfCopy,
+                state.mClip,
                 aCallback, aCallbackData);
     MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PaintThebes", this));
     Mutated();

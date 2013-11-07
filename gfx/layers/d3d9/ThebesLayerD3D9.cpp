@@ -493,7 +493,7 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
 
   context->Translate(gfxPoint(-bounds.x, -bounds.y));
   LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
-  cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
+  cbInfo.Callback(this, context, aRegion, CLIP_NONE, nsIntRegion(), cbInfo.CallbackData);
 
   for (uint32_t i = 0; i < aReadbackUpdates.Length(); ++i) {
     NS_ASSERTION(aMode == SURFACE_OPAQUE,

@@ -213,13 +213,18 @@ WasIncrementalGC(JSRuntime *rt);
 extern JS_FRIEND_API(size_t)
 GetGCNumber();
 
-class AutoAssertNoGC {
+class JS_PUBLIC_API(AutoAssertNoGC)
+{
 #ifdef DEBUG
     size_t gcNumber;
 
   public:
     AutoAssertNoGC();
     ~AutoAssertNoGC();
+#else
+  public:
+    /* Prevent unreferenced local warnings in opt builds. */
+    AutoAssertNoGC() {}
 #endif
 };
 
@@ -309,6 +314,31 @@ static JS_ALWAYS_INLINE void
 ExposeObjectToActiveJS(JSObject *obj)
 {
     ExposeGCThingToActiveJS(obj, JSTRACE_OBJECT);
+}
+
+/*
+ * If a GC is currently marking, mark the object black.
+ */
+static JS_ALWAYS_INLINE void
+MarkGCThingAsLive(JSRuntime *rt_, void *thing, JSGCTraceKind kind)
+{
+    shadow::Runtime *rt = shadow::Runtime::asShadowRuntime(rt_);
+#ifdef JSGC_GENERATIONAL
+    /*
+     * Any object in the nursery will not be freed during any GC running at that time.
+     */
+    if (js::gc::IsInsideNursery(rt, thing))
+        return;
+#endif
+    if (IsIncrementalBarrierNeededOnGCThing(rt, thing, kind))
+        IncrementalReferenceBarrier(thing, kind);
+}
+
+static JS_ALWAYS_INLINE void
+MarkStringAsLive(Zone *zone, JSString *string)
+{
+    JSRuntime *rt = JS::shadow::Zone::asShadowZone(zone)->runtimeFromMainThread();
+    MarkGCThingAsLive(rt, string, JSTRACE_STRING);
 }
 
 } /* namespace JS */
