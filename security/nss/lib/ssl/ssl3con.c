@@ -819,6 +819,11 @@ static SECStatus
 Null_Cipher(void *ctx, unsigned char *output, int *outputLen, int maxOutputLen,
 	    const unsigned char *input, int inputLen)
 {
+    if (inputLen > maxOutputLen) {
+        *outputLen = 0;  /* Match PK11_CipherOp in setting outputLen */
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
+    }
     *outputLen = inputLen;
     if (input != output)
 	PORT_Memcpy(output, input, inputLen);
