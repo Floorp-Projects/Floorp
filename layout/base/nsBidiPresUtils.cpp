@@ -779,6 +779,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
              */
             int32_t newIndex = aBpd->GetLastFrameForContent(content);
             if (newIndex > frameIndex) {
+              currentLine->MarkDirty();
               RemoveBidiContinuation(aBpd, frame,
                                      frameIndex, newIndex, lineOffset);
               frameIndex = newIndex;
@@ -796,6 +797,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
             } while (++newIndex < frameCount &&
                      aBpd->FrameAt(newIndex) == NS_BIDI_CONTROL_FRAME);
             if (newIndex < frameCount) {
+              currentLine->MarkDirty();
               RemoveBidiContinuation(aBpd, frame,
                                      frameIndex, newIndex, lineOffset);
             }
@@ -807,6 +809,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
              */
             nsIFrame* next = frame->GetNextInFlow();
             if (next) {
+              currentLine->MarkDirty();
               nsIFrame* parent = frame;
               nsIFrame* nextParent = next;
               while (parent && nextParent) {
@@ -824,7 +827,6 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
             }
           }
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
-          currentLine->MarkDirty();
         }
       } // isTextFrame
       else {
@@ -1080,6 +1082,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                   CreateContinuation(frame, &next, true);
                   createdContinuation = true;
                 }
+                aBpd->GetLineForFrameAt(aBpd->FrameCount() - 1)->MarkDirty();
               }
               ResolveParagraphWithinBlock(aBlockFrame, aBpd);
 
