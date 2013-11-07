@@ -44,7 +44,8 @@ public:
 
   virtual TemporaryRef<CompositingRenderTarget>
     CreateRenderTargetFromSource(const gfx::IntRect &aRect,
-                                 const CompositingRenderTarget *aSource) MOZ_OVERRIDE;
+                                 const CompositingRenderTarget *aSource,
+                                 const gfx::IntPoint &aSourcePoint) MOZ_OVERRIDE;
 
   virtual void SetRenderTarget(CompositingRenderTarget *aSurface);
   virtual CompositingRenderTarget* GetCurrentRenderTarget() MOZ_OVERRIDE
