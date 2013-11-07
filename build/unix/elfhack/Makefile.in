@@ -40,9 +40,10 @@ test-ctors$(DLL_SUFFIX): DT_TYPE=INIT
 
 GARBAGE += test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX) test-array$(DLL_SUFFIX).bak test-ctors$(DLL_SUFFIX).bak
 
+ifndef CROSS_COMPILE
+ifdef COMPILE_ENVIRONMENT
 libs:: test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX)
 
-ifndef CROSS_COMPILE
 dummy: dummy.$(OBJ_SUFFIX)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
@@ -52,6 +53,7 @@ libs:: dummy
 	LD_PRELOAD=$(CURDIR)/test-ctors$(DLL_SUFFIX) $(CURDIR)/dummy
 
 GARBAGE += dummy
+endif
 endif
 
 test.$(OBJ_SUFFIX): CFLAGS := -O0

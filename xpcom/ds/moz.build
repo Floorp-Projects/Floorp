@@ -105,7 +105,7 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
     SOURCES += [
         'TimeStamp_darwin.cpp',
     ]
-else:
+elif CONFIG['COMPILE_ENVIRONMENT']:
     error('No TimeStamp implementation on this platform.  Build will not succeed')
 
 EXTRA_COMPONENTS += [
