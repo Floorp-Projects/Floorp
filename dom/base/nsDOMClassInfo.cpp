@@ -3651,6 +3651,14 @@ NS_IMETHODIMP
 nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSFreeOp *fop,
                      JSObject *obj)
 {
+  // Since this call is virtual, the exact rooting hazard static analysis is
+  // not able to determine that it happens during finalization and should be
+  // ignored. Moreover, the analysis cannot discover and validate the
+  // potential targets of the virtual call to OnFinalize below because of the
+  // indirection through nsCOMMPtr. Thus, we annotate the analysis here so
+  // that it does not report OnFinalize as GCing with |obj| on stack.
+  JS::AutoAssertNoGC nogc;
+
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
 

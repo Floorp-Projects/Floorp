@@ -46,6 +46,7 @@ IonBuilder::IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
     cx(cx),
     baselineFrame_(baselineFrame),
     abortReason_(AbortReason_Disable),
+    reprSetHash_(nullptr),
     constraints_(constraints),
     analysis_(info->script()),
     thisTypes(nullptr),
@@ -5696,7 +5697,11 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         for (uint32_t i = 0; i < info().nargs(); i++) {
             uint32_t slot = needsArgsObj ? info().argSlotUnchecked(i) : info().argSlot(i);
 
-            if (needsArgsObj) {
+            // Only grab arguments from the arguments object if the arguments object
+            // aliases formals.  If the argsobj does not alias formals, then the
+            // formals may have been assigned to during interpretation, and that change
+            // will not be reflected in the argsobj.
+            if (needsArgsObj && info().argsObjAliasesFormals()) {
                 JS_ASSERT(argsObj && argsObj->isOsrArgumentsObject());
                 // If this is an aliased formal, then the arguments object
                 // contains a hole at this index.  Any references to this
@@ -7678,8 +7683,9 @@ IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName 
 }
 
 bool
-IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetPropertyCache *getPropCache,
-                                    types::TemporaryTypeSet *objTypes, types::TemporaryTypeSet *pushedTypes)
+IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPropCache,
+                                     types::TemporaryTypeSet *objTypes,
+                                     types::TemporaryTypeSet *pushedTypes)
 {
     PropertyName *name = getPropCache->name();
 
@@ -8240,7 +8246,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, PropertyName *name,
         Shape *objShape = shapes[0];
         obj = addShapeGuard(obj, objShape, Bailout_ShapeGuard);
 
-        Shape *shape = objShape->search(cx, NameToId(name));
+        Shape *shape = objShape->searchLinear(NameToId(name));
         JS_ASSERT(shape);
 
         if (!loadSlot(obj, shape, rvalType, barrier, types))
@@ -8255,7 +8261,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, PropertyName *name,
 
         for (size_t i = 0; i < shapes.length(); i++) {
             Shape *objShape = shapes[i];
-            Shape *shape =  objShape->search(cx, NameToId(name));
+            Shape *shape =  objShape->searchLinear(NameToId(name));
             JS_ASSERT(shape);
             if (!load->addShape(objShape, shape))
                 return false;
@@ -8307,7 +8313,7 @@ IonBuilder::getPropTryCache(bool *emitted, PropertyName *name,
     }
 
     if (JSOp(*pc) == JSOP_CALLPROP) {
-        if (!annotateGetPropertyCache(cx, obj, load, obj->resultTypeSet(), types))
+        if (!annotateGetPropertyCache(obj, load, obj->resultTypeSet(), types))
             return false;
     }
 
@@ -8642,7 +8648,7 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
         Shape *objShape = shapes[0];
         obj = addShapeGuard(obj, objShape, Bailout_ShapeGuard);
 
-        Shape *shape = objShape->search(cx, NameToId(name));
+        Shape *shape = objShape->searchLinear(NameToId(name));
         JS_ASSERT(shape);
 
         bool needsBarrier = objTypes->propertyNeedsBarrier(constraints(), NameToId(name));
@@ -8658,7 +8664,7 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
 
         for (size_t i = 0; i < shapes.length(); i++) {
             Shape *objShape = shapes[i];
-            Shape *shape =  objShape->search(cx, NameToId(name));
+            Shape *shape =  objShape->searchLinear(NameToId(name));
             JS_ASSERT(shape);
             if (!ins->addShape(objShape, shape))
                 return false;
@@ -8727,9 +8733,8 @@ IonBuilder::jsop_delelem()
 bool
 IonBuilder::jsop_regexp(RegExpObject *reobj)
 {
-    JSObject *prototype = script()->global().getOrCreateRegExpPrototype(cx);
-    if (!prototype)
-        return false;
+    JSObject *prototype = reobj->getProto();
+    JS_ASSERT(prototype == script()->global().maybeGetRegExpPrototype());
 
     JS_ASSERT(&reobj->JSObject::global() == &script()->global());
 
@@ -9057,7 +9062,7 @@ IonBuilder::walkScopeChain(unsigned hops)
 bool
 IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, JSObject **pcall)
 {
-    JSScript *outerScript = ScopeCoordinateFunctionScript(cx, script(), pc);
+    JSScript *outerScript = ScopeCoordinateFunctionScript(script(), pc);
     if (!outerScript || !outerScript->treatAsRunOnce)
         return false;
 
@@ -9114,7 +9119,7 @@ IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
 {
     JSObject *call = nullptr;
     if (hasStaticScopeObject(sc, &call) && call) {
-        PropertyName *name = ScopeCoordinateName(cx, script(), pc);
+        PropertyName *name = ScopeCoordinateName(script(), pc);
         bool succeeded;
         if (!getStaticName(call, name, &succeeded))
             return false;
@@ -9124,7 +9129,7 @@ IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
 
     MDefinition *obj = walkScopeChain(sc.hops);
 
-    Shape *shape = ScopeCoordinateToStaticScopeShape(cx, script(), pc);
+    Shape *shape = ScopeCoordinateToStaticScopeShape(script(), pc);
 
     MInstruction *load;
     if (shape->numFixedSlots() <= sc.slot) {
@@ -9154,7 +9159,7 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
                 return false;
         }
         MDefinition *value = current->pop();
-        PropertyName *name = ScopeCoordinateName(cx, script(), pc);
+        PropertyName *name = ScopeCoordinateName(script(), pc);
 
         if (call) {
             // Push the object on the stack to match the bound object expected in
@@ -9177,7 +9182,7 @@ IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
     MDefinition *rval = current->peek(-1);
     MDefinition *obj = walkScopeChain(sc.hops);
 
-    Shape *shape = ScopeCoordinateToStaticScopeShape(cx, script(), pc);
+    Shape *shape = ScopeCoordinateToStaticScopeShape(script(), pc);
 
     if (NeedsPostBarrier(info(), rval))
         current->add(MPostWriteBarrier::New(obj, rval));
@@ -9333,16 +9338,14 @@ TypeRepresentationSetHash *
 IonBuilder::getOrCreateReprSetHash()
 {
     if (!reprSetHash_) {
-        TypeRepresentationSetHash* hash =
-            cx->new_<TypeRepresentationSetHash>();
-        if (!hash || !hash->init()) {
-            js_delete(hash);
+        TypeRepresentationSetHash *hash =
+            temp_->lifoAlloc()->new_<TypeRepresentationSetHash>();
+        if (!hash || !hash->init())
             return nullptr;
-        }
 
         reprSetHash_ = hash;
     }
-    return reprSetHash_.get();
+    return reprSetHash_;
 }
 
 bool

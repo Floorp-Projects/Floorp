@@ -417,3 +417,13 @@ MSG_DEF(JSMSG_TYPEDOBJECT_NO_SUCH_PROP, 363, 1, JSEXN_TYPEERR, "No such property
 MSG_DEF(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 364, 2, JSEXN_TYPEERR, "argument {0} invalid: expected {1}")
 MSG_DEF(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED, 365, 0, JSEXN_TYPEERR, "handle unattached")
 MSG_DEF(JSMSG_TYPEDOBJECT_HANDLE_BAD_TYPE, 366, 0, JSEXN_TYPEERR, "handle moved to destination of incorrect type")
+
+MSG_DEF(JSMSG_IMPORT_DECL_AT_TOP_LEVEL, 367, 0, JSEXN_SYNTAXERR, "import declarations may only appear at top level")
+MSG_DEF(JSMSG_NO_IMPORT_NAME,         368, 0, JSEXN_SYNTAXERR, "missing import name")
+MSG_DEF(JSMSG_AS_AFTER_RESERVED_WORD, 369, 1, JSEXN_SYNTAXERR, "missing keyword 'as' after reserved word '{0}'")
+MSG_DEF(JSMSG_NO_BINDING_NAME,	      370, 0, JSEXN_SYNTAXERR, "missing binding name")
+MSG_DEF(JSMSG_RC_AFTER_IMPORT_SPEC_LIST, 371, 0, JSEXN_SYNTAXERR, "missing '}' after module specifier list")
+MSG_DEF(JSMSG_FROM_AFTER_IMPORT_SPEC_SET, 372, 0, JSEXN_SYNTAXERR, "missing keyword 'from' after import specifier set")
+MSG_DEF(JSMSG_DECLARATION_AFTER_IMPORT, 373, 0, JSEXN_SYNTAXERR, "missing declaration after 'import' keyword")
+MSG_DEF(JSMSG_MODULE_SPEC_AFTER_FROM,   374, 0, JSEXN_SYNTAXERR, "missing module specifier after 'from' keyword")
+MSG_DEF(JSMSG_MODULES_NOT_IMPLEMENTED,  375, 0, JSEXN_SYNTAXERR, "modules are not implemented yet")

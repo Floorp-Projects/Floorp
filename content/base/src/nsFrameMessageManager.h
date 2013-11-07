@@ -61,6 +61,7 @@ public:
                                      const nsAString& aMessage,
                                      const mozilla::dom::StructuredCloneData& aData,
                                      JS::Handle<JSObject *> aCpows,
+                                     nsIPrincipal* aPrincipal,
                                      InfallibleTArray<nsString>* aJSONRetVal,
                                      bool aIsSync)
   {
@@ -70,7 +71,8 @@ public:
   virtual bool DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
                                   const mozilla::dom::StructuredCloneData& aData,
-                                  JS::Handle<JSObject *> aCpows)
+                                  JS::Handle<JSObject *> aCpows,
+                                  nsIPrincipal* aPrincipal)
   {
     return true;
   }
@@ -218,7 +220,7 @@ public:
 
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           bool aIsSync, const StructuredCloneData* aCloneData,
-                          CpowHolder* aCpows,
+                          CpowHolder* aCpows, nsIPrincipal* aPrincipal,
                           InfallibleTArray<nsString>* aJSONRetVal);
 
   void AddChildManager(nsFrameMessageManager* aManager,
@@ -239,12 +241,14 @@ public:
   nsresult DispatchAsyncMessage(const nsAString& aMessageName,
                                 const JS::Value& aJSON,
                                 const JS::Value& aObjects,
+                                nsIPrincipal* aPrincipal,
                                 JSContext* aCx,
                                 uint8_t aArgc);
   nsresult DispatchAsyncMessageInternal(JSContext* aCx,
                                         const nsAString& aMessage,
                                         const StructuredCloneData& aData,
-                                        JS::Handle<JSObject *> aCpows);
+                                        JS::Handle<JSObject *> aCpows,
+                                        nsIPrincipal* aPrincipal);
   void RemoveFromParent();
   nsFrameMessageManager* GetParentManager() { return mParentManager; }
   void SetParentManager(nsFrameMessageManager* aParent)
@@ -268,6 +272,7 @@ private:
   nsresult SendMessage(const nsAString& aMessageName,
                        const JS::Value& aJSON,
                        const JS::Value& aObjects,
+                       nsIPrincipal* aPrincipal,
                        JSContext* aCx,
                        uint8_t aArgc,
                        JS::Value* aRetval,

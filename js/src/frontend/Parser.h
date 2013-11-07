@@ -512,6 +512,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node debuggerStatement();
 
     Node letStatement();
+    Node importDeclaration();
     Node expressionStatement();
     Node variables(ParseNodeKind kind, bool *psimple = nullptr,
                    StaticBlockObject *blockObj = nullptr,

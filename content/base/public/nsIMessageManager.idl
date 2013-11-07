@@ -9,6 +9,7 @@ interface nsIDOMDOMStringList;
 interface nsIDOMWindow;
 interface nsIDocShell;
 interface nsIContent;
+interface nsIPrincipal;
 
 /**
  * Message managers provide a way for chrome-privileged JS code to
@@ -156,14 +157,15 @@ interface nsIMessageListener : nsISupports
    * receiveMessage is called with one parameter, which has the following
    * properties:
    *   {
-   *     target:  %the target of the message. Either an element owning
-   *               the message manager, or message manager itself if no
-   *               element owns it%
-   *     name:    %message name%,
-   *     sync:    %true or false%.
-   *     data:    %structured clone of the sent message data%,
-   *     json:    %same as .data, deprecated%,
-   *     objects: %named table of jsvals/objects, or null%
+   *     target:    %the target of the message. Either an element owning
+   *                 the message manager, or message manager itself if no
+   *                 element owns it%
+   *     name:      %message name%,
+   *     sync:      %true or false%.
+   *     data:      %structured clone of the sent message data%,
+   *     json:      %same as .data, deprecated%,
+   *     objects:   %named table of jsvals/objects, or null%
+   *     principal: %principal for the window app
    *   }
    *
    * Each listener is invoked with its own copy of the message
@@ -231,7 +233,7 @@ interface nsIMessageListenerManager : nsISupports
  * messages that are only delivered to its one parent-process message
  * manager.
  */
-[scriptable, builtinclass, uuid(7f23767d-0f39-40c1-a22d-d3ab8a481f9d)]
+[scriptable, builtinclass, uuid(d6b0d851-43e6-426d-9f13-054bc0198175)]
 interface nsIMessageSender : nsIMessageListenerManager
 {
   /**
@@ -252,7 +254,8 @@ interface nsIMessageSender : nsIMessageListenerManager
   [implicit_jscontext, optional_argc]
   void sendAsyncMessage([optional] in AString messageName,
                         [optional] in jsval obj,
-                        [optional] in jsval objects);
+                        [optional] in jsval objects,
+                        [optional] in nsIPrincipal principal);
 };
 
 /**
@@ -289,7 +292,7 @@ interface nsIMessageBroadcaster : nsIMessageListenerManager
   nsIMessageListenerManager getChildAt(in unsigned long aIndex);
 };
 
-[scriptable, builtinclass, uuid(79eeb70f-58e3-4d32-b46f-106f42ada12b)]
+[scriptable, builtinclass, uuid(7fda0941-9dcc-448b-bd39-16373c5b4003)]
 interface nsISyncMessageSender : nsIMessageSender
 {
   /**
@@ -300,7 +303,8 @@ interface nsISyncMessageSender : nsIMessageSender
   [implicit_jscontext, optional_argc]
   jsval sendSyncMessage([optional] in AString messageName,
                         [optional] in jsval obj,
-                        [optional] in jsval objects);
+                        [optional] in jsval objects,
+                        [optional] in nsIPrincipal principal);
 
   /**
    * Like |sendSyncMessage()|, except re-entrant. New RPC messages may be
@@ -314,7 +318,8 @@ interface nsISyncMessageSender : nsIMessageSender
   [implicit_jscontext, optional_argc]
   jsval sendRpcMessage([optional] in AString messageName,
                        [optional] in jsval obj,
-                       [optional] in jsval objects);
+                       [optional] in jsval objects,
+                       [optional] in nsIPrincipal principal);
 };
 
 [scriptable, builtinclass, uuid(894ff2d4-39a3-4df8-9d76-8ee329975488)]
