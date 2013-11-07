@@ -144,6 +144,8 @@ public:
     virtual bool RecvNotifyIMETextChange(const uint32_t& aStart,
                                          const uint32_t& aEnd,
                                          const uint32_t& aNewEnd);
+    virtual bool RecvNotifyIMESelectedCompositionRect(const uint32_t& aOffset,
+                                                      const nsIntRect& aRect);
     virtual bool RecvNotifyIMESelection(const uint32_t& aSeqno,
                                         const uint32_t& aAnchor,
                                         const uint32_t& aFocus);

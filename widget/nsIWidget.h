@@ -450,7 +450,9 @@ enum NotificationToIME {
   // Selection in the focused editable content is changed
   NOTIFY_IME_OF_SELECTION_CHANGE,
   REQUEST_TO_COMMIT_COMPOSITION,
-  REQUEST_TO_CANCEL_COMPOSITION
+  REQUEST_TO_CANCEL_COMPOSITION,
+  // Composition string has been updated
+  NOTIFY_IME_OF_COMPOSITION_UPDATE
 };
 
 } // namespace widget
