@@ -320,6 +320,7 @@ MOCHITEST_BROWSER_FILES = \
                  plugin_clickToPlayDeny.html \
                  plugin_hidden_to_visible.html \
                  plugin_small.html \
+                 plugin_syncRemoved.html \
                  plugin_test.html \
                  plugin_test2.html \
                  plugin_test3.html \
