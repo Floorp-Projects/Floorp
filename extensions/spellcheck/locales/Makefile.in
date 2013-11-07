@@ -11,7 +11,4 @@ DICTIONARY_FILES = $(strip $(wildcard $(LOCALE_SRCDIR)/hunspell/*.dic) $(wildcar
 ifneq (,$(DICTIONARY_FILES))
 libs::
 	$(INSTALL)  $(DICTIONARY_FILES) $(FINAL_TARGET)/dictionaries
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(DICTIONARY_FILES) $(DESTDIR)$(mozappdir)/dictionaries
 endif

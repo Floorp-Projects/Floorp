@@ -909,6 +909,18 @@ JS_SetDestroyCompartmentCallback(JSRuntime *rt, JSDestroyCompartmentCallback cal
 }
 
 JS_PUBLIC_API(void)
+JS_SetDestroyZoneCallback(JSRuntime *rt, JSZoneCallback callback)
+{
+    rt->destroyZoneCallback = callback;
+}
+
+JS_PUBLIC_API(void)
+JS_SetSweepZoneCallback(JSRuntime *rt, JSZoneCallback callback)
+{
+    rt->sweepZoneCallback = callback;
+}
+
+JS_PUBLIC_API(void)
 JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback)
 {
     rt->compartmentNameCallback = callback;
@@ -986,6 +998,18 @@ JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSCompartment *compartment)
 {
     return compartment->data;
+}
+
+JS_PUBLIC_API(void)
+JS_SetZoneUserData(JS::Zone *zone, void *data)
+{
+    zone->data = data;
+}
+
+JS_PUBLIC_API(void *)
+JS_GetZoneUserData(JS::Zone *zone)
+{
+    return zone->data;
 }
 
 JS_PUBLIC_API(bool)

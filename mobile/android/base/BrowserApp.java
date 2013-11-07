@@ -712,7 +712,7 @@ abstract public class BrowserApp extends GeckoApp
 
         if (itemId == R.id.subscribe) {
             Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null && tab.getFeedsEnabled()) {
+            if (tab != null && tab.hasFeeds()) {
                 JSONObject args = new JSONObject();
                 try {
                     args.put("tabId", tab.getId());
@@ -720,6 +720,21 @@ abstract public class BrowserApp extends GeckoApp
                     Log.e(LOGTAG, "error building json arguments");
                 }
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feeds:Subscribe", args.toString()));
+            }
+            return true;
+        }
+
+        if (itemId == R.id.add_search_engine) {
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null && tab.hasOpenSearch()) {
+                JSONObject args = new JSONObject();
+                try {
+                    args.put("tabId", tab.getId());
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "error building json arguments");
+                    return true;
+                }
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Add", args.toString()));
             }
             return true;
         }

@@ -25,7 +25,12 @@ using namespace mozilla::dom;
 using namespace mozilla::hal_sandbox;
 using namespace mozilla::services;
 #else
+namespace mozilla {
+namespace dom {
 class PContentParent;
+}
+}
+
 class nsIPrincipal;
 #endif
 
@@ -280,16 +285,16 @@ AssertAppProcess(mozilla::hal_sandbox::PHalParent* aActor,
 }
 
 bool
-AssertAppPrincipal(PContentParent* aActor,
+AssertAppPrincipal(mozilla::dom::PContentParent* aActor,
                    nsIPrincipal* aPrincipal)
 {
   return true;
 }
 
 uint32_t
-CheckPermission(PContentParent*,
-                nsIPrincipal*,
-                const char*)
+CheckPermission(mozilla::dom::PContentParent* aActor,
+                nsIPrincipal* aPrincipal,
+                const char* aPermission)
 {
   return nsIPermissionManager::ALLOW_ACTION;
 }

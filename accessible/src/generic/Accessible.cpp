@@ -2425,21 +2425,6 @@ Accessible::GetValid(bool *aValid)
   return NS_OK;
 }
 
-// readonly attribute boolean nsIAccessibleHyperLink::selected
-NS_IMETHODIMP
-Accessible::GetSelected(bool *aSelected)
-{
-  NS_ENSURE_ARG_POINTER(aSelected);
-  *aSelected = false;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  *aSelected = IsLinkSelected();
-  return NS_OK;
-
-}
-
 void
 Accessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
                          uint32_t aLength)
@@ -2777,14 +2762,6 @@ Accessible::EndOffset()
 
   HyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nullptr;
   return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
-}
-
-bool
-Accessible::IsLinkSelected()
-{
-  NS_PRECONDITION(IsLink(),
-                  "IsLinkSelected() called on something that is not a hyper link!");
-  return FocusMgr()->IsFocused(this);
 }
 
 uint32_t

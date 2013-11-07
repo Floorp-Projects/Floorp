@@ -375,10 +375,12 @@ parent:
 
     sync ReadFontList() returns (FontListEntry[] retValue);
 
-    sync SyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
+    sync SyncMessage(nsString aMessage, ClonedMessageData aData,
+                     CpowEntry[] aCpows, Principal aPrincipal)
       returns (nsString[] retval);
 
-    rpc RpcMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
+    rpc RpcMessage(nsString aMessage, ClonedMessageData aData,
+                   CpowEntry[] aCpows, Principal aPrincipal)
       returns (nsString[] retval);
 
     ShowAlertNotification(nsString imageUrl,
@@ -469,7 +471,8 @@ parent:
         returns (OptionalInputStreamParams postData, OptionalURIParams uri);
 
 both:
-     AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows);
+     AsyncMessage(nsString aMessage, ClonedMessageData aData,
+                  CpowEntry[] aCpows, Principal aPrincipal);
 };
 
 }

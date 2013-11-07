@@ -39,6 +39,7 @@ JS::Zone::Zone(JSRuntime *rt)
     maybeAlive(true),
     gcMallocBytes(0),
     gcGrayRoots(),
+    data(nullptr),
     types(this)
 {
     /* Ensure that there are no vtables to mess us up here. */

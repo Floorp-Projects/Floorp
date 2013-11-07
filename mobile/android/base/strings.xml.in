@@ -228,6 +228,7 @@
   <string name="contextmenu_top_sites_edit">&contextmenu_top_sites_edit;</string>
   <string name="contextmenu_top_sites_pin">&contextmenu_top_sites_pin;</string>
   <string name="contextmenu_top_sites_unpin">&contextmenu_top_sites_unpin;</string>
+  <string name="contextmenu_add_search_engine">&contextmenu_add_search_engine;</string>
 
   <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>

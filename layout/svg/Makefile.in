@@ -17,6 +17,3 @@ LOCAL_INCLUDES	= \
 
 libs::
 	$(INSTALL) $(srcdir)/svg.css $(DIST)/bin/res
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/svg.css $(DESTDIR)$(mozappdir)/res
