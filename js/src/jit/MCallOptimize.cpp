@@ -105,6 +105,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
     // String natives.
     if (native == js_String)
         return inlineStringObject(callInfo);
+    if (native == js::str_split)
+        return inlineStringSplit(callInfo);
     if (native == js_str_charCodeAt)
         return inlineStrCharCodeAt(callInfo);
     if (native == js::str_fromCharCode)
@@ -911,6 +913,43 @@ IonBuilder::inlineStringObject(CallInfo &callInfo)
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineStringSplit(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+    if (callInfo.thisArg()->type() != MIRType_String)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_String)
+        return InliningStatus_NotInlined;
+
+    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, js::str_split);
+    if (!templateObject)
+        return InliningStatus_NotInlined;
+    JS_ASSERT(templateObject->is<ArrayObject>());
+
+    types::TypeObjectKey *retType = types::TypeObjectKey::get(templateObject);
+    if (retType->unknownProperties())
+        return InliningStatus_NotInlined;
+
+    types::HeapTypeSetKey key = retType->property(JSID_VOID);
+    if (!key.maybeTypes())
+        return InliningStatus_NotInlined;
+
+    if (!key.maybeTypes()->hasType(types::Type::StringType())) {
+        key.freeze(constraints());
+        return InliningStatus_NotInlined;
+    }
+
+    callInfo.unwrapArgs();
+
+    MStringSplit *ins = MStringSplit::New(callInfo.thisArg(), callInfo.getArg(0), templateObject);
+    current->add(ins);
+    current->push(ins);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineStrCharCodeAt(CallInfo &callInfo)
 {
     if (callInfo.argc() != 1 || callInfo.constructing())
@@ -1362,10 +1401,9 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
 
-    JSObject *templateObject = NewDenseAllocatedArray(cx, 0, nullptr, TenuredObject);
-    if (!templateObject)
-        return InliningStatus_Error;
-    templateObject->setType(typeObject);
+    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, intrinsic_NewDenseArray);
+    if (!templateObject || templateObject->type() != typeObject)
+        return InliningStatus_NotInlined;
 
     callInfo.unwrapArgs();
 

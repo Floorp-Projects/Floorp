@@ -209,5 +209,39 @@ PathSkia::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
   return aTransform.TransformBounds(bounds);
 }
 
+void
+PathSkia::StreamToSink(PathSink *aSink) const
+{
+  SkPath::RawIter iter(mPath);
+
+  SkPoint points[4];
+  SkPath::Verb currentVerb;
+  while ((currentVerb = iter.next(points)) != SkPath::kDone_Verb) {
+    switch (currentVerb) {
+    case SkPath::kMove_Verb:
+      aSink->MoveTo(SkPointToPoint(points[0]));
+      break;
+    case SkPath::kLine_Verb:
+      aSink->LineTo(SkPointToPoint(points[1]));
+      break;
+    case SkPath::kCubic_Verb:
+      aSink->BezierTo(SkPointToPoint(points[1]),
+                      SkPointToPoint(points[2]),
+                      SkPointToPoint(points[3]));
+      break;
+    case SkPath::kQuad_Verb:
+      aSink->QuadraticBezierTo(SkPointToPoint(points[1]),
+                               SkPointToPoint(points[2]));
+      break;
+    case SkPath::kClose_Verb:
+      aSink->Close();
+      break;
+    default:
+      MOZ_ASSERT(false);
+      // Unexpected verb found in path!
+    }
+  }
+}
+
 }
 }

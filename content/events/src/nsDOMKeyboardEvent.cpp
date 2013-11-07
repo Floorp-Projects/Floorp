@@ -90,6 +90,20 @@ nsDOMKeyboardEvent::GetMetaKey(bool* aIsDown)
   return NS_OK;
 }
 
+bool
+nsDOMKeyboardEvent::Repeat()
+{
+  return mEvent->AsKeyboardEvent()->mIsRepeat;
+}
+
+NS_IMETHODIMP
+nsDOMKeyboardEvent::GetRepeat(bool* aIsRepeat)
+{
+  NS_ENSURE_ARG_POINTER(aIsRepeat);
+  *aIsRepeat = Repeat();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDOMKeyboardEvent::GetModifierState(const nsAString& aKey,
                                      bool* aState)
