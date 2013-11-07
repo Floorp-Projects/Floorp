@@ -410,7 +410,7 @@ CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
                                   capStyle, joinStyle,
                                   aStrokeOptions.mMiterLimit,
                                   D2D1_DASH_STYLE_CUSTOM,
-                                  aStrokeOptions.mDashOffset),
+                                  aStrokeOptions.mDashOffset / lineWidth),
       &dash[0], // data() is not C++98, although it's in recent gcc
                 // and VC10's STL
       dash.size(),
