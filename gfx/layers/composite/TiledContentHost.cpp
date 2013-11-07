@@ -146,7 +146,6 @@ void
 TiledContentHost::Composite(EffectChain& aEffectChain,
                             float aOpacity,
                             const gfx::Matrix4x4& aTransform,
-                            const gfx::Point& aOffset,
                             const gfx::Filter& aFilter,
                             const gfx::Rect& aClipRect,
                             const nsIntRegion* aVisibleRegion /* = nullptr */,
@@ -164,8 +163,8 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
 
   RenderLayerBuffer(mLowPrecisionVideoMemoryTiledBuffer,
                     mLowPrecisionVideoMemoryTiledBuffer.GetValidRegion(), aEffectChain, aOpacity,
-                    aOffset, aFilter, aClipRect, aLayerProperties->mValidRegion, visibleRect, aTransform);
-  RenderLayerBuffer(mVideoMemoryTiledBuffer, aLayerProperties->mValidRegion, aEffectChain, aOpacity, aOffset,
+                    aFilter, aClipRect, aLayerProperties->mValidRegion, visibleRect, aTransform);
+  RenderLayerBuffer(mVideoMemoryTiledBuffer, aLayerProperties->mValidRegion, aEffectChain, aOpacity,
                     aFilter, aClipRect, nsIntRegion(), visibleRect, aTransform);
 }
 
@@ -175,7 +174,6 @@ TiledContentHost::RenderTile(const TiledTexture& aTile,
                              EffectChain& aEffectChain,
                              float aOpacity,
                              const gfx::Matrix4x4& aTransform,
-                             const gfx::Point& aOffset,
                              const gfx::Filter& aFilter,
                              const gfx::Rect& aClipRect,
                              const nsIntRegion& aScreenRegion,
@@ -202,9 +200,9 @@ TiledContentHost::RenderTile(const TiledTexture& aTile,
                                   textureRect.y / aTextureBounds.height,
                                   textureRect.width / aTextureBounds.width,
                                   textureRect.height / aTextureBounds.height);
-    mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform, aOffset);
+    mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform);
     mCompositor->DrawDiagnostics(DIAGNOSTIC_CONTENT|DIAGNOSTIC_TILE,
-                                 graphicsRect, aClipRect, aTransform, aOffset);
+                                 graphicsRect, aClipRect, aTransform);
   }
 
   aTile.mDeprecatedTextureHost->Unlock();
@@ -215,7 +213,6 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                                     const nsIntRegion& aValidRegion,
                                     EffectChain& aEffectChain,
                                     float aOpacity,
-                                    const gfx::Point& aOffset,
                                     const gfx::Filter& aFilter,
                                     const gfx::Rect& aClipRect,
                                     const nsIntRegion& aMaskRegion,
@@ -276,7 +273,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
           nsIntPoint tileOffset((x - tileStartX) * resolution,
                                 (y - tileStartY) * resolution);
           uint32_t tileSize = aLayerBuffer.GetTileLength();
-          RenderTile(tileTexture, aEffectChain, aOpacity, aTransform, aOffset, aFilter, aClipRect, tileDrawRegion,
+          RenderTile(tileTexture, aEffectChain, aOpacity, aTransform, aFilter, aClipRect, tileDrawRegion,
                      tileOffset, nsIntSize(tileSize, tileSize));
         }
       }
@@ -289,7 +286,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
   gfx::Rect rect(aVisibleRect.x, aVisibleRect.y,
                  aVisibleRect.width, aVisibleRect.height);
   GetCompositor()->DrawDiagnostics(DIAGNOSTIC_CONTENT,
-                                   rect, aClipRect, aTransform, aOffset);
+                                   rect, aClipRect, aTransform);
 }
 
 void

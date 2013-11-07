@@ -4625,6 +4625,19 @@ CodeGenerator::visitFromCharCode(LFromCharCode *lir)
     return true;
 }
 
+typedef JSObject *(*StringSplitFn)(JSContext *, HandleTypeObject, HandleString, HandleString);
+static const VMFunction StringSplitInfo = FunctionInfo<StringSplitFn>(js::str_split_string);
+
+bool
+CodeGenerator::visitStringSplit(LStringSplit *lir)
+{
+    pushArg(ToRegister(lir->separator()));
+    pushArg(ToRegister(lir->string()));
+    pushArg(ImmGCPtr(lir->mir()->typeObject()));
+
+    return callVM(StringSplitInfo, lir);
+}
+
 bool
 CodeGenerator::visitInitializedLength(LInitializedLength *lir)
 {

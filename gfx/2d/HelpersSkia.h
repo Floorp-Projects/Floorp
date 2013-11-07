@@ -250,6 +250,12 @@ IntRectToSkIRect(const IntRect& aRect)
   return SkIRect::MakeXYWH(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
+static inline Point
+SkPointToPoint(const SkPoint &aPoint)
+{
+  return Point(SkScalarToFloat(aPoint.x()), SkScalarToFloat(aPoint.y()));
+}
+
 static inline SkShader::TileMode
 ExtendModeToTileMode(ExtendMode aMode)
 {
