@@ -906,6 +906,15 @@ GfxInfo::GetGfxDriverInfo()
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, IntelGMAX3000, V(6,14,10,5218));
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, IntelGMAX4500HD, V(6,14,10,4969));
 
+    // StrechRect seems to suffer from precision issues which leads to artifacting
+    // during content drawing starting with at least version 6.14.10.5082
+    // and going until 6.14.10.5160. See bug 919454 for more info.
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE(DRIVER_OS_WINDOWS_XP,
+      const_cast<nsAString&>(GfxDriverInfo::GetDeviceVendor(VendorIntel)),
+      const_cast<GfxDeviceFamily*>(GfxDriverInfo::GetDeviceFamily(IntelGMAX4500HD)),
+      GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+      DRIVER_BETWEEN_EXCLUSIVE, V(6,14,10,5076), V(6,14,10,5160), "6.14.10.5160");
+
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMA500,   V(3,0,20,3200));
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMA900,   GfxDriverInfo::allDriverVersions);
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMA950,   V(7,14,10,1504));
