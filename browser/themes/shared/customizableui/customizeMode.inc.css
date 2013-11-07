@@ -15,11 +15,11 @@
   transition-timing-function: linear;
 }
 
-#nav-bar[customizing] > #nav-bar-customization-target {
+#nav-bar[customize-entered] > #nav-bar-customization-target {
   margin: 1px 3px;
 }
 
-#nav-bar[customizing] > #nav-bar-customization-target,
+#nav-bar[customize-entered] > #nav-bar-customization-target,
 #PanelUI-contents > .panel-customization-placeholder {
   outline: 1px dashed transparent;
 }
@@ -63,7 +63,7 @@
   flex-direction: column;
 }
 
-#main-window[customizing] .customization-target {
+#main-window[customize-entered] .customization-target {
   min-width: 100px;
   padding-left: 10px;
   padding-right: 10px;
