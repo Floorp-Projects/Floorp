@@ -374,7 +374,9 @@ ssl3_GatherCompleteHandshake(sslSocket *ss, int flags)
 	 */
 	if (ss->opt.enableFalseStart) {
 	    ssl_GetSSL3HandshakeLock(ss);
-	    canFalseStart = ss->ssl3.hs.canFalseStart;
+	    canFalseStart = (ss->ssl3.hs.ws == wait_change_cipher ||
+			     ss->ssl3.hs.ws == wait_new_session_ticket) &&
+		            ssl3_CanFalseStart(ss);
 	    ssl_ReleaseSSL3HandshakeLock(ss);
 	}
     } while (ss->ssl3.hs.ws != idle_handshake &&
