@@ -7361,6 +7361,14 @@ fi
 AC_SUBST(MOZ_PAY)
 
 dnl ========================================================
+dnl = Enable Browser Support for Activities
+dnl ========================================================
+if test -n "$MOZ_ACTIVITIES"; then
+    AC_DEFINE(MOZ_ACTIVITIES)
+fi
+AC_SUBST(MOZ_ACTIVITIES)
+
+dnl ========================================================
 dnl = Enable Support for AudioChannelManager API
 dnl ========================================================
 if test -n "$MOZ_AUDIO_CHANNEL_MANAGER"; then
