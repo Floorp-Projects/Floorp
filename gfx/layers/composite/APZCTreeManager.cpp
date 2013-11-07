@@ -16,6 +16,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/mozalloc.h"           // for operator new
 #include "mozilla/TouchEvents.h"
+#include "nsDebug.h"                    // for NS_WARNING
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
@@ -29,7 +30,8 @@ namespace layers {
 float APZCTreeManager::sDPI = 72.0;
 
 APZCTreeManager::APZCTreeManager()
-    : mTreeLock("APZCTreeLock")
+    : mTreeLock("APZCTreeLock"),
+      mTouchCount(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
   AsyncPanZoomController::InitializeGlobalState();
@@ -238,6 +240,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
     case MULTITOUCH_INPUT: {
       const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
       if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_START) {
+        mTouchCount++;
         mApzcForInputBlock = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[0].mScreenPoint));
         for (size_t i = 1; i < multiTouchInput.mTouches.Length(); i++) {
           nsRefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[i].mScreenPoint));
@@ -267,10 +270,18 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
           ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
         }
         result = mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
+      }
+      if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_CANCEL ||
+          multiTouchInput.mType == MultiTouchInput::MULTITOUCH_END) {
+        if (mTouchCount >= multiTouchInput.mTouches.Length()) {
+          mTouchCount -= multiTouchInput.mTouches.Length();
+        } else {
+          NS_WARNING("Got an unexpected touchend/touchcancel");
+          mTouchCount = 0;
+        }
         // If we have an mApzcForInputBlock and it's the end of the touch sequence
         // then null it out so we don't keep a dangling reference and leak things.
-        if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_CANCEL ||
-            (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_END && multiTouchInput.mTouches.Length() == 1)) {
+        if (mTouchCount == 0) {
           mApzcForInputBlock = nullptr;
         }
       }
@@ -356,8 +367,16 @@ APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   // If we have an mApzcForInputBlock and it's the end of the touch sequence
   // then null it out so we don't keep a dangling reference and leak things.
   if (aEvent.message == NS_TOUCH_CANCEL ||
-      (aEvent.message == NS_TOUCH_END && aEvent.touches.Length() == 1)) {
-    mApzcForInputBlock = nullptr;
+      aEvent.message == NS_TOUCH_END) {
+    if (mTouchCount >= aEvent.touches.Length()) {
+      mTouchCount -= aEvent.touches.Length();
+    } else {
+      NS_WARNING("Got an unexpected touchend/touchcancel");
+      mTouchCount = 0;
+    }
+    if (mTouchCount == 0) {
+      mApzcForInputBlock = nullptr;
+    }
   }
   return ret;
 }
@@ -410,6 +429,7 @@ APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
         return nsEventStatus_eIgnore;
       }
       if (touchEvent.message == NS_TOUCH_START) {
+        mTouchCount++;
         ScreenPoint point = ScreenPoint(touchEvent.touches[0]->mRefPoint.x, touchEvent.touches[0]->mRefPoint.y);
         mApzcForInputBlock = GetTouchInputBlockAPZC(touchEvent, point);
       }
@@ -442,6 +462,7 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent)
         return nsEventStatus_eIgnore;
       }
       if (touchEvent.message == NS_TOUCH_START) {
+        mTouchCount++;
         ScreenPoint point = ScreenPoint(touchEvent.touches[0]->mRefPoint.x, touchEvent.touches[0]->mRefPoint.y);
         mApzcForInputBlock = GetTouchInputBlockAPZC(touchEvent, point);
       }
