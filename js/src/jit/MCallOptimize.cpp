@@ -1401,10 +1401,9 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
 
-    JSObject *templateObject = NewDenseAllocatedArray(cx, 0, nullptr, TenuredObject);
-    if (!templateObject)
-        return InliningStatus_Error;
-    templateObject->setType(typeObject);
+    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, intrinsic_NewDenseArray);
+    if (!templateObject || templateObject->type() != typeObject)
+        return InliningStatus_NotInlined;
 
     callInfo.unwrapArgs();
 
