@@ -2467,7 +2467,7 @@ chatbox {
   background-attachment: fixed;
 }
 
-#main-window[customizing] #tab-view-deck {
+#main-window:-moz-any([customize-entering],[customize-entered]) #tab-view-deck {
   padding: 0 2em 2em;
 }
 

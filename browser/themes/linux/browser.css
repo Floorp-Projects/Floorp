@@ -1918,12 +1918,12 @@ chatbox {
   background-attachment: fixed;
 }
 
-#main-window[customizing] #tab-view-deck {
+#main-window:-moz-any([customize-entering],[customize-entered]) #tab-view-deck {
   padding: 2em;
 }
 
-#main-window[customizing] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar),
-#main-window[customizing] #customization-container {
+#main-window[customize-entered] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar),
+#main-window[customize-entered] #customization-container {
   border: 3px solid hsla(0,0%,0%,.1);
   border-top-width: 0;
   background-clip: padding-box;
@@ -1933,11 +1933,11 @@ chatbox {
   -moz-border-left-colors: hsla(0,0%,0%,.05) hsla(0,0%,0%,.1) hsla(0,0%,0%,.2);
 }
 
-#main-window[customizing] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+#main-window[customize-entered] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
   border-bottom-width: 0;
 }
 
-#main-window[customizing] #TabsToolbar {
+#main-window[customize-entered] #TabsToolbar {
   -moz-appearance: none;
   background-clip: padding-box;
   border-right: 3px solid transparent;
