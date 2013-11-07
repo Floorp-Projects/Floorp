@@ -143,6 +143,11 @@ static inline Matrix ToMatrix(const D2D1_MATRIX_3X2_F &aTransform)
                 aTransform._31, aTransform._32);
 }
 
+static inline Point ToPoint(const D2D1_POINT_2F &aPoint)
+{
+  return Point(aPoint.x, aPoint.y);
+}
+
 static inline DXGI_FORMAT DXGIFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
