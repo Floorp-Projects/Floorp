@@ -26,6 +26,7 @@ interface KeyboardEvent : UIEvent
   const unsigned long DOM_KEY_LOCATION_JOYSTICK = 0x05;
 
   readonly attribute unsigned long location;
+  readonly attribute boolean       repeat;
 
   readonly attribute DOMString key;
 };
