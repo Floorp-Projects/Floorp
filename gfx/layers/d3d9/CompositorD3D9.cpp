@@ -199,7 +199,8 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
   MOZ_ASSERT(mCurrentRT, "No render target");
   device()->SetVertexShaderConstantF(CBmLayerTransform, &aTransform._11, 4);
 
-  float renderTargetOffset[] = { aOffset.x, aOffset.y, 0, 0 };
+  IntPoint origin = mCurrentRT->GetOrigin();
+  float renderTargetOffset[] = { origin.x, origin.y, 0, 0 };
   device()->SetVertexShaderConstantF(CBvRenderTargetOffset,
                                      renderTargetOffset,
                                      1);

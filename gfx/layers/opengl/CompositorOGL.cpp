@@ -1048,7 +1048,8 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
   }
   program->SetLayerQuadRect(aRect);
   program->SetLayerTransform(aTransform);
-  program->SetRenderOffset(aOffset.x, aOffset.y);
+  IntPoint offset = mCurrentRenderTarget->GetOrigin();
+  program->SetRenderOffset(offset.x, offset.y);
 
   switch (aEffectChain.mPrimaryEffect->mType) {
     case EFFECT_SOLID_COLOR: {
@@ -1229,7 +1230,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
         program->SetLayerOpacity(aOpacity);
         program->SetLayerTransform(aTransform);
         program->SetTextureTransform(gfx3DMatrix());
-        program->SetRenderOffset(aOffset.x, aOffset.y);
+        program->SetRenderOffset(offset.x, offset.y);
         program->SetLayerQuadRect(aRect);
         AutoBindTexture bindMask;
         if (maskType != MaskNone) {
