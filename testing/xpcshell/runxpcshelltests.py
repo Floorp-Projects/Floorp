@@ -71,14 +71,6 @@ import manifestparser
 import mozcrash
 import mozinfo
 
-# ---------------------------------------------------------------
-#TODO: replace this with json.loads when Python 2.6 is required.
-def parse_json(j):
-    """
-    Awful hack to parse a restricted subset of JSON strings into Python dicts.
-    """
-    return eval(j, {'true':True,'false':False,'null':None})
-
 """ Control-C handling """
 gotSIGINT = False
 def markGotSIGINT(signum, stackFrame):
@@ -447,6 +439,9 @@ class XPCShellTestThread(Thread):
         """ Reports a message to a consumer, both as a strucutured and
         human-readable log message. """
         message = self.message_from_line(line)
+
+        if isinstance(message, unicode):
+            message = message.encode("utf-8")
 
         if message.endswith('\n'):
             # A new line is always added by head.js to delimit messages,
@@ -1251,7 +1246,7 @@ class XPCShellTests(object):
             if not os.path.isfile(mozInfoFile):
                 self.log.error("Error: couldn't find mozinfo.json at '%s'. Perhaps you need to use --build-info-json?" % mozInfoFile)
                 return False
-            self.mozInfo = parse_json(open(mozInfoFile).read())
+            self.mozInfo = json.loads(open(mozInfoFile).read())
         mozinfo.update(self.mozInfo)
 
         # The appDirKey is a optional entry in either the default or individual test
