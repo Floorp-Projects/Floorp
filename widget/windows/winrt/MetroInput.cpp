@@ -178,7 +178,12 @@ namespace {
   {
     nsTArray<nsRefPtr<Touch> > *touches =
               static_cast<nsTArray<nsRefPtr<Touch> > *>(aTouchList);
-    touches->AppendElement(aData);
+    nsRefPtr<Touch> copy = new Touch(aData->mIdentifier,
+               aData->mRefPoint,
+               aData->mRadius,
+               aData->mRotationAngle,
+               aData->mForce);
+    touches->AppendElement(copy);
     aData->mChanged = false;
     return PL_DHASH_NEXT;
   }
