@@ -169,6 +169,9 @@ InitKeyEvent(WidgetKeyboardEvent &aEvent, QKeyEvent *aQEvent)
                               aQEvent->modifiers() & Qt::AltModifier,
                               aQEvent->modifiers() & Qt::ShiftModifier,
                               aQEvent->modifiers() & Qt::MetaModifier);
+    aEvent.mIsRepeat =
+        (aEvent.message == NS_KEY_DOWN || aEvent.message == NS_KEY_PRESS) &&
+        aQEvent->isAutoRepeat();
     aEvent.time = 0;
 
     if (sAltGrModifier) {
