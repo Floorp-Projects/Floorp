@@ -38,6 +38,7 @@
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -1165,9 +1166,9 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
         if (bce->script->directlyInsideEval)
             return false;
         RootedObject outerScope(bce->sc->context, bce->script->enclosingStaticScope());
-        for (StaticScopeIter ssi(bce->sc->context, outerScope); !ssi.done(); ssi++) {
-            if (ssi.type() != StaticScopeIter::FUNCTION) {
-                if (ssi.type() == StaticScopeIter::BLOCK) {
+        for (StaticScopeIter<CanGC> ssi(bce->sc->context, outerScope); !ssi.done(); ssi++) {
+            if (ssi.type() != StaticScopeIter<CanGC>::FUNCTION) {
+                if (ssi.type() == StaticScopeIter<CanGC>::BLOCK) {
                     // Use generic ops if a catch block is encountered.
                     return false;
                 }
@@ -6445,6 +6446,11 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              ? EmitLet(cx, bce, pn)
              : EmitVariables(cx, bce, pn, InitializeVars);
         break;
+
+      case PNK_IMPORT:
+       // TODO: Implement emitter support for modules
+       bce->reportError(nullptr, JSMSG_MODULES_NOT_IMPLEMENTED);
+       return false;
 
       case PNK_ARRAYPUSH: {
         int slot;
