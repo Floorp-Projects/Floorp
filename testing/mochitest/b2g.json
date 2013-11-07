@@ -325,6 +325,7 @@
     "dom/media/tests/mochitest/test_peerConnection_setRemoteAnswerInStable.html":"",
     "dom/media/tests/mochitest/test_peerConnection_setRemoteOfferInHaveLocalOffer.html":"",
     "dom/media/tests/mochitest/test_peerConnection_throwInCallbacks.html":"",
+    "dom/media/tests/ipc/test_ipc.html":"nested ipc not working",
 
     "dom/network/tests/test_networkstats_basics.html":"Will be fixed in bug 858005",
     "dom/permission/tests/test_permission_basics.html":"https not working, bug 907770",
