@@ -712,9 +712,11 @@ private:
 
     static void CreateCMSOutputProfile();
 
+    static void GetCMSOutputProfileData(void *&mem, size_t &size);
+
     friend void RecordingPrefChanged(const char *aPrefName, void *aClosure);
 
-    virtual qcms_profile* GetPlatformCMSOutputProfile();
+    virtual void GetPlatformCMSOutputProfile(void *&mem, size_t &size);
 
     virtual bool SupportsOffMainThreadCompositing() { return true; }
 
