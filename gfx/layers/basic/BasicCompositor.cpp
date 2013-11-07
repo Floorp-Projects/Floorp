@@ -259,7 +259,8 @@ BasicCompositor::CreateRenderTarget(const IntRect& aRect, SurfaceInitMode aInit)
 
 TemporaryRef<CompositingRenderTarget>
 BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
-                                              const CompositingRenderTarget *aSource)
+                                              const CompositingRenderTarget *aSource,
+                                              const IntPoint &aSourcePoint)
 {
   RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), FORMAT_B8G8R8A8);
   RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect.Size());
@@ -275,7 +276,8 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
 
   RefPtr<SourceSurface> snapshot = source->Snapshot();
 
-  rt->mDrawTarget->CopySurface(snapshot, aRect, IntPoint(0, 0));
+  IntRect sourceRect(aSourcePoint, aRect.Size());
+  rt->mDrawTarget->CopySurface(snapshot, sourceRect, IntPoint(0, 0));
   return rt.forget();
 }
 

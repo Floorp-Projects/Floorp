@@ -105,7 +105,8 @@ CompositorD3D9::CreateRenderTarget(const gfx::IntRect &aRect,
 
 TemporaryRef<CompositingRenderTarget>
 CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
-                                             const CompositingRenderTarget *aSource)
+                                             const CompositingRenderTarget *aSource,
+                                             const gfx::IntPoint &aSourcePoint)
 {
   RefPtr<IDirect3DTexture9> texture;
   HRESULT hr = device()->CreateTexture(aRect.width, aRect.height, 1,
@@ -130,10 +131,10 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
 
     if (sourceSurface && destSurface) {
       RECT sourceRect;
-      sourceRect.left = aRect.x;
-      sourceRect.right = aRect.XMost();
-      sourceRect.top = aRect.y;
-      sourceRect.bottom = aRect.YMost();
+      sourceRect.left = aSourcePoint.x;
+      sourceRect.right = aSourcePoint.x + aRect.width;
+      sourceRect.top = aSourcePoint.y;
+      sourceRect.bottom = aSourcePoint.y + aRect.height;
       RECT destRect;
       destRect.left = 0;
       destRect.right = aRect.width;
@@ -156,7 +157,7 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
   RefPtr<CompositingRenderTargetD3D9> rt =
     new CompositingRenderTargetD3D9(texture,
                                     INIT_MODE_NONE,
-                                    IntSize(aRect.width, aRect.height));
+                                    aRect.Size());
 
   return rt;
 }
