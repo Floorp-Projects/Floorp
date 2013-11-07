@@ -525,9 +525,9 @@ obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 
 #if JS_HAS_OBJ_WATCHPOINT
 
-bool
-js::WatchHandler(JSContext *cx, JSObject *obj_, jsid id_, JS::Value old,
-                 JS::Value *nvp, void *closure)
+static bool
+obj_watch_handler(JSContext *cx, JSObject *obj_, jsid id_, jsval old,
+                  jsval *nvp, void *closure)
 {
     RootedObject obj(cx, obj_);
     RootedId id(cx, id_);
@@ -574,11 +574,9 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
     if (!CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs))
         return false;
 
-    if (!JSObject::watch(cx, obj, propid, callable))
-        return false;
-
     args.rval().setUndefined();
-    return true;
+
+    return JS_SetWatchPoint(cx, obj, propid, obj_watch_handler, callable);
 }
 
 static bool
@@ -597,7 +595,7 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
     } else {
         id = JSID_VOID;
     }
-    return JSObject::unwatch(cx, obj, id);
+    return JS_ClearWatchPoint(cx, obj, id, nullptr, nullptr);
 }
 
 #endif /* JS_HAS_OBJ_WATCHPOINT */
