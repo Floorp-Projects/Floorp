@@ -27,10 +27,6 @@ const SAVE_ERROR = "error-save";
 // @see StyleEditor.updateStylesheet
 const UPDATE_STYLESHEET_THROTTLE_DELAY = 500;
 
-function ctrl(k) {
-  return (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") + k;
-}
-
 /**
  * StyleSheetEditor controls the editor linked to a particular StyleSheet
  * object.
@@ -392,11 +388,11 @@ StyleSheetEditor.prototype = {
   _getKeyBindings: function() {
     let bindings = {};
 
-    bindings[ctrl(_("saveStyleSheet.commandkey"))] = () => {
+    bindings[Editor.accel(_("saveStyleSheet.commandkey"))] = () => {
       this.saveToFile(this.savedFile);
     };
 
-    bindings["Shift-" + ctrl(_("saveStyleSheet.commandkey"))] = () => {
+    bindings["Shift-" + Editor.accel(_("saveStyleSheet.commandkey"))] = () => {
       this.saveToFile();
     };
 
