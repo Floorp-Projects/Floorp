@@ -362,7 +362,10 @@ class MochitestUtilsMixin(object):
         if options.testPath and not tp.startswith(options.testPath):
           continue
 
-        paths.append({'path': tp})
+        testob = {'path': tp}
+        if test.has_key('disabled'):
+          testob['disabled'] = test['disabled']
+        paths.append(testob)
 
       # Bug 883865 - add this functionality into manifestDestiny
       with open('tests.json', 'w') as manifestFile:

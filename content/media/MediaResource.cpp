@@ -59,12 +59,6 @@ ChannelMediaResource::ChannelMediaResource(MediaDecoder* aDecoder,
     mLock("ChannelMediaResource.mLock"),
     mIgnoreResume(false),
     mSeekingForMetadata(false),
-#ifdef MOZ_DASH
-    mByteRangeDownloads(false),
-    mByteRangeFirstOpen(true),
-    mSeekOffsetMonitor("media.dashseekmonitor"),
-    mSeekOffset(-1),
-#endif
     mIsTransportSeekable(true)
 {
 #ifdef PR_LOGGING
@@ -417,16 +411,6 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
     mChannelStatistics->Stop();
   }
 
-#ifdef MOZ_DASH
-  // If we were loading a byte range, notify decoder and return.
-  // Skip this for unterminated byte range requests, e.g. seeking for whole
-  // file downloads.
-  if (mByteRangeDownloads) {
-    mDecoder->NotifyDownloadEnded(aStatus);
-    return NS_OK;
-  }
-#endif
-
   // Note that aStatus might have succeeded --- this might be a normal close
   // --- even in situations where the server cut us off because we were
   // suspended. So we need to "reopen on error" in that case too. The only
@@ -490,18 +474,6 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream *aInStream,
 
   closure->mResource->mDecoder->NotifyDataArrived(aFromSegment, aCount, closure->mResource->mOffset);
 
-#ifdef MOZ_DASH
-  // For byte range downloads controlled by |DASHDecoder|, there are cases in
-  // which the reader's offset is different enough from the channel offset that
-  // |MediaCache| requests a |CacheClientSeek| to the reader's offset. This
-  // can happen between calls to |CopySegmentToCache|. To avoid copying at
-  // incorrect offsets, ensure |MediaCache| copies to the location that
-  // |ChannelMediaResource| expects.
-  if (closure->mResource->mByteRangeDownloads) {
-    closure->mResource->mCacheStream.NotifyDataStarted(closure->mResource->mOffset);
-  }
-#endif
-
   // Keep track of where we're up to.
   LOG("%p [ChannelMediaResource]: CopySegmentToCache at mOffset [%lld] add "
       "[%d] bytes for decoder[%p]",
@@ -547,39 +519,6 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
 
   return NS_OK;
 }
-
-#ifdef MOZ_DASH
-/* |OpenByteRange|
- * For terminated byte range requests, use this function.
- * Callback is |MediaDecoder|::|NotifyByteRangeDownloaded|().
- * See |CacheClientSeek| also.
- */
-
-nsresult
-ChannelMediaResource::OpenByteRange(nsIStreamListener** aStreamListener,
-                                    MediaByteRange const & aByteRange)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  mByteRangeDownloads = true;
-  mByteRange = aByteRange;
-
-  // OpenByteRange may be called multiple times; same URL, different ranges.
-  // For the first call using this URL, forward to Open for some init.
-  if (mByteRangeFirstOpen) {
-    mByteRangeFirstOpen = false;
-    return Open(aStreamListener);
-  }
-
-  // For subsequent calls, ensure channel is recreated with correct byte range.
-  CloseChannel();
-
-  nsresult rv = RecreateChannel();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return OpenChannel(aStreamListener);
-}
-#endif
 
 nsresult ChannelMediaResource::Open(nsIStreamListener **aStreamListener)
 {
@@ -832,13 +771,6 @@ nsresult ChannelMediaResource::Seek(int32_t aWhence, int64_t aOffset)
 
   CMLOG("Seek requested for aOffset [%lld] for decoder [%p]",
         aOffset, mDecoder);
-#ifdef MOZ_DASH
-  // Remember |aOffset|, because Media Cache may request a diff offset later.
-  if (mByteRangeDownloads) {
-    ReentrantMonitorAutoEnter mon(mSeekOffsetMonitor);
-    mSeekOffset = aOffset;
-  }
-#endif
   return mCacheStream.Seek(aWhence, aOffset);
 }
 
@@ -1045,107 +977,13 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
   CMLOG("CacheClientSeek requested for aOffset [%lld] for decoder [%p]",
         aOffset, mDecoder);
 
-#ifndef MOZ_DASH
   CloseChannel();
-#else
-  // |CloseChannel| immediately for non-byte-range downloads.
-  if (!mByteRangeDownloads) {
-    CloseChannel();
-  } else if (mChannel) {
-    // Only close byte range channels if they are not in pending state.
-    bool isPending = false;
-    nsresult rv = mChannel->IsPending(&isPending);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!isPending) {
-      CloseChannel();
-    }
-  }
-#endif
 
   if (aResume) {
     NS_ASSERTION(mSuspendCount > 0, "Too many resumes!");
     // No need to mess with the channel, since we're making a new one
     --mSuspendCount;
   }
-
-#ifdef MOZ_DASH  // Note: For chunked downloads, e.g. DASH, we need to determine which chunk
-  // contains the requested offset, |mOffset|. This is either previously
-  // requested in |Seek| or updated to the most recent bytes downloaded.
-  // So the process below is:
-  //   1 - Query decoder for chunk containing desired offset, |mOffset|.
-  //       Return silently if the offset is not available; suggests decoder is
-  //         yet to get range information.
-  //       Return with NetworkError for all other errors.
-  //
-  //   2 - Adjust |mByteRange|.mStart to |aOffset|, requested by media cache.
-  //       For seeking, the media cache always requests the start of the cache
-  //       block, so we need to adjust the first chunk of a seek.
-  //       E.g. For "DASH-WebM On Demand" this means the first chunk after
-  //       seeking will most likely be larger than the subsegment (cluster).
-  //
-  //   3 - Call |OpenByteRange| requesting |mByteRange| bytes.
-
-  if (mByteRangeDownloads) {
-    // Query decoder for chunk containing desired offset.
-    nsresult rv;
-    {
-      ReentrantMonitorAutoEnter mon(mSeekOffsetMonitor);
-      // Only continue with seek request if a prior call to |Seek| was made.
-      // If |Seek| was not called previously, it means the media cache is
-      // seeking on its own.
-      // E.g. For those WebM files which are encoded with cues at the end of
-      // the file, when the cues are parsed, the reader and media cache
-      // automatically return to the first offset not downloaded, normally the
-      // first byte after init data. This results in |MediaCache| requesting
-      // |aOffset| = 0 (aligning to the start of the cache block. Ignore this
-      // and let |DASHDecoder| decide which bytes to download and when.
-      if (mSeekOffset >= 0) {
-        rv = mDecoder->GetByteRangeForSeek(mSeekOffset, mByteRange);
-        // Cache may try to seek from the next uncached byte: this offset may
-        // be after the byte range being seeked, i.e. the range containing
-        // |mSeekOffset|, which is the offset actually requested by the reader.
-        // This case means that the seeked range is already cached. For byte
-        // range downloads, we do not permit the cache to request bytes outside
-        // the seeked range. Instead, the decoder is responsible for
-        // controlling the sequence of byte range downloads. As such, return
-        // silently, and do NOT request a new download.
-        if (NS_SUCCEEDED(rv) && !mByteRange.IsNull() &&
-            aOffset > mByteRange.mEnd) {
-          rv = NS_ERROR_NOT_AVAILABLE;
-          mByteRange.Clear();
-        }
-        mSeekOffset = -1;
-      } else if (mByteRange.mStart <= aOffset && aOffset <= mByteRange.mEnd) {
-        CMLOG("Trying to resume download at offset [%lld].", aOffset);
-        rv = NS_OK;
-      } else {
-        CMLOG("MediaCache [%p] trying to seek independently to offset [%lld].",
-            &mCacheStream, aOffset);
-        rv = NS_ERROR_NOT_AVAILABLE;
-      }
-    }
-    if (rv == NS_ERROR_NOT_AVAILABLE) {
-      // Decoder will not make byte ranges available for non-active streams, or
-      // if range information is not yet available, or for metadata bytes if
-      // they have already been downloaded and read. In all cases, it is ok to
-      // return silently and assume that the decoder will request the correct
-      // byte range when range information becomes available.
-      CMLOG("Byte range not available for decoder [%p]; returning "
-            "silently.", mDecoder);
-      return NS_OK;
-    } else if (NS_FAILED(rv) || mByteRange.IsNull()) {
-      // Decoder reported an error we don't want to handle here; just return.
-      CMLOG("Error getting byte range: seek offset[%lld] cache offset[%lld] "
-            "decoder[%p]", mSeekOffset, aOffset, mDecoder);
-      mDecoder->NetworkError();
-      CloseChannel();
-      return rv;
-    }
-    // Adjust the byte range to start where the media cache requested.
-    mByteRange.mStart = mOffset = aOffset;
-    return OpenByteRange(nullptr, mByteRange);
-  }
-#endif
 
   mOffset = aOffset;
 

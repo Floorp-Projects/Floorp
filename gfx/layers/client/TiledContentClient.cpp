@@ -274,7 +274,7 @@ BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 #endif
     PROFILER_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferDraw");
 
-    mCallback(mThebesLayer, ctxt, aPaintRegion, nsIntRegion(), mCallbackData);
+    mCallback(mThebesLayer, ctxt, aPaintRegion, CLIP_NONE, nsIntRegion(), mCallbackData);
   }
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -383,6 +383,7 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
     mCallback(mThebesLayer, ctxt,
               nsIntRegion(nsIntRect(a, nsIntSize(GetScaledTileLength(),
                                                  GetScaledTileLength()))),
+              CLIP_NONE,
               nsIntRegion(), mCallbackData);
   }
 

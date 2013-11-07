@@ -21,9 +21,6 @@ function focusLink(aID, aSelectedAfter)
 
   this.invoke = function focusLink_invoke()
   {
-    is(this.accessible.selected, false,
-       "Wrong selected state before focus for ID " + prettyName(aID) + "!");
-
     var expectedStates = (aSelectedAfter ? STATE_FOCUSABLE : 0);
     var unexpectedStates = (!aSelectedAfter ? STATE_FOCUSABLE : 0) | STATE_FOCUSED;
     testStates(aID, expectedStates, 0, unexpectedStates, 0);
@@ -33,9 +30,6 @@ function focusLink(aID, aSelectedAfter)
 
   this.finalCheck = function focusLink_finalCheck()
   {
-    is(this.accessible.selected, aSelectedAfter,
-       "Wrong seleccted state after focus for ID " + prettyName(aID) + "!");
-
     var expectedStates = (aSelectedAfter ? STATE_FOCUSABLE | STATE_FOCUSED : 0);
     var unexpectedStates = (!aSelectedAfter ? STATE_FOCUSABLE | STATE_FOCUSED : 0);
     testStates(aID, expectedStates, 0, unexpectedStates, 0);

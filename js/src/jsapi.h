@@ -842,6 +842,9 @@ typedef void
 (* JSDestroyCompartmentCallback)(JSFreeOp *fop, JSCompartment *compartment);
 
 typedef void
+(* JSZoneCallback)(JS::Zone *zone);
+
+typedef void
 (* JSCompartmentNameCallback)(JSRuntime *rt, JSCompartment *compartment,
                               char *buf, size_t bufsize);
 
@@ -1624,6 +1627,12 @@ extern JS_PUBLIC_API(void)
 JS_SetDestroyCompartmentCallback(JSRuntime *rt, JSDestroyCompartmentCallback callback);
 
 extern JS_PUBLIC_API(void)
+JS_SetDestroyZoneCallback(JSRuntime *rt, JSZoneCallback callback);
+
+extern JS_PUBLIC_API(void)
+JS_SetSweepZoneCallback(JSRuntime *rt, JSZoneCallback callback);
+
+extern JS_PUBLIC_API(void)
 JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback);
 
 extern JS_PUBLIC_API(JSWrapObjectCallback)
@@ -1637,6 +1646,12 @@ JS_SetCompartmentPrivate(JSCompartment *compartment, void *data);
 
 extern JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSCompartment *compartment);
+
+extern JS_PUBLIC_API(void)
+JS_SetZoneUserData(JS::Zone *zone, void *data);
+
+extern JS_PUBLIC_API(void *)
+JS_GetZoneUserData(JS::Zone *zone);
 
 extern JS_PUBLIC_API(bool)
 JS_WrapObject(JSContext *cx, JS::MutableHandleObject objp);

@@ -17,12 +17,15 @@ export TOPLEVEL_BUILD := 1
 
 default::
 
-ifdef COMPILE_ENVIRONMENT
 include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
-endif
-
 
 include $(topsrcdir)/config/config.mk
+
+ifndef LIBXUL_SDK
+ifdef COMPILE_ENVIRONMENT
+BUILD_JS = 1
+endif
+endif
 
 GARBAGE_DIRS += dist _javagen _profile staticlib
 DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
@@ -35,7 +38,7 @@ ifndef MOZ_PROFILE_USE
 # We need to explicitly put backend.RecursiveMakeBackend here
 # otherwise the rule in rules.mk doesn't run early enough.
 libs binaries export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend
-ifndef LIBXUL_SDK
+ifdef BUILD_JS
 libs binaries export tools:: js-config-status
 endif
 endif
@@ -69,7 +72,7 @@ config.status: $(topsrcdir)/configure
 
 backend.RecursiveMakeBackend:
 	@echo "Build configuration changed. Regenerating backend."
-	./config.status
+	$(PYTHON) config.status
 
 Makefile: backend.RecursiveMakeBackend
 	@$(TOUCH) $@
@@ -78,7 +81,7 @@ include backend.RecursiveMakeBackend.pp
 
 default:: backend.RecursiveMakeBackend
 
-ifndef LIBXUL_SDK
+ifdef BUILD_JS
 .PHONY: js-config-status
 js-config-status:
 	$(call SUBMAKE,backend.RecursiveMakeBackend,js/src,1)
@@ -92,7 +95,7 @@ install_manifest_depends = \
   backend.RecursiveMakeBackend \
   $(NULL)
 
-ifndef LIBXUL_SDK
+ifdef BUILD_JS
 install_manifest_depends += js-config-status
 endif
 
@@ -101,12 +104,12 @@ install-manifests: $(addprefix install-dist-,$(install_manifests))
 
 .PHONY: $(addprefix install-dist-,$(install_manifests))
 $(addprefix install-dist-,$(install_manifests)): install-dist-%: $(install_manifest_depends)
-	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$(DIST)/$* _build_manifests/install/dist_$* $(if $(LIBXUL_SDK),,js/src/_build_manifests/install/dist_$*))
+	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$(DIST)/$* _build_manifests/install/dist_$* $(if $(BUILD_JS),js/src/_build_manifests/install/dist_$*))
 
 .PHONY: install-tests
 install-manifests: install-tests
 install-tests: $(install_manifest_depends)
-	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests js/src/_build_manifests/install/tests)
+	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests $(if $(BUILD_JS),js/src/_build_manifests/install/tests))
 
 
 # _tests should be purged during cleaning. However, we don't want it purged
@@ -142,7 +145,7 @@ include $(topsrcdir)/testing/testsuite-targets.mk
 endif
 
 default all::
-	$(call BUILDSTATUS,TIERS export $(if $(MOZ_PSEUDO_DERECURSE),compile )libs tools)
+	$(call BUILDSTATUS,TIERS export $(if $(COMPILE_ENVIRONMENT),$(if $(MOZ_PSEUDO_DERECURSE),compile ))libs tools)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -247,7 +250,7 @@ scheck::
 	@relcount=`find $(DIST)/bin -name "*.so" | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo "FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?"; exit 1; else echo "PASSED"; fi
 endif
 
-ifndef LIBXUL_SDK
+ifdef BUILD_JS
 js/src/Makefile: subsrcdir := js/src
 
 ifdef ENABLE_TESTS

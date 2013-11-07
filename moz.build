@@ -26,6 +26,7 @@ if not CONFIG['LIBXUL_SDK']:
 
     add_tier_dir('base', ['mozglue', 'memory/mozalloc'])
 
+add_tier_dir('precompile', 'xpcom/xpidl')
+
 # Bring in the configuration for the configured application.
-if CONFIG['COMPILE_ENVIRONMENT']:
-    include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
+include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')
