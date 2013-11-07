@@ -49,6 +49,10 @@ idlprocess := $(PYTHON_PATH) $(PLY_INCLUDE) -I$(IDL_PARSER_DIR) -I$(IDL_PARSER_C
     $(process_py) --cache-dir $(IDL_PARSER_CACHE_DIR) $(dist_idl_dir) \
         $(dist_include_dir) $(idl_xpt_dir) $(idl_deps_dir)
 
+ifdef LIBXUL_SDK
+idlprocess += -I$(LIBXUL_SDK)/idl
+endif
+
 xpidl_modules := @xpidl_modules@
 
 @xpidl_rules@
