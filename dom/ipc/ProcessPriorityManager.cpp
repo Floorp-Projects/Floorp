@@ -43,7 +43,9 @@
 //
 // (Wow, our logging story is a huge mess.)
 
+#ifndef HAVE_64BIT_OS
 #define ENABLE_LOGGING 1
+#endif
 
 #if defined(ANDROID) && defined(ENABLE_LOGGING)
 #  include <android/log.h>
