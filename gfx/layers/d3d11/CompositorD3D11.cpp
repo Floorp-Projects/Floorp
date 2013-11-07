@@ -486,8 +486,9 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
 {
   MOZ_ASSERT(mCurrentRT, "No render target");
   memcpy(&mVSConstants.layerTransform, &aTransform._11, 64);
-  mVSConstants.renderTargetOffset[0] = aOffset.x;
-  mVSConstants.renderTargetOffset[1] = aOffset.y;
+  IntPoint origin = mCurrentRT->GetOrigin();
+  mVSConstants.renderTargetOffset[0] = origin.x;
+  mVSConstants.renderTargetOffset[1] = origin.y;
   mVSConstants.layerQuad = aRect;
 
   mPSConstants.layerOpacity[0] = aOpacity;
