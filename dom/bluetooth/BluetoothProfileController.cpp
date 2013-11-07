@@ -10,7 +10,6 @@
 #include "BluetoothA2dpManager.h"
 #include "BluetoothHfpManager.h"
 #include "BluetoothHidManager.h"
-#include "BluetoothOppManager.h"
 
 #include "BluetoothUtils.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
@@ -80,9 +79,6 @@ BluetoothProfileController::AddProfileWithServiceClass(
     case BluetoothServiceClass::A2DP:
       profile = BluetoothA2dpManager::Get();
       break;
-    case BluetoothServiceClass::OBJECT_PUSH:
-      profile = BluetoothOppManager::Get();
-      break;
     case BluetoothServiceClass::HID:
       profile = BluetoothHidManager::Get();
       break;
@@ -132,7 +128,6 @@ BluetoothProfileController::SetupProfiles(bool aAssignServiceClass)
   // For a disconnect request, all connected profiles are put into array.
   if (!mConnect) {
     AddProfile(BluetoothHidManager::Get(), true);
-    AddProfile(BluetoothOppManager::Get(), true);
     AddProfile(BluetoothA2dpManager::Get(), true);
     AddProfile(BluetoothHfpManager::Get(), true);
     return;
@@ -143,26 +138,19 @@ BluetoothProfileController::SetupProfiles(bool aAssignServiceClass)
    * all of them sequencely.
    */
   bool hasAudio = HAS_AUDIO(mTarget.cod);
-  bool hasObjectTransfer = HAS_OBJECT_TRANSFER(mTarget.cod);
   bool hasRendering = HAS_RENDERING(mTarget.cod);
   bool isPeripheral = IS_PERIPHERAL(mTarget.cod);
 
-  NS_ENSURE_TRUE_VOID(hasAudio || hasObjectTransfer ||
-                      hasRendering || isPeripheral);
+  NS_ENSURE_TRUE_VOID(hasAudio || hasRendering || isPeripheral);
 
   /**
    * Connect to HFP/HSP first. Then, connect A2DP if Rendering bit is set.
-   * It's almost impossible to send file to a remote device which is an Audio
-   * device or a Rendering device, so we won't connect OPP in that case.
    */
   if (hasAudio) {
     AddProfile(BluetoothHfpManager::Get());
   }
   if (hasRendering) {
     AddProfile(BluetoothA2dpManager::Get());
-  }
-  if (hasObjectTransfer && !hasAudio && !hasRendering) {
-    AddProfile(BluetoothOppManager::Get());
   }
   if (isPeripheral) {
     AddProfile(BluetoothHidManager::Get());
