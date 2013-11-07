@@ -74,7 +74,6 @@ loadSubScript.call(this, "resource://gre/modules/commonjs/sdk/core/promise.js");
 this.require = loaderRequire;
 
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
-const escodegen = localRequire("escodegen/escodegen");
 
 loadSubScript.call(this, "resource://gre/modules/devtools/DevToolsUtils.js");
 

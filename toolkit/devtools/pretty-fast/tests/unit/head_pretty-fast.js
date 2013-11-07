@@ -7,6 +7,11 @@ const Cr = Components.results;
 const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { require } = devtools;
 
+this.sourceMap = require("source-map");
+this.acorn = require("acorn");
+this.prettyFast = require("devtools/pretty-fast");
+const { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+
 // Register a console listener, so console messages don't just disappear
 // into the ether.
 let errorCount = 0;
@@ -31,7 +36,7 @@ let listener = {
       }
     }
 
-    do_throw("head_dbg.js got console message: " + string + "\n");
+    do_throw("head_pretty-fast.js got console message: " + string + "\n");
   }
 };
 
