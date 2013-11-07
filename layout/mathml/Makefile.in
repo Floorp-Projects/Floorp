@@ -34,9 +34,6 @@ endif
 libs:: $(font_properties)
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
 
-install:: $(font_properties)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/fonts
-
 math_properties = mathfont.properties
 
 $(DIST)/bin/res/fonts/$(math_properties) $(DESTDIR)$(mozappdir)/res/fonts/$(math_properties): $(math_properties) Makefile

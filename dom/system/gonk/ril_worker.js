@@ -3013,6 +3013,12 @@ let RIL = {
         newCardState = GECKO_CARDSTATE_UNKNOWN;
     }
 
+    let pin1State = app.pin1_replaced ? iccStatus.universalPINState :
+                                        app.pin1;
+    if (pin1State === CARD_PINSTATE_ENABLED_PERM_BLOCKED) {
+      newCardState = GECKO_CARDSTATE_PERMANENT_BLOCKED;
+    }
+
     if (this.cardState == newCardState) {
       return;
     }
