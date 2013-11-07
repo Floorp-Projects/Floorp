@@ -44,8 +44,7 @@ public:
 
   virtual Layer* GetLayer() MOZ_OVERRIDE;
 
-  virtual void RenderLayer(const nsIntPoint& aOffset,
-                           const nsIntRect& aClipRect);
+  virtual void RenderLayer(const nsIntRect& aClipRect);
 
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) MOZ_OVERRIDE;
 

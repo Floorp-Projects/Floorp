@@ -94,8 +94,7 @@ public:
                         const gfx::Rect &aClipRect,
                         const EffectChain &aEffectChain,
                         gfx::Float aOpacity,
-                        const gfx::Matrix4x4 &aTransform,
-                        const gfx::Point &aOffset) MOZ_OVERRIDE;
+                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
 
   /**
    * Start a new frame. If aClipRectIn is null, sets *aClipRectOut to the
