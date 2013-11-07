@@ -9,14 +9,13 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-
 /* Page background */
 *|*:root {
   -moz-appearance: none;
   padding: 18px;
   background-color: Window;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 160px),
-                    linear-gradient(-moz-dialog, Window 160px);
+  background-image: /* Texture */
+                    url("chrome://global/skin/inContentUI/background-texture.png");
   color: WindowText;
 }
 
