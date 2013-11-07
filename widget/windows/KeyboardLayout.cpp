@@ -947,6 +947,7 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
       MOZ_CRASH("Invalid event message");
   }
 
+  aKeyEvent.mIsRepeat = IsRepeat();
   aKeyEvent.mKeyNameIndex = mKeyNameIndex;
   aKeyEvent.location = GetKeyLocation();
   aModKeyState.InitInputEvent(aKeyEvent);
