@@ -1000,7 +1000,7 @@ class ConstraintDataFreeze
     const char *kind() { return "freeze"; }
 
     bool invalidateOnNewType(Type type) { return true; }
-    bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
+    bool invalidateOnNewPropertyState(TypeSet *property) { return true; }
     bool invalidateOnNewObjectState(TypeObject *object) { return false; }
 
     bool constraintHolds(JSContext *cx,
@@ -1103,7 +1103,7 @@ HeapTypeSetKey::knownTypeTag(CompilerConstraintList *constraints)
 bool
 HeapTypeSetKey::isOwnProperty(CompilerConstraintList *constraints)
 {
-    if (maybeTypes() && !maybeTypes()->empty())
+    if (maybeTypes() && (!maybeTypes()->empty() || maybeTypes()->configuredProperty()))
         return true;
     if (JSObject *obj = object()->singleton()) {
         if (CanHaveEmptyPropertyTypesForOwnProperty(obj))
@@ -1138,9 +1138,9 @@ TemporaryTypeSet::getSingleton()
 JSObject *
 HeapTypeSetKey::singleton(CompilerConstraintList *constraints)
 {
-    TypeSet *types = maybeTypes();
+    HeapTypeSet *types = maybeTypes();
 
-    if (!types || types->baseFlags() != 0 || types->getObjectCount() != 1)
+    if (!types || types->configuredProperty() || types->baseFlags() != 0 || types->getObjectCount() != 1)
         return nullptr;
 
     JSObject *obj = types->getSingleObject(0);
