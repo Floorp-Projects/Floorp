@@ -68,6 +68,19 @@ html|applet:not([height]), html|applet[height=""] {
   display: none;
 }
 
+:-moz-handler-clicktoplay .hoverBox,
+:-moz-handler-vulnerable-updatable .hoverBox,
+:-moz-handler-vulnerable-no-update .hoverBox {
+  cursor: pointer;
+}
+
+.hoverBox > label {
+  cursor: inherit;
+}
+.icon {
+  cursor: inherit;
+}
+
 .previewPluginContent {
   display: none;
 }
