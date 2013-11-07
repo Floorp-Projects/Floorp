@@ -728,16 +728,18 @@ var gPluginHandler = {
     let pluginFound = false;
     for (let plugin of plugins) {
       plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      // canActivatePlugin will return false if this isn't a known plugin type,
-      // so the pluginHost.getPermissionStringForType call is protected
-      if (gPluginHandler.canActivatePlugin(plugin) &&
-          aPluginInfo.permissionString == pluginHost.getPermissionStringForType(plugin.actualType)) {
-        let overlay = this.getPluginUI(plugin, "main");
-        if (overlay) {
-          overlay.removeEventListener("click", gPluginHandler._overlayClickListener, true);
-        }
-        plugin.playPlugin();
+      if (!gPluginHandler.isKnownPlugin(plugin)) {
+        continue;
+      }
+      if (aPluginInfo.permissionString == pluginHost.getPermissionStringForType(plugin.actualType)) {
         pluginFound = true;
+        if (gPluginHandler.canActivatePlugin(plugin)) {
+          let overlay = this.getPluginUI(plugin, "main");
+          if (overlay) {
+            overlay.removeEventListener("click", gPluginHandler._overlayClickListener, true);
+          }
+          plugin.playPlugin();
+        }
       }
     }
 
