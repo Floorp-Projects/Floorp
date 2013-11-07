@@ -13,7 +13,7 @@ interface nsIAccessible;
  * A cross-platform interface that supports hyperlink-specific properties and
  * methods.  Anchors, image maps, xul:labels with class="text-link" implement this interface.
  */
-[scriptable, uuid(38c60bfa-6040-4bfe-93f2-acd6a909bb60)]
+[scriptable, uuid(883643d4-93a5-4f32-922c-6f06e01363c1)]
 interface nsIAccessibleHyperLink : nsISupports
 {
   /**
@@ -37,16 +37,6 @@ interface nsIAccessibleHyperLink : nsISupports
    * In all other cases, TRUE is returned.
    */
   readonly attribute boolean valid;
-
-  /**
-   * Determines whether the element currently has the focus, e. g. after
-   * returning from the destination page.
-   *
-   * @note  ARIA links can only be focused if they have the tabindex
-   * attribute set.  Also, state_focused should then be set on the accessible
-   * for this link.
-   */
-  readonly attribute boolean selected;
 
   /**
    * The numbber of anchors within this Hyperlink. Is normally 1 for anchors.
