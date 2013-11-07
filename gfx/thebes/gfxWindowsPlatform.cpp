@@ -1051,16 +1051,19 @@ gfxWindowsPlatform::FindFontEntry(const nsAString& aName, const gfxFontStyle& aF
     return ff->FindFontForStyle(aFontStyle, aNeedsBold);
 }
 
-qcms_profile*
-gfxWindowsPlatform::GetPlatformCMSOutputProfile()
+void
+gfxWindowsPlatform::GetPlatformCMSOutputProfile(void* &mem, size_t &size)
 {
     WCHAR str[MAX_PATH];
     DWORD size = MAX_PATH;
     BOOL res;
 
+    mem = nullptr;
+    size = 0;
+
     HDC dc = GetDC(nullptr);
     if (!dc)
-        return nullptr;
+        return;
 
 #if _MSC_VER
     __try {
@@ -1074,16 +1077,16 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile()
 
     ReleaseDC(nullptr, dc);
     if (!res)
-        return nullptr;
+        return;
 
-    qcms_profile* profile = qcms_profile_from_unicode_path(str);
+    qcms_data_from_unicode_path(str, &mem, &size);
+
 #ifdef DEBUG_tor
-    if (profile)
+    if (size > 0)
         fprintf(stderr,
                 "ICM profile read from %s successfully\n",
                 NS_ConvertUTF16toUTF8(str).get());
 #endif
-    return profile;
 }
 
 bool
