@@ -661,7 +661,7 @@ CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
   GLuint fbo = 0;
   CreateFBOWithTexture(aRect, false, 0, &fbo, &tex);
   RefPtr<CompositingRenderTargetOGL> surface
-    = new CompositingRenderTargetOGL(this, tex, fbo);
+    = new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
   surface->Initialize(aRect.Size(), mFBOTextureTarget, aInit);
   return surface.forget();
 }
@@ -685,7 +685,7 @@ CompositorOGL::CreateRenderTargetFromSource(const IntRect &aRect,
   }
 
   RefPtr<CompositingRenderTargetOGL> surface
-    = new CompositingRenderTargetOGL(this, tex, fbo);
+    = new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
   surface->Initialize(aRect.Size(),
                       mFBOTextureTarget,
                       INIT_MODE_NONE);

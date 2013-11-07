@@ -19,9 +19,10 @@ namespace layers {
 class BasicCompositingRenderTarget : public CompositingRenderTarget
 {
 public:
-  BasicCompositingRenderTarget(gfx::DrawTarget* aDrawTarget, const gfx::IntSize& aSize)
-    : mDrawTarget(aDrawTarget)
-    , mSize(aSize)
+  BasicCompositingRenderTarget(gfx::DrawTarget* aDrawTarget, const gfx::IntRect& aRect)
+    : CompositingRenderTarget(aRect.TopLeft())
+    , mDrawTarget(aDrawTarget)
+    , mSize(aRect.Size())
   { }
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
