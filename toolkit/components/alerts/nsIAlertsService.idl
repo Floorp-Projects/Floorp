@@ -24,9 +24,7 @@ interface nsIAlertsService : nsISupports
     * @param alertListener  Used for callbacks. May be null if the caller 
     *                       doesn't care about callbacks.
     * @param name           The name of the notification. This is currently
-    *                       only used on OS X with Growl and Android.
-    *                       On OS X with Growl, users can disable notifications
-    *                       with a given name. On Android the name is hashed
+    *                       only used on Android. On Android the name is hashed
     *                       and used as a notification ID. Notifications will
     *                       replace previous notifications with the same name.
     * @param dir            Bidi override for the title. Valid values are

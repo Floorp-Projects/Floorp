@@ -389,7 +389,7 @@ class BytecodeParser
 
     JSContext *cx_;
     LifoAllocScope allocScope_;
-    JSScript *script_;
+    RootedScript script_;
 
     Bytecode **codeArray_;
 
@@ -397,7 +397,7 @@ class BytecodeParser
     BytecodeParser(JSContext *cx, JSScript *script)
       : cx_(cx),
         allocScope_(&cx->tempLifoAlloc()),
-        script_(script),
+        script_(cx, script),
         codeArray_(nullptr) { }
 
     bool parse();
@@ -949,7 +949,7 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
       }
 
       case JOF_SCOPECOORD: {
-        Value v = StringValue(ScopeCoordinateName(cx, script, pc));
+        Value v = StringValue(ScopeCoordinateName(script, pc));
         JSAutoByteString bytes;
         if (!ToDisassemblySource(cx, v, &bytes))
             return 0;
@@ -1590,7 +1590,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       }
       case JSOP_CALLALIASEDVAR:
       case JSOP_GETALIASEDVAR: {
-        JSAtom *atom = ScopeCoordinateName(cx, script, pc);
+        JSAtom *atom = ScopeCoordinateName(script, pc);
         JS_ASSERT(atom);
         return write(atom);
       }

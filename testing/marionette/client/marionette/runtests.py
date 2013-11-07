@@ -19,11 +19,25 @@ from manifestparser import TestManifest
 from mozhttpd import MozHttpd
 
 from marionette import Marionette
-from moztest.results import TestResultCollection
+from moztest.results import TestResultCollection, TestResult, relevant_line
 from marionette_test import MarionetteJSTestCase, MarionetteTestCase
 
 
+class MarionetteTest(TestResult):
+
+    @property
+    def test_name(self):
+        if self.test_class is not None:
+            return '%s.py %s.%s' % (self.test_class.split('.')[0],
+                                    self.test_class,
+                                    self.name)
+        else:
+            return self.name
+
+
 class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
+
+    resultClass = MarionetteTest
 
     def __init__(self, *args, **kwargs):
         self.marionette = kwargs.pop('marionette')
@@ -83,10 +97,25 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
         else:
             return 0
 
-    def add_test_result(self, test, *args, **kwargs):
-        self.add_result(test, *args, **kwargs)
-        self[-1].time_start = test.start_time
-        self[-1].time_end = time.time() if test.start_time else 0
+    def add_test_result(self, test, result_expected='PASS',
+                        result_actual='PASS', output='', context=None, **kwargs):
+        def get_class(test):
+            return test.__class__.__module__ + '.' + test.__class__.__name__
+
+        name = str(test).split()[0]
+        test_class = get_class(test)
+        if hasattr(test, 'jsFile'):
+            name = os.path.basename(test.jsFile)
+            test_class = None
+
+        t = self.resultClass(name=name, test_class=test_class,
+                       time_start=test.start_time, result_expected=result_expected,
+                       context=context, **kwargs)
+        t.finish(result_actual,
+                 time_end=time.time() if test.start_time else 0,
+                 reason=relevant_line(output),
+                 output=output)
+        self.append(t)
 
     def addError(self, test, err):
         self.add_test_result(test, output=self._exc_info_to_string(err, test), result_actual='ERROR')

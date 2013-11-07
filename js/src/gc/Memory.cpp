@@ -297,7 +297,7 @@ gc::GetPageFaultCount()
     return 0;
 }
 
-#elif defined(XP_UNIX) || defined(XP_MACOSX) || defined(DARWIN)
+#elif defined(XP_UNIX)
 
 #include <sys/mman.h>
 #include <sys/resource.h>
