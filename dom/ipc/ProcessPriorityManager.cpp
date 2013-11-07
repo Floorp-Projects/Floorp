@@ -43,7 +43,7 @@
 //
 // (Wow, our logging story is a huge mess.)
 
-// #define ENABLE_LOGGING 1
+#define ENABLE_LOGGING 1
 
 #if defined(ANDROID) && defined(ENABLE_LOGGING)
 #  include <android/log.h>
