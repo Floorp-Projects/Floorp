@@ -111,9 +111,6 @@ GARBAGE += $(STL_WRAPPERS_SENTINEL)
 GARBAGE_DIRS += stl_wrappers
 endif
 
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(DEPTH)/mozilla-config.h $(DESTDIR)$(includedir)
-
 GARBAGE += \
   $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES) buildid $(srcdir)/*.pyc *.pyc
 

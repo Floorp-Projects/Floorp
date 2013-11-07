@@ -43,6 +43,3 @@ GARBAGE	+= \
 
 libs:: $(_FILES)
 	$(INSTALL) $^ $(DIST)/bin/res
-
-install:: $(_FILES)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
