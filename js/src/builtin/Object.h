@@ -8,8 +8,7 @@
 #define builtin_Object_h
 
 #include "jsapi.h"
-
-namespace JS { class Value; }
+#include "js/Value.h"
 
 namespace js {
 
@@ -25,10 +24,6 @@ obj_construct(JSContext *cx, unsigned argc, JS::Value *vp);
 JSString *
 ObjectToSource(JSContext *cx, JS::HandleObject obj);
 #endif // JS_HAS_TOSOURCE
-
-extern bool
-WatchHandler(JSContext *cx, JSObject *obj, jsid id, JS::Value old,
-             JS::Value *nvp, void *closure);
 
 } /* namespace js */
 
