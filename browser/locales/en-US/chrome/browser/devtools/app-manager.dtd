@@ -78,9 +78,6 @@
 <!ENTITY projects.manifestEditorTooltip "Edit your app's manifest in the panel below. The Update button will save your changes and update the app.">
 <!ENTITY projects.manifestViewer "Manifest Viewer">
 <!ENTITY projects.manifestViewerTooltip "Examine your app's manifest in the panel below.">
-<!ENTITY projects.valid "Valid">
-<!ENTITY projects.error "Error">
-<!ENTITY projects.warning "Warning">
 
 <!ENTITY help.title "App Manager">
 <!ENTITY help.close "Close">
