@@ -85,6 +85,8 @@ public:
   virtual Rect GetStrokedBounds(const StrokeOptions &aStrokeOptions,
                                 const Matrix &aTransform = Matrix()) const;
 
+  virtual void StreamToSink(PathSink *aSink) const { MOZ_ASSERT(false); }
+
   virtual FillRule GetFillRule() const { return mFillRule; }
 
   CGMutablePathRef GetPath() const { return mPath; }
