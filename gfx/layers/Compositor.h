@@ -125,8 +125,7 @@ class CompositingRenderTarget;
 enum SurfaceInitMode
 {
   INIT_MODE_NONE,
-  INIT_MODE_CLEAR,
-  INIT_MODE_COPY
+  INIT_MODE_CLEAR
 };
 
 /**
