@@ -412,9 +412,6 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { VIDEO_WEBM, "webm" },
   { AUDIO_WEBM, "webm" },
 #endif
-#ifdef MOZ_DASH
-  { APPLICATION_DASH, "mpd" },
-#endif
 #if defined(MOZ_GSTREAMER) || defined(MOZ_WMF)
   { VIDEO_MP4, "mp4" },
   { AUDIO_MP4, "m4a" },
@@ -497,9 +494,6 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 #endif
   { VIDEO_WEBM, "webm", "Web Media Video" },
   { AUDIO_WEBM, "webm", "Web Media Audio" },
-#ifdef MOZ_DASH
-  { APPLICATION_DASH, "mpd", "DASH Media Presentation Description" },
-#endif
   { AUDIO_MP3, "mp3", "MPEG Audio" },
   { VIDEO_MP4, "mp4", "MPEG-4 Video" },
   { AUDIO_MP4, "m4a", "MPEG-4 Audio" },
