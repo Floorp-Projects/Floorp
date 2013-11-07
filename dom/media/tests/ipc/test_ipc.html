@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for OOP PeerConncection</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+  <body>
+
+  <script type="application/javascript;version=1.7">
+    "use strict";
+
+    SimpleTest.waitForExplicitFinish();
+
+    // This isn't a single test. It runs the entirety of the PeerConnection
+    // tests. Each of those has a normal timeout handler, so there's no point in
+    // having a timeout here. I'm setting this really high just to avoid getting
+    // killed.
+    SimpleTest.requestLongerTimeout(100);
+
+    // Disable crash observers as it breaks later tests.
+    function iframeScriptFirst() {
+      SpecialPowers.prototype.registerProcessCrashObservers = function() { };
+      SpecialPowers.prototype.unregisterProcessCrashObservers = function() { };
+
+      content.wrappedJSObject.RunSet.reloadAndRunAll({
+          preventDefault: function() { },
+          __exposedProps__: { preventDefault: 'r' }
+      });
+    }
+
+    function iframeScriptSecond() {
+      let TestRunner = content.wrappedJSObject.TestRunner;
+
+      let oldComplete = TestRunner.onComplete;
+
+      TestRunner.onComplete = function() {
+        TestRunner.onComplete = oldComplete;
+
+        sendAsyncMessage("test:PeerConnection:ipcTestComplete", {
+          result: JSON.stringify(TestRunner._failedTests)
+        });
+
+        if (oldComplete) {
+          oldComplete();
+        }
+      };
+
+      let oldLog = TestRunner.log;
+      TestRunner.log = function(msg) {
+        sendAsyncMessage("test:PeerConnection:ipcTestMessage", { msg: msg });
+      }
+    }
+
+    let regex = /^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO) \| ([^\|]+) \|(.*)/;
+
+    function onTestMessage(data) {
+      let message = SpecialPowers.wrap(data).json.msg;
+      let match = regex.exec(message);
+      if (match) {
+        let state = match[1];
+        let details = match[2] + " | " + match[3];
+
+        switch (state) {
+          case "TEST-PASS":
+          case "TEST-KNOWN-FAIL":
+            ok(true, details);
+            break;
+
+          case "TEST-UNEXPECTED-FAIL":
+          case "TEST-UNEXPECTED-PASS":
+            ok(false, details);
+            break;
+
+          case "TEST-DEBUG-INFO":
+          default:
+            info(details);
+        }
+      }
+    }
+
+    function onTestComplete() {
+      let comp = SpecialPowers.wrap(SpecialPowers.Components);
+      let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+      let spObserver = comp.classes["@mozilla.org/special-powers-observer;1"]
+                            .getService(comp.interfaces.nsIMessageListener);
+
+      mm.removeMessageListener("SPPrefService", spObserver);
+      mm.removeMessageListener("SPProcessCrashService", spObserver);
+      mm.removeMessageListener("SPPingService", spObserver);
+      mm.removeMessageListener("SpecialPowers.Quit", spObserver);
+      mm.removeMessageListener("SPPermissionManager", spObserver);
+
+      mm.removeMessageListener("test:PeerConnection:ipcTestMessage", onTestMessage);
+      mm.removeMessageListener("test:PeerConnection:ipcTestComplete", onTestComplete);
+
+      SimpleTest.executeSoon(function () { SimpleTest.finish(); });
+    }
+
+    function runTests() {
+      let iframe = document.createElement("iframe");
+      SpecialPowers.wrap(iframe).mozbrowser = true;
+      iframe.id = "iframe";
+      iframe.style.width = "100%";
+      iframe.style.height = "1000px";
+
+      function iframeLoadSecond() {
+        ok(true, "Got second iframe load event.");
+        iframe.removeEventListener("mozbrowserloadend", iframeLoadSecond);
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+        mm.loadFrameScript("data:,(" + iframeScriptSecond.toString() + ")();",
+                           false);
+      }
+
+      function iframeLoadFirst() {
+        ok(true, "Got first iframe load event.");
+        iframe.removeEventListener("mozbrowserloadend", iframeLoadFirst);
+        iframe.addEventListener("mozbrowserloadend", iframeLoadSecond);
+
+        let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+
+        let comp = SpecialPowers.wrap(SpecialPowers.Components);
+
+        let spObserver =
+          comp.classes["@mozilla.org/special-powers-observer;1"]
+              .getService(comp.interfaces.nsIMessageListener);
+
+        mm.addMessageListener("SPPrefService", spObserver);
+        mm.addMessageListener("SPProcessCrashService", spObserver);
+        mm.addMessageListener("SPPingService", spObserver);
+        mm.addMessageListener("SpecialPowers.Quit", spObserver);
+        mm.addMessageListener("SPPermissionManager", spObserver);
+
+        mm.addMessageListener("test:PeerConnection:ipcTestMessage", onTestMessage);
+        mm.addMessageListener("test:PeerConnection:ipcTestComplete", onTestComplete);
+
+        let specialPowersBase = "chrome://specialpowers/content/";
+        mm.loadFrameScript(specialPowersBase + "MozillaLogger.js", false);
+        mm.loadFrameScript(specialPowersBase + "specialpowersAPI.js", false);
+        mm.loadFrameScript(specialPowersBase + "specialpowers.js", false);
+
+        mm.loadFrameScript("data:,(" + iframeScriptFirst.toString() + ")();", false);
+      }
+
+      iframe.addEventListener("mozbrowserloadend", iframeLoadFirst);
+
+      // Strip this filename and one directory level and then add "/mochitest".
+      let href =  window.location.href;
+      href = href.substring(0, href.lastIndexOf('/'));
+      href = href.substring(0, href.lastIndexOf('/'));
+      iframe.src = href + "/mochitest?consoleLevel=INFO";
+
+      document.body.appendChild(iframe);
+    }
+
+    addEventListener("load", function() {
+
+      SpecialPowers.addPermission("browser", true, document);
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          ["media.peerconnection.ipc.enabled", true],
+
+          // TODO: remove this as part of bug 820712
+          ["network.disable.ipc.security", true],
+
+          ["dom.ipc.browser_frames.oop_by_default", true],
+          ["dom.mozBrowserFramesEnabled", true],
+          ["browser.pagethumbnails.capturing_disabled", true]
+        ]
+      }, runTests);
+    });
+
+  </script>
+</body>
+</html>

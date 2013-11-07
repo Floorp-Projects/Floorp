@@ -8,8 +8,3 @@ LOCAL_INCLUDES = \
 		$(MOZ_LIBVPX_CFLAGS) \
 		$(NULL)
 
-ifdef MOZ_DASH
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../dash \
-  $(NULL)
-endif

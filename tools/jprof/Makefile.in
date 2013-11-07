@@ -18,6 +18,3 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES += \
 	-I$(srcdir)/stub \
 	$(NULL)
-
-install::
-	$(INSTALL) -m 555 $(HELPER_SCRIPTS)  $(DIST)/bin

@@ -2389,6 +2389,7 @@ this.GECKO_CARDSTATE_CORPORATE_PUK_REQUIRED        = "corporatePukRequired";
 this.GECKO_CARDSTATE_SERVICE_PROVIDER_PUK_REQUIRED = "serviceProviderPukRequired";
 this.GECKO_CARDSTATE_SIM_PUK_REQUIRED              = "simPersonalizationPukRequired";
 this.GECKO_CARDSTATE_READY                         = "ready";
+this.GECKO_CARDSTATE_PERMANENT_BLOCKED             = "permanentBlocked";
 
 this.GECKO_CARDLOCK_PIN      = "pin";
 this.GECKO_CARDLOCK_PIN2     = "pin2";
