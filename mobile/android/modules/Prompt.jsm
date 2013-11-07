@@ -32,12 +32,23 @@ function Prompt(aOptions) {
   if ("buttons" in aOptions && aOptions.buttons != null)
     this.msg.buttons = aOptions.buttons;
 
+  if ("hint" in aOptions && aOptions.hint != null)
+    this.msg.hint = aOptions.hint;
+
   let idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator); 
   this.guid = idService.generateUUID().toString();
   this.msg.guid = this.guid;
 }
 
 Prompt.prototype = {
+  setHint: function(aHint) {
+    if (!aHint)
+      delete this.msg.hint;
+    else
+      this.msg.hint = aHint;
+    return this;
+  },
+
   addButton: function(aOptions) {
     if (!this.msg.buttons)
       this.msg.buttons = [];
