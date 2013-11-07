@@ -440,6 +440,11 @@ public:
   virtual Rect GetStrokedBounds(const StrokeOptions &aStrokeOptions,
                                 const Matrix &aTransform = Matrix()) const = 0;
 
+  /* Take the contents of this path and stream it to another sink, this works
+   * regardless of the backend that might be used for the destination sink.
+   */
+  virtual void StreamToSink(PathSink *aSink) const = 0;
+ 
   /* This gets the fillrule this path's builder was created with. This is not
    * mutable.
    */

@@ -270,6 +270,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
     WriteParam(aMsg, aParam.keyCode);
     WriteParam(aMsg, aParam.charCode);
     WriteParam(aMsg, aParam.isChar);
+    WriteParam(aMsg, aParam.mIsRepeat);
     WriteParam(aMsg, aParam.location);
     WriteParam(aMsg, aParam.mUniqueId);
     // An OS-specific native event might be attached in |mNativeKeyEvent|,  but
@@ -285,6 +286,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
         ReadParam(aMsg, aIter, &aResult->keyCode) &&
         ReadParam(aMsg, aIter, &aResult->charCode) &&
         ReadParam(aMsg, aIter, &aResult->isChar) &&
+        ReadParam(aMsg, aIter, &aResult->mIsRepeat) &&
         ReadParam(aMsg, aIter, &aResult->location) &&
         ReadParam(aMsg, aIter, &aResult->mUniqueId))
     {
