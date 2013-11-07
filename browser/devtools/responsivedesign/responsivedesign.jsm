@@ -185,6 +185,7 @@ function ResponsiveUI(aWindow, aTab)
                       .getInterface(Ci.nsIWebNavigation)
                       .QueryInterface(Ci.nsIDocShell);
 
+  this._deviceSizeWasPageSize = this.docShell.deviceSizeIsPageSize;
   this.docShell.deviceSizeIsPageSize = true;
 
   try {
@@ -255,7 +256,7 @@ ResponsiveUI.prototype = {
       return;
     this.closing = true;
 
-    this.docShell.deviceSizeIsPageSize = false;
+    this.docShell.deviceSizeIsPageSize = this._deviceSizeWasPageSize;
 
     this.browser.removeEventListener("load", this.bound_onPageLoad, true);
     this.browser.removeEventListener("unload", this.bound_onPageUnload, true);
