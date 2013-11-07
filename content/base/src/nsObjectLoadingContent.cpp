@@ -227,6 +227,7 @@ public:
     , mDocument(aTarget->GetCurrentDoc())
     , mEvent(aEvent)
   {
+    MOZ_ASSERT(aTarget && mDocument);
   }
 
   nsSimplePluginEvent(nsIDocument* aTarget, const nsAString& aEvent)
@@ -234,6 +235,7 @@ public:
     , mDocument(aTarget)
     , mEvent(aEvent)
   {
+    MOZ_ASSERT(aTarget);
   }
 
   ~nsSimplePluginEvent() {}
@@ -249,10 +251,12 @@ private:
 NS_IMETHODIMP
 nsSimplePluginEvent::Run()
 {
-  LOG(("OBJLC [%p]: nsSimplePluginEvent firing event \"%s\"", mTarget.get(),
-       mEvent.get()));
-  nsContentUtils::DispatchTrustedEvent(mDocument, mTarget,
-                                       mEvent, true, true);
+  if (mDocument->IsActive()) {
+    LOG(("OBJLC [%p]: nsSimplePluginEvent firing event \"%s\"", mTarget.get(),
+         NS_ConvertUTF16toUTF8(mEvent).get()));
+    nsContentUtils::DispatchTrustedEvent(mDocument, mTarget,
+                                         mEvent, true, true);
+  }
   return NS_OK;
 }
 
@@ -710,9 +714,12 @@ nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
     ///             would keep the docshell around, but trash the frameloader
     UnloadObject();
   }
-  nsCOMPtr<nsIRunnable> ev = new nsSimplePluginEvent(thisContent->GetCurrentDoc(),
-                                           NS_LITERAL_STRING("PluginRemoved"));
-  NS_DispatchToCurrentThread(ev);
+  nsIDocument* doc = thisContent->GetCurrentDoc();
+  if (doc && doc->IsActive()) {
+    nsCOMPtr<nsIRunnable> ev = new nsSimplePluginEvent(doc,
+                                                       NS_LITERAL_STRING("PluginRemoved"));
+    NS_DispatchToCurrentThread(ev);
+  }
 }
 
 nsObjectLoadingContent::nsObjectLoadingContent()
