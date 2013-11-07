@@ -131,9 +131,7 @@ ContainerRender(ContainerT* aContainer,
       // not safe.
       if (HasOpaqueAncestorLayer(aContainer) &&
           transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
-        mode = gfxPlatform::ComponentAlphaEnabled() ?
-                                            INIT_MODE_COPY : INIT_MODE_CLEAR;
-        surfaceCopyNeeded = (mode == INIT_MODE_COPY);
+        surfaceCopyNeeded = gfxPlatform::ComponentAlphaEnabled();
         surfaceRect.x += transform.x0;
         surfaceRect.y += transform.y0;
         aContainer->mSupportsComponentAlphaChildren

@@ -659,7 +659,7 @@ CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
 {
   GLuint tex = 0;
   GLuint fbo = 0;
-  CreateFBOWithTexture(aRect, aInit, 0, &fbo, &tex);
+  CreateFBOWithTexture(aRect, false, 0, &fbo, &tex);
   RefPtr<CompositingRenderTargetOGL> surface
     = new CompositingRenderTargetOGL(this, tex, fbo);
   surface->Initialize(IntSize(aRect.width, aRect.height), mFBOTextureTarget, aInit);
@@ -675,10 +675,10 @@ CompositorOGL::CreateRenderTargetFromSource(const IntRect &aRect,
   const CompositingRenderTargetOGL* sourceSurface
     = static_cast<const CompositingRenderTargetOGL*>(aSource);
   if (aSource) {
-    CreateFBOWithTexture(aRect, INIT_MODE_COPY, sourceSurface->GetFBO(),
+    CreateFBOWithTexture(aRect, true, sourceSurface->GetFBO(),
                          &fbo, &tex);
   } else {
-    CreateFBOWithTexture(aRect, INIT_MODE_COPY, 0,
+    CreateFBOWithTexture(aRect, true, 0,
                          &fbo, &tex);
   }
 
@@ -686,7 +686,7 @@ CompositorOGL::CreateRenderTargetFromSource(const IntRect &aRect,
     = new CompositingRenderTargetOGL(this, tex, fbo);
   surface->Initialize(IntSize(aRect.width, aRect.height),
                       mFBOTextureTarget,
-                      INIT_MODE_COPY);
+                      INIT_MODE_NONE);
   return surface.forget();
 }
 
@@ -841,7 +841,7 @@ CompositorOGL::BeginFrame(const Rect *aClipRectIn, const gfxMatrix& aTransform,
 }
 
 void
-CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, SurfaceInitMode aInit,
+CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, bool aCopyFromSource,
                                     GLuint aSourceFrameBuffer,
                                     GLuint *aFBO, GLuint *aTexture)
 {
@@ -851,7 +851,7 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, SurfaceInitMode aInit,
   mGLContext->fGenTextures(1, &tex);
   mGLContext->fBindTexture(mFBOTextureTarget, tex);
 
-  if (aInit == INIT_MODE_COPY) {
+  if (aCopyFromSource) {
     GLuint curFBO = mCurrentRenderTarget->GetFBO();
     if (curFBO != aSourceFrameBuffer) {
       mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aSourceFrameBuffer);
