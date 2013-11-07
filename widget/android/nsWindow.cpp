@@ -1623,6 +1623,10 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
                                  key.IsShiftPressed(),
                                  key.IsMetaPressed());
     }
+
+    event.mIsRepeat =
+        (event.message == NS_KEY_DOWN || event.message == NS_KEY_PRESS) &&
+        (!!(key.Flags() & AKEY_EVENT_FLAG_LONG_PRESS) || !!key.RepeatCount());
     event.location = key.DomKeyLocation();
     event.time = key.Time();
 
