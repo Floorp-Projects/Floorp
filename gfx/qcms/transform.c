@@ -306,6 +306,14 @@ qcms_bool set_rgb_colorants(qcms_profile *profile, qcms_CIE_xyY white_point, qcm
 	return true;
 }
 
+qcms_bool get_rgb_colorants(struct matrix *colorants, qcms_CIE_xyY white_point, qcms_CIE_xyYTRIPLE primaries)
+{
+	*colorants = build_RGB_to_XYZ_transfer_matrix(white_point, primaries);
+	*colorants = adapt_matrix_to_D50(*colorants, white_point);
+
+	return (colorants->invalid ? true : false);
+}
+
 #if 0
 static void qcms_transform_data_rgb_out_pow(qcms_transform *transform, unsigned char *src, unsigned char *dest, size_t length)
 {

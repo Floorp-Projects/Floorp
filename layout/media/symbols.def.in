@@ -257,6 +257,8 @@ jpeg_abort_decompress
 jpeg_read_raw_data
 #endif
 qcms_enable_iccv4
+qcms_data_from_unicode_path
+qcms_data_from_path
 qcms_profile_create_rgb_with_gamma
 qcms_profile_from_memory
 qcms_profile_from_path

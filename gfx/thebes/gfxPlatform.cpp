@@ -1707,10 +1707,23 @@ gfxPlatform::TransformPixel(const gfxRGBA& in, gfxRGBA& out, qcms_transform *tra
         out = in;
 }
 
-qcms_profile *
-gfxPlatform::GetPlatformCMSOutputProfile()
+void
+gfxPlatform::GetPlatformCMSOutputProfile(void *&mem, size_t &size)
 {
-    return nullptr;
+    mem = nullptr;
+    size = 0;
+}
+
+void
+gfxPlatform::GetCMSOutputProfileData(void *&mem, size_t &size)
+{
+    nsAdoptingCString fname = Preferences::GetCString("gfx.color_management.display_profile");
+    if (!fname.IsEmpty()) {
+        qcms_data_from_path(fname, &mem, &size);
+    }
+    else {
+        gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfile(mem, size);
+    }
 }
 
 void
@@ -1729,15 +1742,14 @@ gfxPlatform::CreateCMSOutputProfile()
         }
 
         if (!gCMSOutputProfile) {
-            nsAdoptingCString fname = Preferences::GetCString(GFX_PREF_CMS_DISPLAY_PROFILE);
-            if (!fname.IsEmpty()) {
-                gCMSOutputProfile = qcms_profile_from_path(fname);
-            }
-        }
+            void* mem = nullptr;
+            size_t size = 0;
 
-        if (!gCMSOutputProfile) {
-            gCMSOutputProfile =
-                gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfile();
+            GetCMSOutputProfileData(mem, size);
+            if ((mem != nullptr) && (size > 0)) {
+                gCMSOutputProfile = qcms_profile_from_memory(mem, size);
+                free(mem);
+            }
         }
 
         /* Determine if the profile looks bogus. If so, close the profile
