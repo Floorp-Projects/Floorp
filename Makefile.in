@@ -72,7 +72,7 @@ config.status: $(topsrcdir)/configure
 
 backend.RecursiveMakeBackend:
 	@echo "Build configuration changed. Regenerating backend."
-	./config.status
+	$(PYTHON) config.status
 
 Makefile: backend.RecursiveMakeBackend
 	@$(TOUCH) $@
