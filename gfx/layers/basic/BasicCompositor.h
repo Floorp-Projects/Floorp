@@ -60,7 +60,8 @@ public:
 
   virtual TemporaryRef<CompositingRenderTarget>
   CreateRenderTargetFromSource(const gfx::IntRect &aRect,
-                               const CompositingRenderTarget *aSource) MOZ_OVERRIDE;
+                               const CompositingRenderTarget *aSource,
+                               const gfx::IntPoint &aSourcePoint) MOZ_OVERRIDE;
 
   virtual TemporaryRef<DataTextureSource>
   CreateDataTextureSource(TextureFlags aFlags = 0) MOZ_OVERRIDE;

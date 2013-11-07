@@ -247,10 +247,13 @@ public:
    * Creates a Surface that can be used as a rendering target by this
    * compositor, and initializes the surface by copying from aSource.
    * If aSource is null, then the current screen buffer is used as source.
+   *
+   * aSourcePoint specifies the point in aSource to copy data from.
    */
   virtual TemporaryRef<CompositingRenderTarget>
   CreateRenderTargetFromSource(const gfx::IntRect& aRect,
-                               const CompositingRenderTarget* aSource) = 0;
+                               const CompositingRenderTarget* aSource,
+                               const gfx::IntPoint& aSourcePoint) = 0;
 
   /**
    * Sets the given surface as the target for subsequent calls to DrawQuad.

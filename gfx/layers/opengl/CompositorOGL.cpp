@@ -662,29 +662,31 @@ CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
   CreateFBOWithTexture(aRect, false, 0, &fbo, &tex);
   RefPtr<CompositingRenderTargetOGL> surface
     = new CompositingRenderTargetOGL(this, tex, fbo);
-  surface->Initialize(IntSize(aRect.width, aRect.height), mFBOTextureTarget, aInit);
+  surface->Initialize(aRect.Size(), mFBOTextureTarget, aInit);
   return surface.forget();
 }
 
 TemporaryRef<CompositingRenderTarget>
 CompositorOGL::CreateRenderTargetFromSource(const IntRect &aRect,
-                                            const CompositingRenderTarget *aSource)
+                                            const CompositingRenderTarget *aSource,
+                                            const IntPoint &aSourcePoint)
 {
   GLuint tex = 0;
   GLuint fbo = 0;
   const CompositingRenderTargetOGL* sourceSurface
     = static_cast<const CompositingRenderTargetOGL*>(aSource);
+  IntRect sourceRect(aSourcePoint, aRect.Size());
   if (aSource) {
-    CreateFBOWithTexture(aRect, true, sourceSurface->GetFBO(),
+    CreateFBOWithTexture(sourceRect, true, sourceSurface->GetFBO(),
                          &fbo, &tex);
   } else {
-    CreateFBOWithTexture(aRect, true, 0,
+    CreateFBOWithTexture(sourceRect, true, 0,
                          &fbo, &tex);
   }
 
   RefPtr<CompositingRenderTargetOGL> surface
     = new CompositingRenderTargetOGL(this, tex, fbo);
-  surface->Initialize(IntSize(aRect.width, aRect.height),
+  surface->Initialize(aRect.Size(),
                       mFBOTextureTarget,
                       INIT_MODE_NONE);
   return surface.forget();

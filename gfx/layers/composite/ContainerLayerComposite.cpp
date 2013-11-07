@@ -107,6 +107,7 @@ ContainerRender(ContainerT* aContainer,
     bool surfaceCopyNeeded = false;
     gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.x, visibleRect.y,
                                             visibleRect.width, visibleRect.height);
+    gfx::IntPoint sourcePoint = gfx::IntPoint(visibleRect.x, visibleRect.y);
     // we're about to create a framebuffer backed by textures to use as an intermediate
     // surface. What to do if its size (as given by framebufferRect) would exceed the
     // maximum texture size supported by the GL? The present code chooses the compromise
@@ -132,16 +133,16 @@ ContainerRender(ContainerT* aContainer,
       if (HasOpaqueAncestorLayer(aContainer) &&
           transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
         surfaceCopyNeeded = gfxPlatform::ComponentAlphaEnabled();
-        surfaceRect.x += transform.x0;
-        surfaceRect.y += transform.y0;
+        sourcePoint.x += transform.x0;
+        sourcePoint.y += transform.y0;
         aContainer->mSupportsComponentAlphaChildren
           = gfxPlatform::ComponentAlphaEnabled();
       }
     }
 
-    surfaceRect -= gfx::IntPoint(aOffset.x, aOffset.y);
+    sourcePoint -= gfx::IntPoint(aOffset.x, aOffset.y);
     if (surfaceCopyNeeded) {
-      surface = compositor->CreateRenderTargetFromSource(surfaceRect, previousTarget);
+      surface = compositor->CreateRenderTargetFromSource(surfaceRect, previousTarget, sourcePoint);
     } else {
       surface = compositor->CreateRenderTarget(surfaceRect, mode);
     }
