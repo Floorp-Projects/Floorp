@@ -390,6 +390,13 @@ void ThreadProfile::BuildJSObject(Builder& b,
           }
         }
         break;
+      case 'p':
+        {
+          if (sample) {
+            b.DefineProperty(sample, "power", entry.mTagFloat);
+          }
+        }
+        break;
       case 'f':
         {
           if (sample) {

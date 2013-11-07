@@ -53,8 +53,7 @@ void
 Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
                             const nsIntRegion& aVisibleRegion,
                             const gfx::Rect& aClipRect,
-                            const gfx::Matrix4x4& aTransform,
-                            const gfx::Point& aOffset)
+                            const gfx::Matrix4x4& aTransform)
 {
   if (!ShouldDrawDiagnostics(aFlags)) {
     return;
@@ -66,36 +65,33 @@ Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
     while (const nsIntRect* rect = screenIter.Next())
     {
       DrawDiagnostics(aFlags | DIAGNOSTIC_REGION_RECT,
-                      ToRect(*rect), aClipRect, aTransform, aOffset);
+                      ToRect(*rect), aClipRect, aTransform);
     }
   }
 
   DrawDiagnostics(aFlags, ToRect(aVisibleRegion.GetBounds()),
-                  aClipRect, aTransform, aOffset);
+                  aClipRect, aTransform);
 }
 
 void
 Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
                             const gfx::Rect& aVisibleRect,
                             const gfx::Rect& aClipRect,
-                            const gfx::Matrix4x4& aTransform,
-                            const gfx::Point& aOffset)
+                            const gfx::Matrix4x4& aTransform)
 {
   if (!ShouldDrawDiagnostics(aFlags)) {
     return;
   }
 
   DrawDiagnosticsInternal(aFlags, aVisibleRect,
-                          aClipRect, aTransform,
-                          aOffset);
+                          aClipRect, aTransform);
 }
 
 void
 Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                     const gfx::Rect& aVisibleRect,
                                     const gfx::Rect& aClipRect,
-                                    const gfx::Matrix4x4& aTransform,
-                                    const gfx::Point& aOffset)
+                                    const gfx::Matrix4x4& aTransform)
 {
 #ifdef MOZ_B2G
   int lWidth = 4;
@@ -138,22 +134,22 @@ Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
   this->DrawQuad(gfx::Rect(aVisibleRect.x, aVisibleRect.y,
                            lWidth, aVisibleRect.height),
                  aClipRect, effects, opacity,
-                 aTransform, aOffset);
+                 aTransform);
   // top
   this->DrawQuad(gfx::Rect(aVisibleRect.x + lWidth, aVisibleRect.y,
                            aVisibleRect.width - 2 * lWidth, lWidth),
                  aClipRect, effects, opacity,
-                 aTransform, aOffset);
+                 aTransform);
   // right
   this->DrawQuad(gfx::Rect(aVisibleRect.x + aVisibleRect.width - lWidth, aVisibleRect.y,
                            lWidth, aVisibleRect.height),
                  aClipRect, effects, opacity,
-                 aTransform, aOffset);
+                 aTransform);
   // bottom
   this->DrawQuad(gfx::Rect(aVisibleRect.x + lWidth, aVisibleRect.y + aVisibleRect.height-lWidth,
                            aVisibleRect.width - 2 * lWidth, lWidth),
                  aClipRect, effects, opacity,
-                 aTransform, aOffset);
+                 aTransform);
 }
 
 } // namespace

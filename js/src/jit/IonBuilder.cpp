@@ -5952,8 +5952,8 @@ ClassHasResolveHook(JSCompartment *comp, const Class *clasp, PropertyName *name)
     return true;
 }
 
-bool
-IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyName *name)
+JSObject *
+IonBuilder::testSingletonProperty(JSObject *obj, PropertyName *name)
 {
     // We would like to completely no-op property/global accesses which can
     // produce only a particular JSObject. When indicating the access result is
@@ -5971,26 +5971,26 @@ IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyNa
 
     while (obj) {
         if (!ClassHasEffectlessLookup(obj->getClass()))
-            return false;
+            return nullptr;
 
         types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
         if (objType->unknownProperties())
-            return false;
+            return nullptr;
 
         types::HeapTypeSetKey property = objType->property(NameToId(name), context());
         if (property.isOwnProperty(constraints())) {
             if (obj->hasSingletonType())
-                return property.singleton(constraints()) == singleton;
-            return false;
+                return property.singleton(constraints());
+            return nullptr;
         }
 
         if (ClassHasResolveHook(compartment, obj->getClass(), name))
-            return false;
+            return nullptr;
 
         obj = obj->getProto();
     }
 
-    return false;
+    return nullptr;
 }
 
 bool
@@ -6014,7 +6014,7 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
 
     JSObject *objectSingleton = types ? types->getSingleton() : nullptr;
     if (objectSingleton)
-        return testSingletonProperty(objectSingleton, singleton, name);
+        return testSingletonProperty(objectSingleton, name) == singleton;
 
     JSProtoKey key;
     switch (obj->type()) {
@@ -6058,7 +6058,7 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
 
             if (JSObject *proto = object->proto().toObjectOrNull()) {
                 // Test this type.
-                if (!testSingletonProperty(proto, singleton, name))
+                if (testSingletonProperty(proto, name) != singleton)
                     return false;
             } else {
                 // Can't be on the prototype chain with no prototypes...
@@ -6070,12 +6070,12 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
         return true;
       }
       default:
-        return true;
+        return false;
     }
 
     JSObject *proto = GetClassPrototypePure(&script()->global(), key);
     if (proto)
-        return testSingletonProperty(proto, singleton, name);
+        return testSingletonProperty(proto, name) == singleton;
 
     return false;
 }
@@ -6213,7 +6213,7 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     if (!barrier) {
         if (singleton) {
             // Try to inline a known constant value.
-            if (testSingletonProperty(staticObject, singleton, name))
+            if (testSingletonProperty(staticObject, name) == singleton)
                 return pushConstant(ObjectValue(*singleton));
         }
         if (knownType == JSVAL_TYPE_UNDEFINED)
@@ -7724,25 +7724,7 @@ IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPro
         if (ownTypes.isOwnProperty(constraints()))
             continue;
 
-        JSObject *singleton = nullptr;
-        JSObject *proto = typeObj->proto().toObject();
-        while (true) {
-            types::TypeObjectKey *protoType = types::TypeObjectKey::get(proto);
-            if (!protoType->unknownProperties()) {
-                types::HeapTypeSetKey property = protoType->property(NameToId(name));
-
-                singleton = property.singleton(constraints());
-                if (singleton) {
-                    if (singleton->is<JSFunction>())
-                        break;
-                    singleton = nullptr;
-                }
-            }
-            TaggedProto taggedProto = proto->getTaggedProto();
-            if (!taggedProto.isObject())
-                break;
-            proto = taggedProto.toObject();
-        }
+        JSObject *singleton = testSingletonProperty(typeObj->proto().toObject(), name);
         if (!singleton)
             continue;
 
