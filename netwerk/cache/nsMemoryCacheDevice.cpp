@@ -64,13 +64,13 @@ nsMemoryCacheDevice::nsMemoryCacheDevice()
         PR_INIT_CLIST(&mEvictionList[i]);
 
     mReporter = new NetworkMemoryCacheReporter(this);
-    NS_RegisterMemoryReporter(mReporter);
+    mozilla::RegisterWeakMemoryReporter(mReporter);
 }
 
 
 nsMemoryCacheDevice::~nsMemoryCacheDevice()
 {
-    NS_UnregisterMemoryReporter(mReporter);
+    mozilla::UnregisterWeakMemoryReporter(mReporter);
     Shutdown();
 }
 

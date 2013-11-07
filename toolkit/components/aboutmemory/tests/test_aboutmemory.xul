@@ -6,7 +6,7 @@
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
-  <!-- This file uses fake memory reporters to test the presentation of memory 
+  <!-- This file uses fake memory reporters to test the presentation of memory
        reports in about:memory.  test_memoryReporters.xul uses the real
        memory reporters to test whether the memory reporters are producing
        sensible results. -->
@@ -27,15 +27,8 @@
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  // Remove all the real reporters;  save them to restore at the end.
-  mgr.blockRegistration();
-  let e = mgr.enumerateReporters();
-  let realReporters = [];
-  while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    mgr.unregisterReporter(r);
-    realReporters.push(r);
-  }
+  // Hide all the real reporters;  we'll restore them at the end.
+  mgr.blockRegistrationAndHideExistingReporters();
 
   // Setup various fake-but-deterministic reporters.
   const KB = 1024;
@@ -123,7 +116,7 @@
     }
   ];
   for (let i = 0; i < fakeReporters.length; i++) {
-    mgr.registerReporterEvenIfBlocked(fakeReporters[i]);
+    mgr.registerStrongReporterEvenIfBlocked(fakeReporters[i]);
   }
 
   // mgr.explicit sums "heap-allocated" and all the appropriate NONHEAP ones:
@@ -140,7 +133,7 @@
   } catch (ex) {
     is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.explicit exception");
   }
- 
+
   // The main process always comes first when we display about:memory.  The
   // remaining processes are sorted by their |resident| values (starting with
   // the largest).  Processes without a |resident| memory reporter are saved
@@ -200,7 +193,7 @@
     }
   ];
   for (let i = 0; i < fakeReporters2.length; i++) {
-    mgr.registerReporterEvenIfBlocked(fakeReporters2[i]);
+    mgr.registerStrongReporterEvenIfBlocked(fakeReporters2[i]);
   }
   fakeReporters = fakeReporters.concat(fakeReporters2);
   ]]>
@@ -550,16 +543,7 @@ End of 5th\n\
 
   function finish()
   {
-    // Unregister fake reporters and re-register the real reporters, just in
-    // case subsequent tests rely on them.
-    for (let i = 0; i < fakeReporters.length; i++) {
-      mgr.unregisterReporter(fakeReporters[i]);
-    }
-    for (let i = 0; i < realReporters.length; i++) {
-      mgr.registerReporterEvenIfBlocked(realReporters[i]);
-    }
-    mgr.unblockRegistration();
-
+    mgr.unblockRegistrationAndRestoreOriginalReporters();
     SimpleTest.finish();
   }
 
