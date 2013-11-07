@@ -2720,6 +2720,26 @@ class LFromCharCode : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LStringSplit : public LCallInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(StringSplit)
+
+    LStringSplit(const LAllocation &string, const LAllocation &separator) {
+        setOperand(0, string);
+        setOperand(1, separator);
+    }
+    const LAllocation *string() {
+        return getOperand(0);
+    }
+    const LAllocation *separator() {
+        return getOperand(1);
+    }
+    const MStringSplit *mir() const {
+        return mir_->toStringSplit();
+    }
+};
+
 // Convert a 32-bit integer to a double.
 class LInt32ToDouble : public LInstructionHelper<1, 1, 0>
 {
