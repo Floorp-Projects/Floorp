@@ -659,34 +659,36 @@ CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
 {
   GLuint tex = 0;
   GLuint fbo = 0;
-  CreateFBOWithTexture(aRect, aInit, 0, &fbo, &tex);
+  CreateFBOWithTexture(aRect, false, 0, &fbo, &tex);
   RefPtr<CompositingRenderTargetOGL> surface
-    = new CompositingRenderTargetOGL(this, tex, fbo);
-  surface->Initialize(IntSize(aRect.width, aRect.height), mFBOTextureTarget, aInit);
+    = new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
+  surface->Initialize(aRect.Size(), mFBOTextureTarget, aInit);
   return surface.forget();
 }
 
 TemporaryRef<CompositingRenderTarget>
 CompositorOGL::CreateRenderTargetFromSource(const IntRect &aRect,
-                                            const CompositingRenderTarget *aSource)
+                                            const CompositingRenderTarget *aSource,
+                                            const IntPoint &aSourcePoint)
 {
   GLuint tex = 0;
   GLuint fbo = 0;
   const CompositingRenderTargetOGL* sourceSurface
     = static_cast<const CompositingRenderTargetOGL*>(aSource);
+  IntRect sourceRect(aSourcePoint, aRect.Size());
   if (aSource) {
-    CreateFBOWithTexture(aRect, INIT_MODE_COPY, sourceSurface->GetFBO(),
+    CreateFBOWithTexture(sourceRect, true, sourceSurface->GetFBO(),
                          &fbo, &tex);
   } else {
-    CreateFBOWithTexture(aRect, INIT_MODE_COPY, 0,
+    CreateFBOWithTexture(sourceRect, true, 0,
                          &fbo, &tex);
   }
 
   RefPtr<CompositingRenderTargetOGL> surface
-    = new CompositingRenderTargetOGL(this, tex, fbo);
-  surface->Initialize(IntSize(aRect.width, aRect.height),
+    = new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
+  surface->Initialize(aRect.Size(),
                       mFBOTextureTarget,
-                      INIT_MODE_COPY);
+                      INIT_MODE_NONE);
   return surface.forget();
 }
 
@@ -841,7 +843,7 @@ CompositorOGL::BeginFrame(const Rect *aClipRectIn, const gfxMatrix& aTransform,
 }
 
 void
-CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, SurfaceInitMode aInit,
+CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, bool aCopyFromSource,
                                     GLuint aSourceFrameBuffer,
                                     GLuint *aFBO, GLuint *aTexture)
 {
@@ -851,7 +853,7 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, SurfaceInitMode aInit,
   mGLContext->fGenTextures(1, &tex);
   mGLContext->fBindTexture(mFBOTextureTarget, tex);
 
-  if (aInit == INIT_MODE_COPY) {
+  if (aCopyFromSource) {
     GLuint curFBO = mCurrentRenderTarget->GetFBO();
     if (curFBO != aSourceFrameBuffer) {
       mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aSourceFrameBuffer);
@@ -981,10 +983,11 @@ private:
 };
 
 void
-CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
+CompositorOGL::DrawQuad(const Rect& aRect,
+                        const Rect& aClipRect,
                         const EffectChain &aEffectChain,
-                        Float aOpacity, const gfx::Matrix4x4 &aTransform,
-                        const Point& aOffset)
+                        Float aOpacity,
+                        const gfx::Matrix4x4 &aTransform)
 {
   PROFILER_LABEL("CompositorOGL", "DrawQuad");
   MOZ_ASSERT(mFrameInProgress, "frame not started");
@@ -1046,7 +1049,8 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
   }
   program->SetLayerQuadRect(aRect);
   program->SetLayerTransform(aTransform);
-  program->SetRenderOffset(aOffset.x, aOffset.y);
+  IntPoint offset = mCurrentRenderTarget->GetOrigin();
+  program->SetRenderOffset(offset.x, offset.y);
 
   switch (aEffectChain.mPrimaryEffect->mType) {
     case EFFECT_SOLID_COLOR: {
@@ -1227,7 +1231,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
         program->SetLayerOpacity(aOpacity);
         program->SetLayerTransform(aTransform);
         program->SetTextureTransform(gfx3DMatrix());
-        program->SetRenderOffset(aOffset.x, aOffset.y);
+        program->SetRenderOffset(offset.x, offset.y);
         program->SetLayerQuadRect(aRect);
         AutoBindTexture bindMask;
         if (maskType != MaskNone) {

@@ -929,6 +929,9 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
       break;
   }
 
+  aKeyEvent.mIsRepeat =
+    ([aNativeKeyEvent type] == NSKeyDown) ? [aNativeKeyEvent isARepeat] : false;
+
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TISInputSourceWrapper::InitKeyEvent, "
      "shift=%s, ctrl=%s, alt=%s, meta=%s",

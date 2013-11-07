@@ -13,6 +13,7 @@
 #include "jsutil.h"
 #include "NamespaceImports.h"
 
+#include "gc/Rooting.h"
 #include "js/RootingAPI.h"
 #include "vm/Unicode.h"
 
@@ -354,6 +355,9 @@ str_search(JSContext *cx, unsigned argc, Value *vp);
 
 bool
 str_split(JSContext *cx, unsigned argc, Value *vp);
+
+JSObject *
+str_split_string(JSContext *cx, HandleTypeObject type, HandleString str, HandleString sep);
 
 bool
 str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,

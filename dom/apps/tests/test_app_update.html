@@ -56,6 +56,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     launchableValue = SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
 
+    // Test Bug 927699 - navigator.mozApps.install(url) lets NS_ERROR_FAILURE
+    //                   onto the web
+    var request = navigator.mozApps.install("");
+    request.onerror = function() {
+      ok(request.error.name == "INVALID_URL", "Got expected INVALID_URL");
+      continueTest();
+    };
+    request.onsuccess = mozAppsError;
+    yield undefined;
+
     setAppVersion(1, continueTest);
     yield undefined;
     SpecialPowers.autoConfirmAppInstall(continueTest);
@@ -69,7 +79,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     setAppVersion(2, continueTest);
     yield undefined;
 
-    var request = navigator.mozApps.install(gHostedManifestURL);
+    request = navigator.mozApps.install(gHostedManifestURL);
     request.onerror = mozAppsError;
     request.onsuccess = continueTest;
     yield undefined;

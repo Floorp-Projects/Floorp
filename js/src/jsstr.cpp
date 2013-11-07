@@ -3005,7 +3005,7 @@ class SplitMatchResult {
 } /* anonymous namespace */
 
 template<class Matcher>
-static JSObject *
+static ArrayObject *
 SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, const Matcher &splitMatch,
             Handle<TypeObject*> type)
 {
@@ -3287,6 +3287,28 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     aobj->setType(type);
     args.rval().setObject(*aobj);
     return true;
+}
+
+JSObject *
+js::str_split_string(JSContext *cx, HandleTypeObject type, HandleString str, HandleString sep)
+{
+    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    if (!linearStr)
+        return nullptr;
+
+    Rooted<JSLinearString*> linearSep(cx, sep->ensureLinear(cx));
+    if (!linearSep)
+        return nullptr;
+
+    uint32_t limit = UINT32_MAX;
+
+    SplitStringMatcher matcher(cx, linearSep);
+    ArrayObject *aobj = SplitHelper(cx, linearStr, limit, matcher, type);
+    if (!aobj)
+        return nullptr;
+
+    aobj->setType(type);
+    return aobj;
 }
 
 static bool

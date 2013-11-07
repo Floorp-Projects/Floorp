@@ -56,11 +56,11 @@ class CompositingRenderTargetD3D9 : public CompositingRenderTarget,
 public:
   CompositingRenderTargetD3D9(IDirect3DTexture9* aTexture,
                               SurfaceInitMode aInit,
-                              const gfx::IntSize& aSize);
+                              const gfx::IntRect& aRect);
   // use for rendering to the main window, cannot be rendered as a texture
   CompositingRenderTargetD3D9(IDirect3DSurface9* aSurface,
                               SurfaceInitMode aInit,
-                              const gfx::IntSize& aSize);
+                              const gfx::IntRect& aRect);
   ~CompositingRenderTargetD3D9();
 
   virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE
