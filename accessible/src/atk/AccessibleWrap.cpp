@@ -982,7 +982,6 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
       {
         a11y::RootAccessible* rootAccWrap = accWrap->RootAccessible();
         if (rootAccWrap && rootAccWrap->mActivated) {
-            atk_focus_tracker_notify(atkObj);
             // Fire state change event for focus
             nsRefPtr<AccEvent> stateChangeEvent =
               new AccStateChangeEvent(accessible, states::FOCUSED, true);
@@ -1169,7 +1168,6 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
       break;
 
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
-        atk_focus_tracker_notify(atkObj); // fire extra focus event
         atk_object_notify_state_change(atkObj, ATK_STATE_VISIBLE, true);
         atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, true);
         break;
