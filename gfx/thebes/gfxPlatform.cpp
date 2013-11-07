@@ -15,6 +15,11 @@
 
 #include "gfxPlatform.h"
 
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#endif
+
 #include "nsXULAppAPI.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
