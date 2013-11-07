@@ -81,7 +81,6 @@ GetOpaqueRect(Layer* aLayer)
 
 template<class ContainerT> void
 ContainerRender(ContainerT* aContainer,
-                const nsIntPoint& aOffset,
                 LayerManagerComposite* aManager,
                 const nsIntRect& aClipRect)
 {
@@ -94,7 +93,6 @@ ContainerRender(ContainerT* aContainer,
 
   RefPtr<CompositingRenderTarget> previousTarget = compositor->GetCurrentRenderTarget();
 
-  nsIntPoint childOffset(aOffset);
   nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
 
   aContainer->mSupportsComponentAlphaChildren = false;
@@ -140,7 +138,7 @@ ContainerRender(ContainerT* aContainer,
       }
     }
 
-    sourcePoint -= gfx::IntPoint(aOffset.x, aOffset.y);
+    sourcePoint -= compositor->GetCurrentRenderTarget()->GetOrigin();
     if (surfaceCopyNeeded) {
       surface = compositor->CreateRenderTargetFromSource(surfaceRect, previousTarget, sourcePoint);
     } else {
@@ -152,8 +150,6 @@ ContainerRender(ContainerT* aContainer,
     }
 
     compositor->SetRenderTarget(surface);
-    childOffset.x = visibleRect.x;
-    childOffset.y = visibleRect.y;
   } else {
     surface = previousTarget;
     aContainer->mSupportsComponentAlphaChildren = (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE) ||
@@ -202,7 +198,7 @@ ContainerRender(ContainerT* aContainer,
       // this time & reset composition flag for next composition phase
       layerToRender->SetLayerComposited(false);
     } else {
-      layerToRender->RenderLayer(childOffset, clipRect);
+      layerToRender->RenderLayer(clipRect);
     }
     // invariant: our GL context should be current here, I don't think we can
     // assert it though
@@ -231,7 +227,7 @@ ContainerRender(ContainerT* aContainer,
     gfx::Rect rect(visibleRect.x, visibleRect.y, visibleRect.width, visibleRect.height);
     gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
     aManager->GetCompositor()->DrawQuad(rect, clipRect, effectChain, opacity,
-                                        transform, gfx::Point(aOffset.x, aOffset.y));
+                                        transform);
   }
 
   if (aContainer->GetFrameMetrics().IsScrollable()) {
@@ -244,7 +240,7 @@ ContainerRender(ContainerT* aContainer,
     gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
     aManager->GetCompositor()->DrawDiagnostics(DIAGNOSTIC_CONTAINER,
                                                rect, clipRect,
-                                               transform, gfx::Point(aOffset.x, aOffset.y));
+                                               transform);
   }
 }
 
@@ -296,10 +292,9 @@ ContainerLayerComposite::GetFirstChildComposite()
 }
 
 void
-ContainerLayerComposite::RenderLayer(const nsIntPoint& aOffset,
-                                     const nsIntRect& aClipRect)
+ContainerLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 {
-  ContainerRender(this, aOffset, mCompositeManager, aClipRect);
+  ContainerRender(this, mCompositeManager, aClipRect);
 }
 
 void
@@ -340,10 +335,9 @@ RefLayerComposite::GetFirstChildComposite()
 }
 
 void
-RefLayerComposite::RenderLayer(const nsIntPoint& aOffset,
-                               const nsIntRect& aClipRect)
+RefLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 {
-  ContainerRender(this, aOffset, mCompositeManager, aClipRect);
+  ContainerRender(this, mCompositeManager, aClipRect);
 }
 
 void
