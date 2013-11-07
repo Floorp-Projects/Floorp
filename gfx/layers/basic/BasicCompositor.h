@@ -19,9 +19,10 @@ namespace layers {
 class BasicCompositingRenderTarget : public CompositingRenderTarget
 {
 public:
-  BasicCompositingRenderTarget(gfx::DrawTarget* aDrawTarget, const gfx::IntSize& aSize)
-    : mDrawTarget(aDrawTarget)
-    , mSize(aSize)
+  BasicCompositingRenderTarget(gfx::DrawTarget* aDrawTarget, const gfx::IntRect& aRect)
+    : CompositingRenderTarget(aRect.TopLeft())
+    , mDrawTarget(aDrawTarget)
+    , mSize(aRect.Size())
   { }
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
@@ -60,7 +61,8 @@ public:
 
   virtual TemporaryRef<CompositingRenderTarget>
   CreateRenderTargetFromSource(const gfx::IntRect &aRect,
-                               const CompositingRenderTarget *aSource) MOZ_OVERRIDE;
+                               const CompositingRenderTarget *aSource,
+                               const gfx::IntPoint &aSourcePoint) MOZ_OVERRIDE;
 
   virtual TemporaryRef<DataTextureSource>
   CreateDataTextureSource(TextureFlags aFlags = 0) MOZ_OVERRIDE;
@@ -76,10 +78,11 @@ public:
     return mRenderTarget;
   }
 
-  virtual void DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
+  virtual void DrawQuad(const gfx::Rect& aRect,
+                        const gfx::Rect& aClipRect,
                         const EffectChain &aEffectChain,
-                        gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform,
-                        const gfx::Point& aOffset) MOZ_OVERRIDE;
+                        gfx::Float aOpacity,
+                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
 
   virtual void BeginFrame(const gfx::Rect *aClipRectIn,
                           const gfxMatrix& aTransform,

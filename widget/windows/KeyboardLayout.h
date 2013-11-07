@@ -298,6 +298,24 @@ private:
     MOZ_CRASH("The default constructor of NativeKey isn't available");
   }
 
+  /**
+   * Returns true if the key event is caused by auto repeat.
+   */
+  bool IsRepeat() const
+  {
+    switch (mMsg.message) {
+      case WM_KEYDOWN:
+      case WM_SYSKEYDOWN:
+      case WM_CHAR:
+      case WM_SYSCHAR:
+      case WM_DEADCHAR:
+      case WM_SYSDEADCHAR:
+        return ((mMsg.lParam & (1 << 30)) != 0);
+      default:
+        return false;
+    }
+  }
+
   UINT GetScanCodeWithExtendedFlag() const;
 
   // The result is one of nsIDOMKeyEvent::DOM_KEY_LOCATION_*.
