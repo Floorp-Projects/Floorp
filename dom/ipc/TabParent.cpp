@@ -993,6 +993,18 @@ TabParent::RecvNotifyIMETextChange(const uint32_t& aStart,
 }
 
 bool
+TabParent::RecvNotifyIMESelectedCompositionRect(const uint32_t& aOffset,
+                                                const nsIntRect& aRect)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+  widget->NotifyIME(NOTIFY_IME_OF_COMPOSITION_UPDATE);
+  return true;
+}
+
+bool
 TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
                                   const uint32_t& aAnchor,
                                   const uint32_t& aFocus)

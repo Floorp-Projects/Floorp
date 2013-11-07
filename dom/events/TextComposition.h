@@ -12,6 +12,7 @@
 #include "nsIWidget.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "nsPresContext.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 
@@ -66,6 +67,11 @@ public:
    */
   nsresult NotifyIME(widget::NotificationToIME aNotification);
 
+  /**
+   * the offset of first selected clause or start of of compositon
+   */
+  uint32_t OffsetOfTargetClause() const { return mCompositionTargetOffset; }
+
 private:
   // This class holds nsPresContext weak.  This instance shouldn't block
   // destroying it.  When the presContext is being destroyed, it's notified to
@@ -82,6 +88,12 @@ private:
   // the compositionstart event).
   nsString mLastData;
 
+  // Offset of the composition string from start of the editor
+  uint32_t mCompositionStartOffset;
+  // Offset of the selected clause of the composition string from start of the
+  // editor
+  uint32_t mCompositionTargetOffset;
+
   // See the comment for IsSynthesizedForTests().
   bool mIsSynthesizedForTests;
 
@@ -95,6 +107,11 @@ private:
   void DispatchEvent(WidgetGUIEvent* aEvent,
                      nsEventStatus* aStatus,
                      nsDispatchingCallback* aCallBack);
+
+  /**
+   * Calculate composition offset then notify composition update to widget
+   */
+  void NotityUpdateComposition(WidgetGUIEvent* aEvent);
 
   /**
    * CompositionEventDispatcher dispatches the specified composition (or text)
