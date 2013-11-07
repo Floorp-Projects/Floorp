@@ -147,9 +147,15 @@ case "$target" in
     dnl set up compilers
     TOOLCHAIN_PREFIX="$android_toolchain/bin/$android_tool_prefix-"
     AS="$android_toolchain"/bin/"$android_tool_prefix"-as
-    CC="$android_toolchain"/bin/"$android_tool_prefix"-gcc
-    CXX="$android_toolchain"/bin/"$android_tool_prefix"-g++
-    CPP="$android_toolchain"/bin/"$android_tool_prefix"-cpp
+    if test -z "$CC"; then
+        CC="$android_toolchain"/bin/"$android_tool_prefix"-gcc
+    fi
+    if test -z "$CXX"; then
+        CXX="$android_toolchain"/bin/"$android_tool_prefix"-g++
+    fi
+    if test -z "$CPP"; then
+        CPP="$android_toolchain"/bin/"$android_tool_prefix"-cpp
+    fi
     LD="$android_toolchain"/bin/"$android_tool_prefix"-ld
     AR="$android_toolchain"/bin/"$android_tool_prefix"-ar
     RANLIB="$android_toolchain"/bin/"$android_tool_prefix"-ranlib
