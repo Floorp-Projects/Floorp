@@ -1556,7 +1556,45 @@ Engine.prototype = {
   },
 
   /**
-   * Sets the .iconURI property of the engine.
+   * Creates a key by serializing an object that contains the icon's width
+   * and height.
+   *
+   * @param aWidth
+   *        Width of the icon.
+   * @param aHeight
+   *        Height of the icon.
+   * @returns key string
+   */
+  _getIconKey: function SRCH_ENG_getIconKey(aWidth, aHeight) {
+    let keyObj = {
+     width: aWidth,
+     height: aHeight
+    };
+
+    return JSON.stringify(keyObj);
+  },
+
+  /**
+   * Add an icon to the icon map used by getIconURIBySize() and getIcons().
+   *
+   * @param aWidth
+   *        Width of the icon.
+   * @param aHeight
+   *        Height of the icon.
+   * @param aURISpec
+   *        String with the icon's URI.
+   */
+  _addIconToMap: function SRCH_ENG_addIconToMap(aWidth, aHeight, aURISpec) {
+    // Use an object instead of a Map() because it needs to be serializable.
+    this._iconMapObj = this._iconMapObj || {};
+    let key = this._getIconKey(aWidth, aHeight);
+    this._iconMapObj[key] = aURISpec;
+  },
+
+  /**
+   * Sets the .iconURI property of the engine. If both aWidth and aHeight are
+   * provided an entry will be added to _iconMapObj that will enable accessing
+   * icon's data through getIcons() and getIconURIBySize() APIs.
    *
    *  @param aIconURL
    *         A URI string pointing to the engine's icon. Must have a http[s],
@@ -1566,13 +1604,12 @@ Engine.prototype = {
    *  @param aIsPreferred
    *         Whether or not this icon is to be preferred. Preferred icons can
    *         override non-preferred icons.
+   *  @param aWidth (optional)
+   *         Width of the icon.
+   *  @param aHeight (optional)
+   *         Height of the icon.
    */
-  _setIcon: function SRCH_ENG_setIcon(aIconURL, aIsPreferred) {
-    // If we already have a preferred icon, and this isn't a preferred icon,
-    // just ignore it.
-    if (this._hasPreferredIcon && !aIsPreferred)
-      return;
-
+  _setIcon: function SRCH_ENG_setIcon(aIconURL, aIsPreferred, aWidth, aHeight) {
     var uri = makeURI(aIconURL);
 
     // Ignore bad URIs
@@ -1584,9 +1621,15 @@ Engine.prototype = {
     // Only accept remote icons from http[s] or ftp
     switch (uri.scheme) {
       case "data":
-        this._iconURI = uri;
-        notifyAction(this, SEARCH_ENGINE_CHANGED);
-        this._hasPreferredIcon = aIsPreferred;
+        if (!this._hasPreferredIcon || aIsPreferred) {
+          this._iconURI = uri;
+          notifyAction(this, SEARCH_ENGINE_CHANGED);
+          this._hasPreferredIcon = aIsPreferred;
+        }
+
+        if (aWidth && aHeight) {
+          this._addIconToMap(aWidth, aHeight, aIconURL)
+        }
         break;
       case "http":
       case "https":
@@ -1610,7 +1653,12 @@ Engine.prototype = {
             }
 
             var str = btoa(String.fromCharCode.apply(null, aByteArray));
-            aEngine._iconURI = makeURI(ICON_DATAURL_PREFIX + str);
+            let dataURL = ICON_DATAURL_PREFIX + str;
+            aEngine._iconURI = makeURI(dataURL);
+
+            if (aWidth && aHeight) {
+              aEngine._addIconToMap(aWidth, aHeight, dataURL)
+            }
 
             // The engine might not have a file yet, if it's being downloaded,
             // because the request for the engine file itself (_onLoad) may not
@@ -1804,14 +1852,17 @@ Engine.prototype = {
    */
   _parseImage: function SRCH_ENG_parseImage(aElement) {
     LOG("_parseImage: Image textContent: \"" + limitURILength(aElement.textContent) + "\"");
-    if (aElement.getAttribute("width")  == "16" &&
-        aElement.getAttribute("height") == "16") {
-      this._setIcon(aElement.textContent, true);
+
+    let width = parseInt(aElement.getAttribute("width"), 10);
+    let height = parseInt(aElement.getAttribute("height"), 10);
+    let isPrefered = width == 16 && height == 16;
+
+    if (isNaN(width) || isNaN(height) || width <= 0 || height <=0) {
+      LOG("OpenSearch image element must have positive width and height.");
+      return;
     }
-    else {
-      LOG("OpenSearch image must have explicit width=16 height=16: " +
-          aElement.textContent);
-    }
+
+    this._setIcon(aElement.textContent, isPrefered, width, height);
   },
 
   _parseAsMozSearch: function SRCH_ENG_parseAsMoz() {
@@ -2209,6 +2260,7 @@ Engine.prototype = {
     else
       this._readOnly = false;
     this._iconURI = makeURI(aJson._iconURL);
+    this._iconMapObj = aJson._iconMapObj;
     for (let i = 0; i < aJson._urls.length; ++i) {
       let url = aJson._urls[i];
       let engineURL = new EngineURL(url.type || URLTYPE_SEARCH_HTML,
@@ -2233,7 +2285,8 @@ Engine.prototype = {
       description: this.description,
       __searchForm: this.__searchForm,
       _iconURL: this._iconURL,
-      _urls: [url._serializeToJSON() for each(url in this._urls)] 
+      _iconMapObj: this._iconMapObj,
+      _urls: [url._serializeToJSON() for each(url in this._urls)]
     };
 
     if (this._file instanceof Ci.nsILocalFile)
@@ -2679,8 +2732,51 @@ Engine.prototype = {
 
   get wrappedJSObject() {
     return this;
-  }
+  },
 
+  /**
+   * Returns a string with the URL to an engine's icon matching both width and
+   * height. Returns null if icon with specified dimensions is not found.
+   *
+   * @param width
+   *        Width of the requested icon.
+   * @param height
+   *        Height of the requested icon.
+   */
+  getIconURLBySize: function SRCH_ENG_getIconURLBySize(aWidth, aHeight) {
+    if (!this._iconMapObj)
+      return null;
+
+    let key = this._getIconKey(aWidth, aHeight);
+    if (key in this._iconMapObj) {
+      return this._iconMapObj[key];
+    }
+    return null;
+  },
+
+  /**
+   * Gets an array of all available icons. Each entry is an object with
+   * width, height and url properties. width and height are numeric and
+   * represent the icon's dimensions. url is a string with the URL for
+   * the icon.
+   */
+  getIcons: function SRCH_ENG_getIcons() {
+    let result = [];
+
+    if (!this._iconMapObj)
+      return result;
+
+    for (let key of Object.keys(this._iconMapObj)) {
+      let iconSize = JSON.parse(key);
+      result.push({
+        width: iconSize.width,
+        height: iconSize.height,
+        url: this._iconMapObj[key]
+      });
+    }
+
+    return result;
+  }
 };
 
 // nsISearchSubmission

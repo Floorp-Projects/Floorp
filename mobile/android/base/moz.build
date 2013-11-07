@@ -148,6 +148,8 @@ gbjar.sources += [
     'GeckoJavaSampler.java',
     'GlobalHistory.java',
     'GeckoView.java',
+    'GeckoViewChrome.java',
+    'GeckoViewContent.java',
     'health/BrowserHealthRecorder.java',
     'health/BrowserHealthReporter.java',
     'InputMethods.java',

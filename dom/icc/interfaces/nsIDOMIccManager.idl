@@ -310,7 +310,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * 'pukRequired', 'personalizationInProgress', 'networkLocked',
    * 'corporateLocked', 'serviceProviderLocked', 'networkPukRequired',
    * 'corporatePukRequired', 'serviceProviderPukRequired',
-   * 'personalizationReady', 'ready'.
+   * 'personalizationReady', 'ready', 'permanentBlocked'.
    */
   readonly attribute DOMString cardState;
 

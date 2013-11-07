@@ -1,0 +1,69 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+
+include "mozilla/net/NeckoMessageUtils.h";
+include "mozilla/net/DNS.h";
+include "prio.h";
+
+using mozilla::net::NetAddr from "mozilla/net/DNS.h";
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+
+struct UDPError {
+  nsCString message;
+  nsCString filename;
+  uint32_t lineNumber;
+  uint32_t columnNumber;
+};
+
+struct UDPMessage {
+  nsCString fromAddr;
+  uint16_t port;
+  uint8_t[] data;
+};
+
+struct UDPAddressInfo {
+  nsCString local;
+  uint16_t port;
+};
+
+struct UDPSendResult {
+  nsresult value;
+};
+
+union UDPCallbackData {
+  void_t;
+  UDPMessage;
+  UDPAddressInfo;
+  UDPSendResult;
+  UDPError;
+};
+
+namespace mozilla {
+namespace net {
+
+//-------------------------------------------------------------------
+protocol PUDPSocket
+{
+  manager PNecko;
+
+parent:
+  Data(uint8_t[] data, nsCString remoteAddress, uint16_t port);
+  DataWithAddress(uint8_t[] data, NetAddr addr);
+  Close();
+  RequestDelete();
+
+child:
+  Callback(nsCString type, UDPCallbackData data, nsCString aState);
+  __delete__();
+};
+
+
+} // namespace net
+} // namespace mozilla
+

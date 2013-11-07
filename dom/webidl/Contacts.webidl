@@ -7,21 +7,21 @@
 [ChromeOnly, Constructor, JSImplementation="@mozilla.org/contactAddress;1"]
 interface ContactAddress {
   attribute object?    type; // DOMString[]
-  [TreatUndefinedAs=Null] attribute DOMString? streetAddress;
-  [TreatUndefinedAs=Null] attribute DOMString? locality;
-  [TreatUndefinedAs=Null] attribute DOMString? region;
-  [TreatUndefinedAs=Null] attribute DOMString? postalCode;
-  [TreatUndefinedAs=Null] attribute DOMString? countryName;
+  attribute DOMString? streetAddress;
+  attribute DOMString? locality;
+  attribute DOMString? region;
+  attribute DOMString? postalCode;
+  attribute DOMString? countryName;
   attribute boolean?   pref;
 
   [ChromeOnly]
   void initialize(optional sequence<DOMString>? type,
-                  optional DOMString streetAddress,
-                  optional DOMString locality,
-                  optional DOMString region,
-                  optional DOMString postalCode,
-                  optional DOMString countryName,
-                  optional boolean pref);
+                  optional DOMString? streetAddress,
+                  optional DOMString? locality,
+                  optional DOMString? region,
+                  optional DOMString? postalCode,
+                  optional DOMString? countryName,
+                  optional boolean? pref);
 
   object toJSON();
 };
@@ -40,13 +40,13 @@ dictionary ContactAddressInit {
 [ChromeOnly, Constructor, JSImplementation="@mozilla.org/contactField;1"]
 interface ContactField {
   attribute object?    type; // DOMString[]
-  [TreatUndefinedAs=Null] attribute DOMString? value;
+  attribute DOMString? value;
   attribute boolean?   pref;
 
   [ChromeOnly]
   void initialize(optional sequence<DOMString>? type,
-                  optional DOMString value,
-                  optional boolean pref);
+                  optional DOMString? value,
+                  optional boolean? pref);
 
   object toJSON();
 };
@@ -60,13 +60,13 @@ dictionary ContactFieldInit {
 
 [ChromeOnly, Constructor, JSImplementation="@mozilla.org/contactTelField;1"]
 interface ContactTelField : ContactField {
-  [TreatUndefinedAs=Null] attribute DOMString? carrier;
+  attribute DOMString? carrier;
 
   [ChromeOnly]
   void initialize(optional sequence<DOMString>? type,
-                  optional DOMString value,
+                  optional DOMString? value,
                   optional DOMString? carrier,
-                  optional boolean pref);
+                  optional boolean? pref);
 
   object toJSON();
 };
@@ -117,8 +117,8 @@ interface mozContact {
            attribute Date?        bday;
            attribute Date?        anniversary;
 
-  [TreatUndefinedAs=Null] attribute DOMString? sex;
-  [TreatUndefinedAs=Null] attribute DOMString? genderIdentity;
+           attribute DOMString?   sex;
+           attribute DOMString?   genderIdentity;
 
            attribute object?      photo;
 
