@@ -15,18 +15,26 @@ function test()
   content.location = "data:text/html;charset=utf8,test Scratchpad pretty print.";
 }
 
+let gTabsize;
+
 function runTests(sw)
 {
-  const tabsize = Services.prefs.getIntPref("devtools.editor.tabsize");
+  gTabsize = Services.prefs.getIntPref("devtools.editor.tabsize");
   Services.prefs.setIntPref("devtools.editor.tabsize", 6);
   const space = " ".repeat(6);
 
   const sp = sw.Scratchpad;
   sp.setText("function main() { console.log(5); }");
-  sp.prettyPrint();
-  const prettyText = sp.getText();
-  ok(prettyText.contains(space));
-
-  Services.prefs.setIntPref("devtools.editor.tabsize", tabsize);
-  finish();
+  sp.prettyPrint().then(() => {
+    const prettyText = sp.getText();
+    ok(prettyText.contains(space));
+    finish();
+  }).then(null, error => {
+    ok(false, error);
+  });
 }
+
+registerCleanupFunction(function () {
+  Services.prefs.setIntPref("devtools.editor.tabsize", gTabsize);
+  gTabsize = null;
+});
