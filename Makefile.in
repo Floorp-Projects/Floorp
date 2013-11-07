@@ -88,7 +88,7 @@ $(addprefix install-dist-,$(install_manifests)): install-dist-%: $(install_manif
 .PHONY: install-tests
 install-manifests: install-tests
 install-tests: $(install_manifest_depends)
-	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests js/src/_build_manifests/install/tests)
+	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests $(if $(LIBXUL_SDK),,js/src/_build_manifests/install/tests))
 
 
 # _tests should be purged during cleaning. However, we don't want it purged
