@@ -1,12 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_TIMEOUT = 30000;
-
-SpecialPowers.addPermission("mobileconnection", true, document);
-
-let icc = navigator.mozIccManager;
-ok(icc instanceof MozIccManager, "icc is instanceof " + icc.constructor);
+MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testLocalInfoLocation(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
@@ -108,40 +103,5 @@ let tests = [
   {command: "d00c810301270282028182a40108",
    func: testTimerManagementGetCurrentValue},
  ];
-
-let pendingEmulatorCmdCount = 0;
-function sendStkPduToEmulator(cmd, func) {
-  ++pendingEmulatorCmdCount;
-
-  runEmulatorCmd(cmd, function (result) {
-    --pendingEmulatorCmdCount;
-    is(result[0], "OK");
-  });
-
-  icc.onstkcommand = function (evt) {
-    func(evt.command);
-  }
-}
-
-function runNextTest() {
-  let test = tests.pop();
-  if (!test) {
-    cleanUp();
-    return;
-  }
-
-  let cmd = "stk pdu " + test.command;
-  sendStkPduToEmulator(cmd, test.func)
-}
-
-function cleanUp() {
-  if (pendingEmulatorCmdCount) {
-    window.setTimeout(cleanUp, 100);
-    return;
-  }
-
-  SpecialPowers.removePermission("mobileconnection", document);
-  finish();
-}
 
 runNextTest();

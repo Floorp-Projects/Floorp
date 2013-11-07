@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsINetAddr;
-interface nsIUDPServerSocketListener;
+interface nsIUDPSocketListener;
 interface nsIUDPMessage;
 interface nsISocketTransport;
 interface nsIOutputStream;
@@ -22,23 +22,23 @@ native NetAddr(mozilla::net::NetAddr);
 [ptr] native NetAddrPtr(mozilla::net::NetAddr);
 
 /**
- * nsIUDPServerSocket
+ * nsIUDPSocket
  *
- * An interface to a server socket that can accept incoming connections.
+ * An interface to a UDP socket that can accept incoming connections.
  */
-[scriptable, uuid(c2a38bd0-024b-4ae8-bcb2-20d766b54389)]
-interface nsIUDPServerSocket : nsISupports
+[scriptable, uuid(6EFE692D-F0B0-4A9E-9E63-837C7452446D)]
+interface nsIUDPSocket : nsISupports
 {
     /**
      * init
      *
-     * This method initializes a server socket.
+     * This method initializes a UDP socket.
      *
      * @param aPort
-     *        The port of the server socket.  Pass -1 to indicate no preference,
+     *        The port of the UDP socket.  Pass -1 to indicate no preference,
      *        and a port will be selected automatically.
      * @param aLoopbackOnly
-     *        If true, the server socket will only respond to connections on the
+     *        If true, the UDP socket will only respond to connections on the
      *        local loopback interface.  Otherwise, it will accept connections
      *        from any interface.  To specify a particular network interface,
      *        use initWithAddress.
@@ -48,20 +48,20 @@ interface nsIUDPServerSocket : nsISupports
     /**
      * initWithAddress
      *
-     * This method initializes a server socket, and binds it to a particular
+     * This method initializes a UDP socket, and binds it to a particular
      * local address (and hence a particular local network interface).
      *
      * @param aAddr
-     *        The address to which this server socket should be bound.
+     *        The address to which this UDP socket should be bound.
      */
     [noscript] void initWithAddress([const] in NetAddrPtr aAddr);
 
     /**
      * close
      *
-     * This method closes a server socket.  This does not affect already
+     * This method closes a UDP socket.  This does not affect already
      * connected client sockets (i.e., the nsISocketTransport instances
-     * created from this server socket).  This will cause the onStopListening
+     * created from this UDP socket).  This will cause the onStopListening
      * event to asynchronously fire with a status of NS_BINDING_ABORTED.
      */
     void close();
@@ -69,7 +69,7 @@ interface nsIUDPServerSocket : nsISupports
     /**
      * asyncListen
      *
-     * This method puts the server socket in the listening state.  It will
+     * This method puts the UDP socket in the listening state.  It will
      * asynchronously listen for and accept client connections.  The listener
      * will be notified once for each client connection that is accepted.  The
      * listener's onSocketAccepted method will be called on the same thread
@@ -81,65 +81,109 @@ interface nsIUDPServerSocket : nsISupports
      * @param aListener
      *        The listener to be notified when client connections are accepted.
      */
-    void asyncListen(in nsIUDPServerSocketListener aListener);
+    void asyncListen(in nsIUDPSocketListener aListener);
 
     /**
-     * Returns the port of this server socket.
+     * Returns the port of this UDP socket.
      */
     readonly attribute long port;
 
     /**
-     * Returns the address to which this server socket is bound.  Since a
-     * server socket may be bound to multiple network devices, this address
+     * Returns the address to which this UDP socket is bound.  Since a
+     * UDP socket may be bound to multiple network devices, this address
      * may not necessarily be specific to a single network device.  In the
      * case of an IP socket, the IP address field would be zerod out to
-     * indicate a server socket bound to all network devices.  Therefore,
+     * indicate a UDP socket bound to all network devices.  Therefore,
      * this method cannot be used to determine the IP address of the local
      * system.  See nsIDNSService::myHostName if this is what you need.
      */
     [noscript] NetAddr getAddress();
+
+    /**
+     * send
+     *
+     * Send out the datagram to specified remote host and port.
+     * DNS lookup will be triggered.
+     *
+     * @param host The remote host name.
+     * @param port The remote port.
+     * @param data The buffer containing the data to be written.
+     * @param dataLength The maximum number of bytes to be written.
+     * @return number of bytes written. (0 or dataLength)
+     */
+    unsigned long send(in AUTF8String host, in unsigned short port,
+                       [const, array, size_is(dataLength)]in uint8_t data,
+                       in unsigned long dataLength);
+
+    /**
+     * sendWithAddr
+     *
+     * Send out the datagram to specified remote host and port.
+     *
+     * @param addr The remote host address.
+     * @param data The buffer containing the data to be written.
+     * @param dataLength The maximum number of bytes to be written.
+     * @return number of bytes written. (0 or dataLength)
+     */
+    unsigned long sendWithAddr(in nsINetAddr addr,
+                               [const, array, size_is(dataLength)]in uint8_t data,
+                               in unsigned long dataLength);
+
+    /**
+     * sendWithAddress
+     *
+     * Send out the datagram to specified remote address and port.
+     *
+     * @param addr The remote host address.
+     * @param data The buffer containing the data to be written.
+     * @param dataLength The maximum number of bytes to be written.
+     * @return number of bytes written. (0 or dataLength)
+     */
+    [noscript] unsigned long sendWithAddress([const] in NetAddrPtr addr,
+                                             [const, array, size_is(dataLength)]in uint8_t data,
+                                             in unsigned long dataLength);
 };
 
 /**
- * nsIUDPServerSocketListener
+ * nsIUDPSocketListener
  *
- * This interface is notified whenever a server socket accepts a new connection.
+ * This interface is notified whenever a UDP socket accepts a new connection.
  * The transport is in the connected state, and read/write streams can be opened
  * using the normal nsITransport API.  The address of the client can be found by
  * calling the nsISocketTransport::GetAddress method or by inspecting
  * nsISocketTransport::GetHost, which returns a string representation of the
  * client's IP address (NOTE: this may be an IPv4 or IPv6 string literal).
  */
-[scriptable, uuid(0500a336-29b2-4df1-9103-911f8ee0a569)]
-interface nsIUDPServerSocketListener : nsISupports
+[scriptable, uuid(2E4B5DD3-7358-4281-B81F-10C62EF39CB5)]
+interface nsIUDPSocketListener : nsISupports
 {
     /**
      * onPacketReceived
      *
      * This method is called when a client sends an UDP packet.
      *
-     * @param aServ
-     *        The server socket.
+     * @param aSocket
+     *        The UDP socket.
      * @param aMessage
      *        The message.
      */
-    void onPacketReceived(in nsIUDPServerSocket aServ,
+    void onPacketReceived(in nsIUDPSocket aSocket,
                           in nsIUDPMessage aMessage);
 
     /**
      * onStopListening
      *
      * This method is called when the listening socket stops for some reason.
-     * The server socket is effectively dead after this notification.
+     * The UDP socket is effectively dead after this notification.
      *
-     * @param aServ
-     *        The server socket.
+     * @param aSocket
+     *        The UDP socket.
      * @param aStatus
-     *        The reason why the server socket stopped listening.  If the
-     *        server socket was manually closed, then this value will be
+     *        The reason why the UDP socket stopped listening.  If the
+     *        UDP socket was manually closed, then this value will be
      *        NS_BINDING_ABORTED.
      */
-    void onStopListening(in nsIUDPServerSocket aServ, in nsresult aStatus);
+    void onStopListening(in nsIUDPSocket aSocket, in nsresult aStatus);
 };
 
 /**
@@ -147,7 +191,7 @@ interface nsIUDPServerSocketListener : nsISupports
  *
  * This interface is used to encapsulate an incomming UDP message
  */
-[scriptable, uuid(1587698a-60b6-4a8d-9df9-708cd793e24b)]
+[scriptable, uuid(333D5D69-8117-4AA6-9E16-2DD4FD6AEBA6)]
 interface nsIUDPMessage : nsISupports
 {
     /**
