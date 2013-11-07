@@ -14,5 +14,6 @@ PARALLEL_DIRS += [
     'webconsole',
     'apps',
     'styleinspector',
-    'escodegen'
+    'acorn',
+    'pretty-fast'
 ]

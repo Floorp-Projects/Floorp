@@ -19,8 +19,11 @@ function runTests(sw)
 {
   const sp = sw.Scratchpad;
   sp.setText("function main() { console.log(5); }");
-  sp.prettyPrint();
-  const prettyText = sp.getText();
-  ok(prettyText.contains("\n"));
-  finish();
+  sp.prettyPrint().then(() => {
+    const prettyText = sp.getText();
+    ok(prettyText.contains("\n"));
+    finish();
+  }).then(null, error => {
+    ok(false, error);
+  });
 }
