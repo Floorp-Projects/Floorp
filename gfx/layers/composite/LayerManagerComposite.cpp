@@ -303,8 +303,7 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
                           clip,
                           effects,
                           opacity,
-                          gfx::Matrix4x4(),
-                          gfx::Point());
+                          gfx::Matrix4x4());
   }
   // We intentionally overflow at 2^16.
   sFrameCount++;
@@ -359,7 +358,7 @@ LayerManagerComposite::Render()
   mCompositor->RestoreState();
 
   // Render our layers.
-  RootLayer()->RenderLayer(nsIntPoint(0, 0), clipRect);
+  RootLayer()->RenderLayer(clipRect);
 
   // Allow widget to render a custom foreground.
   mCompositor->SaveState();

@@ -95,8 +95,7 @@ ThebesLayerComposite::GetRenderState()
 }
 
 void
-ThebesLayerComposite::RenderLayer(const nsIntPoint& aOffset,
-                                  const nsIntRect& aClipRect)
+ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 {
   if (!mBuffer || !mBuffer->IsAttached()) {
     return;
@@ -139,7 +138,6 @@ ThebesLayerComposite::RenderLayer(const nsIntPoint& aOffset,
   mBuffer->Composite(effectChain,
                      GetEffectiveOpacity(),
                      transform,
-                     gfx::Point(aOffset.x, aOffset.y),
                      gfx::FILTER_LINEAR,
                      clipRect,
                      &visibleRegion,

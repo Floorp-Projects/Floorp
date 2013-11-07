@@ -983,10 +983,11 @@ private:
 };
 
 void
-CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
+CompositorOGL::DrawQuad(const Rect& aRect,
+                        const Rect& aClipRect,
                         const EffectChain &aEffectChain,
-                        Float aOpacity, const gfx::Matrix4x4 &aTransform,
-                        const Point& aOffset)
+                        Float aOpacity,
+                        const gfx::Matrix4x4 &aTransform)
 {
   PROFILER_LABEL("CompositorOGL", "DrawQuad");
   MOZ_ASSERT(mFrameInProgress, "frame not started");

@@ -42,8 +42,7 @@ public:
 
   virtual void Destroy() MOZ_OVERRIDE { mDestroyed = true; }
 
-  virtual void RenderLayer(const nsIntPoint& aOffset,
-                           const nsIntRect& aClipRect) MOZ_OVERRIDE;
+  virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
   virtual void CleanupResources() MOZ_OVERRIDE {};
 
   CompositableHost* GetCompositableHost() MOZ_OVERRIDE { return nullptr; }

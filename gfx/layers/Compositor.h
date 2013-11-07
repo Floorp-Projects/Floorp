@@ -282,14 +282,12 @@ public:
   /**
    * Tell the compositor to actually draw a quad. What to do draw and how it is
    * drawn is specified by aEffectChain. aRect is the quad to draw, in user space.
-   * aTransform transforms from user space to screen space. aOffset is the
-   * offset of the render target from 0,0 of the screen. If texture coords are
+   * aTransform transforms from user space to screen space. If texture coords are
    * required, these will be in the primary effect in the effect chain.
    */
   virtual void DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
                         const EffectChain& aEffectChain,
-                        gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform,
-                        const gfx::Point& aOffset) = 0;
+                        gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform) = 0;
 
   /**
    * Start a new frame.
@@ -351,14 +349,12 @@ public:
   void DrawDiagnostics(DiagnosticFlags aFlags,
                        const gfx::Rect& visibleRect,
                        const gfx::Rect& aClipRect,
-                       const gfx::Matrix4x4& transform,
-                       const gfx::Point& aOffset);
+                       const gfx::Matrix4x4& transform);
 
   void DrawDiagnostics(DiagnosticFlags aFlags,
                        const nsIntRegion& visibleRegion,
                        const gfx::Rect& aClipRect,
-                       const gfx::Matrix4x4& transform,
-                       const gfx::Point& aOffset);
+                       const gfx::Matrix4x4& transform);
 
 
 #ifdef MOZ_DUMP_PAINTING
@@ -434,8 +430,7 @@ protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                const gfx::Rect& aVisibleRect,
                                const gfx::Rect& aClipRect,
-                               const gfx::Matrix4x4& transform,
-                               const gfx::Point& aOffset);
+                               const gfx::Matrix4x4& transform);
 
   bool ShouldDrawDiagnostics(DiagnosticFlags);
 

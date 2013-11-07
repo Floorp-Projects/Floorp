@@ -191,10 +191,11 @@ ShaderModeForEffectType(EffectTypes aEffectType)
 }
 
 void
-CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
+CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
+                         const gfx::Rect &aClipRect,
                          const EffectChain &aEffectChain,
-                         gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform,
-                         const gfx::Point &aOffset)
+                         gfx::Float aOpacity,
+                         const gfx::Matrix4x4 &aTransform)
 {
   MOZ_ASSERT(mCurrentRT, "No render target");
   device()->SetVertexShaderConstantF(CBmLayerTransform, &aTransform._11, 4);
