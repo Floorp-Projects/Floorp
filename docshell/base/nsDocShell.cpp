@@ -4951,6 +4951,10 @@ nsDocShell::Create()
         gAddedPreferencesVarCache = true;
     }
 
+    mDeviceSizeIsPageSize =
+        Preferences::GetBool("docshell.device_size_is_page_size",
+                             mDeviceSizeIsPageSize);
+
     nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
     if (serv) {
         const char* msg = mItemType == typeContent ?
