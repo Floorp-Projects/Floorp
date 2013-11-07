@@ -287,10 +287,27 @@ CustomizeMode.prototype = {
     }.bind(this)).then(null, ERROR);
   },
 
+  /**
+   * The customize mode transition has 3 phases when entering:
+   * 1) Pre-customization mode
+   *    This is the starting phase of the browser.
+   * 2) customize-entering
+   *    This phase is a transition, optimized for smoothness.
+   * 3) customize-entered
+   *    After the transition completes, this phase draws all of the
+   *    expensive detail that isn't necessary during the second phase.
+   *
+   * Exiting customization mode has a similar set of phases, but in reverse
+   * order - customize-entered, customize-exiting, pre-customization mode.
+   *
+   * When in the customize-entering, customize-entered, or customize-exiting
+   * phases, there is a "customizing" attribute set on the main-window to simplify
+   * excluding certain styles while in any phase of customize mode.
+   */
   _doTransition: function(aEntering) {
     let deferred = Promise.defer();
-
     let deck = this.document.getElementById("tab-view-deck");
+
     let customizeTransitionEnd = function(aEvent) {
       if (aEvent.originalTarget != deck || aEvent.propertyName != "padding-bottom") {
         return;
@@ -299,6 +316,10 @@ CustomizeMode.prototype = {
 
       if (!aEntering) {
         this.document.documentElement.removeAttribute("customize-exiting");
+        this.document.documentElement.removeAttribute("customizing");
+      } else {
+        this.document.documentElement.setAttribute("customize-entered", true);
+        this.document.documentElement.removeAttribute("customize-entering");
       }
       this.dispatchToolboxEvent("customization-transitionend", aEntering);
 
@@ -311,9 +332,10 @@ CustomizeMode.prototype = {
     }
     if (aEntering) {
       this.document.documentElement.setAttribute("customizing", true);
+      this.document.documentElement.setAttribute("customize-entering", true);
     } else {
       this.document.documentElement.setAttribute("customize-exiting", true);
-      this.document.documentElement.removeAttribute("customizing");
+      this.document.documentElement.removeAttribute("customize-entered");
     }
     return deferred.promise;
   },
