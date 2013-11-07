@@ -112,7 +112,6 @@ AppValidator.prototype._getManifest = function () {
 AppValidator.prototype.validateManifest = function (manifest) {
   if (!manifest.name) {
     this.error(strings.GetStringFromName("validator.missNameManifestProperty"));
-    return;
   }
 
   if (!manifest.icons || Object.keys(manifest.icons).length === 0) {
