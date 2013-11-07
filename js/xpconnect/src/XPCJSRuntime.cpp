@@ -3096,8 +3096,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
     // Register memory reporters and distinguished amount functions.
-    NS_RegisterMemoryReporter(new JSMainRuntimeCompartmentsReporter);
-    NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
+    RegisterStrongMemoryReporter(new JSMainRuntimeCompartmentsReporter());
+    RegisterStrongMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
     RegisterJSMainRuntimeGCHeapDistinguishedAmount(JSMainRuntimeGCHeapDistinguishedAmount);
     RegisterJSMainRuntimeTemporaryPeakDistinguishedAmount(JSMainRuntimeTemporaryPeakDistinguishedAmount);
     RegisterJSMainRuntimeCompartmentsSystemDistinguishedAmount(JSMainRuntimeCompartmentsSystemDistinguishedAmount);
