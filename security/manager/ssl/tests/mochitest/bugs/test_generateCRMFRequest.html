@@ -57,6 +57,30 @@
       is(e.toString(), "Error: error:invalid key generation argument:", "expected exception");
     }
 
+    // Test that an rsa certificate isn't used to generate an ec key.
+    try {
+      var crmfObject = crypto.generateCRMFRequest("CN=a", "a", "a", null, "",
+                         1024, "popcert=MIIBjzCB+aADAgECAgUAnVC3BjANBgkqhkiG9w0BAQUFADAMMQowCAYDVQQDEwFhMB4XDTEzMTEwNjE3NDU1NFoXDTIzMTEwNjE3NDU1NFowDDEKMAgGA1UEAxMBYTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA3G2mwjE8IGVwv6H1NGZFSKE3UrTsgez2DtNIYb5zdi0P0w9SbmL2GWfveu9DZhRebhVz7QSMPKLagI4aoIzoP5BxRl7a8wR5wbU0z8qXnAvy9p3Ex5oN5vX47TWB7cnItoWpi6A81GSn5X1CFFHhVCEwnQsHuWXrEvLD5hrfdmcCAwEAATANBgkqhkiG9w0BAQUFAAOBgQCNo+yLKfAd2NBI5DUpwgHSFBA+59pdNtHY7E2KZjyc9tXN6PHkPp8nScVCtk0g60j4aiiZQm8maPQPLo7Hipgpk83iYqquHRvcJVX4fWJpS/7vX+qTNT0hRiKRhVlI6S4Ttp2J2W6uxy2xxeqC6nBbU98QmDj3UQAY31LyejbecQ==", "ec-dual-use");
+      ok(crmfObject, "generateCRMFRequest succeeded");
+      var request = crmfObject.request;
+      var bytes = atob(request.replace(/\r\n/g, ""));
+
+      // rsaEncryption oid encoded in the request (as ASN1)
+      var badIdentifier = [ 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D,
+                            0x01, 0x01, 0x01 ];
+      ok(!findIdentifierInString(badIdentifier, bytes),
+         "didn't find bad identifier in request");
+
+      // secp256r1 encoded in the request (as ASN1) (this is the default for
+      // a "1024-bit" ec key)
+      var goodIdentifier = [ 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03,
+                             0x01, 0x07 ];
+      ok(findIdentifierInString(goodIdentifier, bytes),
+         "found good identifier in request");
+    } catch (e) {
+      ok(false, "unexpected exception: " + e);
+    }
+
     // Test that only the first of repeated keygen parameters are used.
     try {
       var curveCrmfObject = crypto.generateCRMFRequest("CN=a", "a", "a", null,
