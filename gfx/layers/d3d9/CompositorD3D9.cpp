@@ -98,7 +98,7 @@ CompositorD3D9::CreateRenderTarget(const gfx::IntRect &aRect,
   }
 
   RefPtr<CompositingRenderTargetD3D9> rt =
-    new CompositingRenderTargetD3D9(texture, aInit, IntSize(aRect.width, aRect.height));
+    new CompositingRenderTargetD3D9(texture, aInit, aRect);
 
   return rt;
 }
@@ -157,7 +157,7 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
   RefPtr<CompositingRenderTargetD3D9> rt =
     new CompositingRenderTargetD3D9(texture,
                                     INIT_MODE_NONE,
-                                    aRect.Size());
+                                    aRect);
 
   return rt;
 }
@@ -476,7 +476,7 @@ CompositorD3D9::BeginFrame(const Rect *aClipRectIn,
   nsRefPtr<IDirect3DSurface9> backBuffer = mSwapChain->GetBackBuffer();
   mDefaultRT = new CompositingRenderTargetD3D9(backBuffer,
                                                INIT_MODE_CLEAR,
-                                               IntSize(mSize.width, mSize.height));
+                                               IntRect(0, 0, mSize.width, mSize.height));
   SetRenderTarget(mDefaultRT);
 }
 

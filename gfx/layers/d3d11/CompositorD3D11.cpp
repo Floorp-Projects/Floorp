@@ -380,7 +380,7 @@ CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
     return nullptr;
   }
 
-  RefPtr<CompositingRenderTargetD3D11> rt = new CompositingRenderTargetD3D11(texture);
+  RefPtr<CompositingRenderTargetD3D11> rt = new CompositingRenderTargetD3D11(texture, aRect.TopLeft());
   rt->SetSize(IntSize(aRect.width, aRect.height));
 
   if (aInit == INIT_MODE_CLEAR) {
@@ -432,7 +432,7 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
   }
 
   RefPtr<CompositingRenderTargetD3D11> rt =
-    new CompositingRenderTargetD3D11(texture);
+    new CompositingRenderTargetD3D11(texture, aRect.TopLeft());
   rt->SetSize(aRect.Size());
 
   return rt;
@@ -786,7 +786,7 @@ CompositorD3D11::UpdateRenderTarget()
     return;
   }
 
-  mDefaultRT = new CompositingRenderTargetD3D11(backBuf);
+  mDefaultRT = new CompositingRenderTargetD3D11(backBuf, IntPoint(0, 0));
   mDefaultRT->SetSize(mSize);
 }
 
