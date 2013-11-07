@@ -344,6 +344,17 @@ nsEventStatus
 APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                                    WidgetTouchEvent* aOutEvent)
 {
+  if (!aEvent.touches.Length()) {
+    return nsEventStatus_eIgnore;
+  }
+  if (aEvent.message == NS_TOUCH_START) {
+    mTouchCount++;
+    ScreenPoint point = ScreenPoint(aEvent.touches[0]->mRefPoint.x, aEvent.touches[0]->mRefPoint.y);
+    mApzcForInputBlock = GetTouchInputBlockAPZC(aEvent, point);
+  }
+  if (!mApzcForInputBlock) {
+    return nsEventStatus_eIgnore;
+  }
   // For computing the input for the APZC, used the cached transform.
   // This ensures that the sequence of touch points an APZC sees in an
   // input block are all in the same coordinate space.
@@ -425,17 +436,6 @@ APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       const WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      if (!touchEvent.touches.Length()) {
-        return nsEventStatus_eIgnore;
-      }
-      if (touchEvent.message == NS_TOUCH_START) {
-        mTouchCount++;
-        ScreenPoint point = ScreenPoint(touchEvent.touches[0]->mRefPoint.x, touchEvent.touches[0]->mRefPoint.y);
-        mApzcForInputBlock = GetTouchInputBlockAPZC(touchEvent, point);
-      }
-      if (!mApzcForInputBlock) {
-        return nsEventStatus_eIgnore;
-      }
       return ProcessTouchEvent(touchEvent, aOutEvent->AsTouchEvent());
     }
     case NS_MOUSE_EVENT: {
@@ -458,17 +458,6 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent)
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      if (!touchEvent.touches.Length()) {
-        return nsEventStatus_eIgnore;
-      }
-      if (touchEvent.message == NS_TOUCH_START) {
-        mTouchCount++;
-        ScreenPoint point = ScreenPoint(touchEvent.touches[0]->mRefPoint.x, touchEvent.touches[0]->mRefPoint.y);
-        mApzcForInputBlock = GetTouchInputBlockAPZC(touchEvent, point);
-      }
-      if (!mApzcForInputBlock) {
-        return nsEventStatus_eIgnore;
-      }
       return ProcessTouchEvent(touchEvent, &touchEvent);
     }
     default: {
