@@ -9,8 +9,10 @@
 MOZ_LIBSTDCXX_HOST_VERSION =
 
 ifndef CROSS_COMPILE
+ifdef COMPILE_ENVIRONMENT
 ifdef USE_ELF_DYNSTR_GC
 export:: elf-dynstr-gc
+endif
 endif
 endif
 
@@ -27,6 +29,7 @@ endif
 include $(topsrcdir)/config/config.mk
 
 ifneq (WINNT,$(HOST_OS_ARCH))
+ifdef COMPILE_ENVIRONMENT
 # Ensure nsinstall is atomically created
 nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
 	cp $^ $@.tmp
@@ -36,6 +39,7 @@ NSINSTALL_FILES := nsinstall$(HOST_BIN_SUFFIX)
 NSINSTALL_DEST := $(DIST)/bin
 NSINSTALL_TARGET := export
 INSTALL_TARGETS += NSINSTALL
+endif
 endif
 
 HEADERS_FILES = \
@@ -110,9 +114,6 @@ export:: $(STL_WRAPPERS_SENTINEL)
 GARBAGE += $(STL_WRAPPERS_SENTINEL)
 GARBAGE_DIRS += stl_wrappers
 endif
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(DEPTH)/mozilla-config.h $(DESTDIR)$(includedir)
 
 GARBAGE += \
   $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES) buildid $(srcdir)/*.pyc *.pyc

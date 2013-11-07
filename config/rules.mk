@@ -122,6 +122,7 @@ endif
 endif
 
 ifdef CPP_UNIT_TESTS
+ifdef COMPILE_ENVIRONMENT
 
 # Compile the tests to $(DIST)/bin.  Make lots of niceties available by default
 # through TestHarness.h, by modifying the list of includes and the libs against
@@ -153,6 +154,7 @@ cppunittests-remote:
 		echo "please prepare your host with environment variables for TEST_DEVICE"; \
 	fi
 
+endif # COMPILE_ENVIRONMENT
 endif # CPP_UNIT_TESTS
 
 .PHONY: check
@@ -303,6 +305,7 @@ EXCLUDED_OBJS := $(SIMPLE_PROGRAMS:$(BIN_SUFFIX)=.$(OBJ_SUFFIX))
 SIMPLE_PROGRAMS :=
 endif
 
+ifdef COMPILE_ENVIRONMENT
 ifndef TARGETS
 TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS)
 endif
@@ -327,6 +330,19 @@ HOST_CMMOBJS = $(addprefix host_,$(notdir $(HOST_CMMSRCS:.mm=.$(OBJ_SUFFIX))))
 ifndef HOST_OBJS
 _HOST_OBJS = $(HOST_COBJS) $(HOST_CPPOBJS) $(HOST_CMOBJS) $(HOST_CMMOBJS)
 HOST_OBJS = $(strip $(_HOST_OBJS))
+endif
+else
+LIBRARY :=
+SHARED_LIBRARY :=
+IMPORT_LIBRARY :=
+REAL_LIBRARY :=
+PROGRAM :=
+SIMPLE_PROGRAMS :=
+HOST_LIBRARY :=
+HOST_PROGRAM :=
+HOST_SIMPLE_PROGRAMS :=
+SDK_BINARY := $(filter %.py,$(SDK_BINARY))
+SDK_LIBRARY :=
 endif
 
 ALL_TRASH = \
@@ -613,7 +629,9 @@ ifndef SUPPRESS_DEFAULT_RULES
 default all::
 	$(MAKE) export
 ifdef MOZ_PSEUDO_DERECURSE
+ifdef COMPILE_ENVIRONMENT
 	$(MAKE) compile
+endif
 endif
 	$(MAKE) libs
 	$(MAKE) tools
@@ -642,11 +660,13 @@ HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX),$(HOST_LIBS))
 GLOBAL_DEPS += Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk
 
 ##############################################
+ifdef COMPILE_ENVIRONMENT
 OBJ_TARGETS = $(OBJS) $(PROGOBJS) $(HOST_OBJS) $(HOST_PROGOBJS)
 
 compile:: $(OBJ_TARGETS)
 
-include $(topsrcdir)/config/makefiles/target_libs.mk
+include $(topsrcdir)/config/makefiles/target_binaries.mk
+endif
 
 ifdef IS_TOOL_DIR
 # One would think "tools:: libs" would work, but it turns out that combined with
@@ -1353,7 +1373,7 @@ PP_TARGETS += DIST_CHROME_FILES
 endif
 
 ifneq ($(XPI_PKGNAME),)
-tools realchrome::
+libs realchrome::
 ifdef STRIP_XPI
 ifndef MOZ_DEBUG
 	@echo "Stripping $(XPI_PKGNAME) package directory..."
@@ -1392,7 +1412,7 @@ ifndef XPI_NAME
 $(error XPI_NAME must be set for INSTALL_EXTENSION_ID)
 endif
 
-tools::
+libs::
 	$(RM) -r "$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)"
 	$(NSINSTALL) -D "$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)"
 	$(call copy_dir,$(FINAL_TARGET),$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID))
