@@ -163,6 +163,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(ConcatPar)
     UNSAFE_OP(CharCodeAt)
     UNSAFE_OP(FromCharCode)
+    UNSAFE_OP(StringSplit)
     SAFE_OP(Return)
     CUSTOM_OP(Throw)
     SAFE_OP(Box)     // Boxing just creates a JSVal, doesn't alloc.

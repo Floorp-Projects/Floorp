@@ -7451,6 +7451,18 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         }
     }
 
+    if (native == js::str_split && args.length() == 1 && args[0].isString()) {
+        res.set(NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject));
+        if (!res)
+            return false;
+
+        types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
+        if (!type)
+            return false;
+        res->setType(type);
+        return true;
+    }
+
     if (native == js_String) {
         RootedString emptyString(cx, cx->runtime()->emptyString);
         res.set(StringObject::create(cx, emptyString, TenuredObject));
