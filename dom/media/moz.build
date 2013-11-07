@@ -7,7 +7,7 @@
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['bridge']
 
-TEST_DIRS += ['tests/mochitest']
+TEST_DIRS += ['tests/mochitest', 'tests/ipc']
 
 XPIDL_SOURCES += [
     'nsIDOMMediaStream.idl',

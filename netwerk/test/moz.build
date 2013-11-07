@@ -53,6 +53,6 @@ SOURCES += [
 
 CPP_UNIT_TESTS += [
     'TestSTSParser.cpp',
-    'TestUDPServerSocket.cpp',
+    'TestUDPSocket.cpp',
 ]
 
