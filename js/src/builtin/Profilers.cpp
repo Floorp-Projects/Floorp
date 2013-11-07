@@ -519,10 +519,15 @@ bool js_StartPerf()
             flags = "--call-graph";
         }
 
-        // Split |flags| on spaces.  (Don't bother to free it -- we're going to
+        char *flags2 = (char *)js_malloc(strlen(flags) + 1);
+        if (!flags2)
+            return false;
+        strcpy(flags2, flags);
+
+        // Split |flags2| on spaces.  (Don't bother to free it -- we're going to
         // exec anyway.)
         char *toksave;
-        char *tok = strtok_r(strdup(flags), " ", &toksave);
+        char *tok = strtok_r(flags2, " ", &toksave);
         while (tok) {
             args.append(tok);
             tok = strtok_r(nullptr, " ", &toksave);
