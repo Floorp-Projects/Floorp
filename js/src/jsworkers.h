@@ -391,7 +391,7 @@ struct AsmJSParallelTask
 struct ParseTask
 {
     ExclusiveContext *cx;
-    ReadOnlyCompileOptions options;
+    OwningCompileOptions options;
     const jschar *chars;
     size_t length;
     LifoAlloc alloc;
@@ -414,9 +414,10 @@ struct ParseTask
     // when finishing the script.
     Vector<frontend::CompileError *> errors;
 
-    ParseTask(ExclusiveContext *cx, const ReadOnlyCompileOptions &options,
+    ParseTask(ExclusiveContext *cx, JSContext *initCx,
               const jschar *chars, size_t length, JSObject *scopeChain,
               JS::OffThreadCompileCallback callback, void *callbackData);
+    bool init(JSContext *cx, const ReadOnlyCompileOptions &options);
 
     ~ParseTask();
 };
