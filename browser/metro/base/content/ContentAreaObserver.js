@@ -132,7 +132,7 @@ var ContentAreaObserver = {
     this._updateViewState();
 
     this.updateContentArea(newWidth, this._getContentHeightForWindow(newHeight));
-    this._disatchBrowserEvent("SizeChanged");
+    this._dispatchBrowserEvent("SizeChanged");
   },
 
   updateContentArea: function cao_updateContentArea (width, height) {
@@ -162,7 +162,7 @@ var ContentAreaObserver = {
     this.styles["content-width"].maxWidth = newWidth + "px";
 
     this.updateViewableArea(newWidth, this._getViewableHeightForContent(newHeight));
-    this._disatchBrowserEvent("ContentSizeChanged");
+    this._dispatchBrowserEvent("ContentSizeChanged");
   },
 
   updateViewableArea: function cao_updateViewableArea (width, height) {
@@ -186,7 +186,7 @@ var ContentAreaObserver = {
     // these are hidden.
     BrowserUI._updateButtons();
 
-    this._disatchBrowserEvent("ViewableSizeChanged");
+    this._dispatchBrowserEvent("ViewableSizeChanged");
   },
 
   updateAppBarPosition: function updateAppBarPosition(aForceDown) {
@@ -332,7 +332,7 @@ var ContentAreaObserver = {
     window.dispatchEvent(event);
   },
 
-  _disatchBrowserEvent: function (aName, aDetail) {
+  _dispatchBrowserEvent: function (aName, aDetail) {
     setTimeout(function() {
       let event = document.createEvent("Events");
       event.initEvent(aName, true, false);

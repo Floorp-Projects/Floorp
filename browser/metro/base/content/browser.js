@@ -1312,12 +1312,29 @@ Tab.prototype = {
       self._eventDeferred = null;
     }
     browser.addEventListener("pageshow", onPageShowEvent, true);
+    browser.addEventListener("DOMWindowCreated", this, false);
+    Elements.browsers.addEventListener("SizeChanged", this, false);
+
     browser.messageManager.addMessageListener("Content:StateChange", this);
     Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
     if (aOwner)
       this._copyHistoryFrom(aOwner);
     this._loadUsingParams(browser, aURI, aParams);
+  },
+
+  updateViewport: function (aEvent) {
+    // <meta name=viewport> is not yet supported; just use the browser size.
+    this.browser.setWindowSize(this.browser.clientWidth, this.browser.clientHeight);
+  },
+
+  handleEvent: function (aEvent) {
+    switch (aEvent.type) {
+      case "DOMWindowCreated":
+      case "SizeChanged":
+        this.updateViewport();
+        break;
+    }
   },
 
   receiveMessage: function(aMessage) {
@@ -1348,6 +1365,8 @@ Tab.prototype = {
 
   destroy: function destroy() {
     this._browser.messageManager.removeMessageListener("Content:StateChange", this);
+    this._browser.removeEventListener("DOMWindowCreated", this, false);
+    Elements.browsers.removeEventListener("SizeChanged", this, false);
     Services.obs.removeObserver(this, "metro_viewstate_changed", false);
     clearTimeout(this._updateThumbnailTimeout);
 
