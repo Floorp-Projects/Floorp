@@ -690,11 +690,11 @@ extern void
 TraceRuntime(JSTracer *trc);
 
 /* Must be called with GC lock taken. */
-extern void
+extern bool
 TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason);
 
 /* Must be called with GC lock taken. */
-extern void
+extern bool
 TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
 
 extern void

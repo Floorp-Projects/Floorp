@@ -213,6 +213,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		bug732209-css.sjs \
 		test_bug795520.html \
 		viewport_units_iframe.html \
+		test_background_blend_mode.html \
 		$(NULL)
 
 VISITED_REFTEST_FILES = \
