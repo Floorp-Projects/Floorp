@@ -3325,19 +3325,22 @@ class JS_PUBLIC_API(CompileOptions)
 {
     JSPrincipals *principals_;
     JSPrincipals *originPrincipals_;
+    const char *filename_;
+    const jschar *sourceMapURL_;
+    Handle<JSObject*> element_;
 
   public:
     JSPrincipals *principals() const { return principals_; }
     JSPrincipals *originPrincipals() const;
+    const char *filename() const { return filename_; }
+    const jschar *sourceMapURL() const { return sourceMapURL_; }
+    JSObject *element() const { return element_; }
 
     JSVersion version;
     bool versionSet;
     bool utf8;
-    const char *filename;
-    const jschar *sourceMapURL;
     unsigned lineno;
     unsigned column;
-    Handle<JSObject*> element;
     bool compileAndGo;
     bool forEval;
     bool noScriptRval;
@@ -3359,11 +3362,11 @@ class JS_PUBLIC_API(CompileOptions)
     CompileOptions &setVersion(JSVersion v) { version = v; versionSet = true; return *this; }
     CompileOptions &setUTF8(bool u) { utf8 = u; return *this; }
     CompileOptions &setFileAndLine(const char *f, unsigned l) {
-        filename = f; lineno = l; return *this;
+        filename_ = f; lineno = l; return *this;
     }
-    CompileOptions &setSourceMapURL(const jschar *s) { sourceMapURL = s; return *this; }
+    CompileOptions &setSourceMapURL(const jschar *s) { sourceMapURL_ = s; return *this; }
     CompileOptions &setColumn(unsigned c) { column = c; return *this; }
-    CompileOptions &setElement(Handle<JSObject*> e) { element.repoint(e); return *this; }
+    CompileOptions &setElement(Handle<JSObject*> e) { element_.repoint(e); return *this; }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
     CompileOptions &setForEval(bool eval) { forEval = eval; return *this; }
     CompileOptions &setNoScriptRval(bool nsr) { noScriptRval = nsr; return *this; }

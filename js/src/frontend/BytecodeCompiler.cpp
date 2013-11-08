@@ -154,7 +154,7 @@ frontend::MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
 
     if (listener) {
         void *listenerTSData;
-        listener(options.filename, options.lineno, chars, length,
+        listener(options.filename(), options.lineno, chars, length,
                  &listenerTSData, listenerData);
     }
 }
@@ -195,7 +195,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return nullptr;
-    if (options.filename && !ss->setFilename(cx, options.filename))
+    if (options.filename() && !ss->setFilename(cx, options.filename()))
         return nullptr;
 
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
@@ -379,8 +379,8 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
      * Source map URLs passed as a compile option (usually via a HTTP source map
      * header) override any source map urls passed as comment pragmas.
      */
-    if (options.sourceMapURL) {
-        if (!ss->setSourceMapURL(cx, options.sourceMapURL))
+    if (options.sourceMapURL()) {
+        if (!ss->setSourceMapURL(cx, options.sourceMapURL()))
             return nullptr;
     }
 
@@ -494,7 +494,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions opt
     ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return false;
-    if (options.filename && !ss->setFilename(cx, options.filename))
+    if (options.filename() && !ss->setFilename(cx, options.filename()))
         return false;
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
     if (!sourceObject)
