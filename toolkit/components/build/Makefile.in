@@ -29,7 +29,6 @@ SHARED_LIBRARY_LIBS = \
   ../protobuf/$(LIB_PREFIX)protobuf_s.$(LIB_SUFFIX) \
   ../intl/$(LIB_PREFIX)intl_s.$(LIB_SUFFIX) \
   ../finalizationwitness/$(LIB_PREFIX)finalizationwitness_s.$(LIB_SUFFIX) \
-  ../workerlz4/$(LIB_PREFIX)workerlz4_s.$(LIB_SUFFIX) \
   $(NULL)
 
 ifndef MOZ_DISABLE_PARENTAL_CONTROLS
