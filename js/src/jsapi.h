@@ -3555,21 +3555,21 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(CompileOptions) : public ReadOnlyCompileOpti
 };
 
 extern JS_PUBLIC_API(JSScript *)
-Compile(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,
+Compile(JSContext *cx, JS::Handle<JSObject*> obj, const ReadOnlyCompileOptions &options,
         const char *bytes, size_t length);
 
 extern JS_PUBLIC_API(JSScript *)
-Compile(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,
+Compile(JSContext *cx, JS::Handle<JSObject*> obj, const ReadOnlyCompileOptions &options,
         const jschar *chars, size_t length);
 
 extern JS_PUBLIC_API(JSScript *)
-Compile(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options, FILE *file);
+Compile(JSContext *cx, JS::Handle<JSObject*> obj, const ReadOnlyCompileOptions &options, FILE *file);
 
 extern JS_PUBLIC_API(JSScript *)
-Compile(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options, const char *filename);
+Compile(JSContext *cx, JS::Handle<JSObject*> obj, const ReadOnlyCompileOptions &options, const char *filename);
 
 extern JS_PUBLIC_API(bool)
-CanCompileOffThread(JSContext *cx, const CompileOptions &options);
+CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options);
 
 /*
  * Off thread compilation control flow.
@@ -3588,7 +3588,7 @@ CanCompileOffThread(JSContext *cx, const CompileOptions &options);
  */
 
 extern JS_PUBLIC_API(bool)
-CompileOffThread(JSContext *cx, Handle<JSObject*> obj, CompileOptions options,
+CompileOffThread(JSContext *cx, Handle<JSObject*> obj, const ReadOnlyCompileOptions &options,
                  const jschar *chars, size_t length,
                  OffThreadCompileCallback callback, void *callbackData);
 
@@ -3596,12 +3596,12 @@ extern JS_PUBLIC_API(JSScript *)
 FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token);
 
 extern JS_PUBLIC_API(JSFunction *)
-CompileFunction(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,
+CompileFunction(JSContext *cx, JS::Handle<JSObject*> obj, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
                 const char *bytes, size_t length);
 
 extern JS_PUBLIC_API(JSFunction *)
-CompileFunction(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,
+CompileFunction(JSContext *cx, JS::Handle<JSObject*> obj, const ReadOnlyCompileOptions &options,
                 const char *name, unsigned nargs, const char *const *argnames,
                 const jschar *chars, size_t length);
 
@@ -3727,15 +3727,15 @@ JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, JSObject *obj,
 namespace JS {
 
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,
+Evaluate(JSContext *cx, JS::Handle<JSObject*> obj, const ReadOnlyCompileOptions &options,
          const jschar *chars, size_t length, jsval *rval);
 
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,
+Evaluate(JSContext *cx, JS::Handle<JSObject*> obj, const ReadOnlyCompileOptions &options,
          const char *bytes, size_t length, jsval *rval);
 
 extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,
+Evaluate(JSContext *cx, JS::Handle<JSObject*> obj, const ReadOnlyCompileOptions &options,
          const char *filename, jsval *rval);
 
 } /* namespace JS */
