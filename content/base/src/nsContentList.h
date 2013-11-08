@@ -95,6 +95,10 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
     MOZ_OVERRIDE = 0;
 
+  void SetCapacity(uint32_t aCapacity)
+  {
+    mElements.SetCapacity(aCapacity);
+  }
 protected:
   /**
    * To be called from non-destructor locations (e.g. unlink) that want to
