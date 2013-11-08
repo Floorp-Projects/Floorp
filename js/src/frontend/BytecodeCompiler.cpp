@@ -137,7 +137,7 @@ MaybeCheckEvalFreeVariables(ExclusiveContext *cxArg, HandleScript evalCaller, Ha
 }
 
 static inline bool
-CanLazilyParse(ExclusiveContext *cx, const CompileOptions &options)
+CanLazilyParse(ExclusiveContext *cx, const ReadOnlyCompileOptions &options)
 {
     return options.canLazilyParse &&
         options.compileAndGo &&
@@ -146,7 +146,7 @@ CanLazilyParse(ExclusiveContext *cx, const CompileOptions &options)
 }
 
 void
-frontend::MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
+frontend::MaybeCallSourceHandler(JSContext *cx, const ReadOnlyCompileOptions &options,
                                  const jschar *chars, size_t length)
 {
     JSSourceHandler listener = cx->runtime()->debugHooks.sourceHandler;
@@ -162,7 +162,7 @@ frontend::MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
 JSScript *
 frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject scopeChain,
                         HandleScript evalCaller,
-                        const CompileOptions &options,
+                        const ReadOnlyCompileOptions &options,
                         const jschar *chars, size_t length,
                         JSString *source_ /* = nullptr */,
                         unsigned staticLevel /* = 0 */,
@@ -472,7 +472,7 @@ frontend::CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *cha
 // Compile a JS function body, which might appear as the value of an event
 // handler attribute in an HTML <INPUT> tag, or in a Function() constructor.
 static bool
-CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyCompileOptions &options,
                     const AutoNameVector &formals, const jschar *chars, size_t length,
                     GeneratorKind generatorKind)
 {
@@ -611,7 +611,8 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions opt
 }
 
 bool
-frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun,
+                              const ReadOnlyCompileOptions &options,
                               const AutoNameVector &formals, const jschar *chars, size_t length)
 {
     return CompileFunctionBody(cx, fun, options, formals, chars, length, NotGenerator);
@@ -619,7 +620,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 
 bool
 frontend::CompileStarGeneratorBody(JSContext *cx, MutableHandleFunction fun,
-                                   CompileOptions options, const AutoNameVector &formals,
+                                   const ReadOnlyCompileOptions &options, const AutoNameVector &formals,
                                    const jschar *chars, size_t length)
 {
     return CompileFunctionBody(cx, fun, options, formals, chars, length, StarGenerator);

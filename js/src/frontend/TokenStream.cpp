@@ -260,7 +260,7 @@ TokenStream::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t *line
 #endif
 
 // Initialize members that aren't initialized in |init|.
-TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
+TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &options,
                          const jschar *base, size_t length, StrictModeGetter *smg)
   : srcCoords(cx, options.lineno),
     options_(options),
