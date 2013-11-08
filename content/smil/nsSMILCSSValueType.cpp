@@ -394,8 +394,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
   }
 
   nsIDocument* doc = aTargetElement->GetCurrentDoc();
-  if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr,
-                                                doc->NodePrincipal(),
+  if (doc && !nsStyleUtil::CSPAllowsInlineStyle(doc->NodePrincipal(),
                                                 doc->GetDocumentURI(),
                                                 0, aString, nullptr)) {
     return;
