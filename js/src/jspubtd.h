@@ -35,6 +35,8 @@ class Rooted;
 class JS_PUBLIC_API(AutoGCRooter);
 
 class JS_PUBLIC_API(CompileOptions);
+class JS_PUBLIC_API(ReadOnlyCompileOptions);
+class JS_PUBLIC_API(OwningCompileOptions);
 class JS_PUBLIC_API(CompartmentOptions);
 
 struct Zone;
