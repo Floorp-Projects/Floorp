@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/rtp_rtcp/source/rtp_payload_registry.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
 
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -74,8 +74,8 @@ TEST_F(RtpPayloadRegistryTest, RegistersAndRemembersPayloadsUntilDeregistered) {
   EXPECT_TRUE(new_payload_created) << "A new payload WAS created.";
 
   ModuleRTPUtility::Payload* retrieved_payload = NULL;
-  EXPECT_EQ(0, rtp_payload_registry_->PayloadTypeToPayload(payload_type,
-                                                           retrieved_payload));
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type,
+                                                          retrieved_payload));
 
   // We should get back the exact pointer to the payload returned by the
   // payload strategy.
@@ -83,7 +83,7 @@ TEST_F(RtpPayloadRegistryTest, RegistersAndRemembersPayloadsUntilDeregistered) {
 
   // Now forget about it and verify it's gone.
   EXPECT_EQ(0, rtp_payload_registry_->DeRegisterReceivePayload(payload_type));
-  EXPECT_EQ(-1, rtp_payload_registry_->PayloadTypeToPayload(
+  EXPECT_FALSE(rtp_payload_registry_->PayloadTypeToPayload(
       payload_type, retrieved_payload));
 }
 
@@ -101,8 +101,8 @@ TEST_F(RtpPayloadRegistryTest, DoesNotCreateNewPayloadTypeIfRed) {
   ASSERT_EQ(red_type_of_the_day, rtp_payload_registry_->red_payload_type());
 
   ModuleRTPUtility::Payload* retrieved_payload = NULL;
-  EXPECT_EQ(0, rtp_payload_registry_->PayloadTypeToPayload(red_type_of_the_day,
-                                                           retrieved_payload));
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(red_type_of_the_day,
+                                                          retrieved_payload));
   EXPECT_FALSE(retrieved_payload->audio);
   EXPECT_STRCASEEQ("red", retrieved_payload->name);
 }
@@ -131,11 +131,11 @@ TEST_F(RtpPayloadRegistryTest,
 
   // Ensure both payloads are preserved.
   ModuleRTPUtility::Payload* retrieved_payload = NULL;
-  EXPECT_EQ(0, rtp_payload_registry_->PayloadTypeToPayload(payload_type,
-                                                           retrieved_payload));
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type,
+                                                          retrieved_payload));
   EXPECT_EQ(first_payload_on_heap, retrieved_payload);
-  EXPECT_EQ(0, rtp_payload_registry_->PayloadTypeToPayload(payload_type - 1,
-                                                           retrieved_payload));
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(payload_type - 1,
+                                                          retrieved_payload));
   EXPECT_EQ(second_payload_on_heap, retrieved_payload);
 
   // Ok, update the rate for one of the codecs. If either the incoming rate or
@@ -170,10 +170,10 @@ TEST_F(RtpPayloadRegistryTest,
       kTypicalChannels, kTypicalRate, &ignored));
 
   ModuleRTPUtility::Payload* retrieved_payload = NULL;
-  EXPECT_EQ(-1, rtp_payload_registry_->PayloadTypeToPayload(
+  EXPECT_FALSE(rtp_payload_registry_->PayloadTypeToPayload(
       payload_type, retrieved_payload)) << "The first payload should be "
           "deregistered because the only thing that differs is payload type.";
-  EXPECT_EQ(0, rtp_payload_registry_->PayloadTypeToPayload(
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(
       payload_type - 1, retrieved_payload)) <<
           "The second payload should still be registered though.";
 
@@ -185,10 +185,10 @@ TEST_F(RtpPayloadRegistryTest,
       kTypicalPayloadName, payload_type + 1, kTypicalFrequency,
       kTypicalChannels, kTypicalRate, &ignored));
 
-  EXPECT_EQ(0, rtp_payload_registry_->PayloadTypeToPayload(
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(
       payload_type - 1, retrieved_payload)) <<
           "Not compatible; both payloads should be kept.";
-  EXPECT_EQ(0, rtp_payload_registry_->PayloadTypeToPayload(
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(
       payload_type + 1, retrieved_payload)) <<
           "Not compatible; both payloads should be kept.";
 }

@@ -248,4 +248,4 @@ int FileWrapperImpl::FlushImpl() {
   return -1;
 }
 
-} // namespace webrtc
+}  // namespace webrtc

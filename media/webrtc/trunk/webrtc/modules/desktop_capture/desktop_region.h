@@ -48,6 +48,7 @@ class DesktopRegion {
   // have the same vertical position.
   struct Row {
     Row(int32_t top, int32_t bottom);
+    ~Row();
 
     int32_t top;
     int32_t bottom;
@@ -118,6 +119,12 @@ class DesktopRegion {
   // Clips the region by the |rect|.
   void IntersectWith(const DesktopRect& rect);
 
+  // Subtracts |region| from the current content of the region.
+  void Subtract(const DesktopRegion& region);
+
+  // Subtracts |rect| from the current content of the region.
+  void Subtract(const DesktopRect& rect);
+
   // Adds (dx, dy) to the position of the region.
   void Translate(int32_t dx, int32_t dy);
 
@@ -139,6 +146,10 @@ class DesktopRegion {
   static void IntersectRows(const RowSpanSet& set1,
                             const RowSpanSet& set2,
                             RowSpanSet* output);
+
+  static void SubtractRows(const RowSpanSet& set_a,
+                           const RowSpanSet& set_b,
+                           RowSpanSet* output);
 
   // Merges |row| with the row above it if they contain the same spans. Doesn't
   // do anything if called with |row| set to rows_.begin() (i.e. first row of

@@ -80,6 +80,6 @@ public:
 protected:
     AudioConferenceMixer() {}
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_INTERFACE_AUDIO_CONFERENCE_MIXER_H_

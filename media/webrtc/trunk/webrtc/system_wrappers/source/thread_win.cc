@@ -195,4 +195,4 @@ void ThreadWindows::Run() {
   critsect_stop_->Leave();
 };
 
-} // namespace webrtc
+}  // namespace webrtc

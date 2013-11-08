@@ -8,14 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "../source/acm_common_defs.h"
+#include "../acm2/acm_common_defs.h"
 #include "gtest/gtest.h"
 #include "audio_coding_module.h"
 #include "PCMFile.h"
 #include "module_common_types.h"
 #include "scoped_ptr.h"
-#include "testsupport/fileutils.h"
 #include "typedefs.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace webrtc {
 
@@ -52,9 +53,9 @@ class DualStreamTest :
     kMaxNumStreams
   };
 
-  AudioCodingModule* acm_dual_stream_;
-  AudioCodingModule* acm_ref_primary_;
-  AudioCodingModule* acm_ref_secondary_;
+  scoped_ptr<AudioCodingModule> acm_dual_stream_;
+  scoped_ptr<AudioCodingModule> acm_ref_primary_;
+  scoped_ptr<AudioCodingModule> acm_ref_secondary_;
 
   CodecInst primary_encoder_;
   CodecInst secondary_encoder_;
@@ -97,9 +98,6 @@ DualStreamTest::DualStreamTest()
 }
 
 DualStreamTest::~DualStreamTest() {
-  AudioCodingModule::Destroy(acm_dual_stream_);
-  AudioCodingModule::Destroy(acm_ref_primary_);
-  AudioCodingModule::Destroy(acm_ref_secondary_);
 }
 
 void DualStreamTest::PopulateCodecInstances(int frame_size_primary_ms,
@@ -137,9 +135,9 @@ void DualStreamTest::PopulateCodecInstances(int frame_size_primary_ms,
 void DualStreamTest::InitializeSender(int frame_size_primary_samples,
                                       int num_channels_primary,
                                       int sampling_rate) {
-  ASSERT_TRUE(acm_dual_stream_ != NULL);
-  ASSERT_TRUE(acm_ref_primary_ != NULL);
-  ASSERT_TRUE(acm_ref_secondary_ != NULL);
+  ASSERT_TRUE(acm_dual_stream_.get() != NULL);
+  ASSERT_TRUE(acm_ref_primary_.get() != NULL);
+  ASSERT_TRUE(acm_ref_secondary_.get() != NULL);
 
   ASSERT_EQ(0, acm_dual_stream_->InitializeSender());
   ASSERT_EQ(0, acm_ref_primary_->InitializeSender());
@@ -383,91 +381,105 @@ int32_t DualStreamTest::SendData(FrameType frameType, uint8_t payload_type,
 }
 
 // Mono input, mono primary WB 20 ms frame.
-TEST_F(DualStreamTest, BitExactSyncMonoInputMonoPrimaryWb20Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncMonoInputMonoPrimaryWb20Ms)) {
   InitializeSender(20, 1, 16000);
   Perform(true, 1);
 }
 
 // Mono input, stereo primary WB 20 ms frame.
-TEST_F(DualStreamTest, BitExactSyncMonoInput_StereoPrimaryWb20Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncMonoInput_StereoPrimaryWb20Ms)) {
   InitializeSender(20, 2, 16000);
   Perform(true, 1);
 }
 
 // Mono input, mono primary SWB 20 ms frame.
-TEST_F(DualStreamTest, BitExactSyncMonoInputMonoPrimarySwb20Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncMonoInputMonoPrimarySwb20Ms)) {
   InitializeSender(20, 1, 32000);
   Perform(true, 1);
 }
 
 // Mono input, stereo primary SWB 20 ms frame.
-TEST_F(DualStreamTest, BitExactSyncMonoInputStereoPrimarySwb20Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncMonoInputStereoPrimarySwb20Ms)) {
   InitializeSender(20, 2, 32000);
   Perform(true, 1);
 }
 
 // Mono input, mono primary WB 40 ms frame.
-TEST_F(DualStreamTest, BitExactSyncMonoInputMonoPrimaryWb40Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncMonoInputMonoPrimaryWb40Ms)) {
   InitializeSender(40, 1, 16000);
   Perform(true, 1);
 }
 
 // Mono input, stereo primary WB 40 ms frame
-TEST_F(DualStreamTest, BitExactSyncMonoInputStereoPrimaryWb40Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncMonoInputStereoPrimaryWb40Ms)) {
   InitializeSender(40, 2, 16000);
   Perform(true, 1);
 }
 
 // Stereo input, mono primary WB 20 ms frame.
-TEST_F(DualStreamTest, BitExactSyncStereoInputMonoPrimaryWb20Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncStereoInputMonoPrimaryWb20Ms)) {
   InitializeSender(20, 1, 16000);
   Perform(true, 2);
 }
 
 // Stereo input, stereo primary WB 20 ms frame.
-TEST_F(DualStreamTest, BitExactSyncStereoInputStereoPrimaryWb20Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncStereoInputStereoPrimaryWb20Ms)) {
   InitializeSender(20, 2, 16000);
   Perform(true, 2);
 }
 
 // Stereo input, mono primary SWB 20 ms frame.
-TEST_F(DualStreamTest, BitExactSyncStereoInputMonoPrimarySwb20Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncStereoInputMonoPrimarySwb20Ms)) {
   InitializeSender(20, 1, 32000);
   Perform(true, 2);
 }
 
 // Stereo input, stereo primary SWB 20 ms frame.
-TEST_F(DualStreamTest, BitExactSyncStereoInputStereoPrimarySwb20Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncStereoInputStereoPrimarySwb20Ms)) {
   InitializeSender(20, 2, 32000);
   Perform(true, 2);
 }
 
 // Stereo input, mono primary WB 40 ms frame.
-TEST_F(DualStreamTest, BitExactSyncStereoInputMonoPrimaryWb40Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncStereoInputMonoPrimaryWb40Ms)) {
   InitializeSender(40, 1, 16000);
   Perform(true, 2);
 }
 
 // Stereo input, stereo primary WB 40 ms frame.
-TEST_F(DualStreamTest, BitExactSyncStereoInputStereoPrimaryWb40Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactSyncStereoInputStereoPrimaryWb40Ms)) {
   InitializeSender(40, 2, 16000);
   Perform(true, 2);
 }
 
 // Asynchronous test, ACM is fed with data then secondary coder is registered.
 // Mono input, mono primary WB 20 ms frame.
-TEST_F(DualStreamTest, BitExactAsyncMonoInputMonoPrimaryWb20Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactAsyncMonoInputMonoPrimaryWb20Ms)) {
   InitializeSender(20, 1, 16000);
   Perform(false, 1);
 }
 
 // Mono input, mono primary WB 20 ms frame.
-TEST_F(DualStreamTest, BitExactAsyncMonoInputMonoPrimaryWb40Ms) {
+TEST_F(DualStreamTest,
+       DISABLED_ON_ANDROID(BitExactAsyncMonoInputMonoPrimaryWb40Ms)) {
   InitializeSender(40, 1, 16000);
   Perform(false, 1);
 }
 
-TEST_F(DualStreamTest, Api) {
+TEST_F(DualStreamTest, DISABLED_ON_ANDROID(Api)) {
   PopulateCodecInstances(20, 1, 16000);
   CodecInst my_codec;
   ASSERT_EQ(0, acm_dual_stream_->InitializeSender());

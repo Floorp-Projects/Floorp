@@ -74,19 +74,21 @@ void AddCursorOutline(int width, int height, uint32_t* data) {
   }
 }
 
-// Premultiplies RGB components of a pixel by its alpha component.
-uint32_t AlphaMul(uint32_t pixel) {
+// Premultiplies RGB components of the pixel data in the given image by
+// the corresponding alpha components.
+void AlphaMul(uint32_t* data, int width, int height) {
   COMPILE_ASSERT(sizeof(uint32_t) == kBytesPerPixel);
 
-  RGBQUAD from = *reinterpret_cast<RGBQUAD*>(&pixel);
-  RGBQUAD to = {
-    (static_cast<uint16_t>(from.rgbBlue) * from.rgbReserved) / 0xff,
-    (static_cast<uint16_t>(from.rgbGreen) * from.rgbReserved) / 0xff,
-    (static_cast<uint16_t>(from.rgbRed) * from.rgbReserved) / 0xff,
-    from.rgbReserved
-  };
-
-  return *reinterpret_cast<uint32_t*>(&to);
+  for (uint32_t* data_end = data + width * height; data != data_end; ++data) {
+    RGBQUAD* from = reinterpret_cast<RGBQUAD*>(data);
+    RGBQUAD* to = reinterpret_cast<RGBQUAD*>(data);
+    to->rgbBlue =
+        (static_cast<uint16_t>(from->rgbBlue) * from->rgbReserved) / 0xff;
+    to->rgbGreen =
+        (static_cast<uint16_t>(from->rgbGreen) * from->rgbReserved) / 0xff;
+    to->rgbRed =
+        (static_cast<uint16_t>(from->rgbRed) * from->rgbReserved) / 0xff;
+  }
 }
 
 // Scans a 32bpp bitmap looking for any pixels with non-zero alpha component.
@@ -243,6 +245,10 @@ MouseCursorShape* CreateMouseCursorShapeFromCursor(HDC dc, HCURSOR cursor) {
       AddCursorOutline(width, height, color_plane);
     }
   }
+
+  // Pre-multiply the resulting pixels since MouseCursorShape uses premultiplied
+  // images.
+  AlphaMul(color_plane, width, height);
 
   scoped_ptr<MouseCursorShape> result(new MouseCursorShape());
   result->data.assign(reinterpret_cast<char*>(color_plane),

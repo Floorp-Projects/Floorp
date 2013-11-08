@@ -10,7 +10,8 @@
 
 #include "webrtc/modules/audio_coding/main/test/TestStereo.h"
 
-#include <cassert>
+#include <assert.h>
+
 #include <string>
 
 #include "gtest/gtest.h"
@@ -108,8 +109,8 @@ void TestPackStereo::set_lost_packet(bool lost) {
 }
 
 TestStereo::TestStereo(int test_mode)
-    : acm_a_(NULL),
-      acm_b_(NULL),
+    : acm_a_(AudioCodingModule::Create(0)),
+      acm_b_(AudioCodingModule::Create(1)),
       channel_a2b_(NULL),
       test_cntr_(0),
       pack_size_samp_(0),
@@ -131,14 +132,6 @@ TestStereo::TestStereo(int test_mode)
 }
 
 TestStereo::~TestStereo() {
-  if (acm_a_ != NULL) {
-    AudioCodingModule::Destroy(acm_a_);
-    acm_a_ = NULL;
-  }
-  if (acm_b_ != NULL) {
-    AudioCodingModule::Destroy(acm_b_);
-    acm_b_ = NULL;
-  }
   if (channel_a2b_ != NULL) {
     delete channel_a2b_;
     channel_a2b_ = NULL;
@@ -152,12 +145,6 @@ void TestStereo::Perform() {
   bool dtx;
   bool vad;
   ACMVADMode vad_mode;
-
-  if (test_mode_ == 0) {
-    printf("Running Stereo Test");
-    WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                 "---------- TestStereo ----------");
-  }
 
   // Open both mono and stereo test files in 32 kHz.
   const std::string file_name_stereo = webrtc::test::ResourcePath(
@@ -173,9 +160,7 @@ void TestStereo::Perform() {
   in_file_mono_->ReadStereo(false);
 
   // Create and initialize two ACMs, one for each side of a one-to-one call.
-  acm_a_ = AudioCodingModule::Create(0);
-  acm_b_ = AudioCodingModule::Create(1);
-  ASSERT_TRUE((acm_a_ != NULL) && (acm_b_ != NULL));
+  ASSERT_TRUE((acm_a_.get() != NULL) && (acm_b_.get() != NULL));
   EXPECT_EQ(0, acm_a_->InitializeReceiver());
   EXPECT_EQ(0, acm_b_->InitializeReceiver());
 
@@ -199,25 +184,10 @@ void TestStereo::Perform() {
     EXPECT_EQ(0, acm_b_->RegisterReceiveCodec(my_codec_param));
   }
 
-  // TODO(tlegrand): Take care of return values of all function calls.
-
-  // TODO(tlegrand): Re-register all stereo codecs needed in the test,
-  // with new payload numbers.
-  // g722_pltype_ = 117;
-  // l16_8khz_pltype_ = 120;
-  // l16_16khz_pltype_ = 121;
-  // l16_32khz_pltype_ = 122;
-  // pcma_pltype_ = 110;
-  // pcmu_pltype_ = 118;
-  // celt_pltype_ = 119;
-  // cn_8khz_pltype_ = 123;
-  // cn_16khz_pltype_ = 124;
-  // cn_32khz_pltype_ = 125;
-
   // Create and connect the channel.
   channel_a2b_ = new TestPackStereo;
   EXPECT_EQ(0, acm_a_->RegisterTransportCallback(channel_a2b_));
-  channel_a2b_->RegisterReceiverACM(acm_b_);
+  channel_a2b_->RegisterReceiverACM(acm_b_.get());
 
   // Start with setting VAD/DTX, before we know we will send stereo.
   // Continue with setting a stereo codec as send codec and verify that
@@ -806,11 +776,11 @@ void TestStereo::RegisterSendCodec(char side, char* codec_name,
   AudioCodingModule* my_acm = NULL;
   switch (side) {
     case 'A': {
-      my_acm = acm_a_;
+      my_acm = acm_a_.get();
       break;
     }
     case 'B': {
-      my_acm = acm_b_;
+      my_acm = acm_b_.get();
       break;
     }
     default:
@@ -820,11 +790,11 @@ void TestStereo::RegisterSendCodec(char side, char* codec_name,
 
   CodecInst my_codec_param;
   // Get all codec parameters before registering
-  CHECK_ERROR(AudioCodingModule::Codec(codec_name, &my_codec_param,
-                                       sampling_freq_hz, channels));
+  EXPECT_GT(AudioCodingModule::Codec(codec_name, &my_codec_param,
+                                     sampling_freq_hz, channels), -1);
   my_codec_param.rate = rate;
   my_codec_param.pacsize = pack_size;
-  CHECK_ERROR(my_acm->RegisterSendCodec(my_codec_param));
+  EXPECT_EQ(0, my_acm->RegisterSendCodec(my_codec_param));
 
   send_codec_name_ = codec_name;
 }
@@ -864,10 +834,10 @@ void TestStereo::Run(TestPackStereo* channel, int in_channels, int out_channels,
       }
       in_file_stereo_->Read10MsData(audio_frame);
     }
-    CHECK_ERROR(acm_a_->Add10MsData(audio_frame));
+    EXPECT_EQ(0, acm_a_->Add10MsData(audio_frame));
 
     // Run sender side of ACM
-    CHECK_ERROR(acm_a_->Process());
+    EXPECT_GT(acm_a_->Process(), -1);
 
     // Verify that the received packet size matches the settings
     rec_size = channel->payload_size();
@@ -887,7 +857,7 @@ void TestStereo::Run(TestPackStereo* channel, int in_channels, int out_channels,
     }
 
     // Run received side of ACM
-    CHECK_ERROR(acm_b_->PlayoutData10Ms(out_freq_hz_b, &audio_frame));
+    EXPECT_EQ(0, acm_b_->PlayoutData10Ms(out_freq_hz_b, &audio_frame));
 
     // Write output speech to file
     out_file_.Write10MsData(

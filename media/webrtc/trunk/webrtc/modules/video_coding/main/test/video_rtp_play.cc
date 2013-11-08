@@ -25,13 +25,13 @@ const uint32_t kConfigRenderDelayMs = 0;
 const uint32_t kConfigMinPlayoutDelayMs = 0;
 const int64_t kConfigMaxRuntimeMs = -1;
 
-} // namespace
+}  // namespace
 
 int RtpPlay(const CmdArgs& args) {
   std::string trace_file = webrtc::test::OutputPath() + "receiverTestTrace.txt";
   webrtc::Trace::CreateTrace();
   webrtc::Trace::SetTraceFile(trace_file.c_str());
-  webrtc::Trace::SetLevelFilter(webrtc::kTraceAll);
+  webrtc::Trace::set_level_filter(webrtc::kTraceAll);
 
   webrtc::rtpplayer::PayloadTypes payload_types;
   payload_types.push_back(webrtc::rtpplayer::PayloadCodecTuple(
@@ -49,7 +49,7 @@ int RtpPlay(const CmdArgs& args) {
   webrtc::SimulatedClock clock(0);
   webrtc::rtpplayer::VcmPayloadSinkFactory factory(output_file, &clock,
       kConfigProtectionEnabled, kConfigProtectionMethod, kConfigRttMs,
-      kConfigRenderDelayMs, kConfigMinPlayoutDelayMs, false);
+      kConfigRenderDelayMs, kConfigMinPlayoutDelayMs);
   webrtc::scoped_ptr<webrtc::rtpplayer::RtpPlayerInterface> rtp_player(
       webrtc::rtpplayer::Create(args.inputFile, &factory, &clock, payload_types,
           kConfigLossRate, kConfigRttMs, kConfigReordering));

@@ -11,11 +11,11 @@
 #ifndef WEBRTC_MODULES_MEDIA_FILE_INTERFACE_MEDIA_FILE_H_
 #define WEBRTC_MODULES_MEDIA_FILE_INTERFACE_MEDIA_FILE_H_
 
-#include "common_types.h"
-#include "typedefs.h"
-#include "module.h"
-#include "module_common_types.h"
-#include "media_file_defines.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/interface/module.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/media_file/interface/media_file_defines.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 class MediaFile : public Module
@@ -223,5 +223,5 @@ protected:
     MediaFile() {}
     virtual ~MediaFile() {}
 };
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_MEDIA_FILE_INTERFACE_MEDIA_FILE_H_

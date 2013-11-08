@@ -39,6 +39,6 @@ private:
     uint32_t _frameCntDark;
 };
 
-} //namespace
+}  // namespace
 
 #endif // VPM_BRIGHTNESS_DETECTION_H

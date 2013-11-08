@@ -15,16 +15,22 @@ import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Chrome browsertests will throw away stderr; avoid that output gets lost.
+sys.stderr = sys.stdout
+
 
 def _ParseArgs():
   """Registers the command-line options."""
   usage = 'usage: %prog [options]'
   parser = optparse.OptionParser(usage=usage)
 
+  parser.add_option('--label', type='string', default="MY_TEST",
+                    help=('Label of the test, used to identify different '
+                          'tests. Default: %default'))
   parser.add_option('--ref_video', type='string',
                     help='Reference video to compare with (YUV).')
   parser.add_option('--test_video', type='string',
-                    help=('Test video to be comared with the reference '
+                    help=('Test video to be compared with the reference '
                           'video (YUV).'))
   parser.add_option('--frame_analyzer', type='string',
                     help='Path to the frame analyzer executable.')
@@ -85,14 +91,15 @@ def main():
   barcode_decoder = subprocess.Popen(cmd, stdout=sys.stdout, stderr=sys.stderr)
   barcode_decoder.wait()
   if barcode_decoder.returncode != 0:
-    print >> sys.stderr, 'Failed to run barcode decoder script.'
+    print 'Failed to run barcode decoder script.'
     return 1
 
   # Run frame analyzer to compare the videos and print output.
   cmd = [
     options.frame_analyzer,
+    '--label=%s' % options.label,
     '--reference_file=%s' % options.ref_video,
-    '--test_file=%s' % options.ref_video,
+    '--test_file=%s' % options.test_video,
     '--stats_file=%s' % options.stats_file,
     '--width=%d' % options.yuv_frame_width,
     '--height=%d' % options.yuv_frame_height,
@@ -100,7 +107,7 @@ def main():
   frame_analyzer = subprocess.Popen(cmd, stdout=sys.stdout, stderr=sys.stderr)
   frame_analyzer.wait()
   if frame_analyzer.returncode != 0:
-    print >> sys.stderr, 'Failed to run frame analyzer.'
+    print 'Failed to run frame analyzer.'
     return 1
 
   return 0

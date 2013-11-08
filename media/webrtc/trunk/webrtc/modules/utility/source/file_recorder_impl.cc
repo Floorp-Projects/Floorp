@@ -8,24 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "engine_configurations.h"
-#include "file_recorder_impl.h"
-#include "media_file.h"
-#include "trace.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/media_file/interface/media_file.h"
+#include "webrtc/modules/utility/source/file_recorder_impl.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
     #include "critical_section_wrapper.h"
     #include "frame_scaler.h"
     #include "video_coder.h"
     #include "video_frames_queue.h"
-#endif
-
-// OS independent case insensitive string comparison.
-#ifdef WIN32
-    #define STR_CASE_CMP(x,y) ::_stricmp(x,y)
-#else
-    #define STR_CASE_CMP(x,y) ::strcasecmp(x,y)
 #endif
 
 namespace webrtc {
@@ -793,4 +786,4 @@ int32_t AviRecorder::WriteEncodedAudioData(
 }
 
 #endif // WEBRTC_MODULE_UTILITY_VIDEO
-} // namespace webrtc
+}  // namespace webrtc

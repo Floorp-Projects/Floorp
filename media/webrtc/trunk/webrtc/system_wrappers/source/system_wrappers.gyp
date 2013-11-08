@@ -39,7 +39,6 @@
         '../interface/fix_interlocked_exchange_pointer_win.h',
         '../interface/list_wrapper.h',
         '../interface/logging.h',
-        '../interface/map_wrapper.h',
         '../interface/ref_count.h',
         '../interface/rw_lock_wrapper.h',
         '../interface/scoped_ptr.h',
@@ -85,7 +84,6 @@
         'list_no_stl.cc',
         'logging.cc',
         'logging_no_op.cc',
-        'map.cc',
         'rw_lock.cc',
         'rw_lock_generic.cc',
         'rw_lock_generic.h',
@@ -135,8 +133,8 @@
         ['enable_lazy_trace_alloc==0', {
           'defines': [
             'WEBRTC_LAZY_TRACE_ALLOC',
-	  ],
-	}],
+          ],
+        }],
         ['OS=="android" or moz_widget_toolkit_gonk==1', {
           'defines': [
             'WEBRTC_THREAD_RR',
@@ -221,7 +219,7 @@
             'cpu_features_android.c',
           ],
           'conditions': [
-            ['build_with_chromium==1', {
+            ['include_ndk_cpu_features==1', {
               'conditions': [
                 ['android_webview_build == 1', {
                   'libraries': [

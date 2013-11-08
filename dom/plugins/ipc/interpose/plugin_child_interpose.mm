@@ -37,7 +37,7 @@
 // weak imports, and test for their presence before using them.
 #if !defined(__QUICKDRAWAPI__)
 
-typedef struct Cursor;
+struct Cursor;
 extern "C" void SetCursor(const Cursor * crsr) __attribute__((weak_import));
 
 #endif /* __QUICKDRAWAPI__ */

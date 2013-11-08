@@ -11,6 +11,7 @@
 #include "webrtc/modules/audio_coding/neteq4/timestamp_scaler.h"
 
 #include "webrtc/modules/audio_coding/neteq4/decoder_database.h"
+#include "webrtc/modules/audio_coding/neteq4/defines.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
@@ -84,7 +85,7 @@ uint32_t TimestampScaler::ToInternal(uint32_t external_timestamp,
     assert(denominator_ > 0);  // Should not be possible.
     external_ref_ = external_timestamp;
     internal_ref_ += (external_diff * numerator_) / denominator_;
-    LOG(LS_VERBOSE) << "Converting timestamp: " << external_timestamp <<
+    NETEQ_LOG_VERBOSE << "Converting timestamp: " << external_timestamp <<
         " -> " << internal_ref_;
     return internal_ref_;
   } else {

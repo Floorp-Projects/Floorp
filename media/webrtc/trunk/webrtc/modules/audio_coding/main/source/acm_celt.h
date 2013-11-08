@@ -19,45 +19,50 @@ struct CELT_decinst_t_;
 
 namespace webrtc {
 
+namespace acm1 {
+
 class ACMCELT : public ACMGenericCodec {
  public:
   explicit ACMCELT(int16_t codec_id);
-  ~ACMCELT();
+  virtual ~ACMCELT();
 
-  ACMGenericCodec* CreateInstance(void);
+  virtual ACMGenericCodec* CreateInstance(void) OVERRIDE;
 
-  int16_t InternalEncode(uint8_t* bitstream, int16_t* bitstream_len_byte);
+  virtual int16_t InternalEncode(uint8_t* bitstream,
+                                 int16_t* bitstream_len_byte) OVERRIDE;
 
-  int16_t InternalInitEncoder(WebRtcACMCodecParams *codec_params);
+  virtual int16_t InternalInitEncoder(
+      WebRtcACMCodecParams* codec_params) OVERRIDE;
 
-  int16_t InternalInitDecoder(WebRtcACMCodecParams *codec_params);
+  virtual int16_t InternalInitDecoder(
+      WebRtcACMCodecParams* codec_params) OVERRIDE;
 
  protected:
-  int16_t DecodeSafe(
-      uint8_t* /* bitstream */,
-      int16_t /* bitstream_len_byte */,
-      int16_t* /* audio */,
-      int16_t* /* audio_samples */,
-      int8_t* /* speech_type */);
+  virtual int16_t DecodeSafe(uint8_t* /* bitstream */,
+                             int16_t /* bitstream_len_byte */,
+                             int16_t* /* audio */,
+                             int16_t* /* audio_samples */,
+                             int8_t* /* speech_type */) OVERRIDE;
 
-  int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                   const CodecInst& codec_inst);
+  virtual int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                           const CodecInst& codec_inst) OVERRIDE;
 
-  void DestructEncoderSafe();
+  virtual void DestructEncoderSafe() OVERRIDE;
 
-  void DestructDecoderSafe();
+  virtual void DestructDecoderSafe() OVERRIDE;
 
-  int16_t InternalCreateEncoder();
+  virtual int16_t InternalCreateEncoder() OVERRIDE;
 
-  int16_t InternalCreateDecoder();
+  virtual int16_t InternalCreateDecoder() OVERRIDE;
 
-  void InternalDestructEncoderInst(void* ptr_inst);
+  virtual void InternalDestructEncoderInst(void* ptr_inst) OVERRIDE;
 
-  bool IsTrueStereoCodec();
+  virtual bool IsTrueStereoCodec() OVERRIDE;
 
-  int16_t SetBitRateSafe(const int32_t rate);
+  virtual int16_t SetBitRateSafe(const int32_t rate) OVERRIDE;
 
-  void SplitStereoPacket(uint8_t* payload, int32_t* payload_length);
+  virtual void SplitStereoPacket(uint8_t* payload,
+                                 int32_t* payload_length) OVERRIDE;
 
   CELT_encinst_t_* enc_inst_ptr_;
   CELT_decinst_t_* dec_inst_ptr_;
@@ -66,6 +71,8 @@ class ACMCELT : public ACMGenericCodec {
   uint16_t channels_;
   uint16_t dec_channels_;
 };
+
+}  // namespace acm1
 
 }  // namespace webrtc
 

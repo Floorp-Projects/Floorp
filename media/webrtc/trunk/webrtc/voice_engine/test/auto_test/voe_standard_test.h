@@ -229,6 +229,6 @@ class VoETestManager {
   ResourceManager        resource_manager_;
 };
 
-} // namespace voetest
+}  // namespace voetest
 
 #endif // WEBRTC_VOICE_ENGINE_VOE_STANDARD_TEST_H

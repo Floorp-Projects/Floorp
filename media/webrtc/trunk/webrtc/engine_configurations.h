@@ -11,6 +11,8 @@
 #ifndef WEBRTC_ENGINE_CONFIGURATIONS_H_
 #define WEBRTC_ENGINE_CONFIGURATIONS_H_
 
+#include "webrtc/typedefs.h"
+
 // ============================================================================
 //                              Voice and Video
 // ============================================================================
@@ -32,12 +34,16 @@
 // (which are mandatory and don't have any defines).
 #define WEBRTC_CODEC_AVT
 
-// iLBC, G.722, PCM16B and Redundancy coding are excluded from Chromium and
-// Mozilla builds.
+// PCM16 is useful for testing and incurs only a small binary size cost.
+#ifndef WEBRTC_CODEC_PCM16
+#define WEBRTC_CODEC_PCM16
+#endif
+
+// iLBC, G.722, and Redundancy coding are excluded from Chromium and Mozilla
+// builds to reduce binary size.
 #if !defined(WEBRTC_CHROMIUM_BUILD) && !defined(WEBRTC_MOZILLA_BUILD)
 #define WEBRTC_CODEC_ILBC
 #define WEBRTC_CODEC_G722
-#define WEBRTC_CODEC_PCM16
 #define WEBRTC_CODEC_RED
 #endif  // !WEBRTC_CHROMIUM_BUILD && !WEBRTC_MOZILLA_BUILD
 
@@ -61,7 +67,7 @@
 #define WEBRTC_VOICE_ENGINE_NR                  // Near-end NS
 #define WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
 
-#ifndef WEBRTC_CHROMIUM_BUILD
+#if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
 #define WEBRTC_VOICE_ENGINE_TYPING_DETECTION    // Typing detection
 #endif
 

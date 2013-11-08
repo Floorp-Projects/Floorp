@@ -10,13 +10,12 @@
 
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 
+#include <assert.h>
 #include <math.h>
 
-#include <cassert>
 #include <iostream>
 
 #include "gtest/gtest.h"
-#include "testsupport/fileutils.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
@@ -25,6 +24,8 @@
 #include "webrtc/modules/audio_coding/main/test/utility.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace webrtc {
 
@@ -45,8 +46,8 @@ class InitialPlayoutDelayTest : public ::testing::Test {
  protected:
 
   InitialPlayoutDelayTest()
-      : acm_a_(NULL),
-        acm_b_(NULL),
+      : acm_a_(AudioCodingModule::Create(0)),
+        acm_b_(AudioCodingModule::Create(1)),
         channel_a2b_(NULL) {
   }
 
@@ -54,14 +55,6 @@ class InitialPlayoutDelayTest : public ::testing::Test {
   }
 
   void TearDown() {
-    if (acm_a_ != NULL) {
-      AudioCodingModule::Destroy(acm_a_);
-      acm_a_ = NULL;
-    }
-    if (acm_b_ != NULL) {
-      AudioCodingModule::Destroy(acm_b_);
-      acm_b_ = NULL;
-    }
     if (channel_a2b_ != NULL) {
       delete channel_a2b_;
       channel_a2b_ = NULL;
@@ -69,9 +62,6 @@ class InitialPlayoutDelayTest : public ::testing::Test {
   }
 
   void SetUp() {
-    acm_a_ = AudioCodingModule::Create(0);
-    acm_b_ = AudioCodingModule::Create(1);
-
     acm_b_->InitializeReceiver();
     acm_a_->InitializeReceiver();
 
@@ -89,7 +79,7 @@ class InitialPlayoutDelayTest : public ::testing::Test {
     // Create and connect the channel
     channel_a2b_ = new Channel;
     acm_a_->RegisterTransportCallback(channel_a2b_);
-    channel_a2b_->RegisterReceiverACM(acm_b_);
+    channel_a2b_->RegisterReceiverACM(acm_b_.get());
   }
 
   void Run(CodecInst codec, int initial_delay_ms) {
@@ -124,8 +114,8 @@ class InitialPlayoutDelayTest : public ::testing::Test {
     ASSERT_LE(num_frames * 10, initial_delay_ms + 100);
   }
 
-  AudioCodingModule* acm_a_;
-  AudioCodingModule* acm_b_;
+  scoped_ptr<AudioCodingModule> acm_a_;
+  scoped_ptr<AudioCodingModule> acm_b_;
   Channel* channel_a2b_;
 };
 

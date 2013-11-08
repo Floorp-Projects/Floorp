@@ -56,8 +56,8 @@ private:
     int32_t _lastProcessTime;
 };
 
-}  //  namespace voe
+}  // namespace voe
 
-}  //  namespace webrtc
+}  // namespace webrtc
 
 #endif // VOICE_ENGINE_MONITOR_MODULE

@@ -8,10 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "audio_device_utility_linux.h"
-#include "audio_device_config.h"	// DEBUG_PRINT()
-#include "critical_section_wrapper.h"
-#include "trace.h"
+#include "webrtc/modules/audio_device/linux/audio_device_utility_linux.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc
 {
@@ -51,4 +50,4 @@ int32_t AudioDeviceUtilityLinux::Init()
 }
 
 
-} // namespace webrtc
+}  // namespace webrtc

@@ -36,6 +36,6 @@ class ScopedPixelBufferObject {
   DISALLOW_COPY_AND_ASSIGN(ScopedPixelBufferObject);
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_DESKTOP_CAPTURE_SCOPED_PIXEL_BUFFER_OBJECT_H_
