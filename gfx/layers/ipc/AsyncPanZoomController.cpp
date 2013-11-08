@@ -1262,6 +1262,13 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
                      / mFrameMetrics.GetParentResolution());
 }
 
+gfx3DMatrix AsyncPanZoomController::GetNontransientAsyncTransform() {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  return gfx3DMatrix::ScalingMatrix(mLastContentPaintMetrics.mResolution.scale,
+                                    mLastContentPaintMetrics.mResolution.scale,
+                                    1.0f);
+}
+
 void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint) {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
