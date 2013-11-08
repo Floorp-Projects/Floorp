@@ -1008,7 +1008,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     // Apply CSS transforms to each waterfall in this container totalTime
     // accurately translate and resize as needed.
-    for (let { target, attachment } in this) {
+    for (let { target, attachment } of this) {
       let timingsNode = $(".requests-menu-timings", target);
       let startCapNode = $(".requests-menu-timings-cap.start", target);
       let endCapNode = $(".requests-menu-timings-cap.end", target);
@@ -1144,7 +1144,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Reapplies the current waterfall background on all request items.
    */
   _flushWaterfallBackgrounds: function() {
-    for (let { target } in this) {
+    for (let { target } of this) {
       let waterfallNode = $(".requests-menu-waterfall", target);
       waterfallNode.style.backgroundImage = this._cachedWaterfallBackground;
     }
