@@ -99,4 +99,4 @@ int32_t TimeScheduler::TimeToNextUpdate(
     updateTimeInMS =  (updateTimeInMS < 0) ? 0 : updateTimeInMS;
     return 0;
 }
-} // namespace webrtc
+}  // namespace webrtc

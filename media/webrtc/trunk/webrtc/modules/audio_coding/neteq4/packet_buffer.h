@@ -116,6 +116,11 @@ class PacketBuffer {
   // The default value for |inc| is 1.
   virtual void IncrementWaitingTimes(int inc = 1);
 
+  virtual void BufferStat(int* num_packets,
+                          int* max_num_packets,
+                          int* current_memory_bytes,
+                          int* max_memory_bytes) const;
+
   virtual int current_memory_bytes() const { return current_memory_bytes_; }
 
   // Static method that properly deletes the first packet, and its payload

@@ -16,6 +16,7 @@
 // Storing and handling of YUV (I420) video frames.
 
 #include "webrtc/common_video/plane.h"
+#include "webrtc/system_wrappers/interface/scoped_refptr.h"
 #include "webrtc/typedefs.h"
 
 /*
@@ -49,74 +50,81 @@ class I420VideoFrame {
   // If required size is bigger than the allocated one, new buffers of adequate
   // size will be allocated.
   // Return value: 0 on success ,-1 on error.
-  int CreateEmptyFrame(int width, int height,
-                       int stride_y, int stride_u, int stride_v);
+  virtual int CreateEmptyFrame(int width, int height,
+                               int stride_y, int stride_u, int stride_v);
 
   // CreateFrame: Sets the frame's members and buffers. If required size is
   // bigger than allocated one, new buffers of adequate size will be allocated.
   // Return value: 0 on success ,-1 on error.
-  int CreateFrame(int size_y, const uint8_t* buffer_y,
-                  int size_u, const uint8_t* buffer_u,
-                  int size_v, const uint8_t* buffer_v,
-                  int width, int height,
-                  int stride_y, int stride_u, int stride_v);
+  virtual int CreateFrame(int size_y, const uint8_t* buffer_y,
+                          int size_u, const uint8_t* buffer_u,
+                          int size_v, const uint8_t* buffer_v,
+                          int width, int height,
+                          int stride_y, int stride_u, int stride_v);
 
   // Copy frame: If required size is bigger than allocated one, new buffers of
   // adequate size will be allocated.
   // Return value: 0 on success ,-1 on error.
-  int CopyFrame(const I420VideoFrame& videoFrame);
+  virtual int CopyFrame(const I420VideoFrame& videoFrame);
 
   // Swap Frame.
-  void SwapFrame(I420VideoFrame* videoFrame);
+  virtual void SwapFrame(I420VideoFrame* videoFrame);
 
   // Get pointer to buffer per plane.
-  uint8_t* buffer(PlaneType type);
+  virtual uint8_t* buffer(PlaneType type);
   // Overloading with const.
-  const uint8_t* buffer(PlaneType type) const;
+  virtual const uint8_t* buffer(PlaneType type) const;
 
   // Get allocated size per plane.
-  int allocated_size(PlaneType type) const;
+  virtual int allocated_size(PlaneType type) const;
 
   // Get allocated stride per plane.
-  int stride(PlaneType type) const;
+  virtual int stride(PlaneType type) const;
 
   // Set frame width.
-  int set_width(int width);
+  virtual int set_width(int width);
 
   // Set frame height.
-  int set_height(int height);
+  virtual int set_height(int height);
 
   // Get frame width.
-  int width() const {return width_;}
+  virtual int width() const {return width_;}
 
   // Get frame height.
-  int height() const {return height_;}
+  virtual int height() const {return height_;}
 
   // Set frame timestamp (90kHz).
-  void set_timestamp(uint32_t timestamp) {timestamp_ = timestamp;}
+  virtual void set_timestamp(uint32_t timestamp) {timestamp_ = timestamp;}
 
   // Get frame timestamp (90kHz).
-  uint32_t timestamp() const {return timestamp_;}
+  virtual uint32_t timestamp() const {return timestamp_;}
 
   // Set render time in miliseconds.
-  void set_render_time_ms(int64_t render_time_ms) {render_time_ms_ =
+  virtual void set_render_time_ms(int64_t render_time_ms) {render_time_ms_ =
                                                    render_time_ms;}
 
   // Get render time in miliseconds.
-  int64_t render_time_ms() const {return render_time_ms_;}
+  virtual int64_t render_time_ms() const {return render_time_ms_;}
 
   // Return true if underlying plane buffers are of zero size, false if not.
-  bool IsZeroSize() const;
+  virtual bool IsZeroSize() const;
 
   // Reset underlying plane buffers sizes to 0. This function doesn't
   // clear memory.
-  void ResetSize();
+  virtual void ResetSize();
+
+  // Return the handle of the underlying video frame. This is used when the
+  // frame is backed by a texture. The object should be destroyed when it is no
+  // longer in use, so the underlying resource can be freed.
+  virtual void* native_handle() const;
+
+ protected:
+  // Verifies legality of parameters.
+  // Return value: 0 on success, -1 on error.
+  virtual int CheckDimensions(int width, int height,
+                              int stride_y, int stride_u, int stride_v);
 
  private:
-  // Verifies legality of parameters.
-  // Return value: 0 on success ,-1 on error.
-  int CheckDimensions(int width, int height,
-                      int stride_y, int stride_u, int stride_v);
   // Get the pointer to a specific plane.
   const Plane* GetPlane(PlaneType type) const;
   // Overloading with non-const.

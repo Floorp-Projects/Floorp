@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/audio_processing/gain_control_impl.h"
 
-#include <cassert>
+#include <assert.h>
 
 #include "webrtc/modules/audio_processing/agc/include/gain_control.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"

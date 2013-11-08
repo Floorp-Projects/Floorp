@@ -48,10 +48,10 @@ class Trace {
   // filter parameter is a bitmask where each message type is enumerated by the
   // TraceLevel enumerator. TODO(hellner): why is the TraceLevel enumerator not
   // defined in this file?
-  static int32_t SetLevelFilter(const uint32_t filter);
+  static void set_level_filter(uint32_t filter) { level_filter_ = filter; }
 
   // Returns what type of messages are written to the trace file.
-  static int32_t LevelFilter(uint32_t& filter);
+  static uint32_t level_filter() { return level_filter_; }
 
   // Sets the file name. If add_file_counter is false the same file will be
   // reused when it fills up. If it's true a new file with incremented name
@@ -81,6 +81,9 @@ class Trace {
                   const TraceModule module,
                   const int32_t id,
                   const char* msg, ...);
+
+ private:
+  static uint32_t level_filter_;
 };
 
 }  // namespace webrtc

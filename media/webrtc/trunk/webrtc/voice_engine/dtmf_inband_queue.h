@@ -45,6 +45,6 @@ private:
     uint8_t _DtmfLevel[kDtmfInbandMax];
 };
 
-}   // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_VOICE_ENGINE_DTMF_INBAND_QUEUE_H

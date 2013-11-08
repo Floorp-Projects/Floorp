@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_render_android_surface_view.h"
-#include "critical_section_wrapper.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "tick_util.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/video_render/android/video_render_android_surface_view.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
 
 #ifdef ANDROID_LOG
-#include <stdio.h>
 #include <android/log.h>
+#include <stdio.h>
 
 #undef WEBRTC_TRACE
 #define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTC*", __VA_ARGS__)
 #else
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 #endif
 
 namespace webrtc {

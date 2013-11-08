@@ -444,6 +444,249 @@ TEST(DesktopRegionTest, Intersect) {
   }
 }
 
+TEST(DesktopRegionTest, Subtract) {
+  struct Case {
+    int input1_count;
+    DesktopRect input1_rects[4];
+    int input2_count;
+    DesktopRect input2_rects[4];
+    int expected_count;
+    DesktopRect expected_rects[5];
+  } cases[] = {
+    // Subtract one rect from another.
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(50, 50, 150, 150) },
+      2, { DesktopRect::MakeLTRB(0, 0, 100, 50),
+           DesktopRect::MakeLTRB(0, 50, 50, 100)  } },
+
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(-50, -50, 50, 50) },
+      2, { DesktopRect::MakeLTRB(50, 0, 100, 50),
+           DesktopRect::MakeLTRB(0, 50, 100, 100)  } },
+
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(-50, 50, 50, 150) },
+      2, { DesktopRect::MakeLTRB(0, 0, 100, 50),
+           DesktopRect::MakeLTRB(50, 50, 100, 100)  } },
+
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(50, 50, 150, 70) },
+      3, { DesktopRect::MakeLTRB(0, 0, 100, 50),
+           DesktopRect::MakeLTRB(0, 50, 50, 70),
+           DesktopRect::MakeLTRB(0, 70, 100, 100) } },
+
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(50, 50, 70, 70) },
+      4, { DesktopRect::MakeLTRB(0, 0, 100, 50),
+           DesktopRect::MakeLTRB(0, 50, 50, 70),
+           DesktopRect::MakeLTRB(70, 50, 100, 70),
+           DesktopRect::MakeLTRB(0, 70, 100, 100) } },
+
+    // Empty result.
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      0, {} },
+
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(-10, -10, 110, 110) },
+      0, {} },
+
+    { 2, { DesktopRect::MakeLTRB(0, 0, 100, 100),
+           DesktopRect::MakeLTRB(50, 50, 150, 150) },
+      2, { DesktopRect::MakeLTRB(0, 0, 100, 100),
+           DesktopRect::MakeLTRB(50, 50, 150, 150) },
+      0, {} },
+
+    // One rect out of disjoint set.
+    { 3, { DesktopRect::MakeLTRB(0, 0, 10, 10),
+           DesktopRect::MakeLTRB(20, 20, 30, 30),
+           DesktopRect::MakeLTRB(40, 0, 50, 10) },
+      1, { DesktopRect::MakeLTRB(20, 20, 30, 30) },
+      2, { DesktopRect::MakeLTRB(0, 0, 10, 10),
+           DesktopRect::MakeLTRB(40, 0, 50, 10) } },
+
+    // Row merging.
+    { 3, { DesktopRect::MakeLTRB(0, 0, 100, 50),
+           DesktopRect::MakeLTRB(0, 50, 150, 70),
+           DesktopRect::MakeLTRB(0, 70, 100, 100) },
+      1, { DesktopRect::MakeLTRB(100, 50, 150, 70) },
+      1, { DesktopRect::MakeLTRB(0, 0, 100, 100) } },
+
+    // No-op subtraction.
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(100, 0, 200, 100) },
+      1, { DesktopRect::MakeLTRB(0, 0, 100, 100) } },
+
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(-100, 0, 0, 100) },
+      1, { DesktopRect::MakeLTRB(0, 0, 100, 100) } },
+
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(0, 100, 0, 200) },
+      1, { DesktopRect::MakeLTRB(0, 0, 100, 100) } },
+
+    { 1, { DesktopRect::MakeLTRB(0, 0, 100, 100) },
+      1, { DesktopRect::MakeLTRB(0, -100, 100, 0) },
+      1, { DesktopRect::MakeLTRB(0, 0, 100, 100) } },
+  };
+
+  for (size_t i = 0; i < (sizeof(cases) / sizeof(Case)); ++i) {
+    SCOPED_TRACE(i);
+
+    DesktopRegion r1(cases[i].input1_rects, cases[i].input1_count);
+    DesktopRegion r2(cases[i].input2_rects, cases[i].input2_count);
+
+    r1.Subtract(r2);
+
+    CompareRegion(r1, cases[i].expected_rects, cases[i].expected_count);
+  }
+}
+
+// Verify that DesktopRegion::SubtractRows() works correctly by creating a row
+// of not overlapping rectangles and subtracting a set of rectangle. Result
+// is verified by building a map of the region in an array and comparing it with
+// the expected values.
+TEST(DesktopRegionTest, SubtractRectOnSameRow) {
+  const int kMapWidth = 50;
+
+  struct SpanSet {
+    int count;
+    struct Range {
+     int start;
+     int end;
+    } spans[3];
+  } span_sets[] = {
+    {1, { {0, 3} } },
+    {1, { {0, 5} } },
+    {1, { {0, 7} } },
+    {1, { {0, 12} } },
+    {2, { {0, 3}, {4, 5}, {6, 16} } },
+  };
+
+  DesktopRegion base_region;
+  bool base_map[kMapWidth] = { false, };
+
+  base_region.AddRect(DesktopRect::MakeXYWH(5, 0, 5, 1));
+  std::fill_n(base_map + 5, 5, true);
+  base_region.AddRect(DesktopRect::MakeXYWH(15, 0, 5, 1));
+  std::fill_n(base_map + 15, 5, true);
+  base_region.AddRect(DesktopRect::MakeXYWH(25, 0, 5, 1));
+  std::fill_n(base_map + 25, 5, true);
+  base_region.AddRect(DesktopRect::MakeXYWH(35, 0, 5, 1));
+  std::fill_n(base_map + 35, 5, true);
+  base_region.AddRect(DesktopRect::MakeXYWH(45, 0, 5, 1));
+  std::fill_n(base_map + 45, 5, true);
+
+  for (size_t i = 0; i < sizeof(span_sets) / sizeof(span_sets[0]); i++) {
+    SCOPED_TRACE(i);
+    SpanSet& span_set = span_sets[i];
+    int span_set_end = span_set.spans[span_set.count - 1].end;
+    for (int x = 0; x < kMapWidth - span_set_end; ++x) {
+      SCOPED_TRACE(x);
+
+      DesktopRegion r = base_region;
+
+      bool expected_map[kMapWidth];
+      std::copy(base_map, base_map + kMapWidth, expected_map);
+
+      DesktopRegion region2;
+      for (int span = 0; span < span_set.count; span++) {
+        std::fill_n(x + expected_map + span_set.spans[span].start,
+                    span_set.spans[span].end - span_set.spans[span].start,
+                    false);
+        region2.AddRect(DesktopRect::MakeLTRB(x + span_set.spans[span].start, 0,
+                                              x + span_set.spans[span].end, 1));
+      }
+      r.Subtract(region2);
+
+      bool map[kMapWidth] = { false, };
+
+      int pos = -1;
+      for (DesktopRegion::Iterator it(r); !it.IsAtEnd(); it.Advance()) {
+        EXPECT_GT(it.rect().left(), pos);
+        pos = it.rect().right();
+        std::fill_n(map + it.rect().left(), it.rect().width(), true);
+      }
+
+      EXPECT_TRUE(std::equal(map, map + kMapWidth, expected_map));
+    }
+  }
+}
+
+// Verify that DesktopRegion::Subtract() works correctly by creating a column of
+// not overlapping rectangles and subtracting a set of rectangle on the same
+// column. Result is verified by building a map of the region in an array and
+// comparing it with the expected values.
+TEST(DesktopRegionTest, SubtractRectOnSameCol) {
+  const int kMapHeight = 50;
+
+  struct SpanSet {
+    int count;
+    struct Range {
+     int start;
+     int end;
+    } spans[3];
+  } span_sets[] = {
+    {1, { {0, 3} } },
+    {1, { {0, 5} } },
+    {1, { {0, 7} } },
+    {1, { {0, 12} } },
+    {2, { {0, 3}, {4, 5}, {6, 16} } },
+  };
+
+  DesktopRegion base_region;
+  bool base_map[kMapHeight] = { false, };
+
+  base_region.AddRect(DesktopRect::MakeXYWH(0, 5, 1, 5));
+  std::fill_n(base_map + 5, 5, true);
+  base_region.AddRect(DesktopRect::MakeXYWH(0, 15, 1, 5));
+  std::fill_n(base_map + 15, 5, true);
+  base_region.AddRect(DesktopRect::MakeXYWH(0, 25, 1, 5));
+  std::fill_n(base_map + 25, 5, true);
+  base_region.AddRect(DesktopRect::MakeXYWH(0, 35, 1, 5));
+  std::fill_n(base_map + 35, 5, true);
+  base_region.AddRect(DesktopRect::MakeXYWH(0, 45, 1, 5));
+  std::fill_n(base_map + 45, 5, true);
+
+  for (size_t i = 0; i < sizeof(span_sets) / sizeof(span_sets[0]); i++) {
+    SCOPED_TRACE(i);
+    SpanSet& span_set = span_sets[i];
+    int span_set_end = span_set.spans[span_set.count - 1].end;
+    for (int y = 0; y < kMapHeight - span_set_end; ++y) {
+      SCOPED_TRACE(y);
+
+      DesktopRegion r = base_region;
+
+      bool expected_map[kMapHeight];
+      std::copy(base_map, base_map + kMapHeight, expected_map);
+
+      DesktopRegion region2;
+      for (int span = 0; span < span_set.count; span++) {
+        std::fill_n(y + expected_map + span_set.spans[span].start,
+                    span_set.spans[span].end - span_set.spans[span].start,
+                    false);
+        region2.AddRect(DesktopRect::MakeLTRB(0, y + span_set.spans[span].start,
+                                              1, y + span_set.spans[span].end));
+      }
+      r.Subtract(region2);
+
+      bool map[kMapHeight] = { false, };
+
+      int pos = -1;
+      for (DesktopRegion::Iterator it(r); !it.IsAtEnd(); it.Advance()) {
+        EXPECT_GT(it.rect().top(), pos);
+        pos = it.rect().bottom();
+        std::fill_n(map + it.rect().top(), it.rect().height(), true);
+      }
+
+      for (int j = 0; j < kMapHeight; j++) {
+        EXPECT_EQ(expected_map[j], map[j]) << "j = " << j;
+      }
+    }
+  }
+}
+
+
 TEST(DesktopRegionTest, DISABLED_Performance) {
   for (int c = 0; c < 1000; ++c) {
     DesktopRegion r;

@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_WINDOWS_VIDEO_CAPTURE_MF_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_WINDOWS_VIDEO_CAPTURE_MF_H_
 
-#include "modules/video_capture/video_capture_impl.h"
+#include "webrtc/modules/video_capture/video_capture_impl.h"
 
 namespace webrtc {
 namespace videocapturemodule {

@@ -165,6 +165,54 @@ PathCG::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) c
   return builder;
 }
 
+static void
+StreamPathToSinkApplierFunc(void *vinfo, const CGPathElement *element)
+{
+  PathSink *sink = reinterpret_cast<PathSink*>(vinfo);
+  switch (element->type) {
+    case kCGPathElementMoveToPoint:
+      {
+        CGPoint pt = element->points[0];
+        sink->MoveTo(CGPointToPoint(pt));
+        break;
+      }
+    case kCGPathElementAddLineToPoint:
+      {
+        CGPoint pt = element->points[0];
+        sink->LineTo(CGPointToPoint(pt));
+        break;
+      }
+    case kCGPathElementAddQuadCurveToPoint:
+      {
+        CGPoint cpt = element->points[0];
+        CGPoint pt  = element->points[1];
+        sink->QuadraticBezierTo(CGPointToPoint(cpt),
+                                CGPointToPoint(pt));
+        break;
+      }
+    case kCGPathElementAddCurveToPoint:
+      {
+        CGPoint cpt1 = element->points[0];
+        CGPoint cpt2 = element->points[1];
+        CGPoint pt   = element->points[2];
+        sink->BezierTo(CGPointToPoint(cpt1),
+                       CGPointToPoint(cpt2),
+                       CGPointToPoint(pt));
+        break;
+      }
+    case kCGPathElementCloseSubpath:
+      {
+        sink->Close();
+        break;
+      }
+  }
+}
+
+void
+PathCG::StreamToSink(PathSink *aSink) const
+{
+  CGPathApply(mPath, aSink, StreamPathToSinkApplierFunc);
+}
 
 bool
 PathCG::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const

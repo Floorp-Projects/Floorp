@@ -11,11 +11,13 @@
 #include "webrtc/modules/rtp_rtcp/source/bitrate.h"
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 
 Bitrate::Bitrate(Clock* clock)
     : clock_(clock),
+      crit_(CriticalSectionWrapper::CreateCriticalSection()),
       packet_rate_(0),
       bitrate_(0),
       bitrate_next_idx_(0),
@@ -28,19 +30,23 @@ Bitrate::Bitrate(Clock* clock)
 }
 
 void Bitrate::Update(const int32_t bytes) {
+  CriticalSectionScoped cs(crit_.get());
   bytes_count_ += bytes;
   packet_count_++;
 }
 
 uint32_t Bitrate::PacketRate() const {
+  CriticalSectionScoped cs(crit_.get());
   return packet_rate_;
 }
 
 uint32_t Bitrate::BitrateLast() const {
+  CriticalSectionScoped cs(crit_.get());
   return bitrate_;
 }
 
 uint32_t Bitrate::BitrateNow() const {
+  CriticalSectionScoped cs(crit_.get());
   int64_t now = clock_->TimeInMilliseconds();
   int64_t diff_ms = now - time_last_rate_update_;
 
@@ -57,8 +63,14 @@ uint32_t Bitrate::BitrateNow() const {
   return static_cast<uint32_t>(bitrate);
 }
 
+int64_t Bitrate::time_last_rate_update() const {
+  CriticalSectionScoped cs(crit_.get());
+  return time_last_rate_update_;
+}
+
 void Bitrate::Process() {
   // Triggered by timer.
+  CriticalSectionScoped cs(crit_.get());
   int64_t now = clock_->TimeInMilliseconds();
   int64_t diff_ms = now - time_last_rate_update_;
 

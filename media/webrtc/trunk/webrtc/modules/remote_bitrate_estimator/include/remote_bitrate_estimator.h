@@ -41,18 +41,10 @@ class RemoteBitrateEstimator : public CallStatsObserver, public Module {
  public:
   virtual ~RemoteBitrateEstimator() {}
 
-  // Stores an RTCP SR (NTP, RTP timestamp) tuple for a specific SSRC to be used
-  // in future RTP timestamp to NTP time conversions. As soon as any SSRC has
-  // two tuples the RemoteBitrateEstimator will switch to multi-stream mode.
-  virtual void IncomingRtcp(unsigned int ssrc, uint32_t ntp_secs,
-                            uint32_t ntp_frac, uint32_t rtp_timestamp) = 0;
-
   // Called for each incoming packet. Updates the incoming payload bitrate
   // estimate and the over-use detector. If an over-use is detected the
   // remote bitrate estimate will be updated. Note that |payload_size| is the
-  // packet size excluding headers. The estimator can only count on the
-  // "header" (an RTPHeader) and "extension" (an RTPHeaderExtension) fields of
-  // the WebRtcRTPHeader to be initialized.
+  // packet size excluding headers.
   virtual void IncomingPacket(int64_t arrival_time_ms,
                               int payload_size,
                               const RTPHeader& header) = 0;
@@ -83,16 +75,6 @@ struct RemoteBitrateEstimatorFactory {
 struct AbsoluteSendTimeRemoteBitrateEstimatorFactory {
   AbsoluteSendTimeRemoteBitrateEstimatorFactory() {}
   virtual ~AbsoluteSendTimeRemoteBitrateEstimatorFactory() {}
-
-  virtual RemoteBitrateEstimator* Create(
-      RemoteBitrateObserver* observer,
-      Clock* clock) const;
-};
-
-struct MultiStreamRemoteBitrateEstimatorFactory
-    : RemoteBitrateEstimatorFactory {
-  MultiStreamRemoteBitrateEstimatorFactory() {}
-  virtual ~MultiStreamRemoteBitrateEstimatorFactory() {}
 
   virtual RemoteBitrateEstimator* Create(
       RemoteBitrateObserver* observer,

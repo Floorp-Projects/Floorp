@@ -65,7 +65,6 @@ void ViEAutoTest::ViEStandardTest()
     ViECaptureStandardTest();
     ViECodecStandardTest();
     ViEEncryptionStandardTest();
-    ViEFileStandardTest();
     ViEImageProcessStandardTest();
     ViERenderStandardTest();
     ViERtpRtcpStandardTest();
@@ -77,7 +76,6 @@ void ViEAutoTest::ViEExtendedTest()
     ViECaptureExtendedTest();
     ViECodecExtendedTest();
     ViEEncryptionExtendedTest();
-    ViEFileExtendedTest();
     ViEImageProcessExtendedTest();
     ViERenderExtendedTest();
     ViERtpRtcpExtendedTest();
@@ -89,7 +87,6 @@ void ViEAutoTest::ViEAPITest()
     ViECaptureAPITest();
     ViECodecAPITest();
     ViEEncryptionAPITest();
-    ViEFileAPITest();
     ViEImageProcessAPITest();
     ViERenderAPITest();
     ViERtpRtcpAPITest();

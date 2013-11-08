@@ -30,11 +30,10 @@ ViEAutoTestMain::ViEAutoTestMain() {
   index_to_test_method_map_[2] = "RunsCaptureTestWithoutErrors";
   index_to_test_method_map_[3] = "RunsCodecTestWithoutErrors";
   index_to_test_method_map_[4] = "RunsEncryptionTestWithoutErrors";
-  index_to_test_method_map_[5] = "RunsFileTestWithoutErrors";
-  index_to_test_method_map_[6] = "RunsImageProcessTestWithoutErrors";
-  index_to_test_method_map_[7] = "RunsNetworkTestWithoutErrors";
-  index_to_test_method_map_[8] = "RunsRenderTestWithoutErrors";
-  index_to_test_method_map_[9] = "RunsRtpRtcpTestWithoutErrors";
+  index_to_test_method_map_[5] = "RunsImageProcessTestWithoutErrors";
+  index_to_test_method_map_[6] = "RunsNetworkTestWithoutErrors";
+  index_to_test_method_map_[7] = "RunsRenderTestWithoutErrors";
+  index_to_test_method_map_[8] = "RunsRtpRtcpTestWithoutErrors";
 }
 
 int ViEAutoTestMain::RunTests(int argc, char** argv) {

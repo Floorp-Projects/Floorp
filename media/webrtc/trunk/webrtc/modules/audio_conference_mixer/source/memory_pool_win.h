@@ -194,6 +194,6 @@ MemoryPoolItem<MemoryType>* MemoryPoolImpl<MemoryType>::CreateMemory()
     ++_createdMemory;
     return returnValue;
 }
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_MEMORY_POOL_WINDOWS_H_

@@ -9,9 +9,9 @@
 
 #include "webrtc/modules/video_coding/codecs/vp8/default_temporal_layers.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cassert>
 
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
@@ -277,5 +277,10 @@ void DefaultTemporalLayers::PopulateCodecSpecific(
     vp8_info->tl0PicIdx = tl0_pic_idx_;
   }
 }
-}  // namespace webrtc
 
+TemporalLayers* TemporalLayers::Factory::Create(
+    int temporal_layers,
+    uint8_t initial_tl0_pic_idx) const {
+  return new DefaultTemporalLayers(temporal_layers, initial_tl0_pic_idx);
+}
+}  // namespace webrtc

@@ -38,4 +38,4 @@ ConditionVariableWrapper* ConditionVariableWrapper::CreateConditionVariable() {
 #endif
 }
 
-} // namespace webrtc
+}  // namespace webrtc

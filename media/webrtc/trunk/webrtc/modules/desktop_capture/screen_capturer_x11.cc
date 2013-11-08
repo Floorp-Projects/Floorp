@@ -76,9 +76,8 @@ class ScreenCapturerLinux : public ScreenCapturer {
   // differences between this and the previous capture.
   DesktopFrame* CaptureScreen();
 
-  // Called when the screen configuration is changed. |root_window_size|
-  // specifies the most recent size of the root window.
-  void ScreenConfigurationChanged(const DesktopSize& root_window_size);
+  // Called when the screen configuration is changed.
+  void ScreenConfigurationChanged();
 
   // Synchronize the current buffer with |last_buffer_|, by copying pixels from
   // the area of |last_invalid_rects|.
@@ -89,25 +88,6 @@ class ScreenCapturerLinux : public ScreenCapturer {
 
   void DeinitXlib();
 
-  // Capture a rectangle from |x_server_pixel_buffer_|, and copy the data into
-  // |frame|.
-  void CaptureRect(const DesktopRect& rect,
-                   DesktopFrame* frame);
-
-  // We expose two forms of blitting to handle variations in the pixel format.
-  // In FastBlit, the operation is effectively a memcpy.
-  void FastBlit(uint8_t* image,
-                const DesktopRect& rect,
-                DesktopFrame* frame);
-  void SlowBlit(uint8_t* image,
-                const DesktopRect& rect,
-                DesktopFrame* frame);
-
-  // Returns the number of bits |mask| has to be shifted left so its last
-  // (most-significant) bit set becomes the most-significant bit of the word.
-  // When |mask| is 0 the function returns 31.
-  static uint32_t GetRgbShift(uint32_t mask);
-
   Callback* callback_;
   MouseShapeObserver* mouse_shape_observer_;
 
@@ -115,9 +95,6 @@ class ScreenCapturerLinux : public ScreenCapturer {
   Display* display_;
   GC gc_;
   Window root_window_;
-
-  // Last known dimensions of the root window.
-  DesktopSize root_window_size_;
 
   // XFixes.
   bool has_xfixes_;
@@ -173,8 +150,6 @@ ScreenCapturerLinux::~ScreenCapturerLinux() {
 }
 
 bool ScreenCapturerLinux::Init(bool use_x_damage) {
-  use_x_damage = true;
-
   // TODO(ajwong): We should specify the display string we are attaching to
   // in the constructor.
   display_ = XOpenDisplay(NULL);
@@ -209,8 +184,10 @@ bool ScreenCapturerLinux::Init(bool use_x_damage) {
   // Register for changes to the dimensions of the root window.
   XSelectInput(display_, root_window_, StructureNotifyMask);
 
-  root_window_size_ = XServerPixelBuffer::GetRootWindowSize(display_);
-  x_server_pixel_buffer_.Init(display_, root_window_size_);
+  if (!x_server_pixel_buffer_.Init(display_, DefaultRootWindow(display_))) {
+    LOG(LS_ERROR) << "Failed to initialize pixel buffer.";
+    return false;
+  }
 
   if (has_xfixes_) {
     // Register for changes to the cursor shape.
@@ -278,12 +255,21 @@ void ScreenCapturerLinux::Capture(const DesktopRegion& region) {
   // Process XEvents for XDamage and cursor shape tracking.
   ProcessPendingXEvents();
 
+  // ProcessPendingXEvents() may call ScreenConfigurationChanged() which
+  // reinitializes |x_server_pixel_buffer_|. Check if the pixel buffer is still
+  // in a good shape.
+  if (!x_server_pixel_buffer_.is_initialized()) {
+     // We failed to initialize pixel buffer.
+     callback_->OnCaptureCompleted(NULL);
+     return;
+  }
+
   // If the current frame is from an older generation then allocate a new one.
   // Note that we can't reallocate other buffers at this point, since the caller
   // may still be reading from them.
   if (!queue_.current_frame()) {
     scoped_ptr<DesktopFrame> frame(
-        new BasicDesktopFrame(root_window_size_));
+        new BasicDesktopFrame(x_server_pixel_buffer_.window_size()));
     queue_.ReplaceCurrentFrame(frame.release());
   }
 
@@ -326,9 +312,7 @@ void ScreenCapturerLinux::ProcessPendingXEvents() {
       XDamageNotifyEvent* event = reinterpret_cast<XDamageNotifyEvent*>(&e);
       DCHECK(event->level == XDamageReportNonEmpty);
     } else if (e.type == ConfigureNotify) {
-      const XConfigureEvent& event = e.xconfigure;
-      ScreenConfigurationChanged(
-          DesktopSize(event.width, event.height));
+      ScreenConfigurationChanged();
     } else if (has_xfixes_ &&
                e.type == xfixes_event_base_ + XFixesCursorNotify) {
       XFixesCursorNotifyEvent* cne;
@@ -373,6 +357,7 @@ void ScreenCapturerLinux::CaptureCursor() {
 
 DesktopFrame* ScreenCapturerLinux::CaptureScreen() {
   DesktopFrame* frame = queue_.current_frame()->Share();
+  assert(x_server_pixel_buffer_.window_size().equals(frame->size()));
 
   // Pass the screen size to the helper, so it can clip the invalid region if it
   // expands that region to a grid.
@@ -409,18 +394,17 @@ DesktopFrame* ScreenCapturerLinux::CaptureScreen() {
     // spurious XDamage notifications were received for a previous (larger)
     // screen size.
     updated_region->IntersectWith(
-        DesktopRect::MakeSize(root_window_size_));
+        DesktopRect::MakeSize(x_server_pixel_buffer_.window_size()));
 
     for (DesktopRegion::Iterator it(*updated_region);
          !it.IsAtEnd(); it.Advance()) {
-      CaptureRect(it.rect(), frame);
+      x_server_pixel_buffer_.CaptureRect(it.rect(), frame);
     }
   } else {
     // Doing full-screen polling, or this is the first capture after a
     // screen-resolution change.  In either case, need a full-screen capture.
-    DesktopRect screen_rect =
-        DesktopRect::MakeSize(frame->size());
-    CaptureRect(screen_rect, frame);
+    DesktopRect screen_rect = DesktopRect::MakeSize(frame->size());
+    x_server_pixel_buffer_.CaptureRect(screen_rect, frame);
 
     if (queue_.previous_frame()) {
       // Full-screen polling, so calculate the invalid rects here, based on the
@@ -441,15 +425,15 @@ DesktopFrame* ScreenCapturerLinux::CaptureScreen() {
   return frame;
 }
 
-void ScreenCapturerLinux::ScreenConfigurationChanged(
-    const DesktopSize& root_window_size) {
-  root_window_size_ = root_window_size;
-
+void ScreenCapturerLinux::ScreenConfigurationChanged() {
   // Make sure the frame buffers will be reallocated.
   queue_.Reset();
 
   helper_.ClearInvalidRegion();
-  x_server_pixel_buffer_.Init(display_, root_window_size_);
+  if (!x_server_pixel_buffer_.Init(display_, DefaultRootWindow(display_))) {
+    LOG(LS_ERROR) << "Failed to initialize pixel buffer after screen "
+        "configuration change.";
+  }
 }
 
 void ScreenCapturerLinux::SynchronizeFrame() {
@@ -497,114 +481,6 @@ void ScreenCapturerLinux::DeinitXlib() {
     damage_handle_ = 0;
     damage_region_ = 0;
   }
-}
-
-void ScreenCapturerLinux::CaptureRect(const DesktopRect& rect,
-                                      DesktopFrame* frame) {
-  uint8_t* image = x_server_pixel_buffer_.CaptureRect(rect);
-  int depth = x_server_pixel_buffer_.GetDepth();
-  if ((depth == 24 || depth == 32) &&
-      x_server_pixel_buffer_.GetBitsPerPixel() == 32 &&
-      x_server_pixel_buffer_.GetRedMask() == 0xff0000 &&
-      x_server_pixel_buffer_.GetGreenMask() == 0xff00 &&
-      x_server_pixel_buffer_.GetBlueMask() == 0xff) {
-    FastBlit(image, rect, frame);
-  } else {
-    SlowBlit(image, rect, frame);
-  }
-}
-
-void ScreenCapturerLinux::FastBlit(uint8_t* image,
-                                   const DesktopRect& rect,
-                                   DesktopFrame* frame) {
-  uint8_t* src_pos = image;
-  int src_stride = x_server_pixel_buffer_.GetStride();
-  int dst_x = rect.left(), dst_y = rect.top();
-
-  uint8_t* dst_pos = frame->data() + frame->stride() * dst_y;
-  dst_pos += dst_x * DesktopFrame::kBytesPerPixel;
-
-  int height = rect.height();
-  int row_bytes = rect.width() * DesktopFrame::kBytesPerPixel;
-  for (int y = 0; y < height; ++y) {
-    memcpy(dst_pos, src_pos, row_bytes);
-    src_pos += src_stride;
-    dst_pos += frame->stride();
-  }
-}
-
-void ScreenCapturerLinux::SlowBlit(uint8_t* image,
-                                   const DesktopRect& rect,
-                                   DesktopFrame* frame) {
-  int src_stride = x_server_pixel_buffer_.GetStride();
-  int dst_x = rect.left(), dst_y = rect.top();
-  int width = rect.width(), height = rect.height();
-
-  uint32_t red_mask = x_server_pixel_buffer_.GetRedMask();
-  uint32_t green_mask = x_server_pixel_buffer_.GetGreenMask();
-  uint32_t blue_mask = x_server_pixel_buffer_.GetBlueMask();
-
-  uint32_t red_shift = GetRgbShift(red_mask);
-  uint32_t green_shift = GetRgbShift(green_mask);
-  uint32_t blue_shift = GetRgbShift(blue_mask);
-
-  unsigned int bits_per_pixel = x_server_pixel_buffer_.GetBitsPerPixel();
-
-  uint8_t* dst_pos = frame->data() + frame->stride() * dst_y;
-  uint8_t* src_pos = image;
-  dst_pos += dst_x * DesktopFrame::kBytesPerPixel;
-  // TODO(hclam): Optimize, perhaps using MMX code or by converting to
-  // YUV directly
-  for (int y = 0; y < height; y++) {
-    uint32_t* dst_pos_32 = reinterpret_cast<uint32_t*>(dst_pos);
-    uint32_t* src_pos_32 = reinterpret_cast<uint32_t*>(src_pos);
-    uint16_t* src_pos_16 = reinterpret_cast<uint16_t*>(src_pos);
-    for (int x = 0; x < width; x++) {
-      // Dereference through an appropriately-aligned pointer.
-      uint32_t pixel;
-      if (bits_per_pixel == 32) {
-        pixel = src_pos_32[x];
-      } else if (bits_per_pixel == 16) {
-        pixel = src_pos_16[x];
-      } else {
-        pixel = src_pos[x];
-      }
-      uint32_t r = (pixel & red_mask) << red_shift;
-      uint32_t g = (pixel & green_mask) << green_shift;
-      uint32_t b = (pixel & blue_mask) << blue_shift;
-
-      // Write as 32-bit RGB.
-      dst_pos_32[x] = ((r >> 8) & 0xff0000) | ((g >> 16) & 0xff00) |
-          ((b >> 24) & 0xff);
-    }
-    dst_pos += frame->stride();
-    src_pos += src_stride;
-  }
-}
-
-// static
-uint32_t ScreenCapturerLinux::GetRgbShift(uint32_t mask) {
-  int shift = 0;
-  if ((mask & 0xffff0000u) == 0) {
-    mask <<= 16;
-    shift += 16;
-  }
-  if ((mask & 0xff000000u) == 0) {
-    mask <<= 8;
-    shift += 8;
-  }
-  if ((mask & 0xf0000000u) == 0) {
-    mask <<= 4;
-    shift += 4;
-  }
-  if ((mask & 0xc0000000u) == 0) {
-    mask <<= 2;
-    shift += 2;
-  }
-  if ((mask & 0x80000000u) == 0)
-    shift += 1;
-
-  return shift;
 }
 
 }  // namespace
