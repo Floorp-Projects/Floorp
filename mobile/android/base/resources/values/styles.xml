@@ -374,14 +374,6 @@
         <item name="android:visibility">gone</item>
     </style>
 
-    <style name="UrlBar.ImageButton.Back" parent="UrlBar.ImageButton.Unused">
-        <item name="android:contentDescription">@string/back</item>
-    </style>
-
-    <style name="UrlBar.ImageButton.Forward" parent="UrlBar.ImageButton.Unused">
-        <item name="android:contentDescription">@string/forward</item>
-    </style>
-
     <!-- URL bar - Image Button - Icon -->
     <style name="UrlBar.ImageButton.Icon">
          <item name="android:layout_width">@dimen/browser_toolbar_icon_width</item>
