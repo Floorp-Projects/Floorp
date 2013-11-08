@@ -351,6 +351,22 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
 }
 
 /**
+ * Wait for an nsIMessageManager IPC message.
+ */
+function waitForMessage(aName, aMessageManager) {
+  let deferred = Promise.defer();
+  let manager = aMessageManager || messageManager;
+  function listener(aMessage) {
+    deferred.resolve(aMessage);
+  }
+  manager.addMessageListener(aName, listener);
+  function cleanup(aEventOrError) {
+    manager.removeMessageListener(aName, listener);
+  }
+  return deferred.promise.then(cleanup, cleanup);
+}
+
+/**
  * Waits a specified number of miliseconds.
  *
  * Usage:
