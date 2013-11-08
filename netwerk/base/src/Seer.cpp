@@ -26,6 +26,9 @@
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#ifdef MOZ_NUWA_PROCESS
+#include "ipc/Nuwa.h"
+#endif
 #include "prlog.h"
 
 #include "mozIStorageConnection.h"
@@ -332,6 +335,21 @@ Seer::GetInterface(const nsIID &iid, void **result)
   return QueryInterface(iid, result);
 }
 
+#ifdef MOZ_NUWA_PROCESS
+class NuwaMarkSeerThreadRunner : public nsRunnable
+{
+  NS_IMETHODIMP Run() MOZ_OVERRIDE
+  {
+    if (IsNuwaProcess()) {
+      NS_ASSERTION(NuwaMarkCurrentThread != nullptr,
+                   "NuwaMarkCurrentThread is undefined!");
+      NuwaMarkCurrentThread(nullptr, nullptr);
+    }
+    return NS_OK;
+  }
+};
+#endif
+
 // Seer::nsINetworkSeer
 
 nsresult
@@ -373,6 +391,11 @@ Seer::Init()
 
   rv = NS_NewNamedThread("Network Seer", getter_AddRefs(mIOThread));
   NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef MOZ_NUWA_PROCESS
+  nsCOMPtr<NuwaMarkSeerThreadRunner> runner = new NuwaMarkSeerThreadRunner();
+  mIOThread->Dispatch(runner, NS_DISPATCH_NORMAL);
+#endif
 
   mSpeculativeService = do_GetService("@mozilla.org/network/io-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
