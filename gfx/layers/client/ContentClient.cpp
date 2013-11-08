@@ -165,13 +165,13 @@ ContentClientRemoteBuffer::CreateAndAllocateTextureClient(RefPtr<TextureClient>&
     return false;
   }
 
-  if (!aClient->AsTextureClientDrawTarget()->AllocateForSurface(mSize)) {
+  if (!aClient->AsTextureClientDrawTarget()->AllocateForSurface(mSize, ALLOC_CLEAR_BUFFER)) {
     aClient = CreateTextureClientForDrawing(mSurfaceFormat,
                 mTextureInfo.mTextureFlags | TEXTURE_ALLOC_FALLBACK | aFlags);
     if (!aClient) {
       return false;
     }
-    if (!aClient->AsTextureClientDrawTarget()->AllocateForSurface(mSize)) {
+    if (!aClient->AsTextureClientDrawTarget()->AllocateForSurface(mSize, ALLOC_CLEAR_BUFFER)) {
       NS_WARNING("Could not allocate texture client");
       aClient = nullptr;
       return false;
