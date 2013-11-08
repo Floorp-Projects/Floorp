@@ -844,11 +844,15 @@ class RemakeRuleContext(object):
         self._depfinishedserial(False, False)
 
     def _startdepparallel(self, d):
+        dep, weak = d
+        if weak:
+            depfinished = self._weakdepfinishedparallel
+        else:
+            depfinished = self._depfinishedparallel
         if self.makefile.error:
             depfinished(True, False)
         else:
-            dep, weak = d
-            dep.make(self.makefile, self.targetstack, weak and self._weakdepfinishedparallel or self._depfinishedparallel)
+            dep.make(self.makefile, self.targetstack, depfinished)
 
     def _weakdepfinishedparallel(self, error, didanything):
         if error:
