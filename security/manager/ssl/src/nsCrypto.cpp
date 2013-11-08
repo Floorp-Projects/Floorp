@@ -1926,7 +1926,8 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
     csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                              NS_ConvertASCIItoUTF16(fileName),
                              scriptSample,
-                             lineNum);
+                             lineNum,
+                             EmptyString());
   }
 
   if (!evalAllowed) {
