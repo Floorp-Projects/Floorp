@@ -11,7 +11,8 @@
 #if !defined(WEBRTC_GONK)
 #if defined(WEBRTC_ANDROID_OPENSLES)
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
-#elif defined(WEBRTC_ANDROID)
+#endif
+#if defined(WEBRTC_ANDROID)
 #include "webrtc/modules/audio_device/android/audio_device_jni_android.h"
 #endif
 #endif
@@ -147,16 +148,14 @@ bool VoiceEngine::Delete(VoiceEngine*& voiceEngine)
 
 int VoiceEngine::SetAndroidObjects(void* javaVM, void* env, void* context)
 {
-#if !defined(WEBRTC_GONK)
+#if !defined(WEBRTC_GONK) && defined(ANDROID)
 #if defined(WEBRTC_ANDROID_OPENSLES)
+    // Initialize both backends. The OpenSLES one will fall back
+    // to JNI if some failure happens.
     AudioManagerJni::SetAndroidAudioDeviceObjects(javaVM, env, context);
-    return 0;
-#elif defined(ANDROID)
+#endif
     return AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
          javaVM, env, context);
-#else
-    return -1;
-#endif
 #else
     return -1;
 #endif
