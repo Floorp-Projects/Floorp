@@ -108,7 +108,7 @@ abstract public class BrowserApp extends GeckoApp
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
 
-    public static BrowserToolbar mBrowserToolbar;
+    private BrowserToolbar mBrowserToolbar;
     private HomePager mHomePager;
     private View mHomePagerContainer;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
