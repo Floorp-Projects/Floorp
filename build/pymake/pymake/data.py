@@ -780,7 +780,8 @@ class RemakeTargetParallel(object):
             return
 
         self.currunning = True
-        self.rlist.pop(0).runcommands(self.indent, self.commandscb)
+        rule = self.rlist.pop(0)
+        self.makefile.context.defer(rule.runcommands, self.indent, self.commandscb)
 
     def commandscb(self, error):
         assert error in (True, False)
