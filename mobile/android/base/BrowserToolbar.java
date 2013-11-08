@@ -136,7 +136,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
     public PageActionLayout mPageActionLayout;
     private Animation mProgressSpinner;
     private TabCounter mTabsCounter;
-    private ImageView mShadow;
     private GeckoImageButton mMenu;
     private GeckoImageView mMenuIcon;
     private LinearLayout mActionItemBar;
@@ -316,12 +315,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mProgressSpinner = AnimationUtils.loadAnimation(mActivity, R.anim.progress_spinner);
 
         mStop = (ImageButton) findViewById(R.id.stop);
-        mShadow = (ImageView) findViewById(R.id.shadow);
         mPageActionLayout = (PageActionLayout) findViewById(R.id.page_action_layout);
-
-        if (Build.VERSION.SDK_INT >= 16) {
-            mShadow.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        }
 
         mMenu = (GeckoImageButton) findViewById(R.id.menu);
         mMenuIcon = (GeckoImageView) findViewById(R.id.menu_icon);
@@ -1069,19 +1063,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         if (needsNewFocus) {
             requestFocus();
-        }
-    }
-
-    public void setShadowVisibility(boolean visible) {
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null) {
-            return;
-        }
-
-        String url = tab.getURL();
-
-        if ((mShadow.getVisibility() == View.VISIBLE) != visible) {
-            mShadow.setVisibility(visible ? View.VISIBLE : View.GONE);
         }
     }
 
