@@ -93,10 +93,11 @@ if (this.Components) {
      // instances of |OS.File.Error|)
      self.postMessage({fail: exports.OS.File.Error.toMsg(exn), id:id, durationMs: durationMs});
    } else {
-     LOG("Sending back regular error", exn, exn.stack, "id is", id);
      // Other exceptions do not, and should be propagated through DOM's
      // built-in mechanism for uncaught errors, although this mechanism
      // may lose interesting information.
+     LOG("Sending back regular error", exn, exn.stack, "id is", id);
+
      throw exn;
    }
   };
