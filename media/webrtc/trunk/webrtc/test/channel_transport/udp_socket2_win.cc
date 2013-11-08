@@ -508,7 +508,7 @@ void UdpSocket2Windows::IOCompleted(PerIoContext* pIOContext,
             OutstandingCallCompleted();
             return;
         }
-    } // if (pIOContext == NULL || error == ERROR_OPERATION_ABORTED)
+    }  // if (pIOContext == NULL || error == ERROR_OPERATION_ABORTED)
 
     if(pIOContext->ioOperation == OP_WRITE)
     {

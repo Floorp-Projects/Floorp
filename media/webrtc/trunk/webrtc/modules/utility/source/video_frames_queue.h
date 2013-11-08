@@ -13,10 +13,10 @@
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
 
-#include "common_video/interface/i420_video_frame.h"
-#include "engine_configurations.h"
-#include "list_wrapper.h"
-#include "typedefs.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/system_wrappers/interface/list_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -56,6 +56,6 @@ class VideoFramesQueue {
   // Estimated render delay.
   uint32_t _renderDelayMs;
 };
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_MODULE_UTILITY_VIDEO
 #endif  // WEBRTC_MODULES_UTILITY_SOURCE_VIDEO_FRAMES_QUEUE_H_

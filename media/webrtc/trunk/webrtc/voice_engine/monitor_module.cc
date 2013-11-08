@@ -87,6 +87,6 @@ MonitorModule::Process()
     return 0;
 }
 
-}  //  namespace voe
+}  // namespace voe
 
-}  //  namespace webrtc
+}  // namespace webrtc

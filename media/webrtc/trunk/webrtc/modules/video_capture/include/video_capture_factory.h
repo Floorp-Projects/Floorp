@@ -44,6 +44,6 @@ class VideoCaptureFactory {
   ~VideoCaptureFactory();
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_VIDEO_CAPTURE_INCLUDE_VIDEO_CAPTURE_FACTORY_H_

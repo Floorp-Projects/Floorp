@@ -529,12 +529,14 @@ TEST_F(SplTest, CrossCorrelationTest) {
   // are not bit-exact.
   const int32_t kExpected[kCrossCorrelationDimension] =
       {-266947903, -15579555, -171282001};
+  const int32_t* expected = kExpected;
+#if !defined(MIPS32_LE)
   const int32_t kExpectedNeon[kCrossCorrelationDimension] =
       {-266947901, -15579553, -171281999};
-  const int32_t* expected = kExpected;
   if (WebRtcSpl_CrossCorrelation != WebRtcSpl_CrossCorrelationC) {
     expected = kExpectedNeon;
   }
+#endif
   for (int i = 0; i < kCrossCorrelationDimension; ++i) {
     EXPECT_EQ(expected[i], vector32[i]);
   }

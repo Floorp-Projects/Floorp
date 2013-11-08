@@ -438,6 +438,8 @@ int WebRtcNetEQ_Init(void *inst, uint16_t fs)
     NetEqMainInst->MCUinst.one_desc = 0;
     NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.extraDelayMs = 0;
     NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.minimum_delay_ms = 0;
+    NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.maximum_delay_ms =
+        10000;
     NetEqMainInst->MCUinst.NoOfExpandCalls = 0;
     NetEqMainInst->MCUinst.fs = fs;
 
@@ -521,29 +523,49 @@ int WebRtcNetEQ_SetAVTPlayout(void *inst, int PlayoutAVTon)
 #endif
 }
 
-int WebRtcNetEQ_SetExtraDelay(void *inst, int DelayInMs)
-{
-    MainInst_t *NetEqMainInst = (MainInst_t*) inst;
-    if (NetEqMainInst == NULL) return (-1);
-    if ((DelayInMs < 0) || (DelayInMs > 10000))
-    {
-        NetEqMainInst->ErrorCode = -FAULTY_DELAYVALUE;
-        return (-1);
-    }
-    NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.extraDelayMs = DelayInMs;
-    return (0);
+int WebRtcNetEQ_SetExtraDelay(void *inst, int DelayInMs) {
+  MainInst_t *NetEqMainInst = (MainInst_t*) inst;
+  if (NetEqMainInst == NULL) return (-1);
+  if ((DelayInMs < 0) || (DelayInMs > 10000)) {
+    NetEqMainInst->ErrorCode = -FAULTY_DELAYVALUE;
+    return (-1);
+  }
+  NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.extraDelayMs = DelayInMs;
+  return (0);
 }
 
 int WebRtcNetEQ_SetMinimumDelay(void *inst, int minimum_delay_ms) {
   MainInst_t *NetEqMainInst = (MainInst_t*) inst;
-  if (NetEqMainInst == NULL)
-    return -1;
+  if (NetEqMainInst == NULL)  return -1;
   if (minimum_delay_ms < 0 || minimum_delay_ms > 10000) {
-      NetEqMainInst->ErrorCode = -FAULTY_DELAYVALUE;
-      return -1;
+    NetEqMainInst->ErrorCode = -FAULTY_DELAYVALUE;
+    return -1;
+  }
+  if ((NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.maximum_delay_ms >
+      0) && (minimum_delay_ms >
+      NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.maximum_delay_ms)) {
+    NetEqMainInst->ErrorCode = -FAULTY_DELAYVALUE;
+    return -1;
   }
   NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.minimum_delay_ms =
       minimum_delay_ms;
+  return 0;
+}
+
+int WebRtcNetEQ_SetMaximumDelay(void *inst, int maximum_delay_ms) {
+  MainInst_t *NetEqMainInst = (MainInst_t*) inst;
+  if (NetEqMainInst == NULL)  return -1;
+  if (maximum_delay_ms < 0 || maximum_delay_ms > 10000) {
+      NetEqMainInst->ErrorCode = -FAULTY_DELAYVALUE;
+      return -1;
+  }
+  if (maximum_delay_ms <
+      NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.minimum_delay_ms) {
+    NetEqMainInst->ErrorCode = -FAULTY_DELAYVALUE;
+    return -1;
+  }
+  NetEqMainInst->MCUinst.BufferStat_inst.Automode_inst.maximum_delay_ms =
+      maximum_delay_ms;
   return 0;
 }
 

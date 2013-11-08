@@ -36,7 +36,8 @@ class ViESyncModule : public Module {
 
   int ConfigureSync(int voe_channel_id,
                     VoEVideoSync* voe_sync_interface,
-                    RtpRtcp* video_rtcp_module);
+                    RtpRtcp* video_rtcp_module,
+                    RtpReceiver* video_receiver);
 
   int VoiceChannel();
 
@@ -51,6 +52,7 @@ class ViESyncModule : public Module {
   scoped_ptr<CriticalSectionWrapper> data_cs_;
   VideoCodingModule* vcm_;
   ViEChannel* vie_channel_;
+  RtpReceiver* video_receiver_;
   RtpRtcp* video_rtp_rtcp_;
   int voe_channel_id_;
   VoEVideoSync* voe_sync_interface_;

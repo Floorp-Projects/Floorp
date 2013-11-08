@@ -48,6 +48,6 @@ class Statistics
 
 }  // namespace voe
 
-}  //  namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_VOICE_ENGINE_STATISTICS_H

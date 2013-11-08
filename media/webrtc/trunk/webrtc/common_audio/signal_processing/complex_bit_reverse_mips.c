@@ -174,4 +174,3 @@ void WebRtcSpl_ComplexBitReverse(int16_t frfi[], int stages) {
     );
   }
 }
-

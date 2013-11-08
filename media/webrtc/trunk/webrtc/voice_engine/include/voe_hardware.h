@@ -136,6 +136,6 @@ protected:
     virtual ~VoEHardware() {}
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  //  WEBRTC_VOICE_ENGINE_VOE_HARDWARE_H

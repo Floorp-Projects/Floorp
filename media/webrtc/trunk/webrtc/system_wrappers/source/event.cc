@@ -30,4 +30,4 @@ EventWrapper* EventWrapper::Create() {
   return EventPosix::Create();
 #endif
 }
-} // namespace webrtc
+}  // namespace webrtc

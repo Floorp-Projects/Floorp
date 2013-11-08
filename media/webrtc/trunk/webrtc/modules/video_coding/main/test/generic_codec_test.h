@@ -11,13 +11,13 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_TEST_GENERIC_CODEC_TEST_H_
 #define WEBRTC_MODULES_VIDEO_CODING_TEST_GENERIC_CODEC_TEST_H_
 
-#include "video_coding.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
 
-#include <string.h>
 #include <fstream>
+#include <string.h>
 
-#include "test_callbacks.h"
-#include "test_util.h"
+#include "webrtc/modules/video_coding/main/test/test_callbacks.h"
+#include "webrtc/modules/video_coding/main/test/test_util.h"
 /*
 Test consists of:
 1. Sanity checks

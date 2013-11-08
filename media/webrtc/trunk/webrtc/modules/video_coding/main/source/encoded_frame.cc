@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "encoded_frame.h"
-#include "generic_encoder.h"
-#include "jitter_buffer_common.h"
-#include "video_coding_defines.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
+#include "webrtc/modules/video_coding/main/source/encoded_frame.h"
+#include "webrtc/modules/video_coding/main/source/generic_encoder.h"
+#include "webrtc/modules/video_coding/main/source/jitter_buffer_common.h"
 
 namespace webrtc {
 
@@ -104,7 +104,7 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header)
     {
         switch (header->codec)
         {
-            case kRTPVideoVP8:
+            case kRtpVideoVp8:
             {
                 if (_codecSpecificInfo.codecType != kVideoCodecVP8)
                 {
@@ -147,29 +147,6 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header)
 
 const RTPFragmentationHeader* VCMEncodedFrame::FragmentationHeader() const {
   return &_fragmentation;
-}
-
-int32_t
-VCMEncodedFrame::Store(VCMFrameStorageCallback& storeCallback) const
-{
-    EncodedVideoData frameToStore;
-    frameToStore.codec = _codec;
-    if (_buffer != NULL)
-    {
-        frameToStore.VerifyAndAllocate(_length);
-        memcpy(frameToStore.payloadData, _buffer, _length);
-        frameToStore.payloadSize = _length;
-    }
-    frameToStore.completeFrame = _completeFrame;
-    frameToStore.encodedWidth = _encodedWidth;
-    frameToStore.encodedHeight = _encodedHeight;
-    frameToStore.frameType = ConvertFrameType(_frameType);
-    frameToStore.missingFrame = _missingFrame;
-    frameToStore.payloadType = _payloadType;
-    frameToStore.renderTimeMs = _renderTimeMs;
-    frameToStore.timeStamp = _timeStamp;
-    storeCallback.StoreReceivedFrame(frameToStore);
-    return VCM_OK;
 }
 
 int32_t

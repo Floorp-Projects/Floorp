@@ -15,7 +15,7 @@
 #include <dxdiag.h>
 
 #include "webrtc/modules/video_render/i_video_render.h"
-#include "i_video_render_win.h"
+#include "webrtc/modules/video_render/windows/i_video_render_win.h"
 
 namespace webrtc {
 class CriticalSectionWrapper;
@@ -135,6 +135,6 @@ private:
     IVideoRenderWin* _ptrRendererWin;
 };
 
-} //namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_WINDOWS_VIDEO_RENDER_WINDOWS_IMPL_H_

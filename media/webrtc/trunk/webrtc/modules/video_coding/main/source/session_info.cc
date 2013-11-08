@@ -8,22 +8,30 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/main/source/session_info.h"
+#include "webrtc/modules/video_coding/main/source/session_info.h"
 
-#include "modules/video_coding/main/source/packet.h"
+#include "webrtc/modules/video_coding/main/source/packet.h"
 
 namespace webrtc {
+
+// Used in determining whether a frame is decodable.
+enum {kRttThreshold = 100};  // Not decodable if Rtt is lower than this.
+
+// Do not decode frames if the number of packets is between these two
+// thresholds.
+static const float kLowPacketPercentageThreshold = 0.2f;
+static const float kHighPacketPercentageThreshold = 0.8f;
 
 VCMSessionInfo::VCMSessionInfo()
     : session_nack_(false),
       complete_(false),
       decodable_(false),
       frame_type_(kVideoFrameDelta),
-      previous_frame_loss_(false),
       packets_(),
       empty_seq_num_low_(-1),
       empty_seq_num_high_(-1),
-      packets_not_decodable_(0) {
+      first_packet_seq_num_(-1),
+      last_packet_seq_num_(-1) {
 }
 
 void VCMSessionInfo::UpdateDataPointers(const uint8_t* old_base_ptr,
@@ -51,35 +59,35 @@ int VCMSessionInfo::HighSequenceNumber() const {
 
 int VCMSessionInfo::PictureId() const {
   if (packets_.empty() ||
-      packets_.front().codecSpecificHeader.codec != kRTPVideoVP8)
+      packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
     return kNoPictureId;
   return packets_.front().codecSpecificHeader.codecHeader.VP8.pictureId;
 }
 
 int VCMSessionInfo::TemporalId() const {
   if (packets_.empty() ||
-      packets_.front().codecSpecificHeader.codec != kRTPVideoVP8)
+      packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
     return kNoTemporalIdx;
   return packets_.front().codecSpecificHeader.codecHeader.VP8.temporalIdx;
 }
 
 bool VCMSessionInfo::LayerSync() const {
   if (packets_.empty() ||
-        packets_.front().codecSpecificHeader.codec != kRTPVideoVP8)
+        packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
     return false;
   return packets_.front().codecSpecificHeader.codecHeader.VP8.layerSync;
 }
 
 int VCMSessionInfo::Tl0PicId() const {
   if (packets_.empty() ||
-      packets_.front().codecSpecificHeader.codec != kRTPVideoVP8)
+      packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
     return kNoTl0PicIdx;
   return packets_.front().codecSpecificHeader.codecHeader.VP8.tl0PicIdx;
 }
 
 bool VCMSessionInfo::NonReference() const {
   if (packets_.empty() ||
-      packets_.front().codecSpecificHeader.codec != kRTPVideoVP8)
+      packets_.front().codecSpecificHeader.codec != kRtpVideoVp8)
     return false;
   return packets_.front().codecSpecificHeader.codecHeader.VP8.nonReference;
 }
@@ -89,11 +97,11 @@ void VCMSessionInfo::Reset() {
   complete_ = false;
   decodable_ = false;
   frame_type_ = kVideoFrameDelta;
-  previous_frame_loss_ = false;
   packets_.clear();
   empty_seq_num_low_ = -1;
   empty_seq_num_high_ = -1;
-  packets_not_decodable_ = 0;
+  first_packet_seq_num_ = -1;
+  last_packet_seq_num_ = -1;
 }
 
 int VCMSessionInfo::SessionLength() const {
@@ -101,6 +109,10 @@ int VCMSessionInfo::SessionLength() const {
   for (PacketIteratorConst it = packets_.begin(); it != packets_.end(); ++it)
     length += (*it).sizeBytes;
   return length;
+}
+
+int VCMSessionInfo::NumPackets() const {
+  return packets_.size();
 }
 
 int VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
@@ -154,7 +166,7 @@ void VCMSessionInfo::ShiftSubsequentPackets(PacketIterator it,
 }
 
 void VCMSessionInfo::UpdateCompleteSession() {
-  if (packets_.front().isFirstPacket && packets_.back().markerBit) {
+  if (HaveFirstPacket() && HaveLastPacket()) {
     // Do we have all the packets in this session?
     bool complete_session = true;
     PacketIterator it = packets_.begin();
@@ -171,11 +183,22 @@ void VCMSessionInfo::UpdateCompleteSession() {
   }
 }
 
-void VCMSessionInfo::UpdateDecodableSession(int rttMs) {
+void VCMSessionInfo::UpdateDecodableSession(const FrameData& frame_data) {
   // Irrelevant if session is already complete or decodable
   if (complete_ || decodable_)
     return;
-  // First iteration - do nothing
+  // TODO(agalusza): Account for bursty loss.
+  // TODO(agalusza): Refine these values to better approximate optimal ones.
+  if (frame_data.rtt_ms < kRttThreshold
+      || frame_type_ == kVideoFrameKey
+      || !HaveFirstPacket()
+      || (NumPackets() <= kHighPacketPercentageThreshold
+                          * frame_data.rolling_average_packets_per_frame
+          && NumPackets() > kLowPacketPercentageThreshold
+                            * frame_data.rolling_average_packets_per_frame))
+    return;
+
+  decodable_ = true;
 }
 
 bool VCMSessionInfo::complete() const {
@@ -221,7 +244,6 @@ int VCMSessionInfo::DeletePacketData(PacketIterator start,
     bytes_to_delete += (*it).sizeBytes;
     (*it).sizeBytes = 0;
     (*it).dataPtr = NULL;
-    ++packets_not_decodable_;
   }
   if (bytes_to_delete > 0)
     ShiftSubsequentPackets(end, -bytes_to_delete);
@@ -240,8 +262,7 @@ int VCMSessionInfo::BuildVP8FragmentationHeader(
          kMaxVP8Partitions * sizeof(uint32_t));
   if (packets_.empty())
       return new_length;
-  PacketIterator it = FindNextPartitionBeginning(packets_.begin(),
-                                                 &packets_not_decodable_);
+  PacketIterator it = FindNextPartitionBeginning(packets_.begin());
   while (it != packets_.end()) {
     const int partition_id =
         (*it).codecSpecificHeader.codecHeader.VP8.partitionId;
@@ -256,7 +277,7 @@ int VCMSessionInfo::BuildVP8FragmentationHeader(
            static_cast<uint32_t>(frame_buffer_length));
     new_length += fragmentation->fragmentationLength[partition_id];
     ++partition_end;
-    it = FindNextPartitionBeginning(partition_end, &packets_not_decodable_);
+    it = FindNextPartitionBeginning(partition_end);
     if (partition_id + 1 > fragmentation->fragmentationVectorSize)
       fragmentation->fragmentationVectorSize = partition_id + 1;
   }
@@ -278,14 +299,10 @@ int VCMSessionInfo::BuildVP8FragmentationHeader(
 }
 
 VCMSessionInfo::PacketIterator VCMSessionInfo::FindNextPartitionBeginning(
-    PacketIterator it, int* packets_skipped) const {
+    PacketIterator it) const {
   while (it != packets_.end()) {
     if ((*it).codecSpecificHeader.codecHeader.VP8.beginningOfPartition) {
       return it;
-    } else if (packets_skipped !=  NULL) {
-      // This packet belongs to a partition with a previous loss and can't
-      // be decoded.
-      ++(*packets_skipped);
     }
     ++it;
   }
@@ -353,14 +370,20 @@ int VCMSessionInfo::MakeDecodable() {
   return return_length;
 }
 
+void VCMSessionInfo::SetNotDecodableIfIncomplete() {
+  // We don't need to check for completeness first because the two are
+  // orthogonal. If complete_ is true, decodable_ is irrelevant.
+  decodable_ = false;
+}
+
 bool
 VCMSessionInfo::HaveFirstPacket() const {
-  return !packets_.empty() && packets_.front().isFirstPacket;
+  return !packets_.empty() && (first_packet_seq_num_ != -1);
 }
 
 bool
 VCMSessionInfo::HaveLastPacket() const {
-  return (!packets_.empty() && packets_.back().markerBit);
+  return !packets_.empty() && (last_packet_seq_num_ != -1);
 }
 
 bool
@@ -370,16 +393,8 @@ VCMSessionInfo::session_nack() const {
 
 int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
                                  uint8_t* frame_buffer,
-                                 bool enable_decodable_state,
-                                 int rtt_ms) {
-  // Check if this is first packet (only valid for some codecs)
-  if (packet.isFirstPacket) {
-    // The first packet in a frame signals the frame type.
-    frame_type_ = packet.frameType;
-  } else if (frame_type_ == kFrameEmpty && packet.frameType != kFrameEmpty) {
-    // Update the frame type with the first media packet.
-    frame_type_ = packet.frameType;
-  }
+                                 VCMDecodeErrorMode decode_error_mode,
+                                 const FrameData& frame_data) {
   if (packet.frameType == kFrameEmpty) {
     // Update sequence number of an empty packet.
     // Only media packets are inserted into the packet list.
@@ -387,8 +402,9 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
     return 0;
   }
 
-  if (packets_.size() == kMaxPacketsInSession)
+  if (packets_.size() == kMaxPacketsInSession) {
     return -1;
+  }
 
   // Find the position of this packet in the packet list in sequence number
   // order and insert it. Loop over the list in reverse order.
@@ -402,13 +418,41 @@ int VCMSessionInfo::InsertPacket(const VCMPacket& packet,
       (*rit).seqNum == packet.seqNum && (*rit).sizeBytes > 0)
     return -2;
 
+  // Only insert media packets between first and last packets (when available).
+  // Placing check here, as to properly account for duplicate packets.
+  // Check if this is first packet (only valid for some codecs)
+  // Should only be set for one packet per session.
+  if (packet.isFirstPacket && first_packet_seq_num_ == -1) {
+    // The first packet in a frame signals the frame type.
+    frame_type_ = packet.frameType;
+    // Store the sequence number for the first packet.
+    first_packet_seq_num_ = static_cast<int>(packet.seqNum);
+  } else if (first_packet_seq_num_ != -1 &&
+        !IsNewerSequenceNumber(packet.seqNum, first_packet_seq_num_)) {
+    return -3;
+  } else if (frame_type_ == kFrameEmpty && packet.frameType != kFrameEmpty) {
+    // Update the frame type with the type of the first media packet.
+    // TODO(mikhal): Can this trigger?
+    frame_type_ = packet.frameType;
+  }
+
+  // Track the marker bit, should only be set for one packet per session.
+  if (packet.markerBit && last_packet_seq_num_ == -1) {
+    last_packet_seq_num_ = static_cast<int>(packet.seqNum);
+  } else if (last_packet_seq_num_ != -1 &&
+      IsNewerSequenceNumber(packet.seqNum, last_packet_seq_num_)) {
+    return -3;
+  }
+
   // The insert operation invalidates the iterator |rit|.
   PacketIterator packet_list_it = packets_.insert(rit.base(), packet);
 
   int returnLength = InsertBuffer(frame_buffer, packet_list_it);
   UpdateCompleteSession();
-  if (enable_decodable_state)
-    UpdateDecodableSession(rtt_ms);
+  if (decode_error_mode == kWithErrors)
+    decodable_ = true;
+  else if (decode_error_mode == kSelectiveErrors)
+    UpdateDecodableSession(frame_data);
   return returnLength;
 }
 
@@ -424,10 +468,6 @@ void VCMSessionInfo::InformOfEmptyPacket(uint16_t seq_num) {
   if (empty_seq_num_low_ == -1 || IsNewerSequenceNumber(empty_seq_num_low_,
                                                         seq_num))
     empty_seq_num_low_ = seq_num;
-}
-
-int VCMSessionInfo::packets_not_decodable() const {
-  return packets_not_decodable_;
 }
 
 }  // namespace webrtc

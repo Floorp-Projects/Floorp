@@ -40,7 +40,7 @@ private:
     int               _denoiseFrameCnt;   // Counter for subsampling in time
 };
 
-} //namespace
+}  // namespace
 
 #endif // VPM_DENOISING_H
   

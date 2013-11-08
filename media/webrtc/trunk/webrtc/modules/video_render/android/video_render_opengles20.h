@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_ANDROID_VIDEO_RENDER_OPENGLES20_H_
 #define WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_ANDROID_VIDEO_RENDER_OPENGLES20_H_
 
-#include "video_render_defines.h"
+#include "webrtc/modules/video_render/include/video_render_defines.h"
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>

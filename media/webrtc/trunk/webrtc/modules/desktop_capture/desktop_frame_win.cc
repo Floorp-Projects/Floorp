@@ -10,6 +10,8 @@
 
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 
+#include "webrtc/system_wrappers/interface/logging.h"
+
 namespace webrtc {
 
 DesktopFrameWin::DesktopFrameWin(DesktopSize size,
@@ -48,6 +50,7 @@ DesktopFrameWin* DesktopFrameWin::Create(DesktopSize size,
   HBITMAP bitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &data,
                                     section_handle, 0);
   if (!bitmap) {
+    LOG(LS_WARNING) << "Failed to allocate new window frame " << GetLastError();
     delete shared_memory;
     return NULL;
   }

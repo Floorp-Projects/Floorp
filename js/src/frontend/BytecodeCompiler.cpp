@@ -137,7 +137,7 @@ MaybeCheckEvalFreeVariables(ExclusiveContext *cxArg, HandleScript evalCaller, Ha
 }
 
 static inline bool
-CanLazilyParse(ExclusiveContext *cx, const CompileOptions &options)
+CanLazilyParse(ExclusiveContext *cx, const ReadOnlyCompileOptions &options)
 {
     return options.canLazilyParse &&
         options.compileAndGo &&
@@ -146,7 +146,7 @@ CanLazilyParse(ExclusiveContext *cx, const CompileOptions &options)
 }
 
 void
-frontend::MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
+frontend::MaybeCallSourceHandler(JSContext *cx, const ReadOnlyCompileOptions &options,
                                  const jschar *chars, size_t length)
 {
     JSSourceHandler listener = cx->runtime()->debugHooks.sourceHandler;
@@ -154,7 +154,7 @@ frontend::MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
 
     if (listener) {
         void *listenerTSData;
-        listener(options.filename, options.lineno, chars, length,
+        listener(options.filename(), options.lineno, chars, length,
                  &listenerTSData, listenerData);
     }
 }
@@ -162,7 +162,7 @@ frontend::MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
 JSScript *
 frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject scopeChain,
                         HandleScript evalCaller,
-                        const CompileOptions &options,
+                        const ReadOnlyCompileOptions &options,
                         const jschar *chars, size_t length,
                         JSString *source_ /* = nullptr */,
                         unsigned staticLevel /* = 0 */,
@@ -195,7 +195,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return nullptr;
-    if (options.filename && !ss->setFilename(cx, options.filename))
+    if (options.filename() && !ss->setFilename(cx, options.filename()))
         return nullptr;
 
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
@@ -379,8 +379,8 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
      * Source map URLs passed as a compile option (usually via a HTTP source map
      * header) override any source map urls passed as comment pragmas.
      */
-    if (options.sourceMapURL) {
-        if (!ss->setSourceMapURL(cx, options.sourceMapURL))
+    if (options.sourceMapURL()) {
+        if (!ss->setSourceMapURL(cx, options.sourceMapURL()))
             return nullptr;
     }
 
@@ -472,7 +472,7 @@ frontend::CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *cha
 // Compile a JS function body, which might appear as the value of an event
 // handler attribute in an HTML <INPUT> tag, or in a Function() constructor.
 static bool
-CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyCompileOptions &options,
                     const AutoNameVector &formals, const jschar *chars, size_t length,
                     GeneratorKind generatorKind)
 {
@@ -494,7 +494,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions opt
     ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return false;
-    if (options.filename && !ss->setFilename(cx, options.filename))
+    if (options.filename() && !ss->setFilename(cx, options.filename()))
         return false;
     RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
     if (!sourceObject)
@@ -611,7 +611,8 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions opt
 }
 
 bool
-frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun,
+                              const ReadOnlyCompileOptions &options,
                               const AutoNameVector &formals, const jschar *chars, size_t length)
 {
     return CompileFunctionBody(cx, fun, options, formals, chars, length, NotGenerator);
@@ -619,7 +620,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
 
 bool
 frontend::CompileStarGeneratorBody(JSContext *cx, MutableHandleFunction fun,
-                                   CompileOptions options, const AutoNameVector &formals,
+                                   const ReadOnlyCompileOptions &options, const AutoNameVector &formals,
                                    const jschar *chars, size_t length)
 {
     return CompileFunctionBody(cx, fun, options, formals, chars, length, StarGenerator);

@@ -36,7 +36,7 @@ const float rampArray[] = {0.0000f, 0.0127f, 0.0253f, 0.0380f,
                            0.9114f, 0.9241f, 0.9367f, 0.9494f,
                            0.9620f, 0.9747f, 0.9873f, 1.0000f};
 const int rampSize = sizeof(rampArray)/sizeof(rampArray[0]);
-} // namespace
+}  // namespace
 
 namespace webrtc {
 void CalculateEnergy(AudioFrame& audioFrame)
@@ -78,4 +78,4 @@ void RampOut(AudioFrame& audioFrame)
            (audioFrame.samples_per_channel_ - rampSize) *
            sizeof(audioFrame.data_[0]));
 }
-} // namespace webrtc
+}  // namespace webrtc

@@ -370,7 +370,7 @@ cvt_ws(SprintfState *ss, const jschar *ws, int width, int prec, int flags)
     int result;
     /*
      * Supply nullptr as the JSContext; errors are not reported,
-     * and malloc() is used to allocate the buffer buffer.
+     * and js_malloc() is used to allocate the buffer.
      */
     if (ws) {
         size_t wslen = js_strlen(ws);
@@ -445,7 +445,7 @@ static struct NumArgState* BuildArgArray( const char *fmt, va_list ap, int* rv, 
 
 
     if( number > NAS_DEFAULT_NUM ){
-        nas = (struct NumArgState*)malloc( number * sizeof( struct NumArgState ) );
+        nas = (struct NumArgState*)js_malloc( number * sizeof( struct NumArgState ) );
         if( !nas ){
             *rv = -1;
             return nullptr;
@@ -1040,7 +1040,7 @@ JS_PUBLIC_API(uint32_t) JS_vsxprintf(JSStuffFunc func, void *arg,
 }
 
 /*
-** Stuff routine that automatically grows the malloc'd output buffer
+** Stuff routine that automatically grows the js_malloc'd output buffer
 ** before it overflows.
 */
 static int GrowStuff(SprintfState *ss, const char *sp, uint32_t len)
@@ -1073,7 +1073,7 @@ static int GrowStuff(SprintfState *ss, const char *sp, uint32_t len)
 }
 
 /*
-** sprintf into a malloc'd buffer
+** sprintf into a js_malloc'd buffer
 */
 JS_PUBLIC_API(char *) JS_smprintf(const char *fmt, ...)
 {

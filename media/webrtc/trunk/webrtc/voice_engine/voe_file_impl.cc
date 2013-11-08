@@ -71,8 +71,8 @@ int VoEFileImpl::StartPlayingFileLocally(
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -107,8 +107,8 @@ int VoEFileImpl::StartPlayingFileLocally(int channel,
         return -1;
     }
 
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -133,8 +133,8 @@ int VoEFileImpl::StopPlayingFileLocally(int channel)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -153,8 +153,8 @@ int VoEFileImpl::IsPlayingFileLocally(int channel)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -174,8 +174,8 @@ int VoEFileImpl::ScaleLocalFilePlayout(int channel, float scale)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -234,8 +234,8 @@ int VoEFileImpl::StartPlayingFileAsMicrophone(int channel,
     else
     {
         // Add file after demultiplexing <=> affects one channel only
-        voe::ScopedChannel sc(_shared->channel_manager(), channel);
-        voe::Channel* channelPtr = sc.ChannelPtr();
+        voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+        voe::Channel* channelPtr = ch.channel();
         if (channelPtr == NULL)
         {
             _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -311,8 +311,8 @@ int VoEFileImpl::StartPlayingFileAsMicrophone(int channel,
     else
     {
         // Add file after demultiplexing <=> affects one channel only
-        voe::ScopedChannel sc(_shared->channel_manager(), channel);
-        voe::Channel* channelPtr = sc.ChannelPtr();
+        voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+        voe::Channel* channelPtr = ch.channel();
         if (channelPtr == NULL)
         {
             _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -355,8 +355,8 @@ int VoEFileImpl::StopPlayingFileAsMicrophone(int channel)
     else
     {
         // Stop adding file after demultiplexing <=> affects one channel only
-        voe::ScopedChannel sc(_shared->channel_manager(), channel);
-        voe::Channel* channelPtr = sc.ChannelPtr();
+        voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+        voe::Channel* channelPtr = ch.channel();
         if (channelPtr == NULL)
         {
             _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -383,8 +383,8 @@ int VoEFileImpl::IsPlayingFileAsMicrophone(int channel)
     else
     {
         // Stop adding file after demultiplexing <=> affects one channel only
-        voe::ScopedChannel sc(_shared->channel_manager(), channel);
-        voe::Channel* channelPtr = sc.ChannelPtr();
+        voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+        voe::Channel* channelPtr = ch.channel();
         if (channelPtr == NULL)
         {
             _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -413,8 +413,8 @@ int VoEFileImpl::ScaleFileAsMicrophonePlayout(int channel, float scale)
     else
     {
         // Stop adding file after demultiplexing <=> affects one channel only
-        voe::ScopedChannel sc(_shared->channel_manager(), channel);
-        voe::Channel* channelPtr = sc.ChannelPtr();
+        voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+        voe::Channel* channelPtr = ch.channel();
         if (channelPtr == NULL)
         {
             _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -448,8 +448,8 @@ int VoEFileImpl::StartRecordingPlayout(
     else
     {
         // Add file after demultiplexing <=> affects one channel only
-        voe::ScopedChannel sc(_shared->channel_manager(), channel);
-        voe::Channel* channelPtr = sc.ChannelPtr();
+        voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+        voe::Channel* channelPtr = ch.channel();
         if (channelPtr == NULL)
         {
             _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -478,8 +478,8 @@ int VoEFileImpl::StartRecordingPlayout(
     }
     else
     {
-        voe::ScopedChannel sc(_shared->channel_manager(), channel);
-        voe::Channel* channelPtr = sc.ChannelPtr();
+        voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+        voe::Channel* channelPtr = ch.channel();
         if (channelPtr == NULL)
         {
             _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -505,8 +505,8 @@ int VoEFileImpl::StopRecordingPlayout(int channel)
     }
     else
     {
-        voe::ScopedChannel sc(_shared->channel_manager(), channel);
-        voe::Channel* channelPtr = sc.ChannelPtr();
+        voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+        voe::Channel* channelPtr = ch.channel();
         if (channelPtr == NULL)
         {
             _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -1342,8 +1342,8 @@ int VoEFileImpl::GetPlaybackPosition(int channel, int& positionMs)
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "GetPlaybackPosition(channel=%d)", channel);
 
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,

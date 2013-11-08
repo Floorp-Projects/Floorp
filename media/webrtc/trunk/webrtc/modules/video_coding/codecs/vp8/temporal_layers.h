@@ -24,6 +24,13 @@ struct CodecSpecificInfoVP8;
 
 class TemporalLayers {
  public:
+  struct Factory {
+    Factory() {}
+    virtual ~Factory() {}
+    virtual TemporalLayers* Create(int temporal_layers,
+                                   uint8_t initial_tl0_pic_idx) const;
+  };
+
   virtual ~TemporalLayers() {}
 
   // Returns the recommended VP8 encode flags needed. May refresh the decoder
@@ -44,4 +51,3 @@ class TemporalLayers {
 
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_TEMPORAL_LAYERS_H_
-

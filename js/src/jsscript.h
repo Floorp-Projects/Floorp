@@ -639,7 +639,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
   public:
     static JSScript *Create(js::ExclusiveContext *cx,
                             js::HandleObject enclosingScope, bool savedCallerFun,
-                            const JS::CompileOptions &options, unsigned staticLevel,
+                            const JS::ReadOnlyCompileOptions &options, unsigned staticLevel,
                             js::HandleScriptSource sourceObject, uint32_t sourceStart,
                             uint32_t sourceEnd);
 

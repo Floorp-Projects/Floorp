@@ -30,6 +30,8 @@ namespace webrtc {
 class Config;
 class CriticalSectionWrapper;
 class EventWrapper;
+class CpuOveruseObserver;
+class OveruseFrameDetector;
 class ProcessThread;
 class ThreadWrapper;
 class ViEEffectFilter;
@@ -100,6 +102,8 @@ class ViECapturer
   // Information.
   const char* CurrentDeviceName() const;
 
+  void RegisterCpuOveruseObserver(CpuOveruseObserver* observer);
+
  protected:
   ViECapturer(int capture_id,
               int engine_id,
@@ -140,6 +144,8 @@ class ViECapturer
   void DeliverCodedFrame(VideoFrame* video_frame);
 
  private:
+  bool SwapCapturedAndDeliverFrameIfAvailable();
+
   // Never take capture_cs_ before deliver_cs_!
   scoped_ptr<CriticalSectionWrapper> capture_cs_;
   scoped_ptr<CriticalSectionWrapper> deliver_cs_;
@@ -173,6 +179,8 @@ class ViECapturer
   CaptureCapability requested_capability_;
 
   I420VideoFrame capture_device_image_;
+
+  scoped_ptr<OveruseFrameDetector> overuse_detector_;
 };
 
 }  // namespace webrtc

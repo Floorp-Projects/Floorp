@@ -23,7 +23,7 @@
 #include <netinet/in.h>
 #endif
 
-#include <cassert>
+#include <assert.h>
 
 #include "gtest/gtest.h"
 #include "webrtc/typedefs.h"

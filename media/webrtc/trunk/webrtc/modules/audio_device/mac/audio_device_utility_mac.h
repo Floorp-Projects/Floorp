@@ -11,8 +11,8 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_MAC_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_MAC_H
 
-#include "audio_device_utility.h"
-#include "audio_device.h"
+#include "webrtc/modules/audio_device/audio_device_utility.h"
+#include "webrtc/modules/audio_device/include/audio_device.h"
 
 namespace webrtc
 {
@@ -31,6 +31,6 @@ private:
     int32_t _id;
 };
 
-} //  namespace webrtc
+}  // namespace webrtc
 
 #endif  // MODULES_AUDIO_DEVICE_MAIN_SOURCE_MAC_AUDIO_DEVICE_UTILITY_MAC_H_
