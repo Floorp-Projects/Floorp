@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/main/source/media_opt_util.h"
+#include "webrtc/modules/video_coding/main/source/media_opt_util.h"
 
 #include <algorithm>
-#include <math.h>
 #include <float.h>
 #include <limits.h>
+#include <math.h>
 
-#include "modules/interface/module_common_types.h"
-#include "modules/video_coding/codecs/vp8/include/vp8_common_types.h"
-#include "modules/video_coding/main/interface/video_coding_defines.h"
-#include "modules/video_coding/main/source/er_tables_xor.h"
-#include "modules/video_coding/main/source/fec_tables_xor.h"
-#include "modules/video_coding/main/source/nack_fec_tables.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/codecs/vp8/include/vp8_common_types.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
+#include "webrtc/modules/video_coding/main/source/er_tables_xor.h"
+#include "webrtc/modules/video_coding/main/source/fec_tables_xor.h"
+#include "webrtc/modules/video_coding/main/source/nack_fec_tables.h"
 
 namespace webrtc {
 namespace media_optimization {

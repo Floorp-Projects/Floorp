@@ -37,6 +37,9 @@
 #include "webrtc/video_engine/test/libvietest/include/tb_external_transport.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 
+const uint32_t kSsrc = 0x01234567;
+const uint32_t kRtxSsrc = 0x01234568;
+const int kRtxPayloadType = 98;
 #define VCM_RED_PAYLOAD_TYPE        96
 #define VCM_ULPFEC_PAYLOAD_TYPE     97
 
@@ -219,21 +222,47 @@ int VideoEngineSampleCode(void* window1, void* window2)
 
     // Setting SSRC manually (arbitrary value), as otherwise we will get a clash
     // (loopback), and a new SSRC will be set, which will reset the receiver.
-    error = ptrViERtpRtcp->SetLocalSSRC(videoChannel, 0x01234567);
-    if (error == -1)
-    {
-        printf("ERROR in ViERTP_RTCP::SetLocalSSRC\n");
-        return -1;
+    error = ptrViERtpRtcp->SetLocalSSRC(videoChannel, kSsrc);
+    if (error == -1) {
+      printf("ERROR in ViERTP_RTCP::SetLocalSSRC\n");
+      return -1;
     }
 
+    error = ptrViERtpRtcp->SetLocalSSRC(videoChannel, kRtxSsrc,
+                                        webrtc::kViEStreamTypeRtx, 0);
+    if (error == -1) {
+      printf("ERROR in ViERTP_RTCP::SetLocalSSRC\n");
+      return -1;
+    }
+
+    error = ptrViERtpRtcp->SetRemoteSSRCType(videoChannel,
+                                             webrtc::kViEStreamTypeRtx,
+                                             kRtxSsrc);
+
+    if (error == -1) {
+      printf("ERROR in ViERTP_RTCP::SetRtxReceivePayloadType\n");
+      return -1;
+    }
+
+    error = ptrViERtpRtcp->SetRtxSendPayloadType(videoChannel, kRtxPayloadType);
+    if (error == -1) {
+      printf("ERROR in ViERTP_RTCP::SetRtxSendPayloadType\n");
+      return -1;
+    }
+
+    error = ptrViERtpRtcp->SetRtxReceivePayloadType(videoChannel,
+                                                    kRtxPayloadType);
+    if (error == -1) {
+      printf("ERROR in ViERTP_RTCP::SetRtxReceivePayloadType\n");
+      return -1;
+    }
     //
     // Set up rendering
     //
     webrtc::ViERender* ptrViERender = webrtc::ViERender::GetInterface(ptrViE);
-    if (ptrViERender == NULL)
-    {
-        printf("ERROR in ViERender::GetInterface\n");
-        return -1;
+    if (ptrViERender == NULL) {
+      printf("ERROR in ViERender::GetInterface\n");
+      return -1;
     }
 
     error

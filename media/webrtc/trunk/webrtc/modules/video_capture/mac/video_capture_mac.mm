@@ -13,22 +13,19 @@
  *
  */
 
-
-// super class stuff
-#include "../video_capture_impl.h"
-#include "../device_info_impl.h"
-#include "../video_capture_config.h"
-#include "ref_count.h"
-
-#include "trace.h"
-
 #include <QuickTime/QuickTime.h>
+
+#include "webrtc/modules/video_capture/device_info_impl.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
+#include "webrtc/modules/video_capture/video_capture_impl.h"
+#include "webrtc/system_wrappers/interface/ref_count.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 // 10.4 support must be decided runtime. We will just decide which framework to
 // use at compile time "work" classes. One for QTKit, one for QuickTime
 #if __MAC_OS_X_VERSION_MIN_REQUIRED == __MAC_10_4 // QuickTime version
-#include "QuickTime/video_capture_quick_time.h"
-#include "QuickTime/video_capture_quick_time_info.h"
+#include <QuickTime/video_capture_quick_time.h>
+#include <QuickTime/video_capture_quick_time_info.h>
 #else
 #include "qtkit/video_capture_qtkit.h"
 #include "qtkit/video_capture_qtkit_info.h"
@@ -272,4 +269,3 @@ VideoCaptureImpl::CreateDeviceInfo(const int32_t id)
  ***************************************************************************/
 }  // namespace videocapturemodule
 }  // namespace webrtc
-

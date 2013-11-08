@@ -12,13 +12,15 @@
 
 #include "webrtc/modules/audio_coding/codecs/cng/include/webrtc_cng.h"
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/main/source/acm_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq_help_macros.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
+
+namespace acm1 {
 
 ACMCNG::ACMCNG(int16_t codec_id) {
   encoder_inst_ptr_ = NULL;
@@ -139,5 +141,10 @@ void ACMCNG::InternalDestructEncoderInst(void* ptr_inst) {
   }
   return;
 }
+
+int16_t ACMCNG::EnableDTX() { return -1; }
+int16_t ACMCNG::DisableDTX() { return -1; }
+
+}  // namespace acm1
 
 }  // namespace webrtc

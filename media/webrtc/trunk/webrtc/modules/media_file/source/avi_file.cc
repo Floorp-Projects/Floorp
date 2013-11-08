@@ -12,7 +12,7 @@
 // is detected by asserts in many places. Also a refactoring of this class would
 // be beneficial.
 
-#include "avi_file.h"
+#include "webrtc/modules/media_file/source/avi_file.h"
 
 #include <assert.h>
 #include <string.h>
@@ -21,10 +21,10 @@
 #include <windows.h>
 #endif
 
-#include "critical_section_wrapper.h"
-#include "file_wrapper.h"
-#include "list_wrapper.h"
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/system_wrappers/interface/list_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 // http://msdn2.microsoft.com/en-us/library/ms779636.aspx
 // A chunk has the following form:
@@ -1763,4 +1763,4 @@ void AviFile::WriteIndex()
     }
     PutLE32LengthFromCurrent(static_cast<long>(idxChunkSize));
 }
-} // namespace webrtc
+}  // namespace webrtc

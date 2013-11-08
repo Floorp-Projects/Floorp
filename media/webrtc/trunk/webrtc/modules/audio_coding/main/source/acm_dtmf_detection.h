@@ -17,6 +17,8 @@
 
 namespace webrtc {
 
+namespace acm1 {
+
 class ACMDTMFDetection {
  public:
   ACMDTMFDetection();
@@ -33,6 +35,8 @@ class ACMDTMFDetection {
   ACMResampler resampler_;
 };
 
-} // namespace webrtc
+}  // namespace acm1
+
+}  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_AUDIO_CODING_MAIN_SOURCE_ACM_DTMF_DETECTION_H_

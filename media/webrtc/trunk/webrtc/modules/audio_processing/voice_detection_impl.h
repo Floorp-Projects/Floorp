@@ -27,28 +27,28 @@ class VoiceDetectionImpl : public VoiceDetection,
   int ProcessCaptureAudio(AudioBuffer* audio);
 
   // VoiceDetection implementation.
-  virtual bool is_enabled() const;
+  virtual bool is_enabled() const OVERRIDE;
 
   // ProcessingComponent implementation.
-  virtual int Initialize();
+  virtual int Initialize() OVERRIDE;
 
  private:
   // VoiceDetection implementation.
-  virtual int Enable(bool enable);
-  virtual int set_stream_has_voice(bool has_voice);
-  virtual bool stream_has_voice() const;
-  virtual int set_likelihood(Likelihood likelihood);
-  virtual Likelihood likelihood() const;
-  virtual int set_frame_size_ms(int size);
-  virtual int frame_size_ms() const;
+  virtual int Enable(bool enable) OVERRIDE;
+  virtual int set_stream_has_voice(bool has_voice) OVERRIDE;
+  virtual bool stream_has_voice() const OVERRIDE;
+  virtual int set_likelihood(Likelihood likelihood) OVERRIDE;
+  virtual Likelihood likelihood() const OVERRIDE;
+  virtual int set_frame_size_ms(int size) OVERRIDE;
+  virtual int frame_size_ms() const OVERRIDE;
 
   // ProcessingComponent implementation.
-  virtual void* CreateHandle() const;
-  virtual int InitializeHandle(void* handle) const;
-  virtual int ConfigureHandle(void* handle) const;
-  virtual int DestroyHandle(void* handle) const;
-  virtual int num_handles_required() const;
-  virtual int GetHandleError(void* handle) const;
+  virtual void* CreateHandle() const OVERRIDE;
+  virtual int InitializeHandle(void* handle) const OVERRIDE;
+  virtual int ConfigureHandle(void* handle) const OVERRIDE;
+  virtual int DestroyHandle(void* handle) const OVERRIDE;
+  virtual int num_handles_required() const OVERRIDE;
+  virtual int GetHandleError(void* handle) const OVERRIDE;
 
   const AudioProcessingImpl* apm_;
   bool stream_has_voice_;

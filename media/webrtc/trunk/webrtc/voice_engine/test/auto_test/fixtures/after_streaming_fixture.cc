@@ -10,7 +10,7 @@
 
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
 
-#include <cstring>
+#include <string.h>
 
 AfterStreamingFixture::AfterStreamingFixture()
     : channel_(voe_base_->CreateChannel()) {

@@ -38,7 +38,7 @@ PreemptiveExpand::ReturnCodes PreemptiveExpand::Process(
                               length_change_samples);
 }
 
-void PreemptiveExpand::SetParametersForPassiveSpeech(int len,
+void PreemptiveExpand::SetParametersForPassiveSpeech(size_t len,
                                                      int16_t* best_correlation,
                                                      int* peak_index) const {
   // When the signal does not contain any active speech, the correlation does
@@ -49,11 +49,12 @@ void PreemptiveExpand::SetParametersForPassiveSpeech(int len,
   // but we must ensure that best_correlation is not larger than the length of
   // the new data.
   // but we must ensure that best_correlation is not larger than the new data.
-  *peak_index = std::min(*peak_index, len - old_data_length_per_channel_);
+  *peak_index = std::min(*peak_index,
+                         static_cast<int>(len - old_data_length_per_channel_));
 }
 
 PreemptiveExpand::ReturnCodes PreemptiveExpand::CheckCriteriaAndStretch(
-    const int16_t *input, int input_length, size_t peak_index,
+    const int16_t *input, size_t input_length, size_t peak_index,
     int16_t best_correlation, bool active_speech,
     AudioMultiVector<int16_t>* output) const {
   // Pre-calculate common multiplication with |fs_mult_|.

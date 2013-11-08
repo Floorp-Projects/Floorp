@@ -10,9 +10,11 @@
 
 #include "webrtc/modules/video_coding/main/test/mt_test_common.h"
 
-#include <cmath>
+#include <math.h>
 
 #include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_receiver.h"
 #include "webrtc/modules/utility/interface/rtp_dump.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 
@@ -95,7 +97,14 @@ TransportCallback::TransportPackets()
           delete packet;
           return -1;
         }
-        if (_rtp->IncomingRtpPacket(packet->data, packet->length, header) < 0)
+        PayloadUnion payload_specific;
+        if (!rtp_payload_registry_->GetPayloadSpecifics(
+            header.payloadType, &payload_specific)) {
+          return -1;
+        }
+        if (!rtp_receiver_->IncomingRtpPacket(header, packet->data,
+                                              packet->length, payload_specific,
+                                              true))
         {
             delete packet;
             return -1;

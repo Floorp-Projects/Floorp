@@ -10,7 +10,7 @@
 
 #include <math.h>
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 #include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
 #include "webrtc/modules/video_coding/codecs/test/packet_manipulator.h"
@@ -21,6 +21,7 @@
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/test/testsupport/frame_reader.h"
 #include "webrtc/test/testsupport/frame_writer.h"
+#include "webrtc/test/testsupport/gtest_disable.h"
 #include "webrtc/test/testsupport/metrics/video_metrics.h"
 #include "webrtc/test/testsupport/packet_reader.h"
 #include "webrtc/typedefs.h"
@@ -557,7 +558,8 @@ void SetRateControlMetrics(RateControlMetrics* rc_metrics,
 // Run with no packet loss and fixed bitrate. Quality should be very high.
 // One key frame (first frame only) in sequence. Setting |key_frame_interval|
 // to -1 below means no periodic key frames in test.
-TEST_F(VideoProcessorIntegrationTest, ProcessZeroPacketLoss) {
+TEST_F(VideoProcessorIntegrationTest,
+       DISABLED_ON_ANDROID(ProcessZeroPacketLoss)) {
   // Bitrate and frame rate profile.
   RateProfile rate_profile;
   SetRateProfilePars(&rate_profile, 0, 500, 30, 0);
@@ -580,7 +582,8 @@ TEST_F(VideoProcessorIntegrationTest, ProcessZeroPacketLoss) {
 
 // Run with 5% packet loss and fixed bitrate. Quality should be a bit lower.
 // One key frame (first frame only) in sequence.
-TEST_F(VideoProcessorIntegrationTest, Process5PercentPacketLoss) {
+TEST_F(VideoProcessorIntegrationTest,
+       DISABLED_ON_ANDROID(Process5PercentPacketLoss)) {
   // Bitrate and frame rate profile.
   RateProfile rate_profile;
   SetRateProfilePars(&rate_profile, 0, 500, 30, 0);
@@ -603,7 +606,8 @@ TEST_F(VideoProcessorIntegrationTest, Process5PercentPacketLoss) {
 
 // Run with 10% packet loss and fixed bitrate. Quality should be even lower.
 // One key frame (first frame only) in sequence.
-TEST_F(VideoProcessorIntegrationTest, Process10PercentPacketLoss) {
+TEST_F(VideoProcessorIntegrationTest,
+       DISABLED_ON_ANDROID(Process10PercentPacketLoss)) {
   // Bitrate and frame rate profile.
   RateProfile rate_profile;
   SetRateProfilePars(&rate_profile, 0, 500, 30, 0);
@@ -628,7 +632,8 @@ TEST_F(VideoProcessorIntegrationTest, Process10PercentPacketLoss) {
 // low to high to medium. Check that quality and encoder response to the new
 // target rate/per-frame bandwidth (for each rate update) is within limits.
 // One key frame (first frame only) in sequence.
-TEST_F(VideoProcessorIntegrationTest, ProcessNoLossChangeBitRate) {
+TEST_F(VideoProcessorIntegrationTest,
+       DISABLED_ON_ANDROID(ProcessNoLossChangeBitRate)) {
   // Bitrate and frame rate profile.
   RateProfile rate_profile;
   SetRateProfilePars(&rate_profile, 0, 200, 30, 0);
@@ -660,7 +665,8 @@ TEST_F(VideoProcessorIntegrationTest, ProcessNoLossChangeBitRate) {
 // for the rate control metrics can be lower. One key frame (first frame only).
 // Note: quality after update should be higher but we currently compute quality
 // metrics avergaed over whole sequence run.
-TEST_F(VideoProcessorIntegrationTest, ProcessNoLossChangeFrameRateFrameDrop) {
+TEST_F(VideoProcessorIntegrationTest,
+       DISABLED_ON_ANDROID(ProcessNoLossChangeFrameRateFrameDrop)) {
   config_.networking_config.packet_loss_probability = 0;
   // Bitrate and frame rate profile.
   RateProfile rate_profile;
@@ -692,7 +698,8 @@ TEST_F(VideoProcessorIntegrationTest, ProcessNoLossChangeFrameRateFrameDrop) {
 // spatial resize down at first key frame, and back up at second key frame.
 // Error_concealment is off in this test since there is a memory leak with
 // resizing and error concealment.
-TEST_F(VideoProcessorIntegrationTest, ProcessNoLossSpatialResizeFrameDrop) {
+TEST_F(VideoProcessorIntegrationTest,
+       DISABLED_ON_ANDROID(ProcessNoLossSpatialResizeFrameDrop)) {
   config_.networking_config.packet_loss_probability = 0;
   // Bitrate and frame rate profile.
   RateProfile rate_profile;
@@ -724,7 +731,8 @@ TEST_F(VideoProcessorIntegrationTest, ProcessNoLossSpatialResizeFrameDrop) {
 // encoding rate mismatch are applied to each layer.
 // No dropped frames in this test, and internal spatial resizer is off.
 // One key frame (first frame only) in sequence, so no spatial resizing.
-TEST_F(VideoProcessorIntegrationTest, ProcessNoLossTemporalLayers) {
+TEST_F(VideoProcessorIntegrationTest,
+       DISABLED_ON_ANDROID(ProcessNoLossTemporalLayers)) {
   config_.networking_config.packet_loss_probability = 0;
   // Bitrate and frame rate profile.
   RateProfile rate_profile;

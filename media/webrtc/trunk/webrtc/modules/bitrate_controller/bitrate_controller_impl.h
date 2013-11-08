@@ -15,13 +15,13 @@
 #ifndef WEBRTC_MODULES_BITRATE_CONTROLLER_BITRATE_CONTROLLER_IMPL_H_
 #define WEBRTC_MODULES_BITRATE_CONTROLLER_BITRATE_CONTROLLER_IMPL_H_
 
-#include "modules/bitrate_controller/include/bitrate_controller.h"
+#include "webrtc/modules/bitrate_controller/include/bitrate_controller.h"
 
 #include <list>
 #include <map>
 
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "modules/bitrate_controller/send_side_bandwidth_estimation.h"
+#include "webrtc/modules/bitrate_controller/send_side_bandwidth_estimation.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 
@@ -34,16 +34,16 @@ class BitrateControllerImpl : public BitrateController {
   explicit BitrateControllerImpl();
   virtual ~BitrateControllerImpl();
 
-  virtual bool AvailableBandwidth(uint32_t* bandwidth) const;
+  virtual bool AvailableBandwidth(uint32_t* bandwidth) const OVERRIDE;
 
-  virtual RtcpBandwidthObserver* CreateRtcpBandwidthObserver();
+  virtual RtcpBandwidthObserver* CreateRtcpBandwidthObserver() OVERRIDE;
 
   virtual void SetBitrateObserver(BitrateObserver* observer,
                                   const uint32_t start_bitrate,
                                   const uint32_t min_bitrate,
-                                  const uint32_t max_bitrate);
+                                  const uint32_t max_bitrate) OVERRIDE;
 
-  virtual void RemoveBitrateObserver(BitrateObserver* observer);
+  virtual void RemoveBitrateObserver(BitrateObserver* observer) OVERRIDE;
 
  protected:
   struct BitrateConfiguration {

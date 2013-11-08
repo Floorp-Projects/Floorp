@@ -85,6 +85,6 @@ private:
     VPMFramePreprocessor       _framePreProcessor;
 };
 
-} // namespace
+}  // namespace
 
 #endif

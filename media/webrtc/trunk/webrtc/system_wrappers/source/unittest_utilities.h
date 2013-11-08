@@ -60,7 +60,7 @@ class ScopedTracing {
   void StartTrace() {
     if (logging_) {
       Trace::CreateTrace();
-      Trace::SetLevelFilter(webrtc::kTraceAll);
+      Trace::set_level_filter(webrtc::kTraceAll);
       Trace::SetTraceCallback(&trace_);
     }
   }

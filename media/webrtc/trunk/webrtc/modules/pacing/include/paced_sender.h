@@ -70,7 +70,9 @@ class PacedSender : public Module {
   // pad. We will send padding packets to increase the total bitrate until we
   // reach |pad_up_to_bitrate_kbps|. If the media bitrate is above
   // |pad_up_to_bitrate_kbps| no padding will be sent.
-  void UpdateBitrate(int target_bitrate_kbps, int pad_up_to_bitrate_kbps);
+  void UpdateBitrate(int target_bitrate_kbps,
+                     int max_padding_bitrate_kbps,
+                     int pad_up_to_bitrate_kbps);
 
   // Returns true if we send the packet now, else it will add the packet
   // information to the queue and call TimeToSendPacket when it's time to send.
@@ -85,10 +87,10 @@ class PacedSender : public Module {
 
   // Returns the number of milliseconds until the module want a worker thread
   // to call Process.
-  virtual int32_t TimeUntilNextProcess();
+  virtual int32_t TimeUntilNextProcess() OVERRIDE;
 
   // Process any pending packets in the queue(s).
-  virtual int32_t Process();
+  virtual int32_t Process() OVERRIDE;
 
  private:
   // Return true if next packet in line should be transmitted.

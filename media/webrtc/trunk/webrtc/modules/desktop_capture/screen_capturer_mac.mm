@@ -219,6 +219,29 @@ class ScreenCapturerMac : public ScreenCapturer {
   DISALLOW_COPY_AND_ASSIGN(ScreenCapturerMac);
 };
 
+// DesktopFrame wrapper that flips wrapped frame upside down by inverting
+// stride.
+class InvertedDesktopFrame : public DesktopFrame {
+ public:
+  // Takes ownership of |frame|.
+  InvertedDesktopFrame(DesktopFrame* frame)
+      : DesktopFrame(
+            frame->size(), -frame->stride(),
+            frame->data() + (frame->size().height() - 1) * frame->stride(),
+            frame->shared_memory()),
+        original_frame_(frame) {
+    set_dpi(frame->dpi());
+    set_capture_time_ms(frame->capture_time_ms());
+    mutable_updated_region()->Swap(frame->mutable_updated_region());
+  }
+  virtual ~InvertedDesktopFrame() {}
+
+ private:
+  scoped_ptr<DesktopFrame> original_frame_;
+
+  DISALLOW_COPY_AND_ASSIGN(InvertedDesktopFrame);
+};
+
 DesktopFrame* CreateFrame(
     const MacDesktopConfiguration& desktop_config) {
 
@@ -364,15 +387,11 @@ void ScreenCapturerMac::Capture(
     CgBlitPreLion(*current_frame, region);
   }
 
-  uint8_t* buffer = current_frame->data();
-  int stride = current_frame->stride();
-  if (flip) {
-    stride = -stride;
-    buffer += (current_frame->size().height() - 1) * current_frame->stride();
-  }
-
   DesktopFrame* new_frame = queue_.current_frame()->Share();
   *new_frame->mutable_updated_region() = region;
+
+  if (flip)
+    new_frame = new InvertedDesktopFrame(new_frame);
 
   helper_.set_size_most_recent(new_frame->size());
 
@@ -721,7 +740,14 @@ void ScreenCapturerMac::ScreenConfigurationChanged() {
   LOG(LS_INFO) << "Using GlBlit";
 
   CGLPixelFormatAttribute attributes[] = {
+    // This function does an early return if IsOSLionOrLater(), this code only
+    // runs on 10.6 and can be deleted once 10.6 support is dropped.  So just
+    // keep using kCGLPFAFullScreen even though it was deprecated in 10.6 --
+    // it's still functional there, and it's not used on newer OS X versions.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     kCGLPFAFullScreen,
+#pragma clang diagnostic pop
     kCGLPFADisplayMask,
     (CGLPixelFormatAttribute)CGDisplayIDToOpenGLDisplayMask(mainDevice),
     (CGLPixelFormatAttribute)0

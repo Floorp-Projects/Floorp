@@ -50,7 +50,7 @@
         'video_coding/codecs/test_framework/test_framework.gypi',
         'video_coding/codecs/tools/video_codecs_tools.gypi',
       ], # includes
-     'variables': {
+      'variables': {
         'conditions': [
           # Desktop capturer is supported only on Windows, OSX and Linux.
           ['OS=="win" or OS=="mac" or OS=="linux"', {
@@ -63,7 +63,7 @@
       'targets': [
         {
           'target_name': 'modules_unittests',
-          'type': 'executable',
+          'type': '<(gtest_target_type)',
           'dependencies': [
             'audio_coding_module',
             'audio_processing',
@@ -87,12 +87,14 @@
             'webrtc_utility',
             'webrtc_video_coding',
             '<@(neteq_dependencies)',
+            '<(rbe_components_path)/remote_bitrate_estimator_components.gyp:rbe_components',
             '<(DEPTH)/testing/gmock.gyp:gmock',
             '<(DEPTH)/testing/gtest.gyp:gtest',
             '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/modules/video_coding/codecs/vp8/vp8.gyp:webrtc_vp8',
             '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
             '<(webrtc_root)/test/test.gyp:test_support_main',
+            '<(webrtc_root)/common_video/common_video.gyp:frame_generator',
           ],
           'sources': [
             'audio_coding/main/source/acm_neteq_unittest.cc',
@@ -144,7 +146,7 @@
             'audio_processing/aec/system_delay_unittest.cc',
             'audio_processing/aec/echo_cancellation_unittest.cc',
             'audio_processing/echo_cancellation_impl_unittest.cc',
-            'audio_processing/test/unit_test.cc',
+            'audio_processing/test/audio_processing_unittest.cc',
             'audio_processing/utility/delay_estimator_unittest.cc',
             'audio_processing/utility/ring_buffer_unittest.cc',
             'bitrate_controller/bitrate_controller_unittest.cc',
@@ -164,18 +166,17 @@
             'pacing/paced_sender_unittest.cc',
             'remote_bitrate_estimator/include/mock/mock_remote_bitrate_observer.h',
             'remote_bitrate_estimator/bitrate_estimator_unittest.cc',
-            'remote_bitrate_estimator/remote_bitrate_estimator_multi_stream_unittest.cc',
             'remote_bitrate_estimator/remote_bitrate_estimator_single_stream_unittest.cc',
             'remote_bitrate_estimator/remote_bitrate_estimator_unittest_helper.cc',
             'remote_bitrate_estimator/remote_bitrate_estimator_unittest_helper.h',
             'remote_bitrate_estimator/rtp_to_ntp_unittest.cc',
             'rtp_rtcp/source/mock/mock_rtp_payload_strategy.h',
-            'rtp_rtcp/source/mock/mock_rtp_receiver_video.h',
+            'rtp_rtcp/source/fec_receiver_unittest.cc',
             'rtp_rtcp/source/fec_test_helper.cc',
             'rtp_rtcp/source/fec_test_helper.h',
             'rtp_rtcp/source/nack_rtx_unittest.cc',
             'rtp_rtcp/source/producer_fec_unittest.cc',
-            'rtp_rtcp/source/receiver_fec_unittest.cc',
+            'rtp_rtcp/source/receive_statistics_unittest.cc',
             'rtp_rtcp/source/rtcp_format_remb_unittest.cc',
             'rtp_rtcp/source/rtcp_sender_unittest.cc',
             'rtp_rtcp/source/rtcp_receiver_unittest.cc',
@@ -205,12 +206,13 @@
             'video_coding/main/source/jitter_buffer_unittest.cc',
             'video_coding/main/source/receiver_unittest.cc',
             'video_coding/main/source/session_info_unittest.cc',
-            'video_coding/main/source/stream_generator.cc',
-            'video_coding/main/source/stream_generator.h',
             'video_coding/main/source/timing_unittest.cc',
             'video_coding/main/source/video_coding_robustness_unittest.cc',
-            'video_coding/main/source/video_coding_impl_unittest.cc',
+            'video_coding/main/source/video_receiver_unittest.cc',
+            'video_coding/main/source/video_sender_unittest.cc',
             'video_coding/main/source/qm_select_unittest.cc',
+            'video_coding/main/source/test/stream_generator.cc',
+            'video_coding/main/source/test/stream_generator.h',
             'video_coding/main/test/pcap_file_reader.cc',
             'video_coding/main/test/pcap_file_reader_unittest.cc',
             'video_coding/main/test/rtp_file_reader.cc',
@@ -220,8 +222,8 @@
             'video_processing/main/test/unit_test/content_metrics_test.cc',
             'video_processing/main/test/unit_test/deflickering_test.cc',
             'video_processing/main/test/unit_test/denoising_test.cc',
-            'video_processing/main/test/unit_test/unit_test.cc',
-            'video_processing/main/test/unit_test/unit_test.h',
+            'video_processing/main/test/unit_test/video_processing_unittest.cc',
+            'video_processing/main/test/unit_test/video_processing_unittest.h',
           ],
           'conditions': [
             # Run screen/window capturer tests only on platforms where they are
@@ -248,6 +250,13 @@
                 '<(DEPTH)/third_party/libvpx/libvpx.gyp:libvpx',
               ],
             }],
+            # TODO(henrike): remove build_with_chromium==1 when the bots are
+            # using Chromium's buildbots.
+            ['build_with_chromium==1 and OS=="android" and gtest_target_type=="shared_library"', {
+              'dependencies': [
+                '<(DEPTH)/testing/android/native_test.gyp:native_test_native_code',
+              ],
+            }],
           ],
           # Disable warnings to enable Win64 build, issue 1323.
           'msvs_disabled_warnings': [
@@ -255,8 +264,8 @@
           ],
         },
         {
-          'target_name': 'modules_integrationtests',
-          'type': 'executable',
+          'target_name': 'modules_tests',
+          'type': '<(gtest_target_type)',
           'dependencies': [
             'audio_coding_module',
             'rtp_rtcp',
@@ -300,7 +309,70 @@
             'video_coding/codecs/test/videoprocessor_integrationtest.cc',
             'video_coding/codecs/vp8/test/vp8_impl_unittest.cc',
           ],
+          'conditions': [
+            # TODO(henrike): remove build_with_chromium==1 when the bots are
+            # using Chromium's buildbots.
+            ['build_with_chromium==1 and OS=="android" and gtest_target_type=="shared_library"', {
+              'dependencies': [
+                '<(DEPTH)/testing/android/native_test.gyp:native_test_native_code',
+              ],
+            }],
+          ],
         },
+      ],
+      'conditions': [
+        # TODO(henrike): remove build_with_chromium==1 when the bots are using
+        # Chromium's buildbots.
+        ['build_with_chromium==1 and OS=="android" and gtest_target_type=="shared_library"', {
+          'targets': [
+            {
+              'target_name': 'modules_unittests_apk_target',
+              'type': 'none',
+              'dependencies': [
+                '<(apk_tests_path):modules_unittests_apk',
+              ],
+            },
+            {
+              'target_name': 'modules_tests_apk_target',
+              'type': 'none',
+              'dependencies': [
+                '<(apk_tests_path):modules_tests_apk',
+              ],
+            },
+          ],
+        }],
+        ['test_isolation_mode != "noop"', {
+          'targets': [
+            {
+              'target_name': 'modules_tests_run',
+              'type': 'none',
+              'dependencies': [
+                '<(import_isolate_path):import_isolate_gypi',
+                'modules_tests',
+              ],
+              'includes': [
+                'modules_tests.isolate',
+              ],
+              'sources': [
+                'modules_tests.isolate',
+              ],
+            },
+            {
+              'target_name': 'modules_unittests_run',
+              'type': 'none',
+              'dependencies': [
+                '<(import_isolate_path):import_isolate_gypi',
+                'modules_unittests',
+              ],
+              'includes': [
+                'modules_unittests.isolate',
+              ],
+              'sources': [
+                'modules_unittests.isolate',
+              ],
+            },
+          ],
+        }],
       ],
     }], # include_tests
   ], # conditions

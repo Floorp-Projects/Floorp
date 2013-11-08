@@ -56,7 +56,7 @@ void ViEFrameProviderBase::DeliverFrame(
 
   // Deliver the frame to all registered callbacks.
   if (frame_callbacks_.size() > 0) {
-    if (frame_callbacks_.size() == 1) {
+    if (frame_callbacks_.size() == 1 || video_frame->native_handle() != NULL) {
       // We don't have to copy the frame.
       frame_callbacks_.front()->DeliverFrame(id_, video_frame, num_csrcs, CSRC);
     } else {

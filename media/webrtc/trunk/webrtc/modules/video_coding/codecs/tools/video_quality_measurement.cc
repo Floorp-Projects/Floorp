@@ -8,29 +8,29 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <assert.h>
+#include <stdio.h>
+#include <time.h>
+
 #include <stdarg.h>
 #include <sys/stat.h>  // To check for directory existence.
-
-#include <cassert>
-#include <cstdio>
-#include <ctime>
 
 #ifndef S_ISDIR  // Not defined in stat.h on Windows.
 #define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
 #endif
 
-#include "common_types.h"
-#include "google/gflags.h"
-#include "modules/video_coding/codecs/test/packet_manipulator.h"
-#include "modules/video_coding/codecs/test/stats.h"
-#include "modules/video_coding/codecs/test/videoprocessor.h"
-#include "modules/video_coding/codecs/vp8/include/vp8.h"
-#include "modules/video_coding/main/interface/video_coding.h"
-#include "system_wrappers/interface/trace.h"
-#include "testsupport/frame_reader.h"
-#include "testsupport/frame_writer.h"
-#include "testsupport/metrics/video_metrics.h"
-#include "testsupport/packet_reader.h"
+#include "gflags/gflags.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/video_coding/codecs/test/packet_manipulator.h"
+#include "webrtc/modules/video_coding/codecs/test/stats.h"
+#include "webrtc/modules/video_coding/codecs/test/videoprocessor.h"
+#include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/test/testsupport/frame_reader.h"
+#include "webrtc/test/testsupport/frame_writer.h"
+#include "webrtc/test/testsupport/metrics/video_metrics.h"
+#include "webrtc/test/testsupport/packet_reader.h"
 
 DEFINE_string(test_name, "Quality test", "The name of the test to run. ");
 DEFINE_string(test_description, "", "A more detailed description about what "

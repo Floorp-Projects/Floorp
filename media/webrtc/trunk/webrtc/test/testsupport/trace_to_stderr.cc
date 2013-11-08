@@ -10,8 +10,8 @@
 
 #include "webrtc/test/testsupport/trace_to_stderr.h"
 
-#include <cassert>
-#include <cstdio>
+#include <assert.h>
+#include <stdio.h>
 
 #include <string>
 
@@ -23,23 +23,25 @@ static const int kLevelFilter = kTraceError | kTraceWarning | kTraceTerseInfo;
 TraceToStderr::TraceToStderr()
     : override_time_(false),
       time_seconds_(0) {
+  Trace::set_level_filter(kLevelFilter);
   Trace::CreateTrace();
   Trace::SetTraceCallback(this);
-  Trace::SetLevelFilter(kLevelFilter);
 }
 
 TraceToStderr::TraceToStderr(bool override_time)
     : override_time_(override_time),
       time_seconds_(0) {
+  Trace::set_level_filter(kLevelFilter);
   Trace::CreateTrace();
   Trace::SetTraceCallback(this);
-  Trace::SetLevelFilter(kLevelFilter);
 }
 
 TraceToStderr::~TraceToStderr() {
   Trace::SetTraceCallback(NULL);
   Trace::ReturnTrace();
 }
+
+void TraceToStderr::SetTimeSeconds(float time) { time_seconds_ = time; }
 
 void TraceToStderr::Print(TraceLevel level, const char* msg_array, int length) {
   if (level & kLevelFilter) {
