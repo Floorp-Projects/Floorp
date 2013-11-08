@@ -11,6 +11,7 @@
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
 
 #include <assert.h>
+#include <cstdlib> // for abs()
 #include <string.h>
 
 #include <algorithm>

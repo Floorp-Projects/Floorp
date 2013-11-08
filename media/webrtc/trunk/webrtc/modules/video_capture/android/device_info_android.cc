@@ -16,6 +16,8 @@
 #include "webrtc/system_wrappers/interface/ref_count.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
+#include "AndroidJNIWrapper.h"
+
 namespace webrtc
 {
 
@@ -52,16 +54,13 @@ DeviceInfoAndroid::~DeviceInfoAndroid() {
 }
 
 uint32_t DeviceInfoAndroid::NumberOfDevices() {
-  JNIEnv *env;
-  jclass javaCmDevInfoClass;
-  jobject javaCmDevInfoObject;
-  bool attached = false;
-  if (VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
-          env,
-          javaCmDevInfoClass,
-          javaCmDevInfoObject,
-          attached) != 0)
-    return 0;
+  AutoLocalJNIFrame jniFrame;
+  JNIEnv* env = jniFrame.GetEnv();
+  if (!env)
+      return 0;
+
+  jclass javaCmDevInfoClass = jniFrame.GetCmDevInfoClass();
+  jobject javaCmDevInfoObject = jniFrame.GetCmDevInfoObject();
 
   WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id,
                "%s GetMethodId", __FUNCTION__);
@@ -76,7 +75,6 @@ uint32_t DeviceInfoAndroid::NumberOfDevices() {
                  "%s Calling Number of devices", __FUNCTION__);
     numberOfDevices = env->CallIntMethod(javaCmDevInfoObject, cid);
   }
-  VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
 
   if (numberOfDevices > 0)
     return numberOfDevices;
@@ -92,17 +90,14 @@ int32_t DeviceInfoAndroid::GetDeviceName(
     char* /*productUniqueIdUTF8*/,
     uint32_t /*productUniqueIdUTF8Length*/) {
 
-  JNIEnv *env;
-  jclass javaCmDevInfoClass;
-  jobject javaCmDevInfoObject;
   int32_t result = 0;
-  bool attached = false;
-  if (VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
-          env,
-          javaCmDevInfoClass,
-          javaCmDevInfoObject,
-          attached)!= 0)
-    return -1;
+  AutoLocalJNIFrame jniFrame;
+  JNIEnv* env = jniFrame.GetEnv();
+  if (!env)
+      return -1;
+
+  jclass javaCmDevInfoClass = jniFrame.GetCmDevInfoClass();
+  jobject javaCmDevInfoObject = jniFrame.GetCmDevInfoObject();
 
   // get the method ID for the Android Java GetDeviceUniqueName name.
   jmethodID cid = env->GetMethodID(javaCmDevInfoClass, "GetDeviceUniqueName",
@@ -151,8 +146,6 @@ int32_t DeviceInfoAndroid::GetDeviceName(
     result = -1;
   }
 
-  VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
-
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
                "%s: result %d", __FUNCTION__, (int) result);
   return result;
@@ -168,21 +161,17 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
     delete it->second;
   _captureCapabilities.clear();
 
-  JNIEnv *env;
-  jclass javaCmDevInfoClass;
-  jobject javaCmDevInfoObject;
-  bool attached = false;
-  if (VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
-          env,
-          javaCmDevInfoClass,
-          javaCmDevInfoObject,
-          attached) != 0)
-    return -1;
+  AutoLocalJNIFrame jniFrame;
+  JNIEnv* env = jniFrame.GetEnv();
+  if (!env)
+      return -1;
+
+  jclass javaCmDevInfoClass = jniFrame.GetCmDevInfoClass();
+  jobject javaCmDevInfoObject = jniFrame.GetCmDevInfoObject();
 
   // Find the capability class
-  jclass javaCapClass = g_capabilityClass;
+  jclass javaCapClass = jsjni_GetGlobalClassRef(AndroidJavaCaptureCapabilityClass);
   if (javaCapClass == NULL) {
-    VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                  "%s: SetAndroidCaptureClasses must be called first!",
                  __FUNCTION__);
@@ -195,7 +184,6 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
       "GetCapabilityArray",
       "(Ljava/lang/String;)[Lorg/webrtc/videoengine/CaptureCapabilityAndroid;");
   if (cid == NULL) {
-    VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                  "%s: Can't find method GetCapabilityArray.", __FUNCTION__);
     return -1;
@@ -204,7 +192,6 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
   jstring capureIdString = env->NewStringUTF((char*) deviceUniqueIdUTF8);
 
   if (capureIdString == NULL) {
-    VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                  "%s: Can't create string for  method GetCapabilityArray.",
                  __FUNCTION__);
@@ -214,7 +201,6 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
   jobject javaCapabilitiesObj = env->CallObjectMethod(javaCmDevInfoObject,
                                                       cid, capureIdString);
   if (!javaCapabilitiesObj) {
-    VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                  "%s: Failed to call java GetCapabilityArray.",
                  __FUNCTION__);
@@ -225,7 +211,6 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
   jfieldID heigtField = env->GetFieldID(javaCapClass, "height", "I");
   jfieldID maxFpsField = env->GetFieldID(javaCapClass, "maxFPS", "I");
   if (widthField == NULL || heigtField == NULL || maxFpsField == NULL) {
-    VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                  "%s: Failed to get field Id.", __FUNCTION__);
     return -1;
@@ -258,7 +243,8 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
          deviceUniqueIdUTF8,
          _lastUsedDeviceNameLength + 1);
 
-  VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
+  env->DeleteGlobalRef(javaCapClass);
+
   WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
                "CreateCapabilityMap %d", _captureCapabilities.size());
 
@@ -268,22 +254,18 @@ int32_t DeviceInfoAndroid::CreateCapabilityMap(
 int32_t DeviceInfoAndroid::GetOrientation(
     const char* deviceUniqueIdUTF8,
     VideoCaptureRotation& orientation) {
-  JNIEnv *env;
-  jclass javaCmDevInfoClass;
-  jobject javaCmDevInfoObject;
-  bool attached = false;
-  if (VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
-          env,
-          javaCmDevInfoClass,
-          javaCmDevInfoObject,
-          attached) != 0)
-    return -1;
+  AutoLocalJNIFrame jniFrame;
+  JNIEnv* env = jniFrame.GetEnv();
+  if (!env)
+      return -1;
+
+  jclass javaCmDevInfoClass = jniFrame.GetCmDevInfoClass();
+  jobject javaCmDevInfoObject = jniFrame.GetCmDevInfoObject();
 
   // get the method ID for the Android Java GetOrientation .
   jmethodID cid = env->GetMethodID(javaCmDevInfoClass, "GetOrientation",
                                    "(Ljava/lang/String;)I");
   if (cid == NULL) {
-    VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                  "%s: Can't find method GetOrientation.", __FUNCTION__);
     return -1;
@@ -291,7 +273,6 @@ int32_t DeviceInfoAndroid::GetOrientation(
   // Create a jstring so we can pass the deviceUniquName to the java method.
   jstring capureIdString = env->NewStringUTF((char*) deviceUniqueIdUTF8);
   if (capureIdString == NULL) {
-    VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                  "%s: Can't create string for  method GetCapabilityArray.",
                  __FUNCTION__);
@@ -300,7 +281,6 @@ int32_t DeviceInfoAndroid::GetOrientation(
   // Call the java class and get the orientation.
   jint jorientation = env->CallIntMethod(javaCmDevInfoObject, cid,
                                          capureIdString);
-  VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(attached);
 
   int32_t retValue = 0;
   switch (jorientation) {

@@ -254,7 +254,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
   JNIEnv *env;
   jvm->AttachCurrentThread(&env, nullptr);
 
-  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
+  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, env, (void*)context) != 0) {
     LOG(("VoiceEngine:SetAndroidObjects Failed"));
     return;
   }

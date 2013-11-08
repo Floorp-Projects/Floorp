@@ -145,6 +145,7 @@
             'audio_coding/neteq4/mock/mock_payload_splitter.h',
             'audio_processing/aec/system_delay_unittest.cc',
             'audio_processing/aec/echo_cancellation_unittest.cc',
+            'audio_processing/echo_cancellation_impl_unittest.cc',
             'audio_processing/test/audio_processing_unittest.cc',
             'audio_processing/utility/delay_estimator_unittest.cc',
             'audio_processing/utility/ring_buffer_unittest.cc',

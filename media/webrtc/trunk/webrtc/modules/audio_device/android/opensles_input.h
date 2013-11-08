@@ -15,7 +15,9 @@
 #include <SLES/OpenSLES_Android.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 
+#if !defined(WEBRTC_GONK)
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
+#endif
 #include "webrtc/modules/audio_device/android/low_latency_event.h"
 #include "webrtc/modules/audio_device/android/opensles_common.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
@@ -165,8 +167,10 @@ class OpenSlesInput {
   // Thread-compatible.
   bool CbThreadImpl();
 
+#if !defined(WEBRTC_GONK)
   // Java API handle
   AudioManagerJni audio_manager_;
+#endif
 
   int id_;
   webrtc_opensl::PlayoutDelayProvider* delay_provider_;
@@ -212,6 +216,21 @@ class OpenSlesInput {
 
   // Audio status
   uint16_t recording_delay_;
+
+  // dlopen for OpenSLES
+  void *opensles_lib_;
+  typedef SLresult (*slCreateEngine_t)(SLObjectItf *,
+                                       SLuint32,
+                                       const SLEngineOption *,
+                                       SLuint32,
+                                       const SLInterfaceID *,
+                                       const SLboolean *);
+  slCreateEngine_t f_slCreateEngine;
+  SLInterfaceID SL_IID_ENGINE_;
+  SLInterfaceID SL_IID_BUFFERQUEUE_;
+  SLInterfaceID SL_IID_ANDROIDCONFIGURATION_;
+  SLInterfaceID SL_IID_ANDROIDSIMPLEBUFFERQUEUE_;
+  SLInterfaceID SL_IID_RECORD_;
 };
 
 }  // namespace webrtc

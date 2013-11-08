@@ -55,7 +55,7 @@ int32_t DeviceInfoImpl::NumberOfCapabilities(
     if (_lastUsedDeviceNameLength == strlen((char*) deviceUniqueIdUTF8))
     {
         // Is it the same device that is asked for again.
-#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX)
+#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
         if(strncasecmp((char*)_lastUsedDeviceName,
                        (char*) deviceUniqueIdUTF8,
                        _lastUsedDeviceNameLength)==0)
@@ -92,7 +92,7 @@ int32_t DeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
     ReadLockScoped cs(_apiLock);
 
     if ((_lastUsedDeviceNameLength != strlen((char*) deviceUniqueIdUTF8))
-#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX)
+#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
         || (strncasecmp((char*)_lastUsedDeviceName,
                         (char*) deviceUniqueIdUTF8,
                         _lastUsedDeviceNameLength)!=0))
@@ -156,7 +156,7 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
 
     ReadLockScoped cs(_apiLock);
     if ((_lastUsedDeviceNameLength != strlen((char*) deviceUniqueIdUTF8))
-#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX)
+#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
         || (strncasecmp((char*)_lastUsedDeviceName,
                         (char*) deviceUniqueIdUTF8,
                         _lastUsedDeviceNameLength)!=0))
