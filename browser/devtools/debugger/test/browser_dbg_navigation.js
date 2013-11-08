@@ -33,7 +33,7 @@ function test() {
   });
 }
 
-function testNavigate() {
+function testNavigate([aGrip, aResponse]) {
   let outstanding = [promise.defer(), promise.defer()];
 
   gClient.addListener("tabNavigated", function onTabNavigated(aEvent, aPacket) {
@@ -51,14 +51,16 @@ function testNavigate() {
   });
 
   gBrowser.selectedTab.linkedBrowser.loadURI(TAB2_URL);
-  return promise.all(outstanding.map(e => e.promise));
+  return promise.all(outstanding.map(e => e.promise))
+                .then(() => aGrip.actor);
 }
 
-function testDetach() {
+function testDetach(aActor) {
   let deferred = promise.defer();
 
-  gClient.addOneTimeListener("tabDetached", () => {
+  gClient.addOneTimeListener("tabDetached", (aType, aPacket) => {
     ok(true, "Got a tab detach notification.");
+    is(aPacket.from, aActor, "tab detach message comes from the expected actor");
     gClient.close(deferred.resolve);
   });
 

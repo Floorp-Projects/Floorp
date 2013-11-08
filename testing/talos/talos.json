@@ -1,11 +1,11 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.e00ebeed2477.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.0987e4cbd219.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "http://hg.mozilla.org/build/talos",
-        "talos_revision": "e00ebeed2477"
+        "talos_revision": "0987e4cbd219"
     },
     "suites": {
         "chromez": {
