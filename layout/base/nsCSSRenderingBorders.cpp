@@ -11,152 +11,15 @@
 #include "RoundedRect.h"
 #include "nsClassHashtable.h"
 #include "nsStyleStruct.h"
-
 #include "gfxContext.h"
-
 #include "nsCSSRenderingBorders.h"
-
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
+#include "gfxGradientCache.h"
 #include <algorithm>
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-
-struct BorderGradientCacheKey : public PLDHashEntryHdr {
-  typedef const BorderGradientCacheKey& KeyType;
-  typedef const BorderGradientCacheKey* KeyTypePointer;
-
-  enum { ALLOW_MEMMOVE = true };
-
-  const uint32_t mColor1;
-  const uint32_t mColor2;
-  const BackendType mBackendType;
-
-  BorderGradientCacheKey(const Color& aColor1, const Color& aColor2,
-                         BackendType aBackendType)
-    : mColor1(aColor1.ToABGR()), mColor2(aColor2.ToABGR())
-    , mBackendType(aBackendType)
-  { }
-
-  BorderGradientCacheKey(const BorderGradientCacheKey* aOther)
-    : mColor1(aOther->mColor1), mColor2(aOther->mColor2)
-    , mBackendType(aOther->mBackendType)
-  { }
-
-  static PLDHashNumber
-  HashKey(const KeyTypePointer aKey)
-  {
-    PLDHashNumber hash = 0;
-    hash = AddToHash(hash, aKey->mColor1);
-    hash = AddToHash(hash, aKey->mColor2);
-    hash = AddToHash(hash, aKey->mBackendType);
-    return hash;
-  }
-
-  bool KeyEquals(KeyTypePointer aKey) const
-  {
-    return (aKey->mColor1 == mColor1) &&
-           (aKey->mColor2 == mColor2) &&
-           (aKey->mBackendType == mBackendType);
-  }
-  static KeyTypePointer KeyToPointer(KeyType aKey)
-  {
-    return &aKey;
-  }
-};
-
-/**
- * This class is what is cached. It need to be allocated in an object separated
- * to the cache entry to be able to be tracked by the nsExpirationTracker.
- * */
-struct BorderGradientCacheData {
-  BorderGradientCacheData(GradientStops* aStops, const BorderGradientCacheKey& aKey)
-    : mStops(aStops), mKey(aKey)
-  {}
-
-  BorderGradientCacheData(const BorderGradientCacheData& aOther)
-    : mStops(aOther.mStops),
-      mKey(aOther.mKey)
-  { }
-
-  nsExpirationState *GetExpirationState() {
-    return &mExpirationState;
-  }
-
-  nsExpirationState mExpirationState;
-  RefPtr<GradientStops> mStops;
-  BorderGradientCacheKey mKey;
-};
-
-/**
- * This class implements a cache with no maximum size, that retains the
- * gradient stops used to draw border corners.
- *
- * The key is formed by the two gradient stops, they're always both located
- * at an offset of 0.5. So they can generously be reused. The key also includes
- * the backend type a certain gradient was created for.
- *
- * An entry stays in the cache as long as it is used often.
- *
- * This code was pretty bluntly stolen and modified from nsCSSRendering.
- */
-class BorderGradientCache MOZ_FINAL : public nsExpirationTracker<BorderGradientCacheData,4>
-{
-  public:
-    BorderGradientCache()
-      : nsExpirationTracker<BorderGradientCacheData, 4>(GENERATION_MS)
-    {
-      mTimerPeriod = GENERATION_MS;
-    }
-
-    virtual void NotifyExpired(BorderGradientCacheData* aObject)
-    {
-      // This will free the gfxPattern.
-      RemoveObject(aObject);
-      mHashEntries.Remove(aObject->mKey);
-    }
-
-    BorderGradientCacheData* Lookup(const Color& aColor1, const Color& aColor2,
-                                    BackendType aBackendType)
-    {
-      BorderGradientCacheData* gradient =
-        mHashEntries.Get(BorderGradientCacheKey(aColor1, aColor2, aBackendType));
-
-      if (gradient) {
-        MarkUsed(gradient);
-      }
-
-      return gradient;
-    }
-
-    // Returns true if we successfully register the gradient in the cache, false
-    // otherwise.
-    bool RegisterEntry(BorderGradientCacheData* aValue)
-    {
-      nsresult rv = AddObject(aValue);
-      if (NS_FAILED(rv)) {
-        // We are OOM, and we cannot track this object. We don't want stall
-        // entries in the hash table (since the expiration tracker is responsible
-        // for removing the cache entries), so we avoid putting that entry in the
-        // table, which is a good things considering we are short on memory
-        // anyway, we probably don't want to retain things.
-        return false;
-      }
-      mHashEntries.Put(aValue->mKey, aValue);
-      return true;
-    }
-
-  protected:
-    uint32_t mTimerPeriod;
-    static const uint32_t GENERATION_MS = 4000;
-    /**
-     * FIXME use nsTHashtable to avoid duplicating the BorderGradientCacheKey.
-     * This is analogous to the issue for the generic gradient cache:
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=785794
-     */
-    nsClassHashtable<BorderGradientCacheKey, BorderGradientCacheData> mHashEntries;
-};
 
 /**
  * nsCSSRendering::PaintBorder
@@ -249,8 +112,6 @@ typedef enum {
   CORNER_DOT
 } CornerStyle;
 
-static BorderGradientCache* gBorderGradientCache = nullptr;
-
 nsCSSBorderRenderer::nsCSSBorderRenderer(int32_t aAppUnitsPerPixel,
                                          gfxContext* aDestContext,
                                          gfxRect& aOuterRect,
@@ -289,18 +150,6 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(int32_t aAppUnitsPerPixel,
   mOneUnitBorder = CheckFourFloatsEqual(mBorderWidths, 1.0);
   mNoBorderRadius = AllCornersZeroSize(mBorderRadii);
   mAvoidStroke = false;
-}
-
-void
-nsCSSBorderRenderer::Init()
-{
-  gBorderGradientCache = new BorderGradientCache();
-}
-
-void
-nsCSSBorderRenderer::Shutdown()
-{
-  delete gBorderGradientCache;
 }
 
 /* static */ void
@@ -1282,44 +1131,29 @@ nsCSSBorderRenderer::CreateCornerGradient(mozilla::css::Corner aCorner,
   Color firstColor = ToColor(aFirstColor);
   Color secondColor = ToColor(aSecondColor);
 
-  BorderGradientCacheData *data =
-    gBorderGradientCache->Lookup(firstColor, secondColor, aDT->GetType());
-
-  if (!data) {
+  nsTArray<gfx::GradientStop> rawStops(2);
+  rawStops.SetLength(2);
+  // This is only guaranteed to give correct (and in some cases more correct)
+  // rendering with the Direct2D Azure and Quartz Cairo backends. For other
+  // cairo backends it could create un-antialiased border corner transitions
+  // since that at least used to be pixman's behaviour for hard stops.
+  rawStops[0].color = firstColor;
+  rawStops[0].offset = 0.5;
+  rawStops[1].color = secondColor;
+  rawStops[1].offset = 0.5;
+  RefPtr<GradientStops> gs =
+    gfxGradientCache::GetGradientStops(aDT, rawStops, EXTEND_CLAMP);
+  if (!gs) {
     // Having two corners, both with reversed color stops is pretty common
     // for certain border types. Let's optimize it!
-    data = gBorderGradientCache->Lookup(secondColor, firstColor, aDT->GetType());
-
-    if (data) {
-      Point tmp = aPoint1;
-      aPoint1 = aPoint2;
-      aPoint2 = tmp;
-    }
+    rawStops[0].color = secondColor;
+    rawStops[1].color = firstColor;
+    Point tmp = aPoint1;
+    aPoint1 = aPoint2;
+    aPoint2 = tmp;
+    gs = gfxGradientCache::GetOrCreateGradientStops(aDT, rawStops, EXTEND_CLAMP);
   }
-
-  RefPtr<GradientStops> stops;
-  if (data) {
-    stops = data->mStops;
-  } else {
-    GradientStop rawStops[2];
-    // This is only guaranteed to give correct (and in some cases more correct)
-    // rendering with the Direct2D Azure and Quartz Cairo backends. For other
-    // cairo backends it could create un-antialiased border corner transitions
-    // since that at least used to be pixman's behaviour for hard stops.
-    rawStops[0].color = firstColor;
-    rawStops[0].offset = 0.5;
-    rawStops[1].color = secondColor;
-    rawStops[1].offset = 0.5;
-    stops = aDT->CreateGradientStops(rawStops, 2);
-
-    data = new BorderGradientCacheData(stops, BorderGradientCacheKey(firstColor, secondColor, aDT->GetType()));
-
-    if (!gBorderGradientCache->RegisterEntry(data)) {
-      delete data;
-    }
-  }
-
-  return stops;
+  return gs;
 }
 
 typedef struct { gfxFloat a, b; } twoFloats;
