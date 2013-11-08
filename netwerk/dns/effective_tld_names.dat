@@ -349,7 +349,7 @@ z.bg
 6.bg
 7.bg
 8.bg
-9.bg	 	 	
+9.bg
 
 // bh : http://en.wikipedia.org/wiki/.bh
 bh
@@ -787,7 +787,7 @@ org.ee
 fie.ee
 
 // eg : http://en.wikipedia.org/wiki/.eg
-eg  
+eg
 com.eg
 edu.eg
 eun.eg
@@ -1003,7 +1003,7 @@ org.hk
 网絡.hk
 组织.hk
 組織.hk
-組织.hk 
+組织.hk
 
 // hm : http://en.wikipedia.org/wiki/.hm
 hm
@@ -1180,9 +1180,9 @@ int.is
 it
 gov.it
 edu.it
-// list of reserved geo-names : 
+// list of reserved geo-names :
 // http://www.nic.it/documenti/regolamenti-e-linee-guida/regolamento-assegnazione-versione-6.0.pdf
-// (There is also a list of reserved geo-names corresponding to Italian 
+// (There is also a list of reserved geo-names corresponding to Italian
 // municipalities : http://www.nic.it/documenti/appendice-c.pdf , but it is
 // not included here.)
 agrigento.it
@@ -4255,7 +4255,7 @@ bv.nl
 // no : http://www.norid.no/regelverk/index.en.html
 // The Norwegian registry has declined to notify us of updates. The web pages
 // referenced below are the official source of the data. There is also an
-// announce mailing list: 
+// announce mailing list:
 // https://postlister.uninett.no/sympa/info/norid-diskusjon
 no
 // Norid generic domains : http://www.norid.no/regelverk/vedlegg-c.en.html
@@ -6287,9 +6287,9 @@ lib.wi.us
 lib.wv.us
 lib.wy.us
 
-// k12.ma.us contains school districts in Massachusetts. The 4LDs are 
+// k12.ma.us contains school districts in Massachusetts. The 4LDs are
 //  managed indepedently except for private (PVT), charter (CHTR) and
-//  parochial (PAROCH) schools.  Those are delegated dorectly to the 
+//  parochial (PAROCH) schools.  Those are delegated dorectly to the
 //  5LD operators.   <k12-ma-hostmaster _ at _ rsuc.gweep.net>
 pvt.k12.ma.us
 chtr.k12.ma.us
@@ -6397,10 +6397,10 @@ yt
 // http://nic.ae/english/arabicdomain/rules.jsp
 امارات
 
-// xn--54b7fta0cc ("Bangla" Bangla) : BD  
+// xn--54b7fta0cc ("Bangla" Bangla) : BD
 বাংলা
 
-// xn--fiqs8s ("China" Chinese-Han-Simplified <.Zhonggou>) : CN 
+// xn--fiqs8s ("China" Chinese-Han-Simplified <.Zhonggou>) : CN
 // CNNIC
 // http://cnnic.cn/html/Dir/2005/10/11/3218.htm
 中国
@@ -6410,60 +6410,60 @@ yt
 // http://cnnic.cn/html/Dir/2005/10/11/3218.htm
 中國
 
-// xn--lgbbat1ad8j ("Algeria / Al Jazair" Arabic) : DZ  
+// xn--lgbbat1ad8j ("Algeria / Al Jazair" Arabic) : DZ
 الجزائر
 
 // xn--wgbh1c ("Egypt" Arabic .masr) : EG
 // http://www.dotmasr.eg/
 مصر
 
-// xn--node ("ge" Georgian (Mkhedruli)) : GE  
+// xn--node ("ge" Georgian (Mkhedruli)) : GE
 გე
 
 // xn--j6w193g ("Hong Kong" Chinese-Han) : HK
 // https://www2.hkirc.hk/register/rules.jsp
 香港
 
-// xn--h2brj9c ("Bharat" Devanagari) : IN  
+// xn--h2brj9c ("Bharat" Devanagari) : IN
 // India
 भारत
 
-// xn--mgbbh1a71e ("Bharat" Arabic) : IN  
+// xn--mgbbh1a71e ("Bharat" Arabic) : IN
 // India
 بھارت
 
-// xn--fpcrj9c3d ("Bharat" Telugu) : IN  
+// xn--fpcrj9c3d ("Bharat" Telugu) : IN
 // India
 భారత్
 
-// xn--gecrj9c ("Bharat" Gujarati) : IN  
+// xn--gecrj9c ("Bharat" Gujarati) : IN
 // India
 ભારત
 
-// xn--s9brj9c ("Bharat" Gurmukhi) : IN  
+// xn--s9brj9c ("Bharat" Gurmukhi) : IN
 // India
 ਭਾਰਤ
 
-// xn--45brj9c ("Bharat" Bengali) : IN  
+// xn--45brj9c ("Bharat" Bengali) : IN
 // India
 ভারত
 
-// xn--xkc2dl3a5ee0h ("India" Tamil) : IN  
+// xn--xkc2dl3a5ee0h ("India" Tamil) : IN
 // India
 இந்தியா
 
-// xn--mgba3a4f16a ("Iran" Persian) : IR  
+// xn--mgba3a4f16a ("Iran" Persian) : IR
 ایران
 
-// xn--mgba3a4fra ("Iran" Arabic) : IR  
+// xn--mgba3a4fra ("Iran" Arabic) : IR
 ايران
 
 // xn--mgbayh7gpa ("al-Ordon" Arabic) : JO
-// National Information Technology Center (NITC) 
+// National Information Technology Center (NITC)
 // Royal Scientific Society, Al-Jubeiha
 الاردن
 
-// xn--3e0b707e ("Republic of Korea" Hangul) : KR  
+// xn--3e0b707e ("Republic of Korea" Hangul) : KR
 한국
 
 // xn--fzc2c9e2c ("Lanka" Sinhalese-Sinhala) : LK
@@ -6474,10 +6474,10 @@ yt
 // http://nic.lk
 இலங்கை
 
-// xn--mgbc0a9azcg ("Morocco / al-Maghrib" Arabic) : MA  
+// xn--mgbc0a9azcg ("Morocco / al-Maghrib" Arabic) : MA
 المغرب
 
-// xn--mgb9awbf ("Oman" Arabic) : OM  
+// xn--mgb9awbf ("Oman" Arabic) : OM
 عمان
 
 // xn--ygbi2ammx ("Falasteen" Arabic) : PS
@@ -6485,7 +6485,7 @@ yt
 // http://www.pnina.ps
 فلسطين
 
-// xn--90a3ac ("srb" Cyrillic) : RS  
+// xn--90a3ac ("srb" Cyrillic) : RS
 срб
 
 // xn--p1ai ("rf" Russian-Cyrillic) : RU
@@ -6500,19 +6500,19 @@ yt
 // http://www.nic.net.sa/
 السعودية
 
-// xn--mgberp4a5d4a87g ("AlSaudiah" Arabic) variant : SA  
+// xn--mgberp4a5d4a87g ("AlSaudiah" Arabic) variant : SA
 السعودیة
 
-// xn--mgbqly7c0a67fbc ("AlSaudiah" Arabic) variant : SA  
+// xn--mgbqly7c0a67fbc ("AlSaudiah" Arabic) variant : SA
 السعودیۃ
 
-// xn--mgbqly7cvafr ("AlSaudiah" Arabic) variant : SA  
+// xn--mgbqly7cvafr ("AlSaudiah" Arabic) variant : SA
 السعوديه
 
-// xn--ogbpf8fl ("Syria" Arabic) : SY  
+// xn--ogbpf8fl ("Syria" Arabic) : SY
 سورية
 
-// xn--mgbtf8fl ("Syria" Arabic) variant : SY  
+// xn--mgbtf8fl ("Syria" Arabic) variant : SY
 سوريا
 
 // xn--yfro4i67o Singapore ("Singapore" Chinese-Han) : SG
@@ -6537,13 +6537,13 @@ yt
 // http://www.twnic.net/english/dn/dn_07a.htm
 台湾
 
-// xn--nnx388a ("Taiwan") variant : TW  
+// xn--nnx388a ("Taiwan") variant : TW
 臺灣
 
-// xn--j1amh ("ukr" Cyrillic) : UA  
+// xn--j1amh ("ukr" Cyrillic) : UA
 укр
 
-// xn--mgb2ddes ("AlYemen" Arabic) : YE  
+// xn--mgb2ddes ("AlYemen" Arabic) : YE
 اليمن
 
 // xxx : http://icmregistry.com
@@ -6619,124 +6619,124 @@ tattoo
 // xn--fiq228c5hs : 2013-09-09 TLD Registry Limited
 中文网
 
-// land : 2013-09-10 Pine Moon, LLC 
+// land : 2013-09-10 Pine Moon, LLC
 land
 
-// plumbing : 2013-09-10 Spring Tigers, LLC 
+// plumbing : 2013-09-10 Spring Tigers, LLC
 plumbing
 
-// contractors : 2013-09-10 Magic Woods, LLC 
+// contractors : 2013-09-10 Magic Woods, LLC
 contractors
 
-// sexy : 2013-09-11 Uniregistry,Corp. 
+// sexy : 2013-09-11 Uniregistry,Corp.
 sexy
 
-// menu : 2013-09-11 Wedding TLD2, LLC 
+// menu : 2013-09-11 Wedding TLD2, LLC
 menu
 
-// xn--rhqv96g : 2013-09-11 Stable Tone Limited 
+// xn--rhqv96g : 2013-09-11 Stable Tone Limited
 世界
 
-// uno : 2013-09-11 Dot Latin, LLC 
+// uno : 2013-09-11 Dot Latin, LLC
 uno
 
-// gallery : 2013-09-13 Sugar House, LLC 
+// gallery : 2013-09-13 Sugar House, LLC
 gallery
 
-// technology : 2013-09-13 Auburn Falls 
+// technology : 2013-09-13 Auburn Falls
 technology
 
-// xn--3bst00m : 2013-09-13 Eagle Horizon Limited 
+// xn--3bst00m : 2013-09-13 Eagle Horizon Limited
 集团
 
-// reviews : 2013-09-13 Extra Cover, LLC 
+// reviews : 2013-09-13 Extra Cover, LLC
 reviews
 
-// guide : 2013-09-13 Snow Moon, LLC 
+// guide : 2013-09-13 Snow Moon, LLC
 guide
 
-// xn--6qq986b3x1 : 2013-09-13 Tycoon Treasure Limited 
+// xn--6qq986b3x1 : 2013-09-13 Tycoon Treasure Limited
 我爱你
 
-// graphics : 2013-09-13 Over Madison, LLC 
+// graphics : 2013-09-13 Over Madison, LLC
 graphics
 
-// construction : 2013-09-13 Fox Dynamite, LLC 
+// construction : 2013-09-13 Fox Dynamite, LLC
 construction
 
-// onl : 2013-09-16 I-Registry Ltd. 
+// onl : 2013-09-16 I-Registry Ltd.
 onl
 
-// xn--q9jyb4c : 2013-09-17 Charleston Road Registry 
+// xn--q9jyb4c : 2013-09-17 Charleston Road Registry
 みんな
 
-// diamonds : 2013-09-23 John Edge, LLC 
+// diamonds : 2013-09-23 John Edge, LLC
 diamonds
 
-// kiwi : 2013-09-23 Dot Kiwi Limited 
+// kiwi : 2013-09-23 Dot Kiwi Limited
 kiwi
 
-// enterprises : 2013-09-23 Snow Oaks LLC 
+// enterprises : 2013-09-23 Snow Oaks LLC
 enterprises
 
-// today : 2013-09-23 Pearl Woods, LLC 
+// today : 2013-09-23 Pearl Woods, LLC
 today
 
-// futbol : 2013-09-23 Atomic Falls, LLC 
+// futbol : 2013-09-23 Atomic Falls, LLC
 futbol
 
-// photography : 2013-09-23 Sugar Glen, LLC 
+// photography : 2013-09-23 Sugar Glen, LLC
 photography
 
-// tips : 2013-09-23 Corn Willow, LLC 
+// tips : 2013-09-23 Corn Willow, LLC
 tips
 
-// directory : 2013-09-23 Extra Madison, LLC 
+// directory : 2013-09-23 Extra Madison, LLC
 directory
 
-// kitchen : 2013-09-23 Just Goodbye, LLC 
+// kitchen : 2013-09-23 Just Goodbye, LLC
 kitchen
 
-// xn--6frz82g : 2013-09-24 Afilias Limited 
+// xn--6frz82g : 2013-09-24 Afilias Limited
 移动
 
-// kim : 2013-09-24 Afilias Limited 
+// kim : 2013-09-24 Afilias Limited
 kim
 
-// xn--cg4bki : 2013-09-27 Samsung SDS Co., LTD 
+// xn--cg4bki : 2013-09-27 Samsung SDS Co., LTD
 삼성
 
-// monash : 2013-10-01 Monash University 
+// monash : 2013-10-01 Monash University
 monash
 
-// wed : 2013-10-02 Atgron, Inc. 
+// wed : 2013-10-02 Atgron, Inc.
 wed
 
-// pink : 2013-10-02 Afilias Limited 
+// pink : 2013-10-02 Afilias Limited
 pink
 
-// ruhr : 2013-10-02 regiodot GmbH & Co. KG 
+// ruhr : 2013-10-02 regiodot GmbH & Co. KG
 ruhr
 
-// buzz : 2013-10-03 DOTSTRATEGY CO. 
+// buzz : 2013-10-03 DOTSTRATEGY CO.
 buzz
 
-// careers : 2013-10-03 Wild Corner, LLC 
+// careers : 2013-10-03 Wild Corner, LLC
 careers
 
-// shoes : 2013-10-03 Binky Galley, LLC 
+// shoes : 2013-10-03 Binky Galley, LLC
 shoes
 
-// xn--4gbrim : 2013-10-07 Suhub Electronic Establishment 
+// xn--4gbrim : 2013-10-07 Suhub Electronic Establishment
 موقع
 
-// career : 2013-10-09 dotCareer, LLC 
+// career : 2013-10-09 dotCareer, LLC
 career
 
-// otsuka : 2013-10-11 Otsuka Holdings Co. Ltd. 
+// otsuka : 2013-10-11 Otsuka Holdings Co. Ltd.
 otsuka
 
-// xn--fiQ64b : 2013-10-14 CITIC Group Corporation 
+// xn--fiQ64b : 2013-10-14 CITIC Group Corporation
 中信
 
 // ===END ICANN DOMAINS===
@@ -6762,7 +6762,7 @@ us-gov-west-1.compute.amazonaws.com
 us-west-1.compute.amazonaws.com
 us-west-2.compute.amazonaws.com
 
-// Amazon Elastic Beanstalk : https://aws.amazon.com/elasticbeanstalk/ 
+// Amazon Elastic Beanstalk : https://aws.amazon.com/elasticbeanstalk/
 // Requested by Adam Stein <astein@amazon.com> 2013-04-02
 elasticbeanstalk.com
 
