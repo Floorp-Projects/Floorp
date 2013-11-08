@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <ctime>
+#include <time.h>
 
 #include "gflags/gflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -65,7 +65,7 @@ protected:
     if (FLAGS_rtp_fuzz_test_rand_seed != 0) {
       return FLAGS_rtp_fuzz_test_rand_seed;
     }
-    return std::time(NULL);
+    return time(NULL);
   }
 
   // Pass in a number [0, 1] which will be the bit flip probability per byte.

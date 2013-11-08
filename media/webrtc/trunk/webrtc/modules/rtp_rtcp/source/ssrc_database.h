@@ -57,6 +57,6 @@ private:
 
     CriticalSectionWrapper* _critSect;
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_SSRC_DATABASE_H_

@@ -283,7 +283,7 @@ Notice for all the files in this folder.
 
     <!-- jar file from where the tasks are loaded -->
     <path id="android.antlibs">
-        <pathelement path="${sdk.dir}/tools/lib/anttasks.jar" />
+        <pathelement path="${sdk.dir}/tools/lib/ant-tasks.jar" />
     </path>
 
     <!-- Custom tasks -->
@@ -329,14 +329,15 @@ Notice for all the files in this folder.
 
     <!-- tools location -->
     <property name="android.tools.dir" location="${sdk.dir}/tools" />
+    <property name="android.build.tools.dir" location="${sdk.dir}/build-tools/${env.ANDROID_SDK_BUILD_TOOLS_VERSION}" />
     <property name="android.platform.tools.dir" location="${sdk.dir}/platform-tools" />
     <condition property="exe" value=".exe" else=""><os family="windows" /></condition>
     <condition property="bat" value=".bat" else=""><os family="windows" /></condition>
     <property name="adb" location="${android.platform.tools.dir}/adb${exe}" />
     <property name="zipalign" location="${android.tools.dir}/zipalign${exe}" />
-    <property name="aidl" location="${android.platform.tools.dir}/aidl${exe}" />
-    <property name="aapt" location="${android.platform.tools.dir}/aapt${exe}" />
-    <property name="dx" location="${android.platform.tools.dir}/dx${bat}" />
+    <property name="aidl" location="${android.build.tools.dir}/aidl${exe}" />
+    <property name="aapt" location="${android.build.tools.dir}/aapt${exe}" />
+    <property name="dx" location="${android.build.tools.dir}/dx${bat}" />
     <property name="renderscript" location="${android.platform.tools.dir}/llvm-rs-cc${exe}"/>
 
     <!-- Renderscript include Path -->
@@ -833,7 +834,7 @@ Notice for all the files in this folder.
             <!-- renderscript generates resources so it must be called before aapt -->
             <echo level="info">----------</echo>
             <echo level="info">Handling RenderScript files...</echo>
-            <renderscript executable="${renderscript}"
+            <renderscript buildToolsRoot="${android.platform.tools.dir}"
                     includePathRefId="android.renderscript.include.path"
                     genFolder="${gen.absolute.dir}"
                     resFolder="${out.res.absolute.dir}/raw"

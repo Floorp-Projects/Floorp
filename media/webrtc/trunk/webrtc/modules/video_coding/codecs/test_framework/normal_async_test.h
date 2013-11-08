@@ -11,13 +11,13 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAMEWORK_NORMAL_ASYNC_TEST_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAMEWORK_NORMAL_ASYNC_TEST_H_
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
-#include "normal_test.h"
-#include "rw_lock_wrapper.h"
 #include <list>
 #include <map>
 #include <queue>
+#include "webrtc/modules/video_coding/codecs/test_framework/normal_test.h"
+#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
 
 class FrameQueueTuple
 {

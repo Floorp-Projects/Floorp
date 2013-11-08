@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_COMMON_TYPES_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_COMMON_TYPES_H_
 
-#include "common_types.h"
+#include "webrtc/common_types.h"
 
 namespace webrtc {
 

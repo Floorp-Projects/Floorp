@@ -21,6 +21,6 @@ void CalculateEnergy(AudioFrame& audioFrame);
 void RampIn(AudioFrame& audioFrame);
 void RampOut(AudioFrame& audioFrame);
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_AUDIO_FRAME_MANIPULATOR_H_

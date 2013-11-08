@@ -34,6 +34,7 @@ interface nsIRequest;
 interface nsISHEntry;
 interface nsILayoutHistoryState;
 interface nsISecureBrowserUI;
+interface nsIScriptGlobalObject;
 interface nsIDOMStorage;
 interface nsIPrincipal;
 interface nsIWebBrowserPrint;
@@ -43,7 +44,7 @@ interface nsIReflowObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(77aca3ee-7417-4cd2-994e-9bd95ca1d98a)]
+[scriptable, builtinclass, uuid(55ca6545-7ce4-49ad-8117-8286ca9c61bb)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -907,6 +908,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript, notxpcom] bool IsInvisible();
   [noscript, notxpcom] void SetInvisible(in bool aIsInvisibleDochsell);
+
+/**
+ * Get the script global for the document in this docshell.
+*/
+  [noscript,notxpcom,nostdcall] nsIScriptGlobalObject GetScriptGlobalObject();
 
   /**
    * If deviceSizeIsPageSize is set to true, device-width/height media queries

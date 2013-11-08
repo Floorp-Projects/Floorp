@@ -133,7 +133,8 @@ public:
         switch (aType) {
         case NativeGLContext:
             return mContext;
-
+        case NativeCGLContext:
+            return [mContext CGLContextObj];
         default:
             return nullptr;
         }

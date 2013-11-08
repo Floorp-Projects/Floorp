@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/audio_processing/voice_detection_impl.h"
 
-#include <cassert>
+#include <assert.h>
 
 #include "webrtc/common_audio/vad/include/webrtc_vad.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"

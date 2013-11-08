@@ -10,7 +10,7 @@
 
 #include "webrtc/test/testsupport/frame_reader.h"
 
-#include <cassert>
+#include <assert.h>
 
 #include "webrtc/test/testsupport/fileutils.h"
 
@@ -77,6 +77,9 @@ bool FrameReaderImpl::ReadFrame(uint8_t* source_buffer) {
   }
   return true;
 }
+
+size_t FrameReaderImpl::FrameLength() { return frame_length_in_bytes_; }
+int FrameReaderImpl::NumberOfFrames() { return number_of_frames_; }
 
 }  // namespace test
 }  // namespace webrtc

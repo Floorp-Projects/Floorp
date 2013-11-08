@@ -479,4 +479,4 @@ bool TMMBRHelp::CalcMinBitRate( uint32_t* minBitrateKbit) const {
   }
   return true;
 }
-} // namespace webrtc
+}  // namespace webrtc

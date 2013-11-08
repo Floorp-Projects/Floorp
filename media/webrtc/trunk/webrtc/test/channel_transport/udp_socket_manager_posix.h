@@ -14,9 +14,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <map>
+
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/list_wrapper.h"
-#include "webrtc/system_wrappers/interface/map_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 #include "webrtc/test/channel_transport/udp_socket_wrapper.h"
@@ -27,6 +28,7 @@ class ConditionVariableWrapper;
 
 namespace test {
 
+class UdpSocketPosix;
 class UdpSocketManagerPosixImpl;
 #define MAX_NUMBER_OF_SOCKET_MANAGERS_LINUX 8
 
@@ -36,15 +38,15 @@ public:
     UdpSocketManagerPosix();
     virtual ~UdpSocketManagerPosix();
 
-    virtual bool Init(int32_t id, uint8_t& numOfWorkThreads);
+    virtual bool Init(int32_t id, uint8_t& numOfWorkThreads) OVERRIDE;
 
-    virtual int32_t ChangeUniqueId(const int32_t id);
+    virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
 
-    virtual bool Start();
-    virtual bool Stop();
+    virtual bool Start() OVERRIDE;
+    virtual bool Stop() OVERRIDE;
 
-    virtual bool AddSocket(UdpSocketWrapper* s);
-    virtual bool RemoveSocket(UdpSocketWrapper* s);
+    virtual bool AddSocket(UdpSocketWrapper* s) OVERRIDE;
+    virtual bool RemoveSocket(UdpSocketWrapper* s) OVERRIDE;
 private:
     int32_t _id;
     CriticalSectionWrapper* _critSect;
@@ -77,7 +79,7 @@ private:
 
     fd_set _readFds;
 
-    MapWrapper _socketMap;
+    std::map<SOCKET, UdpSocketPosix*> _socketMap;
     ListWrapper _addList;
     ListWrapper _removeList;
 };

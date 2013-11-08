@@ -12,8 +12,7 @@
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ4_TIME_STRETCH_H_
 
 #include <assert.h>
-
-#include <cstring>  // memset, size_t
+#include <string.h>  // memset, size_t
 
 #include "webrtc/modules/audio_coding/neteq4/audio_multi_vector.h"
 #include "webrtc/system_wrappers/interface/constructor_magic.h"
@@ -40,7 +39,7 @@ class TimeStretch {
               const BackgroundNoise& background_noise)
       : sample_rate_hz_(sample_rate_hz),
         fs_mult_(sample_rate_hz / 8000),
-        num_channels_(num_channels),
+        num_channels_(static_cast<int>(num_channels)),
         master_channel_(0),  // First channel is master.
         background_noise_(background_noise),
         max_input_value_(0) {
@@ -66,7 +65,7 @@ class TimeStretch {
   // Sets the parameters |best_correlation| and |peak_index| to suitable
   // values when the signal contains no active speech. This method must be
   // implemented by the sub-classes.
-  virtual void SetParametersForPassiveSpeech(int input_length,
+  virtual void SetParametersForPassiveSpeech(size_t input_length,
                                              int16_t* best_correlation,
                                              int* peak_index) const = 0;
 
@@ -74,7 +73,7 @@ class TimeStretch {
   // if possible, performs the time-stretching. This method must be implemented
   // by the sub-classes.
   virtual ReturnCodes CheckCriteriaAndStretch(
-      const int16_t* input, int input_length, size_t peak_index,
+      const int16_t* input, size_t input_length, size_t peak_index,
       int16_t best_correlation, bool active_speech,
       AudioMultiVector<int16_t>* output) const = 0;
 
