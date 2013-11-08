@@ -729,7 +729,8 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
         csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT,
                                  NS_ConvertUTF8toUTF16(asciiSpec),
                                  scriptSample,
-                                 0);
+                                 0,
+                                 EmptyString());
       }
 
       // return early if CSP wants us to block inline scripts

@@ -15,7 +15,7 @@ interface nsIDocShell;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(e5020ec3-1437-46f5-b4eb-8b60766d02c0)]
+[scriptable, uuid(781b6511-f1fa-4e2c-8eff-1739d091eb2f)]
 interface nsIContentSecurityPolicy : nsISupports
 {
 
@@ -105,6 +105,24 @@ interface nsIContentSecurityPolicy : nsISupports
   boolean getAllowsInlineStyle(out boolean shouldReportViolations);
 
   /**
+   * Whether this policy accepts the given nonce
+   * @param aNonce
+   *     The nonce string to check against the policy
+   * @param aContentType
+   *     The type of element on which we encountered this nonce
+   * @param shouldReportViolation
+   *     Whether or not the use of an incorrect nonce should be reported.
+   *     This function always returns "true" for report-only policies, but when
+   *     the report-only policy is violated, shouldReportViolation is true as
+   *     well.
+   * @return
+   *     Whether or not this nonce is valid
+   */
+   boolean getAllowsNonce(in AString aNonce,
+                          in unsigned long aContentType,
+                          out boolean shouldReportViolation);
+
+  /**
    * For each violated policy (of type violationType), log policy violation on
    * the Error Console and send a report to report-uris present in the violated
    * policies.
@@ -117,15 +135,22 @@ interface nsIContentSecurityPolicy : nsISupports
    *     sample of the violating content (to aid debugging)
    * @param lineNum
    *     source line number of the violation (if available)
+   * @param aNonce
+   *     (optional) If this is a nonce violation, include the nonce so we can
+   *     recheck to determine which policies were violated and send the
+   *     appropriate reports.
    */
   void logViolationDetails(in unsigned short violationType,
                            in AString sourceFile,
                            in AString scriptSample,
-                           in int32_t lineNum);
+                           in int32_t lineNum,
+                           [optional] in AString nonce);
 
   const unsigned short VIOLATION_TYPE_INLINE_SCRIPT = 1;
-  const unsigned short VIOLATION_TYPE_EVAL = 2;
-  const unsigned short VIOLATION_TYPE_INLINE_STYLE = 3;
+  const unsigned short VIOLATION_TYPE_EVAL          = 2;
+  const unsigned short VIOLATION_TYPE_INLINE_STYLE  = 3;
+  const unsigned short VIOLATION_TYPE_NONCE_SCRIPT  = 4;
+  const unsigned short VIOLATION_TYPE_NONCE_STYLE   = 5;
 
   /**
    * Called after the CSP object is created to fill in the appropriate request
