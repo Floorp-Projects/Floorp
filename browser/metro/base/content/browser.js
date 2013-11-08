@@ -511,9 +511,8 @@ var Browser = {
    * new tab creation.
    */
   _announceNewTab: function _announceNewTab(aTab, aParams, aBringFront) {
-    let getAttention = ("getAttention" in aParams ? aParams.getAttention : !aBringFront);
     let event = document.createEvent("UIEvents");
-    event.initUIEvent("TabOpen", true, false, window, getAttention);
+    event.initUIEvent("TabOpen", true, false, window, 0);
     aTab.chromeTab.dispatchEvent(event);
     aTab.browser.messageManager.sendAsyncMessage("Browser:TabOpen");
   },
@@ -1060,7 +1059,7 @@ nsBrowserAccess.prototype = {
       return null;
     } else if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       let owner = isExternal ? null : Browser.selectedTab;
-      let tab = Browser.addTab("about:blank", true, owner, { getAttention: true });
+      let tab = Browser.addTab("about:blank", true, owner);
       if (isExternal)
         tab.closeOnExit = true;
       browser = tab.browser;
@@ -1074,7 +1073,7 @@ nsBrowserAccess.prototype = {
 
       if (!browser) {
         // Make a new tab to hold the app
-        let tab = Browser.addTab("about:blank", true, null, { getAttention: true });
+        let tab = Browser.addTab("about:blank", true);
         browser = tab.browser;
         browser.appURI = aURI;
       } else {
