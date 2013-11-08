@@ -356,25 +356,15 @@ let UI = {
       loop(0);
       return deferred.promise;
     };
-    let onTargetReady = (target) => {
-      // Finally, when it's finally opened, display the toolbox
-      let deferred = promise.defer();
-      gDevTools.showToolbox(target,
-                            null,
-                            devtools.Toolbox.HostType.WINDOW).then(toolbox => {
-        this.connection.once(Connection.Events.DISCONNECTED, () => {
-          toolbox.destroy();
-        });
-        deferred.resolve(toolbox);
-      });
-      return deferred.promise;
-    };
 
     // First try to open the app
     this.start(project)
         .then(null, onFailedToStart)
         .then(onStarted)
-        .then(onTargetReady)
+        .then((target) =>
+          top.UI.openAndShowToolboxForTarget(target,
+                                             project.manifest.name,
+                                             project.icon))
         .then(() => {
            // And only when the toolbox is opened, release the button
            button.disabled = false;
