@@ -7,10 +7,10 @@
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <ImageButton android:id="@+id/back"
-                 style="@style/UrlBar.ImageButton.Back"/>
+                 style="@style/UrlBar.ImageButton.Unused"/>
 
     <ImageButton android:id="@+id/forward"
-                 style="@style/UrlBar.ImageButton.Forward"/>
+                 style="@style/UrlBar.ImageButton.Unused"/>
 
     <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/url_bar_bg"
                                                 android:layout_width="fill_parent"
@@ -98,7 +98,7 @@
                   android:visibility="gone"
                   android:orientation="horizontal">
 
-        <view class="org.mozilla.gecko.CustomEditText"
+        <org.mozilla.gecko.CustomEditText
               android:id="@+id/url_edit_text"
               style="@style/UrlBar.Button"
               android:layout_width="fill_parent"

@@ -494,28 +494,26 @@ WebappsActor.prototype = {
 
     let appDir = FileUtils.getDir("TmpD", ["b2g", appId], false, false);
 
-    if (!appDir || !appDir.exists()) {
-      if (aRequest.upload) {
-        // Ensure creating the directory (recursively)
-        appDir = FileUtils.getDir("TmpD", ["b2g", appId], true, false);
-        let actor = this.conn.getActor(aRequest.upload);
-        if (!actor) {
-          return { error: "badParameter",
-                   message: "Unable to find upload actor '" + aRequest.upload
-                            + "'" };
-        }
-        let appFile = FileUtils.File(actor.getFilePath());
-        if (!appFile.exists()) {
-          return { error: "badParameter",
-                   message: "The uploaded file doesn't exist on device" };
-        }
-        appFile.moveTo(appDir, "application.zip");
+    if (aRequest.upload) {
+      // Ensure creating the directory (recursively)
+      appDir = FileUtils.getDir("TmpD", ["b2g", appId], true, false);
+      let actor = this.conn.getActor(aRequest.upload);
+      if (!actor) {
+        return { error: "badParameter",
+                 message: "Unable to find upload actor '" + aRequest.upload
+                          + "'" };
       }
-      else if (!aRequest.manifest && !aRequest.metadata) {
-        return { error: "badParameterType",
-                 message: "missing directory " + appDir.path
-               }
+      let appFile = FileUtils.File(actor.getFilePath());
+      if (!appFile.exists()) {
+        return { error: "badParameter",
+                 message: "The uploaded file doesn't exist on device" };
       }
+      appFile.moveTo(appDir, "application.zip");
+    } else if ((!appDir || !appDir.exists()) &&
+               !aRequest.manifest && !aRequest.metadata) {
+      return { error: "badParameterType",
+               message: "missing directory " + appDir.path
+             };
     }
 
     let testFile = appDir.clone();
