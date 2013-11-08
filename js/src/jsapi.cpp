@@ -4267,35 +4267,112 @@ AutoFile::open(JSContext *cx, const char *filename)
     return true;
 }
 
+JSObject * const JS::ReadOnlyCompileOptions::nullObjectPtr = nullptr;
 
-JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
-    : principals_(nullptr),
-      originPrincipals_(nullptr),
-      filename_(nullptr),
-      sourceMapURL_(nullptr),
-      element_(NullPtr()),
-      version(version != JSVERSION_UNKNOWN ? version : cx->findVersion()),
-      versionSet(false),
-      utf8(false),
-      lineno(1),
-      column(0),
-      compileAndGo(cx->options().compileAndGo()),
-      forEval(false),
-      noScriptRval(cx->options().noScriptRval()),
-      selfHostingMode(false),
-      canLazilyParse(true),
-      strictOption(cx->options().strictMode()),
-      extraWarningsOption(cx->options().extraWarnings()),
-      werrorOption(cx->options().werror()),
-      asmJSOption(cx->options().asmJS()),
-      sourcePolicy(SAVE_SOURCE)
+void
+JS::ReadOnlyCompileOptions::copyPODOptions(const ReadOnlyCompileOptions &rhs)
 {
+    version = rhs.version;
+    versionSet = rhs.versionSet;
+    utf8 = rhs.utf8;
+    lineno = rhs.lineno;
+    column = rhs.column;
+    compileAndGo = rhs.compileAndGo;
+    forEval = rhs.forEval;
+    noScriptRval = rhs.noScriptRval;
+    selfHostingMode = rhs.selfHostingMode;
+    canLazilyParse = rhs.canLazilyParse;
+    strictOption = rhs.strictOption;
+    extraWarningsOption = rhs.extraWarningsOption;
+    werrorOption = rhs.werrorOption;
+    asmJSOption = rhs.asmJSOption;
+    sourcePolicy = rhs.sourcePolicy;
 }
 
 JSPrincipals *
-CompileOptions::originPrincipals() const
+JS::ReadOnlyCompileOptions::originPrincipals() const
 {
     return NormalizeOriginPrincipals(principals_, originPrincipals_);
+}
+
+JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
+    : ReadOnlyCompileOptions(),
+      runtime(GetRuntime(cx)),
+      elementRoot(cx)
+{
+}
+
+JS::OwningCompileOptions::~OwningCompileOptions()
+{
+    if (principals_)
+        JS_DropPrincipals(runtime, principals_);
+    if (originPrincipals_)
+        JS_DropPrincipals(runtime, originPrincipals_);
+
+    // OwningCompileOptions always owns these, so these casts are okay.
+    js_free(const_cast<char *>(filename_));
+    js_free(const_cast<jschar *>(sourceMapURL_));
+}
+
+bool
+JS::OwningCompileOptions::copy(JSContext *cx, const ReadOnlyCompileOptions &rhs)
+{
+    copyPODOptions(rhs);
+
+    setPrincipals(rhs.principals());
+    setOriginPrincipals(rhs.originPrincipals());
+    setElement(rhs.element());
+
+    return (setFileAndLine(cx, rhs.filename(), rhs.lineno) &&
+            setSourceMapURL(cx, rhs.sourceMapURL()));
+}
+
+bool
+JS::OwningCompileOptions::setFileAndLine(JSContext *cx, const char *f, unsigned l)
+{
+    char *copy = nullptr;
+    if (f) {
+        copy = JS_strdup(cx, f);
+        if (!copy)
+            return false;
+    }
+
+    // OwningCompileOptions always owns filename_, so this cast is okay.
+    js_free(const_cast<char *>(filename_));
+
+    filename_ = copy;
+    lineno = l;
+    return true;
+}
+
+bool
+JS::OwningCompileOptions::setSourceMapURL(JSContext *cx, const jschar *s)
+{
+    jschar *copy = nullptr;
+    if (s) {
+        copy = js_strdup(cx, s);
+        if (!copy)
+            return false;
+    }
+
+    // OwningCompileOptions always owns sourceMapURL_, so this cast is okay.
+    js_free(const_cast<jschar *>(sourceMapURL_));
+
+    sourceMapURL_ = copy;
+    return true;
+}
+
+JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
+    : ReadOnlyCompileOptions(), elementRoot(cx)
+{
+    this->version = (version != JSVERSION_UNKNOWN) ? version : cx->findVersion();
+
+    compileAndGo = cx->options().compileAndGo();
+    noScriptRval = cx->options().noScriptRval();
+    strictOption = cx->options().strictMode();
+    extraWarningsOption = cx->options().extraWarnings();
+    werrorOption = cx->options().werror();
+    asmJSOption = cx->options().asmJS();
 }
 
 JSScript *
