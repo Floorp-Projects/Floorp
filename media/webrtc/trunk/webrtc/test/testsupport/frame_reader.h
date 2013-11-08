@@ -11,7 +11,8 @@
 #ifndef WEBRTC_TEST_TESTSUPPORT_FRAME_READER_H_
 #define WEBRTC_TEST_TESTSUPPORT_FRAME_READER_H_
 
-#include <cstdio>
+#include <stdio.h>
+
 #include <string>
 
 #include "webrtc/typedefs.h"
@@ -54,11 +55,11 @@ class FrameReaderImpl : public FrameReader {
   //                           For YUV this is 3 * width * height / 2
   FrameReaderImpl(std::string input_filename, size_t frame_length_in_bytes);
   virtual ~FrameReaderImpl();
-  bool Init();
-  bool ReadFrame(uint8_t* source_buffer);
-  void Close();
-  size_t FrameLength() { return frame_length_in_bytes_; }
-  int NumberOfFrames() { return number_of_frames_; }
+  virtual bool Init() OVERRIDE;
+  virtual bool ReadFrame(uint8_t* source_buffer) OVERRIDE;
+  virtual void Close() OVERRIDE;
+  virtual size_t FrameLength() OVERRIDE;
+  virtual int NumberOfFrames() OVERRIDE;
 
  private:
   std::string input_filename_;

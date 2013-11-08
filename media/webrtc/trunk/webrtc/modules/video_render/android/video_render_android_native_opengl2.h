@@ -13,9 +13,9 @@
 
 #include <jni.h>
 
-#include "video_render_defines.h"
-#include "video_render_android_impl.h"
-#include "video_render_opengles20.h"
+#include "webrtc/modules/video_render/android/video_render_android_impl.h"
+#include "webrtc/modules/video_render/android/video_render_opengles20.h"
+#include "webrtc/modules/video_render/include/video_render_defines.h"
 
 namespace webrtc {
 
@@ -91,6 +91,6 @@ class AndroidNativeOpenGl2Renderer: private VideoRenderAndroid {
   jclass _javaRenderClass;
 };
 
-} //namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_ANDROID_VIDEO_RENDER_ANDROID_NATIVE_OPENGL2_H_

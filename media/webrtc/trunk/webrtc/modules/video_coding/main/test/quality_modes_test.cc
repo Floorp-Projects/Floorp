@@ -10,10 +10,10 @@
 
 #include "webrtc/modules/video_coding/main/test/quality_modes_test.h"
 
-#include <time.h>
 #include <iostream>
-#include <string>
 #include <sstream>
+#include <string>
+#include <time.h>
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"

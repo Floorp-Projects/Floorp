@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "audio_mixer_manager_win.h"
-#include "trace.h"
+#include "webrtc/modules/audio_device/win/audio_mixer_manager_win.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
+#include <assert.h>      // assert()
 #include <strsafe.h>    // StringCchCopy(), StringCchCat(), StringCchPrintf()
-#include <cassert>      // assert()
 
 #ifdef _WIN32
 // removes warning: "reinterpret_cast: conversion from 'UINT' to 'HMIXEROBJ'

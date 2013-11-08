@@ -39,7 +39,13 @@ class WEBRTC_DLLEXPORT ExternalRenderer {
                            // RTP timestamp in 90kHz.
                            uint32_t time_stamp,
                            // Wallclock render time in miliseconds
-                           int64_t render_time) = 0;
+                           int64_t render_time,
+                           // Handle of the underlying video frame,
+                           void* handle) = 0;
+
+  // Returns true if the renderer supports textures. DeliverFrame can be called
+  // with NULL |buffer| and non-NULL |handle|.
+  virtual bool IsTextureSupported() = 0;
 
  protected:
   virtual ~ExternalRenderer() {}

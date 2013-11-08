@@ -17,9 +17,18 @@
 
 namespace webrtc {
 
+DecoderDatabase::DecoderDatabase()
+    : active_decoder_(-1), active_cng_decoder_(-1) {}
+
+DecoderDatabase::~DecoderDatabase() {}
+
 DecoderDatabase::DecoderInfo::~DecoderInfo() {
   if (!external) delete decoder;
 }
+
+bool DecoderDatabase::Empty() const { return decoders_.empty(); }
+
+int DecoderDatabase::Size() const { return static_cast<int>(decoders_.size()); }
 
 void DecoderDatabase::Reset() {
   decoders_.clear();

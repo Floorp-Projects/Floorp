@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/main/source/qm_select.h"
+#include "webrtc/modules/video_coding/main/source/qm_select.h"
 
 #include <math.h>
 
-#include "modules/interface/module_common_types.h"
-#include "modules/video_coding/main/source/internal_defines.h"
-#include "modules/video_coding/main/source/qm_select_data.h"
-#include "modules/video_coding/main/interface/video_coding_defines.h"
-#include "system_wrappers/interface/trace.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
+#include "webrtc/modules/video_coding/main/source/internal_defines.h"
+#include "webrtc/modules/video_coding/main/source/qm_select_data.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -956,4 +956,4 @@ bool VCMQmRobustness::SetUepProtection(uint8_t code_rate_delta,
   // Default.
   return false;
 }
-}  // end of namespace
+}  // namespace

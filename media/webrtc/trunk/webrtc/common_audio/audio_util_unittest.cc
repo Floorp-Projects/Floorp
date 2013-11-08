@@ -20,6 +20,20 @@ void ExpectArraysEq(const int16_t* ref, const int16_t* test, int length) {
   }
 }
 
+TEST(AudioUtilTest, Clamp) {
+  EXPECT_EQ(1000.f, ClampInt16(1000.f));
+  EXPECT_EQ(32767.f, ClampInt16(32767.5f));
+  EXPECT_EQ(-32768.f, ClampInt16(-32768.5f));
+}
+
+TEST(AudioUtilTest, Round) {
+  EXPECT_EQ(0, RoundToInt16(0.f));
+  EXPECT_EQ(0, RoundToInt16(0.4f));
+  EXPECT_EQ(1, RoundToInt16(0.5f));
+  EXPECT_EQ(0, RoundToInt16(-0.4f));
+  EXPECT_EQ(-1, RoundToInt16(-0.5f));
+}
+
 TEST(AudioUtilTest, InterleavingStereo) {
   const int16_t kInterleaved[] = {2, 3, 4, 9, 8, 27, 16, 81};
   const int kSamplesPerChannel = 4;

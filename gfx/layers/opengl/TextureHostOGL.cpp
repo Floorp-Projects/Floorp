@@ -482,8 +482,7 @@ MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit)
 
   gl()->fActiveTexture(aTextureUnit);
   gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
-  void *nativeGL = gl()->GetNativeData(gl::GLContext::NativeGLContext);
-  mSurface->CGLTexImageIOSurface2D(nativeGL);
+  mSurface->CGLTexImageIOSurface2D(static_cast<CGLContextObj>(gl()->GetNativeData(GLContext::NativeCGLContext)));
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 

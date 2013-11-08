@@ -10,10 +10,11 @@
 
 #include "webrtc/video_engine/test/auto_test/primitives/choice_helpers.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <algorithm>
-#include <cassert>
-#include <cstdio>
-#include <cstdlib>
 #include <sstream>
 
 namespace webrtc {

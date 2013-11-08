@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <climits>
-#include <cstdarg>
-#include <cstdio>
+#include <limits.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #include <algorithm>
 
@@ -37,8 +37,6 @@
 #define DEFAULT_VIDEO_CODEC_MAX_BITRATE                 "1000"
 #define DEFAULT_AUDIO_PORT                              "11113"
 #define DEFAULT_AUDIO_CODEC                             "ISAC"
-#define DEFAULT_INCOMING_FILE_NAME                      "IncomingFile.avi"
-#define DEFAULT_OUTGOING_FILE_NAME                      "OutgoingFile.avi"
 #define DEFAULT_VIDEO_CODEC_MAX_FRAMERATE               "30"
 #define DEFAULT_VIDEO_PROTECTION_METHOD                 "None"
 #define DEFAULT_TEMPORAL_LAYER                          "0"
@@ -62,16 +60,6 @@ enum VideoProtectionMethod {
 
 using webrtc::FromChoices;
 using webrtc::TypedInput;
-
-class ViEAutotestFileObserver : public webrtc::ViEFileObserver {
- public:
-  ViEAutotestFileObserver() {}
-  ~ViEAutotestFileObserver() {}
-
-  void PlayFileEnded(const int32_t file_id) {
-    ViETest::Log("PlayFile ended");
-  }
-};
 
 class ViEAutotestEncoderObserver : public webrtc::ViEEncoderObserver {
  public:
@@ -558,7 +546,6 @@ int ViEAutoTest::ViECustomCall() {
     number_of_errors += ViETest::TestError(error == 0,
                                            "ERROR: %s at line %d",
                                            __FUNCTION__, __LINE__);
-    ViEAutotestFileObserver file_observer;
 
     ViEAutotestEncoderObserver* codec_encoder_observer = NULL;
     ViEAutotestDecoderObserver* codec_decoder_observer = NULL;

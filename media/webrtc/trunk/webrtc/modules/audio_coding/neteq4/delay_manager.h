@@ -11,7 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ4_DELAY_MANAGER_H_
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ4_DELAY_MANAGER_H_
 
-#include <cstring>  // Provide access to size_t.
+#include <string.h>  // Provide access to size_t.
+
 #include <vector>
 
 #include "webrtc/modules/audio_coding/neteq4/interface/audio_decoder.h"
@@ -33,10 +34,10 @@ class DelayManager {
   // object to the DelayManager.
   DelayManager(int max_packets_in_buffer, DelayPeakDetector* peak_detector);
 
-  virtual ~DelayManager() {}
+  virtual ~DelayManager();
 
   // Read the inter-arrival time histogram. Mainly for testing purposes.
-  virtual const IATVector& iat_vector() const { return iat_vector_; }
+  virtual const IATVector& iat_vector() const;
 
   // Updates the delay manager with a new incoming packet, with
   // |sequence_number| and |timestamp| from the RTP header. This updates the
@@ -79,7 +80,7 @@ class DelayManager {
   virtual void UpdateCounters(int elapsed_time_ms);
 
   // Reset the inter-arrival time counter to 0.
-  virtual void ResetPacketIatCount() { packet_iat_count_ms_ = 0; }
+  virtual void ResetPacketIatCount();
 
   // Writes the lower and higher limits which the buffer level should stay
   // within to the corresponding pointers. The values are in (fractions of)
@@ -93,13 +94,14 @@ class DelayManager {
   virtual void LastDecoderType(NetEqDecoder decoder_type);
 
   // Accessors and mutators.
-  virtual void set_extra_delay_ms(int16_t delay) { extra_delay_ms_ = delay; }
-  virtual int base_target_level() const { return base_target_level_; }
-  virtual void set_streaming_mode(bool value) { streaming_mode_ = value; }
-  virtual int last_pack_cng_or_dtmf() const { return last_pack_cng_or_dtmf_; }
-  virtual void set_last_pack_cng_or_dtmf(int value) {
-    last_pack_cng_or_dtmf_ = value;
-  }
+  // Assuming |delay| is in valid range.
+  virtual bool SetMinimumDelay(int delay_ms);
+  virtual bool SetMaximumDelay(int delay_ms);
+  virtual int least_required_delay_ms() const;
+  virtual int base_target_level() const;
+  virtual void set_streaming_mode(bool value);
+  virtual int last_pack_cng_or_dtmf() const;
+  virtual void set_last_pack_cng_or_dtmf(int value);
 
  private:
   static const int kLimitProbability = 53687091;  // 1/20 in Q30.
@@ -136,13 +138,19 @@ class DelayManager {
   int packet_iat_count_ms_;  // Milliseconds elapsed since last packet.
   int base_target_level_;   // Currently preferred buffer level before peak
                             // detection and streaming mode (Q0).
+  // TODO(turajs) change the comment according to the implementation of
+  // minimum-delay.
   int target_level_;  // Currently preferred buffer level in (fractions)
                       // of packets (Q8), before adding any extra delay.
   int packet_len_ms_;  // Length of audio in each incoming packet [ms].
   bool streaming_mode_;
   uint16_t last_seq_no_;  // Sequence number for last received packet.
   uint32_t last_timestamp_;  // Timestamp for the last received packet.
-  int extra_delay_ms_;  // Externally set extra delay.
+  int minimum_delay_ms_;  // Externally set minimum delay.
+  int least_required_delay_ms_;  // Smallest preferred buffer level (same unit
+                              // as |target_level_|), before applying
+                              // |minimum_delay_ms_| and/or |maximum_delay_ms_|.
+  int maximum_delay_ms_;  // Externally set maximum allowed delay.
   int iat_cumulative_sum_;  // Cumulative sum of delta inter-arrival times.
   int max_iat_cumulative_sum_;  // Max of |iat_cumulative_sum_|.
   int max_timer_ms_;  // Time elapsed since maximum was observed.

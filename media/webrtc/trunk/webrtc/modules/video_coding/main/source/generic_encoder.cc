@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "encoded_frame.h"
-#include "generic_encoder.h"
-#include "media_optimization.h"
-#include "../../../../engine_configurations.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/video_coding/main/source/encoded_frame.h"
+#include "webrtc/modules/video_coding/main/source/generic_encoder.h"
+#include "webrtc/modules/video_coding/main/source/media_optimization.h"
 
 namespace webrtc {
 
@@ -240,36 +240,35 @@ VCMEncodedFrameCallback::EncodedBytes()
 
 void
 VCMEncodedFrameCallback::SetMediaOpt(
-    media_optimization::VCMMediaOptimization *mediaOpt)
+    media_optimization::MediaOptimization *mediaOpt)
 {
     _mediaOpt = mediaOpt;
 }
 
 void VCMEncodedFrameCallback::CopyCodecSpecific(const CodecSpecificInfo& info,
                                                 RTPVideoHeader** rtp) {
-    switch (info.codecType) {
-        case kVideoCodecVP8: {
-            (*rtp)->codecHeader.VP8.InitRTPVideoHeaderVP8();
-            (*rtp)->codecHeader.VP8.pictureId =
-                info.codecSpecific.VP8.pictureId;
-            (*rtp)->codecHeader.VP8.nonReference =
-                info.codecSpecific.VP8.nonReference;
-            (*rtp)->codecHeader.VP8.temporalIdx =
-                info.codecSpecific.VP8.temporalIdx;
-            (*rtp)->codecHeader.VP8.layerSync =
-                info.codecSpecific.VP8.layerSync;
-            (*rtp)->codecHeader.VP8.tl0PicIdx =
-                info.codecSpecific.VP8.tl0PicIdx;
-            (*rtp)->codecHeader.VP8.keyIdx =
-                info.codecSpecific.VP8.keyIdx;
-            (*rtp)->simulcastIdx = info.codecSpecific.VP8.simulcastIdx;
-            return;
-        }
-        default: {
-            // No codec specific info. Change RTP header pointer to NULL.
-            *rtp = NULL;
-            return;
-        }
+  switch (info.codecType) {
+    case kVideoCodecVP8: {
+      (*rtp)->codec = kRtpVideoVp8;
+      (*rtp)->codecHeader.VP8.InitRTPVideoHeaderVP8();
+      (*rtp)->codecHeader.VP8.pictureId = info.codecSpecific.VP8.pictureId;
+      (*rtp)->codecHeader.VP8.nonReference =
+          info.codecSpecific.VP8.nonReference;
+      (*rtp)->codecHeader.VP8.temporalIdx = info.codecSpecific.VP8.temporalIdx;
+      (*rtp)->codecHeader.VP8.layerSync = info.codecSpecific.VP8.layerSync;
+      (*rtp)->codecHeader.VP8.tl0PicIdx = info.codecSpecific.VP8.tl0PicIdx;
+      (*rtp)->codecHeader.VP8.keyIdx = info.codecSpecific.VP8.keyIdx;
+      (*rtp)->simulcastIdx = info.codecSpecific.VP8.simulcastIdx;
+      return;
     }
+    case kVideoCodecGeneric:
+      (*rtp)->codec = kRtpVideoGeneric;
+      (*rtp)->simulcastIdx = info.codecSpecific.generic.simulcast_idx;
+      return;
+    default:
+      // No codec specific info. Change RTP header pointer to NULL.
+      *rtp = NULL;
+      return;
+  }
 }
-} // namespace webrtc
+}  // namespace webrtc

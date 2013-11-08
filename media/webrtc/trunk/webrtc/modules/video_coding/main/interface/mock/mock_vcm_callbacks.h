@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_MAIN_INTERFACE_MOCK_MOCK_VCM_CALLBACKS_H_
 #define WEBRTC_MODULES_VIDEO_CODING_MAIN_INTERFACE_MOCK_MOCK_VCM_CALLBACKS_H_
 
-#include "gmock/gmock.h"
+#include "testing/gmock/include/gmock/gmock.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
 #include "webrtc/typedefs.h"
 

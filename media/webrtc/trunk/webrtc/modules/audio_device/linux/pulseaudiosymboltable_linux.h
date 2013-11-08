@@ -28,7 +28,7 @@
 #ifndef WEBRTC_AUDIO_DEVICE_PULSEAUDIOSYMBOLTABLE_LINUX_H
 #define WEBRTC_AUDIO_DEVICE_PULSEAUDIOSYMBOLTABLE_LINUX_H
 
-#include "latebindingsymboltable_linux.h"
+#include "webrtc/modules/audio_device/linux/latebindingsymboltable_linux.h"
 
 namespace webrtc_adm_linux_pulse {
 

@@ -81,6 +81,6 @@ private:
     
 }; // end of VPMFramePreprocessor class definition
 
-} //namespace
+}  // namespace
 
 #endif // VPM_FRAME_PREPROCESS_H

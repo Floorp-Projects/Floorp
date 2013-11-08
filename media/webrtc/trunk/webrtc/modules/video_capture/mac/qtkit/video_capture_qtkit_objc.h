@@ -16,14 +16,14 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_OBJC_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_OBJC_H_
 
-#import <Foundation/Foundation.h>
-#import <QTKit/QTKit.h>
 #import <AppKit/AppKit.h>
 #import <CoreData/CoreData.h>
 #import <CoreFoundation/CoreFoundation.h>
 #import <CoreVideo/CoreVideo.h>
+#import <Foundation/Foundation.h>
+#import <QTKit/QTKit.h>
 
-#include "video_capture_qtkit.h"
+#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit.h"
 
 @interface VideoCaptureMacQTKitObjC : NSObject {
   bool _capturing;

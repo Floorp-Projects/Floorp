@@ -10,7 +10,7 @@
 
 #include "webrtc/common_audio/resampler/include/push_resampler.h"
 
-#include <cstring>
+#include <string.h>
 
 #include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/common_audio/resampler/push_sinc_resampler.h"
@@ -37,15 +37,13 @@ int PushResampler::InitializeIfNeeded(int src_sample_rate_hz,
                                       int num_channels) {
   if (src_sample_rate_hz == src_sample_rate_hz_ &&
       dst_sample_rate_hz == dst_sample_rate_hz_ &&
-      num_channels == num_channels_) {
+      num_channels == num_channels_)
     // No-op if settings haven't changed.
     return 0;
-  }
 
   if (src_sample_rate_hz <= 0 || dst_sample_rate_hz <= 0 ||
-      num_channels <= 0 || num_channels > 2) {
+      num_channels <= 0 || num_channels > 2)
     return -1;
-  }
 
   src_sample_rate_hz_ = src_sample_rate_hz;
   dst_sample_rate_hz_ = dst_sample_rate_hz;
@@ -71,9 +69,8 @@ int PushResampler::Resample(const int16_t* src, int src_length,
                             int16_t* dst, int dst_capacity) {
   const int src_size_10ms = src_sample_rate_hz_ * num_channels_ / 100;
   const int dst_size_10ms = dst_sample_rate_hz_ * num_channels_ / 100;
-  if (src_length != src_size_10ms || dst_capacity < dst_size_10ms) {
+  if (src_length != src_size_10ms || dst_capacity < dst_size_10ms)
     return -1;
-  }
 
   if (src_sample_rate_hz_ == dst_sample_rate_hz_) {
     // The old resampler provides this memcpy facility in the case of matching

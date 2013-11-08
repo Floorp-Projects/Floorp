@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "engine_configurations.h"
+#include "webrtc/engine_configurations.h"
 #if defined(COCOA_RENDERING)
 
 #ifndef WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_MAC_VIDEO_RENDER_NSOPENGL_H_
@@ -16,16 +16,16 @@
 
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/OpenGL.h>
-#import <OpenGL/glu.h>
 #import <OpenGL/glext.h>
+#import <OpenGL/glu.h>
 #include <QuickTime/QuickTime.h>
 #include <list>
 #include <map>
 
-#include "video_render_defines.h"
+#include "webrtc/modules/video_render/include/video_render_defines.h"
 
-#import "cocoa_render_view.h"
-#import "cocoa_full_screen_window.h"
+#import "webrtc/modules/video_render/mac/cocoa_full_screen_window.h"
+#import "webrtc/modules/video_render/mac/cocoa_render_view.h"
 
 class Trace;
 
@@ -184,8 +184,7 @@ private: // variables
     NSRect _windowRefSuperViewFrame;
 };
 
-} //namespace webrtc
+}  // namespace webrtc
 
 #endif   // WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_MAC_VIDEO_RENDER_NSOPENGL_H_
 #endif	 // COCOA_RENDERING
-

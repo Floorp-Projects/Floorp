@@ -11,11 +11,11 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_PACKET_MANIPULATOR_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_PACKET_MANIPULATOR_H_
 
-#include <cstdlib>
+#include <stdlib.h>
 
-#include "modules/video_coding/codecs/interface/video_codec_interface.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "testsupport/packet_reader.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/test/testsupport/packet_reader.h"
 
 namespace webrtc {
 namespace test {
@@ -92,7 +92,7 @@ class PacketManipulatorImpl : public PacketManipulator {
                         const NetworkingConfig& config,
                         bool verbose);
   virtual ~PacketManipulatorImpl();
-  virtual int ManipulatePackets(webrtc::EncodedImage* encoded_image);
+  virtual int ManipulatePackets(webrtc::EncodedImage* encoded_image) OVERRIDE;
   virtual void InitializeRandomSeed(unsigned int seed);
  protected:
   // Returns a uniformly distributed random value between 0.0 and 1.0

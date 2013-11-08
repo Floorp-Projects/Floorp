@@ -10,14 +10,18 @@
 
 #include "webrtc/tools/simple_command_line_parser.h"
 
-#include <cstdio>
-#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <string>
 
 namespace webrtc {
 namespace test {
 
 using std::string;
+
+CommandLineParser::CommandLineParser() {}
+CommandLineParser::~CommandLineParser() {}
 
 void CommandLineParser::Init(int argc, char** argv) {
   args_ = std::vector<std::string> (argv + 1, argv + argc);

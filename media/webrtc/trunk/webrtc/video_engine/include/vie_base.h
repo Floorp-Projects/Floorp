@@ -26,6 +26,20 @@ namespace webrtc {
 class Config;
 class VoiceEngine;
 
+// CpuOveruseObserver is called when a system overuse is detected and
+// VideoEngine cannot keep up the encoding frequency.
+class CpuOveruseObserver {
+ public:
+  // Called as soon as an overuse is detected.
+  virtual void OveruseDetected() = 0;
+  // Called periodically when the system is not overused any longer.
+  virtual void NormalUsage() = 0;
+
+ protected:
+  virtual ~CpuOveruseObserver() {}
+};
+
+
 class WEBRTC_DLLEXPORT VideoEngine {
  public:
   // Creates a VideoEngine object, which can then be used to acquire sub‐APIs.
@@ -95,6 +109,12 @@ class WEBRTC_DLLEXPORT ViEBase {
 
   // Deletes an existing channel and releases the utilized resources.
   virtual int DeleteChannel(const int video_channel) = 0;
+
+  // Registers an observer to be called when an overuse is detected, see
+  // 'CpuOveruseObserver' for details.
+  // NOTE: This is still very experimental functionality.
+  virtual int RegisterCpuOveruseObserver(int channel,
+                                         CpuOveruseObserver* observer) = 0;
 
   // Specifies the VoiceEngine and VideoEngine channel pair to use for
   // audio/video synchronization.
