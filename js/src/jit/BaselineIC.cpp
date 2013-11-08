@@ -419,6 +419,11 @@ ICStub::trace(JSTracer *trc)
         MarkObject(trc, &stub->templateObject(), "baseline-newobject-template");
         break;
       }
+      case ICStub::Rest_Fallback: {
+        ICRest_Fallback *stub = toRest_Fallback();
+        MarkObject(trc, &stub->templateObject(), "baseline-rest-template");
+        break;
+      }
       default:
         break;
     }
