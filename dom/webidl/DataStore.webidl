@@ -39,20 +39,10 @@ interface DataStore : EventTarget {
 
   attribute EventHandler onchange;
 
-  // Promise<DataStoreChanges>
-  Promise getChanges(DOMString revisionId);
-
   // Promise<unsigned long>
   Promise getLength();
 
   DataStoreCursor sync(optional DOMString revisionId = "");
-};
-
-dictionary DataStoreChanges {
-  DOMString revisionId;
-  sequence<unsigned long> addedIds;
-  sequence<unsigned long> updatedIds;
-  sequence<unsigned long> removedIds;
 };
 
 [Pref="dom.datastore.enabled",
