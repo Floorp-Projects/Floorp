@@ -1379,7 +1379,7 @@ add_test(function test_read_icc_contacts() {
     };
 
     record.readPBR = function readPBR(onsuccess, onerror) {
-      onsuccess([{adn:{}, email: {}, anr0: {}}]);
+      onsuccess([{adn:{fileId: 0x6f3a}, email: {}, anr0: {}}]);
     };
 
     record.readADNLike = function readADNLike(fileId, onsuccess, onerror) {
@@ -1396,7 +1396,7 @@ add_test(function test_read_icc_contacts() {
 
     let onsuccess = function onsuccess(contacts) {
       let contact = contacts[0];
-      for (key in contact) {
+      for (let key in contact) {
         do_print("check " + key);
         if (Array.isArray(contact[key])) {
           do_check_eq(contact[key][0], aExpectedContact[key]);
@@ -1415,12 +1415,14 @@ add_test(function test_read_icc_contacts() {
   }
 
   let expectedContact1 = {
+    pbrIndex: 0,
     recordId: 1,
     alphaId:  "name",
     number:   "111111"
   };
 
   let expectedContact2 = {
+    pbrIndex: 0,
     recordId: 1,
     alphaId:  "name",
     number:   "111111",
@@ -1559,6 +1561,7 @@ add_test(function test_update_icc_contact() {
   }
 
   let contact = {
+    pbrIndex: 0,
     recordId: ADN_RECORD_ID,
     alphaId:  "test",
     number:   "123456",
@@ -1607,6 +1610,7 @@ add_test(function test_find_free_icc_contact() {
   let recordHelper = worker.ICCRecordHelper;
   let contactHelper = worker.ICCContactHelper;
   const RECORD_ID = 1;
+  const PBR_INDEX = 0;
 
   recordHelper.readPBR = function (onsuccess, onerror) {
     onsuccess([{adn:{}, email: {}, anr0: {}}]);
@@ -1616,7 +1620,8 @@ add_test(function test_find_free_icc_contact() {
     onsuccess(RECORD_ID);
   };
 
-  let successCb = function (recordId) {
+  let successCb = function (pbrIndex, recordId) {
+    do_check_eq(pbrIndex, PBR_INDEX);
     do_check_eq(recordId, RECORD_ID);
     run_next_test();
   };
