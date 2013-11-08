@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <ctime>
+#include <time.h>
 
 #include "webrtc/test/libtest/include/bit_flip_encryption.h"
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_streaming_fixture.h"
@@ -16,7 +16,7 @@
 class RtpFuzzTest : public AfterStreamingFixture {
  protected:
   void BitFlipFuzzTest(float flip_probability) {
-    BitFlipEncryption bit_flip_encryption(std::time(NULL), flip_probability);
+    BitFlipEncryption bit_flip_encryption(time(NULL), flip_probability);
 
     TEST_LOG("Starting to flip bits in RTP/RTCP packets.\n");
     voe_encrypt_->RegisterExternalEncryption(channel_, bit_flip_encryption);

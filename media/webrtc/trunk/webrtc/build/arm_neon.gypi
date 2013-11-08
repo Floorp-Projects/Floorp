@@ -23,30 +23,8 @@
   'cflags!': [
     '-mfpu=vfpv3-d16',
   ],
-  'cflags_mozilla!': [
-    '-mfpu=vfpv3-d16',
-  ],
   'cflags': [
     '-mfpu=neon',
     '-flax-vector-conversions',
   ],
-  'cflags_mozilla': [
-    '-mfpu=neon',
-    '-flax-vector-conversions',
-  ],
-  'asflags!': [
-    '-mfpu=vfpv3-d16',
-  ],
-  'asflags_mozilla!': [
-    '-mfpu=vfpv3-d16',
-  ],
-  'asflags': [
-    '-mfpu=neon',
-    '-flax-vector-conversions',
-  ],
-  'asflags_mozilla': [
-    '-mfpu=neon',
-    '-flax-vector-conversions',
-  ],
-
 }

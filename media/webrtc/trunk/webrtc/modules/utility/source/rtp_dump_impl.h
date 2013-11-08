@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_UTILITY_SOURCE_RTP_DUMP_IMPL_H_
 #define WEBRTC_MODULES_UTILITY_SOURCE_RTP_DUMP_IMPL_H_
 
-#include "rtp_dump.h"
+#include "webrtc/modules/utility/interface/rtp_dump.h"
 
 namespace webrtc {
 class CriticalSectionWrapper;
@@ -44,5 +44,5 @@ private:
     FileWrapper& _file;
     uint32_t _startTime;
 };
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_UTILITY_SOURCE_RTP_DUMP_IMPL_H_

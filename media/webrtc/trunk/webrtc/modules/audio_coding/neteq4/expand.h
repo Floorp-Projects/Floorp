@@ -130,7 +130,7 @@ class Expand {
   // samples. The correlation is calculated from a downsampled version of
   // |input|, and is written to |output|. The scale factor is written to
   // |output_scale|. Returns the length of the correlation vector.
-  int16_t Correlation(const int16_t* input, int16_t input_length,
+  int16_t Correlation(const int16_t* input, size_t input_length,
                       int16_t* output, int16_t* output_scale) const;
 
   void UpdateLagIndex();

@@ -11,7 +11,7 @@
 #include "webrtc/modules/audio_coding/main/source/acm_speex.h"
 
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/main/source/acm_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq_help_macros.h"
@@ -24,6 +24,8 @@
 #endif
 
 namespace webrtc {
+
+namespace acm1 {
 
 #ifndef WEBRTC_CODEC_SPEEX
 ACMSPEEX::ACMSPEEX(int16_t /* codec_id */)
@@ -463,5 +465,7 @@ int16_t ACMSPEEX::SetComplMode(int16_t mode) {
 #endif
 
 #endif
+
+}  // namespace acm1
 
 }  // namespace webrtc

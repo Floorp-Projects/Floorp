@@ -11,11 +11,11 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_DEVICE_INFO_IMPL_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_DEVICE_INFO_IMPL_H_
 
-#include "video_capture.h"
+#include <map>
 
-#include "map_wrapper.h"
-#include "rw_lock_wrapper.h"
-#include "video_capture_delay.h"
+#include "webrtc/modules/video_capture/include/video_capture.h"
+#include "webrtc/modules/video_capture/video_capture_delay.h"
+#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
 
 namespace webrtc
 {
@@ -58,11 +58,12 @@ protected:
 protected:
     // Data members
     int32_t _id;
-    MapWrapper _captureCapabilities;
+    typedef std::map<int, VideoCaptureCapability*> VideoCaptureCapabilityMap;
+    VideoCaptureCapabilityMap _captureCapabilities;
     RWLockWrapper& _apiLock;
     char* _lastUsedDeviceName;
     uint32_t _lastUsedDeviceNameLength;
 };
-} //namespace videocapturemodule
-} // namespace webrtc
+}  // namespace videocapturemodule
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_DEVICE_INFO_IMPL_H_

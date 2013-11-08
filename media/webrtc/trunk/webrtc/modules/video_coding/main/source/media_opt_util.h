@@ -11,12 +11,12 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_MEDIA_OPT_UTIL_H_
 #define WEBRTC_MODULES_VIDEO_CODING_MEDIA_OPT_UTIL_H_
 
-#include <cmath>
-#include <cstdlib>
+#include <math.h>
+#include <stdlib.h>
 
-#include "webrtc/modules/video_coding/utility/include/exp_filter.h"
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/modules/video_coding/main/source/qm_select.h"
+#include "webrtc/modules/video_coding/utility/include/exp_filter.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/typedefs.h"
 
@@ -390,7 +390,7 @@ private:
     int                       _numLayers;
 };
 
-} // namespace media_optimization
-} // namespace webrtc
+}  // namespace media_optimization
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_MEDIA_OPT_UTIL_H_

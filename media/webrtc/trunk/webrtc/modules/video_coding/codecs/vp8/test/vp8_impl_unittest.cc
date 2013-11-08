@@ -8,13 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "gtest/gtest.h"
-#include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
-#include "webrtc/modules/video_coding/codecs/test_framework/video_source.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/video_coding/codecs/test_framework/unit_test.h"
+#include "webrtc/modules/video_coding/codecs/test_framework/video_source.h"
+#include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace webrtc {
 
@@ -105,6 +106,43 @@ class TestVp8Impl : public ::testing::Test {
         Vp8UnitTestDecodeCompleteCallback(&decoded_video_frame_));
     encoder_->RegisterEncodeCompleteCallback(encode_complete_callback_.get());
     decoder_->RegisterDecodeCompleteCallback(decode_complete_callback_.get());
+    // Using a QCIF image (aligned stride (u,v planes) > width).
+    // Processing only one frame.
+    const VideoSource source(test::ResourcePath("paris_qcif", "yuv"), kQCIF);
+    length_source_frame_ = source.GetFrameLength();
+    source_buffer_.reset(new uint8_t[length_source_frame_]);
+    source_file_ = fopen(source.GetFileName().c_str(), "rb");
+    ASSERT_TRUE(source_file_ != NULL);
+    // Set input frame.
+    ASSERT_EQ(fread(source_buffer_.get(), 1, length_source_frame_,
+        source_file_), length_source_frame_);
+    codec_inst_.width = source.GetWidth();
+    codec_inst_.height = source.GetHeight();
+    codec_inst_.maxFramerate = source.GetFrameRate();
+    // Setting aligned stride values.
+    int stride_uv = 0;
+    int stride_y = 0;
+    Calc16ByteAlignedStride(codec_inst_.width, &stride_y, &stride_uv);
+    EXPECT_EQ(stride_y, 176);
+    EXPECT_EQ(stride_uv, 96);
+
+    input_frame_.CreateEmptyFrame(codec_inst_.width, codec_inst_.height,
+                                  stride_y, stride_uv, stride_uv);
+    // Using ConvertToI420 to add stride to the image.
+    EXPECT_EQ(0, ConvertToI420(kI420, source_buffer_.get(), 0, 0,
+                               codec_inst_.width, codec_inst_.height,
+                               0, kRotateNone, &input_frame_));
+  }
+
+  void SetUpEncodeDecode() {
+    codec_inst_.startBitrate = 300;
+    codec_inst_.maxBitrate = 4000;
+    codec_inst_.qpMax = 56;
+    codec_inst_.codecSpecific.VP8.denoisingOn = true;
+
+    EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
+        encoder_->InitEncode(&codec_inst_, 1, 1440));
+    EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->InitDecode(&codec_inst_, 1));
   }
 
   int WaitForEncodedFrame() const {
@@ -142,6 +180,7 @@ class TestVp8Impl : public ::testing::Test {
   scoped_ptr<Vp8UnitTestDecodeCompleteCallback> decode_complete_callback_;
   scoped_array<uint8_t> source_buffer_;
   FILE* source_file_;
+  I420VideoFrame input_frame_;
   scoped_ptr<VideoEncoder> encoder_;
   scoped_ptr<VideoDecoder> decoder_;
   VideoFrame encoded_video_frame_;
@@ -150,7 +189,7 @@ class TestVp8Impl : public ::testing::Test {
   VideoCodec codec_inst_;
 };
 
-TEST_F(TestVp8Impl, BaseUnitTest) {
+TEST_F(TestVp8Impl, DISABLED_ON_ANDROID(BaseUnitTest)) {
   // TODO(mikhal): Remove dependency. Move all test code here.
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->Release());
   UnitTest unittest;
@@ -188,50 +227,40 @@ TEST_F(TestVp8Impl, EncoderParameterTest) {
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->InitDecode(&codec_inst_, 1));
 }
 
-TEST_F(TestVp8Impl, AlignedStrideEncodeDecode) {
-  // Using a QCIF image (aligned stride (u,v planse) > width).
-  // Processing only one frame.
-  const VideoSource source(test::ResourcePath("paris_qcif", "yuv"), kQCIF);
-  length_source_frame_ = source.GetFrameLength();
-  source_buffer_.reset(new uint8_t[length_source_frame_]);
-  source_file_ = fopen(source.GetFileName().c_str(), "rb");
-  ASSERT_TRUE(source_file_ != NULL);
-  codec_inst_.maxFramerate = source.GetFrameRate();
-  codec_inst_.startBitrate = 300;
-  codec_inst_.maxBitrate = 4000;
-  codec_inst_.qpMax = 56;
-  codec_inst_.width = source.GetWidth();
-  codec_inst_.height = source.GetHeight();
-  codec_inst_.codecSpecific.VP8.denoisingOn = true;
-
-  // Get input frame.
-  ASSERT_EQ(fread(source_buffer_.get(), 1, length_source_frame_, source_file_),
-            length_source_frame_);
-  // Setting aligned stride values.
-  int stride_uv = 0;
-  int stride_y = 0;
-  Calc16ByteAlignedStride(codec_inst_.width, &stride_y, &stride_uv);
-  EXPECT_EQ(stride_y, 176);
-  EXPECT_EQ(stride_uv, 96);
-
-  I420VideoFrame input_frame;
-  input_frame.CreateEmptyFrame(codec_inst_.width, codec_inst_.height,
-                               stride_y, stride_uv, stride_uv);
-  // Using ConvertToI420 to add stride to the image.
-  EXPECT_EQ(0, ConvertToI420(kI420, source_buffer_.get(), 0, 0,
-                             codec_inst_.width, codec_inst_.height,
-                             0, kRotateNone, &input_frame));
-
-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, encoder_->InitEncode(&codec_inst_, 1, 1440));
-  encoder_->Encode(input_frame, NULL, NULL);
+TEST_F(TestVp8Impl, DISABLED_ON_ANDROID(AlignedStrideEncodeDecode)) {
+  SetUpEncodeDecode();
+  encoder_->Encode(input_frame_, NULL, NULL);
   EXPECT_GT(WaitForEncodedFrame(), 0);
-  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->InitDecode(&codec_inst_, 1));
   EncodedImage encodedImage;
   VideoFrameToEncodedImage(encoded_video_frame_, encodedImage);
+  // First frame should be a key frame.
+  encodedImage._frameType = kKeyFrame;
   EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK, decoder_->Decode(encodedImage, false, NULL));
   EXPECT_GT(WaitForDecodedFrame(), 0);
   // Compute PSNR on all planes (faster than SSIM).
-  EXPECT_GT(I420PSNR(&input_frame, &decoded_video_frame_), 36);
+  EXPECT_GT(I420PSNR(&input_frame_, &decoded_video_frame_), 36);
+}
+
+TEST_F(TestVp8Impl, DISABLED_ON_ANDROID(DecodeWithACompleteKeyFrame)) {
+  SetUpEncodeDecode();
+  encoder_->Encode(input_frame_, NULL, NULL);
+  EXPECT_GT(WaitForEncodedFrame(), 0);
+  EncodedImage encodedImage;
+  VideoFrameToEncodedImage(encoded_video_frame_, encodedImage);
+  // Setting complete to false -> should return an error.
+  encodedImage._completeFrame = false;
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_ERROR,
+      decoder_->Decode(encodedImage, false, NULL));
+  // Setting complete back to true. Forcing a delta frame.
+  encodedImage._frameType = kDeltaFrame;
+  encodedImage._completeFrame = true;
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_ERROR,
+      decoder_->Decode(encodedImage, false, NULL));
+  // Now setting a key frame.
+  encodedImage._frameType = kKeyFrame;
+  EXPECT_EQ(WEBRTC_VIDEO_CODEC_OK,
+      decoder_->Decode(encodedImage, false, NULL));
+  EXPECT_GT(I420PSNR(&input_frame_, &decoded_video_frame_), 36);
 }
 
 }  // namespace webrtc

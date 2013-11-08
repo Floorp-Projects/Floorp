@@ -20,6 +20,7 @@
 #include "webrtc/modules/audio_coding/neteq4/tools/rtp_generator.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace webrtc {
 
@@ -270,7 +271,7 @@ class NetEqStereoTestNoJitter : public NetEqStereoTest {
   }
 };
 
-TEST_P(NetEqStereoTestNoJitter, RunTest) {
+TEST_P(NetEqStereoTestNoJitter, DISABLED_ON_ANDROID(RunTest)) {
   RunTest(8);
 }
 
@@ -295,7 +296,7 @@ class NetEqStereoTestPositiveDrift : public NetEqStereoTest {
   double drift_factor;
 };
 
-TEST_P(NetEqStereoTestPositiveDrift, RunTest) {
+TEST_P(NetEqStereoTestPositiveDrift, DISABLED_ON_ANDROID(RunTest)) {
   RunTest(100);
 }
 
@@ -308,7 +309,7 @@ class NetEqStereoTestNegativeDrift : public NetEqStereoTestPositiveDrift {
   }
 };
 
-TEST_P(NetEqStereoTestNegativeDrift, RunTest) {
+TEST_P(NetEqStereoTestNegativeDrift, DISABLED_ON_ANDROID(RunTest)) {
   RunTest(100);
 }
 
@@ -336,7 +337,7 @@ class NetEqStereoTestDelays : public NetEqStereoTest {
   int frame_index_;
 };
 
-TEST_P(NetEqStereoTestDelays, RunTest) {
+TEST_P(NetEqStereoTestDelays, DISABLED_ON_ANDROID(RunTest)) {
   RunTest(1000);
 }
 
@@ -355,7 +356,7 @@ class NetEqStereoTestLosses : public NetEqStereoTest {
   int frame_index_;
 };
 
-TEST_P(NetEqStereoTestLosses, RunTest) {
+TEST_P(NetEqStereoTestLosses, DISABLED_ON_ANDROID(RunTest)) {
   RunTest(100);
 }
 

@@ -299,6 +299,6 @@ public:
 
 };
 
-} //namespace
+}  // namespace
 
 #endif

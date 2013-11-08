@@ -30,7 +30,8 @@ class RtpGenerator {
         timestamp_(start_timestamp),
         next_send_time_ms_(start_send_time_ms),
         ssrc_(ssrc),
-        samples_per_ms_(samples_per_ms) {
+        samples_per_ms_(samples_per_ms),
+        drift_factor_(0.0) {
   }
 
   // Writes the next RTP header to |rtp_header|, which will be of type
@@ -39,12 +40,15 @@ class RtpGenerator {
   uint32_t GetRtpHeader(uint8_t payload_type, size_t payload_length_samples,
                         WebRtcRTPHeader* rtp_header);
 
+  void set_drift_factor(double factor);
+
  private:
   uint16_t seq_number_;
   uint32_t timestamp_;
   uint32_t next_send_time_ms_;
   const uint32_t ssrc_;
   const int samples_per_ms_;
+  double drift_factor_;
   DISALLOW_COPY_AND_ASSIGN(RtpGenerator);
 };
 

@@ -238,4 +238,4 @@ void ListWrapper::PushFrontImpl(ListItem* item) {
   size_++;
 }
 
-} //namespace webrtc
+}  // namespace webrtc

@@ -24,6 +24,6 @@ namespace VideoProcessing
     int32_t ColorEnhancement(I420VideoFrame* frame);
 }
 
-} //namespace
+}  // namespace
 
 #endif // VPM_COLOR_ENHANCEMENT_H

@@ -10,7 +10,7 @@
 
 #include "webrtc/video_engine/test/common/video_capturer.h"
 
-#include "webrtc/video_engine/test/common/frame_generator.h"
+#include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/video_engine/test/common/frame_generator_capturer.h"
 #include "webrtc/video_engine/test/common/vcm_capturer.h"
 
@@ -26,10 +26,10 @@ class NullCapturer : public VideoCapturer {
   virtual void Stop() {}
 };
 
-VideoCapturer::VideoCapturer(newapi::VideoSendStreamInput* input)
+VideoCapturer::VideoCapturer(VideoSendStreamInput* input)
     : input_(input) {}
 
-VideoCapturer* VideoCapturer::Create(newapi::VideoSendStreamInput* input,
+VideoCapturer* VideoCapturer::Create(VideoSendStreamInput* input,
                                      size_t width,
                                      size_t height,
                                      int fps,
@@ -42,8 +42,7 @@ VideoCapturer* VideoCapturer::Create(newapi::VideoSendStreamInput* input,
   // TODO(pbos): Log a warning that this failed.
 
   FrameGeneratorCapturer* frame_generator_capturer =
-      FrameGeneratorCapturer::Create(
-          input, FrameGenerator::Create(width, height, clock), fps, clock);
+      FrameGeneratorCapturer::Create(input, width, height, fps, clock);
   if (frame_generator_capturer != NULL) {
     return frame_generator_capturer;
   }

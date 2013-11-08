@@ -40,23 +40,17 @@
         'audio_device_impl.cc',
         'audio_device_impl.h',
         'audio_device_config.h',
+        'dummy/audio_device_dummy.cc',
         'dummy/audio_device_dummy.h',
+        'dummy/audio_device_utility_dummy.cc',
         'dummy/audio_device_utility_dummy.h',
       ],
       'conditions': [
-        ['build_with_mozilla==1', {
-          'include_dirs': [
-            '$(DIST)/include',
-          ],
-          'cflags_mozilla': [
-            '$(NSPR_CFLAGS)',
-          ],
-        }],
-        ['OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1', {
+        ['OS=="linux"', {
           'include_dirs': [
             'linux',
           ],
-        }], # OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1
+        }], # OS==linux
         ['OS=="ios"', {
           'include_dirs': [
             'ios',
@@ -74,16 +68,9 @@
         }],
         ['OS=="android"', {
           'include_dirs': [
-            '$(topsrcdir)/widget/android',
             'android',
           ],
         }], # OS==android
-        ['moz_widget_toolkit_gonk==1', {
-          'include_dirs': [
-            '$(ANDROID_SOURCE)/frameworks/wilhelm/include',
-            '$(ANDROID_SOURCE)/system/media/wilhelm/include',
-          ],
-        }], # moz_widget_toolkit_gonk==1
         ['include_internal_audio_device==0', {
           'defines': [
             'WEBRTC_DUMMY_AUDIO_BUILD',
@@ -91,8 +78,14 @@
         }],
         ['include_internal_audio_device==1', {
           'sources': [
+            'linux/alsasymboltable_linux.cc',
+            'linux/alsasymboltable_linux.h',
+            'linux/audio_device_alsa_linux.cc',
+            'linux/audio_device_alsa_linux.h',
             'linux/audio_device_utility_linux.cc',
             'linux/audio_device_utility_linux.h',
+            'linux/audio_mixer_manager_alsa_linux.cc',
+            'linux/audio_mixer_manager_alsa_linux.h',
             'linux/latebindingsymboltable_linux.cc',
             'linux/latebindingsymboltable_linux.h',
             'ios/audio_device_ios.cc',
@@ -118,66 +111,66 @@
             'win/audio_mixer_manager_win.h',
             'android/audio_device_utility_android.cc',
             'android/audio_device_utility_android.h',
-# opensles is shared with gonk, so isn't here
-            'android/audio_device_jni_android.cc',
-            'android/audio_device_jni_android.h',
           ],
           'conditions': [
             ['OS=="android"', {
-              'sources': [
-                'audio_device_opensles.cc',
-                'audio_device_opensles.h',
-              ],
               'link_settings': {
                 'libraries': [
                   '-llog',
                   '-lOpenSLES',
                 ],
               },
-            }],
-            ['moz_widget_toolkit_gonk==1', {
-              'sources': [
-                'audio_device_opensles.cc',
-                'audio_device_opensles.h',
+              'conditions': [
+                ['enable_android_opensl==1', {
+                  'sources': [
+                    'android/audio_device_opensles_android.cc',
+                    'android/audio_device_opensles_android.h',
+                    'android/audio_manager_jni.cc',
+                    'android/audio_manager_jni.h',
+                    'android/fine_audio_buffer.cc',
+                    'android/fine_audio_buffer.h',
+                    'android/low_latency_event_posix.cc',
+                    'android/low_latency_event.h',
+                    'android/opensles_common.cc',
+                    'android/opensles_common.h',
+                    'android/opensles_input.cc',
+                    'android/opensles_input.h',
+                    'android/opensles_output.cc',
+                    'android/opensles_output.h',
+                    'android/single_rw_fifo.cc',
+                    'android/single_rw_fifo.h',
+                  ],
+                }, {
+                  'sources': [
+                    'android/audio_device_jni_android.cc',
+                    'android/audio_device_jni_android.h',
+                  ],
+                }],
               ],
             }],
             ['OS=="linux"', {
+              'defines': [
+                'LINUX_ALSA',
+              ],
               'link_settings': {
                 'libraries': [
                   '-ldl','-lX11',
                 ],
               },
-            }],
-            ['include_alsa_audio==1', {
-              'cflags_mozilla': [
-                '$(MOZ_ALSA_CFLAGS)',
-              ],
-              'defines': [
-                'LINUX_ALSA',
-              ],
-              'sources': [
-                'linux/alsasymboltable_linux.cc',
-                'linux/alsasymboltable_linux.h',
-                'linux/audio_device_alsa_linux.cc',
-                'linux/audio_device_alsa_linux.h',
-                'linux/audio_mixer_manager_alsa_linux.cc',
-                'linux/audio_mixer_manager_alsa_linux.h',
-              ],
-            }],
-            ['include_pulse_audio==1', {
-              'cflags_mozilla': [
-                '$(MOZ_PULSEAUDIO_CFLAGS)',
-              ],
-              'defines': [
-                'LINUX_PULSE',
-              ],
-              'sources': [
-                'linux/audio_device_pulse_linux.cc',
-                'linux/audio_device_pulse_linux.h',
-                'linux/audio_mixer_manager_pulse_linux.cc',
-                'linux/audio_mixer_manager_pulse_linux.h',
-                'linux/pulseaudiosymboltable_linux.cc',
-                'linux/pulseaudiosymboltable_linux.h',
+              'conditions': [
+                ['include_pulse_audio==1', {
+                  'defines': [
+                    'LINUX_PULSE',
+                  ],
+                  'sources': [
+                    'linux/audio_device_pulse_linux.cc',
+                    'linux/audio_device_pulse_linux.h',
+                    'linux/audio_mixer_manager_pulse_linux.cc',
+                    'linux/audio_mixer_manager_pulse_linux.h',
+                    'linux/pulseaudiosymboltable_linux.cc',
+                    'linux/pulseaudiosymboltable_linux.h',
+                  ],
+                }],
               ],
             }],
             ['OS=="mac" or OS=="ios"', {
@@ -208,7 +201,7 @@
     ['include_tests==1', {
       'targets': [
         {
-          'target_name': 'audio_device_integrationtests',
+          'target_name': 'audio_device_tests',
          'type': 'executable',
          'dependencies': [
             'audio_device',
@@ -240,8 +233,50 @@
             'test/func_test_manager.h',
           ],
         },
+      ], # targets
+      'conditions': [
+        ['test_isolation_mode != "noop"', {
+          'targets': [
+            {
+              'target_name': 'audio_device_tests_run',
+              'type': 'none',
+              'dependencies': [
+                '<(import_isolate_path):import_isolate_gypi',
+                'audio_device_tests',
+              ],
+              'includes': [
+                'audio_device_tests.isolate',
+              ],
+              'sources': [
+                'audio_device_tests.isolate',
+              ],
+            },
+          ],
+        }],
+        ['OS=="android" and enable_android_opensl==1', {
+          'targets': [
+            {
+              'target_name': 'audio_device_unittest',
+              'type': 'executable',
+              'dependencies': [
+                'audio_device',
+                'webrtc_utility',
+                '<(DEPTH)/testing/gmock.gyp:gmock',
+                '<(DEPTH)/testing/gtest.gyp:gtest',
+                '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+                '<(webrtc_root)/test/test.gyp:test_support_main',
+              ],
+              'sources': [
+                'android/fine_audio_buffer_unittest.cc',
+                'android/low_latency_event_unittest.cc',
+                'android/single_rw_fifo_unittest.cc',
+                'mock/mock_audio_device_buffer.h',
+              ],
+            },
+          ],
+        }],
       ],
-    }],
+    }], # include_tests
   ],
 }
 

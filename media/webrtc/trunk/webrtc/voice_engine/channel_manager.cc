@@ -8,154 +8,130 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/voice_engine/channel.h"
 #include "webrtc/voice_engine/channel_manager.h"
 
-namespace webrtc
-{
+#include "webrtc/voice_engine/channel.h"
 
-namespace voe
-{
+namespace webrtc {
+namespace voe {
 
-ChannelManager::ChannelManager(uint32_t instanceId) :
-    ChannelManagerBase(),
-    _instanceId(instanceId)
-{
+ChannelOwner::ChannelOwner(class Channel* channel)
+    : channel_ref_(new ChannelRef(channel)) {}
+
+ChannelOwner::ChannelOwner(const ChannelOwner& channel_owner)
+    : channel_ref_(channel_owner.channel_ref_) {
+  ++channel_ref_->ref_count;
 }
 
-ChannelManager::~ChannelManager()
-{
-    ChannelManagerBase::DestroyAllItems();
+ChannelOwner::~ChannelOwner() {
+  if (--channel_ref_->ref_count == 0)
+    delete channel_ref_;
 }
 
-bool ChannelManager::CreateChannel(int32_t& channelId)
-{
-    return ChannelManagerBase::CreateItem(channelId);
+ChannelOwner& ChannelOwner::operator=(const ChannelOwner& other) {
+  if (other.channel_ref_ == channel_ref_)
+    return *this;
+
+  if (--channel_ref_->ref_count == 0)
+    delete channel_ref_;
+
+  channel_ref_ = other.channel_ref_;
+  ++channel_ref_->ref_count;
+
+  return *this;
 }
 
-int32_t ChannelManager::DestroyChannel(int32_t channelId)
-{
-    Channel* deleteChannel =
-        static_cast<Channel*> (ChannelManagerBase::RemoveItem(channelId));
-    if (!deleteChannel)
-    {
-        return -1;
+ChannelOwner::ChannelRef::ChannelRef(class Channel* channel)
+    : channel(channel), ref_count(1) {}
+
+ChannelManager::ChannelManager(uint32_t instance_id, const Config& config)
+    : instance_id_(instance_id),
+      last_channel_id_(-1),
+      lock_(CriticalSectionWrapper::CreateCriticalSection()),
+      config_(config) {}
+
+ChannelOwner ChannelManager::CreateChannel() {
+  Channel* channel;
+  Channel::CreateChannel(channel, ++last_channel_id_, instance_id_, config_);
+  ChannelOwner channel_owner(channel);
+
+  CriticalSectionScoped crit(lock_.get());
+
+  channels_.push_back(channel_owner);
+
+  return channel_owner;
+}
+
+ChannelOwner ChannelManager::GetChannel(int32_t channel_id) {
+  CriticalSectionScoped crit(lock_.get());
+
+  for (size_t i = 0; i < channels_.size(); ++i) {
+    if (channels_[i].channel()->ChannelId() == channel_id)
+      return channels_[i];
+  }
+  return ChannelOwner(NULL);
+}
+
+void ChannelManager::GetAllChannels(std::vector<ChannelOwner>* channels) {
+  CriticalSectionScoped crit(lock_.get());
+
+  *channels = channels_;
+}
+
+void ChannelManager::DestroyChannel(int32_t channel_id) {
+  assert(channel_id >= 0);
+  // Holds a reference to a channel, this is used so that we never delete
+  // Channels while holding a lock, but rather when the method returns.
+  ChannelOwner reference(NULL);
+  {
+    CriticalSectionScoped crit(lock_.get());
+
+    for (std::vector<ChannelOwner>::iterator it = channels_.begin();
+         it != channels_.end();
+         ++it) {
+      if (it->channel()->ChannelId() == channel_id) {
+        reference = *it;
+        channels_.erase(it);
+        break;
+      }
     }
-    delete deleteChannel;
-    return 0;
+  }
 }
 
-int32_t ChannelManager::NumOfChannels() const
-{
-    return ChannelManagerBase::NumOfItems();
+void ChannelManager::DestroyAllChannels() {
+  // Holds references so that Channels are not destroyed while holding this
+  // lock, but rather when the method returns.
+  std::vector<ChannelOwner> references;
+  {
+    CriticalSectionScoped crit(lock_.get());
+    references = channels_;
+    channels_.clear();
+  }
 }
 
-int32_t ChannelManager::MaxNumOfChannels() const
-{
-    return ChannelManagerBase::MaxNumOfItems();
+size_t ChannelManager::NumOfChannels() const {
+  CriticalSectionScoped crit(lock_.get());
+  return channels_.size();
 }
 
-void* ChannelManager::NewItem(int32_t itemID)
-{
-    Channel* channel;
-    if (Channel::CreateChannel(channel, itemID, _instanceId) == -1)
-    {
-        return NULL;
-    }
-    return static_cast<void*> (channel);
+ChannelManager::Iterator::Iterator(ChannelManager* channel_manager)
+    : iterator_pos_(0) {
+  channel_manager->GetAllChannels(&channels_);
 }
 
-void ChannelManager::DeleteItem(void* item)
-{
-    Channel* deleteItem = static_cast<Channel*> (item);
-    delete deleteItem;
+Channel* ChannelManager::Iterator::GetChannel() {
+  if (iterator_pos_ < channels_.size())
+    return channels_[iterator_pos_].channel();
+  return NULL;
 }
 
-Channel* ChannelManager::GetChannel(int32_t channelId) const
-{
-    return static_cast<Channel*> (ChannelManagerBase::GetItem(channelId));
+bool ChannelManager::Iterator::IsValid() {
+  return iterator_pos_ < channels_.size();
 }
 
-void ChannelManager::ReleaseChannel()
-{
-    ChannelManagerBase::ReleaseItem();
+void ChannelManager::Iterator::Increment() {
+  ++iterator_pos_;
 }
 
-void ChannelManager::GetChannelIds(int32_t* channelsArray,
-                                   int32_t& numOfChannels) const
-{
-    ChannelManagerBase::GetItemIds(channelsArray, numOfChannels);
-}
-
-void ChannelManager::GetChannels(MapWrapper& channels) const
-{
-    ChannelManagerBase::GetChannels(channels);
-}
-
-ScopedChannel::ScopedChannel(ChannelManager& chManager) :
-    _chManager(chManager),
-    _channelPtr(NULL)
-{
-    // Copy all existing channels to the local map.
-    // It is not possible to utilize the ChannelPtr() API after
-    // this constructor. The intention is that this constructor
-    // is used in combination with the scoped iterator.
-    _chManager.GetChannels(_channels);
-}
-
-ScopedChannel::ScopedChannel(ChannelManager& chManager,
-                             int32_t channelId) :
-    _chManager(chManager),
-    _channelPtr(NULL)
-{
-    _channelPtr = _chManager.GetChannel(channelId);
-}
-
-ScopedChannel::~ScopedChannel()
-{
-    if (_channelPtr != NULL || _channels.Size() != 0)
-    {
-        _chManager.ReleaseChannel();
-    }
-
-    // Delete the map
-    while (_channels.Erase(_channels.First()) == 0)
-        ;
-}
-
-Channel* ScopedChannel::ChannelPtr()
-{
-    return _channelPtr;
-}
-
-Channel* ScopedChannel::GetFirstChannel(void*& iterator) const
-{
-    MapItem* it = _channels.First();
-    iterator = (void*) it;
-    if (!it)
-    {
-        return NULL;
-    }
-    return static_cast<Channel*> (it->GetItem());
-}
-
-Channel* ScopedChannel::GetNextChannel(void*& iterator) const
-{
-    MapItem* it = (MapItem*) iterator;
-    if (!it)
-    {
-        iterator = NULL;
-        return NULL;
-    }
-    it = _channels.Next(it);
-    iterator = (void*) it;
-    if (!it)
-    {
-        return NULL;
-    }
-    return static_cast<Channel*> (it->GetItem());
-}
-
-} // namespace voe
-
-} // namespace webrtc
+}  // namespace voe
+}  // namespace webrtc

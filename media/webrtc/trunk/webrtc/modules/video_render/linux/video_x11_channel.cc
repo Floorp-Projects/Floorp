@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_x11_channel.h"
+#include "webrtc/modules/video_render/linux/video_x11_channel.h"
 
-#include "critical_section_wrapper.h"
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -312,6 +312,4 @@ int32_t VideoX11Channel::GetStreamProperties(uint32_t& zOrder,
 }
 
 
-} //namespace webrtc
-
-
+}  // namespace webrtc

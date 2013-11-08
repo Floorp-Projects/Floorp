@@ -35,14 +35,14 @@
 #include <vector>
 
 #ifdef WIN32
-#include <cassert>
+#include <assert.h>
 #include <windows.h>
 #endif
 
 #ifdef WEBRTC_LINUX
-#include <netinet/in.h>
+#include <assert.h>
 #include <libgen.h>
-#include <cassert>
+#include <netinet/in.h>
 #endif
 
 //#include "vld.h"
@@ -1269,7 +1269,7 @@ void parsePtypeFile(FILE *ptypeFile, std::map<uint8_t, decoderStruct>* decoders)
         }
 
         n = fscanf(ptypeFile, "%s %i\n", codec, &pt);
-    } // end while
+    }  // end while
 
 }
 

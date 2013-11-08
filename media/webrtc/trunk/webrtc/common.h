@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_COMMON_H
-#define WEBRTC_COMMON_H
+#ifndef WEBRTC_COMMON_H_
+#define WEBRTC_COMMON_H_
 
 #include <map>
 
@@ -38,14 +38,14 @@ namespace webrtc {
 class Config {
  public:
   // Returns the option if set or a default constructed one.
-  // Callers that access options to often are encouraged to cache the result.
+  // Callers that access options too often are encouraged to cache the result.
   // Returned references are owned by this.
   //
   // Requires std::is_default_constructible<T>
   template<typename T> const T& Get() const;
 
   // Set the option, deleting any previous instance of the same.
-  // This instance gets ownership of the newly setted value.
+  // This instance gets ownership of the newly set value.
   template<typename T> void Set(T* value);
 
   Config() {}
@@ -116,5 +116,7 @@ void Config::Set(T* value) {
   delete it;
   it = new Option<T>(value);
 }
+
 }  // namespace webrtc
-#endif  // WEBRTC_COMMON_H
+
+#endif  // WEBRTC_COMMON_H_

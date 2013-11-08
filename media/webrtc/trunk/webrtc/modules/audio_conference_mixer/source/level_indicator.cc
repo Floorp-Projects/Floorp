@@ -73,4 +73,4 @@ int32_t LevelIndicator::GetLevel()
     return _currentLevel;
 }
 
-} // namespace webrtc
+}  // namespace webrtc

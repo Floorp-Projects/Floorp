@@ -333,4 +333,4 @@ VPMContentAnalysis::ContentMetrics()
 
 }
 
-} // namespace
+}  // namespace

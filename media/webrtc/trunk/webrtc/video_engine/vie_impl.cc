@@ -143,8 +143,7 @@ int VideoEngine::SetTraceFile(const char* file_nameUTF8,
 }
 
 int VideoEngine::SetTraceFilter(const unsigned int filter) {
-  uint32_t old_filter = 0;
-  Trace::LevelFilter(old_filter);
+  uint32_t old_filter = Trace::level_filter();
 
   if (filter == kTraceNone && old_filter != kTraceNone) {
     // Do the logging before turning it off.
@@ -152,14 +151,9 @@ int VideoEngine::SetTraceFilter(const unsigned int filter) {
                  "SetTraceFilter(filter = 0x%x)", filter);
   }
 
-  int32_t error = Trace::SetLevelFilter(filter);
+  Trace::set_level_filter(filter);
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo, kModuleId,
                "SetTraceFilter(filter = 0x%x)", filter);
-  if (error != 0) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo, kModuleId,
-                 "SetTraceFilter error: %d", error);
-    return -1;
-  }
   return 0;
 }
 
@@ -179,13 +173,11 @@ int VideoEngine::SetAndroidObjects(void* javaVM, void* javaContext) {
                  "Could not set capture Android VM");
     return -1;
   }
-#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
   if (SetRenderAndroidVM(javaVM) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceVideo, kModuleId,
                  "Could not set render Android VM");
     return -1;
   }
-#endif
   return 0;
 #else
   WEBRTC_TRACE(kTraceError, kTraceVideo, kModuleId,

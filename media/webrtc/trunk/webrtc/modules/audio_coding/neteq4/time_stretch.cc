@@ -49,7 +49,8 @@ TimeStretch::ReturnCodes TimeStretch::Process(
   }
 
   // Find maximum absolute value of input signal.
-  max_input_value_ = WebRtcSpl_MaxAbsValueW16(signal, signal_len);
+  max_input_value_ = WebRtcSpl_MaxAbsValueW16(signal,
+                                              static_cast<int>(signal_len));
 
   // Downsample to 4 kHz sample rate and calculate auto-correlation.
   DspHelper::DownsampleTo4kHz(signal, signal_len, kDownsampledLen,
@@ -139,10 +140,8 @@ TimeStretch::ReturnCodes TimeStretch::Process(
 
 
   // Check accelerate criteria and stretch the signal.
-  ReturnCodes return_value = CheckCriteriaAndStretch(input, input_len,
-                                                     peak_index,
-                                                     best_correlation,
-                                                     active_speech, output);
+  ReturnCodes return_value = CheckCriteriaAndStretch(
+      input, input_len, peak_index, best_correlation, active_speech, output);
   switch (return_value) {
     case kSuccess:
       *length_change_samples = peak_index;

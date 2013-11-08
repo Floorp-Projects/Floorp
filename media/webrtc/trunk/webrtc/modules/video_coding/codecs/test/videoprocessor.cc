@@ -8,17 +8,35 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/codecs/test/videoprocessor.h"
+#include "webrtc/modules/video_coding/codecs/test/videoprocessor.h"
 
-#include <cassert>
-#include <cstring>
+#include <assert.h>
+#include <string.h>
+
 #include <limits>
 #include <vector>
 
-#include "system_wrappers/interface/cpu_info.h"
+#include "webrtc/system_wrappers/interface/cpu_info.h"
 
 namespace webrtc {
 namespace test {
+
+TestConfig::TestConfig()
+    : name(""),
+      description(""),
+      test_number(0),
+      input_filename(""),
+      output_filename(""),
+      output_dir("out"),
+      networking_config(),
+      exclude_frame_types(kExcludeOnlyFirstKeyFrame),
+      frame_length_in_bytes(-1),
+      use_single_core(false),
+      keyframe_interval(0),
+      codec_settings(NULL),
+      verbose(true) {}
+
+TestConfig::~TestConfig() {}
 
 VideoProcessorImpl::VideoProcessorImpl(webrtc::VideoEncoder* encoder,
                                        webrtc::VideoDecoder* decoder,

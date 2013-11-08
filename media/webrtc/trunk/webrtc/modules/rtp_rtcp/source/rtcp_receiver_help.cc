@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_receiver_help.h"
 
-#include <cassert>  // assert
+#include <assert.h>  // assert
 #include <string.h>  // memset
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
@@ -26,11 +26,7 @@ RTCPPacketInformation::RTCPPacketInformation()
       applicationName(0),
       applicationData(),
       applicationLength(0),
-      reportBlock(false),
-      fractionLost(0),
-      roundTripTime(0),
-      lastReceivedExtendedHighSeqNum(0),
-      jitter(0),
+      rtt(0),
       interArrivalJitter(0),
       sliPictureId(0),
       rpsiPictureId(0),
@@ -95,16 +91,11 @@ RTCPPacketInformation::AddNACKPacket(const uint16_t packetID)
 }
 
 void
-RTCPPacketInformation::AddReportInfo(const uint8_t fraction,
-                                     const uint16_t rtt,
-                                     const uint32_t extendedHighSeqNum,
-                                     const uint32_t j)
+RTCPPacketInformation::AddReportInfo(
+    const RTCPReportBlockInformation& report_block_info)
 {
-    reportBlock = true;
-    fractionLost = fraction;
-    roundTripTime = rtt;
-    jitter = j;
-    lastReceivedExtendedHighSeqNum = extendedHighSeqNum;
+  this->rtt = report_block_info.RTT;
+  report_blocks.push_back(report_block_info.remoteReceiveBlock);
 }
 
 RTCPReportBlockInformation::RTCPReportBlockInformation():
@@ -197,4 +188,4 @@ void RTCPReceiveInformation::VerifyAndAllocateBoundingSet(
     const uint32_t minimumSize) {
   TmmbnBoundingSet.VerifyAndAllocateSet(minimumSize);
 }
-} // namespace webrtc
+}  // namespace webrtc

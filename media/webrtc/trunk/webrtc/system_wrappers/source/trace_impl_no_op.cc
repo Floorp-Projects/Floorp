@@ -15,19 +15,12 @@ namespace webrtc {
 const int Trace::kBoilerplateLength = 71;
 const int Trace::kTimestampPosition = 13;
 const int Trace::kTimestampLength = 12;
+uint32_t Trace::level_filter_ = kTraceNone;
 
 void Trace::CreateTrace() {
 }
 
 void Trace::ReturnTrace() {
-}
-
-int32_t Trace::SetLevelFilter(uint32_t filter) {
-  return 0;
-}
-
-int32_t Trace::LevelFilter(uint32_t& filter) {
-  return 0;
 }
 
 int32_t Trace::TraceFile(char file_name[1024]) {
