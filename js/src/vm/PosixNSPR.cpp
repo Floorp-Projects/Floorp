@@ -30,18 +30,39 @@ class nspr::Thread
     pthread_t &pthread() { return pthread_; }
 };
 
-static __thread nspr::Thread *gSelfThread;
+static pthread_key_t gSelfThreadIndex;
 static nspr::Thread gMainThread(nullptr, nullptr, false);
 
 void *
 nspr::Thread::ThreadRoutine(void *arg)
 {
     Thread *self = static_cast<Thread *>(arg);
-    gSelfThread = self;
+    pthread_setspecific(gSelfThreadIndex, self);
     self->start(self->arg);
     if (!self->joinable)
-	js_delete(self);
+        js_delete(self);
     return nullptr;
+}
+
+static bool gInitialized;
+
+void
+DummyDestructor(void *)
+{
+}
+
+/* Should be called from the main thread. */
+static void
+Initialize()
+{
+    gInitialized = true;
+
+    if (pthread_key_create(&gSelfThreadIndex, DummyDestructor)) {
+        MOZ_CRASH();
+        return;
+    }
+
+    pthread_setspecific(gSelfThreadIndex, &gMainThread);
 }
 
 PRThread *
@@ -56,9 +77,17 @@ PR_CreateThread(PRThreadType type,
     JS_ASSERT(type == PR_USER_THREAD);
     JS_ASSERT(priority == PR_PRIORITY_NORMAL);
 
+    if (!gInitialized) {
+        /*
+         * We assume that the first call to PR_CreateThread happens on the main
+         * thread.
+         */
+        Initialize();
+    }
+
     pthread_attr_t attr;
     if (pthread_attr_init(&attr))
-	return nullptr;
+        return nullptr;
 
     if (stackSize && pthread_attr_setstacksize(&attr, stackSize)) {
         pthread_attr_destroy(&attr);
@@ -105,21 +134,20 @@ PR_JoinThread(PRThread *thread)
 PRThread *
 PR_GetCurrentThread()
 {
-    if (!gSelfThread) {
-        /* Must be the main thread. */
-        gSelfThread = &gMainThread;
-    }
-    return gSelfThread;
+    if (!gInitialized)
+        Initialize();
+
+    return (PRThread *)pthread_getspecific(gSelfThreadIndex);
 }
 
 PRStatus
 PR_SetCurrentThreadName(const char *name)
 {
     int result;
-#ifdef XP_UNIX
-    result = pthread_setname_np(pthread_self(), name);
-#else
+#ifdef XP_MACOSX
     result = pthread_setname_np(name);
+#else
+    result = pthread_setname_np(pthread_self(), name);
 #endif
     if (result)
         return PR_FAILURE;
@@ -296,7 +324,7 @@ PRStatus
 PR_WaitCondVar(PRCondVar *cvar, uint32_t timeout)
 {
     if (timeout == PR_INTERVAL_NO_TIMEOUT) {
-	if (pthread_cond_wait(&cvar->cond(), &cvar->lock()->mutex()))
+        if (pthread_cond_wait(&cvar->cond(), &cvar->lock()->mutex()))
             return PR_FAILURE;
         return PR_SUCCESS;
     } else {
