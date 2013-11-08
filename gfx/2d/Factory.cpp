@@ -68,6 +68,8 @@ enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
 
 #ifdef HAVE_CPUID_H
 
+#if !(defined(__SSE2__) || defined(_M_X64) || \
+     (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
 // cpuid.h is available on gcc 4.3 and higher on i386 and x86_64
 #include <cpuid.h>
 
@@ -78,6 +80,7 @@ HasCPUIDBit(unsigned int level, CPUIDRegister reg, unsigned int bit)
   return __get_cpuid(level, &regs[0], &regs[1], &regs[2], &regs[3]) &&
          (regs[reg] & bit);
 }
+#endif
 
 #define HAVE_CPU_DETECTION
 #else
