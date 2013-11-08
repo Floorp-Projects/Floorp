@@ -73,9 +73,6 @@ struct nsCSSBorderRenderer {
                       int aSkipSides,
                       nscolor aBackgroundColor);
 
-  static void Init();
-  static void Shutdown();
-
   gfxCornerSizes mBorderCornerDimensions;
 
   // destination context
