@@ -5974,10 +5974,13 @@ IonBuilder::testSingletonProperty(JSObject *obj, PropertyName *name)
             return nullptr;
 
         types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
+        if (context())
+            objType->ensureTrackedProperty(context(), NameToId(name));
+
         if (objType->unknownProperties())
             return nullptr;
 
-        types::HeapTypeSetKey property = objType->property(NameToId(name), context());
+        types::HeapTypeSetKey property = objType->property(NameToId(name));
         if (property.isOwnProperty(constraints())) {
             if (obj->hasSingletonType())
                 return property.singleton(constraints());
@@ -6049,10 +6052,12 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
             types::TypeObjectKey *object = types->getObject(i);
             if (!object)
                 continue;
+            if (context())
+                object->ensureTrackedProperty(context(), NameToId(name));
 
             if (object->unknownProperties())
                 return false;
-            types::HeapTypeSetKey property = object->property(NameToId(name), context());
+            types::HeapTypeSetKey property = object->property(NameToId(name));
             if (property.isOwnProperty(constraints()))
                 return false;
 
@@ -6187,12 +6192,15 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     }
 
     types::TypeObjectKey *staticType = types::TypeObjectKey::get(staticObject);
+    if (context())
+        staticType->ensureTrackedProperty(context(), NameToId(name));
+
     if (staticType->unknownProperties()) {
         *psucceeded = false;
         return true;
     }
 
-    types::HeapTypeSetKey property = staticType->property(id, context());
+    types::HeapTypeSetKey property = staticType->property(id);
     if (!property.maybeTypes() ||
         !property.maybeTypes()->definiteProperty() ||
         property.configured(constraints(), staticType))
