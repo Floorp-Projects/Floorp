@@ -52,7 +52,7 @@ public:
   bool HasAlpha() { return mHasAlpha; }
   // We would like to forward declare NSOpenGLContext, but it is an @interface
   // and this file is also used from c++, so we use a void *.
-  CGLError CGLTexImageIOSurface2D(void *ctxt);
+  CGLError CGLTexImageIOSurface2D(CGLContextObj ctxt);
   mozilla::TemporaryRef<SourceSurface> GetAsSurface();
   CGContextRef CreateIOSurfaceContext();
 
