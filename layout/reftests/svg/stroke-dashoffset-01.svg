@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Test that stroke-dashoffset is independent of stroke-width</title>
+  <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=885585 -->
+
+  <rect width="100%" height="100%" fill="lime"/>
+
+  <path d="M10,30 h300" stroke="red" stroke-width="40" stroke-dashoffset="10" stroke-dasharray="50"/>
+  <path d="M10,70 h300" stroke="red" stroke-width="20" stroke-dashoffset="20" stroke-dasharray="50"/>
+  <path d="M10,95 h300" stroke="red" stroke-width="10" stroke-dashoffset="40" stroke-dasharray="50"/>
+
+  <!-- if the stroke-dashoffset is independent of the stroke width then these should cover what's above -->
+  <rect x="10" y="10" width="40" height="40" fill="lime"/>
+  <rect x="100" y="10" width="50" height="40" fill="lime"/>
+  <rect x="200" y="10" width="50" height="40" fill="lime"/>
+  <rect x="300" y="10" width="10" height="40" fill="lime"/>
+
+  <rect x="10" y="60" width="30" height="20" fill="lime"/>
+  <rect x="90" y="60" width="50" height="20" fill="lime"/>
+  <rect x="190" y="60" width="50" height="20" fill="lime"/>
+  <rect x="290" y="60" width="20" height="20" fill="lime"/>
+
+  <rect x="10" y="90" width="10" height="10" fill="lime"/>
+  <rect x="70" y="90" width="50" height="10" fill="lime"/>
+  <rect x="170" y="90" width="50" height="10" fill="lime"/>
+  <rect x="270" y="90" width="40" height="10" fill="lime"/>
+</svg>
