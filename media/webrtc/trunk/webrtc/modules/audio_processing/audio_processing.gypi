@@ -60,6 +60,7 @@
         'audio_processing_impl.h',
         'echo_cancellation_impl.cc',
         'echo_cancellation_impl.h',
+        'echo_cancellation_impl_wrapper.h',
         'echo_control_mobile_impl.cc',
         'echo_control_mobile_impl.h',
         'gain_control_impl.cc',
@@ -118,7 +119,7 @@
         ['target_arch=="ia32" or target_arch=="x64"', {
           'dependencies': ['audio_processing_sse2',],
         }],
-        ['target_arch=="arm" and armv7==1', {
+        ['(target_arch=="arm" and armv7==1) or target_arch=="armv7"', {
           'dependencies': ['audio_processing_neon',],
         }],
       ],
@@ -154,14 +155,13 @@
             'aec/aec_rdft_sse2.c',
           ],
           'cflags': ['-msse2',],
-          'cflags_mozilla': [ '-msse2', ],
           'xcode_settings': {
             'OTHER_CFLAGS': ['-msse2',],
           },
         },
       ],
     }],
-    ['target_arch=="arm" and armv7==1', {
+    ['(target_arch=="arm" and armv7==1) or target_arch=="armv7"', {
       'targets': [{
         'target_name': 'audio_processing_neon',
         'type': 'static_library',
@@ -178,14 +178,11 @@
             'dependencies': [
               'audio_processing_offsets',
             ],
-	    #
-	    # We disable the ASM source, because our gyp->Makefile translator
-	    # does not support the build steps to get the asm offsets.
-            'sources!': [
+            'sources': [
               'aecm/aecm_core_neon.S',
               'ns/nsx_core_neon.S',
             ],
-            'sources': [
+            'sources!': [
               'aecm/aecm_core_neon.c',
               'ns/nsx_core_neon.c',
             ],

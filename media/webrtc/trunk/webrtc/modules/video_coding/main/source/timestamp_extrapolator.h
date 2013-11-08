@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_TIMESTAMP_EXTRAPOLATOR_H_
 #define WEBRTC_MODULES_VIDEO_CODING_TIMESTAMP_EXTRAPOLATOR_H_
 
-#include "typedefs.h"
-#include "rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc
 {
@@ -38,7 +38,7 @@ private:
     int32_t         _id;
     Clock*                _clock;
     double                _w[2];
-    double                _pp[2][2];
+    double                _P[2][2];
     int64_t         _startMs;
     int64_t         _prevMs;
     uint32_t        _firstTimestamp;
@@ -58,6 +58,6 @@ private:
     const double        _P11;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_TIMESTAMP_EXTRAPOLATOR_H_

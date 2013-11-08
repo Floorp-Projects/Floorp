@@ -17,42 +17,45 @@
           # This will be set to zero in the supplement.gypi triggered by a
           # gclient hook in the standalone build.
           'build_with_chromium%': 1,
-          'build_with_libjingle%': 0,
         },
         'build_with_chromium%': '<(build_with_chromium)',
-        'build_with_libjingle%': '<(build_with_libjingle)',
 
         'conditions': [
-          ['build_with_chromium==1 or build_with_libjingle==1', {
+          ['build_with_chromium==1', {
+            'build_with_libjingle': 1,
             'webrtc_root%': '<(DEPTH)/third_party/webrtc',
+            'apk_tests_path%': '<(DEPTH)/third_party/webrtc/build/apk_tests.gyp',
+            'import_isolate_path%': '<(DEPTH)/third_party/webrtc/build/import_isolate_chromium.gyp',
+            'modules_java_gyp_path%': '<(DEPTH)/third_party/webrtc/modules/modules_java_chromium.gyp',
           }, {
+            'build_with_libjingle%': 0,
             'webrtc_root%': '<(DEPTH)/webrtc',
+            'apk_tests_path%': '<(DEPTH)/webrtc/build/apk_test_noop.gyp',
+            'import_isolate_path%': '<(DEPTH)/webrtc/build/import_isolate_webrtc.gyp',
+            'modules_java_gyp_path%': '<(DEPTH)/webrtc/modules/modules_java.gyp',
           }],
         ],
       },
       'build_with_chromium%': '<(build_with_chromium)',
       'build_with_libjingle%': '<(build_with_libjingle)',
       'webrtc_root%': '<(webrtc_root)',
+      'apk_tests_path%': '<(apk_tests_path)',
+      'import_isolate_path%': '<(import_isolate_path)',
+      'modules_java_gyp_path%': '<(modules_java_gyp_path)',
 
       'webrtc_vp8_dir%': '<(webrtc_root)/modules/video_coding/codecs/vp8',
-      'include_g711%': 1,
-      'include_g722%': 1,
-      'include_ilbc%': 1,
+      'rbe_components_path%': '<(webrtc_root)/modules/remote_bitrate_estimator',
       'include_opus%': 1,
-      'include_isac%': 1,
-      'include_pcm16b%': 1,
     },
     'build_with_chromium%': '<(build_with_chromium)',
     'build_with_libjingle%': '<(build_with_libjingle)',
     'webrtc_root%': '<(webrtc_root)',
+    'apk_tests_path%': '<(apk_tests_path)',
+    'import_isolate_path%': '<(import_isolate_path)',
+    'modules_java_gyp_path%': '<(modules_java_gyp_path)',
     'webrtc_vp8_dir%': '<(webrtc_vp8_dir)',
-
-    'include_g711%': '<(include_g711)',
-    'include_g722%': '<(include_g722)',
-    'include_ilbc%': '<(include_ilbc)',
     'include_opus%': '<(include_opus)',
-    'include_isac%': '<(include_isac)',
-    'include_pcm16b%': '<(include_pcm16b)',
+    'rbe_components_path%': '<(rbe_components_path)',
 
     # The Chromium common.gypi we use treats all gyp files without
     # chromium_code==1 as third party code. This disables many of the
@@ -108,57 +111,37 @@
         # Exclude internal video render module in Chromium build.
         'include_internal_video_render%': 0,
 
-        'include_tests%': 0,
-
-        'enable_tracing%': 0,
-	 # lazily allocate the ~4MB of trace message buffers if set
-        'enable_lazy_trace_alloc%': 0,
-
-        'enable_android_opensl%': 0,
+        # Include ndk cpu features in Chromium build.
+        'include_ndk_cpu_features%': 1,
       }, {  # Settings for the standalone (not-in-Chromium) build.
-        'include_pulse_audio%': 1,
-        'include_internal_audio_device%': 1,
-        'include_internal_video_capture%': 1,
-        'include_internal_video_render%': 1,
-        'enable_tracing%': 1,
-        'include_tests%': 1,
-
         # TODO(andrew): For now, disable the Chrome plugins, which causes a
         # flood of chromium-style warnings. Investigate enabling them:
         # http://code.google.com/p/webrtc/issues/detail?id=163
         'clang_use_chrome_plugins%': 0,
 
+        'include_pulse_audio%': 1,
+        'include_internal_audio_device%': 1,
+        'include_internal_video_capture%': 1,
+        'include_internal_video_render%': 1,
+        'include_ndk_cpu_features%': 0,
+      }],
+      ['build_with_libjingle==1', {
+        'include_tests%': 0,
+        'enable_tracing%': 0,
+        'enable_android_opensl%': 0,
+      }, {
+        'include_tests%': 1,
+        'enable_tracing%': 1,
         # Switch between Android audio device OpenSL ES implementation
         # and Java Implementation
         'enable_android_opensl%': 0,
       }],
-      ['OS=="linux"', {
-        'include_alsa_audio%': 1,
-      }, {
-        'include_alsa_audio%': 0,
-      }],
-      ['OS=="solaris" or os_bsd==1', {
-        'include_pulse_audio%': 1,
-      }, {
-        'include_pulse_audio%': 0,
-      }],
-      ['OS=="linux" or OS=="solaris" or os_bsd==1', {
-        'include_v4l2_video_capture%': 1,
-      }, {
-        'include_v4l2_video_capture%': 0,
-      }],
       ['OS=="ios"', {
-        'enable_video%': 0,
-        'enable_protobuf%': 0,
         'build_libjpeg%': 0,
-        'build_libyuv%': 0,
-        'build_libvpx%': 0,
+        'enable_protobuf%': 0,
         'include_tests%': 0,
       }],
-      ['build_with_libjingle==1', {
-        'include_tests%': 0,
-      }],
-      ['target_arch=="arm"', {
+      ['target_arch=="arm" or target_arch=="armv7"', {
         'prefer_fixed_point%': 1,
       }],
     ], # conditions
@@ -177,15 +160,10 @@
     'defines': [
       # TODO(leozwang): Run this as a gclient hook rather than at build-time:
       # http://code.google.com/p/webrtc/issues/detail?id=687
-      'WEBRTC_SVNREVISION="\\\"Unavailable_issue687\\\""',
+      'WEBRTC_SVNREVISION="Unavailable(issue687)"',
       #'WEBRTC_SVNREVISION="<!(python <(webrtc_root)/build/version.py)"',
     ],
     'conditions': [
-      ['moz_widget_toolkit_gonk==1', {
-        'defines' : [
-          'WEBRTC_GONK',
-        ],
-      }],
       ['enable_tracing==1', {
         'defines': ['WEBRTC_LOGGING',],
       }],
@@ -217,14 +195,13 @@
           }],
         ],
       }],
-      ['target_arch=="arm"', {
+      ['target_arch=="arm" or target_arch=="armv7"', {
         'defines': [
           'WEBRTC_ARCH_ARM',
         ],
         'conditions': [
           ['armv7==1', {
-            'defines': ['WEBRTC_ARCH_ARM_V7',
-                        'WEBRTC_BUILD_NEON_LIBS'],
+            'defines': ['WEBRTC_ARCH_ARM_V7',],
             'conditions': [
               ['arm_neon==1', {
                 'defines': ['WEBRTC_ARCH_ARM_NEON',],
@@ -235,19 +212,6 @@
           }],
         ],
       }],
-      ['os_bsd==1', {
-        'defines': [
-          'WEBRTC_BSD',
-          'WEBRTC_THREAD_RR',
-        ],
-      }],
-      ['OS=="dragonfly" or OS=="netbsd"', {
-        'defines': [
-          # doesn't support pthread_condattr_setclock
-          'WEBRTC_CLOCK_TYPE_REALTIME',
-        ],
-      }],
-      # Mozilla: if we support Mozilla on MIPS, we'll need to mod the cflags entries here
       ['target_arch=="mipsel"', {
         'defines': [
           'MIPS32_LE',
@@ -308,13 +272,6 @@
         ],
       }],
       ['OS=="linux"', {
-#        'conditions': [
-#          ['have_clock_monotonic==1', {
-#            'defines': [
-#              'WEBRTC_CLOCK_TYPE_REALTIME',
-#            ],
-#          }],
-#        ],
         'defines': [
           'WEBRTC_LINUX',
         ],

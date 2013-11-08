@@ -13,12 +13,12 @@
 
 #include <map>
 
-#include "modules/video_coding/codecs/interface/video_codec_interface.h"
-#include "modules/video_coding/main/interface/video_coding.h"
-#include "modules/video_coding/main/source/generic_decoder.h"
-#include "modules/video_coding/main/source/generic_encoder.h"
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/modules/video_coding/main/source/generic_decoder.h"
+#include "webrtc/modules/video_coding/main/source/generic_encoder.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 

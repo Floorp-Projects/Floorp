@@ -10,7 +10,7 @@
 
 #include "TwoWayCommunication.h"
 
-#include <cctype>
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -23,36 +23,31 @@
 #include "gtest/gtest.h"
 #include "PCMFile.h"
 #include "trace.h"
-#include "testsupport/fileutils.h"
 #include "utility.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 
 #define MAX_FILE_NAME_LENGTH_BYTE 500
 
-TwoWayCommunication::TwoWayCommunication(int testMode) {
-  _testMode = testMode;
+TwoWayCommunication::TwoWayCommunication(int testMode)
+    : _acmA(AudioCodingModule::Create(1)),
+      _acmB(AudioCodingModule::Create(2)),
+      _acmRefA(AudioCodingModule::Create(3)),
+      _acmRefB(AudioCodingModule::Create(4)),
+      _testMode(testMode) {
 }
 
 TwoWayCommunication::~TwoWayCommunication() {
-  AudioCodingModule::Destroy(_acmA);
-  AudioCodingModule::Destroy(_acmB);
-
-  AudioCodingModule::Destroy(_acmRefA);
-  AudioCodingModule::Destroy(_acmRefB);
-
   delete _channel_A2B;
   delete _channel_B2A;
-
   delete _channelRef_A2B;
   delete _channelRef_B2A;
 #ifdef WEBRTC_DTMF_DETECTION
-  if(_dtmfDetectorA != NULL)
-  {
+  if (_dtmfDetectorA != NULL) {
     delete _dtmfDetectorA;
   }
-  if(_dtmfDetectorB != NULL)
-  {
+  if (_dtmfDetectorB != NULL) {
     delete _dtmfDetectorB;
   }
 #endif
@@ -64,15 +59,15 @@ TwoWayCommunication::~TwoWayCommunication() {
   _outFileRefB.Close();
 }
 
-uint8_t TwoWayCommunication::ChooseCodec(uint8_t* codecID_A,
-                                         uint8_t* codecID_B) {
-  AudioCodingModule* tmpACM = AudioCodingModule::Create(0);
+void TwoWayCommunication::ChooseCodec(uint8_t* codecID_A,
+                                      uint8_t* codecID_B) {
+  scoped_ptr<AudioCodingModule> tmpACM(AudioCodingModule::Create(0));
   uint8_t noCodec = tmpACM->NumberOfCodecs();
   CodecInst codecInst;
   printf("List of Supported Codecs\n");
   printf("========================\n");
   for (uint8_t codecCntr = 0; codecCntr < noCodec; codecCntr++) {
-    tmpACM->Codec(codecCntr, &codecInst);
+    EXPECT_EQ(tmpACM->Codec(codecCntr, &codecInst), 0);
     printf("%d- %s\n", codecCntr, codecInst.plname);
   }
   printf("\nChoose a send codec for side A [0]: ");
@@ -84,18 +79,10 @@ uint8_t TwoWayCommunication::ChooseCodec(uint8_t* codecID_A,
   EXPECT_TRUE(fgets(myStr, 10, stdin) != NULL);
   *codecID_B = (uint8_t) atoi(myStr);
 
-  AudioCodingModule::Destroy(tmpACM);
   printf("\n");
-  return 0;
 }
 
-int16_t TwoWayCommunication::SetUp() {
-  _acmA = AudioCodingModule::Create(1);
-  _acmB = AudioCodingModule::Create(2);
-
-  _acmRefA = AudioCodingModule::Create(3);
-  _acmRefB = AudioCodingModule::Create(4);
-
+void TwoWayCommunication::SetUp() {
   uint8_t codecID_A;
   uint8_t codecID_B;
 
@@ -103,35 +90,34 @@ int16_t TwoWayCommunication::SetUp() {
   CodecInst codecInst_A;
   CodecInst codecInst_B;
   CodecInst dummyCodec;
-  _acmA->Codec(codecID_A, &codecInst_A);
-  _acmB->Codec(codecID_B, &codecInst_B);
-
-  _acmA->Codec(6, &dummyCodec);
+  EXPECT_EQ(0, _acmA->Codec(codecID_A, &codecInst_A));
+  EXPECT_EQ(0, _acmB->Codec(codecID_B, &codecInst_B));
+  EXPECT_EQ(0, _acmA->Codec(6, &dummyCodec));
 
   //--- Set A codecs
-  CHECK_ERROR(_acmA->RegisterSendCodec(codecInst_A));
-  CHECK_ERROR(_acmA->RegisterReceiveCodec(codecInst_B));
+  EXPECT_EQ(0, _acmA->RegisterSendCodec(codecInst_A));
+  EXPECT_EQ(0, _acmA->RegisterReceiveCodec(codecInst_B));
 #ifdef WEBRTC_DTMF_DETECTION
   _dtmfDetectorA = new(DTMFDetector);
-  CHECK_ERROR(_acmA->RegisterIncomingMessagesCallback(_dtmfDetectorA,
-          ACMUSA));
+  EXPECT_GT(_acmA->RegisterIncomingMessagesCallback(_dtmfDetectorA, ACMUSA),
+            -1);
 #endif
   //--- Set ref-A codecs
-  CHECK_ERROR(_acmRefA->RegisterSendCodec(codecInst_A));
-  CHECK_ERROR(_acmRefA->RegisterReceiveCodec(codecInst_B));
+  EXPECT_EQ(0, _acmRefA->RegisterSendCodec(codecInst_A));
+  EXPECT_EQ(0, _acmRefA->RegisterReceiveCodec(codecInst_B));
 
   //--- Set B codecs
-  CHECK_ERROR(_acmB->RegisterSendCodec(codecInst_B));
-  CHECK_ERROR(_acmB->RegisterReceiveCodec(codecInst_A));
+  EXPECT_EQ(0, _acmB->RegisterSendCodec(codecInst_B));
+  EXPECT_EQ(0, _acmB->RegisterReceiveCodec(codecInst_A));
 #ifdef WEBRTC_DTMF_DETECTION
   _dtmfDetectorB = new(DTMFDetector);
-  CHECK_ERROR(_acmB->RegisterIncomingMessagesCallback(_dtmfDetectorB,
-          ACMUSA));
+  EXPECT_GT(_acmB->RegisterIncomingMessagesCallback(_dtmfDetectorB, ACMUSA),
+            -1);
 #endif
 
   //--- Set ref-B codecs
-  CHECK_ERROR(_acmRefB->RegisterSendCodec(codecInst_B));
-  CHECK_ERROR(_acmRefB->RegisterReceiveCodec(codecInst_A));
+  EXPECT_EQ(0, _acmRefB->RegisterSendCodec(codecInst_B));
+  EXPECT_EQ(0, _acmRefB->RegisterReceiveCodec(codecInst_A));
 
   uint16_t frequencyHz;
 
@@ -170,69 +156,59 @@ int16_t TwoWayCommunication::SetUp() {
   //--- Set A-to-B channel
   _channel_A2B = new Channel;
   _acmA->RegisterTransportCallback(_channel_A2B);
-  _channel_A2B->RegisterReceiverACM(_acmB);
+  _channel_A2B->RegisterReceiverACM(_acmB.get());
   //--- Do the same for the reference
   _channelRef_A2B = new Channel;
   _acmRefA->RegisterTransportCallback(_channelRef_A2B);
-  _channelRef_A2B->RegisterReceiverACM(_acmRefB);
+  _channelRef_A2B->RegisterReceiverACM(_acmRefB.get());
 
   //--- Set B-to-A channel
   _channel_B2A = new Channel;
   _acmB->RegisterTransportCallback(_channel_B2A);
-  _channel_B2A->RegisterReceiverACM(_acmA);
+  _channel_B2A->RegisterReceiverACM(_acmA.get());
   //--- Do the same for reference
   _channelRef_B2A = new Channel;
   _acmRefB->RegisterTransportCallback(_channelRef_B2A);
-  _channelRef_B2A->RegisterReceiverACM(_acmRefA);
+  _channelRef_B2A->RegisterReceiverACM(_acmRefA.get());
 
   // The clicks will be more obvious when we
   // are in FAX mode.
-  _acmB->SetPlayoutMode(fax);
-  _acmRefB->SetPlayoutMode(fax);
-
-  return 0;
+  EXPECT_EQ(_acmB->SetPlayoutMode(fax), 0);
+  EXPECT_EQ(_acmRefB->SetPlayoutMode(fax), 0);
 }
 
-int16_t TwoWayCommunication::SetUpAutotest() {
-  _acmA = AudioCodingModule::Create(1);
-  _acmB = AudioCodingModule::Create(2);
-
-  _acmRefA = AudioCodingModule::Create(3);
-  _acmRefB = AudioCodingModule::Create(4);
-
+void TwoWayCommunication::SetUpAutotest() {
   CodecInst codecInst_A;
   CodecInst codecInst_B;
   CodecInst dummyCodec;
 
-  _acmA->Codec("ISAC", &codecInst_A, 16000, 1);
-  _acmB->Codec("L16", &codecInst_B, 8000, 1);
-  _acmA->Codec(6, &dummyCodec);
+  EXPECT_EQ(0, _acmA->Codec("ISAC", &codecInst_A, 16000, 1));
+  EXPECT_EQ(0, _acmB->Codec("L16", &codecInst_B, 8000, 1));
+  EXPECT_EQ(0, _acmA->Codec(6, &dummyCodec));
 
   //--- Set A codecs
-  CHECK_ERROR(_acmA->RegisterSendCodec(codecInst_A));
-  CHECK_ERROR(_acmA->RegisterReceiveCodec(codecInst_B));
+  EXPECT_EQ(0, _acmA->RegisterSendCodec(codecInst_A));
+  EXPECT_EQ(0, _acmA->RegisterReceiveCodec(codecInst_B));
 #ifdef WEBRTC_DTMF_DETECTION
   _dtmfDetectorA = new(DTMFDetector);
-  CHECK_ERROR(_acmA->RegisterIncomingMessagesCallback(_dtmfDetectorA,
-          ACMUSA));
+  EXPECT_EQ(0, _acmA->RegisterIncomingMessagesCallback(_dtmfDetectorA, ACMUSA));
 #endif
 
   //--- Set ref-A codecs
-  CHECK_ERROR(_acmRefA->RegisterSendCodec(codecInst_A));
-  CHECK_ERROR(_acmRefA->RegisterReceiveCodec(codecInst_B));
+  EXPECT_GT(_acmRefA->RegisterSendCodec(codecInst_A), -1);
+  EXPECT_GT(_acmRefA->RegisterReceiveCodec(codecInst_B), -1);
 
   //--- Set B codecs
-  CHECK_ERROR(_acmB->RegisterSendCodec(codecInst_B));
-  CHECK_ERROR(_acmB->RegisterReceiveCodec(codecInst_A));
+  EXPECT_GT(_acmB->RegisterSendCodec(codecInst_B), -1);
+  EXPECT_GT(_acmB->RegisterReceiveCodec(codecInst_A), -1);
 #ifdef WEBRTC_DTMF_DETECTION
   _dtmfDetectorB = new(DTMFDetector);
-  CHECK_ERROR(_acmB->RegisterIncomingMessagesCallback(_dtmfDetectorB,
-          ACMUSA));
+  EXPECT_EQ(0, _acmB->RegisterIncomingMessagesCallback(_dtmfDetectorB, ACMUSA));
 #endif
 
   //--- Set ref-B codecs
-  CHECK_ERROR(_acmRefB->RegisterSendCodec(codecInst_B));
-  CHECK_ERROR(_acmRefB->RegisterReceiveCodec(codecInst_A));
+  EXPECT_EQ(0, _acmRefB->RegisterSendCodec(codecInst_B));
+  EXPECT_EQ(0, _acmRefB->RegisterReceiveCodec(codecInst_A));
 
   uint16_t frequencyHz;
 
@@ -262,34 +238,29 @@ int16_t TwoWayCommunication::SetUpAutotest() {
   //--- Set A-to-B channel
   _channel_A2B = new Channel;
   _acmA->RegisterTransportCallback(_channel_A2B);
-  _channel_A2B->RegisterReceiverACM(_acmB);
+  _channel_A2B->RegisterReceiverACM(_acmB.get());
   //--- Do the same for the reference
   _channelRef_A2B = new Channel;
   _acmRefA->RegisterTransportCallback(_channelRef_A2B);
-  _channelRef_A2B->RegisterReceiverACM(_acmRefB);
+  _channelRef_A2B->RegisterReceiverACM(_acmRefB.get());
 
   //--- Set B-to-A channel
   _channel_B2A = new Channel;
   _acmB->RegisterTransportCallback(_channel_B2A);
-  _channel_B2A->RegisterReceiverACM(_acmA);
+  _channel_B2A->RegisterReceiverACM(_acmA.get());
   //--- Do the same for reference
   _channelRef_B2A = new Channel;
   _acmRefB->RegisterTransportCallback(_channelRef_B2A);
-  _channelRef_B2A->RegisterReceiverACM(_acmRefA);
+  _channelRef_B2A->RegisterReceiverACM(_acmRefA.get());
 
   // The clicks will be more obvious when we
   // are in FAX mode.
-  _acmB->SetPlayoutMode(fax);
-  _acmRefB->SetPlayoutMode(fax);
-
-  return 0;
+  EXPECT_EQ(0, _acmB->SetPlayoutMode(fax));
+  EXPECT_EQ(0, _acmRefB->SetPlayoutMode(fax));
 }
 
 void TwoWayCommunication::Perform() {
   if (_testMode == 0) {
-    printf("Running TwoWayCommunication Test");
-    WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                 "---------- TwoWayCommunication ----------");
     SetUpAutotest();
   } else {
     SetUp();
@@ -305,111 +276,78 @@ void TwoWayCommunication::Perform() {
   CodecInst codecInst_B;
   CodecInst dummy;
 
-  _acmB->SendCodec(&codecInst_B);
+  EXPECT_EQ(0, _acmB->SendCodec(&codecInst_B));
 
-  if (_testMode != 0) {
-    printf("\n");
-    printf("sec:msec                   A                              B\n");
-    printf("--------                 -----                        -----\n");
-  }
-
+  // In the following loop we tests that the code can handle misuse of the APIs.
+  // In the middle of a session with data flowing between two sides, called A
+  // and B, APIs will be called, like ResetEncoder(), and the code should
+  // continue to run, and be able to recover.
+  bool expect_error_add = false;
+  bool expect_error_process = false;
   while (!_inFileA.EndOfFile() && !_inFileB.EndOfFile()) {
-    _inFileA.Read10MsData(audioFrame);
-    _acmA->Add10MsData(audioFrame);
-    _acmRefA->Add10MsData(audioFrame);
+    msecPassed += 10;
+    EXPECT_GT(_inFileA.Read10MsData(audioFrame), 0);
+    EXPECT_EQ(0, _acmA->Add10MsData(audioFrame));
+    EXPECT_EQ(0, _acmRefA->Add10MsData(audioFrame));
 
-    _inFileB.Read10MsData(audioFrame);
-    _acmB->Add10MsData(audioFrame);
-    _acmRefB->Add10MsData(audioFrame);
+    EXPECT_GT(_inFileB.Read10MsData(audioFrame), 0);
 
-    _acmA->Process();
-    _acmB->Process();
-    _acmRefA->Process();
-    _acmRefB->Process();
-
-    _acmA->PlayoutData10Ms(outFreqHzA, &audioFrame);
+    // Expect call to pass except for the time when no send codec is registered.
+    if (!expect_error_add) {
+      EXPECT_EQ(0, _acmB->Add10MsData(audioFrame));
+    } else {
+      EXPECT_EQ(-1, _acmB->Add10MsData(audioFrame));
+    }
+    // Expect to pass except for the time when there either is no send codec
+    // registered, or no receive codec.
+    if (!expect_error_process) {
+      EXPECT_GT(_acmB->Process(), -1);
+    } else {
+      EXPECT_EQ(_acmB->Process(), -1);
+    }
+    EXPECT_EQ(0, _acmRefB->Add10MsData(audioFrame));
+    EXPECT_GT(_acmA->Process(), -1);
+    EXPECT_GT(_acmRefA->Process(), -1);
+    EXPECT_GT(_acmRefB->Process(), -1);
+    EXPECT_EQ(0, _acmA->PlayoutData10Ms(outFreqHzA, &audioFrame));
     _outFileA.Write10MsData(audioFrame);
-
-    _acmRefA->PlayoutData10Ms(outFreqHzA, &audioFrame);
+    EXPECT_EQ(0, _acmRefA->PlayoutData10Ms(outFreqHzA, &audioFrame));
     _outFileRefA.Write10MsData(audioFrame);
-
-    _acmB->PlayoutData10Ms(outFreqHzB, &audioFrame);
+    EXPECT_EQ(0, _acmB->PlayoutData10Ms(outFreqHzB, &audioFrame));
     _outFileB.Write10MsData(audioFrame);
-
-    _acmRefB->PlayoutData10Ms(outFreqHzB, &audioFrame);
+    EXPECT_EQ(0, _acmRefB->PlayoutData10Ms(outFreqHzB, &audioFrame));
     _outFileRefB.Write10MsData(audioFrame);
 
-    msecPassed += 10;
+    // Update time counters each time a second of data has passed.
     if (msecPassed >= 1000) {
       msecPassed = 0;
       secPassed++;
     }
+    // Call RestEncoder for ACM on side A, and InitializeSender for ACM on
+    // side B.
     if (((secPassed % 5) == 4) && (msecPassed == 0)) {
-      if (_testMode != 0) {
-        printf("%3u:%3u  ", secPassed, msecPassed);
-      }
-      _acmA->ResetEncoder();
-      if (_testMode == 0) {
-        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                     "---------- Errors expected");
-        printf(".");
-      } else {
-        printf("Reset Encoder (click in side B)               ");
-        printf("Initialize Sender (no audio in side A)\n");
-      }
-      CHECK_ERROR(_acmB->InitializeSender());
+      EXPECT_EQ(0, _acmA->ResetEncoder());
+      EXPECT_EQ(0, _acmB->InitializeSender());
+      expect_error_add = true;
+      expect_error_process = true;
     }
+    // Re-register send codec on side B.
     if (((secPassed % 5) == 4) && (msecPassed >= 990)) {
-      if (_testMode == 0) {
-        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                     "----- END: Errors expected");
-        printf(".");
-      } else {
-        printf("%3u:%3u  ", secPassed, msecPassed);
-        printf("                                              ");
-        printf("Register Send Codec (audio back in side A)\n");
-      }
-      CHECK_ERROR(_acmB->RegisterSendCodec(codecInst_B));
-      CHECK_ERROR(_acmB->SendCodec(&dummy));
+      EXPECT_EQ(0, _acmB->RegisterSendCodec(codecInst_B));
+      EXPECT_EQ(0, _acmB->SendCodec(&dummy));
+      expect_error_add = false;
+      expect_error_process = false;
     }
+    // Reset decoder on side B, and initialize receiver on side A.
     if (((secPassed % 7) == 6) && (msecPassed == 0)) {
-      CHECK_ERROR(_acmB->ResetDecoder());
-      if (_testMode == 0) {
-        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                     "---------- Errors expected");
-        printf(".");
-      } else {
-        printf("%3u:%3u  ", secPassed, msecPassed);
-        printf("Initialize Receiver (no audio in side A)      ");
-        printf("Reset Decoder\n");
-      }
-      CHECK_ERROR(_acmA->InitializeReceiver());
+      EXPECT_EQ(0, _acmB->ResetDecoder());
+      EXPECT_EQ(0, _acmA->InitializeReceiver());
     }
+    // Re-register codec on side A.
     if (((secPassed % 7) == 6) && (msecPassed >= 990)) {
-      if (_testMode == 0) {
-        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
-                     "----- END: Errors expected");
-        printf(".");
-      } else {
-        printf("%3u:%3u  ", secPassed, msecPassed);
-        printf("Register Receive Coded (audio back in side A)\n");
-      }
-      CHECK_ERROR(_acmA->RegisterReceiveCodec(codecInst_B));
+      EXPECT_EQ(0, _acmA->RegisterReceiveCodec(codecInst_B));
     }
-    //Sleep(9);
   }
-  if (_testMode == 0) {
-    printf("Done!\n");
-  }
-
-#ifdef WEBRTC_DTMF_DETECTION
-  printf("\nDTMF at Side A\n");
-  _dtmfDetectorA->PrintDetectedDigits();
-
-  printf("\nDTMF at Side B\n");
-  _dtmfDetectorB->PrintDetectedDigits();
-#endif
-
 }
 
 }  // namespace webrtc

@@ -10,25 +10,24 @@
 
 #include "webrtc/modules/video_render//incoming_video_stream.h"
 
-#include <cassert>
+#include <assert.h>
 
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(WEBRTC_LINUX)
-#include <ctime>
 #include <sys/time.h>
+#include <time.h>
 #else
 #include <sys/time.h>
 #endif
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_render//video_render_frames.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/event_wrapper.h"
-#include "system_wrappers/interface/map_wrapper.h"
-#include "system_wrappers/interface/thread_wrapper.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -101,7 +100,8 @@ int32_t IncomingVideoStream::RenderFrame(const uint32_t stream_id,
     return -1;
   }
 
-  if (true == mirror_frames_enabled_) {
+  // Mirroring is not supported if the frame is backed by a texture.
+  if (true == mirror_frames_enabled_ && video_frame.native_handle() == NULL) {
     transformed_video_frame_.CreateEmptyFrame(video_frame.width(),
                                               video_frame.height(),
                                               video_frame.stride(kYPlane),

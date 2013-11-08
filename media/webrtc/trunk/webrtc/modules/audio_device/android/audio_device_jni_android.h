@@ -15,16 +15,23 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_JNI_ANDROID_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_JNI_ANDROID_H
 
-#include "audio_device_generic.h"
-#include "critical_section_wrapper.h"
+#include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 #include <jni.h> // For accessing AudioDeviceAndroid java class
-
-#define AudioCaptureClass "org/webrtc/voiceengine/WebRTCAudioDevice"
 
 namespace webrtc
 {
 class EventWrapper;
+
+const uint32_t N_REC_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
+const uint32_t N_PLAY_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
+
+const uint32_t N_REC_CHANNELS = 1; // default is mono recording
+const uint32_t N_PLAY_CHANNELS = 1; // default is mono playout
+
+const uint32_t REC_BUF_SIZE_IN_SAMPLES = 480; // Handle max 10 ms @ 48 kHz
+
 
 class ThreadWrapper;
 
@@ -32,9 +39,6 @@ class AudioDeviceAndroidJni : public AudioDeviceGeneric {
  public:
   AudioDeviceAndroidJni(const int32_t id);
   ~AudioDeviceAndroidJni();
-
-  static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
-                                              void* context);
 
   static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
                                               void* env,
@@ -154,14 +158,6 @@ class AudioDeviceAndroidJni : public AudioDeviceGeneric {
   virtual int32_t SetLoudspeakerStatus(bool enable);
   virtual int32_t GetLoudspeakerStatus(bool& enable) const;
 
-  static const uint32_t N_REC_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
-  static const uint32_t N_PLAY_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
-
-  static const uint32_t N_REC_CHANNELS = 1; // default is mono recording
-  static const uint32_t N_PLAY_CHANNELS = 1; // default is mono playout
-
-  static const uint32_t REC_BUF_SIZE_IN_SAMPLES = 480; // Handle max 10 ms @ 48 kHz
-
  private:
   // Lock
   void Lock() {
@@ -268,6 +264,6 @@ class AudioDeviceAndroidJni : public AudioDeviceGeneric {
   static jclass globalScClass;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_JNI_ANDROID_H

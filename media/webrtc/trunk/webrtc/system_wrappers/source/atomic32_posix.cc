@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <inttypes.h>
+#include <malloc.h>
 
 #include "webrtc/common_types.h"
 
@@ -49,8 +50,4 @@ bool Atomic32::CompareExchange(int32_t new_value, int32_t compare_value) {
   return __sync_bool_compare_and_swap(&value_, compare_value, new_value);
 }
 
-int32_t Atomic32::Value() const {
-  return value_;
-}
-
-} // namespace webrtc
+}  // namespace webrtc

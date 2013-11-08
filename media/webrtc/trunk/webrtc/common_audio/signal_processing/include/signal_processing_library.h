@@ -73,6 +73,8 @@
 
 #ifndef WEBRTC_ARCH_ARM_V7
 // For ARMv7 platforms, these are inline functions in spl_inl_armv7.h
+#ifndef MIPS32_LE
+// For MIPS platforms, these are inline functions in spl_inl_mips.h
 #define WEBRTC_SPL_MUL_16_16(a, b) \
     ((int32_t) (((int16_t)(a)) * ((int16_t)(b))))
 #define WEBRTC_SPL_MUL_16_32_RSFT16(a, b) \
@@ -86,6 +88,7 @@
     (int16_t)(a32 >> 16)), b32) + \
     (WEBRTC_SPL_MUL_16_32_RSFT16(( \
     (int16_t)((a32 & 0x0000FFFF) >> 1)), b32) >> 15)))
+#endif
 #endif
 
 #define WEBRTC_SPL_MUL_16_32_RSFT11(a, b) \
@@ -456,6 +459,15 @@ int WebRtcSpl_ScaleAndAddVectorsWithRoundNeon(const int16_t* in_vector1,
                                               int16_t* out_vector,
                                               int length);
 #endif
+#if defined(MIPS_DSP_R1_LE)
+int WebRtcSpl_ScaleAndAddVectorsWithRound_mips(const int16_t* in_vector1,
+                                               int16_t in_vector1_scale,
+                                               const int16_t* in_vector2,
+                                               int16_t in_vector2_scale,
+                                               int right_shifts,
+                                               int16_t* out_vector,
+                                               int length);
+#endif
 // End: Vector scaling operations.
 
 // iLBC specific functions. Implementations in ilbc_specific_functions.c.
@@ -626,6 +638,15 @@ void WebRtcSpl_CrossCorrelationNeon(int32_t* cross_correlation,
                                     int16_t dim_cross_correlation,
                                     int16_t right_shifts,
                                     int16_t step_seq2);
+#endif
+#if defined(MIPS32_LE)
+void WebRtcSpl_CrossCorrelation_mips(int32_t* cross_correlation,
+                                     const int16_t* seq1,
+                                     const int16_t* seq2,
+                                     int16_t dim_seq,
+                                     int16_t dim_cross_correlation,
+                                     int16_t right_shifts,
+                                     int16_t step_seq2);
 #endif
 
 // Creates (the first half of) a Hanning window. Size must be at least 1 and

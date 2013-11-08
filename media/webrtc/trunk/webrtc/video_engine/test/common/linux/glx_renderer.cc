@@ -10,10 +10,10 @@
 
 #include "webrtc/video_engine/test/common/linux/glx_renderer.h"
 
+#include <assert.h>
+
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
-
-#include <cassert>
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 

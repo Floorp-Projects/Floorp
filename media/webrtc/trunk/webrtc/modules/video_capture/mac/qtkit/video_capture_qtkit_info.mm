@@ -8,25 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "trace.h"
-#include "../../video_capture_config.h"
-#import "video_capture_qtkit_info_objc.h"
-
-#include "video_capture.h"
-
-class nsAutoreleasePool {
-public:
-    nsAutoreleasePool()
-    {
-        mLocalPool = [[NSAutoreleasePool alloc] init];
-    }
-    ~nsAutoreleasePool()
-    {
-        [mLocalPool release];
-    }
-private:
-    NSAutoreleasePool *mLocalPool;
-};
+#import "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info_objc.h"
+#include "webrtc/modules/video_capture/include/video_capture.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc
 {
@@ -36,14 +21,13 @@ namespace videocapturemodule
 VideoCaptureMacQTKitInfo::VideoCaptureMacQTKitInfo(const int32_t id) :
     DeviceInfoImpl(id)
 {
-    nsAutoreleasePool localPool;
     _captureInfo = [[VideoCaptureMacQTKitInfoObjC alloc] init];
 }
 
 VideoCaptureMacQTKitInfo::~VideoCaptureMacQTKitInfo()
 {
-    nsAutoreleasePool localPool;
     [_captureInfo release];
+
 }
 
 int32_t VideoCaptureMacQTKitInfo::Init()
@@ -55,7 +39,6 @@ int32_t VideoCaptureMacQTKitInfo::Init()
 uint32_t VideoCaptureMacQTKitInfo::NumberOfDevices()
 {
 
-    nsAutoreleasePool localPool;
     uint32_t captureDeviceCount =
         [[_captureInfo getCaptureDeviceCount]intValue];
     return captureDeviceCount;
@@ -68,7 +51,6 @@ int32_t VideoCaptureMacQTKitInfo::GetDeviceName(
     uint32_t deviceUniqueIdUTF8Length, char* productUniqueIdUTF8,
     uint32_t productUniqueIdUTF8Length)
 {
-    nsAutoreleasePool localPool;
     int errNum = [[_captureInfo getDeviceNamesFromIndex:deviceNumber
                    DefaultName:deviceNameUTF8 WithLength:deviceNameLength
                    AndUniqueID:deviceUniqueIdUTF8
@@ -122,7 +104,6 @@ int32_t VideoCaptureMacQTKitInfo::DisplayCaptureSettingsDialogBox(
     uint32_t positionX, uint32_t positionY)
 {
 
-    nsAutoreleasePool localPool;
     return [[_captureInfo
              displayCaptureSettingsDialogBoxWithDevice:deviceUniqueIdUTF8
              AndTitle:dialogTitleUTF8

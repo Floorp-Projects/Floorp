@@ -19,52 +19,54 @@ struct WebRtcCngDecInst;
 
 namespace webrtc {
 
+namespace acm1 {
+
 class ACMCNG: public ACMGenericCodec {
  public:
   explicit ACMCNG(int16_t codec_id);
-  ~ACMCNG();
+  virtual ~ACMCNG();
 
   // for FEC
-  ACMGenericCodec* CreateInstance(void);
+  virtual ACMGenericCodec* CreateInstance(void) OVERRIDE;
 
-  int16_t InternalEncode(uint8_t* bitstream,
-                         int16_t* bitstream_len_byte);
+  virtual int16_t InternalEncode(uint8_t* bitstream,
+                                 int16_t* bitstream_len_byte) OVERRIDE;
 
-  int16_t InternalInitEncoder(WebRtcACMCodecParams *codec_params);
+  virtual int16_t InternalInitEncoder(
+      WebRtcACMCodecParams* codec_params) OVERRIDE;
 
-  int16_t InternalInitDecoder(WebRtcACMCodecParams *codec_params);
+  virtual int16_t InternalInitDecoder(
+      WebRtcACMCodecParams* codec_params) OVERRIDE;
 
  protected:
-  int16_t DecodeSafe(uint8_t* bitstream,
-                     int16_t bitstream_len_byte,
-                     int16_t* audio, int16_t* audio_samples,
-                     int8_t* speech_type);
+  virtual int16_t DecodeSafe(uint8_t* bitstream,
+                             int16_t bitstream_len_byte,
+                             int16_t* audio,
+                             int16_t* audio_samples,
+                             int8_t* speech_type) OVERRIDE;
 
-  int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
-                   const CodecInst& codec_inst);
+  virtual int32_t CodecDef(WebRtcNetEQ_CodecDef& codec_def,
+                           const CodecInst& codec_inst) OVERRIDE;
 
-  void DestructEncoderSafe();
+  virtual void DestructEncoderSafe() OVERRIDE;
 
-  void DestructDecoderSafe();
+  virtual void DestructDecoderSafe() OVERRIDE;
 
-  int16_t InternalCreateEncoder();
+  virtual int16_t InternalCreateEncoder() OVERRIDE;
 
-  int16_t InternalCreateDecoder();
+  virtual int16_t InternalCreateDecoder() OVERRIDE;
 
-  void InternalDestructEncoderInst(void* ptr_inst);
+  virtual void InternalDestructEncoderInst(void* ptr_inst) OVERRIDE;
 
-  int16_t EnableDTX() {
-    return -1;
-  }
-
-  int16_t DisableDTX() {
-    return -1;
-  }
+  virtual int16_t EnableDTX() OVERRIDE;
+  virtual int16_t DisableDTX() OVERRIDE;
 
   WebRtcCngEncInst* encoder_inst_ptr_;
   WebRtcCngDecInst* decoder_inst_ptr_;
   uint16_t samp_freq_hz_;
 };
+
+}  // namespace acm1
 
 }  // namespace webrtc
 

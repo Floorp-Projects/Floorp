@@ -79,8 +79,8 @@ int VoEStressTest::DoTest() {
         // Should not be possible
         printf("Invalid selection! (Test code error)\n");
         assert(false);
-    } // switch
-  } // while
+    }  // switch
+  }  // while
 
   return 0;
 }
@@ -226,7 +226,7 @@ int VoEStressTest::CreateDeleteChannelsTest() {
   //       Make sure audio is OK after test has finished.
 
   // Set up, start with maxChannels/2 channels
-  const int maxChannels = base->MaxNumOfChannels();
+  const int maxChannels = 100;
   VALIDATE_STRESS(maxChannels < 1); // Should always have at least one channel
   bool* channelState = new bool[maxChannels];
   memset(channelState, 0, maxChannels * sizeof(bool));
@@ -409,4 +409,4 @@ bool VoEStressTest::ProcessExtraApi() {
   return true;
 }
 
-} //  namespace voetest
+}  // namespace voetest

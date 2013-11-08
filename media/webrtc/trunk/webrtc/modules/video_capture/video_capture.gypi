@@ -16,11 +16,6 @@
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
-
-      'cflags_mozilla': [
-        '$(NSPR_CFLAGS)',
-      ],
-
       'include_dirs': [
         'include',
         '../interface',
@@ -46,7 +41,7 @@
           ],
         }, {  # include_internal_video_capture == 1
           'conditions': [
-            ['include_v4l2_video_capture==1', {
+            ['OS=="linux"', {
               'include_dirs': [
                 'linux',
               ],
@@ -82,12 +77,8 @@
               },
             }],  # mac
             ['OS=="win"', {
-              'conditions': [
-                ['build_with_mozilla==0', {
-                  'dependencies': [
-                    '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
-                  ],
-                }],
+              'dependencies': [
+                '<(DEPTH)/third_party/winsdk_samples/winsdk_samples.gyp:directshow_baseclasses',
               ],
               'include_dirs': [
                 'windows',
@@ -106,10 +97,6 @@
                 'windows/video_capture_factory_windows.cc',
                 'windows/video_capture_mf.cc',
                 'windows/video_capture_mf.h',
-                'windows/BasePin.cpp',
-                'windows/BaseFilter.cpp',
-                'windows/BaseInputPin.cpp',
-                'windows/MediaType.cpp',
               ],
               'link_settings': {
                 'libraries': [
@@ -128,6 +115,28 @@
                 'android/video_capture_android.h',
               ],
             }],  # android
+            ['OS=="ios"', {
+              'sources': [
+                'ios/device_info_ios.h',
+                'ios/device_info_ios.mm',
+                'ios/device_info_ios_objc.h',
+                'ios/device_info_ios_objc.mm',
+                'ios/video_capture_ios.h',
+                'ios/video_capture_ios.mm',
+                'ios/video_capture_ios_objc.h',
+                'ios/video_capture_ios_objc.mm',
+              ],
+              'all_dependent_settings': {
+                'xcode_settings': {
+                  'OTHER_LDFLAGS': [
+                    '-framework AVFoundation',
+                    '-framework CoreMedia',
+                    '-framework CoreVideo',
+                    '-framework UIKit',
+                  ],
+                },
+              },
+            }],  # ios
           ], # conditions
         }],  # include_internal_video_capture
       ], # conditions
@@ -137,7 +146,7 @@
     ['include_tests==1', {
       'targets': [
         {
-          'target_name': 'video_capture_integrationtests',
+          'target_name': 'video_capture_tests',
           'type': 'executable',
           'dependencies': [
             'video_capture_module',
@@ -153,7 +162,7 @@
             'test/video_capture_main_mac.mm',
           ],
           'conditions': [
-            ['OS!="win" and OS!="android"', {
+            ['OS=="mac" or OS=="linux"', {
               'cflags': [
                 '-Wno-write-strings',
               ],
@@ -161,15 +170,11 @@
                 '-lpthread -lm',
               ],
             }],
-            ['include_v4l2_video_capture==1', {
-              'libraries': [
-                '-lXext',
-                '-lX11',
-              ],
-            }],
             ['OS=="linux"', {
               'libraries': [
                 '-lrt',
+                '-lXext',
+                '-lX11',
               ],
             }],
             ['OS=="mac"', {
@@ -192,6 +197,26 @@
             }], # OS!="mac"
           ] # conditions
         },
+      ], # targets
+      'conditions': [
+        ['test_isolation_mode != "noop"', {
+          'targets': [
+            {
+              'target_name': 'video_capture_tests_run',
+              'type': 'none',
+              'dependencies': [
+                '<(import_isolate_path):import_isolate_gypi',
+                'video_capture_tests',
+              ],
+              'includes': [
+                'video_capture_tests.isolate',
+              ],
+              'sources': [
+                'video_capture_tests.isolate',
+              ],
+            },
+          ],
+        }],
       ],
     }],
   ],

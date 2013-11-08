@@ -10,9 +10,9 @@
 
 #pragma mark **** imports/includes
 
-#import "video_capture_qtkit_info_objc.h"
+#import "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info_objc.h"
 
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 using namespace webrtc;
 
@@ -60,11 +60,10 @@ using namespace webrtc;
 {
     NSString* strTitle = [NSString stringWithFormat:@"%s", dialogTitleUTF8];
     NSString* strButton = @"Alright";
-    NSString* strMessage = [NSString stringWithFormat:@"Device %s is capturing", deviceUniqueIdUTF8];
     NSAlert* alert = [NSAlert alertWithMessageText:strTitle
                       defaultButton:strButton
                       alternateButton:nil otherButton:nil
-                      informativeTextWithFormat:strMessage];
+                      informativeTextWithFormat:@"Device %s is capturing", deviceUniqueIdUTF8];
     [alert setAlertStyle:NSInformationalAlertStyle];
     [alert runModal];
     return [NSNumber numberWithInt:0];
@@ -94,15 +93,11 @@ using namespace webrtc;
         return [NSNumber numberWithInt:-1];
     }
 
-    if ([_captureDevicesInfo count] <= index)
-    {
-      return [NSNumber numberWithInt:-1];
-    }
-
-    QTCaptureDevice* tempCaptureDevice = (QTCaptureDevice*)[_captureDevicesInfo objectAtIndex:index];
+    QTCaptureDevice* tempCaptureDevice =
+        (QTCaptureDevice*)[_captureDevicesInfo objectAtIndex:index];
     if(!tempCaptureDevice)
     {
-      return [NSNumber numberWithInt:-1];
+        return [NSNumber numberWithInt:-1];
     }
 
     memset(deviceName, 0, deviceNameLength);
@@ -142,6 +137,7 @@ using namespace webrtc;
         return [NSNumber numberWithInt:0];
     }
 
+    _poolInfo = [[NSAutoreleasePool alloc]init];
     _captureDeviceCountInfo = 0;
     [self getCaptureDevices];
 

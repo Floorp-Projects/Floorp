@@ -141,11 +141,19 @@ bool UdpSocketWrapper::StartReceiving()
     return true;
 }
 
+bool UdpSocketWrapper::StartReceiving(const uint32_t /*receiveBuffers*/) {
+  return StartReceiving();
+}
+
 bool UdpSocketWrapper::StopReceiving()
 {
     _wantsIncoming = false;
     return true;
 }
+
+int32_t UdpSocketWrapper::SetPCP(const int32_t /*pcp*/) { return -1; }
+
+uint32_t UdpSocketWrapper::ReceiveBuffers() { return 0; }
 
 }  // namespace test
 }  // namespace webrtc

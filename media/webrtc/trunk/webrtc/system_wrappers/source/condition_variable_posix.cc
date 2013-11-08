@@ -12,7 +12,7 @@
 
 #include <errno.h>
 #if defined(WEBRTC_LINUX)
-#include <ctime>
+#include <time.h>
 #else
 #include <sys/time.h>
 #endif
@@ -79,7 +79,7 @@ bool ConditionVariablePosix::SleepCS(CriticalSectionWrapper& crit_sect,
                                      unsigned long max_time_inMS) {
   const unsigned long INFINITE =  0xFFFFFFFF;
   const int MILLISECONDS_PER_SECOND = 1000;
-#if !defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)
+#ifndef WEBRTC_LINUX
   const int MICROSECONDS_PER_MILLISECOND = 1000;
 #endif
   const int NANOSECONDS_PER_SECOND = 1000000000;
@@ -129,4 +129,4 @@ void ConditionVariablePosix::WakeAll() {
   pthread_cond_broadcast(&cond_);
 }
 
-} // namespace webrtc
+}  // namespace webrtc

@@ -8,31 +8,24 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <errno.h>
-#include <stdio.h>
-#include <sys/mman.h>
-#include <string.h>
-
-//v4l includes
-#if defined(__DragonFly__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#include <sys/videoio.h>
-#elif defined(__sun)
-#include <sys/videodev2.h>
-#else
+#include <fcntl.h>
 #include <linux/videodev2.h>
-#endif
+#include <stdio.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
+#include <iostream>
 #include <new>
 
-#include "ref_count.h"
-#include "trace.h"
-#include "thread_wrapper.h"
-#include "critical_section_wrapper.h"
-#include "video_capture_linux.h"
+#include "webrtc/modules/video_capture/linux/video_capture_linux.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/ref_count.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc
 {
@@ -76,13 +69,6 @@ int32_t VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8)
     if (_deviceUniqueId)
     {
         memcpy(_deviceUniqueId, deviceUniqueIdUTF8, len + 1);
-    }
-
-    int device_index;
-    if (sscanf(deviceUniqueIdUTF8,"fake_%d", &device_index) == 1)
-    {
-      _deviceId = device_index;
-      return 0;
     }
 
     int fd;
@@ -510,5 +496,5 @@ int32_t VideoCaptureModuleV4L2::CaptureSettings(VideoCaptureCapability& settings
 
     return 0;
 }
-} // namespace videocapturemodule
-} // namespace webrtc
+}  // namespace videocapturemodule
+}  // namespace webrtc

@@ -72,8 +72,9 @@ int VoEExternalMediaImpl::RegisterExternalMediaProcessing(
         case kPlaybackPerChannel:
         case kRecordingPerChannel:
         {
-            voe::ScopedChannel sc(shared_->channel_manager(), channel);
-            voe::Channel* channelPtr = sc.ChannelPtr();
+            voe::ChannelOwner ch =
+                shared_->channel_manager().GetChannel(channel);
+            voe::Channel* channelPtr = ch.channel();
             if (channelPtr == NULL)
             {
                 shared_->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -115,8 +116,9 @@ int VoEExternalMediaImpl::DeRegisterExternalMediaProcessing(
         case kPlaybackPerChannel:
         case kRecordingPerChannel:
         {
-            voe::ScopedChannel sc(shared_->channel_manager(), channel);
-            voe::Channel* channelPtr = sc.ChannelPtr();
+            voe::ChannelOwner ch =
+                shared_->channel_manager().GetChannel(channel);
+            voe::Channel* channelPtr = ch.channel();
             if (channelPtr == NULL)
             {
                 shared_->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -191,7 +193,7 @@ int VoEExternalMediaImpl::ExternalRecordingInsertData(
         return -1;
     }
     if ((16000 != samplingFreqHz) && (32000 != samplingFreqHz) &&
-        (48000 != samplingFreqHz) && (44100 != samplingFreqHz))
+        (48000 != samplingFreqHz) && (44000 != samplingFreqHz))
     {
          shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
              "SetExternalRecordingStatus() invalid sample rate");
@@ -301,7 +303,7 @@ int VoEExternalMediaImpl::ExternalPlayoutGetData(
         return -1;
     }
     if ((16000 != samplingFreqHz) && (32000 != samplingFreqHz) &&
-        (48000 != samplingFreqHz) && (44100 != samplingFreqHz))
+        (48000 != samplingFreqHz) && (44000 != samplingFreqHz))
     {
         shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
             "ExternalPlayoutGetData() invalid sample rate");
@@ -349,8 +351,8 @@ int VoEExternalMediaImpl::GetAudioFrame(int channel, int desired_sample_rate_hz,
         shared_->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(shared_->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = shared_->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         shared_->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -387,8 +389,8 @@ int VoEExternalMediaImpl::SetExternalMixing(int channel, bool enable) {
         shared_->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(shared_->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = shared_->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         shared_->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,

@@ -54,12 +54,12 @@ int ComfortNoise::Generate(size_t requested_length,
   // TODO(hlundin): Change to an enumerator and skip assert.
   assert(fs_hz_ == 8000 || fs_hz_ == 16000 || fs_hz_ ==  32000 ||
          fs_hz_ == 48000);
-  assert(output->Channels() == 1);  // Not adapted for multi-channel yet.
+  // Not adapted for multi-channel yet.
   if (output->Channels() != 1) {
     return kMultiChannelNotSupported;
   }
 
-  int16_t number_of_samples = requested_length;
+  size_t number_of_samples = requested_length;
   int16_t new_period = 0;
   if (first_call_) {
     // Generate noise and overlap slightly with old data.
@@ -75,7 +75,8 @@ int ComfortNoise::Generate(size_t requested_length,
   CNG_dec_inst* cng_inst = static_cast<CNG_dec_inst*>(cng_decoder->state());
   // The expression &(*output)[0][0] is a pointer to the first element in
   // the first channel.
-  if (WebRtcCng_Generate(cng_inst, &(*output)[0][0], number_of_samples,
+  if (WebRtcCng_Generate(cng_inst, &(*output)[0][0],
+                         static_cast<int16_t>(number_of_samples),
                          new_period) < 0) {
     // Error returned.
     output->Zeros(requested_length);
