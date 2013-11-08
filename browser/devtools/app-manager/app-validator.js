@@ -1,8 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-let {Ci,Cu,CC,Cc} = require("chrome");
+let {Ci,Cu,CC} = require("chrome");
 const promise = require("sdk/core/promise");
 
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -18,11 +19,11 @@ function AppValidator(project) {
 
 AppValidator.prototype.error = function (message) {
   this.errors.push(message);
-}
+};
 
 AppValidator.prototype.warning = function (message) {
   this.warnings.push(message);
-}
+};
 
 AppValidator.prototype._getPackagedManifestFile = function () {
   let manifestFile = FileUtils.File(this.project.location);
@@ -85,7 +86,7 @@ AppValidator.prototype._fetchManifest = function (manifestURL) {
   }
 
   return deferred.promise;
-}
+};
 
 AppValidator.prototype._getManifest = function () {
   let manifestURL;
@@ -106,29 +107,28 @@ AppValidator.prototype._getManifest = function () {
     return promise.resolve(null);
   }
   return this._fetchManifest(manifestURL);
-}
+};
 
 AppValidator.prototype.validateManifest = function (manifest) {
   if (!manifest.name) {
     this.error(strings.GetStringFromName("validator.missNameManifestProperty"));
-    return;
   }
 
-  if (!manifest.icons || Object.keys(manifest.icons).length == 0) {
+  if (!manifest.icons || Object.keys(manifest.icons).length === 0) {
     this.warning(strings.GetStringFromName("validator.missIconsManifestProperty"));
   } else if (!manifest.icons["128"]) {
     this.warning(strings.GetStringFromName("validator.missIconMarketplace"));
   }
-}
+};
 
-AppValidator.prototype._getOriginURL = function (manifest) {
+AppValidator.prototype._getOriginURL = function () {
   if (this.project.type == "packaged") {
     let manifestURL = Services.io.newURI(this.manifestURL, null, null);
     return Services.io.newURI(".", null, manifestURL).spec;
   } else if (this.project.type == "hosted") {
     return Services.io.newURI(this.project.location, null, null).prePath;
   }
-}
+};
 
 AppValidator.prototype.validateLaunchPath = function (manifest) {
   let deferred = promise.defer();
@@ -181,7 +181,7 @@ AppValidator.prototype.validateLaunchPath = function (manifest) {
   }
 
   return deferred.promise;
-}
+};
 
 AppValidator.prototype.validateType = function (manifest) {
   let appType = manifest.type || "web";
@@ -196,7 +196,7 @@ AppValidator.prototype.validateType = function (manifest) {
   if (appType === "certified") {
     this.warning(strings.GetStringFromName("validator.noCertifiedSupport"));
   }
-}
+};
 
 AppValidator.prototype.validate = function () {
   this.errors = [];
@@ -210,7 +210,6 @@ AppValidator.prototype.validate = function () {
         return this.validateLaunchPath(manifest);
       }
     }).bind(this));
-}
+};
 
 exports.AppValidator = AppValidator;
-
