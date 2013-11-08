@@ -583,6 +583,7 @@ let ContentScroll =  {
       case "Content:SetWindowSize": {
         let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         cwu.setCSSViewport(json.width, json.height);
+        sendAsyncMessage("Content:SetWindowSize:Complete", {});
         break;
       }
     }
