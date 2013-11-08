@@ -122,8 +122,8 @@ int VoECodecImpl::SetSendCodec(int channel, const CodecInst& codec)
             "SetSendCodec() invalid number of channels");
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -156,8 +156,8 @@ int VoECodecImpl::GetSendCodec(int channel, CodecInst& codec)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -189,8 +189,8 @@ int VoECodecImpl::GetRecCodec(int channel, CodecInst& codec)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -223,8 +223,8 @@ int VoECodecImpl::SetAMREncFormat(int channel, AmrMode mode)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -249,8 +249,8 @@ int VoECodecImpl::SetAMRDecFormat(int channel, AmrMode mode)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -277,8 +277,8 @@ int VoECodecImpl::SetAMRWbEncFormat(int channel, AmrMode mode)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -305,8 +305,8 @@ int VoECodecImpl::SetAMRWbDecFormat(int channel, AmrMode mode)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -334,8 +334,8 @@ int VoECodecImpl::SetRecPayloadType(int channel, const CodecInst& codec)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -354,8 +354,8 @@ int VoECodecImpl::GetRecPayloadType(int channel, CodecInst& codec)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -392,8 +392,8 @@ int VoECodecImpl::SetSendCNPayloadType(int channel, int type,
             "SetSendCNPayloadType() invalid payload frequency");
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -417,8 +417,8 @@ int VoECodecImpl::SetISACInitTargetRate(int channel, int rateBps,
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -445,8 +445,8 @@ int VoECodecImpl::SetISACMaxRate(int channel, int rateBps)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -474,8 +474,8 @@ int VoECodecImpl::SetISACMaxPayloadSize(int channel, int sizeBytes)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -503,8 +503,8 @@ int VoECodecImpl::SetVADStatus(int channel, bool enable, VadModes mode,
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -542,8 +542,8 @@ int VoECodecImpl::GetVADStatus(int channel, bool& enabled, VadModes& mode,
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -696,8 +696,8 @@ int VoECodecImpl::SetSecondarySendCodec(int channel, const CodecInst& codec,
                           "SetSecondarySendCodec() invalid number of channels");
     return -1;
   }
-  voe::ScopedChannel sc(_shared->channel_manager(), channel);
-  voe::Channel* channelPtr = sc.ChannelPtr();
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
   if (channelPtr == NULL) {
     _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
                           "SetSecondarySendCodec() failed to locate channel");
@@ -724,8 +724,8 @@ int VoECodecImpl::GetSecondarySendCodec(int channel, CodecInst& codec) {
     _shared->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
   }
-  voe::ScopedChannel sc(_shared->channel_manager(), channel);
-  voe::Channel* channelPtr = sc.ChannelPtr();
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
   if (channelPtr == NULL) {
     _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
                           "GetSecondarySendCodec() failed to locate channel");
@@ -750,8 +750,8 @@ int VoECodecImpl::GetSecondarySendCodec(int channel, CodecInst& codec) {
 int VoECodecImpl::RemoveSecondarySendCodec(int channel) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "RemoveSecondarySendCodec(channel=%d)", channel);
-  voe::ScopedChannel sc(_shared->channel_manager(), channel);
-  voe::Channel* channelPtr = sc.ChannelPtr();
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
   if (channelPtr == NULL) {
     _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
                           "RemoveSecondarySendCodec() failed to locate "
@@ -764,4 +764,4 @@ int VoECodecImpl::RemoveSecondarySendCodec(int channel) {
 
 #endif  // WEBRTC_VOICE_ENGINE_CODEC_API
 
-} // namespace webrtc
+}  // namespace webrtc

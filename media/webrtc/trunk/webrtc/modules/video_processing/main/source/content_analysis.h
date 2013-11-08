@@ -87,6 +87,6 @@ private:
 
 }; // end of VPMContentAnalysis class definition
 
-} // namespace
+}  // namespace
 
 #endif

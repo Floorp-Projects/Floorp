@@ -29,9 +29,6 @@ const int kMaxIntervalTimeMs = 30;
 // low bitrates (less than 320 kbits/s).
 const int kMaxQueueTimeWithoutSendingMs = 30;
 
-// Max padding bytes per second.
-const int kMaxPaddingKbps = 800;
-
 }  // namespace
 
 namespace webrtc {
@@ -128,7 +125,7 @@ PacedSender::PacedSender(Callback* callback, int target_bitrate_kbps,
       critsect_(CriticalSectionWrapper::CreateCriticalSection()),
       media_budget_(new paced_sender::IntervalBudget(
           pace_multiplier_ * target_bitrate_kbps)),
-      padding_budget_(new paced_sender::IntervalBudget(kMaxPaddingKbps)),
+      padding_budget_(new paced_sender::IntervalBudget(0)),
       // No padding until UpdateBitrate is called.
       pad_up_to_bitrate_budget_(new paced_sender::IntervalBudget(0)),
       time_last_update_(TickTime::Now()),
@@ -164,9 +161,11 @@ bool PacedSender::Enabled() const {
 }
 
 void PacedSender::UpdateBitrate(int target_bitrate_kbps,
+                                int max_padding_bitrate_kbps,
                                 int pad_up_to_bitrate_kbps) {
   CriticalSectionScoped cs(critsect_.get());
   media_budget_->set_target_rate_kbps(pace_multiplier_ * target_bitrate_kbps);
+  padding_budget_->set_target_rate_kbps(max_padding_bitrate_kbps);
   pad_up_to_bitrate_budget_->set_target_rate_kbps(pad_up_to_bitrate_kbps);
 }
 
@@ -175,7 +174,6 @@ bool PacedSender::SendPacket(Priority priority, uint32_t ssrc,
   CriticalSectionScoped cs(critsect_.get());
 
   if (!enabled_) {
-    UpdateMediaBytesSent(bytes);
     return true;  // We can send now.
   }
   if (capture_time_ms < 0) {
@@ -244,6 +242,9 @@ int32_t PacedSender::Process() {
   CriticalSectionScoped cs(critsect_.get());
   int elapsed_time_ms = (now - time_last_update_).Milliseconds();
   time_last_update_ = now;
+  if (!enabled_) {
+    return 0;
+  }
   if (!paused_) {
     if (elapsed_time_ms > 0) {
       uint32_t delta_time_ms = std::min(kMaxIntervalTimeMs, elapsed_time_ms);
@@ -261,7 +262,7 @@ int32_t PacedSender::Process() {
       const bool success = callback_->TimeToSendPacket(ssrc, sequence_number,
                                                        capture_time_ms);
       critsect_->Enter();
-      // If packet cannt be sent then keep it in packet list and exit early.
+      // If packet cannot be sent then keep it in packet list and exit early.
       // There's no need to send more packets.
       if (!success) {
         return 0;

@@ -8,11 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "audio_device_utility_win.h"
-#include "audio_device_config.h"
+#include "webrtc/modules/audio_device/win/audio_device_utility_win.h"
 
-#include "critical_section_wrapper.h"
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #include <windows.h>
 #include <tchar.h>
@@ -79,10 +78,8 @@ int32_t AudioDeviceUtilityWindows::Init()
         {
             strncpy(os, "Could not get OS info", STRING_MAX_SIZE);
         }
-        // DEBUG_PRINTP("OS info: %s\n", os);
         WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id, "  OS info: %s", os);
 #else
-        // DEBUG_PRINTP("OS info: %s\n", szOS);
         WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id, "  OS info: %s", szOS);
 #endif
     }
@@ -125,7 +122,7 @@ BOOL AudioDeviceUtilityWindows::GetOSDisplayString(LPTSTR pszOS)
         //  Windows Server 2008 R2	6.1
         //  Windows Server 2008	    6.0
         //  Windows Vista	        6.0
-        //  - - - - - - - - - - - - - - - - - - - 
+        //  - - - - - - - - - - - - - - - - - - -
         //  Windows Server 2003 R2	5.2
         //  Windows Server 2003	    5.2
         //  Windows XP	            5.1
@@ -140,7 +137,7 @@ BOOL AudioDeviceUtilityWindows::GetOSDisplayString(LPTSTR pszOS)
                 // Windows Vista or Server 2008
                 if (osvi.wProductType == VER_NT_WORKSTATION)
                     StringCchCat(pszOS, STRING_MAX_SIZE, TEXT("Windows Vista "));
-                else 
+                else
                     StringCchCat(pszOS, STRING_MAX_SIZE, TEXT("Windows Server 2008 " ));
             }
 
@@ -149,7 +146,7 @@ BOOL AudioDeviceUtilityWindows::GetOSDisplayString(LPTSTR pszOS)
                 // Windows 7 or Server 2008 R2
                 if (osvi.wProductType == VER_NT_WORKSTATION)
                     StringCchCat(pszOS, STRING_MAX_SIZE, TEXT("Windows 7 "));
-                else 
+                else
                     StringCchCat(pszOS, STRING_MAX_SIZE, TEXT("Windows Server 2008 R2 " ));
             }
         }
@@ -164,7 +161,7 @@ BOOL AudioDeviceUtilityWindows::GetOSDisplayString(LPTSTR pszOS)
             StringCchCat(pszOS, STRING_MAX_SIZE, TEXT("Windows XP "));
             if (osvi.wSuiteMask & VER_SUITE_PERSONAL)
                 StringCchCat(pszOS, STRING_MAX_SIZE, TEXT( "Home Edition" ));
-            else 
+            else
                 StringCchCat(pszOS, STRING_MAX_SIZE, TEXT( "Professional" ));
         }
 
@@ -176,7 +173,7 @@ BOOL AudioDeviceUtilityWindows::GetOSDisplayString(LPTSTR pszOS)
             {
                 StringCchCat(pszOS, STRING_MAX_SIZE, TEXT( "Professional" ));
             }
-            else 
+            else
             {
                 if (osvi.wSuiteMask & VER_SUITE_DATACENTER)
                     StringCchCat(pszOS, STRING_MAX_SIZE, TEXT( "Datacenter Server" ));
@@ -206,24 +203,24 @@ BOOL AudioDeviceUtilityWindows::GetOSDisplayString(LPTSTR pszOS)
         pGNSI = (PGNSI) GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "GetNativeSystemInfo");
         if (NULL != pGNSI)
             pGNSI(&si);
-        else 
+        else
             GetSystemInfo(&si);
 
         // Add 64-bit or 32-bit for OS versions "later than" Vista
         //
         if (osvi.dwMajorVersion >= 6)
         {
-            if ((si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) || 
+            if ((si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) ||
                 (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64))
                 StringCchCat(pszOS, STRING_MAX_SIZE, TEXT( ", 64-bit" ));
             else if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL )
                 StringCchCat(pszOS, STRING_MAX_SIZE, TEXT(", 32-bit"));
         }
-      
-        return TRUE; 
+
+        return TRUE;
     }
     else
-    {  
+    {
         return FALSE;
    }
 }

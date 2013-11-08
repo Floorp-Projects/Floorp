@@ -10,7 +10,7 @@
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
 
-#include "video_coder.h"
+#include "webrtc/modules/utility/source/video_coder.h"
 
 namespace webrtc {
 VideoCoder::VideoCoder(uint32_t instanceID)
@@ -27,18 +27,6 @@ VideoCoder::VideoCoder(uint32_t instanceID)
 VideoCoder::~VideoCoder()
 {
     VideoCodingModule::Destroy(_vcm);
-}
-
-int32_t VideoCoder::ResetDecoder()
-{
-    _vcm->ResetDecoder();
-
-    _vcm->InitializeSender();
-    _vcm->InitializeReceiver();
-
-    _vcm->RegisterTransportCallback(this);
-    _vcm->RegisterReceiveCallback(this);
-    return 0;
 }
 
 int32_t VideoCoder::SetEncodeCodec(VideoCodec& videoCodecInst,
@@ -84,10 +72,6 @@ int32_t VideoCoder::Decode(I420VideoFrame& decodedVideo,
     }
 
     _decodedVideo = &decodedVideo;
-    if(_vcm->DecodeFromStorage(encodedData) != VCM_OK)
-    {
-        return -1;
-    }
     return 0;
 }
 
@@ -148,5 +132,5 @@ int32_t VideoCoder::SendData(
     _videoEncodedData->payloadSize = payloadSize;
     return 0;
 }
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_MODULE_UTILITY_VIDEO

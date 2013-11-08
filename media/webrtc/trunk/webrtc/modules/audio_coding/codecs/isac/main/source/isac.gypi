@@ -78,6 +78,11 @@
           'defines': [
             'WEBRTC_LINUX',
           ],
+          'link_settings': {
+            'libraries': [
+              '-lm',
+            ],
+          },
         }],
       ],
     },

@@ -172,17 +172,6 @@ double I420PSNR(const I420VideoFrame* ref_frame,
 // Compute SSIM for an I420 frame (all planes).
 double I420SSIM(const I420VideoFrame* ref_frame,
                 const I420VideoFrame* test_frame);
-
-// TODO(mikhal): Remove these functions and keep only the above functionality.
-// Compute PSNR for an I420 buffer (all planes).
-// Returns the PSNR in decibel, to a maximum of kInfinitePSNR.
-double I420PSNR(const uint8_t* ref_frame,
-                const uint8_t* test_frame,
-                int width, int height);
-// Compute SSIM for an I420 buffer (all planes).
-double I420SSIM(const uint8_t* ref_frame,
-                const uint8_t* test_frame,
-                int width, int height);
 }
 
 #endif  // WEBRTC_COMMON_VIDEO_LIBYUV_INCLUDE_WEBRTC_LIBYUV_H_

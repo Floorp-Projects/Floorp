@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "process_thread_impl.h"
-#include "module.h"
-#include "trace.h"
+#include "webrtc/modules/interface/module.h"
+#include "webrtc/modules/utility/source/process_thread_impl.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 ProcessThread::~ProcessThread()
@@ -186,4 +186,4 @@ bool ProcessThreadImpl::Process()
     }
     return true;
 }
-} // namespace webrtc
+}  // namespace webrtc

@@ -100,6 +100,8 @@ PrintBacktrace()
         fprintf(stderr, "#%d %s\n", OOM_traceIdx, OOM_traceSymbols[OOM_traceIdx]);
     }
 
+    // This must be free(), not js_free(), because backtrace_symbols()
+    // allocates with malloc().
     free(OOM_traceSymbols);
 }
 

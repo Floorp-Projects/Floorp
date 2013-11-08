@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cassert>
+#include <assert.h>
 
-#include "audio_mixer_manager_pulse_linux.h"
-#include "trace.h"
+#include "webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 extern webrtc_adm_linux_pulse::PulseAudioSymbolTable PaSymbolTable;
 
@@ -1265,4 +1265,3 @@ bool AudioMixerManagerLinuxPulse::GetSourceInfoByIndex(
 }
 
 }
-

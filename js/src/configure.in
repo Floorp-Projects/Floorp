@@ -2916,7 +2916,7 @@ if test "$_USE_SYSTEM_NSPR" || (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
 fi
 
 case "$target" in
-  *linux*)
+  *linux*|*darwin*)
     if test -z "$_HAS_NSPR"; then JS_POSIX_NSPR_DEFAULT=1; fi
     ;;
 esac

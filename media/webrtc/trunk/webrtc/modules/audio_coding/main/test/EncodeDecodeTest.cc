@@ -20,8 +20,9 @@
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/main/test/utility.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
@@ -72,23 +73,22 @@ void Sender::Setup(AudioCodingModule *acm, RTPStream *rtpStream) {
     // Choose codec on command line.
     printf("List of supported codec.\n");
     for (int n = 0; n < noOfCodecs; n++) {
-      acm->Codec(n, &sendCodec);
+      EXPECT_EQ(0, acm->Codec(n, &sendCodec));
       printf("%d %s\n", n, sendCodec.plname);
     }
     printf("Choose your codec:");
     ASSERT_GT(scanf("%d", &codecNo), 0);
   }
 
-  acm->Codec(codecNo, &sendCodec);
+  EXPECT_EQ(0, acm->Codec(codecNo, &sendCodec));
+  // Default number of channels is 2 for CELT, so we change to 1 in this test.
   if (!strcmp(sendCodec.plname, "CELT")) {
     sendCodec.channels = 1;
   }
-  acm->RegisterSendCodec(sendCodec);
+
+  EXPECT_EQ(0, acm->RegisterSendCodec(sendCodec));
   _packetization = new TestPacketization(rtpStream, sendCodec.plfreq);
-  if (acm->RegisterTransportCallback(_packetization) < 0) {
-    printf("Registering Transport Callback failed, for run: codecId: %d: --\n",
-           codeId);
-  }
+  EXPECT_EQ(0, acm->RegisterTransportCallback(_packetization));
 
   _acm = acm;
 }
@@ -100,24 +100,15 @@ void Sender::Teardown() {
 
 bool Sender::Add10MsData() {
   if (!_pcmFile.EndOfFile()) {
-    _pcmFile.Read10MsData(_audioFrame);
+    EXPECT_GT(_pcmFile.Read10MsData(_audioFrame), 0);
     int32_t ok = _acm->Add10MsData(_audioFrame);
+    EXPECT_EQ(0, ok);
     if (ok != 0) {
-      printf("Error calling Add10MsData: for run: codecId: %d\n", codeId);
-      exit(1);
+      return false;
     }
     return true;
   }
   return false;
-}
-
-bool Sender::Process() {
-  int32_t ok = _acm->Process();
-  if (ok < 0) {
-    printf("Error calling Add10MsData: for run: codecId: %d\n", codeId);
-    exit(1);
-  }
-  return true;
 }
 
 void Sender::Run() {
@@ -125,9 +116,7 @@ void Sender::Run() {
     if (!Add10MsData()) {
       break;
     }
-    if (!Process()) {  // This could be done in a processing thread
-      break;
-    }
+    EXPECT_GT(_acm->Process(), -1);
   }
 }
 
@@ -139,15 +128,12 @@ Receiver::Receiver()
 void Receiver::Setup(AudioCodingModule *acm, RTPStream *rtpStream) {
   struct CodecInst recvCodec;
   int noOfCodecs;
-  acm->InitializeReceiver();
+  EXPECT_EQ(0, acm->InitializeReceiver());
 
   noOfCodecs = acm->NumberOfCodecs();
   for (int i = 0; i < noOfCodecs; i++) {
-    acm->Codec((uint8_t) i, &recvCodec);
-    if (acm->RegisterReceiveCodec(recvCodec) != 0) {
-      printf("Unable to register codec: for run: codecId: %d\n", codeId);
-      exit(1);
-    }
+    EXPECT_EQ(0, acm->Codec(static_cast<uint8_t>(i), &recvCodec));
+    EXPECT_EQ(0, acm->RegisterReceiveCodec(recvCodec));
   }
 
   int playSampFreq;
@@ -184,8 +170,9 @@ void Receiver::Setup(AudioCodingModule *acm, RTPStream *rtpStream) {
 void Receiver::Teardown() {
   delete[] _playoutBuffer;
   _pcmFile.Close();
-  if (testMode > 1)
+  if (testMode > 1) {
     Trace::ReturnTrace();
+  }
 }
 
 bool Receiver::IncomingPacket() {
@@ -199,18 +186,13 @@ bool Receiver::IncomingPacket() {
           _firstTime = true;
           return true;
         } else {
-          printf("Error in reading incoming payload.\n");
           return false;
         }
       }
     }
 
-    int32_t ok = _acm->IncomingPacket(_incomingPayload, _realPayloadSizeBytes,
-                                      _rtpInfo);
-    if (ok != 0) {
-      printf("Error when inserting packet to ACM, for run: codecId: %d\n",
-             codeId);
-    }
+    EXPECT_EQ(0, _acm->IncomingPacket(_incomingPayload, _realPayloadSizeBytes,
+                                      _rtpInfo));
     _realPayloadSizeBytes = _rtpStream->Read(&_rtpInfo, _incomingPayload,
                                              _payloadSizeBytes, &_nextTime);
     if (_realPayloadSizeBytes == 0 && _rtpStream->EndOfFile()) {
@@ -223,10 +205,10 @@ bool Receiver::IncomingPacket() {
 bool Receiver::PlayoutData() {
   AudioFrame audioFrame;
 
-  if (_acm->PlayoutData10Ms(_frequency, &audioFrame) != 0) {
-    printf("Error when calling PlayoutData10Ms, for run: codecId: %d\n",
-           codeId);
-    exit(1);
+  int32_t ok =_acm->PlayoutData10Ms(_frequency, &audioFrame);
+  EXPECT_EQ(0, ok);
+  if (ok < 0){
+    return false;
   }
   if (_playoutLengthSmpls == 0) {
     return false;
@@ -241,7 +223,7 @@ void Receiver::Run() {
 
   while (counter500Ms > 0) {
     if (clock == 0 || clock >= _nextTime) {
-      IncomingPacket();
+      EXPECT_TRUE(IncomingPacket());
       if (clock == 0) {
         clock = _nextTime;
       }
@@ -279,12 +261,6 @@ EncodeDecodeTest::EncodeDecodeTest(int testMode) {
 }
 
 void EncodeDecodeTest::Perform() {
-  if (_testMode == 0) {
-    printf("Running Encode/Decode Test");
-    WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceAudioCoding, -1,
-                 "---------- EncodeDecodeTest ----------");
-  }
-
   int numCodecs = 1;
   int codePars[3];  // Frequency, packet size, rate.
   int numPars[52];  // Number of codec parameters sets (freq, pacsize, rate)
@@ -294,16 +270,13 @@ void EncodeDecodeTest::Perform() {
   codePars[1] = 0;
   codePars[2] = 0;
 
-  AudioCodingModule* acm = AudioCodingModule::Create(0);
+  scoped_ptr<AudioCodingModule> acm(AudioCodingModule::Create(0));
   struct CodecInst sendCodecTmp;
   numCodecs = acm->NumberOfCodecs();
 
-  if (_testMode == 1) {
-    printf("List of supported codec.\n");
-  }
   if (_testMode != 2) {
     for (int n = 0; n < numCodecs; n++) {
-      acm->Codec(n, &sendCodecTmp);
+      EXPECT_EQ(0, acm->Codec(n, &sendCodecTmp));
       if (STR_CASE_CMP(sendCodecTmp.plname, "telephone-event") == 0) {
         numPars[n] = 0;
       } else if (STR_CASE_CMP(sendCodecTmp.plname, "cn") == 0) {
@@ -314,9 +287,6 @@ void EncodeDecodeTest::Perform() {
         numPars[n] = 0;
       } else {
         numPars[n] = 1;
-        if (_testMode == 1) {
-          printf("%d %s\n", n, sendCodecTmp.plname);
-        }
       }
     }
   } else {
@@ -330,14 +300,7 @@ void EncodeDecodeTest::Perform() {
   for (int codeId = 0; codeId < numCodecs; codeId++) {
     // Only encode using real mono encoders, not telephone-event and cng.
     for (int loopPars = 1; loopPars <= numPars[codeId]; loopPars++) {
-      if (_testMode == 1) {
-        printf("\n");
-        printf("***FOR RUN: codeId: %d\n", codeId);
-        printf("\n");
-      } else if (_testMode == 0) {
-        printf(".");
-      }
-
+      // Encode all data to file.
       EncodeToFile(1, codeId, codePars, _testMode);
 
       RTPFile rtpFile;
@@ -347,44 +310,38 @@ void EncodeDecodeTest::Perform() {
       _receiver.codeId = codeId;
 
       rtpFile.ReadHeader();
-      _receiver.Setup(acm, &rtpFile);
+      _receiver.Setup(acm.get(), &rtpFile);
       _receiver.Run();
       _receiver.Teardown();
       rtpFile.Close();
-
-      if (_testMode == 1) {
-        printf("***COMPLETED RUN FOR: codecID: %d ***\n", codeId);
-      }
     }
   }
-  AudioCodingModule::Destroy(acm);
-  if (_testMode == 0) {
-    printf("Done!\n");
-  }
-  if (_testMode == 1)
+
+  // End tracing.
+  if (_testMode == 1) {
     Trace::ReturnTrace();
+  }
 }
 
 void EncodeDecodeTest::EncodeToFile(int fileType, int codeId, int* codePars,
                                     int testMode) {
-  AudioCodingModule* acm = AudioCodingModule::Create(1);
+  scoped_ptr<AudioCodingModule> acm(AudioCodingModule::Create(1));
   RTPFile rtpFile;
   std::string fileName = webrtc::test::OutputPath() + "outFile.rtp";
   rtpFile.Open(fileName.c_str(), "wb+");
   rtpFile.WriteHeader();
 
-  //for auto_test and logging
+  // Store for auto_test and logging.
   _sender.testMode = testMode;
   _sender.codeId = codeId;
 
-  _sender.Setup(acm, &rtpFile);
+  _sender.Setup(acm.get(), &rtpFile);
   struct CodecInst sendCodecInst;
   if (acm->SendCodec(&sendCodecInst) >= 0) {
     _sender.Run();
   }
   _sender.Teardown();
   rtpFile.Close();
-  AudioCodingModule::Destroy(acm);
 }
 
 }  // namespace webrtc

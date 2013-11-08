@@ -15,18 +15,18 @@
 #ifndef WEBRTC_MODULES_UTILITY_SOURCE_FILE_RECORDER_IMPL_H_
 #define WEBRTC_MODULES_UTILITY_SOURCE_FILE_RECORDER_IMPL_H_
 
-#include "coder.h"
-#include "common_types.h"
-#include "engine_configurations.h"
-#include "event_wrapper.h"
-#include "file_recorder.h"
-#include "media_file_defines.h"
-#include "media_file.h"
-#include "module_common_types.h"
-#include "resampler.h"
-#include "thread_wrapper.h"
-#include "tick_util.h"
-#include "typedefs.h"
+#include "webrtc/common_audio/resampler/include/resampler.h"
+#include "webrtc/common_types.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/media_file/interface/media_file.h"
+#include "webrtc/modules/media_file/interface/media_file_defines.h"
+#include "webrtc/modules/utility/interface/file_recorder.h"
+#include "webrtc/modules/utility/source/coder.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/typedefs.h"
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
     #include "frame_scaler.h"
@@ -159,5 +159,5 @@ private:
     int64_t _writtenVideoMS;
 };
 #endif // WEBRTC_MODULE_UTILITY_VIDEO
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_UTILITY_SOURCE_FILE_RECORDER_IMPL_H_

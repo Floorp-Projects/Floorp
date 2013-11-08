@@ -70,12 +70,12 @@ namespace test {
 
 class SocketFactory : public UdpTransportImpl::SocketFactoryInterface {
  public:
-  UdpSocketWrapper* CreateSocket(const int32_t id,
+  virtual UdpSocketWrapper* CreateSocket(const int32_t id,
                                  UdpSocketManager* mgr,
                                  CallbackObj obj,
                                  IncomingSocketCallback cb,
                                  bool ipV6Enable,
-                                 bool disableGQOS) {
+                                 bool disableGQOS) OVERRIDE {
     return UdpSocketWrapper::CreateSocket(id, mgr, obj, cb, ipV6Enable,
                                           disableGQOS);
   }

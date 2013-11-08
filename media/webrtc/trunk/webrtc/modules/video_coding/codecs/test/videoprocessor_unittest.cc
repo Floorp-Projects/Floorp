@@ -8,17 +8,17 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
-#include "modules/video_coding/codecs/test/mock/mock_packet_manipulator.h"
-#include "modules/video_coding/codecs/test/videoprocessor.h"
-#include "modules/video_coding/codecs/interface/mock/mock_video_codec_interface.h"
-#include "modules/video_coding/main/interface/video_coding.h"
-#include "testsupport/mock/mock_frame_reader.h"
-#include "testsupport/mock/mock_frame_writer.h"
-#include "testsupport/packet_reader.h"
-#include "testsupport/unittest_utils.h"
-#include "typedefs.h"
+#include "testing/gmock/include/gmock/gmock.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/modules/video_coding/codecs/interface/mock/mock_video_codec_interface.h"
+#include "webrtc/modules/video_coding/codecs/test/mock/mock_packet_manipulator.h"
+#include "webrtc/modules/video_coding/codecs/test/videoprocessor.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/test/testsupport/mock/mock_frame_reader.h"
+#include "webrtc/test/testsupport/mock/mock_frame_writer.h"
+#include "webrtc/test/testsupport/packet_reader.h"
+#include "webrtc/test/testsupport/unittest_utils.h"
+#include "webrtc/typedefs.h"
 
 using ::testing::_;
 using ::testing::AtLeast;

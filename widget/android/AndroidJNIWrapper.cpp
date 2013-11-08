@@ -129,4 +129,9 @@ extern "C" {
   JavaVM* jsjni_GetVM() {
     return mozilla::AndroidBridge::GetVM();
   }
+
+  __attribute__ ((visibility("default")))
+  JNIEnv* jsjni_GetJNIForThread() {
+    return GetJNIForThread();
+  }
 }

@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "sink_filter_ds.h"
+#include "webrtc/modules/video_capture/windows/sink_filter_ds.h"
 
-#include "trace.h"
-#include "help_functions_ds.h"
+#include "webrtc/modules/video_capture/windows/help_functions_ds.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #include <Dvdmedia.h> // VIDEOINFOHEADER2
 #include <initguid.h>
@@ -531,5 +531,5 @@ STDMETHODIMP CaptureSinkFilter::GetClassID( OUT CLSID * pCLSID )
     return S_OK;
 }
 
-} // namespace videocapturemodule
-} //namespace webrtc
+}  // namespace videocapturemodule
+}  // namespace webrtc

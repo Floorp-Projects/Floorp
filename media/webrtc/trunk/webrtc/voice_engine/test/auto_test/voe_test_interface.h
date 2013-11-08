@@ -49,5 +49,5 @@ enum ExtendedSelection {
 // Main test function
 int runAutoTest(TestType testType, ExtendedSelection extendedSel);
 
-} //  namespace voetest
+}  // namespace voetest
 #endif // WEBRTC_VOICE_ENGINE_VOE_TEST_INTERFACE_H
