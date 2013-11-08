@@ -178,7 +178,12 @@ namespace {
   {
     nsTArray<nsRefPtr<Touch> > *touches =
               static_cast<nsTArray<nsRefPtr<Touch> > *>(aTouchList);
-    touches->AppendElement(aData);
+    nsRefPtr<Touch> copy = new Touch(aData->mIdentifier,
+               aData->mRefPoint,
+               aData->mRadius,
+               aData->mRotationAngle,
+               aData->mForce);
+    touches->AppendElement(copy);
     aData->mChanged = false;
     return PL_DHASH_NEXT;
   }
@@ -441,10 +446,6 @@ MetroInput::InitTouchEventTouchList(WidgetTouchEvent* aEvent)
 bool
 MetroInput::ShouldDeliverInputToRecognizer()
 {
-  // If the event is destined for chrome deliver all events to the recognizer.
-  if (mChromeHitTestCacheForTouch) {
-    return true;
-  }
   return mRecognizerWantsEvents;
 }
 
@@ -1150,6 +1151,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
       // the touch block for content.
       if (mContentConsumingTouch) {
         mWidget->ApzContentConsumingTouch();
+        DispatchTouchCancel(event);
       } else {
         mWidget->ApzContentIgnoringTouch();
       }
@@ -1194,8 +1196,7 @@ MetroInput::DispatchTouchCancel(WidgetTouchEvent* aEvent)
   MOZ_ASSERT(aEvent);
   // Send a touchcancel for each pointer id we have a corresponding start
   // for. Note we can't rely on mTouches here since touchends remove points
-  // from it. The only time we end up in here is if the apz is consuming
-  // events, so this array shouldn't be very large.
+  // from it.
   WidgetTouchEvent touchEvent(true, NS_TOUCH_CANCEL, mWidget.Get());
   nsTArray< nsRefPtr<dom::Touch> >& touches = aEvent->touches;
   for (uint32_t i = 0; i < touches.Length(); ++i) {
@@ -1213,9 +1214,13 @@ MetroInput::DispatchTouchCancel(WidgetTouchEvent* aEvent)
   if (!touchEvent.touches.Length()) {
     return;
   }
-
-  DUMP_TOUCH_IDS("DOM(4)", &touchEvent);
-  mWidget->DispatchEvent(&touchEvent, sThrowawayStatus);
+  if (mContentConsumingTouch) {
+    DUMP_TOUCH_IDS("APZC(3)", &touchEvent);
+    mWidget->ApzReceiveInputEvent(&touchEvent);
+  } else {
+    DUMP_TOUCH_IDS("DOM(5)", &touchEvent);
+    mWidget->DispatchEvent(&touchEvent, sThrowawayStatus);
+  }
 }
 
 void

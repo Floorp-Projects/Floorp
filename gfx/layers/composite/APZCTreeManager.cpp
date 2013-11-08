@@ -16,6 +16,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/mozalloc.h"           // for operator new
 #include "mozilla/TouchEvents.h"
+#include "nsDebug.h"                    // for NS_WARNING
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
@@ -29,7 +30,8 @@ namespace layers {
 float APZCTreeManager::sDPI = 72.0;
 
 APZCTreeManager::APZCTreeManager()
-    : mTreeLock("APZCTreeLock")
+    : mTreeLock("APZCTreeLock"),
+      mTouchCount(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
   AsyncPanZoomController::InitializeGlobalState();
@@ -238,6 +240,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
     case MULTITOUCH_INPUT: {
       const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
       if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_START) {
+        mTouchCount++;
         mApzcForInputBlock = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[0].mScreenPoint));
         for (size_t i = 1; i < multiTouchInput.mTouches.Length(); i++) {
           nsRefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[i].mScreenPoint));
@@ -267,10 +270,18 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
           ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
         }
         result = mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
+      }
+      if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_CANCEL ||
+          multiTouchInput.mType == MultiTouchInput::MULTITOUCH_END) {
+        if (mTouchCount >= multiTouchInput.mTouches.Length()) {
+          mTouchCount -= multiTouchInput.mTouches.Length();
+        } else {
+          NS_WARNING("Got an unexpected touchend/touchcancel");
+          mTouchCount = 0;
+        }
         // If we have an mApzcForInputBlock and it's the end of the touch sequence
         // then null it out so we don't keep a dangling reference and leak things.
-        if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_CANCEL ||
-            (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_END && multiTouchInput.mTouches.Length() == 1)) {
+        if (mTouchCount == 0) {
           mApzcForInputBlock = nullptr;
         }
       }
@@ -333,31 +344,50 @@ nsEventStatus
 APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                                    WidgetTouchEvent* aOutEvent)
 {
-  // For computing the input for the APZC, used the cached transform.
-  // This ensures that the sequence of touch points an APZC sees in an
-  // input block are all in the same coordinate space.
-  gfx3DMatrix transformToApzc = mCachedTransformToApzcForInputBlock;
-  MultiTouchInput inputForApzc(aEvent);
-  for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
-    ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
+  nsEventStatus ret = nsEventStatus_eIgnore;
+  if (!aEvent.touches.Length()) {
+    return ret;
   }
-  nsEventStatus ret = mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
-
-  // For computing the event to pass back to Gecko, use the up-to-date transforms.
-  // This ensures that transformToApzc and transformToGecko are in sync
-  // (note that transformToGecko isn't cached).
-  gfx3DMatrix transformToGecko;
-  GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToGecko);
-  gfx3DMatrix outTransform = transformToApzc * transformToGecko;
-  for (size_t i = 0; i < aOutEvent->touches.Length(); i++) {
-    ApplyTransform(&(aOutEvent->touches[i]->mRefPoint), outTransform);
+  if (aEvent.message == NS_TOUCH_START) {
+    mTouchCount++;
+    ScreenPoint point = ScreenPoint(aEvent.touches[0]->mRefPoint.x, aEvent.touches[0]->mRefPoint.y);
+    mApzcForInputBlock = GetTouchInputBlockAPZC(aEvent, point);
   }
 
+  if (mApzcForInputBlock) {
+    // For computing the input for the APZC, used the cached transform.
+    // This ensures that the sequence of touch points an APZC sees in an
+    // input block are all in the same coordinate space.
+    gfx3DMatrix transformToApzc = mCachedTransformToApzcForInputBlock;
+    MultiTouchInput inputForApzc(aEvent);
+    for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
+      ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
+    }
+    ret = mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
+
+    // For computing the event to pass back to Gecko, use the up-to-date transforms.
+    // This ensures that transformToApzc and transformToGecko are in sync
+    // (note that transformToGecko isn't cached).
+    gfx3DMatrix transformToGecko;
+    GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToGecko);
+    gfx3DMatrix outTransform = transformToApzc * transformToGecko;
+    for (size_t i = 0; i < aOutEvent->touches.Length(); i++) {
+      ApplyTransform(&(aOutEvent->touches[i]->mRefPoint), outTransform);
+    }
+  }
   // If we have an mApzcForInputBlock and it's the end of the touch sequence
   // then null it out so we don't keep a dangling reference and leak things.
   if (aEvent.message == NS_TOUCH_CANCEL ||
-      (aEvent.message == NS_TOUCH_END && aEvent.touches.Length() == 1)) {
-    mApzcForInputBlock = nullptr;
+      aEvent.message == NS_TOUCH_END) {
+    if (mTouchCount >= aEvent.touches.Length()) {
+      mTouchCount -= aEvent.touches.Length();
+    } else {
+      NS_WARNING("Got an unexpected touchend/touchcancel");
+      mTouchCount = 0;
+    }
+    if (mTouchCount == 0) {
+      mApzcForInputBlock = nullptr;
+    }
   }
   return ret;
 }
@@ -406,16 +436,6 @@ APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       const WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      if (!touchEvent.touches.Length()) {
-        return nsEventStatus_eIgnore;
-      }
-      if (touchEvent.message == NS_TOUCH_START) {
-        ScreenPoint point = ScreenPoint(touchEvent.touches[0]->mRefPoint.x, touchEvent.touches[0]->mRefPoint.y);
-        mApzcForInputBlock = GetTouchInputBlockAPZC(touchEvent, point);
-      }
-      if (!mApzcForInputBlock) {
-        return nsEventStatus_eIgnore;
-      }
       return ProcessTouchEvent(touchEvent, aOutEvent->AsTouchEvent());
     }
     case NS_MOUSE_EVENT: {
@@ -438,16 +458,6 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent)
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      if (!touchEvent.touches.Length()) {
-        return nsEventStatus_eIgnore;
-      }
-      if (touchEvent.message == NS_TOUCH_START) {
-        ScreenPoint point = ScreenPoint(touchEvent.touches[0]->mRefPoint.x, touchEvent.touches[0]->mRefPoint.y);
-        mApzcForInputBlock = GetTouchInputBlockAPZC(touchEvent, point);
-      }
-      if (!mApzcForInputBlock) {
-        return nsEventStatus_eIgnore;
-      }
       return ProcessTouchEvent(touchEvent, &touchEvent);
     }
     default: {
