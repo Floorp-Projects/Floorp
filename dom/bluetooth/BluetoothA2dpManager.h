@@ -20,11 +20,11 @@ public:
   NS_DECL_NSIOBSERVER
 
   enum SinkState {
-    SINK_DISCONNECTED = 1,
+    SINK_UNKNOWN,
+    SINK_DISCONNECTED,
     SINK_CONNECTING,
     SINK_CONNECTED,
     SINK_PLAYING,
-    SINK_DISCONNECTING
   };
 
   static BluetoothA2dpManager* Get();
