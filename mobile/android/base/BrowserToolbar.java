@@ -129,11 +129,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private ShapedButton mTabs;
     private ImageButton mBack;
     private ImageButton mForward;
-    public ImageButton mFavicon;
-    public ImageButton mStop;
-    public ImageButton mSiteSecurity;
-    public ImageButton mGo;
-    public PageActionLayout mPageActionLayout;
+    private ImageButton mFavicon;
+    private ImageButton mStop;
+    private ImageButton mSiteSecurity;
+    private ImageButton mGo;
+    private PageActionLayout mPageActionLayout;
     private Animation mProgressSpinner;
     private TabCounter mTabsCounter;
     private GeckoImageButton mMenu;
