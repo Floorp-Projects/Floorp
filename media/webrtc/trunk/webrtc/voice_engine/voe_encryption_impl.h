@@ -35,6 +35,6 @@ private:
     voe::SharedData* _shared;
 };
 
-}   // namespace webrtc
+}  // namespace webrtc
 
 #endif  // #ifndef WEBRTC_VOICE_ENGINE_VOE_ENCRYPTION_IMPL_H

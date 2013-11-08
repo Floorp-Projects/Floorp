@@ -59,8 +59,4 @@ bool Atomic32::CompareExchange(int32_t new_value, int32_t compare_value) {
   return (old_value == compare_value);
 }
 
-int32_t Atomic32::Value() const {
-  return value_;
-}
-
 }  // namespace webrtc

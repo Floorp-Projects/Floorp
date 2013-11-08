@@ -122,6 +122,6 @@ const uint16_t VCMNackFecTable[100] = {
 
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_SOURCE_NACK_FEC_TABLES_H_

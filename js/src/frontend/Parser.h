@@ -367,7 +367,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool reportWithOffset(ParseReportKind kind, bool strict, uint32_t offset, unsigned errorNumber,
                           ...);
 
-    Parser(ExclusiveContext *cx, LifoAlloc *alloc, const CompileOptions &options,
+    Parser(ExclusiveContext *cx, LifoAlloc *alloc, const ReadOnlyCompileOptions &options,
            const jschar *chars, size_t length, bool foldConstants,
            Parser<SyntaxParseHandler> *syntaxParser,
            LazyScript *lazyOuterFunction);
@@ -471,7 +471,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     virtual bool strictMode() { return pc->sc->strict; }
 
-    const CompileOptions &options() const {
+    const ReadOnlyCompileOptions &options() const {
         return tokenStream.options();
     }
 

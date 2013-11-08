@@ -106,14 +106,14 @@ public:
         , m_lastConstDelta(0)
         , m_flushCount(0)
     {
-        m_pool = static_cast<uint32_t*>(malloc(maxPoolSize));
-        m_mask = static_cast<char*>(malloc(maxPoolSize / sizeof(uint32_t)));
+        m_pool = static_cast<uint32_t*>(js_malloc(maxPoolSize));
+        m_mask = static_cast<char*>(js_malloc(maxPoolSize / sizeof(uint32_t)));
     }
 
     ~AssemblerBufferWithConstantPool()
     {
-        free(m_mask);
-        free(m_pool);
+        js_free(m_mask);
+        js_free(m_pool);
     }
 
     void ensureSpace(int space)

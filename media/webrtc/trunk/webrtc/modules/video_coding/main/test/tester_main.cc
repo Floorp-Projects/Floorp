@@ -12,14 +12,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "google/gflags.h"
+#include "gflags/gflags.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
-#include "webrtc/modules/video_coding/main/test/receiver_tests.h"
-#include "webrtc/modules/video_coding/main/test/normal_test.h"
 #include "webrtc/modules/video_coding/main/test/codec_database_test.h"
 #include "webrtc/modules/video_coding/main/test/generic_codec_test.h"
 #include "webrtc/modules/video_coding/main/test/media_opt_test.h"
+#include "webrtc/modules/video_coding/main/test/normal_test.h"
 #include "webrtc/modules/video_coding/main/test/quality_modes_test.h"
+#include "webrtc/modules/video_coding/main/test/receiver_tests.h"
 #include "webrtc/modules/video_coding/main/test/test_util.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
@@ -121,9 +121,6 @@ int main(int argc, char **argv) {
       ret = RtpPlayMT(args);
       break;
     case 9:
-      ret = DecodeFromStorageTest(args);
-      break;
-    case 10:
       qualityModeTest(args);
       break;
     default:

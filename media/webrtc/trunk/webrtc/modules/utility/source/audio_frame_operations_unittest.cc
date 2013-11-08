@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
-#include "audio_frame_operations.h"
-#include "module_common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/utility/interface/audio_frame_operations.h"
 
 namespace webrtc {
 namespace {

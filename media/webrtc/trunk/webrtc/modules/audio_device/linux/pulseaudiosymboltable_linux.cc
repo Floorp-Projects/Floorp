@@ -25,7 +25,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "pulseaudiosymboltable_linux.h"
+#include "webrtc/modules/audio_device/linux/pulseaudiosymboltable_linux.h"
 
 namespace webrtc_adm_linux_pulse {
 

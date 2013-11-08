@@ -44,6 +44,6 @@ class VoEStressTest {
   ThreadWrapper* _ptrExtraApiThread;
 };
 
-} //  namespace voetest
+}  // namespace voetest
 
 #endif // WEBRTC_VOICE_ENGINE_VOE_STRESS_TEST_H

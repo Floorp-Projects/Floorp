@@ -8,10 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "gtest/gtest.h"
+#include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/media_file/interface/media_file.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/gtest_disable.h"
 
 class MediaFileTest : public testing::Test {
  protected:
@@ -27,7 +28,7 @@ class MediaFileTest : public testing::Test {
   webrtc::MediaFile* media_file_;
 };
 
-TEST_F(MediaFileTest, StartPlayingAudioFileWithoutError) {
+TEST_F(MediaFileTest, DISABLED_ON_ANDROID(StartPlayingAudioFileWithoutError)) {
   // TODO(leozwang): Use hard coded filename here, we want to
   // loop through all audio files in future
   const std::string audio_file = webrtc::test::ProjectRootPath() +

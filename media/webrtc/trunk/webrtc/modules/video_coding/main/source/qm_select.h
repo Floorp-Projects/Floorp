@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_QM_SELECT_H_
 #define WEBRTC_MODULES_VIDEO_CODING_QM_SELECT_H_
 
-#include "common_types.h"
-#include "typedefs.h"
+#include "webrtc/common_types.h"
+#include "webrtc/typedefs.h"
 
 /******************************************************/
 /* Quality Modes: Resolution and Robustness settings  */
@@ -370,6 +370,5 @@ class VCMQmRobustness : public VCMQmMethod {
   uint8_t prev_packet_loss_;
   uint8_t prev_code_rate_delta_;
 };
-}   // namespace webrtc
+}  // namespace webrtc
 #endif  // WEBRTC_MODULES_VIDEO_CODING_QM_SELECT_H_
-

@@ -17,7 +17,6 @@
 #include "nsStyleLinkElement.h"
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIWebShellServices.h"
 #include "nsContentUtils.h"
@@ -653,9 +652,7 @@ nsHtml5TreeOpExecutor::IsScriptEnabled()
   // Getting context is tricky if the document hasn't had its
   // GlobalObject set yet
   if (!globalObject) {
-    nsCOMPtr<nsIScriptGlobalObjectOwner> owner = do_GetInterface(mDocShell);
-    NS_ENSURE_TRUE(owner, true);
-    globalObject = do_QueryInterface(mDocument->GetWindow());
+    globalObject = mDocShell->GetScriptGlobalObject();
     NS_ENSURE_TRUE(globalObject, true);
   }
   nsIScriptContext *scriptContext = globalObject->GetContext();

@@ -10,9 +10,10 @@
 
 #include "webrtc/tools/frame_analyzer/video_quality_analysis.h"
 
-#include <cassert>
-#include <cstdio>
-#include <cstdlib>
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <string>
 
 #define STATS_LINE_LENGTH 32
@@ -229,8 +230,14 @@ void RunAnalysis(const char* reference_file_name, const char* test_file_name,
   delete[] reference_frame;
 }
 
-void PrintMaxRepeatedAndSkippedFrames(const char* stats_file_name) {
-  FILE* stats_file = fopen(stats_file_name, "r");
+void PrintMaxRepeatedAndSkippedFrames(const std::string& label,
+                                      const std::string& stats_file_name) {
+  FILE* stats_file = fopen(stats_file_name.c_str(), "r");
+  if (stats_file == NULL) {
+    fprintf(stderr, "Couldn't open stats file for reading: %s\n",
+            stats_file_name.c_str());
+    return;
+  }
   char line[STATS_LINE_LENGTH];
 
   int repeated_frames = 1;
@@ -264,24 +271,33 @@ void PrintMaxRepeatedAndSkippedFrames(const char* stats_file_name) {
     }
     previous_frame_number = decoded_frame_number;
   }
-  fprintf(stdout, "Max_repeated:%d Max_skipped:%d\n", max_repeated_frames,
+  fprintf(stdout, "RESULT Max_repeated: %s= %d\n", label.c_str(),
+          max_repeated_frames);
+  fprintf(stdout, "RESULT Max_skipped: %s= %d\n", label.c_str(),
           max_skipped_frames);
+  fclose(stats_file);
 }
 
-void PrintAnalysisResults(ResultsContainer* results) {
+void PrintAnalysisResults(const std::string& label, ResultsContainer* results) {
   std::vector<AnalysisResult>::iterator iter;
-  int frames_counter = 0;
 
-  fprintf(stdout, "BSTATS\n");
-  for (iter = results->frames.begin(); iter != results->frames.end(); ++iter) {
-    ++frames_counter;
-    fprintf(stdout, "%f %f;", iter->psnr_value, iter->ssim_value);
-  }
-  fprintf(stdout, "ESTATS\n");
-  if (frames_counter > 0) {
-    fprintf(stdout, "Unique_frames_count:%d\n", frames_counter);
-  } else {
-    fprintf(stdout, "Unique_frames_count:undef\n");
+  fprintf(stdout, "RESULT Unique_frames_count: %s= %u\n", label.c_str(),
+          static_cast<unsigned int>(results->frames.size()));
+
+  if (results->frames.size() > 0u) {
+    fprintf(stdout, "RESULT PSNR: %s= [", label.c_str());
+    for (iter = results->frames.begin(); iter != results->frames.end() - 1;
+         ++iter) {
+      fprintf(stdout, "%f,", iter->psnr_value);
+    }
+    fprintf(stdout, "%f] dB\n", iter->psnr_value);
+
+    fprintf(stdout, "RESULT SSIM: %s= [", label.c_str());
+    for (iter = results->frames.begin(); iter != results->frames.end() - 1;
+         ++iter) {
+      fprintf(stdout, "%f,", iter->ssim_value);
+    }
+    fprintf(stdout, "%f]\n", iter->ssim_value);
   }
 }
 

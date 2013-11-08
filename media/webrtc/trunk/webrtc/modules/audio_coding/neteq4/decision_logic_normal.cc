@@ -171,8 +171,8 @@ Operations DecisionLogicNormal::FuturePacketAvailable(
     }
   }
 
-  const int samples_left = sync_buffer.FutureLength() -
-      expand.overlap_length();
+  const int samples_left = static_cast<int>(sync_buffer.FutureLength() -
+      expand.overlap_length());
   const int cur_size_samples = samples_left +
       packet_buffer_.NumPacketsInBuffer() * decoder_frame_length;
 

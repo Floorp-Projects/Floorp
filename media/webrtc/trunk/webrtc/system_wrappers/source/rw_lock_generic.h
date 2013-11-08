@@ -12,6 +12,7 @@
 #define WEBRTC_SYSTEM_WRAPPERS_SOURCE_RW_LOCK_GENERIC_H_
 
 #include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -23,11 +24,11 @@ class RWLockGeneric : public RWLockWrapper {
   RWLockGeneric();
   virtual ~RWLockGeneric();
 
-  virtual void AcquireLockExclusive();
-  virtual void ReleaseLockExclusive();
+  virtual void AcquireLockExclusive() OVERRIDE;
+  virtual void ReleaseLockExclusive() OVERRIDE;
 
-  virtual void AcquireLockShared();
-  virtual void ReleaseLockShared();
+  virtual void AcquireLockShared() OVERRIDE;
+  virtual void ReleaseLockShared() OVERRIDE;
 
  private:
   CriticalSectionWrapper* critical_section_;

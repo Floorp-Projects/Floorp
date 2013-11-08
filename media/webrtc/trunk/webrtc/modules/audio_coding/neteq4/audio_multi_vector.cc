@@ -73,6 +73,11 @@ template<typename T>
 void AudioMultiVector<T>::PushBackInterleaved(const T* append_this,
                                               size_t length) {
   assert(length % Channels() == 0);
+  if (Channels() == 1) {
+    // Special case to avoid extra allocation and data shuffling.
+    channels_[0]->PushBack(append_this, length);
+    return;
+  }
   size_t length_per_channel = length / Channels();
   T* temp_array = new T[length_per_channel];  // Intermediate storage.
   for (size_t channel = 0; channel < Channels(); ++channel) {

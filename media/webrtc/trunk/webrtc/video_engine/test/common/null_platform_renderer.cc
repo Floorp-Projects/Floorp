@@ -20,4 +20,3 @@ VideoRenderer* VideoRenderer::CreatePlatformRenderer(const char* window_title,
 }
 }  // test
 }  // webrtc
-
