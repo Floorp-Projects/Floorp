@@ -9,7 +9,6 @@ findbar {
   background: @scopeBarBackground@;
   border-top: @scopeBarSeparatorBorder@;
   min-width: 1px;
-  padding: 4px 2px;
   transition-property: margin-bottom, opacity, visibility;
   transition-duration: 150ms, 150ms, 0s;
   transition-timing-function: ease-in-out, ease-in-out, linear;
@@ -30,6 +29,12 @@ findbar:-moz-lwtheme {
   border-style: none;
 }
 
+.findbar-container {
+  -moz-padding-start: 2px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
 label.findbar-find-fast {
   color: @scopeBarTitleColor@;
   margin: 0;
@@ -44,8 +49,9 @@ label.findbar-find-fast:-moz-lwtheme,
 }
 
 .findbar-closebutton {
-  padding: 0;
-  margin: 0 4px;
+  -moz-margin-start: 4px;
+  -moz-padding-start: 0;
+  -moz-padding-end: 8px;
   list-style-image: url("chrome://global/skin/icons/close.png");
   border: none;
   -moz-image-region: rect(0, 16px, 16px, 0);

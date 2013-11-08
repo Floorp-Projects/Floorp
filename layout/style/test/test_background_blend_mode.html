@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for miscellaneous computed style issues</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for miscellaneous computed style issues **/
+
+var frame_container = document.getElementById("display");
+var noframe_container = document.getElementById("content");
+
+(function test_bug_841601() {
+  // Test handling of background-blend-mode
+  var p = document.createElement("p");
+  var cs = getComputedStyle(p, "");
+
+  frame_container.appendChild(p);
+  is(cs.backgroundBlendMode, "normal",
+     "default value of background-blend-mode");
+
+  p.setAttribute("style", "background-blend-mode: normal, invalid");
+  cs = getComputedStyle(p, "");
+  is(cs.backgroundBlendMode, "normal",
+     "set invalid blendmode");
+
+  p.setAttribute("style", "background-blend-mode: normal, normal");
+  cs = getComputedStyle(p, "");
+  is(cs.backgroundBlendMode, "normal, normal",
+     "set normal blendmode twice");
+
+  p.setAttribute("style", "background-blend-mode: normal, multiply, screen, overlay, darken, lighten, color-dodge, color-burn, hard-light, soft-light, difference, exclusion, hue, saturation, color, luminosity");
+  cs = getComputedStyle(p, "");
+  is(cs.backgroundBlendMode, "normal, multiply, screen, overlay, darken, lighten, color-dodge, color-burn, hard-light, soft-light, difference, exclusion, hue, saturation, color, luminosity",
+     "set all blendmodes");
+
+  p.parentNode.removeChild(p);
+})();
+</script>
+</pre>
+</body>
+</html>

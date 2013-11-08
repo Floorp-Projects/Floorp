@@ -2011,6 +2011,14 @@ nsComputedDOMStyle::DoGetBackgroundInlinePolicy()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetBackgroundBlendMode()
+{
+  return GetBackgroundList(&nsStyleBackground::Layer::mBlendMode,
+                           &nsStyleBackground::mBlendModeCount,
+                           nsCSSProps::kBlendModeKTable);
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetBackgroundOrigin()
 {
   return GetBackgroundList(&nsStyleBackground::Layer::mOrigin,
