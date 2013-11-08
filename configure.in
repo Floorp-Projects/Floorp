@@ -9127,9 +9127,6 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     AC_OUTPUT_SUBDIRS(nsprpub)
 
     # .. and restore them
-    unset CFLAGS
-    unset CPPFLAGS
-    unset LDFLAGS
     CFLAGS="$_SAVE_CFLAGS"
     CPPFLAGS="$_SAVE_CPPFLAGS"
     LDFLAGS="$_SAVE_LDFLAGS"
