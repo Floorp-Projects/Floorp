@@ -11,6 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_AUDIO_CONFERENCE_MIXER_IMPL_H_
 #define WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_AUDIO_CONFERENCE_MIXER_IMPL_H_
 
+#include <map>
+
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_conference_mixer/interface/audio_conference_mixer.h"
 #include "webrtc/modules/audio_conference_mixer/source/level_indicator.h"
@@ -99,9 +101,11 @@ private:
     // rampOutList contain AudioFrames corresponding to an audio stream that
     // used to be mixed but shouldn't be mixed any longer. These AudioFrames
     // should be ramped out over this AudioFrame to avoid audio discontinuities.
-    void UpdateToMix(ListWrapper& mixList, ListWrapper& rampOutList,
-                     MapWrapper& mixParticipantList,
-                     uint32_t& maxAudioFrameCounter);
+    void UpdateToMix(
+        ListWrapper& mixList,
+        ListWrapper& rampOutList,
+        std::map<int, MixerParticipant*>* mixParticipantList,
+        uint32_t& maxAudioFrameCounter);
 
     // Return the lowest mixing frequency that can be used without having to
     // downsample any audio.
@@ -113,7 +117,8 @@ private:
 
     // Update the MixHistory of all MixerParticipants. mixedParticipantsList
     // should contain a map of MixerParticipants that have been mixed.
-    void UpdateMixedStatus(MapWrapper& mixedParticipantsList);
+    void UpdateMixedStatus(
+        std::map<int, MixerParticipant*>& mixedParticipantsList);
 
     // Clears audioFrameList and reclaims all memory associated with it.
     void ClearAudioFrameList(ListWrapper& audioFrameList);
@@ -203,6 +208,6 @@ private:
     // Used for inhibiting saturation in mixing.
     scoped_ptr<AudioProcessing> _limiter;
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_AUDIO_CONFERENCE_MIXER_IMPL_H_

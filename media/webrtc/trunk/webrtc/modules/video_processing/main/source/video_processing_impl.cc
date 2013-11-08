@@ -13,7 +13,7 @@
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
-#include <cassert>
+#include <assert.h>
 
 namespace webrtc {
 
@@ -290,4 +290,4 @@ VideoProcessingModuleImpl::EnableContentAnalysis(bool enable)
     _framePreProcessor.EnableContentAnalysis(enable);
 }
 
-} //namespace
+}  // namespace

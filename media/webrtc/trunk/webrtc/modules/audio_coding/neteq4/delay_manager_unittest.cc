@@ -21,6 +21,7 @@
 namespace webrtc {
 
 using ::testing::Return;
+using ::testing::_;
 
 class DelayManagerTest : public ::testing::Test {
  protected:
@@ -193,9 +194,7 @@ TEST_F(DelayManagerTest, UpdatePeakFound) {
   EXPECT_EQ(5 << 8, higher);
 }
 
-TEST_F(DelayManagerTest, ExtraDelay) {
-  const int kExtraDelayMs = 200;
-  dm_->set_extra_delay_ms(kExtraDelayMs);
+TEST_F(DelayManagerTest, TargetDelay) {
   SetPacketAudioLength(kFrameSizeMs);
   // First packet arrival.
   InsertNextPacket();
@@ -208,16 +207,74 @@ TEST_F(DelayManagerTest, ExtraDelay) {
   EXPECT_CALL(detector_, Update(1, 1))
       .WillOnce(Return(false));
   InsertNextPacket();
-  const int kExpectedTarget = 1 + kExtraDelayMs / kFrameSizeMs;
+  const int kExpectedTarget = 1;
   EXPECT_EQ(kExpectedTarget << 8, dm_->TargetLevel());  // In Q8.
   EXPECT_EQ(1, dm_->base_target_level());
   int lower, higher;
   dm_->BufferLimits(&lower, &higher);
-  // Expect |lower| to be 75% of base target level + extra delay, and |higher|
-  // to be target level + extra delay, but at least leave 20 ms headroom from
-  // lower.
-  EXPECT_EQ((1 << 8) * 3 / 4 + (kExtraDelayMs << 8) / kFrameSizeMs, lower);
+  // Expect |lower| to be 75% of base target level, and |higher| to be
+  // lower + 20 ms headroom.
+  EXPECT_EQ((1 << 8) * 3 / 4, lower);
   EXPECT_EQ(lower + (20 << 8) / kFrameSizeMs, higher);
+}
+
+TEST_F(DelayManagerTest, MaxAndRequiredDelay) {
+  const int kExpectedTarget = 5;
+  const int kTimeIncrement = kExpectedTarget * kFrameSizeMs;
+  SetPacketAudioLength(kFrameSizeMs);
+  // First packet arrival.
+  InsertNextPacket();
+  // Second packet arrival.
+  // Expect detector update method to be called once with inter-arrival time
+  // equal to |kExpectedTarget| packet. Return true to indicate peaks found.
+  EXPECT_CALL(detector_, Update(kExpectedTarget, _))
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(detector_, MaxPeakHeight())
+      .WillRepeatedly(Return(kExpectedTarget));
+  IncreaseTime(kTimeIncrement);
+  InsertNextPacket();
+
+  // No limit is set.
+  EXPECT_EQ(kExpectedTarget << 8, dm_->TargetLevel());
+
+  int kMaxDelayPackets = kExpectedTarget - 2;
+  int kMaxDelayMs = kMaxDelayPackets * kFrameSizeMs;
+  EXPECT_TRUE(dm_->SetMaximumDelay(kMaxDelayMs));
+  IncreaseTime(kTimeIncrement);
+  InsertNextPacket();
+  EXPECT_EQ(kExpectedTarget * kFrameSizeMs, dm_->least_required_delay_ms());
+  EXPECT_EQ(kMaxDelayPackets << 8, dm_->TargetLevel());
+
+  // Target level at least should be one packet.
+  EXPECT_FALSE(dm_->SetMaximumDelay(kFrameSizeMs - 1));
+}
+
+TEST_F(DelayManagerTest, MinAndRequiredDelay) {
+  const int kExpectedTarget = 5;
+  const int kTimeIncrement = kExpectedTarget * kFrameSizeMs;
+  SetPacketAudioLength(kFrameSizeMs);
+  // First packet arrival.
+  InsertNextPacket();
+  // Second packet arrival.
+  // Expect detector update method to be called once with inter-arrival time
+  // equal to |kExpectedTarget| packet. Return true to indicate peaks found.
+  EXPECT_CALL(detector_, Update(kExpectedTarget, _))
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(detector_, MaxPeakHeight())
+      .WillRepeatedly(Return(kExpectedTarget));
+  IncreaseTime(kTimeIncrement);
+  InsertNextPacket();
+
+  // No limit is applied.
+  EXPECT_EQ(kExpectedTarget << 8, dm_->TargetLevel());
+
+  int kMinDelayPackets = kExpectedTarget + 2;
+  int kMinDelayMs = kMinDelayPackets * kFrameSizeMs;
+  dm_->SetMinimumDelay(kMinDelayMs);
+  IncreaseTime(kTimeIncrement);
+  InsertNextPacket();
+  EXPECT_EQ(kExpectedTarget * kFrameSizeMs, dm_->least_required_delay_ms());
+  EXPECT_EQ(kMinDelayPackets << 8, dm_->TargetLevel());
 }
 
 TEST_F(DelayManagerTest, Failures) {
@@ -226,6 +283,15 @@ TEST_F(DelayManagerTest, Failures) {
   // Wrong packet size.
   EXPECT_EQ(-1, dm_->SetPacketAudioLength(0));
   EXPECT_EQ(-1, dm_->SetPacketAudioLength(-1));
+
+  // Minimum delay higher than a maximum delay is not accepted.
+  EXPECT_TRUE(dm_->SetMaximumDelay(10));
+  EXPECT_FALSE(dm_->SetMinimumDelay(20));
+
+  // Maximum delay less than minimum delay is not accepted.
+  EXPECT_TRUE(dm_->SetMaximumDelay(100));
+  EXPECT_TRUE(dm_->SetMinimumDelay(80));
+  EXPECT_FALSE(dm_->SetMaximumDelay(60));
 }
 
 }  // namespace webrtc

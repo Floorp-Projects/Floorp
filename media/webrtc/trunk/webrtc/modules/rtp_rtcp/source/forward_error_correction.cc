@@ -10,10 +10,11 @@
 
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
 
-#include <algorithm>
-#include <cassert>
+#include <assert.h>
 #include <cstdlib> // for abs()
-#include <cstring>
+#include <string.h>
+
+#include <algorithm>
 #include <iterator>
 
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction_internal.h"
@@ -41,6 +42,16 @@ enum {
   kMaxFecPackets = ForwardErrorCorrection::kMaxMediaPackets
 };
 
+int32_t ForwardErrorCorrection::Packet::AddRef() { return ++ref_count_; }
+
+int32_t ForwardErrorCorrection::Packet::Release() {
+  int32_t ref_count;
+  ref_count = --ref_count_;
+  if (ref_count == 0)
+    delete this;
+  return ref_count;
+}
+
 // Used to link media packets to their protecting FEC packets.
 //
 // TODO(holmer): Refactor into a proper class.
@@ -66,6 +77,12 @@ bool ForwardErrorCorrection::SortablePacket::LessThan(
     const SortablePacket* first, const SortablePacket* second) {
   return IsNewerSequenceNumber(second->seq_num, first->seq_num);
 }
+
+ForwardErrorCorrection::ReceivedPacket::ReceivedPacket() {}
+ForwardErrorCorrection::ReceivedPacket::~ReceivedPacket() {}
+
+ForwardErrorCorrection::RecoveredPacket::RecoveredPacket() {}
+ForwardErrorCorrection::RecoveredPacket::~RecoveredPacket() {}
 
 ForwardErrorCorrection::ForwardErrorCorrection(int32_t id)
     : id_(id),

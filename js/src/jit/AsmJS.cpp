@@ -1323,7 +1323,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         JS_ASSERT(errorOffset_ == UINT32_MAX);
         JS_ASSERT(str);
         errorOffset_ = offset;
-        errorString_ = strdup(str);
+        errorString_ = js_strdup(cx_, str);
         return false;
     }
 

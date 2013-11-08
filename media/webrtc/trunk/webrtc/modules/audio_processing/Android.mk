@@ -114,7 +114,7 @@ LOCAL_MODULE_TAGS := tests
 LOCAL_CPP_EXTENSION := .cc
 LOCAL_SRC_FILES:= \
     $(call all-proto-files-under, test) \
-    test/unit_test.cc
+    test/audio_processing_unittest.cc
 
 # Flags passed to both C and C++ files.
 LOCAL_CFLAGS := \

@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_coding.h"
-#include "trace.h"
-#include "trace_event.h"
-#include "generic_decoder.h"
-#include "internal_defines.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/modules/video_coding/main/source/generic_decoder.h"
+#include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/trace_event.h"
 
 namespace webrtc {
 
@@ -39,6 +39,12 @@ void VCMDecodedFrameCallback::SetUserReceiveCallback(
 {
     CriticalSectionScoped cs(_critSect);
     _receiveCallback = receiveCallback;
+}
+
+VCMReceiveCallback* VCMDecodedFrameCallback::UserReceiveCallback()
+{
+    CriticalSectionScoped cs(_critSect);
+    return _receiveCallback;
 }
 
 int32_t VCMDecodedFrameCallback::Decoded(I420VideoFrame& decodedImage)
@@ -127,9 +133,7 @@ _frameInfos(),
 _nextFrameInfoIdx(0),
 _decoder(decoder),
 _codecType(kVideoCodecUnknown),
-_isExternal(isExternal),
-_requireKeyFrame(false),
-_keyFrameDecoded(false)
+_isExternal(isExternal)
 {
 }
 
@@ -138,11 +142,8 @@ VCMGenericDecoder::~VCMGenericDecoder()
 }
 
 int32_t VCMGenericDecoder::InitDecode(const VideoCodec* settings,
-                                            int32_t numberOfCores,
-                                            bool requireKeyFrame)
+                                      int32_t numberOfCores)
 {
-    _requireKeyFrame = requireKeyFrame;
-    _keyFrameDecoded = false;
     _codecType = settings->codecType;
 
     return _decoder.InitDecode(settings, numberOfCores);
@@ -151,15 +152,6 @@ int32_t VCMGenericDecoder::InitDecode(const VideoCodec* settings,
 int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame,
                                         int64_t nowMs)
 {
-    if (_requireKeyFrame &&
-        !_keyFrameDecoded &&
-        frame.FrameType() != kVideoFrameKey &&
-        frame.FrameType() != kVideoFrameGolden)
-    {
-        // Require key frame is enabled, meaning that one key frame must be decoded
-        // before we can decode delta frames.
-        return VCM_CODEC_ERROR;
-    }
     _frameInfos[_nextFrameInfoIdx].decodeStartTimeMs = nowMs;
     _frameInfos[_nextFrameInfoIdx].renderTimeMs = frame.RenderTimeMs();
     _callback->Map(frame.TimeStamp(), &_frameInfos[_nextFrameInfoIdx]);
@@ -188,22 +180,17 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame,
         // No output
         _callback->Pop(frame.TimeStamp());
     }
-    // Update the key frame decoded variable so that we know whether or not we've decoded a key frame since reset.
-    _keyFrameDecoded = (_keyFrameDecoded ||
-        frame.FrameType() == kVideoFrameKey);
     return ret;
 }
 
 int32_t
 VCMGenericDecoder::Release()
 {
-    _keyFrameDecoded = false;
     return _decoder.Release();
 }
 
 int32_t VCMGenericDecoder::Reset()
 {
-    _keyFrameDecoded = false;
     return _decoder.Reset();
 }
 
@@ -223,4 +210,4 @@ bool VCMGenericDecoder::External() const
     return _isExternal;
 }
 
-} // namespace
+}  // namespace

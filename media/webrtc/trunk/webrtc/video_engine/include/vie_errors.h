@@ -87,8 +87,6 @@ enum ViEErrors {
   kViENetworkSendCodecNotSet,            // SetSendGQoS- Need to set the send codec first.
   kViENetworkServiceTypeNotSupported,    // SetSendGQoS
   kViENetworkNotSupported,               // SetSendGQoS Not supported on this OS.
-  kViENetworkObserverAlreadyRegistered,  // RegisterObserver
-  kViENetworkObserverNotRegistered,      // SetPeriodicDeadOrAliveStatus - Need to call RegisterObserver first, DeregisterObserver if no observer is registered.
   kViENetworkUnknownError,               // An unknown error has occurred. Check the log file.
 
   // ViERTP_RTCP.

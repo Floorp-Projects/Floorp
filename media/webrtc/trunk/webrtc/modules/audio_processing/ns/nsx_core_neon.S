@@ -20,8 +20,6 @@ GLOBAL_FUNCTION WebRtcNsx_NoiseEstimationNeon
 GLOBAL_FUNCTION WebRtcNsx_PrepareSpectrumNeon
 GLOBAL_FUNCTION WebRtcNsx_SynthesisUpdateNeon
 GLOBAL_FUNCTION WebRtcNsx_AnalysisUpdateNeon
-GLOBAL_FUNCTION WebRtcNsx_DenormalizeNeon
-GLOBAL_FUNCTION WebRtcNsx_CreateComplexBufferNeon
 GLOBAL_LABEL WebRtcNsx_kLogTable
 GLOBAL_LABEL WebRtcNsx_kCounterDiv
 GLOBAL_LABEL WebRtcNsx_kLogTableFrac
@@ -487,88 +485,33 @@ LOOP_MAGNLEN:
   rsb r0, r0, #0
   strh r0, [r1], #2           @ Store to freq_buf[1]. Now r1 -> &freq_buf[2]
 
-  add r2, r1, r7, lsl #2
-  sub r2, #36                 @ &freq_buf[-16]
-
-  mvn r12, #0x1F              @ -32
-
 @ Process and write (inst->anaLen2 * 4 - 32) samples into freq_buf[].
 LOOP_ANALEN2:
-  vld1.16 d3, [r3]!     @ inst->real[], starting from inst->real[1]
-  vld1.16 d1, [r3]!
-  vmov.s16 d4, d3
-  vld1.16 d2, [r6]!     @ inst->imag[], starting from inst->imag[1]
-  vmov.s16 d6, d1
-  vneg.s16 d5, d2
-  vld1.16 d0, [r6]!
-  vneg.s16 d7, d0
-  vzip.16 d1, d0
-  vzip.16 d3, d2
+  vld1.16 d5, [r6]!     @ inst->imag[], starting from inst->imag[1]
+  vld1.16 d7, [r6]!
+  vneg.s16 d5, d5
+  vld1.16 d4, [r3]!     @ inst->real[], starting from inst->real[1]
+  vneg.s16 d7, d7
+  vld1.16 d6, [r3]!
   vzip.16 d4, d5
-  vrev64.32 q8, q0
-  vrev64.32 q9, q1
   vzip.16 d6, d7
   subs r5, #1
-  vst1.16 {d16, d17, d18, d19}, [r2], r12
   vst1.16 {d4, d5, d6, d7}, [r1]!
   bgt LOOP_ANALEN2
 
 @ Process and write 32 samples into freq_buf[]. We need to adjust the pointers
 @ to overwrite the 2 starting samples in the back half of the buffer.
-  sub r0, r3, #2
-  sub r4, r6, #2
-  add r2, #4
-  vld1.16 d3, [r3]!     @ inst->real[], starting from inst->real[1]
-  vld1.16 d1, [r3]!
-  vmov.s16 d4, d3
-  vld1.16 d2, [r6]!     @ inst->imag[], starting from inst->imag[1]
-  vmov.s16 d6, d1
-  vld1.16 d0, [r6]!
-  vneg.s16 d5, d2
-  vld1.16 d23, [r0]!     @ inst->real[], starting from inst->real[1]
-  vneg.s16 d7, d0
-  vld1.16 d21, [r0]
+  vld1.16 d5, [r6]!     @ inst->imag[], starting from inst->imag[1]
+  vld1.16 d7, [r6]!
+  vneg.s16 d5, d5
+  vld1.16 d4, [r3]!     @ inst->real[], starting from inst->real[1]
+  vneg.s16 d7, d7
+  vld1.16 d6, [r3]!
   vzip.16 d4, d5
-  vld1.16 d22, [r4]!     @ inst->imag[], starting from inst->imag[1]
-  vld1.16 d20, [r4]
-  vzip.16 d23, d22
-  vzip.16 d21, d20
   vzip.16 d6, d7
-  vrev64.32 q8, q10
-  vrev64.32 q9, q11
   vst1.16 {d4, d5, d6, d7}, [r1]
-  vst1.16 {d16, d17, d18, d19}, [r2]
 
   pop {r4-r9}
-  bx r14
-
-@ void WebRtcNsx_DenormalizeNeon(NsxInst_t* inst, int16_t* in, int factor);
-.align 2
-DEFINE_FUNCTION WebRtcNsx_DenormalizeNeon
-  movw r12, #offset_nsx_normData
-  movw r3, #offset_nsx_real
-  ldr r12, [r0, r12]          @ inst->normData
-  add r3, r0                  @ &inst->real[0]
-  sub r2, r12
-  vdup.32 q10, r2
-
-  movw r2, #offset_nsx_anaLen
-  ldrsh r2, [r0, r2]          @ inst->anaLen
-  add r0, r3, r2, lsl #1      @ &inst->real[inst->anaLen]
-
-LOOP_ANALEN:
-  vld2.16 {d0, d1}, [r1]!     @ &in[]
-  vld2.16 {d2, d3}, [r1]!     @ &in[]
-  vmovl.s16 q2, d0
-  vmovl.s16 q3, d2
-  vshl.s32 q2, q10
-  vshl.s32 q3, q10
-  vqmovn.s32 d0, q2
-  vqmovn.s32 d1, q3
-  vst1.16 {d0, d1}, [r3]!     @ inst->real[]
-  cmp r3, r0
-  blt LOOP_ANALEN
-
   bx r14
 
 @ void SynthesisUpdateNeon(NsxInst_t* inst,
@@ -703,34 +646,4 @@ LOOP_WINDOW_DATA:
 
 POST_LOOP_WINDOW_DATA:
   pop {r4-r6}
-  bx r14
-
-@ void CreateComplexBufferNeon(NsxInst_t* inst, int16_t* in, int16_t* out);
-.align 2
-DEFINE_FUNCTION WebRtcNsx_CreateComplexBufferNeon
-  movw r3, #offset_nsx_anaLen
-  movw r12, #offset_nsx_normData
-  ldrsh r3, [r0, r3]                  @ inst->anaLen
-  ldr r12, [r0, r12]                  @ inst->normData
-  add r3, r1, r3, lsl #1              @ &in[inst->anaLen]
-
-  vmov.i16 d7, #0                     @ For writing to imaginary parts.
-  vmov.i16 d5, #0                     @ For writing to imaginary parts.
-  vdup.i16 q10, r12
-
-LOOP_CREATE_COMPLEX_BUFFER:           @ Unrolled by 16.
-  vld1.16 {d0, d1, d2, d3}, [r1]!     @ in[]
-  cmp r1, r3
-  vshl.s16 q0, q10
-  vshl.s16 q1, q10
-  vmov d4, d1
-  vmov d1, d5
-  vmov d6, d3
-  vmov d3, d7
-  vst2.16 {d0, d1}, [r2]!
-  vst2.16 {d4, d5}, [r2]!
-  vst2.16 {d2, d3}, [r2]!
-  vst2.16 {d6, d7}, [r2]!
-  blt LOOP_CREATE_COMPLEX_BUFFER
-
   bx r14

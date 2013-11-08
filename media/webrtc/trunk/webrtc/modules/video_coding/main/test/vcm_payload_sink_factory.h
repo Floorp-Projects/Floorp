@@ -29,8 +29,7 @@ class VcmPayloadSinkFactory : public PayloadSinkFactoryInterface {
                         Clock* clock, bool protection_enabled,
                         VCMVideoProtection protection_method,
                         uint32_t rtt_ms, uint32_t render_delay_ms,
-                        uint32_t min_playout_delay_ms,
-                        bool use_frame_storage);
+                        uint32_t min_playout_delay_ms);
   virtual ~VcmPayloadSinkFactory();
 
   // PayloadSinkFactoryInterface
@@ -54,7 +53,6 @@ class VcmPayloadSinkFactory : public PayloadSinkFactoryInterface {
   uint32_t rtt_ms_;
   uint32_t render_delay_ms_;
   uint32_t min_playout_delay_ms_;
-  bool use_frame_storage_;
   scoped_ptr<NullEventFactory> null_event_factory_;
   scoped_ptr<CriticalSectionWrapper> crit_sect_;
   Sinks sinks_;

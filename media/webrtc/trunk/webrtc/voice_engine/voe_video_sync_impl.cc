@@ -58,15 +58,15 @@ int VoEVideoSyncImpl::GetPlayoutTimestamp(int channel, unsigned int& timestamp)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
-    if (channelPtr == NULL)
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channel_ptr = ch.channel();
+    if (channel_ptr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
             "GetPlayoutTimestamp() failed to locate channel");
         return -1;
     }
-    return channelPtr->GetPlayoutTimestamp(timestamp);
+    return channel_ptr->GetPlayoutTimestamp(timestamp);
 }
 
 int VoEVideoSyncImpl::SetInitTimestamp(int channel,
@@ -82,8 +82,8 @@ int VoEVideoSyncImpl::SetInitTimestamp(int channel,
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -106,8 +106,8 @@ int VoEVideoSyncImpl::SetInitSequenceNumber(int channel,
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -129,8 +129,8 @@ int VoEVideoSyncImpl::SetMinimumPlayoutDelay(int channel,int delayMs)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
@@ -145,7 +145,6 @@ int VoEVideoSyncImpl::SetInitialPlayoutDelay(int channel, int delay_ms)
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "SetInitialPlayoutDelay(channel=%d, delay_ms=%d)",
                  channel, delay_ms);
-    ANDROID_NOT_SUPPORTED(_shared->statistics());
     IPHONE_NOT_SUPPORTED(_shared->statistics());
 
     if (!_shared->statistics().Initialized())
@@ -153,15 +152,15 @@ int VoEVideoSyncImpl::SetInitialPlayoutDelay(int channel, int delay_ms)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channel_ptr = sc.ChannelPtr();
-    if (channel_ptr == NULL)
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
+    if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
             "SetInitialPlayoutDelay() failed to locate channel");
         return -1;
     }
-    return channel_ptr->SetInitialPlayoutDelay(delay_ms);
+    return channelPtr->SetInitialPlayoutDelay(delay_ms);
 }
 
 int VoEVideoSyncImpl::GetDelayEstimate(int channel,
@@ -175,8 +174,8 @@ int VoEVideoSyncImpl::GetDelayEstimate(int channel,
     _shared->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
   }
-  voe::ScopedChannel sc(_shared->channel_manager(), channel);
-  voe::Channel* channelPtr = sc.ChannelPtr();
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
   if (channelPtr == NULL) {
     _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
                           "GetDelayEstimate() failed to locate channel");
@@ -216,7 +215,8 @@ int VoEVideoSyncImpl::GetPlayoutBufferSize(int& bufferMs)
     return 0;
 }
 
-int VoEVideoSyncImpl::GetRtpRtcp(int channel, RtpRtcp* &rtpRtcpModule)
+int VoEVideoSyncImpl::GetRtpRtcp(int channel, RtpRtcp** rtpRtcpModule,
+                                 RtpReceiver** rtp_receiver)
 {
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "GetRtpRtcp(channel=%i)", channel);
@@ -226,15 +226,15 @@ int VoEVideoSyncImpl::GetRtpRtcp(int channel, RtpRtcp* &rtpRtcpModule)
         _shared->SetLastError(VE_NOT_INITED, kTraceError);
         return -1;
     }
-    voe::ScopedChannel sc(_shared->channel_manager(), channel);
-    voe::Channel* channelPtr = sc.ChannelPtr();
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
     if (channelPtr == NULL)
     {
         _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
             "GetPlayoutTimestamp() failed to locate channel");
         return -1;
     }
-    return channelPtr->GetRtpRtcp(rtpRtcpModule);
+    return channelPtr->GetRtpRtcp(rtpRtcpModule, rtp_receiver);
 }
 
 int VoEVideoSyncImpl::GetLeastRequiredDelayMs(int channel) const {
@@ -246,8 +246,8 @@ int VoEVideoSyncImpl::GetLeastRequiredDelayMs(int channel) const {
     _shared->SetLastError(VE_NOT_INITED, kTraceError);
     return -1;
   }
-  voe::ScopedChannel sc(_shared->channel_manager(), channel);
-  voe::Channel* channel_ptr = sc.ChannelPtr();
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channel_ptr = ch.channel();
   if (channel_ptr == NULL) {
     _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
                           "GetLeastRequiredDelayMs() failed to locate channel");

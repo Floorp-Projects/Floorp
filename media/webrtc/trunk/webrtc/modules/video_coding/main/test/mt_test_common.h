@@ -15,10 +15,10 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_TEST_MT_TEST_COMMON_H_
 #define WEBRTC_MODULES_VIDEO_CODING_TEST_MT_TEST_COMMON_H_
 
-#include "rtp_rtcp.h"
-#include "test_callbacks.h"
-#include "test_util.h"
-#include "video_coding.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/modules/video_coding/main/test/test_callbacks.h"
+#include "webrtc/modules/video_coding/main/test/video_source.h"
 
 namespace webrtc {
 

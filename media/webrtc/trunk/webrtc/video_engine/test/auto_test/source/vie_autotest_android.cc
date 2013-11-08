@@ -66,23 +66,19 @@ int ViEAutoTestAndroid::RunAutotest(int testSelection, int subTestSelection,
           vieAutoTest.ViEEncryptionStandardTest();
           break;
 
-        case 6: // file
-          vieAutoTest.ViEFileStandardTest();
-          break;
-
-        case 7: // image process
+        case 6: // image process
           vieAutoTest.ViEImageProcessStandardTest();
           break;
 
-        case 8: // network
+        case 7: // network
           vieAutoTest.ViENetworkStandardTest();
           break;
 
-        case 9: // Render
+        case 8: // Render
           vieAutoTest.ViERenderStandardTest();
           break;
 
-        case 10: // RTP/RTCP
+        case 9: // RTP/RTCP
           vieAutoTest.ViERtpRtcpStandardTest();
           break;
 
@@ -109,26 +105,22 @@ int ViEAutoTestAndroid::RunAutotest(int testSelection, int subTestSelection,
           vieAutoTest.ViEEncryptionAPITest();
           break;
 
-        case 6: // file
-          vieAutoTest.ViEFileAPITest();
-          break;
-
-        case 7: // image process
+        case 6: // image process
           vieAutoTest.ViEImageProcessAPITest();
           break;
 
-        case 8: // network
+        case 7: // network
           vieAutoTest.ViENetworkAPITest();
           break;
 
-        case 9: // Render
+        case 8: // Render
           vieAutoTest.ViERenderAPITest();
           break;
 
-        case 10: // RTP/RTCP
+        case 9: // RTP/RTCP
           vieAutoTest.ViERtpRtcpAPITest();
           break;
-        case 11:
+        case 10:
           break;
 
         default:
@@ -154,19 +146,15 @@ int ViEAutoTestAndroid::RunAutotest(int testSelection, int subTestSelection,
           vieAutoTest.ViEEncryptionExtendedTest();
           break;
 
-        case 6: // file
-          vieAutoTest.ViEFileExtendedTest();
-          break;
-
-        case 7: // image process
+        case 6: // image process
           vieAutoTest.ViEImageProcessExtendedTest();
           break;
 
-        case 8: // Render
+        case 7: // Render
           vieAutoTest.ViERenderExtendedTest();
           break;
 
-        case 9: // RTP/RTCP
+        case 8: // RTP/RTCP
           vieAutoTest.ViERtpRtcpExtendedTest();
           break;
 

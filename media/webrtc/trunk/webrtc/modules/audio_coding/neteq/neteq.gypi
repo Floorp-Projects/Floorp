@@ -89,7 +89,7 @@
       'targets': [
         {
           'target_name': 'neteq_unittests',
-          'type': 'executable',
+          'type': '<(gtest_target_type)',
           'dependencies': [
             'NetEq',
             'NetEqTestTools',
@@ -103,6 +103,15 @@
           # Disable warnings to enable Win64 build, issue 1323.
           'msvs_disabled_warnings': [
             4267,  # size_t to int truncation.
+          ],
+          'conditions': [
+            # TODO(henrike): remove build_with_chromium==1 when the bots are
+            # using Chromium's buildbots.
+            ['build_with_chromium==1 and OS=="android" and gtest_target_type=="shared_library"', {
+              'dependencies': [
+                '<(DEPTH)/testing/android/native_test.gyp:native_test_native_code',
+              ],
+            }],
           ],
         }, # neteq_unittests
         {
@@ -145,6 +154,20 @@
           # Disable warnings to enable Win64 build, issue 1323.
           'msvs_disabled_warnings': [
             4267,  # size_t to int truncation.
+          ],
+        },
+
+        {
+          'target_name': 'neteq3_speed_test',
+          'type': 'executable',
+          'dependencies': [
+            'NetEq',
+            'PCM16B',
+            'neteq_unittest_tools',
+            '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+          ],
+          'sources': [
+            'test/neteq_speed_test.cc',
           ],
         },
 
@@ -208,6 +231,39 @@
           ],
         },
       ], # targets
+      'conditions': [
+        # TODO(henrike): remove build_with_chromium==1 when the bots are using
+        # Chromium's buildbots.
+        ['build_with_chromium==1 and OS=="android" and gtest_target_type=="shared_library"', {
+          'targets': [
+            {
+              'target_name': 'neteq_unittests_apk_target',
+              'type': 'none',
+              'dependencies': [
+                '<(apk_tests_path):neteq_unittests_apk',
+              ],
+            },
+          ],
+        }],
+        ['test_isolation_mode != "noop"', {
+          'targets': [
+            {
+              'target_name': 'neteq_unittests_run',
+              'type': 'none',
+              'dependencies': [
+                '<(import_isolate_path):import_isolate_gypi',
+                'neteq_unittests',
+              ],
+              'includes': [
+                'neteq_unittests.isolate',
+              ],
+              'sources': [
+                'neteq_unittests.isolate',
+              ],
+            },
+          ],
+        }],
+      ],
     }], # include_tests
   ], # conditions
 }

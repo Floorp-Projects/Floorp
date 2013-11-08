@@ -815,4 +815,4 @@ H264Information::SetLayerLengths()
 
     return 0;
 }
-} // namespace webrtc
+}  // namespace webrtc

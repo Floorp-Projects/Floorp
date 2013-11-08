@@ -186,4 +186,4 @@ VPMFramePreprocessor::ContentMetrics() const
     return _contentMetrics;
 }
 
-} //namespace
+}  // namespace

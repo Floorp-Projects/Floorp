@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_UTILITY_INTERFACE_PROCESS_THREAD_H_
 #define WEBRTC_MODULES_UTILITY_INTERFACE_PROCESS_THREAD_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 class Module;
@@ -30,5 +30,5 @@ public:
 protected:
     virtual ~ProcessThread();
 };
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_UTILITY_INTERFACE_PROCESS_THREAD_H_

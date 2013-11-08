@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cassert>
+#include <assert.h>
 #include <stdio.h>
 
 #include "webrtc/voice_engine/statistics.h"
@@ -94,6 +94,6 @@ int32_t Statistics::LastError() const
     return _lastError;
 }
 
-}  //  namespace voe
+}  // namespace voe
 
-}  //  namespace webrtc
+}  // namespace webrtc

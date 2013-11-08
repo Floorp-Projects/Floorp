@@ -501,7 +501,7 @@ int ViERTP_RTCPImpl::SetNACKStatus(const int video_channel, const bool enable) {
     shared_data_->SetLastError(kViERtpRtcpUnknownError);
     return -1;
   }
-  vie_encoder->UpdateProtectionMethod();
+  vie_encoder->UpdateProtectionMethod(enable);
   return 0;
 }
 
@@ -542,7 +542,7 @@ int ViERTP_RTCPImpl::SetFECStatus(const int video_channel, const bool enable,
     shared_data_->SetLastError(kViERtpRtcpUnknownError);
     return -1;
   }
-  vie_encoder->UpdateProtectionMethod();
+  vie_encoder->UpdateProtectionMethod(false);
   return 0;
 }
 
@@ -587,7 +587,7 @@ int ViERTP_RTCPImpl::SetHybridNACKFECStatus(
     shared_data_->SetLastError(kViERtpRtcpUnknownError);
     return -1;
   }
-  vie_encoder->UpdateProtectionMethod();
+  vie_encoder->UpdateProtectionMethod(enable);
   return 0;
 }
 

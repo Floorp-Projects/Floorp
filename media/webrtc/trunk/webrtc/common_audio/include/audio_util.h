@@ -15,6 +15,20 @@
 
 namespace webrtc {
 
+// Clamp the floating |value| to the range representable by an int16_t.
+static inline float ClampInt16(float value) {
+  const float kMaxInt16 = 32767.f;
+  const float kMinInt16 = -32768.f;
+  return value < kMinInt16 ? kMinInt16 :
+      (value > kMaxInt16 ? kMaxInt16 : value);
+}
+
+// Return a rounded int16_t of the floating |value|. Doesn't handle overflow;
+// use ClampInt16 if necessary.
+static inline int16_t RoundToInt16(float value) {
+  return static_cast<int16_t>(value < 0.f ? value - 0.5f : value + 0.5f);
+}
+
 // Deinterleave audio from |interleaved| to the channel buffers pointed to
 // by |deinterleaved|. There must be sufficient space allocated in the
 // |deinterleaved| buffers (|num_channel| buffers with |samples_per_channel|

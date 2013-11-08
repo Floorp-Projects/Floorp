@@ -20,7 +20,6 @@ LOCAL_SRC_FILES := \
     audio_frame_operations.cc \
     channel.cc \
     channel_manager.cc \
-    channel_manager_base.cc \
     dtmf_inband.cc \
     dtmf_inband_queue.cc \
     level_indicator.cc \

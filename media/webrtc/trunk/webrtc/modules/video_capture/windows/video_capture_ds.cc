@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_capture_ds.h"
+#include "webrtc/modules/video_capture/windows/video_capture_ds.h"
 
-#include "../video_capture_config.h"
-#include "critical_section_wrapper.h"
-#include "help_functions_ds.h"
-#include "sink_filter_ds.h"
-#include "trace.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
+#include "webrtc/modules/video_capture/windows/help_functions_ds.h"
+#include "webrtc/modules/video_capture/windows/sink_filter_ds.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #include <Dvdmedia.h> // VIDEOINFOHEADER2
 
@@ -409,5 +409,5 @@ HRESULT VideoCaptureDS::ConnectDVCamera()
     }
     return hr;
 }
-} // namespace videocapturemodule
-} //namespace webrtc
+}  // namespace videocapturemodule
+}  // namespace webrtc

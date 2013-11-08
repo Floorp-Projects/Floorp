@@ -15,6 +15,8 @@
 
 namespace webrtc {
 
+namespace acm1 {
+
 #ifdef WEBRTC_CODEC_ISAC
 #define ACM_ISAC_CREATE            WebRtcIsac_Create
 #define ACM_ISAC_FREE              WebRtcIsac_Free
@@ -67,7 +69,9 @@ namespace webrtc {
 #define ACM_ISAC_GETDECSAMPRATE    ACMISACFixGetDecSampRate  // local Impl
 #endif
 
-}  //namespace
+}  // namespace acm1
+
+}  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_AUDIO_CODING_MAIN_SOURCE_ACM_ISAC_MACROS_H_
 

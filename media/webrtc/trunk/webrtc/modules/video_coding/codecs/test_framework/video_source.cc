@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_source.h"
+#include "webrtc/modules/video_coding/codecs/test_framework/video_source.h"
 
 #include <stdio.h>
 
-#include "gtest/gtest.h"
-#include "testsupport/fileutils.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 VideoSource::VideoSource()
 :

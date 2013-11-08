@@ -10,10 +10,12 @@
 
 #include "webrtc/modules/video_coding/main/test/test_callbacks.h"
 
-#include <cmath>
+#include <math.h>
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_receiver.h"
 #include "webrtc/modules/utility/interface/rtp_dump.h"
 #include "webrtc/modules/video_coding/main/test/test_macros.h"
 #include "webrtc/system_wrappers/interface/clock.h"
@@ -34,7 +36,7 @@ VCMEncodeCompleteCallback::VCMEncodeCompleteCallback(FILE* encodedFile):
     _encodeComplete(false),
     _width(0),
     _height(0),
-    _codecType(kRTPVideoNoVideo)
+    _codecType(kRtpVideoNone)
 {
     //
 }
@@ -73,14 +75,12 @@ VCMEncodeCompleteCallback::SendData(
     rtpInfo.type.Video.width = (uint16_t)_width;
     switch (_codecType)
     {
-    case webrtc::kRTPVideoVP8:
+    case webrtc::kRtpVideoVp8:
         rtpInfo.type.Video.codecHeader.VP8.InitRTPVideoHeaderVP8();
         rtpInfo.type.Video.codecHeader.VP8.nonReference =
             videoHdr->codecHeader.VP8.nonReference;
         rtpInfo.type.Video.codecHeader.VP8.pictureId =
             videoHdr->codecHeader.VP8.pictureId;
-        break;
-    case webrtc::kRTPVideoI420:
         break;
     default:
         assert(false);
@@ -209,6 +209,8 @@ RTPSendCompleteCallback::RTPSendCompleteCallback(Clock* clock,
                                                  const char* filename):
     _clock(clock),
     _sendCount(0),
+    rtp_payload_registry_(NULL),
+    rtp_receiver_(NULL),
     _rtp(NULL),
     _lossPct(0),
     _burstLength(0),
@@ -299,7 +301,14 @@ RTPSendCompleteCallback::SendPacket(int channel, const void *data, int len)
           delete packet;
           return -1;
         }
-        if (_rtp->IncomingRtpPacket(packet->data, packet->length, header) < 0)
+        PayloadUnion payload_specific;
+        if (!rtp_payload_registry_->GetPayloadSpecifics(
+            header.payloadType, &payload_specific)) {
+          return -1;
+        }
+        if (!rtp_receiver_->IncomingRtpPacket(header, packet->data,
+                                              packet->length, payload_specific,
+                                              true))
         {
             delete packet;
             return -1;

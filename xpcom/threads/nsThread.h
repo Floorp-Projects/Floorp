@@ -128,4 +128,11 @@ private:
   nsresult mResult;
 };
 
+#if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM \
+  && defined(_GNU_SOURCE)
+# define MOZ_CANARY
+
+extern int sCanaryOutputFD;
+#endif
+
 #endif  // nsThread_h__

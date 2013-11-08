@@ -100,8 +100,8 @@ void TestPack::reset_payload_size() {
 }
 
 TestAllCodecs::TestAllCodecs(int test_mode)
-    : acm_a_(NULL),
-      acm_b_(NULL),
+    : acm_a_(AudioCodingModule::Create(0)),
+      acm_b_(AudioCodingModule::Create(1)),
       channel_a_to_b_(NULL),
       test_count_(0),
       packet_size_samples_(0),
@@ -111,14 +111,6 @@ TestAllCodecs::TestAllCodecs(int test_mode)
 }
 
 TestAllCodecs::~TestAllCodecs() {
-  if (acm_a_ != NULL) {
-    AudioCodingModule::Destroy(acm_a_);
-    acm_a_ = NULL;
-  }
-  if (acm_b_ != NULL) {
-    AudioCodingModule::Destroy(acm_b_);
-    acm_b_ = NULL;
-  }
   if (channel_a_to_b_ != NULL) {
     delete channel_a_to_b_;
     channel_a_to_b_ = NULL;
@@ -134,9 +126,6 @@ void TestAllCodecs::Perform() {
     WEBRTC_TRACE(kTraceStateInfo, kTraceAudioCoding, -1,
                  "---------- TestAllCodecs ----------");
   }
-
-  acm_a_ = AudioCodingModule::Create(0);
-  acm_b_ = AudioCodingModule::Create(1);
 
   acm_a_->InitializeReceiver();
   acm_b_->InitializeReceiver();
@@ -154,7 +143,7 @@ void TestAllCodecs::Perform() {
   // Create and connect the channel
   channel_a_to_b_ = new TestPack;
   acm_a_->RegisterTransportCallback(channel_a_to_b_);
-  channel_a_to_b_->RegisterReceiverACM(acm_b_);
+  channel_a_to_b_->RegisterReceiverACM(acm_b_.get());
 
   // All codecs are tested for all allowed sampling frequencies, rates and
   // packet sizes.
@@ -736,11 +725,11 @@ void TestAllCodecs::RegisterSendCodec(char side, char* codec_name,
   AudioCodingModule* my_acm = NULL;
   switch (side) {
     case 'A': {
-      my_acm = acm_a_;
+      my_acm = acm_a_.get();
       break;
     }
     case 'B': {
-      my_acm = acm_b_;
+      my_acm = acm_b_.get();
       break;
     }
     default: {
