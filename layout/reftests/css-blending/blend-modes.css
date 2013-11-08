@@ -1,0 +1,26 @@
+body {
+  margin: 0;
+}
+
+.reftest {
+  width: 160px;
+  height: 160px;
+  background-size:
+    160px 40px, 160px 40px, 160px 40px, 160px 40px,
+    40px 160px, 40px 160px, 40px 160px, 40px 160px;
+
+  background-position:
+    0px 0px, 0px 40px, 0px 80px, 0px 120px,
+    0px 0px, 40px 0px, 80px 0, 120px 0;
+
+
+  background-repeat: no-repeat;
+  background-image: url(as-image/red100x100.png),
+                    url(as-image/green100x100.png),
+                    url(as-image/blue100x100.png),
+                    url(as-image/brown100x100.png),
+                    url(as-image/red100x100.png),
+                    url(as-image/green100x100.png),
+                    url(as-image/blue100x100.png),
+                    url(as-image/brown100x100.png);
+}
