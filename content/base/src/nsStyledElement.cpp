@@ -236,7 +236,7 @@ nsStyledElementNotElementCSSInlineStyle::ParseStyleAttribute(const nsAString& aV
 {
   nsIDocument* doc = OwnerDoc();
 
-  if (!nsStyleUtil::CSPAllowsInlineStyle(nullptr, NodePrincipal(),
+  if (!nsStyleUtil::CSPAllowsInlineStyle(NodePrincipal(),
                                          doc->GetDocumentURI(), 0, aValue,
                                          nullptr))
     return;

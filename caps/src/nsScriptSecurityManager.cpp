@@ -489,8 +489,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
         csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
                                  fileName,
                                  scriptSample,
-                                 lineNum,
-                                 EmptyString());
+                                 lineNum);
     }
 
     return evalOK;

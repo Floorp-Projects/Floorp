@@ -707,7 +707,7 @@ public:
          "Call to eval() or related function blocked by CSP.");
       if (mWorkerPrivate->GetReportCSPViolations()) {
         csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_EVAL,
-                                 mFileName, scriptSample, mLineNum, EmptyString());
+                                 mFileName, scriptSample, mLineNum);
       }
     }
 

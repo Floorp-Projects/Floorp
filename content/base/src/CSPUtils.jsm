@@ -24,8 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 
 // Module stuff
 this.EXPORTED_SYMBOLS = ["CSPRep", "CSPSourceList", "CSPSource", "CSPHost",
-                         "CSPdebug", "CSPViolationReportListener", "CSPLocalizer",
-                         "CSPPrefObserver"];
+                         "CSPdebug", "CSPViolationReportListener", "CSPLocalizer"];
 
 var STRINGS_URI = "chrome://global/locale/security/csp.properties";
 
@@ -66,28 +65,17 @@ const R_EXTHOSTSRC = new RegExp ("^" + R_HOSTSRC.source + "\\/[:print:]+$", 'i')
 // keyword-source  = "'self'" / "'unsafe-inline'" / "'unsafe-eval'"
 const R_KEYWORDSRC = new RegExp ("^('self'|'unsafe-inline'|'unsafe-eval')$", 'i');
 
-// nonce-source      = "'nonce-" nonce-value "'"
-// nonce-value       = 1*( ALPHA / DIGIT / "+" / "/" )
-const R_NONCESRC = new RegExp ("^'nonce-([a-zA-Z0-9\+\/]+)'$", 'i');
-
 // source-exp      = scheme-source / host-source / keyword-source
 const R_SOURCEEXP  = new RegExp (R_SCHEMESRC.source + "|" +
                                    R_HOSTSRC.source + "|" +
-                                R_KEYWORDSRC.source + "|" +
-                                  R_NONCESRC.source,  'i');
+                                R_KEYWORDSRC.source,  'i');
 
 
-this.CSPPrefObserver = {
+var gPrefObserver = {
   get debugEnabled () {
     if (!this._branch)
       this._initialize();
     return this._debugEnabled;
-  },
-
-  get experimentalEnabled () {
-    if (!this._branch)
-      this._initialize();
-    return this._experimentalEnabled;
   },
 
   _initialize: function() {
@@ -96,7 +84,6 @@ this.CSPPrefObserver = {
     this._branch = prefSvc.getBranch("security.csp.");
     this._branch.addObserver("", this, false);
     this._debugEnabled = this._branch.getBoolPref("debug");
-    this._experimentalEnabled = this._branch.getBoolPref("experimentalEnabled");
   },
 
   unregister: function() {
@@ -108,13 +95,11 @@ this.CSPPrefObserver = {
     if (aTopic != "nsPref:changed") return;
     if (aData === "debug")
       this._debugEnabled = this._branch.getBoolPref("debug");
-    if (aData === "experimentalEnabled")
-      this._experimentalEnabled = this._branch.getBoolPref("experimentalEnabled");
   },
 };
 
 this.CSPdebug = function CSPdebug(aMsg) {
-  if (!CSPPrefObserver.debugEnabled) return;
+  if (!gPrefObserver.debugEnabled) return;
 
   aMsg = 'CSP debug: ' + aMsg + "\n";
   Components.classes["@mozilla.org/consoleservice;1"]
@@ -808,28 +793,14 @@ CSPRep.prototype = {
 
   /**
    * Determines if this policy accepts a URI.
-   * @param aURI
-   *        URI of the requested resource
-   * @param aDirective
-   *        one of the SRC_DIRECTIVES defined above
    * @param aContext
-   *        Context of the resource being requested. This is a type inheriting
-   *        from nsIDOMHTMLElement if this is called from shouldLoad to check
-   *        an external resource load, and refers to the HTML element that is
-   *        causing the resource load. Otherwise, it is a string containing
-   *        a nonce from a nonce="" attribute if it is called from
-   *        getAllowsNonce.
+   *        one of the SRC_DIRECTIVES defined above
    * @returns
    *        true if the policy permits the URI in given context.
    */
   permits:
-  function csp_permits(aURI, aDirective, aContext) {
-    // In the case where permits is called from getAllowsNonce (for an inline
-    // element), aURI is null and aContext has a specific value. Otherwise,
-    // calling permits without aURI is invalid.
-    let checking_nonce = aContext instanceof Ci.nsIDOMHTMLElement ||
-                         typeof aContext === 'string';
-    if (!aURI && !checking_nonce) return false;
+  function csp_permits(aURI, aContext) {
+    if (!aURI) return false;
 
     // GLOBALLY ALLOW "about:" SCHEME
     if (aURI instanceof String && aURI.substring(0,6) === "about:")
@@ -840,13 +811,13 @@ CSPRep.prototype = {
     // make sure the right directive set is used
     let DIRS = this._specCompliant ? CSPRep.SRC_DIRECTIVES_NEW : CSPRep.SRC_DIRECTIVES_OLD;
 
-    let directiveInPolicy = false;
+    let contextIsSrcDir = false;
     for (var i in DIRS) {
-      if (DIRS[i] === aDirective) {
+      if (DIRS[i] === aContext) {
         // for catching calls with invalid contexts (below)
-        directiveInPolicy = true;
-        if (this._directives.hasOwnProperty(aDirective)) {
-          return this._directives[aDirective].permits(aURI, aContext);
+        contextIsSrcDir = true;
+        if (this._directives.hasOwnProperty(aContext)) {
+          return this._directives[aContext].permits(aURI);
         }
         //found matching dir, can stop looking
         break;
@@ -854,15 +825,15 @@ CSPRep.prototype = {
     }
 
     // frame-ancestors is a special case; it doesn't fall back to default-src.
-    if (aDirective === DIRS.FRAME_ANCESTORS)
+    if (aContext === DIRS.FRAME_ANCESTORS)
       return true;
 
     // All directives that don't fall back to default-src should have an escape
     // hatch above (like frame-ancestors).
-    if (!directiveInPolicy) {
+    if (!contextIsSrcDir) {
       // if this code runs, there's probably something calling permits() that
       // shouldn't be calling permits().
-      CSPdebug("permits called with invalid load type: " + aDirective);
+      CSPdebug("permits called with invalid load type: " + aContext);
       return false;
     }
 
@@ -871,7 +842,7 @@ CSPRep.prototype = {
     // indicates no relevant directives were present and the load should be
     // permitted).
     if (this._directives.hasOwnProperty(DIRS.DEFAULT_SRC)) {
-      return this._directives[DIRS.DEFAULT_SRC].permits(aURI, aContext);
+      return this._directives[DIRS.DEFAULT_SRC].permits(aURI);
     }
 
     // no relevant directives present -- this means for CSP 1.0 that the load
@@ -1110,12 +1081,12 @@ CSPSourceList.prototype = {
    *        true if the URI matches a source in this source list.
    */
   permits:
-  function cspsd_permits(aURI, aContext) {
+  function cspsd_permits(aURI) {
     if (this.isNone())    return false;
     if (this.isAll())     return true;
 
     for (var i in this._sources) {
-      if (this._sources[i].permits(aURI, aContext)) {
+      if (this._sources[i].permits(aURI)) {
         return true;
       }
     }
@@ -1131,7 +1102,6 @@ this.CSPSource = function CSPSource() {
   this._scheme = undefined;
   this._port = undefined;
   this._host = undefined;
-  this._nonce = undefined;
 
   //when set to true, this allows all source
   this._permitAll = false;
@@ -1376,19 +1346,6 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
     return sObj;
   }
 
-  // check for a nonce-source match
-  if (R_NONCESRC.test(aStr)) {
-    // We can't put this check outside of the regex test because R_NONCESRC is
-    // included in R_SOURCEEXP, which is const. By testing here, we can
-    // explicitly return null for nonces if experimental is not enabled,
-    // instead of letting it fall through and assuming it won't accidentally
-    // match something later in this function.
-    if (!CSPPrefObserver.experimentalEnabled) return null;
-    var nonceSrcMatch = R_NONCESRC.exec(aStr);
-    sObj._nonce = nonceSrcMatch[1];
-    return sObj;
-  }
-
   // check for 'self' (case insensitive)
   if (aStr.toUpperCase() === "'SELF'") {
     if (!self) {
@@ -1493,8 +1450,6 @@ CSPSource.prototype = {
       s = s + this._host;
     if (this.port)
       s = s + ":" + this.port;
-    if (this._nonce)
-      s = s + "'nonce-" + this._nonce + "'";
     return s;
   },
 
@@ -1510,7 +1465,6 @@ CSPSource.prototype = {
     aClone._scheme = this._scheme;
     aClone._port = this._port;
     aClone._host = this._host ? this._host.clone() : undefined;
-    aClone._nonce = this._nonce;
     aClone._isSelf = this._isSelf;
     aClone._CSPRep = this._CSPRep;
     return aClone;
@@ -1520,24 +1474,11 @@ CSPSource.prototype = {
    * Determines if this Source accepts a URI.
    * @param aSource
    *        the URI, or CSPSource in question
-   * @param aContext
-   *        the context of the resource being loaded
    * @returns
    *        true if the URI matches a source in this source list.
    */
   permits:
-  function(aSource, aContext) {
-    if (this._nonce && CSPPrefObserver.experimentalEnabled) {
-      if (aContext instanceof Ci.nsIDOMHTMLElement) {
-        return this._nonce === aContext.getAttribute('nonce');
-      } else if (typeof aContext === 'string') {
-        return this._nonce === aContext;
-      }
-    }
-    // We only use aContext for nonce checks. If it's otherwise provided,
-    // ignore it.
-    if (!CSPPrefObserver.experimentalEnabled && aContext) return false;
-
+  function(aSource) {
     if (!aSource) return false;
 
     if (!(aSource instanceof CSPSource))
