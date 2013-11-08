@@ -2863,6 +2863,9 @@ BeginMarkPhase(JSRuntime *rt)
         WeakMapBase::resetCompartmentWeakMapList(c);
     }
 
+    if (rt->gcIsFull)
+        UnmarkScriptData(rt);
+
     MarkRuntime(gcmarker);
     BufferGrayRoots(gcmarker);
 
