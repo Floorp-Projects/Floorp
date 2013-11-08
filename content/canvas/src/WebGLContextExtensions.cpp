@@ -122,7 +122,8 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
             // For warnings-as-errors.
             break;
     }
-
+// Uncomment this switch for any new extensions
+#if 0
     if (Preferences::GetBool("webgl.enable-draft-extensions", false) || IsWebGL2()) {
         switch (ext) {
             default:
@@ -130,6 +131,7 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
                 break;
         }
     }
+#endif
 
     return false;
 }
