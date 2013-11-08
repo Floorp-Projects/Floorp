@@ -1796,6 +1796,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
     }
 
+    public View getDoorHangerAnchor() {
+        return mFavicon;
+    }
+
     public void onDestroy() {
         if (mPrefObserverId != null) {
              PrefsHelper.removeObserver(mPrefObserverId);
