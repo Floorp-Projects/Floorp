@@ -142,7 +142,8 @@ public:
   // instead.
   //
   // This value is valid for nested scrollable layers as well, and is still
-  // relative to the layer tree origin.
+  // relative to the layer tree origin. This value is provided by Gecko at
+  // layout/paint time.
   ScreenIntRect mCompositionBounds;
 
   // ---------------------------------------------------------------------------
