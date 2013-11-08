@@ -1295,8 +1295,17 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 
     mFrameMetrics = aLayerMetrics;
     mState = NOTHING;
-  } else if (!mFrameMetrics.mScrollableRect.IsEqualEdges(aLayerMetrics.mScrollableRect)) {
+  } else {
+    // If we're not taking the aLayerMetrics wholesale we still need to pull
+    // in some things into our local mFrameMetrics because these things are
+    // determined by Gecko and our copy in mFrameMetrics may be stale.
     mFrameMetrics.mScrollableRect = aLayerMetrics.mScrollableRect;
+    mFrameMetrics.mCompositionBounds = aLayerMetrics.mCompositionBounds;
+    float parentResolutionChange = aLayerMetrics.GetParentResolution().scale
+                                 / mFrameMetrics.GetParentResolution().scale;
+    mFrameMetrics.mZoom.scale *= parentResolutionChange;
+    mFrameMetrics.mResolution = aLayerMetrics.mResolution;
+    mFrameMetrics.mCumulativeResolution = aLayerMetrics.mCumulativeResolution;
   }
 
   if (needContentRepaint) {
