@@ -1976,7 +1976,7 @@ AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
         RootedId id(cx, NameToId(setprop->name()));
         RootedValue value(cx, UndefinedValue());
         if (!DefineNativeProperty(cx, baseobj, id, value, nullptr, nullptr,
-                                  JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE))
+                                  JSPROP_ENUMERATE, 0, 0))
         {
             return false;
         }

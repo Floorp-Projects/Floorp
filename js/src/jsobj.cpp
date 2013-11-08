@@ -1442,9 +1442,9 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
  * Create a plain object with the specified type. This bypasses getNewType to
  * avoid losing creation site information for objects made by scripted 'new'.
  */
-static JSObject *
-NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind allocKind,
-                  NewObjectKind newKind = GenericObject)
+JSObject *
+js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind allocKind,
+                      NewObjectKind newKind)
 {
     JS_ASSERT(type->proto->hasNewType(&JSObject::class_, type));
     JS_ASSERT(parent);
@@ -1498,46 +1498,6 @@ js::NewObjectScriptedCall(JSContext *cx, MutableHandleObject pobj)
 
     pobj.set(obj);
     return true;
-}
-
-JSObject *
-js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
-                      gc::AllocKind allocKind, HandleShape shape, NewObjectKind newKind)
-{
-    RootedObject res(cx, NewObjectWithType(cx, type, parent, allocKind, newKind));
-    if (!res)
-        return nullptr;
-
-    if (shape->isEmptyShape())
-        return res;
-
-    /* Get all the ids in the object, in order. */
-    js::AutoIdVector ids(cx);
-    {
-        for (unsigned i = 0; i <= shape->slot(); i++) {
-            if (!ids.append(JSID_VOID))
-                return nullptr;
-        }
-        Shape *nshape = shape;
-        while (!nshape->isEmptyShape()) {
-            ids[nshape->slot()] = nshape->propid();
-            nshape = nshape->previous();
-        }
-    }
-
-    /* Construct the new shape. */
-    RootedId id(cx);
-    RootedValue undefinedValue(cx, UndefinedValue());
-    for (unsigned i = 0; i < ids.length(); i++) {
-        id = ids[i];
-        if (!DefineNativeProperty(cx, res, id, undefinedValue, nullptr, nullptr,
-                                  JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE)) {
-            return nullptr;
-        }
-    }
-    JS_ASSERT(!res->inDictionaryMode());
-
-    return res;
 }
 
 JSObject*
@@ -2224,7 +2184,6 @@ DefineStandardSlot(JSContext *cx, HandleObject obj, JSProtoKey key, JSAtom *atom
             uint32_t slot = GlobalObject::constructorPropertySlot(key);
             if (!JSObject::addProperty(cx, obj, id, JS_PropertyStub, JS_StrictPropertyStub, slot, attrs, 0, 0))
                 return false;
-            AddTypePropertyId(cx, obj, id, v);
 
             named = true;
             return true;
@@ -3431,7 +3390,7 @@ CallAddPropertyHook(typename ExecutionModeTraits<mode>::ExclusiveContextType cxA
         }
         if (value.get() != nominal) {
             if (shape->hasSlot())
-                JSObject::nativeSetSlotWithType(cx, obj, shape, value);
+                obj->nativeSetSlotWithType(cx, shape, value);
         }
     }
     return true;
@@ -3473,13 +3432,40 @@ CallAddPropertyHookDense(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
 
         Rooted<jsid> id(cx, INT_TO_JSID(index));
         if (!CallJSPropertyOp(cx->asJSContext(), clasp->addProperty, obj, id, &value)) {
-            JSObject::setDenseElementHole(cx, obj, index);
+            obj->setDenseElementHole(cx, index);
             return false;
         }
         if (value.get() != nominal)
-            JSObject::setDenseElementWithType(cx, obj, index, value);
+            obj->setDenseElementWithType(cx, index, value);
     }
 
+    return true;
+}
+
+template <ExecutionMode mode>
+static bool
+UpdateShapeTypeAndValue(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                        JSObject *obj, Shape *shape, const Value &value)
+{
+    jsid id = shape->propid();
+    if (shape->hasSlot()) {
+        if (mode == ParallelExecution) {
+            if (!obj->nativeSetSlotIfHasType(shape, value))
+                return false;
+        } else {
+            obj->nativeSetSlotWithType(cx->asExclusiveContext(), shape, value);
+        }
+    }
+    if (!shape->hasSlot() || !shape->writable() ||
+        !shape->hasDefaultGetter() || !shape->hasDefaultSetter())
+    {
+        if (mode == ParallelExecution) {
+            if (!IsTypePropertyIdMarkedConfigured(obj, id))
+                return false;
+        } else {
+            MarkTypePropertyConfigured(cx->asExclusiveContext(), obj, id);
+        }
+    }
     return true;
 }
 
@@ -3517,7 +3503,12 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
         if (result == JSObject::ED_FAILED)
             return false;
         if (result == JSObject::ED_OK) {
-            obj->setDenseElementMaybeConvertDouble(index, value);
+            if (mode == ParallelExecution) {
+                if (!obj->setDenseElementIfHasType(index, value))
+                    return false;
+            } else {
+                obj->setDenseElementWithType(cx->asExclusiveContext(), index, value);
+            }
             return CallAddPropertyHookDense<mode>(cx, obj->getClass(), obj, index, value);
         }
     }
@@ -3549,8 +3540,8 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
     if (!shape)
         return false;
 
-    if (shape->hasSlot())
-        obj->nativeSetSlot(shape->slot(), value);
+    if (!UpdateShapeTypeAndValue<mode>(cx, obj, shape, value))
+        return false;
 
     /*
      * Clear any existing dense index after adding a sparse indexed property,
@@ -3594,7 +3585,7 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
                          PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                          unsigned flags, int shortid, unsigned defineHow /* = 0 */)
 {
-    JS_ASSERT((defineHow & ~(DNP_DONT_PURGE | DNP_SKIP_TYPE)) == 0);
+    JS_ASSERT((defineHow & ~DNP_DONT_PURGE) == 0);
     JS_ASSERT(!(attrs & JSPROP_NATIVE_ACCESSORS));
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
@@ -3606,10 +3597,6 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
      */
     RootedShape shape(cx);
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-        /* Type information for getter/setter properties is unknown. */
-        AddTypePropertyId(cx, obj, id, types::Type::UnknownType());
-        MarkTypePropertyConfigured(cx, obj, id);
-
         /*
          * If we are defining a getter whose setter was already defined, or
          * vice versa, finish the job via obj->changeProperty.
@@ -3656,24 +3643,13 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
     if (!setter && !(attrs & JSPROP_SETTER))
         setter = clasp->setProperty;
 
-    if ((getter == JS_PropertyStub) && !(defineHow & DNP_SKIP_TYPE)) {
-        /*
-         * Type information for normal native properties should reflect the
-         * initial value of the property.
-         */
-        AddTypePropertyId(cx, obj, id, value);
-        if (attrs & JSPROP_READONLY)
-            MarkTypePropertyConfigured(cx, obj, id);
-    }
-
     if (!shape) {
         return DefinePropertyOrElement<SequentialExecution>(cx, obj, id, getter, setter,
                                                             attrs, flags, shortid, value,
                                                             false, false);
     }
 
-    if (shape->hasSlot())
-        obj->nativeSetSlot(shape->slot(), value);
+    JS_ALWAYS_TRUE(UpdateShapeTypeAndValue<SequentialExecution>(cx, obj, shape, value));
 
     return CallAddPropertyHook<SequentialExecution>(cx, clasp, obj, shape, value);
 }
@@ -4162,7 +4138,7 @@ js::NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg,
                 if (!obj->nativeSetSlotIfHasType(shape, vp))
                     return false;
             } else {
-                obj->nativeSetSlotWithType(cxArg->asExclusiveContext(), obj, shape, vp);
+                obj->nativeSetSlotWithType(cxArg->asExclusiveContext(), shape, vp);
             }
 
             return true;
@@ -4197,8 +4173,7 @@ js::NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg,
     if (shape->hasSlot() &&
         (JS_LIKELY(cx->runtime()->propertyRemovals == sample) ||
          obj->nativeContains(cx, shape)))
-     {
-        AddTypePropertyId(cx, obj, shape->propid(), ovp);
+    {
         obj->setSlot(shape->slot(), vp);
     }
 
@@ -4241,10 +4216,6 @@ GetPropertyHelperInline(JSContext *cx,
         {
             return false;
         }
-
-        /* Record non-undefined values produced by the class getter hook. */
-        if (!vp.isUndefined())
-            AddTypePropertyId(cx, obj, id, vp);
 
         /*
          * Give a strict warning if foo.bar is evaluated by a script for an
@@ -4830,7 +4801,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
         if (mode == ParallelExecution)
             obj->setDenseElementIfHasType(index, vp);
         else
-            JSObject::setDenseElementWithType(cxArg->asJSContext(), obj, index, vp);
+            obj->setDenseElementWithType(cxArg->asJSContext(), index, vp);
         return true;
     }
 
@@ -4871,9 +4842,6 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
             /* Purge the property cache of now-shadowed id in obj's scope chain. */
             if (!PurgeScopeChain(cx, obj, id))
                 return false;
-
-            if (getter == JS_PropertyStub)
-                AddTypePropertyId(cx, obj, id, vp);
         }
 
         return DefinePropertyOrElement<mode>(cxArg, obj, id, getter, setter,
@@ -4937,9 +4905,15 @@ baseops::SetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *a
             return false;
         shape = obj->nativeLookup(cx, id);
     }
-    return nobj->isNative()
-           ? JSObject::changePropertyAttributes(cx, nobj, shape, *attrsp)
-           : JSObject::setGenericAttributes(cx, nobj, id, attrsp);
+    if (nobj->isNative()) {
+        if (!JSObject::changePropertyAttributes(cx, nobj, shape, *attrsp))
+            return false;
+        if (*attrsp & JSPROP_READONLY)
+            MarkTypePropertyConfigured(cx, obj, id);
+        return true;
+    } else {
+        return JSObject::setGenericAttributes(cx, nobj, id, attrsp);
+    }
 }
 
 bool
@@ -4965,7 +4939,7 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succe
         if (!succeeded)
             return true;
 
-        JSObject::setDenseElementHole(cx, obj, JSID_TO_INT(id));
+        obj->setDenseElementHole(cx, JSID_TO_INT(id));
         return js_SuppressDeletedProperty(cx, obj, id);
     }
 

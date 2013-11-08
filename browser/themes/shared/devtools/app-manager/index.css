@@ -14,6 +14,10 @@
   background: #252C33;
 }
 
+#toolbox-tabs {
+  overflow-y: auto;
+}
+
 .button {
   width: 80px;
   height: 85px;
@@ -52,6 +56,12 @@
 
 .panel:not([selected="true"]) {
   display: none;
+}
+
+.button.toolbox {
+  background-repeat: no-repeat;
+  background-position: center 15px;
+  background-size: 40px 40px;
 }
 
 .projects-button {
