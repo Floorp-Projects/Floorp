@@ -39,10 +39,6 @@ TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest),
   tests_->ViEEncryptionAPITest();
 }
 
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest), RunsFileTestWithoutErrors) {
-  tests_->ViEFileAPITest();
-}
-
 TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest),
        RunsImageProcessTestWithoutErrors) {
   tests_->ViEImageProcessAPITest();
@@ -52,8 +48,10 @@ TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest), RunsRenderTestWithoutErrors) {
   tests_->ViERenderAPITest();
 }
 
-TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest), RunsRtpRtcpTestWithoutErrors) {
+// See: https://code.google.com/p/webrtc/issues/detail?id=2415
+TEST_F(DISABLED_ON_MAC(ViEApiIntegrationTest),
+       DISABLED_RunsRtpRtcpTestWithoutErrors) {
   tests_->ViERtpRtcpAPITest();
 }
 
-} // namespace
+}  // namespace

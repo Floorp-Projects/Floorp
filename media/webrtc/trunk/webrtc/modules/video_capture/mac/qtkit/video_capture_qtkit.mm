@@ -8,26 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_capture_qtkit.h"
-#import "video_capture_qtkit_objc.h"
-#import "video_capture_qtkit_info_objc.h"
-#include "trace.h"
-#include "critical_section_wrapper.h"
-#include "../../video_capture_config.h"
-
-class nsAutoreleasePool {
-public:
-    nsAutoreleasePool()
-    {
-        mLocalPool = [[NSAutoreleasePool alloc] init];
-    }
-    ~nsAutoreleasePool()
-    {
-        [mLocalPool release];
-    }
-private:
-    NSAutoreleasePool *mLocalPool;
-};
+#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit.h"
+#import "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info_objc.h"
+#import "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_objc.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc
 {
@@ -55,7 +41,6 @@ VideoCaptureMacQTKit::VideoCaptureMacQTKit(const int32_t id) :
 VideoCaptureMacQTKit::~VideoCaptureMacQTKit()
 {
 
-    nsAutoreleasePool localPool;
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id,
                  "~VideoCaptureMacQTKit() called");
     if(_captureDevice)
@@ -85,8 +70,6 @@ int32_t VideoCaptureMacQTKit::Init(
     // Store the device name
     _deviceUniqueId = new char[nameLength+1];
     memcpy(_deviceUniqueId, iDeviceUniqueIdUTF8,nameLength+1);
-
-    nsAutoreleasePool localPool;
 
     _captureDevice = [[VideoCaptureMacQTKitObjC alloc] init];
     if(NULL == _captureDevice)
@@ -181,7 +164,6 @@ int32_t VideoCaptureMacQTKit::StartCapture(
     const VideoCaptureCapability& capability)
 {
 
-    nsAutoreleasePool localPool;
     _captureWidth = capability.width;
     _captureHeight = capability.height;
     _captureFrameRate = capability.maxFPS;
@@ -198,7 +180,6 @@ int32_t VideoCaptureMacQTKit::StartCapture(
 
 int32_t VideoCaptureMacQTKit::StopCapture()
 {
-    nsAutoreleasePool localPool;
     [_captureDevice stopCapture];
     _isCapturing = false;
     return 0;
@@ -228,4 +209,3 @@ struct VideoCaptureCapabilityMacQTKit:public VideoCaptureCapability
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc
-

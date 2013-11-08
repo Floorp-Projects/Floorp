@@ -214,15 +214,13 @@ UdpSocketManagerPosixImpl::~UdpSocketManagerPosixImpl()
         UpdateSocketMap();
 
         _critSectList->Enter();
-
-        MapItem* item = _socketMap.First();
-        while(item)
-        {
-            UdpSocketPosix* s = static_cast<UdpSocketPosix*>(item->GetItem());
-            _socketMap.Erase(item);
-            item = _socketMap.First();
-            delete s;
+        for (std::map<SOCKET, UdpSocketPosix*>::iterator it =
+                 _socketMap.begin();
+             it != _socketMap.end();
+             ++it) {
+          delete it->second;
         }
+        _socketMap.clear();
         _critSectList->Leave();
 
         delete _critSectList;
@@ -264,18 +262,19 @@ bool UdpSocketManagerPosixImpl::Process()
     struct timeval timeout;
     timeout.tv_sec = 0;
     timeout.tv_usec = 10000;
-    MapItem* it;
 
     FD_ZERO(&_readFds);
 
     UpdateSocketMap();
 
-    unsigned int maxFd = 0;
-    for (it = _socketMap.First(); it != NULL; it=_socketMap.Next(it))
-    {
-        doSelect = true;
-        maxFd = maxFd > it->GetUnsignedId() ? maxFd : it->GetUnsignedId();
-        FD_SET(it->GetUnsignedId(), &_readFds);
+    SOCKET maxFd = 0;
+    for (std::map<SOCKET, UdpSocketPosix*>::iterator it = _socketMap.begin();
+         it != _socketMap.end();
+         ++it) {
+      doSelect = true;
+      if (it->first > maxFd)
+        maxFd = it->first;
+      FD_SET(it->first, &_readFds);
     }
 
     int num = 0;
@@ -296,16 +295,15 @@ bool UdpSocketManagerPosixImpl::Process()
         return true;
     }
 
-    for (it = _socketMap.First(); it != NULL && num > 0;
-         it = _socketMap.Next(it))
-    {
-        UdpSocketPosix* s = static_cast<UdpSocketPosix*>(it->GetItem());
-        if (FD_ISSET(it->GetUnsignedId(), &_readFds))
-        {
-            s->HasIncoming();
-            num--;
-        }
+    for (std::map<SOCKET, UdpSocketPosix*>::iterator it = _socketMap.begin();
+         it != _socketMap.end();
+         ++it) {
+      if (FD_ISSET(it->first, &_readFds)) {
+        it->second->HasIncoming();
+        --num;
+      }
     }
+
     return true;
 }
 
@@ -352,11 +350,11 @@ bool UdpSocketManagerPosixImpl::RemoveSocket(UdpSocketWrapper* s)
 
     // Checking the socket map is safe since all Erase and Insert calls to this
     // map are also protected by _critSectList.
-    if(_socketMap.Find(static_cast<UdpSocketPosix*>(s)->GetFd()) != NULL)
-    {
-        _removeList.PushBack(static_cast<UdpSocketPosix*>(s)->GetFd());
-        _critSectList->Leave();
-         return true;
+    if (_socketMap.find(static_cast<UdpSocketPosix*>(s)->GetFd()) !=
+        _socketMap.end()) {
+      _removeList.PushBack(static_cast<UdpSocketPosix*>(s)->GetFd());
+      _critSectList->Leave();
+      return true;
     }
     _critSectList->Leave();
     return false;
@@ -369,7 +367,7 @@ void UdpSocketManagerPosixImpl::UpdateSocketMap()
     while(!_removeList.Empty())
     {
         UdpSocketPosix* deleteSocket = NULL;
-        unsigned int removeFD = _removeList.First()->GetUnsignedItem();
+        SOCKET removeFD = _removeList.First()->GetUnsignedItem();
 
         // If the socket is in the add list it hasn't been added to the socket
         // map yet. Just remove the socket from the add list.
@@ -377,7 +375,7 @@ void UdpSocketManagerPosixImpl::UpdateSocketMap()
         while(addListItem)
         {
             UdpSocketPosix* addSocket = (UdpSocketPosix*)addListItem->GetItem();
-            unsigned int addFD = addSocket->GetFd();
+            SOCKET addFD = addSocket->GetFd();
             if(removeFD == addFD)
             {
                 deleteSocket = addSocket;
@@ -388,16 +386,12 @@ void UdpSocketManagerPosixImpl::UpdateSocketMap()
         }
 
         // Find and remove socket from _socketMap.
-        MapItem* it = _socketMap.Find(removeFD);
-        if(it != NULL)
+        std::map<SOCKET, UdpSocketPosix*>::iterator it =
+            _socketMap.find(removeFD);
+        if(it != _socketMap.end())
         {
-            UdpSocketPosix* socket =
-                static_cast<UdpSocketPosix*>(it->GetItem());
-            if(socket)
-            {
-                deleteSocket = socket;
-            }
-            _socketMap.Erase(it);
+          deleteSocket = it->second;
+          _socketMap.erase(it);
         }
         if(deleteSocket)
         {
@@ -412,9 +406,8 @@ void UdpSocketManagerPosixImpl::UpdateSocketMap()
     {
         UdpSocketPosix* s =
             static_cast<UdpSocketPosix*>(_addList.First()->GetItem());
-        if(s)
-        {
-            _socketMap.Insert(s->GetFd(), s);
+        if(s) {
+          _socketMap[s->GetFd()] = s;
         }
         _addList.PopFront();
     }

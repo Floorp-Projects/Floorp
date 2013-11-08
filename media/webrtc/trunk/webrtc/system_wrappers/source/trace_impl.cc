@@ -10,7 +10,7 @@
 
 #include "webrtc/system_wrappers/source/trace_impl.h"
 
-#include <cassert>
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,8 +34,7 @@ namespace webrtc {
 const int Trace::kBoilerplateLength = 71;
 const int Trace::kTimestampPosition = 13;
 const int Trace::kTimestampLength = 12;
-
-static uint32_t level_filter = kTraceDefault;
+uint32_t Trace::level_filter_ = kTraceDefault;
 
 // Construct On First Use idiom. Avoids "static initialization order fiasco".
 TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
@@ -44,7 +43,7 @@ TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
   // performance reasons). count_operation == kAddRefNoCreate implies that a
   // message will be written to file.
   if ((level != kTraceAll) && (count_operation == kAddRefNoCreate)) {
-    if (!(level & level_filter)) {
+    if (!(level & level_filter())) {
       return NULL;
     }
   }
@@ -486,13 +485,13 @@ void TraceImpl::AddMessageToList(
   length_[active_queue_][idx] = length;
   memcpy(message_queue_[active_queue_][idx], trace_message, length);
 
-  if (next_free_idx_[active_queue_] >= WEBRTC_TRACE_MAX_QUEUE - 1) {
+  if (next_free_idx_[active_queue_] == WEBRTC_TRACE_MAX_QUEUE - 1) {
     // Logging more messages than can be worked off. Log a warning.
     const char warning_msg[] = "WARNING MISSING TRACE MESSAGES\n";
-    level_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = kTraceWarning;
-    length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = strlen(warning_msg);
-    memcpy(message_queue_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1],
-           warning_msg, length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1]);
+    level_[active_queue_][next_free_idx_[active_queue_]] = kTraceWarning;
+    length_[active_queue_][next_free_idx_[active_queue_]] = strlen(warning_msg);
+    memcpy(message_queue_[active_queue_][next_free_idx_[active_queue_]],
+           warning_msg, strlen(warning_msg));
     next_free_idx_[active_queue_]++;
   }
 }
@@ -654,7 +653,7 @@ void TraceImpl::AddImpl(const TraceLevel level, const TraceModule module,
 }
 
 bool TraceImpl::TraceCheck(const TraceLevel level) const {
-  return (level & level_filter) ? true : false;
+  return (level & level_filter()) ? true : false;
 }
 
 bool TraceImpl::UpdateFileName(
@@ -727,16 +726,6 @@ void Trace::CreateTrace() {
 
 void Trace::ReturnTrace() {
   TraceImpl::StaticInstance(kRelease);
-}
-
-int32_t Trace::SetLevelFilter(uint32_t filter) {
-  level_filter = filter;
-  return 0;
-}
-
-int32_t Trace::LevelFilter(uint32_t& filter) {
-  filter = level_filter;
-  return 0;
 }
 
 int32_t Trace::TraceFile(char file_name[FileWrapper::kMaxFileNameSize]) {

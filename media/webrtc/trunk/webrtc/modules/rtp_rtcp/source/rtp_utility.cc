@@ -10,9 +10,9 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 
-#include <cassert>
-#include <cmath>  // ceil
-#include <cstring>  // memcpy
+#include <assert.h>
+#include <math.h>  // ceil
+#include <string.h>  // memcpy
 
 #if defined(_WIN32)
 // Order for these headers are important
@@ -21,7 +21,7 @@
 #include <WinSock.h>  // timeval
 
 #include <MMSystem.h>  // timeGetTime
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC))
 #include <sys/time.h>  // gettimeofday
 #include <time.h>
 #endif
@@ -46,11 +46,35 @@
 
 namespace webrtc {
 
+RtpData* NullObjectRtpData() {
+  static NullRtpData null_rtp_data;
+  return &null_rtp_data;
+}
+
+RtpFeedback* NullObjectRtpFeedback() {
+  static NullRtpFeedback null_rtp_feedback;
+  return &null_rtp_feedback;
+}
+
+RtpAudioFeedback* NullObjectRtpAudioFeedback() {
+  static NullRtpAudioFeedback null_rtp_audio_feedback;
+  return &null_rtp_audio_feedback;
+}
+
+ReceiveStatistics* NullObjectReceiveStatistics() {
+  static NullReceiveStatistics null_receive_statistics;
+  return &null_receive_statistics;
+}
+
 namespace ModuleRTPUtility {
 
 enum {
+  kRtcpExpectedVersion = 2,
   kRtcpMinHeaderLength = 4,
-  kRtcpExpectedVersion = 2
+  kRtcpMinParseLength = 8,
+
+  kRtpExpectedVersion = 2,
+  kRtpMinParseLength = 12
 };
 
 /*
@@ -72,9 +96,9 @@ uint32_t GetCurrentRTP(Clock* clock, uint32_t freq) {
 }
 
 uint32_t ConvertNTPTimeToRTP(uint32_t NTPsec, uint32_t NTPfrac, uint32_t freq) {
-  float ftemp = (float)NTPfrac / (float)NTP_FRAC; 
+  float ftemp = (float)NTPfrac / (float)NTP_FRAC;
   uint32_t tmp = (uint32_t)(ftemp * freq);
- return NTPsec * freq + tmp;
+  return NTPsec * freq + tmp;
 }
 
 uint32_t ConvertNTPTimeToMS(uint32_t NTPsec, uint32_t NTPfrac) {
@@ -89,24 +113,12 @@ uint32_t ConvertNTPTimeToMS(uint32_t NTPsec, uint32_t NTPfrac) {
  * Misc utility routines
  */
 
-const uint8_t* GetPayloadData(const RTPHeader& rtp_header,
-                              const uint8_t* packet) {
-  return packet + rtp_header.headerLength;
-}
-
-uint16_t GetPayloadDataLength(const RTPHeader& rtp_header,
-                              const uint16_t packet_length) {
-  uint16_t length = packet_length - rtp_header.paddingLength -
-      rtp_header.headerLength;
-  return static_cast<uint16_t>(length);
-}
-
 #if defined(_WIN32)
 bool StringCompare(const char* str1, const char* str2,
                    const uint32_t length) {
   return (_strnicmp(str1, str2, length) == 0) ? true : false;
 }
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 bool StringCompare(const char* str1, const char* str2,
                    const uint32_t length) {
   return (strncasecmp(str1, str2, length) == 0) ? true : false;
@@ -146,7 +158,7 @@ void AssignUWord24ToBuffer(uint8_t* dataBuffer, uint32_t value) {
 }
 
 void AssignUWord16ToBuffer(uint8_t* dataBuffer, uint16_t value) {
-#if defined(WEBRTC_LITTLE_ENDIAN) 
+#if defined(WEBRTC_LITTLE_ENDIAN)
   dataBuffer[0] = static_cast<uint8_t>(value >> 8);
   dataBuffer[1] = static_cast<uint8_t>(value);
 #else
@@ -184,9 +196,9 @@ void RTPPayload::SetType(RtpVideoCodecTypes videoType) {
   type = videoType;
 
   switch (type) {
-    case kRtpGenericVideo:
+    case kRtpVideoGeneric:
       break;
-    case kRtpVp8Video: {
+    case kRtpVideoVp8: {
       info.VP8.nonReferenceFrame = false;
       info.VP8.beginningOfPartition = false;
       info.VP8.partitionID = 0;
@@ -291,11 +303,39 @@ bool RTPHeaderParser::RTCP() const {
   return RTCP;
 }
 
+bool RTPHeaderParser::ParseRtcp(RTPHeader* header) const {
+  assert(header != NULL);
+
+  const ptrdiff_t length = _ptrRTPDataEnd - _ptrRTPDataBegin;
+  if (length < kRtcpMinParseLength) {
+    return false;
+  }
+
+  const uint8_t V = _ptrRTPDataBegin[0] >> 6;
+  if (V != kRtcpExpectedVersion) {
+    return false;
+  }
+
+  const uint8_t PT = _ptrRTPDataBegin[1];
+  const uint16_t len = (_ptrRTPDataBegin[2] << 8) + _ptrRTPDataBegin[3];
+  const uint8_t* ptr = &_ptrRTPDataBegin[4];
+
+  uint32_t SSRC = *ptr++ << 24;
+  SSRC += *ptr++ << 16;
+  SSRC += *ptr++ << 8;
+  SSRC += *ptr++;
+
+  header->payloadType  = PT;
+  header->ssrc         = SSRC;
+  header->headerLength = 4 + (len << 2);
+
+  return true;
+}
+
 bool RTPHeaderParser::Parse(RTPHeader& header,
                             RtpHeaderExtensionMap* ptrExtensionMap) const {
   const ptrdiff_t length = _ptrRTPDataEnd - _ptrRTPDataBegin;
-
-  if (length < 12) {
+  if (length < kRtpMinParseLength) {
     return false;
   }
 
@@ -325,7 +365,7 @@ bool RTPHeaderParser::Parse(RTPHeader& header,
   SSRC += *ptr++ << 8;
   SSRC += *ptr++;
 
-  if (V != 2) {
+  if (V != kRtpExpectedVersion) {
     return false;
   }
 
@@ -535,9 +575,9 @@ bool RTPPayloadParser::Parse(RTPPayload& parsedPacket) const {
   parsedPacket.SetType(_videoType);
 
   switch (_videoType) {
-    case kRtpGenericVideo:
+    case kRtpVideoGeneric:
       return ParseGeneric(parsedPacket);
-    case kRtpVp8Video:
+    case kRtpVideoVp8:
       return ParseVP8(parsedPacket);
     default:
       return false;

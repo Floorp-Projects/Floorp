@@ -8,16 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_SESSION_INFO_H_
-#define WEBRTC_MODULES_VIDEO_CODING_SESSION_INFO_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_MAIN_SOURCE_SESSION_INFO_H_
+#define WEBRTC_MODULES_VIDEO_CODING_MAIN_SOURCE_SESSION_INFO_H_
 
 #include <list>
 
-#include "modules/interface/module_common_types.h"
-#include "modules/video_coding/main/source/packet.h"
-#include "typedefs.h"  // NOLINT(build/include)
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding.h"
+#include "webrtc/modules/video_coding/main/source/packet.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
+// Used to pass data from jitter buffer to session info.
+// This data is then used in determining whether a frame is decodable.
+struct FrameData {
+  int rtt_ms;
+  float rolling_average_packets_per_frame;
+};
 
 class VCMSessionInfo {
  public:
@@ -41,8 +48,8 @@ class VCMSessionInfo {
   void Reset();
   int InsertPacket(const VCMPacket& packet,
                    uint8_t* frame_buffer,
-                   bool enable_decodable_state,
-                   int rtt_ms);
+                   VCMDecodeErrorMode enable_decodable_state,
+                   const FrameData& frame_data);
   bool complete() const;
   bool decodable() const;
 
@@ -58,7 +65,15 @@ class VCMSessionInfo {
   // memory to remove any empty space.
   // Returns the number of bytes deleted from the session.
   int MakeDecodable();
+
+  // Sets decodable_ to false.
+  // Used by the dual decoder. After the mode is changed to kNoErrors from
+  // kWithErrors or kSelective errors, any states that have been marked
+  // decodable and are not complete are marked as non-decodable.
+  void SetNotDecodableIfIncomplete();
+
   int SessionLength() const;
+  int NumPackets() const;
   bool HaveFirstPacket() const;
   bool HaveLastPacket() const;
   bool session_nack() const;
@@ -72,8 +87,6 @@ class VCMSessionInfo {
   bool LayerSync() const;
   int Tl0PicId() const;
   bool NonReference() const;
-  void SetPreviousFrameLoss() { previous_frame_loss_ = true; }
-  bool PreviousFrameLoss() const { return previous_frame_loss_; }
 
   // The number of packets discarded because the decoder can't make use of
   // them.
@@ -94,8 +107,7 @@ class VCMSessionInfo {
   // |it| is expected to point to the last packet of the previous partition,
   // or to the first packet of the frame. |packets_skipped| is incremented
   // for each packet found which doesn't have the beginning bit set.
-  PacketIterator FindNextPartitionBeginning(PacketIterator it,
-                                            int* packets_skipped) const;
+  PacketIterator FindNextPartitionBeginning(PacketIterator it) const;
 
   // Returns an iterator pointing to the last packet of the partition pointed to
   // by |it|.
@@ -114,7 +126,21 @@ class VCMSessionInfo {
 
   // When enabled, determine if session is decodable, i.e. incomplete but
   // would be sent to the decoder.
-  void UpdateDecodableSession(int rtt_ms);
+  // Note: definition assumes random loss.
+  // A frame is defined to be decodable when:
+  //  Round trip time is higher than threshold
+  //  It is not a key frame
+  //  It has the first packet: In VP8 the first packet contains all or part of
+  //    the first partition, which consists of the most relevant information for
+  //    decoding.
+  //  Either more than the upper threshold of the average number of packets per
+  //        frame is present
+  //      or less than the lower threshold of the average number of packets per
+  //        frame is present: suggests a small frame. Such a frame is unlikely
+  //        to contain many motion vectors, so having the first packet will
+  //        likely suffice. Once we have more than the lower threshold of the
+  //        frame, we know that the frame is medium or large-sized.
+  void UpdateDecodableSession(const FrameData& frame_data);
 
   // If this session has been NACKed by the jitter buffer.
   bool session_nack_;
@@ -126,10 +152,16 @@ class VCMSessionInfo {
   PacketList packets_;
   int empty_seq_num_low_;
   int empty_seq_num_high_;
-  // Number of packets discarded because the decoder can't use them.
-  int packets_not_decodable_;
+
+  // The following two variables correspond to the first and last media packets
+  // in a session defined by the first packet flag and the marker bit.
+  // They are not necessarily equal to the front and back packets, as packets
+  // may enter out of order.
+  // TODO(mikhal): Refactor the list to use a map.
+  int first_packet_seq_num_;
+  int last_packet_seq_num_;
 };
 
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_SESSION_INFO_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_MAIN_SOURCE_SESSION_INFO_H_

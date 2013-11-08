@@ -13,14 +13,14 @@
 
 #include <AudioUnit/AudioUnit.h>
 
-#include "audio_device_generic.h"
-#include "critical_section_wrapper.h"
+#include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 class ThreadWrapper;
 
-const uint32_t N_REC_SAMPLES_PER_SEC = 44100;
-const uint32_t N_PLAY_SAMPLES_PER_SEC = 44100;
+const uint32_t N_REC_SAMPLES_PER_SEC = 44000;
+const uint32_t N_PLAY_SAMPLES_PER_SEC = 44000;
 
 const uint32_t N_REC_CHANNELS = 1;  // default is mono recording
 const uint32_t N_PLAY_CHANNELS = 1;  // default is mono playout

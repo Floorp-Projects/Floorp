@@ -36,4 +36,10 @@
 #define DISABLED_ON_WIN(test) test
 #endif
 
+#ifdef WEBRTC_ANDROID
+#define DISABLED_ON_ANDROID(test) DISABLED_##test
+#else
+#define DISABLED_ON_ANDROID(test) test
+#endif
+
 #endif  // TEST_TESTSUPPORT_INCLUDE_GTEST_DISABLE_H_

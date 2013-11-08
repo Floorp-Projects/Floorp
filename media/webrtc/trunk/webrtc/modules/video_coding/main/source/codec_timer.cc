@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "codec_timer.h"
+#include "webrtc/modules/video_coding/main/source/codec_timer.h"
 
 #include <assert.h>
 

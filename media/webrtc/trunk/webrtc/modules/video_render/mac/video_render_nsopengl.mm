@@ -64,7 +64,7 @@ VideoChannelNSOpenGL::~VideoChannelNSOpenGL()
 
 int VideoChannelNSOpenGL::ChangeContext(NSOpenGLContext *nsglContext)
 {
-    _owner->UnlockAGLCntx();
+    _owner->LockAGLCntx();
 
     _nsglContext = nsglContext;
     [_nsglContext makeCurrentContext];
@@ -556,7 +556,8 @@ int VideoRenderNSOpenGL::setRenderTargetWindow()
         0
     };
 
-    NSOpenGLPixelFormat* fmt = [[NSOpenGLPixelFormat alloc] initWithAttributes: (NSOpenGLPixelFormatAttribute*) attribs];
+    NSOpenGLPixelFormat* fmt = [[[NSOpenGLPixelFormat alloc] initWithAttributes:
+                          (NSOpenGLPixelFormatAttribute*) attribs] autorelease];
 
     if(_windowRef)
     {
@@ -567,8 +568,6 @@ int VideoRenderNSOpenGL::setRenderTargetWindow()
         UnlockAGLCntx();
         return -1;
     }
-
-    [fmt release];
 
     _nsglContext = [_windowRef nsOpenGLContext];
     [_nsglContext makeCurrentContext];
@@ -597,7 +596,8 @@ int VideoRenderNSOpenGL::setRenderTargetFullScreen()
         0
     };
 
-    NSOpenGLPixelFormat* fmt = [[NSOpenGLPixelFormat alloc] initWithAttributes: (NSOpenGLPixelFormatAttribute*) attribs];
+    NSOpenGLPixelFormat* fmt = [[[NSOpenGLPixelFormat alloc] initWithAttributes:
+                          (NSOpenGLPixelFormatAttribute*) attribs] autorelease];
 
     // Store original superview and frame for use when exiting full screens
     _windowRefSuperViewFrame = [_windowRef frame];
@@ -623,8 +623,6 @@ int VideoRenderNSOpenGL::setRenderTargetFullScreen()
         UnlockAGLCntx();
         return -1;
     }
-
-    [fmt release];
 
     _nsglContext = [_windowRef nsOpenGLContext];
     [_nsglContext makeCurrentContext];
@@ -1260,6 +1258,6 @@ void VideoRenderNSOpenGL::UnlockAGLCntx()
  */
 
 
-} //namespace webrtc
+}  // namespace webrtc
 
 #endif // COCOA_RENDERING

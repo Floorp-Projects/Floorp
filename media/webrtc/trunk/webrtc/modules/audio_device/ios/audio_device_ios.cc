@@ -10,10 +10,10 @@
 
 #include <AudioToolbox/AudioServices.h>  // AudioSession
 
-#include "audio_device_ios.h"
+#include "webrtc/modules/audio_device/ios/audio_device_ios.h"
 
-#include "trace.h"
-#include "thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 AudioDeviceIPhone::AudioDeviceIPhone(const int32_t id)
@@ -1332,7 +1332,7 @@ int32_t AudioDeviceIPhone::InitPlayOrRecord() {
     // todo: Add 48 kHz (increase buffer sizes). Other fs?
     if ((playoutDesc.mSampleRate > 44090.0)
         && (playoutDesc.mSampleRate < 44110.0)) {
-        _adbSampFreq = 44100;
+        _adbSampFreq = 44000;
     } else if ((playoutDesc.mSampleRate > 15990.0)
                && (playoutDesc.mSampleRate < 16010.0)) {
         _adbSampFreq = 16000;
@@ -1895,4 +1895,3 @@ bool AudioDeviceIPhone::CaptureWorkerThread() {
 }
 
 }  // namespace webrtc
-

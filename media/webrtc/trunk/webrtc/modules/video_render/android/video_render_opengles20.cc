@@ -14,18 +14,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "video_render_opengles20.h"
+#include "webrtc/modules/video_render/android/video_render_opengles20.h"
 
 //#define ANDROID_LOG
 
 #ifdef ANDROID_LOG
-#include <stdio.h>
 #include <android/log.h>
+#include <stdio.h>
 
 #undef WEBRTC_TRACE
 #define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTCN*", __VA_ARGS__)
 #else
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 #endif
 
 namespace webrtc {

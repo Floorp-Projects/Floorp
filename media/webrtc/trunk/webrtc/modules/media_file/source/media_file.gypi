@@ -12,7 +12,6 @@
       'target_name': 'media_file',
       'type': 'static_library',
       'dependencies': [
-        'webrtc_utility',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
       'defines': [

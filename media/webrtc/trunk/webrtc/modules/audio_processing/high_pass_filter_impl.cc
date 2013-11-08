@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/audio_processing/high_pass_filter_impl.h"
 
-#include <cassert>
+#include <assert.h>
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"

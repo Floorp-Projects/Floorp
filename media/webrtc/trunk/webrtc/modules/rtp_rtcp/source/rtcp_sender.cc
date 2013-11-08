@@ -10,10 +10,11 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_sender.h"
 
-#include <algorithm>  // min
-#include <cassert>  // assert
-#include <cstdlib>  // rand
+#include <assert.h>  // assert
+#include <stdlib.h>  // rand
 #include <string.h>  // memcpy
+
+#include <algorithm>  // min
 
 #include "webrtc/common_types.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_impl.h"
@@ -30,6 +31,8 @@ NACKStringBuilder::NACKStringBuilder() :
 {
     // Empty.
 }
+
+NACKStringBuilder::~NACKStringBuilder() {}
 
 void NACKStringBuilder::PushNACK(uint16_t nack)
 {
@@ -62,15 +65,41 @@ std::string NACKStringBuilder::GetResult()
     return _stream.str();
 }
 
+RTCPSender::FeedbackState::FeedbackState(ModuleRtpRtcpImpl* module)
+    : send_payload_type(module->SendPayloadType()),
+      frequency_hz(module->CurrentSendFrequencyHz()),
+      packet_count_sent(module->PacketCountSent()),
+      byte_count_sent(module->ByteCountSent()),
+      module(module) {
+  uint32_t last_ntp_secs = 0, last_ntp_frac = 0, last_remote_sr = 0;
+  module->LastReceivedNTP(last_ntp_secs, last_ntp_frac, last_remote_sr);
+  last_rr_ntp_secs = last_ntp_secs;
+  last_rr_ntp_frac = last_ntp_frac;
+  remote_sr = last_remote_sr;
+
+  uint32_t send_bitrate = 0, tmp;
+  module->BitrateSent(&send_bitrate, &tmp, &tmp, &tmp);
+  this->send_bitrate = send_bitrate;
+}
+
+RTCPSender::FeedbackState::FeedbackState()
+    : send_payload_type(0),
+      frequency_hz(0),
+      packet_count_sent(0),
+      byte_count_sent(0),
+      send_bitrate(0),
+      last_rr_ntp_secs(0),
+      last_rr_ntp_frac(0),
+      remote_sr(0) {}
+
 RTCPSender::RTCPSender(const int32_t id,
                        const bool audio,
                        Clock* clock,
-                       ModuleRtpRtcpImpl* owner) :
+                       ReceiveStatistics* receive_statistics) :
     _id(id),
     _audio(audio),
     _clock(clock),
     _method(kRtcpOff),
-    _rtpRtcp(*owner),
     _criticalSectionTransport(CriticalSectionWrapper::CreateCriticalSection()),
     _cbTransport(NULL),
 
@@ -89,7 +118,9 @@ RTCPSender::RTCPSender(const int32_t id,
     _SSRC(0),
     _remoteSSRC(0),
     _CNAME(),
-    _reportBlocks(),
+    receive_statistics_(receive_statistics),
+    internal_report_blocks_(),
+    external_report_blocks_(),
     _csrcCNAMEs(),
 
     _cameraDelayMS(0),
@@ -134,11 +165,15 @@ RTCPSender::~RTCPSender() {
   delete [] _rembSSRC;
   delete [] _appData;
 
-  while (!_reportBlocks.empty()) {
+  while (!internal_report_blocks_.empty()) {
+    delete internal_report_blocks_.begin()->second;
+    internal_report_blocks_.erase(internal_report_blocks_.begin());
+  }
+  while (!external_report_blocks_.empty()) {
     std::map<uint32_t, RTCPReportBlock*>::iterator it =
-        _reportBlocks.begin();
+        external_report_blocks_.begin();
     delete it->second;
-    _reportBlocks.erase(it);
+    external_report_blocks_.erase(it);
   }
   while (!_csrcCNAMEs.empty()) {
     std::map<uint32_t, RTCPCnameInformation*>::iterator it =
@@ -250,7 +285,7 @@ RTCPSender::Sending() const
 }
 
 int32_t
-RTCPSender::SetSendingStatus(const bool sending)
+RTCPSender::SetSendingStatus(const FeedbackState& feedback_state, bool sending)
 {
     bool sendRTCPBye = false;
     {
@@ -268,7 +303,7 @@ RTCPSender::SetSendingStatus(const bool sending)
     }
     if(sendRTCPBye)
     {
-        return SendRTCP(kRtcpBye);
+        return SendRTCP(feedback_state, kRtcpBye);
     }
     return 0;
 }
@@ -373,12 +408,10 @@ RTCPSender::SetSSRC( const uint32_t ssrc)
     _SSRC = ssrc;
 }
 
-int32_t
-RTCPSender::SetRemoteSSRC( const uint32_t ssrc)
+void RTCPSender::SetRemoteSSRC(uint32_t ssrc)
 {
     CriticalSectionScoped lock(_criticalSectionRTCPSender);
     _remoteSSRC = ssrc;
-    return 0;
 }
 
 int32_t
@@ -558,52 +591,59 @@ RTCPSender::SendTimeOfSendReport(const uint32_t sendReport)
     return 0;
 }
 
-int32_t RTCPSender::AddReportBlock(const uint32_t SSRC,
-                                   const RTCPReportBlock* reportBlock) {
+int32_t RTCPSender::AddExternalReportBlock(
+    uint32_t SSRC,
+    const RTCPReportBlock* reportBlock) {
+  CriticalSectionScoped lock(_criticalSectionRTCPSender);
+  return AddReportBlock(SSRC, &external_report_blocks_, reportBlock);
+}
+
+int32_t RTCPSender::AddReportBlock(
+    uint32_t SSRC,
+    std::map<uint32_t, RTCPReportBlock*>* report_blocks,
+    const RTCPReportBlock* reportBlock) {
   if (reportBlock == NULL) {
     WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, _id,
                  "%s invalid argument", __FUNCTION__);
     return -1;
   }
-  CriticalSectionScoped lock(_criticalSectionRTCPSender);
 
-  if (_reportBlocks.size() >= RTCP_MAX_REPORT_BLOCKS) {
+  if (report_blocks->size() >= RTCP_MAX_REPORT_BLOCKS) {
     WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, _id,
                  "%s invalid argument", __FUNCTION__);
     return -1;
   }
   std::map<uint32_t, RTCPReportBlock*>::iterator it =
-      _reportBlocks.find(SSRC);
-  if (it != _reportBlocks.end()) {
+      report_blocks->find(SSRC);
+  if (it != report_blocks->end()) {
     delete it->second;
-    _reportBlocks.erase(it);
+    report_blocks->erase(it);
   }
   RTCPReportBlock* copyReportBlock = new RTCPReportBlock();
   memcpy(copyReportBlock, reportBlock, sizeof(RTCPReportBlock));
-  _reportBlocks[SSRC] = copyReportBlock;
+  (*report_blocks)[SSRC] = copyReportBlock;
   return 0;
 }
 
-int32_t RTCPSender::RemoveReportBlock(const uint32_t SSRC) {
+int32_t RTCPSender::RemoveExternalReportBlock(uint32_t SSRC) {
   CriticalSectionScoped lock(_criticalSectionRTCPSender);
 
   std::map<uint32_t, RTCPReportBlock*>::iterator it =
-      _reportBlocks.find(SSRC);
+      external_report_blocks_.find(SSRC);
 
-  if (it == _reportBlocks.end()) {
+  if (it == external_report_blocks_.end()) {
     return -1;
   }
   delete it->second;
-  _reportBlocks.erase(it);
+  external_report_blocks_.erase(it);
   return 0;
 }
 
-int32_t
-RTCPSender::BuildSR(uint8_t* rtcpbuffer,
-                    uint32_t& pos,
-                    const uint32_t NTPsec,
-                    const uint32_t NTPfrac,
-                    const RTCPReportBlock* received)
+int32_t RTCPSender::BuildSR(const FeedbackState& feedback_state,
+                            uint8_t* rtcpbuffer,
+                            int& pos,
+                            uint32_t NTPsec,
+                            uint32_t NTPfrac)
 {
     // sanity
     if(pos + 52 >= IP_PACKET_SIZE)
@@ -629,11 +669,6 @@ RTCPSender::BuildSR(uint8_t* rtcpbuffer,
     _lastRTCPTime[0] = Clock::NtpToMs(NTPsec, NTPfrac);
     _lastSendReport[0] = (NTPsec << 16) + (NTPfrac >> 16);
 
-    uint32_t freqHz = 90000; // For video
-    if(_audio) {
-      freqHz =  _rtpRtcp.CurrentSendFrequencyHz();
-    }
-
     // The timestamp of this RTCP packet should be estimated as the timestamp of
     // the frame being captured at this moment. We are calculating that
     // timestamp as the last frame's timestamp + the time since the last frame
@@ -643,7 +678,7 @@ RTCPSender::BuildSR(uint8_t* rtcpbuffer,
       CriticalSectionScoped lock(_criticalSectionRTCPSender);
       RTPtime = start_timestamp_ + last_rtp_timestamp_ + (
           _clock->TimeInMilliseconds() - last_frame_capture_time_ms_) *
-          (freqHz / 1000);
+          (feedback_state.frequency_hz / 1000);
     }
 
     // Add sender data
@@ -663,20 +698,25 @@ RTCPSender::BuildSR(uint8_t* rtcpbuffer,
     pos += 4;
 
     //sender's packet count
-    ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos, _rtpRtcp.PacketCountSent());
+    ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos,
+                                            feedback_state.packet_count_sent);
     pos += 4;
 
     //sender's octet count
-    ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos, _rtpRtcp.ByteCountSent());
+    ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos,
+                                            feedback_state.byte_count_sent);
     pos += 4;
 
     uint8_t numberOfReportBlocks = 0;
-    int32_t retVal = AddReportBlocks(rtcpbuffer, pos, numberOfReportBlocks, received, NTPsec, NTPfrac);
+    int32_t retVal = WriteAllReportBlocksToBuffer(rtcpbuffer, pos,
+                                                  numberOfReportBlocks,
+                                                  NTPsec, NTPfrac);
     if(retVal < 0)
     {
         //
         return retVal ;
     }
+    pos = retVal;
     rtcpbuffer[posNumberOfReportBlocks] += numberOfReportBlocks;
 
     uint16_t len = uint16_t((pos/4) -1);
@@ -685,8 +725,7 @@ RTCPSender::BuildSR(uint8_t* rtcpbuffer,
 }
 
 
-int32_t RTCPSender::BuildSDEC(uint8_t* rtcpbuffer,
-                              uint32_t& pos) {
+int32_t RTCPSender::BuildSDEC(uint8_t* rtcpbuffer, int& pos) {
   size_t lengthCname = strlen(_CNAME);
   assert(lengthCname < RTCP_CNAME_SIZE);
 
@@ -781,10 +820,9 @@ int32_t RTCPSender::BuildSDEC(uint8_t* rtcpbuffer,
 
 int32_t
 RTCPSender::BuildRR(uint8_t* rtcpbuffer,
-                    uint32_t& pos,
+                    int& pos,
                     const uint32_t NTPsec,
-                    const uint32_t NTPfrac,
-                    const RTCPReportBlock* received)
+                    const uint32_t NTPfrac)
 {
     // sanity one block
     if(pos + 32 >= IP_PACKET_SIZE)
@@ -805,11 +843,14 @@ RTCPSender::BuildRR(uint8_t* rtcpbuffer,
     pos += 4;
 
     uint8_t numberOfReportBlocks = 0;
-    int32_t retVal = AddReportBlocks(rtcpbuffer, pos, numberOfReportBlocks, received, NTPsec, NTPfrac);
+    int retVal = WriteAllReportBlocksToBuffer(rtcpbuffer, pos,
+                                              numberOfReportBlocks,
+                                              NTPsec, NTPfrac);
     if(retVal < 0)
     {
-        return retVal;
+        return pos;
     }
+    pos = retVal;
     rtcpbuffer[posNumberOfReportBlocks] += numberOfReportBlocks;
 
     uint16_t len = uint16_t((pos)/4 -1);
@@ -838,10 +879,10 @@ RTCPSender::BuildRR(uint8_t* rtcpbuffer,
 int32_t
 RTCPSender::BuildExtendedJitterReport(
     uint8_t* rtcpbuffer,
-    uint32_t& pos,
+    int& pos,
     const uint32_t jitterTransmissionTimeOffset)
 {
-    if (_reportBlocks.size() > 0)
+    if (external_report_blocks_.size() > 0)
     {
         WEBRTC_TRACE(kTraceWarning, kTraceRtpRtcp, _id, "Not implemented.");
         return 0;
@@ -869,7 +910,7 @@ RTCPSender::BuildExtendedJitterReport(
 }
 
 int32_t
-RTCPSender::BuildPLI(uint8_t* rtcpbuffer, uint32_t& pos)
+RTCPSender::BuildPLI(uint8_t* rtcpbuffer, int& pos)
 {
     // sanity
     if(pos + 12 >= IP_PACKET_SIZE)
@@ -896,7 +937,7 @@ RTCPSender::BuildPLI(uint8_t* rtcpbuffer, uint32_t& pos)
 }
 
 int32_t RTCPSender::BuildFIR(uint8_t* rtcpbuffer,
-                             uint32_t& pos,
+                             int& pos,
                              bool repeat) {
   // sanity
   if(pos + 20 >= IP_PACKET_SIZE)  {
@@ -945,7 +986,7 @@ int32_t RTCPSender::BuildFIR(uint8_t* rtcpbuffer,
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 */
 int32_t
-RTCPSender::BuildSLI(uint8_t* rtcpbuffer, uint32_t& pos, const uint8_t pictureID)
+RTCPSender::BuildSLI(uint8_t* rtcpbuffer, int& pos, const uint8_t pictureID)
 {
     // sanity
     if(pos + 16 >= IP_PACKET_SIZE)
@@ -992,7 +1033,7 @@ RTCPSender::BuildSLI(uint8_t* rtcpbuffer, uint32_t& pos, const uint8_t pictureID
 */
 int32_t
 RTCPSender::BuildRPSI(uint8_t* rtcpbuffer,
-                     uint32_t& pos,
+                     int& pos,
                      const uint64_t pictureID,
                      const uint8_t payloadType)
 {
@@ -1068,7 +1109,7 @@ RTCPSender::BuildRPSI(uint8_t* rtcpbuffer,
 }
 
 int32_t
-RTCPSender::BuildREMB(uint8_t* rtcpbuffer, uint32_t& pos)
+RTCPSender::BuildREMB(uint8_t* rtcpbuffer, int& pos)
 {
     // sanity
     if(pos + 20 + 4 * _lengthRembSSRC >= IP_PACKET_SIZE)
@@ -1118,7 +1159,6 @@ RTCPSender::BuildREMB(uint8_t* rtcpbuffer, uint32_t& pos)
         ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos, _rembSSRC[i]);
         pos += 4;
     }
-    TRACE_COUNTER_ID1("webrtc_rtp", "RTCPRembBitrate", _SSRC, _rembBitrate);
     return 0;
 }
 
@@ -1129,9 +1169,11 @@ RTCPSender::SetTargetBitrate(unsigned int target_bitrate)
     _tmmbr_Send = target_bitrate / 1000;
 }
 
-int32_t
-RTCPSender::BuildTMMBR(uint8_t* rtcpbuffer, uint32_t& pos)
-{
+int32_t RTCPSender::BuildTMMBR(ModuleRtpRtcpImpl* rtp_rtcp_module,
+                               uint8_t* rtcpbuffer,
+                               int& pos) {
+    if (rtp_rtcp_module == NULL)
+      return -1;
     // Before sending the TMMBR check the received TMMBN, only an owner is allowed to raise the bitrate
     // If the sender is an owner of the TMMBN -> send TMMBR
     // If not an owner but the TMMBR would enter the TMMBN -> send TMMBR
@@ -1144,8 +1186,8 @@ RTCPSender::BuildTMMBR(uint8_t* rtcpbuffer, uint32_t& pos)
     // holding _criticalSectionRTCPSender while calling RTCPreceiver which
     // will accuire _criticalSectionRTCPReceiver is a potental deadlock but
     // since RTCPreceiver is not doing the reverse we should be fine
-    int32_t lengthOfBoundingSet
-        = _rtpRtcp.BoundingSet(tmmbrOwner, candidateSet);
+    int32_t lengthOfBoundingSet =
+        rtp_rtcp_module->BoundingSet(tmmbrOwner, candidateSet);
 
     if(lengthOfBoundingSet > 0)
     {
@@ -1236,7 +1278,7 @@ RTCPSender::BuildTMMBR(uint8_t* rtcpbuffer, uint32_t& pos)
 }
 
 int32_t
-RTCPSender::BuildTMMBN(uint8_t* rtcpbuffer, uint32_t& pos)
+RTCPSender::BuildTMMBN(uint8_t* rtcpbuffer, int& pos)
 {
     TMMBRSet* boundingSet = _tmmbrHelp.BoundingSetToSend();
     if(boundingSet == NULL)
@@ -1308,7 +1350,7 @@ RTCPSender::BuildTMMBN(uint8_t* rtcpbuffer, uint32_t& pos)
 }
 
 int32_t
-RTCPSender::BuildAPP(uint8_t* rtcpbuffer, uint32_t& pos)
+RTCPSender::BuildAPP(uint8_t* rtcpbuffer, int& pos)
 {
     // sanity
     if(_appData == NULL)
@@ -1346,7 +1388,7 @@ RTCPSender::BuildAPP(uint8_t* rtcpbuffer, uint32_t& pos)
 
 int32_t
 RTCPSender::BuildNACK(uint8_t* rtcpbuffer,
-                      uint32_t& pos,
+                      int& pos,
                       const int32_t nackSize,
                       const uint16_t* nackList,
                       std::string* nackString)
@@ -1416,7 +1458,7 @@ RTCPSender::BuildNACK(uint8_t* rtcpbuffer,
 }
 
 int32_t
-RTCPSender::BuildBYE(uint8_t* rtcpbuffer, uint32_t& pos)
+RTCPSender::BuildBYE(uint8_t* rtcpbuffer, int& pos)
 {
     // sanity
     if(pos + 8 >= IP_PACKET_SIZE)
@@ -1461,7 +1503,7 @@ RTCPSender::BuildBYE(uint8_t* rtcpbuffer, uint32_t& pos)
 }
 
 int32_t
-RTCPSender::BuildVoIPMetric(uint8_t* rtcpbuffer, uint32_t& pos)
+RTCPSender::BuildVoIPMetric(uint8_t* rtcpbuffer, int& pos)
 {
     // sanity
     if(pos + 44 >= IP_PACKET_SIZE)
@@ -1533,413 +1575,369 @@ RTCPSender::BuildVoIPMetric(uint8_t* rtcpbuffer, uint32_t& pos)
     return 0;
 }
 
-int32_t
-RTCPSender::SendRTCP(const uint32_t packetTypeFlags,
-                     const int32_t nackSize,       // NACK
-                     const uint16_t* nackList,     // NACK
-                     const bool repeat,                  // FIR
-                     const uint64_t pictureID)     // SLI & RPSI
-{
-    uint32_t rtcpPacketTypeFlags = packetTypeFlags;
-    uint32_t pos = 0;
-    uint8_t rtcpbuffer[IP_PACKET_SIZE];
-
-    do  // only to be able to use break :) (and the critsect must be inside its own scope)
+int32_t RTCPSender::SendRTCP(const FeedbackState& feedback_state,
+                             uint32_t packetTypeFlags,
+                             int32_t nackSize,
+                             const uint16_t* nackList,
+                             bool repeat,
+                             uint64_t pictureID) {
+  {
+    CriticalSectionScoped lock(_criticalSectionRTCPSender);
+    if(_method == kRtcpOff)
     {
-        // collect the received information
-        RTCPReportBlock received;
-        bool hasReceived = false;
-        uint32_t NTPsec = 0;
-        uint32_t NTPfrac = 0;
-        bool rtcpCompound = false;
-        uint32_t jitterTransmissionOffset = 0;
-
-        {
-          CriticalSectionScoped lock(_criticalSectionRTCPSender);
-          if(_method == kRtcpOff)
-          {
-              WEBRTC_TRACE(kTraceWarning, kTraceRtpRtcp, _id,
-                           "%s invalid state", __FUNCTION__);
-              return -1;
-          }
-          rtcpCompound = (_method == kRtcpCompound) ? true : false;
-        }
-
-        if (rtcpCompound ||
-            rtcpPacketTypeFlags & kRtcpReport ||
-            rtcpPacketTypeFlags & kRtcpSr ||
-            rtcpPacketTypeFlags & kRtcpRr)
-        {
-            // get statistics from our RTPreceiver outside critsect
-            if(_rtpRtcp.ReportBlockStatistics(&received.fractionLost,
-                                              &received.cumulativeLost,
-                                              &received.extendedHighSeqNum,
-                                              &received.jitter,
-                                              &jitterTransmissionOffset) == 0)
-            {
-                hasReceived = true;
-
-                uint32_t lastReceivedRRNTPsecs = 0;
-                uint32_t lastReceivedRRNTPfrac = 0;
-                uint32_t remoteSR = 0;
-
-                // ok even if we have not received a SR, we will send 0 in that case
-                _rtpRtcp.LastReceivedNTP(lastReceivedRRNTPsecs,
-                                         lastReceivedRRNTPfrac,
-                                         remoteSR);
-
-                // get our NTP as late as possible to avoid a race
-                _clock->CurrentNtp(NTPsec, NTPfrac);
-
-                // Delay since last received report
-                uint32_t delaySinceLastReceivedSR = 0;
-                if((lastReceivedRRNTPsecs !=0) || (lastReceivedRRNTPfrac !=0))
-                {
-                    // get the 16 lowest bits of seconds and the 16 higest bits of fractions
-                    uint32_t now=NTPsec&0x0000FFFF;
-                    now <<=16;
-                    now += (NTPfrac&0xffff0000)>>16;
-
-                    uint32_t receiveTime = lastReceivedRRNTPsecs&0x0000FFFF;
-                    receiveTime <<=16;
-                    receiveTime += (lastReceivedRRNTPfrac&0xffff0000)>>16;
-
-                    delaySinceLastReceivedSR = now-receiveTime;
-                }
-                received.delaySinceLastSR = delaySinceLastReceivedSR;
-                received.lastSR = remoteSR;
-            } else
-            {
-                // we need to send our NTP even if we dont have received any reports
-                _clock->CurrentNtp(NTPsec, NTPfrac);
-            }
-        }
-
-        CriticalSectionScoped lock(_criticalSectionRTCPSender);
-
-        if(_TMMBR ) // attach TMMBR to send and receive reports
-        {
-            rtcpPacketTypeFlags |= kRtcpTmmbr;
-        }
-        if(_appSend)
-        {
-            rtcpPacketTypeFlags |= kRtcpApp;
-            _appSend = false;
-        }
-        if(_REMB && _sendREMB)
-        {
-            // Always attach REMB to SR if that is configured. Note that REMB is
-            // only sent on one of the RTP modules in the REMB group.
-            rtcpPacketTypeFlags |= kRtcpRemb;
-        }        
-        if(_xrSendVoIPMetric)
-        {
-            rtcpPacketTypeFlags |= kRtcpXrVoipMetric;
-            _xrSendVoIPMetric = false;
-        }
-        if(_sendTMMBN)  // set when having received a TMMBR
-        {
-            rtcpPacketTypeFlags |= kRtcpTmmbn;
-            _sendTMMBN = false;
-        }
-
-        if(_method == kRtcpCompound)
-        {
-            if(_sending)
-            {
-                rtcpPacketTypeFlags |= kRtcpSr;
-            } else
-            {
-                rtcpPacketTypeFlags |= kRtcpRr;
-            }
-            if (_IJ && hasReceived)
-            {
-                rtcpPacketTypeFlags |= kRtcpTransmissionTimeOffset;
-            }
-        } else if(_method == kRtcpNonCompound)
-        {
-            if(rtcpPacketTypeFlags & kRtcpReport)
-            {
-                if(_sending)
-                {
-                    rtcpPacketTypeFlags |= kRtcpSr;
-                } else
-                {
-                    rtcpPacketTypeFlags |= kRtcpRr;
-                }
-            }
-        }
-        if( rtcpPacketTypeFlags & kRtcpRr ||
-            rtcpPacketTypeFlags & kRtcpSr)
-        {
-            // generate next time to send a RTCP report
-            // seeded from RTP constructor
-            int32_t random = rand() % 1000;
-            int32_t timeToNext = RTCP_INTERVAL_AUDIO_MS;
-
-            if(_audio)
-            {
-                timeToNext = (RTCP_INTERVAL_AUDIO_MS/2) + (RTCP_INTERVAL_AUDIO_MS*random/1000);
-            }else
-            {
-                uint32_t minIntervalMs = RTCP_INTERVAL_AUDIO_MS;
-                if(_sending)
-                {
-                    // calc bw for video 360/sendBW in kbit/s
-                    uint32_t sendBitrateKbit = 0;
-                    uint32_t videoRate = 0;
-                    uint32_t fecRate = 0;
-                    uint32_t nackRate = 0;
-                    _rtpRtcp.BitrateSent(&sendBitrateKbit,
-                                         &videoRate,
-                                         &fecRate,
-                                         &nackRate);
-                    sendBitrateKbit /= 1000;
-                    if(sendBitrateKbit != 0)
-                    {
-                        minIntervalMs = 360000/sendBitrateKbit;
-                    }
-                }
-                if(minIntervalMs > RTCP_INTERVAL_VIDEO_MS)
-                {
-                    minIntervalMs = RTCP_INTERVAL_VIDEO_MS;
-                }
-                timeToNext = (minIntervalMs/2) + (minIntervalMs*random/1000);
-            }
-            _nextTimeToSendRTCP = _clock->TimeInMilliseconds() + timeToNext;
-        }
-
-        // if the data does not fitt in the packet we fill it as much as possible
-        int32_t buildVal = 0;
-
-        if(rtcpPacketTypeFlags & kRtcpSr)
-        {
-            if(hasReceived)
-            {
-                buildVal = BuildSR(rtcpbuffer, pos, NTPsec, NTPfrac, &received);
-            } else
-            {
-                buildVal = BuildSR(rtcpbuffer, pos, NTPsec, NTPfrac);
-            }
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-            buildVal = BuildSDEC(rtcpbuffer, pos);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-
-        }else if(rtcpPacketTypeFlags & kRtcpRr)
-        {
-            if(hasReceived)
-            {
-                buildVal = BuildRR(rtcpbuffer, pos, NTPsec, NTPfrac,&received);
-            }else
-            {
-                buildVal = BuildRR(rtcpbuffer, pos, NTPsec, NTPfrac);
-            }
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-            // only of set
-            if(_CNAME[0] != 0)
-            {
-                buildVal = BuildSDEC(rtcpbuffer, pos);
-                if(buildVal == -1)
-                {
-                    return -1; // error
-                }
-            }
-        }
-        if(rtcpPacketTypeFlags & kRtcpTransmissionTimeOffset)
-        {
-            // If present, this RTCP packet must be placed after a
-            // receiver report.
-            buildVal = BuildExtendedJitterReport(rtcpbuffer,
-                                                 pos,
-                                                 jitterTransmissionOffset);
-            if(buildVal == -1)
-            {
-                return -1; // error
-            }
-            else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-        }
-        if(rtcpPacketTypeFlags & kRtcpPli)
-        {
-            buildVal = BuildPLI(rtcpbuffer, pos);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-            TRACE_EVENT_INSTANT0("webrtc_rtp", "RTCPSender::PLI");
-            _pliCount++;
-            TRACE_COUNTER_ID1("webrtc_rtp", "RTCP_PLICount", _SSRC, _pliCount);
-        }
-        if(rtcpPacketTypeFlags & kRtcpFir)
-        {
-            buildVal = BuildFIR(rtcpbuffer, pos, repeat);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-            TRACE_EVENT_INSTANT0("webrtc_rtp", "RTCPSender::FIR");
-            _fullIntraRequestCount++;
-            TRACE_COUNTER_ID1("webrtc_rtp", "RTCP_FIRCount", _SSRC,
-                              _fullIntraRequestCount);
-        }
-        if(rtcpPacketTypeFlags & kRtcpSli)
-        {
-            buildVal = BuildSLI(rtcpbuffer, pos, (uint8_t)pictureID);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-        }
-        if(rtcpPacketTypeFlags & kRtcpRpsi)
-        {
-            const int8_t payloadType = _rtpRtcp.SendPayloadType();
-            if(payloadType == -1)
-            {
-                return -1;
-            }
-            buildVal = BuildRPSI(rtcpbuffer, pos, pictureID, (uint8_t)payloadType);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-        }
-        if(rtcpPacketTypeFlags & kRtcpRemb)
-        {
-            buildVal = BuildREMB(rtcpbuffer, pos);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-            TRACE_EVENT_INSTANT0("webrtc_rtp", "RTCPSender::REMB");
-        }
-        if(rtcpPacketTypeFlags & kRtcpBye)
-        {
-            buildVal = BuildBYE(rtcpbuffer, pos);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-        }
-        if(rtcpPacketTypeFlags & kRtcpApp)
-        {
-            buildVal = BuildAPP(rtcpbuffer, pos);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-        }
-        if(rtcpPacketTypeFlags & kRtcpTmmbr)
-        {
-            buildVal = BuildTMMBR(rtcpbuffer, pos);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-        }
-        if(rtcpPacketTypeFlags & kRtcpTmmbn)
-        {
-            buildVal = BuildTMMBN(rtcpbuffer, pos);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-        }
-        if(rtcpPacketTypeFlags & kRtcpNack)
-        {
-            std::string nackString;
-            buildVal = BuildNACK(rtcpbuffer, pos, nackSize, nackList,
-                                 &nackString);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-            TRACE_EVENT_INSTANT1("webrtc_rtp", "RTCPSender::NACK",
-                                 "nacks", TRACE_STR_COPY(nackString.c_str()));
-            _nackCount++;
-            TRACE_COUNTER_ID1("webrtc_rtp", "RTCP_NACKCount", _SSRC, _nackCount);
-        }
-        if(rtcpPacketTypeFlags & kRtcpXrVoipMetric)
-        {
-            buildVal = BuildVoIPMetric(rtcpbuffer, pos);
-            if(buildVal == -1)
-            {
-                return -1; // error
-
-            }else if(buildVal == -2)
-            {
-                break;  // out of buffer
-            }
-        }
-    }while (false);
-    // Sanity don't send empty packets.
-    if (pos == 0)
-    {
+        WEBRTC_TRACE(kTraceWarning, kTraceRtpRtcp, _id,
+                     "%s invalid state", __FUNCTION__);
         return -1;
     }
-    return SendToNetwork(rtcpbuffer, (uint16_t)pos);
+  }
+  uint8_t rtcp_buffer[IP_PACKET_SIZE];
+  int rtcp_length = PrepareRTCP(feedback_state,
+                                packetTypeFlags,
+                                nackSize,
+                                nackList,
+                                repeat,
+                                pictureID,
+                                rtcp_buffer,
+                                IP_PACKET_SIZE);
+  if (rtcp_length < 0) {
+    return -1;
+  }
+  // Sanity don't send empty packets.
+  if (rtcp_length == 0)
+  {
+      return -1;
+  }
+  return SendToNetwork(rtcp_buffer, static_cast<uint16_t>(rtcp_length));
+}
+
+int RTCPSender::PrepareRTCP(const FeedbackState& feedback_state,
+                            uint32_t packetTypeFlags,
+                            int32_t nackSize,
+                            const uint16_t* nackList,
+                            bool repeat,
+                            uint64_t pictureID,
+                            uint8_t* rtcp_buffer,
+                            int buffer_size) {
+  uint32_t rtcpPacketTypeFlags = packetTypeFlags;
+  // Collect the received information.
+  uint32_t NTPsec = 0;
+  uint32_t NTPfrac = 0;
+  uint32_t jitterTransmissionOffset = 0;
+  int position = 0;
+
+  CriticalSectionScoped lock(_criticalSectionRTCPSender);
+
+  if(_TMMBR )  // Attach TMMBR to send and receive reports.
+  {
+      rtcpPacketTypeFlags |= kRtcpTmmbr;
+  }
+  if(_appSend)
+  {
+      rtcpPacketTypeFlags |= kRtcpApp;
+      _appSend = false;
+  }
+  if(_REMB && _sendREMB)
+  {
+      // Always attach REMB to SR if that is configured. Note that REMB is
+      // only sent on one of the RTP modules in the REMB group.
+      rtcpPacketTypeFlags |= kRtcpRemb;
+  }
+  if(_xrSendVoIPMetric)
+  {
+      rtcpPacketTypeFlags |= kRtcpXrVoipMetric;
+      _xrSendVoIPMetric = false;
+  }
+  if(_sendTMMBN)  // Set when having received a TMMBR.
+  {
+      rtcpPacketTypeFlags |= kRtcpTmmbn;
+      _sendTMMBN = false;
+  }
+
+  if(_method == kRtcpCompound)
+  {
+      if(_sending)
+      {
+          rtcpPacketTypeFlags |= kRtcpSr;
+      } else
+      {
+          rtcpPacketTypeFlags |= kRtcpRr;
+      }
+  } else if(_method == kRtcpNonCompound)
+  {
+      if(rtcpPacketTypeFlags & kRtcpReport)
+      {
+          if(_sending)
+          {
+              rtcpPacketTypeFlags |= kRtcpSr;
+          } else
+          {
+              rtcpPacketTypeFlags |= kRtcpRr;
+          }
+      }
+  }
+  if( rtcpPacketTypeFlags & kRtcpRr ||
+      rtcpPacketTypeFlags & kRtcpSr)
+  {
+      // generate next time to send a RTCP report
+      // seeded from RTP constructor
+      int32_t random = rand() % 1000;
+      int32_t timeToNext = RTCP_INTERVAL_AUDIO_MS;
+
+      if(_audio)
+      {
+          timeToNext = (RTCP_INTERVAL_AUDIO_MS/2) +
+              (RTCP_INTERVAL_AUDIO_MS*random/1000);
+      }else
+      {
+          uint32_t minIntervalMs = RTCP_INTERVAL_AUDIO_MS;
+          if(_sending)
+          {
+            // Calculate bandwidth for video; 360 / send bandwidth in kbit/s.
+            uint32_t send_bitrate_kbit = feedback_state.send_bitrate / 1000;
+            if (send_bitrate_kbit != 0)
+              minIntervalMs = 360000 / send_bitrate_kbit;
+          }
+          if(minIntervalMs > RTCP_INTERVAL_VIDEO_MS)
+          {
+              minIntervalMs = RTCP_INTERVAL_VIDEO_MS;
+          }
+          timeToNext = (minIntervalMs/2) + (minIntervalMs*random/1000);
+      }
+      _nextTimeToSendRTCP = _clock->TimeInMilliseconds() + timeToNext;
+  }
+
+  // If the data does not fit in the packet we fill it as much as possible.
+  int32_t buildVal = 0;
+
+  // We need to send our NTP even if we haven't received any reports.
+  _clock->CurrentNtp(NTPsec, NTPfrac);
+  if (ShouldSendReportBlocks(rtcpPacketTypeFlags)) {
+    StatisticianMap statisticians =
+        receive_statistics_->GetActiveStatisticians();
+    if (!statisticians.empty()) {
+      StatisticianMap::const_iterator it;
+      int i;
+      for (it = statisticians.begin(), i = 0; it != statisticians.end();
+           ++it, ++i) {
+        RTCPReportBlock report_block;
+        if (PrepareReport(
+                feedback_state, it->second, &report_block, &NTPsec, &NTPfrac))
+          AddReportBlock(it->first, &internal_report_blocks_, &report_block);
+      }
+      if (_IJ && !statisticians.empty()) {
+        rtcpPacketTypeFlags |= kRtcpTransmissionTimeOffset;
+      }
+      _lastRTCPTime[0] = Clock::NtpToMs(NTPsec, NTPfrac);
+    }
+  }
+
+  if(rtcpPacketTypeFlags & kRtcpSr)
+  {
+    buildVal = BuildSR(feedback_state, rtcp_buffer, position, NTPsec, NTPfrac);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+      buildVal = BuildSDEC(rtcp_buffer, position);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }else if(rtcpPacketTypeFlags & kRtcpRr)
+  {
+      buildVal = BuildRR(rtcp_buffer, position, NTPsec, NTPfrac);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+      // only of set
+      if(_CNAME[0] != 0)
+      {
+          buildVal = BuildSDEC(rtcp_buffer, position);
+          if (buildVal == -1) {
+            return -1;
+          }
+      }
+  }
+  if(rtcpPacketTypeFlags & kRtcpTransmissionTimeOffset)
+  {
+      // If present, this RTCP packet must be placed after a
+      // receiver report.
+      buildVal = BuildExtendedJitterReport(rtcp_buffer,
+                                           position,
+                                           jitterTransmissionOffset);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
+  if(rtcpPacketTypeFlags & kRtcpPli)
+  {
+      buildVal = BuildPLI(rtcp_buffer, position);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+      TRACE_EVENT_INSTANT0("webrtc_rtp", "RTCPSender::PLI");
+      _pliCount++;
+      TRACE_COUNTER_ID1("webrtc_rtp", "RTCP_PLICount", _SSRC, _pliCount);
+  }
+  if(rtcpPacketTypeFlags & kRtcpFir)
+  {
+      buildVal = BuildFIR(rtcp_buffer, position, repeat);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+      TRACE_EVENT_INSTANT0("webrtc_rtp", "RTCPSender::FIR");
+      _fullIntraRequestCount++;
+      TRACE_COUNTER_ID1("webrtc_rtp", "RTCP_FIRCount", _SSRC,
+                        _fullIntraRequestCount);
+  }
+  if(rtcpPacketTypeFlags & kRtcpSli)
+  {
+      buildVal = BuildSLI(rtcp_buffer, position, (uint8_t)pictureID);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
+  if(rtcpPacketTypeFlags & kRtcpRpsi)
+  {
+      const int8_t payloadType = feedback_state.send_payload_type;
+      if (payloadType == -1) {
+        return -1;
+      }
+      buildVal = BuildRPSI(rtcp_buffer, position, pictureID,
+                           (uint8_t)payloadType);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
+  if(rtcpPacketTypeFlags & kRtcpRemb)
+  {
+      buildVal = BuildREMB(rtcp_buffer, position);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+      TRACE_EVENT_INSTANT0("webrtc_rtp", "RTCPSender::REMB");
+  }
+  if(rtcpPacketTypeFlags & kRtcpBye)
+  {
+      buildVal = BuildBYE(rtcp_buffer, position);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
+  if(rtcpPacketTypeFlags & kRtcpApp)
+  {
+      buildVal = BuildAPP(rtcp_buffer, position);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
+  if(rtcpPacketTypeFlags & kRtcpTmmbr)
+  {
+      buildVal = BuildTMMBR(feedback_state.module, rtcp_buffer, position);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
+  if(rtcpPacketTypeFlags & kRtcpTmmbn)
+  {
+      buildVal = BuildTMMBN(rtcp_buffer, position);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
+  if(rtcpPacketTypeFlags & kRtcpNack)
+  {
+      std::string nackString;
+      buildVal = BuildNACK(rtcp_buffer, position, nackSize, nackList,
+                           &nackString);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+      TRACE_EVENT_INSTANT1("webrtc_rtp", "RTCPSender::NACK",
+                           "nacks", TRACE_STR_COPY(nackString.c_str()));
+      _nackCount++;
+      TRACE_COUNTER_ID1("webrtc_rtp", "RTCP_NACKCount", _SSRC, _nackCount);
+  }
+  if(rtcpPacketTypeFlags & kRtcpXrVoipMetric)
+  {
+      buildVal = BuildVoIPMetric(rtcp_buffer, position);
+      if (buildVal == -1) {
+        return -1;
+      } else if (buildVal == -2) {
+        return position;
+      }
+  }
+  return position;
+}
+
+bool RTCPSender::ShouldSendReportBlocks(uint32_t rtcp_packet_type) const {
+  return Status() == kRtcpCompound ||
+      (rtcp_packet_type & kRtcpReport) ||
+      (rtcp_packet_type & kRtcpSr) ||
+      (rtcp_packet_type & kRtcpRr);
+}
+
+bool RTCPSender::PrepareReport(const FeedbackState& feedback_state,
+                               StreamStatistician* statistician,
+                               RTCPReportBlock* report_block,
+                               uint32_t* ntp_secs, uint32_t* ntp_frac) {
+  // Do we have receive statistics to send?
+  StreamStatistician::Statistics stats;
+  if (!statistician->GetStatistics(&stats, true))
+    return false;
+  report_block->fractionLost = stats.fraction_lost;
+  report_block->cumulativeLost = stats.cumulative_lost;
+  report_block->extendedHighSeqNum =
+      stats.extended_max_sequence_number;
+  report_block->jitter = stats.jitter;
+
+  // get our NTP as late as possible to avoid a race
+  _clock->CurrentNtp(*ntp_secs, *ntp_frac);
+
+  // Delay since last received report
+  uint32_t delaySinceLastReceivedSR = 0;
+  if ((feedback_state.last_rr_ntp_secs != 0) ||
+      (feedback_state.last_rr_ntp_frac != 0)) {
+    // get the 16 lowest bits of seconds and the 16 higest bits of fractions
+    uint32_t now=*ntp_secs&0x0000FFFF;
+    now <<=16;
+    now += (*ntp_frac&0xffff0000)>>16;
+
+    uint32_t receiveTime = feedback_state.last_rr_ntp_secs&0x0000FFFF;
+    receiveTime <<=16;
+    receiveTime += (feedback_state.last_rr_ntp_frac&0xffff0000)>>16;
+
+    delaySinceLastReceivedSR = now-receiveTime;
+  }
+  report_block->delaySinceLastSR = delaySinceLastReceivedSR;
+  report_block->lastSR = feedback_state.remote_sr;
+  return true;
 }
 
 int32_t
@@ -2023,103 +2021,76 @@ RTCPSender::SetRTCPVoIPMetrics(const RTCPVoIPMetric* VoIPMetric)
 }
 
 // called under critsect _criticalSectionRTCPSender
-int32_t RTCPSender::AddReportBlocks(uint8_t* rtcpbuffer,
-                                    uint32_t& pos,
-                                    uint8_t& numberOfReportBlocks,
-                                    const RTCPReportBlock* received,
-                                    const uint32_t NTPsec,
-                                    const uint32_t NTPfrac) {
+int32_t RTCPSender::WriteAllReportBlocksToBuffer(
+    uint8_t* rtcpbuffer,
+    int pos,
+    uint8_t& numberOfReportBlocks,
+    const uint32_t NTPsec,
+    const uint32_t NTPfrac) {
   // sanity one block
   if(pos + 24 >= IP_PACKET_SIZE) {
     WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, _id,
                  "%s invalid argument", __FUNCTION__);
     return -1;
   }
-  numberOfReportBlocks = _reportBlocks.size();
-  if (received) {
-    // add our multiple RR to numberOfReportBlocks
-    numberOfReportBlocks++;
-  }
-  if (received) {
-    // answer to the one that sends to me
-    _lastRTCPTime[0] = Clock::NtpToMs(NTPsec, NTPfrac);
-
-    // Remote SSRC
-    ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos, _remoteSSRC);
-    pos += 4;
-
-    // fraction lost
-    rtcpbuffer[pos++]=received->fractionLost;
-
-    // cumulative loss
-    ModuleRTPUtility::AssignUWord24ToBuffer(rtcpbuffer+pos,
-                                            received->cumulativeLost);
-    pos += 3;
-    // extended highest seq_no, contain the highest sequence number received
-    ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos,
-                                            received->extendedHighSeqNum);
-    pos += 4;
-
-    //Jitter
-    ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos, received->jitter);
-    pos += 4;
-
-    // Last SR timestamp, our NTP time when we received the last report
-    // This is the value that we read from the send report packet not when we
-    // received it...
-    ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos, received->lastSR);
-    pos += 4;
-
-    // Delay since last received report,time since we received the report
-    ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos,
-                                            received->delaySinceLastSR);
-    pos += 4;
-  }
-  if ((pos + _reportBlocks.size() * 24) >= IP_PACKET_SIZE) {
+  numberOfReportBlocks = external_report_blocks_.size();
+  numberOfReportBlocks += internal_report_blocks_.size();
+  if ((pos + numberOfReportBlocks * 24) >= IP_PACKET_SIZE) {
     WEBRTC_TRACE(kTraceError, kTraceRtpRtcp, _id,
                  "%s invalid argument", __FUNCTION__);
     return -1;
   }
-  std::map<uint32_t, RTCPReportBlock*>::iterator it =
-      _reportBlocks.begin();
+  pos = WriteReportBlocksToBuffer(rtcpbuffer, pos, internal_report_blocks_);
+  while (!internal_report_blocks_.empty()) {
+    delete internal_report_blocks_.begin()->second;
+    internal_report_blocks_.erase(internal_report_blocks_.begin());
+  }
+  pos = WriteReportBlocksToBuffer(rtcpbuffer, pos, external_report_blocks_);
+  return pos;
+}
 
-  for (; it != _reportBlocks.end(); it++) {
-    // we can have multiple report block in a conference
+int32_t RTCPSender::WriteReportBlocksToBuffer(
+    uint8_t* rtcpbuffer,
+    int32_t position,
+    const std::map<uint32_t, RTCPReportBlock*>& report_blocks) {
+  std::map<uint32_t, RTCPReportBlock*>::const_iterator it =
+      report_blocks.begin();
+  for (; it != report_blocks.end(); it++) {
     uint32_t remoteSSRC = it->first;
     RTCPReportBlock* reportBlock = it->second;
     if (reportBlock) {
       // Remote SSRC
-      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos, remoteSSRC);
-      pos += 4;
+      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+position, remoteSSRC);
+      position += 4;
 
       // fraction lost
-      rtcpbuffer[pos++] = reportBlock->fractionLost;
+      rtcpbuffer[position++] = reportBlock->fractionLost;
 
       // cumulative loss
-      ModuleRTPUtility::AssignUWord24ToBuffer(rtcpbuffer+pos,
+      ModuleRTPUtility::AssignUWord24ToBuffer(rtcpbuffer+position,
                                               reportBlock->cumulativeLost);
-      pos += 3;
+      position += 3;
 
       // extended highest seq_no, contain the highest sequence number received
-      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos,
+      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+position,
                                               reportBlock->extendedHighSeqNum);
-      pos += 4;
+      position += 4;
 
-      //Jitter
-      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos,
+      // Jitter
+      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+position,
                                               reportBlock->jitter);
-      pos += 4;
+      position += 4;
 
-      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos,
+      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+position,
                                               reportBlock->lastSR);
-      pos += 4;
+      position += 4;
 
-      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+pos,
+      ModuleRTPUtility::AssignUWord32ToBuffer(rtcpbuffer+position,
                                               reportBlock->delaySinceLastSR);
-      pos += 4;
+      position += 4;
     }
   }
-  return pos;
+  return position;
 }
 
 // no callbacks allowed inside this function
@@ -2136,4 +2107,4 @@ RTCPSender::SetTMMBN(const TMMBRSet* boundingSet,
     }
     return -1;
 }
-} // namespace webrtc
+}  // namespace webrtc

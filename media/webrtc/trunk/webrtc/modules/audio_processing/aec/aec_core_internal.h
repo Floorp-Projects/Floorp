@@ -19,15 +19,8 @@
 #include "webrtc/modules/audio_processing/utility/ring_buffer.h"
 #include "webrtc/typedefs.h"
 
-// Number of partitions for the extended filter mode. The first one is an enum
-// to be used in array declarations, as it represents the maximum filter length.
-enum { kExtendedNumPartitions = 32 };
-static const int kNormalNumPartitions = 12;
-
-// Extended filter adaptation parameters.
-// TODO(ajm): No narrowband tuning yet.
-static const float kExtendedMu = 0.4f;
-static const float kExtendedErrorThreshold = 1.0e-6f;
+#define NR_PART 12  // Number of partitions in filter.
+#define PREF_BAND_SIZE 24
 
 typedef struct PowerLevel {
   float sfrsum;
@@ -63,12 +56,11 @@ struct AecCore {
   float dInitMinPow[PART_LEN1];
   float *noisePow;
 
-  float xfBuf[2][kExtendedNumPartitions * PART_LEN1];  // farend fft buffer
-  float wfBuf[2][kExtendedNumPartitions * PART_LEN1];  // filter fft
+  float xfBuf[2][NR_PART * PART_LEN1];  // farend fft buffer
+  float wfBuf[2][NR_PART * PART_LEN1];  // filter fft
   complex_t sde[PART_LEN1];  // cross-psd of nearend and error
   complex_t sxd[PART_LEN1];  // cross-psd of farend and nearend
-  // Farend windowed fft buffer.
-  complex_t xfwBuf[kExtendedNumPartitions * PART_LEN1];
+  complex_t xfwBuf[NR_PART * PART_LEN1];  // farend windowed fft buffer
 
   float sx[PART_LEN1], sd[PART_LEN1], se[PART_LEN1];  // far, near, error psd
   float hNs[PART_LEN1];
@@ -93,8 +85,8 @@ struct AecCore {
   int sampFreq;
   uint32_t seed;
 
-  float normal_mu;  // stepsize
-  float normal_error_threshold;  // error threshold
+  float mu;  // stepsize
+  float errThresh;  // error threshold
 
   int noiseEstCtr;
 
@@ -119,11 +111,6 @@ struct AecCore {
   int delay_logging_enabled;
   void* delay_estimator_farend;
   void* delay_estimator;
-
-  // 1 = extended filter mode enabled, 0 = disabled.
-  int extended_filter_enabled;
-  // Runtime selection of number of filter partitions.
-  int num_partitions;
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
   RingBuffer* far_time_buf;

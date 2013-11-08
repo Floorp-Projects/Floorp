@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/main/source/content_metrics_processing.h"
+#include "webrtc/modules/video_coding/main/source/content_metrics_processing.h"
 
 #include <math.h>
 
-#include "modules/interface/module_common_types.h"
-#include "modules/video_coding/main/interface/video_coding_defines.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
 
 namespace webrtc {
 //////////////////////////////////
@@ -122,4 +122,4 @@ void VCMContentMetricsProcessing::UpdateRecursiveAvg(
       recursive_avg_->motion_magnitude +
       recursive_avg_factor_ * contentMetrics->motion_magnitude;
 }
-}  // end of namespace
+}  // namespace

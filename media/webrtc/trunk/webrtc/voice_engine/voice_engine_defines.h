@@ -27,9 +27,6 @@
 
 namespace webrtc {
 
-// TODO(ajm): There's not really a reason for this limitation. Remove it.
-enum { kVoiceEngineMaxNumChannels = 100 };
-
 // VolumeControl
 enum { kMinVolumeLevel = 0 };
 enum { kMaxVolumeLevel = 255 };
@@ -123,7 +120,7 @@ enum { kVoiceEngineMinRtpExtensionId = 1 };
 // Max 4-bit ID for RTP extension
 enum { kVoiceEngineMaxRtpExtensionId = 14 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 // TODO(ajm): we shouldn't be using the precompiler for this.
 // Use enums or bools as appropriate.
@@ -138,12 +135,6 @@ enum { kVoiceEngineMaxRtpExtensionId = 14 };
     // AudioProcessing AGC mode
 #define WEBRTC_VOICE_ENGINE_RX_NS_DEFAULT_MODE NoiseSuppression::kModerate
     // AudioProcessing RX NS mode
-
-// Macros
-// Comparison of two strings without regard to case
-#define STR_CASE_CMP(x,y) ::_stricmp(x,y)
-// Compares characters of two strings without regard to case
-#define STR_NCASE_CMP(x,y,n) ::_strnicmp(x,y,n)
 
 // ----------------------------------------------------------------------------
 //  Build information macros
@@ -218,7 +209,7 @@ inline int VoEChannelId(int moduleId)
     return (int) (moduleId & 0xffff);
 }
 
-} // namespace webrtc
+}  // namespace webrtc
 
 // ----------------------------------------------------------------------------
 //  Platform settings
@@ -227,6 +218,8 @@ inline int VoEChannelId(int moduleId)
 // *** WINDOWS ***
 
 #if defined(_WIN32)
+
+  #include <windows.h>
 
   #pragma comment( lib, "winmm.lib" )
 
@@ -237,13 +230,6 @@ inline int VoEChannelId(int moduleId)
 // ----------------------------------------------------------------------------
 //  Defines
 // ----------------------------------------------------------------------------
-
-  #include <windows.h>
-
-  // Comparison of two strings without regard to case
-  #define STR_CASE_CMP(x,y) ::_stricmp(x,y)
-  // Compares characters of two strings without regard to case
-  #define STR_NCASE_CMP(x,y,n) ::_strnicmp(x,y,n)
 
 // Default device for Windows PC
   #define WEBRTC_VOICE_ENGINE_DEFAULT_DEVICE \
@@ -314,18 +300,9 @@ inline int VoEChannelId(int moduleId)
 
   // Always excluded for Android builds
   #undef WEBRTC_CODEC_ISAC
-  // We need WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT to make things work on Android.
-  // Motivation for the commented-out undef below is unclear.
-  //
-  // #undef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
-  #undef WEBRTC_CONFERENCING
-  #undef WEBRTC_TYPING_DETECTION
+  #undef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
 
-  // This macro used to cause the calling function to set an error code and return.
-  // However, not doing that seems to cause the unit tests to pass / behave reasonably,
-  // so it's disabled for now; see bug 819856.
-  #define ANDROID_NOT_SUPPORTED(stat)
-  //#define ANDROID_NOT_SUPPORTED(stat) NOT_SUPPORTED(stat)
+  #define ANDROID_NOT_SUPPORTED(stat) NOT_SUPPORTED(stat)
 
 #else // LINUX PC
 
@@ -344,11 +321,9 @@ inline int VoEChannelId(int moduleId)
 // *** WEBRTC_MAC ***
 // including iPhone
 
-#if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#ifdef WEBRTC_MAC
 
-#if !defined(WEBRTC_BSD)
 #include <AudioUnit/AudioUnit.h>
-#endif
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -364,14 +339,13 @@ inline int VoEChannelId(int moduleId)
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#if !defined(WEBRTC_BSD) && !defined(WEBRTC_IOS)
+#if !defined(WEBRTC_IOS)
   #include <CoreServices/CoreServices.h>
   #include <CoreAudio/CoreAudio.h>
   #include <AudioToolbox/DefaultAudioOutput.h>
   #include <AudioToolbox/AudioConverter.h>
   #include <CoreAudio/HostTime.h>
 #endif
-
 
 #define DWORD unsigned long int
 #define WINAPI
@@ -427,6 +401,6 @@ inline int VoEChannelId(int moduleId)
 
 #else
 #define IPHONE_NOT_SUPPORTED(stat)
-#endif  // #if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#endif  // #ifdef WEBRTC_MAC
 
 #endif // WEBRTC_VOICE_ENGINE_VOICE_ENGINE_DEFINES_H

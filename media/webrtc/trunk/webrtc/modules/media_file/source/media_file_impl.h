@@ -11,11 +11,12 @@
 #ifndef WEBRTC_MODULES_MEDIA_FILE_SOURCE_MEDIA_FILE_IMPL_H_
 #define WEBRTC_MODULES_MEDIA_FILE_SOURCE_MEDIA_FILE_IMPL_H_
 
-#include "common_types.h"
-#include "media_file.h"
-#include "media_file_defines.h"
-#include "media_file_utility.h"
-#include "module_common_types.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/media_file/interface/media_file.h"
+#include "webrtc/modules/media_file/interface/media_file_defines.h"
+#include "webrtc/modules/media_file/source/media_file_utility.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 class MediaFileImpl : public MediaFile
@@ -236,6 +237,6 @@ private:
 
     FileCallback* _ptrCallback;
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_MEDIA_FILE_SOURCE_MEDIA_FILE_IMPL_H_

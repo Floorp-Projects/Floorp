@@ -13,10 +13,10 @@
  * In particular, for the selection of spatial and/or temporal down-sampling.
  */
 
-#include <gtest/gtest.h>
+#include "testing/gtest/include/gtest/gtest.h"
 
-#include "modules/video_coding/main/source/qm_select.h"
-#include "modules/interface/module_common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/main/source/qm_select.h"
 
 namespace webrtc {
 

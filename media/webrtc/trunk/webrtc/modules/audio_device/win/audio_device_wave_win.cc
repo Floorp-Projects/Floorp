@@ -8,18 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "audio_device_utility.h"
-#include "audio_device_wave_win.h"
-#include "audio_device_config.h"
+#include "webrtc/modules/audio_device/audio_device_config.h"
+#include "webrtc/modules/audio_device/audio_device_utility.h"
+#include "webrtc/modules/audio_device/win/audio_device_wave_win.h"
 
-#include "trace.h"
-#include "thread_wrapper.h"
-#include "event_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #include <windows.h>
 #include <objbase.h>    // CoTaskMemAlloc, CoTaskMemFree
 #include <strsafe.h>    // StringCchCopy(), StringCchCat(), StringCchPrintf()
-#include <cassert>
+#include <assert.h>
 
 // Avoids the need of Windows 7 SDK
 #ifndef WAVE_MAPPED_DEFAULT_COMMUNICATION_DEVICE
@@ -231,8 +231,8 @@ int32_t AudioDeviceWindowsWave::Init()
     }
 
     const char* threadName = "webrtc_audio_module_thread";
-    _ptrThread = ThreadWrapper::CreateThread(ThreadFunc, 
-                                             this, 
+    _ptrThread = ThreadWrapper::CreateThread(ThreadFunc,
+                                             this,
                                              kRealtimePriority,
                                              threadName);
     if (_ptrThread == NULL)
@@ -364,7 +364,7 @@ int32_t AudioDeviceWindowsWave::Terminate()
         return -1;
     }
     _critSect.Enter();
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, 
+    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
         "  volume getter thread is now closed");
 
     SetEvent(_hShutdownSetVolumeEvent);
@@ -417,7 +417,7 @@ DWORD AudioDeviceWindowsWave::DoGetCaptureVolumeThread()
 
     while (1)
     {
-        DWORD waitResult = WaitForSingleObject(waitObject, 
+        DWORD waitResult = WaitForSingleObject(waitObject,
                                                GET_MIC_VOLUME_INTERVAL_MS);
         switch (waitResult)
         {
@@ -440,7 +440,7 @@ DWORD AudioDeviceWindowsWave::DoGetCaptureVolumeThread()
                 _critSect.Enter();
                 if (_ptrAudioBuffer)
                 {
-                    _ptrAudioBuffer->SetCurrentMicLevel(currentMicLevel);				
+                    _ptrAudioBuffer->SetCurrentMicLevel(currentMicLevel);
                 }
                 _critSect.Leave();
             }
@@ -472,11 +472,11 @@ DWORD AudioDeviceWindowsWave::DoSetCaptureVolumeThread()
         _critSect.Leave();
 
         if (SetMicrophoneVolume(newMicLevel) == -1)
-        {   
+        {
             WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
                 "  the required modification of the microphone volume failed");
         }
-    }      
+    }
     return 0;
 }
 
@@ -1269,7 +1269,7 @@ int32_t AudioDeviceWindowsWave::MaxMicrophoneVolume(uint32_t& maxVolume) const
     // (1) API GetLineControl() returns failure at querying the max Mic level.
     // (2) API GetLineControl() returns maxVolume as zero in rare cases.
     // Both cases show we don't have access to the mixer controls.
-    // We return -1 here to indicate that.    
+    // We return -1 here to indicate that.
     if (_maxMicVolume == 0)
     {
         return -1;
@@ -2809,7 +2809,6 @@ int32_t AudioDeviceWindowsWave::GetPlayoutBufferDelay(uint32_t& writtenSamples, 
 
     // derive remaining amount (in ms) of data in the playout buffer
     msecInPlayoutBuffer = ((writtenSamples - playedSamples)/nSamplesPerMs);
-    // DEBUG_PRINTP("msecInPlayoutBuffer=%u\n", msecInPlayoutBuffer);
 
     playedDifference = (long) (_playedSamplesOld - playedSamples);
 
@@ -3393,7 +3392,7 @@ int32_t AudioDeviceWindowsWave::RecProc(LONGLONG& consumedTime)
                 // The VQE will only deliver non-zero microphone levels when a change is needed.
                 WEBRTC_TRACE(kTraceStream, kTraceUtility, _id,"AGC change of volume: => new=%u", newMicLevel);
 
-                // We store this outside of the audio buffer to avoid 
+                // We store this outside of the audio buffer to avoid
                 // having it overwritten by the getter thread.
                 _newMicLevel = newMicLevel;
                 SetEvent(_hSetCaptureVolumeEvent);
@@ -3833,4 +3832,3 @@ bool AudioDeviceWindowsWave::KeyPressed() const{
   return (key_down > 0);
 }
 }  // namespace webrtc
-

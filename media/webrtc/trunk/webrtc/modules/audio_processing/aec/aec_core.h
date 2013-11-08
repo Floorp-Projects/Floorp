@@ -70,38 +70,23 @@ void WebRtcAec_ProcessFrame(AecCore* aec,
 // Returns the number of elements moved, and adjusts |system_delay| by the
 // corresponding amount in ms.
 int WebRtcAec_MoveFarReadPtr(AecCore* aec, int elements);
-
 // Calculates the median and standard deviation among the delay estimates
 // collected since the last call to this function.
 int WebRtcAec_GetDelayMetricsCore(AecCore* self, int* median, int* std);
-
 // Returns the echo state (1: echo, 0: no echo).
 int WebRtcAec_echo_state(AecCore* self);
-
 // Gets statistics of the echo metrics ERL, ERLE, A_NLP.
 void WebRtcAec_GetEchoStats(AecCore* self, Stats* erl, Stats* erle,
                             Stats* a_nlp);
 #ifdef WEBRTC_AEC_DEBUG_DUMP
 void* WebRtcAec_far_time_buf(AecCore* self);
 #endif
-
 // Sets local configuration modes.
 void WebRtcAec_SetConfigCore(AecCore* self, int nlp_mode, int metrics_mode,
                              int delay_logging);
-
-// We now interpret delay correction to mean an extended filter length feature.
-// We reuse the delay correction infrastructure to avoid changes through to
-// libjingle. See details along with |DelayCorrection| in
-// echo_cancellation_impl.h. Non-zero enables, zero disables.
-void WebRtcAec_enable_delay_correction(AecCore* self, int enable);
-
-// Returns non-zero if delay correction is enabled and zero if disabled.
-int WebRtcAec_delay_correction_enabled(AecCore* self);
-
 // Returns the current |system_delay|, i.e., the buffered difference between
 // far-end and near-end.
 int WebRtcAec_system_delay(AecCore* self);
-
 // Sets the |system_delay| to |value|.  Note that if the value is changed
 // improperly, there can be a performance regression.  So it should be used with
 // care.

@@ -16,6 +16,8 @@
 
 #include <string.h>
 
+#include "webrtc/modules/rtp_rtcp/interface/rtp_payload_registry.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_receiver.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/test/media_opt_test.h"
@@ -127,7 +129,7 @@ int MTRxTxTest(CmdArgs& args)
     // Set up trace
     Trace::CreateTrace();
     Trace::SetTraceFile((test::OutputPath() + "MTRxTxTestTrace.txt").c_str());
-    Trace::SetLevelFilter(webrtc::kTraceAll);
+    Trace::set_level_filter(webrtc::kTraceAll);
 
     FILE* sourceFile;
     FILE* decodedFile;
@@ -152,29 +154,46 @@ int MTRxTxTest(CmdArgs& args)
     RtpRtcp::Configuration configuration;
     configuration.id = 1;
     configuration.audio = false;
-    configuration.incoming_data = &dataCallback;
     configuration.outgoing_transport = outgoingTransport;
     RtpRtcp* rtp = RtpRtcp::CreateRtpRtcp(configuration);
+    scoped_ptr<RTPPayloadRegistry> registry(new RTPPayloadRegistry(
+        -1, RTPPayloadStrategy::CreateStrategy(false)));
+    scoped_ptr<RtpReceiver> rtp_receiver(
+        RtpReceiver::CreateVideoReceiver(-1, Clock::GetRealTimeClock(),
+                                         &dataCallback, NULL, registry.get()));
 
     // registering codecs for the RTP module
-    VideoCodec videoCodec;
-    strncpy(videoCodec.plName, "ULPFEC", 32);
-    videoCodec.plType = VCM_ULPFEC_PAYLOAD_TYPE;
-    TEST(rtp->RegisterReceivePayload(videoCodec) == 0);
+    VideoCodec video_codec;
+    strncpy(video_codec.plName, "ULPFEC", 32);
+    video_codec.plType = VCM_ULPFEC_PAYLOAD_TYPE;
+    TEST(rtp_receiver->RegisterReceivePayload(video_codec.plName,
+                                              video_codec.plType,
+                                              90000,
+                                              0,
+                                              video_codec.maxBitrate) == 0);
 
-    strncpy(videoCodec.plName, "RED", 32);
-    videoCodec.plType = VCM_RED_PAYLOAD_TYPE;
-    TEST(rtp->RegisterReceivePayload(videoCodec) == 0);
+    strncpy(video_codec.plName, "RED", 32);
+    video_codec.plType = VCM_RED_PAYLOAD_TYPE;
+    TEST(rtp_receiver->RegisterReceivePayload(video_codec.plName,
+                                              video_codec.plType,
+                                              90000,
+                                              0,
+                                              video_codec.maxBitrate) == 0);
 
-    strncpy(videoCodec.plName, args.codecName.c_str(), 32);
-    videoCodec.plType = VCM_VP8_PAYLOAD_TYPE;
-    videoCodec.maxBitrate = 10000;
-    videoCodec.codecType = args.codecType;
-    TEST(rtp->RegisterReceivePayload(videoCodec) == 0);
-    TEST(rtp->RegisterSendPayload(videoCodec) == 0);
+    strncpy(video_codec.plName, args.codecName.c_str(), 32);
+    video_codec.plType = VCM_VP8_PAYLOAD_TYPE;
+    video_codec.maxBitrate = 10000;
+    video_codec.codecType = args.codecType;
+    TEST(rtp_receiver->RegisterReceivePayload(video_codec.plName,
+                                              video_codec.plType,
+                                              90000,
+                                              0,
+                                              video_codec.maxBitrate) == 0);
+    TEST(rtp->RegisterSendPayload(video_codec) == 0);
 
     // inform RTP Module of error resilience features
-    TEST(rtp->SetGenericFECStatus(fecEnabled, VCM_RED_PAYLOAD_TYPE, VCM_ULPFEC_PAYLOAD_TYPE) == 0);
+    TEST(rtp->SetGenericFECStatus(fecEnabled, VCM_RED_PAYLOAD_TYPE,
+                                  VCM_ULPFEC_PAYLOAD_TYPE) == 0);
 
     //VCM
     if (vcm->InitializeReceiver() < 0)
@@ -238,7 +257,7 @@ int MTRxTxTest(CmdArgs& args)
     FecProtectionParams delta_params = protectionCallback.DeltaFecParameters();
     FecProtectionParams key_params = protectionCallback.KeyFecParameters();
     rtp->SetFecParameters(&delta_params, &key_params);
-    rtp->SetNACKStatus(nackEnabled ? kNackRtcp : kNackOff, kMaxPacketAgeToNack);
+    rtp_receiver->SetNACKStatus(nackEnabled ? kNackRtcp : kNackOff);
 
     vcm->SetChannelParameters(static_cast<uint32_t>(1000 * bitRate),
                               (uint8_t) lossRate, rttMS);
@@ -360,4 +379,3 @@ int MTRxTxTest(CmdArgs& args)
     return 0;
 
 }
-

@@ -8,15 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "device_info_ds.h"
+#include "webrtc/modules/video_capture/windows/device_info_ds.h"
 
-#include "../video_capture_config.h"
-#include "../video_capture_delay.h"
-#include "help_functions_ds.h"
-#include "ref_count.h"
-#include "trace.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
+#include "webrtc/modules/video_capture/video_capture_delay.h"
+#include "webrtc/modules/video_capture/windows/help_functions_ds.h"
+#include "webrtc/system_wrappers/interface/ref_count.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #include <Dvdmedia.h>
+#include <Streams.h>
 
 namespace webrtc
 {
@@ -40,23 +41,6 @@ const DelayValues WindowsCaptureDelays[NoWindowsCaptureDelays] = {
     {800,600,127}
   },
 };
-
-
-  void _FreeMediaType(AM_MEDIA_TYPE& mt)
-{
-    if (mt.cbFormat != 0)
-    {
-        CoTaskMemFree((PVOID)mt.pbFormat);
-        mt.cbFormat = 0;
-        mt.pbFormat = NULL;
-    }
-    if (mt.pUnk != NULL)
-    {
-        // pUnk should not be used.
-        mt.pUnk->Release();
-        mt.pUnk = NULL;
-    }
-}
 
 // static
 DeviceInfoDS* DeviceInfoDS::Create(const int32_t id)
@@ -383,23 +367,18 @@ IBaseFilter * DeviceInfoDS::GetDeviceFilter(
 }
 
 int32_t DeviceInfoDS::GetWindowsCapability(
-                              const int32_t capabilityIndex,
-                              VideoCaptureCapabilityWindows& windowsCapability)
+    const int32_t capabilityIndex,
+    VideoCaptureCapabilityWindows& windowsCapability) {
+  ReadLockScoped cs(_apiLock);
 
-{
-    ReadLockScoped cs(_apiLock);
-    // Make sure the number is valid
-    if (capabilityIndex >= _captureCapabilities.Size() || capabilityIndex < 0)
-        return -1;
+  std::map<int, VideoCaptureCapability*>::iterator item =
+      _captureCapabilities.find(capabilityIndex);
+  if (item == _captureCapabilities.end())
+    return -1;
 
-    MapItem* item = _captureCapabilities.Find(capabilityIndex);
-    if (!item)
-        return -1;
-
-    VideoCaptureCapabilityWindows* capPointer =
-                static_cast<VideoCaptureCapabilityWindows*> (item->GetItem());
-    windowsCapability = *capPointer;
-    return 0;
+  windowsCapability =
+      *static_cast<VideoCaptureCapabilityWindows*>(item->second);
+  return 0;
 }
 
 int32_t DeviceInfoDS::CreateCapabilityMap(
@@ -407,14 +386,14 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
 {
     // Reset old capability list
-    MapItem* item = NULL;
-    while (item = _captureCapabilities.Last())
-    {
-        VideoCaptureCapabilityWindows* cap =
-            static_cast<VideoCaptureCapabilityWindows*> (item->GetItem());
-        delete cap;
-        _captureCapabilities.Erase(item);
+  for (std::map<int, VideoCaptureCapability*>::iterator it =
+           _captureCapabilities.begin();
+       it != _captureCapabilities.end();
+       ++it) {
+      delete it->second;
     }
+
+    _captureCapabilities.clear();
 
     const int32_t deviceUniqueIdUTF8Length =
         (int32_t) strlen((char*) deviceUniqueIdUTF8);
@@ -586,7 +565,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
             if (hrVC == S_OK)
             {
-                LONGLONG *frameDurationList = NULL;
+                LONGLONG *frameDurationList;
                 LONGLONG maxFPS; 
                 long listSize;
                 SIZE size;
@@ -605,9 +584,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
                 // On some odd cameras, you may get a 0 for duration.
                 // GetMaxOfFrameArray returns the lowest duration (highest FPS)
-                // Initialize and check the returned list for null since
-                // some broken drivers don't modify it.
-                if (hrVC == S_OK && listSize > 0 && frameDurationList &&
+                if (hrVC == S_OK && listSize > 0 &&
                     0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, 
                                                       listSize)))
                 {
@@ -696,13 +673,13 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
                                                       productId,
                                                       capability->width,
                                                       capability->height);
-            _captureCapabilities.Insert(index++, capability);
+            _captureCapabilities[index++] = capability;
             WEBRTC_TRACE( webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
                          "Camera capability, width:%d height:%d type:%d fps:%d",
                          capability->width, capability->height,
                          capability->rawType, capability->maxFPS);
         }
-        _FreeMediaType(*pmt);
+        DeleteMediaType(pmt);
         pmt = NULL;
     }
     RELEASE_AND_CLEAR(streamConfig);
@@ -717,9 +694,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
                                                        + 1);
     memcpy(_lastUsedDeviceName, deviceUniqueIdUTF8, _lastUsedDeviceNameLength+ 1);
     WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideoCapture, _id,
-                 "CreateCapabilityMap %d", _captureCapabilities.Size());
+                 "CreateCapabilityMap %d", _captureCapabilities.size());
 
-    return _captureCapabilities.Size();
+    return static_cast<int32_t>(_captureCapabilities.size());
 }
 
 /* Constructs a product ID from the Windows DevicePath. on a USB device the devicePath contains product id and vendor id.
@@ -827,5 +804,5 @@ int32_t DeviceInfoDS::DisplayCaptureSettingsDialogBox(
     filter->Release();
     return 0;
 }
-} // namespace videocapturemodule
-} // namespace webrtc
+}  // namespace videocapturemodule
+}  // namespace webrtc

@@ -13,13 +13,15 @@
 
 #include <stddef.h>
 
+#include "webrtc/typedefs.h"
+
 namespace webrtc {
 namespace newapi {
 
 class Transport {
  public:
-  virtual bool SendRTP(const void* packet, size_t length) = 0;
-  virtual bool SendRTCP(const void* packet, size_t length) = 0;
+  virtual bool SendRTP(const uint8_t* packet, size_t length) = 0;
+  virtual bool SendRTCP(const uint8_t* packet, size_t length) = 0;
 
  protected:
   virtual ~Transport() {}
