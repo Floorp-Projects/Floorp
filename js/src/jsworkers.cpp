@@ -174,7 +174,7 @@ static const JSClass workerGlobalClass = {
     JS_ConvertStub,   nullptr
 };
 
-ParseTask::ParseTask(ExclusiveContext *cx, const CompileOptions &options,
+ParseTask::ParseTask(ExclusiveContext *cx, const ReadOnlyCompileOptions &options,
                      const jschar *chars, size_t length, JSObject *scopeChain,
                      JS::OffThreadCompileCallback callback, void *callbackData)
   : cx(cx), options(options), chars(chars), length(length),
@@ -209,7 +209,7 @@ ParseTask::~ParseTask()
 }
 
 bool
-js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
+js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &options,
                               const jschar *chars, size_t length, HandleObject scopeChain,
                               JS::OffThreadCompileCallback callback, void *callbackData)
 {
@@ -1055,7 +1055,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 }
 
 bool
-js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
+js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &options,
                               const jschar *chars, size_t length, HandleObject scopeChain,
                               JS::OffThreadCompileCallback callback, void *callbackData)
 {
