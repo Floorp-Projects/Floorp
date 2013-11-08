@@ -446,10 +446,40 @@ var Browser = {
     return this._tabId++;
   },
 
+  /**
+   * Create a new tab and add it to the tab list.
+   *
+   * If you are opening a new foreground tab in response to a user action, use
+   * BrowserUI.addAndShowTab which will also show the tab strip.
+   *
+   * @param aURI String specifying the URL to load.
+   * @param aBringFront Boolean (optional) Open the new tab in the foreground?
+   * @param aOwner Tab object (optional) The "parent" of the new tab.
+   *   This is the tab responsible for opening the new tab.  When the new tab
+   *   is closed, we will return to a parent or "sibling" tab if possible.
+   * @param aParams Object (optional) with optional properties:
+   *   index: Number specifying where in the tab list to insert the new tab.
+   *   flags, postData, charset, referrerURI: See loadURIWithFlags.
+   */
   addTab: function browser_addTab(aURI, aBringFront, aOwner, aParams) {
     let params = aParams || {};
+
+    if (aOwner && !('index' in params)) {
+      // Position the new tab to the right of its owner...
+      params.index = this._tabs.indexOf(aOwner) + 1;
+      // ...and to the right of any siblings.
+      while (this._tabs[params.index] && this._tabs[params.index].owner == aOwner) {
+        params.index++;
+      }
+    }
+
     let newTab = new Tab(aURI, params, aOwner);
-    this._tabs.push(newTab);
+
+    if (params.index >= 0) {
+      this._tabs.splice(params.index, 0, newTab);
+    } else {
+      this._tabs.push(newTab);
+    }
 
     if (aBringFront)
       this.selectedTab = newTab;
@@ -1299,7 +1329,7 @@ Tab.prototype = {
   create: function create(aURI, aParams, aOwner) {
     this._eventDeferred = Promise.defer();
 
-    this._chromeTab = Elements.tabList.addTab();
+    this._chromeTab = Elements.tabList.addTab(aParams.index);
     this._id = Browser.createTabId();
     let browser = this._createBrowser(aURI, null);
 
