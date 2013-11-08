@@ -1635,7 +1635,7 @@ IonCompile(JSContext *cx, JSScript *script,
     if (!constraints)
         return AbortReason_Alloc;
 
-    IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, constraints,
+    IonBuilder *builder = alloc->new_<IonBuilder>(nullptr, cx->compartment(), temp, graph, constraints,
                                                   &inspector, info, baselineFrame);
     if (!builder)
         return AbortReason_Alloc;
