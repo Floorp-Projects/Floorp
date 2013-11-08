@@ -4762,6 +4762,18 @@ if (SpecialPowers.getBoolPref("layout.css.mix-blend-mode.enabled")) {
     };
 }
 
+if (SpecialPowers.getBoolPref("layout.css.background-blend-mode.enabled")) {
+	gCSSProperties["background-blend-mode"] = {
+		domProp: "backgroundBlendMode",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "normal" ],
+		other_values: [ "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
+			"hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity" ],
+		invalid_values: []
+	};
+}
+
 if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
   gCSSProperties["animation-direction"].invalid_values.push("normal, unset");
   gCSSProperties["animation-name"].invalid_values.push("bounce, unset", "unset, bounce");

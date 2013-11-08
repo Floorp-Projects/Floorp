@@ -38,6 +38,7 @@ JS::Zone::Zone(JSRuntime *rt)
     scheduledForDestruction(false),
     maybeAlive(true),
     gcMallocBytes(0),
+    gcMallocGCTriggered(false),
     gcGrayRoots(),
     data(nullptr),
     types(this)
@@ -112,6 +113,7 @@ void
 Zone::resetGCMallocBytes()
 {
     gcMallocBytes = ptrdiff_t(gcMaxMallocBytes);
+    gcMallocGCTriggered = false;
 }
 
 void
@@ -128,7 +130,8 @@ Zone::setGCMaxMallocBytes(size_t value)
 void
 Zone::onTooMuchMalloc()
 {
-    TriggerZoneGC(this, gcreason::TOO_MUCH_MALLOC);
+    if (!gcMallocGCTriggered)
+        gcMallocGCTriggered = TriggerZoneGC(this, JS::gcreason::TOO_MUCH_MALLOC);
 }
 
 void
