@@ -33,7 +33,7 @@
 
       var store = stores[0];
       ok("get" in store, "store.get exists");
-      ok("update" in store, "store.update exists");
+      ok("put" in store, "store.put exists");
       ok("add" in store, "store.add exists");
       ok("remove" in store, "store.remove exists");
       ok("clear" in store, "store.clear exists");
@@ -51,11 +51,11 @@
 
       f = f.then(cbError, function() {
         ok(true, "store.add() fails because the db is readonly");
-        return store.update(123, {});
+        return store.put({}, 123);
       })
 
       f = f.then(cbError, function() {
-        ok(true, "store.update() fails because the db is readonly");
+        ok(true, "store.put() fails because the db is readonly");
       })
 
       f.then(function() {
