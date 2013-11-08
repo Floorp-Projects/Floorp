@@ -489,7 +489,14 @@ BaselineCompiler::emitStackCheck(bool earlyCheck)
     pushArg(Imm32(tolerance));
     masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
     pushArg(R1.scratchReg());
-    if (!callVM(CheckOverRecursedWithExtraInfo, /*preInitialize=*/earlyCheck))
+
+    CallVMPhase phase = POST_INITIALIZE;
+    if (earlyCheck)
+        phase = PRE_INITIALIZE;
+    else if (needsEarlyStackCheck())
+        phase = CHECK_OVER_RECURSED;
+
+    if (!callVM(CheckOverRecursedWithExtraInfo, phase))
         return false;
 
     masm.bind(&skipCall);
@@ -536,6 +543,10 @@ static const VMFunction HeavyweightFunPrologueInfo =
 bool
 BaselineCompiler::initScopeChain()
 {
+    CallVMPhase phase = POST_INITIALIZE;
+    if (needsEarlyStackCheck())
+        phase = CHECK_OVER_RECURSED;
+
     RootedFunction fun(cx, function());
     if (fun) {
         // Use callee->environment as scope chain. Note that we do
@@ -554,7 +565,7 @@ BaselineCompiler::initScopeChain()
             masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
             pushArg(R0.scratchReg());
 
-            if (!callVM(HeavyweightFunPrologueInfo))
+            if (!callVM(HeavyweightFunPrologueInfo, phase))
                 return false;
         }
     } else {
@@ -568,7 +579,7 @@ BaselineCompiler::initScopeChain()
             masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
             pushArg(R0.scratchReg());
 
-            if (!callVM(StrictEvalPrologueInfo))
+            if (!callVM(StrictEvalPrologueInfo, phase))
                 return false;
         }
     }
