@@ -7609,11 +7609,14 @@ IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyN
             if (!isGetter && clasp->ops.setGeneric)
                 return false;
 
-            // Note: freezePropertiesForCommonPropFunc will freeze the property
-            // type sets later on if optimizing.
+            // Test for isOwnProperty() without freezing. If we end up
+            // optimizing, freezePropertiesForCommonPropFunc will freeze the
+            // property type sets later on.
             types::HeapTypeSetKey property = type->property(NameToId(name));
-            if (property.maybeTypes() && !property.maybeTypes()->empty())
-                return false;
+            if (types::TypeSet *types = property.maybeTypes()) {
+                if (!types->empty() || types->configuredProperty())
+                    return false;
+            }
             if (JSObject *obj = type->singleton()) {
                 if (types::CanHaveEmptyPropertyTypesForOwnProperty(obj))
                     return false;
