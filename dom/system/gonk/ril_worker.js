@@ -877,9 +877,14 @@ let RIL = {
       this.appType,
       options.contactType,
       function onsuccess(contacts) {
+        for (let i = 0; i < contacts.length; i++) {
+          let contact = contacts[i];
+          let pbrIndex = contact.pbrIndex || 0;
+          let recordIndex = pbrIndex * ICC_MAX_LINEAR_FIXED_RECORDS + contact.recordId;
+          contact.contactId = this.iccInfo.iccid + recordIndex;
+        }
         // Reuse 'options' to get 'requestId' and 'contactType'.
         options.contacts = contacts;
-        options.iccid = RIL.iccInfo.iccid;
         RIL.sendChromeMessage(options);
       }.bind(this),
       function onerror(errorMsg) {
@@ -914,9 +919,13 @@ let RIL = {
 
     let contact = options.contact;
     let iccid = RIL.iccInfo.iccid;
-    if (contact.id.startsWith(iccid)) {
-      contact.recordId = contact.id.substring(iccid.length);
+    if (contact.contactId.startsWith(iccid)) {
+      let recordIndex = contact.contactId.substring(iccid.length);
+      contact.pbrIndex = Math.floor(recordIndex / ICC_MAX_LINEAR_FIXED_RECORDS);
+      contact.recordId = recordIndex % ICC_MAX_LINEAR_FIXED_RECORDS;
     }
+
+    let isValidRecordId = contact.recordId > 0 && contact.recordId < 0xff;
 
     if (DEBUG) {
       debug("Update ICC Contact " + JSON.stringify(contact));
@@ -924,12 +933,12 @@ let RIL = {
 
     // If contact has 'recordId' property, updates corresponding record.
     // If not, inserts the contact into a free record.
-    if (options.contact.recordId) {
+    if (isValidRecordId) {
       ICCContactHelper.updateICCContact(
-        this.appType, options.contactType, options.contact, options.pin2, onsuccess, onerror);
+        this.appType, options.contactType, contact, options.pin2, onsuccess, onerror);
     } else {
       ICCContactHelper.addICCContact(
-        this.appType, options.contactType, options.contact, options.pin2, onsuccess, onerror);
+        this.appType, options.contactType, contact, options.pin2, onsuccess, onerror);
     }
   },
 
@@ -12673,7 +12682,7 @@ let ICCContactHelper = {
     switch (contactType) {
       case "adn":
         if (!this.hasDfPhoneBook(appType)) {
-          ICCRecordHelper.findFreeRecordId(ICC_EF_ADN, onsuccess, onerror);
+          ICCRecordHelper.findFreeRecordId(ICC_EF_ADN, onsuccess.bind(null, 0), onerror);
         } else {
           let gotPbrCb = function gotPbrCb(pbrs) {
             this.findUSimFreeADNRecordId(pbrs, onsuccess, onerror);
@@ -12683,7 +12692,7 @@ let ICCContactHelper = {
         }
         break;
       case "fdn":
-        ICCRecordHelper.findFreeRecordId(ICC_EF_FDN, onsuccess, onerror);
+        ICCRecordHelper.findFreeRecordId(ICC_EF_FDN, onsuccess.bind(null, 0), onerror);
         break;
       default:
         let error = onerror || debug;
@@ -12710,10 +12719,8 @@ let ICCContactHelper = {
       let pbr = pbrs[pbrIndex];
       ICCRecordHelper.findFreeRecordId(
         pbr.adn.fileId,
-        onsuccess,
-        function (errorMsg) {
-          findFreeRecordId.bind(this, pbrIndex + 1);
-        }.bind(this));
+        onsuccess.bind(this, pbrIndex),
+        findFreeRecordId.bind(null, pbrIndex + 1));
     })(0);
   },
 
@@ -12728,10 +12735,11 @@ let ICCContactHelper = {
    * @param onerror       Callback to be called when error.
    */
   addICCContact: function addICCContact(appType, contactType, contact, pin2, onsuccess, onerror) {
-    let foundFreeCb = function foundFreeCb(recordId) {
+    let foundFreeCb = function foundFreeCb(pbrIndex, recordId) {
+      contact.pbrIndex = pbrIndex;
       contact.recordId = recordId;
       ICCContactHelper.updateICCContact(appType, contactType, contact, pin2, onsuccess, onerror);
-    }.bind(this);
+    };
 
     // Find free record first.
     ICCContactHelper.findFreeICCContact(appType, contactType, foundFreeCb, onerror);
@@ -12800,7 +12808,7 @@ let ICCContactHelper = {
 
       let cLen = contacts ? contacts.length : 0;
       for (let i = 0; i < cLen; i++) {
-        contacts[i].recordId += pbrIndex * ICC_MAX_LINEAR_FIXED_RECORDS;
+        contacts[i].pbrIndex = pbrIndex;
       }
 
       pbrIndex++;
@@ -12991,14 +12999,12 @@ let ICCContactHelper = {
    */
   updateUSimContact: function updateUSimContact(contact, onsuccess, onerror) {
     let gotPbrCb = function gotPbrCb(pbrs) {
-      let pbrIndex = Math.floor(contact.recordId / ICC_MAX_LINEAR_FIXED_RECORDS);
-      let pbr = pbrs[pbrIndex];
+      let pbr = pbrs[contact.pbrIndex];
       if (!pbr) {
         let error = onerror || debug;
         error("Cannot access Phonebook.");
         return;
       }
-      contact.recordId %= ICC_MAX_LINEAR_FIXED_RECORDS;
       this.updatePhonebookSet(pbr, contact, onsuccess, onerror);
     }.bind(this);
 
