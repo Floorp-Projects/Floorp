@@ -451,14 +451,6 @@ protected:
   void TimeoutTouchListeners();
 
   /**
-   * Utility function that sets the zoom and resolution simultaneously. This is
-   * useful when we want to repaint at the current zoom level.
-   *
-   * *** The monitor must be held while calling this.
-   */
-  void SetZoomAndResolution(const mozilla::CSSToScreenScale& aZoom);
-
-  /**
    * Timeout function for mozbrowserasyncscroll event. Because we throttle
    * mozbrowserasyncscroll events in some conditions, this function ensures
    * that the last mozbrowserasyncscroll event will be fired after a period of
