@@ -7,6 +7,7 @@
 #include "gfxPattern.h"
 #include "gfxASurface.h"
 #include "gfxPlatform.h"
+#include "gfxGradientCache.h"
 
 #include "cairo.h"
 
@@ -99,6 +100,29 @@ void
 gfxPattern::SetColorStops(mozilla::RefPtr<mozilla::gfx::GradientStops> aStops)
 {
   mStops = aStops;
+}
+
+void
+gfxPattern::CacheColorStops(mozilla::gfx::DrawTarget *aDT)
+{
+  if (mPattern) {
+    mStops = nullptr;
+    nsTArray<GradientStop> stops;
+    int count = 0;
+    cairo_pattern_get_color_stop_count(mPattern, &count);
+    stops.SetLength(count);
+    for (int n = 0; n < count; ++n) {
+      double offset, r, g, b, a;
+      cairo_pattern_get_color_stop_rgba(mPattern, n, &offset, &r, &g, &b, &a);
+      stops[n].color = mozilla::gfx::Color(r, g, b, a);
+      stops[n].offset = offset;
+    }
+    mStops = gfxGradientCache::GetOrCreateGradientStops(aDT,
+                                                        stops,
+                                                        (cairo_pattern_get_extend(mPattern) == CAIRO_EXTEND_REPEAT)
+                                                        ? mozilla::gfx::EXTEND_REPEAT
+                                                        : mozilla::gfx::EXTEND_CLAMP);
+  }
 }
 
 void
