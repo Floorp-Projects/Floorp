@@ -116,6 +116,8 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
             return WebGLExtensionInstancedArrays::IsSupported(this);
         case EXT_sRGB:
             return WebGLExtensionSRGB::IsSupported(this);
+        case WEBGL_draw_buffers:
+            return WebGLExtensionDrawBuffers::IsSupported(this);
         default:
             // For warnings-as-errors.
             break;
@@ -123,8 +125,6 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
 
     if (Preferences::GetBool("webgl.enable-draft-extensions", false) || IsWebGL2()) {
         switch (ext) {
-            case WEBGL_draw_buffers:
-                return WebGLExtensionDrawBuffers::IsSupported(this);
             default:
                 // For warnings-as-errors.
                 break;
