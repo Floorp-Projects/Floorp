@@ -1919,6 +1919,13 @@ pref("layout.css.scope-pseudo.enabled", false);
 pref("layout.css.scope-pseudo.enabled", true);
 #endif
 
+// Is support for background-blend-mode enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.background-blend-mode.enabled", false);
+#else
+pref("layout.css.background-blend-mode.enabled", true);
+#endif
+
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", false);
 
