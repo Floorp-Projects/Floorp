@@ -8,12 +8,33 @@
 
 #include "MozNdefRecord.h"
 #include "mozilla/dom/MozNdefRecordBinding.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "nsContentUtils.h"
+
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(MozNdefRecord, mWindow)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(MozNdefRecord)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MozNdefRecord)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MozNdefRecord)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(MozNdefRecord)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mType)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mId)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mPayload)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MozNdefRecord)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MozNdefRecord)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MozNdefRecord)
@@ -21,11 +42,32 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MozNdefRecord)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+void
+MozNdefRecord::HoldData()
+{
+  mozilla::HoldJSObjects(this);
+}
+
+void
+MozNdefRecord::DropData()
+{
+  if (mType) {
+    mType = nullptr;
+  }
+  if (mId) {
+    mId = nullptr;
+  }
+  if (mPayload) {
+    mPayload = nullptr;
+  }
+  mozilla::DropJSObjects(this);
+}
+
 /* static */
 already_AddRefed<MozNdefRecord>
 MozNdefRecord::Constructor(const GlobalObject& aGlobal,
-                           uint8_t aTnf, const nsAString& aType,
-                           const nsAString& aId, const nsAString& aPayload,
+                           uint8_t aTnf, const Uint8Array& aType,
+                           const Uint8Array& aId, const Uint8Array& aPayload,
                            ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
@@ -33,25 +75,35 @@ MozNdefRecord::Constructor(const GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  nsRefPtr<MozNdefRecord> ndefrecord =
-    new MozNdefRecord(win, aTnf, aType, aId, aPayload);
+
+  nsRefPtr<MozNdefRecord> ndefrecord = new MozNdefRecord(aGlobal.GetContext(),
+                                                         win, aTnf, aType, aId,
+                                                         aPayload);
+  if (!ndefrecord) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
   return ndefrecord.forget();
 }
 
-MozNdefRecord::MozNdefRecord(nsPIDOMWindow* aWindow,
-                             uint8_t aTnf, const nsAString& aType,
-                             const nsAString& aId, const nsAString& aPayload)
+MozNdefRecord::MozNdefRecord(JSContext* aCx, nsPIDOMWindow* aWindow,
+                             uint8_t aTnf, const Uint8Array& aType,
+                             const Uint8Array& aId, const Uint8Array& aPayload)
   : mTnf(aTnf)
-  , mType(aType)
-  , mId(aId)
-  , mPayload(aPayload)
 {
-  mWindow = aWindow;
+  mWindow = aWindow; // For GetParentObject()
+
+  mType = Uint8Array::Create(aCx, this, aType.Length(), aType.Data());
+  mId = Uint8Array::Create(aCx, this, aId.Length(), aId.Data());
+  mPayload = Uint8Array::Create(aCx, this, aPayload.Length(), aPayload.Data());
+
   SetIsDOMBinding();
+  HoldData();
 }
 
 MozNdefRecord::~MozNdefRecord()
 {
+  DropData();
 }
 
 JSObject*
