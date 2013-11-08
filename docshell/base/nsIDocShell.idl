@@ -44,7 +44,7 @@ interface nsIReflowObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(5c9adf31-8e4a-4d8d-8daf-9999e6002697)]
+[scriptable, builtinclass, uuid(55ca6545-7ce4-49ad-8117-8286ca9c61bb)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -913,4 +913,16 @@ interface nsIDocShell : nsIDocShellTreeItem
  * Get the script global for the document in this docshell.
 */
   [noscript,notxpcom,nostdcall] nsIScriptGlobalObject GetScriptGlobalObject();
+
+  /**
+   * If deviceSizeIsPageSize is set to true, device-width/height media queries
+   * will be calculated from the page size, not the device size.
+   *
+   * Used by the Responsive Design View and B2G Simulator.
+   *
+   * Default is False.
+   * Default value can be overriden with
+   * docshell.device_size_is_page_size pref.
+   */
+  [infallible] attribute boolean deviceSizeIsPageSize;
 };
