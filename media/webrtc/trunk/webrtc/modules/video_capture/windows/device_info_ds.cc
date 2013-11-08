@@ -17,7 +17,6 @@
 #include "webrtc/system_wrappers/interface/trace.h"
 
 #include <Dvdmedia.h>
-#include <Streams.h>
 
 namespace webrtc
 {
@@ -41,6 +40,23 @@ const DelayValues WindowsCaptureDelays[NoWindowsCaptureDelays] = {
     {800,600,127}
   },
 };
+
+
+  void _FreeMediaType(AM_MEDIA_TYPE& mt)
+{
+    if (mt.cbFormat != 0)
+    {
+        CoTaskMemFree((PVOID)mt.pbFormat);
+        mt.cbFormat = 0;
+        mt.pbFormat = NULL;
+    }
+    if (mt.pUnk != NULL)
+    {
+        // pUnk should not be used.
+        mt.pUnk->Release();
+        mt.pUnk = NULL;
+    }
+}
 
 // static
 DeviceInfoDS* DeviceInfoDS::Create(const int32_t id)
@@ -565,7 +581,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
             if (hrVC == S_OK)
             {
-                LONGLONG *frameDurationList;
+                LONGLONG *frameDurationList = NULL;
                 LONGLONG maxFPS; 
                 long listSize;
                 SIZE size;
@@ -584,7 +600,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
 
                 // On some odd cameras, you may get a 0 for duration.
                 // GetMaxOfFrameArray returns the lowest duration (highest FPS)
-                if (hrVC == S_OK && listSize > 0 &&
+                // Initialize and check the returned list for null since
+                // some broken drivers don't modify it.
+                if (hrVC == S_OK && listSize > 0 && frameDurationList &&
                     0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, 
                                                       listSize)))
                 {
@@ -679,7 +697,7 @@ int32_t DeviceInfoDS::CreateCapabilityMap(
                          capability->width, capability->height,
                          capability->rawType, capability->maxFPS);
         }
-        DeleteMediaType(pmt);
+        _FreeMediaType(*pmt);
         pmt = NULL;
     }
     RELEASE_AND_CLEAR(streamConfig);

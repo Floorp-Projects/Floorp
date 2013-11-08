@@ -11,6 +11,7 @@
 #include "webrtc/modules/audio_device/android/opensles_input.h"
 
 #include <assert.h>
+#include <dlfcn.h>
 
 #include "webrtc/modules/audio_device/android/single_rw_fifo.h"
 #include "webrtc/modules/audio_device/audio_device_buffer.h"
@@ -65,7 +66,8 @@ OpenSlesInput::OpenSlesInput(
       active_queue_(0),
       rec_sampling_rate_(0),
       agc_enabled_(false),
-      recording_delay_(0) {
+      recording_delay_(0),
+      opensles_lib_(NULL) {
 }
 
 OpenSlesInput::~OpenSlesInput() {
@@ -74,15 +76,41 @@ OpenSlesInput::~OpenSlesInput() {
 int32_t OpenSlesInput::Init() {
   assert(!initialized_);
 
+  /* Try to dynamically open the OpenSLES library */
+  opensles_lib_ = dlopen("libOpenSLES.so", RTLD_LAZY);
+  if (!opensles_lib_) {
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_,
+                   "  failed to dlopen OpenSLES library");
+      return -1;
+  }
+
+  f_slCreateEngine = (slCreateEngine_t)dlsym(opensles_lib_, "slCreateEngine");
+  SL_IID_ENGINE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ENGINE");
+  SL_IID_BUFFERQUEUE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_BUFFERQUEUE");
+  SL_IID_ANDROIDCONFIGURATION_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ANDROIDCONFIGURATION");
+  SL_IID_ANDROIDSIMPLEBUFFERQUEUE_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_ANDROIDSIMPLEBUFFERQUEUE");
+  SL_IID_RECORD_ = *(SLInterfaceID *)dlsym(opensles_lib_, "SL_IID_RECORD");
+
+  if (!f_slCreateEngine ||
+      !SL_IID_ENGINE_ ||
+      !SL_IID_BUFFERQUEUE_ ||
+      !SL_IID_ANDROIDCONFIGURATION_ ||
+      !SL_IID_ANDROIDSIMPLEBUFFERQUEUE_ ||
+      !SL_IID_RECORD_) {
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_,
+                   "  failed to find OpenSLES function");
+      return -1;
+  }
+
   // Set up OpenSL engine.
-  OPENSL_RETURN_ON_FAILURE(slCreateEngine(&sles_engine_, 1, kOption, 0,
+  OPENSL_RETURN_ON_FAILURE(f_slCreateEngine(&sles_engine_, 1, kOption, 0,
                                           NULL, NULL),
                            -1);
   OPENSL_RETURN_ON_FAILURE((*sles_engine_)->Realize(sles_engine_,
                                                     SL_BOOLEAN_FALSE),
                            -1);
   OPENSL_RETURN_ON_FAILURE((*sles_engine_)->GetInterface(sles_engine_,
-                                                         SL_IID_ENGINE,
+                                                         SL_IID_ENGINE_,
                                                          &sles_engine_itf_),
                            -1);
 
@@ -101,6 +129,7 @@ int32_t OpenSlesInput::Terminate() {
   initialized_ = false;
   mic_initialized_ = false;
   rec_initialized_ = false;
+  dlclose(opensles_lib_);
   return 0;
 }
 
@@ -270,8 +299,12 @@ void OpenSlesInput::UpdateRecordingDelay() {
 }
 
 void OpenSlesInput::UpdateSampleRate() {
+#if !defined(WEBRTC_GONK)
   rec_sampling_rate_ = audio_manager_.low_latency_supported() ?
       audio_manager_.native_output_sample_rate() : kDefaultSampleRate;
+#else
+  rec_sampling_rate_ = kDefaultSampleRate;
+#endif
 }
 
 void OpenSlesInput::CalculateNumFifoBuffersNeeded() {
@@ -345,7 +378,7 @@ bool OpenSlesInput::CreateAudioRecorder() {
   // Note the interfaces still need to be initialized. This only tells OpenSl
   // that the interfaces will be needed at some point.
   const SLInterfaceID id[kNumInterfaces] = {
-    SL_IID_ANDROIDSIMPLEBUFFERQUEUE, SL_IID_ANDROIDCONFIGURATION };
+    SL_IID_ANDROIDSIMPLEBUFFERQUEUE_, SL_IID_ANDROIDCONFIGURATION_ };
   const SLboolean req[kNumInterfaces] = {
     SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
   OPENSL_RETURN_ON_FAILURE(
@@ -363,13 +396,13 @@ bool OpenSlesInput::CreateAudioRecorder() {
                                                       SL_BOOLEAN_FALSE),
                            false);
   OPENSL_RETURN_ON_FAILURE(
-      (*sles_recorder_)->GetInterface(sles_recorder_, SL_IID_RECORD,
+      (*sles_recorder_)->GetInterface(sles_recorder_, SL_IID_RECORD_,
                                       static_cast<void*>(&sles_recorder_itf_)),
       false);
   OPENSL_RETURN_ON_FAILURE(
       (*sles_recorder_)->GetInterface(
           sles_recorder_,
-          SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
+          SL_IID_ANDROIDSIMPLEBUFFERQUEUE_,
           static_cast<void*>(&sles_recorder_sbq_itf_)),
       false);
   return true;

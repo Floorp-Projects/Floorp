@@ -25,6 +25,9 @@
         '<(webrtc_root)/modules/modules.gyp:webrtc_utility',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
+      'defines': [
+        'WEBRTC_EXTERNAL_TRANSPORT',
+      ],
       'sources': [
         '../common_types.h',
         '../engine_configurations.h',

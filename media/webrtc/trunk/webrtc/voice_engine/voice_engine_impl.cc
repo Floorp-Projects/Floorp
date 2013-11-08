@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#if defined(WEBRTC_ANDROID)
+#if !defined(WEBRTC_GONK)
 #if defined(WEBRTC_ANDROID_OPENSLES)
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
-#else
+#elif defined(WEBRTC_ANDROID)
 #include "webrtc/modules/audio_device/android/audio_device_jni_android.h"
 #endif
 #endif
@@ -147,16 +147,18 @@ bool VoiceEngine::Delete(VoiceEngine*& voiceEngine)
 
 int VoiceEngine::SetAndroidObjects(void* javaVM, void* env, void* context)
 {
-#ifdef WEBRTC_ANDROID
-#ifdef WEBRTC_ANDROID_OPENSLES
-  AudioManagerJni::SetAndroidAudioDeviceObjects(javaVM, env, context);
-  return 0;
+#if !defined(WEBRTC_GONK)
+#if defined(WEBRTC_ANDROID_OPENSLES)
+    AudioManagerJni::SetAndroidAudioDeviceObjects(javaVM, env, context);
+    return 0;
+#elif defined(ANDROID)
+    return AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
+         javaVM, env, context);
 #else
-  return AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
-      javaVM, env, context);
+    return -1;
 #endif
 #else
-  return -1;
+    return -1;
 #endif
 }
 

@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include "webrtc/common_audio/include/audio_util.h"
-#include "webrtc/common_audio/resampler/include/resampler.h"
 #include "webrtc/common_audio/resampler/push_sinc_resampler.h"
 
 namespace webrtc {

@@ -49,6 +49,7 @@ ViEReceiver::ViEReceiver(const int32_t channel_id,
       decryption_buffer_(NULL),
       rtp_dump_(NULL),
       receiving_(false),
+      receiving_rtcp_(false),
       restored_packet_in_use_(false) {
   assert(remote_bitrate_estimator);
 }
@@ -385,6 +386,16 @@ void ViEReceiver::StartReceive() {
 void ViEReceiver::StopReceive() {
   CriticalSectionScoped cs(receive_cs_.get());
   receiving_ = false;
+}
+
+void ViEReceiver::StartRTCPReceive() {
+  CriticalSectionScoped cs(receive_cs_.get());
+  receiving_rtcp_ = true;
+}
+
+void ViEReceiver::StopRTCPReceive() {
+  CriticalSectionScoped cs(receive_cs_.get());
+  receiving_rtcp_ = false;
 }
 
 int ViEReceiver::StartRTPDump(const char file_nameUTF8[1024]) {
