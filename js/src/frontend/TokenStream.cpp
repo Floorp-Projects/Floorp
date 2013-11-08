@@ -272,7 +272,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
     linebase(base - options.column),
     prevLinebase(nullptr),
     userbuf(cx, base - options.column, length + options.column), // See comment below
-    filename(options.filename),
+    filename(options.filename()),
     sourceURL_(nullptr),
     sourceMapURL_(nullptr),
     tokenbuf(cx),
