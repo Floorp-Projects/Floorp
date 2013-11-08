@@ -16,3 +16,21 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-image
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-isolation.html background-blending-isolation-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-list-repeat.html background-blending-list-repeat-ref.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-multiple-images.html background-blending-multiple-images-ref.html
+
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-color-burn.html background-blending-color-burn-ref.svg
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-color-dodge.html background-blending-color-dodge-ref.svg
+# need to investigate why these tests are fuzzy - first suspect is a possible color space conversion on some platforms; same for mix-blend-mode tests
+fuzzy-if(azureQuartz,2,8000) fuzzy-if(azureSkia||gtk2Widget,2,9600) fuzzy-if(d2d,1,8000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-color.html background-blending-color-ref.svg
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-darken.html background-blending-darken-ref.svg
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-difference.html background-blending-difference-ref.svg
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-exclusion.html background-blending-exclusion-ref.svg
+fuzzy-if(azureQuartz||d2d,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hard-light.html background-blending-hard-light-ref.svg
+fuzzy-if(azureQuartz,2,8000) fuzzy-if(d2d,1,9600) fuzzy-if(azureSkia||gtk2Widget,2,9600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hue.html background-blending-hue-ref.svg
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-lighten.html background-blending-lighten-ref.svg
+fuzzy-if(azureQuartz,2,8000) fuzzy-if(d2d,1,8000) fuzzy-if(azureSkia||gtk2Widget,2,9600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-luminosity.html background-blending-luminosity-ref.svg
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-multiply.html background-blending-multiply-ref.svg
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-normal.html background-blending-normal-ref.svg
+fuzzy-if(azureSkia||gtk2Widget,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-overlay.html background-blending-overlay-ref.svg
+fuzzy-if(d2d,1,1600) fuzzy-if(azureSkia||gtk2Widget,2,12800) fuzzy-if(OSX==10.6,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-saturation.html background-blending-saturation-ref.svg
+fuzzy-if(d2d||azureSkia||gtk2Widget,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-screen.html background-blending-screen-ref.svg
+fuzzy-if(azureQuartz,1,1600) fuzzy-if(d2d||azureSkia||gtk2Widget,10,4800) pref(layout.css.background-blend-mode.enabled,true) == background-blending-soft-light.html background-blending-soft-light-ref.svg
