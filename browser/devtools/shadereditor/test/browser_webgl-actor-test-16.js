@@ -45,6 +45,8 @@ function ifWebGLSupported() {
   is(programs.length, 0,
     "There should be no cached program actors yet.");
 
+  yield once(front, "program-linked");
+  yield once(front, "program-linked");
   yield globalCreated;
   let programs = yield front.getPrograms();
   is(programs.length, 2,
