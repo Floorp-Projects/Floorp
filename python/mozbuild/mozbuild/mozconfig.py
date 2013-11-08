@@ -75,7 +75,7 @@ class MozconfigLoader(ProcessExecutionMixin):
 
         return os.path.join(our_dir, 'mozconfig_loader')
 
-    def find_mozconfig(self):
+    def find_mozconfig(self, env=os.environ):
         """Find the active mozconfig file for the current environment.
 
         This emulates the logic in mozconfig-find.
@@ -91,10 +91,10 @@ class MozconfigLoader(ProcessExecutionMixin):
         """
         # Check for legacy methods first.
 
-        if 'MOZ_MYCONFIG' in os.environ:
+        if 'MOZ_MYCONFIG' in env:
             raise MozconfigFindException(MOZ_MYCONFIG_ERROR)
 
-        env_path = os.environ.get('MOZCONFIG', None)
+        env_path = env.get('MOZCONFIG', None)
         if env_path is not None:
             if not os.path.exists(env_path):
                 raise MozconfigFindException(
@@ -128,7 +128,7 @@ class MozconfigLoader(ProcessExecutionMixin):
         deprecated_paths = [os.path.join(self.topsrcdir, s) for s in
             self.DEPRECATED_TOPSRCDIR_PATHS]
 
-        home = os.environ.get('HOME', None)
+        home = env.get('HOME', None)
         if home is not None:
             deprecated_paths.extend([os.path.join(home, s) for s in
             self.DEPRECATED_HOME_PATHS])
