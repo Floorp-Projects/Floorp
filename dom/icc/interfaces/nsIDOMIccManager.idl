@@ -6,7 +6,7 @@
 
 interface nsIDOMMozIcc;
 
-[scriptable, builtinclass, uuid(955726cc-768c-4155-b8ff-57b51a5cc7f5)]
+[scriptable, builtinclass, uuid(67e40e8e-35ee-40a4-a5b8-414588675133)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -221,6 +221,12 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    */
   const unsigned short STK_BROWSER_TERMINATION_CAUSE_USER  = 0x00;
   const unsigned short STK_BROWSER_TERMINATION_CAUSE_ERROR = 0x01;
+
+  /**
+   * Next Action Indicator.
+   */
+  const unsigned short STK_NEXT_ACTION_NULL                  = 0x00;
+  const unsigned short STK_NEXT_ACTION_END_PROACTIVE_SESSION = 0x81;
 
   /**
    * Array of iccIds that are currently detected.
