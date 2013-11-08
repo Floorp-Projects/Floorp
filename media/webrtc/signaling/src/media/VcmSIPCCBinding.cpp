@@ -588,7 +588,7 @@ static short vcmRxAllocICE_s(TemporaryRef<NrIceCtx> ctx_in,
   VcmSIPCCBinding::connectCandidateSignal(stream);
 
   std::vector<std::string> candidates = stream->GetCandidates();
-  CSFLogDebug( logTag, "%s: Got %lu candidates", __FUNCTION__, candidates.size());
+  CSFLogDebug( logTag, "%s: Got %lu candidates", __FUNCTION__, (unsigned long) candidates.size());
 
   std::string default_addr;
   int default_port;
