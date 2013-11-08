@@ -177,17 +177,17 @@ this.DataStore.prototype = {
     getInternalRequest();
   },
 
-  updateInternal: function(aResolve, aStore, aRevisionStore, aId, aObj) {
-    debug("UpdateInternal " + aId);
+  putInternal: function(aResolve, aStore, aRevisionStore, aObj, aId) {
+    debug("putInternal " + aId);
 
     let self = this;
     let request = aStore.put(aObj, aId);
     request.onsuccess = function(aEvent) {
-      debug("UpdateInternal success");
+      debug("putInternal success");
 
       self.addRevision(aRevisionStore, aId, REVISION_UPDATED,
         function() {
-          debug("UpdateInternal - revisionId increased");
+          debug("putInternal - revisionId increased");
           // No wrap here because the result is always a int.
           aResolve(aEvent.target.result);
         }
@@ -195,11 +195,11 @@ this.DataStore.prototype = {
     };
   },
 
-  addInternal: function(aResolve, aStore, aRevisionStore, aObj) {
+  addInternal: function(aResolve, aStore, aRevisionStore, aObj, aId) {
     debug("AddInternal");
 
     let self = this;
-    let request = aStore.put(aObj);
+    let request = aStore.add(aObj, aId);
     request.onsuccess = function(aEvent) {
       debug("Request successful. Id: " + aEvent.target.result);
       self.addRevision(aRevisionStore, aEvent.target.result, REVISION_ADDED,
@@ -384,7 +384,7 @@ this.DataStore.prototype = {
     );
   },
 
-  update: function(aId, aObj) {
+  put: function(aObj, aId) {
     aId = parseInt(aId);
     if (isNaN(aId) || aId <= 0) {
       return throwInvalidArg(this._window);
@@ -399,12 +399,19 @@ this.DataStore.prototype = {
     // Promise<void>
     return this.newDBPromise("readwrite",
       function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-        self.updateInternal(aResolve, aStore, aRevisionStore, aId, aObj);
+        self.putInternal(aResolve, aStore, aRevisionStore, aObj, aId);
       }
     );
   },
 
-  add: function(aObj) {
+  add: function(aObj, aId) {
+    if (aId) {
+      aId = parseInt(aId);
+      if (isNaN(aId) || aId <= 0) {
+        return throwInvalidArg(this._window);
+      }
+    }
+
     if (this._readOnly) {
       return throwReadOnly(this._window);
     }
@@ -414,7 +421,7 @@ this.DataStore.prototype = {
     // Promise<int>
     return this.newDBPromise("readwrite",
       function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-        self.addInternal(aResolve, aStore, aRevisionStore, aObj);
+        self.addInternal(aResolve, aStore, aRevisionStore, aObj, aId);
       }
     );
   },
