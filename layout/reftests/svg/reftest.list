@@ -150,6 +150,7 @@ fails-if(Android||B2G) pref(security.fileuri.strict_origin_policy,true) == filte
 == filter-foreignObject-01.svg pass.svg
 == filter-in-mask-01.svg pass.svg
 skip-if(B2G) == filter-invalidation-01.svg pass.svg
+== filter-result-01.svg filter-result-01-ref.svg
 skip-if(B2G) == filter-scaled-01.svg pass.svg
 skip-if(B2G) == filter-scaled-02.html filter-scaled-02-ref.html
 == filter-translated-01.svg filter-translated-01-ref.svg
