@@ -2105,7 +2105,7 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, HandleFunction fun,
 
     types::CompilerConstraintList *constraints = types::NewCompilerConstraintList();
     BaselineInspector inspector(script);
-    IonBuilder builder(cx, &temp, &graph, constraints,
+    IonBuilder builder(cx, cx->compartment(), &temp, &graph, constraints,
                        &inspector, &info, /* baselineFrame = */ nullptr);
 
     if (!builder.build()) {

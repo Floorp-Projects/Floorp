@@ -205,7 +205,7 @@ class IonBuilder : public MIRGenerator
     static int CmpSuccessors(const void *a, const void *b);
 
   public:
-    IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
+    IonBuilder(JSContext *analysisContext, JSCompartment *comp, TempAllocator *temp, MIRGraph *graph,
                types::CompilerConstraintList *constraints,
                BaselineInspector *inspector, CompileInfo *info, BaselineFrame *baselineFrame,
                size_t inliningDepth = 0, uint32_t loopDepth = 0);
@@ -696,22 +696,12 @@ class IonBuilder : public MIRGenerator
         return callerBuilder_ != nullptr;
     }
 
-    JSContext *context() {
-        // JSContexts are only available to IonBuilder when running on the main
-        // thread, which after bug 785905 will only occur when doing eager
-        // analyses with no available baseline information. Until this bug is
-        // completed, both the |cx| member and |context()| may be used.
-        if (info().executionMode() == DefinitePropertiesAnalysis)
-            return cx;
-        return nullptr;
-    }
-
     JSAtomState &names() { return compartment->runtimeFromAnyThread()->atomState; }
 
   private:
     bool init();
 
-    JSContext *cx;
+    JSContext *analysisContext;
     BaselineFrame *baselineFrame_;
     AbortReason abortReason_;
     TypeRepresentationSetHash *reprSetHash_;
