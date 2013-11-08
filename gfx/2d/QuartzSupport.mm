@@ -444,10 +444,9 @@ MacIOSurface::GetAsSurface() {
 }
 
 CGLError 
-MacIOSurface::CGLTexImageIOSurface2D(void *c)
+MacIOSurface::CGLTexImageIOSurface2D(CGLContextObj ctxt)
 {
-  NSOpenGLContext *ctxt = static_cast<NSOpenGLContext*>(c);
-  return MacIOSurfaceLib::CGLTexImageIOSurface2D((CGLContextObj)[ctxt CGLContextObj],
+  return MacIOSurfaceLib::CGLTexImageIOSurface2D(ctxt,
                                                 GL_TEXTURE_RECTANGLE_ARB,
                                                 HasAlpha() ? LOCAL_GL_RGBA : LOCAL_GL_RGB,
                                                 GetDevicePixelWidth(),
