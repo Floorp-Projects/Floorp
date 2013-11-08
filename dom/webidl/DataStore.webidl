@@ -24,10 +24,10 @@ interface DataStore : EventTarget {
   Promise get(sequence<unsigned long> id);
 
   // Promise<void>
-  Promise update(unsigned long id, any obj);
+  Promise put(any obj, unsigned long id);
 
   // Promise<unsigned long>
-  Promise add(any obj);
+  Promise add(any obj, optional unsigned long id);
 
   // Promise<boolean>
   Promise remove(unsigned long id);

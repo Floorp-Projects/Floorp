@@ -49,9 +49,9 @@
     }, cbError);
   }
 
-  function testStoreUpdate(id, value) {
-    gStore.update(id, value).then(function(retId) {
-      is(id, retId, "store.update() is called with the right id");
+  function testStorePut(value, id) {
+    gStore.put(value, id).then(function(retId) {
+      is(id, retId, "store.put() is called with the right id");
     }, cbError);
   }
 
@@ -84,9 +84,9 @@
     function() { gChangeId = 1; gChangeOperation = 'added';
                  testStoreAdd({ number: 42 }, 1); },
 
-    // Update
+    // Put
     function() { gChangeId = 1; gChangeOperation = 'updated';
-                 testStoreUpdate(1, { number: 43 }); },
+                 testStorePut({ number: 43 }, 1); },
 
     // Remove
     function() { gChangeId = 1; gChangeOperation = 'removed';
@@ -103,9 +103,9 @@
     function() { gChangeId = 2; gChangeOperation = 'added';
                  testStoreAdd({ number: 42 }, 2); },
 
-    // Update
+    // Put
     function() { gChangeId = 2; gChangeOperation = 'updated';
-                 testStoreUpdate(2, { number: 43 }); },
+                 testStorePut({ number: 43 }, 2); },
 
     // Remove
     function() { gChangeId = 2; gChangeOperation = 'removed';
