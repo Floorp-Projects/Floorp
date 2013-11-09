@@ -827,7 +827,7 @@ TypeObjectKey::unknownProperties()
 }
 
 HeapTypeSetKey
-TypeObjectKey::property(jsid id, JSContext *maybecx /* = nullptr */)
+TypeObjectKey::property(jsid id)
 {
     JS_ASSERT(!unknownProperties());
 
@@ -837,22 +837,24 @@ TypeObjectKey::property(jsid id, JSContext *maybecx /* = nullptr */)
     if (TypeObject *type = maybeType())
         property.maybeTypes_ = type->maybeGetProperty(id);
 
+    return property;
+}
+
+void
+TypeObjectKey::ensureTrackedProperty(JSContext *cx, jsid id)
+{
 #ifdef JS_ION
     // If we are accessing a lazily defined property which actually exists in
     // the VM and has not been instantiated yet, instantiate it now if we are
     // on the main thread and able to do so.
-    if (maybecx && !property.maybeTypes() && !JSID_IS_VOID(id) && !JSID_IS_EMPTY(id)) {
-        JS_ASSERT(CurrentThreadCanAccessRuntime(maybecx->runtime()));
-        JSObject *singleton = isSingleObject() ? asSingleObject() : asTypeObject()->singleton;
-        if (singleton && singleton->isNative() && singleton->nativeLookupPure(id)) {
-            EnsureTrackPropertyTypes(maybecx, singleton, id);
-            if (TypeObject *type = maybeType())
-                property.maybeTypes_ = type->maybeGetProperty(id);
+    if (!JSID_IS_VOID(id) && !JSID_IS_EMPTY(id)) {
+        JS_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+        if (JSObject *obj = singleton()) {
+            if (obj->isNative() && obj->nativeLookupPure(id))
+                EnsureTrackPropertyTypes(cx, obj, id);
         }
     }
 #endif // JS_ION
-
-    return property;
 }
 
 bool

@@ -1275,10 +1275,40 @@ js::math_atanh(JSContext *cx, unsigned argc, Value *vp)
     return math_function<math_atanh_impl>(cx, argc, vp);
 }
 
+/* Consistency wrapper for platform deviations in hypot() */
+double
+js::ecmaHypot(double x, double y)
+{
+#ifdef XP_WIN
+    /*
+     * Workaround MS hypot bug, where hypot(Infinity, NaN or Math.MIN_VALUE)
+     * is NaN, not Infinity.
+     */
+    if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y)) {
+        return mozilla::PositiveInfinity();
+    }
+#endif
+    return hypot(x, y);
+}
+
 bool
 js::math_hypot(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    // IonMonkey calls the system hypot function directly if two arguments are
+    // given. Do that here as well to get the same results.
+    if (args.length() == 2) {
+        double x, y;
+        if (!ToNumber(cx, args[0], &x))
+            return false;
+        if (!ToNumber(cx, args[1], &y))
+            return false;
+
+        double result = ecmaHypot(x, y);
+        args.rval().setNumber(result);
+        return true;
+    }
 
     bool isInfinite = false;
     bool isNaN = false;
