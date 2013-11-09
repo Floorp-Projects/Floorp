@@ -1,11 +1,21 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=666041
+-->
 <head>
+  <meta charset="utf-8">
+  <title>Test for Bug 666041</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="flexbox_layout_testcases.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<div id="content">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=666041">Mozilla Bug 666041</a>
+<div id="display">
+  <div id="content">
+  </div>
 </div>
 <pre id="test">
 <script type="application/javascript;version=1.7">
@@ -21,10 +31,6 @@
  *
  * See flexbox_layout_testcases.js for the actual testcases & testcase format.
  */
-
-// Use "is()" and "ok()" from parent document.
-var is = parent.is;
-var ok = parent.ok;
 
 function getComputedStyleWrapper(elem, prop)
 {
@@ -128,9 +134,6 @@ function testFlexboxTestcase(aFlexboxTestcase, aFlexDirection, aPropertyMapping)
 
 function main()
 {
-  ok(SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
-     "expecting to be run with flexbox support enabled");
-
   gFlexboxTestcases.forEach(
     function(aTestcase) {
       testFlexboxTestcase(aTestcase, "",
@@ -145,11 +148,10 @@ function main()
                           gColumnReversePropertyMapping);
     }
   );
-
-  parent.finish();
 }
 
-window.addEventListener("load", main, false);
+main();
+
 </script>
 </pre>
 </body>
