@@ -54,13 +54,13 @@ var WebrtcUI = {
 
       if (cameraActive && audioActive) {
         msg.text = Strings.browser.GetStringFromName("getUserMedia.sharingCameraAndMicrophone.message2");
-        msg.smallicon = "drawable:alert_mic_camera";
+        msg.smallIcon = "drawable:alert_mic_camera";
       } else if (cameraActive) {
         msg.text = Strings.browser.GetStringFromName("getUserMedia.sharingCamera.message2");
-        msg.smallicon = "drawable:alert_camera";
+        msg.smallIcon = "drawable:alert_camera";
       } else if (audioActive) {
         msg.text = Strings.browser.GetStringFromName("getUserMedia.sharingMicrophone.message2");
-        msg.smallicon = "drawable:alert_mic";
+        msg.smallIcon = "drawable:alert_mic";
       } else {
         // somethings wrong. lets throw
         throw "Couldn't find any cameras or microphones being used"
