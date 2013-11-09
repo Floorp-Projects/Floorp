@@ -1,6 +1,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=783415
+-->
+<head>
+  <meta charset="utf-8"/>
+  <title>Test "display" values of content in a flex container (Bug 783415)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
 <body>
-<div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783415">Mozilla Bug 783415</a>
+<div id="display">
   <div id="wrapper"></div>
 </div>
 <pre id="test">
@@ -17,10 +27,6 @@
  * in a flex container.  (Generally, it'll be the "blockified" form of the
  * specified display-value.)
  */
-
-// Use "is()" and "ok()" from parent document.
-let is = parent.is;
-let ok = parent.ok;
 
 /*
  * Utility function for getting computed style of "display".
@@ -120,9 +126,6 @@ function testDisplayValue(aSpecifiedDisplay,
  * Main test function
  */
 function main() {
-  ok(SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
-     "expecting to be run with flexbox support enabled");
-
   testDisplayValue("none");
   testDisplayValue("block");
   testDisplayValue("flex");
@@ -176,8 +179,6 @@ function main() {
     function(aSpecifiedDisplay) {
       testDisplayValue(aSpecifiedDisplay, aSpecifiedDisplay, "block");
   });
-
-  parent.finish();
 }
 
 main();

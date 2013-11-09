@@ -1,7 +1,14 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=799775
+-->
 <head>
+  <meta charset="utf-8">
+  <title>Test for Bug 799775</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style type="text/css">
 
     div.ref {
@@ -44,6 +51,7 @@
   </style>
 </head>
 <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=799775">Mozilla Bug 799775</a>
 <div id="display">
 
   <!-- Reference cases (display:none; only shown during initRefSnapshots) -->
@@ -71,17 +79,14 @@
 <script type="application/javascript;version=1.7">
 "use strict";
 
+/** Test for Bug 799775 **/
+
 /* This testcase ensures that we honor the "order" property when ordering
  * tables as flex items within a flex container.
  *
  * Note: The items in this testcase don't overlap, so this testcase does _not_
  * test paint ordering.  It only tests horizontal ordering in a flex container.
  */
-
-// Use "is()", "ok()", and "todo()" from parent document.
-var is = parent.is;
-var ok = parent.ok;
-var todo = parent.todo;
 
 // DATA
 // ----
@@ -181,8 +186,6 @@ function main() {
 
   // Re-hide the flex container at the end
   flexContainerParent.style.display = "";
-
-  parent.finish();
 }
 
 main();

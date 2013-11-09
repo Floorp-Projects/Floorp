@@ -1,10 +1,20 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696253
+-->
 <head>
+  <meta charset="utf-8">
+  <title>Test for Bug 696253</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<div id="content">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696253">Mozilla Bug 696253</a>
+<div id="display">
+  <div id="content">
+  </div>
 </div>
 <pre id="test">
 <script type="application/javascript;version=1.7">
@@ -12,10 +22,6 @@
 
 /** Test for Bug 696253 **/
 /* (Testing the 'flex' CSS shorthand property) */
-
-// Use "is()" and "ok()" from parent document.
-var is = parent.is;
-var ok = parent.ok;
 
 const gFlexPropName = "flex";
 const gFlexPropInfo = gCSSProperties[gFlexPropName];
@@ -255,11 +261,7 @@ function runFlexShorthandTest(aFlexShorthandTestcase)
 }
 
 function main() {
-  ok(SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
-     "expecting to be run with flexbox support enabled");
-
   gFlexShorthandTestcases.forEach(runFlexShorthandTest);
-  parent.finish();
 }
 
 main();
