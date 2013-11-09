@@ -293,7 +293,7 @@ parent:
      * The zoom controller code lives on the parent side and so this allows it to
      * have up-to-date zoom constraints.
      */
-    UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId,
+    UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId, bool aIsRoot,
                           bool aAllowZoom, CSSToScreenScale aMinZoom, CSSToScreenScale aMaxZoom);
 
     /**
