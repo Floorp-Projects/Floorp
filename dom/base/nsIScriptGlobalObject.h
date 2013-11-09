@@ -33,8 +33,8 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0x6995e1ff, 0x9fc5, 0x44a7, \
- { 0xbd, 0x7c, 0xe7, 0xcd, 0x44, 0x47, 0x22, 0x87 } }
+{ 0x876f83bd, 0x6314, 0x460a, \
+  { 0xa0, 0x45, 0x1c, 0x8f, 0x46, 0x2f, 0xb8, 0xe1 } }
 
 /**
  * The global object which keeps a script context for each supported script
@@ -66,15 +66,6 @@ public:
   nsIScriptContext* GetContext() {
     return GetScriptContext();
   }
-
-  /**
-   * Called when the global script for a language is finalized, typically as
-   * part of its GC process.  By the time this call is made, the
-   * nsIScriptContext for the language has probably already been removed.
-   * After this call, the passed object is dead - which should generally be the
-   * same object the global is using for a global for that language.
-   */
-  virtual void OnFinalize(JSObject* aObject) = 0;
 
   /**
    * Handle a script error.  Generally called by a script context.

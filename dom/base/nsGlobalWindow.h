@@ -358,8 +358,9 @@ public:
   // nsIScriptGlobalObject
   JSObject *FastGetGlobalJSObject() const
   {
-    return mJSObject;
+    return GetWrapperPreserveColor();
   }
+
   void TraceGlobalJSObject(JSTracer* aTrc);
 
   virtual nsresult EnsureScriptEnvironment();
@@ -367,7 +368,6 @@ public:
   virtual nsIScriptContext *GetScriptContext();
 
   void PoisonOuterWindowProxy(JSObject *aObject);
-  virtual void OnFinalize(JSObject* aObject);
 
   virtual bool IsBlackForCC(bool aTracingNeeded = true);
 
@@ -1505,9 +1505,6 @@ protected:
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
-
-  // The JS global object.  Global objects are always allocated tenured.
-  JS::TenuredHeap<JSObject*> mJSObject;
 
   typedef nsCOMArray<nsIDOMStorageEvent> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;

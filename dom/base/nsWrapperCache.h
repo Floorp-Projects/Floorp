@@ -11,8 +11,8 @@
 #include "js/Id.h"          // must come before js/RootingAPI.h
 #include "js/Value.h"       // must come before js/RootingAPI.h
 #include "js/RootingAPI.h"
+#include "js/Tracer.h"
 
-struct JSTracer;
 class XPCWrappedNativeScope;
 
 #define NS_WRAPPERCACHE_IID \
@@ -221,6 +221,21 @@ public:
   }
 
   void ReleaseWrapper(void* aScriptObjectHolder);
+
+protected:
+  void TraceWrapper(JSTracer* aTrc, const char* name)
+  {
+    if (mWrapper) {
+      JS_CallHeapObjectTracer(aTrc, &mWrapper, name);
+    }
+  }
+
+  void PoisonWrapper()
+  {
+    if (mWrapper) {
+      mWrapper.setToCrashOnTouch();
+    }
+  }
 
 private:
   JSObject *GetWrapperJSObject() const
