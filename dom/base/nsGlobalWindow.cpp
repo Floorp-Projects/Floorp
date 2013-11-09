@@ -1371,7 +1371,6 @@ nsGlobalWindow::CleanupCachedXBLHandlers(nsGlobalWindow* aWindow)
   if (aWindow->mCachedXBLPrototypeHandlers &&
       aWindow->mCachedXBLPrototypeHandlers->Count() > 0) {
     aWindow->mCachedXBLPrototypeHandlers->Clear();
-    mozilla::DropJSObjects(aWindow);
   }
 }
 
@@ -1617,17 +1616,11 @@ nsGlobalWindow::FreeInnerObjects()
 // nsGlobalWindow::nsISupports
 //*****************************************************************************
 
-#define OUTER_WINDOW_ONLY                                                     \
-  if (IsOuterWindow()) {
-
-#define END_OUTER_WINDOW_ONLY                                                 \
-    foundInterface = 0;                                                       \
-  } else
-
 DOMCI_DATA(Window, nsGlobalWindow)
 
 // QueryInterface implementation for nsGlobalWindow
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   // Make sure this matches the cast in nsGlobalWindow::FromWrapper()
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindow)
@@ -1660,9 +1653,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsITouchEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIInlineEventHandlers)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Window)
-  OUTER_WINDOW_ONLY
-    NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  END_OUTER_WINDOW_ONLY
 NS_INTERFACE_MAP_END
 
 
@@ -1770,6 +1760,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -1830,6 +1821,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 #ifdef DEBUG
@@ -1859,6 +1851,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsGlobalWindow)
     TraceData data = { aCallbacks, aClosure };
     tmp->mCachedXBLPrototypeHandlers->Enumerate(TraceXBLHandlers, &data);
   }
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 bool
@@ -1904,12 +1897,12 @@ nsGlobalWindow::EnsureScriptEnvironment()
     return NS_ERROR_FAILURE;
   }
 
-  if (outer->mJSObject) {
+  if (outer->GetWrapperPreserveColor()) {
     return NS_OK;
   }
 
   NS_ASSERTION(!outer->GetCurrentInnerWindowInternal(),
-               "mJSObject is null, but we have an inner window?");
+               "No cached wrapper, but we have an inner window?");
 
   // If this window is a [i]frame, don't bother GC'ing when the frame's context
   // is destroyed since a GC will happen when the frameset or host document is
@@ -1944,9 +1937,7 @@ nsGlobalWindow::GetGlobalJSObject()
 void
 nsGlobalWindow::TraceGlobalJSObject(JSTracer* aTrc)
 {
-  if (mJSObject) {
-    JS_CallTenuredObjectTracer(aTrc, &mJSObject, "active window global");
-  }
+  TraceWrapper(aTrc, "active window global");
 }
 
 bool
@@ -2129,7 +2120,7 @@ WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
   aWindow->SuspendTimeouts();
 
   // When a global goes into the bfcache, we disable script.
-  xpc::Scriptability::Get(aWindow->mJSObject).SetDocShellAllowsScript(false);
+  xpc::Scriptability::Get(aWindow->GetWrapperPreserveColor()).SetDocShellAllowsScript(false);
 }
 
 WindowStateHolder::~WindowStateHolder()
@@ -2167,7 +2158,6 @@ CreateNativeGlobalForInner(JSContext* aCx,
                            nsGlobalWindow* aNewInner,
                            nsIURI* aURI,
                            nsIPrincipal* aPrincipal,
-                           JS::TenuredHeap<JSObject*>& aNativeGlobal,
                            nsIXPConnectJSObjectHolder** aHolder)
 {
   MOZ_ASSERT(aCx);
@@ -2195,20 +2185,15 @@ CreateNativeGlobalForInner(JSContext* aCx,
   uint32_t flags = needComponents ? 0 : nsIXPConnect::OMIT_COMPONENTS_OBJECT;
   flags |= nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK;
 
-  nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
   nsresult rv = xpc->InitClassesWithNewWrappedGlobal(
     aCx, ToSupports(aNewInner),
-    aPrincipal, flags, options, getter_AddRefs(jsholder));
+    aPrincipal, flags, options, aHolder);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  MOZ_ASSERT(jsholder);
-  aNativeGlobal = jsholder->GetJSObject();
-  jsholder.forget(aHolder);
 
   // Set the location information for the new global, so that tools like
   // about:memory may use that information
-  MOZ_ASSERT(aNativeGlobal.getPtr());
-  xpc::SetLocationForGlobal(aNativeGlobal, aURI);
+  MOZ_ASSERT(aNewInner->GetWrapperPreserveColor());
+  xpc::SetLocationForGlobal(aNewInner->GetWrapperPreserveColor(), aURI);
 
   return NS_OK;
 }
@@ -2338,22 +2323,23 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
   NS_ASSERTION(!aState || wsh, "What kind of weird state are you giving me here?");
 
+  JS::Rooted<JSObject*> newInnerGlobal(cx);
   if (reUseInnerWindow) {
     // We're reusing the current inner window.
     NS_ASSERTION(!currentInner->IsFrozen(),
                  "We should never be reusing a shared inner window");
     newInnerWindow = currentInner;
+    newInnerGlobal = currentInner->GetWrapperPreserveColor();
 
     if (aDocument != oldDoc) {
-      JS::Rooted<JSObject*> obj(cx, currentInner->mJSObject);
-      JS::ExposeObjectToActiveJS(obj);
+      JS::ExposeObjectToActiveJS(newInnerGlobal);
     }
 
     // We're reusing the inner window, but this still counts as a navigation,
     // so all expandos and such defined on the outer window should go away. Force
     // all Xray wrappers to be recomputed.
-    JS::ExposeObjectToActiveJS(mJSObject);
-    JS::Rooted<JSObject*> rootedObject(cx, mJSObject);
+    JS::Rooted<JSObject*> rootedObject(cx, GetWrapperPreserveColor());
+    JS::ExposeObjectToActiveJS(rootedObject);
     if (!JS_RefreshCrossCompartmentWrappers(cx, rootedObject)) {
       return NS_ERROR_FAILURE;
     }
@@ -2363,7 +2349,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // match the new document.
     // NB: We don't just call currentInner->RefreshCompartmentPrincipals() here
     // because we haven't yet set its mDoc to aDocument.
-    JSCompartment *compartment = js::GetObjectCompartment(currentInner->mJSObject);
+    JSCompartment *compartment = js::GetObjectCompartment(newInnerGlobal);
 #ifdef DEBUG
     bool sameOrigin = false;
     nsIPrincipal *existing =
@@ -2376,18 +2362,17 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   } else {
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
+      newInnerGlobal = newInnerWindow->GetWrapperPreserveColor();
       mInnerWindowHolder = wsh->GetInnerWindowHolder();
-
-      NS_ASSERTION(newInnerWindow, "Got a state without inner window");
-    } else if (thisChrome) {
-      newInnerWindow = new nsGlobalChromeWindow(this);
-    } else if (mIsModalContentWindow) {
-      newInnerWindow = new nsGlobalModalWindow(this);
     } else {
-      newInnerWindow = new nsGlobalWindow(this);
-    }
+      if (thisChrome) {
+        newInnerWindow = new nsGlobalChromeWindow(this);
+      } else if (mIsModalContentWindow) {
+        newInnerWindow = new nsGlobalModalWindow(this);
+      } else {
+        newInnerWindow = new nsGlobalWindow(this);
+      }
 
-    if (!aState) {
       // Freeze the outer window and null out the inner window so
       // that initializing classes on the new inner doesn't end up
       // reaching into the old inner window for classes etc.
@@ -2407,10 +2392,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       rv = CreateNativeGlobalForInner(cx, newInnerWindow,
                                       aDocument->GetDocumentURI(),
                                       aDocument->NodePrincipal(),
-                                      newInnerWindow->mJSObject,
                                       getter_AddRefs(mInnerWindowHolder));
-      NS_ASSERTION(NS_SUCCEEDED(rv) && newInnerWindow->mJSObject && mInnerWindowHolder,
-                   "Failed to get script global and holder");
+      newInnerGlobal = mInnerWindowHolder->GetJSObject();
+      NS_ASSERTION(NS_SUCCEEDED(rv) && newInnerGlobal &&
+                   newInnerWindow->GetWrapperPreserveColor() == newInnerGlobal,
+                   "Failed to get script global");
 
       mCreatingInnerWindow = false;
       createdInnerWindow = true;
@@ -2419,7 +2405,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (currentInner && currentInner->mJSObject) {
+    if (currentInner && currentInner->GetWrapperPreserveColor()) {
       if (oldDoc == aDocument) {
         // Move the navigator from the old inner window to the new one since
         // this is a document.write. This is safe from a same-origin point of
@@ -2451,32 +2437,32 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     mInnerWindow = newInnerWindow;
 
-    if (!mJSObject) {
-      JS::Rooted<JSObject*> global(cx, newInnerWindow->FastGetGlobalJSObject());
-      JS::Rooted<JSObject*> outer(cx, NewOuterWindowProxy(cx, global, thisChrome));
+    if (!GetWrapperPreserveColor()) {
+      JS::Rooted<JSObject*> outer(cx,
+        NewOuterWindowProxy(cx, newInnerGlobal, thisChrome));
       NS_ENSURE_TRUE(outer, NS_ERROR_FAILURE);
 
       js::SetProxyExtra(outer, 0, js::PrivateValue(ToSupports(this)));
+      js::SetProxyExtra(outer, 1, JS::ObjectValue(*newInnerGlobal));
 
       // Inform the nsJSContext, which is the canonical holder of the outer.
       mContext->SetWindowProxy(outer);
       mContext->DidInitializeContext();
 
-      mJSObject = mContext->GetWindowProxy();
-      SetWrapper(mJSObject);
+      SetWrapper(mContext->GetWindowProxy());
     } else {
-      JS::ExposeObjectToActiveJS(newInnerWindow->mJSObject);
-      JS::Rooted<JSObject*> global(cx, newInnerWindow->mJSObject);
+      JS::ExposeObjectToActiveJS(newInnerGlobal);
       JS::Rooted<JSObject*> outerObject(cx,
-        NewOuterWindowProxy(cx, global, thisChrome));
+        NewOuterWindowProxy(cx, newInnerGlobal, thisChrome));
       if (!outerObject) {
         NS_ERROR("out of memory");
         return NS_ERROR_FAILURE;
       }
 
-      js::SetProxyExtra(mJSObject, 0, js::PrivateValue(nullptr));
+      JS::Rooted<JSObject*> obj(cx, GetWrapperPreserveColor());
 
-      JS::Rooted<JSObject*> obj(cx, mJSObject);
+      js::SetProxyExtra(obj, 0, js::PrivateValue(nullptr));
+
       outerObject = xpc::TransplantObject(cx, obj, outerObject);
       if (!outerObject) {
         NS_ERROR("unable to transplant wrappers, probably OOM");
@@ -2485,41 +2471,38 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
       js::SetProxyExtra(outerObject, 0, js::PrivateValue(ToSupports(this)));
 
-      mJSObject = outerObject;
-      SetWrapper(mJSObject);
+      SetWrapper(outerObject);
 
       {
-        JSAutoCompartment ac(cx, mJSObject);
+        JSAutoCompartment ac(cx, outerObject);
 
-        JS::Rooted<JSObject*> obj(cx, mJSObject);
-        JS::Rooted<JSObject*> newParent(cx, newInnerWindow->mJSObject);
-        JS_SetParent(cx, obj, newParent);
+        JS_SetParent(cx, outerObject, newInnerGlobal);
 
         // Inform the nsJSContext, which is the canonical holder of the outer.
-        mContext->SetWindowProxy(obj);
+        mContext->SetWindowProxy(outerObject);
 
         NS_ASSERTION(!JS_IsExceptionPending(cx),
                      "We might overwrite a pending exception!");
-        XPCWrappedNativeScope* scope = xpc::GetObjectScope(obj);
+        XPCWrappedNativeScope* scope = xpc::GetObjectScope(outerObject);
         if (scope->mWaiverWrapperMap) {
-          scope->mWaiverWrapperMap->Reparent(cx, newParent);
+          scope->mWaiverWrapperMap->Reparent(cx, newInnerGlobal);
         }
       }
     }
 
     // Enter the new global's compartment.
-    JSAutoCompartment ac(cx, mJSObject);
+    JSAutoCompartment ac(cx, GetWrapperPreserveColor());
 
     // Set scriptability based on the state of the docshell.
     bool allow = GetDocShell()->GetCanExecuteScripts();
-    xpc::Scriptability::Get(mJSObject).SetDocShellAllowsScript(allow);
+    xpc::Scriptability::Get(GetWrapperPreserveColor()).SetDocShellAllowsScript(allow);
 
     // If we created a new inner window above, we need to do the last little bit
     // of initialization now that the dust has settled.
     if (createdInnerWindow) {
       nsIXPConnect *xpc = nsContentUtils::XPConnect();
       nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-      nsresult rv = xpc->GetWrappedNativeOfJSObject(cx, newInnerWindow->mJSObject,
+      nsresult rv = xpc->GetWrappedNativeOfJSObject(cx, newInnerGlobal,
                                                     getter_AddRefs(wrapper));
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ABORT_IF_FALSE(wrapper, "bad wrapper");
@@ -2528,8 +2511,8 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
 
     if (!aState) {
-      if (!JS_DefineProperty(cx, newInnerWindow->mJSObject, "window",
-                             OBJECT_TO_JSVAL(mJSObject),
+      if (!JS_DefineProperty(cx, newInnerGlobal, "window",
+                             OBJECT_TO_JSVAL(GetWrapperPreserveColor()),
                              JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
         NS_ERROR("can't create the 'window' property");
@@ -2538,7 +2521,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     }
   }
 
-  JSAutoCompartment ac(cx, mJSObject);
+  JSAutoCompartment ac(cx, GetWrapperPreserveColor());
 
   if (!aState && !reUseInnerWindow) {
     // Loading a new page and creating a new inner window, *not*
@@ -2546,17 +2529,12 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     // Now that both the the inner and outer windows are initialized
     // let the script context do its magic to hook them together.
+    MOZ_ASSERT(mContext->GetWindowProxy() == GetWrapperPreserveColor());
 #ifdef DEBUG
-    JS::Rooted<JSObject*> newInnerJSObject(cx,
-        newInnerWindow->FastGetGlobalJSObject());
-#endif
-
-    MOZ_ASSERT(mContext->GetWindowProxy() == mJSObject);
-#ifdef DEBUG
-    JS::Rooted<JSObject*> rootedJSObject(cx, mJSObject);
+    JS::Rooted<JSObject*> rootedJSObject(cx, GetWrapperPreserveColor());
     JS::Rooted<JSObject*> proto1(cx), proto2(cx);
     JS_GetPrototype(cx, rootedJSObject, &proto1);
-    JS_GetPrototype(cx, newInnerJSObject, &proto2);
+    JS_GetPrototype(cx, newInnerGlobal, &proto2);
     NS_ASSERTION(proto1 == proto2,
                  "outer and inner globals should have the same prototype");
 #endif
@@ -2585,14 +2563,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         // make sure the cached document property gets updated.
 
         // XXXmarkh - tell other languages about this?
-        JS::Rooted<JSObject*> obj(cx, currentInner->mJSObject);
+        JS::Rooted<JSObject*> obj(cx, currentInner->GetWrapperPreserveColor());
         ::JS_DeleteProperty(cx, obj, "document");
       }
     } else {
       newInnerWindow->InnerSetNewDocument(aDocument);
 
       // Initialize DOM classes etc on the inner window.
-      JS::Rooted<JSObject*> obj(cx, newInnerWindow->mJSObject);
+      JS::Rooted<JSObject*> obj(cx, newInnerGlobal);
       rv = mContext->InitClasses(obj);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2602,7 +2580,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // calling Block() and throwing away the key.
     nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aDocument->GetChannel());
     if (jarChannel && jarChannel->GetIsUnsafe()) {
-      xpc::Scriptability::Get(newInnerWindow->mJSObject).Block();
+      xpc::Scriptability::Get(newInnerGlobal).Block();
     }
 
     if (mArguments) {
@@ -2621,7 +2599,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // We wait to fire the debugger hook until the window is all set up and hooked
   // up with the outer. See bug 969156.
   if (createdInnerWindow) {
-    JS::Rooted<JSObject*> global(cx, newInnerWindow->mJSObject);
+    JS::Rooted<JSObject*> global(cx, newInnerWindow->GetWrapper());
     JS_FireOnNewGlobalObject(cx, global);
   }
 
@@ -2790,8 +2768,7 @@ nsGlobalWindow::DetachFromDocShell()
   // DetachFromDocShell means the window is being torn down. Drop our
   // reference to the script context, allowing it to be deleted
   // later. Meanwhile, keep our weak reference to the script object
-  // (mJSObject) so that it can be retrieved later (until it is
-  // finalized by the JS GC).
+  // so that it can be retrieved later (until it is finalized by the JS GC).
 
   NS_ASSERTION(mTimeouts.isEmpty(), "Uh, outer window holds timeouts!");
 
@@ -3215,19 +3192,11 @@ nsGlobalWindow::DispatchDOMEvent(WidgetEvent* aEvent,
 }
 
 void
-nsGlobalWindow::OnFinalize(JSObject* aObject)
-{
-  if (aObject == mJSObject) {
-    mJSObject = nullptr;
-  }
-}
-
-void
 nsGlobalWindow::PoisonOuterWindowProxy(JSObject *aObject)
 {
   MOZ_ASSERT(IsOuterWindow());
-  if (aObject == mJSObject) {
-    mJSObject.setToCrashOnTouch();
+  if (aObject == GetWrapperPreserveColor()) {
+    PoisonWrapper();
   }
 }
 
@@ -3275,7 +3244,7 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
   AutoPushJSContext cx(ctx->GetNativeContext());
   NS_ENSURE_TRUE(cx, NS_ERROR_NOT_INITIALIZED);
 
-  JS::Rooted<JSObject*> obj(cx, mJSObject);
+  JS::Rooted<JSObject*> obj(cx, GetWrapperPreserveColor());
   return GetContextInternal()->SetProperty(obj, "arguments", aArguments);
 }
 
@@ -4415,8 +4384,8 @@ nsGlobalWindow::SetOpener(nsIDOMWindow* aOpener, ErrorResult& aError)
       return;
     }
 
-    JS::Rooted<JSObject*> thisObj(cx, mJSObject);
-    if (!mJSObject) {
+    JS::Rooted<JSObject*> thisObj(cx, GetWrapperPreserveColor());
+    if (!thisObj) {
       aError.Throw(NS_ERROR_UNEXPECTED);
       return;
     }
@@ -5100,8 +5069,8 @@ nsGlobalWindow::RequestAnimationFrame(const nsIDocument::FrameRequestCallbackHol
     return 0;
   }
 
-  if (mJSObject) {
-    js::NotifyAnimationActivity(mJSObject);
+  if (GetWrapperPreserveColor()) {
+    js::NotifyAnimationActivity(GetWrapperPreserveColor());
   }
 
   int32_t handle;
@@ -5662,7 +5631,7 @@ nsGlobalWindow::DispatchResizeEvent(const nsIntSize& aSize)
   }
 
   AutoSafeJSContext cx;
-  JSAutoCompartment ac(cx, mJSObject);
+  JSAutoCompartment ac(cx, GetWrapperPreserveColor());
   DOMWindowResizeEventDetail detail;
   detail.mWidth = aSize.width;
   detail.mHeight = aSize.height;
@@ -5699,7 +5668,7 @@ nsGlobalWindow::RefreshCompartmentPrincipal()
 {
   FORWARD_TO_INNER(RefreshCompartmentPrincipal, (), /* void */ );
 
-  JS_SetCompartmentPrincipals(js::GetObjectCompartment(mJSObject),
+  JS_SetCompartmentPrincipals(js::GetObjectCompartment(GetWrapperPreserveColor()),
                               nsJSPrincipals::get(mDoc->NodePrincipal()));
 }
 
@@ -8657,10 +8626,7 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
 {
   if (!mCachedXBLPrototypeHandlers) {
     mCachedXBLPrototypeHandlers = new nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*>();
-  }
-
-  if (!mCachedXBLPrototypeHandlers->Count()) {
-    mozilla::HoldJSObjects(this);
+    PreserveWrapper(ToSupports(this));
   }
 
   mCachedXBLPrototypeHandlers->Put(aKey, aHandler);
@@ -12542,7 +12508,7 @@ nsGlobalWindow::SaveWindowState()
 {
   NS_PRECONDITION(IsOuterWindow(), "Can't save the inner window's state");
 
-  if (!mContext || !mJSObject) {
+  if (!mContext || !GetWrapperPreserveColor()) {
     // The window may be getting torn down; don't bother saving state.
     return nullptr;
   }
@@ -12572,7 +12538,7 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 {
   NS_ASSERTION(IsOuterWindow(), "Cannot restore an inner window");
 
-  if (!mContext || !mJSObject) {
+  if (!mContext || !GetWrapperPreserveColor()) {
     // The window may be getting torn down; don't bother restoring state.
     return NS_OK;
   }
@@ -13552,8 +13518,8 @@ nsGlobalWindow::GetConsole(JSContext* aCx,
     return rv.ErrorCode();
   }
 
-  JS::Rooted<JSObject*> thisObj(aCx, mJSObject);
-  if (!mJSObject) {
+  JS::Rooted<JSObject*> thisObj(aCx, GetWrapper());
+  if (!thisObj) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -13568,8 +13534,8 @@ nsGlobalWindow::GetConsole(JSContext* aCx,
 NS_IMETHODIMP
 nsGlobalWindow::SetConsole(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  JS::Rooted<JSObject*> thisObj(aCx, mJSObject);
-  if (!mJSObject) {
+  JS::Rooted<JSObject*> thisObj(aCx, GetWrapper());
+  if (!thisObj) {
     return NS_ERROR_UNEXPECTED;
   }
 

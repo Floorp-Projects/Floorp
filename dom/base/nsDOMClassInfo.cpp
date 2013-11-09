@@ -182,7 +182,6 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 #define WINDOW_SCRIPTABLE_FLAGS                                               \
  (nsIXPCScriptable::WANT_PRECREATE |                                          \
   nsIXPCScriptable::WANT_POSTCREATE |                                         \
-  nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_ENUMERATE |                                          \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
   nsIXPCScriptable::IS_GLOBAL_OBJECT |                                        \
@@ -1855,7 +1854,7 @@ nsWindowSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
 #ifdef DEBUG
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
 
-  NS_ASSERTION(sgo && sgo->GetGlobalJSObject() == nullptr,
+  NS_ASSERTION(sgo && sgo->GetGlobalJSObject() == obj,
                "Multiple wrappers created for global object!");
 #endif
 
@@ -3397,26 +3396,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   return nsDOMGenericSH::NewResolve(wrapper, cx, obj, id, flags, objp,
                                     _retval);
-}
-
-NS_IMETHODIMP
-nsWindowSH::Finalize(nsIXPConnectWrappedNative *wrapper, JSFreeOp *fop,
-                     JSObject *obj)
-{
-  // Since this call is virtual, the exact rooting hazard static analysis is
-  // not able to determine that it happens during finalization and should be
-  // ignored. Moreover, the analysis cannot discover and validate the
-  // potential targets of the virtual call to OnFinalize below because of the
-  // indirection through nsCOMMPtr. Thus, we annotate the analysis here so
-  // that it does not report OnFinalize as GCing with |obj| on stack.
-  JS::AutoAssertNoGC nogc;
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
-  NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
-
-  sgo->OnFinalize(obj);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
