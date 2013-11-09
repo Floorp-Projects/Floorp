@@ -1,7 +1,14 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696253
+-->
 <head>
+  <meta charset="utf-8">
+  <title>Test for flex-grow and flex-shrink animation (Bug 696253)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style type="text/css">
 
   /* Set flex-grow and flex-shrink to nonzero values,
@@ -49,6 +56,7 @@
   </style>
 </head>
 <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696253">Mozilla Bug 696253</a>
 <div id="display">
   <div id="myDiv"></div>
 </div>
@@ -61,13 +69,6 @@
 function advance_clock(milliseconds) {
   SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
 }
-
-// Use "is()" and "ok()" from parent document.
-var is = parent.is;
-var ok = parent.ok;
-
-ok(SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
-   "expecting to be run with flexbox support enabled");
 
 var display = document.getElementById("display");
 var div = null;
@@ -175,8 +176,6 @@ is(cs.flexShrink, 20, "flexShrinkOneToZero at 1.5s");
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
-
-parent.finish();
 
 </script>
 </pre>

@@ -1,6 +1,16 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696253
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test behavior of 'align-self:auto' (Bug 696253)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
 <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696253">Mozilla Bug 696253</a>
 <div id="display">
   <div id="myDiv"></div>
 </div>
@@ -40,10 +50,6 @@
  *
  * This mochitest tests that situation and a few other similar tricky situations.
  */
-
-// Use "is()" and "ok()" from parent document.
-var is = parent.is;
-var ok = parent.ok;
 
 /*
  * Utility function for getting computed style of "align-self":
@@ -162,9 +168,6 @@ function testNodeThatHasGrandparent(elem) {
  * Main test function
  */
 function main() {
-  ok(SpecialPowers.getBoolPref("layout.css.flexbox.enabled"),
-     "expecting to be run with flexbox support enabled");
-
   // Test the root node
   // ==================
   // (It's special because it has no parent style context.)
@@ -201,8 +204,6 @@ function main() {
   testGeneralNode(displayNode);
   testNodeThatHasParent(displayNode);
   testNodeThatHasGrandparent(displayNode);
-
-  parent.finish();
 }
 
 main();
