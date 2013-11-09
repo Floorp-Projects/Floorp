@@ -374,16 +374,6 @@ HTMLBreadcrumbs.prototype = {
   },
 
   /**
-   * Re-init the cache and remove all the buttons.
-   */
-  invalidateHierarchy: function BC_invalidateHierarchy()
-  {
-    this.inspector.hideNodeMenu();
-    this.nodeHierarchy = [];
-    this.empty();
-  },
-
-  /**
    * Set which button represent the selected node.
    *
    * @param aIdx Index of the displayed-button to select
@@ -615,7 +605,9 @@ HTMLBreadcrumbs.prototype = {
    */
   update: function BC_update(reason)
   {
-    this.inspector.hideNodeMenu();
+    if (reason !== "markupmutation") {
+      this.inspector.hideNodeMenu();
+    }
 
     let cmdDispatcher = this.chromeDoc.commandDispatcher;
     this.hadFocus = (cmdDispatcher.focusedElement &&

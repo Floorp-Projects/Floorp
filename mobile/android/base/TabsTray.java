@@ -202,11 +202,22 @@ public class TabsTray extends TwoWayView
         // Updates the selected position in the list so that it will be scrolled to the right place.
         private void updateSelectedPosition() {
             int selected = getPositionForTab(Tabs.getInstance().getSelectedTab());
-            for (int i=0; i < getCount(); i++)
-                 TabsTray.this.setItemChecked(i, (i == selected));
-
-            if (selected != -1)
+            if (selected != -1) {
                 TabsTray.this.setSelection(selected);
+            }
+
+            updateSelectedStyle(selected);
+        }
+
+        /**
+         * Updates the selected/unselected style for the tabs.
+         *
+         * @param selected position of the selected tab
+         */
+        private void updateSelectedStyle(int selected) {
+            for (int i = 0; i < getCount(); i++) {
+                TabsTray.this.setItemChecked(i, (i == selected));
+            }
         }
 
         public void clear() {
@@ -240,7 +251,9 @@ public class TabsTray extends TwoWayView
             if (tab.isPrivate() == mIsPrivate && mTabs != null) {
                 mTabs.remove(tab);
                 notifyDataSetChanged(); // Be sure to call this whenever mTabs changes.
-                updateSelectedPosition();
+
+                int selected = getPositionForTab(Tabs.getInstance().getSelectedTab());
+                updateSelectedStyle(selected);
             }
         }
 
