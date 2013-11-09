@@ -445,8 +445,12 @@ class RecursiveMakeBackend(CommonBackend):
             # automated.
             if isinstance(obj.wrapped, JavaJarData):
                 self._process_java_jar_data(obj.wrapped, backend_file)
+            else:
+                return
 
-        self._backend_files[obj.srcdir] = backend_file
+        else:
+            return
+        obj.ack()
 
     def _fill_root_mk(self):
         """
