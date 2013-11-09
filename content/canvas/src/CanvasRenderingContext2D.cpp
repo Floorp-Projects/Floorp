@@ -2003,6 +2003,7 @@ CanvasRenderingContext2D::EnsureUserSpacePath(const CanvasWindingRule& winding)
   if (mPath && mPath->GetFillRule() != fillRule) {
     mPathBuilder = mPath->CopyToBuilder(fillRule);
     mPath = mPathBuilder->Finish();
+    mPathBuilder = nullptr;
   }
 
   NS_ASSERTION(mPath, "mPath should exist");
