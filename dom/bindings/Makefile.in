@@ -157,14 +157,14 @@ $(test_webidl_files): %: $(srcdir)/test/%
 # a symlink, which will clobber files in the srcdir, which is bad.
 $(preprocessed_webidl_files): %: $(webidl_base)/% $(GLOBAL_DEPS)
 	$(RM) $@
-	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
-          $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(webidl_base)/$* -o $@
+	$(call py_action,preprocessor, \
+          $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(webidl_base)/$* -o $@)
 
 # See the comment about PP_TARGETS for $(preprocessed_webidl_files)
 $(preprocessed_test_webidl_files): %: $(srcdir)/test/% $(GLOBAL_DEPS)
 	$(RM) $@
-	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
-          $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(srcdir)/test/$* -o $@
+	$(call py_action,preprocessor, \
+          $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(srcdir)/test/$* -o $@)
 
 # Make is dumb and can get confused between "foo" and "$(CURDIR)/foo".  Make
 # sure that the latter depends on the former, since the latter gets used in .pp

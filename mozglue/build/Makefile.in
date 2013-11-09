@@ -36,7 +36,7 @@ ifeq (WINNT,$(OS_TARGET))
 DEFFILE = mozglue.def
 
 mozglue.def: mozglue.def.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(if $(MOZ_REPLACE_MALLOC),-DMOZ_REPLACE_MALLOC) $(ACDEFINES) $< > $@
+	$(call py_action,preprocessor,$(if $(MOZ_REPLACE_MALLOC),-DMOZ_REPLACE_MALLOC) $(ACDEFINES) $< -o $@)
 
 GARBAGE += mozglue.def
 

@@ -105,12 +105,11 @@ PROFILE_CHROME = userChrome-example.css userContent-example.css
 NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
 
 %/defaults/profile/bookmarks.html: bookmarks.inc generic/profile/bookmarks.html.in
-	$(SYSINSTALL) -D $(dir $@)
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	$(call py_action,preprocessor, \
 	  -I $< \
 	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
 	  $(srcdir)/generic/profile/bookmarks.html.in \
-	  > $@
+	  -o $@)
 
 libs:: $(FINAL_TARGET)/defaults/profile/bookmarks.html ;
 

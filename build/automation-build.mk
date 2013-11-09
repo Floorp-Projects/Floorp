@@ -67,7 +67,7 @@ AUTOMATION_PPARGS += -DIS_ASAN=0
 endif
 
 automation.py: $(MOZILLA_DIR)/build/automation.py.in $(MOZILLA_DIR)/build/automation-build.mk
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py \
-	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
+	$(call py_action,preprocessor, \
+	$(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< -o $@)
 
 GARBAGE += automation.py automation.pyc

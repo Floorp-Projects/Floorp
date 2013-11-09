@@ -4,7 +4,7 @@ import sys
 import os.path
 import mozunit
 
-from Expression import Expression, Context
+from mozbuild.preprocessor import Expression, Context
 
 class TestContext(unittest.TestCase):
   """
