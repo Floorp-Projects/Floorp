@@ -236,11 +236,8 @@ DataStoreService.prototype = {
         // This method can be called in the child so we need to send a request
         // to the parent and create DataStore object here.
         new DataStoreServiceChild(aWindow, aName, function(aStores) {
-          debug("DataStoreServiceChild success callback!");
+          debug("DataStoreServiceChild callback!");
           self.getDataStoreCreate(aWindow, resolve, aStores);
-        }, function() {
-          debug("DataStoreServiceChild error callback!");
-          reject(new aWindow.DOMError("SecurityError", "Access denied"));
         });
       }
     });
@@ -428,39 +425,32 @@ DataStoreService.prototype = {
 
 /* DataStoreServiceChild */
 
-function DataStoreServiceChild(aWindow, aName, aSuccessCb, aErrorCb) {
+function DataStoreServiceChild(aWindow, aName, aCallback) {
   debug("DataStoreServiceChild created");
-  this.init(aWindow, aName, aSuccessCb, aErrorCb);
+  this.init(aWindow, aName, aCallback);
 }
 
 DataStoreServiceChild.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
-  init: function(aWindow, aName, aSuccessCb, aErrorCb) {
+  init: function(aWindow, aName, aCallback) {
     debug("DataStoreServiceChild init");
-    this._successCb = aSuccessCb;
-    this._errorCb = aErrorCb;
+    this._callback = aCallback;
 
-    this.initDOMRequestHelper(aWindow, [ "DataStore:Get:Return:OK",
-                                         "DataStore:Get:Return:KO" ]);
+    this.initDOMRequestHelper(aWindow, [ "DataStore:Get:Return" ]);
 
     // This is a security issue and it will be fixed by Bug 916091
     cpmm.sendAsyncMessage("DataStore:Get",
-                          { name: aName }, null, aWindow.document.nodePrincipal );
+                          { name: aName, appId: aWindow.document.nodePrincipal.appId });
   },
 
   receiveMessage: function(aMessage) {
     debug("DataStoreServiceChild receiveMessage");
-
-    switch (aMessage.name) {
-      case 'DataStore:Get:Return:OK':
-        this._successCb(aMessage.data.stores);
-        break;
-
-      case 'DataStore:Get:Return:KO':
-        this._errorCb();
-        break;
+    if (aMessage.name != 'DataStore:Get:Return') {
+      return;
     }
+
+    this._callback(aMessage.data.stores);
   }
 }
 
