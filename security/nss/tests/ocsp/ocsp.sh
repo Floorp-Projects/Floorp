@@ -60,11 +60,11 @@ ocsp_stapling()
   ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5143 -d . < ${REQF}
   html_msg $? 0 "$TESTNAME"
 
-  TESTNAME="startssl revoked, supports OCSP stapling"
-  echo "$SCRIPTNAME: $TESTNAME"
-  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5144 -d . < ${REQF}"
-  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5144 -d . < ${REQF}
-  html_msg $? 3 "$TESTNAME"
+#  TESTNAME="startssl revoked, supports OCSP stapling"
+#  echo "$SCRIPTNAME: $TESTNAME"
+#  echo "tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5144 -d . < ${REQF}"
+#  ${BINDIR}/tstclnt -4 -V tls1.0: -T -v -F -M 1 -O -h kuix.de -p 5144 -d . < ${REQF}
+#  html_msg $? 3 "$TESTNAME"
 
   TESTNAME="comodo trial test expired revoked, supports OCSP stapling"
   echo "$SCRIPTNAME: $TESTNAME"
