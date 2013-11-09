@@ -638,27 +638,32 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
   // comments explain what values are stored in the variables at these two levels. All the comments
   // use standard matrix notation where the leftmost matrix in a multiplication is applied first.
 
-  // ancestorUntransform takes points from aApzc's parent APZC's screen coordinates
+  // ancestorUntransform takes points from aApzc's parent APZC's layer coordinates
   // to aApzc's screen coordinates.
   // It is OC.Inverse() * NC.Inverse() * MC.Inverse() at recursion level for L,
   //   and RC.Inverse() * QC.Inverse()                at recursion level for P.
   gfx3DMatrix ancestorUntransform = aApzc->GetAncestorTransform().Inverse();
 
-  // Hit testing for this layer is performed in aApzc's screen coordinates.
-  gfxPoint hitTestPointForThisLayer = ancestorUntransform.ProjectPoint(aHitTestPoint);
-  APZC_LOG("Untransformed %f %f to screen coordinates %f %f for hit-testing APZC %p\n",
+  // hitTestTransform takes points from aApzc's parent APZC's layer coordinates to
+  // the hit test space (which is aApzc's transient coordinates).
+  // It is OC.Inverse() * NC.Inverse() * MC.Inverse() * LC.Inverse() * LN.Inverse() at L,
+  //   and RC.Inverse() * QC.Inverse() * PC.Inverse() * PN.Inverse()                at P.
+  gfx3DMatrix hitTestTransform = ancestorUntransform
+                               * aApzc->GetCSSTransform().Inverse()
+                               * aApzc->GetNontransientAsyncTransform().Inverse();
+  gfxPoint hitTestPointForThisLayer = hitTestTransform.ProjectPoint(aHitTestPoint);
+  APZC_LOG("Untransformed %f %f to transient coordinates %f %f for hit-testing APZC %p\n",
            aHitTestPoint.x, aHitTestPoint.y,
            hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, aApzc);
 
-  // myUntransform takes points from aApzc's screen coordinates
+  // childUntransform takes points from aApzc's parent APZC's layer coordinates
   // to aApzc's layer coordinates (which are aApzc's children's screen coordinates).
-  // It is LA.Inverse() * LC.Inverse() at L
-  //   and PA.Inverse() * PC.Inverse() at P.
-  gfx3DMatrix myUntransform = gfx3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse()
-                            * aApzc->GetCSSTransform().Inverse();
-
-  // Hit testing for child layers is performed in aApzc's layer coordinates.
-  gfxPoint hitTestPointForChildLayers = myUntransform.ProjectPoint(hitTestPointForThisLayer);
+  // It is OC.Inverse() * NC.Inverse() * MC.Inverse() * LC.Inverse() * LA.Inverse() at L
+  //   and RC.Inverse() * QC.Inverse() * PC.Inverse() * PA.Inverse()                at P.
+  gfx3DMatrix childUntransform = ancestorUntransform
+                               * aApzc->GetCSSTransform().Inverse()
+                               * gfx3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse();
+  gfxPoint hitTestPointForChildLayers = childUntransform.ProjectPoint(aHitTestPoint);
   APZC_LOG("Untransformed %f %f to layer coordinates %f %f for APZC %p\n",
            aHitTestPoint.x, aHitTestPoint.y,
            hitTestPointForChildLayers.x, hitTestPointForChildLayers.y, aApzc);
@@ -687,22 +692,34 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
    When layer L is displayed to the screen by the compositor, the set of transforms that
    are applied to L are (in order from top to bottom):
 
-        L's CSS transform      (hereafter referred to as transform matrix LC)
-        L's async transform    (hereafter referred to as transform matrix LA)
-        M's CSS transform      (hereafter referred to as transform matrix MC)
-        M's async transform    (hereafter referred to as transform matrix MA)
+        L's transient async transform       (hereafter referred to as transform matrix LT)
+        L's nontransient async transform    (hereafter referred to as transform matrix LN)
+        L's CSS transform                   (hereafter referred to as transform matrix LC)
+        M's transient async transform       (hereafter referred to as transform matrix MT)
+        M's nontransient async transform    (hereafter referred to as transform matrix MN)
+        M's CSS transform                   (hereafter referred to as transform matrix MC)
         ...
-        R's CSS transform      (hereafter referred to as transform matrix RC)
-        R's async transform    (hereafter referred to as transform matrix RA)
+        R's transient async transform       (hereafter referred to as transform matrix RT)
+        R's nontransient async transform    (hereafter referred to as transform matrix RN)
+        R's CSS transform                   (hereafter referred to as transform matrix RC)
 
-   Therefore, if we want user input to modify L's async transform, we have to first convert
-   user input from screen space to the coordinate space of L's async transform. Doing this
-   involves applying the following transforms (in order from top to bottom):
-        RA.Inverse()
+   Also, for any layer, the async transform is the combination of its transient and non-transient
+   parts. That is, for any layer L:
+                  LA === LT * LN
+        LA.Inverse() === LN.Inverse() * LT.Inverse()
+
+   If we want user input to modify L's transient async transform, we have to first convert
+   user input from screen space to the coordinate space of L's transient async transform. Doing
+   this involves applying the following transforms (in order from top to bottom):
         RC.Inverse()
+        RN.Inverse()
+        RT.Inverse()
         ...
-        MA.Inverse()
         MC.Inverse()
+        MN.Inverse()
+        MT.Inverse()
+        LC.Inverse()
+        LN.Inverse()
    This combined transformation is returned in the aTransformToApzcOut out-parameter.
 
    Next, if we want user inputs sent to gecko for event-dispatching, we will need to strip
@@ -710,34 +727,39 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
    transforms are stored only in the compositor and gecko does not account for them when
    doing display-list-based hit-testing for event dispatching. Therefore, given a user input
    in screen space, the following transforms need to be applied (in order from top to bottom):
-        RA.Inverse()
         RC.Inverse()
+        RN.Inverse()
+        RT.Inverse()
         ...
-        MA.Inverse()
         MC.Inverse()
-        LA.Inverse()
+        MN.Inverse()
+        MT.Inverse()
         LC.Inverse()
+        LN.Inverse()
+        LT.Inverse()
         LC
         MC
         ...
         RC
    This sequence can be simplified and refactored to the following:
         aTransformToApzcOut
-        LA.Inverse()
+        LT.Inverse()
+        LC
         MC
         ...
         RC
    Since aTransformToApzcOut is already one of the out-parameters, we set aTransformToGeckoOut
-   to the remaining transforms (LA.Inverse() * MC * ... * RC), so that the caller code can
+   to the remaining transforms (LT.Inverse() * LC * ... * RC), so that the caller code can
    combine it with aTransformToApzcOut to get the final transform required in this case.
 
    Note that for many of these layers, there will be no AsyncPanZoomController attached, and
    so the async transform will be the identity transform. So, in the example above, if layers
-   L and P have APZC instances attached, MA, NA, OA, QA, and RA will be identity transforms.
-   Additionally, for space-saving purposes, each APZC instance stores its layers individual
+   L and P have APZC instances attached, MT, MN, NT, NN, OT, ON, QT, QN, RT and RN will be
+   identity transforms.
+   Additionally, for space-saving purposes, each APZC instance stores its layer's individual
    CSS transform and the accumulation of CSS transforms to its parent APZC. So the APZC for
    layer L would store LC and (MC * NC * OC), and the layer P would store PC and (QC * RC).
-   The APZCs also obviously have LA and PA, so all of the above transformation combinations
+   The APZCs also obviously have LT, LN, PT, and PN, so all of the above transformation combinations
    required can be generated.
  */
 void
@@ -754,23 +776,27 @@ APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& 
   gfx3DMatrix ancestorUntransform = aApzc->GetAncestorTransform().Inverse();
   // asyncUntransform is LA.Inverse()
   gfx3DMatrix asyncUntransform = gfx3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse();
+  // nontransientAsyncTransform is LN
+  gfx3DMatrix nontransientAsyncTransform = aApzc->GetNontransientAsyncTransform();
+  // transientAsyncUntransform is LT.Inverse()
+  gfx3DMatrix transientAsyncUntransform = nontransientAsyncTransform * asyncUntransform;
 
-  // aTransformToApzcOut is initialized to OC.Inverse() * NC.Inverse() * MC.Inverse()
-  aTransformToApzcOut = ancestorUntransform;
-  // aTransformToGeckoOut is initialized to LA.Inverse() * MC * NC * OC
-  aTransformToGeckoOut = asyncUntransform * aApzc->GetAncestorTransform();
+  // aTransformToApzcOut is initialized to OC.Inverse() * NC.Inverse() * MC.Inverse() * LC.Inverse() * LN.Inverse()
+  aTransformToApzcOut = ancestorUntransform * aApzc->GetCSSTransform().Inverse() * nontransientAsyncTransform.Inverse();
+  // aTransformToGeckoOut is initialized to LT.Inverse() * LC * MC * NC * OC
+  aTransformToGeckoOut = transientAsyncUntransform * aApzc->GetCSSTransform() * aApzc->GetAncestorTransform();
 
   for (AsyncPanZoomController* parent = aApzc->GetParent(); parent; parent = parent->GetParent()) {
     // ancestorUntransform is updated to RC.Inverse() * QC.Inverse() when parent == P
     ancestorUntransform = parent->GetAncestorTransform().Inverse();
     // asyncUntransform is updated to PA.Inverse() when parent == P
     asyncUntransform = gfx3DMatrix(parent->GetCurrentAsyncTransform()).Inverse();
-    // untransformSinceLastApzc is RC.Inverse() * QC.Inverse() * PA.Inverse() * PC.Inverse()
-    gfx3DMatrix untransformSinceLastApzc = ancestorUntransform * asyncUntransform * parent->GetCSSTransform().Inverse();
+    // untransformSinceLastApzc is RC.Inverse() * QC.Inverse() * PC.Inverse() * PA.Inverse()
+    gfx3DMatrix untransformSinceLastApzc = ancestorUntransform * parent->GetCSSTransform().Inverse() * asyncUntransform;
 
-    // aTransformToApzcOut is RC.Inverse() * QC.Inverse() * PA.Inverse() * PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse()
+    // aTransformToApzcOut is RC.Inverse() * QC.Inverse() * PC.Inverse() * PA.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse() * LC.Inverse() * LN.Inverse()
     aTransformToApzcOut = untransformSinceLastApzc * aTransformToApzcOut;
-    // aTransformToGeckoOut is LA.Inverse() * MC * NC * OC * PC * QC * RC
+    // aTransformToGeckoOut is LT.Inverse() * LC * MC * NC * OC * PC * QC * RC
     aTransformToGeckoOut = aTransformToGeckoOut * parent->GetCSSTransform() * parent->GetAncestorTransform();
 
     // The above values for aTransformToApzcOut and aTransformToGeckoOut when parent == P match

@@ -1257,7 +1257,8 @@ struct TypeObjectKey
     void watchStateChangeForInlinedCall(CompilerConstraintList *constraints);
     void watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints);
     void watchStateChangeForTypedArrayBuffer(CompilerConstraintList *constraints);
-    HeapTypeSetKey property(jsid id, JSContext *maybecx = nullptr);
+    HeapTypeSetKey property(jsid id);
+    void ensureTrackedProperty(JSContext *cx, jsid id);
 
     TypeObject *maybeType();
 };

@@ -3586,6 +3586,49 @@ class MAtan2
     }
 };
 
+// Inline implementation of Math.hypot().
+class MHypot
+  : public MBinaryInstruction,
+    public MixPolicy<DoublePolicy<0>, DoublePolicy<1> >
+{
+    MHypot(MDefinition *y, MDefinition *x)
+      : MBinaryInstruction(x, y)
+    {
+        setResultType(MIRType_Double);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Hypot)
+    static MHypot *New(MDefinition *x, MDefinition *y) {
+        return new MHypot(y, x);
+    }
+
+    MDefinition *x() const {
+        return getOperand(0);
+    }
+
+    MDefinition *y() const {
+        return getOperand(1);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    bool congruentTo(MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    bool possiblyCalls() const {
+        return true;
+    }
+};
+
 // Inline implementation of Math.pow().
 class MPow
   : public MBinaryInstruction,

@@ -2369,6 +2369,33 @@ class LAtan2D : public LCallInstructionHelper<1, 2, 1>
     }
 };
 
+class LHypot : public LCallInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(Hypot)
+    LHypot(const LAllocation &x, const LAllocation &y, const LDefinition &temp) {
+        setOperand(0, x);
+        setOperand(1, y);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *x() {
+        return getOperand(0);
+    }
+
+    const LAllocation *y() {
+        return getOperand(1);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Double raised to an integer power.
 class LPowI : public LCallInstructionHelper<1, 2, 1>
 {
