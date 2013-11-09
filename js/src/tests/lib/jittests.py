@@ -390,9 +390,9 @@ def print_tinderbox(ok, res):
     print("INFO exit-status     : {}".format(res.rc))
     print("INFO timed-out       : {}".format(res.timed_out))
     for line in res.out.split('\n'):
-        print("INFO stdout          > " + line)
-    for line in res.out.split('\n'):
-        print("INFO stderr         2> " + line)
+        print("INFO stdout          > " + line.strip())
+    for line in res.err.split('\n'):
+        print("INFO stderr         2> " + line.strip())
 
 def wrap_parallel_run_test(test, prefix, resultQueue, options):
     # Ignore SIGINT in the child
