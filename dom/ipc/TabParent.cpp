@@ -1628,12 +1628,13 @@ TabParent::RecvZoomToRect(const uint32_t& aPresShellId,
 bool
 TabParent::RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
                                      const ViewID& aViewId,
+                                     const bool& aIsRoot,
                                      const bool& aAllowZoom,
                                      const CSSToScreenScale& aMinZoom,
                                      const CSSToScreenScale& aMaxZoom)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->UpdateZoomConstraints(aPresShellId, aViewId, aAllowZoom, aMinZoom, aMaxZoom);
+    rfp->UpdateZoomConstraints(aPresShellId, aViewId, aIsRoot, aAllowZoom, aMinZoom, aMaxZoom);
   }
   return true;
 }

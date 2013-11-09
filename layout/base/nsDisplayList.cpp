@@ -593,6 +593,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                                nsRect* aDisplayPort,
                                nsRect* aCriticalDisplayPort,
                                ViewID aScrollId,
+                               bool aIsRoot,
                                const ContainerLayerParameters& aContainerParameters) {
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
@@ -629,6 +630,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   }
 
   metrics.mScrollId = aScrollId;
+  metrics.mIsRoot = aIsRoot;
 
   // Only the root scrollable frame for a given presShell should pick up
   // the presShell's resolution. All the other frames are 1.0.
@@ -1150,8 +1152,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   root->SetPostScale(1.0f/containerParameters.mXScale,
                      1.0f/containerParameters.mYScale);
 
-  ViewID id = presContext->IsRootContentDocument() ? FrameMetrics::ROOT_SCROLL_ID
-                                                   : FrameMetrics::NULL_SCROLL_ID;
+  ViewID id = FrameMetrics::NULL_SCROLL_ID;
+  bool isRoot = presContext->IsRootContentDocument();
 
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   nsRect displayport, criticalDisplayport;
@@ -1164,11 +1166,9 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       usingCriticalDisplayport =
         nsLayoutUtils::GetCriticalDisplayPort(content, &criticalDisplayport);
 
-      if (id == FrameMetrics::ROOT_SCROLL_ID) {
-        // Record the mapping between the root scroll frame's content and
-        // ROOT_SCROLL_ID so that users of nsLayoutUtils::FindIDFor() and
-        // nsLayoutUtils::FindContentFor() don't have to special-case the root.
-        nsLayoutUtils::FindOrCreateIDFor(content, true);
+      // If this is the root content document, we want it to have a scroll id.
+      if (isRoot) {
+        id = nsLayoutUtils::FindOrCreateIDFor(content);
       }
     }
   }
@@ -1180,7 +1180,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                      root, mVisibleRect, viewport,
                      (usingDisplayport ? &displayport : nullptr),
                      (usingCriticalDisplayport ? &criticalDisplayport : nullptr),
-                     id, containerParameters);
+                     id, isRoot, containerParameters);
   if (usingDisplayport &&
       !(root->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
     // See bug 693938, attachment 567017
@@ -3450,7 +3450,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                      mVisibleRect, viewport,
                      (usingDisplayport ? &displayport : nullptr),
                      (usingCriticalDisplayport ? &criticalDisplayport : nullptr),
-                     scrollId, aContainerParameters);
+                     scrollId, false, aContainerParameters);
 
   return layer.forget();
 }

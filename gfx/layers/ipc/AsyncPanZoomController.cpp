@@ -1527,19 +1527,19 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
     return;
   }
 
-  FrameMetrics::ViewID scrollId;
+  bool isRoot;
   CSSRect contentRect;
   CSSSize scrollableSize;
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    scrollId = mFrameMetrics.mScrollId;
+    isRoot = mFrameMetrics.mIsRoot;
     scrollableSize = mFrameMetrics.mScrollableRect.Size();
     contentRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
     contentRect.MoveTo(mCurrentAsyncScrollOffset);
   }
 
-  controller->SendAsyncScrollDOMEvent(scrollId, contentRect, scrollableSize);
+  controller->SendAsyncScrollDOMEvent(isRoot, contentRect, scrollableSize);
 }
 
 void AsyncPanZoomController::UpdateScrollOffset(const CSSPoint& aScrollOffset)
