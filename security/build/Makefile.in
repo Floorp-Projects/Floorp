@@ -384,8 +384,6 @@ nss3.def: $(NSS_STATIC_LIBS_DEFS) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
 	mv $@.tmp $@
 endif
 
-else
-$(NSS_DIST_DLL_FILES) $(NSS_SDK_LIB_FILES): libs-nss/lib
 endif # MOZ_FOLD_LIBS
 
 include $(topsrcdir)/config/rules.mk
@@ -446,6 +444,8 @@ libs-nss/lib/freebl: $(DIST)/lib/$(IMPORT_PREFIX)nssutil3$(IMPORT_SUFFIX) $(NSPR
 # For each directory where we build static libraries, force the NSS build system
 # to only build static libraries.
 $(addprefix libs-,$(NSS_STATIC_DIRS)): DEFAULT_GMAKE_FLAGS += SHARED_LIBRARY= IMPORT_LIBRARY=
+else
+$(NSS_DIST_DLL_FILES) $(NSS_SDK_LIB_FILES): libs-nss/lib
 endif # MOZ_FOLD_LIBS
 
 ifeq ($(NSINSTALL_PY),$(NSINSTALL))
