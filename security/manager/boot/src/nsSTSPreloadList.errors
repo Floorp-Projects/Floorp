@@ -41,12 +41,12 @@ groups.google.com: did not receive HSTS header
 history.google.com: did not receive HSTS header
 hostedtalkgadget.google.com: did not receive HSTS header
 id.atlassian.com: did not receive HSTS header
-iop.intuit.com: max-age too low: 86400
+iop.intuit.com: could not connect to host
 irccloud.com: did not receive HSTS header
 jitsi.org: did not receive HSTS header
 jottit.com: did not receive HSTS header
 kiwiirc.com: max-age too low: 5256000
-ledgerscope.net: max-age too low: 86400
+ledgerscope.net: did not receive HSTS header
 liberty.lavabit.com: did not receive HSTS header
 lists.mayfirst.org: did not receive HSTS header
 logentries.com: did not receive HSTS header
@@ -102,7 +102,7 @@ www.gov.uk: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR
 www.greplin.com: could not connect to host
 www.jitsi.org: did not receive HSTS header
 www.lastpass.com: did not receive HSTS header
-www.ledgerscope.net: max-age too low: 86400
+www.ledgerscope.net: did not receive HSTS header
 www.logentries.com: did not receive HSTS header
 www.moneybookers.com: did not receive HSTS header
 www.neonisi.com: could not connect to host
