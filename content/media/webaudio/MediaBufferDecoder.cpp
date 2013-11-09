@@ -539,6 +539,17 @@ MediaBufferDecoder::EnsureThreadPoolInitialized()
   return true;
 }
 
+void
+MediaBufferDecoder::Shutdown() {
+  if (mThreadPool) {
+    // Setting threadLimit to 0 causes threads to exit when all events have
+    // been run, like nsIThreadPool::Shutdown(), but doesn't run a nested event
+    // loop nor wait until this has happened.
+    mThreadPool->SetThreadLimit(0);
+    mThreadPool = nullptr;
+  }
+}
+
 WebAudioDecodeJob::WebAudioDecodeJob(const nsACString& aContentType,
                                      AudioContext* aContext,
                                      const ArrayBuffer& aBuffer,
