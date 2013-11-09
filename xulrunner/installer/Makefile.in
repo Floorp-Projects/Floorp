@@ -107,25 +107,24 @@ DEFINES += \
 
 ifeq ($(OS_TARGET),Linux)
 debian/changelog: $(srcdir)/debian/changelog.in  $(LIBXUL_DIST)/bin/platform.ini
-	mkdir -p debian
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+	$(call py_action,preprocessor, \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ -o $@)
 
 debian/xulrunner.links: $(srcdir)/debian/xulrunner.links.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+	$(call py_action,preprocessor, \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ -o $@)
 
 debian/xulrunner.service: $(srcdir)/debian/xulrunner.service.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+	$(call py_action,preprocessor, \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ -o $@)
 
 debian/prerm: $(srcdir)/debian/prerm.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+	$(call py_action,preprocessor, \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ -o $@)
 
 debian/postinst: $(srcdir)/debian/postinst.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
+	$(call py_action,preprocessor, \
+        $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ -o $@)
 
 package:
 	$(MAKE) package -C $(DEPTH)
