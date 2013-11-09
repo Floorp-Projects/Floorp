@@ -3001,6 +3001,21 @@ bool CodeGenerator::visitAtan2D(LAtan2D *lir)
     return true;
 }
 
+bool CodeGenerator::visitHypot(LHypot *lir)
+{
+    Register temp = ToRegister(lir->temp());
+    FloatRegister x = ToFloatRegister(lir->x());
+    FloatRegister y = ToFloatRegister(lir->y());
+
+    masm.setupUnalignedABICall(2, temp);
+    masm.passABIArg(x);
+    masm.passABIArg(y);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ecmaHypot), MacroAssembler::DOUBLE);
+
+    JS_ASSERT(ToFloatRegister(lir->output()) == ReturnFloatReg);
+    return true;
+}
+
 bool
 CodeGenerator::visitNewParallelArray(LNewParallelArray *lir)
 {

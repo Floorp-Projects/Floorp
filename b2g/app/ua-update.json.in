@@ -43,12 +43,8 @@
   "ebay.com": "\\(Mobile#(Android; Mobile",
   // bug 827622, bing.com
   "bing.com": "\\(Mobile#(Android; Mobile",
-  // bug 827625, pagseguro.uol.com.br
-  "pagseguro.uol.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827626, magazineluiza.com.br
   "magazineluiza.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 827627, bol.uol.com.br
-  "bol.uol.com.br": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 827628, groupon.com.br
   "groupon.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827630, vagalume.com.br
@@ -83,8 +79,6 @@
   "sport.pl": "\\(Mobile#(Android; Mobile",
   // bug 828364, nk.pl
   "nk.pl": "\\(Mobile#(Android; Mobile",
-  // bug 828366, wyborcza.biz
-  "wyborcza.biz": "\\(Mobile#(Android; Mobile",
   // bug 828369, money.pl
   "money.pl": "\\(Mobile#(Android; Mobile",
   // bug 828371, ingbank.pl
@@ -215,8 +209,6 @@
   "download.com": "\\(Mobile#(Android; Mobile",
   // bug 878264, haber.ba
   "haber.ba": "\\(Mobile#(Android; Mobile",
-  // bug 878268, jutarnji.hr
-  "jutarnji.hr": "\\(Mobile#(Android; Mobile",
   // bug 878271, kurir-info.rs
   "kurir-info.rs": "\\(Mobile#(Android; Mobile",
   // bug 878273, livescore.com
@@ -233,8 +225,6 @@
   "ask.com": "\\(Mobile#(Android; Mobile",
   // bug 878632, banorte.com
   "banorte.com": "\\(Mobile#(Android; Mobile",
-  // bug 878634, buenastareas.com
-  "buenastareas.com": "\\(Mobile#(Android; Mobile",
   // bug 878637, eluniversal.com.mx
   "eluniversal.com.mx": "\\(Mobile#(Android; Mobile",
   // bug 878640, hootsuite.com
