@@ -83,6 +83,8 @@ class TreeMetadataEmitter(LoggingMixin):
             if isinstance(out, MozbuildSandbox):
                 for o in self.emit_from_sandbox(out):
                     yield o
+                    if not o._ack:
+                        raise Exception('Unhandled object of type %s' % type(o))
 
                 # Update the stats.
                 file_count += len(out.all_paths)
