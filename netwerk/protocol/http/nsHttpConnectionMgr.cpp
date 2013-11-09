@@ -2838,6 +2838,19 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Abandon()
 
     nsRefPtr<nsHalfOpenSocket> deleteProtector(this);
 
+    // Tell socket (and backup socket) to forget the half open socket.
+    if (mSocketTransport) {
+        mSocketTransport->SetEventSink(nullptr, nullptr);
+        mSocketTransport->SetSecurityCallbacks(nullptr);
+        mSocketTransport = nullptr;
+    }
+    if (mBackupTransport) {
+        mBackupTransport->SetEventSink(nullptr, nullptr);
+        mBackupTransport->SetSecurityCallbacks(nullptr);
+        mBackupTransport = nullptr;
+    }
+
+    // Tell output stream (and backup) to forget the half open socket.
     if (mStreamOut) {
         gHttpHandler->ConnMgr()->RecvdConnect();
         mStreamOut->AsyncWait(nullptr, 0, 0, nullptr);
@@ -2849,8 +2862,13 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Abandon()
         mBackupStreamOut = nullptr;
     }
 
+    // Lose references to input stream (and backup).
+    mStreamIn = mBackupStreamIn = nullptr;
+
+    // Stop the timer - we don't want any new backups.
     CancelBackupTimer();
 
+    // Remove the half open from the connection entry.
     if (mEnt)
         mEnt->RemoveHalfOpen(this);
     mEnt = nullptr;
