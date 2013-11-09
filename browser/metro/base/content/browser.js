@@ -590,13 +590,13 @@ var Browser = {
     if (tab)
       tab.active = true;
 
+    BrowserUI.update();
+
     if (isFirstTab) {
-      // Don't waste time at startup updating the whole UI; just display the URL.
       BrowserUI._titleChanged(browser);
     } else {
       // Update all of our UI to reflect the new tab's location
       BrowserUI.updateURI();
-      BrowserUI.update();
 
       let event = document.createEvent("Events");
       event.initEvent("TabSelect", true, false);
