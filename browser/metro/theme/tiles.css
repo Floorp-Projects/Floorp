@@ -206,10 +206,6 @@ richgriditem:active {
 
 /* thumbnail variation */
 
-richgriditem[tiletype="thumbnail"] .tile-start-container {
-  background-image: url("chrome://browser/skin/images/firefox-watermark.png");
-}
-
 richgriditem[tiletype="thumbnail"] {
   width: @grid_double_column_width@;
   height: @grid_double_row_height@;
@@ -232,7 +228,9 @@ richgriditem[tiletype="thumbnail"] > .tile-content > .tile-desc {
 }
 
 /* thumbnail tiles use a screenshot thumbnail as the background */
-richgriditem[tiletype="thumbnail"] > .tile-content > .tile-start-container {
+
+richgriditem[tiletype="thumbnail"] > .tile-content > .tile-start-container,
+richgriditem[tiletype="thumbnail"] > .tile-content > .tile-start-container::after {
   background-size: cover;
   background-position: top left;
   background-repeat: no-repeat;
@@ -242,6 +240,21 @@ richgriditem[tiletype="thumbnail"] > .tile-content > .tile-start-container {
   right: 0;
   left: 0;
 }
+
+richgriditem[tiletype="thumbnail"] > .tile-content > .tile-start-container::after {
+  pointer-events:none;
+  content: "";
+  display: block;
+  opacity: 0;
+  background-color: #fff;
+  background-image: url("chrome://browser/skin/images/firefox-watermark.png")!important;
+  transition: @metro_animation_duration@ opacity ease-in;
+}
+
+richgriditem[tiletype="thumbnail"]:not([customImage]) > .tile-content > .tile-start-container::after {
+  opacity: 1;
+}
+
 richgriditem[tiletype="thumbnail"] .tile-icon-box {
   top: auto;
   left: 10px;
