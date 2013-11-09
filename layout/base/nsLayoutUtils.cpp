@@ -94,7 +94,6 @@ using mozilla::image::Flip;
 using mozilla::image::ImageOps;
 using mozilla::image::Orientation;
 
-#define FLEXBOX_ENABLED_PREF_NAME "layout.css.flexbox.enabled"
 #define STICKY_ENABLED_PREF_NAME "layout.css.sticky.enabled"
 #define TEXT_ALIGN_TRUE_ENABLED_PREF_NAME "layout.css.text-align-true-value.enabled"
 
@@ -123,56 +122,6 @@ static ContentMap& GetContentMap() {
     sContentMap = new ContentMap();
   }
   return *sContentMap;
-}
-
-// When the pref "layout.css.flexbox.enabled" changes, this function is invoked
-// to let us update kDisplayKTable, to selectively disable or restore the
-// entries for "flex" and "inline-flex" in that table.
-static int
-FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
-{
-  MOZ_ASSERT(strncmp(aPrefName, FLEXBOX_ENABLED_PREF_NAME,
-                     NS_ARRAY_LENGTH(FLEXBOX_ENABLED_PREF_NAME)) == 0,
-             "We only registered this callback for a single pref, so it "
-             "should only be called for that pref");
-
-  static int32_t sIndexOfFlexInDisplayTable;
-  static int32_t sIndexOfInlineFlexInDisplayTable;
-  static bool sAreFlexKeywordIndicesInitialized; // initialized to false
-
-  bool isFlexboxEnabled =
-    Preferences::GetBool(FLEXBOX_ENABLED_PREF_NAME, false);
-
-  if (!sAreFlexKeywordIndicesInitialized) {
-    // First run: find the position of "flex" and "inline-flex" in
-    // kDisplayKTable.
-    sIndexOfFlexInDisplayTable =
-      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_flex,
-                                     nsCSSProps::kDisplayKTable);
-    MOZ_ASSERT(sIndexOfFlexInDisplayTable >= 0,
-               "Couldn't find flex in kDisplayKTable");
-
-    sIndexOfInlineFlexInDisplayTable =
-      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_inline_flex,
-                                     nsCSSProps::kDisplayKTable);
-    MOZ_ASSERT(sIndexOfInlineFlexInDisplayTable >= 0,
-               "Couldn't find inline-flex in kDisplayKTable");
-
-    sAreFlexKeywordIndicesInitialized = true;
-  }
-
-  // OK -- now, stomp on or restore the "flex" entries in kDisplayKTable,
-  // depending on whether the flexbox pref is enabled vs. disabled.
-  if (sIndexOfFlexInDisplayTable >= 0) {
-    nsCSSProps::kDisplayKTable[sIndexOfFlexInDisplayTable] =
-      isFlexboxEnabled ? eCSSKeyword_flex : eCSSKeyword_UNKNOWN;
-  }
-  if (sIndexOfInlineFlexInDisplayTable >= 0) {
-    nsCSSProps::kDisplayKTable[sIndexOfInlineFlexInDisplayTable] =
-      isFlexboxEnabled ? eCSSKeyword_inline_flex : eCSSKeyword_UNKNOWN;
-  }
-
-  return 0;
 }
 
 // When the pref "layout.css.sticky.enabled" changes, this function is invoked
@@ -5217,9 +5166,6 @@ nsLayoutUtils::Initialize()
   Preferences::AddBoolVarCache(&sInvalidationDebuggingIsEnabled,
                                "nglayout.debug.invalidation");
 
-  Preferences::RegisterCallback(FlexboxEnabledPrefChangeCallback,
-                                FLEXBOX_ENABLED_PREF_NAME);
-  FlexboxEnabledPrefChangeCallback(FLEXBOX_ENABLED_PREF_NAME, nullptr);
   Preferences::RegisterCallback(StickyEnabledPrefChangeCallback,
                                 STICKY_ENABLED_PREF_NAME);
   StickyEnabledPrefChangeCallback(STICKY_ENABLED_PREF_NAME, nullptr);
@@ -5240,8 +5186,6 @@ nsLayoutUtils::Shutdown()
     sContentMap = nullptr;
   }
 
-  Preferences::UnregisterCallback(FlexboxEnabledPrefChangeCallback,
-                                  FLEXBOX_ENABLED_PREF_NAME);
   Preferences::UnregisterCallback(StickyEnabledPrefChangeCallback,
                                   STICKY_ENABLED_PREF_NAME);
 
