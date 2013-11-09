@@ -313,6 +313,8 @@ class Preprocessor:
     self.setMarker('#')
     self.LE = '\n'
     self.varsubst = re.compile('@(?P<VAR>\w+)@', re.U)
+    self.depfile = None
+    self.includes = set()
 
   def warnUnused(self, file):
     if self.actionLevel == 0:
@@ -387,25 +389,46 @@ class Preprocessor:
     Parse a commandline into this parser.
     Uses OptionParser internally, no args mean sys.argv[1:].
     """
-    p = self.getCommandLineParser()
-    (options, args) = p.parse_args(args=args)
-    includes = options.I
-    if options.output:
-      dir = os.path.dirname(options.output)
+    def get_output_file(path):
+      dir = os.path.dirname(path)
       if dir and not os.path.exists(dir):
         try:
           os.makedirs(dir)
         except OSError as error:
           if error.errno != errno.EEXIST:
             raise
-      self.out = open(options.output, 'wb')
+      return open(path, 'wb')
+
+    p = self.getCommandLineParser()
+    options, args = p.parse_args(args=args)
+    includes = options.I
+    if options.output:
+      self.out = get_output_file(options.output)
     if defaultToStdin and len(args) == 0:
       args = [sys.stdin]
+      if options.depend:
+        raise Preprocessor.Error(self, "--depend doesn't work with stdin",
+                                 None)
+    if options.depend:
+      if not options.output:
+        raise Preprocessor.Error(self, "--depend doesn't work with stdout",
+                                 None)
+      try:
+        from makeutil import Makefile
+      except:
+        raise Preprocessor.Error(self, "--depend requires the "
+                                       "mozbuild.makeutil module", None)
+      self.depfile = get_output_file(options.depend)
     includes.extend(args)
     if includes:
       for f in includes:
         self.do_include(f, False)
       self.warnUnused(f)
+      if self.depfile:
+        mk = Makefile()
+        mk.create_rule([options.output]).add_dependencies(self.includes)
+        mk.dump(self.depfile)
+        self.depfile.close()
     if options.output:
       self.out.close()
 
@@ -447,6 +470,8 @@ class Preprocessor:
     p.add_option('-o', '--output', type="string", default=None,
                  metavar="FILENAME", help='Output to the specified file '+
                  'instead of stdout')
+    p.add_option('--depend', type="string", default=None, metavar="FILENAME",
+                 help='Generate dependencies in the given file')
     p.add_option('--line-endings', action='callback', callback=handleLE,
                  type="string", metavar="[cr|lr|crlf]",
                  help='Use the specified line endings [Default: OS dependent]')
@@ -692,6 +717,8 @@ class Preprocessor:
       self.context['DIRECTORY'] = ''
     else:
       abspath = os.path.abspath(args.name)
+      if self.depfile:
+          self.includes.add(abspath)
       self.context['FILE'] = abspath
       self.context['DIRECTORY'] = os.path.dirname(abspath)
     self.context['LINE'] = 0
