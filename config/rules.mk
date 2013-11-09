@@ -1600,12 +1600,39 @@ $(foreach tier,$(PP_TARGETS_TIERS), \
   $(eval $(tier):: $(PP_TARGETS_RESULTS_$(tier))) \
 )
 
-$(sort $(foreach tier,$(PP_TARGETS_TIERS),$(PP_TARGETS_RESULTS_$(tier)))):
+PP_TARGETS_ALL_RESULTS := $(sort $(foreach tier,$(PP_TARGETS_TIERS),$(PP_TARGETS_RESULTS_$(tier))))
+$(PP_TARGETS_ALL_RESULTS):
 	$(if $(filter-out $(notdir $@),$(notdir $(<:.in=))),$(error Looks like $@ has an unexpected dependency on $< which breaks PP_TARGETS))
 	$(REPORT_BUILD)
 	$(RM) "$@"
-	$(call py_action,preprocessor,$(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) "$<" -o "$@")
+	$(call py_action,preprocessor,--depend $(MDDEPDIR)/$(@F).pp $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) "$<" -o "$@")
 
+# The depfile is based on the filename, and we don't want conflicts. So check
+# there's only one occurrence of any given filename in PP_TARGETS_ALL_RESULTS.
+PP_TARGETS_ALL_RESULT_NAMES := $(notdir $(PP_TARGETS_ALL_RESULTS))
+$(foreach file,$(sort $(PP_TARGETS_ALL_RESULT_NAMES)), \
+  $(if $(filter-out 1,$(words $(filter $(file),$(PP_TARGETS_ALL_RESULT_NAMES)))), \
+    $(error Multiple preprocessing rules are creating a $(file) file) \
+  ) \
+)
+
+ifneq (,$(filter $(PP_TARGETS_TIERS) $(PP_TARGETS_ALL_RESULTS),$(MAKECMDGOALS)))
+# If the depfile for a preprocessed file doesn't exist, add a dep to force
+# re-preprocessing.
+$(foreach file,$(PP_TARGETS_ALL_RESULTS), \
+  $(if $(wildcard $(MDDEPDIR)/$(notdir $(file)).pp), \
+    , \
+    $(eval $(file): FORCE) \
+  ) \
+)
+
+MDDEPEND_FILES := $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(addsuffix .pp,$(notdir $(PP_TARGETS_ALL_RESULTS))))))
+
+ifneq (,$(MDDEPEND_FILES))
+$(call include_deps,$(MDDEPEND_FILES))
+endif
+
+endif
 
 # Pull in non-recursive targets if this is a partial tree build.
 ifndef TOPLEVEL_BUILD
