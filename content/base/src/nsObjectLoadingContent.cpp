@@ -2399,6 +2399,14 @@ nsObjectLoadingContent::UnloadObject(bool aResetState)
 
   mScriptRequested = false;
 
+  if (!mInstanceOwner) {
+    // The protochain is normally thrown out after a plugin stops, but if we
+    // re-enter while stopping a plugin and try to load something new, we need
+    // to throw away the old protochain in the nested unload.
+    TeardownProtoChain();
+    mIsStopping = false;
+  }
+
   // This call should be last as it may re-enter
   StopPluginInstance();
 }
@@ -2786,9 +2794,17 @@ nsObjectLoadingContent::DoStopPlugin(nsPluginInstanceOwner* aInstanceOwner,
     NS_ASSERTION(pluginHost, "No plugin host?");
     pluginHost->StopPluginInstance(inst);
   }
-  TeardownProtoChain();
+
   aInstanceOwner->Destroy();
 
+  // If we re-enter in plugin teardown UnloadObject will tear down the
+  // protochain -- the current protochain could be from a new, unrelated, load.
+  if (!mIsStopping) {
+    LOG(("OBJLC [%p]: Re-entered in plugin teardown", this));
+    return;
+  }
+
+  TeardownProtoChain();
   mIsStopping = false;
 }
 
@@ -2892,6 +2908,17 @@ nsObjectLoadingContent::PlayPlugin()
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsObjectLoadingContent::Reload(bool aClearActivation)
+{
+  if (aClearActivation) {
+    mActivated = false;
+    mPlayPreviewCanceled = false;
+  }
+
+  return LoadObject(true, true);
 }
 
 NS_IMETHODIMP

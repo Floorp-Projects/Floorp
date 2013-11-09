@@ -47,6 +47,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathSqrt(callInfo);
     if (native == math_atan2)
         return inlineMathAtan2(callInfo);
+    if (native == js::math_hypot)
+        return inlineMathHypot(callInfo);
     if (native == js_math_max)
         return inlineMathMinMax(callInfo, true /* max */);
     if (native == js_math_min)
@@ -326,7 +328,7 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
     bool needsHoleCheck = thisTypes->hasObjectFlags(constraints(), types::OBJECT_FLAG_NON_PACKED);
     bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
 
-    bool barrier = PropertyReadNeedsTypeBarrier(context(), constraints(),
+    bool barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
                                                 callInfo.thisArg(), nullptr, returnTypes);
     if (barrier)
         returnType = MIRType_Value;
@@ -676,6 +678,32 @@ IonBuilder::inlineMathAtan2(CallInfo &callInfo)
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineMathHypot(CallInfo &callInfo)
+{
+    if (callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (callInfo.argc() != 2)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Double)
+        return InliningStatus_NotInlined;
+
+    MIRType argType0 = callInfo.getArg(0)->type();
+    MIRType argType1 = callInfo.getArg(1)->type();
+
+    if (!IsNumberType(argType0) || !IsNumberType(argType1))
+        return InliningStatus_NotInlined;
+
+    callInfo.unwrapArgs();
+
+    MHypot *hypot = MHypot::New(callInfo.getArg(0), callInfo.getArg(1));
+    current->add(hypot);
+    current->push(hypot);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineMathPow(CallInfo &callInfo)
 {
     if (callInfo.constructing())
@@ -855,32 +883,36 @@ IonBuilder::inlineMathFRound(CallInfo &callInfo)
 IonBuilder::InliningStatus
 IonBuilder::inlineMathMinMax(CallInfo &callInfo, bool max)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing())
+    if (callInfo.argc() < 2 || callInfo.constructing())
         return InliningStatus_NotInlined;
 
     MIRType returnType = getInlineReturnType();
     if (!IsNumberType(returnType))
         return InliningStatus_NotInlined;
 
-    MIRType arg0Type = callInfo.getArg(0)->type();
-    if (!IsNumberType(arg0Type))
-        return InliningStatus_NotInlined;
-    MIRType arg1Type = callInfo.getArg(1)->type();
-    if (!IsNumberType(arg1Type))
-        return InliningStatus_NotInlined;
+    for (unsigned i = 0; i < callInfo.argc(); i++) {
+        MIRType argType = callInfo.getArg(i)->type();
+        if (!IsNumberType(argType))
+            return InliningStatus_NotInlined;
 
-    if (returnType == MIRType_Int32 &&
-        (arg0Type == MIRType_Double || arg1Type == MIRType_Double))
-    {
-        // We would need to inform TI, if we happen to return a double.
-        return InliningStatus_NotInlined;
+        // We would need to inform TI if we happen to return a double.
+        if (returnType == MIRType_Int32 && IsFloatingPointType(argType))
+            return InliningStatus_NotInlined;
     }
 
     callInfo.unwrapArgs();
 
-    MMinMax *ins = MMinMax::New(callInfo.getArg(0), callInfo.getArg(1), returnType, max);
-    current->add(ins);
-    current->push(ins);
+    // Chain N-1 MMinMax instructions to compute the MinMax.
+    MMinMax *last = MMinMax::New(callInfo.getArg(0), callInfo.getArg(1), returnType, max);
+    current->add(last);
+
+    for (unsigned i = 2; i < callInfo.argc(); i++) {
+        MMinMax *ins = MMinMax::New(last, callInfo.getArg(i), returnType, max);
+        current->add(ins);
+        last = ins;
+    }
+
+    current->push(last);
     return InliningStatus_Inlined;
 }
 
@@ -1469,7 +1501,8 @@ IonBuilder::inlineUnsafeGetReservedSlot(CallInfo &callInfo)
     current->push(load);
 
     // We don't track reserved slot types, so always emit a barrier.
-    pushTypeBarrier(load, getInlineReturnTypeSet(), true);
+    if (!pushTypeBarrier(load, getInlineReturnTypeSet(), true))
+        return InliningStatus_Error;
 
     return InliningStatus_Inlined;
 }
