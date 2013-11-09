@@ -2,8 +2,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let temp = {};
-Cu.import("resource://gre/modules/devtools/dbg-server.jsm", temp);
 
 function test()
 {
@@ -33,14 +31,19 @@ function testThrowOutput()
     });
   });
 
-  let longString = Array(temp.DebuggerServer.LONG_STRING_LENGTH + 1).join("a"),
-      shortedString = longString.substring(0,
-                        temp.DebuggerServer.LONG_STRING_INITIAL_LENGTH
-                      ) + "\u2026";
+  let server = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {})
+               .DebuggerServer;
+
+  let longLength = server.LONG_STRING_LENGTH + 1;
+  let longString = new Array(longLength).join("a");
+  let shortedString = longString.substring(0, server.LONG_STRING_INITIAL_LENGTH) +
+                      "\u2026";
+
   tests.push({
     method: "display",
-    code: "throw '" + longString + "';",
-    result: "throw '" + longString + "';\n/*\nException: " + shortedString + "\n*/",
+    code: "throw (new Array(" + longLength + ").join('a'));",
+    result: "throw (new Array(" + longLength + ").join('a'));\n" +
+            "/*\nException: " + shortedString + "\n*/",
     label: "Correct exception message for a longString is shown"
   });
 
