@@ -7,6 +7,7 @@
 #define OggWriter_h_
 
 #include "ContainerWriter.h"
+#include "OpusTrackEncoder.h"
 #include <ogg/ogg.h>
 
 namespace mozilla {
@@ -29,7 +30,7 @@ public:
                             uint32_t aFlags = 0) MOZ_OVERRIDE;
 
   // Check metadata type integrity and reject unacceptable track encoder.
-  nsresult SetMetadata(nsRefPtr<TrackMetadataBase> aMetadata) MOZ_OVERRIDE;
+  nsresult SetMetadata(TrackMetadataBase* aMetadata) MOZ_OVERRIDE;
 
 private:
   nsresult Init();
@@ -38,6 +39,8 @@ private:
                             uint32_t aFlags = 0);
 
   void ProduceOggPage(nsTArray<nsTArray<uint8_t> >* aOutputBufs);
+  // Store the Medatata from track encoder
+  nsRefPtr<OpusMetadata> mMetadata;
 
   ogg_stream_state mOggStreamState;
   ogg_page mOggPage;
