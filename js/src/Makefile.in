@@ -179,8 +179,8 @@ ifeq (Linux,$(OS_TARGET))
 EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-		-DVERSION="$(subst -,_,$(LIBRARY_NAME))" $< > $@
+	$(call py_action,preprocessor, \
+		-DVERSION="$(subst -,_,$(LIBRARY_NAME))" $< -o $@)
 
 EXTRA_DEPS += symverscript
 endif
@@ -526,14 +526,14 @@ JS_CONFIG_SUBSTITUTIONS=\
 
 $(JS_CONFIG_NAME): js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
 	$(RM) $@.tmp
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py --marker % $(JS_CONFIG_SUBSTITUTIONS) $< > $@.tmp \
-	&& mv $@.tmp $@ && chmod +x $@
+	$(call py_action,preprocessor,--marker % $(JS_CONFIG_SUBSTITUTIONS) $< -o $@.tmp)
+	mv $@.tmp $@ && chmod +x $@
 
 SCRIPTS = $(JS_CONFIG_NAME)
 SDK_BINARY = $(JS_CONFIG_NAME)
 
 $(LIBRARY_NAME).pc: js.pc.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(JS_CONFIG_SUBSTITUTIONS) $< > $@
+	$(call py_action,preprocessor,$(JS_CONFIG_SUBSTITUTIONS) $< -o $@)
 
 install:: $(LIBRARY_NAME).pc
 	$(SYSINSTALL) $^ $(DESTDIR)$(libdir)/pkgconfig

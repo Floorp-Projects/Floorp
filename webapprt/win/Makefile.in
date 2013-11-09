@@ -68,9 +68,9 @@ endif
 libs::
 	$(RM) -r $(CONFIG_DIR)
 	$(MKDIR) $(CONFIG_DIR)
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py -Fsubstitution \
+	$(call py_action,preprocessor,-Fsubstitution \
 		$(DEFINES) $(ACDEFINES) \
-		$(srcdir)/webapp-uninstaller.nsi.in > $(CONFIG_DIR)/webapp-uninstaller.nsi
+		$(srcdir)/webapp-uninstaller.nsi.in -o $(CONFIG_DIR)/webapp-uninstaller.nsi)
 	$(PYTHON) \
 		$(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
 		--create-nlf-file $(topsrcdir) $(AB_CD) $(CONFIG_DIR)

@@ -1559,16 +1559,16 @@ $(sort $(foreach tier,$(INSTALL_TARGETS_TIERS),$(INSTALL_TARGETS_EXECUTABLES_$(t
 # If PP_TARGETS lists a category name <C> (like FOO, above), then we consult the
 # following make variables to see what to do:
 #
-# - <C> lists input files to be preprocessed with config/Preprocessor.py. We
-#   search VPATH for the names given here. If an input file name ends in '.in',
-#   that suffix is omitted from the output file name.
+# - <C> lists input files to be preprocessed with mozbuild.action.preprocessor.
+#   We search VPATH for the names given here. If an input file name ends in
+#   '.in', that suffix is omitted from the output file name.
 #
 # - <C>_PATH names the directory in which to place the preprocessed output
 #   files. We create this directory if it does not already exist. Setting
 #   this variable is optional; if unset, we install the files in $(CURDIR).
 #
-# - <C>_FLAGS lists flags to pass to Preprocessor.py, in addition to the usual
-#   bunch. Setting this variable is optional.
+# - <C>_FLAGS lists flags to pass to mozbuild.action.preprocessor, in addition
+#   to the usual bunch. Setting this variable is optional.
 #
 # - <C>_TARGET names the 'make' target that should depend on creating the output
 #   files. Setting this variable is optional; if unset, we preprocess the
@@ -1604,7 +1604,7 @@ $(sort $(foreach tier,$(PP_TARGETS_TIERS),$(PP_TARGETS_RESULTS_$(tier)))):
 	$(if $(filter-out $(notdir $@),$(notdir $(<:.in=))),$(error Looks like $@ has an unexpected dependency on $< which breaks PP_TARGETS))
 	$(REPORT_BUILD)
 	$(RM) "$@"
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) "$<" -o "$@"
+	$(call py_action,preprocessor,$(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) "$<" -o "$@")
 
 
 # Pull in non-recursive targets if this is a partial tree build.

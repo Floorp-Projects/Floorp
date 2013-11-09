@@ -74,7 +74,7 @@ export-preqs = \
   $(NULL)
 
 export:: $(export-preqs)
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
+	$(PYTHON) -m mozbuild.action.preprocessor $(DEFINES) $(ACDEFINES) \
 		-DMOZ_TREE_CAIRO=$(MOZ_TREE_CAIRO) \
 		-DMOZ_TREE_PIXMAN=$(MOZ_TREE_PIXMAN) \
 		-DMOZ_NATIVE_HUNSPELL=$(MOZ_NATIVE_HUNSPELL) \
