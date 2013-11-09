@@ -14,6 +14,7 @@
   background-color: transparent;
   background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
   border-radius: 3px;
+  overflow-x: hidden;
 %ifdef XP_LINUX
   max-height: 32rem;
 %else

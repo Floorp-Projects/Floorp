@@ -116,6 +116,7 @@ AutocompletePopup.prototype = {
   _document: null,
   _panel: null,
   _list: null,
+  __scrollbarWidth: null,
 
   // Event handlers.
   onSelect: null,
@@ -127,10 +128,16 @@ AutocompletePopup.prototype = {
    *
    * @param nsIDOMNode aAnchor
    *        Optional node to anchor the panel to.
+   * @param Number aXOffset
+   *        Horizontal offset in pixels from the left of the node to the left
+   *        of the popup.
+   * @param Number aYOffset
+   *        Vertical offset in pixels from the top of the node to the starting
+   *        of the popup.
    */
-  openPopup: function AP_openPopup(aAnchor)
+  openPopup: function AP_openPopup(aAnchor, aXOffset = 0, aYOffset = 0)
   {
-    this._panel.openPopup(aAnchor, this.position, 0, 0);
+    this._panel.openPopup(aAnchor, this.position, aXOffset, aYOffset);
 
     if (this.autoSelect) {
       this.selectFirstItem();
@@ -271,7 +278,7 @@ AutocompletePopup.prototype = {
     this._list.scrollBoxObject.getScrolledSize({}, height);
     // Change the width of the popup only if the scrollbar is visible.
     if (height.value > this._panel.clientHeight) {
-       this._list.width = this._panel.clientWidth + this._scrollbarWidth;
+      this._list.width = this._panel.clientWidth + this._scrollbarWidth;
     }
     // Height change is required, otherwise the panel is drawn at an offset
     // the first time.
@@ -496,20 +503,27 @@ AutocompletePopup.prototype = {
    */
   get _scrollbarWidth()
   {
-    if (this.__scrollbarWidth) {
+    if (this.__scrollbarWidth !== null) {
       return this.__scrollbarWidth;
     }
 
-    let hbox = this._document.createElementNS(XUL_NS, "hbox");
+    let doc = this._document;
+    if (doc.defaultView.matchMedia("(-moz-overlay-scrollbars)").matches) {
+      // This is for the Mac's floating scrollbar, which actually is drawn over
+      // the content, thus taking no extra width.
+      return (this.__scrollbarWidth = 0);
+    }
+
+    let hbox = doc.createElementNS(XUL_NS, "hbox");
     hbox.setAttribute("style", "height: 0%; overflow: hidden");
 
-    let scrollbar = this._document.createElementNS(XUL_NS, "scrollbar");
+    let scrollbar = doc.createElementNS(XUL_NS, "scrollbar");
     scrollbar.setAttribute("orient", "vertical");
     hbox.appendChild(scrollbar);
+    doc.documentElement.appendChild(hbox);
 
-    this._document.documentElement.appendChild(hbox);
     this.__scrollbarWidth = scrollbar.clientWidth;
-    this._document.documentElement.removeChild(hbox);
+    doc.documentElement.removeChild(hbox);
 
     return this.__scrollbarWidth;
   },
