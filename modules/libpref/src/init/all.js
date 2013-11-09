@@ -1873,9 +1873,6 @@ pref("layout.css.supports-rule.enabled", true);
 // Is support for CSS Filters enabled?
 pref("layout.css.filters.enabled", false);
 
-// Is support for CSS Flexbox enabled?
-pref("layout.css.flexbox.enabled", true);
-
 // Is support for CSS sticky positioning enabled?
 #ifdef RELEASE_BUILD
 pref("layout.css.sticky.enabled", false);
