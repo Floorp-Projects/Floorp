@@ -211,22 +211,6 @@ nsAccUtils::GetARIAToken(dom::Element* aElement, nsIAtom* aAttr)
 }
 
 Accessible*
-nsAccUtils::GetAncestorWithRole(Accessible* aDescendant, uint32_t aRole)
-{
-  Accessible* document = aDescendant->Document();
-  Accessible* parent = aDescendant;
-  while ((parent = parent->Parent())) {
-    uint32_t testRole = parent->Role();
-    if (testRole == aRole)
-      return parent;
-
-    if (parent == document)
-      break;
-  }
-  return nullptr;
-}
-
-Accessible*
 nsAccUtils::GetSelectableContainer(Accessible* aAccessible, uint64_t aState)
 {
   if (!aAccessible)

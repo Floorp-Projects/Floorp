@@ -117,17 +117,6 @@ public:
   }
 
   /**
-    * Return ancestor in this document with the given role if it exists.
-    *
-    * @param  aDescendant  [in] descendant to start search with
-    * @param  aRole        [in] role to find matching ancestor for
-    * @return               the ancestor accessible with the given role, or
-    *                       nullptr if no match is found
-    */
-   static Accessible* GetAncestorWithRole(Accessible* aDescendant,
-                                          uint32_t aRole);
-
-  /**
    * Return single or multi selectable container for the given item.
    *
    * @param  aAccessible  [in] the item accessible
