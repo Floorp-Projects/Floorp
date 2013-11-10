@@ -90,6 +90,7 @@ SOURCES += [
     'Factory.cpp',
     'ImageScaling.cpp',
     'Matrix.cpp',
+    'Path.cpp',
     'PathCairo.cpp',
     'PathHelpers.cpp',
     'PathRecording.cpp',
