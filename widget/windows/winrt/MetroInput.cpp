@@ -1138,6 +1138,14 @@ MetroInput::DeliverNextQueuedTouchEvent()
     mWidget->DispatchEvent(mChromeHitTestCacheForTouch ? event : &transformedEvent, status);
     if (event->message == NS_TOUCH_START) {
       mContentConsumingTouch = (nsEventStatus_eConsumeNoDefault == status);
+      // If we know content wants touch here, we can bail early on mCancelable
+      // processing. This insures the apz gets an update when the user touches
+      // the screen, but doesn't move soon after.
+      if (mContentConsumingTouch) {
+        mCancelable = false;
+        mWidget->ApzContentConsumingTouch(mTargetAPZCGuid);
+        DispatchTouchCancel(event);
+      }
       // Disable gesture based events (taps, swipes, rotation) if
       // preventDefault is called on touchstart.
       mRecognizerWantsEvents = !(nsEventStatus_eConsumeNoDefault == status);
