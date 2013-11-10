@@ -1240,7 +1240,7 @@ skip-if(B2G) == 463952-1.html 463952-1-ref.html
 == 468546-1.xhtml 468546-1-ref.xhtml
 == 471356-1.html 471356-1-ref.html
 == 471594-1.xhtml 471594-1-ref.html
-== 472020-1a.xul 472020-1-ref.xul
+fuzzy(255,15) == 472020-1a.xul 472020-1-ref.xul
 fails == 472020-1b.xul 472020-1-ref.xul
 fails == 472020-2.xul 472020-2-ref.xul
 == 472500-1.xul 472500-1-ref.xul

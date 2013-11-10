@@ -40,6 +40,7 @@
 %define grid_double_column_width 262px
 %define grid_row_height 86px
 %define grid_double_row_height 172px
+%define grid_search_width 86px
 
 %define compactgrid_column_width 62px
 %define compactgrid_row_height 62px
@@ -78,6 +79,7 @@
 %define touch_row 47px
 %define touch_button_small 37px
 %define touch_action_minwidth 133px
+%define touch_action_snapped_minwidth 80px
 
 %define margin_large 16px
 %define margin_xnormal 7px
