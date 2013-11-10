@@ -222,8 +222,10 @@ TEST(AsyncPanZoomController, Overzoom) {
 
   fm = apzc->GetFrameMetrics();
   EXPECT_EQ(fm.mZoom.scale, 0.8f);
-  EXPECT_EQ(fm.mScrollOffset.x, 0);
-  EXPECT_EQ(fm.mScrollOffset.y, 0);
+  // bug 936721 - PGO builds introduce rounding error so
+  // use a fuzzy match instead
+  EXPECT_LT(abs(fm.mScrollOffset.x), 1e-5);
+  EXPECT_LT(abs(fm.mScrollOffset.y), 1e-5);
 }
 
 TEST(AsyncPanZoomController, SimpleTransform) {
