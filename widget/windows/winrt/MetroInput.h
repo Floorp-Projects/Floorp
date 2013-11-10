@@ -12,6 +12,7 @@
 #include "mozwrlbase.h"
 #include "nsDeque.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/layers/APZCTreeManager.h"
 
 // System headers (alphabetical)
 #include <EventToken.h>     // EventRegistrationToken
@@ -99,6 +100,8 @@ private:
   typedef ABI::Windows::UI::Input::IRightTappedEventArgs IRightTappedEventArgs;
   typedef ABI::Windows::UI::Input::ITappedEventArgs ITappedEventArgs;
   typedef ABI::Windows::UI::Input::ManipulationDelta ManipulationDelta;
+
+  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
 public:
   MetroInput(MetroWidget* aWidget,
@@ -277,6 +280,7 @@ private:
   void DispatchTouchCancel(WidgetTouchEvent* aEvent);
 
   nsDeque mInputEventQueue;
+  mozilla::layers::ScrollableLayerGuid mTargetAPZCGuid;
   static nsEventStatus sThrowawayStatus;
 };
 
