@@ -973,57 +973,60 @@ CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfa
 }
 
 void
-MetroWidget::ApzContentConsumingTouch()
+MetroWidget::ApzContentConsumingTouch(const ScrollableLayerGuid& aGuid)
 {
   LogFunction();
-  if (!APZController::sAPZC) {
+  if (!mController) {
     return;
   }
-  APZController::sAPZC->ContentReceivedTouch(mRootLayerTreeId, true);
+  mController->ContentReceivedTouch(aGuid, true);
 }
 
 void
-MetroWidget::ApzContentIgnoringTouch()
+MetroWidget::ApzContentIgnoringTouch(const ScrollableLayerGuid& aGuid)
 {
   LogFunction();
-  if (!APZController::sAPZC) {
+  if (!mController) {
     return;
   }
-  APZController::sAPZC->ContentReceivedTouch(mRootLayerTreeId, false);
+  mController->ContentReceivedTouch(aGuid, false);
 }
 
 bool
-MetroWidget::HitTestAPZC(ScreenPoint& pt)
+MetroWidget::ApzHitTest(ScreenPoint& pt)
 {
-  if (!APZController::sAPZC) {
+  if (!mController) {
     return false;
   }
-  return APZController::sAPZC->HitTestAPZC(pt);
+  return mController->HitTestAPZC(pt);
 }
 
 nsEventStatus
-MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aEvent)
+MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid)
 {
   MOZ_ASSERT(aEvent);
 
-  if (!APZController::sAPZC) {
+  if (!mController) {
     return nsEventStatus_eIgnore;
   }
-  return APZController::sAPZC->ReceiveInputEvent(*aEvent->AsInputEvent());
+  return mController->ReceiveInputEvent(aEvent, aOutTargetGuid);
 }
 
 nsEventStatus
 MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aInEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid,
                                   WidgetInputEvent* aOutEvent)
 {
   MOZ_ASSERT(aInEvent);
   MOZ_ASSERT(aOutEvent);
 
-  if (!APZController::sAPZC) {
+  if (!mController) {
     return nsEventStatus_eIgnore;
   }
-  return APZController::sAPZC->ReceiveInputEvent(*aInEvent->AsInputEvent(),
-                                                 aOutEvent);
+  return mController->ReceiveInputEvent(aInEvent,
+                                        aOutTargetGuid,
+                                        aOutEvent);
 }
 
 LayerManager*
