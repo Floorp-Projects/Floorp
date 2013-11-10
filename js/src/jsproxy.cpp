@@ -156,7 +156,7 @@ BaseProxyHandler::getElementIfPresent(JSContext *cx, HandleObject proxy, HandleO
                                       uint32_t index, MutableHandleValue vp, bool *present)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
 
     assertEnteredPolicy(cx, proxy, id);
@@ -2525,7 +2525,7 @@ Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject recei
     JS_CHECK_RECURSION(cx, return false);
 
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
 
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
@@ -2811,7 +2811,7 @@ proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                     MutableHandleObject objp, MutableHandleShape propp)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
     return proxy_LookupGeneric(cx, obj, id, objp, propp);
 }
@@ -2851,7 +2851,7 @@ proxy_DefineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
     return proxy_DefineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
@@ -2884,7 +2884,7 @@ proxy_GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_
                  MutableHandleValue vp)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
     return proxy_GetGeneric(cx, obj, receiver, id, vp);
 }
@@ -2924,7 +2924,7 @@ proxy_SetElement(JSContext *cx, HandleObject obj, uint32_t index,
                  MutableHandleValue vp, bool strict)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
     return proxy_SetGeneric(cx, obj, id, vp, strict);
 }
@@ -2979,7 +2979,7 @@ static bool
 proxy_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
     return proxy_DeleteGeneric(cx, obj, id, succeeded);
 }
