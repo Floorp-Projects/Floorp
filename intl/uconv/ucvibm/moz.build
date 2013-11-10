@@ -4,41 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'ucvibm'
-
 EXPORTS += [
     'nsUCvIBMCID.h',
-]
-
-UNIFIED_SOURCES += [
-    'nsCP850ToUnicode.cpp',
-    'nsCP852ToUnicode.cpp',
-    'nsCP855ToUnicode.cpp',
-    'nsCP857ToUnicode.cpp',
-    'nsCP862ToUnicode.cpp',
-    'nsCP864ToUnicode.cpp',
-    'nsUnicodeToCP850.cpp',
-    'nsUnicodeToCP852.cpp',
-    'nsUnicodeToCP855.cpp',
-    'nsUnicodeToCP857.cpp',
-    'nsUnicodeToCP862.cpp',
-    'nsUnicodeToCP864.cpp',
-]
-
-if CONFIG['OS_ARCH'] == 'OS2':
-    UNIFIED_SOURCES += [
-        'nsCP1125ToUnicode.cpp',
-        'nsCP1131ToUnicode.cpp',
-        'nsCP869ToUnicode.cpp',
-        'nsUnicodeToCP1125.cpp',
-        'nsUnicodeToCP1131.cpp',
-        'nsUnicodeToCP869.cpp',
-    ]
-
-LIBRARY_NAME = 'ucvibm_s'
-
-LIBXUL_LIBRARY = True
-
-LOCAL_INCLUDES += [
-    '../util',
 ]
