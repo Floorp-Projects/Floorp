@@ -993,12 +993,22 @@ MetroWidget::ApzContentIgnoringTouch(const ScrollableLayerGuid& aGuid)
 }
 
 bool
-MetroWidget::ApzHitTest(ScreenPoint& pt)
+MetroWidget::ApzHitTest(ScreenIntPoint& pt)
 {
   if (!mController) {
     return false;
   }
   return mController->HitTestAPZC(pt);
+}
+
+void
+MetroWidget::ApzTransformGeckoCoordinate(const ScreenIntPoint& aPoint,
+                                         LayoutDeviceIntPoint* aRefPointOut)
+{
+  if (!mController) {
+    return;
+  }
+  mController->TransformCoordinateToGecko(aPoint, aRefPointOut);
 }
 
 nsEventStatus

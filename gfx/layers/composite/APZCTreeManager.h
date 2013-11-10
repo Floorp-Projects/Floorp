@@ -191,6 +191,15 @@ public:
                                   ScrollableLayerGuid* aOutTargetGuid);
 
   /**
+   * A helper for transforming coordinates to gecko coordinate space.
+   *
+   * @param aPoint point to transform
+   * @param aOutTransformedPoint resulting transformed point
+   */
+  void TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
+                                  LayoutDeviceIntPoint* aOutTransformedPoint);
+
+  /**
    * Updates the composition bounds, i.e. the dimensions of the final size of
    * the frame this is tied to during composition onto, in device pixels. In
    * general, this will just be:
@@ -254,7 +263,7 @@ public:
   /**
    * Tests if a screen point intersect an apz in the tree.
    */
-  bool HitTestAPZC(const ScreenPoint& aPoint);
+  bool HitTestAPZC(const ScreenIntPoint& aPoint);
 
   /**
    * Set the dpi value used by all AsyncPanZoomControllers.

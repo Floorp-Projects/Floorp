@@ -38,7 +38,9 @@ public:
   void SetWidgetListener(nsIWidgetListener* aWidgetListener);
   void UpdateScrollOffset(const mozilla::layers::ScrollableLayerGuid& aScrollLayerId, CSSIntPoint& aScrollOffset);
 
-  bool HitTestAPZC(mozilla::ScreenPoint& pt);
+  bool HitTestAPZC(mozilla::ScreenIntPoint& aPoint);
+  void TransformCoordinateToGecko(const mozilla::ScreenIntPoint& aPoint,
+                                  LayoutDeviceIntPoint* aRefPointOut);
   void ContentReceivedTouch(const ScrollableLayerGuid& aGuid, bool aPreventDefault);
   nsEventStatus ReceiveInputEvent(mozilla::WidgetInputEvent* aEvent,
                                   ScrollableLayerGuid* aOutTargetGuid);

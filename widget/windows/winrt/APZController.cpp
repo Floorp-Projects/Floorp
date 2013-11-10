@@ -174,12 +174,22 @@ APZController::ContentReceivedTouch(const ScrollableLayerGuid& aGuid, bool aPrev
 }
 
 bool
-APZController::HitTestAPZC(ScreenPoint& pt)
+APZController::HitTestAPZC(ScreenIntPoint& aPoint)
 {
   if (!sAPZC) {
     return false;
   }
-  return sAPZC->HitTestAPZC(pt);
+  return sAPZC->HitTestAPZC(aPoint);
+}
+
+void
+APZController::TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
+                                          LayoutDeviceIntPoint* aRefPointOut)
+{
+  if (!sAPZC || !aRefPointOut) {
+    return;
+  }
+  sAPZC->TransformCoordinateToGecko(aPoint, aRefPointOut);
 }
 
 nsEventStatus

@@ -398,6 +398,24 @@ APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   return ret;
 }
 
+void
+APZCTreeManager::TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
+                                            LayoutDeviceIntPoint* aOutTransformedPoint)
+{
+  MOZ_ASSERT(aOutTransformedPoint);
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aPoint);
+  if (apzc && aOutTransformedPoint) {
+    gfx3DMatrix transformToApzc;
+    gfx3DMatrix transformToGecko;
+    GetInputTransforms(apzc, transformToApzc, transformToGecko);
+    gfx3DMatrix outTransform = transformToApzc * transformToGecko;
+    aOutTransformedPoint->x = aPoint.x;
+    aOutTransformedPoint->y = aPoint.y;
+    ApplyTransform(aOutTransformedPoint, outTransform);
+  }
+}
+
+
 nsEventStatus
 APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
                                    ScrollableLayerGuid* aOutTargetGuid,
@@ -579,7 +597,7 @@ APZCTreeManager::HandleOverscroll(AsyncPanZoomController* aChild, ScreenPoint aS
 }
 
 bool
-APZCTreeManager::HitTestAPZC(const ScreenPoint& aPoint)
+APZCTreeManager::HitTestAPZC(const ScreenIntPoint& aPoint)
 {
   MonitorAutoLock lock(mTreeLock);
   nsRefPtr<AsyncPanZoomController> target;
