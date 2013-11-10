@@ -27,10 +27,6 @@ pref("general.useragent.compatMode.firefox", false);
 // overrides by default, don't initialize UserAgentOverrides.jsm.
 pref("general.useragent.site_specific_overrides", true);
 
-// This pref controls whether or not to enable UA overrides in the
-// product code that end users use (as opposed to testing code).
-pref("general.useragent.enable_overrides", false);
-
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
 pref("general.warnOnAboutConfig", true);
@@ -1917,6 +1913,13 @@ pref("layout.css.prefixes.animations", true);
 pref("layout.css.scope-pseudo.enabled", false);
 #else
 pref("layout.css.scope-pseudo.enabled", true);
+#endif
+
+// Is support for background-blend-mode enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.background-blend-mode.enabled", false);
+#else
+pref("layout.css.background-blend-mode.enabled", true);
 #endif
 
 // Is support for CSS vertical text enabled?

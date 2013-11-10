@@ -460,6 +460,9 @@ documenttab[selected] .documenttab-selection {
   box-shadow: 0 1px 0 hsla(210,5%,50%,.1) inset;
   -moz-user-focus: ignore;
 }
+#progress-container[startpage] {
+  visibility: collapse;
+}
 
 #progress-control {
   display: block;

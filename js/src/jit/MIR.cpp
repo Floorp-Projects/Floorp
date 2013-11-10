@@ -2928,8 +2928,11 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                 break;
 
             types::TypeObjectKey *typeObj = types::TypeObjectKey::get(obj);
+            if (propertycx)
+                typeObj->ensureTrackedProperty(propertycx, NameToId(name));
+
             if (!typeObj->unknownProperties()) {
-                types::HeapTypeSetKey property = typeObj->property(NameToId(name), propertycx);
+                types::HeapTypeSetKey property = typeObj->property(NameToId(name));
                 if (property.maybeTypes()) {
                     types::TypeSet::TypeList types;
                     if (!property.maybeTypes()->enumerateTypes(&types))
