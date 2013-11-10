@@ -202,7 +202,11 @@ public:
   // apzc controller related api
 
   // Hit test a point to see if an apzc would consume input there
-  bool ApzHitTest(mozilla::ScreenPoint& pt);
+  bool ApzHitTest(mozilla::ScreenIntPoint& pt);
+  // Transforms a coord so that it properly targets gecko content based
+  // on apzc transforms currently applied.
+  void ApzTransformGeckoCoordinate(const mozilla::ScreenIntPoint& pt,
+                                   mozilla::LayoutDeviceIntPoint* aRefPointOut);
   // send ContentRecievedTouch calls to the apz with appropriate preventDefault params
   void ApzContentConsumingTouch(const ScrollableLayerGuid& aGuid);
   void ApzContentIgnoringTouch(const ScrollableLayerGuid& aGuid);

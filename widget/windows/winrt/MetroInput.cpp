@@ -668,19 +668,35 @@ MetroInput::TransformRefPoint(const Foundation::Point& aPosition, LayoutDeviceIn
 {
   // If this event is destined for content we need to transform our ref point through
   // the apz so that zoom can be accounted for.
-  LayoutDeviceIntPoint pt = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(aPosition));
-  aRefPointOut = pt;
+  aRefPointOut = LayoutDeviceIntPoint::FromUntyped(MetroUtils::LogToPhys(aPosition));
+  ScreenIntPoint spt;
+  spt.x = aRefPointOut.x;
+  spt.y = aRefPointOut.y;
   // This is currently a general contained rect hit test, it may produce a false positive for
   // overlay chrome elements.
-  bool apzIntersect = mWidget->ApzHitTest(mozilla::ScreenPoint(pt.x, pt.y));
-  if (apzIntersect && HitTestChrome(pt)) {
+  bool apzIntersect = mWidget->ApzHitTest(spt);
+  if (apzIntersect && HitTestChrome(aRefPointOut)) {
     return;
   }
-  WidgetMouseEvent event(true, NS_MOUSE_MOVE, mWidget.Get(),
-                         WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
-  event.refPoint = aRefPointOut;
-  mWidget->ApzReceiveInputEvent(&event, nullptr);
-  aRefPointOut = event.refPoint;
+  mWidget->ApzTransformGeckoCoordinate(spt, &aRefPointOut);
+}
+
+void
+MetroInput::TransformTouchEvent(WidgetTouchEvent* aEvent)
+{
+  nsTArray< nsRefPtr<dom::Touch> >& touches = aEvent->touches;
+  for (uint32_t i = 0; i < touches.Length(); ++i) {
+    dom::Touch* touch = touches[i];
+    if (touch) {
+      LayoutDeviceIntPoint lpt;
+      ScreenIntPoint spt;
+      spt.x = touch->mRefPoint.x;
+      spt.y = touch->mRefPoint.y;
+      mWidget->ApzTransformGeckoCoordinate(spt, &lpt);
+      touch->mRefPoint.x = lpt.x;
+      touch->mRefPoint.y = lpt.y;
+    }
+  }
 }
 
 void
@@ -1115,7 +1131,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
   if (mCancelable && event->message == NS_TOUCH_START) {
     nsRefPtr<Touch> touch = event->touches[0];
     LayoutDeviceIntPoint pt = LayoutDeviceIntPoint::FromUntyped(touch->mRefPoint);
-    bool apzIntersect = mWidget->ApzHitTest(mozilla::ScreenPoint(pt.x, pt.y));
+    bool apzIntersect = mWidget->ApzHitTest(mozilla::ScreenIntPoint(pt.x, pt.y));
     mChromeHitTestCacheForTouch = (apzIntersect && HitTestChrome(pt));
   }
 
@@ -1172,11 +1188,14 @@ MetroInput::DeliverNextQueuedTouchEvent()
     return;
   }
 
-  // Forward event data to apz.  Even if content is consuming input, we still
-  // need APZC to transform the coordinates.  It won't actually react to the
-  // event if ContentReceivedTouch was called previously.
-  DUMP_TOUCH_IDS("APZC(2)", event);
-  status = mWidget->ApzReceiveInputEvent(event, nullptr);
+  // If content is consuming touch, we need to transform event coords
+  // through the apzc before sending. Otherwise send the event to apzc.
+  if (mContentConsumingTouch) {
+    TransformTouchEvent(event);
+  } else {
+    DUMP_TOUCH_IDS("APZC(2)", event);
+    status = mWidget->ApzReceiveInputEvent(event, nullptr);
+  }
 
   // If content called preventDefault on touchstart or first touchmove send
   // the event to content only.
