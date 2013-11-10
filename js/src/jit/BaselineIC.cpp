@@ -587,7 +587,7 @@ ICStubCompiler::getStubCode()
     if (!generateStubCode(masm))
         return nullptr;
     Linker linker(masm);
-    Rooted<IonCode *> newStubCode(cx, linker.newCode(cx, JSC::BASELINE_CODE));
+    Rooted<IonCode *> newStubCode(cx, linker.newCode<CanGC>(cx, JSC::BASELINE_CODE));
     if (!newStubCode)
         return nullptr;
 
