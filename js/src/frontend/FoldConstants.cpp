@@ -91,7 +91,7 @@ FoldType(ExclusiveContext *cx, ParseNode *pn, ParseNodeKind kind)
 
           case PNK_STRING:
             if (pn->isKind(PNK_NUMBER)) {
-                pn->pn_atom = NumberToAtom<CanGC>(cx, pn->pn_dval);
+                pn->pn_atom = NumberToAtom(cx, pn->pn_dval);
                 if (!pn->pn_atom)
                     return false;
                 pn->setKind(PNK_STRING);
@@ -593,7 +593,7 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
             JS_ASSERT(*chars == 0);
 
             /* Atomize the result string and mutate pn to refer to it. */
-            pn->pn_atom = AtomizeString<CanGC>(cx, str);
+            pn->pn_atom = AtomizeString(cx, str);
             if (!pn->pn_atom)
                 return false;
             pn->setKind(PNK_STRING);
@@ -614,7 +614,7 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
             RootedString str(cx, ConcatStrings<CanGC>(cx, left, right));
             if (!str)
                 return false;
-            pn->pn_atom = AtomizeString<CanGC>(cx, str);
+            pn->pn_atom = AtomizeString(cx, str);
             if (!pn->pn_atom)
                 return false;
             pn->setKind(PNK_STRING);

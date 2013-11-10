@@ -75,7 +75,7 @@ StringBuffer::finishAtom()
     if (length == 0)
         return cx->names().empty;
 
-    JSAtom *atom = AtomizeChars<CanGC>(cx, cb.begin(), length);
+    JSAtom *atom = AtomizeChars(cx, cb.begin(), length);
     cb.clear();
     return atom;
 }
