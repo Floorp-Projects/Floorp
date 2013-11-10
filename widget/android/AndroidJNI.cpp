@@ -877,7 +877,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(JNIEnv* env,
         const MultiTouchInput& input = wrapper->MakeMultiTouchInput(nsWindow::TopWindow());
         delete wrapper;
         if (input.mType >= 0) {
-            controller->ReceiveInputEvent(input);
+            controller->ReceiveInputEvent(input, nullptr);
         }
     }
 }
