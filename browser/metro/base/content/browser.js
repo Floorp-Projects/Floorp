@@ -370,6 +370,7 @@ var Browser = {
     let promptBox = {
       appendPrompt : function(args, onCloseCallback) {
           let newPrompt = document.createElementNS(XUL_NS, "tabmodalprompt");
+          newPrompt.setAttribute("promptType", args.promptType);
           stack.appendChild(newPrompt);
           browser.setAttribute("tabmodalPromptShowing", true);
           newPrompt.clientTop; // style flush to assure binding is attached
@@ -377,7 +378,7 @@ var Browser = {
           let tab = self.getTabForBrowser(browser);
           tab = tab.chromeTab;
 
-          newPrompt.init(args, tab, onCloseCallback);
+          newPrompt.metroInit(args, tab, onCloseCallback);
           return newPrompt;
       },
 
@@ -446,10 +447,40 @@ var Browser = {
     return this._tabId++;
   },
 
+  /**
+   * Create a new tab and add it to the tab list.
+   *
+   * If you are opening a new foreground tab in response to a user action, use
+   * BrowserUI.addAndShowTab which will also show the tab strip.
+   *
+   * @param aURI String specifying the URL to load.
+   * @param aBringFront Boolean (optional) Open the new tab in the foreground?
+   * @param aOwner Tab object (optional) The "parent" of the new tab.
+   *   This is the tab responsible for opening the new tab.  When the new tab
+   *   is closed, we will return to a parent or "sibling" tab if possible.
+   * @param aParams Object (optional) with optional properties:
+   *   index: Number specifying where in the tab list to insert the new tab.
+   *   flags, postData, charset, referrerURI: See loadURIWithFlags.
+   */
   addTab: function browser_addTab(aURI, aBringFront, aOwner, aParams) {
     let params = aParams || {};
+
+    if (aOwner && !('index' in params)) {
+      // Position the new tab to the right of its owner...
+      params.index = this._tabs.indexOf(aOwner) + 1;
+      // ...and to the right of any siblings.
+      while (this._tabs[params.index] && this._tabs[params.index].owner == aOwner) {
+        params.index++;
+      }
+    }
+
     let newTab = new Tab(aURI, params, aOwner);
-    this._tabs.push(newTab);
+
+    if (params.index >= 0) {
+      this._tabs.splice(params.index, 0, newTab);
+    } else {
+      this._tabs.push(newTab);
+    }
 
     if (aBringFront)
       this.selectedTab = newTab;
@@ -481,9 +512,8 @@ var Browser = {
    * new tab creation.
    */
   _announceNewTab: function _announceNewTab(aTab, aParams, aBringFront) {
-    let getAttention = ("getAttention" in aParams ? aParams.getAttention : !aBringFront);
     let event = document.createEvent("UIEvents");
-    event.initUIEvent("TabOpen", true, false, window, getAttention);
+    event.initUIEvent("TabOpen", true, false, window, 0);
     aTab.chromeTab.dispatchEvent(event);
     aTab.browser.messageManager.sendAsyncMessage("Browser:TabOpen");
   },
@@ -590,13 +620,13 @@ var Browser = {
     if (tab)
       tab.active = true;
 
+    BrowserUI.update();
+
     if (isFirstTab) {
-      // Don't waste time at startup updating the whole UI; just display the URL.
       BrowserUI._titleChanged(browser);
     } else {
       // Update all of our UI to reflect the new tab's location
       BrowserUI.updateURI();
-      BrowserUI.update();
 
       let event = document.createEvent("Events");
       event.initEvent("TabSelect", true, false);
@@ -1030,7 +1060,7 @@ nsBrowserAccess.prototype = {
       return null;
     } else if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       let owner = isExternal ? null : Browser.selectedTab;
-      let tab = Browser.addTab("about:blank", true, owner, { getAttention: true });
+      let tab = Browser.addTab("about:blank", true, owner);
       if (isExternal)
         tab.closeOnExit = true;
       browser = tab.browser;
@@ -1044,7 +1074,7 @@ nsBrowserAccess.prototype = {
 
       if (!browser) {
         // Make a new tab to hold the app
-        let tab = Browser.addTab("about:blank", true, null, { getAttention: true });
+        let tab = Browser.addTab("about:blank", true);
         browser = tab.browser;
         browser.appURI = aURI;
       } else {
@@ -1299,7 +1329,7 @@ Tab.prototype = {
   create: function create(aURI, aParams, aOwner) {
     this._eventDeferred = Promise.defer();
 
-    this._chromeTab = Elements.tabList.addTab();
+    this._chromeTab = Elements.tabList.addTab(aParams.index);
     this._id = Browser.createTabId();
     let browser = this._createBrowser(aURI, null);
 
@@ -1312,12 +1342,29 @@ Tab.prototype = {
       self._eventDeferred = null;
     }
     browser.addEventListener("pageshow", onPageShowEvent, true);
+    browser.addEventListener("DOMWindowCreated", this, false);
+    Elements.browsers.addEventListener("SizeChanged", this, false);
+
     browser.messageManager.addMessageListener("Content:StateChange", this);
     Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
     if (aOwner)
       this._copyHistoryFrom(aOwner);
     this._loadUsingParams(browser, aURI, aParams);
+  },
+
+  updateViewport: function (aEvent) {
+    // <meta name=viewport> is not yet supported; just use the browser size.
+    this.browser.setWindowSize(this.browser.clientWidth, this.browser.clientHeight);
+  },
+
+  handleEvent: function (aEvent) {
+    switch (aEvent.type) {
+      case "DOMWindowCreated":
+      case "SizeChanged":
+        this.updateViewport();
+        break;
+    }
   },
 
   receiveMessage: function(aMessage) {
@@ -1348,6 +1395,8 @@ Tab.prototype = {
 
   destroy: function destroy() {
     this._browser.messageManager.removeMessageListener("Content:StateChange", this);
+    this._browser.removeEventListener("DOMWindowCreated", this, false);
+    Elements.browsers.removeEventListener("SizeChanged", this, false);
     Services.obs.removeObserver(this, "metro_viewstate_changed", false);
     clearTimeout(this._updateThumbnailTimeout);
 

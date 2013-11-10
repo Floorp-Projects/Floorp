@@ -179,6 +179,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     {
       aRv = PlayPlugin();
     }
+    void Reload(bool aClearActivation, mozilla::ErrorResult& aRv)
+    {
+      aRv = Reload(aClearActivation);
+    }
     bool Activated() const
     {
       return mActivated;

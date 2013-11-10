@@ -55,6 +55,3 @@ assertEq(Math.hypot(+0, +0, -0), +0);
 
 // The length property of the hypot function is 2.
 assertEq(Math.hypot.length, 2);
-
-
-reportCompare(0, 0, "ok");

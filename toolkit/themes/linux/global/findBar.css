@@ -5,7 +5,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 findbar {
-  padding: 4px 8px;
   border-top: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
   min-width: 1px;
@@ -21,6 +20,12 @@ findbar[hidden] {
   margin-bottom: -1em;
   opacity: 0;
   transition-delay: 0s, 0s, 150ms;
+}
+
+.findbar-container {
+  -moz-padding-start: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .findbar-closebutton {
