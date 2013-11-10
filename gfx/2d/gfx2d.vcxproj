@@ -92,6 +92,7 @@
     <ClInclude Include="Logging.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="PathD2D.h" />
+    <ClInclude Include="PathHelpers.h" />
     <ClInclude Include="PathRecording.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="RecordedEvent.h" />
