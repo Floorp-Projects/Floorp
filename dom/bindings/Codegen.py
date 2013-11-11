@@ -3729,7 +3729,7 @@ for (uint32_t i = 0; i < length; ++i) {
             notDate = failureCode
 
         conversion = (
-            "JS::RootedObject possibleDateObject(cx, &${val}.toObject());\n"
+            "JS::Rooted<JSObject*> possibleDateObject(cx, &${val}.toObject());\n"
             "if (!JS_ObjectIsDate(cx, possibleDateObject) ||\n"
             "    !%s.SetTimeStamp(cx, possibleDateObject)) {\n"
             "%s\n"
@@ -4713,7 +4713,7 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
     if type.isAny():
         assert not type.nullable()
         if isMember:
-            value = "JS::MutableHandleValue::fromMarkedLocation(&%s)" % value
+            value = "JS::MutableHandle<JS::Value>::fromMarkedLocation(&%s)" % value
         else:
             value = "&" + value
         return CGGeneric("if (!JS_WrapValue(cx, %s)) {\n"
@@ -4722,7 +4722,7 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
 
     if type.isObject():
         if isMember:
-            value = "JS::MutableHandleObject::fromMarkedLocation(&%s)" % value
+            value = "JS::MutableHandle<JSObject*>::fromMarkedLocation(&%s)" % value
         else:
             value = "&" + value
         return CGGeneric("if (!JS_WrapObject(cx, %s)) {\n"
@@ -5535,7 +5535,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
                 ensureThisObj = None
             self.getThisObj = CGList(
                 [ensureThisObj,
-                 CGGeneric("JS::RootedObject obj(cx, %s);\n" %
+                 CGGeneric("JS::Rooted<JSObject*> obj(cx, %s);\n" %
                            getThisObj)],
                 "\n")
         self.callArgs = callArgs
@@ -5575,7 +5575,7 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
 
     def definition_body(self):
         unwrap = CGGeneric("""JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-JS::RootedObject obj(cx, args.computeThis(cx).toObjectOrNull());
+JS::Rooted<JSObject*> obj(cx, args.computeThis(cx).toObjectOrNull());
 if (!obj) {
   return false;
 }""")
@@ -5956,7 +5956,7 @@ class CGSpecializedForwardingSetter(CGSpecializedSetter):
         # JS_GetProperty and JS_SetProperty can only deal with ASCII
         assert all(ord(c) < 128 for c in attrName)
         assert all(ord(c) < 128 for c in forwardToAttrName)
-        return CGIndenter(CGGeneric("""JS::RootedValue v(cx);
+        return CGIndenter(CGGeneric("""JS::Rooted<JS::Value> v(cx);
 if (!JS_GetProperty(cx, obj, "%s", &v)) {
   return false;
 }

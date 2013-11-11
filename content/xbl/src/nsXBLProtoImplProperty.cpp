@@ -194,10 +194,9 @@ nsXBLProtoImplProperty::CompileMember(const nsCString& aClassStr,
       options.setFileAndLine(functionUri.get(), getterText->GetLineNumber())
              .setVersion(JSVERSION_LATEST);
       nsCString name = NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
-      JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
-      JS::RootedObject getterObject(cx);
-      rv = nsJSUtils::CompileFunction(cx, rootedNull, options, name, 0, nullptr,
-                                      getter, getterObject.address());
+      JS::Rooted<JSObject*> getterObject(cx);
+      rv = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options, name, 0,
+                                      nullptr, getter, getterObject.address());
 
       delete getterText;
       deletedGetter = true;
@@ -241,10 +240,10 @@ nsXBLProtoImplProperty::CompileMember(const nsCString& aClassStr,
       options.setFileAndLine(functionUri.get(), setterText->GetLineNumber())
              .setVersion(JSVERSION_LATEST);
       nsCString name = NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
-      JS::RootedObject rootedNull(cx, nullptr); // See bug 781070.
-      JS::RootedObject setterObject(cx);
-      rv = nsJSUtils::CompileFunction(cx, rootedNull, options, name, 1,
-                                      gPropertyArgs, setter, setterObject.address());
+      JS::Rooted<JSObject*> setterObject(cx);
+      rv = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options, name, 1,
+                                      gPropertyArgs, setter,
+                                      setterObject.address());
 
       delete setterText;
       deletedSetter = true;

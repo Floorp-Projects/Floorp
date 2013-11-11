@@ -524,7 +524,7 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JS::RootedValue reviver(mCx, JS::NullValue()), value(mCx);
+  JS::Rooted<JS::Value> reviver(mCx, JS::NullValue()), value(mCx);
 
   JS::StableCharPtr chars(reinterpret_cast<const jschar*>(mBufferedChars.Elements()),
                           mBufferedChars.Length());

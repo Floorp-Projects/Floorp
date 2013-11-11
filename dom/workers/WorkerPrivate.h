@@ -824,7 +824,6 @@ public:
               ErrorResult& aRv);
 
   static already_AddRefed<WorkerPrivate>
-
   Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
               bool aIsChromeWorker, WorkerType aWorkerType,
               const nsAString& aSharedWorkerName,
@@ -932,7 +931,7 @@ public:
   PostMessageToParentMessagePort(
                              JSContext* aCx,
                              uint64_t aMessagePortSerial,
-                             JS::HandleValue aMessage,
+                             JS::Handle<JS::Value> aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
                              ErrorResult& aRv);
 
