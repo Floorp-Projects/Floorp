@@ -8340,8 +8340,8 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, PropertyName *name,
 {
     JS_ASSERT(*emitted == false);
 
-    Shape *lastProperty = NULL;
-    JSFunction *commonGetter = NULL;
+    Shape *lastProperty = nullptr;
+    JSFunction *commonGetter = nullptr;
     JSObject *foundProto = inspector->commonGetPropFunction(pc, &lastProperty, &commonGetter);
     if (!foundProto)
         return true;
@@ -8619,8 +8619,8 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
 {
     JS_ASSERT(*emitted == false);
 
-    Shape *lastProperty = NULL;
-    JSFunction *commonSetter = NULL;
+    Shape *lastProperty = nullptr;
+    JSFunction *commonSetter = nullptr;
     JSObject *foundProto = inspector->commonSetPropFunction(pc, &lastProperty, &commonSetter);
     if (!foundProto)
         return true;

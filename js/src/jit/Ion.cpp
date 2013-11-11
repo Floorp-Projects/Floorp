@@ -1577,7 +1577,7 @@ TrackPropertiesForSingletonScopes(JSContext *cx, JSScript *script, BaselineFrame
     // could access are tracked. These are generally accessed through
     // ALIASEDVAR operations in baseline and will not be tracked even if they
     // have been accessed in baseline code.
-    JSObject *environment = script->function() ? script->function()->environment() : NULL;
+    JSObject *environment = script->function() ? script->function()->environment() : nullptr;
 
     while (environment && !environment->is<GlobalObject>()) {
         if (environment->is<CallObject>() && environment->hasSingletonType())
