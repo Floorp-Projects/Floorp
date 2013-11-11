@@ -5,6 +5,9 @@
 
 #include "nsUCConstructors.h"
 #include "nsMacIcelandicToUnicode.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -17,6 +20,7 @@ nsMacIcelandicToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 #include "macicela.ut"
   };
 
+  Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_MACICELANDIC, true);
   return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                               aOuter, aIID, aResult);
 }
