@@ -256,7 +256,7 @@ SeekableZStream::GetFilter(SeekableZStream::FilterId id)
   case BCJ_X86:
     return BCJ_X86_filter;
   default:
-    return NULL;
+    return nullptr;
   }
-  return NULL;
+  return nullptr;
 }
