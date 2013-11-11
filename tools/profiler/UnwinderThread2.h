@@ -40,7 +40,7 @@ void uwt__deinit();
 // Registers a sampler thread for profiling.  Threads must be
 // registered before calls to call utb__acquire_empty_buffer or
 // utb__release_full_buffer have any effect.  If stackTop is
-// NULL, the call is ignored.
+// nullptr, the call is ignored.
 void uwt__register_thread_for_profiling(void* stackTop);
 
 // Deregister a sampler thread for profiling.
@@ -48,7 +48,7 @@ void uwt__unregister_thread_for_profiling();
 
 // RUNS IN SIGHANDLER CONTEXT 
 // Called in the sampled thread (signal) context.  Get an empty buffer
-// into which ProfileEntries can be put.  It may return NULL if no
+// into which ProfileEntries can be put.  It may return nullptr if no
 // empty buffers can be found, which will be the case if the unwinder
 // thread(s) have fallen behind for some reason.  In this case the
 // sampled thread must simply give up and return from the signal
@@ -56,7 +56,7 @@ void uwt__unregister_thread_for_profiling();
 //
 // If the calling thread has not previously registered itself for
 // profiling via uwt__register_thread_for_profiling, this routine
-// returns NULL.
+// returns nullptr.
 UnwinderThreadBuffer* uwt__acquire_empty_buffer();
 
 // RUNS IN SIGHANDLER CONTEXT
@@ -64,7 +64,7 @@ UnwinderThreadBuffer* uwt__acquire_empty_buffer();
 // that the sampled thread has acquired, handing the contents to
 // the unwinder thread, and, if necessary, passing sufficient
 // information (stack top chunk, + registers) to also do a native
-// unwind.  If 'ucV' is NULL, no native unwind is done.  If non-NULL,
+// unwind.  If 'ucV' is nullptr, no native unwind is done.  If non-nullptr,
 // it is assumed to point to a ucontext_t* that holds the initial 
 // register state for the unwind.  The results of all of this are
 // dumped into |aProfile| (by the unwinder thread, not the calling thread).
