@@ -1333,7 +1333,7 @@ void
 Debugger::slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 {
     JS_ASSERT(!JS_CLIST_IS_EMPTY(&cx->runtime()->onNewGlobalObjectWatchers));
-    if (global->compartment()->options().invisibleToDebugger)
+    if (global->compartment()->options().invisibleToDebugger())
         return;
 
     /*
@@ -1951,7 +1951,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGGER(cx, argc, vp, "addAllGlobalsAsDebuggees", args, dbg);
     AutoDebugModeGC dmgc(cx->runtime());
     for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
-        if (c == dbg->object->compartment() || c->options().invisibleToDebugger)
+        if (c == dbg->object->compartment() || c->options().invisibleToDebugger())
             continue;
         c->zone()->scheduledForDestruction = false;
         GlobalObject *global = c->maybeGlobal();
@@ -2134,7 +2134,7 @@ Debugger::addDebuggeeGlobal(JSContext *cx,
     // with certain testing aides we expose in the shell, so just make addDebuggee
     // throw in that case.
     JSCompartment *debuggeeCompartment = global->compartment();
-    if (debuggeeCompartment->options().invisibleToDebugger) {
+    if (debuggeeCompartment->options().invisibleToDebugger()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_DEBUG_CANT_DEBUG_GLOBAL);
         return false;
