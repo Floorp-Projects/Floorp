@@ -17,7 +17,7 @@ SOURCES += [
     'nsUnknownDecoder.cpp',
 ]
 
-if CONFIG['NECKO_PROTOCOLS'].find('ftp') != -1:
+if 'ftp' in CONFIG['NECKO_PROTOCOLS']:
     SOURCES += [
         'nsFTPDirListingConv.cpp',
         'ParseFTPList.cpp',
