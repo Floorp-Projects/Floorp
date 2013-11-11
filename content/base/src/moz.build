@@ -43,6 +43,9 @@ if CONFIG['MOZ_WEBRTC']:
     SOURCES += [
         'nsDOMDataChannel.cpp',
     ]
+    LOCAL_INCLUDES += [
+        '/netwerk/sctp/datachannel',
+    ]
 
 # Are we targeting x86-32 or x86-64?  If so, we want to include SSE2 code for
 # nsTextFragment.cpp
@@ -184,3 +187,28 @@ LIBRARY_NAME = 'gkconbase_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/caps/include',
+    '/content/events/src',
+    '/content/html/content/src',
+    '/content/html/document/src',
+    '/content/xbl/src',
+    '/content/xml/content/src',
+    '/content/xml/document/src',
+    '/content/xslt/src/xpath',
+    '/content/xul/content/src',
+    '/content/xul/document/src',
+    '/dom/base',
+    '/dom/ipc',
+    '/dom/workers',
+    '/image/src',
+    '/js/ipc',
+    '/js/xpconnect/src',
+    '/js/xpconnect/wrappers',
+    '/layout/base',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/svg',
+    '/layout/xul/base/src',
+    '/netwerk/base/src',
+]

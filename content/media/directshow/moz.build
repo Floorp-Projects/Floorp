@@ -40,3 +40,7 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkcondirectshow_s'
 
+LOCAL_INCLUDES += [
+    '/media/webrtc/trunk/webrtc/modules/video_capture/windows',
+]
+
