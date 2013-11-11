@@ -120,7 +120,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private CustomEditText mUrlEditText;
     private View mUrlBarEntry;
     private ImageView mUrlBarRightEdge;
-    private BrowserToolbarBackground mUrlBarBackground;
     private GeckoTextView mTitle;
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
@@ -185,6 +184,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private final ForegroundColorSpan mDomainColor;
     private final ForegroundColorSpan mPrivateDomainColor;
 
+    private final LightweightTheme mTheme;
+
     private boolean mShowUrl;
     private boolean mTrimURLs;
 
@@ -196,6 +197,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     public BrowserToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
         // BrowserToolbar is attached to BrowserApp only.
         mActivity = (BrowserApp) context;
@@ -272,7 +274,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mAnimatingEntry = false;
 
-        mUrlBarBackground = (BrowserToolbarBackground) findViewById(R.id.url_bar_bg);
         mUrlBarViewOffset = res.getDimensionPixelSize(R.dimen.url_bar_offset_left);
         mDefaultForwardMargin = res.getDimensionPixelSize(R.dimen.forward_default_offset);
         mUrlDisplayContainer = findViewById(R.id.url_display_container);
@@ -1772,7 +1773,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
             updateForwardButton(tab.canDoForward());
 
             final boolean isPrivate = tab.isPrivate();
-            mUrlBarBackground.setPrivateMode(isPrivate);
             setPrivateMode(isPrivate);
             mTabs.setPrivateMode(isPrivate);
             mTitle.setPrivateMode(isPrivate);
@@ -1859,5 +1859,23 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 tab.addToReadingList();
             }
         }
+    }
+
+    @Override
+    public void onLightweightThemeChanged() {
+        Drawable drawable = mTheme.getDrawable(this);
+        if (drawable == null)
+            return;
+
+        StateListDrawable stateList = new StateListDrawable();
+        stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.background_private));
+        stateList.addState(EMPTY_STATE_SET, drawable);
+
+        setBackgroundDrawable(stateList);
+    }
+
+    @Override
+    public void onLightweightThemeReset() {
+        setBackgroundResource(R.drawable.url_bar_bg);
     }
 }
