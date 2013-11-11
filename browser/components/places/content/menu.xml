@@ -80,8 +80,8 @@
               elt = elt.parentNode;
 
             // Calculate positions taking care of arrowscrollbox
-            let eventY = aEvent.layerY;
             let scrollbox = this._scrollBox;
+            let eventY = aEvent.layerY + (scrollbox.boxObject.y - this.boxObject.y);
             let scrollboxOffset = scrollbox.scrollBoxObject.y -
                                   (scrollbox.boxObject.y - this.boxObject.y);
             let eltY = elt.boxObject.y - scrollboxOffset;
@@ -483,6 +483,123 @@
         this._cleanupDragDetails();
       ]]></handler>
 
+    </handlers>
+  </binding>
+
+  <!-- Most of this is copied from the arrowpanel binding in popup.xml -->
+  <binding id="places-popup-arrow"
+           extends="chrome://browser/content/places/menu.xml#places-popup-base">
+    <content flip="both" side="top" position="bottomcenter topleft">
+      <xul:box anonid="container" class="panel-arrowcontainer" flex="1"
+               xbl:inherits="side,panelopen">
+        <xul:box anonid="arrowbox" class="panel-arrowbox">
+          <xul:image anonid="arrow" class="panel-arrow" xbl:inherits="side"/>
+        </xul:box>
+        <xul:box class="panel-arrowcontent" xbl:inherits="side,align,dir,orient,pack" flex="1">
+          <xul:vbox class="menupopup-drop-indicator-bar" hidden="true">
+            <xul:image class="menupopup-drop-indicator" mousethrough="always"/>
+          </xul:vbox>
+          <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical"
+                              smoothscroll="false">
+            <children/>
+          </xul:arrowscrollbox>
+        </xul:box>
+      </xul:box>
+    </content>
+
+    <implementation>
+      <method name="adjustArrowPosition">
+        <body><![CDATA[
+          var arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
+
+          var anchor = this.anchorNode;
+          if (!anchor) {
+            arrow.hidden = true;
+            return;
+          }
+
+          var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+          var arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
+
+          // if this panel has a "sliding" arrow, we may have previously set margins...
+          arrowbox.style.removeProperty("margin");
+
+          var position = this.alignmentPosition;
+          if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
+            container.orient = "";
+            arrowbox.orient = "vertical";
+            if (position.indexOf("_after") > 0) {
+              arrowbox.pack = "end";
+              arrowbox.style.marginBottom = this.alignmentOffset + "px";
+            } else {
+              arrowbox.pack = "start";
+              arrowbox.style.marginTop = this.alignmentOffset + "px";
+            }
+
+            // The assigned side stays the same regardless of direction.
+            var isRTL = (window.getComputedStyle(this).direction == "rtl");
+
+            if (position.indexOf("start_") == 0) {
+              container.dir = "reverse";
+              this.setAttribute("side", isRTL ? "left" : "right");
+            }
+            else {
+              container.dir = "";
+              this.setAttribute("side", isRTL ? "right" : "left");
+            }
+          }
+          else if (position.indexOf("before_") == 0 || position.indexOf("after_") == 0) {
+            container.orient = "vertical";
+            arrowbox.orient = "";
+            if (position.indexOf("_end") > 0) {
+              arrowbox.pack = "end";
+              arrowbox.style.marginRight = this.alignmentOffset + "px";
+            } else {
+              arrowbox.pack = "start";
+              arrowbox.style.marginLeft = this.alignmentOffset + "px";
+            }
+
+            if (position.indexOf("before_") == 0) {
+              container.dir = "reverse";
+              this.setAttribute("side", "bottom");
+            }
+            else {
+              container.dir = "";
+              this.setAttribute("side", "top");
+            }
+          }
+          arrow.hidden = false;
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="popupshowing" phase="target"><![CDATA[
+        this.adjustArrowPosition();
+      ]]></handler>
+      <handler event="popupshown" phase="target"><![CDATA[
+        this.setAttribute("panelopen", "true");
+
+        // Allow anchoring to a specified element inside the anchor.
+        var anchorClass = this.getAttribute("anonanchorclass");
+        if (anchorClass && this.anchorNode) {
+          let anchor =
+            document.getAnonymousElementByAttribute(this.anchorNode, "class",
+                                                    anchorClass);
+          if (anchor) {
+            let offsetX = anchor.boxObject.width / 2;
+            if (this.alignmentPosition.endsWith("_end"))
+              offsetX *= -1;
+            this.popupBoxObject.moveToAnchor(anchor, this.alignmentPosition,
+                                             offsetX, 0,
+                                             false);
+            this.adjustArrowPosition();
+          }
+        }
+      ]]></handler>
+      <handler event="popuphidden" phase="target"><![CDATA[
+        this.removeAttribute("panelopen");
+      ]]></handler>
     </handlers>
   </binding>
 </bindings>
