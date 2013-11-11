@@ -1,0 +1,556 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings id="browserToolbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="toolbar">
+    <resources>
+      <stylesheet src="chrome://global/skin/toolbar.css"/>
+    </resources>
+    <implementation implements="nsIAccessibleProvider">
+      <field name="overflowedDuringConstruction">null</field>
+
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULToolbar;
+        </getter>
+      </property>
+
+      <constructor><![CDATA[
+          let scope = {};
+          Cu.import("resource:///modules/CustomizableUI.jsm", scope);
+          // Add an early overflow event listener that will mark if the
+          // toolbar overflowed during construction.
+          if (scope.CustomizableUI.isAreaOverflowable(this.id)) {
+            this.addEventListener("overflow", this);
+            this.addEventListener("underflow", this);
+          }
+
+          if (document.readyState == "complete") {
+            this._init();
+          } else {
+            // Need to wait until XUL overlays are loaded. See bug 554279.
+            let self = this;
+            document.addEventListener("readystatechange", function onReadyStateChange() {
+              if (document.readyState != "complete")
+                return;
+              document.removeEventListener("readystatechange", onReadyStateChange, false);
+              self._init();
+            }, false);
+          }
+      ]]></constructor>
+
+      <method name="_init">
+        <body><![CDATA[
+          let scope = {};
+          Cu.import("resource:///modules/CustomizableUI.jsm", scope);
+          let CustomizableUI = scope.CustomizableUI;
+
+          // Searching for the toolbox palette in the toolbar binding because
+          // toolbars are constructed first.
+          let toolbox = this.toolbox;
+          if (toolbox && !toolbox.palette) {
+            for (let node of toolbox.children) {
+              if (node.localName == "toolbarpalette") {
+                // Hold on to the palette but remove it from the document.
+                toolbox.palette = node;
+                toolbox.removeChild(node);
+                break;
+              }
+            }
+          }
+
+          // pass the current set of children for comparison with placements:
+          let children = [node.id for (node of this.childNodes)
+                          if (node.getAttribute("skipintoolbarset") != "true" && node.id)];
+          CustomizableUI.registerToolbarNode(this, children);
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "overflow" && aEvent.detail > 0) {
+            if (this.overflowable && this.overflowable.initialized) {
+              this.overflowable.onOverflow(aEvent);
+            } else {
+              this.overflowedDuringConstruction = aEvent;
+            }
+          } else if (aEvent.type == "underflow" && aEvent.detail > 0) {
+            this.overflowedDuringConstruction = null;
+          }
+        ]]></body>
+      </method>
+
+      <method name="insertItem">
+        <parameter name="aId"/>
+        <parameter name="aBeforeElt"/>
+        <parameter name="aWrapper"/>
+        <body><![CDATA[
+          if (aWrapper) {
+            Cu.reportError("Can't insert " + aId + ": using insertItem " +
+                           "no longer supports wrapper elements.");
+            return null;
+          }
+
+          // Hack, the customizable UI code makes this be the last position
+          let pos = null;
+          if (aBeforeElt) {
+            let beforeInfo = CustomizableUI.getPlacementOfWidget(aBeforeElt.id);
+            if (beforeInfo.area != this.id) {
+              Cu.reportError("Can't insert " + aId + " before " +
+                             aBeforeElt.id + " which isn't in this area (" +
+                             this.id + ").");
+              return null;
+            }
+            pos = beforeInfo.position;
+          }
+
+          CustomizableUI.addWidgetToArea(aId, this.id, pos);
+          return this.ownerDocument.getElementById(aId);
+        ]]></body>
+      </method>
+
+      <property name="toolbarName"
+                onget="return this.getAttribute('toolbarname');"
+                onset="this.setAttribute('toolbarname', val); return val;"/>
+
+      <property name="customizationTarget" readonly="true">
+        <getter><![CDATA[
+          if (this._customizationTarget)
+            return this._customizationTarget;
+
+          let id = this.getAttribute("customizationtarget");
+          if (id)
+            this._customizationTarget = document.getElementById(id);
+
+          if (this._customizationTarget)
+            this._customizationTarget.insertItem = this.insertItem.bind(this);
+          else
+            this._customizationTarget = this;
+
+          return this._customizationTarget;
+        ]]></getter>
+      </property>
+
+      <property name="toolbox" readonly="true">
+        <getter><![CDATA[
+          if (this._toolbox)
+            return this._toolbox;
+
+          let toolboxId = this.getAttribute("toolboxid");
+          if (toolboxId) {
+            let toolbox = document.getElementById(toolboxId);
+            if (toolbox) {
+              if (toolbox.externalToolbars.indexOf(this) == -1)
+                toolbox.externalToolbars.push(this);
+
+              this._toolbox = toolbox;
+            }
+          }
+
+          if (!this._toolbox && this.parentNode &&
+              this.parentNode.localName == "toolbox") {
+            this._toolbox = this.parentNode;
+          }
+
+          return this._toolbox;
+        ]]></getter>
+      </property>
+
+      <property name="currentSet">
+        <getter><![CDATA[
+          let currentWidgets = new Set();
+          for (let node of this.customizationTarget.children) {
+            let realNode = node.localName == "toolbarpaletteitem" ? node.firstChild : node;
+            if (realNode.getAttribute("skipintoolbarset") != "true") {
+              currentWidgets.add(realNode.id);
+            }
+          }
+          if (this.getAttribute("overflowing") == "true") {
+            let overflowTarget = this.getAttribute("overflowtarget");
+            let overflowList = this.ownerDocument.getElementById(overflowTarget);
+            for (let node of overflowList.children) {
+              let realNode = node.localName == "toolbarpaletteitem" ? node.firstChild : node;
+              if (realNode.getAttribute("skipintoolbarset") != "true") {
+                currentWidgets.add(realNode.id);
+              }
+            }
+          }
+          let orderedPlacements = CustomizableUI.getWidgetIdsInArea(this.id);
+          return orderedPlacements.filter((x) => currentWidgets.has(x)).join(',');
+        ]]></getter>
+        <setter><![CDATA[
+          // Get list of new and old ids:
+          let newVal = (val || '').split(',').filter(x => x);
+          let oldIds = CustomizableUI.getWidgetIdsInArea(this.id);
+
+          // Get a list of items only in the new list
+          let newIds = [id for (id of newVal) if (oldIds.indexOf(id) == -1)];
+          CustomizableUI.beginBatchUpdate();
+          for (let newId of newIds) {
+            oldIds = CustomizableUI.getWidgetIdsInArea(this.id);
+            let nextId = newId;
+            let pos;
+            do {
+              // Get the next item
+              nextId = newVal[newVal.indexOf(nextId) + 1];
+              // Figure out where it is in the old list
+              pos = oldIds.indexOf(nextId);
+              // If it's not in the old list, repeat:
+            } while (pos == -1 && nextId);
+            if (pos == -1) {
+              pos = null; // We didn't find anything, insert at the end
+            }
+            CustomizableUI.addWidgetToArea(newId, this.id, pos);
+          }
+
+          let currentIds = this.currentSet.split(',');
+          let removedIds = [id for (id of currentIds) if (newIds.indexOf(id) == -1 && newVal.indexOf(id) == -1)];
+          for (let removedId of removedIds) {
+            CustomizableUI.removeWidgetFromArea(removedId);
+          }
+          CustomizableUI.endBatchUpdate();
+        ]]></setter>
+      </property>
+
+
+    </implementation>
+  </binding>
+
+  <binding id="toolbar-menubar-stub">
+    <implementation>
+      <property name="toolbox" readonly="true">
+        <getter><![CDATA[
+          if (this._toolbox)
+            return this._toolbox;
+
+          if (this.parentNode && this.parentNode.localName == "toolbox") {
+            this._toolbox = this.parentNode;
+          }
+
+          return this._toolbox;
+        ]]></getter>
+      </property>
+      <property name="currentSet" readonly="true">
+        <getter><![CDATA[
+          return this.getAttribute("defaultset");
+        ]]></getter>
+      </property>
+      <method name="insertItem">
+        <body><![CDATA[
+          return null;
+        ]]></body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- The toolbar-menubar-autohide and toolbar-drag bindings are almost
+       verbatim copies of their toolkit counterparts - they just inherit from
+       the customizableui's toolbar binding instead of toolkit's. We're currently
+       OK with the maintainance burden of having two copies of a binding, since
+       the long term goal is to move the customization framework into toolkit. -->
+
+  <binding id="toolbar-menubar-autohide"
+           extends="chrome://browser/content/customizableui/toolbar.xml#toolbar">
+    <implementation>
+      <constructor>
+        this._setInactive();
+      </constructor>
+      <destructor>
+        this._setActive();
+      </destructor>
+
+      <field name="_inactiveTimeout">null</field>
+
+      <field name="_contextMenuListener"><![CDATA[({
+        toolbar: this,
+        contextMenu: null,
+
+        get active () !!this.contextMenu,
+
+        init: function (event) {
+          let node = event.target;
+          while (node != this.toolbar) {
+            if (node.localName == "menupopup")
+              return;
+            node = node.parentNode;
+          }
+
+          let contextMenuId = this.toolbar.getAttribute("context");
+          if (!contextMenuId)
+            return;
+
+          this.contextMenu = document.getElementById(contextMenuId);
+          if (!this.contextMenu)
+            return;
+
+          this.contextMenu.addEventListener("popupshown", this, false);
+          this.contextMenu.addEventListener("popuphiding", this, false);
+          this.toolbar.addEventListener("mousemove", this, false);
+        },
+        handleEvent: function (event) {
+          switch (event.type) {
+            case "popupshown":
+              this.toolbar.removeEventListener("mousemove", this, false);
+              break;
+            case "popuphiding":
+            case "mousemove":
+              this.toolbar._setInactiveAsync();
+              this.toolbar.removeEventListener("mousemove", this, false);
+              this.contextMenu.removeEventListener("popuphiding", this, false);
+              this.contextMenu.removeEventListener("popupshown", this, false);
+              this.contextMenu = null;
+              break;
+          }
+        }
+      })]]></field>
+
+      <method name="_setInactive">
+        <body><![CDATA[
+          this.setAttribute("inactive", "true");
+        ]]></body>
+      </method>
+
+      <method name="_setInactiveAsync">
+        <body><![CDATA[
+          this._inactiveTimeout = setTimeout(function (self) {
+            if (self.getAttribute("autohide") == "true") {
+              self._inactiveTimeout = null;
+              self._setInactive();
+            }
+          }, 0, this);
+        ]]></body>
+      </method>
+
+      <method name="_setActive">
+        <body><![CDATA[
+          if (this._inactiveTimeout) {
+            clearTimeout(this._inactiveTimeout);
+            this._inactiveTimeout = null;
+          }
+          this.removeAttribute("inactive");
+        ]]></body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="DOMMenuBarActive"     action="this._setActive();"/>
+      <handler event="popupshowing"         action="this._setActive();"/>
+      <handler event="mousedown" button="2" action="this._contextMenuListener.init(event);"/>
+      <handler event="DOMMenuBarInactive"><![CDATA[
+        if (!this._contextMenuListener.active)
+          this._setInactiveAsync();
+      ]]></handler>
+    </handlers>
+  </binding>
+
+  <binding id="toolbar-drag"
+           extends="chrome://browser/content/customizableui/toolbar.xml#toolbar">
+    <implementation>
+      <field name="_dragBindingAlive">true</field>
+      <constructor><![CDATA[
+        if (!this._draggableStarted) {
+          this._draggableStarted = true;
+          try {
+            let tmp = {};
+            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
+            let draggableThis = new tmp.WindowDraggingElement(this);
+            draggableThis.mouseDownCheck = function(e) {
+              return this._dragBindingAlive;
+            };
+          } catch (e) {}
+        }
+      ]]></constructor>
+    </implementation>
+  </binding>
+
+
+<!-- This is a peculiar binding. It is here to deal with overlayed/inserted add-on content,
+      and immediately direct such content elsewhere. -->
+  <binding id="addonbar-delegating">
+    <implementation>
+      <constructor><![CDATA[
+          // Reading these immediately so nobody messes with them anymore:
+          this._delegatingToolbar = this.getAttribute("toolbar-delegate");
+          // Leaving those in here to unbreak some code:
+          if (document.readyState == "complete") {
+            this._init();
+          } else {
+            // Need to wait until XUL overlays are loaded. See bug 554279.
+            let self = this;
+            document.addEventListener("readystatechange", function onReadyStateChange() {
+              if (document.readyState != "complete")
+                return;
+              document.removeEventListener("readystatechange", onReadyStateChange, false);
+              self._init();
+            }, false);
+          }
+      ]]></constructor>
+
+      <method name="_init">
+        <body><![CDATA[
+          // Searching for the toolbox palette in the toolbar binding because
+          // toolbars are constructed first.
+          let toolbox = this.toolbox;
+          if (toolbox && !toolbox.palette) {
+            for (let node of toolbox.children) {
+              if (node.localName == "toolbarpalette") {
+                // Hold on to the palette but remove it from the document.
+                toolbox.palette = node;
+                toolbox.removeChild(node);
+              }
+            }
+          }
+
+          // pass the current set of children for comparison with placements:
+          let children = [node.id for (node of this.childNodes)
+                          if (node.getAttribute("skipintoolbarset") != "true" && node.id)];
+          CustomizableUI.registerToolbarNode(this, children);
+          this.evictNodes();
+          // We can't easily use |this| or strong bindings for the observer fn here
+          // because that creates leaky circular references when the node goes away,
+          // and XBL destructors are unreliable.
+          let mutationObserver = new MutationObserver(function(mutations) {
+            if (!mutations.length) {
+              return;
+            }
+            let toolbar = mutations[0].target;
+            // Can't use our own attribute because we might not have one if we're set to
+            // collapsed
+            let areCustomizing = toolbar.ownerDocument.documentElement.getAttribute("customizing");
+            if (!toolbar._isModifying && !areCustomizing) {
+              toolbar.evictNodes();
+            }
+          });
+          mutationObserver.observe(this, {childList: true});
+        ]]></body>
+      </method>
+      <method name="evictNodes">
+        <body><![CDATA[
+          this._isModifying = true;
+          let i = this.childNodes.length;
+          while (i--) {
+            let node = this.childNodes[i];
+            if (this.childNodes[i].id) {
+              this.evictNode(this.childNodes[i]);
+            } else {
+              node.remove();
+            }
+          }
+          this._isModifying = false;
+        ]]></body>
+      </method>
+      <method name="evictNode">
+        <parameter name="aNode"/>
+        <body>
+        <![CDATA[
+          if (this._whiteListed.has(aNode.id) || CustomizableUI.isSpecialWidget(aNode.id)) {
+            return;
+          }
+          const kItemMaxWidth = 100;
+          let oldParent = aNode.parentNode;
+
+          try {
+            aNode.setAttribute("removable", "true");
+
+            let nodeWidth = aNode.getBoundingClientRect().width;
+            if (nodeWidth == 0 || nodeWidth > kItemMaxWidth) {
+              throw new Error(aNode.id + " is too big (" + nodeWidth +
+                              "px wide), moving to the palette");
+            }
+            CustomizableUI.addWidgetToArea(aNode.id, this._delegatingToolbar);
+          } catch (ex) {
+            Cu.reportError(ex);
+            // This will throw if the node is too big, or can't be moved there for
+            // some reason. Try to remove it anyway:
+            try {
+              CustomizableUI.removeWidgetFromArea(aNode.id);
+            } catch (ex) {
+              Cu.reportError(ex);
+              aNode.remove();
+            }
+          }
+
+          // Surprise: addWidgetToArea(palette) will get you nothing if the palette
+          // is not constructed yet. Fix:
+          if (aNode.parentNode == oldParent) {
+            let palette = this.toolbox.palette;
+            if (palette && oldParent != palette) {
+              palette.appendChild(aNode);
+            }
+          }
+        ]]></body>
+      </method>
+      <method name="insertItem">
+        <parameter name="aId"/>
+        <parameter name="aBeforeElt"/>
+        <parameter name="aWrapper"/>
+        <body><![CDATA[
+          if (aWrapper) {
+            Cu.reportError("Can't insert " + aId + ": using insertItem " +
+                           "no longer supports wrapper elements.");
+            return null;
+          }
+
+          let widget = CustomizableUI.getWidget(aId);
+          widget = widget && widget.forWindow(window);
+          let node = widget && widget.node;
+          if (!node) {
+            return null;
+          }
+
+          this._isModifying = true;
+          // Temporarily add it here so it can have a width, then ditch it:
+          this.appendChild(node);
+          this.evictNode(node);
+          this._isModifying = false;
+          // We will now have moved stuff around; kick off an aftercustomization event
+          // so add-ons know we've just moved their stuff:
+          if (window.gCustomizeMode) {
+            window.gCustomizeMode.dispatchToolboxEvent("aftercustomization");
+          }
+          return node;
+        ]]></body>
+      </method>
+      <property name="customizationTarget" readonly="true">
+        <getter><![CDATA[
+          return this;
+        ]]></getter>
+      </property>
+      <property name="currentSet">
+        <getter><![CDATA[
+          return [node.id for (node of this.children)].join(',');
+        ]]></getter>
+        <setter><![CDATA[
+          let v = val.split(',');
+          let newButtons = v.filter(x => x && (!this._whiteListed.has(x) &&
+                                               !CustomizableUI.isSpecialWidget(x) &&
+                                               !this._currentSetMigrated.has(x)));
+          for (x of newButtons) {
+            this._currentSetMigrated.add(x);
+            this.insertItem(x);
+          }
+        ]]></setter>
+      </property>
+      <property name="toolbox" readonly="true">
+        <getter><![CDATA[
+          if (!this._toolbox && this.parentNode &&
+              this.parentNode.localName == "toolbox") {
+            this._toolbox = this.parentNode;
+          }
+
+          return this._toolbox;
+        ]]></getter>
+      </property>
+      <field name="_whiteListed" readonly="true">new Set(["addonbar-closebutton", "status-bar"])</field>
+      <field name="_isModifying">false</field>
+      <field name="_currentSetMigrated">new Set()</field>
+    </implementation>
+  </binding>
+</bindings>
