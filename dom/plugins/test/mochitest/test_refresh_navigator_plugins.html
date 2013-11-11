@@ -10,6 +10,8 @@
   </head>
   <body>
     <script class="testbody" type="application/javascript">
+      "use strict";
+
       SimpleTest.waitForExplicitFinish();
       setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
@@ -28,11 +30,11 @@
       };
       obsService.addObserver(observer, "plugin-info-updated", false);
 
-      var navTestPlugin = navigator.plugins.namedItem("Test Plug-in");
-      ok(navTestPlugin, "navigator.plugins should have Test Plug-in");
+      var navTestPlugin1 = navigator.plugins.namedItem("Test Plug-in");
+      ok(navTestPlugin1, "navigator.plugins should have Test Plug-in");
       var tagTestPlugin = null;
       for (var plugin of pluginTags) {
-        if (plugin.name == navTestPlugin.name) {
+        if (plugin.name == navTestPlugin1.name) {
           tagTestPlugin = plugin;
           break;
         }
@@ -47,8 +49,8 @@
       tagTestPlugin.enabledState = Components.interfaces.nsIPluginTag.STATE_DISABLED;
 
       function testPart2() {
-        var navTestPlugin = navigator.plugins.namedItem("Test Plug-in");
-        ok(!navTestPlugin, "now navigator.plugins should not have Test Plug-in");
+        var navTestPlugin2 = navigator.plugins.namedItem("Test Plug-in");
+        ok(!navTestPlugin2, "now navigator.plugins should not have Test Plug-in");
         ok(!navigator.mimeTypes[mimeType], "now navigator.mimeTypes should not have an entry for '" + mimeType + "'");
 
         nextTest = testPart3;
@@ -56,7 +58,8 @@
       }
 
       function testPart3() {
-        ok(navTestPlugin, "now navigator.plugins should have Test Plug-in again");
+        var navTestPlugin3 = navigator.plugins.namedItem("Test Plug-in");
+        ok(navTestPlugin3, "now navigator.plugins should have Test Plug-in again");
         ok(navigator.mimeTypes[mimeType], "now navigator.mimeTypes should have an entry for '" + mimeType + "' again");
         obsService.removeObserver(observer, "plugin-info-updated");
         SimpleTest.finish();
