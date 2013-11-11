@@ -186,8 +186,9 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
 {
   NS_ABORT_IF_FALSE(aResult.IsNull(), "Unexpected type for SMIL value");
 
-  // nsSVGSMILTransform constructor should be expecting array with 3 params
-  PR_STATIC_ASSERT(SVGTransformSMILData::NUM_SIMPLE_PARAMS == 3);
+  static_assert(SVGTransformSMILData::NUM_SIMPLE_PARAMS == 3,
+                "nsSVGSMILTransform constructor should be expecting array "
+                "with 3 params");
 
   float params[3] = { 0.f };
   int32_t numParsed = ParseParameterList(aSpec, params, 3);
