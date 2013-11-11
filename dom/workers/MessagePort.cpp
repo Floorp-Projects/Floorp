@@ -72,7 +72,7 @@ MessagePort::~MessagePort()
 }
 
 void
-MessagePort::PostMessageMoz(JSContext* aCx, JS::HandleValue aMessage,
+MessagePort::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                             const Optional<Sequence<JS::Value>>& aTransferable,
                             ErrorResult& aRv)
 {
@@ -232,7 +232,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessagePort,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 JSObject*
-MessagePort::WrapObject(JSContext* aCx, JS::HandleObject aScope)
+MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   AssertCorrectThread();
 

@@ -37,7 +37,7 @@ protected:
 
 public:
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::HandleObject aScope) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   virtual JSObject*
   WrapGlobalObject(JSContext* aCx, JS::CompartmentOptions& aOptions,
