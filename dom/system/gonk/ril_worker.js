@@ -919,7 +919,8 @@ let RIL = {
 
     let contact = options.contact;
     let iccid = RIL.iccInfo.iccid;
-    if (contact.contactId.startsWith(iccid)) {
+    if (typeof contact.contactId === "string" &&
+        contact.contactId.startsWith(iccid)) {
       let recordIndex = contact.contactId.substring(iccid.length);
       contact.pbrIndex = Math.floor(recordIndex / ICC_MAX_LINEAR_FIXED_RECORDS);
       contact.recordId = recordIndex % ICC_MAX_LINEAR_FIXED_RECORDS;
