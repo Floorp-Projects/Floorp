@@ -167,12 +167,13 @@ const PanelUI = {
         // Fall through
       case "popuphiding":
         // Fall through
-      case "popuphidden": {
+      case "popuphidden":
         this._updatePanelButton(aEvent.target);
         break;
-      }
       case "mousedown":
-        // Fall through
+        if (aEvent.button == 0)
+          this.toggle(aEvent);
+        break;
       case "keypress":
         this.toggle(aEvent);
         break;
