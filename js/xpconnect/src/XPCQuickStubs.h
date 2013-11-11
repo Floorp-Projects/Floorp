@@ -92,14 +92,6 @@ xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
 bool
 xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp);
 
-bool
-xpc_qsThrowMethodFailedWithCcx(XPCCallContext &ccx, nsresult rv);
-
-bool
-xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
-                                   const char *ifaceName,
-                                   const char *memberName);
-
 /**
  * Fail after converting a method argument fails.
  *
