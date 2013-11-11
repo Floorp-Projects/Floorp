@@ -1660,7 +1660,7 @@ CASE(JSOP_RETRVAL)
         if (!REGS.fp()->isYielding())
             REGS.fp()->epilogue(cx);
         else
-            probes::ExitScript(cx, script, script->function(), REGS.fp());
+            probes::ExitScript(cx, script, script->function(), REGS.fp()->hasPushedSPSFrame());
 
 #if defined(JS_ION)
   jit_return_pop_frame:
@@ -3437,7 +3437,7 @@ DEFAULT()
     if (!REGS.fp()->isYielding())
         REGS.fp()->epilogue(cx);
     else
-        probes::ExitScript(cx, script, script->function(), REGS.fp());
+        probes::ExitScript(cx, script, script->function(), REGS.fp()->hasPushedSPSFrame());
 
     gc::MaybeVerifyBarriers(cx, true);
 
