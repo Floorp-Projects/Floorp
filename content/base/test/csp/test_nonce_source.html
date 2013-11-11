@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test CSP 1.1 nonce-source for scripts and styles</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="visibility:hidden">
+  <iframe style="width:100%;" id='cspframe'></iframe>
+</div>
+<script class="testbody" type="text/javascript">
+
+var testsRun = 0;
+var totalTests = 20;
+
+var inlineScriptTestsRun = 0;
+var totalInlineScriptTests = 4;
+
+var scriptNonceViolations = 0;
+var expectedScriptNonceViolations = 2;
+var scriptInlineViolations = 0;
+var expectedScriptInlineViolations = 1;
+
+// This is used to watch the blocked data bounce off CSP
+function examiner() {
+  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+  SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
+}
+
+examiner.prototype = {
+  observe: function(subject, topic, data) {
+    if (!SpecialPowers.can_QI(subject))
+      return;
+
+    var testid_re = new RegExp("testid=([a-z0-9_]+)");
+
+    //_good things better be allowed!
+    //_bad things better be blocked!
+
+    if (topic === "http-on-modify-request") {
+      // these things were allowed by CSP
+      var allowed_uri = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
+      if (!testid_re.test(allowed_uri)) return;
+      var testid = testid_re.exec(allowed_uri)[1];
+      ok(/_good/.test(testid), "Allowed URI with testid " + testid);
+      ranTests(1);
+    }
+
+    if (topic === "csp-on-violate-policy") {
+      try {
+        // if it is an blocked external load, subject will be the URI of the resource
+        var blocked_uri = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+        if (!testid_re.test(blocked_uri)) return;
+        var testid = testid_re.exec(blocked_uri)[1];
+        ok(/_bad/.test(testid), "Blocked URI with testid " + testid);
+        ranTests(1);
+      } catch (e) {
+        // if the subject is blocked inline, data will be a violation msg (defined at the top of contentSecurityPolicy.js)
+        var violation_msg = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsISupportsCString"), "data");
+        if (/Inline Script/.test(violation_msg)) {
+          if (/Inline Script had invalid nonce/.test(violation_msg))
+            scriptNonceViolations++;
+          if (/Inline Scripts will not execute/.test(violation_msg))
+            scriptInlineViolations++;
+          window.inlineScriptTestResult("blocked", "blocked",
+                                        "Blocked because " + violation_msg);
+        }
+      }
+    }
+  },
+  // must eventually call this to remove the listener, or mochitests might get borked.
+  remove: function() {
+    SpecialPowers.removeObserver(this, "http-on-modify-request");
+    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+  }
+}
+
+var inlineScriptTestResult = function(testIs, testShouldBe, description) {
+  if (testIs !== testShouldBe) {
+    ok(false, description);
+  } else {
+    ok(true, description);
+  }
+  ranTests(1)
+
+  inlineScriptTestsRun++;
+  if (inlineScriptTestsRun == totalInlineScriptTests) {
+    if (scriptNonceViolations != expectedScriptNonceViolations)
+      ok(false, "The number of reported script nonce violations does not match expected; got " + scriptNonceViolations + ", expected " + expectedScriptNonceViolations);
+    if (scriptInlineViolations != expectedScriptInlineViolations)
+      ok(false, "The number of reported inline script  violations does not match expected; got " + scriptInlineViolations + ", expected " + expectedScriptInlineViolations);
+    ranTests(2);
+  }
+}
+
+function cleanup() {
+  // remove the observer so we don't bork other tests
+  window.examiner.remove();
+  // finish the tests
+  SimpleTest.finish();
+}
+
+function ranTests(num) {
+  testsRun += num;
+  if (testsRun < totalTests) {
+    return;
+  }
+  cleanup();
+}
+
+function checkStyles () {
+  var cspframe = document.getElementById('cspframe');
+  var getElementColorById = function (id) {
+    return window.getComputedStyle(cspframe.contentDocument.getElementById(id), null).color;
+  };
+  // Inline style tries to change an element's color to green. If blocked, the
+  // element's color will be the default black.
+  var green = "rgb(0, 128, 0)";
+  var black = "rgb(0, 0, 0)";
+
+  is(getElementColorById('inline-style-correct-nonce'), green, "Inline style with correct nonce allowed");
+  is(getElementColorById('inline-style-incorrect-nonce'), black, "Inline style with incorrect nonce blocked");
+  is(getElementColorById('inline-style-correct-script-nonce'), black, "Inline style with correct nonce for scripts (but incorrect nonce for styles) blocked");
+  is(getElementColorById('inline-style-no-nonce'), black, "Inline style with no nonce blocked");
+
+  ranTests(4);
+}
+
+//////////////////////////////////////////////////////////////////////
+// set up and go
+window.examiner = new examiner();
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true],
+          ["security.csp.experimentalEnabled", true]]},
+  function() {
+    // save this for last so that our listeners are registered.
+    // ... this loads the testbed of good and bad requests.
+    document.getElementById('cspframe').src = 'file_nonce_source.html';
+    document.getElementById('cspframe').addEventListener('load', checkStyles, false);
+  });
+</script>
+</pre>
+</body>
+</html>

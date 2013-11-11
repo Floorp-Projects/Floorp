@@ -26,11 +26,18 @@ from .sandbox_symbols import compute_final_target
 class TreeMetadata(object):
     """Base class for all data being captured."""
 
+    def __init__(self):
+        self._ack = False
+
+    def ack(self):
+        self._ack = True
+
 
 class ReaderSummary(TreeMetadata):
     """A summary of what the reader did."""
 
     def __init__(self, total_file_count, total_execution_time):
+        TreeMetadata.__init__(self)
         self.total_file_count = total_file_count
         self.total_execution_time = total_execution_time
 
@@ -53,6 +60,8 @@ class SandboxDerived(TreeMetadata):
     )
 
     def __init__(self, sandbox):
+        TreeMetadata.__init__(self)
+
         # Capture the files that were evaluated to build this sandbox.
         self.sandbox_main_path = sandbox.main_path
         self.sandbox_all_paths = sandbox.all_paths

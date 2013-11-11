@@ -17,7 +17,7 @@ DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
 # 'application.ini' breaks firefox build config. So we use something different.
 metroapp.ini: metroapp.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
 	$(RM) "metroapp.ini"
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+	$(call py_action,preprocessor,$(DEFINES) $< -o $@)
 
 libs:: metroapp.ini
 	$(INSTALL) metroapp.ini $(FINAL_TARGET)

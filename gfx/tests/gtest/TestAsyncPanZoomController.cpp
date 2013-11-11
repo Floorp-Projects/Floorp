@@ -113,6 +113,25 @@ void ApzcPan(AsyncPanZoomController* apzc, int& aTime, int aTouchStartY, int aTo
   status = apzc->HandleInputEvent(mti);
 }
 
+static void
+ApzcPinch(AsyncPanZoomController* aApzc, int aFocusX, int aFocusY, float aScale) {
+  aApzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
+                                            0,
+                                            ScreenPoint(aFocusX, aFocusY),
+                                            10.0,
+                                            10.0));
+  aApzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
+                                            0,
+                                            ScreenPoint(aFocusX, aFocusY),
+                                            10.0 * aScale,
+                                            10.0));
+  aApzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
+                                            0,
+                                            ScreenPoint(aFocusX, aFocusY),
+                                            10.0 * aScale,
+                                            10.0 * aScale));
+}
+
 TEST(AsyncPanZoomController, Constructor) {
   // RefCounted class can't live in the stack
   nsRefPtr<MockContentController> mcc = new MockContentController();
@@ -136,21 +155,7 @@ TEST(AsyncPanZoomController, Pinch) {
   EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(2);
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
 
-  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
-                                           0,
-                                           ScreenPoint(250, 300),
-                                           10.0,
-                                           10.0));
-  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                                           0,
-                                           ScreenPoint(250, 300),
-                                           12.5,
-                                           10.0));
-  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
-                                           0,
-                                           ScreenPoint(250, 300),
-                                           12.5,
-                                           12.5));
+  ApzcPinch(apzc, 250, 300, 1.25);
 
   // the visible area of the document in CSS pixels is now x=305 y=310 w=40 h=80
   fm = apzc->GetFrameMetrics();
@@ -165,21 +170,7 @@ TEST(AsyncPanZoomController, Pinch) {
   apzc->SetFrameMetrics(fm);
   // the visible area of the document in CSS pixels is x=930 y=5 w=50 h=100
 
-  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
-                                           0,
-                                           ScreenPoint(250, 300),
-                                           10.0,
-                                           10.0));
-  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                                           0,
-                                           ScreenPoint(250, 300),
-                                           5.0,
-                                           10.0));
-  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
-                                           0,
-                                           ScreenPoint(250, 300),
-                                           5.0,
-                                           5.0));
+  ApzcPinch(apzc, 250, 300, 0.5);
 
   // the visible area of the document in CSS pixels is now x=880 y=0 w=100 h=200
   fm = apzc->GetFrameMetrics();
@@ -204,26 +195,14 @@ TEST(AsyncPanZoomController, Overzoom) {
   EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(1);
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
 
-  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
-                                           0,
-                                           ScreenPoint(50, 50),
-                                           10.0,
-                                           10.0));
-  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                                           0,
-                                           ScreenPoint(50, 50),
-                                           5.0,
-                                           10.0));
-  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
-                                           0,
-                                           ScreenPoint(50, 50),
-                                           5.0,
-                                           5.0));
+  ApzcPinch(apzc, 50, 50, 0.5);
 
   fm = apzc->GetFrameMetrics();
   EXPECT_EQ(fm.mZoom.scale, 0.8f);
-  EXPECT_EQ(fm.mScrollOffset.x, 0);
-  EXPECT_EQ(fm.mScrollOffset.y, 0);
+  // bug 936721 - PGO builds introduce rounding error so
+  // use a fuzzy match instead
+  EXPECT_LT(abs(fm.mScrollOffset.x), 1e-5);
+  EXPECT_LT(abs(fm.mScrollOffset.y), 1e-5);
 }
 
 TEST(AsyncPanZoomController, SimpleTransform) {

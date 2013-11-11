@@ -61,9 +61,6 @@
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindow);
 
-      // Focus the location bar
-      mainWindow.focusAndSelectUrlBar();
-
       function setFavIcon(url) {
         var icon = document.createElement("link");
         icon.setAttribute("rel", "icon");

@@ -17,6 +17,7 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/TouchEvents.h"
 
 //#define DEBUG_CONTROLLER 1
 
@@ -161,6 +162,62 @@ void
 APZController::SetWidgetListener(nsIWidgetListener* aWidgetListener)
 {
   mWidgetListener = aWidgetListener;
+}
+
+void
+APZController::ContentReceivedTouch(const ScrollableLayerGuid& aGuid, bool aPreventDefault)
+{
+  if (!sAPZC) {
+    return;
+  }
+  sAPZC->ContentReceivedTouch(aGuid, aPreventDefault);
+}
+
+bool
+APZController::HitTestAPZC(ScreenIntPoint& aPoint)
+{
+  if (!sAPZC) {
+    return false;
+  }
+  return sAPZC->HitTestAPZC(aPoint);
+}
+
+void
+APZController::TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
+                                          LayoutDeviceIntPoint* aRefPointOut)
+{
+  if (!sAPZC || !aRefPointOut) {
+    return;
+  }
+  sAPZC->TransformCoordinateToGecko(aPoint, aRefPointOut);
+}
+
+nsEventStatus
+APZController::ReceiveInputEvent(WidgetInputEvent* aEvent,
+                                 ScrollableLayerGuid* aOutTargetGuid)
+{
+  MOZ_ASSERT(aEvent);
+
+  if (!sAPZC) {
+    return nsEventStatus_eIgnore;
+  }
+  return sAPZC->ReceiveInputEvent(*aEvent->AsInputEvent(), aOutTargetGuid);
+}
+
+nsEventStatus
+APZController::ReceiveInputEvent(WidgetInputEvent* aInEvent,
+                                 ScrollableLayerGuid* aOutTargetGuid,
+                                 WidgetInputEvent* aOutEvent)
+{
+  MOZ_ASSERT(aInEvent);
+  MOZ_ASSERT(aOutEvent);
+
+  if (!sAPZC) {
+    return nsEventStatus_eIgnore;
+  }
+  return sAPZC->ReceiveInputEvent(*aInEvent->AsInputEvent(),
+                                  aOutTargetGuid,
+                                  aOutEvent);
 }
 
 // APZC sends us this request when we need to update the display port on

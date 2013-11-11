@@ -18,7 +18,7 @@ from mozpack.chrome.manifest import (
     ManifestContent,
 )
 from mozunit import MockedOpen
-from Preprocessor import Preprocessor
+from mozbuild.preprocessor import Preprocessor
 from mozpack.errors import (
     errors,
     ErrorMessage,

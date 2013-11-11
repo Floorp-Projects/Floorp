@@ -47,8 +47,11 @@ class TestEmitterBasic(unittest.TestCase):
 
     def read_topsrcdir(self, reader):
         emitter = TreeMetadataEmitter(reader.config)
+        def ack(obj):
+            obj.ack()
+            return obj
 
-        objs = list(emitter.emit(reader.read_topsrcdir()))
+        objs = list(ack(o) for o in emitter.emit(reader.read_topsrcdir()))
         self.assertGreater(len(objs), 0)
         self.assertIsInstance(objs[-1], ReaderSummary)
 

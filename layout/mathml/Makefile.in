@@ -39,7 +39,7 @@ math_properties = mathfont.properties
 $(DIST)/bin/res/fonts/$(math_properties) $(DESTDIR)$(mozappdir)/res/fonts/$(math_properties): $(math_properties) Makefile
 	test -d $(@D) || $(NSINSTALL) -D $(@D)
 	rm -f $@
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py --marker=% $(DEFINES) $(ACDEFINES) $< > $@
+	$(call py_action,preprocessor,--marker=% $(DEFINES) $(ACDEFINES) $< -o $@)
 
 libs:: $(DIST)/bin/res/fonts/$(math_properties)
 install:: $(DESTDIR)$(mozappdir)/res/fonts/$(math_properties)

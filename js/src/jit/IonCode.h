@@ -131,6 +131,7 @@ class IonCode : public gc::BarrieredCell<IonCode>
     // Allocates a new IonCode object which will be managed by the GC. If no
     // object can be allocated, nullptr is returned. On failure, |pool| is
     // automatically released, so the code may be freed.
+    template <AllowGC allowGC>
     static IonCode *New(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool);
 
   public:
