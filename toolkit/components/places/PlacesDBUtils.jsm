@@ -970,9 +970,11 @@ this.PlacesDBUtils = {
         if ("callback" in aProbe) {
           value = aProbe.callback(value);
         }
-        probeValues[aProbe.histogram] = value;
-        Services.telemetry.getHistogramById(aProbe.histogram)
-                          .add(value);
+        if (isFinite(value)) {
+          probeValues[aProbe.histogram] = value;
+          Services.telemetry.getHistogramById(aProbe.histogram)
+                            .add(value);
+        }
       } catch (ex) {
         Components.utils.reportError(ex);
       }
