@@ -19,22 +19,22 @@ Zip::Create(const char *filename)
   AutoCloseFD fd(open(filename, O_RDONLY));
   if (fd == -1) {
     LOG("Error opening %s: %s", filename, strerror(errno));
-    return NULL;
+    return nullptr;
   }
   struct stat st;
   if (fstat(fd, &st) == -1) {
     LOG("Error stating %s: %s", filename, strerror(errno));
-    return NULL;
+    return nullptr;
   }
   size_t size = st.st_size;
   if (size <= sizeof(CentralDirectoryEnd)) {
     LOG("Error reading %s: too short", filename);
-    return NULL;
+    return nullptr;
   }
-  void *mapped = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+  void *mapped = mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
   if (mapped == MAP_FAILED) {
     LOG("Error mmapping %s: %s", filename, strerror(errno));
-    return NULL;
+    return nullptr;
   }
   DEBUG_LOG("Mapped %s @%p", filename, mapped);
 
@@ -50,7 +50,7 @@ Zip::Create(const char *filename, void *mapped, size_t size)
   // have been found, the zip was invalid.
   if (!zip->nextFile && !zip->entries) {
     LOG("%s - Invalid zip", filename);
-    return NULL;
+    return nullptr;
   }
 
   ZipCollection::Singleton.Register(zip);
@@ -58,12 +58,12 @@ Zip::Create(const char *filename, void *mapped, size_t size)
 }
 
 Zip::Zip(const char *filename, void *mapped, size_t size)
-: name(filename ? strdup(filename) : NULL)
+: name(filename ? strdup(filename) : nullptr)
 , mapped(mapped)
 , size(size)
 , nextFile(LocalFile::validate(mapped)) // first Local File entry
-, nextDir(NULL)
-, entries(NULL)
+, nextDir(nullptr)
+, entries(nullptr)
 {
   // If the first local file entry couldn't be found (which can happen
   // with optimized jars), check the first central directory entry.
@@ -149,7 +149,7 @@ Zip::GetStream(const char *path, Zip::Stream *out) const
 
   /* Store the next directory entry */
   nextDir = nextDir->GetNext();
-  nextFile = NULL;
+  nextFile = nullptr;
   return true;
 }
 
@@ -159,7 +159,7 @@ Zip::GetFirstEntry() const
   if (entries)
     return entries;
 
-  const CentralDirectoryEnd *end = NULL;
+  const CentralDirectoryEnd *end = nullptr;
   const char *_end = static_cast<const char *>(mapped) + size
                      - sizeof(CentralDirectoryEnd);
 
@@ -168,7 +168,7 @@ Zip::GetFirstEntry() const
     end = CentralDirectoryEnd::validate(_end);
   if (!end) {
     LOG("%s - Couldn't find end of central directory record", name);
-    return NULL;
+    return nullptr;
   }
 
   entries = DirectoryEntry::validate(static_cast<const char *>(mapped)
