@@ -60,7 +60,7 @@ js::Nursery::init()
     JS_POISON(heap, FreshNursery, NurserySize);
 #endif
     for (int i = 0; i < NumNurseryChunks; ++i)
-        chunk(i).runtime = rt;
+        chunk(i).trailer.runtime = rt;
 
     JS_ASSERT(isEnabled());
     return true;
@@ -648,7 +648,7 @@ js::Nursery::sweep(JSRuntime *rt)
     /* Poison the nursery contents so touching a freed object will crash. */
     JS_POISON((void *)start(), SweptNursery, NurserySize - sizeof(JSRuntime *));
     for (int i = 0; i < NumNurseryChunks; ++i)
-        chunk(i).runtime = runtime();
+        chunk(i).trailer.runtime = runtime();
 
     if (rt->gcZeal_ == ZealGenerationalGCValue) {
         /* Undo any grow or shrink the collection may have done. */
