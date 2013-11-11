@@ -67,8 +67,8 @@ nsresult GetProfileHDDInfo(nsAutoCString& aModel, nsAutoCString& aRevision)
       volumeMountPoint[volumeMountPointLen - 1] = L'\0';
     }
     ScopedHandle handle(::CreateFileW(volumeMountPoint, 0,
-                                      FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                                      OPEN_EXISTING, 0, NULL));
+                                      FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                      nullptr, OPEN_EXISTING, 0, nullptr));
     if (!handle.IsValid()) {
         return NS_ERROR_UNEXPECTED;
     }
