@@ -77,3 +77,23 @@ LIBRARY_NAME = 'gkconevents_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/content/html/content/src',
+    '/content/xml/content/src',
+    '/content/xul/content/src',
+    '/dom/base',
+    '/dom/settings',
+    '/dom/src/storage',
+    '/layout/generic',
+    '/layout/xul/base/src',
+    '/layout/xul/tree/',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    LOCAL_INCLUDES += [
+        '/dom/wifi',
+    ]
+
+if CONFIG['MOZ_JSDEBUGGER']:
+    DEFINES['MOZ_JSDEBUGGER'] = True
