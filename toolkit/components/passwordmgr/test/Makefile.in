@@ -32,7 +32,6 @@ MOCHITEST_FILES = \
     test_bug_627616.html \
     test_bug_654348.html \
     test_bug_776171.html \
-    test_master_password.html \
     test_master_password_cleanup.html \
     test_maxforms_1.html \
     test_maxforms_2.html \
@@ -85,3 +84,6 @@ MOCHITEST_CHROME_FILES += \
 # This test doesn't pass because we can't ensure a cross-platform
 # event that occurs between DOMContentLoaded and Pageload
 # test_bug_221634.html
+
+# Bug 917797 - Frequent intermittent failures
+#    test_master_password.html \
