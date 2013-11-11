@@ -67,6 +67,7 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._toolRegistered = this._toolRegistered.bind(this);
   this._toolUnregistered = this._toolUnregistered.bind(this);
   this._refreshHostTitle = this._refreshHostTitle.bind(this);
+  this._splitConsoleOnKeypress = this._splitConsoleOnKeypress.bind(this)
   this.destroy = this.destroy.bind(this);
 
   this._target.on("close", this.destroy);
@@ -229,11 +230,55 @@ Toolbox.prototype = {
     }, true);
   },
 
+  _splitConsoleOnKeypress: function(e) {
+    if (e.keyCode === e.DOM_VK_ESCAPE) {
+      this.toggleSplitConsole();
+    }
+  },
+
   _addToolSwitchingKeys: function() {
     let nextKey = this.doc.getElementById("toolbox-next-tool-key");
     nextKey.addEventListener("command", this.selectNextTool.bind(this), true);
     let prevKey = this.doc.getElementById("toolbox-previous-tool-key");
     prevKey.addEventListener("command", this.selectPreviousTool.bind(this), true);
+
+    // Split console uses keypress instead of command so the event can be
+    // cancelled with stopPropagation on the keypress, and not preventDefault.
+    this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
+  },
+
+  /**
+   * Make sure that the console is showing up properly based on all the
+   * possible conditions.
+   *   1) If the console tab is selected, then regardless of split state
+   *      it should take up the full height of the deck, and we should
+   *      hide the deck and splitter.
+   *   2) If the console tab is not selected and it is split, then we should
+   *      show the splitter, deck, and console.
+   *   3) If the console tab is not selected and it is *not* split,
+   *      then we should hide the console and splitter, and show the deck
+   *      at full height.
+   */
+  _refreshConsoleDisplay: function() {
+    let deck = this.doc.getElementById("toolbox-deck");
+    let webconsolePanel = this.doc.getElementById("toolbox-panel-webconsole");
+    let splitter = this.doc.getElementById("toolbox-console-splitter");
+    let openedConsolePanel = this.currentToolId === "webconsole";
+
+    if (openedConsolePanel) {
+      deck.setAttribute("collapsed", "true");
+      splitter.setAttribute("hidden", "true");
+      webconsolePanel.removeAttribute("collapsed");
+    } else {
+      deck.removeAttribute("collapsed");
+      if (this._splitConsole) {
+        webconsolePanel.removeAttribute("collapsed");
+        splitter.removeAttribute("hidden");
+      } else {
+        webconsolePanel.setAttribute("collapsed", "true");
+        splitter.setAttribute("hidden", "true");
+      }
+    }
   },
 
   /**
@@ -502,8 +547,11 @@ Toolbox.prototype = {
     }
     let vbox = this.doc.createElement("vbox");
     vbox.className = "toolbox-panel " + toolDefinition.bgTheme;
-    vbox.id = "toolbox-panel-" + id;
 
+    // There is already a container for the webconsole frame.
+    if (!this.doc.getElementById("toolbox-panel-" + id)) {
+      vbox.id = "toolbox-panel-" + id;
+    }
 
     // If there is no tab yet, or the ordinal to be added is the largest one.
     if (tabs.childNodes.length == 0 ||
@@ -613,7 +661,6 @@ Toolbox.prototype = {
     let tab = this.doc.getElementById("toolbox-tab-" + id);
     tab.setAttribute("selected", "true");
 
-
     if (this.currentToolId == id) {
       // re-focus tool to get key events again
       this.focusTool(id);
@@ -656,6 +703,7 @@ Toolbox.prototype = {
     deck.selectedIndex = index;
 
     this.currentToolId = id;
+    this._refreshConsoleDisplay();
     if (id != "options") {
       Services.prefs.setCharPref(this._prefs.LAST_TOOL, id);
     }
@@ -678,6 +726,27 @@ Toolbox.prototype = {
   focusTool: function(id) {
     let iframe = this.doc.getElementById("toolbox-panel-iframe-" + id);
     iframe.focus();
+  },
+
+  /**
+   * Toggles the split state of the webconsole.  If the webconsole panel
+   * is already selected, then this command is ignored.
+   */
+  toggleSplitConsole: function() {
+    let openedConsolePanel = this.currentToolId === "webconsole";
+
+    // Don't allow changes when console is open, since it could be confusing
+    if (!openedConsolePanel) {
+      this._splitConsole = !this._splitConsole;
+      this._refreshConsoleDisplay();
+      this.emit("split-console");
+
+      if (this._splitConsole) {
+        this.loadTool("webconsole").then(() => {
+          this.focusTool("webconsole");
+        });
+      }
+    }
   },
 
   /**
@@ -789,7 +858,7 @@ Toolbox.prototype = {
       iframe.swapFrameLoaders(this.frame);
 
       this._host.off("window-closed", this.destroy);
-      this._host.destroy();
+      this.destroyHost();
 
       this._host = newHost;
 
@@ -877,6 +946,17 @@ Toolbox.prototype = {
   },
 
   /**
+   * Destroy the current host, and remove event listeners from its frame.
+   *
+   * @return {promise} to be resolved when the host is destroyed.
+   */
+  destroyHost: function() {
+    this.doc.removeEventListener("keypress",
+      this._splitConsoleOnKeypress, false);
+    return this._host.destroy();
+  },
+
+  /**
    * Remove all UI elements, detach from target and clear up
    */
   destroy: function() {
@@ -917,7 +997,7 @@ Toolbox.prototype = {
       container.removeChild(container.firstChild);
     }
 
-    outstanding.push(this._host.destroy());
+    outstanding.push(this.destroyHost());
 
     this._telemetry.destroy();
 
