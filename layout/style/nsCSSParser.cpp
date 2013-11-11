@@ -1962,7 +1962,7 @@ CSSParserImpl::ParseImportRule(RuleAppendFunc aAppendFunc, void* aData)
 
     // Safe to assert this, since we ensured that there is something
     // other than the ';' coming after the @import's url() token.
-    NS_ASSERTION(media->Count() != 0, "media list must be nonempty");
+    NS_ASSERTION(media->Length() != 0, "media list must be nonempty");
   }
 
   ProcessImport(url, media, aAppendFunc, aData);
