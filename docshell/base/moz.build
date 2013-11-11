@@ -72,3 +72,16 @@ LIBRARY_NAME = 'basedocshell_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '../shistory/src',
+    '/content/base/src',
+    '/dom/base',
+    '/layout/base',
+    '/layout/generic',
+    '/layout/xul/base/src',
+    '/netwerk/protocol/viewsource',
+    '/xpcom/ds',
+]
+
+if CONFIG['MOZ_TOOLKIT_SEARCH']:
+    DEFINES['MOZ_TOOLKIT_SEARCH'] = True
