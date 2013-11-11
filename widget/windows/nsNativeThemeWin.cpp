@@ -17,6 +17,7 @@
 #include "nsEventStates.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsLookAndFeel.h"
 #include "nsMenuFrame.h"
 #include "nsGkAtoms.h"
 #include <malloc.h>
@@ -2312,6 +2313,17 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
           aResult->width = 20;
           aResult->height = 12;
         }
+        return NS_OK;
+      }
+      break;
+    }
+
+    case NS_THEME_SCROLLBAR:
+    {
+      if (nsLookAndFeel::GetInt(
+            nsLookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
+        aResult->SizeTo(::GetSystemMetrics(SM_CXHSCROLL),
+                        ::GetSystemMetrics(SM_CYVSCROLL));
         return NS_OK;
       }
       break;

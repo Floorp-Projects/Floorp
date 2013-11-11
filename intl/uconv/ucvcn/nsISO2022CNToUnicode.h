@@ -6,6 +6,7 @@
 #define nsISO2022CNToUnicode_h__
 #include "nsCOMPtr.h"
 #include "nsUCSupport.h"
+#include "mozilla/Telemetry.h"
 
 #define MBYTE       0x8e
 #undef PMASK
@@ -17,13 +18,18 @@
 #define SS2         0x4e
 #define SS3         0x4f
 
+using namespace mozilla;
+
 class nsISO2022CNToUnicode : public nsBasicDecoderSupport
 {
 public:
   nsISO2022CNToUnicode() : 
         mState(eState_ASCII), 
         mPlaneID(0),
-        mRunLength(0) { }
+        mRunLength(0)
+  {
+    Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_ISO2022CN, true);
+  }
 
   virtual ~nsISO2022CNToUnicode() {}
 
