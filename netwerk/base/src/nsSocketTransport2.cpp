@@ -1161,6 +1161,28 @@ nsSocketTransport::InitiateSocket()
             return NS_ERROR_OFFLINE;
     }
 
+    // Hosts/Proxy Hosts that are Local IP Literals should not be speculatively
+    // connected - Bug 853423.
+    if (mConnectionFlags & nsISocketTransport::DISABLE_RFC1918 &&
+        IsIPAddrLocal(&mNetAddr)) {
+#ifdef PR_LOGGING
+        if (SOCKET_LOG_ENABLED()) {
+            nsAutoCString netAddrCString;
+            netAddrCString.SetCapacity(kIPv6CStrBufSize);
+            if (!NetAddrToString(&mNetAddr,
+                                 netAddrCString.BeginWriting(),
+                                 kIPv6CStrBufSize))
+                netAddrCString = NS_LITERAL_CSTRING("<IP-to-string failed>");
+            SOCKET_LOG(("nsSocketTransport::InitiateSocket skipping "
+                        "speculative connection for host [%s:%d] proxy "
+                        "[%s:%d] with Local IP address [%s]",
+                        mHost.get(), mPort, mProxyHost.get(), mProxyPort,
+                        netAddrCString.get()));
+        }
+#endif
+        return NS_ERROR_CONNECTION_REFUSED;
+    }
+
     //
     // find out if it is going to be ok to attach another socket to the STS.
     // if not then we have to wait for the STS to tell us that it is ok.
