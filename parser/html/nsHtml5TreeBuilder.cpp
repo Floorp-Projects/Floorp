@@ -4124,15 +4124,15 @@ nsHtml5TreeBuilder::flushCharacters()
         charBufferLen = 0;
         return;
       }
-      int32_t eltPos = findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE);
-      nsHtml5StackNode* node = stack[eltPos];
-      nsIContent** elt = node->node;
-      if (!eltPos) {
-        appendCharacters(elt, charBuffer, 0, charBufferLen);
+      int32_t tablePos = findLastOrRoot(NS_HTML5TREE_BUILDER_TABLE);
+      int32_t templatePos = findLastOrRoot(NS_HTML5TREE_BUILDER_TEMPLATE);
+      if (templatePos >= tablePos) {
+        appendCharacters(stack[templatePos]->node, charBuffer, 0, charBufferLen);
         charBufferLen = 0;
         return;
       }
-      insertFosterParentedCharacters(charBuffer, 0, charBufferLen, elt, stack[eltPos - 1]->node);
+      nsHtml5StackNode* tableElt = stack[tablePos];
+      insertFosterParentedCharacters(charBuffer, 0, charBufferLen, tableElt->node, stack[tablePos - 1]->node);
       charBufferLen = 0;
       return;
     }

@@ -541,6 +541,18 @@
 |         <div>
 
 #data
+<body><template><tr>Foo</tr></template>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <template>
+|       content
+|         <tr>
+|         "Foo"
+
+#data
 <body><template><tr></tr><td></td></template>
 #errors
 #document
@@ -1141,6 +1153,20 @@
 |         <template>
 |           content
 |             "Foo"
+|             <table>
+|   <body>
+
+#data
+<template><template><table><div>
+#errors
+#document
+| <html>
+|   <head>
+|     <template>
+|       content
+|         <template>
+|           content
+|             <div>
 |             <table>
 |   <body>
 

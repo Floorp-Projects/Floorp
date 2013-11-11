@@ -5644,16 +5644,19 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     charBufferLen = 0;
                     return;
                 }
-                int eltPos = findLastOrRoot(TreeBuilder.TABLE);
-                StackNode<T> node = stack[eltPos];
-                T elt = node.node;
-                if (eltPos == 0) {
-                    appendCharacters(elt, charBuffer, 0, charBufferLen);
+
+                int tablePos = findLastOrRoot(TreeBuilder.TABLE);
+                int templatePos = findLastOrRoot(TreeBuilder.TEMPLATE);
+
+                if (templatePos >= tablePos) {
+                    appendCharacters(stack[templatePos].node, charBuffer, 0, charBufferLen);
                     charBufferLen = 0;
                     return;
                 }
+
+                StackNode<T> tableElt = stack[tablePos];
                 insertFosterParentedCharacters(charBuffer, 0, charBufferLen,
-                        elt, stack[eltPos - 1].node);
+                        tableElt.node, stack[tablePos - 1].node);
                 charBufferLen = 0;
                 return;
             }
