@@ -15,12 +15,12 @@ using namespace mozilla::test;
 
 
 SECItemArray *
-GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
+GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
                        PLArenaPool *aArena)
 {
-  if (aOSRT == OSRTNone) {
+  if (aORT == ORTNone) {
     if (gDebugLevel >= DEBUG_WARNINGS) {
-      fprintf(stderr, "GetOCSPResponseForType called with type OSRTNone, "
+      fprintf(stderr, "GetOCSPResponseForType called with type ORTNone, "
                       "which makes no sense.\n");
     }
     return nullptr;
@@ -39,9 +39,9 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
   PRTime oldNextUpdate = oldNow + 10 * PR_USEC_PER_SEC;
 
   CERTOCSPSingleResponse *sr = nullptr;
-  switch (aOSRT) {
-    case OSRTGood:
-    case OSRTGoodOtherCA:
+  switch (aORT) {
+    case ORTGood:
+    case ORTGoodOtherCA:
       sr = CERT_CreateOCSPSingleResponseGood(aArena, id, now, &nextUpdate);
       if (!sr) {
         PrintPRError("CERT_CreateOCSPSingleResponseGood failed");
@@ -49,7 +49,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
       }
       id.forget(); // owned by sr now
       break;
-    case OSRTRevoked:
+    case ORTRevoked:
       sr = CERT_CreateOCSPSingleResponseRevoked(aArena, id, now, &nextUpdate,
                                                 expiredTime, nullptr);
       if (!sr) {
@@ -58,7 +58,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
       }
       id.forget(); // owned by sr now
       break;
-    case OSRTUnknown:
+    case ORTUnknown:
       sr = CERT_CreateOCSPSingleResponseUnknown(aArena, id, now, &nextUpdate);
       if (!sr) {
         PrintPRError("CERT_CreateOCSPSingleResponseUnknown failed");
@@ -66,8 +66,8 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
       }
       id.forget(); // owned by sr now
       break;
-    case OSRTExpired:
-    case OSRTExpiredFreshCA:
+    case ORTExpired:
+    case ORTExpiredFreshCA:
       sr = CERT_CreateOCSPSingleResponseGood(aArena, id, oldNow, &oldNextUpdate);
       if (!sr) {
         PrintPRError("CERT_CreateOCSPSingleResponseGood failed");
@@ -75,7 +75,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
       }
       id.forget(); // owned by sr now
       break;
-    case OSRTGoodOtherCert:
+    case ORTGoodOtherCert:
     {
       ScopedCERTCertificate otherCert(
         PK11_FindCertFromNickname("ocspOtherEndEntity", nullptr));
@@ -97,22 +97,22 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
       otherID.forget(); // owned by sr now
       break;
     }
-    case OSRTEmpty:
-    case OSRTMalformed:
-    case OSRTSrverr:
-    case OSRTTryLater:
-    case OSRTNeedsSig:
-    case OSRTUnauthorized:
+    case ORTEmpty:
+    case ORTMalformed:
+    case ORTSrverr:
+    case ORTTryLater:
+    case ORTNeedsSig:
+    case ORTUnauthorized:
       break;
     default:
       if (gDebugLevel >= DEBUG_ERRORS) {
-        fprintf(stderr, "bad ocsp response type: %d\n", aOSRT);
+        fprintf(stderr, "bad ocsp response type: %d\n", aORT);
       }
       return nullptr;
   }
 
   ScopedCERTCertificate ca;
-  if (aOSRT == OSRTGoodOtherCA) {
+  if (aORT == ORTGoodOtherCA) {
     ca = PK11_FindCertFromNickname("otherCA", nullptr);
     if (!ca) {
       PrintPRError("PK11_FindCertFromNickname failed");
@@ -128,14 +128,14 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
   }
 
   PRTime signTime = now;
-  if (aOSRT == OSRTExpired) {
+  if (aORT == ORTExpired) {
     signTime = oldNow;
   }
 
   CERTOCSPSingleResponse **responses;
   SECItem *response = nullptr;
-  switch (aOSRT) {
-    case OSRTMalformed:
+  switch (aORT) {
+    case ORTMalformed:
       response = CERT_CreateEncodedOCSPErrorResponse(
         aArena, SEC_ERROR_OCSP_MALFORMED_REQUEST);
       if (!response) {
@@ -143,7 +143,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
         return nullptr;
       }
       break;
-    case OSRTSrverr:
+    case ORTSrverr:
       response = CERT_CreateEncodedOCSPErrorResponse(
         aArena, SEC_ERROR_OCSP_SERVER_ERROR);
       if (!response) {
@@ -151,7 +151,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
         return nullptr;
       }
       break;
-    case OSRTTryLater:
+    case ORTTryLater:
       response = CERT_CreateEncodedOCSPErrorResponse(
         aArena, SEC_ERROR_OCSP_TRY_SERVER_LATER);
       if (!response) {
@@ -159,7 +159,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
         return nullptr;
       }
       break;
-    case OSRTNeedsSig:
+    case ORTNeedsSig:
       response = CERT_CreateEncodedOCSPErrorResponse(
         aArena, SEC_ERROR_OCSP_REQUEST_NEEDS_SIG);
       if (!response) {
@@ -167,7 +167,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
         return nullptr;
       }
       break;
-    case OSRTUnauthorized:
+    case ORTUnauthorized:
       response = CERT_CreateEncodedOCSPErrorResponse(
         aArena, SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST);
       if (!response) {
@@ -175,7 +175,7 @@ GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
         return nullptr;
       }
       break;
-    case OSRTEmpty:
+    case ORTEmpty:
       break;
     default:
       // responses is contained in aArena and will be freed when aArena is

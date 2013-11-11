@@ -21,21 +21,21 @@ using namespace mozilla::test;
 
 const OCSPHost sOCSPHosts[] =
 {
-  { "ocsp-stapling-good.example.com", OSRTGood },
-  { "ocsp-stapling-revoked.example.com", OSRTRevoked },
-  { "ocsp-stapling-unknown.example.com", OSRTUnknown },
-  { "ocsp-stapling-good-other.example.com", OSRTGoodOtherCert },
-  { "ocsp-stapling-good-other-ca.example.com", OSRTGoodOtherCA },
-  { "ocsp-stapling-expired.example.com", OSRTExpired },
-  { "ocsp-stapling-expired-fresh-ca.example.com", OSRTExpiredFreshCA },
-  { "ocsp-stapling-none.example.com", OSRTNone },
-  { "ocsp-stapling-empty.example.com", OSRTEmpty },
-  { "ocsp-stapling-malformed.example.com", OSRTMalformed },
-  { "ocsp-stapling-srverr.example.com", OSRTSrverr },
-  { "ocsp-stapling-trylater.example.com", OSRTTryLater },
-  { "ocsp-stapling-needssig.example.com", OSRTNeedsSig },
-  { "ocsp-stapling-unauthorized.example.com", OSRTUnauthorized },
-  { nullptr, OSRTNull }
+  { "ocsp-stapling-good.example.com", ORTGood },
+  { "ocsp-stapling-revoked.example.com", ORTRevoked },
+  { "ocsp-stapling-unknown.example.com", ORTUnknown },
+  { "ocsp-stapling-good-other.example.com", ORTGoodOtherCert },
+  { "ocsp-stapling-good-other-ca.example.com", ORTGoodOtherCA },
+  { "ocsp-stapling-expired.example.com", ORTExpired },
+  { "ocsp-stapling-expired-fresh-ca.example.com", ORTExpiredFreshCA },
+  { "ocsp-stapling-none.example.com", ORTNone },
+  { "ocsp-stapling-empty.example.com", ORTEmpty },
+  { "ocsp-stapling-malformed.example.com", ORTMalformed },
+  { "ocsp-stapling-srverr.example.com", ORTSrverr },
+  { "ocsp-stapling-trylater.example.com", ORTTryLater },
+  { "ocsp-stapling-needssig.example.com", ORTNeedsSig },
+  { "ocsp-stapling-unauthorized.example.com", ORTUnauthorized },
+  { nullptr, ORTNull }
 };
 
 int32_t
@@ -60,7 +60,7 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
   }
 
   // If the OCSP response type is "none", don't staple a response.
-  if (host->mOSRT == OSRTNone) {
+  if (host->mORT == ORTNone) {
     return 0;
   }
 
@@ -71,7 +71,7 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
   }
 
   // response is contained by the arena - freeing the arena will free it
-  SECItemArray *response = GetOCSPResponseForType(host->mOSRT, cert, arena);
+  SECItemArray *response = GetOCSPResponseForType(host->mORT, cert, arena);
   if (!response) {
     PORT_FreeArena(arena, PR_FALSE);
     return SSL_SNI_SEND_ALERT;
