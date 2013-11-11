@@ -225,9 +225,8 @@ public:
   };
   EnsureUniqueInnerResult EnsureUniqueInner();
 
-  // Append all of this sheet's child sheets to aArray.  Return true
-  // on success and false on allocation failure.
-  bool AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray);
+  // Append all of this sheet's child sheets to aArray.
+  void AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray);
 
   bool UseForPresentation(nsPresContext* aPresContext,
                             nsMediaQueryResultCacheKey& aKey) const;
