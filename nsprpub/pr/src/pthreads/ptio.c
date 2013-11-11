@@ -4586,7 +4586,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportUDPSocket(PRInt32 osfd)
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
     fd = pt_SetMethods(osfd, PR_DESC_SOCKET_UDP, PR_FALSE, PR_TRUE);
-    if (NULL != fd) close(osfd);
+    if (NULL == fd) close(osfd);
     return fd;
 }  /* PR_ImportUDPSocket */
 
