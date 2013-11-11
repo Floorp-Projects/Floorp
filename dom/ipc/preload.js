@@ -87,9 +87,15 @@ const BrowserElementIsPreloaded = true;
   } catch(e) {
   }
 
+  try {
+    if (Services.prefs.getBoolPref("dom.mozInputMethod.enabled")) {
+      Services.scriptloader.loadSubScript("chrome://global/content/forms.js", global);
+    }
+  } catch (e) {
+  }
+
   // Those are produc-specific files that's sometimes unavailable.
   try {
-    Services.scriptloader.loadSubScript("chrome://browser/content/forms.js", global);
     Services.scriptloader.loadSubScript("chrome://browser/content/ErrorPage.js", global);
   } catch (e) {
   }

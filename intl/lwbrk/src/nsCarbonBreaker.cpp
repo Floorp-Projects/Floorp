@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include <stdint.h>
 #include "nsDebug.h"
 #include "nscore.h"
@@ -13,33 +13,29 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
                         uint8_t* aBreakBefore)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
-  TextBreakLocatorRef breakLocator;
 
-  memset(aBreakBefore, false, aLength * sizeof(uint8_t));
+  memset(aBreakBefore, 0, aLength * sizeof(uint8_t));
 
-  OSStatus status = UCCreateTextBreakLocator(nullptr,
-                                             0,
-                                             kUCTextBreakLineMask,
-                                             &breakLocator);
-
-  if (status != noErr)
+  CFStringRef str = ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, reinterpret_cast<const UniChar*>(aText), aLength, kCFAllocatorNull);
+  if (!str) {
     return;
-     
-  for (UniCharArrayOffset position = 0; position < aLength;) {
-    UniCharArrayOffset offset;
-    status = UCFindTextBreak(breakLocator, 
-                  kUCTextBreakLineMask, 
-                  position == 0 ? kUCTextBreakLeadingEdgeMask : 
-                                  (kUCTextBreakLeadingEdgeMask | 
-                                   kUCTextBreakIterateMask),
-                  reinterpret_cast<const UniChar*>(aText),
-                  aLength, 
-                  position, 
-                  &offset);
-    if (status != noErr || offset >= aLength)
-      break;        
-    aBreakBefore[offset] = true;
-    position = offset;
   }
-  UCDisposeTextBreakLocator(&breakLocator);
+
+  CFStringTokenizerRef st = ::CFStringTokenizerCreate(kCFAllocatorDefault, str, ::CFRangeMake(0, aLength), kCFStringTokenizerUnitLineBreak, NULL);
+  if (!st) {
+    ::CFRelease(str);
+    return;
+  }
+
+  CFStringTokenizerTokenType tt = ::CFStringTokenizerAdvanceToNextToken(st);
+  while (tt != kCFStringTokenizerTokenNone) {
+    CFRange r = ::CFStringTokenizerGetCurrentTokenRange(st);
+    if (r.location != 0) { // Ignore leading edge
+      aBreakBefore[r.location] = true;
+    }
+    tt = CFStringTokenizerAdvanceToNextToken(st);
+  }
+
+  ::CFRelease(st);
+  ::CFRelease(str);
 }
