@@ -51,7 +51,7 @@ public:
   SpdyInformation();
   ~SpdyInformation() {}
 
-  static const uint32_t kCount = 2;
+  static const uint32_t kCount = 3;
 
   // determine if a version of the protocol is enabled for index <= kCount
   bool ProtocolEnabled(uint32_t index);
