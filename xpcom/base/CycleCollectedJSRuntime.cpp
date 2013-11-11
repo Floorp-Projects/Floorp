@@ -518,10 +518,8 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, void* aThing,
   }
 
   char name[72];
-  uint64_t compartmentAddress = 0;
   if (aTraceKind == JSTRACE_OBJECT) {
     JSObject* obj = static_cast<JSObject*>(aThing);
-    compartmentAddress = (uint64_t)js::GetObjectCompartment(obj);
     const js::Class* clasp = js::GetObjectClass(obj);
 
     // Give the subclass a chance to do something
@@ -557,7 +555,7 @@ CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, void* aThing,
   }
 
   // Disable printing global for objects while we figure out ObjShrink fallout.
-  aCb.DescribeGCedNode(aIsMarked, name, compartmentAddress);
+  aCb.DescribeGCedNode(aIsMarked, name);
 }
 
 void
