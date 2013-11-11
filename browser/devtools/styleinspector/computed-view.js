@@ -146,6 +146,7 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this._onContextMenu = this._onContextMenu.bind(this);
   this._contextMenuUpdate = this._contextMenuUpdate.bind(this);
   this._onSelectAll = this._onSelectAll.bind(this);
+  this._onClick = this._onClick.bind(this);
   this._onCopy = this._onCopy.bind(this);
 
   this.styleDocument.addEventListener("copy", this._onCopy);
@@ -156,6 +157,9 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this.root = this.styleDocument.getElementById("root");
   this.templateRoot = this.styleDocument.getElementById("templateRoot");
   this.propertyContainer = this.styleDocument.getElementById("propertyContainer");
+
+  // Listen for click events
+  this.propertyContainer.addEventListener("click", this._onClick, false);
 
   // No results text.
   this.noResults = this.styleDocument.getElementById("noResults");
@@ -592,6 +596,18 @@ CssHtmlTree.prototype = {
     }
   },
 
+  _onClick: function(event) {
+    let target = event.target;
+
+    if (target.nodeName === "a") {
+      event.stopPropagation();
+      event.preventDefault();
+      let browserWin = this.styleInspector.inspector.target
+                           .tab.ownerDocument.defaultView;
+      browserWin.openUILinkIn(target.href, "tab");
+    }
+  },
+
   /**
    * Copy selected text.
    *
@@ -643,7 +659,6 @@ CssHtmlTree.prototype = {
   destroy: function CssHtmlTree_destroy()
   {
     delete this.viewedElement;
-
     delete this._outputParser;
 
     // Remove event listeners
@@ -659,6 +674,8 @@ CssHtmlTree.prototype = {
     if (this._refreshProcess) {
       this._refreshProcess.cancel();
     }
+
+    this.propertyContainer.removeEventListener("click", this._onClick, false);
 
     // Remove context menu
     if (this._contextmenu) {
@@ -955,7 +972,9 @@ PropertyView.prototype = {
     let frag = outputParser.parseCssProperty(this.propertyInfo.name,
       this.propertyInfo.value,
       {
-        colorSwatchClass: "computedview-colorswatch"
+        colorSwatchClass: "computedview-colorswatch",
+        urlClass: "theme-link"
+        // No need to use baseURI here as computed URIs are never relative.
       });
     this.valueNode.innerHTML = "";
     this.valueNode.appendChild(frag);
@@ -1164,11 +1183,17 @@ SelectorView.prototype = {
 
   get outputFragment()
   {
+    // Sadly, because this fragment is added to the template by DOM Templater
+    // we lose any events that are attached. This means that URLs will open in a
+    // new window. At some point we should fix this by stopping using the
+    // templater.
     let outputParser = this.tree._outputParser;
     let frag = outputParser.parseCssProperty(
       this.selectorInfo.name,
       this.selectorInfo.value, {
-      colorSwatchClass: "computedview-colorswatch"
+      colorSwatchClass: "computedview-colorswatch",
+      urlClass: "theme-link",
+      baseURI: this.selectorInfo.rule.href
     });
     return frag;
   },
