@@ -16,11 +16,11 @@ tab-selected-svg: $(srcdir)/../shared/tab-selected.svg
 	$(call py_action,preprocessor, \
 	  --marker "%" -D TAB_SIDE=start \
 	  $(ACDEFINES) \
-	  $(srcdir)/../shared/tab-selected.svg > tab-selected-start.svg)
+	  $(srcdir)/../shared/tab-selected.svg -o tab-selected-start.svg)
 	$(call py_action,preprocessor, \
 	  --marker "%" -D TAB_SIDE=end \
 	  $(ACDEFINES) \
-	  $(srcdir)/../shared/tab-selected.svg > tab-selected-end.svg)
+	  $(srcdir)/../shared/tab-selected.svg -o tab-selected-end.svg)
 
 .PHONY: tab-selected-svg
 
