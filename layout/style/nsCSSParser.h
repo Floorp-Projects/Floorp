@@ -134,11 +134,11 @@ public:
    * parentheses and strings more important than commas.  |aURL| and
    * |aLineNumber| are used for error reporting.
    */
-  nsresult ParseMediaList(const nsSubstring& aBuffer,
-                          nsIURI*            aURL,
-                          uint32_t           aLineNumber,
-                          nsMediaList*       aMediaList,
-                          bool               aHTMLMode);
+  void ParseMediaList(const nsSubstring& aBuffer,
+                      nsIURI*            aURL,
+                      uint32_t           aLineNumber,
+                      nsMediaList*       aMediaList,
+                      bool               aHTMLMode);
 
   /**
    * Parse aBuffer into a nsCSSValue |aValue|. Will return false

@@ -1244,22 +1244,18 @@ Loader::PrepareSheet(nsCSSStyleSheet* aSheet,
 {
   NS_PRECONDITION(aSheet, "Must have a sheet!");
 
-  nsresult rv;
   nsRefPtr<nsMediaList> mediaList(aMediaList);
 
   if (!aMediaString.IsEmpty()) {
     NS_ASSERTION(!aMediaList,
                  "must not provide both aMediaString and aMediaList");
     mediaList = new nsMediaList();
-    NS_ENSURE_TRUE(mediaList, NS_ERROR_OUT_OF_MEMORY);
 
     nsCSSParser mediumParser(this);
 
     // We have aMediaString only when linked from link elements, style
     // elements, or PIs, so pass true.
-    rv = mediumParser.ParseMediaList(aMediaString, nullptr, 0, mediaList,
-                                     true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mediumParser.ParseMediaList(aMediaString, nullptr, 0, mediaList, true);
   }
 
   aSheet->SetMedia(mediaList);
