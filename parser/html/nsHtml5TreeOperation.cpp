@@ -42,7 +42,7 @@
 #include "mozilla/Likely.h"
 #include "nsTextNode.h"
 
-namespace dom = mozilla::dom;
+using namespace mozilla;
 
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
