@@ -12,14 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOCAL_INCLUDES = \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/src/geolocation \
-  -I$(topsrcdir)/dom/wifi \
-  -I$(topsrcdir)/dom/bluetooth \
-  -I$(topsrcdir)/content/events/src \
-  $(NULL)
-
 # TODO: Bug 908038, move this to moz.build
 WORKER_FILES := worker_buf.js \
   $(NULL)
