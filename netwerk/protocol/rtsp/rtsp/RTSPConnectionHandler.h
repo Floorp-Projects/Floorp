@@ -1509,7 +1509,7 @@ private:
                     "rtp-time", (int32_t *)&rtpTime));
 
         int64_t relRtpTimeUs =
-            (((int64_t)rtpTime - (int64_t)track->mRTPAnchor) * 1000000ll)
+            (((int64_t)rtpTime - (int64_t)track->mNormalPlayTimeRTP) * 1000000ll)
                 / track->mTimeScale;
 
         int64_t ntpTimeUs = track->mNTPAnchorUs + relRtpTimeUs;

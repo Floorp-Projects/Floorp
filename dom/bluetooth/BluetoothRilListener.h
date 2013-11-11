@@ -9,114 +9,37 @@
 
 #include "BluetoothCommon.h"
 
-#include "nsIIccProvider.h"
-#include "nsIMobileConnectionProvider.h"
-#include "nsITelephonyProvider.h"
+#include "nsCOMPtr.h"
+
+class nsIIccListener;
+class nsIMobileConnectionListener;
+class nsITelephonyListener;
 
 BEGIN_BLUETOOTH_NAMESPACE
-
-class BluetoothRilListener;
-
-class IccListener : public nsIIccListener
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIICCLISTENER
-
-  IccListener() { }
-
-  bool Listen(bool aStart);
-  void SetOwner(BluetoothRilListener *aOwner);
-
-private:
-  BluetoothRilListener* mOwner;
-};
-
-class MobileConnectionListener : public nsIMobileConnectionListener
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMOBILECONNECTIONLISTENER
-
-  MobileConnectionListener(uint32_t aClientId)
-  : mClientId(aClientId) { }
-
-  bool Listen(bool aStart);
-
-private:
-  uint32_t mClientId;
-};
-
-class TelephonyListener : public nsITelephonyListener
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITELEPHONYLISTENER
-
-  TelephonyListener() { }
-
-  bool Listen(bool aStart);
-};
 
 class BluetoothRilListener
 {
 public:
   BluetoothRilListener();
 
-  /**
-   * Start/Stop listening.
-   *
-   * @param aStart [in] whether to start/stop listening
-   */
-  bool Listen(bool aStart);
+  bool StartListening();
+  bool StopListening();
 
-  /**
-   * Be informed that certain client's service has changed.
-   *
-   * @param aClientId   [in] the client id with service change
-   * @param aRegistered [in] whether changed service is registered
-   */
-  void ServiceChanged(uint32_t aClientId, bool aRegistered);
-
-  /**
-   * Enumerate current calls.
-   */
   void EnumerateCalls();
 
-  /**
-   * The id of client that mobile connection and icc info listeners
-   * are listening to.
-   *
-   * mClientId equals to number of total clients (array length of
-   * mobile connection listeners) if there is no available client to listen.
-   */
-  uint32_t mClientId;
-
 private:
-  /**
-   * Start/Stop listening of mobile connection and icc info.
-   *
-   * @param aStart [in] whether to start/stop listening
-   */
-  bool ListenMobileConnAndIccInfo(bool aStart);
+  bool StartIccListening();
+  bool StopIccListening();
 
-  /**
-   * Select available client to listen and assign mClientId.
-   *
-   * mClientId is assigned to number of total clients (array length of
-   * mobile connection listeners) if there is no available client to listen.
-   */
-  void SelectClient();
+  bool StartMobileConnectionListening();
+  bool StopMobileConnectionListening();
 
-  /**
-   * Array of mobile connection listeners.
-   *
-   * The length equals to number of total clients.
-   */
-  nsTArray<MobileConnectionListener> mMobileConnListeners;
+  bool StartTelephonyListening();
+  bool StopTelephonyListening();
 
-  IccListener mIccListener;
-  TelephonyListener mTelephonyListener;
+  nsCOMPtr<nsIIccListener> mIccListener;
+  nsCOMPtr<nsIMobileConnectionListener> mMobileConnectionListener;
+  nsCOMPtr<nsITelephonyListener> mTelephonyListener;
 };
 
 END_BLUETOOTH_NAMESPACE

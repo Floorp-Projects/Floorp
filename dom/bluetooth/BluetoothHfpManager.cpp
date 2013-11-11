@@ -415,7 +415,7 @@ BluetoothHfpManager::Init()
 
 #ifdef MOZ_B2G_RIL
   mListener = new BluetoothRilListener();
-  if (!mListener->Listen(true)) {
+  if (!mListener->StartListening()) {
     BT_WARNING("Failed to start listening RIL");
     return false;
   }
@@ -447,7 +447,7 @@ BluetoothHfpManager::Init()
 BluetoothHfpManager::~BluetoothHfpManager()
 {
 #ifdef MOZ_B2G_RIL
-  if (!mListener->Listen(false)) {
+  if (!mListener->StopListening()) {
     BT_WARNING("Failed to stop listening RIL");
   }
   mListener = nullptr;
@@ -586,14 +586,15 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
 
 #ifdef MOZ_B2G_RIL
 void
-BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
+BluetoothHfpManager::HandleVoiceConnectionChanged()
 {
   nsCOMPtr<nsIMobileConnectionProvider> connection =
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE_VOID(connection);
 
   nsCOMPtr<nsIDOMMozMobileConnectionInfo> voiceInfo;
-  connection->GetVoiceConnectionInfo(aClientId, getter_AddRefs(voiceInfo));
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
+  connection->GetVoiceConnectionInfo(0, getter_AddRefs(voiceInfo));
   NS_ENSURE_TRUE_VOID(voiceInfo);
 
   nsString type;
@@ -604,12 +605,11 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
   voiceInfo->GetRoaming(&roaming);
   UpdateCIND(CINDType::ROAM, roaming);
 
+  bool service = false;
   nsString regState;
   voiceInfo->GetState(regState);
-  bool service = regState.EqualsLiteral("registered");
-  if (service != sCINDItems[CINDType::SERVICE].value) {
-    // Notify BluetoothRilListener of service change
-    mListener->ServiceChanged(aClientId, service);
+  if (regState.EqualsLiteral("registered")) {
+    service = true;
   }
   UpdateCIND(CINDType::SERVICE, service);
 
@@ -630,7 +630,8 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
    * - manual: set mNetworkSelectionMode to 1 (manual)
    */
   nsString mode;
-  connection->GetNetworkSelectionMode(aClientId, mode);
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
+  connection->GetNetworkSelectionMode(0, mode);
   if (mode.EqualsLiteral("manual")) {
     mNetworkSelectionMode = 1;
   } else {
@@ -657,14 +658,15 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
 }
 
 void
-BluetoothHfpManager::HandleIccInfoChanged(uint32_t aClientId)
+BluetoothHfpManager::HandleIccInfoChanged()
 {
   nsCOMPtr<nsIIccProvider> icc =
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE_VOID(icc);
 
   nsCOMPtr<nsIDOMMozIccInfo> iccInfo;
-  icc->GetIccInfo(aClientId, getter_AddRefs(iccInfo));
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
+  icc->GetIccInfo(0, getter_AddRefs(iccInfo));
   NS_ENSURE_TRUE_VOID(iccInfo);
 
   nsCOMPtr<nsIDOMMozGsmIccInfo> gsmIccInfo = do_QueryInterface(iccInfo);
