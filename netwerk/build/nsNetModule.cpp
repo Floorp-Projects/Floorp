@@ -319,7 +319,7 @@ WEB_SOCKET_HANDLER_CONSTRUCTOR(WebSocketSSLChannel, true)
 } // namespace mozilla
 #endif
 
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
 #include "RtspHandler.h"
 namespace mozilla {
 namespace net {
@@ -798,7 +798,7 @@ NS_DEFINE_NAMED_CID(NS_WYCIWYGPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_WEBSOCKETPROTOCOLHANDLER_CID);
 NS_DEFINE_NAMED_CID(NS_WEBSOCKETSSLPROTOCOLHANDLER_CID);
 #endif
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
 NS_DEFINE_NAMED_CID(NS_RTSPPROTOCOLHANDLER_CID);
 #endif
 #if defined(XP_WIN)
@@ -940,7 +940,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_WEBSOCKETSSLPROTOCOLHANDLER_CID, false, nullptr,
       mozilla::net::WebSocketSSLChannelConstructor },
 #endif
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
     { &kNS_RTSPPROTOCOLHANDLER_CID, false, nullptr, mozilla::net::RtspHandlerConstructor },
 #endif
 #if defined(XP_WIN)
@@ -1085,7 +1085,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ws", &kNS_WEBSOCKETPROTOCOLHANDLER_CID },
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wss", &kNS_WEBSOCKETSSLPROTOCOLHANDLER_CID },
 #endif
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "rtsp", &kNS_RTSPPROTOCOLHANDLER_CID },
 #endif
 #if defined(XP_WIN)
