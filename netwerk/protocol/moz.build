@@ -4,22 +4,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += [
-    'about',
-    'app',
-    'data',
-    'device',
-    'file',
-    'ftp',
-    'http',
-    'res',
-    'viewsource',
-    'websocket',
-    'wyciwyg',
-]
-
-if CONFIG['MOZ_RTSP']:
-    PARALLEL_DIRS += [
-        'rtsp',
-    ]
-
+PARALLEL_DIRS += sorted(CONFIG['NECKO_PROTOCOLS'])

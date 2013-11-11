@@ -116,3 +116,17 @@ LIBRARY_NAME = 'neckobase_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/dom/base',
+]
+
+if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
+    LOCAL_INCLUDES += [
+        '/netwerk/protocol/rtsp/controller',
+        '/netwerk/protocol/rtsp/rtsp',
+    ]
+
+if CONFIG['MOZ_ENABLE_QTNETWORK']:
+    LOCAL_INCLUDES += [
+        '/netwerk/system/qt',
+    ]
