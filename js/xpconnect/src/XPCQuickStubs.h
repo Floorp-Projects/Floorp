@@ -362,10 +362,6 @@ bool
 xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, JS::MutableHandleValue pval, const PRUnichar **pstr);
 
 
-/** Convert an nsString to JSString, returning true on success. This will sometimes modify |str| to be empty. */
-bool
-xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval);
-
 nsresult
 getWrapper(JSContext *cx,
            JSObject *obj,
