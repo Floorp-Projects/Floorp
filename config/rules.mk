@@ -800,7 +800,7 @@ else # !WINNT || GNU_CC
 endif # WINNT && !GNU_CC
 
 ifdef ENABLE_STRIP
-	$(STRIP) $@
+	$(STRIP) $(STRIP_FLAGS) $@
 endif
 ifdef MOZ_POST_PROGRAM_COMMAND
 	$(MOZ_POST_PROGRAM_COMMAND) $@
@@ -856,7 +856,7 @@ else
 endif # WINNT && !GNU_CC
 
 ifdef ENABLE_STRIP
-	$(STRIP) $@
+	$(STRIP) $(STRIP_FLAGS) $@
 endif
 ifdef MOZ_POST_PROGRAM_COMMAND
 	$(MOZ_POST_PROGRAM_COMMAND) $@
@@ -975,7 +975,7 @@ endif	# WINNT && !GCC
 	@$(RM) foodummyfilefoo $(DELETE_AFTER_LINK)
 	chmod +x $@
 ifdef ENABLE_STRIP
-	$(STRIP) $@
+	$(STRIP) $(STRIP_FLAGS) $@
 endif
 ifdef MOZ_POST_DSO_LIB_COMMAND
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
