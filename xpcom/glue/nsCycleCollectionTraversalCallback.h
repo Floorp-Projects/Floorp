@@ -19,8 +19,10 @@ public:
   // WANT_DEBUG_INFO in mFlags.
   NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
                                            const char* objname) = 0;
+  // Note, aCompartmentAddress is 0 if it is unknown.
   NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
-                                     const char* objname) = 0;
+                                     const char* objname,
+                                     uint64_t aCompartmentAddress = 0) = 0;
 
   NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) = 0;
   NS_IMETHOD_(void) NoteJSChild(void *child) = 0;
