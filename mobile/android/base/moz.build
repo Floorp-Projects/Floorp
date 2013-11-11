@@ -94,6 +94,7 @@ gbjar.sources += [
     'BaseGeckoInterface.java',
     'BrowserApp.java',
     'BrowserToolbar.java',
+    'BrowserToolbarBackground.java',
     'CameraImageResultHandler.java',
     'CameraVideoResultHandler.java',
     'CanvasDelegate.java',
