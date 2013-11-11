@@ -446,30 +446,6 @@ public:
 };
 
 
-// MediaList helper
-
-class nsMediaListSH : public nsStringArraySH
-{
-protected:
-  nsMediaListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
-  {
-  }
-
-  virtual ~nsMediaListSH()
-  {
-  }
-
-  virtual nsresult GetStringAt(nsISupports *aNative, int32_t aIndex,
-                               nsAString& aResult) MOZ_OVERRIDE;
-
-public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsMediaListSH(aData);
-  }
-};
-
-
 // StyleSheetList helper
 
 class nsStyleSheetListSH : public nsArraySH

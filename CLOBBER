@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 906990 needs a clobber because of bug 928195
+Bug 921718 presumably needed a clobber due to bug 928195.

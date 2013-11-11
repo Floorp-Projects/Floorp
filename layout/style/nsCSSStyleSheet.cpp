@@ -12,6 +12,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/css/NameSpaceRule.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/ImportRule.h"
@@ -479,35 +480,40 @@ nsMediaQuery::Matches(nsPresContext* aPresContext,
   return match == !mNegated;
 }
 
-DOMCI_DATA(MediaList, nsMediaList)
-
-NS_INTERFACE_MAP_BEGIN(nsMediaList)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsMediaList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MediaList)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsMediaList)
-NS_IMPL_RELEASE(nsMediaList)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsMediaList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsMediaList)
 
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsMediaList)
 
 nsMediaList::nsMediaList()
   : mStyleSheet(nullptr)
 {
+  SetIsDOMBinding();
 }
 
 nsMediaList::~nsMediaList()
 {
 }
 
-nsresult
+/* virtual */ JSObject*
+nsMediaList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return MediaListBinding::Wrap(aCx, aScope, this);
+}
+
+void
 nsMediaList::GetText(nsAString& aMediaText)
 {
   aMediaText.Truncate();
 
   for (int32_t i = 0, i_end = mArray.Length(); i < i_end; ++i) {
     nsMediaQuery* query = mArray[i];
-    NS_ENSURE_TRUE(query, NS_ERROR_FAILURE);
 
     query->AppendToString(aMediaText);
 
@@ -515,13 +521,11 @@ nsMediaList::GetText(nsAString& aMediaText)
       aMediaText.AppendLiteral(", ");
     }
   }
-
-  return NS_OK;
 }
 
 // XXXbz this is so ill-defined in the spec, it's not clear quite what
 // it should be doing....
-nsresult
+void
 nsMediaList::SetText(const nsAString& aMediaText)
 {
   nsCSSParser parser;
@@ -529,7 +533,6 @@ nsMediaList::SetText(const nsAString& aMediaText)
   bool htmlMode = mStyleSheet && mStyleSheet->GetOwnerNode();
 
   parser.ParseMediaList(aMediaText, nullptr, 0, this, htmlMode);
-  return NS_OK;
 }
 
 bool
@@ -568,7 +571,8 @@ nsMediaList::Clone()
 NS_IMETHODIMP
 nsMediaList::GetMediaText(nsAString& aMediaText)
 {
-  return GetText(aMediaText);
+  GetText(aMediaText);
+  return NS_OK;
 }
 
 // "sheet" should be an nsCSSStyleSheet and "doc" should be an
@@ -595,18 +599,15 @@ nsMediaList::GetMediaText(nsAString& aMediaText)
 NS_IMETHODIMP
 nsMediaList::SetMediaText(const nsAString& aMediaText)
 {
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIDocument> doc;
 
   BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
 
-  rv = SetText(aMediaText);
-  if (NS_FAILED(rv))
-    return rv;
+  SetText(aMediaText);
   
   END_MEDIA_CHANGE(mStyleSheet, doc)
 
-  return rv;
+  return NS_OK;
 }
                                
 NS_IMETHODIMP
@@ -621,17 +622,22 @@ nsMediaList::GetLength(uint32_t* aLength)
 NS_IMETHODIMP
 nsMediaList::Item(uint32_t aIndex, nsAString& aReturn)
 {
-  if (aIndex < Length()) {
-    nsMediaQuery* query = mArray[aIndex];
-    NS_ENSURE_TRUE(query, NS_ERROR_FAILURE);
+  bool dummy;
+  IndexedGetter(aIndex, dummy, aReturn);
+  return NS_OK;
+}
 
+void
+nsMediaList::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aReturn)
+{
+  if (aIndex < Length()) {
+    aFound = true;
     aReturn.Truncate();
-    query->AppendToString(aReturn);
+    mArray[aIndex]->AppendToString(aReturn);
   } else {
+    aFound = false;
     SetDOMStringToNull(aReturn);
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -676,7 +682,6 @@ nsMediaList::Delete(const nsAString& aOldMedium)
 
   for (int32_t i = 0, i_end = mArray.Length(); i < i_end; ++i) {
     nsMediaQuery* query = mArray[i];
-    NS_ENSURE_TRUE(query, NS_ERROR_FAILURE);
 
     nsAutoString buf;
     query->AppendToString(buf);
@@ -1755,7 +1760,7 @@ nsCSSStyleSheet::GetMedia(nsIDOMMediaList** aMedia)
   return NS_OK;
 }
 
-nsIDOMMediaList*
+nsMediaList*
 nsCSSStyleSheet::Media()
 {
   if (!mMedia) {
