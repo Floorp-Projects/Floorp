@@ -8,9 +8,11 @@ dbg.onDebuggerStatement = function (frame) {
     assertEq(typeof frame.script.url, 'string');
 };
 
-function test(f) {
+function test(f, manualCount) {
     start = count = g.first = g.last = undefined;
     f();
+    if (manualCount)
+        g.last = g.first + manualCount - 1;
     assertEq(start, g.first);
     assertEq(count, g.last + 1 - g.first);
     print(start, count);
@@ -41,3 +43,19 @@ g.eval("function f2() {\n" +
        "}\n");
 test(g.f2);
 test(g.f2);
+
+// Having a last = Error().lineNumber forces a setline srcnote, so test a
+// function that ends with newline srcnotes.
+g.eval("/* Any copyright is dedicated to the Public Domain.\n" +
+       " http://creativecommons.org/publicdomain/zero/1.0/ */\n" +
+       "\n" +
+       "function secondCall() { first = Error().lineNumber;\n" +
+       "    debugger;\n" +
+       "    // Comment\n" +
+       "    eval(\"42;\");\n" +
+       "    function foo() {}\n" +
+       "    if (true) {\n" +
+       "        foo();\n" +  // <- this is +6 and must be within the extent
+       "    }\n" +
+       "}");
+test(g.secondCall, 7);
