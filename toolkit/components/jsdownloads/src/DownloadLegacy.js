@@ -117,6 +117,11 @@ DownloadLegacyTransfer.prototype = {
       // The last file has been received, or the download failed.  Wait for the
       // associated Download object to be available before notifying.
       this._deferDownload.promise.then(download => {
+	// At this point, the hash has been set and we need to copy it to the
+	// DownloadSaver.
+	if (Components.isSuccessCode(aStatus)) {
+          download.saver.setSha256Hash(this._sha256Hash);
+        }
         download.saver.onTransferFinished(aRequest, aStatus);
       }).then(null, Cu.reportError);
 
@@ -231,7 +236,10 @@ DownloadLegacyTransfer.prototype = {
     }.bind(this)).then(null, Cu.reportError);
   },
 
-  setSha256Hash: function () { },
+  setSha256Hash: function (hash)
+  {
+    this._sha256Hash = hash;
+  },
 
   //////////////////////////////////////////////////////////////////////////////
   //// Private methods and properties
@@ -254,6 +262,11 @@ DownloadLegacyTransfer.prototype = {
    * that cancel the download.
    */
   _componentFailed: false,
+
+  /**
+   * Save the SHA-256 hash in raw bytes of the downloaded file.
+   */
+  _sha256Hash: null,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
