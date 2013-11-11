@@ -851,9 +851,9 @@ function test26() {
   let notification = PopupNotifications.getNotification("click-to-play-plugins");
   ok(notification, "Test 26: There should be a plugin notification");
 
-  waitForCondition(() => gBrowser.ownerDocument.
-      getElementById("plugins-notification-icon").classList.
-      contains("plugin-hidden"),
+  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+
+  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") !== null,
     () => {
       // Don't use setTestPluginEnabledState here because we already saved the
       // prior value
@@ -867,9 +867,9 @@ function test27() {
   let notification = PopupNotifications.getNotification("click-to-play-plugins");
   ok(notification, "Test 27: There should be a plugin notification");
 
-  waitForCondition(() => !gBrowser.ownerDocument.
-      getElementById("plugins-notification-icon").classList.
-      contains("plugin-hidden"),
+  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+
+  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") === null,
     finishTest,
     "Test 27, expected the plugin notification icon to not be highlighted");
 }
