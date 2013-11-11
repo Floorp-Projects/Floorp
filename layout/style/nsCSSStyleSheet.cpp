@@ -534,8 +534,8 @@ nsMediaList::SetText(const nsAString& aMediaText)
 
   bool htmlMode = mStyleSheet && mStyleSheet->GetOwnerNode();
 
-  return parser.ParseMediaList(aMediaText, nullptr, 0,
-                               this, htmlMode);
+  parser.ParseMediaList(aMediaText, nullptr, 0, this, htmlMode);
+  return NS_OK;
 }
 
 bool
