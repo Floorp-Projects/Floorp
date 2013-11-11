@@ -410,12 +410,12 @@ private:
   // Pass in either a media string or the nsMediaList from the
   // CSSParser.  Don't pass both.
   // This method will set the sheet's enabled state based on isAlternate
-  nsresult PrepareSheet(nsCSSStyleSheet* aSheet,
-                        const nsAString& aTitle,
-                        const nsAString& aMediaString,
-                        nsMediaList* aMediaList,
-                        mozilla::dom::Element* aScopeElement,
-                        bool isAlternate);
+  void PrepareSheet(nsCSSStyleSheet* aSheet,
+                    const nsAString& aTitle,
+                    const nsAString& aMediaString,
+                    nsMediaList* aMediaList,
+                    dom::Element* aScopeElement,
+                    bool isAlternate);
 
   nsresult InsertSheetInDoc(nsCSSStyleSheet* aSheet,
                             nsIContent* aLinkingContent,
