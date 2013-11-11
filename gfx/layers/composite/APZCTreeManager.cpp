@@ -231,7 +231,8 @@ ApplyTransform(nsIntPoint* aPoint, const gfx3DMatrix& aMatrix)
 }
 
 nsEventStatus
-APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
+APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
   gfx3DMatrix transformToApzc;
@@ -261,6 +262,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
         APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
       }
       if (mApzcForInputBlock) {
+        mApzcForInputBlock->GetGuid(aOutTargetGuid);
         // Use the cached transform to compute the point to send to the APZC.
         // This ensures that the sequence of touch points an APZC sees in an
         // input block are all in the same coordinate space.
@@ -290,6 +292,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
       const PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(pinchInput.mFocusPoint);
       if (apzc) {
+        apzc->GetGuid(aOutTargetGuid);
         GetInputTransforms(apzc, transformToApzc, transformToGecko);
         PinchGestureInput inputForApzc(pinchInput);
         ApplyTransform(&(inputForApzc.mFocusPoint), transformToApzc);
@@ -300,6 +303,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
       const TapGestureInput& tapInput = aEvent.AsTapGestureInput();
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(tapInput.mPoint));
       if (apzc) {
+        apzc->GetGuid(aOutTargetGuid);
         GetInputTransforms(apzc, transformToApzc, transformToGecko);
         TapGestureInput inputForApzc(tapInput);
         ApplyTransform(&(inputForApzc.mPoint), transformToApzc);
@@ -342,6 +346,7 @@ APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent,
 
 nsEventStatus
 APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid,
                                    WidgetTouchEvent* aOutEvent)
 {
   nsEventStatus ret = nsEventStatus_eIgnore;
@@ -355,6 +360,7 @@ APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   }
 
   if (mApzcForInputBlock) {
+    mApzcForInputBlock->GetGuid(aOutTargetGuid);
     // For computing the input for the APZC, used the cached transform.
     // This ensures that the sequence of touch points an APZC sees in an
     // input block are all in the same coordinate space.
@@ -392,14 +398,34 @@ APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   return ret;
 }
 
+void
+APZCTreeManager::TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
+                                            LayoutDeviceIntPoint* aOutTransformedPoint)
+{
+  MOZ_ASSERT(aOutTransformedPoint);
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aPoint);
+  if (apzc && aOutTransformedPoint) {
+    gfx3DMatrix transformToApzc;
+    gfx3DMatrix transformToGecko;
+    GetInputTransforms(apzc, transformToApzc, transformToGecko);
+    gfx3DMatrix outTransform = transformToApzc * transformToGecko;
+    aOutTransformedPoint->x = aPoint.x;
+    aOutTransformedPoint->y = aPoint.y;
+    ApplyTransform(aOutTransformedPoint, outTransform);
+  }
+}
+
+
 nsEventStatus
 APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid,
                                    WidgetMouseEvent* aOutEvent)
 {
   nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y));
   if (!apzc) {
     return nsEventStatus_eIgnore;
   }
+  apzc->GetGuid(aOutTargetGuid);
   gfx3DMatrix transformToApzc;
   gfx3DMatrix transformToGecko;
   GetInputTransforms(apzc, transformToApzc, transformToGecko);
@@ -412,6 +438,7 @@ APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
 
 nsEventStatus
 APZCTreeManager::ProcessEvent(const WidgetInputEvent& aEvent,
+                              ScrollableLayerGuid* aOutTargetGuid,
                               WidgetInputEvent* aOutEvent)
 {
   // Transform the refPoint
@@ -419,6 +446,7 @@ APZCTreeManager::ProcessEvent(const WidgetInputEvent& aEvent,
   if (!apzc) {
     return nsEventStatus_eIgnore;
   }
+  apzc->GetGuid(aOutTargetGuid);
   gfx3DMatrix transformToApzc;
   gfx3DMatrix transformToGecko;
   GetInputTransforms(apzc, transformToApzc, transformToGecko);
@@ -429,6 +457,7 @@ APZCTreeManager::ProcessEvent(const WidgetInputEvent& aEvent,
 
 nsEventStatus
 APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid,
                                    WidgetInputEvent* aOutEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -436,32 +465,33 @@ APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       const WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      return ProcessTouchEvent(touchEvent, aOutEvent->AsTouchEvent());
+      return ProcessTouchEvent(touchEvent, aOutTargetGuid, aOutEvent->AsTouchEvent());
     }
     case NS_MOUSE_EVENT: {
       // For b2g emulation
       const WidgetMouseEvent& mouseEvent = *aEvent.AsMouseEvent();
       WidgetMouseEvent* outMouseEvent = aOutEvent->AsMouseEvent();
-      return ProcessMouseEvent(mouseEvent, outMouseEvent);
+      return ProcessMouseEvent(mouseEvent, aOutTargetGuid, outMouseEvent);
     }
     default: {
-      return ProcessEvent(aEvent, aOutEvent);
+      return ProcessEvent(aEvent, aOutTargetGuid, aOutEvent);
     }
   }
 }
 
 nsEventStatus
-APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent)
+APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      return ProcessTouchEvent(touchEvent, &touchEvent);
+      return ProcessTouchEvent(touchEvent, aOutTargetGuid, &touchEvent);
     }
     default: {
-      return ProcessEvent(aEvent, &aEvent);
+      return ProcessEvent(aEvent, aOutTargetGuid, &aEvent);
     }
   }
 }
@@ -567,7 +597,7 @@ APZCTreeManager::HandleOverscroll(AsyncPanZoomController* aChild, ScreenPoint aS
 }
 
 bool
-APZCTreeManager::HitTestAPZC(const ScreenPoint& aPoint)
+APZCTreeManager::HitTestAPZC(const ScreenIntPoint& aPoint)
 {
   MonitorAutoLock lock(mTreeLock);
   nsRefPtr<AsyncPanZoomController> target;

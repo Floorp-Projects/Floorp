@@ -6,7 +6,7 @@ Text Preprocessor
 
 The build system contains a text preprocessor similar to the C preprocessor,
 meant for processing files which have no built-in preprocessor such as XUL
-and JavaScript documents. It is implemented at ``config/Preprocessor.py`` and
+and JavaScript documents. It is implemented at ``python/mozbuild/mozbuild/preprocessor.py`` and
 is typically invoked via :ref:`jar_manifests`.
 
 While used to preprocess CSS files, the directives are changed to begin with

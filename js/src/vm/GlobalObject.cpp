@@ -504,6 +504,23 @@ GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx, Handle<GlobalObject*> globa
     return !v.isFalse();
 }
 
+/* static */ bool
+GlobalObject::warnOnceAboutWatch(JSContext *cx, HandleObject obj)
+{
+    Rooted<GlobalObject*> global(cx, &obj->global());
+    HeapSlot &v = global->getSlotRef(WARNED_WATCH_DEPRECATED);
+    if (v.isUndefined()) {
+        // Warn only once per global object.
+        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage, NULL,
+                                          JSMSG_OBJECT_WATCH_DEPRECATED))
+        {
+            return false;
+        }
+        v.init(global, HeapSlot::Slot, WARNED_WATCH_DEPRECATED, BooleanValue(true));
+    }
+    return true;
+}
+
 JSFunction *
 GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *nameArg, unsigned length,
                                 gc::AllocKind kind)

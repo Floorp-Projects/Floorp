@@ -688,7 +688,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
             RootedId id(cx);
             RootedValue newElement(cx);
             for (uint32_t i = 0; i < length; i++) {
-                if (!IndexToId(cx, i, &id))
+                if (!IndexToId(cx, i, id.address()))
                     return false;
 
                 /* Step 2a(iii)(1). */

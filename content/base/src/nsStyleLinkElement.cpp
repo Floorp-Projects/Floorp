@@ -360,7 +360,10 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument *aOldDocument,
     nsAutoString text;
     nsContentUtils::GetNodeTextContent(thisContent, false, text);
 
-    if (!nsStyleUtil::CSPAllowsInlineStyle(thisContent->NodePrincipal(),
+    MOZ_ASSERT(thisContent->Tag() != nsGkAtoms::link,
+               "<link> is not 'inline', and needs different CSP checks");
+    if (!nsStyleUtil::CSPAllowsInlineStyle(thisContent,
+                                           thisContent->NodePrincipal(),
                                            doc->GetDocumentURI(),
                                            mLineNumber, text, &rv))
       return rv;

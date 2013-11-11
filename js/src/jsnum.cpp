@@ -622,30 +622,23 @@ js::Int32ToString<CanGC>(ThreadSafeContext *cx, int32_t si);
 template JSFlatString *
 js::Int32ToString<NoGC>(ThreadSafeContext *cx, int32_t si);
 
-template <AllowGC allowGC>
 JSAtom *
 js::Int32ToAtom(ExclusiveContext *cx, int32_t si)
 {
     if (JSFlatString *str = LookupInt32ToString(cx, si))
-        return js::AtomizeString<allowGC>(cx, str);
+        return js::AtomizeString(cx, str);
 
     char buffer[JSShortString::MAX_SHORT_LENGTH + 1];
     size_t length;
     char *start = BackfillInt32InBuffer(si, buffer, JSShortString::MAX_SHORT_LENGTH + 1, &length);
 
-    JSAtom *atom = AtomizeMaybeGC<allowGC>(cx, start, length);
+    JSAtom *atom = Atomize(cx, start, length);
     if (!atom)
         return nullptr;
 
     CacheNumber(cx, si, atom);
     return atom;
 }
-
-template JSAtom *
-js::Int32ToAtom<CanGC>(ExclusiveContext *cx, int32_t si);
-
-template JSAtom *
-js::Int32ToAtom<NoGC>(ExclusiveContext *cx, int32_t si);
 
 /* Returns a non-nullptr pointer to inside cbuf.  */
 static char *
@@ -1393,16 +1386,15 @@ js::NumberToString<CanGC>(ThreadSafeContext *cx, double d);
 template JSString *
 js::NumberToString<NoGC>(ThreadSafeContext *cx, double d);
 
-template <AllowGC allowGC>
 JSAtom *
 js::NumberToAtom(ExclusiveContext *cx, double d)
 {
     int32_t si;
     if (mozilla::DoubleIsInt32(d, &si))
-        return Int32ToAtom<allowGC>(cx, si);
+        return Int32ToAtom(cx, si);
 
     if (JSFlatString *str = LookupDtoaCache(cx, d))
-        return AtomizeString<allowGC>(cx, str);
+        return AtomizeString(cx, str);
 
     ToCStringBuf cbuf;
     char *numStr = FracNumberToCString(cx, &cbuf, d);
@@ -1413,7 +1405,7 @@ js::NumberToAtom(ExclusiveContext *cx, double d)
     JS_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
 
     size_t length = strlen(numStr);
-    JSAtom *atom = AtomizeMaybeGC<allowGC>(cx, numStr, length);
+    JSAtom *atom = Atomize(cx, numStr, length);
     if (!atom)
         return nullptr;
 
@@ -1421,12 +1413,6 @@ js::NumberToAtom(ExclusiveContext *cx, double d)
 
     return atom;
 }
-
-template JSAtom *
-js::NumberToAtom<CanGC>(ExclusiveContext *cx, double d);
-
-template JSAtom *
-js::NumberToAtom<NoGC>(ExclusiveContext *cx, double d);
 
 JSFlatString *
 js::NumberToString(JSContext *cx, double d)

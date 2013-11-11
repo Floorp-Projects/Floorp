@@ -6,7 +6,7 @@ import sys
 import os.path
 import mozunit
 
-from Preprocessor import Preprocessor
+from mozbuild.preprocessor import Preprocessor
 
 class TestLineEndings(unittest.TestCase):
   """

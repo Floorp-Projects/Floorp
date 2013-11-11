@@ -106,7 +106,7 @@ IonCache::LinkStatus
 IonCache::linkCode(JSContext *cx, MacroAssembler &masm, IonScript *ion, IonCode **code)
 {
     Linker linker(masm);
-    *code = linker.newCode(cx, JSC::ION_CODE);
+    *code = linker.newCode<CanGC>(cx, JSC::ION_CODE);
     if (!*code)
         return LINK_ERROR;
 
