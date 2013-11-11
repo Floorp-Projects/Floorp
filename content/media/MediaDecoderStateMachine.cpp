@@ -89,7 +89,8 @@ static const int64_t LOW_DATA_THRESHOLD_USECS = 5000000;
 
 // LOW_DATA_THRESHOLD_USECS needs to be greater than AMPLE_AUDIO_USECS, otherwise
 // the skip-to-keyframe logic can activate when we're running low on data.
-PR_STATIC_ASSERT(LOW_DATA_THRESHOLD_USECS > AMPLE_AUDIO_USECS);
+static_assert(LOW_DATA_THRESHOLD_USECS > AMPLE_AUDIO_USECS,
+              "LOW_DATA_THRESHOLD_USECS is too small");
 
 // Amount of excess usecs of data to add in to the "should we buffer" calculation.
 static const uint32_t EXHAUSTED_DATA_MARGIN_USECS = 60000;
@@ -113,7 +114,8 @@ static const uint32_t QUICK_BUFFERING_LOW_DATA_USECS = 1000000;
 // quick buffering in a timely fashion, as the decode pauses when it
 // reaches AMPLE_AUDIO_USECS decoded data, and thus we'll never reach
 // QUICK_BUFFERING_LOW_DATA_USECS.
-PR_STATIC_ASSERT(QUICK_BUFFERING_LOW_DATA_USECS <= AMPLE_AUDIO_USECS);
+static_assert(QUICK_BUFFERING_LOW_DATA_USECS <= AMPLE_AUDIO_USECS,
+              "QUICK_BUFFERING_LOW_DATA_USECS is too large");
 
 // This value has been chosen empirically.
 static const uint32_t AUDIOSTREAM_MIN_WRITE_BEFORE_START_USECS = 200000;
