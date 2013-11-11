@@ -21,6 +21,7 @@ EXPORTS.mozilla.gfx += [
     'Blur.h',
     'BorrowedContext.h',
     'DataSurfaceHelpers.h',
+    'Helpers.h',
     'Matrix.h',
     'PathHelpers.h',
     'Point.h',
