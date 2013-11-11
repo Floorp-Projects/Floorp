@@ -10,7 +10,7 @@
 #include "nsRuleData.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsMappedAttributes.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/dom/HTMLTableElementBinding.h"
 #include "nsContentUtils.h"
@@ -41,8 +41,8 @@ public:
     return mParent;
   }
 
-  virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
-                              ErrorResult& error);
+  virtual Element*
+  GetFirstNamedElement(const nsAString& aName, bool& aFound) MOZ_OVERRIDE;
   virtual void GetSupportedNames(nsTArray<nsString>& aNames);
 
   NS_IMETHOD    ParentDestroyed();
@@ -215,31 +215,14 @@ TableRowsCollection::Item(uint32_t aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(node, aReturn);
 }
 
-JSObject*
-TableRowsCollection::NamedItem(JSContext* cx, const nsAString& name,
-                               ErrorResult& error)
+Element*
+TableRowsCollection::GetFirstNamedElement(const nsAString& aName, bool& aFound)
 {
+  aFound = false;
   DO_FOR_EACH_ROWGROUP(
-    nsCOMPtr<nsIHTMLCollection> collection = do_QueryInterface(rows);
-    if (collection) {
-      // We'd like to call the nsIHTMLCollection::NamedItem that returns a
-      // JSObject*, but that relies on collection having a cached wrapper, which
-      // we can't guarantee here.
-      nsCOMPtr<nsIDOMNode> item;
-      error = collection->NamedItem(name, getter_AddRefs(item));
-      if (error.Failed()) {
-        return nullptr;
-      }
-      if (item) {
-        JS::Rooted<JSObject*> wrapper(cx, nsWrapperCache::GetWrapper());
-        JSAutoCompartment ac(cx, wrapper);
-        JS::Rooted<JS::Value> v(cx);
-        if (!mozilla::dom::WrapObject(cx, wrapper, item, &v)) {
-          error.Throw(NS_ERROR_FAILURE);
-          return nullptr;
-        }
-        return &v.toObject();
-      }
+    Element* item = rows->NamedGetter(aName, aFound);
+    if (aFound) {
+      return item;
     }
   );
   return nullptr;
