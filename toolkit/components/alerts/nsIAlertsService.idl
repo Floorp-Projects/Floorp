@@ -7,6 +7,8 @@
 #include "nsISupports.idl"
 #include "nsIObserver.idl"
 
+interface nsIPrincipal;
+
 [scriptable, uuid(160e87e1-d57d-456b-b6ea-17826f6ea7a8)]
 interface nsIAlertsService : nsISupports
 {
@@ -55,7 +57,8 @@ interface nsIAlertsService : nsISupports
                               [optional] in nsIObserver alertListener,
                               [optional] in AString name,
                               [optional] in AString dir,
-                              [optional] in AString lang);
+                              [optional] in AString lang,
+                              [optional] in nsIPrincipal principal);
 
    /**
     * Close alerts created by the service.
@@ -64,7 +67,8 @@ interface nsIAlertsService : nsISupports
     *                       is provided then only a notification created with
     *                       no name (if any) will be closed.
     */
-   void closeAlert([optional] in AString name);
+   void closeAlert([optional] in AString name,
+                   [optional] in nsIPrincipal principal);
 };
 
 [scriptable, uuid(df1bd4b0-3a8c-40e6-806a-203f38b0bd9f)]
