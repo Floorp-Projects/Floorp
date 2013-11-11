@@ -18,6 +18,11 @@ class BluetoothA2dpManager : public BluetoothProfileManagerBase
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  BT_DECL_PROFILE_MGR_BASE
+  virtual void GetName(nsACString& aName)
+  {
+    aName.AssignLiteral("A2DP");
+  }
 
   enum SinkState {
     SINK_UNKNOWN,
@@ -31,24 +36,6 @@ public:
   ~BluetoothA2dpManager();
   void ResetA2dp();
   void ResetAvrcp();
-
-  // The following functions are inherited from BluetoothProfileManagerBase
-  virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,
-                                   const nsAString& aServiceUuid,
-                                   int aChannel) MOZ_OVERRIDE;
-  virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) MOZ_OVERRIDE;
-  virtual void GetAddress(nsAString& aDeviceAddress) MOZ_OVERRIDE;
-  virtual bool IsConnected() MOZ_OVERRIDE;
-  virtual void Connect(const nsAString& aDeviceAddress,
-                       BluetoothProfileController* aController) MOZ_OVERRIDE;
-  virtual void Disconnect(BluetoothProfileController* aController) MOZ_OVERRIDE;
-  virtual void OnConnect(const nsAString& aErrorStr) MOZ_OVERRIDE;
-  virtual void OnDisconnect(const nsAString& aErrorStr) MOZ_OVERRIDE;
-
-  virtual void GetName(nsACString& aName)
-  {
-    aName.AssignLiteral("A2DP");
-  }
 
   // A2DP-specific functions
   void HandleSinkPropertyChanged(const BluetoothSignal& aSignal);
