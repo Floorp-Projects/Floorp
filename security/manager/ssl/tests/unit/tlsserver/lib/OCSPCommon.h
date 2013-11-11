@@ -34,10 +34,11 @@ struct OCSPHost
 {
   const char *mHostName;
   OCSPResponseType mORT;
+  const char *mAdditionalCertName; // useful for ORTGoodOtherCert, etc.
 };
 
 SECItemArray *
 GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
-                       PLArenaPool *aArena);
+                       PLArenaPool *aArena, const char *aAdditionalCertName);
 
 #endif // OCSPCommon_h

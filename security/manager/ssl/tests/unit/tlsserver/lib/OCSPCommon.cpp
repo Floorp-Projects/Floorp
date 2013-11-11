@@ -16,7 +16,7 @@ using namespace mozilla::test;
 
 SECItemArray *
 GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
-                       PLArenaPool *aArena)
+                       PLArenaPool *aArena, const char *aAdditionalCertName)
 {
   if (aORT == ORTNone) {
     if (gDebugLevel >= DEBUG_WARNINGS) {
@@ -78,7 +78,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     case ORTGoodOtherCert:
     {
       ScopedCERTCertificate otherCert(
-        PK11_FindCertFromNickname("ocspOtherEndEntity", nullptr));
+        PK11_FindCertFromNickname(aAdditionalCertName, nullptr));
       if (!otherCert) {
         PrintPRError("PK11_FindCertFromNickname failed");
         return nullptr;
@@ -113,7 +113,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
 
   ScopedCERTCertificate ca;
   if (aORT == ORTGoodOtherCA) {
-    ca = PK11_FindCertFromNickname("otherCA", nullptr);
+    ca = PK11_FindCertFromNickname(aAdditionalCertName, nullptr);
     if (!ca) {
       PrintPRError("PK11_FindCertFromNickname failed");
       return nullptr;
