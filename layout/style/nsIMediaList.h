@@ -165,7 +165,7 @@ public:
     mArray.AppendElement(aQuery.forget());
   }
 
-  nsresult Clone(nsMediaList** aResult);
+  already_AddRefed<nsMediaList> Clone();
 
   int32_t Count() { return mArray.Length(); }
   nsMediaQuery* MediumAt(int32_t aIndex) { return mArray[aIndex]; }
