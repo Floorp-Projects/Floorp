@@ -266,7 +266,7 @@ public:
   void GetTitle(nsString& aTitle) {
     const_cast<const nsCSSStyleSheet*>(this)->GetTitle(aTitle);
   }
-  nsIDOMMediaList* Media();
+  nsMediaList* Media();
   bool Disabled() const { return mDisabled; }
   // The XPCOM SetDisabled is fine for WebIDL
 

@@ -8,7 +8,6 @@
  */
 
 interface CSSRule;
-interface MediaList;
 
 interface StyleSheet {
   [Constant]
