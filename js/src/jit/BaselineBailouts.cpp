@@ -795,30 +795,31 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     BaselineScript *baselineScript = script->baselineScript();
 
 #ifdef DEBUG
-    uint32_t expectedDepth = js_ReconstructStackDepth(cx, script,
-                                                      resumeAfter ? GetNextPc(pc) : pc);
-    if (op != JSOP_FUNAPPLY || !iter.moreFrames() || resumeAfter) {
-        if (op == JSOP_FUNCALL) {
-            // For fun.call(this, ...); the reconstructStackDepth will
-            // include the this. When inlining that is not included.
-            // So the exprStackSlots will be one less.
-            JS_ASSERT(expectedDepth - exprStackSlots <= 1);
-        } else if (iter.moreFrames() && (IsGetPropPC(pc) || IsSetPropPC(pc))) {
-            // Accessors coming out of ion are inlined via a complete
-            // lie perpetrated by the compiler internally. Ion just rearranges
-            // the stack, and pretends that it looked like a call all along.
-            // This means that the depth is actually one *more* than expected
-            // by the interpreter, as there is now a JSFunction, |this| and [arg],
-            // rather than the expected |this| and [arg]
-            // Note that none of that was pushed, but it's still reflected
-            // in exprStackSlots.
-            JS_ASSERT(exprStackSlots - expectedDepth == 1);
-        } else {
-            // For fun.apply({}, arguments) the reconstructStackDepth will
-            // have stackdepth 4, but it could be that we inlined the
-            // funapply. In that case exprStackSlots, will have the real
-            // arguments in the slots and not be 4.
-            JS_ASSERT(exprStackSlots == expectedDepth);
+    uint32_t expectedDepth;
+    if (ReconstructStackDepth(cx, script, resumeAfter ? GetNextPc(pc) : pc, &expectedDepth)) {
+        if (op != JSOP_FUNAPPLY || !iter.moreFrames() || resumeAfter) {
+            if (op == JSOP_FUNCALL) {
+                // For fun.call(this, ...); the reconstructStackDepth will
+                // include the this. When inlining that is not included.
+                // So the exprStackSlots will be one less.
+                JS_ASSERT(expectedDepth - exprStackSlots <= 1);
+            } else if (iter.moreFrames() && (IsGetPropPC(pc) || IsSetPropPC(pc))) {
+                // Accessors coming out of ion are inlined via a complete
+                // lie perpetrated by the compiler internally. Ion just rearranges
+                // the stack, and pretends that it looked like a call all along.
+                // This means that the depth is actually one *more* than expected
+                // by the interpreter, as there is now a JSFunction, |this| and [arg],
+                // rather than the expected |this| and [arg]
+                // Note that none of that was pushed, but it's still reflected
+                // in exprStackSlots.
+                JS_ASSERT(exprStackSlots - expectedDepth == 1);
+            } else {
+                // For fun.apply({}, arguments) the reconstructStackDepth will
+                // have stackdepth 4, but it could be that we inlined the
+                // funapply. In that case exprStackSlots, will have the real
+                // arguments in the slots and not be 4.
+                JS_ASSERT(exprStackSlots == expectedDepth);
+            }
         }
     }
 
