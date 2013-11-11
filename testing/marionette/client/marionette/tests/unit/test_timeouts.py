@@ -33,12 +33,16 @@ class TestTimeouts(MarionetteTestCase):
     def test_searchtimeout_found_settimeout(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
-        self.marionette.timeouts("implicit", 4000)
+        button = self.marionette.find_element("id", "createDivButton")
+        button.click()
+        self.marionette.timeouts("implicit", 8000)
         self.assertEqual(HTMLElement, type(self.marionette.find_element("id", "newDiv")))
 
     def test_searchtimeout_found(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
+        button = self.marionette.find_element("id", "createDivButton")
+        button.click()
         self.assertRaises(NoSuchElementException, self.marionette.find_element, "id", "newDiv")
 
     def test_execute_async_timeout_settimeout(self):
