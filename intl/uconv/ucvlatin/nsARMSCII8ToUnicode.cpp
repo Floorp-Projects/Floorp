@@ -5,6 +5,9 @@
 
 #include "nsUCConstructors.h"
 #include "nsARMSCII8ToUnicode.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -17,6 +20,7 @@ nsARMSCII8ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 #include "armscii.ut"
   };
 
+  Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_ARMSCII8, true);
   return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                               aOuter, aIID, aResult);
 }

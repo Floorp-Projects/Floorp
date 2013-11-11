@@ -5,6 +5,9 @@
 
 #include "nsUCConstructors.h"
 #include "nsMacTurkishToUnicode.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -17,6 +20,7 @@ nsMacTurkishToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 #include "macturki.ut"
   };
 
+  Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_MACTURKISH, true);
   return CreateOneByteDecoder((uMappingTable*) &g_MacTurkishMappingTable,
                             aOuter, aIID, aResult);
 }
