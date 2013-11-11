@@ -71,6 +71,10 @@ XPCOMUtils.defineLazyGetter(this, "gParentalControlsService", function() {
   return null;
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "gApplicationReputationService",
+           "@mozilla.org/downloads/application-reputation-service;1",
+           Ci.nsIApplicationReputationService);
+
 /**
  * ArrayBufferView representing the bytes to be written to the "Zone.Identifier"
  * Alternate Data Stream to mark a file as coming from the Internet zone.
@@ -125,6 +129,8 @@ this.DownloadIntegration = {
   dontLoadObservers: false,
   dontCheckParentalControls: false,
   shouldBlockInTest: false,
+  dontCheckApplicationReputation: false,
+  shouldBlockInTestForApplicationReputation: false,
   dontOpenFileAndFolder: false,
   downloadDoneCalled: false,
   _deferTestOpenFile: null,
@@ -399,6 +405,41 @@ this.DownloadIntegration = {
     }
 
     return Promise.resolve(shouldBlock);
+  },
+
+  /**
+   * Checks to determine whether to block downloads because they might be
+   * malware, based on application reputation checks.
+   *
+   * aParam aDownload
+   *        The download object.
+   *
+   * @return {Promise}
+   * @resolves The boolean indicates to block downloads or not.
+   */
+  shouldBlockForReputationCheck: function (aDownload) {
+    if (this.dontCheckApplicationReputation) {
+      return Promise.resolve(this.shouldBlockInTestForApplicationReputation);
+    }
+    let hash;
+    try {
+      hash = aDownload.saver.getSha256Hash();
+    } catch (ex) {
+      // Bail if DownloadSaver doesn't have a hash.
+      return Promise.resolve(false);
+    }
+    if (!hash) {
+      return Promise.resolve(false);
+    }
+    let deferred = Promise.defer();
+    gApplicationReputationService.queryReputation({
+      sourceURI: NetUtil.newURI(aDownload.source.url),
+      fileSize: aDownload.currentBytes,
+      sha256Hash: hash },
+      function onComplete(aShouldBlock, aRv) {
+        deferred.resolve(aShouldBlock);
+      });
+    return deferred.promise;
   },
 
   /**
