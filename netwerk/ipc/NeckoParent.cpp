@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "necko-config.h"
 #include "nsHttp.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/HttpChannelParent.h"
@@ -12,7 +13,7 @@
 #include "mozilla/net/WyciwygChannelParent.h"
 #include "mozilla/net/FTPChannelParent.h"
 #include "mozilla/net/WebSocketChannelParent.h"
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
 #include "mozilla/net/RtspControllerParent.h"
 #endif
 #include "mozilla/net/RemoteOpenFileParent.h"
@@ -313,7 +314,7 @@ NeckoParent::DeallocPWebSocketParent(PWebSocketParent* actor)
 PRtspControllerParent*
 NeckoParent::AllocPRtspControllerParent()
 {
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
   RtspControllerParent* p = new RtspControllerParent();
   p->AddRef();
   return p;
@@ -325,7 +326,7 @@ NeckoParent::AllocPRtspControllerParent()
 bool
 NeckoParent::DeallocPRtspControllerParent(PRtspControllerParent* actor)
 {
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
   RtspControllerParent* p = static_cast<RtspControllerParent*>(actor);
   p->Release();
 #endif

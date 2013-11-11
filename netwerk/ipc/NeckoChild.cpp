@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "necko-config.h"
 #include "nsHttp.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/dom/ContentChild.h"
@@ -17,7 +18,7 @@
 #include "mozilla/dom/network/TCPSocketChild.h"
 #include "mozilla/dom/network/TCPServerSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
 #include "mozilla/net/RtspControllerChild.h"
 #endif
 #include "SerializedLoadContext.h"
@@ -171,7 +172,7 @@ NeckoChild::AllocPRtspControllerChild()
 bool
 NeckoChild::DeallocPRtspControllerChild(PRtspControllerChild* child)
 {
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
   RtspControllerChild* p = static_cast<RtspControllerChild*>(child);
   p->ReleaseIPDLReference();
 #endif

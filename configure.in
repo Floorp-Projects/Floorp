@@ -3979,6 +3979,9 @@ MOZ_DISABLE_CRYPTOLEGACY=
 NSS_DISABLE_DBM=
 NECKO_COOKIES=1
 NECKO_PROTOCOLS_DEFAULT="about app data file ftp http res viewsource websocket wyciwyg device"
+if test -n "$MOZ_RTSP"; then
+  NECKO_PROTOCOLS_DEFAULT="$NECKO_PROTOCOLS_DEFAULT rtsp"
+fi
 USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
@@ -7288,14 +7291,6 @@ if test -n "$MOZ_B2G_FM"; then
     AC_DEFINE(MOZ_B2G_FM)
 fi
 AC_SUBST(MOZ_B2G_FM)
-
-dnl ========================================================
-dnl = Enable Rtsp Protocol for B2G (Gonk usually)
-dnl ========================================================
-if test -n "$MOZ_RTSP"; then
-    AC_DEFINE(MOZ_RTSP)
-fi
-AC_SUBST(MOZ_RTSP)
 
 dnl ========================================================
 dnl = Enable Bluetooth Interface for B2G (Gonk usually)

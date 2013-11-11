@@ -18,7 +18,7 @@ SOURCES += [
     'OmxDecoder.cpp',
 ]
 
-if CONFIG['MOZ_RTSP']:
+if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
     EXPORTS += [
         'RtspOmxDecoder.h',
         'RtspOmxReader.h',

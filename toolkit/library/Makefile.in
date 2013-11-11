@@ -471,7 +471,7 @@ OS_LIBS += \
   $(NULL)
 endif
 
-ifdef MOZ_RTSP
+ifneq (,$(filter rtsp,$(NECKO_PROTOCOLS)))
 OS_LIBS += -lstagefright_foundation
 endif
 
