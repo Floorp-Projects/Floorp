@@ -219,9 +219,7 @@ public:
     eUniqueInner_AlreadyUnique,
     // A clone was done to ensure a unique inner (which means the style
     // rules in this sheet have changed).
-    eUniqueInner_ClonedInner,
-    // A clone was attempted, but it failed.
-    eUniqueInner_CloneFailed
+    eUniqueInner_ClonedInner
   };
   EnsureUniqueInnerResult EnsureUniqueInner();
 
