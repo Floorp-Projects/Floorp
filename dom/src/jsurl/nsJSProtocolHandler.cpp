@@ -179,7 +179,8 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
             csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT,
                                      NS_ConvertUTF8toUTF16(asciiSpec),
                                      NS_ConvertUTF8toUTF16(mURL),
-                                     0);
+                                     0,
+                                     EmptyString());
         }
 
         //return early if inline scripts are not allowed

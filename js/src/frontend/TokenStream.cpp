@@ -909,7 +909,7 @@ TokenStream::newToken(ptrdiff_t adjust)
 JS_ALWAYS_INLINE JSAtom *
 TokenStream::atomize(ExclusiveContext *cx, CharBuffer &cb)
 {
-    return AtomizeChars<CanGC>(cx, cb.begin(), cb.length());
+    return AtomizeChars(cx, cb.begin(), cb.length());
 }
 
 #ifdef DEBUG
@@ -1178,7 +1178,7 @@ TokenStream::getTokenInternal(Modifier modifier)
                 goto out;
         }
 
-        JSAtom *atom = AtomizeChars<CanGC>(cx, chars, length);
+        JSAtom *atom = AtomizeChars(cx, chars, length);
         if (!atom)
             goto error;
         tp->type = TOK_NAME;

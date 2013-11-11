@@ -241,7 +241,7 @@ RegExpObject *
 RegExpObject::createNoStatics(ExclusiveContext *cx, const jschar *chars, size_t length, RegExpFlag flags,
                               TokenStream *tokenStream)
 {
-    RootedAtom source(cx, AtomizeChars<CanGC>(cx, chars, length));
+    RootedAtom source(cx, AtomizeChars(cx, chars, length));
     if (!source)
         return nullptr;
 

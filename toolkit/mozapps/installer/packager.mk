@@ -178,12 +178,11 @@ RPM_INCIDENTALS=$(topsrcdir)/toolkit/mozapps/installer/linux/rpm
 
 RPM_CMD = \
   echo Creating RPM && \
-  mkdir -p $(RPMBUILD_SOURCEDIR) && \
-  $(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+  $(PYTHON) -m mozbuild.action.preprocessor \
 	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
 	-DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
-	< $(RPM_INCIDENTALS)/mozilla.desktop \
-	> $(RPMBUILD_SOURCEDIR)/$(MOZ_APP_NAME).desktop && \
+	$(RPM_INCIDENTALS)/mozilla.desktop \
+	-o $(RPMBUILD_SOURCEDIR)/$(MOZ_APP_NAME).desktop && \
   rm -rf $(_ABS_DIST)/$(TARGET_CPU) && \
   $(RPMBUILD) -bb \
   $(SPEC_FILE) \

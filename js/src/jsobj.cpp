@@ -21,6 +21,7 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
+#include "jsfriendapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsiter.h"
@@ -35,6 +36,7 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
+#include "builtin/Object.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "jit/AsmJSModule.h"
@@ -1683,7 +1685,7 @@ JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj,
 {
     if (JS_UNLIKELY(obj->watched())) {
         RootedId id(cx);
-        if (!IndexToId(cx, index, &id))
+        if (!IndexToId(cx, index, id.address()))
             return false;
 
         WatchpointMap *wpmap = cx->compartment()->watchpointMap;
@@ -3321,7 +3323,7 @@ baseops::DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, H
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
 
     return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs, 0, 0);
@@ -3911,7 +3913,7 @@ baseops::LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                        MutableHandleObject objp, MutableHandleShape propp)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
 
     return LookupPropertyWithFlagsInline<CanGC>(cx, obj, id, cx->resolveFlags, objp, propp);
@@ -4486,7 +4488,7 @@ baseops::GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint
                     MutableHandleValue vp)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
 
     /* This call site is hot -- use the always-inlined variant of js_GetPropertyHelper(). */
@@ -4867,7 +4869,7 @@ baseops::SetElementHelper(JSContext *cx, HandleObject obj, HandleObject receiver
                           unsigned defineHow, MutableHandleValue vp, bool strict)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
     return baseops::SetPropertyHelper<SequentialExecution>(cx, obj, receiver, id, defineHow, vp,
                                                            strict);
@@ -4972,7 +4974,7 @@ bool
 baseops::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
+    if (!IndexToId(cx, index, id.address()))
         return false;
     return baseops::DeleteGeneric(cx, obj, id, succeeded);
 }
@@ -4982,6 +4984,70 @@ baseops::DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, boo
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return baseops::DeleteGeneric(cx, obj, id, succeeded);
+}
+
+bool
+js::WatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id, JS::HandleObject callable)
+{
+    RootedObject obj(cx, GetInnerObject(cx, origObj));
+    if (origObj != obj) {
+        // If by unwrapping and innerizing, we changed the object, check again
+        // to make sure that we're allowed to set a watch point.
+        RootedValue v(cx);
+        unsigned attrs;
+        if (!CheckAccess(cx, obj, id, JSACC_WATCH, &v, &attrs))
+            return false;
+    }
+
+    if (obj->isNative()) {
+        // Use sparse indexes for watched objects, as dense elements can be
+        // written to without checking the watchpoint map.
+        if (!JSObject::sparsifyDenseElements(cx, obj))
+            return false;
+
+        types::MarkTypePropertyConfigured(cx, obj, id);
+    }
+
+    WatchpointMap *wpmap = cx->compartment()->watchpointMap;
+    if (!wpmap) {
+        wpmap = cx->runtime()->new_<WatchpointMap>();
+        if (!wpmap || !wpmap->init()) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+        cx->compartment()->watchpointMap = wpmap;
+    }
+
+    return wpmap->watch(cx, obj, id, js::WatchHandler, callable);
+}
+
+bool
+baseops::Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable)
+{
+    if (!obj->isNative()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
+                             obj->getClass()->name);
+        return false;
+    }
+
+    return WatchGuts(cx, obj, id, callable);
+}
+
+bool
+js::UnwatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id)
+{
+    // Looking in the map for an unsupported object will never hit, so we don't
+    // need to check for nativeness or watchable-ness here.
+    RootedObject obj(cx, GetInnerObject(cx, origObj));
+    if (WatchpointMap *wpmap = cx->compartment()->watchpointMap)
+        wpmap->unwatch(obj, id, nullptr, nullptr);
+    return true;
+}
+
+bool
+baseops::Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
+{
+    return UnwatchGuts(cx, obj, id);
 }
 
 bool

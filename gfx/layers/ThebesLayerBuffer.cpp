@@ -738,6 +738,8 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
               mDTBuffer->ReleaseBits(data);
 
               if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+                EnsureBufferOnWhite();
+                MOZ_ASSERT(mDTBufferOnWhite);
                 mDTBufferOnWhite->LockBits(&data, &size, &stride, &format);
                 uint8_t bytesPerPixel = BytesPerPixel(format);
                 BufferUnrotate(data,
@@ -834,7 +836,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
         NS_ASSERTION(destDTBufferOnWhite, "Must have a white buffer!");
         destDTBufferOnWhite->SetTransform(mat);
         EnsureBufferOnWhite();
-        MOZ_ASSERT(destDTBufferOnWhite, "Have we got a Thebes buffer for some reason?");
+        MOZ_ASSERT(mDTBufferOnWhite, "Have we got a Thebes buffer for some reason?");
         DrawBufferWithRotation(destDTBufferOnWhite, BUFFER_WHITE, 1.0, OP_SOURCE);
         destDTBufferOnWhite->SetTransform(Matrix());
       }

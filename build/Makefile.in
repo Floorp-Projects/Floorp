@@ -106,7 +106,7 @@ _LEAKTEST_FILES =    \
 		$(NULL)
 
 leaktest.py: leaktest.py.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $^ > $@
+	$(call py_action,preprocessor,$^ -o $@)
 	chmod +x $@
 GARBAGE += leaktest.py
 

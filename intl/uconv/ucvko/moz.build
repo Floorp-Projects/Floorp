@@ -4,24 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'ucvko'
-
 EXPORTS += [
     'nsUCvKOCID.h',
-]
-
-UNIFIED_SOURCES += [
-    'nsCP949ToUnicode.cpp',
-    'nsISO2022KRToUnicode.cpp',
-    'nsJohabToUnicode.cpp',
-    'nsUnicodeToCP949.cpp',
-    'nsUnicodeToJohab.cpp',
-]
-
-LIBRARY_NAME = 'ucvko_s'
-
-LIBXUL_LIBRARY = True
-
-LOCAL_INCLUDES += [
-    '../util',
 ]

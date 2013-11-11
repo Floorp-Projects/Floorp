@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=903332
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 903332</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 903332 **/
+
+  var watch1Called;
+  function watch1(prop, oldValue, newValue)
+  {
+    is(watch1Called, false, "watch1Called not reset properly?");
+    watch1Called = true;
+
+    is(prop, "cookie", "wrong property name passed to watch1");
+    return newValue;
+  }
+
+  var watch2Called;
+  function watch2(prop, oldValue, newValue)
+  {
+    is(watch2Called, false, "watch2Called not reset properly?");
+    watch2Called = true;
+
+    is(prop, "cookie", "wrong property name passed to watch2");
+    return newValue;
+  }
+
+  // Just in case subsequent tests depend on a particular value...
+  var originalValue = document.cookie;
+  ok(true, "originalValue: " + originalValue);
+
+  var originalPrefix = originalValue.length > 0 ? originalValue + "; " : "";
+
+  try
+  {
+    // trial set (no watch) to verify things work
+    document.cookie = "first=set";
+    is(document.cookie, originalPrefix + "first=set",
+       "first value correct");
+
+    // add a watch
+    document.watch("cookie", watch1);
+
+    // set, check for watch invoked
+    watch1Called = false;
+    document.cookie = "second=set";
+    is(watch1Called, true, "watch1 function should be called");
+    is(document.cookie, originalPrefix + "first=set; second=set",
+       "second value correct");
+
+    // and a second time, just in case
+    watch1Called = false;
+    document.cookie = "third=set";
+    is(watch1Called, true, "watch1 function should be called");
+    is(document.cookie, originalPrefix + "first=set; second=set; third=set",
+       "third value correct");
+
+    // overwrite the current watch with a new one
+    document.watch("cookie", watch2);
+
+    // set, check for watch invoked
+    watch1Called = false;
+    watch2Called = false;
+    document.cookie = "fourth=set";
+    is(watch1Called, false, "watch1 invoked erroneously");
+    is(watch2Called, true, "watch2 function should be called");
+    is(document.cookie, originalPrefix + "first=set; second=set; third=set; fourth=set",
+       "fourth value correct");
+
+    // and a second time, just in case
+    watch1Called = false;
+    watch2Called = false;
+    document.cookie = "fifth=set";
+    is(watch1Called, false, "watch1 invoked erroneously");
+    is(watch2Called, true, "watch2 function should be called");
+    is(document.cookie, originalPrefix + "first=set; second=set; third=set; fourth=set; fifth=set",
+       "fifth value correct");
+
+    // remove the watch
+    document.unwatch("cookie");
+
+    // check for non-invocation now
+    watch1Called = false;
+    watch2Called = false;
+    document.cookie = "sixth=set";
+    is(watch1Called, false, "watch1 shouldn't be called");
+    is(watch2Called, false, "watch2 shouldn't be called");
+    is(document.cookie, originalPrefix + "first=set; second=set; third=set; fourth=set; fifth=set; sixth=set",
+       "sixth value correct");
+  }
+  finally
+  {
+    // reset
+    document.unwatch("cookie"); // harmless, should be no-op except if bugs
+
+    var d = new Date();
+    d.setTime(0);
+    var suffix = "=; expires=" + d.toGMTString();
+
+    document.cookie = "first" + suffix;
+    document.cookie = "second" + suffix;
+    document.cookie = "third" + suffix;
+    document.cookie = "fourth" + suffix;
+    document.cookie = "fifth" + suffix;
+    document.cookie = "sixth" + suffix;
+  }
+
+  is(document.cookie, originalValue,
+     "document.cookie isn't what it was initially!  expect bustage further " +
+     "down the line");
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=903332">Mozilla Bug 903332</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

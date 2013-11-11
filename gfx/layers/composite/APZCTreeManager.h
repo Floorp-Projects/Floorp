@@ -44,6 +44,14 @@ struct ScrollableLayerGuid {
   uint32_t mPresShellId;
   FrameMetrics::ViewID mScrollId;
 
+  ScrollableLayerGuid()
+    : mLayersId(0)
+    , mPresShellId(0)
+    , mScrollId(0)
+  {
+    MOZ_COUNT_CTOR(ScrollableLayerGuid);
+  }
+
   ScrollableLayerGuid(uint64_t aLayersId, uint32_t aPresShellId,
                       FrameMetrics::ViewID aScrollId)
     : mLayersId(aLayersId)
@@ -142,8 +150,13 @@ public:
    * General handler for incoming input events. Manipulates the frame metrics
    * based on what type of input it is. For example, a PinchGestureEvent will
    * cause scaling. This should only be called externally to this class.
+   *
+   * @param aEvent input event object, will not be modified
+   * @param aOutTargetGuid returns the guid of the apzc this event was
+   * delivered to. May be null.
    */
-  nsEventStatus ReceiveInputEvent(const InputData& aEvent);
+  nsEventStatus ReceiveInputEvent(const InputData& aEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid);
 
   /**
    * WidgetInputEvent handler. Sets |aOutEvent| (which is assumed to be an
@@ -158,9 +171,12 @@ public:
    * to the appropriate apz as such.
    *
    * @param aEvent input event object, will not be modified
+   * @param aOutTargetGuid returns the guid of the apzc this event was
+   * delivered to. May be null.
    * @param aOutEvent event object transformed to DOM coordinate space.
    */
   nsEventStatus ReceiveInputEvent(const WidgetInputEvent& aEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid,
                                   WidgetInputEvent* aOutEvent);
 
   /**
@@ -168,8 +184,20 @@ public:
    * WidgetInputEvent. Must be called on the main thread.
    *
    * @param aEvent input event object
+   * @param aOutTargetGuid returns the guid of the apzc this event was
+   * delivered to. May be null.
    */
-  nsEventStatus ReceiveInputEvent(WidgetInputEvent& aEvent);
+  nsEventStatus ReceiveInputEvent(WidgetInputEvent& aEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid);
+
+  /**
+   * A helper for transforming coordinates to gecko coordinate space.
+   *
+   * @param aPoint point to transform
+   * @param aOutTransformedPoint resulting transformed point
+   */
+  void TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
+                                  LayoutDeviceIntPoint* aOutTransformedPoint);
 
   /**
    * Updates the composition bounds, i.e. the dimensions of the final size of
@@ -235,7 +263,7 @@ public:
   /**
    * Tests if a screen point intersect an apz in the tree.
    */
-  bool HitTestAPZC(const ScreenPoint& aPoint);
+  bool HitTestAPZC(const ScreenIntPoint& aPoint);
 
   /**
    * Set the dpi value used by all AsyncPanZoomControllers.
@@ -285,9 +313,9 @@ private:
   AsyncPanZoomController* CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   AsyncPanZoomController* RootAPZCForLayersId(AsyncPanZoomController* aApzc);
   AsyncPanZoomController* GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent, ScreenPoint aPoint);
-  nsEventStatus ProcessTouchEvent(const WidgetTouchEvent& touchEvent, WidgetTouchEvent* aOutEvent);
-  nsEventStatus ProcessMouseEvent(const WidgetMouseEvent& mouseEvent, WidgetMouseEvent* aOutEvent);
-  nsEventStatus ProcessEvent(const WidgetInputEvent& inputEvent, WidgetInputEvent* aOutEvent);
+  nsEventStatus ProcessTouchEvent(const WidgetTouchEvent& touchEvent, ScrollableLayerGuid* aOutTargetGuid, WidgetTouchEvent* aOutEvent);
+  nsEventStatus ProcessMouseEvent(const WidgetMouseEvent& mouseEvent, ScrollableLayerGuid* aOutTargetGuid, WidgetMouseEvent* aOutEvent);
+  nsEventStatus ProcessEvent(const WidgetInputEvent& inputEvent, ScrollableLayerGuid* aOutTargetGuid, WidgetInputEvent* aOutEvent);
 
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has

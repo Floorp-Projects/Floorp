@@ -153,7 +153,7 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
     {
         a = pool->current;
         do {
-            if ( a->avail +nb <= a->limit )  {
+            if ( nb <= a->limit - a->avail )  {
                 pool->current = a;
                 rp = (char *)a->avail;
                 a->avail += nb;
@@ -171,7 +171,7 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
             return(0);
 
         for ( a = arena_freelist, p = NULL; a != NULL ; p = a, a = a->next ) {
-            if ( a->base +nb <= a->limit )  {
+            if ( nb <= a->limit - a->base )  {
                 if ( p == NULL )
                     arena_freelist = a->next;
                 else
@@ -196,8 +196,12 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
     /* attempt to allocate from the heap */ 
     {  
         PRUint32 sz = PR_MAX(pool->arenasize, nb);
-        sz += sizeof *a + pool->mask;  /* header and alignment slop */
-        a = (PLArena*)PR_MALLOC(sz);
+        if (PR_UINT32_MAX - sz < sizeof *a + pool->mask) {
+            a = NULL;
+        } else {
+            sz += sizeof *a + pool->mask;  /* header and alignment slop */
+            a = (PLArena*)PR_MALLOC(sz);
+        }
         if ( NULL != a )  {
             a->limit = (PRUword)a + sz;
             a->base = a->avail = (PRUword)PL_ARENA_ALIGN(pool, a + 1);

@@ -525,9 +525,9 @@ obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 
 #if JS_HAS_OBJ_WATCHPOINT
 
-static bool
-obj_watch_handler(JSContext *cx, JSObject *obj_, jsid id_, jsval old,
-                  jsval *nvp, void *closure)
+bool
+js::WatchHandler(JSContext *cx, JSObject *obj_, jsid id_, JS::Value old,
+                 JS::Value *nvp, void *closure)
 {
     RootedObject obj(cx, obj_);
     RootedId id(cx, id_);
@@ -552,6 +552,15 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    RootedObject obj(cx, ToObject(cx, args.thisv()));
+    if (!obj)
+        return false;
+
+#if 0 /* pending addressing Firebug's use of this method */
+    if (!GlobalObject::warnOnceAboutWatch(cx, obj))
+        return false;
+#endif
+
     if (args.length() <= 1) {
         js_ReportMissingArg(cx, args.calleev(), 1);
         return false;
@@ -565,18 +574,16 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args[0], &propid))
         return false;
 
-    RootedObject obj(cx, ToObject(cx, args.thisv()));
-    if (!obj)
-        return false;
-
     RootedValue tmp(cx);
     unsigned attrs;
     if (!CheckAccess(cx, obj, propid, JSACC_WATCH, &tmp, &attrs))
         return false;
 
-    args.rval().setUndefined();
+    if (!JSObject::watch(cx, obj, propid, callable))
+        return false;
 
-    return JS_SetWatchPoint(cx, obj, propid, obj_watch_handler, callable);
+    args.rval().setUndefined();
+    return true;
 }
 
 static bool
@@ -587,15 +594,25 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
-    args.rval().setUndefined();
+
+#if 0 /* pending addressing Firebug's use of this method */
+    if (!GlobalObject::warnOnceAboutWatch(cx, obj))
+        return false;
+#endif
+
     RootedId id(cx);
-    if (argc != 0) {
+    if (args.length() != 0) {
         if (!ValueToId<CanGC>(cx, args[0], &id))
             return false;
     } else {
         id = JSID_VOID;
     }
-    return JS_ClearWatchPoint(cx, obj, id, nullptr, nullptr);
+
+    if (!JSObject::unwatch(cx, obj, id))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
 }
 
 #endif /* JS_HAS_OBJ_WATCHPOINT */
