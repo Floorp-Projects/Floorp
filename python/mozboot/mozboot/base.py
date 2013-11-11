@@ -189,13 +189,24 @@ class BaseBootstrapper(object):
         This should be defined in child classes.
         """
 
+    def _hgplain_env(self):
+        """ Returns a copy of the current environment updated with the HGPLAIN
+        environment variable.
+
+        HGPLAIN prevents Mercurial from applying locale variations to the output
+        making it suitable for use in scripts.
+        """
+        env = os.environ.copy()
+        env['HGPLAIN'] = '1'
+        return env
+
     def is_mercurial_modern(self):
         hg = self.which('hg')
         if not hg:
             print(NO_MERCURIAL)
             return False, False, None
 
-        info = self.check_output([hg, '--version']).splitlines()[0]
+        info = self.check_output([hg, '--version'], env=self._hgplain_env()).splitlines()[0]
 
         match = re.search('version ([^\+\)]+)', info)
         if not match:
