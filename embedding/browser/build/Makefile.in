@@ -6,11 +6,3 @@
 SHARED_LIBRARY_LIBS= \
 		../webBrowser/$(LIB_PREFIX)nsWebBrowser_s.$(LIB_SUFFIX) \
 		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
-INCLUDES	+= \
-		-I$(srcdir)			\
-		-I$(srcdir)/../webBrowser		\
-		-I$(srcdir)/../setup		\
-		$(NULL)
