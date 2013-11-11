@@ -30,8 +30,8 @@ const char *filterName[] = {
 
 /* Maximum supported size for chunkSize */
 static const size_t maxChunkSize =
-  1 << (8 * std::min(sizeof(((SeekableZStreamHeader *)NULL)->chunkSize),
-                     sizeof(((SeekableZStreamHeader *)NULL)->lastChunkSize)) - 1);
+  1 << (8 * std::min(sizeof(((SeekableZStreamHeader *)nullptr)->chunkSize),
+                     sizeof(((SeekableZStreamHeader *)nullptr)->lastChunkSize)) - 1);
 
 class Buffer: public MappedPtr
 {
@@ -40,7 +40,7 @@ public:
 
   virtual bool Resize(size_t size)
   {
-    MemoryRange buf = mmap(NULL, size, PROT_READ | PROT_WRITE,
+    MemoryRange buf = mmap(nullptr, size, PROT_READ | PROT_WRITE,
                            MAP_PRIVATE | MAP_ANON, -1, 0);
     if (buf == MAP_FAILED)
       return false;
@@ -78,7 +78,8 @@ public:
       if (ftruncate(fd, size) == -1)
         return false;
     }
-    Assign(MemoryRange::mmap(NULL, size, PROT_READ | (writable ? PROT_WRITE : 0),
+    Assign(MemoryRange::mmap(nullptr, size,
+                             PROT_READ | (writable ? PROT_WRITE : 0),
                              writable ? MAP_SHARED : MAP_PRIVATE, fd, 0));
     return this != MAP_FAILED;
   }
@@ -273,7 +274,7 @@ int SzipCompress::run(const char *name, Buffer &origBuf,
   mozilla::ScopedDeletePtr<Buffer> filteredBuf;
   Buffer *origData;
   for (SeekableZStream::FilterId f = firstFilter; f < lastFilter; ++f) {
-    FilteredBuffer *filteredTmp = NULL;
+    FilteredBuffer *filteredTmp = nullptr;
     Buffer tmpBuf;
     if (f != SeekableZStream::NONE) {
       DEBUG_LOG("Applying filter \"%s\"", filterName[f]);
@@ -288,7 +289,7 @@ int SzipCompress::run(const char *name, Buffer &origBuf,
       break;
     }
     DEBUG_LOG("Compressing with no dictionary");
-    if (do_compress(*origData, tmpBuf, NULL, 0, f) == 0) {
+    if (do_compress(*origData, tmpBuf, nullptr, 0, f) == 0) {
       if (tmpBuf.GetLength() < outBuf.GetLength()) {
         outBuf.Fill(tmpBuf);
         compressed = true;

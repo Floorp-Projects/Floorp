@@ -155,6 +155,10 @@ class FullParseHandler
         return newUnary(PNK_DELETE, JSOP_NOP, begin, expr);
     }
 
+    ParseNode *newNullary(ParseNodeKind kind, JSOp op, const TokenPos &pos) {
+        return new_<NullaryNode>(kind, op, pos);
+    }
+
     ParseNode *newUnary(ParseNodeKind kind, JSOp op, uint32_t begin, ParseNode *kid) {
         TokenPos pos(begin, kid ? kid->pn_pos.end : begin + 1);
         return new_<UnaryNode>(kind, op, pos, kid);
@@ -302,6 +306,20 @@ class FullParseHandler
                                          importSpecSet, moduleSpec);
         if (!pn)
             return null();
+        return pn;
+    }
+
+    ParseNode *newExportDeclaration(ParseNode *kid, const TokenPos &pos) {
+        return new_<UnaryNode>(PNK_EXPORT, JSOP_NOP, pos, kid);
+    }
+
+    ParseNode *newExportFromDeclaration(uint32_t begin, ParseNode *exportSpecSet,
+                                        ParseNode *moduleSpec)
+    {
+        ParseNode *pn = new_<BinaryNode>(PNK_EXPORT_FROM, JSOP_NOP, exportSpecSet, moduleSpec);
+        if (!pn)
+            return null();
+        pn->pn_pos.begin = begin;
         return pn;
     }
 
