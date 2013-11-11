@@ -614,16 +614,15 @@ nsMediaList::GetLength(uint32_t* aLength)
 {
   NS_ENSURE_ARG_POINTER(aLength);
 
-  *aLength = mArray.Length();
+  *aLength = Length();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMediaList::Item(uint32_t aIndex, nsAString& aReturn)
 {
-  int32_t index = aIndex;
-  if (0 <= index && index < Count()) {
-    nsMediaQuery* query = mArray[index];
+  if (aIndex < Length()) {
+    nsMediaQuery* query = mArray[aIndex];
     NS_ENSURE_TRUE(query, NS_ERROR_FAILURE);
 
     aReturn.Truncate();
