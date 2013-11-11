@@ -451,11 +451,7 @@ nsMediaQuery::AppendToString(nsAString& aString) const
 nsMediaQuery*
 nsMediaQuery::Clone() const
 {
-  nsAutoPtr<nsMediaQuery> result(new nsMediaQuery(*this));
-  NS_ENSURE_TRUE(result &&
-                   result->mExpressions.Length() == mExpressions.Length(),
-                 nullptr);
-  return result.forget();
+  return new nsMediaQuery(*this);
 }
 
 bool
@@ -563,10 +559,9 @@ nsMediaList::Clone(nsMediaList** aResult)
   nsRefPtr<nsMediaList> result = new nsMediaList();
   if (!result || !result->mArray.AppendElements(mArray.Length()))
     return NS_ERROR_OUT_OF_MEMORY;
-  for (int32_t i = 0, i_end = mArray.Length(); i < i_end; ++i) {
-    if (!(result->mArray[i] = mArray[i]->Clone())) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  for (uint32_t i = 0, i_end = mArray.Length(); i < i_end; ++i) {
+    result->mArray[i] = mArray[i]->Clone();
+    MOZ_ASSERT(result->mArray[i]);
   }
   NS_ADDREF(*aResult = result);
   return NS_OK;
