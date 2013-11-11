@@ -553,18 +553,16 @@ nsMediaList::SetStyleSheet(nsCSSStyleSheet *aSheet)
   return NS_OK;
 }
 
-nsresult
-nsMediaList::Clone(nsMediaList** aResult)
+already_AddRefed<nsMediaList>
+nsMediaList::Clone()
 {
   nsRefPtr<nsMediaList> result = new nsMediaList();
-  if (!result || !result->mArray.AppendElements(mArray.Length()))
-    return NS_ERROR_OUT_OF_MEMORY;
+  result->mArray.AppendElements(mArray.Length());
   for (uint32_t i = 0, i_end = mArray.Length(); i < i_end; ++i) {
     result->mArray[i] = mArray[i]->Clone();
     MOZ_ASSERT(result->mArray[i]);
   }
-  NS_ADDREF(*aResult = result);
-  return NS_OK;
+  return result.forget();
 }
 
 NS_IMETHODIMP
@@ -1025,7 +1023,7 @@ nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and
     // sheets in sync!
-    aCopy.mMedia->Clone(getter_AddRefs(mMedia));
+    mMedia = aCopy.mMedia->Clone();
   }
 
   SetIsDOMBinding();
