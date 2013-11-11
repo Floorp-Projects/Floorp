@@ -36,6 +36,7 @@ namespace dom {
 
 class MediaRecorder : public nsDOMEventTargetHelper
 {
+  class ShutdownObserver;
   class ExtractEncodedDataTask;
   class PushBlobTask;
   class PushErrorMessageTask;
@@ -122,6 +123,9 @@ protected:
   int32_t mTimeSlice;
   // The current state of the MediaRecorder object.
   RecordingState mState;
+
+  // Receive shutdown notofication to terminate read thread.
+  nsRefPtr<ShutdownObserver> mObserver;
 };
 
 }

@@ -115,14 +115,67 @@ private:
   nsRefPtr<MediaEncoder>  mEncoder;
 };
 
+// ShutdownObserver receive shutdow notification from the main thread.
+// Stop recording thread if MediaRecorder is in recording state.
+class MediaRecorder::ShutdownObserver : public nsIObserver
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+public:
+  ShutdownObserver(MediaRecorder *recorder)
+    : mRecorder(recorder)
+  {
+  }
+
+  virtual ~ShutdownObserver()
+  {
+     Unregister();
+  }
+
+  // Register shutdown notification
+  void Registrer() { nsContentUtils::RegisterShutdownObserver(this); }
+
+  // Ungegister shutdown notification
+  void Unregister() { nsContentUtils::UnregisterShutdownObserver(this); }
+
+private:
+  MediaRecorder *mRecorder;
+};
+
+NS_IMPL_ISUPPORTS1(MediaRecorder::ShutdownObserver, nsIObserver)
+
+NS_IMETHODIMP
+MediaRecorder::ShutdownObserver::Observe(nsISupports *aSubject,
+                                         const char *aTopic,
+                                         const PRUnichar *aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    if (mRecorder->mState != RecordingState::Inactive) {
+      ErrorResult result;
+      mRecorder->Stop(result);
+    }
+  }
+
+   return NS_OK;
+}
+
+
 MediaRecorder::~MediaRecorder()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mStreamPort) {
     mStreamPort->Destroy();
   }
   if (mTrackUnionStream) {
     mTrackUnionStream->Destroy();
   }
+
+  if (mObserver.get())
+     mObserver->Unregister();
 }
 
 void
@@ -131,6 +184,9 @@ MediaRecorder::Init(nsPIDOMWindow* aOwnerWindow)
   MOZ_ASSERT(aOwnerWindow);
   MOZ_ASSERT(aOwnerWindow->IsInnerWindow());
   BindToOwner(aOwnerWindow);
+
+  if (mObserver.get() == nullptr)
+    mObserver = new ShutdownObserver(this);
 }
 
 MediaRecorder::MediaRecorder(DOMMediaStream& aStream)
@@ -221,6 +277,9 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
     mReadThread->Dispatch(event, NS_DISPATCH_NORMAL);
     mState = RecordingState::Recording;
   }
+
+  if (mObserver.get())
+    mObserver->Registrer();
 }
 
 void
@@ -237,6 +296,9 @@ MediaRecorder::Stop(ErrorResult& aResult)
 
   mTrackUnionStream->Destroy();
   mTrackUnionStream = nullptr;
+
+  if (mObserver.get())
+    mObserver->Unregister();
 }
 
 void
