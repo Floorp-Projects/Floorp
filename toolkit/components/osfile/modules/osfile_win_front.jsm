@@ -410,13 +410,13 @@
       *
       * @param {string} path The name of the directory to remove.
       * @param {*=} options Additional options.
-      *   - {bool} ignoreAbsent If |false|, throw an error if the directory
-      *     does not exist. |true| by default
+      *   - {bool} ignoreAbsent If |true|, do not fail if the
+      *     directory does not exist yet.
       */
      File.removeEmptyDir = function removeEmptyDir(path, options = {}) {
        let result = WinFile.RemoveDirectory(path);
        if (!result) {
-         if ((!("ignoreAbsent" in options) || options.ignoreAbsent) &&
+         if (options.ignoreAbsent &&
              ctypes.winLastError == Const.ERROR_FILE_NOT_FOUND) {
            return;
          }
@@ -435,19 +435,18 @@
       * as per winapi function |CreateDirectory|. If unspecified,
       * use the default security descriptor, inherited from the
       * parent directory.
-      * - {bool} ignoreExisting If |false|, throw an error if the directory
-      * already exists. |true| by default
+      * - {bool} ignoreExisting If |true|, do not fail if the
+      * directory already exists.
       */
      File.makeDir = function makeDir(path, options = {}) {
        let security = options.winSecurity || null;
        let result = WinFile.CreateDirectory(path, security);
-       if (!result) {
-         if ((!("ignoreExisting" in options) || options.ignoreExisting) &&
-             ctypes.winLastError == Const.ERROR_ALREADY_EXISTS) {
-           return;
-         }
-         throw new File.Error("makeDir");
+       if (result ||
+           options.ignoreExisting &&
+           ctypes.winLastError == Const.ERROR_ALREADY_EXISTS) {
+        return;
        }
+       throw new File.Error("makeDir");
      };
 
      /**
