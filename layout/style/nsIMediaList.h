@@ -167,7 +167,7 @@ public:
 
   already_AddRefed<nsMediaList> Clone();
 
-  int32_t Count() { return mArray.Length(); }
+  uint32_t Length() { return mArray.Length(); }
   nsMediaQuery* MediumAt(int32_t aIndex) { return mArray[aIndex]; }
   void Clear() { mArray.Clear(); }
 
