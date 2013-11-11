@@ -1528,16 +1528,13 @@ nsCSSStyleSheet::EnsureUniqueInner()
   return eUniqueInner_ClonedInner;
 }
 
-bool
+void
 nsCSSStyleSheet::AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray)
 {
   for (nsCSSStyleSheet* child = mInner->mFirstChild; child;
        child = child->mNext) {
-    if (!aArray.AppendElement(child)) {
-      return false;
-    }
+    aArray.AppendElement(child);
   }
-  return true;
 }
 
 already_AddRefed<nsCSSStyleSheet>
