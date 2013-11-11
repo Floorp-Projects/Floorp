@@ -99,7 +99,7 @@ static uint64_t TimeStamp_Now()
   return baseNs + (uint64_t)ts.tv_nsec;
 }
 
-static struct mapping_info * lib_mapping = NULL;
+static struct mapping_info * lib_mapping = nullptr;
 
 NS_EXPORT const struct mapping_info *
 getLibraryMapping()
@@ -112,7 +112,7 @@ JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg)
 {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Throw\n");
     jclass cls = jenv->FindClass(classname);
-    if (cls == NULL) {
+    if (cls == nullptr) {
         __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't find exception class (or exception pending) %s\n", classname);
         exit(FAILURE);
     }
@@ -128,17 +128,17 @@ JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg)
 #include "jni-stubs.inc"
 #undef JNI_STUBS
 
-static void * xul_handle = NULL;
+static void * xul_handle = nullptr;
 #ifndef MOZ_FOLD_LIBS
-static void * sqlite_handle = NULL;
-static void * nspr_handle = NULL;
-static void * plc_handle = NULL;
+static void * sqlite_handle = nullptr;
+static void * nspr_handle = nullptr;
+static void * plc_handle = nullptr;
 #else
 #define sqlite_handle nss_handle
 #define nspr_handle nss_handle
 #define plc_handle nss_handle
 #endif
-static void * nss_handle = NULL;
+static void * nss_handle = nullptr;
 
 template <typename T> inline void
 xul_dlsym(const char *symbolName, T *value)
@@ -305,8 +305,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jcl
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
   // better to do here
-  str = jenv->GetStringUTFChars(jApkName, NULL);
-  if (str == NULL)
+  str = jenv->GetStringUTFChars(jApkName, nullptr);
+  if (str == nullptr)
     return;
 
   int res = loadGeckoLibs(str);
@@ -325,8 +325,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadSQLiteLibsNative(JNIEnv *jenv, jc
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
   // better to do here
-  str = jenv->GetStringUTFChars(jApkName, NULL);
-  if (str == NULL)
+  str = jenv->GetStringUTFChars(jApkName, nullptr);
+  if (str == nullptr)
     return;
 
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load sqlite start\n");
@@ -347,8 +347,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadNSSLibsNative(JNIEnv *jenv, jclas
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
   // better to do here
-  str = jenv->GetStringUTFChars(jApkName, NULL);
-  if (str == NULL)
+  str = jenv->GetStringUTFChars(jApkName, nullptr);
+  if (str == nullptr)
     return;
 
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Load nss start\n");
@@ -367,7 +367,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv *jenv, jclass jc, js
 {
   GeckoStart_t GeckoStart;
   xul_dlsym("GeckoStart", &GeckoStart);
-  if (GeckoStart == NULL)
+  if (GeckoStart == nullptr)
     return;
   // XXX: java doesn't give us true UTF8, we should figure out something
   // better to do here
