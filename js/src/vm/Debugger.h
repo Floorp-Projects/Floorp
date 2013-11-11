@@ -230,12 +230,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 
     bool addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> obj);
     bool addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> obj,
-                           AutoDebugModeGC &dmgc);
+                           AutoDebugModeInvalidation &invalidate);
     void removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
                               GlobalObjectSet::Enum *compartmentEnum,
                               GlobalObjectSet::Enum *debugEnum);
     void removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
-                              AutoDebugModeGC &dmgc,
+                              AutoDebugModeInvalidation &invalidate,
                               GlobalObjectSet::Enum *compartmentEnum,
                               GlobalObjectSet::Enum *debugEnum);
 
