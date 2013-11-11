@@ -862,8 +862,14 @@ void AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
   }
 
   if (fabs(overscroll.x) > EPSILON || fabs(overscroll.y) > EPSILON) {
-    // "+ overscroll" rather than "- overscroll" for the same reason as above.
-    mTreeManager->HandleOverscroll(this, aEndPoint + overscroll, aEndPoint);
+    // Make a local copy of the tree manager pointer and check if it's not
+    // null before calling HandleOverscroll(). This is necessary because
+    // Destroy(), which nulls out mTreeManager, could be called concurrently.
+    APZCTreeManager* treeManagerLocal = mTreeManager;
+    if (treeManagerLocal) {
+      // "+ overscroll" rather than "- overscroll" for the same reason as above.
+      treeManagerLocal->HandleOverscroll(this, aEndPoint + overscroll, aEndPoint);
+    }
   }
 }
 
