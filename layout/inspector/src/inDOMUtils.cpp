@@ -203,12 +203,12 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   }
 
   nsRuleNode* ruleNode = nullptr;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  NS_ENSURE_STATE(content);
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  NS_ENSURE_STATE(element);
   nsRefPtr<nsStyleContext> styleContext;
-  GetRuleNodeForContent(content, pseudoElt, getter_AddRefs(styleContext), &ruleNode);
+  GetRuleNodeForElement(element, pseudoElt, getter_AddRefs(styleContext), &ruleNode);
   if (!ruleNode) {
-    // This can fail for content nodes that are not in the document or
+    // This can fail for elements that are not in the document or
     // if the document they're in doesn't have a presshell.  Bail out.
     return NS_OK;
   }
@@ -699,19 +699,17 @@ inDOMUtils::GetContentState(nsIDOMElement *aElement, nsEventStates::InternalType
 }
 
 /* static */ nsresult
-inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
+inDOMUtils::GetRuleNodeForElement(dom::Element* aElement,
                                   nsIAtom* aPseudo,
                                   nsStyleContext** aStyleContext,
                                   nsRuleNode** aRuleNode)
 {
+  MOZ_ASSERT(aElement);
+
   *aRuleNode = nullptr;
   *aStyleContext = nullptr;
 
-  if (!aContent->IsElement()) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsIDocument* doc = aContent->GetDocument();
+  nsIDocument* doc = aElement->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
   nsIPresShell *presShell = doc->GetShell();
@@ -723,7 +721,7 @@ inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
   presContext->EnsureSafeToHandOutCSSRules();
 
   nsRefPtr<nsStyleContext> sContext =
-    nsComputedDOMStyle::GetStyleContextForElement(aContent->AsElement(), aPseudo, presShell);
+    nsComputedDOMStyle::GetStyleContextForElement(aElement, aPseudo, presShell);
   if (sContext) {
     *aRuleNode = sContext->RuleNode();
     sContext.forget(aStyleContext);
