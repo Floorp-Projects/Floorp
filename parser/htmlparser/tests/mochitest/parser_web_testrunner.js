@@ -40,9 +40,9 @@ function writeErrorSummary(input, expected, got, isTodo) {
   $("display").appendChild(createEl('span', null, "Matched: "));
   $("display").appendChild(document.createTextNode("" + (expected == got)));
   var pre = createEl('pre');
-  pre.appendChild(createTextNode("Input: \n" + input, "\n-\n"));
-  pre.appendChild(createTextNode("Expected:\n" + expected, "\n-\n"));
-  pre.appendChild(createTextNode("Output:\n" + got + "\n-\n"));
+  pre.appendChild(document.createTextNode("Input: \n" + input, "\n-\n"));
+  pre.appendChild(document.createTextNode("Expected:\n" + expected, "\n-\n"));
+  pre.appendChild(document.createTextNode("Output:\n" + got + "\n-\n"));
   $("display").appendChild(pre);
   $("display").appendChild(createEl('hr'));
 }
