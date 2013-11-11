@@ -21,21 +21,21 @@ using namespace mozilla::test;
 
 const OCSPHost sOCSPHosts[] =
 {
-  { "ocsp-stapling-good.example.com", ORTGood },
-  { "ocsp-stapling-revoked.example.com", ORTRevoked },
-  { "ocsp-stapling-unknown.example.com", ORTUnknown },
-  { "ocsp-stapling-good-other.example.com", ORTGoodOtherCert },
-  { "ocsp-stapling-good-other-ca.example.com", ORTGoodOtherCA },
-  { "ocsp-stapling-expired.example.com", ORTExpired },
-  { "ocsp-stapling-expired-fresh-ca.example.com", ORTExpiredFreshCA },
-  { "ocsp-stapling-none.example.com", ORTNone },
-  { "ocsp-stapling-empty.example.com", ORTEmpty },
-  { "ocsp-stapling-malformed.example.com", ORTMalformed },
-  { "ocsp-stapling-srverr.example.com", ORTSrverr },
-  { "ocsp-stapling-trylater.example.com", ORTTryLater },
-  { "ocsp-stapling-needssig.example.com", ORTNeedsSig },
-  { "ocsp-stapling-unauthorized.example.com", ORTUnauthorized },
-  { nullptr, ORTNull }
+  { "ocsp-stapling-good.example.com", ORTGood, nullptr },
+  { "ocsp-stapling-revoked.example.com", ORTRevoked, nullptr },
+  { "ocsp-stapling-unknown.example.com", ORTUnknown, nullptr },
+  { "ocsp-stapling-good-other.example.com", ORTGoodOtherCert, "ocspOtherEndEntity" },
+  { "ocsp-stapling-good-other-ca.example.com", ORTGoodOtherCA, "otherCA" },
+  { "ocsp-stapling-expired.example.com", ORTExpired, nullptr },
+  { "ocsp-stapling-expired-fresh-ca.example.com", ORTExpiredFreshCA, nullptr },
+  { "ocsp-stapling-none.example.com", ORTNone, nullptr },
+  { "ocsp-stapling-empty.example.com", ORTEmpty, nullptr },
+  { "ocsp-stapling-malformed.example.com", ORTMalformed, nullptr },
+  { "ocsp-stapling-srverr.example.com", ORTSrverr, nullptr },
+  { "ocsp-stapling-trylater.example.com", ORTTryLater, nullptr },
+  { "ocsp-stapling-needssig.example.com", ORTNeedsSig, nullptr },
+  { "ocsp-stapling-unauthorized.example.com", ORTUnauthorized, nullptr },
+  { nullptr, ORTNull, nullptr }
 };
 
 int32_t
@@ -71,7 +71,8 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
   }
 
   // response is contained by the arena - freeing the arena will free it
-  SECItemArray *response = GetOCSPResponseForType(host->mORT, cert, arena);
+  SECItemArray *response = GetOCSPResponseForType(host->mORT, cert, arena,
+                                                  host->mAdditionalCertName);
   if (!response) {
     PORT_FreeArena(arena, PR_FALSE);
     return SSL_SNI_SEND_ALERT;
