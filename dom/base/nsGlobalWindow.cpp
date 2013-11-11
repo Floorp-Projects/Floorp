@@ -6962,27 +6962,23 @@ nsGlobalWindow::SetResizable(bool aResizable)
   return NS_OK;
 }
 
-static void
-ReportUseOfDeprecatedMethod(nsGlobalWindow* aWindow, const char* aWarning)
-{
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("DOM Events"), doc,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  aWarning);
-}
-
 NS_IMETHODIMP
 nsGlobalWindow::CaptureEvents(int32_t aEventFlags)
 {
-  ReportUseOfDeprecatedMethod(this, "UseOfCaptureEventsWarning");
+  if (mDoc) {
+    mDoc->WarnOnceAbout(nsIDocument::eUseOfCaptureEvents);
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::ReleaseEvents(int32_t aEventFlags)
 {
-  ReportUseOfDeprecatedMethod(this, "UseOfReleaseEventsWarning");
+  if (mDoc) {
+    mDoc->WarnOnceAbout(nsIDocument::eUseOfReleaseEvents);
+  }
+
   return NS_OK;
 }
 
