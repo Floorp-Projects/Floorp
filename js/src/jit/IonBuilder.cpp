@@ -9056,9 +9056,18 @@ IonBuilder::jsop_setarg(uint32_t arg)
                 op->resultTypeSet() &&
                 op->resultTypeSet()->empty())
             {
-                JS_ASSERT(op->resultTypeSet() == &argTypes[arg]);
-                if (!argTypes[arg].addType(types::Type::UnknownType(), temp_->lifoAlloc()))
-                    return false;
+                bool otherUses = false;
+                for (MUseDefIterator iter(op); iter; iter++) {
+                    MDefinition *def = iter.def();
+                    if (def == val)
+                        continue;
+                    otherUses = true;
+                }
+                if (!otherUses) {
+                    JS_ASSERT(op->resultTypeSet() == &argTypes[arg]);
+                    if (!argTypes[arg].addType(types::Type::UnknownType(), temp_->lifoAlloc()))
+                        return false;
+                }
             }
         }
     }
