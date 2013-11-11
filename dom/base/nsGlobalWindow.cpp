@@ -10396,7 +10396,7 @@ nsGlobalWindow::ShowSlowScriptDialog()
   NS_ENSURE_TRUE(prompt, KillSlowScript);
 
   // Check if we should offer the option to debug
-  JS::RootedScript script(cx);
+  JS::Rooted<JSScript*> script(cx);
   unsigned lineno;
   bool hasFrame = JS_DescribeScriptedCaller(cx, &script, &lineno);
 

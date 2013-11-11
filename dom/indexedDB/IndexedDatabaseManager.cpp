@@ -208,8 +208,8 @@ struct MOZ_STACK_CLASS InvalidateInfo
 };
 
 bool
-GetIndexedDB(JSContext* aCx, JS::HandleObject aGlobal,
-             JS::MutableHandleValue aResult)
+GetIndexedDB(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+             JS::MutableHandle<JS::Value> aResult)
 {
   MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
   MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
@@ -227,20 +227,20 @@ GetIndexedDB(JSContext* aCx, JS::HandleObject aGlobal,
 }
 
 bool
-IndexedDBLazyGetter(JSContext* aCx, JS::HandleObject aGlobal,
-                    JS::HandleId aId, JS::MutableHandleValue aVp)
+IndexedDBLazyGetter(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
+                    JS::Handle<jsid> aId, JS::MutableHandle<JS::Value> aVp)
 {
   MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
   MOZ_ASSERT(JSID_IS_STRING(aId), "Bad id!");
   MOZ_ASSERT(JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(aId), IDB_STR),
              "Bad id!");
 
-  JS::RootedObject global(aCx, CheckedUnwrap(aGlobal,
-                                             /* stopAtOuter = */ false));
+  JS::Rooted<JSObject*> global(aCx, CheckedUnwrap(aGlobal,
+                                                  /* stopAtOuter = */ false));
   NS_ENSURE_TRUE(global, false);
   NS_ENSURE_TRUE(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL, false);
 
-  JS::RootedValue indexedDB(aCx);
+  JS::Rooted<JS::Value> indexedDB(aCx);
   if (!GetIndexedDB(aCx, global, &indexedDB)) {
     return false;
   }
@@ -483,7 +483,7 @@ IndexedDatabaseManager::TabContextMayAccessOrigin(const TabContext& aContext,
 // static
 bool
 IndexedDatabaseManager::DefineConstructors(JSContext* aCx,
-                                           JS::HandleObject aGlobal)
+                                           JS::Handle<JSObject*> aGlobal)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -499,14 +499,14 @@ IndexedDatabaseManager::DefineConstructors(JSContext* aCx,
 // static
 bool
 IndexedDatabaseManager::DefineIndexedDBGetter(JSContext* aCx,
-                                              JS::HandleObject aGlobal)
+                                              JS::Handle<JSObject*> aGlobal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
   MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
              "Passed object is not a global object!");
 
-  JS::RootedValue indexedDB(aCx);
+  JS::Rooted<JS::Value> indexedDB(aCx);
   if (!GetIndexedDB(aCx, aGlobal, &indexedDB)) {
     return false;
   }
@@ -518,7 +518,7 @@ IndexedDatabaseManager::DefineIndexedDBGetter(JSContext* aCx,
 // static
 bool
 IndexedDatabaseManager::DefineIndexedDBLazyGetter(JSContext* aCx,
-                                                  JS::HandleObject aGlobal)
+                                                  JS::Handle<JSObject*> aGlobal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
@@ -733,7 +733,7 @@ IndexedDatabaseManager::InitWindowless(const jsval& aGlobal, JSContext* aCx)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
-  JS::RootedObject global(aCx, JSVAL_TO_OBJECT(aGlobal));
+  JS::Rooted<JSObject*> global(aCx, JSVAL_TO_OBJECT(aGlobal));
   if (!(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL)) {
     NS_WARNING("Passed object is not a global object!");
     return NS_ERROR_FAILURE;
@@ -1005,8 +1005,8 @@ GetFileReferencesHelper::Run()
 BEGIN_INDEXEDDB_NAMESPACE
 
 bool
-ResolveConstructors(JSContext* aCx, JS::HandleObject aObj, JS::HandleId aId,
-                    JS::MutableHandleObject aObjp)
+ResolveConstructors(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                    JS::Handle<jsid> aId, JS::MutableHandle<JSObject*> aObjp)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1014,7 +1014,8 @@ ResolveConstructors(JSContext* aCx, JS::HandleObject aObj, JS::HandleId aId,
   // care about.
   if (JSID_IS_VOID(gConstructorInfo[0].id)) {
     for (uint32_t i = 0; i < mozilla::ArrayLength(gConstructorInfo); i++) {
-      JS::RootedString str(aCx, JS_InternString(aCx, gConstructorInfo[i].name));
+      JS::Rooted<JSString*> str(aCx,
+                                JS_InternString(aCx, gConstructorInfo[i].name));
       if (!str) {
         NS_WARNING("Failed to intern string!");
         while (i) {
@@ -1029,7 +1030,7 @@ ResolveConstructors(JSContext* aCx, JS::HandleObject aObj, JS::HandleId aId,
   // Now resolve.
   for (uint32_t i = 0; i < mozilla::ArrayLength(gConstructorInfo); i++) {
     if (gConstructorInfo[i].id == aId) {
-      JS::RootedObject constructor(aCx,
+      JS::Rooted<JSObject*> constructor(aCx,
         gConstructorInfo[i].resolve(aCx, aObj, true));
       if (!constructor) {
         return false;

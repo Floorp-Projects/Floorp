@@ -63,7 +63,7 @@ IDBKeyRange::FromJSVal(JSContext* aCx,
     return NS_OK;
   }
 
-  JS::RootedObject obj(aCx, aVal.isObject() ? &aVal.toObject() : nullptr);
+  JS::Rooted<JSObject*> obj(aCx, aVal.isObject() ? &aVal.toObject() : nullptr);
   if (aVal.isPrimitive() || JS_IsArrayObject(aCx, obj) ||
       JS_ObjectIsDate(aCx, obj)) {
     // A valid key returns an 'only' IDBKeyRange.
@@ -159,7 +159,7 @@ IDBKeyRange::~IDBKeyRange()
 }
 
 JSObject*
-IDBKeyRange::WrapObject(JSContext* aCx, JS::HandleObject aScope)
+IDBKeyRange::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return IDBKeyRangeBinding::Wrap(aCx, aScope, this);
 }
@@ -211,7 +211,7 @@ IDBKeyRange::GetUpper(JSContext* aCx, ErrorResult& aRv)
 // static
 already_AddRefed<IDBKeyRange>
 IDBKeyRange::Only(const GlobalObject& aGlobal, JSContext* aCx,
-                  JS::HandleValue aValue, ErrorResult& aRv)
+                  JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -229,7 +229,8 @@ IDBKeyRange::Only(const GlobalObject& aGlobal, JSContext* aCx,
 // static
 already_AddRefed<IDBKeyRange>
 IDBKeyRange::LowerBound(const GlobalObject& aGlobal, JSContext* aCx,
-                        JS::HandleValue aValue, bool aOpen, ErrorResult& aRv)
+                        JS::Handle<JS::Value> aValue, bool aOpen,
+                        ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -247,7 +248,8 @@ IDBKeyRange::LowerBound(const GlobalObject& aGlobal, JSContext* aCx,
 // static
 already_AddRefed<IDBKeyRange>
 IDBKeyRange::UpperBound(const GlobalObject& aGlobal, JSContext* aCx,
-                        JS::HandleValue aValue, bool aOpen, ErrorResult& aRv)
+                        JS::Handle<JS::Value> aValue, bool aOpen,
+                        ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
@@ -265,7 +267,7 @@ IDBKeyRange::UpperBound(const GlobalObject& aGlobal, JSContext* aCx,
 // static
 already_AddRefed<IDBKeyRange>
 IDBKeyRange::Bound(const GlobalObject& aGlobal, JSContext* aCx,
-                   JS::HandleValue aLower, JS::HandleValue aUpper,
+                   JS::Handle<JS::Value> aLower, JS::Handle<JS::Value> aUpper,
                    bool aLowerOpen, bool aUpperOpen, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");

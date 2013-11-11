@@ -1826,7 +1826,8 @@ nsContentUtils::IsImageSrcSetDisabled()
 // static
 bool
 nsContentUtils::LookupBindingMember(JSContext* aCx, nsIContent *aContent,
-                                    JS::HandleId aId, JS::MutableHandle<JSPropertyDescriptor> aDesc)
+                                    JS::Handle<jsid> aId,
+                                    JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   nsXBLBinding* binding = aContent->GetXBLBinding();
   if (!binding)
@@ -5673,7 +5674,7 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
 nsresult
 nsContentUtils::WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                            nsISupports *native, nsWrapperCache *cache,
-                           const nsIID* aIID, JS::MutableHandleValue vp,
+                           const nsIID* aIID, JS::MutableHandle<JS::Value> vp,
                            nsIXPConnectJSObjectHolder **aHolder,
                            bool aAllowWrapping)
 {
@@ -6155,9 +6156,10 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
   aPattern.Append(NS_LITERAL_STRING(")$"));
 
-  JS::RootedObject re(cx, JS_NewUCRegExpObjectNoStatics(cx, static_cast<jschar*>
-                                                        (aPattern.BeginWriting()),
-                                                        aPattern.Length(), 0));
+  JS::Rooted<JSObject*> re(cx,
+    JS_NewUCRegExpObjectNoStatics(cx,
+                                  static_cast<jschar*>(aPattern.BeginWriting()),
+                                  aPattern.Length(), 0));
   if (!re) {
     JS_ClearPendingException(cx);
     return true;

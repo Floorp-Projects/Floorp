@@ -45,8 +45,9 @@ public:
                              bool* aTargetIsNew);
   nsresult CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding);
 
-  bool LookupMember(JSContext* aCx, nsString& aName, JS::HandleId aNameAsId,
-                    JS::MutableHandle<JSPropertyDescriptor> aDesc, JSObject* aClassObject);
+  bool LookupMember(JSContext* aCx, nsString& aName, JS::Handle<jsid> aNameAsId,
+                    JS::MutableHandle<JSPropertyDescriptor> aDesc,
+                    JSObject* aClassObject);
 
   void SetMemberList(nsXBLProtoImplMember* aMemberList)
   {

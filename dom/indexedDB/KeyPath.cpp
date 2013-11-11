@@ -47,7 +47,7 @@ IsValidKeyPathString(JSContext* aCx, const nsAString& aKeyPath)
     }
 
     NS_ASSERTION(stringVal.toString(), "This should never happen");
-    JS::RootedString str(aCx, stringVal.toString());
+    JS::Rooted<JSString*> str(aCx, stringVal.toString());
 
     bool isIdentifier = false;
     if (!JS_IsIdentifier(aCx, str, &isIdentifier) || !isIdentifier) {
@@ -382,7 +382,7 @@ KeyPath::ExtractKeyAsJSVal(JSContext* aCx, const JS::Value& aValue,
   }
 
   const uint32_t len = mStrings.Length();
-  JS::RootedObject arrayObj(aCx, JS_NewArrayObject(aCx, len, nullptr));
+  JS::Rooted<JSObject*> arrayObj(aCx, JS_NewArrayObject(aCx, len, nullptr));
   if (!arrayObj) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

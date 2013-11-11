@@ -1547,7 +1547,7 @@ nsHTMLDocument::Open(JSContext* cx,
     SetIsInitialDocument(false);
 
     nsCOMPtr<nsIScriptGlobalObject> newScope(do_QueryReferent(mScopeObject));
-    JS::RootedObject wrapper(cx, GetWrapper());
+    JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
     if (oldScope && newScope != oldScope && wrapper) {
       rv = mozilla::dom::ReparentWrapper(cx, wrapper);
       if (rv.Failed()) {

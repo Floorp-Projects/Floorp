@@ -1381,7 +1381,7 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, JS::Handle<jsid> id, bool *aI
   if (JSID_IS_INT(id)) {
       i = JSID_TO_INT(id);
   } else {
-      JS::RootedValue idval(cx);
+      JS::Rooted<JS::Value> idval(cx);
       double array_index;
       if (!::JS_IdToValue(cx, id, idval.address()) ||
           !JS::ToNumber(cx, idval, &array_index) ||
@@ -3438,7 +3438,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject **objp, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, obj_);
-  JS::RootedId id(cx, id_);
+  JS::Rooted<jsid> id(cx, id_);
 
   if (!JSID_IS_STRING(id)) {
     return NS_OK;

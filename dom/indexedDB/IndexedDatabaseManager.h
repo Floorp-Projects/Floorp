@@ -140,13 +140,13 @@ public:
                             const nsACString& aOrigin);
 
   static bool
-  DefineConstructors(JSContext* aCx, JS::HandleObject aGlobal);
+  DefineConstructors(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
   static bool
-  DefineIndexedDBGetter(JSContext* aCx, JS::HandleObject aGlobal);
+  DefineIndexedDBGetter(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
   static bool
-  DefineIndexedDBLazyGetter(JSContext* aCx, JS::HandleObject aGlobal);
+  DefineIndexedDBLazyGetter(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
 private:
   IndexedDatabaseManager();
@@ -177,8 +177,8 @@ private:
 };
 
 bool
-ResolveConstructors(JSContext* aCx, JS::HandleObject aObj, JS::HandleId aId,
-                    JS::MutableHandleObject aObjp);
+ResolveConstructors(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                    JS::Handle<jsid> aId, JS::MutableHandle<JSObject*> aObjp);
 
 END_INDEXEDDB_NAMESPACE
 
