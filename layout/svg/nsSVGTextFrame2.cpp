@@ -3765,15 +3765,13 @@ nsSVGTextFrame2::ReflowSVG()
     nsSVGEffects::UpdateEffects(this);
   }
 
-  // Now unset the various reflow bits. Do this before calling
-  // FinishAndStoreOverflow since FinishAndStoreOverflow can require glyph
-  // positions (to resolve transform-origin).
-  mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
-              NS_FRAME_HAS_DIRTY_CHILDREN);
-
   nsRect overflow = nsRect(nsPoint(0,0), mRect.Size());
   nsOverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
+
+  // Now unset the various reflow bits:
+  mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
+              NS_FRAME_HAS_DIRTY_CHILDREN);
 
   // XXX nsSVGContainerFrame::ReflowSVG only looks at its nsISVGChildFrame
   // children, and calls ConsiderChildOverflow on them.  Does it matter
