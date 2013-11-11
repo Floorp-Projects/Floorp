@@ -402,12 +402,16 @@ class BytecodeParser
 
     bool parse();
 
+#ifdef DEBUG
+    bool isReachable(uint32_t offset) { return maybeCode(offset); }
+    bool isReachable(const jsbytecode *pc) { return maybeCode(pc); }
+#endif
+
     uint32_t stackDepthAtPC(uint32_t offset) {
         // Sometimes the code generator in debug mode asks about the stack depth
         // of unreachable code (bug 932180 comment 22).  Assume that unreachable
         // code has no operands on the stack.
-        Bytecode *code = maybeCode(offset);
-        return code ? code->stackDepth : 0;
+        return getCode(offset).stackDepth;
     }
     uint32_t stackDepthAtPC(const jsbytecode *pc) { return stackDepthAtPC(pc - script_->code); }
 
@@ -697,6 +701,21 @@ BytecodeParser::parse()
 
 #ifdef DEBUG
 
+bool
+js::ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc, uint32_t *depth)
+{
+    BytecodeParser parser(cx, script);
+    if (!parser.parse())
+        return false;
+
+    if (!parser.isReachable(pc))
+        return false;
+
+    *depth = parser.stackDepthAtPC(pc);
+
+    return true;
+}
+
 /*
  * If pc != nullptr, include a prefix indicating whether the PC is at the
  * current line. If showAll is true, include the source note type and the
@@ -707,9 +726,13 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, bool lines,
                    jsbytecode *pc, bool showAll, Sprinter *sp)
 {
     RootedScript script(cx, scriptArg);
+    BytecodeParser parser(cx, script);
 
     jsbytecode *next, *end;
     unsigned len;
+
+    if (showAll && !parser.parse())
+        return false;
 
     if (showAll)
         Sprint(sp, "%s:%u\n", script->filename(), script->lineno);
@@ -757,10 +780,10 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, bool lines,
             }
             else
                 sp->put("   ");
-            if (script->hasAnalysis() && script->analysis()->maybeCode(next))
-                Sprint(sp, "%05u ", script->analysis()->getCode(next).stackDepth);
+            if (parser.isReachable(next))
+                Sprint(sp, "%05u ", parser.stackDepthAtPC(next));
             else
-                sp->put("      ");
+                Sprint(sp, "      ", parser.stackDepthAtPC(next));
         }
         len = js_Disassemble1(cx, script, next, next - script->code, lines, sp);
         if (!len)
@@ -1984,16 +2007,6 @@ js::DecompileArgument(JSContext *cx, int formalIndex, HandleValue v)
         return nullptr;
     return LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
 }
-
-unsigned
-js_ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    BytecodeParser parser(cx, script);
-    if (!parser.parse())
-        return 0;
-    return parser.stackDepthAtPC(pc);
-}
-
 
 bool
 js::CallResultEscapes(jsbytecode *pc)
