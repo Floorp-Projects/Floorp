@@ -11,33 +11,33 @@
 #include "certt.h"
 #include "seccomon.h"
 
-enum OCSPStapleResponseType
+enum OCSPResponseType
 {
-  OSRTNull = 0,
-  OSRTGood,             // the certificate is good
-  OSRTRevoked,          // the certificate has been revoked
-  OSRTUnknown,          // the responder doesn't know if the cert is good
-  OSRTGoodOtherCert,    // the response references a different certificate
-  OSRTGoodOtherCA,      // the wrong CA has signed the response
-  OSRTExpired,          // the signature on the response has expired
-  OSRTExpiredFreshCA,   // fresh signature, but old validity period
-  OSRTNone,             // no stapled response
-  OSRTEmpty,            // an empty stapled response
-  OSRTMalformed,        // the response from the responder was malformed
-  OSRTSrverr,           // the response indicates there was a server error
-  OSRTTryLater,         // the responder replied with "try again later"
-  OSRTNeedsSig,         // the response needs a signature
-  OSRTUnauthorized      // the responder is not authorized for this certificate
+  ORTNull = 0,
+  ORTGood,             // the certificate is good
+  ORTRevoked,          // the certificate has been revoked
+  ORTUnknown,          // the responder doesn't know if the cert is good
+  ORTGoodOtherCert,    // the response references a different certificate
+  ORTGoodOtherCA,      // the wrong CA has signed the response
+  ORTExpired,          // the signature on the response has expired
+  ORTExpiredFreshCA,   // fresh signature, but old validity period
+  ORTNone,             // no stapled response
+  ORTEmpty,            // an empty stapled response
+  ORTMalformed,        // the response from the responder was malformed
+  ORTSrverr,           // the response indicates there was a server error
+  ORTTryLater,         // the responder replied with "try again later"
+  ORTNeedsSig,         // the response needs a signature
+  ORTUnauthorized      // the responder is not authorized for this certificate
 };
 
 struct OCSPHost
 {
   const char *mHostName;
-  OCSPStapleResponseType mOSRT;
+  OCSPResponseType mORT;
 };
 
 SECItemArray *
-GetOCSPResponseForType(OCSPStapleResponseType aOSRT, CERTCertificate *aCert,
+GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
                        PLArenaPool *aArena);
 
 #endif // OCSPCommon_h
