@@ -72,7 +72,15 @@ function updateTitle(sidebar, title) {
 exports.updateTitle = updateTitle;
 
 function updateURL(sidebar, url) {
+  let eleID = makeID(sidebar.id);
+
   for (let window of windows(null, { includePrivate: true })) {
+    // update the menuitem
+    let mi = window.document.getElementById(eleID);
+    if (mi) {
+      mi.setAttribute('sidebarurl', url)
+    }
+
     // update sidebar, if showing
     if (isSidebarShowing(window, sidebar)) {
       showSidebar(window, sidebar, url);
