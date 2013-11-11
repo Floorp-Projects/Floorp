@@ -10,12 +10,6 @@
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
-%ifdef ANDROID
-%define INPUT_TYPE_COLOR_UNSUPPORTED
-%elifdef MOZ_WIDGET_GONK
-%define INPUT_TYPE_COLOR_UNSUPPORTED
-%endif
-
 *|*::-moz-fieldset-content {
   display: block;
   unicode-bidi: inherit;
@@ -459,7 +453,7 @@ input[type="file"] > button[type="button"] {
 }
 
 /* colored part of the color selector button */
-input[type="color"]::-moz-color-swatch {
+input[type="color"]:-moz-system-metric(color-picker-available)::-moz-color-swatch {
   width: 100%;
   height: 100%;
   min-width: 40px;
@@ -547,9 +541,7 @@ input[type="radio"]:hover:active {
 /* Non text-related properties for buttons: these ones are shared with
    input[type="color"] */
 button,
-%ifndef INPUT_TYPE_COLOR_UNSUPPORTED
-input[type="color"],
-%endif
+input[type="color"]:-moz-system-metric(color-picker-available),
 input[type="reset"],
 input[type="button"],
 input[type="submit"] {
@@ -593,9 +585,7 @@ button {
 }
 
 button:hover,
-%ifndef INPUT_TYPE_COLOR_UNSUPPORTED
-input[type="color"]:hover,
-%endif
+input[type="color"]:-moz-system-metric(color-picker-available):hover,
 input[type="reset"]:hover,
 input[type="button"]:hover,
 input[type="submit"]:hover {
@@ -610,9 +600,7 @@ input[type="submit"]:hover {
 }
 
 button:active:hover,
-%ifndef INPUT_TYPE_COLOR_UNSUPPORTED
-input[type="color"]:active:hover,
-%endif
+input[type="color"]:-moz-system-metric(color-picker-available):active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
@@ -629,9 +617,7 @@ input[type="submit"]:active:hover {
 }
 
 button::-moz-focus-inner,
-%ifndef INPUT_TYPE_COLOR_UNSUPPORTED
-input[type="color"]::-moz-focus-inner,
-%endif
+input[type="color"]:-moz-system-metric(color-picker-available)::-moz-focus-inner,
 input[type="reset"]::-moz-focus-inner,
 input[type="button"]::-moz-focus-inner,
 input[type="submit"]::-moz-focus-inner,
@@ -641,9 +627,7 @@ input[type="file"] > button[type="button"]::-moz-focus-inner {
 }
 
 button:-moz-focusring::-moz-focus-inner,
-%ifndef INPUT_TYPE_COLOR_UNSUPPORTED
-input[type="color"]:-moz-focusring::-moz-focus-inner,
-%endif
+input[type="color"]:-moz-system-metric(color-picker-available):-moz-focusring::-moz-focus-inner,
 input[type="reset"]:-moz-focusring::-moz-focus-inner,
 input[type="button"]:-moz-focusring::-moz-focus-inner,
 input[type="submit"]:-moz-focusring::-moz-focus-inner,
@@ -652,10 +636,8 @@ input[type="file"] > button[type="button"]:-moz-focusring::-moz-focus-inner {
 }
 
 button:disabled:active, button:disabled,
-%ifndef INPUT_TYPE_COLOR_UNSUPPORTED
-input[type="color"]:disabled:active,
-input[type="color"]:disabled,
-%endif
+input[type="color"]:-moz-system-metric(color-picker-available):disabled:active,
+input[type="color"]:-moz-system-metric(color-picker-available):disabled,
 input[type="reset"]:disabled:active,
 input[type="reset"]:disabled,
 input[type="button"]:disabled:active,
