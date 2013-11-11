@@ -28,6 +28,7 @@ import os.path
 import re
 from optparse import OptionParser
 import errno
+from makeutil import Makefile
 
 # hack around win32 mangling our line endings
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/65443
@@ -273,7 +274,8 @@ class Preprocessor:
             self.line = cpp.context['LINE']
             self.key = MSG
             RuntimeError.__init__(self, (self.file, self.line, self.key, context))
-    def __init__(self):
+
+    def __init__(self, line_endings='\n', defines=None, marker='#'):
         self.context = Context()
         for k,v in {'FILE': '',
                     'LINE': 0,
@@ -309,11 +311,12 @@ class Preprocessor:
                            'error': 0}.iteritems():
             self.cmds[cmd] = (level, getattr(self, 'do_' + cmd))
         self.out = sys.stdout
-        self.setMarker('#')
-        self.LE = '\n'
+        self.setMarker(marker)
+        self.LE = line_endings
         self.varsubst = re.compile('@(?P<VAR>\w+)@', re.U)
-        self.depfile = None
         self.includes = set()
+        if defines:
+            self.context.update(defines)
 
     def warnUnused(self, file):
         if self.actionLevel == 0:
@@ -346,6 +349,14 @@ class Preprocessor:
                     return False
             self.instruction = self.comment = NoMatch()
 
+    def addDefines(self, defines):
+        """
+        Adds the specified defines to the preprocessor.
+        ``defines`` may be a dictionary object or an iterable of key/value pairs
+        (as tuples or other iterables of length two)
+        """
+        self.context.update(defines)
+
     def clone(self):
         """
         Create a clone of the current processor, including line ending
@@ -358,6 +369,35 @@ class Preprocessor:
         rv.out = self.out
         return rv
 
+    def processFile(self, input, output, depfile=None):
+        """
+        Preprocesses the contents of the ``input`` stream and writes the result
+        to the ``output`` stream. If ``depfile`` is set,  the dependencies of
+        ``output`` file are written to ``depfile`` in Makefile format.
+        """
+        self.out = output
+
+        self.do_include(input, False)
+        self.warnUnused(input)
+
+        if depfile:
+            mk = Makefile()
+            mk.create_rule([output.name]).add_dependencies(self.includes)
+            mk.dump(depfile)
+
+    def computeDependencies(self, input):
+        """
+        Reads the ``input`` stream, and computes the dependencies for that input.
+        """
+        try:
+            old_out = self.out
+            self.out = None
+            self.do_include(input, False)
+
+            return self.includes
+        finally:
+            self.out = old_out
+
     def applyFilters(self, aLine):
         for f in self.filters:
             aLine = f[1](aLine)
@@ -367,6 +407,9 @@ class Preprocessor:
         """
         Internal method for handling output.
         """
+        if not self.out:
+            return
+
         if self.checkLineNumbers:
             self.writtenLines += 1
             ln = self.context['LINE']
@@ -390,7 +433,7 @@ class Preprocessor:
         """
         def get_output_file(path):
             dir = os.path.dirname(path)
-            if dir and not os.path.exists(dir):
+            if dir:
                 try:
                     os.makedirs(dir)
                 except OSError as error:
@@ -400,9 +443,12 @@ class Preprocessor:
 
         p = self.getCommandLineParser()
         options, args = p.parse_args(args=args)
+        out = self.out
+        depfile = None
         includes = options.I
+
         if options.output:
-            self.out = get_output_file(options.output)
+            out = get_output_file(options.output)
         if defaultToStdin and len(args) == 0:
             args = [sys.stdin]
             if options.depend:
@@ -417,19 +463,21 @@ class Preprocessor:
             except:
                 raise Preprocessor.Error(self, "--depend requires the "
                                                "mozbuild.makeutil module", None)
-            self.depfile = get_output_file(options.depend)
+            depfile = get_output_file(options.depend)
         includes.extend(args)
+
         if includes:
             for f in includes:
-                self.do_include(f, False)
-            self.warnUnused(f)
-            if self.depfile:
+                with open(f, 'rU') as input:
+                    self.processFile(input=input, output=out)
+            if depfile:
                 mk = Makefile()
                 mk.create_rule([options.output]).add_dependencies(self.includes)
-                mk.dump(self.depfile)
-                self.depfile.close()
+                mk.dump(depfile)
+                depfile.close()
+
         if options.output:
-            self.out.close()
+            out.close()
 
     def getCommandLineParser(self, unescapeDefines = False):
         escapedValue = re.compile('".*"$')
@@ -716,8 +764,7 @@ class Preprocessor:
             self.context['DIRECTORY'] = ''
         else:
             abspath = os.path.abspath(args.name)
-            if self.depfile:
-                self.includes.add(abspath)
+            self.includes.add(abspath)
             self.context['FILE'] = abspath
             self.context['DIRECTORY'] = os.path.dirname(abspath)
         self.context['LINE'] = 0
@@ -725,7 +772,8 @@ class Preprocessor:
         for l in args:
             self.context['LINE'] += 1
             self.handleLine(l)
-        args.close()
+        if isName:
+            args.close()
         self.context['FILE'] = oldFile
         self.checkLineNumbers = oldCheckLineNumbers
         self.writtenLines = oldWrittenLines
@@ -741,13 +789,12 @@ class Preprocessor:
 def preprocess(includes=[sys.stdin], defines={},
                output = sys.stdout,
                line_endings='\n', marker='#'):
-    pp = Preprocessor()
-    pp.context.update(defines)
-    pp.setLineEndings(line_endings)
-    pp.setMarker(marker)
-    pp.out = output
+    pp = Preprocessor(line_endings=line_endings,
+                      defines=defines,
+                      marker=marker)
     for f in includes:
-        pp.do_include(f, False)
+        with open(f, 'rU') as input:
+            pp.processFile(input=input, output=output)
 
 
 # Keep this module independently executable.
