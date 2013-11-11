@@ -408,7 +408,7 @@ JSRuntime::~JSRuntime()
     sourceHook = nullptr;
 
     /* Off thread compilation and parsing depend on atoms still existing. */
-    for (CompartmentsIter comp(this); !comp.done(); comp.next())
+    for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next())
         CancelOffThreadIonCompile(comp, nullptr);
     WaitForOffThreadParsingToFinish(this);
 
@@ -421,7 +421,7 @@ JSRuntime::~JSRuntime()
     FinishCommonNames(this);
 
     /* Clear debugging state to remove GC roots. */
-    for (CompartmentsIter comp(this); !comp.done(); comp.next()) {
+    for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next()) {
         comp->clearTraps(defaultFreeOp());
         if (WatchpointMap *wpmap = comp->watchpointMap)
             wpmap->clear();
@@ -713,7 +713,7 @@ JSRuntime::setGCMaxMallocBytes(size_t value)
      */
     gcMaxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
     resetGCMallocBytes();
-    for (ZonesIter zone(this); !zone.done(); zone.next())
+    for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next())
         zone->setGCMaxMallocBytes(value);
 }
 
