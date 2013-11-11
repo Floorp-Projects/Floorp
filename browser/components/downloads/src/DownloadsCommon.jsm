@@ -840,6 +840,9 @@ DownloadsDataItem.prototype = {
     } else if (this._download.error &&
                this._download.error.becauseBlockedByParentalControls) {
       this.state = nsIDM.DOWNLOAD_BLOCKED_PARENTAL;
+    } else if (this._download.error &&
+               this._download.error.becauseBlockedByReputationCheck) {
+      this.state = nsIDM.DOWNLOAD_DIRTY;
     } else if (this._download.error) {
       this.state = nsIDM.DOWNLOAD_FAILED;
     } else if (this._download.canceled && this._download.hasPartialData) {
