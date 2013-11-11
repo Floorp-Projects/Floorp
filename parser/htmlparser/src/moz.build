@@ -6,7 +6,7 @@
 
 MODULE = 'htmlparser'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'CNavDTD.cpp',
     'CParserContext.cpp',
     'nsElementTable.cpp',
