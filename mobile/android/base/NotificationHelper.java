@@ -30,7 +30,7 @@ public final class NotificationHelper implements GeckoEventListener {
     public static final String NOTIFICATION_ID = "NotificationHelper_ID";
     private static final String LOGTAG = "GeckoNotificationManager";
     private static final String HELPER_NOTIFICATION = "helperNotif";
-    private static final String HELPER_BROADCAST_ACTION = "helperBroadcastAction";
+    private static final String HELPER_BROADCAST_ACTION = AppConstants.ANDROID_PACKAGE_NAME + ".helperBroadcastAction";
 
     // Attributes mandatory to be used while sending a notification from js.
     private static final String TITLE_ATTR = "title";
@@ -71,6 +71,7 @@ public final class NotificationHelper implements GeckoEventListener {
     public static void init(Context context) {
         if (mInstance != null) {
             Log.w(LOGTAG, "NotificationHelper.init() called twice!");
+            return;
         }
         mInstance = new NotificationHelper();
         mContext = context;

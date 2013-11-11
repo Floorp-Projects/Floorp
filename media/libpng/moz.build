@@ -12,7 +12,7 @@ EXPORTS += [
     'pngconf.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'png.c',
     'pngerror.c',
     'pngget.c',
