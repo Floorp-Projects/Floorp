@@ -3,39 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifdef MOZ_WEBRTC
-LOCAL_INCLUDES += \
-		-I$(topsrcdir)/netwerk/sctp/datachannel \
-		$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/caps/include \
-  -I$(topsrcdir)/content/events/src \
-  -I$(topsrcdir)/content/html/content/src \
-  -I$(topsrcdir)/content/html/document/src \
-  -I$(topsrcdir)/content/xbl/src \
-  -I$(topsrcdir)/content/xml/content/src \
-  -I$(topsrcdir)/content/xml/document/src \
-  -I$(topsrcdir)/content/xslt/src/xpath \
-  -I$(topsrcdir)/content/xul/content/src \
-  -I$(topsrcdir)/content/xul/document/src \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/ipc \
-  -I$(topsrcdir)/dom/workers \
-  -I$(topsrcdir)/js/ipc \
-  -I$(topsrcdir)/image/src \
-  -I$(topsrcdir)/js/xpconnect/src \
-  -I$(topsrcdir)/layout/base \
-  -I$(topsrcdir)/layout/generic \
-  -I$(topsrcdir)/layout/style \
-  -I$(topsrcdir)/layout/svg \
-  -I$(topsrcdir)/layout/xul/base/src \
-  -I$(topsrcdir)/netwerk/base/src \
-  -I$(topsrcdir)/js/xpconnect/wrappers \
-  $(NULL)
 
 # gcc requires -msse2 for this file since it uses SSE2 intrinsics.  (See bug
 # 585538 comment 12.)
