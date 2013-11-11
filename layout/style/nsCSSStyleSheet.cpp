@@ -584,10 +584,9 @@ nsMediaList::GetMediaText(nsAString& aMediaText)
   if (sheet) {                                                 \
     doc = sheet->GetOwningDocument();                          \
   }                                                            \
-  mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);    \
+  mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);       \
   if (sheet) {                                                 \
-    rv = sheet->WillDirty();                                   \
-    NS_ENSURE_SUCCESS(rv, rv);                                 \
+    sheet->WillDirty();                                        \
   }
 
 #define END_MEDIA_CHANGE(sheet, doc)                           \
@@ -1375,19 +1374,18 @@ nsCSSStyleSheet::AppendStyleSheet(nsCSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(nullptr != aSheet, "null arg");
 
-  if (NS_SUCCEEDED(WillDirty())) {
-    nsRefPtr<nsCSSStyleSheet>* tail = &mInner->mFirstChild;
-    while (*tail) {
-      tail = &(*tail)->mNext;
-    }
-    *tail = aSheet;
-  
-    // This is not reference counted. Our parent tells us when
-    // it's going away.
-    aSheet->mParent = this;
-    aSheet->mDocument = mDocument;
-    DidDirty();
+  WillDirty();
+  nsRefPtr<nsCSSStyleSheet>* tail = &mInner->mFirstChild;
+  while (*tail) {
+    tail = &(*tail)->mNext;
   }
+  *tail = aSheet;
+
+  // This is not reference counted. Our parent tells us when
+  // it's going away.
+  aSheet->mParent = this;
+  aSheet->mDocument = mDocument;
+  DidDirty();
 }
 
 void
@@ -1395,21 +1393,20 @@ nsCSSStyleSheet::InsertStyleSheetAt(nsCSSStyleSheet* aSheet, int32_t aIndex)
 {
   NS_PRECONDITION(nullptr != aSheet, "null arg");
 
-  if (NS_SUCCEEDED(WillDirty())) {
-    nsRefPtr<nsCSSStyleSheet>* tail = &mInner->mFirstChild;
-    while (*tail && aIndex) {
-      --aIndex;
-      tail = &(*tail)->mNext;
-    }
-    aSheet->mNext = *tail;
-    *tail = aSheet;
-
-    // This is not reference counted. Our parent tells us when
-    // it's going away.
-    aSheet->mParent = this;
-    aSheet->mDocument = mDocument;
-    DidDirty();
+  WillDirty();
+  nsRefPtr<nsCSSStyleSheet>* tail = &mInner->mFirstChild;
+  while (*tail && aIndex) {
+    --aIndex;
+    tail = &(*tail)->mNext;
   }
+  aSheet->mNext = *tail;
+  *tail = aSheet;
+
+  // This is not reference counted. Our parent tells us when
+  // it's going away.
+  aSheet->mParent = this;
+  aSheet->mDocument = mDocument;
+  DidDirty();
 }
 
 void
@@ -1417,15 +1414,14 @@ nsCSSStyleSheet::PrependStyleRule(css::Rule* aRule)
 {
   NS_PRECONDITION(nullptr != aRule, "null arg");
 
-  if (NS_SUCCEEDED(WillDirty())) {
-    mInner->mOrderedRules.InsertObjectAt(aRule, 0);
-    aRule->SetStyleSheet(this);
-    DidDirty();
+  WillDirty();
+  mInner->mOrderedRules.InsertObjectAt(aRule, 0);
+  aRule->SetStyleSheet(this);
+  DidDirty();
 
-    if (css::Rule::NAMESPACE_RULE == aRule->GetType()) {
-      // no api to prepend a namespace (ugh), release old ones and re-create them all
-      mInner->RebuildNameSpaces();
-    }
+  if (css::Rule::NAMESPACE_RULE == aRule->GetType()) {
+    // no api to prepend a namespace (ugh), release old ones and re-create them all
+    mInner->RebuildNameSpaces();
   }
 }
 
@@ -1434,19 +1430,18 @@ nsCSSStyleSheet::AppendStyleRule(css::Rule* aRule)
 {
   NS_PRECONDITION(nullptr != aRule, "null arg");
 
-  if (NS_SUCCEEDED(WillDirty())) {
-    mInner->mOrderedRules.AppendObject(aRule);
-    aRule->SetStyleSheet(this);
-    DidDirty();
+  WillDirty();
+  mInner->mOrderedRules.AppendObject(aRule);
+  aRule->SetStyleSheet(this);
+  DidDirty();
 
-    if (css::Rule::NAMESPACE_RULE == aRule->GetType()) {
+  if (css::Rule::NAMESPACE_RULE == aRule->GetType()) {
 #ifdef DEBUG
-      nsresult rv =
+    nsresult rv =
 #endif
-        RegisterNamespaceRule(aRule);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                       "RegisterNamespaceRule returned error");
-    }
+      RegisterNamespaceRule(aRule);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                     "RegisterNamespaceRule returned error");
   }
 }
 
@@ -1456,20 +1451,19 @@ nsCSSStyleSheet::ReplaceStyleRule(css::Rule* aOld, css::Rule* aNew)
   NS_PRECONDITION(mInner->mOrderedRules.Count() != 0, "can't have old rule");
   NS_PRECONDITION(mInner->mComplete, "No replacing in an incomplete sheet!");
 
-  if (NS_SUCCEEDED(WillDirty())) {
-    int32_t index = mInner->mOrderedRules.IndexOf(aOld);
-    if (MOZ_UNLIKELY(index == -1)) {
-      NS_NOTREACHED("Couldn't find old rule");
-      return;
-    }
-    mInner->mOrderedRules.ReplaceObjectAt(aNew, index);
-
-    aNew->SetStyleSheet(this);
-    aOld->SetStyleSheet(nullptr);
-    DidDirty();
-    NS_ASSERTION(css::Rule::NAMESPACE_RULE != aNew->GetType(), "not yet implemented");
-    NS_ASSERTION(css::Rule::NAMESPACE_RULE != aOld->GetType(), "not yet implemented");
+  WillDirty();
+  int32_t index = mInner->mOrderedRules.IndexOf(aOld);
+  if (MOZ_UNLIKELY(index == -1)) {
+    NS_NOTREACHED("Couldn't find old rule");
+    return;
   }
+  mInner->mOrderedRules.ReplaceObjectAt(aNew, index);
+
+  aNew->SetStyleSheet(this);
+  aOld->SetStyleSheet(nullptr);
+  DidDirty();
+  NS_ASSERTION(css::Rule::NAMESPACE_RULE != aNew->GetType(), "not yet implemented");
+  NS_ASSERTION(css::Rule::NAMESPACE_RULE != aOld->GetType(), "not yet implemented");
 }
 
 int32_t
@@ -1617,16 +1611,12 @@ nsCSSStyleSheet::ClearRuleCascades()
   }
 }
 
-nsresult
+void
 nsCSSStyleSheet::WillDirty()
 {
-  if (!mInner->mComplete) {
-    // Do nothing
-    return NS_OK;
+  if (mInner->mComplete) {
+    EnsureUniqueInner();
   }
-
-  EnsureUniqueInner();
-  return NS_OK;
 }
 
 void
@@ -1675,8 +1665,7 @@ nsCSSStyleSheet::SubjectSubsumesInnerPrincipal()
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
     }
 
-    rv = WillDirty();
-    NS_ENSURE_SUCCESS(rv, rv);
+    WillDirty();
 
     mInner->mPrincipal = subjectPrincipal;
 
@@ -1866,10 +1855,7 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
-  nsresult result;
-  result = WillDirty();
-  if (NS_FAILED(result))
-    return result;
+  WillDirty();
   
   if (aIndex > uint32_t(mInner->mOrderedRules.Count()))
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -1890,8 +1876,8 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
 
   nsRefPtr<css::Rule> rule;
-  result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
-                         mInner->mPrincipal, getter_AddRefs(rule));
+  nsresult result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                                  mInner->mPrincipal, getter_AddRefs(rule));
   if (NS_FAILED(result))
     return result;
 
@@ -1972,7 +1958,6 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
 NS_IMETHODIMP    
 nsCSSStyleSheet::DeleteRule(uint32_t aIndex)
 {
-  nsresult result = NS_ERROR_DOM_INDEX_SIZE_ERR;
   // No doing this if the sheet is not complete!
   if (!mInner->mComplete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -1986,34 +1971,32 @@ nsCSSStyleSheet::DeleteRule(uint32_t aIndex)
   // XXX TBI: handle @rule types
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
     
-  result = WillDirty();
+  WillDirty();
 
-  if (NS_SUCCEEDED(result)) {
-    if (aIndex >= uint32_t(mInner->mOrderedRules.Count()))
-      return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (aIndex >= uint32_t(mInner->mOrderedRules.Count()))
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-    NS_ASSERTION(uint32_t(mInner->mOrderedRules.Count()) <= INT32_MAX,
-                 "Too many style rules!");
+  NS_ASSERTION(uint32_t(mInner->mOrderedRules.Count()) <= INT32_MAX,
+               "Too many style rules!");
 
-    // Hold a strong ref to the rule so it doesn't die when we RemoveObjectAt
-    nsRefPtr<css::Rule> rule = mInner->mOrderedRules.ObjectAt(aIndex);
-    if (rule) {
-      mInner->mOrderedRules.RemoveObjectAt(aIndex);
-      if (mDocument && mDocument->StyleSheetChangeEventsEnabled()) {
-        // Force creation of the DOM rule, so that it can be put on the
-        // StyleRuleRemoved event object.
-        rule->GetDOMRule();
-      }
-      rule->SetStyleSheet(nullptr);
-      DidDirty();
+  // Hold a strong ref to the rule so it doesn't die when we RemoveObjectAt
+  nsRefPtr<css::Rule> rule = mInner->mOrderedRules.ObjectAt(aIndex);
+  if (rule) {
+    mInner->mOrderedRules.RemoveObjectAt(aIndex);
+    if (mDocument && mDocument->StyleSheetChangeEventsEnabled()) {
+      // Force creation of the DOM rule, so that it can be put on the
+      // StyleRuleRemoved event object.
+      rule->GetDOMRule();
+    }
+    rule->SetStyleSheet(nullptr);
+    DidDirty();
 
-      if (mDocument) {
-        mDocument->StyleRuleRemoved(this, rule);
-      }
+    if (mDocument) {
+      mDocument->StyleRuleRemoved(this, rule);
     }
   }
 
-  return result;
+  return NS_OK;
 }
 
 nsresult
@@ -2021,7 +2004,6 @@ nsCSSStyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex)
 {
   NS_ENSURE_ARG_POINTER(aGroup);
   NS_ASSERTION(mInner->mComplete, "No deleting from an incomplete sheet!");
-  nsresult result;
   nsRefPtr<css::Rule> rule = aGroup->GetStyleRuleAt(aIndex);
   NS_ENSURE_TRUE(rule, NS_ERROR_ILLEGAL_VALUE);
 
@@ -2032,10 +2014,9 @@ nsCSSStyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex)
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
   
-  result = WillDirty();
-  NS_ENSURE_SUCCESS(result, result);
+  WillDirty();
 
-  result = aGroup->DeleteStyleRuleAt(aIndex);
+  nsresult result = aGroup->DeleteStyleRuleAt(aIndex);
   NS_ENSURE_SUCCESS(result, result);
   
   rule->SetStyleSheet(nullptr);
@@ -2055,7 +2036,6 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
                                      uint32_t aIndex,
                                      uint32_t* _retval)
 {
-  nsresult result;
   NS_ASSERTION(mInner->mComplete, "No inserting into an incomplete sheet!");
   // check that the group actually belongs to this sheet!
   if (this != aGroup->GetStyleSheet()) {
@@ -2075,12 +2055,11 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   // parse and grab the rule
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
 
-  result = WillDirty();
-  NS_ENSURE_SUCCESS(result, result);
+  WillDirty();
 
   nsRefPtr<css::Rule> rule;
-  result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
-                         mInner->mPrincipal, getter_AddRefs(rule));
+  nsresult result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
+                                  mInner->mPrincipal, getter_AddRefs(rule));
   if (NS_FAILED(result))
     return result;
 
@@ -2120,13 +2099,12 @@ nsresult
 nsCSSStyleSheet::ReplaceRuleInGroup(css::GroupRule* aGroup,
                                     css::Rule* aOld, css::Rule* aNew)
 {
-  nsresult result;
   NS_PRECONDITION(mInner->mComplete, "No replacing in an incomplete sheet!");
   NS_ASSERTION(this == aGroup->GetStyleSheet(), "group doesn't belong to this sheet");
-  result = WillDirty();
-  NS_ENSURE_SUCCESS(result, result);
 
-  result = aGroup->ReplaceStyleRule(aOld, aNew);
+  WillDirty();
+
+  nsresult result = aGroup->ReplaceStyleRule(aOld, aNew);
   DidDirty();
   return result;
 }
@@ -2174,8 +2152,7 @@ nsCSSStyleSheet::ParseSheet(const nsAString& aInput)
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, true);
 
-  nsresult rv = WillDirty();
-  NS_ENSURE_SUCCESS(rv, rv);
+  WillDirty();
 
   // detach existing rules (including child sheets via import rules)
   int ruleCount;
@@ -2201,8 +2178,8 @@ nsCSSStyleSheet::ParseSheet(const nsAString& aInput)
   bool allowUnsafeRules = nsContentUtils::IsSystemPrincipal(mInner->mPrincipal);
 
   nsCSSParser parser(loader, this);
-  rv = parser.ParseSheet(aInput, mInner->mSheetURI, mInner->mBaseURI,
-                         mInner->mPrincipal, 1, allowUnsafeRules);
+  nsresult rv = parser.ParseSheet(aInput, mInner->mSheetURI, mInner->mBaseURI,
+                                  mInner->mPrincipal, 1, allowUnsafeRules);
   DidDirty(); // we are always 'dirty' here since we always remove rules first
   NS_ENSURE_SUCCESS(rv, rv);
 
