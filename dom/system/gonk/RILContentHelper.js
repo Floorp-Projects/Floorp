@@ -566,7 +566,7 @@ RILContentHelper.prototype = {
     let rilContext =
       cpmm.sendSyncMessage("RIL:GetRilContext", {clientId: 0})[0];
     if (!rilContext) {
-      debug("Received null rilContext from chrome process.");
+      if (DEBUG) debug("Received null rilContext from chrome process.");
       return;
     }
     this.rilContext.cardState = rilContext.cardState;
@@ -859,7 +859,7 @@ RILContentHelper.prototype = {
   },
 
   sendMMI: function sendMMI(window, mmi) {
-    debug("Sending MMI " + mmi);
+    if (DEBUG) debug("Sending MMI " + mmi);
     if (!window) {
       throw Components.Exception("Can't get window object",
                                  Cr.NS_ERROR_UNEXPECTED);
@@ -881,7 +881,7 @@ RILContentHelper.prototype = {
   },
 
   cancelMMI: function cancelMMI(window) {
-    debug("Cancel MMI");
+    if (DEBUG) debug("Cancel MMI");
     if (!window) {
       throw Components.Exception("Can't get window object",
                                  Cr.NS_ERROR_UNEXPECTED);
@@ -1382,7 +1382,7 @@ RILContentHelper.prototype = {
   },
 
   registerMobileConnectionMsg: function registerMobileConnectionMsg(listener) {
-    debug("Registering for mobile connection related messages");
+    if (DEBUG) debug("Registering for mobile connection related messages");
     this.registerListener("_mobileConnectionListeners", listener);
     cpmm.sendAsyncMessage("RIL:RegisterMobileConnectionMsg");
   },
@@ -1392,7 +1392,7 @@ RILContentHelper.prototype = {
   },
 
   registerVoicemailMsg: function registerVoicemailMsg(listener) {
-    debug("Registering for voicemail-related messages");
+    if (DEBUG) debug("Registering for voicemail-related messages");
     this.registerListener("_voicemailListeners", listener);
     cpmm.sendAsyncMessage("RIL:RegisterVoicemailMsg");
   },
@@ -1402,7 +1402,7 @@ RILContentHelper.prototype = {
   },
 
   registerCellBroadcastMsg: function registerCellBroadcastMsg(listener) {
-    debug("Registering for Cell Broadcast related messages");
+    if (DEBUG) debug("Registering for Cell Broadcast related messages");
     this.registerListener("_cellBroadcastListeners", listener);
     cpmm.sendAsyncMessage("RIL:RegisterCellBroadcastMsg");
   },
@@ -1412,7 +1412,7 @@ RILContentHelper.prototype = {
   },
 
   registerIccMsg: function registerIccMsg(listener) {
-    debug("Registering for ICC related messages");
+    if (DEBUG) debug("Registering for ICC related messages");
     this.registerListener("_iccListeners", listener);
     cpmm.sendAsyncMessage("RIL:RegisterIccMsg");
   },
@@ -1505,7 +1505,9 @@ RILContentHelper.prototype = {
 
   receiveMessage: function receiveMessage(msg) {
     let request;
-    debug("Received message '" + msg.name + "': " + JSON.stringify(msg.json));
+    if (DEBUG) {
+      debug("Received message '" + msg.name + "': " + JSON.stringify(msg.json));
+    }
 
     let data = msg.json.data;
     switch (msg.name) {
@@ -1702,9 +1704,11 @@ RILContentHelper.prototype = {
   },
 
   handleGetAvailableNetworks: function handleGetAvailableNetworks(message) {
-    debug("handleGetAvailableNetworks: " + JSON.stringify(message));
+    if (DEBUG) debug("handleGetAvailableNetworks: " + JSON.stringify(message));
     if (message.errorMsg) {
-      debug("Received error from getAvailableNetworks: " + message.errorMsg);
+      if (DEBUG) {
+        debug("Received error from getAvailableNetworks: " + message.errorMsg);
+      }
       this.fireRequestError(message.requestId, message.errorMsg);
       return;
     }
@@ -1860,7 +1864,7 @@ RILContentHelper.prototype = {
   },
 
   handleSendCancelMMI: function handleSendCancelMMI(message) {
-    debug("handleSendCancelMMI " + JSON.stringify(message));
+    if (DEBUG) debug("handleSendCancelMMI " + JSON.stringify(message));
     let request = this.takeRequest(message.requestId);
     let requestWindow = this._windowsMap[message.requestId];
     delete this._windowsMap[message.requestId];
@@ -1924,7 +1928,7 @@ RILContentHelper.prototype = {
       try {
         handler.apply(listener, args);
       } catch (e) {
-        debug("listener for " + name + " threw an exception: " + e);
+        if (DEBUG) debug("listener for " + name + " threw an exception: " + e);
       }
     }
   },
