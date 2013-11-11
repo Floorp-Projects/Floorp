@@ -2627,6 +2627,18 @@
     "n_buckets": 20,
     "description": "Gloda: indexing rate (message/s)"
   },
+  "FX_GESTURE_TAKE_SNAPSHOT_OF_PAGE": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": "30",
+    "description": "Firefox: Time taken to capture the page to a canvas, for reuse while swiping through history (ms)."
+  },
+  "FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": "30",
+    "description": "Firefox: Time taken to store the image capture of the page to a canvas, for reuse while swiping through history (ms)."
+  },
   "FX_TAB_ANIM_OPEN_MS": {
     "kind": "exponential",
     "high": "3000",
