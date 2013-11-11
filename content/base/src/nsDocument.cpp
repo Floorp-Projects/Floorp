@@ -9038,7 +9038,8 @@ void
 nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
                            bool asError /* = false */)
 {
-  PR_STATIC_ASSERT(eDeprecatedOperationCount <= 64);
+  static_assert(eDeprecatedOperationCount <= 64,
+                "Too many deprecated operations");
   if (mWarnedAbout & (1ull << aOperation)) {
     return;
   }
