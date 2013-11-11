@@ -482,6 +482,10 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_SwipeAnimationEnabled:
         aResult = 0;
         break;
+    case eIntID_ColorPickerAvailable:
+        // We don't have a color picker implemented on Metro yet (bug 895464)
+        aResult = (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Metro);
+        break;
     case eIntID_UseOverlayScrollbars:
         aResult = (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro);
         break;
