@@ -357,6 +357,14 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
     LOG(("nsHttpConnectionMgr::SpeculativeConnect [ci=%s]\n",
          ci->HashKey().get()));
 
+    // Hosts that are Local IP Literals should not be speculatively
+    // connected - Bug 853423.
+    if (ci && ci->HostIsLocalIPLiteral()) {
+        LOG(("nsHttpConnectionMgr::SpeculativeConnect skipping RFC1918 "
+             "address [%s]", ci->Host()));
+        return NS_OK;
+    }
+
     nsRefPtr<SpeculativeConnectArgs> args = new SpeculativeConnectArgs();
 
     // Wrap up the callbacks and the target to ensure they're released on the target
@@ -1984,13 +1992,13 @@ nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     nsRefPtr<nsHalfOpenSocket> sock = new nsHalfOpenSocket(ent, trans, caps);
+    if (speculative)
+        sock->SetSpeculative(true);
     nsresult rv = sock->SetupPrimaryStreams();
     NS_ENSURE_SUCCESS(rv, rv);
 
     ent->mHalfOpens.AppendElement(sock);
     mNumHalfOpenConns++;
-    if (speculative)
-        sock->SetSpeculative(true);
     return NS_OK;
 }
 
@@ -2709,6 +2717,10 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
     else if (mEnt->mPreferIPv4 ||
              (isBackup && gHttpHandler->FastFallbackToIPv4())) {
         tmpFlags |= nsISocketTransport::DISABLE_IPV6;
+    }
+
+    if (IsSpeculative()) {
+        tmpFlags |= nsISocketTransport::DISABLE_RFC1918;
     }
 
     socketTransport->SetConnectionFlags(tmpFlags);
