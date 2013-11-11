@@ -12,17 +12,17 @@
                   android:title="@string/pref_category_customize"
                   android:enabled="false">
 
-    <org.mozilla.gecko.SyncPreference android:key="android.not_a_preference.sync"
-                                      android:title="@string/pref_sync"
-                                      android:persistent="false" />
+    <org.mozilla.gecko.preferences.SyncPreference android:key="android.not_a_preference.sync"
+                                                  android:title="@string/pref_sync"
+                                                  android:persistent="false" />
 
     <PreferenceScreen android:title="@string/pref_category_search"
-                      android:fragment="org.mozilla.gecko.GeckoPreferenceFragment" >
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_search"/>
     </PreferenceScreen>
 
-    <org.mozilla.gecko.AndroidImportPreference
+    <org.mozilla.gecko.preferences.AndroidImportPreference
             android:key="android.not_a_preference.import_android"
             gecko:entries="@array/pref_import_android_entries"
             gecko:entryKeys="@array/pref_import_android_keys"
