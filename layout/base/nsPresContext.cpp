@@ -2124,12 +2124,8 @@ nsPresContext::EnsureSafeToHandOutCSSRules()
     // Nothing to do.
     return true;
   }
-  if (res == nsCSSStyleSheet::eUniqueInner_CloneFailed) {
-    return false;
-  }
 
-  NS_ABORT_IF_FALSE(res == nsCSSStyleSheet::eUniqueInner_ClonedInner,
-                    "unexpected result");
+  MOZ_ASSERT(res == nsCSSStyleSheet::eUniqueInner_ClonedInner);
   RebuildAllStyleData(nsChangeHint(0));
   return true;
 }
