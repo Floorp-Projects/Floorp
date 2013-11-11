@@ -720,8 +720,7 @@ inDOMUtils::GetRuleNodeForContent(nsIContent* aContent,
   nsPresContext *presContext = presShell->GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
 
-  bool safe = presContext->EnsureSafeToHandOutCSSRules();
-  NS_ENSURE_TRUE(safe, NS_ERROR_OUT_OF_MEMORY);
+  presContext->EnsureSafeToHandOutCSSRules();
 
   nsRefPtr<nsStyleContext> sContext =
     nsComputedDOMStyle::GetStyleContextForElement(aContent->AsElement(), aPseudo, presShell);
