@@ -1078,6 +1078,35 @@ exports.testTwoSidebarsWithSameTitleAndURL = function(assert) {
   sidebar2.destroy();
 }
 
+exports.testChangingURLBackToOriginalValue = function(assert) {
+  const { Sidebar } = require('sdk/ui/sidebar');
+  let testName = 'testChangingURLBackToOriginalValue';
+
+  let title = testName;
+  let url = 'data:text/html;charset=utf-8,' + testName;
+  let count = 0;
+
+  let sidebar = Sidebar({
+    id: testName,
+    title: title,
+    url: url
+  });
+
+  sidebar.url = url + 2;
+  assert.equal(sidebar.url, url + 2, 'the sidebar.url is correct');
+  sidebar.url = url;
+  assert.equal(sidebar.url, url, 'the sidebar.url is correct');
+
+  sidebar.title = 'foo';
+  assert.equal(sidebar.title, 'foo', 'the sidebar.title is correct');
+  sidebar.title = title;
+  assert.equal(sidebar.title, title, 'the sidebar.title is correct');
+
+  sidebar.destroy();
+
+  assert.pass('Changing values back to originals works');
+}
+
 exports.testShowToOpenXToClose = function(assert, done) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testShowToOpenXToClose';
