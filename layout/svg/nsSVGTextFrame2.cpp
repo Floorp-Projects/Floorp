@@ -3807,21 +3807,9 @@ nsSVGTextFrame2::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 {
   NS_ASSERTION(GetFirstPrincipalChild(), "must have a child frame");
 
-  SVGBBox bbox;
-  if (NS_SUBTREE_DIRTY(this)) {
-    // Return an empty bbox if this frame's subtree is dirty. This may be called
-    // in that situation, e.g. when we're building a display list after an
-    // interrupted reflow. This can also be called during reflow before we've
-    // been reflowed, e.g. if an earlier sibling is calling FinishAndStoreOverflow and
-    // needs our parent's perspective matrix, which depends on the SVG bbox
-    // contribution of this frame. In the latter situation, when all siblings have
-    // been reflowed, the parent will compute its perspective and rerun
-    // FinishAndStoreOverflow for all its children.
-    return bbox;
-  }
-
   UpdateGlyphPositioning();
 
+  SVGBBox bbox;
   nsPresContext* presContext = PresContext();
 
   TextRenderedRunIterator it(this);
