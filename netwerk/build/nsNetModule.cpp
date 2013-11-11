@@ -955,7 +955,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_SERIALIZATION_HELPER_CID, false, nullptr, nsSerializationHelperConstructor },
     { &kNS_REDIRECTCHANNELREGISTRAR_CID, false, nullptr, RedirectChannelRegistrarConstructor },
     { &kNS_CACHE_STORAGE_SERVICE_CID, false, nullptr, CacheStorageServiceConstructor },
-    { &kNS_NETWORKSEER_CID, false, NULL, mozilla::net::Seer::Create },
+    { &kNS_NETWORKSEER_CID, false, nullptr, mozilla::net::Seer::Create },
     { nullptr }
 };
 
