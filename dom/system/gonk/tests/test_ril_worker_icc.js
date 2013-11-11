@@ -1603,35 +1603,105 @@ add_test(function test_update_icc_contact() {
 });
 
 /**
- * Verify ICCContactHelper.findFreeICCContact
+ * Verify ICCContactHelper.findFreeICCContact in SIM
  */
-add_test(function test_find_free_icc_contact() {
+add_test(function test_find_free_icc_contact_sim() {
   let worker = newUint8Worker();
   let recordHelper = worker.ICCRecordHelper;
   let contactHelper = worker.ICCContactHelper;
-  const RECORD_ID = 1;
+  // Correct record Id starts with 1, so put a null element at index 0.
+  let records = [null];
+  const MAX_RECORDS = 3;
   const PBR_INDEX = 0;
 
-  recordHelper.readPBR = function (onsuccess, onerror) {
-    onsuccess([{adn:{}, email: {}, anr0: {}}]);
-  };
-
   recordHelper.findFreeRecordId = function (fileId, onsuccess, onerror) {
-    onsuccess(RECORD_ID);
+    if (records.length > MAX_RECORDS) {
+      onerror("No free record found.");
+      return;
+    }
+
+    onsuccess(records.length);
   };
 
   let successCb = function (pbrIndex, recordId) {
     do_check_eq(pbrIndex, PBR_INDEX);
-    do_check_eq(recordId, RECORD_ID);
-    run_next_test();
+    records[recordId] = {};
+  };
+
+  let errorCb = function (errorMsg) {
+    do_print(errorMsg);
+    do_check_true(false);
+  };
+
+  for (let i = 0; i < MAX_RECORDS; i++) {
+    contactHelper.findFreeICCContact(CARD_APPTYPE_SIM, "adn", successCb, errorCb);
+  }
+  // The 1st element, records[0], is null.
+  do_check_eq(records.length - 1, MAX_RECORDS);
+
+  // Now the EF is full, so finding a free one should result failure.
+  successCb = function (pbrIndex, recordId) {
+    do_check_true(false);
+  };
+
+  errorCb = function (errorMsg) {
+    do_check_true(errorMsg === "No free record found.");
+  };
+  contactHelper.findFreeICCContact(CARD_APPTYPE_SIM, "adn", successCb, errorCb);
+
+  run_next_test();
+});
+
+/**
+ * Verify ICCContactHelper.findFreeICCContact in USIM
+ */
+add_test(function test_find_free_icc_contact_usim() {
+  let worker = newUint8Worker();
+  let recordHelper = worker.ICCRecordHelper;
+  let contactHelper = worker.ICCContactHelper;
+  const ADN1_FILE_ID = 0x6f3a;
+  const ADN2_FILE_ID = 0x6f3b;
+  const MAX_RECORDS = 3;
+
+  // The adn in the first phonebook set has already two records, which means
+  // only 1 free record remained.
+  let pbrs = [{adn: {fileId: ADN1_FILE_ID, records: [null, {}, {}]}},
+              {adn: {fileId: ADN2_FILE_ID, records: [null]}}];
+
+  recordHelper.readPBR = function readPBR(onsuccess, onerror) {
+    onsuccess(pbrs);
+  };
+
+  recordHelper.findFreeRecordId = function (fileId, onsuccess, onerror) {
+    let pbr = (fileId == ADN1_FILE_ID ? pbrs[0]: pbrs[1]);
+    if (pbr.adn.records.length > MAX_RECORDS) {
+      onerror("No free record found.");
+      return;
+    }
+
+    onsuccess(pbr.adn.records.length);
+  };
+
+  let successCb = function (pbrIndex, recordId) {
+    do_check_eq(pbrIndex, 0);
+    pbrs[pbrIndex].adn.records[recordId] = {};
   };
 
   let errorCb = function (errorMsg) {
     do_check_true(false);
-    run_next_test();
   };
 
   contactHelper.findFreeICCContact(CARD_APPTYPE_USIM, "adn", successCb, errorCb);
+
+  // Now the EF_ADN in the 1st phonebook set is full, so the next free contact
+  // will come from the 2nd phonebook set.
+  successCb = function (pbrIndex, recordId) {
+    do_check_eq(pbrIndex, 1);
+    do_check_eq(recordId, 1);
+  }
+  contactHelper.findFreeICCContact(CARD_APPTYPE_USIM, "adn", successCb, errorCb);
+
+  run_next_test();
 });
 
 add_test(function test_personalization_state() {
