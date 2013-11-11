@@ -304,15 +304,15 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
         public PageAction(String id,
                           String title,
                           Drawable image,
-                          OnPageActionClickListeners mOnPageActionClickListeners,
-                          boolean mImportant) {
-            this.mId = id;
-            this.mTitle = title;
-            this.mDrawable = image;
-            this.mOnPageActionClickListeners = mOnPageActionClickListeners;
-            this.mImportant = mImportant;
+                          OnPageActionClickListeners onPageActionClickListeners,
+                          boolean important) {
+            mId = id;
+            mTitle = title;
+            mDrawable = image;
+            mOnPageActionClickListeners = onPageActionClickListeners;
+            mImportant = important;
 
-            this.key = UUID.fromString(mId.subSequence(1, mId.length() - 2).toString()).hashCode();
+            key = UUID.fromString(mId.subSequence(1, mId.length() - 2).toString()).hashCode();
         }
 
         public Drawable getDrawable() {
@@ -320,7 +320,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
         }
 
         public void setDrawable(Drawable d) {
-            this.mDrawable = d;
+            mDrawable = d;
         }
 
         public String getTitle() {
