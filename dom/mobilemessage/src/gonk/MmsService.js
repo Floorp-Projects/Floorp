@@ -407,16 +407,25 @@ MmsConnection.prototype = {
           return;
         }
 
-        this.connected =
+        // We only need to capture the state change of MMS network. Using
+        // |network.state| isn't reliable due to the possibilty of shared APN.
+        let connected =
           this.radioInterface.getDataCallStateByType("mms") ==
             Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
 
+        // Return if the MMS network state doesn't change, where the network
+        // state change can come from other non-MMS networks.
+        if (connected == this.connected) {
+          return;
+        }
+
+        this.connected = connected;
         if (!this.connected) {
           return;
         }
 
-        // Set up the MMS APN setting based on the network, which is going to
-        // be used for the HTTP requests later.
+        // Set up the MMS APN setting based on the connected MMS network,
+        // which is going to be used for the HTTP requests later.
         this.setApnSetting(network);
 
         if (DEBUG) debug("Got the MMS network connected! Resend the buffered " +
