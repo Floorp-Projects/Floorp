@@ -1234,7 +1234,7 @@ Loader::CreateSheet(nsIURI* aURI,
  * well as setting the enabled state based on the title and whether
  * the sheet had "alternate" in its rel.
  */
-nsresult
+void
 Loader::PrepareSheet(nsCSSStyleSheet* aSheet,
                      const nsSubstring& aTitle,
                      const nsSubstring& aMediaString,
@@ -1263,7 +1263,6 @@ Loader::PrepareSheet(nsCSSStyleSheet* aSheet,
   aSheet->SetTitle(aTitle);
   aSheet->SetEnabled(! isAlternate);
   aSheet->SetScopeElement(aScopeElement);
-  return NS_OK;
 }
 
 /**
@@ -1886,9 +1885,7 @@ Loader::LoadInlineStyle(nsIContent* aElement,
 
   LOG(("  Sheet is alternate: %d", *aIsAlternate));
 
-  rv = PrepareSheet(sheet, aTitle, aMedia, nullptr, aScopeElement,
-                    *aIsAlternate);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PrepareSheet(sheet, aTitle, aMedia, nullptr, aScopeElement, *aIsAlternate);
 
   rv = InsertSheetInDoc(sheet, aElement, mDocument);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1960,8 +1957,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
 
   LOG(("  Sheet is alternate: %d", *aIsAlternate));
 
-  rv = PrepareSheet(sheet, aTitle, aMedia, nullptr, nullptr, *aIsAlternate);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PrepareSheet(sheet, aTitle, aMedia, nullptr, nullptr, *aIsAlternate);
 
   rv = InsertSheetInDoc(sheet, aElement, mDocument);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2118,8 +2114,7 @@ Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
                    false, empty, state, &isAlternate, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = PrepareSheet(sheet, empty, empty, aMedia, nullptr, isAlternate);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PrepareSheet(sheet, empty, empty, aMedia, nullptr, isAlternate);
 
   rv = InsertChildSheet(sheet, aParentSheet, aParentRule);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2229,8 +2224,7 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
                    empty, state, &isAlternate, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = PrepareSheet(sheet, empty, empty, nullptr, nullptr, isAlternate);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PrepareSheet(sheet, empty, empty, nullptr, nullptr, isAlternate);
 
   if (state == eSheetComplete) {
     LOG(("  Sheet already complete"));
