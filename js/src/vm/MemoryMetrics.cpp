@@ -487,7 +487,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     JS_ASSERT(totalArenaSize % gc::ArenaSize == 0);
 #endif
 
-    for (CompartmentsIter comp(rt); !comp.done(); comp.next())
+    for (CompartmentsIter comp(rt, WithAtoms); !comp.done(); comp.next())
         comp->compartmentStats = nullptr;
 
     size_t numDirtyChunks =
@@ -512,7 +512,7 @@ JS_PUBLIC_API(size_t)
 JS::SystemCompartmentCount(JSRuntime *rt)
 {
     size_t n = 0;
-    for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
+    for (CompartmentsIter comp(rt, WithAtoms); !comp.done(); comp.next()) {
         if (comp->isSystem)
             ++n;
     }
@@ -523,7 +523,7 @@ JS_PUBLIC_API(size_t)
 JS::UserCompartmentCount(JSRuntime *rt)
 {
     size_t n = 0;
-    for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
+    for (CompartmentsIter comp(rt, WithAtoms); !comp.done(); comp.next()) {
         if (!comp->isSystem)
             ++n;
     }
