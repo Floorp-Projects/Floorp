@@ -298,6 +298,10 @@ MarkupView.prototype = {
         this.navigate(selection);
         break;
       }
+      case Ci.nsIDOMKeyEvent.DOM_VK_F2: {
+        this.beginEditingOuterHTML(this._selectedContainer.node);
+        break;
+      }
       default:
         handled = false;
     }
@@ -689,7 +693,11 @@ MarkupView.prototype = {
         return;
       }
       this.htmlEditor.show(container.tagLine, oldValue);
-      this.htmlEditor.once("popup-hidden", (e, aCommit, aValue) => {
+      this.htmlEditor.once("popuphidden", (e, aCommit, aValue) => {
+        // Need to focus the <html> element instead of the frame / window
+        // in order to give keyboard focus back to doc (from editor).
+        this._frame.contentDocument.documentElement.focus();
+
         if (aCommit) {
           this.updateNodeOuterHTML(aNode, aValue, oldValue);
         }

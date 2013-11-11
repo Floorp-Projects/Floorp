@@ -114,6 +114,24 @@ let WebConsoleUtils = {
   },
 
   /**
+   * Copies certain style attributes from one element to another.
+   *
+   * @param nsIDOMNode aFrom
+   *        The target node.
+   * @param nsIDOMNode aTo
+   *        The destination node.
+   */
+  copyTextStyles: function WCU_copyTextStyles(aFrom, aTo)
+  {
+    let win = aFrom.ownerDocument.defaultView;
+    let style = win.getComputedStyle(aFrom);
+    aTo.style.fontFamily = style.getPropertyCSSValue("font-family").cssText;
+    aTo.style.fontSize = style.getPropertyCSSValue("font-size").cssText;
+    aTo.style.fontWeight = style.getPropertyCSSValue("font-weight").cssText;
+    aTo.style.fontStyle = style.getPropertyCSSValue("font-style").cssText;
+  },
+
+  /**
    * Gets the ID of the inner window of this DOM window.
    *
    * @param nsIDOMWindow aWindow
