@@ -40,3 +40,8 @@ MOCHITEST_MANIFESTS += ['mochitest.ini']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/content/events/src',
+    '/dom/indexedDB',
+]
+
