@@ -112,13 +112,11 @@ CSSRuleListImpl::IndexedGetter(uint32_t aIndex, bool& aFound)
 
   if (mStyleSheet) {
     // ensure rules have correct parent
-    if (mStyleSheet->EnsureUniqueInner() !=
-          nsCSSStyleSheet::eUniqueInner_CloneFailed) {
-      css::Rule* rule = mStyleSheet->GetStyleRuleAt(aIndex);
-      if (rule) {
-        aFound = true;
-        return rule->GetDOMRule();
-      }
+    mStyleSheet->EnsureUniqueInner();
+    css::Rule* rule = mStyleSheet->GetStyleRuleAt(aIndex);
+    if (rule) {
+      aFound = true;
+      return rule->GetDOMRule();
     }
   }
 
@@ -1516,9 +1514,7 @@ nsCSSStyleSheet::EnsureUniqueInner()
     return eUniqueInner_AlreadyUnique;
   }
   nsCSSStyleSheetInner* clone = mInner->CloneFor(this);
-  if (!clone) {
-    return eUniqueInner_CloneFailed;
-  }
+  MOZ_ASSERT(clone);
   mInner->RemoveSheet(this);
   mInner = clone;
 
@@ -1629,9 +1625,7 @@ nsCSSStyleSheet::WillDirty()
     return NS_OK;
   }
 
-  if (EnsureUniqueInner() == eUniqueInner_CloneFailed) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  EnsureUniqueInner();
   return NS_OK;
 }
 
