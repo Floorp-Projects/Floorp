@@ -8,7 +8,7 @@
 #include "HttpLog.h"
 
 /*
-  Currently supported are spdy/3.1 and spdy/3
+  Currently supported are spdy/3.1 and spdy/3 and spdy/2
 
 */
 
@@ -19,6 +19,7 @@
 #include "PSpdyPush.h"
 #include "SpdyPush3.h"
 #include "SpdyPush31.h"
+#include "SpdySession2.h"
 #include "SpdySession3.h"
 #include "SpdySession31.h"
 
@@ -35,7 +36,8 @@ ASpdySession::NewSpdySession(uint32_t version,
 {
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
-  MOZ_ASSERT(version == SPDY_VERSION_3 ||
+  MOZ_ASSERT(version == SPDY_VERSION_2 ||
+             version == SPDY_VERSION_3 ||
              version == SPDY_VERSION_31 ,
              "Unsupported spdy version");
 
@@ -49,16 +51,22 @@ ASpdySession::NewSpdySession(uint32_t version,
   if (version == SPDY_VERSION_3)
     return new SpdySession3(aTransaction, aTransport, aPriority);
 
+  if (version == SPDY_VERSION_2)
+    return new SpdySession2(aTransaction, aTransport, aPriority);
+
   return new SpdySession31(aTransaction, aTransport, aPriority);
 }
 
 SpdyInformation::SpdyInformation()
 {
-  Version[0] = SPDY_VERSION_3;
-  VersionString[0] = NS_LITERAL_CSTRING("spdy/3");
+  Version[0] = SPDY_VERSION_2;
+  VersionString[0] = NS_LITERAL_CSTRING("spdy/2");
 
-  Version[1] = SPDY_VERSION_31;
-  VersionString[1] = NS_LITERAL_CSTRING("spdy/3.1");
+  Version[1] = SPDY_VERSION_3;
+  VersionString[1] = NS_LITERAL_CSTRING("spdy/3");
+
+  Version[2] = SPDY_VERSION_31;
+  VersionString[2] = NS_LITERAL_CSTRING("spdy/3.1");
 }
 
 bool
@@ -68,8 +76,10 @@ SpdyInformation::ProtocolEnabled(uint32_t index)
 
   switch (index) {
   case 0:
-    return gHttpHandler->IsSpdyV3Enabled();
+    return gHttpHandler->IsSpdyV2Enabled();
   case 1:
+    return gHttpHandler->IsSpdyV3Enabled();
+  case 2:
     return gHttpHandler->IsSpdyV31Enabled();
   }
   return false;
