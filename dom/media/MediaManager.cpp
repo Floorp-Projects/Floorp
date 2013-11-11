@@ -662,25 +662,36 @@ template<class SourceType>
 static SourceSet *
   GetSources(MediaEngine *engine,
              const MediaTrackConstraintsInternal &aConstraints,
-             void (MediaEngine::* aEnumerate)(nsTArray<nsRefPtr<SourceType> >*))
+             void (MediaEngine::* aEnumerate)(nsTArray<nsRefPtr<SourceType> >*),
+             char* media_device_name = nullptr)
 {
   const SourceType * const type = nullptr;
-
+  nsString deviceName;
   // First collect sources
   SourceSet candidateSet;
   {
     nsTArray<nsRefPtr<SourceType> > sources;
     (engine->*aEnumerate)(&sources);
-
     /**
       * We're allowing multiple tabs to access the same camera for parity
       * with Chrome.  See bug 811757 for some of the issues surrounding
       * this decision.  To disallow, we'd filter by IsAvailable() as we used
       * to.
       */
-
     for (uint32_t len = sources.Length(), i = 0; i < len; i++) {
-      candidateSet.AppendElement(new MediaDevice(sources[i]));
+#ifdef DEBUG
+      sources[i]->GetName(deviceName);
+      if (media_device_name && strlen(media_device_name) > 0)  {
+        if (deviceName.EqualsASCII(media_device_name)) {
+          candidateSet.AppendElement(new MediaDevice(sources[i]));
+          break;
+        }
+      } else {
+#endif
+        candidateSet.AppendElement(new MediaDevice(sources[i]));
+#ifdef DEBUG
+      }
+#endif
     }
   }
 
@@ -1003,24 +1014,29 @@ public:
     const MediaStreamConstraintsInternal& aConstraints,
     already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
-    uint64_t aWindowId)
+    uint64_t aWindowId, char* aAudioLoopbackDev, char* aVideoLoopbackDev)
     : mConstraints(aConstraints)
     , mSuccess(aSuccess)
     , mError(aError)
     , mManager(MediaManager::GetInstance())
-    , mWindowId(aWindowId) {}
+    , mWindowId(aWindowId)
+    , mLoopbackAudioDevice(aAudioLoopbackDev)
+    , mLoopbackVideoDevice(aVideoLoopbackDev) {}
 
   NS_IMETHOD
   Run()
   {
     NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
+
     MediaEngine *backend = mManager->GetBackend(mWindowId);
 
     ScopedDeletePtr<SourceSet> final (GetSources(backend, mConstraints.mVideom,
-                                          &MediaEngine::EnumerateVideoDevices));
+                                          &MediaEngine::EnumerateVideoDevices,
+                                          mLoopbackVideoDevice));
     {
       ScopedDeletePtr<SourceSet> s (GetSources(backend, mConstraints.mAudiom,
-                                        &MediaEngine::EnumerateAudioDevices));
+                                        &MediaEngine::EnumerateAudioDevices,
+                                        mLoopbackAudioDevice));
       final->MoveElementsFrom(*s);
     }
     NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(mSuccess, mError,
@@ -1034,6 +1050,11 @@ private:
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   nsRefPtr<MediaManager> mManager;
   uint64_t mWindowId;
+  // Audio & Video loopback devices to be used based on
+  // the preference settings. This is currently used for
+  // automated media tests only.
+  char* mLoopbackAudioDevice;
+  char* mLoopbackVideoDevice;
 };
 
 MediaManager::MediaManager()
@@ -1392,13 +1413,28 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
 
   nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> onSuccess(aOnSuccess);
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> onError(aOnError);
+  char* loopbackAudioDevice = nullptr;
+  char* loopbackVideoDevice = nullptr;
+  nsresult rv;
+#ifdef DEBUG
+  // Check if the preference for using loopback devices is enabled.
+  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+    if (branch) {
+      branch->GetCharPref("media.audio_loopback_dev", &loopbackAudioDevice);
+      branch->GetCharPref("media.video_loopback_dev", &loopbackVideoDevice);
+    }
+  }
+#endif
 
   nsCOMPtr<nsIRunnable> gUMDRunnable = new GetUserMediaDevicesRunnable(
-    aConstraints, onSuccess.forget(), onError.forget(), aWindow->WindowID()
+    aConstraints, onSuccess.forget(), onError.forget(), aWindow->WindowID(),
+    loopbackAudioDevice, loopbackVideoDevice
   );
 
   nsCOMPtr<nsIThread> deviceThread;
-  nsresult rv = NS_NewThread(getter_AddRefs(deviceThread));
+  rv = NS_NewThread(getter_AddRefs(deviceThread));
   NS_ENSURE_SUCCESS(rv, rv);
 
 
