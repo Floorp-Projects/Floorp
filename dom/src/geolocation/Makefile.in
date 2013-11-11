@@ -2,29 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LOCAL_INCLUDES = \
-		-I$(topsrcdir)/dom/base \
-		-I$(topsrcdir)/dom/ipc \
-		-I$(topsrcdir)/content/base/src \
-		-I$(topsrcdir)/content/events/src \
-		$(NULL)
+include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_ENABLE_QTMOBILITY
-LOCAL_INCLUDES  += $(MOZ_QT_CFLAGS) \
-                   -I$(topsrcdir)/dom/system/unix \
-                   $(NULL)
+CXXFLAGS += $(MOZ_QT_CFLAGS)
 endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/android
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/gonk
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/mac
-endif
-
-include $(topsrcdir)/config/rules.mk

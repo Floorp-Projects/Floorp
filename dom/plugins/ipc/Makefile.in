@@ -2,28 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq (WINNT,$(OS_ARCH))
-DEFINES += \
-  -DMOZ_HANGUI_PROCESS_NAME=\"plugin-hang-ui$(BIN_SUFFIX)\" \
-  $(NULL)
-endif
-
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../base \
-  -I$(topsrcdir)/xpcom/base/ \
-  $(NULL)
-
-ifeq (WINNT,$(OS_ARCH))
-LOCAL_INCLUDES += \
-  -I$(srcdir)/hangui \
-  -I$(topsrcdir)/widget/shared \
-  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(TK_CFLAGS)
-
-DEFINES += -DFORCE_PR_LOG
-
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS += \
+  $(TK_CFLAGS) \
+  $(MOZ_CAIRO_CFLAGS) \
+  $(NULL)

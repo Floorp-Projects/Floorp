@@ -28,3 +28,8 @@ LOCAL_INCLUDES += [
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/dom/fmradio',
+]
+
