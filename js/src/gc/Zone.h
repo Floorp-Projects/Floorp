@@ -319,21 +319,39 @@ struct Zone : public JS::shadow::Zone,
 
 namespace js {
 
+/*
+ * Using the atoms zone without holding the exclusive access lock is dangerous
+ * because worker threads may be using it simultaneously. Therefore, it's
+ * better to skip the atoms zone when iterating over zones. If you need to
+ * iterate over the atoms zone, consider taking the exclusive access lock first.
+ */
+enum ZoneSelector {
+    WithAtoms,
+    SkipAtoms
+};
+
 class ZonesIter {
   private:
     JS::Zone **it, **end;
 
   public:
-    ZonesIter(JSRuntime *rt) {
+    ZonesIter(JSRuntime *rt, ZoneSelector selector) {
         it = rt->zones.begin();
         end = rt->zones.end();
+
+        if (selector == SkipAtoms) {
+            JS_ASSERT(rt->isAtomsZone(*it));
+            it++;
+        }
     }
 
     bool done() const { return it == end; }
 
     void next() {
         JS_ASSERT(!done());
-        it++;
+        do {
+            it++;
+        } while (!done() && (*it)->usedByExclusiveThread);
     }
 
     JS::Zone *get() const {
@@ -383,8 +401,15 @@ class CompartmentsIterT
     CompartmentsIterT(JSRuntime *rt)
       : zone(rt)
     {
-        JS_ASSERT(!zone.done());
-        comp.construct(zone);
+        if (!zone.done())
+            comp.construct(zone);
+    }
+
+    CompartmentsIterT(JSRuntime *rt, ZoneSelector selector)
+      : zone(rt, selector)
+    {
+        if (!zone.done())
+            comp.construct(zone);
     }
 
     bool done() const { return zone.done(); }

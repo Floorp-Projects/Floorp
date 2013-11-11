@@ -56,7 +56,7 @@ void
 WeakMapBase::traceAllMappings(WeakMapTracer *tracer)
 {
     JSRuntime *rt = tracer->runtime;
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next)
             m->traceMappings(tracer);
     }
@@ -440,3 +440,4 @@ js_InitWeakMapClass(JSContext *cx, HandleObject obj)
         return nullptr;
     return weakMapProto;
 }
+
