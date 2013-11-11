@@ -155,7 +155,7 @@ JS::PrepareZoneForGC(Zone *zone)
 JS_FRIEND_API(void)
 JS::PrepareForFullGC(JSRuntime *rt)
 {
-    for (ZonesIter zone(rt); !zone.done(); zone.next())
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
         zone->scheduleGC();
 }
 
@@ -165,7 +165,7 @@ JS::PrepareForIncrementalGC(JSRuntime *rt)
     if (!JS::IsIncrementalGCInProgress(rt))
         return;
 
-    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         if (zone->wasGCStarted())
             PrepareZoneForGC(zone);
     }
@@ -174,7 +174,7 @@ JS::PrepareForIncrementalGC(JSRuntime *rt)
 JS_FRIEND_API(bool)
 JS::IsGCScheduled(JSRuntime *rt)
 {
-    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         if (zone->isGCScheduled())
             return true;
     }

@@ -664,7 +664,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     JS_ASSERT(!rt->mainThread.suppressGC);
 
     if (IS_GC_MARKING_TRACER(trc)) {
-        for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
             if (!c->zone()->isCollecting())
                 c->markCrossCompartmentWrappers(trc);
         }
@@ -721,7 +721,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     for (ContextIter acx(rt); !acx.done(); acx.next())
         acx->mark(trc);
 
-    for (ZonesIter zone(rt); !zone.done(); zone.next()) {
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         if (IS_GC_MARKING_TRACER(trc) && !zone->isCollecting())
             continue;
 
@@ -743,7 +743,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     }
 
     /* We can't use GCCompartmentsIter if we're called from TraceRuntime. */
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         if (trc->runtime->isHeapMinorCollecting())
             c->globalWriteBarriered = false;
 
@@ -773,7 +773,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
          * which have been entered. Globals aren't nursery allocated so there's
          * no need to do this for minor GCs.
          */
-        for (CompartmentsIter c(rt); !c.done(); c.next())
+        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
             c->mark(trc);
 
         /*
