@@ -333,6 +333,7 @@ asserts-if(!Android,1) load 479938-1.html # Bug 575011
 load 480345-1.html
 skip-if(Android) load 481921.html
 load 489462-1.html
+load 489477.html
 load 489480-1.xhtml
 load 493111-1.html
 load 493118-1.html
