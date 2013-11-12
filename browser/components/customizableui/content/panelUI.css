@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.panel-viewstack[viewtype="main"] > .panel-clickcapturer {
+  pointer-events: none;
+}
+
+.panel-mainview,
+.panel-viewcontainer,
+.panel-viewstack {
+  overflow: hidden;
+}
+
+.panel-viewstack {
+  position: relative;
+}
+
+.panel-subviews {
+  -moz-stack-sizing: ignore;
+  transform: translateX(0);
+  overflow-y: auto;
+}
+
+.panel-subviews[panelopen] {
+  transition: transform 150ms;
+}
+
+.panel-viewcontainer[panelopen]:-moz-any(:not([viewtype="main"]),[transitioning="true"]) {
+  transition: height 150ms;
+}
