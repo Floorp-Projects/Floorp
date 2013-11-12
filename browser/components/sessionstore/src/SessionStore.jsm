@@ -2552,6 +2552,17 @@ let SessionStoreInternal = {
       // out of date now that we're restoring it.
       TabState.dropPendingCollections(tab);
 
+      if (!tabData.entries) {
+        tabData.entries = [];
+      }
+      if (tabData.extData) {
+        tab.__SS_extdata = {};
+        for (let key in tabData.extData)
+         tab.__SS_extdata[key] = tabData.extData[key];
+      } else {
+        delete tab.__SS_extdata;
+      }
+
       browser.__SS_tabStillLoading = true;
 
       // keep the data around to prevent dataloss in case
@@ -2561,11 +2572,7 @@ let SessionStoreInternal = {
       browser.setAttribute("pending", "true");
       tab.setAttribute("pending", "true");
 
-      // Make sure that set/getTabValue will set/read the correct data by
-      // wiping out any current value in tab.__SS_extdata.
-      delete tab.__SS_extdata;
-
-      if (!tabData.entries || tabData.entries.length == 0) {
+      if (tabData.entries.length == 0) {
         // make sure to blank out this tab's content
         // (just purging the tab's history won't be enough)
         browser.loadURIWithFlags("about:blank",
@@ -2599,6 +2606,16 @@ let SessionStoreInternal = {
           tab.label = activePageData.url;
           tab.crop = "center";
         }
+      }
+
+      // Restore tab attributes.
+      if ("attributes" in tabData) {
+        TabAttributes.set(tab, tabData.attributes);
+      }
+
+      // Restore the tab icon.
+      if ("image" in tabData) {
+        tabbrowser.setIcon(tab, tabData.image);
       }
     }
 
@@ -2654,17 +2671,6 @@ let SessionStoreInternal = {
     browser.__SS_shistoryListener = new SessionStoreSHistoryListener(tab);
     history.addSHistoryListener(browser.__SS_shistoryListener);
 
-    if (!tabData.entries) {
-      tabData.entries = [];
-    }
-    if (tabData.extData) {
-      tab.__SS_extdata = {};
-      for (let key in tabData.extData)
-        tab.__SS_extdata[key] = tabData.extData[key];
-    } else {
-      delete tab.__SS_extdata;
-    }
-
     let idMap = { used: {} };
     let docIdentMap = {};
     for (var i = 0; i < tabData.entries.length; i++) {
@@ -2678,16 +2684,6 @@ let SessionStoreInternal = {
     // make sure to reset the capabilities and attributes, in case this tab gets reused
     let disallow = new Set(tabData.disallow && tabData.disallow.split(","));
     DocShellCapabilities.restore(browser.docShell, disallow);
-
-    // Restore tab attributes.
-    if ("attributes" in tabData) {
-      TabAttributes.set(tab, tabData.attributes);
-    }
-
-    // Restore the tab icon.
-    if ("image" in tabData) {
-      window.gBrowser.setIcon(tab, tabData.image);
-    }
 
     if (tabData.storage && browser.docShell instanceof Ci.nsIDocShell)
       SessionStorage.deserialize(browser.docShell, tabData.storage);
