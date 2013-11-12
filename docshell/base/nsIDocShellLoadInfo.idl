@@ -61,7 +61,8 @@ interface nsIDocShellLoadInfo : nsISupports
     const long loadNormalBypassProxyAndCache = 16;
     const long loadPushState = 17;                 // history.pushState or replaceState
     const long loadReplaceBypassCache = 18;
-    const long loadMixedContent = 19;
+    const long loadReloadMixedContent = 19;
+    const long loadNormalAllowMixedContent = 20;
 
     /** Contains a load type as specified by the load* constants */
     attribute nsDocShellInfoLoadType loadType;

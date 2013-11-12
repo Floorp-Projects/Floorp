@@ -99,6 +99,8 @@ AMPEG4ElementaryAssembler::AMPEG4ElementaryAssembler(
       mRandomAccessIndication(false),
       mStreamStateIndication(0),
       mAuxiliaryDataSizeLength(0),
+      mConstantDuration(0),
+      mPreviousAUCount(0),
       mHasAUHeader(false),
       mAccessUnitRTPTime(0),
       mNextExpectedSeqNoValid(false),
@@ -153,6 +155,12 @@ AMPEG4ElementaryAssembler::AMPEG4ElementaryAssembler(
                     params.c_str(), "auxiliaryDataSizeLength",
                     &mAuxiliaryDataSizeLength)) {
             mAuxiliaryDataSizeLength = 0;
+        }
+
+        if (!GetIntegerAttribute(
+                    params.c_str(), "constantDuration",
+                    &mConstantDuration)) {
+            mConstantDuration = 0;
         }
 
         mHasAUHeader =
@@ -214,6 +222,14 @@ ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::addPacket(
     if (mPackets.size() > 0 && rtpTime != mAccessUnitRTPTime) {
         submitAccessUnit();
     }
+
+    // If constantDuration and CTSDelta are not present. We should assume the
+    // stream has fixed duration and calculate the mConstantDuration.
+    if (!mConstantDuration && !mCTSDeltaLength && mPreviousAUCount
+        && rtpTime > mAccessUnitRTPTime) {
+        mConstantDuration = (rtpTime - mAccessUnitRTPTime) / mPreviousAUCount;
+    }
+
     mAccessUnitRTPTime = rtpTime;
 
     if (!mIsGeneric) {
@@ -309,10 +325,12 @@ ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::addPacket(
             offset += (mAuxiliaryDataSizeLength + auxSize + 7) / 8;
         }
 
+        mPreviousAUCount = 0;
         for (List<AUHeader>::iterator it = headers.begin();
              it != headers.end(); ++it) {
+            mPreviousAUCount++;
             const AUHeader &header = *it;
-
+            const AUHeader &first = *headers.begin();
             CHECK_LE(offset + header.mSize, buffer->size());
 
             sp<ABuffer> accessUnit = new ABuffer(header.mSize);
@@ -320,7 +338,11 @@ ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::addPacket(
 
             offset += header.mSize;
 
-            CopyTimes(accessUnit, buffer);
+            int rtpTime = mAccessUnitRTPTime +
+                          mConstantDuration * (header.mSerial - first.mSerial);
+            accessUnit->meta()->setInt32("rtp-time", rtpTime);
+            accessUnit->setInt32Data(buffer->int32Data());
+
             mPackets.push_back(accessUnit);
         }
 
@@ -338,38 +360,24 @@ void AMPEG4ElementaryAssembler::submitAccessUnit() {
 
     LOGV("Access unit complete (%d nal units)", mPackets.size());
 
-    size_t totalSize = 0;
     for (List<sp<ABuffer> >::iterator it = mPackets.begin();
          it != mPackets.end(); ++it) {
-        totalSize += (*it)->size();
-    }
-
-    sp<ABuffer> accessUnit = new ABuffer(totalSize);
-    size_t offset = 0;
-    for (List<sp<ABuffer> >::iterator it = mPackets.begin();
-         it != mPackets.end(); ++it) {
+        sp<ABuffer> accessUnit = new ABuffer((*it)->size());
         sp<ABuffer> nal = *it;
-        memcpy(accessUnit->data() + offset, nal->data(), nal->size());
-        offset += nal->size();
-    }
+        memcpy(accessUnit->data(), nal->data(), nal->size());
+        CopyTimes(accessUnit, nal);
 
-    CopyTimes(accessUnit, *mPackets.begin());
+        if (mAccessUnitDamaged) {
+            accessUnit->meta()->setInt32("damaged", true);
+        }
 
-#if 0
-    printf(mAccessUnitDamaged ? "X" : ".");
-    fflush(stdout);
-#endif
-
-    if (mAccessUnitDamaged) {
-        accessUnit->meta()->setInt32("damaged", true);
+        sp<AMessage> msg = mNotifyMsg->dup();
+        msg->setObject("access-unit", accessUnit);
+        msg->post();
     }
 
     mPackets.clear();
     mAccessUnitDamaged = false;
-
-    sp<AMessage> msg = mNotifyMsg->dup();
-    msg->setObject("access-unit", accessUnit);
-    msg->post();
 }
 
 ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::assembleMore(
@@ -388,6 +396,8 @@ void AMPEG4ElementaryAssembler::packetLost() {
     ++mNextExpectedSeqNo;
 
     mAccessUnitDamaged = true;
+
+    mPreviousAUCount = 0;
 }
 
 void AMPEG4ElementaryAssembler::onByeReceived() {

@@ -21,6 +21,7 @@
 
 #include "plbase64.h"
 #include "certdb.h"
+#include "ScopedNSSTypes.h"
 
 using namespace mozilla::ipc;
 
@@ -327,7 +328,7 @@ KeyStore::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
           const char *certName = (const char *)mHandlerInfo.param[0].data;
 
           // Get cert from NSS by name
-          CERTCertificate *cert = CERT_FindCertByNickname(certdb, certName);
+          ScopedCERTCertificate cert(CERT_FindCertByNickname(certdb, certName));
           if (!cert) {
             break;
           }
