@@ -32,9 +32,8 @@ nsExternalSharingAppService::ShareWithDefault(const nsAString & data,
   NS_NAMED_LITERAL_STRING(sendAction, "android.intent.action.SEND");
   const nsString emptyString = EmptyString();
   if (AndroidBridge::Bridge())
-    return AndroidBridge::Bridge()->
-      OpenUriExternal(data, mime,
-                      emptyString,emptyString, sendAction, title) ? NS_OK : NS_ERROR_FAILURE;
+    return GeckoAppShell::OpenUriExternal(data, mime,
+                                          emptyString,emptyString, sendAction, title) ? NS_OK : NS_ERROR_FAILURE;
 
   return NS_ERROR_FAILURE;
 }

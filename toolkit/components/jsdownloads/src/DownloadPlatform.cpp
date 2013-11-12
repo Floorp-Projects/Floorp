@@ -118,7 +118,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
 #endif
 #ifdef MOZ_WIDGET_ANDROID
     if (!aContentType.IsEmpty()) {
-      mozilla::AndroidBridge::Bridge()->ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
+      mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
     }
 #endif
   }
