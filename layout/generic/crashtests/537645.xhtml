@@ -1,0 +1,11 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<style>
+span { margin: inherit; }
+html, body { -moz-column-width: 1px; column-width: 1px; }
+</style>
+</head>
+<body onload="document.getElementsByTagName('style')[0].setAttribute('foo', 'bar'); document.documentElement.removeAttribute('class');">
+<span><i><spacer /><caption /></i><span><span><div /></span></span></span>
+</body>
+</html>
