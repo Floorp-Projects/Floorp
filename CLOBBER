@@ -18,6 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 921718 presumably needed a clobber due to bug 928195.
-and
-Bug 853423 - New code (inc. new function IsIPAddrLocal) is not being included in incremental builds.
+Another Windows WebIDL clobber needed due to bug 928195
