@@ -59,6 +59,9 @@ ASTDEF(AST_DEBUGGER_STMT,         "DebuggerStatement",              "debuggerSta
 ASTDEF(AST_LET_STMT,              "LetStatement",                   "letStatement")
 ASTDEF(AST_IMPORT_DECL,           "ImportDeclaration",              "importDeclaration")
 ASTDEF(AST_IMPORT_SPEC,           "ImportSpecifier",                "importSpecifier")
+ASTDEF(AST_EXPORT_DECL,           "ExportDeclaration",              "exportDeclaration")
+ASTDEF(AST_EXPORT_SPEC,           "ExportSpecifier",                "exportSpecifier")
+ASTDEF(AST_EXPORT_BATCH_SPEC,     "ExportBatchSpecifier",           "exportBatchSpecifier")
 
 ASTDEF(AST_CASE,                  "SwitchCase",                     "switchCase")
 ASTDEF(AST_CATCH,                 "CatchClause",                    "catchClause")

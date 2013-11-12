@@ -96,7 +96,7 @@ LinkedUWTBuffer* utb__acquire_sync_buffer(void* stackTop)
 // RUNS IN SIGHANDLER CONTEXT
 UnwinderThreadBuffer* uwt__acquire_empty_buffer()
 {
-  return NULL;
+  return nullptr;
 }
 
 void
@@ -170,8 +170,8 @@ static void release_sync_buffer(LinkedUWTBuffer* utb);
 // chunk and register fields if a native unwind is requested.
 // APROFILE is where the profile data should be added to.  UTB
 // is the partially-filled-in buffer, containing ProfileEntries.
-// UCV is the ucontext_t* from the signal handler.  If non-NULL, is
-// taken as a cue to request native unwind.
+// UCV is the ucontext_t* from the signal handler.  If non-nullptr,
+// is taken as a cue to request native unwind.
 static void release_full_buffer(ThreadProfile* aProfile,
                                 UnwinderThreadBuffer* utb,
                                 void* /* ucontext_t*, really */ ucV );
@@ -187,9 +187,9 @@ void uwt__init()
 {
   // Create the unwinder thread.
   MOZ_ASSERT(unwind_thr_exit_now == 0);
-  int r = pthread_create( &unwind_thr, NULL,
+  int r = pthread_create( &unwind_thr, nullptr,
                           unwind_thr_fn, (void*)&unwind_thr_exit_now );
-  MOZ_ALWAYS_TRUE(r==0);
+  MOZ_ALWAYS_TRUE(r == 0);
 }
 
 void uwt__stop()
@@ -198,7 +198,8 @@ void uwt__stop()
   MOZ_ASSERT(unwind_thr_exit_now == 0);
   unwind_thr_exit_now = 1;
   do_MBAR();
-  int r = pthread_join(unwind_thr, NULL); MOZ_ALWAYS_TRUE(r==0);
+  int r = pthread_join(unwind_thr, nullptr);
+  MOZ_ALWAYS_TRUE(r == 0);
 }
 
 void uwt__deinit()
@@ -401,7 +402,7 @@ typedef
 
 /* Globals -- the buffer array */
 #define N_UNW_THR_BUFFERS 10
-/*SL*/ static UnwinderThreadBuffer** g_buffers     = NULL;
+/*SL*/ static UnwinderThreadBuffer** g_buffers     = nullptr;
 /*SL*/ static uint64_t               g_seqNo       = 0;
 /*SL*/ static SpinLock               g_spinLock    = { 0 };
 
@@ -412,7 +413,7 @@ typedef
    allocate or expand the array, as that would risk deadlock against a
    sampling thread that holds the malloc lock and is trying to acquire
    the spinlock. */
-/*SL*/ static StackLimit* g_stackLimits     = NULL;
+/*SL*/ static StackLimit* g_stackLimits     = nullptr;
 /*SL*/ static size_t      g_stackLimitsUsed = 0;
 /*SL*/ static size_t      g_stackLimitsSize = 0;
 
@@ -527,7 +528,7 @@ static void sleep_ms(unsigned int ms)
   struct timespec req;
   req.tv_sec = ((time_t)ms) / 1000;
   req.tv_nsec = 1000 * 1000 * (((unsigned long)ms) % 1000);
-  nanosleep(&req, NULL);
+  nanosleep(&req, nullptr);
 }
 
 /* Use CAS to implement standalone atomic increment. */
@@ -553,7 +554,7 @@ static void thread_register_for_profiling(void* stackTop)
   int n_used;
 
   // Ignore spurious calls which aren't really registering anything.
-  if (stackTop == NULL) {
+  if (stackTop == nullptr) {
     n_used = g_stackLimitsUsed;
     spinLock_release(&g_spinLock);
     LOGF("BPUnw: [%d total] thread_register_for_profiling"
@@ -720,7 +721,7 @@ static void show_registered_threads()
 static void init_empty_buffer(UnwinderThreadBuffer* buff, void* stackTop)
 {
   /* Now we own the buffer, initialise it. */
-  buff->aProfile       = NULL;
+  buff->aProfile       = nullptr;
   buff->entsUsed       = 0;
   buff->haveNativeInfo = false;
   buff->stackImgUsed   = 0;
@@ -756,7 +757,7 @@ static LinkedUWTBuffer* acquire_sync_buffer(void* stackTop)
 static UnwinderThreadBuffer* acquire_empty_buffer()
 {
   /* acq lock
-     if buffers == NULL { rel lock; exit }
+     if buffers == nullptr { rel lock; exit }
      scan to find a free buff; if none { rel lock; exit }
      set buff state to S_FILLING
      fillseqno++; and remember it
@@ -789,11 +790,11 @@ static UnwinderThreadBuffer* acquire_empty_buffer()
   }
 
   /* If the thread isn't registered for profiling, just ignore the call
-     and return NULL. */
+     and return nullptr. */
   if (i == g_stackLimitsUsed) {
     spinLock_release(&g_spinLock);
     atomic_INC( &g_stats_thrUnregd );
-    return NULL;
+    return nullptr;
   }
 
   /* "this thread is registered for profiling" */
@@ -804,12 +805,12 @@ static UnwinderThreadBuffer* acquire_empty_buffer()
   g_stackLimits[i].nSamples++;
 
   /* Try to find a free buffer to use. */
-  if (g_buffers == NULL) {
+  if (g_buffers == nullptr) {
     /* The unwinder thread hasn't allocated any buffers yet.
        Nothing we can do. */
     spinLock_release(&g_spinLock);
     atomic_INC( &g_stats_noBuffAvail );
-    return NULL;
+    return nullptr;
   }
 
   for (i = 0; i < N_UNW_THR_BUFFERS; i++) {
@@ -824,7 +825,7 @@ static UnwinderThreadBuffer* acquire_empty_buffer()
     atomic_INC( &g_stats_noBuffAvail );
     if (LOGLEVEL >= 3)
       LOG("BPUnw: handler:  no free buffers");
-    return NULL;
+    return nullptr;
   }
 
   /* So we can use this one safely.  Whilst still holding the lock,
@@ -863,7 +864,7 @@ static void fill_buffer(ThreadProfile* aProfile,
   buff->aProfile = aProfile;
 
   /* And, if we have register state, that and the stack top */
-  buff->haveNativeInfo = ucV != NULL;
+  buff->haveNativeInfo = ucV != nullptr;
   if (buff->haveNativeInfo) {
 #   if defined(SPS_PLAT_amd64_linux)
     ucontext_t* uc = (ucontext_t*)ucV;
@@ -965,11 +966,11 @@ static void release_full_buffer(ThreadProfile* aProfile,
 static ProfEntsPage* mmap_anon_ProfEntsPage()
 {
 # if defined(SPS_OS_darwin)
-  void* v = ::mmap(NULL, sizeof(ProfEntsPage), PROT_READ|PROT_WRITE, 
-                   MAP_PRIVATE|MAP_ANON,      -1, 0);
+  void* v = ::mmap(nullptr, sizeof(ProfEntsPage), PROT_READ | PROT_WRITE, 
+                   MAP_PRIVATE | MAP_ANON,      -1, 0);
 # else
-  void* v = ::mmap(NULL, sizeof(ProfEntsPage), PROT_READ|PROT_WRITE, 
-                   MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+  void* v = ::mmap(nullptr, sizeof(ProfEntsPage), PROT_READ | PROT_WRITE, 
+                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 # endif
   if (v == MAP_FAILED) {
     return ProfEntsPage_INVALID;
@@ -1139,7 +1140,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
       // action a native-unwind-now hint
       if (ent.is_ent_hint('N')) {
         MOZ_ASSERT(buff->haveNativeInfo);
-        PCandSP* pairs = NULL;
+        PCandSP* pairs = nullptr;
         unsigned int nPairs = 0;
         do_breakpad_unwind_Buffer(&pairs, &nPairs, buff, oldest_ix);
         buff->aProfile->addTag( ProfileEntry('s', "(root)") );
@@ -1209,7 +1210,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
     MOZ_ASSERT(buff->haveNativeInfo);
 
     // Get native unwind info
-    PCandSP* pairs = NULL;
+    PCandSP* pairs = nullptr;
     unsigned int n_pairs = 0;
     do_breakpad_unwind_Buffer(&pairs, &n_pairs, buff, oldest_ix);
 
@@ -1362,7 +1363,7 @@ static void process_buffer(UnwinderThreadBuffer* buff, int oldest_ix)
     else if (ent.is_ent_hint('N')) {
       /* This is a do-a-native-unwind-right-now hint */
       MOZ_ASSERT(buff->haveNativeInfo);
-      PCandSP* pairs = NULL;
+      PCandSP* pairs = nullptr;
       unsigned int nPairs = 0;
       do_breakpad_unwind_Buffer(&pairs, &nPairs, buff, oldest_ix);
       buff->aProfile->addTag( ProfileEntry('s', "(root)") );
@@ -1388,7 +1389,7 @@ static void* unwind_thr_fn(void* exit_nowV)
   /* If we're the first thread in, we'll need to allocate the buffer
      array g_buffers plus the Buffer structs that it points at. */
   spinLock_acquire(&g_spinLock);
-  if (g_buffers == NULL) {
+  if (g_buffers == nullptr) {
     /* Drop the lock, make a complete copy in memory, reacquire the
        lock, and try to install it -- which might fail, if someone
        else beat us to it. */
@@ -1409,7 +1410,7 @@ static void* unwind_thr_fn(void* exit_nowV)
     }
     /* Try to install it */
     spinLock_acquire(&g_spinLock);
-    if (g_buffers == NULL) {
+    if (g_buffers == nullptr) {
       g_buffers = buffers;
       spinLock_release(&g_spinLock);
     } else {
@@ -1526,7 +1527,7 @@ static void* unwind_thr_fn(void* exit_nowV)
     ms_to_sleep_if_empty = 1;
     show_sleep_message = true;
   }
-  return NULL;
+  return nullptr;
 }
 
 static void finish_sync_buffer(ThreadProfile* profile,
@@ -1582,7 +1583,7 @@ static void release_sync_buffer(LinkedUWTBuffer* buff)
 #include "google_breakpad/processor/memory_region.h"
 #include "google_breakpad/processor/code_modules.h"
 
-google_breakpad::MemoryRegion* foo = NULL;
+google_breakpad::MemoryRegion* foo = nullptr;
 
 using std::string;
 
@@ -1692,7 +1693,7 @@ public:
   // ownership of.  The new CodeModule may be of a different concrete class
   // than the CodeModule being copied, but will behave identically to the
   // copied CodeModule as far as the CodeModule interface is concerned.
-  const CodeModule* Copy() const { MOZ_CRASH(); return NULL; }
+  const CodeModule* Copy() const { MOZ_CRASH(); return nullptr; }
 
   friend void read_procmaps(std::vector<MyCodeModule*>& mods_);
 
@@ -1827,7 +1828,7 @@ class MyCodeModules : public google_breakpad::CodeModules
     // comparisons against {min_,max_}addr_ are only valid in the case
     // where nMods > 0, hence the ordering of tests.
     if (nMods == 0 || address < min_addr_ || address > max_addr_) {
-      return NULL;
+      return nullptr;
     }
 
     // Binary search in |mods_|.  lo and hi need to be signed, else
@@ -1838,7 +1839,7 @@ class MyCodeModules : public google_breakpad::CodeModules
       // current unsearched space is from lo to hi, inclusive.
       if (lo > hi) {
         // not found
-        return NULL;
+        return nullptr;
       }
       long int mid = (lo + hi) / 2;
       MyCodeModule* mid_mod = mods_[mid];
@@ -1852,20 +1853,20 @@ class MyCodeModules : public google_breakpad::CodeModules
   }
 
   const google_breakpad::CodeModule* GetMainModule() const {
-    MOZ_CRASH(); return NULL; return NULL;
+    MOZ_CRASH(); return nullptr; return nullptr;
   }
 
   const google_breakpad::CodeModule* GetModuleAtSequence(
                 unsigned int sequence) const {
-    MOZ_CRASH(); return NULL;
+    MOZ_CRASH(); return nullptr;
   }
 
   const google_breakpad::CodeModule* GetModuleAtIndex(unsigned int index) const {
-    MOZ_CRASH(); return NULL;
+    MOZ_CRASH(); return nullptr;
   }
 
   const CodeModules* Copy() const {
-    MOZ_CRASH(); return NULL;
+    MOZ_CRASH(); return nullptr;
   }
 };
 
@@ -1888,8 +1889,8 @@ class MyCodeModules : public google_breakpad::CodeModules
    reason.  Users of this function need to be aware of that.
 */
 
-MyCodeModules* sModules = NULL;
-google_breakpad::LocalDebugInfoSymbolizer* sSymbolizer = NULL;
+MyCodeModules* sModules = nullptr;
+google_breakpad::LocalDebugInfoSymbolizer* sSymbolizer = nullptr;
 
 // Free up the above two singletons when the unwinder thread is shut
 // down.
@@ -1898,17 +1899,17 @@ void do_breakpad_unwind_Buffer_free_singletons()
 {
   if (sSymbolizer) {
     delete sSymbolizer;
-    sSymbolizer = NULL;
+    sSymbolizer = nullptr;
   }
   if (sModules) {
     delete sModules;
-    sModules = NULL;
+    sModules = nullptr;
   }
 
   g_stackLimitsUsed = 0;
   g_seqNo = 0;
   free(g_buffers);
-  g_buffers = NULL;
+  g_buffers = nullptr;
 }
 
 static void stats_notify_frame(google_breakpad::StackFrame::FrameTrust tr)
@@ -2030,18 +2031,18 @@ void do_breakpad_unwind_Buffer(/*OUT*/PCandSP** pairs,
 
 # if defined(SPS_ARCH_amd64)
   google_breakpad::StackwalkerAMD64* sw
-   = new google_breakpad::StackwalkerAMD64(NULL, context,
+   = new google_breakpad::StackwalkerAMD64(nullptr, context,
                                            memory, sModules,
                                            sSymbolizer);
 # elif defined(SPS_ARCH_arm)
   google_breakpad::StackwalkerARM* sw
-   = new google_breakpad::StackwalkerARM(NULL, context,
+   = new google_breakpad::StackwalkerARM(nullptr, context,
                                          -1/*FP reg*/,
                                          memory, sModules,
                                          sSymbolizer);
 # elif defined(SPS_ARCH_x86)
   google_breakpad::StackwalkerX86* sw
-   = new google_breakpad::StackwalkerX86(NULL, context,
+   = new google_breakpad::StackwalkerX86(nullptr, context,
                                          memory, sModules,
                                          sSymbolizer);
 # else
@@ -2072,7 +2073,7 @@ void do_breakpad_unwind_Buffer(/*OUT*/PCandSP** pairs,
 
   *pairs  = (PCandSP*)calloc(n_frames, sizeof(PCandSP));
   *nPairs = n_frames;
-  if (*pairs == NULL) {
+  if (*pairs == nullptr) {
     *nPairs = 0;
     return;
   }

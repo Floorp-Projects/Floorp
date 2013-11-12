@@ -98,7 +98,7 @@ this.SafeBrowsing = {
       var clientID = Services.appinfo.name;
     }
 
-    log("initializing safe browsing URLs");
+    log("initializing safe browsing URLs, client id ", clientID);
     let basePref = "browser.safebrowsing.";
 
     // Urls to HTML report pages
@@ -141,10 +141,15 @@ this.SafeBrowsing = {
     else
       listManager.disableUpdate(phishingList);
 
-    if (this.malwareEnabled)
+    if (this.malwareEnabled) {
       listManager.enableUpdate(malwareList);
-    else
+      listManager.enableUpdate(downloadBlockList);
+      listManager.enableUpdate(downloadAllowList);
+    } else {
       listManager.disableUpdate(malwareList);
+      listManager.disableUpdate(downloadBlockList);
+      listManager.disableUpdate(downloadAllowList);
+    }
   },
 
 

@@ -164,7 +164,7 @@ struct thread_info : public mozilla::LinkedListElement<thread_info> {
 
 typedef struct thread_info thread_info_t;
 
-static thread_info_t *sCurrentRecreatingThread = NULL;
+static thread_info_t *sCurrentRecreatingThread = nullptr;
 
 /**
  * This function runs the custom recreation function registered when calling
@@ -173,7 +173,7 @@ static thread_info_t *sCurrentRecreatingThread = NULL;
 static void
 RunCustomRecreation() {
   thread_info_t *tinfo = sCurrentRecreatingThread;
-  if (tinfo->recrFunc != NULL) {
+  if (tinfo->recrFunc != nullptr) {
     tinfo->recrFunc(tinfo->recrArg);
   }
 }
@@ -257,7 +257,7 @@ GetThreadInfoInner(pthread_t threadID) {
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -306,9 +306,9 @@ GetCurThreadInfo() {
 #define CUR_THREAD_INFO GetCurThreadInfo()
 #define SET_THREAD_INFO(x) /* Nothing to do. */
 #else
-// Is not NULL only for threads created by pthread_create() in an Nuwa process.
-// It is always NULL for the main thread.
-static __thread thread_info_t *sCurThreadInfo = NULL;
+// Is not nullptr only for threads created by pthread_create() in an Nuwa process.
+// It is always nullptr for the main thread.
+static __thread thread_info_t *sCurThreadInfo = nullptr;
 #define CUR_THREAD_INFO sCurThreadInfo
 #define SET_THREAD_INFO(x) do { sCurThreadInfo = (x); } while(0)
 #endif  // HAVE_THREAD_TLS_KEYWORD
@@ -386,7 +386,7 @@ public:
 public:
   void AddEpollInfo(int aEpollFd, int aBackSize) {
     EpollInfo *oldinfo = FindEpollInfo(aEpollFd);
-    if (oldinfo != NULL) {
+    if (oldinfo != nullptr) {
       abort();
     }
     mEpollFdsInfo[aEpollFd] = EpollInfo(aBackSize);
@@ -395,7 +395,7 @@ public:
   EpollInfo *FindEpollInfo(int aEpollFd) {
     iterator it = mEpollFdsInfo.find(aEpollFd);
     if (it == mEpollFdsInfo.end()) {
-      return NULL;
+      return nullptr;
     }
     return &it->second;
   }
@@ -425,7 +425,7 @@ public:
     }
 
     delete sInstance;
-    sInstance = NULL;
+    sInstance = nullptr;
   }
 
 private:
@@ -446,10 +446,10 @@ thread_info_new(void) {
   /* link tinfo to sAllThreads */
   thread_info_t *tinfo = new thread_info_t();
   tinfo->flags = 0;
-  tinfo->recrFunc = NULL;
-  tinfo->recrArg = NULL;
+  tinfo->recrFunc = nullptr;
+  tinfo->recrArg = nullptr;
   tinfo->recreatedThreadID = 0;
-  tinfo->reacquireMutex = NULL;
+  tinfo->reacquireMutex = nullptr;
   tinfo->stk = malloc(NUWA_STACK_SIZE);
   pthread_attr_init(&tinfo->threadAttr);
 
@@ -590,7 +590,7 @@ SaveTLSInfo(thread_info_t *tinfo) {
        it != sTLSKeys.end();
        it++) {
     void *value = pthread_getspecific(it->first);
-    if (value == NULL) {
+    if (value == nullptr) {
       continue;
     }
 
@@ -662,7 +662,7 @@ __wrap_pthread_self() {
 extern "C" MFBT_API int
 __wrap_pthread_join(pthread_t thread, void **retval) {
   thread_info_t *tinfo = GetThreadInfo(thread);
-  if (tinfo == NULL) {
+  if (tinfo == nullptr) {
     return REAL(pthread_join)(thread, retval);
   }
   // pthread_join() need to use the real thread ID in the spawned process.
@@ -1174,7 +1174,7 @@ __wrap_epoll_ctl(int aEpollFd, int aOp, int aFd, struct epoll_event *aEvent) {
 
   EpollManager::EpollInfo *info =
     EpollManager::Singleton()->FindEpollInfo(aEpollFd);
-  if (info == NULL) {
+  if (info == nullptr) {
     abort();
   }
 
@@ -1235,7 +1235,7 @@ thread_recreate_startup(void *arg) {
   RestoreTLSInfo(tinfo);
 
   if (setjmp(tinfo->retEnv) != 0) {
-    return NULL;
+    return nullptr;
   }
 
   // longjump() to recreate the stack on the new thread.
@@ -1244,7 +1244,7 @@ thread_recreate_startup(void *arg) {
   // Never go here!
   abort();
 
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -1280,7 +1280,7 @@ RecreateThreads() {
   pthread_mutex_unlock(&sThreadCountLock);
 
   RECREATE_START();
-  while (tinfo != NULL) {
+  while (tinfo != nullptr) {
     if (tinfo->flags & TINFO_FLAG_NUWA_SUPPORT) {
       RECREATE_BEFORE(tinfo);
       thread_recreate(tinfo);
@@ -1423,9 +1423,9 @@ ReplaceIPC(NuwaProtoFdInfo *aInfoList, int aInfoSize) {
  */
 static void
 AddNewProcess(pid_t pid, NuwaProtoFdInfo *aInfoList, int aInfoSize) {
-  static bool (*AddNewIPCProcess)(pid_t, NuwaProtoFdInfo *, int) = NULL;
+  static bool (*AddNewIPCProcess)(pid_t, NuwaProtoFdInfo *, int) = nullptr;
 
-  if (AddNewIPCProcess == NULL) {
+  if (AddNewIPCProcess == nullptr) {
     AddNewIPCProcess = (bool (*)(pid_t, NuwaProtoFdInfo *, int))
       dlsym(RTLD_DEFAULT, "AddNewIPCProcess");
   }
@@ -1561,8 +1561,8 @@ PrepareNuwaProcess() {
 // Make current process as a Nuwa process.
 MFBT_API void
 MakeNuwaProcess() {
-  void (*GetProtoFdInfos)(NuwaProtoFdInfo *, int, int *) = NULL;
-  void (*OnNuwaProcessReady)() = NULL;
+  void (*GetProtoFdInfos)(NuwaProtoFdInfo *, int, int *) = nullptr;
+  void (*OnNuwaProcessReady)() = nullptr;
   sIsFreezing = true;
 
   REAL(pthread_mutex_lock)(&sThreadCountLock);
@@ -1600,7 +1600,7 @@ NuwaMarkCurrentThread(void (*recreate)(void *), void *arg) {
   }
 
   thread_info_t *tinfo = CUR_THREAD_INFO;
-  if (tinfo == NULL) {
+  if (tinfo == nullptr) {
     abort();
   }
 
@@ -1618,7 +1618,7 @@ NuwaSkipCurrentThread() {
   if (!sIsNuwaProcess) return;
 
   thread_info_t *tinfo = CUR_THREAD_INFO;
-  if (tinfo == NULL) {
+  if (tinfo == nullptr) {
     abort();
   }
 

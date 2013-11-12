@@ -427,3 +427,7 @@ MSG_DEF(JSMSG_FROM_AFTER_IMPORT_SPEC_SET, 372, 0, JSEXN_SYNTAXERR, "missing keyw
 MSG_DEF(JSMSG_DECLARATION_AFTER_IMPORT, 373, 0, JSEXN_SYNTAXERR, "missing declaration after 'import' keyword")
 MSG_DEF(JSMSG_MODULE_SPEC_AFTER_FROM,   374, 0, JSEXN_SYNTAXERR, "missing module specifier after 'from' keyword")
 MSG_DEF(JSMSG_MODULES_NOT_IMPLEMENTED,  375, 0, JSEXN_SYNTAXERR, "modules are not implemented yet")
+MSG_DEF(JSMSG_EXPORT_DECL_AT_TOP_LEVEL, 376, 0, JSEXN_SYNTAXERR, "export declarations may only appear at top level")
+MSG_DEF(JSMSG_RC_AFTER_EXPORT_SPEC_LIST, 377, 0, JSEXN_SYNTAXERR, "missing '}' after export specifier list")
+MSG_DEF(JSMSG_NO_EXPORT_NAME,           378, 0, JSEXN_SYNTAXERR, "missing export name")
+MSG_DEF(JSMSG_DECLARATION_AFTER_EXPORT, 379, 0, JSEXN_SYNTAXERR, "missing declaration after 'export' keyword")
