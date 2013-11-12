@@ -2424,3 +2424,13 @@ MNot::collectRangeInfo()
 {
     operandIsNeverNaN_ = !Range(operand()).canBeNaN();
 }
+
+void
+MPowHalf::collectRangeInfo()
+{
+    Range inputRange(input());
+    operandIsNeverNegativeInfinity_ = !inputRange.canBeInfiniteOrNaN() ||
+                                      inputRange.hasInt32LowerBound();
+    operandIsNeverNegativeZero_ = !inputRange.canBeZero();
+    operandIsNeverNaN_ = !inputRange.canBeNaN();
+}
