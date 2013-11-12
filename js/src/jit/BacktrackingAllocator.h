@@ -197,8 +197,8 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
     bool requeueIntervals(const LiveIntervalVector &newIntervals);
     void spill(LiveInterval *interval);
 
-    bool isReusedInput(LUse *use, LInstruction *ins, bool considerCopy = false);
-    bool isRegisterUse(LUse *use, LInstruction *ins);
+    bool isReusedInput(LUse *use, LInstruction *ins, bool considerCopy);
+    bool isRegisterUse(LUse *use, LInstruction *ins, bool considerCopy = false);
     bool isRegisterDefinition(LiveInterval *interval);
     bool addLiveInterval(LiveIntervalVector &intervals, uint32_t vreg,
                          LiveInterval *spillInterval,
