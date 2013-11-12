@@ -125,7 +125,11 @@ BluetoothHidManager::Connect(const nsAString& aDeviceAddress,
   mDeviceAddress = aDeviceAddress;
   mController = aController;
 
-  bs->SendInputMessage(aDeviceAddress, NS_LITERAL_STRING("Connect"));
+  if (NS_FAILED(bs->SendInputMessage(aDeviceAddress,
+                                     NS_LITERAL_STRING("Connect")))) {
+    aController->OnConnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    return;
+  }
 }
 
 void
@@ -153,7 +157,11 @@ BluetoothHidManager::Disconnect(BluetoothProfileController* aController)
 
   mController = aController;
 
-  bs->SendInputMessage(mDeviceAddress, NS_LITERAL_STRING("Disconnect"));
+  if (NS_FAILED(bs->SendInputMessage(mDeviceAddress,
+                                     NS_LITERAL_STRING("Disconnect")))) {
+    aController->OnDisconnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    return;
+  }
 }
 
 void
