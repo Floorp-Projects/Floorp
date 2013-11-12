@@ -9,14 +9,14 @@
     <PreferenceScreen android:title="@string/pref_category_search" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.GeckoPreferences" >
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
             <extra
                 android:name="resource"
                 android:value="preferences_search" />
         </intent>
     </PreferenceScreen>
 
-    <org.mozilla.gecko.AndroidImportPreference
+    <org.mozilla.gecko.preferences.AndroidImportPreference
                   android:key="android.not_a_preference.import_android"
                   gecko:entries="@array/pref_import_android_entries"
                   gecko:entryKeys="@array/pref_import_android_keys"

@@ -71,7 +71,7 @@
                       android:layout_marginBottom="10dp"
                       android:text="@string/crash_allow_contact2"/>
 
-            <org.mozilla.gecko.ClickableWhenDisabledEditText
+            <org.mozilla.gecko.widget.ClickableWhenDisabledEditText
                     android:id="@+id/email"
                     style="@style/CrashReporter.EditText"
                     android:layout_width="fill_parent"
