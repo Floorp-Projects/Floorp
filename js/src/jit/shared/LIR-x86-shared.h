@@ -171,6 +171,9 @@ class LPowHalfD : public LInstructionHelper<1, 1, 0>
     const LDefinition *output() {
         return getDef(0);
     }
+    MPowHalf *mir() const {
+        return mir_->toPowHalf();
+    }
 };
 
 // Takes a tableswitch with an integer to decide
