@@ -11,6 +11,7 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_GNOMEVFS_LIBS) \
 		$(GLIB_LIBS) \
 		$(MOZ_GIO_LIBS) \
+		$(MOZ_DBUS_GLIB_LIBS) \
 		$(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/build/
@@ -22,6 +23,7 @@ CXXFLAGS += \
 	$(MOZ_GNOMEVFS_CFLAGS) \
 	$(MOZ_GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
+	$(MOZ_DBUS_GLIB_CFLAGS) \
 	$(NULL)
 
 ifdef MOZ_ENABLE_GTK

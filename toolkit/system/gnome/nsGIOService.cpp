@@ -12,6 +12,8 @@
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
+#include <dbus/dbus-glib.h>
+#include <dbus/dbus-glib-lowlevel.h>
 
 
 char *
@@ -375,6 +377,56 @@ nsGIOService::ShowURIForInput(const nsACString& aUri)
   g_free(spec);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsGIOService::OrgFreedesktopFileManager1ShowItems(const nsACString& aPath)
+{
+  GError* error = nullptr;
+  static bool org_freedesktop_FileManager1_exists = true;
+
+  if (!org_freedesktop_FileManager1_exists) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  DBusGConnection* dbusGConnection = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+
+  if (!dbusGConnection) {
+    if (error) {
+      g_printerr("Failed to open connection to session bus: %s\n", error->message);
+      g_error_free(error);
+    }
+    return NS_ERROR_FAILURE;
+  }
+
+  char *uri = g_filename_to_uri(PromiseFlatCString(aPath).get(), nullptr, nullptr);
+  if (uri == NULL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  DBusConnection* dbusConnection = dbus_g_connection_get_connection(dbusGConnection);
+  // Make sure we do not exit the entire program if DBus connection get lost.
+  dbus_connection_set_exit_on_disconnect(dbusConnection, false);
+
+  DBusGProxy* dbusGProxy = dbus_g_proxy_new_for_name(dbusGConnection,
+                                                     "org.freedesktop.FileManager1",
+                                                     "/org/freedesktop/FileManager1",
+                                                     "org.freedesktop.FileManager1");
+
+  const char *uris[2] = { uri, nullptr };
+  gboolean rv_dbus_call = dbus_g_proxy_call (dbusGProxy, "ShowItems", nullptr, G_TYPE_STRV, uris,
+                                             G_TYPE_STRING, "", G_TYPE_INVALID, G_TYPE_INVALID);
+
+  g_object_unref(dbusGProxy);
+  dbus_g_connection_unref(dbusGConnection);
+  g_free(uri);
+
+  if (!rv_dbus_call) {
+    org_freedesktop_FileManager1_exists = false;
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return NS_OK;
 }
 
 /**
