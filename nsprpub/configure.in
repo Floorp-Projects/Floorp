@@ -15,7 +15,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=10
-MOD_PATCH_VERSION=1
+MOD_PATCH_VERSION=2
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -1955,6 +1955,17 @@ tools are selected during the Xcode/Developer Tools installation.])
         PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
         PROFILE_USE_CFLAGS="-GL -wd4624 -wd4952"
         PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE"
+
+        if test "$MSC_VER" -ge "1800"; then
+            dnl Visual C++ 2013 requires -FS when parallel building with
+            dnl make -jN. If not specified, compiler sometimes emits C1041
+            dnl error.
+            CFLAGS="$CFLAGS -FS"
+            dnl -Gw can benefit when using linker optimization on PGO.
+            dnl http://blogs.msdn.com/b/vcblog/archive/2013/09/11/introducing-gw-compiler-switch.aspx
+            PROFILE_GEN_CFLAGS="$PROFILE_GEN_CFLAGS -Gw"
+            PROFILE_USE_CFLAGS="$PROFILE_USE_CFLAGS -Gw"
+        fi
 
         if test -z "$MOZ_OPTIMIZE"; then
             CFLAGS="$CFLAGS -Od"
