@@ -20,9 +20,9 @@
 #include <stdlib.h>
 
 /*
- * This release (4.10.1) is backward compatible with the
+ * This release (4.10.2) is backward compatible with the
  * 4.0.x, 4.1.x, 4.2.x, 4.3.x, 4.4.x, 4.5.x, 4.6.x, 4.7.x,
- * 4.8.x, 4.9.x, and 4.10 releases.
+ * 4.8.x, 4.9.x, 4.10, and 4.10.1 releases.
  * It, of course, is compatible with itself.
  */
 static char *compatible_version[] = {
@@ -37,7 +37,7 @@ static char *compatible_version[] = {
     "4.8.6", "4.8.7", "4.8.8", "4.8.9",
     "4.9", "4.9.1", "4.9.2", "4.9.3", "4.9.4", "4.9.5",
     "4.9.6",
-    "4.10",
+    "4.10", "4.10.1",
     PR_VERSION
 };
 
@@ -53,7 +53,7 @@ static char *incompatible_version[] = {
     "3.0", "3.0.1",
     "3.1", "3.1.1", "3.1.2", "3.1.3",
     "3.5", "3.5.1",
-    "4.10.2",
+    "4.10.3",
     "4.11", "4.11.1",
     "10.0", "11.1", "12.14.20"
 };
