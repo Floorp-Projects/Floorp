@@ -4515,10 +4515,10 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
 void
-nsFrame::GetOffsetFromView(nsPoint& aOffset, nsView** aView) const
+nsIFrame::GetOffsetFromView(nsPoint& aOffset, nsView** aView) const
 {
   NS_PRECONDITION(nullptr != aView, "null OUT parameter pointer");
-  nsIFrame* frame = const_cast<nsFrame*>(this);
+  nsIFrame* frame = const_cast<nsIFrame*>(this);
 
   *aView = nullptr;
   aOffset.MoveTo(0, 0);
