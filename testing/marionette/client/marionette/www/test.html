@@ -11,13 +11,15 @@
   <h1 id="testh1">Test Page</h1>
   <script type="text/javascript">
     window.ready = true;
-    setTimeout(addDelayedElement, 1000);
     function addDelayedElement() {
-      var newDiv = document.createElement("div");
-      newDiv.id = "newDiv";
-      var newContent = document.createTextNode("I am a newly created div!");
-      newDiv.appendChild(newContent);
-      document.body.appendChild(newDiv);
+      setTimeout(createDiv, 2000);
+      function createDiv() {
+        var newDiv = document.createElement("div");
+        newDiv.id = "newDiv";
+        var newContent = document.createTextNode("I am a newly created div!");
+        newDiv.appendChild(newContent);
+        document.body.appendChild(newDiv);
+      }
     }
     function clicked() {
       var link = document.getElementById("mozLink");
@@ -31,5 +33,6 @@
   </div>
   <input name="myInput" type="text" value="asdf"/>
   <input name="myCheckBox" type="checkbox" />
+  <input id="createDivButton" type="button" value="create a div" onclick="addDelayedElement()" />
 </body>
 </html> 

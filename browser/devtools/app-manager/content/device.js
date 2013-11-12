@@ -162,13 +162,16 @@ let UI = {
     if (!this.connected) {
       return;
     }
-
-    let app = this.store.object.apps.all.filter(a => a.manifestURL == manifest)[0];
     getTargetForApp(this.connection.client,
                     this.listTabsResponse.webappsActor,
                     manifest).then((target) => {
-
-      top.UI.openAndShowToolboxForTarget(target, app.name, app.iconURL);
+      gDevTools.showToolbox(target,
+                            null,
+                            devtools.Toolbox.HostType.WINDOW).then(toolbox => {
+        this.connection.once(Connection.Events.DISCONNECTED, () => {
+          toolbox.destroy();
+        });
+      });
     }, console.error);
   },
 
