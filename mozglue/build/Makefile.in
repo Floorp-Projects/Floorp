@@ -45,7 +45,14 @@ ifneq (,$(filter -DEFAULTLIB:mozcrt,$(MOZ_GLUE_LDFLAGS)))
 NO_INSTALL_IMPORT_LIBRARY = 1
 endif
 
-EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_ZLIB_LIBS) \
+	version.lib \
+	$(NULL)
+
+STL_FLAGS=
+
 endif
 
 ifeq (Darwin_1,$(OS_TARGET)_$(MOZ_REPLACE_MALLOC))
