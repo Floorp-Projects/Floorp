@@ -4167,14 +4167,14 @@ gfxFontGroup::Copy(const gfxFontStyle *aStyle)
 bool 
 gfxFontGroup::IsInvalidChar(uint8_t ch)
 {
-    return ((ch & 0x7f) < 0x20);
+    return ((ch & 0x7f) < 0x20 || ch == 0x7f);
 }
 
 bool 
 gfxFontGroup::IsInvalidChar(PRUnichar ch)
 {
     // All printable 7-bit ASCII values are OK
-    if (ch >= ' ' && ch < 0x80) {
+    if (ch >= ' ' && ch < 0x7f) {
         return false;
     }
     // No point in sending non-printing control chars through font shaping
