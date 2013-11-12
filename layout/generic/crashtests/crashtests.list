@@ -136,6 +136,7 @@ load 387233-1.html
 load 387233-2.html
 load 387282-1.html
 load 388175-1.html
+load 388367-1.html
 load 388709-1.html
 load 389635-1.html
 load 390050-1.html
@@ -169,7 +170,7 @@ load 398322-1.html
 load 398322-2.html
 load 398332-1.html
 load 398332-2.html
-asserts(2) load 398332-3.html # bug 436123 and bug 457397
+asserts(0-2) load 398332-3.html # bug 436123 and bug 457397
 load 399407-1.xhtml
 load 399412-1.html
 load 399843-1.html
@@ -302,6 +303,7 @@ load 463350-1.html
 load 463350-2.html
 load 463350-3.html
 load 463741-1.html
+load 463785.xhtml
 load 465651-1.html
 load 467137-1.html
 load 467213-1.html
@@ -331,6 +333,7 @@ asserts-if(!Android,1) load 479938-1.html # Bug 575011
 load 480345-1.html
 skip-if(Android) load 481921.html
 load 489462-1.html
+load 489477.html
 load 489480-1.xhtml
 load 493111-1.html
 load 493118-1.html
@@ -373,6 +376,7 @@ load 534082-1.html
 load 534366-1.html
 load 534366-2.html
 load 536692-1.xhtml
+load 537645.xhtml
 load 541277-1.html
 load 541277-2.html
 load 541714-1.html
@@ -421,6 +425,8 @@ load 646561-1.html
 load 646983-1.html
 load 647332-1.html
 load 650499-1.html
+load 654002-1.html
+load 654002-2.html
 load 655462-1.html
 load 656130-1.html
 load 656130-2.html
@@ -464,6 +470,8 @@ asserts(0-200) load 767765.html # bug 407550, bug 871758, and various nscoord_MA
 load 769303-1.html
 load 769303-2.html
 load 769120.html
+load 777838.html
+load 784600.html
 load 786740-1.html
 asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
 test-pref(font.size.inflation.minTwips,120) load 794693.html

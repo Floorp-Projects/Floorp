@@ -1602,32 +1602,50 @@ class MutableValueOperations : public UnbarrieredMutableValueOperations<Outer>
  * type-querying, value-extracting, and mutating operations.
  */
 template <>
-class HeapBase<JS::Value> : public UnbarrieredMutableValueOperations<JS::Heap<JS::Value> >
+class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
 {
     typedef JS::Heap<JS::Value> Outer;
 
     friend class ValueOperations<Outer>;
-    friend class UnbarrieredMutableValueOperations<Outer>;
 
     const JS::Value * extract() const { return static_cast<const Outer*>(this)->address(); }
-    JS::Value * extractMutable() { return static_cast<Outer*>(this)->unsafeGet(); }
 
-    /*
-     * Setters that potentially change the value to a GC thing from a non-GC
-     * thing must call JS::Heap::set() to trigger the post barrier.
-     *
-     * Changing from a GC thing to a non-GC thing value will leave the heap
-     * value in the store buffer, but it will be ingored so this is not a
-     * problem.
-     */
     void setBarriered(const JS::Value &v) {
         static_cast<JS::Heap<JS::Value> *>(this)->set(v);
     }
 
   public:
+    void setNull() { setBarriered(JS::NullValue()); }
+    void setUndefined() { setBarriered(JS::UndefinedValue()); }
+    void setInt32(int32_t i) { setBarriered(JS::Int32Value(i)); }
+    void setDouble(double d) { setBarriered(JS::DoubleValue(d)); }
+    void setNaN() { setDouble(JS::GenericNaN()); }
+    void setBoolean(bool b) { setBarriered(JS::BooleanValue(b)); }
+    void setMagic(JSWhyMagic why) { setBarriered(JS::MagicValue(why)); }
     void setString(JSString *str) { setBarriered(JS::StringValue(str)); }
     void setString(const JS::Anchor<JSString *> &str) { setBarriered(JS::StringValue(str.get())); }
     void setObject(JSObject &obj) { setBarriered(JS::ObjectValue(obj)); }
+
+    bool setNumber(uint32_t ui) {
+        if (ui > JSVAL_INT_MAX) {
+            setDouble((double)ui);
+            return false;
+        } else {
+            setInt32((int32_t)ui);
+            return true;
+        }
+    }
+
+    bool setNumber(double d) {
+        int32_t i;
+        if (mozilla::DoubleIsInt32(d, &i)) {
+            setInt32(i);
+            return true;
+        }
+
+        setDouble(d);
+        return false;
+    }
 
     void setObjectOrNull(JSObject *arg) {
         if (arg)

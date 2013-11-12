@@ -328,6 +328,8 @@ class RegisterAllocator
         return CodePosition(pos, CodePosition::INPUT);
     }
     CodePosition inputOf(const LInstruction *ins) const {
+        // Phi nodes "use" their inputs before the beginning of the block.
+        JS_ASSERT(!ins->isPhi());
         return CodePosition(ins->id(), CodePosition::INPUT);
     }
 
@@ -339,17 +341,6 @@ class RegisterAllocator
     }
     LMoveGroup *getMoveGroupAfter(CodePosition pos) {
         return getMoveGroupAfter(pos.ins());
-    }
-
-    size_t findFirstNonCallSafepoint(CodePosition from) const
-    {
-        size_t i = 0;
-        for (; i < graph.numNonCallSafepoints(); i++) {
-            const LInstruction *ins = graph.getNonCallSafepoint(i);
-            if (from <= inputOf(ins))
-                break;
-        }
-        return i;
     }
 
     CodePosition minimalDefEnd(LInstruction *ins) {

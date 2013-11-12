@@ -1403,6 +1403,13 @@ private:
             s_sseCheckState = HasSSE;
         else
             s_sseCheckState = NoSSE;
+
+#ifdef DEBUG
+        if (s_sseCheckState >= HasSSE4_1 && s_SSE4Disabled)
+            s_sseCheckState = HasSSE3;
+        if (s_sseCheckState >= HasSSE3 && s_SSE3Disabled)
+            s_sseCheckState = HasSSE2;
+#endif
     }
 
 #if WTF_CPU_X86
@@ -1505,10 +1512,18 @@ private:
 
 #ifdef DEBUG
     static bool s_floatingPointDisabled;
+    static bool s_SSE3Disabled;
+    static bool s_SSE4Disabled;
 
   public:
     static void SetFloatingPointDisabled() {
         s_floatingPointDisabled = true;
+    }
+    static void SetSSE3Disabled() {
+        s_SSE3Disabled = true;
+    }
+    static void SetSSE4Disabled() {
+        s_SSE4Disabled = true;
     }
 #endif
 };

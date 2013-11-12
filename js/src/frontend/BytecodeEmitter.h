@@ -28,13 +28,13 @@ template <typename ParseHandler> class Parser;
 class SharedContext;
 class TokenStream;
 
-struct CGTryNoteList {
-    Vector<JSTryNote> list;
-    CGTryNoteList(ExclusiveContext *cx) : list(cx) {}
-
-    bool append(JSTryNoteKind kind, unsigned stackDepth, size_t start, size_t end);
+class CGConstList {
+    Vector<Value> list;
+  public:
+    CGConstList(ExclusiveContext *cx) : list(cx) {}
+    bool append(Value v) { JS_ASSERT_IF(v.isString(), v.toString()->isAtom()); return list.append(v); }
     size_t length() const { return list.length(); }
-    void finish(TryNoteArray *array);
+    void finish(ConstArray *array);
 };
 
 struct CGObjectList {
@@ -48,13 +48,23 @@ struct CGObjectList {
     void finish(ObjectArray *array);
 };
 
-class CGConstList {
-    Vector<Value> list;
-  public:
-    CGConstList(ExclusiveContext *cx) : list(cx) {}
-    bool append(Value v) { JS_ASSERT_IF(v.isString(), v.toString()->isAtom()); return list.append(v); }
+struct CGTryNoteList {
+    Vector<JSTryNote> list;
+    CGTryNoteList(ExclusiveContext *cx) : list(cx) {}
+
+    bool append(JSTryNoteKind kind, unsigned stackDepth, size_t start, size_t end);
     size_t length() const { return list.length(); }
-    void finish(ConstArray *array);
+    void finish(TryNoteArray *array);
+};
+
+struct CGBlockScopeList {
+    Vector<BlockScopeNote> list;
+    CGBlockScopeList(ExclusiveContext *cx) : list(cx) {}
+
+    bool append(uint32_t scopeObject, uint32_t offset);
+    void recordEnd(uint32_t index, uint32_t offset);
+    size_t length() const { return list.length(); }
+    void finish(BlockScopeArray *array);
 };
 
 struct StmtInfoBCE;
@@ -104,8 +114,6 @@ struct BytecodeEmitter
     int             stackDepth;     /* current stack depth in script frame */
     unsigned        maxStackDepth;  /* maximum stack depth so far */
 
-    CGTryNoteList   tryNoteList;    /* list of emitted try notes */
-
     unsigned        arrayCompDepth; /* stack depth of array in comprehension */
 
     unsigned        emitLevel;      /* js::frontend::EmitTree recursion level */
@@ -115,6 +123,8 @@ struct BytecodeEmitter
     CGObjectList    objectList;     /* list of emitted objects */
     CGObjectList    regexpList;     /* list of emitted regexp that will be
                                        cloned during execution */
+    CGTryNoteList   tryNoteList;    /* list of emitted try notes */
+    CGBlockScopeList blockScopeList;/* list of emitted block scope notes */
 
     uint16_t        typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
