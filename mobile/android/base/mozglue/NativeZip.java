@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.mozglue;
 
+import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
+
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.zip.Inflater;
@@ -68,6 +70,7 @@ public class NativeZip implements NativeReference {
     private static native void _release(long obj);
     private native InputStream _getInputStream(long obj, String path);
 
+    @WrapElementForJNI
     private InputStream createInputStream(ByteBuffer buffer, int compression) {
         if (compression != STORE && compression != DEFLATE) {
             throw new IllegalArgumentException("Unexpected compression: " + compression);
