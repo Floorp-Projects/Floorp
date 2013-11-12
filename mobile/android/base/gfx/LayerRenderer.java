@@ -12,6 +12,8 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.gfx.Layer.RenderContext;
 import org.mozilla.gecko.gfx.RenderTask;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
+import org.mozilla.gecko.mozglue.generatorannotations.GeneratorOptions;
+import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,7 +21,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -437,6 +438,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
     }
 
+    @GeneratorOptions(generatedClassName = "LayerRendererFrame")
     public class Frame {
         // The timestamp recording the start of this frame.
         private long mFrameStartTime;
@@ -490,6 +492,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
+        @WrapElementForJNI(allowMultithread = true)
         public void beginDrawing() {
             mFrameStartTime = System.nanoTime();
 
@@ -579,6 +582,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
+        @WrapElementForJNI(allowMultithread = true)
         public void drawBackground() {
             // Any GL state which is changed here must be restored in
             // CompositorOGL::RestoreState
@@ -614,6 +618,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
+        @WrapElementForJNI(allowMultithread = true)
         public void drawForeground() {
             // Any GL state which is changed here must be restored in
             // CompositorOGL::RestoreState
@@ -667,6 +672,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
+        @WrapElementForJNI(allowMultithread = true)
         public void endDrawing() {
             // If a layer update requires further work, schedule another redraw
             if (!mUpdated)
