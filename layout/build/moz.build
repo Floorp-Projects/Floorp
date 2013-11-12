@@ -18,6 +18,16 @@ SOURCES += [
     'nsLayoutStatics.cpp',
 ]
 
+if CONFIG['MOZ_NFC']:
+    SHARED_LIBRARY_LIBS += [
+        '%s/dom/nfc/%sdom_nfc_s.%s' % (TOPOBJDIR, CONFIG['LIB_PREFIX'], CONFIG['LIB_SUFFIX'])
+    ]
+
+if CONFIG['MOZ_NFC']:
+    LOCAL_INCLUDES += [
+        '/dom/nfc'
+    ]
+
 FAIL_ON_WARNINGS = True
 
 LIBXUL_LIBRARY = True
