@@ -1477,7 +1477,7 @@ let SessionStoreInternal = {
     // Remove the tab state from the cache.
     // Note that we cannot simply replace the contents of the cache
     // as |aState| can be an incomplete state that will be completed
-    // by |restoreHistoryPrecursor|.
+    // by |restoreTabs|.
     let tabState = JSON.parse(aState);
     if (!tabState) {
       debug("Empty state argument");
@@ -1508,7 +1508,7 @@ let SessionStoreInternal = {
 
     TabStateCache.delete(aTab);
     this._setWindowStateBusy(window);
-    this.restoreHistoryPrecursor(window, [aTab], [tabState], 0);
+    this.restoreTabs(window, [aTab], [tabState], 0);
   },
 
   duplicateTab: function ssi_duplicateTab(aWindow, aTab, aDelta = 0) {
@@ -1528,8 +1528,8 @@ let SessionStoreInternal = {
       aWindow.gBrowser.addTab(null, {relatedToCurrent: true, ownerTab: aTab}) :
       aWindow.gBrowser.addTab();
 
-    this.restoreHistoryPrecursor(aWindow, [newTab], [tabState], 0,
-                                 true /* Load this tab right away. */);
+    this.restoreTabs(aWindow, [newTab], [tabState], 0,
+                     true /* Load this tab right away. */);
 
     return newTab;
   },
@@ -1608,7 +1608,7 @@ let SessionStoreInternal = {
     let tab = tabbrowser.addTab();
 
     // restore tab content
-    this.restoreHistoryPrecursor(aWindow, [tab], [closedTabState], 1);
+    this.restoreTabs(aWindow, [tab], [closedTabState], 1);
 
     // restore the tab's position
     tabbrowser.moveTabTo(tab, closedTab.pos);
@@ -2227,7 +2227,7 @@ let SessionStoreInternal = {
 
     TelemetryStopwatch.start("FX_SESSION_RESTORE_RESTORE_WINDOW_MS");
 
-    // We're not returning from this before we end up calling restoreHistoryPrecursor
+    // We're not returning from this before we end up calling restoreTabs
     // for this window, so make sure we send the SSWindowStateBusy event.
     this._setWindowStateBusy(aWindow);
 
@@ -2325,7 +2325,7 @@ let SessionStoreInternal = {
     // If overwriting tabs, we want to reset each tab's "restoring" state. Since
     // we're overwriting those tabs, they should no longer be restoring. The
     // tabs will be rebuilt and marked if they need to be restored after loading
-    // state (in restoreHistoryPrecursor).
+    // state (in restoreTabs).
     // We also want to invalidate any cached information on the tab state.
     if (overwriteTabs) {
       for (let i = 0; i < tabbrowser.tabs.length; i++) {
@@ -2380,7 +2380,7 @@ let SessionStoreInternal = {
       this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs || [];
     }
 
-    this.restoreHistoryPrecursor(aWindow, tabs, winData.tabs,
+    this.restoreTabs(aWindow, tabs, winData.tabs,
       (overwriteTabs ? (parseInt(winData.selected) || 1) : 0));
 
     if (aState.scratchpads) {
@@ -2474,7 +2474,7 @@ let SessionStoreInternal = {
 
     return [aTabs, aTabData];
   },
-  
+
   /**
    * Manage history restoration for a window
    * @param aWindow
@@ -2489,9 +2489,8 @@ let SessionStoreInternal = {
    *        Flag to indicate whether the given set of tabs aTabs should be
    *        restored/loaded immediately even if restore_on_demand = true
    */
-  restoreHistoryPrecursor:
-    function ssi_restoreHistoryPrecursor(aWindow, aTabs, aTabData, aSelectTab,
-                                         aRestoreImmediately = false)
+  restoreTabs: function (aWindow, aTabs, aTabData, aSelectTab,
+                         aRestoreImmediately = false)
   {
 
     var tabbrowser = aWindow.gBrowser;
@@ -3502,7 +3501,7 @@ let SessionStoreInternal = {
   /**
    * Determine if we can restore history into this tab.
    * This will be false when a tab has been removed (usually between
-   * restoreHistoryPrecursor && restoreHistory) or if the tab is still marked
+   * restoreTabs && restoreHistory) or if the tab is still marked
    * as loading.
    *
    * @param aTab
