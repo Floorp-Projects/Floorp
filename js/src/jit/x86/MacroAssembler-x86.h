@@ -357,6 +357,18 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         JS_ASSERT(cond == Equal || cond == NotEqual);
         return testDouble(cond, Operand(address));
     }
+
+
+    Condition testUndefined(Condition cond, const Operand &operand) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToType(operand), ImmTag(JSVAL_TAG_UNDEFINED));
+        return cond;
+    }
+    Condition testUndefined(Condition cond, const Address &addr) {
+        return testUndefined(cond, Operand(addr));
+    }
+
+
     Condition testUndefined(Condition cond, const ValueOperand &value) {
         return testUndefined(cond, value.typeReg());
     }

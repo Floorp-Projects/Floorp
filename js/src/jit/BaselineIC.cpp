@@ -3488,6 +3488,18 @@ IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *sh
 }
 
 static bool
+LookupNoSuchMethodHandler(JSContext *cx, HandleObject obj, HandleValue id,
+                          MutableHandleValue result)
+{
+    return OnUnknownMethod(cx, obj, id, result);
+}
+
+typedef bool (*LookupNoSuchMethodHandlerFn)(JSContext *, HandleObject, HandleValue,
+                                            MutableHandleValue);
+static const VMFunction LookupNoSuchMethodHandlerInfo =
+    FunctionInfo<LookupNoSuchMethodHandlerFn>(LookupNoSuchMethodHandler);
+
+static bool
 GetElemNativeStubExists(ICGetElem_Fallback *stub, HandleObject obj, HandleObject holder,
                         HandlePropertyName propName, bool needsAtomize)
 {
@@ -3668,6 +3680,7 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbyt
 
     RootedPropertyName propName(cx, JSID_TO_ATOM(id)->asPropertyName());
     bool needsAtomize = !key.toString()->isAtom();
+    bool isCallElem = (JSOp(*pc) == JSOP_CALLELEM);
 
     RootedShape shape(cx);
     RootedObject holder(cx);
@@ -3698,8 +3711,8 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbyt
 
         ICGetElemNativeStub::AccessType acctype = isFixedSlot ? ICGetElemNativeStub::FixedSlot
                                                               : ICGetElemNativeStub::DynamicSlot;
-        ICGetElemNativeCompiler compiler(cx, kind, monitorStub, obj, holder, propName, acctype,
-                                         needsAtomize, offset);
+        ICGetElemNativeCompiler compiler(cx, kind, isCallElem, monitorStub, obj, holder, propName,
+                                         acctype, needsAtomize, offset);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -3711,6 +3724,13 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbyt
     bool getterIsScripted = false;
     if (IsCacheableGetPropCall(cx, obj, holder, shape, &getterIsScripted, /*isDOMProxy=*/false)) {
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
+
+#if JS_HAS_NO_SUCH_METHOD
+        // It's unlikely that a getter function will be used in callelem locations.
+        // Just don't attach stubs in that case to avoid issues with __noSuchMethod__ handling.
+        if (isCallElem)
+            return true;
+#endif
 
         // If a suitable stub already exists, nothing else to do.
         if (GetElemNativeStubExists(stub, obj, holder, propName, needsAtomize))
@@ -3744,7 +3764,7 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbyt
                                                            ? ICGetElemNativeStub::ScriptedGetter
                                                            : ICGetElemNativeStub::NativeGetter;
         ICGetElemNativeCompiler compiler(cx, kind, monitorStub, obj, holder, propName, acctype,
-                                         needsAtomize, getter, pc - script->code);
+                                         needsAtomize, getter, pc - script->code, isCallElem);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -3769,10 +3789,14 @@ static bool
 TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetElem_Fallback *stub,
                      HandleValue lhs, HandleValue rhs, HandleValue res)
 {
+    bool isCallElem = (JSOp(*pc) == JSOP_CALLELEM);
+
     // Check for String[i] => Char accesses.
     if (lhs.isString() && rhs.isInt32() && res.isString() &&
         !stub->hasStub(ICStub::GetElem_String))
     {
+        // NoSuchMethod handling doesn't apply to string targets.
+
         IonSpew(IonSpew_BaselineIC, "  Generating GetElem(String[Int32]) stub");
         ICGetElem_String::Compiler compiler(cx);
         ICStub *stringStub = compiler.getStub(compiler.getStubSpace(script));
@@ -3786,9 +3810,13 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetEl
     if (lhs.isMagic(JS_OPTIMIZED_ARGUMENTS) && rhs.isInt32() &&
         !ArgumentsGetElemStubExists(stub, ICGetElem_Arguments::Magic))
     {
+        // Any script with a CALLPROP on arguments (arguments.foo())
+        // should not have optimized arguments.
+        JS_ASSERT(!isCallElem);
+
         IonSpew(IonSpew_BaselineIC, "  Generating GetElem(MagicArgs[Int32]) stub");
         ICGetElem_Arguments::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                               ICGetElem_Arguments::Magic);
+                                               ICGetElem_Arguments::Magic, false);
         ICStub *argsStub = compiler.getStub(compiler.getStubSpace(script));
         if (!argsStub)
             return false;
@@ -3810,7 +3838,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetEl
         if (!ArgumentsGetElemStubExists(stub, which)) {
             IonSpew(IonSpew_BaselineIC, "  Generating GetElem(ArgsObj[Int32]) stub");
             ICGetElem_Arguments::Compiler compiler(
-                cx, stub->fallbackMonitorStub()->firstMonitorStub(), which);
+                cx, stub->fallbackMonitorStub()->firstMonitorStub(), which, isCallElem);
             ICStub *argsStub = compiler.getStub(compiler.getStubSpace(script));
             if (!argsStub)
                 return false;
@@ -3825,7 +3853,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetEl
         if (rhs.isInt32() && rhs.toInt32() >= 0) {
             IonSpew(IonSpew_BaselineIC, "  Generating GetElem(Native[Int32] dense) stub");
             ICGetElem_Dense::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                               obj->lastProperty());
+                                               obj->lastProperty(), isCallElem);
             ICStub *denseStub = compiler.getStub(compiler.getStubSpace(script));
             if (!denseStub)
                 return false;
@@ -3845,6 +3873,12 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetEl
     if (obj->is<TypedArrayObject>() && rhs.isInt32() && res.isNumber() &&
         !TypedArrayGetElemStubExists(stub, obj))
     {
+        // Don't attach CALLELEM stubs for accesses on typed array expected to yield numbers.
+#if JS_HAS_NO_SUCH_METHOD
+        if (isCallElem)
+            return true;
+#endif
+
         Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
         if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(tarr))
             return true;
@@ -4211,16 +4245,58 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler &masm)
     if (acctype_ == ICGetElemNativeStub::DynamicSlot ||
         acctype_ == ICGetElemNativeStub::FixedSlot)
     {
-        // Load from object.
-        if (acctype_ == ICGetElemNativeStub::DynamicSlot)
-            masm.loadPtr(Address(holderReg, JSObject::offsetOfSlots()), holderReg);
-
         masm.load32(Address(BaselineStubReg, ICGetElemNativeSlotStub::offsetOfOffset()),
                     scratchReg);
-        masm.loadValue(BaseIndex(holderReg, scratchReg, TimesOne), R0);
 
+        // Load from object.
+        if (acctype_ == ICGetElemNativeStub::DynamicSlot)
+            masm.addPtr(Address(holderReg, JSObject::offsetOfSlots()), scratchReg);
+        else
+            masm.addPtr(holderReg, scratchReg);
+
+        Address valAddr(scratchReg, 0);
+
+        // Check if __noSuchMethod__ needs to be called.
+#if JS_HAS_NO_SUCH_METHOD
+        if (isCallElem_) {
+            Label afterNoSuchMethod;
+            Label skipNoSuchMethod;
+
+            masm.branchTestUndefined(Assembler::NotEqual, valAddr, &skipNoSuchMethod);
+
+            GeneralRegisterSet regs = availableGeneralRegs(0);
+            regs.takeUnchecked(objReg);
+            regs.take(R1);
+            Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
+            if (popR1)
+                masm.pop(R1.scratchReg());
+            enterStubFrame(masm, scratch);
+
+            masm.pushValue(R1);
+            masm.push(objReg);
+            if (!callVM(LookupNoSuchMethodHandlerInfo, masm))
+                return false;
+
+            leaveStubFrame(masm);
+            // Result is already in R0
+            masm.jump(&afterNoSuchMethod);
+            masm.bind(&skipNoSuchMethod);
+
+            if (popR1)
+                masm.pop(R1.scratchReg());
+            masm.loadValue(valAddr, R0);
+            masm.bind(&afterNoSuchMethod);
+        } else {
+            masm.loadValue(valAddr, R0);
+            if (popR1)
+                masm.addPtr(ImmWord(sizeof(size_t)), BaselineStackReg);
+        }
+#else
+        masm.loadValue(valAddr, R0);
         if (popR1)
             masm.addPtr(ImmWord(sizeof(size_t)), BaselineStackReg);
+#endif
+
     } else {
         JS_ASSERT(acctype_ == ICGetElemNativeStub::NativeGetter ||
                   acctype_ == ICGetElemNativeStub::ScriptedGetter);
@@ -4355,7 +4431,45 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     JS_STATIC_ASSERT(sizeof(Value) == 8);
     BaseIndex element(scratchReg, key, TimesEight);
     masm.branchTestMagic(Assembler::Equal, element, &failure);
+
+    // Check if __noSuchMethod__ should be called.
+#if JS_HAS_NO_SUCH_METHOD
+    entersStubFrame_ = true;
+    if (isCallElem_) {
+        Label afterNoSuchMethod;
+        Label skipNoSuchMethod;
+        regs = availableGeneralRegs(0);
+        regs.takeUnchecked(obj);
+        regs.take(R1);
+
+        masm.pushValue(R1);
+        masm.loadValue(element, R1);
+        masm.branchTestUndefined(Assembler::NotEqual, R1, &skipNoSuchMethod);
+
+        // Call __noSuchMethod__ checker.  Object pointer is in objReg.
+        scratchReg = regs.takeAnyExcluding(BaselineTailCallReg);
+        enterStubFrame(masm, scratchReg);
+
+        // propName (R1) already pushed above.
+        masm.push(obj);
+        if (!callVM(LookupNoSuchMethodHandlerInfo, masm))
+            return false;
+
+        leaveStubFrame(masm);
+        // Result is already in R0
+        masm.jump(&afterNoSuchMethod);
+        masm.bind(&skipNoSuchMethod);
+
+        masm.moveValue(R1, R0);
+        masm.addPtr(Imm32(sizeof(Value)), BaselineStackReg); // pop previously pushed propName (R1)
+        masm.bind(&afterNoSuchMethod);
+    } else {
+        masm.loadValue(element, R0);
+    }
+#else
+    // Load value from element location.
     masm.loadValue(element, R0);
+#endif
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
@@ -4414,8 +4528,16 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 bool
 ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
 {
+    // Variatns of GetElem_Arguments can enter stub frames if entered in CallProp
+    // context when noSuchMethod support is on.
+#if JS_HAS_NO_SUCH_METHOD
+    entersStubFrame_ = true;
+#endif
+
     Label failure;
     if (which_ == ICGetElem_Arguments::Magic) {
+        JS_ASSERT(!isCallElem_);
+
         // Ensure that this is a magic arguments value.
         masm.branchTestMagicValue(Assembler::NotEqual, R0, JS_OPTIMIZED_ARGUMENTS, &failure);
 
@@ -4516,15 +4638,47 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
     masm.addPtr(Imm32(ArgumentsData::offsetOfArgs()), argData);
     regs.add(scratchReg);
     regs.add(tempReg);
-    regs.add(argData);
     ValueOperand tempVal = regs.takeAnyValue();
     masm.loadValue(BaseIndex(argData, idxReg, ScaleFromElemWidth(sizeof(Value))), tempVal);
 
     // Makesure that this is not a FORWARD_TO_CALL_SLOT magic value.
     masm.branchTestMagic(Assembler::Equal, tempVal, &failureReconstructInputs);
 
-    // Everything checked out, return value.
+#if JS_HAS_NO_SUCH_METHOD
+    if (isCallElem_) {
+        Label afterNoSuchMethod;
+        Label skipNoSuchMethod;
+
+        masm.branchTestUndefined(Assembler::NotEqual, tempVal, &skipNoSuchMethod);
+
+        // Call __noSuchMethod__ checker.  Object pointer is in objReg.
+        regs = availableGeneralRegs(0);
+        // R1 and objReg are guaranteed not to overlap.
+        regs.takeUnchecked(objReg);
+        regs.take(R1);
+        masm.tagValue(JSVAL_TYPE_INT32, idxReg, R1);
+        scratchReg = regs.takeAnyExcluding(BaselineTailCallReg);
+        enterStubFrame(masm, scratchReg);
+
+        masm.pushValue(R1);
+        masm.push(objReg);
+        if (!callVM(LookupNoSuchMethodHandlerInfo, masm))
+            return false;
+
+        leaveStubFrame(masm);
+        // Result is already in R0
+        masm.jump(&afterNoSuchMethod);
+        masm.bind(&skipNoSuchMethod);
+
+        masm.moveValue(tempVal, R0);
+        masm.bind(&afterNoSuchMethod);
+    } else {
+        masm.moveValue(tempVal, R0);
+    }
+#else
+    // Copy value from temp to R0.
     masm.moveValue(tempVal, R0);
+#endif
 
     // Type-check result
     EmitEnterTypeMonitorIC(masm);
@@ -5818,6 +5972,8 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     if (!isDOMProxy && !obj->isNative())
         return true;
 
+    bool isCallProp = (JSOp(*pc) == JSOP_CALLPROP);
+
     ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
     if (!isDOMProxy && IsCacheableGetPropReadSlot(obj, holder, shape)) {
         bool isFixedSlot;
@@ -5834,7 +5990,8 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         IonSpew(IonSpew_BaselineIC, "  Generating GetProp(%s %s) stub",
                     isDOMProxy ? "DOMProxy" : "Native",
                     (obj == holder) ? "direct" : "prototype");
-        ICGetPropNativeCompiler compiler(cx, kind, monitorStub, obj, holder, isFixedSlot, offset);
+        ICGetPropNativeCompiler compiler(cx, kind, isCallProp, monitorStub, obj, holder,
+                                         name, isFixedSlot, offset);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -5849,6 +6006,14 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 
     // Try handling scripted getters.
     if (cacheableCall && isScripted && !isDOMProxy) {
+#if JS_HAS_NO_SUCH_METHOD
+        // It's hard to keep the original object alive through a call, and it's unlikely
+        // that a getter will be used to generate functions for calling in CALLPROP locations.
+        // Just don't attach stubs in that case.
+        if (isCallProp)
+            return true;
+#endif
+
         RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
         JS_ASSERT(obj != holder);
         JS_ASSERT(callee->hasScript());
@@ -5869,6 +6034,14 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 
     // Try handling JSNative getters.
     if (cacheableCall && !isScripted) {
+#if JS_HAS_NO_SUCH_METHOD
+        // It's unlikely that a getter function will be used to generate functions for calling
+        // in CALLPROP locations.  Just don't attach stubs in that case to avoid issues with
+        // __noSuchMethod__ handling.
+        if (isCallProp)
+            return true;
+#endif
+
         RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
         JS_ASSERT(obj != holder);
         JS_ASSERT(callee->isNative());
@@ -5909,6 +6082,10 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     // If it's a shadowed listbase proxy property, attach stub to call Proxy::get instead.
     if (isDOMProxy && domProxyShadowsResult == Shadows) {
         JS_ASSERT(obj == holder);
+#if JS_HAS_NO_SUCH_METHOD
+        if (isCallProp)
+            return true;
+#endif
 
         IonSpew(IonSpew_BaselineIC, "  Generating GetProp(DOMProxyProxy) stub");
         Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
@@ -5926,9 +6103,9 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 }
 
 static bool
-TryAttachStringGetPropStub(JSContext *cx, HandleScript script, ICGetProp_Fallback *stub,
-                           HandlePropertyName name, HandleValue val, HandleValue res,
-                           bool *attached)
+TryAttachStringGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
+                           ICGetProp_Fallback *stub, HandlePropertyName name, HandleValue val,
+                           HandleValue res, bool *attached)
 {
     JS_ASSERT(!*attached);
     JS_ASSERT(val.isString());
@@ -6038,7 +6215,7 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
         return true;
 
     if (val.isString()) {
-        if (!TryAttachStringGetPropStub(cx, script, stub, name, val, res, &attached))
+        if (!TryAttachStringGetPropStub(cx, script, pc, stub, name, val, res, &attached))
             return false;
         if (attached)
             return true;
@@ -6219,7 +6396,7 @@ ICGetPropNativeCompiler::generateStubCode(MacroAssembler &masm)
     // Guard input is an object.
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
-    Register scratch = regs.takeAny();
+    Register scratch = regs.takeAnyExcluding(BaselineTailCallReg);
 
     // Unbox and shape guard.
     Register objReg = masm.extractObject(R0, ExtractTemp0);
@@ -6239,11 +6416,51 @@ ICGetPropNativeCompiler::generateStubCode(MacroAssembler &masm)
         masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failure);
     }
 
-    if (!isFixedSlot_)
-        masm.loadPtr(Address(holderReg, JSObject::offsetOfSlots()), holderReg);
+    if (!isFixedSlot_) {
+        // Don't overwrite actual holderReg if we need to load a dynamic slots object.
+        // May need to preserve object for noSuchMethod check later.
+        Register nextHolder = regs.takeAny();
+        masm.loadPtr(Address(holderReg, JSObject::offsetOfSlots()), nextHolder);
+        holderReg = nextHolder;
+    }
 
     masm.load32(Address(BaselineStubReg, ICGetPropNativeStub::offsetOfOffset()), scratch);
-    masm.loadValue(BaseIndex(holderReg, scratch, TimesOne), R0);
+    BaseIndex result(holderReg, scratch, TimesOne);
+
+#if JS_HAS_NO_SUCH_METHOD
+    entersStubFrame_ = true;
+    if (isCallProp_) {
+        // Check for __noSuchMethod__ invocation.
+        Label afterNoSuchMethod;
+        Label skipNoSuchMethod;
+
+        masm.push(objReg);
+        masm.loadValue(result, R0);
+        masm.branchTestUndefined(Assembler::NotEqual, R0, &skipNoSuchMethod);
+
+        masm.pop(objReg);
+        enterStubFrame(masm, scratch);
+
+        masm.movePtr(ImmGCPtr(propName_.get()), R1.scratchReg());
+        masm.tagValue(JSVAL_TYPE_STRING, R1.scratchReg(), R1);
+        masm.pushValue(R1);
+        masm.push(objReg);
+        if (!callVM(LookupNoSuchMethodHandlerInfo, masm))
+            return false;
+
+        leaveStubFrame(masm);
+        masm.jump(&afterNoSuchMethod);
+        masm.bind(&skipNoSuchMethod);
+
+        // Pop pushed objReg.
+        masm.addPtr(Imm32(sizeof(void *)), BaselineStackReg);
+        masm.bind(&afterNoSuchMethod);
+    } else {
+        masm.loadValue(result, R0);
+    }
+#else
+    masm.loadValue(result, R0);
+#endif
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
