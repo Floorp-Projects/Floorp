@@ -577,7 +577,7 @@ nsConvertToActualKeyGenParams(uint32_t keyGenMech, char *params,
     }
 
     // first try to use the params of the provided CA cert
-    if (keyPairInfo->ecPopPubKey)
+    if (keyPairInfo->ecPopPubKey && keyPairInfo->ecPopPubKey->keyType == ecKey)
     {
       returnParams = SECITEM_DupItem(&keyPairInfo->ecPopPubKey->u.ec.DEREncodedParams);
     }

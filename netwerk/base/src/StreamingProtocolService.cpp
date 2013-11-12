@@ -7,8 +7,9 @@
 #include "StreamingProtocolService.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsIURI.h"
+#include "necko-config.h"
 
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
 #include "RtspControllerChild.h"
 #include "RtspController.h"
 #endif
