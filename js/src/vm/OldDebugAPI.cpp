@@ -1124,7 +1124,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
             if (i < bindings.length()) {
                 name = nameBytes.encodeLatin1(cx, bindings[i].name());
                 if (!buf)
-                    return NULL;
+                    return nullptr;
             }
 
             if (value) {

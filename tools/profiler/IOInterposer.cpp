@@ -25,11 +25,11 @@ struct ObserverLists {
   }
 
   // mObserverListsLock guards access to lists of observers
-  // Note, we can use mozilla::Mutex here as the ObserverLists may be leaked, as
-  // we want to monitor IO during shutdown. Furthermore, as we may have to
+  // Note, we can use mozilla::Mutex here as the ObserverLists may be leaked,
+  // as we want to monitor IO during shutdown. Furthermore, as we may have to
   // unregister observers during shutdown an OffTheBooksMutex is not an option
-  // either, as it base calls into sDeadlockDetector which may be NULL during
-  // shutdown.
+  // either, as it base calls into sDeadlockDetector which may be nullptr
+  // during shutdown.
   PRLock* mObserverListsLock;
 
   ~ObserverLists()
@@ -194,7 +194,7 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
 {
   // IOInterposer::Init most be called before this method
   MOZ_ASSERT(sObserverLists);
-  // We should never register NULL as observer
+  // We should never register nullptr as observer
   MOZ_ASSERT(aObserver);
   if (!sObserverLists || !aObserver) {
     return;
