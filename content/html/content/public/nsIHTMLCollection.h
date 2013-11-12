@@ -24,8 +24,8 @@ class Element;
 
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID \
-{ 0x5643235d, 0x9a72, 0x4b6a, \
- { 0xa6, 0x0c, 0x64, 0x63, 0x72, 0xb7, 0x53, 0x4a } }
+{ 0x4e169191, 0x5196, 0x4e17, \
+  { 0xa4, 0x79, 0xd5, 0x35, 0x0b, 0x5b, 0x0a, 0xcd } }
 
 /**
  * An internal interface
@@ -76,11 +76,11 @@ public:
 
   JSObject* GetWrapperPreserveColor()
   {
-    nsWrapperCache* cache;
-    CallQueryInterface(this, &cache);
-    return cache->GetWrapperPreserveColor();
+    return GetWrapperPreserveColorInternal();
   }
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) = 0;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) = 0;
+protected:
+  virtual JSObject* GetWrapperPreserveColorInternal() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLCollection, NS_IHTMLCOLLECTION_IID)
