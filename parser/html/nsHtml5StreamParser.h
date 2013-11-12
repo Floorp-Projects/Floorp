@@ -341,14 +341,11 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * Initialize the Unicode decoder, mark the BOM as the source and
      * drop the sniffer.
      *
-     * @param aCharsetName The charset name to report to the outside (UTF-16
-     *                     or UTF-8)
-     * @param aDecoderCharsetName The actual name for the decoder's charset
+     * @param aDecoderCharsetName The name for the decoder's charset
      *                            (UTF-16BE, UTF-16LE or UTF-8; the BOM has
      *                            been swallowed)
      */
-    nsresult SetupDecodingFromBom(const char* aCharsetName,
-                                  const char* aDecoderCharsetName);
+    nsresult SetupDecodingFromBom(const char* aDecoderCharsetName);
 
     /**
      * Become confident or resolve and encoding name to its preferred form.
