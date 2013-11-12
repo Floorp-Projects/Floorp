@@ -42,6 +42,7 @@
 #endif
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/WindowsDllBlocklist.h"
 
 static void Output(const char *fmt, ... )
 {
@@ -92,9 +93,6 @@ public:
 XRE_GetFileFromPathType XRE_GetFileFromPath;
 XRE_CreateAppDataType XRE_CreateAppData;
 XRE_FreeAppDataType XRE_FreeAppData;
-#ifdef XRE_HAS_DLL_BLOCKLIST
-XRE_SetupDllBlocklistType XRE_SetupDllBlocklist;
-#endif
 XRE_TelemetryAccumulateType XRE_TelemetryAccumulate;
 XRE_mainType XRE_main;
 
@@ -102,9 +100,6 @@ static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_GetFileFromPath", (NSFuncPtr*) &XRE_GetFileFromPath },
     { "XRE_CreateAppData", (NSFuncPtr*) &XRE_CreateAppData },
     { "XRE_FreeAppData", (NSFuncPtr*) &XRE_FreeAppData },
-#ifdef XRE_HAS_DLL_BLOCKLIST
-    { "XRE_SetupDllBlocklist", (NSFuncPtr*) &XRE_SetupDllBlocklist },
-#endif
     { "XRE_TelemetryAccumulate", (NSFuncPtr*) &XRE_TelemetryAccumulate },
     { "XRE_main", (NSFuncPtr*) &XRE_main },
     { nullptr, nullptr }
@@ -210,6 +205,10 @@ int main(int argc, char* argv[])
   gotCounters = GetProcessIoCounters(GetCurrentProcess(), &ioCounters);
 #endif
 
+#ifdef HAS_DLL_BLOCKLIST
+  DllBlocklist_Initialize();
+#endif
+
   // We do this because of data in bug 771745
   XPCOMGlueEnablePreload();
 
@@ -226,10 +225,6 @@ int main(int argc, char* argv[])
     Output("Couldn't load XRE functions.\n");
     return 255;
   }
-
-#ifdef XRE_HAS_DLL_BLOCKLIST
-  XRE_SetupDllBlocklist();
-#endif
 
   if (gotCounters) {
 #if defined(XP_WIN)
