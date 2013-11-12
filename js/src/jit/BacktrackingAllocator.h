@@ -192,7 +192,7 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
     bool tryAllocateGroupRegister(PhysicalRegister &r, VirtualRegisterGroup *group,
                                   bool *psuccess, bool *pfixed, LiveInterval **pconflicting);
     bool evictInterval(LiveInterval *interval);
-    bool distributeUses(LiveInterval *interval, const LiveIntervalVector &newIntervals);
+    void distributeUses(LiveInterval *interval, const LiveIntervalVector &newIntervals);
     bool split(LiveInterval *interval, const LiveIntervalVector &newIntervals);
     bool requeueIntervals(const LiveIntervalVector &newIntervals);
     void spill(LiveInterval *interval);

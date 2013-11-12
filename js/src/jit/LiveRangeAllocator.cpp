@@ -36,9 +36,7 @@ Requirement::priority() const
 bool
 LiveInterval::Range::contains(const Range *other) const
 {
-    Range pre, inside, post;
-    intersect(other, &pre, &inside, &post);
-    return inside.from == other->from && inside.to == other->to;
+    return from <= other->from && to >= other->to;
 }
 
 void
