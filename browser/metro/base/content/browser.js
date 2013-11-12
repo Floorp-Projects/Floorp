@@ -1020,9 +1020,6 @@ Browser.MainDragger.prototype = {
 };
 
 
-
-const OPEN_APPTAB = 100; // Hack until we get a real API
-
 function nsBrowserAccess() { }
 
 nsBrowserAccess.prototype = {
@@ -1032,56 +1029,59 @@ nsBrowserAccess.prototype = {
     throw Cr.NS_NOINTERFACE;
   },
 
+  _getOpenAction: function _getOpenAction(aURI, aOpener, aWhere, aContext) {
+    let where = aWhere;
+    /*
+     * aWhere: 
+     * OPEN_DEFAULTWINDOW: default action
+     * OPEN_CURRENTWINDOW: current window/tab
+     * OPEN_NEWWINDOW: not allowed, converted to newtab below
+     * OPEN_NEWTAB: open a new tab
+     * OPEN_SWITCHTAB: open in an existing tab if it matches, otherwise open
+     * a new tab. afaict we always open these in the current tab.
+     */
+    if (where == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+      // query standard browser prefs indicating what to do for default action
+      switch (aContext) {
+        // indicates this is an open request from a 3rd party app.
+        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
+          where = Services.prefs.getIntPref("browser.link.open_external");
+          break;
+        // internal request
+        default :
+          where = Services.prefs.getIntPref("browser.link.open_newwindow");
+      }
+    }
+    if (where == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW) {
+      Util.dumpLn("Invalid request - we can't open links in new windows.");
+      where = Ci.nsIBrowserDOMWindow.OPEN_NEWTAB;
+    }
+    return where;
+  },
+
   _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aContext) {
     let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    // We don't allow externals apps opening chrome docs
     if (isExternal && aURI && aURI.schemeIs("chrome"))
       return null;
 
+    let location;
+    let browser;
     let loadflags = isExternal ?
                       Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                       Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    let location;
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
-      switch (aContext) {
-        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
-          aWhere = Services.prefs.getIntPref("browser.link.open_external");
-          break;
-        default : // OPEN_NEW or an illegal value
-          aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
-      }
-    }
+    let openAction = this._getOpenAction(aURI, aOpener, aWhere, aContext);
 
-    let browser;
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW) {
-      let url = aURI ? aURI.spec : "about:blank";
-      let newWindow = openDialog("chrome://browser/content/browser.xul", "_blank",
-                                 "all,dialog=no", url, null, null, null);
-      // since newWindow.Browser doesn't exist yet, just return null
-      return null;
-    } else if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
+    if (openAction == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       let owner = isExternal ? null : Browser.selectedTab;
       let tab = Browser.addTab("about:blank", true, owner);
-      if (isExternal)
+      // Link clicks in content need to trigger peek tab functionality
+      ContextUI.peekTabs(kOpenInNewTabAnimationDelayMsec);
+      if (isExternal) {
         tab.closeOnExit = true;
-      browser = tab.browser;
-    } else if (aWhere == OPEN_APPTAB) {
-      Browser.tabs.forEach(function(aTab) {
-        if ("appURI" in aTab.browser && aTab.browser.appURI.spec == aURI.spec) {
-          Browser.selectedTab = aTab;
-          browser = aTab.browser;
-        }
-      });
-
-      if (!browser) {
-        // Make a new tab to hold the app
-        let tab = Browser.addTab("about:blank", true);
-        browser = tab.browser;
-        browser.appURI = aURI;
-      } else {
-        // Just use the existing browser, but return null to keep the system from trying to load the URI again
-        browser = null;
       }
-    } else { // OPEN_CURRENTWINDOW and illegal values
+      browser = tab.browser;
+    } else {
       browser = Browser.selectedBrowser;
     }
 
@@ -1096,10 +1096,6 @@ nsBrowserAccess.prototype = {
       }
       browser.focus();
     } catch(e) { }
-
-    // We are loading web content into this window, so make sure content is visible
-    // XXX Can we remove this?  It seems to be reproduced in BrowserUI already.
-    BrowserUI.showContent();
 
     return browser;
   },
