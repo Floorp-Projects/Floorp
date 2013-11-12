@@ -3,14 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.preferences;
 
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.DataReportingNotification;
+import org.mozilla.gecko.GeckoActivityStatus;
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
-import org.mozilla.gecko.preferences.SearchEnginePreference;
 import org.mozilla.gecko.util.GeckoEventListener;
-import org.mozilla.gecko.GeckoPreferenceFragment;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;

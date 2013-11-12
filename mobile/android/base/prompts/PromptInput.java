@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko.prompts;
 
-import org.mozilla.gecko.AllCapsTextView;
 import org.mozilla.gecko.util.GeckoEventResponder;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.AllCapsTextView;
 import org.mozilla.gecko.widget.DateTimePicker;
 
 import org.json.JSONArray;
