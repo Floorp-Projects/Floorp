@@ -317,7 +317,9 @@ BacktrackingAllocator::tryGroupReusedRegister(uint32_t def, uint32_t use)
     if (!newIntervals.append(preInterval) || !newIntervals.append(postInterval))
         return false;
 
-    if (!distributeUses(interval, newIntervals) || !split(interval, newIntervals))
+    distributeUses(interval, newIntervals);
+
+    if (!split(interval, newIntervals))
         return false;
 
     JS_ASSERT(usedReg.numIntervals() == 2);
@@ -495,19 +497,17 @@ BacktrackingAllocator::processInterval(LiveInterval *interval)
                         return true;
                 }
             }
-        }
 
-        // Failed to allocate a register for this interval.
-
-        if (attempt < MAX_ATTEMPTS &&
-            canAllocate &&
-            !fixed &&
-            conflict &&
-            computeSpillWeight(conflict) < computeSpillWeight(interval))
-        {
-            if (!evictInterval(conflict))
-                return false;
-            continue;
+            // Failed to allocate a register for this interval.
+            if (attempt < MAX_ATTEMPTS &&
+                !fixed &&
+                conflict &&
+                computeSpillWeight(conflict) < computeSpillWeight(interval))
+            {
+                if (!evictInterval(conflict))
+                    return false;
+                continue;
+            }
         }
 
         // A minimal interval cannot be split any further. If we try to split
@@ -761,7 +761,7 @@ BacktrackingAllocator::evictInterval(LiveInterval *interval)
     return allocationQueue.insert(QueueItem(interval, priority));
 }
 
-bool
+void
 BacktrackingAllocator::distributeUses(LiveInterval *interval,
                                       const LiveIntervalVector &newIntervals)
 {
@@ -786,8 +786,6 @@ BacktrackingAllocator::distributeUses(LiveInterval *interval,
         }
         addInterval->addUse(new UsePosition(iter->use, iter->pos));
     }
-
-    return true;
 }
 
 bool
@@ -1553,10 +1551,10 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveInterval *interval, bool *succe
     if (postInterval && !newIntervals.append(postInterval))
         return false;
 
+    distributeUses(interval, newIntervals);
+
     *success = true;
-    return distributeUses(interval, newIntervals) &&
-        split(interval, newIntervals) &&
-        requeueIntervals(newIntervals);
+    return split(interval, newIntervals) && requeueIntervals(newIntervals);
 }
 
 bool
@@ -1612,10 +1610,10 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveInterval *interval, bool
     if (!newIntervals.append(preInterval) || !newIntervals.append(postInterval))
         return false;
 
+    distributeUses(interval, newIntervals);
+
     *success = true;
-    return distributeUses(interval, newIntervals) &&
-        split(interval, newIntervals) &&
-        requeueIntervals(newIntervals);
+    return split(interval, newIntervals) && requeueIntervals(newIntervals);
 }
 
 bool
