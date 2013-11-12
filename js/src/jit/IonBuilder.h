@@ -327,6 +327,9 @@ class IonBuilder : public MIRGenerator
     bool initArgumentsObject();
     bool pushConstant(const Value &v);
 
+    MConstant *constant(const Value &v);
+    MConstant *constantInt(int32_t i);
+
     // Add a guard which ensure that the set of type which goes through this
     // generated code correspond to the observed types for the bytecode.
     bool pushTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *observed, bool needBarrier);
@@ -400,6 +403,11 @@ class IonBuilder : public MIRGenerator
                                 types::TemporaryTypeSet *objTypes);
     bool setPropTryTypedObject(bool *emitted, MDefinition *obj,
                                PropertyName *name, MDefinition *value);
+    bool setPropTryScalarPropOfTypedObject(bool *emitted,
+                                           MDefinition *obj,
+                                           int32_t fieldOffset,
+                                           MDefinition *value,
+                                           TypeRepresentationSet fieldTypeReprs);
     bool setPropTryCache(bool *emitted, MDefinition *obj,
                          PropertyName *name, MDefinition *value,
                          bool barrier, types::TemporaryTypeSet *objTypes);
@@ -413,12 +421,22 @@ class IonBuilder : public MIRGenerator
                                 TypeRepresentationSet *fieldTypeReprs,
                                 size_t *fieldIndex);
     MDefinition *loadTypedObjectType(MDefinition *value);
-    void loadTypedObjectData(MDefinition *inOwner,
-                             int32_t inOffset,
-                             MDefinition **outOwner,
-                             MDefinition **outOffset);
+    void loadTypedObjectData(MDefinition *typedObj,
+                             MDefinition *offset,
+                             MDefinition **owner,
+                             MDefinition **ownerOffset);
+    void loadTypedObjectElements(MDefinition *typedObj,
+                                 MDefinition *offset,
+                                 int32_t unit,
+                                 MDefinition **ownerElements,
+                                 MDefinition **ownerScaledOffset);
+    MDefinition *typeObjectForElementFromArrayStructType(MDefinition *typedObj);
     MDefinition *typeObjectForFieldFromStructType(MDefinition *type,
                                                   size_t fieldIndex);
+    bool storeScalarTypedObjectValue(MDefinition *typedObj,
+                                     MDefinition *offset,
+                                     ScalarTypeRepresentation *typeRepr,
+                                     MDefinition *value);
 
     // jsop_setelem() helpers.
     bool setElemTryTyped(bool *emitted, MDefinition *object,
