@@ -42,8 +42,7 @@ function test()
     gDevTools.once("pref-changed", onPrefChanged);
 
     let checkbox = panel.panelDoc.getElementById("webconsole-timestamp-messages");
-    checkbox.scrollIntoView();
-    EventUtils.synthesizeMouseAtCenter(checkbox, {}, panel.panelWin);
+    checkbox.click();
   }
 
   function onPrefChanged()
