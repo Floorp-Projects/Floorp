@@ -93,7 +93,7 @@ let MessageListener = {
   receiveMessage: function ({name, data: {id}}) {
     switch (name) {
       case "SessionStore:collectSessionHistory":
-        let history = SessionHistory.read(docShell);
+        let history = SessionHistory.collect(docShell);
         if ("index" in history) {
           let tabIndex = history.index - 1;
           // Don't include private data. It's only needed when duplicating
@@ -141,7 +141,7 @@ let SyncHandler = {
   },
 
   collectSessionHistory: function (includePrivateData) {
-    let history = SessionHistory.read(docShell);
+    let history = SessionHistory.collect(docShell);
     if ("index" in history) {
       let tabIndex = history.index - 1;
       TextAndScrollData.updateFrame(history.entries[tabIndex],
