@@ -1081,7 +1081,7 @@ pref("devtools.commands.dir", "");
 
 // Enable the app manager
 pref("devtools.appmanager.enabled", true);
-pref("devtools.appmanager.lastTab", "help");
+pref("devtools.appmanager.firstrun", true);
 pref("devtools.appmanager.manifestEditor.enabled", false);
 
 // Toolbox preferences
