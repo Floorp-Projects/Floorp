@@ -129,11 +129,24 @@ class MockedOpen(object):
     def __enter__(self):
         import __builtin__
         self.open = __builtin__.open
+        self._orig_path_exists = os.path.exists
         __builtin__.open = self
+        os.path.exists = self._wrapped_exists
 
     def __exit__(self, type, value, traceback):
         import __builtin__
         __builtin__.open = self.open
+        os.path.exists = self._orig_path_exists
+
+    def _wrapped_exists(self, p):
+        if p in self.files:
+            return True
+
+        abspath = os.path.abspath(p)
+        if abspath in self.files:
+            return True
+
+        return self._orig_path_exists(p)
 
 def main(*args):
     unittest.main(testRunner=MozTestRunner(),*args)
