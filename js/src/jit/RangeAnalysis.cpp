@@ -25,6 +25,7 @@ using mozilla::Abs;
 using mozilla::CountLeadingZeroes32;
 using mozilla::DoubleEqualsInt32;
 using mozilla::ExponentComponent;
+using mozilla::FloorLog2;
 using mozilla::IsInfinite;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
@@ -284,6 +285,25 @@ SymbolicBound::print(Sprinter &sp) const
     sum.print(sp);
 }
 
+// Test whether the given range's exponent tells us anything that its lower
+// and upper bound values don't.
+static bool
+IsExponentInteresting(const Range *r)
+{
+   // If it lacks either a lower or upper bound, the exponent is interesting.
+   if (!r->hasInt32Bounds())
+       return true;
+
+   // Otherwise if there's no fractional part, the lower and upper bounds,
+   // which are integers, are perfectly precise.
+   if (!r->canHaveFractionalPart())
+       return false;
+
+   // Otherwise, if the bounds are conservatively rounded across a power-of-two
+   // boundary, the exponent may imply a tighter range.
+   return FloorLog2(Max(Abs(r->lower()), Abs(r->upper()))) > r->exponent();
+}
+
 void
 Range::print(Sprinter &sp) const
 {
@@ -320,12 +340,14 @@ Range::print(Sprinter &sp) const
     }
 
     sp.printf("]");
-    if (max_exponent_ == IncludesInfinityAndNaN)
-        sp.printf(" (U inf U NaN)", max_exponent_);
-    else if (max_exponent_ == IncludesInfinity)
-        sp.printf(" (U inf)");
-    else if (!hasInt32UpperBound_ || !hasInt32LowerBound_)
-        sp.printf(" (< pow(2, %d+1))", max_exponent_);
+    if (IsExponentInteresting(this)) {
+        if (max_exponent_ == IncludesInfinityAndNaN)
+            sp.printf(" (U inf U NaN)", max_exponent_);
+        else if (max_exponent_ == IncludesInfinity)
+            sp.printf(" (U inf)");
+        else
+            sp.printf(" (< pow(2, %d+1))", max_exponent_);
+    }
 }
 
 void
@@ -390,11 +412,23 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
     // than our newLower and newUpper. This is unusual, so we handle it here
     // instead of in optimize().
     //
-    // For example, when the floating-point range has an actual maximum value
-    // of 1.5, it may have a range like [0,2] and the max_exponent may be zero.
+    // For example, consider the range F[0,1.5]. Range analysis represents the
+    // lower and upper bound as integers, so we'd actually have
+    // F[0,2] (< pow(2, 0+1)). In this case, the exponent gives us a slightly
+    // more precise upper bound than the integer upper bound.
+    //
     // When intersecting such a range with an integer range, the fractional part
-    // of the range is dropped, but the max exponent of 0 remains valid.
-    if (lhs->canHaveFractionalPart_ != rhs->canHaveFractionalPart_) {
+    // of the range is dropped. The max exponent of 0 remains valid, so the
+    // upper bound needs to be adjusted to 1.
+    //
+    // When intersecting F[0,2] (< pow(2, 0+1)) with a range like F[2,4],
+    // the naive intersection is I[2,2], but since the max exponent tells us
+    // that the value is always less than 2, the intersection is actually empty.
+    if (lhs->canHaveFractionalPart_ != rhs->canHaveFractionalPart_ ||
+        (lhs->canHaveFractionalPart_ &&
+         newHasInt32LowerBound && newHasInt32UpperBound &&
+         newLower == newUpper))
+    {
         refineInt32BoundsByExponent(newExponent, &newLower, &newUpper);
 
         // If we're intersecting two ranges that don't overlap, this could also
@@ -2423,4 +2457,14 @@ void
 MNot::collectRangeInfo()
 {
     operandIsNeverNaN_ = !Range(operand()).canBeNaN();
+}
+
+void
+MPowHalf::collectRangeInfo()
+{
+    Range inputRange(input());
+    operandIsNeverNegativeInfinity_ = !inputRange.canBeInfiniteOrNaN() ||
+                                      inputRange.hasInt32LowerBound();
+    operandIsNeverNegativeZero_ = !inputRange.canBeZero();
+    operandIsNeverNaN_ = !inputRange.canBeNaN();
 }
