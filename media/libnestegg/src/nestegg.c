@@ -128,7 +128,9 @@ enum ebml_type_enum {
 
 /* Track IDs */
 #define TRACK_ID_VP8            "V_VP8"
+#define TRACK_ID_VP9            "V_VP9"
 #define TRACK_ID_VORBIS         "A_VORBIS"
+#define TRACK_ID_OPUS           "A_OPUS"
 
 enum vint_mask {
   MASK_NONE,
@@ -1422,9 +1424,8 @@ ne_find_cue_position_for_track(nestegg * ctx, struct ebml_list_node * node, unsi
     if (ne_map_track_number_to_index(ctx, track_number, &t) != 0)
       return NULL;
 
-    if (t == track) {
+    if (t == track)
       return pos;
-    }
 
     node = node->next;
   }
@@ -1550,9 +1551,9 @@ ne_buffer_read(void * buffer, size_t length, void * user_data)
   int rv = 1;
   size_t available = sb->length - sb->offset;
 
-  if (available < length) {
+  if (available < length)
     return 0;
-  }
+
   memcpy(buffer, sb->buffer + sb->offset, length);
   sb->offset += length;
 
@@ -1577,9 +1578,8 @@ ne_buffer_seek(int64_t offset, int whence, void * user_data)
       break;
   }
 
-  if (o < 0 || o > (int64_t) sb->length) {
+  if (o < 0 || o > (int64_t) sb->length)
     return -1;
-  }
 
   sb->offset = o;
   return 0;
@@ -1933,8 +1933,14 @@ nestegg_track_codec_id(nestegg * ctx, unsigned int track)
   if (strcmp(codec_id, TRACK_ID_VP8) == 0)
     return NESTEGG_CODEC_VP8;
 
+  if (strcmp(codec_id, TRACK_ID_VP9) == 0)
+    return NESTEGG_CODEC_VP9;
+
   if (strcmp(codec_id, TRACK_ID_VORBIS) == 0)
     return NESTEGG_CODEC_VORBIS;
+
+  if (strcmp(codec_id, TRACK_ID_OPUS) == 0)
+    return NESTEGG_CODEC_OPUS;
 
   return -1;
 }

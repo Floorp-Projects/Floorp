@@ -413,6 +413,72 @@ ParseTypeAttribute(const nsAString& aType, JSVersion* aVersion)
 }
 
 bool
+CSPAllowsInlineScript(nsIScriptElement *aElement, nsIDocument *aDocument)
+{
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsresult rv = aDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (!csp) {
+    // no CSP --> allow
+    return true;
+  }
+
+  bool reportViolation = false;
+  bool allowInlineScript = true;
+  rv = csp->GetAllowsInlineScript(&reportViolation, &allowInlineScript);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool foundNonce = false;
+  nsAutoString nonce;
+  if (!allowInlineScript) {
+    nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
+    foundNonce = scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
+    if (foundNonce) {
+      // We can overwrite the outparams from GetAllowsInlineScript because
+      // if the nonce is correct, then we don't want to report the original
+      // inline violation (it has been whitelisted by the nonce), and if
+      // the nonce is incorrect, then we want to return just the specific
+      // "nonce violation" rather than both a "nonce violation" and
+      // a generic "inline violation".
+      rv = csp->GetAllowsNonce(nonce, nsIContentPolicy::TYPE_SCRIPT,
+                               &reportViolation, &allowInlineScript);
+      NS_ENSURE_SUCCESS(rv, false);
+    }
+  }
+
+  if (reportViolation) {
+    // gather information to log with violation report
+    nsIURI* uri = aDocument->GetDocumentURI();
+    nsAutoCString asciiSpec;
+    uri->GetAsciiSpec(asciiSpec);
+    nsAutoString scriptText;
+    aElement->GetScriptText(scriptText);
+
+    // cap the length of the script sample at 40 chars
+    if (scriptText.Length() > 40) {
+      scriptText.Truncate(40);
+      scriptText.AppendLiteral("...");
+    }
+
+    // The type of violation to report is determined by whether there was
+    // a nonce present.
+    unsigned short violationType = foundNonce ?
+      nsIContentSecurityPolicy::VIOLATION_TYPE_NONCE_SCRIPT :
+      nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT;
+    csp->LogViolationDetails(violationType, NS_ConvertUTF8toUTF16(asciiSpec),
+                             scriptText, aElement->GetScriptLineNumber(), nonce);
+  }
+
+  if (!allowInlineScript) {
+    NS_ASSERTION(reportViolation,
+        "CSP blocked inline script but is not reporting a violation");
+   return false;
+  }
+  return true;
+}
+
+bool
 nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 {
   // We need a document to evaluate scripts.
@@ -619,63 +685,9 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     return false;
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = mDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (csp) {
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("New ScriptLoader ****with CSP****"));
-
-    bool reportViolation = false;
-    bool allowInlineScript = true;
-    rv = csp->GetAllowsInlineScript(&reportViolation, &allowInlineScript);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    bool foundNonce = false;
-    nsAutoString nonce;
-    if (!allowInlineScript) {
-      foundNonce = scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
-      if (foundNonce) {
-        // We can overwrite the outparams from GetAllowsInlineScript because
-        // if the nonce is correct, then we don't want to report the original
-        // inline violation (it has been whitelisted by the nonce), and if
-        // the nonce is incorrect, then we want to return just the specific
-        // "nonce violation" rather than both a "nonce violation" and
-        // a generic "inline violation".
-        rv = csp->GetAllowsNonce(nonce, nsIContentPolicy::TYPE_SCRIPT,
-                                 &reportViolation, &allowInlineScript);
-        NS_ENSURE_SUCCESS(rv, false);
-      }
-    }
-
-    if (reportViolation) {
-      // gather information to log with violation report
-      nsIURI* uri = mDocument->GetDocumentURI();
-      nsAutoCString asciiSpec;
-      uri->GetAsciiSpec(asciiSpec);
-      nsAutoString scriptText;
-      aElement->GetScriptText(scriptText);
-
-      // cap the length of the script sample at 40 chars
-      if (scriptText.Length() > 40) {
-        scriptText.Truncate(40);
-        scriptText.AppendLiteral("...");
-      }
-
-      // The type of violation to report is determined by whether there was
-      // a nonce present.
-      unsigned short violationType = foundNonce ?
-        nsIContentSecurityPolicy::VIOLATION_TYPE_NONCE_SCRIPT :
-        nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT;
-      csp->LogViolationDetails(violationType, NS_ConvertUTF8toUTF16(asciiSpec),
-                               scriptText, aElement->GetScriptLineNumber(), nonce);
-    }
-
-    if (!allowInlineScript) {
-      NS_ASSERTION(reportViolation,
-          "CSP blocked inline script but is not reporting a violation");
-      return false;
-    }
+  // Does CSP allow this inline script to run?
+  if (!CSPAllowsInlineScript(aElement, mDocument)) {
+    return false;
   }
 
   // Inline scripts ignore ther CORS mode and are always CORS_NONE

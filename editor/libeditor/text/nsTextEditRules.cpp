@@ -469,9 +469,9 @@ GetTextNode(nsISelection *selection, nsEditor *editor) {
 }
 #ifdef DEBUG
 #define ASSERT_PASSWORD_LENGTHS_EQUAL()                                \
-  if (IsPasswordEditor()) {                                            \
+  if (IsPasswordEditor() && mEditor->GetRoot()) {                      \
     int32_t txtLen;                                                    \
-    mEditor->GetTextLength(&txtLen);                                    \
+    mEditor->GetTextLength(&txtLen);                                   \
     NS_ASSERTION(mPasswordText.Length() == uint32_t(txtLen),           \
                  "password length not equal to number of asterisks");  \
   }

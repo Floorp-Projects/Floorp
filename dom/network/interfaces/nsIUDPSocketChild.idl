@@ -8,7 +8,11 @@
 interface nsIUDPSocketInternal;
 
 %{ C++
-#include "mozilla/net/DNS.h"
+namespace mozilla {
+namespace net {
+union NetAddr;
+}
+}
 %}
 native NetAddr(mozilla::net::NetAddr);
 [ptr] native NetAddrPtr(mozilla::net::NetAddr);

@@ -53,7 +53,7 @@ else
 REPORT_BUILD = $(info $(shell $(PYTHON) $(MOZILLA_DIR)/config/rebuild_check.py $@ $^))
 endif
 else
-REPORT_BUILD = $(info $(if $(filter $(DEPTH)/%,$@),$(@:$(DEPTH)/%=%),$(notdir $@)))
+REPORT_BUILD = $(info $(notdir $@))
 endif
 
 ifeq ($(OS_ARCH),OS2)
@@ -1536,12 +1536,10 @@ install_targets_sanity = $(if $(filter-out $(notdir $@),$(notdir $(<))),$(error 
 
 $(sort $(foreach tier,$(INSTALL_TARGETS_TIERS),$(INSTALL_TARGETS_FILES_$(tier)))):
 	$(install_targets_sanity)
-	$(REPORT_BUILD)
 	$(call install_cmd,$(IFLAGS1) "$<" "$(@D)")
 
 $(sort $(foreach tier,$(INSTALL_TARGETS_TIERS),$(INSTALL_TARGETS_EXECUTABLES_$(tier)))):
 	$(install_targets_sanity)
-	$(REPORT_BUILD)
 	$(call install_cmd,$(IFLAGS2) "$<" "$(@D)")
 
 ################################################################################
@@ -1603,7 +1601,6 @@ $(foreach tier,$(PP_TARGETS_TIERS), \
 PP_TARGETS_ALL_RESULTS := $(sort $(foreach tier,$(PP_TARGETS_TIERS),$(PP_TARGETS_RESULTS_$(tier))))
 $(PP_TARGETS_ALL_RESULTS):
 	$(if $(filter-out $(notdir $@),$(notdir $(<:.in=))),$(error Looks like $@ has an unexpected dependency on $< which breaks PP_TARGETS))
-	$(REPORT_BUILD)
 	$(RM) "$@"
 	$(call py_action,preprocessor,--depend $(MDDEPDIR)/$(@F).pp $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) "$<" -o "$@")
 
