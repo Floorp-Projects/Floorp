@@ -1346,10 +1346,10 @@ let SessionStoreInternal = {
       let tab = aWindow.gBrowser.selectedTab;
       // If __SS_restoreState is still on the browser and it is
       // TAB_STATE_NEEDS_RESTORE, then then we haven't restored
-      // this tab yet. Explicitly call restoreTab to kick off the restore.
+      // this tab yet. Explicitly call restoreTabContent to kick off the restore.
       if (tab.linkedBrowser.__SS_restoreState &&
           tab.linkedBrowser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
-        this.restoreTab(tab);
+        this.restoreTabContent(tab);
 
       // attempt to update the current URL we send in a crash report
       this._updateCrashReportURL(aWindow);
@@ -2701,7 +2701,7 @@ let SessionStoreInternal = {
     // This could cause us to ignore MAX_CONCURRENT_TAB_RESTORES a bit, but
     // it ensures each window will have its selected tab loaded.
     if (restoreImmediately || window.gBrowser.selectedBrowser == browser) {
-      this.restoreTab(tab);
+      this.restoreTabContent(tab);
     } else {
       TabRestoreQueue.add(tab);
       this.restoreNextTab();
@@ -2725,7 +2725,7 @@ let SessionStoreInternal = {
    *
    * @returns true/false indicating whether or not a load actually happened
    */
-  restoreTab: function ssi_restoreTab(aTab) {
+  restoreTabContent: function (aTab) {
     let window = aTab.ownerDocument.defaultView;
     let browser = aTab.linkedBrowser;
     let tabData = browser.__SS_data;
@@ -2828,7 +2828,7 @@ let SessionStoreInternal = {
 
     let tab = TabRestoreQueue.shift();
     if (tab) {
-      let didStartLoad = this.restoreTab(tab);
+      let didStartLoad = this.restoreTabContent(tab);
       // If we don't start a load in the restored tab (eg, no entries) then we
       // want to attempt to restore the next tab.
       if (!didStartLoad)
@@ -3829,11 +3829,11 @@ let SessionStoreInternal = {
     }
     else if (previousState == TAB_STATE_NEEDS_RESTORE) {
       // Make sure the session history listener is removed. This is normally
-      // done in restoreTab, but this tab is being removed before that gets called.
+      // done in restoreTabContent, but this tab is being removed before that gets called.
       this._removeSHistoryListener(aTab);
 
       // Make sure that the tab is removed from the list of tabs to restore.
-      // Again, this is normally done in restoreTab, but that isn't being called
+      // Again, this is normally done in restoreTabContent, but that isn't being called
       // for this tab.
       TabRestoreQueue.remove(aTab);
     }
@@ -4123,9 +4123,9 @@ SessionStoreSHistoryListener.prototype = {
   },
   OnHistoryReload: function(aReloadURI, aReloadFlags) {
     // On reload, we want to make sure that session history loads the right
-    // URI. In order to do that, we will juet call restoreTab. That will remove
+    // URI. In order to do that, we will juet call restoreTabContent. That will remove
     // the history listener and load the right URI.
-    SessionStoreInternal.restoreTab(this.tab);
+    SessionStoreInternal.restoreTabContent(this.tab);
     // Returning false will stop the load that docshell is attempting.
     return false;
   }
