@@ -3156,12 +3156,27 @@ GetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
 GetElementIC::canAttachTypedArrayElement(JSObject *obj, const Value &idval,
                                          TypedOrValueRegister output)
 {
-    if (!obj->is<TypedArrayObject>() ||
-        (!(idval.isInt32()) &&
-         !(idval.isString() && GetIndexFromString(idval.toString()) != UINT32_MAX)))
-    {
+    if (!obj->is<TypedArrayObject>())
         return false;
+
+    if (!idval.isInt32() && !idval.isString())
+        return false;
+
+
+    // Don't emit a stub if the access is out of bounds. We make to make
+    // certain that we monitor the type coming out of the typed array when
+    // we generate the stub. Out of bounds accesses will hit the fallback
+    // path.
+    uint32_t index;
+    if (idval.isInt32()) {
+        index = idval.toInt32();
+    } else {
+        index = GetIndexFromString(idval.toString());
+        if (index == UINT32_MAX)
+            return false;
     }
+    if (index >= obj->as<TypedArrayObject>().length())
+        return false;
 
     // The output register is not yet specialized as a float register, the only
     // way to accept float typed arrays for now is to return a Value type.

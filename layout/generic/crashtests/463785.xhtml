@@ -1,0 +1,40 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml" class="reftest-wait">
+
+<bindings xmlns="http://www.mozilla.org/xbl" xmlns:xlink="http://www.w3.org/1999/xlink">
+<binding id="xbl">
+<content>
+<div xmlns="http://www.w3.org/1999/xhtml" style="border: 100px solid red;">
+<div  style="position: fixed;"/>
+</div>
+</content>
+</binding>
+</bindings>
+
+<div style="position: absolute; -moz-column-count: 2;">
+<table style="border: 100px solid green;" id="c">
+<tr id="b" style="-moz-binding:url(#xbl)">
+<td style="position: absolute;">
+m
+  <span id="a">
+    <div style="border: 100px solid black;">
+       <div style="position: fixed;"/>
+    </div>
+  </span>
+
+</td>
+</tr>
+</table>
+</div>
+
+<script>
+var doc = document;
+function doe() {
+  var newNode = document.createElementNS("http://www.w3.org/1999/xhtml", 'div');
+  newNode.innerHTML = '<div xmlns="http://www.w3.org/1999/xhtml" style="border: 100px solid black;"><div  style="position: fixed;"/></div>';
+  document.getElementById('c').insertBefore(newNode, doc.getElementById('b'));
+  document.getElementById('b').removeAttribute('style');
+  document.documentElement.removeAttribute("class");
+}
+setTimeout(doe, 100);
+</script>
+</html>

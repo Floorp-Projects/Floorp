@@ -44,7 +44,8 @@ inline bool IsIgnorableCharacter(PRUnichar ch)
 inline bool IsConditionalPunctuation(PRUnichar ch)
 {
   return (ch == '\'' ||
-          ch == 0x2019); // RIGHT SINGLE QUOTATION MARK
+          ch == 0x2019 || // RIGHT SINGLE QUOTATION MARK
+          ch == 0x00B7); // MIDDLE DOT
 }
 
 // mozInlineSpellWordUtil::Init
