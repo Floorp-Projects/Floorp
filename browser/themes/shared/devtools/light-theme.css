@@ -61,6 +61,15 @@
   color: hsl(208,56%,40%);
 }
 
+/*
+ * FIXME: http://bugzil.la/575675 CSS links without :visited set cause assertion
+ * failures in debug builds.
+ */
+.theme-link:visited,
+.cm-s-mozilla .cm-link:visited { /* blue */
+  color: hsl(208,56%,40%);
+}
+
 .theme-comment,
 .cm-s-mozilla .cm-meta,
 .cm-s-mozilla .cm-hr,

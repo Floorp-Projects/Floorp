@@ -1188,22 +1188,22 @@ MetroInput::DeliverNextQueuedTouchEvent()
     return;
   }
 
-  // If content is consuming touch, we need to transform event coords
-  // through the apzc before sending. Otherwise send the event to apzc.
+  // If content is consuming touch, we may need to transform event coords
+  // through the apzc before sending to the dom. Otherwise send the event
+  // to apzc.
   if (mContentConsumingTouch) {
-    TransformTouchEvent(event);
-  } else {
-    DUMP_TOUCH_IDS("APZC(2)", event);
-    status = mWidget->ApzReceiveInputEvent(event, nullptr);
-  }
-
-  // If content called preventDefault on touchstart or first touchmove send
-  // the event to content only.
-  if (mContentConsumingTouch) {
+    // Only translate if we're dealing with web content that's transformed
+    // by the apzc.
+    if (!mChromeHitTestCacheForTouch) {
+      TransformTouchEvent(event);
+    }
     DUMP_TOUCH_IDS("DOM(3)", event);
     mWidget->DispatchEvent(event, status);
     return;
   }
+
+  DUMP_TOUCH_IDS("APZC(2)", event);
+  status = mWidget->ApzReceiveInputEvent(event, nullptr);
 
   // Send the event to content unless APZC is consuming it.
   if (!mApzConsumingTouch) {
@@ -1211,6 +1211,9 @@ MetroInput::DeliverNextQueuedTouchEvent()
       mApzConsumingTouch = true;
       DispatchTouchCancel(event);
       return;
+    }
+    if (!mChromeHitTestCacheForTouch) {
+      TransformTouchEvent(event);
     }
     DUMP_TOUCH_IDS("DOM(4)", event);
     mWidget->DispatchEvent(event, status);

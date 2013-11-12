@@ -4514,11 +4514,11 @@ nsRect nsIFrame::GetScreenRectInAppUnits() const
 
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
-NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint&  aOffset,
-                                         nsView** aView) const
+void
+nsIFrame::GetOffsetFromView(nsPoint& aOffset, nsView** aView) const
 {
   NS_PRECONDITION(nullptr != aView, "null OUT parameter pointer");
-  nsIFrame* frame = const_cast<nsFrame*>(this);
+  nsIFrame* frame = const_cast<nsIFrame*>(this);
 
   *aView = nullptr;
   aOffset.MoveTo(0, 0);
@@ -4526,9 +4526,10 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint&  aOffset,
     aOffset += frame->GetPosition();
     frame = frame->GetParent();
   } while (frame && !frame->HasView());
-  if (frame)
+
+  if (frame) {
     *aView = frame->GetView();
-  return NS_OK;
+  }
 }
 
 nsIWidget*
@@ -5760,9 +5761,10 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         nsRect tempRect = resultFrame->GetRect();
         nsPoint offset;
         nsView * view; //used for call of get offset from view
-        result = resultFrame->GetOffsetFromView(offset, &view);
-        if (NS_FAILED(result))
-          return result;
+        resultFrame->GetOffsetFromView(offset, &view);
+        if (!view) {
+          return NS_ERROR_FAILURE;
+        }
         point.y = tempRect.height + offset.y;
 
         //special check. if we allow non-text selection then we can allow a hit location to fall before a table.

@@ -67,7 +67,7 @@ function testRuleChange2()
   testPropertyChanges();
 }
 
-function validateTextProp(aProp, aEnabled, aName, aValue, aDesc)
+function validateTextProp(aProp, aEnabled, aName, aValue, aDesc, valueSpanText)
 {
   is(aProp.enabled, aEnabled, aDesc + ": enabled.");
   is(aProp.name, aName, aDesc + ": name.");
@@ -75,7 +75,7 @@ function validateTextProp(aProp, aEnabled, aName, aValue, aDesc)
 
   is(aProp.editor.enable.hasAttribute("checked"), aEnabled, aDesc + ": enabled checkbox.");
   is(aProp.editor.nameSpan.textContent, aName, aDesc + ": name span.");
-  is(aProp.editor.valueSpan.textContent, aValue, aDesc + ": value span.");
+  is(aProp.editor.valueSpan.textContent, valueSpanText || aValue, aDesc + ": value span.");
 }
 
 function testPropertyChanges()
@@ -153,6 +153,20 @@ function testPropertyChange6()
 {
   is(rule.editor.element.querySelectorAll(".ruleview-property").length, 4, "Added a property");
   validateTextProp(rule.textProps[3], true, "padding-left", "20px", "Padding property enabled");
+
+  inspector.once("rule-view-refreshed", testPropertyChange7);
+
+  // Add an entirely new property
+  testElement.setAttribute("style", "background: url(\"chrome://branding/content/about-logo.png\") repeat scroll 0% 0% red");
+}
+
+function testPropertyChange7()
+{
+  is(rule.editor.element.querySelectorAll(".ruleview-property").length, 5, "Added a property");
+  validateTextProp(rule.textProps[4], true, "background",
+                   "url(\"chrome://branding/content/about-logo.png\") repeat scroll 0% 0% red",
+                   "shortcut property correctly set",
+                   "url('chrome://branding/content/about-logo.png') repeat scroll 0% 0% #F00");
 
   finishTest();
 }

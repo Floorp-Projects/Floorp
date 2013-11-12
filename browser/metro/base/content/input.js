@@ -322,12 +322,6 @@ var TouchModule = {
       if (aEvent.defaultPrevented) {
         this._isCancelled = true;
       }
-      // Help out chrome ui elements that want input.js vs. apz scrolling: call
-      // preventDefault when apz is enabled on anything that isn't in the
-      // browser.
-      if (APZCObserver.enabled && aEvent.target.ownerDocument == document) {
-        aEvent.preventDefault();
-      }
     }
 
     if (this._isCancelled)
