@@ -1,0 +1,8 @@
+component {6ff2b290-2573-11e3-8224-0800200c9a66} nsNfc.js
+contract @mozilla.org/navigatorNfc;1 {6ff2b290-2573-11e3-8224-0800200c9a66}
+
+component {4e1e2e90-3137-11e3-aa6e-0800200c9a66} nsNfc.js
+contract @mozilla.org/nfc/NFCTag;1 {4e1e2e90-3137-11e3-aa6e-0800200c9a66}
+
+component {c1b2bcf0-35eb-11e3-aa6e-0800200c9a66} nsNfc.js
+contract @mozilla.org/nfc/NFCPeer;1 {c1b2bcf0-35eb-11e3-aa6e-0800200c9a66}
