@@ -2603,48 +2603,49 @@ let SessionStoreInternal = {
       }
     }
 
-    // helper hashes for ensuring unique frame IDs and unique document
-    // identifiers.
-    let idMap = { used: {} };
-    let docIdentMap = {};
-    this.restoreHistory(aWindow, aTabs, aTabData, idMap, docIdentMap,
-                        aRestoreImmediately);
+    function restoreNextHistory() {
+      if (aWindow.closed) {
+        return;
+      }
+
+      // if the tab got removed before being completely restored, then skip it
+      while (aTabs.length > 0 && !this._canRestoreTabHistory(aTabs[0])) {
+        aTabs.shift();
+        aTabData.shift();
+      }
+      if (aTabs.length == 0) {
+        // At this point we're essentially ready for consumers to read/write data
+        // via the sessionstore API so we'll send the SSWindowStateReady event.
+        this._setWindowStateReady(aWindow);
+        return; // no more tabs to restore
+      }
+
+      let tab = aTabs.shift();
+      let tabData = aTabData.shift();
+      this.restoreHistory(aWindow, tab, tabData, aRestoreImmediately);
+
+      // Restore the history in the next tab
+      aWindow.setTimeout(restoreNextHistory.bind(this), 0);
+    }
+
+    restoreNextHistory.call(this);
   },
 
   /**
    * Restore history for a list of tabs.
-   * @param aWindow
+   * @param window
    *        Window reference
-   * @param aTabs
-   *        Array of tab references
-   * @param aTabData
-   *        Array of tab data
-   * @param aIdMap
-   *        Hash for ensuring unique frame IDs
-   * @param aRestoreImmediately
+   * @param tab
+   *        Tab to be restored
+   * @param tabData
+   *        Tab data to restore
+   * @param restoreImmediately
    *        Flag to indicate whether the given set of tabs aTabs should be
    *        restored/loaded immediately even if restore_on_demand = true
    */
-  restoreHistory:
-    function ssi_restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap,
-                                aRestoreImmediately)
-  {
-    // if the tab got removed before being completely restored, then skip it
-    while (aTabs.length > 0 && !(this._canRestoreTabHistory(aTabs[0]))) {
-      aTabs.shift();
-      aTabData.shift();
-    }
-    if (aTabs.length == 0) {
-      // At this point we're essentially ready for consumers to read/write data
-      // via the sessionstore API so we'll send the SSWindowStateReady event.
-      this._setWindowStateReady(aWindow);
-      return; // no more tabs to restore
-    }
-
-    var tab = aTabs.shift();
-    var tabData = aTabData.shift();
-    var browser = aWindow.gBrowser.getBrowserForTab(tab);
-    var history = browser.webNavigation.sessionHistory;
+  restoreHistory: function (window, tab, tabData, restoreImmediately) {
+    let browser = tab.linkedBrowser;
+    let history = browser.webNavigation.sessionHistory;
 
     if (history.count > 0) {
       history.PurgeHistory(history.count);
@@ -2661,16 +2662,18 @@ let SessionStoreInternal = {
       tab.__SS_extdata = {};
       for (let key in tabData.extData)
         tab.__SS_extdata[key] = tabData.extData[key];
-    }
-    else
+    } else {
       delete tab.__SS_extdata;
+    }
 
+    let idMap = { used: {} };
+    let docIdentMap = {};
     for (var i = 0; i < tabData.entries.length; i++) {
       //XXXzpao Wallpaper patch for bug 514751
       if (!tabData.entries[i].url)
         continue;
       history.addEntry(this._deserializeHistoryEntry(tabData.entries[i],
-                                                     aIdMap, aDocIdentMap), true);
+                                                     idMap, docIdentMap), true);
     }
 
     // make sure to reset the capabilities and attributes, in case this tab gets reused
@@ -2684,31 +2687,22 @@ let SessionStoreInternal = {
 
     // Restore the tab icon.
     if ("image" in tabData) {
-      aWindow.gBrowser.setIcon(tab, tabData.image);
+      window.gBrowser.setIcon(tab, tabData.image);
     }
 
     if (tabData.storage && browser.docShell instanceof Ci.nsIDocShell)
       SessionStorage.deserialize(browser.docShell, tabData.storage);
 
     // notify the tabbrowser that the tab chrome has been restored
-    var event = aWindow.document.createEvent("Events");
+    var event = window.document.createEvent("Events");
     event.initEvent("SSTabRestoring", true, false);
     tab.dispatchEvent(event);
 
-    // Restore the history in the next tab
-    aWindow.setTimeout(() => {
-      if (!aWindow.closed) {
-        this.restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap,
-                            aRestoreImmediately);
-      }
-    }, 0);
-
     // This could cause us to ignore MAX_CONCURRENT_TAB_RESTORES a bit, but
     // it ensures each window will have its selected tab loaded.
-    if (aRestoreImmediately || aWindow.gBrowser.selectedBrowser == browser) {
+    if (restoreImmediately || window.gBrowser.selectedBrowser == browser) {
       this.restoreTab(tab);
-    }
-    else {
+    } else {
       TabRestoreQueue.add(tab);
       this.restoreNextTab();
     }
