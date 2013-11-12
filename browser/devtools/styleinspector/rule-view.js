@@ -1626,9 +1626,9 @@ RuleEditor.prototype = {
         let win = this.doc.defaultView;
         win.focus();
 
-        this.ruleView._contextmenu.openPopup(
-          event.target.ownerDocument.documentElement,
-          "overlap", event.clientX, event.clientY, true, false, null);
+        this.ruleView._contextmenu.openPopupAtScreen(
+          event.screenX, event.screenY, true);
+
       } catch(e) {
         console.error(e);
       }
