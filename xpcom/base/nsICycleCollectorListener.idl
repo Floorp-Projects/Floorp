@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0ef15f15-7783-4991-af68-4976d7ec2267)]
+[scriptable, uuid(39a8f80e-7eee-4141-b9ef-6e2a7d6e466d)]
 interface nsICycleCollectorHandler : nsISupports
 {
     void noteRefCountedObject(in ACString aAddress,
@@ -12,7 +12,8 @@ interface nsICycleCollectorHandler : nsISupports
                               in ACString aObjectDescription);
     void noteGCedObject(in ACString aAddress,
                         in boolean aMarked,
-                        in ACString aObjectDescription);
+                        in ACString aObjectDescription,
+                        in ACString aCompartmentAddress);
     void noteEdge(in ACString aFromAddress,
                   in ACString aToAddress,
                   in ACString aEdgeName);
@@ -34,7 +35,7 @@ interface nsICycleCollectorHandler : nsISupports
  * a call to end().  If begin() returns an error none of the other
  * functions will be called.
  */
-[scriptable, builtinclass, uuid(32a3ab19-82a3-4096-a12a-de37274f51c3)]
+[scriptable, builtinclass, uuid(7096e77d-7834-4996-b52c-50564144d4be)]
 interface nsICycleCollectorListener : nsISupports
 {
     nsICycleCollectorListener allTraces();
@@ -55,7 +56,8 @@ interface nsICycleCollectorListener : nsISupports
 			       in string aObjectDescription);
     void noteGCedObject (in unsigned long long aAddress,
 			 in boolean aMarked,
-			 in string aObjectDescription);
+			 in string aObjectDescription,
+			 in unsigned long long aCompartmentAddress);
     void noteEdge(in unsigned long long aToAddress,
                   in string aEdgeName);
     void noteWeakMapEntry(in unsigned long long aMap,
