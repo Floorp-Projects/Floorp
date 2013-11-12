@@ -212,6 +212,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitSetPropertyPolymorphic(MSetPropertyPolymorphic *ins);
     bool visitGetElementCache(MGetElementCache *ins);
     bool visitBindNameCache(MBindNameCache *ins);
+    bool visitGuardObjectIdentity(MGuardObjectIdentity *ins);
     bool visitGuardClass(MGuardClass *ins);
     bool visitGuardObject(MGuardObject *ins);
     bool visitGuardString(MGuardString *ins);

@@ -163,6 +163,7 @@
     _(StoreSlotT)                   \
     _(GuardShape)                   \
     _(GuardObjectType)              \
+    _(GuardObjectIdentity)          \
     _(GuardClass)                   \
     _(GuardThreadLocalObject)       \
     _(TypeBarrierV)                 \
