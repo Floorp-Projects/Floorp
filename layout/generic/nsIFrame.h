@@ -2039,8 +2039,7 @@ public:
    * Returns the offset from this frame to the closest geometric parent that
    * has a view. Also returns the containing view or null in case of error
    */
-  NS_IMETHOD  GetOffsetFromView(nsPoint&  aOffset,
-                                nsView** aView) const = 0;
+  virtual void GetOffsetFromView(nsPoint& aOffset, nsView** aView) const = 0;
 
   /**
    * Returns the nearest widget containing this frame. If this frame has a
