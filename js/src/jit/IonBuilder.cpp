@@ -1397,7 +1397,7 @@ IonBuilder::inspectOpcode(JSOp op)
                         bool otherUses = false;
                         for (MUseDefIterator iter(op); iter; iter++) {
                             MDefinition *def = iter.def();
-                            if (def == val)
+                            if (def == value)
                                 continue;
                             otherUses = true;
                         }
