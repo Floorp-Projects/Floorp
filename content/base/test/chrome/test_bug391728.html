@@ -97,27 +97,10 @@ function start_test(plugin) {
   load_frame(test_normal, "file_bug391728");
 }
 
-function clearInfobar() {
-  var Ci = SpecialPowers.Ci;
-  var Cc = SpecialPowers.Cc;
-  ok(Ci != null, "Access Ci");
-  ok(Cc != null, "Access Cc");
-
-  var browser = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIWebNavigation)
-                      .QueryInterface(Ci.nsIDocShell)
-                      .chromeEventHandler;
-  var chromeWin = browser.ownerDocument.defaultView;
-  var notificationBox = chromeWin.gBrowser.getNotificationBox(browser);
-  var notification = notificationBox.getNotificationWithValue("plugin-hidden");
-  notificationBox.removeNotification(notification, true);
-}
-
 function finish_test(plugin) {
   Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
   resetBlocklist();
   plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
-  clearInfobar();
   SimpleTest.finish();
 }
 
@@ -206,7 +189,7 @@ function test_unknown(plugin) {
   test_style("none");
   setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", function() {
     ok(!plugin.blocklisted, "Plugin shouldn't remain blocklisted");
-    SimpleTest.executeSoon(function() { finish_test(plugin); });
+    finish_test(plugin);
   });
 }
 
