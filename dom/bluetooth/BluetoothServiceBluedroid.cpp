@@ -21,6 +21,7 @@
 #include <hardware/bluetooth.h>
 #include <hardware/hardware.h>
 
+#include "BluetoothProfileController.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
@@ -70,6 +71,7 @@ static nsString sAdapterBdName;
 static uint32_t sAdapterDiscoverableTimeout;
 static InfallibleTArray<nsString> sAdapterBondedAddressArray;
 static InfallibleTArray<BluetoothNamedValue> sRemoteDevicesPack;
+static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeDiscoveryRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetPairedDeviceRunnableArray;
@@ -1079,13 +1081,55 @@ BluetoothServiceBluedroid::PrepareAdapterInternal()
   return NS_OK;
 }
 
+static void
+NextBluetoothProfileController()
+{
+  sControllerArray[0] = nullptr;
+  sControllerArray.RemoveElementAt(0);
+
+  if (!sControllerArray.IsEmpty()) {
+    sControllerArray[0]->Start();
+  }
+}
+
+static void
+ConnectDisconnect(bool aConnect, const nsAString& aDeviceAddress,
+                  BluetoothReplyRunnable* aRunnable,
+                  uint16_t aServiceUuid, uint32_t aCod = 0)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  BluetoothProfileController* controller =
+    new BluetoothProfileController(aConnect, aDeviceAddress, aRunnable,
+                                   NextBluetoothProfileController,
+                                   aServiceUuid, aCod);
+  sControllerArray.AppendElement(controller);
+
+  /**
+   * If the request is the first element of the quene, start from here. Note
+   * that other request is pushed into the quene and is popped out after the
+   * first one is completed. See NextBluetoothProfileController() for details.
+   */
+  if (sControllerArray.Length() == 1) {
+    sControllerArray[0]->Start();
+  }
+}
+
 void
 BluetoothServiceBluedroid::Connect(const nsAString& aDeviceAddress,
                                    uint32_t aCod,
                                    uint16_t aServiceUuid,
                                    BluetoothReplyRunnable* aRunnable)
 {
+  // TODO: Remove this error reply once Connect() is done in profile managers
+  if (aRunnable) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
+    return;
+  }
 
+  ConnectDisconnect(true, aDeviceAddress, aRunnable, aServiceUuid, aCod);
 }
 
 bool
@@ -1099,7 +1143,14 @@ BluetoothServiceBluedroid::Disconnect(
   const nsAString& aDeviceAddress, uint16_t aServiceUuid,
   BluetoothReplyRunnable* aRunnable)
 {
+  // TODO: Remove this error reply once Disconnect() is done in profile managers
+  if (aRunnable) {
+    DispatchBluetoothReply(aRunnable, BluetoothValue(),
+                           NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
+    return;
+  }
 
+  ConnectDisconnect(false, aDeviceAddress, aRunnable, aServiceUuid);
 }
 
 void

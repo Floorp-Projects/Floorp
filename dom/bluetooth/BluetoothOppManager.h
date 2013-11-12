@@ -31,6 +31,11 @@ class BluetoothOppManager : public BluetoothSocketObserver
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  BT_DECL_PROFILE_MGR_BASE
+  virtual void GetName(nsACString& aName)
+  {
+    aName.AssignLiteral("OPP");
+  }
 
   /*
    * Channel of reserved services are fixed values, please check
@@ -68,25 +73,6 @@ public:
   virtual void OnSocketConnectSuccess(BluetoothSocket* aSocket) MOZ_OVERRIDE;
   virtual void OnSocketConnectError(BluetoothSocket* aSocket) MOZ_OVERRIDE;
   virtual void OnSocketDisconnect(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-
-  // The following functions are inherited from BluetoothProfileManagerBase
-  virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,
-                                   const nsAString& aServiceUuid,
-                                   int aChannel) MOZ_OVERRIDE;
-  virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) MOZ_OVERRIDE;
-  virtual void GetAddress(nsAString& aDeviceAddress) MOZ_OVERRIDE;
-  virtual bool IsConnected() MOZ_OVERRIDE;
-
-  virtual void GetName(nsACString& aName)
-  {
-    aName.AssignLiteral("OPP");
-  }
-
-  virtual void Connect(const nsAString& aDeviceAddress,
-                       BluetoothProfileController* aController) MOZ_OVERRIDE;
-  virtual void Disconnect(BluetoothProfileController* aController) MOZ_OVERRIDE;
-  virtual void OnConnect(const nsAString& aErrorStr) MOZ_OVERRIDE;
-  virtual void OnDisconnect(const nsAString& aErrorStr) MOZ_OVERRIDE;
 
 private:
   BluetoothOppManager();
