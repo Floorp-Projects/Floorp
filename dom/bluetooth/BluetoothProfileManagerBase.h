@@ -70,6 +70,20 @@ public:
   virtual void GetName(nsACString& aName) = 0;
 };
 
+#define BT_DECL_PROFILE_MGR_BASE                                                 \
+public:                                                                          \
+  virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,              \
+                                   const nsAString& aServiceUuid,                \
+                                   int aChannel) MOZ_OVERRIDE;                   \
+  virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) MOZ_OVERRIDE; \
+  virtual void GetAddress(nsAString& aDeviceAddress) MOZ_OVERRIDE;               \
+  virtual bool IsConnected() MOZ_OVERRIDE;                                       \
+  virtual void Connect(const nsAString& aDeviceAddress,                          \
+                       BluetoothProfileController* aController) MOZ_OVERRIDE;    \
+  virtual void Disconnect(BluetoothProfileController* aController) MOZ_OVERRIDE; \
+  virtual void OnConnect(const nsAString& aErrorStr) MOZ_OVERRIDE;               \
+  virtual void OnDisconnect(const nsAString& AErrorStr) MOZ_OVERRIDE;            \
+
 END_BLUETOOTH_NAMESPACE
 
 #endif  //#ifndef mozilla_dom_bluetooth_bluetoothprofilemanagerbase_h__
