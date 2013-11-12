@@ -54,6 +54,10 @@
           <checkbox label="&options.enablePersistentLogging.label;"
                     tooltiptext="&options.enablePersistentLogging.tooltip;"
                     data-pref="devtools.webconsole.persistlog"/>
+          <checkbox id="webconsole-timestamp-messages"
+                    label="&options.timestampMessages.label;"
+                    tooltiptext="&options.timestampMessages.tooltip;"
+                    data-pref="devtools.webconsole.timestampMessages"/>
         </vbox>
         <label value="&options.profiler.label;"/>
         <vbox id="profiler-options" class="options-groupbox">
