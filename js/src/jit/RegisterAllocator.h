@@ -328,6 +328,8 @@ class RegisterAllocator
         return CodePosition(pos, CodePosition::INPUT);
     }
     CodePosition inputOf(const LInstruction *ins) const {
+        // Phi nodes "use" their inputs before the beginning of the block.
+        JS_ASSERT(!ins->isPhi());
         return CodePosition(ins->id(), CodePosition::INPUT);
     }
 
