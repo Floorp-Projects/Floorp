@@ -50,6 +50,10 @@ ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
 DEFINES += -DMOZ_SHARED_MOZGLUE=1
 endif
 
+ifneq (,$(filter rtsp,$(NECKO_PROTOCOLS)))
+DEFINES += -DMOZ_RTSP
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) FORCE
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $< -o $@)

@@ -8,6 +8,7 @@ MODULE = 'vorbis'
 
 EXPORTS.vorbis += [
     'include/vorbis/codec.h',
+    'include/vorbis/vorbisenc.h',
 ]
 
 LIBRARY_NAME = 'vorbis'
@@ -33,7 +34,10 @@ SOURCES += [
     'lib/vorbis_smallft.c',
     'lib/vorbis_synthesis.c',
     'lib/vorbis_window.c',
+    'lib/vorbisenc.c',
 ]
+
+LOCAL_INCLUDES += ['lib']
 
 if CONFIG['OS_ARCH'] == 'AIX':
     DEFINES['alloca'] = '__alloca'
