@@ -596,6 +596,14 @@ IonBuilder::build()
     if (instrumentedProfiling())
         current->add(MFunctionBoundary::New(script(), MFunctionBoundary::Enter));
 
+    // Guard against over-recursion. Do this before we start unboxing, since
+    // this will create an OSI point that will read the incoming argument
+    // values, which is nice to do before their last real use, to minimize
+    // register/stack pressure.
+    MCheckOverRecursed *check = new MCheckOverRecursed;
+    current->add(check);
+    check->setResumePoint(current->entryResumePoint());
+
     // Parameters have been checked to correspond to the typeset, now we unbox
     // what we can in an infallible manner.
     rewriteParameters();
@@ -606,11 +614,6 @@ IonBuilder::build()
 
     if (info().needsArgsObj() && !initArgumentsObject())
         return false;
-
-    // Guard against over-recursion.
-    MCheckOverRecursed *check = new MCheckOverRecursed;
-    current->add(check);
-    check->setResumePoint(current->entryResumePoint());
 
     // Prevent |this| from being DCE'd: necessary for constructors.
     if (info().fun())
