@@ -210,11 +210,6 @@ nsWindow::Create(nsIWidget *aParent,
 {
     ALOG("nsWindow[%p]::Create %p [%d %d %d %d]", (void*)this, (void*)aParent, aRect.x, aRect.y, aRect.width, aRect.height);
     nsWindow *parent = (nsWindow*) aParent;
-
-    if (!AndroidBridge::Bridge()) {
-        aNativeParent = nullptr;
-    }
-
     if (aNativeParent) {
         if (parent) {
             ALOG("Ignoring native parent on Android window [%p], since parent was specified (%p %p)", (void*)this, (void*)aNativeParent, (void*)aParent);
@@ -354,9 +349,7 @@ nsWindow::GetDefaultScaleInternal()
         return density;
     }
 
-    if (AndroidBridge::Bridge()) {
-        density = GeckoAppShell::GetDensity();
-    }
+    density = GeckoAppShell::GetDensity();
 
     if (!density) {
         density = 1.0;
@@ -572,9 +565,6 @@ nsWindow::SetFocus(bool aRaise)
         ALOG("nsWindow::SetFocus: can't set focus without raising, ignoring aRaise = false!");
     }
 
-    if (!AndroidBridge::Bridge())
-        return NS_OK;
-
     nsWindow *top = FindTopLevel();
     top->mFocus = this;
     top->BringToFront();
@@ -770,9 +760,6 @@ nsWindow::CreateLayerManager(int aCompositorWidth, int aCompositorHeight)
 void
 nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 {
-    if (!AndroidBridge::Bridge())
-        return;
-
     nsWindow *win = TopWindow();
     if (!win)
         return;
@@ -950,9 +937,6 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 void
 nsWindow::OnAndroidEvent(AndroidGeckoEvent *ae)
 {
-    if (!AndroidBridge::Bridge())
-        return;
-
     switch (ae->Type()) {
         case AndroidGeckoEvent::DRAW:
             OnDraw(ae);
