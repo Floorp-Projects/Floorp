@@ -1115,7 +1115,7 @@ GraphWalker<Visitor>::DoWalk(nsDeque &aQueue)
 struct CCGraphDescriber : public LinkedListElement<CCGraphDescriber>
 {
   CCGraphDescriber()
-  : mAddress("0x"), mToAddress("0x"), mCnt(0), mType(eUnknown) {}
+  : mAddress("0x"), mCnt(0), mType(eUnknown) {}
 
   enum Type
   {
@@ -1129,8 +1129,8 @@ struct CCGraphDescriber : public LinkedListElement<CCGraphDescriber>
   };
 
   nsCString mAddress;
-  nsCString mToAddress;
   nsCString mName;
+  nsCString mCompartmentOrToAddress;
   uint32_t mCnt;
   Type mType;
 };
@@ -1290,7 +1290,8 @@ public:
         return NS_OK;
     }
     NS_IMETHOD NoteGCedObject(uint64_t aAddress, bool aMarked,
-                              const char *aObjectDescription)
+                              const char *aObjectDescription,
+                              uint64_t aCompartmentAddress)
     {
         if (!mDisableLog) {
             fprintf(mStream, "%p [gc%s] %s\n", (void*)aAddress,
@@ -1305,6 +1306,12 @@ public:
                                  CCGraphDescriber::eGCedObject;
             d->mAddress = mCurrentAddress;
             d->mName.Append(aObjectDescription);
+            if (aCompartmentAddress) {
+                d->mCompartmentOrToAddress.AssignLiteral("0x");
+                d->mCompartmentOrToAddress.AppendInt(aCompartmentAddress, 16);
+            } else {
+                d->mCompartmentOrToAddress.SetIsVoid(true);
+            }
         }
         return NS_OK;
     }
@@ -1318,7 +1325,8 @@ public:
             mDescribers.insertBack(d);
             d->mType = CCGraphDescriber::eEdge;
             d->mAddress = mCurrentAddress;
-            d->mToAddress.AppendInt(aToAddress, 16);
+            d->mCompartmentOrToAddress.AssignLiteral("0x");
+            d->mCompartmentOrToAddress.AppendInt(aToAddress, 16);
             d->mName.Append(aEdgeName);
         }
         return NS_OK;
@@ -1421,11 +1429,12 @@ public:
                     aHandler->NoteGCedObject(d->mAddress,
                                              d->mType ==
                                                CCGraphDescriber::eGCMarkedObject,
-                                             d->mName);
+                                             d->mName,
+                                             d->mCompartmentOrToAddress);
                     break;
                 case CCGraphDescriber::eEdge:
                     aHandler->NoteEdge(d->mAddress,
-                                       d->mToAddress,
+                                       d->mCompartmentOrToAddress,
                                        d->mName);
                     break;
                 case CCGraphDescriber::eRoot:
@@ -1598,7 +1607,8 @@ public:
     // nsCycleCollectionTraversalCallback methods.
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refCount,
                                              const char *objName);
-    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, const char *objName);
+    NS_IMETHOD_(void) DescribeGCedNode(bool isMarked, const char *objName,
+                                       uint64_t aCompartmentAddress);
 
     NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
     NS_IMETHOD_(void) NoteJSChild(void *child);
@@ -1782,14 +1792,15 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, const char *objName)
 }
 
 NS_IMETHODIMP_(void)
-GCGraphBuilder::DescribeGCedNode(bool isMarked, const char *objName)
+GCGraphBuilder::DescribeGCedNode(bool isMarked, const char *objName,
+                                 uint64_t aCompartmentAddress)
 {
     uint32_t refCount = isMarked ? UINT32_MAX : 0;
     mCollector->mVisitedGCed++;
 
     if (mListener) {
         mListener->NoteGCedObject((uint64_t)mCurrPi->mPointer, isMarked,
-                                  objName);
+                                  objName, aCompartmentAddress);
     }
 
     DescribeNode(refCount, objName);
@@ -1923,7 +1934,8 @@ public:
     NS_IMETHOD_(void) DescribeRefCountedNode(nsrefcnt refcount,
                                              const char *objname) {}
     NS_IMETHOD_(void) DescribeGCedNode(bool ismarked,
-                                       const char *objname) {}
+                                       const char *objname,
+                                       uint64_t aCompartmentAddress) {}
     NS_IMETHOD_(void) NoteNextEdgeName(const char* name) {}
     bool MayHaveChild() {
         return mMayHaveChild;

@@ -416,7 +416,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     };
 
     uint32_t length, lineno, nslots;
-    uint32_t natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, i;
+    uint32_t natoms, nsrcnotes, i;
+    uint32_t nconsts, nobjects, nregexps, ntrynotes, nblockscopes;
     uint32_t prologLength, version;
     uint32_t funLength = 0;
     uint32_t nTypeSets = 0;
@@ -424,7 +425,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
 
     JSContext *cx = xdr->cx();
     RootedScript script(cx);
-    nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
+    natoms = nsrcnotes = 0;
+    nconsts = nobjects = nregexps = ntrynotes = nblockscopes = 0;
 
     /* XDR arguments and vars. */
     uint16_t nargs = 0, nvars = 0;
@@ -468,6 +470,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             nregexps = script->regexps()->length;
         if (script->hasTrynotes())
             ntrynotes = script->trynotes()->length;
+        if (script->hasBlockScopes())
+            nblockscopes = script->blockScopes()->length;
 
         nTypeSets = script->nTypeSets;
         funLength = script->funLength;
@@ -512,21 +516,20 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     if (!xdr->codeUint32(&version))
         return false;
 
-    /*
-     * To fuse allocations, we need srcnote, atom, objects, regexp, and trynote
-     * counts early.
-     */
+    // To fuse allocations, we need lengths of all embedded arrays early.
     if (!xdr->codeUint32(&natoms))
         return false;
     if (!xdr->codeUint32(&nsrcnotes))
         return false;
-    if (!xdr->codeUint32(&ntrynotes))
+    if (!xdr->codeUint32(&nconsts))
         return false;
     if (!xdr->codeUint32(&nobjects))
         return false;
     if (!xdr->codeUint32(&nregexps))
         return false;
-    if (!xdr->codeUint32(&nconsts))
+    if (!xdr->codeUint32(&ntrynotes))
+        return false;
+    if (!xdr->codeUint32(&nblockscopes))
         return false;
     if (!xdr->codeUint32(&nTypeSets))
         return false;
@@ -569,8 +572,11 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         return false;
 
     if (mode == XDR_DECODE) {
-        if (!JSScript::partiallyInit(cx, script, nobjects, nregexps, ntrynotes, nconsts, nTypeSets))
+        if (!JSScript::partiallyInit(cx, script, nconsts, nobjects, nregexps, ntrynotes,
+                                     nblockscopes, nTypeSets))
+        {
             return false;
+        }
 
         JS_ASSERT(!script->mainOffset);
         script->mainOffset = prologLength;
@@ -664,6 +670,14 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             return false;
     }
 
+    if (nconsts) {
+        HeapValue *vector = script->consts()->vector;
+        for (i = 0; i != nconsts; ++i) {
+            if (!XDRScriptConst(xdr, &vector[i]))
+                return false;
+        }
+    }
+
     /*
      * Here looping from 0-to-length to xdr objects is essential to ensure that
      * all references to enclosing blocks (via FindBlockIndex below) happen
@@ -740,6 +754,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             *objp = tmp;
         }
     }
+
     for (i = 0; i != nregexps; ++i) {
         if (!XDRScriptRegExpObject(xdr, &script->regexps()->vector[i]))
             return false;
@@ -776,11 +791,13 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         } while (tn != tnfirst);
     }
 
-    if (nconsts) {
-        HeapValue *vector = script->consts()->vector;
-        for (i = 0; i != nconsts; ++i) {
-            if (!XDRScriptConst(xdr, &vector[i]))
-                return false;
+    for (i = 0; i < nblockscopes; ++i) {
+        BlockScopeNote *note = &script->blockScopes()->vector[i];
+        if (!xdr->codeUint32(&note->index) ||
+            !xdr->codeUint32(&note->start) ||
+            !xdr->codeUint32(&note->length))
+        {
+            return false;
         }
     }
 
@@ -1580,6 +1597,7 @@ js::FreeScriptData(JSRuntime *rt)
  * ObjectArray      Objects         objects()
  * ObjectArray      Regexps         regexps()
  * TryNoteArray     Try notes       trynotes()
+ * BlockScopeArray  Scope notes     blockScopes()
  *
  * Then are the elements of several arrays.
  * - Most of these arrays have headers listed above (if present). For each of
@@ -1595,6 +1613,7 @@ js::FreeScriptData(JSRuntime *rt)
  * Objects          objects()->vector     objects()->length
  * Regexps          regexps()->vector     regexps()->length
  * Try notes        trynotes()->vector    trynotes()->length
+ * Scope notes      blockScopes()->vector blockScopes()->length
  *
  * IMPORTANT: This layout has two key properties.
  * - It ensures that everything has sufficient alignment; in particular, the
@@ -1640,6 +1659,7 @@ js::FreeScriptData(JSRuntime *rt)
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ConstArray));
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(ObjectArray));       /* there are two of these */
 JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(TryNoteArray));
+JS_STATIC_ASSERT(KEEPS_JSVAL_ALIGNMENT(BlockScopeArray));
 
 /* These assertions ensure there is no padding required between array elements. */
 JS_STATIC_ASSERT(HAS_JSVAL_ALIGNMENT(HeapValue));
@@ -1649,9 +1669,15 @@ JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(HeapPtrObject, JSTryNote));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(JSTryNote, uint32_t));
 JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(uint32_t, uint32_t));
 
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(HeapValue, BlockScopeNote));
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(BlockScopeNote, BlockScopeNote));
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(JSTryNote, BlockScopeNote));
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(HeapPtrObject, BlockScopeNote));
+JS_STATIC_ASSERT(NO_PADDING_BETWEEN_ENTRIES(BlockScopeNote, uint32_t));
+
 static inline size_t
-ScriptDataSize(uint32_t nbindings, uint32_t nobjects, uint32_t nregexps,
-               uint32_t ntrynotes, uint32_t nconsts)
+ScriptDataSize(uint32_t nbindings, uint32_t nconsts, uint32_t nobjects, uint32_t nregexps,
+               uint32_t ntrynotes, uint32_t nblockscopes)
 {
     size_t size = 0;
 
@@ -1663,6 +1689,8 @@ ScriptDataSize(uint32_t nbindings, uint32_t nobjects, uint32_t nregexps,
         size += sizeof(ObjectArray) + nregexps * sizeof(JSObject *);
     if (ntrynotes != 0)
         size += sizeof(TryNoteArray) + ntrynotes * sizeof(JSTryNote);
+    if (nblockscopes != 0)
+        size += sizeof(BlockScopeArray) + nblockscopes * sizeof(BlockScopeNote);
 
     if (nbindings != 0) {
 	// Make sure bindings are sufficiently aligned.
@@ -1736,10 +1764,12 @@ AllocScriptData(ExclusiveContext *cx, size_t size)
 }
 
 /* static */ bool
-JSScript::partiallyInit(ExclusiveContext *cx, HandleScript script, uint32_t nobjects,
-                        uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts, uint32_t nTypeSets)
+JSScript::partiallyInit(ExclusiveContext *cx, HandleScript script, uint32_t nconsts,
+                        uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes,
+                        uint32_t nblockscopes, uint32_t nTypeSets)
 {
-    size_t size = ScriptDataSize(script->bindings.count(), nobjects, nregexps, ntrynotes, nconsts);
+    size_t size = ScriptDataSize(script->bindings.count(), nconsts, nobjects, nregexps, ntrynotes,
+                                 nblockscopes);
     script->data = AllocScriptData(cx, size);
     if (!script->data)
         return false;
@@ -1764,6 +1794,10 @@ JSScript::partiallyInit(ExclusiveContext *cx, HandleScript script, uint32_t nobj
     if (ntrynotes != 0) {
         script->setHasArray(TRYNOTES);
         cursor += sizeof(TryNoteArray);
+    }
+    if (nblockscopes != 0) {
+        script->setHasArray(BLOCK_SCOPES);
+        cursor += sizeof(BlockScopeArray);
     }
 
     if (nconsts != 0) {
@@ -1795,6 +1829,16 @@ JSScript::partiallyInit(ExclusiveContext *cx, HandleScript script, uint32_t nobj
         cursor += vectorSize;
     }
 
+    if (nblockscopes != 0) {
+        script->blockScopes()->length = nblockscopes;
+        script->blockScopes()->vector = reinterpret_cast<BlockScopeNote *>(cursor);
+        size_t vectorSize = nblockscopes * sizeof(script->blockScopes()->vector[0]);
+#ifdef DEBUG
+        memset(cursor, 0, vectorSize);
+#endif
+        cursor += vectorSize;
+    }
+
     if (script->bindings.count() != 0) {
 	// Make sure bindings are sufficiently aligned.
 	cursor = reinterpret_cast<uint8_t*>
@@ -1809,7 +1853,7 @@ JSScript::partiallyInit(ExclusiveContext *cx, HandleScript script, uint32_t nobj
 /* static */ bool
 JSScript::fullyInitTrivial(ExclusiveContext *cx, Handle<JSScript*> script)
 {
-    if (!partiallyInit(cx, script, 0, 0, 0, 0, 0))
+    if (!partiallyInit(cx, script, 0, 0, 0, 0, 0, 0))
         return false;
 
     SharedScriptData *ssd = SharedScriptData::new_(cx, 1, 1, 0);
@@ -1835,8 +1879,8 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
     uint32_t nsrcnotes = uint32_t(bce->countFinalSourceNotes());
     uint32_t natoms = bce->atomIndices->count();
     if (!partiallyInit(cx, script,
-                       bce->objectList.length, bce->regexpList.length, bce->tryNoteList.length(),
-                       bce->constList.length(), bce->typesetCount))
+                       bce->constList.length(), bce->objectList.length, bce->regexpList.length,
+                       bce->tryNoteList.length(), bce->blockScopeList.length(), bce->typesetCount))
     {
         return false;
     }
@@ -1873,14 +1917,16 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
 
     FunctionBox *funbox = bce->sc->isFunctionBox() ? bce->sc->asFunctionBox() : nullptr;
 
-    if (bce->tryNoteList.length() != 0)
-        bce->tryNoteList.finish(script->trynotes());
+    if (bce->constList.length() != 0)
+        bce->constList.finish(script->consts());
     if (bce->objectList.length != 0)
         bce->objectList.finish(script->objects());
     if (bce->regexpList.length != 0)
         bce->regexpList.finish(script->regexps());
-    if (bce->constList.length() != 0)
-        bce->constList.finish(script->consts());
+    if (bce->tryNoteList.length() != 0)
+        bce->tryNoteList.finish(script->trynotes());
+    if (bce->blockScopeList.length() != 0)
+        bce->blockScopeList.finish(script->blockScopes());
     script->strict = bce->sc->strict;
     script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
@@ -2279,6 +2325,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     uint32_t nobjects  = src->hasObjects()  ? src->objects()->length  : 0;
     uint32_t nregexps  = src->hasRegexps()  ? src->regexps()->length  : 0;
     uint32_t ntrynotes = src->hasTrynotes() ? src->trynotes()->length : 0;
+    uint32_t nblockscopes = src->hasBlockScopes() ? src->blockScopes()->length : 0;
 
     /* Script data */
 
@@ -2444,6 +2491,8 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     }
     if (ntrynotes != 0)
         dst->trynotes()->vector = Rebase<JSTryNote>(dst, src, src->trynotes()->vector);
+    if (nblockscopes != 0)
+        dst->blockScopes()->vector = Rebase<BlockScopeNote>(dst, src, src->blockScopes()->vector);
 
     return dst;
 }

@@ -300,7 +300,7 @@ StackFrame::epilogue(JSContext *cx)
     JS_ASSERT(!hasBlockChain());
 
     RootedScript script(cx, this->script());
-    probes::ExitScript(cx, script, script->function(), this);
+    probes::ExitScript(cx, script, script->function(), hasPushedSPSFrame());
 
     if (isEvalFrame()) {
         if (isStrictEvalFrame()) {

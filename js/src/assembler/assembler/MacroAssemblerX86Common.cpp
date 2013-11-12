@@ -16,6 +16,8 @@ MacroAssemblerX86Common::SSECheckState MacroAssemblerX86Common::s_sseCheckState 
 
 #ifdef DEBUG
 bool MacroAssemblerX86Common::s_floatingPointDisabled = false;
+bool MacroAssemblerX86Common::s_SSE3Disabled = false;
+bool MacroAssemblerX86Common::s_SSE4Disabled = false;
 #endif
 
 #endif /* WTF_CPU_X86 || WTF_CPU_X86_64 */
