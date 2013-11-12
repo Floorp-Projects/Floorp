@@ -1782,6 +1782,8 @@ nsLocalFile::Reveal()
         else 
             /* Fallback to GnomeVFS */
             return gnomevfs->ShowURIForInput(mPath);
+    } else if (giovfs && NS_SUCCEEDED(giovfs->OrgFreedesktopFileManager1ShowItems(mPath))) {
+        return NS_OK;
     } else {
         nsCOMPtr<nsIFile> parentDir;
         nsAutoCString dirPath;
