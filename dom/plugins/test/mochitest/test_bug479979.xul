@@ -28,7 +28,10 @@ function runTests() {
   is(exceptionThrown, false, "Exception thrown setting undefined variable.");
   is(rv, false, "Setting undefined variable succeeded.");
 
-  SimpleTest.finish();
+  // give the UI a chance to settle with the current enabled plugin state
+  // before we finish the test and reset the state to disabled. Otherwise
+  // the UI shows the plugin infobar!
+  SimpleTest.executeSoon(SimpleTest.finish);
 }
 ]]>
 </script>
