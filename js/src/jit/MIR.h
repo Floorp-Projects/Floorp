@@ -6888,6 +6888,58 @@ class MGuardObjectType
     }
 };
 
+// Guard on an object's identity, inclusively or exclusively.
+class MGuardObjectIdentity
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    CompilerRoot<JSObject *> singleObject_;
+    bool bailOnEquality_;
+
+    MGuardObjectIdentity(MDefinition *obj, JSObject *singleObject, bool bailOnEquality)
+      : MUnaryInstruction(obj),
+        singleObject_(singleObject),
+        bailOnEquality_(bailOnEquality)
+    {
+        setGuard();
+        setMovable();
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(GuardObjectIdentity)
+
+    static MGuardObjectIdentity *New(MDefinition *obj, JSObject *singleObject,
+                                 bool bailOnEquality) {
+        return new MGuardObjectIdentity(obj, singleObject, bailOnEquality);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *obj() const {
+        return getOperand(0);
+    }
+    JSObject *singleObject() const {
+        return singleObject_;
+    }
+    bool bailOnEquality() const {
+        return bailOnEquality_;
+    }
+    bool congruentTo(MDefinition *ins) const {
+        if (!ins->isGuardObjectIdentity())
+            return false;
+        if (singleObject() != ins->toGuardObjectIdentity()->singleObject())
+            return false;
+        if (bailOnEquality() != ins->toGuardObjectIdentity()->bailOnEquality())
+            return false;
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
 // Guard on an object's class.
 class MGuardClass
   : public MUnaryInstruction,
