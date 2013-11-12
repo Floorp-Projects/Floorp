@@ -5,28 +5,21 @@
 
 #include <windows.h>
 #include <winternl.h>
+#include <io.h>
 
-#include <stdio.h>
-#include <string.h>
-
+#pragma warning( push )
+#pragma warning( disable : 4275 4530 ) // See msvc-stl-wrapper.template.h
 #include <map>
+#pragma warning( pop )
 
-#include "nsXULAppAPI.h"
-
+#define MOZ_NO_MOZALLOC
 #include "nsAutoPtr.h"
-#include "nsThreadUtils.h"
-
-#include "prlog.h"
 
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
 
 using namespace mozilla;
-
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
 
 #define ALL_VERSIONS   ((unsigned long long)-1LL)
 
@@ -153,7 +146,47 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
 // define this for very verbose dll load debug spew
 #undef DEBUG_very_verbose
 
-extern bool gInXPCOMLoadOnMainThread;
+static const char kBlockedDllsParameter[] = "BlockedDllList=";
+static const int kBlockedDllsParameterLen =
+  sizeof(kBlockedDllsParameter) - 1;
+
+static const char kBlocklistInitFailedParameter[] = "BlocklistInitFailed=";
+static const int kBlocklistInitFailedParameterLen =
+  sizeof(kBlocklistInitFailedParameter) - 1;
+
+static const char kUser32BeforeBlocklistParameter[] = "User32BeforeBlocklist=";
+static const int kUser32BeforeBlocklistParameterLen =
+  sizeof(kUser32BeforeBlocklistParameterLen) - 1;
+
+static DWORD sThreadLoadingXPCOMModule;
+static bool sBlocklistInitFailed;
+static bool sUser32BeforeBlocklist;
+
+// Duplicated from xpcom glue. Ideally this should be shared.
+static void
+printf_stderr(const char *fmt, ...)
+{
+  if (IsDebuggerPresent()) {
+    char buf[2048];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    buf[sizeof(buf) - 1] = '\0';
+    va_end(args);
+    OutputDebugStringA(buf);
+  }
+
+  FILE *fp = _fdopen(_dup(2), "a");
+  if (!fp)
+      return;
+
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(fp, fmt, args);
+  va_end(args);
+
+  fclose(fp);
+}
 
 namespace {
 
@@ -170,7 +203,7 @@ struct RVAMap {
     DWORD alignedOffset = (offset / info.dwAllocationGranularity) *
                           info.dwAllocationGranularity;
 
-    NS_ASSERTION(offset - alignedOffset < info.dwAllocationGranularity, "Wtf");
+    MOZ_ASSERT(offset - alignedOffset < info.dwAllocationGranularity, "Wtf");
 
     mRealView = ::MapViewOfFile(map, FILE_MAP_READ, 0, alignedOffset,
                                 sizeof(T) + (offset - alignedOffset));
@@ -544,7 +577,7 @@ continue_loading:
   printf_stderr("LdrLoadDll: continuing load... ('%S')\n", moduleFileName->Buffer);
 #endif
 
-  if (gInXPCOMLoadOnMainThread && NS_IsMainThread()) {
+  if (GetCurrentThreadId() == sThreadLoadingXPCOMModule) {
     // Check to ensure that the DLL has ASLR.
     full_fname = getFullPath(filePath, fname);
     if (!full_fname) {
@@ -566,31 +599,56 @@ WindowsDllInterceptor NtDllIntercept;
 
 } // anonymous namespace
 
-void
-XRE_SetupDllBlocklist()
+NS_EXPORT void
+DllBlocklist_Initialize()
 {
+  if (GetModuleHandleA("user32.dll")) {
+    sUser32BeforeBlocklist = true;
+  }
+
   NtDllIntercept.Init("ntdll.dll");
 
   ReentrancySentinel::InitializeStatics();
 
   bool ok = NtDllIntercept.AddHook("LdrLoadDll", reinterpret_cast<intptr_t>(patched_LdrLoadDll), (void**) &stub_LdrLoadDll);
 
+  if (!ok) {
+    sBlocklistInitFailed = true;
 #ifdef DEBUG
-  if (!ok)
     printf_stderr ("LdrLoadDll hook failed, no dll blocklisting active\n");
 #endif
-
-#ifdef MOZ_CRASHREPORTER
-  if (!ok) {
-    CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DllBlockList Failed\n"));
   }
-#endif
 }
 
-#ifdef MOZ_CRASHREPORTER
-void
-CrashReporter::WriteBlockedDlls(HANDLE file)
+NS_EXPORT void
+DllBlocklist_SetInXPCOMLoadOnMainThread(bool inXPCOMLoadOnMainThread)
 {
-  DllBlockSet::Write(file);
+  if (inXPCOMLoadOnMainThread) {
+    MOZ_ASSERT(sThreadLoadingXPCOMModule == 0, "Only one thread should be doing this");
+    sThreadLoadingXPCOMModule = GetCurrentThreadId();
+  } else {
+    sThreadLoadingXPCOMModule = 0;
+  }
 }
-#endif
+
+NS_EXPORT void
+DllBlocklist_WriteNotes(HANDLE file)
+{
+  DWORD nBytes;
+
+  WriteFile(file, kBlockedDllsParameter, kBlockedDllsParameterLen, &nBytes, nullptr);
+  DllBlockSet::Write(file);
+  WriteFile(file, "\n", 1, &nBytes, nullptr);
+
+  if (sBlocklistInitFailed) {
+    WriteFile(file, kBlocklistInitFailedParameter,
+              kBlocklistInitFailedParameterLen, &nBytes, nullptr);
+    WriteFile(file, "1\n", 2, &nBytes, nullptr);
+  }
+
+  if (sUser32BeforeBlocklist) {
+    WriteFile(file, kUser32BeforeBlocklistParameter,
+              kUser32BeforeBlocklistParameterLen, &nBytes, nullptr);
+    WriteFile(file, "1\n", 2, &nBytes, nullptr);
+  }
+}
