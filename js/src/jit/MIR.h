@@ -3673,8 +3673,15 @@ class MPowHalf
   : public MUnaryInstruction,
     public DoublePolicy<0>
 {
+    bool operandIsNeverNegativeInfinity_;
+    bool operandIsNeverNegativeZero_;
+    bool operandIsNeverNaN_;
+
     MPowHalf(MDefinition *input)
-      : MUnaryInstruction(input)
+      : MUnaryInstruction(input),
+        operandIsNeverNegativeInfinity_(false),
+        operandIsNeverNegativeZero_(false),
+        operandIsNeverNaN_(false)
     {
         setResultType(MIRType_Double);
         setMovable();
@@ -3688,12 +3695,22 @@ class MPowHalf
     bool congruentTo(MDefinition *ins) const {
         return congruentIfOperandsEqual(ins);
     }
+    bool operandIsNeverNegativeInfinity() const {
+        return operandIsNeverNegativeInfinity_;
+    }
+    bool operandIsNeverNegativeZero() const {
+        return operandIsNeverNegativeZero_;
+    }
+    bool operandIsNeverNaN() const {
+        return operandIsNeverNaN_;
+    }
     TypePolicy *typePolicy() {
         return this;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    void collectRangeInfo();
 };
 
 // Inline implementation of Math.random().
