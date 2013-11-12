@@ -587,7 +587,7 @@ Rule.prototype = {
           store.userProperties.setProperty(
             this.style,
             textProp.name,
-            cssProp.value);
+            textProp.value);
         }
         textProp.priority = cssProp.priority;
       }
