@@ -110,31 +110,31 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
  { TLS_RSA_WITH_AES_256_CBC_SHA256,         SSL_ALLOWED, PR_TRUE,  PR_FALSE},
 
 #ifdef NSS_ENABLE_ECC
- { TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,        SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,    SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { TLS_ECDHE_RSA_WITH_RC4_128_SHA,          SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,        SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,      SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,   SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_ECDHE_RSA_WITH_RC4_128_SHA,          SSL_ALLOWED, PR_FALSE, PR_FALSE},
 #endif /* NSS_ENABLE_ECC */
  { TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA,   SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,   SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { TLS_DHE_DSS_WITH_RC4_128_SHA,            SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_DHE_RSA_WITH_AES_128_CBC_SHA,        SSL_ALLOWED, PR_TRUE,  PR_FALSE},
  { TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,     SSL_ALLOWED, PR_TRUE,  PR_FALSE},
  { TLS_DHE_DSS_WITH_AES_128_CBC_SHA,        SSL_ALLOWED, PR_TRUE,  PR_FALSE},
+ { TLS_DHE_DSS_WITH_RC4_128_SHA,            SSL_ALLOWED, PR_FALSE, PR_FALSE},
 #ifdef NSS_ENABLE_ECC
- { TLS_ECDH_RSA_WITH_RC4_128_SHA,           SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,       SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { TLS_ECDH_ECDSA_WITH_RC4_128_SHA,         SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_ECDH_RSA_WITH_RC4_128_SHA,           SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,     SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_ECDH_ECDSA_WITH_RC4_128_SHA,         SSL_ALLOWED, PR_FALSE, PR_FALSE},
 #endif /* NSS_ENABLE_ECC */
  { TLS_RSA_WITH_SEED_CBC_SHA,               SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_RSA_WITH_CAMELLIA_128_CBC_SHA,       SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { SSL_RSA_WITH_RC4_128_SHA,                SSL_ALLOWED, PR_TRUE,  PR_FALSE},
- { SSL_RSA_WITH_RC4_128_MD5,                SSL_ALLOWED, PR_TRUE,  PR_FALSE},
  { TLS_RSA_WITH_AES_128_CBC_SHA,            SSL_ALLOWED, PR_TRUE,  PR_FALSE},
  { TLS_RSA_WITH_AES_128_CBC_SHA256,         SSL_ALLOWED, PR_TRUE,  PR_FALSE},
+ { SSL_RSA_WITH_RC4_128_SHA,                SSL_ALLOWED, PR_TRUE,  PR_FALSE},
+ { SSL_RSA_WITH_RC4_128_MD5,                SSL_ALLOWED, PR_TRUE,  PR_FALSE},
 
 #ifdef NSS_ENABLE_ECC
  { TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,   SSL_ALLOWED, PR_FALSE, PR_FALSE},
@@ -593,8 +593,9 @@ void SSL_AtomicIncrementLong(long * x)
 }
 
 static PRBool
-ssl3_CipherSuiteAllowedForVersion(ssl3CipherSuite cipherSuite,
-				  SSL3ProtocolVersion version)
+ssl3_CipherSuiteAllowedForVersionRange(
+    ssl3CipherSuite cipherSuite,
+    const SSLVersionRange *vrange)
 {
     switch (cipherSuite) {
     /* See RFC 4346 A.5. Export cipher suites must not be used in TLS 1.1 or
@@ -611,7 +612,7 @@ ssl3_CipherSuiteAllowedForVersion(ssl3CipherSuite cipherSuite,
      *   SSL_DH_ANON_EXPORT_WITH_RC4_40_MD5:     never implemented
      *   SSL_DH_ANON_EXPORT_WITH_DES40_CBC_SHA:  never implemented
      */
-	return version <= SSL_LIBRARY_VERSION_TLS_1_0;
+	return vrange->min <= SSL_LIBRARY_VERSION_TLS_1_0;
     case TLS_DHE_RSA_WITH_AES_256_CBC_SHA256:
     case TLS_RSA_WITH_AES_256_CBC_SHA256:
     case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:
@@ -623,7 +624,7 @@ ssl3_CipherSuiteAllowedForVersion(ssl3CipherSuite cipherSuite,
     case TLS_RSA_WITH_AES_128_CBC_SHA256:
     case TLS_RSA_WITH_AES_128_GCM_SHA256:
     case TLS_RSA_WITH_NULL_SHA256:
-	return version >= SSL_LIBRARY_VERSION_TLS_1_2;
+	return vrange->max >= SSL_LIBRARY_VERSION_TLS_1_2;
     default:
 	return PR_TRUE;
     }
@@ -766,7 +767,8 @@ ssl3_config_match_init(sslSocket *ss)
 }
 
 
-/* return PR_TRUE if suite matches policy and enabled state */
+/* return PR_TRUE if suite matches policy, enabled state and is applicable to
+ * the given version range. */
 /* It would be a REALLY BAD THING (tm) if we ever permitted the use
 ** of a cipher that was NOT_ALLOWED.  So, if this is ever called with
 ** policy == SSL_NOT_ALLOWED, report no match.
@@ -774,7 +776,8 @@ ssl3_config_match_init(sslSocket *ss)
 /* adjust suite enabled to the availability of a token that can do the
  * cipher suite. */
 static PRBool
-config_match(ssl3CipherSuiteCfg *suite, int policy, PRBool enabled)
+config_match(ssl3CipherSuiteCfg *suite, int policy, PRBool enabled,
+	     const SSLVersionRange *vrange)
 {
     PORT_Assert(policy != SSL_NOT_ALLOWED && enabled != PR_FALSE);
     if (policy == SSL_NOT_ALLOWED || !enabled)
@@ -782,10 +785,13 @@ config_match(ssl3CipherSuiteCfg *suite, int policy, PRBool enabled)
     return (PRBool)(suite->enabled &&
                     suite->isPresent &&
 	            suite->policy != SSL_NOT_ALLOWED &&
-		    suite->policy <= policy);
+		    suite->policy <= policy &&
+		    ssl3_CipherSuiteAllowedForVersionRange(
+                        suite->cipher_suite, vrange));
 }
 
-/* return number of cipher suites that match policy and enabled state */
+/* return number of cipher suites that match policy, enabled state and are
+ * applicable for the configured protocol version range. */
 /* called from ssl3_SendClientHello and ssl3_ConstructV2CipherSpecsHack */
 static int
 count_cipher_suites(sslSocket *ss, int policy, PRBool enabled)
@@ -796,7 +802,7 @@ count_cipher_suites(sslSocket *ss, int policy, PRBool enabled)
 	return 0;
     }
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
-	if (config_match(&ss->cipherSuites[i], policy, enabled))
+	if (config_match(&ss->cipherSuites[i], policy, enabled, &ss->vrange))
 	    count++;
     }
     if (count <= 0) {
@@ -813,6 +819,11 @@ static SECStatus
 Null_Cipher(void *ctx, unsigned char *output, int *outputLen, int maxOutputLen,
 	    const unsigned char *input, int inputLen)
 {
+    if (inputLen > maxOutputLen) {
+        *outputLen = 0;  /* Match PK11_CipherOp in setting outputLen */
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
+    }
     *outputLen = inputLen;
     if (input != output)
 	PORT_Memcpy(output, input, inputLen);
@@ -5089,7 +5100,7 @@ ssl3_SendClientHello(sslSocket *ss, PRBool resending)
     }
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
 	ssl3CipherSuiteCfg *suite = &ss->cipherSuites[i];
-	if (config_match(suite, ss->ssl3.policy, PR_TRUE)) {
+	if (config_match(suite, ss->ssl3.policy, PR_TRUE, &ss->vrange)) {
 	    actual_count++;
 	    if (actual_count > num_suites) {
 		/* set error card removal/insertion error */
@@ -6124,14 +6135,18 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
 	ssl3CipherSuiteCfg *suite = &ss->cipherSuites[i];
 	if (temp == suite->cipher_suite) {
-	    if (!config_match(suite, ss->ssl3.policy, PR_TRUE)) {
+	    SSLVersionRange vrange = {ss->version, ss->version};
+	    if (!config_match(suite, ss->ssl3.policy, PR_TRUE, &vrange)) {
+		/* config_match already checks whether the cipher suite is
+		 * acceptable for the version, but the check is repeated here
+		 * in order to give a more precise error code. */
+		if (!ssl3_CipherSuiteAllowedForVersionRange(temp, &vrange)) {
+		    desc    = handshake_failure;
+		    errCode = SSL_ERROR_CIPHER_DISALLOWED_FOR_VERSION;
+		    goto alert_loser;
+		}
+
 		break;	/* failure */
-	    }
-	    if (!ssl3_CipherSuiteAllowedForVersion(suite->cipher_suite,
-						   ss->version)) {
-		desc    = handshake_failure;
-		errCode = SSL_ERROR_CIPHER_DISALLOWED_FOR_VERSION;
-		goto alert_loser;
 	    }
 	
 	    suite_found = PR_TRUE;
@@ -7521,6 +7536,9 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     */
     if (sid) do {
 	ssl3CipherSuiteCfg *suite;
+#ifdef PARANOID
+	SSLVersionRange vrange = {ss->version, ss->version};
+#endif
 
 	/* Check that the cached compression method is still enabled. */
 	if (!compressionEnabled(ss, sid->u.ssl3.compression))
@@ -7549,7 +7567,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	 * The product policy won't change during the process lifetime.  
 	 * Implemented ("isPresent") shouldn't change for servers.
 	 */
-	if (!config_match(suite, ss->ssl3.policy, PR_TRUE))
+	if (!config_match(suite, ss->ssl3.policy, PR_TRUE, &vrange))
 	    break;
 #else
 	if (!suite->enabled)
@@ -7597,9 +7615,8 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     */
     for (j = 0; j < ssl_V3_SUITES_IMPLEMENTED; j++) {
 	ssl3CipherSuiteCfg *suite = &ss->cipherSuites[j];
-	if (!config_match(suite, ss->ssl3.policy, PR_TRUE) ||
-	    !ssl3_CipherSuiteAllowedForVersion(suite->cipher_suite,
-					       ss->version)) {
+	SSLVersionRange vrange = {ss->version, ss->version};
+	if (!config_match(suite, ss->ssl3.policy, PR_TRUE, &vrange)) {
 	    continue;
 	}
 	for (i = 0; i + 1 < suites.len; i += 2) {
@@ -8131,9 +8148,8 @@ ssl3_HandleV2ClientHello(sslSocket *ss, unsigned char *buffer, int length)
     */
     for (j = 0; j < ssl_V3_SUITES_IMPLEMENTED; j++) {
 	ssl3CipherSuiteCfg *suite = &ss->cipherSuites[j];
-	if (!config_match(suite, ss->ssl3.policy, PR_TRUE) ||
-	    !ssl3_CipherSuiteAllowedForVersion(suite->cipher_suite,
-					       ss->version)) {
+	SSLVersionRange vrange = {ss->version, ss->version};
+	if (!config_match(suite, ss->ssl3.policy, PR_TRUE, &vrange)) {
 	    continue;
 	}
 	for (i = 0; i+2 < suite_length; i += 3) {
@@ -11569,7 +11585,7 @@ ssl3_ConstructV2CipherSpecsHack(sslSocket *ss, unsigned char *cs, int *size)
     /* ssl3_config_match_init was called by the caller of this function. */
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
 	ssl3CipherSuiteCfg *suite = &ss->cipherSuites[i];
-	if (config_match(suite, SSL_ALLOWED, PR_TRUE)) {
+	if (config_match(suite, SSL_ALLOWED, PR_TRUE, &ss->vrange)) {
 	    if (cs != NULL) {
 		*cs++ = 0x00;
 		*cs++ = (suite->cipher_suite >> 8) & 0xFF;
