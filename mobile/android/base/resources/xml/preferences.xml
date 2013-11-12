@@ -11,14 +11,14 @@
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
                   android:enabled="false">
 
-    <org.mozilla.gecko.SyncPreference android:key="android.not_a_preference.sync"
-                                      android:title="@string/pref_sync"
-                                      android:persistent="false" />
+    <org.mozilla.gecko.preferences.SyncPreference android:key="android.not_a_preference.sync"
+                                                  android:title="@string/pref_sync"
+                                                  android:persistent="false" />
 
     <PreferenceScreen android:title="@string/pref_category_customize" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.GeckoPreferences" >
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
             <extra
                 android:name="resource"
                 android:value="preferences_customize" />
@@ -28,7 +28,7 @@
     <PreferenceScreen android:title="@string/pref_category_display" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.GeckoPreferences" >
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
             <extra
                 android:name="resource"
                 android:value="preferences_display" />
@@ -38,7 +38,7 @@
     <PreferenceScreen android:title="@string/pref_category_privacy_short" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.GeckoPreferences" >
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
             <extra
                 android:name="resource"
                 android:value="preferences_privacy" />
@@ -48,7 +48,7 @@
     <PreferenceScreen android:title="@string/pref_category_vendor">
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.GeckoPreferences" >
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
             <extra
                 android:name="resource"
                 android:value="preferences_vendor" />
@@ -57,7 +57,7 @@
     <PreferenceScreen android:title="@string/pref_category_devtools">
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.GeckoPreferences" >
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
             <extra
                 android:name="resource"
                 android:value="preferences_devtools" />
