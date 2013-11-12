@@ -63,8 +63,7 @@ probes::EnterScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
 }
 
 inline bool
-probes::ExitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
-                   AbstractFramePtr fp)
+probes::ExitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun, bool popSPSFrame)
 {
     bool ok = true;
 
@@ -76,22 +75,10 @@ probes::ExitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
     cx->doFunctionCallback(maybeFun, script, 0);
 #endif
 
-    JSRuntime *rt = cx->runtime();
-    /*
-     * Coming from IonMonkey, the fp might not be known (fp == nullptr), but
-     * IonMonkey will only call exitScript() when absolutely necessary, so it is
-     * guaranteed that fp->hasPushedSPSFrame() would have been true
-     */
-    if ((!fp && rt->spsProfiler.enabled()) || (fp && fp.hasPushedSPSFrame()))
-        rt->spsProfiler.exit(cx, script, maybeFun);
-    return ok;
-}
+    if (popSPSFrame)
+        cx->runtime()->spsProfiler.exit(cx, script, maybeFun);
 
-inline bool
-probes::ExitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
-                   StackFrame *fp)
-{
-    return probes::ExitScript(cx, script, maybeFun, fp ? AbstractFramePtr(fp) : AbstractFramePtr());
+    return ok;
 }
 
 inline bool
