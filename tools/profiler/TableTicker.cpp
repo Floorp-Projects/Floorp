@@ -342,18 +342,18 @@ void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
     addDynamicTag(aProfile, 'c', sampleLabel);
     if (entry.js()) {
       if (!entry.pc()) {
-        // The JIT only allows the top-most entry to have a NULL pc
+        // The JIT only allows the top-most entry to have a nullptr pc
         MOZ_ASSERT(&entry == &stack->mStack[stack->stackSize() - 1]);
         // If stack-walking was disabled, then that's just unfortunate
         if (lastpc) {
           jsbytecode *jspc = js::ProfilingGetPC(stack->mRuntime, entry.script(),
                                                 lastpc);
           if (jspc) {
-            lineno = JS_PCToLineNumber(NULL, entry.script(), jspc);
+            lineno = JS_PCToLineNumber(nullptr, entry.script(), jspc);
           }
         }
       } else {
-        lineno = JS_PCToLineNumber(NULL, entry.script(), entry.pc());
+        lineno = JS_PCToLineNumber(nullptr, entry.script(), entry.pc());
       }
     } else {
       lineno = entry.line();
@@ -385,13 +385,13 @@ static void mergeNativeBacktrace(ThreadProfile &aProfile, const PCArray &array) 
    * and the pseudostack we managed during execution. We want to consolidate
    * the two in order. We do so by merging using the approximate stack address
    * when each entry was push. When pushing JS entry we may not now the stack
-   * address in which case we have a NULL stack address in which case we assume
+   * address in which case we have a nullptr stack address in which case we assume
    * that it follows immediatly the previous element.
    *
    *  C Stack | Address    --  Pseudo Stack | Address
    *  main()  | 0x100          run_js()     | 0x40
-   *  start() | 0x80           jsCanvas()   | NULL
-   *  timer() | 0x50           drawLine()   | NULL
+   *  start() | 0x80           jsCanvas()   | nullptr
+   *  timer() | 0x50           drawLine()   | nullptr
    *  azure() | 0x10
    *
    * Merged: main(), start(), timer(), run_js(), jsCanvas(), drawLine(), azure()
@@ -673,7 +673,7 @@ static void print_callback(const ProfileEntry& entry, const char* tagStringData)
 void mozilla_sampler_print_location1()
 {
   if (!stack_key_initialized)
-    profiler_init(NULL);
+    profiler_init(nullptr);
 
   SyncProfile* syncProfile = NewSyncProfile();
   if (!syncProfile) {
@@ -681,7 +681,7 @@ void mozilla_sampler_print_location1()
   }
 
   syncProfile->BeginUnwind();
-  doSampleStackTrace(syncProfile->GetPseudoStack(), *syncProfile, NULL);
+  doSampleStackTrace(syncProfile->GetPseudoStack(), *syncProfile, nullptr);
   syncProfile->EndUnwind();
 
   printf_stderr("Backtrace:\n");

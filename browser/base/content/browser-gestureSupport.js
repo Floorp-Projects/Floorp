@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
+
 // Simple gestures support
 //
 // As per bug #412486, web content must not be allowed to receive any
@@ -941,24 +943,36 @@ let gHistorySwipeAnimation = {
         (gBrowser.webNavigation.sessionHistory.index < 0))
       return;
 
-    let browser = gBrowser.selectedBrowser;
-    let r = browser.getBoundingClientRect();
-    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                          "canvas");
-    canvas.mozOpaque = true;
-    canvas.width = r.width;
-    canvas.height = r.height;
-    let ctx = canvas.getContext("2d");
-    let zoom = browser.markupDocumentViewer.fullZoom;
-    ctx.scale(zoom, zoom);
-    ctx.drawWindow(browser.contentWindow,
-                   0, 0, r.width / zoom, r.height / zoom, "white",
-                   ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_VIEW |
-                   ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
-                   ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
+    let canvas = null;
 
-    this._installCurrentPageSnapshot(canvas);
-    this._assignSnapshotToCurrentBrowser(canvas);
+    TelemetryStopwatch.start("FX_GESTURE_TAKE_SNAPSHOT_OF_PAGE");
+    try {
+      let browser = gBrowser.selectedBrowser;
+      let r = browser.getBoundingClientRect();
+      canvas = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                            "canvas");
+      canvas.mozOpaque = true;
+      canvas.width = r.width;
+      canvas.height = r.height;
+      let ctx = canvas.getContext("2d");
+      let zoom = browser.markupDocumentViewer.fullZoom;
+      ctx.scale(zoom, zoom);
+      ctx.drawWindow(browser.contentWindow,
+                     0, 0, r.width / zoom, r.height / zoom, "white",
+                     ctx.DRAWWINDOW_DO_NOT_FLUSH | ctx.DRAWWINDOW_DRAW_VIEW |
+                     ctx.DRAWWINDOW_ASYNC_DECODE_IMAGES |
+                     ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
+    } finally {
+      TelemetryStopwatch.finish("FX_GESTURE_TAKE_SNAPSHOT_OF_PAGE");
+    }
+
+    TelemetryStopwatch.start("FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE");
+    try {
+      this._installCurrentPageSnapshot(canvas);
+      this._assignSnapshotToCurrentBrowser(canvas);
+    } finally {
+      TelemetryStopwatch.finish("FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE");
+    }
   },
 
   /**

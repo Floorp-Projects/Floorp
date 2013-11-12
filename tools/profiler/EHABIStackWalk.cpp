@@ -480,13 +480,13 @@ bool operator<(const EHEntryHandle &lhs, const EHEntryHandle &rhs) {
 const EHEntry *EHTable::lookup(uint32_t aPC) const {
   MOZ_ASSERT(aPC >= mStartPC);
   if (aPC >= mEndPC)
-    return NULL;
+    return nullptr;
 
   std::vector<EHEntryHandle>::const_iterator begin = mEntries.begin();
   std::vector<EHEntryHandle>::const_iterator end = mEntries.end();
   MOZ_ASSERT(begin < end);
   if (aPC < reinterpret_cast<uint32_t>(begin->value()->startPC.compute()))
-    return NULL;
+    return nullptr;
 
   while (end - begin > 1) {
     std::vector<EHEntryHandle>::const_iterator mid = begin + (end - begin) / 2;

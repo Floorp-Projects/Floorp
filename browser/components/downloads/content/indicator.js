@@ -361,7 +361,7 @@ const DownloadsIndicatorView = {
    */
   set hasDownloads(aValue)
   {
-    if (this._hasDownloads != aValue) {
+    if (this._hasDownloads != aValue || (!this._operational && aValue)) {
       this._hasDownloads = aValue;
 
       // If there is at least one download, ensure that the view elements are

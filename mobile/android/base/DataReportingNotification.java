@@ -5,8 +5,8 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.GeckoPreferences;
-import org.mozilla.gecko.GeckoPreferenceFragment;
+import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.preferences.GeckoPreferenceFragment;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Notification;

@@ -47,7 +47,7 @@ typedef NSInteger NSWindowAnimationBehavior;
 #endif
 
 typedef struct _nsCocoaWindowList {
-  _nsCocoaWindowList() : prev(NULL), window(NULL) {}
+  _nsCocoaWindowList() : prev(nullptr), window(nullptr) {}
   struct _nsCocoaWindowList *prev;
   nsCocoaWindow *window; // Weak
 } nsCocoaWindowList;

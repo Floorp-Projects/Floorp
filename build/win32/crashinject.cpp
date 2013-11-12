@@ -27,11 +27,12 @@ int main(int argc, char** argv)
 
   // find our DLL to inject
   wchar_t filename[_MAX_PATH];
-  if (GetModuleFileNameW(NULL, filename, sizeof(filename) / sizeof(wchar_t)) == 0)
+  if (GetModuleFileNameW(nullptr, filename,
+                         sizeof(filename) / sizeof(wchar_t)) == 0)
     return 1;
 
   wchar_t* slash = wcsrchr(filename, L'\\');
-  if (slash == NULL)
+  if (slash == nullptr)
     return 1;
 
   slash++;
@@ -41,7 +42,7 @@ int main(int argc, char** argv)
   HANDLE targetProc = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION,
                                   FALSE,
                                   pid);
-  if (targetProc == NULL) {
+  if (targetProc == nullptr) {
     fprintf(stderr, "Error %d opening target process\n", GetLastError());
     return 1;
   }
@@ -58,16 +59,16 @@ int main(int argc, char** argv)
    */
   HMODULE hKernel32 = GetModuleHandleW(L"Kernel32");
   // allocate some memory to hold the path in the remote process
-  void*   pLibRemote = VirtualAllocEx(targetProc, NULL, sizeof(filename),
+  void*   pLibRemote = VirtualAllocEx(targetProc, nullptr, sizeof(filename),
                                       MEM_COMMIT, PAGE_READWRITE);
-  if (pLibRemote == NULL) {
+  if (pLibRemote == nullptr) {
     fprintf(stderr, "Error %d in VirtualAllocEx\n", GetLastError());
     CloseHandle(targetProc);
     return 1;
   }
 
   if (!WriteProcessMemory(targetProc, pLibRemote, (void*)filename,
-                          sizeof(filename), NULL)) {
+                          sizeof(filename), nullptr)) {
     fprintf(stderr, "Error %d in WriteProcessMemory\n", GetLastError());
     VirtualFreeEx(targetProc, pLibRemote, sizeof(filename), MEM_RELEASE);
     CloseHandle(targetProc);
@@ -75,11 +76,11 @@ int main(int argc, char** argv)
   }
   // Now create a thread in the target process that will load our DLL
   HANDLE hThread = CreateRemoteThread(
-                     targetProc, NULL, 0,
+                     targetProc, nullptr, 0,
                      (LPTHREAD_START_ROUTINE)GetProcAddress(hKernel32,
                                                             "LoadLibraryW"),
-                     pLibRemote, 0, NULL);
-  if (hThread == NULL) {
+                     pLibRemote, 0, nullptr);
+  if (hThread == nullptr) {
     fprintf(stderr, "Error %d in CreateRemoteThread\n", GetLastError());
     VirtualFreeEx(targetProc, pLibRemote, sizeof(filename), MEM_RELEASE);
     CloseHandle(targetProc);

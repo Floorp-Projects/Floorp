@@ -370,7 +370,7 @@ class MutexBase
 public:
   MutexBase()
   {
-    pthread_mutex_init(&mMutex, NULL);
+    pthread_mutex_init(&mMutex, nullptr);
   }
 
   void Lock()
@@ -1259,7 +1259,7 @@ replace_realloc(void* aOldPtr, size_t aSize)
     return InfallibleAllocPolicy::realloc_(aOldPtr, aSize);
   }
 
-  // If |aOldPtr| is NULL, the call is equivalent to |malloc(aSize)|.
+  // If |aOldPtr| is nullptr, the call is equivalent to |malloc(aSize)|.
   if (!aOldPtr) {
     return replace_malloc(aSize);
   }

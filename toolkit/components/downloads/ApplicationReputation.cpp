@@ -128,11 +128,16 @@ PendingLookup::HandleEvent(const nsACString& tables) {
     return OnComplete(true, NS_OK);
   }
 
+#if 0
   nsresult rv = SendRemoteQuery();
   if (NS_FAILED(rv)) {
     return OnComplete(false, rv);
   }
   return NS_OK;
+#else
+  // Revert when remote lookups are enabled (bug 933432)
+  return OnComplete(false, NS_OK);
+#endif
 }
 
 nsresult

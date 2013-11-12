@@ -8,14 +8,14 @@
                   android:title="@string/pref_category_vendor"
                   android:enabled="false">
 
-    <org.mozilla.gecko.LinkPreference android:title="@string/pref_about_firefox"
-                                      url="about:" />
+    <org.mozilla.gecko.preferences.LinkPreference android:title="@string/pref_about_firefox"
+                                                  url="about:" />
 
-    <org.mozilla.gecko.LinkPreference android:title="@string/pref_vendor_faqs"
-                                      url="https://support.mozilla.org/kb/firefox-android-faq"/>
+    <org.mozilla.gecko.preferences.LinkPreference android:title="@string/pref_vendor_faqs"
+                                                  url="https://support.mozilla.org/kb/firefox-android-faq"/>
 
-    <org.mozilla.gecko.LinkPreference android:title="@string/pref_vendor_feedback"
-                                      url="about:feedback" />
+    <org.mozilla.gecko.preferences.LinkPreference android:title="@string/pref_vendor_feedback"
+                                                  url="about:feedback" />
 
     <CheckBoxPreference android:key="android.not_a_preference.privacy.announcements.enabled"
                         android:title="@string/pref_show_product_announcements"
@@ -43,9 +43,9 @@
                             android:summary="@string/datareporting_fhr_summary2"
                             android:defaultValue="true" />
 
-        <org.mozilla.gecko.AlignRightLinkPreference android:key="android.not_a_preference.healthreport.link"
-                                                    android:title="@string/datareporting_abouthr_title"
-                                                    url="about:healthreport" />
+        <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.healthreport.link"
+                                                                android:title="@string/datareporting_abouthr_title"
+                                                                url="about:healthreport" />
 
     </PreferenceCategory>
 

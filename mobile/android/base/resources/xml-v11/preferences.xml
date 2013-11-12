@@ -11,38 +11,38 @@
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
                   android:enabled="false">
 
-    <org.mozilla.gecko.SyncPreference android:key="android.not_a_preference.sync"
-                                      android:title="@string/pref_sync"
-                                      android:persistent="false" />
+    <org.mozilla.gecko.preferences.SyncPreference android:key="android.not_a_preference.sync"
+                                                  android:title="@string/pref_sync"
+                                                  android:persistent="false" />
 
     <PreferenceScreen android:title="@string/pref_category_customize"
-                      android:fragment="org.mozilla.gecko.GeckoPreferenceFragment" >
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_customize"/>
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_display"
-                      android:fragment="org.mozilla.gecko.GeckoPreferenceFragment" >
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_display" />
     </PreferenceScreen>
 
 
     <PreferenceScreen android:title="@string/pref_category_privacy_short"
-                      android:fragment="org.mozilla.gecko.GeckoPreferenceFragment" >
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_privacy" />
     </PreferenceScreen>
 
 
     <PreferenceScreen android:title="@string/pref_category_vendor"
-                      android:fragment="org.mozilla.gecko.GeckoPreferenceFragment" >
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_vendor"/>
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_devtools"
-                      android:fragment="org.mozilla.gecko.GeckoPreferenceFragment" >
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_devtools"/>
     </PreferenceScreen>

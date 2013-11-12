@@ -162,9 +162,9 @@ Close()
 
     munmap(Buffers()[0]->Data(), sMappedSize);
     delete sBuffers;
-    sBuffers = NULL;
+    sBuffers = nullptr;
     delete sScreenSize;
-    sScreenSize = NULL;
+    sScreenSize = nullptr;
 
     close(sFd);
     sFd = -1;
