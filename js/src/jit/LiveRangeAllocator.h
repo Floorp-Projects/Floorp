@@ -618,6 +618,17 @@ class LiveRangeAllocator : public RegisterAllocator
         return addMove(moves, from, to);
     }
 
+    size_t findFirstNonCallSafepoint(CodePosition from) const
+    {
+        size_t i = 0;
+        for (; i < graph.numNonCallSafepoints(); i++) {
+            const LInstruction *ins = graph.getNonCallSafepoint(i);
+            if (from <= (forLSRA ? inputOf(ins) : outputOf(ins)))
+                break;
+        }
+        return i;
+    }
+
     void addLiveRegistersForInterval(VirtualRegister *reg, LiveInterval *interval)
     {
         // Fill in the live register sets for all non-call safepoints.
@@ -633,7 +644,7 @@ class LiveRangeAllocator : public RegisterAllocator
         size_t i = findFirstNonCallSafepoint(start);
         for (; i < graph.numNonCallSafepoints(); i++) {
             LInstruction *ins = graph.getNonCallSafepoint(i);
-            CodePosition pos = inputOf(ins);
+            CodePosition pos = forLSRA ? inputOf(ins) : outputOf(ins);
 
             // Safepoints are sorted, so we can shortcut out of this loop
             // if we go out of range.
