@@ -1007,11 +1007,11 @@ BacktrackingAllocator::isReusedInput(LUse *use, LInstruction *ins, bool consider
 }
 
 bool
-BacktrackingAllocator::isRegisterUse(LUse *use, LInstruction *ins)
+BacktrackingAllocator::isRegisterUse(LUse *use, LInstruction *ins, bool considerCopy)
 {
     switch (use->policy()) {
       case LUse::ANY:
-        return isReusedInput(use, ins);
+        return isReusedInput(use, ins, considerCopy);
 
       case LUse::REGISTER:
       case LUse::FIXED:
@@ -1578,22 +1578,9 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveInterval *interval, bool
         JS_ASSERT(iter->pos >= lastUse);
         lastUse = inputOf(ins);
 
-        switch (use->policy()) {
-          case LUse::ANY:
-            if (isReusedInput(iter->use, ins, /* considerCopy = */ true)) {
-                lastRegisterFrom = inputOf(ins);
-                lastRegisterTo = iter->pos.next();
-            }
-            break;
-
-          case LUse::REGISTER:
-          case LUse::FIXED:
+        if (isRegisterUse(use, ins, /* considerCopy = */ true)) {
             lastRegisterFrom = inputOf(ins);
             lastRegisterTo = iter->pos.next();
-            break;
-
-          default:
-            break;
         }
     }
 
