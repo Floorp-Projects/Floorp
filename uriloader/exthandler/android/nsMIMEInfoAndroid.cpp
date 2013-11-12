@@ -30,10 +30,7 @@ nsMIMEInfoAndroid::LoadUriInternal(nsIURI * aURI)
   nsCString uriScheme;
   aURI->GetScheme(uriScheme);
 
-  if (mozilla::AndroidBridge::Bridge())
-    return GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec), (mType.Equals(uriScheme) || mType.Equals(uriSpec)) ? EmptyString() : NS_ConvertUTF8toUTF16(mType)) ? NS_OK : NS_ERROR_FAILURE;
-
-  return NS_ERROR_FAILURE;
+  return GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec), (mType.Equals(uriScheme) || mType.Equals(uriSpec)) ? EmptyString() : NS_ConvertUTF8toUTF16(mType)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
