@@ -270,6 +270,7 @@ class DoubleToStringConverter {
   // exponent character, the exponent's sign, and at most 3 exponent digits).
   MFBT_API bool ToPrecision(double value,
                    int precision,
+                   bool* used_exponential_notation,
                    StringBuilder* result_builder) const;
 
   enum DtoaMode {
