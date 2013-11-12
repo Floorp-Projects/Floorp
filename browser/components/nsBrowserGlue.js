@@ -2030,6 +2030,13 @@ ContentPermissionPrompt.prototype = {
       }
     }
 
+    var browser = this._getBrowserForRequest(request);
+    var chromeWin = browser.ownerDocument.defaultView;
+    if (!chromeWin.PopupNotifications)
+      // Ignore requests from browsers hosted in windows that don't support
+      // PopupNotifications.
+      return;
+
     // Show the prompt.
     switch (request.type) {
     case "geolocation":

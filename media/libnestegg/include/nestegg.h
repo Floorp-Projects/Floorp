@@ -67,6 +67,8 @@ extern "C" {
 
 #define NESTEGG_CODEC_VP8    0 /**< Track uses Google On2 VP8 codec. */
 #define NESTEGG_CODEC_VORBIS 1 /**< Track uses Xiph Vorbis codec. */
+#define NESTEGG_CODEC_VP9    2 /**< Track uses Google On2 VP9 codec. */
+#define NESTEGG_CODEC_OPUS   3 /**< Track uses Xiph Opus codec. */
 
 #define NESTEGG_VIDEO_MONO              0 /**< Track is mono video. */
 #define NESTEGG_VIDEO_STEREO_LEFT_RIGHT 1 /**< Track is side-by-side stereo video.  Left first. */

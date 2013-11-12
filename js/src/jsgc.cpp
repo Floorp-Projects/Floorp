@@ -113,7 +113,8 @@ const AllocKind gc::slotsToThingKind[] = {
     /* 16 */ FINALIZE_OBJECT16
 };
 
-JS_STATIC_ASSERT(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT);
+static_assert(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT,
+              "We have defined a slot count for each kind.");
 
 const uint32_t Arena::ThingSizes[] = {
     sizeof(JSObject),           /* FINALIZE_OBJECT0             */
@@ -276,9 +277,8 @@ ArenaHeader::checkSynchronizedWithFreeList() const
 /* static */ void
 Arena::staticAsserts()
 {
-    JS_STATIC_ASSERT(sizeof(Arena) == ArenaSize);
-    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(ThingSizes) == FINALIZE_LIMIT);
-    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(FirstThingOffsets) == FINALIZE_LIMIT);
+    static_assert(JS_ARRAY_LENGTH(ThingSizes) == FINALIZE_LIMIT, "We have defined all thing sizes.");
+    static_assert(JS_ARRAY_LENGTH(FirstThingOffsets) == FINALIZE_LIMIT, "We have defined all offsets.");
 }
 
 template<typename T>
@@ -654,7 +654,7 @@ Chunk::init(JSRuntime *rt)
     info.numArenasFree = ArenasPerChunk;
     info.numArenasFreeCommitted = ArenasPerChunk;
     info.age = 0;
-    info.runtime = rt;
+    info.trailer.runtime = rt;
 
     /* Initialize the arena header state. */
     for (unsigned i = 0; i < ArenasPerChunk; i++) {
@@ -742,7 +742,7 @@ Chunk::fetchNextDecommittedArena()
     decommittedArenas.unset(offset);
 
     Arena *arena = &arenas[offset];
-    MarkPagesInUse(info.runtime, arena, ArenaSize);
+    MarkPagesInUse(info.trailer.runtime, arena, ArenaSize);
     arena->aheader.setAsNotAllocated();
 
     return &arena->aheader;
@@ -5328,15 +5328,18 @@ JS::GetGCNumber()
 }
 
 JS::AutoAssertNoGC::AutoAssertNoGC()
+  : runtime(js::TlsPerThreadData.get()->runtimeFromMainThread())
 {
-    JSRuntime *rt = js::TlsPerThreadData.get()->runtimeFromMainThread();
-    gcNumber = rt ? rt->gcNumber : size_t(-1);
+    gcNumber = runtime->gcNumber;
+}
+
+JS::AutoAssertNoGC::AutoAssertNoGC(JSRuntime *rt)
+  : runtime(rt), gcNumber(rt->gcNumber)
+{
 }
 
 JS::AutoAssertNoGC::~AutoAssertNoGC()
 {
-    JSRuntime *rt = js::TlsPerThreadData.get()->runtimeFromMainThread();
-    if (rt)
-        MOZ_ASSERT(gcNumber == rt->gcNumber, "GC ran inside an AutoAssertNoGC scope");
+    MOZ_ASSERT(gcNumber == runtime->gcNumber, "GC ran inside an AutoAssertNoGC scope.");
 }
 #endif

@@ -125,9 +125,10 @@ class TestElements(MarionetteTestCase):
     def test_timeout(self):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
+        button = self.marionette.find_element("id", "createDivButton")
+        button.click()
         self.assertRaises(NoSuchElementException, self.marionette.find_element, By.ID, "newDiv")
-        self.assertTrue(True, self.marionette.set_search_timeout(4000))
-        self.marionette.navigate(test_html)
+        self.assertTrue(True, self.marionette.set_search_timeout(8000))
         self.assertEqual(HTMLElement, type(self.marionette.find_element(By.ID, "newDiv")))
 
     def test_css_selector_scope_doesnt_start_at_rootnode(self):

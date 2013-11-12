@@ -2,6 +2,8 @@
 #
 # Copies the needed files from a directory containing the original
 # libvorbis source that we need for the Mozilla HTML5 media support.
+mkdir -p ./lib
+mkdir -p ./include/vorbis
 cp $1/lib/envelope.h ./lib/envelope.h
 cp $1/lib/lpc.h ./lib/lpc.h
 cp $1/lib/highlevel.h ./lib/highlevel.h
@@ -46,5 +48,36 @@ cp $1/todo.txt ./todo.txt
 cp $1/COPYING ./COPYING
 cp $1/README ./README
 cp $1/AUTHORS ./AUTHORS
+
+# Encoder support
+cp $1/lib/vorbisenc.c ./lib/vorbisenc.c
+cp $1/include/vorbis/vorbisenc.h ./include/vorbis/vorbisenc.h
+mkdir -p ./lib/modes
+cp $1/lib/modes/setup_44.h ./lib/modes/setup_44.h
+cp $1/lib/modes/setup_44u.h ./lib/modes/setup_44u.h
+cp $1/lib/modes/setup_44p51.h ./lib/modes/setup_44p51.h
+cp $1/lib/modes/setup_32.h ./lib/modes/setup_32.h
+cp $1/lib/modes/setup_8.h ./lib/modes/setup_8.h
+cp $1/lib/modes/setup_11.h ./lib/modes/setup_11.h
+cp $1/lib/modes/setup_16.h ./lib/modes/setup_16.h
+cp $1/lib/modes/setup_22.h ./lib/modes/setup_22.h
+cp $1/lib/modes/setup_X.h ./lib/modes/setup_X.h
+cp $1/lib/modes/floor_all.h ./lib/modes/floor_all.h
+cp $1/lib/modes/residue_44.h ./lib/modes/residue_44.h
+cp $1/lib/modes/residue_44u.h ./lib/modes/residue_44u.h
+cp $1/lib/modes/residue_44p51.h ./lib/modes/residue_44p51.h
+cp $1/lib/modes/residue_8.h ./lib/modes/residue_8.h
+cp $1/lib/modes/residue_16.h ./lib/modes/residue_16.h
+cp $1/lib/modes/psych_44.h ./lib/modes/psych_44.h
+cp $1/lib/modes/psych_8.h ./lib/modes/psych_8.h
+cp $1/lib/modes/psych_11.h ./lib/modes/psych_11.h
+cp $1/lib/modes/psych_16.h ./lib/modes/psych_16.h
+mkdir -p ./lib/books/coupled
+mkdir -p ./lib/books/floor
+mkdir -p ./lib/books/uncoupled
+cp $1/lib/books/coupled/res_books_stereo.h ./lib/books/coupled/
+cp $1/lib/books/coupled/res_books_51.h ./lib/books/coupled/
+cp $1/lib/books/floor/floor_books.h ./lib/books/floor/
+cp $1/lib/books/uncoupled/res_books_uncoupled.h ./lib/books/uncoupled/
 
 # Add any patches against upstream here.
