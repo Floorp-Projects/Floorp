@@ -1782,6 +1782,17 @@ struct nsStyleDisplay {
     return IsDisplayTypeInlineOutside(mOriginalDisplay);
   }
 
+  bool IsInnerTableStyle() const {
+    return NS_STYLE_DISPLAY_TABLE_CAPTION == mDisplay ||
+           NS_STYLE_DISPLAY_TABLE_CELL == mDisplay ||
+           NS_STYLE_DISPLAY_TABLE_ROW == mDisplay ||
+           NS_STYLE_DISPLAY_TABLE_ROW_GROUP == mDisplay ||
+           NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == mDisplay ||
+           NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == mDisplay ||
+           NS_STYLE_DISPLAY_TABLE_COLUMN == mDisplay ||
+           NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == mDisplay;
+  }
+
   bool IsFloatingStyle() const {
     return NS_STYLE_FLOAT_NONE != mFloats;
   }
