@@ -883,7 +883,6 @@ $(filter %.$(LIB_SUFFIX),$(LIBRARY)): $(OBJS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(RM) $(LIBRARY)
 	$(EXPAND_AR) $(AR_FLAGS) $(OBJS) $(SHARED_LIBRARY_LIBS)
-	$(RANLIB) $@
 
 $(filter-out %.$(LIB_SUFFIX),$(LIBRARY)): $(filter %.$(LIB_SUFFIX),$(LIBRARY)) $(OBJS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 # When we only build a library descriptor, blow out any existing library
@@ -917,14 +916,12 @@ $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	$(REPORT_BUILD)
 	$(RM) $@
 	$(IMPLIB) $@ $^
-	$(RANLIB) $@
 endif # OS/2
 
 $(HOST_LIBRARY): $(HOST_OBJS) Makefile
 	$(REPORT_BUILD)
 	$(RM) $@
 	$(EXPAND_LIBS_EXEC) --extract -- $(HOST_AR) $(HOST_AR_FLAGS) $(HOST_OBJS)
-	$(HOST_RANLIB) $@
 
 ifdef HAVE_DTRACE
 ifndef XP_MACOSX
