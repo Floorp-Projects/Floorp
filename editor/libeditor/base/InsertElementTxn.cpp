@@ -19,11 +19,6 @@
 
 using namespace mozilla;
 
-#ifdef DEBUG
-static bool gNoisy = false;
-#endif
-
-
 InsertElementTxn::InsertElementTxn()
   : EditTxn()
 {
@@ -57,23 +52,6 @@ NS_IMETHODIMP InsertElementTxn::Init(nsINode *aNode,
 
 NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 {
-#ifdef DEBUG
-  if (gNoisy) 
-  { 
-    nsCOMPtr<nsIContent>nodeAsContent = do_QueryInterface(mNode);
-    nsCOMPtr<nsIContent>parentAsContent = do_QueryInterface(mParent);
-    nsString namestr = mNode->NodeName();
-    char* nodename = ToNewCString(namestr);
-    printf("%p Do Insert Element of %p <%s> into parent %p at offset %d\n", 
-           static_cast<void*>(this),
-           static_cast<void*>(nodeAsContent.get()),
-           nodename,
-           static_cast<void*>(parentAsContent.get()),
-           mOffset); 
-    nsMemory::Free(nodename);
-  }
-#endif
-
   NS_ENSURE_TRUE(mNode && mParent, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsINode> parent = do_QueryInterface(mParent);
@@ -115,17 +93,6 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 
 NS_IMETHODIMP InsertElementTxn::UndoTransaction(void)
 {
-#ifdef DEBUG
-  if (gNoisy)
-  {
-    printf("%p Undo Insert Element of %p into parent %p at offset %d\n",
-           static_cast<void*>(this),
-           static_cast<void*>(mNode.get()),
-           static_cast<void*>(mParent.get()),
-           mOffset);
-  }
-#endif
-
   NS_ENSURE_TRUE(mNode && mParent, NS_ERROR_NOT_INITIALIZED);
 
   ErrorResult rv;
