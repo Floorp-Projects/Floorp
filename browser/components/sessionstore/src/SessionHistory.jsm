@@ -15,6 +15,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource:///modules/sessionstore/PrivacyLevel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource:///modules/sessionstore/Utils.jsm");
 
 function debug(msg) {
   Services.console.logStringMessage("SessionHistory: " + msg);
@@ -38,6 +40,10 @@ XPCOMUtils.defineLazyGetter(this, "gPostData", function () {
 this.SessionHistory = Object.freeze({
   collect: function (docShell, includePrivateData) {
     return SessionHistoryInternal.collect(docShell, includePrivateData);
+  },
+
+  restore: function (docShell, tabData) {
+    SessionHistoryInternal.restore(docShell, tabData);
   }
 });
 
@@ -274,5 +280,166 @@ let SessionHistoryInternal = {
     // is guaranteed to handle all chars in strings, including embedded
     // nulls.
     return btoa(String.fromCharCode.apply(null, ownerBytes));
-  }
+  },
+
+  /**
+   * Restores session history data for a given docShell.
+   *
+   * @param docShell
+   *        The docShell that owns the session history.
+   * @param tabData
+   *        The tabdata including all history entries.
+   */
+  restore: function (docShell, tabData) {
+    let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
+    let history = webNavigation.sessionHistory;
+
+    if (history.count > 0) {
+      history.PurgeHistory(history.count);
+    }
+    history.QueryInterface(Ci.nsISHistoryInternal);
+
+    let idMap = { used: {} };
+    let docIdentMap = {};
+    for (let i = 0; i < tabData.entries.length; i++) {
+      //XXXzpao Wallpaper patch for bug 514751
+      if (!tabData.entries[i].url)
+        continue;
+      history.addEntry(this.deserializeEntry(tabData.entries[i],
+                                             idMap, docIdentMap), true);
+    }
+  },
+
+  /**
+   * Expands serialized history data into a session-history-entry instance.
+   *
+   * @param entry
+   *        Object containing serialized history data for a URL
+   * @param idMap
+   *        Hash for ensuring unique frame IDs
+   * @param docIdentMap
+   *        Hash to ensure reuse of BFCache entries
+   * @returns nsISHEntry
+   */
+  deserializeEntry: function (entry, idMap, docIdentMap) {
+
+    var shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].
+                  createInstance(Ci.nsISHEntry);
+
+    shEntry.setURI(Utils.makeURI(entry.url));
+    shEntry.setTitle(entry.title || entry.url);
+    if (entry.subframe)
+      shEntry.setIsSubFrame(entry.subframe || false);
+    shEntry.loadType = Ci.nsIDocShellLoadInfo.loadHistory;
+    if (entry.contentType)
+      shEntry.contentType = entry.contentType;
+    if (entry.referrer)
+      shEntry.referrerURI = Utils.makeURI(entry.referrer);
+    if (entry.isSrcdocEntry)
+      shEntry.srcdocData = entry.srcdocData;
+
+    if (entry.cacheKey) {
+      var cacheKey = Cc["@mozilla.org/supports-PRUint32;1"].
+                     createInstance(Ci.nsISupportsPRUint32);
+      cacheKey.data = entry.cacheKey;
+      shEntry.cacheKey = cacheKey;
+    }
+
+    if (entry.ID) {
+      // get a new unique ID for this frame (since the one from the last
+      // start might already be in use)
+      var id = idMap[entry.ID] || 0;
+      if (!id) {
+        for (id = Date.now(); id in idMap.used; id++);
+        idMap[entry.ID] = id;
+        idMap.used[id] = true;
+      }
+      shEntry.ID = id;
+    }
+
+    if (entry.docshellID)
+      shEntry.docshellID = entry.docshellID;
+
+    if (entry.structuredCloneState && entry.structuredCloneVersion) {
+      shEntry.stateData =
+        Cc["@mozilla.org/docshell/structured-clone-container;1"].
+        createInstance(Ci.nsIStructuredCloneContainer);
+
+      shEntry.stateData.initFromBase64(entry.structuredCloneState,
+                                       entry.structuredCloneVersion);
+    }
+
+    if (entry.scroll) {
+      var scrollPos = (entry.scroll || "0,0").split(",");
+      scrollPos = [parseInt(scrollPos[0]) || 0, parseInt(scrollPos[1]) || 0];
+      shEntry.setScrollPosition(scrollPos[0], scrollPos[1]);
+    }
+
+    if (entry.postdata_b64) {
+      var postdata = atob(entry.postdata_b64);
+      var stream = Cc["@mozilla.org/io/string-input-stream;1"].
+                   createInstance(Ci.nsIStringInputStream);
+      stream.setData(postdata, postdata.length);
+      shEntry.postData = stream;
+    }
+
+    let childDocIdents = {};
+    if (entry.docIdentifier) {
+      // If we have a serialized document identifier, try to find an SHEntry
+      // which matches that doc identifier and adopt that SHEntry's
+      // BFCacheEntry.  If we don't find a match, insert shEntry as the match
+      // for the document identifier.
+      let matchingEntry = docIdentMap[entry.docIdentifier];
+      if (!matchingEntry) {
+        matchingEntry = {shEntry: shEntry, childDocIdents: childDocIdents};
+        docIdentMap[entry.docIdentifier] = matchingEntry;
+      }
+      else {
+        shEntry.adoptBFCacheEntry(matchingEntry.shEntry);
+        childDocIdents = matchingEntry.childDocIdents;
+      }
+    }
+
+    if (entry.owner_b64) {
+      var ownerInput = Cc["@mozilla.org/io/string-input-stream;1"].
+                       createInstance(Ci.nsIStringInputStream);
+      var binaryData = atob(entry.owner_b64);
+      ownerInput.setData(binaryData, binaryData.length);
+      var binaryStream = Cc["@mozilla.org/binaryinputstream;1"].
+                         createInstance(Ci.nsIObjectInputStream);
+      binaryStream.setInputStream(ownerInput);
+      try { // Catch possible deserialization exceptions
+        shEntry.owner = binaryStream.readObject(true);
+      } catch (ex) { debug(ex); }
+    }
+
+    if (entry.children && shEntry instanceof Ci.nsISHContainer) {
+      for (var i = 0; i < entry.children.length; i++) {
+        //XXXzpao Wallpaper patch for bug 514751
+        if (!entry.children[i].url)
+          continue;
+
+        // We're getting sessionrestore.js files with a cycle in the
+        // doc-identifier graph, likely due to bug 698656.  (That is, we have
+        // an entry where doc identifier A is an ancestor of doc identifier B,
+        // and another entry where doc identifier B is an ancestor of A.)
+        //
+        // If we were to respect these doc identifiers, we'd create a cycle in
+        // the SHEntries themselves, which causes the docshell to loop forever
+        // when it looks for the root SHEntry.
+        //
+        // So as a hack to fix this, we restrict the scope of a doc identifier
+        // to be a node's siblings and cousins, and pass childDocIdents, not
+        // aDocIdents, to _deserializeHistoryEntry.  That is, we say that two
+        // SHEntries with the same doc identifier have the same document iff
+        // they have the same parent or their parents have the same document.
+
+        shEntry.AddChild(this.deserializeEntry(entry.children[i], idMap,
+                                               childDocIdents), i);
+      }
+    }
+
+    return shEntry;
+  },
+
 };
