@@ -15,6 +15,7 @@
 #ifndef mozilla_PodOperations_h
 #define mozilla_PodOperations_h
 
+#include "mozilla/Array.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Util.h"
 
@@ -62,6 +63,13 @@ static MOZ_ALWAYS_INLINE void
 PodArrayZero(T (&t)[N])
 {
   memset(t, 0, N * sizeof(T));
+}
+
+template <typename T, size_t N>
+static MOZ_ALWAYS_INLINE void
+PodArrayZero(Array<T, N>& arr)
+{
+  memset(&arr[0], 0, N * sizeof(T));
 }
 
 /**
