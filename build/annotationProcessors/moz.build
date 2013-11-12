@@ -7,10 +7,10 @@
 jar = add_java_jar('annotationProcessors')
 jar.sources += [
     'AnnotationProcessor.java',
-    'CodeGenerator.java',
-    'MethodWithAnnotationInfo.java',
     'classloader/IterableJarLoadingURLClassLoader.java',
     'classloader/JarClassIterator.java',
+    'CodeGenerator.java',
+    'MethodWithAnnotationInfo.java',
     'utils/AlphabeticMethodComparator.java',
     'utils/GeneratableEntryPointIterator.java',
     'utils/Utils.java',
