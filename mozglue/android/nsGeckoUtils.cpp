@@ -19,8 +19,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv *jenv, jclass, jstring 
     const char* str;
     // XXX: java doesn't give us true UTF8, we should figure out something
     // better to do here
-    str = jenv->GetStringUTFChars(map, NULL);
-    if (str == NULL)
+    str = jenv->GetStringUTFChars(map, nullptr);
+    if (str == nullptr)
         return;
     putenv(strdup(str));
     jenv->ReleaseStringUTFChars(map, str);
@@ -31,7 +31,7 @@ __attribute__ ((visibility("default")))
 jobject JNICALL
 Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeAllocateDirectBuffer(JNIEnv *jenv, jclass, jlong size)
 {
-    jobject buffer = NULL;
+    jobject buffer = nullptr;
     void* mem = malloc(size);
     if (mem) {
         buffer = jenv->NewDirectByteBuffer(mem, size);
@@ -55,7 +55,7 @@ jlong JNICALL
 Java_org_mozilla_gecko_mozglue_NativeZip_getZip(JNIEnv *jenv, jclass, jstring path)
 {
     const char* str;
-    str = jenv->GetStringUTFChars(path, NULL);
+    str = jenv->GetStringUTFChars(path, nullptr);
     if (!str || !*str) {
         if (str)
             jenv->ReleaseStringUTFChars(path, str);
@@ -104,18 +104,18 @@ Java_org_mozilla_gecko_mozglue_NativeZip__1getInputStream(JNIEnv *jenv, jobject 
 {
     Zip *zip = (Zip *)obj;
     const char* str;
-    str = jenv->GetStringUTFChars(path, NULL);
+    str = jenv->GetStringUTFChars(path, nullptr);
 
     Zip::Stream stream;
     bool res = zip->GetStream(str, &stream);
     jenv->ReleaseStringUTFChars(path, str);
     if (!res) {
-        return NULL;
+        return nullptr;
     }
     jobject buf = jenv->NewDirectByteBuffer(const_cast<void *>(stream.GetBuffer()), stream.GetSize());
     if (!buf) {
         JNI_Throw(jenv, "java/lang/RuntimeException", "Failed to create ByteBuffer");
-        return NULL;
+        return nullptr;
     }
     jclass nativeZip = jenv->GetObjectClass(jzip);
     jmethodID method = jenv->GetMethodID(nativeZip, "createInputStream", "(Ljava/nio/ByteBuffer;I)Ljava/io/InputStream;");
