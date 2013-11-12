@@ -341,17 +341,6 @@ class RegisterAllocator
         return getMoveGroupAfter(pos.ins());
     }
 
-    size_t findFirstNonCallSafepoint(CodePosition from) const
-    {
-        size_t i = 0;
-        for (; i < graph.numNonCallSafepoints(); i++) {
-            const LInstruction *ins = graph.getNonCallSafepoint(i);
-            if (from <= inputOf(ins))
-                break;
-        }
-        return i;
-    }
-
     CodePosition minimalDefEnd(LInstruction *ins) {
         // Compute the shortest interval that captures vregs defined by ins.
         // Watch for instructions that are followed by an OSI point and/or Nop.
