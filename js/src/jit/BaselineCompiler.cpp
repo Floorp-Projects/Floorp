@@ -251,9 +251,6 @@ BaselineCompiler::compile()
         bytecodeMap[script->nTypeSets] = 0;
     }
 
-    if (script->compartment()->debugMode())
-        baselineScript->setDebugMode();
-
     return Method_Compiled;
 }
 

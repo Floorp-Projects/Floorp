@@ -132,11 +132,7 @@ struct BaselineScript
 
         // Flag set when the script contains any writes to its on-stack
         // (rather than call object stored) arguments.
-        MODIFIES_ARGUMENTS = 1 << 2,
-
-        // Flag set when compiled for use for debug mode. Handles various
-        // Debugger hooks and compiles toggled calls for traps.
-        DEBUG_MODE = 1 << 3
+        MODIFIES_ARGUMENTS = 1 << 2
     };
 
   private:
@@ -203,13 +199,6 @@ struct BaselineScript
     }
     bool modifiesArguments() {
         return flags_ & MODIFIES_ARGUMENTS;
-    }
-
-    void setDebugMode() {
-        flags_ |= DEBUG_MODE;
-    }
-    bool debugMode() const {
-        return flags_ & DEBUG_MODE;
     }
 
     uint32_t prologueOffset() const {
