@@ -1,0 +1,28 @@
+<html class="reftest-wait">
+  <head>
+    <style>
+      #el0 {
+        -moz-column-count: 3; 
+        column-count: 3; 
+        max-width: 13ex;
+        display: inline-block;
+      }
+      #el0:first-line { font-family: x; }
+      #el0:first-letter { float: right; }
+    </style>
+    <script>
+      onload = function() {
+        el0=document.createElement('object')
+        el0.setAttribute('id','el0')
+        document.body.appendChild(el0)
+        el0.appendChild(document.createTextNode(unescape('%ua000%uf400')))
+        el0.appendChild(document.createTextNode(unescape('%u3000')+'AA'))
+        el0.appendChild(document.createTextNode(''))
+  document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
+

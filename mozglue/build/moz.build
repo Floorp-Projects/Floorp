@@ -31,6 +31,11 @@ if CONFIG['OS_TARGET'] == 'Android':
         'BionicGlue.cpp',
     ]
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    SOURCES += [
+        'WindowsDllBlocklist.cpp',
+    ]
+
 if CONFIG['MOZ_NUWA_PROCESS']:
     EXPORTS.ipc += [
         'Nuwa.h',
@@ -42,6 +47,7 @@ if CONFIG['MOZ_NUWA_PROCESS']:
 EXPORTS.mozilla += [
     'arm.h',
     'SSE.h',
+    'WindowsDllBlocklist.h',
 ]
 
 if CONFIG['CPU_ARCH'].startswith('x86'):
