@@ -31,7 +31,7 @@
                         android:persistent="false" />
 
     <!-- keys prefixed with "android.not_a_preference." are not synced with Gecko -->
-    <org.mozilla.gecko.PrivateDataPreference
+    <org.mozilla.gecko.preferences.PrivateDataPreference
                         android:key="android.not_a_preference.privacy.clear"
                         android:title="@string/pref_clear_private_data"
                         android:persistent="true"

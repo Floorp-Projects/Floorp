@@ -375,7 +375,7 @@ static bool HostIgnoredByProxy(const nsACString& aIgnore,
   nsDependentCSubstring ignoreStripped(start, slash);
   PRIPv6Addr ignoreAddr, hostAddr;
   if (!ConvertToIPV6Addr(ignoreStripped, &ignoreAddr, &mask) ||
-      !ConvertToIPV6Addr(aHost, &hostAddr, NULL))
+      !ConvertToIPV6Addr(aHost, &hostAddr, nullptr))
     return false;
 
   proxy_MaskIPv6Addr(ignoreAddr, mask);
