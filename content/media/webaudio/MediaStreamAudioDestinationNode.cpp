@@ -23,8 +23,9 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(MediaStreamAudioDestinationNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(MediaStreamAudioDestinationNode, AudioNode)
 
-// This must be a different value than AUDIO_NODE_STREAM_TRACK_ID
 static const int MEDIA_STREAM_DEST_TRACK_ID = 2;
+static_assert(MEDIA_STREAM_DEST_TRACK_ID != AudioNodeStream::AUDIO_TRACK,
+              "MediaStreamAudioDestinationNode::MEDIA_STREAM_DEST_TRACK_ID must be a different value than AudioNodeStream::AUDIO_TRACK");
 
 class MediaStreamDestinationEngine : public AudioNodeEngine {
 public:
