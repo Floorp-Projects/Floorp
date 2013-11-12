@@ -1437,43 +1437,21 @@ js_QuoteString(ExclusiveContext *cx, JSString *str, jschar quote)
 static JSObject *
 GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    jsbytecode *start = script->main();
+    JS_ASSERT(pc >= script->main() && pc < script->code + script->length);
 
-    JS_ASSERT(pc >= start && pc < script->code + script->length);
+    ptrdiff_t offset = pc - script->main();
 
+    if (!script->hasBlockScopes())
+        return nullptr;
+
+    BlockScopeArray *blockScopes = script->blockScopes();
     JSObject *blockChain = nullptr;
-    for (jsbytecode *p = start; p < pc; p += GetBytecodeLength(p)) {
-        JSOp op = JSOp(*p);
-
-        switch (op) {
-          case JSOP_ENTERBLOCK:
-          case JSOP_ENTERLET0:
-          case JSOP_ENTERLET1:
-          case JSOP_ENTERLET2: {
-            JSObject *child = script->getObject(p);
-            JS_ASSERT_IF(blockChain, child->as<BlockObject>().stackDepth() >=
-                                     blockChain->as<BlockObject>().stackDepth());
-            blockChain = child;
+    for (uint32_t n = 0; n < blockScopes->length; n++) {
+        const BlockScopeNote *note = &blockScopes->vector[n];
+        if (note->start > offset)
             break;
-          }
-          case JSOP_LEAVEBLOCK:
-          case JSOP_LEAVEBLOCKEXPR:
-          case JSOP_LEAVEFORLETIN: {
-            // Some LEAVEBLOCK instructions are due to early exits via
-            // return/break/etc. from block-scoped loops and functions.  We
-            // should ignore these instructions, since they don't really signal
-            // the end of the block.
-            jssrcnote *sn = js_GetSrcNote(cx, script, p);
-            if (!(sn && SN_TYPE(sn) == SRC_HIDDEN)) {
-                JS_ASSERT(blockChain);
-                blockChain = blockChain->as<StaticBlockObject>().enclosingBlock();
-                JS_ASSERT_IF(blockChain, blockChain->is<BlockObject>());
-            }
-            break;
-          }
-          default:
-            break;
-        }
+        if (offset <= note->start + note->length)
+            blockChain = script->getObject(note->index);
     }
 
     return blockChain;

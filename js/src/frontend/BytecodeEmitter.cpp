@@ -789,6 +789,7 @@ static bool
 EmitInternedObjectOp(ExclusiveContext *cx, uint32_t index, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
+    JS_ASSERT(index < bce->objectList.length);
     return EmitIndex32(cx, op, index, bce);
 }
 
@@ -1090,6 +1091,7 @@ EmitEnterBlock(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp o
     JS_ASSERT(bce->blockScopeList.list[stmt->blockScopeIndex].length == 0);
     uint32_t scopeObjectIndex = bce->blockScopeList.list[stmt->blockScopeIndex].index;
     JS_ASSERT(scopeObjectIndex == bce->objectList.length - 1);
+    JS_ASSERT(pn->pn_objbox == bce->objectList.lastbox);
     if (!EmitInternedObjectOp(cx, scopeObjectIndex, op, bce))
         return false;
 
