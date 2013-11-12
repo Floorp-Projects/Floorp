@@ -331,7 +331,9 @@ bool
 BacktrackingAllocator::groupAndQueueRegisters()
 {
     // Try to group registers with their reused inputs.
-    for (size_t i = 0; i < graph.numVirtualRegisters(); i++) {
+    // Virtual register number 0 is unused.
+    JS_ASSERT(vregs[0u].numIntervals() == 0);
+    for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         BacktrackingVirtualRegister &reg = vregs[i];
         if (!reg.numIntervals())
             continue;
@@ -357,7 +359,9 @@ BacktrackingAllocator::groupAndQueueRegisters()
         }
     }
 
-    for (size_t i = 0; i < graph.numVirtualRegisters(); i++) {
+    // Virtual register number 0 is unused.
+    JS_ASSERT(vregs[0u].numIntervals() == 0);
+    for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         if (mir->shouldCancel("Backtracking Enqueue Registers"))
             return false;
 
@@ -885,7 +889,9 @@ BacktrackingAllocator::spill(LiveInterval *interval)
 bool
 BacktrackingAllocator::resolveControlFlow()
 {
-    for (size_t i = 0; i < graph.numVirtualRegisters(); i++) {
+    // Virtual register number 0 is unused.
+    JS_ASSERT(vregs[0u].numIntervals() == 0);
+    for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         BacktrackingVirtualRegister *reg = &vregs[i];
 
         if (mir->shouldCancel("Backtracking Resolve Control Flow (vreg loop)"))
@@ -1035,7 +1041,9 @@ BacktrackingAllocator::isRegisterDefinition(LiveInterval *interval)
 bool
 BacktrackingAllocator::reifyAllocations()
 {
-    for (size_t i = 0; i < graph.numVirtualRegisters(); i++) {
+    // Virtual register number 0 is unused.
+    JS_ASSERT(vregs[0u].numIntervals() == 0);
+    for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         VirtualRegister *reg = &vregs[i];
 
         if (mir->shouldCancel("Backtracking Reify Allocations (main loop)"))
@@ -1095,7 +1103,9 @@ BacktrackingAllocator::populateSafepoints()
 {
     size_t firstSafepoint = 0;
 
-    for (uint32_t i = 0; i < vregs.numVirtualRegisters(); i++) {
+    // Virtual register number 0 is unused.
+    JS_ASSERT(!vregs[0u].def());
+    for (uint32_t i = 1; i < vregs.numVirtualRegisters(); i++) {
         BacktrackingVirtualRegister *reg = &vregs[i];
 
         if (!reg->def() || (!IsTraceable(reg) && !IsSlotsOrElements(reg) && !IsNunbox(reg)))
@@ -1172,7 +1182,10 @@ void
 BacktrackingAllocator::dumpRegisterGroups()
 {
     fprintf(stderr, "Register groups:\n");
-    for (size_t i = 0; i < graph.numVirtualRegisters(); i++) {
+
+    // Virtual register number 0 is unused.
+    JS_ASSERT(!vregs[0u].group());
+    for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         VirtualRegisterGroup *group = vregs[i].group();
         if (group && i == group->canonicalReg()) {
             for (size_t j = 0; j < group->registers.length(); j++)
@@ -1239,6 +1252,7 @@ BacktrackingAllocator::dumpLiveness()
             fprintf(stderr, "reg %s: %s\n", AnyRegister::FromCode(i).name(), IntervalString(fixedIntervals[i]));
 
     // Virtual register number 0 is unused.
+    JS_ASSERT(vregs[0u].numIntervals() == 0);
     for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         fprintf(stderr, "v%lu:", static_cast<unsigned long>(i));
         VirtualRegister &vreg = vregs[i];
@@ -1279,6 +1293,7 @@ BacktrackingAllocator::dumpAllocations()
     fprintf(stderr, "Allocations:\n");
 
     // Virtual register number 0 is unused.
+    JS_ASSERT(vregs[0u].numIntervals() == 0);
     for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
         fprintf(stderr, "v%lu:", static_cast<unsigned long>(i));
         VirtualRegister &vreg = vregs[i];
@@ -1350,7 +1365,7 @@ BacktrackingAllocator::minimalDef(const LiveInterval *interval, LInstruction *in
 {
     // Whether interval is a minimal interval capturing a definition at ins.
     return (interval->end() <= minimalDefEnd(ins).next()) &&
-        (interval->start() == inputOf(ins) || interval->start() == outputOf(ins));
+        ((!ins->isPhi() && interval->start() == inputOf(ins)) || interval->start() == outputOf(ins));
 }
 
 bool
