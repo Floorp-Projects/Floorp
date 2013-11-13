@@ -10,7 +10,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 
-[scriptable, uuid(d6475e53-9ece-4dc0-940c-095ac3d85363)]
+[scriptable, uuid(374ab3e6-d827-479f-b966-eeed90e94788)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -116,11 +116,9 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                         in voidPtr targetObj);
 
     /**
-     * Return true if content from the given principal is allowed to
-     * execute scripts.
+     * Return true if scripts may be executed in the scope of the given global.
      */
-    [noscript] boolean canExecuteScripts(in JSContextPtr cx,
-                                         in nsIPrincipal principal);
+    [noscript,notxpcom] boolean scriptAllowed(in JSObjectPtr aGlobal);
 
     ///////////////// Principals ///////////////////////
     /**

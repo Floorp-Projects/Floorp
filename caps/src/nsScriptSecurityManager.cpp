@@ -63,6 +63,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
+#include "nsJSUtils.h"
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"
@@ -1649,14 +1650,6 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     return rv;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
-                                           nsIPrincipal *aPrincipal,
-                                           bool *result)
-{
-    return CanExecuteScripts(cx, aPrincipal, false, result);
-}
-
 nsresult
 nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
                                            nsIPrincipal *aPrincipal,
@@ -1768,6 +1761,23 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     //-- Nobody vetoed, so allow the JS to run.
     *result = true;
     return NS_OK;
+}
+
+NS_IMETHODIMP_(bool)
+nsScriptSecurityManager::ScriptAllowed(JSObject *aGlobal)
+{
+    MOZ_ASSERT(aGlobal);
+    MOZ_ASSERT(JS_IsGlobalObject(aGlobal) || js::IsOuterObject(aGlobal));
+    AutoJSContext cx_;
+    JS::RootedObject global(cx_, js::UncheckedUnwrap(aGlobal, /* stopAtOuter = */ false));
+
+    nsCOMPtr<nsIScriptContext> scx = nsJSUtils::GetStaticScriptContext(global);
+    AutoPushJSContext cx(scx ? scx->GetNativeContext() : GetSafeJSContext());
+    bool result = false;
+    nsresult rv = CanExecuteScripts(cx, doGetObjectPrincipal(global),
+                                    /* aAllowIfNoScriptContext = */ false,
+                                    &result);
+    return NS_SUCCEEDED(rv) && result;
 }
 
 ///////////////// Principals ///////////////////////
