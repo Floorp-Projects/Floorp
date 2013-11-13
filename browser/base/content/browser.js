@@ -4197,6 +4197,17 @@ var TabsInTitlebar = {
     this._menuObserver.observe(menu, {attributes: true});
 
     gNavToolbox.addEventListener("customization-transitionend", this);
+
+    this.onAreaReset = function(aArea) {
+      if (aArea == CustomizableUI.AREA_TABSTRIP || aArea == CustomizableUI.AREA_MENUBAR)
+        this._update(true);
+    };
+    this.onWidgetAdded = this.onWidgetRemoved = function(aWidgetId, aArea) {
+      if (aArea == CustomizableUI.AREA_TABSTRIP || aArea == CustomizableUI.AREA_MENUBAR)
+        this._update(true);
+    };
+    CustomizableUI.addListener(this);
+
     this._initialized = true;
 #endif
   },
@@ -4441,6 +4452,7 @@ var TabsInTitlebar = {
     this._initialized = false;
     Services.prefs.removeObserver(this._prefName, this);
     this._menuObserver.disconnect();
+    CustomizableUI.removeListener(this);
 #endif
   }
 };
