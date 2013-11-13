@@ -3782,6 +3782,9 @@ public:
     bool adoptedNode;
     bool donatedNode;
 
+    // The scriptability of this compartment.
+    Scriptability scriptability;
+
     // Our XPCWrappedNativeScope. This is non-null if and only if this is an
     // XPConnect compartment.
     XPCWrappedNativeScope *scope;
