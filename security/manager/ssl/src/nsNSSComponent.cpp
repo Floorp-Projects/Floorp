@@ -1057,6 +1057,10 @@ void nsNSSComponent::setValidationOptions()
   }
   CERT_SetOCSPTimeout(OCSPTimeoutSeconds);
 
+  // XXX: Always use POST for OCSP; see bug 871954 for undoing this.
+  bool ocspGetEnabled = Preferences::GetBool("security.OCSP.GET.enabled", false);
+  CERT_ForcePostMethodForOCSP(!ocspGetEnabled);
+
   mDefaultCertVerifier = new CertVerifier(
       aiaDownloadEnabled ? 
         CertVerifier::missing_cert_download_on : CertVerifier::missing_cert_download_off,
@@ -1068,7 +1072,9 @@ void nsNSSComponent::setValidationOptions()
         CertVerifier::ocsp_strict : CertVerifier::ocsp_relaxed,
       anyFreshRequired ?
         CertVerifier::any_revo_strict : CertVerifier::any_revo_relaxed,
-      firstNetworkRevo.get());
+      firstNetworkRevo.get(),
+      ocspGetEnabled ?
+        CertVerifier::ocsp_get_enabled : CertVerifier::ocsp_get_disabled);
 
   /*
     * The new defaults might change the validity of already established SSL sessions,
@@ -1730,6 +1736,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
                || prefName.Equals("security.missing_cert_download.enabled")
                || prefName.Equals("security.first_network_revocation_method")
                || prefName.Equals("security.OCSP.require")
+               || prefName.Equals("security.OCSP.GET.enabled")
                || prefName.Equals("security.ssl.enable_ocsp_stapling")) {
       MutexAutoLock lock(mutex);
       setValidationOptions();
