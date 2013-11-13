@@ -3708,7 +3708,6 @@ void
 nsHtml5TreeBuilder::pushHeadPointerOntoStack()
 {
   MOZ_ASSERT(!!headPointer);
-  MOZ_ASSERT(!fragment);
   MOZ_ASSERT(mode == NS_HTML5TREE_BUILDER_AFTER_HEAD);
 
   silentPush(new nsHtml5StackNode(nsHtml5ElementName::ELT_HEAD, headPointer));
