@@ -116,6 +116,10 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ipc/URIUtils.h"
 
+#ifdef MOZ_WIDGET_GONK
+#include "nsDeviceStorage.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::ipc;
 
@@ -328,6 +332,32 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
                                          getter_AddRefs(dir));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+#elif defined(MOZ_WIDGET_GONK)
+  // On Gonk, store the files on the sdcard in the downloads directory.
+  // We need to check with the volume manager which storage point is
+  // available.
+
+  // Pick the default storage in case multiple (internal and external) ones
+  // are available.
+  nsString storageName;
+  nsDOMDeviceStorage::GetDefaultStorageName(NS_LITERAL_STRING("sdcard"),
+                                            storageName);
+  NS_ENSURE_TRUE(!storageName.IsEmpty(), NS_ERROR_FAILURE);
+
+  DeviceStorageFile dsf(NS_LITERAL_STRING("sdcard"),
+                        storageName,
+                        NS_LITERAL_STRING("downloads"));
+  NS_ENSURE_TRUE(dsf.mFile, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(dsf.IsAvailable(), NS_ERROR_FAILURE);
+
+  bool alreadyThere;
+  nsresult rv = dsf.mFile->Exists(&alreadyThere);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!alreadyThere) {
+    rv = dsf.mFile->Create(nsIFile::DIRECTORY_TYPE, 0770);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  dir = dsf.mFile;
 #elif defined(ANDROID)
   // On mobile devices, we are avoiding exposing users to the file
   // system, and don't save downloads to temp directories
