@@ -277,7 +277,6 @@ function compareArrayToResult(aArray, aRoot) {
     // Debugging code for failures.
     dump_table("moz_places");
     dump_table("moz_historyvisits");
-    dump_table("moz_bookmarks");
     LOG("Found children:");
     for (let i = 0; i < aRoot.childCount; i++) {
       LOG(aRoot.getChild(i).uri);
