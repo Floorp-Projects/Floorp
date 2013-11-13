@@ -118,27 +118,27 @@
 
 
         @// Update pSubFFTSize and pSubFFTNum regs
-        VLD2    {dXr0,dXi0},[pSrc :128],pointStep          @//  data[0]
+        VLD2    {dXr0,dXi0},[pSrc, :128],pointStep          @//  data[0]
         @// subFFTSize = 1 for the first stage
         MOV     subFFTSize,#4
 
         @// Note: setCount = subFFTNum/4 (reuse the grpSize reg for setCount)
         LSR     grpSize,subFFTNum,#2
-        VLD2    {dXr1,dXi1},[pSrc :128],pointStep          @//  data[1]
+        VLD2    {dXr1,dXi1},[pSrc, :128],pointStep          @//  data[1]
         MOV     subFFTNum,grpSize
 
 
         @// Calculate the step of input data for the next set
         @//MOV     setStep,pointStep,LSL #1
         MOV     setStep,grpSize,LSL #4
-        VLD2    {dXr2,dXi2},[pSrc :128],pointStep          @//  data[2]
+        VLD2    {dXr2,dXi2},[pSrc, :128],pointStep          @//  data[2]
         @// setStep = 3*pointStep
         ADD     setStep,setStep,pointStep
         @// setStep = - 3*pointStep+16
         RSB     setStep,setStep,#16
 
         @//  data[3] & update pSrc for the next set
-        VLD2    {dXr3,dXi3},[pSrc :128],setStep
+        VLD2    {dXr3,dXi3},[pSrc, :128],setStep
         @// step1 = 2*pointStep
         MOV     step1,pointStep,LSL #1
 
@@ -163,9 +163,9 @@ radix4fsGrpZeroSetLoop\name :
 
         VSUB    qY2,qX0,qX2
 
-        VLD2    {dXr0,dXi0},[pSrc :128],step1          @//  data[0]
+        VLD2    {dXr0,dXi0},[pSrc, :128],step1          @//  data[0]
         VADD    qY1,qX1,qX3
-        VLD2    {dXr2,dXi2},[pSrc :128],step3          @//  data[2]
+        VLD2    {dXr2,dXi2},[pSrc, :128],step3          @//  data[2]
         VSUB    qY3,qX1,qX3
 
 
@@ -173,56 +173,56 @@ radix4fsGrpZeroSetLoop\name :
 
         .ifeqs "\inverse", "TRUE"
 
-            VLD2    {dXr1,dXi1},[pSrc :128],step1          @//  data[1]
+            VLD2    {dXr1,dXi1},[pSrc, :128],step1          @//  data[1]
             VADD    qZ0,qY0,qY1
 
             @//  data[3] & update pSrc for the next set, but not if it's the
             @//  last iteration so that we don't read past the end of the 
             @//  input array.
             BEQ     radix4SkipLastUpdateInv\name
-            VLD2    {dXr3,dXi3},[pSrc :128],setStep
+            VLD2    {dXr3,dXi3},[pSrc, :128],setStep
 radix4SkipLastUpdateInv\name:
             VSUB    dZr3,dYr2,dYi3
 
-            VST2    {dZr0,dZi0},[pDst :128],outPointStep
+            VST2    {dZr0,dZi0},[pDst, :128],outPointStep
             VADD    dZi3,dYi2,dYr3
 
             VSUB    qZ1,qY0,qY1
-            VST2    {dZr3,dZi3},[pDst :128],outPointStep
+            VST2    {dZr3,dZi3},[pDst, :128],outPointStep
 
             VADD    dZr2,dYr2,dYi3
-            VST2    {dZr1,dZi1},[pDst :128],outPointStep
+            VST2    {dZr1,dZi1},[pDst, :128],outPointStep
             VSUB    dZi2,dYi2,dYr3
 
             VADD    qY0,qX0,qX2                     @// u0 for next iteration
-            VST2    {dZr2,dZi2},[pDst :128],setStep
+            VST2    {dZr2,dZi2},[pDst, :128],setStep
 
 
         .else
 
-            VLD2    {dXr1,dXi1},[pSrc :128],step1          @//  data[1]
+            VLD2    {dXr1,dXi1},[pSrc, :128],step1          @//  data[1]
             VADD    qZ0,qY0,qY1
 
             @//  data[3] & update pSrc for the next set, but not if it's the
             @//  last iteration so that we don't read past the end of the 
             @//  input array.
             BEQ     radix4SkipLastUpdateFwd\name
-            VLD2    {dXr3,dXi3},[pSrc :128],setStep
+            VLD2    {dXr3,dXi3},[pSrc, :128],setStep
 radix4SkipLastUpdateFwd\name:
             VADD    dZr2,dYr2,dYi3
 
-            VST2    {dZr0,dZi0},[pDst :128],outPointStep
+            VST2    {dZr0,dZi0},[pDst, :128],outPointStep
             VSUB    dZi2,dYi2,dYr3
 
             VSUB    qZ1,qY0,qY1
-            VST2    {dZr2,dZi2},[pDst :128],outPointStep
+            VST2    {dZr2,dZi2},[pDst, :128],outPointStep
 
             VSUB    dZr3,dYr2,dYi3
-            VST2    {dZr1,dZi1},[pDst :128],outPointStep
+            VST2    {dZr1,dZi1},[pDst, :128],outPointStep
             VADD    dZi3,dYi2,dYr3
 
             VADD    qY0,qX0,qX2                     @// u0 for next iteration
-            VST2    {dZr3,dZi3},[pDst :128],setStep
+            VST2    {dZr3,dZi3},[pDst, :128],setStep
 
         .endif
 

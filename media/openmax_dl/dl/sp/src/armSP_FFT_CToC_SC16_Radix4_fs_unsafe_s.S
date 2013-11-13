@@ -121,7 +121,7 @@
         @// Update pSubFFTSize and pSubFFTNum regs
 
 
-        VLD2    {dXr0,dXi0},[pSrc :128],pointStep          @//  data[0]
+        VLD2    {dXr0,dXi0},[pSrc, :128],pointStep          @//  data[0]
         @// Note: setCount = subFFTNum/4 (reuse the grpSize reg for setCount)
         LSR     grpSize,subFFTNum,#2
         MOV     subFFTNum,grpSize
@@ -130,19 +130,19 @@
         @// pT0+1 increments pT0 by 4 bytes
         @// pT0+pointStep = increment of 4*pointStep bytes = grpSize bytes
         @// Note: outPointStep = pointStep for firststage
-        VLD2    {dXr1,dXi1},[pSrc :128],pointStep          @//  data[1]
+        VLD2    {dXr1,dXi1},[pSrc, :128],pointStep          @//  data[1]
 
 
         @// Calculate the step of input data for the next set
         @//MOV     setStep,pointStep,LSL #1
         MOV     setStep,grpSize,LSL #3
-        VLD2    {dXr2,dXi2},[pSrc :128],pointStep          @//  data[2]
+        VLD2    {dXr2,dXi2},[pSrc, :128],pointStep          @//  data[2]
         MOV     step1,setStep
         ADD     setStep,setStep,pointStep             @// setStep = 3*pointStep
         RSB     setStep,setStep,#16                   @// setStep = - 3*pointStep+16
 
 
-        VLD2    {dXr3,dXi3},[pSrc :128],setStep            @//  data[3]
+        VLD2    {dXr3,dXi3},[pSrc, :128],setStep            @//  data[3]
         MOV     subFFTSize,#4                         @// subFFTSize = 1 for the first stage
 
 
@@ -166,36 +166,36 @@ grpZeroSetLoop\name:
             VHSUB    qY2,qX0,qX2             @// u1
             SUBS    setCount,setCount,#4                    @// decrement the set loop counter
 
-            VLD2    {dXr0,dXi0},[pSrc :128],step1          @//  data[0]
+            VLD2    {dXr0,dXi0},[pSrc, :128],step1          @//  data[0]
             VHADD    qY1,qX1,qX3             @// u2
-            VLD2    {dXr2,dXi2},[pSrc :128],step3
+            VLD2    {dXr2,dXi2},[pSrc, :128],step3
             VHSUB    qY3,qX1,qX3             @// u3
 
 
 
             @// finish second stage of 4 point FFT
 
-            VLD2    {dXr1,dXi1},[pSrc :128],step1          @//  data[1]
+            VLD2    {dXr1,dXi1},[pSrc, :128],step1          @//  data[1]
             VHADD    qZ0,qY0,qY1             @// y0
 
-            VLD2    {dXr3,dXi3},[pSrc :128],setStep
+            VLD2    {dXr3,dXi3},[pSrc, :128],setStep
 
 
             .ifeqs  "\inverse", "TRUE"
 
                 VHSUB    dZr3,dYr2,dYi3                  @// y3
                 VHADD    dZi3,dYi2,dYr3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
 
                 VHSUB    qZ1,qY0,qY1                     @// y2
-                VST2    {dZr3,dZi3},[pDst :128],outPointStep
+                VST2    {dZr3,dZi3},[pDst, :128],outPointStep
 
                 VHADD    dZr2,dYr2,dYi3                  @// y1
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
                 VHSUB    dZi2,dYi2,dYr3
 
                 VHADD    qY0,qX0,qX2                     @// u0 (next loop)
-                VST2    {dZr2,dZi2},[pDst :128],setStep
+                VST2    {dZr2,dZi2},[pDst, :128],setStep
 
 
             .ELSE
@@ -203,15 +203,15 @@ grpZeroSetLoop\name:
                 VHADD    dZr2,dYr2,dYi3                  @// y1
                 VHSUB    dZi2,dYi2,dYr3
 
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VHSUB    qZ1,qY0,qY1                     @// y2
 
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VHSUB    dZr3,dYr2,dYi3                  @// y3
                 VHADD    dZi3,dYi2,dYr3
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
                 VHADD    qY0,qX0,qX2                     @// u0 (next loop)
-                VST2    {dZr3,dZi3},[pDst :128],setStep
+                VST2    {dZr3,dZi3},[pDst, :128],setStep
 
             .ENDIF
 
@@ -223,36 +223,36 @@ grpZeroSetLoop\name:
             VSUB    qY2,qX0,qX2             @// u1
             SUBS    setCount,setCount,#4                    @// decrement the set loop counter
 
-            VLD2    {dXr0,dXi0},[pSrc :128],step1          @//  data[0]
+            VLD2    {dXr0,dXi0},[pSrc, :128],step1          @//  data[0]
             VADD    qY1,qX1,qX3             @// u2
-            VLD2    {dXr2,dXi2},[pSrc :128],step3
+            VLD2    {dXr2,dXi2},[pSrc, :128],step3
             VSUB    qY3,qX1,qX3             @// u3
 
 
 
             @// finish second stage of 4 point FFT
 
-            VLD2    {dXr1,dXi1},[pSrc :128],step1          @//  data[1]
+            VLD2    {dXr1,dXi1},[pSrc, :128],step1          @//  data[1]
             VADD    qZ0,qY0,qY1             @// y0
 
-            VLD2    {dXr3,dXi3},[pSrc :128],setStep
+            VLD2    {dXr3,dXi3},[pSrc, :128],setStep
 
 
             .ifeqs  "\inverse", "TRUE"
 
                 VSUB    dZr3,dYr2,dYi3                  @// y3
                 VADD    dZi3,dYi2,dYr3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
 
                 VSUB    qZ1,qY0,qY1                     @// y2
-                VST2    {dZr3,dZi3},[pDst :128],outPointStep
+                VST2    {dZr3,dZi3},[pDst, :128],outPointStep
 
                 VADD    dZr2,dYr2,dYi3                  @// y1
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
                 VSUB    dZi2,dYi2,dYr3
 
                 VADD    qY0,qX0,qX2                     @// u0 (next loop)
-                VST2    {dZr2,dZi2},[pDst :128],setStep
+                VST2    {dZr2,dZi2},[pDst, :128],setStep
 
 
             .ELSE
@@ -260,15 +260,15 @@ grpZeroSetLoop\name:
                 VADD    dZr2,dYr2,dYi3                  @// y1
                 VSUB    dZi2,dYi2,dYr3
 
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VSUB    qZ1,qY0,qY1                     @// y2
 
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VSUB    dZr3,dYr2,dYi3                  @// y3
                 VADD    dZi3,dYi2,dYr3
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
                 VADD    qY0,qX0,qX2                     @// u0 (next loop)
-                VST2    {dZr3,dZi3},[pDst :128],setStep
+                VST2    {dZr3,dZi3},[pDst, :128],setStep
 
             .ENDIF
 
