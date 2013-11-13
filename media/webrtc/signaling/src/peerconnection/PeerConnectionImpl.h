@@ -222,9 +222,10 @@ public:
   virtual const std::string& GetHandle();
 
   // ICE events
-  void IceGatheringCompleted(NrIceCtx *aCtx);
-  void IceCompleted(NrIceCtx *aCtx);
-  void IceFailed(NrIceCtx *aCtx);
+  void IceConnectionStateChange(NrIceCtx* ctx,
+                                NrIceCtx::ConnectionState state);
+  void IceGatheringStateChange(NrIceCtx* ctx,
+                               NrIceCtx::GatheringState state);
   void IceStreamReady(NrIceMediaStream *aStream);
 
   static void ListenThread(void *aData);
@@ -290,12 +291,14 @@ public:
   NS_IMETHODIMP CreateAnswer(const MediaConstraintsExternal& aConstraints);
 
   NS_IMETHODIMP SetLocalDescription (int32_t aAction, const char* aSDP);
+
   void SetLocalDescription (int32_t aAction, const nsAString& aSDP, ErrorResult &rv)
   {
     rv = SetLocalDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
   }
 
   NS_IMETHODIMP SetRemoteDescription (int32_t aAction, const char* aSDP);
+
   void SetRemoteDescription (int32_t aAction, const nsAString& aSDP, ErrorResult &rv)
   {
     rv = SetRemoteDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
@@ -316,6 +319,7 @@ public:
 
   NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
                                 unsigned short aLevel);
+
   void AddIceCandidate(const nsAString& aCandidate, const nsAString& aMid,
                        unsigned short aLevel, ErrorResult &rv)
   {
@@ -324,6 +328,7 @@ public:
   }
 
   NS_IMETHODIMP CloseStreams();
+
   void CloseStreams(ErrorResult &rv)
   {
     rv = CloseStreams();
@@ -342,6 +347,7 @@ public:
   }
 
   NS_IMETHODIMP GetLocalDescription(char** aSDP);
+
   void GetLocalDescription(nsAString& aSDP)
   {
     char *tmp;
@@ -351,6 +357,7 @@ public:
   }
 
   NS_IMETHODIMP GetRemoteDescription(char** aSDP);
+
   void GetRemoteDescription(nsAString& aSDP)
   {
     char *tmp;
@@ -360,6 +367,7 @@ public:
   }
 
   NS_IMETHODIMP ReadyState(mozilla::dom::PCImplReadyState* aState);
+
   mozilla::dom::PCImplReadyState ReadyState()
   {
     mozilla::dom::PCImplReadyState state;
@@ -368,6 +376,7 @@ public:
   }
 
   NS_IMETHODIMP SignalingState(mozilla::dom::PCImplSignalingState* aState);
+
   mozilla::dom::PCImplSignalingState SignalingState()
   {
     mozilla::dom::PCImplSignalingState state;
@@ -376,6 +385,7 @@ public:
   }
 
   NS_IMETHODIMP SipccState(mozilla::dom::PCImplSipccState* aState);
+
   mozilla::dom::PCImplSipccState SipccState()
   {
     mozilla::dom::PCImplSipccState state;
@@ -383,15 +393,28 @@ public:
     return state;
   }
 
-  NS_IMETHODIMP IceState(mozilla::dom::PCImplIceState* aState);
-  mozilla::dom::PCImplIceState IceState()
+  NS_IMETHODIMP IceConnectionState(
+      mozilla::dom::PCImplIceConnectionState* aState);
+
+  mozilla::dom::PCImplIceConnectionState IceConnectionState()
   {
-    mozilla::dom::PCImplIceState state;
-    IceState(&state);
+    mozilla::dom::PCImplIceConnectionState state;
+    IceConnectionState(&state);
+    return state;
+  }
+
+  NS_IMETHODIMP IceGatheringState(
+      mozilla::dom::PCImplIceGatheringState* aState);
+
+  mozilla::dom::PCImplIceGatheringState IceGatheringState()
+  {
+    mozilla::dom::PCImplIceGatheringState state;
+    IceGatheringState(&state);
     return state;
   }
 
   NS_IMETHODIMP Close();
+
   void Close(ErrorResult &rv)
   {
     rv = Close();
@@ -489,7 +512,10 @@ private:
   void ShutdownMedia();
 
   // ICE callbacks run on the right thread.
-  nsresult IceStateChange_m(mozilla::dom::PCImplIceState aState);
+  nsresult IceConnectionStateChange_m(
+      mozilla::dom::PCImplIceConnectionState aState);
+  nsresult IceGatheringStateChange_m(
+      mozilla::dom::PCImplIceGatheringState aState);
 
 #ifdef MOZILLA_INTERNAL_API
   // Fills in an RTCStatsReportInternal. Must be run on STS.
@@ -521,7 +547,8 @@ private:
   mozilla::dom::PCImplSignalingState mSignalingState;
 
   // ICE State
-  mozilla::dom::PCImplIceState mIceState;
+  mozilla::dom::PCImplIceConnectionState mIceConnectionState;
+  mozilla::dom::PCImplIceGatheringState mIceGatheringState;
 
   nsCOMPtr<nsIThread> mThread;
   // TODO: Remove if we ever properly wire PeerConnection for cycle-collection.

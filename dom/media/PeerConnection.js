@@ -1016,21 +1016,8 @@ PeerConnectionObserver.prototype = {
   },
 
 
-  // This method is primarily responsible for updating two attributes:
-  // iceGatheringState and iceConnectionState. These states are defined
-  // in the WebRTC specification as follows:
-  //
-  // iceGatheringState:
-  // ------------------
-  //   new        The object was just created, and no networking has occurred
-  //              yet.
-  //
-  //   gathering  The ICE engine is in the process of gathering candidates for
-  //              this RTCPeerConnection.
-  //
-  //   complete   The ICE engine has completed gathering. Events such as adding
-  //              a new interface or a new TURN server will cause the state to
-  //              go back to gathering.
+  // This method is primarily responsible for updating iceConnectionState.
+  // This state is defined in the WebRTC specification as follows:
   //
   // iceConnectionState:
   // -------------------
@@ -1064,36 +1051,38 @@ PeerConnectionObserver.prototype = {
   //   closed        The ICE Agent has shut down and is no longer responding to
   //                 STUN requests.
 
-  handleIceStateChanges: function(iceState) {
+  handleIceConnectionStateChange: function(iceState) {
     var histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
 
-    const STATE_MAP = {
-      IceGathering:
-        { gathering: "gathering" },
-      IceWaiting:
-        { connection: "new",  gathering: "complete" },
-      IceChecking:
-        { connection: "checking" },
-      IceConnected:
-        { connection: "connected", success: true },
-      IceFailed:
-        { connection: "failed", success: false }
-    };
-    // These are all the allowed inputs.
-
-    let transitions = STATE_MAP[iceState];
-
-    if ("connection" in transitions) {
-        this._dompc.changeIceConnectionState(transitions.connection);
+    if (iceState === 'failed') {
+      histogram.add(false);
     }
-    if ("gathering" in transitions) {
-      this._dompc.changeIceGatheringState(transitions.gathering);
+    if (this._dompc.iceConnectionState === 'checking' &&
+        (iceState === 'completed' || iceState === 'connected')) {
+          histogram.add(true);
     }
-    if ("success" in transitions) {
-      histogram.add(transitions.success);
-    }
+    this._dompc.changeIceConnectionState(iceState);
+  },
 
-    if (iceState == "IceWaiting") {
+  // This method is responsible for updating iceGatheringState. This
+  // state is defined in the WebRTC specification as follows:
+  //
+  // iceGatheringState:
+  // ------------------
+  //   new        The object was just created, and no networking has occurred
+  //              yet.
+  //
+  //   gathering  The ICE engine is in the process of gathering candidates for
+  //              this RTCPeerConnection.
+  //
+  //   complete   The ICE engine has completed gathering. Events such as adding
+  //              a new interface or a new TURN server will cause the state to
+  //              go back to gathering.
+  //
+  handleIceGatheringStateChange: function(gatheringState) {
+    this._dompc.changeIceGatheringState(gatheringState);
+
+    if (gatheringState === "complete") {
       if (!this._dompc._trickleIce) {
         // If we are not trickling, then the queue is in a pending state
         // waiting for ICE gathering and executeNext frees it
@@ -1115,8 +1104,12 @@ PeerConnectionObserver.prototype = {
                     this._dompc.signalingState);
         break;
 
-      case "IceState":
-        this.handleIceStateChanges(this._dompc._pc.iceState);
+      case "IceConnectionState":
+        this.handleIceConnectionStateChange(this._dompc._pc.iceState);
+        break;
+
+      case "IceGatheringState":
+        this.handleIceGatheringStateChange(this._dompc._pc.iceGatheringState);
         break;
 
       case "SdpState":
