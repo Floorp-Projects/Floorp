@@ -40,7 +40,7 @@
 #ifdef MOZ_B2G_RIL
 #include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/CellBroadcast.h"
-#include "mozilla/dom/network/MobileConnection.h"
+#include "mozilla/dom/network/MobileConnectionArray.h"
 #include "mozilla/dom/Voicemail.h"
 #endif
 #include "nsIIdleObserver.h"
@@ -141,7 +141,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
 #ifdef MOZ_B2G_RIL
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileConnection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileConnections)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCellBroadcast)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIccManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVoicemail)
@@ -219,9 +219,8 @@ Navigator::Invalidate()
   }
 
 #ifdef MOZ_B2G_RIL
-  if (mMobileConnection) {
-    mMobileConnection->Shutdown();
-    mMobileConnection = nullptr;
+  if (mMobileConnections) {
+    mMobileConnections = nullptr;
   }
 
   if (mCellBroadcast) {
@@ -1181,6 +1180,20 @@ Navigator::GetMozTelephony(ErrorResult& aRv)
 
 #ifdef MOZ_B2G_RIL
 
+network::MobileConnectionArray*
+Navigator::GetMozMobileConnections(ErrorResult& aRv)
+{
+  if (!mMobileConnections) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    mMobileConnections = new network::MobileConnectionArray(mWindow);
+  }
+
+  return mMobileConnections;
+}
+
 CellBroadcast*
 Navigator::GetMozCellBroadcast(ErrorResult& aRv)
 {
@@ -1271,23 +1284,6 @@ Navigator::GetMozConnection()
 
   return mConnection;
 }
-
-#ifdef MOZ_B2G_RIL
-nsIDOMMozMobileConnection*
-Navigator::GetMozMobileConnection(ErrorResult& aRv)
-{
-  if (!mMobileConnection) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    mMobileConnection = new network::MobileConnection();
-    mMobileConnection->Init(mWindow);
-  }
-
-  return mMobileConnection;
-}
-#endif // MOZ_B2G_RIL
 
 #ifdef MOZ_B2G_BT
 bluetooth::BluetoothManager*
