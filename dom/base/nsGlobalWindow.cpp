@@ -8942,10 +8942,13 @@ NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsGlobalWindow)
 NS_IMETHODIMP
 nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 {
-  MOZ_ASSERT(!IsInnerWindow() || IsCurrentInnerWindow(),
-             "We should only fire events on the current inner window.");
-
   FORWARD_TO_INNER(DispatchEvent, (aEvent, aRetVal), NS_OK);
+
+  if (!IsCurrentInnerWindow()) {
+    NS_WARNING("DispatchEvent called on non-current inner window, dropping. "
+               "Please check the window in the caller instead.");
+    return NS_ERROR_FAILURE;
+  }
 
   if (!mDoc) {
     return NS_ERROR_FAILURE;
