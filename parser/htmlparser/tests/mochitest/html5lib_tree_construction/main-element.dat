@@ -1,8 +1,7 @@
 #data
 <!doctype html><p>foo<main>bar<p>baz
 #errors
-36: End of file seen and there were open elements.
-27: Unclosed element “main”.
+(1,36): expected-closing-tag-but-got-eof
 #document
 | <!DOCTYPE html>
 | <html>
@@ -27,3 +26,19 @@
 |       <p>
 |         "foo"
 |     "bar"
+
+#data
+<!DOCTYPE html>xxx<svg><x><g><a><main><b>
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     "xxx"
+|     <svg svg>
+|       <svg x>
+|         <svg g>
+|           <svg a>
+|             <svg main>
+|     <b>

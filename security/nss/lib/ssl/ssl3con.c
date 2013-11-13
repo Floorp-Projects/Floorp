@@ -819,11 +819,6 @@ static SECStatus
 Null_Cipher(void *ctx, unsigned char *output, int *outputLen, int maxOutputLen,
 	    const unsigned char *input, int inputLen)
 {
-    if (inputLen > maxOutputLen) {
-        *outputLen = 0;  /* Match PK11_CipherOp in setting outputLen */
-        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
-        return SECFailure;
-    }
     *outputLen = inputLen;
     if (input != output)
 	PORT_Memcpy(output, input, inputLen);
@@ -7043,7 +7038,7 @@ ssl3_CheckFalseStart(sslSocket *ss)
 PRBool
 ssl3_WaitingForStartOfServerSecondRound(sslSocket *ss)
 {
-    PRBool result;
+    PRBool result = PR_FALSE;
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
 
@@ -7054,9 +7049,10 @@ ssl3_WaitingForStartOfServerSecondRound(sslSocket *ss)
     case wait_change_cipher:
         result = !ssl3_ExtensionNegotiated(ss, ssl_session_ticket_xtn);
         break;
-    default:
-        result = PR_FALSE;
+    case wait_finished:
         break;
+    default:
+        PR_NOT_REACHED("ssl3_WaitingForStartOfServerSecondRound");
     }
 
     return result;
@@ -9966,17 +9962,19 @@ ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode error)
 	PORT_Assert(!ss->firstHsDone);
 	PORT_Assert(!ss->sec.isServer);
 	PORT_Assert(!ss->ssl3.hs.isResuming);
-	PORT_Assert(ss->ssl3.hs.ws != idle_handshake);
+	PORT_Assert(ss->ssl3.hs.ws == wait_new_session_ticket ||
+		    ss->ssl3.hs.ws == wait_change_cipher ||
+		    ss->ssl3.hs.ws == wait_finished);
 
+	/* ssl3_SendClientSecondRound deferred the false start check because
+	 * certificate authentication was pending, so we do it now if we still
+         * haven't received any of the server's second round yet.
+	 */
 	if (ss->opt.enableFalseStart &&
 	    !ss->firstHsDone &&
 	    !ss->sec.isServer &&
 	    !ss->ssl3.hs.isResuming &&
 	    ssl3_WaitingForStartOfServerSecondRound(ss)) {
-	    /* ssl3_SendClientSecondRound deferred the false start check because
-	     * certificate authentication was pending, so we do it now if we still
-	     * haven't received any of the server's second round yet.
-	     */
 	    rv = ssl3_CheckFalseStart(ss);
 	} else {
 	    rv = SECSuccess;

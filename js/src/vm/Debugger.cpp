@@ -97,6 +97,25 @@ ReportMoreArgsNeeded(JSContext *cx, const char *name, unsigned required)
     return false;
 }
 
+static inline bool
+EnsureFunctionHasScript(JSContext *cx, JSFunction *fun)
+{
+    if (fun->isInterpretedLazy()) {
+        AutoCompartment ac(cx, fun);
+        return !!fun->getOrCreateScript(cx);
+    }
+    return true;
+}
+
+static inline JSScript *
+GetOrCreateFunctionScript(JSContext *cx, JSFunction *fun)
+{
+    MOZ_ASSERT(fun->isInterpreted());
+    if (!EnsureFunctionHasScript(cx, fun))
+        return nullptr;
+    return fun->nonLazyScript();
+}
+
 #define REQUIRE_ARGC(name, n)                                                 \
     JS_BEGIN_MACRO                                                            \
         if (argc < (n))                                                       \
@@ -686,6 +705,9 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
     if (vp.isObject()) {
         RootedObject obj(cx, &vp.toObject());
 
+        if (obj->is<JSFunction>() && !EnsureFunctionHasScript(cx, &obj->as<JSFunction>()))
+            return false;
+
         ObjectWeakMap::AddPtr p = objects.lookupForAdd(obj);
         if (p) {
             vp.setObject(*p->value);
@@ -1123,6 +1145,8 @@ Debugger::slowPathOnNewScript(JSContext *cx, HandleScript script, GlobalObject *
 JSTrapStatus
 Debugger::onTrap(JSContext *cx, MutableHandleValue vp)
 {
+    MOZ_ASSERT(cx->compartment()->debugMode());
+
     ScriptFrameIter iter(cx);
     RootedScript script(cx, iter.script());
     Rooted<GlobalObject*> scriptGlobal(cx, &script->global());
@@ -1949,16 +1973,20 @@ bool
 Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "addAllGlobalsAsDebuggees", args, dbg);
-    AutoDebugModeGC dmgc(cx->runtime());
-    for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
-        if (c == dbg->object->compartment() || c->options().invisibleToDebugger())
-            continue;
-        c->zone()->scheduledForDestruction = false;
-        GlobalObject *global = c->maybeGlobal();
-        if (global) {
-            Rooted<GlobalObject*> rg(cx, global);
-            if (!dbg->addDebuggeeGlobal(cx, rg, dmgc))
-                return false;
+    for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
+        // Invalidate a zone at a time to avoid doing a zone-wide CellIter
+        // per compartment.
+        AutoDebugModeInvalidation invalidate(zone);
+        for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
+            if (c == dbg->object->compartment() || c->options().invisibleToDebugger())
+                continue;
+            c->zone()->scheduledForDestruction = false;
+            GlobalObject *global = c->maybeGlobal();
+            if (global) {
+                Rooted<GlobalObject*> rg(cx, global);
+                if (!dbg->addDebuggeeGlobal(cx, rg, invalidate))
+                    return false;
+            }
         }
     }
 
@@ -1984,9 +2012,9 @@ bool
 Debugger::removeAllDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "removeAllDebuggees", args, dbg);
-    AutoDebugModeGC dmgc(cx->runtime());
     for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-        dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), e.front(), dmgc, nullptr, &e);
+        dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), e.front(), nullptr, &e);
+
     args.rval().setUndefined();
     return true;
 }
@@ -2117,14 +2145,14 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
 bool
 Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
 {
-    AutoDebugModeGC dmgc(cx->runtime());
-    return addDebuggeeGlobal(cx, global, dmgc);
+    AutoDebugModeInvalidation invalidate(global->compartment());
+    return addDebuggeeGlobal(cx, global, invalidate);
 }
 
 bool
 Debugger::addDebuggeeGlobal(JSContext *cx,
                             Handle<GlobalObject*> global,
-                            AutoDebugModeGC &dmgc)
+                            AutoDebugModeInvalidation &invalidate)
 {
     if (debuggees.has(global))
         return true;
@@ -2190,7 +2218,7 @@ Debugger::addDebuggeeGlobal(JSContext *cx,
         } else {
             if (global->getDebuggers()->length() > 1)
                 return true;
-            if (debuggeeCompartment->addDebuggee(cx, global, dmgc))
+            if (debuggeeCompartment->addDebuggee(cx, global, invalidate))
                 return true;
 
             /* Maintain consistency on error. */
@@ -2207,13 +2235,13 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
                                GlobalObjectSet::Enum *compartmentEnum,
                                GlobalObjectSet::Enum *debugEnum)
 {
-    AutoDebugModeGC dmgc(fop->runtime());
-    return removeDebuggeeGlobal(fop, global, dmgc, compartmentEnum, debugEnum);
+    AutoDebugModeInvalidation invalidate(global->compartment());
+    return removeDebuggeeGlobal(fop, global, invalidate, compartmentEnum, debugEnum);
 }
 
 void
 Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
-                               AutoDebugModeGC &dmgc,
+                               AutoDebugModeInvalidation &invalidate,
                                GlobalObjectSet::Enum *compartmentEnum,
                                GlobalObjectSet::Enum *debugEnum)
 {
@@ -2269,7 +2297,7 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
      * global cannot be rooted on the stack without a cx.
      */
     if (v->empty())
-        global->compartment()->removeDebuggee(fop, global, dmgc, compartmentEnum);
+        global->compartment()->removeDebuggee(fop, global, invalidate, compartmentEnum);
 }
 
 /*
@@ -2397,10 +2425,14 @@ class Debugger::ScriptQuery {
         if (!prepareQuery())
             return false;
 
+        JSCompartment *singletonComp = nullptr;
+        if (compartments.count() == 1)
+            singletonComp = compartments.all().front();
+
         /* Search each compartment for debuggee scripts. */
         vector = v;
         oom = false;
-        IterateScripts(cx->runtime(), nullptr, this, considerScript);
+        IterateScripts(cx->runtime(), singletonComp, this, considerScript);
         if (oom) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -2470,10 +2502,21 @@ class Debugger::ScriptQuery {
     /* Indicates whether OOM has occurred while matching. */
     bool oom;
 
+    bool addCompartment(JSCompartment *comp) {
+        {
+            // All scripts in the debuggee compartment must be visible, so
+            // delazify everything.
+            AutoCompartment ac(cx, comp);
+            if (!comp->ensureDelazifyScriptsForDebugMode(cx))
+                return false;
+        }
+        return compartments.put(comp);
+    }
+
     /* Arrange for this ScriptQuery to match only scripts that run in |global|. */
     bool matchSingleGlobal(GlobalObject *global) {
         JS_ASSERT(compartments.count() == 0);
-        if (!compartments.put(global->compartment())) {
+        if (!addCompartment(global->compartment())) {
             js_ReportOutOfMemory(cx);
             return false;
         }
@@ -2488,7 +2531,7 @@ class Debugger::ScriptQuery {
         JS_ASSERT(compartments.count() == 0);
         /* Build our compartment set from the debugger's set of debuggee globals. */
         for (GlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
-            if (!compartments.put(r.front()->compartment())) {
+            if (!addCompartment(r.front()->compartment())) {
                 js_ReportOutOfMemory(cx);
                 return false;
             }
@@ -2931,8 +2974,10 @@ DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
         for (uint32_t i = script->innerObjectsStart(); i < objects->length; i++) {
             obj = objects->vector[i];
             if (obj->is<JSFunction>()) {
-                fun = static_cast<JSFunction *>(obj.get());
-                funScript = fun->nonLazyScript();
+                fun = &obj->as<JSFunction>();
+                funScript = GetOrCreateFunctionScript(cx, fun);
+                if (!funScript)
+                    return false;
                 s = dbg->wrapScript(cx, funScript);
                 if (!s || !js_NewbornArrayPush(cx, result, ObjectValue(*s)))
                     return false;
@@ -4653,14 +4698,9 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseInitializedLength(cx, 0, fun->nargs);
 
     if (fun->isInterpreted()) {
-        RootedScript script(cx);
-
-        {
-            AutoCompartment ac(cx, fun);
-            script = fun->getOrCreateScript(cx);
-            if (!script)
-                return false;
-        }
+        RootedScript script(cx, GetOrCreateFunctionScript(cx, fun));
+        if (!script)
+            return false;
 
         JS_ASSERT(fun->nargs == script->bindings.numArgs());
 
@@ -4702,15 +4742,9 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedScript script(cx);
-
-    {
-        AutoCompartment ac(cx, obj);
-
-        script = fun->getOrCreateScript(cx);
-        if (!script)
-            return false;
-    }
+    RootedScript script(cx, GetOrCreateFunctionScript(cx, fun));
+    if (!script)
+        return false;
 
     /* Only hand out debuggee scripts. */
     if (!dbg->observesScript(script)) {

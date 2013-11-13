@@ -2311,6 +2311,22 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (usingDisplayport) {
       nsRect clip = displayPort + aBuilder->ToReferenceFrame(mOuter);
+
+      // If we are using a display port, then ignore any pre-existing clip
+      // passed down from our parents, and use only the clip computed here
+      // based on the display port. The pre-existing clip would just defeat
+      // the purpose of a display port which is to paint regions that are not
+      // currently visible so that they can be brought into view asynchronously.
+      // Notes:
+      //   - The pre-existing clip state will be restored when the
+      //     AutoSaveRestore goes out of scope, so there is no permanent change
+      //     to this clip state.
+      //   - We still set a clip to the scroll port further below where we
+      //     build the scroll wrapper. This doesn't prevent us from painting
+      //     the entire displayport, but it lets the compositor know to
+      //     clip to the scroll port after compositing.
+      clipState.Clear();
+
       if (mClipAllDescendants) {
         clipState.ClipContentDescendants(clip);
       } else {
