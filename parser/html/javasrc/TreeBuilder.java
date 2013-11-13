@@ -175,8 +175,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int RT_OR_RP = 53;
 
-    final static int COMMAND = 54;
-
     final static int PARAM_OR_SOURCE_OR_TRACK = 55;
 
     final static int MGLYPH_OR_MALIGNMARK = 56;
@@ -2025,7 +2023,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             case STYLE:
                             case SCRIPT:
                             case TITLE:
-                            case COMMAND:
                             case TEMPLATE:
                                 // Fall through to IN_HEAD
                                 break inbodyloop;
@@ -2481,7 +2478,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 }
                                 break starttagloop;
                             case BASE:
-                            case COMMAND:
                             case LINK_OR_BASEFONT_OR_BGSOUND:
                                 appendVoidElementToCurrentMayFoster(
                                         elementName,
