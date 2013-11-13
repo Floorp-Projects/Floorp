@@ -9,7 +9,6 @@ import java.util.HashMap;
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.EngineSettings;
 import org.mozilla.gecko.sync.NonObjectJSONException;
-import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.SyncConfigurationException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
@@ -23,7 +22,7 @@ public class MockGlobalSession extends MockPrefsGlobalSession {
   public MockGlobalSession(String clusterURL, String username, String password,
       KeyBundle syncKeyBundle, GlobalSessionCallback callback)
           throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
-    super(SyncConfiguration.DEFAULT_USER_API, clusterURL, username, password, null, syncKeyBundle, callback, /* context */ null, null, null);
+    super(clusterURL, username, password, null, syncKeyBundle, callback, /* context */ null, null, null);
   }
 
   @Override
