@@ -20,7 +20,6 @@
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Util.h"
 #include "nsCycleCollector.h"
@@ -2323,8 +2322,6 @@ CreateGlobal(JSContext* aCx, T* aObject, nsWrapperCache* aCache,
     NS_WARNING("Failed to set proto");
     return nullptr;
   }
-
-  mozilla::HoldJSObjects(aObject);
 
   return global;
 }
