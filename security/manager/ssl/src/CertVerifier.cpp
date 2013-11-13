@@ -25,7 +25,8 @@ CertVerifier::CertVerifier(missing_cert_download_config mcdc,
                            ocsp_download_config odc,
                            ocsp_strict_config osc,
                            any_revo_fresh_config arfc,
-                           const char *firstNetworkRevocationMethod)
+                           const char *firstNetworkRevocationMethod,
+                           ocsp_get_config ogc)
   : mMissingCertDownloadEnabled(mcdc == missing_cert_download_on)
   , mCRLDownloadEnabled(cdc == crl_download_allowed)
   , mOCSPDownloadEnabled(odc == ocsp_on)
@@ -33,6 +34,7 @@ CertVerifier::CertVerifier(missing_cert_download_config mcdc,
   , mRequireRevocationInfo(arfc == any_revo_strict)
   , mCRLFirst(firstNetworkRevocationMethod != nullptr &&
               !strcmp("crl", firstNetworkRevocationMethod))
+  , mOCSPGETEnabled(ogc == ocsp_get_enabled)
 {
   MOZ_COUNT_CTOR(CertVerifier);
 }
@@ -230,8 +232,11 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
  
     rev.leafTests.cert_rev_flags_per_method[cert_revocation_method_crl] =
     rev.chainTests.cert_rev_flags_per_method[cert_revocation_method_crl] = revMethodFlags;
+
     rev.leafTests.cert_rev_flags_per_method[cert_revocation_method_ocsp] =
-    rev.chainTests.cert_rev_flags_per_method[cert_revocation_method_ocsp] = revMethodFlags;
+    rev.chainTests.cert_rev_flags_per_method[cert_revocation_method_ocsp]
+      = revMethodFlags
+      | (mOCSPGETEnabled ? 0 : CERT_REV_M_FORCE_POST_METHOD_FOR_OCSP);
 
     rev.leafTests.cert_rev_method_independent_flags =
     rev.chainTests.cert_rev_method_independent_flags =
@@ -342,6 +347,8 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
     // ocsp enabled controls network fetching, too
     | ((mOCSPDownloadEnabled && !localOnly) ?
         CERT_REV_M_ALLOW_NETWORK_FETCHING : CERT_REV_M_FORBID_NETWORK_FETCHING)
+    
+    | (mOCSPGETEnabled ? 0 : CERT_REV_M_FORCE_POST_METHOD_FOR_OCSP);
     ;
 
   rev.leafTests.preferred_methods[0] =
