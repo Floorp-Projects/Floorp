@@ -2595,7 +2595,7 @@ let SessionStoreInternal = {
 
       // Any data that's in the process of being collected for this tab will be
       // out of date now that we're restoring it.
-      TabState.dropPendingCollections(tab);
+      TabState.dropPendingCollections(browser);
 
       if (!tabData.entries) {
         tabData.entries = [];
