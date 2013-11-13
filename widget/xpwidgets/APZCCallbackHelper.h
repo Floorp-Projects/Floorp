@@ -48,6 +48,12 @@ public:
     /* Get the DOMWindowUtils for the window corresponding to the givent content
        element. This might be an iframe inside the tab, for instance. */
     static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(nsIContent* aContent);
+
+    /* Get the presShellId and view ID for the given content element, if they can be
+       found. Returns false if the values could not be found, true if they could. */
+    static bool GetScrollIdentifiers(nsIContent* aContent,
+                                     uint32_t* aPresShellIdOut,
+                                     FrameMetrics::ViewID* aViewIdOut);
 };
 
 }
