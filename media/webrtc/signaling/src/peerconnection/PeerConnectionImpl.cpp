@@ -1292,7 +1292,10 @@ PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector, bool internalStats) {
   PC_AUTO_ENTER_API_CALL(true);
 
 #ifdef MOZILLA_INTERNAL_API
-  MOZ_ASSERT(mMedia);
+  if (!mMedia) {
+    // Since we zero this out before the d'tor, we should check.
+    return NS_ERROR_UNEXPECTED;
+  }
 
   // Gather up pipelines from mMedia and dispatch them to STS for inspection
 
@@ -1952,6 +1955,7 @@ PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
 }
 
 #ifdef MOZILLA_INTERNAL_API
+
 nsresult
 PeerConnectionImpl::GetStatsImpl_s(
     bool internalStats,
@@ -1960,6 +1964,8 @@ PeerConnectionImpl::GetStatsImpl_s(
     const std::vector<RefPtr<NrIceMediaStream>>& streams,
     DOMHighResTimeStamp now,
     RTCStatsReportInternal* report) {
+
+  ASSERT_ON_THREAD(iceCtx->thread());
 
   // Gather stats from pipelines provided (can't touch mMedia + stream on STS)
 
@@ -2005,34 +2011,57 @@ PeerConnectionImpl::GetStatsImpl_s(
   return NS_OK;
 }
 
+static void ToRTCIceCandidateStats(
+    const std::vector<NrIceCandidate>& candidates,
+    RTCStatsType candidateType,
+    const nsString& componentId,
+    DOMHighResTimeStamp now,
+    RTCStatsReportInternal* report) {
+
+  MOZ_ASSERT(report);
+  for (auto c = candidates.begin(); c != candidates.end(); ++c) {
+    RTCIceCandidateStats cand;
+    cand.mType.Construct(candidateType);
+    NS_ConvertASCIItoUTF16 codeword(c->codeword.c_str());
+    cand.mComponentId.Construct(componentId);
+    cand.mId.Construct(codeword);
+    cand.mTimestamp.Construct(now);
+    cand.mCandidateType.Construct(
+        RTCStatsIceCandidateType(c->type));
+    cand.mIpAddress.Construct(
+        NS_ConvertASCIItoUTF16(c->cand_addr.host.c_str()));
+    cand.mPortNumber.Construct(c->cand_addr.port);
+    report->mIceCandidateStats.Value().AppendElement(cand);
+  }
+}
+
 void PeerConnectionImpl::FillStatsReport_s(
     NrIceMediaStream& mediaStream,
     bool internalStats,
     DOMHighResTimeStamp now,
     RTCStatsReportInternal* report) {
-  std::vector<NrIceCandidatePair> candPairs;
-  nsresult res = mediaStream.GetCandidatePairs(&candPairs);
-
-  if (NS_FAILED(res)) {
-    CSFLogError(logTag, "%s: Error getting candidate pairs", __FUNCTION__);
-    return;
-  }
 
   NS_ConvertASCIItoUTF16 componentId(mediaStream.name().c_str());
-  for (auto p = candPairs.begin(); p != candPairs.end(); ++p) {
-    NS_ConvertASCIItoUTF16 codeword(p->codeword.c_str());
-    NS_ConvertASCIItoUTF16 localCodeword(p->local.codeword.c_str());
-    NS_ConvertASCIItoUTF16 remoteCodeword(p->remote.codeword.c_str());
-    // Only expose candidate-pair statistics to chrome, until we've thought
-    // through the implications of exposing it to content.
+  if (internalStats) {
+    std::vector<NrIceCandidatePair> candPairs;
+    nsresult res = mediaStream.GetCandidatePairs(&candPairs);
+    if (NS_FAILED(res)) {
+      CSFLogError(logTag, "%s: Error getting candidate pairs", __FUNCTION__);
+      return;
+    }
 
-    if (internalStats) {
+    for (auto p = candPairs.begin(); p != candPairs.end(); ++p) {
+      NS_ConvertASCIItoUTF16 codeword(p->codeword.c_str());
+      NS_ConvertASCIItoUTF16 localCodeword(p->local.codeword.c_str());
+      NS_ConvertASCIItoUTF16 remoteCodeword(p->remote.codeword.c_str());
+      // Only expose candidate-pair statistics to chrome, until we've thought
+      // through the implications of exposing it to content.
+
       RTCIceCandidatePairStats s;
       s.mId.Construct(codeword);
       s.mComponentId.Construct(componentId);
       s.mTimestamp.Construct(now);
       s.mType.Construct(RTCStatsType::Candidatepair);
-
       s.mLocalCandidateId.Construct(localCodeword);
       s.mRemoteCandidateId.Construct(remoteCodeword);
       s.mNominated.Construct(p->nominated);
@@ -2041,34 +2070,24 @@ void PeerConnectionImpl::FillStatsReport_s(
       s.mState.Construct(RTCStatsIceCandidatePairState(p->state));
       report->mIceCandidatePairStats.Value().AppendElement(s);
     }
+  }
 
-    {
-      RTCIceCandidateStats local;
-      local.mComponentId.Construct(componentId);
-      local.mId.Construct(localCodeword);
-      local.mTimestamp.Construct(now);
-      local.mType.Construct(RTCStatsType::Localcandidate);
-      local.mCandidateType.Construct(
-          RTCStatsIceCandidateType(p->local.type));
-      local.mIpAddress.Construct(
-          NS_ConvertASCIItoUTF16(p->local.cand_addr.host.c_str()));
-      local.mPortNumber.Construct(p->local.cand_addr.port);
-      report->mIceCandidateStats.Value().AppendElement(local);
-    }
+  std::vector<NrIceCandidate> candidates;
+  if (NS_SUCCEEDED(mediaStream.GetLocalCandidates(&candidates))) {
+    ToRTCIceCandidateStats(candidates,
+                           RTCStatsType::Localcandidate,
+                           componentId,
+                           now,
+                           report);
+  }
+  candidates.clear();
 
-    {
-      RTCIceCandidateStats remote;
-      remote.mComponentId.Construct(componentId);
-      remote.mId.Construct(remoteCodeword);
-      remote.mTimestamp.Construct(now);
-      remote.mType.Construct(RTCStatsType::Remotecandidate);
-      remote.mCandidateType.Construct(
-          RTCStatsIceCandidateType(p->remote.type));
-      remote.mIpAddress.Construct(
-          NS_ConvertASCIItoUTF16(p->remote.cand_addr.host.c_str()));
-      remote.mPortNumber.Construct(p->remote.cand_addr.port);
-      report->mIceCandidateStats.Value().AppendElement(remote);
-    }
+  if (NS_SUCCEEDED(mediaStream.GetRemoteCandidates(&candidates))) {
+    ToRTCIceCandidateStats(candidates,
+                           RTCStatsType::Remotecandidate,
+                           componentId,
+                           now,
+                           report);
   }
 }
 
@@ -2081,6 +2100,8 @@ void PeerConnectionImpl::GetStats_s(
     const RefPtr<NrIceCtx>& iceCtx,
     const std::vector<RefPtr<NrIceMediaStream>>& streams,
     DOMHighResTimeStamp now) {
+
+  ASSERT_ON_THREAD(iceCtx->thread());
 
   // We do not use the pcHandle here, since that's risky to expose to content.
   nsAutoPtr<RTCStatsReportInternal> report(
