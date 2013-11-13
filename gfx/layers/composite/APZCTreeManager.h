@@ -227,11 +227,12 @@ public:
                             bool aPreventDefault);
 
   /**
-   * Updates any zoom constraints contained in the <meta name="viewport"> tag.
+   * Updates any zoom constraints on the root APZC for the given layers id.
+   * Generally the zoom constraints come from the <meta name="viewport"> tag.
    * We try to obey everything it asks us elsewhere, but here we only handle
    * minimum-scale, maximum-scale, and user-scalable.
    */
-  void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
+  void UpdateZoomConstraints(const uint64_t& aLayersId,
                              bool aAllowZoom,
                              const CSSToScreenScale& aMinScale,
                              const CSSToScreenScale& aMaxScale);
