@@ -1,52 +1,11 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/en_CA.xml
 // *
 // ***************************************************************************
 en_CA{
-    PaperSize:intvector{
-        279,
-        216,
-    }
-    Version{"2.0.75.99"}
-    calendar{
-        gregorian{
-            availableFormats{
-                MMMMEd{"E, MMMM d"}
-                MMMMd{"MMMM d"}
-                MMdd{"MM/dd"}
-                yyMMM{"MMM yy"}
-            }
-            intervalFormats{
-                M{
-                    M{"M-M"}
-                }
-                d{
-                    d{"d-d"}
-                }
-                fallback{"{0} - {1}"}
-                h{
-                    a{"h a - h a"}
-                    h{"h-h a"}
-                }
-                hm{
-                    a{"h:mm a - h:mm a"}
-                    h{"h:mm-h:mm a"}
-                    m{"h:mm-h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a - h:mm a v"}
-                    h{"h:mm-h:mm a v"}
-                    m{"h:mm-h:mm a v"}
-                }
-                hv{
-                    a{"h a - h a v"}
-                    h{"h-h a v"}
-                }
-            }
-        }
-    }
+    Version{"2.0.90.61"}
 }

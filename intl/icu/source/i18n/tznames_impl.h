@@ -1,6 +1,6 @@
 /*
  *******************************************************************************
- * Copyright (C) 2011-2012, International Business Machines Corporation and    *
+ * Copyright (C) 2011-2013, International Business Machines Corporation and    *
  * others. All Rights Reserved.                                                *
  *******************************************************************************
  */
@@ -183,6 +183,8 @@ public:
     UnicodeString& getExemplarLocationName(const UnicodeString& tzID, UnicodeString& name) const;
 
     TimeZoneNames::MatchInfoCollection* find(const UnicodeString& text, int32_t start, uint32_t types, UErrorCode& status) const;
+
+    static UnicodeString& getDefaultExemplarLocationName(const UnicodeString& tzID, UnicodeString& name);
 
 private:
 

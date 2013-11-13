@@ -2082,10 +2082,9 @@ ultag_parse(const char* tag, int32_t tagLen, int32_t* parsedLen, UErrorCode* sta
     int32_t subtagLen;
     int32_t extlangIdx;
     ExtensionListEntry *pExtension;
-    AttributeListEntry *pAttribute;
     char *pExtValueSubtag, *pExtValueSubtagEnd;
     int32_t i;
-    UBool isLDMLExtension, privateuseVar = FALSE;
+    UBool privateuseVar = FALSE;
     int32_t grandfatheredLen = 0;
 
     if (parsedLen != NULL) {
@@ -2161,8 +2160,6 @@ ultag_parse(const char* tag, int32_t tagLen, int32_t* parsedLen, UErrorCode* sta
     pExtension = NULL;
     pExtValueSubtag = NULL;
     pExtValueSubtagEnd = NULL;
-    pAttribute = NULL;
-    isLDMLExtension = FALSE;
 
     while (pNext) {
         char *pSep;
@@ -2287,8 +2284,6 @@ ultag_parse(const char* tag, int32_t tagLen, int32_t* parsedLen, UErrorCode* sta
                         break;
                     }
                 }
-
-                isLDMLExtension = (uprv_tolower(*pSubtag) == LDMLEXT);
 
                 /* create a new extension */
                 pExtension = (ExtensionListEntry*)uprv_malloc(sizeof(ExtensionListEntry));

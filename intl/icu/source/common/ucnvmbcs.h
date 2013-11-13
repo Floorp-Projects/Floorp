@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-*   Copyright (C) 2000-2012, International Business Machines
+*   Copyright (C) 2000-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 ******************************************************************************
@@ -59,6 +59,9 @@
  * The first of these versions is 5.3, which is like 4.3 except for the differences above.
  *
  * When possible, makeconv continues to generate version 4.m files.
+ *
+ * _MBCSHeader.version 5.4/4.4 supports "good one-way" mappings (|4)
+ * in the extension tables (fromUTableValues bit 30). See ucnv_ext.h for details.
  *
  * _MBCSHeader.version 4.3 optionally modifies the fromUnicode data structures
  * slightly and optionally adds a table for conversion to MBCS (non-SBCS)

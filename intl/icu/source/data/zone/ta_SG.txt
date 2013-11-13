@@ -1,16 +1,19 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ta_SG.xml
 // *
 // ***************************************************************************
 ta_SG{
-    Version{"2.0.74.95"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "meta:Brunei"{
             ls{"புருணை டாரு சலாம் நேரம்"}
+        }
+        "meta:India"{
+            ss{"∅∅∅"}
         }
         "meta:Indonesia_Central"{
             ls{"மத்திய இந்தோனேசிய நேரம்"}

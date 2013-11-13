@@ -1,7 +1,7 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/windowsZones.xml
 // *
@@ -137,7 +137,7 @@ windowsZones:table(nofallback){
         }
         "Central Pacific Standard Time"{
             001{"Pacific/Guadalcanal"}
-            AQ{"Antarctica/Macquarie"}
+            AU{"Antarctica/Macquarie"}
             FM{"Pacific/Ponape Pacific/Kosrae"}
             NC{"Pacific/Noumea"}
             SB{"Pacific/Guadalcanal"}
@@ -202,7 +202,7 @@ windowsZones:table(nofallback){
         }
         "E. South America Standard Time"{
             001{"America/Sao_Paulo"}
-            BR{"America/Sao_Paulo"}
+            BR{"America/Sao_Paulo America/Araguaina"}
         }
         "Eastern Standard Time"{
             001{"America/New_York"}
@@ -211,6 +211,8 @@ windowsZones:table(nofallback){
                 "America/Toronto America/Iqaluit America/Montreal America/Nipigon Ame"
                 "rica/Pangnirtung America/Thunder_Bay"
             }
+            CU{"America/Havana"}
+            HT{"America/Port-au-Prince"}
             TC{"America/Grand_Turk"}
             US{
                 "America/New_York America/Detroit America/Indiana/Petersburg America/"
@@ -222,7 +224,6 @@ windowsZones:table(nofallback){
         "Egypt Standard Time"{
             001{"Africa/Cairo"}
             EG{"Africa/Cairo"}
-            PS{"Asia/Gaza Asia/Hebron"}
         }
         "Ekaterinburg Standard Time"{
             001{"Asia/Yekaterinburg"}
@@ -319,6 +320,10 @@ windowsZones:table(nofallback){
             001{"Asia/Seoul"}
             KP{"Asia/Pyongyang"}
             KR{"Asia/Seoul"}
+        }
+        "Libya Standard Time"{
+            001{"Africa/Tripoli"}
+            LY{"Africa/Tripoli"}
         }
         "Magadan Standard Time"{
             001{"Asia/Magadan"}
@@ -429,8 +434,8 @@ windowsZones:table(nofallback){
             001{"America/Cayenne"}
             AQ{"Antarctica/Rothera"}
             BR{
-                "America/Fortaleza America/Araguaina America/Belem America/Maceio Ame"
-                "rica/Recife America/Santarem"
+                "America/Fortaleza America/Belem America/Maceio America/Recife Americ"
+                "a/Santarem"
             }
             FK{"Atlantic/Stanley"}
             GF{"America/Cayenne"}
@@ -442,7 +447,6 @@ windowsZones:table(nofallback){
             CA{"America/Coral_Harbour"}
             CO{"America/Bogota"}
             EC{"America/Guayaquil"}
-            HT{"America/Port-au-Prince"}
             JM{"America/Jamaica"}
             KY{"America/Cayman"}
             PA{"America/Panama"}
@@ -606,7 +610,7 @@ windowsZones:table(nofallback){
         }
         "Vladivostok Standard Time"{
             001{"Asia/Vladivostok"}
-            RU{"Asia/Vladivostok Asia/Sakhalin"}
+            RU{"Asia/Vladivostok Asia/Sakhalin Asia/Ust-Nera"}
         }
         "W. Australia Standard Time"{
             001{"Australia/Perth"}
@@ -635,12 +639,11 @@ windowsZones:table(nofallback){
             AD{"Europe/Andorra"}
             AT{"Europe/Vienna"}
             CH{"Europe/Zurich"}
-            DE{"Europe/Berlin"}
+            DE{"Europe/Berlin Europe/Busingen"}
             GI{"Europe/Gibraltar"}
             IT{"Europe/Rome"}
             LI{"Europe/Vaduz"}
             LU{"Europe/Luxembourg"}
-            LY{"Africa/Tripoli"}
             MC{"Europe/Monaco"}
             MT{"Europe/Malta"}
             NL{"Europe/Amsterdam"}
@@ -672,7 +675,7 @@ windowsZones:table(nofallback){
         }
         "Yakutsk Standard Time"{
             001{"Asia/Yakutsk"}
-            RU{"Asia/Yakutsk"}
+            RU{"Asia/Yakutsk Asia/Khandyga"}
         }
     }
 }

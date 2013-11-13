@@ -1,7 +1,7 @@
 /*
 *******************************************************************************
 *
-*   Copyright (C) 2000-2012, International Business Machines
+*   Copyright (C) 2000-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 *
 *******************************************************************************
@@ -1049,6 +1049,11 @@ MBCSAddTable(NewConverter *cnvData, UCMTable *table, UConverterStaticData *stati
             staticData->hasToUnicodeFallback=TRUE;
             isOK&=MBCSAddToUnicode(mbcsData, m->b.bytes, m->bLen, c, f);
             break;
+        case 4:
+            /* move "good one-way" mappings to the extension table */
+            m->f|=MBCS_FROM_U_EXT_FLAG;
+            m->moveFlag=UCM_MOVE_TO_EXT;
+            break;
         default:
             /* will not occur because the parser checked it already */
             fprintf(stderr, "error: illegal fallback indicator %d\n", f);
@@ -1494,7 +1499,7 @@ MBCSWrite(NewConverter *cnvData, const UConverterStaticData *staticData,
         header.version[0]=4;
         headerLength=MBCS_HEADER_V4_LENGTH;  /* 8 */
     }
-    header.version[1]=3;
+    header.version[1]=4;
     /* header.version[2] set above for utf8Friendly data */
 
     header.options|=(uint32_t)headerLength;

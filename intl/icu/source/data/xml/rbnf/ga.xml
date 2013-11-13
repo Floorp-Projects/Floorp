@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
- Copyright (c) 2010 International Business Machines Corporation and others. All rights reserved.
+ Copyright (c) 2013 International Business Machines Corporation and others. All rights reserved.
 -->
 <!DOCTYPE ldml SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd">
 <ldml>
@@ -10,11 +10,6 @@
 		<language type="ga"/>
 	</identity>
     <rbnf>
-        <rulesetGrouping type="SpelloutRules">
-            <ruleset type="lenient-parse" access="private">
-                <rbnfrule value="0">&amp; ' ' , ',' ;</rbnfrule>
-            </ruleset>
-        </rulesetGrouping>
         <rulesetGrouping type="DurationRules">
             <ruleset type="with-words">
                 <rbnfrule value="0">=0= soicind;</rbnfrule>

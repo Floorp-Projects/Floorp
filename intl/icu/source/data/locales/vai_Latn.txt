@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/vai_Latn.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/vai_Latn.xml
+ * ICU <specials> source: <path>/common/main/vai_Latn.xml
  */
 vai_Latn{
     %%Parent{"root"}
@@ -23,7 +23,8 @@ vai_Latn{
         default{"latn"}
         latn{
             patterns{
-                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
             }
             symbols{
@@ -33,8 +34,49 @@ vai_Latn{
         }
         native{"vaii"}
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/y G",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E d"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"m:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMd{"MMM d y"}
+                yMd{"M/d/y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+        }
         gregorian{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -44,7 +86,7 @@ vai_Latn{
                 "EEEE, d MMMM y",
                 "d MMMM y",
                 "d MMM y",
-                "dd/MM/yyyy",
+                "dd/MM/y",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -88,37 +130,6 @@ vai_Latn{
                     }
                 }
             }
-            fields{
-                day{
-                    dn{"tele"}
-                    relative{
-                        "-1"{"kunu"}
-                        "0"{"wɛlɛ"}
-                        "1"{"sina"}
-                    }
-                }
-                hour{
-                    dn{"hawa"}
-                }
-                minute{
-                    dn{"mini"}
-                }
-                month{
-                    dn{"kalo"}
-                }
-                second{
-                    dn{"jaki-jaka"}
-                }
-                week{
-                    dn{"wiki"}
-                }
-                weekday{
-                    dn{"wikiyɛma tele"}
-                }
-                year{
-                    dn{"saŋ"}
-                }
-            }
             monthNames{
                 format{
                     wide{
@@ -144,5 +155,36 @@ vai_Latn{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"tele"}
+            relative{
+                "-1"{"kunu"}
+                "0"{"wɛlɛ"}
+                "1"{"sina"}
+            }
+        }
+        hour{
+            dn{"hawa"}
+        }
+        minute{
+            dn{"mini"}
+        }
+        month{
+            dn{"kalo"}
+        }
+        second{
+            dn{"jaki-jaka"}
+        }
+        week{
+            dn{"wiki"}
+        }
+        weekday{
+            dn{"wikiyɛma tele"}
+        }
+        year{
+            dn{"saŋ"}
+        }
     }
 }

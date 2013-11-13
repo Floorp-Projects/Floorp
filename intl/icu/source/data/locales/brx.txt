@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/brx.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/brx.xml
+ * ICU <specials> source: <path>/common/main/brx.xml
  */
 brx{
     AuxExemplarCharacters{"[\u200C\u200D]"}
@@ -47,8 +47,49 @@ brx{
         }
         native{"deva"}
     }
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, MMMM d, y G",
+                "MMMM d, y G",
+                "MMM d, y G",
+                "M/d/yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                GGGGyMMMMEEEEdd{"EEEE,dd MMMM GGGGy"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"d-MMM"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "फुं",
@@ -84,12 +125,12 @@ brx{
                 d{"d"}
                 hm{"h:mm a"}
                 ms{"mm:ss"}
-                y{"yyyy"}
-                yM{"M/yyyy"}
-                yMEd{"E, M/d/yyyy"}
-                yMMM{"MMM yyyy"}
-                yMMMEd{"E, MMM d, yyyy"}
-                yMMMM{"MMMM yyyy"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
             }
@@ -130,46 +171,6 @@ brx{
                 abbreviated{
                     "ईसा.पूर्व",
                     "सन",
-                }
-            }
-            fields{
-                day{
-                    dn{"सान"}
-                    relative{
-                        "-1"{"मैया"}
-                        "0"{"दिनै"}
-                        "1"{"गाबोन"}
-                    }
-                }
-                dayperiod{
-                    dn{"फुं/बेलासे"}
-                }
-                era{
-                    dn{"जौथाय"}
-                }
-                hour{
-                    dn{"रिंगा"}
-                }
-                minute{
-                    dn{"मिनिथ"}
-                }
-                month{
-                    dn{"दान"}
-                }
-                second{
-                    dn{"सेखेन्द"}
-                }
-                week{
-                    dn{"सबथा/हबथा"}
-                }
-                weekday{
-                    dn{"सप्ताह के दिन"}
-                }
-                year{
-                    dn{"बोसोर"}
-                }
-                zone{
-                    dn{"ओनसोल"}
                 }
             }
             monthNames{
@@ -244,38 +245,80 @@ brx{
         quotationEnd{"”"}
         quotationStart{"“"}
     }
+    fields{
+        day{
+            dn{"सान"}
+            relative{
+                "-1"{"मैया"}
+                "0"{"दिनै"}
+                "1"{"गाबोन"}
+            }
+        }
+        dayperiod{
+            dn{"फुं/बेलासे"}
+        }
+        era{
+            dn{"जौथाय"}
+        }
+        hour{
+            dn{"रिंगा"}
+        }
+        minute{
+            dn{"मिनिथ"}
+        }
+        month{
+            dn{"दान"}
+        }
+        second{
+            dn{"सेखेन्द"}
+        }
+        week{
+            dn{"सबथा/हबथा"}
+        }
+        weekday{
+            dn{"सप्ताह के दिन"}
+        }
+        year{
+            dn{"बोसोर"}
+        }
+        zone{
+            dn{"ओनसोल"}
+        }
+    }
     measurementSystemNames{
         US{"यु.एस"}
         metric{"मिथार खिलमिथार"}
     }
     units{
-        day{
-            one{"{0} सान"}
-            other{"{0} सान"}
-        }
-        hour{
-            one{"{0} रिंगा"}
-            other{"{0} घंटे"}
-        }
-        minute{
-            one{"{0} मिन."}
-            other{"{0} मिन."}
-        }
-        month{
-            one{"{0} महीना"}
-            other{"{0} महीने"}
-        }
-        second{
-            one{"{0} सेकं."}
-            other{"{0} सेकं."}
-        }
-        week{
-            one{"{0} सप्ताह"}
-            other{"{0} सप्ताह"}
-        }
-        year{
-            one{"{0} साल"}
-            other{"{0} साल"}
+        duration{
+            day{
+                one{"{0} सान"}
+                other{"{0} सान"}
+            }
+            hour{
+                one{"{0} रिंगा"}
+                other{"{0} घंटे"}
+            }
+            minute{
+                one{"{0} मिन."}
+                other{"{0} मिन."}
+            }
+            month{
+                one{"{0} महीना"}
+                other{"{0} महीने"}
+            }
+            second{
+                one{"{0} सेकं."}
+                other{"{0} सेकं."}
+            }
+            week{
+                one{"{0} सप्ताह"}
+                other{"{0} सप्ताह"}
+            }
+            year{
+                one{"{0} साल"}
+                other{"{0} साल"}
+            }
         }
     }
 }
