@@ -7959,9 +7959,12 @@ nsGlobalWindow::Close(ErrorResult& aError)
     return;
   }
 
-  // Don't allow scripts from content to close non-app windows that were not
-  // opened by script.
+  // Don't allow scripts from content to close non-app or non-neterror
+  // windows that were not opened by script.
+  nsAutoString url;
+  mDoc->GetURL(url);
   if (!mDocShell->GetIsApp() &&
+      !StringBeginsWith(url, NS_LITERAL_STRING("about:neterror")) &&
       !mHadOriginalOpener && !nsContentUtils::IsCallerChrome()) {
     bool allowClose = mAllowScriptsToClose ||
       Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
