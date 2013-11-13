@@ -48,7 +48,7 @@ StreamingProtocolControllerService::Create(nsIChannel *aChannel, nsIStreamingPro
   nsresult rv = uri->GetScheme(scheme);
   if (NS_FAILED(rv)) return rv;
 
-#ifdef MOZ_RTSP
+#ifdef NECKO_PROTOCOL_rtsp
   if (scheme.EqualsLiteral("rtsp")) {
     if (IsNeckoChild()) {
       mediacontroller = new RtspControllerChild(aChannel);
