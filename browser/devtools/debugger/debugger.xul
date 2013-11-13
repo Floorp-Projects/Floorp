@@ -21,6 +21,8 @@
         width="960" height="480"
         persist="screenX screenY width height sizemode">
 
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/devtools/theme-switching.js"/>
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="text/javascript" src="debugger-controller.js"/>
   <script type="text/javascript" src="debugger-view.js"/>
@@ -283,7 +285,7 @@
          command="removeAllWatchExpressionsCommand"/>
   </keyset>
 
-  <vbox id="body" layout="horizontal" flex="1">
+  <vbox id="body" layout="horizontal" flex="1" class="theme-body">
     <toolbar id="debugger-toolbar"
              class="devtools-toolbar">
       <hbox id="debugger-controls">
