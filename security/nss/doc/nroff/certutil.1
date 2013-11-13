@@ -2,12 +2,12 @@
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 19 July 2013
+.\"      Date:  5 November 2013
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "19 July 2013" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "5 November 2013" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -249,6 +249,11 @@ If no prefix is specified the default type is retrieved from NSS_DEFAULT_DB_TYPE
 \-e
 .RS 4
 Check a certificate\*(Aqs signature during the process of validating a certificate\&.
+.RE
+.PP
+\-\-email email\-address
+.RS 4
+Specify the email address of a certificate to list\&. Used with the \-L command option\&.
 .RE
 .PP
 \-f password\-file
@@ -903,6 +908,11 @@ Add the Subject Key ID extension to the certificate\&. X\&.509 certificate exten
 \-\-extNC
 .RS 4
 Add a Name Constraint extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-empty\-password
+.RS 4
+Use empty password when creating new certificate database with \-N\&.
 .RE
 .PP
 \-\-keyAttrFlags attrflags
