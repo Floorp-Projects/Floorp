@@ -1866,7 +1866,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             NS_HTML5_BREAK(starttagloop);
           }
           case NS_HTML5TREE_BUILDER_NOFRAMES: {
-            startTagScriptInHead(elementName, attributes);
+            startTagGenericRawText(elementName, attributes);
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
@@ -2950,8 +2950,7 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
       }
       case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET: {
         errStrayEndTag(name);
-        mode = NS_HTML5TREE_BUILDER_IN_FRAMESET;
-        continue;
+        NS_HTML5_BREAK(endtagloop);
       }
       case NS_HTML5TREE_BUILDER_TEXT: {
         pop();
