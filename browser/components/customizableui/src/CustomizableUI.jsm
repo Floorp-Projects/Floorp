@@ -401,7 +401,7 @@ let CustomizableUIInternal = {
 
       this.insertWidgetBefore(node, currentNode, container, aArea);
       if (gResetting) {
-        this.notifyListeners("onWidgetReset", id);
+        this.notifyListeners("onWidgetReset", id, aArea);
       }
     }
 
@@ -448,6 +448,10 @@ let CustomizableUIInternal = {
         let index = placementAry.indexOf(id);
         placementAry.splice(index, 1);
       }
+    }
+
+    if (gResetting) {
+      this.notifyListeners("onAreaReset", aArea);
     }
 
     this.endBatchUpdate();
