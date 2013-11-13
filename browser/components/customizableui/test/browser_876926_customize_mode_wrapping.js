@@ -114,8 +114,13 @@ let gTests = [
     setup: startCustomizing,
     run: function() {
       otherWin = yield openAndLoadWindow(null, true);
-      // Open panel to force its construction:
-      yield afterPanelOpen(otherWin);
+      // Open and close the panel to force its construction:
+      let shownPromise = promisePanelShown(otherWin);
+      otherWin.PanelUI.toggle({type: "command"});
+      yield shownPromise;
+      let hiddenPromise = promisePanelHidden(otherWin);
+      otherWin.PanelUI.toggle({type: "command"});
+      yield hiddenPromise;
 
       ok(CustomizableUI.inDefaultState, "Should start in default state");
 
@@ -142,23 +147,6 @@ let gTests = [
     }
   }
 ];
-
-function afterPanelOpen(win) {
-  let panelEl = win.PanelUI.panel;
-  let deferred = Promise.defer();
-  function onPanelClose(e) {
-    panelEl.removeEventListener("popuphidden", onPanelClose);
-    deferred.resolve();
-  }
-  function onPanelOpen(e) {
-    panelEl.removeEventListener("popupshown", onPanelOpen);
-    panelEl.addEventListener("popuphidden", onPanelClose);
-    win.PanelUI.toggle({type: "command"});
-  };
-  panelEl.addEventListener("popupshown", onPanelOpen);
-  win.PanelUI.toggle({type: "command"});
-  return deferred.promise;
-}
 
 function asyncCleanup() {
   Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
