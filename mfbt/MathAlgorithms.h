@@ -451,6 +451,30 @@ RoundUpPow2(size_t x)
   return size_t(1) << CeilingLog2(x);
 }
 
+/**
+ * Rotates the bits of the given value left by the amount of the shift width.
+ */
+template<typename T>
+inline T
+RotateLeft(const T t, uint_fast8_t shift)
+{
+  MOZ_ASSERT(shift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
+  static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
+  return (t << shift) | (t >> (sizeof(T) * CHAR_BIT - shift));
+}
+
+/**
+ * Rotates the bits of the given value right by the amount of the shift width.
+ */
+template<typename T>
+inline T
+RotateRight(const T t, uint_fast8_t shift)
+{
+  MOZ_ASSERT(shift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
+  static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
+  return (t >> shift) | (t << (sizeof(T) * CHAR_BIT - shift));
+}
+
 } /* namespace mozilla */
 
 #endif /* mozilla_MathAlgorithms_h */
