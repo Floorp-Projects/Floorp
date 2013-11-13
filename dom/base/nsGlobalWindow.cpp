@@ -3190,19 +3190,6 @@ nsGlobalWindow::PoisonOuterWindowProxy(JSObject *aObject)
   }
 }
 
-void
-nsGlobalWindow::SetScriptsEnabled(bool aEnabled, bool aFireTimeouts)
-{
-  FORWARD_TO_INNER_VOID(SetScriptsEnabled, (aEnabled, aFireTimeouts));
-
-  if (aEnabled && aFireTimeouts) {
-    // Scripts are enabled (again?) on this context, run timeouts that
-    // fired on this context while scripts were disabled.
-    void (nsGlobalWindow::*run)() = &nsGlobalWindow::RunTimeout;
-    NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, run));
-  }
-}
-
 nsresult
 nsGlobalWindow::SetArguments(nsIArray *aArguments)
 {
@@ -11834,20 +11821,6 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     if (!scx) {
       // No context means this window was closed or never properly
       // initialized for this language.
-      continue;
-    }
-
-    // The "scripts disabled" concept is still a little vague wrt
-    // multiple languages.  Prepare for the day when languages can be
-    // disabled independently of the other languages...
-    if (!scx->GetScriptsEnabled()) {
-      // Scripts were enabled once in this window (unless aTimeout ==
-      // nullptr) but now scripts are disabled (we might be in
-      // print-preview, for instance), this means we shouldn't run any
-      // timeouts at this point.
-      //
-      // If scripts are enabled for this language in this window again
-      // we'll fire the timeouts that are due at that point.
       continue;
     }
 

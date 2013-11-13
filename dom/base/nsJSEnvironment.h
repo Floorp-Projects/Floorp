@@ -59,9 +59,6 @@ public:
   virtual nsresult InitContext() MOZ_OVERRIDE;
   virtual bool IsContextInitialized() MOZ_OVERRIDE;
 
-  virtual bool GetScriptsEnabled() MOZ_OVERRIDE;
-  virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts) MOZ_OVERRIDE;
-
   virtual nsresult SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, nsISupports* aVal) MOZ_OVERRIDE;
 
   virtual bool GetProcessingScriptTag() MOZ_OVERRIDE;
@@ -166,7 +163,6 @@ private:
   JS::Heap<JSObject*> mWindowProxy;
 
   bool mIsInitialized;
-  bool mScriptsEnabled;
   bool mGCOnDestruction;
   bool mProcessingScriptTag;
 
