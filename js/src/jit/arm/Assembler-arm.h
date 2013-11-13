@@ -98,9 +98,9 @@ static MOZ_CONSTEXPR_VAR Register StackPointer = sp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = InvalidReg;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = r0;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = { FloatRegisters::d0 };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = { FloatRegisters::d1 };
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = { FloatRegisters::d15 };
 
-static MOZ_CONSTEXPR_VAR FloatRegister NANReg = { FloatRegisters::d15 };
+static MOZ_CONSTEXPR_VAR FloatRegister NANReg = { FloatRegisters::d14 };
 
 static MOZ_CONSTEXPR_VAR FloatRegister d0  = {FloatRegisters::d0};
 static MOZ_CONSTEXPR_VAR FloatRegister d1  = {FloatRegisters::d1};

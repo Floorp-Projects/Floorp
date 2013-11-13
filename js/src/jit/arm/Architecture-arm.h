@@ -150,7 +150,6 @@ class FloatRegisters
         d1,
         d2,
         d3,
-        SD0 = d3,
         d4,
         d5,
         d6,
@@ -195,6 +194,7 @@ class FloatRegisters
 
     static const uint32_t AllMask = (1 << Total) - 1;
 
+    // d15 is the ScratchFloatReg.
     static const uint32_t NonVolatileMask =
         (1 << d8) |
         (1 << d9) |
@@ -202,15 +202,14 @@ class FloatRegisters
         (1 << d11) |
         (1 << d12) |
         (1 << d13) |
-        (1 << d14) |
-        (1 << d15);
+        (1 << d14);
 
     static const uint32_t VolatileMask = AllMask & ~NonVolatileMask;
 
     static const uint32_t WrapperMask = VolatileMask;
 
-    // d1 is the ARM scratch float register.
-    static const uint32_t NonAllocatableMask = (1 << d1) | (1 << invalid_freg);
+    // d15 is the ARM scratch float register.
+    static const uint32_t NonAllocatableMask = (1 << d15) | (1 << invalid_freg);
 
     // Registers that can be allocated without being saved, generally.
     static const uint32_t TempMask = VolatileMask & ~NonAllocatableMask;
