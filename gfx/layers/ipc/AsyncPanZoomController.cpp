@@ -1284,13 +1284,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       aLayerMetrics.mCompositionBounds.height == mFrameMetrics.mCompositionBounds.height) {
     // Remote content has sync'd up to the composition geometry
     // change, so we can accept the viewport it's calculated.
-    CSSToScreenScale previousResolution = mFrameMetrics.CalculateIntrinsicScale();
-    mFrameMetrics.mViewport = aLayerMetrics.mViewport;
-    CSSToScreenScale newResolution = mFrameMetrics.CalculateIntrinsicScale();
-    if (previousResolution != newResolution) {
+    if (mFrameMetrics.mViewport.width != aLayerMetrics.mViewport)
       needContentRepaint = true;
-      mFrameMetrics.mZoom.scale *= newResolution.scale / previousResolution.scale;
-    }
+    mFrameMetrics.mViewport = aLayerMetrics.mViewport;
   }
 
   if (aIsFirstPaint || isDefault) {
