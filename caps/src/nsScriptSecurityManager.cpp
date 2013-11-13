@@ -21,6 +21,7 @@
 #include "nsSystemPrincipal.h"
 #include "nsPrincipal.h"
 #include "nsNullPrincipal.h"
+#include "DomainPolicy.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
@@ -1615,11 +1616,6 @@ nsScriptSecurityManager::ScriptAllowed(JSObject *aGlobal)
         return true;
     }
 
-    // If JS is disabled system-wide, we disallow.
-    if (!mIsJavaScriptEnabled) {
-        return false;
-    }
-
     // Check for a per-site policy.
     static const char jsPrefGroupName[] = "javascript";
     ClassInfoData nameData(nullptr, jsPrefGroupName);
@@ -2156,6 +2152,9 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void)
     if(mDefaultPolicy)
         mDefaultPolicy->Drop();
     delete mCapabilities;
+    if (mDomainPolicy)
+        mDomainPolicy->Deactivate();
+    MOZ_ASSERT(!mDomainPolicy);
 }
 
 void
@@ -2580,4 +2579,75 @@ nsScriptSecurityManager::GetJarPrefix(uint32_t aAppId,
 
   mozilla::GetJarPrefix(aAppId, aInMozBrowser, aJarPrefix);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetDomainPolicyActive(bool *aRv)
+{
+    *aRv = !!mDomainPolicy;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::ActivateDomainPolicy(nsIDomainPolicy** aRv)
+{
+    // We only allow one domain policy at a time. The holder of the previous
+    // policy must explicitly deactivate it first.
+    if (mDomainPolicy) {
+        return NS_ERROR_SERVICE_NOT_AVAILABLE;
+    }
+
+    mDomainPolicy = new mozilla::hotness::DomainPolicy();
+    nsCOMPtr<nsIDomainPolicy> ptr = mDomainPolicy;
+    ptr.forget(aRv);
+    return NS_OK;
+}
+
+// Intentionally non-scriptable. Script must have a reference to the
+// nsIDomainPolicy to deactivate it.
+void
+nsScriptSecurityManager::DeactivateDomainPolicy()
+{
+    mDomainPolicy = nullptr;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::PolicyAllowsScript(nsIURI* aURI, bool *aRv)
+{
+    nsresult rv;
+
+    // Compute our rule. If we don't have any domain policy set up that might
+    // provide exceptions to this rule, we're done.
+    *aRv = mIsJavaScriptEnabled;
+    if (!mDomainPolicy) {
+        return NS_OK;
+    }
+
+    // We have a domain policy. Grab the appropriate set of exceptions to the
+    // rule (either the blacklist or the whitelist, depending on whether script
+    // is enabled or disabled by default).
+    nsCOMPtr<nsIDomainSet> exceptions;
+    nsCOMPtr<nsIDomainSet> superExceptions;
+    if (*aRv) {
+        mDomainPolicy->GetBlacklist(getter_AddRefs(exceptions));
+        mDomainPolicy->GetSuperBlacklist(getter_AddRefs(superExceptions));
+    } else {
+        mDomainPolicy->GetWhitelist(getter_AddRefs(exceptions));
+        mDomainPolicy->GetSuperWhitelist(getter_AddRefs(superExceptions));
+    }
+
+    bool contains;
+    rv = exceptions->Contains(aURI, &contains);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (contains) {
+        *aRv = !*aRv;
+        return NS_OK;
+    }
+    rv = superExceptions->ContainsSuperDomain(aURI, &contains);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (contains) {
+        *aRv = !*aRv;
+    }
+
+    return NS_OK;
 }

@@ -9,8 +9,9 @@
 interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
+interface nsIDomainPolicy;
 
-[scriptable, uuid(36619e6e-6ed3-4fd5-9a16-763f3614e5ed)]
+[scriptable, uuid(2911ae60-1b5f-47e6-941e-1bb7b53a167d)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -228,6 +229,29 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * inMozBrowser has to be true if the app is inside a mozbrowser iframe.
      */
     AUTF8String getJarPrefix(in unsigned long appId, in boolean inMozBrowser);
+
+    /**
+     * Per-domain controls to enable and disable script. This system is designed
+     * to be used by at most one consumer, and enforces this with its semantics.
+     *
+     * Initially, domainPolicyActive is false. When activateDomainPolicy() is
+     * invoked, domainPolicyActive becomes true, and subsequent calls to
+     * activateDomainPolicy() will fail until deactivate() is invoked on the
+     * nsIDomainPolicy returned from activateDomainPolicy(). At this point,
+     * domainPolicyActive becomes false again, and a new consumer may acquire
+     * control of the system by invoking activateDomainPolicy().
+     */
+    nsIDomainPolicy activateDomainPolicy();
+    readonly attribute boolean domainPolicyActive;
+
+    /**
+     * Query mechanism for the above policy.
+     *
+     * If domainPolicyEnabled is false, this simply returns the current value
+     * of javascript.enabled. Otherwise, it returns the same value, but taking
+     * the various blacklist/whitelist exceptions into account.
+     */
+    bool policyAllowsScript(in nsIURI aDomain);
 };
 
 %{C++

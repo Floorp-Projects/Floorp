@@ -61,6 +61,10 @@ private:
     // Whether this scope is immune to user-defined or addon-defined script
     // policy.
     bool mImmuneToScriptPolicy;
+
+    // Whether the new-style domain policy when this compartment was created
+    // forbids script execution.
+    bool mScriptBlockedByPolicy;
 };
 
 JSObject *
