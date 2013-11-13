@@ -516,7 +516,7 @@ static void DestroyViewID(void* aObject, nsIAtom* aPropertyName,
  */
 
 bool
-nsLayoutUtils::FindIDFor(nsIContent* aContent, ViewID* aOutViewId)
+nsLayoutUtils::FindIDFor(const nsIContent* aContent, ViewID* aOutViewId)
 {
   void* scrollIdProperty = aContent->GetProperty(nsGkAtoms::RemoteId);
   if (scrollIdProperty) {
