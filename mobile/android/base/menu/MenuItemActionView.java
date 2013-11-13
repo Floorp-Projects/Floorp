@@ -123,10 +123,9 @@ public class MenuItemActionView extends LinearLayout
             button.setOnClickListener(mActionButtonListener);
             button.setTag(count);
 
-            final int width = (int) (getResources().getDimension(R.dimen.menu_item_action_icon));
             final int height = (int) (getResources().getDimension(R.dimen.menu_item_row_height));
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, height);
-            params.weight = 0.0f;
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, height);
+            params.weight = 1.0f;
             button.setLayoutParams(params);
 
             mActionButtons.add(button);

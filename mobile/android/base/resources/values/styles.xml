@@ -88,8 +88,6 @@
     </style>
 
     <style name="Widget.MenuItemShareActionButton">
-        <item name="android:layout_width">@dimen/menu_item_action_icon</item>
-        <item name="android:layout_height">@dimen/menu_item_row_height</item>
         <item name="android:padding">10dip</item>
         <item name="android:background">@drawable/action_bar_button</item>
         <item name="android:scaleType">centerInside</item>

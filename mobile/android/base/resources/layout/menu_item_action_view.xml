@@ -15,7 +15,7 @@
             android:focusable="true"/>
 
     <ImageButton android:id="@+id/menu_item_button"
-                 android:layout_width="@dimen/menu_item_action_icon"
+                 android:layout_width="0dip"
                  android:layout_height="@dimen/menu_item_row_height"
                  android:layout_weight="1.0"
                  android:padding="10dip"
