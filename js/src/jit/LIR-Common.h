@@ -5109,6 +5109,20 @@ class LPostWriteBarrierAllSlots : public LInstructionHelper<0, 1, 0>
     }
 };
 
+// Guard against an object's identity.
+class LGuardObjectIdentity : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(GuardObjectIdentity)
+
+    LGuardObjectIdentity(const LAllocation &in) {
+        setOperand(0, in);
+    }
+    const MGuardObjectIdentity *mir() const {
+        return mir_->toGuardObjectIdentity();
+    }
+};
+
 // Guard against an object's class.
 class LGuardClass : public LInstructionHelper<0, 1, 1>
 {

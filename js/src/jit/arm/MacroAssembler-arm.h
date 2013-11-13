@@ -728,6 +728,12 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testMagic(Condition cond, const Address &address);
     Condition testInt32(Condition cond, const Address &address);
     Condition testDouble(Condition cond, const Address &address);
+    Condition testBoolean(Condition cond, const Address &address);
+    Condition testNull(Condition cond, const Address &address);
+    Condition testUndefined(Condition cond, const Address &address);
+    Condition testString(Condition cond, const Address &address);
+    Condition testObject(Condition cond, const Address &address);
+    Condition testNumber(Condition cond, const Address &address);
 
     Condition testUndefined(Condition cond, const BaseIndex &src);
     Condition testNull(Condition cond, const BaseIndex &src);

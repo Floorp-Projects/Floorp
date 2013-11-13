@@ -259,11 +259,11 @@ SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
     certStatusArray = &ss->sec.ci.sid->peerCertStatus;
 
     if (certStatusArray->len) {
-	PORT_SetError(0);
-	if (CERT_CacheOCSPResponseFromSideChannel(handle, ss->sec.peerCert, now,
+	SECStatus test_rv =
+	    CERT_CacheOCSPResponseFromSideChannel(handle, ss->sec.peerCert, now,
 						  &certStatusArray->items[0],
-						  ss->pkcs11PinArg)
-		!= SECSuccess) {
+						  ss->pkcs11PinArg);
+	if (test_rv != SECSuccess) {
 	    PRErrorCode error = PR_GetError();
 	    PORT_Assert(error != 0);
 	}
