@@ -17,12 +17,12 @@
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
-#include "prbit.h"
 #include "nsIInputStream.h"
 #include "nsISeekableStream.h"
 #include "prlog.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MathAlgorithms.h"
 
 #if defined(PR_LOGGING)
 //
@@ -72,7 +72,7 @@ nsStorageStream::Init(uint32_t segmentSize, uint32_t maxSize,
         return NS_ERROR_OUT_OF_MEMORY;
     
     mSegmentSize = segmentSize;
-    mSegmentSizeLog2 = PR_FloorLog2(segmentSize);
+    mSegmentSizeLog2 = mozilla::FloorLog2(segmentSize);
 
     // Segment size must be a power of two
     if (mSegmentSize != ((uint32_t)1 << mSegmentSizeLog2))
