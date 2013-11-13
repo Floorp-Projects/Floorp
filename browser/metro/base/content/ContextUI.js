@@ -161,7 +161,7 @@ var ContextUI = {
    * Dismiss tab bar after a delay. Fires context ui events.
    */
   dismissTabsWithDelay: function (aDelay) {
-    aDelay = aDelay || kNewTabAnimationDelayMsec;
+    aDelay = aDelay || kForegroundTabAnimationDelay;
     this._clearDelayedTimeout();
     this._hidingId = setTimeout(function () {
         ContextUI.dismissTabs();
