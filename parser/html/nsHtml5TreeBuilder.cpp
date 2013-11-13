@@ -1003,7 +1003,6 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
             case NS_HTML5TREE_BUILDER_STYLE:
             case NS_HTML5TREE_BUILDER_SCRIPT:
             case NS_HTML5TREE_BUILDER_TITLE:
-            case NS_HTML5TREE_BUILDER_COMMAND:
             case NS_HTML5TREE_BUILDER_TEMPLATE: {
               NS_HTML5_BREAK(inbodyloop);
             }
@@ -1397,7 +1396,6 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               NS_HTML5_BREAK(starttagloop);
             }
             case NS_HTML5TREE_BUILDER_BASE:
-            case NS_HTML5TREE_BUILDER_COMMAND:
             case NS_HTML5TREE_BUILDER_LINK_OR_BASEFONT_OR_BGSOUND: {
               appendVoidElementToCurrentMayFoster(elementName, attributes);
               selfClosing = false;
