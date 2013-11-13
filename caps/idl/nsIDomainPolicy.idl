@@ -1,0 +1,62 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIDomainSet;
+
+/*
+ * When a domain policy is instantiated by invoking activateDomainPolicy() on
+ * nsIScriptSecurityManager, these domain sets are consulted when each new
+ * global is created (they have no effect on already-created globals).
+ * If javascript is globally enabled with |javascript.enabled|, the blacklists
+ * are consulted. If globally disabled, the whitelists are consulted. Lookups
+ * on blacklist and whitelist happen with contains(), and lookups on
+ * superBlacklist and superWhitelist happen with containsSuperDomain().
+ *
+ * When deactivate() is invoked, the domain sets are emptied, and the
+ * nsIDomainPolicy ceases to have any effect on the system.
+ */
+[scriptable, builtinclass, uuid(27b10f54-f34b-42b7-8594-4348d3ad7953)]
+interface nsIDomainPolicy : nsISupports
+{
+    readonly attribute nsIDomainSet blacklist;
+    readonly attribute nsIDomainSet superBlacklist;
+    readonly attribute nsIDomainSet whitelist;
+    readonly attribute nsIDomainSet superWhitelist;
+
+    void deactivate();
+};
+
+[scriptable, builtinclass, uuid(946a01ff-6525-4007-a2c2-447ebe1875d3)]
+interface nsIDomainSet : nsISupports
+{
+    /*
+     * Add a domain to the set. No-op if it already exists.
+     */
+    void add(in nsIURI aDomain);
+
+    /*
+     * Remove a domain from the set. No-op if it doesn't exist.
+     */
+    void remove(in nsIURI aDomain);
+
+    /*
+     * Remove all entries from the set.
+     */
+    void clear();
+
+    /*
+     * Returns true if a given domain is in the set.
+     */
+    bool contains(in nsIURI aDomain);
+
+    /*
+     * Returns true if a given domain is a subdomain of one of the entries in
+     * the set.
+     */
+    bool containsSuperDomain(in nsIURI aDomain);
+};

@@ -362,6 +362,8 @@ public:
     AppAttributesEqual(nsIPrincipal* aFirst,
                        nsIPrincipal* aSecond);
 
+    void DeactivateDomainPolicy();
+
 private:
 
     // GetScriptSecurityManager is the only call that can make one
@@ -486,6 +488,10 @@ private:
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;
     bool mPolicyPrefsChanged;
+
+    // This machinery controls new-style domain policies. The old-style
+    // policy machinery will be removed soon.
+    nsCOMPtr<nsIDomainPolicy> mDomainPolicy;
 
     static bool sStrictFileOriginPolicy;
 
