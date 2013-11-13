@@ -498,28 +498,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     return false;
   }
 
-  // Script evaluation can also be disabled in the current script
-  // context even though it's enabled in the document.
-  // XXX - still hard-coded for JS here, even though another language
-  // may be specified.  Should this check be made *after* we examine
-  // the attributes to locate the script-type?
-  // For now though, if JS is disabled we assume every language is
-  // disabled.
-  // XXX is this different from the mDocument->IsScriptEnabled() call?
-  nsCOMPtr<nsIScriptGlobalObject> globalObject =
-    do_QueryInterface(mDocument->GetWindow());
-  if (!globalObject) {
-    return false;
-  }
-  
-  nsIScriptContext *context = globalObject->GetScriptContext();
-
-  // If scripts aren't enabled in the current context, there's no
-  // point in going on.
-  if (!context || !context->GetScriptsEnabled()) {
-    return false;
-  }
-
   JSVersion version = JSVERSION_DEFAULT;
 
   // Check the type attribute to determine language and version.
