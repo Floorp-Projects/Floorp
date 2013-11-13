@@ -10,16 +10,16 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.simple.parser.ParseException;
+import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.AlreadySyncingException;
 import org.mozilla.gecko.sync.CredentialException;
-import org.mozilla.gecko.background.common.GlobalConstants;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.SyncConfigurationException;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.SyncException;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.Utils;
@@ -28,6 +28,8 @@ import org.mozilla.gecko.sync.crypto.CryptoException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
+import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.ConnectionMonitorThread;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
@@ -502,8 +504,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
 
     // TODO: default serverURL.
     final KeyBundle keyBundle = new KeyBundle(username, syncKey);
-    GlobalSession globalSession = new GlobalSession(SyncConfiguration.DEFAULT_USER_API,
-                                                    serverURL, username, password, prefsPath,
+    final AuthHeaderProvider authHeaderProvider = new BasicAuthHeaderProvider(username, password);
+    GlobalSession globalSession = new GlobalSession(serverURL, username, authHeaderProvider, prefsPath,
                                                     keyBundle, this, this.mContext, extras, this);
 
     globalSession.start();
