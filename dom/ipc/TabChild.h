@@ -451,6 +451,8 @@ private:
 
     // Get the DOMWindowUtils for the top-level window in this tab.
     already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils();
+    // Get the Document for the top-level window in this tab.
+    already_AddRefed<nsIDocument> GetDocument();
 
     class CachedFileDescriptorInfo;
     class CachedFileDescriptorCallbackRunnable;
