@@ -42,13 +42,13 @@ function run_test() {
 
   add_ocsp_test("ocsp-stapling-good.example.com", Cr.NS_OK, true);
 
-  // SEC_ERROR_REVOKED_CERTIFICATE = SEC_ERROR_BASE + 12
-  add_ocsp_test("ocsp-stapling-revoked.example.com", getXPCOMStatusFromNSS(12), true);
+  add_ocsp_test("ocsp-stapling-revoked.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_REVOKED_CERTIFICATE), true);
 
   // This stapled response is from a CA that is untrusted and did not issue
   // the server's certificate.
-  // SEC_ERROR_BAD_DATABASE = SEC_ERROR_BASE + 18
-  add_ocsp_test("ocsp-stapling-good-other-ca.example.com", getXPCOMStatusFromNSS(18), true);
+  add_ocsp_test("ocsp-stapling-good-other-ca.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_BAD_DATABASE), true);
 
   // SEC_ERROR_BAD_DATABASE vs SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE depends on
   // whether the CA that signed the response is a trusted CA.
@@ -61,28 +61,32 @@ function run_test() {
     run_next_test();
   });
 
-  // SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE = (SEC_ERROR_BASE + 130)
-  add_ocsp_test("ocsp-stapling-good-other-ca.example.com", getXPCOMStatusFromNSS(130), true);
-  // SEC_ERROR_OCSP_MALFORMED_REQUEST = (SEC_ERROR_BASE + 120)
-  add_ocsp_test("ocsp-stapling-malformed.example.com", getXPCOMStatusFromNSS(120), true);
-  // SEC_ERROR_OCSP_SERVER_ERROR = (SEC_ERROR_BASE + 121)
-  add_ocsp_test("ocsp-stapling-srverr.example.com", getXPCOMStatusFromNSS(121), true);
-  // SEC_ERROR_OCSP_TRY_SERVER_LATER = (SEC_ERROR_BASE + 122)
-  add_ocsp_test("ocsp-stapling-trylater.example.com", getXPCOMStatusFromNSS(122), true);
-  // SEC_ERROR_OCSP_REQUEST_NEEDS_SIG = (SEC_ERROR_BASE + 123)
-  add_ocsp_test("ocsp-stapling-needssig.example.com", getXPCOMStatusFromNSS(123), true);
-  // SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST = (SEC_ERROR_BASE + 124)
-  add_ocsp_test("ocsp-stapling-unauthorized.example.com", getXPCOMStatusFromNSS(124), true);
-  // SEC_ERROR_OCSP_UNKNOWN_CERT = (SEC_ERROR_BASE + 126)
-  add_ocsp_test("ocsp-stapling-unknown.example.com", getXPCOMStatusFromNSS(126), true);
-  add_ocsp_test("ocsp-stapling-good-other.example.com", getXPCOMStatusFromNSS(126), true);
+  add_ocsp_test("ocsp-stapling-good-other-ca.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE),
+                true);
+  add_ocsp_test("ocsp-stapling-malformed.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_MALFORMED_REQUEST), true);
+  add_ocsp_test("ocsp-stapling-srverr.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_SERVER_ERROR), true);
+  add_ocsp_test("ocsp-stapling-trylater.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_TRY_SERVER_LATER), true);
+  add_ocsp_test("ocsp-stapling-needssig.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_REQUEST_NEEDS_SIG), true);
+  add_ocsp_test("ocsp-stapling-unauthorized.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST),
+                true);
+  add_ocsp_test("ocsp-stapling-unknown.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNKNOWN_CERT), true);
+  add_ocsp_test("ocsp-stapling-good-other.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNKNOWN_CERT), true);
   // If the server doesn't send an OCSP response, we continue as normal.
   add_ocsp_test("ocsp-stapling-none.example.com", Cr.NS_OK, true);
-  // SEC_ERROR_OCSP_MALFORMED_RESPONSE = (SEC_ERROR_BASE + 129)
-  add_ocsp_test("ocsp-stapling-empty.example.com", getXPCOMStatusFromNSS(129), true);
-  // SEC_ERROR_OCSP_OLD_RESPONSE = (SEC_ERROR_BASE + 132)
-  add_ocsp_test("ocsp-stapling-expired.example.com", getXPCOMStatusFromNSS(132), true);
-  add_ocsp_test("ocsp-stapling-expired-fresh-ca.example.com", getXPCOMStatusFromNSS(132), true);
+  add_ocsp_test("ocsp-stapling-empty.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_MALFORMED_RESPONSE), true);
+  add_ocsp_test("ocsp-stapling-expired.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_OLD_RESPONSE), true);
+  add_ocsp_test("ocsp-stapling-expired-fresh-ca.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_OLD_RESPONSE), true);
 
   run_next_test();
 }

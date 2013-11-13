@@ -57,7 +57,8 @@ using namespace mozilla::dom;
 // vararg-list methods in this file:
 //   nsSVGElement::GetAnimated{Length,Number,Integer}Values
 // See bug 547964 for details:
-PR_STATIC_ASSERT(sizeof(void*) == sizeof(nullptr));
+static_assert(sizeof(void*) == sizeof(nullptr),
+              "nullptr should be the correct size");
 
 nsresult
 NS_NewSVGElement(nsIContent **aResult, already_AddRefed<nsINodeInfo> aNodeInfo) 

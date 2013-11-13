@@ -13,16 +13,6 @@ LOCAL_INCLUDES	= -I$(srcdir)/../util \
 		  -I$(srcdir)/../ucvcn \
 		  $(NULL)
 
-SHARED_LIBRARY_LIBS += \
-	../ucvlatin/$(LIB_PREFIX)ucvlatin_s.$(LIB_SUFFIX) \
-	../ucvibm/$(LIB_PREFIX)ucvibm_s.$(LIB_SUFFIX) \
-	../ucvja/$(LIB_PREFIX)ucvja_s.$(LIB_SUFFIX) \
-	../ucvtw2/$(LIB_PREFIX)ucvtw2_s.$(LIB_SUFFIX) \
-	../ucvtw/$(LIB_PREFIX)ucvtw_s.$(LIB_SUFFIX) \
-	../ucvko/$(LIB_PREFIX)ucvko_s.$(LIB_SUFFIX) \
-	../ucvcn/$(LIB_PREFIX)ucvcn_s.$(LIB_SUFFIX) \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(INTEL_ARCHITECTURE))

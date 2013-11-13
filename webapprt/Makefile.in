@@ -28,7 +28,7 @@ DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) \
            $(NULL)
 
 webapprt.ini: application.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
+	$(call py_action,preprocessor,$(DEFINES) $< -o $@)
 
 libs:: webapprt.ini
 	$(INSTALL) webapprt.ini $(FINAL_TARGET)

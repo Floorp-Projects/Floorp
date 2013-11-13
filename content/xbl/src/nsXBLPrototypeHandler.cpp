@@ -382,11 +382,11 @@ nsXBLPrototypeHandler::EnsureEventHandler(nsIScriptGlobalObject* aGlobal,
   options.setFileAndLine(bindingURI.get(), mLineNumber)
          .setVersion(JSVERSION_LATEST);
 
-  JS::Rooted<JSObject*> rootedNull(cx); // See bug 781070.
   JS::Rooted<JSObject*> handlerFun(cx);
-  nsresult rv = nsJSUtils::CompileFunction(cx, rootedNull, options,
+  nsresult rv = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options,
                                            nsAtomCString(aName), argCount,
-                                           argNames, handlerText, handlerFun.address());
+                                           argNames, handlerText,
+                                           handlerFun.address());
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(handlerFun, NS_ERROR_FAILURE);
 

@@ -77,7 +77,7 @@ public:
   IMPL_EVENT_HANDLER(error)
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::HandleObject aScope) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   virtual nsresult
   PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
@@ -98,7 +98,7 @@ private:
 
   // Only called by MessagePort.
   void
-  PostMessage(JSContext* aCx, JS::HandleValue aMessage,
+  PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Optional<Sequence<JS::Value>>& aTransferable,
               ErrorResult& aRv);
 

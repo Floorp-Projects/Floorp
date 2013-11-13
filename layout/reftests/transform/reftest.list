@@ -124,7 +124,3 @@ skip-if(B2G) == stresstest-1.html stresstest-1-ref.html # bug 773482
 == table-2b.html table-2-ref.html
 # Bug 722463
 == inline-1a.html inline-1-ref.html
-== transform-origin-svg-1a.svg transform-origin-svg-1-ref.svg
-== transform-origin-svg-1b.svg transform-origin-svg-1-ref.svg
-== transform-origin-svg-2a.svg transform-origin-svg-2-ref.svg
-== transform-origin-svg-2b.svg transform-origin-svg-2-ref.svg

@@ -800,7 +800,7 @@ else # !WINNT || GNU_CC
 endif # WINNT && !GNU_CC
 
 ifdef ENABLE_STRIP
-	$(STRIP) $@
+	$(STRIP) $(STRIP_FLAGS) $@
 endif
 ifdef MOZ_POST_PROGRAM_COMMAND
 	$(MOZ_POST_PROGRAM_COMMAND) $@
@@ -856,7 +856,7 @@ else
 endif # WINNT && !GNU_CC
 
 ifdef ENABLE_STRIP
-	$(STRIP) $@
+	$(STRIP) $(STRIP_FLAGS) $@
 endif
 ifdef MOZ_POST_PROGRAM_COMMAND
 	$(MOZ_POST_PROGRAM_COMMAND) $@
@@ -883,7 +883,6 @@ $(filter %.$(LIB_SUFFIX),$(LIBRARY)): $(OBJS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
 	$(RM) $(LIBRARY)
 	$(EXPAND_AR) $(AR_FLAGS) $(OBJS) $(SHARED_LIBRARY_LIBS)
-	$(RANLIB) $@
 
 $(filter-out %.$(LIB_SUFFIX),$(LIBRARY)): $(filter %.$(LIB_SUFFIX),$(LIBRARY)) $(OBJS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 # When we only build a library descriptor, blow out any existing library
@@ -917,14 +916,12 @@ $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	$(REPORT_BUILD)
 	$(RM) $@
 	$(IMPLIB) $@ $^
-	$(RANLIB) $@
 endif # OS/2
 
 $(HOST_LIBRARY): $(HOST_OBJS) Makefile
 	$(REPORT_BUILD)
 	$(RM) $@
 	$(EXPAND_LIBS_EXEC) --extract -- $(HOST_AR) $(HOST_AR_FLAGS) $(HOST_OBJS)
-	$(HOST_RANLIB) $@
 
 ifdef HAVE_DTRACE
 ifndef XP_MACOSX
@@ -975,7 +972,7 @@ endif	# WINNT && !GCC
 	@$(RM) foodummyfilefoo $(DELETE_AFTER_LINK)
 	chmod +x $@
 ifdef ENABLE_STRIP
-	$(STRIP) $@
+	$(STRIP) $(STRIP_FLAGS) $@
 endif
 ifdef MOZ_POST_DSO_LIB_COMMAND
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
@@ -1481,6 +1478,11 @@ endif
 #
 # Additionally, a FOO_TARGET variable may be added to indicate the target for
 # which the files and executables are installed. Default is "libs".
+#
+# Finally, a FOO_KEEP_PATH variable may be set to 1 to indicate the paths given
+# in FOO_FILES/FOO_EXECUTABLES are to be kept at the destination. That is,
+# if FOO_FILES is bar/baz/qux.h, and FOO_DEST is $(DIST)/include, the installed
+# file would be $(DIST)/include/bar/baz/qux.h instead of $(DIST)/include/qux.h
 
 # If we're using binary nsinstall and it's not built yet, fallback to python nsinstall.
 ifneq (,$(filter $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX),$(install_cmd)))
@@ -1493,21 +1495,49 @@ endef
 endif
 endif
 
-define install_file_template
-$(or $(3),libs):: $(2)/$(notdir $(1))
-$(call install_cmd_override,$(2)/$(notdir $(1)))
-$(2)/$(notdir $(1)): $(1)
-	$$(call install_cmd,$(4) "$$<" "$${@D}")
+install_target_tier = $(or $($(1)_TARGET),libs)
+INSTALL_TARGETS_TIERS := $(sort $(foreach category,$(INSTALL_TARGETS),$(call install_target_tier,$(category))))
+
+install_target_result = $($(1)_DEST:%/=%)/$(if $($(1)_KEEP_PATH),$(2),$(notdir $(2)))
+install_target_files = $(foreach file,$($(1)_FILES),$(call install_target_result,$(category),$(file)))
+install_target_executables = $(foreach file,$($(1)_EXECUTABLES),$(call install_target_result,$(category),$(file)))
+
+# Work around a GNU make 3.81 bug where it gives $< the wrong value.
+# See details in bug 934864.
+define create_dependency
+$(1): $(2)
+$(1): $(2)
 endef
+
+define install_target_template
+$(call install_cmd_override,$(2))
+$(call create_dependency,$(2),$(1))
+endef
+
 $(foreach category,$(INSTALL_TARGETS),\
-  $(if $($(category)_DEST),,$(error Missing $(category)_DEST))\
-  $(foreach file,$($(category)_FILES),\
-    $(eval $(call install_file_template,$(file),$($(category)_DEST),$($(category)_TARGET),$(IFLAGS1)))\
-  )\
-  $(foreach file,$($(category)_EXECUTABLES),\
-    $(eval $(call install_file_template,$(file),$($(category)_DEST),$($(category)_TARGET),$(IFLAGS2)))\
-  )\
+  $(if $($(category)_DEST),,$(error Missing $(category)_DEST)) \
+  $(foreach tier,$(call install_target_tier,$(category)),\
+    $(eval INSTALL_TARGETS_FILES_$(tier) += $(call install_target_files,$(category))) \
+    $(eval INSTALL_TARGETS_EXECUTABLES_$(tier) += $(call install_target_executables,$(category))) \
+  ) \
+  $(foreach file,$($(category)_FILES) $($(category)_EXECUTABLES), \
+    $(eval $(call install_target_template,$(file),$(call install_target_result,$(category),$(file)))) \
+  ) \
 )
+
+$(foreach tier,$(INSTALL_TARGETS_TIERS), \
+  $(eval $(tier):: $(INSTALL_TARGETS_FILES_$(tier)) $(INSTALL_TARGETS_EXECUTABLES_$(tier))) \
+)
+
+install_targets_sanity = $(if $(filter-out $(notdir $@),$(notdir $(<))),$(error Looks like $@ has an unexpected dependency on $< which breaks INSTALL_TARGETS))
+
+$(sort $(foreach tier,$(INSTALL_TARGETS_TIERS),$(INSTALL_TARGETS_FILES_$(tier)))):
+	$(install_targets_sanity)
+	$(call install_cmd,$(IFLAGS1) "$<" "$(@D)")
+
+$(sort $(foreach tier,$(INSTALL_TARGETS_TIERS),$(INSTALL_TARGETS_EXECUTABLES_$(tier)))):
+	$(install_targets_sanity)
+	$(call install_cmd,$(IFLAGS2) "$<" "$(@D)")
 
 ################################################################################
 # Preprocessing rules
@@ -1524,40 +1554,79 @@ $(foreach category,$(INSTALL_TARGETS),\
 # If PP_TARGETS lists a category name <C> (like FOO, above), then we consult the
 # following make variables to see what to do:
 #
-# - <C> lists input files to be preprocessed with config/Preprocessor.py. We
-#   search VPATH for the names given here. If an input file name ends in '.in',
-#   that suffix is omitted from the output file name.
+# - <C> lists input files to be preprocessed with mozbuild.action.preprocessor.
+#   We search VPATH for the names given here. If an input file name ends in
+#   '.in', that suffix is omitted from the output file name.
 #
 # - <C>_PATH names the directory in which to place the preprocessed output
 #   files. We create this directory if it does not already exist. Setting
 #   this variable is optional; if unset, we install the files in $(CURDIR).
 #
-# - <C>_FLAGS lists flags to pass to Preprocessor.py, in addition to the usual
-#   bunch. Setting this variable is optional.
+# - <C>_FLAGS lists flags to pass to mozbuild.action.preprocessor, in addition
+#   to the usual bunch. Setting this variable is optional.
 #
 # - <C>_TARGET names the 'make' target that should depend on creating the output
 #   files. Setting this variable is optional; if unset, we preprocess the
 #   files for the 'libs' target.
+#
+# - <C>_KEEP_PATH may be set to 1 to indicate the paths given in <C> are to be
+#   kept under <C>_PATH. That is, if <C> is bar/baz/qux.h.in and <C>_PATH is
+#   $(DIST)/include, the preprocessed file would be $(DIST)/include/bar/baz/qux.h
+#   instead of $(DIST)/include/qux.h.
 
-# preprocess_file_template defines preprocessing rules.
-# $(call preprocess_file_template, source_file, output_file,
-#                                  makefile_target, extra_flags)
-define preprocess_file_template
-$(2): $(1) $$(GLOBAL_DEPS)
-	$$(RM) "$$@"
-	$$(PYTHON) $$(topsrcdir)/config/Preprocessor.py $(4) $$(DEFINES) $$(ACDEFINES) $$(XULPPFLAGS) "$$<" -o "$$@"
-$(3):: $(2)
-endef
+pp_target_tier = $(or $($(1)_TARGET),libs)
+PP_TARGETS_TIERS := $(sort $(foreach category,$(PP_TARGETS),$(call pp_target_tier,$(category))))
 
-$(foreach category,$(PP_TARGETS),						\
-  $(foreach file,$($(category)),						\
-    $(eval $(call preprocess_file_template,					\
-                  $(file),							\
-                  $(or $($(category)_PATH),$(CURDIR))/$(notdir $(file:.in=)),	\
-                  $(or $($(category)_TARGET),libs),				\
-                  $($(category)_FLAGS)))					\
-   )										\
- )
+pp_target_result = $(or $($(1)_PATH:%/=%),$(CURDIR))/$(if $($(1)_KEEP_PATH),$(2:.in=),$(notdir $(2:.in=)))
+pp_target_results = $(foreach file,$($(1)),$(call pp_target_result,$(category),$(file)))
+
+$(foreach category,$(PP_TARGETS), \
+  $(foreach tier,$(call pp_target_tier,$(category)), \
+    $(eval PP_TARGETS_RESULTS_$(tier) += $(call pp_target_results,$(category))) \
+  ) \
+  $(foreach file,$($(category)), \
+    $(eval $(call create_dependency,$(call pp_target_result,$(category),$(file)), \
+                                    $(file) $(GLOBAL_DEPS))) \
+  ) \
+  $(eval $(call pp_target_results,$(category)): PP_TARGET_FLAGS=$($(category)_FLAGS)) \
+)
+
+$(foreach tier,$(PP_TARGETS_TIERS), \
+  $(eval $(tier):: $(PP_TARGETS_RESULTS_$(tier))) \
+)
+
+PP_TARGETS_ALL_RESULTS := $(sort $(foreach tier,$(PP_TARGETS_TIERS),$(PP_TARGETS_RESULTS_$(tier))))
+$(PP_TARGETS_ALL_RESULTS):
+	$(if $(filter-out $(notdir $@),$(notdir $(<:.in=))),$(error Looks like $@ has an unexpected dependency on $< which breaks PP_TARGETS))
+	$(RM) "$@"
+	$(call py_action,preprocessor,--depend $(MDDEPDIR)/$(@F).pp $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) "$<" -o "$@")
+
+# The depfile is based on the filename, and we don't want conflicts. So check
+# there's only one occurrence of any given filename in PP_TARGETS_ALL_RESULTS.
+PP_TARGETS_ALL_RESULT_NAMES := $(notdir $(PP_TARGETS_ALL_RESULTS))
+$(foreach file,$(sort $(PP_TARGETS_ALL_RESULT_NAMES)), \
+  $(if $(filter-out 1,$(words $(filter $(file),$(PP_TARGETS_ALL_RESULT_NAMES)))), \
+    $(error Multiple preprocessing rules are creating a $(file) file) \
+  ) \
+)
+
+ifneq (,$(filter $(PP_TARGETS_TIERS) $(PP_TARGETS_ALL_RESULTS),$(MAKECMDGOALS)))
+# If the depfile for a preprocessed file doesn't exist, add a dep to force
+# re-preprocessing.
+$(foreach file,$(PP_TARGETS_ALL_RESULTS), \
+  $(if $(wildcard $(MDDEPDIR)/$(notdir $(file)).pp), \
+    , \
+    $(eval $(file): FORCE) \
+  ) \
+)
+
+MDDEPEND_FILES := $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(addsuffix .pp,$(notdir $(PP_TARGETS_ALL_RESULTS))))))
+
+ifneq (,$(MDDEPEND_FILES))
+$(call include_deps,$(MDDEPEND_FILES))
+endif
+
+endif
 
 # Pull in non-recursive targets if this is a partial tree build.
 ifndef TOPLEVEL_BUILD

@@ -103,12 +103,14 @@ function editableItem(aOptions, aCallback)
   let trigger = aOptions.trigger || "click"
   let element = aOptions.element;
   element.addEventListener(trigger, function(evt) {
-    let win = this.ownerDocument.defaultView;
-    let selection = win.getSelection();
-    if (trigger != "click" || selection.isCollapsed) {
-      aCallback(element, evt);
+    if (evt.target.nodeName !== "a") {
+      let win = this.ownerDocument.defaultView;
+      let selection = win.getSelection();
+      if (trigger != "click" || selection.isCollapsed) {
+        aCallback(element, evt);
+      }
+      evt.stopPropagation();
     }
-    evt.stopPropagation();
   }, false);
 
   // If focused by means other than a click, start editing by
@@ -125,14 +127,16 @@ function editableItem(aOptions, aCallback)
   // to an ugly flash of the focus ring before showing the editor.
   // So hide the focus ring while the mouse is down.
   element.addEventListener("mousedown", function(evt) {
-    let cleanup = function() {
-      element.style.removeProperty("outline-style");
-      element.removeEventListener("mouseup", cleanup, false);
-      element.removeEventListener("mouseout", cleanup, false);
-    };
-    element.style.setProperty("outline-style", "none");
-    element.addEventListener("mouseup", cleanup, false);
-    element.addEventListener("mouseout", cleanup, false);
+    if (evt.target.nodeName !== "a") {
+      let cleanup = function() {
+        element.style.removeProperty("outline-style");
+        element.removeEventListener("mouseup", cleanup, false);
+        element.removeEventListener("mouseout", cleanup, false);
+      };
+      element.style.setProperty("outline-style", "none");
+      element.addEventListener("mouseup", cleanup, false);
+      element.addEventListener("mouseout", cleanup, false);
+    }
   }, false);
 
   // Mark the element editable field for tab
@@ -179,6 +183,7 @@ function InplaceEditor(aOptions, aEvent)
 
   this._createInput();
   this._autosize();
+  this.inputCharWidth = this._getInputCharWidth();
 
   // Pull out character codes for advanceChars, listing the
   // characters that should trigger a blur.
@@ -329,6 +334,18 @@ InplaceEditor.prototype = {
     }
 
     this.input.style.width = width + "px";
+  },
+
+  /**
+   * Get the width of a single character in the input to properly position the
+   * autocompletion popup.
+   */
+  _getInputCharWidth: function InplaceEditor_getInputCharWidth()
+  {
+    // Just make the text content to be 'x' to get the width of any character in
+    // a monospace font.
+    this._measurement.textContent = "x";
+    return this._measurement.offsetWidth;
   },
 
    /**
@@ -1065,8 +1082,11 @@ InplaceEditor.prototype = {
       }
 
       if (finalList.length > 1) {
+        // Calculate the offset for the popup to be opened.
+        let x = (this.input.selectionStart - startCheckQuery.length) *
+                this.inputCharWidth;
         this.popup.setItems(finalList);
-        this.popup.openPopup(this.input);
+        this.popup.openPopup(this.input, x);
       } else {
         this.popup.hidePopup();
       }

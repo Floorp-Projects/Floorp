@@ -70,3 +70,14 @@ LIBRARY_NAME = 'dom_indexeddb_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/caps/include',
+    '/content/base/src',
+    '/content/events/src',
+    '/db/sqlite3/src',
+    '/dom/base',
+    '/dom/quota',
+    '/dom/src/storage',
+    '/xpcom/build',
+]
+

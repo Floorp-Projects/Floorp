@@ -53,7 +53,8 @@ const DOWNLOAD_QUEUED = 5;
  *                imported download will be added.
  * @param aPath   The path to the database file.
  */
-this.DownloadImport = function(aList, aPath) {
+this.DownloadImport = function (aList, aPath)
+{
   this.list = aList;
   this.path = aPath;
 }

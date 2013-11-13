@@ -31,7 +31,7 @@ bool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
                               uint32_t* aLineno)
 {
-  JS::RootedScript script(aContext);
+  JS::Rooted<JSScript*> script(aContext);
   unsigned lineno = 0;
 
   if (!JS_DescribeScriptedCaller(aContext, &script, &lineno)) {
@@ -156,7 +156,7 @@ nsJSUtils::ReportPendingException(JSContext *aContext)
 
 nsresult
 nsJSUtils::CompileFunction(JSContext* aCx,
-                           JS::HandleObject aTarget,
+                           JS::Handle<JSObject*> aTarget,
                            JS::CompileOptions& aOptions,
                            const nsACString& aName,
                            uint32_t aArgCount,
@@ -263,7 +263,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   {
     JSAutoCompartment ac(aCx, aScopeObject);
 
-    JS::RootedObject rootedScope(aCx, aScopeObject);
+    JS::Rooted<JSObject*> rootedScope(aCx, aScopeObject);
     if (aOffThreadToken) {
       JSScript *script = JS::FinishOffThreadScript(aCx, JS_GetRuntime(aCx), *aOffThreadToken);
       *aOffThreadToken = nullptr; // Mark the token as having been finished.
@@ -294,7 +294,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
     } else {
       rv = JS_IsExceptionPending(aCx) ? NS_ERROR_FAILURE
                                       : NS_ERROR_OUT_OF_MEMORY;
-      JS::RootedValue exn(aCx);
+      JS::Rooted<JS::Value> exn(aCx);
       JS_GetPendingException(aCx, &exn);
       if (aRetValue) {
         *aRetValue = exn;

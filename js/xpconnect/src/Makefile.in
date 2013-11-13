@@ -113,7 +113,7 @@ GeneratedEvents.$(OBJ_SUFFIX): GeneratedEvents.h \
                                GeneratedEvents.cpp
 
 event_impl_gen.conf : $(srcdir)/event_impl_gen.conf.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $^ > event_impl_gen.conf
+	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $^ -o event_impl_gen.conf)
 
 GeneratedEvents.h: $(srcdir)/dictionary_helper_gen.conf \
                    event_impl_gen.conf \

@@ -35,7 +35,7 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
 
-  MobileConnection();
+  MobileConnection(uint32_t aClientId);
 
   void Init(nsPIDOMWindow *aWindow);
   void Shutdown();
@@ -50,7 +50,7 @@ private:
 
   uint32_t mClientId;
 
-  bool CheckPermission(const char* type);
+  bool CheckPermission(const char* aType);
 };
 
 } // namespace network

@@ -18,7 +18,7 @@ SOURCES += [
     'OmxDecoder.cpp',
 ]
 
-if CONFIG['MOZ_RTSP']:
+if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
     EXPORTS += [
         'RtspOmxDecoder.h',
         'RtspOmxReader.h',
@@ -33,4 +33,11 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'gkconomx_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/content/html/content/src',
+    '/ipc/chromium/src',
+    'mediaresourcemanager',
+]
 

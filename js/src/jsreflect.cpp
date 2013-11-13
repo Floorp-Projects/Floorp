@@ -566,6 +566,12 @@ class NodeBuilder
 
     bool importSpecifier(HandleValue importName, HandleValue bindingName, TokenPos *pos, MutableHandleValue dst);
 
+    bool exportDeclaration(HandleValue decl, NodeVector &elts, HandleValue moduleSpec, TokenPos *pos, MutableHandleValue dst);
+
+    bool exportSpecifier(HandleValue bindingName, HandleValue exportName, TokenPos *pos, MutableHandleValue dst);
+
+    bool exportBatchSpecifier(TokenPos *pos, MutableHandleValue dst);
+
     /*
      * expressions
      */
@@ -1390,6 +1396,50 @@ NodeBuilder::importSpecifier(HandleValue importName, HandleValue bindingName, To
 }
 
 bool
+NodeBuilder::exportDeclaration(HandleValue decl, NodeVector &elts, HandleValue moduleSpec,
+                               TokenPos *pos, MutableHandleValue dst)
+{
+    RootedValue array(cx, NullValue());
+    if (decl.isNull() && !newArray(elts, &array))
+        return false;
+
+    RootedValue cb(cx, callbacks[AST_IMPORT_DECL]);
+
+    if (!cb.isNull())
+        return callback(cb, decl, array, moduleSpec, pos, dst);
+
+    return newNode(AST_EXPORT_DECL, pos,
+                   "declaration", decl,
+                   "specifiers", array,
+                   "source", moduleSpec,
+                   dst);
+}
+
+bool
+NodeBuilder::exportSpecifier(HandleValue bindingName, HandleValue exportName, TokenPos *pos,
+                             MutableHandleValue dst)
+{
+    RootedValue cb(cx, callbacks[AST_EXPORT_SPEC]);
+    if (!cb.isNull())
+        return callback(cb, bindingName, exportName, pos, dst);
+
+    return newNode(AST_EXPORT_SPEC, pos,
+                   "id", bindingName,
+                   "name", exportName,
+                   dst);
+}
+
+bool
+NodeBuilder::exportBatchSpecifier(TokenPos *pos, MutableHandleValue dst)
+{
+    RootedValue cb(cx, callbacks[AST_EXPORT_BATCH_SPEC]);
+    if (!cb.isNull())
+        return callback(cb, pos, dst);
+
+    return newNode(AST_EXPORT_BATCH_SPEC, pos, dst);
+}
+
+bool
 NodeBuilder::variableDeclaration(NodeVector &elts, VarDeclKind kind, TokenPos *pos,
                                  MutableHandleValue dst)
 {
@@ -1558,6 +1608,8 @@ class ASTSerializer
     bool let(ParseNode *pn, bool expr, MutableHandleValue dst);
     bool importDeclaration(ParseNode *pn, MutableHandleValue dst);
     bool importSpecifier(ParseNode *pn, MutableHandleValue dst);
+    bool exportDeclaration(ParseNode *pn, MutableHandleValue dst);
+    bool exportSpecifier(ParseNode *pn, MutableHandleValue dst);
 
     bool optStatement(ParseNode *pn, MutableHandleValue dst) {
         if (!pn) {
@@ -1957,6 +2009,69 @@ ASTSerializer::importSpecifier(ParseNode *pn, MutableHandleValue dst)
 }
 
 bool
+ASTSerializer::exportDeclaration(ParseNode *pn, MutableHandleValue dst)
+{
+    JS_ASSERT(pn->isKind(PNK_EXPORT) || pn->isKind(PNK_EXPORT_FROM));
+    JS_ASSERT_IF(pn->isKind(PNK_EXPORT_FROM), pn->pn_right->isKind(PNK_STRING));
+
+    RootedValue decl(cx, NullValue());
+    NodeVector elts(cx);
+
+    ParseNode *kid = pn->isKind(PNK_EXPORT) ? pn->pn_kid : pn->pn_left;
+    switch (ParseNodeKind kind = kid->getKind()) {
+      case PNK_EXPORT_SPEC_LIST:
+        if (!elts.reserve(pn->pn_count))
+            return false;
+
+        for (ParseNode *next = pn->pn_left->pn_head; next; next = next->pn_next) {
+            RootedValue elt(cx);
+            if (next->isKind(PNK_EXPORT_SPEC)) {
+                if (!exportSpecifier(next, &elt))
+                    return false;
+            } else {
+                if (!builder.exportBatchSpecifier(&pn->pn_pos, &elt))
+                    return false;
+            }
+            elts.infallibleAppend(elt);
+        }
+        break;
+
+      case PNK_FUNCTION:
+        if (!function(kid, AST_FUNC_DECL, &decl))
+            return false;
+        break;
+
+      case PNK_VAR:
+      case PNK_CONST:
+      case PNK_LET:
+        if (!variableDeclaration(kid, kind == PNK_LET, &decl))
+            return false;
+        break;
+
+      default:
+        LOCAL_NOT_REACHED("unexpected statement type");
+    }
+
+    RootedValue moduleSpec(cx, NullValue());
+    if (pn->isKind(PNK_EXPORT_FROM) && !literal(pn->pn_right, &moduleSpec))
+        return false;
+
+    return builder.exportDeclaration(decl, elts, moduleSpec, &pn->pn_pos, dst);
+}
+
+bool
+ASTSerializer::exportSpecifier(ParseNode *pn, MutableHandleValue dst)
+{
+    JS_ASSERT(pn->isKind(PNK_EXPORT_SPEC));
+
+    RootedValue bindingName(cx);
+    RootedValue exportName(cx);
+    return identifier(pn->pn_left, &bindingName) &&
+           identifier(pn->pn_right, &exportName) &&
+           builder.exportSpecifier(bindingName, exportName, &pn->pn_pos, dst);
+}
+
+bool
 ASTSerializer::switchCase(ParseNode *pn, MutableHandleValue dst)
 {
     JS_ASSERT_IF(pn->pn_left, pn->pn_pos.encloses(pn->pn_left->pn_pos));
@@ -2113,6 +2228,10 @@ ASTSerializer::statement(ParseNode *pn, MutableHandleValue dst)
 
       case PNK_IMPORT:
         return importDeclaration(pn, dst);
+
+      case PNK_EXPORT:
+      case PNK_EXPORT_FROM:
+        return exportDeclaration(pn, dst);
 
       case PNK_NAME:
         LOCAL_ASSERT(pn->isUsed());

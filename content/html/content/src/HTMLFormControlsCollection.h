@@ -40,9 +40,9 @@ public:
   virtual Element* GetElementAt(uint32_t index);
   virtual nsINode* GetParentObject() MOZ_OVERRIDE;
 
-  virtual JSObject* NamedItem(JSContext* aCx, const nsAString& aName,
-                              ErrorResult& aError);
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
+  virtual Element*
+  GetFirstNamedElement(const nsAString& aName, bool& aFound) MOZ_OVERRIDE;
+
   void
   NamedGetter(const nsAString& aName,
               bool& aFound,
@@ -54,6 +54,7 @@ public:
     bool dummy;
     NamedGetter(aName, dummy, aResult);
   }
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames);
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);

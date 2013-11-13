@@ -374,11 +374,16 @@ AllocationIntegrityState::dump()
         for (size_t i = 0; i < block->numPhis(); i++) {
             InstructionInfo &info = blocks[blockIndex].phis[i];
             LPhi *phi = block->getPhi(i);
+            CodePosition output(phi->id(), CodePosition::OUTPUT);
 
-            fprintf(stderr, "Phi v%u <-", info.outputs[0].virtualRegister());
+            // Don't print the inputOf for phi nodes, since it's never used.
+            fprintf(stderr, "[,%u Phi [def v%u %s] <-",
+                    output.pos(),
+                    info.outputs[0].virtualRegister(),
+                    phi->getDef(0)->output()->toString());
             for (size_t j = 0; j < phi->numOperands(); j++)
                 fprintf(stderr, " %s", info.inputs[j].toString());
-            fprintf(stderr, "\n");
+            fprintf(stderr, "]\n");
         }
 
         for (LInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
@@ -388,7 +393,10 @@ AllocationIntegrityState::dump()
             CodePosition input(ins->id(), CodePosition::INPUT);
             CodePosition output(ins->id(), CodePosition::OUTPUT);
 
-            fprintf(stderr, "[%u,%u %s]", input.pos(), output.pos(), ins->opName());
+            fprintf(stderr, "[");
+            if (input != CodePosition::MIN)
+                fprintf(stderr, "%u,%u ", input.pos(), output.pos());
+            fprintf(stderr, "%s]", ins->opName());
 
             if (ins->isMoveGroup()) {
                 LMoveGroup *group = ins->toMoveGroup();

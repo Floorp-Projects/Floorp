@@ -149,3 +149,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/js/xpconnect/src',
+    '/js/xpconnect/wrappers',
+    '/xpcom/ds',
+]
+

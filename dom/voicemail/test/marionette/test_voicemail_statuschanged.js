@@ -111,7 +111,7 @@ function testLevel2DiscardActive() {
     // TODO: bug 905228 - MozVoicemailStatus is not defined.
     //ok(status instanceof MozVoicemailStatus);
     is(status.hasMessages, true);
-    is(status.messageCount, status.MESSAGE_COUNT_UNKNOWN);
+    is(status.messageCount, -1);
     is(status.returnNumber, MWI_LEVEL2_SENDER);
     is(status.returnMessage, MWI_DEFAULT_BODY);
     isVoicemailStatus(status);
