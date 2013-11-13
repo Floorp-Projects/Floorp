@@ -3375,6 +3375,38 @@ nsXPCComponents_Utils::NukeSandbox(const Value &obj, JSContext *cx)
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::BlockScriptForGlobal(const JS::Value &globalArg,
+                                            JSContext *cx)
+{
+    NS_ENSURE_TRUE(globalArg.isObject(), NS_ERROR_INVALID_ARG);
+    JSObject *global = UncheckedUnwrap(&globalArg.toObject(),
+                                       /* stopAtOuter = */ false);
+    NS_ENSURE_TRUE(JS_IsGlobalObject(global), NS_ERROR_INVALID_ARG);
+    if (nsContentUtils::IsSystemPrincipal(GetObjectPrincipal(global))) {
+        JS_ReportError(cx, "Script may not be disabled for system globals");
+        return NS_ERROR_FAILURE;
+    }
+    Scriptability::Get(global).Block();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::UnblockScriptForGlobal(const JS::Value &globalArg,
+                                              JSContext *cx)
+{
+    NS_ENSURE_TRUE(globalArg.isObject(), NS_ERROR_INVALID_ARG);
+    JSObject *global = UncheckedUnwrap(&globalArg.toObject(),
+                                       /* stopAtOuter = */ false);
+    NS_ENSURE_TRUE(JS_IsGlobalObject(global), NS_ERROR_INVALID_ARG);
+    if (nsContentUtils::IsSystemPrincipal(GetObjectPrincipal(global))) {
+        JS_ReportError(cx, "Script may not be disabled for system globals");
+        return NS_ERROR_FAILURE;
+    }
+    Scriptability::Get(global).Unblock();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::IsXrayWrapper(const Value &obj, bool* aRetval)
 {
     *aRetval =
