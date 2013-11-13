@@ -66,6 +66,9 @@ XPCOMUtils.defineLazyServiceGetter(window, "gFaviconService",
 XPCOMUtils.defineLazyServiceGetter(window, "gFocusManager",
                                    "@mozilla.org/focus-manager;1",
                                    "nsIFocusManager");
+XPCOMUtils.defineLazyServiceGetter(window, "gEventListenerService",
+                                   "@mozilla.org/eventlistenerservice;1",
+                                   "nsIEventListenerService");
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
                                    "@mozilla.org/xre/app-info;1",
