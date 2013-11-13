@@ -42,6 +42,7 @@ public:
 
     void Block();
     void Unblock();
+    void SetDocShellAllowsScript(bool aAllowed);
 
     static Scriptability& Get(JSObject *aScope);
 
@@ -51,6 +52,10 @@ private:
     // re-enable it (if ever), it decrements this value with a call to Unblock().
     // Script may not run if this value is non-zero.
     uint32_t mScriptBlocks;
+
+    // Whether the docshell allows javascript in this scope. If this scope
+    // doesn't have a docshell, this value is always true.
+    bool mDocShellAllowsScript;
 };
 
 JSObject *

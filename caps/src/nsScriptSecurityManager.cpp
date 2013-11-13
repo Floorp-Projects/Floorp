@@ -1637,24 +1637,8 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
         if (!sgo) {
             return NS_ERROR_FAILURE;
         }
-
-        // window can be null here if we're running with a non-DOM window
-        // as the script global (i.e. a XUL prototype document).
-        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
-        nsCOMPtr<nsIDocShell> docshell;
-        nsresult rv;
-        if (window) {
-            docshell = window->GetDocShell();
-        }
-
-        if (docshell) {
-          rv = docshell->GetCanExecuteScripts(result);
-          if (NS_FAILED(rv)) return rv;
-          if (!*result) return NS_OK;
-        }
     }
 
-    // OK, the docshell doesn't have script execution explicitly disabled.
     // Check whether our URI is an "about:" URI that allows scripts.  If it is,
     // we need to allow JS to run.  In this case, don't apply the JS enabled
     // pref or policies.  On failures, just press on and don't do this special
