@@ -166,7 +166,11 @@ BluetoothA2dpManager::Connect(const nsAString& aDeviceAddress,
   mDeviceAddress = aDeviceAddress;
   mController = aController;
 
-  bs->SendSinkMessage(aDeviceAddress, NS_LITERAL_STRING("Connect"));
+  if (NS_FAILED(bs->SendSinkMessage(aDeviceAddress,
+                                    NS_LITERAL_STRING("Connect")))) {
+    aController->OnConnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    return;
+  }
 }
 
 void
@@ -192,7 +196,11 @@ BluetoothA2dpManager::Disconnect(BluetoothProfileController* aController)
 
   mController = aController;
 
-  bs->SendSinkMessage(mDeviceAddress, NS_LITERAL_STRING("Disconnect"));
+  if (NS_FAILED(bs->SendSinkMessage(mDeviceAddress,
+                                    NS_LITERAL_STRING("Disconnect")))) {
+    aController->OnDisconnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    return;
+  }
 }
 
 void

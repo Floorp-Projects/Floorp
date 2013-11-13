@@ -73,7 +73,8 @@ typedef uint8_t XBLBindingSerializeDetails;
 // are no more attributes.
 #define XBLBinding_Serialize_NoMoreAttributes 0xFF
 
-PR_STATIC_ASSERT(XBLBinding_Serialize_CustomNamespace >= kNameSpaceID_LastBuiltin);
+static_assert(XBLBinding_Serialize_CustomNamespace >= kNameSpaceID_LastBuiltin,
+              "The custom namespace should not be in use as a real namespace");
 
 nsresult
 XBL_SerializeFunction(nsIObjectOutputStream* aStream,

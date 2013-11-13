@@ -24,3 +24,28 @@ LIBRARY_NAME = 'jsdomgeolocation_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/content/events/src',
+    '/dom/base',
+    '/dom/ipc',
+]
+
+if CONFIG['MOZ_ENABLE_QTMOBILITY']:
+    LOCAL_INCLUDES += [
+        '/dom/system/unix',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    LOCAL_INCLUDES += [
+        '/dom/system/android',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    LOCAL_INCLUDES += [
+        '/dom/system/gonk',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    LOCAL_INCLUDES += [
+        '/dom/system/mac',
+    ]
+

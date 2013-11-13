@@ -161,7 +161,7 @@ SharedWorker::Close()
 }
 
 void
-SharedWorker::PostMessage(JSContext* aCx, JS::HandleValue aMessage,
+SharedWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                           const Optional<Sequence<JS::Value>>& aTransferable,
                           ErrorResult& aRv)
 {
@@ -205,7 +205,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SharedWorker,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 JSObject*
-SharedWorker::WrapObject(JSContext* aCx, JS::HandleObject aScope)
+SharedWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   AssertIsOnMainThread();
 

@@ -67,31 +67,6 @@ CPPSRCS = \
   $(NULL)
 endif
 
-LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
-  -I$(topsrcdir)/js/xpconnect/wrappers \
-  -I$(topsrcdir)/js/ipc \
-  -I$(topsrcdir)/content/canvas/src \
-  -I$(topsrcdir)/content/html/content/src \
-  -I$(topsrcdir)/media/webrtc/signaling/src/peerconnection \
-  -I$(topsrcdir)/media/webrtc/signaling/src/common/time_profiling \
-  -I$(topsrcdir)/media/mtransport \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/dom/battery \
-  -I$(topsrcdir)/dom/indexedDB \
-  -I$(topsrcdir)/content/xslt/src/base \
-  -I$(topsrcdir)/content/xslt/src/xpath \
-  -I$(topsrcdir)/content/xml/content/src \
-  -I$(topsrcdir)/content/xul/content/src \
-  -I$(topsrcdir)/content/xul/document/src \
-  -I$(topsrcdir)/content/media/webspeech/recognition \
-  $(NULL)
-
-ifdef MOZ_AUDIO_CHANNEL_MANAGER
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/dom/system/gonk \
-  $(NULL)
-endif
-
 ABS_DIST := $(abspath $(DIST))
 
 EXTRA_EXPORT_MDDEPEND_FILES := $(addsuffix .pp,$(binding_dependency_trackers))
@@ -157,14 +132,14 @@ $(test_webidl_files): %: $(srcdir)/test/%
 # a symlink, which will clobber files in the srcdir, which is bad.
 $(preprocessed_webidl_files): %: $(webidl_base)/% $(GLOBAL_DEPS)
 	$(RM) $@
-	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
-          $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(webidl_base)/$* -o $@
+	$(call py_action,preprocessor, \
+          $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(webidl_base)/$* -o $@)
 
 # See the comment about PP_TARGETS for $(preprocessed_webidl_files)
 $(preprocessed_test_webidl_files): %: $(srcdir)/test/% $(GLOBAL_DEPS)
 	$(RM) $@
-	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
-          $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(srcdir)/test/$* -o $@
+	$(call py_action,preprocessor, \
+          $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(srcdir)/test/$* -o $@)
 
 # Make is dumb and can get confused between "foo" and "$(CURDIR)/foo".  Make
 # sure that the latter depends on the former, since the latter gets used in .pp

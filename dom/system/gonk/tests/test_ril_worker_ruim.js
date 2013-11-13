@@ -69,6 +69,124 @@ add_test(function test_ruim_file_path_id() {
   run_next_test();
 });
 
+add_test(function test_fetch_ruim_recodes() {
+  let worker = newWorker();
+  let RIL = worker.RIL;
+  let iccHelper = worker.ICCRecordHelper;
+  let ruimHelper = worker.RuimRecordHelper;
+
+  function testFetchRuimRecordes(expectCalled) {
+    let ifCalled = [];
+
+    iccHelper.readICCID = function () {
+      ifCalled.push("readICCID");
+    };
+
+    ruimHelper.getIMSI_M = function () {
+      ifCalled.push("getIMSI_M");
+    };
+
+    ruimHelper.readCST = function () {
+      ifCalled.push("readCST");
+    };
+
+    ruimHelper.readCDMAHome = function () {
+      ifCalled.push("readCDMAHome");
+    };
+
+    RIL.getCdmaSubscription = function () {
+      ifCalled.push("getCdmaSubscription");
+    };
+
+    ruimHelper.fetchRuimRecords();
+
+    for (let i = 0; i < expectCalled.length; i++ ) {
+      if (ifCalled[i] != expectCalled[i]) {
+        do_print(expectCalled[i] + " is not called.");
+        do_check_true(false);
+      }
+    }
+  }
+
+  let expectCalled = ["readICCID", "getIMSI_M", "readCST", "readCDMAHome",
+                      "getCdmaSubscription"];
+  testFetchRuimRecordes(expectCalled);
+
+  run_next_test();
+});
+
+/**
+ * Verify RuimRecordHelper.decodeIMSIValue
+ */
+add_test(function test_decode_imsi_value() {
+  let worker = newUint8Worker();
+
+  function testDecodeImsiValue(encoded, length, expect) {
+    let decoded = worker.RuimRecordHelper.decodeIMSIValue(encoded, length);
+
+    do_check_eq(expect, decoded);
+  }
+
+  testDecodeImsiValue( 99, 2, "00");
+  testDecodeImsiValue( 90, 2, "01");
+  testDecodeImsiValue( 19, 2, "20");
+  testDecodeImsiValue( 23, 2, "34");
+  testDecodeImsiValue(999, 3, "000");
+  testDecodeImsiValue(990, 3, "001");
+  testDecodeImsiValue(909, 3, "010");
+  testDecodeImsiValue( 99, 3, "100");
+  testDecodeImsiValue(901, 3, "012");
+  testDecodeImsiValue( 19, 3, "120");
+  testDecodeImsiValue( 91, 3, "102");
+  testDecodeImsiValue(199, 3, "200");
+  testDecodeImsiValue(123, 3, "234");
+  testDecodeImsiValue(578, 3, "689");
+
+  run_next_test();
+});
+
+/**
+ * Verify RuimRecordHelper.getIMSI_M
+ */
+add_test(function test_get_imsi_m() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let buf    = worker.Buf;
+  let io     = worker.ICCIOHelper;
+
+  function testDecodeImsi(encodedImsi, expectedImsi) {
+    io.loadTransparentEF = function fakeLoadTransparentEF(options) {
+      // Write data size
+      buf.writeInt32(encodedImsi.length * 2);
+
+      // Write imsi
+      for (let i = 0; i < encodedImsi.length; i++) {
+        helper.writeHexOctet(encodedImsi[i]);
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(encodedImsi.length * 2);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    worker.RuimRecordHelper.getIMSI_M();
+    let imsi = worker.RIL.iccInfoPrivate.imsi;
+
+    do_check_eq(expectedImsi, imsi)
+  }
+
+  let imsi_1 = "466050081062861";
+  testDecodeImsi([0x0, 0xe5, 0x03, 0xee, 0xca, 0x17, 0x5e, 0x80, 0x63, 0x01], imsi_1);
+
+  let imsi_2 = "460038351175976";
+  testDecodeImsi([0x0, 0xd4, 0x02, 0x61, 0x97, 0x01, 0x5c, 0x80, 0x67, 0x01], imsi_2);
+
+  run_next_test();
+});
+
 /**
  * Verify RuimRecordHelper.readCDMAHome
  */

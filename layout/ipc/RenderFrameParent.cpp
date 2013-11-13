@@ -827,10 +827,11 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
 
 void
 RenderFrameParent::NotifyInputEvent(const WidgetInputEvent& aEvent,
+                                    ScrollableLayerGuid* aOutTargetGuid,
                                     WidgetInputEvent* aOutEvent)
 {
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->ReceiveInputEvent(aEvent, aOutEvent);
+    GetApzcTreeManager()->ReceiveInputEvent(aEvent, aOutTargetGuid, aOutEvent);
   }
 }
 
@@ -838,8 +839,8 @@ void
 RenderFrameParent::NotifyDimensionsChanged(ScreenIntSize size)
 {
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->UpdateCompositionBounds(ScrollableLayerGuid(mLayersId),
-                                                  ScreenIntRect(ScreenIntPoint(), size));
+    GetApzcTreeManager()->UpdateRootCompositionBounds(
+      mLayersId, ScreenIntRect(ScreenIntPoint(), size));
   }
 }
 
@@ -1001,20 +1002,21 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 void
-RenderFrameParent::ZoomToRect(const CSSRect& aRect)
+RenderFrameParent::ZoomToRect(uint32_t aPresShellId, ViewID aViewId,
+                              const CSSRect& aRect)
 {
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->ZoomToRect(ScrollableLayerGuid(mLayersId),
+    GetApzcTreeManager()->ZoomToRect(ScrollableLayerGuid(mLayersId, aPresShellId, aViewId),
                                      aRect);
   }
 }
 
 void
-RenderFrameParent::ContentReceivedTouch(bool aPreventDefault)
+RenderFrameParent::ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
+                                        bool aPreventDefault)
 {
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->ContentReceivedTouch(ScrollableLayerGuid(mLayersId),
-                                               aPreventDefault);
+    GetApzcTreeManager()->ContentReceivedTouch(aGuid, aPreventDefault);
   }
 }
 
@@ -1027,8 +1029,8 @@ RenderFrameParent::UpdateZoomConstraints(bool aAllowZoom,
     mContentController->SaveZoomConstraints(aAllowZoom, aMinZoom, aMaxZoom);
   }
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->UpdateZoomConstraints(ScrollableLayerGuid(mLayersId),
-                                                aAllowZoom, aMinZoom, aMaxZoom);
+    GetApzcTreeManager()->UpdateZoomConstraints(mLayersId, aAllowZoom,
+                                                aMinZoom, aMaxZoom);
   }
 }
 

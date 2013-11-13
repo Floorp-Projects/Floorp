@@ -70,7 +70,6 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMJSWindow.h"
-#include "nsIDOMMediaList.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
 
@@ -349,8 +348,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSNameSpaceRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSRuleList, nsCSSRuleListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(MediaList, nsMediaListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(StyleSheetList, nsStyleSheetListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
@@ -1046,10 +1043,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRuleList)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(MediaList, nsIDOMMediaList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMediaList)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(StyleSheetList, nsIDOMStyleSheetList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
   DOM_CLASSINFO_MAP_END
@@ -1388,7 +1381,7 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, JS::Handle<jsid> id, bool *aI
   if (JSID_IS_INT(id)) {
       i = JSID_TO_INT(id);
   } else {
-      JS::RootedValue idval(cx);
+      JS::Rooted<JS::Value> idval(cx);
       double array_index;
       if (!::JS_IdToValue(cx, id, idval.address()) ||
           !JS::ToNumber(cx, idval, &array_index) ||
@@ -2038,6 +2031,8 @@ NS_IMETHODIMP
 nsWindowSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
                        JSContext *cx, JSObject *obj)
 {
+  JS::Rooted<JSObject*> window(cx, obj);
+
 #ifdef DEBUG
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
 
@@ -2050,7 +2045,6 @@ nsWindowSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
   const NativeProperties* eventTargetProperties =
     EventTargetBinding::sNativePropertyHooks->mNativeProperties.regular;
 
-  JS::Rooted<JSObject*> window(cx, obj);
   return DefineWebIDLBindingPropertiesOnXPCObject(cx, window, windowProperties, true) &&
          DefineWebIDLBindingPropertiesOnXPCObject(cx, window, eventTargetProperties, true) ?
          NS_OK : NS_ERROR_FAILURE;
@@ -3445,7 +3439,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject **objp, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, obj_);
-  JS::RootedId id(cx, id_);
+  JS::Rooted<jsid> id(cx, id_);
 
   if (!JSID_IS_STRING(id)) {
     return NS_OK;
@@ -3620,17 +3614,19 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   if (!(flags & JSRESOLVE_ASSIGNING) && sDocument_id == id) {
+    nsCOMPtr<nsIDocument> document = win->GetDoc();
+    JS::Rooted<JS::Value> v(cx);
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+    rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), document, document,
+                    &NS_GET_IID(nsIDOMDocument), &v, getter_AddRefs(holder),
+                    false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // nsIDocument::WrapObject will handle defining the property.
+    *objp = obj;
+
+    // NB: We need to do this for any Xray wrapper.
     if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
-      nsCOMPtr<nsIDocument> document = win->GetDoc();
-      JS::Rooted<JS::Value> v(cx);
-      nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-      rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), document, document,
-                      &NS_GET_IID(nsIDOMDocument), &v, getter_AddRefs(holder),
-                      false);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      *objp = obj;
-
       *_retval = JS_WrapValue(cx, &v) &&
                  JS_DefineProperty(cx, obj, "document", v,
                                    JS_PropertyStub, JS_StrictPropertyStub,
@@ -4279,30 +4275,6 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                  NS_ERROR_OUT_OF_MEMORY);
   *vp = rval;
   return NS_SUCCESS_I_DID_SOMETHING;
-}
-
-
-// MediaList helper
-
-nsresult
-nsMediaListSH::GetStringAt(nsISupports *aNative, int32_t aIndex,
-                           nsAString& aResult)
-{
-  if (aIndex < 0) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  nsCOMPtr<nsIDOMMediaList> media_list(do_QueryInterface(aNative));
-
-  nsresult rv = media_list->Item(uint32_t(aIndex), aResult);
-#ifdef DEBUG
-  if (DOMStringIsNull(aResult)) {
-    uint32_t length = 0;
-    media_list->GetLength(&length);
-    NS_ASSERTION(uint32_t(aIndex) >= length, "Item should only return null for out-of-bounds access");
-  }
-#endif
-  return rv;
 }
 
 

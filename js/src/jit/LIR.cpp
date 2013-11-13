@@ -236,8 +236,17 @@ PrintUse(char *buf, size_t size, const LUse *use)
         JS_snprintf(buf, size, "v%d:%s", use->virtualRegister(),
                     Registers::GetName(Registers::Code(use->registerCode())));
         break;
-      default:
+      case LUse::ANY:
+        JS_snprintf(buf, size, "v%d:r?", use->virtualRegister());
+        break;
+      case LUse::KEEPALIVE:
         JS_snprintf(buf, size, "v%d:*", use->virtualRegister());
+        break;
+      case LUse::RECOVERED_INPUT:
+        JS_snprintf(buf, size, "v%d:**", use->virtualRegister());
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("invalid use policy");
     }
 }
 

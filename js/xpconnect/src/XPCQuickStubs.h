@@ -92,14 +92,6 @@ xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv,
 bool
 xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp);
 
-bool
-xpc_qsThrowMethodFailedWithCcx(XPCCallContext &ccx, nsresult rv);
-
-bool
-xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
-                                   const char *ifaceName,
-                                   const char *memberName);
-
 /**
  * Fail after converting a method argument fails.
  *
@@ -361,10 +353,6 @@ xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes);
 bool
 xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, JS::MutableHandleValue pval, const PRUnichar **pstr);
 
-
-/** Convert an nsString to JSString, returning true on success. This will sometimes modify |str| to be empty. */
-bool
-xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval);
 
 nsresult
 getWrapper(JSContext *cx,

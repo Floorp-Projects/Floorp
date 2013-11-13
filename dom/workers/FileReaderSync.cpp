@@ -51,7 +51,7 @@ FileReaderSync::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 }
 
 JSObject*
-FileReaderSync::WrapObject(JSContext* aCx, JS::HandleObject aScope)
+FileReaderSync::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return FileReaderSyncBinding_workers::Wrap(aCx, aScope, this);
 }

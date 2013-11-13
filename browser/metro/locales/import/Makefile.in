@@ -44,9 +44,9 @@ bookmarks-src = $(srcdir)/../generic/profile/bookmarks.json.in
 # processing of the jar file in the parent directory.
 bookmarks: bookmarks.inc
 	@echo "Generating: $@"
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	$(call py_action,preprocessor, \
 	  -I $^ \
 	  -DAB_CD=$(AB_CD) \
-	  $(bookmarks-src) > ../bookmarks.json
+	  $(bookmarks-src) -o ../bookmarks.json)
 
 export:: bookmarks

@@ -93,7 +93,7 @@ DesktopNotification::PostDesktopNotification()
       nsString manifestUrl = EmptyString();
       appsService->GetManifestURLByLocalId(appId, manifestUrl);
       mozilla::AutoSafeJSContext cx;
-      JS::RootedValue val(cx);
+      JS::Rooted<JS::Value> val(cx);
       AppNotificationServiceOptions ops;
       ops.mTextClickable = true;
       ops.mManifestURL = manifestUrl;
@@ -119,13 +119,15 @@ DesktopNotification::PostDesktopNotification()
   // to nsIObservers, thus cookies must be unique to differentiate observers.
   nsString uniqueName = NS_LITERAL_STRING("desktop-notification:");
   uniqueName.AppendInt(sCount++);
+  nsIPrincipal* principal = GetOwner()->GetDoc()->NodePrincipal();
   return alerts->ShowAlertNotification(mIconURL, mTitle, mDescription,
                                        true,
                                        uniqueName,
                                        mObserver,
                                        uniqueName,
                                        NS_LITERAL_STRING("auto"),
-                                       EmptyString());
+                                       EmptyString(),
+                                       principal);
 }
 
 DesktopNotification::DesktopNotification(const nsAString & title,

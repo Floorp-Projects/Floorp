@@ -198,7 +198,6 @@ public:
   virtual void SetPrevInFlow(nsIFrame*) MOZ_OVERRIDE;
   virtual nsIFrame* GetNextInFlowVirtual() const MOZ_OVERRIDE;
   virtual void SetNextInFlow(nsIFrame*) MOZ_OVERRIDE;
-  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsView** aView) const MOZ_OVERRIDE;
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
   NS_IMETHOD  IsSelectable(bool* aIsSelectable, uint8_t* aSelectStyle) const MOZ_OVERRIDE;

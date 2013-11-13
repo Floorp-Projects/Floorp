@@ -10,6 +10,7 @@
 #include "nsCSSProps.h"
 #include "nsRuleNode.h"
 #include "nsROCSSPrimitiveValue.h"
+#include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIURI.h"
 
@@ -441,7 +442,8 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
 }
 
 /* static */ bool
-nsStyleUtil::CSPAllowsInlineStyle(nsIPrincipal* aPrincipal,
+nsStyleUtil::CSPAllowsInlineStyle(nsIContent* aContent,
+                                  nsIPrincipal* aPrincipal,
                                   nsIURI* aSourceURI,
                                   uint32_t aLineNumber,
                                   const nsSubstring& aStyleText,
@@ -453,6 +455,10 @@ nsStyleUtil::CSPAllowsInlineStyle(nsIPrincipal* aPrincipal,
     *aRv = NS_OK;
   }
 
+  MOZ_ASSERT(!aContent || aContent->Tag() == nsGkAtoms::style,
+      "aContent passed to CSPAllowsInlineStyle "
+      "for an element that is not <style>");
+
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   rv = aPrincipal->GetCsp(getter_AddRefs(csp));
 
@@ -462,39 +468,72 @@ nsStyleUtil::CSPAllowsInlineStyle(nsIPrincipal* aPrincipal,
     return false;
   }
 
-  if (csp) {
-    bool inlineOK = true;
-    bool reportViolation;
-    rv = csp->GetAllowsInlineStyle(&reportViolation, &inlineOK);
-    if (NS_FAILED(rv)) {
-      if (aRv)
-        *aRv = rv;
-      return false;
-    }
+  if (!csp) {
+    // No CSP --> the style is allowed
+    return true;
+  }
 
-    if (reportViolation) {
-      // Inline styles are not allowed by CSP, so report the violation
-      nsAutoCString asciiSpec;
-      aSourceURI->GetAsciiSpec(asciiSpec);
-      nsAutoString styleText(aStyleText);
+  bool reportViolation;
+  bool allowInlineStyle = true;
+  rv = csp->GetAllowsInlineStyle(&reportViolation, &allowInlineStyle);
+  if (NS_FAILED(rv)) {
+    if (aRv)
+      *aRv = rv;
+    return false;
+  }
 
-      // cap the length of the style sample at 40 chars.
-      if (styleText.Length() > 40) {
-        styleText.Truncate(40);
-        styleText.Append(NS_LITERAL_STRING("..."));
-      }
-
-      csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_STYLE,
-                               NS_ConvertUTF8toUTF16(asciiSpec),
-                               aStyleText,
-                               aLineNumber);
-    }
-
-    if (!inlineOK) {
-        // The inline style should be blocked.
+  bool foundNonce = false;
+  nsAutoString nonce;
+  // If inline styles are allowed ('unsafe-inline'), skip the (irrelevant)
+  // nonce check
+  if (!allowInlineStyle) {
+    // We can only find a nonce if aContent is provided
+    foundNonce = !!aContent &&
+      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
+    if (foundNonce) {
+      // We can overwrite the outparams from GetAllowsInlineStyle because
+      // if the nonce is correct, then we don't want to report the original
+      // inline violation (it has been whitelisted by the nonce), and if
+      // the nonce is incorrect, then we want to return just the specific
+      // "nonce violation" rather than both a "nonce violation" and
+      // a generic "inline violation".
+      rv = csp->GetAllowsNonce(nonce, nsIContentPolicy::TYPE_STYLESHEET,
+                               &reportViolation, &allowInlineStyle);
+      if (NS_FAILED(rv)) {
+        if (aRv)
+          *aRv = rv;
         return false;
+      }
     }
   }
-  // No CSP or a CSP that allows inline styles.
+
+  if (reportViolation) {
+    // This inline style is not allowed by CSP, so report the violation
+    nsAutoCString asciiSpec;
+    aSourceURI->GetAsciiSpec(asciiSpec);
+    nsAutoString styleText(aStyleText);
+
+    // cap the length of the style sample at 40 chars.
+    if (styleText.Length() > 40) {
+      styleText.Truncate(40);
+      styleText.AppendLiteral("...");
+    }
+
+    // The type of violation to report is determined by whether there was
+    // a nonce present.
+    unsigned short violationType = foundNonce ?
+      nsIContentSecurityPolicy::VIOLATION_TYPE_NONCE_STYLE :
+      nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_STYLE;
+    csp->LogViolationDetails(violationType, NS_ConvertUTF8toUTF16(asciiSpec),
+                             styleText, aLineNumber, nonce);
+  }
+
+  if (!allowInlineStyle) {
+    NS_ASSERTION(reportViolation,
+        "CSP blocked inline style but is not reporting a violation");
+    // The inline style should be blocked.
+    return false;
+  }
+  // CSP allows inline styles.
   return true;
 }

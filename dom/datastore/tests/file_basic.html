@@ -34,12 +34,11 @@
 
       var store = stores[0];
       ok("get" in store, "store.get exists");
-      ok("update" in store, "store.update exists");
+      ok("put" in store, "store.put exists");
       ok("add" in store, "store.add exists");
       ok("remove" in store, "store.remove exists");
       ok("clear" in store, "store.clear exists");
       ok("revisionId" in store, "store.revisionId exists");
-      ok("getChanges" in store, "store.getChanges exists");
       ok("getLength" in store, "store.getLength exists");
       ok("sync" in store, "store.sync exists");
 
@@ -66,9 +65,9 @@
     }, cbError);
   }
 
-  function testStoreUpdate(id, value) {
-    return gStore.update(id, value).then(function() {
-      ok(true, "store.update() is called");
+  function testStorePut(value, id) {
+    return gStore.put(value, id).then(function() {
+      ok(true, "store.put() is called");
     }, cbError);
   }
 
@@ -114,8 +113,8 @@
                    gId = id; runTest(); }, cbError); },
     function() { testStoreGet(gId, "hello world"); },
 
-    // Update + Get - string
-    function() { testStoreUpdate(gId, "hello world 2").then(function() {
+    // Put + Get - string
+    function() { testStorePut("hello world 2", gId).then(function() {
                    runTest(); }, cbError); },
     function() { testStoreGet(gId, "hello world 2"); },
 

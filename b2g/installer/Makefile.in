@@ -50,9 +50,13 @@ ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
 DEFINES += -DMOZ_SHARED_MOZGLUE=1
 endif
 
+ifneq (,$(filter rtsp,$(NECKO_PROTOCOLS)))
+DEFINES += -DMOZ_RTSP
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) FORCE
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $< > $@
+	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $< -o $@)
 ifdef MOZ_CHROME_MULTILOCALE
 	printf "\n[multilocale]\n" >> $@
 	for LOCALE in $(MOZ_CHROME_MULTILOCALE) ;\

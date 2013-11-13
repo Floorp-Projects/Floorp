@@ -238,7 +238,7 @@ nsresult LoadInfo::UpdateSystemLoad()
 nsresult LoadInfo::UpdateProcessLoad() {
 #if defined(LINUX) || defined(ANDROID)
   struct timeval tv;
-  gettimeofday(&tv, NULL);
+  gettimeofday(&tv, nullptr);
   const uint64_t total_times = tv.tv_sec * PR_USEC_PER_SEC + tv.tv_usec;
 
   rusage usage;

@@ -36,7 +36,7 @@ public:
   static already_AddRefed<FileReaderSync>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  JSObject* WrapObject(JSContext* aCx, JS::HandleObject aScope);
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
 
   NS_DECL_ISUPPORTS
 

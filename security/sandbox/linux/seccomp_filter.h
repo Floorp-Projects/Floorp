@@ -32,12 +32,14 @@
 #define SECCOMP_WHITELIST_ARCH_LOW \
   ALLOW_SYSCALL(_llseek), \
   ALLOW_SYSCALL(getuid32), \
+  ALLOW_SYSCALL(geteuid32), \
   ALLOW_SYSCALL(sigreturn), \
   ALLOW_SYSCALL(fcntl64),
 #elif defined(__i386__)
 #define SECCOMP_WHITELIST_ARCH_LOW \
   ALLOW_SYSCALL(_llseek), \
   ALLOW_SYSCALL(getuid32), \
+  ALLOW_SYSCALL(geteuid32), \
   ALLOW_SYSCALL(sigreturn), \
   ALLOW_SYSCALL(fcntl64),
 #else
@@ -58,11 +60,18 @@
 
 /* System calls used by the profiler */
 #ifdef MOZ_PROFILING
-#define SECCOMP_WHITELIST_PROFILING \
+# ifdef __NR_sigaction
+#  define SECCOMP_WHITELIST_PROFILING \
   ALLOW_SYSCALL(sigaction), \
+  ALLOW_SYSCALL(rt_sigaction), \
   ALLOW_SYSCALL(tgkill),
+# else
+#  define SECCOMP_WHITELIST_PROFILING \
+  ALLOW_SYSCALL(rt_sigaction), \
+  ALLOW_SYSCALL(tgkill),
+# endif
 #else
-#define SECCOMP_WHITELIST_PROFILING
+# define SECCOMP_WHITELIST_PROFILING
 #endif
 
 /* Architecture-specific syscalls that should eventually be removed */
@@ -70,11 +79,13 @@
 #define SECCOMP_WHITELIST_ARCH_TOREMOVE \
   ALLOW_SYSCALL(fstat64), \
   ALLOW_SYSCALL(stat64), \
+  ALLOW_SYSCALL(lstat64), \
   ALLOW_SYSCALL(sigprocmask),
 #elif defined(__i386__)
 #define SECCOMP_WHITELIST_ARCH_TOREMOVE \
   ALLOW_SYSCALL(fstat64), \
   ALLOW_SYSCALL(stat64), \
+  ALLOW_SYSCALL(lstat64), \
   ALLOW_SYSCALL(sigprocmask),
 #else
 #define SECCOMP_WHITELIST_ARCH_TOREMOVE
@@ -133,6 +144,9 @@
   ALLOW_SYSCALL(access), \
   ALLOW_SYSCALL(getdents64), \
   ALLOW_SYSCALL(unlink), \
+  ALLOW_SYSCALL(fsync), \
+  ALLOW_SYSCALL(socketpair), \
+  ALLOW_SYSCALL(sendmsg), \
   /* Should remove all of the following in the future, if possible */ \
   ALLOW_SYSCALL(getpriority), \
   ALLOW_SYSCALL(setpriority), \

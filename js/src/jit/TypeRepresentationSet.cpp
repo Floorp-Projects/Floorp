@@ -162,20 +162,20 @@ TypeRepresentationSet::TypeRepresentationSet()
 bool
 TypeRepresentationSet::empty()
 {
-    return length() == 0;
+    return length_ == 0;
 }
 
-size_t
-TypeRepresentationSet::length()
+bool
+TypeRepresentationSet::singleton()
 {
-    return length_;
+    return length_ == 1;
 }
 
 TypeRepresentation *
-TypeRepresentationSet::get(size_t i)
+TypeRepresentationSet::getTypeRepresentation()
 {
-    JS_ASSERT(i < length());
-    return entries_[i];
+    JS_ASSERT(singleton());
+    return get(0);
 }
 
 bool

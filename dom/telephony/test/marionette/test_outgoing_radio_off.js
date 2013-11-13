@@ -81,7 +81,7 @@ let permissions = [
 ];
 
 startTestWithPermissions(permissions, function() {
-  connection = navigator.mozMobileConnection;
+  connection = navigator.mozMobileConnections[0];
   ok(connection instanceof MozMobileConnection,
      "connection is instanceof " + connection.constructor);
 

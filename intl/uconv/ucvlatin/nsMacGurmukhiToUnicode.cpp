@@ -5,6 +5,9 @@
 
 #include "nsUCConstructors.h"
 #include "nsMacGurmukhiToUnicode.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -17,6 +20,7 @@ nsMacGurmukhiToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 #include "macgurmukhi.ut"
    };
 
+   Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_MACGURMUKHI, true);
    return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                                aOuter, aIID, aResult);
 }

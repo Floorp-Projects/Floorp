@@ -91,7 +91,7 @@ static const unsigned long kKeyMapping[] = {
     0, // EXPLORER
     0, // ENVELOPE
     NS_VK_RETURN, // ENTER
-    NS_VK_DELETE,
+    NS_VK_BACK,
     NS_VK_BACK_QUOTE, // GRAVE
     NS_VK_HYPHEN_MINUS,
     NS_VK_EQUALS,
@@ -136,7 +136,7 @@ static const unsigned long kKeyMapping[] = {
     0, // BUTTON_SELECT
     0, // BUTTON_MODE
     0, // ESCAPE
-    0, // FORWARD_DEL
+    NS_VK_DELETE,
     0, // CTRL_LEFT
     0, // CTRL_RIGHT
     NS_VK_CAPS_LOCK,

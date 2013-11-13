@@ -298,21 +298,6 @@ xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp)
     return ThrowCallFailed(cx, rv, ifaceName, memberId, nullptr);
 }
 
-bool
-xpc_qsThrowMethodFailedWithCcx(XPCCallContext &ccx, nsresult rv)
-{
-    ThrowBadResult(rv, ccx);
-    return false;
-}
-
-bool
-xpc_qsThrowMethodFailedWithDetails(JSContext *cx, nsresult rv,
-                                   const char *ifaceName,
-                                   const char *memberName)
-{
-    return ThrowCallFailed(cx, rv, ifaceName, JSID_VOIDHANDLE, memberName);
-}
-
 static void
 ThrowBadArg(JSContext *cx, nsresult rv, const char *ifaceName,
             jsid memberId, const char *memberName, unsigned paramnum)
@@ -822,28 +807,6 @@ NonVoidStringToJsval(JSContext *cx, nsAString &str, MutableHandleValue rval)
 }
 
 } // namespace xpc
-
-bool
-xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval)
-{
-    // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
-    if (str.IsVoid()) {
-        *rval = nullptr;
-        return true;
-    }
-
-    nsStringBuffer* sharedBuffer;
-    jsval jsstr = XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer);
-    if (JSVAL_IS_NULL(jsstr))
-        return false;
-    *rval = JSVAL_TO_STRING(jsstr);
-    if (sharedBuffer) {
-        // The string was shared but ReadableToJSVal didn't addref it.
-        // Move the ownership from str to jsstr.
-        str.ForgetSharedBuffer();
-    }
-    return true;
-}
 
 bool
 xpc_qsXPCOMObjectToJsval(JSContext *cx, qsObjectHelper &aHelper,

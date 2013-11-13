@@ -14,6 +14,10 @@
 #include <sys/time.h>
 #include <time.h>
 
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#include <pthread_np.h>
+#endif
+
 class nspr::Thread
 {
     pthread_t pthread_;
@@ -146,6 +150,11 @@ PR_SetCurrentThreadName(const char *name)
     int result;
 #ifdef XP_MACOSX
     result = pthread_setname_np(name);
+#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+    pthread_set_name_np(pthread_self(), name);
+    result = 0;
+#elif defined(__NetBSD__)
+    result = pthread_setname_np(pthread_self(), "%s", (void *)name);
 #else
     result = pthread_setname_np(pthread_self(), name);
 #endif

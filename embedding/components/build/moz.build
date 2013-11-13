@@ -18,3 +18,29 @@ LIBXUL_LIBRARY = True
 
 EXPORT_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    '../appstartup/src',
+    '../commandhandler/src',
+    '../find/src',
+    '../webbrowserpersist/src',
+    '../windowwatcher/src',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    LOCAL_INCLUDES += [
+        '../printingui/src/os2',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    LOCAL_INCLUDES += [
+        '../printingui/src/win',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    LOCAL_INCLUDES += [
+        '../printingui/src/mac',
+    ]
+
+if CONFIG['MOZ_PDF_PRINTING']:
+    LOCAL_INCLUDES += [
+        '../printingui/src/unixshared',
+    ]
+

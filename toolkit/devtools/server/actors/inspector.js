@@ -177,6 +177,7 @@ var NodeActor = protocol.ActorClass({
 
     let form = {
       actor: this.actorID,
+      baseURI: this.rawNode.baseURI,
       parent: parentNode ? parentNode.actorID : undefined,
       nodeType: this.rawNode.nodeType,
       namespaceURI: this.rawNode.namespaceURI,
@@ -467,6 +468,8 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   get nodeType() this._form.nodeType,
   get namespaceURI() this._form.namespaceURI,
   get nodeName() this._form.nodeName,
+
+  get baseURI() this._form.baseURI,
 
   get className() {
     return this.getAttribute("class") || '';

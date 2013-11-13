@@ -103,18 +103,18 @@ void genProfileEntry(/*MODIFIED*/UnwinderThreadBuffer* utb,
     }
     if (entry.js()) {
       if (!entry.pc()) {
-        // The JIT only allows the top-most entry to have a NULL pc
+        // The JIT only allows the top-most entry to have a nullptr pc
         MOZ_ASSERT(&entry == &stack->mStack[stack->stackSize() - 1]);
         // If stack-walking was disabled, then that's just unfortunate
         if (lastpc) {
           jsbytecode *jspc = js::ProfilingGetPC(stack->mRuntime, entry.script(),
                                                 lastpc);
           if (jspc) {
-            lineno = JS_PCToLineNumber(NULL, entry.script(), jspc);
+            lineno = JS_PCToLineNumber(nullptr, entry.script(), jspc);
           }
         }
       } else {
-        lineno = JS_PCToLineNumber(NULL, entry.script(), entry.pc());
+        lineno = JS_PCToLineNumber(nullptr, entry.script(), entry.pc());
       }
     } else {
       lineno = entry.line();
@@ -294,13 +294,13 @@ void populateBuffer(UnwinderThreadBuffer* utb, TickSample* sample,
 #   elif defined(SPS_OS_windows)
     /* Totally fake this up so it at least builds.  No idea if we can
        even ever get here on Windows. */
-    void* ucV = NULL;
+    void* ucV = nullptr;
 #   else
 #     error "Unsupported platform"
 #   endif
     releaseFunction(&sampledThreadProfile, utb, ucV);
   } else {
-    releaseFunction(&sampledThreadProfile, utb, NULL);
+    releaseFunction(&sampledThreadProfile, utb, nullptr);
   }
 }
 

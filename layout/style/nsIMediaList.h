@@ -16,7 +16,9 @@
 #include "nsTArray.h"
 #include "nsIAtom.h"
 #include "nsCSSValue.h"
+#include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 
 class nsPresContext;
 class nsCSSStyleSheet;
@@ -102,9 +104,9 @@ private:
     , mTypeOmitted(aOther.mTypeOmitted)
     , mHadUnknownExpression(aOther.mHadUnknownExpression)
     , mMediaType(aOther.mMediaType)
-    // Clone checks the result of this deep copy for allocation failure
     , mExpressions(aOther.mExpressions)
   {
+    MOZ_ASSERT(mExpressions.Length() == aOther.mExpressions.Length());
   }
 
 public:
@@ -143,16 +145,28 @@ private:
   nsTArray<nsMediaExpression> mExpressions;
 };
 
-class nsMediaList MOZ_FINAL : public nsIDOMMediaList {
+class nsMediaList MOZ_FINAL : public nsIDOMMediaList
+                            , public nsWrapperCache
+{
 public:
+  typedef mozilla::ErrorResult ErrorResult;
+
   nsMediaList();
 
-  NS_DECL_ISUPPORTS
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  nsISupports* GetParentObject() const
+  {
+    return nullptr;
+  }
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsMediaList)
 
   NS_DECL_NSIDOMMEDIALIST
 
-  nsresult GetText(nsAString& aMediaText);
-  nsresult SetText(const nsAString& aMediaText);
+  void GetText(nsAString& aMediaText);
+  void SetText(const nsAString& aMediaText);
 
   // Does this query apply to the presentation?
   // If |aKey| is non-null, add cache information to it.
@@ -165,11 +179,24 @@ public:
     mArray.AppendElement(aQuery.forget());
   }
 
-  nsresult Clone(nsMediaList** aResult);
+  already_AddRefed<nsMediaList> Clone();
 
-  int32_t Count() { return mArray.Length(); }
   nsMediaQuery* MediumAt(int32_t aIndex) { return mArray[aIndex]; }
   void Clear() { mArray.Clear(); }
+
+  // WebIDL
+  // XPCOM GetMediaText and SetMediaText are fine.
+  uint32_t Length() { return mArray.Length(); }
+  void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aReturn);
+  // XPCOM Item is fine.
+  void DeleteMedium(const nsAString& aMedium, ErrorResult& aRv)
+  {
+    aRv = DeleteMedium(aMedium);
+  }
+  void AppendMedium(const nsAString& aMedium, ErrorResult& aRv)
+  {
+    aRv = AppendMedium(aMedium);
+  }
 
 protected:
   ~nsMediaList();

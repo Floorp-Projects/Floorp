@@ -127,8 +127,8 @@ OS_LIBS += -lrt
 EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-		-DVERSION="$(LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)" $< > $@
+	$(call py_action,preprocessor, \
+		-DVERSION="$(LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)" $< -o $@)
 
 EXTRA_DEPS += symverscript
 endif
@@ -136,7 +136,6 @@ endif
 
 STATIC_LIBS += \
   xpcom_core \
-  ucvutil_s \
   chromium_s \
   snappy_s \
   $(NULL)
@@ -472,7 +471,7 @@ OS_LIBS += \
   $(NULL)
 endif
 
-ifdef MOZ_RTSP
+ifneq (,$(filter rtsp,$(NECKO_PROTOCOLS)))
 OS_LIBS += -lstagefright_foundation
 endif
 

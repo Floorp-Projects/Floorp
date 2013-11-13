@@ -3874,9 +3874,8 @@ nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
   NS_PRECONDITION(aFrame, "Can't get the bounds of a nonexistent frame!");
 
   if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    gfxRect bbox = nsSVGUtils::GetBBox(const_cast<nsIFrame*>(aFrame));
-    return nsLayoutUtils::RoundGfxRectToAppRect(bbox,
-      aFrame->PresContext()->AppUnitsPerCSSPixel()) - aFrame->GetPosition();
+    // TODO: SVG needs to define what percentage translations resolve against.
+    return nsRect();
   }
 
   return nsRect(nsPoint(0, 0), aFrame->GetSize());
@@ -3892,9 +3891,8 @@ nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
   nsRect result;
 
   if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    gfxRect bbox = nsSVGUtils::GetBBox(const_cast<nsIFrame*>(aFrame));
-    return nsLayoutUtils::RoundGfxRectToAppRect(bbox,
-      aFrame->PresContext()->AppUnitsPerCSSPixel()) - aFrame->GetPosition();
+    // TODO: SVG needs to define what percentage translations resolve against.
+    return result;
   }
 
   /* Iterate through the continuation list, unioning together all the
@@ -3964,56 +3962,51 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
    * a distance, it's already computed for us!
    */
   const nsStyleDisplay* display = aFrame->StyleDisplay();
-  nsRect boundingRect;
-  if (aBoundsOverride) {
-    boundingRect = *aBoundsOverride;
-  } else if (display->mTransformOrigin[0].GetUnit() != eStyleUnit_Coord ||
-             display->mTransformOrigin[1].GetUnit() != eStyleUnit_Coord) {
-    // GetFrameBoundsForTransform is expensive for SVG frames and we don't need
-    // it if the origin is coords (which it is by default for SVG).
-    boundingRect = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
-  }
+  nsRect boundingRect = (aBoundsOverride ? *aBoundsOverride :
+                         nsDisplayTransform::GetFrameBoundsForTransform(aFrame));
 
   /* Allows us to access named variables by index. */
-  float coords[2];
-  nscoord boundingOffsets[2] = {boundingRect.x, boundingRect.y};
-  nscoord boundingDimensions[2] = {boundingRect.width, boundingRect.height};
-  nscoord frameOffsets[2] = {aFrame->GetPosition().x, aFrame->GetPosition().y};
+  float coords[3];
+  const nscoord* dimensions[2] =
+    {&boundingRect.width, &boundingRect.height};
 
   for (uint8_t index = 0; index < 2; ++index) {
     /* If the -moz-transform-origin specifies a percentage, take the percentage
      * of the size of the box.
      */
     const nsStyleCoord &coord = display->mTransformOrigin[index];
-    if (coord.GetUnit() == eStyleUnit_Percent) {
+    if (coord.GetUnit() == eStyleUnit_Calc) {
+      const nsStyleCoord::Calc *calc = coord.GetCalcValue();
       coords[index] =
-        NSAppUnitsToFloatPixels(boundingDimensions[index], aAppUnitsPerPixel) *
-          coord.GetPercentValue() +
-        NSAppUnitsToFloatPixels(boundingOffsets[index], aAppUnitsPerPixel);
+        NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
+          calc->mPercent +
+        NSAppUnitsToFloatPixels(calc->mLength, aAppUnitsPerPixel);
+    } else if (coord.GetUnit() == eStyleUnit_Percent) {
+      coords[index] =
+        NSAppUnitsToFloatPixels(*dimensions[index], aAppUnitsPerPixel) *
+        coord.GetPercentValue();
     } else {
-      if (coord.GetUnit() == eStyleUnit_Calc) {
-        const nsStyleCoord::Calc *calc = coord.GetCalcValue();
-        coords[index] =
-          NSAppUnitsToFloatPixels(boundingDimensions[index], aAppUnitsPerPixel) *
-            calc->mPercent +
-          NSAppUnitsToFloatPixels(calc->mLength, aAppUnitsPerPixel);
-      } else {
-        NS_ABORT_IF_FALSE(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
-        coords[index] =
-          NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
-      }
-      if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-        // <length> values represent offsets from the origin of the SVG element's
-        // user space, not the top left of its border-box, so we must
-        // convert them to be relative to the border-box.
-        coords[index] -= NSAppUnitsToFloatPixels(frameOffsets[index], aAppUnitsPerPixel);
-      }
+      NS_ABORT_IF_FALSE(coord.GetUnit() == eStyleUnit_Coord, "unexpected unit");
+      coords[index] =
+        NSAppUnitsToFloatPixels(coord.GetCoordValue(), aAppUnitsPerPixel);
+    }
+    if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
+        coord.GetUnit() != eStyleUnit_Percent) {
+      // <length> values represent offsets from the origin of the SVG element's
+      // user space, not the top left of its bounds, so we must adjust for that:
+      nscoord offset =
+        (index == 0) ? aFrame->GetPosition().x : aFrame->GetPosition().y;
+      coords[index] -= NSAppUnitsToFloatPixels(offset, aAppUnitsPerPixel);
     }
   }
 
-  return gfxPoint3D(coords[0], coords[1],
-                    NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
-                                            aAppUnitsPerPixel));
+  coords[2] = NSAppUnitsToFloatPixels(display->mTransformOrigin[2].GetCoordValue(),
+                                      aAppUnitsPerPixel);
+  /* Adjust based on the origin of the rectangle. */
+  coords[0] += NSAppUnitsToFloatPixels(boundingRect.x, aAppUnitsPerPixel);
+  coords[1] += NSAppUnitsToFloatPixels(boundingRect.y, aAppUnitsPerPixel);
+
+  return gfxPoint3D(coords[0], coords[1], coords[2]);
 }
 
 /* Returns the delta specified by the -moz-perspective-origin property.
@@ -4087,6 +4080,7 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsI
   : mFrame(aFrame)
   , mTransformList(aFrame->StyleDisplay()->mSpecifiedTransform)
   , mToTransformOrigin(GetDeltaToTransformOrigin(aFrame, aAppUnitsPerPixel, aBoundsOverride))
+  , mToPerspectiveOrigin(GetDeltaToPerspectiveOrigin(aFrame, aAppUnitsPerPixel))
   , mChildPerspective(0)
 {
   const nsStyleDisplay* parentDisp = nullptr;
@@ -4096,9 +4090,6 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsI
   }
   if (parentDisp && parentDisp->mChildPerspective.GetUnit() == eStyleUnit_Coord) {
     mChildPerspective = parentDisp->mChildPerspective.GetCoordValue();
-    if (mChildPerspective > 0.0) {
-      mToPerspectiveOrigin = GetDeltaToPerspectiveOrigin(aFrame, aAppUnitsPerPixel);
-    }
   }
 }
 
@@ -4198,7 +4189,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     /* At the point when perspective is applied, we have been translated to the transform origin.
      * The translation to the perspective origin is the difference between these values.
      */
-    result = result * nsLayoutUtils::ChangeMatrixBasis(aProperties.GetToPerspectiveOrigin() - aProperties.mToTransformOrigin, perspective);
+    result = result * nsLayoutUtils::ChangeMatrixBasis(aProperties.mToPerspectiveOrigin - aProperties.mToTransformOrigin, perspective);
   }
 
   gfxPoint3D rounded(hasSVGTransforms ? newOrigin.x : NS_round(newOrigin.x),

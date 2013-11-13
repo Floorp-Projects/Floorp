@@ -12,6 +12,7 @@ import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.config.AccountPickler;
 import org.mozilla.gecko.sync.config.ClientRecordTerminator;
+import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
 
@@ -129,7 +130,7 @@ public class SyncAccountDeletedService extends IntentService {
     }
 
     try {
-      ClientRecordTerminator.deleteClientRecord(encodedUsername, password, clusterURL, clientGuid);
+      ClientRecordTerminator.deleteClientRecord(encodedUsername, clusterURL, clientGuid, new BasicAuthHeaderProvider(encodedUsername, password));
     } catch (Exception e) {
       // This should never happen, but we really don't want to die in a background thread.
       Logger.warn(LOG_TAG, "Got exception deleting client record from server; ignoring.", e);

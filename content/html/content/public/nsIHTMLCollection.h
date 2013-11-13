@@ -60,15 +60,17 @@ public:
     aFound = !!item;
     return item;
   }
-  virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
-                              mozilla::ErrorResult& error) = 0;
-  JSObject* NamedGetter(JSContext* cx, const nsAString& name,
-                        bool& found, mozilla::ErrorResult& error)
+  mozilla::dom::Element* NamedItem(const nsAString& aName)
   {
-    JSObject* namedItem = NamedItem(cx, name, error);
-    found = !!namedItem;
-    return namedItem;
+    bool dummy;
+    return NamedGetter(aName, dummy);
   }
+  mozilla::dom::Element* NamedGetter(const nsAString& aName, bool& aFound)
+  {
+    return GetFirstNamedElement(aName, aFound);
+  }
+  virtual mozilla::dom::Element*
+  GetFirstNamedElement(const nsAString& aName, bool& aFound) = 0;
 
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) = 0;
 

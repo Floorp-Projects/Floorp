@@ -18,26 +18,3 @@ SHARED_LIBRARY_LIBS += \
 endif
 endif
 
-LOCAL_INCLUDES	= \
-	-I$(srcdir)/../windowwatcher/src  \
-	-I$(srcdir)/../appstartup/src  \
-	-I$(srcdir)/../find/src  \
-	-I$(srcdir)/../webbrowserpersist/src  \
-	-I$(srcdir)/../commandhandler/src \
-	$(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/os2 
-endif
-
-ifdef MOZ_PDF_PRINTING
-LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/unixshared 
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/win 
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/mac
-endif

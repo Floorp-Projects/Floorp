@@ -15,7 +15,7 @@ BEGIN_TEST(testStringBuffer_finishString)
     JSString *str = JS_NewStringCopyZ(cx, "foopy");
     CHECK(str);
 
-    JS::Rooted<JSAtom*> atom(cx, js::AtomizeString<js::CanGC>(cx, str));
+    JS::Rooted<JSAtom*> atom(cx, js::AtomizeString(cx, str));
     CHECK(atom);
 
     js::StringBuffer buffer(cx);

@@ -26,10 +26,6 @@
 
 #include "misc.h"
 
-#ifdef SOLARIS
-#define HAVE_ALLOCA_H
-#endif
-
 #ifndef _V_IFDEFJAIL_H_
 #  define _V_IFDEFJAIL_H_
 

@@ -58,6 +58,11 @@ public:
                              JS::Handle<jsid> id,
                              JS::MutableHandle<JSPropertyDescriptor> desc,
                              unsigned flags) MOZ_OVERRIDE;
+
+  bool watch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
+             JS::Handle<JSObject*> callable) MOZ_OVERRIDE;
+  bool unwatch(JSContext* cx, JS::Handle<JSObject*> proxy,
+               JS::Handle<jsid> id) MOZ_OVERRIDE;
 };
 
 class DOMProxyHandler : public BaseDOMProxyHandler

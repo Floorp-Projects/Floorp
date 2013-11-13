@@ -37,6 +37,8 @@
 #include "transportlayerdtls.h"
 #include "transportlayerice.h"
 #include "runnable_utils.h"
+#include "gfxImageSurface.h"
+#include "libyuv/convert.h"
 
 using namespace mozilla;
 
@@ -922,6 +924,48 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     MOZ_MTLOG(ML_DEBUG, "Sending a video frame");
     // Not much for us to do with an error
     conduit->SendVideoFrame(y, length, width, height, mozilla::kVideoI420, 0);
+  } else if(format == CAIRO_SURFACE) {
+    layers::CairoImage* rgb =
+    const_cast<layers::CairoImage *>(
+          static_cast<const layers::CairoImage *>(img));
+
+    gfxIntSize size = rgb->GetSize();
+    int half_width = (size.width + 1) >> 1;
+    int half_height = (size.height + 1) >> 1;
+    int c_size = half_width * half_height;
+    int buffer_size = size.width * size.height + 2 * c_size;
+    uint8* yuv = (uint8*) malloc(buffer_size);
+    if (!yuv)
+      return;
+
+    int cb_offset = size.width * size.height;
+    int cr_offset = cb_offset + c_size;
+    nsRefPtr<gfxImageSurface> surf = rgb->mSurface->GetAsImageSurface();
+
+    switch (surf->Format()) {
+      case gfxImageFormatARGB32:
+      case gfxImageFormatRGB24:
+        libyuv::ARGBToI420(static_cast<uint8*>(surf->Data()), surf->Stride(),
+                           yuv, size.width,
+                           yuv + cb_offset, half_width,
+                           yuv + cr_offset, half_width,
+                           size.width, size.height);
+        break;
+      case gfxImageFormatRGB16_565:
+        libyuv::RGB565ToI420(static_cast<uint8*>(surf->Data()), surf->Stride(),
+                             yuv, size.width,
+                             yuv + cb_offset, half_width,
+                             yuv + cr_offset, half_width,
+                             size.width, size.height);
+        break;
+      case gfxImageFormatA1:
+      case gfxImageFormatA8:
+      case gfxImageFormatUnknown:
+      default:
+        MOZ_MTLOG(ML_ERROR, "Unsupported RGB video format");
+        MOZ_ASSERT(PR_FALSE);
+    }
+    conduit->SendVideoFrame(yuv, buffer_size, size.width, size.height, mozilla::kVideoI420, 0);
   } else {
     MOZ_MTLOG(ML_ERROR, "Unsupported video format");
     MOZ_ASSERT(PR_FALSE);

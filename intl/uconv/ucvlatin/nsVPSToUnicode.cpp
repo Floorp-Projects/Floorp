@@ -5,6 +5,9 @@
 
 #include "nsVPSToUnicode.h"
 #include "nsUCConstructors.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -17,6 +20,7 @@ nsVPSToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 #include "vps.ut"
   };
 
+  Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_VIETVPS, true);
   return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                               aOuter, aIID, aResult);
 }

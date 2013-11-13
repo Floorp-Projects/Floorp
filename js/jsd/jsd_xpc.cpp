@@ -1666,9 +1666,9 @@ jsdContext::GetOptions(uint32_t *_rval)
            | (JS::ContextOptionsRef(mJSCx).dontReportUncaught() ? JSOPTION_DONT_REPORT_UNCAUGHT : 0)
            | (JS::ContextOptionsRef(mJSCx).noDefaultCompartmentObject() ? JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT : 0)
            | (JS::ContextOptionsRef(mJSCx).noScriptRval() ? JSOPTION_NO_SCRIPT_RVAL : 0)
+           | (JS::ContextOptionsRef(mJSCx).strictMode() ? JSOPTION_STRICT_MODE : 0)
            | (JS::ContextOptionsRef(mJSCx).baseline() ? JSOPTION_BASELINE : 0)
            | (JS::ContextOptionsRef(mJSCx).typeInference() ? JSOPTION_TYPE_INFERENCE : 0)
-           | (JS::ContextOptionsRef(mJSCx).strictMode() ? JSOPTION_STRICT_MODE : 0)
            | (JS::ContextOptionsRef(mJSCx).ion() ? JSOPTION_ION : 0)
            | (JS::ContextOptionsRef(mJSCx).asmJS() ? JSOPTION_ASMJS : 0);
     return NS_OK;
@@ -1692,9 +1692,9 @@ jsdContext::SetOptions(uint32_t options)
                                 .setDontReportUncaught(options & JSOPTION_DONT_REPORT_UNCAUGHT)
                                 .setNoDefaultCompartmentObject(options & JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT)
                                 .setNoScriptRval(options & JSOPTION_NO_SCRIPT_RVAL)
+                                .setStrictMode(options & JSOPTION_STRICT_MODE)
                                 .setBaseline(options & JSOPTION_BASELINE)
                                 .setTypeInference(options & JSOPTION_TYPE_INFERENCE)
-                                .setStrictMode(options & JSOPTION_STRICT_MODE)
                                 .setIon(options & JSOPTION_ION)
                                 .setAsmJS(options & JSOPTION_ASMJS);
     return NS_OK;

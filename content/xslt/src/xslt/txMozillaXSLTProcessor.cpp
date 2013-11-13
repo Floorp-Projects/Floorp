@@ -1441,10 +1441,11 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 JSContext* cx = nsContentUtils::GetCurrentJSContext();
                 NS_ENSURE_TRUE(cx, NS_ERROR_NOT_AVAILABLE);
 
-                JS::RootedObject jsobj(cx, holder->GetJSObject());
+                JS::Rooted<JSObject*> jsobj(cx, holder->GetJSObject());
                 NS_ENSURE_STATE(jsobj);
 
-                JS::RootedString str(cx, JS_ValueToString(cx, OBJECT_TO_JSVAL(jsobj)));
+                JS::Rooted<JSString*> str(cx,
+                    JS_ValueToString(cx, OBJECT_TO_JSVAL(jsobj)));
                 NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
 
                 nsDependentJSString value;

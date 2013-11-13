@@ -2627,6 +2627,18 @@
     "n_buckets": 20,
     "description": "Gloda: indexing rate (message/s)"
   },
+  "FX_GESTURE_TAKE_SNAPSHOT_OF_PAGE": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": "30",
+    "description": "Firefox: Time taken to capture the page to a canvas, for reuse while swiping through history (ms)."
+  },
+  "FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": "30",
+    "description": "Firefox: Time taken to store the image capture of the page to a canvas, for reuse while swiping through history (ms)."
+  },
   "FX_TAB_ANIM_OPEN_MS": {
     "kind": "exponential",
     "high": "3000",
@@ -2853,6 +2865,118 @@
   "CHARSET_OVERRIDE_USED": {
     "kind": "flag",
     "description": "Whether the character encoding menu was used to override an encoding in this session."
+  },
+  "DECODER_INSTANTIATED_HZ": {
+    "kind": "flag",
+    "description": "Whether the decoder for HZ has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_ISO2022CN": {
+    "kind": "flag",
+    "description": "Whether the decoder for ISO-2022-CN has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_ISO2022KR": {
+    "kind": "flag",
+    "description": "Whether the decoder for ISO-2022-KR has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_ISO2022JP": {
+    "kind": "flag",
+    "description": "Whether the decoder for ISO-2022-JP has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_JOHAB": {
+    "kind": "flag",
+    "description": "Whether the decoder for JOHAB has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_T61": {
+    "kind": "flag",
+    "description": "Whether the decoder for T.61 has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_IBM850": {
+    "kind": "flag",
+    "description": "Whether the decoder for IBM850 has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_IBM852": {
+    "kind": "flag",
+    "description": "Whether the decoder for IBM852 has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_IBM855": {
+    "kind": "flag",
+    "description": "Whether the decoder for IBM855 has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_IBM857": {
+    "kind": "flag",
+    "description": "Whether the decoder for IBM857 has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_IBM862": {
+    "kind": "flag",
+    "description": "Whether the decoder for IBM862 has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACGREEK": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACGREEK has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACICELANDIC": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACICELANDIC has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACCE": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACCE has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACHEBREW": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACHEBREW has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACARABIC": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACARABIC has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACFARSI": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACFARSI has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACCROATIAN": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACCROATIAN has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACROMANIAN": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACROMANIAN has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACTURKISH": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACTURKISH has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACDEVANAGARI": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACDEVANAGARI has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACGUJARATI": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACGUJARATI has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACGURMUKHI": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACGURMUKHI has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_ISOIR111": {
+    "kind": "flag",
+    "description": "Whether the decoder for ISOIR111 has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_ARMSCII8": {
+    "kind": "flag",
+    "description": "Whether the decoder for ARMSCII8 has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_VISCII": {
+    "kind": "flag",
+    "description": "Whether the decoder for VISCII has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_VIETTCVN5712": {
+    "kind": "flag",
+    "description": "Whether the decoder for VIETTCVN5712 has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_VIETVPS": {
+    "kind": "flag",
+    "description": "Whether the decoder for VIETVPS has been instantiated in this session."
   },
   "XUL_FOREGROUND_REFLOW_MS": {
     "kind": "exponential",

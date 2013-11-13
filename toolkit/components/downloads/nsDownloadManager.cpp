@@ -2724,7 +2724,8 @@ nsDownload::SetState(DownloadState aState)
                   NS_LITERAL_STRING(DOWNLOAD_MANAGER_ALERT_ICON), title,
                   message, !removeWhenDone,
                   mPrivate ? NS_LITERAL_STRING("private") : NS_LITERAL_STRING("non-private"),
-                  mDownloadManager, EmptyString(), NS_LITERAL_STRING("auto"), EmptyString());
+                  mDownloadManager, EmptyString(), NS_LITERAL_STRING("auto"),
+                  EmptyString(), nullptr);
             }
         }
       }

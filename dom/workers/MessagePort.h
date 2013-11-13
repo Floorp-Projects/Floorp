@@ -38,7 +38,7 @@ public:
   PrefEnabled();
 
   virtual void
-  PostMessageMoz(JSContext* aCx, JS::HandleValue aMessage,
+  PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                  const Optional<Sequence<JS::Value>>& aTransferable,
                  ErrorResult& aRv) MOZ_OVERRIDE;
 
@@ -76,7 +76,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx, JS::HandleObject aScope) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   virtual nsresult
   PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;

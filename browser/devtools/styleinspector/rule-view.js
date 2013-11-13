@@ -601,6 +601,7 @@ Rule.prototype = {
 
       this.elementStyle._changed();
     }).then(null, promiseWarn);
+
     this._applyingModifications = promise;
     return promise;
   },
@@ -678,7 +679,7 @@ Rule.prototype = {
     let props = [];
 
     for (let line of lines) {
-      let [, name, value, priority] = CSS_PROP_RE.exec(line) || []
+      let [, name, value, priority] = CSS_PROP_RE.exec(line) || [];
       if (!name || !value) {
         continue;
       }
@@ -1210,7 +1211,7 @@ CssRuleView.prototype = {
       } else {
         let win = this.doc.defaultView;
         let selection = win.getSelection();
-        debugger;
+
         text = selection.toString();
 
         // Remove any double newlines.
@@ -1878,9 +1879,11 @@ TextPropertyEditor.prototype = {
     let propertyContainer = createChild(this.element, "span", {
       class: "ruleview-propertycontainer"
     });
+
     propertyContainer.addEventListener("click", (aEvent) => {
       // Clicks within the value shouldn't propagate any further.
       aEvent.stopPropagation();
+
       if (aEvent.target === propertyContainer) {
         this.valueSpan.click();
       }
@@ -1893,6 +1896,16 @@ TextPropertyEditor.prototype = {
       class: "ruleview-propertyvalue theme-fg-color1",
       tabindex: "0",
     });
+
+    this.valueSpan.addEventListener("click", (event) => {
+      let target = event.target;
+
+      if (target.nodeName === "a") {
+        event.stopPropagation();
+        event.preventDefault();
+        this.browserWindow.openUILinkIn(target.href, "tab");
+      }
+    }, false);
 
     // Storing the TextProperty on the valuespan for easy access
     // (for instance by the tooltip)
@@ -1994,46 +2007,22 @@ TextPropertyEditor.prototype = {
 
     let store = this.prop.rule.elementStyle.store;
     let propDirty = store.userProperties.contains(this.prop.rule.style, name);
+
     if (propDirty) {
       this.element.setAttribute("dirty", "");
     } else {
       this.element.removeAttribute("dirty");
     }
 
-    // Treat URLs differently than other properties.
-    // Allow the user to click a link to the resource and open it.
-    let resourceURI = this.getResourceURI();
-    if (resourceURI) {
-      this.valueSpan.textContent = "";
-
-      appendText(this.valueSpan, val.split(resourceURI)[0]);
-
-      let a = createChild(this.valueSpan, "a",  {
-        target: "_blank",
-        class: "theme-link",
-        textContent: resourceURI,
-        href: this.resolveURI(resourceURI)
-      });
-
-      a.addEventListener("click", (aEvent) => {
-        // Clicks within the link shouldn't trigger editing.
-        aEvent.stopPropagation();
-        aEvent.preventDefault();
-
-        this.browserWindow.openUILinkIn(aEvent.target.href, "tab");
-
-      }, false);
-
-      appendText(this.valueSpan, val.split(resourceURI)[1]);
-    } else {
-      let outputParser = this.ruleEditor.ruleView._outputParser;
-      let frag = outputParser.parseCssProperty(name, val, {
-        colorSwatchClass: "ruleview-colorswatch",
-        defaultColorType: !propDirty
-      });
-      this.valueSpan.innerHTML = "";
-      this.valueSpan.appendChild(frag);
-    }
+    let outputParser = this.ruleEditor.ruleView._outputParser;
+    let frag = outputParser.parseCssProperty(name, val, {
+      colorSwatchClass: "ruleview-colorswatch",
+      defaultColorType: !propDirty,
+      urlClass: "theme-link",
+      baseURI: this.sheetURI
+    });
+    this.valueSpan.innerHTML = "";
+    this.valueSpan.appendChild(frag);
 
     // Populate the computed styles.
     this._updateComputed();
@@ -2082,7 +2071,9 @@ TextPropertyEditor.prototype = {
       let outputParser = this.ruleEditor.ruleView._outputParser;
       let frag = outputParser.parseCssProperty(
         computed.name, computed.value, {
-          colorSwatchClass: "ruleview-colorswatch"
+          colorSwatchClass: "ruleview-colorswatch",
+          urlClass: "theme-link",
+          baseURI: this.sheetURI
         }
       );
 
@@ -2208,7 +2199,10 @@ TextPropertyEditor.prototype = {
       if (this.removeOnRevert) {
         this.remove();
       } else {
-        this.prop.setValue(this.committed.value, this.committed.priority);
+        // We use this.valueSpan.textContent instead of this.committed.value
+        // because otherwise pressing escape to revert a color value will result
+        // in an unparsed property value.
+        this.prop.setValue(this.valueSpan.textContent, this.committed.priority);
       }
     }
   },
@@ -2297,11 +2291,7 @@ UserProperties.prototype = {
 
     if (entry && aName in entry) {
       let item = entry[aName];
-      if (item != aDefault) {
-        delete entry[aName];
-        return aDefault;
-      }
-      return item;
+      return item || aDefault;
     }
     return aDefault;
   },

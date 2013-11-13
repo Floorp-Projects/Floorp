@@ -54,6 +54,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'PluginHangUIParent.cpp',
         'PluginSurfaceParent.cpp',
     ]
+    DEFINES['MOZ_HANGUI_PROCESS_NAME'] = '"plugin-hang-ui%s"' % CONFIG['BIN_SUFFIX']
+    LOCAL_INCLUDES += [
+        '/widget/shared',
+        'hangui',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.mozilla.plugins += [
@@ -116,4 +121,11 @@ LIBRARY_NAME = 'domplugins_s'
 EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '../base',
+    '/xpcom/base/',
+]
+
+DEFINES['FORCE_PR_LOG'] = True
 

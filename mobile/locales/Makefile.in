@@ -177,21 +177,19 @@ bookmarks-inc = $(firstword $(bookmarks-inc-array))
 
 bookmarks-preqs = \
   $(bookmarks-inc) \
-  $(call mkdir_deps,$(dir $(bookmarks-ts))) \
   $(src-bookmarks) \
   generic/profile/$(bookmarks).in \
-  $(topsrcdir)/config/Preprocessor.py \
   $(if $(IS_LANGUAGE_REPACK),FORCE) \
   $(GLOBAL_DEPS) \
   $(NULL)
 
 $(bookmarks-ts): $(bookmarks-preqs)
 	$(display_deps)
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	$(call py_action,preprocessor, \
       -I $< \
       -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
       $(src-bookmarks) \
-      > $@
+      -o $@)
 
 .PHONY: bookmarks $(bookmarks)
 bookmarks: $(bookmarks)

@@ -269,14 +269,20 @@ public:
 
   virtual nsIContent* Item(uint32_t aIndex) MOZ_OVERRIDE;
   virtual mozilla::dom::Element* GetElementAt(uint32_t index) MOZ_OVERRIDE;
-  virtual JSObject* NamedItem(JSContext* cx, const nsAString& name,
-                              mozilla::ErrorResult& error) MOZ_OVERRIDE;
+  virtual mozilla::dom::Element*
+  GetFirstNamedElement(const nsAString& aName, bool& aFound) MOZ_OVERRIDE
+  {
+    mozilla::dom::Element* item = NamedItem(aName, true);
+    aFound = !!item;
+    return item;
+  }
   virtual void GetSupportedNames(nsTArray<nsString>& aNames) MOZ_OVERRIDE;
 
   // nsContentList public methods
   NS_HIDDEN_(uint32_t) Length(bool aDoFlush);
   NS_HIDDEN_(nsIContent*) Item(uint32_t aIndex, bool aDoFlush);
-  NS_HIDDEN_(nsIContent*) NamedItem(const nsAString& aName, bool aDoFlush);
+  NS_HIDDEN_(mozilla::dom::Element*)
+  NamedItem(const nsAString& aName, bool aDoFlush);
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED

@@ -104,22 +104,18 @@ BackfillIndexInCharBuffer(uint32_t index, mozilla::RangedPtr<T> end)
     return end;
 }
 
-template <AllowGC allowGC>
 bool
-IndexToIdSlow(ExclusiveContext *cx, uint32_t index,
-              typename MaybeRooted<jsid, allowGC>::MutableHandleType idp);
+IndexToIdSlow(ExclusiveContext *cx, uint32_t index, jsid *idp);
 
 inline bool
-IndexToId(ExclusiveContext *cx, uint32_t index, MutableHandleId idp)
+IndexToId(ExclusiveContext *cx, uint32_t index, jsid *idp)
 {
-    MaybeCheckStackRoots(cx);
-
     if (index <= JSID_INT_MAX) {
-        idp.set(INT_TO_JSID(index));
+        *idp = INT_TO_JSID(index);
         return true;
     }
 
-    return IndexToIdSlow<CanGC>(cx, index, idp);
+    return IndexToIdSlow(cx, index, idp);
 }
 
 inline bool
@@ -131,15 +127,6 @@ IndexToIdPure(uint32_t index, jsid *idp)
     }
 
     return false;
-}
-
-inline bool
-IndexToIdNoGC(JSContext *cx, uint32_t index, jsid *idp)
-{
-    if (IndexToIdPure(index, idp))
-        return true;
-
-    return IndexToIdSlow<NoGC>(cx, index, idp);
 }
 
 static JS_ALWAYS_INLINE JSFlatString *

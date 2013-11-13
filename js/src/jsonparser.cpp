@@ -96,7 +96,7 @@ JSONParser::readString()
             size_t length = current - start;
             current++;
             JSFlatString *str = (ST == JSONParser::PropertyName)
-                                ? AtomizeChars<CanGC>(cx, start.get(), length)
+                                ? AtomizeChars(cx, start.get(), length)
                                 : js_NewStringCopyN<CanGC>(cx, start.get(), length);
             if (!str)
                 return token(OOM);

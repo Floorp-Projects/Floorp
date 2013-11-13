@@ -8,6 +8,7 @@
 
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/EventForwards.h"
 #include "FrameMetrics.h"
 #include "Units.h"
 
@@ -21,6 +22,7 @@ class APZController :
   public mozilla::layers::GeckoContentController
 {
   typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
 public:
   // GeckoContentController interface
@@ -36,7 +38,18 @@ public:
   void SetWidgetListener(nsIWidgetListener* aWidgetListener);
   void UpdateScrollOffset(const mozilla::layers::ScrollableLayerGuid& aScrollLayerId, CSSIntPoint& aScrollOffset);
 
+  bool HitTestAPZC(mozilla::ScreenIntPoint& aPoint);
+  void TransformCoordinateToGecko(const mozilla::ScreenIntPoint& aPoint,
+                                  LayoutDeviceIntPoint* aRefPointOut);
+  void ContentReceivedTouch(const ScrollableLayerGuid& aGuid, bool aPreventDefault);
+  nsEventStatus ReceiveInputEvent(mozilla::WidgetInputEvent* aEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid);
+  nsEventStatus ReceiveInputEvent(mozilla::WidgetInputEvent* aInEvent,
+                                  ScrollableLayerGuid* aOutTargetGuid,
+                                  mozilla::WidgetInputEvent* aOutEvent);
+
 public:
+  // todo: make this a member variable as prep for multiple views
   static nsRefPtr<mozilla::layers::APZCTreeManager> sAPZC;
 
 private:

@@ -40,3 +40,11 @@ LOCAL_INCLUDES += [
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/dom/',
+    '/dom/base',
+    '/dom/ipc',
+]
+

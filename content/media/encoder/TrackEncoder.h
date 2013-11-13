@@ -52,7 +52,7 @@ public:
   /**
    * Creates and sets up meta data for a specific codec
    */
-  virtual nsRefPtr<TrackMetadataBase> GetMetadata() = 0;
+  virtual already_AddRefed<TrackMetadataBase> GetMetadata() = 0;
 
   /**
    * Encodes raw segments. Result data is returned in aData.

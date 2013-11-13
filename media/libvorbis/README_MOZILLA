@@ -8,5 +8,3 @@ https://svn.xiph.org/tags/vorbis/libvorbis-1.3.3@18190
 
 Some files are renamed during the copy to prevent clashes with object
 file names with other Mozilla libraries.
-
-alloca.diff - Bug 469639 - Failed to build firefox trunk on OpenSolaris

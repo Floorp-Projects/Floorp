@@ -54,7 +54,7 @@ public class GeckoApplication extends Application {
         mInited = true;
     }
 
-    protected void onActivityPause(GeckoActivityStatus activity) {
+    public void onActivityPause(GeckoActivityStatus activity) {
         mInBackground = true;
 
         if ((activity.isFinishing() == false) &&
@@ -79,7 +79,7 @@ public class GeckoApplication extends Application {
         GeckoNetworkManager.getInstance().stop();
     }
 
-    protected void onActivityResume(GeckoActivityStatus activity) {
+    public void onActivityResume(GeckoActivityStatus activity) {
         if (mPausedGecko) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createAppForegroundingEvent());
             mPausedGecko = false;
@@ -98,7 +98,6 @@ public class GeckoApplication extends Application {
     public void onCreate() {
         HardwareUtils.init(getApplicationContext());
         Clipboard.init(getApplicationContext());
-        NotificationHelper.init(getApplicationContext());
         GeckoLoader.loadMozGlue();
         super.onCreate();
     }

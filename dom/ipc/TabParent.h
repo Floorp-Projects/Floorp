@@ -162,12 +162,15 @@ public:
     virtual bool RecvGetDPI(float* aValue);
     virtual bool RecvGetDefaultScale(double* aValue);
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
-    virtual bool RecvZoomToRect(const CSSRect& aRect);
+    virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
+                                const ViewID& aViewId,
+                                const CSSRect& aRect);
     virtual bool RecvUpdateZoomConstraints(const bool& aAllowZoom,
                                            const CSSToScreenScale& aMinZoom,
                                            const CSSToScreenScale& aMaxZoom);
     virtual bool RecvUpdateScrollOffset(const uint32_t& aPresShellId, const ViewID& aViewId, const CSSIntPoint& aScrollOffset);
-    virtual bool RecvContentReceivedTouch(const bool& aPreventDefault);
+    virtual bool RecvContentReceivedTouch(const ScrollableLayerGuid& aGuid,
+                                          const bool& aPreventDefault);
     virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
                                            const bool& aIsAudio,
                                            const bool& aIsVideo);
@@ -343,8 +346,11 @@ private:
     // If we have a render frame currently, notify it that we're about
     // to dispatch |aEvent| to our child.  If there's a relevant
     // transform in place, |aOutEvent| is the transformed |aEvent| to
-    // dispatch to content.
+    // dispatch to content. |aOutTargetGuid| will contain the identifier
+    // of the APZC instance that handled the event. aOutTargetGuid may be
+    // null but aOutEvent must not be.
     void MaybeForwardEventToRenderFrame(const WidgetInputEvent& aEvent,
+                                        ScrollableLayerGuid* aOutTargetGuid,
                                         WidgetInputEvent* aOutEvent);
     // The offset for the child process which is sampled at touch start. This
     // means that the touch events are relative to where the frame was at the
