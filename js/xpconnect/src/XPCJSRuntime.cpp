@@ -410,12 +410,14 @@ EnsureCompartmentPrivate(JSCompartment *c)
     return priv;
 }
 
-Scriptability::Scriptability() : mScriptBlocks(0) {}
+Scriptability::Scriptability() : mScriptBlocks(0)
+                               , mDocShellAllowsScript(true)
+{}
 
 bool
 Scriptability::Allowed()
 {
-    return mScriptBlocks == 0;
+    return mDocShellAllowsScript && mScriptBlocks == 0;
 }
 
 void
@@ -429,6 +431,12 @@ Scriptability::Unblock()
 {
     MOZ_ASSERT(mScriptBlocks > 0);
     --mScriptBlocks;
+}
+
+void
+Scriptability::SetDocShellAllowsScript(bool aAllowed)
+{
+    mDocShellAllowsScript = aAllowed;
 }
 
 /* static */

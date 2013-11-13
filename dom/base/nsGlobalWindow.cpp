@@ -2062,6 +2062,9 @@ WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
   mInnerWindowHolder = aHolder;
 
   aWindow->SuspendTimeouts();
+
+  // When a global goes into the bfcache, we disable script.
+  xpc::Scriptability::Get(aWindow->mJSObject).SetDocShellAllowsScript(false);
 }
 
 WindowStateHolder::~WindowStateHolder()
@@ -2459,6 +2462,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
     // Enter the new global's compartment.
     JSAutoCompartment ac(cx, mJSObject);
+
+    // Set scriptability based on the state of the docshell.
+    bool allow = GetDocShell()->GetCanExecuteScripts();
+    xpc::Scriptability::Get(mJSObject).SetDocShellAllowsScript(allow);
 
     // If we created a new inner window above, we need to do the last little bit
     // of initialization now that the dust has settled.
