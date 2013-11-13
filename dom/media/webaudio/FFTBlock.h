@@ -7,7 +7,13 @@
 #ifndef FFTBlock_h_
 #define FFTBlock_h_
 
-#include "nsTArray.h"
+#ifdef BUILD_ARM_NEON
+#include <cmath>
+#include "mozilla/arm.h"
+#include "dl/sp/api/omxSP.h"
+#endif
+
+#include "AlignedTArray.h"
 #include "AudioNodeEngine.h"
 #include "kiss_fft/kiss_fftr.h"
 
@@ -18,15 +24,26 @@ namespace mozilla {
 // Currently it's implemented on top of KissFFT on all platforms.
 class FFTBlock final
 {
+  union ComplexU {
+    kiss_fft_cpx c;
+    float f[2];
+    struct {
+      float r;
+      float i;
+    };
+  };
+
 public:
   explicit FFTBlock(uint32_t aFFTSize)
-    : mFFT(nullptr)
-    , mIFFT(nullptr)
-    , mFFTSize(aFFTSize)
+    : mKissFFT(nullptr)
+    , mKissIFFT(nullptr)
+#ifdef BUILD_ARM_NEON
+    , mOmxFFT(nullptr)
+    , mOmxIFFT(nullptr)
+#endif
   {
     MOZ_COUNT_CTOR(FFTBlock);
-    mOutputBuffer.SetLength(aFFTSize / 2 + 1);
-    PodZero(mOutputBuffer.Elements(), aFFTSize / 2 + 1);
+    SetFFTSize(aFFTSize);
   }
   ~FFTBlock()
   {
@@ -44,10 +61,17 @@ public:
   void PerformFFT(const float* aData)
   {
     EnsureFFT();
-    kiss_fftr(mFFT, aData, mOutputBuffer.Elements());
+#ifdef BUILD_ARM_NEON
+    if (mozilla::supports_neon()) {
+      omxSP_FFTFwd_RToCCS_F32_Sfs(aData, mOutputBuffer.Elements()->f, mOmxFFT);
+    } else
+#endif
+    {
+      kiss_fftr(mKissFFT, aData, &(mOutputBuffer.Elements()->c));
+    }
   }
   // Inverse-transform internal data and store the resulting FFTSize()
-  // points in aData.
+  // points in aDataOut.
   void GetInverse(float* aDataOut)
   {
     GetInverseWithoutScaling(aDataOut);
@@ -59,7 +83,17 @@ public:
   void GetInverseWithoutScaling(float* aDataOut)
   {
     EnsureIFFT();
-    kiss_fftri(mIFFT, mOutputBuffer.Elements(), aDataOut);
+#ifdef BUILD_ARM_NEON
+    if (mozilla::supports_neon()) {
+      omxSP_FFTInv_CCSToR_F32_Sfs(mOutputBuffer.Elements()->f, aDataOut, mOmxIFFT);
+      // There is no function that computes de inverse FFT without scaling, so
+      // we have to scale back up here. Bug 1158741.
+      AudioBufferInPlaceScale(aDataOut, mFFTSize, mFFTSize);
+    } else
+#endif
+    {
+      kiss_fftri(mKissIFFT, &(mOutputBuffer.Elements()->c), aDataOut);
+    }
   }
   // Inverse-transform the FFTSize()/2+1 points of data in each
   // of aRealDataIn and aImagDataIn and store the resulting
@@ -70,23 +104,30 @@ public:
   {
     EnsureIFFT();
     const uint32_t inputSize = mFFTSize / 2 + 1;
-    nsTArray<kiss_fft_cpx> inputBuffer;
-    inputBuffer.SetLength(inputSize);
+    AlignedTArray<ComplexU> inputBuffer(inputSize);
     for (uint32_t i = 0; i < inputSize; ++i) {
       inputBuffer[i].r = aRealDataIn[i];
       inputBuffer[i].i = aImagDataIn[i];
     }
-    kiss_fftri(mIFFT, inputBuffer.Elements(), aRealDataOut);
-    for (uint32_t i = 0; i < mFFTSize; ++i) {
-      aRealDataOut[i] /= mFFTSize;
+#ifdef BUILD_ARM_NEON
+    if (mozilla::supports_neon()) {
+      omxSP_FFTInv_CCSToR_F32_Sfs(inputBuffer.Elements()->f,
+                                  aRealDataOut, mOmxIFFT);
+    } else
+#endif
+    {
+      kiss_fftri(mKissIFFT, &(inputBuffer.Elements()->c), aRealDataOut);
+      for (uint32_t i = 0; i < mFFTSize; ++i) {
+        aRealDataOut[i] /= mFFTSize;
+      }
     }
   }
 
   void Multiply(const FFTBlock& aFrame)
   {
-    BufferComplexMultiply(reinterpret_cast<const float*>(mOutputBuffer.Elements()),
-                          reinterpret_cast<const float*>(aFrame.mOutputBuffer.Elements()),
-                          reinterpret_cast<float*>(mOutputBuffer.Elements()),
+    BufferComplexMultiply(mOutputBuffer.Elements()->f,
+                          aFrame.mOutputBuffer.Elements()->f,
+                          mOutputBuffer.Elements()->f,
                           mFFTSize / 2 + 1);
   }
 
@@ -97,7 +138,7 @@ public:
   void PadAndMakeScaledDFT(const float* aData, size_t dataSize)
   {
     MOZ_ASSERT(dataSize <= FFTSize());
-    nsTArray<float> paddedData;
+    AlignedTArray<float> paddedData;
     paddedData.SetLength(FFTSize());
     AudioBufferCopyWithScale(aData, 1.0f / FFTSize(),
                              paddedData.Elements(), dataSize);
@@ -132,8 +173,8 @@ public:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t amount = 0;
-    amount += aMallocSizeOf(mFFT);
-    amount += aMallocSizeOf(mIFFT);
+    amount += aMallocSizeOf(mKissFFT);
+    amount += aMallocSizeOf(mKissIFFT);
     amount += mOutputBuffer.SizeOfExcludingThis(aMallocSizeOf);
     return amount;
   }
@@ -149,31 +190,78 @@ private:
 
   void EnsureFFT()
   {
-    if (!mFFT) {
-      mFFT = kiss_fftr_alloc(mFFTSize, 0, nullptr, nullptr);
+#ifdef BUILD_ARM_NEON
+    if (mozilla::supports_neon()) {
+      if (!mOmxFFT) {
+        mOmxFFT = createOmxFFT(mFFTSize);
+      }
+    } else
+#endif
+    {
+      if (!mKissFFT) {
+        mKissFFT = kiss_fftr_alloc(mFFTSize, 0, nullptr, nullptr);
+      }
     }
   }
   void EnsureIFFT()
   {
-    if (!mIFFT) {
-      mIFFT = kiss_fftr_alloc(mFFTSize, 1, nullptr, nullptr);
+#ifdef BUILD_ARM_NEON
+    if (mozilla::supports_neon()) {
+      if (!mOmxIFFT) {
+        mOmxIFFT = createOmxFFT(mFFTSize);
+      }
+    } else
+#endif
+    {
+      if (!mKissIFFT) {
+        mKissIFFT = kiss_fftr_alloc(mFFTSize, 1, nullptr, nullptr);
+      }
     }
   }
+
+#ifdef BUILD_ARM_NEON
+  static OMXFFTSpec_R_F32* createOmxFFT(uint32_t aFFTSize)
+  {
+    MOZ_ASSERT((aFFTSize & (aFFTSize-1)) == 0);
+    OMX_INT bufSize;
+    OMX_INT order = log((double)aFFTSize)/M_LN2;
+    MOZ_ASSERT(aFFTSize>>order == 1);
+    OMXResult status = omxSP_FFTGetBufSize_R_F32(order, &bufSize);
+    if (status == OMX_Sts_NoErr) {
+      OMXFFTSpec_R_F32* context = static_cast<OMXFFTSpec_R_F32*>(malloc(bufSize));
+      if (omxSP_FFTInit_R_F32(context, order) != OMX_Sts_NoErr) {
+        return nullptr;
+      }
+      return context;
+    }
+    return nullptr;
+  }
+#endif
+
   void Clear()
   {
-    free(mFFT);
-    free(mIFFT);
-    mFFT = mIFFT = nullptr;
+#ifdef BUILD_ARM_NEON
+    free(mOmxFFT);
+    free(mOmxIFFT);
+    mOmxFFT = mOmxIFFT = nullptr;
+#endif
+    free(mKissFFT);
+    free(mKissIFFT);
+    mKissFFT = mKissIFFT = nullptr;
   }
   void AddConstantGroupDelay(double sampleFrameDelay);
   void InterpolateFrequencyComponents(const FFTBlock& block0,
                                       const FFTBlock& block1, double interp);
 
-  kiss_fftr_cfg mFFT, mIFFT;
-  nsTArray<kiss_fft_cpx> mOutputBuffer;
+  kiss_fftr_cfg mKissFFT;
+  kiss_fftr_cfg mKissIFFT;
+#ifdef BUILD_ARM_NEON
+  OMXFFTSpec_R_F32* mOmxFFT;
+  OMXFFTSpec_R_F32* mOmxIFFT;
+#endif
+  AlignedTArray<ComplexU> mOutputBuffer;
   uint32_t mFFTSize;
 };
-
 }
 
 #endif
