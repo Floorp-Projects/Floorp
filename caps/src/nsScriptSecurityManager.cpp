@@ -1714,6 +1714,11 @@ nsScriptSecurityManager::ScriptAllowed(JSObject *aGlobal)
     AutoJSContext cx_;
     JS::RootedObject global(cx_, js::UncheckedUnwrap(aGlobal, /* stopAtOuter = */ false));
 
+    // Check the bits on the compartment private.
+    if (!xpc::Scriptability::Get(global).Allowed()) {
+        return false;
+    }
+
     nsCOMPtr<nsIScriptContext> scx = nsJSUtils::GetStaticScriptContext(global);
     AutoPushJSContext cx(scx ? scx->GetNativeContext() : GetSafeJSContext());
     bool result = false;

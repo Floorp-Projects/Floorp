@@ -410,6 +410,34 @@ EnsureCompartmentPrivate(JSCompartment *c)
     return priv;
 }
 
+Scriptability::Scriptability() : mScriptBlocks(0) {}
+
+bool
+Scriptability::Allowed()
+{
+    return mScriptBlocks == 0;
+}
+
+void
+Scriptability::Block()
+{
+    ++mScriptBlocks;
+}
+
+void
+Scriptability::Unblock()
+{
+    MOZ_ASSERT(mScriptBlocks > 0);
+    --mScriptBlocks;
+}
+
+/* static */
+Scriptability&
+Scriptability::Get(JSObject *aScope)
+{
+    return EnsureCompartmentPrivate(aScope)->scriptability;
+}
+
 bool
 IsXBLScope(JSCompartment *compartment)
 {

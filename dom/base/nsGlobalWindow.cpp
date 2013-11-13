@@ -139,6 +139,7 @@
 #endif
 #include "nsIDOMCustomEvent.h"
 #include "nsIFrameRequestCallback.h"
+#include "nsIJARChannel.h"
 
 #include "xpcprivate.h"
 
@@ -2539,6 +2540,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       JS::Rooted<JSObject*> obj(cx, newInnerWindow->mJSObject);
       rv = mContext->InitClasses(obj);
       NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // If the document comes from a JAR, check if the channel was determined
+    // to be unsafe. If so, permanently disable script on the compartment by
+    // calling Block() and throwing away the key.
+    nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aDocument->GetChannel());
+    if (jarChannel && jarChannel->GetIsUnsafe()) {
+      xpc::Scriptability::Get(newInnerWindow->mJSObject).Block();
     }
 
     if (mArguments) {

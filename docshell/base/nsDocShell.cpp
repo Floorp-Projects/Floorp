@@ -2077,12 +2077,6 @@ nsDocShell::GetAllowJavascript(bool * aAllowJavascript)
     NS_ENSURE_ARG_POINTER(aAllowJavascript);
 
     *aAllowJavascript = mAllowJavascript;
-    if (!mAllowJavascript) {
-        return NS_OK;
-    }
-
-    bool unsafe;
-    *aAllowJavascript = NS_SUCCEEDED(GetChannelIsUnsafe(&unsafe)) && !unsafe;
     return NS_OK;
 }
 
