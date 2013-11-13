@@ -28,9 +28,11 @@ SOURCES += [
 if CONFIG['MOZ_B2G_RIL']:
     EXPORTS.mozilla.dom.network += [
         'MobileConnection.h',
+        'MobileConnectionArray.h',
     ]
     SOURCES += [
         'MobileConnection.cpp',
+        'MobileConnectionArray.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
