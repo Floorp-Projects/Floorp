@@ -83,14 +83,14 @@ public class Utils {
    * Helper to convert a byte array to a hex-encoded string
    */
   public static String byte2Hex(final byte[] b) {
-    return byte2Hex(b, b.length);
+    return byte2Hex(b, 2 * b.length);
   }
 
   public static String byte2Hex(final byte[] b, int hexLength) {
-    final StringBuilder hs = new StringBuilder(b.length * 2);
+    final StringBuilder hs = new StringBuilder(Math.max(2*b.length, hexLength));
     String stmp;
 
-    for (int n = 0; n < hexLength - b.length; n++) {
+    for (int n = 0; n < hexLength - 2*b.length; n++) {
       hs.append("0");
     }
 
