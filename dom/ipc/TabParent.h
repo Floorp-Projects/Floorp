@@ -162,7 +162,9 @@ public:
     virtual bool RecvGetDPI(float* aValue);
     virtual bool RecvGetDefaultScale(double* aValue);
     virtual bool RecvGetWidgetNativeData(WindowsHandle* aValue);
-    virtual bool RecvZoomToRect(const CSSRect& aRect);
+    virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
+                                const ViewID& aViewId,
+                                const CSSRect& aRect);
     virtual bool RecvUpdateZoomConstraints(const bool& aAllowZoom,
                                            const CSSToScreenScale& aMinZoom,
                                            const CSSToScreenScale& aMaxZoom);
