@@ -43,11 +43,11 @@ public:
                                const FrameMetrics& aMetrics);
 
     /* Get the DOMWindowUtils for the window corresponding to the given document. */
-    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(nsIDocument* doc);
+    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(nsIDocument* aDoc);
 
     /* Get the DOMWindowUtils for the window corresponding to the givent content
-     * element. This might be an iframe inside the tab, for instance. */
-    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(nsIContent* content);
+       element. This might be an iframe inside the tab, for instance. */
+    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(nsIContent* aContent);
 };
 
 }
