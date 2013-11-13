@@ -1867,7 +1867,8 @@ TabChild::CancelTapTracking()
 }
 
 bool
-TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent)
+TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
+                             const ScrollableLayerGuid& aGuid)
 {
   WidgetTouchEvent localEvent(aEvent);
   nsEventStatus status = DispatchWidgetEvent(localEvent);
@@ -1877,7 +1878,7 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent)
     nsCOMPtr<nsPIDOMWindow> innerWindow = outerWindow->GetCurrentInnerWindow();
 
     if (innerWindow && innerWindow->HasTouchEventListeners()) {
-      SendContentReceivedTouch(nsIPresShell::gPreventMouseEvents);
+      SendContentReceivedTouch(aGuid, nsIPresShell::gPreventMouseEvents);
     }
   } else {
     UpdateTapState(aEvent, status);
@@ -1887,9 +1888,10 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent)
 }
 
 bool
-TabChild::RecvRealTouchMoveEvent(const WidgetTouchEvent& aEvent)
+TabChild::RecvRealTouchMoveEvent(const WidgetTouchEvent& aEvent,
+                                 const ScrollableLayerGuid& aGuid)
 {
-  return RecvRealTouchEvent(aEvent);
+  return RecvRealTouchEvent(aEvent, aGuid);
 }
 
 bool
