@@ -56,7 +56,10 @@ public class GeckoActionProvider extends ActionProvider {
         if (dataModel.getHistorySize() > 0) {
             PackageManager packageManager = mContext.getPackageManager();
             ResolveInfo defaultActivity = dataModel.getDefaultActivity();
-            view.setActionButton(defaultActivity == null ? null : defaultActivity.loadIcon(packageManager));
+            view.addActionButton(defaultActivity == null ? null : defaultActivity.loadIcon(packageManager));
+            if (dataModel.getActivityCount() >= 2) {
+                view.addActionButton(dataModel.getActivity(1).loadIcon(packageManager));
+            }
         }
 
         return view;
@@ -132,8 +135,9 @@ public class GeckoActionProvider extends ActionProvider {
 
         @Override
         public void onClick(View view) {
+            Integer index = (Integer) view.getTag();
             ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
-            chooseActivity(dataModel.getActivityIndex(dataModel.getDefaultActivity()));
+            chooseActivity(index);
         }
     }
 }
