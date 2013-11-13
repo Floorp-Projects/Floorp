@@ -827,10 +827,11 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
 
 void
 RenderFrameParent::NotifyInputEvent(const WidgetInputEvent& aEvent,
+                                    ScrollableLayerGuid* aOutTargetGuid,
                                     WidgetInputEvent* aOutEvent)
 {
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->ReceiveInputEvent(aEvent, nullptr, aOutEvent);
+    GetApzcTreeManager()->ReceiveInputEvent(aEvent, aOutTargetGuid, aOutEvent);
   }
 }
 
@@ -1011,11 +1012,11 @@ RenderFrameParent::ZoomToRect(uint32_t aPresShellId, ViewID aViewId,
 }
 
 void
-RenderFrameParent::ContentReceivedTouch(bool aPreventDefault)
+RenderFrameParent::ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
+                                        bool aPreventDefault)
 {
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->ContentReceivedTouch(ScrollableLayerGuid(mLayersId),
-                                               aPreventDefault);
+    GetApzcTreeManager()->ContentReceivedTouch(aGuid, aPreventDefault);
   }
 }
 

@@ -23,6 +23,7 @@ using struct gfxMatrix from "gfxMatrix.h";
 using struct gfxSize from "gfxPoint.h";
 using CSSRect from "Units.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
+using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layout::ScrollingBehavior from "mozilla/layout/RenderFrameUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
@@ -285,7 +286,7 @@ parent:
      * batched and only processed for panning and zooming if content does not
      * preventDefault.
      */
-    ContentReceivedTouch(bool aPreventDefault);
+    ContentReceivedTouch(ScrollableLayerGuid aGuid, bool aPreventDefault);
 
     /**
      * Updates the parent's zoom constraints for this tab. The zoom controller
@@ -373,10 +374,10 @@ child:
     RealMouseEvent(WidgetMouseEvent event);
     RealKeyEvent(WidgetKeyboardEvent event);
     MouseWheelEvent(WidgetWheelEvent event);
-    RealTouchEvent(WidgetTouchEvent event);
+    RealTouchEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid);
     // We use a separate message for touchmove events only to apply
     // compression to them.
-    RealTouchMoveEvent(WidgetTouchEvent event) compress;
+    RealTouchMoveEvent(WidgetTouchEvent aEvent, ScrollableLayerGuid aGuid) compress;
 
     /**
      * @see nsIDOMWindowUtils sendKeyEvent.

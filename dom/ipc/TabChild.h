@@ -229,8 +229,10 @@ public:
     virtual bool RecvRealMouseEvent(const mozilla::WidgetMouseEvent& event);
     virtual bool RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& event);
     virtual bool RecvMouseWheelEvent(const mozilla::WidgetWheelEvent& event);
-    virtual bool RecvRealTouchEvent(const WidgetTouchEvent& event);
-    virtual bool RecvRealTouchMoveEvent(const WidgetTouchEvent& event);
+    virtual bool RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
+                                    const ScrollableLayerGuid& aGuid);
+    virtual bool RecvRealTouchMoveEvent(const WidgetTouchEvent& aEvent,
+                                        const ScrollableLayerGuid& aGuid);
     virtual bool RecvKeyEvent(const nsString& aType,
                               const int32_t&  aKeyCode,
                               const int32_t&  aCharCode,
