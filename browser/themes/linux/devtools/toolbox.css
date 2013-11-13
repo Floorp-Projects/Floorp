@@ -164,6 +164,7 @@
   -moz-margin-start: 4px;
   opacity: 0.6;
   max-height: 16px;
+  width: 16px; /* Prevents collapse during theme switching */
 }
 
 #toolbox-tab-options > image {
@@ -246,10 +247,6 @@
 .devtools-tab[selected=true] > .highlighted-icon,
 .devtools-tab:not([selected=true]).highlighted > .default-icon {
   visibility: collapse;
-}
-
-#options-panel {
-  background-image: url("chrome://browser/skin/newtab/noise.png");
 }
 
 .options-vertical-pane {
