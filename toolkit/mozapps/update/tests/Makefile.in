@@ -44,10 +44,12 @@ service-updater-head_DEST    := $(XPCSHELLTESTROOT)/unit_service_updater
 service-updater-head_FILES   := $(XPCSHELLTESTROOT)/unit_aus_update/head_update.js
 
 ifndef MOZ_PROFILE_GENERATE
+ifdef COMPILE_ENVIRONMENT
 INSTALL_TARGETS              += xpcshell-test-helper
 xpcshell-test-helper_TARGET  := libs
 xpcshell-test-helper_DEST    := $(XPCSHELLTESTROOT)/data
 xpcshell-test-helper_FILES   := $(DIST)/bin/TestAUSHelper$(BIN_SUFFIX)
+endif
 endif # Not MOZ_PROFILE_GENERATE
 
 _CHROME_SHARED := \

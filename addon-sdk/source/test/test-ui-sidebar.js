@@ -15,9 +15,9 @@ const { show, hide } = require('sdk/ui/sidebar/actions');
 const { isShowing } = require('sdk/ui/sidebar/utils');
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { open, close, focus, promise: windowPromise } = require('sdk/window/helpers');
-const { setTimeout } = require('sdk/timers');
+const { setTimeout, setImmediate } = require('sdk/timers');
 const { isPrivate } = require('sdk/private-browsing');
-const { data } = require('sdk/self');
+const data = require('./fixtures');
 const { URL } = require('sdk/url');
 const { once, off, emit } = require('sdk/event/core');
 const { defer, all } = require('sdk/core/promise');
@@ -251,6 +251,32 @@ exports.testAddonGlobalComplex = function(assert, done) {
   show(sidebar);
 }
 
+exports.testAddonReady = function(assert, done) {
+  const { Sidebar } = require('sdk/ui/sidebar');
+  let testName = 'testAddonReady';
+  let sidebar = Sidebar({
+    id: testName,
+    title: testName,
+    url: data.url('test-sidebar-addon-global.html'),
+    onReady: function(worker) {
+      assert.pass('sidebar was attached');
+      assert.ok(!!worker, 'attach event has worker');
+
+      worker.port.on('X', function(msg) {
+        assert.equal(msg, '123', 'the final message is correct');
+
+        sidebar.destroy();
+
+        done();
+      });
+
+      worker.port.emit('X', '12');
+    }
+  });
+
+  show(sidebar);
+}
+
 exports.testShowingOneSidebarAfterAnother = function(assert, done) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testShowingOneSidebarAfterAnother';
@@ -356,7 +382,7 @@ exports.testRemoteContent = function(assert) {
     sidebar.destroy();
   }
   catch(e) {
-    assert.ok(/The option "url" must be a valid URI./.test(e), 'remote content is not acceptable');
+    assert.ok(/The option "url" must be a valid local URI\./.test(e), 'remote content is not acceptable');
   }
 }
 
@@ -373,7 +399,7 @@ exports.testInvalidURL = function(assert) {
     sidebar.destroy();
   }
   catch(e) {
-    assert.ok(/The option "url" must be a valid URI./.test(e), 'invalid URIs are not acceptable');
+    assert.ok(/The option "url" must be a valid local URI\./.test(e), 'invalid URIs are not acceptable');
   }
 }
 
@@ -389,7 +415,7 @@ exports.testInvalidURLType = function(assert) {
     sidebar.destroy();
   }
   catch(e) {
-    assert.ok(/The option "url" must be a valid URI./.test(e), 'invalid URIs are not acceptable');
+    assert.ok(/The option "url" must be a valid local URI\./.test(e), 'invalid URIs are not acceptable');
   }
 }
 
@@ -461,19 +487,24 @@ exports.testInvalidNullID = function(assert) {
   }
 }
 
-exports.testInvalidUndefinedID = function(assert) {
+exports.testUndefinedID = function(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
-  let testName = 'testInvalidBlankID';
+  let testName = 'testInvalidUndefinedID';
+
   try {
     let sidebar = Sidebar({
       title: testName,
-      url: 'data:text/html;charset=utf-8,'+testName
+      url: 'data:text/html;charset=utf-8,' + testName
     });
-    assert.fail('a bad sidebar was created..');
+
+    assert.ok(sidebar.id, 'an undefined id was accepted, id was creawted: ' + sidebar.id);
+    assert.ok(getMostRecentBrowserWindow().document.getElementById(makeID(sidebar.id)), 'the sidebar element was found');
+
     sidebar.destroy();
   }
   catch(e) {
-    assert.ok(/The option "id" must be a valid alphanumeric id/.test(e), 'invalid ids are not acceptable');
+    assert.fail('undefined ids are acceptable');
+    assert.fail(e.message);
   }
 }
 
@@ -892,6 +923,64 @@ exports.testGCdShowingSidebarsOnUnload = function(assert, done) {
   sidebar.show();
 }
 
+exports.testDetachEventOnWindowClose = function(assert, done) {
+  const loader = Loader(module);
+  const { Sidebar } = loader.require('sdk/ui/sidebar');
+  const window = getMostRecentBrowserWindow();
+
+  let testName = 'testDetachEventOnWindowClose';
+  let url = 'data:text/html;charset=utf-8,' + testName;
+
+
+  windowPromise(window.OpenBrowserWindow(), 'load').then(focus).then(function(window) {
+    let sidebar = Sidebar({
+      id: testName,
+      title: testName,
+      url: url,
+      onAttach: function() {
+        assert.pass('the attach event is fired');
+        window.close();
+      },
+      onDetach: function() {
+        assert.pass('the detach event is fired when the window showing it closes');
+        loader.unload();
+        done();
+      }
+    });
+
+    sidebar.show();
+  }).then(null, assert.fail);
+}
+
+exports.testHideEventOnWindowClose = function(assert, done) {
+  const loader = Loader(module);
+  const { Sidebar } = loader.require('sdk/ui/sidebar');
+  const window = getMostRecentBrowserWindow();
+
+  let testName = 'testDetachEventOnWindowClose';
+  let url = 'data:text/html;charset=utf-8,' + testName;
+
+
+  windowPromise(window.OpenBrowserWindow(), 'load').then(focus).then(function(window) {
+    let sidebar = Sidebar({
+      id: testName,
+      title: testName,
+      url: url,
+      onAttach: function() {
+        assert.pass('the attach event is fired');
+        window.close();
+      },
+      onHide: function() {
+        assert.pass('the hide event is fired when the window showing it closes');
+        loader.unload();
+        done();
+      }
+    });
+
+    sidebar.show();
+  }).then(null, assert.fail);
+}
+
 exports.testGCdHiddenSidebarsOnUnload = function(assert, done) {
   const loader = Loader(module);
   const { Sidebar } = loader.require('sdk/ui/sidebar');
@@ -1078,6 +1167,35 @@ exports.testTwoSidebarsWithSameTitleAndURL = function(assert) {
   sidebar2.destroy();
 }
 
+exports.testChangingURLBackToOriginalValue = function(assert) {
+  const { Sidebar } = require('sdk/ui/sidebar');
+  let testName = 'testChangingURLBackToOriginalValue';
+
+  let title = testName;
+  let url = 'data:text/html;charset=utf-8,' + testName;
+  let count = 0;
+
+  let sidebar = Sidebar({
+    id: testName,
+    title: title,
+    url: url
+  });
+
+  sidebar.url = url + 2;
+  assert.equal(sidebar.url, url + 2, 'the sidebar.url is correct');
+  sidebar.url = url;
+  assert.equal(sidebar.url, url, 'the sidebar.url is correct');
+
+  sidebar.title = 'foo';
+  assert.equal(sidebar.title, 'foo', 'the sidebar.title is correct');
+  sidebar.title = title;
+  assert.equal(sidebar.title, title, 'the sidebar.title is correct');
+
+  sidebar.destroy();
+
+  assert.pass('Changing values back to originals works');
+}
+
 exports.testShowToOpenXToClose = function(assert, done) {
   const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testShowToOpenXToClose';
@@ -1181,14 +1299,17 @@ exports.testEventListeners = function(assert, done) {
   let constructorOnShow = defer();
   let constructorOnHide = defer();
   let constructorOnAttach = defer();
+  let constructorOnReady = defer();
 
   let onShow = defer();
   let onHide = defer();
   let onAttach = defer();
+  let onReady = defer();
 
   let onceShow = defer();
   let onceHide = defer();
   let onceAttach = defer();
+  let onceReady = defer();
 
   function testThis() {
     assert(this, sidebar, '`this` is correct');
@@ -1208,6 +1329,11 @@ exports.testEventListeners = function(assert, done) {
       eventListenerOrder.push('onAttach');
       constructorOnAttach.resolve();
     },
+    onReady: function() {
+      assert.equal(this, sidebar, '`this` is correct in onReady');
+      eventListenerOrder.push('onReady');
+      constructorOnReady.resolve();
+    },
     onHide: function() {
       assert.equal(this, sidebar, '`this` is correct in onHide');
       eventListenerOrder.push('onHide');
@@ -1224,6 +1350,11 @@ exports.testEventListeners = function(assert, done) {
     assert.equal(this, sidebar, '`this` is correct in once attach');
     eventListenerOrder.push('once attach');
     onceAttach.resolve();
+  });
+  sidebar.once('ready', function() {
+    assert.equal(this, sidebar, '`this` is correct in once ready');
+    eventListenerOrder.push('once ready');
+    onceReady.resolve();
   });
   sidebar.once('hide', function() {
     assert.equal(this, sidebar, '`this` is correct in once hide');
@@ -1243,6 +1374,11 @@ exports.testEventListeners = function(assert, done) {
     eventListenerOrder.push('on attach');
     onAttach.resolve();
   });
+  sidebar.on('ready', function() {
+    assert.equal(this, sidebar, '`this` is correct in on ready');
+    eventListenerOrder.push('on ready');
+    onReady.resolve();
+  });
   sidebar.on('hide', function() {
     assert.equal(this, sidebar, '`this` is correct in on hide');
     eventListenerOrder.push('on hide');
@@ -1251,17 +1387,23 @@ exports.testEventListeners = function(assert, done) {
 
   all(constructorOnShow.promise,
       constructorOnAttach.promise,
+      constructorOnReady.promise,
       constructorOnHide.promise,
       onceShow.promise,
       onceAttach.promise,
+      onceReady.promise,
       onceHide.promise,
       onShow.promise,
       onAttach.promise,
+      onReady.promise,
       onHide.promise).then(function() {
         assert.equal(eventListenerOrder.join(), [
             'onAttach',
             'once attach',
             'on attach',
+            'onReady',
+            'once ready',
+            'on ready',
             'onShow',
             'once show',
             'on show',
@@ -1271,6 +1413,58 @@ exports.testEventListeners = function(assert, done) {
           ].join(), 'the event order was correct');
         sidebar.destroy();
       }).then(done, assert.fail);
+
+  sidebar.show();
+}
+
+// For more information see Bug 920780
+exports.testAttachDoesNotEmitWhenShown = function(assert, done) {
+  const { Sidebar } = require('sdk/ui/sidebar');
+  let testName = 'testSidebarLeakCheckUnloadAfterAttach';
+  let count = 0;
+
+  let sidebar = Sidebar({
+    id: testName,
+    title: testName,
+    url: 'data:text/html;charset=utf-8,'+testName,
+    onAttach: function() {
+      if (count > 2) {
+        assert.fail('sidebar was attached again..');
+      }
+      else {
+        assert.pass('sidebar was attached ' + count + ' time(s)');
+      }
+
+      if (++count == 1) {
+        setTimeout(function() {
+          let shown = false;
+          let endShownTest = false;
+          sidebar.once('show', function() {
+            assert.pass('shown was emitted');
+            shown = !endShownTest && true;
+          });
+
+          sidebar.show().then(function() {
+            assert.pass('calling hide');
+            sidebar.hide();
+          }).then(function() {
+            endShownTest = true;
+
+            setTimeout(function() {
+              sidebar.show().then(function() {
+                assert.ok(!shown, 'show did not emit');
+
+                sidebar.hide().then(function() {
+                  sidebar.destroy();
+                  done();
+                }).then(null, assert.fail);
+              })
+            })
+          }).then(null, assert.fail);
+        });
+      }
+    }
+  });
 
   sidebar.show();
 }

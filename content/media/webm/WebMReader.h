@@ -22,10 +22,6 @@
 #include "vorbis/codec.h"
 #endif
 
-#ifdef MOZ_DASH
-#include "DASHRepReader.h"
-#endif
-
 namespace mozilla {
 
 class WebMBufferedState;
@@ -101,11 +97,7 @@ class WebMPacketQueue : private nsDeque {
   }
 };
 
-#ifdef MOZ_DASH
-class WebMReader : public DASHRepReader
-#else
 class WebMReader : public MediaDecoderReader
-#endif
 {
 public:
   WebMReader(AbstractMediaDecoder* aDecoder);
@@ -139,80 +131,6 @@ public:
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime);
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
-#ifdef MOZ_DASH
-  virtual void SetMainReader(DASHReader *aMainReader) MOZ_OVERRIDE {
-    NS_ASSERTION(aMainReader, "aMainReader is null.");
-    mMainReader = aMainReader;
-  }
-
-  // Called by |DASHReader| on the decode thread so that this reader will
-  // start reading at the appropriate subsegment/cluster. If this is not the
-  // current reader and a switch was previously requested, then it will seek to
-  // starting offset of the subsegment at which it is supposed to switch.
-  // Called on the decode thread, enters the decode monitor.
-  void PrepareToDecode() MOZ_OVERRIDE;
-
-  // Returns a reference to the audio/video queue of the main reader.
-  // Allows for a single audio/video queue to be shared among multiple
-  // |WebMReader|s.
-  MediaQueue<AudioData>& AudioQueue() MOZ_OVERRIDE {
-    if (mMainReader) {
-      return mMainReader->AudioQueue();
-    } else {
-      return MediaDecoderReader::AudioQueue();
-    }
-  }
-
-  MediaQueue<VideoData>& VideoQueue() MOZ_OVERRIDE {
-    if (mMainReader) {
-      return mMainReader->VideoQueue();
-    } else {
-      return MediaDecoderReader::VideoQueue();
-    }
-  }
-
-  // Sets byte range for initialization (EBML); used by DASH.
-  void SetInitByteRange(MediaByteRange &aByteRange) MOZ_OVERRIDE {
-    mInitByteRange = aByteRange;
-  }
-
-  // Sets byte range for cue points, i.e. cluster offsets; used by DASH.
-  void SetIndexByteRange(MediaByteRange &aByteRange) MOZ_OVERRIDE {
-    mCuesByteRange = aByteRange;
-  }
-
-  // Returns the index of the subsegment which contains the seek time.
-  int64_t GetSubsegmentForSeekTime(int64_t aSeekToTime) MOZ_OVERRIDE;
-
-  // Returns list of ranges for cluster start and end offsets.
-  nsresult GetSubsegmentByteRanges(nsTArray<MediaByteRange>& aByteRanges)
-                                                                  MOZ_OVERRIDE;
-
-  // Called by |DASHReader|::|PossiblySwitchVideoReaders| to check if this
-  // reader has reached a switch access point and it's ok to switch readers.
-  // Called on the decode thread.
-  bool HasReachedSubsegment(uint32_t aSubsegmentIndex) MOZ_OVERRIDE;
-
-  // Requests that this reader seek to the specified subsegment. Seek will
-  // happen when |PrepareDecodeVideoFrame| is called on the decode
-  // thread.
-  // Called on the main thread or decoder thread. Decode monitor must be held.
-  void RequestSeekToSubsegment(uint32_t aIdx) MOZ_OVERRIDE;
-
-  // Requests that this reader switch to |aNextReader| at the start of the
-  // specified subsegment. This is the reader to switch FROM.
-  // Called on the main thread or decoder thread. Decode monitor must be held.
-  void RequestSwitchAtSubsegment(int32_t aSubsegmentIdx,
-                                 MediaDecoderReader* aNextReader) MOZ_OVERRIDE;
-
-  // Seeks to the beginning of the specified cluster. Called on the decode
-  // thread.
-  void SeekToCluster(uint32_t aIdx);
-
-  // Returns true if data at the end of the final subsegment has been cached.
-  bool IsDataCachedAtEndOfSubsegments() MOZ_OVERRIDE;
-#endif
-
 protected:
   // Value passed to NextPacket to determine if we are reading a video or an
   // audio packet.
@@ -224,14 +142,6 @@ protected:
   // Read a packet from the nestegg file. Returns nullptr if all packets for
   // the particular track have been read. Pass VIDEO or AUDIO to indicate the
   // type of the packet we want to read.
-#ifdef MOZ_DASH
-  nsReturnRef<NesteggPacketHolder> NextPacketInternal(TrackType aTrackType);
-
-  // Read a packet from the nestegg file. Returns nullptr if all packets for
-  // the particular track have been read. Pass VIDEO or AUDIO to indicate the
-  // type of the packet we want to read. If the reader reaches a switch access
-  // point, this function will get a packet from |mNextReader|.
-#endif
   nsReturnRef<NesteggPacketHolder> NextPacket(TrackType aTrackType);
 
   // Pushes a packet to the front of the video packet queue.
@@ -301,54 +211,6 @@ private:
   // Booleans to indicate if we have audio and/or video data
   bool mHasVideo;
   bool mHasAudio;
-
-#ifdef MOZ_DASH
-  // Byte range for initialisation data; e.g. specified in DASH manifest.
-  MediaByteRange mInitByteRange;
-
-  // Byte range for cues; e.g. specified in DASH manifest.
-  MediaByteRange mCuesByteRange;
-
-  // Byte ranges for clusters; set internally, derived from cues.
-  nsTArray<TimestampedMediaByteRange> mClusterByteRanges;
-
-  // Pointer to the main |DASHReader|. Set in the constructor.
-  DASHReader* mMainReader;
-
-  // Index of the cluster to switch to. Monitor must be entered for write
-  // access on all threads, read access off the decode thread.
-  int32_t mSwitchingCluster;
-
-  // Pointer to the next reader. Used in |NextPacket| and |PushVideoPacket| at
-  // switch access points. Monitor must be entered for write access on all
-  // threads, read access off the decode thread.
-  nsRefPtr<WebMReader> mNextReader;
-
-  // Index of the cluster to seek to for a DASH stream request. Monitor must be
-  // entered for write access on all threads, read access off the decode
-  // thread.
-  int32_t mSeekToCluster;
-
-  // Current end offset of the last packet read in |NextPacket|. Used to check
-  // if the reader reached the switch access point. Accessed on the decode
-  // thread only.
-  int64_t mCurrentOffset;
-
-  // Index of next cluster to be read. Used to determine the starting offset of
-  // the next cluster. Accessed on the decode thread only.
-  uint32_t mNextCluster;
-
-  // Set in |NextPacket| if we read a packet from the next reader. If true in
-  // |PushVideoPacket|, we will push the packet onto the next reader's
-  // video packet queue (not video data queue!). Accessed on decode thread
-  // only.
-  bool mPushVideoPacketToNextReader;
-
-  // Indicates if the reader has reached a switch access point.  Set in
-  // |NextPacket| and read in |HasReachedSubsegment|. Accessed on
-  // decode thread only.
-  bool mReachedSwitchAccessPoint;
-#endif
 };
 
 } // namespace mozilla

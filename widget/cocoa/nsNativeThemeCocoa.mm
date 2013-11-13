@@ -2163,7 +2163,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     case NS_THEME_WINDOW_TITLEBAR: {
       NSWindow* win = NativeWindowForFrame(aFrame);
       BOOL isMain = [win isMainWindow];
-      float unifiedToolbarHeight = [(ToolbarWindow*)win unifiedToolbarHeight];
+      float unifiedToolbarHeight = [win isKindOfClass:[ToolbarWindow class]] ?
+        [(ToolbarWindow*)win unifiedToolbarHeight] : macRect.size.height;
       DrawNativeTitlebar(cgContext, macRect, unifiedToolbarHeight, isMain);
     }
       break;

@@ -232,4 +232,4 @@ VPMVideoDecimator::ProcessIncomingFrameRate(int64_t now)
     }
 }
 
-} //namespace
+}  // namespace

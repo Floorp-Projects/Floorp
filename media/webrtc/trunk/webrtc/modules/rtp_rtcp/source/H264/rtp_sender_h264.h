@@ -174,6 +174,6 @@ private:
 
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_H264_RTP_SENDER_H264_H_

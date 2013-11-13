@@ -9,11 +9,11 @@
  *
  */
 
-#include "modules/bitrate_controller/bitrate_controller_impl.h"
+#include "webrtc/modules/bitrate_controller/bitrate_controller_impl.h"
 
 #include <utility>
 
-#include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 
 namespace webrtc {
 
@@ -25,28 +25,49 @@ class RtcpBandwidthObserverImpl : public RtcpBandwidthObserver {
   virtual ~RtcpBandwidthObserverImpl() {
   }
   // Received RTCP REMB or TMMBR.
-  virtual void OnReceivedEstimatedBitrate(const uint32_t bitrate) {
+  virtual void OnReceivedEstimatedBitrate(const uint32_t bitrate) OVERRIDE {
     owner_->OnReceivedEstimatedBitrate(bitrate);
   }
   // Received RTCP receiver block.
   virtual void OnReceivedRtcpReceiverReport(
-      const uint32_t ssrc,
-      const uint8_t fraction_loss,
-      const uint32_t rtt,
-      const uint32_t last_received_extended_high_seq_num,
-      const uint32_t now_ms) {
-    uint32_t number_of_packets = 0;
-    std::map<uint32_t, uint32_t>::iterator it =
-        ssrc_to_last_received_extended_high_seq_num_.find(ssrc);
+      const ReportBlockList& report_blocks,
+      uint16_t rtt,
+      int64_t now_ms) OVERRIDE {
+    if (report_blocks.empty())
+      return;
 
-    if (it != ssrc_to_last_received_extended_high_seq_num_.end()) {
-      number_of_packets = last_received_extended_high_seq_num - it->second;
+    int fraction_lost_aggregate = 0;
+    int total_number_of_packets = 0;
+
+    // Compute the a weighted average of the fraction loss from all report
+    // blocks.
+    for (ReportBlockList::const_iterator it = report_blocks.begin();
+        it != report_blocks.end(); ++it) {
+      std::map<uint32_t, uint32_t>::iterator seq_num_it =
+          ssrc_to_last_received_extended_high_seq_num_.find(it->sourceSSRC);
+
+      int number_of_packets = 0;
+      if (seq_num_it != ssrc_to_last_received_extended_high_seq_num_.end())
+        number_of_packets = it->extendedHighSeqNum -
+            seq_num_it->second;
+
+      fraction_lost_aggregate += number_of_packets * it->fractionLost;
+      total_number_of_packets += number_of_packets;
+
+      // Update last received for this SSRC.
+      ssrc_to_last_received_extended_high_seq_num_[it->sourceSSRC] =
+          it->extendedHighSeqNum;
     }
-    // Update last received for this SSRC.
-    ssrc_to_last_received_extended_high_seq_num_[ssrc] =
-        last_received_extended_high_seq_num;
-    owner_->OnReceivedRtcpReceiverReport(fraction_loss, rtt, number_of_packets,
-                                         now_ms);
+    if (total_number_of_packets == 0)
+      fraction_lost_aggregate = 0;
+    else
+      fraction_lost_aggregate  = (fraction_lost_aggregate +
+          total_number_of_packets / 2) / total_number_of_packets;
+    if (fraction_lost_aggregate > 255)
+      return;
+
+    owner_->OnReceivedRtcpReceiverReport(fraction_lost_aggregate, rtt,
+                                         total_number_of_packets, now_ms);
   }
  private:
   std::map<uint32_t, uint32_t> ssrc_to_last_received_extended_high_seq_num_;
@@ -228,4 +249,3 @@ bool BitrateControllerImpl::AvailableBandwidth(uint32_t* bandwidth) const {
   return bandwidth_estimation_.AvailableBandwidth(bandwidth);
 }
 }  // namespace webrtc
-

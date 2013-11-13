@@ -750,6 +750,10 @@ this.STK_CMD_SEND_USSD = 0x12;
 this.STK_CMD_SEND_SMS = 0x13;
 this.STK_CMD_SEND_DTMF = 0x14;
 this.STK_CMD_LAUNCH_BROWSER = 0x15;
+this.STK_CMD_OPEN_CHANNEL = 0x16;
+this.STK_CMD_CLOSE_CHANNEL = 0x17;
+this.STK_CMD_RECEIVE_DATA = 0x18;
+this.STK_CMD_SEND_DATA = 0x19;
 this.STK_CMD_PLAY_TONE = 0x20;
 this.STK_CMD_DISPLAY_TEXT = 0x21;
 this.STK_CMD_GET_INKEY = 0x22;
@@ -1043,6 +1047,12 @@ this.STK_TERMINAL_SUPPORT_PROACTIVE_LANGUAGE_NOTIFICATION   = 0;
 this.STK_TERMINAL_SUPPORT_PROACTIVE_LAUNCH_BROWSER          = 1;
 this.STK_TERMINAL_SUPPORT_PROACTIVE_LOCAL_INFO_ACCESS_TECH  = 0;
 
+this.STK_TERMINAL_SUPPORT_BIP_COMMAND_OPEN_CHANNEL       = 1;
+this.STK_TERMINAL_SUPPORT_BIP_COMMAND_CLOSE_CHANNEL      = 1;
+this.STK_TERMINAL_SUPPORT_BIP_COMMAND_RECEIVE_DATA       = 1;
+this.STK_TERMINAL_SUPPORT_BIP_COMMAND_SEND_DATA          = 1;
+this.STK_TERMINAL_SUPPORT_BIP_COMMAND_GET_CHANNEL_STATUS = 0;
+
 /**
  * SAT profile
  *
@@ -1124,6 +1134,13 @@ this.STK_TERMINAL_PROFILE_PROACTIVE_4 =
   (STK_TERMINAL_SUPPORT_PROACTIVE_LAUNCH_BROWSER << 6) |
   (STK_TERMINAL_SUPPORT_PROACTIVE_LOCAL_INFO_ACCESS_TECH << 7);
 
+this.STK_TERMINAL_PROFILE_BIP_COMMAND =
+  (STK_TERMINAL_SUPPORT_BIP_COMMAND_OPEN_CHANNEL << 0) |
+  (STK_TERMINAL_SUPPORT_BIP_COMMAND_CLOSE_CHANNEL << 1) |
+  (STK_TERMINAL_SUPPORT_BIP_COMMAND_RECEIVE_DATA << 2) |
+  (STK_TERMINAL_SUPPORT_BIP_COMMAND_SEND_DATA << 3) |
+  (STK_TERMINAL_SUPPORT_BIP_COMMAND_GET_CHANNEL_STATUS << 4);
+
 this.STK_SUPPORTED_TERMINAL_PROFILE = [
   STK_TERMINAL_PROFILE_DOWNLOAD,
   STK_TERMINAL_PROFILE_OTHER,
@@ -1136,7 +1153,7 @@ this.STK_SUPPORTED_TERMINAL_PROFILE = [
   STK_TERMINAL_PROFILE_PROACTIVE_4,
   0x00, // Softkey support
   0x00, // Softkey information
-  0x00, // BIP proactive commands
+  STK_TERMINAL_PROFILE_BIP_COMMAND,
   0x00, // BIP supported bearers
   0x00, // Screen height
   0x00, // Screen width
@@ -2372,6 +2389,7 @@ this.GECKO_CARDSTATE_CORPORATE_PUK_REQUIRED        = "corporatePukRequired";
 this.GECKO_CARDSTATE_SERVICE_PROVIDER_PUK_REQUIRED = "serviceProviderPukRequired";
 this.GECKO_CARDSTATE_SIM_PUK_REQUIRED              = "simPersonalizationPukRequired";
 this.GECKO_CARDSTATE_READY                         = "ready";
+this.GECKO_CARDSTATE_PERMANENT_BLOCKED             = "permanentBlocked";
 
 this.GECKO_CARDLOCK_PIN      = "pin";
 this.GECKO_CARDLOCK_PIN2     = "pin2";
@@ -2755,16 +2773,18 @@ this.PDU_CDMA_MSG_CODING_7BITS_GSM = 0x09;    // GSM 7-bit default alphabet(7-bi
 this.PDU_CDMA_MSG_CODING_GSM_DCS = 0x0A;      // GSM Data-Coding-Scheme, Not supported
 
 // SMS Message Type, as defined in 3GPP2 C.S0015-A v2.0, Table 4.5.1-1
-this.PDU_CDMA_MSG_TYPE_DELIVER = 0x01;        // Receive
-this.PDU_CDMA_MSG_TYPE_SUBMIT = 0x02;         // Send
+this.PDU_CDMA_MSG_TYPE_DELIVER     = 0x01;         // Deliver
+this.PDU_CDMA_MSG_TYPE_SUBMIT      = 0x02;         // Submit
+this.PDU_CDMA_MSG_TYPE_DELIVER_ACK = 0x04;         // Delivery Acknowledgment
 
 // SMS User Data Subparameters, as defined in 3GPP2 C.S0015-A v2.0, Table 4.5-1
-this.PDU_CDMA_MSG_USERDATA_MSG_ID = 0x00;           // Message Identifier
-this.PDU_CDMA_MSG_USERDATA_BODY = 0x01;             // User Data Body
-this.PDU_CDMA_MSG_USERDATA_TIMESTAMP = 0x03;        // Message Center Time Stamp
-this.PDU_CDMA_REPLY_OPTION = 0x0A;                  // Reply Option
-this.PDU_CDMA_LANGUAGE_INDICATOR = 0x0D;            // Language Indicator
+this.PDU_CDMA_MSG_USERDATA_MSG_ID          = 0x00;  // Message Identifier
+this.PDU_CDMA_MSG_USERDATA_BODY            = 0x01;  // User Data Body
+this.PDU_CDMA_MSG_USERDATA_TIMESTAMP       = 0x03;  // Message Center Time Stamp
+this.PDU_CDMA_MSG_USERDATA_REPLY_OPTION    = 0x0A;  // Reply Option
+this.PDU_CDMA_LANGUAGE_INDICATOR           = 0x0D;  // Language Indicator
 this.PDU_CDMA_MSG_USERDATA_CALLBACK_NUMBER = 0x0E;  // Callback Number
+this.PDU_CDMA_MSG_USER_DATA_MSG_STATUS     = 0x14;  // Message Status
 
 // CDMA Language Indicator: Language groups
 // see 3GPP2 C.R1001-F table 9.2-1

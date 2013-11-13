@@ -364,9 +364,9 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     else
         ss.appendString("Reason", ExplainReason(slices[0].reason));
     ss.appendDecimal("Total Time", "ms", t(total));
-    ss.appendNumber("Compartments Collected", "%d", "", collectedCount);
-    ss.appendNumber("Total Compartments", "%d", "", compartmentCount);
+    ss.appendNumber("Zones Collected", "%d", "", collectedCount);
     ss.appendNumber("Total Zones", "%d", "", zoneCount);
+    ss.appendNumber("Total Compartments", "%d", "", compartmentCount);
     ss.appendNumber("MMU (20ms)", "%d", "%", int(mmu20 * 100));
     ss.appendNumber("MMU (50ms)", "%d", "%", int(mmu50 * 100));
     ss.appendDecimal("SCC Sweep Total", "ms", t(sccTotal));

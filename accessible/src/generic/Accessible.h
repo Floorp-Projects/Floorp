@@ -630,11 +630,6 @@ public:
   }
 
   /**
-   * Return true if the link currently has the focus.
-   */
-  bool IsLinkSelected();
-
-  /**
    * Return the number of anchors within the link.
    */
   virtual uint32_t AnchorCount();

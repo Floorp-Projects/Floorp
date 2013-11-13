@@ -10,23 +10,41 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_strategy.h"
 
-#include <cstdlib>
+#include <stdlib.h>
+
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 
 RTPReceiverStrategy::RTPReceiverStrategy(RtpData* data_callback)
-    : data_callback_(data_callback) {
+    : crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
+      data_callback_(data_callback) {
   memset(&last_payload_, 0, sizeof(last_payload_));
 }
 
 void RTPReceiverStrategy::GetLastMediaSpecificPayload(
-  ModuleRTPUtility::PayloadUnion* payload) const {
+    PayloadUnion* payload) const {
+  CriticalSectionScoped cs(crit_sect_.get());
   memcpy(payload, &last_payload_, sizeof(*payload));
 }
 
 void RTPReceiverStrategy::SetLastMediaSpecificPayload(
-  const ModuleRTPUtility::PayloadUnion& payload) {
+    const PayloadUnion& payload) {
+  CriticalSectionScoped cs(crit_sect_.get());
   memcpy(&last_payload_, &payload, sizeof(last_payload_));
+}
+
+void RTPReceiverStrategy::CheckPayloadChanged(int8_t payload_type,
+                                              PayloadUnion* specific_payload,
+                                              bool* should_reset_statistics,
+                                              bool* should_discard_changes) {
+  // Default: Keep changes and don't reset statistics.
+  *should_discard_changes = false;
+  *should_reset_statistics = false;
+}
+
+int RTPReceiverStrategy::Energy(uint8_t array_of_energy[kRtpCsrcSize]) const {
+  return -1;
 }
 
 }  // namespace webrtc

@@ -91,6 +91,6 @@ private:
     float           _max_time_drops;
 }; // end of VCMFrameDropper class
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_UTILITY_INCLUDE_FRAME_DROPPER_H_

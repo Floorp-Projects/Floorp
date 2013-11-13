@@ -10,7 +10,7 @@
 #include "webrtc/modules/audio_coding/main/source/acm_isac.h"
 
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/main/source/acm_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq_help_macros.h"
@@ -27,6 +27,8 @@
 #endif
 
 namespace webrtc {
+
+namespace acm1 {
 
 // we need this otherwise we cannot use forward declaration
 // in the header file
@@ -895,5 +897,7 @@ int16_t ACMISAC::REDPayloadISAC(const int32_t isac_rate,
 }
 
 #endif
+
+}  // namespace acm1
 
 }  // namespace webrtc

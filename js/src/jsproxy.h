@@ -357,8 +357,7 @@ SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
 class MOZ_STACK_CLASS ProxyOptions {
   public:
     ProxyOptions() : callable_(false),
-                     singleton_(false),
-                     forceForegroundFinalization_(false)
+                     singleton_(false)
     {}
 
     bool callable() const { return callable_; }
@@ -373,18 +372,9 @@ class MOZ_STACK_CLASS ProxyOptions {
         return *this;
     }
 
-    bool forceForegroundFinalization() const {
-        return forceForegroundFinalization_;
-    }
-    ProxyOptions &setForceForegroundFinalization(bool flag) {
-        forceForegroundFinalization_ = true;
-        return *this;
-    }
-
   private:
     bool callable_;
     bool singleton_;
-    bool forceForegroundFinalization_;
 };
 
 JS_FRIEND_API(JSObject *)

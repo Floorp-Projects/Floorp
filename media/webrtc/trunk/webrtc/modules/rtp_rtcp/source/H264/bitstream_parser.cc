@@ -214,4 +214,4 @@ BitstreamParser::GetUE()
     }
     return retVal;
 }
-} // namespace webrtc
+}  // namespace webrtc

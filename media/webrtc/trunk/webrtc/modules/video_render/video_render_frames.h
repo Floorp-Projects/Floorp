@@ -12,7 +12,7 @@
 #define WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_VIDEO_RENDER_FRAMES_H_  // NOLINT
 
 #include "webrtc/modules/video_render/include/video_render.h"
-#include "system_wrappers/interface/list_wrapper.h"
+#include "webrtc/system_wrappers/interface/list_wrapper.h"
 
 namespace webrtc {
 

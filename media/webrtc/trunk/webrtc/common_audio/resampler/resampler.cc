@@ -132,4 +132,4 @@ int Resampler::Push(const int16_t* samples_in, int length_in,
   return 0;
 }
 
-} // namespace webrtc
+}  // namespace webrtc

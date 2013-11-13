@@ -12,7 +12,6 @@
 #define WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_INTERFACE_AUDIO_CONFERENCE_MIXER_DEFINES_H_
 
 #include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/system_wrappers/interface/map_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -87,19 +86,6 @@ protected:
     AudioMixerOutputReceiver() {}
     virtual ~AudioMixerOutputReceiver() {}
 };
-
-class AudioRelayReceiver
-{
-public:
-    // This callback function provides the mix decision for this mix iteration.
-    // mixerList is a list of elements of the type
-    // [int,MixerParticipant*]
-    virtual void NewAudioToRelay(const int32_t id,
-                                 const MapWrapper& mixerList) = 0;
-protected:
-    AudioRelayReceiver() {}
-    virtual ~AudioRelayReceiver() {}
-};
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_INTERFACE_AUDIO_CONFERENCE_MIXER_DEFINES_H_

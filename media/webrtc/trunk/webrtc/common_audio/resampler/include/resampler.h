@@ -54,13 +54,12 @@ private:
 
     SpeexResamplerState* state_;
 
-    // State
     int in_freq_;
     int out_freq_;
     int channels_;
     ResamplerType type_;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_RESAMPLER_RESAMPLER_H_

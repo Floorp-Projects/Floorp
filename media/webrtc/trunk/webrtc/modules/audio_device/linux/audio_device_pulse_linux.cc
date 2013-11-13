@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cassert>
+#include <assert.h>
 
-#include "audio_device_utility.h"
-#include "audio_device_pulse_linux.h"
-#include "audio_device_config.h"
+#include "webrtc/modules/audio_device/audio_device_config.h"
+#include "webrtc/modules/audio_device/audio_device_utility.h"
+#include "webrtc/modules/audio_device/linux/audio_device_pulse_linux.h"
 
-#include "event_wrapper.h"
-#include "trace.h"
-#include "thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 webrtc_adm_linux_pulse::PulseAudioSymbolTable PaSymbolTable;
 
@@ -2954,7 +2954,7 @@ bool AudioDeviceLinuxPulse::PlayThreadProcess()
         EnableWriteCallback();
         PaUnLock();
 
-    } // _playing
+    }  // _playing
 
     UnLock();
     return true;
@@ -3103,7 +3103,7 @@ bool AudioDeviceLinuxPulse::RecThreadProcess()
         EnableReadCallback();
         PaUnLock();
 
-    } // _recording
+    }  // _recording
 
     UnLock();
     return true;

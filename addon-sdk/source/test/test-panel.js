@@ -22,8 +22,9 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { getWindow } = require('sdk/panel/window');
 const { pb } = require('./private-browsing/helper');
 const { URL } = require('sdk/url');
+const fixtures = require('./fixtures')
 
-const SVG_URL = self.data.url('mofo_logo.SVG');
+const SVG_URL = fixtures.url('mofo_logo.SVG');
 const Isolate = fn => '(' + fn + ')()';
 
 function ignorePassingDOMNodeWarning(type, message) {

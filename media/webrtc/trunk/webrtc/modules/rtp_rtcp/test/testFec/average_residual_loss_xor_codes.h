@@ -185,4 +185,4 @@ const float kMaxResidualLossBurstyMask[kNumberCodes] = {
   0.009657f
 };
 
-}   // namespace
+}  // namespace

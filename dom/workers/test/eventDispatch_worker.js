@@ -5,15 +5,18 @@
 const fakeEventType = "foo";
 
 function testEventTarget(event) {
-  if (event.target !== self || event.currentTarget !== self) {
+  if (event.target !== self) {
     throw new Error("Event has a bad target!");
+  }
+  if (event.currentTarget) {
+    throw new Error("Event has a bad currentTarget!");
   }
   postMessage(event.data);
 }
 
 addEventListener(fakeEventType, function(event) {
   throw new Error("Trusted event listener received untrusted event!");
-}, false);
+}, false, false);
 
 addEventListener(fakeEventType, function(event) {
   if (event.target !== self || event.currentTarget !== self) {
@@ -49,9 +52,14 @@ onmessage = function(event) {
       throw new Error("Recursive dispatch didn't fail!");
     }
 
-    event.initMessageEvent(fakeEventType, event.bubbles, event.cancelable,
-                           event.data, "*", null);
+    event = new MessageEvent(fakeEventType, { bubbles: event.bubbles,
+                                              cancelable: event.cancelable,
+                                              data: event.data,
+                                              origin: "*",
+                                              source: null
+                                            });
     self.dispatchEvent(event);
+
     return;
   }
 

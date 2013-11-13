@@ -17,8 +17,8 @@
 #include <GL/gl.h>
 #endif
 
-#include "webrtc/video_engine/test/common/video_renderer.h"
 #include "webrtc/typedefs.h"
+#include "webrtc/video_engine/test/common/video_renderer.h"
 
 
 namespace webrtc {

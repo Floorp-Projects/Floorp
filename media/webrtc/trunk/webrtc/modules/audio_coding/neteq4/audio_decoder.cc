@@ -16,6 +16,33 @@
 
 namespace webrtc {
 
+int AudioDecoder::DecodeRedundant(const uint8_t* encoded,
+                                  size_t encoded_len,
+                                  int16_t* decoded,
+                                  SpeechType* speech_type) {
+  return Decode(encoded, encoded_len, decoded, speech_type);
+}
+
+bool AudioDecoder::HasDecodePlc() const { return false; }
+
+int AudioDecoder::DecodePlc(int num_frames, int16_t* decoded) { return -1; }
+
+int AudioDecoder::IncomingPacket(const uint8_t* payload,
+                                 size_t payload_len,
+                                 uint16_t rtp_sequence_number,
+                                 uint32_t rtp_timestamp,
+                                 uint32_t arrival_timestamp) {
+  return 0;
+}
+
+int AudioDecoder::ErrorCode() { return 0; }
+
+int AudioDecoder::PacketDuration(const uint8_t* encoded, size_t encoded_len) {
+  return kNotImplemented;
+}
+
+NetEqDecoder AudioDecoder::codec_type() const { return codec_type_; }
+
 bool AudioDecoder::CodecSupported(NetEqDecoder codec_type) {
   switch (codec_type) {
     case kDecoderPCMu:

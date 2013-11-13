@@ -61,8 +61,14 @@ public:
 
 
     int32_t DemuxAndMix();
+    // Used by the Chrome to pass the recording data to the specific VoE
+    // channels for demux.
+    void DemuxAndMix(const int voe_channels[], int number_of_voe_channels);
 
     int32_t EncodeAndSend();
+    // Used by the Chrome to pass the recording data to the specific VoE
+    // channels for encoding and sending to the network.
+    void EncodeAndSend(const int voe_channels[], int number_of_voe_channels);
 
     uint32_t CaptureLevel() const;
 
@@ -211,7 +217,8 @@ private:
     int32_t _timeActive;
     int32_t _timeSinceLastTyping;
     int32_t _penaltyCounter;
-    bool _typingNoiseWarning;
+    bool _typingNoiseWarningPending;
+    bool _typingNoiseDetected;
 
     // Tunable treshold values
     int _timeWindow; // nr of10ms slots accepted to count as a hit.
@@ -236,6 +243,6 @@ private:
 
 #endif // WEBRTC_VOICE_ENGINE_TRANSMIT_MIXER_H
 
-}  //  namespace voe
+}  // namespace voe
 
 }  // namespace webrtc

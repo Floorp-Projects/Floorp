@@ -6476,6 +6476,6 @@ static const unsigned char kCodeRateXORTable[kSizeCodeRateXORTable] = {
 
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_SOURCE_FEC_TABLES_XOR_H_

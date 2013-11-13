@@ -128,11 +128,6 @@
 #endif
   <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 
-<hbox class="heading" data-category="paneAdvanced" hidden="true">
-  <image class="preference-icon" type="advanced"/>
-  <html:h1>&paneAdvanced.title;</html:h1>
-</hbox>
-
 <tabbox id="advancedPrefs" flex="1"
         data-category="paneAdvanced" hidden="true"
         onselect="gAdvancedPane.tabSelectionChanged();">

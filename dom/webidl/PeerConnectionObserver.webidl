@@ -8,7 +8,7 @@ interface nsISupports;
 
 [ChromeOnly,
  JSImplementation="@mozilla.org/dom/peerconnectionobserver;1",
- Constructor (object domPC)]
+ Constructor (mozRTCPeerConnection domPC)]
 interface PeerConnectionObserver
 {
   /* JSEP callbacks */

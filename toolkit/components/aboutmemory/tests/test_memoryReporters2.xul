@@ -19,15 +19,11 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  // We want to know when a remote process sends us an update.
-  let os = Cc["@mozilla.org/observer-service;1"]
-             .getService(Ci.nsIObserverService);
-  os.addObserver(childMemoryReporterUpdate, "child-memory-reporter-update", false);
-
   let numRemotes = 3;
+  let numReady = 0;
 
-  // Create some remote processes, and set up message-passing so that go() is
-  // called once per process, once it is fully initialized.
+  // Create some remote processes, and set up message-passing so that
+  // we know when each child is fully initialized.
   let remotes = [];
   SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 3]]}, function() {
     for (let i = 0; i < numRemotes; i++) {
@@ -39,47 +35,40 @@
         let mm = remoteBrowser.messageManager;
         mm.addMessageListener("test:ready", function readyHandler() {
           mm.removeMessageListener("test:ready", readyHandler);
-          remoteReady();
+          numReady++;
+          if (numReady == numRemotes) {
+            // All the remote processes are ready.  Do memory reporting.
+            doReports();
+          }
         });
         mm.loadFrameScript("data:," + encodeURI("sendAsyncMessage('test:ready');"), true);
       });
     }
   });
 
-  let numReady = 0;
+  let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
 
-  function remoteReady()
+  function doReports()
   {
-    numReady++;
-    if (numReady == numRemotes) {
-      // All the remote processes are ready.  Ask them for memory reports.
-      os.notifyObservers(null, "child-memory-reporter-request", null);
-    }
-  }
+    let residents = {};
 
-  let numUpdates = 0;
-
-  function childMemoryReporterUpdate()
-  {
-    numUpdates++;
-    if (numUpdates == numRemotes) {
-      // All the remote processes have reported back.  Check reports.
-      let vsizes = {};
-
-      // Get all the reports.
-      let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
-                getService(Ci.nsIMemoryReporterManager);
-      let e = mgr.enumerateReporters();
-      while (e.hasMoreElements()) {
-        let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-        r.collectReports(function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
-          if (aPath === "vsize") {
-            ok(100 * 1000 <= aAmount && aAmount <= 10 * 1000 * 1000 * 1000,
-               "vsize is reasonable");
-            vsizes[aProcess] = aAmount;
-          }
-        }, null);
+    let handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+      if (aPath === "resident") {
+        ok(100 * 1000 <= aAmount && aAmount <= 10 * 1000 * 1000 * 1000,
+           "resident is reasonable");
+        residents[aProcess] = aAmount;
       }
+    }
+
+    let processReports = function() {
+      // First, test a failure case:  calling getReports() before the previous
+      // getReports() has finished should silently abort.  (And the arguments
+      // won't be used.)
+      mgr.getReports(
+        () => ok(false, "handleReport called for nested getReports() call"),
+        null, null, null
+      );
 
       // Close the remote processes.
       for (let i = 0; i < numRemotes; i++) {
@@ -88,8 +77,8 @@
 
       // Check the results.
 
-      let processes = Object.keys(vsizes);
-      ok(processes.length == numRemotes + 1, "correct vsize count");
+      let processes = Object.keys(residents);
+      ok(processes.length == numRemotes + 1, "correct resident count");
 
       let numEmptyProcesses = 0, numNonEmptyProcesses = 0;
       for (let i = 0; i < processes.length; i++) {
@@ -107,6 +96,9 @@
 
       SimpleTest.finish();
     }
+
+    mgr.getReports(handleReport, null, processReports, null);
   }
+
   ]]></script>
 </window>

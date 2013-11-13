@@ -11,11 +11,11 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_GENERIC_DECODER_H_
 #define WEBRTC_MODULES_VIDEO_CODING_GENERIC_DECODER_H_
 
-#include "timing.h"
-#include "timestamp_map.h"
-#include "video_codec_interface.h"
-#include "encoded_frame.h"
-#include "module_common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/main/source/encoded_frame.h"
+#include "webrtc/modules/video_coding/main/source/timestamp_map.h"
+#include "webrtc/modules/video_coding/main/source/timing.h"
 
 namespace webrtc
 {
@@ -37,6 +37,7 @@ public:
     VCMDecodedFrameCallback(VCMTiming& timing, Clock* clock);
     virtual ~VCMDecodedFrameCallback();
     void SetUserReceiveCallback(VCMReceiveCallback* receiveCallback);
+    VCMReceiveCallback* UserReceiveCallback();
 
     virtual int32_t Decoded(I420VideoFrame& decodedImage);
     virtual int32_t ReceivedDecodedReferenceFrame(const uint64_t pictureId);
@@ -69,8 +70,7 @@ public:
     *	Initialize the decoder with the information from the VideoCodec
     */
     int32_t InitDecode(const VideoCodec* settings,
-                             int32_t numberOfCores,
-                             bool requireKeyFrame);
+                             int32_t numberOfCores);
 
     /**
     *	Decode to a raw I420 frame,
@@ -114,11 +114,10 @@ protected:
     VideoDecoder&               _decoder;
     VideoCodecType              _codecType;
     bool                        _isExternal;
-    bool                        _requireKeyFrame;
     bool                        _keyFrameDecoded;
 
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_GENERIC_DECODER_H_

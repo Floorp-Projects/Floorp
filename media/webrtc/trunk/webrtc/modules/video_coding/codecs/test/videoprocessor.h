@@ -13,15 +13,15 @@
 
 #include <string>
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "common_video/libyuv/include/scaler.h"
-#include "common_video/interface/i420_video_frame.h"
-#include "modules/video_coding/codecs/interface/video_codec_interface.h"
-#include "modules/video_coding/codecs/test/packet_manipulator.h"
-#include "modules/video_coding/codecs/test/stats.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "testsupport/frame_reader.h"
-#include "testsupport/frame_writer.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/common_video/libyuv/include/scaler.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/codecs/test/packet_manipulator.h"
+#include "webrtc/modules/video_coding/codecs/test/stats.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/test/testsupport/frame_reader.h"
+#include "webrtc/test/testsupport/frame_writer.h"
 
 namespace webrtc {
 namespace test {
@@ -40,13 +40,8 @@ const char* ExcludeFrameTypesToStr(ExcludeFrameTypes e);
 
 // Test configuration for a test run
 struct TestConfig {
-  TestConfig()
-    : name(""), description(""), test_number(0),
-      input_filename(""), output_filename(""), output_dir("out"),
-      networking_config(), exclude_frame_types(kExcludeOnlyFirstKeyFrame),
-      frame_length_in_bytes(-1), use_single_core(false), keyframe_interval(0),
-      codec_settings(NULL), verbose(true) {
-  };
+  TestConfig();
+  ~TestConfig();
 
   // Name of the test. This is purely metadata and does not affect
   // the test in any way.
@@ -168,8 +163,8 @@ class VideoProcessorImpl : public VideoProcessor {
                      const TestConfig& config,
                      Stats* stats);
   virtual ~VideoProcessorImpl();
-  virtual bool Init();
-  virtual bool ProcessFrame(int frame_number);
+  virtual bool Init() OVERRIDE;
+  virtual bool ProcessFrame(int frame_number) OVERRIDE;
 
  private:
   // Invoked by the callback when a frame has completed encoding.
@@ -181,13 +176,13 @@ class VideoProcessorImpl : public VideoProcessor {
   int GetElapsedTimeMicroseconds(const webrtc::TickTime& start,
                                  const webrtc::TickTime& stop);
   // Updates the encoder with the target bit rate and the frame rate.
-  void SetRates(int bit_rate, int frame_rate);
+  virtual void SetRates(int bit_rate, int frame_rate) OVERRIDE;
   // Return the size of the encoded frame in bytes.
-  int EncodedFrameSize();
+  virtual int EncodedFrameSize() OVERRIDE;
   // Return the number of dropped frames.
-  int NumberDroppedFrames();
+  virtual int NumberDroppedFrames() OVERRIDE;
   // Return the number of spatial resizes.
-  int NumberSpatialResizes();
+  virtual int NumberSpatialResizes() OVERRIDE;
 
   webrtc::VideoEncoder* encoder_;
   webrtc::VideoDecoder* decoder_;
@@ -226,14 +221,14 @@ class VideoProcessorImpl : public VideoProcessor {
 
   // Callback class required to implement according to the VideoEncoder API.
   class VideoProcessorEncodeCompleteCallback
-    : public webrtc::EncodedImageCallback {
+      : public webrtc::EncodedImageCallback {
    public:
-      explicit VideoProcessorEncodeCompleteCallback(VideoProcessorImpl* vp)
-        : video_processor_(vp) {
-    }
-    int32_t Encoded(webrtc::EncodedImage& encoded_image,
-                    const webrtc::CodecSpecificInfo* codec_specific_info = NULL,
-                    const webrtc::RTPFragmentationHeader* fragmentation = NULL);
+    explicit VideoProcessorEncodeCompleteCallback(VideoProcessorImpl* vp)
+        : video_processor_(vp) {}
+    virtual int32_t Encoded(
+        webrtc::EncodedImage& encoded_image,
+        const webrtc::CodecSpecificInfo* codec_specific_info = NULL,
+        const webrtc::RTPFragmentationHeader* fragmentation = NULL) OVERRIDE;
 
    private:
     VideoProcessorImpl* video_processor_;
@@ -246,7 +241,7 @@ class VideoProcessorImpl : public VideoProcessor {
       explicit VideoProcessorDecodeCompleteCallback(VideoProcessorImpl* vp)
       : video_processor_(vp) {
     }
-    int32_t Decoded(webrtc::I420VideoFrame& image);
+    virtual int32_t Decoded(webrtc::I420VideoFrame& image) OVERRIDE;
 
    private:
     VideoProcessorImpl* video_processor_;

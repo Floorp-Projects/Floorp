@@ -447,4 +447,4 @@ int32_t VPMDeflickering::DetectFlicker()
     return retVal;
 }
 
-} //namespace
+}  // namespace

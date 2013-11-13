@@ -11,7 +11,4 @@ PATTERN_FILES = $(strip $(wildcard $(srcdir)/*/hyphenation/*.dic))
 ifneq (,$(PATTERN_FILES))
 libs::
 	$(INSTALL)  $(PATTERN_FILES) $(FINAL_TARGET)/hyphenation
-
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(PATTERN_FILES) $(DESTDIR)$(mozappdir)/hyphenation
 endif

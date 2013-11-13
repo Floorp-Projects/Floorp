@@ -98,4 +98,4 @@ int VoECpuTest::DoTest() {
   return 0;
 }
 
-} //  namespace voetest
+}  // namespace voetest

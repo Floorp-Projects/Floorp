@@ -189,8 +189,7 @@ CdmaIccInfo.prototype = {
 
   // nsIDOMMozCdmaIccInfo
 
-  mdn: null,
-  min: null
+  mdn: null
 };
 
 function VoicemailInfo() {}
@@ -271,7 +270,9 @@ MobileCellInfo.prototype = {
   cdmaNetworkId: -1
 };
 
-function VoicemailStatus() {}
+function VoicemailStatus(clientId) {
+  this.serviceId = clientId;
+}
 VoicemailStatus.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozVoicemailStatus]),
   classID:        VOICEMAILSTATUS_CID,
@@ -284,8 +285,9 @@ VoicemailStatus.prototype = {
 
   // nsIDOMMozVoicemailStatus
 
+  serviceId: -1,
   hasMessages: false,
-  messageCount: Ci.nsIDOMMozVoicemailStatus.MESSAGE_COUNT_UNKNOWN,
+  messageCount: -1, // Count unknown.
   returnNumber: null,
   returnMessage: null
 };
@@ -448,9 +450,11 @@ function RILContentHelper() {
   this.updateDebugFlag();
 
   this.numClients = gNumRadioInterfaces;
-  debug("Number of clients: " + this.numClients);
+  if (DEBUG) debug("Number of clients: " + this.numClients);
 
   this.rilContexts = [];
+  this.voicemailInfos = [];
+  this.voicemailStatuses = [];
   for (let clientId = 0; clientId < this.numClients; clientId++) {
     this.rilContexts[clientId] = {
       cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
@@ -459,9 +463,10 @@ function RILContentHelper() {
       voiceConnectionInfo:  new MobileConnectionInfo(),
       dataConnectionInfo:   new MobileConnectionInfo()
     };
+
+    this.voicemailInfos[clientId] = new VoicemailInfo();
   }
 
-  this.voicemailInfo = new VoicemailInfo();
   this.voicemailDefaultServiceId = this.getVoicemailDefaultServiceId();
 
   this.initDOMRequestHelper(/* aWindow */ null, RIL_IPC_MSG_NAMES);
@@ -600,7 +605,7 @@ RILContentHelper.prototype = {
       let rilContext =
         cpmm.sendSyncMessage("RIL:GetRilContext", {clientId: cId})[0];
       if (!rilContext) {
-        debug("Received null rilContext from chrome process.");
+        if (DEBUG) debug("Received null rilContext from chrome process.");
         continue;
       }
       this.rilContexts[cId].cardState = rilContext.cardState;
@@ -905,7 +910,7 @@ RILContentHelper.prototype = {
   },
 
   sendMMI: function sendMMI(clientId, window, mmi) {
-    debug("Sending MMI " + mmi);
+    if (DEBUG) debug("Sending MMI " + mmi);
     if (!window) {
       throw Components.Exception("Can't get window object",
                                  Cr.NS_ERROR_UNEXPECTED);
@@ -927,7 +932,7 @@ RILContentHelper.prototype = {
   },
 
   cancelMMI: function cancelMMI(clientId, window) {
-    debug("Cancel MMI");
+    if (DEBUG) debug("Cancel MMI");
     if (!window) {
       throw Components.Exception("Can't get window object",
                                  Cr.NS_ERROR_UNEXPECTED);
@@ -1361,7 +1366,8 @@ RILContentHelper.prototype = {
   _voicemailListeners: null,
   _iccListeners: null,
 
-  voicemailStatus: null,
+  voicemailInfos: null,
+  voicemailStatuses: null,
 
   voicemailDefaultServiceId: 0,
   getVoicemailDefaultServiceId: function getVoicemailDefaultServiceId() {
@@ -1374,27 +1380,33 @@ RILContentHelper.prototype = {
     return id;
   },
 
-  getVoicemailInfo: function getVoicemailInfo() {
+  getVoicemailInfo: function getVoicemailInfo(clientId) {
     // Get voicemail infomation by IPC only on first time.
-    this.getVoicemailInfo = function getVoicemailInfo() {
-      return this.voicemailInfo;
+    this.getVoicemailInfo = function getVoicemailInfo(clientId) {
+      return this.voicemailInfos[clientId];
     };
 
-    let voicemailInfo =
-      cpmm.sendSyncMessage("RIL:GetVoicemailInfo", {clientId: 0})[0];
-    if (voicemailInfo) {
-      this.updateInfo(voicemailInfo, this.voicemailInfo);
+    for (let cId = 0; cId < gNumRadioInterfaces; cId++) {
+      let voicemailInfo =
+        cpmm.sendSyncMessage("RIL:GetVoicemailInfo", {clientId: cId})[0];
+      if (voicemailInfo) {
+        this.updateInfo(voicemailInfo, this.voicemailInfos[cId]);
+      }
     }
 
-    return this.voicemailInfo;
+    return this.voicemailInfos[clientId];
   },
 
-  get voicemailNumber() {
-    return this.getVoicemailInfo().number;
+  getVoicemailNumber: function getVoicemailNumber(clientId) {
+    return this.getVoicemailInfo(clientId).number;
   },
 
-  get voicemailDisplayName() {
-    return this.getVoicemailInfo().displayName;
+  getVoicemailDisplayName: function getVoicemailDisplayName(clientId) {
+    return this.getVoicemailInfo(clientId).displayName;
+  },
+
+  getVoicemailStatus: function getVoicemailStatus(clientId) {
+    return this.voicemailStatuses[clientId];
   },
 
   registerListener: function registerListener(listenerType, clientId, listener) {
@@ -1431,7 +1443,7 @@ RILContentHelper.prototype = {
   },
 
   registerMobileConnectionMsg: function registerMobileConnectionMsg(clientId, listener) {
-    debug("Registering for mobile connection related messages");
+    if (DEBUG) debug("Registering for mobile connection related messages");
     this.registerListener("_mobileConnectionListeners", clientId, listener);
     cpmm.sendAsyncMessage("RIL:RegisterMobileConnectionMsg");
   },
@@ -1441,19 +1453,23 @@ RILContentHelper.prototype = {
   },
 
   registerVoicemailMsg: function registerVoicemailMsg(listener) {
-    debug("Registering for voicemail-related messages");
-    //TODO: Bug 814634 - WebVoicemail API: support multiple sim cards.
+    if (DEBUG) debug("Registering for voicemail-related messages");
+    // To follow the listener registration scheme, we add a dummy clientId 0.
+    // All voicemail events are routed to listener for client id 0.
+    // See |handleVoicemailNotification|.
     this.registerListener("_voicemailListeners", 0, listener);
     cpmm.sendAsyncMessage("RIL:RegisterVoicemailMsg");
   },
 
   unregisterVoicemailMsg: function unregisteVoicemailMsg(listener) {
-    //TODO: Bug 814634 - WebVoicemail API: support multiple sim cards.
+    // To follow the listener unregistration scheme, we add a dummy clientId 0.
+    // All voicemail events are routed to listener for client id 0.
+    // See |handleVoicemailNotification|.
     this.unregisterListener("_voicemailListeners", 0, listener);
   },
 
   registerCellBroadcastMsg: function registerCellBroadcastMsg(listener) {
-    debug("Registering for Cell Broadcast related messages");
+    if (DEBUG) debug("Registering for Cell Broadcast related messages");
     //TODO: Bug 921326 - Cellbroadcast API: support multiple sim cards
     this.registerListener("_cellBroadcastListeners", 0, listener);
     cpmm.sendAsyncMessage("RIL:RegisterCellBroadcastMsg");
@@ -1465,7 +1481,7 @@ RILContentHelper.prototype = {
   },
 
   registerIccMsg: function registerIccMsg(clientId, listener) {
-    debug("Registering for ICC related messages");
+    if (DEBUG) debug("Registering for ICC related messages");
     this.registerListener("_iccListeners", clientId, listener);
     cpmm.sendAsyncMessage("RIL:RegisterIccMsg");
   },
@@ -1558,7 +1574,9 @@ RILContentHelper.prototype = {
 
   receiveMessage: function receiveMessage(msg) {
     let request;
-    debug("Received message '" + msg.name + "': " + JSON.stringify(msg.json));
+    if (DEBUG) {
+      debug("Received message '" + msg.name + "': " + JSON.stringify(msg.json));
+    }
 
     let data = msg.json.data;
     let clientId = msg.json.clientId;
@@ -1619,7 +1637,7 @@ RILContentHelper.prototype = {
         this.handleVoicemailNotification(clientId, data);
         break;
       case "RIL:VoicemailInfoChanged":
-        this.updateInfo(data, this.voicemailInfo);
+        this.updateInfo(data, this.voicemailInfos[clientId]);
         break;
       case "RIL:CardLockResult": {
         let requestId = data.requestId;
@@ -1767,9 +1785,11 @@ RILContentHelper.prototype = {
   },
 
   handleGetAvailableNetworks: function handleGetAvailableNetworks(message) {
-    debug("handleGetAvailableNetworks: " + JSON.stringify(message));
+    if (DEBUG) debug("handleGetAvailableNetworks: " + JSON.stringify(message));
     if (message.errorMsg) {
-      debug("Received error from getAvailableNetworks: " + message.errorMsg);
+      if (DEBUG) {
+        debug("Received error from getAvailableNetworks: " + message.errorMsg);
+      }
       this.fireRequestError(message.requestId, message.errorMsg);
       return;
     }
@@ -1835,41 +1855,44 @@ RILContentHelper.prototype = {
     this.fireRequestSuccess(message.requestId, result);
   },
 
-  handleVoicemailNotification: function handleVoicemailNotification(clientId, message) {
-    // Bug 814634 - WebVoicemail API: support multiple sim cards
+  handleVoicemailNotification: function handleVoicemailNotification(clientId,
+                                                                    message) {
     let changed = false;
-    if (!this.voicemailStatus) {
-      this.voicemailStatus = new VoicemailStatus();
+    if (!this.voicemailStatuses[clientId]) {
+      this.voicemailStatuses[clientId] = new VoicemailStatus(clientId);
     }
 
-    if (this.voicemailStatus.hasMessages != message.active) {
+    let voicemailStatus = this.voicemailStatuses[clientId];
+    if (voicemailStatus.hasMessages != message.active) {
       changed = true;
-      this.voicemailStatus.hasMessages = message.active;
+      voicemailStatus.hasMessages = message.active;
     }
 
-    if (this.voicemailStatus.messageCount != message.msgCount) {
+    if (voicemailStatus.messageCount != message.msgCount) {
       changed = true;
-      this.voicemailStatus.messageCount = message.msgCount;
+      voicemailStatus.messageCount = message.msgCount;
     } else if (message.msgCount == -1) {
       // For MWI using DCS the message count is not available
       changed = true;
     }
 
-    if (this.voicemailStatus.returnNumber != message.returnNumber) {
+    if (voicemailStatus.returnNumber != message.returnNumber) {
       changed = true;
-      this.voicemailStatus.returnNumber = message.returnNumber;
+      voicemailStatus.returnNumber = message.returnNumber;
     }
 
-    if (this.voicemailStatus.returnMessage != message.returnMessage) {
+    if (voicemailStatus.returnMessage != message.returnMessage) {
       changed = true;
-      this.voicemailStatus.returnMessage = message.returnMessage;
+      voicemailStatus.returnMessage = message.returnMessage;
     }
 
     if (changed) {
-      this._deliverEvent(clientId,
+      // To follow the event delivering scheme, we add a dummy clientId 0.
+      // All voicemail events are routed to listener for client id 0.
+      this._deliverEvent(0,
                          "_voicemailListeners",
                          "notifyStatusChanged",
-                         [this.voicemailStatus]);
+                         [voicemailStatus]);
     }
   },
 
@@ -1927,7 +1950,7 @@ RILContentHelper.prototype = {
   },
 
   handleSendCancelMMI: function handleSendCancelMMI(message) {
-    debug("handleSendCancelMMI " + JSON.stringify(message));
+    if (DEBUG) debug("handleSendCancelMMI " + JSON.stringify(message));
     let request = this.takeRequest(message.requestId);
     let requestWindow = this._windowsMap[message.requestId];
     delete this._windowsMap[message.requestId];
@@ -1994,7 +2017,7 @@ RILContentHelper.prototype = {
       try {
         handler.apply(listener, args);
       } catch (e) {
-        debug("listener for " + name + " threw an exception: " + e);
+        if (DEBUG) debug("listener for " + name + " threw an exception: " + e);
       }
     }
   },

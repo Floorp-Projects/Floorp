@@ -190,10 +190,6 @@ struct IonScript
     // Number of times this script bailed out without invalidation.
     uint32_t numBailouts_;
 
-    // Number of times this scripted bailed out to enter a catch or
-    // finally block.
-    uint32_t numExceptionBailouts_;
-
     // Flag set when it is likely that one of our (transitive) call
     // targets is not compiled.  Used in ForkJoin.cpp to decide when
     // we should add call targets to the worklist.
@@ -411,12 +407,6 @@ struct IonScript
     }
     bool bailoutExpected() const {
         return numBailouts_ > 0;
-    }
-    void incNumExceptionBailouts() {
-        numExceptionBailouts_++;
-    }
-    uint32_t numExceptionBailouts() const {
-        return numExceptionBailouts_;
     }
     void setHasUncompiledCallTarget() {
         hasUncompiledCallTarget_ = true;

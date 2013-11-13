@@ -26,9 +26,6 @@ if CONFIG['MOZ_WEBM']:
 if CONFIG['MOZ_GSTREAMER']:
     PARALLEL_DIRS += ['gstreamer']
 
-if CONFIG['MOZ_DASH']:
-    PARALLEL_DIRS += ['dash']
-
 if CONFIG['MOZ_DIRECTSHOW']:
     PARALLEL_DIRS += ['directshow']
 

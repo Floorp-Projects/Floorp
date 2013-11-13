@@ -52,12 +52,12 @@
  @ingroup common_src
 */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include "pa_ringbuffer.h"
 #include <string.h>
-#include "pa_memorybarrier.h"
+#include "webrtc/modules/audio_device/mac/portaudio/pa_memorybarrier.h"
+#include "webrtc/modules/audio_device/mac/portaudio/pa_ringbuffer.h"
 
 /***************************************************************************
  * Initialize FIFO.

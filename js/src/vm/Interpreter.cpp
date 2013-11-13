@@ -73,7 +73,7 @@ static bool
 #endif
 ToBooleanOp(const FrameRegs &regs)
 {
-    return ToBoolean(regs.sp[-1]);
+    return ToBoolean(regs.stackHandleAt(-1));
 }
 
 template <bool Eq>
@@ -2787,7 +2787,7 @@ CASE(JSOP_SETALIASEDVAR)
 
     // Avoid computing the name if no type updates are needed, as this may be
     // expensive on scopes with large numbers of variables.
-    PropertyName *name = obj.hasSingletonType() ? ScopeCoordinateName(cx, script, REGS.pc)
+    PropertyName *name = obj.hasSingletonType() ? ScopeCoordinateName(script, REGS.pc)
                                                 : nullptr;
 
     obj.setAliasedVar(cx, sc, name, REGS.sp[-1]);

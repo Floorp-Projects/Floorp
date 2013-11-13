@@ -46,8 +46,4 @@ bool Atomic32::CompareExchange(int32_t new_value, int32_t compare_value) {
   return OSAtomicCompareAndSwap32Barrier(compare_value, new_value, &value_);
 }
 
-int32_t Atomic32::Value() const {
-  return value_;
-}
-
 }  // namespace webrtc

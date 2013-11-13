@@ -9,11 +9,13 @@
  */
 
 #include "gtest/gtest.h"
-#include "testsupport/fileutils.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace webrtc {
 class TargetDelayTest : public ::testing::Test {
@@ -31,11 +33,10 @@ class TargetDelayTest : public ::testing::Test {
       : acm_(AudioCodingModule::Create(0)) {}
 
   ~TargetDelayTest() {
-    AudioCodingModule::Destroy(acm_);
   }
 
   void SetUp() {
-    EXPECT_TRUE(acm_ != NULL);
+    EXPECT_TRUE(acm_.get() != NULL);
 
     CodecInst codec;
     ASSERT_EQ(0, AudioCodingModule::Codec("L16", &codec, kSampleRateHz, 1));
@@ -93,6 +94,10 @@ class TargetDelayTest : public ::testing::Test {
     return acm_->SetMinimumPlayoutDelay(delay_ms);
   }
 
+  int SetMaximumDelay(int delay_ms) {
+    return acm_->SetMaximumPlayoutDelay(delay_ms);
+  }
+
   int GetCurrentOptimalDelayMs() {
     ACMNetworkStatistics stats;
     acm_->NetworkStatistics(&stats);
@@ -103,16 +108,16 @@ class TargetDelayTest : public ::testing::Test {
     return acm_->LeastRequiredDelayMs();
   }
 
-  AudioCodingModule* acm_;
+  scoped_ptr<AudioCodingModule> acm_;
   WebRtcRTPHeader rtp_info_;
 };
 
-TEST_F(TargetDelayTest, OutOfRangeInput) {
+TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(OutOfRangeInput)) {
   EXPECT_EQ(-1, SetMinimumDelay(-1));
   EXPECT_EQ(-1, SetMinimumDelay(10001));
 }
 
-TEST_F(TargetDelayTest, NoTargetDelayBufferSizeChanges) {
+TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(NoTargetDelayBufferSizeChanges)) {
   for (int n = 0; n < 30; ++n)  // Run enough iterations.
     Run(true);
   int clean_optimal_delay = GetCurrentOptimalDelayMs();
@@ -124,7 +129,7 @@ TEST_F(TargetDelayTest, NoTargetDelayBufferSizeChanges) {
   EXPECT_NEAR(required_delay, jittery_optimal_delay, 1);
 }
 
-TEST_F(TargetDelayTest, WithTargetDelayBufferNotChanging) {
+TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(WithTargetDelayBufferNotChanging)) {
   // A target delay that is one packet larger than jitter.
   const int kTargetDelayMs = (kInterarrivalJitterPacket + 1) *
       kNum10msPerFrame * 10;
@@ -138,7 +143,7 @@ TEST_F(TargetDelayTest, WithTargetDelayBufferNotChanging) {
   EXPECT_EQ(jittery_optimal_delay, clean_optimal_delay);
 }
 
-TEST_F(TargetDelayTest, RequiredDelayAtCorrectRange) {
+TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(RequiredDelayAtCorrectRange)) {
   for (int n = 0; n < 30; ++n)  // Run clean and store delay.
     Run(true);
   int clean_optimal_delay = GetCurrentOptimalDelayMs();
@@ -167,6 +172,23 @@ TEST_F(TargetDelayTest, RequiredDelayAtCorrectRange) {
   // expect |required_delay| be close to that.
   EXPECT_NEAR(kInterarrivalJitterPacket * kNum10msPerFrame * 10,
               required_delay, 1);
+}
+
+TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(TargetDelayBufferMinMax)) {
+  const int kTargetMinDelayMs = kNum10msPerFrame * 10;
+  ASSERT_EQ(0, SetMinimumDelay(kTargetMinDelayMs));
+  for (int m = 0; m < 30; ++m)  // Run enough iterations to fill up the buffer.
+    Run(true);
+  int clean_optimal_delay = GetCurrentOptimalDelayMs();
+  EXPECT_EQ(kTargetMinDelayMs, clean_optimal_delay);
+
+  const int kTargetMaxDelayMs = 2 * (kNum10msPerFrame * 10);
+  ASSERT_EQ(0, SetMaximumDelay(kTargetMaxDelayMs));
+  for (int n = 0; n < 30; ++n)  // Run enough iterations to fill up the buffer.
+    Run(false);
+
+  int capped_optimal_delay = GetCurrentOptimalDelayMs();
+  EXPECT_EQ(kTargetMaxDelayMs, capped_optimal_delay);
 }
 
 }  // webrtc

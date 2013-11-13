@@ -167,6 +167,13 @@ SmsIPCService::GetSegmentInfoForText(const nsAString& aText,
 }
 
 NS_IMETHODIMP
+SmsIPCService::GetSmscAddress(uint32_t aServiceId,
+                              nsIMobileMessageCallback* aRequest)
+{
+  return SendRequest(GetSmscAddressRequest(aServiceId), aRequest);
+}
+
+NS_IMETHODIMP
 SmsIPCService::Send(uint32_t aServiceId,
                     const nsAString& aNumber,
                     const nsAString& aMessage,

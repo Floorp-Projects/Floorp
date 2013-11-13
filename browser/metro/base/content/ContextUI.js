@@ -22,7 +22,6 @@ var ContextUI = {
     Elements.browsers.addEventListener('URLChanged', this, true);
     Elements.browsers.addEventListener("AlertActive", this, true);
     Elements.browsers.addEventListener("AlertClose", this, true);
-    Elements.tabList.addEventListener('TabSelect', this, true);
     Elements.panelUI.addEventListener('ToolPanelShown', this, false);
     Elements.panelUI.addEventListener('ToolPanelHidden', this, false);
 
@@ -292,7 +291,9 @@ var ContextUI = {
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "URLChanged":
-        this.displayNavbar();
+        if (aEvent.target == Browser.selectedBrowser) {
+          this.displayNavbar();
+        }
         break;
       case "MozEdgeUIStarted":
         this._onEdgeUIStarted(aEvent);

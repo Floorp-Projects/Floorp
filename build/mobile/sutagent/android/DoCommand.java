@@ -107,6 +107,8 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
+    private static final int DEFAULT_STARTPRG_TIMEOUT_SECONDS = 300;
+
     private final String prgVersion = "SUTAgentAndroid Version 1.19";
 
     public enum Command
@@ -116,6 +118,7 @@ public class DoCommand {
         EXECSU ("execsu"),
         EXECCWD ("execcwd"),
         EXECCWDSU ("execcwdsu"),
+        EXECEXT ("execext"),
         ENVRUN ("envrun"),
         KILL ("kill"),
         PS ("ps"),
@@ -723,7 +726,7 @@ public class DoCommand {
                         theArgs[lcv - 1] = Argv[lcv];
                         }
 
-                    strReturn = StartPrg2(theArgs, cmdOut, null, false);
+                    strReturn = StartPrg2(theArgs, cmdOut, null, false, DEFAULT_STARTPRG_TIMEOUT_SECONDS);
                     }
                 else
                     {
@@ -741,7 +744,7 @@ public class DoCommand {
                         theArgs[lcv - 1] = Argv[lcv];
                         }
 
-                    strReturn = StartPrg2(theArgs, cmdOut, null, true);
+                    strReturn = StartPrg2(theArgs, cmdOut, null, true, DEFAULT_STARTPRG_TIMEOUT_SECONDS);
                     }
                 else
                     {
@@ -759,7 +762,7 @@ public class DoCommand {
                         theArgs[lcv - 2] = Argv[lcv];
                         }
 
-                    strReturn = StartPrg2(theArgs, cmdOut, Argv[1], false);
+                    strReturn = StartPrg2(theArgs, cmdOut, Argv[1], false, DEFAULT_STARTPRG_TIMEOUT_SECONDS);
                     }
                 else
                     {
@@ -777,7 +780,7 @@ public class DoCommand {
                         theArgs[lcv - 2] = Argv[lcv];
                         }
 
-                    strReturn = StartPrg2(theArgs, cmdOut, Argv[1], true);
+                    strReturn = StartPrg2(theArgs, cmdOut, Argv[1], true, DEFAULT_STARTPRG_TIMEOUT_SECONDS);
                     }
                 else
                     {
@@ -796,9 +799,65 @@ public class DoCommand {
                         }
 
                     if (Argv[1].contains("/") || Argv[1].contains("\\") || !Argv[1].contains("."))
-                        strReturn = StartPrg(theArgs, cmdOut, false);
+                        strReturn = StartPrg(theArgs, cmdOut, false, DEFAULT_STARTPRG_TIMEOUT_SECONDS);
                     else
                         strReturn = StartJavaPrg(theArgs, null);
+                    }
+                else
+                    {
+                    strReturn = sErrorPrefix + "Wrong number of arguments for " + Argv[0] + " command!";
+                    }
+                break;
+
+            case EXECEXT:
+                // An "extended" exec command with format:
+                //    execext [su] [cwd=<path>] [t=<timeout in seconds>] arg1 ...
+                if (Argc >= 2)
+                    {
+                    boolean su = false;
+                    String cwd = null;
+                    int timeout = DEFAULT_STARTPRG_TIMEOUT_SECONDS;
+                    int extra;
+                    for (extra = 1; extra < Argc; extra++)
+                        {
+                        if (Argv[extra].equals("su"))
+                            {
+                            su = true;
+                            }
+                        else if (Argv[extra].startsWith("cwd="))
+                            {
+                            cwd = Argv[extra].substring(4);
+                            }
+                        else if (Argv[extra].startsWith("t="))
+                            {
+                            timeout = Integer.parseInt(Argv[extra].substring(2));
+                            if (timeout < 1 || timeout > 4*60*60)
+                                {
+                                Log.e("SUTAgentAndroid", 
+                                  "invalid execext timeout "+Argv[extra].substring(2)+"; using default instead");
+                                timeout = DEFAULT_STARTPRG_TIMEOUT_SECONDS;
+                                }
+                            }
+                        else
+                            {
+                            break;
+                            }
+                        }
+
+                    if (extra < Argc)
+                        {
+                        String [] theArgs = new String [Argc - extra];
+                        for (int lcv = extra; lcv < Argc; lcv++)
+                            {
+                            theArgs[lcv - extra] = Argv[lcv];
+                            }
+
+                        strReturn = StartPrg2(theArgs, cmdOut, cwd, su, timeout);
+                        }
+                    else
+                        {
+                        strReturn = sErrorPrefix + "No regular arguments for " + Argv[0] + " command!";
+                        }
                     }
                 else
                     {
@@ -3594,7 +3653,7 @@ private void CancelNotification()
         return (sRet);
         }
 
-    public String StartPrg(String [] progArray, OutputStream out, boolean startAsRoot)
+    public String StartPrg(String [] progArray, OutputStream out, boolean startAsRoot, int timeoutSeconds)
         {
         String sRet = "";
         int    lcv = 0;
@@ -3625,16 +3684,12 @@ private void CancelNotification()
                 }
             RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
             outThrd.start();
-            while (lcv < 30) {
-                try {
-                    outThrd.join(10000);
-                    int nRetCode = pProc.exitValue();
-                    sRet = "return code [" + nRetCode + "]";
-                    break;
-                    }
-                catch (IllegalThreadStateException itse) {
-                    lcv++;
-                    }
+            try {
+                outThrd.join(timeoutSeconds * 1000);
+                int nRetCode = pProc.exitValue();
+                sRet = "return code [" + nRetCode + "]";
+                }
+            catch (IllegalThreadStateException itse) {
                 }
             outThrd.stopRedirect();
             }
@@ -3651,7 +3706,7 @@ private void CancelNotification()
         return (sRet);
         }
 
-    public String StartPrg2(String [] progArray, OutputStream out, String cwd, boolean startAsRoot)
+    public String StartPrg2(String [] progArray, OutputStream out, String cwd, boolean startAsRoot, int timeoutSeconds)
         {
         String sRet = "";
 
@@ -3665,7 +3720,7 @@ private void CancelNotification()
         if (!sEnvString.contains("=") && (sEnvString.length() > 0))
             {
             if (sEnvString.contains("/") || sEnvString.contains("\\") || !sEnvString.contains("."))
-                sRet = StartPrg(progArray, out, startAsRoot);
+                sRet = StartPrg(progArray, out, startAsRoot, timeoutSeconds);
             else
                 sRet = StartJavaPrg(progArray, null);
             return(sRet);
@@ -3754,18 +3809,12 @@ private void CancelNotification()
                 RedirOutputThread outThrd = new RedirOutputThread(pProc, out);
                 outThrd.start();
 
-                lcv = 0;
-
-                while (lcv < 30) {
-                    try {
-                        outThrd.join(10000);
-                        int nRetCode = pProc.exitValue();
-                        sRet = "return code [" + nRetCode + "]";
-                        lcv = 30;
-                        }
-                    catch (IllegalThreadStateException itse) {
-                        lcv++;
-                        }
+                try {
+                    outThrd.join(timeoutSeconds * 1000);
+                    int nRetCode = pProc.exitValue();
+                    sRet = "return code [" + nRetCode + "]";
+                    }
+                catch (IllegalThreadStateException itse) {
                     }
                 outThrd.stopRedirect();
                 }
@@ -3898,9 +3947,10 @@ private void CancelNotification()
             "run [cmdline]                   - start program no wait\n" +
             "exec [env pairs] [cmdline]      - start program no wait optionally pass env\n" +
             "                                  key=value pairs (comma separated)\n" +
-            "execcwd [env pairs] [cmdline]   - start program from specified directory\n" +
+            "execcwd <dir> [env pairs] [cmdline] - start program from specified directory\n" +
             "execsu [env pairs] [cmdline]    - start program as privileged user\n" +
-            "execcwdsu [env pairs] [cmdline] - start program from specified directory as privileged user\n" +
+            "execcwdsu <dir> [env pairs] [cmdline] - start program from specified directory as privileged user\n" +
+            "execext [su] [cwd=<dir>] [t=<timeout>] [env pairs] [cmdline] - start program with extended options\n" +
             "kill [program name]             - kill program no path\n" +
             "killall                         - kill all processes started\n" +
             "ps                              - list of running processes\n" +
@@ -3915,7 +3965,6 @@ private void CancelNotification()
             "        [memory]                - physical, free, available, storage memory\n" +
             "                                  for device\n" +
             "        [processes]             - list of running processes see 'ps'\n" +
-            "deadman timeout                 - set the duration for the deadman timer\n" +
             "alrt [on/off]                   - start or stop sysalert behavior\n" +
             "disk [arg]                      - prints disk space info\n" +
             "cp file1 file2                  - copy file1 to file2\n" +

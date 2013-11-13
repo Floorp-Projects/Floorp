@@ -95,6 +95,16 @@ ParallelArrayObject::construct(JSContext *cx, unsigned argc, Value *vp)
     return constructHelper(cx, &ctor, args);
 }
 
+/* static */ JSFunction *
+ParallelArrayObject::maybeGetConstructor(GlobalObject *global, unsigned argc)
+{
+    PropertyName *ctorName = ctorNames[js::Min(argc, NumCtors - 1)];
+    Value ctorValue;
+    if (!global->maybeGetIntrinsicValue(ctorName, &ctorValue))
+        return nullptr;
+    JS_ASSERT(ctorValue.isObject() && ctorValue.toObject().is<JSFunction>());
+    return &ctorValue.toObject().as<JSFunction>();
+}
 
 /* static */ JSFunction *
 ParallelArrayObject::getConstructor(JSContext *cx, unsigned argc)

@@ -16,6 +16,11 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdk.h>
 
+// X.h defines KeyPress
+#ifdef KeyPress
+#undef KeyPress
+#endif
+
 using namespace mozilla;
 using namespace mozilla::widget;
 

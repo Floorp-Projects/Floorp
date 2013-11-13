@@ -253,6 +253,11 @@ uint32_t VCMTiming::TargetVideoDelay() const {
 }
 
 uint32_t VCMTiming::TargetDelayInternal() const {
+  WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding,
+      VCMId(vcm_id_, timing_id_),
+      "Delay: min_playout=%u jitter=%u max_decode=%u render=%u",
+      min_playout_delay_ms_, jitter_delay_ms_, MaxDecodeTimeMs(),
+      render_delay_ms_);
   return std::max(min_playout_delay_ms_,
       jitter_delay_ms_ + MaxDecodeTimeMs() + render_delay_ms_);
 }

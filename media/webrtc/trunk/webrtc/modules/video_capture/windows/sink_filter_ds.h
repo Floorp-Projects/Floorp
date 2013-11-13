@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_SINK_FILTER_DS_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_SINK_FILTER_DS_H_
 
-#include "video_capture_defines.h"
+#include "webrtc/modules/video_capture/include/video_capture_defines.h"
 #include "BaseInputPin.h"
 #include "BaseFilter.h"
 #include "MediaType.h"
@@ -117,6 +117,6 @@ private:
     int32_t _moduleId;
     unsigned long mRefCnt;
 };
-} // namespace videocapturemodule
-} // namespace webrtc
+}  // namespace videocapturemodule
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_SINK_FILTER_DS_H_

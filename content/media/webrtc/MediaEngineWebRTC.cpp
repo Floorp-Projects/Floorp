@@ -34,6 +34,7 @@ GetUserMediaLog()
 #include "nsITabSource.h"
 
 #ifdef MOZ_WIDGET_ANDROID
+#include "AndroidJNIWrapper.h"
 #include "AndroidBridge.h"
 #endif
 
@@ -250,16 +251,12 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
 
   // get the JVM
   JavaVM *jvm = mozilla::AndroidBridge::Bridge()->GetVM();
+  JNIEnv *env = GetJNIForThread();
 
-  JNIEnv *env;
-  jvm->AttachCurrentThread(&env, nullptr);
-
-  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
+  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, env, (void*)context) != 0) {
     LOG(("VoiceEngine:SetAndroidObjects Failed"));
     return;
   }
-
-  env->DeleteGlobalRef(context);
 #endif
 
   if (!mVoiceEngine) {

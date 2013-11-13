@@ -75,6 +75,6 @@ class RemoteRateControl {
   float beta_;
   unsigned int rtt_;
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_REMOTE_RATE_CONTROL_H_

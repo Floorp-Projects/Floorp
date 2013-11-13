@@ -32,6 +32,7 @@ NS_IMPL_RELEASE(MobileMessageThread)
 MobileMessageThread::Create(const uint64_t aId,
                             const JS::Value& aParticipants,
                             const JS::Value& aTimestamp,
+                            const nsAString& aLastMessageSubject,
                             const nsAString& aBody,
                             const uint64_t aUnreadCount,
                             const nsAString& aLastMessageType,
@@ -44,6 +45,7 @@ MobileMessageThread::Create(const uint64_t aId,
   // to them.
   ThreadData data;
   data.id() = aId;
+  data.lastMessageSubject().Assign(aLastMessageSubject);
   data.body().Assign(aBody);
   data.unreadCount() = aUnreadCount;
 
@@ -114,10 +116,12 @@ MobileMessageThread::Create(const uint64_t aId,
 MobileMessageThread::MobileMessageThread(const uint64_t aId,
                                          const nsTArray<nsString>& aParticipants,
                                          const uint64_t aTimestamp,
+                                         const nsString& aLastMessageSubject,
                                          const nsString& aBody,
                                          const uint64_t aUnreadCount,
                                          MessageType aLastMessageType)
-  : mData(aId, aParticipants, aTimestamp, aBody, aUnreadCount, aLastMessageType)
+  : mData(aId, aParticipants, aTimestamp, aLastMessageSubject, aBody,
+          aUnreadCount, aLastMessageType)
 {
   MOZ_ASSERT(aParticipants.Length());
 }
@@ -132,6 +136,13 @@ NS_IMETHODIMP
 MobileMessageThread::GetId(uint64_t* aId)
 {
   *aId = mData.id();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MobileMessageThread::GetLastMessageSubject(nsAString& aLastMessageSubject)
+{
+  aLastMessageSubject = mData.lastMessageSubject();
   return NS_OK;
 }
 

@@ -68,7 +68,9 @@ TEST_F(HardwareTest, GetCpuLoadReturnsErrorOnNonWindowsPlatform) {
 }
 #endif
 
-TEST_F(HardwareTest, BuiltInWasapiAECWorksForAudioWindowsCoreAudioLayer) {
+// Flakily hangs on Windows: code.google.com/p/webrtc/issues/detail?id=2179.
+TEST_F(HardwareTest,
+       DISABLED_ON_WIN(BuiltInWasapiAECWorksForAudioWindowsCoreAudioLayer)) {
 #ifdef WEBRTC_IOS
   // Ensure the sound device is reset on iPhone.
   EXPECT_EQ(0, voe_hardware_->ResetAudioDevice());

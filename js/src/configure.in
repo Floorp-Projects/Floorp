@@ -124,6 +124,7 @@ MOZ_ARG_DISABLE_BOOL(compile-environment,
 [  --disable-compile-environment
                           Disable compiler/library checks.],
     COMPILE_ENVIRONMENT= )
+AC_SUBST(COMPILE_ENVIRONMENT)
 
 dnl Check for Perl first -- needed for win32 SDK checks
 MOZ_PATH_PROGS(PERL, $PERL perl5 perl )
@@ -240,7 +241,7 @@ MOZILLA_SYMBOLVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -sym
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
-AC_DEFINE_UNQUOTED(MOZILLA_SYMBOLVERSION,"$MOZILLA_SYMBOLVERSION")
+AC_SUBST(MOZILLA_SYMBOLVERSION)
 
 # Separate version into components for use in shared object naming etc
 changequote(,)
@@ -1647,8 +1648,11 @@ ia64*-hpux*)
         if test "$_CC_SUITE" -ge "12"; then
             dnl VS2013+ requires -FS when parallel building by make -jN.
             dnl If nothing, compiler sometimes causes C1041 error.
-            CFLAGS="$CFLAGS -FS"
-            CXXFLAGS="$CXXFLAGS -FS"
+            dnl
+            dnl Visual Studio 2013 supports -Gw flags
+            dnl http://blogs.msdn.com/b/vcblog/archive/2013/09/11/introducing-gw-compiler-switch.aspx
+            CFLAGS="$CFLAGS -FS -Gw"
+            CXXFLAGS="$CXXFLAGS -FS -Gw"
         fi
         # khuey says we can safely ignore MSVC warning C4251
         # MSVC warning C4244 (implicit type conversion may lose data) warns
@@ -2086,7 +2090,10 @@ if test "$ENABLE_YARR_JIT"; then
     AC_DEFINE(ENABLE_YARR_JIT)
 fi
 
-MOZ_COMPILER_OPTS
+if test -n "$COMPILE_ENVIRONMENT"; then
+    MOZ_COMPILER_OPTS
+fi
+
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
@@ -2904,11 +2911,37 @@ MOZ_ARG_WITH_STRING(nspr-libs,
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 
+if test "$_USE_SYSTEM_NSPR" || (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
+  _HAS_NSPR=1
+fi
+
+case "$target" in
+  *linux*|*darwin*)
+    if test -z "$_HAS_NSPR"; then JS_POSIX_NSPR_DEFAULT=1; fi
+    ;;
+esac
+
+MOZ_ARG_ENABLE_BOOL(posix-nspr-emulation,
+[  --enable-posix-nspr-emulation
+                          Enable emulation of NSPR for POSIX systems],
+    JS_POSIX_NSPR=1,
+    JS_POSIX_NSPR=,
+    JS_POSIX_NSPR="$JS_POSIX_NSPR_DEFAULT" )
+if test -n "$JS_POSIX_NSPR"; then
+    AC_DEFINE(JS_POSIX_NSPR)
+fi
+
 dnl Pass either --with-system-nspr or (--with-nspr-cflags and
 dnl --with-nspr-libs), but not both.
 if test "$_USE_SYSTEM_NSPR" && (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
     AC_MSG_ERROR([--with-system-nspr and --with-nspr-libs/cflags are mutually exclusive.
 See 'configure --help'.])
+fi
+
+dnl Can't use --enable-posix-nspr-emulation if compiling with NSPR.
+if test "$_HAS_NSPR" && test "$JS_POSIX_NSPR"; then
+    AC_MSG_ERROR([--enable-posix-nspr-emulation is mututally exclusive with --with-system-nspr
+and --with-nspr-libs/cflags. See 'configure --help'.])
 fi
 
 if test -n "$_USE_SYSTEM_NSPR"; then
@@ -4271,16 +4304,9 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
     ac_configure_args="$ac_configure_args --with-pic"
   fi
   if test "$CROSS_COMPILE"; then
-    case "$target" in
-    *-android*|*-linuxandroid*)
-      export AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS CFLAGS LDFLAGS
+    export AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS CFLAGS LDFLAGS
 
-      ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\""
-      ;;
-    *)
-      ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
-      ;;
-    esac
+    ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\""
   fi
   if test "$_MSC_VER"; then
     # Use a wrapper script for cl and ml that looks more like gcc.

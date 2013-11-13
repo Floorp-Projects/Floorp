@@ -11,7 +11,7 @@
 #include "webrtc/modules/audio_coding/main/source/acm_opus.h"
 
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/main/source/acm_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq_help_macros.h"
@@ -22,6 +22,8 @@
 #endif
 
 namespace webrtc {
+
+namespace acm1 {
 
 #ifndef WEBRTC_CODEC_OPUS
 
@@ -311,5 +313,7 @@ void ACMOpus::SplitStereoPacket(uint8_t* payload, int32_t* payload_length) {
 }
 
 #endif  // WEBRTC_CODEC_OPUS
+
+}  // namespace acm1
 
 }  // namespace webrtc

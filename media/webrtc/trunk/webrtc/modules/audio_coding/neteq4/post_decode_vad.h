@@ -33,11 +33,7 @@ class PostDecodeVad {
         vad_instance_(NULL) {
   }
 
-  virtual ~PostDecodeVad() {
-    if (vad_instance_) {
-      WebRtcVad_Free(vad_instance_);
-    }
-  }
+  virtual ~PostDecodeVad();
 
   // Enables post-decode VAD.
   void Enable();
@@ -50,7 +46,7 @@ class PostDecodeVad {
 
   // Updates post-decode VAD with the audio data in |signal| having |length|
   // samples. The data is of type |speech_type|, at the sample rate |fs_hz|.
-  void Update(int16_t* signal, size_t length,
+  void Update(int16_t* signal, int length,
               AudioDecoder::SpeechType speech_type, bool sid_frame, int fs_hz);
 
   // Accessors.

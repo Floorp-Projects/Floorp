@@ -451,7 +451,7 @@ function HandleMoveInternal(handle, obj, path) {
          "HandleMoveInternal: not typed handle");
 
   if (!IsObject(obj) || !ObjectIsTypedDatum(obj))
-    ThrowError(JSMSG_INCOMPATIBLE_PROTO);
+    ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Handle", "set", "value");
 
   var ptr = TypedObjectPointer.fromTypedDatum(obj);
   for (var i = 0; i < path.length; i++)

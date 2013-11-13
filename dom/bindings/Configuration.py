@@ -46,11 +46,23 @@ class Configuration:
             if not isinstance(entry, list):
                 assert isinstance(entry, dict)
                 entry = [entry]
-            elif len(entry) == 1 and entry[0].get("workers", False):
-                # List with only a workers descriptor means we should
-                # infer a mainthread descriptor.  If you want only
-                # workers bindings, don't use a list here.
-                entry.append({})
+            elif len(entry) == 1:
+                if entry[0].get("workers", False):
+                    # List with only a workers descriptor means we should
+                    # infer a mainthread descriptor.  If you want only
+                    # workers bindings, don't use a list here.
+                    entry.append({})
+                else:
+                    raise TypeError("Don't use a single-element list for "
+                                    "non-worker-only interface " + iface.identifier.name +
+                                    " in Bindings.conf")
+            elif len(entry) == 2:
+                if entry[0].get("workers", False) == entry[1].get("workers", False):
+                    raise TypeError("The two entries for interface " + iface.identifier.name +
+                                    " in Bindings.conf should not have the same value for 'workers'")
+            else:
+                raise TypeError("Interface " + iface.identifier.name +
+                                " should have no more than two entries in Bindings.conf")
             self.descriptors.extend([Descriptor(self, iface, x) for x in entry])
 
         # Keep the descriptor list sorted for determinism.
@@ -165,6 +177,10 @@ class Configuration:
             if d.workers == workers:
                 return d
 
+        if workers:
+            for d in self.descriptorsByName[interfaceName]:
+                return d
+
         raise NoSuchDescriptorError("For " + interfaceName + " found no matches");
     def getDescriptorProvider(self, workers):
         """
@@ -238,6 +254,7 @@ class Descriptor(DescriptorProvider):
                 headerDefault = self.nativeType
                 headerDefault = headerDefault.replace("::", "/") + ".h"
         self.headerFile = desc.get('headerFile', headerDefault)
+        self.headerIsDefault = self.headerFile == headerDefault
         if self.jsImplParent == self.nativeType:
             self.jsImplParentHeader = self.headerFile
         else:
@@ -356,12 +373,17 @@ class Descriptor(DescriptorProvider):
                                 (self.interface.identifier.name, self.nativeOwnership))
         self.customTrace = (self.nativeOwnership == 'worker')
         self.customFinalize = desc.get('customFinalize', self.nativeOwnership == 'worker')
+        self.customWrapperManagement = desc.get('customWrapperManagement', False)
         if desc.get('wantsQI', None) != None:
             self._wantsQI = desc.get('wantsQI', None)
         self.wrapperCache = (not self.interface.isCallback() and
                              (self.nativeOwnership == 'worker' or
                               (self.nativeOwnership != 'owned' and
                                desc.get('wrapperCache', True))))
+        if self.customWrapperManagement and not self.wrapperCache:
+            raise TypeError("Descriptor for %s has customWrapperManagement "
+                            "but is not wrapperCached." %
+                            (self.interface.identifier.name))
 
         def make_name(name):
             return name + "_workers" if self.workers else name
@@ -408,7 +430,7 @@ class Descriptor(DescriptorProvider):
         self.prototypeChain = []
         parent = interface
         while parent:
-            self.prototypeChain.insert(0, make_name(parent.identifier.name))
+            self.prototypeChain.insert(0, parent.identifier.name)
             parent = parent.parent
         config.maxProtoChainLength = max(config.maxProtoChainLength,
                                          len(self.prototypeChain))

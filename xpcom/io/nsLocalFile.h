@@ -55,10 +55,28 @@ nsresultForErrno(int err)
     switch (err) {
       case 0:
         return NS_OK;
+#ifdef EDQUOT
+      case EDQUOT: /* Quota exceeded */
+        // FALLTHROUGH to return NS_ERROR_FILE_DISK_FULL
+#endif
+      case ENOSPC:
+        return NS_ERROR_FILE_DISK_FULL;
+#ifdef EISDIR
+      case EISDIR:    /*      Is a directory. */
+        return NS_ERROR_FILE_IS_DIRECTORY;
+#endif
+      case ENAMETOOLONG: 
+        return NS_ERROR_FILE_NAME_TOO_LONG;
+      case ENOEXEC:  /*     Executable file format error. */
+        return NS_ERROR_FILE_EXECUTION_FAILED;
       case ENOENT:
         return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
       case ENOTDIR:
         return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+#ifdef ELOOP
+      case ELOOP:
+        return NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
+#endif /* ELOOP */
 #ifdef ENOLINK
       case ENOLINK:
         return NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
@@ -70,6 +88,10 @@ nsresultForErrno(int err)
 #endif /* EPERM */
       case EACCES:
         return NS_ERROR_FILE_ACCESS_DENIED;
+#ifdef EROFS
+      case EROFS: /*     Read-only file system. */
+        return NS_ERROR_FILE_READ_ONLY;
+#endif
       /*
        * On AIX 4.3, ENOTEMPTY is defined as EEXIST,
        * so there can't be cases for both without
@@ -79,6 +101,17 @@ nsresultForErrno(int err)
       case ENOTEMPTY:
         return NS_ERROR_FILE_DIR_NOT_EMPTY;
 #endif /* ENOTEMPTY != EEXIST */
+        /* Note that nsIFile.createUnique() returns
+           NS_ERROR_FILE_TOO_BIG when it cannot create a temporary
+           file with a unique filename.
+           See https://developer.mozilla.org/en-US/docs/Table_Of_Errors 
+           Other usages of NS_ERROR_FILE_TOO_BIG in the source tree
+           are in line with the POSIX semantics of EFBIG.
+           So this is a reasonably good approximation.
+        */
+      case EFBIG: /*     File too large. */
+        return NS_ERROR_FILE_TOO_BIG;
+
       default:
         return NS_ERROR_FAILURE;
     }

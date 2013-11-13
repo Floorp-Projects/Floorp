@@ -14,6 +14,7 @@ const COLLAPSE_ATTRIBUTE_LENGTH = 120;
 const COLLAPSE_DATA_URL_REGEX = /^data.+base64/;
 const COLLAPSE_DATA_URL_LENGTH = 60;
 const CONTAINER_FLASHING_DURATION = 500;
+const IMAGE_PREVIEW_MAX_DIM = 400;
 
 const {UndoStack} = require("devtools/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
@@ -99,6 +100,10 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
   gDevTools.on("pref-changed", this._handlePrefChange);
 
   this._initPreview();
+
+  this.tooltip = new Tooltip(this._inspector.panelDoc);
+  this.tooltip.startTogglingOnHover(this._elt,
+    this._buildTooltipContent.bind(this));
 }
 
 exports.MarkupView = MarkupView;
@@ -146,6 +151,25 @@ MarkupView.prototype = {
 
     // Recursively update each node starting with documentElement.
     updateChildren(documentElement);
+  },
+
+  _buildTooltipContent: function(target) {
+    // From the target passed here, let's find the parent MarkupContainer
+    // and ask it if the tooltip should be shown
+    let parent = target, container;
+    while (parent !== this.doc.body) {
+      if (parent.container) {
+        container = parent.container;
+        break;
+      }
+      parent = parent.parentNode;
+    }
+
+    if (container) {
+      // With the newly found container, delegate the tooltip content creation
+      // and decision to show or not the tooltip
+      return container._buildTooltipContent(target, this.tooltip);
+    }
   },
 
   /**
@@ -954,13 +978,17 @@ MarkupView.prototype = {
       container.destroy();
     }
     delete this._containers;
+
+    this.tooltip.destroy();
+    delete this.tooltip;
   },
 
   /**
    * Initialize the preview panel.
    */
   _initPreview: function() {
-    if (!Services.prefs.getBoolPref("devtools.inspector.markupPreview")) {
+    this._previewEnabled = Services.prefs.getBoolPref("devtools.inspector.markupPreview");
+    if (!this._previewEnabled) {
       return;
     }
 
@@ -990,6 +1018,9 @@ MarkupView.prototype = {
    * Move the preview viewbox.
    */
   _updatePreview: function() {
+    if (!this._previewEnabled) {
+      return;
+    }
     let win = this._frame.contentWindow;
 
     if (win.scrollMaxY == 0) {
@@ -1025,6 +1056,9 @@ MarkupView.prototype = {
    * Hide the preview while resizing, to avoid slowness.
    */
   _resizePreview: function() {
+    if (!this._previewEnabled) {
+      return;
+    }
     let win = this._frame.contentWindow;
     this._previewBar.classList.add("hide");
     win.clearTimeout(this._resizePreviewTimeout);
@@ -1099,8 +1133,8 @@ function MarkupContainer(aMarkupView, aNode, aInspector) {
   this._onMouseDown = this._onMouseDown.bind(this);
   this.elt.addEventListener("mousedown", this._onMouseDown, false);
 
-  this.tooltip = null;
-  this._attachTooltipIfNeeded();
+  // Prepare the image preview tooltip data if any
+  this._prepareImagePreview();
 }
 
 MarkupContainer.prototype = {
@@ -1108,36 +1142,43 @@ MarkupContainer.prototype = {
     return "[MarkupContainer for " + this.node + "]";
   },
 
-  _attachTooltipIfNeeded: function() {
+  _prepareImagePreview: function() {
     if (this.node.tagName) {
       let tagName = this.node.tagName.toLowerCase();
-      let isImage = tagName === "img" &&
-        this.editor.getAttributeElement("src");
-      let isCanvas = tagName && tagName === "canvas";
+      let srcAttr = this.editor.getAttributeElement("src");
+      let isImage = tagName === "img" && srcAttr;
+      let isCanvas = tagName === "canvas";
 
       // Get the image data for later so that when the user actually hovers over
       // the element, the tooltip does contain the image
       if (isImage || isCanvas) {
-        this.tooltip = new Tooltip(this._inspector.panelDoc);
+        let def = promise.defer();
 
-        this.node.getImageData().then(data => {
+        this.tooltipData = {
+          target: isImage ? srcAttr : this.editor.tag,
+          data: def.promise
+        };
+
+        this.node.getImageData(IMAGE_PREVIEW_MAX_DIM).then(data => {
           if (data) {
-            data.string().then(str => {
-              this.tooltip.setImageContent(str);
+            data.data.string().then(str => {
+              // Resolving the data promise and, to always keep tooltipData.data
+              // as a promise, create a new one that resolves immediately
+              def.resolve(str, data.size);
+              this.tooltipData.data = promise.resolve(str, data.size);
             });
           }
         });
       }
+    }
+  },
 
-      // If it's an image, show the tooltip on the src attribute
-      if (isImage) {
-        this.tooltip.startTogglingOnHover(this.editor.getAttributeElement("src"));
-      }
-
-      // If it's a canvas, show it on the tag
-      if (isCanvas) {
-        this.tooltip.startTogglingOnHover(this.editor.tag);
-      }
+  _buildTooltipContent: function(target, tooltip) {
+    if (this.tooltipData && target === this.tooltipData.target) {
+      this.tooltipData.data.then((data, size) => {
+        tooltip.setImageContent(data, size);
+      });
+      return true;
     }
   },
 
@@ -1375,12 +1416,6 @@ MarkupContainer.prototype = {
 
     // Destroy my editor
     this.editor.destroy();
-
-    // Destroy the tooltip if any
-    if (this.tooltip) {
-      this.tooltip.destroy();
-      this.tooltip = null;
-    }
   }
 };
 
@@ -1542,7 +1577,9 @@ function ElementEditor(aContainer, aNode) {
   // Create the main editor
   this.template("element", this);
 
-  this.rawNode = aNode.rawNode();
+  if (aNode.isLocal_toBeDeprecated()) {
+    this.rawNode = aNode.rawNode();
+  }
 
   // Make the tag name editable (unless this is a remote node or
   // a document element)

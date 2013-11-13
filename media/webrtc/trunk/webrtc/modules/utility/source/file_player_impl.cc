@@ -8,20 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "file_player_impl.h"
-#include "trace.h"
+#include "webrtc/modules/utility/source/file_player_impl.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
     #include "frame_scaler.h"
     #include "tick_util.h"
     #include "video_coder.h"
-#endif
-
-// OS independent case insensitive string comparison.
-#ifdef WIN32
-    #define STR_CASE_CMP(x,y) ::_stricmp(x,y)
-#else
-    #define STR_CASE_CMP(x,y) ::strcasecmp(x,y)
 #endif
 
 namespace webrtc {
@@ -464,8 +457,8 @@ int32_t FilePlayerImpl::SetUpAudioDecoder()
 #ifdef WEBRTC_MODULE_UTILITY_VIDEO
 VideoFilePlayerImpl::VideoFilePlayerImpl(uint32_t instanceID,
                                          FileFormats fileFormat)
-    : FilePlayerImpl(instanceID,fileFormat),
-      _videoDecoder(*new VideoCoder(instanceID)),
+    : FilePlayerImpl(instanceID, fileFormat),
+      video_decoder_(new VideoCoder(instanceID)),
       video_codec_info_(),
       _decodedVideoFrames(0),
       _encodedData(*new EncodedVideoData()),
@@ -475,16 +468,15 @@ VideoFilePlayerImpl::VideoFilePlayerImpl(uint32_t instanceID,
       _accumulatedRenderTimeMs(0),
       _frameLengthMS(0),
       _numberOfFramesRead(0),
-      _videoOnly(false)
-{
-    memset(&video_codec_info_, 0, sizeof(video_codec_info_));
+      _videoOnly(false) {
+  memset(&video_codec_info_, 0, sizeof(video_codec_info_));
 }
 
 VideoFilePlayerImpl::~VideoFilePlayerImpl()
 {
     delete _critSec;
     delete &_frameScaler;
-    delete &_videoDecoder;
+    video_decoder_.reset();
     delete &_encodedData;
 }
 
@@ -530,7 +522,7 @@ int32_t VideoFilePlayerImpl::StopPlayingFile()
     CriticalSectionScoped lock( _critSec);
 
     _decodedVideoFrames = 0;
-    _videoDecoder.ResetDecoder();
+    video_decoder_.reset(new VideoCoder(_instanceID));
 
     return FilePlayerImpl::StopPlayingFile();
 }
@@ -585,7 +577,7 @@ int32_t VideoFilePlayerImpl::GetVideoFromFile(I420VideoFrame& videoFrame)
         // Set the timestamp manually since there is no timestamp in the file.
         // Update timestam according to 90 kHz stream.
         _encodedData.timeStamp += (90000 / video_codec_info_.maxFramerate);
-        retVal = _videoDecoder.Decode(videoFrame, _encodedData);
+        retVal = video_decoder_->Decode(videoFrame, _encodedData);
     }
 
     int64_t renderTimeMs = TickTime::MillisecondTimestamp();
@@ -703,14 +695,13 @@ int32_t VideoFilePlayerImpl::SetUpVideoDecoder()
     }
 
     int32_t useNumberOfCores = 1;
-    if(_videoDecoder.SetDecodeCodec(video_codec_info_, useNumberOfCores) != 0)
-    {
-        WEBRTC_TRACE(
-            kTraceWarning,
-            kTraceVideo,
-            _instanceID,
-            "FilePlayerImpl::SetUpVideoDecoder() codec %s not supported",
-            video_codec_info_.plName);
+    if (video_decoder_->SetDecodeCodec(video_codec_info_, useNumberOfCores) !=
+        0) {
+      WEBRTC_TRACE(kTraceWarning,
+                   kTraceVideo,
+                   _instanceID,
+                   "FilePlayerImpl::SetUpVideoDecoder() codec %s not supported",
+                   video_codec_info_.plName);
         return -1;
     }
 
@@ -728,4 +719,4 @@ int32_t VideoFilePlayerImpl::SetUpVideoDecoder()
     return 0;
 }
 #endif // WEBRTC_MODULE_UTILITY_VIDEO
-} // namespace webrtc
+}  // namespace webrtc

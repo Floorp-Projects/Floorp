@@ -32,24 +32,6 @@ enum ViEPacketTimeout {
   PacketReceived = 1
 };
 
-// This class declares an abstract interface for a user defined observer. It is
-// up to the VideoEngine user to implement a derived class which implements the
-// observer class. The observer is registered using RegisterObserver() and
-// deregistered using DeregisterObserver().
-class WEBRTC_DLLEXPORT ViENetworkObserver {
- public:
-  // This method will be called periodically delivering a dead‐or‐alive
-  // decision for a specified channel.
-  virtual void OnPeriodicDeadOrAlive(const int video_channel,
-                                     const bool alive) = 0;
-
-  // This method is called once if a packet timeout occurred.
-  virtual void PacketTimeout(const int video_channel,
-                             const ViEPacketTimeout timeout) = 0;
- protected:
-  virtual ~ViENetworkObserver() {}
-};
-
 class WEBRTC_DLLEXPORT ViENetwork {
  public:
   // Default values.
@@ -95,27 +77,6 @@ class WEBRTC_DLLEXPORT ViENetwork {
   // RTP packet will be packetized based on this MTU to optimize performance
   // over the network.
   virtual int SetMTU(int video_channel, unsigned int mtu) = 0;
-
-  // This function enables or disables warning reports if packets have not
-  // been received for a specified time interval.
-  virtual int SetPacketTimeoutNotification(const int video_channel,
-                                           bool enable,
-                                           int timeout_seconds) = 0;
-
-  // Registers an instance of a user implementation of the ViENetwork
-  // observer.
-  virtual int RegisterObserver(const int video_channel,
-                               ViENetworkObserver& observer) = 0;
-
-  // Removes a registered instance of ViENetworkObserver.
-  virtual int DeregisterObserver(const int video_channel) = 0;
-
-  // This function enables or disables the periodic dead‐or‐alive callback
-  // functionality for a specified channel.
-  virtual int SetPeriodicDeadOrAliveStatus(
-      const int video_channel,
-      const bool enable,
-      const unsigned int sample_time_seconds = KDefaultSampleTimeSeconds) = 0;
 
  protected:
   ViENetwork() {}

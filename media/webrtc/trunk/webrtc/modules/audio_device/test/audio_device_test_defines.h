@@ -11,10 +11,10 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_TEST_DEFINES_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_TEST_DEFINES_H
 
-#include "audio_device.h"
-#include "common_types.h"
-#include "process_thread.h"
-#include "trace.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/audio_device/include/audio_device.h"
+#include "webrtc/modules/utility/interface/process_thread.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #ifdef _WIN32
 #define MACRO_DEFAULT_DEVICE AudioDeviceModule::kDefaultDevice
@@ -74,4 +74,3 @@ const char* GetFilename(const char* filename);
 const char* GetResource(const char* resource);
 
 #endif  // WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_TEST_DEFINES_H
-

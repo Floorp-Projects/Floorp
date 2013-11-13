@@ -108,12 +108,18 @@ private:
   std::vector<MockUdpSocketWrapper*> sockets_created_;
 };
 
+// Disable for TSan v2, see
+// https://code.google.com/p/webrtc/issues/detail?id=2334 for details.
+#if !defined(THREAD_SANITIZER)
+
 TEST_F(UDPTransportTest, CreateTransport) {
   int32_t id = 0;
   uint8_t threads = 1;
   UdpTransport* transport = UdpTransport::Create(id, threads);
   UdpTransport::Destroy(transport);
 }
+
+#endif // if !defined(THREAD_SANITIZER)
 
 // This test verifies that the mock_socket is not called from the constructor.
 TEST_F(UDPTransportTest, ConstructorDoesNotCreateSocket) {

@@ -13,6 +13,7 @@
 
 #include <math.h>
 
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "ACMTest.h"
 #include "Channel.h"
 #include "PCMFile.h"
@@ -83,8 +84,8 @@ class TestStereo : public ACMTest {
 
   int test_mode_;
 
-  AudioCodingModule* acm_a_;
-  AudioCodingModule* acm_b_;
+  scoped_ptr<AudioCodingModule> acm_a_;
+  scoped_ptr<AudioCodingModule> acm_b_;
 
   TestPackStereo* channel_a2b_;
 

@@ -36,60 +36,51 @@ namespace js {
  *
  * Don't forget to update XDR_BYTECODE_VERSION in vm/Xdr.h for all such
  * incompatible source note or other bytecode changes.
- *
- * FIXME: Use higher-order macro to force this to be in sync with
- * js_SrcNoteSpec.  Bug 922070.
  */
+#define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
+    M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
+    M(SRC_IF,           "if",          0)  /* JSOP_IFEQ bytecode is from an if-then. */            \
+    M(SRC_IF_ELSE,      "if-else",     1)  /* JSOP_IFEQ bytecode is from an if-then-else. */       \
+    M(SRC_COND,         "cond",        1)  /* JSOP_IFEQ is from conditional ?: operator. */        \
+    M(SRC_FOR,          "for",         3)  /* JSOP_NOP or JSOP_POP in for(;;) loop head. */        \
+    M(SRC_WHILE,        "while",       1)  /* JSOP_GOTO to for or while loop condition from before \
+                                              loop, else JSOP_NOP at top of do-while loop. */      \
+    M(SRC_FOR_IN,       "for-in",      1)  /* JSOP_GOTO to for-in loop condition from before       \
+                                              loop. */                                             \
+    M(SRC_FOR_OF,       "for-of",      1)  /* JSOP_GOTO to for-of loop condition from before       \
+                                              loop. */                                             \
+    M(SRC_CONTINUE,     "continue",    0)  /* JSOP_GOTO is a continue. */                          \
+    M(SRC_BREAK,        "break",       0)  /* JSOP_GOTO is a break. */                             \
+    M(SRC_BREAK2LABEL,  "break2label", 0)  /* JSOP_GOTO for 'break label'. */                      \
+    M(SRC_SWITCHBREAK,  "switchbreak", 0)  /* JSOP_GOTO is a break in a switch. */                 \
+    M(SRC_TABLESWITCH,  "tableswitch", 1)  /* JSOP_TABLESWITCH; offset points to end of switch. */ \
+    M(SRC_CONDSWITCH,   "condswitch",  2)  /* JSOP_CONDSWITCH; 1st offset points to end of switch, \
+                                              2nd points to first JSOP_CASE. */                    \
+    M(SRC_NEXTCASE,     "nextcase",    1)  /* Distance forward from one CASE in a CONDSWITCH to    \
+                                              the next. */                                         \
+    M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
+    M(SRC_HIDDEN,       "hidden",      0)  /* Opcode shouldn't be decompiled. */                   \
+    M(SRC_CATCH,        "catch",       0)  /* Catch block has guard. */                            \
+    M(SRC_TRY,          "try",         1)  /* JSOP_TRY, offset points to goto at the end of the    \
+                                              try block. */                                        \
+    /* All notes below here are "gettable".  See SN_IS_GETTABLE below. */                          \
+    M(SRC_COLSPAN,      "colspan",     1)  /* Number of columns this opcode spans. */              \
+    M(SRC_NEWLINE,      "newline",     0)  /* Bytecode follows a source newline. */                \
+    M(SRC_SETLINE,      "setline",     1)  /* A file-absolute source line number note. */          \
+    M(SRC_UNUSED22,     "unused22",    0)  /* Unused. */                                           \
+    M(SRC_UNUSED23,     "unused23",    0)  /* Unused. */                                           \
+    M(SRC_XDELTA,       "xdelta",      0)  /* 24-31 are for extended delta notes. */
+
 enum SrcNoteType {
-    SRC_NULL        = 0,        /* terminates a note vector */
+#define DEFINE_SRC_NOTE_TYPE(sym, name, arity) sym,
+    FOR_EACH_SRC_NOTE_TYPE(DEFINE_SRC_NOTE_TYPE)
+#undef DEFINE_SRC_NOTE_TYPE
 
-    SRC_IF          = 1,        /* JSOP_IFEQ bytecode is from an if-then */
-    SRC_IF_ELSE     = 2,        /* JSOP_IFEQ bytecode is from an if-then-else */
-    SRC_COND        = 3,        /* JSOP_IFEQ is from conditional ?: operator */
-
-    SRC_FOR         = 4,        /* JSOP_NOP or JSOP_POP in for(;;) loop head */
-
-    SRC_WHILE       = 5,        /* JSOP_GOTO to for or while loop condition
-                                   from before loop, else JSOP_NOP at top of
-                                   do-while loop */
-    SRC_FOR_IN      = 6,        /* JSOP_GOTO to for-in loop condition from
-                                   before loop */
-    SRC_FOR_OF      = 7,        /* JSOP_GOTO to for-of loop condition from
-                                   before loop */
-    SRC_CONTINUE    = 8,        /* JSOP_GOTO is a continue */
-    SRC_BREAK       = 9,        /* JSOP_GOTO is a break */
-    SRC_BREAK2LABEL = 10,       /* JSOP_GOTO for 'break label' */
-    SRC_SWITCHBREAK = 11,       /* JSOP_GOTO is a break in a switch */
-
-    SRC_TABLESWITCH = 12,       /* JSOP_TABLESWITCH, offset points to end of
-                                   switch */
-    SRC_CONDSWITCH  = 13,       /* JSOP_CONDSWITCH, 1st offset points to end of
-                                   switch, 2nd points to first JSOP_CASE */
-
-    SRC_NEXTCASE    = 14,       /* distance forward from one CASE in a
-                                   CONDSWITCH to the next */
-
-    SRC_ASSIGNOP    = 15,       /* += or another assign-op follows */
-
-    SRC_HIDDEN      = 16,       /* opcode shouldn't be decompiled */
-
-    SRC_CATCH       = 17,       /* catch block has guard */
-
-    SRC_TRY         = 18,       /* JSOP_TRY, offset points to goto at the
-                                   end of the try block. */
-
-    /* All notes below here are "gettable".  See SN_IS_GETTABLE below. */
-    SRC_LAST_GETTABLE = SRC_TRY,
-
-    SRC_COLSPAN     = 19,       /* number of columns this opcode spans */
-    SRC_NEWLINE     = 20,       /* bytecode follows a source newline */
-    SRC_SETLINE     = 21,       /* a file-absolute source line number note */
-
-    SRC_UNUSED22    = 22,
-    SRC_UNUSED23    = 23,
-
-    SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
+    SRC_LAST,
+    SRC_LAST_GETTABLE = SRC_TRY
 };
+
+static_assert(SRC_XDELTA == 24, "SRC_XDELTA should be 24");
 
 /* A source note array is terminated by an all-zero element. */
 inline void

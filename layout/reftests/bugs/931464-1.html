@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+<fieldset id="f" style="overflow: auto;"></fieldset>
+<script>
+function boom()
+{
+  var f = document.getElementById("f");
+  var s = document.createElement("span");
+  s.textContent = "Hello Kitty";
+  f.appendChild(s);
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", boom);
+</script>
+</body>
+</html>

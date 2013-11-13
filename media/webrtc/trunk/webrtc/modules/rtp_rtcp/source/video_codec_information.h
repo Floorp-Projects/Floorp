@@ -23,6 +23,6 @@ public:
     virtual RtpVideoCodecTypes Type() = 0;
     virtual ~VideoCodecInformation(){};
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_VIDEO_CODEC_INFORMATION_H_

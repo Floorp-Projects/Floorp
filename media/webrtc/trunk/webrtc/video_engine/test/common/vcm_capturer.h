@@ -20,7 +20,7 @@ namespace test {
 
 class VcmCapturer : public VideoCapturer, public VideoCaptureDataCallback {
  public:
-  static VcmCapturer* Create(newapi::VideoSendStreamInput* input, size_t width,
+  static VcmCapturer* Create(VideoSendStreamInput* input, size_t width,
                              size_t height, size_t target_fps);
   virtual ~VcmCapturer();
 
@@ -33,7 +33,7 @@ class VcmCapturer : public VideoCapturer, public VideoCaptureDataCallback {
       OVERRIDE;
 
  private:
-  explicit VcmCapturer(newapi::VideoSendStreamInput* input);
+  explicit VcmCapturer(VideoSendStreamInput* input);
   bool Init(size_t width, size_t height, size_t target_fps);
   void Destroy();
 

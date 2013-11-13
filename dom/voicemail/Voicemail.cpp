@@ -10,12 +10,14 @@
 #include "nsIDOMMozVoicemailStatus.h"
 #include "nsIDOMMozVoicemailEvent.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsDOMClassInfo.h"
 #include "nsServiceManagerUtils.h"
 #include "GeneratedEvents.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
+const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 
 using namespace mozilla::dom;
 
@@ -67,18 +69,48 @@ Voicemail::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return MozVoicemailBinding::Wrap(aCx, aScope, this);
 }
 
+bool
+Voicemail::IsValidServiceId(uint32_t aServiceId) const
+{
+  uint32_t numClients = mozilla::Preferences::GetUint(kPrefRilNumRadioInterfaces, 1);
+
+  return aServiceId < numClients;
+}
+
+bool
+Voicemail::PassedOrDefaultServiceId(const Optional<uint32_t>& aServiceId,
+                                    uint32_t& aResult) const
+{
+  if (aServiceId.WasPassed()) {
+    if (!IsValidServiceId(aServiceId.Value())) {
+      return false;
+    }
+    aResult = aServiceId.Value();
+  } else {
+    mProvider->GetVoicemailDefaultServiceId(&aResult);
+  }
+
+  return true;
+}
+
 // MozVoicemail WebIDL
 
 already_AddRefed<nsIDOMMozVoicemailStatus>
-Voicemail::GetStatus(ErrorResult& aRv) const
+Voicemail::GetStatus(const Optional<uint32_t>& aServiceId,
+                     ErrorResult& aRv) const
 {
   if (!mProvider) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
+  uint32_t id = 0;
+  if (!PassedOrDefaultServiceId(aServiceId, id)) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return nullptr;
+  }
   nsCOMPtr<nsIDOMMozVoicemailStatus> status;
-  nsresult rv = mProvider->GetVoicemailStatus(getter_AddRefs(status));
+  nsresult rv = mProvider->GetVoicemailStatus(id, getter_AddRefs(status));
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -88,7 +120,8 @@ Voicemail::GetStatus(ErrorResult& aRv) const
 }
 
 void
-Voicemail::GetNumber(nsString& aNumber, ErrorResult& aRv) const
+Voicemail::GetNumber(const Optional<uint32_t>& aServiceId, nsString& aNumber,
+                     ErrorResult& aRv) const
 {
   aNumber.SetIsVoid(true);
 
@@ -97,11 +130,18 @@ Voicemail::GetNumber(nsString& aNumber, ErrorResult& aRv) const
     return;
   }
 
-  aRv = mProvider->GetVoicemailNumber(aNumber);
+  uint32_t id = 0;
+  if (!PassedOrDefaultServiceId(aServiceId, id)) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  aRv = mProvider->GetVoicemailNumber(id, aNumber);
 }
 
 void
-Voicemail::GetDisplayName(nsString& aDisplayName, ErrorResult& aRv) const
+Voicemail::GetDisplayName(const Optional<uint32_t>& aServiceId, nsString& aDisplayName,
+                          ErrorResult& aRv) const
 {
   aDisplayName.SetIsVoid(true);
 
@@ -110,7 +150,13 @@ Voicemail::GetDisplayName(nsString& aDisplayName, ErrorResult& aRv) const
     return;
   }
 
-  aRv = mProvider->GetVoicemailDisplayName(aDisplayName);
+  uint32_t id = 0;
+  if (!PassedOrDefaultServiceId(aServiceId, id)) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  aRv = mProvider->GetVoicemailDisplayName(id, aDisplayName);
 }
 
 // nsIVoicemailListener

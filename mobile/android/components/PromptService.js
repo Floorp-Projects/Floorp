@@ -218,6 +218,7 @@ InternalPrompt.prototype = {
 
   alert: function alert(aTitle, aText) {
     let p = this._getPrompt(aTitle, aText, [ PromptUtils.getLocaleString("OK") ]);
+    p.setHint("alert");
     this.showPrompt(p);
   },
 
@@ -230,6 +231,7 @@ InternalPrompt.prototype = {
 
   confirm: function confirm(aTitle, aText) {
     let p = this._getPrompt(aTitle, aText);
+    p.setHint("confirm");
     let data = this.showPrompt(p);
     return (data.button == 0);
   },
@@ -291,6 +293,7 @@ InternalPrompt.prototype = {
 
   nsIPrompt_prompt: function nsIPrompt_prompt(aTitle, aText, aValue, aCheckMsg, aCheckState) {
     let p = this._getPrompt(aTitle, aText, null, aCheckMsg, aCheckState);
+    p.setHint("prompt");
     p.addTextbox({
       value: aValue.value,
       autofocus: true

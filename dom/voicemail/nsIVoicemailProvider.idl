@@ -22,7 +22,7 @@ interface nsIVoicemailListener : nsISupports
  * XPCOM component (in the content process) that provides the voicemail
  * information.
  */
-[scriptable, uuid(38746f3c-f4e3-4804-b900-ba2463b923c8)]
+[scriptable, uuid(1bbfff90-88f7-4d73-896e-9620a0000ab0)]
 interface nsIVoicemailProvider : nsISupports
 {
   readonly attribute unsigned long voicemailDefaultServiceId;
@@ -35,7 +35,7 @@ interface nsIVoicemailProvider : nsISupports
   void registerVoicemailMsg(in nsIVoicemailListener listener);
   void unregisterVoicemailMsg(in nsIVoicemailListener listener);
 
-  readonly attribute nsIDOMMozVoicemailStatus voicemailStatus;
-  readonly attribute DOMString voicemailNumber;
-  readonly attribute DOMString voicemailDisplayName;
+  nsIDOMMozVoicemailStatus getVoicemailStatus(in unsigned long clientId);
+  DOMString getVoicemailNumber(in unsigned long clientId);
+  DOMString getVoicemailDisplayName(in unsigned long clientId);
 };

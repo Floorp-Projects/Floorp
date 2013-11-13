@@ -60,6 +60,6 @@ class ThreadWindows : public ThreadWrapper {
 
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_SYSTEM_WRAPPERS_SOURCE_THREAD_WIN_H_

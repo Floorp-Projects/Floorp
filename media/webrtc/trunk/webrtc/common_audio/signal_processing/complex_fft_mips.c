@@ -9,8 +9,8 @@
  */
 
 
-#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/common_audio/signal_processing/complex_fft_tables.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
 #define CFFTSFT 14
 #define CFFTRND 1
@@ -320,4 +320,3 @@ int WebRtcSpl_ComplexIFFT(int16_t frfi[], int stages, int mode) {
   return scale;
 
 }
-

@@ -210,7 +210,7 @@
 
     <!-- Navigation bar -->
     <appbar id="navbar" mousethrough="never" visible="true">
-      <hbox id="progress-container" layer="true">
+      <hbox id="progress-container" layer="true" observes="bcast_windowState">
         <hbox id="progress-control" />
       </hbox>
 

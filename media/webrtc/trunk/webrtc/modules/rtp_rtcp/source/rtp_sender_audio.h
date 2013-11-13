@@ -121,6 +121,6 @@ private:
     uint8_t     _audioLevelIndicationID;
     uint8_t     _audioLevel_dBov;
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_SENDER_AUDIO_H_

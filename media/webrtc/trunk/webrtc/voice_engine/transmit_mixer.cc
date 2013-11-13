@@ -41,18 +41,26 @@ TransmitMixer::OnPeriodicProcess()
                  "TransmitMixer::OnPeriodicProcess()");
 
 #if defined(WEBRTC_VOICE_ENGINE_TYPING_DETECTION)
-    if (_typingNoiseWarning)
+    if (_typingNoiseWarningPending)
     {
         CriticalSectionScoped cs(&_callbackCritSect);
         if (_voiceEngineObserverPtr)
         {
-            WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
-                         "TransmitMixer::OnPeriodicProcess() => "
-                         "CallbackOnError(VE_TYPING_NOISE_WARNING)");
-            _voiceEngineObserverPtr->CallbackOnError(-1,
-                                                     VE_TYPING_NOISE_WARNING);
+            if (_typingNoiseDetected) {
+              WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
+                           "TransmitMixer::OnPeriodicProcess() => "
+                           "CallbackOnError(VE_TYPING_NOISE_WARNING)");
+              _voiceEngineObserverPtr->CallbackOnError(-1,
+                                                       VE_TYPING_NOISE_WARNING);
+            } else {
+              WEBRTC_TRACE(kTraceInfo, kTraceVoice, VoEId(_instanceId, -1),
+                           "TransmitMixer::OnPeriodicProcess() => "
+                           "CallbackOnError(VE_TYPING_NOISE_OFF_WARNING)");
+              _voiceEngineObserverPtr->CallbackOnError(
+                  -1, VE_TYPING_NOISE_OFF_WARNING);
+            }
         }
-        _typingNoiseWarning = false;
+        _typingNoiseWarningPending = false;
     }
 #endif
 
@@ -189,7 +197,8 @@ TransmitMixer::TransmitMixer(uint32_t instanceId) :
     _timeActive(0),
     _timeSinceLastTyping(0),
     _penaltyCounter(0),
-    _typingNoiseWarning(false),
+    _typingNoiseWarningPending(false),
+    _typingNoiseDetected(false),
     _timeWindow(10), // 10ms slots accepted to count as a hit
     _costPerTyping(100), // Penalty added for a typing + activity coincide
     _reportingThreshold(300), // Threshold for _penaltyCounter
@@ -305,13 +314,11 @@ TransmitMixer::SetAudioProcessingModule(AudioProcessing* audioProcessingModule)
 }
 
 void TransmitMixer::GetSendCodecInfo(int* max_sample_rate, int* max_channels) {
-  ScopedChannel sc(*_channelManagerPtr);
-  void* iterator = NULL;
-  Channel* channel = sc.GetFirstChannel(iterator);
-
   *max_sample_rate = 8000;
   *max_channels = 1;
-  while (channel != NULL) {
+  for (ChannelManager::Iterator it(_channelManagerPtr); it.IsValid();
+       it.Increment()) {
+    Channel* channel = it.GetChannel();
     if (channel->Sending()) {
       CodecInst codec;
       channel->GetSendCodec(codec);
@@ -321,7 +328,6 @@ void TransmitMixer::GetSendCodecInfo(int* max_sample_rate, int* max_channels) {
                                   std::max(*max_sample_rate, codec.plfreq));
       *max_channels = std::max(*max_channels, codec.channels);
     }
-    channel = sc.GetNextChannel(iterator);
   }
 }
 
@@ -424,11 +430,10 @@ TransmitMixer::DemuxAndMix()
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId, -1),
                  "TransmitMixer::DemuxAndMix()");
 
-    ScopedChannel sc(*_channelManagerPtr);
-    void* iterator(NULL);
-    Channel* channelPtr = sc.GetFirstChannel(iterator);
-    while (channelPtr != NULL)
+    for (ChannelManager::Iterator it(_channelManagerPtr); it.IsValid();
+         it.Increment())
     {
+        Channel* channelPtr = it.GetChannel();
         if (channelPtr->InputIsOnHold())
         {
             channelPtr->UpdateLocalTimeStamp();
@@ -438,9 +443,25 @@ TransmitMixer::DemuxAndMix()
             channelPtr->Demultiplex(_audioFrame);
             channelPtr->PrepareEncodeAndSend(_audioFrame.sample_rate_hz_);
         }
-        channelPtr = sc.GetNextChannel(iterator);
     }
     return 0;
+}
+
+void TransmitMixer::DemuxAndMix(const int voe_channels[],
+                                int number_of_voe_channels) {
+  for (int i = 0; i < number_of_voe_channels; ++i) {
+    voe::ChannelOwner ch = _channelManagerPtr->GetChannel(voe_channels[i]);
+    voe::Channel* channel_ptr = ch.channel();
+    if (channel_ptr) {
+      if (channel_ptr->InputIsOnHold()) {
+        channel_ptr->UpdateLocalTimeStamp();
+      } else if (channel_ptr->Sending()) {
+        // Demultiplex makes a copy of its input.
+        channel_ptr->Demultiplex(_audioFrame);
+        channel_ptr->PrepareEncodeAndSend(_audioFrame.sample_rate_hz_);
+      }
+    }
+  }
 }
 
 int32_t
@@ -449,18 +470,26 @@ TransmitMixer::EncodeAndSend()
     WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(_instanceId, -1),
                  "TransmitMixer::EncodeAndSend()");
 
-    ScopedChannel sc(*_channelManagerPtr);
-    void* iterator(NULL);
-    Channel* channelPtr = sc.GetFirstChannel(iterator);
-    while (channelPtr != NULL)
+    for (ChannelManager::Iterator it(_channelManagerPtr); it.IsValid();
+         it.Increment())
     {
+        Channel* channelPtr = it.GetChannel();
         if (channelPtr->Sending() && !channelPtr->InputIsOnHold())
         {
             channelPtr->EncodeAndSend();
         }
-        channelPtr = sc.GetNextChannel(iterator);
     }
     return 0;
+}
+
+void TransmitMixer::EncodeAndSend(const int voe_channels[],
+                                  int number_of_voe_channels) {
+  for (int i = 0; i < number_of_voe_channels; ++i) {
+    voe::ChannelOwner ch = _channelManagerPtr->GetChannel(voe_channels[i]);
+    voe::Channel* channel_ptr = ch.channel();
+    if (channel_ptr && channel_ptr->Sending() && !channel_ptr->InputIsOnHold())
+      channel_ptr->EncodeAndSend();
+  }
 }
 
 uint32_t TransmitMixer::CaptureLevel() const
@@ -1362,8 +1391,17 @@ int TransmitMixer::TypingDetection(bool keyPressed)
         if (_penaltyCounter > _reportingThreshold)
         {
             // Triggers a callback in OnPeriodicProcess().
-            _typingNoiseWarning = true;
+            _typingNoiseWarningPending = true;
+            _typingNoiseDetected = true;
         }
+    }
+
+    // If there is already a warning pending, do not change the state.
+    // Otherwise sets a warning pending if noise is off now but previously on.
+    if (!_typingNoiseWarningPending && _typingNoiseDetected) {
+      // Triggers a callback in OnPeriodicProcess().
+      _typingNoiseWarningPending = true;
+      _typingNoiseDetected = false;
     }
 
     if (_penaltyCounter > 0)
@@ -1422,6 +1460,6 @@ bool TransmitMixer::IsStereoChannelSwappingEnabled() {
   return swap_stereo_channels_;
 }
 
-}  //  namespace voe
+}  // namespace voe
 
-}  //  namespace webrtc
+}  // namespace webrtc

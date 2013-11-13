@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <vector>
 
 #include "gtest/gtest.h"
 #include "webrtc/typedefs.h"
@@ -20,6 +21,8 @@
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
+
+namespace acm1 {
 
 namespace {
 
@@ -479,4 +482,6 @@ TEST(NackTest, RoudTripTimeIsApplied) {
   EXPECT_EQ(5, nack_list[1]);
 }
 
-}  // webrtc
+}  // namespace acm1
+
+}  // namespace webrtc

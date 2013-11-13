@@ -2005,6 +2005,12 @@ nsOfflineCacheUpdate::NotifyUpdateAvailability(bool updateAvailable)
 void
 nsOfflineCacheUpdate::AssociateDocuments(nsIApplicationCache* cache)
 {
+    if (!cache) {
+        LOG(("nsOfflineCacheUpdate::AssociateDocuments bypassed"
+             ", no cache provided [this=%p]", this));
+        return;
+    }
+
     nsCOMArray<nsIOfflineCacheUpdateObserver> observers;
     GatherObservers(observers);
 

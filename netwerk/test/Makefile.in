@@ -22,8 +22,6 @@ _RES_FILES 	= urlparse.dat \
 		  $(NULL)
 libs:: $(_RES_FILES)
 	$(INSTALL) $^ $(DIST)/bin/res
-install:: $(_RES_FILES)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
 
 # One of the xpcshell unit tests needs this file, so make sure it winds
 #  up in the test directory.

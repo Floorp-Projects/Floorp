@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_capture_android.h"
+#include "webrtc/modules/video_capture/android/video_capture_android.h"
 
 #include <stdio.h>
 
-#include "critical_section_wrapper.h"
-#include "ref_count.h"
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/ref_count.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #include "AndroidJNIWrapper.h"
 #include "mozilla/Assertions.h"

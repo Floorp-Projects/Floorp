@@ -105,6 +105,7 @@
     _(SqrtD)                        \
     _(SqrtF)                        \
     _(Atan2D)                       \
+    _(Hypot)                        \
     _(PowI)                         \
     _(PowD)                         \
     _(Random)                       \
@@ -126,6 +127,7 @@
     _(ConcatPar)                    \
     _(CharCodeAt)                   \
     _(FromCharCode)                 \
+    _(StringSplit)                  \
     _(Int32ToDouble)                \
     _(Float32ToDouble)              \
     _(DoubleToFloat32)              \

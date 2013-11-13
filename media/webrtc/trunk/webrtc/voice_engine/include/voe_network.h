@@ -89,36 +89,11 @@ public:
     virtual int ReceivedRTCPPacket(
         int channel, const void* data, unsigned int length) = 0;
 
-    // Enables or disables warnings that report if packets have not been
-    // received in |timeoutSeconds| seconds for a specific |channel|.
-    virtual int SetPacketTimeoutNotification(
-        int channel, bool enable, int timeoutSeconds = 2) = 0;
-
-    // Gets the current time-out notification status.
-    virtual int GetPacketTimeoutNotification(
-        int channel, bool& enabled, int& timeoutSeconds) = 0;
-
-    // Installs the observer class implementation for a specified |channel|.
-    virtual int RegisterDeadOrAliveObserver(
-        int channel, VoEConnectionObserver& observer) = 0;
-
-    // Removes the observer class implementation for a specified |channel|.
-    virtual int DeRegisterDeadOrAliveObserver(int channel) = 0;
-
-    // Enables or disables the periodic dead-or-alive callback functionality
-    // for a specified |channel|.
-    virtual int SetPeriodicDeadOrAliveStatus(
-        int channel, bool enable, int sampleTimeSeconds = 2) = 0;
-
-    // Gets the current dead-or-alive notification status.
-    virtual int GetPeriodicDeadOrAliveStatus(
-        int channel, bool& enabled, int& sampleTimeSeconds) = 0;
-
 protected:
     VoENetwork() {}
     virtual ~VoENetwork() {}
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  //  WEBRTC_VOICE_ENGINE_VOE_NETWORK_H

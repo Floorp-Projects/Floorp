@@ -85,4 +85,15 @@ function run_test() {
   Cu.evalInSandbox("(" + function() {
     checkIfCalled();
   }.toSource() + ")()", epsb);
+
+  // exportFunction and createObjectIn should be available from Cu too.
+  var newContentObject = Cu.createObjectIn(subsb, {defineAs:"importedObject2"});
+  var wasCalled = false;
+  Cu.exportFunction(function(arg){wasCalled = arg.wasCalled;}, newContentObject, "privMethod");
+
+  Cu.evalInSandbox("(" + function () {
+    importedObject2.privMethod({wasCalled: true});
+  }.toSource() + ")()", subsb);
+
+  do_check_true(wasCalled, true);
 }

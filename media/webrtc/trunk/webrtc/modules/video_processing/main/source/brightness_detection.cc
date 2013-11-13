@@ -193,4 +193,4 @@ VPMBrightnessDetection::ProcessFrame(const I420VideoFrame& frame,
     }
 }
 
-} //namespace
+}  // namespace

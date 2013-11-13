@@ -31,6 +31,6 @@ struct DelayValues
     DelayValue delayValues[NoOfDelayValues];
 };
 
-} //namespace videocapturemodule
-} //namespace webrtc
+}  // namespace videocapturemodule
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_VIDEO_CAPTURE_DELAY_H_

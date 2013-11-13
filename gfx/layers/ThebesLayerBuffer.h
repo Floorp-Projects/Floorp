@@ -21,6 +21,7 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "LayersTypes.h"
 
 struct gfxMatrix;
 struct nsIntSize;
@@ -111,6 +112,8 @@ protected:
     TOP, BOTTOM
   };
   nsIntRect GetQuadrantRectangle(XSide aXSide, YSide aYSide) const;
+
+  gfx::Rect GetSourceRectangle(XSide aXSide, YSide aYSide) const;
 
   /*
    * If aMask is non-null, then it is used as an alpha mask for rendering this
@@ -216,6 +219,7 @@ public:
     nsIntRegion mRegionToDraw;
     nsIntRegion mRegionToInvalidate;
     bool mDidSelfCopy;
+    DrawRegionClip mClip;
   };
 
   enum {

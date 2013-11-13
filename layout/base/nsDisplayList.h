@@ -3061,15 +3061,24 @@ public:
       : mFrame(nullptr)
       , mTransformList(aTransformList)
       , mToTransformOrigin(aToTransformOrigin)
-      , mToPerspectiveOrigin(aToPerspectiveOrigin)
       , mChildPerspective(aChildPerspective)
+      , mToPerspectiveOrigin(aToPerspectiveOrigin)
     {}
 
     const nsIFrame* mFrame;
     const nsCSSValueList* mTransformList;
     const gfxPoint3D mToTransformOrigin;
-    const gfxPoint3D mToPerspectiveOrigin;
     nscoord mChildPerspective;
+
+    const gfxPoint3D& GetToPerspectiveOrigin() const
+    {
+      NS_ASSERTION(mChildPerspective > 0, "Only valid with mChildPerspective > 0");
+      return mToPerspectiveOrigin;
+    }
+
+  private:
+    // mToPerspectiveOrigin is only valid if mChildPerspective > 0.
+    gfxPoint3D mToPerspectiveOrigin;
   };
 
   /**

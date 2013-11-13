@@ -6,7 +6,7 @@
 #include "SourceSurfaceCG.h"
 #include "DrawTargetCG.h"
 
-#include "QuartzSupport.h"
+#include "MacIOSurface.h"
 #include "Tools.h"
 
 namespace mozilla {

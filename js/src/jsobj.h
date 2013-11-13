@@ -409,10 +409,8 @@ class JSObject : public js::ObjectImpl
     }
 
     inline bool nativeSetSlotIfHasType(js::Shape *shape, const js::Value &value);
-
-    static inline void nativeSetSlotWithType(js::ExclusiveContext *cx,
-                                             js::HandleObject, js::Shape *shape,
-                                             const js::Value &value);
+    inline void nativeSetSlotWithType(js::ExclusiveContext *cx, js::Shape *shape,
+                                      const js::Value &value);
 
     inline const js::Value &getReservedSlot(uint32_t index) const {
         JS_ASSERT(index < JSSLOT_FREE(getClass()));
@@ -642,12 +640,11 @@ class JSObject : public js::ObjectImpl
     }
 
     inline bool setDenseElementIfHasType(uint32_t index, const js::Value &val);
-    static inline void setDenseElementWithType(js::ExclusiveContext *cx, js::HandleObject obj,
-                                               uint32_t index, const js::Value &val);
-    static inline void initDenseElementWithType(js::ExclusiveContext *cx, js::HandleObject obj,
-                                                uint32_t index, const js::Value &val);
-    static inline void setDenseElementHole(js::ExclusiveContext *cx,
-                                           js::HandleObject obj, uint32_t index);
+    inline void setDenseElementWithType(js::ExclusiveContext *cx, uint32_t index,
+                                        const js::Value &val);
+    inline void initDenseElementWithType(js::ExclusiveContext *cx, uint32_t index,
+                                         const js::Value &val);
+    inline void setDenseElementHole(js::ExclusiveContext *cx, uint32_t index);
     static inline void removeDenseElementForSparseIndex(js::ExclusiveContext *cx,
                                                         js::HandleObject obj, uint32_t index);
 
@@ -1394,7 +1391,6 @@ const unsigned DNP_DONT_PURGE   = 1;   /* suppress js_PurgeScopeChain */
 const unsigned DNP_UNQUALIFIED  = 2;   /* Unqualified property set.  Only used in
                                        the defineHow argument of
                                        js_SetPropertyHelper. */
-const unsigned DNP_SKIP_TYPE    = 4;   /* Don't update type information */
 
 /*
  * Return successfully added or changed shape or nullptr on error.

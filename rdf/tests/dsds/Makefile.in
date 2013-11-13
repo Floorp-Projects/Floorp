@@ -24,6 +24,3 @@ GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(RESOURCE_SAMPLES))
 
 libs::
 	$(INSTALL) $(addprefix $(srcdir)/,$(RESOURCE_SAMPLES)) $(SAMPLES_DIR)
-
-install:: $(RESOURCE_SAMPLES)
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/samples/rdf

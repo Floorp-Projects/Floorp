@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_SOURCE_INTERNAL_DEFINES_H_
 #define WEBRTC_MODULES_VIDEO_CODING_SOURCE_INTERNAL_DEFINES_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc
 {
@@ -53,6 +53,6 @@ inline int32_t VCMId(const int32_t vcmId, const int32_t receiverId = 0)
     return static_cast<int32_t>((vcmId << 16) + receiverId);
 }
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_SOURCE_INTERNAL_DEFINES_H_

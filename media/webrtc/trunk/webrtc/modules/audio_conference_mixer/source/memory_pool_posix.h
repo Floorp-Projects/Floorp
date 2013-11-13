@@ -163,6 +163,6 @@ int32_t MemoryPoolImpl<MemoryType>::CreateMemory(
     }
     return 0;
 }
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_MEMORY_POOL_GENERIC_H_

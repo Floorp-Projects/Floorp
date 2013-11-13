@@ -67,5 +67,5 @@ class VoEUnitTest : public Encryption {
   int _extChannel;
 };
 
-} //  namespace voetest
+}  // namespace voetest
 #endif // WEBRTC_VOICE_ENGINE_VOE_UNIT_TEST_H

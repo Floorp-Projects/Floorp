@@ -125,6 +125,7 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
     nsresult rv;
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
     NS_ENSURE_SUCCESS_VOID(rv);
+    NS_ENSURE_TRUE_VOID(sc);
 
     AutoPushJSContext cx(sc->GetNativeContext());
 
@@ -140,6 +141,7 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
     nsresult rv;
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
     NS_ENSURE_SUCCESS_VOID(rv);
+    NS_ENSURE_TRUE_VOID(sc);
 
     AutoPushJSContext cx(sc->GetNativeContext());
 

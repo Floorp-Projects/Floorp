@@ -26,9 +26,6 @@ ifneq (,$(SIMPLE_PROGRAMS))
 	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
 endif
 
-install::
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
-
 ifeq (,$(filter-out WINNT os2-emx, $(HOST_OS_ARCH)))
 getnativepath = $(call normalizepath,$(1))
 else

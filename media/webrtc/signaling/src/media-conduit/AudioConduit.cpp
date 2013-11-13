@@ -153,8 +153,9 @@ MediaConduitErrorCode WebrtcAudioConduit::Init(WebrtcAudioConduit *other)
 
       // get the JVM
       JavaVM *jvm = jsjni_GetVM();
+      JNIEnv* jenv = jsjni_GetJNIForThread();
 
-      if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
+      if (webrtc::VoiceEngine::SetAndroidObjects(jvm, jenv, (void*)context) != 0) {
         CSFLogError(logTag, "%s Unable to set Android objects", __FUNCTION__);
         return kMediaConduitSessionNotInited;
       }

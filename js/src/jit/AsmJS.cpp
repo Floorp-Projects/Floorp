@@ -1231,6 +1231,7 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     char *                         errorString_;
     uint32_t                       errorOffset_;
+    bool                           errorOverRecursed_;
 
     int64_t                        usecBefore_;
     SlowFunctionVector             slowFunctions_;
@@ -1260,6 +1261,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         globalAccesses_(cx),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
+        errorOverRecursed_(false),
         usecBefore_(PRMJ_Now()),
         slowFunctions_(cx),
         finishedFunctionBodies_(false)
@@ -1275,6 +1277,8 @@ class MOZ_STACK_CLASS ModuleCompiler
                                                  errorString_);
             js_free(errorString_);
         }
+        if (errorOverRecursed_)
+            js_ReportOverRecursed(cx_);
 
         // Avoid spurious Label assertions on compilation failure.
         if (!stackOverflowLabel_.bound())
@@ -1319,12 +1323,20 @@ class MOZ_STACK_CLASS ModuleCompiler
         JS_ASSERT(errorOffset_ == UINT32_MAX);
         JS_ASSERT(str);
         errorOffset_ = offset;
-        errorString_ = strdup(str);
+        errorString_ = js_strdup(cx_, str);
         return false;
     }
 
     bool fail(ParseNode *pn, const char *str) {
-        return failOffset(pn ? pn->pn_pos.begin : parser_.tokenStream.peekTokenPos().begin, str);
+        if (pn)
+            return failOffset(pn->pn_pos.begin, str);
+
+        // The exact rooting static analysis does not perform dataflow analysis, so it believes
+        // that unrooted things on the stack during compilation may still be accessed after this.
+        // Since pn is typically only null under OOM, this suppression simply forces any GC to be
+        // delayed until the compilation is off the stack and more memory can be freed.
+        gc::AutoSuppressGC nogc(cx_);
+        return failOffset(parser_.tokenStream.peekTokenPos().begin, str);
     }
 
     bool failfVA(ParseNode *pn, const char *fmt, va_list ap) {
@@ -1350,6 +1362,11 @@ class MOZ_STACK_CLASS ModuleCompiler
         JSAutoByteString bytes;
         if (AtomToPrintableString(cx_, name, &bytes))
             failf(pn, fmt, bytes.ptr());
+        return false;
+    }
+
+    bool failOverRecursed() {
+        errorOverRecursed_ = true;
         return false;
     }
 
@@ -2410,7 +2427,7 @@ class FunctionCompiler
         MBasicBlock *body;
         if (!newBlock(curBlock_, &body, bodyPn))
             return false;
-        if (cond->isConstant() && ToBoolean(cond->toConstant()->value())) {
+        if (cond->isConstant() && cond->toConstant()->valueToBoolean()) {
             *afterLoop = nullptr;
             curBlock_->end(MGoto::New(body));
         } else {
@@ -2468,7 +2485,7 @@ class FunctionCompiler
         if (curBlock_) {
             JS_ASSERT(curBlock_->loopDepth() == loopStack_.length() + 1);
             if (cond->isConstant()) {
-                if (ToBoolean(cond->toConstant()->value())) {
+                if (cond->toConstant()->valueToBoolean()) {
                     curBlock_->end(MGoto::New(loopEntry));
                     if (!loopEntry->setBackedgeAsmJS(curBlock_))
                         return false;
@@ -3813,7 +3830,7 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltin 
 static bool
 CheckCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
 {
-    JS_CHECK_RECURSION(f.cx(), return false);
+    JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
     ParseNode *callee = CallCallee(call);
 
@@ -4104,7 +4121,7 @@ static bool
 CheckAddOrSub(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type,
               unsigned *numAddOrSubOut = nullptr)
 {
-    JS_CHECK_RECURSION(f.cx(), return false);
+    JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
     JS_ASSERT(expr->isKind(PNK_ADD) || expr->isKind(PNK_SUB));
     ParseNode *lhs = BinaryLeft(expr);
@@ -4308,7 +4325,7 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
 static bool
 CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
 {
-    JS_CHECK_RECURSION(f.cx(), return false);
+    JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
     if (!f.mirGen().ensureBallast())
         return false;
@@ -4781,7 +4798,7 @@ CheckStatementList(FunctionCompiler &f, ParseNode *stmtList)
 static bool
 CheckStatement(FunctionCompiler &f, ParseNode *stmt, LabelVector *maybeLabels)
 {
-    JS_CHECK_RECURSION(f.cx(), return false);
+    JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
     if (!f.mirGen().ensureBallast())
         return false;

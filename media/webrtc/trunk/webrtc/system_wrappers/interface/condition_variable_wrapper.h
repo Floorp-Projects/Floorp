@@ -37,6 +37,6 @@ class ConditionVariableWrapper {
   virtual void WakeAll() = 0;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_CONDITION_VARIABLE_WRAPPER_H_

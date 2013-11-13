@@ -17,6 +17,7 @@ const { off, emit, setListeners } = require('../event/core');
 const { EventTarget } = require('../event/target');
 const { URL } = require('../url');
 const { add, remove, has, clear, iterator } = require('../lang/weak-set');
+const { id: addonID } = require('../self');
 const { WindowTracker } = require('../deprecated/window-utils');
 const { isShowing } = require('./sidebar/utils');
 const { isBrowser, getMostRecentBrowserWindow, windows, isWindowPrivate } = require('../window/utils');
@@ -30,6 +31,8 @@ const { defer } = require('../core/promise');
 const { models, views, viewsFor, modelFor } = require('./sidebar/namespace');
 const { isLocalURL } = require('../url');
 const { ensure } = require('../system/unload');
+const { identify } = require('./id');
+const { uuid } = require('../util/uuid');
 
 const Worker = WorkerTrait.resolve({
   _injectInDocument: '__injectInDocument'
@@ -47,9 +50,16 @@ const Sidebar = Class({
   implements: [ Disposable ],
   extends: EventTarget,
   setup: function(options) {
+    // inital validation for the model information
     let model = sidebarContract(options);
+
+    // save the model information
     models.set(this, model);
 
+    // generate an id if one was not provided
+    model.id = model.id || addonID + '-' + uuid();
+
+    // further validation for the title and url
     validateTitleAndURLCombo({}, this.title, this.url);
 
     const self = this;
@@ -119,12 +129,22 @@ const Sidebar = Class({
 
               emit(self, 'hide', {});
               emit(self, 'detach', worker);
+              windowNS(window).worker = null;
             }
             windowNS(window).onWebPanelSidebarUnload = onWebPanelSidebarUnload;
             panelBrowser.contentWindow.addEventListener('unload', onWebPanelSidebarUnload, true);
 
             // check the associated menuitem
             bar.setAttribute('checked', 'true');
+
+            function onWebPanelSidebarReady() {
+              panelBrowser.contentWindow.removeEventListener('DOMContentLoaded', onWebPanelSidebarReady, false);
+              windowNS(window).onWebPanelSidebarReady = null;
+
+              emit(self, 'ready', worker);
+            }
+            windowNS(window).onWebPanelSidebarReady = onWebPanelSidebarReady;
+            panelBrowser.contentWindow.addEventListener('DOMContentLoaded', onWebPanelSidebarReady, false);
 
             function onWebPanelSidebarLoad() {
               panelBrowser.contentWindow.removeEventListener('load', onWebPanelSidebarLoad, true);
@@ -173,6 +193,11 @@ const Sidebar = Class({
           windowNS(window).onWebPanelSidebarCreated = null;
         }
 
+        if (windowNS(window).onWebPanelSidebarReady) {
+          panelBrowser && panelBrowser.contentWindow.removeEventListener('DOMContentLoaded', windowNS(window).onWebPanelSidebarReady, false);
+          windowNS(window).onWebPanelSidebarReady = null;
+        }
+
         if (windowNS(window).onWebPanelSidebarLoad) {
           panelBrowser && panelBrowser.contentWindow.removeEventListener('load', windowNS(window).onWebPanelSidebarLoad, true);
           windowNS(window).onWebPanelSidebarLoad = null;
@@ -180,7 +205,7 @@ const Sidebar = Class({
 
         if (windowNS(window).onWebPanelSidebarUnload) {
           panelBrowser && panelBrowser.contentWindow.removeEventListener('unload', windowNS(window).onWebPanelSidebarUnload, true);
-          windowNS(window).onWebPanelSidebarUnload = null;
+          windowNS(window).onWebPanelSidebarUnload();
         }
       }
     });
@@ -208,10 +233,13 @@ const Sidebar = Class({
     // destroyed?
     if (!modelFor(this))
       return;
+
     // validation
     if (!isLocalURL(v))
       throw Error('the url must be a valid local url');
+
     validateTitleAndURLCombo(this, this.title, v);
+
     // do update
     updateURL(this, v);
     modelFor(this).url = v;
@@ -259,6 +287,10 @@ function validateTitleAndURLCombo(sidebar, title, url) {
 isShowing.define(Sidebar, isSidebarShowing.bind(null, null));
 show.define(Sidebar, showSidebar.bind(null, null));
 hide.define(Sidebar, hideSidebar.bind(null, null));
+
+identify.define(Sidebar, function(sidebar) {
+  return sidebar.id;
+});
 
 function toggleSidebar(window, sidebar) {
   // TODO: make sure this is not private

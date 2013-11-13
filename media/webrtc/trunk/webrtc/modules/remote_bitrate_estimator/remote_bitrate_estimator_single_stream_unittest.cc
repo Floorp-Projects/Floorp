@@ -54,25 +54,15 @@ TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropOneStreamWrap) {
 
 // Verify that the time it takes for the estimator to reduce the bitrate when
 // the capacity is tightened stays the same. This test also verifies that we
-// handle wrap-arounds in this scenario.
-TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropOneStreamWrapAlign) {
-  align_streams_ = true;
-  CapacityDropTestHelper(1, true, 956214, 367);
-}
-
-// Verify that the time it takes for the estimator to reduce the bitrate when
-// the capacity is tightened stays the same. This test also verifies that we
 // handle wrap-arounds in this scenario. This is a multi-stream test.
-TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropTwoStreamsWrapAlign) {
-  align_streams_ = true;
+TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropTwoStreamsWrap) {
   CapacityDropTestHelper(2, true, 927088, 267);
 }
 
 // Verify that the time it takes for the estimator to reduce the bitrate when
 // the capacity is tightened stays the same. This test also verifies that we
 // handle wrap-arounds in this scenario. This is a multi-stream test.
-TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropThreeStreamsWrapAlign) {
-  align_streams_ = true;
+TEST_F(RemoteBitrateEstimatorSingleTest, CapacityDropThreeStreamsWrap) {
   CapacityDropTestHelper(3, true, 920944, 333);
 }
 

@@ -62,6 +62,8 @@ class RtpFormatVp8 {
                const RTPVideoHeaderVP8& hdr_info,
                int max_payload_len);
 
+  ~RtpFormatVp8();
+
   // Get the next payload with VP8 payload header.
   // max_payload_len limits the sum length of payload and VP8 payload header.
   // buffer is a pointer to where the output will be written.

@@ -213,9 +213,6 @@ AccGroupInfo::IsConceptualParent(role aRole, role aParentRole)
   if ((aParentRole == roles::TABLE || aParentRole == roles::TREE_TABLE) &&
       aRole == roles::ROW)
     return true;
-  if (aParentRole == roles::ROW &&
-      (aRole == roles::CELL || aRole == roles::GRID_CELL))
-    return true;
   if (aParentRole == roles::LIST && aRole == roles::LISTITEM)
     return true;
   if (aParentRole == roles::COMBOBOX_LIST && aRole == roles::COMBOBOX_OPTION)

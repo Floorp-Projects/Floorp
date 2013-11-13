@@ -321,6 +321,8 @@ private:
    * input delivery thread, and so does not require locking.
    */
   nsRefPtr<AsyncPanZoomController> mApzcForInputBlock;
+  /* The number of touch points we are tracking that are currently on the screen. */
+  uint32_t mTouchCount;
   /* The transform from root screen coordinates into mApzcForInputBlock's
    * screen coordinates, as returned through the 'aTransformToApzcOut' parameter
    * of GetInputTransform(), at the start of the input block. This is cached

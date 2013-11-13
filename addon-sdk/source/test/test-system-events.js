@@ -17,7 +17,7 @@ exports["test basic"] = function(assert) {
   let type = Date.now().toString(32);
 
   let timesCalled = 0;
-  function handler(subject, data) { timesCalled++; };
+  function handler({subject, data}) { timesCalled++; };
 
   events.on(type, handler);
   events.emit(type, { data: "yo yo" });
@@ -35,6 +35,32 @@ exports["test basic"] = function(assert) {
 
   assert.equal(timesCalled, 2, "handlers added via once are triggered once");
 }
+
+exports["test simple argument passing"] = function (assert) {
+  let type = Date.now().toString(32);
+
+  let lastArg;
+  function handler({data}) { lastArg = data; }
+  events.on(type, handler);
+
+  [true, false, 100, 0, 'a string', ''].forEach(arg => {
+    events.emit(type, arg);
+    assert.strictEqual(lastArg, arg + '',
+      'event emitted for ' + arg + ' has correct data value');
+
+    events.emit(type, { data: arg });
+    assert.strictEqual(lastArg, arg + '',
+      'event emitted for ' + arg + ' has correct data value when a property on an object');
+  });
+
+  [null, undefined, {}].forEach(arg => {
+    events.emit(type, arg);
+    assert.strictEqual(lastArg, null,
+      'emitting ' + arg + ' gets null data');
+  });
+
+  events.off(type, handler);
+};
 
 exports["test error reporting"] = function(assert) {
   let { loader, messages } = LoaderWithHookedConsole2(module);
@@ -220,7 +246,7 @@ exports["test emit to nsIObserverService observers"] = function(assert) {
   assert.equal(lastData, "data again", "event.data is notification data");
 
   nsIObserverService.removeObserver(nsIObserver, "*");
-  
+
   events.emit(topic, { data: "last data" });
   assert.equal(timesCalled, 3, "removed observers no longer invoked");
 }

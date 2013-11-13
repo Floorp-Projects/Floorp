@@ -11,11 +11,9 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_MAC_QTKIT_VIDEO_CAPTURE_QTKIT_INFO_H_
 
-#include "../../video_capture_impl.h"
-#include "../../device_info_impl.h"
-#include "video_capture_qtkit_utility.h"
-
-#include "map_wrapper.h"
+#include "webrtc/modules/video_capture/device_info_impl.h"
+#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_utility.h"
+#include "webrtc/modules/video_capture/video_capture_impl.h"
 
 
 @class VideoCaptureMacQTKitInfoObjC;

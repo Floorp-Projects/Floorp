@@ -55,6 +55,6 @@ class EventWrapper {
   virtual bool StopTimer() = 0;
 
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_EVENT_WRAPPER_H_

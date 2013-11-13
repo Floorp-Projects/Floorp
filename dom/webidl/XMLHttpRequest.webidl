@@ -57,7 +57,6 @@ dictionary MozXMLHttpRequestParameters
  Constructor(DOMString ignored)]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
-  [SetterThrows=Workers, GetterThrows=Workers]
   attribute EventHandler onreadystatechange;
 
   // states

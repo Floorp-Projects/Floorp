@@ -31,6 +31,8 @@ class ViEBaseImpl
   // Implements ViEBase.
   virtual int Init();
   virtual int SetVoiceEngine(VoiceEngine* voice_engine);
+  virtual int RegisterCpuOveruseObserver(int channel,
+                                         CpuOveruseObserver* observer);
   virtual int CreateChannel(int& video_channel);  // NOLINT
   virtual int CreateChannel(int& video_channel,  // NOLINT
                             int original_channel);
@@ -48,7 +50,7 @@ class ViEBaseImpl
   virtual int LastError();
 
  protected:
-  ViEBaseImpl(const Config& config);
+  explicit ViEBaseImpl(const Config& config);
   virtual ~ViEBaseImpl();
 
   ViESharedData* shared_data() { return &shared_data_; }

@@ -85,6 +85,8 @@ using JS::CallReceiver;
 using JS::CompileOptions;
 using JS::IsAcceptableThis;
 using JS::NativeImpl;
+using JS::OwningCompileOptions;
+using JS::ReadOnlyCompileOptions;
 
 using JS::Rooted;
 using JS::RootedFunction;

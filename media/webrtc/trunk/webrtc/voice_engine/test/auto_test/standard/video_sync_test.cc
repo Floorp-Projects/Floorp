@@ -8,7 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cmath>
+#include <math.h>
+
 #include <numeric>
 #include <vector>
 
@@ -66,7 +67,7 @@ class VideoSyncTest : public AfterStreamingFixture {
     for (; start != end; ++start) {
       variance += (*start - mean) * (*start - mean) / (num_elements - 1);
     }
-    return std::sqrt(variance);
+    return sqrt(variance);
   }
 };
 

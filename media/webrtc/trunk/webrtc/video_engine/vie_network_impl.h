@@ -37,16 +37,6 @@ class ViENetworkImpl
                                  const void* data,
                                  const int length);
   virtual int SetMTU(int video_channel, unsigned int mtu);
-  virtual int SetPacketTimeoutNotification(const int video_channel,
-                                           bool enable,
-                                           int timeout_seconds);
-  virtual int RegisterObserver(const int video_channel,
-                               ViENetworkObserver& observer);
-  virtual int DeregisterObserver(const int video_channel);
-  virtual int SetPeriodicDeadOrAliveStatus(
-      const int video_channel,
-      const bool enable,
-      const unsigned int sample_time_seconds);
 
  protected:
   explicit ViENetworkImpl(ViESharedData* shared_data);

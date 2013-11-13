@@ -10,7 +10,7 @@
 #include "Tools.h"
 #include <vector>
 #include <algorithm>
-#include "QuartzSupport.h"
+#include "MacIOSurface.h"
 
 using namespace std;
 

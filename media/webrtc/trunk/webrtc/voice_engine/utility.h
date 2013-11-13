@@ -51,8 +51,8 @@ public:
                              uint16_t len);
 };
 
-} // namespace voe
+}  // namespace voe
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_VOICE_ENGINE_UTILITY_H

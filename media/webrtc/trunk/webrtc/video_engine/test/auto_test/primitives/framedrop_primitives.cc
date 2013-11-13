@@ -8,8 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cassert>
-#include <cmath>
+#include <assert.h>
+#include <math.h>
+
 #include <sstream>
 #include <string>
 
@@ -294,8 +295,8 @@ void FixOutputFileForComparison(const std::string& output_file,
   delete[] last_frame_data;
   frame_reader.Close();
   frame_writer.Close();
-  ASSERT_EQ(0, std::remove(output_file.c_str()));
-  ASSERT_EQ(0, std::rename(temp_file.c_str(), output_file.c_str()));
+  ASSERT_EQ(0, remove(output_file.c_str()));
+  ASSERT_EQ(0, rename(temp_file.c_str(), output_file.c_str()));
 }
 
 void FrameDropDetector::ReportFrameState(State state, unsigned int timestamp,
@@ -587,7 +588,7 @@ int FrameDropDetector::GetNumberOfFramesDroppedAt(State state) {
 
 int FrameDropMonitoringRemoteFileRenderer::DeliverFrame(
     unsigned char *buffer, int buffer_size, uint32_t time_stamp,
-    int64_t render_time) {
+    int64_t render_time, void* /*handle*/) {
   // |render_time| provides the ideal render time for this frame. If that time
   // has already passed we will render it immediately.
   int64_t report_render_time_us = render_time * 1000;
@@ -599,7 +600,7 @@ int FrameDropMonitoringRemoteFileRenderer::DeliverFrame(
   frame_drop_detector_->ReportFrameState(FrameDropDetector::kRendered,
                                          time_stamp, report_render_time_us);
   return ViEToFileRenderer::DeliverFrame(buffer, buffer_size,
-                                         time_stamp, render_time);
+                                         time_stamp, render_time, NULL);
 }
 
 int FrameDropMonitoringRemoteFileRenderer::FrameSizeChange(

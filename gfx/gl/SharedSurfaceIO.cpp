@@ -76,10 +76,10 @@ SharedSurface_IOSurface::SharedSurface_IOSurface(MacIOSurface* surface,
                         LOCAL_GL_TEXTURE_WRAP_T,
                         LOCAL_GL_CLAMP_TO_EDGE);
 
-    void *nativeCtx = mGL->GetNativeData(GLContext::NativeGLContext);
-    MOZ_ASSERT(nativeCtx);
+    CGLContextObj ctx = static_cast<CGLContextObj>(mGL->GetNativeData(GLContext::NativeCGLContext));
+    MOZ_ASSERT(ctx);
 
-    surface->CGLTexImageIOSurface2D(nativeCtx);
+    surface->CGLTexImageIOSurface2D(ctx);
 }
 
 SharedSurface_IOSurface::~SharedSurface_IOSurface()

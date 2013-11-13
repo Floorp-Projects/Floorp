@@ -14,6 +14,7 @@
 #include "GraphicsFilter.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
+#include "nsTArray.h"
 
 class gfxContext;
 class gfxASurface;
@@ -39,6 +40,11 @@ public:
     cairo_pattern_t *CairoPattern();
     void AddColorStop(gfxFloat offset, const gfxRGBA& c);
     void SetColorStops(mozilla::RefPtr<mozilla::gfx::GradientStops> aStops);
+
+    // This should only be called on a cairo pattern that we want to use with
+    // Azure. We will read back the color stops from cairo and try to look
+    // them up in the cache.
+    void CacheColorStops(mozilla::gfx::DrawTarget *aDT);
 
     void SetMatrix(const gfxMatrix& matrix);
     gfxMatrix GetMatrix() const;

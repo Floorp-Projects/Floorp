@@ -10,8 +10,8 @@
 
 #include "webrtc/modules/audio_processing/echo_control_mobile_impl.h"
 
-#include <cassert>
-#include <cstring>
+#include <assert.h>
+#include <string.h>
 
 #include "webrtc/modules/audio_processing/aecm/include/echo_control_mobile.h"
 #include "webrtc/modules/audio_processing/audio_buffer.h"

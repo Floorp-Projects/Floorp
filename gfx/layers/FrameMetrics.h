@@ -142,7 +142,8 @@ public:
   // instead.
   //
   // This value is valid for nested scrollable layers as well, and is still
-  // relative to the layer tree origin.
+  // relative to the layer tree origin. This value is provided by Gecko at
+  // layout/paint time.
   ScreenIntRect mCompositionBounds;
 
   // ---------------------------------------------------------------------------
@@ -226,23 +227,20 @@ public:
   // The following metrics are dimensionless.
   //
 
-  // The resolution that the current frame has been painted at.
-  //
-  // Every time this frame is composited and the compositor samples its
-  // transform, this metric is used to create a transform which is
-  // post-multiplied into the parent's transform. Since this only happens when
-  // we walk the layer tree, the resulting transform isn't stored here. Thus the
-  // resolution of parent layers is opaque to this metric.
+  // The incremental resolution that the current frame has been painted at
+  // relative to the parent frame's resolution. This information is provided
+  // by Gecko at layout/paint time.
   ParentLayerToLayerScale mResolution;
 
   // The cumulative resolution that the current frame has been painted at.
   // This is the product of our mResolution and the mResolutions of our parent frames.
+  // This information is provided by Gecko at layout/paint time.
   LayoutDeviceToLayerScale mCumulativeResolution;
 
   // The "user zoom". Content is painted by gecko at mResolution * mDevPixelsPerCSSPixel,
   // but will be drawn to the screen at mZoom. In the steady state, the
   // two will be the same, but during an async zoom action the two may
-  // diverge.
+  // diverge. This information is initialized in Gecko but updated in the APZC.
   CSSToScreenScale mZoom;
 
   // The conversion factor between CSS pixels and device pixels for this frame.

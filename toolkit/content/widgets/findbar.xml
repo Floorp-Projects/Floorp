@@ -192,11 +192,11 @@
                          type="checkbox"
                          xbl:inherits="accesskey=matchcaseaccesskey"/>
       <xul:label anonid="match-case-status" class="findbar-find-fast"/>
-      <xul:toolbarbutton anonid="find-closebutton"
-                         class="findbar-closebutton"
-                         tooltiptext="&findCloseButton.tooltip;"
-                         oncommand="close();"/>
     </xul:hbox>
+    <xul:toolbarbutton anonid="find-closebutton"
+                       class="findbar-closebutton"
+                       tooltiptext="&findCloseButton.tooltip;"
+                       oncommand="close();"/>
     </content>
 
     <implementation implements="nsIDOMEventListener, nsIEditActionListener">
@@ -863,7 +863,7 @@
 
           // Only search on input if we don't have a last-failed string,
           // or if the current search string doesn't start with it.
-          if (this._findFailedString == null ||
+          if (!this._findFailedString ||
               !val.startsWith(this._findFailedString))
           {
             this._enableFindButtons(val);

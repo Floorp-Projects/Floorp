@@ -24,12 +24,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     } catch(e) {
       ok(!what, "Should MessageChannel exist?");
     }
-    try {
-      status = MessagePort;
-      ok(what, "Should MessagePort exist?");
-    } catch(e) {
-      ok(!what, "Should MessagePort exist?");
-    }
   }
 
   SimpleTest.waitForExplicitFinish();

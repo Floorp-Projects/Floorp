@@ -17,7 +17,7 @@
         '<(webrtc_root)/modules/modules.gyp:video_capture_module',
         '<(webrtc_root)/voice_engine/voice_engine.gyp:voice_engine',
         '<(DEPTH)/testing/gtest.gyp:gtest',
-        '<(DEPTH)/third_party/google-gflags/google-gflags.gyp:google-gflags',
+        '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
         '<(webrtc_root)/test/metrics.gyp:metrics',
         '<(webrtc_root)/test/test.gyp:channel_transport',
         '<(webrtc_root)/test/test.gyp:test_support',
@@ -69,7 +69,6 @@
         'source/vie_autotest_capture.cc',
         'source/vie_autotest_codec.cc',
         'source/vie_autotest_encryption.cc',
-        'source/vie_autotest_file.cc',
         'source/vie_autotest_image_process.cc',
         'source/vie_autotest_loopback.cc',
         'source/vie_autotest_main.cc',
@@ -126,5 +125,25 @@
         4267,  # size_t to int truncation.
       ],
     },
+  ],
+  'conditions': [
+    ['test_isolation_mode != "noop"', {
+      'targets': [
+        {
+          'target_name': 'vie_auto_test_run',
+          'type': 'none',
+          'dependencies': [
+            '<(import_isolate_path):import_isolate_gypi',
+            'vie_auto_test',
+          ],
+          'includes': [
+            'vie_auto_test.isolate',
+          ],
+          'sources': [
+            'vie_auto_test.isolate',
+          ],
+        },
+      ],
+    }],
   ],
 }

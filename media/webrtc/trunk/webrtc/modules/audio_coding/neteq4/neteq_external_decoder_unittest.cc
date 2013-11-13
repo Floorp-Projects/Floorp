@@ -21,6 +21,7 @@
 #include "webrtc/modules/audio_coding/neteq4/tools/rtp_generator.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace webrtc {
 
@@ -201,7 +202,7 @@ class NetEqExternalDecoderTest : public ::testing::Test {
   scoped_ptr<test::InputAudioFile> input_file_;
 };
 
-TEST_F(NetEqExternalDecoderTest, RunTest) {
+TEST_F(NetEqExternalDecoderTest, DISABLED_ON_ANDROID(RunTest)) {
   RunTest(100);  // Run 100 laps @ 10 ms each in the test loop.
 }
 

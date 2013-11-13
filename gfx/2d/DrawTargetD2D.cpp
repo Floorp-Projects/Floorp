@@ -763,26 +763,7 @@ DrawTargetD2D::CopySurface(SourceSurface *aSurface,
   mRT->Clear(D2D1::ColorF(0, 0.0f));
   mRT->PopAxisAlignedClip();
 
-  RefPtr<ID2D1Bitmap> bitmap;
-
-  switch (aSurface->GetType()) {
-  case SURFACE_D2D1_BITMAP:
-    {
-      SourceSurfaceD2D *srcSurf = static_cast<SourceSurfaceD2D*>(aSurface);
-      bitmap = srcSurf->GetBitmap();
-    }
-    break;
-  case SURFACE_D2D1_DRAWTARGET:
-    {
-      SourceSurfaceD2DTarget *srcSurf = static_cast<SourceSurfaceD2DTarget*>(aSurface);
-      bitmap = srcSurf->GetBitmap(mRT);
-      AddDependencyOnSource(srcSurf);
-    }
-    break;
-  default:
-    return;
-  }
-
+  RefPtr<ID2D1Bitmap> bitmap = GetBitmapForSurface(aSurface, srcRect);
   if (!bitmap) {
     return;
   }

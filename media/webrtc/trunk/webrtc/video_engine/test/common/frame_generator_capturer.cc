@@ -10,23 +10,58 @@
 
 #include "webrtc/video_engine/test/common/frame_generator_capturer.h"
 
+#include <math.h>
+#include <string.h>
+
+#include "webrtc/common_video/test/frame_generator.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
-#include "webrtc/video_engine/test/common/frame_generator.h"
+#include "webrtc/video_engine/new_include/video_send_stream.h"
 
 namespace webrtc {
 namespace test {
+namespace {
+class ChromaGenerator : public FrameGenerator {
+ public:
+  ChromaGenerator(size_t width, size_t height, Clock* clock) : clock_(clock) {
+    assert(width > 0);
+    assert(height > 0);
+    frame_.CreateEmptyFrame(static_cast<int>(width),
+                            static_cast<int>(height),
+                            static_cast<int>(width),
+                            static_cast<int>((width + 1) / 2),
+                            static_cast<int>((width + 1) / 2));
+    memset(frame_.buffer(kYPlane), 0x80, frame_.allocated_size(kYPlane));
+  }
+
+  virtual I420VideoFrame& NextFrame() OVERRIDE {
+    double angle =
+        static_cast<double>(clock_->CurrentNtpInMilliseconds()) / 1000.0;
+    uint8_t u = fabs(sin(angle)) * 0xFF;
+    uint8_t v = fabs(cos(angle)) * 0xFF;
+
+    memset(frame_.buffer(kUPlane), u, frame_.allocated_size(kUPlane));
+    memset(frame_.buffer(kVPlane), v, frame_.allocated_size(kVPlane));
+    return frame_;
+  }
+
+ private:
+  Clock* clock_;
+  I420VideoFrame frame_;
+};
+}  // namespace
 
 FrameGeneratorCapturer* FrameGeneratorCapturer::Create(
-    newapi::VideoSendStreamInput* input,
-    FrameGenerator* frame_generator,
+    VideoSendStreamInput* input,
+    size_t width,
+    size_t height,
     int target_fps,
     Clock* clock) {
-  FrameGeneratorCapturer* capturer =
-      new FrameGeneratorCapturer(input, frame_generator, target_fps, clock);
-
+  FrameGeneratorCapturer* capturer = new FrameGeneratorCapturer(
+      clock, input, new ChromaGenerator(width, height, clock), target_fps);
   if (!capturer->Init()) {
     delete capturer;
     return NULL;
@@ -35,14 +70,34 @@ FrameGeneratorCapturer* FrameGeneratorCapturer::Create(
   return capturer;
 }
 
-FrameGeneratorCapturer::FrameGeneratorCapturer(
-    newapi::VideoSendStreamInput* input,
-    FrameGenerator* frame_generator,
+FrameGeneratorCapturer* FrameGeneratorCapturer::CreateFromYuvFile(
+    VideoSendStreamInput* input,
+    const char* file_name,
+    size_t width,
+    size_t height,
     int target_fps,
-    Clock* clock)
+    Clock* clock) {
+  FrameGeneratorCapturer* capturer = new FrameGeneratorCapturer(
+      clock,
+      input,
+      FrameGenerator::CreateFromYuvFile(file_name, width, height),
+      target_fps);
+  if (!capturer->Init()) {
+    delete capturer;
+    return NULL;
+  }
+
+  return capturer;
+}
+
+FrameGeneratorCapturer::FrameGeneratorCapturer(Clock* clock,
+                                               VideoSendStreamInput* input,
+                                               FrameGenerator* frame_generator,
+                                               int target_fps)
     : VideoCapturer(input),
-      sending_(false),
       clock_(clock),
+      sending_(false),
+      tick_(EventWrapper::Create()),
       lock_(CriticalSectionWrapper::CreateCriticalSection()),
       thread_(NULL),
       frame_generator_(frame_generator),
@@ -55,26 +110,22 @@ FrameGeneratorCapturer::FrameGeneratorCapturer(
 FrameGeneratorCapturer::~FrameGeneratorCapturer() {
   Stop();
 
-  if (thread_ != NULL) {
-    if (!thread_->Stop()) {
-      // TODO(pbos): Log a warning. This will leak a thread.
-    } else {
-      delete thread_;
-    }
-  }
+  if (thread_.get() != NULL)
+    thread_->Stop();
 }
 
 bool FrameGeneratorCapturer::Init() {
-  thread_ = ThreadWrapper::CreateThread(FrameGeneratorCapturer::Run,
-                                        this,
-                                        webrtc::kHighPriority,
-                                        "FrameGeneratorCapturer");
-  if (thread_ == NULL)
+  if (!tick_->StartTimer(true, 1000 / target_fps_))
+    return false;
+  thread_.reset(ThreadWrapper::CreateThread(FrameGeneratorCapturer::Run,
+                                            this,
+                                            webrtc::kHighPriority,
+                                            "FrameGeneratorCapturer"));
+  if (thread_.get() == NULL)
     return false;
   unsigned int thread_id;
   if (!thread_->Start(thread_id)) {
-    delete thread_;
-    thread_ = NULL;
+    thread_.reset();
     return false;
   }
   return true;
@@ -86,29 +137,26 @@ bool FrameGeneratorCapturer::Run(void* obj) {
 }
 
 void FrameGeneratorCapturer::InsertFrame() {
-  int64_t time_start = clock_->TimeInMilliseconds();
-
   {
-    CriticalSectionScoped cs(lock_);
-    if (sending_)
-      frame_generator_->InsertFrame(input_);
+    CriticalSectionScoped cs(lock_.get());
+    if (sending_) {
+      int64_t time_before = clock_->CurrentNtpInMilliseconds();
+      I420VideoFrame& frame = frame_generator_->NextFrame();
+      frame.set_render_time_ms(time_before);
+      int64_t time_after = clock_->CurrentNtpInMilliseconds();
+      input_->PutFrame(frame, static_cast<uint32_t>(time_after - time_before));
+    }
   }
-
-  int64_t remaining_sleep =
-      1000 / target_fps_ - (clock_->TimeInMilliseconds() - time_start);
-
-  if (remaining_sleep > 0) {
-    SleepMs(static_cast<int>(remaining_sleep));
-  }
+  tick_->Wait(WEBRTC_EVENT_INFINITE);
 }
 
 void FrameGeneratorCapturer::Start() {
-  CriticalSectionScoped cs(lock_);
+  CriticalSectionScoped cs(lock_.get());
   sending_ = true;
 }
 
 void FrameGeneratorCapturer::Stop() {
-  CriticalSectionScoped cs(lock_);
+  CriticalSectionScoped cs(lock_.get());
   sending_ = false;
 }
 }  // test

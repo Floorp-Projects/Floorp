@@ -171,8 +171,8 @@ let Scheduler = {
         if (error instanceof PromiseWorker.WorkerError) {
           throw OS.File.Error.fromMsg(error.data);
         }
-        // Extract something meaningful from WorkerErrorEvent
-        if (typeof error == "object" && error && error.constructor.name == "WorkerErrorEvent") {
+        // Extract something meaningful from ErrorEvent
+        if (error instanceof ErrorEvent) {
           let message = error.message;
           if (message == "uncaught exception: [object StopIteration]") {
             throw StopIteration;

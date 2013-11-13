@@ -30,18 +30,14 @@ _JAVA_HARNESS := \
   PaintedSurface.java \
   $(NULL)
 
-# pre-process harness sources
-PP_TARGETS        += java-harness
-java-harness      := $(addprefix $(srcdir)/,$(addsuffix .in,$(_JAVA_HARNESS)))
-java-harness-dep  := $(addprefix $(CURDIR)/,$(_JAVA_HARNESS))
-java-harness_PATH := $(CURDIR)
+java-harness := $(addprefix $(srcdir)/,$(_JAVA_HARNESS))
+java-tests   := $(wildcard $(TESTPATH)/*.java)
 
-# pre-process test sources
-PP_TARGETS      += java-tests
-java-tests-src  := $(wildcard $(TESTPATH)/*.java.in)
-java-tests-dep  := $(patsubst $(TESTPATH)/%.java.in,$(dir-tests)/%.java,$(java-tests-src))
-java-tests      := $(java-tests-src)
-java-tests_PATH := $(dir-tests)
+# pre-process TestConstants.java.in
+PP_TARGETS         += testconstants
+testconstants-dep  := $(dir-tests)/TestConstants.java
+testconstants      := $(TESTPATH)/TestConstants.java.in
+testconstants_PATH := $(dir-tests)
 
 PP_TARGETS        += manifest
 manifest          := $(srcdir)/AndroidManifest.xml.in
@@ -68,15 +64,15 @@ MOCHITEST_ROBOCOP_FILES := \
 
 GARBAGE += \
   AndroidManifest.xml \
-  $(java-tests-dep) \
-  $(java-harness-dep) \
   $(robocop-deps) \
+  $(testconstants-dep) \
   $(NULL)
 
 JAVAFILES += \
+  $(java-harness) \
+  $(java-tests) \
   $(robocop-deps) \
-  $(java-harness-dep) \
-  $(java-tests-dep) \
+  $(testconstants-dep) \
   $(NULL)
 
 DEFINES += \
@@ -88,8 +84,3 @@ include $(topsrcdir)/config/rules.mk
 tools:: $(ANDROID_APK_NAME).apk
 
 GENERATED_DIRS += $(dir-tests)
-
-# PP_java-tests not fully usable here
-# Intermediate step toward a library rule.
-$(dir-tests)/%.java: $(TESTPATH)/%.java.in $(call mkdir_deps,$(dir-tests))
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $< > $@
