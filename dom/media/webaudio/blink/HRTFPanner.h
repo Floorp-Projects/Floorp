@@ -35,6 +35,8 @@ struct AudioChunk;
 
 namespace WebCore {
 
+typedef nsTArray<float> AudioFloatArray;
+
 class HRTFDatabaseLoader;
 
 using mozilla::AudioChunk;
