@@ -53,13 +53,14 @@ public class GeckoActionProvider extends ActionProvider {
         MenuItemActionView view = new MenuItemActionView(mContext, null);
         view.setActionButtonClickListener(mCallbacks);
 
-        if (dataModel.getHistorySize() > 0) {
-            PackageManager packageManager = mContext.getPackageManager();
-            ResolveInfo defaultActivity = dataModel.getDefaultActivity();
-            view.addActionButton(defaultActivity == null ? null : defaultActivity.loadIcon(packageManager));
-            if (dataModel.getActivityCount() >= 2) {
-                view.addActionButton(dataModel.getActivity(1).loadIcon(packageManager));
-            }
+        final PackageManager packageManager = mContext.getPackageManager();
+        int historySize = dataModel.getHistorySize();
+        if (historySize > 2) {
+            historySize = 2;
+        }
+
+        for (int i = 0; i < historySize; i++) {
+            view.addActionButton(dataModel.getActivity(i).loadIcon(packageManager));
         }
 
         return view;
