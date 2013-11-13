@@ -1,13 +1,19 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ar_MA.xml
 // *
 // ***************************************************************************
 ar_MA{
     NumberElements{
+        arab{
+            symbols{
+                decimal{"٫"}
+                group{"٬"}
+            }
+        }
         default{"latn"}
         latn{
             symbols{
@@ -16,18 +22,18 @@ ar_MA{
             }
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.80"}
     calendar{
-        gregorian{
+        generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE، d MMMM، y",
-                "d MMMM، y",
-                "yyyy/MM/dd",
-                "yyyy/M/d",
+                "EEEE، d MMMM، y G",
+                "d MMMM، y G",
+                "G y/MM/dd",
+                "GGGGG y/M/d",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -37,8 +43,48 @@ ar_MA{
             availableFormats{
                 MMdd{"MM/dd"}
                 Md{"M/d"}
-                yM{"yyyy/M"}
-                yyyyMM{"yyyy/MM"}
+                yyyyM{"G y/M"}
+                yyyyMM{"G y/MM"}
+            }
+            intervalFormats{
+                MMMd{
+                    d{"d‏-d MMM"}
+                }
+                d{
+                    d{"d‏-d"}
+                }
+                y{
+                    y{"G y‏-y"}
+                }
+                yMMMM{
+                    M{"MM ‏- MM ‏–y G"}
+                }
+                yMMMd{
+                    d{"d‏–d MMM، y G"}
+                }
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE، d MMMM، y",
+                "d MMMM، y",
+                "y/MM/dd",
+                "y/M/d",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                MMdd{"MM/dd"}
+                Md{"M/d"}
+                yM{"y/M"}
+                yMM{"y/MM"}
             }
             intervalFormats{
                 MMMd{
@@ -51,7 +97,7 @@ ar_MA{
                     y{"y‏-y"}
                 }
                 yMMMM{
-                    M{"MM ‏- MM ‏–yyyy"}
+                    M{"MM ‏- MM ‏–y"}
                 }
                 yMMMd{
                     d{"d‏–d MMM، y"}
@@ -63,43 +109,43 @@ ar_MA{
                         "يناير",
                         "فبراير",
                         "مارس",
-                        "ﺄبﺮيﻟ",
+                        "أبريل",
                         "ماي",
                         "يونيو",
-                        "يوليو",
+                        "يوليوز",
                         "غشت",
-                        "سبتمبر",
+                        "شتنبر",
                         "أكتوبر",
                         "نونبر",
-                        "ديسمبر",
+                        "دجنبر",
                     }
                     narrow{
                         "ي",
                         "ف",
                         "م",
-                        "ﺃ",
+                        "أ",
                         "م",
-                        "ﻥ",
-                        "ﻝ",
+                        "ن",
+                        "ل",
                         "غ",
                         "ش",
-                        "ﻙ",
-                        "ﺏ",
-                        "ﺩ",
+                        "ك",
+                        "ب",
+                        "د",
                     }
                     wide{
                         "يناير",
                         "فبراير",
                         "مارس",
-                        "إبريل",
+                        "أبريل",
                         "ماي",
                         "يونيو",
-                        "يوليو",
+                        "يوليوز",
                         "غشت",
-                        "سبتمبر",
+                        "شتنبر",
                         "أكتوبر",
                         "نونبر",
-                        "ديسمبر",
+                        "دجنبر",
                     }
                 }
                 stand-alone{
@@ -110,40 +156,40 @@ ar_MA{
                         "أبريل",
                         "ماي",
                         "يونيو",
-                        "يوليو",
+                        "يوليوز",
                         "غشت",
-                        "سبتمبر",
+                        "شتنبر",
                         "أكتوبر",
                         "نونبر",
-                        "ديسمبر",
+                        "دجنبر",
                     }
                     narrow{
                         "ي",
                         "ف",
                         "م",
-                        "إ",
+                        "أ",
                         "م",
-                        "ﻥ",
-                        "ﻝ",
+                        "ن",
+                        "ل",
                         "غ",
                         "ش",
-                        "ﻙ",
-                        "ﺏ",
-                        "ﺩ",
+                        "ك",
+                        "ب",
+                        "د",
                     }
                     wide{
                         "يناير",
                         "فبراير",
                         "مارس",
-                        "ﺄبﺮيﻟ",
+                        "أبريل",
                         "ماي",
                         "يونيو",
-                        "يوليو",
+                        "يوليوز",
                         "غشت",
-                        "سبتمبر",
+                        "شتنبر",
                         "أكتوبر",
                         "نونبر",
-                        "ديسمبر",
+                        "دجنبر",
                     }
                 }
             }

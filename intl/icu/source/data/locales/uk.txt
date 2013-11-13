@@ -1,23 +1,37 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/uk.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/uk.xml
+ * ICU <specials> source: <path>/common/main/uk.xml
  */
 uk{
-    AuxExemplarCharacters{"[ё ъ ы э]"}
+    AuxExemplarCharacters{
+        "[{а\u0301} {е\u0301} ё {є\u0301} {и\u0301} {і\u0301} {ї\u0301} {о\u0301} {у"
+        "\u0301} ъ ы э {ю\u0301} {я\u0301}]"
+    }
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+    }
     ExemplarCharacters{"[ʼ а б в г ґ д е є ж з и і ї й к л м н о п р с т у ф х ц ч ш щ ь ю я]"}
     ExemplarCharactersIndex{"[А Б В Г Ґ Д Е Є Ж З И І Ї Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ю Я]"}
+    ExemplarCharactersPunctuation{"[\\- – , ; \\: ! ? . ' \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * / \\\\ №]"}
     LocaleScript{
         "Cyrl",
     }
+    MoreInformation{"?"}
     NumberElements{
         latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}–{1}"}
+            }
             patterns{
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
@@ -187,10 +201,11 @@ uk{
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
+                superscriptingExponent{"×"}
             }
         }
     }
-    Version{"2.0.78.38"}
+    Version{"2.0.92.87"}
     calendar{
         coptic{
             monthNames{
@@ -213,8 +228,160 @@ uk{
                 }
             }
         }
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM y 'р'. G",
+                "d MMMM y 'р'. G",
+                "d MMM y G",
+                "dd.MM.yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"E, d"}
+                Gy{"y G"}
+                GyMMM{"LLL y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                H{"HH"}
+                HHmm{"HH:mm"}
+                HHmmss{"HH:mm:ss"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, dd.MM"}
+                MMM{"LLL"}
+                MMMEd{"E, d MMM"}
+                MMMMEd{"E, d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"dd.MM"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yyyy{"y G"}
+                yyyyM{"MM.y G"}
+                yyyyMEd{"E, dd.MM.y G"}
+                yyyyMMM{"LLL y G"}
+                yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMM{"LLLL y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"dd.MM.y G"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y 'р'. G"}
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"E, dd.MM – E, dd.MM"}
+                    d{"E, dd.MM – E, dd.MM"}
+                }
+                MMM{
+                    M{"LLL–LLL"}
+                }
+                MMMEd{
+                    M{"E, d MMM – E, d MMM"}
+                    d{"E, d – E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM – d MMM"}
+                    d{"d–d MMM"}
+                }
+                Md{
+                    M{"dd.MM – dd.MM"}
+                    d{"dd.MM – dd.MM"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"MM.y – MM.y"}
+                    y{"MM.y – MM.y"}
+                }
+                yMEd{
+                    M{"E, dd.MM.y – E, dd.MM.y"}
+                    d{"E, dd.MM.y – E, dd.MM.y"}
+                    y{"E, dd.MM.y – E, dd.MM.y"}
+                }
+                yMMM{
+                    M{"LLL–LLL y"}
+                    y{"LLL y – LLL y"}
+                }
+                yMMMEd{
+                    M{"E, d MMM – E, d MMM y"}
+                    d{"E, d – E, d MMM y"}
+                    y{"E, d MMM y – E, d MMM y"}
+                }
+                yMMMM{
+                    M{"LLLL – LLLL y"}
+                    y{"LLLL y – LLLL y"}
+                }
+                yMMMd{
+                    M{"d MMM – d MMM y"}
+                    d{"d–d MMM y"}
+                    y{"d MMM y – d MMM y"}
+                }
+                yMd{
+                    M{"dd.MM.y – dd.MM.y"}
+                    d{"dd.MM.y – dd.MM.y"}
+                    y{"dd.MM.y – dd.MM.y"}
+                }
+            }
+        }
         gregorian{
             AmPmMarkers{
+                "дп",
+                "пп",
+            }
+            AmPmMarkersNarrow{
                 "дп",
                 "пп",
             }
@@ -233,8 +400,19 @@ uk{
                 "{1} {0}",
                 "{1} {0}",
             }
+            appendItems{
+                Timezone{"{0} {1}"}
+            }
             availableFormats{
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
+                Gy{"y G"}
+                GyMMM{"LLL y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
                 H{"HH"}
                 HHmm{"HH:mm"}
                 HHmmss{"HH:mm:ss"}
@@ -247,28 +425,22 @@ uk{
                 MMMMEd{"E, d MMMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
-                MMdd{"dd.MM"}
                 Md{"dd.MM"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                mmss{"mm:ss"}
                 ms{"mm:ss"}
                 y{"y"}
-                yM{"MM.yyyy"}
-                yMEd{"E, dd.MM.yyyy"}
+                yM{"MM.y"}
+                yMEd{"E, dd.MM.y"}
                 yMMM{"LLL y"}
                 yMMMEd{"E, d MMM y"}
                 yMMMM{"LLLL y"}
                 yMMMd{"d MMM y"}
-                yMd{"dd.MM.yy"}
+                yMd{"dd.MM.y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y 'р'."}
-                yyMM{"MM.yy"}
-                yyMMM{"LLL yy"}
-                yyyyMMMM{"LLLL y"}
-                yyyyQQQQ{"QQQQ y 'р'."}
             }
             dayNames{
                 format{
@@ -280,6 +452,53 @@ uk{
                         "Чт",
                         "Пт",
                         "Сб",
+                    }
+                    narrow{
+                        "Н",
+                        "П",
+                        "В",
+                        "С",
+                        "Ч",
+                        "П",
+                        "С",
+                    }
+                    short{
+                        "Нд",
+                        "Пн",
+                        "Вт",
+                        "Ср",
+                        "Чт",
+                        "Пт",
+                        "Сб",
+                    }
+                    wide{
+                        "неділя",
+                        "понеділок",
+                        "вівторок",
+                        "середа",
+                        "четвер",
+                        "пʼятниця",
+                        "субота",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Нд",
+                        "Пн",
+                        "Вт",
+                        "Ср",
+                        "Чт",
+                        "Пт",
+                        "Сб",
+                    }
+                    narrow{
+                        "Н",
+                        "П",
+                        "В",
+                        "С",
+                        "Ч",
+                        "П",
+                        "С",
                     }
                     short{
                         "Нд",
@@ -300,26 +519,6 @@ uk{
                         "Субота",
                     }
                 }
-                stand-alone{
-                    narrow{
-                        "Н",
-                        "П",
-                        "В",
-                        "С",
-                        "Ч",
-                        "П",
-                        "С",
-                    }
-                    short{
-                        "Нд",
-                        "Пн",
-                        "Вт",
-                        "Ср",
-                        "Чт",
-                        "Пт",
-                        "Сб",
-                    }
-                }
             }
             eras{
                 abbreviated{
@@ -329,63 +528,6 @@ uk{
                 wide{
                     "до нашої ери",
                     "нашої ери",
-                }
-            }
-            fields{
-                day{
-                    dn{"День"}
-                    relative{
-                        "-1"{"Вчора"}
-                        "-2"{"Позавчора"}
-                        "0"{"Сьогодні"}
-                        "1"{"Завтра"}
-                        "2"{"Післязавтра"}
-                    }
-                }
-                dayperiod{
-                    dn{"Частина доби"}
-                }
-                era{
-                    dn{"Ера"}
-                }
-                hour{
-                    dn{"Година"}
-                }
-                minute{
-                    dn{"Хвилина"}
-                }
-                month{
-                    dn{"Місяць"}
-                    relative{
-                        "-1"{"Минулого місяця"}
-                        "0"{"Цього місяця"}
-                        "1"{"Наступного місяця"}
-                    }
-                }
-                second{
-                    dn{"Секунда"}
-                }
-                week{
-                    dn{"Тиждень"}
-                    relative{
-                        "-1"{"Минулого тижня"}
-                        "0"{"Цього тижня"}
-                        "1"{"Наступного тижня"}
-                    }
-                }
-                weekday{
-                    dn{"День тижня"}
-                }
-                year{
-                    dn{"Рік"}
-                    relative{
-                        "-1"{"Минулого року"}
-                        "0"{"Цього року"}
-                        "1"{"Наступного року"}
-                    }
-                }
-                zone{
-                    dn{"Зона"}
                 }
             }
             intervalFormats{
@@ -451,13 +593,13 @@ uk{
                     y{"y–y"}
                 }
                 yM{
-                    M{"MM.yy – MM.yy"}
-                    y{"MM.yy – MM.yy"}
+                    M{"MM.y – MM.y"}
+                    y{"MM.y – MM.y"}
                 }
                 yMEd{
-                    M{"E, dd.MM.yy – E, dd.MM.yy"}
-                    d{"E, dd.MM.yy – E, dd.MM.yy"}
-                    y{"E, dd.MM.yy – E, dd.MM.yy"}
+                    M{"E, dd.MM.y – E, dd.MM.y"}
+                    d{"E, dd.MM.y – E, dd.MM.y"}
+                    y{"E, dd.MM.y – E, dd.MM.y"}
                 }
                 yMMM{
                     M{"LLL–LLL y"}
@@ -478,9 +620,9 @@ uk{
                     y{"d MMM y – d MMM y"}
                 }
                 yMd{
-                    M{"dd.MM.yy – dd.MM.yy"}
-                    d{"dd.MM.yy – dd.MM.yy"}
-                    y{"dd.MM.yy – dd.MM.yy"}
+                    M{"dd.MM.y – dd.MM.y"}
+                    d{"dd.MM.y – dd.MM.y"}
+                    y{"dd.MM.y – dd.MM.y"}
                 }
             }
             monthNames{
@@ -498,6 +640,20 @@ uk{
                         "жовт.",
                         "лист.",
                         "груд.",
+                    }
+                    narrow{
+                        "С",
+                        "Л",
+                        "Б",
+                        "К",
+                        "Т",
+                        "Ч",
+                        "Л",
+                        "С",
+                        "В",
+                        "Ж",
+                        "Л",
+                        "Г",
                     }
                     wide{
                         "січня",
@@ -693,10 +849,234 @@ uk{
         quotationEnd{"»"}
         quotationStart{"«"}
     }
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
+    fields{
+        day{
+            dn{"День"}
+            relative{
+                "-1"{"учора"}
+                "-2"{"позавчора"}
+                "0"{"сьогодні"}
+                "1"{"завтра"}
+                "2"{"післязавтра"}
+            }
+            relativeTime{
+                future{
+                    few{"Через {0} дні"}
+                    many{"Через {0} днів"}
+                    one{"Через {0} день"}
+                    other{"Через {0} дня"}
+                }
+                past{
+                    few{"{0} дні тому"}
+                    many{"{0} днів тому"}
+                    one{"{0} день тому"}
+                    other{"{0} дня тому"}
+                }
+            }
+        }
+        dayperiod{
+            dn{"Частина доби"}
+        }
+        era{
+            dn{"Ера"}
+        }
+        fri{
+            relative{
+                "-1"{"минулої п’ятниці"}
+                "0"{"цієї п’ятниці"}
+                "1"{"наступної п’ятниці"}
+            }
+        }
+        hour{
+            dn{"Година"}
+            relativeTime{
+                future{
+                    few{"Через {0} години"}
+                    many{"Через {0} годин"}
+                    one{"Через {0} годину"}
+                    other{"Через {0} години"}
+                }
+                past{
+                    few{"{0} години тому"}
+                    many{"{0} годин тому"}
+                    one{"{0} годину тому"}
+                    other{"{0} години тому"}
+                }
+            }
+        }
+        minute{
+            dn{"Хвилина"}
+            relativeTime{
+                future{
+                    few{"Через {0} хвилини"}
+                    many{"Через {0} хвилин"}
+                    one{"Через {0} хвилину"}
+                    other{"Через {0} хвилини"}
+                }
+                past{
+                    few{"{0} хвилини тому"}
+                    many{"{0} хвилин тому"}
+                    one{"{0} хвилину тому"}
+                    other{"{0} хвилини тому"}
+                }
+            }
+        }
+        mon{
+            relative{
+                "-1"{"минулого понеділка"}
+                "0"{"цього понеділка"}
+                "1"{"наступного понеділка"}
+            }
+        }
+        month{
+            dn{"Місяць"}
+            relative{
+                "-1"{"минулого місяця"}
+                "0"{"цього місяця"}
+                "1"{"наступного місяця"}
+            }
+            relativeTime{
+                future{
+                    few{"Через {0} місяці"}
+                    many{"Через {0} місяців"}
+                    one{"Через {0} місяць"}
+                    other{"Через {0} місяця"}
+                }
+                past{
+                    few{"{0} місяці тому"}
+                    many{"{0} місяців тому"}
+                    one{"{0} місяць тому"}
+                    other{"{0} місяця тому"}
+                }
+            }
+        }
+        sat{
+            relative{
+                "-1"{"минулої суботи"}
+                "0"{"цієї суботи"}
+                "1"{"наступної суботи"}
+            }
+        }
+        second{
+            dn{"Секунда"}
+            relative{
+                "0"{"зараз"}
+            }
+            relativeTime{
+                future{
+                    few{"Через {0} секунди"}
+                    many{"Через {0} секунд"}
+                    one{"Через {0} секунду"}
+                    other{"Через {0} секунди"}
+                }
+                past{
+                    few{"{0} секунди тому"}
+                    many{"{0} секунд тому"}
+                    one{"{0} секунду тому"}
+                    other{"{0} секунди тому"}
+                }
+            }
+        }
+        sun{
+            relative{
+                "-1"{"минулої неділі"}
+                "0"{"цієї неділі"}
+                "1"{"наступної неділі"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"минулого четверга"}
+                "0"{"цього четверга"}
+                "1"{"наступного четверга"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"минулого вівторка"}
+                "0"{"цього вівторка"}
+                "1"{"наступного вівторка"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"минулої середи"}
+                "0"{"цієї середи"}
+                "1"{"наступної середи"}
+            }
+        }
+        week{
+            dn{"Тиждень"}
+            relative{
+                "-1"{"минулого тижня"}
+                "0"{"цього тижня"}
+                "1"{"наступного тижня"}
+            }
+            relativeTime{
+                future{
+                    few{"Через {0} тижні"}
+                    many{"Через {0} тижнів"}
+                    one{"Через {0} тиждень"}
+                    other{"Через {0} тижня"}
+                }
+                past{
+                    few{"{0} тижні тому"}
+                    many{"{0} тижнів тому"}
+                    one{"{0} тиждень тому"}
+                    other{"{0} тижня тому"}
+                }
+            }
+        }
+        weekday{
+            dn{"День тижня"}
+        }
+        year{
+            dn{"Рік"}
+            relative{
+                "-1"{"минулого року"}
+                "0"{"цього року"}
+                "1"{"наступного року"}
+            }
+            relativeTime{
+                future{
+                    few{"Через {0} роки"}
+                    many{"Через {0} років"}
+                    one{"Через {0} рік"}
+                    other{"Через {0} року"}
+                }
+                past{
+                    few{"{0} роки тому"}
+                    many{"{0} років тому"}
+                    one{"{0} рік тому"}
+                    other{"{0} року тому"}
+                }
+            }
+        }
+        zone{
+            dn{"Часовий пояс"}
+        }
+    }
     listPattern{
         standard{
             2{"{0} та {1}"}
             end{"{0} та {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
+            2{"{0} і {1}"}
+            end{"{0} і {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-short{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
@@ -706,176 +1086,925 @@ uk{
         US{"США"}
         metric{"Метрична"}
     }
+    transformNames{
+        BGN{"BGN"}
+        Numeric{"Цифри"}
+        Tone{"Тон"}
+        UNGEGN{"UNGEGN"}
+        x-Accents{"Діактричні знаки"}
+        x-Fullwidth{"Повна ширина"}
+        x-Halfwidth{"Половинна ширина"}
+        x-Jamo{"Jamo"}
+        x-Pinyin{"Піньїнь"}
+        x-Publishing{"Публікація"}
+    }
     units{
-        day{
-            few{"{0} дні"}
-            many{"{0} днів"}
-            one{"{0} день"}
-            other{"{0} дня"}
+        acceleration{
+            g-force{
+                few{"{0} сили тяжіння"}
+                many{"{0} сил тяжіння"}
+                one{"{0} сила тяжіння"}
+                other{"{0} сили тяжіння"}
+            }
         }
-        day-future{
-            few{"Через {0} дні"}
-            many{"Через {0} днів"}
-            one{"Через {0} день"}
-            other{"Через {0} дня"}
+        angle{
+            arc-minute{
+                few{"{0} мінути"}
+                many{"{0} мінут"}
+                one{"{0} мінута"}
+                other{"{0} мінути"}
+            }
+            arc-second{
+                few{"{0} секунди"}
+                many{"{0} секунд"}
+                one{"{0} секунда"}
+                other{"{0} секунди"}
+            }
+            degree{
+                few{"{0} градуси"}
+                many{"{0} градусів"}
+                one{"{0} градус"}
+                other{"{0} градуса"}
+            }
         }
-        day-past{
-            few{"{0} дні тому"}
-            many{"{0} днів тому"}
-            one{"{0} день тому"}
-            other{"{0} дня тому"}
+        area{
+            acre{
+                few{"{0} акри"}
+                many{"{0} акрів"}
+                one{"{0} акр"}
+                other{"{0} акра"}
+            }
+            hectare{
+                few{"{0} гектари"}
+                many{"{0} гектарів"}
+                one{"{0} гектар"}
+                other{"{0} гектара"}
+            }
+            square-foot{
+                few{"{0} квадратні фути"}
+                many{"{0} квадратних футів"}
+                one{"{0} квадратний фут"}
+                other{"{0} квадратного фута"}
+            }
+            square-kilometer{
+                few{"{0} квадратні кілометри"}
+                many{"{0} квадратних кілометрів"}
+                one{"{0} квадратний кілометр"}
+                other{"{0} квадратного кілометра"}
+            }
+            square-meter{
+                few{"{0} квадратні метри"}
+                many{"{0} квадратних метрів"}
+                one{"{0} квадратний метр"}
+                other{"{0} квадратного метра"}
+            }
+            square-mile{
+                few{"{0} квадратні милі"}
+                many{"{0} квадратних миль"}
+                one{"{0} квадратна миля"}
+                other{"{0} квадратної милі"}
+            }
         }
-        hour{
-            few{"{0} години"}
-            many{"{0} годин"}
-            one{"{0} година"}
-            other{"{0} години"}
+        compound{
+            per{"{0} на {1}"}
         }
-        hour-future{
-            few{"Через {0} години"}
-            many{"Через {0} годин"}
-            one{"Через {0} годину"}
-            other{"Через {0} години"}
+        duration{
+            day{
+                few{"{0} дні"}
+                many{"{0} днів"}
+                one{"{0} день"}
+                other{"{0} дня"}
+            }
+            hour{
+                few{"{0} години"}
+                many{"{0} годин"}
+                one{"{0} година"}
+                other{"{0} години"}
+            }
+            millisecond{
+                few{"{0} мілісекунди"}
+                many{"{0} мілісекунд"}
+                one{"{0} мілісекунда"}
+                other{"{0} мілісекунди"}
+            }
+            minute{
+                few{"{0} хвилини"}
+                many{"{0} хвилин"}
+                one{"{0} хвилина"}
+                other{"{0} хвилини"}
+            }
+            month{
+                few{"{0} місяці"}
+                many{"{0} місяців"}
+                one{"{0} місяць"}
+                other{"{0} місяця"}
+            }
+            second{
+                few{"{0} секунди"}
+                many{"{0} секунд"}
+                one{"{0} секунда"}
+                other{"{0} секунди"}
+            }
+            week{
+                few{"{0} тижні"}
+                many{"{0} тижнів"}
+                one{"{0} тиждень"}
+                other{"{0} тижня"}
+            }
+            year{
+                few{"{0} роки"}
+                many{"{0} років"}
+                one{"{0} рік"}
+                other{"{0} року"}
+            }
         }
-        hour-past{
-            few{"{0} години тому"}
-            many{"{0} годин тому"}
-            one{"{0} годину тому"}
-            other{"{0} години тому"}
+        length{
+            centimeter{
+                few{"{0} сантиметри"}
+                many{"{0} сантиметрів"}
+                one{"{0} сантиметр"}
+                other{"{0} сантиметра"}
+            }
+            foot{
+                few{"{0} фути"}
+                many{"{0} футів"}
+                one{"{0} фут"}
+                other{"{0} фута"}
+            }
+            inch{
+                few{"{0} дюйми"}
+                many{"{0} дюймів"}
+                one{"{0} дюйм"}
+                other{"{0} дюйма"}
+            }
+            kilometer{
+                few{"{0} кілометри"}
+                many{"{0} кілометрів"}
+                one{"{0} кілометр"}
+                other{"{0} кілометра"}
+            }
+            light-year{
+                few{"{0} світлові роки"}
+                many{"{0} світлових років"}
+                one{"{0} світловий рік"}
+                other{"{0} світлового року"}
+            }
+            meter{
+                few{"{0} метри"}
+                many{"{0} метрів"}
+                one{"{0} метр"}
+                other{"{0} метра"}
+            }
+            mile{
+                few{"{0} милі"}
+                many{"{0} миль"}
+                one{"{0} миля"}
+                other{"{0} милі"}
+            }
+            millimeter{
+                few{"{0} міліметри"}
+                many{"{0} міліметрів"}
+                one{"{0} міліметр"}
+                other{"{0} міліметра"}
+            }
+            picometer{
+                few{"{0} пікометри"}
+                many{"{0} пікометрів"}
+                one{"{0} пікометр"}
+                other{"{0} пікометра"}
+            }
+            yard{
+                few{"{0} ярди"}
+                many{"{0} ярдів"}
+                one{"{0} ярд"}
+                other{"{0} ярда"}
+            }
         }
-        minute{
-            few{"{0} хвилини"}
-            many{"{0} хвилин"}
-            one{"{0} хвилина"}
-            other{"{0} хвилини"}
+        mass{
+            gram{
+                few{"{0} грами"}
+                many{"{0} грамів"}
+                one{"{0} грам"}
+                other{"{0} грама"}
+            }
+            kilogram{
+                few{"{0} кілограми"}
+                many{"{0} кілограмів"}
+                one{"{0} кілограм"}
+                other{"{0} кілограма"}
+            }
+            ounce{
+                few{"{0} унції"}
+                many{"{0} унцій"}
+                one{"{0} унція"}
+                other{"{0} унції"}
+            }
+            pound{
+                few{"{0} фунти"}
+                many{"{0} фунтів"}
+                one{"{0} фунт"}
+                other{"{0} фунта"}
+            }
         }
-        minute-future{
-            few{"Через {0} хвилини"}
-            many{"Через {0} хвилин"}
-            one{"Через {0} хвилину"}
-            other{"Через {0} хвилини"}
+        power{
+            horsepower{
+                few{"{0} кінські сили"}
+                many{"{0} кінських сил"}
+                one{"{0} кінська сила"}
+                other{"{0} кінської сили"}
+            }
+            kilowatt{
+                few{"{0} кіловати"}
+                many{"{0} кіловатів"}
+                one{"{0} кіловат"}
+                other{"{0} кіловата"}
+            }
+            watt{
+                few{"{0} вати"}
+                many{"{0} ватів"}
+                one{"{0} ват"}
+                other{"{0} вата"}
+            }
         }
-        minute-past{
-            few{"{0} хвилини тому"}
-            many{"{0} хвилин тому"}
-            one{"{0} хвилину тому"}
-            other{"{0} хвилини тому"}
+        pressure{
+            hectopascal{
+                few{"{0} гектопаскалі"}
+                many{"{0} гектопаскалів"}
+                one{"{0} гектопаскаль"}
+                other{"{0} гектопаскаля"}
+            }
+            inch-hg{
+                few{"{0} дюйми ртутного стовпа"}
+                many{"{0} дюймів ртутного стовпа"}
+                one{"{0} дюйм ртутного стовпа"}
+                other{"{0} дюйма ртутного стовпа"}
+            }
+            millibar{
+                few{"{0} мілібари"}
+                many{"{0} мілібарів"}
+                one{"{0} мілібар"}
+                other{"{0} мілібара"}
+            }
         }
-        month{
-            few{"{0} місяці"}
-            many{"{0} місяців"}
-            one{"{0} місяць"}
-            other{"{0} місяця"}
+        speed{
+            kilometer-per-hour{
+                few{"{0} кілометри на годину"}
+                many{"{0} кілометрів на годину"}
+                one{"{0} кілометр на годину"}
+                other{"{0} кілометра на годину"}
+            }
+            meter-per-second{
+                few{"{0} метри на секунду"}
+                many{"{0} метрів на секунду"}
+                one{"{0} метр на секунду"}
+                other{"{0} метра на секунду"}
+            }
+            mile-per-hour{
+                few{"{0} милі на годину"}
+                many{"{0} миль на годину"}
+                one{"{0} миля на годину"}
+                other{"{0} милі на годину"}
+            }
         }
-        month-future{
-            few{"Через {0} місяці"}
-            many{"Через {0} місяців"}
-            one{"Через {0} місяць"}
-            other{"Через {0} місяця"}
+        temperature{
+            celsius{
+                few{"{0} градуси Цельсія"}
+                many{"{0} градусів Цельсія"}
+                one{"{0} градус Цельсія"}
+                other{"{0} градуса Цельсія"}
+            }
+            fahrenheit{
+                few{"{0} градуси Фаренгейта"}
+                many{"{0} градусів Фаренгейта"}
+                one{"{0} градус Фаренгейта"}
+                other{"{0} градуса Фаренгейта"}
+            }
         }
-        month-past{
-            few{"{0} місяці тому"}
-            many{"{0} місяців тому"}
-            one{"{0} місяць тому"}
-            other{"{0} місяця тому"}
+        volume{
+            cubic-kilometer{
+                few{"{0} кубічні кілометри"}
+                many{"{0} кубічних кілометрів"}
+                one{"{0} кубічний кілометр"}
+                other{"{0} кубічного кілометра"}
+            }
+            cubic-mile{
+                few{"{0} кубічні милі"}
+                many{"{0} кубічних миль"}
+                one{"{0} кубічна миля"}
+                other{"{0} кубічної милі"}
+            }
+            liter{
+                few{"{0} літри"}
+                many{"{0} літрів"}
+                one{"{0} літр"}
+                other{"{0} літра"}
+            }
         }
-        second{
-            few{"{0} секунди"}
-            many{"{0} секунд"}
-            one{"{0} секунда"}
-            other{"{0} секунди"}
+    }
+    unitsNarrow{
+        acceleration{
+            g-force{
+                few{"{0} G"}
+                many{"{0} G"}
+                one{"{0} G"}
+                other{"{0} G"}
+            }
         }
-        second-future{
-            few{"Через {0} секунди"}
-            many{"Через {0} секунд"}
-            one{"Через {0} секунду"}
-            other{"Через {0} секунди"}
+        angle{
+            arc-minute{
+                few{"{0}′"}
+                many{"{0}′"}
+                one{"{0}′"}
+                other{"{0}′"}
+            }
+            arc-second{
+                few{"{0}″"}
+                many{"{0}″"}
+                one{"{0}″"}
+                other{"{0}″"}
+            }
+            degree{
+                few{"{0}°"}
+                many{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
         }
-        second-past{
-            few{"{0} секунди тому"}
-            many{"{0} секунд тому"}
-            one{"{0} секунду тому"}
-            other{"{0} секунди тому"}
+        area{
+            acre{
+                few{"{0} акри"}
+                many{"{0} акрів"}
+                one{"{0} акр"}
+                other{"{0} акра"}
+            }
+            hectare{
+                few{"{0} га"}
+                many{"{0} га"}
+                one{"{0} га"}
+                other{"{0} га"}
+            }
+            square-foot{
+                few{"{0} фути²"}
+                many{"{0} футів²"}
+                one{"{0} фут²"}
+                other{"{0} фута²"}
+            }
+            square-kilometer{
+                few{"{0} км²"}
+                many{"{0} км²"}
+                one{"{0} км²"}
+                other{"{0} км²"}
+            }
+            square-meter{
+                few{"{0} м²"}
+                many{"{0} м²"}
+                one{"{0} м²"}
+                other{"{0} м²"}
+            }
+            square-mile{
+                few{"{0} милі²"}
+                many{"{0} миль²"}
+                one{"{0} миля²"}
+                other{"{0} милі²"}
+            }
         }
-        week{
-            few{"{0} тижні"}
-            many{"{0} тижнів"}
-            one{"{0} тиждень"}
-            other{"{0} тижня"}
+        compound{
+            per{"{0}/{1}"}
         }
-        week-future{
-            few{"Через {0} тижні"}
-            many{"Через {0} тижнів"}
-            one{"Через {0} тиждень"}
-            other{"Через {0} тижня"}
+        duration{
+            day{
+                few{"{0} дн."}
+                many{"{0} дн."}
+                one{"{0} дн."}
+                other{"{0} дн."}
+            }
+            hour{
+                few{"{0} год"}
+                many{"{0} год"}
+                one{"{0} год"}
+                other{"{0} год"}
+            }
+            millisecond{
+                few{"{0} мс"}
+                many{"{0} мс"}
+                one{"{0} мс"}
+                other{"{0} мс"}
+            }
+            minute{
+                few{"{0} хв"}
+                many{"{0} хв"}
+                one{"{0} хв"}
+                other{"{0} хв"}
+            }
+            month{
+                few{"{0} міс."}
+                many{"{0} міс."}
+                one{"{0} міс."}
+                other{"{0} міс."}
+            }
+            second{
+                few{"{0} с"}
+                many{"{0} с"}
+                one{"{0} с"}
+                other{"{0} с"}
+            }
+            week{
+                few{"{0} тиж."}
+                many{"{0} тиж."}
+                one{"{0} тиж."}
+                other{"{0} тиж."}
+            }
+            year{
+                few{"{0} р."}
+                many{"{0} р."}
+                one{"{0} р."}
+                other{"{0} р."}
+            }
         }
-        week-past{
-            few{"{0} тижні тому"}
-            many{"{0} тижнів тому"}
-            one{"{0} тиждень тому"}
-            other{"{0} тижня тому"}
+        length{
+            centimeter{
+                few{"{0} см"}
+                many{"{0} см"}
+                one{"{0} см"}
+                other{"{0} см"}
+            }
+            foot{
+                few{"{0} фути"}
+                many{"{0} футів"}
+                one{"{0} фут"}
+                other{"{0} фута"}
+            }
+            inch{
+                few{"{0} дюйми"}
+                many{"{0} дюймів"}
+                one{"{0} дюйм"}
+                other{"{0} дюйма"}
+            }
+            kilometer{
+                few{"{0} км"}
+                many{"{0} км"}
+                one{"{0} км"}
+                other{"{0} км"}
+            }
+            light-year{
+                few{"{0} св. р."}
+                many{"{0} св. р."}
+                one{"{0} св. р."}
+                other{"{0} св. р."}
+            }
+            meter{
+                few{"{0} м"}
+                many{"{0} м"}
+                one{"{0} м"}
+                other{"{0} м"}
+            }
+            mile{
+                few{"{0} милі"}
+                many{"{0} миль"}
+                one{"{0} миля"}
+                other{"{0} милі"}
+            }
+            millimeter{
+                few{"{0} мм"}
+                many{"{0} мм"}
+                one{"{0} мм"}
+                other{"{0} мм"}
+            }
+            picometer{
+                few{"{0} пм"}
+                many{"{0} пм"}
+                one{"{0} пм"}
+                other{"{0} пм"}
+            }
+            yard{
+                few{"{0} ярди"}
+                many{"{0} ярдів"}
+                one{"{0} ярд"}
+                other{"{0} ярда"}
+            }
         }
-        year{
-            few{"{0} роки"}
-            many{"{0} років"}
-            one{"{0} рік"}
-            other{"{0} року"}
+        mass{
+            gram{
+                few{"{0} г"}
+                many{"{0} г"}
+                one{"{0} г"}
+                other{"{0} г"}
+            }
+            kilogram{
+                few{"{0} кг"}
+                many{"{0} кг"}
+                one{"{0} кг"}
+                other{"{0} кг"}
+            }
+            ounce{
+                few{"{0} унції"}
+                many{"{0} унцій"}
+                one{"{0} унція"}
+                other{"{0} унції"}
+            }
+            pound{
+                few{"{0} фунти"}
+                many{"{0} фунтів"}
+                one{"{0} фунт"}
+                other{"{0} фунта"}
+            }
         }
-        year-future{
-            few{"Через {0} роки"}
-            many{"Через {0} років"}
-            one{"Через {0} рік"}
-            other{"Через {0} року"}
+        power{
+            horsepower{
+                few{"{0} к.с."}
+                many{"{0} к.с."}
+                one{"{0} к.с."}
+                other{"{0} к.с."}
+            }
+            kilowatt{
+                few{"{0} кВт"}
+                many{"{0} кВт"}
+                one{"{0} кВт"}
+                other{"{0} кВт"}
+            }
+            watt{
+                few{"{0} Вт"}
+                many{"{0} Вт"}
+                one{"{0} Вт"}
+                other{"{0} Вт"}
+            }
         }
-        year-past{
-            few{"{0} роки тому"}
-            many{"{0} років тому"}
-            one{"{0} рік тому"}
-            other{"{0} року тому"}
+        pressure{
+            hectopascal{
+                few{"{0} гПа"}
+                many{"{0} гПа"}
+                one{"{0} гПа"}
+                other{"{0} гПа"}
+            }
+            inch-hg{
+                few{"{0} inHg"}
+                many{"{0} inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+            }
+            millibar{
+                few{"{0} мбари"}
+                many{"{0} мбарів"}
+                one{"{0} мбар"}
+                other{"{0} мбара"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                few{"{0} км/год"}
+                many{"{0} км/год"}
+                one{"{0} км/год"}
+                other{"{0} км/год"}
+            }
+            meter-per-second{
+                few{"{0} м/с"}
+                many{"{0} м/с"}
+                one{"{0} м/с"}
+                other{"{0} м/с"}
+            }
+            mile-per-hour{
+                few{"{0} милі/год"}
+                many{"{0} миль/год"}
+                one{"{0} миля/год"}
+                other{"{0} милі/год"}
+            }
+        }
+        temperature{
+            celsius{
+                few{"{0}°"}
+                many{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+            fahrenheit{
+                few{"{0}°F"}
+                many{"{0}°F"}
+                one{"{0}°F"}
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                few{"{0} км³"}
+                many{"{0} км³"}
+                one{"{0} км³"}
+                other{"{0} км³"}
+            }
+            cubic-mile{
+                few{"{0} милі³"}
+                many{"{0} миль³"}
+                one{"{0} миля³"}
+                other{"{0} милі³"}
+            }
+            liter{
+                few{"{0} л"}
+                many{"{0} л"}
+                one{"{0} л"}
+                other{"{0} л"}
+            }
         }
     }
     unitsShort{
-        day{
-            few{"{0} дні"}
-            many{"{0} днів"}
-            one{"{0} день"}
-            other{"{0} дня"}
+        acceleration{
+            g-force{
+                few{"{0} G"}
+                many{"{0} G"}
+                one{"{0} G"}
+                other{"{0} G"}
+            }
         }
-        hour{
-            few{"{0} год."}
-            many{"{0} год."}
-            one{"{0} год."}
-            other{"{0} год."}
+        angle{
+            arc-minute{
+                few{"{0} мін."}
+                many{"{0} мін."}
+                one{"{0} мін."}
+                other{"{0} мін."}
+            }
+            arc-second{
+                few{"{0} сек."}
+                many{"{0} сек."}
+                one{"{0} сек."}
+                other{"{0} сек."}
+            }
+            degree{
+                few{"{0}°"}
+                many{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
         }
-        minute{
-            few{"{0} хв."}
-            many{"{0} хв."}
-            one{"{0} хв."}
-            other{"{0} хв."}
+        area{
+            acre{
+                few{"{0} акри"}
+                many{"{0} акрів"}
+                one{"{0} акр"}
+                other{"{0} акра"}
+            }
+            hectare{
+                few{"{0} га"}
+                many{"{0} га"}
+                one{"{0} га"}
+                other{"{0} га"}
+            }
+            square-foot{
+                few{"{0} фути²"}
+                many{"{0} футів²"}
+                one{"{0} фут²"}
+                other{"{0} фута²"}
+            }
+            square-kilometer{
+                few{"{0} км²"}
+                many{"{0} км²"}
+                one{"{0} км²"}
+                other{"{0} км²"}
+            }
+            square-meter{
+                few{"{0} м²"}
+                many{"{0} м²"}
+                one{"{0} м²"}
+                other{"{0} м²"}
+            }
+            square-mile{
+                few{"{0} милі²"}
+                many{"{0} миль²"}
+                one{"{0} миля²"}
+                other{"{0} милі²"}
+            }
         }
-        month{
-            few{"{0} міс."}
-            many{"{0} міс."}
-            one{"{0} міс."}
-            other{"{0} міс."}
+        compound{
+            per{"{0}/{1}"}
         }
-        second{
-            few{"{0} сек."}
-            many{"{0} сек."}
-            one{"{0} сек."}
-            other{"{0} сек."}
+        duration{
+            day{
+                few{"{0} дн."}
+                many{"{0} дн."}
+                one{"{0} дн."}
+                other{"{0} дн."}
+            }
+            hour{
+                few{"{0} год"}
+                many{"{0} год"}
+                one{"{0} год"}
+                other{"{0} год"}
+            }
+            millisecond{
+                few{"{0} мс"}
+                many{"{0} мс"}
+                one{"{0} мс"}
+                other{"{0} мс"}
+            }
+            minute{
+                few{"{0} хв"}
+                many{"{0} хв"}
+                one{"{0} хв"}
+                other{"{0} хв"}
+            }
+            month{
+                few{"{0} міс."}
+                many{"{0} міс."}
+                one{"{0} міс."}
+                other{"{0} міс."}
+            }
+            second{
+                few{"{0} с"}
+                many{"{0} с"}
+                one{"{0} с"}
+                other{"{0} с"}
+            }
+            week{
+                few{"{0} тиж."}
+                many{"{0} тиж."}
+                one{"{0} тиж."}
+                other{"{0} тиж."}
+            }
+            year{
+                few{"{0} р."}
+                many{"{0} р."}
+                one{"{0} р."}
+                other{"{0} р."}
+            }
         }
-        week{
-            few{"{0} тиж."}
-            many{"{0} тиж."}
-            one{"{0} тиж."}
-            other{"{0} тиж."}
+        length{
+            centimeter{
+                few{"{0} см"}
+                many{"{0} см"}
+                one{"{0} см"}
+                other{"{0} см"}
+            }
+            foot{
+                few{"{0} фути"}
+                many{"{0} футів"}
+                one{"{0} фут"}
+                other{"{0} фута"}
+            }
+            inch{
+                few{"{0} дюйми"}
+                many{"{0} дюймів"}
+                one{"{0} дюйм"}
+                other{"{0} дюйма"}
+            }
+            kilometer{
+                few{"{0} км"}
+                many{"{0} км"}
+                one{"{0} км"}
+                other{"{0} км"}
+            }
+            light-year{
+                few{"{0} св. р."}
+                many{"{0} св. р."}
+                one{"{0} св. р."}
+                other{"{0} св. р."}
+            }
+            meter{
+                few{"{0} м"}
+                many{"{0} м"}
+                one{"{0} м"}
+                other{"{0} м"}
+            }
+            mile{
+                few{"{0} милі"}
+                many{"{0} миль"}
+                one{"{0} миля"}
+                other{"{0} милі"}
+            }
+            millimeter{
+                few{"{0} мм"}
+                many{"{0} мм"}
+                one{"{0} мм"}
+                other{"{0} мм"}
+            }
+            picometer{
+                few{"{0} пм"}
+                many{"{0} пм"}
+                one{"{0} пм"}
+                other{"{0} пм"}
+            }
+            yard{
+                few{"{0} ярди"}
+                many{"{0} ярдів"}
+                one{"{0} ярд"}
+                other{"{0} ярда"}
+            }
         }
-        year{
-            few{"{0} р."}
-            many{"{0} р."}
-            one{"{0} р."}
-            other{"{0} р."}
+        mass{
+            gram{
+                few{"{0} г"}
+                many{"{0} г"}
+                one{"{0} г"}
+                other{"{0} г"}
+            }
+            kilogram{
+                few{"{0} кг"}
+                many{"{0} кг"}
+                one{"{0} кг"}
+                other{"{0} кг"}
+            }
+            ounce{
+                few{"{0} унції"}
+                many{"{0} унцій"}
+                one{"{0} унція"}
+                other{"{0} унції"}
+            }
+            pound{
+                few{"{0} фунти"}
+                many{"{0} фунтів"}
+                one{"{0} фунт"}
+                other{"{0} фунта"}
+            }
+        }
+        power{
+            horsepower{
+                few{"{0} к.с."}
+                many{"{0} к.с."}
+                one{"{0} к.с."}
+                other{"{0} к.с."}
+            }
+            kilowatt{
+                few{"{0} кВт"}
+                many{"{0} кВт"}
+                one{"{0} кВт"}
+                other{"{0} кВт"}
+            }
+            watt{
+                few{"{0} Вт"}
+                many{"{0} Вт"}
+                one{"{0} Вт"}
+                other{"{0} Вт"}
+            }
+        }
+        pressure{
+            hectopascal{
+                few{"{0} гПа"}
+                many{"{0} гПа"}
+                one{"{0} гПа"}
+                other{"{0} гПа"}
+            }
+            inch-hg{
+                few{"{0} дюйми рт. ст."}
+                many{"{0} дюймів рт. ст."}
+                one{"{0} дюйм рт. ст."}
+                other{"{0} дюйма рт. ст."}
+            }
+            millibar{
+                few{"{0} мбари"}
+                many{"{0} мбарів"}
+                one{"{0} мбар"}
+                other{"{0} мбара"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                few{"{0} км/год"}
+                many{"{0} км/год"}
+                one{"{0} км/год"}
+                other{"{0} км/год"}
+            }
+            meter-per-second{
+                few{"{0} м/с"}
+                many{"{0} м/с"}
+                one{"{0} м/с"}
+                other{"{0} м/с"}
+            }
+            mile-per-hour{
+                few{"{0} милі/год"}
+                many{"{0} миль/год"}
+                one{"{0} миля/год"}
+                other{"{0} милі/год"}
+            }
+        }
+        temperature{
+            celsius{
+                few{"{0}°C"}
+                many{"{0}°C"}
+                one{"{0}°C"}
+                other{"{0}°C"}
+            }
+            fahrenheit{
+                few{"{0}°F"}
+                many{"{0}°F"}
+                one{"{0}°F"}
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                few{"{0} км³"}
+                many{"{0} км³"}
+                one{"{0} км³"}
+                other{"{0} км³"}
+            }
+            cubic-mile{
+                few{"{0} милі³"}
+                many{"{0} миль³"}
+                one{"{0} миля³"}
+                other{"{0} милі³"}
+            }
+            liter{
+                few{"{0} л"}
+                many{"{0} л"}
+                one{"{0} л"}
+                other{"{0} л"}
+            }
         }
     }
 }

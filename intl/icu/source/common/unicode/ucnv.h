@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 1999-2012, International Business Machines
+*   Copyright (C) 1999-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
  *  ucnv.h:
@@ -521,10 +521,12 @@ ucnv_openPackage(const char *packageName, const char *converterName, UErrorCode 
  * adjusted pointer and use an accordingly smaller buffer size.
  *
  * @param cnv converter to be cloned
- * @param stackBuffer user allocated space for the new clone. If NULL new memory will be allocated. 
+ * @param stackBuffer <em>Deprecated functionality as of ICU 52, use NULL.</em><br>
+ *  user allocated space for the new clone. If NULL new memory will be allocated. 
  *  If buffer is not large enough, new memory will be allocated.
  *  Clients can use the U_CNV_SAFECLONE_BUFFERSIZE. This will probably be enough to avoid memory allocations.
- * @param pBufferSize pointer to size of allocated space. pBufferSize must not be NULL.
+ * @param pBufferSize <em>Deprecated functionality as of ICU 52, use NULL or 1.</em><br>
+ *  pointer to size of allocated space.
  * @param status to indicate whether the operation went on smoothly or there were errors
  *  An informational status value, U_SAFECLONE_ALLOCATED_WARNING,
  *  is used if any allocations were necessary.
@@ -540,13 +542,17 @@ ucnv_safeClone(const UConverter *cnv,
                int32_t          *pBufferSize, 
                UErrorCode       *status);
 
+#ifndef U_HIDE_DEPRECATED_API
+
 /**
  * \def U_CNV_SAFECLONE_BUFFERSIZE
  * Definition of a buffer size that is designed to be large enough for
  * converters to be cloned with ucnv_safeClone().
- * @stable ICU 2.0
+ * @deprecated ICU 52. Do not rely on ucnv_safeClone() cloning into any provided buffer.
  */
 #define U_CNV_SAFECLONE_BUFFERSIZE  1024
+
+#endif /* U_HIDE_DEPRECATED_API */
 
 /**
  * Deletes the unicode converter and releases resources associated

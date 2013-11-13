@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/fo.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/fo.xml
+ * ICU <specials> source: <path>/common/main/fo.xml
  */
 fo{
     AuxExemplarCharacters{"[c q w z]"}
@@ -28,8 +28,25 @@ fo{
             }
         }
     }
-    Version{"2.0.78.17"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE dd MMMM y G",
+                "d. MMM y G",
+                "dd-MM-y G",
+                "dd-MM-yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
         gregorian{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -38,7 +55,7 @@ fo{
                 "HH:mm",
                 "EEEE dd MMMM y",
                 "d. MMM y",
-                "dd-MM-yyyy",
+                "dd-MM-y",
                 "dd-MM-yy",
                 "{1} {0}",
                 "{1} {0}",
@@ -115,13 +132,54 @@ fo{
                         "4. kvartal",
                     }
                 }
+                stand-alone{
+                    wide{
+                        "1. kvartal",
+                        "2. kvartal",
+                        "3. kvartal",
+                        "4. kvartal",
+                    }
+                }
             }
         }
+    }
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
     }
     listPattern{
         standard{
             2{"{0} og {1}"}
             end{"{0} og {1}"}
+        }
+    }
+    units{
+        duration{
+            day{
+                one{"{0} samdøgur"}
+                other{"{0} samdøgur"}
+            }
+            hour{
+                one{"{0} tími"}
+                other{"{0} tímar"}
+            }
+            minute{
+                one{"{0} minuttur"}
+                other{"{0} minuttir"}
+            }
+            month{
+                one{"{0} mánadur"}
+                other{"{0} mánaðir"}
+            }
+            second{
+                one{"{0} sekund"}
+                other{"{0} sekundir"}
+            }
+            week{
+                one{"{0} vika"}
+                other{"{0} vikur"}
+            }
         }
     }
 }

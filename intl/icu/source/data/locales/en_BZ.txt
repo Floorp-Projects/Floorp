@@ -1,35 +1,25 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/en_BZ.xml
 // *
 // ***************************************************************************
 en_BZ{
-    NumberElements{
-        latn{
-            patterns{
-                currencyFormat{"¤#,##0.00"}
-            }
-        }
-    }
-    PaperSize:intvector{
-        279,
-        216,
-    }
-    Version{"2.0.75.60"}
+    %%Parent{"en_001"}
+    Version{"2.0.92.80"}
     calendar{
-        gregorian{
+        generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE, MMMM d, y",
-                "MMMM d, y",
-                "dd-MMM-y",
-                "M/d/yy",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE dd MMMM y G",
+                "dd MMMM y G",
+                "dd-MMM-y G",
+                "dd/MM/y GGGGG",
                 "{1}, {0}",
                 "{1} 'at' {0}",
                 "{1} 'at' {0}",
@@ -37,10 +27,43 @@ en_BZ{
                 "{1}, {0}",
             }
             availableFormats{
+                MEd{"E dd/MM"}
                 MMMEd{"E dd MMM"}
                 MMMd{"dd MMM"}
+                Md{"dd/MM"}
+                yyyyM{"MM/y G"}
+                yyyyMEd{"E dd/MM/y G"}
+                yyyyMMMEd{"E dd MMM y G"}
+                yyyyMMMd{"dd MMM y G"}
+                yyyyMd{"dd/MM/y G"}
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE dd MMMM y",
+                "dd MMMM y",
+                "dd-MMM-y",
+                "dd/MM/yy",
+                "{1}, {0}",
+                "{1} 'at' {0}",
+                "{1} 'at' {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                MEd{"E dd/MM"}
+                MMMEd{"E dd MMM"}
+                MMMd{"dd MMM"}
+                Md{"dd/MM"}
+                yM{"MM/y"}
+                yMEd{"E dd/MM/y"}
                 yMMMEd{"E dd MMM y"}
                 yMMMd{"dd MMM y"}
+                yMd{"dd/MM/y"}
             }
         }
     }

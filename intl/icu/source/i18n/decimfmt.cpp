@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 1997-2012, International Business Machines Corporation and    *
+* Copyright (C) 1997-2013, International Business Machines Corporation and    *
 * others. All Rights Reserved.                                                *
 *******************************************************************************
 *
@@ -70,8 +70,36 @@
 #include "hash.h"
 #include "decfmtst.h"
 #include "dcfmtimp.h"
+#include "plurrule_impl.h"
+
+/*
+ * On certain platforms, round is a macro defined in math.h
+ * This undefine is to avoid conflict between the macro and
+ * the function defined below.
+ */
+#ifdef round
+#undef round
+#endif
+
 
 U_NAMESPACE_BEGIN
+
+#ifdef FMT_DEBUG
+#include <stdio.h>
+static void _debugout(const char *f, int l, const UnicodeString& s) {
+    char buf[2000];
+    s.extract((int32_t) 0, s.length(), buf, "utf-8");
+    printf("%s:%d: %s\n", f,l, buf);
+}
+#define debugout(x) _debugout(__FILE__,__LINE__,x)
+#define debug(x) printf("%s:%d: %s\n", __FILE__,__LINE__, x);
+static const UnicodeString dbg_null("<NULL>","");
+#define DEREFSTR(x)   ((x!=NULL)?(*x):(dbg_null))
+#else
+#define debugout(x)
+#define debug(x)
+#endif
+
 
 
 /* == Fastpath calculation. ==
@@ -114,6 +142,15 @@ struct AffixPatternsForCurrency : public UMemory {
 		posSuffixPatternForCurrency = posSuffix;
 		patternType = type;
 	}
+#ifdef FMT_DEBUG
+  void dump() const  {
+    debugout( UnicodeString("AffixPatternsForCurrency( -=\"") +
+              negPrefixPatternForCurrency + (UnicodeString)"\"/\"" +
+              negSuffixPatternForCurrency + (UnicodeString)"\" +=\"" + 
+              posPrefixPatternForCurrency + (UnicodeString)"\"/\"" + 
+              posSuffixPatternForCurrency + (UnicodeString)"\" )");
+  }
+#endif
 };
 
 /* affix for currency formatting when the currency sign in the pattern
@@ -141,6 +178,15 @@ struct AffixesForCurrency : public UMemory {
 		posPrefixForCurrency = posPrefix;
 		posSuffixForCurrency = posSuffix;
 	}
+#ifdef FMT_DEBUG
+  void dump() const {
+    debugout( UnicodeString("AffixesForCurrency( -=\"") +
+              negPrefixForCurrency + (UnicodeString)"\"/\"" +
+              negSuffixForCurrency + (UnicodeString)"\" +=\"" + 
+              posPrefixForCurrency + (UnicodeString)"\"/\"" + 
+              posSuffixForCurrency + (UnicodeString)"\" )");
+  }
+#endif
 };
 
 U_CDECL_BEGIN
@@ -188,21 +234,6 @@ U_CALLCONV decimfmtAffixPatternValueComparator(UHashTok val1, UHashTok val2) {
 
 U_CDECL_END
 
-#ifdef FMT_DEBUG
-#include <stdio.h>
-static void _debugout(const char *f, int l, const UnicodeString& s) {
-    char buf[2000];
-    s.extract((int32_t) 0, s.length(), buf);
-    printf("%s:%d: %s\n", f,l, buf);
-}
-#define debugout(x) _debugout(__FILE__,__LINE__,x)
-#define debug(x) printf("%s:%d: %s\n", __FILE__,__LINE__, x);
-static const UnicodeString dbg_null("<NULL>","");
-#define DEREFSTR(x)   ((x!=NULL)?(*x):(dbg_null))
-#else
-#define debugout(x)
-#define debug(x)
-#endif
 
 
 
@@ -251,6 +282,7 @@ static const char fgLatn[]="latn";
 static const char fgPatterns[]="patterns";
 static const char fgDecimalFormat[]="decimalFormat";
 static const char fgCurrencyFormat[]="currencyFormat";
+
 static const UChar fgTripleCurrencySign[] = {0xA4, 0xA4, 0xA4, 0};
 
 inline int32_t _min(int32_t a, int32_t b) { return (a<b) ? a : b; }
@@ -260,7 +292,7 @@ inline int32_t _max(int32_t a, int32_t b) { return (a<b) ? b : a; }
 // Constructs a DecimalFormat instance in the default locale.
 
 DecimalFormat::DecimalFormat(UErrorCode& status) {
-    init(status);
+    init();
     UParseError parseError;
     construct(status, parseError);
 }
@@ -271,7 +303,7 @@ DecimalFormat::DecimalFormat(UErrorCode& status) {
 
 DecimalFormat::DecimalFormat(const UnicodeString& pattern,
                              UErrorCode& status) {
-    init(status);
+    init();
     UParseError parseError;
     construct(status, parseError, &pattern);
 }
@@ -284,7 +316,7 @@ DecimalFormat::DecimalFormat(const UnicodeString& pattern,
 DecimalFormat::DecimalFormat(const UnicodeString& pattern,
                              DecimalFormatSymbols* symbolsToAdopt,
                              UErrorCode& status) {
-    init(status);
+    init();
     UParseError parseError;
     if (symbolsToAdopt == NULL)
         status = U_ILLEGAL_ARGUMENT_ERROR;
@@ -295,7 +327,7 @@ DecimalFormat::DecimalFormat(  const UnicodeString& pattern,
                     DecimalFormatSymbols* symbolsToAdopt,
                     UParseError& parseErr,
                     UErrorCode& status) {
-    init(status);
+    init();
     if (symbolsToAdopt == NULL)
         status = U_ILLEGAL_ARGUMENT_ERROR;
     construct(status,parseErr, &pattern, symbolsToAdopt);
@@ -309,7 +341,7 @@ DecimalFormat::DecimalFormat(  const UnicodeString& pattern,
 DecimalFormat::DecimalFormat(const UnicodeString& pattern,
                              const DecimalFormatSymbols& symbols,
                              UErrorCode& status) {
-    init(status);
+    init();
     UParseError parseError;
     construct(status, parseError, &pattern, new DecimalFormatSymbols(symbols));
 }
@@ -323,7 +355,7 @@ DecimalFormat::DecimalFormat(const UnicodeString& pattern,
                              DecimalFormatSymbols* symbolsToAdopt,
                              UNumberFormatStyle style,
                              UErrorCode& status) {
-    init(status);
+    init();
     fStyle = style;
     UParseError parseError;
     construct(status, parseError, &pattern, symbolsToAdopt);
@@ -333,14 +365,17 @@ DecimalFormat::DecimalFormat(const UnicodeString& pattern,
 // Common DecimalFormat initialization.
 //    Put all fields of an uninitialized object into a known state.
 //    Common code, shared by all constructors.
+//    Can not fail. Leave the object in good enough shape that the destructor
+//    or assignment operator can run successfully.
 void
-DecimalFormat::init(UErrorCode &status) {
+DecimalFormat::init() {
     fPosPrefixPattern = 0;
     fPosSuffixPattern = 0;
     fNegPrefixPattern = 0;
     fNegSuffixPattern = 0;
     fCurrencyChoice = 0;
     fMultiplier = NULL;
+    fScale = 0;
     fGroupingSize = 0;
     fGroupingSize2 = 0;
     fDecimalSeparatorAlwaysShown = FALSE;
@@ -358,7 +393,7 @@ DecimalFormat::init(UErrorCode &status) {
     fFormatWidth = 0;
     fPadPosition = kPadBeforePrefix;
     fStyle = UNUM_DECIMAL;
-    fCurrencySignCount = 0;
+    fCurrencySignCount = fgCurrencySignCountZero;
     fAffixPatternsForCurrency = NULL;
     fAffixesForCurrency = NULL;
     fPluralAffixesForCurrency = NULL;
@@ -372,8 +407,7 @@ DecimalFormat::init(UErrorCode &status) {
     data.fFastFormatStatus=kFastpathUNKNOWN; // don't try to calculate the fastpath until later.
     data.fFastParseStatus=kFastpathUNKNOWN; // don't try to calculate the fastpath until later.
 #endif
-    // only do this once per obj.
-    DecimalFormatStaticSets::initSets(&status);
+    fStaticSets = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -382,7 +416,7 @@ DecimalFormat::init(UErrorCode &status) {
 // created instance owns the symbols.
 
 void
-DecimalFormat::construct(UErrorCode&             status,
+DecimalFormat::construct(UErrorCode&            status,
                          UParseError&           parseErr,
                          const UnicodeString*   pattern,
                          DecimalFormatSymbols*  symbolsToAdopt)
@@ -407,11 +441,14 @@ DecimalFormat::construct(UErrorCode&             status,
     if (fSymbols == NULL)
     {
         fSymbols = new DecimalFormatSymbols(Locale::getDefault(), status);
-        /* test for NULL */
         if (fSymbols == 0) {
             status = U_MEMORY_ALLOCATION_ERROR;
             return;
         }
+    }
+    fStaticSets = DecimalFormatStaticSets::getStaticSets(status);
+    if (U_FAILURE(status)) {
+        return;
     }
     UErrorCode nsStatus = U_ZERO_ERROR;
     NumberingSystem *ns = NumberingSystem::createInstance(nsStatus);
@@ -511,7 +548,7 @@ DecimalFormat::construct(UErrorCode&             status,
 
     // If it was a currency format, apply the appropriate rounding by
     // resetting the currency. NOTE: this copies fCurrency on top of itself.
-    if (fCurrencySignCount > fgCurrencySignCountZero) {
+    if (fCurrencySignCount != fgCurrencySignCountZero) {
         setCurrencyInternally(getCurrency(), status);
     }
 #if UCONFIG_FORMAT_FASTPATHS_49
@@ -685,8 +722,7 @@ DecimalFormat::~DecimalFormat()
 
 DecimalFormat::DecimalFormat(const DecimalFormat &source) :
     NumberFormat(source) {
-    UErrorCode status = U_ZERO_ERROR;
-    init(status); // if this fails, 'source' isn't initialized properly either.
+    init();
     *this = source;
 }
 
@@ -719,7 +755,9 @@ DecimalFormat&
 DecimalFormat::operator=(const DecimalFormat& rhs)
 {
     if(this != &rhs) {
+        UErrorCode status = U_ZERO_ERROR;
         NumberFormat::operator=(rhs);
+        fStaticSets     = DecimalFormatStaticSets::getStaticSets(status);
         fPositivePrefix = rhs.fPositivePrefix;
         fPositiveSuffix = rhs.fPositiveSuffix;
         fNegativePrefix = rhs.fNegativePrefix;
@@ -982,6 +1020,163 @@ DecimalFormat::clone() const
     return new DecimalFormat(*this);
 }
 
+
+FixedDecimal
+DecimalFormat::getFixedDecimal(double number, UErrorCode &status) const {
+    FixedDecimal result;
+
+    if (U_FAILURE(status)) {
+        return result;
+    }
+
+    if (uprv_isNaN(number) || uprv_isPositiveInfinity(fabs(number))) {
+        // For NaN and Infinity the state of the formatter is ignored.
+        result.init(number);
+        return result;
+    }
+
+    if (fMultiplier == NULL && fScale == 0 && fRoundingIncrement == 0 && areSignificantDigitsUsed() == FALSE &&
+            result.quickInit(number) && result.visibleDecimalDigitCount <= getMaximumFractionDigits()) {
+        // Fast Path. Construction of an exact FixedDecimal directly from the double, without passing
+        //   through a DigitList, was successful, and the formatter is doing nothing tricky with rounding.
+        // printf("getFixedDecimal(%g): taking fast path.\n", number);
+        result.adjustForMinFractionDigits(getMinimumFractionDigits());
+    } else {
+        // Slow path. Create a DigitList, and have this formatter round it according to the
+        //     requirements of the format, and fill the fixedDecimal from that.
+        DigitList digits;
+        digits.set(number);
+        result = getFixedDecimal(digits, status);
+    }
+    return result;
+}
+
+// MSVC optimizer bug? 
+// turn off optimization as it causes different behavior in the int64->double->int64 conversion
+#if defined (_MSC_VER)
+#pragma optimize ( "", off )
+#endif
+FixedDecimal
+DecimalFormat::getFixedDecimal(const Formattable &number, UErrorCode &status) const {
+    if (U_FAILURE(status)) {
+        return FixedDecimal();
+    }
+    if (!number.isNumeric()) {
+        status = U_ILLEGAL_ARGUMENT_ERROR;
+        return FixedDecimal();
+    }
+
+    DigitList *dl = number.getDigitList();
+    if (dl != NULL) {
+        DigitList clonedDL(*dl);
+        return getFixedDecimal(clonedDL, status);
+    }
+
+    Formattable::Type type = number.getType();
+    if (type == Formattable::kDouble || type == Formattable::kLong) { 
+        return getFixedDecimal(number.getDouble(status), status);
+    }
+
+    if (type == Formattable::kInt64) {
+        // "volatile" here is a workaround to avoid optimization issues.
+        volatile double fdv = number.getDouble(status);
+        // Note: conversion of int64_t -> double rounds with some compilers to
+        //       values beyond what can be represented as a 64 bit int. Subsequent
+        //       testing or conversion with int64_t produces bad results.
+        //       So filter the problematic values, route them to DigitList.
+        if (fdv != (double)U_INT64_MAX && fdv != (double)U_INT64_MIN &&
+                number.getInt64() == (int64_t)fdv) {
+            return getFixedDecimal(number.getDouble(status), status);
+        }
+    }
+
+    // The only case left is type==int64_t, with a value with more digits than a double can represent.
+    // Any formattable originating as a big decimal will have had a pre-existing digit list.
+    // Any originating as a double or int32 will have been handled as a double.
+
+    U_ASSERT(type == Formattable::kInt64);
+    DigitList digits;
+    digits.set(number.getInt64());
+    return getFixedDecimal(digits, status);
+}
+// end workaround MSVC optimizer bug
+#if defined (_MSC_VER)
+#pragma optimize ( "", on )
+#endif
+
+
+// Create a fixed decimal from a DigitList.
+//    The digit list may be modified.
+//    Internal function only.
+FixedDecimal
+DecimalFormat::getFixedDecimal(DigitList &number, UErrorCode &status) const {
+    // Round the number according to the requirements of this Format.
+    FixedDecimal result;
+    _round(number, number, result.isNegative, status);
+
+    // The int64_t fields in FixedDecimal can easily overflow.
+    // In deciding what to discard in this event, consider that fixedDecimal
+    //   is being used only with PluralRules, and those rules mostly look at least significant
+    //   few digits of the integer part, and whether the fraction part is zero or not.
+    // 
+    // So, in case of overflow when filling in the fields of the FixedDecimal object,
+    //    for the integer part, discard the most significant digits.
+    //    for the fraction part, discard the least significant digits,
+    //                           don't truncate the fraction value to zero.
+    // For simplicity, the int64_t fields are limited to 18 decimal digits, even
+    // though they could hold most (but not all) 19 digit values.
+
+    // Integer Digits.
+    int32_t di = number.getDecimalAt()-18;  // Take at most 18 digits.
+    if (di < 0) {
+        di = 0;
+    }
+    result.intValue = 0;
+    for (; di<number.getDecimalAt(); di++) {
+        result.intValue = result.intValue * 10 + (number.getDigit(di) & 0x0f);
+    }
+    if (result.intValue == 0 && number.getDecimalAt()-18 > 0) {
+        // The number is something like 100000000000000000000000.
+        // More than 18 digits integer digits, but the least significant 18 are all zero.
+        // We don't want to return zero as the int part, but want to keep zeros
+        //   for several of the least significant digits.
+        result.intValue = 100000000000000000LL;
+    }
+    
+    // Fraction digits.
+    result.decimalDigits = result.decimalDigitsWithoutTrailingZeros = result.visibleDecimalDigitCount = 0;
+    for (di = number.getDecimalAt(); di < number.getCount(); di++) {
+        result.visibleDecimalDigitCount++;
+        if (result.decimalDigits <  100000000000000000LL) {
+                   //              9223372036854775807    Largest 64 bit signed integer
+            int32_t digitVal = number.getDigit(di) & 0x0f;  // getDigit() returns a char, '0'-'9'.
+            result.decimalDigits = result.decimalDigits * 10 + digitVal;
+            if (digitVal > 0) {
+                result.decimalDigitsWithoutTrailingZeros = result.decimalDigits;
+            }
+        }
+    }
+
+    result.hasIntegerValue = (result.decimalDigits == 0);
+
+    // Trailing fraction zeros. The format specification may require more trailing
+    //    zeros than the numeric value. Add any such on now.
+
+    int32_t minFractionDigits;
+    if (areSignificantDigitsUsed()) {
+        minFractionDigits = getMinimumSignificantDigits() - number.getDecimalAt();
+        if (minFractionDigits < 0) {
+            minFractionDigits = 0;
+        }
+    } else {
+        minFractionDigits = getMinimumFractionDigits();
+    }
+    result.adjustForMinFractionDigits(minFractionDigits);
+
+    return result;
+}
+
+
 //------------------------------------------------------------------------------
 
 UnicodeString&
@@ -1057,14 +1252,16 @@ void DecimalFormat::handleChanged() {
     debug("No format fastpath: fMinSignificantDigits!=1");
   } else if(fMultiplier!=NULL) {
     debug("No format fastpath: fMultiplier!=NULL");
+  } else if(fScale!=0) {
+    debug("No format fastpath: fScale!=0");
   } else if(0x0030 != getConstSymbol(DecimalFormatSymbols::kZeroDigitSymbol).char32At(0)) {
     debug("No format fastpath: 0x0030 != getConstSymbol(DecimalFormatSymbols::kZeroDigitSymbol).char32At(0)");
   } else if(fDecimalSeparatorAlwaysShown) {
     debug("No format fastpath: fDecimalSeparatorAlwaysShown");
   } else if(getMinimumFractionDigits()>0) {
     debug("No format fastpath: fMinFractionDigits>0");
-  } else if(fCurrencySignCount > fgCurrencySignCountZero) {
-    debug("No format fastpath: fCurrencySignCount > fgCurrencySignCountZero");
+  } else if(fCurrencySignCount != fgCurrencySignCountZero) {
+    debug("No format fastpath: fCurrencySignCount != fgCurrencySignCountZero");
   } else if(fRoundingIncrement!=0) {
     debug("No format fastpath: fRoundingIncrement!=0");
   } else {
@@ -1344,7 +1541,98 @@ DecimalFormat::format(const DigitList &number,
     return appendTo;
 }
 
+DigitList&
+DecimalFormat::_round(const DigitList &number, DigitList &adjustedNum, UBool& isNegative, UErrorCode &status) const {
+    if (U_FAILURE(status)) {
+        return adjustedNum;
+    }
 
+    // note: number and adjustedNum may refer to the same DigitList, in cases where a copy
+    //       is not needed by the caller.
+
+    adjustedNum = number;
+    isNegative = false;
+    if (number.isNaN()) {
+        return adjustedNum;
+    }
+
+    // Do this BEFORE checking to see if value is infinite or negative! Sets the
+    // begin and end index to be length of the string composed of
+    // localized name of Infinite and the positive/negative localized
+    // signs.
+
+    adjustedNum.setRoundingMode(fRoundingMode);
+    if (fMultiplier != NULL) {
+        adjustedNum.mult(*fMultiplier, status);
+        if (U_FAILURE(status)) {
+            return adjustedNum;
+        }
+    }
+
+    if (fScale != 0) {
+        DigitList ten;
+        ten.set((int32_t)10);
+        if (fScale > 0) {
+            for (int32_t i = fScale ; i > 0 ; i--) {
+                adjustedNum.mult(ten, status);
+                if (U_FAILURE(status)) {
+                    return adjustedNum;
+                }
+            }
+        } else {
+            for (int32_t i = fScale ; i < 0 ; i++) {
+                adjustedNum.div(ten, status);
+                if (U_FAILURE(status)) {
+                    return adjustedNum;
+                }
+            }
+        }
+    }
+
+    /*
+     * Note: sign is important for zero as well as non-zero numbers.
+     * Proper detection of -0.0 is needed to deal with the
+     * issues raised by bugs 4106658, 4106667, and 4147706.  Liu 7/6/98.
+     */
+    isNegative = !adjustedNum.isPositive();
+
+    // Apply rounding after multiplier
+
+    adjustedNum.fContext.status &= ~DEC_Inexact;
+    if (fRoundingIncrement != NULL) {
+        adjustedNum.div(*fRoundingIncrement, status);
+        adjustedNum.toIntegralValue();
+        adjustedNum.mult(*fRoundingIncrement, status);
+        adjustedNum.trim();
+        if (U_FAILURE(status)) {
+            return adjustedNum;
+        }
+    }
+    if (fRoundingMode == kRoundUnnecessary && (adjustedNum.fContext.status & DEC_Inexact)) {
+        status = U_FORMAT_INEXACT_ERROR;
+        return adjustedNum;
+    }
+
+    if (adjustedNum.isInfinite()) {
+        return adjustedNum;
+    }
+
+    if (fUseExponentialNotation || areSignificantDigitsUsed()) {
+        int32_t sigDigits = precision();
+        if (sigDigits > 0) {
+            adjustedNum.round(sigDigits);
+        }
+    } else {
+        // Fixed point format.  Round to a set number of fraction digits.
+        int32_t numFractionDigits = precision();
+        adjustedNum.roundFixedPoint(numFractionDigits);
+    }
+    if (fRoundingMode == kRoundUnnecessary && (adjustedNum.fContext.status & DEC_Inexact)) {
+        status = U_FORMAT_INEXACT_ERROR;
+        return adjustedNum;
+    }
+    return adjustedNum;
+}
 
 UnicodeString&
 DecimalFormat::_format(const DigitList &number,
@@ -1352,6 +1640,10 @@ DecimalFormat::_format(const DigitList &number,
                         FieldPositionHandler& handler,
                         UErrorCode &status) const
 {
+    if (U_FAILURE(status)) {
+        return appendTo;
+    }
+
     // Special case for NaN, sets the begin and end index to be the
     // the string length of localized name of NaN.
     if (number.isNaN())
@@ -1365,38 +1657,12 @@ DecimalFormat::_format(const DigitList &number,
         return appendTo;
     }
 
-    // Do this BEFORE checking to see if value is infinite or negative! Sets the
-    // begin and end index to be length of the string composed of
-    // localized name of Infinite and the positive/negative localized
-    // signs.
-
-    DigitList adjustedNum(number);  // Copy, so we do not alter the original. 
-    adjustedNum.setRoundingMode(fRoundingMode);
-    if (fMultiplier != NULL) {
-        adjustedNum.mult(*fMultiplier, status);
-    }
-
-    /* 
-     * Note: sign is important for zero as well as non-zero numbers.
-     * Proper detection of -0.0 is needed to deal with the
-     * issues raised by bugs 4106658, 4106667, and 4147706.  Liu 7/6/98.
-     */
-    UBool isNegative = !adjustedNum.isPositive();
-
-    // Apply rounding after multiplier
-    
-    adjustedNum.fContext.status &= ~DEC_Inexact;
-    if (fRoundingIncrement != NULL) {
-        adjustedNum.div(*fRoundingIncrement, status);
-        adjustedNum.toIntegralValue();
-        adjustedNum.mult(*fRoundingIncrement, status);
-        adjustedNum.trim();
-    }
-    if (fRoundingMode == kRoundUnnecessary && (adjustedNum.fContext.status & DEC_Inexact)) {
-        status = U_FORMAT_INEXACT_ERROR;
+    DigitList adjustedNum;
+    UBool isNegative;
+    _round(number, adjustedNum, isNegative, status);
+    if (U_FAILURE(status)) {
         return appendTo;
     }
-        
 
     // Special case for INFINITE,
     if (adjustedNum.isInfinite()) {
@@ -1412,33 +1678,7 @@ DecimalFormat::_format(const DigitList &number,
         addPadding(appendTo, handler, prefixLen, suffixLen);
         return appendTo;
     }
-
-    if (fUseExponentialNotation || areSignificantDigitsUsed()) {
-        int32_t sigDigits = precision();
-        if (sigDigits > 0) {
-            adjustedNum.round(sigDigits);
-        }
-    } else {
-        // Fixed point format.  Round to a set number of fraction digits.
-        int32_t numFractionDigits = precision();
-        adjustedNum.roundFixedPoint(numFractionDigits);
-    }
-    if (fRoundingMode == kRoundUnnecessary && (adjustedNum.fContext.status & DEC_Inexact)) {
-        status = U_FORMAT_INEXACT_ERROR;
-        return appendTo;
-    }
- 
     return subformat(appendTo, handler, adjustedNum, FALSE, status);
-}
-
-
-UnicodeString&
-DecimalFormat::format(  const Formattable& obj,
-                        UnicodeString& appendTo,
-                        FieldPosition& fieldPosition,
-                        UErrorCode& status) const
-{
-    return NumberFormat::format(obj, appendTo, fieldPosition, status);
 }
 
 /**
@@ -1493,16 +1733,16 @@ DecimalFormat::subformat(UnicodeString& appendTo,
     localizedDigits[9] = getConstSymbol(DecimalFormatSymbols::kNineDigitSymbol).char32At(0);
 
     const UnicodeString *grouping ;
-    if(fCurrencySignCount > fgCurrencySignCountZero) {
-        grouping = &getConstSymbol(DecimalFormatSymbols::kMonetaryGroupingSeparatorSymbol);
-    }else{
+    if(fCurrencySignCount == fgCurrencySignCountZero) {
         grouping = &getConstSymbol(DecimalFormatSymbols::kGroupingSeparatorSymbol);
+    }else{
+        grouping = &getConstSymbol(DecimalFormatSymbols::kMonetaryGroupingSeparatorSymbol);
     }
     const UnicodeString *decimal;
-    if(fCurrencySignCount > fgCurrencySignCountZero) {
-        decimal = &getConstSymbol(DecimalFormatSymbols::kMonetarySeparatorSymbol);
-    } else {
+    if(fCurrencySignCount == fgCurrencySignCountZero) {
         decimal = &getConstSymbol(DecimalFormatSymbols::kDecimalSeparatorSymbol);
+    } else {
+        decimal = &getConstSymbol(DecimalFormatSymbols::kMonetarySeparatorSymbol);
     }
     UBool useSigDig = areSignificantDigitsUsed();
     int32_t maxIntDig = getMaximumIntegerDigits();
@@ -1714,14 +1954,14 @@ DecimalFormat::subformat(UnicodeString& appendTo,
                 appendTo.append(*grouping);
                 handler.addAttribute(kGroupingSeparatorField, currentLength, appendTo.length());
             }
-        } 
+        }
 
-        // This handles the special case of formatting 0. For zero only, we count the 
-        // zero to the left of the decimal point as one signficant digit. Ordinarily we 
-        // do not count any leading 0's as significant. If the number we are formatting 
-        // is not zero, then either sigCount or digits.getCount() will be non-zero. 
-        if (sigCount == 0 && digits.getCount() == 0) { 
-          sigCount = 1; 
+        // This handles the special case of formatting 0. For zero only, we count the
+        // zero to the left of the decimal point as one signficant digit. Ordinarily we
+        // do not count any leading 0's as significant. If the number we are formatting
+        // is not zero, then either sigCount or digits.getCount() will be non-zero.
+        if (sigCount == 0 && digits.getCount() == 0) {
+          sigCount = 1;
         }
 
         // TODO(dlf): this looks like it was a bug, we marked the int field as ending
@@ -1851,14 +2091,6 @@ void DecimalFormat::addPadding(UnicodeString& appendTo,
 void
 DecimalFormat::parse(const UnicodeString& text,
                      Formattable& result,
-                     UErrorCode& status) const
-{
-    NumberFormat::parse(text, result, status);
-}
-
-void
-DecimalFormat::parse(const UnicodeString& text,
-                     Formattable& result,
                      ParsePosition& parsePosition) const {
     parse(text, result, parsePosition, NULL);
 }
@@ -1867,7 +2099,7 @@ CurrencyAmount* DecimalFormat::parseCurrency(const UnicodeString& text,
                                              ParsePosition& pos) const {
     Formattable parseResult;
     int32_t start = pos.getIndex();
-    UChar curbuf[4];
+    UChar curbuf[4] = {};
     parse(text, parseResult, pos, curbuf);
     if (pos.getIndex() != start) {
         UErrorCode ec = U_ZERO_ERROR;
@@ -1905,6 +2137,11 @@ void DecimalFormat::parse(const UnicodeString& text,
     // clear any old contents in the result.  In particular, clears any DigitList
     //   that it may be holding.
     result.setLong(0);
+    if (currency != NULL) {
+        for (int32_t ci=0; ci<4; ci++) {
+            currency[ci] = 0;
+        }
+    }
 
     // Handle NaN as a special case:
 
@@ -1946,7 +2183,7 @@ void DecimalFormat::parse(const UnicodeString& text,
         return;    // no way to report error from here.
     }
 
-    if (fCurrencySignCount > fgCurrencySignCountZero) {
+    if (fCurrencySignCount != fgCurrencySignCountZero) {
         if (!parseForCurrency(text, parsePosition, *digits,
                               status, currency)) {
           return;
@@ -1975,6 +2212,22 @@ void DecimalFormat::parse(const UnicodeString& text,
         if (fMultiplier != NULL) {
             UErrorCode ec = U_ZERO_ERROR;
             digits->div(*fMultiplier, ec);
+        }
+
+        if (fScale != 0) {
+            DigitList ten;
+            ten.set((int32_t)10);
+            if (fScale > 0) {
+                for (int32_t i = fScale; i > 0; i--) {
+                    UErrorCode ec = U_ZERO_ERROR;
+                    digits->div(ten,ec);
+                }
+            } else {
+                for (int32_t i = fScale; i < 0; i++) {
+                    UErrorCode ec = U_ZERO_ERROR;
+                    digits->mult(ten,ec);
+                }
+            }
         }
 
         // Negative zero special case:
@@ -2040,6 +2293,12 @@ DecimalFormat::parseForCurrency(const UnicodeString& text,
         UBool tmpStatus[fgStatusLength];
         ParsePosition tmpPos(origPos);
         DigitList tmpDigitList;
+
+#ifdef FMT_DEBUG
+        debug("trying affix for currency..");
+        affixPtn->dump();
+#endif
+
         UBool result = subparse(text,
                                 &affixPtn->negPrefixPatternForCurrency,
                                 &affixPtn->negSuffixPatternForCurrency,
@@ -2069,16 +2328,21 @@ DecimalFormat::parseForCurrency(const UnicodeString& text,
     // and the parse stops at "\u00A4".
     // We will just use simple affix comparison (look for exact match)
     // to pass it.
+    //
+    // TODO: We should parse against simple affix first when
+    // output currency is not requested. After the complex currency
+    // parsing implementation was introduced, the default currency
+    // instance parsing slowed down because of the new code flow.
+    // I filed #10312 - Yoshito
     UBool tmpStatus_2[fgStatusLength];
     ParsePosition tmpPos_2(origPos);
     DigitList tmpDigitList_2;
-    // set currencySignCount to 0 so that compareAffix function will
-    // fall to compareSimpleAffix path, not compareComplexAffix path.
-    // ?? TODO: is it right? need "false"?
+
+    // Disable complex currency parsing and try it again.
     UBool result = subparse(text,
                             &fNegativePrefix, &fNegativeSuffix,
                             &fPositivePrefix, &fPositiveSuffix,
-                            FALSE, UCURR_SYMBOL_NAME,
+                            FALSE /* disable complex currency parsing */, UCURR_SYMBOL_NAME,
                             tmpPos_2, tmpDigitList_2, tmpStatus_2,
                             currency);
     if (result) {
@@ -2114,7 +2378,7 @@ DecimalFormat::parseForCurrency(const UnicodeString& text,
  * @param negSuffix negative suffix.
  * @param posPrefix positive prefix.
  * @param posSuffix positive suffix.
- * @param currencyParsing whether it is currency parsing or not.
+ * @param complexCurrencyParsing whether it is complex currency parsing or not.
  * @param type the currency type to parse against, LONG_NAME only or not.
  * @param parsePosition The position at which to being parsing.  Upon
  * return, the first unparsed character.
@@ -2131,7 +2395,7 @@ UBool DecimalFormat::subparse(const UnicodeString& text,
                               const UnicodeString* negSuffix,
                               const UnicodeString* posPrefix,
                               const UnicodeString* posSuffix,
-                              UBool currencyParsing,
+                              UBool complexCurrencyParsing,
                               int8_t type,
                               ParsePosition& parsePosition,
                               DigitList& digits, UBool* status,
@@ -2149,7 +2413,8 @@ UBool DecimalFormat::subparse(const UnicodeString& text,
     int32_t textLength = text.length(); // One less pointer to follow
     UBool strictParse = !isLenient();
     UChar32 zero = getConstSymbol(DecimalFormatSymbols::kZeroDigitSymbol).char32At(0);
-    const UnicodeString *groupingString = &getConstSymbol(DecimalFormatSymbols::kGroupingSeparatorSymbol);
+    const UnicodeString *groupingString = &getConstSymbol(fCurrencySignCount == fgCurrencySignCountZero ?
+        DecimalFormatSymbols::kGroupingSeparatorSymbol : DecimalFormatSymbols::kMonetaryGroupingSeparatorSymbol);
     UChar32 groupingChar = groupingString->char32At(0);
     int32_t groupingStringLength = groupingString->length();
     int32_t groupingCharLength   = U16_LENGTH(groupingChar);
@@ -2168,10 +2433,10 @@ UBool DecimalFormat::subparse(const UnicodeString& text,
 #endif
 
     UBool fastParseOk = false; /* TRUE iff fast parse is OK */
-    UBool fastParseHadDecimal = FALSE; /* true if fast parse saw a decimal point. */
+    // UBool fastParseHadDecimal = FALSE; /* true if fast parse saw a decimal point. */
     const DecimalFormatInternal &data = internalData(fReserved);
     if((data.fFastParseStatus==kFastpathYES) &&
-       !currencyParsing &&
+       fCurrencySignCount == fgCurrencySignCountZero &&
        //       (negPrefix!=NULL&&negPrefix->isEmpty()) ||
        text.length()>0 &&
        text.length()<32 &&
@@ -2231,7 +2496,7 @@ UBool DecimalFormat::subparse(const UnicodeString& text,
         } else if(ch == decimalChar) {
           parsedNum.append((char)('.'), err);
           decimalChar=0; // no more decimals.
-          fastParseHadDecimal=TRUE;
+          // fastParseHadDecimal=TRUE;
         } else if(ch == lookForGroup) {
           // ignore grouping char. No decimals, so it has to be an ignorable grouping sep
         } else if(intOnly && (lookForGroup!=0) && !u_isdigit(ch)) {
@@ -2290,8 +2555,8 @@ UBool DecimalFormat::subparse(const UnicodeString& text,
     }
 
     // Match positive and negative prefixes; prefer longest match.
-    int32_t posMatch = compareAffix(text, position, FALSE, TRUE, posPrefix, currencyParsing, type, currency);
-    int32_t negMatch = compareAffix(text, position, TRUE,  TRUE, negPrefix, currencyParsing, type, currency);
+    int32_t posMatch = compareAffix(text, position, FALSE, TRUE, posPrefix, complexCurrencyParsing, type, currency);
+    int32_t negMatch = compareAffix(text, position, TRUE,  TRUE, negPrefix, complexCurrencyParsing, type, currency);
     if (posMatch >= 0 && negMatch >= 0) {
         if (posMatch > negMatch) {
             negMatch = -1;
@@ -2346,7 +2611,7 @@ UBool DecimalFormat::subparse(const UnicodeString& text,
         int32_t gs2 = fGroupingSize2 == 0 ? fGroupingSize : fGroupingSize2;
 
         const UnicodeString *decimalString;
-        if (fCurrencySignCount > fgCurrencySignCountZero) {
+        if (fCurrencySignCount != fgCurrencySignCountZero) {
             decimalString = &getConstSymbol(DecimalFormatSymbols::kMonetarySeparatorSymbol);
         } else {
             decimalString = &getConstSymbol(DecimalFormatSymbols::kDecimalSeparatorSymbol);
@@ -2373,9 +2638,9 @@ UBool DecimalFormat::subparse(const UnicodeString& text,
 
         if (groupingCharLength == groupingStringLength) {
             if (strictParse) {
-                groupingSet = DecimalFormatStaticSets::gStaticSets->fStrictDefaultGroupingSeparators;
+                groupingSet = fStaticSets->fStrictDefaultGroupingSeparators;
             } else {
-                groupingSet = DecimalFormatStaticSets::gStaticSets->fDefaultGroupingSeparators;
+                groupingSet = fStaticSets->fDefaultGroupingSeparators;
             }
         }
 
@@ -2511,7 +2776,7 @@ UBool DecimalFormat::subparse(const UnicodeString& text,
             else {
 
                 if(!fBoolFlags.contains(UNUM_PARSE_NO_EXPONENT) || // don't parse if this is set unless..
-                    fUseExponentialNotation /* should be:  isScientificNotation() but it is not const (?!) see bug #9619 */) { // .. it's an exponent format - ignore setting and parse anyways
+                   isScientificNotation()) { // .. it's an exponent format - ignore setting and parse anyways
                     const UnicodeString *tmp;
                     tmp = &getConstSymbol(DecimalFormatSymbols::kExponentialSymbol);
                     // TODO: CASE
@@ -2619,10 +2884,10 @@ UBool DecimalFormat::subparse(const UnicodeString& text,
 
     // Match positive and negative suffixes; prefer longest match.
     if (posMatch >= 0 || (!strictParse && negMatch < 0)) {
-        posSuffixMatch = compareAffix(text, position, FALSE, FALSE, posSuffix, currencyParsing, type, currency);
+        posSuffixMatch = compareAffix(text, position, FALSE, FALSE, posSuffix, complexCurrencyParsing, type, currency);
     }
     if (negMatch >= 0) {
-        negSuffixMatch = compareAffix(text, position, TRUE, FALSE, negSuffix, currencyParsing, type, currency);
+        negSuffixMatch = compareAffix(text, position, TRUE, FALSE, negSuffix, complexCurrencyParsing, type, currency);
     }
     if (posSuffixMatch >= 0 && negSuffixMatch >= 0) {
         if (posSuffixMatch > negSuffixMatch) {
@@ -2713,7 +2978,7 @@ int32_t DecimalFormat::skipPadding(const UnicodeString& text, int32_t position) 
  * @param isNegative
  * @param isPrefix
  * @param affixPat affix pattern used for currency affix comparison.
- * @param currencyParsing whether it is currency parsing or not
+ * @param complexCurrencyParsing whether it is currency parsing or not
  * @param type the currency type to parse against, LONG_NAME only or not.
  * @param currency return value for parsed currency, for generic
  * currency parsing mode, or null for normal parsing. In generic
@@ -2726,13 +2991,13 @@ int32_t DecimalFormat::compareAffix(const UnicodeString& text,
                                     UBool isNegative,
                                     UBool isPrefix,
                                     const UnicodeString* affixPat,
-                                    UBool currencyParsing,
+                                    UBool complexCurrencyParsing,
                                     int8_t type,
                                     UChar* currency) const
 {
     const UnicodeString *patternToCompare;
     if (fCurrencyChoice != NULL || currency != NULL ||
-        (fCurrencySignCount > fgCurrencySignCountZero && currencyParsing)) {
+        (fCurrencySignCount != fgCurrencySignCountZero && complexCurrencyParsing)) {
 
         if (affixPat != NULL) {
             return compareComplexAffix(*affixPat, text, pos, type, currency);
@@ -2758,6 +3023,40 @@ int32_t DecimalFormat::compareAffix(const UnicodeString& text,
     return compareSimpleAffix(*patternToCompare, text, pos, isLenient());
 }
 
+UBool DecimalFormat::equalWithSignCompatibility(UChar32 lhs, UChar32 rhs) const {
+    if (lhs == rhs) {
+        return TRUE;
+    }
+    U_ASSERT(fStaticSets != NULL); // should already be loaded
+    const UnicodeSet *minusSigns = fStaticSets->fMinusSigns;
+    const UnicodeSet *plusSigns = fStaticSets->fPlusSigns;
+    return (minusSigns->contains(lhs) && minusSigns->contains(rhs)) ||
+        (plusSigns->contains(lhs) && plusSigns->contains(rhs));
+}
+
+// check for LRM 0x200E, RLM 0x200F, ALM 0x061C
+#define IS_BIDI_MARK(c) (c==0x200E || c==0x200F || c==0x061C)
+
+#define TRIM_BUFLEN 32
+UnicodeString& DecimalFormat::trimMarksFromAffix(const UnicodeString& affix, UnicodeString& trimmedAffix) {
+    UChar trimBuf[TRIM_BUFLEN];
+    int32_t affixLen = affix.length();
+    int32_t affixPos, trimLen = 0;
+
+    for (affixPos = 0; affixPos < affixLen; affixPos++) {
+        UChar c = affix.charAt(affixPos);
+        if (!IS_BIDI_MARK(c)) {
+        	if (trimLen < TRIM_BUFLEN) {
+        		trimBuf[trimLen++] = c;
+        	} else {
+        		trimLen = 0;
+        		break;
+        	}
+        }
+    }
+    return (trimLen > 0)? trimmedAffix.setTo(trimBuf, trimLen): trimmedAffix.setTo(affix);
+}
+
 /**
  * Return the length matched by the given affix, or -1 if none.
  * Runs of white space in the affix, match runs of white space in
@@ -2771,28 +3070,41 @@ int32_t DecimalFormat::compareAffix(const UnicodeString& text,
 int32_t DecimalFormat::compareSimpleAffix(const UnicodeString& affix,
                                           const UnicodeString& input,
                                           int32_t pos,
-                                          UBool lenient) {
+                                          UBool lenient) const {
     int32_t start = pos;
-    UChar32 affixChar = affix.char32At(0);
-    int32_t affixLength = affix.length();
+    UnicodeString trimmedAffix;
+    // For more efficiency we should keep lazily-created trimmed affixes around in
+    // instance variables instead of trimming each time they are used (the next step)
+    trimMarksFromAffix(affix, trimmedAffix);
+    UChar32 affixChar = trimmedAffix.char32At(0);
+    int32_t affixLength = trimmedAffix.length();
     int32_t inputLength = input.length();
     int32_t affixCharLength = U16_LENGTH(affixChar);
     UnicodeSet *affixSet;
+    UErrorCode status = U_ZERO_ERROR;
 
+    U_ASSERT(fStaticSets != NULL); // should already be loaded
+
+    if (U_FAILURE(status)) {
+        return -1;
+    }
     if (!lenient) {
-        affixSet = DecimalFormatStaticSets::gStaticSets->fStrictDashEquivalents;
-        
-        // If the affix is exactly one character long and that character
+        affixSet = fStaticSets->fStrictDashEquivalents;
+
+        // If the trimmedAffix is exactly one character long and that character
         // is in the dash set and the very next input character is also
         // in the dash set, return a match.
         if (affixCharLength == affixLength && affixSet->contains(affixChar))  {
-            if (affixSet->contains(input.char32At(pos))) {
-                return 1;
+            UChar32 ic = input.char32At(pos);
+            if (affixSet->contains(ic)) {
+                pos += U16_LENGTH(ic);
+                pos = skipBidiMarks(input, pos); // skip any trailing bidi marks
+                return pos - start;
             }
         }
 
         for (int32_t i = 0; i < affixLength; ) {
-            UChar32 c = affix.char32At(i);
+            UChar32 c = trimmedAffix.char32At(i);
             int32_t len = U16_LENGTH(c);
             if (PatternProps::isWhiteSpace(c)) {
                 // We may have a pattern like: \u200F \u0020
@@ -2802,23 +3114,29 @@ int32_t DecimalFormat::compareSimpleAffix(const UnicodeString& affix,
                 // match of the run of Pattern_White_Space in the pattern,
                 // then match any extra characters.
                 UBool literalMatch = FALSE;
-                while (pos < inputLength &&
-                       input.char32At(pos) == c) {
-                    literalMatch = TRUE;
-                    i += len;
-                    pos += len;
-                    if (i == affixLength) {
-                        break;
-                    }
-                    c = affix.char32At(i);
-                    len = U16_LENGTH(c);
-                    if (!PatternProps::isWhiteSpace(c)) {
+                while (pos < inputLength) {
+                    UChar32 ic = input.char32At(pos);
+                    if (ic == c) {
+                        literalMatch = TRUE;
+                        i += len;
+                        pos += len;
+                        if (i == affixLength) {
+                            break;
+                        }
+                        c = trimmedAffix.char32At(i);
+                        len = U16_LENGTH(c);
+                        if (!PatternProps::isWhiteSpace(c)) {
+                            break;
+                        }
+                    } else if (IS_BIDI_MARK(ic)) {
+                        pos ++; // just skip over this input text
+                    } else {
                         break;
                     }
                 }
 
                 // Advance over run in pattern
-                i = skipPatternWhiteSpace(affix, i);
+                i = skipPatternWhiteSpace(trimmedAffix, i);
 
                 // Advance over run in input text
                 // Must see at least one white space char in input,
@@ -2831,51 +3149,64 @@ int32_t DecimalFormat::compareSimpleAffix(const UnicodeString& affix,
 
                 // If we skip UWhiteSpace in the input text, we need to skip it in the pattern.
                 // Otherwise, the previous lines may have skipped over text (such as U+00A0) that
-                // is also in the affix.
-                i = skipUWhiteSpace(affix, i);
+                // is also in the trimmedAffix.
+                i = skipUWhiteSpace(trimmedAffix, i);
             } else {
-                if (pos < inputLength &&
-                    input.char32At(pos) == c) {
-                    i += len;
-                    pos += len;
-                } else {
+                UBool match = FALSE;
+                while (pos < inputLength) {
+                    UChar32 ic = input.char32At(pos);
+                    if (!match && ic == c) {
+                        i += len;
+                        pos += len;
+                        match = TRUE;
+                    } else if (IS_BIDI_MARK(ic)) {
+                        pos++; // just skip over this input text
+                    } else {
+                        break;
+                    }
+                }
+                if (!match) {
                     return -1;
                 }
             }
         }
     } else {
         UBool match = FALSE;
-        
-        affixSet = DecimalFormatStaticSets::gStaticSets->fDashEquivalents;
+
+        affixSet = fStaticSets->fDashEquivalents;
 
         if (affixCharLength == affixLength && affixSet->contains(affixChar))  {
-            pos = skipUWhiteSpace(input, pos);
-            
-            if (affixSet->contains(input.char32At(pos))) {
-                return pos - start + 1;
+            pos = skipUWhiteSpaceAndMarks(input, pos);
+            UChar32 ic = input.char32At(pos);
+
+            if (affixSet->contains(ic)) {
+                pos += U16_LENGTH(ic);
+                pos = skipBidiMarks(input, pos);
+                return pos - start;
             }
         }
 
         for (int32_t i = 0; i < affixLength; )
         {
-            //i = skipRuleWhiteSpace(affix, i);
-            i = skipUWhiteSpace(affix, i);
-            pos = skipUWhiteSpace(input, pos);
+            //i = skipRuleWhiteSpace(trimmedAffix, i);
+            i = skipUWhiteSpace(trimmedAffix, i);
+            pos = skipUWhiteSpaceAndMarks(input, pos);
 
             if (i >= affixLength || pos >= inputLength) {
                 break;
             }
 
-            UChar32 c = affix.char32At(i);
-            int32_t len = U16_LENGTH(c);
+            UChar32 c = trimmedAffix.char32At(i);
+            UChar32 ic = input.char32At(pos);
 
-            if (input.char32At(pos) != c) {
+            if (!equalWithSignCompatibility(ic, c)) {
                 return -1;
             }
 
             match = TRUE;
-            i += len;
-            pos += len;
+            i += U16_LENGTH(c);
+            pos += U16_LENGTH(ic);
+            pos = skipBidiMarks(input, pos);
         }
 
         if (affixLength > 0 && ! match) {
@@ -2910,6 +3241,35 @@ int32_t DecimalFormat::skipUWhiteSpace(const UnicodeString& text, int32_t pos) {
 }
 
 /**
+ * Skip over a run of zero or more isUWhiteSpace() characters or bidi marks at pos
+ * in text.
+ */
+int32_t DecimalFormat::skipUWhiteSpaceAndMarks(const UnicodeString& text, int32_t pos) {
+    while (pos < text.length()) {
+        UChar32 c = text.char32At(pos);
+        if (!u_isUWhiteSpace(c) && !IS_BIDI_MARK(c)) { // u_isUWhiteSpace doesn't include LRM,RLM,ALM
+            break;
+        }
+        pos += U16_LENGTH(c);
+    }
+    return pos;
+}
+
+/**
+ * Skip over a run of zero or more bidi marks at pos in text.
+ */
+int32_t DecimalFormat::skipBidiMarks(const UnicodeString& text, int32_t pos) {
+    while (pos < text.length()) {
+        UChar c = text.charAt(pos);
+        if (!IS_BIDI_MARK(c)) {
+            break;
+        }
+        pos++;
+    }
+    return pos;
+}
+
+/**
  * Return the length matched by the given affix, or -1 if none.
  * @param affixPat pattern string
  * @param input input text
@@ -2930,7 +3290,7 @@ int32_t DecimalFormat::compareComplexAffix(const UnicodeString& affixPat,
     int32_t start = pos;
     U_ASSERT(currency != NULL ||
              (fCurrencyChoice != NULL && *getCurrency() != 0) ||
-             fCurrencySignCount > fgCurrencySignCountZero);
+             fCurrencySignCount != fgCurrencySignCountZero);
 
     for (int32_t i=0;
          i<affixPat.length() && pos >= 0; ) {
@@ -3171,7 +3531,7 @@ DecimalFormat::adoptCurrencyPluralInfo(CurrencyPluralInfo* toAdopt)
         delete fCurrencyPluralInfo;
         fCurrencyPluralInfo = toAdopt;
         // re-set currency affix patterns and currency affixes.
-        if (fCurrencySignCount > fgCurrencySignCountZero) {
+        if (fCurrencySignCount != fgCurrencySignCountZero) {
             UErrorCode status = U_ZERO_ERROR;
             if (fAffixPatternsForCurrency) {
                 deleteHashForAffixPattern();
@@ -3554,7 +3914,7 @@ void DecimalFormat::setPadPosition(EPadPosition padPos) {
  * @see #isExponentSignAlwaysShown
  * @see #setExponentSignAlwaysShown
  */
-UBool DecimalFormat::isScientificNotation() {
+UBool DecimalFormat::isScientificNotation() const {
     return fUseExponentialNotation;
 }
 
@@ -3617,7 +3977,7 @@ void DecimalFormat::setMinimumExponentDigits(int8_t minExpDig) {
  * @see #getMinimumExponentDigits
  * @see #setExponentSignAlwaysShown
  */
-UBool DecimalFormat::isExponentSignAlwaysShown() {
+UBool DecimalFormat::isExponentSignAlwaysShown() const {
     return fExponentSignAlwaysShown;
 }
 
@@ -3978,7 +4338,15 @@ int32_t DecimalFormat::appendAffix(UnicodeString& buf, double number,
 
     const UnicodeString* affix;
     if (fCurrencySignCount == fgCurrencySignCountInPluralFormat) {
-        UnicodeString pluralCount = fCurrencyPluralInfo->getPluralRules()->select(number);
+        // TODO: get an accurate count of visible fraction digits.
+        UnicodeString pluralCount;
+        int32_t minFractionDigits = this->getMinimumFractionDigits();
+        if (minFractionDigits > 0) {
+            FixedDecimal ni(number, this->getMinimumFractionDigits());
+            pluralCount = fCurrencyPluralInfo->getPluralRules()->select(ni);
+        } else {
+            pluralCount = fCurrencyPluralInfo->getPluralRules()->select(number);
+        }
         AffixesForCurrency* oneSet;
         if (fStyle == UNUM_CURRENCY_PLURAL) {
             oneSet = (AffixesForCurrency*)fPluralAffixesForCurrency->get(pluralCount);
@@ -4903,7 +5271,7 @@ DecimalFormat::applyPatternWithoutExpandAffix(const UnicodeString& pattern,
                 setMinimumIntegerDigits(minInt);
                 setMaximumIntegerDigits(fUseExponentialNotation
                     ? digitLeftCount + getMinimumIntegerDigits()
-                    : kDoubleIntegerDigits);
+                    : NumberFormat::gDefaultMaxIntegerDigits);
                 setMaximumFractionDigits(decimalPos >= 0
                     ? (digitTotalCount - decimalPos) : 0);
                 setMinimumFractionDigits(decimalPos >= 0
@@ -4996,7 +5364,7 @@ DecimalFormat::applyPatternWithoutExpandAffix(const UnicodeString& pattern,
         setMaximumFractionDigits(kDoubleFractionDigits);
 
         fUseExponentialNotation = FALSE;
-        fCurrencySignCount = 0;
+        fCurrencySignCount = fgCurrencySignCountZero;
         setGroupingUsed(FALSE);
         fGroupingSize = 0;
         fGroupingSize2 = 0;
@@ -5094,11 +5462,11 @@ DecimalFormat::applyPatternInternally(const UnicodeString& pluralCount,
 
 /**
  * Sets the maximum number of digits allowed in the integer portion of a
- * number. This override limits the integer digit count to 309.
+ * number. 
  * @see NumberFormat#setMaximumIntegerDigits
  */
 void DecimalFormat::setMaximumIntegerDigits(int32_t newValue) {
-    NumberFormat::setMaximumIntegerDigits(_min(newValue, kDoubleIntegerDigits));
+    NumberFormat::setMaximumIntegerDigits(_min(newValue, gDefaultMaxIntegerDigits));
 #if UCONFIG_FORMAT_FASTPATHS_49
     handleChanged();
 #endif
@@ -5156,6 +5524,7 @@ void DecimalFormat::setMinimumSignificantDigits(int32_t min) {
     int32_t max = _max(fMaxSignificantDigits, min);
     fMinSignificantDigits = min;
     fMaxSignificantDigits = max;
+    fUseSignificantDigits = TRUE;
 #if UCONFIG_FORMAT_FASTPATHS_49
     handleChanged();
 #endif
@@ -5170,6 +5539,7 @@ void DecimalFormat::setMaximumSignificantDigits(int32_t max) {
     int32_t min = _min(fMinSignificantDigits, max);
     fMinSignificantDigits = min;
     fMaxSignificantDigits = max;
+    fUseSignificantDigits = TRUE;
 #if UCONFIG_FORMAT_FASTPATHS_49
     handleChanged();
 #endif
@@ -5201,7 +5571,7 @@ void DecimalFormat::setCurrencyInternally(const UChar* theCurrency,
 
     double rounding = 0.0;
     int32_t frac = 0;
-    if (fCurrencySignCount > fgCurrencySignCountZero && isCurr) {
+    if (fCurrencySignCount != fgCurrencySignCountZero && isCurr) {
         rounding = ucurr_getRoundingIncrement(theCurrency, &ec);
         frac = ucurr_getDefaultFractionDigits(theCurrency, &ec);
     }
@@ -5209,7 +5579,7 @@ void DecimalFormat::setCurrencyInternally(const UChar* theCurrency,
     NumberFormat::setCurrency(theCurrency, ec);
     if (U_FAILURE(ec)) return;
 
-    if (fCurrencySignCount > fgCurrencySignCountZero) {
+    if (fCurrencySignCount != fgCurrencySignCountZero) {
         // NULL or empty currency is *legal* and indicates no currency.
         if (isCurr) {
             setRoundingIncrement(rounding);
@@ -5485,6 +5855,10 @@ DecimalFormat& DecimalFormat::setAttribute( UNumberFormatAttribute attr,
       }
       break;
 
+    case UNUM_SCALE:
+        fScale = newValue;
+        break;
+
     default:
       status = U_UNSUPPORTED_ERROR;
       break;
@@ -5559,6 +5933,9 @@ int32_t DecimalFormat::getAttribute( UNumberFormatAttribute attr,
     case UNUM_PARSE_NO_EXPONENT:
     case UNUM_FORMAT_FAIL_IF_MORE_THAN_MAX_DIGITS:
       return fBoolFlags.get(attr);
+
+    case UNUM_SCALE:
+        return fScale;
 
     default:
         status = U_UNSUPPORTED_ERROR;

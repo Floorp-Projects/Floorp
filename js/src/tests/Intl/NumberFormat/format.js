@@ -18,7 +18,7 @@ assertEq(format.format(123456789.123456789), "123,456,789.123");
 // parenthesized.
 format = new Intl.NumberFormat("en-us", {style: "currency", currency: "USD"});
 assertEq(format.format(0), "$0.00");
-assertEq(format.format(-1), "($1.00)");
+assertEq(format.format(-1), "-$1.00");
 assertEq(format.format(123456789.123456789), "$123,456,789.12");
 
 // Locale ja-JP; currency JPY.
@@ -32,8 +32,8 @@ assertEq(format.format(123456789.123456789), "￥123,456,789");
 // The Jordanian Dinar divides into 1000 fils. Jordan uses (real) Arabic digits.
 format = new Intl.NumberFormat("ar-jo", {style: "currency", currency: "JOD"});
 assertEq(format.format(0), "د.أ.‏ ٠٫٠٠٠");
-assertEq(format.format(-1), "د.أ.‏ ١٫٠٠٠-");
-assertEq(format.format(123456789.123456789), "د.أ.‏ ١٢٣٤٥٦٧٨٩٫١٢٣");
+assertEq(format.format(-1), "‏-د.أ.‏ ١٫٠٠٠");
+assertEq(format.format(123456789.123456789), "د.أ.‏ ١٢٣٬٤٥٦٬٧٨٩٫١٢٣");
 
 // Locale th-TH; Thai digits, percent, two significant digits.
 format = new Intl.NumberFormat("th-th-u-nu-thai",

@@ -1,11 +1,11 @@
 ## -*-makefile-*-
 ## Linux-specific setup
-## Copyright (c) 1999-2012, International Business Machines Corporation and
+## Copyright (c) 1999-2013, International Business Machines Corporation and
 ## others. All Rights Reserved.
 
 ## Commands to generate dependency files
 GEN_DEPS.c=  $(CC) -E -MM $(DEFS) $(CPPFLAGS)
-GEN_DEPS.cc= $(CXX) -E -MM $(DEFS) $(CPPFLAGS)
+GEN_DEPS.cc= $(CXX) -E -MM $(DEFS) $(CPPFLAGS) $(CXXFLAGS)
 
 ## Flags for position independent code
 SHAREDLIBCFLAGS = -fPIC

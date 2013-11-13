@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/seh.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/seh.xml
+ * ICU <specials> source: <path>/common/main/seh.xml
  */
 seh{
     ExemplarCharacters{
@@ -29,18 +29,18 @@ seh{
             }
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     calendar{
-        gregorian{
+        generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, d 'de' MMMM 'de' y",
-                "d 'de' MMMM 'de' y",
-                "d 'de' MMM 'de' y",
-                "d/M/yyyy",
+                "EEEE, d 'de' MMMM 'de' y G",
+                "d 'de' MMMM 'de' y G",
+                "d 'de' MMM 'de' y G",
+                "d/M/y GGGGG",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -66,16 +66,57 @@ seh{
                 y{"y"}
                 yM{"MM/y"}
                 yMEd{"E, dd/MM/y"}
+                yMM{"MM/y"}
                 yMMM{"MMM 'de' y"}
                 yMMMEd{"E, d 'de' MMM 'de' y"}
                 yMMMM{"MMMM 'de' y"}
+                yMMMd{"d 'de' MMM 'de' y"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
-                yyMM{"MM/yy"}
-                yyMMM{"MMM yy"}
-                yyMMMEd{"E, d 'de' MMM 'de' yy"}
-                yyMMMd{"d 'de' MMM 'de' yy"}
-                yyQQQ{"QQQ yy"}
+            }
+        }
+        gregorian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d 'de' MMMM 'de' y",
+                "d 'de' MMMM 'de' y",
+                "d 'de' MMM 'de' y",
+                "d/M/y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                HHmm{"HH:mm"}
+                HHmmss{"HH:mm:ss"}
+                Hm{"H:mm"}
+                M{"L"}
+                MEd{"E, dd/MM"}
+                MMM{"LLL"}
+                MMMEd{"E, d MMM"}
+                MMMMEd{"E, d MMMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                MMdd{"dd/MM"}
+                Md{"d/M"}
+                d{"d"}
+                mmss{"mm:ss"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"MM/y"}
+                yMEd{"E, dd/MM/y"}
+                yMM{"MM/y"}
+                yMMM{"MMM 'de' y"}
+                yMMMEd{"E, d 'de' MMM 'de' y"}
+                yMMMM{"MMMM 'de' y"}
+                yMMMd{"d 'de' MMM 'de' y"}
+                yQQQ{"y QQQ"}
+                yQQQQ{"y QQQQ"}
             }
             dayNames{
                 format{
@@ -118,31 +159,6 @@ seh{
                 wide{
                     "Antes de Cristo",
                     "Anno Domini",
-                }
-            }
-            fields{
-                day{
-                    dn{"Ntsiku"}
-                    relative{
-                        "-1"{"Zuro"}
-                        "0"{"Lero"}
-                        "1"{"Manguana"}
-                    }
-                }
-                hour{
-                    dn{"Hora"}
-                }
-                minute{
-                    dn{"Minuto"}
-                }
-                month{
-                    dn{"Mwezi"}
-                }
-                second{
-                    dn{"Segundo"}
-                }
-                year{
-                    dn{"Chaka"}
                 }
             }
             monthNames{
@@ -200,5 +216,30 @@ seh{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"Ntsiku"}
+            relative{
+                "-1"{"Zuro"}
+                "0"{"Lero"}
+                "1"{"Manguana"}
+            }
+        }
+        hour{
+            dn{"Hora"}
+        }
+        minute{
+            dn{"Minuto"}
+        }
+        month{
+            dn{"Mwezi"}
+        }
+        second{
+            dn{"Segundo"}
+        }
+        year{
+            dn{"Chaka"}
+        }
     }
 }

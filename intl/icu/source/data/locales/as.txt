@@ -1,20 +1,20 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/as.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/as.xml
+ * ICU <specials> source: <path>/common/main/as.xml
  */
 as{
     AuxExemplarCharacters{"[\u200C\u200D ৲]"}
     ExemplarCharacters{
         "[অ আ ই ঈ উ ঊ ঋ এ ঐ ও ঔ ং \u0981 ঃ ক খ গ ঘ ঙ চ ছ জ ঝ ঞ ট ঠ ড {ড\u09BC}ড় ঢ {ঢ"
-        "\u09BC}ঢ় ণ ত থ দ ধ ন প ফ ব ভ ম য {য\u09BC} ৰ ল ৱ শ ষ স হ া ি ী \u09C1 \u09C2"
-        " \u09C3 ে ৈ ো ৌ \u09CD]"
+        "\u09BC}ঢ় ণ ত থ দ ধ ন প ফ ব ভ ম য {য\u09BC} ৰ ল ৱ শ ষ স হ {ক\u09CDষ} া ি ী "
+        "\u09C1 \u09C2 \u09C3 ে ৈ ো ৌ \u09CD]"
     }
     LocaleScript{
         "Beng",
@@ -30,7 +30,7 @@ as{
         }
         native{"beng"}
     }
-    Version{"2.0.74.65"}
+    Version{"2.0.92.87"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -57,40 +57,6 @@ as{
                         "শুক্ৰবাৰ",
                         "শনিবাৰ",
                     }
-                }
-            }
-            fields{
-                day{
-                    dn{"দিন"}
-                    relative{
-                        "-1"{"কালি"}
-                        "1"{"কাইলৈ"}
-                        "2"{"পৰহিলৈ"}
-                    }
-                }
-                era{
-                    dn{"যুগ"}
-                }
-                hour{
-                    dn{"ঘণ্টা"}
-                }
-                minute{
-                    dn{"মিনিট"}
-                }
-                month{
-                    dn{"মাহ"}
-                }
-                second{
-                    dn{"ছেকেণ্ড"}
-                }
-                week{
-                    dn{"সপ্তাহ"}
-                }
-                year{
-                    dn{"বছৰ"}
-                }
-                zone{
-                    dn{"ক্ষেত্ৰ"}
                 }
             }
             monthNames{
@@ -135,6 +101,40 @@ as{
                     }
                 }
             }
+        }
+    }
+    fields{
+        day{
+            dn{"দিন"}
+            relative{
+                "-1"{"কালি"}
+                "1"{"কাইলৈ"}
+                "2"{"পৰহিলৈ"}
+            }
+        }
+        era{
+            dn{"যুগ"}
+        }
+        hour{
+            dn{"ঘণ্টা"}
+        }
+        minute{
+            dn{"মিনিট"}
+        }
+        month{
+            dn{"মাহ"}
+        }
+        second{
+            dn{"ছেকেণ্ড"}
+        }
+        week{
+            dn{"সপ্তাহ"}
+        }
+        year{
+            dn{"বছৰ"}
+        }
+        zone{
+            dn{"ক্ষেত্ৰ"}
         }
     }
     measurementSystemNames{

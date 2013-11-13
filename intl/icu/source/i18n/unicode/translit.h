@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-* Copyright (C) 1999-2012, International Business Machines
+* Copyright (C) 1999-2013, International Business Machines
 * Corporation and others. All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -1320,7 +1320,7 @@ inline Transliterator::Token Transliterator::pointerToken(void* p) {
     t.pointer = p;
     return t;
 }
-#endif
+#endif  /* U_HIDE_INTERNAL_API */
 
 U_NAMESPACE_END
 

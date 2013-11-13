@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2010-2012, International Business Machines Corporation and
+* Copyright (C) 2010-2013, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 */
@@ -149,8 +149,6 @@ ICUDataTable::getNoFallback(const char* tableKey, const char* subTableKey, const
 
 LocaleDisplayNames::~LocaleDisplayNames() {}
 
-UOBJECT_DEFINE_NO_RTTI_IMPLEMENTATION(LocaleDisplayNames)
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if 0  // currently unused
@@ -273,10 +271,14 @@ class LocaleDisplayNamesImpl : public LocaleDisplayNames {
     UDialectHandling dialectHandling;
     ICUDataTable langData;
     ICUDataTable regionData;
-    UnicodeString sep;
+    MessageFormat *separatorFormat;
     MessageFormat *format;
     MessageFormat *keyTypeFormat;
     UDisplayContext capitalizationContext;
+    UnicodeString formatOpenParen;
+    UnicodeString formatReplaceOpenParen;
+    UnicodeString formatCloseParen;
+    UnicodeString formatReplaceCloseParen;
 
     // Constants for capitalization context usage types.
     enum CapContextUsage {
@@ -335,6 +337,7 @@ LocaleDisplayNamesImpl::LocaleDisplayNamesImpl(const Locale& locale,
     : dialectHandling(dialectHandling)
     , langData(U_ICUDATA_LANG, locale)
     , regionData(U_ICUDATA_REGION, locale)
+    , separatorFormat(NULL)
     , format(NULL)
     , keyTypeFormat(NULL)
     , capitalizationContext(UDISPCTX_CAPITALIZATION_NONE)
@@ -347,6 +350,7 @@ LocaleDisplayNamesImpl::LocaleDisplayNamesImpl(const Locale& locale,
     : dialectHandling(ULDN_STANDARD_NAMES)
     , langData(U_ICUDATA_LANG, locale)
     , regionData(U_ICUDATA_REGION, locale)
+    , separatorFormat(NULL)
     , format(NULL)
     , keyTypeFormat(NULL)
     , capitalizationContext(UDISPCTX_CAPITALIZATION_NONE)
@@ -375,18 +379,31 @@ LocaleDisplayNamesImpl::initialize(void) {
         ? regionData.getLocale()
         : langData.getLocale();
 
+    UnicodeString sep;
     langData.getNoFallback("localeDisplayPattern", "separator", sep);
     if (sep.isBogus()) {
-        sep = UnicodeString(", ", -1, US_INV);
+        sep = UnicodeString("{0}, {1}", -1, US_INV);
     }
+    UErrorCode status = U_ZERO_ERROR;
+    separatorFormat = new MessageFormat(sep, status);
 
     UnicodeString pattern;
     langData.getNoFallback("localeDisplayPattern", "pattern", pattern);
     if (pattern.isBogus()) {
         pattern = UnicodeString("{0} ({1})", -1, US_INV);
     }
-    UErrorCode status = U_ZERO_ERROR;
     format = new MessageFormat(pattern, status);
+    if (pattern.indexOf((UChar)0xFF08) >= 0) {
+        formatOpenParen.setTo((UChar)0xFF08);         // fullwidth (
+        formatReplaceOpenParen.setTo((UChar)0xFF3B);  // fullwidth [
+        formatCloseParen.setTo((UChar)0xFF09);        // fullwidth )
+        formatReplaceCloseParen.setTo((UChar)0xFF3D); // fullwidth ]
+    } else {
+        formatOpenParen.setTo((UChar)0x0028);         // (
+        formatReplaceOpenParen.setTo((UChar)0x005B);  // [
+        formatCloseParen.setTo((UChar)0x0029);        // )
+        formatReplaceCloseParen.setTo((UChar)0x005D); // ]
+    }
 
     UnicodeString ktPattern;
     langData.get("localeDisplayPattern", "keyTypePattern", ktPattern);
@@ -446,6 +463,7 @@ LocaleDisplayNamesImpl::initialize(void) {
 }
 
 LocaleDisplayNamesImpl::~LocaleDisplayNamesImpl() {
+    delete separatorFormat;
     delete format;
     delete keyTypeFormat;
  }
@@ -593,6 +611,8 @@ LocaleDisplayNamesImpl::localeDisplayName(const Locale& locale,
   if (hasVariant) {
     appendWithSep(resultRemainder, variantDisplayName(variant, temp));
   }
+  resultRemainder.findAndReplace(formatOpenParen, formatReplaceOpenParen);
+  resultRemainder.findAndReplace(formatCloseParen, formatReplaceCloseParen);
 
   e = locale.createKeywords(status);
   if (e && U_SUCCESS(status)) {
@@ -602,7 +622,11 @@ LocaleDisplayNamesImpl::localeDisplayName(const Locale& locale,
     while ((key = e->next((int32_t *)0, status)) != NULL) {
       locale.getKeywordValue(key, value, ULOC_KEYWORD_AND_VALUES_CAPACITY, status);
       keyDisplayName(key, temp);
+      temp.findAndReplace(formatOpenParen, formatReplaceOpenParen);
+      temp.findAndReplace(formatCloseParen, formatReplaceCloseParen);
       keyValueDisplayName(key, value, temp2);
+      temp2.findAndReplace(formatOpenParen, formatReplaceOpenParen);
+      temp2.findAndReplace(formatCloseParen, formatReplaceCloseParen);
       if (temp2 != UnicodeString(value, -1, US_INV)) {
         appendWithSep(resultRemainder, temp2);
       } else if (temp != UnicodeString(key, -1, US_INV)) {
@@ -641,10 +665,21 @@ LocaleDisplayNamesImpl::localeDisplayName(const Locale& locale,
 
 UnicodeString&
 LocaleDisplayNamesImpl::appendWithSep(UnicodeString& buffer, const UnicodeString& src) const {
-    if (!buffer.isEmpty()) {
-        buffer.append(sep);
+    if (buffer.isEmpty()) {
+        buffer.setTo(src);
+    } else {
+        UnicodeString combined;
+        Formattable data[] = {
+          buffer,
+          src
+        };
+        FieldPosition fpos;
+        UErrorCode status = U_ZERO_ERROR;
+        separatorFormat->format(data, 2, combined, fpos, status);
+        if (U_SUCCESS(status)) {
+            buffer.setTo(combined);
+        }
     }
-    buffer.append(src);
     return buffer;
 }
 

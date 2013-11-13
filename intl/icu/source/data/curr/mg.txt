@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/mg.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/mg.xml
+ * ICU <specials> source: <path>/common/main/mg.xml
  */
 mg{
     Currencies{
@@ -128,7 +128,7 @@ mg{
             "Dirham marokianina",
         }
         MGA{
-            "MGA",
+            "Ar",
             "Ariary",
         }
         MRO{
@@ -225,6 +225,10 @@ mg{
         }
         ZMK{
             "ZMK",
+            "Kwacha zambianina (1968–2012)",
+        }
+        ZMW{
+            "ZMW",
             "Kwacha zambianina",
         }
         ZWD{
@@ -232,5 +236,5 @@ mg{
             "Dôlara Zimbaboeanina",
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
 }

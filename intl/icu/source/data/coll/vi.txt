@@ -1,20 +1,20 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
-// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
-// * Source File:<path>/common/collation/vi.xml
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/collation/vi.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/collation/vi.xml
+ * ICU <specials> source: <path>/xml/collation/vi.xml
  */
 vi{
-    Version{"2.0.41.26"}
+    Version{"2.0.89.0"}
     collations{
         standard{
             Sequence{
-                " [normalization on ]"
+                "[normalization on]"
                 "&̀<<̉<<̃<<́<<̣"
                 "&a<ă<<<Ă<â<<<Â"
                 "&d<đ<<<Đ"
@@ -22,7 +22,26 @@ vi{
                 "&o<ô<<<Ô<ơ<<<Ơ"
                 "&u<ư<<<Ư"
             }
-            Version{"22.1.1"}
+            Version{"24"}
+        }
+        traditional{
+            Sequence{
+                "[normalization on]"
+                "&̀<<̉<<̃<<́<<̣"
+                "&a<ă<<<Ă<â<<<Â"
+                "&C<ch<<<Ch<<<CH"
+                "&d<đ<<<Đ"
+                "&e<ê<<<Ê"
+                "&G<gh<<<Gh<<<GH<gi<<<Gi<<<GI"
+                "&K<kh<<<Kh<<<KH"
+                "&N<nh<<<Nh<<<NH<ng<<<Ng<<<NG<ngh<<<Ngh<<<NGh<<<NGH"
+                "&o<ô<<<Ô<ơ<<<Ơ"
+                "&P<ph<<<Ph<<<PH"
+                "&Q<qu<<<Qu<<<QU"
+                "&T<th<<<Th<<<TH<tr<<<Tr<<<TR"
+                "&u<ư<<<Ư"
+            }
+            Version{"24"}
         }
     }
 }
