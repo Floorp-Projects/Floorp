@@ -497,8 +497,11 @@ Toolbox.prototype = {
       radio.setAttribute("flex", "1");
     }
 
+    if (!toolDefinition.bgTheme) {
+      toolDefinition.bgTheme = "theme-toolbar";
+    }
     let vbox = this.doc.createElement("vbox");
-    vbox.className = "toolbox-panel";
+    vbox.className = "toolbox-panel " + toolDefinition.bgTheme;
     vbox.id = "toolbox-panel-" + id;
 
 
@@ -555,11 +558,15 @@ Toolbox.prototype = {
     iframe.setAttribute("flex", 1);
     iframe.setAttribute("forceOwnRefreshDriver", "");
     iframe.tooltip = "aHTMLTooltip";
+    iframe.style.visibility = "hidden";
 
     let vbox = this.doc.getElementById("toolbox-panel-" + id);
     vbox.appendChild(iframe);
 
     let onLoad = () => {
+      // Prevent flicker while loading by waiting to make visible until now.
+      iframe.style.visibility = "visible";
+
       let built = definition.build(iframe.contentWindow, this);
       promise.resolve(built).then((panel) => {
         this._toolPanels.set(id, panel);
