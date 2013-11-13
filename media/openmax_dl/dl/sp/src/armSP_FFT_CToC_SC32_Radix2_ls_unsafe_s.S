@@ -100,9 +100,9 @@
         @// Loop on 2 grps at a time for the last stage
 
 grpLoop\name :	
-        VLD2    {dWr,dWi},[pTwiddle :64]!
+        VLD2    {dWr,dWi},[pTwiddle, :64]!
         
-        VLD4    {dXr0,dXi0,dXr1,dXi1},[pSrc :128]!
+        VLD4    {dXr0,dXi0,dXr1,dXi1},[pSrc, :128]!
         SUBS    grpCount,grpCount,#4                   @// grpCount is multiplied by 2 
         
         .ifeqs  "\inverse", "TRUE"

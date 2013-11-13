@@ -93,13 +93,13 @@
 radix2lsGrpLoop\name :
         @ dWr = [pTwiddle[0].Re, pTwiddle[1].Re]
         @ dWi = [pTwiddle[0].Im, pTwiddle[1].Im]
-        VLD2    {dWr,dWi},[pTwiddle :64]!
+        VLD2    {dWr,dWi},[pTwiddle, :64]!
 
         @ dXr0 = [pSrc[0].Re, pSrc[2].Re]
         @ dXi0 = [pSrc[0].Im, pSrc[2].Im]
         @ dXr1 = [pSrc[1].Re, pSrc[3].Re]
         @ dXi1 = [pSrc[1].Im, pSrc[3].Im]
-        VLD4    {dXr0,dXi0,dXr1,dXi1},[pSrc :128]!
+        VLD4    {dXr0,dXi0,dXr1,dXi1},[pSrc, :128]!
         SUBS    grpCount,grpCount,#4                   @// grpCount is multiplied by 2
 
         .ifeqs  "\inverse", "TRUE"
