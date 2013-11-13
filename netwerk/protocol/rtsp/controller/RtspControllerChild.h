@@ -40,9 +40,9 @@ class RtspControllerChild : public nsIStreamingProtocolController
          const InfallibleTArray<RtspMetadataParam>& meta);
 
   bool RecvOnDisconnected(const uint8_t& index,
-                          const uint32_t& reason);
+                          const nsresult& reason);
 
-  bool RecvAsyncOpenFailed(const uint8_t& reason);
+  bool RecvAsyncOpenFailed(const nsresult& reason);
   void AddIPDLReference();
   void ReleaseIPDLReference();
   void AddMetaData(already_AddRefed<nsIStreamingProtocolMetaData> meta);

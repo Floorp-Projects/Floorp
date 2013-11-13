@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-//#define LOG_NDEBUG 0
 #define LOG_TAG "AMPEG4AudioAssembler"
+#include "RtspPrlog.h"
 
 #include "AMPEG4AudioAssembler.h"
 

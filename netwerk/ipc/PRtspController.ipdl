@@ -55,8 +55,8 @@ child:
   OnConnected(uint8_t index,
               RtspMetadataParam[] meta);
   OnDisconnected(uint8_t index,
-                 uint32_t reason);
-  AsyncOpenFailed(uint8_t reason);
+                 nsresult reason);
+  AsyncOpenFailed(nsresult reason);
 };
 
 } //namespace net
