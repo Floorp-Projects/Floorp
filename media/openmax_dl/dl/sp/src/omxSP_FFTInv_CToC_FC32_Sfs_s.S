@@ -198,10 +198,10 @@ FFTEnd:                                               @// Does only the scaling
 
         @// N = subFFTSize  ; dataptr = pDst  ; scale = diff
 scaleFFTData:
-        VLD1    {qX0},[pSrc :128]            @// pSrc contains pDst pointer
+        VLD1    {qX0},[pSrc, :128]            @// pSrc contains pDst pointer
         SUBS    subFFTSize,subFFTSize,#2
         VMUL    qX0, qX0, dScale[0]
-        VST1    {qX0},[pSrc :128]!
+        VST1    {qX0},[pSrc, :128]!
 
         BGT     scaleFFTData
 End:

@@ -173,10 +173,6 @@
 #define dT0     D14.F32
 #define dT1     D15.F32
 
-@// Define constants
-        @ sqrt(1/2)
-ONEBYSQRT2:     .float  0.7071067811865476e0
-
 
         .MACRO FFTSTAGE scaled, inverse, name
 
@@ -185,7 +181,7 @@ ONEBYSQRT2:     .float  0.7071067811865476e0
         @// Update pSubFFTSize and pSubFFTNum regs
         @// subFFTSize = 1 for the first stage
         MOV     subFFTSize,#8
-        LDR     t0,=ONEBYSQRT2
+        ADR     t0,ONEBYSQRT2\name
 
         @// Note: setCount = subFFTNum/8 (reuse the grpSize reg for setCount)
         LSR     grpSize,subFFTNum,#3
@@ -201,23 +197,23 @@ ONEBYSQRT2:     .float  0.7071067811865476e0
 
         @// Calculate the step of input data for the next set
         @//MOV     step1,pointStep,LSL #1             @// step1 = 2*pointStep
-        VLD2    {dXr0,dXi0},[pSrc :128],pointStep     @//  data[0]
+        VLD2    {dXr0,dXi0},[pSrc, :128],pointStep     @//  data[0]
         MOV     step1,grpSize,LSL #4
 
         MOV     step2,pointStep,LSL #3
-        VLD2    {dXr1,dXi1},[pSrc :128],pointStep     @//  data[1]
+        VLD2    {dXr1,dXi1},[pSrc, :128],pointStep     @//  data[1]
         SUB     step2,step2,pointStep                 @// step2 = 7*pointStep
         @// setStep = - 7*pointStep+16
         RSB     setStep,step2,#16
 
-        VLD2    {dXr2,dXi2},[pSrc :128],pointStep     @//  data[2]
-        VLD2    {dXr3,dXi3},[pSrc :128],pointStep     @//  data[3]
-        VLD2    {dXr4,dXi4},[pSrc :128],pointStep     @//  data[4]
-        VLD2    {dXr5,dXi5},[pSrc :128],pointStep     @//  data[5]
-        VLD2    {dXr6,dXi6},[pSrc :128],pointStep     @//  data[6]
+        VLD2    {dXr2,dXi2},[pSrc, :128],pointStep     @//  data[2]
+        VLD2    {dXr3,dXi3},[pSrc, :128],pointStep     @//  data[3]
+        VLD2    {dXr4,dXi4},[pSrc, :128],pointStep     @//  data[4]
+        VLD2    {dXr5,dXi5},[pSrc, :128],pointStep     @//  data[5]
+        VLD2    {dXr6,dXi6},[pSrc, :128],pointStep     @//  data[6]
         @//  data[7] & update pSrc for the next set
         @//  setStep = -7*pointStep + 16
-        VLD2    {dXr7,dXi7},[pSrc :128],setStep
+        VLD2    {dXr7,dXi7},[pSrc, :128],setStep
         @// grp = 0 a special case since all the twiddle factors are 1
         @// Loop on the sets
 
@@ -245,7 +241,7 @@ radix8fsGrpZeroSetLoop\name :
 
         VADD    qY0,qV0,qV4
         VSUB    qY4,qV0,qV4
-        VST2    {dYr0,dYi0},[pDst :128],step1         @// store y0
+        VST2    {dYr0,dYi0},[pDst, :128],step1         @// store y0
 
         .ifeqs  "\inverse", "TRUE"
 
@@ -253,15 +249,15 @@ radix8fsGrpZeroSetLoop\name :
             VADD    dYi2,dVi2,dVr6
 
             VADD    dYr6,dVr2,dVi6
-            VST2    {dYr2,dYi2},[pDst :128],step1     @// store y2
+            VST2    {dYr2,dYi2},[pDst, :128],step1     @// store y2
             VSUB    dYi6,dVi2,dVr6
 
             VSUB    qU1,qX0,qX4
-            VST2    {dYr4,dYi4},[pDst :128],step1     @// store y4
+            VST2    {dYr4,dYi4},[pDst, :128],step1     @// store y4
 
             VSUB    qU3,qX1,qX5
             VSUB    qU5,qX2,qX6
-            VST2    {dYr6,dYi6},[pDst :128],step1     @// store y6
+            VST2    {dYr6,dYi6},[pDst, :128],step1     @// store y6
 
         .ELSE
 
@@ -269,15 +265,15 @@ radix8fsGrpZeroSetLoop\name :
             VSUB    dYi6,dVi2,dVr6
 
             VSUB    dYr2,dVr2,dVi6
-            VST2    {dYr6,dYi6},[pDst :128],step1     @// store y2
+            VST2    {dYr6,dYi6},[pDst, :128],step1     @// store y2
             VADD    dYi2,dVi2,dVr6
 
 
             VSUB    qU1,qX0,qX4
-            VST2    {dYr4,dYi4},[pDst :128],step1     @// store y4
+            VST2    {dYr4,dYi4},[pDst, :128],step1     @// store y4
             VSUB    qU3,qX1,qX5
             VSUB    qU5,qX2,qX6
-            VST2    {dYr2,dYi2},[pDst :128],step1     @// store y6
+            VST2    {dYr2,dYi2},[pDst, :128],step1     @// store y6
 
 
         .ENDIF
@@ -291,17 +287,17 @@ radix8fsGrpZeroSetLoop\name :
 
         VSUB    dVr1,dUr1,dUi5
         @//  data[0] for next iteration
-        VLD2    {dXr0,dXi0},[pSrc :128],pointStep
+        VLD2    {dXr0,dXi0},[pSrc, :128],pointStep
         VADD    dVi1,dUi1,dUr5
         VADD    dVr3,dUr1,dUi5
-        VLD2    {dXr1,dXi1},[pSrc :128],pointStep     @//  data[1]
+        VLD2    {dXr1,dXi1},[pSrc, :128],pointStep     @//  data[1]
         VSUB    dVi3,dUi1,dUr5
 
         VSUB    dVr5,dUr3,dUi7
-        VLD2    {dXr2,dXi2},[pSrc :128],pointStep     @//  data[2]
+        VLD2    {dXr2,dXi2},[pSrc, :128],pointStep     @//  data[2]
         VADD    dVi5,dUi3,dUr7
         VADD    dVr7,dUr3,dUi7
-        VLD2    {dXr3,dXi3},[pSrc :128],pointStep     @//  data[3]
+        VLD2    {dXr3,dXi3},[pSrc, :128],pointStep     @//  data[3]
         VSUB    dVi7,dUi3,dUr7
 
         @// finish third stage of 8 point FFT
@@ -311,14 +307,14 @@ radix8fsGrpZeroSetLoop\name :
             @// calculate a*v5
             VMUL    dT1,dVr5,dT0[0]                   @// use dVi0 for dT1
 
-            VLD2    {dXr4,dXi4},[pSrc :128],pointStep @//  data[4]
+            VLD2    {dXr4,dXi4},[pSrc, :128],pointStep @//  data[4]
             VMUL    dVi5,dVi5,dT0[0]
 
-            VLD2    {dXr5,dXi5},[pSrc :128],pointStep @//  data[5]
+            VLD2    {dXr5,dXi5},[pSrc, :128],pointStep @//  data[5]
             VSUB    dVr5,dT1,dVi5                     @// a * V5
             VADD    dVi5,dT1,dVi5
 
-            VLD2    {dXr6,dXi6},[pSrc :128],pointStep @//  data[6]
+            VLD2    {dXr6,dXi6},[pSrc, :128],pointStep @//  data[6]
 
             @// calculate  b*v7
             VMUL    dT1,dVr7,dT0[0]
@@ -335,33 +331,33 @@ radix8fsGrpZeroSetLoop\name :
             @// On the last iteration,  this will read past the end of pSrc, 
             @// so skip this read.
             BEQ     radix8SkipLastUpdateInv\name
-            VLD2    {dXr7,dXi7},[pSrc :128],setStep   @//  data[7]
+            VLD2    {dXr7,dXi7},[pSrc, :128],setStep   @//  data[7]
 radix8SkipLastUpdateInv\name:
 
             VSUB    dYr3,dVr3,dVr7
             VSUB    dYi3,dVi3,dVi7
-            VST2    {dYr1,dYi1},[pDst :128],step1     @// store y1
+            VST2    {dYr1,dYi1},[pDst, :128],step1     @// store y1
             VADD    dYr7,dVr3,dVr7
             VADD    dYi7,dVi3,dVi7
 
 
-            VST2    {dYr3,dYi3},[pDst :128],step1     @// store y3
-            VST2    {dYr5,dYi5},[pDst :128],step1     @// store y5
-            VST2    {dYr7,dYi7},[pDst :128]           @// store y7
+            VST2    {dYr3,dYi3},[pDst, :128],step1     @// store y3
+            VST2    {dYr5,dYi5},[pDst, :128],step1     @// store y5
+            VST2    {dYr7,dYi7},[pDst, :128]           @// store y7
             ADD pDst, pDst, #16
 
         .ELSE
 
             @// calculate  b*v7
             VMUL    dT1,dVr7,dT0[0]
-            VLD2    {dXr4,dXi4},[pSrc :128],pointStep @//  data[4]
+            VLD2    {dXr4,dXi4},[pSrc, :128],pointStep @//  data[4]
             VMUL    dVi7,dVi7,dT0[0]
 
-            VLD2    {dXr5,dXi5},[pSrc :128],pointStep @//  data[5]
+            VLD2    {dXr5,dXi5},[pSrc, :128],pointStep @//  data[5]
             VADD    dVr7,dT1,dVi7                     @// b * V7
             VSUB    dVi7,dVi7,dT1
 
-            VLD2    {dXr6,dXi6},[pSrc :128],pointStep @//  data[6]
+            VLD2    {dXr6,dXi6},[pSrc, :128],pointStep @//  data[6]
 
             @// calculate a*v5
             VMUL    dT1,dVr5,dT0[0]                   @// use dVi0 for dT1
@@ -377,20 +373,20 @@ radix8SkipLastUpdateInv\name:
             @// On the last iteration,  this will read past the end of pSrc, 
             @// so skip this read.
             BEQ     radix8SkipLastUpdateFwd\name
-            VLD2    {dXr7,dXi7},[pSrc :128],setStep   @//  data[7]
+            VLD2    {dXr7,dXi7},[pSrc, :128],setStep   @//  data[7]
 radix8SkipLastUpdateFwd\name:
 
             VSUB    qY5,qV1,qV5
 
             VSUB    dYr3,dVr3,dVr7
-            VST2    {dYr7,dYi7},[pDst :128],step1     @// store y1
+            VST2    {dYr7,dYi7},[pDst, :128],step1     @// store y1
             VSUB    dYi3,dVi3,dVi7
             VADD    qY1,qV1,qV5
 
 
-            VST2    {dYr5,dYi5},[pDst :128],step1     @// store y3
-            VST2    {dYr3,dYi3},[pDst :128],step1     @// store y5
-            VST2    {dYr1,dYi1},[pDst :128]!          @// store y7
+            VST2    {dYr5,dYi5},[pDst, :128],step1     @// store y3
+            VST2    {dYr3,dYi3},[pDst, :128],step1     @// store y5
+            VST2    {dYr1,dYi1},[pDst, :128]!          @// store y7
 
         .ENDIF
 
@@ -415,12 +411,12 @@ radix8SkipLastUpdateFwd\name:
         M_START armSP_FFTFwd_CToC_FC32_Radix8_fs_OutOfPlace_unsafe,r4
             FFTSTAGE "FALSE","FALSE",FWD
         M_END
-
+ONEBYSQRT2FWD:     .float  0.7071067811865476e0
 
         M_START armSP_FFTInv_CToC_FC32_Radix8_fs_OutOfPlace_unsafe,r4
             FFTSTAGE "FALSE","TRUE",INV
         M_END
-
+ONEBYSQRT2INV:     .float  0.7071067811865476e0
 
 
         .end

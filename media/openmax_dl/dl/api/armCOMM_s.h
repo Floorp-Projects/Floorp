@@ -170,6 +170,9 @@
 	.global	\name
 	.func	\name
 	.section	.text.\name,"ax",%progbits
+	.arch armv7-a
+	.fpu neon
+	.object_arch armv4
 	.align	2
 \name :		
 .fnstart
