@@ -1620,13 +1620,8 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     // Check if the principal the function was compiled under is
     // allowed to execute scripts.
 
-    bool result;
-    rv = CanExecuteScripts(aCx, subject, true, &result);
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (!result)
-      return NS_ERROR_DOM_SECURITY_ERR;
+    if (!ScriptAllowed(js::GetGlobalForObjectCrossCompartment(rootedFunObj)))
+        return NS_ERROR_DOM_SECURITY_ERR;
 
     if (!aTargetObj) {
         // We're done here
@@ -1653,7 +1648,6 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
 nsresult
 nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
                                            nsIPrincipal *aPrincipal,
-                                           bool aAllowIfNoScriptContext,
                                            bool *result)
 {
     *result = false; 
@@ -1675,40 +1669,32 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
 
     //-- See if the current window allows JS execution
     nsIScriptContext *scriptContext = GetScriptContext(cx);
-    if (!scriptContext) {
-        if (aAllowIfNoScriptContext) {
-            *result = true;
+    if (scriptContext) {
+        if (!scriptContext->GetScriptsEnabled()) {
+            // No scripting on this context, folks
+            *result = false;
             return NS_OK;
         }
-        return NS_ERROR_FAILURE;
-    }
 
-    if (!scriptContext->GetScriptsEnabled()) {
-        // No scripting on this context, folks
-        *result = false;
-        return NS_OK;
-    }
-    
-    nsIScriptGlobalObject *sgo = scriptContext->GetGlobalObject();
+        nsIScriptGlobalObject *sgo = scriptContext->GetGlobalObject();
+        if (!sgo) {
+            return NS_ERROR_FAILURE;
+        }
 
-    if (!sgo) {
-        return NS_ERROR_FAILURE;
-    }
+        // window can be null here if we're running with a non-DOM window
+        // as the script global (i.e. a XUL prototype document).
+        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
+        nsCOMPtr<nsIDocShell> docshell;
+        nsresult rv;
+        if (window) {
+            docshell = window->GetDocShell();
+        }
 
-    // window can be null here if we're running with a non-DOM window
-    // as the script global (i.e. a XUL prototype document).
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
-    nsCOMPtr<nsIDocShell> docshell;
-    nsresult rv;
-
-    if (window) {
-        docshell = window->GetDocShell();
-    }
-
-    if (docshell) {
-      rv = docshell->GetCanExecuteScripts(result);
-      if (NS_FAILED(rv)) return rv;
-      if (!*result) return NS_OK;
+        if (docshell) {
+          rv = docshell->GetCanExecuteScripts(result);
+          if (NS_FAILED(rv)) return rv;
+          if (!*result) return NS_OK;
+        }
     }
 
     // OK, the docshell doesn't have script execution explicitly disabled.
@@ -1725,7 +1711,7 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     }
         
     bool isAbout;
-    rv = principalURI->SchemeIs("about", &isAbout);
+    nsresult rv = principalURI->SchemeIs("about", &isAbout);
     if (NS_SUCCEEDED(rv) && isAbout) {
         nsCOMPtr<nsIAboutModule> module;
         rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
@@ -1774,9 +1760,7 @@ nsScriptSecurityManager::ScriptAllowed(JSObject *aGlobal)
     nsCOMPtr<nsIScriptContext> scx = nsJSUtils::GetStaticScriptContext(global);
     AutoPushJSContext cx(scx ? scx->GetNativeContext() : GetSafeJSContext());
     bool result = false;
-    nsresult rv = CanExecuteScripts(cx, doGetObjectPrincipal(global),
-                                    /* aAllowIfNoScriptContext = */ false,
-                                    &result);
+    nsresult rv = CanExecuteScripts(cx, doGetObjectPrincipal(global), &result);
     return NS_SUCCEEDED(rv) && result;
 }
 
