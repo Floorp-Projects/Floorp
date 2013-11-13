@@ -1,22 +1,30 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/zh.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/zh.xml
+ * ICU <specials> source: <path>/common/main/zh.xml
  */
 zh{
-    AuxExemplarCharacters{"[侣 傣 卑 厘 吕 堤 奎 巽 撤 楔 楠 滕 瑚 甫 盲 禄 粟 脚 钯 铂 锑 镑 魁]"}
+    AuxExemplarCharacters{"[仂 侣 傈 傣 僳 卑 卞 厘 吕 坝 堤 奎 屿 巽 撤 楔 楠 滕 瑚 甫 盲 碑 禄 粟 脚 艮 谬 钯 铂 锑 镑 魁]"}
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0}…"}
+        word-initial{"…{0}"}
+        word-medial{"{0}…{1}"}
+    }
     ExemplarCharacters{
         "[一 丁 七 万-与 丑 专 且 世 丘-业 东 丝 丢 两 严 丧 个 中 丰 串 临 丸-主 丽 举 乃 久 么 义 之-乐 乔 乖 乘 乙 九 也"
         "-乡 书 买 乱 乾 了 予 争 事 二 于 亏 云 互 五 井 亚 些 亡 交-亨 享 京 亮 亲 人 亿-仁 仅 仇 今 介 仍 从 仔 他 付 仙"
         " 代-以 仪 们 仰 仲 件 价 任 份 仿 企 伊 伍 伏-休 众-会 伟 传 伤 伦 伯 估 伴 伸 似 伽 但 位-佑 体 何 余 佛 作 你 佤"
         " 佩 佳 使 例 供 依 侠 侦-侨 侬 侯 侵 便 促 俄 俊 俗 保 信 俩 修 俱 俾 倍 倒 候 倚 借 倦 值 倾 假 偌 偏 做 停 健 偶"
-        " 偷 储 催 傲 傻 像 僧 儒 儿 允 元-充 先 光 克 免 兑 兔 党 入 全 八-兮 兰 共 关-兹 养-兽 内 冈 册 再 冒 写 军 农 冠"
+        " 偷 储 催 傲 傻 像 僧 儒 儿 允 元-兆 先 光 克 免 兑 兔 党 入 全 八-兮 兰 共 关-兹 养-兽 内 冈 册 再 冒 写 军 农 冠"
         " 冬 冰 冲 决 况 冷 准 凌 减 凝 几 凡 凤 凭 凯 凰 出 击 函 刀 分 切 刊 刑 划 列-创 初 判 利 别 到 制-券 刺 刻 剂 前"
         " 剑 剧 剩 剪 副 割 力 劝-务 劣 动-劫 励-劳 势 勇 勉 勋 勒 勤 勾 勿 包 匆 匈 化 北 匙 匹-医 十 千 升 午 半 华 协 卒"
         " 卓 单-南 博 占-卢 卫 卯-危 即 却 卷 厂 厄-历 厉 压-厍 厚 原 去 县 参 又-反 发 叔 取-叙 口-另 只-叭 可 台 史 右 叶"
@@ -70,20 +78,26 @@ zh{
     }
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
     ExemplarCharactersPunctuation{
-        "[﹉-﹌ _ ＿ ﹍-﹏ ︳ ︴ \- － ﹣ ‐ – — ︱ ― , ， ﹐ 、 ﹑ ; ； ﹔ \: ： ﹕ ! ！ ﹗ ? ？ ﹖ . ． ﹒ ‥"
-        " ︰ … 。 · ＇ ‘ ’ \" ＂ “ ” 〝 〞 ( （ ﹙ ︵ ) ） ﹚ ︶ \[ ［ \] ］ \{ ｛ ﹛ ︷ \} ｝ ﹜ ︸ 〈 ︿ "
-        "〉 ﹀ 《 ︽ 》 ︾ 「 ﹁ 」 ﹂ 『 ﹃ 』 ﹄ 【 ︻ 】 ︼ 〔 ﹝ ︹ 〕 ﹞ ︺ 〖 〗 ‖ § @ ＠ ﹫ * ＊ ﹡ / ／ \\ ＼"
-        " ﹨ \& ＆ ﹠ # ＃ ﹟ % ％ ﹪ ‰ ′ ″ ‵ 〃 ※]"
+        "[﹉﹊﹋﹌ _ ＿ ﹍﹎﹏ ︳︴ \\- － ﹣ ‐ – — ︱ ― , ， ﹐ 、 ﹑ ; ； ﹔ \\: ： ﹕ ! ！ ﹗ ? ？ ﹖ . ． ﹒"
+        " ‥ ︰ … 。 · ＇ ‘ ’ \u0022 ＂ “ ” 〝 〞 ( （ ﹙ ︵ ) ） ﹚ ︶ \\[ ［ \\] ］ \\{ ｛ ﹛ ︷ \\} "
+        "｝ ﹜ ︸ 〈 ︿ 〉 ﹀ 《 ︽ 》 ︾ 「 ﹁ 」 ﹂ 『 ﹃ 』 ﹄ 【 ︻ 】 ︼ 〔 ﹝ ︹ 〕 ﹞ ︺ 〖 〗 ‖ § @ ＠ ﹫ * ＊ "
+        "﹡ / ／ \\\\ ＼ ﹨ \\& ＆ ﹠ # ＃ ﹟ % ％ ﹪ ‰ ′ ″ ‵ 〃 ※]"
     }
     LocaleScript{
         "Hani",
     }
+    MoreInformation{"？"}
     NumberElements{
         default{"latn"}
         finance{"hansfin"}
         latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
             patterns{
-                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -91,7 +105,7 @@ zh{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0千"}
                     }
                     10000{
                         other{"0万"}
@@ -118,20 +132,20 @@ zh{
                         other{"0000亿"}
                     }
                     1000000000000{
-                        other{"0万亿"}
+                        other{"0兆"}
                     }
                     10000000000000{
-                        other{"00万亿"}
+                        other{"00兆"}
                     }
                     100000000000000{
-                        other{"000万亿"}
+                        other{"000兆"}
                     }
                 }
             }
             patternsShort{
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0千"}
                     }
                     10000{
                         other{"0万"}
@@ -158,13 +172,13 @@ zh{
                         other{"0000亿"}
                     }
                     1000000000000{
-                        other{"0万亿"}
+                        other{"0兆"}
                     }
                     10000000000000{
-                        other{"00万亿"}
+                        other{"00兆"}
                     }
                     100000000000000{
-                        other{"000万亿"}
+                        other{"000兆"}
                     }
                 }
             }
@@ -179,12 +193,13 @@ zh{
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
+                superscriptingExponent{"×"}
             }
         }
         native{"hanidec"}
         traditional{"hans"}
     }
-    Version{"2.0.78.39"}
+    Version{"2.0.93.8"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -194,20 +209,15 @@ zh{
                 "ah:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
-                "Gyyyy-M-d",
+                "Gy年M月d日",
                 "Gy-M-d",
                 "{1} {0}",
-                "{1}{0}",
-                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
             availableFormats{
-                Ed{"d日E"}
-                Gy{"Gy年"}
-                H{"H时"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
                 M{"M月"}
                 MEd{"M-dE"}
                 MMM{"LLL"}
@@ -215,22 +225,13 @@ zh{
                 MMMd{"M月d日"}
                 Md{"M-d"}
                 d{"d日"}
-                h{"ah时"}
-                hm{"ah:mm"}
-                hms{"ah:mm:ss"}
-                ms{"mm:ss"}
                 y{"Gy年"}
-                yM{"Gy年M月"}
-                yMEd{"Gy年M月d日，E"}
-                yMMM{"Gy年M月"}
-                yMMMEd{"Gy年M月d日E"}
-                yQQQ{"Gy年第Q季度"}
-                yQQQQ{"Gy年QQQQ"}
                 yyyy{"Gy年"}
                 yyyyM{"Gy-M"}
-                yyyyMEd{"Gy-M-dE"}
+                yyyyMEd{"Gy-M-d（E）"}
                 yyyyMMM{"Gy年M月"}
                 yyyyMMMEd{"Gy年M月d日E"}
+                yyyyMMMM{"Gy年M月"}
                 yyyyMMMd{"Gy年M月d日"}
                 yyyyMd{"Gy-M-d"}
                 yyyyQQQ{"Gy年第Q季度"}
@@ -262,13 +263,17 @@ zh{
                 }
                 "U-M-d",
                 "{1} {0}",
-                "{1}{0}",
-                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
             availableFormats{
                 Ed{"d日E"}
+                Gy{"U年"}
+                GyMMM{"U年MMM"}
+                GyMMMEd{"U年MMMd日E"}
+                GyMMMd{"U年MMMd日"}
                 M{"MMM"}
                 MEd{"M-dE"}
                 MMMEd{"MMMd日E"}
@@ -276,14 +281,16 @@ zh{
                 Md{"M-d"}
                 d{"d日"}
                 y{"U年"}
-                yM{"U年M月"}
-                yMEd{"U年M月d日，E"}
-                yMMM{"U年MMM"}
-                yMMMEd{"U年MMMd日E"}
-                yMMMd{"U年MMMd日"}
                 yMd{"U年M月d日"}
-                yQQQ{"U年QQQQ"}
-                yQQQQ{"U年QQQQ"}
+                yyyy{"U年"}
+                yyyyM{"U年M月"}
+                yyyyMEd{"U年M月d日，E"}
+                yyyyMMM{"U年MMM"}
+                yyyyMMMEd{"U年MMMd日E"}
+                yyyyMMMd{"U年MMMd日"}
+                yyyyMd{"U年M月d日"}
+                yyyyQQQ{"U年QQQQ"}
+                yyyyQQQQ{"U年QQQQ"}
             }
             cyclicNameSets{
                 dayParts{
@@ -777,8 +784,152 @@ zh{
                 }
             }
         }
+        generic{
+            DateTimePatterns{
+                "zzzzah:mm:ss",
+                "zah:mm:ss",
+                "ah:mm:ss",
+                "ah:mm",
+                "Gy年M月d日EEEE",
+                "Gy年M月d日",
+                "Gy年M月d日",
+                "Gy/M/d",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"d日E"}
+                Gy{"Gy年"}
+                GyMMM{"Gy年M月"}
+                GyMMMEd{"Gy年M月d日E"}
+                GyMMMd{"Gy年M月d日"}
+                H{"H时"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"M月"}
+                MEd{"M/dE"}
+                MMM{"LLL"}
+                MMMEd{"M月d日E"}
+                MMMd{"M月d日"}
+                Md{"M/d"}
+                d{"d日"}
+                h{"ah时"}
+                hm{"ah:mm"}
+                hms{"ah:mm:ss"}
+                ms{"mm:ss"}
+                y{"Gy年"}
+                yyyy{"Gy年"}
+                yyyyM{"Gy年M月"}
+                yyyyMEd{"Gy/M/dE"}
+                yyyyMMM{"Gy年M月"}
+                yyyyMMMEd{"Gy年M月d日E"}
+                yyyyMMMM{"Gy年M月"}
+                yyyyMMMd{"Gy年M月d日"}
+                yyyyMd{"Gy/M/d"}
+                yyyyQQQ{"Gy年第Q季度"}
+                yyyyQQQQ{"Gy年第Q季度"}
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M月"}
+                }
+                MEd{
+                    M{"M/dE至M/dE"}
+                    d{"M/dE至M/dE"}
+                }
+                MMM{
+                    M{"LLL至LLL"}
+                }
+                MMMEd{
+                    M{"M月d日E至M月d日E"}
+                    d{"M月d日E至d日E"}
+                }
+                MMMd{
+                    M{"M月d日至M月d日"}
+                    d{"M月d日至d日"}
+                }
+                Md{
+                    M{"M/d – M/d"}
+                    d{"M/d – M/d"}
+                }
+                d{
+                    d{"d日至d日"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"ah时至ah时"}
+                    h{"ah时至h时"}
+                }
+                hm{
+                    a{"ah:mm至ah:mm"}
+                    h{"ah:mm至h:mm"}
+                    m{"ah:mm至h:mm"}
+                }
+                hmv{
+                    a{"vah:mm至ah:mm"}
+                    h{"vah:mm至h:mm"}
+                    m{"vah:mm至h:mm"}
+                }
+                hv{
+                    a{"vah时至ah时"}
+                    h{"vah时至h时"}
+                }
+                y{
+                    y{"Gy–y年"}
+                }
+                yM{
+                    M{"Gy年M月至M月"}
+                    y{"Gy年M月至y年M月"}
+                }
+                yMEd{
+                    M{"Gy/M/dE至y/M/dE"}
+                    d{"Gy/M/dE至y/M/dE"}
+                    y{"Gy/M/dE至y/M/dE"}
+                }
+                yMMM{
+                    M{"Gy年M月至M月"}
+                    y{"Gy年M月至y年M月"}
+                }
+                yMMMEd{
+                    M{"Gy年M月d日E至M月d日E"}
+                    d{"Gy年M月d日E至d日E"}
+                    y{"Gy年M月d日E至y年M月d日E"}
+                }
+                yMMMM{
+                    M{"Gy年M月至M月"}
+                    y{"Gy年M月至y年M月"}
+                }
+                yMMMd{
+                    M{"Gy年M月d日至M月d日"}
+                    d{"Gy年M月d日至d日"}
+                    y{"Gy年M月d日至y年M月d日"}
+                }
+                yMd{
+                    M{"Gy/M/d – y/M/d"}
+                    d{"Gy/M/d – y/M/d"}
+                    y{"Gy/M/d – y/M/d"}
+                }
+            }
+        }
         gregorian{
             AmPmMarkers{
+                "上午",
+                "下午",
+            }
+            AmPmMarkersNarrow{
                 "上午",
                 "下午",
             }
@@ -790,15 +941,26 @@ zh{
                 "y年M月d日EEEE",
                 "y年M月d日",
                 "y年M月d日",
-                "yy-M-d",
+                "yy/M/d",
                 "{1} {0}",
-                "{1}{0}",
-                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
+            appendItems{
+                Timezone{"{1}{0}"}
+            }
             availableFormats{
+                EHm{"EHH:mm"}
+                EHms{"EHH:mm:ss"}
                 Ed{"d日E"}
+                Ehm{"Eah:mm"}
+                Ehms{"Eah:mm:ss"}
+                Gy{"Gy年"}
+                GyMMM{"Gy年M月"}
+                GyMMMEd{"Gy年M月d日E"}
+                GyMMMd{"Gy年M月d日"}
                 H{"H时"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -817,19 +979,15 @@ zh{
                 ms{"mm:ss"}
                 y{"y年"}
                 yM{"y/M"}
-                yMEd{"y/M/dEEE"}
+                yMEd{"y/M/dE"}
+                yMM{"y年M月"}
                 yMMM{"y年M月"}
                 yMMMEd{"y年M月d日E"}
+                yMMMM{"y年M月"}
                 yMMMd{"y年M月d日"}
                 yMd{"y/M/d"}
                 yQQQ{"y年第Q季度"}
-                yQQQQ{"y年QQQQ"}
-                yyMM{"yy年M月"}
-                yyMMM{"yy年M月"}
-                yyQQQ{"yy年第Q季度"}
-                yyyy{"yyyy年"}
-                yyyyM{"yyyy年M月"}
-                yyyyMMMM{"yyyy年M月"}
+                yQQQQ{"y年第Q季度"}
             }
             dayNames{
                 format{
@@ -923,63 +1081,6 @@ zh{
                     "公元",
                 }
             }
-            fields{
-                day{
-                    dn{"日"}
-                    relative{
-                        "-1"{"昨天"}
-                        "-2"{"前天"}
-                        "0"{"今天"}
-                        "1"{"明天"}
-                        "2"{"后天"}
-                    }
-                }
-                dayperiod{
-                    dn{"上午/下午"}
-                }
-                era{
-                    dn{"时期"}
-                }
-                hour{
-                    dn{"小时"}
-                }
-                minute{
-                    dn{"分钟"}
-                }
-                month{
-                    dn{"月"}
-                    relative{
-                        "-1"{"上个月"}
-                        "0"{"本月"}
-                        "1"{"下个月"}
-                    }
-                }
-                second{
-                    dn{"秒钟"}
-                }
-                week{
-                    dn{"周"}
-                    relative{
-                        "-1"{"上周"}
-                        "0"{"本周"}
-                        "1"{"下周"}
-                    }
-                }
-                weekday{
-                    dn{"星期"}
-                }
-                year{
-                    dn{"年"}
-                    relative{
-                        "-1"{"去年"}
-                        "0"{"今年"}
-                        "1"{"明年"}
-                    }
-                }
-                zone{
-                    dn{"时区"}
-                }
-            }
             intervalFormats{
                 H{
                     H{"HH–HH"}
@@ -988,8 +1089,12 @@ zh{
                     H{"HH:mm–HH:mm"}
                     m{"HH:mm–HH:mm"}
                 }
+                Hmv{
+                    H{"v HH:mm–HH:mm"}
+                    m{"v HH:mm–HH:mm"}
+                }
                 Hv{
-                    H{"HH–HH v"}
+                    H{"v HH–HH"}
                 }
                 M{
                     M{"M–M月"}
@@ -1014,7 +1119,7 @@ zh{
                     d{"M/d – M/d"}
                 }
                 d{
-                    d{"d日至d日"}
+                    d{"d–d日"}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -1039,13 +1144,13 @@ zh{
                     y{"y–y年"}
                 }
                 yM{
-                    M{"yy年M月至M月"}
-                    y{"yy年M月至yy年M月"}
+                    M{"y年M月至M月"}
+                    y{"y年M月至y年M月"}
                 }
                 yMEd{
-                    M{"yy/M/dE至yy/M/dE"}
-                    d{"yy/M/dE至yy/M/dE"}
-                    y{"yy/M/dE至yy/M/dE"}
+                    M{"y/M/dE至y/M/dE"}
+                    d{"y/M/dE至y/M/dE"}
+                    y{"y/M/dE至y/M/dE"}
                 }
                 yMMM{
                     M{"y年M月至M月"}
@@ -1066,9 +1171,9 @@ zh{
                     y{"y年M月d日至y年M月d日"}
                 }
                 yMd{
-                    M{"yy/M/d – yy/M/d"}
-                    d{"yy/M/d – yy/M/d"}
-                    y{"yy/M/d – yy/M/d"}
+                    M{"y/M/d – y/M/d"}
+                    d{"y/M/d – y/M/d"}
+                    y{"y/M/d – y/M/d"}
                 }
             }
             monthNames{
@@ -1205,6 +1310,21 @@ zh{
             }
         }
         hebrew{
+            DateTimePatterns{
+                "zzzzah:mm:ss",
+                "zah:mm:ss",
+                "ah:mm:ss",
+                "ah:mm",
+                "Gy年M月d日EEEE",
+                "Gy年M月d日",
+                "Gy年M月d日",
+                "Gy-M-d",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
             eras{
                 abbreviated{
                     "希伯来历",
@@ -1387,45 +1507,21 @@ zh{
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
                 "Gy年M月d日",
-                "Gyy-MM-dd",
+                "Gy/M/d",
                 "{1} {0}",
-                "{1}{0}",
-                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
             availableFormats{
-                Ed{"d日E"}
-                Gy{"GGGyy年"}
-                H{"H时"}
-                Hm{"H:mm"}
-                Hms{"H:mm:ss"}
                 M{"M月"}
                 MEd{"M-dE"}
                 MMM{"LLL"}
                 MMMEd{"M月d日E"}
-                MMMMdd{"M月dd日"}
                 MMMd{"M月d日"}
-                MMdd{"MM-dd"}
                 Md{"M-d"}
                 d{"d日"}
-                h{"ah时"}
-                hm{"ah:mm"}
-                hms{"ah:mm:ss"}
-                ms{"mm:ss"}
-                y{"GGGyy年"}
-                yM{"y年M月"}
-                yMEd{"y年M月d日，E"}
-                yMMM{"y年M月"}
-                yMMMEd{"y年M月d日E"}
-                yQQQ{"y年第Q季度"}
-                yQQQQ{"y年QQQQ"}
-                yyyy{"GGGyy年"}
-                yyyyM{"GGGGGyy-MM"}
-                yyyyMMM{"GGGGGyy年M月"}
-                yyyyMMMd{"GGGGGyy年M月d日"}
-                yyyyMd{"GGGGGyy-MM-dd"}
-                yyyyQQQ{"Gy年第Q季度"}
             }
             eras{
                 abbreviated{
@@ -1542,6 +1638,9 @@ zh{
             availableFormats{
                 Ed{"d日E"}
                 Gy{"Gy年"}
+                GyMMM{"Gy年M月"}
+                GyMMMEd{"Gy年M月d日E"}
+                GyMMMd{"Gy年M月d日"}
                 H{"H时"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1565,6 +1664,7 @@ zh{
                 yyyyMMMd{"Gy年M月d日"}
                 yyyyMd{"Gy-MM-dd"}
                 yyyyQQQ{"Gy年第Q季度"}
+                yyyyQQQQ{"Gy年QQQQ"}
             }
             eras{
                 abbreviated{
@@ -1912,41 +2012,38 @@ zh{
                 "ah:mm",
                 "Gy年M月d日EEEE",
                 "Gy年M月d日",
-                "Gy-M-d",
-                "Gy-M-d",
+                "Gy年M月d日",
+                "Gyy/M/d",
                 "{1} {0}",
-                "{1}{0}",
-                "{1}{0}",
+                "{1} {0}",
+                "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
             availableFormats{
                 Ed{"d日E"}
                 Gy{"Gy年"}
-                H{"H时"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
+                GyMMM{"Gy年M月"}
+                GyMMMEd{"Gy年M月d日E"}
+                GyMMMd{"Gy年M月d日"}
                 M{"M月"}
-                MEd{"M-dE"}
+                MEd{"M/dE"}
                 MMM{"LLL"}
                 MMMEd{"M月d日E"}
                 MMMd{"M月d日"}
-                Md{"M-d"}
+                Md{"M/d"}
                 d{"d日"}
-                h{"ah时"}
-                hm{"ah:mm"}
-                hms{"ah:mm:ss"}
-                ms{"mm:ss"}
                 y{"Gy年"}
                 yyyy{"Gy年"}
-                yyyyM{"Gy-M"}
-                yyyyMEd{"Gy-M-d（E）"}
-                yyyyMM{"Gy-MM"}
+                yyyyM{"Gy年M月"}
+                yyyyMEd{"Gy/M/dE"}
                 yyyyMMM{"Gy年M月"}
                 yyyyMMMEd{"Gy年M月d日E"}
+                yyyyMMMM{"Gy年M月"}
                 yyyyMMMd{"Gy年M月d日"}
-                yyyyMd{"Gy-M-d"}
+                yyyyMd{"Gy/M/d"}
                 yyyyQQQ{"Gy年第Q季度"}
+                yyyyQQQQ{"Gy年第Q季度"}
             }
             eras{
                 abbreviated{
@@ -1962,6 +2059,176 @@ zh{
         quotationEnd{"”"}
         quotationStart{"“"}
     }
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
+    fields{
+        day{
+            dn{"日"}
+            relative{
+                "-1"{"昨天"}
+                "-2"{"前天"}
+                "0"{"今天"}
+                "1"{"明天"}
+                "2"{"后天"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}天后"}
+                }
+                past{
+                    other{"{0}天前"}
+                }
+            }
+        }
+        dayperiod{
+            dn{"上午/下午"}
+        }
+        era{
+            dn{"纪元"}
+        }
+        fri{
+            relative{
+                "-1"{"上周五"}
+                "0"{"本周五"}
+                "1"{"下周五"}
+            }
+        }
+        hour{
+            dn{"小时"}
+            relativeTime{
+                future{
+                    other{"{0}小时后"}
+                }
+                past{
+                    other{"{0}小时前"}
+                }
+            }
+        }
+        minute{
+            dn{"分钟"}
+            relativeTime{
+                future{
+                    other{"{0}分钟后"}
+                }
+                past{
+                    other{"{0}分钟前"}
+                }
+            }
+        }
+        mon{
+            relative{
+                "-1"{"上周一"}
+                "0"{"本周一"}
+                "1"{"下周一"}
+            }
+        }
+        month{
+            dn{"月"}
+            relative{
+                "-1"{"上个月"}
+                "0"{"本月"}
+                "1"{"下个月"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}个月后"}
+                }
+                past{
+                    other{"{0}个月前"}
+                }
+            }
+        }
+        sat{
+            relative{
+                "-1"{"上周六"}
+                "0"{"本周六"}
+                "1"{"下周六"}
+            }
+        }
+        second{
+            dn{"秒钟"}
+            relative{
+                "0"{"现在"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}秒钟后"}
+                }
+                past{
+                    other{"{0}秒钟前"}
+                }
+            }
+        }
+        sun{
+            relative{
+                "-1"{"上周日"}
+                "0"{"本周日"}
+                "1"{"下周日"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"上周四"}
+                "0"{"本周四"}
+                "1"{"下周四"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"上周二"}
+                "0"{"本周二"}
+                "1"{"下周二"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"上周三"}
+                "0"{"本周三"}
+                "1"{"下周三"}
+            }
+        }
+        week{
+            dn{"周"}
+            relative{
+                "-1"{"上周"}
+                "0"{"本周"}
+                "1"{"下周"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}周后"}
+                }
+                past{
+                    other{"{0}周前"}
+                }
+            }
+        }
+        weekday{
+            dn{"星期"}
+        }
+        year{
+            dn{"年"}
+            relative{
+                "-1"{"去年"}
+                "0"{"今年"}
+                "1"{"明年"}
+            }
+            relativeTime{
+                future{
+                    other{"{0}年后"}
+                }
+                past{
+                    other{"{0}年前"}
+                }
+            }
+        }
+        zone{
+            dn{"时区"}
+        }
+    }
     listPattern{
         standard{
             2{"{0}和{1}"}
@@ -1969,98 +2236,529 @@ zh{
             middle{"{0}、{1}"}
             start{"{0}、{1}"}
         }
+        unit{
+            2{"{0}{1}"}
+            end{"{0}{1}"}
+            middle{"{0}{1}"}
+            start{"{0}{1}"}
+        }
+        unit-short{
+            2{"{0}{1}"}
+            end{"{0}{1}"}
+            middle{"{0}{1}"}
+            start{"{0}{1}"}
+        }
     }
     measurementSystemNames{
         UK{"英制"}
         US{"美制"}
         metric{"公制"}
     }
+    transformNames{
+        BGN{"美国地名委员会 (BGN)"}
+        Numeric{"数字"}
+        Tone{"音调"}
+        UNGEGN{"联合国地名专家组 (UNGEGN)"}
+        x-Accents{"重音符号"}
+        x-Fullwidth{"全角"}
+        x-Halfwidth{"半角"}
+        x-Jamo{"韩文字母"}
+        x-Pinyin{"拼音"}
+        x-Publishing{"印刷体"}
+    }
     units{
-        day{
-            other{"{0}天"}
+        acceleration{
+            g-force{
+                other{"{0}G力"}
+            }
         }
-        day-future{
-            other{"{0}天后"}
+        angle{
+            arc-minute{
+                other{"{0}分钟"}
+            }
+            arc-second{
+                other{"{0}秒钟"}
+            }
+            degree{
+                other{"{0}度"}
+            }
         }
-        day-past{
-            other{"{0}天前"}
+        area{
+            acre{
+                other{"{0}英亩"}
+            }
+            hectare{
+                other{"{0}公顷"}
+            }
+            square-foot{
+                other{"{0}平方英尺"}
+            }
+            square-kilometer{
+                other{"{0}平方公里"}
+            }
+            square-meter{
+                other{"{0}平方米"}
+            }
+            square-mile{
+                other{"{0}平方英里"}
+            }
         }
-        hour{
-            other{"{0}小时"}
+        compound{
+            per{"{0}每{1}"}
         }
-        hour-future{
-            other{"{0}小时后"}
+        duration{
+            day{
+                other{"{0}天"}
+            }
+            hour{
+                other{"{0}小时"}
+            }
+            millisecond{
+                other{"{0}毫秒"}
+            }
+            minute{
+                other{"{0}分钟"}
+            }
+            month{
+                other{"{0}个月"}
+            }
+            second{
+                other{"{0}秒钟"}
+            }
+            week{
+                other{"{0}周"}
+            }
+            year{
+                other{"{0}年"}
+            }
         }
-        hour-past{
-            other{"{0}小时前"}
+        length{
+            centimeter{
+                other{"{0}厘米"}
+            }
+            foot{
+                other{"{0}英尺"}
+            }
+            inch{
+                other{"{0}英寸"}
+            }
+            kilometer{
+                other{"{0}公里"}
+            }
+            light-year{
+                other{"{0}光年"}
+            }
+            meter{
+                other{"{0}米"}
+            }
+            mile{
+                other{"{0}英里"}
+            }
+            millimeter{
+                other{"{0}毫米"}
+            }
+            picometer{
+                other{"{0}皮米"}
+            }
+            yard{
+                other{"{0}码"}
+            }
         }
-        minute{
-            other{"{0}分钟"}
+        mass{
+            gram{
+                other{"{0}克"}
+            }
+            kilogram{
+                other{"{0}千克"}
+            }
+            ounce{
+                other{"{0}盎司"}
+            }
+            pound{
+                other{"{0}磅"}
+            }
         }
-        minute-future{
-            other{"{0}分钟后"}
+        power{
+            horsepower{
+                other{"{0}马力"}
+            }
+            kilowatt{
+                other{"{0}千瓦"}
+            }
+            watt{
+                other{"{0}瓦特"}
+            }
         }
-        minute-past{
-            other{"{0}分钟前"}
+        pressure{
+            hectopascal{
+                other{"{0}百帕斯卡"}
+            }
+            inch-hg{
+                other{"{0}英寸汞柱"}
+            }
+            millibar{
+                other{"{0}毫巴"}
+            }
         }
-        month{
-            other{"{0}个月"}
+        speed{
+            kilometer-per-hour{
+                other{"{0}千米每小时"}
+            }
+            meter-per-second{
+                other{"{0}米每秒"}
+            }
+            mile-per-hour{
+                other{"{0}英里每小时"}
+            }
         }
-        month-future{
-            other{"{0}个月后"}
+        temperature{
+            celsius{
+                other{"{0}摄氏度"}
+            }
+            fahrenheit{
+                other{"{0}华氏度"}
+            }
         }
-        month-past{
-            other{"{0}个月前"}
+        volume{
+            cubic-kilometer{
+                other{"{0}立方公里"}
+            }
+            cubic-mile{
+                other{"{0}立方英里"}
+            }
+            liter{
+                other{"{0}公升"}
+            }
         }
-        second{
-            other{"{0}秒钟"}
+    }
+    unitsNarrow{
+        acceleration{
+            g-force{
+                other{"{0}G"}
+            }
         }
-        second-future{
-            other{"{0}秒钟后"}
+        angle{
+            arc-minute{
+                other{"{0}′"}
+            }
+            arc-second{
+                other{"{0}″"}
+            }
+            degree{
+                other{"{0}°"}
+            }
         }
-        second-past{
-            other{"{0}秒钟前"}
+        area{
+            acre{
+                other{"{0}ac"}
+            }
+            hectare{
+                other{"{0}ha"}
+            }
+            square-foot{
+                other{"{0}ft²"}
+            }
+            square-kilometer{
+                other{"{0}km²"}
+            }
+            square-meter{
+                other{"{0}m²"}
+            }
+            square-mile{
+                other{"{0}mi²"}
+            }
         }
-        week{
-            other{"{0}周"}
+        compound{
+            per{"{0}/{1}"}
         }
-        week-future{
-            other{"{0}周后"}
+        duration{
+            day{
+                other{"{0}天"}
+            }
+            hour{
+                other{"{0}小时"}
+            }
+            millisecond{
+                other{"{0}毫秒"}
+            }
+            minute{
+                other{"{0}分钟"}
+            }
+            month{
+                other{"{0}个月"}
+            }
+            second{
+                other{"{0}秒"}
+            }
+            week{
+                other{"{0}周"}
+            }
+            year{
+                other{"{0}年"}
+            }
         }
-        week-past{
-            other{"{0}周前"}
+        length{
+            centimeter{
+                other{"{0}cm"}
+            }
+            foot{
+                other{"{0}′"}
+            }
+            inch{
+                other{"{0}″"}
+            }
+            kilometer{
+                other{"{0}km"}
+            }
+            light-year{
+                other{"{0}ly"}
+            }
+            meter{
+                other{"{0}m"}
+            }
+            mile{
+                other{"{0}mi"}
+            }
+            millimeter{
+                other{"{0}mm"}
+            }
+            picometer{
+                other{"{0}pm"}
+            }
+            yard{
+                other{"{0}yd"}
+            }
         }
-        year{
-            other{"{0}年"}
+        mass{
+            gram{
+                other{"{0}克"}
+            }
+            kilogram{
+                other{"{0}千克"}
+            }
+            ounce{
+                other{"{0}盎司"}
+            }
+            pound{
+                other{"{0}磅"}
+            }
         }
-        year-future{
-            other{"{0}年后"}
+        power{
+            horsepower{
+                other{"{0}hp"}
+            }
+            kilowatt{
+                other{"{0}kW"}
+            }
+            watt{
+                other{"{0}W"}
+            }
         }
-        year-past{
-            other{"{0}年前"}
+        pressure{
+            hectopascal{
+                other{"{0}hPa"}
+            }
+            inch-hg{
+                other{"{0}\u0022 Hg"}
+            }
+            millibar{
+                other{"{0}mb"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                other{"{0}km/h"}
+            }
+            meter-per-second{
+                other{"{0}m/s"}
+            }
+            mile-per-hour{
+                other{"{0}mi/h"}
+            }
+        }
+        temperature{
+            celsius{
+                other{"{0}°"}
+            }
+            fahrenheit{
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                other{"{0}km³"}
+            }
+            cubic-mile{
+                other{"{0}mi³"}
+            }
+            liter{
+                other{"{0}l"}
+            }
         }
     }
     unitsShort{
-        day{
-            other{"{0}天"}
+        acceleration{
+            g-force{
+                other{"{0} G"}
+            }
         }
-        hour{
-            other{"{0}小时"}
+        angle{
+            arc-minute{
+                other{"{0}分"}
+            }
+            arc-second{
+                other{"{0}秒"}
+            }
+            degree{
+                other{"{0}°"}
+            }
         }
-        minute{
-            other{"{0}分"}
+        area{
+            acre{
+                other{"{0} ac"}
+            }
+            hectare{
+                other{"{0} ha"}
+            }
+            square-foot{
+                other{"{0} ft²"}
+            }
+            square-kilometer{
+                other{"{0} km²"}
+            }
+            square-meter{
+                other{"{0} m²"}
+            }
+            square-mile{
+                other{"{0} mi²"}
+            }
         }
-        month{
-            other{"{0}个月"}
+        compound{
+            per{"{0}/{1}"}
         }
-        second{
-            other{"{0}秒"}
+        duration{
+            day{
+                other{"{0}天"}
+            }
+            hour{
+                other{"{0}小时"}
+            }
+            millisecond{
+                other{"{0}毫秒"}
+            }
+            minute{
+                other{"{0}分钟"}
+            }
+            month{
+                other{"{0}个月"}
+            }
+            second{
+                other{"{0}秒"}
+            }
+            week{
+                other{"{0}周"}
+            }
+            year{
+                other{"{0}年"}
+            }
         }
-        week{
-            other{"{0}周"}
+        length{
+            centimeter{
+                other{"{0} cm"}
+            }
+            foot{
+                other{"{0} ft"}
+            }
+            inch{
+                other{"{0} in"}
+            }
+            kilometer{
+                other{"{0} km"}
+            }
+            light-year{
+                other{"{0} ly"}
+            }
+            meter{
+                other{"{0} m"}
+            }
+            mile{
+                other{"{0} mi"}
+            }
+            millimeter{
+                other{"{0} mm"}
+            }
+            picometer{
+                other{"{0} pm"}
+            }
+            yard{
+                other{"{0} yd"}
+            }
         }
-        year{
-            other{"{0}年"}
+        mass{
+            gram{
+                other{"{0}克"}
+            }
+            kilogram{
+                other{"{0}千克"}
+            }
+            ounce{
+                other{"{0}盎司"}
+            }
+            pound{
+                other{"{0}磅"}
+            }
+        }
+        power{
+            horsepower{
+                other{"{0} hp"}
+            }
+            kilowatt{
+                other{"{0} kW"}
+            }
+            watt{
+                other{"{0}瓦"}
+            }
+        }
+        pressure{
+            hectopascal{
+                other{"{0} hPa"}
+            }
+            inch-hg{
+                other{"{0} inHg"}
+            }
+            millibar{
+                other{"{0} mb"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                other{"{0}千米/小时"}
+            }
+            meter-per-second{
+                other{"{0}米/秒"}
+            }
+            mile-per-hour{
+                other{"{0}英里/小时"}
+            }
+        }
+        temperature{
+            celsius{
+                other{"{0}°C"}
+            }
+            fahrenheit{
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                other{"{0} km³"}
+            }
+            cubic-mile{
+                other{"{0} mi³"}
+            }
+            liter{
+                other{"{0}升"}
+            }
         }
     }
 }

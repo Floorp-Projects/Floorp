@@ -1,7 +1,7 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/so_KE.xml
 // *
@@ -13,5 +13,5 @@ so_KE{
             "KES",
         }
     }
-    Version{"2.0.57.17"}
+    Version{"2.0.90.61"}
 }

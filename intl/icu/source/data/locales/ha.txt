@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ha.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ha.xml
+ * ICU <specials> source: <path>/common/main/ha.xml
  */
 ha{
     AuxExemplarCharacters{"[á à â é è ê í ì î ó ò ô p q {r\u0303} ú ù û v x ƴ]"}
@@ -30,8 +30,48 @@ ha{
             }
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM, y G",
+                "d MMMM, y G",
+                "d MMM, y G",
+                "d/M/yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+        }
         gregorian{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -114,46 +154,6 @@ ha{
                     "Bayan haihuwar annab",
                 }
             }
-            fields{
-                day{
-                    dn{"Kwana"}
-                    relative{
-                        "-1"{"Jiya"}
-                        "0"{"Yau"}
-                        "1"{"Gobe"}
-                    }
-                }
-                dayperiod{
-                    dn{"Yini"}
-                }
-                era{
-                    dn{"Zamani"}
-                }
-                hour{
-                    dn{"Awa"}
-                }
-                minute{
-                    dn{"Minti"}
-                }
-                month{
-                    dn{"Wata"}
-                }
-                second{
-                    dn{"Daƙiƙa"}
-                }
-                week{
-                    dn{"Mako"}
-                }
-                weekday{
-                    dn{"Rana"}
-                }
-                year{
-                    dn{"Shekara"}
-                }
-                zone{
-                    dn{"Agogo"}
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -225,5 +225,45 @@ ha{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"Kwana"}
+            relative{
+                "-1"{"Jiya"}
+                "0"{"Yau"}
+                "1"{"Gobe"}
+            }
+        }
+        dayperiod{
+            dn{"Yini"}
+        }
+        era{
+            dn{"Zamani"}
+        }
+        hour{
+            dn{"Awa"}
+        }
+        minute{
+            dn{"Minti"}
+        }
+        month{
+            dn{"Wata"}
+        }
+        second{
+            dn{"Daƙiƙa"}
+        }
+        week{
+            dn{"Mako"}
+        }
+        weekday{
+            dn{"Rana"}
+        }
+        year{
+            dn{"Shekara"}
+        }
+        zone{
+            dn{"Agogo"}
+        }
     }
 }

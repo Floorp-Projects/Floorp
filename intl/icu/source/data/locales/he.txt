@@ -1,27 +1,41 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/he.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/he.xml
+ * ICU <specials> source: <path>/common/main/he.xml
  */
 he{
     AuxExemplarCharacters{
         "[\u05BD\u05C4\u200E\u200F \u05B0 \u05B1 \u05B2 \u05B3 \u05B4 \u05B5 \u05B6 "
-        "\u05B7 \u05B8 \u05B9 \u05BB \u05C2 \u05C1 \u05BC \u05BF ־ ׳ ״]"
+        "\u05B7 \u05B8 \u05B9 \u05BB \u05C2 \u05C1 \u05BC \u05BF ״]"
+    }
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0} …"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{"[א ב ג ד ה ו ז ח ט י כ ך ל מ ם נ ן ס ע פ ף צ ץ ק ר ש ת]"}
     ExemplarCharactersIndex{"[א ב ג ד ה ו ז ח ט י כ ל מ נ ס ע פ צ ק ר ש ת]"}
+    ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . ' \u0022 ( ) \\[ \\] / ־ ׳ ״]"}
     LocaleScript{
         "Hebr",
     }
+    MoreInformation{"?"}
     NumberElements{
         default{"latn"}
         latn{
+            miscPatterns{
+                atLeast{"⩾{0}+"}
+                range{"{0}-{1}"}
+            }
             patterns{
                 currencyFormat{"#,##0.00 ¤"}
                 decimalFormat{"#,##0.###"}
@@ -186,32 +200,29 @@ he{
                 group{","}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
+                minusSign{"‎-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
+                plusSign{"‎+"}
+                superscriptingExponent{"×"}
             }
         }
         native{"latn"}
         traditional{"hebr"}
     }
-    Version{"2.0.78.38"}
+    Version{"2.0.92.87"}
     calendar{
-        gregorian{
-            AmPmMarkers{
-                "לפנה״צ",
-                "אחה״צ",
-            }
+        generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, d בMMMM y",
-                "d בMMMM y",
-                "d בMMM yyyy",
-                "dd/MM/yy",
+                "EEEE, d בMMMM y G",
+                "d בMMMM y G",
+                "d בMMM y G",
+                "dd/MM/yy GGGGG",
                 "{1}, {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -220,6 +231,10 @@ he{
             }
             availableFormats{
                 Ed{"E ה-d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d בMMM y G"}
+                GyMMMd{"d בMMM y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -227,160 +242,24 @@ he{
                 MEd{"E, d/M"}
                 MMM{"LLL"}
                 MMMEd{"E, d בMMM"}
-                MMMMEd{"E, d בMMMM"}
-                MMMMd{"d בMMMM"}
                 MMMd{"d בMMM"}
-                MMdd{"dd/MM"}
                 Md{"d/M"}
                 d{"d"}
                 h{"‏h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                mmss{"mm:ss"}
                 ms{"mm:ss"}
-                y{"y"}
-                yM{"M.yyyy"}
-                yMEd{"E, d/M/y"}
-                yMMM{"MMM y"}
-                yMMMEd{"E, d בMMM y"}
-                yMMMM{"MMMM y"}
-                yMMMd{"d בMMM y"}
-                yMd{"d.M.yyyy"}
-                yQQQ{"y QQQ"}
-                yQQQQ{"y QQQQ"}
-                yyMM{"MM/yy"}
-                yyMMM{"MMM yyyy"}
-                yyQQQ{"QQQ yy"}
-                yyyy{"y"}
-                yyyyMM{"MM/yyyy"}
-                yyyyMMMM{"MMMM y"}
-            }
-            dayNames{
-                format{
-                    abbreviated{
-                        "יום א׳",
-                        "יום ב׳",
-                        "יום ג׳",
-                        "יום ד׳",
-                        "יום ה׳",
-                        "יום ו׳",
-                        "שבת",
-                    }
-                    narrow{
-                        "א'",
-                        "ב'",
-                        "ג'",
-                        "ד'",
-                        "ה'",
-                        "ו׳",
-                        "ש׳",
-                    }
-                    short{
-                        "א'",
-                        "ב'",
-                        "ג'",
-                        "ד'",
-                        "ה'",
-                        "ו'",
-                        "ש'",
-                    }
-                    wide{
-                        "יום ראשון",
-                        "יום שני",
-                        "יום שלישי",
-                        "יום רביעי",
-                        "יום חמישי",
-                        "יום שישי",
-                        "יום שבת",
-                    }
-                }
-                stand-alone{
-                    narrow{
-                        "א׳",
-                        "ב׳",
-                        "ג׳",
-                        "ד׳",
-                        "ה׳",
-                        "ו",
-                        "ש",
-                    }
-                    short{
-                        "א'",
-                        "ב'",
-                        "ג'",
-                        "ד'",
-                        "ה'",
-                        "ו'",
-                        "ש'",
-                    }
-                }
-            }
-            eras{
-                abbreviated{
-                    "לפנה״ס",
-                    "לסה״נ",
-                }
-                wide{
-                    "לפני הספירה",
-                    "לספירה",
-                }
-            }
-            fields{
-                day{
-                    dn{"יום"}
-                    relative{
-                        "-1"{"אתמול"}
-                        "-2"{"שלשום"}
-                        "0"{"היום"}
-                        "1"{"מחר"}
-                        "2"{"מחרתיים"}
-                    }
-                }
-                dayperiod{
-                    dn{"לפה״צ/אחה״צ"}
-                }
-                era{
-                    dn{"תקופה"}
-                }
-                hour{
-                    dn{"שעה"}
-                }
-                minute{
-                    dn{"דקה"}
-                }
-                month{
-                    dn{"חודש"}
-                    relative{
-                        "-1"{"חודש שעבר"}
-                        "0"{"החודש"}
-                        "1"{"חודש הבא"}
-                    }
-                }
-                second{
-                    dn{"שנייה"}
-                }
-                week{
-                    dn{"שבוע"}
-                    relative{
-                        "-1"{"שבוע שעבר"}
-                        "0"{"השבוע"}
-                        "1"{"שבוע הבא"}
-                    }
-                }
-                weekday{
-                    dn{"יום בשבוע"}
-                }
-                year{
-                    dn{"שנה"}
-                    relative{
-                        "-1"{"שנה שעברה"}
-                        "0"{"השנה"}
-                        "1"{"שנה הבאה"}
-                    }
-                }
-                zone{
-                    dn{"אזור"}
-                }
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M.y G"}
+                yyyyMEd{"E, d/M/y G"}
+                yyyyMM{"MM/y G"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, d בMMM y G"}
+                yyyyMMMd{"d בMMM y G"}
+                yyyyMd{"d.M.y G"}
+                yyyyQQQ{"G y QQQ"}
+                yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
                 H{
@@ -448,13 +327,13 @@ he{
                     y{"y–y"}
                 }
                 yM{
-                    M{"MM/yy – MM/yy"}
-                    y{"MM/yy – MM/yy"}
+                    M{"MM/y – MM/y"}
+                    y{"MM/y – MM/y"}
                 }
                 yMEd{
-                    M{"EEEE dd/MM/yy – EEEE dd/MM/yy"}
-                    d{"EEEE dd/MM/yy – EEEE dd/MM/yy"}
-                    y{"EEEE dd/MM/yy – EEEE dd/MM/yy"}
+                    M{"EEEE dd/MM/y – EEEE dd/MM/y"}
+                    d{"EEEE dd/MM/y – EEEE dd/MM/y"}
+                    y{"EEEE dd/MM/y – EEEE dd/MM/y"}
                 }
                 yMMM{
                     M{"MMM–MMM y"}
@@ -475,9 +354,246 @@ he{
                     y{"d MMM y – d MMM y"}
                 }
                 yMd{
-                    M{"dd/MM/yy – dd/MM/yy"}
-                    d{"dd/MM/yy – dd/MM/yy"}
-                    y{"dd/MM/yy – dd/MM/yy"}
+                    M{"dd/MM/y – dd/MM/y"}
+                    d{"dd/MM/y – dd/MM/y"}
+                    y{"dd/MM/y – dd/MM/y"}
+                }
+            }
+        }
+        gregorian{
+            AmPmMarkers{
+                "לפנה״צ",
+                "אחה״צ",
+            }
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d בMMMM y",
+                "d בMMMM y",
+                "d בMMM y",
+                "dd/MM/yy",
+                "{1}, {0}",
+                "{1} בשעה {0}",
+                "{1} בשעה {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            appendItems{
+                Timezone{"{0} {1}"}
+            }
+            availableFormats{
+                EHm{"E H:mm"}
+                EHms{"E H:mm:ss"}
+                Ed{"E ה-d"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d בMMM y G"}
+                GyMMMd{"d בMMM y G"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, d/M"}
+                MMM{"LLL"}
+                MMMEd{"E, d בMMM"}
+                MMMd{"d בMMM"}
+                Md{"d/M"}
+                d{"d"}
+                h{"‏h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M.y"}
+                yMEd{"E, d/M/y"}
+                yMM{"MM/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, d בMMM y"}
+                yMMMM{"MMMM y"}
+                yMMMd{"d בMMM y"}
+                yMd{"d.M.y"}
+                yQQQ{"y QQQ"}
+                yQQQQ{"y QQQQ"}
+            }
+            dayNames{
+                format{
+                    abbreviated{
+                        "יום א׳",
+                        "יום ב׳",
+                        "יום ג׳",
+                        "יום ד׳",
+                        "יום ה׳",
+                        "יום ו׳",
+                        "שבת",
+                    }
+                    narrow{
+                        "א׳",
+                        "ב׳",
+                        "ג׳",
+                        "ד׳",
+                        "ה׳",
+                        "ו׳",
+                        "ש׳",
+                    }
+                    short{
+                        "א׳",
+                        "ב׳",
+                        "ג׳",
+                        "ד׳",
+                        "ה׳",
+                        "ו׳",
+                        "ש׳",
+                    }
+                    wide{
+                        "יום ראשון",
+                        "יום שני",
+                        "יום שלישי",
+                        "יום רביעי",
+                        "יום חמישי",
+                        "יום שישי",
+                        "יום שבת",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "א׳",
+                        "ב׳",
+                        "ג׳",
+                        "ד׳",
+                        "ה׳",
+                        "ו׳",
+                        "ש׳",
+                    }
+                    short{
+                        "א׳",
+                        "ב׳",
+                        "ג׳",
+                        "ד׳",
+                        "ה׳",
+                        "ו׳",
+                        "ש׳",
+                    }
+                    wide{
+                        "יום ראשון",
+                        "יום שני",
+                        "יום שלישי",
+                        "יום רביעי",
+                        "יום חמישי",
+                        "יום שישי",
+                        "יום שבת",
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "לפנה״ס",
+                    "לסה״נ",
+                }
+                wide{
+                    "לפני הספירה",
+                    "לספירה",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"H–H"}
+                }
+                Hm{
+                    H{"H:mm–H:mm"}
+                    m{"H:mm–H:mm"}
+                }
+                Hmv{
+                    H{"H:mm–H:mm v"}
+                    m{"H:mm–H:mm v"}
+                }
+                Hv{
+                    H{"H–H v"}
+                }
+                M{
+                    M{"M–M"}
+                }
+                MEd{
+                    M{"EEEE d.M – EEEE d.M"}
+                    d{"EEEE d.M–EEEE d.M"}
+                }
+                MMM{
+                    M{"MMM–MMM"}
+                }
+                MMMEd{
+                    M{"EEEE d MMM – EEEE d MMM"}
+                    d{"EEEE d MMM – EEEE d MMM"}
+                }
+                MMMM{
+                    M{"LLLL–LLLL"}
+                }
+                MMMd{
+                    M{"d MMM–d MMM"}
+                    d{"d–d MMM"}
+                }
+                Md{
+                    M{"d.M–d.M"}
+                    d{"d.M–d.M"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
+                }
+                yM{
+                    M{"M.y–M.y"}
+                    y{"M.y‏-M.y"}
+                }
+                yMEd{
+                    M{"EEEE d.M.y – EEEE d.M.y"}
+                    d{"EEEE d.M.y – EEEE d.M.y"}
+                    y{"EEEE d.M.y – EEEE d.M.y"}
+                }
+                yMMM{
+                    M{"MMM–MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMEd{
+                    M{"EEEE d MMM – EEEE d MMM y"}
+                    d{"EEEE d MMM – EEEE d MMM y"}
+                    y{"EEEE d MMM y – EEEE d MMM y"}
+                }
+                yMMMM{
+                    M{"MMMM–MMMM y"}
+                    y{"MMMM y–MMMM y"}
+                }
+                yMMMd{
+                    M{"d MMM – d MMM y"}
+                    d{"d–d MMM y"}
+                    y{"d MMM y – d MMM y"}
+                }
+                yMd{
+                    M{"d.M.y – d.M.y"}
+                    d{"dd.M.y – dd.M.y"}
+                    y{"d.M.y – d.M.y"}
                 }
             }
             monthNames{
@@ -554,10 +670,30 @@ he{
                         "11",
                         "12",
                     }
+                    wide{
+                        "ינואר",
+                        "פברואר",
+                        "מרץ",
+                        "אפריל",
+                        "מאי",
+                        "יוני",
+                        "יולי",
+                        "אוגוסט",
+                        "ספטמבר",
+                        "אוקטובר",
+                        "נובמבר",
+                        "דצמבר",
+                    }
                 }
             }
             quarters{
                 format{
+                    abbreviated{
+                        "רבעון 1",
+                        "רבעון 2",
+                        "רבעון 3",
+                        "רבעון 4",
+                    }
                     narrow{
                         "1",
                         "2",
@@ -572,11 +708,23 @@ he{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "רבעון 1",
+                        "רבעון 2",
+                        "רבעון 3",
+                        "רבעון 4",
+                    }
                     narrow{
                         "ר1",
                         "ר2",
                         "ר3",
                         "ר4",
+                    }
+                    wide{
+                        "רבעון 1",
+                        "רבעון 2",
+                        "רבעון 3",
+                        "רבעון 4",
                     }
                 }
             }
@@ -610,6 +758,10 @@ he{
                 "{1}, {0}",
             }
             availableFormats{
+                Gy{"y G"}
+                GyMMM{"MMMM y G"}
+                GyMMMEd{"E, d MMMM y G"}
+                GyMMMd{"d MMMM y G"}
                 M{"MMMM"}
                 MEd{"E, d בMMMM"}
                 MMM{"MMMM"}
@@ -618,13 +770,13 @@ he{
                 MMMMd{"d בMMMM"}
                 MMMd{"d בMMMM"}
                 Md{"d בMMMM"}
-                yM{"MMMM y"}
-                yMEd{"E, d בMMMM y"}
-                yMMM{"MMMM y"}
-                yMMMEd{"E, d בMMMM y"}
-                yMMMM{"MMMM y"}
-                yMMMd{"d בMMMM y"}
-                yMd{"d בMMMM y"}
+                yyyyM{"MMMM y"}
+                yyyyMEd{"E, d בMMMM y"}
+                yyyyMMM{"MMMM y"}
+                yyyyMMMEd{"E, d בMMMM y"}
+                yyyyMMMM{"MMMM y"}
+                yyyyMMMd{"d בMMMM y"}
+                yyyyMd{"d בMMMM y"}
             }
             eras{
                 abbreviated{
@@ -635,7 +787,7 @@ he{
                 format{
                     abbreviated{
                         "תשרי",
-                        "חשוון",
+                        "חשון",
                         "כסלו",
                         "טבת",
                         "שבט",
@@ -667,7 +819,7 @@ he{
                     }
                     wide{
                         "תשרי",
-                        "חשוון",
+                        "חשון",
                         "כסלו",
                         "טבת",
                         "שבט",
@@ -693,7 +845,7 @@ he{
                         "אדר",
                         "ניסן",
                         "אייר",
-                        "סיוון",
+                        "סיון",
                         "תמוז",
                         "אב",
                         "אלול",
@@ -735,38 +887,32 @@ he{
             }
         }
         islamic{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d בMMMM y",
-                "d בMMMM y",
-                "d בMMM yyyy",
-                "dd/MM/yy",
-                "{1}, {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
             availableFormats{
+                Ed{"E ה-d"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d בMMM y G"}
+                GyMMMd{"d בMMM y G"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 MEd{"E, d/M"}
-                MMMMEd{"E, d בMMMM"}
-                MMMMd{"d בMMMM"}
+                MMMEd{"E, d בMMM"}
                 MMMd{"d בMMM"}
                 Md{"d/M"}
+                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                yM{"M/yyyy"}
-                yMEd{"E, d.M.yyyy"}
-                yMMM{"MMM y"}
-                yMMMEd{"E, d בMMM y"}
-                yQQQ{"QQQ y"}
-                yQQQQ{"QQQQ y"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M/y"}
+                yyyyMEd{"E, d.M.y"}
+                yyyyMMM{"MMM y"}
+                yyyyMMMEd{"E, d בMMM y"}
+                yyyyMMMd{"d בMMM y"}
+                yyyyMd{"d.M.y G"}
+                yyyyQQQ{"QQQ y"}
+                yyyyQQQQ{"QQQQ y"}
             }
             eras{
                 abbreviated{
@@ -847,7 +993,7 @@ he{
                     "Daidō (806-810)",
                     "Kōnin (810-824)",
                     "Tenchō (824-834)",
-                    "Shōwa (834-848)",
+                    "Jōwa (834-848)",
                     "Kajō (848-851)",
                     "נינג׳ו",
                     "Saiko (854-857)",
@@ -1066,14 +1212,225 @@ he{
         }
     }
     delimiters{
-        alternateQuotationEnd{"'"}
-        alternateQuotationStart{"'"}
-        quotationEnd{"\""}
-        quotationStart{"\""}
+        alternateQuotationEnd{"׳"}
+        alternateQuotationStart{"׳"}
+        quotationEnd{"״"}
+        quotationStart{"״"}
+    }
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
+    fields{
+        day{
+            dn{"יום"}
+            relative{
+                "-1"{"אתמול"}
+                "-2"{"שלשום"}
+                "0"{"היום"}
+                "1"{"מחר"}
+                "2"{"מחרתיים"}
+            }
+            relativeTime{
+                future{
+                    many{"בעוד {0} ימים"}
+                    one{"בעוד יום {0}"}
+                    other{"בעוד {0} ימים"}
+                    two{"בעוד {0} ימים"}
+                }
+                past{
+                    many{"לפני {0} ימים"}
+                    one{"לפני יום {0}"}
+                    other{"לפני {0} ימים"}
+                    two{"לפני {0} ימים"}
+                }
+            }
+        }
+        dayperiod{
+            dn{"לפנה״צ/אחה״צ"}
+        }
+        era{
+            dn{"תקופה"}
+        }
+        fri{
+            relative{
+                "-1"{"יום שישי שעבר"}
+                "0"{"יום שישי"}
+                "1"{"יום שישי הבא"}
+            }
+        }
+        hour{
+            dn{"שעה"}
+            relativeTime{
+                future{
+                    many{"בעוד {0} שעות"}
+                    one{"בעוד שעה {0}"}
+                    other{"בעוד {0} שעות"}
+                    two{"בעוד {0} שעות"}
+                }
+                past{
+                    many{"לפני {0} שעות"}
+                    one{"לפני שעה {0}"}
+                    other{"לפני {0} שעות"}
+                    two{"לפני {0} שעות"}
+                }
+            }
+        }
+        minute{
+            dn{"דקה"}
+            relativeTime{
+                future{
+                    many{"בעוד {0} דקות"}
+                    one{"בעוד דקה {0}"}
+                    other{"בעוד {0} דקות"}
+                    two{"בעוד {0} דקות"}
+                }
+                past{
+                    many{"לפני {0} דקות"}
+                    one{"לפני דקה {0}"}
+                    other{"לפני {0} דקות"}
+                    two{"לפני {0} דקות"}
+                }
+            }
+        }
+        mon{
+            relative{
+                "-1"{"יום שני שעבר"}
+                "0"{"יום שני הזה"}
+                "1"{"יום שני הבא"}
+            }
+        }
+        month{
+            dn{"חודש"}
+            relative{
+                "-1"{"החודש שעבר"}
+                "0"{"החודש"}
+                "1"{"החודש הבא"}
+            }
+            relativeTime{
+                future{
+                    many{"בעוד {0} חודשים"}
+                    one{"בעוד חודש {0}"}
+                    other{"בעוד {0} חודשים"}
+                    two{"בעוד {0} חודשים"}
+                }
+                past{
+                    many{"לפני {0} חודשים"}
+                    one{"לפני חודש {0}"}
+                    other{"לפני {0} חודשים"}
+                    two{"לפני {0} חודשים"}
+                }
+            }
+        }
+        sat{
+            relative{
+                "-1"{"השבת שעברה"}
+                "0"{"השבת הזאת"}
+                "1"{"השבת הבאה"}
+            }
+        }
+        second{
+            dn{"שנייה"}
+            relative{
+                "0"{"עכשיו"}
+            }
+            relativeTime{
+                future{
+                    many{"בעוד {0} שניות"}
+                    one{"בעוד שנייה {0}"}
+                    other{"בעוד {0} שניות"}
+                    two{"בעוד {0} שניות"}
+                }
+                past{
+                    many{"לפני {0} שניות"}
+                    one{"לפני שנייה {0}"}
+                    other{"לפני {0} שניות"}
+                    two{"לפני {0} שניות"}
+                }
+            }
+        }
+        sun{
+            relative{
+                "-1"{"יום ראשון שעבר"}
+                "0"{"יום ראשון"}
+                "1"{"יום ראשון הבא"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"יום חמישי שעבר"}
+                "0"{"יום חמישי"}
+                "1"{"יום חמישי הבא"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"יום שלישי שעבר"}
+                "0"{"יום שלישי"}
+                "1"{"יום שלישי הבא"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"יום רביעי שעבר"}
+                "0"{"יום רביעי"}
+                "1"{"יום רביעי הבא"}
+            }
+        }
+        week{
+            dn{"שבוע"}
+            relative{
+                "-1"{"השבוע שעבר"}
+                "0"{"השבוע"}
+                "1"{"השבוע הבא"}
+            }
+            relativeTime{
+                future{
+                    many{"בעוד {0} שבועות"}
+                    one{"בעוד שבוע {0}"}
+                    other{"בעוד {0} שבועות"}
+                    two{"בעוד {0} שבועות"}
+                }
+                past{
+                    many{"לפני {0} שבועות"}
+                    one{"לפני שבוע {0}"}
+                    other{"לפני {0} שבועות"}
+                    two{"לפני {0} שבועות"}
+                }
+            }
+        }
+        weekday{
+            dn{"יום בשבוע"}
+        }
+        year{
+            dn{"שנה"}
+            relative{
+                "-1"{"השנה שעברה"}
+                "0"{"השנה"}
+                "1"{"השנה הבאה"}
+            }
+            relativeTime{
+                future{
+                    many{"בעוד {0} שנים"}
+                    one{"בעוד שנה {0}"}
+                    other{"בעוד {0} שנים"}
+                    two{"בעוד {0} שנים"}
+                }
+                past{
+                    many{"לפני {0} שנים"}
+                    one{"לפני שנה {0}"}
+                    other{"לפני {0} שנים"}
+                    two{"לפני {0} שנים"}
+                }
+            }
+        }
+        zone{
+            dn{"אזור"}
+        }
     }
     layout{
         characters{"right-to-left"}
-        lines{"top-to-bottom"}
     }
     listPattern{
         standard{
@@ -1088,176 +1445,925 @@ he{
         US{"ארה״ב"}
         metric{"מטרי"}
     }
+    transformNames{
+        BGN{"מטבע BGN"}
+        Numeric{"מספרי"}
+        Tone{"טון"}
+        UNGEGN{"UNGEGN"}
+        x-Accents{"סימנים דיאקריטיים"}
+        x-Fullwidth{"רוחב מלא"}
+        x-Halfwidth{"חצי רוחב"}
+        x-Jamo{"ג׳אמו"}
+        x-Pinyin{"פיניין"}
+        x-Publishing{"הוצאה לאור"}
+    }
     units{
-        day{
-            many{"{0} ימים"}
-            one{"‏{0} יום"}
-            other{"{0} ימים"}
-            two{"{0} ימים"}
+        acceleration{
+            g-force{
+                many{"{0} כוח ג׳י"}
+                one{"כוח ג׳י {0}"}
+                other{"{0} כוח ג׳י"}
+                two{"{0} כוח ג׳י"}
+            }
         }
-        day-future{
-            many{"בעוד {0} ימים"}
-            one{"בעוד {0} ימים"}
-            other{"בעוד {0} ימים"}
-            two{"בעוד {0} ימים"}
+        angle{
+            arc-minute{
+                many{"{0} דקות"}
+                one{"דקה {0}"}
+                other{"{0} דקות"}
+                two{"{0} דקות"}
+            }
+            arc-second{
+                many{"{0} שניות"}
+                one{"שנייה {0}"}
+                other{"{0} שניות"}
+                two{"{0} שניות"}
+            }
+            degree{
+                many{"{0} מעלות"}
+                one{"מעלה {0}"}
+                other{"{0} מעלות"}
+                two{"{0} מעלות"}
+            }
         }
-        day-past{
-            many{"לפני {0} ימים"}
-            one{"לפני {0} ימים"}
-            other{"לפני {0} ימים"}
-            two{"לפני {0} ימים"}
+        area{
+            acre{
+                many{"{0} אקר"}
+                one{"אקר {0}"}
+                other{"{0} אקר"}
+                two{"{0} אקר"}
+            }
+            hectare{
+                many{"{0} הקטאר"}
+                one{"הקטאר {0}"}
+                other{"{0} הקטאר"}
+                two{"{0} הקטאר"}
+            }
+            square-foot{
+                many{"{0} רגל רבועה"}
+                one{"רגל רבועה {0}"}
+                other{"{0} רגל רבועה"}
+                two{"{0} רגל רבועה"}
+            }
+            square-kilometer{
+                many{"{0} קילומטר רבוע"}
+                one{"קילומטר רבוע {0}"}
+                other{"{0} קילומטר רבוע"}
+                two{"{0} קילומטר רבוע"}
+            }
+            square-meter{
+                many{"{0} מטר רבוע"}
+                one{"מטר רבוע {0}"}
+                other{"{0} מטר רבוע"}
+                two{"{0} מטר רבוע"}
+            }
+            square-mile{
+                many{"{0} מייל רבוע"}
+                one{"מייל רבוע {0}"}
+                other{"{0} מייל רבוע"}
+                two{"{0} מייל רבוע"}
+            }
         }
-        hour{
-            many{"{0} שעות"}
-            one{"{0} שעה"}
-            other{"{0} שעות"}
-            two{"{0} שעות"}
+        compound{
+            per{"{0} לכל {1}"}
         }
-        hour-future{
-            many{"בעוד {0} שעות"}
-            one{"בעוד {0} שעות"}
-            other{"בעוד {0} שעות"}
-            two{"בעוד {0} שעות"}
+        duration{
+            day{
+                many{"{0} ימים"}
+                one{"‏יום {0}"}
+                other{"{0} ימים"}
+                two{"{0} ימים"}
+            }
+            hour{
+                many{"{0} שעות"}
+                one{"שעה {0}"}
+                other{"{0} שעות"}
+                two{"{0} שעות"}
+            }
+            millisecond{
+                many{"{0} אלפיות שנייה"}
+                one{"אלפית שנייה {0}"}
+                other{"{0} אלפיות שנייה"}
+                two{"{0} אלפיות שנייה"}
+            }
+            minute{
+                many{"{0} דקות"}
+                one{"דקה {0}"}
+                other{"{0} דקות"}
+                two{"{0} דקות"}
+            }
+            month{
+                many{"{0} חודשים"}
+                one{"חודש {0}"}
+                other{"{0} חודשים"}
+                two{"{0} חודשים"}
+            }
+            second{
+                many{"‏{0} שניות"}
+                one{"שנייה {0}"}
+                other{"{0} שניות"}
+                two{"{0} שניות"}
+            }
+            week{
+                many{"{0} שבועות"}
+                one{"שבוע {0}"}
+                other{"{0} שבועות"}
+                two{"{0} שבועות"}
+            }
+            year{
+                many{"{0} שנים"}
+                one{"שנה {0}"}
+                other{"{0} שנים"}
+                two{"{0} שנים"}
+            }
         }
-        hour-past{
-            many{"לפני {0} שעות"}
-            one{"לפני {0} שעות"}
-            other{"לפני {0} שעות"}
-            two{"לפני {0} שעות"}
+        length{
+            centimeter{
+                many{"{0} סנטימטר"}
+                one{"סנטימטר {0}"}
+                other{"{0} סנטימטר"}
+                two{"{0} סנטימטר"}
+            }
+            foot{
+                many{"{0} רגל"}
+                one{"רגל {0}"}
+                other{"{0} רגל"}
+                two{"{0} רגל"}
+            }
+            inch{
+                many{"{0} אינץ׳"}
+                one{"אינץ׳ {0}"}
+                other{"{0} אינץ׳"}
+                two{"{0} אינץ׳"}
+            }
+            kilometer{
+                many{"{0} קילומטר"}
+                one{"קילומטר {0}"}
+                other{"{0} קילומטר"}
+                two{"{0} קילומטר"}
+            }
+            light-year{
+                many{"{0} שנות אור"}
+                one{"שנת אור {0}"}
+                other{"{0} שנות אור"}
+                two{"{0} שנות אור"}
+            }
+            meter{
+                many{"{0} מטר"}
+                one{"מטר {0}"}
+                other{"{0} מטר"}
+                two{"{0} מטר"}
+            }
+            mile{
+                many{"{0} מייל"}
+                one{"מייל {0}"}
+                other{"{0} מייל"}
+                two{"{0} מייל"}
+            }
+            millimeter{
+                many{"{0} מילימטר"}
+                one{"מילימטר {0}"}
+                other{"{0} מילימטר"}
+                two{"{0} מילימטר"}
+            }
+            picometer{
+                many{"{0} פיקומטר"}
+                one{"פיקומטר {0}"}
+                other{"{0} פיקומטר"}
+                two{"{0} פיקומטר"}
+            }
+            yard{
+                many{"{0} יארד"}
+                one{"יארד {0}"}
+                other{"{0} יארד"}
+                two{"{0} יארד"}
+            }
         }
-        minute{
-            many{"{0} דקות"}
-            one{"{0} דקה"}
-            other{"{0} דקות"}
-            two{"{0} דקות"}
+        mass{
+            gram{
+                many{"{0} גרם"}
+                one{"גרם {0}"}
+                other{"{0} גרם"}
+                two{"{0} גרם"}
+            }
+            kilogram{
+                many{"{0} קילוגרם"}
+                one{"קילוגרם {0}"}
+                other{"{0} קילוגרם"}
+                two{"{0} קילוגרם"}
+            }
+            ounce{
+                many{"{0} אונקיות"}
+                one{"אונקיה {0}"}
+                other{"{0} אונקיות"}
+                two{"{0} אונקיות"}
+            }
+            pound{
+                many{"{0} ליבראות"}
+                one{"ליברה {0}"}
+                other{"{0} ליבראות"}
+                two{"{0} ליבראות"}
+            }
         }
-        minute-future{
-            many{"בעוד {0} דקות"}
-            one{"בעוד {0} דקות"}
-            other{"בעוד {0} דקות"}
-            two{"בעוד {0} דקות"}
+        power{
+            horsepower{
+                many{"{0} כוח סוס"}
+                one{"כוח סוס {0}"}
+                other{"{0} כוח סוס"}
+                two{"{0} כוח סוס"}
+            }
+            kilowatt{
+                many{"{0} קילוואט"}
+                one{"קילוואט {0}"}
+                other{"{0} קילוואט"}
+                two{"{0} קילוואט"}
+            }
+            watt{
+                many{"{0} ואט"}
+                one{"ואט {0}"}
+                other{"{0} ואט"}
+                two{"{0} ואט"}
+            }
         }
-        minute-past{
-            many{"לפני {0} דקות"}
-            one{"לפני {0} דקות"}
-            other{"לפני {0} דקות"}
-            two{"לפני {0} דקות"}
+        pressure{
+            hectopascal{
+                many{"{0} הקטופסקל"}
+                one{"הקטופסקל {0}"}
+                other{"{0} הקטופסקל"}
+                two{"{0} הקטופסקל"}
+            }
+            inch-hg{
+                many{"{0} אינץ׳ כספית"}
+                one{"אינץ׳ כספית {0}"}
+                other{"{0} אינץ׳ כספית"}
+                two{"{0} אינץ׳ כספית"}
+            }
+            millibar{
+                many{"{0} מיליבר"}
+                one{"{0} מיליבר"}
+                other{"{0} מיליבר"}
+                two{"{0} מיליבר"}
+            }
         }
-        month{
-            many{"{0} חודשים"}
-            one{"{0} חודש"}
-            other{"{0} חודשים"}
-            two{"{0} חודשים"}
+        speed{
+            kilometer-per-hour{
+                many{"{0} קילומטר לשעה"}
+                one{"{0} קילומטר לשעה"}
+                other{"{0} קילומטר לשעה"}
+                two{"{0} קילומטר לשעה"}
+            }
+            meter-per-second{
+                many{"{0} מטר לשנייה"}
+                one{"{0} מטר לשנייה"}
+                other{"{0} מטר לשנייה"}
+                two{"{0} מטר לשנייה"}
+            }
+            mile-per-hour{
+                many{"{0} מייל לשעה"}
+                one{"{0} מייל לשעה"}
+                other{"{0} מייל לשעה"}
+                two{"{0} מייל לשעה"}
+            }
         }
-        month-future{
-            many{"בעוד {0} חודשים"}
-            one{"בעוד {0} חודשים"}
-            other{"בעוד {0} חודשים"}
-            two{"בעוד {0} חודשים"}
+        temperature{
+            celsius{
+                many{"{0} מעלות צלזיוס"}
+                one{"מעלת צלזיוס {0}"}
+                other{"{0} מעלות צלזיוס"}
+                two{"{0} מעלות צלזיוס"}
+            }
+            fahrenheit{
+                many{"{0} מעלות פרנהייט"}
+                one{"מעלת פרנהייט {0}"}
+                other{"{0} מעלות פרנהייט"}
+                two{"{0} מעלות פרנהייט"}
+            }
         }
-        month-past{
-            many{"לפני {0} חודשים"}
-            one{"לפני {0} חודשים"}
-            other{"לפני {0} חודשים"}
-            two{"לפני {0} חודשים"}
+        volume{
+            cubic-kilometer{
+                many{"{0} קילומטר מעוקב"}
+                one{"{0} קילומטר מעוקב"}
+                other{"{0} קילומטר מעוקב"}
+                two{"{0} קילומטר מעוקב"}
+            }
+            cubic-mile{
+                many{"{0} מייל מעוקב"}
+                one{"{0} מייל מעוקב"}
+                other{"{0} מייל מעוקב"}
+                two{"{0} מייל מעוקב"}
+            }
+            liter{
+                many{"{0} ליטר"}
+                one{"{0} ליטר"}
+                other{"{0} ליטר"}
+                two{"{0} ליטר"}
+            }
         }
-        second{
-            many{"‏{0} שניות"}
-            one{"{0} שניה"}
-            other{"{0} שניות"}
-            two{"{0} שניות"}
+    }
+    unitsNarrow{
+        acceleration{
+            g-force{
+                many{"{0} G"}
+                one{"{0} G"}
+                other{"{0} G"}
+                two{"{0} G"}
+            }
         }
-        second-future{
-            many{"בעוד {0} שניות"}
-            one{"בעוד {0} שניות"}
-            other{"בעוד {0} שניות"}
-            two{"בעוד {0} שניות"}
+        angle{
+            arc-minute{
+                many{"{0} דקות"}
+                one{"דקה {0}"}
+                other{"{0} דקות"}
+                two{"{0} דקות"}
+            }
+            arc-second{
+                many{"{0} שנ׳"}
+                one{"שנ׳ {0}"}
+                other{"{0} שנ׳"}
+                two{"{0} שנ׳"}
+            }
+            degree{
+                many{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+                two{"{0}°"}
+            }
         }
-        second-past{
-            many{"לפני {0} שניות"}
-            one{"לפני {0} שניות"}
-            other{"לפני {0} שניות"}
-            two{"לפני {0} שניות"}
+        area{
+            acre{
+                many{"{0} אקר"}
+                one{"אקר {0}"}
+                other{"{0} אקר"}
+                two{"{0} אקר"}
+            }
+            hectare{
+                many{"{0} הקטאר"}
+                one{"הקטאר {0}"}
+                other{"{0} הקטאר"}
+                two{"{0} הקטאר"}
+            }
+            square-foot{
+                many{"{0} רגל רבועה"}
+                one{"רגל רבועה {0}"}
+                other{"{0} רגל רבועה"}
+                two{"{0} רגל רבועה"}
+            }
+            square-kilometer{
+                many{"{0} קמ״ר"}
+                one{"קמ״ר {0}"}
+                other{"{0} קמ״ר"}
+                two{"{0} קמ״ר"}
+            }
+            square-meter{
+                many{"{0} מ״ר"}
+                one{"מ״ר {0}"}
+                other{"{0} מ״ר"}
+                two{"{0} מ״ר"}
+            }
+            square-mile{
+                many{"{0} מייל רבוע"}
+                one{"מייל רבוע {0}"}
+                other{"{0} מייל רבוע"}
+                two{"{0} מייל רבוע"}
+            }
         }
-        week{
-            many{"{0} שבועות"}
-            one{"{0} שבוע"}
-            other{"{0} שבועות"}
-            two{"{0} שבועות"}
+        compound{
+            per{"{0}/{1}"}
         }
-        week-future{
-            many{"בעוד {0} שבועות"}
-            one{"בעוד {0} שבועות"}
-            other{"בעוד {0} שבועות"}
-            two{"בעוד {0} שבועות"}
+        duration{
+            day{
+                many{"{0} ימים"}
+                one{"‏יום {0}"}
+                other{"{0} ימים"}
+                two{"{0} ימים"}
+            }
+            hour{
+                many{"{0} שעות"}
+                one{"שעה {0}"}
+                other{"{0} שעות"}
+                two{"{0} שעות"}
+            }
+            millisecond{
+                many{"{0} ms"}
+                one{"{0} ms"}
+                other{"{0} ms"}
+                two{"{0} ms"}
+            }
+            minute{
+                many{"{0} דק׳"}
+                one{"דק׳ {0}"}
+                other{"{0} דק׳"}
+                two{"{0} דק׳"}
+            }
+            month{
+                many{"{0} ח׳"}
+                one{"חודש {0}"}
+                other{"{0} ח׳"}
+                two{"{0} ח׳"}
+            }
+            second{
+                many{"{0} שנ׳"}
+                one{"שנ׳ {0}"}
+                other{"{0} שנ׳"}
+                two{"{0} שנ׳"}
+            }
+            week{
+                many{"{0} שבועות"}
+                one{"שבוע {0}"}
+                other{"{0} שבועות"}
+                two{"{0} שבועות"}
+            }
+            year{
+                many{"{0} שנים"}
+                one{"שנה {0}"}
+                other{"{0} שנים"}
+                two{"{0} שנים"}
+            }
         }
-        week-past{
-            many{"לפני {0} שבועות"}
-            one{"לפני {0} שבועות"}
-            other{"לפני {0} שבועות"}
-            two{"לפני {0} שבועות"}
+        length{
+            centimeter{
+                many{"{0} ס״מ"}
+                one{"ס״מ {0}"}
+                other{"{0} ס״מ"}
+                two{"{0} ס״מ"}
+            }
+            foot{
+                many{"{0} רגל"}
+                one{"רגל {0}"}
+                other{"{0} רגל"}
+                two{"{0} רגל"}
+            }
+            inch{
+                many{"{0} אינץ׳"}
+                one{"אינץ׳ {0}"}
+                other{"{0} אינץ׳"}
+                two{"{0} אינץ׳"}
+            }
+            kilometer{
+                many{"{0} ק״מ"}
+                one{"ק״מ {0}"}
+                other{"{0} ק״מ"}
+                two{"{0} ק״מ"}
+            }
+            light-year{
+                many{"{0} שנות אור"}
+                one{"שנת אור {0}"}
+                other{"{0} שנות אור"}
+                two{"{0} שנות אור"}
+            }
+            meter{
+                many{"{0} מ׳"}
+                one{"מ׳ {0}"}
+                other{"{0} מ׳"}
+                two{"{0} מ׳"}
+            }
+            mile{
+                many{"{0} מייל"}
+                one{"מייל {0}"}
+                other{"{0} מייל"}
+                two{"{0} מייל"}
+            }
+            millimeter{
+                many{"{0} מ״מ"}
+                one{"מ״מ {0}"}
+                other{"{0} מ״מ"}
+                two{"{0} מ״מ"}
+            }
+            picometer{
+                many{"{0} פיקומטר"}
+                one{"פיקומטר {0}"}
+                other{"{0} פיקומטר"}
+                two{"{0} פיקומטר"}
+            }
+            yard{
+                many{"{0} יארד"}
+                one{"יארד {0}"}
+                other{"{0} יארד"}
+                two{"{0} יארד"}
+            }
         }
-        year{
-            many{"{0} שנים"}
-            one{"{0} שנה"}
-            other{"{0} שנים"}
-            two{"{0} שנים"}
+        mass{
+            gram{
+                many{"{0} גר׳"}
+                one{"גר׳ {0}"}
+                other{"{0} גר׳"}
+                two{"{0} גר׳"}
+            }
+            kilogram{
+                many{"{0} ק״ג"}
+                one{"ק״ג {0}"}
+                other{"{0} ק״ג"}
+                two{"{0} ק״ג"}
+            }
+            ounce{
+                many{"{0} אונקיות"}
+                one{"אונקיה {0}"}
+                other{"{0} אונקיות"}
+                two{"{0} אונקיות"}
+            }
+            pound{
+                many{"{0} ליבראות"}
+                one{"ליברה {0}"}
+                other{"{0} ליבראות"}
+                two{"{0} ליבראות"}
+            }
         }
-        year-future{
-            many{"בעוד {0} שנים"}
-            one{"בעוד {0} שנים"}
-            other{"בעוד {0} שנים"}
-            two{"בעוד {0} שנים"}
+        power{
+            horsepower{
+                many{"{0} כ״ס"}
+                one{"כ״ס {0}"}
+                other{"{0} כ״ס"}
+                two{"{0} כ״ס"}
+            }
+            kilowatt{
+                many{"{0} kW"}
+                one{"{0} kW"}
+                other{"{0} kW"}
+                two{"{0} kW"}
+            }
+            watt{
+                many{"{0} W"}
+                one{"{0} W"}
+                other{"{0} W"}
+                two{"{0} W"}
+            }
         }
-        year-past{
-            many{"לפני {0} שנים"}
-            one{"לפני {0} שנים"}
-            other{"לפני {0} שנים"}
-            two{"לפני {0} שנים"}
+        pressure{
+            hectopascal{
+                many{"{0} hPa"}
+                one{"{0} hPa"}
+                other{"{0} hPa"}
+                two{"{0} hPa"}
+            }
+            inch-hg{
+                many{"{0} inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+                two{"{0} inHg"}
+            }
+            millibar{
+                many{"{0} מיליבר"}
+                one{"מיליבר {0}"}
+                other{"{0} מיליבר"}
+                two{"{0} מיליבר"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                many{"{0} קמ״ש"}
+                one{"{0} קמ״ש"}
+                other{"{0} קמ״ש"}
+                two{"{0} קמ״ש"}
+            }
+            meter-per-second{
+                many{"{0} מ/ש"}
+                one{"{0} מ/ש"}
+                other{"{0} מ/ש"}
+                two{"{0} מ/ש"}
+            }
+            mile-per-hour{
+                many{"{0} mph"}
+                one{"{0} mph"}
+                other{"{0} mph"}
+                two{"{0} mph"}
+            }
+        }
+        temperature{
+            celsius{
+                many{"{0}°"}
+                one{"{0}°"}
+                other{"{0}°"}
+                two{"{0}°"}
+            }
+            fahrenheit{
+                many{"{0}°F"}
+                one{"{0}°F"}
+                other{"{0}°F"}
+                two{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                many{"{0} קמ״ק"}
+                one{"{0} קמ״ק"}
+                other{"{0} קמ״ק"}
+                two{"{0} קמ״ק"}
+            }
+            cubic-mile{
+                many{"{0} mi³"}
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+                two{"{0} mi³"}
+            }
+            liter{
+                many{"{0} ל׳"}
+                one{"{0} ל׳"}
+                other{"{0} ל׳"}
+                two{"{0} ל׳"}
+            }
         }
     }
     unitsShort{
-        day{
-            many{"{0} ימים"}
-            one{"{0} יום"}
-            other{"{0} ימים"}
-            two{"{0} ימים"}
+        acceleration{
+            g-force{
+                many{"{0} G"}
+                one{"{0} G"}
+                other{"{0} G"}
+                two{"{0} G"}
+            }
         }
-        hour{
-            many{"{0} שעות"}
-            one{"{0} שעה"}
-            other{"{0} שעות"}
-            two{"{0} שעות"}
+        angle{
+            arc-minute{
+                many{"{0} דקות"}
+                one{"דקה {0}"}
+                other{"{0} דקות"}
+                two{"{0} דקות"}
+            }
+            arc-second{
+                many{"{0} שניות"}
+                one{"שנייה {0}"}
+                other{"{0} שניות"}
+                two{"{0} שניות"}
+            }
+            degree{
+                many{"{0} מעלות"}
+                one{"מעלה {0}"}
+                other{"{0} מעלות"}
+                two{"{0} מעלות"}
+            }
         }
-        minute{
-            many{"{0} דק׳"}
-            one{"{0} דק׳"}
-            other{"{0} דק׳"}
-            two{"{0} דק׳"}
+        area{
+            acre{
+                many{"{0} אקר"}
+                one{"אקר {0}"}
+                other{"{0} אקר"}
+                two{"{0} אקר"}
+            }
+            hectare{
+                many{"{0} הקטאר"}
+                one{"הקטאר {0}"}
+                other{"{0} הקטאר"}
+                two{"{0} הקטאר"}
+            }
+            square-foot{
+                many{"{0} רגל רבועה"}
+                one{"רגל רבועה {0}"}
+                other{"{0} רגל רבועה"}
+                two{"{0} רגל רבועה"}
+            }
+            square-kilometer{
+                many{"{0} קמ״ר"}
+                one{"קמ״ר {0}"}
+                other{"{0} קמ״ר"}
+                two{"{0} קמ״ר"}
+            }
+            square-meter{
+                many{"{0} מ״ר"}
+                one{"מ״ר {0}"}
+                other{"{0} מ״ר"}
+                two{"{0} מ״ר"}
+            }
+            square-mile{
+                many{"{0} מייל רבוע"}
+                one{"מייל רבוע {0}"}
+                other{"{0} מייל רבוע"}
+                two{"{0} מייל רבוע"}
+            }
         }
-        month{
-            many{"{0} חודשים"}
-            one{"{0} חודש"}
-            other{"{0} חודשים"}
-            two{"{0} חודשים"}
+        compound{
+            per{"{0}/{1}"}
         }
-        second{
-            many{"{0} שנ׳"}
-            one{"{0} שנ׳"}
-            other{"{0} שניות"}
-            two{"{0} שנ׳"}
+        duration{
+            day{
+                many{"{0} ימים"}
+                one{"‏יום {0}"}
+                other{"{0} ימים"}
+                two{"{0} ימים"}
+            }
+            hour{
+                many{"{0} שעות"}
+                one{"שעה {0}"}
+                other{"{0} שעות"}
+                two{"{0} שעות"}
+            }
+            millisecond{
+                many{"{0} ms"}
+                one{"{0} ms"}
+                other{"{0} ms"}
+                two{"{0} ms"}
+            }
+            minute{
+                many{"{0} דק׳"}
+                one{"דק׳ {0}"}
+                other{"{0} דק׳"}
+                two{"{0} דק׳"}
+            }
+            month{
+                many{"{0} חודשים"}
+                one{"חודש {0}"}
+                other{"{0} חודשים"}
+                two{"{0} חודשים"}
+            }
+            second{
+                many{"{0} שנ׳"}
+                one{"שנ׳ {0}"}
+                other{"{0} שנ׳"}
+                two{"{0} שנ׳"}
+            }
+            week{
+                many{"{0} שבועות"}
+                one{"שבוע {0}"}
+                other{"{0} שבועות"}
+                two{"{0} שבועות"}
+            }
+            year{
+                many{"{0} שנים"}
+                one{"שנה {0}"}
+                other{"{0} שנים"}
+                two{"{0} שנים"}
+            }
         }
-        week{
-            many{"{0} שבועות"}
-            one{"{0} שבוע"}
-            other{"{0} שבועות"}
-            two{"{0} שבועות"}
+        length{
+            centimeter{
+                many{"{0} ס״מ"}
+                one{"ס״מ {0}"}
+                other{"{0} ס״מ"}
+                two{"{0} ס״מ"}
+            }
+            foot{
+                many{"{0} רגל"}
+                one{"רגל {0}"}
+                other{"{0} רגל"}
+                two{"{0} רגל"}
+            }
+            inch{
+                many{"{0} אינץ׳"}
+                one{"אינץ׳ {0}"}
+                other{"{0} אינץ׳"}
+                two{"{0} אינץ׳"}
+            }
+            kilometer{
+                many{"{0} ק״מ"}
+                one{"ק״מ {0}"}
+                other{"{0} ק״מ"}
+                two{"{0} ק״מ"}
+            }
+            light-year{
+                many{"{0} שנות אור"}
+                one{"שנת אור {0}"}
+                other{"{0} שנות אור"}
+                two{"{0} שנות אור"}
+            }
+            meter{
+                many{"{0} מ׳"}
+                one{"מ׳ {0}"}
+                other{"{0} מ׳"}
+                two{"{0} מ׳"}
+            }
+            mile{
+                many{"{0} מייל"}
+                one{"מייל {0}"}
+                other{"{0} מייל"}
+                two{"{0} מייל"}
+            }
+            millimeter{
+                many{"{0} מ״מ"}
+                one{"מ״מ {0}"}
+                other{"{0} מ״מ"}
+                two{"{0} מ״מ"}
+            }
+            picometer{
+                many{"{0} פיקומטר"}
+                one{"פיקומטר {0}"}
+                other{"{0} פיקומטר"}
+                two{"{0} פיקומטר"}
+            }
+            yard{
+                many{"{0} יארד"}
+                one{"יארד {0}"}
+                other{"{0} יארד"}
+                two{"{0} יארד"}
+            }
         }
-        year{
-            many{"{0} שנים"}
-            one{"{0} שנה"}
-            other{"{0} שנים"}
-            two{"{0} שנים"}
+        mass{
+            gram{
+                many{"{0} גר׳"}
+                one{"גר׳ {0}"}
+                other{"{0} גר׳"}
+                two{"{0} גר׳"}
+            }
+            kilogram{
+                many{"{0} ק״ג"}
+                one{"ק״ג {0}"}
+                other{"{0} ק״ג"}
+                two{"{0} ק״ג"}
+            }
+            ounce{
+                many{"{0} אונקיות"}
+                one{"אונקיה {0}"}
+                other{"{0} אונקיות"}
+                two{"{0} אונקיות"}
+            }
+            pound{
+                many{"{0} ליבראות"}
+                one{"ליברה {0}"}
+                other{"{0} ליבראות"}
+                two{"{0} ליבראות"}
+            }
+        }
+        power{
+            horsepower{
+                many{"{0} כ״ס"}
+                one{"כ״ס {0}"}
+                other{"{0} כ״ס"}
+                two{"{0} כ״ס"}
+            }
+            kilowatt{
+                many{"{0} kW"}
+                one{"{0} kW"}
+                other{"{0} kW"}
+                two{"{0} kW"}
+            }
+            watt{
+                many{"{0} W"}
+                one{"{0} W"}
+                other{"{0} W"}
+                two{"{0} W"}
+            }
+        }
+        pressure{
+            hectopascal{
+                many{"{0} hPa"}
+                one{"{0} hPa"}
+                other{"{0} hPa"}
+                two{"{0} hPa"}
+            }
+            inch-hg{
+                many{"{0} inHg"}
+                one{"{0} inHg"}
+                other{"{0} inHg"}
+                two{"{0} inHg"}
+            }
+            millibar{
+                many{"{0} מיליבר"}
+                one{"מיליבר {0}"}
+                other{"{0} מיליבר"}
+                two{"{0} מיליבר"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                many{"{0} קמ״ש"}
+                one{"{0} קמ״ש"}
+                other{"{0} קמ״ש"}
+                two{"{0} קמ״ש"}
+            }
+            meter-per-second{
+                many{"{0} מ/ש"}
+                one{"{0} מ/ש"}
+                other{"{0} מ/ש"}
+                two{"{0} מ/ש"}
+            }
+            mile-per-hour{
+                many{"{0} mph"}
+                one{"{0} mph"}
+                other{"{0} mph"}
+                two{"{0} mph"}
+            }
+        }
+        temperature{
+            celsius{
+                many{"{0}°C"}
+                one{"{0}°C"}
+                other{"{0}°C"}
+                two{"{0}°C"}
+            }
+            fahrenheit{
+                many{"{0}°F"}
+                one{"{0}°F"}
+                other{"{0}°F"}
+                two{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                many{"{0} קמ״ק"}
+                one{"{0} קמ״ק"}
+                other{"{0} קמ״ק"}
+                two{"{0} קמ״ק"}
+            }
+            cubic-mile{
+                many{"{0} mi³"}
+                one{"{0} mi³"}
+                other{"{0} mi³"}
+                two{"{0} mi³"}
+            }
+            liter{
+                many{"{0} ל׳"}
+                one{"{0} ל׳"}
+                other{"{0} ל׳"}
+                two{"{0} ל׳"}
+            }
         }
     }
 }

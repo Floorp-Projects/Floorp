@@ -61,7 +61,7 @@ public:
     static LocaleDisplayNames* U_EXPORT2 createInstance(const Locale& locale,
                             UDialectHandling dialectHandling);
 
-#ifndef U_HIDE_INTERNAL_API
+#ifndef U_HIDE_DRAFT_API
     /**
      * Returns an instance of LocaleDisplayNames that returns names formatted
      * for the provided locale, using the provided UDisplayContext settings.
@@ -71,11 +71,11 @@ public:
      *               handling, capitalization, etc.
      * @param length Number of items in the contexts list
      * @return a LocaleDisplayNames instance
-     * @internal ICU 50 technology preview
+     * @draft ICU 51
      */
     static LocaleDisplayNames* U_EXPORT2 createInstance(const Locale& locale,
                             UDisplayContext *contexts, int32_t length);
-#endif  /* U_HIDE_INTERNAL_API */
+#endif  /* U_HIDE_DRAFT_API */
 
     // getters for state
     /**
@@ -97,7 +97,7 @@ public:
      * Returns the UDisplayContext value for the specified UDisplayContextType.
      * @param type the UDisplayContextType whose value to return
      * @return the UDisplayContext for the specified type.
-     * @internal ICU 50 technology preview
+     * @draft ICU 51
      */
     virtual UDisplayContext getContext(UDisplayContextType type) const = 0;
 
@@ -193,10 +193,6 @@ public:
      */
     virtual UnicodeString& keyValueDisplayName(const char* key, const char* value,
                            UnicodeString& result) const = 0;
-
-private:
-    // No ICU "poor man's RTTI" for this class nor its subclasses.
-    virtual UClassID getDynamicClassID() const;
 };
 
 inline LocaleDisplayNames* LocaleDisplayNames::createInstance(const Locale& locale) {

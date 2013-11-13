@@ -1,6 +1,6 @@
 /*  
 **********************************************************************
-*   Copyright (C) 2002-2012, International Business Machines
+*   Copyright (C) 2002-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   file name:  uconfig.h
@@ -96,7 +96,7 @@
  * utypes.h includes those headers if this macro is defined to 0.
  * Otherwise, each those headers must be included explicitly when using one of their macros.
  * Defaults to 0 for backward compatibility, except inside ICU.
- * @draft ICU 49
+ * @stable ICU 49
  */
 #ifdef U_NO_DEFAULT_INCLUDE_UTF_HEADERS
     /* Use the predefined value. */

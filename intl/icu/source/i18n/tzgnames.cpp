@@ -1,6 +1,6 @@
 /*
 *******************************************************************************
-* Copyright (C) 2011-2012, International Business Machines Corporation and
+* Copyright (C) 2011-2013, International Business Machines Corporation and
 * others. All Rights Reserved.
 *******************************************************************************
 */
@@ -20,6 +20,7 @@
 
 #include "cmemory.h"
 #include "cstring.h"
+#include "mutex.h"
 #include "uhash.h"
 #include "uassert.h"
 #include "umutex.h"
@@ -37,13 +38,11 @@ U_NAMESPACE_BEGIN
 static const char gZoneStrings[]                = "zoneStrings";
 
 static const char gRegionFormatTag[]            = "regionFormat";
-static const char gFallbackRegionFormatTag[]    = "fallbackRegionFormat";
 static const char gFallbackFormatTag[]          = "fallbackFormat";
 
 static const UChar gEmpty[]                     = {0x00};
 
 static const UChar gDefRegionPattern[]          = {0x7B, 0x30, 0x7D, 0x00}; // "{0}"
-static const UChar gDefFallbackRegionPattern[]  = {0x7B, 0x31, 0x7D, 0x20, 0x28, 0x7B, 0x30, 0x7D, 0x29, 0x00}; // "{1} ({0})"
 static const UChar gDefFallbackPattern[]        = {0x7B, 0x31, 0x7D, 0x20, 0x28, 0x7B, 0x30, 0x7D, 0x29, 0x00}; // "{1} ({0})"
 
 static const double kDstCheckRange      = (double)184*U_MILLIS_PER_DAY;
@@ -361,7 +360,6 @@ TZGNCore::initialize(const Locale& locale, UErrorCode& status) {
 
     // Initialize format patterns
     UnicodeString rpat(TRUE, gDefRegionPattern, -1);
-    UnicodeString frpat(TRUE, gDefFallbackRegionPattern, -1);
     UnicodeString fpat(TRUE, gDefFallbackPattern, -1);
 
     UErrorCode tmpsts = U_ZERO_ERROR;   // OK with fallback warning..
@@ -372,11 +370,6 @@ TZGNCore::initialize(const Locale& locale, UErrorCode& status) {
         const UChar *regionPattern = ures_getStringByKeyWithFallback(zoneStrings, gRegionFormatTag, NULL, &tmpsts);
         if (U_SUCCESS(tmpsts) && u_strlen(regionPattern) > 0) {
             rpat.setTo(regionPattern, -1);
-        }
-        tmpsts = U_ZERO_ERROR;
-        const UChar *fallbackRegionPattern = ures_getStringByKeyWithFallback(zoneStrings, gFallbackRegionFormatTag, NULL, &tmpsts);
-        if (U_SUCCESS(tmpsts) && u_strlen(fallbackRegionPattern) > 0) {
-            frpat.setTo(fallbackRegionPattern, -1);
         }
         tmpsts = U_ZERO_ERROR;
         const UChar *fallbackPattern = ures_getStringByKeyWithFallback(zoneStrings, gFallbackFormatTag, NULL, &tmpsts);
@@ -546,35 +539,32 @@ TZGNCore::getGenericLocationName(const UnicodeString& tzCanonicalID) {
 
     // Construct location name
     UnicodeString name;
-    UBool isSingleCountry = FALSE;
     UnicodeString usCountryCode;
-    ZoneMeta::getSingleCountry(tzCanonicalID, usCountryCode);
-    if (!usCountryCode.isEmpty()) {
-        isSingleCountry = TRUE;
-    } else {
-        ZoneMeta::getCanonicalCountry(tzCanonicalID, usCountryCode);
-    }
+    UBool isPrimary = FALSE;
+
+    ZoneMeta::getCanonicalCountry(tzCanonicalID, usCountryCode, &isPrimary);
 
     if (!usCountryCode.isEmpty()) {
-        char countryCode[ULOC_COUNTRY_CAPACITY];
-        U_ASSERT(usCountryCode.length() < ULOC_COUNTRY_CAPACITY);
-        int32_t ccLen = usCountryCode.extract(0, usCountryCode.length(), countryCode, sizeof(countryCode), US_INV);
-        countryCode[ccLen] = 0;
-
-        UnicodeString country;
-        fLocaleDisplayNames->regionDisplayName(countryCode, country);
-
-        // Format
         FieldPosition fpos;
-        if (isSingleCountry) {
-            // If this is only the single zone in the country, use the country name
+
+        if (isPrimary) {
+            // If this is the primary zone in the country, use the country name.
+            char countryCode[ULOC_COUNTRY_CAPACITY];
+            U_ASSERT(usCountryCode.length() < ULOC_COUNTRY_CAPACITY);
+            int32_t ccLen = usCountryCode.extract(0, usCountryCode.length(), countryCode, sizeof(countryCode), US_INV);
+            countryCode[ccLen] = 0;
+
+            UnicodeString country;
+            fLocaleDisplayNames->regionDisplayName(countryCode, country);
+
             Formattable param[] = {
                 Formattable(country)
             };
+
             fRegionFormat->format(param, 1, name, fpos, status);
         } else {
-            // If there are multiple zones including this in the country,
-            // use the exemplar city name
+            // If this is not the primary zone in the country,
+            // use the exemplar city name.
 
             // getExemplarLocationName should retur non-empty string
             // if the time zone is associated with a region
@@ -585,6 +575,7 @@ TZGNCore::getGenericLocationName(const UnicodeString& tzCanonicalID) {
             Formattable param[] = {
                 Formattable(city),
             };
+
             fRegionFormat->format(param, 1, name, fpos, status);
         }
         if (U_FAILURE(status)) {
@@ -1232,33 +1223,25 @@ TimeZoneGenericNames::createInstance(const Locale& locale, UErrorCode& status) {
         return NULL;
     }
 
-    UBool initialized;
-    UMTX_CHECK(&gTZGNLock, gTZGNCoreCacheInitialized, initialized);
-    if (!initialized) {
-        // Create empty hashtable
-        umtx_lock(&gTZGNLock);
-        {
-            if (!gTZGNCoreCacheInitialized) {
-                gTZGNCoreCache = uhash_open(uhash_hashChars, uhash_compareChars, NULL, &status);
-                if (U_SUCCESS(status)) {
-                    uhash_setKeyDeleter(gTZGNCoreCache, uprv_free);
-                    uhash_setValueDeleter(gTZGNCoreCache, deleteTZGNCoreRef);
-                    gTZGNCoreCacheInitialized = TRUE;
-                    ucln_i18n_registerCleanup(UCLN_I18N_TIMEZONEGENERICNAMES, tzgnCore_cleanup);
-                }
+    TZGNCoreRef *cacheEntry = NULL;
+    {
+        Mutex lock(&gTZGNLock);
+
+        if (!gTZGNCoreCacheInitialized) {
+            // Create empty hashtable
+            gTZGNCoreCache = uhash_open(uhash_hashChars, uhash_compareChars, NULL, &status);
+            if (U_SUCCESS(status)) {
+                uhash_setKeyDeleter(gTZGNCoreCache, uprv_free);
+                uhash_setValueDeleter(gTZGNCoreCache, deleteTZGNCoreRef);
+                gTZGNCoreCacheInitialized = TRUE;
+                ucln_i18n_registerCleanup(UCLN_I18N_TIMEZONEGENERICNAMES, tzgnCore_cleanup);
             }
         }
-        umtx_unlock(&gTZGNLock);
-
         if (U_FAILURE(status)) {
             return NULL;
         }
-    }
 
-    // Check the cache, if not available, create new one and cache
-    TZGNCoreRef *cacheEntry = NULL;
-    umtx_lock(&gTZGNLock);
-    {
+        // Check the cache, if not available, create new one and cache
         const char *key = locale.getName();
         cacheEntry = (TZGNCoreRef *)uhash_get(gTZGNCoreCache, key);
         if (cacheEntry == NULL) {
@@ -1312,8 +1295,7 @@ TimeZoneGenericNames::createInstance(const Locale& locale, UErrorCode& status) {
             sweepCache();
             gAccessCount = 0;
         }
-    }
-    umtx_unlock(&gTZGNLock);
+    }  // End of mutex locked block
 
     if (cacheEntry == NULL) {
         delete instance;

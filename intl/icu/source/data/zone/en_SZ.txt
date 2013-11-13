@@ -1,53 +1,28 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/en_SZ.xml
 // *
 // ***************************************************************************
 en_SZ{
-    Version{"2.0.75.60"}
+    %%Parent{"en_001"}
+    Version{"2.0.91.70"}
     zoneStrings{
-        "Pacific:Honolulu"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
+        "meta:Africa_Central"{
+            ss{"CAT"}
         }
-        "meta:Alaska"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
+        "meta:Africa_Eastern"{
+            ss{"EAT"}
         }
-        "meta:America_Central"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
+        "meta:Africa_Southern"{
+            ss{"SAST"}
         }
-        "meta:America_Eastern"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
-        }
-        "meta:America_Mountain"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
-        }
-        "meta:America_Pacific"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
-        }
-        "meta:Atlantic"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
-        }
-        "meta:Hawaii_Aleutian"{
-            sd{"∅∅∅"}
-            sg{"∅∅∅"}
-            ss{"∅∅∅"}
+        "meta:Africa_Western"{
+            sd{"WAST"}
+            sg{"WAT"}
+            ss{"WAT"}
         }
     }
 }
