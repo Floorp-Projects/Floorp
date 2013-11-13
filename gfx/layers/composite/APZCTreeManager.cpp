@@ -505,10 +505,10 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
 }
 
 void
-APZCTreeManager::UpdateCompositionBounds(const ScrollableLayerGuid& aGuid,
-                                         const ScreenIntRect& aCompositionBounds)
+APZCTreeManager::UpdateRootCompositionBounds(const uint64_t& aLayersId,
+                                             const ScreenIntRect& aCompositionBounds)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
+  nsRefPtr<AsyncPanZoomController> apzc = GetRootAPZCFor(aLayersId);
   if (apzc) {
     apzc->UpdateCompositionBounds(aCompositionBounds);
   }
@@ -651,8 +651,24 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint)
   return target.forget();
 }
 
+already_AddRefed<AsyncPanZoomController>
+APZCTreeManager::GetRootAPZCFor(const uint64_t& aLayersId)
+{
+  MonitorAutoLock lock(mTreeLock);
+  nsRefPtr<AsyncPanZoomController> target;
+  // The root may have siblings, check those too
+  for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
+    target = FindRootAPZC(apzc, aLayersId);
+    if (target) {
+      break;
+    }
+  }
+  return target.forget();
+}
+
 AsyncPanZoomController*
-APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid) {
+APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid)
+{
   mTreeLock.AssertCurrentThreadOwns();
 
   // This walks the tree in depth-first, reverse order, so that it encounters
@@ -722,6 +738,23 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
     APZC_LOG("Successfully matched untransformed point %f %f to visible region for APZC %p\n",
              hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, aApzc);
     return aApzc;
+  }
+  return nullptr;
+}
+
+AsyncPanZoomController*
+APZCTreeManager::FindRootAPZC(AsyncPanZoomController* aApzc, const uint64_t& aLayersId)
+{
+  mTreeLock.AssertCurrentThreadOwns();
+
+  if (aApzc->IsRootForLayersId(aLayersId)) {
+    return aApzc;
+  }
+  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
+    AsyncPanZoomController* match = FindRootAPZC(child, aLayersId);
+    if (match) {
+      return match;
+    }
   }
   return nullptr;
 }

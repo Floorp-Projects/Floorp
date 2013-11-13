@@ -838,8 +838,8 @@ void
 RenderFrameParent::NotifyDimensionsChanged(ScreenIntSize size)
 {
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->UpdateCompositionBounds(ScrollableLayerGuid(mLayersId),
-                                                  ScreenIntRect(ScreenIntPoint(), size));
+    GetApzcTreeManager()->UpdateRootCompositionBounds(
+      mLayersId, ScreenIntRect(ScreenIntPoint(), size));
   }
 }
 
