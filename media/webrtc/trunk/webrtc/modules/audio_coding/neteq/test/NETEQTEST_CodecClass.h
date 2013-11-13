@@ -51,7 +51,7 @@ class decoder_iSAC : public NETEQTEST_Decoder
 public:
     decoder_iSAC(uint8_t pt = 0);
     virtual ~decoder_iSAC();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -60,7 +60,7 @@ class decoder_iSACSWB : public NETEQTEST_Decoder
 public:
     decoder_iSACSWB(uint8_t pt = 0);
     virtual ~decoder_iSACSWB();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -68,7 +68,7 @@ class decoder_iSACFB : public NETEQTEST_Decoder {
  public:
   decoder_iSACFB(uint8_t pt = 0);
   virtual ~decoder_iSACFB();
-  int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+  virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -77,7 +77,7 @@ class decoder_PCMU : public NETEQTEST_Decoder
 public:
     decoder_PCMU(uint8_t pt = 0);
     virtual ~decoder_PCMU() {};
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -86,7 +86,7 @@ class decoder_PCMA : public NETEQTEST_Decoder
 public:
     decoder_PCMA(uint8_t pt = 0);
     virtual ~decoder_PCMA() {};
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_PCM16B_NB : public NETEQTEST_Decoder
@@ -94,37 +94,37 @@ class decoder_PCM16B_NB : public NETEQTEST_Decoder
 public:
     decoder_PCM16B_NB(uint8_t pt = 0) : NETEQTEST_Decoder(kDecoderPCM16B, 8000, "PCM16 nb", pt) {};
     virtual ~decoder_PCM16B_NB() {};
-    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 class decoder_PCM16B_WB : public NETEQTEST_Decoder
 {
 public:
     decoder_PCM16B_WB(uint8_t pt = 0) : NETEQTEST_Decoder(kDecoderPCM16Bwb, 16000, "PCM16 wb", pt) {};
     virtual ~decoder_PCM16B_WB() {};
-    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 class decoder_PCM16B_SWB32 : public NETEQTEST_Decoder
 {
 public:
     decoder_PCM16B_SWB32(uint8_t pt = 0) : NETEQTEST_Decoder(kDecoderPCM16Bswb32kHz, 32000, "PCM16 swb32", pt) {};
     virtual ~decoder_PCM16B_SWB32() {};
-    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
+
 class decoder_PCM16B_SWB48 : public NETEQTEST_Decoder
 {
 public:
     decoder_PCM16B_SWB48(uint8_t pt = 0) : NETEQTEST_Decoder(kDecoderPCM16Bswb48kHz, 48000, "PCM16 swb48", pt) {};
     virtual ~decoder_PCM16B_SWB48() {};
-    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
-
 
 class decoder_ILBC : public NETEQTEST_Decoder
 {
 public:
     decoder_ILBC(uint8_t pt = 0);
     virtual ~decoder_ILBC();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -133,7 +133,7 @@ class decoder_G729 : public NETEQTEST_Decoder
 public:
     decoder_G729(uint8_t pt = 0);
     virtual ~decoder_G729();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_G729_1 : public NETEQTEST_Decoder
@@ -141,7 +141,7 @@ class decoder_G729_1 : public NETEQTEST_Decoder
 public:
     decoder_G729_1(uint8_t pt = 0);
     virtual ~decoder_G729_1();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -150,7 +150,7 @@ class decoder_G722 : public NETEQTEST_Decoder
 public:
     decoder_G722(uint8_t pt = 0);
     virtual ~decoder_G722();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -159,7 +159,7 @@ class decoder_G722_1_16 : public NETEQTEST_Decoder
 public:
     decoder_G722_1_16(uint8_t pt = 0);
     virtual ~decoder_G722_1_16();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_G722_1_24 : public NETEQTEST_Decoder
@@ -167,7 +167,7 @@ class decoder_G722_1_24 : public NETEQTEST_Decoder
 public:
     decoder_G722_1_24(uint8_t pt = 0);
     virtual ~decoder_G722_1_24();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_G722_1_32 : public NETEQTEST_Decoder
@@ -175,7 +175,7 @@ class decoder_G722_1_32 : public NETEQTEST_Decoder
 public:
     decoder_G722_1_32(uint8_t pt = 0);
     virtual ~decoder_G722_1_32();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -184,7 +184,7 @@ class decoder_G722_1C_24 : public NETEQTEST_Decoder
 public:
     decoder_G722_1C_24(uint8_t pt = 0);
     virtual ~decoder_G722_1C_24();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_G722_1C_32 : public NETEQTEST_Decoder
@@ -192,7 +192,7 @@ class decoder_G722_1C_32 : public NETEQTEST_Decoder
 public:
     decoder_G722_1C_32(uint8_t pt = 0);
     virtual ~decoder_G722_1C_32();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_G722_1C_48 : public NETEQTEST_Decoder
@@ -200,7 +200,7 @@ class decoder_G722_1C_48 : public NETEQTEST_Decoder
 public:
     decoder_G722_1C_48(uint8_t pt = 0);
     virtual ~decoder_G722_1C_48();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -209,7 +209,7 @@ class decoder_AMR : public NETEQTEST_Decoder
 public:
     decoder_AMR(uint8_t pt = 0);
     virtual ~decoder_AMR();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_AMRWB : public NETEQTEST_Decoder
@@ -217,7 +217,7 @@ class decoder_AMRWB : public NETEQTEST_Decoder
 public:
     decoder_AMRWB(uint8_t pt = 0);
     virtual ~decoder_AMRWB();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_GSMFR : public NETEQTEST_Decoder
@@ -225,7 +225,7 @@ class decoder_GSMFR : public NETEQTEST_Decoder
 public:
     decoder_GSMFR(uint8_t pt = 0);
     virtual ~decoder_GSMFR();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_G726 : public NETEQTEST_Decoder
@@ -241,28 +241,28 @@ class decoder_G726_16 : public decoder_G726
 {
 public:
     decoder_G726_16(uint8_t pt = 0) : decoder_G726(kDecoderG726_16, "G.726 (16 kbps)", pt) {};
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_G726_24 : public decoder_G726
 {
 public:
     decoder_G726_24(uint8_t pt = 0) : decoder_G726(kDecoderG726_24, "G.726 (24 kbps)", pt) {};
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_G726_32 : public decoder_G726
 {
 public:
     decoder_G726_32(uint8_t pt = 0) : decoder_G726(kDecoderG726_32, "G.726 (32 kbps)", pt) {};
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_G726_40 : public decoder_G726
 {
 public:
     decoder_G726_40(uint8_t pt = 0) : decoder_G726(kDecoderG726_40, "G.726 (40 kbps)", pt) {};
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_SPEEX : public NETEQTEST_Decoder
@@ -270,7 +270,7 @@ class decoder_SPEEX : public NETEQTEST_Decoder
 public:
     decoder_SPEEX(uint8_t pt = 0, uint16_t fs = 8000);
     virtual ~decoder_SPEEX();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_CELT : public NETEQTEST_Decoder
@@ -278,14 +278,14 @@ class decoder_CELT : public NETEQTEST_Decoder
 public:
     decoder_CELT(uint8_t pt = 0, uint16_t fs = 32000);
     virtual ~decoder_CELT();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 class decoder_CELTslave : public NETEQTEST_Decoder
 {
 public:
     decoder_CELTslave(uint8_t pt = 0, uint16_t fs = 32000);
     virtual ~decoder_CELTslave();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_RED : public NETEQTEST_Decoder
@@ -293,7 +293,7 @@ class decoder_RED : public NETEQTEST_Decoder
 public:
     decoder_RED(uint8_t pt = 0) : NETEQTEST_Decoder(kDecoderRED, 8000, "RED", pt) {};
     virtual ~decoder_RED() {};
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 class decoder_AVT : public NETEQTEST_Decoder
@@ -301,7 +301,7 @@ class decoder_AVT : public NETEQTEST_Decoder
 public:
     decoder_AVT(uint8_t pt = 0) : NETEQTEST_Decoder(kDecoderAVT, 8000, "AVT", pt) {};
     virtual ~decoder_AVT() {};
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 
@@ -310,7 +310,7 @@ class decoder_CNG : public NETEQTEST_Decoder
 public:
     decoder_CNG(uint8_t pt = 0, uint16_t fs = 8000);
     virtual ~decoder_CNG();
-    int loadToNetEQ(NETEQTEST_NetEQClass & neteq);
+    virtual int loadToNetEQ(NETEQTEST_NetEQClass & neteq) OVERRIDE;
 };
 
 #endif //NETEQTEST_CODECCLASS_H

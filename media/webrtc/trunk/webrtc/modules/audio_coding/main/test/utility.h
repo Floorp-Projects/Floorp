@@ -52,14 +52,6 @@ namespace webrtc {
     }                                                                          \
   } while(0)
 
-#define DESTROY_ACM(acm)                                                       \
-  do {                                                                         \
-    if (acm != NULL) {                                                         \
-      AudioCodingModule::Destroy(acm);                                         \
-      acm = NULL;                                                              \
-    }                                                                          \
-  } while(0)
-
 #define DELETE_POINTER(p)                                                      \
   do {                                                                         \
     if (p != NULL) {                                                           \

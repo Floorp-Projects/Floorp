@@ -12,9 +12,9 @@
 #define WEBRTC_VIDEO_ENGINE_NEW_INCLUDE_CONFIG_H_
 
 #include <string>
+#include <vector>
 
 namespace webrtc {
-namespace newapi {
 
 struct RtpStatistics {
   RtpStatistics()
@@ -29,12 +29,14 @@ struct RtpStatistics {
   std::string c_name;
 };
 
+namespace newapi {
 // RTCP mode to use. Compound mode is described by RFC 4585 and reduced-size
 // RTCP mode is described by RFC 5506.
 enum RtcpMode {
   kRtcpCompound,
   kRtcpReducedSize
 };
+}  // namespace newapi
 
 // Settings for NACK, see RFC 4585 for details.
 struct NackConfig {
@@ -59,9 +61,9 @@ struct FecConfig {
 
 // Settings for RTP retransmission payload format, see RFC 4588 for details.
 struct RtxConfig {
-  RtxConfig() : ssrc(0), rtx_payload_type(0), video_payload_type(0) {}
-  // SSRC to use for the RTX stream.
-  uint32_t ssrc;
+  RtxConfig() : rtx_payload_type(0), video_payload_type(0) {}
+  // SSRCs to use for the RTX streams.
+  std::vector<uint32_t> ssrcs;
 
   // Payload type to use for the RTX stream.
   int rtx_payload_type;
@@ -72,12 +74,11 @@ struct RtxConfig {
 
 // RTP header extension to use for the video stream, see RFC 5285.
 struct RtpExtension {
-  RtpExtension() : id(0) {}
+  RtpExtension(const char* name, int id) : name(name), id(id) {}
   // TODO(mflodman) Add API to query supported extensions.
   std::string name;
   int id;
 };
-}  // namespace newapi
 }  // namespace webrtc
 
 #endif  // WEBRTC_VIDEO_ENGINE_NEW_INCLUDE_CONFIG_H_

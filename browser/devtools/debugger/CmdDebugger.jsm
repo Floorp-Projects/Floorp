@@ -37,8 +37,8 @@ function getAllBreakpoints(dbg) {
   let sources = dbg._view.Sources;
   let { trimUrlLength: trim } = dbg.panelWin.SourceUtils;
 
-  for (let source in sources) {
-    for (let { attachment: breakpoint } in source) {
+  for (let source of sources) {
+    for (let { attachment: breakpoint } of source) {
       breakpoints.push({
         url: source.value,
         label: source.label + ":" + breakpoint.line,

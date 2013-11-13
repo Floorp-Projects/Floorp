@@ -367,7 +367,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool reportWithOffset(ParseReportKind kind, bool strict, uint32_t offset, unsigned errorNumber,
                           ...);
 
-    Parser(ExclusiveContext *cx, LifoAlloc *alloc, const CompileOptions &options,
+    Parser(ExclusiveContext *cx, LifoAlloc *alloc, const ReadOnlyCompileOptions &options,
            const jschar *chars, size_t length, bool foldConstants,
            Parser<SyntaxParseHandler> *syntaxParser,
            LazyScript *lazyOuterFunction);
@@ -408,7 +408,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
      * cx->tempLifoAlloc.
      */
     ObjectBox *newObjectBox(JSObject *obj);
-    ModuleBox *newModuleBox(Module *module, ParseContext<ParseHandler> *pc);
     FunctionBox *newFunctionBox(Node fn, JSFunction *fun, ParseContext<ParseHandler> *pc,
                                 Directives directives, GeneratorKind generatorKind);
 
@@ -472,7 +471,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     virtual bool strictMode() { return pc->sc->strict; }
 
-    const CompileOptions &options() const {
+    const ReadOnlyCompileOptions &options() const {
         return tokenStream.options();
     }
 
@@ -493,7 +492,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
      * Some parsers have two versions:  an always-inlined version (with an 'i'
      * suffix) and a never-inlined version (with an 'n' suffix).
      */
-    Node moduleDecl();
     Node functionStmt();
     Node functionExpr();
     Node statements();
@@ -514,6 +512,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node debuggerStatement();
 
     Node letStatement();
+    Node importDeclaration();
     Node expressionStatement();
     Node variables(ParseNodeKind kind, bool *psimple = nullptr,
                    StaticBlockObject *blockObj = nullptr,

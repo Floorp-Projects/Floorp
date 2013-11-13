@@ -7,18 +7,16 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'includes': [
+    '../../build/common.gypi',
+  ],
   'targets': [
     {
       'target_name': 'remote_bitrate_estimator',
       'type': 'static_library',
       'dependencies': [
-        # system_wrappers
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
-      ],
-      'include_dirs': [
-        'include',
-        '../rtp_rtcp/interface',
-        '../interface',
+        '<(rbe_components_path)/remote_bitrate_estimator_components.gyp:rbe_components',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
@@ -26,20 +24,11 @@
         ],
       },
       'sources': [
-        # interface
         'include/bwe_defines.h',
         'include/remote_bitrate_estimator.h',
         'include/rtp_to_ntp.h',
-
-        # source
         'bitrate_estimator.cc',
         'bitrate_estimator.h',
-        'overuse_detector.cc',
-        'overuse_detector.h',
-        'remote_bitrate_estimator_multi_stream.cc',
-        'remote_bitrate_estimator_single_stream.cc',
-        'remote_rate_control.cc',
-        'remote_rate_control.h',
         'rtp_to_ntp.cc',
       ], # source
     },

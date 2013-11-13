@@ -41,5 +41,14 @@ class RDFTests(unittest.TestCase):
                 self.failUnlessEqual(m.get("em:unpack"), "true")
                 self.failUnlessIn("<em:unpack>true</em:unpack>", str(m), n)
 
+    def testTitle(self):
+        basedir = os.path.join(test_dir, 'bug-906359-files')
+        for n in ['title', 'fullName', 'none']:
+            cfg = packaging.get_config_in_dir(os.path.join(basedir, n))
+            m = rdf.gen_manifest(template_dir, cfg, jid='JID')
+            self.failUnlessEqual(m.get('em:name'), 'a long ' + n)
+            self.failUnlessIn('<em:name>a long ' + n + '</em:name>', str(m), n)
+
+
 if __name__ == '__main__':
     unittest.main()

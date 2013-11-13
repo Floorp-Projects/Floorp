@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "packet.h"
-#include "module_common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/main/source/packet.h"
 
 #include <assert.h>
 
@@ -94,7 +94,7 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader)
 {
     switch(videoHeader.codec)
     {
-        case kRTPVideoVP8:
+        case kRtpVideoVp8:
             {
                 // Handle all packets within a frame as depending on the previous packet
                 // TODO(holmer): This should be changed to make fragments independent
@@ -109,11 +109,6 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader)
                     completeNALU = kNaluIncomplete;
 
                 codec = kVideoCodecVP8;
-                break;
-            }
-        case kRTPVideoI420:
-            {
-                codec = kVideoCodecI420;
                 break;
             }
         default:

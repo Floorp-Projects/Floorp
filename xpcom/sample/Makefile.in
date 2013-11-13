@@ -32,6 +32,3 @@ include $(topsrcdir)/config/rules.mk
 
 libs:: $(TARGETS)
 	$(INSTALL) $(srcdir)/xpconnect-sample.html $(DIST)/bin/res/samples
-
-install:: $(TARGETS)
-	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/xpconnect-sample.html $(DESTDIR)$(mozappdir)/res/samples

@@ -17,7 +17,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerNavigator, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerNavigator, Release)
 
 /* static */ already_AddRefed<WorkerNavigator>
-WorkerNavigator::Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
+WorkerNavigator::Create()
 {
   RuntimeService* rts = RuntimeService::GetService();
   MOZ_ASSERT(rts);

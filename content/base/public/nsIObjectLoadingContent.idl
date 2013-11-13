@@ -25,7 +25,7 @@ class nsNPAPIPluginInstance;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, uuid(070bfc7f-f8b8-4e84-aa31-a0bfaffa8e8e)]
+[scriptable, uuid(16c14177-52eb-49d3-9842-a1a0b92be11a)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -132,6 +132,14 @@ interface nsIObjectLoadingContent : nsISupports
    * click-to-play plugins or play-preview features.
    */
   void playPlugin();
+
+  /**
+   * Forces a re-evaluation and reload of the tag, optionally invalidating its
+   * click-to-play state.  This can be used when the MIME type that provides a
+   * type has changed, for instance, to force the tag to re-evalulate the
+   * handler to use.
+   */
+  void reload(in boolean aClearActivation);
 
   /**
    * This attribute will return true if the current content type has been

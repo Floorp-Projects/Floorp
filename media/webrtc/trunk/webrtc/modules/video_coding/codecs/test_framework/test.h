@@ -11,11 +11,13 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAWEWORK_TEST_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAWEWORK_TEST_H_
 
-#include "modules/interface/module_common_types.h"
-#include "video_codec_interface.h"
-#include <string>
+#include <stdlib.h>
+
 #include <fstream>
-#include <cstdlib>
+#include <string>
+
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
 
 class CodecTest
 {

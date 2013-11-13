@@ -104,5 +104,5 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
     {
     }
 }
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_SYSTEM_WRAPPERS_SOURCE_THREAD_WINDOWS_SET_NAME_H_

@@ -36,10 +36,12 @@ class TraceToStderr : public TraceCallback {
   // No attempt is made to ensure thread-safety between the trace writing and
   // time updating. In tests, since traces will normally be triggered by the
   // main thread doing the time updating, this should be of no concern.
-  virtual void SetTimeSeconds(float time) { time_seconds_ = time; }
+  virtual void SetTimeSeconds(float time);
 
   // Implements TraceCallback.
-  virtual void Print(TraceLevel level, const char* msg_array, int length);
+  virtual void Print(TraceLevel level,
+                     const char* msg_array,
+                     int length) OVERRIDE;
 
  private:
   bool override_time_;

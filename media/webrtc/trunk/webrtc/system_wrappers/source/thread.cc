@@ -28,4 +28,9 @@ ThreadWrapper* ThreadWrapper::CreateThread(ThreadRunFunction func,
 #endif
 }
 
-} // namespace webrtc
+bool ThreadWrapper::SetAffinity(const int* processor_numbers,
+                                const unsigned int amount_of_processors) {
+  return false;
+}
+
+}  // namespace webrtc

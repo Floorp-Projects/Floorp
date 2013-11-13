@@ -208,6 +208,7 @@ function DownloadNotifOptions (aDownload, aTitle, aMessage) {
   this.message = aMessage;
   this.buttons = null;
   this.cookie = aDownload.guid;
+  this.persistent = true;
 }
 
 function DownloadProgressNotifOptions (aDownload, aButtons) {

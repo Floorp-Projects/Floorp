@@ -461,7 +461,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         unsigned int version = 0;
 
         bool parseSuccess = ParseGLVersion(this, &version);
-        printf_stderr("OpenGL version detected: %u\n", version);
 
         if (version >= mVersion) {
             mVersion = version;

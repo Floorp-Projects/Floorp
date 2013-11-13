@@ -64,6 +64,6 @@ public:
     bool                        _completeFrame;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // COMMON_VIDEO_INTERFACE_VIDEO_IMAGE_H

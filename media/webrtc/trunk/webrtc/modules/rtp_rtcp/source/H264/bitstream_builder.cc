@@ -577,4 +577,4 @@ BitstreamBuilder::AddSuffix(const uint8_t numBits, const uint32_t rest)
         }
     }
 }
-} // namespace webrtc
+}  // namespace webrtc

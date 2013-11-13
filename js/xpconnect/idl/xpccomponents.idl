@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(08a49c33-0704-4b88-bebb-9a0cf1309f30)]
+[scriptable, uuid(90019271-a0d1-439f-911c-967f8e85cd5b)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -308,12 +308,44 @@ interface nsIXPCComponents_Utils : nsISupports
     jsval getGlobalForObject(in jsval obj);
 
     /*
+     * Similar to evalInSandbox except this one is used to eval a script in the
+     * scope of a window. Also note, that the return value and the possible exceptions
+     * in the script are structured cloned, unless they are natives (then they are just
+     * wrapped).
+     * Principal of the caller must subsume the target's.
+     */
+    [implicit_jscontext]
+    jsval evalInWindow(in AString source, in jsval window);
+
+    /*
+     * To be called from JS only.
+     *
+     * Instead of simply wrapping a function into another compartment,
+     * this helper function creates a native function in the target
+     * compartment and forwards the call to the original function.
+     * That call will be different than a regular JS function call in
+     * that, the |this| is left unbound, and all the non-native JS
+     * object arguments will be cloned using the structured clone
+     * algorithm.
+     * The return value is the new forwarder function, wrapped into
+     * the caller's compartment.
+     * The 3rd argument is the name of the property that will
+     * be set on the target scope, with the forwarder function as
+     * the value.
+     */
+    [implicit_jscontext]
+    jsval exportFunction(in jsval vfunction, in jsval vscope, in jsval vname);
+
+    /*
      * To be called from JS only.
      *
      * Returns an object created in |vobj|'s compartment.
+     * If defineAs property on the options object is a non-null ID,
+     * the new object will be added to vobj as a property. Also, the
+     * returned new object is always automatically waived (see waiveXrays).
      */
     [implicit_jscontext]
-    jsval createObjectIn(in jsval vobj);
+    jsval createObjectIn(in jsval vobj, [optional] in jsval voptions);
 
     /*
      * To be called from JS only.

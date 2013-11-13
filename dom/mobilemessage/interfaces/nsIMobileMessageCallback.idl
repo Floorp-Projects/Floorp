@@ -14,7 +14,7 @@ dictionary SmsThreadListItem
   unsigned long long unreadCount;
 };
 
-[scriptable, uuid(5f82f826-1956-11e3-a2bb-9b043b33de27)]
+[scriptable, uuid(0ee2ada1-fa98-40f1-adb3-0d7fd6df3f48)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -31,6 +31,7 @@ interface nsIMobileMessageCallback : nsISupports
   const unsigned short RADIO_DISABLED_ERROR      = 6;
   const unsigned short INVALID_ADDRESS_ERROR     = 7;
   const unsigned short FDN_CHECK_ERROR           = 8;
+  const unsigned short NON_ACTIVE_SIM_CARD_ERROR = 9;
 
   /**
    * |message| can be nsIDOMMoz{Mms,Sms}Message.
@@ -53,4 +54,10 @@ interface nsIMobileMessageCallback : nsISupports
 
   void notifySegmentInfoForTextGot(in nsIDOMMozSmsSegmentInfo info);
   void notifyGetSegmentInfoForTextFailed(in long error);
+
+  /**
+   *  SMSC Address get/set result
+   */
+  void notifyGetSmscAddress(in DOMString aSmscAddress);
+  void notifyGetSmscAddressFailed(in long error);
 };

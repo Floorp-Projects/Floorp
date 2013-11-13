@@ -56,6 +56,6 @@ class CriticalSectionScoped {
   CriticalSectionWrapper* ptr_crit_sec_;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_CRITICAL_SECTION_WRAPPER_H_

@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ4_BACKGROUND_NOISE_H_
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ4_BACKGROUND_NOISE_H_
 
-#include <cstring>  // size_t
+#include <string.h>  // size_t
 
 #include "webrtc/modules/audio_coding/neteq4/audio_multi_vector.h"
 #include "webrtc/system_wrappers/interface/constructor_magic.h"
@@ -36,15 +36,8 @@ class BackgroundNoise {
   // Will work anyway, but probably sound a little worse.
   static const int kMaxLpcOrder = 8;  // 32000 / 8000 + 4.
 
-  explicit BackgroundNoise(size_t num_channels)
-      : num_channels_(num_channels),
-        channel_parameters_(new ChannelParameters[num_channels_]),
-        mode_(kBgnOn) {
-    Reset();
-  }
-
-  virtual ~BackgroundNoise() {
-  }
+  explicit BackgroundNoise(size_t num_channels);
+  virtual ~BackgroundNoise();
 
   void Reset();
 
@@ -120,7 +113,7 @@ class BackgroundNoise {
   };
 
   int32_t CalculateAutoCorrelation(const int16_t* signal,
-                                   size_t length,
+                                   int length,
                                    int32_t* auto_correlation) const;
 
   // Increments the energy threshold by a factor 1 + |kThresholdIncrement|.

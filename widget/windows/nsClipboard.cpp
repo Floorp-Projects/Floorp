@@ -728,8 +728,10 @@ nsClipboard :: FindPlatformHTML ( IDataObject* inDataObject, UINT inIndex, void*
   }
 
   // Make sure we were passed sane values within our buffer size.
+  // (Note that we've handled all cases of negative endOfData above, so we can
+  // safely cast it to be unsigned here.)
   if (!endOfData || startOfData >= endOfData || 
-      endOfData > *outDataLen) {
+      static_cast<uint32_t>(endOfData) > *outDataLen) {
     return false;
   }
   

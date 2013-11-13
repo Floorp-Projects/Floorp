@@ -158,20 +158,6 @@ public:
   void* GetThebesLayerCallbackData() const
   { return mThebesLayerCallbackData; }
 
-  /*
-   * Helper functions for our layers
-   */
-  void CallThebesLayerDrawCallback(ThebesLayer* aLayer,
-                                   gfxContext* aContext,
-                                   const nsIntRegion& aRegionToDraw)
-  {
-    NS_ASSERTION(mThebesLayerCallback,
-                 "CallThebesLayerDrawCallback without callback!");
-    mThebesLayerCallback(aLayer, aContext,
-                         aRegionToDraw, nsIntRegion(),
-                         mThebesLayerCallbackData);
-  }
-
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const MOZ_OVERRIDE { return ""; }
 #endif // MOZ_LAYERS_HAVE_LOG
@@ -331,8 +317,7 @@ public:
 
   virtual Layer* GetLayer() = 0;
 
-  virtual void RenderLayer(const nsIntPoint& aOffset,
-                           const nsIntRect& aClipRect) = 0;
+  virtual void RenderLayer(const nsIntRect& aClipRect) = 0;
 
   virtual void SetCompositableHost(CompositableHost* aHost)
   {

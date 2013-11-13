@@ -25,6 +25,10 @@ function inlinefunction() {
          return 42;
 }
 
+// 1 assertion in debug builds because bug 821726 added the ignoreCache switch and
+// we now write to the cache more than once for the same entry
+SimpleTest.expectAssertions(1);
+
 var src;
 src = inlinefunction.toSource();
 isnot(src.indexOf("return 42"), -1, "inline XUL script should have source");
@@ -50,6 +54,12 @@ isnot(src.indexOf("return"), -1, "subscript of a subscript should have source");
 
 ns = {};
 Services.scriptloader.loadSubScript(resolvedBase + "utf8_subscript.js", ns, "UTF-8");
+src = ns.f.toSource();
+isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
+
+ns = {};
+Services.scriptloader.loadSubScriptWithOptions(resolvedBase + "utf8_subscript.js",
+                                               {target: ns, charset: "UTF-8", ignoreCache: true});
 src = ns.f.toSource();
 isnot(src.indexOf("return 42;"), -1, "encoded subscript should have correct source");
   ]]></script>

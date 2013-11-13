@@ -8,17 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "frame_buffer.h"
-#include "packet.h"
+#include "webrtc/modules/video_coding/main/source/frame_buffer.h"
 
-#include <cassert>
+#include <assert.h>
 #include <string.h>
+
+#include "webrtc/modules/video_coding/main/source/packet.h"
 
 namespace webrtc {
 
 VCMFrameBuffer::VCMFrameBuffer()
   :
-    _state(kStateFree),
+    _state(kStateEmpty),
     _frameCounted(false),
     _nackCount(0),
     _latestPacketTimeMs(-1) {
@@ -27,40 +28,30 @@ VCMFrameBuffer::VCMFrameBuffer()
 VCMFrameBuffer::~VCMFrameBuffer() {
 }
 
-VCMFrameBuffer::VCMFrameBuffer(VCMFrameBuffer& rhs)
+VCMFrameBuffer::VCMFrameBuffer(const VCMFrameBuffer& rhs)
 :
 VCMEncodedFrame(rhs),
 _state(rhs._state),
 _frameCounted(rhs._frameCounted),
 _sessionInfo(),
 _nackCount(rhs._nackCount),
-_latestPacketTimeMs(rhs._latestPacketTimeMs)
-{
+_latestPacketTimeMs(rhs._latestPacketTimeMs) {
     _sessionInfo = rhs._sessionInfo;
     _sessionInfo.UpdateDataPointers(rhs._buffer, _buffer);
 }
 
 webrtc::FrameType
-VCMFrameBuffer::FrameType() const
-{
+VCMFrameBuffer::FrameType() const {
     return _sessionInfo.FrameType();
 }
 
-void
-VCMFrameBuffer::SetPreviousFrameLoss()
-{
-    _sessionInfo.SetPreviousFrameLoss();
-}
-
 int32_t
-VCMFrameBuffer::GetLowSeqNum() const
-{
+VCMFrameBuffer::GetLowSeqNum() const {
     return _sessionInfo.LowSequenceNumber();
 }
 
 int32_t
-VCMFrameBuffer::GetHighSeqNum() const
-{
+VCMFrameBuffer::GetHighSeqNum() const {
     return _sessionInfo.HighSequenceNumber();
 }
 
@@ -85,58 +76,40 @@ bool VCMFrameBuffer::NonReference() const {
 }
 
 bool
-VCMFrameBuffer::IsSessionComplete() const
-{
+VCMFrameBuffer::IsSessionComplete() const {
     return _sessionInfo.complete();
 }
 
 // Insert packet
 VCMFrameBufferEnum
-VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
-                             bool enableDecodableState, uint32_t rttMS)
-{
-    if (_state == kStateDecoding)
-    {
-        // Do not insert packet
-        return kNoError;
-    }
-
-    // Sanity to check if the frame has been freed. (Too old for example)
-    if (_state == kStateFree)
-    {
-        return kGeneralError;
-    }
-
-    // is this packet part of this frame
-    if (TimeStamp() && (TimeStamp() != packet.timestamp))
-    {
+VCMFrameBuffer::InsertPacket(const VCMPacket& packet,
+                             int64_t timeInMs,
+                             VCMDecodeErrorMode decode_error_mode,
+                             const FrameData& frame_data) {
+    // Is this packet part of this frame?
+    if (TimeStamp() && (TimeStamp() != packet.timestamp)) {
         return kTimeStampError;
     }
 
     // sanity checks
     if (_size + packet.sizeBytes +
         (packet.insertStartCode ?  kH264StartCodeLengthBytes : 0 )
-        > kMaxJBFrameSizeBytes)
-    {
+        > kMaxJBFrameSizeBytes) {
         return kSizeError;
     }
-    if (NULL == packet.dataPtr && packet.sizeBytes > 0)
-    {
+    if (NULL == packet.dataPtr && packet.sizeBytes > 0) {
         return kSizeError;
     }
-    if (packet.dataPtr != NULL)
-    {
+    if (packet.dataPtr != NULL) {
         _payloadType = packet.payloadType;
     }
 
-    if (kStateEmpty == _state)
-    {
+    if (kStateEmpty == _state) {
         // First packet (empty and/or media) inserted into this frame.
         // store some info and set some initial values.
         _timeStamp = packet.timestamp;
         _codec = packet.codec;
-        if (packet.frameType != kFrameEmpty)
-        {
+        if (packet.frameType != kFrameEmpty) {
             // first media packet
             SetState(kStateIncomplete);
         }
@@ -144,8 +117,7 @@ VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
 
     uint32_t requiredSizeBytes = Length() + packet.sizeBytes +
                    (packet.insertStartCode ? kH264StartCodeLengthBytes : 0);
-    if (requiredSizeBytes >= _size)
-    {
+    if (requiredSizeBytes >= _size) {
         const uint8_t* prevBuffer = _buffer;
         const uint32_t increments = requiredSizeBytes /
                                           kBufferIncStepSizeBytes +
@@ -153,12 +125,10 @@ VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
                                          kBufferIncStepSizeBytes > 0);
         const uint32_t newSize = _size +
                                        increments * kBufferIncStepSizeBytes;
-        if (newSize > kMaxJBFrameSizeBytes)
-        {
+        if (newSize > kMaxJBFrameSizeBytes) {
             return kSizeError;
         }
-        if (VerifyAndAllocate(newSize) == -1)
-        {
+        if (VerifyAndAllocate(newSize) == -1) {
             return kSizeError;
         }
         _sessionInfo.UpdateDataPointers(prevBuffer, _buffer);
@@ -172,15 +142,14 @@ VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
     CopyCodecSpecific(&packet.codecSpecificHeader);
 
     int retVal = _sessionInfo.InsertPacket(packet, _buffer,
-                                           enableDecodableState,
-                                           rttMS);
-    if (retVal == -1)
-    {
+                                           decode_error_mode,
+                                           frame_data);
+    if (retVal == -1) {
         return kSizeError;
-    }
-    else if (retVal == -2)
-    {
+    } else if (retVal == -2) {
         return kDuplicatePacket;
+    } else if (retVal == -3) {
+        return kOutOfBoundsPacket;
     }
     // update length
     _length = Length() + static_cast<uint32_t>(retVal);
@@ -188,54 +157,47 @@ VCMFrameBuffer::InsertPacket(const VCMPacket& packet, int64_t timeInMs,
     _latestPacketTimeMs = timeInMs;
 
     if (_sessionInfo.complete()) {
+      SetState(kStateComplete);
       return kCompleteSession;
     } else if (_sessionInfo.decodable()) {
       SetState(kStateDecodable);
       return kDecodableSession;
-    } else {
-      // this layer is not complete
-      if (_state == kStateComplete) {
-        // we already have a complete layer
-        // wait for all independent layers belonging to the same frame
-        _state = kStateIncomplete;
-      }
     }
     return kIncomplete;
 }
 
 int64_t
-VCMFrameBuffer::LatestPacketTimeMs() const
-{
+VCMFrameBuffer::LatestPacketTimeMs() const {
     return _latestPacketTimeMs;
 }
 
 void
-VCMFrameBuffer::IncrementNackCount()
-{
+VCMFrameBuffer::IncrementNackCount() {
     _nackCount++;
 }
 
 int16_t
-VCMFrameBuffer::GetNackCount() const
-{
+VCMFrameBuffer::GetNackCount() const {
     return _nackCount;
 }
 
 bool
-VCMFrameBuffer::HaveFirstPacket() const
-{
+VCMFrameBuffer::HaveFirstPacket() const {
     return _sessionInfo.HaveFirstPacket();
 }
 
 bool
-VCMFrameBuffer::HaveLastPacket() const
-{
+VCMFrameBuffer::HaveLastPacket() const {
     return _sessionInfo.HaveLastPacket();
 }
 
+int
+VCMFrameBuffer::NumPackets() const {
+    return _sessionInfo.NumPackets();
+}
+
 void
-VCMFrameBuffer::Reset()
-{
+VCMFrameBuffer::Reset() {
     _length = 0;
     _timeStamp = 0;
     _sessionInfo.Reset();
@@ -243,49 +205,20 @@ VCMFrameBuffer::Reset()
     _payloadType = 0;
     _nackCount = 0;
     _latestPacketTimeMs = -1;
-    _state = kStateFree;
+    _state = kStateEmpty;
     VCMEncodedFrame::Reset();
-}
-
-// Makes sure the session contains a decodable stream.
-void
-VCMFrameBuffer::MakeSessionDecodable()
-{
-    uint32_t retVal;
-#ifdef INDEPENDENT_PARTITIONS
-    if (_codec != kVideoCodecVP8) {
-        retVal = _sessionInfo.MakeDecodable();
-        _length -= retVal;
-    }
-#else
-    retVal = _sessionInfo.MakeDecodable();
-    _length -= retVal;
-#endif
 }
 
 // Set state of frame
 void
-VCMFrameBuffer::SetState(VCMFrameBufferStateEnum state)
-{
-    if (_state == state)
-    {
+VCMFrameBuffer::SetState(VCMFrameBufferStateEnum state) {
+    if (_state == state) {
         return;
     }
-    switch (state)
-    {
-    case kStateFree:
-        // Reset everything
-        // We can go to this state from all other states.
-        // The one setting the state to free must ensure
-        // that the frame is removed from the timestamp
-        // ordered frame list in the jb.
-        Reset();
-        break;
-
+    switch (state) {
     case kStateIncomplete:
         // we can go to this state from state kStateEmpty
-        assert(_state == kStateEmpty ||
-            _state == kStateDecoding);
+        assert(_state == kStateEmpty);
 
         // Do nothing, we received a packet
         break;
@@ -298,20 +231,8 @@ VCMFrameBuffer::SetState(VCMFrameBufferStateEnum state)
         break;
 
     case kStateEmpty:
-        assert(_state == kStateFree);
-        // Do nothing
-        break;
-
-    case kStateDecoding:
-        // A frame might have received empty packets, or media packets might
-        // have been removed when making the frame decodable. The frame can
-        // still be set to decodable since it can be used to inform the
-        // decoder of a frame loss.
-        assert(_state == kStateComplete || _state == kStateIncomplete ||
-               _state == kStateDecodable || _state == kStateEmpty);
-        // Transfer frame information to EncodedFrame and create any codec
-        // specific information
-        RestructureFrameInformation();
+        // Should only be set to empty through Reset().
+        assert(false);
         break;
 
     case kStateDecodable:
@@ -322,85 +243,53 @@ VCMFrameBuffer::SetState(VCMFrameBufferStateEnum state)
     _state = state;
 }
 
-void
-VCMFrameBuffer::RestructureFrameInformation()
-{
-    PrepareForDecode();
-    _frameType = ConvertFrameType(_sessionInfo.FrameType());
-    _completeFrame = _sessionInfo.complete();
-    _missingFrame = _sessionInfo.PreviousFrameLoss();
-}
-
-int32_t
-VCMFrameBuffer::ExtractFromStorage(const EncodedVideoData& frameFromStorage)
-{
-    _frameType = ConvertFrameType(frameFromStorage.frameType);
-    _timeStamp = frameFromStorage.timeStamp;
-    _payloadType = frameFromStorage.payloadType;
-    _encodedWidth = frameFromStorage.encodedWidth;
-    _encodedHeight = frameFromStorage.encodedHeight;
-    _missingFrame = frameFromStorage.missingFrame;
-    _completeFrame = frameFromStorage.completeFrame;
-    _renderTimeMs = frameFromStorage.renderTimeMs;
-    _codec = frameFromStorage.codec;
-    const uint8_t *prevBuffer = _buffer;
-    if (VerifyAndAllocate(frameFromStorage.payloadSize) < 0)
-    {
-        return VCM_MEMORY;
-    }
-    _sessionInfo.UpdateDataPointers(prevBuffer, _buffer);
-    memcpy(_buffer, frameFromStorage.payloadData, frameFromStorage.payloadSize);
-    _length = frameFromStorage.payloadSize;
-    return VCM_OK;
-}
-
-int VCMFrameBuffer::NotDecodablePackets() const {
-  return _sessionInfo.packets_not_decodable();
-}
-
 // Set counted status (as counted by JB or not)
-void VCMFrameBuffer::SetCountedFrame(bool frameCounted)
-{
+void VCMFrameBuffer::SetCountedFrame(bool frameCounted) {
     _frameCounted = frameCounted;
 }
 
-bool VCMFrameBuffer::GetCountedFrame() const
-{
+bool VCMFrameBuffer::GetCountedFrame() const {
     return _frameCounted;
 }
 
 // Get current state of frame
 VCMFrameBufferStateEnum
-VCMFrameBuffer::GetState() const
-{
+VCMFrameBuffer::GetState() const {
     return _state;
 }
 
 // Get current state of frame
 VCMFrameBufferStateEnum
-VCMFrameBuffer::GetState(uint32_t& timeStamp) const
-{
+VCMFrameBuffer::GetState(uint32_t& timeStamp) const {
     timeStamp = TimeStamp();
     return GetState();
 }
 
 bool
-VCMFrameBuffer::IsRetransmitted() const
-{
+VCMFrameBuffer::IsRetransmitted() const {
     return _sessionInfo.session_nack();
 }
 
 void
-VCMFrameBuffer::PrepareForDecode()
-{
+VCMFrameBuffer::PrepareForDecode(bool continuous) {
 #ifdef INDEPENDENT_PARTITIONS
-    if (_codec == kVideoCodecVP8)
-    {
+    if (_codec == kVideoCodecVP8) {
         _length =
             _sessionInfo.BuildVP8FragmentationHeader(_buffer, _length,
                                                      &_fragmentation);
+    } else {
+        int bytes_removed = _sessionInfo.MakeDecodable();
+        _length -= bytes_removed;
     }
+#else
+    int bytes_removed = _sessionInfo.MakeDecodable();
+    _length -= bytes_removed;
 #endif
+    // Transfer frame information to EncodedFrame and create any codec
+    // specific information.
+    _frameType = ConvertFrameType(_sessionInfo.FrameType());
+    _completeFrame = _sessionInfo.complete();
+    _missingFrame = !continuous;
 }
 
-}
+}  // namespace webrtc

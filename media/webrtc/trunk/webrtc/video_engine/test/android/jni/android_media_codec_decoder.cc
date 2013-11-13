@@ -19,14 +19,31 @@ namespace webrtc {
 
 AndroidMediaCodecDecoder::AndroidMediaCodecDecoder(
     JavaVM* vm, jobject surface, jclass decoderClass)
-  : decode_complete_callback_(NULL),
-    vm_(vm),
-    surface_(surface),
+  : vm_(vm),
+    surface_(NULL),
     mediaCodecDecoder_(NULL),
-    decoderClass_(decoderClass),
+    decoderClass_(NULL),
     env_(NULL),
     setEncodedImageID_(NULL),
     vm_attached_(false) {
+  Initialize(vm, surface, decoderClass);
+}
+
+AndroidMediaCodecDecoder::~AndroidMediaCodecDecoder() {
+  env_->DeleteGlobalRef(decoderClass_);
+  env_->DeleteGlobalRef(surface_);
+}
+
+void AndroidMediaCodecDecoder::Initialize(
+    JavaVM* vm, jobject surface, jclass decoderClass) {
+  int ret = vm->GetEnv(reinterpret_cast<void**>(&env_), JNI_VERSION_1_4);
+  if ((ret < 0) || !env_) {
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
+                        "Could not get JNI env (%d, %p)", ret, env_);
+    assert(false);
+  }
+  surface_ = env_->NewGlobalRef(surface);
+  decoderClass_ = reinterpret_cast<jclass>(env_->NewGlobalRef(decoderClass));
 }
 
 int32_t AndroidMediaCodecDecoder::InitDecode(

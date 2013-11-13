@@ -401,7 +401,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipFlexItemStyleFixup)
     }
   }
 
-  // Computer User Interface style, to trigger loads of cursors
+  // Compute User Interface style, to trigger loads of cursors
   StyleUserInterface();
 }
 

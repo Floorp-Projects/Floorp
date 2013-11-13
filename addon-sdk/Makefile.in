@@ -13,7 +13,6 @@ include $(topsrcdir)/config/rules.mk
 TEST_FILES = \
   source/app-extension \
   source/bin \
-  source/data \
   source/python-lib \
   source/test \
   source/package.json \

@@ -25,14 +25,14 @@ class FrameWriterTest: public testing::Test {
   virtual ~FrameWriterTest() {}
   void SetUp() {
     // Cleanup any previous output file.
-    std::remove(kOutputFilename.c_str());
+    remove(kOutputFilename.c_str());
     frame_writer_ = new FrameWriterImpl(kOutputFilename, kFrameLength);
     ASSERT_TRUE(frame_writer_->Init());
   }
   void TearDown() {
     delete frame_writer_;
     // Cleanup the temporary file.
-    std::remove(kOutputFilename.c_str());
+    remove(kOutputFilename.c_str());
   }
   FrameWriter* frame_writer_;
 };

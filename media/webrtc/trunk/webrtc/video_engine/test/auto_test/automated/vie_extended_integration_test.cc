@@ -48,11 +48,6 @@ TEST_F(DISABLED_ON_MAC(ViEExtendedIntegrationTest),
 }
 
 TEST_F(DISABLED_ON_MAC(ViEExtendedIntegrationTest),
-       RunsFileTestWithoutErrors) {
-  tests_->ViEFileExtendedTest();
-}
-
-TEST_F(DISABLED_ON_MAC(ViEExtendedIntegrationTest),
        RunsImageProcessTestWithoutErrors) {
   tests_->ViEImageProcessExtendedTest();
 }

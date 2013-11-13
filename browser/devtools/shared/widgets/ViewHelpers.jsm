@@ -405,7 +405,7 @@ ViewHelpers.Prefs.prototype = {
 /**
  * A generic Item is used to describe children present in a Widget.
  * The label, value and description properties are necessarily strings.
- * Iterable via "for (let childItem in parentItem) { }".
+ * Iterable via "for (let childItem of parentItem) { }".
  *
  * @param object aOwnerView
  *        The owner view creating this item.
@@ -513,7 +513,7 @@ Item.prototype = {
     if (aItem.finalize) {
       aItem.finalize(aItem);
     }
-    for (let childItem in aItem) {
+    for (let childItem of aItem) {
       aItem.remove(childItem);
     }
 
@@ -557,7 +557,7 @@ Item.prototype = {
 
 /**
  * Some generic Widget methods handling Item instances.
- * Iterable via "for (let childItem in wrappedView) { }".
+ * Iterable via "for (let childItem of wrappedView) { }".
  *
  * Usage:
  *   function MyView() {
@@ -1529,7 +1529,7 @@ this.WidgetMethods = {
     if (aItem.finalize) {
       aItem.finalize(aItem);
     }
-    for (let childItem in aItem) {
+    for (let childItem of aItem) {
       aItem.remove(childItem);
     }
 
@@ -1654,9 +1654,7 @@ this.WidgetMethods = {
 /**
  * A generator-iterator over all the items in this container.
  */
-Item.prototype.__iterator__ =
-WidgetMethods.__iterator__ = function() {
-  for (let [, item] of this._itemsByElement) {
-    yield item;
-  }
+Item.prototype["@@iterator"] =
+WidgetMethods["@@iterator"] = function*() {
+  yield* this._itemsByElement.values();
 };

@@ -11,10 +11,10 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_TEST_QUALITY_MODSE_TEST_H_
 #define WEBRTC_MODULES_VIDEO_CODING_TEST_QUALITY_MODSE_TEST_H_
 
-#include "video_processing.h"
-#include "normal_test.h"
-#include "system_wrappers/interface/data_log.h"
-#include "video_coding_defines.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
+#include "webrtc/modules/video_coding/main/test/normal_test.h"
+#include "webrtc/modules/video_processing/main/interface/video_processing.h"
+#include "webrtc/system_wrappers/interface/data_log.h"
 
 int qualityModeTest(const CmdArgs& args);
 

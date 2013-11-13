@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_LINUX_VIDEO_X11_RENDER_H_
 #define WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_LINUX_VIDEO_X11_RENDER_H_
 
-#include "video_render_defines.h"
+#include "webrtc/modules/video_render/include/video_render_defines.h"
 
 #include <X11/Xlib.h>
 #include <map>
@@ -53,6 +53,6 @@ private:
 };
 
 
-} //namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_LINUX_VIDEO_X11_RENDER_H_

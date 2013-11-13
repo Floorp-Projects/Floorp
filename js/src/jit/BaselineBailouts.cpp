@@ -1244,9 +1244,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     IonSpew(IonSpew_BaselineBailouts, "  Reading from snapshot offset %u size %u",
             iter.snapshotOffset(), iter.ionScript()->snapshotsSize());
 
-    if (excInfo)
-        iter.ionScript()->incNumExceptionBailouts();
-    else
+    if (!excInfo)
         iter.ionScript()->incNumBailouts();
     iter.script()->updateBaselineOrIonRaw();
 

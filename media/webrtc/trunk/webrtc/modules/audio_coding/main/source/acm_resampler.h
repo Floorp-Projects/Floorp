@@ -16,6 +16,8 @@
 
 namespace webrtc {
 
+namespace acm1 {
+
 class ACMResampler {
  public:
   ACMResampler();
@@ -30,6 +32,8 @@ class ACMResampler {
  private:
   PushResampler resampler_;
 };
+
+}  // namespace acm1
 
 }  // namespace webrtc
 

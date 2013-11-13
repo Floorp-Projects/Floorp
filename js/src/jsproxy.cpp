@@ -692,7 +692,7 @@ IndicatePropertyNotFound(MutableHandle<PropertyDescriptor> desc)
 }
 
 static bool
-ValueToBool(const Value &v, bool *bp)
+ValueToBool(HandleValue v, bool *bp)
 {
     *bp = ToBoolean(v);
     return true;

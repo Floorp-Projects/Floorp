@@ -411,7 +411,7 @@ js::intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp)
 
         if (arrobj->isNative()) {
             JS_ASSERT(idx < arrobj->getDenseInitializedLength());
-            JSObject::setDenseElementWithType(cx, arrobj, idx, args[elemi]);
+            arrobj->setDenseElementWithType(cx, idx, args[elemi]);
         } else {
             JS_ASSERT(idx < arrobj->as<TypedArrayObject>().length());
             RootedValue tmp(cx, args[elemi]);

@@ -4,6 +4,3 @@
 
 export::
 	$(NSINSTALL) $(srcdir)/resources.pri $(DIST)/bin
-
-install::
-	$(NSINSTALL) $(srcdir)/resources.pri $(DIST)/bin

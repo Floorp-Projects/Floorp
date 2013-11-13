@@ -117,7 +117,8 @@ public:
     virtual bool DoSendAsyncMessage(JSContext* aCx,
                                     const nsAString& aMessage,
                                     const mozilla::dom::StructuredCloneData& aData,
-                                    JS::Handle<JSObject *> aCpows) MOZ_OVERRIDE;
+                                    JS::Handle<JSObject *> aCpows,
+                                    nsIPrincipal* aPrincipal) MOZ_OVERRIDE;
     virtual bool CheckPermission(const nsAString& aPermission) MOZ_OVERRIDE;
     virtual bool CheckManifestURL(const nsAString& aManifestURL) MOZ_OVERRIDE;
     virtual bool CheckAppHasPermission(const nsAString& aPermission) MOZ_OVERRIDE;
@@ -139,10 +140,6 @@ public:
 
     bool IsAlive();
     bool IsForApp();
-
-    void SetChildMemoryReports(const InfallibleTArray<MemoryReport>&
-                               childReports);
-    void UnregisterChildMemoryReporter();
 
     GeckoChildProcessHost* Process() {
         return mSubprocess;
@@ -340,7 +337,7 @@ private:
 
     virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor);
 
-    virtual PMemoryReportRequestParent* AllocPMemoryReportRequestParent();
+    virtual PMemoryReportRequestParent* AllocPMemoryReportRequestParent(const uint32_t& generation);
     virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor);
 
     virtual PTestShellParent* AllocPTestShellParent();
@@ -424,14 +421,17 @@ private:
     virtual bool RecvSyncMessage(const nsString& aMsg,
                                  const ClonedMessageData& aData,
                                  const InfallibleTArray<CpowEntry>& aCpows,
+                                 const IPC::Principal& aPrincipal,
                                  InfallibleTArray<nsString>* aRetvals);
     virtual bool AnswerRpcMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows,
+                                  const IPC::Principal& aPrincipal,
                                   InfallibleTArray<nsString>* aRetvals);
     virtual bool RecvAsyncMessage(const nsString& aMsg,
                                   const ClonedMessageData& aData,
-                                  const InfallibleTArray<CpowEntry>& aCpows);
+                                  const InfallibleTArray<CpowEntry>& aCpows,
+                                  const IPC::Principal& aPrincipal);
 
     virtual bool RecvFilePathUpdateNotify(const nsString& aType,
                                           const nsString& aStorageName,
@@ -499,14 +499,6 @@ private:
 
     uint64_t mChildID;
     int32_t mGeolocationWatchID;
-
-    // This is a reporter holding the reports from the child's last
-    // "child-memory-reporter-update" notification.  To update this, one can
-    // broadcast the topic "child-memory-reporter-request" using the
-    // nsIObserverService.
-    //
-    // Note that this assumes there is at most one child process at a time!
-    nsCOMPtr<nsIMemoryReporter> mChildReporter;
 
     nsString mAppManifestURL;
 

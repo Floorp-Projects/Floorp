@@ -853,10 +853,6 @@ void MediaDecoderStateMachine::DecodeLoop()
          !mStopDecodeThread &&
          (videoPlaying || audioPlaying))
   {
-#ifdef MOZ_DASH
-    mReader->PrepareToDecode();
-#endif
-
     // We don't want to consider skipping to the next keyframe if we've
     // only just started up the decode loop, so wait until we've decoded
     // some frames before enabling the keyframe skip logic on video.
@@ -1307,8 +1303,6 @@ void MediaDecoderStateMachine::StopPlayback()
 {
   LOG(PR_LOG_DEBUG, ("%p StopPlayback()", mDecoder.get()));
 
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
-               "Should be on state machine thread or the decoder thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
   mDecoder->NotifyPlaybackStopped();

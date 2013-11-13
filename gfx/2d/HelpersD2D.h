@@ -143,6 +143,11 @@ static inline Matrix ToMatrix(const D2D1_MATRIX_3X2_F &aTransform)
                 aTransform._31, aTransform._32);
 }
 
+static inline Point ToPoint(const D2D1_POINT_2F &aPoint)
+{
+  return Point(aPoint.x, aPoint.y);
+}
+
 static inline DXGI_FORMAT DXGIFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
@@ -405,7 +410,7 @@ CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
                                   capStyle, joinStyle,
                                   aStrokeOptions.mMiterLimit,
                                   D2D1_DASH_STYLE_CUSTOM,
-                                  aStrokeOptions.mDashOffset),
+                                  aStrokeOptions.mDashOffset / lineWidth),
       &dash[0], // data() is not C++98, although it's in recent gcc
                 // and VC10's STL
       dash.size(),

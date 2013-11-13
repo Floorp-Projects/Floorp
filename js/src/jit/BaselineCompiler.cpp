@@ -489,7 +489,14 @@ BaselineCompiler::emitStackCheck(bool earlyCheck)
     pushArg(Imm32(tolerance));
     masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
     pushArg(R1.scratchReg());
-    if (!callVM(CheckOverRecursedWithExtraInfo, /*preInitialize=*/earlyCheck))
+
+    CallVMPhase phase = POST_INITIALIZE;
+    if (earlyCheck)
+        phase = PRE_INITIALIZE;
+    else if (needsEarlyStackCheck())
+        phase = CHECK_OVER_RECURSED;
+
+    if (!callVM(CheckOverRecursedWithExtraInfo, phase))
         return false;
 
     masm.bind(&skipCall);
@@ -536,6 +543,10 @@ static const VMFunction HeavyweightFunPrologueInfo =
 bool
 BaselineCompiler::initScopeChain()
 {
+    CallVMPhase phase = POST_INITIALIZE;
+    if (needsEarlyStackCheck())
+        phase = CHECK_OVER_RECURSED;
+
     RootedFunction fun(cx, function());
     if (fun) {
         // Use callee->environment as scope chain. Note that we do
@@ -554,7 +565,7 @@ BaselineCompiler::initScopeChain()
             masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
             pushArg(R0.scratchReg());
 
-            if (!callVM(HeavyweightFunPrologueInfo))
+            if (!callVM(HeavyweightFunPrologueInfo, phase))
                 return false;
         }
     } else {
@@ -568,7 +579,7 @@ BaselineCompiler::initScopeChain()
             masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
             pushArg(R0.scratchReg());
 
-            if (!callVM(StrictEvalPrologueInfo))
+            if (!callVM(StrictEvalPrologueInfo, phase))
                 return false;
         }
     }
@@ -1907,7 +1918,7 @@ Address
 BaselineCompiler::getScopeCoordinateAddressFromObject(Register objReg, Register reg)
 {
     ScopeCoordinate sc(pc);
-    Shape *shape = ScopeCoordinateToStaticScopeShape(cx, script, pc);
+    Shape *shape = ScopeCoordinateToStaticScopeShape(script, pc);
 
     Address addr;
     if (shape->numFixedSlots() <= sc.slot) {
@@ -1950,7 +1961,7 @@ BaselineCompiler::emit_JSOP_CALLALIASEDVAR()
 bool
 BaselineCompiler::emit_JSOP_SETALIASEDVAR()
 {
-    JSScript *outerScript = ScopeCoordinateFunctionScript(cx, script, pc);
+    JSScript *outerScript = ScopeCoordinateFunctionScript(script, pc);
     if (outerScript && outerScript->treatAsRunOnce) {
         // Type updates for this operation might need to be tracked, so treat
         // this as a SETPROP.
@@ -2908,38 +2919,22 @@ BaselineCompiler::emit_JSOP_RUNONCE()
     return callVM(RunOnceScriptPrologueInfo);
 }
 
-static bool
-DoCreateRestParameter(JSContext *cx, BaselineFrame *frame, MutableHandleValue res)
-{
-    unsigned numFormals = frame->numFormalArgs() - 1;
-    unsigned numActuals = frame->numActualArgs();
-    unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
-    Value *rest = frame->argv() + numFormals;
-
-    JSObject *obj = NewDenseCopiedArray(cx, numRest, rest, nullptr);
-    if (!obj)
-        return false;
-    types::FixRestArgumentsType(cx, obj);
-    res.setObject(*obj);
-    return true;
-}
-
-typedef bool(*DoCreateRestParameterFn)(JSContext *cx, BaselineFrame *, MutableHandleValue);
-static const VMFunction DoCreateRestParameterInfo =
-    FunctionInfo<DoCreateRestParameterFn>(DoCreateRestParameter);
-
 bool
 BaselineCompiler::emit_JSOP_REST()
 {
     frame.syncStack(0);
 
-    prepareVMCall();
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-    pushArg(R0.scratchReg());
+    JSObject *templateObject = NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject);
+    if (!templateObject)
+        return false;
+    types::FixRestArgumentsType(cx, templateObject);
 
-    if (!callVM(DoCreateRestParameterInfo))
+    // Call IC.
+    ICRest_Fallback::Compiler compiler(cx, templateObject);
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
+    // Mark R0 as pushed stack value.
     frame.push(R0);
     return true;
 }

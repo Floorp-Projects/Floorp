@@ -10,17 +10,17 @@
 
 #include <stdio.h>
 
-#include "gtest/gtest.h"
-#include "modules/utility/interface/process_thread.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/utility/interface/process_thread.h"
 #include "webrtc/modules/video_capture/include/video_capture.h"
 #include "webrtc/modules/video_capture/include/video_capture_factory.h"
-#include "common_video/interface/i420_video_frame.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "system_wrappers/interface/scoped_refptr.h"
-#include "system_wrappers/interface/sleep.h"
-#include "system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/system_wrappers/interface/scoped_refptr.h"
+#include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
 
 using webrtc::CriticalSectionWrapper;
 using webrtc::CriticalSectionScoped;
@@ -142,7 +142,7 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
  public:
   TestVideoCaptureCallback()
     : capture_cs_(CriticalSectionWrapper::CreateCriticalSection()),
-      capture_delay_(0),
+      capture_delay_(-1),
       last_render_time_ms_(0),
       incoming_frames_(0),
       timing_warnings_(0),
@@ -204,7 +204,7 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
     capability_= capability;
     incoming_frames_ = 0;
     last_render_time_ms_ = 0;
-    capture_delay_ = 0;
+    capture_delay_ = -1;
   }
   int incoming_frames() {
     CriticalSectionScoped cs(capture_cs_.get());
@@ -356,7 +356,7 @@ TEST_F(VideoCaptureTest, CreateDelete) {
     // Make sure 5 frames are captured.
     EXPECT_TRUE_WAIT(capture_observer.incoming_frames() >= 5, kTimeOut);
 
-    EXPECT_GT(capture_observer.capture_delay(), 0);
+    EXPECT_GE(capture_observer.capture_delay(), 0);
 
     int64_t stop_time = TickTime::MillisecondTimestamp();
     EXPECT_EQ(0, module->StopCapture());
@@ -639,4 +639,3 @@ TEST_F(VideoCaptureExternalTest, Rotation) {
   EXPECT_EQ(0, capture_input_interface_->IncomingFrame(test_buffer.get(),
     length, capture_callback_.capability(), 0));
 }
-

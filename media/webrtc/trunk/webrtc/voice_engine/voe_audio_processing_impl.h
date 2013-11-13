@@ -107,6 +107,6 @@ class VoEAudioProcessingImpl : public VoEAudioProcessing {
   voe::SharedData* _shared;
 };
 
-}  //  namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_VOICE_ENGINE_VOE_AUDIO_PROCESSING_IMPL_H

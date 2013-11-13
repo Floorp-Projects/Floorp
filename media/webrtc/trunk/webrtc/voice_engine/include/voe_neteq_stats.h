@@ -40,6 +40,6 @@ protected:
     virtual ~VoENetEqStats() {}
 };
 
-}   // namespace webrtc
+}  // namespace webrtc
 
 #endif    // #ifndef WEBRTC_VOICE_ENGINE_VOE_NETEQ_STATS_H

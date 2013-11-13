@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_COMMON_TYPES_H
-#define WEBRTC_COMMON_TYPES_H
+#ifndef WEBRTC_COMMON_TYPES_H_
+#define WEBRTC_COMMON_TYPES_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 
 #if defined(_MSC_VER)
 // Disable "new behavior: elements of array will be default initialized"
@@ -32,6 +32,16 @@
 #endif
 
 #define RTP_PAYLOAD_NAME_SIZE 32
+
+#if defined(WEBRTC_WIN)
+// Compares two strings without regard to case.
+#define STR_CASE_CMP(s1, s2) ::_stricmp(s1, s2)
+// Compares characters of two strings without regard to case.
+#define STR_NCASE_CMP(s1, s2, n) ::_strnicmp(s1, s2, n)
+#else
+#define STR_CASE_CMP(s1, s2) ::strcasecmp(s1, s2)
+#define STR_NCASE_CMP(s1, s2, n) ::strncasecmp(s1, s2, n)
+#endif
 
 namespace webrtc {
 
@@ -227,7 +237,7 @@ struct CodecInst
     int plfreq;
     int pacsize;
     int channels;
-    int rate;
+    int rate;  // bits/sec unlike {start,min,max}Bitrate elsewhere in this file!
 };
 
 enum FrameType
@@ -525,9 +535,9 @@ struct SimulcastStream
     unsigned short      width;
     unsigned short      height;
     unsigned char       numberOfTemporalLayers;
-    unsigned int        maxBitrate;
-    unsigned int        targetBitrate;
-    unsigned int        minBitrate;
+    unsigned int        maxBitrate;  // kilobits/sec.
+    unsigned int        targetBitrate;  // kilobits/sec.
+    unsigned int        minBitrate;  // kilobits/sec.
     unsigned int        qpMax; // minimum quality
 };
 
@@ -546,9 +556,9 @@ struct VideoCodec
     unsigned short      width;
     unsigned short      height;
 
-    unsigned int        startBitrate;
-    unsigned int        maxBitrate;
-    unsigned int        minBitrate;
+    unsigned int        startBitrate;  // kilobits/sec.
+    unsigned int        maxBitrate;  // kilobits/sec.
+    unsigned int        minBitrate;  // kilobits/sec.
     unsigned char       maxFramerate;
 
     VideoCodecUnion     codecSpecific;
@@ -590,5 +600,8 @@ struct OverUseDetectorOptions {
   double initial_var_noise;
   double initial_threshold;
 };
+
 }  // namespace webrtc
-#endif  // WEBRTC_COMMON_TYPES_H
+
+#endif  // WEBRTC_COMMON_TYPES_H_
+

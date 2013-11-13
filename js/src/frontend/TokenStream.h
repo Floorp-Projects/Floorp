@@ -408,7 +408,7 @@ class MOZ_STACK_CLASS TokenStream
   public:
     typedef Vector<jschar, 32> CharBuffer;
 
-    TokenStream(ExclusiveContext *cx, const CompileOptions &options,
+    TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &options,
                 const jschar *base, size_t length, StrictModeGetter *smg);
 
     ~TokenStream();
@@ -734,7 +734,7 @@ class MOZ_STACK_CLASS TokenStream
         return cx;
     }
 
-    const CompileOptions &options() const {
+    const ReadOnlyCompileOptions &options() const {
         return options_;
     }
 
@@ -878,7 +878,7 @@ class MOZ_STACK_CLASS TokenStream
     void updateFlagsForEOL();
 
     // Options used for parsing/tokenizing.
-    const CompileOptions &options_;
+    const ReadOnlyCompileOptions &options_;
 
     Token               tokens[ntokens];    // circular token buffer
     unsigned            cursor;             // index of last parsed token

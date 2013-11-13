@@ -137,6 +137,6 @@ private:
     // Bitrate used for video payload and RTP headers
     Bitrate                   _videoBitrate;
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_SENDER_VIDEO_H_

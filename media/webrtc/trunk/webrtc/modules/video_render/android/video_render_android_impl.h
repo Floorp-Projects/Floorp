@@ -12,8 +12,10 @@
 #define WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_ANDROID_VIDEO_RENDER_ANDROID_IMPL_H_
 
 #include <jni.h>
+
+#include <map>
+
 #include "webrtc/modules/video_render/i_video_render.h"
-#include "map_wrapper.h"
 
 
 namespace webrtc {
@@ -136,7 +138,8 @@ class VideoRenderAndroid: IVideoRender {
   bool JavaRenderThreadProcess();
 
   // Map with streams to render.
-  MapWrapper _streamsMap;
+  typedef std::map<int32_t, AndroidStream*> AndroidStreamMap;
+  AndroidStreamMap _streamsMap;
   // True if the _javaRenderThread thread shall be detached from the JVM.
   bool _javaShutDownFlag;
   EventWrapper& _javaShutdownEvent;
@@ -146,6 +149,6 @@ class VideoRenderAndroid: IVideoRender {
   ThreadWrapper* _javaRenderThread;
 };
 
-} //namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_ANDROID_VIDEO_RENDER_ANDROID_IMPL_H_

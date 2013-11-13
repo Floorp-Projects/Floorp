@@ -11,12 +11,12 @@
 #ifndef WEBRTC_MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_
 #define WEBRTC_MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_
 
-#include "critical_section_wrapper.h"
-#include "event_wrapper.h"
-#include "list_wrapper.h"
-#include "process_thread.h"
-#include "thread_wrapper.h"
-#include "typedefs.h"
+#include "webrtc/modules/utility/interface/process_thread.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/list_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 class ProcessThreadImpl : public ProcessThread
@@ -42,6 +42,6 @@ private:
     ListWrapper             _modules;
     ThreadWrapper*          _thread;
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_

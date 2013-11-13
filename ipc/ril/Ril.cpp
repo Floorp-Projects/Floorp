@@ -144,7 +144,7 @@ ConnectWorkerToRIL::RunTask(JSContext *aCx)
     JSObject *workerGlobal = JS::CurrentGlobalOrNull(aCx);
 
     return !!JS_DefineFunction(aCx, workerGlobal,
-                               "postRILMessage", PostToRIL, 1, 0);
+                               "postRILMessage", PostToRIL, 2, 0);
 }
 
 class DispatchRILEvent : public WorkerTask

@@ -12,7 +12,6 @@
 
 #include <assert.h>
 
-#include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/source/encoded_frame.h"
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/modules/video_coding/main/source/media_opt_util.h"
@@ -62,8 +61,8 @@ void VCMReceiver::Reset() {
 }
 
 int32_t VCMReceiver::Initialize() {
-  CriticalSectionScoped cs(crit_sect_);
   Reset();
+  CriticalSectionScoped cs(crit_sect_);
   if (!master_) {
     SetNackMode(kNoNack, -1, -1);
   }
@@ -123,7 +122,6 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(
     int64_t& next_render_time_ms,
     bool render_timing,
     VCMReceiver* dual_receiver) {
-  TRACE_EVENT0("webrtc", "Recv::FrameForDecoding");
   const int64_t start_time_ms = clock_->TimeInMilliseconds();
   uint32_t frame_timestamp = 0;
   // Exhaust wait time to get a complete frame for decoding.
@@ -158,11 +156,12 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(
   // Assume that render timing errors are due to changes in the video stream.
   if (next_render_time_ms < 0) {
     timing_error = true;
-  } else if (next_render_time_ms < now_ms - max_video_delay_ms_) {
+  } else if (abs(next_render_time_ms - now_ms) > max_video_delay_ms_) {
     WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCoding,
                  VCMId(vcm_id_, receiver_id_),
-                 "This frame should have been rendered more than %u ms ago."
-                 "Flushing jitter buffer and resetting timing.",
+                 "This frame is out of our delay bounds, resetting jitter "
+                 "buffer: %d > %d",
+                 static_cast<int>(abs(next_render_time_ms - now_ms)),
                  max_video_delay_ms_);
     timing_error = true;
   } else if (static_cast<int>(timing_->TargetVideoDelay()) >
@@ -183,7 +182,6 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(
 
   if (!render_timing) {
     // Decode frame as close as possible to the render timestamp.
-    TRACE_EVENT0("webrtc", "FrameForRendering");
     const int32_t available_wait_time = max_wait_time_ms -
         static_cast<int32_t>(clock_->TimeInMilliseconds() - start_time_ms);
     uint16_t new_max_wait_time = static_cast<uint16_t>(
@@ -207,6 +205,8 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(
     return NULL;
   }
   frame->SetRenderTime(next_render_time_ms);
+  TRACE_EVENT_ASYNC_STEP1("webrtc", "Video", frame->TimeStamp(),
+                          "SetRenderTS", "render_time", next_render_time_ms);
   if (dual_receiver != NULL) {
     dual_receiver->UpdateState(*frame);
   }
@@ -314,14 +314,12 @@ VCMReceiverState VCMReceiver::State() const {
   return state_;
 }
 
-void VCMReceiver::SetDecodeWithErrors(bool enable){
-  CriticalSectionScoped cs(crit_sect_);
-  jitter_buffer_.DecodeWithErrors(enable);
+void VCMReceiver::SetDecodeErrorMode(VCMDecodeErrorMode decode_error_mode) {
+  jitter_buffer_.SetDecodeErrorMode(decode_error_mode);
 }
 
-bool VCMReceiver::DecodeWithErrors() const {
-  CriticalSectionScoped cs(crit_sect_);
-  return jitter_buffer_.decode_with_errors();
+VCMDecodeErrorMode VCMReceiver::DecodeErrorMode() const {
+  return jitter_buffer_.decode_error_mode();
 }
 
 int VCMReceiver::SetMinReceiverDelay(int desired_delay_ms) {
@@ -329,7 +327,6 @@ int VCMReceiver::SetMinReceiverDelay(int desired_delay_ms) {
   if (desired_delay_ms < 0 || desired_delay_ms > kMaxReceiverDelayMs) {
     return -1;
   }
-  jitter_buffer_.SetMaxJitterEstimate(desired_delay_ms > 0);
   max_video_delay_ms_ = desired_delay_ms + kMaxVideoDelayMs;
   // Initializing timing to the desired delay.
   timing_->set_min_playout_delay(desired_delay_ms);

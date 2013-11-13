@@ -33,6 +33,6 @@ class CriticalSectionWindows : public CriticalSectionWrapper {
   friend class ConditionVariableNativeWin;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_SYSTEM_WRAPPERS_SOURCE_CRITICAL_SECTION_WIN_H_

@@ -36,15 +36,23 @@ for (var index = 0; index < propsToCheck.length; index++) {
 }
 
 onconnect = function(event) {
-  if (!(event instanceof WorkerMessageEvent)) {
-    throw new Error("'connect' event is not a WorkerMessageEvent!");
+  if (!("SharedWorkerGlobalScope" in self)) {
+    throw new Error("SharedWorkerGlobalScope should be visible!");
+  }
+  if (!(self instanceof SharedWorkerGlobalScope)) {
+    throw new Error("The global should be a SharedWorkerGlobalScope!");
+  }
+  if (!(self instanceof WorkerGlobalScope)) {
+    throw new Error("The global should be a WorkerGlobalScope!");
+  }
+  if ("DedicatedWorkerGlobalScope" in self) {
+    throw new Error("DedicatedWorkerGlobalScope should not be visible!");
+  }
+  if (!(event instanceof MessageEvent)) {
+    throw new Error("'connect' event is not a MessageEvent!");
   }
   if (!("ports" in event)) {
     throw new Error("'connect' event doesn't have a 'ports' property!");
-  }
-  if (!Array.isArray(event.ports)) {
-    throw new Error("'connect' event has 'ports' property that isn't an " +
-                    "Array!");
   }
   if (event.ports.length != 1) {
     throw new Error("'connect' event has a 'ports' property with length '" +
@@ -53,28 +61,26 @@ onconnect = function(event) {
   if (!event.ports[0]) {
     throw new Error("'connect' event has a null 'ports[0]' property!");
   }
-  if (!(event.ports[0] instanceof WorkerMessagePort)) {
+  if (!(event.ports[0] instanceof MessagePort)) {
     throw new Error("'connect' event has a 'ports[0]' property that isn't a " +
                     "MessagePort!");
+  }
+  if (!(event.ports[0] == event.source)) {
+    throw new Error("'connect' event source property is incorrect!");
   }
   if (event.data) {
     throw new Error("'connect' event has data: " + event.data);
   }
 
   event.ports[0].onmessage = function(event) {
-    if (!(event instanceof WorkerMessageEvent)) {
-      throw new Error("'message' event is not a WorkerMessageEvent!");
+    if (!(event instanceof MessageEvent)) {
+      throw new Error("'message' event is not a MessageEvent!");
     }
     if (!("ports" in event)) {
       throw new Error("'message' event doesn't have a 'ports' property!");
     }
-    if (!Array.isArray(event.ports)) {
-      throw new Error("'message' event has 'ports' property that isn't an " +
-                      "Array!");
-    }
-    if (event.ports.length) {
-      throw new Error("'message' event has a 'ports' property with length '" +
-                      event.ports.length + "'!");
+    if (!(event.ports === null)) {
+      throw new Error("'message' event has a non-null 'ports' property!");
     }
     event.target.postMessage(event.data);
     throw new Error(event.data);

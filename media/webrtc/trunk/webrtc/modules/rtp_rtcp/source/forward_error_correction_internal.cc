@@ -10,8 +10,8 @@
 
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction_internal.h"
 
-#include <cassert>
-#include <cstring>
+#include <assert.h>
+#include <string.h>
 
 #include "webrtc/modules/rtp_rtcp/source/fec_private_tables_bursty.h"
 #include "webrtc/modules/rtp_rtcp/source/fec_private_tables_random.h"
@@ -370,7 +370,7 @@ void GeneratePacketMasks(int num_media_packets, int num_fec_packets,
                           num_mask_bytes, packet_mask, mask_table);
 
   }  // End of UEP modification
-}    //End of GetPacketMasks
+}  //End of GetPacketMasks
 
 }  // namespace internal
 }  // namespace webrtc

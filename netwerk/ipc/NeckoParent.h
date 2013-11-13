@@ -116,6 +116,12 @@ protected:
                                                const uint16_t& aBacklog,
                                                const nsString& aBinaryType);
   virtual bool DeallocPTCPServerSocketParent(PTCPServerSocketParent*);
+  virtual PUDPSocketParent* AllocPUDPSocketParent(const nsCString& aHost,
+                                                  const uint16_t& aPort);
+  virtual bool RecvPUDPSocketConstructor(PUDPSocketParent*,
+                                         const nsCString& aHost,
+                                         const uint16_t& aPort);
+  virtual bool DeallocPUDPSocketParent(PUDPSocketParent*);
   virtual bool RecvHTMLDNSPrefetch(const nsString& hostname,
                                    const uint16_t& flags);
   virtual bool RecvCancelHTMLDNSPrefetch(const nsString& hostname,

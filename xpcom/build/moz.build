@@ -17,8 +17,9 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'FileLocation.h',
-    'mozPoisonWrite.h',
+    'LateWriteChecks.h',
     'Omnijar.h',
+    'PoisonIOInterposer.h',
     'ServiceList.h',
     'Services.h',
     'XPCOM.h',
@@ -27,19 +28,15 @@ EXPORTS.mozilla += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla += ['perfprobe.h']
     SOURCES += [
-        'mozPoisonWriteBase.cpp',
-        'mozPoisonWriteWin.cpp',
         'perfprobe.cpp',
+        'PoisonIOInterposerBase.cpp',
+        'PoisonIOInterposerWin.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'Darwin':
     SOURCES += [
         'mach_override.c',
-        'mozPoisonWriteBase.cpp',
-        'mozPoisonWriteMac.cpp',
-    ]
-else:
-    SOURCES += [
-        'mozPoisonWriteStub.cpp',
+        'PoisonIOInterposerBase.cpp',
+        'PoisonIOInterposerMac.cpp',
     ]
 
 include('../glue/objs.mozbuild')
@@ -50,6 +47,7 @@ SOURCES += xpcom_glue_src_cppsrcs
 SOURCES += [
     'FileLocation.cpp',
     'FrozenFunctions.cpp',
+    'LateWriteChecks.cpp',
     'nsXPComInit.cpp',
     'nsXPCOMStrings.cpp',
     'Omnijar.cpp',

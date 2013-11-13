@@ -30,6 +30,6 @@ IPin* GetInputPin(IBaseFilter* filter);
 IPin* GetOutputPin(IBaseFilter* filter, REFGUID Category);
 BOOL PinMatchesCategory(IPin *pPin, REFGUID Category);
 
-} // namespace videocapturemodule
-} // namespace webrtc
+}  // namespace videocapturemodule
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_HELP_FUNCTIONS_DS_H_

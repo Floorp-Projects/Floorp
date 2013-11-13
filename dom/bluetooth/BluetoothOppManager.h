@@ -82,17 +82,6 @@ public:
     aName.AssignLiteral("OPP");
   }
 
-  /*
-   * If an application wants to send a file, first, it needs to
-   * call Connect() to create a valid RFCOMM connection. After
-   * that, call SendFile()/StopSendingFile() to control file-sharing
-   * process. During the file transfering process, the application
-   * will receive several system messages which contain the processed
-   * percentage of file. At the end, the application will get another
-   * system message indicating that the process is complete, then it can
-   * either call Disconnect() to close RFCOMM connection or start another
-   * file-sending thread via calling SendFile() again.
-   */
   virtual void Connect(const nsAString& aDeviceAddress,
                        BluetoothProfileController* aController) MOZ_OVERRIDE;
   virtual void Disconnect(BluetoothProfileController* aController) MOZ_OVERRIDE;
@@ -222,7 +211,6 @@ private:
   nsCOMPtr<nsIOutputStream> mOutputStream;
   nsCOMPtr<nsIInputStream> mInputStream;
   nsCOMPtr<nsIVolumeMountLock> mMountLock;
-  nsRefPtr<BluetoothProfileController> mController;
   nsRefPtr<DeviceStorageFile> mDsFile;
 
   // If a connection has been established, mSocket will be the socket

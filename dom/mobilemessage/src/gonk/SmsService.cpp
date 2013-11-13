@@ -149,6 +149,19 @@ SmsService::RemoveSilentNumber(const nsAString& aNumber)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SmsService::GetSmscAddress(uint32_t aServiceId,
+                           nsIMobileMessageCallback *aRequest)
+{
+  nsCOMPtr<nsIRadioInterface> radioInterface;
+  if (mRil) {
+    mRil->GetRadioInterface(aServiceId, getter_AddRefs(radioInterface));
+  }
+  NS_ENSURE_TRUE(radioInterface, NS_ERROR_FAILURE);
+
+  return radioInterface->GetSmscAddress(aRequest);
+}
+
 } // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

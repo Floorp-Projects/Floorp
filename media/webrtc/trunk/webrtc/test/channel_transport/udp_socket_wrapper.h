@@ -62,8 +62,7 @@ public:
 
     // Start receiving UDP data.
     virtual bool StartReceiving();
-    virtual inline bool StartReceiving(const uint32_t /*receiveBuffers*/)
-    {return StartReceiving();}
+    virtual bool StartReceiving(const uint32_t /*receiveBuffers*/);
     // Stop receiving UDP data.
     virtual bool StopReceiving();
 
@@ -77,7 +76,7 @@ public:
     virtual int32_t SetTOS(const int32_t serviceType) = 0;
 
     // Set 802.1Q PCP field (802.1p) for outgoing VLAN traffic.
-    virtual int32_t SetPCP(const int32_t /*pcp*/) {return -1;}
+    virtual int32_t SetPCP(const int32_t /*pcp*/);
 
     // Send buf of length len to the address specified by to.
     virtual int32_t SendTo(const int8_t* buf, int32_t len,
@@ -95,7 +94,7 @@ public:
                         const SocketAddress &stRemName,
                         int32_t overrideDSCP = 0) = 0;
 
-    virtual uint32_t ReceiveBuffers() {return 0;};
+    virtual uint32_t ReceiveBuffers();
 
 protected:
     // Creating the socket is done via CreateSocket().

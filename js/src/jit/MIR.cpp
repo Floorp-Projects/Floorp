@@ -818,7 +818,7 @@ MPhi::reserveLength(size_t length)
 {
     // Initializes a new MPhi to have an Operand vector of at least the given
     // capacity. This permits use of addInput() instead of addInputSlow(), the
-    // latter of which may call realloc().
+    // latter of which may call realloc_().
     JS_ASSERT(numOperands() == 0);
 #if DEBUG
     capacity_ = length;
@@ -968,7 +968,7 @@ MPhi::addInputSlow(MDefinition *ins, bool *ptypeChange)
     uint32_t index = inputs_.length();
     bool performingRealloc = !inputs_.canAppendWithoutRealloc(1);
 
-    // Remove all MUses from all use lists, in case realloc() moves.
+    // Remove all MUses from all use lists, in case realloc_() moves.
     if (performingRealloc) {
         for (uint32_t i = 0; i < index; i++) {
             MUse *use = &inputs_[i];
@@ -2459,12 +2459,12 @@ MNot::foldsTo(bool useValueNumbers)
 {
     // Fold if the input is constant
     if (operand()->isConstant()) {
-        const Value &v = operand()->toConstant()->value();
+        bool result = operand()->toConstant()->valueToBoolean();
         if (type() == MIRType_Int32)
-            return MConstant::New(Int32Value(!ToBoolean(v)));
+            return MConstant::New(Int32Value(!result));
 
-        // ToBoolean can cause no side effects, so this is safe.
-        return MConstant::New(BooleanValue(!ToBoolean(v)));
+        // ToBoolean can't cause side effects, so this is safe.
+        return MConstant::New(BooleanValue(!result));
     }
 
     // NOT of an undefined or null value is always true
@@ -2928,8 +2928,11 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                 break;
 
             types::TypeObjectKey *typeObj = types::TypeObjectKey::get(obj);
+            if (propertycx)
+                typeObj->ensureTrackedProperty(propertycx, NameToId(name));
+
             if (!typeObj->unknownProperties()) {
-                types::HeapTypeSetKey property = typeObj->property(NameToId(name), propertycx);
+                types::HeapTypeSetKey property = typeObj->property(NameToId(name));
                 if (property.maybeTypes()) {
                     types::TypeSet::TypeList types;
                     if (!property.maybeTypes()->enumerateTypes(&types))

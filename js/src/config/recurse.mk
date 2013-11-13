@@ -112,6 +112,7 @@ ifeq ($(CURRENT_TIER),export)
 $(addsuffix /$(CURRENT_TIER),$(filter-out config,$(CURRENT_DIRS))): config/$(CURRENT_TIER)
 endif
 
+ifdef COMPILE_ENVIRONMENT
 ifneq (,$(filter libs binaries,$(CURRENT_TIER)))
 # When doing a "libs" build, target_libs.mk ensures the interesting dependency data
 # is available in the "binaries" stamp. Once recursion is done, aggregate all that
@@ -138,6 +139,8 @@ endif
 endif
 
 DIST_GARBAGE += binaries-deps.mk binaries-deps
+
+endif
 
 else
 
@@ -209,6 +212,8 @@ endif
 endif
 endif
 
+ifdef COMPILE_ENVIRONMENT
+
 # Aggregate all dependency files relevant to a binaries build except in
 # the mozilla top-level directory.
 ifneq (_.,$(recurse_targets)_$(DEPTH))
@@ -225,6 +230,8 @@ endif
 binaries libs:: $(TARGETS) $(BINARIES_PP)
 ifneq (_.,$(recurse_targets)_$(DEPTH))
 	@$(if $(or $(recurse_targets),$^),$(call py_action,link_deps,-o binaries --group-all $(if $(want_abspaths),--abspaths )--topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(ALL_DEP_FILES)))
+endif
+
 endif
 
 endif # ifdef MOZ_PSEUDO_DERECURSE

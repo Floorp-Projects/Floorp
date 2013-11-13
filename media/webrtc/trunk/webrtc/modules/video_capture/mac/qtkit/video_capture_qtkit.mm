@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "video_capture_qtkit.h"
-#import "video_capture_qtkit_objc.h"
-#import "video_capture_qtkit_info_objc.h"
-#include "trace.h"
-#include "critical_section_wrapper.h"
-#include "../../video_capture_config.h"
+#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit.h"
+#import "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info_objc.h"
+#import "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_objc.h"
+#include "webrtc/modules/video_capture/video_capture_config.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 class nsAutoreleasePool {
 public:
@@ -228,4 +228,3 @@ struct VideoCaptureCapabilityMacQTKit:public VideoCaptureCapability
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc
-

@@ -54,29 +54,6 @@ TEST_F(CallReportTest, DISABLED_GetRoundTripTimesReturnsValuesIfRtcpIsOn) {
   EXPECT_NE(-1, delays.max);
 }
 
-TEST_F(CallReportTest, DeadOrAliveSummaryFailsIfDeadOrAliveTrackingNotActive) {
-  int count_the_dead;
-  int count_the_living;
-  EXPECT_EQ(-1, voe_call_report_->GetDeadOrAliveSummary(channel_,
-                                                        count_the_dead,
-                                                        count_the_living));
-}
-
-TEST_F(CallReportTest,
-       DeadOrAliveSummarySucceedsIfDeadOrAliveTrackingIsActive) {
-  EXPECT_EQ(0, voe_network_->SetPeriodicDeadOrAliveStatus(channel_, true, 1));
-  Sleep(1200);
-
-  int count_the_dead;
-  int count_the_living;
-  EXPECT_EQ(0, voe_call_report_->GetDeadOrAliveSummary(channel_,
-                                                       count_the_dead,
-                                                       count_the_living));
-
-  EXPECT_GE(count_the_dead, 0);
-  EXPECT_GE(count_the_living, 0);
-}
-
 TEST_F(CallReportTest, WriteReportToFileFailsOnBadInput) {
   EXPECT_EQ(-1, voe_call_report_->WriteReportToFile(NULL));
 }

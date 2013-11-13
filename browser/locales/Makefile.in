@@ -120,14 +120,6 @@ libs:: $(addprefix generic/profile/,$(PROFILE_FILES))
 libs:: $(call MERGE_FILES,$(addprefix profile/chrome/,$(PROFILE_CHROME)))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile/chrome
 
-install:: $(DESTDIR)$(mozappdir)/defaults/profile/bookmarks.html ;
-
-install:: $(addprefix generic/profile/,$(PROFILE_FILES))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
-
-install:: $(call MERGE_FILES,$(addprefix profile/chrome/,$(PROFILE_CHROME)))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile/chrome
-
 # metro build calls back here for search engine plugins
 searchplugins: $(addprefix $(FINAL_TARGET)/searchplugins/,$(SEARCHPLUGINS))
 .PHONY: searchplugins

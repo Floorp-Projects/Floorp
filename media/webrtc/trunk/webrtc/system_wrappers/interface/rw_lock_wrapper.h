@@ -63,6 +63,6 @@ class WriteLockScoped {
   RWLockWrapper& rw_lock_;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_RW_LOCK_WRAPPER_H_

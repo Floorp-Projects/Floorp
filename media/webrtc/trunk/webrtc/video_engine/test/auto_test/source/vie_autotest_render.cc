@@ -58,7 +58,8 @@ public:
 
     virtual int DeliverFrame(unsigned char* buffer, int bufferSize,
                              uint32_t time_stamp,
-                             int64_t render_time) {
+                             int64_t render_time,
+                             void* /*handle*/) {
       if (bufferSize != CalcBufferSize(webrtc::kI420, _width, _height)) {
         ViETest::Log("Incorrect render buffer received, of length = %d\n",
                      bufferSize);
@@ -66,6 +67,8 @@ public:
       }
       return 0;
     }
+
+    virtual bool IsTextureSupported() { return false; }
 
 public:
     virtual ~ViEAutoTestExternalRenderer()

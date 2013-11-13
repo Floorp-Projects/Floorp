@@ -13,21 +13,15 @@
 
 #include <vector>
 
-#include "common_video/interface/video_image.h"
+#include "webrtc/common_video/interface/video_image.h"
 
 namespace webrtc {
 namespace test {
 
 // Contains statistics of a single frame that has been processed.
 struct FrameStatistic {
-  FrameStatistic() :
-      encoding_successful(false), decoding_successful(false),
-      encode_return_code(0), decode_return_code(0),
-      encode_time_in_us(0), decode_time_in_us(0),
-      frame_number(0), packets_dropped(0), total_packets(0),
-      bit_rate_in_kbps(0), encoded_frame_length_in_bytes(0),
-      frame_type(kDeltaFrame) {
-  };
+  FrameStatistic();
+
   bool encoding_successful;
   bool decoding_successful;
   int encode_return_code;
@@ -35,7 +29,7 @@ struct FrameStatistic {
   int encode_time_in_us;
   int decode_time_in_us;
   int frame_number;
-  // How many packets were discarded of the encoded frame data (if any)
+  // How many packets were discarded of the encoded frame data (if any).
   int packets_dropped;
   int total_packets;
 

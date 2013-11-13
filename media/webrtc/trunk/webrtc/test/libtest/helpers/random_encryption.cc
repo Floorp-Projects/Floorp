@@ -10,9 +10,10 @@
 
 #include "webrtc/test/libtest/include/random_encryption.h"
 
+#include <math.h>
+#include <stdlib.h>
+
 #include <algorithm>
-#include <cmath>
-#include <cstdlib>
 
 #include "webrtc/video_engine/vie_defines.h"
 

@@ -232,6 +232,6 @@ protected:
     virtual ~VoEAudioProcessing() {}
 };
 
-}  //  namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_VOICE_ENGINE_VOE_AUDIO_PROCESSING_H

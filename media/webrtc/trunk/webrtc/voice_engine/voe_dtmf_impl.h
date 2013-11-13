@@ -61,6 +61,6 @@ private:
     voe::SharedData* _shared;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_VOICE_ENGINE_VOE_DTMF_IMPL_H

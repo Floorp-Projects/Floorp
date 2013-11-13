@@ -83,7 +83,7 @@ MacDisplayConfiguration GetConfigurationForScreen(NSScreen* screen) {
   return display_config;
 }
 
-} // namespace
+}  // namespace
 
 MacDisplayConfiguration::MacDisplayConfiguration()
     : id(0),

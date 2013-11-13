@@ -11,12 +11,11 @@
 // Atomic, system independent 32-bit integer.  Unless you know what you're
 // doing, use locks instead! :-)
 //
-// Note: uses full memory barriers.
 // Note: assumes 32-bit (or higher) system
 #ifndef WEBRTC_SYSTEM_WRAPPERS_INTERFACE_ATOMIC32_H_
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_ATOMIC32_H_
 
-#include <cstddef>
+#include <stddef.h>
 
 #include "webrtc/common_types.h"
 #include "webrtc/system_wrappers/interface/constructor_magic.h"
@@ -42,7 +41,9 @@ class Atomic32 {
   // Sets the value atomically to new_value if the value equals compare value.
   // The function returns true if the exchange happened.
   bool CompareExchange(int32_t new_value, int32_t compare_value);
-  int32_t Value() const;
+  int32_t Value() {
+    return *this += 0;
+  }
 
  private:
   // Disable the + and - operator since it's unclear what these operations

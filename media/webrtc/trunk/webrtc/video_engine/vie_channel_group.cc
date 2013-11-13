@@ -60,12 +60,6 @@ class WrappingBitrateEstimator : public RemoteBitrateEstimator {
     receive_absolute_send_time_ = enable;
   }
 
-  virtual void IncomingRtcp(unsigned int ssrc, uint32_t ntp_secs,
-                            uint32_t ntp_frac, uint32_t rtp_timestamp) {
-    CriticalSectionScoped cs(crit_sect_.get());
-    rbe_->IncomingRtcp(ssrc, ntp_secs, ntp_frac, rtp_timestamp);
-  }
-
   virtual void IncomingPacket(int64_t arrival_time_ms,
                               int payload_size,
                               const RTPHeader& header) {

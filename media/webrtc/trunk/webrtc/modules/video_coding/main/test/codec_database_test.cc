@@ -151,7 +151,7 @@ CodecDataBaseTest::Perform(CmdArgs& args)
     // Testing with VP8.
     VideoCodingModule::Codec(kVideoCodecVP8, &sendCodec);
     _vcm->RegisterSendCodec(&sendCodec, 1, 1440);
-    _encodeCompleteCallback->SetCodecType(kRTPVideoVP8);
+    _encodeCompleteCallback->SetCodecType(kRtpVideoVp8);
     _vcm->InitializeReceiver();
     TEST (_vcm->AddVideoFrame(sourceFrame) == VCM_OK );
     _vcm->InitializeSender();
@@ -196,7 +196,7 @@ CodecDataBaseTest::Perform(CmdArgs& args)
     VideoCodingModule::Codec(kVideoCodecVP8, &vp8EncSettings);
     _vcm->RegisterTransportCallback(_encodeCallback); // encode returns error if callback uninitialized
     _encodeCallback->RegisterReceiverVCM(_vcm);
-    _encodeCallback->SetCodecType(kRTPVideoVP8);
+    _encodeCallback->SetCodecType(kRtpVideoVp8);
     TEST(_vcm->RegisterExternalEncoder(encoder, vp8EncSettings.plType) == VCM_OK);
     TEST(_vcm->RegisterSendCodec(&vp8EncSettings, 4, 1440) == VCM_OK);
     TEST(_vcm->AddVideoFrame(sourceFrame) == VCM_OK);
@@ -232,7 +232,7 @@ CodecDataBaseTest::Perform(CmdArgs& args)
     TEST(_vcm->RegisterReceiveCodec(&receiveCodec, 1, true) == VCM_OK); // Require key frame
     _vcm->RegisterTransportCallback(_encodeCallback); // encode returns error if callback uninitialized
     _encodeCallback->RegisterReceiverVCM(_vcm);
-    _encodeCallback->SetCodecType(kRTPVideoVP8);
+    _encodeCallback->SetCodecType(kRtpVideoVp8);
     TEST(_vcm->AddVideoFrame(sourceFrame) == VCM_OK);
     TEST(_vcm->Decode() == VCM_OK);
     TEST(_vcm->ResetDecoder() == VCM_OK);
@@ -359,7 +359,7 @@ CodecDataBaseTest::Perform(CmdArgs& args)
                 {
                     printf("frame number:%d\n",frameCnt);
                 }
-            } // end for:encode-decode
+            }  // end for:encode-decode
            // byte count for codec specific
 
             printf("Total bytes encoded: %f \n\n",(8.0/1000)*(encodeCallCDT->EncodedBytes()/((int)10/VideoCodingModule::NumberOfCodecs())));
@@ -375,14 +375,14 @@ CodecDataBaseTest::Perform(CmdArgs& args)
                 printf("PSNR from encoder-decoder send-receive control test"
                        "is %f\n\n", psnr.average);
             }
-        } // end: iterate codecs
+        }  // end: iterate codecs
         rewind(_sourceFile);
         delete [] tmpBuffer;
         delete decodeCallCDT;
         delete encodeCallCDT;
         // closing and calculating PSNR for prior encoder-decoder test
         TearDown(); // closing open files
-    } // end of #codecs >1
+    }  // end of #codecs >1
 
     delete waitEvent;
     Print();

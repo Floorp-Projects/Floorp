@@ -33,28 +33,29 @@ public:
 
     virtual ~UdpSocketPosix();
 
-    virtual int32_t ChangeUniqueId(const int32_t id);
+    virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
 
-    virtual bool SetCallback(CallbackObj obj, IncomingSocketCallback cb);
+    virtual bool SetCallback(CallbackObj obj,
+                             IncomingSocketCallback cb) OVERRIDE;
 
-    virtual bool Bind(const SocketAddress& name);
+    virtual bool Bind(const SocketAddress& name) OVERRIDE;
 
     virtual bool SetSockopt(int32_t level, int32_t optname,
-                            const int8_t* optval, int32_t optlen);
+                            const int8_t* optval, int32_t optlen) OVERRIDE;
 
-    virtual int32_t SetTOS(const int32_t serviceType);
+    virtual int32_t SetTOS(const int32_t serviceType) OVERRIDE;
 
     virtual int32_t SendTo(const int8_t* buf, int32_t len,
-                           const SocketAddress& to);
+                           const SocketAddress& to) OVERRIDE;
 
     // Deletes socket in addition to closing it.
     // TODO (hellner): make destructor protected.
-    virtual void CloseBlocking();
+    virtual void CloseBlocking() OVERRIDE;
 
-    virtual SOCKET GetFd() {return _socket;}
-    virtual int32_t GetError() {return _error;}
+    virtual SOCKET GetFd();
+    virtual int32_t GetError();
 
-    virtual bool ValidHandle();
+    virtual bool ValidHandle() OVERRIDE;
 
     virtual bool SetQos(int32_t /*serviceType*/,
                         int32_t /*tokenRate*/,
@@ -63,11 +64,11 @@ public:
                         int32_t /*minPolicedSize*/,
                         int32_t /*maxSduSize*/,
                         const SocketAddress& /*stRemName*/,
-                        int32_t /*overrideDSCP*/) {return false;}
+                        int32_t /*overrideDSCP*/) OVERRIDE;
 
     bool CleanUp();
     void HasIncoming();
-    bool WantsIncoming() {return _wantsIncoming;}
+    bool WantsIncoming();
     void ReadyForDeletion();
 private:
     friend class UdpSocketManagerPosix;

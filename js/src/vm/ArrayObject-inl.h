@@ -23,8 +23,6 @@ ArrayObject::setLength(ExclusiveContext *cx, Handle<ArrayObject*> arr, uint32_t 
     if (length > INT32_MAX) {
         /* Track objects with overflowing lengths in type information. */
         types::MarkTypeObjectFlags(cx, arr, types::OBJECT_FLAG_LENGTH_OVERFLOW);
-        jsid lengthId = NameToId(cx->names().length);
-        types::AddTypePropertyId(cx, arr, lengthId, types::Type::DoubleType());
     }
 
     arr->getElementsHeader()->length = length;

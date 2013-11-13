@@ -11,22 +11,22 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_UTILITY_H_
 
-#include <cstddef> // size_t, ptrdiff_t
+#include <stddef.h> // size_t, ptrdiff_t
 
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/interface/receive_statistics.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_header_extension.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
-enum RtpVideoCodecTypes
-{
-    kRtpGenericVideo  = 0,
-    kRtpFecVideo      = 10,
-    kRtpVp8Video      = 11
-};
 
 const uint8_t kRtpMarkerBitMask = 0x80;
+
+RtpData* NullObjectRtpData();
+RtpFeedback* NullObjectRtpFeedback();
+RtpAudioFeedback* NullObjectRtpAudioFeedback();
+ReceiveStatistics* NullObjectReceiveStatistics();
 
 namespace ModuleRTPUtility
 {
@@ -36,22 +36,6 @@ namespace ModuleRTPUtility
     // Magic NTP fractional unit.
     const double NTP_FRAC = 4.294967296E+9;
 
-    struct AudioPayload
-    {
-        uint32_t    frequency;
-        uint8_t     channels;
-        uint32_t    rate;
-    };
-    struct VideoPayload
-    {
-        RtpVideoCodecTypes   videoCodecType;
-        uint32_t       maxRate;
-    };
-    union PayloadUnion
-    {
-        AudioPayload Audio;
-        VideoPayload Video;
-    };
     struct Payload
     {
         char name[RTP_PAYLOAD_NAME_SIZE];
@@ -71,14 +55,6 @@ namespace ModuleRTPUtility
                                  uint32_t freq);
 
     uint32_t pow2(uint8_t exp);
-
-    // Returns a pointer to the payload data given a packet.
-    const uint8_t* GetPayloadData(const RTPHeader& rtp_header,
-                                  const uint8_t* packet);
-
-    // Returns payload length given a packet.
-    uint16_t GetPayloadDataLength(const RTPHeader& rtp_header,
-                                  const uint16_t packet_length);
 
     // Returns true if |newTimestamp| is older than |existingTimestamp|.
     // |wrapped| will be set to true if there has been a wraparound between the
@@ -124,6 +100,7 @@ namespace ModuleRTPUtility
         ~RTPHeaderParser();
 
         bool RTCP() const;
+        bool ParseRtcp(RTPHeader* header) const;
         bool Parse(RTPHeader& parsedPacket,
                    RtpHeaderExtensionMap* ptrExtensionMap = NULL) const;
 

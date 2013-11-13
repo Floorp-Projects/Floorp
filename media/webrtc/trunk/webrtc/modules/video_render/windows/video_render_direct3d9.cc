@@ -9,17 +9,17 @@
  */
 
 // Own include file
-#include "video_render_direct3d9.h"
+#include "webrtc/modules/video_render/windows/video_render_direct3d9.h"
 
 // System include files
 #include <windows.h>
 
 // WebRtc include files
-#include "critical_section_wrapper.h"
-#include "event_wrapper.h"
-#include "trace.h"
-#include "thread_wrapper.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 
@@ -1174,5 +1174,4 @@ int32_t VideoRenderDirect3D9::ConfigureRenderer(const uint32_t channel,
     return 0;
 }
 
-} //namespace webrtc
-
+}  // namespace webrtc

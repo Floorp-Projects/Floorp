@@ -39,6 +39,9 @@ namespace widget {
 #define MOZ_MODIFIER_KEYS "MozKeymapWrapper"
 
 KeymapWrapper* KeymapWrapper::sInstance = nullptr;
+guint KeymapWrapper::sLastRepeatableHardwareKeyCode = 0;
+KeymapWrapper::RepeatState KeymapWrapper::sRepeatState =
+    KeymapWrapper::NOT_PRESSED;
 nsIBidiKeyboard* sBidiKeyboard = nullptr;
 
 #ifdef PR_LOGGING
@@ -194,6 +197,8 @@ KeymapWrapper::Init()
 
     InitBySystemSettings();
 
+    gdk_window_add_filter(nullptr, FilterEvents, this);
+
     PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
         ("KeymapWrapper(%p): Init, CapsLock=0x%X, NumLock=0x%X, "
          "ScrollLock=0x%X, Level3=0x%X, Level5=0x%X, "
@@ -210,6 +215,8 @@ KeymapWrapper::Init()
 void
 KeymapWrapper::InitXKBExtension()
 {
+    PodZero(&mKeyboardState);
+
     int xkbMajorVer = XkbMajorVersion;
     int xkbMinorVer = XkbMinorVersion;
     if (!XkbLibraryVersion(&xkbMajorVer, &xkbMinorVer)) {
@@ -241,7 +248,25 @@ KeymapWrapper::InitXKBExtension()
                                XkbModifierStateMask, XkbModifierStateMask)) {
         PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
                ("KeymapWrapper(%p): InitXKBExtension failed due to failure of "
-                "XkbSelectEventDetails(), display=0x%p", this, display));
+                "XkbSelectEventDetails() for XModifierStateMask, display=0x%p",
+                this, display));
+        return;
+    }
+
+    if (!XkbSelectEventDetails(display, XkbUseCoreKbd, XkbControlsNotify,
+                               XkbPerKeyRepeatMask, XkbPerKeyRepeatMask)) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+               ("KeymapWrapper(%p): InitXKBExtension failed due to failure of "
+                "XkbSelectEventDetails() for XkbControlsNotify, display=0x%p",
+                this, display));
+        return;
+    }
+
+    if (!XGetKeyboardControl(display, &mKeyboardState)) {
+        PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+               ("KeymapWrapper(%p): InitXKBExtension failed due to failure of "
+                "XGetKeyboardControl(), display=0x%p",
+                this, display));
         return;
     }
 
@@ -416,9 +441,81 @@ KeymapWrapper::InitBySystemSettings()
 
 KeymapWrapper::~KeymapWrapper()
 {
+    gdk_window_remove_filter(nullptr, FilterEvents, this);
     NS_IF_RELEASE(sBidiKeyboard);
     PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
         ("KeymapWrapper(%p): Destructor", this));
+}
+
+/* static */ GdkFilterReturn
+KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
+                            GdkEvent* aGdkEvent,
+                            gpointer aData)
+{
+    XEvent* xEvent = static_cast<XEvent*>(aXEvent);
+    switch (xEvent->type) {
+        case KeyPress: {
+            // If the key doesn't support auto repeat, ignore the event because
+            // even if such key (e.g., Shift) is pressed during auto repeat of
+            // anoter key, it doesn't stop the auto repeat.
+            KeymapWrapper* self = static_cast<KeymapWrapper*>(aData);
+            if (!self->IsAutoRepeatableKey(xEvent->xkey.keycode)) {
+                break;
+            }
+            if (sRepeatState == NOT_PRESSED) {
+                sRepeatState = FIRST_PRESS;
+            } else if (sLastRepeatableHardwareKeyCode == xEvent->xkey.keycode) {
+                sRepeatState = REPEATING;
+            } else {
+                // If a different key is pressed while another key is pressed,
+                // auto repeat system repeats only the last pressed key.
+                // So, setting new keycode and setting repeat state as first key
+                // press should work fine.
+                sRepeatState = FIRST_PRESS;
+            }
+            sLastRepeatableHardwareKeyCode = xEvent->xkey.keycode;
+            break;
+        }
+        case KeyRelease: {
+            if (sLastRepeatableHardwareKeyCode != xEvent->xkey.keycode) {
+                // This case means the key release event is caused by
+                // a non-repeatable key such as Shift or a repeatable key that
+                // was pressed before sLastRepeatableHardwareKeyCode was
+                // pressed.
+                break;
+            }
+            sRepeatState = NOT_PRESSED;
+            break;
+        }
+        case FocusOut: {
+            // At moving focus, we should reset keyboard repeat state.
+            // Strictly, this causes incorrect behavior.  However, this
+            // correctness must be enough for web applications.
+            sRepeatState = NOT_PRESSED;
+            break;
+        }
+        default: {
+            KeymapWrapper* self = static_cast<KeymapWrapper*>(aData);
+            if (xEvent->type != self->mXKBBaseEventCode) {
+                break;
+            }
+            XkbEvent* xkbEvent = (XkbEvent*)xEvent;
+            if (xkbEvent->any.xkb_type != XkbControlsNotify ||
+                !(xkbEvent->ctrls.changed_ctrls & XkbPerKeyRepeatMask)) {
+                break;
+            }
+            if (!XGetKeyboardControl(xkbEvent->any.display,
+                                     &self->mKeyboardState)) {
+                PR_LOG(gKeymapWrapperLog, PR_LOG_ALWAYS,
+                       ("KeymapWrapper(%p): FilterEvents failed due to failure "
+                        "of XGetKeyboardControl(), display=0x%p",
+                        self, xkbEvent->any.display));
+            }
+            break;
+        }
+    }
+
+    return GDK_FILTER_CONTINUE;
 }
 
 /* static */ void
@@ -879,6 +976,8 @@ KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
     aKeyEvent.pluginEvent = (void *)aGdkKeyEvent;
     aKeyEvent.time = aGdkKeyEvent->time;
     aKeyEvent.mNativeKeyEvent = static_cast<void*>(aGdkKeyEvent);
+    aKeyEvent.mIsRepeat = sRepeatState == REPEATING &&
+        aGdkKeyEvent->hardware_keycode == sLastRepeatableHardwareKeyCode;
 }
 
 /* static */ uint32_t
@@ -999,6 +1098,16 @@ KeymapWrapper::IsLatinGroup(guint8 aGroup)
         g_free(keys);
     }
     return result;
+}
+
+bool
+KeymapWrapper::IsAutoRepeatableKey(guint aHardwareKeyCode)
+{
+    uint8_t indexOfArray = aHardwareKeyCode / 8;
+    MOZ_ASSERT(indexOfArray < ArrayLength(mKeyboardState.auto_repeats),
+               "invalid index");
+    char bitMask = 1 << (aHardwareKeyCode % 8);
+    return (mKeyboardState.auto_repeats[indexOfArray] & bitMask) != 0;
 }
 
 /* static */ bool

@@ -8,6 +8,7 @@ const {Cc, Ci, Cu} = require("chrome");
 const {colorUtils} = require("devtools/css-color");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
+const MAX_ITERATIONS = 100;
 const REGEX_QUOTES = /^".*?"|^".*/;
 const REGEX_URL = /^url\(["']?(.+?)(?::(\d+))?["']?\)/;
 const REGEX_WHITESPACE = /^\s+/;
@@ -135,6 +136,7 @@ OutputParser.prototype = {
     let dirty = false;
     let matched = null;
     let nameValueSupported = false;
+    let i = 0;
 
     let trimMatchFromStart = function(match) {
       text = text.substr(match.length);
@@ -207,6 +209,14 @@ OutputParser.prototype = {
       }
 
       dirty = false;
+
+      // Prevent this loop from slowing down the browser with too
+      // many nodes being appended into output.
+      i++;
+      if (i > MAX_ITERATIONS) {
+        trimMatchFromStart(text);
+        this._appendTextNode(text);
+      }
     }
 
     return this._toDOM();
@@ -312,14 +322,10 @@ OutputParser.prototype = {
    */
   _appendTextNode: function(text) {
     let lastItem = this.parsed[this.parsed.length - 1];
-
-    if (typeof lastItem !== "undefined" && lastItem.nodeName === "#text") {
-      lastItem.nodeValue += text;
+    if (typeof lastItem === "string") {
+      this.parsed[this.parsed.length - 1] = lastItem + text
     } else {
-      let win = Services.appShell.hiddenDOMWindow;
-      let doc = win.document;
-      let textNode = doc.createTextNode(text);
-      this.parsed.push(textNode);
+      this.parsed.push(text);
     }
   },
 
@@ -335,7 +341,11 @@ OutputParser.prototype = {
     let frag = doc.createDocumentFragment();
 
     for (let item of this.parsed) {
-      frag.appendChild(item);
+      if (typeof item === "string") {
+        frag.appendChild(doc.createTextNode(item));
+      } else {
+        frag.appendChild(item);
+      }
     }
 
     this.parsed.length = 0;

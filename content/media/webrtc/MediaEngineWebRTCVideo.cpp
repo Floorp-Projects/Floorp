@@ -40,7 +40,8 @@ MediaEngineWebRTCVideoSource::FrameSizeChange(
 // ViEExternalRenderer Callback. Process every incoming frame here.
 int
 MediaEngineWebRTCVideoSource::DeliverFrame(
-   unsigned char* buffer, int size, uint32_t time_stamp, int64_t render_time)
+   unsigned char* buffer, int size, uint32_t time_stamp, int64_t render_time,
+   void *handle)
 {
   // mInSnapshotMode can only be set before the camera is turned on and
   // the renderer is started, so this amounts to a 1-shot
@@ -399,126 +400,7 @@ MediaEngineWebRTCVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
 nsresult
 MediaEngineWebRTCVideoSource::Snapshot(uint32_t aDuration, nsIDOMFile** aFile)
 {
-  /**
-   * To get a Snapshot we do the following:
-   * - Set a condition variable (mInSnapshotMode) to true
-   * - Attach the external renderer and start the camera
-   * - Wait for the condition variable to change to false
-   *
-   * Starting the camera has the effect of invoking DeliverFrame() when
-   * the first frame arrives from the camera. We only need one frame for
-   * GetCaptureDeviceSnapshot to work, so we immediately set the condition
-   * variable to false and notify this method.
-   *
-   * This causes the current thread to continue (PR_CondWaitVar will return),
-   * at which point we can grab a snapshot, convert it to a file and
-   * return from this function after cleaning up the temporary stream object
-   * and caling Stop() on the media source.
-   */
-#ifdef MOZ_B2G_CAMERA
-  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-#endif
-  *aFile = nullptr;
-  if (!mInitDone || mState != kAllocated) {
-    return NS_ERROR_FAILURE;
-  }
-#ifdef MOZ_B2G_CAMERA
-  mLastCapture = nullptr;
-
-  NS_DispatchToMainThread(WrapRunnable(this,
-                                       &MediaEngineWebRTCVideoSource::StartImpl,
-                                       mCapability));
-  mCallbackMonitor.Wait();
-  if (mState != kStarted) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_DispatchToMainThread(WrapRunnable(this,
-                                       &MediaEngineWebRTCVideoSource::SnapshotImpl));
-  mCallbackMonitor.Wait();
-  if (mLastCapture == nullptr)
-    return NS_ERROR_FAILURE;
-
-  mState = kStopped;
-  NS_DispatchToMainThread(WrapRunnable(this,
-                                       &MediaEngineWebRTCVideoSource::StopImpl));
-
-  // The camera return nsDOMMemoryFile indeed, and the inheritance tree is:
-  // nsIDOMBlob <- nsIDOMFile <- nsDOMFileBase <- nsDOMFile <- nsDOMMemoryFile
-  *aFile = mLastCapture.get();
-  return NS_OK;
-#else
-  {
-    MonitorAutoLock lock(mMonitor);
-    mInSnapshotMode = true;
-  }
-
-  // Start the rendering (equivalent to calling Start(), but without a track).
-  int error = 0;
-  if (!mInitDone || mState != kAllocated) {
-    return NS_ERROR_FAILURE;
-  }
-  error = mViERender->AddRenderer(mCaptureIndex, webrtc::kVideoI420, (webrtc::ExternalRenderer*)this);
-  if (error == -1) {
-    return NS_ERROR_FAILURE;
-  }
-  error = mViERender->StartRender(mCaptureIndex);
-  if (error == -1) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (mViECapture->StartCapture(mCaptureIndex, mCapability) < 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Wait for the condition variable, will be set in DeliverFrame.
-  // We use a while loop, because even if Wait() returns, it's not
-  // guaranteed that the condition variable changed.
-  // FIX: we need need a way to cancel this and to bail if it appears to not be working
-  // Perhaps a maximum time, though some cameras can take seconds to start.  10 seconds?
-  {
-    MonitorAutoLock lock(mMonitor);
-    while (mInSnapshotMode) {
-      lock.Wait();
-    }
-  }
-
-  // If we get here, DeliverFrame received at least one frame.
-  webrtc::ViEFile* vieFile = webrtc::ViEFile::GetInterface(mVideoEngine);
-  if (!vieFile) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Create a temporary file on the main thread and put the snapshot in it.
-  // See Run() in MediaEngineWebRTCVideo.h (sets mSnapshotPath).
-  NS_DispatchToMainThread(this, NS_DISPATCH_SYNC);
-
-  if (!mSnapshotPath) {
-    return NS_ERROR_FAILURE;
-  }
-
-  NS_ConvertUTF16toUTF8 path(*mSnapshotPath);
-  if (vieFile->GetCaptureDeviceSnapshot(mCaptureIndex, path.get()) < 0) {
-    delete mSnapshotPath;
-    mSnapshotPath = nullptr;
-    return NS_ERROR_FAILURE;
-  }
-
-  // Stop the camera.
-  mViERender->StopRender(mCaptureIndex);
-  mViERender->RemoveRenderer(mCaptureIndex);
-
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_NewLocalFile(*mSnapshotPath, false, getter_AddRefs(file));
-
-  delete mSnapshotPath;
-  mSnapshotPath = nullptr;
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ADDREF(*aFile = new nsDOMFileFile(file));
-#endif
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /**

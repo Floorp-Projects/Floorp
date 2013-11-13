@@ -201,19 +201,6 @@ typedef void (*AnalysisUpdate)(NsxInst_t* inst,
                                int16_t* new_speech);
 extern AnalysisUpdate WebRtcNsx_AnalysisUpdate;
 
-// Denormalize the input buffer.
-typedef void (*Denormalize)(NsxInst_t* inst,
-                            int16_t* in,
-                            int factor);
-extern Denormalize WebRtcNsx_Denormalize;
-
-// Create a complex number buffer, as the intput interleaved with zeros,
-// and normalize it.
-typedef void (*CreateComplexBuffer)(NsxInst_t* inst,
-                                    int16_t* in,
-                                    int16_t* out);
-extern CreateComplexBuffer WebRtcNsx_CreateComplexBuffer;
-
 #if (defined WEBRTC_DETECT_ARM_NEON) || defined (WEBRTC_ARCH_ARM_NEON)
 // For the above function pointers, functions for generic platforms are declared
 // and defined as static in file nsx_core.c, while those for ARM Neon platforms
@@ -222,16 +209,12 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
                                    uint16_t* magn,
                                    uint32_t* noise,
                                    int16_t* q_noise);
-void WebRtcNsx_CreateComplexBufferNeon(NsxInst_t* inst,
-                                       int16_t* in,
-                                       int16_t* out);
 void WebRtcNsx_SynthesisUpdateNeon(NsxInst_t* inst,
                                    int16_t* out_frame,
                                    int16_t gain_factor);
 void WebRtcNsx_AnalysisUpdateNeon(NsxInst_t* inst,
                                   int16_t* out,
                                   int16_t* new_speech);
-void WebRtcNsx_DenormalizeNeon(NsxInst_t* inst, int16_t* in, int factor);
 void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buff);
 #endif
 

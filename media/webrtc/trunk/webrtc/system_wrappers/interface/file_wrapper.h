@@ -73,6 +73,6 @@ class FileWrapper : public InStream, public OutStream {
   virtual int Rewind() = 0;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_FILE_WRAPPER_H_

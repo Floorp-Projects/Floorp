@@ -4951,6 +4951,9 @@ class ICSetPropNativeAddCompiler : public ICStubCompiler {
     ICUpdatedStub *getStubSpecific(ICStubSpace *space, const AutoShapeVector *shapes)
     {
         RootedTypeObject type(cx, obj_->getType(cx));
+        if (!type)
+            return nullptr;
+
         RootedShape newShape(cx, obj_->lastProperty());
 
         return ICSetProp_NativeAddImpl<ProtoChainDepth>::New(
@@ -5846,6 +5849,47 @@ class ICTypeOf_Typed : public ICFallbackStub
 
         ICStub *getStub(ICStubSpace *space) {
             return ICTypeOf_Typed::New(space, getStubCode(), type_);
+        }
+    };
+};
+
+class ICRest_Fallback : public ICFallbackStub
+{
+    friend class ICStubSpace;
+
+    HeapPtrObject templateObject_;
+
+    ICRest_Fallback(IonCode *stubCode, JSObject *templateObject)
+      : ICFallbackStub(ICStub::Rest_Fallback, stubCode), templateObject_(templateObject)
+    { }
+
+  public:
+    static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+
+    static inline ICRest_Fallback *New(ICStubSpace *space, IonCode *code,
+                                       JSObject *templateObject) {
+        if (!code)
+            return nullptr;
+        return space->allocate<ICRest_Fallback>(code, templateObject);
+    }
+
+    HeapPtrObject &templateObject() {
+        return templateObject_;
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        RootedObject templateObject;
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        Compiler(JSContext *cx, JSObject *templateObject)
+          : ICStubCompiler(cx, ICStub::Rest_Fallback),
+            templateObject(cx, templateObject)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICRest_Fallback::New(space, getStubCode(), templateObject);
         }
     };
 };

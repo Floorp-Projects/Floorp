@@ -123,11 +123,12 @@ Operations DecisionLogic::GetDecision(const SyncBuffer& sync_buffer,
     }
   }
 
-  const int samples_left = sync_buffer.FutureLength() - expand.overlap_length();
+  const int samples_left = static_cast<int>(
+      sync_buffer.FutureLength() - expand.overlap_length());
   const int cur_size_samples =
       samples_left + packet_buffer_.NumSamplesInBuffer(decoder_database_,
                                                        decoder_frame_length);
-  LOG(LS_VERBOSE) << "Buffers: " << packet_buffer_.NumPacketsInBuffer() <<
+  NETEQ_LOG_VERBOSE << "Buffers: " << packet_buffer_.NumPacketsInBuffer() <<
       " packets * " << decoder_frame_length << " samples/packet + " <<
       samples_left << " samples in sync buffer = " << cur_size_samples;
 

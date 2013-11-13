@@ -9,6 +9,10 @@
 pref("nglayout.debug.disable_xul_cache", true);
 pref("nglayout.debug.disable_xul_fastload", true);
 pref("devtools.errorconsole.enabled", true);
+pref("devtools.chrome.enabled", true);
+#else
+pref("devtools.errorconsole.enabled", false);
+pref("devtools.chrome.enabled", false);
 #endif
 
 // Automatically submit crash reports
@@ -39,8 +43,8 @@ pref("layers.componentalpha.enabled", false);
 
 // Prefs to control the async pan/zoom behaviour
 pref("apz.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel threshold
-pref("apz.pan_repaint_interval", "50");   // prefer 20 fps
-pref("apz.fling_repaint_interval", "50"); // prefer 20 fps
+pref("apz.pan_repaint_interval", 50);   // prefer 20 fps
+pref("apz.fling_repaint_interval", 50); // prefer 20 fps
 pref("apz.fling_friction", "0.002");
 pref("apz.fling_stopped_threshold", "0.2");
 
@@ -382,9 +386,6 @@ pref("privacy.sanitize.migrateFx3Prefs",    false);
 // enable geo
 pref("geo.enabled", true);
 pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
-
-// JS error console
-pref("devtools.errorconsole.enabled", false);
 
 // snapped view
 pref("browser.ui.snapped.maxWidth", 600);

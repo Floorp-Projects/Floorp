@@ -8,9 +8,14 @@ SpecialPowers.addPermission("voicemail", true, document);
 let voicemail = window.navigator.mozVoicemail;
 ok(voicemail instanceof MozVoicemail);
 
+let serviceId = 0;
+
 // These are the emulator's hard coded voicemail number and alphaId
-is(voicemail.number, "+15552175049");
-is(voicemail.displayName, "Voicemail");
+is(voicemail.getNumber(serviceId), "+15552175049");
+is(voicemail.getDisplayName(serviceId), "Voicemail");
+
+is(voicemail.getNumber(), "+15552175049");
+is(voicemail.getDisplayName(), "Voicemail");
 
 SpecialPowers.removePermission("voicemail", document);
 finish();

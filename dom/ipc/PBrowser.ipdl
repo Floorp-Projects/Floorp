@@ -61,7 +61,8 @@ intr protocol PBrowser
     manages PIndexedDB;
 
 both:
-    AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows);
+    AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows,
+                 Principal aPrincipal);
 
 parent:
     /**
@@ -74,10 +75,12 @@ parent:
 
     intr CreateWindow() returns (PBrowser window);
 
-    sync SyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
+    sync SyncMessage(nsString aMessage, ClonedMessageData aData,
+                     CpowEntry[] aCpows, Principal aPrincipal)
       returns (nsString[] retval);
 
-    rpc RpcMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
+    rpc RpcMessage(nsString aMessage, ClonedMessageData aData,
+                   CpowEntry[] aCpows, Principal aPrincipal)
       returns (nsString[] retval);
 
     /**

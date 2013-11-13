@@ -50,8 +50,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WorkerLocation)
 
   static already_AddRefed<WorkerLocation>
-  Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
-         WorkerPrivate::LocationInfo& aInfo);
+  Create(WorkerPrivate::LocationInfo& aInfo);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

@@ -11,9 +11,9 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_MIXER_MANAGER_MAC_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_MIXER_MANAGER_MAC_H
 
-#include "typedefs.h"
-#include "audio_device.h"
-#include "critical_section_wrapper.h"
+#include "webrtc/modules/audio_device/include/audio_device.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/typedefs.h"
 
 #include <CoreAudio/CoreAudio.h>
 
@@ -75,6 +75,6 @@ private:
 
 };
 	
-} //namespace webrtc
+}  // namespace webrtc
 
 #endif  // AUDIO_MIXER_MAC_H

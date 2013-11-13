@@ -11,9 +11,9 @@
 #include "webrtc/modules/audio_coding/neteq4/dsp_helper.h"
 
 #include <assert.h>
+#include <string.h>  // Access to memset.
 
 #include <algorithm>  // Access to min, max.
-#include <cstring>  // Access to memset.
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
@@ -258,11 +258,11 @@ int DspHelper::MinDistortion(const int16_t* signal, int min_lag,
 }
 
 void DspHelper::CrossFade(const int16_t* input1, const int16_t* input2,
-                          int length, int16_t* mix_factor,
+                          size_t length, int16_t* mix_factor,
                           int16_t factor_decrement, int16_t* output) {
   int16_t factor = *mix_factor;
   int16_t complement_factor = 16384 - factor;
-  for (int i = 0; i < length; i++) {
+  for (size_t i = 0; i < length; i++) {
     output[i] =
         (factor * input1[i] + complement_factor * input2[i] + 8192) >> 14;
     factor -= factor_decrement;
@@ -271,11 +271,12 @@ void DspHelper::CrossFade(const int16_t* input1, const int16_t* input2,
   *mix_factor = factor;
 }
 
-void DspHelper::UnmuteSignal(const int16_t* input, int length, int16_t* factor,
-                             int16_t increment, int16_t* output) {
+void DspHelper::UnmuteSignal(const int16_t* input, size_t length,
+                             int16_t* factor, int16_t increment,
+                             int16_t* output) {
   uint16_t factor_16b = *factor;
   int32_t factor_32b = (static_cast<int32_t>(factor_16b) << 6) + 32;
-  for (int i = 0; i < length; i++) {
+  for (size_t i = 0; i < length; i++) {
     output[i] = (factor_16b * input[i] + 8192) >> 14;
     factor_32b = std::max(factor_32b + increment, 0);
     factor_16b = std::min(16384, factor_32b >> 6);
@@ -283,15 +284,15 @@ void DspHelper::UnmuteSignal(const int16_t* input, int length, int16_t* factor,
   *factor = factor_16b;
 }
 
-void DspHelper::MuteSignal(int16_t* signal, int16_t mute_slope, int length) {
+void DspHelper::MuteSignal(int16_t* signal, int16_t mute_slope, size_t length) {
   int32_t factor = (16384 << 6) + 32;
-  for (int i = 0; i < length; i++) {
+  for (size_t i = 0; i < length; i++) {
     signal[i] = ((factor >> 6) * signal[i] + 8192) >> 14;
     factor -= mute_slope;
   }
 }
 
-int DspHelper::DownsampleTo4kHz(const int16_t* input, int input_length,
+int DspHelper::DownsampleTo4kHz(const int16_t* input, size_t input_length,
                                 int output_length, int input_rate_hz,
                                 bool compensate_delay, int16_t* output) {
   // Set filter parameters depending on input frequency.
@@ -343,10 +344,10 @@ int DspHelper::DownsampleTo4kHz(const int16_t* input, int input_length,
   }
 
   // Returns -1 if input signal is too short; 0 otherwise.
-  return WebRtcSpl_DownsampleFast(&input[filter_length - 1],
-                                  input_length - (filter_length - 1), output,
-                                  output_length, filter_coefficients,
-                                  filter_length, factor, filter_delay);
+  return WebRtcSpl_DownsampleFast(
+      &input[filter_length - 1], static_cast<int>(input_length) -
+      (filter_length - 1), output, output_length, filter_coefficients,
+      filter_length, factor, filter_delay);
 }
 
 }  // namespace webrtc

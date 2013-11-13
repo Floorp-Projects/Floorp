@@ -8,9 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "benchmark.h"
+#include "webrtc/modules/video_coding/codecs/test_framework/benchmark.h"
 
-#include <cassert>
+#include <assert.h>
+
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -18,11 +19,11 @@
     #include <windows.h>
 #endif
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "system_wrappers/interface/event_wrapper.h"
-#include "modules/video_coding/codecs/test_framework/video_source.h"
-#include "testsupport/fileutils.h"
-#include "testsupport/metrics/video_metrics.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/modules/video_coding/codecs/test_framework/video_source.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/test/testsupport/metrics/video_metrics.h"
 
 #define SSIM_CALC 0 // by default, don't compute SSIM
 
@@ -301,4 +302,3 @@ Benchmark::CodecSpecific_InitBitrate()
         _encoder->SetRates(_bitRate, _inst.maxFramerate);
     }
 }
-

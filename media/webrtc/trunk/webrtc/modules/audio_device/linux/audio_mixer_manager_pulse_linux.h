@@ -11,13 +11,13 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_MIXER_MANAGER_PULSE_LINUX_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_MIXER_MANAGER_PULSE_LINUX_H
 
-#include "typedefs.h"
-#include "audio_device.h"
-#include "critical_section_wrapper.h"
-#include "pulseaudiosymboltable_linux.h"
+#include "webrtc/modules/audio_device/include/audio_device.h"
+#include "webrtc/modules/audio_device/linux/pulseaudiosymboltable_linux.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/typedefs.h"
 
-#include <stdint.h>
 #include <pulse/pulseaudio.h>
+#include <stdint.h>
 
 #ifndef UINT32_MAX
 #define UINT32_MAX  ((uint32_t)-1)

@@ -26,7 +26,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=634156
       Cu.evalInSandbox("Object.defineProperty(Object.prototype, 'getProp', { get: function() { throw 'FAIL: called getter' }, set: function() { throw 'FAIL: called setter'; } })", sandbox);
 
       var obj = Cu.createObjectIn(sandbox);
-      is(Object.getPrototypeOf(obj), Cu.evalInSandbox("Object.prototype", sandbox),
+      is(obj, Cu.waiveXrays(obj), "createObjectIn waives");
+      is(Object.getPrototypeOf(obj), Cu.waiveXrays(Cu.evalInSandbox("Object.prototype", sandbox)),
          "Object is a sandbox object");
 
       function genPropDesc(value) {

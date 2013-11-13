@@ -41,6 +41,6 @@ private:
     uint32_t _byteOffset;
     uint8_t  _bitOffset;
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_RTP_RTCP_SOURCE_H264_BITSTREAM_PARSER_H_

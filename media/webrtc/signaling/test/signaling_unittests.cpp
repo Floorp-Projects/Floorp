@@ -2033,6 +2033,28 @@ TEST_F(SignalingTest, FullCallAudioOnly)
   ASSERT_GE(a2_->GetPacketsReceived(0), 40);
 }
 
+TEST_F(SignalingTest, FullCallAnswererRejectsVideo)
+{
+  sipcc::MediaConstraints offerconstraints;
+  sipcc::MediaConstraints answerconstraints;
+  answerconstraints.setBooleanConstraint("OfferToReceiveAudio", true, false);
+  answerconstraints.setBooleanConstraint("OfferToReceiveVideo", false, false);
+  OfferAnswer(offerconstraints, answerconstraints, OFFER_AV | ANSWER_AUDIO,
+              true, SHOULD_SENDRECV_AV, SHOULD_SENDRECV_AUDIO);
+
+  // Wait for some data to get written
+  ASSERT_TRUE_WAIT(a1_->GetPacketsSent(0) >= 40 &&
+                   a2_->GetPacketsReceived(0) >= 40, kDefaultTimeout * 2);
+
+  a1_->CloseSendStreams();
+  a2_->CloseReceiveStreams();
+  // Check that we wrote a bunch of data
+  ASSERT_GE(a1_->GetPacketsSent(0), 40);
+  //ASSERT_GE(a2_->GetPacketsSent(0), 40);
+  //ASSERT_GE(a1_->GetPacketsReceived(0), 40);
+  ASSERT_GE(a2_->GetPacketsReceived(0), 40);
+}
+
 TEST_F(SignalingTest, FullCallVideoOnly)
 {
   sipcc::MediaConstraints constraints;

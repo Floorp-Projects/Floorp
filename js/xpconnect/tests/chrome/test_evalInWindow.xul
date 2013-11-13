@@ -51,6 +51,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=877673
 
         executeIn(frame.contentDocument, "var a = 42;", function(e){ok(e.toString().indexOf("Second argument must be a window") > -1,
                                                                        "Passing non-window to evalInWindow should throw.");});
+        // evalInWindow is also available from Cu:
+        is(Cu.evalInWindow("document.str", frame.contentWindow), "foobar");
         testDone();
       }
 

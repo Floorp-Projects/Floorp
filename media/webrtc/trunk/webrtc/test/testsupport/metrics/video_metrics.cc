@@ -10,9 +10,10 @@
 
 #include "webrtc/test/testsupport/metrics/video_metrics.h"
 
+#include <assert.h>
+#include <stdio.h>
+
 #include <algorithm>  // min_element, max_element
-#include <cassert>
-#include <cstdio>
 
 #include "webrtc/common_video/interface/i420_video_frame.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"

@@ -11,11 +11,11 @@
 #ifndef WEBRTC_MODULES_UTILITY_INTERFACE_FILE_PLAYER_H_
 #define WEBRTC_MODULES_UTILITY_INTERFACE_FILE_PLAYER_H_
 
-#include "common_types.h"
-#include "common_video/interface/i420_video_frame.h"
-#include "engine_configurations.h"
-#include "module_common_types.h"
-#include "typedefs.h"
+#include "webrtc/common_types.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 class FileCallback;
@@ -107,5 +107,5 @@ protected:
     virtual ~FilePlayer() {}
 
 };
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_UTILITY_INTERFACE_FILE_PLAYER_H_

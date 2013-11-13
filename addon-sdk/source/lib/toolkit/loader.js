@@ -38,6 +38,7 @@ const { loadSubScript } = Cc['@mozilla.org/moz/jssubscript-loader;1'].
                      getService(Ci.mozIJSSubScriptLoader);
 const { notifyObservers } = Cc['@mozilla.org/observer-service;1'].
                         getService(Ci.nsIObserverService);
+const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
 // Define some shortcuts.
 const bind = Function.call.bind(Function.bind);
@@ -156,6 +157,18 @@ var serializeStack = iced(function serializeStack(frames) {
   }, "");
 })
 exports.serializeStack = serializeStack
+
+function readURI(uri) {
+  let stream = NetUtil.newChannel(uri, 'UTF-8', null).open();
+  let count = stream.available();
+  let data = NetUtil.readInputStreamToString(stream, count, {
+    charset: 'UTF-8'
+  });
+
+  stream.close();
+
+  return data;
+}
 
 // Function takes set of options and returns a JS sandbox. Function may be
 // passed set of options:
@@ -313,7 +326,11 @@ exports.load = load;
 // Utility function to check if id is relative.
 function isRelative(id) { return id[0] === '.'; }
 // Utility function to normalize module `uri`s so they have `.js` extension.
-function normalize(uri) { return uri.substr(-3) === '.js' ? uri : uri + '.js'; }
+function normalize(uri) {
+  return isJSURI(uri) ? uri :
+         isJSONURI(uri) ? uri :
+         uri + '.js';
+}
 // Utility function to join paths. In common case `base` is a
 // `requirer.uri` but in some cases it may be `baseURI`. In order to
 // avoid complexity we require `baseURI` with a trailing `/`.
@@ -371,9 +388,31 @@ const Require = iced(function Require(loader, requirer) {
     if (uri in modules) {
       module = modules[uri];
     }
-    // Otherwise load and cache it. We also freeze module to prevent it from
-    // further changes at runtime.
-    else {
+    else if (isJSONURI(uri)) {
+      let data;
+
+      // First attempt to load and parse json uri
+      // ex: `test.json`
+      // If that doesn't exist, check for `test.json.js`
+      // for node parity
+      try {
+        data = JSON.parse(readURI(uri));
+        module = modules[uri] = Module(requirement, uri);
+        module.exports = data;
+        freeze(module);
+      }
+      catch (err) {
+        // If error thrown from JSON parsing, throw that, do not
+        // attempt to find .json.js file
+        if (err && /JSON\.parse/.test(err.message))
+          throw err;
+        uri = uri + '.js';
+      }
+    }
+    // If not yet cached, load and cache it.
+    // We also freeze module to prevent it from further changes
+    // at runtime.
+    if (!(uri in modules)) {
       module = modules[uri] = Module(requirement, uri);
       freeze(load(loader, module));
     }
@@ -503,6 +542,9 @@ const Loader = iced(function Loader(options) {
   }));
 });
 exports.Loader = Loader;
+
+let isJSONURI = uri => uri.substr(-5) === '.json';
+let isJSURI = uri => uri.substr(-3) === '.js';
 
 });
 

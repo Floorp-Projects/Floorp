@@ -146,7 +146,8 @@ let gPage = {
   handleEvent: function Page_handleEvent(aEvent) {
     switch (aEvent.type) {
       case "unload":
-        this._mutationObserver.disconnect();
+        if (this._mutationObserver)
+          this._mutationObserver.disconnect();
         gAllPages.unregister(this);
         break;
       case "click":

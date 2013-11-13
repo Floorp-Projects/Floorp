@@ -32,6 +32,6 @@ private:
     uint32_t _count;
     uint32_t _currentLevel;
 };
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_LEVEL_INDICATOR_H_

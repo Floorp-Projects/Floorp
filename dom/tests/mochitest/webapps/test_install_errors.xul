@@ -168,20 +168,27 @@ function invalidMessage(next) {
 
 function fileURL(next) {
   try {
-    navigator.mozApps.install("file:///nonexistent");
-    ok(false,
-       "attempt to install nonexistent file: URL doesn't throw exception");
+    var req = navigator.mozApps.install("file:///nonexistent");
+    req.onsuccess = function() {
+      ok(false, "Unexpected success installing non existent file");
+    };
+    req.onerror = function() {
+      is(this.error.name, "INVALID_URL", "Expected INVALID_URL");
+    };
   } catch(ex) {
-    is(ex.message, "INVALID_URL_SCHEME: 'file'; must be 'http' or 'https'",
-       "attempt to install nonexistent file: URL throws exception");
+    ok(false, "Unexpected exception " + ex.message);
   }
 
   try {
-    navigator.mozApps.install("file:///");
-    ok(false, "attempt to install existent file: URL doesn't throw exception");
+    req = navigator.mozApps.install("file:///");
+    req.onsuccess = function() {
+      ok(false, "Unexpected success installing file: URL");
+    };
+    req.onerror = function() {
+      is(this.error.name, "INVALID_URL", "Expected INVALID_URL");
+    };
   } catch(ex) {
-    is(ex.message, "INVALID_URL_SCHEME: 'file'; must be 'http' or 'https'",
-       "attempt to install existent file: URL throws exception");
+    ok(false, "Unexpected exception " + ex.message);
   }
 
   next();

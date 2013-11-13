@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODEC_TIMER_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODEC_TIMER_H_
 
-#include "typedefs.h"
-#include "module_common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc
 {
@@ -56,6 +56,6 @@ private:
 
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_CODEC_TIMER_H_

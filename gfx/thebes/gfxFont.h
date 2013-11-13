@@ -950,12 +950,15 @@ public:
                                 FontCacheSizes* aSizes) const;
 
 protected:
-    class MemoryReporter MOZ_FINAL
-        : public nsIMemoryReporter
+    class MemoryReporter MOZ_FINAL : public mozilla::MemoryMultiReporter
     {
     public:
-        NS_DECL_ISUPPORTS
-        NS_DECL_NSIMEMORYREPORTER
+        MemoryReporter()
+            : MemoryMultiReporter("font-cache")
+        {}
+
+        NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
+                                  nsISupports* aClosure);
     };
 
     // Observer for notifications that the font cache cares about

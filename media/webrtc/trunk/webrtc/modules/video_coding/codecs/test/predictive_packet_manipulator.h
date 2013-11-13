@@ -13,8 +13,8 @@
 
 #include <queue>
 
-#include "modules/video_coding/codecs/test/packet_manipulator.h"
-#include "testsupport/packet_reader.h"
+#include "webrtc/modules/video_coding/codecs/test/packet_manipulator.h"
+#include "webrtc/test/testsupport/packet_reader.h"
 
 namespace webrtc {
 namespace test {
@@ -33,7 +33,7 @@ class PredictivePacketManipulator : public PacketManipulatorImpl {
   void AddRandomResult(double result);
  protected:
   // Returns a uniformly distributed random value between 0.0 and 1.0
-  virtual double RandomUniform();
+  virtual double RandomUniform() OVERRIDE;
 
  private:
   std::queue<double> random_results_;

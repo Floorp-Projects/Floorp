@@ -9,6 +9,9 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
+                                   "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+
 let WebProgressListener = {
   _lastLocation: null,
   _firstPaint: false,
@@ -260,7 +263,7 @@ let WebNavigation =  {
       // start might already be in use)
       let id = aIdMap[aEntry.ID] || 0;
       if (!id) {
-        for (id = Date.now(); id in aIdMap.used; id++);
+        id = gUUIDGenerator.generateUUID();
         aIdMap[aEntry.ID] = id;
         aIdMap.used[id] = true;
       }
@@ -580,6 +583,7 @@ let ContentScroll =  {
       case "Content:SetWindowSize": {
         let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         cwu.setCSSViewport(json.width, json.height);
+        sendAsyncMessage("Content:SetWindowSize:Complete", {});
         break;
       }
     }

@@ -49,7 +49,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/mozPoisonWrite.h"
+#include "mozilla/PoisonIOInterposer.h"
 #if defined(MOZ_ENABLE_PROFILER_SPS)
 #include "shared-libraries.h"
 #endif
@@ -386,8 +386,8 @@ struct TelemetryHistogram {
   uint32_t max;
   uint32_t bucketCount;
   uint32_t histogramType;
-  uint16_t id_offset;
-  uint16_t comment_offset;
+  uint32_t id_offset;
+  uint32_t comment_offset;
   bool extendedStatisticsOK;
 
   const char *id() const;

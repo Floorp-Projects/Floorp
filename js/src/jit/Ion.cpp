@@ -711,7 +711,6 @@ IonScript::IonScript()
     invalidateEpilogueOffset_(0),
     invalidateEpilogueDataOffset_(0),
     numBailouts_(0),
-    numExceptionBailouts_(0),
     hasUncompiledCallTarget_(false),
     hasSPSInstrumentation_(false),
     runtimeData_(0),
@@ -1636,7 +1635,7 @@ IonCompile(JSContext *cx, JSScript *script,
     if (!constraints)
         return AbortReason_Alloc;
 
-    IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, constraints,
+    IonBuilder *builder = alloc->new_<IonBuilder>((JSContext *) nullptr, cx->compartment(), temp, graph, constraints,
                                                   &inspector, info, baselineFrame);
     if (!builder)
         return AbortReason_Alloc;

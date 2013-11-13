@@ -8,8 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cstdio>
-#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -28,19 +29,15 @@
  * where xxxx is the frame number in the test video and yyyy is the
  * corresponding frame number in the original video.
  * The video files should be 1420 YUV videos.
- * The tool prints the result to the standard output in the following format:
- * BSTATS
- * <psnr_value> <ssim_value>; <psnr_value> <ssim_value>; ....
- * ESTATS
- * Unique_frames_count:<value>
- * Max_repeated:<value>
- * Max_skipped<value>
+ * The tool prints the result to standard output in the Chromium perf format:
+ * RESULT <metric>:<label>= <values>
  *
  * The max value for PSNR is 48.0 (between equal frames), as for SSIM it is 1.0.
  *
  * Usage:
- * frame_analyzer --reference_file=<name_of_file> --test_file=<name_of_file>
- * --stats_file=<name_of_file> --width=<frame_width> --height=<frame_height>
+ * frame_analyzer --label=<test_label> --reference_file=<name_of_file>
+ * --test_file=<name_of_file> --stats_file=<name_of_file> --width=<frame_width>
+ * --height=<frame_height>
  */
 int main(int argc, char** argv) {
   std::string program_name = argv[0];
@@ -51,6 +48,8 @@ int main(int argc, char** argv) {
       "  - width(int): The width of the reference and test files. Default: -1\n"
       "  - height(int): The height of the reference and test files. "
       " Default: -1\n"
+      "  - label(string): The label to use for the perf output."
+      " Default: MY_TEST\n"
       "  - stats_file(string): The full name of the file containing the stats"
       " after decoding of the received YUV video. Default: stats.txt\n"
       "  - reference_file(string): The reference YUV file to compare against."
@@ -66,6 +65,7 @@ int main(int argc, char** argv) {
 
   parser.SetFlag("width", "-1");
   parser.SetFlag("height", "-1");
+  parser.SetFlag("label", "MY_TEST");
   parser.SetFlag("stats_file", "stats.txt");
   parser.SetFlag("reference_file", "ref.yuv");
   parser.SetFlag("test_file", "test.yuv");
@@ -92,7 +92,8 @@ int main(int argc, char** argv) {
                             parser.GetFlag("stats_file").c_str(), width, height,
                             &results);
 
-  webrtc::test::PrintAnalysisResults(&results);
-  webrtc::test::PrintMaxRepeatedAndSkippedFrames(
-      parser.GetFlag("stats_file").c_str());
+  std::string label = parser.GetFlag("label");
+  webrtc::test::PrintAnalysisResults(label, &results);
+  webrtc::test::PrintMaxRepeatedAndSkippedFrames(label,
+                                                 parser.GetFlag("stats_file"));
 }

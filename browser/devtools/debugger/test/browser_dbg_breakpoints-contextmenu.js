@@ -107,8 +107,8 @@ function test() {
   }
 
   function initialChecks() {
-    for (let source in gSources) {
-      for (let breakpoint in source) {
+    for (let source of gSources) {
+      for (let breakpoint of source) {
         ok(gBreakpoints._getAdded(breakpoint.attachment),
           "All breakpoint items should have corresponding promises (1).");
         ok(!gBreakpoints._getRemoving(breakpoint.attachment),
@@ -223,8 +223,8 @@ function test() {
       is(!!selectedBreakpoint.attachment.disabled, false,
         "The targetted breakpoint should not have been disabled (" + aIndex + ").");
 
-      for (let source in gSources) {
-        for (let otherBreakpoint in source) {
+      for (let source of gSources) {
+        for (let otherBreakpoint of source) {
           if (otherBreakpoint != selectedBreakpoint) {
             ok(!gBreakpoints._getAdded(otherBreakpoint.attachment),
               "There should be no breakpoint client for a disabled breakpoint (9).");
@@ -235,8 +235,8 @@ function test() {
       }
 
       waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_ADDED, 4).then(() => {
-        for (let source in gSources) {
-          for (let someBreakpoint in source) {
+        for (let source of gSources) {
+          for (let someBreakpoint of source) {
             ok(gBreakpoints._getAdded(someBreakpoint.attachment),
               "There should be a breakpoint client for all enabled breakpoints (11).");
             is(someBreakpoint.attachment.disabled, false,
@@ -245,8 +245,8 @@ function test() {
         }
 
         waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_REMOVED, 5).then(() => {
-          for (let source in gSources) {
-            for (let someBreakpoint in source) {
+          for (let source of gSources) {
+            for (let someBreakpoint of source) {
               ok(!gBreakpoints._getAdded(someBreakpoint.attachment),
                 "There should be no breakpoint client for a disabled breakpoint (13).");
               is(someBreakpoint.attachment.disabled, true,
@@ -255,8 +255,8 @@ function test() {
           }
 
           waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_ADDED, 5).then(() => {
-            for (let source in gSources) {
-              for (let someBreakpoint in source) {
+            for (let source of gSources) {
+              for (let someBreakpoint of source) {
                 ok(gBreakpoints._getAdded(someBreakpoint.attachment),
                   "There should be a breakpoint client for all enabled breakpoints (15).");
                 is(someBreakpoint.attachment.disabled, false,
@@ -293,8 +293,8 @@ function test() {
       ok(!gSources._selectedBreakpointItem,
         "There should be no breakpoint available after removing all breakpoints.");
 
-      for (let source in gSources) {
-        for (let otherBreakpoint in source) {
+      for (let source of gSources) {
+        for (let otherBreakpoint of source) {
           ok(false, "It's a trap!");
         }
       }

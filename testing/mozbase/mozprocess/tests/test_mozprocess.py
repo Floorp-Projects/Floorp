@@ -168,6 +168,30 @@ class ProcTest(unittest.TestCase):
                               False,
                               ['returncode', 'didtimeout'])
 
+    def test_process_timeout_no_kill(self):
+        """ Process is started, runs but we time out waiting on it
+            to complete. Process should not be killed.
+        """
+        p = None
+        def timeout_handler():
+            self.assertEqual(p.proc.poll(), None)
+            p.kill()
+        p = processhandler.ProcessHandler([self.proclaunch, "process_waittimeout.ini"],
+                                          cwd=here,
+                                          onTimeout=(timeout_handler,),
+                                          kill_on_timeout=False)
+        p.run(timeout=1)
+        p.wait()
+        self.assertTrue(p.didTimeout)
+
+        detected, output = check_for_process(self.proclaunch)
+        self.determine_status(detected,
+                              output,
+                              p.proc.returncode,
+                              p.didTimeout,
+                              False,
+                              ['returncode', 'didtimeout'])
+
     def test_process_waittimeout(self):
         """
         Process is started, then wait is called and times out.

@@ -35,7 +35,7 @@ if (!("@mozilla.org/alerts-service;1" in Cc)) {
                getService(Ci.nsIAlertsService);
     ok(true, "Alerts service is available");
   } catch (ex) {
-    todo(false, "Alerts service is not available. (Mac OS X without Growl?)", ex);
+    todo(false, "Alerts service is not available.", ex);
   }
 
   if (notifier) {
@@ -46,7 +46,7 @@ if (!("@mozilla.org/alerts-service;1" in Cc)) {
 
       gNotificationIsAvailable = true;
     } catch (ex) {
-      todo(false, "showAlertNotification() failed. (Mac OS X without Growl?)", ex);
+      todo(false, "showAlertNotification() failed.", ex);
     }
   }
 }

@@ -11,8 +11,7 @@
 #include "webrtc/modules/audio_coding/neteq4/audio_decoder_impl.h"
 
 #include <assert.h>
-
-#include <cstring>  // memmove
+#include <string.h>  // memmove
 
 #include "webrtc/modules/audio_coding/codecs/cng/include/webrtc_cng.h"
 #include "webrtc/modules/audio_coding/codecs/g711/include/g711_interface.h"
@@ -50,7 +49,8 @@ int AudioDecoderPcmU::Decode(const uint8_t* encoded, size_t encoded_len,
 
 int AudioDecoderPcmU::PacketDuration(const uint8_t* encoded,
                                      size_t encoded_len) {
-  return encoded_len / channels_;  // One encoded byte per sample per channel.
+  // One encoded byte per sample per channel.
+  return static_cast<int>(encoded_len / channels_);
 }
 
 // PCMa
@@ -66,7 +66,8 @@ int AudioDecoderPcmA::Decode(const uint8_t* encoded, size_t encoded_len,
 
 int AudioDecoderPcmA::PacketDuration(const uint8_t* encoded,
                                      size_t encoded_len) {
-  return encoded_len / channels_;  // One encoded byte per sample per channel.
+  // One encoded byte per sample per channel.
+  return static_cast<int>(encoded_len / channels_);
 }
 
 // PCM16B
@@ -92,7 +93,7 @@ int AudioDecoderPcm16B::Decode(const uint8_t* encoded, size_t encoded_len,
 int AudioDecoderPcm16B::PacketDuration(const uint8_t* encoded,
                                        size_t encoded_len) {
   // Two encoded byte per sample per channel.
-  return encoded_len / (2 * channels_);
+  return static_cast<int>(encoded_len / (2 * channels_));
 }
 
 AudioDecoderPcm16BMultiCh::AudioDecoderPcm16BMultiCh(
@@ -196,7 +197,7 @@ int AudioDecoderIsac::IncomingPacket(const uint8_t* payload,
                                      uint32_t arrival_timestamp) {
   return WebRtcIsac_UpdateBwEstimate(static_cast<ISACStruct*>(state_),
                                      reinterpret_cast<const uint16_t*>(payload),
-                                     payload_len,
+                                     static_cast<int32_t>(payload_len),
                                      rtp_sequence_number,
                                      rtp_timestamp,
                                      arrival_timestamp);
@@ -250,7 +251,8 @@ int AudioDecoderIsacFix::IncomingPacket(const uint8_t* payload,
                                         uint32_t arrival_timestamp) {
   return WebRtcIsacfix_UpdateBwEstimate(
       static_cast<ISACFIX_MainStruct*>(state_),
-      reinterpret_cast<const uint16_t*>(payload), payload_len,
+      reinterpret_cast<const uint16_t*>(payload),
+      static_cast<int32_t>(payload_len),
       rtp_sequence_number, rtp_timestamp, arrival_timestamp);
 }
 
@@ -287,7 +289,7 @@ int AudioDecoderG722::Init() {
 int AudioDecoderG722::PacketDuration(const uint8_t* encoded,
                                      size_t encoded_len) {
   // 1/2 encoded byte per sample per channel.
-  return 2 * encoded_len / channels_;
+  return static_cast<int>(2 * encoded_len / channels_);
 }
 
 AudioDecoderG722Stereo::AudioDecoderG722Stereo()
@@ -384,7 +386,8 @@ AudioDecoderOpus::AudioDecoderOpus(enum NetEqDecoder type)
   } else {
     channels_ = 1;
   }
-  WebRtcOpus_DecoderCreate(reinterpret_cast<OpusDecInst**>(&state_), channels_);
+  WebRtcOpus_DecoderCreate(reinterpret_cast<OpusDecInst**>(&state_),
+                           static_cast<int>(channels_));
 }
 
 AudioDecoderOpus::~AudioDecoderOpus() {
@@ -394,25 +397,23 @@ AudioDecoderOpus::~AudioDecoderOpus() {
 int AudioDecoderOpus::Decode(const uint8_t* encoded, size_t encoded_len,
                              int16_t* decoded, SpeechType* speech_type) {
   int16_t temp_type = 1;  // Default is speech.
-  assert(channels_ == 1);
-  // TODO(hlundin): Allow 2 channels when WebRtcOpus_Decode provides both
-  // channels interleaved.
-  int16_t ret = WebRtcOpus_Decode(
-      static_cast<OpusDecInst*>(state_),
-      const_cast<int16_t*>(reinterpret_cast<const int16_t*>(encoded)),
-      static_cast<int16_t>(encoded_len), decoded, &temp_type);
+  int16_t ret = WebRtcOpus_DecodeNew(static_cast<OpusDecInst*>(state_), encoded,
+                                     static_cast<int16_t>(encoded_len), decoded,
+                                     &temp_type);
+  if (ret > 0)
+    ret *= static_cast<int16_t>(channels_);  // Return total number of samples.
   *speech_type = ConvertSpeechType(temp_type);
   return ret;
 }
 
 int AudioDecoderOpus::Init() {
-  return WebRtcOpus_DecoderInit(static_cast<OpusDecInst*>(state_));
+  return WebRtcOpus_DecoderInitNew(static_cast<OpusDecInst*>(state_));
 }
 
 int AudioDecoderOpus::PacketDuration(const uint8_t* encoded,
                                      size_t encoded_len) {
   return WebRtcOpus_DurationEst(static_cast<OpusDecInst*>(state_),
-                                encoded, encoded_len);
+                                encoded, static_cast<int>(encoded_len));
 }
 #endif
 

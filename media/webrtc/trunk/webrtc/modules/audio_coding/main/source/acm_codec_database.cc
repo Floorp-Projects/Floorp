@@ -17,7 +17,7 @@
 // references, where appropriate.
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
 
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 // Includes needed to create the codecs.
@@ -101,6 +101,8 @@
 
 namespace webrtc {
 
+namespace acm1 {
+
 // Not yet used payload-types.
 // 83,  82,  81, 80, 79,  78,  77,  76,  75,  74,  73,  72,  71,  70,  69, 68,
 // 67, 66, 65
@@ -183,7 +185,9 @@ const CodecInst ACMCodecDB::database_[] = {
   {13, "CN", 8000, 240, 1, 0},
   {98, "CN", 16000, 480, 1, 0},
   {99, "CN", 32000, 960, 1, 0},
+#ifdef ENABLE_48000_HZ
   {100, "CN", 48000, 1440, 1, 0},
+#endif
 #ifdef WEBRTC_CODEC_AVT
   {106, "telephone-event", 8000, 240, 1, 0},
 #endif
@@ -277,7 +281,9 @@ const ACMCodecDB::CodecSettings ACMCodecDB::codec_settings_[] = {
     {1, {240}, 240, 1},
     {1, {480}, 480, 1},
     {1, {960}, 960, 1},
+#ifdef ENABLE_48000_HZ
     {1, {1440}, 1440, 1},
+#endif
 #ifdef WEBRTC_CODEC_AVT
     {1, {240}, 240, 1},
 #endif
@@ -366,7 +372,9 @@ const WebRtcNetEQDecoder ACMCodecDB::neteq_decoders_[] = {
     kDecoderCNG,
     kDecoderCNG,
     kDecoderCNG,
+#ifdef ENABLE_48000_HZ
     kDecoderCNG,
+#endif
 #ifdef WEBRTC_CODEC_AVT
     kDecoderAVT,
 #endif
@@ -693,10 +701,12 @@ ACMGenericCodec* ACMCodecDB::CreateCodecInstance(const CodecInst* codec_inst) {
         codec_id = kCNSWB;
         break;
       }
+#ifdef ENABLE_48000_HZ
       case 48000: {
         codec_id = kCNFB;
         break;
       }
+#endif
       default: {
         return NULL;
       }
@@ -748,10 +758,12 @@ ACMGenericCodec* ACMCodecDB::CreateCodecInstance(const CodecInst* codec_inst) {
         codec_id = kCNSWB;
         break;
       }
+#ifdef ENABLE_48000_HZ
       case 48000: {
         codec_id = kCNFB;
         break;
       }
+#endif
       default: {
         return NULL;
       }
@@ -938,5 +950,7 @@ bool ACMCodecDB::ValidPayloadType(int payload_type) {
   }
   return true;
 }
+
+}  // namespace acm1
 
 }  // namespace webrtc

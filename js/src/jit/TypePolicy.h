@@ -134,6 +134,17 @@ class IntPolicy : public BoxInputsPolicy
     }
 };
 
+// Expect an Int for operand Op. Else a ToInt32 instruction is inserted.
+template <unsigned Op>
+class ConvertToInt32Policy : public BoxInputsPolicy
+{
+  public:
+    static bool staticAdjustInputs(MInstruction *def);
+    bool adjustInputs(MInstruction *def) {
+        return staticAdjustInputs(def);
+    }
+};
+
 // Expect a double for operand Op. If the input is a Value, it is unboxed.
 template <unsigned Op>
 class DoublePolicy : public BoxInputsPolicy

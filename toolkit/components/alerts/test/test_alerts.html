@@ -53,7 +53,7 @@ function runTest() {
     ok(true, "Alerts service is available");
   } catch (ex) {
     todo(false, 
-         "Alerts service is not available. (Mac OS X without Growl?)", ex);
+         "Alerts service is not available.", ex);
     return;
   }
 
@@ -64,7 +64,7 @@ function runTest() {
                                    false, "foobarcookie", observer);
     ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
   } catch (ex) {
-    todo(false, "showAlertNotification() failed. (Mac OS X without Growl?)", ex);
+    todo(false, "showAlertNotification() failed.", ex);
     SimpleTest.finish();
   }
 }

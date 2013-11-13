@@ -264,6 +264,6 @@ int32_t VideoRenderMacCocoaImpl::FullScreenRender(void* window, const bool enabl
     return -1;
 }
 
-} //namespace webrtc
+}  // namespace webrtc
 
 #endif // COCOA_RENDERING
