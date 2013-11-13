@@ -8,11 +8,11 @@
 
 #include "gfxPlatform.h"
 
+#include "mozilla/MathAlgorithms.h"
 #include "nsAutoRef.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsISupportsImpl.h"
-#include "prbit.h" // for PR_ROTATE_LEFT32
 
 #include <fontconfig/fontconfig.h>
 
@@ -165,7 +165,7 @@ protected:
         static PLDHashNumber HashKey(const FcChar8 *aKey) {
             uint32_t hash = 0;
             for (const FcChar8 *c = aKey; *c != '\0'; ++c) {
-                hash = PR_ROTATE_LEFT32(hash, 3) ^ FcToLower(*c);
+                hash = mozilla::RotateLeft(hash, 3) ^ FcToLower(*c);
             }
             return hash;
         }
