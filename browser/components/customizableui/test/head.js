@@ -174,6 +174,28 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup=false) {
   return deferred.promise;
 }
 
+function promisePanelShown(win) {
+  let panelEl = win.PanelUI.panel;
+  let deferred = Promise.defer();
+  function onPanelOpen(e) {
+    panelEl.removeEventListener("popupshown", onPanelOpen);
+    deferred.resolve();
+  };
+  panelEl.addEventListener("popupshown", onPanelOpen);
+  return deferred.promise;
+}
+
+function promisePanelHidden(win) {
+  let panelEl = win.PanelUI.panel;
+  let deferred = Promise.defer();
+  function onPanelClose(e) {
+    panelEl.removeEventListener("popuphidden", onPanelClose);
+    deferred.resolve();
+  }
+  panelEl.addEventListener("popuphidden", onPanelClose);
+  return deferred.promise;
+}
+
 function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
   function tryNow() {
     tries++;
