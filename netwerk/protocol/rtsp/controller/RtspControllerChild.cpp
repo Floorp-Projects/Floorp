@@ -84,7 +84,7 @@ RtspControllerChild::RecvOnMediaDataAvailable(
 {
   nsRefPtr<RtspMetaData> meta = new RtspMetaData();
   nsresult rv = meta->DeserializeRtspMetaData(metaArray);
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, true);
 
   if (mListener) {
     mListener->OnMediaDataAvailable(index, data, length, offset, meta.get());
@@ -115,7 +115,7 @@ RtspControllerChild::RecvOnConnected(
   // Deserialize meta data.
   nsRefPtr<RtspMetaData> meta = new RtspMetaData();
   nsresult rv = meta->DeserializeRtspMetaData(metaArray);
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, true);
   meta->GetTotalTracks(&tracks);
   if (tracks <= 0) {
     LOG(("RtspControllerChild::RecvOnConnected invalid tracks %d", tracks));
@@ -138,9 +138,9 @@ RtspControllerChild::RecvOnConnected(
 bool
 RtspControllerChild::RecvOnDisconnected(
                        const uint8_t& index,
-                       const uint32_t& reason)
+                       const nsresult& reason)
 {
-  LOG(("RtspControllerChild::RecvOnDisconnected %d %d", index, reason));
+  LOG(("RtspControllerChild::RecvOnDisconnected for track %d reason = 0x%x", index, reason));
   if (mListener) {
     mListener->OnDisconnected(index, reason);
   }
@@ -148,9 +148,9 @@ RtspControllerChild::RecvOnDisconnected(
 }
 
 bool
-RtspControllerChild::RecvAsyncOpenFailed(const uint8_t& reason)
+RtspControllerChild::RecvAsyncOpenFailed(const nsresult& reason)
 {
-  LOG(("RtspControllerChild::RecvAsyncOpenFailed %d", reason));
+  LOG(("RtspControllerChild::RecvAsyncOpenFailed reason = 0x%x", reason));
   if (mListener) {
     mListener->OnDisconnected(0, NS_ERROR_CONNECTION_REFUSED);
   }
@@ -249,7 +249,7 @@ NS_IMETHODIMP
 RtspControllerChild::Play(void)
 {
   LOG(("RtspControllerChild::Play()"));
-  NS_ENSURE_SUCCESS(mIPCOpen, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (NS_IsMainThread()) {
     if (!SendPlay())
@@ -267,7 +267,7 @@ NS_IMETHODIMP
 RtspControllerChild::Pause(void)
 {
   LOG(("RtspControllerChild::Pause()"));
-  NS_ENSURE_SUCCESS(mIPCOpen, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (NS_IsMainThread()) {
     if (!SendPause())
@@ -285,7 +285,7 @@ NS_IMETHODIMP
 RtspControllerChild::Resume(void)
 {
   LOG(("RtspControllerChild::Resume()"));
-  NS_ENSURE_SUCCESS(mIPCOpen, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
 
   if (!--mSuspendCount) {
@@ -306,7 +306,7 @@ NS_IMETHODIMP
 RtspControllerChild::Suspend(void)
 {
   LOG(("RtspControllerChild::Suspend()"));
-  NS_ENSURE_SUCCESS(mIPCOpen, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (!mSuspendCount++) {
     if (NS_IsMainThread()) {
@@ -326,7 +326,7 @@ NS_IMETHODIMP
 RtspControllerChild::Seek(uint64_t seekTimeUs)
 {
   LOG(("RtspControllerChild::Seek() %llu", seekTimeUs));
-  NS_ENSURE_SUCCESS(mIPCOpen, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (NS_IsMainThread()) {
     if (!SendSeek(seekTimeUs))
@@ -344,7 +344,7 @@ NS_IMETHODIMP
 RtspControllerChild::Stop()
 {
   LOG(("RtspControllerChild::Stop()"));
-  NS_ENSURE_SUCCESS(mIPCOpen, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (NS_IsMainThread()) {
     if (!SendStop())
@@ -392,9 +392,9 @@ RtspControllerChild::OnConnected(uint8_t index,
 
 NS_IMETHODIMP
 RtspControllerChild::OnDisconnected(uint8_t index,
-                                    uint32_t reason)
+                                    nsresult reason)
 {
-  LOG(("RtspControllerChild::OnDisconnected()"));
+  LOG(("RtspControllerChild::OnDisconnected() reason = 0x%x", reason));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
