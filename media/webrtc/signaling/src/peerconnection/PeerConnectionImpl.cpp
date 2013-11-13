@@ -456,7 +456,8 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mInternal(new Internal())
   , mReadyState(PCImplReadyState::New)
   , mSignalingState(PCImplSignalingState::SignalingStable)
-  , mIceState(PCImplIceState::IceGathering)
+  , mIceConnectionState(PCImplIceConnectionState::New)
+  , mIceGatheringState(PCImplIceGatheringState::New)
   , mWindow(nullptr)
   , mIdentity(nullptr)
   , mSTSThread(nullptr)
@@ -753,9 +754,12 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   mMedia = new PeerConnectionMedia(this);
 
   // Connect ICE slots.
-  mMedia->SignalIceGatheringCompleted.connect(this, &PeerConnectionImpl::IceGatheringCompleted);
-  mMedia->SignalIceCompleted.connect(this, &PeerConnectionImpl::IceCompleted);
-  mMedia->SignalIceFailed.connect(this, &PeerConnectionImpl::IceFailed);
+  mMedia->SignalIceGatheringStateChange.connect(
+      this,
+      &PeerConnectionImpl::IceGatheringStateChange);
+  mMedia->SignalIceConnectionStateChange.connect(
+      this,
+      &PeerConnectionImpl::IceConnectionStateChange);
 
   // Initialize the media object.
   res = mMedia->Init(aConfiguration->getStunServers(),
@@ -1418,12 +1422,22 @@ PeerConnectionImpl::SipccState(PCImplSipccState* aState)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::IceState(PCImplIceState* aState)
+PeerConnectionImpl::IceConnectionState(PCImplIceConnectionState* aState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aState);
 
-  *aState = mIceState;
+  *aState = mIceConnectionState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::IceGatheringState(PCImplIceGatheringState* aState)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+  MOZ_ASSERT(aState);
+
+  *aState = mIceGatheringState;
   return NS_OK;
 }
 
@@ -1432,7 +1446,7 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(mTrickle || !assert_ice_ready ||
-             (mIceState != PCImplIceState::IceGathering));
+             (mIceGatheringState == PCImplIceGatheringState::Complete));
 
   if (mReadyState == PCImplReadyState::Closed)
     return NS_ERROR_FAILURE;
@@ -1630,71 +1644,96 @@ PeerConnectionImpl::GetHandle()
   return mHandle;
 }
 
+static mozilla::dom::PCImplIceConnectionState
+toDomIceConnectionState(NrIceCtx::ConnectionState state) {
+  switch (state) {
+    case NrIceCtx::ICE_CTX_INIT:
+      return PCImplIceConnectionState::New;
+    case NrIceCtx::ICE_CTX_CHECKING:
+      return PCImplIceConnectionState::Checking;
+    case NrIceCtx::ICE_CTX_OPEN:
+      return PCImplIceConnectionState::Connected;
+    case NrIceCtx::ICE_CTX_FAILED:
+      return PCImplIceConnectionState::Failed;
+  }
+  MOZ_CRASH();
+}
+
+static mozilla::dom::PCImplIceGatheringState
+toDomIceGatheringState(NrIceCtx::GatheringState state) {
+  switch (state) {
+    case NrIceCtx::ICE_CTX_GATHER_INIT:
+      return PCImplIceGatheringState::New;
+    case NrIceCtx::ICE_CTX_GATHER_STARTED:
+      return PCImplIceGatheringState::Gathering;
+    case NrIceCtx::ICE_CTX_GATHER_COMPLETE:
+      return PCImplIceGatheringState::Complete;
+  }
+  MOZ_CRASH();
+}
+
 // This is called from the STS thread and so we need to thunk
 // to the main thread.
-void
-PeerConnectionImpl::IceGatheringCompleted(NrIceCtx *aCtx)
-{
-  (void) aCtx;
+void PeerConnectionImpl::IceConnectionStateChange(
+    NrIceCtx* ctx,
+    NrIceCtx::ConnectionState state) {
+  (void)ctx;
   // Do an async call here to unwind the stack. refptr keeps the PC alive.
   nsRefPtr<PeerConnectionImpl> pc(this);
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pc,
-                             &PeerConnectionImpl::IceStateChange_m,
-                             PCImplIceState::IceWaiting),
+                             &PeerConnectionImpl::IceConnectionStateChange_m,
+                             toDomIceConnectionState(state)),
                 NS_DISPATCH_NORMAL);
 }
 
 void
-PeerConnectionImpl::IceCompleted(NrIceCtx *aCtx)
+PeerConnectionImpl::IceGatheringStateChange(
+    NrIceCtx* ctx,
+    NrIceCtx::GatheringState state)
 {
-  (void) aCtx;
+  (void)ctx;
   // Do an async call here to unwind the stack. refptr keeps the PC alive.
   nsRefPtr<PeerConnectionImpl> pc(this);
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pc,
-                             &PeerConnectionImpl::IceStateChange_m,
-                             PCImplIceState::IceConnected),
-                NS_DISPATCH_NORMAL);
-}
-
-void
-PeerConnectionImpl::IceFailed(NrIceCtx *aCtx)
-{
-  (void) aCtx;
-  // Do an async call here to unwind the stack. refptr keeps the PC alive.
-  nsRefPtr<PeerConnectionImpl> pc(this);
-  RUN_ON_THREAD(mThread,
-                WrapRunnable(pc,
-                             &PeerConnectionImpl::IceStateChange_m,
-                             PCImplIceState::IceFailed),
+                             &PeerConnectionImpl::IceGatheringStateChange_m,
+                             toDomIceGatheringState(state)),
                 NS_DISPATCH_NORMAL);
 }
 
 nsresult
-PeerConnectionImpl::IceStateChange_m(PCImplIceState aState)
+PeerConnectionImpl::IceConnectionStateChange_m(PCImplIceConnectionState aState)
 {
   PC_AUTO_ENTER_API_CALL(false);
 
   CSFLogDebug(logTag, "%s", __FUNCTION__);
 
-  mIceState = aState;
+  mIceConnectionState = aState;
 
-  switch (mIceState) {
-    case PCImplIceState::IceGathering:
-      STAMP_TIMECARD(mTimeCard, "Ice state: gathering");
+  // Would be nice if we had a means of converting one of these dom enums
+  // to a string that wasn't almost as much text as this switch statement...
+  switch (mIceConnectionState) {
+    case PCImplIceConnectionState::New:
+      STAMP_TIMECARD(mTimeCard, "Ice state: new");
       break;
-    case PCImplIceState::IceWaiting:
-      STAMP_TIMECARD(mTimeCard, "Ice state: waiting");
-      break;
-    case PCImplIceState::IceChecking:
+    case PCImplIceConnectionState::Checking:
       STAMP_TIMECARD(mTimeCard, "Ice state: checking");
       break;
-    case PCImplIceState::IceConnected:
+    case PCImplIceConnectionState::Connected:
       STAMP_TIMECARD(mTimeCard, "Ice state: connected");
       break;
-    case PCImplIceState::IceFailed:
+    case PCImplIceConnectionState::Completed:
+      STAMP_TIMECARD(mTimeCard, "Ice state: completed");
+      break;
+    case PCImplIceConnectionState::Failed:
       STAMP_TIMECARD(mTimeCard, "Ice state: failed");
+      break;
+    case PCImplIceConnectionState::Disconnected:
+      STAMP_TIMECARD(mTimeCard, "Ice state: disconnected");
+      break;
+    case PCImplIceConnectionState::Closed:
+      STAMP_TIMECARD(mTimeCard, "Ice state: closed");
       break;
   }
 
@@ -1706,7 +1745,44 @@ PeerConnectionImpl::IceStateChange_m(PCImplIceState aState)
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pco,
                              &PeerConnectionObserver::OnStateChange,
-                             PCObserverStateType::IceState,
+                             PCObserverStateType::IceConnectionState,
+                             rv, static_cast<JSCompartment*>(nullptr)),
+                NS_DISPATCH_NORMAL);
+  return NS_OK;
+}
+
+nsresult
+PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
+{
+  PC_AUTO_ENTER_API_CALL(false);
+
+  CSFLogDebug(logTag, "%s", __FUNCTION__);
+
+  mIceGatheringState = aState;
+
+  // Would be nice if we had a means of converting one of these dom enums
+  // to a string that wasn't almost as much text as this switch statement...
+  switch (mIceGatheringState) {
+    case PCImplIceGatheringState::New:
+      STAMP_TIMECARD(mTimeCard, "Ice gathering state: new");
+      break;
+    case PCImplIceGatheringState::Gathering:
+      STAMP_TIMECARD(mTimeCard, "Ice gathering state: gathering");
+      break;
+    case PCImplIceGatheringState::Complete:
+      STAMP_TIMECARD(mTimeCard, "Ice state: complete");
+      break;
+  }
+
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
+  if (!pco) {
+    return NS_OK;
+  }
+  WrappableJSErrorResult rv;
+  RUN_ON_THREAD(mThread,
+                WrapRunnable(pco,
+                             &PeerConnectionObserver::OnStateChange,
+                             PCObserverStateType::IceGatheringState,
                              rv, static_cast<JSCompartment*>(nullptr)),
                 NS_DISPATCH_NORMAL);
   return NS_OK;
