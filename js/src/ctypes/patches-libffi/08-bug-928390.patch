@@ -1,0 +1,135 @@
+# HG changeset patch
+# Parent e5f7246bf2158ac88b3e0727811925c467226d2e
+# User Landry Breuil <landry@openbsd.org>
+Bug 928390: Partially backport libffi upstream 049d8386ff for OpenBSD/mips/hppa. r=glandium
+
+diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
+--- a/js/src/ctypes/libffi/configure
++++ b/js/src/ctypes/libffi/configure
+@@ -11208,17 +11208,17 @@ case "$host" in
+   cris-*-*)
+ 	TARGET=LIBFFI_CRIS; TARGETDIR=cris
+ 	;;
+ 
+   frv-*-*)
+ 	TARGET=FRV; TARGETDIR=frv
+ 	;;
+ 
+-  hppa*-*-linux* | parisc*-*-linux*)
++  hppa*-*-linux* | hppa*-*-openbsd* | parisc*-*-linux*)
+ 	TARGET=PA_LINUX; TARGETDIR=pa
+ 	;;
+   hppa*64-*-hpux*)
+ 	TARGET=PA64_HPUX; TARGETDIR=pa
+ 	;;
+   hppa*-*-hpux*)
+ 	TARGET=PA_HPUX; TARGETDIR=pa
+ 	;;
+@@ -11251,17 +11251,17 @@ case "$host" in
+ 
+   m68k-*-*)
+ 	TARGET=M68K; TARGETDIR=m68k
+ 	;;
+ 
+   mips-sgi-irix5.* | mips-sgi-irix6.*)
+ 	TARGET=MIPS; TARGETDIR=mips
+ 	;;
+-  mips*-*linux*)
++  mips*-*linux* | mips*-*-openbsd*)
+ 	# Support 128-bit long double for NewABI.
+ 	HAVE_LONG_DOUBLE='defined(__mips64)'
+ 	TARGET=MIPS; TARGETDIR=mips
+ 	;;
+ 
+   moxie-*-*)
+         TARGET=MOXIE; TARGETDIR=moxie
+ 	;;
+diff --git a/js/src/ctypes/libffi/configure.ac b/js/src/ctypes/libffi/configure.ac
+--- a/js/src/ctypes/libffi/configure.ac
++++ b/js/src/ctypes/libffi/configure.ac
+@@ -70,17 +70,17 @@ case "$host" in
+   cris-*-*)
+ 	TARGET=LIBFFI_CRIS; TARGETDIR=cris
+ 	;;
+ 
+   frv-*-*)
+ 	TARGET=FRV; TARGETDIR=frv
+ 	;;
+ 
+-  hppa*-*-linux* | parisc*-*-linux*)
++  hppa*-*-linux* | hppa*-*-openbsd* | parisc*-*-linux*)
+ 	TARGET=PA_LINUX; TARGETDIR=pa
+ 	;;
+   hppa*64-*-hpux*)
+ 	TARGET=PA64_HPUX; TARGETDIR=pa
+ 	;;
+   hppa*-*-hpux*)
+ 	TARGET=PA_HPUX; TARGETDIR=pa
+ 	;;
+@@ -113,17 +113,17 @@ case "$host" in
+ 
+   m68k-*-*)
+ 	TARGET=M68K; TARGETDIR=m68k
+ 	;;
+ 
+   mips-sgi-irix5.* | mips-sgi-irix6.*)
+ 	TARGET=MIPS; TARGETDIR=mips
+ 	;;
+-  mips*-*linux*)
++  mips*-*linux* | mips*-*-openbsd*)
+ 	# Support 128-bit long double for NewABI.
+ 	HAVE_LONG_DOUBLE='defined(__mips64)'
+ 	TARGET=MIPS; TARGETDIR=mips
+ 	;;
+ 
+   moxie-*-*)
+         TARGET=MOXIE; TARGETDIR=moxie
+ 	;;
+diff --git a/js/src/ctypes/libffi/src/mips/ffi.c b/js/src/ctypes/libffi/src/mips/ffi.c
+--- a/js/src/ctypes/libffi/src/mips/ffi.c
++++ b/js/src/ctypes/libffi/src/mips/ffi.c
+@@ -32,17 +32,21 @@
+ 
+ #ifdef __GNUC__
+ #  if (__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3))
+ #    define USE__BUILTIN___CLEAR_CACHE 1
+ #  endif
+ #endif
+ 
+ #ifndef USE__BUILTIN___CLEAR_CACHE
+-#include <sys/cachectl.h>
++#  if defined(__OpenBSD__)
++#    include <mips64/sysarch.h>
++#  else
++#    include <sys/cachectl.h>
++#  endif
+ #endif
+ 
+ #ifdef FFI_DEBUG
+ # define FFI_MIPS_STOP_HERE() ffi_stop_here()
+ #else
+ # define FFI_MIPS_STOP_HERE() do {} while(0)
+ #endif
+ 
+diff --git a/js/src/ctypes/libffi/src/mips/ffitarget.h b/js/src/ctypes/libffi/src/mips/ffitarget.h
+--- a/js/src/ctypes/libffi/src/mips/ffitarget.h
++++ b/js/src/ctypes/libffi/src/mips/ffitarget.h
+@@ -24,17 +24,17 @@
+ 
+    ----------------------------------------------------------------------- */
+ 
+ #ifndef LIBFFI_TARGET_H
+ #define LIBFFI_TARGET_H
+ 
+ #ifdef linux
+ # include <asm/sgidefs.h>
+-#else
++#elif !defined(__OpenBSD__)
+ # include <sgidefs.h>
+ #endif
+ #  ifndef _ABIN32
+ #    define _ABIN32 _MIPS_SIM_NABI32
+ #  endif
+ #  ifndef _ABI64
+ #    define _ABI64 _MIPS_SIM_ABI64
+ #  endif
