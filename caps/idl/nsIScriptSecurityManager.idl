@@ -10,7 +10,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 
-[scriptable, uuid(374ab3e6-d827-479f-b966-eeed90e94788)]
+[scriptable, uuid(36619e6e-6ed3-4fd5-9a16-763f3614e5ed)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -101,19 +101,6 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     void checkLoadURIStrWithPrincipal(in nsIPrincipal aPrincipal,
                                       in AUTF8String uri,
                                       in unsigned long flags);
-
-    /**
-     * Check that the function 'funObj' is allowed to run on 'targetObj'
-     *
-     * Will return error code NS_ERROR_DOM_SECURITY_ERR if the function
-     * should not run
-     *
-     * @param cx The current active JavaScript context.
-     * @param funObj The function trying to run..
-     * @param targetObj The object the function will run on.
-     */
-    [noscript] void checkFunctionAccess(in JSContextPtr cx, in voidPtr funObj,
-                                        in voidPtr targetObj);
 
     /**
      * Return true if scripts may be executed in the scope of the given global.
