@@ -13,7 +13,7 @@ translator:: javaparser \
 javaparser:: \
 ; mkdir -p javaparser/bin && \
   find javaparser/src -name "*.java" | \
-    xargs javac -g -d javaparser/bin && \
+    xargs javac -encoding ISO-8859-1 -g -d javaparser/bin && \
   jar cf javaparser.jar -C javaparser/bin .
 
 sync_javaparser:: \
