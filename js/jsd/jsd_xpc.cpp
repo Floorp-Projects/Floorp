@@ -6,6 +6,7 @@
 
 #include "jsfriendapi.h"
 #include "jsd_xpc.h"
+#include "xpcpublic.h"
 
 #include "js/GCAPI.h"
 #include "js/OldDebugAPI.h"
@@ -30,6 +31,7 @@
 
 /* XXX DOM dependency */
 #include "nsIScriptContext.h"
+#include "nsPIDOMWindow.h"
 #include "nsDOMJSUtils.h"
 #include "SandboxPrivate.h"
 #include "nsJSPrincipals.h"
@@ -1585,7 +1587,9 @@ jsdContext::FromPtr (JSDContext *aJSDCx, JSContext *aJSCx)
 }
 
 jsdContext::jsdContext (JSDContext *aJSDCx, JSContext *aJSCx,
-                        nsISupports *aISCx) : mValid(true), mTag(0),
+                        nsISupports *aISCx) : mValid(true),
+                                              mScriptDisabledForWindowWithID(0),
+                                              mTag(0),
                                               mJSDCx(aJSDCx),
                                               mJSCx(aJSCx), mISCx(aISCx)
 {
@@ -1754,17 +1758,7 @@ NS_IMETHODIMP
 jsdContext::GetScriptsEnabled (bool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    if (!mISCx) {
-        *_rval = true;
-        return NS_OK;
-    }
-
-    nsCOMPtr<nsIScriptContext> context = do_QueryInterface(mISCx);
-    if (!context)
-        return NS_ERROR_NO_INTERFACE;
-
-    *_rval = context->GetScriptsEnabled();
-
+    *_rval = IsScriptEnabled();
     return NS_OK;
 }
 
@@ -1772,17 +1766,29 @@ NS_IMETHODIMP
 jsdContext::SetScriptsEnabled (bool _rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    if (!mISCx) {
-        if (_rval)
-            return NS_OK;
-        return NS_ERROR_NO_INTERFACE;
+    if (_rval == IsScriptEnabled())
+        return NS_OK;
+
+    nsCOMPtr<nsIScriptContext> scx = do_QueryInterface(mISCx);
+    NS_ENSURE_TRUE(scx && scx->GetWindowProxy(), NS_ERROR_NO_INTERFACE);
+    nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(scx->GetGlobalObject());
+    NS_ENSURE_TRUE(piWin, NS_ERROR_NO_INTERFACE);
+    uint64_t currentWindowID = piWin->WindowID();
+
+    if (_rval) {
+        if (mScriptDisabledForWindowWithID != currentWindowID) {
+            NS_WARNING("Please stop abusing JSD and fix your code!");
+            return NS_ERROR_UNEXPECTED;
+        }
+        xpc::Scriptability::Get(scx->GetWindowProxy()).Unblock();
+        piWin->ResumeTimeouts();
+        mScriptDisabledForWindowWithID = 0;
     }
-
-    nsCOMPtr<nsIScriptContext> context = do_QueryInterface(mISCx);
-    if (!context)
-        return NS_ERROR_NO_INTERFACE;
-
-    context->SetScriptsEnabled(_rval, true);
+    else {
+        piWin->SuspendTimeouts();
+        xpc::Scriptability::Get(scx->GetWindowProxy()).Block();
+        mScriptDisabledForWindowWithID = currentWindowID;
+    }
 
     return NS_OK;
 }
