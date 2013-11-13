@@ -4,6 +4,8 @@ div.input-color-swatch {
   height: 100%;
   min-width: 40px;
   min-height: 15px;
+  -moz-box-sizing: border-box;
+  border: 1px solid grey;
   display: block;
   background-color:#000000; /* default color for input type color */
 }
