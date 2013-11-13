@@ -1170,6 +1170,7 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
       if (!this.istreamComposed) {
         this.loadBlobs(this.msg.parts, (function () {
           this.istream = MMS.PduHelper.compose(null, this.msg);
+          this.istreamSize = this.istream.available();
           this.istreamComposed = true;
           if (this.isCancelled) {
             this.runCallbackIfValid(_MMS_ERROR_MESSAGE_DELETED, null);
@@ -1199,6 +1200,13 @@ SendTransaction.prototype = Object.create(CancellableTransaction.prototype, {
           }
 
           this.retryCount++;
+
+          // the input stream may be read in the previous failure request so
+          // we have to re-compose it.
+          if (this.istreamSize == null ||
+              this.istreamSize != this.istream.available()) {
+            this.istream = MMS.PduHelper.compose(null, this.msg);
+          }
 
           this.timer.initWithCallback(this.send.bind(this, retryCallback),
                                       PREF_SEND_RETRY_INTERVAL,
