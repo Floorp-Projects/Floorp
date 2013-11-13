@@ -288,8 +288,9 @@ parent:
     ContentReceivedTouch(bool aPreventDefault);
 
     /**
-     * Updates any zoom constraints on the parent and anything tied to it. This
-     * is useful for control logic that resides outside of the remote browser.
+     * Updates the parent's zoom constraints for this tab. The zoom controller
+     * code lives on the parent side and so this allows it to have up-to-date
+     * zoom constraints.
      */
     UpdateZoomConstraints(bool aAllowZoom, CSSToScreenScale aMinZoom, CSSToScreenScale aMaxZoom);
 
