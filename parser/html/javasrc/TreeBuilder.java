@@ -4819,7 +4819,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private void pushHeadPointerOntoStack() throws SAXException {
         assert headPointer != null;
-        assert !fragment;
         assert mode == AFTER_HEAD;
         fatal();
         silentPush(new StackNode<T>(ElementName.HEAD, headPointer
