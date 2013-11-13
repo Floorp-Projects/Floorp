@@ -306,7 +306,7 @@ dnl to use the cross-compile setup for now
 dnl ========================================================
 
 dnl AR_FLAGS set here so HOST_AR_FLAGS can be set correctly (see bug 538269)
-AR_FLAGS='cr $@'
+AR_FLAGS='crs $@'
 
 if test "$COMPILE_ENVIRONMENT"; then
 
@@ -3557,7 +3557,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.9.6, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR(4.10.2, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -3668,7 +3668,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.15.3, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.15.4, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -3979,6 +3979,9 @@ MOZ_DISABLE_CRYPTOLEGACY=
 NSS_DISABLE_DBM=
 NECKO_COOKIES=1
 NECKO_PROTOCOLS_DEFAULT="about app data file ftp http res viewsource websocket wyciwyg device"
+if test -n "$MOZ_RTSP"; then
+  NECKO_PROTOCOLS_DEFAULT="$NECKO_PROTOCOLS_DEFAULT rtsp"
+fi
 USE_ARM_KUSER=
 BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
@@ -7290,14 +7293,6 @@ fi
 AC_SUBST(MOZ_B2G_FM)
 
 dnl ========================================================
-dnl = Enable Rtsp Protocol for B2G (Gonk usually)
-dnl ========================================================
-if test -n "$MOZ_RTSP"; then
-    AC_DEFINE(MOZ_RTSP)
-fi
-AC_SUBST(MOZ_RTSP)
-
-dnl ========================================================
 dnl = Enable Bluetooth Interface for B2G (Gonk usually)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(b2g-bt,
@@ -8105,7 +8100,7 @@ done],
     NECKO_PROTOCOLS="$NECKO_PROTOCOLS_DEFAULT")
 dnl Remove dupes
 NECKO_PROTOCOLS=`${PERL} ${srcdir}/build/unix/uniq.pl ${NECKO_PROTOCOLS}`
-AC_SUBST(NECKO_PROTOCOLS)
+AC_SUBST_SET(NECKO_PROTOCOLS)
 for p in $NECKO_PROTOCOLS; do
     AC_DEFINE_UNQUOTED(NECKO_PROTOCOL_$p)
     _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_PROTOCOL_$p"
@@ -8877,7 +8872,27 @@ dnl so that regeneration via dependencies works correctly
       WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_ethtool_cmd_speed_hi=0"
    fi
 
-   GYP_WEBRTC_OPTIONS="--format=mozmake ${WEBRTC_CONFIG} -D target_arch=${WEBRTC_TARGET_ARCH} ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
+   if test -n "$CROSS_COMPILE"; then
+      case "$target" in
+      *-mingw*)
+      	GYP_MOZMAKE_OPTIONS="-G os=win"
+        ;;
+      *-darwin*)
+        GYP_MOZMAKE_OPTIONS="-G os=mac"
+        if test "$MACOS_SDK_DIR"; then
+           GYP_MOZMAKE_OPTIONS="${GYP_MOZMAKE_OPTIONS} -D mac_sdk_path=$MACOS_SDK_DIR"
+        fi
+        ;;
+      *-*linux*)
+        GYP_MOZMAKE_OPTIONS="-G os=linux"
+        ;;
+      *)
+        AC_MSG_ERROR([Don't know what options to give to WebRTC for cross-compilation])
+    	;;
+      esac
+   fi
+
+   GYP_WEBRTC_OPTIONS="--format=mozmake ${GYP_MOZMAKE_OPTIONS} ${WEBRTC_CONFIG} -D target_arch=${WEBRTC_TARGET_ARCH} ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
 
    $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
      $GYP_WEBRTC_OPTIONS \

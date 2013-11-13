@@ -279,25 +279,28 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
 
 #ifdef DEBUG
         if (GetIonContext()->cx) {
-            uint32_t stackDepth = js_ReconstructStackDepth(GetIonContext()->cx, script, bailPC);
-            if (JSOp(*bailPC) == JSOP_FUNCALL) {
-                // For fun.call(this, ...); the reconstructStackDepth will
-                // include the this. When inlining that is not included.
-                // So the exprStackSlots will be one less.
-                JS_ASSERT(stackDepth - exprStack <= 1);
-            } else if (JSOp(*bailPC) != JSOP_FUNAPPLY &&
-                       !IsGetPropPC(bailPC) && !IsSetPropPC(bailPC))
-            {
-                // For fun.apply({}, arguments) the reconstructStackDepth will
-                // have stackdepth 4, but it could be that we inlined the
-                // funapply. In that case exprStackSlots, will have the real
-                // arguments in the slots and not be 4.
+            uint32_t stackDepth;
+            if (ReconstructStackDepth(GetIonContext()->cx, script, bailPC, &stackDepth)) {
+                if (JSOp(*bailPC) == JSOP_FUNCALL) {
+                    // For fun.call(this, ...); the reconstructStackDepth will
+                    // include the this. When inlining that is not included.
+                    // So the exprStackSlots will be one less.
+                    JS_ASSERT(stackDepth - exprStack <= 1);
+                } else if (JSOp(*bailPC) != JSOP_FUNAPPLY &&
+                           !IsGetPropPC(bailPC) && !IsSetPropPC(bailPC))
+                {
+                    // For fun.apply({}, arguments) the reconstructStackDepth will
+                    // have stackdepth 4, but it could be that we inlined the
+                    // funapply. In that case exprStackSlots, will have the real
+                    // arguments in the slots and not be 4.
 
-                // With accessors, we have different stack depths depending on whether or not we
-                // inlined the accessor, as the inlined stack contains a callee function that should
-                // never have been there and we might just be capturing an uneventful property site,
-                // in which case there won't have been any violence.
-                JS_ASSERT(exprStack == stackDepth);
+                    // With accessors, we have different stack depths depending on
+                    // whether or not we inlined the accessor, as the inlined stack
+                    // contains a callee function that should never have been there
+                    // and we might just be capturing an uneventful property site, in
+                    // which case there won't have been any violence.
+                    JS_ASSERT(exprStack == stackDepth);
+                }
             }
         }
 #endif

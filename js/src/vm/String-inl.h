@@ -219,7 +219,7 @@ JSFlatString::toPropertyName(JSContext *cx)
 #endif
     if (isAtom())
         return asAtom().asPropertyName();
-    JSAtom *atom = js::AtomizeString<js::CanGC>(cx, this);
+    JSAtom *atom = js::AtomizeString(cx, this);
     if (!atom)
         return nullptr;
     return atom->asPropertyName();

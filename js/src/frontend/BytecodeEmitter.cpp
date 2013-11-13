@@ -59,6 +59,7 @@ struct frontend::StmtInfoBCE : public StmtInfoBase
     ptrdiff_t       update;         /* loop update offset (top if none) */
     ptrdiff_t       breaks;         /* offset of last break in loop */
     ptrdiff_t       continues;      /* offset of last continue in loop */
+    uint32_t        blockScopeIndex; /* index of scope in BlockScopeArray */
 
     StmtInfoBCE(ExclusiveContext *cx) : StmtInfoBase(cx) {}
 
@@ -100,10 +101,11 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     atomIndices(sc->context),
     firstLine(lineNum),
     stackDepth(0), maxStackDepth(0),
-    tryNoteList(sc->context),
     arrayCompDepth(0),
     emitLevel(0),
     constList(sc->context),
+    tryNoteList(sc->context),
+    blockScopeList(sc->context),
     typesetCount(0),
     hasSingletons(false),
     emittingForInit(false),
@@ -686,13 +688,23 @@ EnclosingStaticScope(BytecodeEmitter *bce)
 }
 
 // Push a block scope statement and link blockObj into bce->blockChain.
-static void
-PushBlockScopeBCE(BytecodeEmitter *bce, StmtInfoBCE *stmt, StaticBlockObject &blockObj,
+static bool
+PushBlockScopeBCE(BytecodeEmitter *bce, StmtInfoBCE *stmt, ObjectBox *objbox,
                   ptrdiff_t top)
 {
+    StaticBlockObject &blockObj = objbox->object->as<StaticBlockObject>();
+
     PushStatementBCE(bce, stmt, STMT_BLOCK, top);
+
+    unsigned scopeObjectIndex = bce->objectList.add(objbox);
+    stmt->blockScopeIndex = bce->blockScopeList.length();
+    if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset()))
+        return false;
+
     blockObj.initEnclosingStaticScope(EnclosingStaticScope(bce));
     FinishPushBlockScope(bce, stmt, blockObj);
+
+    return true;
 }
 
 // Patches |breaks| and |continues| unless the top statement info record
@@ -707,6 +719,10 @@ PopStatementBCE(ExclusiveContext *cx, BytecodeEmitter *bce)
     {
         return false;
     }
+
+    if (stmt->isBlockScope)
+        bce->blockScopeList.recordEnd(stmt->blockScopeIndex, bce->offset());
+
     FinishPopStatement(bce);
     return true;
 }
@@ -770,10 +786,17 @@ EmitAtomOp(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 }
 
 static bool
-EmitObjectOp(ExclusiveContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
+EmitInternedObjectOp(ExclusiveContext *cx, uint32_t index, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
-    return EmitIndex32(cx, op, bce->objectList.add(objbox), bce);
+    JS_ASSERT(index < bce->objectList.length);
+    return EmitIndex32(cx, op, index, bce);
+}
+
+static bool
+EmitObjectOp(ExclusiveContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
+{
+    return EmitInternedObjectOp(cx, bce->objectList.add(objbox), op, bce);
 }
 
 static bool
@@ -1061,7 +1084,15 @@ static bool
 EmitEnterBlock(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
 {
     JS_ASSERT(pn->isKind(PNK_LEXICALSCOPE));
-    if (!EmitObjectOp(cx, pn->pn_objbox, op, bce))
+    StmtInfoBCE *stmt = bce->topStmt;
+    JS_ASSERT(stmt->type == STMT_BLOCK || stmt->type == STMT_SWITCH);
+    JS_ASSERT(stmt->isBlockScope);
+    JS_ASSERT(stmt->blockScopeIndex == bce->blockScopeList.length() - 1);
+    JS_ASSERT(bce->blockScopeList.list[stmt->blockScopeIndex].length == 0);
+    uint32_t scopeObjectIndex = bce->blockScopeList.list[stmt->blockScopeIndex].index;
+    JS_ASSERT(scopeObjectIndex == bce->objectList.length - 1);
+    JS_ASSERT(pn->pn_objbox == bce->objectList.lastbox);
+    if (!EmitInternedObjectOp(cx, scopeObjectIndex, op, bce))
         return false;
 
     Rooted<StaticBlockObject*> blockObj(cx, &pn->pn_objbox->object->as<StaticBlockObject>());
@@ -2305,7 +2336,8 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     if (pn2->isKind(PNK_LEXICALSCOPE)) {
-        PushBlockScopeBCE(bce, &stmtInfo, pn2->pn_objbox->object->as<StaticBlockObject>(), -1);
+        if (!PushBlockScopeBCE(bce, &stmtInfo, pn2->pn_objbox, -1))
+            return false;
         stmtInfo.type = STMT_SWITCH;
         if (!EmitEnterBlock(cx, bce, pn2, JSOP_ENTERLET1))
             return false;
@@ -4193,7 +4225,8 @@ EmitLet(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     }
 
     StmtInfoBCE stmtInfo(cx);
-    PushBlockScopeBCE(bce, &stmtInfo, *blockObj, bce->offset());
+    if (!PushBlockScopeBCE(bce, &stmtInfo, letBody->pn_objbox, bce->offset()))
+        return false;
 
     DebugOnly<ptrdiff_t> bodyBegin = bce->offset();
     if (!EmitEnterBlock(cx, bce, letBody, JSOP_ENTERLET0))
@@ -4226,7 +4259,8 @@ EmitLexicalScope(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     ObjectBox *objbox = pn->pn_objbox;
     StaticBlockObject &blockObj = objbox->object->as<StaticBlockObject>();
     size_t slots = blockObj.slotCount();
-    PushBlockScopeBCE(bce, &stmtInfo, blockObj, bce->offset());
+    if (!PushBlockScopeBCE(bce, &stmtInfo, objbox, bce->offset()))
+        return false;
 
     if (!EmitEnterBlock(cx, bce, pn, JSOP_ENTERBLOCK))
         return false;
@@ -4316,7 +4350,8 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     // Enter the block before the loop body, after evaluating the obj.
     StmtInfoBCE letStmt(cx);
     if (letDecl) {
-        PushBlockScopeBCE(bce, &letStmt, *blockObj, bce->offset());
+        if (!PushBlockScopeBCE(bce, &letStmt, pn1->pn_objbox, bce->offset()))
+            return false;
         letStmt.isForLetBlock = true;
         if (!EmitEnterBlock(cx, bce, pn1, JSOP_ENTERLET2))
             return false;
@@ -4492,7 +4527,8 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     /* Enter the block before the loop body, after evaluating the obj. */
     StmtInfoBCE letStmt(cx);
     if (letDecl) {
-        PushBlockScopeBCE(bce, &letStmt, *blockObj, bce->offset());
+        if (!PushBlockScopeBCE(bce, &letStmt, pn1->pn_objbox, bce->offset()))
+            return false;
         letStmt.isForLetBlock = true;
         if (!EmitEnterBlock(cx, bce, pn1, JSOP_ENTERLET1))
             return false;
@@ -6444,6 +6480,7 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
 
       case PNK_IMPORT:
+      case PNK_EXPORT:
        // TODO: Implement emitter support for modules
        bce->reportError(nullptr, JSMSG_MODULES_NOT_IMPLEMENTED);
        return false;
@@ -6774,25 +6811,8 @@ frontend::FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce, jssrc
     return true;
 }
 
-bool
-CGTryNoteList::append(JSTryNoteKind kind, unsigned stackDepth, size_t start, size_t end)
-{
-    JS_ASSERT(unsigned(uint16_t(stackDepth)) == stackDepth);
-    JS_ASSERT(start <= end);
-    JS_ASSERT(size_t(uint32_t(start)) == start);
-    JS_ASSERT(size_t(uint32_t(end)) == end);
-
-    JSTryNote note;
-    note.kind = kind;
-    note.stackDepth = uint16_t(stackDepth);
-    note.start = uint32_t(start);
-    note.length = uint32_t(end - start);
-
-    return list.append(note);
-}
-
 void
-CGTryNoteList::finish(TryNoteArray *array)
+CGConstList::finish(ConstArray *array)
 {
     JS_ASSERT(length() == array->length);
 
@@ -6877,8 +6897,56 @@ CGObjectList::finish(ObjectArray *array)
     JS_ASSERT(cursor == array->vector);
 }
 
+bool
+CGTryNoteList::append(JSTryNoteKind kind, unsigned stackDepth, size_t start, size_t end)
+{
+    JS_ASSERT(unsigned(uint16_t(stackDepth)) == stackDepth);
+    JS_ASSERT(start <= end);
+    JS_ASSERT(size_t(uint32_t(start)) == start);
+    JS_ASSERT(size_t(uint32_t(end)) == end);
+
+    JSTryNote note;
+    note.kind = kind;
+    note.stackDepth = uint16_t(stackDepth);
+    note.start = uint32_t(start);
+    note.length = uint32_t(end - start);
+
+    return list.append(note);
+}
+
 void
-CGConstList::finish(ConstArray *array)
+CGTryNoteList::finish(TryNoteArray *array)
+{
+    JS_ASSERT(length() == array->length);
+
+    for (unsigned i = 0; i < length(); i++)
+        array->vector[i] = list[i];
+}
+
+bool
+CGBlockScopeList::append(uint32_t scopeObject, uint32_t offset)
+{
+    BlockScopeNote note;
+    mozilla::PodZero(&note);
+
+    note.index = scopeObject;
+    note.start = offset;
+
+    return list.append(note);
+}
+
+void
+CGBlockScopeList::recordEnd(uint32_t index, uint32_t offset)
+{
+    JS_ASSERT(index < length());
+    JS_ASSERT(offset >= list[index].start);
+    JS_ASSERT(list[index].length == 0);
+
+    list[index].length = offset - list[index].start;
+}
+
+void
+CGBlockScopeList::finish(BlockScopeArray *array)
 {
     JS_ASSERT(length() == array->length);
 

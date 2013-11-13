@@ -133,7 +133,7 @@ PaymentUI.prototype = {
       } finally {
         tab.browser.removeEventListener("DOMContentLoaded", loadPaymentShim);
       }
-    }, false);
+    }, true);
 
     // fail the payment if the tab is closed on its own
     tab.browser.addEventListener("TabClose", function paymentCanceled() {

@@ -148,7 +148,7 @@ public:
 
   // WebIDL
   JSObject*
-  WrapObject(JSContext* aCx, JS::HandleObject aScope);
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
 
   nsISupports*
   GetParentObject() const
@@ -175,21 +175,21 @@ public:
   }
 
   static already_AddRefed<IDBKeyRange>
-  Only(const GlobalObject& aGlobal, JSContext* aCx, JS::HandleValue aValue,
-       ErrorResult& aRv);
+  Only(const GlobalObject& aGlobal, JSContext* aCx,
+       JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<IDBKeyRange>
   LowerBound(const GlobalObject& aGlobal, JSContext* aCx,
-             JS::HandleValue aValue, bool aOpen, ErrorResult& aRv);
+             JS::Handle<JS::Value> aValue, bool aOpen, ErrorResult& aRv);
 
   static already_AddRefed<IDBKeyRange>
   UpperBound(const GlobalObject& aGlobal, JSContext* aCx,
-             JS::HandleValue aValue, bool aOpen, ErrorResult& aRv);
+             JS::Handle<JS::Value> aValue, bool aOpen, ErrorResult& aRv);
 
   static already_AddRefed<IDBKeyRange>
-  Bound(const GlobalObject& aGlobal, JSContext* aCx, JS::HandleValue aLower,
-        JS::HandleValue aUpper, bool aLowerOpen, bool aUpperOpen,
-        ErrorResult& aRv);
+  Bound(const GlobalObject& aGlobal, JSContext* aCx,
+        JS::Handle<JS::Value> aLower, JS::Handle<JS::Value> aUpper,
+        bool aLowerOpen, bool aUpperOpen, ErrorResult& aRv);
 
 private:
   IDBKeyRange(nsISupports* aGlobal,

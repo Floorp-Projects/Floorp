@@ -20,17 +20,25 @@ from __future__ import unicode_literals
 import os
 
 from collections import OrderedDict
+from mozbuild.util import StrictOrderingOnAppendList
 from .sandbox_symbols import compute_final_target
 
 
 class TreeMetadata(object):
     """Base class for all data being captured."""
 
+    def __init__(self):
+        self._ack = False
+
+    def ack(self):
+        self._ack = True
+
 
 class ReaderSummary(TreeMetadata):
     """A summary of what the reader did."""
 
     def __init__(self, total_file_count, total_execution_time):
+        TreeMetadata.__init__(self)
         self.total_file_count = total_file_count
         self.total_execution_time = total_execution_time
 
@@ -53,6 +61,8 @@ class SandboxDerived(TreeMetadata):
     )
 
     def __init__(self, sandbox):
+        TreeMetadata.__init__(self)
+
         # Capture the files that were evaluated to build this sandbox.
         self.sandbox_main_path = sandbox.main_path
         self.sandbox_all_paths = sandbox.all_paths
@@ -416,11 +426,12 @@ class JavaJarData(object):
     """Represents a Java JAR file.
 
     A Java JAR has the following members:
-        * sources - list of input java sources
-        * generated_sources - list of generated input java sources
+        * sources - strictly ordered list of input java sources
+        * generated_sources - strictly ordered list of generated input
+          java sources
         * extra_jars - list of JAR file dependencies to include on the
           javac compiler classpath
-        * javac_flags - string containing extra flags passed to the
+        * javac_flags - list containing extra flags passed to the
           javac compiler
     """
 
@@ -433,12 +444,12 @@ class JavaJarData(object):
     )
 
     def __init__(self, name, sources=[], generated_sources=[],
-            extra_jars=[], javac_flags=None):
+            extra_jars=[], javac_flags=[]):
         self.name = name
-        self.sources = list(sources)
-        self.generated_sources = list(generated_sources)
+        self.sources = StrictOrderingOnAppendList(sources)
+        self.generated_sources = StrictOrderingOnAppendList(generated_sources)
         self.extra_jars = list(extra_jars)
-        self.javac_flags = javac_flags
+        self.javac_flags = list(javac_flags)
 
 
 class InstallationTarget(SandboxDerived):

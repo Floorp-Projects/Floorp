@@ -370,7 +370,7 @@ JSStackFrame::CreateStack(JSContext* cx)
 
     JSFunction* fun = desc->frames[i].fun;
     if (fun) {
-      JS::RootedString funid(cx, JS_GetFunctionDisplayId(fun));
+      JS::Rooted<JSString*> funid(cx, JS_GetFunctionDisplayId(fun));
       if (funid) {
         size_t length = JS_GetStringEncodingLength(cx, funid);
         if (length != size_t(-1)) {

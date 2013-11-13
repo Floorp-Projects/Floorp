@@ -1793,8 +1793,25 @@ _cairo_image_surface_fixup_unbounded_boxes (cairo_image_surface_t *dst,
     struct _cairo_boxes_chunk *chunk;
     int i;
 
-    if (boxes->num_boxes < 1 && clip_region == NULL)
-	return _cairo_image_surface_fixup_unbounded (dst, extents, NULL);
+    // If we have no boxes then we need to clear the entire extents
+    // because we have nothing to draw.
+    if (boxes->num_boxes < 1 && clip_region == NULL) {
+        int x = extents->unbounded.x;
+        int y = extents->unbounded.y;
+        int width = extents->unbounded.width;
+        int height = extents->unbounded.height;
+
+        pixman_color_t color = { 0 };
+        pixman_box32_t box = { x, y, x + width, y + height };
+
+        if (! pixman_image_fill_boxes (PIXMAN_OP_CLEAR,
+                                       dst->pixman_image,
+                                       &color,
+                                       1, &box)) {
+            return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        }
+        return CAIRO_STATUS_SUCCESS;
+    }
 
     _cairo_boxes_init (&clear);
 

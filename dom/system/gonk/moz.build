@@ -93,3 +93,11 @@ LIBRARY_NAME = 'domsystemgonk_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/content/events/src',
+    '/dom/base',
+    '/dom/bluetooth',
+    '/dom/src/geolocation',
+    '/dom/wifi',
+]
+

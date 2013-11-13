@@ -758,7 +758,6 @@ fails == 387344-1.html 387344-1-ref.html # scrolling rowgroups were removed in b
 == 387876-3a.html 387876-3-ref.html
 == 387876-3b.html 387876-3-ref.html
 == 388026-1.html 388026-1-ref.html
-== 388367-1.html about:blank
 == 389074-1.html 389074-1-ref.html
 == 389224-1.html 389224-1-ref.html
 == 389224-2.html about:blank
@@ -1643,7 +1642,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,300) == 625409-1.html 625409-1-ref.html
 == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
 skip-if(B2G) fails-if(Android) == 632423-1.html 632423-1-ref.html
-skip-if(Android||B2G) random-if(winWidget&&!d2d) == 632781-verybig.html 632781-ref.html
+skip-if(Android||B2G) random-if(winWidget) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 fails-if(Android) == 633344-1.html 633344-1-ref.html
 == 634232-1.html 634232-1-ref.html
@@ -1759,7 +1758,7 @@ fails-if(Android&&AndroidVersion<15) == 836844-1.html 836844-1-ref.html
 == 846144-1.html 846144-1-ref.html
 == 847850-1.html 847850-1-ref.html
 == 848421-1.html 848421-1-ref.html
-test-pref(layout.css.flexbox.enabled,true) == 849407-1.html 849407-1-ref.html
+== 849407-1.html 849407-1-ref.html
 == 849996-1.html 849996-1-ref.html
 == 858803-1.html 858803-1-ref.html
 == 860242-1.html 860242-1-ref.html

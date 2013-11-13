@@ -223,7 +223,8 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
   spec.Trim(",");
   
   // Count the commas. Don't count more than X commas (bug 576447).
-  PR_STATIC_ASSERT(NS_MAX_FRAMESET_SPEC_COUNT * sizeof(nsFramesetSpec) < (1 << 30));
+  static_assert(NS_MAX_FRAMESET_SPEC_COUNT * sizeof(nsFramesetSpec) < (1 << 30),
+                "Too many frameset specs allowed to allocate");
   int32_t commaX = spec.FindChar(sComma);
   int32_t count = 1;
   while (commaX != kNotFound && count < NS_MAX_FRAMESET_SPEC_COUNT) {

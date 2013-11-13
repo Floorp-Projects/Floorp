@@ -1704,7 +1704,7 @@ class MOZ_STACK_CLASS StringRegExpGuard
             if (!arg)
                 return false;
 
-            fm.patstr = AtomizeString<CanGC>(cx, arg);
+            fm.patstr = AtomizeString(cx, arg);
             if (!fm.patstr)
                 return false;
         }

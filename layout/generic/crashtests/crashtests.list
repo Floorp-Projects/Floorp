@@ -136,6 +136,7 @@ load 387233-1.html
 load 387233-2.html
 load 387282-1.html
 load 388175-1.html
+load 388367-1.html
 load 388709-1.html
 load 389635-1.html
 load 390050-1.html
@@ -169,7 +170,7 @@ load 398322-1.html
 load 398322-2.html
 load 398332-1.html
 load 398332-2.html
-asserts(2) load 398332-3.html # bug 436123 and bug 457397
+asserts(0-2) load 398332-3.html # bug 436123 and bug 457397
 load 399407-1.xhtml
 load 399412-1.html
 load 399843-1.html
@@ -302,6 +303,7 @@ load 463350-1.html
 load 463350-2.html
 load 463350-3.html
 load 463741-1.html
+load 463785.xhtml
 load 465651-1.html
 load 467137-1.html
 load 467213-1.html
@@ -331,6 +333,7 @@ asserts-if(!Android,1) load 479938-1.html # Bug 575011
 load 480345-1.html
 skip-if(Android) load 481921.html
 load 489462-1.html
+load 489477.html
 load 489480-1.xhtml
 load 493111-1.html
 load 493118-1.html
@@ -373,6 +376,7 @@ load 534082-1.html
 load 534366-1.html
 load 534366-2.html
 load 536692-1.xhtml
+load 537645.xhtml
 load 541277-1.html
 load 541277-2.html
 load 541714-1.html
@@ -421,6 +425,8 @@ load 646561-1.html
 load 646983-1.html
 load 647332-1.html
 load 650499-1.html
+load 654002-1.html
+load 654002-2.html
 load 655462-1.html
 load 656130-1.html
 load 656130-2.html
@@ -450,9 +456,9 @@ load 730559.html
 load first-letter-638937.html
 load first-letter-638937-2.html
 load 734777.html
-test-pref(layout.css.flexbox.enabled,true) load 737313-1.html
-test-pref(layout.css.flexbox.enabled,true) load 737313-2.html
-test-pref(layout.css.flexbox.enabled,true) load 737313-3.html
+load 737313-1.html
+load 737313-2.html
+load 737313-3.html
 load 747688.html
 load 750066.html
 test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-762332.html # bug 762332
@@ -464,40 +470,42 @@ asserts(0-200) load 767765.html # bug 407550, bug 871758, and various nscoord_MA
 load 769303-1.html
 load 769303-2.html
 load 769120.html
+load 777838.html
+skip-if(Android) load 784600.html
 load 786740-1.html
 asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
 test-pref(font.size.inflation.minTwips,120) load 794693.html
-asserts(8) test-pref(layout.css.flexbox.enabled,true) load 798020-1.html
-test-pref(layout.css.flexbox.enabled,true) load 798235-1.html
-test-pref(layout.css.flexbox.enabled,true) load 799207-1.html
-asserts(12) test-pref(layout.css.flexbox.enabled,true) load 799207-2.html
-test-pref(layout.css.flexbox.enabled,true) load 801268-1.html
-test-pref(layout.css.flexbox.enabled,true) load 804089-1.xhtml
+asserts(8) load 798020-1.html
+load 798235-1.html
+load 799207-1.html
+asserts(12) load 799207-2.html
+load 801268-1.html
+load 804089-1.xhtml
 load 810726.html
-test-pref(layout.css.flexbox.enabled,true) load 825810-1.html
-test-pref(layout.css.flexbox.enabled,true) load 825810-2.html
-test-pref(layout.css.flexbox.enabled,true) load 827076.html
+load 825810-1.html
+load 825810-2.html
+load 827076.html
 load 840818.html
-test-pref(layout.css.flexbox.enabled,true) load 812822-1.html
-asserts(1) test-pref(layout.css.flexbox.enabled,true) load 824297-1.html # bug 399262
-test-pref(layout.css.flexbox.enabled,true) load 826483-1.html
-asserts(1) test-pref(layout.css.flexbox.enabled,true) load 826532-1.html # bug 399262
-test-pref(layout.css.flexbox.enabled,true) load 827168-1.html
+load 812822-1.html
+asserts(1) load 824297-1.html # bug 399262
+load 826483-1.html
+asserts(1) load 826532-1.html # bug 399262
+load 827168-1.html
 load 836895.html
 load 840787.html
 load 842132-1.html
-test-pref(layout.css.flexbox.enabled,true) load 844529-1.html
+load 844529-1.html
 load 847130.xhtml
 load 847208.html
 asserts(4) load 847209.html # bug 847368
-test-pref(layout.css.flexbox.enabled,true) load 847211-1.html
+load 847211-1.html
 load 849603.html
-test-pref(layout.css.flexbox.enabled,true) load 851396-1.html
-test-pref(layout.css.flexbox.enabled,true) load 854263-1.html
-test-pref(layout.css.flexbox.enabled,true) load 862947-1.html
+load 851396-1.html
+load 854263-1.html
+load 862947-1.html
 needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
-test-pref(layout.css.flexbox.enabled,true) load 866547-1.html
-asserts(1-4) test-pref(layout.css.flexbox.enabled,true) load 876074-1.html # bug 876749
+load 866547-1.html
+asserts(1-4) load 876074-1.html # bug 876749
 load 885009-1.html
 load 893523.html
 test-pref(layout.css.sticky.enabled,true) load 914891.html

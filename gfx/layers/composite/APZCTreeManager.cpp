@@ -107,6 +107,8 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                              bool aIsFirstPaint, uint64_t aFirstPaintLayersId,
                                              nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy)
 {
+  mTreeLock.AssertCurrentThreadOwns();
+
   ContainerLayer* container = aLayer->AsContainerLayer();
   AsyncPanZoomController* apzc = nullptr;
   if (container) {
@@ -231,7 +233,8 @@ ApplyTransform(nsIntPoint* aPoint, const gfx3DMatrix& aMatrix)
 }
 
 nsEventStatus
-APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
+APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
   gfx3DMatrix transformToApzc;
@@ -261,6 +264,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
         APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
       }
       if (mApzcForInputBlock) {
+        mApzcForInputBlock->GetGuid(aOutTargetGuid);
         // Use the cached transform to compute the point to send to the APZC.
         // This ensures that the sequence of touch points an APZC sees in an
         // input block are all in the same coordinate space.
@@ -290,6 +294,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
       const PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(pinchInput.mFocusPoint);
       if (apzc) {
+        apzc->GetGuid(aOutTargetGuid);
         GetInputTransforms(apzc, transformToApzc, transformToGecko);
         PinchGestureInput inputForApzc(pinchInput);
         ApplyTransform(&(inputForApzc.mFocusPoint), transformToApzc);
@@ -300,6 +305,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
       const TapGestureInput& tapInput = aEvent.AsTapGestureInput();
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(tapInput.mPoint));
       if (apzc) {
+        apzc->GetGuid(aOutTargetGuid);
         GetInputTransforms(apzc, transformToApzc, transformToGecko);
         TapGestureInput inputForApzc(tapInput);
         ApplyTransform(&(inputForApzc.mPoint), transformToApzc);
@@ -311,7 +317,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
   return result;
 }
 
-AsyncPanZoomController*
+already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent,
                                         ScreenPoint aPoint)
 {
@@ -320,7 +326,7 @@ APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent,
   // Reset the cached apz transform
   mCachedTransformToApzcForInputBlock = transformToApzc;
   if (!apzc) {
-    return nullptr;
+    return apzc.forget();
   }
   for (size_t i = 1; i < aEvent.touches.Length(); i++) {
     nsIntPoint point = aEvent.touches[i]->mRefPoint;
@@ -337,13 +343,16 @@ APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent,
     // Cache apz transform so it can be used for future events in this block.
     GetInputTransforms(apzc, mCachedTransformToApzcForInputBlock, transformToGecko);
   }
-  return apzc.get();
+  return apzc.forget();
 }
 
 nsEventStatus
 APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid,
                                    WidgetTouchEvent* aOutEvent)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsEventStatus ret = nsEventStatus_eIgnore;
   if (!aEvent.touches.Length()) {
     return ret;
@@ -355,6 +364,7 @@ APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   }
 
   if (mApzcForInputBlock) {
+    mApzcForInputBlock->GetGuid(aOutTargetGuid);
     // For computing the input for the APZC, used the cached transform.
     // This ensures that the sequence of touch points an APZC sees in an
     // input block are all in the same coordinate space.
@@ -392,14 +402,36 @@ APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   return ret;
 }
 
+void
+APZCTreeManager::TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
+                                            LayoutDeviceIntPoint* aOutTransformedPoint)
+{
+  MOZ_ASSERT(aOutTransformedPoint);
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aPoint);
+  if (apzc && aOutTransformedPoint) {
+    gfx3DMatrix transformToApzc;
+    gfx3DMatrix transformToGecko;
+    GetInputTransforms(apzc, transformToApzc, transformToGecko);
+    gfx3DMatrix outTransform = transformToApzc * transformToGecko;
+    aOutTransformedPoint->x = aPoint.x;
+    aOutTransformedPoint->y = aPoint.y;
+    ApplyTransform(aOutTransformedPoint, outTransform);
+  }
+}
+
+
 nsEventStatus
 APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid,
                                    WidgetMouseEvent* aOutEvent)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y));
   if (!apzc) {
     return nsEventStatus_eIgnore;
   }
+  apzc->GetGuid(aOutTargetGuid);
   gfx3DMatrix transformToApzc;
   gfx3DMatrix transformToGecko;
   GetInputTransforms(apzc, transformToApzc, transformToGecko);
@@ -412,13 +444,17 @@ APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
 
 nsEventStatus
 APZCTreeManager::ProcessEvent(const WidgetInputEvent& aEvent,
+                              ScrollableLayerGuid* aOutTargetGuid,
                               WidgetInputEvent* aOutEvent)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // Transform the refPoint
   nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y));
   if (!apzc) {
     return nsEventStatus_eIgnore;
   }
+  apzc->GetGuid(aOutTargetGuid);
   gfx3DMatrix transformToApzc;
   gfx3DMatrix transformToGecko;
   GetInputTransforms(apzc, transformToApzc, transformToGecko);
@@ -429,6 +465,7 @@ APZCTreeManager::ProcessEvent(const WidgetInputEvent& aEvent,
 
 nsEventStatus
 APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid,
                                    WidgetInputEvent* aOutEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -436,41 +473,42 @@ APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       const WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      return ProcessTouchEvent(touchEvent, aOutEvent->AsTouchEvent());
+      return ProcessTouchEvent(touchEvent, aOutTargetGuid, aOutEvent->AsTouchEvent());
     }
     case NS_MOUSE_EVENT: {
       // For b2g emulation
       const WidgetMouseEvent& mouseEvent = *aEvent.AsMouseEvent();
       WidgetMouseEvent* outMouseEvent = aOutEvent->AsMouseEvent();
-      return ProcessMouseEvent(mouseEvent, outMouseEvent);
+      return ProcessMouseEvent(mouseEvent, aOutTargetGuid, outMouseEvent);
     }
     default: {
-      return ProcessEvent(aEvent, aOutEvent);
+      return ProcessEvent(aEvent, aOutTargetGuid, aOutEvent);
     }
   }
 }
 
 nsEventStatus
-APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent)
+APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      return ProcessTouchEvent(touchEvent, &touchEvent);
+      return ProcessTouchEvent(touchEvent, aOutTargetGuid, &touchEvent);
     }
     default: {
-      return ProcessEvent(aEvent, &aEvent);
+      return ProcessEvent(aEvent, aOutTargetGuid, &aEvent);
     }
   }
 }
 
 void
-APZCTreeManager::UpdateCompositionBounds(const ScrollableLayerGuid& aGuid,
-                                         const ScreenIntRect& aCompositionBounds)
+APZCTreeManager::UpdateRootCompositionBounds(const uint64_t& aLayersId,
+                                             const ScreenIntRect& aCompositionBounds)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
+  nsRefPtr<AsyncPanZoomController> apzc = GetRootAPZCFor(aLayersId);
   if (apzc) {
     apzc->UpdateCompositionBounds(aCompositionBounds);
   }
@@ -497,12 +535,12 @@ APZCTreeManager::ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
 }
 
 void
-APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
+APZCTreeManager::UpdateZoomConstraints(const uint64_t& aLayersId,
                                        bool aAllowZoom,
                                        const CSSToScreenScale& aMinScale,
                                        const CSSToScreenScale& aMaxScale)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
+  nsRefPtr<AsyncPanZoomController> apzc = GetRootAPZCFor(aLayersId);
   if (apzc) {
     apzc->UpdateZoomConstraints(aAllowZoom, aMinScale, aMaxScale);
   }
@@ -567,7 +605,7 @@ APZCTreeManager::HandleOverscroll(AsyncPanZoomController* aChild, ScreenPoint aS
 }
 
 bool
-APZCTreeManager::HitTestAPZC(const ScreenPoint& aPoint)
+APZCTreeManager::HitTestAPZC(const ScreenIntPoint& aPoint)
 {
   MonitorAutoLock lock(mTreeLock);
   nsRefPtr<AsyncPanZoomController> target;
@@ -613,8 +651,26 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint)
   return target.forget();
 }
 
+already_AddRefed<AsyncPanZoomController>
+APZCTreeManager::GetRootAPZCFor(const uint64_t& aLayersId)
+{
+  MonitorAutoLock lock(mTreeLock);
+  nsRefPtr<AsyncPanZoomController> target;
+  // The root may have siblings, check those too
+  for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
+    target = FindRootAPZC(apzc, aLayersId);
+    if (target) {
+      break;
+    }
+  }
+  return target.forget();
+}
+
 AsyncPanZoomController*
-APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid) {
+APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid)
+{
+  mTreeLock.AssertCurrentThreadOwns();
+
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
   for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
@@ -633,6 +689,8 @@ APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableL
 AsyncPanZoomController*
 APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint)
 {
+  mTreeLock.AssertCurrentThreadOwns();
+
   // The comments below assume there is a chain of layers L..R with L and P having APZC instances as
   // explained in the comment on GetInputTransforms. This function will recurse with aApzc at L and P, and the
   // comments explain what values are stored in the variables at these two levels. All the comments
@@ -680,6 +738,23 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
     APZC_LOG("Successfully matched untransformed point %f %f to visible region for APZC %p\n",
              hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, aApzc);
     return aApzc;
+  }
+  return nullptr;
+}
+
+AsyncPanZoomController*
+APZCTreeManager::FindRootAPZC(AsyncPanZoomController* aApzc, const uint64_t& aLayersId)
+{
+  mTreeLock.AssertCurrentThreadOwns();
+
+  if (aApzc->IsRootForLayersId(aLayersId)) {
+    return aApzc;
+  }
+  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
+    AsyncPanZoomController* match = FindRootAPZC(child, aLayersId);
+    if (match) {
+      return match;
+    }
   }
   return nullptr;
 }
@@ -766,6 +841,8 @@ void
 APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& aTransformToApzcOut,
                                     gfx3DMatrix& aTransformToGeckoOut)
 {
+  MonitorAutoLock lock(mTreeLock);
+
   // The comments below assume there is a chain of layers L..R with L and P having APZC instances as
   // explained in the comment above. This function is called with aApzc at L, and the loop
   // below performs one iteration, where parent is at P. The comments explain what values are stored
@@ -805,9 +882,12 @@ APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& 
   }
 }
 
-AsyncPanZoomController*
+already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2)
 {
+  MonitorAutoLock lock(mTreeLock);
+  nsRefPtr<AsyncPanZoomController> ancestor;
+
   // If either aApzc1 or aApzc2 is null, min(depth1, depth2) will be 0 and this function
   // will return null.
 
@@ -836,7 +916,8 @@ APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomCont
   // either APZC, and return the the first common ancestor encountered.
   while (true) {
     if (aApzc1 == aApzc2) {
-      return aApzc1;
+      ancestor = aApzc1;
+      break;
     }
     if (depth1 <= 0) {
       break;
@@ -844,16 +925,18 @@ APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomCont
     aApzc1 = aApzc1->GetParent();
     aApzc2 = aApzc2->GetParent();
   }
-  return nullptr;
+  return ancestor.forget();
 }
 
-AsyncPanZoomController*
+already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::RootAPZCForLayersId(AsyncPanZoomController* aApzc)
 {
-  while (aApzc && !aApzc->IsRootForLayersId()) {
-    aApzc = aApzc->GetParent();
+  MonitorAutoLock lock(mTreeLock);
+  nsRefPtr<AsyncPanZoomController> apzc = aApzc;
+  while (apzc && !apzc->IsRootForLayersId()) {
+    apzc = apzc->GetParent();
   }
-  return aApzc;
+  return apzc.forget();
 }
 
 }

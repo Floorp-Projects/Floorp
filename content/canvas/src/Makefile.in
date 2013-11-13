@@ -3,24 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifdef MOZ_WEBGL
-LOCAL_INCLUDES += \
-	-I$(topsrcdir)/js/xpconnect/wrappers \
-	$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS	+= $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)
 
-INCLUDES	+= \
-		-I$(srcdir)/../../../layout/xul/base/src \
-		-I$(srcdir)/../../../layout/style \
-		-I$(srcdir)/../../../layout/generic \
-		-I$(srcdir)/../../base/src \
-		-I$(srcdir)/../../html/content/src \
-		-I$(srcdir)/../../../js/xpconnect/src \
-		-I$(srcdir)/../../../dom/base \
-		-I$(srcdir)/../../../image/src \
-		-I$(topsrcdir)/content/xul/content/src \
-		$(NULL)

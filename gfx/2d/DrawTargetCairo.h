@@ -60,6 +60,8 @@ public:
   virtual TemporaryRef<SourceSurface> Snapshot();
   virtual IntSize GetSize();
 
+  virtual void SetPermitSubpixelAA(bool aPermitSubpixelAA);
+
   virtual bool LockBits(uint8_t** aData, IntSize* aSize,
                         int32_t* aStride, SurfaceFormat* aFormat);
   virtual void ReleaseBits(uint8_t* aData);

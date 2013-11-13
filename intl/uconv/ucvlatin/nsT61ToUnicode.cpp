@@ -5,6 +5,9 @@
 
 #include "nsUCConstructors.h"
 #include "nsT61ToUnicode.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -24,6 +27,7 @@ nsT61ToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
       ShiftInCell(u2BytesChar,  2, 0xC0, 0xCF)
   };
 
+  Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_T61, true);
   return CreateTableDecoder(uMultibytesCharset,
                             (uShiftInTable*) &g_T61ShiftInTable, 
                             (uMappingTable*) &g_T61MappingTable, 1,

@@ -1314,3 +1314,44 @@ add_test(function StringContent_decode() {
 
   run_next_test();
 });
+
+//// PduHelper.composeMultiPart ////
+
+add_test(function test_PduHelper_composeMultiPart() {
+  let multiStream = Components.classes["@mozilla.org/io/multiplex-input-stream;1"]
+                    .createInstance(Ci.nsIMultiplexInputStream);
+  let uint8Array = new Uint8Array(5);
+  uint8Array[0] = 0x00;
+  uint8Array[1] = 0x01;
+  uint8Array[2] = 0x02;
+  uint8Array[3] = 0x03;
+  uint8Array[4] = 0x04;
+
+  let parts = [
+      {
+        content: "content",
+        headers: {
+            "content-type": {
+                media: "text/plain",
+                params: {}
+            }
+        }
+      },
+      {
+        content: uint8Array,
+        headers: {
+            "content-type": {
+                media: "text/plain",
+                params: {}
+            }
+        }
+      }
+    ];
+
+  let beforeCompose = JSON.stringify(parts);
+  WSP.PduHelper.composeMultiPart(multiStream, parts);
+  let afterCompose = JSON.stringify(parts);
+
+  do_check_eq(beforeCompose, afterCompose);
+  run_next_test();
+});

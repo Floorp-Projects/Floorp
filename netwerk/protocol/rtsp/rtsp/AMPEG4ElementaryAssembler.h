@@ -55,6 +55,8 @@ private:
     bool mRandomAccessIndication;
     unsigned mStreamStateIndication;
     unsigned mAuxiliaryDataSizeLength;
+    unsigned mConstantDuration;
+    unsigned mPreviousAUCount;
     bool mHasAUHeader;
 
     uint32_t mAccessUnitRTPTime;

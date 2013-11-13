@@ -904,7 +904,7 @@ jit::AddSizeOfBaselineData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf,
 void
 jit::ToggleBaselineSPS(JSRuntime *runtime, bool enable)
 {
-    for (ZonesIter zone(runtime); !zone.done(); zone.next()) {
+    for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
         for (gc::CellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             if (!script->hasBaselineScript())

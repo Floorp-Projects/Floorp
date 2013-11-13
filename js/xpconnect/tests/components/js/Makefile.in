@@ -22,4 +22,4 @@ libs:: $(JS_FILES)
 	$(INSTALL) $^ $(testxpcobjdir)/$(componentdir)
 
 libs:: $(MANIFEST_FILE)
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $< > $(testxpcobjdir)/$(componentdir)/$(<F)
+	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $< -o $(testxpcobjdir)/$(componentdir)/$(<F))

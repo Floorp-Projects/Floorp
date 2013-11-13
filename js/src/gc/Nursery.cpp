@@ -60,7 +60,7 @@ js::Nursery::init()
     JS_POISON(heap, FreshNursery, NurserySize);
 #endif
     for (int i = 0; i < NumNurseryChunks; ++i)
-        chunk(i).runtime = rt;
+        chunk(i).trailer.runtime = rt;
 
     JS_ASSERT(isEnabled());
     return true;
@@ -602,7 +602,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
     rt->gcStoreBuffer.mark(&trc); // This must happen first.
     MarkRuntime(&trc);
     Debugger::markAll(&trc);
-    for (CompartmentsIter comp(rt); !comp.done(); comp.next()) {
+    for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next()) {
         comp->markAllCrossCompartmentWrappers(&trc);
         comp->markAllInitialShapeTableEntries(&trc);
     }
@@ -648,7 +648,7 @@ js::Nursery::sweep(JSRuntime *rt)
     /* Poison the nursery contents so touching a freed object will crash. */
     JS_POISON((void *)start(), SweptNursery, NurserySize - sizeof(JSRuntime *));
     for (int i = 0; i < NumNurseryChunks; ++i)
-        chunk(i).runtime = runtime();
+        chunk(i).trailer.runtime = runtime();
 
     if (rt->gcZeal_ == ZealGenerationalGCValue) {
         /* Undo any grow or shrink the collection may have done. */

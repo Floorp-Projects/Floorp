@@ -242,7 +242,8 @@ mozilla::dom::ipc::UnpackClonedMessageDataForChild(const ClonedMessageData& aDat
 }
 
 bool
-SameProcessCpowHolder::ToObject(JSContext* aCx, JS::MutableHandleObject aObjp)
+SameProcessCpowHolder::ToObject(JSContext* aCx,
+                                JS::MutableHandle<JSObject*> aObjp)
 {
   if (!mObj) {
     return true;
@@ -553,7 +554,7 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
   data.mData = buffer.data();
   data.mDataLength = buffer.nbytes();
 
-  JS::RootedObject objects(aCx);
+  JS::Rooted<JSObject*> objects(aCx);
   if (aArgc >= 3 && aObjects.isObject()) {
     objects = &aObjects.toObject();
   }
@@ -632,7 +633,7 @@ nsFrameMessageManager::DispatchAsyncMessage(const nsAString& aMessageName,
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
-  JS::RootedObject objects(aCx);
+  JS::Rooted<JSObject*> objects(aCx);
   if (aArgc >= 3 && aObjects.isObject()) {
     objects = &aObjects.toObject();
   }
@@ -903,7 +904,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       nsContentUtils::WrapNative(ctx, global, aTarget, &targetv,
                                  nullptr, true);
 
-      JS::RootedObject cpows(ctx);
+      JS::Rooted<JSObject*> cpows(ctx);
       if (aCpows) {
         if (!aCpows->ToObject(ctx, &cpows)) {
           return NS_ERROR_UNEXPECTED;
@@ -917,7 +918,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         }
       }
 
-      JS::RootedValue cpowsv(ctx, JS::ObjectValue(*cpows));
+      JS::Rooted<JS::Value> cpowsv(ctx, JS::ObjectValue(*cpows));
 
       JS::Rooted<JS::Value> json(ctx, JS::NullValue());
       if (aCloneData && aCloneData->mDataLength &&
@@ -971,7 +972,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JS::Rooted<JS::Value> browserValue(ctx, BOOLEAN_TO_JSVAL(browser));
         JS_DefineProperty(ctx, principalObj, "isInBrowserElement", browserValue, nullptr, nullptr, JSPROP_ENUMERATE);
 
-        JS::RootedValue principalValue(ctx, JS::ObjectValue(*principalObj));
+        JS::Rooted<JS::Value> principalValue(ctx, JS::ObjectValue(*principalObj));
         JS_DefineProperty(ctx, param, "principal", principalValue, nullptr, nullptr, JSPROP_ENUMERATE);
       }
 
@@ -1424,9 +1425,8 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
       options.setNoScriptRval(true)
              .setFileAndLine(url.get(), 1)
              .setPrincipals(nsJSPrincipals::get(mPrincipal));
-      JS::RootedObject empty(cx, nullptr);
       JS::Rooted<JSScript*> script(cx,
-        JS::Compile(cx, empty, options, dataString.get(),
+        JS::Compile(cx, JS::NullPtr(), options, dataString.get(),
                     dataString.Length()));
 
       if (script) {

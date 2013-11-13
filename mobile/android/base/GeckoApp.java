@@ -18,6 +18,7 @@ import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
 import org.mozilla.gecko.health.BrowserHealthRecorder;
 import org.mozilla.gecko.health.BrowserHealthRecorder.SessionInformation;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
@@ -1293,6 +1294,7 @@ abstract public class GeckoApp
         });
 
         GeckoAppShell.setNotificationClient(makeNotificationClient());
+        NotificationHelper.init(getApplicationContext());
     }
 
     protected void initializeChrome() {

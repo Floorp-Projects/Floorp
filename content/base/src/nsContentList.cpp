@@ -21,7 +21,6 @@
 #include "nsGkAtoms.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/dom/NodeListBinding.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Likely.h"
 #include "nsGenericHTMLElement.h"
 #include <algorithm>
@@ -38,6 +37,7 @@
 #define ASSERT_IN_SYNC PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 nsBaseContentList::~nsBaseContentList()
@@ -535,7 +535,7 @@ nsContentList::Item(uint32_t aIndex, bool aDoFlush)
   return mElements.SafeElementAt(aIndex);
 }
 
-nsIContent *
+Element*
 nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
 {
   BringSelfUpToDate(aDoFlush);
@@ -554,7 +554,7 @@ nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
                               name, eCaseMatters) ||
          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
                               name, eCaseMatters))) {
-      return content;
+      return content->AsElement();
     }
   }
 
@@ -670,24 +670,6 @@ nsIContent*
 nsContentList::Item(uint32_t aIndex)
 {
   return GetElementAt(aIndex);
-}
-
-JSObject*
-nsContentList::NamedItem(JSContext* cx, const nsAString& name,
-                         mozilla::ErrorResult& error)
-{
-  nsIContent *item = NamedItem(name, true);
-  if (!item) {
-    return nullptr;
-  }
-  JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
-  JSAutoCompartment ac(cx, wrapper);
-  JS::Rooted<JS::Value> v(cx);
-  if (!mozilla::dom::WrapObject(cx, wrapper, item, item, nullptr, &v)) {
-    error.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  return &v.toObject();
 }
 
 void

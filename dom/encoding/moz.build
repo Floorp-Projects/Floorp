@@ -28,3 +28,7 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domencoding_s'
 
+LOCAL_INCLUDES += [
+    '/intl/locale/src',
+]
+

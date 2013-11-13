@@ -123,6 +123,12 @@ var supported_properties = {
                        // (not parsing/interpolation)
                        test_float_zeroToOne_clamped ],
     "filter" : [ test_filter_transition ],
+    "flex-basis": [ test_length_transition, test_percent_transition,
+                    test_length_clamped, test_percent_clamped ],
+    "flex-grow": [ test_float_zeroToOne_transition,
+                   test_float_aboveOne_transition ],
+    "flex-shrink": [ test_float_zeroToOne_transition,
+                     test_float_aboveOne_transition ],
     "flood-color": [ test_color_transition ],
     "flood-opacity" : [ test_float_zeroToOne_transition,
                         // opacity is clamped in computed style
@@ -179,6 +185,7 @@ var supported_properties = {
                   // opacity is clamped in computed style
                   // (not parsing/interpolation)
                   test_float_zeroToOne_clamped ],
+    "order": [ test_integer_transition ],
     "outline-color": [ test_color_transition ],
     "outline-offset": [ test_length_transition, test_length_unclamped ],
     "outline-width": [ test_length_transition, test_length_clamped ],
@@ -243,23 +250,6 @@ var supported_properties = {
     "word-spacing": [ test_length_transition, test_length_unclamped ],
     "z-index": [ test_integer_transition, test_pos_integer_or_auto_transition ],
 };
-
-// Automatically add pref-controlled CSS properties & keywords
-// to supported_properties, if the flexbox pref is enabled.
-if (SpecialPowers.getBoolPref("layout.css.flexbox.enabled")) {
-    var flexbox_properties = {
-        "flex-basis": [ test_length_transition, test_percent_transition,
-                        test_length_clamped, test_percent_clamped ],
-        "flex-grow": [ test_float_zeroToOne_transition,
-                       test_float_aboveOne_transition ],
-        "flex-shrink": [ test_float_zeroToOne_transition,
-                         test_float_aboveOne_transition ],
-        "order": [ test_integer_transition ]
-    };
-    for (var prop in flexbox_properties) {
-      supported_properties[prop] = flexbox_properties[prop];
-    }
-}
 
 var div = document.getElementById("display");
 var OMTAdiv = document.getElementById("transformTest");

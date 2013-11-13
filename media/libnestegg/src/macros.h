@@ -20,7 +20,7 @@
 /*
  	restore pointer to the structure by a pointer to its field
  */
-#define structof(p,t,f) ((t*)(- offsetof(t,f) + (char*)(p)))
+#define structof(p,t,f) ((t*)(- (ptrdiff_t) offsetof(t,f) + (char*)(p)))
 
 /*
  *	redefine for the target compiler

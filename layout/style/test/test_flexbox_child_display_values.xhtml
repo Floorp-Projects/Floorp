@@ -1,0 +1,189 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=783415
+-->
+<head>
+  <meta charset="utf-8"/>
+  <title>Test "display" values of content in a flex container (Bug 783415)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783415">Mozilla Bug 783415</a>
+<div id="display">
+  <div id="wrapper"></div>
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+<![CDATA[
+"use strict";
+
+/**
+ * Test "display" values of content in a flex container (Bug 783415)
+ * ================================================================
+ *
+ * This test creates content with a variety of specified "display" values
+ * and checks what the computed "display" is when we put that content
+ * in a flex container.  (Generally, it'll be the "blockified" form of the
+ * specified display-value.)
+ */
+
+/*
+ * Utility function for getting computed style of "display".
+ *
+ * @arg aElem The element to query for its computed "display" value.
+ * @return    The computed display value
+ */
+function getComputedDisplay(aElem) {
+  return window.getComputedStyle(aElem, "").display;
+}
+
+/*
+ * Function used for testing a given specified "display" value and checking
+ * its computed value against expectations.
+ *
+ * @arg aSpecifiedDisplay
+ *        The specified value of "display" that we should test.
+ *
+ * @arg aExpectedDisplayAsFlexContainerChild
+ *        (optional) The expected computed "display" when an element with
+ *        aSpecifiedDisplay is a child of a flex container. If omitted,
+ *        this argument defaults to aSpecifiedDisplay.
+ *
+ * @arg aExpectedDisplayAsOutOfFlowFlexContainerChild
+ *        (optional) The expected computed "display" when an element with
+ *        aSpecifiedDisplay is a child of a flex container *and* has
+ *        position:[fixed|absolute] or float: [left|right] set. If omitted,
+ *        this argument defaults to aExpectedDisplayAsFlexContainerChild.
+ */
+function testDisplayValue(aSpecifiedDisplay,
+                          aExpectedDisplayAsFlexContainerChild,
+                          aExpectedDisplayAsOutOfFlowFlexContainerChild) {
+  // DEFAULT-ARGUMENT-VALUES MAGIC: Make 2nd and 3rd args each default to
+  // the preceding arg, if they're unspecified.
+  if (typeof aExpectedDisplayAsFlexContainerChild == "undefined") {
+    aExpectedDisplayAsFlexContainerChild = aSpecifiedDisplay;
+  }
+  if (typeof aExpectedDisplayAsOutOfFlowFlexContainerChild == "undefined") {
+    aExpectedDisplayAsOutOfFlowFlexContainerChild =
+      aExpectedDisplayAsFlexContainerChild;
+  }
+
+  // FIRST: Create a node with display:aSpecifiedDisplay, and make sure that
+  // this original display-type is honored in a non-flex-container context.
+  let wrapper = document.getElementById("wrapper");
+  let node = document.createElement("div");
+  wrapper.appendChild(node);
+
+  node.style.display = aSpecifiedDisplay;
+  is(getComputedDisplay(node), aSpecifiedDisplay,
+     "checking computed value of 'display: " + aSpecifiedDisplay + "' " +
+     "should be the same as specified value, when parent is a block");
+
+
+  // SECOND: We make our node's parent into a flex container, and make sure
+  // that this produces the correct computed "display" value.
+  wrapper.style.display = "flex";
+  is(getComputedDisplay(node), aExpectedDisplayAsFlexContainerChild,
+     "checking computed value of 'display: " + aSpecifiedDisplay + "' " +
+     "when parent is a flex container");
+
+
+  // THIRD: We set "float" and "position" on our node (still inside of a
+  // flex container), and make sure that this produces the correct computed
+  // "display" value.
+  node.style.cssFloat = "left";
+  is(getComputedDisplay(node), aExpectedDisplayAsOutOfFlowFlexContainerChild,
+     "checking computed value of 'display: " + aSpecifiedDisplay + "' " +
+     "when parent is a flex container and we're floated left");
+  node.style.cssFloat = "";
+
+  node.style.cssFloat = "right";
+  is(getComputedDisplay(node), aExpectedDisplayAsOutOfFlowFlexContainerChild,
+     "checking computed value of 'display: " + aSpecifiedDisplay + "' " +
+     "when parent is a flex container and we're floated right");
+  node.style.cssFloat = "";
+
+  node.style.position = "absolute";
+  is(getComputedDisplay(node), aExpectedDisplayAsOutOfFlowFlexContainerChild,
+     "checking computed value of 'display: " + aSpecifiedDisplay + "' " +
+     "when parent is a flex container and we're abs-pos");
+  node.style.position = "";
+
+  node.style.position = "fixed";
+  is(getComputedDisplay(node), aExpectedDisplayAsOutOfFlowFlexContainerChild,
+     "checking computed value of 'display: " + aSpecifiedDisplay + "' " +
+     "when parent is a flex container and we're fixed-pos");
+  node.style.position = "";
+
+  // FINALLY: Clean up -- remove the node we created, and turn the wrapper
+  // back into its original display type (a block).
+  wrapper.removeChild(node);
+  wrapper.style.display = "";
+}
+
+/*
+ * Main test function
+ */
+function main() {
+  testDisplayValue("none");
+  testDisplayValue("block");
+  testDisplayValue("flex");
+  testDisplayValue("inline-flex", "flex");
+  testDisplayValue("list-item");
+  testDisplayValue("table");
+  testDisplayValue("inline-table", "table");
+
+  // These values all compute to "block" in a flex container. Do them in a
+  // loop, so that I don't have to type "block" a zillion times.
+  var dispValsThatComputeToBlockInAFlexContainer = [
+    "inline",
+    "inline-block",
+    "-moz-box",
+    "-moz-inline-box",
+    "-moz-grid",
+    "-moz-inline-grid",
+    "-moz-grid-group",
+    "-moz-grid-line",
+    "-moz-stack",
+    "-moz-inline-stack",
+    "-moz-deck",
+    "-moz-popup",
+    "-moz-groupbox",
+  ];
+
+  dispValsThatComputeToBlockInAFlexContainer.forEach(
+    function(aSpecifiedDisplay) {
+      testDisplayValue(aSpecifiedDisplay, "block");
+  });
+
+  // Table-parts are special. When they're a child of a flex container,
+  // they normally don't get blockified -- instead, they trigger table-fixup
+  // and get wrapped in a table.  So, their expected display as the child of
+  // a flex container is the same as their specified display. BUT, if
+  // we apply out-of-flow styling, then *that* blockifies them before
+  // we get to the table-fixup stage -- so then, their computed display
+  // is "block".
+  let tablePartsDispVals = [
+    "table-row-group",
+    "table-column",
+    "table-column-group",
+    "table-header-group",
+    "table-footer-group",
+    "table-row",
+    "table-cell",
+    "table-caption"
+  ];
+
+  tablePartsDispVals.forEach(
+    function(aSpecifiedDisplay) {
+      testDisplayValue(aSpecifiedDisplay, aSpecifiedDisplay, "block");
+  });
+}
+
+main();
+]]>
+</script>
+</pre>
+</body>
+</html>

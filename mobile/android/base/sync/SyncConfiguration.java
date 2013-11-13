@@ -16,12 +16,13 @@ import java.util.Set;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.crypto.PersistedCrypto5Keys;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
-public class SyncConfiguration implements CredentialsSource {
+public class SyncConfiguration {
 
   public class EditorBranch implements Editor {
 
@@ -179,17 +180,16 @@ public class SyncConfiguration implements CredentialsSource {
   private static final String LOG_TAG = "SyncConfiguration";
 
   // These must be set in GlobalSession's constructor.
-  public String          userAPI;
   public URI             serverURL;
   public URI             clusterURL;
-  public String          username;
   public KeyBundle       syncKeyBundle;
 
   public CollectionKeys  collectionKeys;
   public InfoCollections infoCollections;
   public MetaGlobal      metaGlobal;
-  public String          password;
   public String          syncID;
+
+  protected final String username;
 
   /**
    * Persisted collection of enabledEngineNames.
@@ -243,6 +243,8 @@ public class SyncConfiguration implements CredentialsSource {
   public String          prefsPath;
   public PrefsSource     prefsSource;
 
+  protected final AuthHeaderProvider authHeaderProvider;
+
   public static final String PREF_PREFS_VERSION = "prefs.version";
   public static final long CURRENT_PREFS_VERSION = 1;
 
@@ -267,7 +269,9 @@ public class SyncConfiguration implements CredentialsSource {
    * Create a new SyncConfiguration instance. Pass in a PrefsSource to
    * provide access to preferences.
    */
-  public SyncConfiguration(String prefsPath, PrefsSource prefsSource) {
+  public SyncConfiguration(String username, AuthHeaderProvider authHeaderProvider, String prefsPath, PrefsSource prefsSource) {
+    this.username = username;
+    this.authHeaderProvider = authHeaderProvider;
     this.prefsPath   = prefsPath;
     this.prefsSource = prefsSource;
     this.loadFromPrefs(getPrefs());
@@ -437,9 +441,8 @@ public class SyncConfiguration implements CredentialsSource {
     // TODO: keys.
   }
 
-  @Override
-  public String credentials() {
-    return username + ":" + password;
+  public AuthHeaderProvider getAuthHeaderProvider() {
+    return authHeaderProvider;
   }
 
   public CollectionKeys getCollectionKeys() {
@@ -478,16 +481,20 @@ public class SyncConfiguration implements CredentialsSource {
   }
 
   public String metaURL() {
-    return clusterURL + GlobalSession.API_VERSION + "/" + username + "/storage/meta/global";
+    return storageURL() + "/meta/global";
   }
 
-  public String storageURL(boolean trailingSlash) {
-    return clusterURL + GlobalSession.API_VERSION + "/" + username +
-           (trailingSlash ? "/storage/" : "/storage");
+  /**
+   * Return path to storage endpoint without trailing slash.
+   *
+   * @return storage endpoint without trailing slash.
+   */
+  public String storageURL() {
+    return clusterURL + GlobalSession.API_VERSION + "/" + username + "/storage";
   }
 
   public URI collectionURI(String collection) throws URISyntaxException {
-    return new URI(storageURL(true) + collection);
+    return new URI(storageURL() + "/" + collection);
   }
 
   public URI collectionURI(String collection, boolean full) throws URISyntaxException {
@@ -502,12 +509,12 @@ public class SyncConfiguration implements CredentialsSource {
       }
       uriParams = params.toString();
     }
-    String uri = storageURL(true) + collection + uriParams;
+    String uri = storageURL() + "/" + collection + uriParams;
     return new URI(uri);
   }
 
   public URI wboURI(String collection, String id) throws URISyntaxException {
-    return new URI(storageURL(true) + collection + "/" + id);
+    return new URI(storageURL() + "/" + collection + "/" + id);
   }
 
   public URI keysURI() throws URISyntaxException {

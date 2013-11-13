@@ -21,7 +21,7 @@ let originalValue = "#00F";
 let testData = [
   {value: "red", commitKey: "VK_ESCAPE", modifiers: {}, expected: originalValue},
   {value: "red", commitKey: "VK_RETURN", modifiers: {}, expected: "#F00"},
-  {value: "blue", commitKey: "VK_TAB", modifiers: {shiftKey: true}, expected: "#00F"}
+  {value: "blue", commitKey: "VK_TAB", modifiers: {shiftKey: true}, expected: "blue"}
 ];
 
 function startTests()

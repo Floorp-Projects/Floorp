@@ -28,9 +28,11 @@ SOURCES += [
 if CONFIG['MOZ_B2G_RIL']:
     EXPORTS.mozilla.dom.network += [
         'MobileConnection.h',
+        'MobileConnectionArray.h',
     ]
     SOURCES += [
         'MobileConnection.cpp',
+        'MobileConnectionArray.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
@@ -70,4 +72,8 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'dom_network_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/content/events/src',
+]
 

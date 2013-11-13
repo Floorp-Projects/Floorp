@@ -13,6 +13,7 @@ self.onmessage = function(msg) {
   test_OpenClose();
   test_CreateFile();
   test_ReadWrite();
+  test_passing_undefined();
   finish();
 };
 
@@ -188,3 +189,23 @@ function test_ReadWrite()
   info("test_ReadWrite cleanup complete");
 }
 
+function test_passing_undefined()
+{
+  info("Testing that an exception gets thrown when an FFI function is passed undefined");
+  let exceptionRaised = false;
+
+  try {
+    let file = OS.Win.File.CreateFile(
+      undefined,
+      OS.Constants.Win.GENERIC_READ,
+      0,
+      null,
+      OS.Constants.Win.OPEN_EXISTING,
+      0,
+      null);
+  } catch(e if e instanceof TypeError && e.message.indexOf("CreateFile") > -1) {
+    exceptionRaised = true;
+  }
+
+  ok(exceptionRaised, "test_passing_undefined: exception gets thrown")
+}

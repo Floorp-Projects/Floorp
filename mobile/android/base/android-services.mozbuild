@@ -577,7 +577,6 @@ sync_java_files = [
     'sync/config/ClientRecordTerminator.java',
     'sync/config/ConfigurationMigrator.java',
     'sync/CredentialException.java',
-    'sync/CredentialsSource.java',
     'sync/crypto/CryptoException.java',
     'sync/crypto/CryptoInfo.java',
     'sync/crypto/HKDF.java',

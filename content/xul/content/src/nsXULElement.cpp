@@ -2633,7 +2633,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     // source from the files on demand.
     options.setSourcePolicy(mOutOfLine ? JS::CompileOptions::LAZY_SOURCE
                                        : JS::CompileOptions::SAVE_SOURCE);
-    JS::RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
+    JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
     if (scope) {
       JS::ExposeObjectToActiveJS(scope);
     }

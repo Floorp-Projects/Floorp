@@ -232,6 +232,11 @@ public:
   nsEventStatus HandleInputEvent(const InputData& aEvent);
 
   /**
+   * Populates the provided object with the scrollable guid of this apzc.
+   */
+  void GetGuid(ScrollableLayerGuid* aGuidOut);
+
+  /**
    * Returns true if this APZC instance is for the layer identified by the guid.
    */
   bool Matches(const ScrollableLayerGuid& aGuid);
@@ -635,6 +640,10 @@ public:
    */
   bool IsRootForLayersId() const {
     return !mParent || (mParent->mLayersId != mLayersId);
+  }
+
+  bool IsRootForLayersId(const uint64_t& aLayersId) const {
+    return (mLayersId == aLayersId) && IsRootForLayersId();
   }
 
 private:

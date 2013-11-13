@@ -4,8 +4,7 @@
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= \
-	        -I$(srcdir)/ \
+CXXFLAGS += \
 		-I$(ANDROID_SOURCE)/frameworks/base/include/ \
 		-I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
 		-I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \

@@ -284,7 +284,7 @@ dnl to use the cross-compile setup for now
 dnl ========================================================
 
 dnl AR_FLAGS set here so HOST_AR_FLAGS can be set correctly (see bug 538269)
-AR_FLAGS='cr $@'
+AR_FLAGS='crs $@'
 
 if test "$COMPILE_ENVIRONMENT"; then
 
@@ -2916,7 +2916,7 @@ if test "$_USE_SYSTEM_NSPR" || (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
 fi
 
 case "$target" in
-  *linux*|*darwin*)
+  *linux*|*darwin*|*dragonfly*|*freebsd*|*netbsd*|*openbsd*)
     if test -z "$_HAS_NSPR"; then JS_POSIX_NSPR_DEFAULT=1; fi
     ;;
 esac

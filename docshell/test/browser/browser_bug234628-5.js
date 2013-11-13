@@ -32,7 +32,7 @@ function afterChangeCharset(event) {
   is(gBrowser.contentDocument.getElementsByTagName("iframe")[0].contentDocument.documentElement.textContent.indexOf('\u20AC'), 87, "Child doc should decode as utf-16 subsequently");  
 
   is(gBrowser.contentDocument.characterSet, "windows-1251", "Parent doc should report windows-1251 subsequently");
-  is(gBrowser.contentDocument.getElementsByTagName("iframe")[0].contentDocument.characterSet, "UTF-16", "Child doc should report UTF-16 subsequently");
+  is(gBrowser.contentDocument.getElementsByTagName("iframe")[0].contentDocument.characterSet, "UTF-16LE", "Child doc should report UTF-16LE subsequently");
 
   gBrowser.removeCurrentTab();
   finish();

@@ -16,3 +16,9 @@ MOCHITEST_MANIFESTS += ['mochitest.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 
+LOCAL_INCLUDES += [
+    '/dom/bindings',
+    '/js/xpconnect/src',
+    '/js/xpconnect/wrappers',
+]
+

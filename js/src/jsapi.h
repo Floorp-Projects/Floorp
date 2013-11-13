@@ -1440,9 +1440,9 @@ class JS_PUBLIC_API(ContextOptions) {
         dontReportUncaught_(false),
         noDefaultCompartmentObject_(false),
         noScriptRval_(false),
+        strictMode_(false),
         baseline_(false),
         typeInference_(false),
-        strictMode_(false),
         ion_(false),
         asmJS_(false)
     {
@@ -1528,6 +1528,16 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
+    bool strictMode() const { return strictMode_; }
+    ContextOptions &setStrictMode(bool flag) {
+        strictMode_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleStrictMode() {
+        strictMode_ = !strictMode_;
+        return *this;
+    }
+
     bool baseline() const { return baseline_; }
     ContextOptions &setBaseline(bool flag) {
         baseline_ = flag;
@@ -1545,16 +1555,6 @@ class JS_PUBLIC_API(ContextOptions) {
     }
     ContextOptions &toggleTypeInference() {
         typeInference_ = !typeInference_;
-        return *this;
-    }
-
-    bool strictMode() const { return strictMode_; }
-    ContextOptions &setStrictMode(bool flag) {
-        strictMode_ = flag;
-        return *this;
-    }
-    ContextOptions &toggleStrictMode() {
-        strictMode_ = !strictMode_;
         return *this;
     }
 
@@ -1587,9 +1587,9 @@ class JS_PUBLIC_API(ContextOptions) {
     bool dontReportUncaught_ : 1;
     bool noDefaultCompartmentObject_ : 1;
     bool noScriptRval_ : 1;
+    bool strictMode_ : 1;
     bool baseline_ : 1;
     bool typeInference_ : 1;
-    bool strictMode_ : 1;
     bool ion_ : 1;
     bool asmJS_ : 1;
 };
@@ -2546,26 +2546,43 @@ enum ZoneSpecifier {
 
 class JS_PUBLIC_API(CompartmentOptions)
 {
-    union {
-        ZoneSpecifier spec;
-        void *pointer; // js::Zone* is not exposed in the API.
-    } zone_;
-    JSVersion version_;
-
   public:
-    bool invisibleToDebugger;
+    class Override {
+      public:
+        Override() : mode_(Default) {}
+
+        bool get(bool defaultValue) const {
+            if (mode_ == Default)
+                return defaultValue;
+            return mode_ == ForceTrue;
+        };
+
+        void set(bool overrideValue) {
+            mode_ = overrideValue ? ForceTrue : ForceFalse;
+        };
+
+        void reset() {
+            mode_ = Default;
+        }
+
+      private:
+        enum Mode {
+            Default,
+            ForceTrue,
+            ForceFalse
+        };
+
+        Mode mode_;
+    };
 
     explicit CompartmentOptions()
       : version_(JSVERSION_UNKNOWN)
-      , invisibleToDebugger(false)
+      , invisibleToDebugger_(false)
     {
         zone_.spec = JS::FreshZone;
     }
 
-    CompartmentOptions &setZone(ZoneSpecifier spec);
-
-    CompartmentOptions &setSameZoneAs(JSObject *obj);
-
+    JSVersion version() const { return version_; }
     CompartmentOptions &setVersion(JSVersion aVersion) {
         MOZ_ASSERT(aVersion != JSVERSION_UNKNOWN);
         version_ = aVersion;
@@ -2576,20 +2593,50 @@ class JS_PUBLIC_API(CompartmentOptions)
     // of the embedding, and references to them should never leak out to script.
     // This flag causes the this compartment to skip firing onNewGlobalObject
     // and makes addDebuggee a no-op for this global.
-    CompartmentOptions &setInvisibleToDebugger(bool invisible) {
-        invisibleToDebugger = invisible;
+    bool invisibleToDebugger() { return invisibleToDebugger_; }
+    CompartmentOptions &setInvisibleToDebugger(bool flag) {
+        invisibleToDebugger_ = flag;
         return *this;
     }
 
-    ZoneSpecifier zoneSpecifier() const { return zone_.spec; }
+    bool baseline(JSContext *cx) const;
+    Override &baselineOverride() { return baselineOverride_; }
 
-    JSVersion version() const { return version_; }
+    bool typeInference(const js::ExclusiveContext *cx) const;
+    Override &typeInferenceOverride() { return typeInferenceOverride_; }
+
+    bool ion(JSContext *cx) const;
+    Override &ionOverride() { return ionOverride_; }
+
+    bool asmJS(JSContext *cx) const;
+    Override &asmJSOverride() { return asmJSOverride_; }
 
     void *zonePointer() const {
         JS_ASSERT(uintptr_t(zone_.pointer) > uintptr_t(JS::SystemZone));
         return zone_.pointer;
     }
+    ZoneSpecifier zoneSpecifier() const { return zone_.spec; }
+    CompartmentOptions &setZone(ZoneSpecifier spec);
+    CompartmentOptions &setSameZoneAs(JSObject *obj);
+
+  private:
+    JSVersion version_;
+    bool invisibleToDebugger_;
+    Override baselineOverride_;
+    Override typeInferenceOverride_;
+    Override ionOverride_;
+    Override asmJSOverride_;
+    union {
+        ZoneSpecifier spec;
+        void *pointer; // js::Zone* is not exposed in the API.
+    } zone_;
 };
+
+JS_PUBLIC_API(CompartmentOptions &)
+CompartmentOptionsRef(JSCompartment *compartment);
+
+JS_PUBLIC_API(CompartmentOptions &)
+CompartmentOptionsRef(JSContext *cx);
 
 // During global creation, we fire notifications to callbacks registered
 // via the Debugger API. These callbacks are arbitrary script, and can touch
