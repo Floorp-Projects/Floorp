@@ -362,11 +362,17 @@ TabChild::Observe(nsISupports *aSubject,
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
     nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
     if (tabChild == this) {
-      CSSRect rect;
-      sscanf(NS_ConvertUTF16toUTF8(aData).get(),
-             "{\"x\":%f,\"y\":%f,\"w\":%f,\"h\":%f}",
-             &rect.x, &rect.y, &rect.width, &rect.height);
-      SendZoomToRect(rect);
+      nsCOMPtr<nsIDocument> doc(GetDocument());
+      uint32_t presShellId;
+      ViewID viewId;
+      if (APZCCallbackHelper::GetScrollIdentifiers(doc->GetDocumentElement(),
+                                                    &presShellId, &viewId)) {
+        CSSRect rect;
+        sscanf(NS_ConvertUTF16toUTF8(aData).get(),
+               "{\"x\":%f,\"y\":%f,\"w\":%f,\"h\":%f}",
+               &rect.x, &rect.y, &rect.width, &rect.height);
+        SendZoomToRect(presShellId, viewId, rect);
+      }
     }
   } else if (!strcmp(aTopic, BEFORE_FIRST_PAINT)) {
     if (IsAsyncPanZoomEnabled()) {

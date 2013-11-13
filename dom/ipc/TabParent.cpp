@@ -1613,10 +1613,12 @@ TabParent::RecvPRenderFrameConstructor(PRenderFrameParent* actor,
 }
 
 bool
-TabParent::RecvZoomToRect(const CSSRect& aRect)
+TabParent::RecvZoomToRect(const uint32_t& aPresShellId,
+                          const ViewID& aViewId,
+                          const CSSRect& aRect)
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->ZoomToRect(aRect);
+    rfp->ZoomToRect(aPresShellId, aViewId, aRect);
   }
   return true;
 }

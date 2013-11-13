@@ -1001,10 +1001,11 @@ RenderFrameParent::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 void
-RenderFrameParent::ZoomToRect(const CSSRect& aRect)
+RenderFrameParent::ZoomToRect(uint32_t aPresShellId, ViewID aViewId,
+                              const CSSRect& aRect)
 {
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->ZoomToRect(ScrollableLayerGuid(mLayersId),
+    GetApzcTreeManager()->ZoomToRect(ScrollableLayerGuid(mLayersId, aPresShellId, aViewId),
                                      aRect);
   }
 }
