@@ -3009,7 +3009,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             }
                             break starttagloop;
                         case NOFRAMES:
-                            startTagScriptInHead(elementName, attributes);
+                            startTagGenericRawText(elementName, attributes);
                             attributes = null; // CPP
                             break starttagloop;
                         default:
@@ -4017,8 +4017,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     continue;
                 case AFTER_AFTER_FRAMESET:
                     errStrayEndTag(name);
-                    mode = IN_FRAMESET;
-                    continue;
+                    break endtagloop;
                 case TEXT:
                     // XXX need to manage insertion point here
                     pop();
