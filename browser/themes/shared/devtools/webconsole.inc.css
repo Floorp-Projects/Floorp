@@ -112,6 +112,10 @@ a {
   align-items: flex-start;
 }
 
+#output-container.hideTimestamps > .message > .timestamp {
+  display: none;
+}
+
 .filtered-by-type,
 .filtered-by-string {
   display: none;
