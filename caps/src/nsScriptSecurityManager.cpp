@@ -184,12 +184,6 @@ GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
   return GetOriginFromURI(uri, aOrigin);
 }
 
-static nsIScriptContext *
-GetScriptContext(JSContext *cx)
-{
-    return GetScriptContextFromJSContext(cx);
-}
-
 inline void SetPendingException(JSContext *cx, const char *aMsg)
 {
     JS_ReportError(cx, "%s", aMsg);
@@ -1622,21 +1616,6 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     {
         *result = true;
         return NS_OK;
-    }
-
-    //-- See if the current window allows JS execution
-    nsIScriptContext *scriptContext = GetScriptContext(cx);
-    if (scriptContext) {
-        if (!scriptContext->GetScriptsEnabled()) {
-            // No scripting on this context, folks
-            *result = false;
-            return NS_OK;
-        }
-
-        nsIScriptGlobalObject *sgo = scriptContext->GetGlobalObject();
-        if (!sgo) {
-            return NS_ERROR_FAILURE;
-        }
     }
 
     // Check whether our URI is an "about:" URI that allows scripts.  If it is,
