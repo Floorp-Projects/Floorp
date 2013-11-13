@@ -183,6 +183,11 @@ this.EventManager.prototype = {
             Presentation.
               actionInvoked(aEvent.accessible,
                             event.isEnabled ? 'check' : 'uncheck'));
+        } else if (event.state == Ci.nsIAccessibleStates.STATE_SELECTED) {
+          this.present(
+            Presentation.
+              actionInvoked(aEvent.accessible,
+                            event.isEnabled ? 'select' : 'unselect'));
         }
         break;
       }
