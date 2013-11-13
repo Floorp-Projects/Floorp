@@ -1027,8 +1027,8 @@ RenderFrameParent::UpdateZoomConstraints(bool aAllowZoom,
     mContentController->SaveZoomConstraints(aAllowZoom, aMinZoom, aMaxZoom);
   }
   if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->UpdateZoomConstraints(ScrollableLayerGuid(mLayersId),
-                                                aAllowZoom, aMinZoom, aMaxZoom);
+    GetApzcTreeManager()->UpdateZoomConstraints(mLayersId, aAllowZoom,
+                                                aMinZoom, aMaxZoom);
   }
 }
 
