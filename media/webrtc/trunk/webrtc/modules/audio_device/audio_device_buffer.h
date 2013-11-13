@@ -11,11 +11,9 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_BUFFER_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_BUFFER_H
 
-#include "typedefs.h"
-#include "common_audio/resampler/include/resampler.h"
-#include "file_wrapper.h"
-#include "audio_device.h"
-#include "list_wrapper.h"
+#include "webrtc/modules/audio_device/include/audio_device.h"
+#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 class CriticalSectionWrapper;
@@ -29,6 +27,9 @@ class MediaFile;
 class AudioDeviceBuffer
 {
 public:
+    AudioDeviceBuffer();
+    virtual ~AudioDeviceBuffer();
+
     void SetId(uint32_t id);
     int32_t RegisterAudioCallback(AudioTransport* audioCallback);
 
@@ -51,14 +52,14 @@ public:
 
     int32_t SetRecordedBuffer(const void* audioBuffer, uint32_t nSamples);
     int32_t SetCurrentMicLevel(uint32_t level);
-    int32_t SetVQEData(uint32_t playDelayMS,
-                       uint32_t recDelayMS,
-                       int32_t clockDrift);
+    void SetVQEData(int playDelayMS,
+                    int recDelayMS,
+                    int clockDrift);
     int32_t DeliverRecordedData();
     uint32_t NewMicLevel() const;
 
-    int32_t RequestPlayoutData(uint32_t nSamples);
-    int32_t GetPlayoutData(void* audioBuffer);
+    virtual int32_t RequestPlayoutData(uint32_t nSamples);
+    virtual int32_t GetPlayoutData(void* audioBuffer);
 
     int32_t StartInputFileRecording(
         const char fileName[kAdmMaxFileNameSize]);
@@ -68,9 +69,6 @@ public:
     int32_t StopOutputFileRecording();
 
     int32_t SetTypingStatus(bool typingStatus);
-
-    AudioDeviceBuffer();
-    ~AudioDeviceBuffer();
 
 private:
     int32_t                   _id;
@@ -114,10 +112,10 @@ private:
 
     bool                      _typingStatus;
 
-    uint32_t                  _playDelayMS;
-    uint32_t                  _recDelayMS;
-
-    int32_t                   _clockDrift;
+    int _playDelayMS;
+    int _recDelayMS;
+    int _clockDrift;
+    int high_delay_counter_;
 };
 
 }  // namespace webrtc

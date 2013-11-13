@@ -185,9 +185,6 @@ Tester.prototype = {
     var failCount = this.tests.reduce(function(a, f) a + f.failCount, 0);
     var todoCount = this.tests.reduce(function(a, f) a + f.todoCount, 0);
 
-    if (failCount > 0 && this.runUntilFailure)
-      this.repeat = 0;
-
     if (this.repeat > 0) {
       --this.repeat;
       this.currentTestIndex = -1;
@@ -220,6 +217,12 @@ Tester.prototype = {
       this.tests = null;
       this.openedWindows = null;
     }
+  },
+
+  haltTests: function Tester_haltTests() {
+    // Do not run any further tests
+    this.currentTestIndex = this.tests.length - 1;
+    this.repeat = 0;
   },
 
   observe: function Tester_observe(aSubject, aTopic, aData) {
@@ -353,6 +356,10 @@ Tester.prototype = {
       let time = Date.now() - this.lastStartTime;
       this.dumper.dump("INFO TEST-END | " + this.currentTest.path + " | finished in " + time + "ms\n");
       this.currentTest.setDuration(time);
+
+      if (this.runUntilFailure && this.currentTest.failCount > 0) {
+        this.haltTests();
+      }
 
       testScope.destroy();
       this.currentTest.scope = null;

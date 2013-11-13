@@ -50,7 +50,10 @@ int EventPosix::Construct() {
   // Set start time to zero
   memset(&created_at_, 0, sizeof(created_at_));
 
-  int result = pthread_mutex_init(&mutex_, 0);
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+  int result = pthread_mutex_init(&mutex_, &attr);
   if (result != 0) {
     return -1;
   }
@@ -180,15 +183,18 @@ EventTypeWrapper EventPosix::Wait(timespec& wake_at) {
 }
 
 bool EventPosix::StartTimer(bool periodic, unsigned long time) {
+  pthread_mutex_lock(&mutex_);
   if (timer_thread_) {
     if (periodic_) {
       // Timer already started.
+      pthread_mutex_unlock(&mutex_);
       return false;
     } else  {
       // New one shot timer
       time_ = time;
       created_at_.tv_sec = 0;
       timer_event_->Set();
+      pthread_mutex_unlock(&mutex_);
       return true;
     }
   }
@@ -201,10 +207,10 @@ bool EventPosix::StartTimer(bool periodic, unsigned long time) {
   periodic_ = periodic;
   time_ = time;
   unsigned int id = 0;
-  if (timer_thread_->Start(id)) {
-    return true;
-  }
-  return false;
+  bool started = timer_thread_->Start(id);
+  pthread_mutex_unlock(&mutex_);
+
+  return started;
 }
 
 bool EventPosix::Run(ThreadObj obj) {
@@ -212,6 +218,7 @@ bool EventPosix::Run(ThreadObj obj) {
 }
 
 bool EventPosix::Process() {
+  pthread_mutex_lock(&mutex_);
   if (created_at_.tv_sec == 0) {
 #ifndef WEBRTC_MAC
 #ifdef WEBRTC_CLOCK_TYPE_REALTIME
@@ -240,6 +247,7 @@ bool EventPosix::Process() {
     end_at.tv_nsec -= E9;
   }
 
+  pthread_mutex_unlock(&mutex_);
   switch (timer_event_->Wait(end_at)) {
     case kEventSignaled:
       return true;
@@ -248,9 +256,12 @@ bool EventPosix::Process() {
     case kEventTimeout:
       break;
   }
-  if (periodic_ || count_ == 1) {
+
+  pthread_mutex_lock(&mutex_);
+  if (periodic_ || count_ == 1)
     Set();
-  }
+  pthread_mutex_unlock(&mutex_);
+
   return true;
 }
 
@@ -280,4 +291,4 @@ bool EventPosix::StopTimer() {
   return true;
 }
 
-} // namespace webrtc
+}  // namespace webrtc

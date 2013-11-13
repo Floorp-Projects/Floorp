@@ -12,6 +12,7 @@
 
 #ifdef WIN32
 #include <direct.h>
+#include <algorithm>
 #define GET_CURRENT_DIR _getcwd
 #else
 #include <unistd.h>
@@ -23,36 +24,41 @@
 #define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
 #endif
 
-#include <cstdio>
-#include <cstring>
+#include <stdio.h>
+#include <string.h>
 
 #include "webrtc/typedefs.h"  // For architecture defines
 
 namespace webrtc {
 namespace test {
 
+namespace {
+
 #ifdef WIN32
-static const char* kPathDelimiter = "\\";
+const char* kPathDelimiter = "\\";
 #else
-static const char* kPathDelimiter = "/";
+const char* kPathDelimiter = "/";
 #endif
 
 #ifdef WEBRTC_ANDROID
-static const char* kRootDirName = "/sdcard/";
-static const char* kResourcesDirName = "resources";
+const char* kResourcesDirName = "resources";
 #else
 // The file we're looking for to identify the project root dir.
-static const char* kProjectRootFileName = "DEPS";
-static const char* kOutputDirName = "out";
-static const char* kFallbackPath = "./";
-static const char* kResourcesDirName = "resources";
+const char* kProjectRootFileName = "DEPS";
+const char* kResourcesDirName = "resources";
 #endif
-const char* kCannotFindProjectRootDir = "ERROR_CANNOT_FIND_PROJECT_ROOT_DIR";
 
-namespace {
+const char* kFallbackPath = "./";
+const char* kOutputDirName = "out";
 char relative_dir_path[FILENAME_MAX];
 bool relative_dir_path_set = false;
-}
+
+}  // namespace
+
+const char* kCannotFindProjectRootDir = "ERROR_CANNOT_FIND_PROJECT_ROOT_DIR";
+
+std::string OutputPathAndroid();
+std::string ProjectRootPathAndroid();
 
 void SetExecutablePath(const std::string& path) {
   std::string working_dir = WorkingDir();
@@ -62,6 +68,13 @@ void SetExecutablePath(const std::string& path) {
   if (path.find(working_dir) != std::string::npos) {
     temp_path = path.substr(working_dir.length() + 1);
   }
+  // On Windows, when tests are run under memory tools like DrMemory and TSan,
+  // slashes occur in the path as directory separators. Make sure we replace
+  // such cases with backslashes in order for the paths to be correct.
+#ifdef WIN32
+  std::replace(temp_path.begin(), temp_path.end(), '/', '\\');
+#endif
+
   // Trim away the executable name; only store the relative dir path.
   temp_path = temp_path.substr(0, temp_path.find_last_of(kPathDelimiter));
   strncpy(relative_dir_path, temp_path.c_str(), FILENAME_MAX);
@@ -73,18 +86,30 @@ bool FileExists(std::string& file_name) {
   return stat(file_name.c_str(), &file_info) == 0;
 }
 
+std::string OutputPathImpl() {
+  std::string path = ProjectRootPath();
+  if (path == kCannotFindProjectRootDir) {
+    return kFallbackPath;
+  }
+  path += kOutputDirName;
+  if (!CreateDirectory(path)) {
+    return kFallbackPath;
+  }
+  return path + kPathDelimiter;
+}
+
 #ifdef WEBRTC_ANDROID
 
 std::string ProjectRootPath() {
-  return kRootDirName;
+  return ProjectRootPathAndroid();
 }
 
 std::string OutputPath() {
-  return kRootDirName;
+  return OutputPathAndroid();
 }
 
 std::string WorkingDir() {
-  return kRootDirName;
+  return ProjectRootPath();
 }
 
 #else // WEBRTC_ANDROID
@@ -114,15 +139,7 @@ std::string ProjectRootPath() {
 }
 
 std::string OutputPath() {
-  std::string path = ProjectRootPath();
-  if (path == kCannotFindProjectRootDir) {
-    return kFallbackPath;
-  }
-  path += kOutputDirName;
-  if (!CreateDirectory(path)) {
-    return kFallbackPath;
-  }
-  return path + kPathDelimiter;
+  return OutputPathImpl();
 }
 
 std::string WorkingDir() {

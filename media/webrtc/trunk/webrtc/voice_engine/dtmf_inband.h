@@ -82,6 +82,6 @@ private:
     uint32_t _delaySinceLastToneMS; // time since last generated tone [ms]
 };
 
-}   // namespace webrtc
+}  // namespace webrtc
 
 #endif // #ifndef WEBRTC_VOICE_ENGINE_DTMF_INBAND_H_

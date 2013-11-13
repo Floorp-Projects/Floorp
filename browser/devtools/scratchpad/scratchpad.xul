@@ -35,7 +35,7 @@
 <script type="application/javascript">
   function goUpdateSourceEditorMenuItems() {
     goUpdateGlobalEditMenuItems();
-    let commands = ['cmd_undo', 'cmd_redo', 'cmd_cut', 'cmd_paste', 'cmd_delete', 'cmd_findAgain'];
+    let commands = ['cmd_undo', 'cmd_redo', 'cmd_delete', 'cmd_findAgain'];
     commands.forEach(goUpdateCommand);
   }
 </script>

@@ -173,9 +173,23 @@ int32_t UdpSocketPosix::SendTo(const int8_t* buf, int32_t len,
     return retVal;
 }
 
+SOCKET UdpSocketPosix::GetFd() { return _socket; }
+int32_t UdpSocketPosix::GetError() { return _error; }
+
 bool UdpSocketPosix::ValidHandle()
 {
     return _socket != INVALID_SOCKET;
+}
+
+bool UdpSocketPosix::SetQos(int32_t /*serviceType*/,
+                            int32_t /*tokenRate*/,
+                            int32_t /*bucketSize*/,
+                            int32_t /*peekBandwith*/,
+                            int32_t /*minPolicedSize*/,
+                            int32_t /*maxSduSize*/,
+                            const SocketAddress& /*stRemName*/,
+                            int32_t /*overrideDSCP*/) {
+  return false;
 }
 
 void UdpSocketPosix::HasIncoming()
@@ -220,6 +234,8 @@ void UdpSocketPosix::HasIncoming()
         break;
     }
 }
+
+bool UdpSocketPosix::WantsIncoming() { return _wantsIncoming; }
 
 void UdpSocketPosix::CloseBlocking()
 {

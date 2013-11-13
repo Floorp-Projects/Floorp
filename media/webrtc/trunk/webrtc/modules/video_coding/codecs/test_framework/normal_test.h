@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAMEWORK_NORMAL_TEST_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAMEWORK_NORMAL_TEST_H_
 
-#include "test.h"
+#include "webrtc/modules/video_coding/codecs/test_framework/test.h"
 
 class NormalTest : public CodecTest
 {
@@ -43,4 +43,3 @@ protected:
 };
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAMEWORK_NORMAL_TEST_H_
-

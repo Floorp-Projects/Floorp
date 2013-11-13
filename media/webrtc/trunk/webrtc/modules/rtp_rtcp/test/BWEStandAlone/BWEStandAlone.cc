@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 
     Trace::CreateTrace();
     Trace::SetTraceFile("BWEStandAloneTrace.txt");
-    Trace::SetLevelFilter(webrtc::kTraceAll);
+    Trace::set_level_filter(webrtc::kTraceAll);
 
     sendrec->InitReceiver(port);
 

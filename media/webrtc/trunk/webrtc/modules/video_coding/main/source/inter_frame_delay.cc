@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "inter_frame_delay.h"
+#include "webrtc/modules/video_coding/main/source/inter_frame_delay.h"
 
 namespace webrtc {
 

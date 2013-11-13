@@ -55,7 +55,7 @@ bool ViEFileCaptureDevice::OpenI420File(const std::string& path,
   webrtc::CriticalSectionScoped cs(mutex_);
   assert(input_file_ == NULL);
 
-  input_file_ = std::fopen(path.c_str(), "rb");
+  input_file_ = fopen(path.c_str(), "rb");
   if (input_file_ == NULL) {
     return false;
   }
@@ -80,10 +80,10 @@ void ViEFileCaptureDevice::ReadFileFor(uint64_t time_slice_ms,
 
   while (elapsed_ms < time_slice_ms) {
     FramePacemaker pacemaker(max_fps);
-    int read = std::fread(frame_buffer, 1, frame_length_, input_file_);
+    int read = fread(frame_buffer, 1, frame_length_, input_file_);
 
-    if (std::feof(input_file_)) {
-      std::rewind(input_file_);
+    if (feof(input_file_)) {
+      rewind(input_file_);
     }
     input_sink_->IncomingFrame(frame_buffer, read, width_, height_,
                                webrtc::kVideoI420,
@@ -101,5 +101,5 @@ void ViEFileCaptureDevice::CloseFile() {
   webrtc::CriticalSectionScoped cs(mutex_);
   assert(input_file_ != NULL);
 
-  std::fclose(input_file_);
+  fclose(input_file_);
 }

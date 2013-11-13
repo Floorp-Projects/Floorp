@@ -106,6 +106,9 @@ MobileMessageCallback::NotifyError(int32_t aError, bool aAsync)
     case nsIMobileMessageCallback::FDN_CHECK_ERROR:
       errorStr = NS_LITERAL_STRING("FdnCheckError");
       break;
+    case nsIMobileMessageCallback::NON_ACTIVE_SIM_CARD_ERROR:
+      errorStr = NS_LITERAL_STRING("NonActiveSimCardError");
+      break;
     default: // SUCCESS_NO_ERROR is handled above.
       MOZ_CRASH("Should never get here!");
   }
@@ -205,6 +208,28 @@ NS_IMETHODIMP
 MobileMessageCallback::NotifyGetSegmentInfoForTextFailed(int32_t aError)
 {
   return NotifyError(aError, true);
+}
+
+NS_IMETHODIMP
+MobileMessageCallback::NotifyGetSmscAddress(const nsAString& aSmscAddress)
+{
+  AutoJSContext cx;
+  JSString* smsc = JS_NewUCStringCopyN(cx,
+                                       static_cast<const jschar *>(aSmscAddress.BeginReading()),
+                                       aSmscAddress.Length());
+
+  if (!smsc) {
+    return NotifyError(nsIMobileMessageCallback::INTERNAL_ERROR);
+  }
+
+  JS::Rooted<JS::Value> val(cx, STRING_TO_JSVAL(smsc));
+  return NotifySuccess(val);
+}
+
+NS_IMETHODIMP
+MobileMessageCallback::NotifyGetSmscAddressFailed(int32_t aError)
+{
+  return NotifyError(aError);
 }
 
 } // namesapce mobilemessage

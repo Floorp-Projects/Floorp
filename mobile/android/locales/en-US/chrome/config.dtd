@@ -2,6 +2,20 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY search.placeholder2    "Search Settings">
-<!ENTITY clear.altText          "Clear">
-<!ENTITY newpref.label2         "Add a New Setting">
+
+<!ENTITY toolbar.searchPlaceholder     "Search">
+
+<!ENTITY newPref.namePlaceholder       "Name">
+
+<!ENTITY newPref.valueBoolean          "Boolean">
+<!ENTITY newPref.valueString           "String">
+<!ENTITY newPref.valueInteger          "Integer">
+
+<!ENTITY newPref.stringPlaceholder     "Enter a string">
+<!ENTITY newPref.numberPlaceholder     "Enter a number">
+
+<!ENTITY newPref.toggleButton          "Toggle">
+<!ENTITY newPref.cancelButton          "Cancel">
+
+<!ENTITY contextMenu.copyPrefName      "Copy Name">
+<!ENTITY contextMenu.copyPrefValue     "Copy Value">

@@ -6,6 +6,7 @@
 #include "platform.h"
 #include "ProfileEntry.h"
 #include "mozilla/Mutex.h"
+#include "IntelPowerGadget.h"
 
 static bool
 hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature) {
@@ -50,6 +51,9 @@ class TableTicker: public Sampler {
     , mSaveRequested(false)
     , mUnwinderThread(false)
     , mFilterCount(aFilterCount)
+#if defined(XP_WIN)
+    , mIntelPowerGadget(nullptr)
+#endif
   {
     mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
@@ -57,11 +61,19 @@ class TableTicker: public Sampler {
     mJankOnly = hasFeature(aFeatures, aFeatureCount, "jank");
     mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
     mProfileJava = hasFeature(aFeatures, aFeatureCount, "java");
+    mProfilePower = hasFeature(aFeatures, aFeatureCount, "power");
     mProfileThreads = hasFeature(aFeatures, aFeatureCount, "threads");
     mUnwinderThread = hasFeature(aFeatures, aFeatureCount, "unwinder") || sps_version2();
     mAddLeafAddresses = hasFeature(aFeatures, aFeatureCount, "leaf");
     mPrivacyMode = hasFeature(aFeatures, aFeatureCount, "privacy");
     mAddMainThreadIO = hasFeature(aFeatures, aFeatureCount, "mainthreadio");
+
+#if defined(XP_WIN)
+    if (mProfilePower) {
+      mIntelPowerGadget = new IntelPowerGadget();
+      mProfilePower = mIntelPowerGadget->Init();
+    }
+#endif
 
     // Deep copy aThreadNameFilters
     mThreadNameFilters = new char*[aFilterCount];
@@ -104,6 +116,9 @@ class TableTicker: public Sampler {
         }
       }
     }
+#if defined(XP_WIN)
+    delete mIntelPowerGadget;
+#endif
   }
 
   void RegisterThread(ThreadInfo* aInfo) {
@@ -163,6 +178,7 @@ class TableTicker: public Sampler {
   bool HasUnwinderThread() const { return mUnwinderThread; }
   bool ProfileJS() const { return mProfileJS; }
   bool ProfileJava() const { return mProfileJava; }
+  bool ProfilePower() const { return mProfilePower; }
   bool ProfileThreads() const { return mProfileThreads; }
   bool InPrivacyMode() const { return mPrivacyMode; }
   bool AddMainThreadIO() const { return mAddMainThreadIO; }
@@ -189,6 +205,7 @@ protected:
   bool mProfileThreads;
   bool mUnwinderThread;
   bool mProfileJava;
+  bool mProfilePower;
 
   // Keep the thread filter to check against new thread that
   // are started while profiling
@@ -196,5 +213,8 @@ protected:
   uint32_t mFilterCount;
   bool mPrivacyMode;
   bool mAddMainThreadIO;
+#if defined(XP_WIN)
+  IntelPowerGadget* mIntelPowerGadget;
+#endif
 };
 

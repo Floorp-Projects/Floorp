@@ -93,6 +93,7 @@ gTests.push({
   tearDown: restoreViewstate
 });
 
+/* Disabled because it breaks at specific screen sizes (bug 936735).
 gTests.push({
   desc: "Test Snapped scrolls vertically",
   setUp: function() {
@@ -114,6 +115,8 @@ gTests.push({
     yield restoreViewstate();
   }
 });
+*/
+
 gTests.push({
   desc: "Test tile selection is cleared and disabled",
   setUp: function() {
@@ -183,6 +186,7 @@ gTests.push({
   tearDown: restoreViewstate
 });
 
+/* Disabled because it breaks at specific screen sizes (bug 936735).
 gTests.push({
   desc: "Test portrait scrolls vertically",
   setUp: function() {
@@ -202,3 +206,4 @@ gTests.push({
     yield restoreViewstate();
   }
 });
+*/

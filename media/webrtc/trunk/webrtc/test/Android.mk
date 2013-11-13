@@ -17,6 +17,7 @@ LOCAL_MODULE:= libwebrtc_test_support
 LOCAL_MODULE_TAGS := optional
 LOCAL_CPP_EXTENSION := .cc
 LOCAL_SRC_FILES:= \
+    testsupport/android/root_path_android.cc \
     testsupport/fileutils.cc \
     testsupport/perf_test.cc
 
@@ -36,4 +37,3 @@ ifndef NDK_ROOT
 include external/stlport/libstlport.mk
 endif
 include $(BUILD_STATIC_LIBRARY)
-

@@ -282,9 +282,7 @@ def write_getter(a, iface, fd):
     if realtype.count("JS::Value"):
         fd.write("    aDict.%s = v;\n" % a.name)
     elif realtype.count("bool"):
-        fd.write("    bool b;\n")
-        fd.write("    MOZ_ALWAYS_TRUE(JS_ValueToBoolean(aCx, v, &b));\n")
-        fd.write("    aDict.%s = b;\n" % a.name)
+        fd.write("    aDict.%s = JS::ToBoolean(v);\n" % a.name)
     elif realtype.count("uint16_t"):
         fd.write("    uint32_t u;\n")
         fd.write("    NS_ENSURE_STATE(JS::ToUint32(aCx, v, &u));\n")

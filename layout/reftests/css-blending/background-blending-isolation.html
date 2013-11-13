@@ -1,0 +1,31 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<style>
+.reftest {
+  width: 100px;
+  height: 100px;
+}
+
+.image {
+  background-image: url(as-image/green100x100.png);
+  background-blend-mode: difference;
+}
+
+.color {
+  background-color: rgb(0, 255, 0);
+  background-blend-mode: difference;
+}
+
+body {
+  background-color: rgb(0, 0, 255);
+}
+
+</style>
+<body>
+  <div class="reftest image"></div>
+  <div class="reftest color"></div>
+</body>
+</html>

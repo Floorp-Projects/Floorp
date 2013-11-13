@@ -73,7 +73,7 @@ protected:
   // The lock protects mVideoDecoderSlots and mVideoCodecRequestQueue called
   //  from multiple threads.
   Mutex mLock;
-  typedef Vector<sp<IBinder> > Fifo;
+  typedef List<sp<IBinder> > Fifo;
   // Queue of media resource requests.
   // Hold IMediaResourceManagerClient that requesting a media resource as IBinder.
   Fifo mVideoCodecRequestQueue;

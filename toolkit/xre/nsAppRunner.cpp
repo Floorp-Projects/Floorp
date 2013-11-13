@@ -129,7 +129,7 @@
 #include "nsINIParser.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/StartupTimeline.h"
-#include "mozilla/mozPoisonWrite.h"
+#include "mozilla/LateWriteChecks.h"
 
 #include <stdlib.h>
 
@@ -4051,10 +4051,10 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // corresponds to nsIAppStartup.quit(eRestart)
   if (rv == NS_SUCCESS_RESTART_APP) {
     appInitiatedRestart = true;
-  } else {
-    // We will have a real shutdown, let ShutdownXPCOM poison writes to
-    // find any late ones.
-    mozilla::EnableWritePoisoning();
+
+    // We have an application restart don't do any shutdown checks here
+    // In particular we don't want to poison IO for checking late-writes.
+    gShutdownChecks = SCM_NOTHING;
   }
 
   if (!mShuttingDown) {
@@ -4234,8 +4234,8 @@ void SetWindowsEnvironment(WindowsEnvironmentType aEnvID);
 #endif // MOZ_METRO || !defined(XP_WIN)
 
 void
-XRE_DisableWritePoisoning(void) {
-  mozilla::DisableWritePoisoning();
+XRE_StopLateWriteChecks(void) {
+  mozilla::StopLateWriteChecks();
 }
 
 int

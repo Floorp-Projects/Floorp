@@ -214,6 +214,10 @@ TestRunner.error = function(msg) {
         dump(msg + "\n");
     }
 
+    if (TestRunner.runUntilFailure) {
+      TestRunner._haltTests = true;
+    }
+
     if (TestRunner.debugOnFailure) {
       // You've hit this line because you requested to break into the
       // debugger upon a testcase failure on your test run.
@@ -366,10 +370,7 @@ TestRunner.runNextTest = function() {
              TestRunner.onComplete();
          }
 
-        var failCount = parseInt($("fail-count").innerHTML);
-        var stopLooping = failCount > 0 && TestRunner.runUntilFailure;
-
-        if (TestRunner._currentLoop <= TestRunner.repeat && !stopLooping) {
+        if (TestRunner._currentLoop <= TestRunner.repeat && !TestRunner._haltTests) {
           TestRunner._currentLoop++;
           TestRunner.resetTests(TestRunner._urls);
           TestRunner._loopIsRestarting = true;

@@ -19,7 +19,6 @@ LOCAL_CPP_EXTENSION := .cc
 LOCAL_SRC_FILES := \
     android/cpu-features.c \
     cpu_features_android.c \
-    map.cc \
     sort.cc \
     aligned_malloc.cc \
     atomic32_posix.cc \

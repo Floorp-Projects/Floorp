@@ -33,6 +33,7 @@ int WebRtcNetEQ_McuReset(MCUInst_t *inst)
     inst->one_desc = 0;
     inst->BufferStat_inst.Automode_inst.extraDelayMs = 0;
     inst->BufferStat_inst.Automode_inst.minimum_delay_ms = 0;
+    inst->BufferStat_inst.Automode_inst.maximum_delay_ms = 10000;
     inst->NetEqPlayoutMode = kPlayoutOn;
     inst->av_sync = 0;
 

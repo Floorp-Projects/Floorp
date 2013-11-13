@@ -18,8 +18,11 @@ namespace js {
 
 // Whether the current thread is permitted access to any part of the specified
 // runtime or zone.
-extern bool CurrentThreadCanAccessRuntime(JSRuntime *rt);
-extern bool CurrentThreadCanAccessZone(JS::Zone *zone);
+JS_FRIEND_API(bool)
+CurrentThreadCanAccessRuntime(JSRuntime *rt);
+
+JS_FRIEND_API(bool)
+CurrentThreadCanAccessZone(JS::Zone *zone);
 
 namespace gc {
 

@@ -10,9 +10,9 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_vp8.h"
 
+#include <assert.h>   // assert
 #include <string.h>  // memcpy
 
-#include <cassert>   // assert
 #include <vector>
 
 #include "webrtc/modules/rtp_rtcp/source/vp8_partition_aggregator.h"
@@ -66,6 +66,8 @@ RtpFormatVp8::RtpFormatVp8(const uint8_t* payload_data,
     part_info_.fragmentationLength[0] = payload_size;
     part_info_.fragmentationOffset[0] = 0;
 }
+
+RtpFormatVp8::~RtpFormatVp8() {}
 
 int RtpFormatVp8::NextPacket(uint8_t* buffer,
                              int* bytes_to_send,

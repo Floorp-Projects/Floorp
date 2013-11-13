@@ -691,6 +691,7 @@
             let typeSelectors = {
               'richgriditem' : "default",
               'richgriditem[tiletype="thumbnail"]': "thumbnail",
+              'richgriditem[search]': "search",
               'richgriditem[compact]': "compact"
             };
             let rules, sheet;

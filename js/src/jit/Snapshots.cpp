@@ -362,7 +362,7 @@ SnapshotWriter::writeSlotHeader(JSValueType type, uint32_t regCode)
 void
 SnapshotWriter::addSlot(const FloatRegister &reg)
 {
-    JS_ASSERT(reg.code() < MIN_REG_FIELD_ESC);
+    JS_ASSERT(uint32_t(reg.code()) < MIN_REG_FIELD_ESC);
     IonSpew(IonSpew_Snapshots, "    slot %u: double (reg %s)", slotsWritten_, reg.name());
 
     writeSlotHeader(JSVAL_TYPE_DOUBLE, reg.code());
@@ -519,7 +519,7 @@ SnapshotWriter::addInt32Slot(int32_t value)
 void
 SnapshotWriter::addFloat32Slot(const FloatRegister &reg)
 {
-    JS_ASSERT(reg.code() < MIN_REG_FIELD_ESC);
+    JS_ASSERT(uint32_t(reg.code()) < MIN_REG_FIELD_ESC);
     IonSpew(IonSpew_Snapshots, "    slot %u: float32 (reg %s)", slotsWritten_, reg.name());
     writeSlotHeader(JSVAL_TYPE_NULL, ESC_REG_FIELD_FLOAT32_REG);
     writer_.writeUnsigned(reg.code());

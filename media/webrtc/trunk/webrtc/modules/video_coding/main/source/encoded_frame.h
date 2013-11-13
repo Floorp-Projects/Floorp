@@ -13,11 +13,11 @@
 
 #include <vector>
 
-#include "common_types.h"
-#include "common_video/interface/video_image.h"
-#include "modules/interface/module_common_types.h"
-#include "modules/video_coding/codecs/interface/video_codec_interface.h"
-#include "modules/video_coding/main/interface/video_coding_defines.h"
+#include "webrtc/common_types.h"
+#include "webrtc/common_video/interface/video_image.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
 
 namespace webrtc
 {
@@ -91,8 +91,6 @@ public:
 
     const RTPFragmentationHeader* FragmentationHeader() const;
 
-    int32_t Store(VCMFrameStorageCallback& storeCallback) const;
-
     static webrtc::FrameType ConvertFrameType(VideoFrameType frameType);
     static VideoFrameType ConvertFrameType(webrtc::FrameType frameType);
     static void ConvertFrameTypes(
@@ -120,6 +118,6 @@ protected:
     RTPFragmentationHeader        _fragmentation;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_ENCODED_FRAME_H_

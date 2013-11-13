@@ -10,6 +10,8 @@
 
 #include "webrtc/modules/desktop_capture/window_capturer.h"
 
+#include <iostream>
+
 #include "gtest/gtest.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_region.h"
@@ -42,15 +44,10 @@ class WindowCapturerTest : public testing::Test,
   scoped_ptr<DesktopFrame> frame_;
 };
 
-#if defined(WEBRTC_WIN)
-
 // Verify that we can enumerate windows.
 TEST_F(WindowCapturerTest, Enumerate) {
   WindowCapturer::WindowList windows;
   EXPECT_TRUE(capturer_->GetWindowList(&windows));
-
-  // Assume that there is at least one window.
-  EXPECT_GT(windows.size(), 0U);
 
   // Verify that window titles are set.
   for (WindowCapturer::WindowList::iterator it = windows.begin();
@@ -94,7 +91,5 @@ TEST_F(WindowCapturerTest, Capture) {
     EXPECT_GT(frame_->size().height(), 0);
   }
 }
-
-#endif  // defined(WEBRTC_WIN)
 
 }  // namespace webrtc

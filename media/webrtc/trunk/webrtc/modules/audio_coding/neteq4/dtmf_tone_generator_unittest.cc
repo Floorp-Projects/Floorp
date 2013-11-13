@@ -12,7 +12,7 @@
 
 #include "webrtc/modules/audio_coding/neteq4/dtmf_tone_generator.h"
 
-#include <cmath>
+#include <math.h>
 
 #include "gtest/gtest.h"
 #include "webrtc/modules/audio_coding/neteq4/audio_multi_vector.h"

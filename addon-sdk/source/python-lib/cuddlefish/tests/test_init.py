@@ -48,7 +48,7 @@ class TestInit(unittest.TestCase):
         self.assertEqual(open(main_js,"r").read(),"")
         self.assertEqual(open(package_json,"r").read() % {"id":"tmp_addon_id" },
                          PACKAGE_JSON % {"name":"tmp_addon_sample",
-                                         "fullName": "tmp_addon_SAMPLE",
+                                         "title": "tmp_addon_SAMPLE",
                                          "id":init_run["jid"] })
         self.assertEqual(open(test_main_js,"r").read(),TEST_MAIN_JS)
 

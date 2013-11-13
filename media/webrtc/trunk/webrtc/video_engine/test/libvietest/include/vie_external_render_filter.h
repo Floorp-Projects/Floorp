@@ -35,7 +35,8 @@ class ExternalRendererEffectFilter : public webrtc::ViEEffectFilter {
     return renderer_->DeliverFrame(frame_buffer,
                                    size,
                                    time_stamp90KHz,
-                                   webrtc::TickTime::MillisecondTimestamp());
+                                   webrtc::TickTime::MillisecondTimestamp(),
+                                   NULL);
   }
 
  private:

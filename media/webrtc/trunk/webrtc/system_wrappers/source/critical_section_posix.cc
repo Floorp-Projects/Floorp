@@ -39,4 +39,4 @@ CriticalSectionPosix::Leave() {
   (void) pthread_mutex_unlock(&mutex_);
 }
 
-} // namespace webrtc
+}  // namespace webrtc

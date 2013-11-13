@@ -13,8 +13,8 @@
 #ifndef WEBRTC_MODULES_BITRATE_CONTROLLER_SEND_SIDE_BANDWIDTH_ESTIMATION_H_
 #define WEBRTC_MODULES_BITRATE_CONTROLLER_SEND_SIDE_BANDWIDTH_ESTIMATION_H_
 
-#include "modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 class SendSideBandwidthEstimation {

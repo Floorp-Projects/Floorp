@@ -8,16 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "coder.h"
-#include "common_types.h"
-#include "module_common_types.h"
-
-// OS independent case insensitive string comparison.
-#ifdef WIN32
-    #define STR_CASE_CMP(x,y) ::_stricmp(x,y)
-#else
-    #define STR_CASE_CMP(x,y) ::strcasecmp(x,y)
-#endif
+#include "webrtc/common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/utility/source/coder.h"
 
 namespace webrtc {
 AudioCoder::AudioCoder(uint32_t instanceID)
@@ -35,7 +28,6 @@ AudioCoder::AudioCoder(uint32_t instanceID)
 
 AudioCoder::~AudioCoder()
 {
-    AudioCodingModule::Destroy(_acm);
 }
 
 int32_t AudioCoder::SetEncodeCodec(const CodecInst& codecInst,
@@ -124,4 +116,4 @@ int32_t AudioCoder::SendData(
     _encodedLengthInBytes = payloadSize;
     return 0;
 }
-} // namespace webrtc
+}  // namespace webrtc

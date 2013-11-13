@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_LINUX_VIDEO_CAPTURE_LINUX_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_LINUX_VIDEO_CAPTURE_LINUX_H_
 
-#include "common_types.h"
-#include "../video_capture_impl.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/video_capture/video_capture_impl.h"
 
 namespace webrtc
 {
@@ -58,7 +58,7 @@ private:
     };
     Buffer *_pool;
 };
-} // namespace videocapturemodule
-} // namespace webrtc
+}  // namespace videocapturemodule
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_LINUX_VIDEO_CAPTURE_LINUX_H_

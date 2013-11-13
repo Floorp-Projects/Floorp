@@ -9,11 +9,32 @@ GECKOVIEW_LIBRARY_FILES := \
   .project \
   AndroidManifest.xml \
   project.properties \
+  build.xml \
   $(NULL)
+
+
+PP_TARGETS = properties
+
+properties = local.properties.in
+properties_PATH = .
+properties_deps := $(patsubst %.in,%,$(properties))
+
+GARBAGE = $(GECKOVIEW_LIBRARY_FILES) $(properties_deps)
+
+GARBAGE_DIRS = \
+  bin \
+  libs \
+  src \
+  .deps \
+  gen  \
+  res \
+  $(NULL)
+
+DEFINES += -DANDROID_SDK=$(ANDROID_SDK)
 
 include $(topsrcdir)/config/rules.mk
 
-package:
+package: $(properties_deps)
 	# Make directory for the zips
 	$(MKDIR) -p $(DIST)/geckoview_library
 

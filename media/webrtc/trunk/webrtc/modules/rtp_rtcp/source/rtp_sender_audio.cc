@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_sender_audio.h"
 
-#include <cassert> //assert
+#include <assert.h> //assert
 #include <string.h> //memcpy
 
 #include "webrtc/system_wrappers/interface/trace_event.h"
@@ -474,10 +474,10 @@ int32_t RTPSenderAudio::SendAudio(
       }
     }
     _lastPayloadType = payloadType;
-  }   // end critical section
-  TRACE_EVENT_INSTANT2("webrtc_rtp", "Audio::Send",
-                       "timestamp", captureTimeStamp,
-                       "seqnum", _rtpSender->SequenceNumber());
+  }  // end critical section
+  TRACE_EVENT_ASYNC_END2("webrtc", "Audio", captureTimeStamp,
+                         "timestamp", _rtpSender->Timestamp(),
+                         "seqnum", _rtpSender->SequenceNumber());
   return _rtpSender->SendToNetwork(dataBuffer,
                                    payloadSize,
                                    static_cast<uint16_t>(rtpHeaderLength),
@@ -631,4 +631,4 @@ RTPSenderAudio::SendTelephoneEventPacket(const bool ended,
 
     return retVal;
 }
-} // namespace webrtc
+}  // namespace webrtc

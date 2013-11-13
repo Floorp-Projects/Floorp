@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Replace body test</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+function doTest()
+{
+  var y = document.getElementById("y");
+  var oldBody = document.body;
+  var newBody = document.createElement("body")
+  document.documentElement.insertBefore(newBody, oldBody);
+  setTimeout(function() {
+    document.documentElement.removeChild(oldBody);
+    newBody.appendChild(y);
+    ok(true, "we didn't assert");
+    SimpleTest.finish();
+  }, 0);
+}
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=895082"
+     title="Bug 895082 - replacing body element asserts">
+    Bug 895082</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+<div><div id="y"></div></div>
+
+</body>
+</html>

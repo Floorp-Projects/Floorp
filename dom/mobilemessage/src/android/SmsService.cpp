@@ -80,6 +80,14 @@ SmsService::RemoveSilentNumber(const nsAString& aNumber)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+SmsService::GetSmscAddress(uint32_t aServiceId,
+                           nsIMobileMessageCallback *aRequest)
+{
+  // TODO: bug 878016 - Android backend: implement getSMSCAddress/setSMSCAddress
+  return NS_OK;
+}
+
 } // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

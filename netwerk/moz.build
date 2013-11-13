@@ -29,9 +29,6 @@ if CONFIG['NECKO_WIFI']:
 
 PARALLEL_DIRS += ['locales']
 
-if CONFIG['MOZ_DASH']:
-    PARALLEL_DIRS += ['dash']
-
 DIRS += ['build']
 TEST_TOOL_DIRS += ['test']
 

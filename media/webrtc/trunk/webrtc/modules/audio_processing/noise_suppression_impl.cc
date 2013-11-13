@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/audio_processing/noise_suppression_impl.h"
 
-#include <cassert>
+#include <assert.h>
 
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #if defined(WEBRTC_NS_FLOAT)

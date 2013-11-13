@@ -8,15 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "normal_test.h"
+#include "webrtc/modules/video_coding/codecs/test_framework/normal_test.h"
 
-#include <time.h>
 #include <sstream>
 #include <string.h>
+#include <time.h>
 
-#include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "gtest/gtest.h"
-#include "testsupport/fileutils.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 NormalTest::NormalTest()
 :

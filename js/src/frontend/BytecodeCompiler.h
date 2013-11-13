@@ -23,7 +23,7 @@ namespace frontend {
 JSScript *
 CompileScript(ExclusiveContext *cx, LifoAlloc *alloc,
               HandleObject scopeChain, HandleScript evalCaller,
-              const CompileOptions &options, const jschar *chars, size_t length,
+              const ReadOnlyCompileOptions &options, const jschar *chars, size_t length,
               JSString *source_ = nullptr, unsigned staticLevel = 0,
               SourceCompressionTask *extraSct = nullptr);
 
@@ -31,10 +31,12 @@ bool
 CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *chars, size_t length);
 
 bool
-CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+CompileFunctionBody(JSContext *cx, MutableHandleFunction fun,
+                    const ReadOnlyCompileOptions &options,
                     const AutoNameVector &formals, const jschar *chars, size_t length);
 bool
-CompileStarGeneratorBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+CompileStarGeneratorBody(JSContext *cx, MutableHandleFunction fun,
+                         const ReadOnlyCompileOptions &options,
                          const AutoNameVector &formals, const jschar *chars, size_t length);
 
 /*
@@ -42,7 +44,7 @@ CompileStarGeneratorBody(JSContext *cx, MutableHandleFunction fun, CompileOption
  * occur on a worker thread.
  */
 void
-MaybeCallSourceHandler(JSContext *cx, const CompileOptions &options,
+MaybeCallSourceHandler(JSContext *cx, const ReadOnlyCompileOptions &options,
                        const jschar *chars, size_t length);
 
 /*

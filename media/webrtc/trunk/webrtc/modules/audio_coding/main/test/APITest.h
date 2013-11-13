@@ -56,9 +56,6 @@ class APITest : public ACMTest {
   // Receiver Frequency, playout frequency.
   void TestPlayout(char receiveSide);
 
-  // set/get receiver VAD status & mode.
-  void TestReceiverVAD(char side);
-
   //
   void TestSendVAD(char side);
 
@@ -67,8 +64,6 @@ class APITest : public ACMTest {
   void ChangeCodec(char side);
 
   void Wait(uint32_t waitLengthMs);
-
-  void LookForDTMF(char side);
 
   void RunTest(char thread);
 
@@ -145,11 +140,6 @@ class APITest : public ACMTest {
   AudioPlayoutMode _playoutModeA;
   AudioPlayoutMode _playoutModeB;
 
-  ACMBackgroundNoiseMode _bgnModeA;
-  ACMBackgroundNoiseMode _bgnModeB;
-
-  int _receiveVADActivityA[3];
-  int _receiveVADActivityB[3];
   bool _verbose;
 
   int _dotPositionA;

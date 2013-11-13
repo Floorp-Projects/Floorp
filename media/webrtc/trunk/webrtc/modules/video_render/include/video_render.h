@@ -20,7 +20,7 @@
  *
  */
 
-#include "modules/interface/module.h"
+#include "webrtc/modules/interface/module.h"
 #include "webrtc/modules/video_render/include/video_render_defines.h"
 
 namespace webrtc {
@@ -288,5 +288,5 @@ public:
                                        const bool mirrorXAxis,
                                        const bool mirrorYAxis) = 0;
 };
-} //namespace webrtc
+}  // namespace webrtc
 #endif  // WEBRTC_MODULES_VIDEO_RENDER_MAIN_INTERFACE_VIDEO_RENDER_H_

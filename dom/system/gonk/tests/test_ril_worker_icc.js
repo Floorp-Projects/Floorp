@@ -1702,6 +1702,41 @@ add_test(function test_card_app_state() {
 });
 
 /**
+ * Verify permanent blocked for ICC.
+ */
+add_test(function test_icc_permanent_blocked() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  function testPermanentBlocked(pin1_replaced, universalPINState, pin1) {
+    let iccStatus = {
+      gsmUmtsSubscriptionAppIndex: 0,
+      universalPINState: universalPINState,
+      apps: [
+      {
+        pin1_replaced: pin1_replaced,
+        pin1: pin1
+      }]
+    };
+
+    ril._processICCStatus(iccStatus);
+    do_check_eq(ril.cardState, GECKO_CARDSTATE_PERMANENT_BLOCKED);
+  }
+
+  testPermanentBlocked(1,
+                       CARD_PINSTATE_ENABLED_PERM_BLOCKED,
+                       CARD_PINSTATE_UNKNOWN);
+  testPermanentBlocked(1,
+                       CARD_PINSTATE_ENABLED_PERM_BLOCKED,
+                       CARD_PINSTATE_ENABLED_PERM_BLOCKED);
+  testPermanentBlocked(0,
+                       CARD_PINSTATE_UNKNOWN,
+                       CARD_PINSTATE_ENABLED_PERM_BLOCKED);
+
+  run_next_test();
+});
+
+/**
  * Verify iccSetCardLock - Facility Lock.
  */
 add_test(function test_set_icc_card_lock_facility_lock() {

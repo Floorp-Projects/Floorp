@@ -1739,14 +1739,6 @@ MediaDecoder::IsMediaPluginsEnabled()
 }
 #endif
 
-#ifdef MOZ_DASH
-bool
-MediaDecoder::IsDASHEnabled()
-{
-  return Preferences::GetBool("media.dash.enabled");
-}
-#endif
-
 #ifdef MOZ_WMF
 bool
 MediaDecoder::IsWMFEnabled()
@@ -1763,16 +1755,12 @@ MediaDecoder::IsAppleMP3Enabled()
 }
 #endif
 
-class MediaReporter MOZ_FINAL : public nsIMemoryReporter
+class MediaReporter MOZ_FINAL : public MemoryMultiReporter
 {
 public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetName(nsACString& aName)
-  {
-    aName.AssignLiteral("media");
-    return NS_OK;
-  }
+  MediaReporter()
+    : MemoryMultiReporter("media")
+  {}
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
                             nsISupports* aClosure)
@@ -1799,8 +1787,6 @@ public:
     return NS_OK;
   }
 };
-
-NS_IMPL_ISUPPORTS1(MediaReporter, nsIMemoryReporter)
 
 MediaDecoderOwner*
 MediaDecoder::GetOwner()

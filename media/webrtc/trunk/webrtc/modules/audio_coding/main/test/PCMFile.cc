@@ -10,7 +10,7 @@
 
 #include "PCMFile.h"
 
-#include <cctype>
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -44,44 +44,6 @@ PCMFile::PCMFile(uint32_t timestamp)
       read_stereo_(false),
       save_stereo_(false) {
   timestamp_ = timestamp;
-}
-
-int16_t PCMFile::ChooseFile(std::string* file_name, int16_t max_len) {
-  char tmp_name[MAX_FILE_NAME_LENGTH_BYTE];
-
-  EXPECT_TRUE(fgets(tmp_name, MAX_FILE_NAME_LENGTH_BYTE, stdin) != NULL);
-  tmp_name[MAX_FILE_NAME_LENGTH_BYTE - 1] = '\0';
-  int16_t n = 0;
-
-  // Removing leading spaces.
-  while ((isspace(tmp_name[n]) || iscntrl(tmp_name[n])) && (tmp_name[n] != 0)
-      && (n < MAX_FILE_NAME_LENGTH_BYTE)) {
-    n++;
-  }
-  if (n > 0) {
-    memmove(tmp_name, &tmp_name[n], MAX_FILE_NAME_LENGTH_BYTE - n);
-  }
-
-  // Removing trailing spaces.
-  n = (int16_t)(strlen(tmp_name) - 1);
-  if (n >= 0) {
-    while ((isspace(tmp_name[n]) || iscntrl(tmp_name[n])) && (n >= 0)) {
-      n--;
-    }
-  }
-  if (n >= 0) {
-    tmp_name[n + 1] = '\0';
-  }
-
-  int16_t len = (int16_t) strlen(tmp_name);
-  if (len > max_len) {
-    return -1;
-  }
-  if (len > 0) {
-    std::string tmp_string(tmp_name, len + 1);
-    *file_name = tmp_string;
-  }
-  return 0;
 }
 
 int16_t PCMFile::ChooseFile(std::string* file_name, int16_t max_len,

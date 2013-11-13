@@ -14,8 +14,8 @@ extern "C" {
 #include "webrtc/modules/audio_processing/utility/ring_buffer.h"
 }
 
-#include <cstdlib>
-#include <ctime>
+#include <stdlib.h>
+#include <time.h>
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
@@ -51,9 +51,9 @@ static void RandomStressTest(int** data_ptr) {
   const int kNumOps = 10000;
   const int kMaxBufferSize = 1000;
 
-  unsigned int seed = std::time(NULL);
+  unsigned int seed = time(NULL);
   printf("seed=%u\n", seed);
-  std::srand(seed);
+  srand(seed);
   for (int i = 0; i < kNumTests; i++) {
     const int buffer_size = std::max(rand() % kMaxBufferSize, 1);
     scoped_array<int> write_data(new int[buffer_size]);

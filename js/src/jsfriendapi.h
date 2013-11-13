@@ -665,11 +665,19 @@ GetNativeStackLimit(JSContext *cx)
  * extra space so that we can ensure that crucial code is able to run.
  */
 
-#define JS_CHECK_RECURSION(cx, onerror)                              \
+#define JS_CHECK_RECURSION(cx, onerror)                                         \
     JS_BEGIN_MACRO                                                              \
         int stackDummy_;                                                        \
         if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx), &stackDummy_)) {  \
             js_ReportOverRecursed(cx);                                          \
+            onerror;                                                            \
+        }                                                                       \
+    JS_END_MACRO
+
+#define JS_CHECK_RECURSION_DONT_REPORT(cx, onerror)                             \
+    JS_BEGIN_MACRO                                                              \
+        int stackDummy_;                                                        \
+        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx), &stackDummy_)) {  \
             onerror;                                                            \
         }                                                                       \
     JS_END_MACRO
@@ -1248,8 +1256,8 @@ JS_GetArrayBufferViewBuffer(JSObject *obj);
 /*
  * Set an ArrayBuffer's length to 0 and neuter all of its views.
  */
-extern JS_FRIEND_API(void)
-JS_NeuterArrayBuffer(JSObject *obj, JSContext *cx);
+extern JS_FRIEND_API(bool)
+JS_NeuterArrayBuffer(JSContext *cx, JS::HandleObject obj);
 
 /*
  * Check whether obj supports JS_GetDataView* APIs.

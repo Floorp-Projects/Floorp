@@ -16,38 +16,34 @@
 #include "common_types.h"
 #include "SpatialAudio.h"
 #include "trace.h"
-#include "testsupport/fileutils.h"
 #include "utility.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 
 #define NUM_PANN_COEFFS 10
 
-SpatialAudio::SpatialAudio(int testMode) {
-  _testMode = testMode;
+SpatialAudio::SpatialAudio(int testMode)
+    : _acmLeft(AudioCodingModule::Create(1)),
+      _acmRight(AudioCodingModule::Create(2)),
+      _acmReceiver(AudioCodingModule::Create(3)),
+      _testMode(testMode) {
 }
 
 SpatialAudio::~SpatialAudio() {
-  AudioCodingModule::Destroy(_acmLeft);
-  AudioCodingModule::Destroy(_acmRight);
-  AudioCodingModule::Destroy(_acmReceiver);
   delete _channel;
   _inFile.Close();
   _outFile.Close();
 }
 
 int16_t SpatialAudio::Setup() {
-  // Create ACMs and the Channel;
-  _acmLeft = AudioCodingModule::Create(1);
-  _acmRight = AudioCodingModule::Create(2);
-  _acmReceiver = AudioCodingModule::Create(3);
   _channel = new Channel;
 
   // Register callback for the sender side.
   CHECK_ERROR(_acmLeft->RegisterTransportCallback(_channel));
   CHECK_ERROR(_acmRight->RegisterTransportCallback(_channel));
   // Register the receiver ACM in channel
-  _channel->RegisterReceiverACM(_acmReceiver);
+  _channel->RegisterReceiverACM(_acmReceiver.get());
 
   uint16_t sampFreqHz = 32000;
 

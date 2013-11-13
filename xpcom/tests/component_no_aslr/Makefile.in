@@ -5,7 +5,11 @@
 
 FORCE_SHARED_LIB = 1
 
-MANIFEST_FILE = testcompnoaslr.manifest
+unittestlocation = xpcom/tests/unit
+
+MANIFEST = testcompnoaslr.manifest
+MANIFEST_PATH = $(testxpcobjdir)/$(unittestlocation)
+PP_TARGETS += MANIFEST
 
 EXTRA_DSO_LDOPTS = \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
@@ -20,16 +24,12 @@ EXTRA_DSO_LDOPTS += \
 		$(NULL)
 endif
 
+LIB_FILES = $(SHARED_LIBRARY)
+LIB_DEST = $(testxpcobjdir)/$(unittestlocation)
+INSTALL_TARGETS += LIB
+
 include $(topsrcdir)/config/rules.mk
 
 LDFLAGS := $(filter-out -DYNAMICBASE,$(LDFLAGS)) -DYNAMICBASE:NO
 
 DEFINES += -DLIBRARY_FILENAME="$(SHARED_LIBRARY)"
-
-unittestlocation = xpcom/tests/unit
-
-libs:: $(SHARED_LIBRARY)
-	$(INSTALL) $^ $(testxpcobjdir)/$(unittestlocation)
-
-libs:: $(MANIFEST_FILE)
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $< > $(testxpcobjdir)/$(unittestlocation)/$(<F)

@@ -11,7 +11,7 @@
 #ifndef WEBRTC_VIDEO_ENGINE_TEST_AUTO_TEST_PRIMITIVES_
 #define WEBRTC_VIDEO_ENGINE_TEST_AUTO_TEST_PRIMITIVES_
 
-#include <cstdlib>
+#include <stdlib.h>
 
 #include <map>
 #include <string>

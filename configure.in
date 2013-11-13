@@ -1777,7 +1777,7 @@ fi
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
-AC_DEFINE_UNQUOTED(MOZILLA_SYMBOLVERSION,"$MOZILLA_SYMBOLVERSION")
+AC_SUBST(MOZILLA_SYMBOLVERSION)
 
 MOZ_DOING_LTO(lto_is_enabled)
 
@@ -2079,8 +2079,11 @@ ia64*-hpux*)
         if test "$_CC_SUITE" -ge "12"; then
             dnl VS2013+ requires -FS when parallel building by make -jN.
             dnl If nothing, compiler sometimes causes C1041 error.
-            CFLAGS="$CFLAGS -FS"
-            CXXFLAGS="$CXXFLAGS -FS"
+            dnl
+            dnl Visual Studio 2013 supports -Gw flags
+            dnl http://blogs.msdn.com/b/vcblog/archive/2013/09/11/introducing-gw-compiler-switch.aspx
+            CFLAGS="$CFLAGS -FS -Gw"
+            CXXFLAGS="$CXXFLAGS -FS -Gw"
         fi
         # khuey says we can safely ignore MSVC warning C4251
         # MSVC warning C4244 (implicit type conversion may lose data) warns
@@ -2495,9 +2498,10 @@ esac
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
+else
+    MOZ_COMPILER_OPTS
 fi
 
-MOZ_COMPILER_OPTS
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
@@ -3664,7 +3668,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.15, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.15.3, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -3925,7 +3929,6 @@ MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
 MOZ_OPUS=1
 MOZ_WEBM=1
-MOZ_DASH=
 MOZ_DIRECTSHOW=
 MOZ_WMF=
 MOZ_WEBRTC=1
@@ -7176,7 +7179,7 @@ if test "$USE_ELF_HACK" = 1; then
     esac
 fi
 
-if test -n "$USE_ELF_HACK"; then
+if test -n "$COMPILE_ENVIRONMENT" -a -n "$USE_ELF_HACK"; then
     dnl PT_GNU_RELRO segment makes the dynamic linker set a read-only flag on
     dnl memory addresses it maps to. The result is that by the time elfhack
     dnl kicks in, it is not possible to apply relocations because of that,
@@ -7356,6 +7359,14 @@ if test -n "$MOZ_PAY"; then
     AC_DEFINE(MOZ_PAY)
 fi
 AC_SUBST(MOZ_PAY)
+
+dnl ========================================================
+dnl = Enable Browser Support for Activities
+dnl ========================================================
+if test -n "$MOZ_ACTIVITIES"; then
+    AC_DEFINE(MOZ_ACTIVITIES)
+fi
+AC_SUBST(MOZ_ACTIVITIES)
 
 dnl ========================================================
 dnl = Enable Support for AudioChannelManager API
@@ -7871,7 +7882,9 @@ AC_SUBST(MOZ_PIXMAN_CFLAGS)
 AC_SUBST(MOZ_PIXMAN_LIBS)
 
 # Check for headers defining standard int types.
-MOZ_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+if test -n "$COMPILE_ENVIRONMENT"; then
+    MOZ_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+fi
 
 if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
@@ -8627,7 +8640,6 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
-AC_SUBST(MOZ_DASH)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
@@ -8658,6 +8670,7 @@ AC_SUBST(MOZ_FOLD_LIBS)
 AC_SUBST(MOZ_ENABLE_SZIP)
 AC_SUBST(MOZ_SZIP_FLAGS)
 
+if test -n "$COMPILE_ENVIRONMENT"; then
 AC_MSG_CHECKING([for posix_fallocate])
 AC_TRY_LINK([#define _XOPEN_SOURCE 600
   #include <fcntl.h>],
@@ -8673,7 +8686,6 @@ else
 fi
 
 dnl Check for missing components
-if test "$COMPILE_ENVIRONMENT"; then
 if test "$MOZ_X11"; then
     if test "$WITHOUT_X11"; then
         AC_MSG_ERROR([--without-x specified and MOZ_X11 still defined])

@@ -14,8 +14,9 @@
 #include <jni.h>
 #include <assert.h>
 #include "trace.h"
-#include "device_info_android.h"
-#include "../video_capture_impl.h"
+
+#include "webrtc/modules/video_capture/android/device_info_android.h"
+#include "webrtc/modules/video_capture/video_capture_impl.h"
 
 #define AndroidJavaCaptureClass "org/webrtc/videoengine/VideoCaptureAndroid"
 
@@ -49,6 +50,7 @@ class VideoCaptureAndroid : public VideoCaptureImpl {
   jobject _javaCaptureObj; // Java Camera object.
   VideoCaptureCapability _frameInfo;
   bool _captureStarted;
+
   static JavaVM* g_jvm;
   static jclass g_javaCmClass;
   static jclass g_javaCmDevInfoClass;

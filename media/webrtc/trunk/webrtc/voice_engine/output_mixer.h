@@ -147,8 +147,8 @@ private:
     bool _outputFileRecording;
 };
 
-}  //  namespace voe
+}  // namespace voe
 
-}  //  namespace werbtc
+}  // namespace werbtc
 
 #endif  // VOICE_ENGINE_OUTPUT_MIXER_H_

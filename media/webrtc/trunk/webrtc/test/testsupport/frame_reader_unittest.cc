@@ -28,7 +28,7 @@ class FrameReaderTest: public testing::Test {
   virtual ~FrameReaderTest() {}
   void SetUp() {
     // Cleanup any previous dummy input file.
-    std::remove(kInputFilename.c_str());
+    remove(kInputFilename.c_str());
 
     // Create a dummy input file.
     FILE* dummy = fopen(kInputFilename.c_str(), "wb");
@@ -41,7 +41,7 @@ class FrameReaderTest: public testing::Test {
   void TearDown() {
     delete frame_reader_;
     // Cleanup the dummy input file.
-    std::remove(kInputFilename.c_str());
+    remove(kInputFilename.c_str());
   }
   FrameReader* frame_reader_;
 };

@@ -34,6 +34,7 @@
 #include "webrtc/common_types.h"
 #include "webrtc/video_engine/test/android/jni/android_media_codec_decoder.h"
 
+#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/channel_transport/include/channel_transport.h"
 
@@ -1012,7 +1013,6 @@ JNIEXPORT jint JNICALL Java_org_webrtc_videoengineapp_ViEAndroidJavaAPI_SetExter
       ANDROID_LOG_DEBUG, WEBRTC_LOG_TAG, "SetExternalMediaCodecDecoder");
 
   jclass cls = env->FindClass("org/webrtc/videoengine/ViEMediaCodecDecoder");
-  env->NewGlobalRef(cls);
 
   AndroidMediaCodecDecoder* mediaCodecDecoder =
       new AndroidMediaCodecDecoder(webrtcGlobalVM, glSurface, cls);
@@ -1020,7 +1020,7 @@ JNIEXPORT jint JNICALL Java_org_webrtc_videoengineapp_ViEAndroidJavaAPI_SetExter
   // TODO(dwkang): Check the ownership of decoder object and release it
   //               if needed.
   return vieData.externalCodec->RegisterExternalReceiveCodec(
-      channel, 120, mediaCodecDecoder, true);
+      channel, VCM_VP8_PAYLOAD_TYPE, mediaCodecDecoder, true);
 }
 
 /*
@@ -1627,7 +1627,9 @@ JNIEXPORT jobjectArray JNICALL Java_org_webrtc_videoengineapp_ViEAndroidJavaAPI_
                            codecToList.plname, codecToList.pltype,
                            codecToList.plfreq, codecToList.pacsize,
                            codecToList.channels, codecToList.rate);
-    assert(written >= 0 && written < static_cast<int>(sizeof(info)));
+    if (written < 0 || written >= static_cast<int>(sizeof(info))) {
+      assert(false);
+    }
     __android_log_print(ANDROID_LOG_DEBUG, WEBRTC_LOG_TAG,
                         "VoiceEgnine Codec[%d] %s", i, info);
     env->SetObjectArrayElement(ret, i, env->NewStringUTF( info ));

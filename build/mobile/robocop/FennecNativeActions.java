@@ -1,0 +1,508 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.InvocationHandler;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+
+import android.app.Activity;
+import android.app.Instrumentation;
+import android.content.Context;
+import android.database.Cursor;
+import android.os.SystemClock;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
+
+import com.jayway.android.robotium.solo.Solo;
+
+import static org.mozilla.gecko.FennecNativeDriver.LogLevel;
+
+public class FennecNativeActions implements Actions {
+    private Solo mSolo;
+    private Instrumentation mInstr;
+    private Activity mGeckoApp;
+    private Assert mAsserter;
+
+    // Objects for reflexive access of fennec classes.
+    private ClassLoader mClassLoader;
+    private Class mApiClass;
+    private Class mEventListenerClass;
+    private Class mDrawListenerClass;
+    private Method mRegisterEventListener;
+    private Method mUnregisterEventListener;
+    private Method mBroadcastEvent;
+    private Method mPreferencesGetEvent;
+    private Method mPreferencesObserveEvent;
+    private Method mPreferencesRemoveObserversEvent;
+    private Method mSetDrawListener;
+    private Method mQuerySql;
+    private Object mRobocopApi;
+
+    private static final String LOGTAG = "FennecNativeActions";
+
+    public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation, Assert asserter) {
+        mSolo = robocop;
+        mInstr = instrumentation;
+        mGeckoApp = activity;
+        mAsserter = asserter;
+        // Set up reflexive access of java classes and methods.
+        try {
+            mClassLoader = activity.getClassLoader();
+
+            mApiClass = mClassLoader.loadClass("org.mozilla.gecko.RobocopAPI");
+            mEventListenerClass = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
+            mDrawListenerClass = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient$DrawListener");
+
+            mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
+            mUnregisterEventListener = mApiClass.getMethod("unregisterEventListener", String.class, mEventListenerClass);
+            mBroadcastEvent = mApiClass.getMethod("broadcastEvent", String.class, String.class);
+            mPreferencesGetEvent = mApiClass.getMethod("preferencesGetEvent", Integer.TYPE, String[].class);
+            mPreferencesObserveEvent = mApiClass.getMethod("preferencesObserveEvent", Integer.TYPE, String[].class);
+            mPreferencesRemoveObserversEvent = mApiClass.getMethod("preferencesRemoveObserversEvent", Integer.TYPE);
+            mSetDrawListener = mApiClass.getMethod("setDrawListener", mDrawListenerClass);
+            mQuerySql = mApiClass.getMethod("querySql", String.class, String.class);
+
+            mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
+        } catch (Exception e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        }
+    }
+
+    class wakeInvocationHandler implements InvocationHandler {
+        private final GeckoEventExpecter mEventExpecter;
+
+        public wakeInvocationHandler(GeckoEventExpecter expecter) {
+            mEventExpecter = expecter;
+        }
+
+        public Object invoke(Object proxy, Method method, Object[] args) {
+            String methodName = method.getName();
+            //Depending on the method, return a completely different type.
+            if(methodName.equals("toString")) {
+                return this.toString();
+            }
+            if(methodName.equals("equals")) {
+                return
+                    args[0] == null ? false :
+                    this.toString().equals(args[0].toString());
+            }
+            if(methodName.equals("clone")) {
+                return this;
+            }
+            if(methodName.equals("hashCode")) {
+                return 314;
+            }
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, 
+                "Waking up on "+methodName);
+            mEventExpecter.notifyOfEvent(args);
+            return null;
+        }
+    }
+
+    class GeckoEventExpecter implements RepeatedEventExpecter {
+        private final String mGeckoEvent;
+        private Object[] mRegistrationParams;
+        private boolean mEventEverReceived;
+        private String mEventData;
+        private BlockingQueue<String> mEventDataQueue;
+        private static final int MAX_WAIT_MS = 90000;
+
+        GeckoEventExpecter(String geckoEvent, Object[] registrationParams) {
+            if (TextUtils.isEmpty(geckoEvent)) {
+                throw new IllegalArgumentException("geckoEvent must not be empty");
+            }
+            if (registrationParams == null || registrationParams.length == 0) {
+                throw new IllegalArgumentException("registrationParams must not be empty");
+            }
+
+            mGeckoEvent = geckoEvent;
+            mRegistrationParams = registrationParams;
+            mEventDataQueue = new LinkedBlockingQueue<String>();
+        }
+
+        public void blockForEvent() {
+            blockForEvent(MAX_WAIT_MS, true);
+        }
+
+        private void blockForEvent(long millis, boolean failOnTimeout) {
+            if (mRegistrationParams == null) {
+                throw new IllegalStateException("listener not registered");
+            }
+            try {
+                mEventData = mEventDataQueue.poll(millis, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ie) {
+                FennecNativeDriver.log(LogLevel.ERROR, ie);
+            }
+            if (mEventData == null) {
+                if (failOnTimeout) {
+                    FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
+                    mAsserter.ok(false, "GeckoEventExpecter",
+                        "blockForEvent timeout: "+mGeckoEvent);
+                } else {
+                    FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+                        "blockForEvent timeout: "+mGeckoEvent);
+                }
+            } else {
+                FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+                    "unblocked on expecter for " + mGeckoEvent);
+            }
+        }
+
+        public void blockUntilClear(long millis) {
+            if (mRegistrationParams == null) {
+                throw new IllegalStateException("listener not registered");
+            }
+            if (millis <= 0) {
+                throw new IllegalArgumentException("millis must be > 0");
+            }
+            // wait for at least one event
+            try {
+                mEventData = mEventDataQueue.poll(MAX_WAIT_MS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ie) {
+                FennecNativeDriver.log(LogLevel.ERROR, ie);
+            }
+            if (mEventData == null) {
+                FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
+                mAsserter.ok(false, "GeckoEventExpecter", "blockUntilClear timeout");
+                return;
+            }
+            // now wait for a period of millis where we don't get an event
+            while (true) {
+                try {
+                    mEventData = mEventDataQueue.poll(millis, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException ie) {
+                    FennecNativeDriver.log(LogLevel.INFO, ie);
+                }
+                if (mEventData == null) {
+                    // success
+                    break;
+                }
+            }
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+                "unblocked on expecter for " + mGeckoEvent);
+        }
+
+        public String blockForEventData() {
+            blockForEvent();
+            return mEventData;
+        }
+
+        public String blockForEventDataWithTimeout(long millis) {
+            blockForEvent(millis, false);
+            return mEventData;
+        }
+
+        public void unregisterListener() {
+            if (mRegistrationParams == null) {
+                throw new IllegalStateException("listener not registered");
+            }
+            try {
+                FennecNativeDriver.log(LogLevel.INFO, "EventExpecter: no longer listening for "+mGeckoEvent);
+                mUnregisterEventListener.invoke(mRobocopApi, mRegistrationParams);
+                mRegistrationParams = null;
+            } catch (IllegalAccessException e) {
+                FennecNativeDriver.log(LogLevel.ERROR, e);
+            } catch (InvocationTargetException e) {
+                FennecNativeDriver.log(LogLevel.ERROR, e);
+            }
+        }
+
+        public synchronized boolean eventReceived() {
+            return mEventEverReceived;
+        }
+
+        void notifyOfEvent(Object[] args) {
+            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+                "received event " + mGeckoEvent);
+            synchronized (this) {
+                mEventEverReceived = true;
+            }
+            try {
+                mEventDataQueue.put(args[1].toString());
+            } catch (InterruptedException e) {
+                FennecNativeDriver.log(LogLevel.ERROR,
+                    "EventExpecter dropped event: "+args[1].toString());
+                FennecNativeDriver.log(LogLevel.ERROR, e);
+            }
+        }
+    }
+
+    public RepeatedEventExpecter expectGeckoEvent(String geckoEvent) {
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+            "waiting for "+geckoEvent);
+        try {
+            Object[] finalParams = new Object[2];
+            finalParams[0] = geckoEvent;
+            GeckoEventExpecter expecter = new GeckoEventExpecter(geckoEvent, finalParams);
+            wakeInvocationHandler wIH = new wakeInvocationHandler(expecter);
+            Object proxy = Proxy.newProxyInstance(mClassLoader, new Class[] { mEventListenerClass }, wIH);
+            finalParams[1] = proxy;
+
+            mRegisterEventListener.invoke(mRobocopApi, finalParams);
+            return expecter;
+        } catch (IllegalAccessException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (InvocationTargetException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        }
+        return null;
+    }
+
+    public void sendGeckoEvent(String geckoEvent, String data) {
+        try {
+            mBroadcastEvent.invoke(mRobocopApi, geckoEvent, data);
+        } catch (IllegalAccessException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (InvocationTargetException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        }
+    }
+
+    private void sendPreferencesEvent(Method method, int requestId, String[] prefNames) {
+        try {
+            method.invoke(mRobocopApi, requestId, prefNames);
+        } catch (IllegalAccessException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (InvocationTargetException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        }
+    }
+
+    public void sendPreferencesGetEvent(int requestId, String[] prefNames) {
+        sendPreferencesEvent(mPreferencesGetEvent, requestId, prefNames);
+    }
+
+    public void sendPreferencesObserveEvent(int requestId, String[] prefNames) {
+        sendPreferencesEvent(mPreferencesObserveEvent, requestId, prefNames);
+    }
+
+    public void sendPreferencesRemoveObserversEvent(int requestId) {
+        try {
+            mPreferencesRemoveObserversEvent.invoke(mRobocopApi, requestId);
+        } catch (IllegalAccessException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (InvocationTargetException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } 
+    }
+
+    class DrawListenerProxy implements InvocationHandler {
+        private final PaintExpecter mPaintExpecter;
+
+        DrawListenerProxy(PaintExpecter paintExpecter) {
+            mPaintExpecter = paintExpecter;
+        }
+
+        public Object invoke(Object proxy, Method method, Object[] args) {
+            String methodName = method.getName();
+            if ("drawFinished".equals(methodName)) {
+                FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+                    "Received drawFinished notification");
+                mPaintExpecter.notifyOfEvent(args);
+            } else if ("toString".equals(methodName)) {
+                return "DrawListenerProxy";
+            } else if ("equals".equals(methodName)) {
+                return false;
+            } else if ("hashCode".equals(methodName)) {
+                return 0;
+            }
+            return null;
+        }
+    }
+
+    class PaintExpecter implements RepeatedEventExpecter {
+        private boolean mPaintDone;
+        private boolean mListening;
+        private static final int MAX_WAIT_MS = 90000;
+
+        PaintExpecter() throws IllegalAccessException, InvocationTargetException {
+            Object proxy = Proxy.newProxyInstance(mClassLoader, new Class[] { mDrawListenerClass }, new DrawListenerProxy(this));
+            mSetDrawListener.invoke(mRobocopApi, proxy);
+            mListening = true;
+        }
+
+        void notifyOfEvent(Object[] args) {
+            synchronized (this) {
+                mPaintDone = true;
+                this.notifyAll();
+            }
+        }
+
+        private synchronized void blockForEvent(long millis, boolean failOnTimeout) {
+            if (!mListening) {
+                throw new IllegalStateException("draw listener not registered");
+            }
+            long startTime = SystemClock.uptimeMillis();
+            long endTime = 0;
+            while (!mPaintDone) {
+                try {
+                    this.wait(millis);
+                } catch (InterruptedException ie) {
+                    FennecNativeDriver.log(LogLevel.ERROR, ie);
+                    break;
+                }
+                endTime = SystemClock.uptimeMillis();
+                if (!mPaintDone && (endTime - startTime >= millis)) {
+                    if (failOnTimeout) {
+                        FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
+                        mAsserter.ok(false, "PaintExpecter", "blockForEvent timeout");
+                    }
+                    return;
+                }
+            }
+        }
+
+        public synchronized void blockForEvent() {
+            blockForEvent(MAX_WAIT_MS, true);
+        }
+
+        public synchronized String blockForEventData() {
+            blockForEvent();
+            return null;
+        }
+
+        public synchronized String blockForEventDataWithTimeout(long millis) {
+            blockForEvent(millis, false);
+            return null;
+        }
+
+        public synchronized boolean eventReceived() {
+            return mPaintDone;
+        }
+
+        public synchronized void blockUntilClear(long millis) {
+            if (!mListening) {
+                throw new IllegalStateException("draw listener not registered");
+            }
+            if (millis <= 0) {
+                throw new IllegalArgumentException("millis must be > 0");
+            }
+            // wait for at least one event
+            long startTime = SystemClock.uptimeMillis();
+            long endTime = 0;
+            while (!mPaintDone) {
+                try {
+                    this.wait(MAX_WAIT_MS);
+                } catch (InterruptedException ie) {
+                    FennecNativeDriver.log(LogLevel.ERROR, ie);
+                    break;
+                }
+                endTime = SystemClock.uptimeMillis();
+                if (!mPaintDone && (endTime - startTime >= MAX_WAIT_MS)) {
+                    FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
+                    mAsserter.ok(false, "PaintExpecter", "blockUtilClear timeout");
+                    return;
+                }
+            }
+            // now wait for a period of millis where we don't get an event
+            startTime = SystemClock.uptimeMillis();
+            while (true) {
+                try {
+                    this.wait(millis);
+                } catch (InterruptedException ie) {
+                    FennecNativeDriver.log(LogLevel.ERROR, ie);
+                    break;
+                }
+                endTime = SystemClock.uptimeMillis();
+                if (endTime - startTime >= millis) {
+                    // success
+                    break;
+                }
+
+                // we got a notify() before we could wait long enough, so we need to start over
+                // Note, moving the goal post might have us race against a "drawFinished" flood
+                startTime = endTime;
+            }
+        }
+
+        public synchronized void unregisterListener() {
+            if (!mListening) {
+                throw new IllegalStateException("listener not registered");
+            }
+            try {
+                FennecNativeDriver.log(LogLevel.INFO, "PaintExpecter: no longer listening for events");
+                mListening = false;
+                mSetDrawListener.invoke(mRobocopApi, (Object)null);
+            } catch (Exception e) {
+                FennecNativeDriver.log(LogLevel.ERROR, e);
+            }
+        }
+    }
+
+    public RepeatedEventExpecter expectPaint() {
+        try {
+            return new PaintExpecter();
+        } catch (Exception e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+            return null;
+        }
+    }
+
+    public void sendSpecialKey(SpecialKey button) {
+        switch(button) {
+            case DOWN:
+                sendKeyCode(KeyEvent.KEYCODE_DPAD_DOWN);
+                break;
+            case UP:
+                sendKeyCode(KeyEvent.KEYCODE_DPAD_UP);
+                break;
+            case LEFT:
+                sendKeyCode(KeyEvent.KEYCODE_DPAD_LEFT);
+                break;
+            case RIGHT:
+                sendKeyCode(KeyEvent.KEYCODE_DPAD_RIGHT);
+                break;
+            case ENTER:
+                sendKeyCode(KeyEvent.KEYCODE_ENTER);
+                break;
+            case MENU:
+                sendKeyCode(KeyEvent.KEYCODE_MENU);
+                break;
+            case BACK:
+                sendKeyCode(KeyEvent.KEYCODE_BACK);
+                break;
+            default:
+                mAsserter.ok(false, "sendSpecialKey", "Unknown SpecialKey " + button);
+                break;
+        }
+    }
+
+    public void sendKeyCode(int keyCode) {
+        if (keyCode <= 0 || keyCode > KeyEvent.getMaxKeyCode()) {
+            mAsserter.ok(false, "sendKeyCode", "Unknown keyCode " + keyCode);
+        }
+        mInstr.sendCharacterSync(keyCode);
+    }
+
+    @Override
+    public void sendKeys(String input) {
+        mInstr.sendStringSync(input);
+    }
+
+    public void drag(int startingX, int endingX, int startingY, int endingY) {
+        mSolo.drag(startingX, endingX, startingY, endingY, 10);
+    }
+
+    public Cursor querySql(String dbPath, String sql) {
+        try {
+            return (Cursor)mQuerySql.invoke(mRobocopApi, dbPath, sql);
+        } catch(InvocationTargetException ex) {
+            Log.e(LOGTAG, "Error invoking method", ex);
+        } catch(IllegalAccessException ex) {
+            Log.e(LOGTAG, "Error using field", ex);
+        }
+        return null;
+    }
+}

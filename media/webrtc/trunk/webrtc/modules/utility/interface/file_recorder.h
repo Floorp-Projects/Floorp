@@ -11,14 +11,14 @@
 #ifndef WEBRTC_MODULES_UTILITY_INTERFACE_FILE_RECORDER_H_
 #define WEBRTC_MODULES_UTILITY_INTERFACE_FILE_RECORDER_H_
 
-#include "common_video/interface/i420_video_frame.h"
-#include "common_types.h"
-#include "engine_configurations.h"
-#include "modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
-#include "modules/interface/module_common_types.h"
-#include "modules/media_file/interface/media_file_defines.h"
-#include "system_wrappers/interface/tick_util.h"
-#include "typedefs.h"
+#include "webrtc/common_types.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/engine_configurations.h"
+#include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/media_file/interface/media_file_defines.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
@@ -86,5 +86,5 @@ protected:
     virtual ~FileRecorder() {}
 
 };
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_UTILITY_INTERFACE_FILE_RECORDER_H_

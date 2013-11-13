@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAWEWORK_BENCHMARK_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAWEWORK_BENCHMARK_H_
 
-#include "normal_async_test.h"
+#include "webrtc/modules/video_coding/codecs/test_framework/normal_async_test.h"
 
 class VideoSource;
 
@@ -37,4 +37,3 @@ protected:
 };
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAWEWORK_BENCHMARK_H_
-

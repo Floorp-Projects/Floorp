@@ -38,7 +38,8 @@ public:
 
     virtual int GetPlayoutTimestamp(int channel, unsigned int& timestamp);
 
-    virtual int GetRtpRtcp(int channel, RtpRtcp* &rtpRtcpModule);
+    virtual int GetRtpRtcp(int channel, RtpRtcp** rtpRtcpModule,
+                           RtpReceiver** rtp_receiver);
 
 protected:
     VoEVideoSyncImpl(voe::SharedData* shared);
@@ -48,6 +49,6 @@ private:
     voe::SharedData* _shared;
 };
 
-}   // namespace webrtc
+}  // namespace webrtc
 
 #endif    // WEBRTC_VOICE_ENGINE_VOE_VIDEO_SYNC_IMPL_H

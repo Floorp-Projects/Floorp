@@ -53,6 +53,6 @@ private:
     const float    _max;
 }; // end of ExpFilter class
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_UTILITY_INCLUDE_EXP_FILTER_H_

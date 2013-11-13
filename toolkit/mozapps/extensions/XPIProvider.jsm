@@ -1198,59 +1198,57 @@ function saveStreamAsync(aPath, aStream, aFile) {
 function extractFilesAsync(aZipFile, aDir) {
   let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
                   createInstance(Ci.nsIZipReader);
-  zipReader.open(aZipFile);
 
-  let promises = [];
-
-  // Get all of the entries in the zip and sort them so we create directories
-  // before files
-  let entries = zipReader.findEntries(null);
-  let names = [];
-  while (entries.hasMore())
-    names.push(entries.getNext());
-  names.sort();
-
-  for (let name of names) {
-    let entryName = name;
-    let zipentry = zipReader.getEntry(name);
-    let path = OS.Path.join(aDir.path, ...name.split("/"));
-
-    if (zipentry.isDirectory) {
-      promises.push(OS.File.makeDir(path).then(null, function(e) {
-        ERROR("extractFilesAsync: failed to create directory " + path, e);
-        throw e;
-      }));
-    }
-    else {
-      let options = { unixMode: zipentry.permissions | FileUtils.PERMS_FILE };
-      let promise = OS.File.open(path, { truncate: true }, options).then(function(file) {
-        if (zipentry.realSize == 0)
-          return file.close();
-
-        return saveStreamAsync(path, zipReader.getInputStream(entryName), file);
-      });
-
-      promises.push(promise.then(null, function(e) {
-        ERROR("extractFilesAsync: failed to extract file " + path, e);
-        throw e;
-      }));
-    }
+  try {
+    zipReader.open(aZipFile);
+  }
+  catch (e) {
+    return Promise.reject(e);
   }
 
-  // Will be rejected if any of the promises are rejected and resolved otherwise
-  let result = Promise.defer();
+  return Task.spawn(function() {
+    // Get all of the entries in the zip and sort them so we create directories
+    // before files
+    let entries = zipReader.findEntries(null);
+    let names = [];
+    while (entries.hasMore())
+      names.push(entries.getNext());
+    names.sort();
 
-  // If any promise is rejected then result is rejected, the resulting array of
-  // promises are all resolved though
-  promises = promises.map(p => p.then(null, result.reject));
+    for (let name of names) {
+      let entryName = name;
+      let zipentry = zipReader.getEntry(name);
+      let path = OS.Path.join(aDir.path, ...name.split("/"));
 
-  // Wait for all of the promises to be resolved
-  return Promise.all(promises).then(function() {
-    // Resolve the result if it hasn't already been rejected
-    result.resolve();
+      if (zipentry.isDirectory) {
+        try {
+          yield OS.File.makeDir(path);
+        }
+        catch (e) {
+          ERROR("extractFilesAsync: failed to create directory " + path, e);
+          throw e;
+        }
+      }
+      else {
+        let options = { unixMode: zipentry.permissions | FileUtils.PERMS_FILE };
+        try {
+          let file = yield OS.File.open(path, { truncate: true }, options);
+          if (zipentry.realSize == 0)
+            yield file.close();
+          else
+            yield saveStreamAsync(path, zipReader.getInputStream(entryName), file);
+        }
+        catch (e) {
+          ERROR("extractFilesAsync: failed to extract file " + path, e);
+          throw e;
+        }
+      }
+    }
 
     zipReader.close();
-    return result.promise;
+  }).then(null, (e) => {
+    zipReader.close();
+    throw e;
   });
 }
 
@@ -2201,7 +2199,7 @@ var XPIProvider = {
    */
   getAddonStates: function XPI_getAddonStates(aLocation) {
     let addonStates = {};
-    aLocation.addonLocations.forEach(function(file) {
+    for (let file of aLocation.addonLocations) {
       let id = aLocation.getIDForLocation(file);
       let unpacked = 0;
       let [modFile, modTime] = recursiveLastModifiedTime(file);
@@ -2219,7 +2217,8 @@ var XPIProvider = {
       catch (e) { }
       this._mostRecentlyModifiedFile[id] = modFile;
       this.setTelemetry(id, "unpacked", unpacked);
-    }, this);
+      this.setTelemetry(id, "location", aLocation.name);
+    }
 
     return addonStates;
   },
@@ -3182,7 +3181,7 @@ var XPIProvider = {
     // The install locations are iterated in reverse order of priority so when
     // there are multiple add-ons installed with the same ID the one that
     // should be visible is the first one encountered.
-    aState.reverse().forEach(function(aSt) {
+    for (let aSt of aState.reverse()) {
 
       // We can't include the install location directly in the state as it has
       // to be cached as JSON.
@@ -3195,7 +3194,7 @@ var XPIProvider = {
         let addons = XPIDatabase.getAddonsInLocation(installLocation.name);
         // Iterate through the add-ons installed the last time the application
         // ran
-        addons.forEach(function(aOldAddon) {
+        for (let aOldAddon of addons) {
           // If a version of this add-on has been installed in an higher
           // priority install location then count it as changed
           if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
@@ -3213,10 +3212,25 @@ var XPIProvider = {
             if (aOldAddon.visible && !aOldAddon.active)
               XPIProvider.inactiveAddonIDs.push(aOldAddon.id);
 
+            // record a bit more per-addon telemetry
+            let loc = aOldAddon.defaultLocale;
+            if (loc) {
+              XPIProvider.setTelemetry(aOldAddon.id, "name", loc.name);
+              XPIProvider.setTelemetry(aOldAddon.id, "creator", loc.creator);
+            }
+
             // Check if the add-on has been changed outside the XPI provider
             if (aOldAddon.updateDate != addonState.mtime) {
+              // Did time change in the wrong direction?
+              if (addonState.mtime < aOldAddon.updateDate) {
+                this.setTelemetry(aOldAddon.id, "olderFile", {
+                  name: this._mostRecentlyModifiedFile[aOldAddon.id],
+                  mtime: addonState.mtime,
+                  oldtime: aOldAddon.updateDate
+                });
+              }
               // Is the add-on unpacked?
-              if (addonState.rdfTime) {
+              else if (addonState.rdfTime) {
                 // Was the addon manifest "install.rdf" modified, or some other file?
                 if (addonState.rdfTime > aOldAddon.updateDate) {
                   this.setTelemetry(aOldAddon.id, "modifiedInstallRDF", 1);
@@ -3256,7 +3270,7 @@ var XPIProvider = {
           else {
             changed = removeMetadata(aOldAddon) || changed;
           }
-        }, this);
+        }
       }
 
       // All the remaining add-ons in this install location must be new.
@@ -3269,7 +3283,7 @@ var XPIProvider = {
         changed = addMetadata(installLocation, id, addonStates[id],
                               locMigrateData[id]) || changed;
       }
-    }, this);
+    }
 
     // The remaining locations that had add-ons installed in them no longer
     // have any add-ons installed in them, or the locations no longer exist.
@@ -3277,9 +3291,9 @@ var XPIProvider = {
     // database.
     for (let location of knownLocations) {
       let addons = XPIDatabase.getAddonsInLocation(location);
-      addons.forEach(function(aOldAddon) {
+      for (let aOldAddon of addons) {
         changed = removeMetadata(aOldAddon) || changed;
-      }, this);
+      }
     }
 
     // Cache the new install location states
@@ -5402,6 +5416,7 @@ AddonInstall.prototype = {
     let stagedAddon = stagingDir.clone();
 
     Task.spawn((function() {
+      let installedUnpacked = 0;
       yield this.installLocation.requestStagingDir();
 
       // First stage the file regardless of whether restarting is necessary
@@ -5412,6 +5427,7 @@ AddonInstall.prototype = {
         yield recursiveRemoveAsync(stagedAddon);
         yield OS.File.makeDir(stagedAddon.path);
         yield extractFilesAsync(this.file, stagedAddon);
+        installedUnpacked = 1;
       }
       else {
         LOG("Addon " + this.addon.id + " will be installed as " +
@@ -5546,10 +5562,17 @@ AddonInstall.prototype = {
                                             reason, extraParams);
           }
           else {
-            // XXX this makes it dangerous to do many things in onInstallEnded
+            // XXX this makes it dangerous to do some things in onInstallEnded
             // listeners because important cleanup hasn't been done yet
             XPIProvider.unloadBootstrapScope(this.addon.id);
           }
+        }
+        XPIProvider.setTelemetry(this.addon.id, "unpacked", installedUnpacked);
+        XPIProvider.setTelemetry(this.addon.id, "location", this.installLocation.name);
+        let loc = this.addon.defaultLocale;
+        if (loc) {
+          XPIProvider.setTelemetry(this.addon.id, "name", loc.name);
+          XPIProvider.setTelemetry(this.addon.id, "creator", loc.creator);
         }
       }
     }).bind(this)).then(null, (e) => {
@@ -5559,6 +5582,8 @@ AddonInstall.prototype = {
       this.state = AddonManager.STATE_INSTALL_FAILED;
       this.error = AddonManager.ERROR_FILE_ACCESS;
       XPIProvider.removeActiveInstall(this);
+      AddonManagerPrivate.callAddonListeners("onOperationCancelled",
+                                             createWrapper(this.addon));
       AddonManagerPrivate.callInstallListeners("onInstallFailed",
                                                this.listeners,
                                                this.wrapper);

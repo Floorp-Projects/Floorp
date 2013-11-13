@@ -9,6 +9,7 @@
 
 class nsIPrincipal;
 class nsIURI;
+class LoadSubScriptOptions;
 
 #define MOZ_JSSUBSCRIPTLOADER_CID                                             \
 { /* 829814d6-1dd2-11b2-8e08-82fa0a339b00 */                                  \
@@ -36,6 +37,10 @@ private:
                         nsIIOService *serv, nsIPrincipal *principal,
                         bool reuseGlobal, JSScript **scriptp,
                         JSFunction **functionp);
+
+    nsresult DoLoadSubScriptWithOptions(const nsAString& url,
+                                        LoadSubScriptOptions& options,
+                                        JSContext* cx, JS::Value* retval);
 
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
 };

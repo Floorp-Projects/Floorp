@@ -249,7 +249,7 @@ condIf(const ParseNode *pn, ParseNodeKind kind)
 
 static bool
 Fold(ExclusiveContext *cx, ParseNode **pnp,
-     FullParseHandler &handler, const CompileOptions &options,
+     FullParseHandler &handler, const ReadOnlyCompileOptions &options,
      bool inGenexpLambda, SyntacticContext sc)
 {
     ParseNode *pn = *pnp;
@@ -264,10 +264,6 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
             pn->pn_funbox->useAsmOrInsideUseAsm() && options.asmJSOption)
         {
             return true;
-        }
-        if (pn->getKind() == PNK_MODULE) {
-            if (!Fold(cx, &pn->pn_body, handler, options, false, SyntacticContext::Other))
-                return false;
         } else {
             // Note: pn_body is nullptr for functions which are being lazily parsed.
             JS_ASSERT(pn->getKind() == PNK_FUNCTION);

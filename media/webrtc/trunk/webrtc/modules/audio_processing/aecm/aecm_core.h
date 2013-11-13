@@ -294,37 +294,10 @@ extern StoreAdaptiveChannel WebRtcAecm_StoreAdaptiveChannel;
 typedef void (*ResetAdaptiveChannel)(AecmCore_t* aecm);
 extern ResetAdaptiveChannel WebRtcAecm_ResetAdaptiveChannel;
 
-typedef void (*WindowAndFFT)(
-    AecmCore_t* aecm,
-    int16_t* fft,
-    const int16_t* time_signal,
-    complex16_t* freq_signal,
-    int time_signal_scaling);
-extern WindowAndFFT WebRtcAecm_WindowAndFFT;
-
-typedef void (*InverseFFTAndWindow)(
-    AecmCore_t* aecm,
-    int16_t* fft, complex16_t* efw,
-    int16_t* output,
-    const int16_t* nearendClean);
-extern InverseFFTAndWindow WebRtcAecm_InverseFFTAndWindow;
-
 // For the above function pointers, functions for generic platforms are declared
 // and defined as static in file aecm_core.c, while those for ARM Neon platforms
 // are declared below and defined in file aecm_core_neon.s.
 #if (defined WEBRTC_DETECT_ARM_NEON) || defined (WEBRTC_ARCH_ARM_NEON)
-void WebRtcAecm_WindowAndFFTNeon(AecmCore_t* aecm,
-                                 int16_t* fft,
-                                 const int16_t* time_signal,
-                                 complex16_t* freq_signal,
-                                 int time_signal_scaling);
-
-void WebRtcAecm_InverseFFTAndWindowNeon(AecmCore_t* aecm,
-                                        int16_t* fft,
-                                        complex16_t* efw,
-                                        int16_t* output,
-                                        const int16_t* nearendClean);
-
 void WebRtcAecm_CalcLinearEnergiesNeon(AecmCore_t* aecm,
                                        const uint16_t* far_spectrum,
                                        int32_t* echo_est,

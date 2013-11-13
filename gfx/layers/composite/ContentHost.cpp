@@ -56,7 +56,6 @@ void
 ContentHostBase::Composite(EffectChain& aEffectChain,
                            float aOpacity,
                            const gfx::Matrix4x4& aTransform,
-                           const Point& aOffset,
                            const Filter& aFilter,
                            const Rect& aClipRect,
                            const nsIntRegion* aVisibleRegion,
@@ -188,12 +187,12 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
                                           Float(tileRegionRect.y) / texRect.height,
                                           Float(tileRegionRect.width) / texRect.width,
                                           Float(tileRegionRect.height) / texRect.height);
-            GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform, aOffset);
+            GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform);
             if (usingTiles) {
               DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT | DIAGNOSTIC_BIGIMAGE;
               diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
               GetCompositor()->DrawDiagnostics(diagnostics, rect, aClipRect,
-                                               aTransform, aOffset);
+                                               aTransform);
             }
         }
       }
@@ -213,7 +212,7 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
 
   DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT;
   diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
-  GetCompositor()->DrawDiagnostics(diagnostics, *aVisibleRegion, aClipRect, aTransform, aOffset);
+  GetCompositor()->DrawDiagnostics(diagnostics, *aVisibleRegion, aClipRect, aTransform);
 }
 
 void

@@ -462,7 +462,7 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
         // required for initializing 'const' closure variables.
         Shape *shape = obj->nativeLookup(cx, name);
         JS_ASSERT(shape && shape->hasSlot());
-        JSObject::nativeSetSlotWithType(cx, obj, shape, value);
+        obj->nativeSetSlotWithType(cx, shape, value);
         return true;
     }
 

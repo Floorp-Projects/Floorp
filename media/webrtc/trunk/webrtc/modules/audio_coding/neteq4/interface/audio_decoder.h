@@ -72,25 +72,23 @@ class AudioDecoder {
   virtual ~AudioDecoder() {}
 
   // Decodes |encode_len| bytes from |encoded| and writes the result in
-  // |decoded|. The number of samples produced is in the return value. If the
-  // decoder produced comfort noise, |speech_type| is set to kComfortNoise,
-  // otherwise it is kSpeech.
+  // |decoded|. The number of samples from all channels produced is in
+  // the return value. If the decoder produced comfort noise, |speech_type|
+  // is set to kComfortNoise, otherwise it is kSpeech.
   virtual int Decode(const uint8_t* encoded, size_t encoded_len,
                      int16_t* decoded, SpeechType* speech_type) = 0;
 
   // Same as Decode(), but interfaces to the decoders redundant decode function.
   // The default implementation simply calls the regular Decode() method.
   virtual int DecodeRedundant(const uint8_t* encoded, size_t encoded_len,
-                              int16_t* decoded, SpeechType* speech_type) {
-    return Decode(encoded, encoded_len, decoded, speech_type);
-  }
+                              int16_t* decoded, SpeechType* speech_type);
 
   // Indicates if the decoder implements the DecodePlc method.
-  virtual bool HasDecodePlc() const { return false; }
+  virtual bool HasDecodePlc() const;
 
   // Calls the packet-loss concealment of the decoder to update the state after
   // one or several lost packets.
-  virtual int DecodePlc(int num_frames, int16_t* decoded) { return -1; }
+  virtual int DecodePlc(int num_frames, int16_t* decoded);
 
   // Initializes the decoder.
   virtual int Init() = 0;
@@ -100,19 +98,17 @@ class AudioDecoder {
                              size_t payload_len,
                              uint16_t rtp_sequence_number,
                              uint32_t rtp_timestamp,
-                             uint32_t arrival_timestamp) { return 0; }
+                             uint32_t arrival_timestamp);
 
   // Returns the last error code from the decoder.
-  virtual int ErrorCode() { return 0; }
+  virtual int ErrorCode();
 
   // Returns the duration in samples of the payload in |encoded| which is
   // |encoded_len| bytes long. Returns kNotImplemented if no duration estimate
   // is available, or -1 in case of an error.
-  virtual int PacketDuration(const uint8_t* encoded, size_t encoded_len) {
-    return kNotImplemented;
-  }
+  virtual int PacketDuration(const uint8_t* encoded, size_t encoded_len);
 
-  virtual NetEqDecoder codec_type() const { return codec_type_; }
+  virtual NetEqDecoder codec_type() const;
 
   // Returns the underlying decoder state.
   void* state() { return state_; }

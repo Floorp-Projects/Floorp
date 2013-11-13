@@ -214,4 +214,4 @@ uint32_t SSRCDatabase::GenerateRandom()
 
     return ssrc;
 }
-} // namespace webrtc
+}  // namespace webrtc

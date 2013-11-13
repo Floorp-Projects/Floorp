@@ -27,7 +27,6 @@ namespace webrtc {
 
 class Config;
 class CriticalSectionWrapper;
-class MapWrapper;
 class ProcessThread;
 class RtcpRttObserver;
 class ViEChannel;

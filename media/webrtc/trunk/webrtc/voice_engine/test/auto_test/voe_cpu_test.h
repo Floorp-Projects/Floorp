@@ -26,6 +26,6 @@ class VoECpuTest {
   VoETestManager& _mgr;
 };
 
-} // namespace voetest
+}  // namespace voetest
 
 #endif // WEBRTC_VOICE_ENGINE_VOE_CPU_TEST_H

@@ -10,7 +10,7 @@
 
 #include "webrtc/video_engine/test/common/gl/gl_renderer.h"
 
-#include <cstring>
+#include <string.h>
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 

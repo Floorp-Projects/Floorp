@@ -1732,7 +1732,8 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer,
       // accessibles into accessible tree. We need to invalidate children even
       // there's no inserted accessibles in the end because accessible children
       // are created while parent recaches child accessibles.
-      aContainer->UpdateChildren();
+      aContainer->InvalidateChildren();
+      CacheChildrenInSubtree(aContainer);
     }
 
     UpdateTree(aContainer, aInsertedContent->ElementAt(idx), true);

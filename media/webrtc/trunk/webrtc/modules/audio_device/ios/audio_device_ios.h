@@ -13,8 +13,8 @@
 
 #include <AudioUnit/AudioUnit.h>
 
-#include "audio_device_generic.h"
-#include "critical_section_wrapper.h"
+#include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 class ThreadWrapper;

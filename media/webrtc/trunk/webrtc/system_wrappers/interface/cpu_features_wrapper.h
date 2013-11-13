@@ -45,7 +45,7 @@ extern WebRtc_CPUInfo WebRtc_GetCPUInfoNoASM;
 extern uint64_t WebRtc_GetCPUFeaturesARM(void);
 
 #if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_CPU_FEATURES_WRAPPER_H_

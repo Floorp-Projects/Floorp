@@ -32,8 +32,8 @@
 #include <stddef.h>  // for NULL
 #include <string.h>
 
-#include "constructor_magic.h"
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 // This file provides macros for creating "symbol table" classes to simplify the
 // dynamic loading of symbols from DLLs. Currently the implementation only

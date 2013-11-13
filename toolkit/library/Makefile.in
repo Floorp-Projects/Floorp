@@ -677,9 +677,9 @@ LD := $(PYTHON) $(topsrcdir)/build/link.py $(CURDIR)/linker-vsize $(LD)
 endif
 
 ifndef LINK_GTEST
+ifdef COMPILE_ENVIRONMENT
 libs:: $(FINAL_TARGET)/dependentlibs.list
-else
-libs::
+endif
 endif
 
 .PHONY: gtestxul

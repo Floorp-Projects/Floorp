@@ -52,6 +52,6 @@ private:
     voe::SharedData* _shared;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif  // WEBRTC_VOICE_ENGINE_VOE_CALL_REPORT_IMPL_H

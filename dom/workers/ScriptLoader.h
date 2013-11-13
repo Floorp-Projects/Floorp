@@ -14,6 +14,18 @@ class nsIDocument;
 class nsString;
 class nsIChannel;
 
+namespace mozilla {
+
+class ErrorResult;
+
+namespace dom {
+
+template <typename T>
+class Sequence;
+
+} // namespace dom
+} // namespace mozilla
+
 BEGIN_WORKERS_NAMESPACE
 
 namespace scriptloader {
@@ -36,7 +48,10 @@ void ReportLoadError(JSContext* aCx, const nsAString& aURL,
 
 bool LoadWorkerScript(JSContext* aCx);
 
-bool Load(JSContext* aCx, unsigned aURLCount, jsval* aURLs);
+void Load(JSContext* aCx,
+          WorkerPrivate* aWorkerPrivate,
+          const mozilla::dom::Sequence<nsString>& aScriptURLs,
+          mozilla::ErrorResult& aRv);
 
 } // namespace scriptloader
 

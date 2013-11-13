@@ -205,7 +205,7 @@ class IonBuilder : public MIRGenerator
     static int CmpSuccessors(const void *a, const void *b);
 
   public:
-    IonBuilder(JSContext *cx, TempAllocator *temp, MIRGraph *graph,
+    IonBuilder(JSContext *analysisContext, JSCompartment *comp, TempAllocator *temp, MIRGraph *graph,
                types::CompilerConstraintList *constraints,
                BaselineInspector *inspector, CompileInfo *info, BaselineFrame *baselineFrame,
                size_t inliningDepth = 0, uint32_t loopDepth = 0);
@@ -435,11 +435,24 @@ class IonBuilder : public MIRGenerator
     // jsop_getelem() helpers.
     bool getElemTryDense(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *index);
-    bool getElemTryTyped(bool *emitted, MDefinition *obj, MDefinition *index);
+    bool getElemTryTypedArray(bool *emitted, MDefinition *obj, MDefinition *index);
+    bool getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryString(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryArguments(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryArgumentsInlined(bool *emitted, MDefinition *obj, MDefinition *index);
     bool getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index);
+    bool getElemTryScalarElemOfTypedObject(bool *emitted,
+                                           MDefinition *obj,
+                                           MDefinition *index,
+                                           TypeRepresentationSet objTypeReprs,
+                                           TypeRepresentationSet elemTypeReprs,
+                                           size_t elemSize);
+    bool getElemTryComplexElemOfTypedObject(bool *emitted,
+                                            MDefinition *obj,
+                                            MDefinition *index,
+                                            TypeRepresentationSet objTypeReprs,
+                                            TypeRepresentationSet elemTypeReprs,
+                                            size_t elemSize);
 
     // Typed array helpers.
     MInstruction *getTypedArrayLength(MDefinition *obj);
@@ -550,6 +563,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineMathRound(CallInfo &callInfo);
     InliningStatus inlineMathSqrt(CallInfo &callInfo);
     InliningStatus inlineMathAtan2(CallInfo &callInfo);
+    InliningStatus inlineMathHypot(CallInfo &callInfo);
     InliningStatus inlineMathMinMax(CallInfo &callInfo, bool max);
     InliningStatus inlineMathPow(CallInfo &callInfo);
     InliningStatus inlineMathRandom(CallInfo &callInfo);
@@ -559,6 +573,7 @@ class IonBuilder : public MIRGenerator
 
     // String natives.
     InliningStatus inlineStringObject(CallInfo &callInfo);
+    InliningStatus inlineStringSplit(CallInfo &callInfo);
     InliningStatus inlineStrCharCodeAt(CallInfo &callInfo);
     InliningStatus inlineStrFromCharCode(CallInfo &callInfo);
     InliningStatus inlineStrCharAt(CallInfo &callInfo);
@@ -583,10 +598,11 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineNewParallelArray(CallInfo &callInfo);
     InliningStatus inlineParallelArray(CallInfo &callInfo);
     InliningStatus inlineParallelArrayTail(CallInfo &callInfo,
-                                           HandleFunction target,
+                                           JSFunction *target,
                                            MDefinition *ctor,
                                            types::TemporaryTypeSet *ctorTypes,
-                                           uint32_t discards);
+                                           uint32_t discards,
+                                           Native native);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);
@@ -635,12 +651,13 @@ class IonBuilder : public MIRGenerator
     bool testShouldDOMCall(types::TypeSet *inTypes,
                            JSFunction *func, JSJitInfo::OpType opType);
 
-    bool annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetPropertyCache *getPropCache,
-                                  types::TemporaryTypeSet *objTypes, types::TemporaryTypeSet *pushedTypes);
+    bool annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPropCache,
+                                  types::TemporaryTypeSet *objTypes,
+                                  types::TemporaryTypeSet *pushedTypes);
 
     MGetPropertyCache *getInlineableGetPropertyCache(CallInfo &callInfo);
 
-    bool testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyName *name);
+    JSObject *testSingletonProperty(JSObject *obj, PropertyName *name);
     bool testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, PropertyName *name,
                                     bool *testObject, bool *testString);
     bool getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name,
@@ -693,25 +710,15 @@ class IonBuilder : public MIRGenerator
         return callerBuilder_ != nullptr;
     }
 
-    JSContext *context() {
-        // JSContexts are only available to IonBuilder when running on the main
-        // thread, which after bug 785905 will only occur when doing eager
-        // analyses with no available baseline information. Until this bug is
-        // completed, both the |cx| member and |context()| may be used.
-        if (info().executionMode() == DefinitePropertiesAnalysis)
-            return cx;
-        return nullptr;
-    }
-
     JSAtomState &names() { return compartment->runtimeFromAnyThread()->atomState; }
 
   private:
     bool init();
 
-    JSContext *cx;
+    JSContext *analysisContext;
     BaselineFrame *baselineFrame_;
     AbortReason abortReason_;
-    ScopedJSDeletePtr<TypeRepresentationSetHash> reprSetHash_;
+    TypeRepresentationSetHash *reprSetHash_;
 
     // Constraints for recording dependencies on type information.
     types::CompilerConstraintList *constraints_;

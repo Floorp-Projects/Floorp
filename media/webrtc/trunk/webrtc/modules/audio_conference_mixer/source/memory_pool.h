@@ -117,6 +117,6 @@ int32_t MemoryPool<MemoryType>::PushMemory(MemoryType*& memory)
     }
     return _ptrImpl->PushMemory(memory);
 }
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_AUDIO_CONFERENCE_MIXER_SOURCE_MEMORY_POOL_H_

@@ -45,6 +45,8 @@ extern void* globalJavaVM;
 extern void* globalContext;
 #endif
 
+static const int kTestMaxNumChannels = 100;
+
 // ----------------------------------------------------------------------------
 // External AudioDeviceModule implementation
 // ----------------------------------------------------------------------------
@@ -464,24 +466,13 @@ int VoEExtendedTest::TestBase() {
   // >> end of Init(AudioDeviceModule)
   // ------------------------------------------------------------------------
 
-  ///////////////////////////
-  // MaxNumOfChannels
-  TEST(MaxNumOfChannels);
-  ANL();
-  TEST_MUSTPASS(voe_base_->MaxNumOfChannels() < 0);
-  MARK();
-  ANL();
-  AOK();
-  ANL();
-  ANL();
-
   ////////////////////////
   // CreateChannel
   // DeleteChannel
 
   int i;
   int channel;
-  int nChannels(voe_base_->MaxNumOfChannels());
+  static const int kTestMaxNumChannels = 100;
 
   TEST(CreateChannel);
   ANL();
@@ -511,7 +502,7 @@ int VoEExtendedTest::TestBase() {
     MARK();
   }
   // create max number of channels
-  for (i = 0; i < nChannels; i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     channel = voe_base_->CreateChannel();
     MARK();
     TEST_MUSTPASS(channel != i);
@@ -520,7 +511,8 @@ int VoEExtendedTest::TestBase() {
   MARK(); // should fail since no more channels can now be created
   TEST_MUSTPASS(channel != -1);
 
-  int aChannel = (((nChannels - 17) > 0) ? (nChannels - 17) : 0);
+  int aChannel =
+      (((kTestMaxNumChannels - 17) > 0) ? (kTestMaxNumChannels - 17) : 0);
   TEST_MUSTPASS(voe_base_->DeleteChannel(aChannel));
   MARK();
   channel = voe_base_->CreateChannel();
@@ -528,7 +520,7 @@ int VoEExtendedTest::TestBase() {
   TEST_MUSTPASS(channel != aChannel);
 
   // delete all created channels
-  for (i = 0; i < nChannels; i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     TEST_MUSTPASS(voe_base_->DeleteChannel(i));
     MARK();
   }
@@ -608,15 +600,15 @@ int VoEExtendedTest::TestBase() {
 
   // Multi-channel tests
 
-  for (i = 0; i < voe_base_->MaxNumOfChannels(); i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     ch = voe_base_->CreateChannel();
     MARK();
   }
-  for (i = 0; i < voe_base_->MaxNumOfChannels(); i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     voe_base_->DeleteChannel(i);
     MARK();
   }
-  for (i = 0; i < voe_base_->MaxNumOfChannels(); i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     ch = voe_base_->CreateChannel();
     ExtendedTestTransport* ptrTransport =
         new ExtendedTestTransport(voe_network);
@@ -669,17 +661,17 @@ int VoEExtendedTest::TestBase() {
   voe_base_->DeleteChannel(ch);
 
   // Multi-channel tests
-  for (i = 0; i < kVoiceEngineMaxNumChannels; i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     ch = voe_base_->CreateChannel();
     TEST_MUSTPASS(voe_base_->StartPlayout(ch));
     MARK();
   }
-  for (i = 0; i < kVoiceEngineMaxNumChannels; i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     TEST_MUSTPASS(voe_base_->StopPlayout(i));
     MARK();
     voe_base_->DeleteChannel(i);
   }
-  for (i = 0; i < kVoiceEngineMaxNumChannels; i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     ch = voe_base_->CreateChannel();
     TEST_MUSTPASS(voe_base_->StartPlayout(ch));
     MARK();
@@ -791,7 +783,7 @@ int VoEExtendedTest::TestBase() {
   voe_base_->DeleteChannel(ch);
 
   // verify Set/Get for all supported modes and max number of channels
-  for (i = 0; i < voe_base_->MaxNumOfChannels(); i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     ch = voe_base_->CreateChannel();
 
     // verify Set/Get for all supported modes
@@ -813,7 +805,7 @@ int VoEExtendedTest::TestBase() {
     SleepMs(50);
   }
 
-  for (i = 0; i < voe_base_->MaxNumOfChannels(); i++) {
+  for (i = 0; i < kTestMaxNumChannels; i++) {
     voe_base_->DeleteChannel(i);
   }
 
@@ -1158,24 +1150,6 @@ int VoEExtendedTest::TestCallReport() {
    ANL();
    */
 
-  int nDead = 0;
-  int nAlive = 0;
-  TEST(GetDeadOrAliveSummary);
-  ANL();
-  // All results should be -1 since dead-or-alive is not active
-  TEST_MUSTPASS(report->GetDeadOrAliveSummary(0, nDead, nAlive) != -1);
-  MARK();
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, true, 1));
-  SleepMs(2000);
-  // All results should be >= 0 since dead-or-alive is active
-  TEST_MUSTPASS(report->GetDeadOrAliveSummary(0, nDead, nAlive));
-  MARK();
-  TEST_MUSTPASS(nDead == -1);
-  TEST_MUSTPASS(nAlive == -1)
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, false));
-  AOK();
-  ANL();
-
   TEST(WriteReportToFile);
   ANL();
 
@@ -1306,10 +1280,9 @@ int VoEExtendedTest::TestCodec() {
   CodecInst defaultCodec;
 
   // check the channel parameter
-  int nMaxChannels(voe_base_->MaxNumOfChannels());
-  TEST_MUSTPASS(-1 != codec->GetSendCodec(nMaxChannels-1, cinst));
+  TEST_MUSTPASS(-1 != codec->GetSendCodec(kTestMaxNumChannels-1, cinst));
   MARK(); // not created
-  TEST_MUSTPASS(-1 != codec->GetSendCodec(nMaxChannels, cinst));
+  TEST_MUSTPASS(-1 != codec->GetSendCodec(kTestMaxNumChannels, cinst));
   MARK(); // out of range
   TEST_MUSTPASS(-1 != codec->GetSendCodec(-1, cinst));
   MARK(); // out of range
@@ -1600,7 +1573,7 @@ int VoEExtendedTest::TestCodec() {
       }
     }
     ANL();
-  } // for (int index = 0; index < nCodecs; index++)
+  }  // for (int index = 0; index < nCodecs; index++)
 
   // restore PCMU
   const CodecInst tmp = { 0, "PCMU", 8000, 160, 1, 64000 };
@@ -3500,7 +3473,7 @@ int VoEExtendedTest::TestFile() {
   TEST_LOG("StartRecordingCall, record both mic and file in specific"
     " channels \n");
   TEST_LOG("Create maxnumofchannels \n");
-  for (int i = 1; i < voe_base_->MaxNumOfChannels(); i++) {
+  for (int i = 1; i < kTestMaxNumChannels; i++) {
     int ch = voe_base_->CreateChannel();
     TEST_MUSTPASS(ch == -1);
     TEST_MUSTPASS(voe_base_->StopPlayout(ch));
@@ -3573,7 +3546,7 @@ int VoEExtendedTest::TestFile() {
           kFileFormatCompressedFile));
   SleepMs(2500);
   TEST_MUSTPASS(file->StopPlayingFileLocally(0));
-  for (int i = 1; i < voe_base_->MaxNumOfChannels(); i++) {
+  for (int i = 1; i < kTestMaxNumChannels; i++) {
     TEST_MUSTPASS(voe_base_->DeleteChannel(i));
   }
 
@@ -4183,218 +4156,8 @@ int VoEExtendedTest::TestNetwork() {
 
   // >> end of SetExternalTransport
   // ------------------------------------------------------------------------
-
-  // ------------------------------------------------------------------------
-  // >> RegisterDeadOrAliveObserver
-  // >> DeRegisterDeadOrAliveObserver
-  //
-  // - VE initialized
-  // - no existing channels
-  // - no media
-  TEST(RegisterDeadOrAliveObserver);
-  ANL();
-  TEST(DeRegisterDeadOrAliveObserver);
-  ANL();
-
-  // call without valid channel
-  TEST_MUSTPASS(!voe_network ->RegisterDeadOrAliveObserver(0, *this));
-  MARK();
-  TEST_ERROR(VE_CHANNEL_NOT_VALID);
-
-  TEST_MUSTPASS(voe_base_->CreateChannel());
-
-  TEST_MUSTPASS(voe_network ->RegisterDeadOrAliveObserver(0, *this));
-  MARK();
-  TEST_MUSTPASS(!voe_network ->RegisterDeadOrAliveObserver(0, *this));
-  MARK(); // already registered
-  TEST_ERROR(VE_INVALID_OPERATION);
-  TEST_MUSTPASS(voe_network ->DeRegisterDeadOrAliveObserver(0));
-  MARK();
-  TEST_MUSTPASS(voe_network ->DeRegisterDeadOrAliveObserver(0));
-  MARK(); // OK to do it again
-  TEST_MUSTPASS(voe_network ->RegisterDeadOrAliveObserver(0, *this));
-  MARK();
-  TEST_MUSTPASS(voe_network ->DeRegisterDeadOrAliveObserver(0));
-  MARK();
-
-  TEST_MUSTPASS(voe_base_->DeleteChannel(0));
-
-  // STATE: dead-or-alive observer is disabled
-
-  // >> end of RegisterDeadOrAliveObserver
-  // ------------------------------------------------------------------------
-
-  // ------------------------------------------------------------------------
-  // >> SetPeriodicDeadOrAliveStatus
-  // >> GetPeriodicDeadOrAliveStatus
-  //
-  // - VE initialized
-  // - no existing channels
-  // - no media
-
-  // call without valid channel
-  TEST_MUSTPASS(!voe_network ->SetPeriodicDeadOrAliveStatus(0, false));
-  MARK();
-  TEST_ERROR(VE_CHANNEL_NOT_VALID);
-
-  TEST_MUSTPASS(voe_base_->CreateChannel());
-
-  // Invalid paramters
-  TEST_MUSTPASS(!voe_network ->SetPeriodicDeadOrAliveStatus(0, true, 0));
-  MARK();
-  TEST_ERROR(VE_INVALID_ARGUMENT);
-  TEST_MUSTPASS(!voe_network ->SetPeriodicDeadOrAliveStatus(0, true, 151));
-  MARK();
-  TEST_ERROR(VE_INVALID_ARGUMENT);
-  TEST_MUSTPASS(!voe_network ->SetPeriodicDeadOrAliveStatus(1, true, 10));
-  MARK();
-  TEST_ERROR(VE_CHANNEL_NOT_VALID);
-
-  int sampleTime(0);
-  bool enabled;
-
-  // Valid parameters
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, true, 1));
-  MARK();
-  TEST_MUSTPASS(
-      voe_network ->GetPeriodicDeadOrAliveStatus(0, enabled, sampleTime));
-  TEST_MUSTPASS(enabled != true);
-  TEST_MUSTPASS(sampleTime != 1);
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, true, 150));
-  MARK();
-  TEST_MUSTPASS(
-      voe_network ->GetPeriodicDeadOrAliveStatus(0, enabled, sampleTime));
-  TEST_MUSTPASS(enabled != true);
-  TEST_MUSTPASS(sampleTime != 150);
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, false));
-  MARK();
-  TEST_MUSTPASS(
-      voe_network ->GetPeriodicDeadOrAliveStatus(0, enabled, sampleTime));
-  TEST_MUSTPASS(enabled != false);
-  TEST_MUSTPASS(sampleTime != 150); // ensure last set time isnt modified
-
-  StartMedia(0, 2000, true, true, true);
-
-  // STATE: full duplex media is active
-
-  // test the dead-or-alive mechanism
-  TEST_MUSTPASS(voe_network ->RegisterDeadOrAliveObserver(0, *this));
-  MARK();
-  TEST_LOG("\nVerify that Alive callbacks are received (dT=2sec): ");
-  fflush(NULL);
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, true, 2));
-  SleepMs(6000);
-  TEST_LOG("\nChange dT to 1 second: ");
-  fflush(NULL);
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, true, 1));
-  SleepMs(6000);
-  TEST_LOG("\nDisable dead-or-alive callbacks: ");
-  fflush(NULL);
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, false));
-  SleepMs(6000);
-  TEST_LOG("\nStop sending and enable callbacks again.\n");
-  TEST_LOG("Verify that Dead callbacks are received (dT=2sec): ");
-  fflush(NULL);
-  TEST_MUSTPASS(voe_base_->StopSend(0));
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, true, 2));
-  SleepMs(6000);
-  TEST_MUSTPASS(voe_base_->StartSend(0));
-  TEST_LOG("\nRestart sending.\n");
-  TEST_LOG("Verify that Alive callbacks are received again (dT=2sec): ");
-  fflush(NULL);
-  SleepMs(6000);
-  TEST_LOG("\nDisable dead-or-alive callbacks.");
-  fflush(NULL);
-  TEST_MUSTPASS(voe_network ->SetPeriodicDeadOrAliveStatus(0, false));
-  TEST_MUSTPASS(voe_network ->DeRegisterDeadOrAliveObserver(0));
-  MARK();
-
-  StopMedia(0);
-
-  TEST_MUSTPASS(voe_base_->DeleteChannel(0));
-  ANL();
-  AOK();
-  ANL();
-  ANL();
-
-  // >> end of SetPeriodicDeadOrAliveStatus
-  // ------------------------------------------------------------------------
-
-  // ------------------------------------------------------------------------
-  // >> SetPacketTimeoutNotification
-  // >> GetPacketTimeoutNotification
-  //
-  // - VE initialized
-  // - no existing channels
-  // - no media
-  // - NOTE: dynamic tests are performed in standard test
-
-  int timeOut(0);
-
-  TEST(SetPacketTimeoutNotification);
-  ANL();
-  TEST(GetPacketTimeoutNotification);
-  ANL();
-
-  // call without existing valid channel
-  TEST_MUSTPASS(!voe_network ->SetPacketTimeoutNotification(0, false));
-  MARK();
-  TEST_ERROR(VE_CHANNEL_NOT_VALID);
-
-  TEST_MUSTPASS(voe_base_->CreateChannel());
-
-  // invalid function calls
-  TEST_MUSTPASS(!voe_network ->SetPacketTimeoutNotification(0, true, 0));
-  MARK();
-  TEST_ERROR(VE_INVALID_ARGUMENT);
-  TEST_MUSTPASS(!voe_network ->SetPacketTimeoutNotification(0, true, 151));
-  MARK();
-  TEST_ERROR(VE_INVALID_ARGUMENT);
-
-  // valid function calls (no active media)
-  TEST_MUSTPASS(voe_network ->SetPacketTimeoutNotification(0, true, 2));
-  MARK();
-  TEST_MUSTPASS(voe_network ->GetPacketTimeoutNotification(0, enabled,
-                                                           timeOut));
-  MARK();
-  TEST_MUSTPASS(enabled != true);
-  TEST_MUSTPASS(timeOut != 2);
-  TEST_MUSTPASS(voe_network ->SetPacketTimeoutNotification(0, false));
-  MARK();
-  TEST_MUSTPASS(voe_network ->GetPacketTimeoutNotification(0, enabled,
-                                                           timeOut));
-  MARK();
-  TEST_MUSTPASS(enabled != false);
-  TEST_MUSTPASS(voe_network ->SetPacketTimeoutNotification(0, true, 10));
-  MARK();
-  TEST_MUSTPASS(voe_network ->GetPacketTimeoutNotification(0, enabled,
-                                                           timeOut));
-  MARK();
-  TEST_MUSTPASS(enabled != true);
-  TEST_MUSTPASS(timeOut != 10);
-  TEST_MUSTPASS(voe_network ->SetPacketTimeoutNotification(0, true, 2));
-  MARK();
-  TEST_MUSTPASS(voe_network ->GetPacketTimeoutNotification(0, enabled,
-                                                           timeOut));
-  MARK();
-  TEST_MUSTPASS(enabled != true);
-  TEST_MUSTPASS(timeOut != 2);
-  TEST_MUSTPASS(voe_network ->SetPacketTimeoutNotification(0, false));
-  MARK();
-  TEST_MUSTPASS(voe_network ->GetPacketTimeoutNotification(0, enabled,
-                                                           timeOut));
-  MARK();
-  TEST_MUSTPASS(enabled != false);
-
-  TEST_MUSTPASS(voe_base_->DeleteChannel(0));
-  ANL();
-  AOK();
-  ANL();
-  ANL();
   return 0;
 }
-  // >> end of SetPacketTimeoutNotification
-  // ------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 //  VoEExtendedTest::TestRTP_RTCP
@@ -5304,4 +5067,4 @@ int VoEExtendedTest::TestVolumeControl()
   return 0;
 }
 
-} //  namespace voetest
+}  // namespace voetest

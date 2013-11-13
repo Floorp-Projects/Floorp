@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAMEWORK_UNIT_TEST_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAMEWORK_UNIT_TEST_H_
 
-#include "test.h"
-#include "event_wrapper.h"
+#include "webrtc/modules/video_coding/codecs/test_framework/test.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
 
 // Disable "conditional expression is constant" warnings on the perfectly
 // acceptable
@@ -63,6 +63,7 @@ protected:
     unsigned char* _refDecFrame;
     unsigned int _refEncFrameLength;
     FILE* _sourceFile;
+    bool is_key_frame_;
 
     UnitTestEncodeCompleteCallback* _encodeCompleteCallback;
     UnitTestDecodeCompleteCallback* _decodeCompleteCallback;
@@ -103,4 +104,3 @@ private:
 };
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_CODECS_TEST_FRAMEWORK_UNIT_TEST_H_
-

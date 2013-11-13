@@ -532,17 +532,23 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
 }
 
 bool
-DefineWebIDLBindingPropertiesOnXPCProto(JSContext* cx,
-                                        JS::Handle<JSObject*> proto,
-                                        const NativeProperties* properties)
+DefineWebIDLBindingPropertiesOnXPCObject(JSContext* cx,
+                                         JS::Handle<JSObject*> obj,
+                                         const NativeProperties* properties,
+                                         bool defineUnforgeableAttributes)
 {
   if (properties->methods &&
-      !DefinePrefable(cx, proto, properties->methods)) {
+      !DefinePrefable(cx, obj, properties->methods)) {
     return false;
   }
 
   if (properties->attributes &&
-      !DefinePrefable(cx, proto, properties->attributes)) {
+      !DefinePrefable(cx, obj, properties->attributes)) {
+    return false;
+  }
+
+  if (defineUnforgeableAttributes && properties->unforgeableAttributes &&
+      !DefinePrefable(cx, obj, properties->unforgeableAttributes)) {
     return false;
   }
 
@@ -2147,10 +2153,38 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
 }
 
 bool
-ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj) {
+ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj)
+{
   using mozilla::dom::workers::GetWorkerPrivateFromContext;
   return NS_IsMainThread() ? xpc::AccessCheck::isChrome(aObj):
                              GetWorkerPrivateFromContext(aCx)->IsChromeWorker();
+}
+
+void
+TraceGlobal(JSTracer* aTrc, JSObject* aObj)
+{
+  MOZ_ASSERT(js::GetObjectClass(aObj)->flags & JSCLASS_DOM_GLOBAL);
+  mozilla::dom::TraceProtoAndIfaceCache(aTrc, aObj);
+}
+
+bool
+ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
+              JS::MutableHandle<jsid> aId, unsigned aFlags,
+              JS::MutableHandle<JSObject*> aObjp)
+{
+  bool resolved;
+  if (!JS_ResolveStandardClass(aCx, aObj, aId, &resolved)) {
+    return false;
+  }
+
+  aObjp.set(resolved ? aObj.get() : nullptr);
+  return true;
+}
+
+bool
+EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj)
+{
+  return JS_EnumerateStandardClasses(aCx, aObj);
 }
 
 } // namespace dom

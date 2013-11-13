@@ -452,6 +452,8 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
   JS_SetGCCallback(mJSRuntime, GCCallback, this);
   JS_SetContextCallback(mJSRuntime, ContextCallback, this);
+  JS_SetDestroyZoneCallback(mJSRuntime, XPCStringConvert::FreeZoneCache);
+  JS_SetSweepZoneCallback(mJSRuntime, XPCStringConvert::ClearZoneCache);
 
   nsCycleCollector_registerJSRuntime(this);
 }

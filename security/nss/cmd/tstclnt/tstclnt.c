@@ -528,11 +528,10 @@ ownAuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig,
         csa = SSL_PeerStapledOCSPResponses(fd);
         if (csa) {
             for (i = 0; i < csa->len; ++i) {
-		SECStatus test_rv =
-		    CERT_CacheOCSPResponseFromSideChannel(
+		PORT_SetError(0);
+		if (CERT_CacheOCSPResponseFromSideChannel(
 			serverCertAuth->dbHandle, cert, PR_Now(),
-			&csa->items[i], arg);
-		if (test_rv != SECSuccess) {
+			&csa->items[i], arg) != SECSuccess) {
 		    PRErrorCode error = PR_GetError();
 		    PORT_Assert(error != 0);
 		}

@@ -14,8 +14,8 @@
 #include "typedefs.h"
 #include "jitter_buffer.h"
 #include "jitter_estimator.h"
-#include <cstdlib>
-#include <cmath>
+#include <stdlib.h>
+#include <math.h>
 
 double const pi = 4*std::atan(1.0);
 
@@ -28,7 +28,7 @@ public:
     {
         double r1 = (std::rand() + 1.0)/(RAND_MAX + 1.0); // gives equal distribution in (0, 1]
         double r2 = (std::rand() + 1.0)/(RAND_MAX + 1.0);
-        return _mu + _sigma * std::sqrt(-2*std::log(r1))*std::cos(2*pi*r2);
+        return _mu + _sigma * sqrt(-2*std::log(r1))*std::cos(2*pi*r2);
     }
 
     double GetAverage()

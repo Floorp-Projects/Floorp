@@ -12,7 +12,7 @@
 
 #include <errno.h>
 #if defined(WEBRTC_LINUX)
-#include <ctime>
+#include <time.h>
 #else
 #include <sys/time.h>
 #endif
@@ -129,4 +129,4 @@ void ConditionVariablePosix::WakeAll() {
   pthread_cond_broadcast(&cond_);
 }
 
-} // namespace webrtc
+}  // namespace webrtc

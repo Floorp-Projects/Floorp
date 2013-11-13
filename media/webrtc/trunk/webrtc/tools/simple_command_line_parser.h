@@ -34,8 +34,8 @@ namespace test {
 
 class CommandLineParser {
  public:
-  CommandLineParser() {}
-  ~CommandLineParser() {}
+  CommandLineParser();
+  ~CommandLineParser();
 
   void Init(int argc, char** argv);
 

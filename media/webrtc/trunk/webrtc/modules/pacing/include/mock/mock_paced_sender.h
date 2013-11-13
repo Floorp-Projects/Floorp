@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_PACING_INCLUDE_MOCK_MOCK_PACED_SENDER_H_
 #define WEBRTC_MODULES_PACING_INCLUDE_MOCK_MOCK_PACED_SENDER_H_
 
-#include <gmock/gmock.h>
+#include "testing/gmock/include/gmock/gmock.h"
 
 #include <vector>
 

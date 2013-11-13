@@ -237,9 +237,14 @@ function whenNewTabLoaded(aWindow, aCallback) {
     return;
   }
 
+  whenTabLoaded(aWindow.gBrowser.selectedTab, aCallback);
+}
+
+function whenTabLoaded(aTab, aCallback) {
+  let browser = aTab.linkedBrowser;
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-    aCallback();
+    executeSoon(aCallback);
   }, true);
 }
 

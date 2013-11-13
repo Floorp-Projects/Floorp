@@ -6,6 +6,8 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-632347-iterators-generators.html";
 
 function test() {
+  requestLongerTimeout(6);
+
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);

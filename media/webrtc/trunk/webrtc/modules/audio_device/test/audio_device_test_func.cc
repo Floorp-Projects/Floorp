@@ -9,8 +9,8 @@
  */
 
 #include <stdio.h>
-#include "audio_device_test_defines.h"
-#include "func_test_manager.h"
+#include "webrtc/modules/audio_device/test/audio_device_test_defines.h"
+#include "webrtc/modules/audio_device/test/func_test_manager.h"
 
 #ifndef __GNUC__
 // Disable warning message 4996 ('scanf': This function or variable may be unsafe)

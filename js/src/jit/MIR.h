@@ -969,6 +969,10 @@ class MConstant : public MNullaryInstruction
     const js::Value *vp() const {
         return &value_;
     }
+    const bool valueToBoolean() const {
+        // A hack to avoid this wordy pattern everywhere in the JIT.
+        return ToBoolean(HandleValue::fromMarkedLocation(&value_));
+    }
 
     void printOpcode(FILE *fp) const;
 
@@ -3582,6 +3586,49 @@ class MAtan2
     }
 };
 
+// Inline implementation of Math.hypot().
+class MHypot
+  : public MBinaryInstruction,
+    public MixPolicy<DoublePolicy<0>, DoublePolicy<1> >
+{
+    MHypot(MDefinition *y, MDefinition *x)
+      : MBinaryInstruction(x, y)
+    {
+        setResultType(MIRType_Double);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(Hypot)
+    static MHypot *New(MDefinition *x, MDefinition *y) {
+        return new MHypot(y, x);
+    }
+
+    MDefinition *x() const {
+        return getOperand(0);
+    }
+
+    MDefinition *y() const {
+        return getOperand(1);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    bool congruentTo(MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    bool possiblyCalls() const {
+        return true;
+    }
+};
+
 // Inline implementation of Math.pow().
 class MPow
   : public MBinaryInstruction,
@@ -4148,6 +4195,48 @@ class MFromCharCode
     }
 };
 
+class MStringSplit
+  : public MBinaryInstruction,
+    public MixPolicy<StringPolicy<0>, StringPolicy<1> >
+{
+    types::TypeObject *typeObject_;
+
+    MStringSplit(MDefinition *string, MDefinition *sep, JSObject *templateObject)
+      : MBinaryInstruction(string, sep),
+        typeObject_(templateObject->type())
+    {
+        setResultType(MIRType_Object);
+        setResultTypeSet(MakeSingletonTypeSet(templateObject));
+    }
+
+  public:
+    INSTRUCTION_HEADER(StringSplit)
+
+    static MStringSplit *New(MDefinition *string, MDefinition *sep, JSObject *templateObject) {
+        return new MStringSplit(string, sep, templateObject);
+    }
+    types::TypeObject *typeObject() const {
+        return typeObject_;
+    }
+    MDefinition *string() const {
+        return getOperand(0);
+    }
+    MDefinition *separator() const {
+        return getOperand(1);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool possiblyCalls() const {
+        return true;
+    }
+    virtual AliasSet getAliasSet() const {
+        // Although this instruction returns a new array, we don't have to mark
+        // it as store instruction, see also MNewArray.
+        return AliasSet::None();
+    }
+};
+
 // Returns an object to use as |this| value. See also ComputeThis and
 // BoxNonStrictThis in Interpreter.h.
 class MComputeThis
@@ -4270,7 +4359,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
     // Use only if capacity has been reserved by reserveLength
     void addInput(MDefinition *ins);
 
-    // Appends a new input to the input vector. May call realloc().
+    // Appends a new input to the input vector. May call realloc_().
     // Prefer reserveLength() and addInput() instead, where possible.
     bool addInputSlow(MDefinition *ins, bool *ptypeChange = nullptr);
 
@@ -5769,7 +5858,7 @@ class MLoadTypedArrayElementHole
 // Load a value fallibly or infallibly from a statically known typed array.
 class MLoadTypedArrayElementStatic
   : public MUnaryInstruction,
-    public IntPolicy<0>
+    public ConvertToInt32Policy<0>
 {
     MLoadTypedArrayElementStatic(TypedArrayObject *typedArray, MDefinition *ptr)
       : MUnaryInstruction(ptr), typedArray_(typedArray), fallible_(true)

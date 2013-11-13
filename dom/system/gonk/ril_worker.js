@@ -1793,19 +1793,30 @@ let RIL = {
   /**
    * Get the Short Message Service Center address.
    */
-  getSMSCAddress: function getSMSCAddress() {
-    Buf.simpleRequest(REQUEST_GET_SMSC_ADDRESS);
+  getSmscAddress: function getSmscAddress(options) {
+    if (!this.SMSC) {
+      Buf.simpleRequest(REQUEST_GET_SMSC_ADDRESS, options);
+      return;
+    }
+
+    if (!options || options.rilMessageType !== "getSmscAddress") {
+      return;
+    }
+
+    options.smscAddress = this.SMSC;
+    options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendChromeMessage(options);
   },
 
   /**
    * Set the Short Message Service Center address.
    *
-   * @param SMSC
+   * @param smscAddress
    *        Short Message Service Center address in PDU format.
    */
-  setSMSCAddress: function setSMSCAddress(options) {
-    Buf.newParcel(REQUEST_SET_SMSC_ADDRESS);
-    Buf.writeString(options.SMSC);
+  setSmscAddress: function setSmscAddress(options) {
+    Buf.newParcel(REQUEST_SET_SMSC_ADDRESS, options);
+    Buf.writeString(options.smscAddress);
     Buf.sendParcel();
   },
 
@@ -3002,6 +3013,12 @@ let RIL = {
         newCardState = GECKO_CARDSTATE_UNKNOWN;
     }
 
+    let pin1State = app.pin1_replaced ? iccStatus.universalPINState :
+                                        app.pin1;
+    if (pin1State === CARD_PINSTATE_ENABLED_PERM_BLOCKED) {
+      newCardState = GECKO_CARDSTATE_PERMANENT_BLOCKED;
+    }
+
     if (this.cardState == newCardState) {
       return;
     }
@@ -3330,7 +3347,7 @@ let RIL = {
     let rs = this.voiceRegistrationState;
     let stateChanged = this._processCREG(rs, state);
     if (stateChanged && rs.connected) {
-      RIL.getSMSCAddress();
+      RIL.getSmscAddress();
     }
 
     let cell = rs.cell;
@@ -4284,6 +4301,46 @@ let RIL = {
     delete this._pendingSentSmsMap[message.messageRef];
 
     let deliveryStatus = ((status >>> 5) === 0x00)
+                       ? GECKO_SMS_DELIVERY_STATUS_SUCCESS
+                       : GECKO_SMS_DELIVERY_STATUS_ERROR;
+    this.sendChromeMessage({
+      rilMessageType: options.rilMessageType,
+      rilMessageToken: options.rilMessageToken,
+      deliveryStatus: deliveryStatus
+    });
+
+    return PDU_FCS_OK;
+  },
+
+  /**
+   * Helper for processing CDMA SMS Delivery Acknowledgment Message
+   *
+   * @param message
+   *        decoded SMS Delivery ACK message from CdmaPDUHelper.
+   *
+   * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
+   */
+  _processCdmaSmsStatusReport: function _processCdmaSmsStatusReport(message) {
+    let options = this._pendingSentSmsMap[message.msgId];
+    if (!options) {
+      if (DEBUG) debug("no pending SMS-SUBMIT message");
+      return PDU_FCS_OK;
+    }
+
+    if (message.errorClass === 2) {
+      if (DEBUG) debug("SMS-STATUS-REPORT: delivery still pending, msgStatus: " + message.msgStatus);
+      return PDU_FCS_OK;
+    }
+
+    delete this._pendingSentSmsMap[message.msgId];
+
+    if (message.errorClass === -1 && message.body) {
+      // Process as normal incoming SMS, if errorClass is invalid
+      // but message body is available.
+      return this._processSmsMultipart(message);
+    }
+
+    let deliveryStatus = (message.errorClass === 0)
                        ? GECKO_SMS_DELIVERY_STATUS_SUCCESS
                        : GECKO_SMS_DELIVERY_STATUS_ERROR;
     this.sendChromeMessage({
@@ -5882,7 +5939,7 @@ RIL[REQUEST_CDMA_SUBSCRIPTION] = function REQUEST_CDMA_SUBSCRIPTION(length, opti
   this.iccInfo.mdn = result[0];
   // The result[1] is Home SID. (Already be handled in readCDMAHome())
   // The result[2] is Home NID. (Already be handled in readCDMAHome())
-  this.iccInfo.min = result[3];
+  // The result[3] is MIN.
   // The result[4] is PRL version.
 
   ICCUtilsHelper.handleICCInfoChange();
@@ -5914,11 +5971,15 @@ RIL[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = function REQUEST_EXIT_EMERGENCY_CALL
   this.sendChromeMessage(options);
 };
 RIL[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
-  if (options.rilRequestError) {
+  this.SMSC = options.rilRequestError ? null : Buf.readString();
+
+  if (!options || options.rilMessageType !== "getSmscAddress") {
     return;
   }
 
-  this.SMSC = Buf.readString();
+  options.smscAddress = this.SMSC;
+  options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  this.sendChromeMessage(options);
 };
 RIL[REQUEST_SET_SMSC_ADDRESS] = null;
 RIL[REQUEST_REPORT_SMS_MEMORY_STATUS] = null;
@@ -6191,7 +6252,11 @@ RIL[UNSOLICITED_RESPONSE_CDMA_NEW_SMS] = function UNSOLICITED_RESPONSE_CDMA_NEW_
   let [message, result] = CdmaPDUHelper.processReceivedSms(length);
 
   if (message) {
-    result = this._processSmsMultipart(message);
+    if (message.subMsgType === PDU_CDMA_MSG_TYPE_DELIVER_ACK) {
+      result = this._processCdmaSmsStatusReport(message);
+    } else {
+      result = this._processSmsMultipart(message);
+    }
   }
 
   if (result == PDU_FCS_RESERVED || result == MOZ_FCS_WAIT_FOR_EXPLICIT_ACK) {
@@ -8652,6 +8717,9 @@ let CdmaPDUHelper = {
     // User Data
     this.encodeUserDataMsg(options);
 
+    // Reply Option
+    this.encodeUserDataReplyOption(options);
+
     return userDataBuffer;
   },
 
@@ -8777,6 +8845,21 @@ let CdmaPDUHelper = {
   },
 
   /**
+   * User data subparameter encoder : Reply Option
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.11 Reply Option
+   */
+  encodeUserDataReplyOption: function cdma_encodeUserDataReplyOption(options) {
+    if (options.requestStatusReport) {
+      BitBufferHelper.writeBits(PDU_CDMA_MSG_USERDATA_REPLY_OPTION, 8);
+      BitBufferHelper.writeBits(1, 8);
+      BitBufferHelper.writeBits(0, 1); // USER_ACK_REQ
+      BitBufferHelper.writeBits(1, 1); // DAK_REQ
+      BitBufferHelper.flushWithPadding();
+    }
+  },
+
+  /**
    * Entry point for SMS decoding, the returned object is made compatible
    * with existing readMessage() of GsmPDUHelper
    */
@@ -8823,38 +8906,55 @@ let CdmaPDUHelper = {
       message.sender += String.fromCharCode(addrDigit);
     }
 
-    // User Data
+    // Bearer Data
     this.decodeUserData(message);
+
+    // Bearer Data Sub-Parameter: User Data
+    let userData = message[PDU_CDMA_MSG_USERDATA_BODY];
+    [message.header, message.body, message.encoding] =
+      (userData)? [userData.header, userData.body, userData.encoding]
+                : [null, null, null];
+
+    // Bearer Data Sub-Parameter: Message Status
+    // Success Delivery (0) if both Message Status and User Data are absent.
+    // Message Status absent (-1) if only User Data is available.
+    let msgStatus = message[PDU_CDMA_MSG_USER_DATA_MSG_STATUS];
+    [message.errorClass, message.msgStatus] =
+      (msgStatus)? [msgStatus.errorClass, msgStatus.msgStatus]
+                 : ((message.body)? [-1, -1]: [0, 0]);
 
     // Transform message to GSM msg
     let msg = {
-      SMSC:            "",
-      mti:             0,
-      udhi:            0,
-      sender:          message.sender,
-      recipient:       null,
-      pid:             PDU_PID_DEFAULT,
-      epid:            PDU_PID_DEFAULT,
-      dcs:             0,
-      mwi:             null, //message[PDU_CDMA_MSG_USERDATA_BODY].header ? message[PDU_CDMA_MSG_USERDATA_BODY].header.mwi : null,
-      replace:         false,
-      header:          message[PDU_CDMA_MSG_USERDATA_BODY].header,
-      body:            message[PDU_CDMA_MSG_USERDATA_BODY].body,
-      data:            null,
-      timestamp:       message[PDU_CDMA_MSG_USERDATA_TIMESTAMP],
-      language:        message[PDU_CDMA_LANGUAGE_INDICATOR],
-      status:          null,
-      scts:            null,
-      dt:              null,
-      encoding:        message[PDU_CDMA_MSG_USERDATA_BODY].encoding,
-      messageClass:    GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL],
-      messageType:     message.messageType,
-      serviceCategory: message.service
+      SMSC:             "",
+      mti:              0,
+      udhi:             0,
+      sender:           message.sender,
+      recipient:        null,
+      pid:              PDU_PID_DEFAULT,
+      epid:             PDU_PID_DEFAULT,
+      dcs:              0,
+      mwi:              null,
+      replace:          false,
+      header:           message.header,
+      body:             message.body,
+      data:             null,
+      timestamp:        message[PDU_CDMA_MSG_USERDATA_TIMESTAMP],
+      language:         message[PDU_CDMA_LANGUAGE_INDICATOR],
+      status:           null,
+      scts:             null,
+      dt:               null,
+      encoding:         message.encoding,
+      messageClass:     GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL],
+      messageType:      message.messageType,
+      serviceCategory:  message.service,
+      subMsgType:       message[PDU_CDMA_MSG_USERDATA_MSG_ID].msgType,
+      msgId:            message[PDU_CDMA_MSG_USERDATA_MSG_ID].msgId,
+      errorClass:       message.errorClass,
+      msgStatus:        message.msgStatus
     };
 
     return msg;
   },
-
 
   /**
    * Helper for processing received SMS parcel data.
@@ -8948,14 +9048,17 @@ let CdmaPDUHelper = {
         case PDU_CDMA_MSG_USERDATA_TIMESTAMP:
           message[id] = this.decodeUserDataTimestamp();
           break;
-        case PDU_CDMA_REPLY_OPTION:
-          message[id] = this.decodeUserDataReplyAction();
+        case PDU_CDMA_MSG_USERDATA_REPLY_OPTION:
+          message[id] = this.decodeUserDataReplyOption();
           break;
         case PDU_CDMA_LANGUAGE_INDICATOR:
           message[id] = this.decodeLanguageIndicator();
           break;
         case PDU_CDMA_MSG_USERDATA_CALLBACK_NUMBER:
           message[id] = this.decodeUserDataCallbackNumber();
+          break;
+        case PDU_CDMA_MSG_USER_DATA_MSG_STATUS:
+          message[id] = this.decodeUserDataMsgStatus();
           break;
       }
 
@@ -9323,7 +9426,7 @@ let CdmaPDUHelper = {
    *
    * @see 3GGP2 C.S0015-B 2.0, 4.5.11 Reply Option
    */
-  decodeUserDataReplyAction: function cdma_decodeUserDataReplyAction() {
+  decodeUserDataReplyOption: function cdma_decodeUserDataReplyOption() {
     let replyAction = BitBufferHelper.readBits(4),
         result = { userAck: (replyAction & 0x8) ? true : false,
                    deliverAck: (replyAction & 0x4) ? true : false,
@@ -9367,6 +9470,20 @@ let CdmaPDUHelper = {
         result += String.fromCharCode(addrDigit);
       }
     }
+
+    return result;
+  },
+
+  /**
+   * User data subparameter decoder : Message Status
+   *
+   * @see 3GGP2 C.S0015-B 2.0, 4.5.21 Message Status
+   */
+  decodeUserDataMsgStatus: function cdma_decodeUserDataMsgStatus() {
+    let result = {
+      errorClass: BitBufferHelper.readBits(2),
+      msgStatus: BitBufferHelper.readBits(6)
+    };
 
     return result;
   },
@@ -9788,20 +9905,19 @@ let StkCommandParamsFactory = {
 
   processSetupCall: function processSetupCall(cmdDetails, ctlvs) {
     let call = {};
+    let iter = Iterator(ctlvs);
 
-    for (let i = 0; i < ctlvs.length; i++) {
-      let ctlv = ctlvs[i];
-      if (ctlv.tag == COMPREHENSIONTLV_TAG_ALPHA_ID) {
-        if (!call.confirmMessage) {
-          call.confirmMessage = ctlv.value.identifier;
-        } else {
-          call.callMessage = ctlv.value.identifier;
-          break;
-        }
-      }
+    let ctlv = StkProactiveCmdHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+    if (ctlv) {
+      call.confirmMessage = ctlv.value.identifier;
     }
 
-    let ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ADDRESS, ctlvs);
+    ctlv = StkProactiveCmdHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+    if (ctlv) {
+      call.callMessage = ctlv.value.identifier;
+    }
+
+    ctlv = StkProactiveCmdHelper.searchForTag(COMPREHENSIONTLV_TAG_ADDRESS, ctlvs);
     if (!ctlv) {
       RIL.sendStkTerminalResponse({
         command: cmdDetails,
@@ -9900,6 +10016,26 @@ let StkCommandParamsFactory = {
     }
 
     return timer;
+  },
+
+   /**
+    * Construct a param for BIP commands.
+    *
+    * @param cmdDetails
+    *        The value object of CommandDetails TLV.
+    * @param ctlvs
+    *        The all TLVs in this proactive command.
+    */
+  processBipMessage: function processBipMessage(cmdDetails, ctlvs) {
+    let bipMsg = {};
+
+    let ctlv = StkProactiveCmdHelper.searchForTag(
+        COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
+    if (ctlv) {
+      bipMsg.text = ctlv.value.identifier;
+    }
+
+    return bipMsg;
   }
 };
 StkCommandParamsFactory[STK_CMD_REFRESH] = function STK_CMD_REFRESH(cmdDetails, ctlvs) {
@@ -9958,6 +10094,18 @@ StkCommandParamsFactory[STK_CMD_PLAY_TONE] = function STK_CMD_PLAY_TONE(cmdDetai
 };
 StkCommandParamsFactory[STK_CMD_TIMER_MANAGEMENT] = function STK_CMD_TIMER_MANAGEMENT(cmdDetails, ctlvs) {
   return this.processTimerManagement(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_OPEN_CHANNEL] = function STK_CMD_OPEN_CHANNEL(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_CLOSE_CHANNEL] = function STK_CMD_CLOSE_CHANNEL(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_RECEIVE_DATA] = function STK_CMD_RECEIVE_DATA(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SEND_DATA] = function STK_CMD_SEND_DATA(cmdDetails, ctlvs) {
+  return this.processBipMessage(cmdDetails, ctlvs);
 };
 
 let StkProactiveCmdHelper = {
@@ -10281,8 +10429,12 @@ let StkProactiveCmdHelper = {
   },
 
   searchForTag: function searchForTag(tag, ctlvs) {
-    for (let i = 0; i < ctlvs.length; i++) {
-      let ctlv = ctlvs[i];
+    let iter = Iterator(ctlvs);
+    return this.searchForNextTag(tag, iter);
+  },
+
+  searchForNextTag: function searchForNextTag(tag, iter) {
+    for (let [index, ctlv] in iter) {
       if ((ctlv.tag & ~COMPREHENSIONTLV_FLAG_CR) == tag) {
         return ctlv;
       }

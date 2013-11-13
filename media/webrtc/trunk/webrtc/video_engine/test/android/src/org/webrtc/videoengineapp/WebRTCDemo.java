@@ -23,6 +23,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
+import android.hardware.Camera.CameraInfo;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -189,6 +190,10 @@ public class WebRTCDemo extends TabActivity implements IViEAndroidCallback,
     private WakeLock wakeLock;
 
     private boolean usingFrontCamera = true;
+    // The orientations (in degrees) of each of the cameras CCW-relative to the
+    // device, indexed by CameraInfo.CAMERA_FACING_{BACK,FRONT}, and -1
+    // for unrepresented |facing| values (i.e. single-camera device).
+    private int[] cameraOrientations = new int[] { -1, -1 };
 
     private String[] mVideoCodecsStrings = null;
     private String[] mVideoCodecsSizeStrings = { "176x144", "320x240",
@@ -207,6 +212,25 @@ public class WebRTCDemo extends TabActivity implements IViEAndroidCallback,
         return (int)(Math.round((double)rotation / 90) * 90) % 360;
     }
 
+    // Populate |cameraOrientations| with the first cameras that have each of
+    // the facing values.
+    private void populateCameraOrientations() {
+        CameraInfo info = new CameraInfo();
+        for (int i = 0; i < Camera.getNumberOfCameras(); ++i) {
+            Camera.getCameraInfo(i, info);
+            if (cameraOrientations[info.facing] != -1) {
+                continue;
+            }
+            cameraOrientations[info.facing] = info.orientation;
+        }
+    }
+
+    // Return the |CameraInfo.facing| value appropriate for |usingFrontCamera|.
+    private static int facingOf(boolean usingFrontCamera) {
+        return usingFrontCamera ? CameraInfo.CAMERA_FACING_FRONT
+                : CameraInfo.CAMERA_FACING_BACK;
+    }
+
     // This function ensures that egress streams always send real world up
     // streams.
     // Note: There are two components of the camera rotation. The rotation of
@@ -214,9 +238,7 @@ public class WebRTCDemo extends TabActivity implements IViEAndroidCallback,
     // device up. When rotating the device the camera is also rotated.
     // The former is called orientation and the second is called rotation here.
     public void compensateCameraRotation() {
-        Camera.CameraInfo info = new Camera.CameraInfo();
-        Camera.getCameraInfo(usingFrontCamera ? 1 : 0, info);
-        int cameraOrientation = info.orientation;
+        int cameraOrientation = cameraOrientations[facingOf(usingFrontCamera)];
         // The device orientation is the device's rotation relative to its
         // natural position.
         int cameraRotation = roundRotation(currentDeviceOrientation);
@@ -244,8 +266,9 @@ public class WebRTCDemo extends TabActivity implements IViEAndroidCallback,
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        // Set screen orientation
-        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+        populateCameraOrientations();
 
         PowerManager pm = (PowerManager) this.getSystemService(
             Context.POWER_SERVICE);
@@ -487,7 +510,11 @@ public class WebRTCDemo extends TabActivity implements IViEAndroidCallback,
         }
 
         btSwitchCamera = (Button) findViewById(R.id.btSwitchCamera);
-        btSwitchCamera.setOnClickListener(this);
+        if (cameraOrientations[0] != -1 && cameraOrientations[1] != -1) {
+            btSwitchCamera.setOnClickListener(this);
+        } else {
+            btSwitchCamera.setEnabled(false);
+        }
         btStartStopCall = (Button) findViewById(R.id.btStartStopCall);
         btStartStopCall.setOnClickListener(this);
         findViewById(R.id.btExit).setOnClickListener(this);

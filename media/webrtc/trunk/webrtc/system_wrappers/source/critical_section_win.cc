@@ -30,4 +30,4 @@ CriticalSectionWindows::Leave() {
   LeaveCriticalSection(&crit);
 }
 
-} // namespace webrtc
+}  // namespace webrtc

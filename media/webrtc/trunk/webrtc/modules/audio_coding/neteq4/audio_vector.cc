@@ -144,7 +144,7 @@ void AudioVector<T>::CrossFade(const AudioVector<T>& append_this,
   // |alpha| is the mixing factor in Q14.
   // TODO(hlundin): Consider skipping +1 in the denominator to produce a
   // smoother cross-fade, in particular at the end of the fade.
-  int alpha_step = 16384 / (fade_length + 1);
+  int alpha_step = 16384 / (static_cast<int>(fade_length) + 1);
   int alpha = 16384;
   for (size_t i = 0; i < fade_length; ++i) {
     alpha -= alpha_step;
@@ -174,7 +174,7 @@ void AudioVector<double>::CrossFade(const AudioVector<double>& append_this,
   // |alpha| is the mixing factor in Q14.
   // TODO(hlundin): Consider skipping +1 in the denominator to produce a
   // smoother cross-fade, in particular at the end of the fade.
-  int alpha_step = 16384 / (fade_length + 1);
+  int alpha_step = 16384 / (static_cast<int>(fade_length) + 1);
   int alpha = 16384;
   for (size_t i = 0; i < fade_length; ++i) {
     alpha -= alpha_step;

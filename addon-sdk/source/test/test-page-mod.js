@@ -13,15 +13,18 @@ const { open, getFrames, getMostRecentBrowserWindow } = require('sdk/window/util
 const windowUtils = require('sdk/deprecated/window-utils');
 const { getTabContentWindow, getActiveTab, setTabURL, openTab, closeTab } = require('sdk/tabs/utils');
 const xulApp = require("sdk/system/xul-app");
-const { data, isPrivateBrowsingSupported } = require('sdk/self');
+const { isPrivateBrowsingSupported } = require('sdk/self');
 const { isPrivate } = require('sdk/private-browsing');
 const { openWebpage } = require('./private-browsing/helper');
 const { isTabPBSupported, isWindowPBSupported, isGlobalPBSupported } = require('sdk/private-browsing/utils');
 const promise = require("sdk/core/promise");
 const { pb } = require('./private-browsing/helper');
 const { URL } = require("sdk/url");
-const testPageURI = require("sdk/self").data.url("test.html");
+
 const { waitUntil } = require("sdk/test/utils");
+const data = require("./fixtures");
+
+const testPageURI = data.url("test.html");
 
 // The following adds Debugger constructor to the global namespace.
 const { addDebuggerToGlobal } =
@@ -311,7 +314,7 @@ exports.testHistory = function(assert, done) {
   // We need a valid url in order to have a working History API.
   // (i.e do not work on data: or about: pages)
   // Test bug 679054.
-  let url = require("sdk/self").data.url("test-page-mod.html");
+  let url = data.url("test-page-mod.html");
   let callbackDone = null;
   testPageMod(assert, done, url, [{
       include: url,
@@ -691,8 +694,7 @@ exports.testPageModCss = function(assert, done) {
     'data:text/html;charset=utf-8,<div style="background: silver">css test</div>', [{
       include: ["*", "data:*"],
       contentStyle: "div { height: 100px; }",
-      contentStyleFile:
-        require("sdk/self").data.url("pagemod-css-include-file.css")
+      contentStyleFile: data.url("pagemod-css-include-file.css")
     }],
     function(win, done) {
       let div = win.document.querySelector("div");

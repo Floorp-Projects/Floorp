@@ -20,6 +20,8 @@
 
 namespace webrtc {
 
+class DesktopFrame;
+
 // A class to allow the X server's pixel buffer to be accessed as efficiently
 // as possible.
 class XServerPixelBuffer {
@@ -29,14 +31,14 @@ class XServerPixelBuffer {
 
   void Release();
 
-  // Allocate (or reallocate) the pixel buffer with the given size, which is
-  // assumed to be the current size of the root window.
-  // |screen_size| should either come from GetRootWindowSize(), or
-  // from a recent ConfigureNotify event on the root window.
-  void Init(Display* display, const DesktopSize& screen_size);
+  // Allocate (or reallocate) the pixel buffer for |window|. Returns false in
+  // case of an error (e.g. window doesn't exist).
+  bool Init(Display* display, Window window);
 
-  // Request the current size of the root window from the X Server.
-  static DesktopSize GetRootWindowSize(Display* display);
+  bool is_initialized() { return window_ != 0; }
+
+  // Returns the size of the window the buffer was initialized for.
+  const DesktopSize& window_size() { return window_size_; }
 
   // If shared memory is being used without pixmaps, synchronize this pixel
   // buffer with the root window contents (otherwise, this is a no-op).
@@ -45,31 +47,28 @@ class XServerPixelBuffer {
   // beginning.
   void Synchronize();
 
-  // Capture the specified rectangle and return a pointer to its top-left pixel
-  // or NULL if capture fails. The returned pointer remains valid until the next
-  // call to CaptureRect.
-  // In the case where the full-screen data is captured by Synchronize(), this
-  // simply returns the pointer without doing any more work.
-  // The caller must ensure that |rect| is no larger than the screen size
-  // supplied to Init().
-  uint8_t* CaptureRect(const DesktopRect& rect);
-
-  // Return information about the most recent capture. This is only guaranteed
-  // to be valid between CaptureRect calls.
-  int GetStride() const;
-  int GetDepth() const;
-  int GetBitsPerPixel() const;
-  int GetRedMask() const;
-  int GetBlueMask() const;
-  int GetGreenMask() const;
+  // Capture the specified rectangle and stores it in the |frame|. In the case
+  // where the full-screen data is captured by Synchronize(), this simply
+  // returns the pointer without doing any more work. The caller must ensure
+  // that |rect| is not larger than window_size().
+  void CaptureRect(const DesktopRect& rect, DesktopFrame* frame);
 
  private:
-  void InitShm(int screen);
+  void InitShm(const XWindowAttributes& attributes);
   bool InitPixmaps(int depth);
 
+  // We expose two forms of blitting to handle variations in the pixel format.
+  // In FastBlit(), the operation is effectively a memcpy.
+  void FastBlit(uint8_t* image,
+                const DesktopRect& rect,
+                DesktopFrame* frame);
+  void SlowBlit(uint8_t* image,
+                const DesktopRect& rect,
+                DesktopFrame* frame);
+
   Display* display_;
-  Window root_window_;
-  DesktopSize root_window_size_;
+  Window window_;
+  DesktopSize window_size_;
   XImage* x_image_;
   XShmSegmentInfo* shm_segment_info_;
   Pixmap shm_pixmap_;

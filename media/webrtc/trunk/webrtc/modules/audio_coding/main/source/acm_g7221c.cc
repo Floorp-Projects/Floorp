@@ -11,7 +11,7 @@
 #include "webrtc/modules/audio_coding/main/source/acm_g7221c.h"
 
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/main/source/acm_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq_help_macros.h"
@@ -86,6 +86,8 @@
 #endif
 
 namespace webrtc {
+
+namespace acm1 {
 
 #ifndef WEBRTC_CODEC_G722_1C
 
@@ -502,5 +504,7 @@ void ACMG722_1C::InternalDestructEncoderInst(void* ptr_inst) {
 }
 
 #endif
+
+}  // namespace acm1
 
 }  // namespace webrtc

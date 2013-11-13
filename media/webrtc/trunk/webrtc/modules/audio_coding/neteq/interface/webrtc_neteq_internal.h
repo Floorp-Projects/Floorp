@@ -317,6 +317,13 @@ int WebRtcNetEQ_RecInSyncRTP(void* inst,
 int WebRtcNetEQ_SetMinimumDelay(void *inst, int minimum_delay_ms);
 
 /*
+ * Set a maximum latency for the jitter buffer. The overall delay is the min of
+ * |maximum_delay_ms| and the latency that is internally computed based on the
+ * inter-arrival times.
+ */
+int WebRtcNetEQ_SetMaximumDelay(void *inst, int maximum_delay_ms);
+
+/*
  * Get the least required delay in milliseconds given inter-arrival times
  * and playout mode.
  */

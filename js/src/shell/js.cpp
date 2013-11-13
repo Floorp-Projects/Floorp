@@ -291,7 +291,7 @@ GetLine(FILE *file, const char * prompt)
         }
         if (len + 1 == size) {
             size = size * 2;
-            char *tmp = (char *) realloc(buffer, size);
+            char *tmp = (char *) js_realloc(buffer, size);
             if (!tmp) {
                 free(buffer);
                 return nullptr;
@@ -336,7 +336,7 @@ NewContextData()
         return nullptr;
 
     JSShellContextData *data = (JSShellContextData *)
-                               calloc(sizeof(JSShellContextData), 1);
+                               js_calloc(sizeof(JSShellContextData), 1);
     if (!data)
         return nullptr;
     data->startTime = PRMJ_Now();
@@ -458,10 +458,9 @@ EvalAndPrint(JSContext *cx, Handle<JSObject*> global, const char *bytes, size_t 
 {
     // Eval.
     JS::CompileOptions options(cx);
-    options.utf8 = true;
-    options.compileAndGo = true;
-    options.filename = "typein";
-    options.lineno = lineno;
+    options.setUTF8(true)
+           .setCompileAndGo(true)
+           .setFileAndLine("typein", lineno);
     RootedScript script(cx);
     script = JS::Compile(cx, global, options, bytes, length);
     if (!script)
@@ -917,36 +916,24 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 
         if (!JS_GetProperty(cx, opts, "newContext", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
-            bool b;
-            if (!JS_ValueToBoolean(cx, v, &b))
-                return false;
-            newContext = b;
-        }
+        if (!v.isUndefined())
+            newContext = ToBoolean(v);
 
         if (!JS_GetProperty(cx, opts, "compileAndGo", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
-            bool b;
-            if (!JS_ValueToBoolean(cx, v, &b))
-                return false;
-            compileAndGo = b;
-        }
+        if (!v.isUndefined())
+            compileAndGo = ToBoolean(v);
 
         if (!JS_GetProperty(cx, opts, "noScriptRval", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
-            bool b;
-            if (!JS_ValueToBoolean(cx, v, &b))
-                return false;
-            noScriptRval = b;
-        }
+        if (!v.isUndefined())
+            noScriptRval = ToBoolean(v);
 
         if (!JS_GetProperty(cx, opts, "fileName", &v))
             return false;
-        if (JSVAL_IS_NULL(v)) {
+        if (v.isNull()) {
             fileName = nullptr;
-        } else if (!JSVAL_IS_VOID(v)) {
+        } else if (!v.isUndefined()) {
             JSString *s = JS_ValueToString(cx, v);
             if (!s)
                 return false;
@@ -957,12 +944,12 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 
         if (!JS_GetProperty(cx, opts, "element", &v))
             return false;
-        if (!JSVAL_IS_PRIMITIVE(v))
-            element = JSVAL_TO_OBJECT(v);
+        if (v.isObject())
+            element = &v.toObject();
 
         if (!JS_GetProperty(cx, opts, "sourceURL", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
+        if (!v.isUndefined()) {
             sourceURL = JS_ValueToString(cx, v);
             if (!sourceURL)
                 return false;
@@ -970,7 +957,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 
         if (!JS_GetProperty(cx, opts, "sourceMapURL", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
+        if (!v.isUndefined()) {
             sourceMapURL = JS_ValueToString(cx, v);
             if (!sourceMapURL)
                 return false;
@@ -978,7 +965,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 
         if (!JS_GetProperty(cx, opts, "lineNumber", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
+        if (!v.isUndefined()) {
             uint32_t u;
             if (!ToUint32(cx, v, &u))
                 return false;
@@ -987,10 +974,9 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 
         if (!JS_GetProperty(cx, opts, "global", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
-            global = JSVAL_IS_PRIMITIVE(v) ? nullptr : JSVAL_TO_OBJECT(v);
-            if (global) {
-                global = js::UncheckedUnwrap(global);
+        if (!v.isUndefined()) {
+            if (v.isObject()) {
+                global = js::UncheckedUnwrap(&v.toObject());
                 if (!global)
                     return false;
             }
@@ -1003,25 +989,17 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 
         if (!JS_GetProperty(cx, opts, "catchTermination", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
-            bool b;
-            if (!JS_ValueToBoolean(cx, v, &b))
-                return false;
-            catchTermination = b;
-        }
+        if (!v.isUndefined())
+            catchTermination = ToBoolean(v);
 
         if (!JS_GetProperty(cx, opts, "saveFrameChain", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
-            bool b;
-            if (!JS_ValueToBoolean(cx, v, &b))
-                return false;
-            saveFrameChain = b;
-        }
+        if (!v.isUndefined())
+            saveFrameChain = ToBoolean(v);
 
         if (!JS_GetProperty(cx, opts, "sourcePolicy", &v))
             return false;
-        if (!JSVAL_IS_VOID(v)) {
+        if (!v.isUndefined()) {
             JSString *s = JS_ValueToString(cx, v);
             if (!s)
                 return false;
@@ -2454,13 +2432,14 @@ static bool
 sandbox_enumerate(JSContext *cx, HandleObject obj)
 {
     RootedValue v(cx);
-    bool b;
 
     if (!JS_GetProperty(cx, obj, "lazy", &v))
         return false;
 
-    JS_ValueToBoolean(cx, v, &b);
-    return !b || JS_EnumerateStandardClasses(cx, obj);
+    if (!ToBoolean(v))
+        return true;
+
+    return JS_EnumerateStandardClasses(cx, obj);
 }
 
 static bool
@@ -2468,13 +2447,11 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                 MutableHandleObject objp)
 {
     RootedValue v(cx);
-    bool b, resolved;
-
     if (!JS_GetProperty(cx, obj, "lazy", &v))
         return false;
 
-    JS_ValueToBoolean(cx, v, &b);
-    if (b) {
+    if (ToBoolean(v)) {
+        bool resolved;
         if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return false;
         if (resolved) {
@@ -4151,10 +4128,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "intern(str)",
 "  Internalize str in the atom table."),
 
-    JS_FN_HELP("clone", Clone, 1, 0,
-"clone(fun[, scope])",
-"  Clone function object."),
-
     JS_FN_HELP("getpda", GetPDA, 1, 0,
 "getpda(obj)",
 "  Get the property descriptors for obj."),
@@ -4299,6 +4272,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 };
 
 static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
+    JS_FN_HELP("clone", Clone, 1, 0,
+"clone(fun[, scope])",
+"  Clone function object."),
+
     JS_FN_HELP("getSelfHostedValue", GetSelfHostedValue, 1, 0,
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"
@@ -5191,12 +5168,12 @@ ShellCloseAsmJSCacheEntryForWrite(HandleObject global, size_t serializedSize, ui
 }
 
 static bool
-ShellBuildId(mozilla::Vector<char> *buildId)
+ShellBuildId(js::Vector<char> *buildId)
 {
     // The browser embeds the date into the buildid and the buildid is embedded
     // in the binary, so every 'make' necessarily builds a new firefox binary.
     // Fortunately, the actual firefox executable is tiny -- all the code is in
-    // libxul.so and other shared modules -- so this isn't a big deal. No so
+    // libxul.so and other shared modules -- so this isn't a big deal. Not so
     // for the statically-linked JS shell. To avoid recompmiling js.cpp and
     // re-linking 'js' on every 'make', we use a constant buildid and rely on
     // the shell user to manually clear the cache (deleting the dir passed to

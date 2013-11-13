@@ -10,23 +10,27 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_audio.h"
 
+#include <assert.h>  // assert
 #include <math.h>   // pow()
-
-#include <cassert>  // assert
-#include <cstring>  // memcpy()
+#include <string.h>  // memcpy()
 
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/system_wrappers/interface/trace_event.h"
 
 namespace webrtc {
+RTPReceiverStrategy* RTPReceiverStrategy::CreateAudioStrategy(
+    int32_t id, RtpData* data_callback,
+    RtpAudioFeedback* incoming_messages_callback) {
+  return new RTPReceiverAudio(id, data_callback, incoming_messages_callback);
+}
+
 RTPReceiverAudio::RTPReceiverAudio(const int32_t id,
                                    RtpData* data_callback,
                                    RtpAudioFeedback* incoming_messages_callback)
     : RTPReceiverStrategy(data_callback),
+      TelephoneEventHandler(),
       id_(id),
-      critical_section_rtp_receiver_audio_(
-          CriticalSectionWrapper::CreateCriticalSection()),
       last_received_frequency_(8000),
       telephone_event_forward_to_decoder_(false),
       telephone_event_payload_type_(-1),
@@ -37,42 +41,36 @@ RTPReceiverAudio::RTPReceiverAudio(const int32_t id,
       cng_payload_type_(-1),
       g722_payload_type_(-1),
       last_received_g722_(false),
+      num_energy_(0),
+      current_remote_energy_(),
       cb_audio_feedback_(incoming_messages_callback) {
   last_payload_.Audio.channels = 1;
-}
-
-uint32_t RTPReceiverAudio::AudioFrequency() const {
-  CriticalSectionScoped lock(critical_section_rtp_receiver_audio_.get());
-  if (last_received_g722_) {
-    return 8000;
-  }
-  return last_received_frequency_;
+  memset(current_remote_energy_, 0, sizeof(current_remote_energy_));
 }
 
 // Outband TelephoneEvent(DTMF) detection
-int RTPReceiverAudio::SetTelephoneEventForwardToDecoder(
+void RTPReceiverAudio::SetTelephoneEventForwardToDecoder(
     bool forward_to_decoder) {
-  CriticalSectionScoped lock(critical_section_rtp_receiver_audio_.get());
+  CriticalSectionScoped lock(crit_sect_.get());
   telephone_event_forward_to_decoder_ = forward_to_decoder;
-  return 0;
 }
 
 // Is forwarding of outband telephone events turned on/off?
 bool RTPReceiverAudio::TelephoneEventForwardToDecoder() const {
-  CriticalSectionScoped lock(critical_section_rtp_receiver_audio_.get());
+  CriticalSectionScoped lock(crit_sect_.get());
   return telephone_event_forward_to_decoder_;
 }
 
 bool RTPReceiverAudio::TelephoneEventPayloadType(
-    const int8_t payload_type) const {
-  CriticalSectionScoped lock(critical_section_rtp_receiver_audio_.get());
+    int8_t payload_type) const {
+  CriticalSectionScoped lock(crit_sect_.get());
   return (telephone_event_payload_type_ == payload_type) ? true : false;
 }
 
-bool RTPReceiverAudio::CNGPayloadType(const int8_t payload_type,
+bool RTPReceiverAudio::CNGPayloadType(int8_t payload_type,
                                       uint32_t* frequency,
                                       bool* cng_payload_type_has_changed) {
-  CriticalSectionScoped lock(critical_section_rtp_receiver_audio_.get());
+  CriticalSectionScoped lock(crit_sect_.get());
   *cng_payload_type_has_changed = false;
 
   //  We can have four CNG on 8000Hz, 16000Hz, 32000Hz and 48000Hz.
@@ -118,8 +116,7 @@ bool RTPReceiverAudio::CNGPayloadType(const int8_t payload_type,
   return false;
 }
 
-bool RTPReceiverAudio::ShouldReportCsrcChanges(
-    uint8_t payload_type) const {
+bool RTPReceiverAudio::ShouldReportCsrcChanges(uint8_t payload_type) const {
   // Don't do this for DTMF packets, otherwise it's fine.
   return !TelephoneEventPayloadType(payload_type);
 }
@@ -158,9 +155,9 @@ bool RTPReceiverAudio::ShouldReportCsrcChanges(
 // -   G7221     frame         N/A
 int32_t RTPReceiverAudio::OnNewPayloadTypeCreated(
     const char payload_name[RTP_PAYLOAD_NAME_SIZE],
-    const int8_t payload_type,
-    const uint32_t frequency) {
-  CriticalSectionScoped lock(critical_section_rtp_receiver_audio_.get());
+    int8_t payload_type,
+    uint32_t frequency) {
+  CriticalSectionScoped lock(crit_sect_.get());
 
   if (ModuleRTPUtility::StringCompare(payload_name, "telephone-event", 15)) {
     telephone_event_payload_type_ = payload_type;
@@ -183,32 +180,40 @@ int32_t RTPReceiverAudio::OnNewPayloadTypeCreated(
   return 0;
 }
 
-int32_t RTPReceiverAudio::ParseRtpPacket(
-    WebRtcRTPHeader* rtp_header,
-    const ModuleRTPUtility::PayloadUnion& specific_payload,
-    const bool is_red,
-    const uint8_t* packet,
-    const uint16_t packet_length,
-    const int64_t timestamp_ms,
-    const bool is_first_packet) {
+int32_t RTPReceiverAudio::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
+                                         const PayloadUnion& specific_payload,
+                                         bool is_red,
+                                         const uint8_t* payload,
+                                         uint16_t payload_length,
+                                         int64_t timestamp_ms,
+                                         bool is_first_packet) {
   TRACE_EVENT2("webrtc_rtp", "Audio::ParseRtp",
                "seqnum", rtp_header->header.sequenceNumber,
                "timestamp", rtp_header->header.timestamp);
   rtp_header->type.Audio.numEnergy = rtp_header->header.numCSRCs;
-  const uint8_t* payload_data =
-      ModuleRTPUtility::GetPayloadData(rtp_header->header, packet);
-  const uint16_t payload_data_length =
-      ModuleRTPUtility::GetPayloadDataLength(rtp_header->header, packet_length);
+  num_energy_ = rtp_header->type.Audio.numEnergy;
+  if (rtp_header->type.Audio.numEnergy > 0 &&
+      rtp_header->type.Audio.numEnergy <= kRtpCsrcSize) {
+    memcpy(current_remote_energy_,
+           rtp_header->type.Audio.arrOfEnergy,
+           rtp_header->type.Audio.numEnergy);
+  }
+  const uint16_t payload_data_length = payload_length -
+      rtp_header->header.paddingLength;
 
   return ParseAudioCodecSpecific(rtp_header,
-                                 payload_data,
+                                 payload,
                                  payload_data_length,
                                  specific_payload.Audio,
                                  is_red);
 }
 
-int32_t RTPReceiverAudio::GetFrequencyHz() const {
-  return AudioFrequency();
+int RTPReceiverAudio::GetPayloadTypeFrequency() const {
+  CriticalSectionScoped lock(crit_sect_.get());
+  if (last_received_g722_) {
+    return 8000;
+  }
+  return last_received_frequency_;
 }
 
 RTPAliveType RTPReceiverAudio::ProcessDeadOrAlive(
@@ -223,11 +228,10 @@ RTPAliveType RTPReceiverAudio::ProcessDeadOrAlive(
   }
 }
 
-void RTPReceiverAudio::CheckPayloadChanged(
-    const int8_t payload_type,
-    ModuleRTPUtility::PayloadUnion* specific_payload,
-    bool* should_reset_statistics,
-    bool* should_discard_changes) {
+void RTPReceiverAudio::CheckPayloadChanged(int8_t payload_type,
+                                           PayloadUnion* specific_payload,
+                                           bool* should_reset_statistics,
+                                           bool* should_discard_changes) {
   *should_discard_changes = false;
   *should_reset_statistics = false;
 
@@ -251,12 +255,24 @@ void RTPReceiverAudio::CheckPayloadChanged(
   }
 }
 
+int RTPReceiverAudio::Energy(uint8_t array_of_energy[kRtpCsrcSize]) const {
+  CriticalSectionScoped cs(crit_sect_.get());
+
+  assert(num_energy_ <= kRtpCsrcSize);
+
+  if (num_energy_ > 0) {
+    memcpy(array_of_energy, current_remote_energy_,
+           sizeof(uint8_t) * num_energy_);
+  }
+  return num_energy_;
+}
+
 int32_t RTPReceiverAudio::InvokeOnInitializeDecoder(
     RtpFeedback* callback,
-    const int32_t id,
-    const int8_t payload_type,
+    int32_t id,
+    int8_t payload_type,
     const char payload_name[RTP_PAYLOAD_NAME_SIZE],
-    const ModuleRTPUtility::PayloadUnion& specific_payload) const {
+    const PayloadUnion& specific_payload) const {
   if (-1 == callback->OnInitializeDecoder(id,
                                           payload_type,
                                           payload_name,
@@ -277,9 +293,9 @@ int32_t RTPReceiverAudio::InvokeOnInitializeDecoder(
 int32_t RTPReceiverAudio::ParseAudioCodecSpecific(
     WebRtcRTPHeader* rtp_header,
     const uint8_t* payload_data,
-    const uint16_t payload_length,
-    const ModuleRTPUtility::AudioPayload& audio_specific,
-    const bool is_red) {
+    uint16_t payload_length,
+    const AudioPayload& audio_specific,
+    bool is_red) {
 
   if (payload_length == 0) {
     return 0;
@@ -288,7 +304,7 @@ int32_t RTPReceiverAudio::ParseAudioCodecSpecific(
   bool telephone_event_packet =
       TelephoneEventPayloadType(rtp_header->header.payloadType);
   if (telephone_event_packet) {
-    CriticalSectionScoped lock(critical_section_rtp_receiver_audio_.get());
+    CriticalSectionScoped lock(crit_sect_.get());
 
     // RFC 4733 2.3
     // 0                   1                   2                   3
@@ -333,7 +349,7 @@ int32_t RTPReceiverAudio::ParseAudioCodecSpecific(
   }
 
   {
-    CriticalSectionScoped lock(critical_section_rtp_receiver_audio_.get());
+    CriticalSectionScoped lock(crit_sect_.get());
 
     if (!telephone_event_packet) {
       last_received_frequency_ = audio_specific.frequency;
@@ -366,6 +382,7 @@ int32_t RTPReceiverAudio::ParseAudioCodecSpecific(
       }
     }
   }
+  // TODO(holmer): Break this out to have RED parsing handled generically.
   if (is_red && !(payload_data[0] & 0x80)) {
     // we recive only one frame packed in a RED packet remove the RED wrapper
     rtp_header->header.payloadType = payload_data[0];

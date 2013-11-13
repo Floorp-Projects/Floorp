@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ4_DSP_HELPER_H_
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ4_DSP_HELPER_H_
 
-#include <cstring>  // Access to size_t.
+#include <string.h>  // Access to size_t.
 
 #include "webrtc/modules/audio_coding/neteq4/audio_multi_vector.h"
 #include "webrtc/system_wrappers/interface/constructor_magic.h"
@@ -103,25 +103,25 @@ class DspHelper {
   // is decreased by |factor_decrement| (Q14) for each sample. The gain for
   // |input2| is the complement 16384 - mix_factor.
   static void CrossFade(const int16_t* input1, const int16_t* input2,
-                        int length, int16_t* mix_factor,
+                        size_t length, int16_t* mix_factor,
                         int16_t factor_decrement, int16_t* output);
 
   // Scales |input| with an increasing gain. Applies |factor| (Q14) to the first
   // sample and increases the gain by |increment| (Q20) for each sample. The
   // result is written to |output|. |length| samples are processed.
-  static void UnmuteSignal(const int16_t* input, int length, int16_t* factor,
+  static void UnmuteSignal(const int16_t* input, size_t length, int16_t* factor,
                            int16_t increment, int16_t* output);
 
   // Starts at unity gain and gradually fades out |signal|. For each sample,
   // the gain is reduced by |mute_slope| (Q14). |length| samples are processed.
-  static void MuteSignal(int16_t* signal, int16_t mute_slope, int length);
+  static void MuteSignal(int16_t* signal, int16_t mute_slope, size_t length);
 
   // Downsamples |input| from |sample_rate_hz| to 4 kHz sample rate. The input
   // has |input_length| samples, and the method will write |output_length|
   // samples to |output|. Compensates for the phase delay of the downsampling
   // filters if |compensate_delay| is true. Returns -1 if the input is too short
   // to produce |output_length| samples, otherwise 0.
-  static int DownsampleTo4kHz(const int16_t* input, int input_length,
+  static int DownsampleTo4kHz(const int16_t* input, size_t input_length,
                               int output_length, int input_rate_hz,
                               bool compensate_delay, int16_t* output);
 

@@ -11,7 +11,7 @@
 #include "webrtc/modules/audio_coding/main/source/acm_amr.h"
 
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
-#include "webrtc/modules/audio_coding/main/source/acm_common_defs.h"
+#include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/main/source/acm_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq.h"
 #include "webrtc/modules/audio_coding/neteq/interface/webrtc_neteq_help_macros.h"
@@ -48,6 +48,8 @@
 #endif
 
 namespace webrtc {
+
+namespace acm1 {
 
 #ifndef WEBRTC_CODEC_AMR
 ACMAMR::ACMAMR(int16_t /* codec_id */)
@@ -421,4 +423,8 @@ ACMAMRPackingFormat ACMAMR::AMRDecoderPackingFormat() const {
 }
 
 #endif
-}
+
+}  // namespace acm1
+
+}  // namespace webrtc
+

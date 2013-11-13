@@ -119,4 +119,4 @@ VPMSimpleSpatialResampler::ApplyResample(int32_t width,
     return true;
 }
 
-} //namespace
+}  // namespace

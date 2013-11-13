@@ -55,7 +55,7 @@ const STR = Services.strings.createBundle(DBG_STRINGS_URI);
 
 /**
  * A tree view for inspecting scopes, objects and properties.
- * Iterable via "for (let [id, scope] in instance) { }".
+ * Iterable via "for (let [id, scope] of instance) { }".
  * Requires the devtools common.css and debugger.css skin stylesheets.
  *
  * To allow replacing variable or property values in this view, provide an
@@ -1126,7 +1126,7 @@ VariablesView.getterOrSetterDeleteCallback = function(aItem) {
 
 /**
  * A Scope is an object holding Variable instances.
- * Iterable via "for (let [name, variable] in instance) { }".
+ * Iterable via "for (let [name, variable] of instance) { }".
  *
  * @param VariablesView aView
  *        The view to contain this scope.
@@ -2077,7 +2077,7 @@ DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_batchItems", Array);
 
 /**
  * A Variable is a Scope holding Property instances.
- * Iterable via "for (let [name, property] in instance) { }".
+ * Iterable via "for (let [name, property] of instance) { }".
  *
  * @param Scope aScope
  *        The scope to contain this variable.
@@ -2867,7 +2867,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
 /**
  * A Property is a Variable holding additional child Property instances.
- * Iterable via "for (let [name, property] in instance) { }".
+ * Iterable via "for (let [name, property] of instance) { }".
  *
  * @param Variable aVar
  *        The variable to contain this property.
@@ -2928,13 +2928,11 @@ Property.prototype = Heritage.extend(Variable.prototype, {
 /**
  * A generator-iterator over the VariablesView, Scopes, Variables and Properties.
  */
-VariablesView.prototype.__iterator__ =
-Scope.prototype.__iterator__ =
-Variable.prototype.__iterator__ =
-Property.prototype.__iterator__ = function() {
-  for (let item of this._store) {
-    yield item;
-  }
+VariablesView.prototype["@@iterator"] =
+Scope.prototype["@@iterator"] =
+Variable.prototype["@@iterator"] =
+Property.prototype["@@iterator"] = function*() {
+  yield* this._store;
 };
 
 /**

@@ -25,25 +25,33 @@ class PushSincResampler : public SincResamplerCallback {
   // Provide the size of the source and destination blocks in samples. These
   // must correspond to the same time duration (typically 10 ms) as the sample
   // ratio is inferred from them.
-  PushSincResampler(int src_block_size, int dst_block_size);
+  PushSincResampler(int source_frames, int destination_frames);
   virtual ~PushSincResampler();
 
-  // Perform the resampling. |source_length| must always equal the
-  // |src_block_size| provided at construction. |destination_capacity| must be
-  // at least as large as |dst_block_size|. Returns the number of samples
+  // Perform the resampling. |source_frames| must always equal the
+  // |source_frames| provided at construction. |destination_capacity| must be
+  // at least as large as |destination_frames|. Returns the number of samples
   // provided in destination (for convenience, since this will always be equal
-  // to |dst_block_size|).
-  int Resample(const int16_t* source, int source_length,
+  // to |destination_frames|).
+  int Resample(const int16_t* source, int source_frames,
                int16_t* destination, int destination_capacity);
 
   // Implements SincResamplerCallback.
-  virtual void Run(float* destination, int frames);
+  virtual void Run(int frames, float* destination) OVERRIDE;
+
+  SincResampler* get_resampler_for_testing() { return resampler_.get(); }
 
  private:
   scoped_ptr<SincResampler> resampler_;
   scoped_array<float> float_buffer_;
   const int16_t* source_ptr_;
-  const int dst_size_;
+  const int destination_frames_;
+
+  // True on the first call to Resample(), to prime the SincResampler buffer.
+  bool first_pass_;
+
+  // Used to assert we are only requested for as much data as is available.
+  int source_available_;
 
   DISALLOW_COPY_AND_ASSIGN(PushSincResampler);
 };

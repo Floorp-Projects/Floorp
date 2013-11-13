@@ -150,6 +150,7 @@ fails-if(Android||B2G) pref(security.fileuri.strict_origin_policy,true) == filte
 == filter-foreignObject-01.svg pass.svg
 == filter-in-mask-01.svg pass.svg
 skip-if(B2G) == filter-invalidation-01.svg pass.svg
+== filter-result-01.svg filter-result-01-ref.svg
 skip-if(B2G) == filter-scaled-01.svg pass.svg
 skip-if(B2G) == filter-scaled-02.html filter-scaled-02-ref.html
 == filter-translated-01.svg filter-translated-01-ref.svg
@@ -315,6 +316,7 @@ HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 fails-if(OSX==10.8) == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg # bug 896487
 == stroke-dasharray-and-pathLength-01.svg pass.svg
 == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg 
+== stroke-dashoffset-01.svg pass.svg
 == stroke-linecap-square-w-zero-length-segs-01.svg pass.svg
 == stroke-linecap-square-w-zero-length-segs-02.svg pass.svg
 == textPath-01.svg textPath-01-ref.svg

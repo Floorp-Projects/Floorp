@@ -31,12 +31,12 @@ class EventPosix : public EventWrapper {
 
   virtual ~EventPosix();
 
-  virtual EventTypeWrapper Wait(unsigned long max_time);
-  virtual bool Set();
-  virtual bool Reset();
+  virtual EventTypeWrapper Wait(unsigned long max_time) OVERRIDE;
+  virtual bool Set() OVERRIDE;
+  virtual bool Reset() OVERRIDE;
 
-  virtual bool StartTimer(bool periodic, unsigned long time);
-  virtual bool StopTimer();
+  virtual bool StartTimer(bool periodic, unsigned long time) OVERRIDE;
+  virtual bool StopTimer() OVERRIDE;
 
  private:
   EventPosix();

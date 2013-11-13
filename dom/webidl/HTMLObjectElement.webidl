@@ -163,6 +163,15 @@ interface MozObjectLoadingContent {
   void playPlugin();
 
   /**
+   * Forces a re-evaluation and reload of the tag, optionally invalidating its
+   * click-to-play state.  This can be used when the MIME type that provides a
+   * type has changed, for instance, to force the tag to re-evalulate the
+   * handler to use.
+   */
+  [ChromeOnly, Throws]
+  void reload(boolean aClearActivation);
+
+  /**
    * This attribute will return true if the current content type has been
    * activated, either explicitly or by passing checks that would have it be
    * click-to-play or play-preview.

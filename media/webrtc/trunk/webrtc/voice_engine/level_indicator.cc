@@ -100,4 +100,4 @@ int16_t AudioLevel::LevelFullRange() const
 
 }  // namespace voe
 
-}  //  namespace webrtc
+}  // namespace webrtc

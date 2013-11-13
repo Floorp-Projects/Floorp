@@ -1,0 +1,9 @@
+{
+    "name": "empty",
+    "license": "MPL 2.0",
+    "author": "",
+    "version": "0.1",
+    "fullName": "a long fullName",
+    "id": "jid1-80123",
+    "description": "test addon name fallback to 'fullName' key"
+}

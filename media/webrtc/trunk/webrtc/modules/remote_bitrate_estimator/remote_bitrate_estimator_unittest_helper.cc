@@ -18,6 +18,13 @@ enum { kMtu = 1200 };
 
 namespace testing {
 
+void TestBitrateObserver::OnReceiveBitrateChanged(
+    const std::vector<unsigned int>& ssrcs,
+    unsigned int bitrate) {
+  latest_bitrate_ = bitrate;
+  updated_ = true;
+}
+
 RtpStream::RtpStream(int fps,
                      int bitrate_bps,
                      unsigned int ssrc,
@@ -178,25 +185,16 @@ int64_t StreamGenerator::GenerateFrame(RtpStream::PacketList* packets,
   it = std::min_element(streams_.begin(), streams_.end(), RtpStream::Compare);
   return (*it).second->next_rtp_time();
 }
-
-void StreamGenerator::Rtcps(RtcpList* rtcps, int64_t time_now_us) const {
-  for (StreamMap::const_iterator it = streams_.begin(); it != streams_.end();
-      ++it) {
-    RtpStream::RtcpPacket* rtcp = it->second->Rtcp(time_now_us);
-    if (rtcp) {
-      rtcps->push_front(rtcp);
-    }
-  }
-}
 }  // namespace testing
 
 RemoteBitrateEstimatorTest::RemoteBitrateEstimatorTest()
     : clock_(0),
-      align_streams_(false),
       bitrate_observer_(new testing::TestBitrateObserver),
       stream_generator_(new testing::StreamGenerator(
           1e6,  // Capacity.
           clock_.TimeInMicroseconds())) {}
+
+RemoteBitrateEstimatorTest::~RemoteBitrateEstimatorTest() {}
 
 void RemoteBitrateEstimatorTest::AddDefaultStream() {
   stream_generator_->AddStream(new testing::RtpStream(
@@ -246,18 +244,6 @@ bool RemoteBitrateEstimatorTest::GenerateAndProcessFrame(unsigned int ssrc,
   bool overuse = false;
   while (!packets.empty()) {
     testing::RtpStream::RtpPacket* packet = packets.front();
-    if (align_streams_) {
-      testing::StreamGenerator::RtcpList rtcps;
-      stream_generator_->Rtcps(&rtcps, clock_.TimeInMicroseconds());
-      for (testing::StreamGenerator::RtcpList::iterator it = rtcps.begin();
-          it != rtcps.end(); ++it) {
-        bitrate_estimator_->IncomingRtcp((*it)->ssrc,
-                                         (*it)->ntp_secs,
-                                         (*it)->ntp_frac,
-                                         (*it)->timestamp);
-        delete *it;
-      }
-    }
     bitrate_observer_->Reset();
     IncomingPacket(packet->ssrc,
                    packet->size,

@@ -6,39 +6,17 @@
 #ifndef _mozilla_time_change_observer_h_
 #define _mozilla_time_change_observer_h_
 
-#include "mozilla/Hal.h"
-#include "mozilla/Observer.h"
-#include "mozilla/HalTypes.h"
-#include "nsPIDOMWindow.h"
-#include "nsWeakPtr.h"
-#include "nsTObserverArray.h"
+#include "nscore.h"
 
-typedef mozilla::Observer<int64_t> SystemClockChangeObserver;
-typedef mozilla::Observer<mozilla::hal::SystemTimezoneChangeInformation> SystemTimezoneChangeObserver;
+class nsPIDOMWindow;
 
-class nsSystemTimeChangeObserver : public SystemClockChangeObserver,
-                                   public SystemTimezoneChangeObserver
-{
-  typedef nsTObserverArray<nsWeakPtr> ListenerArray;
-public:
-  static nsSystemTimeChangeObserver* GetInstance();
-  virtual ~nsSystemTimeChangeObserver();
+namespace mozilla {
+namespace time {
 
-  // Implementing hal::SystemClockChangeObserver::Notify()
-  void Notify(const int64_t& aClockDeltaMS);
+nsresult AddWindowListener(nsPIDOMWindow* aWindow);
+nsresult RemoveWindowListener(nsPIDOMWindow* aWindow);
 
-  // Implementing hal::SystemTimezoneChangeObserver::Notify()
-  void Notify(
-    const mozilla::hal::SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo);
-
-  static nsresult AddWindowListener(nsPIDOMWindow* aWindow);
-  static nsresult RemoveWindowListener(nsPIDOMWindow* aWindow);
-private:
-  nsresult AddWindowListenerImpl(nsPIDOMWindow* aWindow);
-  nsresult RemoveWindowListenerImpl(nsPIDOMWindow* aWindow);
-  nsSystemTimeChangeObserver() { };
-  ListenerArray mWindowListeners;
-  void FireMozTimeChangeEvent();
-};
+} // namespace time
+} // namespace mozilla
 
 #endif //_mozilla_time_change_observer_h_

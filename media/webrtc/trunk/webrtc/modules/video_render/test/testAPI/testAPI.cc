@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "testAPI.h"
+#include "webrtc/modules/video_render/test/testAPI/testAPI.h"
 
 #include <stdio.h>
 
 #if defined(_WIN32)
 #include <tchar.h>
 #include <windows.h>
-#include <cassert>
+#include <assert.h>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -24,21 +24,21 @@
 
 #elif defined(WEBRTC_LINUX) && !defined(WEBRTC_ANDROID)
 
-#include <iostream>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <iostream>
 #include <sys/time.h>
 
 #endif
 
-#include "common_types.h"
-#include "process_thread.h"
-#include "module_common_types.h"
-#include "video_render_defines.h"
-#include "video_render.h"
-#include "tick_util.h"
-#include "trace.h"
-#include "system_wrappers/interface/sleep.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/utility/interface/process_thread.h"
+#include "webrtc/modules/video_render/include/video_render.h"
+#include "webrtc/modules/video_render/include/video_render_defines.h"
+#include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 using namespace webrtc;
 

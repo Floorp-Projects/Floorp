@@ -10,10 +10,11 @@
 
 #include "webrtc/modules/remote_bitrate_estimator/remote_rate_control.h"
 
+#include <assert.h>
+#include <math.h>
+#include <string.h>
+
 #include <algorithm>
-#include <cassert>
-#include <cmath>
-#include <cstring>
 
 #include "webrtc/system_wrappers/interface/trace.h"
 
@@ -381,4 +382,4 @@ void RemoteRateControl::StateStr(BandwidthUsage state, char* str) {
       assert(false);
   }
 }
-} // namespace webrtc
+}  // namespace webrtc

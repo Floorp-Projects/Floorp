@@ -11,7 +11,7 @@
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/video_processing/main/interface/video_processing.h"
 #include "webrtc/modules/video_processing/main/source/content_analysis.h"
-#include "webrtc/modules/video_processing/main/test/unit_test/unit_test.h"
+#include "webrtc/modules/video_processing/main/test/unit_test/video_processing_unittest.h"
 
 namespace webrtc {
 

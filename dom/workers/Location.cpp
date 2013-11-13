@@ -15,8 +15,7 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerLocation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerLocation, Release)
 
 /* static */ already_AddRefed<WorkerLocation>
-WorkerLocation::Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
-                       WorkerPrivate::LocationInfo& aInfo)
+WorkerLocation::Create(WorkerPrivate::LocationInfo& aInfo)
 {
   nsRefPtr<WorkerLocation> location =
     new WorkerLocation(NS_ConvertUTF8toUTF16(aInfo.mHref),

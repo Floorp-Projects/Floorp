@@ -10,7 +10,8 @@
 
 #include "webrtc/modules/audio_coding/main/test/opus_test.h"
 
-#include <cassert>
+#include <assert.h>
+
 #include <string>
 
 #include "testing/gtest/include/gtest/gtest.h"
@@ -28,7 +29,7 @@
 namespace webrtc {
 
 OpusTest::OpusTest()
-    : acm_receiver_(NULL),
+    : acm_receiver_(AudioCodingModule::Create(0)),
       channel_a2b_(NULL),
       counter_(0),
       payload_type_(255),
@@ -36,10 +37,6 @@ OpusTest::OpusTest()
 }
 
 OpusTest::~OpusTest() {
-  if (acm_receiver_ != NULL) {
-    AudioCodingModule::Destroy(acm_receiver_);
-    acm_receiver_ = NULL;
-  }
   if (channel_a2b_ != NULL) {
     delete channel_a2b_;
     channel_a2b_ = NULL;
@@ -51,6 +48,14 @@ OpusTest::~OpusTest() {
   if (opus_stereo_encoder_ != NULL) {
     WebRtcOpus_EncoderFree(opus_stereo_encoder_);
     opus_stereo_encoder_ = NULL;
+  }
+  if (opus_mono_decoder_ != NULL) {
+    WebRtcOpus_DecoderFree(opus_mono_decoder_);
+    opus_mono_decoder_ = NULL;
+  }
+  if (opus_stereo_decoder_ != NULL) {
+    WebRtcOpus_DecoderFree(opus_stereo_decoder_);
+    opus_stereo_decoder_ = NULL;
   }
 }
 
@@ -78,9 +83,13 @@ void OpusTest::Perform() {
   ASSERT_GT(WebRtcOpus_EncoderCreate(&opus_mono_encoder_, 1), -1);
   ASSERT_GT(WebRtcOpus_EncoderCreate(&opus_stereo_encoder_, 2), -1);
 
-  // Create and initialize one ACM, to be used as receiver.
-  acm_receiver_ = AudioCodingModule::Create(0);
-  ASSERT_TRUE(acm_receiver_ != NULL);
+  // Create Opus decoders for mono and stereo for stand-alone testing of Opus.
+  ASSERT_GT(WebRtcOpus_DecoderCreate(&opus_mono_decoder_, 1), -1);
+  ASSERT_GT(WebRtcOpus_DecoderCreate(&opus_stereo_decoder_, 2), -1);
+  ASSERT_GT(WebRtcOpus_DecoderInitNew(opus_mono_decoder_), -1);
+  ASSERT_GT(WebRtcOpus_DecoderInitNew(opus_stereo_decoder_), -1);
+
+  ASSERT_TRUE(acm_receiver_.get() != NULL);
   EXPECT_EQ(0, acm_receiver_->InitializeReceiver());
 
   // Register Opus stereo as receiving codec.
@@ -92,7 +101,7 @@ void OpusTest::Perform() {
 
   // Create and connect the channel.
   channel_a2b_ = new TestPackStereo;
-  channel_a2b_->RegisterReceiverACM(acm_receiver_);
+  channel_a2b_->RegisterReceiverACM(acm_receiver_.get());
 
   //
   // Test Stereo.
@@ -122,6 +131,26 @@ void OpusTest::Perform() {
   Run(channel_a2b_, audio_channels, 64000, 2880);
 
   out_file_.Close();
+  out_file_standalone_.Close();
+
+  //
+  // Test Opus stereo with packet-losses.
+  //
+
+  test_cntr++;
+  OpenOutFile(test_cntr);
+
+  // Run Opus with 20 ms frame size, 1% packet loss.
+  Run(channel_a2b_, audio_channels, 64000, 960, 1);
+
+  // Run Opus with 20 ms frame size, 5% packet loss.
+  Run(channel_a2b_, audio_channels, 64000, 960, 5);
+
+  // Run Opus with 20 ms frame size, 10% packet loss.
+  Run(channel_a2b_, audio_channels, 64000, 960, 10);
+
+  out_file_.Close();
+  out_file_standalone_.Close();
 
   //
   // Test Mono.
@@ -153,10 +182,29 @@ void OpusTest::Perform() {
   // Run Opus with 60 ms frame size.
   Run(channel_a2b_, audio_channels, 32000, 2880);
 
+  out_file_.Close();
+  out_file_standalone_.Close();
+
+  //
+  // Test Opus mono with packet-losses.
+  //
+  test_cntr++;
+  OpenOutFile(test_cntr);
+
+  // Run Opus with 20 ms frame size, 1% packet loss.
+  Run(channel_a2b_, audio_channels, 64000, 960, 1);
+
+  // Run Opus with 20 ms frame size, 5% packet loss.
+  Run(channel_a2b_, audio_channels, 64000, 960, 5);
+
+  // Run Opus with 20 ms frame size, 10% packet loss.
+  Run(channel_a2b_, audio_channels, 64000, 960, 10);
+
   // Close the files.
   in_file_stereo_.Close();
   in_file_mono_.Close();
   out_file_.Close();
+  out_file_standalone_.Close();
 #endif
 }
 
@@ -165,27 +213,20 @@ void OpusTest::Run(TestPackStereo* channel, int channels, int bitrate,
   AudioFrame audio_frame;
   int32_t out_freq_hz_b = out_file_.SamplingFrequency();
   int16_t audio[480 * 12 * 2];  // Can hold 120 ms stereo audio.
+  int16_t out_audio[480 * 12 * 2];  // Can hold 120 ms stereo audio.
+  int16_t audio_type;
   int written_samples = 0;
   int read_samples = 0;
+  int decoded_samples = 0;
   channel->reset_payload_size();
+  counter_ = 0;
 
   // Set encoder rate.
   EXPECT_EQ(0, WebRtcOpus_SetBitRate(opus_mono_encoder_, bitrate));
   EXPECT_EQ(0, WebRtcOpus_SetBitRate(opus_stereo_encoder_, bitrate));
 
   while (1) {
-    // Simulate packet loss by setting |packet_loss_| to "true" in
-    // |percent_loss| percent of the loops.
-    // TODO(tlegrand): Move handling of loss simulation to TestPackStereo.
-    if (percent_loss > 0) {
-      if (counter_ == floor((100 / percent_loss) + 0.5)) {
-        counter_ = 0;
-        channel->set_lost_packet(true);
-      } else {
-        channel->set_lost_packet(false);
-      }
-      counter_++;
-    }
+    bool lost_packet = false;
 
     // Get 10 msec of audio.
     if (channels == 1) {
@@ -200,10 +241,11 @@ void OpusTest::Run(TestPackStereo* channel, int channels, int bitrate,
       in_file_stereo_.Read10MsData(audio_frame);
     }
 
-    // Input audio is sampled at 32 kHz, but Opus operates at 48 kHz.
-    // Resampling is required.
-    EXPECT_EQ(480, resampler_.Resample10Msec(audio_frame.data_, 32000,
-                                             &audio[written_samples], 48000,
+    // If input audio is sampled at 32 kHz, resampling to 48 kHz is required.
+    EXPECT_EQ(480, resampler_.Resample10Msec(audio_frame.data_,
+                                             audio_frame.sample_rate_hz_,
+                                             &audio[written_samples],
+                                             48000,
                                              channels));
     written_samples += 480 * channels;
 
@@ -228,6 +270,45 @@ void OpusTest::Run(TestPackStereo* channel, int channels, int bitrate,
               frame_length, kMaxBytes, bitstream);
           ASSERT_GT(bitstream_len_byte, -1);
         }
+
+        // Simulate packet loss by setting |packet_loss_| to "true" in
+        // |percent_loss| percent of the loops.
+        // TODO(tlegrand): Move handling of loss simulation to TestPackStereo.
+        if (percent_loss > 0) {
+          if (counter_ == floor((100 / percent_loss) + 0.5)) {
+            counter_ = 0;
+            lost_packet = true;
+            channel->set_lost_packet(true);
+          } else {
+            lost_packet = false;
+            channel->set_lost_packet(false);
+          }
+          counter_++;
+        }
+
+        // Run stand-alone Opus decoder, or decode PLC.
+        if (channels == 1) {
+          if (!lost_packet) {
+            decoded_samples += WebRtcOpus_DecodeNew(
+                opus_mono_decoder_, bitstream, bitstream_len_byte,
+                &out_audio[decoded_samples * channels], &audio_type);
+          } else {
+            decoded_samples += WebRtcOpus_DecodePlc(
+                opus_mono_decoder_, &out_audio[decoded_samples * channels], 1);
+          }
+        } else {
+          if (!lost_packet) {
+            decoded_samples += WebRtcOpus_DecodeNew(
+                opus_stereo_decoder_, bitstream, bitstream_len_byte,
+                &out_audio[decoded_samples * channels], &audio_type);
+          } else {
+            decoded_samples += WebRtcOpus_DecodePlc(
+                opus_stereo_decoder_, &out_audio[decoded_samples * channels],
+                1);
+          }
+        }
+
+        // Send data to the channel. "channel" will handle the loss simulation.
         channel->SendData(kAudioFrameSpeech, payload_type_, rtp_timestamp_,
                           bitstream, bitstream_len_byte, NULL);
         rtp_timestamp_ += frame_length;
@@ -246,6 +327,10 @@ void OpusTest::Run(TestPackStereo* channel, int channels, int bitrate,
     out_file_.Write10MsData(
         audio_frame.data_,
         audio_frame.samples_per_channel_ * audio_frame.num_channels_);
+
+    // Write stand-alone speech to file.
+    out_file_standalone_.Write10MsData(out_audio, decoded_samples * channels);
+    decoded_samples = 0;
   }
 
   if (in_file_mono_.EndOfFile()) {
@@ -265,6 +350,12 @@ void OpusTest::OpenOutFile(int test_number) {
       << test_number << ".pcm";
   file_name = file_stream.str();
   out_file_.Open(file_name, 32000, "wb");
+  file_stream.str("");
+  file_name = file_stream.str();
+  file_stream << webrtc::test::OutputPath() << "opusstandalone_out_"
+      << test_number << ".pcm";
+  file_name = file_stream.str();
+  out_file_standalone_.Open(file_name, 32000, "wb");
 }
 
 }  // namespace webrtc

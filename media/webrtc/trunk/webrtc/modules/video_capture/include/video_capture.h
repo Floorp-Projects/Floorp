@@ -152,5 +152,5 @@ protected:
   virtual ~VideoCaptureModule() {};
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 #endif  // WEBRTC_MODULES_VIDEO_CAPTURE_INCLUDE_VIDEO_CAPTURE_H_

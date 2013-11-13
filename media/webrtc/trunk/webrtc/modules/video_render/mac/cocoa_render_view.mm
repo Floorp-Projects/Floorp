@@ -19,7 +19,7 @@ using namespace webrtc;
 
 -(void)initCocoaRenderView:(NSOpenGLPixelFormat*)fmt{
 	
-	self = [super initWithFrame:[self frame] pixelFormat:[fmt autorelease]];
+    self = [super initWithFrame:[self frame] pixelFormat:fmt];
 	if (self == nil){
 		
 		WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, 0, "%s:%d Could not create instance", __FUNCTION__, __LINE__); 
@@ -39,7 +39,7 @@ using namespace webrtc;
 	NSRect screenRect = [[NSScreen mainScreen]frame];
 //	[_windowRef setFrame:screenRect];
 //	[_windowRef setBounds:screenRect];
-	self = [super initWithFrame:screenRect	pixelFormat:[fmt autorelease]];
+    self = [super initWithFrame:screenRect pixelFormat:fmt];
 	if (self == nil){
 		
 		WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, 0, "%s:%d Could not create instance", __FUNCTION__, __LINE__); 

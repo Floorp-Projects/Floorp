@@ -11,8 +11,9 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_INPUT_MANAGER_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_INPUT_MANAGER_H_
 
+#include <map>
+
 #include "webrtc/modules/video_capture/include/video_capture.h"
-#include "webrtc/system_wrappers/interface/map_wrapper.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 #include "webrtc/video_engine/include/vie_capture.h"
@@ -28,7 +29,6 @@ class ProcessThread;
 class RWLockWrapper;
 class ViECapturer;
 class ViEExternalCapture;
-class ViEFilePlayer;
 class VoiceEngine;
 
 class ViEInputManager : private ViEManagerBase {
@@ -78,24 +78,12 @@ class ViEInputManager : private ViEManagerBase {
                                   int& capture_id);
   int DestroyCaptureDevice(int capture_id);
 
-  int CreateFilePlayer(const char* file_nameUTF8, const bool loop,
-                       const FileFormats file_format,
-                       VoiceEngine* voe_ptr,
-                       int& file_id);
-  int DestroyFilePlayer(int file_id);
-
  private:
   // Gets and allocates a free capture device id. Assumed protected by caller.
   bool GetFreeCaptureId(int* freecapture_id);
 
   // Frees a capture id assigned in GetFreeCaptureId.
   void ReturnCaptureId(int capture_id);
-
-  // Gets and allocates a free file id. Assumed protected by caller.
-  bool GetFreeFileId(int* free_file_id);
-
-  // Frees a file id assigned in GetFreeFileId.
-  void ReturnFileId(int file_id);
 
   // Gets the ViEFrameProvider for this capture observer.
   ViEFrameProviderBase* ViEFrameProvider(
@@ -107,21 +95,17 @@ class ViEInputManager : private ViEManagerBase {
   // Gets the ViECapturer for the capture device id.
   ViECapturer* ViECapturePtr(int capture_id) const;
 
-  // Gets the ViEFilePlayer for this file_id.
-  ViEFilePlayer* ViEFilePlayerPtr(int file_id) const;
-
   const Config& config_;
   int engine_id_;
   scoped_ptr<CriticalSectionWrapper> map_cs_;
   scoped_ptr<CriticalSectionWrapper> device_info_cs_;
-  MapWrapper vie_frame_provider_map_;
+
+  typedef std::map<int, ViEFrameProviderBase*> FrameProviderMap;
+  FrameProviderMap vie_frame_provider_map_;
 
   // Capture devices.
   VideoCaptureModule::DeviceInfo* capture_device_info_;
   int free_capture_device_id_[kViEMaxCaptureDevices];
-
-  // File Players.
-  int free_file_id_[kViEMaxFilePlayers];
 
   ProcessThread* module_process_thread_;  // Weak.
 };
@@ -132,7 +116,6 @@ class ViEInputManagerScoped: private ViEManagerScopedBase {
   explicit ViEInputManagerScoped(const ViEInputManager& vie_input_manager);
 
   ViECapturer* Capture(int capture_id) const;
-  ViEFilePlayer* FilePlayer(int file_id) const;
   ViEFrameProviderBase* FrameProvider(int provider_id) const;
   ViEFrameProviderBase* FrameProvider(const ViEFrameCallback*
                                       capture_observer) const;

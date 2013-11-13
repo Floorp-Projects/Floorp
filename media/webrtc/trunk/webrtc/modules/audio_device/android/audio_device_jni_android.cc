@@ -18,13 +18,13 @@
 #include <android/log.h>
 #include <stdlib.h>
 
-#include "audio_device_utility.h"
-#include "audio_device_jni_android.h"
-#include "audio_device_config.h"
+#include "webrtc/modules/audio_device/android/audio_device_jni_android.h"
+#include "webrtc/modules/audio_device/audio_device_config.h"
+#include "webrtc/modules/audio_device/audio_device_utility.h"
 
-#include "trace.h"
-#include "thread_wrapper.h"
-#include "event_wrapper.h"
+#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 #include "AndroidJNIWrapper.h"
 
@@ -2680,7 +2680,7 @@ bool AudioDeviceAndroidJni::PlayThreadProcess()
 
         Lock();
 
-    } // _playing
+    }  // _playing
 
     if (_shutdownPlayThread)
     {
@@ -2817,7 +2817,7 @@ bool AudioDeviceAndroidJni::RecThreadProcess()
             Lock();
         }
 
-    } // _recording
+    }  // _recording
 
     if (_shutdownRecThread)
     {
@@ -2848,4 +2848,4 @@ bool AudioDeviceAndroidJni::RecThreadProcess()
     return true;
 }
 
-} // namespace webrtc
+}  // namespace webrtc

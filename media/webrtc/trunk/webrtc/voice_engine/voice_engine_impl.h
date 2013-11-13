@@ -98,7 +98,8 @@ class VoiceEngineImpl : public voe::SharedData,  // Must be the first base class
                         public VoEBaseImpl
 {
 public:
-    VoiceEngineImpl() : 
+    VoiceEngineImpl(const Config* config, bool owns_config) :
+        SharedData(*config),
 #ifdef WEBRTC_VOICE_ENGINE_AUDIO_PROCESSING_API
         VoEAudioProcessingImpl(this),
 #endif
@@ -137,7 +138,8 @@ public:
         VoEVolumeControlImpl(this),
 #endif
         VoEBaseImpl(this),
-        _ref_count(0)
+        _ref_count(0),
+        own_config_(owns_config ? config : NULL)
     {
     }
     virtual ~VoiceEngineImpl()
@@ -152,8 +154,9 @@ public:
 
 private:
     Atomic32 _ref_count;
+    scoped_ptr<const Config> own_config_;
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_VOICE_ENGINE_VOICE_ENGINE_IMPL_H

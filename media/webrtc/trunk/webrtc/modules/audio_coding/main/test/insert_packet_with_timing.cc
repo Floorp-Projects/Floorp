@@ -18,6 +18,7 @@
 #include "webrtc/modules/audio_coding/main/test/PCMFile.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 // Codec.
@@ -75,8 +76,8 @@ class InsertPacketWithTiming {
     ASSERT_TRUE(sender_clock_ != NULL);
     ASSERT_TRUE(receiver_clock_ != NULL);
 
-    ASSERT_TRUE(send_acm_ != NULL);
-    ASSERT_TRUE(receive_acm_ != NULL);
+    ASSERT_TRUE(send_acm_.get() != NULL);
+    ASSERT_TRUE(receive_acm_.get() != NULL);
     ASSERT_TRUE(channel_ != NULL);
 
     ASSERT_TRUE(seq_num_fid_ != NULL);
@@ -99,7 +100,7 @@ class InsertPacketWithTiming {
     samples_in_1ms_ = codec.plfreq / 1000;
     num_10ms_in_codec_frame_ = codec.pacsize / (codec.plfreq / 100);
 
-    channel_->RegisterReceiverACM(receive_acm_);
+    channel_->RegisterReceiverACM(receive_acm_.get());
     send_acm_->RegisterTransportCallback(channel_);
 
     if (FLAGS_input.size() == 0) {
@@ -195,8 +196,6 @@ class InsertPacketWithTiming {
   }
 
   void TearDown() {
-    AudioCodingModule::Destroy(send_acm_);
-    AudioCodingModule::Destroy(receive_acm_);
     delete channel_;
 
     fclose(seq_num_fid_);
@@ -250,8 +249,8 @@ class InsertPacketWithTiming {
   SimulatedClock* sender_clock_;
   SimulatedClock* receiver_clock_;
 
-  AudioCodingModule* send_acm_;
-  AudioCodingModule* receive_acm_;
+  scoped_ptr<AudioCodingModule> send_acm_;
+  scoped_ptr<AudioCodingModule> receive_acm_;
   Channel* channel_;
 
   FILE* seq_num_fid_;  // Input (text), one sequence number per line.

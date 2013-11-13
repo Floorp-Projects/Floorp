@@ -181,6 +181,8 @@ class MockAudioProcessing : public AudioProcessing {
 
   MOCK_METHOD0(Initialize,
       int());
+  MOCK_METHOD1(SetExtraOptions,
+      void(const Config& config));
   MOCK_METHOD1(set_sample_rate_hz,
       int(int rate));
   MOCK_CONST_METHOD0(sample_rate_hz,

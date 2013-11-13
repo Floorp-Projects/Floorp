@@ -307,7 +307,7 @@ nsUXThemeData::UpdateNativeThemeInfo()
   themeName = themeName ? themeName + 1 : themeFileName;
 
   WindowsTheme theme = WINTHEME_UNRECOGNIZED;
-  for (int i = 0; i < ArrayLength(knownThemes); ++i) {
+  for (size_t i = 0; i < ArrayLength(knownThemes); ++i) {
     if (!lstrcmpiW(themeName, knownThemes[i].name)) {
       theme = (WindowsTheme)knownThemes[i].type;
       break;
@@ -342,7 +342,7 @@ nsUXThemeData::UpdateNativeThemeInfo()
 
   // calculate the luna color scheme
   WindowsThemeColor color = WINTHEMECOLOR_UNRECOGNIZED;
-  for (int i = 0; i < ArrayLength(knownColors); ++i) {
+  for (size_t i = 0; i < ArrayLength(knownColors); ++i) {
     if (!lstrcmpiW(themeColor, knownColors[i].name)) {
       color = (WindowsThemeColor)knownColors[i].type;
       break;

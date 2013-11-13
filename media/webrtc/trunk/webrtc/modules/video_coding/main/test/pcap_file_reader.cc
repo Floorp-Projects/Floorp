@@ -16,8 +16,9 @@
 #else
 #include <arpa/inet.h>
 #endif
-#include <cassert>
-#include <cstdio>
+#include <assert.h>
+#include <stdio.h>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -114,10 +115,9 @@ class PcapFileReaderImpl : public RtpPacketSourceInterface {
     uint32_t stream_start_ms = 0;
     int32_t next_packet_pos = ftell(file_);
     for (;;) {
-      ++total_packet_count;
       TRY(fseek(file_, next_packet_pos, SEEK_SET));
       int result = ReadPacket(&next_packet_pos, stream_start_ms,
-                              total_packet_count);
+                              ++total_packet_count);
       if (result == kResultFail) {
         break;
       } else if (result == kResultSuccess && packets_.size() == 1) {
@@ -140,8 +140,9 @@ class PcapFileReaderImpl : public RtpPacketSourceInterface {
         mit != packets_by_ssrc_.end(); ++mit) {
       uint32_t ssrc = mit->first;
       const std::vector<uint32_t>& packet_numbers = mit->second;
-      printf("SSRC: %08x, %d packets\n", ssrc,
-             static_cast<int>(packet_numbers.size()));
+      uint8_t pt = packets_[packet_numbers[0]].rtp_header.payloadType;
+      printf("SSRC: %08x, %d packets, pt=%d\n", ssrc,
+             static_cast<int>(packet_numbers.size()), pt);
     }
 
     // TODO(solenberg): Better validation of identified SSRC streams.
@@ -187,14 +188,14 @@ class PcapFileReaderImpl : public RtpPacketSourceInterface {
  private:
   // A marker of an RTP packet within the file.
   struct RtpPacketMarker {
-    uint32_t packet_number;
+    uint32_t packet_number;   // One-based index (like in WireShark)
     uint32_t time_offset_ms;
     uint32_t source_ip;
     uint32_t dest_ip;
     uint16_t source_port;
     uint16_t dest_port;
     RTPHeader rtp_header;
-    int32_t pos_in_file;
+    int32_t pos_in_file;      // Byte offset of payload from start of file.
     uint32_t payload_length;
   };
 
@@ -270,6 +271,7 @@ class PcapFileReaderImpl : public RtpPacketSourceInterface {
     ModuleRTPUtility::RTPHeaderParser rtp_parser(read_buffer_,
                                                  marker.payload_length);
     if (rtp_parser.RTCP()) {
+      rtp_parser.ParseRtcp(&marker.rtp_header);
       packets_.push_back(marker);
     } else {
       if (!rtp_parser.Parse(marker.rtp_header, NULL)) {

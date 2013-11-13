@@ -24,8 +24,6 @@ namespace webrtc {
 
 class VideoDecoder;
 
-namespace newapi {
-
 // TODO(mflodman) Move all these settings to VideoDecoder and move the
 // declaration to common_types.h.
 struct ExternalVideoDecoder {
@@ -93,7 +91,7 @@ class VideoReceiveStream {
           pre_decode_callback(NULL),
           post_decode_callback(NULL),
           target_delay_ms(0) {}
-    // Codecs the receive stream
+    // Codecs the receive stream can receive.
     std::vector<VideoCodec> codecs;
 
     // Receive-stream specific RTP settings.
@@ -163,7 +161,6 @@ class VideoReceiveStream {
   virtual ~VideoReceiveStream() {}
 };
 
-}  // namespace newapi
 }  // namespace webrtc
 
 #endif  // WEBRTC_VIDEO_ENGINE_NEW_INCLUDE_VIDEO_RECEIVE_STREAM_H_

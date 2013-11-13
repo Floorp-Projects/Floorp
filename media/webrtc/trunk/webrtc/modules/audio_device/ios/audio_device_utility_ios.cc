@@ -8,11 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "audio_device_utility_ios.h"
-#include "audio_device_config.h"
+#include "webrtc/modules/audio_device/audio_device_config.h"
+#include "webrtc/modules/audio_device/ios/audio_device_utility_ios.h"
 
-#include "critical_section_wrapper.h"
-#include "trace.h"
+#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 AudioDeviceUtilityIPhone::AudioDeviceUtilityIPhone(const int32_t id)
@@ -42,4 +42,4 @@ int32_t AudioDeviceUtilityIPhone::Init() {
     return 0;
 }
 
-}  //  namespace webrtc
+}  // namespace webrtc

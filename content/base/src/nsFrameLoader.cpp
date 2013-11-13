@@ -2215,8 +2215,10 @@ public:
                         nsFrameLoader* aFrameLoader,
                         const nsAString& aMessage,
                         const StructuredCloneData& aData,
-                        JS::Handle<JSObject *> aCpows)
-    : mRuntime(js::GetRuntime(aCx)), mFrameLoader(aFrameLoader), mMessage(aMessage), mCpows(aCpows)
+                        JS::Handle<JSObject *> aCpows,
+                        nsIPrincipal* aPrincipal)
+    : mRuntime(js::GetRuntime(aCx)), mFrameLoader(aFrameLoader)
+    , mMessage(aMessage), mCpows(aCpows), mPrincipal(aPrincipal)
   {
     if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
       NS_RUNTIMEABORT("OOM");
@@ -2249,7 +2251,7 @@ public:
 
       nsRefPtr<nsFrameMessageManager> mm = tabChild->GetInnerManager();
       mm->ReceiveMessage(static_cast<EventTarget*>(tabChild), mMessage,
-                         false, &data, &cpows, nullptr);
+                         false, &data, &cpows, mPrincipal, nullptr);
     }
     return NS_OK;
   }
@@ -2259,13 +2261,15 @@ public:
   JSAutoStructuredCloneBuffer mData;
   StructuredCloneClosure mClosure;
   JSObject* mCpows;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 bool
 nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
                                   const StructuredCloneData& aData,
-                                  JS::Handle<JSObject *> aCpows)
+                                  JS::Handle<JSObject *> aCpows,
+                                  nsIPrincipal* aPrincipal)
 {
   TabParent* tabParent = mRemoteBrowser;
   if (tabParent) {
@@ -2278,11 +2282,14 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
     if (aCpows && !cp->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
       return false;
     }
-    return tabParent->SendAsyncMessage(nsString(aMessage), data, cpows);
+    return tabParent->SendAsyncMessage(nsString(aMessage), data, cpows,
+                                       aPrincipal);
   }
 
   if (mChildMessageManager) {
-    nsRefPtr<nsIRunnable> ev = new nsAsyncMessageToChild(aCx, this, aMessage, aData, aCpows);
+    nsRefPtr<nsIRunnable> ev = new nsAsyncMessageToChild(aCx, this, aMessage,
+                                                         aData, aCpows,
+                                                         aPrincipal);
     NS_DispatchToCurrentThread(ev);
     return true;
   }

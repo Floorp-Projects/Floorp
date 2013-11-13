@@ -1,0 +1,19 @@
+<html>
+<head>
+<body>
+  <img class="big-horizontal" src="large-image.jpg" style="width:500px;" />
+  <canvas class="big-vertical" style="width:500px;"></canvas>
+  <img class="small" src="small-image.gif"></img>
+  <script>
+    window.onload = () => {
+      var canvas = document.querySelector("canvas"), ctx = canvas.getContext("2d");
+      canvas.width = 1000;
+      canvas.height = 2000;
+      ctx.fillStyle = "red";
+      ctx.fillRect(0, 0, 1000, 2000);
+
+      window.opener.postMessage('ready', '*')
+    }
+  </script>
+</body>
+</html>

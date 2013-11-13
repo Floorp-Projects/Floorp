@@ -1,4 +1,4 @@
 bingmetrofx
 googlemetrofx
-wikipedia
-yahoo
+wikipediametrofx
+yahoometrofx

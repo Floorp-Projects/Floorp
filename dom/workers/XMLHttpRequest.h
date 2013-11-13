@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_workers_xmlhttprequest_h__
 #define mozilla_dom_workers_xmlhttprequest_h__
 
-#include "mozilla/dom/workers/bindings/XMLHttpRequestEventTarget.h"
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
 // Need this for XMLHttpRequestResponseType.
@@ -15,6 +14,7 @@
 #include "mozilla/dom/TypedArray.h"
 
 #include "js/StructuredClone.h"
+#include "nsXMLHttpRequest.h"
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -22,7 +22,7 @@ class Proxy;
 class XMLHttpRequestUpload;
 class WorkerPrivate;
 
-class XMLHttpRequest : public XMLHttpRequestEventTarget,
+class XMLHttpRequest : public nsXHREventTarget,
                        public WorkerFeature
 {
 public:
@@ -45,8 +45,7 @@ public:
   };
 
 private:
-  JS::Heap<JSObject*> mJSObject;
-  XMLHttpRequestUpload* mUpload;
+  nsRefPtr<XMLHttpRequestUpload> mUpload;
   WorkerPrivate* mWorkerPrivate;
   nsRefPtr<Proxy> mProxy;
   XMLHttpRequestResponseType mResponseType;
@@ -54,7 +53,7 @@ private:
 
   uint32_t mTimeout;
 
-  bool mJSObjectRooted;
+  bool mRooted;
   bool mBackgroundRequest;
   bool mWithCredentials;
   bool mCanceled;
@@ -63,22 +62,30 @@ private:
   bool mMozSystem;
 
 protected:
-  XMLHttpRequest(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
+  XMLHttpRequest(WorkerPrivate* aWorkerPrivate);
   virtual ~XMLHttpRequest();
 
 public:
-  virtual void
-  _trace(JSTracer* aTrc) MOZ_OVERRIDE;
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  virtual void
-  _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(XMLHttpRequest,
+                                                         nsXHREventTarget)
 
-  static XMLHttpRequest*
+  nsISupports*
+  GetParentObject() const
+  {
+    // There's only one global on a worker, so we don't need to specify.
+    return nullptr;
+  }
+
+  static already_AddRefed<XMLHttpRequest>
   Constructor(const GlobalObject& aGlobal,
               const MozXMLHttpRequestParameters& aParams,
               ErrorResult& aRv);
 
-  static XMLHttpRequest*
+  static already_AddRefed<XMLHttpRequest>
   Constructor(const GlobalObject& aGlobal, const nsAString& ignored,
               ErrorResult& aRv)
   {
@@ -98,22 +105,7 @@ public:
   bool
   Notify(JSContext* aCx, Status aStatus) MOZ_OVERRIDE;
 
-#define IMPL_GETTER_AND_SETTER(_type)                                          \
-  already_AddRefed<EventHandlerNonNull>                                        \
-  GetOn##_type(ErrorResult& aRv)                                               \
-  {                                                                            \
-    return GetEventListener(NS_LITERAL_STRING(#_type), aRv);                   \
-  }                                                                            \
-                                                                               \
-  void                                                                         \
-  SetOn##_type(EventHandlerNonNull* aListener,  ErrorResult& aRv)              \
-  {                                                                            \
-    SetEventListener(NS_LITERAL_STRING(#_type), aListener, aRv);               \
-  }
-
-  IMPL_GETTER_AND_SETTER(readystatechange)
-
-#undef IMPL_GETTER_AND_SETTER
+  IMPL_EVENT_HANDLER(readystatechange)
 
   uint16_t
   ReadyState() const
@@ -260,10 +252,7 @@ public:
   }
 
   void
-  UpdateState(const StateData& aStateData)
-  {
-    mStateData = aStateData;
-  }
+  UpdateState(const StateData& aStateData);
 
   void
   NullResponseText()
@@ -295,13 +284,14 @@ private:
   MaybeDispatchPrematureAbortEvents(ErrorResult& aRv);
 
   void
-  DispatchPrematureAbortEvent(JS::Handle<JSObject*> aTarget, uint8_t aEventType,
-                              bool aUploadTarget, ErrorResult& aRv);
+  DispatchPrematureAbortEvent(EventTarget* aTarget,
+                              const nsAString& aEventType, bool aUploadTarget,
+                              ErrorResult& aRv);
 
   bool
   SendInProgress() const
   {
-    return mJSObjectRooted;
+    return mRooted;
   }
 
   void

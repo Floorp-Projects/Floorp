@@ -38737,6 +38737,6 @@ static const unsigned char kAvgFECRecoveryXOR[kSizeAvgFECRecoveryXOR] = {
 
 };
 
-} // namespace webrtc
+}  // namespace webrtc
 
 #endif // WEBRTC_MODULES_VIDEO_CODING_SOURCE_ER_TABLES_XOR_H_

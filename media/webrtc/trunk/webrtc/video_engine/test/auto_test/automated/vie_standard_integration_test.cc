@@ -13,7 +13,7 @@
 // tests in this section of the code. Currently, this code makes no attempt
 // to verify any video output - it only checks for direct errors.
 
-#include <cstdio>
+#include <stdio.h>
 
 #include "gflags/gflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
@@ -47,10 +47,6 @@ TEST_F(ViEStandardIntegrationTest, RunsEncryptionTestWithoutErrors)  {
   tests_->ViEEncryptionStandardTest();
 }
 
-TEST_F(ViEStandardIntegrationTest, RunsFileTestWithoutErrors)  {
-  tests_->ViEFileStandardTest();
-}
-
 TEST_F(ViEStandardIntegrationTest, RunsImageProcessTestWithoutErrors)  {
   tests_->ViEImageProcessStandardTest();
 }
@@ -69,4 +65,4 @@ TEST_F(ViEStandardIntegrationTest, MAYBE_RunsRtpRtcpTestWithoutErrors)  {
   tests_->ViERtpRtcpStandardTest();
 }
 
-} // namespace
+}  // namespace

@@ -6,10 +6,6 @@
 
 TEST_DIRS += ['test']
 
-XPIDL_SOURCES += [
-    'b2g.idl',
-]
-
 MODULE = 'B2GComponents'
 
 EXTRA_COMPONENTS += [

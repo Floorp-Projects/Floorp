@@ -10,7 +10,7 @@
 
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 
-#include <cassert>
+#include <assert.h>
 
 #ifdef _WIN32
 #include "webrtc/system_wrappers/interface/fix_interlocked_exchange_pointer_win.h"

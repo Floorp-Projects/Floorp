@@ -155,44 +155,46 @@ SVGRectElement::ConstructPath(gfxContext *aCtx)
 TemporaryRef<Path>
 SVGRectElement::BuildPath()
 {
-  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
-
   float x, y, width, height, rx, ry;
   GetAnimatedLengthValues(&x, &y, &width, &height, &rx, &ry, nullptr);
 
-  if (width > 0 && height > 0) {
-    rx = std::max(rx, 0.0f);
-    ry = std::max(ry, 0.0f);
+  if (width <= 0 || height <= 0) {
+    return nullptr;
+  }
 
-    if (rx == 0 && ry == 0) {
-      // Optimization for the no rounded corners case.
-      Rect r(x, y, width, height);
-      pathBuilder->MoveTo(r.TopLeft());
-      pathBuilder->LineTo(r.TopRight());
-      pathBuilder->LineTo(r.BottomRight());
-      pathBuilder->LineTo(r.BottomLeft());
-      pathBuilder->Close();
-    } else {
-      // If either the 'rx' or the 'ry' attribute isn't set, then we have to
-      // set it to the value of the other:
-      bool hasRx = mLengthAttributes[ATTR_RX].IsExplicitlySet();
-      bool hasRy = mLengthAttributes[ATTR_RY].IsExplicitlySet();
-      MOZ_ASSERT(hasRx || hasRy);
+  RefPtr<PathBuilder> pathBuilder = CreatePathBuilder();
 
-      if (hasRx && !hasRy) {
-        ry = rx;
-      } else if (hasRy && !hasRx) {
-        rx = ry;
-      }
+  rx = std::max(rx, 0.0f);
+  ry = std::max(ry, 0.0f);
 
-      // Clamp rx and ry to half the rect's width and height respectively:
-      rx = std::min(rx, width / 2);
-      ry = std::min(ry, height / 2);
+  if (rx == 0 && ry == 0) {
+    // Optimization for the no rounded corners case.
+    Rect r(x, y, width, height);
+    pathBuilder->MoveTo(r.TopLeft());
+    pathBuilder->LineTo(r.TopRight());
+    pathBuilder->LineTo(r.BottomRight());
+    pathBuilder->LineTo(r.BottomLeft());
+    pathBuilder->Close();
+  } else {
+    // If either the 'rx' or the 'ry' attribute isn't set, then we have to
+    // set it to the value of the other:
+    bool hasRx = mLengthAttributes[ATTR_RX].IsExplicitlySet();
+    bool hasRy = mLengthAttributes[ATTR_RY].IsExplicitlySet();
+    MOZ_ASSERT(hasRx || hasRy);
 
-      Size cornerRadii(rx, ry);
-      Size radii[] = { cornerRadii, cornerRadii, cornerRadii, cornerRadii };
-      AppendRoundedRectToPath(pathBuilder, Rect(x, y, width, height), radii);
+    if (hasRx && !hasRy) {
+      ry = rx;
+    } else if (hasRy && !hasRx) {
+      rx = ry;
     }
+
+    // Clamp rx and ry to half the rect's width and height respectively:
+    rx = std::min(rx, width / 2);
+    ry = std::min(ry, height / 2);
+
+    Size cornerRadii(rx, ry);
+    Size radii[] = { cornerRadii, cornerRadii, cornerRadii, cornerRadii };
+    AppendRoundedRectToPath(pathBuilder, Rect(x, y, width, height), radii);
   }
 
   return pathBuilder->Finish();

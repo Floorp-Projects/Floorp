@@ -469,5 +469,5 @@ class VoEExtendedTest : public VoiceEngineObserver,
   bool _sending[32];
 };
 
-} //  namespace voetest
+}  // namespace voetest
 #endif // WEBRTC_VOICE_ENGINE_VOE_EXTENDED_TEST_H

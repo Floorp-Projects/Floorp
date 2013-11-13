@@ -731,9 +731,11 @@ GetCPUID(uint32_t *cpuId)
 class MachineId
 {
     uint32_t cpuId_;
-    mozilla::Vector<char> buildId_;
+    js::Vector<char> buildId_;
 
   public:
+    MachineId(ExclusiveContext *cx) : buildId_(cx) {}
+
     bool extractCurrentState(ExclusiveContext *cx) {
         if (!cx->asmJSCacheOps().buildId)
             return false;
@@ -860,7 +862,8 @@ class ModuleChars
         uint32_t parseBeginOffset = parser.pc->maybeFunction->pn_pos.begin;
         const jschar *parseBegin = parser.tokenStream.rawBase() + parseBeginOffset;
         const jschar *parseLimit = parser.tokenStream.rawLimit();
-        if (parseLimit - parseBegin < length_)
+        JS_ASSERT(parseLimit >= parseBegin);
+        if (uint32_t(parseLimit - parseBegin) < length_)
             return false;
         if (!PodEqual(begin_, parseBegin, length_))
             return false;
@@ -912,7 +915,7 @@ js::StoreAsmJSModuleInCache(AsmJSParser &parser,
                             const AsmJSStaticLinkData &linkData,
                             ExclusiveContext *cx)
 {
-    MachineId machineId;
+    MachineId machineId(cx);
     if (!machineId.extractCurrentState(cx))
         return;
 
@@ -967,7 +970,7 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
 {
     int64_t usecBefore = PRMJ_Now();
 
-    MachineId machineId;
+    MachineId machineId(cx);
     if (!machineId.extractCurrentState(cx))
         return true;
 
@@ -981,7 +984,7 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
 
     const uint8_t *cursor = entry.memory;
 
-    MachineId cachedMachineId;
+    MachineId cachedMachineId(cx);
     cursor = cachedMachineId.deserialize(cx, cursor);
     if (!cursor)
         return false;

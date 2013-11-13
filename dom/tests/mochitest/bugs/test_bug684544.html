@@ -32,10 +32,18 @@ f.parentNode.removeChild(f);
 // Check that location is now null.  If it's not, the test needs changing
 // (e.g. to use window.close() so that it's null).
 is("location" in win, true, "Should still have a location property");
-todo_is(win.location, null, "There should be no location object now");
+is(win.location, null, "There should be no location object now");
 
-// Just set the location.  This should not crash.
-win.location = "data:text/html,2";
+// Just set the location.  This should not crash but throw an exception.
+var noException;
+try {
+  win.location = "data:text/html,2";
+  noException = true;
+}
+catch(e) {
+  noException = false;
+}
+todo(noException, "Shouldn't throw when setting location.");
 
 // And check that we didn't override the slot in the process.
 is(typeof(win.location), "object", "Location should not have become a string");

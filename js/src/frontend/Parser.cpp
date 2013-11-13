@@ -384,7 +384,7 @@ Parser<SyntaxParseHandler>::abortIfSyntaxParser()
 
 template <typename ParseHandler>
 Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
-                             const CompileOptions &options,
+                             const ReadOnlyCompileOptions &options,
                              const jschar *chars, size_t length, bool foldConstants,
                              Parser<SyntaxParseHandler> *syntaxParser,
                              LazyScript *lazyOuterFunction)
@@ -549,39 +549,6 @@ Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction *fun, ParseContext<Pars
         handler.setFunctionBox(fn, funbox);
 
     return funbox;
-}
-
-ModuleBox::ModuleBox(ExclusiveContext *cx, ObjectBox *traceListHead, Module *module,
-                     ParseContext<FullParseHandler> *pc, bool extraWarnings)
-  : ObjectBox(module, traceListHead),
-      SharedContext(cx, Directives(/* strict = */ true), extraWarnings)
-{
-}
-
-template <>
-ModuleBox *
-Parser<FullParseHandler>::newModuleBox(Module *module, ParseContext<FullParseHandler> *outerpc)
-{
-    JS_ASSERT(module && !IsPoisonedPtr(module));
-
-    /*
-     * We use JSContext.tempLifoAlloc to allocate parsed objects and place them
-     * on a list in this Parser to ensure GC safety. Thus the tempLifoAlloc
-     * arenas containing the entries must be alive until we are done with
-     * scanning, parsing and code generation for the whole script or top-level
-     * function.
-     */
-    ModuleBox *modulebox =
-        alloc.new_<ModuleBox>(context, traceListHead, module, outerpc,
-                              options().extraWarningsOption);
-    if (!modulebox) {
-        js_ReportOutOfMemory(context);
-        return nullptr;
-    }
-
-    traceListHead = modulebox;
-
-    return modulebox;
 }
 
 template <typename ParseHandler>
@@ -2345,52 +2312,6 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     return finishFunctionDefinition(pn, funbox, prelude, body);
 }
 
-template <>
-ParseNode *
-Parser<FullParseHandler>::moduleDecl()
-{
-    JS_ASSERT(tokenStream.currentName() == context->names().module);
-    if (!((pc->sc->isGlobalSharedContext() || pc->sc->isModuleBox()) && pc->atBodyLevel()))
-    {
-        report(ParseError, false, nullptr, JSMSG_MODULE_STATEMENT);
-        return nullptr;
-    }
-
-    ParseNode *pn = CodeNode::create(PNK_MODULE, &handler);
-    if (!pn)
-        return nullptr;
-    JS_ALWAYS_TRUE(tokenStream.matchToken(TOK_STRING));
-    RootedAtom atom(context, tokenStream.currentToken().atom());
-    Module *module = Module::create(context, atom);
-    if (!module)
-        return nullptr;
-    ModuleBox *modulebox = newModuleBox(module, pc);
-    if (!modulebox)
-        return nullptr;
-    pn->pn_modulebox = modulebox;
-
-    ParseContext<FullParseHandler> modulepc(this, pc, /* function = */ nullptr, modulebox,
-                                            /* newDirectives = */ nullptr, pc->staticLevel + 1,
-                                            pc->blockidGen);
-    if (!modulepc.init(tokenStream))
-        return nullptr;
-    MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_MODULE);
-    pn->pn_body = statements();
-    if (!pn->pn_body)
-        return nullptr;
-    MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_MODULE);
-
-    return pn;
-}
-
-template <>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::moduleDecl()
-{
-    JS_ALWAYS_FALSE(abortIfSyntaxParser());
-    return SyntaxParseHandler::NodeFailure;
-}
-
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::checkYieldNameValidity()
@@ -3707,6 +3628,134 @@ Parser<SyntaxParseHandler>::letStatement()
     return SyntaxParseHandler::NodeFailure;
 }
 
+template<typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::importDeclaration()
+{
+    JS_ASSERT(tokenStream.currentToken().type == TOK_IMPORT);
+
+    if (pc->sc->isFunctionBox() || !pc->atBodyLevel()) {
+        report(ParseError, false, null(), JSMSG_IMPORT_DECL_AT_TOP_LEVEL);
+        return null();
+    }
+
+    uint32_t begin = pos().begin;
+    TokenKind tt = tokenStream.getToken();
+
+    Node importSpecSet = handler.newList(PNK_IMPORT_SPEC_LIST);
+    if (!importSpecSet)
+        return null();
+
+    if (tt == TOK_NAME || tt == TOK_LC) {
+        if (tt == TOK_NAME) {
+            // Handle the form |import a from 'b'|, by adding a single import
+            // specifier to the list, with 'default' as the import name and
+            // 'a' as the binding name. This is equivalent to
+            // |import { default as a } from 'b'|.
+            Node importName = newName(context->names().default_);
+            if (!importName)
+                return null();
+
+            Node bindingName = newName(tokenStream.currentName());
+            if (!bindingName)
+                return null();
+
+            Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importName, bindingName);
+            if (!importSpec)
+                return null();
+
+            handler.addList(importSpecSet, importSpec);
+        } else {
+            do {
+                // Handle the forms |import {} from 'a'| and
+                // |import { ..., } from 'a'| (where ... is non empty), by
+                // escaping the loop early if the next token is }.
+                tt = tokenStream.peekToken(TokenStream::KeywordIsName);
+                if (tt == TOK_ERROR)
+                    return null();
+                if (tt == TOK_RC)
+                    break;
+
+                // If the next token is a keyword, the previous call to
+                // peekToken matched it as a TOK_NAME, and put it in the
+                // lookahead buffer, so this call will match keywords as well.
+                MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_IMPORT_NAME);
+                Node importName = newName(tokenStream.currentName());
+                if (!importName)
+                    return null();
+
+                if (tokenStream.getToken() == TOK_NAME &&
+                    tokenStream.currentName() == context->names().as)
+                {
+                    if (tokenStream.getToken() != TOK_NAME) {
+                        report(ParseError, false, null(), JSMSG_NO_BINDING_NAME);
+                        return null();
+                    }
+                } else {
+                    // Keywords cannot be bound to themselves, so an import name
+                    // that is a keyword is a syntax error if it is not followed
+                    // by the keyword 'as'.
+                    if (IsKeyword(importName->name())) {
+                        JSAutoByteString bytes;
+                        if (!AtomToPrintableString(context, importName->name(), &bytes))
+                            return null();
+                        report(ParseError, false, null(), JSMSG_AS_AFTER_RESERVED_WORD, bytes.ptr());
+                        return null();
+                    }
+                    tokenStream.ungetToken();
+                }
+                Node bindingName = newName(tokenStream.currentName());
+                if (!bindingName)
+                    return null();
+
+                Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importName, bindingName);
+                if (!importSpec)
+                    return null();
+
+                handler.addList(importSpecSet, importSpec);
+            } while (tokenStream.matchToken(TOK_COMMA));
+
+            MUST_MATCH_TOKEN(TOK_RC, JSMSG_RC_AFTER_IMPORT_SPEC_LIST);
+        }
+
+        if (tokenStream.getToken() != TOK_NAME ||
+            tokenStream.currentName() != context->names().from)
+        {
+            report(ParseError, false, null(), JSMSG_FROM_AFTER_IMPORT_SPEC_SET);
+            return null();
+        }
+
+        MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
+    } else {
+        if (tt != TOK_STRING) {
+            report(ParseError, false, null(), JSMSG_DECLARATION_AFTER_IMPORT);
+            return null();
+        }
+
+        // Handle the form |import 'a'| by leaving the list empty. This is
+        // equivalent to |import {} from 'a'|.
+        importSpecSet->pn_pos.end = importSpecSet->pn_pos.begin;
+    }
+
+    Node moduleSpec = stringLiteral();
+    if (!moduleSpec)
+        return null();
+
+    if (!MatchOrInsertSemicolon(tokenStream))
+        return null();
+
+    return handler.newImportDeclaration(importSpecSet, moduleSpec,
+                                        TokenPos(begin, pos().end));
+}
+
+template<>
+SyntaxParseHandler::Node
+Parser<SyntaxParseHandler>::importDeclaration()
+{
+    JS_ALWAYS_FALSE(abortIfSyntaxParser());
+    return SyntaxParseHandler::NodeFailure;
+}
+
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::expressionStatement()
@@ -4986,6 +5035,8 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_LET:
         return letStatement();
+      case TOK_IMPORT:
+        return importDeclaration();
       case TOK_SEMI:
         return handler.newEmptyStatement(pos());
       case TOK_IF:
@@ -5047,11 +5098,6 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
       case TOK_NAME:
         if (tokenStream.peekToken() == TOK_COLON)
             return labeledStatement();
-        if (tokenStream.currentName() == context->names().module
-            && tokenStream.peekTokenSameLine() == TOK_STRING)
-        {
-            return moduleDecl();
-        }
         return expressionStatement();
 
       default:

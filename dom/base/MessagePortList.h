@@ -26,7 +26,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MessagePortList)
 
 public:
-  MessagePortList(nsISupports* aOwner, nsTArray<nsRefPtr<MessagePort> >& aPorts)
+  MessagePortList(nsISupports* aOwner, nsTArray<nsRefPtr<MessagePortBase>>& aPorts)
     : mOwner(aOwner)
     , mPorts(aPorts)
   {
@@ -48,13 +48,13 @@ public:
     return mPorts.Length();
   }
 
-  MessagePort*
+  MessagePortBase*
   Item(uint32_t aIndex)
   {
     return mPorts.SafeElementAt(aIndex);
   }
 
-  MessagePort*
+  MessagePortBase*
   IndexedGetter(uint32_t aIndex, bool &aFound)
   {
     aFound = aIndex < mPorts.Length();
@@ -66,7 +66,7 @@ public:
 
 public:
   nsCOMPtr<nsISupports> mOwner;
-  nsTArray<nsRefPtr<MessagePort> > mPorts;
+  nsTArray<nsRefPtr<MessagePortBase>> mPorts;
 };
 
 } // namespace dom

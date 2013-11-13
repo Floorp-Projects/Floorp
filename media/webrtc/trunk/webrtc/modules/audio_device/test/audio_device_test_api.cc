@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <cmath>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "audio_device_test_defines.h"
+#include "webrtc/modules/audio_device/test/audio_device_test_defines.h"
 
-#include "gtest/gtest.h"
-#include "testsupport/fileutils.h"
+#include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
-#include "modules/audio_device/audio_device_config.h"
-#include "modules/audio_device/audio_device_impl.h"
-#include "modules/audio_device/audio_device_utility.h"
-#include "system_wrappers/interface/sleep.h"
+#include "webrtc/modules/audio_device/audio_device_config.h"
+#include "webrtc/modules/audio_device/audio_device_impl.h"
+#include "webrtc/modules/audio_device/audio_device_utility.h"
+#include "webrtc/system_wrappers/interface/sleep.h"
 
 // Helper functions
 #if defined(ANDROID)
@@ -126,6 +126,19 @@ class AudioTransportAPI: public AudioTransport {
       }
     }
     nSamplesOut = 480;
+    return 0;
+  }
+
+  virtual int OnDataAvailable(const int voe_channels[],
+                              int number_of_voe_channels,
+                              const int16_t* audio_data,
+                              int sample_rate,
+                              int number_of_channels,
+                              int number_of_frames,
+                              int audio_delay_milliseconds,
+                              int current_volume,
+                              bool key_pressed,
+                              bool need_audio_processing) {
     return 0;
   }
 

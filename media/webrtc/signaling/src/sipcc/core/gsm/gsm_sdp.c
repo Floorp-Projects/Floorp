@@ -2673,9 +2673,7 @@ gsmsdp_update_local_sdp_media (fsmdef_dcb_t *dcb_p, cc_sdp_t *cc_sdp_p,
         return;
     }
 
-    if (media->support_direction != SDP_DIRECTION_INACTIVE) {
-        gsmsdp_set_connection_address(sdp_p, media->level, dcb_p->ice_default_candidate_addr);
-    }
+    gsmsdp_set_connection_address(sdp_p, media->level, dcb_p->ice_default_candidate_addr);
 
     (void) sdp_set_media_type(sdp_p, level, media->type);
 

@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "ref_count.h"
-#include "video_capture_ds.h"
-#include "video_capture_mf.h"
+#include "webrtc/modules/video_capture/windows/video_capture_ds.h"
+#include "webrtc/modules/video_capture/windows/video_capture_mf.h"
+#include "webrtc/system_wrappers/interface/ref_count.h"
 
 namespace webrtc {
 namespace videocapturemodule {

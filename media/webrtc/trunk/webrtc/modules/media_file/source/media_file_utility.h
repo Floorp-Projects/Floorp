@@ -14,8 +14,8 @@
 
 #include <stdio.h>
 
-#include "common_types.h"
-#include "media_file_defines.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/media_file/interface/media_file_defines.h"
 
 namespace webrtc {
 class AviFile;
@@ -343,5 +343,5 @@ private:
     VideoCodec _videoCodec;
 #endif
 };
-} // namespace webrtc
+}  // namespace webrtc
 #endif // WEBRTC_MODULES_MEDIA_FILE_SOURCE_MEDIA_FILE_UTILITY_H_

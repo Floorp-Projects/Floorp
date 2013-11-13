@@ -13,15 +13,21 @@
 namespace webrtc {
 namespace test {
 
+InputAudioFile::InputAudioFile(const std::string file_name) {
+  fp_ = fopen(file_name.c_str(), "rb");
+}
+
+InputAudioFile::~InputAudioFile() { fclose(fp_); }
+
 bool InputAudioFile::Read(size_t samples, int16_t* destination) {
   if (!fp_) {
     return false;
   }
-  size_t bytes_read = fread(destination, sizeof(int16_t), samples, fp_);
-  if (bytes_read < samples) {
-    // Rewind and read the missing sampels.
+  size_t samples_read = fread(destination, sizeof(int16_t), samples, fp_);
+  if (samples_read < samples) {
+    // Rewind and read the missing samples.
     rewind(fp_);
-    size_t missing_samples = samples - bytes_read;
+    size_t missing_samples = samples - samples_read;
     if (fread(destination, sizeof(int16_t), missing_samples, fp_) <
         missing_samples) {
       // Could not read enough even after rewinding the file.

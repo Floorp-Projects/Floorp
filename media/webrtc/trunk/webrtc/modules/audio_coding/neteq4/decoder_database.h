@@ -65,18 +65,15 @@ class DecoderDatabase {
   // only 7 bits).
   static const uint8_t kRtpPayloadTypeError = 0xFF;
 
-  DecoderDatabase()
-      : active_decoder_(-1),
-        active_cng_decoder_(-1) {
-  }
+  DecoderDatabase();
 
-  virtual ~DecoderDatabase() {}
+  virtual ~DecoderDatabase();
 
   // Returns true if the database is empty.
-  virtual bool Empty() const { return decoders_.empty(); }
+  virtual bool Empty() const;
 
   // Returns the number of decoders registered in the database.
-  virtual int Size() const { return decoders_.size(); }
+  virtual int Size() const;
 
   // Resets the database, erasing all registered payload types, and deleting
   // any AudioDecoder objects that were not externally created and inserted

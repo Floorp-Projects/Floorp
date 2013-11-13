@@ -10,6 +10,7 @@
 
 #include "webrtc/video_engine/vie_sync_module.h"
 
+#include "webrtc/modules/rtp_rtcp/interface/rtp_receiver.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
@@ -24,15 +25,15 @@ namespace webrtc {
 enum { kSyncInterval = 1000};
 
 int UpdateMeasurements(StreamSynchronization::Measurements* stream,
-                       const RtpRtcp* rtp_rtcp) {
-  stream->latest_timestamp = rtp_rtcp->RemoteTimestamp();
-  stream->latest_receive_time_ms = rtp_rtcp->LocalTimeOfRemoteTimeStamp();
+                       const RtpRtcp& rtp_rtcp, const RtpReceiver& receiver) {
+  stream->latest_timestamp = receiver.Timestamp();
+  stream->latest_receive_time_ms = receiver.LastReceivedTimeMs();
   synchronization::RtcpMeasurement measurement;
-  if (0 != rtp_rtcp->RemoteNTP(&measurement.ntp_secs,
-                               &measurement.ntp_frac,
-                               NULL,
-                               NULL,
-                               &measurement.rtp_timestamp)) {
+  if (0 != rtp_rtcp.RemoteNTP(&measurement.ntp_secs,
+                              &measurement.ntp_frac,
+                              NULL,
+                              NULL,
+                              &measurement.rtp_timestamp)) {
     return -1;
   }
   if (measurement.ntp_secs == 0 && measurement.ntp_frac == 0) {
@@ -60,6 +61,7 @@ ViESyncModule::ViESyncModule(VideoCodingModule* vcm,
     : data_cs_(CriticalSectionWrapper::CreateCriticalSection()),
       vcm_(vcm),
       vie_channel_(vie_channel),
+      video_receiver_(NULL),
       video_rtp_rtcp_(NULL),
       voe_channel_id_(-1),
       voe_sync_interface_(NULL),
@@ -72,10 +74,12 @@ ViESyncModule::~ViESyncModule() {
 
 int ViESyncModule::ConfigureSync(int voe_channel_id,
                                  VoEVideoSync* voe_sync_interface,
-                                 RtpRtcp* video_rtcp_module) {
+                                 RtpRtcp* video_rtcp_module,
+                                 RtpReceiver* video_receiver) {
   CriticalSectionScoped cs(data_cs_.get());
   voe_channel_id_ = voe_channel_id;
   voe_sync_interface_ = voe_sync_interface;
+  video_receiver_ = video_receiver;
   video_rtp_rtcp_ = video_rtcp_module;
   sync_.reset(new StreamSynchronization(voe_channel_id, vie_channel_->Id()));
 
@@ -129,16 +133,21 @@ int32_t ViESyncModule::Process() {
       playout_buffer_delay_ms;
 
   RtpRtcp* voice_rtp_rtcp = NULL;
-  if (0 != voe_sync_interface_->GetRtpRtcp(voe_channel_id_, voice_rtp_rtcp)) {
+  RtpReceiver* voice_receiver = NULL;
+  if (0 != voe_sync_interface_->GetRtpRtcp(voe_channel_id_, &voice_rtp_rtcp,
+                                           &voice_receiver)) {
     return 0;
   }
   assert(voice_rtp_rtcp);
+  assert(voice_receiver);
 
-  if (UpdateMeasurements(&video_measurement_, video_rtp_rtcp_) != 0) {
+  if (UpdateMeasurements(&video_measurement_, *video_rtp_rtcp_,
+                         *video_receiver_) != 0) {
     return 0;
   }
 
-  if (UpdateMeasurements(&audio_measurement_, voice_rtp_rtcp) != 0) {
+  if (UpdateMeasurements(&audio_measurement_, *voice_rtp_rtcp,
+                         *voice_receiver) != 0) {
     return 0;
   }
 
