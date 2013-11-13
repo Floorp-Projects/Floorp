@@ -70,7 +70,8 @@ interface PeerConnectionImpl  {
   readonly attribute DOMString localDescription;
   readonly attribute DOMString remoteDescription;
 
-  readonly attribute PCImplIceState iceState;
+  readonly attribute PCImplIceConnectionState iceConnectionState;
+  readonly attribute PCImplIceGatheringState iceGatheringState;
   readonly attribute PCImplReadyState readyState;
   readonly attribute PCImplSignalingState signalingState;
   readonly attribute PCImplSipccState sipccState;

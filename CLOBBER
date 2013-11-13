@@ -18,5 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-WebIDL dictionary modification requires clobber on Windows (bug 928195), part of
-bug 906990.
+Another Windows WebIDL clobber needed due to bug 928195
