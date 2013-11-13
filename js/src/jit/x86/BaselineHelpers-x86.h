@@ -199,7 +199,7 @@ EmitUnstowICValues(MacroAssembler &masm, int values)
         masm.push(BaselineTailCallReg);
         break;
       case 2:
-        // Untow R0 and R1
+        // Unstow R0 and R1
         masm.pop(BaselineTailCallReg);
         masm.popValue(R1);
         masm.popValue(R0);
