@@ -3758,11 +3758,12 @@ public:
         LocationHintAddon
     };
 
-    CompartmentPrivate()
+    CompartmentPrivate(JSCompartment *c)
         : wantXrays(false)
         , universalXPConnectEnabled(false)
         , adoptedNode(false)
         , donatedNode(false)
+        , scriptability(c)
         , scope(nullptr)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);

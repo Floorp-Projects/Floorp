@@ -39,6 +39,7 @@
 #include "mozilla/Attributes.h"
 #include "AccessCheck.h"
 #include "nsGlobalWindow.h"
+#include "nsAboutProtocolUtils.h"
 
 #include "GeckoProfiler.h"
 #include "nsJSPrincipals.h"
@@ -405,19 +406,63 @@ EnsureCompartmentPrivate(JSCompartment *c)
     CompartmentPrivate *priv = GetCompartmentPrivate(c);
     if (priv)
         return priv;
-    priv = new CompartmentPrivate();
+    priv = new CompartmentPrivate(c);
     JS_SetCompartmentPrivate(c, priv);
     return priv;
 }
 
-Scriptability::Scriptability() : mScriptBlocks(0)
-                               , mDocShellAllowsScript(true)
-{}
+static bool
+PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal)
+{
+    // System principal gets a free pass.
+    if (XPCWrapper::GetSecurityManager()->IsSystemPrincipal(aPrincipal))
+        return true;
+
+    // nsExpandedPrincipal gets a free pass.
+    nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
+    if (ep)
+        return true;
+
+    // Check whether our URI is an "about:" URI that allows scripts.  If it is,
+    // we need to allow JS to run.
+    nsCOMPtr<nsIURI> principalURI;
+    aPrincipal->GetURI(getter_AddRefs(principalURI));
+    MOZ_ASSERT(principalURI);
+    bool isAbout;
+    nsresult rv = principalURI->SchemeIs("about", &isAbout);
+    if (NS_SUCCEEDED(rv) && isAbout) {
+        nsCOMPtr<nsIAboutModule> module;
+        rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
+        if (NS_SUCCEEDED(rv)) {
+            uint32_t flags;
+            rv = module->GetURIFlags(principalURI, &flags);
+            if (NS_SUCCEEDED(rv) &&
+                (flags & nsIAboutModule::ALLOW_SCRIPT)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+Scriptability::Scriptability(JSCompartment *c) : mScriptBlocks(0)
+                                               , mDocShellAllowsScript(true)
+{
+    nsIPrincipal *prin = nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+    mImmuneToScriptPolicy = PrincipalImmuneToScriptPolicy(prin);
+}
 
 bool
 Scriptability::Allowed()
 {
     return mDocShellAllowsScript && mScriptBlocks == 0;
+}
+
+bool
+Scriptability::IsImmuneToScriptPolicy()
+{
+    return mImmuneToScriptPolicy;
 }
 
 void
