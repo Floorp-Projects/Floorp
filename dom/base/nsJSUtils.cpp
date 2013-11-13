@@ -241,15 +241,14 @@ nsJSUtils::EvaluateString(JSContext* aCx,
 
   JS::ExposeObjectToActiveJS(aScopeObject);
   nsAutoMicroTask mt;
+  nsresult rv = NS_OK;
 
   JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(aScopeObject));
   aCompileOptions.setPrincipals(p);
 
   bool ok = false;
-  nsresult rv = nsContentUtils::GetSecurityManager()->
-                  CanExecuteScripts(aCx, nsJSPrincipals::get(p), &ok);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(ok, NS_OK);
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(ssm->ScriptAllowed(js::GetGlobalForObjectCrossCompartment(aScopeObject)), NS_OK);
 
   mozilla::Maybe<AutoDontReportUncaught> dontReport;
   if (!aEvaluateOptions.reportUncaught) {
