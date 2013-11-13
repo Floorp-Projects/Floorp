@@ -37,8 +37,9 @@ namespace xpc {
 
 class Scriptability {
 public:
-    Scriptability();
+    Scriptability(JSCompartment *c);
     bool Allowed();
+    bool IsImmuneToScriptPolicy();
 
     void Block();
     void Unblock();
@@ -56,6 +57,10 @@ private:
     // Whether the docshell allows javascript in this scope. If this scope
     // doesn't have a docshell, this value is always true.
     bool mDocShellAllowsScript;
+
+    // Whether this scope is immune to user-defined or addon-defined script
+    // policy.
+    bool mImmuneToScriptPolicy;
 };
 
 JSObject *

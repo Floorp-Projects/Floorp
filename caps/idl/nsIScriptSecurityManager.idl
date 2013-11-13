@@ -201,6 +201,13 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * script to check whether a given principal is system.
      */
     boolean isSystemPrincipal(in nsIPrincipal aPrincipal);
+%{C++
+    bool IsSystemPrincipal(nsIPrincipal* aPrincipal) {
+      bool isSystem = false;
+      IsSystemPrincipal(aPrincipal, &isSystem);
+      return isSystem;
+    }
+%}
 
     /**
      * Same as getSubjectPrincipal(), only faster. cx must *never* be
