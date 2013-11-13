@@ -250,7 +250,7 @@ radix4SkipRead\name:
         VSUB    qY2,qX0,qZ2
 
         @//  data[0] for next iteration
-        VLD2    {dXr0,dXi0},[pSrc :128]!
+        VLD2    {dXr0,dXi0},[pSrc, :128]!
         VADD    qY1,qZ1,qZ3
         VSUB    qY3,qZ1,qZ3
 
@@ -262,33 +262,33 @@ radix4SkipRead\name:
         .ifeqs  "\inverse", "TRUE"
 
             VADD    dZr3,dYr0,dYi3
-            VST2    {dZr0,dZi0},[pDst :128],outPointStep
+            VST2    {dZr0,dZi0},[pDst, :128],outPointStep
             VSUB    dZi3,dYi0,dYr3
 
             VADD    qZ2,qY2,qY1
-            VST2    {dZr3,dZi3},[pDst :128],outPointStep
+            VST2    {dZr3,dZi3},[pDst, :128],outPointStep
 
             VSUB    dZr1,dYr0,dYi3
-            VST2    {dZr2,dZi2},[pDst :128],outPointStep
+            VST2    {dZr2,dZi2},[pDst, :128],outPointStep
             VADD    dZi1,dYi0,dYr3
 
-            VST2    {dZr1,dZi1},[pDst :128],dstStep
+            VST2    {dZr1,dZi1},[pDst, :128],dstStep
 
 
         .else
 
             VSUB    dZr1,dYr0,dYi3
-            VST2    {dZr0,dZi0},[pDst :128],outPointStep
+            VST2    {dZr0,dZi0},[pDst, :128],outPointStep
             VADD    dZi1,dYi0,dYr3
 
             VADD    qZ2,qY2,qY1
-            VST2    {dZr1,dZi1},[pDst :128],outPointStep
+            VST2    {dZr1,dZi1},[pDst, :128],outPointStep
 
             VADD    dZr3,dYr0,dYi3
-            VST2    {dZr2,dZi2},[pDst :128],outPointStep
+            VST2    {dZr2,dZi2},[pDst, :128],outPointStep
             VSUB    dZi3,dYi0,dYr3
 
-            VST2    {dZr3,dZi3},[pDst :128],dstStep
+            VST2    {dZr3,dZi3},[pDst, :128],dstStep
 
 
         .endif
@@ -298,13 +298,13 @@ radix4SkipRead\name:
         BGT     radix4SetLoop\name
 
 
-        VLD1     dW1,[pTwiddle :64],stepTwiddle    @//[wi | wr]
+        VLD1     dW1,[pTwiddle, :64],stepTwiddle    @//[wi | wr]
         @// subtract 4 since grpCount multiplied by 4
         SUBS    grpCount,grpCount,#4
-        VLD1     dW2,[pTwiddle :64],stepTwiddle    @//[wi | wr]
+        VLD1     dW2,[pTwiddle, :64],stepTwiddle    @//[wi | wr]
         @// increment pSrc for the next grp
         ADD     pSrc,pSrc,srcStep
-        VLD1     dW3,[pTwiddle :64],twStep         @//[wi | wr]
+        VLD1     dW3,[pTwiddle, :64],twStep         @//[wi | wr]
         BGT     radix4GrpLoop\name
 
 

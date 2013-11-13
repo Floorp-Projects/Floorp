@@ -147,30 +147,30 @@
         
         @// Update grpCount and grpSize rightaway 
         
-        VLD2    {dW1r,dW1i},[pTwiddle :128]                          @// [wi|wr]
+        VLD2    {dW1r,dW1i},[pTwiddle, :128]                          @// [wi|wr]
         MOV     step16,#16
         LSL     grpCount,subFFTSize,#2
         
-        VLD1    dW2r,[pTwiddle :64]                             @// [wi|wr]
+        VLD1    dW2r,[pTwiddle, :64]                             @// [wi|wr]
         MOV     subFFTNum,#1                            @//after the last stage
         
-        VLD1    dW3r,[pTwiddle :64],step16                     @// [wi|wr]
+        VLD1    dW3r,[pTwiddle, :64],step16                     @// [wi|wr]
         MOV     stepTwiddle,#0
         
-        VLD1    dW2i,[pTwiddle :64]!                            @// [wi|wr]
+        VLD1    dW2i,[pTwiddle, :64]!                            @// [wi|wr]
         SUB     grpTwStep,stepTwiddle,#8                    @// grpTwStep = -8 to start with       
         
         @// update subFFTSize for the next stage
         MOV     subFFTSize,grpCount
-        VLD1    dW3i,[pTwiddle :64],grpTwStep                           @// [wi|wr]
+        VLD1    dW3i,[pTwiddle, :64],grpTwStep                           @// [wi|wr]
         MOV     dstStep,outPointStep,LSL #1
         
-        VLD4     {dButterfly1Real02,dButterfly1Imag02,dButterfly1Real13,dButterfly1Imag13},[pSrc :256]! @// AC.r AC.i BD.r BD.i
+        VLD4     {dButterfly1Real02,dButterfly1Imag02,dButterfly1Real13,dButterfly1Imag13},[pSrc, :256]! @// AC.r AC.i BD.r BD.i
         ADD     dstStep,dstStep,outPointStep                @// dstStep = 3*outPointStep
         RSB     dstStep,dstStep,#16                         @// dstStep = - 3*outPointStep+16
         MOV     step24,#24 
 
-        VLD4     {dButterfly2Real02,dButterfly2Imag02,dButterfly2Real13,dButterfly2Imag13},[pSrc :256]! @// AC.r AC.i BD.r BD.i
+        VLD4     {dButterfly2Real02,dButterfly2Imag02,dButterfly2Real13,dButterfly2Imag13},[pSrc, :256]! @// AC.r AC.i BD.r BD.i
         
 
         @// Process two groups at a time
@@ -209,13 +209,13 @@ grpLoop\name :
                     
         .endif
         
-        VLD2    {dW1r,dW1i},[pTwiddle :128],stepTwiddle      @// [wi|wr]
+        VLD2    {dW1r,dW1i},[pTwiddle, :128],stepTwiddle      @// [wi|wr]
         
         .ifeqs  "\inverse", "TRUE"
             VMULL   qT2,dW2r,dXr2
             VMLAL   qT2,dW2i,dXi2                       @// real part
             VMULL   qT3,dW2r,dXi2
-            VLD1    dW2r,[pTwiddle :64],step16                  @// [wi|wr]
+            VLD1    dW2r,[pTwiddle, :64],step16                  @// [wi|wr]
             VMLSL   qT3,dW2i,dXr2                       @// imag part
                 
         .else
@@ -223,25 +223,25 @@ grpLoop\name :
             VMULL   qT2,dW2r,dXr2
             VMLSL   qT2,dW2i,dXi2                       @// real part
             VMULL   qT3,dW2r,dXi2
-            VLD1    dW2r,[pTwiddle :64],step16                  @// [wi|wr]
+            VLD1    dW2r,[pTwiddle, :64],step16                  @// [wi|wr]
             VMLAL   qT3,dW2i,dXr2                       @// imag part
                     
         .endif
         
         
         VRSHRN  dZr1,qT0,#31
-        VLD1    dW2i,[pTwiddle :64],twStep                  @// [wi|wr] 
+        VLD1    dW2i,[pTwiddle, :64],twStep                  @// [wi|wr] 
         VRSHRN  dZi1,qT1,#31
         
         VMOV     qZ0,qX0                                @// move qX0 so as to load for the next iteration
-        VLD4     {dButterfly1Real02,dButterfly1Imag02,dButterfly1Real13,dButterfly1Imag13},[pSrc :256]! @// AC.r AC.i BD.r BD.i
+        VLD4     {dButterfly1Real02,dButterfly1Imag02,dButterfly1Real13,dButterfly1Imag13},[pSrc, :256]! @// AC.r AC.i BD.r BD.i
         
                 
         .ifeqs  "\inverse", "TRUE"
             VMULL   qT4,dW3r,dXr3
             VMLAL   qT4,dW3i,dXi3                       @// real part
             VMULL   qT5,dW3r,dXi3
-            VLD1    dW3r,[pTwiddle :64],step24
+            VLD1    dW3r,[pTwiddle, :64],step24
             VMLSL   qT5,dW3i,dXr3                       @// imag part
                 
         .else
@@ -249,18 +249,18 @@ grpLoop\name :
             VMULL   qT4,dW3r,dXr3
             VMLSL   qT4,dW3i,dXi3                       @// real part
             VMULL   qT5,dW3r,dXi3
-            VLD1    dW3r,[pTwiddle :64],step24
+            VLD1    dW3r,[pTwiddle, :64],step24
             VMLAL   qT5,dW3i,dXr3                       @// imag part
                     
         .endif
         
         VRSHRN  dZr2,qT2,#31
-        VLD1    dW3i,[pTwiddle :64],grpTwStep                           @// [wi|wr]
+        VLD1    dW3i,[pTwiddle, :64],grpTwStep                           @// [wi|wr]
         VRSHRN  dZi2,qT3,#31
         
         VRSHRN  dZr3,qT4,#31
         VRSHRN  dZi3,qT5,#31
-        VLD4     {dButterfly2Real02,dButterfly2Imag02,dButterfly2Real13,dButterfly2Imag13},[pSrc :256]! @// AC.r AC.i BD.r BD.i
+        VLD4     {dButterfly2Real02,dButterfly2Imag02,dButterfly2Real13,dButterfly2Imag13},[pSrc, :256]! @// AC.r AC.i BD.r BD.i
         
                 
         .ifeqs "\scaled", "TRUE"
@@ -280,17 +280,17 @@ grpLoop\name :
                 VHSUB    qZ0,qY2,qY1
             
                 VHADD    dZr3,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VHSUB    dZi3,dYi0,dYr3
                                 
                 VHADD    qZ2,qY2,qY1
-                VST2    {dZr3,dZi3},[pDst :128],outPointStep
+                VST2    {dZr3,dZi3},[pDst, :128],outPointStep
             
                 VHSUB    dZr1,dYr0,dYi3
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VHADD    dZi1,dYi0,dYr3
                 
-                VST2    {dZr1,dZi1},[pDst :128],dstStep              @// dstStep = -outPointStep + 16
+                VST2    {dZr1,dZi1},[pDst, :128],dstStep              @// dstStep = -outPointStep + 16
             
                                 
             .else
@@ -298,17 +298,17 @@ grpLoop\name :
                 VHSUB    qZ0,qY2,qY1
             
                 VHSUB    dZr1,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VHADD    dZi1,dYi0,dYr3
             
                 VHADD    qZ2,qY2,qY1
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
             
                 VHADD    dZr3,dYr0,dYi3
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VHSUB    dZi3,dYi0,dYr3
                 
-                VST2    {dZr3,dZi3},[pDst :128],dstStep              @// dstStep = -outPointStep + 16
+                VST2    {dZr3,dZi3},[pDst, :128],dstStep              @// dstStep = -outPointStep + 16
 
             
             .endif
@@ -332,17 +332,17 @@ grpLoop\name :
                 VSUB    qZ0,qY2,qY1
             
                 VADD    dZr3,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VSUB    dZi3,dYi0,dYr3
                                 
                 VADD    qZ2,qY2,qY1
-                VST2    {dZr3,dZi3},[pDst :128],outPointStep
+                VST2    {dZr3,dZi3},[pDst, :128],outPointStep
             
                 VSUB    dZr1,dYr0,dYi3
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VADD    dZi1,dYi0,dYr3
                 
-                VST2    {dZr1,dZi1},[pDst :128],dstStep              @// dstStep = -outPointStep + 16
+                VST2    {dZr1,dZi1},[pDst, :128],dstStep              @// dstStep = -outPointStep + 16
             
                                 
             .else
@@ -350,17 +350,17 @@ grpLoop\name :
                 VSUB    qZ0,qY2,qY1
             
                 VSUB    dZr1,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VADD    dZi1,dYi0,dYr3
             
                 VADD    qZ2,qY2,qY1
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
             
                 VADD    dZr3,dYr0,dYi3
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VSUB    dZi3,dYi0,dYr3
                 
-                VST2    {dZr3,dZi3},[pDst :128],dstStep              @// dstStep = -outPointStep + 16
+                VST2    {dZr3,dZi3},[pDst, :128],dstStep              @// dstStep = -outPointStep + 16
 
             
             .endif

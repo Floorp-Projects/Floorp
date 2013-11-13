@@ -213,20 +213,20 @@
                                        
         @// Calculate the step of input data for the next set
         @//MOV     step1,pointStep,LSL #1                      @// step1 = 2*pointStep
-        VLD2    {dXr0,dXi0},[pSrc :128],pointStep          @//  data[0]
+        VLD2    {dXr0,dXi0},[pSrc, :128],pointStep          @//  data[0]
         MOV     step1,grpSize,LSL #4
         
         MOV     step2,pointStep,LSL #3
-        VLD2    {dXr1,dXi1},[pSrc :128],pointStep          @//  data[1]
+        VLD2    {dXr1,dXi1},[pSrc, :128],pointStep          @//  data[1]
         SUB     step2,step2,pointStep                          @// step2 = 7*pointStep
         RSB     setStep,step2,#16                              @// setStep = - 7*pointStep+16
         
-        VLD2    {dXr2,dXi2},[pSrc :128],pointStep          @//  data[2]
-        VLD2    {dXr3,dXi3},[pSrc :128],pointStep          @//  data[3] 
-        VLD2    {dXr4,dXi4},[pSrc :128],pointStep          @//  data[4]
-        VLD2    {dXr5,dXi5},[pSrc :128],pointStep          @//  data[5]
-        VLD2    {dXr6,dXi6},[pSrc :128],pointStep          @//  data[6]
-        VLD2    {dXr7,dXi7},[pSrc :128],setStep            @//  data[7] & update pSrc for the next set
+        VLD2    {dXr2,dXi2},[pSrc, :128],pointStep          @//  data[2]
+        VLD2    {dXr3,dXi3},[pSrc, :128],pointStep          @//  data[3] 
+        VLD2    {dXr4,dXi4},[pSrc, :128],pointStep          @//  data[4]
+        VLD2    {dXr5,dXi5},[pSrc, :128],pointStep          @//  data[5]
+        VLD2    {dXr6,dXi6},[pSrc, :128],pointStep          @//  data[6]
+        VLD2    {dXr7,dXi7},[pSrc, :128],setStep            @//  data[7] & update pSrc for the next set
                                                       @//  setStep = -7*pointStep + 16  
         @// grp = 0 a special case since all the twiddle factors are 1
         @// Loop on the sets
@@ -256,7 +256,7 @@ grpZeroSetLoop\name :
             
             VHADD    qY0,qV0,qV4
             VHSUB    qY4,qV0,qV4
-            VST2    {dYr0,dYi0},[pDst :128],step1                    @// store y0
+            VST2    {dYr0,dYi0},[pDst, :128],step1                    @// store y0
             
             .ifeqs	"\inverse", "TRUE"
                 
@@ -264,15 +264,15 @@ grpZeroSetLoop\name :
                 VHADD    dYi2,dVi2,dVr6
                 
                 VHADD    dYr6,dVr2,dVi6
-                VST2    {dYr2,dYi2},[pDst :128],step1                    @// store y2
+                VST2    {dYr2,dYi2},[pDst, :128],step1                    @// store y2
                 VHSUB    dYi6,dVi2,dVr6
             
                 VHSUB    qU1,qX0,qX4                    
-                VST2    {dYr4,dYi4},[pDst :128],step1                    @// store y4
+                VST2    {dYr4,dYi4},[pDst, :128],step1                    @// store y4
             
                 VHSUB    qU3,qX1,qX5
                 VHSUB    qU5,qX2,qX6
-                VST2    {dYr6,dYi6},[pDst :128],step1                    @// store y6
+                VST2    {dYr6,dYi6},[pDst, :128],step1                    @// store y6
             
             .ELSE
             
@@ -280,15 +280,15 @@ grpZeroSetLoop\name :
                 VHSUB    dYi6,dVi2,dVr6
                 
                 VHSUB    dYr2,dVr2,dVi6
-                VST2    {dYr6,dYi6},[pDst :128],step1                    @// store y2
+                VST2    {dYr6,dYi6},[pDst, :128],step1                    @// store y2
                 VHADD    dYi2,dVi2,dVr6
                 
                                 
                 VHSUB    qU1,qX0,qX4
-                VST2    {dYr4,dYi4},[pDst :128],step1                    @// store y4
+                VST2    {dYr4,dYi4},[pDst, :128],step1                    @// store y4
                 VHSUB    qU3,qX1,qX5
                 VHSUB    qU5,qX2,qX6
-                VST2    {dYr2,dYi2},[pDst :128],step1                    @// store y6
+                VST2    {dYr2,dYi2},[pDst, :128],step1                    @// store y6
 
             
             .ENDIF
@@ -301,17 +301,17 @@ grpZeroSetLoop\name :
             @// finish second stage of 8 point FFT 
             
             VHSUB    dVr1,dUr1,dUi5
-            VLD2    {dXr0,dXi0},[pSrc :128],pointStep          @//  data[0] for next iteration
+            VLD2    {dXr0,dXi0},[pSrc, :128],pointStep          @//  data[0] for next iteration
             VHADD    dVi1,dUi1,dUr5
             VHADD    dVr3,dUr1,dUi5
-            VLD2    {dXr1,dXi1},[pSrc :128],pointStep          @//  data[1]
+            VLD2    {dXr1,dXi1},[pSrc, :128],pointStep          @//  data[1]
             VHSUB    dVi3,dUi1,dUr5
                         
             VHSUB    dVr5,dUr3,dUi7
-            VLD2    {dXr2,dXi2},[pSrc :128],pointStep          @//  data[2]
+            VLD2    {dXr2,dXi2},[pSrc, :128],pointStep          @//  data[2]
             VHADD    dVi5,dUi3,dUr7
             VHADD    dVr7,dUr3,dUi7
-            VLD2    {dXr3,dXi3},[pSrc :128],pointStep          @//  data[3]
+            VLD2    {dXr3,dXi3},[pSrc, :128],pointStep          @//  data[3]
             VHSUB    dVi7,dUi3,dUr7
             
             @// finish third stage of 8 point FFT 
@@ -320,14 +320,14 @@ grpZeroSetLoop\name :
             
                 @// calculate a*v5 
                 VQRDMULH    dT1,dVr5,dT0[0]                         @// use dVi0 for dT1
-                VLD2    {dXr4,dXi4},[pSrc :128],pointStep          @//  data[4]
+                VLD2    {dXr4,dXi4},[pSrc, :128],pointStep          @//  data[4]
                 VQRDMULH    dVi5,dVi5,dT0[0]
                             
-                VLD2    {dXr5,dXi5},[pSrc :128],pointStep          @//  data[5]
+                VLD2    {dXr5,dXi5},[pSrc, :128],pointStep          @//  data[5]
                 VSUB    dVr5,dT1,dVi5                               @// a * V5
                 VADD    dVi5,dT1,dVi5
                 
-                VLD2    {dXr6,dXi6},[pSrc :128],pointStep          @//  data[6]
+                VLD2    {dXr6,dXi6},[pSrc, :128],pointStep          @//  data[6]
                 
                 @// calculate  b*v7
                 VQRDMULH    dT1,dVr7,dT0[0]
@@ -341,32 +341,32 @@ grpZeroSetLoop\name :
                 VSUB    dVi7,dVi7,dT1
                 SUB     pDst, pDst, step2                           @// set pDst to y1
                 
-                VLD2    {dXr7,dXi7},[pSrc :128],setStep            @//  data[7]            
+                VLD2    {dXr7,dXi7},[pSrc, :128],setStep            @//  data[7]            
                 
                 
                 VHSUB    dYr3,dVr3,dVr7
                 VHSUB    dYi3,dVi3,dVi7
-                VST2    {dYr1,dYi1},[pDst :128],step1                    @// store y1
+                VST2    {dYr1,dYi1},[pDst, :128],step1                    @// store y1
                 VHADD    dYr7,dVr3,dVr7
                 VHADD    dYi7,dVi3,dVi7
 
                 
-                VST2    {dYr3,dYi3},[pDst :128],step1                    @// store y3
-                VST2    {dYr5,dYi5},[pDst :128],step1                    @// store y5
-                VST2    {dYr7,dYi7},[pDst :128]!                      @// store y7
+                VST2    {dYr3,dYi3},[pDst, :128],step1                    @// store y3
+                VST2    {dYr5,dYi5},[pDst, :128],step1                    @// store y5
+                VST2    {dYr7,dYi7},[pDst, :128]!                      @// store y7
 
             .ELSE
             
                 @// calculate  b*v7
                 VQRDMULH    dT1,dVr7,dT0[0]
-                VLD2    {dXr4,dXi4},[pSrc :128],pointStep          @//  data[4]
+                VLD2    {dXr4,dXi4},[pSrc, :128],pointStep          @//  data[4]
                 VQRDMULH    dVi7,dVi7,dT0[0]
                 
-                VLD2    {dXr5,dXi5},[pSrc :128],pointStep          @//  data[5]
+                VLD2    {dXr5,dXi5},[pSrc, :128],pointStep          @//  data[5]
                 VADD    dVr7,dT1,dVi7                               @// b * V7
                 VSUB    dVi7,dVi7,dT1
                 
-                VLD2    {dXr6,dXi6},[pSrc :128],pointStep          @//  data[6]
+                VLD2    {dXr6,dXi6},[pSrc, :128],pointStep          @//  data[6]
                 
                 @// calculate a*v5 
                 VQRDMULH    dT1,dVr5,dT0[0]                         @// use dVi0 for dT1
@@ -378,19 +378,19 @@ grpZeroSetLoop\name :
             
                 VSUB    dVr5,dT1,dVi5                               @// a * V5
                 VADD    dVi5,dT1,dVi5
-                VLD2    {dXr7,dXi7},[pSrc :128],setStep            @//  data[7]            
+                VLD2    {dXr7,dXi7},[pSrc, :128],setStep            @//  data[7]            
                 
                 VHSUB    qY5,qV1,qV5
                 
                 VHSUB    dYr3,dVr3,dVr7
-                VST2    {dYr7,dYi7},[pDst :128],step1                    @// store y1
+                VST2    {dYr7,dYi7},[pDst, :128],step1                    @// store y1
                 VHSUB    dYi3,dVi3,dVi7
                 VHADD    qY1,qV1,qV5
                 
                 
-                VST2    {dYr5,dYi5},[pDst :128],step1                    @// store y3
-                VST2    {dYr3,dYi3},[pDst :128],step1                    @// store y5
-                VST2    {dYr1,dYi1},[pDst :128]!                      @// store y7
+                VST2    {dYr5,dYi5},[pDst, :128],step1                    @// store y3
+                VST2    {dYr3,dYi3},[pDst, :128],step1                    @// store y5
+                VST2    {dYr1,dYi1},[pDst, :128]!                      @// store y7
             
             .ENDIF
             
@@ -415,7 +415,7 @@ grpZeroSetLoop\name :
             
             VADD    qY0,qV0,qV4
             VSUB    qY4,qV0,qV4
-            VST2    {dYr0,dYi0},[pDst :128],step1                    @// store y0
+            VST2    {dYr0,dYi0},[pDst, :128],step1                    @// store y0
             
             .ifeqs	"\inverse", "TRUE"
                 
@@ -423,15 +423,15 @@ grpZeroSetLoop\name :
                 VADD    dYi2,dVi2,dVr6
                 
                 VADD    dYr6,dVr2,dVi6
-                VST2    {dYr2,dYi2},[pDst :128],step1                    @// store y2
+                VST2    {dYr2,dYi2},[pDst, :128],step1                    @// store y2
                 VSUB    dYi6,dVi2,dVr6
             
                 VSUB    qU1,qX0,qX4                    
-                VST2    {dYr4,dYi4},[pDst :128],step1                    @// store y4
+                VST2    {dYr4,dYi4},[pDst, :128],step1                    @// store y4
             
                 VSUB    qU3,qX1,qX5
                 VSUB    qU5,qX2,qX6
-                VST2    {dYr6,dYi6},[pDst :128],step1                    @// store y6
+                VST2    {dYr6,dYi6},[pDst, :128],step1                    @// store y6
             
             .ELSE
             
@@ -439,15 +439,15 @@ grpZeroSetLoop\name :
                 VSUB    dYi6,dVi2,dVr6
                 
                 VSUB    dYr2,dVr2,dVi6
-                VST2    {dYr6,dYi6},[pDst :128],step1                    @// store y2
+                VST2    {dYr6,dYi6},[pDst, :128],step1                    @// store y2
                 VADD    dYi2,dVi2,dVr6
                 
                                 
                 VSUB    qU1,qX0,qX4
-                VST2    {dYr4,dYi4},[pDst :128],step1                    @// store y4
+                VST2    {dYr4,dYi4},[pDst, :128],step1                    @// store y4
                 VSUB    qU3,qX1,qX5
                 VSUB    qU5,qX2,qX6
-                VST2    {dYr2,dYi2},[pDst :128],step1                    @// store y6
+                VST2    {dYr2,dYi2},[pDst, :128],step1                    @// store y6
 
             
             .ENDIF
@@ -460,17 +460,17 @@ grpZeroSetLoop\name :
             @// finish second stage of 8 point FFT 
             
             VSUB    dVr1,dUr1,dUi5
-            VLD2    {dXr0,dXi0},[pSrc :128],pointStep          @//  data[0] for next iteration
+            VLD2    {dXr0,dXi0},[pSrc, :128],pointStep          @//  data[0] for next iteration
             VADD    dVi1,dUi1,dUr5
             VADD    dVr3,dUr1,dUi5
-            VLD2    {dXr1,dXi1},[pSrc :128],pointStep          @//  data[1]
+            VLD2    {dXr1,dXi1},[pSrc, :128],pointStep          @//  data[1]
             VSUB    dVi3,dUi1,dUr5
                         
             VSUB    dVr5,dUr3,dUi7
-            VLD2    {dXr2,dXi2},[pSrc :128],pointStep          @//  data[2]
+            VLD2    {dXr2,dXi2},[pSrc, :128],pointStep          @//  data[2]
             VADD    dVi5,dUi3,dUr7
             VADD    dVr7,dUr3,dUi7
-            VLD2    {dXr3,dXi3},[pSrc :128],pointStep          @//  data[3]
+            VLD2    {dXr3,dXi3},[pSrc, :128],pointStep          @//  data[3]
             VSUB    dVi7,dUi3,dUr7
             
             @// finish third stage of 8 point FFT 
@@ -479,14 +479,14 @@ grpZeroSetLoop\name :
             
                 @// calculate a*v5 
                 VQRDMULH    dT1,dVr5,dT0[0]                         @// use dVi0 for dT1
-                VLD2    {dXr4,dXi4},[pSrc :128],pointStep          @//  data[4]
+                VLD2    {dXr4,dXi4},[pSrc, :128],pointStep          @//  data[4]
                 VQRDMULH    dVi5,dVi5,dT0[0]
                             
-                VLD2    {dXr5,dXi5},[pSrc :128],pointStep          @//  data[5]
+                VLD2    {dXr5,dXi5},[pSrc, :128],pointStep          @//  data[5]
                 VSUB    dVr5,dT1,dVi5                               @// a * V5
                 VADD    dVi5,dT1,dVi5
                 
-                VLD2    {dXr6,dXi6},[pSrc :128],pointStep          @//  data[6]
+                VLD2    {dXr6,dXi6},[pSrc, :128],pointStep          @//  data[6]
                 
                 @// calculate  b*v7
                 VQRDMULH    dT1,dVr7,dT0[0]
@@ -500,32 +500,32 @@ grpZeroSetLoop\name :
                 VSUB    dVi7,dVi7,dT1
                 SUB     pDst, pDst, step2                           @// set pDst to y1
                 
-                VLD2    {dXr7,dXi7},[pSrc :128],setStep            @//  data[7]            
+                VLD2    {dXr7,dXi7},[pSrc, :128],setStep            @//  data[7]            
                 
                 
                 VSUB    dYr3,dVr3,dVr7
                 VSUB    dYi3,dVi3,dVi7
-                VST2    {dYr1,dYi1},[pDst :128],step1                    @// store y1
+                VST2    {dYr1,dYi1},[pDst, :128],step1                    @// store y1
                 VADD    dYr7,dVr3,dVr7
                 VADD    dYi7,dVi3,dVi7
 
                 
-                VST2    {dYr3,dYi3},[pDst :128],step1                    @// store y3
-                VST2    {dYr5,dYi5},[pDst :128],step1                    @// store y5
-                VST2    {dYr7,dYi7},[pDst :128]!                      @// store y7
+                VST2    {dYr3,dYi3},[pDst, :128],step1                    @// store y3
+                VST2    {dYr5,dYi5},[pDst, :128],step1                    @// store y5
+                VST2    {dYr7,dYi7},[pDst, :128]!                      @// store y7
 
             .ELSE
             
                 @// calculate  b*v7
                 VQRDMULH    dT1,dVr7,dT0[0]
-                VLD2    {dXr4,dXi4},[pSrc :128],pointStep          @//  data[4]
+                VLD2    {dXr4,dXi4},[pSrc, :128],pointStep          @//  data[4]
                 VQRDMULH    dVi7,dVi7,dT0[0]
                 
-                VLD2    {dXr5,dXi5},[pSrc :128],pointStep          @//  data[5]
+                VLD2    {dXr5,dXi5},[pSrc, :128],pointStep          @//  data[5]
                 VADD    dVr7,dT1,dVi7                               @// b * V7
                 VSUB    dVi7,dVi7,dT1
                 
-                VLD2    {dXr6,dXi6},[pSrc :128],pointStep          @//  data[6]
+                VLD2    {dXr6,dXi6},[pSrc, :128],pointStep          @//  data[6]
                 
                 @// calculate a*v5 
                 VQRDMULH    dT1,dVr5,dT0[0]                         @// use dVi0 for dT1
@@ -537,19 +537,19 @@ grpZeroSetLoop\name :
             
                 VSUB    dVr5,dT1,dVi5                               @// a * V5
                 VADD    dVi5,dT1,dVi5
-                VLD2    {dXr7,dXi7},[pSrc :128],setStep            @//  data[7]            
+                VLD2    {dXr7,dXi7},[pSrc, :128],setStep            @//  data[7]            
                 
                 VSUB    qY5,qV1,qV5
                 
                 VSUB    dYr3,dVr3,dVr7
-                VST2    {dYr7,dYi7},[pDst :128],step1                    @// store y1
+                VST2    {dYr7,dYi7},[pDst, :128],step1                    @// store y1
                 VSUB    dYi3,dVi3,dVi7
                 VADD    qY1,qV1,qV5
                 
                 
-                VST2    {dYr5,dYi5},[pDst :128],step1                    @// store y3
-                VST2    {dYr3,dYi3},[pDst :128],step1                    @// store y5
-                VST2    {dYr1,dYi1},[pDst :128]!                      @// store y7
+                VST2    {dYr5,dYi5},[pDst, :128],step1                    @// store y3
+                VST2    {dYr3,dYi3},[pDst, :128],step1                    @// store y5
+                VST2    {dYr1,dYi1},[pDst, :128]!                      @// store y7
             
             .ENDIF
             

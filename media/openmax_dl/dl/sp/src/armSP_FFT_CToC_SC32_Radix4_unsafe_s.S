@@ -268,33 +268,33 @@ setLoop\name :
             .ifeqs  "\inverse", "TRUE"
                 
                 VHADD    dZr3,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VHSUB    dZi3,dYi0,dYr3
                 
                 VHADD    qZ2,qY2,qY1
-                VST2    {dZr3,dZi3},[pDst :128],outPointStep
+                VST2    {dZr3,dZi3},[pDst, :128],outPointStep
             
                 VHSUB    dZr1,dYr0,dYi3
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VHADD    dZi1,dYi0,dYr3
             
-                VST2    {dZr1,dZi1},[pDst :128],dstStep
+                VST2    {dZr1,dZi1},[pDst, :128],dstStep
                 
                 
             .else
                 
                 VHSUB    dZr1,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VHADD    dZi1,dYi0,dYr3
             
                 VHADD    qZ2,qY2,qY1
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
             
                 VHADD    dZr3,dYr0,dYi3
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VHSUB    dZi3,dYi0,dYr3
             
-                VST2    {dZr3,dZi3},[pDst :128],dstStep
+                VST2    {dZr3,dZi3},[pDst, :128],dstStep
 
             
             .endif
@@ -306,7 +306,7 @@ setLoop\name :
             VADD    qY0,qX0,qZ2
             VSUB    qY2,qX0,qZ2
                         
-            VLD2    {dXr0,dXi0},[pSrc :128]!          @//  data[0] for next iteration
+            VLD2    {dXr0,dXi0},[pSrc, :128]!          @//  data[0] for next iteration
             VADD    qY1,qZ1,qZ3
             VSUB    qY3,qZ1,qZ3
             
@@ -318,33 +318,33 @@ setLoop\name :
             .ifeqs  "\inverse", "TRUE"
                 
                 VADD    dZr3,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VSUB    dZi3,dYi0,dYr3
                 
                 VADD    qZ2,qY2,qY1
-                VST2    {dZr3,dZi3},[pDst :128],outPointStep
+                VST2    {dZr3,dZi3},[pDst, :128],outPointStep
             
                 VSUB    dZr1,dYr0,dYi3
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VADD    dZi1,dYi0,dYr3
             
-                VST2    {dZr1,dZi1},[pDst :128],dstStep
+                VST2    {dZr1,dZi1},[pDst, :128],dstStep
                 
                 
             .else
                 
                 VSUB    dZr1,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VADD    dZi1,dYi0,dYr3
             
                 VADD    qZ2,qY2,qY1
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
             
                 VADD    dZr3,dYr0,dYi3
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
                 VSUB    dZi3,dYi0,dYr3
             
-                VST2    {dZr3,dZi3},[pDst :128],dstStep
+                VST2    {dZr3,dZi3},[pDst, :128],dstStep
 
             
             .endif
@@ -355,11 +355,11 @@ setLoop\name :
         BGT     setLoop\name
         
         
-        VLD1     dW1,[pTwiddle :64],stepTwiddle                  @//[wi | wr]
+        VLD1     dW1,[pTwiddle, :64],stepTwiddle                  @//[wi | wr]
         SUBS    grpCount,grpCount,#4                    @// subtract 4 since grpCount multiplied by 4               
-        VLD1     dW2,[pTwiddle :64],stepTwiddle                  @//[wi | wr]
+        VLD1     dW2,[pTwiddle, :64],stepTwiddle                  @//[wi | wr]
         ADD     pSrc,pSrc,srcStep                       @// increment pSrc for the next grp
-        VLD1     dW3,[pTwiddle :64],twStep                       @//[wi | wr]
+        VLD1     dW3,[pTwiddle, :64],twStep                       @//[wi | wr]
         BGT     grpLoop\name
 
                 
