@@ -1,31 +1,45 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/km.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/km.xml
+ * ICU <specials> source: <path>/common/main/km.xml
  */
 km{
     AuxExemplarCharacters{"[\u17B4\u17B5\u200B ឝ ឞ]"}
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0} …"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
+    }
     ExemplarCharacters{
         "[\u17CC \u17CE \u17CF \u17D1 \u17D0 ៈ \u17CB \u17C9 \u17CA \u17CD ក ខ គ ឃ ង "
         "ច ឆ ជ ឈ ញ ដ ឋ ឌ ឍ ណ ត ថ ទ ធ ន ប ផ ព ភ ម យ រ ឫ ឬ ល ឭ ឮ វ ស ហ ឡ អ ឲ ឪ {អា} ឥ ឦ"
         " ឧ {ឧក} ឩ ឯ ឰ ឱ ឳ ា \u17B7 \u17B8 \u17B9 \u17BA \u17BB \u17BC \u17BD ើ ឿ ៀ េ"
         " ែ ៃ ោ ៅ \u17C6 ះ \u17D2]"
     }
-    ExemplarCharactersPunctuation{"[\- , ៖ ! ? . ។ ៕ ‘ ’ \" “ ” ( ) \[ \] \{ \} ៙ ៚]"}
+    ExemplarCharactersPunctuation{"[\\- , ៖ ! ? . ។ ៕ ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\} ៙ ៚]"}
     LocaleScript{
         "Khmr",
     }
+    MoreInformation{"?"}
     NumberElements{
         default{"latn"}
         latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}–{1}"}
+            }
             patterns{
-                currencyFormat{"¤#,##0.00;(¤#,##0.00)"}
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
+                currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
@@ -121,12 +135,156 @@ km{
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
+                superscriptingExponent{"×"}
             }
         }
         native{"khmr"}
     }
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y G",
+                "d MMMM, y G",
+                "d MMM y G",
+                "d/M/y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                Ed{"d E"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, d/M"}
+                MMM{"LLL"}
+                MMMEd{"E d MMM"}
+                MMMd{"d MMM"}
+                Md{"d/M"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"GGGGG M/y"}
+                yyyyMEd{"E, d-M-y G"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"d-M-y G"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
+            }
+            intervalFormats{
+                H{
+                    H{"H-H"}
+                }
+                Hm{
+                    H{"H:mm-H:mm"}
+                    m{"H:mm-H:mm"}
+                }
+                Hmv{
+                    H{"H:mm-H:mm v"}
+                    m{"H:mm-H:mm v"}
+                }
+                Hv{
+                    H{"H-H v"}
+                }
+                M{
+                    M{"M-M"}
+                }
+                MEd{
+                    M{"E, d/M - E, d/M"}
+                    d{"E, d/M– E, d/M"}
+                }
+                MMM{
+                    M{"MMM-MMM"}
+                }
+                MMMEd{
+                    M{"E, d MMM - E, d MMM"}
+                    d{"E, d MMM - E, d MMM"}
+                }
+                MMMd{
+                    M{"d MMM - d MMM"}
+                    d{"d-d MMM"}
+                }
+                Md{
+                    M{"d/M - d/M"}
+                    d{"d/M– d/M"}
+                }
+                d{
+                    d{"d-d"}
+                }
+                fallback{"{0} - {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h-h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm-h:mm a"}
+                    m{"h:mm-h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm-h:mm a v"}
+                    m{"h:mm-h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h-h a v"}
+                }
+                y{
+                    y{"y-y G"}
+                }
+                yM{
+                    M{"M/y - M/y G"}
+                    y{"M/y - M/y G"}
+                }
+                yMEd{
+                    M{"E, d/M/y - E, d/M/y G"}
+                    d{"E, d/M/y - E, d/M/y G"}
+                    y{"E, d/M/y - E, d/M/y G"}
+                }
+                yMMM{
+                    M{"MM – MM-y G"}
+                    y{"MM-y – MM-y G"}
+                }
+                yMMMEd{
+                    M{"E, dd MMM y - E, dd MMM y G"}
+                    d{"E, dd MMM y - E, dd MMM y G"}
+                    y{"E, dd-MM-y – E, dd MMM y G"}
+                }
+                yMMMM{
+                    M{"MM – MM y G"}
+                    y{"MM-y – MM-y G"}
+                }
+                yMMMd{
+                    M{"d MMM y – d MMM"}
+                    d{"d-d MMM y G"}
+                    y{"d MMM y - d MMM y G"}
+                }
+                yMd{
+                    M{"d/M/y - d/M/y G"}
+                    d{"d/M/y - d/M/y G"}
+                    y{"d/M/y - d/M/y G"}
+                }
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "ព្រឹក",
@@ -137,27 +295,38 @@ km{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE, d MMMM y",
-                "d MMMM, y",
+                "EEEE d MMMM y",
+                "d MMMM y",
                 "d MMM y",
-                "d/M/yyyy",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "d/M/y",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            appendItems{
+                Timezone{"{0} {1}"}
             }
             availableFormats{
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
+                Gy{"y នៃ G"}
+                GyMMM{"MMM y នៃ G"}
+                GyMMMEd{"E d MMM y នៃ G"}
+                GyMMMd{"d MMM y នៃ G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
-                MEd{"E, M-d"}
+                MEd{"E d MMM"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMd{"d MMM"}
-                Md{"M-d"}
+                Md{"d-M"}
                 d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
@@ -165,9 +334,9 @@ km{
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"M-y"}
-                yMEd{"E, d-M-y"}
+                yMEd{"E d-M-y"}
                 yMMM{"MMM y"}
-                yMMMEd{"E, d MMM y"}
+                yMMMEd{"E d MMM y"}
                 yMMMd{"d MMM y"}
                 yMd{"d-M-y"}
                 yQQQ{"QQQ y"}
@@ -261,73 +430,34 @@ km{
                     "គ្រិស្តសករាជ",
                 }
             }
-            fields{
-                day{
-                    dn{"ថ្ងៃ"}
-                    relative{
-                        "-1"{"ម្សិលមិញ"}
-                        "-2"{"ម្សិល​ម៉្ងៃ"}
-                        "0"{"ថ្ងៃ​នេះ"}
-                        "1"{"ថ្ងៃ​ស្អែក"}
-                        "2"{"​ខាន​ស្អែក"}
-                    }
-                }
-                dayperiod{
-                    dn{"ព្រឹក/ល្ងាច"}
-                }
-                era{
-                    dn{"សករាជ"}
-                }
-                hour{
-                    dn{"ម៉ោង"}
-                }
-                minute{
-                    dn{"នាទី"}
-                }
-                month{
-                    dn{"ខែ"}
-                }
-                second{
-                    dn{"វិនាទី"}
-                }
-                week{
-                    dn{"សប្ដាហ៍"}
-                }
-                weekday{
-                    dn{"ថ្ងៃ​នៃ​សប្ដាហ៍"}
-                }
-                year{
-                    dn{"ឆ្នាំ"}
-                }
-            }
             intervalFormats{
                 H{
                     H{"H-H"}
                 }
                 Hm{
                     H{"H:mm-H:mm"}
-                    m{"H:mm-H:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
                     H{"H:mm-H:mm v"}
-                    m{"H:mm-H:mm v"}
+                    m{"HH:mm–HH:mm v"}
                 }
                 Hv{
-                    H{"H-H v"}
+                    H{"HH–HH v"}
                 }
                 M{
                     M{"M-M"}
                 }
                 MEd{
-                    M{"E, d/M - E, d/M"}
-                    d{"E, d/M– E, d/M"}
+                    M{"E d/M - E d/M"}
+                    d{"E d/M– E d/M"}
                 }
                 MMM{
                     M{"MMM-MMM"}
                 }
                 MMMEd{
-                    M{"E, d MMM - E, d MMM"}
-                    d{"E, d MMM - E, d MMM"}
+                    M{"E d MMM - E d MMM"}
+                    d{"E d MMM - E d MMM"}
                 }
                 MMMd{
                     M{"d MMM - d MMM"}
@@ -357,42 +487,42 @@ km{
                 }
                 hv{
                     a{"h a – h a v"}
-                    h{"h-h a v"}
+                    h{"h–h a v"}
                 }
                 y{
                     y{"y-y"}
                 }
                 yM{
-                    M{"M/yyyy - M/yyyy"}
-                    y{"M/yyyy - M/yyyy"}
+                    M{"M/y - M/y"}
+                    y{"M/y - M/y"}
                 }
                 yMEd{
-                    M{"E, d/M/yyyy - E, d/M/yyyy"}
-                    d{"E, d/M/yyyy - E, d/M/yyyy"}
-                    y{"E, d/M/yyyy - E, d/M/yyyy"}
+                    M{"E d/M/y - E d/M/y"}
+                    d{"E d/M/y - E d/M/y"}
+                    y{"E d/M/y - E d/M/y"}
                 }
                 yMMM{
-                    M{"MM – MM-yyyy"}
-                    y{"MM-yyyy – MM-yyyy"}
+                    M{"MMM–MMM​ y"}
+                    y{"MMM y – MMM y"}
                 }
                 yMMMEd{
-                    M{"E, dd MMM y - E, dd MMM y"}
-                    d{"E, dd MMM y - E, dd MMM y"}
-                    y{"E, dd-MM-yyyy – E, dd MMM y"}
+                    M{"E dd MMM y - E dd MMM y"}
+                    d{"E dd MMM y - E dd MMM y"}
+                    y{"E dd-MM-y – E dd MMM y"}
                 }
                 yMMMM{
-                    M{"MM – MM yyyy"}
-                    y{"MM-yyyy – MM-yyyy"}
+                    M{"MMMM – MMMM y"}
+                    y{"MMMM y – MMMM y"}
                 }
                 yMMMd{
-                    M{"d MMM y – d MMM"}
+                    M{"d MMM – d MMM y"}
                     d{"d-d MMM y"}
                     y{"d MMM y - d MMM y"}
                 }
                 yMd{
-                    M{"d/M/yyyy - d/M/yyyy"}
-                    d{"d/M/yyyy - d/M/yyyy"}
-                    y{"d/M/yyyy - d/M/yyyy"}
+                    M{"d/M/y - d/M/y"}
+                    d{"d/M/y - d/M/y"}
+                    y{"d/M/y - d/M/y"}
                 }
             }
             monthNames{
@@ -500,10 +630,10 @@ km{
                         "៤",
                     }
                     wide{
-                        "ត្រីមាស ទី ១",
-                        "ត្រីមាស ទី ២",
-                        "ត្រីមាស ទី ៣",
-                        "ត្រីមាស ទី ៤",
+                        "ត្រីមាសទី ១",
+                        "ត្រីមាសទី ២",
+                        "ត្រីមាសទី ៣",
+                        "ត្រីមាសទី ៤",
                     }
                 }
                 stand-alone{
@@ -535,6 +665,176 @@ km{
         quotationEnd{"”"}
         quotationStart{"“"}
     }
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
+    fields{
+        day{
+            dn{"ថ្ងៃ"}
+            relative{
+                "-1"{"ម្សិលមិញ"}
+                "-2"{"ម្សិល​ម៉្ងៃ"}
+                "0"{"ថ្ងៃ​នេះ"}
+                "1"{"ថ្ងៃ​ស្អែក"}
+                "2"{"​ខាន​ស្អែក"}
+            }
+            relativeTime{
+                future{
+                    other{"ក្នុង​រយៈ​ពេល {0} ថ្ងៃ"}
+                }
+                past{
+                    other{"{0} ថ្ងៃ​មុន"}
+                }
+            }
+        }
+        dayperiod{
+            dn{"ព្រឹក/ល្ងាច"}
+        }
+        era{
+            dn{"សករាជ"}
+        }
+        fri{
+            relative{
+                "-1"{"ថ្ងៃ​សុក្រ​មុន"}
+                "0"{"ថ្ងៃ​សុក្រ​នេះ"}
+                "1"{"ថ្ងៃ​សុក្រ​ក្រោយ"}
+            }
+        }
+        hour{
+            dn{"ម៉ោង"}
+            relativeTime{
+                future{
+                    other{"ក្នុង​រយៈ​ពេល {0} ម៉ោង"}
+                }
+                past{
+                    other{"{0} ម៉ោង​មុន"}
+                }
+            }
+        }
+        minute{
+            dn{"នាទី"}
+            relativeTime{
+                future{
+                    other{"ក្នុង​រយៈពេល {0} នាទី"}
+                }
+                past{
+                    other{"{0} នាទី​មុន"}
+                }
+            }
+        }
+        mon{
+            relative{
+                "-1"{"ថ្ងៃ​ច័ន្ទ​មុន"}
+                "0"{"ថ្ងៃ​ច័ន្ទ​នេះ"}
+                "1"{"ថ្ងៃ​ច័ន្ទ​ក្រោយ"}
+            }
+        }
+        month{
+            dn{"ខែ"}
+            relative{
+                "-1"{"ខែ​មុន"}
+                "0"{"ខែ​នេះ"}
+                "1"{"ខែ​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ក្នុង​រយៈ​ពេល {0} ខែ"}
+                }
+                past{
+                    other{"{0} ខែមុន"}
+                }
+            }
+        }
+        sat{
+            relative{
+                "-1"{"ថ្ងៃ​សៅរ៍​មុន"}
+                "0"{"ថ្ងៃ​សៅរ៍​នេះ"}
+                "1"{"ថ្ងៃ​សៅរ៍​ក្រោយ"}
+            }
+        }
+        second{
+            dn{"វិនាទី"}
+            relative{
+                "0"{"ឥឡូវ"}
+            }
+            relativeTime{
+                future{
+                    other{"ក្នុង​រយៈពេល {0} វិនាទី"}
+                }
+                past{
+                    other{"{0} វិនាទី​មុន"}
+                }
+            }
+        }
+        sun{
+            relative{
+                "-1"{"ថ្ងៃ​អាទិត្យ​មុន"}
+                "0"{"ថ្ងៃ​អាទិត្យ​នេះ"}
+                "1"{"ថ្ងៃ​អាទិត្យ​ក្រោយ"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"ថ្ងៃ​ព្រហស្បតិ៍​មុន"}
+                "0"{"ថ្ងៃ​ព្រហស្បតិ៍​នេះ"}
+                "1"{"ថ្ងៃ​ព្រហស្បតិ៍​ក្រោយ"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"ថ្ងៃ​អង្គារ​មុន"}
+                "0"{"ថ្ងៃ​អង្គារ​នេះ"}
+                "1"{"ថ្ងៃ​អង្គារ​ក្រោយ"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"ថ្ងៃ​ពុធ​មុន"}
+                "0"{"ថ្ងៃ​ពុធ​នេះ"}
+                "1"{"ថ្ងៃ​ពុធ​ក្រោយ"}
+            }
+        }
+        week{
+            dn{"សប្ដាហ៍"}
+            relative{
+                "-1"{"សប្ដាហ៍​មុន"}
+                "0"{"សប្ដាហ៍​នេះ"}
+                "1"{"សប្ដាហ៍​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ក្នុង​រយៈ​ពេល {0} សប្ដាហ៍"}
+                }
+                past{
+                    other{"{0} សប្ដាហ៍​មុន"}
+                }
+            }
+        }
+        weekday{
+            dn{"ថ្ងៃ​នៃ​សប្ដាហ៍"}
+        }
+        year{
+            dn{"ឆ្នាំ"}
+            relative{
+                "-1"{"ឆ្នាំ​មុន"}
+                "0"{"ឆ្នាំ​នេះ"}
+                "1"{"ឆ្នាំ​ក្រោយ"}
+            }
+            relativeTime{
+                future{
+                    other{"ក្នុង​រយៈ​ពេល {0} ឆ្នាំ"}
+                }
+                past{
+                    other{"{0} ឆ្នាំ​មុន"}
+                }
+            }
+        }
+        zone{
+            dn{"តំបន់​ពេល​វេលា"}
+        }
+    }
     listPattern{
         standard{
             2{"{0} និង {1}"}
@@ -542,74 +842,523 @@ km{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        unit{
+            2{"{0} និង {1}"}
+            end{"{0} និង {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
+        unit-narrow{
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
+        unit-short{
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
     }
     measurementSystemNames{
         UK{"ចក្រភព​អង់គ្លេស"}
+        US{"សហរដ្ឋអាមេរិក"}
         metric{"ម៉ែត្រ"}
     }
     units{
-        day{
-            other{"{0} ថ្ងៃ"}
+        acceleration{
+            g-force{
+                other{"{0} កម្លាំង​ទំនាញ"}
+            }
         }
-        day-future{
-            other{"ក្នុង​រយៈ​ពេល {0} ថ្ងៃ"}
+        angle{
+            arc-minute{
+                other{"{0} នាទី"}
+            }
+            arc-second{
+                other{"{0} វិនាទី"}
+            }
+            degree{
+                other{"{0} ដឺក្រេ"}
+            }
         }
-        day-past{
-            other{"{0} ថ្ងៃ​មុន"}
+        area{
+            acre{
+                other{"{0} អា"}
+            }
+            hectare{
+                other{"{0} ហិកតា"}
+            }
+            square-foot{
+                other{"{0} ហ្វីត​ការ៉េ"}
+            }
+            square-kilometer{
+                other{"{0} គីឡូម៉ែត្រ​ការ៉េ"}
+            }
+            square-meter{
+                other{"{0} ម៉ែត្រ​ការ៉េ"}
+            }
+            square-mile{
+                other{"{0} ម៉ាយល៍​ការ៉េ"}
+            }
         }
-        hour{
-            other{"{0} ម៉ោង"}
+        compound{
+            per{"{0}​ក្នុង​មួយ​{1}"}
         }
-        hour-future{
-            other{"ក្នុង​រយៈ​ពេល {0} ម៉ោង"}
+        duration{
+            day{
+                other{"{0} ថ្ងៃ"}
+            }
+            hour{
+                other{"{0} ម៉ោង"}
+            }
+            millisecond{
+                other{"{0} មិល្លី​វិនាទី"}
+            }
+            minute{
+                other{"{0} នាទី"}
+            }
+            month{
+                other{"{0} ខែ"}
+            }
+            second{
+                other{"{0} វិនាទី"}
+            }
+            week{
+                other{"{0} សប្ដាហ៍"}
+            }
+            year{
+                other{"{0} ឆ្នាំ"}
+            }
         }
-        hour-past{
-            other{"{0} ម៉ោង​មុន"}
+        length{
+            centimeter{
+                other{"{0} សង់ទីម៉ែត្រ"}
+            }
+            foot{
+                other{"{0} ហ្វីត"}
+            }
+            inch{
+                other{"{0} អ៊ិន្ឈ៍"}
+            }
+            kilometer{
+                other{"{0} គីឡូម៉ែត្រ"}
+            }
+            light-year{
+                other{"{0} ឆ្នាំ​ពន្លឺ"}
+            }
+            meter{
+                other{"{0} ម៉ែត្រ"}
+            }
+            mile{
+                other{"{0} ម៉ាយល៍"}
+            }
+            millimeter{
+                other{"{0} មិល្លីម៉ែត្រ"}
+            }
+            picometer{
+                other{"{0} ពីកូម៉ែត្រ"}
+            }
+            yard{
+                other{"{0} យ៉ាត"}
+            }
         }
-        minute{
-            other{"{0} នាទី"}
+        mass{
+            gram{
+                other{"{0} ក្រាម"}
+            }
+            kilogram{
+                other{"{0} គីឡូក្រាម"}
+            }
+            ounce{
+                other{"{0} អោនស៍"}
+            }
+            pound{
+                other{"{0} ផោន"}
+            }
         }
-        minute-future{
-            other{"ក្នុង​រយៈពេល {0} នាទី"}
+        power{
+            horsepower{
+                other{"{0} សេះ"}
+            }
+            kilowatt{
+                other{"{0} គីឡូវ៉ាត់"}
+            }
+            watt{
+                other{"{0} វ៉ាត់"}
+            }
         }
-        minute-past{
-            other{"{0} នាទី​មុន"}
+        pressure{
+            hectopascal{
+                other{"{0} ហិចតូប៉ាស្កាល់"}
+            }
+            inch-hg{
+                other{"{0} inHg"}
+            }
+            millibar{
+                other{"{0} មិល្លីបារ"}
+            }
         }
-        month{
-            other{"{0} ខែ"}
+        speed{
+            kilometer-per-hour{
+                other{"{0} គីឡូម៉ែត្រ​ក្នុង​មួយ​ម៉ោង"}
+            }
+            meter-per-second{
+                other{"{0} ម៉ែត្រ​ក្នុង​មួយ​វិនាទី"}
+            }
+            mile-per-hour{
+                other{"{0} ម៉ាយល៍​ក្នុង​មួយ​ម៉ោង"}
+            }
         }
-        month-future{
-            other{"ក្នុង​រយៈ​ពេល {0} ខែ"}
+        temperature{
+            celsius{
+                other{"{0}ដឺក្រេសែលស៊ីស"}
+            }
+            fahrenheit{
+                other{"{0}ដឺក្រេហ្វារិនហៃ"}
+            }
         }
-        month-past{
-            other{"{0} នាទី​មុន"}
+        volume{
+            cubic-kilometer{
+                other{"{0} គីឡូម៉ែត្រ​គីប"}
+            }
+            cubic-mile{
+                other{"{0} ម៉ាយល៍​គីប"}
+            }
+            liter{
+                other{"{0} លីត្រ"}
+            }
         }
-        second{
-            other{"{0} វិនាទី"}
+    }
+    unitsNarrow{
+        acceleration{
+            g-force{
+                other{"{0} ក.ទ."}
+            }
         }
-        second-future{
-            other{"ក្នុង​រយៈពេល {0} វិនាទី"}
+        angle{
+            arc-minute{
+                other{"{0}′"}
+            }
+            arc-second{
+                other{"{0}″"}
+            }
+            degree{
+                other{"{0}°"}
+            }
         }
-        second-past{
-            other{"{0} វិនាទី​មុន"}
+        area{
+            acre{
+                other{"{0} អា"}
+            }
+            hectare{
+                other{"{0} ហ."}
+            }
+            square-foot{
+                other{"{0} ហ្វ²."}
+            }
+            square-kilometer{
+                other{"{0} គ.ម²."}
+            }
+            square-meter{
+                other{"{0} ម²."}
+            }
+            square-mile{
+                other{"{0} ម៉²."}
+            }
         }
-        week{
-            other{"{0} សប្ដាហ៍"}
+        compound{
+            per{"{0}/{1}"}
         }
-        week-future{
-            other{"ក្នុង​រយៈ​ពេល {0} សប្ដាហ៍"}
+        duration{
+            day{
+                other{"{0} ថ្ងៃ"}
+            }
+            hour{
+                other{"{0} ម៉."}
+            }
+            millisecond{
+                other{"{0} មិ.វិ."}
+            }
+            minute{
+                other{"{0} ន."}
+            }
+            month{
+                other{"{0} ខែ"}
+            }
+            second{
+                other{"{0} វិ."}
+            }
+            week{
+                other{"{0} សប្ដាហ៍"}
+            }
+            year{
+                other{"{0} ឆ្នាំ"}
+            }
         }
-        week-past{
-            other{"{0} សប្ដាហ៍​មុន"}
+        length{
+            centimeter{
+                other{"{0} ស.ម."}
+            }
+            foot{
+                other{"{0}′"}
+            }
+            inch{
+                other{"{0}″"}
+            }
+            kilometer{
+                other{"{0} គ.ម"}
+            }
+            light-year{
+                other{"{0} ឆ្នាំ​ពន្លឺ"}
+            }
+            meter{
+                other{"{0} ម."}
+            }
+            mile{
+                other{"{0} ម៉."}
+            }
+            millimeter{
+                other{"{0} ម.ម."}
+            }
+            picometer{
+                other{"{0} ព.ម."}
+            }
+            yard{
+                other{"{0} យ៉."}
+            }
         }
-        year{
-            other{"{0} ឆ្នាំ"}
+        mass{
+            gram{
+                other{"{0} ក."}
+            }
+            kilogram{
+                other{"{0} គ.ក."}
+            }
+            ounce{
+                other{"{0} អ."}
+            }
+            pound{
+                other{"{0}#"}
+            }
         }
-        year-future{
-            other{"ក្នុង​រយៈ​ពេល {0} ឆ្នាំ"}
+        power{
+            horsepower{
+                other{"{0} សេះ"}
+            }
+            kilowatt{
+                other{"{0} គ.វ."}
+            }
+            watt{
+                other{"{0} វ."}
+            }
         }
-        year-past{
-            other{"{0} ឆ្នាំ​មុន"}
+        pressure{
+            hectopascal{
+                other{"{0} hPa"}
+            }
+            inch-hg{
+                other{"{0}\u0022 Hg"}
+            }
+            millibar{
+                other{"{0} ម.ប."}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                other{"{0} គ.ម./ម៉"}
+            }
+            meter-per-second{
+                other{"{0} ម./វិ."}
+            }
+            mile-per-hour{
+                other{"{0} ម៉./ម៉"}
+            }
+        }
+        temperature{
+            celsius{
+                other{"{0}°"}
+            }
+            fahrenheit{
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                other{"{0} គ.ម³."}
+            }
+            cubic-mile{
+                other{"{0} ម៉³."}
+            }
+            liter{
+                other{"{0} ល."}
+            }
+        }
+    }
+    unitsShort{
+        acceleration{
+            g-force{
+                other{"{0} ក.ទ."}
+            }
+        }
+        angle{
+            arc-minute{
+                other{"{0} ន."}
+            }
+            arc-second{
+                other{"{0} វិ."}
+            }
+            degree{
+                other{"{0}°"}
+            }
+        }
+        area{
+            acre{
+                other{"{0} អា"}
+            }
+            hectare{
+                other{"{0} ហ."}
+            }
+            square-foot{
+                other{"{0} ហ្វ²."}
+            }
+            square-kilometer{
+                other{"{0} គ.ម²."}
+            }
+            square-meter{
+                other{"{0} ម²."}
+            }
+            square-mile{
+                other{"{0} ម៉²."}
+            }
+        }
+        compound{
+            per{"{0}/{1}"}
+        }
+        duration{
+            day{
+                other{"{0} ថ្ងៃ"}
+            }
+            hour{
+                other{"{0} ម៉."}
+            }
+            millisecond{
+                other{"{0} មិ.វិ."}
+            }
+            minute{
+                other{"{0} ន."}
+            }
+            month{
+                other{"{0} ខែ"}
+            }
+            second{
+                other{"{0} វិ."}
+            }
+            week{
+                other{"{0} សប្ដាហ៍"}
+            }
+            year{
+                other{"{0} ឆ្នាំ"}
+            }
+        }
+        length{
+            centimeter{
+                other{"{0} ស.ម."}
+            }
+            foot{
+                other{"{0} ហ្វ."}
+            }
+            inch{
+                other{"{0} អ៊ិន្ឈ៍"}
+            }
+            kilometer{
+                other{"{0} គ.ម."}
+            }
+            light-year{
+                other{"{0} ឆ្នាំ​ពន្លឺ"}
+            }
+            meter{
+                other{"{0} ម."}
+            }
+            mile{
+                other{"{0} ម៉."}
+            }
+            millimeter{
+                other{"{0} ម.ម."}
+            }
+            picometer{
+                other{"{0} ព.ម."}
+            }
+            yard{
+                other{"{0} យ៉."}
+            }
+        }
+        mass{
+            gram{
+                other{"{0} ក."}
+            }
+            kilogram{
+                other{"{0} គ.ក."}
+            }
+            ounce{
+                other{"{0} អ."}
+            }
+            pound{
+                other{"{0} ផ."}
+            }
+        }
+        power{
+            horsepower{
+                other{"{0} សេះ"}
+            }
+            kilowatt{
+                other{"{0} គ.វ."}
+            }
+            watt{
+                other{"{0} វ."}
+            }
+        }
+        pressure{
+            hectopascal{
+                other{"{0} hPa"}
+            }
+            inch-hg{
+                other{"{0} inHg"}
+            }
+            millibar{
+                other{"{0} ម.ប."}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                other{"{0} គ.ម./ម៉"}
+            }
+            meter-per-second{
+                other{"{0} ម./វិ."}
+            }
+            mile-per-hour{
+                other{"{0} ម៉./ម៉"}
+            }
+        }
+        temperature{
+            celsius{
+                other{"{0}°C"}
+            }
+            fahrenheit{
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                other{"{0} គ.ម³."}
+            }
+            cubic-mile{
+                other{"{0} ម៉³."}
+            }
+            liter{
+                other{"{0} ល."}
+            }
         }
     }
 }

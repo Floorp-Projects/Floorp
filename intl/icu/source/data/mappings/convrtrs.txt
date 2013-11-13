@@ -1,6 +1,6 @@
 # ******************************************************************************
 # *
-# *   Copyright (C) 1995-2012, International Business Machines
+# *   Copyright (C) 1995-2013, International Business Machines
 # *   Corporation and others.  All Rights Reserved.
 # *
 # ******************************************************************************
@@ -455,30 +455,22 @@ ibm-1089_P100-1995 { UTR22* }
 # ISO Greek (with euro update). This is really ISO_8859-7:2003
 ibm-9005_X110-2007 { UTR22* }
                         ibm-9005 { IBM* }
-                        ISO-8859-7 { MIME* IANA WINDOWS }
-                        greek { IANA WINDOWS }
-                        greek8 { IANA WINDOWS }
-                        ELOT_928 { IANA WINDOWS }
-                        ECMA-118 { IANA WINDOWS }
-                        csISOLatinGreek { IANA WINDOWS }
-                        iso-ir-126 { IANA WINDOWS }
-                        ISO_8859-7:1987 { IANA* WINDOWS }
+                        ISO-8859-7 { MIME* IANA JAVA* WINDOWS }
+                        8859_7 { JAVA }
+                        greek { IANA JAVA WINDOWS }
+                        greek8 { IANA JAVA WINDOWS }
+                        ELOT_928 { IANA JAVA WINDOWS }
+                        ECMA-118 { IANA JAVA WINDOWS }
+                        csISOLatinGreek { IANA JAVA WINDOWS }
+                        iso-ir-126 { IANA JAVA WINDOWS }
+                        ISO_8859-7:1987 { IANA* JAVA WINDOWS }
                         windows-28597 { WINDOWS* }
                         sun_eu_greek # For Solaris
 
 # ISO Greek (w/o euro update)
 # JDK 1.5 has these aliases.
 ibm-813_P100-1995 { UTR22* }
-                        ibm-813 { IBM* JAVA }
-                        ISO-8859-7 { JAVA* }
-                        greek { JAVA }
-                        greek8 { JAVA }
-                        ELOT_928 { JAVA }
-                        ECMA-118 { JAVA }
-                        csISOLatinGreek { JAVA }
-                        iso-ir-126 { JAVA }
-                        ISO_8859-7:1987 { JAVA }
-                        8859_7 { JAVA }
+                        ibm-813 { IBM* JAVA* }
                         cp813 { JAVA }
                         813 { JAVA }
 
@@ -622,10 +614,6 @@ ibm-943_P130-1999 { UTR22* }
 ibm-33722_P12A_P12A-2009_U2 { UTR22* }
                         ibm-33722   # Leave untagged because this isn't the default
                         ibm-5050    # Leave untagged because this isn't the default, and yes this alias is correct
-                        EUC-JP { IANA MIME* WINDOWS }
-                        Extended_UNIX_Code_Packed_Format_for_Japanese { IANA* WINDOWS* }
-                        csEUCPkdFmtJapanese { IANA WINDOWS }
-                        X-EUC-JP { WINDOWS }   # Japan EUC. x-euc-jp is a MIME name
                         ibm-33722_VPUA
                         IBM-eucJP
 windows-51932-2006 { UTR22* }
@@ -646,16 +634,17 @@ ibm-33722_P120-1999 { UTR22* }  # Japan EUC with \ <-> Yen mapping
 # ibm-954 contains more PUA characters than the others.
 ibm-954_P101-2007 { UTR22* }
                         ibm-954 { IBM* }
-                        EUC-JP { JAVA* } # Matches more closely with ibm-1350
-                        Extended_UNIX_Code_Packed_Format_for_Japanese { JAVA }
-                        csEUCPkdFmtJapanese { JAVA }
-                        X-EUC-JP { JAVA }   # Japan EUC. x-euc-jp is a MIME name
-                        eucjis { JAVA }
-                        ujis # Linux sometimes uses this name. This is an unfortunate generic and rarely used name. Its use is discouraged.
-                        x-IBM954 { JAVA }
+                        x-IBM954 { JAVA* }
                         x-IBM954C { JAVA }
                         # eucJP # This is closest to Solaris EUC-JP.
-                        
+euc-jp-2007 { UTR22* }
+                        EUC-JP { MIME* IANA JAVA* WINDOWS* }
+                        Extended_UNIX_Code_Packed_Format_for_Japanese { IANA* JAVA WINDOWS }
+                        csEUCPkdFmtJapanese { IANA JAVA WINDOWS }
+                        X-EUC-JP { MIME JAVA WINDOWS }   # Japan EUC. x-euc-jp is a MIME name
+                        eucjis {JAVA}
+                        ujis # Linux sometimes uses this name. This is an unfortunate generic and rarely used name. Its use is discouraged.
+
 aix-IBM_udcJP-4.3.6 { UTR22* }
                         x-IBM-udcJP { JAVA* }
 
@@ -676,6 +665,7 @@ windows-950-2000 { UTR22* }
                         windows-950 { WINDOWS* }
                         x-windows-950 { JAVA }
                         x-big5
+                        ms950
 ibm-950_P110-1999 { UTR22* }                # Taiwan Big-5 (w/o euro update)
                         ibm-950 { IBM* JAVA }
                         cp950 { JAVA* }

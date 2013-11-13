@@ -1,31 +1,88 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/af.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/af.xml
+ * ICU <specials> source: <path>/common/main/af.xml
  */
 af{
-    Version{"2.0.78.32"}
+    Version{"2.0.92.87"}
     zoneStrings{
+        "Africa:Addis_Ababa"{
+            ec{"Addis Abeba"}
+        }
+        "Africa:Asmera"{
+            ec{"Asmara"}
+        }
+        "Africa:Cairo"{
+            ec{"Caro"}
+        }
+        "Africa:Djibouti"{
+            ec{"Djiboeti"}
+        }
+        "Africa:Khartoum"{
+            ec{"Kartoem"}
+        }
         "Africa:Sao_Tome"{
             ec{"São Tomé"}
         }
         "America:Asuncion"{
             ec{"Asunción"}
         }
+        "America:Coral_Harbour"{
+            ec{"Atikokan"}
+        }
         "America:Curacao"{
             ec{"Curaçao"}
         }
+        "America:Godthab"{
+            ec{"Nuuk"}
+        }
+        "America:Indiana:Knox"{
+            ec{"Knox, Indiana"}
+        }
+        "America:Indiana:Marengo"{
+            ec{"Marengo, Indiana"}
+        }
+        "America:Indiana:Petersburg"{
+            ec{"Petersburg, Indiana"}
+        }
+        "America:Indiana:Tell_City"{
+            ec{"Tell City, Indiana"}
+        }
+        "America:Indiana:Vevay"{
+            ec{"Vevay, Indiana"}
+        }
+        "America:Indiana:Vincennes"{
+            ec{"Vincennes, Indiana"}
+        }
+        "America:Indiana:Winamac"{
+            ec{"Winamac, Indiana"}
+        }
+        "America:Kentucky:Monticello"{
+            ec{"Monticello, Kentucky"}
+        }
         "America:Lower_Princes"{
-            ec{"Laer Prins se kwartaal"}
+            ec{"Lower Prince's Quarter"}
         }
         "America:Mexico_City"{
             ec{"Meksikostad"}
+        }
+        "America:North_Dakota:Beulah"{
+            ec{"Beulah, North Dakota"}
+        }
+        "America:North_Dakota:Center"{
+            ec{"Center, North Dakota"}
+        }
+        "America:North_Dakota:New_Salem"{
+            ec{"New Salem, North Dakota"}
+        }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
         }
         "America:St_Barthelemy"{
             ec{"Sint Barthélemy"}
@@ -33,17 +90,192 @@ af{
         "America:St_Johns"{
             ec{"Sint John's"}
         }
+        "America:St_Kitts"{
+            ec{"St. Kitts"}
+        }
+        "America:St_Lucia"{
+            ec{"St. Lucia"}
+        }
+        "America:St_Thomas"{
+            ec{"St. Thomas"}
+        }
+        "America:St_Vincent"{
+            ec{"St. Vincent"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont d’Urville"}
+        }
         "Antarctica:South_Pole"{
             ec{"Suidpool"}
+        }
+        "Asia:Ashgabat"{
+            ec{"Asjchabad"}
+        }
+        "Asia:Baghdad"{
+            ec{"Bagdad"}
         }
         "Asia:Bahrain"{
             ec{"Bahrein"}
         }
+        "Asia:Baku"{
+            ec{"Bakoe"}
+        }
+        "Asia:Beirut"{
+            ec{"Beiroet"}
+        }
+        "Asia:Bishkek"{
+            ec{"Bisjkek"}
+        }
+        "Asia:Brunei"{
+            ec{"Broenei"}
+        }
+        "Asia:Calcutta"{
+            ec{"Kolkata"}
+        }
+        "Asia:Damascus"{
+            ec{"Damaskus"}
+        }
+        "Asia:Hong_Kong"{
+            ec{"Hongkong"}
+        }
+        "Asia:Karachi"{
+            ec{"Karatsji"}
+        }
+        "Asia:Katmandu"{
+            ec{"Katmandoe"}
+        }
+        "Asia:Kuwait"{
+            ec{"Koeweit"}
+        }
+        "Asia:Muscat"{
+            ec{"Muskat"}
+        }
+        "Asia:Oral"{
+            ec{"Oeral"}
+        }
+        "Asia:Qatar"{
+            ec{"Katar"}
+        }
+        "Asia:Rangoon"{
+            ec{"Rangoen"}
+        }
+        "Asia:Riyadh"{
+            ec{"Riaad"}
+        }
+        "Asia:Saigon"{
+            ec{"Ho Tsji Minhstad"}
+        }
+        "Asia:Seoul"{
+            ec{"Seoel"}
+        }
+        "Asia:Singapore"{
+            ec{"Singapoer"}
+        }
+        "Asia:Ulaanbaatar"{
+            ec{"Ulaanbatar"}
+        }
+        "Asia:Yakutsk"{
+            ec{"Jakoetsk"}
+        }
+        "Asia:Yekaterinburg"{
+            ec{"Jekaterinburg"}
+        }
+        "Atlantic:Azores"{
+            ec{"Asore"}
+        }
+        "Atlantic:Canary"{
+            ec{"Kanarie"}
+        }
+        "Atlantic:Cape_Verde"{
+            ec{"Kaap Verde"}
+        }
+        "Atlantic:Faeroe"{
+            ec{"Faroe"}
+        }
+        "Atlantic:South_Georgia"{
+            ec{"Suid-Georgië"}
+        }
+        "Atlantic:St_Helena"{
+            ec{"St. Helena"}
+        }
+        "Etc:Unknown"{
+            ec{"Onbekende stad"}
+        }
+        "Europe:Athens"{
+            ec{"Athene"}
+        }
+        "Europe:Berlin"{
+            ec{"Berlyn"}
+        }
+        "Europe:Brussels"{
+            ec{"Brussel"}
+        }
+        "Europe:Bucharest"{
+            ec{"Boekarest"}
+        }
+        "Europe:Budapest"{
+            ec{"Boedapest"}
+        }
+        "Europe:Copenhagen"{
+            ec{"Kopenhagen"}
+        }
+        "Europe:Dublin"{
+            ld{"Ierse somertyd"}
+        }
+        "Europe:Kiev"{
+            ec{"Kiëf"}
+        }
+        "Europe:Lisbon"{
+            ec{"Lissabon"}
+        }
+        "Europe:London"{
+            ec{"Londen"}
+            ld{"Britse somertyd"}
+        }
+        "Europe:Luxembourg"{
+            ec{"Luxemburg"}
+        }
         "Europe:Moscow"{
             ec{"Moskou"}
         }
+        "Europe:Paris"{
+            ec{"Parys"}
+        }
+        "Europe:Prague"{
+            ec{"Praag"}
+        }
+        "Europe:Vatican"{
+            ec{"Vatikaanstad"}
+        }
+        "Europe:Vienna"{
+            ec{"Wene"}
+        }
+        "Europe:Warsaw"{
+            ec{"Warskou"}
+        }
+        "Europe:Zurich"{
+            ec{"Zürich"}
+        }
+        "Indian:Christmas"{
+            ec{"Kers"}
+        }
+        "Indian:Maldives"{
+            ec{"Maledive"}
+        }
         "Indian:Reunion"{
             ec{"Réunion"}
+        }
+        "Pacific:Easter"{
+            ec{"Paas"}
+        }
+        "Pacific:Noumea"{
+            ec{"Nouméa"}
+        }
+        "Pacific:Ponape"{
+            ec{"Pohnpei"}
+        }
+        "Pacific:Truk"{
+            ec{"Chuuk"}
         }
         "meta:Afghanistan"{
             ls{"Afghanistan-tyd"}
@@ -81,7 +313,7 @@ af{
         "meta:America_Central"{
             ld{"Sentrale dagligtyd"}
             lg{"Sentrale tyd"}
-            ls{"Sentraal-standaardtyd"}
+            ls{"Sentrale standaardtyd"}
         }
         "meta:America_Eastern"{
             ld{"Oostelike dagligtyd"}
@@ -105,7 +337,7 @@ af{
         }
         "meta:Arabian"{
             ld{"Arabiese dagligtyd"}
-            lg{"Arabiese Tyd"}
+            lg{"Arabiese tyd"}
             ls{"Arabiese standaardtyd"}
         }
         "meta:Argentina"{
@@ -209,7 +441,7 @@ af{
             ls{"Kersfeeseiland-tyd"}
         }
         "meta:Cocos"{
-            ls{"Cocos Eilande-tyd"}
+            ls{"Cocoseilande-tyd"}
         }
         "meta:Colombia"{
             ld{"Colombië-somertyd"}
@@ -259,9 +491,9 @@ af{
             ls{"Wes-Europese standaardtyd"}
         }
         "meta:Falkland"{
-            ld{"Falkland-eilande-somertyd"}
-            lg{"Falkland-eilande-tyd"}
-            ls{"Falkland-eilande-standaardtyd"}
+            ld{"Falklandeilande-somertyd"}
+            lg{"Falklandeilande-tyd"}
+            ls{"Falklandeilande-standaardtyd"}
         }
         "meta:Fiji"{
             ld{"Fidji-somertyd"}
@@ -407,7 +639,7 @@ af{
             ls{"Maleisië-tyd"}
         }
         "meta:Maldives"{
-            ls{"Maldives-tyd"}
+            ls{"Maledive-tyd"}
         }
         "meta:Marquesas"{
             ls{"Marquesas-tyd"}
@@ -424,7 +656,7 @@ af{
             ls{"Mawson-tyd"}
         }
         "meta:Mongolia"{
-            ld{"Oelan Bator-somertyd"}
+            ld{"Ulaanbatar-somertyd"}
             lg{"Ulaanbatar-tyd"}
             ls{"Ulaanbatar-standaardtyd"}
         }
@@ -461,7 +693,7 @@ af{
             ls{"Niue-tyd"}
         }
         "meta:Norfolk"{
-            ls{"Norfolk-eilande-tyd"}
+            ls{"Norfolkeilande-tyd"}
         }
         "meta:Noronha"{
             ld{"Fernando de Noronha-somertyd"}
@@ -505,7 +737,7 @@ af{
             ls{"Filippynse standaardtyd"}
         }
         "meta:Phoenix_Islands"{
-            ls{"Feniks-eilande-tyd"}
+            ls{"Fenikseilande-tyd"}
         }
         "meta:Pierre_Miquelon"{
             ld{"Sint-Pierre en Miquelon-dagligtyd"}
@@ -530,11 +762,13 @@ af{
             ls{"Sakhalin-standaardtyd"}
         }
         "meta:Samara"{
-            ld{"Samara-somertyd"}
+            ld{"Samara-dagligtyd"}
             lg{"Samara-tyd"}
             ls{"Samara-standaardtyd"}
         }
         "meta:Samoa"{
+            ld{"Samoa-dagligtyd"}
+            lg{"Samoa-tyd"}
             ls{"Samoa-standaardtyd"}
         }
         "meta:Seychelles"{
@@ -633,10 +867,11 @@ af{
             ls{"Jekaterinburg-standaardtyd"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1}-tyd ({0})"}
         gmtFormat{"MGT{0}"}
         gmtZeroFormat{"MGT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0}-tyd"}
+        regionFormatDaylight{"{0}-dagligtyd"}
+        regionFormatStandard{"{0}-standaardtyd"}
     }
 }

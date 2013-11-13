@@ -1,18 +1,23 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/bn_IN.xml
 // *
 // ***************************************************************************
 bn_IN{
-    Version{"2.0.78.47"}
+    Version{"2.0.92.80"}
     zoneStrings{
         "meta:Alaska"{
             ld{"আলাসকা দিবালোক সময়"}
             lg{"আলাস্কার সময়"}
             ls{"অ্যালাসকা মানক সময়"}
+        }
+        "meta:America_Central"{
+            ld{"কেন্দ্রীয় দিবালোক মসয়"}
+            lg{"উত্তর আমিরিকা কেন্দ্রীয় সময়"}
+            ls{"উত্তর আমিরিকা কেন্দ্রীয় মানক সময়"}
         }
         "meta:Cook"{
             ld{"কুক দ্বীপপুঞ্জ অর্ধেক গ্রীষ্মকাল সময়"}
@@ -59,5 +64,6 @@ bn_IN{
         "meta:Vostok"{
             ls{"ভসটক সময়"}
         }
+        gmtZeroFormat{"গ্রীনিচ মানক সময়"}
     }
 }

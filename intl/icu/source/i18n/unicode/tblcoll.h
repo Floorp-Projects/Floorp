@@ -1,6 +1,6 @@
 /*
 ******************************************************************************
-* Copyright (C) 1996-2012, International Business Machines Corporation and
+* Copyright (C) 1996-2013, International Business Machines Corporation and
 * others. All Rights Reserved.
 ******************************************************************************
 */
@@ -394,17 +394,25 @@ public:
      */
     virtual void getVersion(UVersionInfo info) const;
 
+#ifndef U_HIDE_DEPRECATED_API 
     /**
-     * Return the maximum length of any expansion sequences that end with the
+     * Returns the maximum length of any expansion sequences that end with the
      * specified comparison order.
-     * @param order a collation order returned by previous or next.
+     *
+     * This is specific to the kind of collation element values and sequences
+     * returned by the CollationElementIterator.
+     * Call CollationElementIterator::getMaxExpansion() instead.
+     *
+     * @param order a collation order returned by CollationElementIterator::previous
+     *              or CollationElementIterator::next.
      * @return maximum size of the expansion sequences ending with the collation
-     *         element or 1 if collation element does not occur at the end of
+     *         element, or 1 if the collation element does not occur at the end of
      *         any expansion sequence
      * @see CollationElementIterator#getMaxExpansion
-     * @stable ICU 2.0
+     * @deprecated ICU 51 Use CollationElementIterator::getMaxExpansion() instead.
      */
     int32_t getMaxExpansion(int32_t order) const;
+#endif  /* U_HIDE_DEPRECATED_API */
 
     /**
      * Returns a unique class ID POLYMORPHICALLY. Pure virtual override. This
@@ -431,16 +439,19 @@ public:
      */
     static UClassID U_EXPORT2 getStaticClassID(void);
 
+#ifndef U_HIDE_DEPRECATED_API 
     /**
-     * Returns the binary format of the class's rules. The format is that of
-     * .col files.
+     * Do not use this method: The caller and the ICU library might use different heaps.
+     * Use cloneBinary() instead which writes to caller-provided memory.
+     *
+     * Returns a binary format of this collator.
      * @param length Returns the length of the data, in bytes
      * @param status the error code status.
      * @return memory, owned by the caller, of size 'length' bytes.
-     * @stable ICU 2.2
+     * @deprecated ICU 52. Use cloneBinary() instead.
      */
     uint8_t *cloneRuleData(int32_t &length, UErrorCode &status);
-
+#endif  /* U_HIDE_DEPRECATED_API */
 
     /** Creates a binary image of a collator. This binary image can be stored and 
     *  later used to instantiate a collator using ucol_openBinary.
@@ -840,7 +851,7 @@ inline const UCollator * RuleBasedCollator::getUCollator()
 {
     return ucollator;
 }
-#endif
+#endif  /* U_HIDE_INTERNAL_API */
 
 U_NAMESPACE_END
 

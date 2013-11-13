@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ak.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ak.xml
+ * ICU <specials> source: <path>/common/main/ak.xml
  */
 ak{
     AuxExemplarCharacters{"[c j q v z]"}
@@ -27,8 +27,49 @@ ak{
             }
         }
     }
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, G y MMMM dd",
+                "G y MMMM d",
+                "G y MMM d",
+                "GGGGG yy/MM/dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M/d"}
+                MMM{"LLL"}
+                MMMEd{"E, MMM d"}
+                MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
+                yMd{"y/M/d"}
+                yQQQ{"QQQ y"}
+                yQQQQ{"QQQQ y"}
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "AN",
@@ -63,12 +104,12 @@ ak{
                 d{"d"}
                 hm{"h:mm a"}
                 ms{"mm:ss"}
-                y{"yyyy"}
-                yM{"M/yyyy"}
-                yMEd{"E, M/d/yyyy"}
-                yMMM{"MMM yyyy"}
-                yMMMEd{"E, MMM d, yyyy"}
-                yMMMM{"MMMM yyyy"}
+                y{"y"}
+                yM{"M/y"}
+                yMEd{"E, M/d/y"}
+                yMMM{"MMM y"}
+                yMMMEd{"E, MMM d, y"}
+                yMMMM{"MMMM y"}
                 yMd{"y/M/d"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
@@ -116,46 +157,6 @@ ak{
                     "Kristo Ekyiri",
                 }
             }
-            fields{
-                day{
-                    dn{"Da"}
-                    relative{
-                        "-1"{"Ndeda"}
-                        "0"{"Ndɛ"}
-                        "1"{"Ɔkyena"}
-                    }
-                }
-                dayperiod{
-                    dn{"Da bere"}
-                }
-                era{
-                    dn{"Bere"}
-                }
-                hour{
-                    dn{"Dɔnhwer"}
-                }
-                minute{
-                    dn{"Sema"}
-                }
-                month{
-                    dn{"Bosome"}
-                }
-                second{
-                    dn{"Sɛkɛnd"}
-                }
-                week{
-                    dn{"Dapɛn"}
-                }
-                weekday{
-                    dn{"Dapɛn mu da"}
-                }
-                year{
-                    dn{"Afe"}
-                }
-                zone{
-                    dn{"Bere apaamu"}
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -195,5 +196,45 @@ ak{
         alternateQuotationStart{"‘"}
         quotationEnd{"”"}
         quotationStart{"“"}
+    }
+    fields{
+        day{
+            dn{"Da"}
+            relative{
+                "-1"{"Ndeda"}
+                "0"{"Ndɛ"}
+                "1"{"Ɔkyena"}
+            }
+        }
+        dayperiod{
+            dn{"Da bere"}
+        }
+        era{
+            dn{"Bere"}
+        }
+        hour{
+            dn{"Dɔnhwer"}
+        }
+        minute{
+            dn{"Sema"}
+        }
+        month{
+            dn{"Bosome"}
+        }
+        second{
+            dn{"Sɛkɛnd"}
+        }
+        week{
+            dn{"Dapɛn"}
+        }
+        weekday{
+            dn{"Dapɛn mu da"}
+        }
+        year{
+            dn{"Afe"}
+        }
+        zone{
+            dn{"Bere apaamu"}
+        }
     }
 }

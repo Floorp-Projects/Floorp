@@ -1,14 +1,31 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/sr_Cyrl_BA.xml
 // *
 // ***************************************************************************
 sr_Cyrl_BA{
-    Version{"2.0.45.82"}
+    Version{"2.0.90.61"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "HH 'часова', mm 'минута', ss 'секунди' zzzz",
+                "HH.mm.ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, dd. MMMM y. G",
+                "dd. MMMM y. G",
+                "G y-MM-dd",
+                "GGGGG yy-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+        }
         gregorian{
             DateTimePatterns{
                 "HH 'часова', mm 'минута', ss 'секунди' zzzz",
@@ -17,7 +34,7 @@ sr_Cyrl_BA{
                 "HH:mm",
                 "EEEE, dd. MMMM y.",
                 "dd. MMMM y.",
-                "yyyy-MM-dd",
+                "y-MM-dd",
                 "yy-MM-dd",
                 "{1} {0}",
                 "{1} {0}",

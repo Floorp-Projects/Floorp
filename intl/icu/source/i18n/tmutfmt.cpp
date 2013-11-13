@@ -1,6 +1,6 @@
 /*
  *******************************************************************************
- * Copyright (C) 2008-2012, Google, International Business Machines Corporation
+ * Copyright (C) 2008-2013, Google, International Business Machines Corporation
  * and others. All Rights Reserved.
  *******************************************************************************
  */
@@ -75,7 +75,6 @@ static const UChar DEFAULT_PATTERN_FOR_YEAR[] = {LEFT_CURLY_BRACKET, DIGIT_ZERO,
 static const UChar PLURAL_COUNT_ZERO[] = {LOW_Z, LOW_E, LOW_R, LOW_O, 0};
 static const UChar PLURAL_COUNT_ONE[] = {LOW_O, LOW_N, LOW_E, 0};
 static const UChar PLURAL_COUNT_TWO[] = {LOW_T, LOW_W, LOW_O, 0};
-
 
 TimeUnitFormat::TimeUnitFormat(UErrorCode& status)
 :   fNumberFormat(NULL),
@@ -356,13 +355,12 @@ TimeUnitFormat::parseObject(const UnicodeString& source,
     }
 }
 
-
 void
 TimeUnitFormat::create(const Locale& locale, UTimeUnitFormatStyle style, UErrorCode& status) {
     if (U_FAILURE(status)) {
         return;
     }
-    if (style < UTMUTFMT_FULL_STYLE || style > UTMUTFMT_ABBREVIATED_STYLE) {
+    if (style < UTMUTFMT_FULL_STYLE || style >= UTMUTFMT_FORMAT_STYLE_COUNT) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
         return;
     }
@@ -423,9 +421,6 @@ TimeUnitFormat::initDataMembers(UErrorCode& err){
     }
 }
 
-
-
-
 void
 TimeUnitFormat::readFromCurrentLocale(UTimeUnitFormatStyle style, const char* key,
                                       const UVector& pluralCounts, UErrorCode& err) {
@@ -440,6 +435,7 @@ TimeUnitFormat::readFromCurrentLocale(UTimeUnitFormatStyle style, const char* ke
     UResourceBundle *rb, *unitsRes;
     rb = ures_open(NULL, fLocale.getName(), &status);
     unitsRes = ures_getByKey(rb, key, NULL, &status);
+    unitsRes = ures_getByKey(unitsRes, "duration", unitsRes, &status);
     if (U_FAILURE(status)) {
         ures_close(unitsRes);
         ures_close(rb);

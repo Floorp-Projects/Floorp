@@ -1,6 +1,6 @@
 /*
 **********************************************************************
-*   Copyright (C) 1999-2012, International Business Machines
+*   Copyright (C) 1999-2013, International Business Machines
 *   Corporation and others.  All Rights Reserved.
 **********************************************************************
 *   Date        Name        Description
@@ -248,8 +248,11 @@ RuleBasedTransliterator::handleTransliterate(Replaceable& text, UTransPosition& 
         //   some other transliteration that is still in progress and holding the 
         //   transliteration mutex.  If so, do not lock the transliteration
         //    mutex again.
+        // TODO(andy): Need a better scheme for handling this.
         UBool needToLock;
-        UMTX_CHECK(NULL, (&text != gLockedText), needToLock);
+        umtx_lock(NULL);
+        needToLock = (&text != gLockedText);
+        umtx_unlock(NULL);
         if (needToLock) {
             umtx_lock(&transliteratorDataMutex);
             gLockedText = &text;

@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ar.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ar.xml
+ * ICU <specials> source: <path>/common/main/ar.xml
  */
 ar{
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"أبيدجان"}
@@ -86,6 +86,9 @@ ar{
         }
         "Africa:Johannesburg"{
             ec{"جوهانسبرغ"}
+        }
+        "Africa:Juba"{
+            ec{"جوبا"}
         }
         "Africa:Kampala"{
             ec{"كامبالا"}
@@ -210,6 +213,9 @@ ar{
         "America:Bahia"{
             ec{"باهيا"}
         }
+        "America:Bahia_Banderas"{
+            ec{"باهيا بانديراس"}
+        }
         "America:Barbados"{
             ec{"بربادوس"}
         }
@@ -269,6 +275,9 @@ ar{
         }
         "America:Costa_Rica"{
             ec{"كوستاريكا"}
+        }
+        "America:Creston"{
+            ec{"كريستون"}
         }
         "America:Cuiaba"{
             ec{"كيابا"}
@@ -384,6 +393,9 @@ ar{
         "America:Kentucky:Monticello"{
             ec{"مونتيسيلو"}
         }
+        "America:Kralendijk"{
+            ec{"كرالنديك"}
+        }
         "America:La_Paz"{
             ec{"لا باز"}
         }
@@ -414,6 +426,9 @@ ar{
         "America:Martinique"{
             ec{"المارتينيك"}
         }
+        "America:Matamoros"{
+            ec{"ماتاموروس"}
+        }
         "America:Mazatlan"{
             ec{"مازاتلان"}
         }
@@ -425,6 +440,9 @@ ar{
         }
         "America:Merida"{
             ec{"ميريدا"}
+        }
+        "America:Metlakatla"{
+            ec{"ميتلاكاتلا"}
         }
         "America:Mexico_City"{
             ec{"مدينة المكسيك"}
@@ -471,6 +489,9 @@ ar{
         "America:North_Dakota:New_Salem"{
             ec{"نيو ساليم"}
         }
+        "America:Ojinaga"{
+            ec{"أوجيناجا"}
+        }
         "America:Panama"{
             ec{"بنما"}
         }
@@ -513,6 +534,9 @@ ar{
         "America:Rio_Branco"{
             ec{"ريوبرانكو"}
         }
+        "America:Santa_Isabel"{
+            ec{"سانتا إيزابيل"}
+        }
         "America:Santarem"{
             ec{"سانتاريم"}
         }
@@ -530,6 +554,9 @@ ar{
         }
         "America:Shiprock"{
             ec{"شيبروك"}
+        }
+        "America:Sitka"{
+            ec{"سيتكا"}
         }
         "America:St_Barthelemy"{
             ec{"سانت بارثيلمي"}
@@ -593,6 +620,9 @@ ar{
         }
         "Antarctica:DumontDUrville"{
             ec{"دي مونت دو روفيل"}
+        }
+        "Antarctica:Macquarie"{
+            ec{"ماكواري"}
         }
         "Antarctica:Mawson"{
             ec{"ماوسون"}
@@ -693,6 +723,9 @@ ar{
         "Asia:Harbin"{
             ec{"هاربين"}
         }
+        "Asia:Hebron"{
+            ec{"هيبرون (مدينة الخليل)"}
+        }
         "Asia:Hong_Kong"{
             ec{"هونغ كونغ"}
         }
@@ -726,6 +759,9 @@ ar{
         "Asia:Katmandu"{
             ec{"كاتماندو"}
         }
+        "Asia:Khandyga"{
+            ec{"خانديجا"}
+        }
         "Asia:Krasnoyarsk"{
             ec{"كراسنويارسك"}
         }
@@ -755,6 +791,9 @@ ar{
         }
         "Asia:Nicosia"{
             ec{"نيقوسيا"}
+        }
+        "Asia:Novokuznetsk"{
+            ec{"نوفوكوزنتسك"}
         }
         "Asia:Novosibirsk"{
             ec{"نوفوسبيرسك"}
@@ -828,6 +867,9 @@ ar{
         "Asia:Urumqi"{
             ec{"أرومكي"}
         }
+        "Asia:Ust-Nera"{
+            ec{"أوست نيرا"}
+        }
         "Asia:Vientiane"{
             ec{"فيانتيان"}
         }
@@ -874,7 +916,7 @@ ar{
             ec{"استانلي"}
         }
         "Australia:Adelaide"{
-            ec{"استراليا(توقيت أدليادا"}
+            ec{"استراليا(توقيت أدليادا)"}
         }
         "Australia:Brisbane"{
             ec{"برسيبان"}
@@ -909,51 +951,6 @@ ar{
         "Australia:Sydney"{
             ec{"سيدني"}
         }
-        "Etc:GMT"{
-            ec{"توقيت جرينتش"}
-        }
-        "Etc:GMT-1"{
-            ec{"توقيت جرينتش-1"}
-        }
-        "Etc:GMT-10"{
-            ec{"توقيت جرينتش-10"}
-        }
-        "Etc:GMT-11"{
-            ec{"توقيت جرينتش-11"}
-        }
-        "Etc:GMT-12"{
-            ec{"توقيت جرينتش-12"}
-        }
-        "Etc:GMT-13"{
-            ec{"توقيت جرينتش-13"}
-        }
-        "Etc:GMT-14"{
-            ec{"توقيت جرينتش-14"}
-        }
-        "Etc:GMT-2"{
-            ec{"توقيت جرينتش-2"}
-        }
-        "Etc:GMT-3"{
-            ec{"توقيت جرينتش-3"}
-        }
-        "Etc:GMT-4"{
-            ec{"توقيت جرينتش-4"}
-        }
-        "Etc:GMT-5"{
-            ec{"توقيت جرينتش-5"}
-        }
-        "Etc:GMT-6"{
-            ec{"توقيت جرينتش-6"}
-        }
-        "Etc:GMT-7"{
-            ec{"توقيت جرينتش-7"}
-        }
-        "Etc:GMT-8"{
-            ec{"توقيت جرينتش-8"}
-        }
-        "Etc:GMT-9"{
-            ec{"توقيت جرينتش-9"}
-        }
         "Etc:Unknown"{
             ec{"مدينة غير معروفة"}
         }
@@ -983,6 +980,9 @@ ar{
         }
         "Europe:Budapest"{
             ec{"بودابست"}
+        }
+        "Europe:Busingen"{
+            ec{"بوسنغن"}
         }
         "Europe:Chisinau"{
             ec{"تشيسيناو"}
@@ -1293,11 +1293,6 @@ ar{
             lg{"توقيت ألاسكا"}
             ls{"التوقيت الرسمي لألاسكا"}
         }
-        "meta:Alaska_Hawaii"{
-            ld{"توقيت ألاسكا-هاواي الصيفي"}
-            lg{"توقيت ألاسكا-هاواي"}
-            ls{"التوقيت الرسمي لألاسكا-هاواي"}
-        }
         "meta:Amazon"{
             ld{"توقيت الأمازون الصيفي"}
             lg{"توقيت الأمازون"}
@@ -1383,16 +1378,16 @@ ar{
             lg{"توقيت أزورس"}
             ls{"توقيت أزورس الرسمي"}
         }
+        "meta:Bangladesh"{
+            ld{"توقيت بنجلاديش الصيفي"}
+            lg{"توقيت بنجلاديش"}
+            ls{"توقيت بنجلاديش الرسمي"}
+        }
         "meta:Bhutan"{
             ls{"توقيت بوتان"}
         }
         "meta:Bolivia"{
             ls{"توقيت بوليفيا"}
-        }
-        "meta:Borneo"{
-            ld{"توقيت بورنيو الصيفي"}
-            lg{"توقيت بورنيو"}
-            ls{"توقيت بورنيو الرسمي"}
         }
         "meta:Brasilia"{
             ld{"توقيت برازيليا الصيفي"}
@@ -1406,6 +1401,9 @@ ar{
             ld{"توقيت الرأس الأخضر الصيفي"}
             lg{"توقيت الرأس الأخضر"}
             ls{"توقيت الرأس الأخضر الرسمي"}
+        }
+        "meta:Chamorro"{
+            ls{"توقيت تشامورو"}
         }
         "meta:Chatham"{
             ld{"توقيت تشاتام الصيفي"}
@@ -1427,15 +1425,32 @@ ar{
             lg{"توقيت شويبالسان"}
             ls{"توقيت شويبالسان الرسمي"}
         }
+        "meta:Christmas"{
+            ls{"توقيت جزر الكريسماس"}
+        }
+        "meta:Cocos"{
+            ls{"توقيت جزر كوكوس"}
+        }
         "meta:Colombia"{
             ld{"توقيت كولومبيا الصيفي"}
             lg{"توقيت كولومبيا"}
             ls{"توقيت كولومبيا الرسمي"}
         }
+        "meta:Cook"{
+            ld{"توقيت جزر كووك الصيفي"}
+            lg{"توقيت جزر كووك"}
+            ls{"توقيت جزر كووك الرسمي"}
+        }
         "meta:Cuba"{
             ld{"توقيت كوبا الصيفي"}
             lg{"توقيت كوبا"}
             ls{"توقيت كوبا الرسمي"}
+        }
+        "meta:Davis"{
+            ls{"توقيت دافيز"}
+        }
+        "meta:DumontDUrville"{
+            ls{"توقيت دي مونت دو روفيل"}
         }
         "meta:East_Timor"{
             ls{"توقيت تيمور الشرقية"}
@@ -1476,16 +1491,25 @@ ar{
         "meta:French_Guiana"{
             ls{"توقيت غويانا الفرنسية"}
         }
+        "meta:French_Southern"{
+            ls{"توقيت المقاطعات الفرنسية الجنوبية والأنتارتيكية"}
+        }
         "meta:GMT"{
             ls{"توقيت غرينتش"}
         }
         "meta:Galapagos"{
             ls{"توقيت غلاباغوس"}
         }
+        "meta:Gambier"{
+            ls{"توقيت جامبير"}
+        }
         "meta:Georgia"{
             ld{"توقيت جورجيا الصيفي"}
             lg{"توقيت جورجيا"}
             ls{"توقيت جورجيا الرسمي"}
+        }
+        "meta:Gilbert_Islands"{
+            ls{"توقيت جزر جيلبرت"}
         }
         "meta:Greenland_Eastern"{
             ld{"توقيت شرق غرينلاند الصيفي"}
@@ -1499,6 +1523,9 @@ ar{
         }
         "meta:Guam"{
             ls{"توقيت غوام"}
+        }
+        "meta:Gulf"{
+            ls{"توقيت الخليج"}
         }
         "meta:Guyana"{
             ls{"توقيت غيانا"}
@@ -1572,13 +1599,19 @@ ar{
             lg{"توقيت كوريا"}
             ls{"توقيت كوريا الرسمي"}
         }
+        "meta:Kosrae"{
+            ls{"توقيت كوسرا"}
+        }
         "meta:Krasnoyarsk"{
             ld{"التوقيت الصيفي لكراسنويارسك"}
             lg{"توقيت كراسنويارسك"}
             ls{"توقيت كراسنويارسك الرسمي"}
         }
-        "meta:Kwajalein"{
-            ls{"توقيت كواجالين"}
+        "meta:Kyrgystan"{
+            ls{"توقيت قرغيزستان"}
+        }
+        "meta:Line_Islands"{
+            ls{"توقيت جزر لاين"}
         }
         "meta:Lord_Howe"{
             ld{"التوقيت الصيفي للورد هاو"}
@@ -1593,14 +1626,14 @@ ar{
             lg{"توقيت ماغادان"}
             ls{"توقيت ماغادان الرسمي"}
         }
-        "meta:Malaya"{
-            ls{"توقيت مالايا"}
-        }
         "meta:Malaysia"{
             ls{"توقيت ماليزيا"}
         }
         "meta:Maldives"{
             ls{"توقيت الـمالديف"}
+        }
+        "meta:Marquesas"{
+            ls{"توقيت ماركيساس"}
         }
         "meta:Marshall_Islands"{
             ls{"توقيت جزر مارشال"}
@@ -1632,6 +1665,11 @@ ar{
         "meta:Nepal"{
             ls{"توقيت نيبال"}
         }
+        "meta:New_Caledonia"{
+            ld{"توقيت كاليدونيا الجديدة الصيفي"}
+            lg{"توقيت كاليدونيا الجديدة"}
+            ls{"توقيت كاليدونيا الجديدة الرسمي"}
+        }
         "meta:New_Zealand"{
             ld{"توقيت نيوزيلاندا الصيفي"}
             lg{"توقيت نيوزيلاندا"}
@@ -1644,6 +1682,9 @@ ar{
         }
         "meta:Niue"{
             ls{"توقيت نيوي"}
+        }
+        "meta:Norfolk"{
+            ls{"توقيت نورفوك"}
         }
         "meta:Noronha"{
             ld{"توقيت فرناندو دي نورونها الصيفي"}
@@ -1684,10 +1725,24 @@ ar{
             lg{"توقيت بيرو"}
             ls{"توقيت بيرو الرسمي"}
         }
+        "meta:Philippines"{
+            ld{"توقيت الفيلبين الصيفي"}
+            lg{"توقيت الفيلبين"}
+            ls{"توقيت الفيلبين الرسمي"}
+        }
+        "meta:Phoenix_Islands"{
+            ls{"توقيت جزر فينكس"}
+        }
         "meta:Pierre_Miquelon"{
-            ld{"ﺕﻮﻘﻴﺗ ﺱﺎﻨﺗ ﺐﻴﻳﺭ ﻮﻤﻴﻛﻮﻟﻮﻧ ﻞﺼﻴﻔﻳ"}
-            lg{"توقيت ﺱﺎﻨﺗ ﺐﻴﻳﺭ ﻮﻤﻴﻛﻮﻟﻮﻧ"}
-            ls{"توقيت ﺱﺎﻨﺗ ﺐﻴﻳﺭ ﻮﻤﻴﻛﻮﻟﻮﻧ الرسمي"}
+            ld{"توقيت سانت بيير وميكولون لصيفي"}
+            lg{"توقيت سانت بيير وميكولون"}
+            ls{"توقيت سانت بيير وميكولون الرسمي"}
+        }
+        "meta:Pitcairn"{
+            ls{"توقيت بيتكيرن"}
+        }
+        "meta:Ponape"{
+            ls{"توقيت باناب"}
         }
         "meta:Reunion"{
             ls{"توقيت ريونيون"}
@@ -1705,11 +1760,28 @@ ar{
             lg{"توقيت سامارا"}
             ls{"توقيت سمارا"}
         }
+        "meta:Samoa"{
+            ld{"توقيت ساموا الصيفي"}
+            lg{"توقيت ساموا"}
+            ls{"توقيت ساموا الرسمي"}
+        }
+        "meta:Seychelles"{
+            ls{"توقيت سيشل"}
+        }
+        "meta:Singapore"{
+            ls{"توقيت سنغافورة"}
+        }
         "meta:Solomon"{
             ls{"توقيت جزر سليمان"}
         }
+        "meta:South_Georgia"{
+            ls{"توقيت جنوب جورجيا"}
+        }
         "meta:Suriname"{
             ls{"توقيت سورينام"}
+        }
+        "meta:Syowa"{
+            ls{"توقيت سايووا"}
         }
         "meta:Tahiti"{
             ls{"توقيت تاهيتي"}
@@ -1730,6 +1802,9 @@ ar{
             lg{"توقيت تونغا"}
             ls{"توقيت تونغا الرسمي"}
         }
+        "meta:Truk"{
+            ls{"توقيت تشاك"}
+        }
         "meta:Turkmenistan"{
             ld{"توقيت تركمانستان الصيفي"}
             lg{"توقيت تركمانستان"}
@@ -1742,6 +1817,11 @@ ar{
             ld{"توقيت أورغواي الصيفي"}
             lg{"توقيت أورغواي"}
             ls{"توقيت أورغواي الرسمي"}
+        }
+        "meta:Uzbekistan"{
+            ld{"توقيت أوزبكستان الصيفي"}
+            lg{"توقيت أوزبكستان"}
+            ls{"توقيت أوزبكستان الرسمي"}
         }
         "meta:Vanuatu"{
             ld{"توقيت فانواتو الصيفي"}
@@ -1764,6 +1844,12 @@ ar{
         "meta:Vostok"{
             ls{"توقيت فوستوك"}
         }
+        "meta:Wake"{
+            ls{"توقيت واك"}
+        }
+        "meta:Wallis"{
+            ls{"توقيت واليس و فوتونا"}
+        }
         "meta:Yakutsk"{
             ld{"توقيت ياكوتسك الصيفي"}
             lg{"توقيت ياكوتسك"}
@@ -1775,10 +1861,11 @@ ar{
             ls{"توقيت يكاترينبورغ الرسمي"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"توقيت {1} ({0})"}
         gmtFormat{"جرينتش{0}"}
         gmtZeroFormat{"جرينتش"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"توقيت {0}"}
+        regionFormatDaylight{"توقيت {0} الصيفي"}
+        regionFormatStandard{"توقيت {0} الرسمي"}
     }
 }

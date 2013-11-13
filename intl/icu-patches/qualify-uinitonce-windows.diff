@@ -1,0 +1,22 @@
+diff --git a/intl/icu/source/common/umutex.h b/intl/icu/source/common/umutex.h
+--- a/intl/icu/source/common/umutex.h
++++ b/intl/icu/source/common/umutex.h
+@@ -315,17 +315,17 @@ U_NAMESPACE_END
+ # define NOMCX
+ # ifndef NOMINMAX
+ # define NOMINMAX
+ # endif
+ # include <windows.h>
+ 
+ 
+ typedef struct UMutex {
+-    UInitOnce         fInitOnce;
++    icu::UInitOnce    fInitOnce;
+     CRITICAL_SECTION  fCS;
+ } UMutex;
+ 
+ /* Initializer for a static UMUTEX. Deliberately contains no value for the
+  *  CRITICAL_SECTION.
+  */
+ #define U_MUTEX_INITIALIZER {U_INITONCE_INITIALIZER}
+ 
