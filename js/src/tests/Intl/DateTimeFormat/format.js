@@ -23,7 +23,7 @@ assertEq(format.format(date), "12/12/2555");
 
 // Locale th-TH; long format, Thai digits.
 format = new Intl.DateTimeFormat("th-th-u-nu-thai", longFormatOptions);
-assertEq(format.format(date), "๑๒ ธันวาคม ๒๕๕๕, ๐๓:๐๐:๐๐");
+assertEq(format.format(date), "๑๒ ธันวาคม ๒๕๕๕ ๐๓:๐๐:๐๐");
 
 // Locale ja-JP; long format.
 format = new Intl.DateTimeFormat("ja-jp", longFormatOptions);

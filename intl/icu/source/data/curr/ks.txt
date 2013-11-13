@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ks.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ks.xml
+ * ICU <specials> source: <path>/common/main/ks.xml
  */
 ks{
     Currencies{
@@ -309,7 +309,7 @@ ks{
         }
         GHC{
             "GHC",
-            "گَنیٚیَن سٮ۪ڑی(۱۹۷۹-۲٠٠۷)",
+            "گَنیٚیَن سٮ۪ڑی(۱۹۷۹–۲٠٠۷)",
         }
         GHS{
             "GHS",
@@ -585,7 +585,7 @@ ks{
         }
         MXP{
             "MXP",
-            "مٮ۪کسِکَن سِلوَر پٮ۪سو (۱۸۶۱-۱۹۹۲)",
+            "مٮ۪کسِکَن سِلوَر پٮ۪سو (۱۸۶۱–۱۹۹۲)",
         }
         MYR{
             "MYR",
@@ -673,7 +673,7 @@ ks{
         }
         PLZ{
             "PLZ",
-            "پولِش زلوٹی(۱۹۵٠-۱۹۹۵)",
+            "پولِش زلوٹی(۱۹۵٠–۱۹۹۵)",
         }
         PTE{
             "PTE",
@@ -709,7 +709,7 @@ ks{
         }
         RUR{
             "RUR",
-            "رٔشیَن رَبٕل(۱۹۹۱-۱۹۹۸)",
+            "رٔشیَن رَبٕل(۱۹۹۱–۱۹۹۸)",
         }
         RWF{
             "RWF",
@@ -841,7 +841,7 @@ ks{
         }
         UGS{
             "UGS",
-            "اُگاداہُک شِلِنٛگ(۱۹۶۶-۱۹۸۷)",
+            "اُگاداہُک شِلِنٛگ(۱۹۶۶–۱۹۸۷)",
         }
         UGX{
             "UGX",
@@ -865,7 +865,7 @@ ks{
         }
         UYP{
             "UYP",
-            "اُرگایَن پیٚسو(۱۹۷۵-۱۹۹۳)",
+            "اُرگایَن پیٚسو(۱۹۷۵–۱۹۹۳)",
         }
         UYU{
             "UYU",
@@ -877,7 +877,7 @@ ks{
         }
         VEB{
             "VEB",
-            "وینٕزوٗلیُک بولِوَر (۱۸۷۱-۲۰۰۸)",
+            "وینٕزوٗلیُک بولِوَر (۱۸۷۱–۲۰۰۸)",
         }
         VEF{
             "VEF",
@@ -997,6 +997,10 @@ ks{
         }
         ZMK{
             "ZMK",
+            "زِمبابیُک کواچا (1968–2012)",
+        }
+        ZMW{
+            "ZMW",
             "زِمبابیُک کواچا",
         }
         ZRN{
@@ -1012,5 +1016,5 @@ ks{
             "زِمبابِیُک ڈالَر",
         }
     }
-    Version{"2.0.78.55"}
+    Version{"2.0.92.87"}
 }

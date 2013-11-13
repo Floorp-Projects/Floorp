@@ -1,16 +1,16 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
-// * Tool: com.ibm.icu.dev.tool.cldr.LDML2ICUConverter.java
-// * Source File:<path>/common/collation/ee.xml
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
+// * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
+// * Source File: <path>/common/collation/ee.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/collation/ee.xml
+ * ICU <specials> source: <path>/xml/collation/ee.xml
  */
 ee{
-    Version{"2.0.63.75"}
+    Version{"2.0.89.0"}
     collations{
         standard{
             Sequence{
@@ -26,7 +26,7 @@ ee{
                 "&T<ts<<<Ts<<<TS"
                 "&V<ʋ<<<Ʋ"
             }
-            Version{"22.1.1"}
+            Version{"24"}
         }
     }
 }

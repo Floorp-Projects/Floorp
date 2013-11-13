@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/om.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/om.xml
+ * ICU <specials> source: <path>/common/main/om.xml
  */
 om{
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
@@ -25,8 +25,32 @@ om{
         native{"latn"}
         traditional{"ethi"}
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, MMMM d, y G",
+                "dd MMMM y G",
+                "dd-MMM-y G",
+                "dd/MM/yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                MMMMdd{"dd MMMM"}
+                MMdd{"dd/MM"}
+                yMM{"MM/y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
+            }
+        }
         gregorian{
             AmPmMarkers{
                 "WD",
@@ -50,9 +74,9 @@ om{
             availableFormats{
                 MMMMdd{"dd MMMM"}
                 MMdd{"dd/MM"}
-                yyMM{"MM/yy"}
-                yyQQQ{"QQQ yy"}
-                yyyyMMMM{"MMMM y"}
+                yMM{"MM/y"}
+                yMMMM{"MMMM y"}
+                yQQQ{"QQQ y"}
             }
             dayNames{
                 format{

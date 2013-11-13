@@ -1,119 +1,1527 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/hy.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/hy.xml
+ * ICU <specials> source: <path>/common/main/hy.xml
  */
 hy{
-    ExemplarCharacters{
-        "[֊ ՝ ՜ ՞ ՚ ՛ ՟ ա բ գ դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն շ ո չ պ ջ ռ ս վ տ"
-        " ր ց ւ փ ք և օ ֆ]"
+    AuxExemplarCharacters{"[]"}
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0} …"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
     }
+    ExemplarCharacters{
+        "[ա բ գ դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն շ ո չ պ ջ ռ ս վ տ ր ց ւ փ ք և օ"
+        " ֆ]"
+    }
+    ExemplarCharactersPunctuation{"[֊ , ՝ \\: ՜ ՞ . « » ՚ ՛ ՟]"}
     LocaleScript{
         "Armn",
     }
+    MoreInformation{"?"}
     NumberElements{
         default{"latn"}
         latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+                range{"{0}-{1}"}
+            }
             patterns{
                 currencyFormat{"#0.00 ¤"}
                 decimalFormat{"#0.###"}
                 percentFormat{"#0%"}
+                scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        one{"0 հազար"}
+                        other{"0 հազար"}
+                    }
+                    10000{
+                        one{"00 հազար"}
+                        other{"00 հազար"}
+                    }
+                    100000{
+                        one{"000 հազար"}
+                        other{"000 հազար"}
+                    }
+                    1000000{
+                        one{"0 միլիոն"}
+                        other{"0 միլիոն"}
+                    }
+                    10000000{
+                        one{"00 միլիոն"}
+                        other{"00 միլիոն"}
+                    }
+                    100000000{
+                        one{"000 միլիոն"}
+                        other{"000 միլիոն"}
+                    }
+                    1000000000{
+                        one{"0 միլիարդ"}
+                        other{"0 միլիարդ"}
+                    }
+                    10000000000{
+                        one{"00 միլիարդ"}
+                        other{"00 միլիարդ"}
+                    }
+                    100000000000{
+                        one{"000 միլիարդ"}
+                        other{"000 միլիարդ"}
+                    }
+                    1000000000000{
+                        one{"0 տրիլիոն"}
+                        other{"0 տրիլիոն"}
+                    }
+                    10000000000000{
+                        one{"00 տրիլիոն"}
+                        other{"00 տրիլիոն"}
+                    }
+                    100000000000000{
+                        one{"000 տրիլիոն"}
+                        other{"000 տրիլիոն"}
+                    }
+                }
+            }
+            patternsShort{
+                decimalFormat{
+                    1000{
+                        one{"0 հզր"}
+                        other{"0 հզր"}
+                    }
+                    10000{
+                        one{"00 հզր"}
+                        other{"00 հզր"}
+                    }
+                    100000{
+                        one{"000 հզր"}
+                        other{"000 հզր"}
+                    }
+                    1000000{
+                        one{"0 մլն"}
+                        other{"0 մլն"}
+                    }
+                    10000000{
+                        one{"00 մլն"}
+                        other{"00 մլն"}
+                    }
+                    100000000{
+                        one{"000 մլն"}
+                        other{"000 մլն"}
+                    }
+                    1000000000{
+                        one{"0 մլրդ"}
+                        other{"0 մլրդ"}
+                    }
+                    10000000000{
+                        one{"00 մլրդ"}
+                        other{"00 մլրդ"}
+                    }
+                    100000000000{
+                        one{"000 մլրդ"}
+                        other{"000 մլրդ"}
+                    }
+                    1000000000000{
+                        one{"0 տրլն"}
+                        other{"0 տրլն"}
+                    }
+                    10000000000000{
+                        one{"00 տրլն"}
+                        other{"00 տրլն"}
+                    }
+                    100000000000000{
+                        one{"000 տրլն"}
+                        other{"000 տրլն"}
+                    }
+                }
             }
             symbols{
                 decimal{","}
+                exponential{"E"}
                 group{"."}
+                infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
             }
         }
         native{"latn"}
         traditional{"armn"}
     }
-    Version{"2.0.78.38"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "H:mm:ss, zzzz",
+                "H:mm:ss, z",
+                "H:mm:ss",
+                "H:mm",
+                "d MMMM, y թ. G, EEEE",
+                "dd MMMM, y թ. G",
+                "dd MMM, y թ. G",
+                "dd.MM.y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            availableFormats{
+                Ed{"d, ccc"}
+                Gy{"G yթ."}
+                GyMMM{"G yթ. LLL"}
+                GyMMMEd{"G yթ. MMM d, E"}
+                GyMMMd{"G yթ. MMM d"}
+                H{"H"}
+                Hm{"H:mm"}
+                Hms{"H:mm:ss"}
+                M{"L"}
+                MEd{"dd.MM, E"}
+                MMM{"LLL"}
+                MMMEd{"d MMM, E"}
+                MMMd{"d MMM"}
+                Md{"dd.MM"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y, G"}
+                yyyy{"y, G"}
+                yyyyM{"G yթ. MM"}
+                yyyyMEd{"d.MM.y թ., G, E"}
+                yyyyMMM{"G y թ. LLL"}
+                yyyyMMMEd{"d MMM, y թ. G, E"}
+                yyyyMMMd{"d MMM, y թ., G"}
+                yyyyMd{"d.M.yթ., G"}
+                yyyyQQQ{"G y թ, QQQ"}
+                yyyyQQQQ{"G y թ, QQQQ"}
+            }
+            intervalFormats{
+                H{
+                    H{"H-H"}
+                }
+                Hm{
+                    H{"H:mm-H:mm"}
+                    m{"H:mm-H:mm"}
+                }
+                Hmv{
+                    H{"H:mm-H:mm v"}
+                    m{"H:mm-H:mm v"}
+                }
+                Hv{
+                    H{"H-H v"}
+                }
+                M{
+                    M{"M-M"}
+                }
+                MEd{
+                    M{"E, dd.MM - E, dd.MM"}
+                    d{"E, dd.MM - E, dd.MM"}
+                }
+                MMM{
+                    M{"MMM-MMM"}
+                }
+                MMMEd{
+                    M{"E, MMM dd - E, MMM dd"}
+                    d{"E, MMM dd - E, MMM dd"}
+                }
+                MMMd{
+                    M{"MMM dd - MMM dd"}
+                    d{"MMM dd-dd"}
+                }
+                Md{
+                    M{"dd.MM - dd.MM"}
+                    d{"dd.MM - dd.MM"}
+                }
+                d{
+                    d{"d-d"}
+                }
+                fallback{"{0} - {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h-h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm-h:mm a"}
+                    m{"h:mm-h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm-h:mm a v"}
+                    m{"h:mm-h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h-h a v"}
+                }
+                y{
+                    y{"y-y G"}
+                }
+                yM{
+                    M{"MM.y - MM.y G"}
+                    y{"MM.y - MM.y G"}
+                }
+                yMEd{
+                    M{"ccc, dd.MM.y - ccc, dd.MM.y G"}
+                    d{"ccc, dd.MM.y - ccc, dd.MM.y G"}
+                    y{"ccc, dd.MM.y - ccc, dd.MM.y G"}
+                }
+                yMMM{
+                    M{"MMM-MMM y թ. G"}
+                    y{"MMM y - MMM y թ. G"}
+                }
+                yMMMEd{
+                    M{"E, d MMM - E, d MMM, y թ. G"}
+                    d{"E, d MMM - E, d MMM, y թ. G"}
+                    y{"E, d MMM, y - E, d MMM, y թ. G"}
+                }
+                yMMMM{
+                    M{"G y թ. MMM – MMM"}
+                    y{"MMM y - MMM y թ G"}
+                }
+                yMMMd{
+                    M{"dd MMM - dd MMM, y թ. G"}
+                    d{"dd-dd MMM, y թ. G"}
+                    y{"dd MMM, y - dd MMM, y թ. G"}
+                }
+                yMd{
+                    M{"dd.MM.y - dd.MM.y G"}
+                    d{"dd.MM.y - dd.MM.y G"}
+                    y{"dd.MM.y - dd.MM.y G"}
+                }
+            }
+        }
         gregorian{
             AmPmMarkers{
-                "Առ․",
-                "Կե․",
+                "կեսօրից առաջ",
+                "կեսօրից հետո",
             }
             DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, MMMM d, y",
-                "MMMM dd, y",
-                "MMM d, y",
-                "MM/dd/yy",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "H:mm:ss, zzzz",
+                "H:mm:ss, z",
+                "H:mm:ss",
+                "H:mm",
+                "yթ. MMMM d, EEEE",
+                "dd MMMM, yթ.",
+                "dd MMM, y թ.",
+                "dd.MM.yy",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
+            appendItems{
+                Timezone{"{0}, {1}"}
+            }
+            availableFormats{
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
+                Ed{"d, ccc"}
+                Ehm{"E, h:mm a"}
+                Ehms{"E, h:mm:ss a"}
+                Gy{"G yթ."}
+                GyMMM{"G yթ. LLL"}
+                GyMMMEd{"G yթ. MMM d, E"}
+                GyMMMd{"d MMM, yթ.,"}
+                H{"H"}
+                Hm{"H:mm"}
+                Hms{"H:mm:ss"}
+                M{"L"}
+                MEd{"dd.MM, E"}
+                MMM{"LLL"}
+                MMMEd{"d MMM, E"}
+                MMMd{"d MMM"}
+                Md{"dd.MM"}
+                d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"y"}
+                yM{"MM.y"}
+                yMEd{"d.MM.yթ., E"}
+                yMMM{"yթ. LLL"}
+                yMMMEd{"yթ. MMM d, E"}
+                yMMMd{"d MMM, yթ."}
+                yMd{"dd.MM.y"}
+                yQQQ{"y թ, QQQ"}
+                yQQQQ{"y թ, QQQQ"}
             }
             dayNames{
                 format{
                     abbreviated{
-                        "Կիր",
-                        "Երկ",
-                        "Երք",
-                        "Չոր",
-                        "Հնգ",
-                        "Ուր",
-                        "Շաբ",
+                        "կիր",
+                        "երկ",
+                        "երք",
+                        "չրք",
+                        "հնգ",
+                        "ուր",
+                        "շբթ",
+                    }
+                    narrow{
+                        "Կ",
+                        "Ե",
+                        "Ե",
+                        "Չ",
+                        "Հ",
+                        "Ու",
+                        "Շ",
+                    }
+                    short{
+                        "կիր",
+                        "երկ",
+                        "երք",
+                        "չրք",
+                        "հնգ",
+                        "ուր",
+                        "շբթ",
                     }
                     wide{
-                        "Կիրակի",
-                        "Երկուշաբթի",
-                        "Երեքշաբթի",
-                        "Չորեքշաբթի",
-                        "Հինգշաբթի",
-                        "Ուրբաթ",
-                        "Շաբաթ",
+                        "կիրակի",
+                        "երկուշաբթի",
+                        "երեքշաբթի",
+                        "չորեքշաբթի",
+                        "հինգշաբթի",
+                        "ուրբաթ",
+                        "շաբաթ",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "կիր",
+                        "երկ",
+                        "երք",
+                        "չրք",
+                        "հնգ",
+                        "ուր",
+                        "շբթ",
+                    }
+                    narrow{
+                        "Կ",
+                        "Ե",
+                        "Ե",
+                        "Չ",
+                        "Հ",
+                        "Ու",
+                        "Շ",
+                    }
+                    short{
+                        "կր",
+                        "եկ",
+                        "եք",
+                        "չր",
+                        "հգ",
+                        "ուր",
+                        "շբ",
+                    }
+                    wide{
+                        "կիրակի",
+                        "երկուշաբթի",
+                        "երեքշաբթի",
+                        "չորեքշաբթի",
+                        "հինգշաբթի",
+                        "ուրբաթ",
+                        "շաբաթ",
                     }
                 }
             }
             eras{
                 abbreviated{
-                    "Մ․Թ․Ա․",
-                    "Մ․Թ․",
+                    "մ.թ.ա.",
+                    "մ.թ.",
+                }
+            }
+            intervalFormats{
+                H{
+                    H{"H-H"}
+                }
+                Hm{
+                    H{"H:mm-H:mm"}
+                    m{"H:mm-H:mm"}
+                }
+                Hmv{
+                    H{"H:mm-H:mm, v"}
+                    m{"H:mm-H:mm, v"}
+                }
+                Hv{
+                    H{"H-H, v"}
+                }
+                M{
+                    M{"M-M"}
+                }
+                MEd{
+                    M{"E, dd.MM - E, dd.MM"}
+                    d{"E, dd.MM - E, dd.MM"}
+                }
+                MMM{
+                    M{"MMM-MMM"}
+                }
+                MMMEd{
+                    M{"E, MMM dd - E, MMM dd"}
+                    d{"E, MMM dd - E, MMM dd"}
+                }
+                MMMd{
+                    M{"MMM dd - MMM dd"}
+                    d{"MMM dd-dd"}
+                }
+                Md{
+                    M{"dd.MM - dd.MM"}
+                    d{"dd.MM - dd.MM"}
+                }
+                d{
+                    d{"d-d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h-h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm-h:mm a"}
+                    m{"h:mm-h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a, v"}
+                    h{"h:mm-h:mm a, v"}
+                    m{"h:mm-h:mm a, v"}
+                }
+                hv{
+                    a{"h a – h a, v"}
+                    h{"h-h a, v"}
+                }
+                y{
+                    y{"y-y"}
+                }
+                yM{
+                    M{"MM.y - MM.y"}
+                    y{"MM.y - MM.y"}
+                }
+                yMEd{
+                    M{"ccc, dd.MM.y - ccc, dd.MM.y"}
+                    d{"ccc, dd.MM.y - ccc, dd.MM.y"}
+                    y{"ccc, dd.MM.y - ccc, dd.MM.y"}
+                }
+                yMMM{
+                    M{"MMM-MMM yթ."}
+                    y{"MMM y - MMM yթ."}
+                }
+                yMMMEd{
+                    M{"E, d MMM - E, d MMM, yթ."}
+                    d{"E, d MMM - E, d MMM, yթ."}
+                    y{"E, d MMM, y - E, d MMM, yթ."}
+                }
+                yMMMM{
+                    M{"yթ. MMM – MMM"}
+                    y{"MMM y - MMM yթ."}
+                }
+                yMMMd{
+                    M{"dd MMM - dd MMM, yթ."}
+                    d{"dd-dd MMM, yթ."}
+                    y{"dd MMM, y - dd MMM, yթ."}
+                }
+                yMd{
+                    M{"dd.MM.y - dd.MM.y"}
+                    d{"dd.MM.y - dd.MM.y"}
+                    y{"dd.MM.y - dd.MM.y"}
                 }
             }
             monthNames{
                 format{
                     abbreviated{
-                        "Հնվ",
-                        "Փտվ",
-                        "Մրտ",
-                        "Ապր",
-                        "Մյս",
-                        "Հնս",
-                        "Հլս",
-                        "Օգս",
-                        "Սեպ",
-                        "Հոկ",
-                        "Նոյ",
-                        "Դեկ",
+                        "հնվ",
+                        "փտվ",
+                        "մրտ",
+                        "ապր",
+                        "մյս",
+                        "հնս",
+                        "հլս",
+                        "օգս",
+                        "սպտ",
+                        "հկտ",
+                        "նյմ",
+                        "դկտ",
+                    }
+                    narrow{
+                        "Հ",
+                        "Փ",
+                        "Մ",
+                        "Ա",
+                        "Մ",
+                        "Հ",
+                        "Հ",
+                        "Օ",
+                        "Ս",
+                        "Հ",
+                        "Ն",
+                        "Դ",
                     }
                     wide{
-                        "Հունվար",
-                        "Փետրվար",
-                        "Մարտ",
-                        "Ապրիլ",
-                        "Մայիս",
-                        "Հունիս",
-                        "Հուլիս",
-                        "Օգոստոս",
-                        "Սեպտեմբեր",
-                        "Հոկտեմբեր",
-                        "Նոյեմբեր",
-                        "Դեկտեմբեր",
+                        "հունվարի",
+                        "փետրվարի",
+                        "մարտի",
+                        "ապրիլի",
+                        "մայիսի",
+                        "հունիսի",
+                        "հուլիսի",
+                        "օգոստոսի",
+                        "սեպտեմբերի",
+                        "հոկտեմբերի",
+                        "նոյեմբերի",
+                        "դեկտեմբերի",
                     }
                 }
+                stand-alone{
+                    abbreviated{
+                        "հնվ",
+                        "փտվ",
+                        "մրտ",
+                        "ապր",
+                        "մյս",
+                        "հնս",
+                        "հլս",
+                        "օգս",
+                        "սպտ",
+                        "հկտ",
+                        "նյմ",
+                        "դկտ",
+                    }
+                    narrow{
+                        "Հ",
+                        "Փ",
+                        "Մ",
+                        "Ա",
+                        "Մ",
+                        "Հ",
+                        "Հ",
+                        "Օ",
+                        "Ս",
+                        "Հ",
+                        "Ն",
+                        "Դ",
+                    }
+                    wide{
+                        "հունվար",
+                        "փետրվար",
+                        "մարտ",
+                        "ապրիլ",
+                        "մայիս",
+                        "հունիս",
+                        "հուլիս",
+                        "օգոստոս",
+                        "սեպտեմբեր",
+                        "հոկտեմբեր",
+                        "նոյեմբեր",
+                        "դեկտեմբեր",
+                    }
+                }
+            }
+            quarters{
+                format{
+                    abbreviated{
+                        "1-ին եռմս.",
+                        "2-րդ եռմս.",
+                        "3-րդ եռմս.",
+                        "4-րդ եռմս.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1-ին եռամսյակ",
+                        "2-րդ եռամսյակ",
+                        "3-րդ եռամսյակ",
+                        "4-րդ եռամսյակ",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "1-ին եռմս.",
+                        "2-րդ եռմս.",
+                        "3-րդ եռմս.",
+                        "4-րդ եռմս.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1-ին եռամսյակ",
+                        "2-րդ եռամսյակ",
+                        "3-րդ եռամսյակ",
+                        "4-րդ եռամսյակ",
+                    }
+                }
+            }
+        }
+    }
+    delimiters{
+        alternateQuotationEnd{"»"}
+        alternateQuotationStart{"«"}
+        quotationEnd{"»"}
+        quotationStart{"«"}
+    }
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
+    fields{
+        day{
+            dn{"Օր"}
+            relative{
+                "-1"{"երեկ"}
+                "-2"{"երեկ չէ առաջի օրը"}
+                "0"{"այսօր"}
+                "1"{"վաղը"}
+                "2"{"վաղը չէ մյուս օրը"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} օր անց"}
+                    other{"{0} օր անց"}
+                }
+                past{
+                    one{"{0} օր առաջ"}
+                    other{"{0} օր առաջ"}
+                }
+            }
+        }
+        dayperiod{
+            dn{"ԿԱ/ԿՀ"}
+        }
+        era{
+            dn{"Թվարկություն"}
+        }
+        fri{
+            relative{
+                "-1"{"անցյալ ուրբաթ"}
+                "0"{"այս ուրբաթ"}
+                "1"{"հաջորդ ուրբաթ"}
+            }
+        }
+        hour{
+            dn{"Ժամ"}
+            relativeTime{
+                future{
+                    one{"{0} ժամ անց"}
+                    other{"{0} ժամ անց"}
+                }
+                past{
+                    one{"{0} ժամ առաջ"}
+                    other{"{0} ժամ առաջ"}
+                }
+            }
+        }
+        minute{
+            dn{"Րոպե"}
+            relativeTime{
+                future{
+                    one{"{0} րոպե անց"}
+                    other{"{0} րոպե անց"}
+                }
+                past{
+                    one{"{0} րոպե առաջ"}
+                    other{"{0} րոպե առաջ"}
+                }
+            }
+        }
+        mon{
+            relative{
+                "-1"{"անցյալ երկուշաբթի"}
+                "0"{"այս երկուշաբթի"}
+                "1"{"հաջորդ երկուշաբթի"}
+            }
+        }
+        month{
+            dn{"Ամիս"}
+            relative{
+                "-1"{"անցյալ ամիս"}
+                "0"{"այս ամիս"}
+                "1"{"հաջորդ ամիս"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} ամիս անց"}
+                    other{"{0} ամիս անց"}
+                }
+                past{
+                    one{"{0} ամիս առաջ"}
+                    other{"{0} ամիս առաջ"}
+                }
+            }
+        }
+        sat{
+            relative{
+                "-1"{"անցյալ շաբաթ"}
+                "0"{"այս շաբաթ"}
+                "1"{"հաջորդ շաբաթ"}
+            }
+        }
+        second{
+            dn{"Վայրկյան"}
+            relative{
+                "0"{"այժմ"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} վայրկյան անց"}
+                    other{"{0} վայրկյան անց"}
+                }
+                past{
+                    one{"{0} վայրկյան առաջ"}
+                    other{"{0} վայրկյան առաջ"}
+                }
+            }
+        }
+        sun{
+            relative{
+                "-1"{"անցյալ կիրակի"}
+                "0"{"այս կիրակի"}
+                "1"{"հաջորդ կիրակի"}
+            }
+        }
+        thu{
+            relative{
+                "-1"{"անցյալ հինգշաբթի"}
+                "0"{"այս հինգշաբթի"}
+                "1"{"հաջորդ հինգշաբթի"}
+            }
+        }
+        tue{
+            relative{
+                "-1"{"անցյալ երեքշաբթի"}
+                "0"{"այս երեքշաբթի"}
+                "1"{"հաջորդ երեքշաբթի"}
+            }
+        }
+        wed{
+            relative{
+                "-1"{"անցյալ չորեքշաբթի"}
+                "0"{"այս չորեքշաբթի"}
+                "1"{"հաջորդ չորեքշաբթի"}
+            }
+        }
+        week{
+            dn{"Շաբաթ"}
+            relative{
+                "-1"{"անցյալ շաբաթ"}
+                "0"{"այս շաբաթ"}
+                "1"{"հաջորդ շաբաթ"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} շաբաթ անց"}
+                    other{"{0} շաբաթ անց"}
+                }
+                past{
+                    one{"{0} շաբաթ առաջ"}
+                    other{"{0} շաբաթ առաջ"}
+                }
+            }
+        }
+        weekday{
+            dn{"Շաբաթվա օր"}
+        }
+        year{
+            dn{"Տարի"}
+            relative{
+                "-1"{"անցյալ տարի"}
+                "0"{"այս տարի"}
+                "1"{"հաջորդ տարի"}
+            }
+            relativeTime{
+                future{
+                    one{"{0} տարի անց"}
+                    other{"{0} տարի անց"}
+                }
+                past{
+                    one{"{0} տարի առաջ"}
+                    other{"{0} տարի առաջ"}
+                }
+            }
+        }
+        zone{
+            dn{"Ժամային գոտի"}
+        }
+    }
+    listPattern{
+        standard{
+            2{"{0} և {1}"}
+            end{"{0} և {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
+            2{"{0} և {1}"}
+            end{"{0} և {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-short{
+            2{"{0} և {1}"}
+            end{"{0} և {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+    }
+    measurementSystemNames{
+        UK{"Անգլիական"}
+        US{"Ամերիկյան"}
+        metric{"Մետրիկ"}
+    }
+    units{
+        acceleration{
+            g-force{
+                one{"{0} ձգողության ուժի արագացում"}
+                other{"{0} ձգողության ուժի արագացում"}
+            }
+        }
+        angle{
+            arc-minute{
+                one{"{0} րոպե"}
+                other{"{0} րոպե"}
+            }
+            arc-second{
+                one{"{0} վայրկյան"}
+                other{"{0} վայրկյան"}
+            }
+            degree{
+                one{"{0} աստիճան"}
+                other{"{0} աստիճան"}
+            }
+        }
+        area{
+            acre{
+                one{"{0} ակր"}
+                other{"{0} ակր"}
+            }
+            hectare{
+                one{"{0} հեկտար"}
+                other{"{0} հեկտար"}
+            }
+            square-foot{
+                one{"{0} քառակուսի ֆուտ"}
+                other{"{0} քառակուսի ֆուտ"}
+            }
+            square-kilometer{
+                one{"{0} քառակուսի կիլոմետր"}
+                other{"{0} քառակուսի կիլոմետր"}
+            }
+            square-meter{
+                one{"{0} քառակուսի մետր"}
+                other{"{0} քառակուսի մետր"}
+            }
+            square-mile{
+                one{"{0} քառակուսի մղոն"}
+                other{"{0} քառակուսի մղոն"}
+            }
+        }
+        compound{
+            per{"{0}/{1}"}
+        }
+        duration{
+            day{
+                one{"{0} օր"}
+                other{"{0} օր"}
+            }
+            hour{
+                one{"{0} ժամ"}
+                other{"{0} ժամ"}
+            }
+            millisecond{
+                one{"{0} միլիվայրկյան"}
+                other{"{0} միլիվայրկյան"}
+            }
+            minute{
+                one{"{0} րոպե"}
+                other{"{0} րոպե"}
+            }
+            month{
+                one{"{0} ամիս"}
+                other{"{0} ամիս"}
+            }
+            second{
+                one{"{0} վայրկյան"}
+                other{"{0} վայրկյան"}
+            }
+            week{
+                one{"{0} շաբաթ"}
+                other{"{0} շաբաթ"}
+            }
+            year{
+                one{"{0} տարի"}
+                other{"{0} տարի"}
+            }
+        }
+        length{
+            centimeter{
+                one{"{0} սանտիմետր"}
+                other{"{0} սանտիմետր"}
+            }
+            foot{
+                one{"{0} ֆուտ"}
+                other{"{0} ֆուտ"}
+            }
+            inch{
+                one{"{0} դյույմ"}
+                other{"{0} դյույմ"}
+            }
+            kilometer{
+                one{"{0} կիլոմետր"}
+                other{"{0} կիլոմետր"}
+            }
+            light-year{
+                one{"{0} լուսային տարի"}
+                other{"{0} լուսային տարի"}
+            }
+            meter{
+                one{"{0} մետր"}
+                other{"{0} մետր"}
+            }
+            mile{
+                one{"{0} մղոն"}
+                other{"{0} մղոն"}
+            }
+            millimeter{
+                one{"{0} միլիմետր"}
+                other{"{0} միլիմետր"}
+            }
+            picometer{
+                one{"{0} պիկոմետր"}
+                other{"{0} պիկոմետր"}
+            }
+            yard{
+                one{"{0} յարդ"}
+                other{"{0} յարդ"}
+            }
+        }
+        mass{
+            gram{
+                one{"{0} գրամ"}
+                other{"{0} գրամ"}
+            }
+            kilogram{
+                one{"{0} կիլոգրամ"}
+                other{"{0} կիլոգրամ"}
+            }
+            ounce{
+                one{"{0} ունցիա"}
+                other{"{0} ունցիա"}
+            }
+            pound{
+                one{"{0} ֆունտ"}
+                other{"{0} ֆունտ"}
+            }
+        }
+        power{
+            horsepower{
+                one{"{0} ձիաուժ"}
+                other{"{0} ձիաուժ"}
+            }
+            kilowatt{
+                one{"{0} կիլովատ"}
+                other{"{0} կիլովատ"}
+            }
+            watt{
+                one{"{0} վատ"}
+                other{"{0} վատ"}
+            }
+        }
+        pressure{
+            hectopascal{
+                one{"{0} հեկտապասկալ"}
+                other{"{0} հեկտապասկալ"}
+            }
+            inch-hg{
+                one{"{0} դյույմ սնդիկի սյուն"}
+                other{"{0} դյույմ սնդիկի սյուն"}
+            }
+            millibar{
+                one{"{0} միլիբար"}
+                other{"{0} միլիբար"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                one{"{0} կիլոմետր / ժամ"}
+                other{"{0} կիլոմետր / ժամ"}
+            }
+            meter-per-second{
+                one{"{0} մետր / վայրկյան"}
+                other{"{0} մետր / վայրկյան"}
+            }
+            mile-per-hour{
+                one{"{0} մղոն / ժամ"}
+                other{"{0} մղոն / ժամ"}
+            }
+        }
+        temperature{
+            celsius{
+                one{"{0} աստիճան ըստ Ցելսիուսի"}
+                other{"{0} աստիճան ըստ Ցելսիուսի"}
+            }
+            fahrenheit{
+                one{"{0} աստիճան ըստ Ֆարենհայթի"}
+                other{"{0} աստիճան ըստ Ֆարենհայթի"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                one{"{0} խորանարդ կիլոմետր"}
+                other{"{0} խորանարդ կիլոմետր"}
+            }
+            cubic-mile{
+                one{"{0} խորանարդ մղոն"}
+                other{"{0} խորանարդ մղոն"}
+            }
+            liter{
+                one{"{0} լիտր"}
+                other{"{0} լիտր"}
+            }
+        }
+    }
+    unitsNarrow{
+        acceleration{
+            g-force{
+                one{"{0}G"}
+                other{"{0}G"}
+            }
+        }
+        angle{
+            arc-minute{
+                one{"{0}′"}
+                other{"{0}′"}
+            }
+            arc-second{
+                one{"{0}″"}
+                other{"{0}″"}
+            }
+            degree{
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+        }
+        area{
+            acre{
+                one{"{0}ակր"}
+                other{"{0}ակր"}
+            }
+            hectare{
+                one{"{0}հա"}
+                other{"{0}հա"}
+            }
+            square-foot{
+                one{"{0}ֆտ²"}
+                other{"{0}ֆտ²"}
+            }
+            square-kilometer{
+                one{"{0} կմ²"}
+                other{"{0} կմ²"}
+            }
+            square-meter{
+                one{"{0} մ²"}
+                other{"{0} մ²"}
+            }
+            square-mile{
+                one{"{0}մղ²"}
+                other{"{0}մղ²"}
+            }
+        }
+        compound{
+            per{"{0}/{1}"}
+        }
+        duration{
+            day{
+                one{"{0}օ."}
+                other{"{0}օ."}
+            }
+            hour{
+                one{"{0} ժ."}
+                other{"{0} ժ."}
+            }
+            millisecond{
+                one{"{0}մվ"}
+                other{"{0}մվ"}
+            }
+            minute{
+                one{"{0} ր."}
+                other{"{0} ր."}
+            }
+            month{
+                one{"{0} ա."}
+                other{"{0} ա."}
+            }
+            second{
+                one{"{0} վ."}
+                other{"{0} վ."}
+            }
+            week{
+                one{"{0} շ."}
+                other{"{0} շ."}
+            }
+            year{
+                one{"{0}տ."}
+                other{"{0}տ."}
+            }
+        }
+        length{
+            centimeter{
+                one{"{0} սմ"}
+                other{"{0} սմ"}
+            }
+            foot{
+                one{"{0}′"}
+                other{"{0}′"}
+            }
+            inch{
+                one{"{0}″"}
+                other{"{0}″"}
+            }
+            kilometer{
+                one{"{0} կմ"}
+                other{"{0} կմ"}
+            }
+            light-year{
+                one{"{0} լ. տ."}
+                other{"{0} լ. տ."}
+            }
+            meter{
+                one{"{0} մ"}
+                other{"{0} մ"}
+            }
+            mile{
+                one{"{0} մղ"}
+                other{"{0} մղ"}
+            }
+            millimeter{
+                one{"{0} մմ"}
+                other{"{0} մմ"}
+            }
+            picometer{
+                one{"{0} պմ"}
+                other{"{0} պմ"}
+            }
+            yard{
+                one{"{0} յդ."}
+                other{"{0} յդ."}
+            }
+        }
+        mass{
+            gram{
+                one{"{0} գր"}
+                other{"{0} գր"}
+            }
+            kilogram{
+                one{"{0} կգ"}
+                other{"{0} կգ"}
+            }
+            ounce{
+                one{"{0} ունց"}
+                other{"{0} ունց"}
+            }
+            pound{
+                one{"{0}#"}
+                other{"{0}#"}
+            }
+        }
+        power{
+            horsepower{
+                one{"{0}ձ/ու"}
+                other{"{0}ձ/ու"}
+            }
+            kilowatt{
+                one{"{0}կՎ"}
+                other{"{0}կՎ"}
+            }
+            watt{
+                one{"{0}Վ"}
+                other{"{0}Վ"}
+            }
+        }
+        pressure{
+            hectopascal{
+                one{"{0} հՊա"}
+                other{"{0} հՊա"}
+            }
+            inch-hg{
+                one{"{0}\u0022 ս. ս."}
+                other{"{0}\u0022 ս. ս"}
+            }
+            millibar{
+                one{"{0} մբ"}
+                other{"{0} մբ"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                one{"{0}կմ/ժ"}
+                other{"{0}կմ/ժ"}
+            }
+            meter-per-second{
+                one{"{0}մ/վ"}
+                other{"{0}մ/վ"}
+            }
+            mile-per-hour{
+                one{"{0}մղ/ժ"}
+                other{"{0}մղ/ժ"}
+            }
+        }
+        temperature{
+            celsius{
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+            fahrenheit{
+                one{"{0}°F"}
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                one{"{0}կմ³"}
+                other{"{0}կմ³"}
+            }
+            cubic-mile{
+                one{"{0}մղ³"}
+                other{"{0}մղ³"}
+            }
+            liter{
+                one{"{0}լ."}
+                other{"{0}լ."}
+            }
+        }
+    }
+    unitsShort{
+        acceleration{
+            g-force{
+                one{"{0} G"}
+                other{"{0} G"}
+            }
+        }
+        angle{
+            arc-minute{
+                one{"{0} րոպ"}
+                other{"{0} րոպ"}
+            }
+            arc-second{
+                one{"{0} վրկ"}
+                other{"{0} վրկ"}
+            }
+            degree{
+                one{"{0} աստճ."}
+                other{"{0} աստճ."}
+            }
+        }
+        area{
+            acre{
+                one{"{0} ակր"}
+                other{"{0} ակր"}
+            }
+            hectare{
+                one{"{0} հա"}
+                other{"{0} հա"}
+            }
+            square-foot{
+                one{"{0} քռ. ֆտ."}
+                other{"{0} քռ. ֆտ."}
+            }
+            square-kilometer{
+                one{"{0} կմ²"}
+                other{"{0} կմ²"}
+            }
+            square-meter{
+                one{"{0} մ²"}
+                other{"{0} մ²"}
+            }
+            square-mile{
+                one{"{0} քռ. մղ."}
+                other{"{0} քռ. մղ."}
+            }
+        }
+        compound{
+            per{"{0}/{1}"}
+        }
+        duration{
+            day{
+                one{"{0} օր"}
+                other{"{0} օր"}
+            }
+            hour{
+                one{"{0} ժ."}
+                other{"{0} ժ."}
+            }
+            millisecond{
+                one{"{0} մվ"}
+                other{"{0}մվ"}
+            }
+            minute{
+                one{"{0} րպ."}
+                other{"{0} րպ."}
+            }
+            month{
+                one{"{0} ամս"}
+                other{"{0} ամս"}
+            }
+            second{
+                one{"{0} վրկ"}
+                other{"{0} վրկ"}
+            }
+            week{
+                one{"{0} շբթ."}
+                other{"{0} շբթ."}
+            }
+            year{
+                one{"{0} տր."}
+                other{"{0} տր."}
+            }
+        }
+        length{
+            centimeter{
+                one{"{0} սմ"}
+                other{"{0} սմ"}
+            }
+            foot{
+                one{"{0} ֆտ."}
+                other{"{0} ֆտ."}
+            }
+            inch{
+                one{"{0} դմ."}
+                other{"{0} դմ."}
+            }
+            kilometer{
+                one{"{0} կմ"}
+                other{"{0} կմ"}
+            }
+            light-year{
+                one{"{0} լ. տ."}
+                other{"{0} լ. տ."}
+            }
+            meter{
+                one{"{0} մ"}
+                other{"{0} մ"}
+            }
+            mile{
+                one{"{0} մղ"}
+                other{"{0} մղ"}
+            }
+            millimeter{
+                one{"{0} մմ"}
+                other{"{0} մմ"}
+            }
+            picometer{
+                one{"{0} պմ"}
+                other{"{0} պմ"}
+            }
+            yard{
+                one{"{0} յդ."}
+                other{"{0} յդ."}
+            }
+        }
+        mass{
+            gram{
+                one{"{0} գր"}
+                other{"{0} գր"}
+            }
+            kilogram{
+                one{"{0} կգ"}
+                other{"{0} կգ"}
+            }
+            ounce{
+                one{"{0} ունց"}
+                other{"{0} ունց"}
+            }
+            pound{
+                one{"{0} ֆն."}
+                other{"{0} ֆն."}
+            }
+        }
+        power{
+            horsepower{
+                one{"{0} ձ/ու"}
+                other{"{0} ձ/ու"}
+            }
+            kilowatt{
+                one{"{0} կՎ"}
+                other{"{0} կՎ"}
+            }
+            watt{
+                one{"{0} Վ"}
+                other{"{0} Վ"}
+            }
+        }
+        pressure{
+            hectopascal{
+                one{"{0} հՊա"}
+                other{"{0} հՊա"}
+            }
+            inch-hg{
+                one{"{0} դյույմ ս. ս."}
+                other{"{0} դյույմ ս. ս."}
+            }
+            millibar{
+                one{"{0} մբ"}
+                other{"{0} մբ"}
+            }
+        }
+        speed{
+            kilometer-per-hour{
+                one{"{0} կմ/ժ"}
+                other{"{0} կմ/ժ"}
+            }
+            meter-per-second{
+                one{"{0} մ/վ"}
+                other{"{0} մ/վ"}
+            }
+            mile-per-hour{
+                one{"{0} մղ/ժ"}
+                other{"{0} մղ/ժ"}
+            }
+        }
+        temperature{
+            celsius{
+                one{"{0}°C"}
+                other{"{0}°C"}
+            }
+            fahrenheit{
+                one{"{0}°F"}
+                other{"{0}°F"}
+            }
+        }
+        volume{
+            cubic-kilometer{
+                one{"{0} կմ³"}
+                other{"{0} կմ³"}
+            }
+            cubic-mile{
+                one{"{0} մղ³"}
+                other{"{0} մղ³"}
+            }
+            liter{
+                one{"{0} լ."}
+                other{"{0} լ."}
             }
         }
     }

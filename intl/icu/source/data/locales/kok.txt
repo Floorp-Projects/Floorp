@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/kok.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/kok.xml
+ * ICU <specials> source: <path>/common/main/kok.xml
  */
 kok{
     AuxExemplarCharacters{"[\u200C\u200D]"}
@@ -31,7 +31,7 @@ kok{
         }
         native{"deva"}
     }
-    Version{"2.0.74.65"}
+    Version{"2.0.92.87"}
     calendar{
         gregorian{
             AmPmMarkers{

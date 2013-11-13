@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ti.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ti.xml
+ * ICU <specials> source: <path>/common/main/ti.xml
  */
 ti{
     Currencies{
@@ -48,5 +48,5 @@ ti{
             "የአሜሪካን ዶላር",
         }
     }
-    Version{"2.0.77.46"}
+    Version{"2.0.92.87"}
 }

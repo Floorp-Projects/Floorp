@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/br.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/br.xml
+ * ICU <specials> source: <path>/common/main/br.xml
  */
 br{
     AuxExemplarCharacters{"[á à ă â å ä ã ā æ c ç é è ĕ ë ē í ì ĭ î ï ī ó ò ŏ ô ö ø ō œ q ú ŭ û ü ū ÿ]"}
@@ -24,7 +24,7 @@ br{
             }
         }
     }
-    Version{"2.0.78.38"}
+    Version{"2.0.92.75"}
     calendar{
         gregorian{
             dayNames{
@@ -85,31 +85,6 @@ br{
                         "Gwener",
                         "Sadorn",
                     }
-                }
-            }
-            fields{
-                day{
-                    relative{
-                        "-1"{"decʼh"}
-                        "-2"{"dercʼhent-decʼh"}
-                        "0"{"hiziv"}
-                        "1"{"warcʼhoazh"}
-                    }
-                }
-                hour{
-                    dn{"eur"}
-                }
-                minute{
-                    dn{"munut"}
-                }
-                month{
-                    dn{"miz"}
-                }
-                second{
-                    dn{"eilenn"}
-                }
-                week{
-                    dn{"sizhun"}
                 }
             }
             monthNames{
@@ -181,6 +156,31 @@ br{
         alternateQuotationStart{"‹"}
         quotationEnd{"»"}
         quotationStart{"«"}
+    }
+    fields{
+        day{
+            relative{
+                "-1"{"decʼh"}
+                "-2"{"dercʼhent-decʼh"}
+                "0"{"hiziv"}
+                "1"{"warcʼhoazh"}
+            }
+        }
+        hour{
+            dn{"eur"}
+        }
+        minute{
+            dn{"munut"}
+        }
+        month{
+            dn{"miz"}
+        }
+        second{
+            dn{"eilenn"}
+        }
+        week{
+            dn{"sizhun"}
+        }
     }
     measurementSystemNames{
         UK{"RU"}
