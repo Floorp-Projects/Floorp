@@ -1602,49 +1602,6 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
     return rv;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
-                                             void *aTargetObj)
-{
-    // This check is called for event handlers
-    nsresult rv;
-    JS::Rooted<JSObject*> rootedFunObj(aCx, static_cast<JSObject*>(aFunObj));
-    nsIPrincipal* subject = doGetObjectPrincipal(rootedFunObj);
-    if (!subject)
-        return NS_ERROR_FAILURE;
-
-    if (subject == mSystemPrincipal)
-        // This is the system principal: just allow access
-        return NS_OK;
-
-    // Check if the principal the function was compiled under is
-    // allowed to execute scripts.
-
-    if (!ScriptAllowed(js::GetGlobalForObjectCrossCompartment(rootedFunObj)))
-        return NS_ERROR_DOM_SECURITY_ERR;
-
-    if (!aTargetObj) {
-        // We're done here
-        return NS_OK;
-    }
-
-    /*
-    ** Get origin of subject and object and compare.
-    */
-    JS::Rooted<JSObject*> obj(aCx, (JSObject*)aTargetObj);
-    nsIPrincipal* object = doGetObjectPrincipal(obj);
-
-    if (!object)
-        return NS_ERROR_FAILURE;
-
-    bool subsumes;
-    rv = subject->Subsumes(object, &subsumes);
-    if (NS_SUCCEEDED(rv) && !subsumes) {
-        rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
-    }
-    return rv;
-}
-
 nsresult
 nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
                                            nsIPrincipal *aPrincipal,
