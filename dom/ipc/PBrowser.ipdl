@@ -276,7 +276,7 @@ parent:
      * Instructs the TabParent to forward a request to zoom to a rect given in
      * CSS pixels. This rect is relative to the document.
      */
-    ZoomToRect(CSSRect aRect);
+    ZoomToRect(uint32_t aPresShellId, ViewID aViewId, CSSRect aRect);
 
     /**
      * We know for sure that content has either preventDefaulted or not
