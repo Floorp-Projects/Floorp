@@ -133,5 +133,17 @@ APZCCallbackHelper::GetDOMWindowUtils(nsIContent* aContent)
     return utils.forget();
 }
 
+bool
+APZCCallbackHelper::GetScrollIdentifiers(nsIContent* aContent,
+                                         uint32_t* aPresShellIdOut,
+                                         FrameMetrics::ViewID* aViewIdOut)
+{
+    if (!nsLayoutUtils::FindIDFor(aContent, aViewIdOut)) {
+        return false;
+    }
+    nsCOMPtr<nsIDOMWindowUtils> utils = GetDOMWindowUtils(aContent);
+    return utils && (utils->GetPresShellId(aPresShellIdOut) == NS_OK);
+}
+
 }
 }
