@@ -112,7 +112,7 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
 }
 
 already_AddRefed<nsIDOMWindowUtils>
-APZCCallbackHelper::GetDOMWindowUtils(nsIDocument* aDoc)
+APZCCallbackHelper::GetDOMWindowUtils(const nsIDocument* aDoc)
 {
     nsCOMPtr<nsIDOMWindowUtils> utils;
     nsCOMPtr<nsIDOMWindow> window = aDoc->GetDefaultView();
@@ -123,7 +123,7 @@ APZCCallbackHelper::GetDOMWindowUtils(nsIDocument* aDoc)
 }
 
 already_AddRefed<nsIDOMWindowUtils>
-APZCCallbackHelper::GetDOMWindowUtils(nsIContent* aContent)
+APZCCallbackHelper::GetDOMWindowUtils(const nsIContent* aContent)
 {
     nsCOMPtr<nsIDOMWindowUtils> utils;
     nsIDocument* doc = aContent->GetCurrentDoc();
@@ -134,7 +134,7 @@ APZCCallbackHelper::GetDOMWindowUtils(nsIContent* aContent)
 }
 
 bool
-APZCCallbackHelper::GetScrollIdentifiers(nsIContent* aContent,
+APZCCallbackHelper::GetScrollIdentifiers(const nsIContent* aContent,
                                          uint32_t* aPresShellIdOut,
                                          FrameMetrics::ViewID* aViewIdOut)
 {
