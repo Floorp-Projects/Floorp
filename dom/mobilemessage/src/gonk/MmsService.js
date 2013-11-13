@@ -37,9 +37,6 @@ const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
 const kMobileMessageDeletedObserverTopic = "mobile-message-deleted";
 
-const kPrefRilMmsc                       = "ril.mms.mmsc";
-const kPrefRilMmsProxy                   = "ril.mms.mmsproxy";
-const kPrefRilMmsPort                    = "ril.mms.mmsport";
 const kPrefRilRadioDisabled              = "ril.radio.disabled";
 
 // HTTP status codes:
@@ -174,7 +171,8 @@ MmsConnection.prototype = {
     }
 
     let port = this.mmsPort;
-    if (port == -1) {
+
+    if (port <= 0) {
       port = 80;
       if (DEBUG) debug("getProxyInfo: port is not valid. Set to defult (80).");
     }
@@ -190,7 +188,7 @@ MmsConnection.prototype = {
 
   // For keeping track of the radio status.
   radioDisabled: false,
-  settings: ["ril.radio.disabled"],
+  settings: [kPrefRilRadioDisabled],
   connected: false,
 
   //A queue to buffer the MMS HTTP requests when the MMS network
