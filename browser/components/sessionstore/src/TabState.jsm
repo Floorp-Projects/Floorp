@@ -87,7 +87,7 @@ let TabStateInternal = {
     if (this._syncHandlers.has(otherBrowser)) {
       let otherHandler = this._syncHandlers.get(otherBrowser);
       this._syncHandlers.set(browser, otherHandler);
-      this._syncHandlers.set(otherHandler, handler);
+      this._syncHandlers.set(otherBrowser, handler);
     } else {
       this._syncHandlers.set(otherBrowser, handler);
       this._syncHandlers.delete(browser);
