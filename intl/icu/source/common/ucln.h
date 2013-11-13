@@ -1,7 +1,7 @@
 /*
 ******************************************************************************
 *
-* Copyright (C) 2001-2012, International Business Machines
+* Copyright (C) 2001-2013, International Business Machines
 *                Corporation and others. All Rights Reserved.
 *
 ******************************************************************************
@@ -85,8 +85,5 @@ U_CAPI void U_EXPORT2 ucln_registerCleanup(ECleanupLibraryType type,
  * @param type which library to cleanup
  */
 U_CAPI void U_EXPORT2 ucln_cleanupOne(ECleanupLibraryType type);
-
-/* ucln_cmn.c variables shared with uinit.c */
-U_CFUNC UBool ucln_mutexedInit(initFunc *func, UErrorCode *status);
 
 #endif

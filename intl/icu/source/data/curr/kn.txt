@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/kn.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/kn.xml
+ * ICU <specials> source: <path>/common/main/kn.xml
  */
 kn{
     Currencies{
@@ -641,11 +641,38 @@ kn{
         }
         ZMK{
             "ZMK",
+            "ಜಾಂಬಿಯಾ ಕ್ವಾಚ (1968–2012)",
+        }
+        ZMW{
+            "ZMW",
             "ಜಾಂಬಿಯಾ ಕ್ವಾಚ",
         }
     }
+    CurrencyPlurals{
+        BMD{
+            one{"ಬರ್ಮುಡನ್ ಡಾಲರ್"}
+            other{"ಬರ್ಮುಡನ್ ಡಾಲರ್"}
+        }
+        KYD{
+            one{"ಕೆಮ್ಯಾನ್‌ ಐಲ್ಯಾಂಡ್‌ನ ಡಾಲರ್‌"}
+            other{"ಕೆಮ್ಯಾನ್‌ ಐಲ್ಯಾಂಡ್‌ನ ಡಾಲರ್‌"}
+        }
+        LAK{
+            one{"ಲೋಟಿಯನ್ ಕಿಪ್"}
+            other{"ಲೋಟಿಯನ್ ಕಿಪ್"}
+        }
+        PAB{
+            one{"ಪನಾಮಾನಿಯನ್ ಬಲ್ಬೋವಾ"}
+            other{"ಪನಾಮಾನಿಯನ್ ಬಲ್ಬೋವಾ"}
+        }
+        XXX{
+            one{"ಗೊತ್ತಿಲ್ಲದ ಕರೆನ್ಸಿ"}
+            other{"ಗೊತ್ತಿಲ್ಲದ ಕರೆನ್ಸಿ"}
+        }
+    }
     CurrencyUnitPatterns{
+        one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.0.78.40"}
+    Version{"2.0.92.87"}
 }

@@ -1,7 +1,7 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/es_419.xml
 // *
@@ -70,47 +70,16 @@ es_419{
             }
         }
     }
-    Version{"2.0.78.47"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            availableFormats{
+                yMEd{"E d/M/y G"}
+            }
+        }
         gregorian{
             availableFormats{
                 yMEd{"E d/M/y"}
-            }
-            dayNames{
-                stand-alone{
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "J",
-                        "V",
-                        "S",
-                    }
-                }
-            }
-            fields{
-                month{
-                    relative{
-                        "-1"{"El mes pasado"}
-                        "0"{"Este mes"}
-                        "1"{"Mes próximo"}
-                    }
-                }
-                week{
-                    relative{
-                        "-1"{"Semana pasada"}
-                        "0"{"Esta semana"}
-                        "1"{"Próxima semana"}
-                    }
-                }
-                year{
-                    relative{
-                        "-1"{"Año pasado"}
-                        "0"{"Este año"}
-                        "1"{"Año próximo"}
-                    }
-                }
             }
             quarters{
                 format{
@@ -124,37 +93,83 @@ es_419{
             }
         }
     }
+    fields{
+        day{
+            relativeTime{
+                future{
+                    one{"En {0} día"}
+                    other{"En {0} días"}
+                }
+            }
+        }
+        hour{
+            relativeTime{
+                future{
+                    one{"En {0} hora"}
+                    other{"En {0} horas"}
+                }
+            }
+        }
+        minute{
+            relativeTime{
+                future{
+                    one{"En {0} minuto"}
+                    other{"En {0} minutos"}
+                }
+            }
+        }
+        month{
+            relative{
+                "-1"{"El mes pasado"}
+                "0"{"Este mes"}
+                "1"{"Mes próximo"}
+            }
+            relativeTime{
+                future{
+                    one{"En {0} mes"}
+                    other{"En {0} meses"}
+                }
+            }
+        }
+        second{
+            relativeTime{
+                future{
+                    one{"En {0} segundo"}
+                    other{"En {0} segundos"}
+                }
+            }
+        }
+        week{
+            relative{
+                "-1"{"Semana pasada"}
+                "0"{"Esta semana"}
+                "1"{"Próxima semana"}
+            }
+            relativeTime{
+                future{
+                    one{"En {0} semana"}
+                    other{"En {0} semanas"}
+                }
+            }
+        }
+        year{
+            relative{
+                "-1"{"Año pasado"}
+                "0"{"Este año"}
+                "1"{"Año próximo"}
+            }
+            relativeTime{
+                future{
+                    one{"En {0} año"}
+                    other{"En {0} años"}
+                }
+            }
+        }
+    }
     measurementSystemNames{
         UK{"Reino Unido"}
     }
-    units{
-        day-future{
-            one{"En {0} día"}
-            other{"En {0} días"}
-        }
-        hour-future{
-            one{"En {0} hora"}
-            other{"En {0} horas"}
-        }
-        minute-future{
-            one{"En {0} minuto"}
-            other{"En {0} minutos"}
-        }
-        month-future{
-            one{"En {0} mes"}
-            other{"En {0} meses"}
-        }
-        second-future{
-            one{"En {0} segundo"}
-            other{"En {0} segundos"}
-        }
-        week-future{
-            one{"En {0} semana"}
-            other{"En {0} semanas"}
-        }
-        year-future{
-            one{"En {0} año"}
-            other{"En {0} años"}
-        }
+    transformNames{
+        Numeric{"Numéricas"}
     }
 }

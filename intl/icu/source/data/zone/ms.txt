@@ -1,19 +1,67 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ms.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ms.xml
+ * ICU <specials> source: <path>/common/main/ms.xml
  */
 ms{
-    Version{"2.0.78.20"}
+    Version{"2.0.92.87"}
     zoneStrings{
+        "Africa:Asmera"{
+            ec{"Asmara"}
+        }
+        "America:Coral_Harbour"{
+            ec{"Atikokan"}
+        }
+        "America:Godthab"{
+            ec{"Nuuk"}
+        }
+        "America:Indiana:Knox"{
+            ec{"Knox, Indiana"}
+        }
+        "America:Indiana:Marengo"{
+            ec{"Marengo, Indiana"}
+        }
+        "America:Indiana:Petersburg"{
+            ec{"Petersburg, Indiana"}
+        }
+        "America:Indiana:Tell_City"{
+            ec{"Tell City, Indiana"}
+        }
+        "America:Indiana:Vevay"{
+            ec{"Vevay, Indiana"}
+        }
+        "America:Indiana:Vincennes"{
+            ec{"Vincennes, Indiana"}
+        }
+        "America:Indiana:Winamac"{
+            ec{"Winamac, Indiana"}
+        }
+        "America:Kentucky:Monticello"{
+            ec{"Monticello, Kentucky"}
+        }
         "America:Lower_Princes"{
             ec{"Lower Prince's Quarter"}
+        }
+        "America:Mexico_City"{
+            ec{"Bandar Raya Mexico"}
+        }
+        "America:North_Dakota:Beulah"{
+            ec{"Beulah, North Dakota"}
+        }
+        "America:North_Dakota:Center"{
+            ec{"Center, North Dakota"}
+        }
+        "America:North_Dakota:New_Salem"{
+            ec{"New Salem, North Dakota"}
+        }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
         }
         "America:St_Barthelemy"{
             ec{"Saint Barthelemy"}
@@ -21,8 +69,47 @@ ms{
         "America:St_Johns"{
             ec{"St John"}
         }
+        "America:St_Kitts"{
+            ec{"St. Kitts"}
+        }
+        "America:St_Lucia"{
+            ec{"St. Lucia"}
+        }
+        "America:St_Thomas"{
+            ec{"St. Thomas"}
+        }
+        "America:St_Vincent"{
+            ec{"St. Vincent"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont d’Urville"}
+        }
+        "Asia:Calcutta"{
+            ec{"Kolkata"}
+        }
+        "Asia:Damascus"{
+            ec{"Damsyik"}
+        }
+        "Asia:Jerusalem"{
+            ec{"Baitulmuqaddis"}
+        }
+        "Asia:Katmandu"{
+            ec{"Kathmandu"}
+        }
+        "Asia:Rangoon"{
+            ec{"Yangon"}
+        }
+        "Asia:Saigon"{
+            ec{"Ho Chi Minh"}
+        }
         "Asia:Singapore"{
             ec{"Singapura"}
+        }
+        "Atlantic:Faeroe"{
+            ec{"Faroe"}
+        }
+        "Atlantic:St_Helena"{
+            ec{"St. Helena"}
         }
         "Etc:Unknown"{
             ec{"Bandar Tidak Diketahui"}
@@ -32,6 +119,12 @@ ms{
         }
         "Europe:London"{
             ld{"Waktu Musim Panas British"}
+        }
+        "Pacific:Ponape"{
+            ec{"Pohnpei"}
+        }
+        "Pacific:Truk"{
+            ec{"Chuuk"}
         }
         "meta:Afghanistan"{
             ls{"Waktu Afghanistan"}
@@ -113,12 +206,12 @@ ms{
         "meta:Australia_Central"{
             ld{"Waktu Siang Australia Tengah"}
             lg{"Waktu Australia Tengah"}
-            ls{"Waktu Piawai Pusat Australia"}
+            ls{"Waktu Piawai Australia Tengah"}
         }
         "meta:Australia_CentralWestern"{
-            ld{"Waktu Siang Barat Australia Tengah"}
-            lg{"Waktu Barat Pusat Australia"}
-            ls{"Waktu Piawai Barat Pusat Australia"}
+            ld{"Waktu Siang Barat Tengah Australia"}
+            lg{"Waktu Barat Tengah Australia"}
+            ls{"Waktu Piawai Barat Tengah Australia"}
         }
         "meta:Australia_Eastern"{
             ld{"Waktu Siang Australia Timur"}
@@ -128,7 +221,7 @@ ms{
         "meta:Australia_Western"{
             ld{"Waktu Siang Australia Barat"}
             lg{"Waktu Australia Barat"}
-            ls{"Waktu Piawai Barat Australia"}
+            ls{"Waktu Piawai Australia Barat"}
         }
         "meta:Azerbaijan"{
             ld{"Waktu Musim Panas Azerbaijan"}
@@ -152,8 +245,8 @@ ms{
             ls{"Waktu Bolivia"}
         }
         "meta:Brasilia"{
-            ld{"Waktu Musim Panas Brasil"}
-            lg{"Waktu Brasil"}
+            ld{"Waktu Musim Panas Brasilia"}
+            lg{"Waktu Brasilia"}
             ls{"Waktu Piawai Brasilia"}
         }
         "meta:Brunei"{
@@ -284,7 +377,7 @@ ms{
             ls{"Waktu Piawai Greenland Barat"}
         }
         "meta:Gulf"{
-            ls{"Waktu Piawai Teluk"}
+            ls{"Waktu Teluk"}
         }
         "meta:Guyana"{
             ls{"Waktu Guyana"}
@@ -387,6 +480,7 @@ ms{
         }
         "meta:Malaysia"{
             ls{"Waktu Malaysia"}
+            ss{"MYT"}
         }
         "meta:Maldives"{
             ls{"Waktu Maldives"}
@@ -508,7 +602,7 @@ ms{
         }
         "meta:Sakhalin"{
             ld{"Waktu Musim Panas Sakhalin"}
-            lg{"Waktu Skhalin"}
+            lg{"Waktu Sakhalin"}
             ls{"Waktu Piawai Sakhalin"}
         }
         "meta:Samara"{
@@ -517,6 +611,8 @@ ms{
             ls{"Waktu Piawai Samara"}
         }
         "meta:Samoa"{
+            ld{"Waktu Musim Panas Samoa"}
+            lg{"Waktu Samoa"}
             ls{"Waktu Piawai Samoa"}
         }
         "meta:Seychelles"{
@@ -524,6 +620,7 @@ ms{
         }
         "meta:Singapore"{
             ls{"Waktu Piawai Singapura"}
+            ss{"SGT"}
         }
         "meta:Solomon"{
             ls{"Waktu Kepulauan Solomon"}
@@ -591,7 +688,7 @@ ms{
             ls{"Waktu Piawai Vladivostok"}
         }
         "meta:Volgograd"{
-            ld{"Waktu Musim Panas Volgogra"}
+            ld{"Waktu Musim Panas Volgograd"}
             lg{"Waktu Volgograd"}
             ls{"Waktu Piawai Volgograd"}
         }
@@ -615,10 +712,11 @@ ms{
             ls{"Waktu Piawai Yekaterinburg"}
         }
         fallbackFormat{"{1} ({0})"}
-        fallbackRegionFormat{"{1} Waktu ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Waktu {0}"}
+        regionFormatDaylight{"Waktu Siang {0}"}
+        regionFormatStandard{"Waktu Piawai {0}"}
     }
 }

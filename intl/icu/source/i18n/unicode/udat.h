@@ -1,6 +1,6 @@
 /*
  *******************************************************************************
- * Copyright (C) 1996-2012, International Business Machines
+ * Copyright (C) 1996-2013, International Business Machines
  * Corporation and others. All Rights Reserved.
  *******************************************************************************
 */
@@ -131,6 +131,16 @@
  *   <li>   Align any particular field, or find out where it is for selection
  *          on the screen.
  * </ul>
+ * <p><strong>Date and Time Patterns:</strong></p>
+ *
+ * <p>Date and time formats are specified by <em>date and time pattern</em> strings.
+ * Within date and time pattern strings, all unquoted ASCII letters [A-Za-z] are reserved
+ * as pattern letters representing calendar fields. <code>UDateFormat</code> supports
+ * the date and time formatting algorithm and pattern letters defined by
+ * <a href="http://www.unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table">UTS#35
+ * Unicode Locale Data Markup Language (LDML)</a> and further documented for ICU in the
+ * <a href="https://sites.google.com/site/icuprojectuserguide/formatparse/datetime?pli=1#TOC-Date-Field-Symbol-Table">ICU
+ * User Guide</a>.</p>
  */
 
 /** A date formatter.
@@ -172,7 +182,7 @@ typedef enum UDateFormatStyle {
     /**
      * Use the pattern given in the parameter to udat_open
      * @see udat_open
-     * @draft ICU 50
+     * @stable ICU 50
      */
     UDAT_PATTERN = -2,
 
@@ -180,23 +190,25 @@ typedef enum UDateFormatStyle {
     UDAT_IGNORE = UDAT_PATTERN
 } UDateFormatStyle;
 
-// Skeletons for dates.
+/* Skeletons for dates. */
 
 /**
  * Constant for date skeleton with year.
  * @stable ICU 4.0
  */
 #define UDAT_YEAR                       "y"
+#ifndef U_HIDE_DRAFT_API
 /**
  * Constant for date skeleton with quarter.
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_QUARTER                    "QQQQ"
 /**
  * Constant for date skeleton with abbreviated quarter.
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_ABBR_QUARTER               "QQQ"
+#endif  /* U_HIDE_DRAFT_API */
 /**
  * Constant for date skeleton with year and quarter.
  * @stable ICU 4.0
@@ -260,16 +272,18 @@ typedef enum UDateFormatStyle {
  * @stable ICU 4.0
  */
 #define UDAT_YEAR_NUM_MONTH_DAY         "yMd"
+#ifndef U_HIDE_DRAFT_API
 /**
  * Constant for date skeleton with weekday.
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_WEEKDAY                    "EEEE"
 /**
  * Constant for date skeleton with abbreviated weekday.
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_ABBR_WEEKDAY               "E"
+#endif  /* U_HIDE_DRAFT_API */
 /**
  * Constant for date skeleton with year, month, weekday, and day.
  * Used in combinations date + time, date + time + zone, or time + zone.
@@ -325,23 +339,25 @@ typedef enum UDateFormatStyle {
  */
 #define UDAT_NUM_MONTH_WEEKDAY_DAY      "MEd"
 
-// Skeletons for times.
+/* Skeletons for times. */
 
 /**
  * Constant for date skeleton with hour, with the locale's preferred hour format (12 or 24).
  * @stable ICU 4.0
  */
 #define UDAT_HOUR                       "j"
+#ifndef U_HIDE_DRAFT_API
 /**
  * Constant for date skeleton with hour in 24-hour presentation.
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_HOUR24                     "H"
 /**
  * Constant for date skeleton with minute.
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_MINUTE                     "m"
+#endif  /* U_HIDE_DRAFT_API */
 /**
  * Constant for date skeleton with hour and minute, with the locale's preferred hour format (12 or 24).
  * Used in combinations date + time, date + time + zone, or time + zone.
@@ -354,11 +370,13 @@ typedef enum UDateFormatStyle {
  * @stable ICU 4.0
  */
 #define UDAT_HOUR24_MINUTE              "Hm"
+#ifndef U_HIDE_DRAFT_API
 /**
  * Constant for date skeleton with second.
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_SECOND                     "s"
+#endif  /* U_HIDE_DRAFT_API */
 /**
  * Constant for date skeleton with hour, minute, and second,
  * with the locale's preferred hour format (12 or 24).
@@ -380,14 +398,15 @@ typedef enum UDateFormatStyle {
  */
 #define UDAT_MINUTE_SECOND              "ms"
 
-// Skeletons for time zones.
+/* Skeletons for time zones. */
 
+#ifndef U_HIDE_DRAFT_API
 /**
  * Constant for <i>generic location format</i>, such as Los Angeles Time;
  * used in combinations date + time + zone, or time + zone.
  * @see <a href="http://unicode.org/reports/tr35/#Date_Format_Patterns">LDML Date Format Patterns</a>
  * @see <a href="http://unicode.org/reports/tr35/#Time_Zone_Fallback">LDML Time Zone Fallback</a>
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_LOCATION_TZ "VVVV"
 /**
@@ -395,7 +414,7 @@ typedef enum UDateFormatStyle {
  * used in combinations date + time + zone, or time + zone.
  * @see <a href="http://unicode.org/reports/tr35/#Date_Format_Patterns">LDML Date Format Patterns</a>
  * @see <a href="http://unicode.org/reports/tr35/#Time_Zone_Fallback">LDML Time Zone Fallback</a>
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_GENERIC_TZ "vvvv"
 /**
@@ -403,7 +422,7 @@ typedef enum UDateFormatStyle {
  * used in combinations date + time + zone, or time + zone.
  * @see <a href="http://unicode.org/reports/tr35/#Date_Format_Patterns">LDML Date Format Patterns</a>
  * @see <a href="http://unicode.org/reports/tr35/#Time_Zone_Fallback">LDML Time Zone Fallback</a>
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_ABBR_GENERIC_TZ "v"
 /**
@@ -411,7 +430,7 @@ typedef enum UDateFormatStyle {
  * used in combinations date + time + zone, or time + zone.
  * @see <a href="http://unicode.org/reports/tr35/#Date_Format_Patterns">LDML Date Format Patterns</a>
  * @see <a href="http://unicode.org/reports/tr35/#Time_Zone_Fallback">LDML Time Zone Fallback</a>
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_SPECIFIC_TZ "zzzz"
 /**
@@ -419,7 +438,7 @@ typedef enum UDateFormatStyle {
  * used in combinations date + time + zone, or time + zone.
  * @see <a href="http://unicode.org/reports/tr35/#Date_Format_Patterns">LDML Date Format Patterns</a>
  * @see <a href="http://unicode.org/reports/tr35/#Time_Zone_Fallback">LDML Time Zone Fallback</a>
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_ABBR_SPECIFIC_TZ "z"
 /**
@@ -427,12 +446,14 @@ typedef enum UDateFormatStyle {
  * used in combinations date + time + zone, or time + zone.
  * @see <a href="http://unicode.org/reports/tr35/#Date_Format_Patterns">LDML Date Format Patterns</a>
  * @see <a href="http://unicode.org/reports/tr35/#Time_Zone_Fallback">LDML Time Zone Fallback</a>
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
 #define UDAT_ABBR_UTC_TZ "ZZZZ"
+#endif  /* U_HIDE_DRAFT_API */
 
-// deprecated skeleton constants
+/* deprecated skeleton constants */
 
+#ifndef U_HIDE_DEPRECATED_API 
 /**
  * Constant for date skeleton with standalone month.
  * @deprecated ICU 50 Use UDAT_MONTH instead.
@@ -464,6 +485,7 @@ typedef enum UDateFormatStyle {
  * @deprecated ICU 50 Use instead UDAT_HOUR UDAT_ABBR_SPECIFIC_TZ or some other timezone presentation.
  */
 #define UDAT_HOUR_TZ                    "jz"
+#endif  /* U_HIDE_DEPRECATED_API */
 
 /**
  * FieldPosition and UFieldPosition selectors for format fields
@@ -709,11 +731,37 @@ typedef enum UDateFormatField {
      * corresponding to cyclic year names. This is implemented
      * using the {@link #UCAL_YEAR} field. This displays
      * the cyclic year name, if available.
-     * @draft ICU 49
+     * @stable ICU 49
      */
     UDAT_YEAR_NAME_FIELD = 30,
 
-   /**
+#ifndef U_HIDE_DRAFT_API
+    /**
+     * FieldPosition selector for 'O' field alignment,
+     * corresponding to the UCAL_ZONE_OFFSET and UCAL_DST_OFFSETfields.
+     * This displays the localized GMT format.
+     * @draft ICU 51
+     */
+    UDAT_TIMEZONE_LOCALIZED_GMT_OFFSET_FIELD = 31,
+
+    /**
+     * FieldPosition selector for 'X' field alignment,
+     * corresponding to the UCAL_ZONE_OFFSET and UCAL_DST_OFFSETfields.
+     * This displays the ISO 8601 local time offset format or UTC indicator ("Z").
+     * @draft ICU 51
+     */
+    UDAT_TIMEZONE_ISO_FIELD = 32,
+
+    /**
+     * FieldPosition selector for 'x' field alignment,
+     * corresponding to the UCAL_ZONE_OFFSET and UCAL_DST_OFFSETfields.
+     * This displays the ISO 8601 local time offset format.
+     * @draft ICU 51
+     */
+    UDAT_TIMEZONE_ISO_LOCAL_FIELD = 33,
+#endif  /* U_HIDE_DRAFT_API */
+
+    /**
      * Number of FieldPosition and UFieldPosition selectors for
      * DateFormat and UDateFormat.
      * Valid selectors range from 0 to UDAT_FIELD_COUNT-1.
@@ -721,7 +769,7 @@ typedef enum UDateFormatField {
      * in the future.
      * @stable ICU 3.0
      */
-    UDAT_FIELD_COUNT = 31
+    UDAT_FIELD_COUNT = 34
 
 } UDateFormatField;
 
@@ -785,6 +833,61 @@ udat_open(UDateFormatStyle  timeStyle,
 */
 U_STABLE void U_EXPORT2 
 udat_close(UDateFormat* format);
+
+
+/**
+ * DateFormat boolean attributes
+ * @internal ICU technology preview
+ */
+typedef enum UDateFormatBooleanAttribute {
+    /**
+     * indicates whether whitespace is allowed. Includes trailing dot tolerance.
+     * @internal ICU technology preview
+     */
+    UDAT_PARSE_ALLOW_WHITESPACE,
+    /**
+     * indicates tolerance of numeric data when String data may be assumed. eg: UDAT_YEAR_NAME_FIELD,
+     * 		UDAT_STANDALONE_MONTH_FIELD, UDAT_DAY_OF_WEEK_FIELD
+     * @internal ICU technology preview
+     */
+    UDAT_PARSE_ALLOW_NUMERIC,
+    /**
+     * count boolean date format constants
+     * @internal ICU technology preview
+     */
+    UDAT_BOOLEAN_ATTRIBUTE_COUNT
+} UDateFormatBooleanAttribute;
+
+#ifndef U_HIDE_INTERNAL_API
+/**
+ * Get a boolean attribute associated with a UDateFormat.
+ * An example would be a true value for a key of UDAT_PARSE_ALLOW_WHITESPACE indicating allowing whitespace leniency.
+ * If the formatter does not understand the attribute, -1 is returned.
+ * @param fmt The formatter to query.
+ * @param attr The attribute to query; e.g. UDAT_PARSE_ALLOW_WHITESPACE.
+ * @param status A pointer to an UErrorCode to receive any errors
+ * @return The value of attr.
+ * @internal technology preview
+ */
+U_INTERNAL UBool U_EXPORT2
+udat_getBooleanAttribute(const UDateFormat* fmt, UDateFormatBooleanAttribute attr, UErrorCode* status);
+
+/**
+ * Set a boolean attribute associated with a UDateFormat.
+ * An example of a boolean attribute is parse leniency control.  If the formatter does not understand
+ * the attribute, the call is ignored.
+ * @param fmt The formatter to set.
+ * @param attr The attribute to set; one of UDAT_PARSE_ALLOW_WHITESPACE or UDAT_PARSE_ALLOW_NUMERIC
+ * @param newValue The new value of attr.
+ * @param status A pointer to an UErrorCode to receive any errors
+ * @internal ICU technology preview
+ */
+U_INTERNAL void U_EXPORT2
+udat_setBooleanAttribute(UDateFormat *fmt, UDateFormatBooleanAttribute attr, UBool, UErrorCode* status);
+
+#endif  /* U_HIDE_INTERNAL_API */
+
+
 
 #if U_SHOW_CPLUSPLUS_API
 
@@ -1077,9 +1180,12 @@ typedef enum UDateFormatSymbolType {
     UDAT_MONTHS,
     /** The short month names, for example Feb. */
     UDAT_SHORT_MONTHS,
-    /** The weekday names, for example Monday */
+    /** The CLDR-style format "wide" weekday names, for example Monday */
     UDAT_WEEKDAYS,
-    /** The short weekday names, for example Mon. */
+    /**
+     * The CLDR-style format "abbreviated" (not "short") weekday names, for example "Mon."
+     * For the CLDR-style format "short" weekday names, use UDAT_SHORTER_WEEKDAYS.
+     */
     UDAT_SHORT_WEEKDAYS,
     /** The AM/PM names, for example AM */
     UDAT_AM_PMS,
@@ -1089,15 +1195,20 @@ typedef enum UDateFormatSymbolType {
     UDAT_ERA_NAMES,
     /** The narrow month names, for example F */
     UDAT_NARROW_MONTHS,
-    /** The narrow weekday names, for example N */
+    /** The CLDR-style format "narrow" weekday names, for example "M" */
     UDAT_NARROW_WEEKDAYS,
     /** Standalone context versions of months */
     UDAT_STANDALONE_MONTHS,
     UDAT_STANDALONE_SHORT_MONTHS,
     UDAT_STANDALONE_NARROW_MONTHS,
-    /** Standalone context versions of weekdays */
+    /** The CLDR-style stand-alone "wide" weekday names */
     UDAT_STANDALONE_WEEKDAYS,
+    /**
+     * The CLDR-style stand-alone "abbreviated" (not "short") weekday names.
+     * For the CLDR-style stand-alone "short" weekday names, use UDAT_STANDALONE_SHORTER_WEEKDAYS.
+     */
     UDAT_STANDALONE_SHORT_WEEKDAYS,
+    /** The CLDR-style stand-alone "narrow" weekday names */
     UDAT_STANDALONE_NARROW_WEEKDAYS,
     /** The quarters, for example 1st Quarter */
     UDAT_QUARTERS,
@@ -1105,8 +1216,22 @@ typedef enum UDateFormatSymbolType {
     UDAT_SHORT_QUARTERS,
     /** Standalone context versions of quarters */
     UDAT_STANDALONE_QUARTERS,
-    UDAT_STANDALONE_SHORT_QUARTERS
-
+    UDAT_STANDALONE_SHORT_QUARTERS,
+#ifndef U_HIDE_DRAFT_API
+    /**
+     * The CLDR-style short weekday names, e.g. "Su", Mo", etc.
+     * These are named "SHORTER" to contrast with the constants using _SHORT_
+     * above, which actually get the CLDR-style *abbreviated* versions of the
+     * corresponding names.
+     * @draft ICU 51
+     */
+    UDAT_SHORTER_WEEKDAYS,
+    /**
+     * Standalone version of UDAT_SHORTER_WEEKDAYS.
+     * @draft ICU 51
+     */
+    UDAT_STANDALONE_SHORTER_WEEKDAYS
+#endif  /* U_HIDE_DRAFT_API */
 } UDateFormatSymbolType;
 
 struct UDateFormatSymbols;
@@ -1193,16 +1318,16 @@ udat_getLocaleByType(const UDateFormat *fmt,
                      ULocDataLocaleType type,
                      UErrorCode* status); 
 
-#ifndef U_HIDE_INTERNAL_API
+#ifndef U_HIDE_DRAFT_API
 /**
  * Set a particular UDisplayContext value in the formatter, such as
  * UDISPCTX_CAPITALIZATION_FOR_STANDALONE.
  * @param fmt The formatter for which to set a UDisplayContext value.
  * @param value The UDisplayContext value to set.
  * @param status A pointer to an UErrorCode to receive any errors
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
-U_INTERNAL void U_EXPORT2
+U_DRAFT void U_EXPORT2
 udat_setContext(UDateFormat* fmt, UDisplayContext value, UErrorCode* status);
 
 /**
@@ -1212,12 +1337,12 @@ udat_setContext(UDateFormat* fmt, UDisplayContext value, UErrorCode* status);
  * @param type The UDisplayContextType whose value to return
  * @param status A pointer to an UErrorCode to receive any errors
  * @return The UDisplayContextValue for the specified type.
- * @internal ICU 50 technology preview
+ * @draft ICU 51
  */
-U_INTERNAL UDisplayContext U_EXPORT2
+U_DRAFT UDisplayContext U_EXPORT2
 udat_getContext(UDateFormat* fmt, UDisplayContextType type, UErrorCode* status);
 
-#endif  /* U_HIDE_INTERNAL_API */
+#endif  /* U_HIDE_DRAFT_API */
 
 #ifndef U_HIDE_INTERNAL_API
 /**
@@ -1273,7 +1398,6 @@ udat_applyPatternRelative(UDateFormat *format,
                           const UChar *timePattern,
                           int32_t     timePatternLength,
                           UErrorCode  *status);
-#endif  /* U_HIDE_INTERNAL_API */
 
 /**
  * @internal
@@ -1301,6 +1425,7 @@ udat_registerOpener(UDateFormatOpener opener, UErrorCode *status);
  */
 U_INTERNAL UDateFormatOpener U_EXPORT2
 udat_unregisterOpener(UDateFormatOpener opener, UErrorCode *status);
+#endif  /* U_HIDE_INTERNAL_API */
 
 
 #endif /* #if !UCONFIG_NO_FORMATTING */

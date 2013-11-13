@@ -1,33 +1,39 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/dz.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/dz.xml
+ * ICU <specials> source: <path>/common/main/dz.xml
  */
 dz{
     AuxExemplarCharacters{
-        "[\u0F7E ཊ \u0F9A ཋ \u0F9B ཌ \u0F9C ཎ \u0F9E \u0FBA \u0FBB \u0FBC ཥ \u0F80 "
-        "\u0F7B \u0F7D \u0F84]"
+        "[\u0F84 ཊ ཋ ཌ ཎ \u0F7E ཥ \u0F80 \u0F7B \u0F7D \u0F9A \u0F9B \u0F9C \u0F9E "
+        "\u0FBA \u0FBB \u0FBC]"
+    }
+    Ellipsis{
+        final{"{0}་་་་"}
+        initial{"་་་་{0}"}
+        medial{"{0}་་་་་་ {1}"}
     }
     ExemplarCharacters{
-        "[ཀ \u0F90 ཁ \u0F91 ག \u0F92 ང \u0F94 ཅ ཆ ཇ \u0F97 ཉ \u0F99 ཏ \u0F9F ཐ \u0FA0"
-        " ད \u0FA1 ན \u0FA3 པ \u0FA4 ཕ \u0FA5 བ \u0FA6 མ \u0FA8 ཙ \u0FA9 ཚ \u0FAA ཛ "
-        "\u0FAB ཝ \u0FAD ཞ ཟ འ ཡ \u0FB1 ར \u0FB2 ལ \u0FB3 ཤ \u0FB5 ས \u0FB6 ཧ \u0FB7 "
-        "ཨ \u0F72 \u0F74 \u0F7A \u0F7C]"
+        "[ཀ ཁ ག ང ཅ ཆ ཇ ཉ ཏ ཐ ད ན པ ཕ བ མ ཙ ཚ ཛ ཝ ཞ ཟ འ ཡ ར ལ ཤ ས ཧ ཨ \u0F72 \u0F74 "
+        "\u0F7A \u0F7C \u0F90 \u0F91 \u0F92 \u0F94 \u0F97 \u0F99 \u0F9F \u0FA0 \u0FA1"
+        " \u0FA3 \u0FA4 \u0FA5 \u0FA6 \u0FA8 \u0FA9 \u0FAA \u0FAB \u0FAD \u0FB1 "
+        "\u0FB2 \u0FB3 \u0FB5 \u0FB6 \u0FB7]"
     }
     ExemplarCharactersIndex{"[ཀ ཁ ག ང ཅ ཆ ཇ ཉ ཏ ཐ ད ན པ ཕ བ མ ཙ ཚ ཛ ཝ ཞ ཟ འ ཡ ར ལ ཤ ས ཧ ཨ]"}
     ExemplarCharactersPunctuation{
-        "[\- ‐ – — , ; \: ༔ ! ? . … ' ‘ ’ \" “ ” ( ) \[ \] ༼ ༽ § @ * / \& # † ‡ ༄ ༅ ༆"
-        " ༈ ༉ ༊ ࿐ ࿑ ༌ ། ༎ ༏ ༐ ༑ ༒ ࿒ ࿓ ࿔ ༴ ༶ ྾ ྿]"
+        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] ༼ ༽ § @ * / \\& # † "
+        "‡ ༄ ༅ ༆ ༈ ༉ ༊ ࿐ ࿑ ༒ ࿒ ࿓ ࿔ ༶ ྾ ྿ ༌ ། ༎ ༏ ༐ ༑ ༔ ༴]"
     }
     LocaleScript{
         "Tibt",
     }
+    MoreInformation{"?"}
     NumberElements{
         default{"tibt"}
         latn{
@@ -106,10 +112,157 @@ dz{
             }
         }
     }
-    Version{"2.0.78.30"}
+    Version{"2.0.92.87"}
     calendar{
+        generic{
+            DateTimePatterns{
+                "ཆུ་ཚོད་ h སྐར་མ་ mm:ss a zzzz",
+                "ཆུ་ཚོད་ h སྐར་མ་ mm:ss a z",
+                "ཆུ་ཚོད་h:mm:ss a",
+                "ཆུ་ཚོད་ h སྐར་མ་ mm a",
+                "EEEE, G སྤྱི་ལོ་y MMMM ཚེས་dd",
+                "G སྤྱི་ལོ་y MMMM ཚེས་ dd",
+                "G སྤྱི་ལོ་y ཟླ་MMM ཚེས་dd",
+                "GGGGG y-MM-dd",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                Ed{"d E"}
+                Gy{"G y"}
+                GyMMM{"G y སྤྱི་ཟླ་MMM"}
+                GyMMMEd{"གཟའ་E, G ལོy ཟླ་MMM ཚེ་d"}
+                GyMMMd{"G y MMM d"}
+                H{"ཆུ་ཚོད་HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
+                MEd{"E, M-d"}
+                MMM{"སྤྱི་LLL"}
+                MMMEd{"E, སྤྱི་LLL ཚེ་d"}
+                MMMd{"སྤྱི་LLL ཚེ་d"}
+                Md{"M-d"}
+                d{"d"}
+                h{"ཆུ་ཚོད་h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
+                y{"G y"}
+                yyyy{"G y"}
+                yyyyM{"G y-M"}
+                yyyyMEd{"E, G y-M-d"}
+                yyyyMMM{"G y སྤྱི་ཟླ་MMM"}
+                yyyyMMMEd{"གཟའ་E, G ལོy ཟླ་MMM ཚེ་d"}
+                yyyyMMMd{"G y MMM d"}
+                yyyyMd{"G y-M-d"}
+                yyyyQQQ{"G y QQQ"}
+                yyyyQQQQ{"G y QQQQ"}
+            }
+            intervalFormats{
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"སྤྱི་ཟླ་M–M"}
+                }
+                MEd{
+                    M{"E, སྤྱི་ཟླ་MM ཚེས་dd–ཟླ་MM ཚེས་dd"}
+                    d{"E, སྤྱི་ཟླ་MM ཚེས་dd–ཟླ་MM ཚེས་dd"}
+                }
+                MMM{
+                    M{"སྤྱི་LLL–LLL"}
+                }
+                MMMEd{
+                    M{"E, སྤྱི་ཟླ་MM ཚེས་d – E, ཟླ་MM ཚེས་d"}
+                    d{"E, སྤྱི་ཟླ་MM ཚེས་d – E, ཟླ་MM ཚེས་d"}
+                }
+                MMMd{
+                    M{"སྤྱི་ཟླ་MM ཚེས་d–ཟླ་MM ཚེས་d"}
+                    d{"སྤྱི་ཟླ་MM ཚེས་d–d"}
+                }
+                Md{
+                    M{"སྤྱི་ཟླ་MM ཚེས་dd–ཟླ་MM ཚེས་dd"}
+                    d{"སྤྱི་ཟླ་M ཚེས་dd/dd"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
+                hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
+                    m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    a{"h a – h a v"}
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"G y–y"}
+                }
+                yM{
+                    M{"G y-MM – MM"}
+                    y{"G y-MM – y-MM"}
+                }
+                yMEd{
+                    M{"E, y-MM-dd – E, y-MM-dd"}
+                    d{"E, y-MM-dd – E, y-MM-dd"}
+                    y{"E, y-MM-dd – E, y-MM-dd"}
+                }
+                yMMM{
+                    M{"སྤྱི་ཟླ་MMM/MMM, y"}
+                    y{"G y-MM – y-MM"}
+                }
+                yMMMEd{
+                    M{"E, y-MM-dd – E, y-MM-dd"}
+                    d{"E, y-MM-dd – E, y-MM-dd"}
+                    y{"E, y-MM-dd – E, y-MM-dd"}
+                }
+                yMMMM{
+                    M{"G y-སྤྱི་ཟླ་MM – MM"}
+                    y{"G y-MM – y-MM"}
+                }
+                yMMMd{
+                    M{"G y-MM-dd – MM-d"}
+                    d{"G y-MM-d – d"}
+                    y{"G y-MM-dd – y-MM-dd"}
+                }
+                yMd{
+                    M{"G y-MM-dd – MM-dd"}
+                    d{"G y-MM-dd – dd"}
+                    y{"G y-MM-dd – y-MM-dd"}
+                }
+            }
+        }
         gregorian{
             AmPmMarkers{
+                "སྔ་ཆ་",
+                "ཕྱི་ཆ་",
+            }
+            AmPmMarkersNarrow{
                 "སྔ་ཆ་",
                 "ཕྱི་ཆ་",
             }
@@ -121,7 +274,7 @@ dz{
                 "EEEE, སྤྱི་ལོ་y MMMM ཚེས་dd",
                 "སྤྱི་ལོ་y MMMM ཚེས་ dd",
                 "སྤྱི་ལོ་y ཟླ་MMM ཚེས་dd",
-                "yyyy-MM-dd",
+                "y-MM-dd",
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -130,6 +283,10 @@ dz{
             }
             availableFormats{
                 Ed{"d E"}
+                Gy{"G y"}
+                GyMMM{"G y སྤྱི་ཟླ་MMM"}
+                GyMMMEd{"གཟའ་E, G ལོy ཟླ་MMM ཚེ་d"}
+                GyMMMd{"G y MMM d"}
                 H{"ཆུ་ཚོད་HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -238,48 +395,6 @@ dz{
                     "CE",
                 }
             }
-            fields{
-                day{
-                    dn{"ཚེས་"}
-                    relative{
-                        "-1"{"ཁ་ཙ་"}
-                        "-2"{"ཁ་ཉིམ"}
-                        "0"{"ད་རིས་"}
-                        "1"{"ནངས་པ་"}
-                        "2"{"གནངས་ཚེ"}
-                    }
-                }
-                dayperiod{
-                    dn{"སྔ་ཆ/ཕྱི་ཆ་"}
-                }
-                era{
-                    dn{"དུས་བསྐལ"}
-                }
-                hour{
-                    dn{"ཆུ་ཚོད"}
-                }
-                minute{
-                    dn{"སྐར་མ"}
-                }
-                month{
-                    dn{"ཟླ་ཝ་"}
-                }
-                second{
-                    dn{"སྐར་ཆཱ་"}
-                }
-                week{
-                    dn{"བདུན་ཕྲག"}
-                }
-                weekday{
-                    dn{"བདུན་ཕྲག་གི་ཉིམ"}
-                }
-                year{
-                    dn{"ལོ"}
-                }
-                zone{
-                    dn{"དུས་ཀུལ"}
-                }
-            }
             intervalFormats{
                 H{
                     H{"HH–HH"}
@@ -343,36 +458,36 @@ dz{
                     y{"y–y"}
                 }
                 yM{
-                    M{"yyyy-MM – MM"}
-                    y{"yyyy-MM – yyyy-MM"}
+                    M{"y-MM – MM"}
+                    y{"y-MM – y-MM"}
                 }
                 yMEd{
-                    M{"E, yyyy-MM-dd – E, yyyy-MM-dd"}
-                    d{"E, yyyy-MM-dd – E, yyyy-MM-dd"}
-                    y{"E, yyyy-MM-dd – E, yyyy-MM-dd"}
+                    M{"E, y-MM-dd – E, y-MM-dd"}
+                    d{"E, y-MM-dd – E, y-MM-dd"}
+                    y{"E, y-MM-dd – E, y-MM-dd"}
                 }
                 yMMM{
                     M{"སྤྱི་ཟླ་MMM/MMM, y"}
-                    y{"yyyy-MM – yyyy-MM"}
+                    y{"y-MM – y-MM"}
                 }
                 yMMMEd{
-                    M{"E, yyyy-MM-dd – E, yyyy-MM-dd"}
-                    d{"E, yyyy-MM-dd – E, yyyy-MM-dd"}
-                    y{"E, yyyy-MM-dd – E, yyyy-MM-dd"}
+                    M{"E, y-MM-dd – E, y-MM-dd"}
+                    d{"E, y-MM-dd – E, y-MM-dd"}
+                    y{"E, y-MM-dd – E, y-MM-dd"}
                 }
                 yMMMM{
-                    M{"yyyy-སྤྱི་ཟླ་MM – MM"}
-                    y{"yyyy-MM – yyyy-MM"}
+                    M{"y-སྤྱི་ཟླ་MM – MM"}
+                    y{"y-MM – y-MM"}
                 }
                 yMMMd{
-                    M{"yyyy-MM-dd – MM-d"}
-                    d{"yyyy-MM-d – d"}
-                    y{"yyyy-MM-dd – yyyy-MM-dd"}
+                    M{"y-MM-dd – MM-d"}
+                    d{"y-MM-d – d"}
+                    y{"y-MM-dd – y-MM-dd"}
                 }
                 yMd{
-                    M{"yyyy-MM-dd – MM-dd"}
-                    d{"yyyy-MM-dd – dd"}
-                    y{"yyyy-MM-dd – yyyy-MM-dd"}
+                    M{"y-MM-dd – MM-dd"}
+                    d{"y-MM-dd – dd"}
+                    y{"y-MM-dd – y-MM-dd"}
                 }
             }
             monthNames{
@@ -515,6 +630,104 @@ dz{
         quotationEnd{"”"}
         quotationStart{"“"}
     }
+    fields{
+        day{
+            dn{"ཚེས་"}
+            relative{
+                "-1"{"ཁ་ཙ་"}
+                "-2"{"ཁ་ཉིམ"}
+                "0"{"ད་རིས་"}
+                "1"{"ནངས་པ་"}
+                "2"{"གནངས་ཚེ"}
+            }
+            relativeTime{
+                future{
+                    other{"ཉིནམ་ {0} ནང་"}
+                }
+                past{
+                    other{"ཉིནམ་ {0} ཧེ་མ་"}
+                }
+            }
+        }
+        dayperiod{
+            dn{"སྔ་ཆ/ཕྱི་ཆ་"}
+        }
+        era{
+            dn{"དུས་བསྐལ"}
+        }
+        hour{
+            dn{"ཆུ་ཚོད"}
+            relativeTime{
+                future{
+                    other{"ཆུ་ཚོད་ {0} ནང་"}
+                }
+                past{
+                    other{"ཆུ་ཚོད་ {0} ཧེ་མ་"}
+                }
+            }
+        }
+        minute{
+            dn{"སྐར་མ"}
+            relativeTime{
+                future{
+                    other{"སྐར་མ་ {0} ནང་"}
+                }
+                past{
+                    other{"སྐར་མ་ {0} ཧེ་མ་"}
+                }
+            }
+        }
+        month{
+            dn{"ཟླ་ཝ་"}
+            relativeTime{
+                future{
+                    other{"ཟླཝ་ {0} ནང་"}
+                }
+                past{
+                    other{"ཟླཝ་ {0} ཧེ་མ་"}
+                }
+            }
+        }
+        second{
+            dn{"སྐར་ཆཱ་"}
+            relativeTime{
+                future{
+                    other{"སྐར་ཆ་ {0} ནང་"}
+                }
+                past{
+                    other{"སྐར་ཆ་ {0} ཧེ་མ་"}
+                }
+            }
+        }
+        week{
+            dn{"བདུན་ཕྲག"}
+            relativeTime{
+                future{
+                    other{"བངུན་ཕྲག་ {0} ནང་"}
+                }
+                past{
+                    other{"བངུན་ཕྲག་ {0} ཧེ་མ་"}
+                }
+            }
+        }
+        weekday{
+            dn{"བདུན་ཕྲག་གི་ཉིམ"}
+        }
+        year{
+            dn{"ལོ"}
+            relativeTime{
+                future{
+                    other{"ལོ་འཁོར་ {0} ནང་"}
+                }
+                past{
+                    other{"ལོ་འཁོར་ {0} ཧེ་མ་"}
+                }
+            }
+        }
+        zone{
+            dn{"དུས་ཀུལ"}
+        }
+    }
     listPattern{
         standard{
             2{"{0} དང་ {1}"}
@@ -529,68 +742,28 @@ dz{
         metric{"མེ་ཊྲིཀ་བརྩི་ལུགས"}
     }
     units{
-        day{
-            other{"ཉིན་ཞག་ {0}"}
-        }
-        day-future{
-            other{"ཉིནམ་ {0} ནང་"}
-        }
-        day-past{
-            other{"ཉིནམ་ {0} ཧེ་མ་"}
-        }
-        hour{
-            other{"ཆུ་ཚོད་ {0}"}
-        }
-        hour-future{
-            other{"ཆུ་ཚོད་ {0} ནང་"}
-        }
-        hour-past{
-            other{"ཆུ་ཚོད་ {0} ཧེ་མ་"}
-        }
-        minute{
-            other{"སྐར་ཆ་ {0}"}
-        }
-        minute-future{
-            other{"སྐར་ཆ་ {0} ནང་"}
-        }
-        minute-past{
-            other{"སྐར་ཆ་ {0} ཧེ་མ་"}
-        }
-        month{
-            other{"ཟླཝ་ {0}"}
-        }
-        month-future{
-            other{"ཟླཝ་ {0} ནང་"}
-        }
-        month-past{
-            other{"ཟླཝ་ {0} ཧེ་མ་"}
-        }
-        second{
-            other{"སྐར་ཆ་ {0}"}
-        }
-        second-future{
-            other{"སྐར་ཆ་ {0} ནང་"}
-        }
-        second-past{
-            other{"བངུན་ཕྲག་ {0} ཧེ་མ་"}
-        }
-        week{
-            other{"བངུན་ཕྲག་ {0}"}
-        }
-        week-future{
-            other{"བངུན་ཕྲག་ {0} ནང་"}
-        }
-        week-past{
-            other{"བངུན་ཕྲག་ {0} ཧེ་མ་"}
-        }
-        year{
-            other{"ལོ་འཁོར་ {0}"}
-        }
-        year-future{
-            other{"ལོ་འཁོར་ {0} ནང་"}
-        }
-        year-past{
-            other{"ལོ་འཁོར་ {0} ཧེ་མ་"}
+        duration{
+            day{
+                other{"ཉིན་ཞག་ {0}"}
+            }
+            hour{
+                other{"ཆུ་ཚོད་ {0}"}
+            }
+            minute{
+                other{"སྐར་མ་ {0}"}
+            }
+            month{
+                other{"ཟླཝ་ {0}"}
+            }
+            second{
+                other{"སྐར་ཆ་ {0}"}
+            }
+            week{
+                other{"བངུན་ཕྲག་ {0}"}
+            }
+            year{
+                other{"ལོ་འཁོར་ {0}"}
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/es_UY.xml
 // *
@@ -11,7 +11,8 @@ es_UY{
     NumberElements{
         latn{
             patterns{
-                currencyFormat{"¤ #,##0.00;(¤ #,##0.00)"}
+                accountingFormat{"¤ #,##0.00;(¤ #,##0.00)"}
+                currencyFormat{"¤ #,##0.00"}
             }
             symbols{
                 decimal{","}
@@ -19,5 +20,5 @@ es_UY{
             }
         }
     }
-    Version{"2.0.74.64"}
+    Version{"2.0.92.87"}
 }

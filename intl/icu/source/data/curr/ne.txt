@@ -1,13 +1,13 @@
 ﻿// ***************************************************************************
 // *
-// * Copyright (C) 2012 International Business Machines
-// * Corporation and others.  All Rights Reserved.
+// * Copyright (C) 2013 International Business Machines
+// * Corporation and others. All Rights Reserved.
 // * Tool: org.unicode.cldr.icu.NewLdml2IcuConverter
 // * Source File: <path>/common/main/ne.xml
 // *
 // ***************************************************************************
 /**
- *  ICU <specials> source: <path>/xml/main/ne.xml
+ * ICU <specials> source: <path>/common/main/ne.xml
  */
 ne{
     Currencies{
@@ -17,7 +17,7 @@ ne{
         }
         AFA{
             "AFA",
-            "अफ्गानी(१९२७-२००२)",
+            "अफ्गानी(१९२७–२००२)",
         }
         AFN{
             "AFN",
@@ -61,7 +61,7 @@ ne{
         }
         BBD{
             "BBD",
-            "बार्बाड",
+            "बर्बाडियन डलर",
         }
         BDT{
             "BDT",
@@ -122,6 +122,10 @@ ne{
         CDF{
             "CDF",
             "कङ्गोली फ्रान्क",
+        }
+        CHF{
+            "CHF",
+            "स्विस् फ्रैङ्क",
         }
         CLP{
             "CLP",
@@ -463,6 +467,10 @@ ne{
             "QAR",
             "कतारी रियल",
         }
+        RON{
+            "RON",
+            "रोमानियाली लेऊ",
+        }
         RSD{
             "RSD",
             "सर्बियाली डिनार",
@@ -581,7 +589,7 @@ ne{
         }
         UYU{
             "UYU",
-            "युरूगुयाली पेसो",
+            "उरूग्वेयन पेसो",
         }
         UZS{
             "UZS",
@@ -633,6 +641,10 @@ ne{
         }
         ZMK{
             "ZMK",
+            "जाम्बियाली क्वाचा (१९६८–२०१२)",
+        }
+        ZMW{
+            "ZMW",
             "जाम्बियाली क्वाचा",
         }
     }
@@ -695,7 +707,7 @@ ne{
         }
         BMD{
             one{"बर्मुडन डलर"}
-            other{"बीएम्‌डीी"}
+            other{"बर्मुडन डलर"}
         }
         BND{
             one{"ब्रुनाई डलर"}
@@ -732,6 +744,10 @@ ne{
         CDF{
             one{"कङ्गोली फ्रान्क"}
             other{"कङ्गोली फ्रान्कहरू"}
+        }
+        CHF{
+            one{"स्विस् फ्रैङ्क"}
+            other{"स्विस् फ्रैङ्क"}
         }
         CLP{
             one{"चिलियन पेसो"}
@@ -1158,7 +1174,7 @@ ne{
             other{"युक्रेनी हिर्भिनिया"}
         }
         UGX{
-            one{"यगाण्डाली शिलिङ"}
+            one{"युगाण्डाली शिलिङहरू"}
             other{"युगाण्डाली शिलिङहरू"}
         }
         UYU{
@@ -1210,9 +1226,13 @@ ne{
             other{"दक्षिण अफ्रिकी र्‍यान्ड"}
         }
         ZMK{
+            one{"जाम्बियाली क्वाचा (१९६८–२०१२)"}
+            other{"जाम्बियाली क्वाचाहरू (१९६८–२०१२)"}
+        }
+        ZMW{
             one{"जाम्बियाली क्वाचा"}
             other{"जाम्बियाली क्वाचाहरू"}
         }
     }
-    Version{"2.0.78.39"}
+    Version{"2.0.92.87"}
 }
