@@ -8883,7 +8883,7 @@ dnl so that regeneration via dependencies works correctly
            GYP_MOZMAKE_OPTIONS="${GYP_MOZMAKE_OPTIONS} -D mac_sdk_path=$MACOS_SDK_DIR"
         fi
         ;;
-      *-android*)
+      *-*linux*)
         GYP_MOZMAKE_OPTIONS="-G os=linux"
         ;;
       *)
