@@ -39,6 +39,9 @@ var APZCObserver = {
   handleEvent: function APZC_handleEvent(aEvent) {
     switch (aEvent.type) {
       case 'pageshow':
+        if (aEvent.target != Browser.selectedBrowser.contentDocument)
+          break;
+        // fall through to TabSelect:
       case 'TabSelect':
         // ROOT_ID doesn't really identify the view we want. When we call
         // this on a content document (tab),  findElementWithViewId will
