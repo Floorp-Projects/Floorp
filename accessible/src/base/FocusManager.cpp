@@ -287,7 +287,7 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
   }
 
   // Fire menu start/end events for ARIA menus.
-  if (target->ARIARole() == roles::MENUITEM) {
+  if (target->IsARIARole(nsGkAtoms::menuitem)) {
     // The focus was moved into menu.
     Accessible* ARIAMenubar = nullptr;
     Accessible* child = target;
