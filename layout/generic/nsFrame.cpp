@@ -979,10 +979,10 @@ nsIFrame::ApplySkipSides(nsMargin& aMargin,
 nsRect
 nsIFrame::GetPaddingRectRelativeToSelf() const
 {
-  nsMargin bp(GetUsedBorder());
-  ApplySkipSides(bp);
+  nsMargin border(GetUsedBorder());
+  ApplySkipSides(border);
   nsRect r(0, 0, mRect.width, mRect.height);
-  r.Deflate(bp);
+  r.Deflate(border);
   return r;
 }
 
