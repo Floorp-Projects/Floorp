@@ -150,12 +150,12 @@
 
         LSL     pointStep,subFFTNum,#2                      @// 2*grpSize
 
-        VLD1     dW1,[pTwiddle :64]                             @//[wi | wr]
+        VLD1     dW1,[pTwiddle, :64]                             @//[wi | wr]
         MOV     srcStep,pointStep,LSL #1                    @// srcStep = 2*pointStep
-        VLD1     dW2,[pTwiddle :64]                             @//[wi | wr]
+        VLD1     dW2,[pTwiddle, :64]                             @//[wi | wr]
         ADD     setStep,srcStep,pointStep                   @// setStep = 3*pointStep
         SUB     srcStep,srcStep,#16                         @// srcStep = 2*pointStep-16
-        VLD1     dW3,[pTwiddle :64]
+        VLD1     dW3,[pTwiddle, :64]
         @//RSB     setStep,setStep,#16                      @// setStep = - 3*pointStep+16
         RSB     setStep,setStep,#0                          @// setStep = - 3*pointStep
 
@@ -167,13 +167,13 @@
 
 grpLoop\name:
 
-        VLD2    {dXr0,dXi0},[pSrc :128],pointStep          @//  data[0]
+        VLD2    {dXr0,dXi0},[pSrc, :128],pointStep          @//  data[0]
         ADD      stepTwiddle,stepTwiddle,pointStep
-        VLD2    {dXr1,dXi1},[pSrc :128],pointStep          @//  data[1]
+        VLD2    {dXr1,dXi1},[pSrc, :128],pointStep          @//  data[1]
         ADD      pTwiddle,pTwiddle,stepTwiddle               @// set pTwiddle to the first point
-        VLD2    {dXr2,dXi2},[pSrc :128],pointStep          @//  data[2]
+        VLD2    {dXr2,dXi2},[pSrc, :128],pointStep          @//  data[2]
         MOV      twStep,stepTwiddle,LSL #2
-        VLD2    {dXr3,dXi3},[pSrc :128],setStep            @//  data[3] & reset pSrc
+        VLD2    {dXr3,dXi3},[pSrc, :128],setStep            @//  data[3] & reset pSrc
 
         SUB      twStep,stepTwiddle,twStep                   @// twStep = -3*stepTwiddle
 
@@ -202,7 +202,7 @@ setLoop\name:
 
         .ENDIF
 
-        VLD2    {dXr1,dXi1},[pSrc :128],pointStep          @//  data[1]
+        VLD2    {dXr1,dXi1},[pSrc, :128],pointStep          @//  data[1]
 
         .ifeqs  "\inverse", "TRUE"
             VMULL   qT2,dXr2,dW2[0]
@@ -222,7 +222,7 @@ setLoop\name:
         VRSHRN  dZi1,qT1,#15
 
 
-        VLD2    {dXr2,dXi2},[pSrc :128],pointStep          @//  data[2]
+        VLD2    {dXr2,dXi2},[pSrc, :128],pointStep          @//  data[2]
 
         .ifeqs  "\inverse", "TRUE"
             VMULL   qT0,dXr3,dW3[0]
@@ -244,7 +244,7 @@ setLoop\name:
 
         VRSHRN  dZr3,qT0,#15
         VRSHRN  dZi3,qT1,#15
-        VLD2    {dXr3,dXi3},[pSrc :128],setStep            @//  data[3] & update pSrc for the next set
+        VLD2    {dXr3,dXi3},[pSrc, :128],setStep            @//  data[3] & update pSrc for the next set
 
 
         .ifeqs "\scaled", "TRUE"
@@ -253,7 +253,7 @@ setLoop\name:
             VHADD    qY0,qX0,qZ2
             VHSUB    qY2,qX0,qZ2
 
-            VLD2    {dXr0,dXi0},[pSrc :128]!          @//  data[0]
+            VLD2    {dXr0,dXi0},[pSrc, :128]!          @//  data[0]
             VHADD    qY1,qZ1,qZ3
             VHSUB    qY3,qZ1,qZ3
 
@@ -265,16 +265,16 @@ setLoop\name:
                 VHSUB    qZ0,qY2,qY1
 
                 VHADD    dZr2,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VHSUB    dZi2,dYi0,dYr3
 
                 VHADD    qZ1,qY2,qY1
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
 
                 VHSUB    dZr3,dYr0,dYi3
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
                 VHADD    dZi3,dYi0,dYr3
-                VST2    {dZr3,dZi3},[pDst :128],dstStep
+                VST2    {dZr3,dZi3},[pDst, :128],dstStep
 
 
             .ELSE
@@ -282,16 +282,16 @@ setLoop\name:
                 VHSUB    qZ0,qY2,qY1
 
                 VHSUB    dZr3,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VHADD    dZi3,dYi0,dYr3
 
                 VHADD    qZ1,qY2,qY1
-                VST2    {dZr3,dZi3},[pDst :128],outPointStep
+                VST2    {dZr3,dZi3},[pDst, :128],outPointStep
 
                 VHADD    dZr2,dYr0,dYi3
                 VHSUB    dZi2,dYi0,dYr3
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
-                VST2    {dZr2,dZi2},[pDst :128],dstStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],dstStep
 
 
             .ENDIF
@@ -316,16 +316,16 @@ setLoop\name:
                 VSUB    qZ0,qY2,qY1
 
                 VADD    dZr2,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VSUB    dZi2,dYi0,dYr3
 
                 VADD    qZ1,qY2,qY1
-                VST2    {dZr2,dZi2},[pDst :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],outPointStep
 
                 VSUB    dZr3,dYr0,dYi3
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
                 VADD    dZi3,dYi0,dYr3
-                VST2    {dZr3,dZi3},[pDst :128],dstStep
+                VST2    {dZr3,dZi3},[pDst, :128],dstStep
 
 
             .ELSE
@@ -333,16 +333,16 @@ setLoop\name:
                 VSUB    qZ0,qY2,qY1
 
                 VSUB    dZr3,dYr0,dYi3
-                VST2    {dZr0,dZi0},[pDst :128],outPointStep
+                VST2    {dZr0,dZi0},[pDst, :128],outPointStep
                 VADD    dZi3,dYi0,dYr3
 
                 VADD    qZ1,qY2,qY1
-                VST2    {dZr3,dZi3},[pDst :128],outPointStep
+                VST2    {dZr3,dZi3},[pDst, :128],outPointStep
 
                 VADD    dZr2,dYr0,dYi3
                 VSUB    dZi2,dYi0,dYr3
-                VST2    {dZr1,dZi1},[pDst :128],outPointStep
-                VST2    {dZr2,dZi2},[pDst :128],dstStep
+                VST2    {dZr1,dZi1},[pDst, :128],outPointStep
+                VST2    {dZr2,dZi2},[pDst, :128],dstStep
 
 
             .ENDIF
@@ -354,11 +354,11 @@ setLoop\name:
         ADD     pSrc,pSrc,pointStep                         @// increment to data[1] of the next set
         BGT     setLoop\name
 
-        VLD1     dW1,[pTwiddle :64],stepTwiddle                 @//[wi | wr]
+        VLD1     dW1,[pTwiddle, :64],stepTwiddle                 @//[wi | wr]
         SUBS    grpCount,grpCount,#4                        @// subtract 4 since grpCount multiplied by 4
-        VLD1     dW2,[pTwiddle :64],stepTwiddle                 @//[wi | wr]
+        VLD1     dW2,[pTwiddle, :64],stepTwiddle                 @//[wi | wr]
         ADD     pSrc,pSrc,srcStep                           @// increment pSrc for the next grp
-        VLD1     dW3,[pTwiddle :64],twStep                      @//[wi | wr]
+        VLD1     dW3,[pTwiddle, :64],twStep                      @//[wi | wr]
 
 
 
