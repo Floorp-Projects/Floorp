@@ -137,6 +137,9 @@ class NrIceMediaStream {
   // Get all the candidates
   std::vector<std::string> GetCandidates() const;
 
+  nsresult GetLocalCandidates(std::vector<NrIceCandidate>* candidates) const;
+  nsresult GetRemoteCandidates(std::vector<NrIceCandidate>* candidates) const;
+
   // Get all candidate pairs, whether in the check list or triggered check
   // queue, in priority order. |out_pairs| is cleared before being filled.
   nsresult GetCandidatePairs(std::vector<NrIceCandidatePair>* out_pairs) const;
