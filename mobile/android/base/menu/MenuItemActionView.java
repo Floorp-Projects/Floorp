@@ -41,8 +41,6 @@ public class MenuItemActionView extends LinearLayout
     public MenuItemActionView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
-        setWeightSum(3.0f);
-
         Resources res = context.getResources();
         int width = res.getDimensionPixelSize(R.dimen.menu_item_row_width);
         int height = res.getDimensionPixelSize(R.dimen.menu_item_row_height);
