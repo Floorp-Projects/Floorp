@@ -97,25 +97,6 @@ ReportMoreArgsNeeded(JSContext *cx, const char *name, unsigned required)
     return false;
 }
 
-static inline bool
-EnsureFunctionHasScript(JSContext *cx, JSFunction *fun)
-{
-    if (fun->isInterpretedLazy()) {
-        AutoCompartment ac(cx, fun);
-        return !!fun->getOrCreateScript(cx);
-    }
-    return true;
-}
-
-static inline JSScript *
-GetOrCreateFunctionScript(JSContext *cx, JSFunction *fun)
-{
-    MOZ_ASSERT(fun->isInterpreted());
-    if (!EnsureFunctionHasScript(cx, fun))
-        return nullptr;
-    return fun->nonLazyScript();
-}
-
 #define REQUIRE_ARGC(name, n)                                                 \
     JS_BEGIN_MACRO                                                            \
         if (argc < (n))                                                       \
@@ -704,9 +685,6 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
 
     if (vp.isObject()) {
         RootedObject obj(cx, &vp.toObject());
-
-        if (obj->is<JSFunction>() && !EnsureFunctionHasScript(cx, &obj->as<JSFunction>()))
-            return false;
 
         ObjectWeakMap::AddPtr p = objects.lookupForAdd(obj);
         if (p) {
@@ -2425,14 +2403,10 @@ class Debugger::ScriptQuery {
         if (!prepareQuery())
             return false;
 
-        JSCompartment *singletonComp = nullptr;
-        if (compartments.count() == 1)
-            singletonComp = compartments.all().front();
-
         /* Search each compartment for debuggee scripts. */
         vector = v;
         oom = false;
-        IterateScripts(cx->runtime(), singletonComp, this, considerScript);
+        IterateScripts(cx->runtime(), nullptr, this, considerScript);
         if (oom) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -2502,21 +2476,10 @@ class Debugger::ScriptQuery {
     /* Indicates whether OOM has occurred while matching. */
     bool oom;
 
-    bool addCompartment(JSCompartment *comp) {
-        {
-            // All scripts in the debuggee compartment must be visible, so
-            // delazify everything.
-            AutoCompartment ac(cx, comp);
-            if (!comp->ensureDelazifyScriptsForDebugMode(cx))
-                return false;
-        }
-        return compartments.put(comp);
-    }
-
     /* Arrange for this ScriptQuery to match only scripts that run in |global|. */
     bool matchSingleGlobal(GlobalObject *global) {
         JS_ASSERT(compartments.count() == 0);
-        if (!addCompartment(global->compartment())) {
+        if (!compartments.put(global->compartment())) {
             js_ReportOutOfMemory(cx);
             return false;
         }
@@ -2531,7 +2494,7 @@ class Debugger::ScriptQuery {
         JS_ASSERT(compartments.count() == 0);
         /* Build our compartment set from the debugger's set of debuggee globals. */
         for (GlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
-            if (!addCompartment(r.front()->compartment())) {
+            if (!compartments.put(r.front()->compartment())) {
                 js_ReportOutOfMemory(cx);
                 return false;
             }
@@ -2974,10 +2937,8 @@ DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
         for (uint32_t i = script->innerObjectsStart(); i < objects->length; i++) {
             obj = objects->vector[i];
             if (obj->is<JSFunction>()) {
-                fun = &obj->as<JSFunction>();
-                funScript = GetOrCreateFunctionScript(cx, fun);
-                if (!funScript)
-                    return false;
+                fun = static_cast<JSFunction *>(obj.get());
+                funScript = fun->nonLazyScript();
                 s = dbg->wrapScript(cx, funScript);
                 if (!s || !js_NewbornArrayPush(cx, result, ObjectValue(*s)))
                     return false;
@@ -4698,9 +4659,14 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseInitializedLength(cx, 0, fun->nargs);
 
     if (fun->isInterpreted()) {
-        RootedScript script(cx, GetOrCreateFunctionScript(cx, fun));
-        if (!script)
-            return false;
+        RootedScript script(cx);
+
+        {
+            AutoCompartment ac(cx, fun);
+            script = fun->getOrCreateScript(cx);
+            if (!script)
+                return false;
+        }
 
         JS_ASSERT(fun->nargs == script->bindings.numArgs());
 
@@ -4742,9 +4708,15 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedScript script(cx, GetOrCreateFunctionScript(cx, fun));
-    if (!script)
-        return false;
+    RootedScript script(cx);
+
+    {
+        AutoCompartment ac(cx, obj);
+
+        script = fun->getOrCreateScript(cx);
+        if (!script)
+            return false;
+    }
 
     /* Only hand out debuggee scripts. */
     if (!dbg->observesScript(script)) {
