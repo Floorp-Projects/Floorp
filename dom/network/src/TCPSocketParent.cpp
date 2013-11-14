@@ -168,13 +168,13 @@ TCPSocketParent::RecvData(const SendableData& aData)
       JS::Rooted<JS::Value> val(cx);
       JS::Rooted<JSObject*> obj(cx, mIntermediaryObj);
       IPC::DeserializeArrayBuffer(obj, aData.get_ArrayOfuint8_t(), &val);
-      rv = mIntermediary->SendArrayBuffer(val);
+      rv = mIntermediary->OnRecvSendArrayBuffer(val);
       NS_ENSURE_SUCCESS(rv, true);
       break;
     }
 
     case SendableData::TnsString:
-      rv = mIntermediary->SendString(aData.get_nsString());
+      rv = mIntermediary->OnRecvSendString(aData.get_nsString());
       NS_ENSURE_SUCCESS(rv, true);
       break;
 
@@ -194,9 +194,8 @@ TCPSocketParent::RecvClose()
 }
 
 NS_IMETHODIMP
-TCPSocketParent::SendCallback(const nsAString& aType, const JS::Value& aDataVal,
-                              const nsAString& aReadyState, uint32_t aBuffered,
-                              JSContext* aCx)
+TCPSocketParent::SendEvent(const nsAString& aType, const JS::Value& aDataVal,
+                           const nsAString& aReadyState, JSContext* aCx)
 {
   if (!mIPCOpen) {
     NS_WARNING("Dropping callback due to no IPC connection");

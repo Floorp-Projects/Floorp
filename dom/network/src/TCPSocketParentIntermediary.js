@@ -23,8 +23,8 @@ TCPSocketParentIntermediary.prototype = {
     ["open", "drain", "data", "error", "close"].forEach(
       function(p) {
         socket["on" + p] = function(data) {
-          aParentSide.sendCallback(p, data.data, socket.readyState,
-                                   socket.bufferedAmount);
+          aParentSide.sendEvent(p, data.data, socket.readyState,
+                                socket.bufferedAmount);
         };
       }
     );
@@ -79,11 +79,11 @@ TCPSocketParentIntermediary.prototype = {
     return serverSocket;
   },
 
-  sendString: function(aData) {
+  onRecvSendString: function(aData) {
     return this._socket.send(aData);
   },
 
-  sendArrayBuffer: function(aData) {
+  onRecvSendArrayBuffer: function(aData) {
     return this._socket.send(aData, 0, aData.byteLength);
   },
 
