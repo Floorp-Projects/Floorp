@@ -5966,8 +5966,7 @@ IonBuilder::maybeInsertResume()
 }
 
 bool
-IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton,
-                                  PropertyName *name, bool *isKnownConstant)
+IonBuilder::testSingletonProperty(JSObject *obj, PropertyName *name, JSObject **psingleton)
 {
     // We would like to completely no-op property/global accesses which can
     // produce only a particular JSObject. When indicating the access result is
@@ -5982,7 +5981,7 @@ IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton,
     // and the only way it can become missing in the future is if it is deleted.
     // Deletion causes type properties to be explicitly marked with undefined.
 
-    *isKnownConstant = false;
+    *psingleton = nullptr;
 
     if (!CanEffectlesslyCallLookupGenericOnObject(cx, obj, name))
         return true;
@@ -6016,15 +6015,13 @@ IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton,
             if (property.notEmpty(constraints()))
                 return true;
         } else {
-            if (property.singleton(constraints()) != singleton)
-                return true;
+            *psingleton = property.singleton(constraints());
             break;
         }
 
         obj = obj->getProto();
     }
 
-    *isKnownConstant = true;
     return true;
 }
 
@@ -6051,8 +6048,13 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton,
         return true;
 
     JSObject *objectSingleton = types ? types->getSingleton() : nullptr;
-    if (objectSingleton)
-        return testSingletonProperty(objectSingleton, singleton, name, isKnownConstant);
+    if (objectSingleton) {
+        JSObject *nsingleton;
+        if (!testSingletonProperty(objectSingleton, name, &nsingleton))
+            return false;
+        *isKnownConstant = (nsingleton == singleton);
+        return true;
+    }
 
     if (!globalObj)
         return true;
@@ -6099,10 +6101,10 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton,
 
             if (JSObject *proto = object->proto().toObjectOrNull()) {
                 // Test this type.
-                bool thoughtConstant = false;
-                if (!testSingletonProperty(proto, singleton, name, &thoughtConstant))
+                JSObject *nsingleton;
+                if (!testSingletonProperty(proto, name, &nsingleton))
                     return false;
-                if (!thoughtConstant)
+                if (nsingleton != singleton)
                     return true;
             } else {
                 // Can't be on the prototype chain with no prototypes...
@@ -6122,7 +6124,12 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton,
     if (!js_GetClassPrototype(cx, key, &proto, nullptr))
         return false;
 
-    return testSingletonProperty(proto, singleton, name, isKnownConstant);
+    JSObject *nsingleton;
+    if (!testSingletonProperty(proto, name, &nsingleton))
+        return false;
+
+    *isKnownConstant = (nsingleton == singleton);
+    return true;
 }
 
 // Given an observed type set, annotates the IR as much as possible:
@@ -6251,10 +6258,10 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     if (!barrier) {
         if (singleton) {
             // Try to inline a known constant value.
-            bool isKnownConstant;
-            if (!testSingletonProperty(staticObject, singleton, name, &isKnownConstant))
+            JSObject *nsingleton;
+            if (!testSingletonProperty(staticObject, name, &nsingleton))
                 return false;
-            if (isKnownConstant)
+            if (singleton == nsingleton)
                 return pushConstant(ObjectValue(*singleton));
         }
         if (knownType == JSVAL_TYPE_UNDEFINED)
@@ -7914,31 +7921,11 @@ IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetProper
         if (ownTypes.notEmpty(constraints()))
             continue;
 
-        JSObject *singleton = nullptr;
-        JSObject *proto = typeObj->proto().toObject();
-        while (true) {
-            types::TypeObjectKey *protoType = types::TypeObjectKey::get(proto);
-            if (!protoType->unknownProperties()) {
-                types::HeapTypeSetKey property = protoType->property(NameToId(name));
-
-                singleton = property.singleton(constraints());
-                if (singleton) {
-                    if (singleton->is<JSFunction>())
-                        break;
-                    singleton = nullptr;
-                }
-            }
-            TaggedProto taggedProto = proto->getTaggedProto();
-            if (!taggedProto.isObject())
-                break;
-            proto = taggedProto.toObject();
-        }
+        JSObject *singleton;
+        if (!testSingletonProperty(typeObj->proto().toObject(), name, &singleton))
+            return false;
         if (!singleton)
             continue;
-
-        bool knownConstant = false;
-        if (!testSingletonProperty(proto, singleton, name, &knownConstant))
-            return false;
 
         // Don't add cases corresponding to non-observed pushes
         if (!pushedTypes->hasType(types::Type::ObjectType(singleton)))

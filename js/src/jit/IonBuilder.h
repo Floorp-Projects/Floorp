@@ -631,8 +631,7 @@ class IonBuilder : public MIRGenerator
 
     MGetPropertyCache *getInlineableGetPropertyCache(CallInfo &callInfo);
 
-    bool testSingletonProperty(JSObject *obj, JSObject *singleton, PropertyName *name,
-                               bool *isKnownConstant);
+    bool testSingletonProperty(JSObject *obj, PropertyName *name, JSObject **psingleton);
     bool testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton,
                                     JSObject *globalObj, PropertyName *name,
                                     bool *isKnownConstant, bool *testObject,
