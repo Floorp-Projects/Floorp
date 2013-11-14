@@ -588,10 +588,14 @@ CustomizeMode.prototype = {
     }.bind(this)).then(null, ERROR);
   },
 
-  persistCurrentSets: function()  {
+  persistCurrentSets: function(aSetBeforePersisting)  {
     let document = this.document;
     let toolbars = document.querySelectorAll("toolbar[customizable='true'][currentset]");
     for (let toolbar of toolbars) {
+      if (aSetBeforePersisting) {
+        let set = toolbar.currentSet;
+        toolbar.setAttribute("currentset", set);
+      }
       // Persist the currentset attribute directly on hardcoded toolbars.
       document.persist(toolbar.id, "currentset");
     }
@@ -609,15 +613,7 @@ CustomizeMode.prototype = {
       yield this._wrapToolbarItems();
       yield this.populatePalette();
 
-      let document = this.document;
-      let toolbars = document.querySelectorAll("toolbar[customizable='true']");
-      for (let toolbar of toolbars) {
-        let set = toolbar.currentSet;
-        toolbar.removeAttribute("currentset");
-        LOG("[RESET] Removing currentset of " + toolbar.id);
-        // Persist the currentset attribute directly on hardcoded toolbars.
-        document.persist(toolbar.id, "currentset");
-      }
+      this.persistCurrentSets(true);
 
       this._updateResetButton();
       this._showPanelCustomizationPlaceholders();
