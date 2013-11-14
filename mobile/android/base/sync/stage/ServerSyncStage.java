@@ -11,7 +11,6 @@ import java.util.concurrent.ExecutorService;
 
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.CredentialsSource;
 import org.mozilla.gecko.sync.EngineSettings;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.HTTPFailureException;
@@ -23,6 +22,7 @@ import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.delegates.WipeServerDelegate;
 import org.mozilla.gecko.sync.middleware.Crypto5MiddlewareRepository;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncStorageRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
@@ -145,10 +145,10 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
 
   // Override this in subclasses.
   protected Repository getRemoteRepository() throws URISyntaxException {
-    return new Server11Repository(session.config.getClusterURLString(),
-                                  session.config.username,
-                                  getCollection(),
-                                  session);
+    String collection = getCollection();
+    return new Server11Repository(collection,
+                                  session.config.storageURL(),
+                                  session.getAuthHeaderProvider());
   }
 
   /**
@@ -374,7 +374,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
   /**
    * Asynchronously wipe collection on server.
    */
-  protected void wipeServer(final CredentialsSource credentials, final WipeServerDelegate wipeDelegate) {
+  protected void wipeServer(final AuthHeaderProvider authHeaderProvider, final WipeServerDelegate wipeDelegate) {
     SyncStorageRequest request;
 
     try {
@@ -415,8 +415,8 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
       }
 
       @Override
-      public String credentials() {
-        return credentials.credentials();
+      public AuthHeaderProvider getAuthHeaderProvider() {
+        return authHeaderProvider;
       }
     };
 
@@ -436,7 +436,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     final Runnable doWipe = new Runnable() {
       @Override
       public void run() {
-        wipeServer(session, new WipeServerDelegate() {
+        wipeServer(session.getAuthHeaderProvider(), new WipeServerDelegate() {
           @Override
           public void onWiped(long timestamp) {
             synchronized (monitor) {
