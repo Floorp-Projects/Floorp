@@ -254,5 +254,20 @@ let tests = [
       this.notification2.remove();
     },
     onHidden: function(popup) { }
+  },
+  // The anchor icon should be shown for notifications in background windows.
+  { id: "Test#13",
+    run: function() {
+      let notifyObj = new BasicNotification(this.id);
+      notifyObj.options.dismissed = true;
+      let win = gBrowser.replaceTabWithWindow(gBrowser.addTab("about:blank"));
+      whenDelayedStartupFinished(win, function() {
+        showNotification(notifyObj);
+        let anchor = document.getElementById("default-notification-icon");
+        is(anchor.getAttribute("showing"), "true", "the anchor is shown");
+        win.close();
+        goNext();
+      });
+    }
   }
 ];
