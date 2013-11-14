@@ -2250,19 +2250,29 @@ JS_FRIEND_API(unsigned)
 js_GetScriptLineExtent(JSScript *script)
 {
     unsigned lineno = script->lineno;
-    unsigned maxLineNo = lineno;
+    unsigned maxLineNo = 0;
+    bool counting = true;
     for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
-        if (type == SRC_SETLINE)
+        if (type == SRC_SETLINE) {
+            if (maxLineNo < lineno)
+                maxLineNo = lineno;
             lineno = (unsigned) js_GetSrcNoteOffset(sn, 0);
-        else if (type == SRC_NEWLINE)
-            lineno++;
-
-        if (maxLineNo < lineno)
-            maxLineNo = lineno;
+            counting = true;
+            if (maxLineNo < lineno)
+                maxLineNo = lineno;
+            else
+                counting = false;
+        } else if (type == SRC_NEWLINE) {
+            if (counting)
+                lineno++;
+        }
     }
 
-    return 1 + maxLineNo - script->lineno;
+    if (maxLineNo > lineno)
+        lineno = maxLineNo;
+
+    return 1 + lineno - script->lineno;
 }
 
 void
