@@ -43,6 +43,24 @@
 const IS_MAC = navigator.platform.indexOf("Mac") == 0;
 const IS_WIN = navigator.platform.indexOf("Win") == 0;
 
+/**
+ * Firefox infobar UI can have access keys which conflict with this test. Really
+ * stupid workaround until we can move this test into its own chrome window.
+ */
+function clearInfobars()
+{
+  var Ci = Components.interfaces;
+
+  var browser = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIWebNavigation)
+                  .QueryInterface(Ci.nsIDocShell).chromeEventHandler;
+  var chromeWin = browser.ownerDocument.defaultView;
+  var nb = chromeWin.gBrowser.getNotificationBox(browser);
+  for (let n of nb.allNotifications) {
+    nb.removeNotification(n, true);
+  }
+}
+
 function synthesizeNativeKey(aLayout, aKeyCode, aModifiers, aSystemChars,
                              aSystemUnmodifiedChars, aWindow)
 {
@@ -2370,6 +2388,8 @@ function runTest()
   }
 
   SimpleTest.waitForExplicitFinish();
+
+  clearInfobars();
 
   runKeyEventTests();
   runAccessKeyTests();
