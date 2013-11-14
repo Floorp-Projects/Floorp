@@ -170,15 +170,15 @@ struct ConservativeGCData
 class SourceDataCache
 {
     typedef HashMap<ScriptSource *,
-                    JSStableString *,
+                    const jschar *,
                     DefaultHasher<ScriptSource *>,
                     SystemAllocPolicy> Map;
     Map *map_;
 
   public:
     SourceDataCache() : map_(nullptr) {}
-    JSStableString *lookup(ScriptSource *ss);
-    void put(ScriptSource *ss, JSStableString *);
+    const jschar *lookup(ScriptSource *ss);
+    bool put(ScriptSource *ss, const jschar *chars);
     void purge();
 };
 

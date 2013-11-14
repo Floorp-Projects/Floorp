@@ -1032,7 +1032,7 @@ JSScript::sourceData(JSContext *cx)
     return scriptSource()->substring(cx, sourceStart, sourceEnd);
 }
 
-JSStableString *
+const jschar *
 SourceDataCache::lookup(ScriptSource *ss)
 {
     if (!map_)
@@ -1042,25 +1042,33 @@ SourceDataCache::lookup(ScriptSource *ss)
     return nullptr;
 }
 
-void
-SourceDataCache::put(ScriptSource *ss, JSStableString *str)
+bool
+SourceDataCache::put(ScriptSource *ss, const jschar *str)
 {
     if (!map_) {
         map_ = js_new<Map>();
         if (!map_)
-            return;
+            return false;
+
         if (!map_->init()) {
-            purge();
-            return;
+            js_delete(map_);
+            map_ = nullptr;
+            return false;
         }
     }
 
-    (void) map_->put(ss, str);
+    return map_->put(ss, str);
 }
 
 void
 SourceDataCache::purge()
 {
+    if (!map_)
+        return;
+
+    for (Map::Range r = map_->all(); !r.empty(); r.popFront())
+        js_delete(const_cast<jschar*>(r.front().value));
+
     js_delete(map_);
     map_ = nullptr;
 }
@@ -1074,27 +1082,30 @@ ScriptSource::chars(JSContext *cx)
 
 #ifdef USE_ZLIB
     if (compressed()) {
-        JSStableString *cached = cx->runtime()->sourceDataCache.lookup(this);
-        if (!cached) {
-            const size_t nbytes = sizeof(jschar) * (length_ + 1);
-            jschar *decompressed = static_cast<jschar *>(js_malloc(nbytes));
-            if (!decompressed)
-                return nullptr;
-            if (!DecompressString(data.compressed, compressedLength_,
-                                  reinterpret_cast<unsigned char *>(decompressed), nbytes)) {
-                JS_ReportOutOfMemory(cx);
-                js_free(decompressed);
-                return nullptr;
-            }
-            decompressed[length_] = 0;
-            cached = js_NewString<CanGC>(cx, decompressed, length_);
-            if (!cached) {
-                js_free(decompressed);
-                return nullptr;
-            }
-            cx->runtime()->sourceDataCache.put(this, cached);
+        if (const jschar *decompressed = cx->runtime()->sourceDataCache.lookup(this))
+            return decompressed;
+      
+        const size_t nbytes = sizeof(jschar) * (length_ + 1);
+        jschar *decompressed = static_cast<jschar *>(js_malloc(nbytes));
+        if (!decompressed)
+            return nullptr;
+
+        if (!DecompressString(data.compressed, compressedLength_,
+                              reinterpret_cast<unsigned char *>(decompressed), nbytes)) {
+            JS_ReportOutOfMemory(cx);
+            js_free(decompressed);
+            return nullptr;
         }
-        return cached->chars().get();
+
+        decompressed[length_] = 0;
+
+        if (!cx->runtime()->sourceDataCache.put(this, decompressed)) {
+            JS_ReportOutOfMemory(cx);
+            js_free(decompressed);
+            return nullptr;
+        }
+
+        return decompressed;
     }
 #endif
     return data.source;
