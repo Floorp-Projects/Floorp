@@ -27,7 +27,7 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace layers {
 
-mozilla::Atomic<int32_t> GfxMemoryImageReporter::sAmount = 0;
+mozilla::Atomic<int32_t> GfxMemoryImageReporter::sAmount(0);
 
 SharedMemory::SharedMemoryType OptimalShmemType()
 {
