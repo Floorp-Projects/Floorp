@@ -169,7 +169,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
           // was created
           bool allowZoom;
           CSSToScreenScale minZoom, maxZoom;
-          if (state->mController->GetZoomConstraints(&allowZoom, &minZoom, &maxZoom)) {
+          if (state->mController->GetRootZoomConstraints(&allowZoom, &minZoom, &maxZoom)) {
             apzc->UpdateZoomConstraints(allowZoom, minZoom, maxZoom);
           }
         }
@@ -535,12 +535,12 @@ APZCTreeManager::ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
 }
 
 void
-APZCTreeManager::UpdateZoomConstraints(const uint64_t& aLayersId,
+APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                                        bool aAllowZoom,
                                        const CSSToScreenScale& aMinScale,
                                        const CSSToScreenScale& aMaxScale)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetRootAPZCFor(aLayersId);
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
   if (apzc) {
     apzc->UpdateZoomConstraints(aAllowZoom, aMinScale, aMaxScale);
   }

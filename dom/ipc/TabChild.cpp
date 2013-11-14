@@ -537,8 +537,17 @@ TabChild::HandlePossibleViewportChange()
 
   nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
 
+  uint32_t presShellId;
+  ViewID viewId;
+  if (!APZCCallbackHelper::GetScrollIdentifiers(document->GetDocumentElement(),
+                                                &presShellId, &viewId)) {
+    return;
+  }
+
   nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(document, mInnerSize);
-  SendUpdateZoomConstraints(viewportInfo.IsZoomAllowed(),
+  SendUpdateZoomConstraints(presShellId,
+                            viewId,
+                            viewportInfo.IsZoomAllowed(),
                             viewportInfo.GetMinZoom(),
                             viewportInfo.GetMaxZoom());
 
