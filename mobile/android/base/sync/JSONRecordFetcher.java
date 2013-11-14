@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.delegates.JSONRecordFetchDelegate;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
@@ -21,13 +22,13 @@ public class JSONRecordFetcher {
   private static final long DEFAULT_AWAIT_TIMEOUT_MSEC = 2 * 60 * 1000;   // Two minutes.
   private static final String LOG_TAG = "JSONRecordFetcher";
 
-  protected final String credentials;
+  protected final AuthHeaderProvider authHeaderProvider;
   protected final String uri;
   protected JSONRecordFetchDelegate delegate;
 
-  public JSONRecordFetcher(final String uri, final String credentials) {
+  public JSONRecordFetcher(final String uri, final AuthHeaderProvider authHeaderProvider) {
     this.uri = uri;
-    this.credentials = credentials;
+    this.authHeaderProvider = authHeaderProvider;
   }
 
   protected String getURI() {
@@ -37,8 +38,9 @@ public class JSONRecordFetcher {
   private class JSONFetchHandler implements SyncStorageRequestDelegate {
 
     // SyncStorageRequestDelegate methods for fetching.
-    public String credentials() {
-      return credentials;
+    @Override
+    public AuthHeaderProvider getAuthHeaderProvider() {
+      return authHeaderProvider;
     }
 
     public String ifUnmodifiedSince() {
