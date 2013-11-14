@@ -18,7 +18,6 @@
 
 #include "BluetoothServiceBluedroid.h"
 
-#include <hardware/bluetooth.h>
 #include <hardware/hardware.h>
 
 #include "BluetoothProfileController.h"
@@ -31,8 +30,6 @@
 using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
-
-typedef char bdstr_t[18];
 
 /**
  *  Classes only used in this file
@@ -159,24 +156,6 @@ ClassToIcon(uint32_t aClass, nsAString& aRetIcon)
   }
 }
 
-static void
-Setup()
-{
-  // Bluetooth scan mode is NONE by default
-  bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
-  bt_property_t prop;
-  prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
-  prop.val = (void*)&mode;
-  prop.len = sizeof(mode);
-
-  NS_ENSURE_TRUE_VOID(sBtInterface);
-
-  int ret = sBtInterface->set_adapter_property(&prop);
-  if (ret != BT_STATUS_SUCCESS) {
-    BT_LOGR("%s: Fail to set: BT_SCAN_MODE_CONNECTABLE", __FUNCTION__);
-  }
-}
-
 static bool
 IsReady()
 {
@@ -185,6 +164,24 @@ IsReady()
     return false;
   }
   return true;
+}
+
+const bt_interface_t*
+GetBluetoothInterface()
+{
+  return (IsReady()) ? sBtInterface : nullptr;
+}
+
+void
+StringToBdAddressType(const nsAString& aBdAddress,
+                      bt_bdaddr_t *aRetBdAddressType)
+{
+  const char* str = NS_ConvertUTF16toUTF8(aBdAddress).get();
+
+  for (int i = 0; i < 6; i++) {
+    aRetBdAddressType->address[i] = (uint8_t) strtoul(str, (char **)&str, 16);
+    str++;
+  }
 }
 
 static void
@@ -201,14 +198,20 @@ BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
 }
 
 static void
-StringToBdAddressType(const nsAString& aBdAddress,
-                      bt_bdaddr_t *aRetBdAddressType)
+Setup()
 {
-  const char* str = NS_ConvertUTF16toUTF8(aBdAddress).get();
+  // Bluetooth scan mode is NONE by default
+  bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
+  bt_property_t prop;
+  prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
+  prop.val = (void*)&mode;
+  prop.len = sizeof(mode);
 
-  for (int i = 0; i < 6; i++) {
-    aRetBdAddressType->address[i] = (uint8_t) strtoul(str, (char **)&str, 16);
-    str++;
+  NS_ENSURE_TRUE_VOID(sBtInterface);
+
+  int ret = sBtInterface->set_adapter_property(&prop);
+  if (ret != BT_STATUS_SUCCESS) {
+    BT_LOGR("%s: Fail to set: BT_SCAN_MODE_CONNECTABLE", __FUNCTION__);
   }
 }
 
@@ -237,6 +240,7 @@ AdapterStateChangeCallback(bt_state_t aStatus)
     NS_WARNING("Failed to dispatch to main thread!");
   }
 }
+
 /**
  * AdapterPropertiesChangeCallback will be called after enable() but before
  * AdapterStateChangeCallback sIsBtEnabled get updated.

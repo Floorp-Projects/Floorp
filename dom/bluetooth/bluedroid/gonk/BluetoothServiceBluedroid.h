@@ -7,8 +7,19 @@
 #ifndef mozilla_dom_bluetooth_bluetoothservicebluedroid_h__
 #define mozilla_dom_bluetooth_bluetoothservicebluedroid_h__
 
+#include <hardware/bluetooth.h>
+
 #include "BluetoothCommon.h"
 #include "BluetoothService.h"
+
+typedef char bdstr_t[18];
+
+const bt_interface_t*
+GetBluetoothInterface();
+
+void
+StringToBdAddressType(const nsAString& aBdAddress,
+                      bt_bdaddr_t *aRetBdAddressType);
 
 class DBusMessage;
 
