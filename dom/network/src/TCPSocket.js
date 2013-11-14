@@ -517,8 +517,8 @@ TCPSocket.prototype = {
     if (this._inChild) {
       that._socketBridge = Cc["@mozilla.org/tcp-socket-child;1"]
                              .createInstance(Ci.nsITCPSocketChild);
-      that._socketBridge.open(that, host, port, !!that._ssl,
-                              that._binaryType, this.useWin, this.useWin || this);
+      that._socketBridge.sendOpen(that, host, port, !!that._ssl,
+                                  that._binaryType, this.useWin, this.useWin || this);
       return that;
     }
 
@@ -551,7 +551,7 @@ TCPSocket.prototype = {
     this._ssl = 'ssl';
 
     if (this._inChild) {
-      this._socketBridge.startTLS();
+      this._socketBridge.sendStartTLS();
       return;
     }
 
@@ -585,7 +585,7 @@ TCPSocket.prototype = {
     this._readyState = kCLOSING;
 
     if (this._inChild) {
-      this._socketBridge.close();
+      this._socketBridge.sendClose();
       return;
     }
 
@@ -605,7 +605,7 @@ TCPSocket.prototype = {
     }
 
     if (this._inChild) {
-      this._socketBridge.send(data, byteOffset, byteLength);
+      this._socketBridge.sendSend(data, byteOffset, byteLength);
     }
 
     let length = this._binaryType === "arraybuffer" ? byteLength : data.length;
@@ -655,7 +655,7 @@ TCPSocket.prototype = {
 
   suspend: function ts_suspend() {
     if (this._inChild) {
-      this._socketBridge.suspend();
+      this._socketBridge.sendSuspend();
       return;
     }
 
@@ -668,7 +668,7 @@ TCPSocket.prototype = {
 
   resume: function ts_resume() {
     if (this._inChild) {
-      this._socketBridge.resume();
+      this._socketBridge.sendResume();
       return;
     }
 
