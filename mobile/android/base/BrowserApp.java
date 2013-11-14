@@ -1416,7 +1416,6 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         final String url = mBrowserToolbar.commitEdit();
-        animateHideHomePager();
         hideBrowserSearch();
 
         // HACK: We don't know the url that will be loaded when hideHomePager is initially called
@@ -1505,22 +1504,22 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.cancelEdit();
 
-        // Resetting the visibility of HomePager, which might have been hidden
-        // by the filterEditingMode().
-        mHomePager.setVisibility(View.VISIBLE);
-        animateHideHomePager();
+        // Since the underlying LayerView is set visible in hideHomePager, we would
+        // ordinarily want to call it first. However, hideBrowserSearch changes the
+        // visibility of the HomePager and hideHomePager will take no action if the
+        // HomePager is hidden, so we want to call hideBrowserSearch to restore the
+        // HomePager visibility first.
         hideBrowserSearch();
+        animateHideHomePager();
 
         return true;
     }
 
     void filterEditingMode(String searchTerm, AutocompleteHandler handler) {
         if (TextUtils.isEmpty(searchTerm)) {
-            mHomePager.setVisibility(View.VISIBLE);
             hideBrowserSearch();
         } else {
             showBrowserSearch();
-            mHomePager.setVisibility(View.INVISIBLE);
             mBrowserSearch.filter(searchTerm, handler);
         }
     }
@@ -1653,6 +1652,9 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserSearchContainer.setVisibility(View.VISIBLE);
 
+        // Prevent overdraw by hiding the underlying HomePager View.
+        mHomePager.setVisibility(View.INVISIBLE);
+
         final FragmentManager fm = getSupportFragmentManager();
 
         // In certain situations, showBrowserSearch() can be called immediately after hideBrowserSearch()
@@ -1670,6 +1672,10 @@ abstract public class BrowserApp extends GeckoApp
         if (!mBrowserSearch.getUserVisibleHint()) {
             return;
         }
+
+        // To prevent overdraw, the HomePager is hidden when BrowserSearch is displayed:
+        // reverse that.
+        mHomePager.setVisibility(View.VISIBLE);
 
         mBrowserSearchContainer.setVisibility(View.INVISIBLE);
 
