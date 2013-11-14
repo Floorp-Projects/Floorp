@@ -167,21 +167,6 @@ struct ConservativeGCData
     }
 };
 
-class SourceDataCache
-{
-    typedef HashMap<ScriptSource *,
-                    const jschar *,
-                    DefaultHasher<ScriptSource *>,
-                    SystemAllocPolicy> Map;
-    Map *map_;
-
-  public:
-    SourceDataCache() : map_(nullptr) {}
-    const jschar *lookup(ScriptSource *ss);
-    bool put(ScriptSource *ss, const jschar *chars);
-    void purge();
-};
-
 struct EvalCacheEntry
 {
     JSScript *script;
