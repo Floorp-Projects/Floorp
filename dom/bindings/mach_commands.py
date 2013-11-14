@@ -18,6 +18,17 @@ from mozbuild.base import MachCommandBase
 
 @CommandProvider
 class WebIDLProvider(MachCommandBase):
+    @Command('webidl-example', category='misc',
+        description='Generate example files for a WebIDL interface.')
+    @CommandArgument('interface', nargs='+',
+        help='Interface(s) whose examples to generate.')
+    def webidl_example(self, interface):
+        from mozwebidlcodegen import BuildSystemWebIDL
+
+        manager = self._spawn(BuildSystemWebIDL).manager
+        for i in interface:
+            manager.generate_example_files(i)
+
     @Command('webidl-parser-test', category='testing',
         description='Run WebIDL tests.')
     @CommandArgument('--verbose', '-v', action='store_true',
