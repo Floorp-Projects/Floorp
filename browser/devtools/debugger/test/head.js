@@ -438,15 +438,6 @@ function getTab(aTarget, aWindow) {
 function initDebugger(aTarget, aWindow) {
   info("Initializing a debugger panel.");
 
-  // Running debugger browser-chrome tests in ASan often OOMs. Force a GC to
-  // avoid erroring.
-  //
-  // FIXME: Bug 933882 exposed the OOMs by removing the previous full GC that
-  // was being forced every debug mode toggle. This papers over that, until
-  // bug 937726 is resolved.
-  info("Forcing GC for debugger test.");
-  Cu.forceGC();
-
   return getTab(aTarget, aWindow).then(aTab => {
     info("Debugee tab added successfully: " + aTarget);
 
