@@ -418,9 +418,15 @@ function drainTwice() {
     ['ondrain', 'ondrain2',
     'ondata', 'ondata2',
     'serverclose', 'clientclose']);
+  let ondrainCalled = false,
+      ondataCalled = false;
 
-  function serverSideCallback() {
-    yays.ondata();
+  function maybeSendNextData() {
+    if (!ondrainCalled || !ondataCalled) {
+      // make sure server got data and client got ondrain.
+      return;
+    }
+
     server.ondata = makeExpectData(
       "ondata2", BIG_TYPED_ARRAY_2, false, yays.ondata2);
 
@@ -433,12 +439,24 @@ function drainTwice() {
     sock.close();
   }
 
+  function clientOndrain() {
+    yays.ondrain();
+    ondrainCalled = true;
+    maybeSendNextData();
+  }
+
+  function serverSideCallback() {
+    yays.ondata();
+    ondataCalled = true;
+    maybeSendNextData();
+  }
+
   server.onclose = yays.serverclose;
   server.ondata = makeExpectData(
     "ondata", BIG_TYPED_ARRAY, false, serverSideCallback);
 
   sock.onclose = yays.clientclose;
-  sock.ondrain = yays.ondrain;
+  sock.ondrain = clientOndrain;
 
   if (sock.send(BIG_ARRAY_BUFFER)) {
     throw new Error("sock.send(BIG_TYPED_ARRAY) did not return false to indicate buffering");
