@@ -508,9 +508,13 @@ void
 APZCTreeManager::UpdateRootCompositionBounds(const uint64_t& aLayersId,
                                              const ScreenIntRect& aCompositionBounds)
 {
-  nsRefPtr<AsyncPanZoomController> apzc = GetRootAPZCFor(aLayersId);
-  if (apzc) {
-    apzc->UpdateCompositionBounds(aCompositionBounds);
+  // There can be multiple root APZCs for a given layers id (e.g. tabs in
+  // a single-process setup) and in such a case we probably want to notify
+  // all of them.
+  nsTArray< nsRefPtr<AsyncPanZoomController> > rootApzcs;
+  GetRootAPZCsFor(aLayersId, &rootApzcs);
+  for (size_t i = 0; i < rootApzcs.Length(); i++) {
+    rootApzcs[i]->UpdateCompositionBounds(aCompositionBounds);
   }
 }
 
@@ -651,19 +655,15 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint)
   return target.forget();
 }
 
-already_AddRefed<AsyncPanZoomController>
-APZCTreeManager::GetRootAPZCFor(const uint64_t& aLayersId)
+void
+APZCTreeManager::GetRootAPZCsFor(const uint64_t& aLayersId,
+                                 nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs)
 {
   MonitorAutoLock lock(mTreeLock);
-  nsRefPtr<AsyncPanZoomController> target;
   // The root may have siblings, check those too
   for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
-    target = FindRootAPZC(apzc, aLayersId);
-    if (target) {
-      break;
-    }
+    FindRootAPZCs(apzc, aLayersId, aOutRootApzcs);
   }
-  return target.forget();
 }
 
 AsyncPanZoomController*
@@ -742,21 +742,23 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
   return nullptr;
 }
 
-AsyncPanZoomController*
-APZCTreeManager::FindRootAPZC(AsyncPanZoomController* aApzc, const uint64_t& aLayersId)
+void
+APZCTreeManager::FindRootAPZCs(AsyncPanZoomController* aApzc,
+                               const uint64_t& aLayersId,
+                               nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs)
 {
   mTreeLock.AssertCurrentThreadOwns();
 
   if (aApzc->IsRootForLayersId(aLayersId)) {
-    return aApzc;
+    aOutRootApzcs->AppendElement(aApzc);
+    // If this APZC is a root for this layers id then we know nothing else
+    // in the subtree rooted here will match so we can early-exit
+    return;
   }
+
   for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
-    AsyncPanZoomController* match = FindRootAPZC(child, aLayersId);
-    if (match) {
-      return match;
-    }
+    FindRootAPZCs(child, aLayersId, aOutRootApzcs);
   }
-  return nullptr;
 }
 
 /* This function sets the aTransformToApzcOut and aTransformToGeckoOut out-parameters
