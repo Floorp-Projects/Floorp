@@ -239,14 +239,17 @@ public:
   */
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint);
-  already_AddRefed<AsyncPanZoomController> GetRootAPZCFor(const uint64_t& aLayersId);
+  void GetRootAPZCsFor(const uint64_t& aLayersId,
+                       nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs);
   void GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& aTransformToApzcOut,
                           gfx3DMatrix& aTransformToGeckoOut);
 private:
   /* Helpers */
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint);
-  AsyncPanZoomController* FindRootAPZC(AsyncPanZoomController* aApzc, const uint64_t& aLayersId);
+  void FindRootAPZCs(AsyncPanZoomController* aApzc,
+                     const uint64_t& aLayersId,
+                     nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs);
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc);
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent, ScreenPoint aPoint);
