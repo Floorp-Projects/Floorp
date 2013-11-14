@@ -115,7 +115,9 @@ public:
   void ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
                             bool aPreventDefault);
 
-  void UpdateZoomConstraints(bool aAllowZoom,
+  void UpdateZoomConstraints(uint32_t aPresShellId,
+                             ViewID aViewId,
+                             bool aAllowZoom,
                              const CSSToScreenScale& aMinZoom,
                              const CSSToScreenScale& aMaxZoom);
 
