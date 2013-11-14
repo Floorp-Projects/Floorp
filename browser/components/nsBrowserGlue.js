@@ -1306,21 +1306,29 @@ BrowserGlue.prototype = {
       let currentsetResource = this._rdf.GetResource("currentset");
       let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
       let currentset = this._getPersist(toolbarResource, currentsetResource);
-      if (currentset.indexOf("unified-back-forward-button") == -1) {
-        currentset = currentset.replace("urlbar-container",
-                                        "unified-back-forward-button,urlbar-container");
+      let oldCurrentset = currentset;
+      if (currentset) {
+        if (currentset.indexOf("unified-back-forward-button") == -1) {
+          currentset = currentset.replace("urlbar-container",
+                                          "unified-back-forward-button,urlbar-container");
+        }
+        if (currentset.indexOf("reload-button") == -1) {
+          currentset = currentset.replace("urlbar-container", "urlbar-container,reload-button");
+        }
+        if (currentset.indexOf("stop-button") == -1) {
+          currentset = currentset.replace("reload-button", "reload-button,stop-button");
+        }
       }
-      if (currentset.indexOf("reload-button") == -1) {
-        currentset = currentset.replace("urlbar-container", "urlbar-container,reload-button");
-      }
-      if (currentset.indexOf("stop-button") == -1) {
-        currentset = currentset.replace("reload-button", "reload-button,stop-button");
-      }
-      this._setPersist(toolbarResource, currentsetResource, currentset);
       Services.prefs.clearUserPref("browser.uiCustomization.state");
 
+      if (oldCurrentset != currentset) {
+        this._setPersist(toolbarResource, currentsetResource, currentset);
+      }
       // If we don't have anything else to do, we can bail here:
       if (currentUIVersion >= UI_VERSION) {
+        if (this._dirty) {
+          this._dataSource.QueryInterface(Ci.nsIRDFRemoteDataSource).Flush();
+        }
         delete this._rdf;
         delete this._dataSource;
         return;
