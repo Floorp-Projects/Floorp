@@ -1123,8 +1123,6 @@ Debugger::slowPathOnNewScript(JSContext *cx, HandleScript script, GlobalObject *
 JSTrapStatus
 Debugger::onTrap(JSContext *cx, MutableHandleValue vp)
 {
-    MOZ_ASSERT(cx->compartment()->debugMode());
-
     ScriptFrameIter iter(cx);
     RootedScript script(cx, iter.script());
     Rooted<GlobalObject*> scriptGlobal(cx, &script->global());
@@ -1951,20 +1949,16 @@ bool
 Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "addAllGlobalsAsDebuggees", args, dbg);
-    for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-        // Invalidate a zone at a time to avoid doing a zone-wide CellIter
-        // per compartment.
-        AutoDebugModeInvalidation invalidate(zone);
-        for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-            if (c == dbg->object->compartment() || c->options().invisibleToDebugger())
-                continue;
-            c->zone()->scheduledForDestruction = false;
-            GlobalObject *global = c->maybeGlobal();
-            if (global) {
-                Rooted<GlobalObject*> rg(cx, global);
-                if (!dbg->addDebuggeeGlobal(cx, rg, invalidate))
-                    return false;
-            }
+    AutoDebugModeGC dmgc(cx->runtime());
+    for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {
+        if (c == dbg->object->compartment() || c->options().invisibleToDebugger())
+            continue;
+        c->zone()->scheduledForDestruction = false;
+        GlobalObject *global = c->maybeGlobal();
+        if (global) {
+            Rooted<GlobalObject*> rg(cx, global);
+            if (!dbg->addDebuggeeGlobal(cx, rg, dmgc))
+                return false;
         }
     }
 
@@ -1990,9 +1984,9 @@ bool
 Debugger::removeAllDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "removeAllDebuggees", args, dbg);
+    AutoDebugModeGC dmgc(cx->runtime());
     for (GlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-        dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), e.front(), nullptr, &e);
-
+        dbg->removeDebuggeeGlobal(cx->runtime()->defaultFreeOp(), e.front(), dmgc, nullptr, &e);
     args.rval().setUndefined();
     return true;
 }
@@ -2123,14 +2117,14 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
 bool
 Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
 {
-    AutoDebugModeInvalidation invalidate(global->compartment());
-    return addDebuggeeGlobal(cx, global, invalidate);
+    AutoDebugModeGC dmgc(cx->runtime());
+    return addDebuggeeGlobal(cx, global, dmgc);
 }
 
 bool
 Debugger::addDebuggeeGlobal(JSContext *cx,
                             Handle<GlobalObject*> global,
-                            AutoDebugModeInvalidation &invalidate)
+                            AutoDebugModeGC &dmgc)
 {
     if (debuggees.has(global))
         return true;
@@ -2196,7 +2190,7 @@ Debugger::addDebuggeeGlobal(JSContext *cx,
         } else {
             if (global->getDebuggers()->length() > 1)
                 return true;
-            if (debuggeeCompartment->addDebuggee(cx, global, invalidate))
+            if (debuggeeCompartment->addDebuggee(cx, global, dmgc))
                 return true;
 
             /* Maintain consistency on error. */
@@ -2213,13 +2207,13 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
                                GlobalObjectSet::Enum *compartmentEnum,
                                GlobalObjectSet::Enum *debugEnum)
 {
-    AutoDebugModeInvalidation invalidate(global->compartment());
-    return removeDebuggeeGlobal(fop, global, invalidate, compartmentEnum, debugEnum);
+    AutoDebugModeGC dmgc(fop->runtime());
+    return removeDebuggeeGlobal(fop, global, dmgc, compartmentEnum, debugEnum);
 }
 
 void
 Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
-                               AutoDebugModeInvalidation &invalidate,
+                               AutoDebugModeGC &dmgc,
                                GlobalObjectSet::Enum *compartmentEnum,
                                GlobalObjectSet::Enum *debugEnum)
 {
@@ -2275,7 +2269,7 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
      * global cannot be rooted on the stack without a cx.
      */
     if (v->empty())
-        global->compartment()->removeDebuggee(fop, global, invalidate, compartmentEnum);
+        global->compartment()->removeDebuggee(fop, global, dmgc, compartmentEnum);
 }
 
 /*
