@@ -786,8 +786,8 @@ sync_java_files = [
 ]
 
 sync_generated_java_files = [
-    'background/announcements/AnnouncementsConstants.java',
     'background/common/GlobalConstants.java',
-    'background/healthreport/HealthReportConstants.java',
     'sync/SyncConstants.java',
+    'background/announcements/AnnouncementsConstants.java',
+    'background/healthreport/HealthReportConstants.java',
 ]
