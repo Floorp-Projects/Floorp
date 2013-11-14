@@ -493,8 +493,14 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.setOnStopEditingListener(new BrowserToolbar.OnStopEditingListener() {
             public void onStopEditing() {
                 selectTargetTabForEditingMode();
-                hideHomePager();
+
+                // Since the underlying LayerView is set visible in hideHomePager, we would
+                // ordinarily want to call it first. However, hideBrowserSearch changes the
+                // visibility of the HomePager and hideHomePager will take no action if the
+                // HomePager is hidden, so we want to call hideBrowserSearch to restore the
+                // HomePager visibility first.
                 hideBrowserSearch();
+                hideHomePager();
 
                 // Re-enable doorhanger notifications. They may trigger on the selected tab above.
                 mDoorHangerPopup.enable();
@@ -1542,12 +1548,6 @@ abstract public class BrowserApp extends GeckoApp
             return false;
         }
 
-        // cancelEdit will call hideHomePager. If we're on web content, this is fine. If we're on
-        // about:home, the HomePager needs to be visible in the end (note that hideHomePager will
-        // not hide the HomePager on about:home). However, filterEditingMode may have hidden the
-        // HomePager so we set it visible here.
-        mHomePager.setVisibility(View.VISIBLE);
-
         mBrowserToolbar.cancelEdit();
 
         return true;
@@ -1555,11 +1555,9 @@ abstract public class BrowserApp extends GeckoApp
 
     void filterEditingMode(String searchTerm, AutocompleteHandler handler) {
         if (TextUtils.isEmpty(searchTerm)) {
-            mHomePager.setVisibility(View.VISIBLE);
             hideBrowserSearch();
         } else {
             showBrowserSearch();
-            mHomePager.setVisibility(View.INVISIBLE);
             mBrowserSearch.filter(searchTerm, handler);
         }
     }
@@ -1700,6 +1698,9 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserSearchContainer.setVisibility(View.VISIBLE);
 
+        // Prevent overdraw by hiding the underlying HomePager View.
+        mHomePager.setVisibility(View.INVISIBLE);
+
         final FragmentManager fm = getSupportFragmentManager();
 
         // In certain situations, showBrowserSearch() can be called immediately after hideBrowserSearch()
@@ -1717,6 +1718,10 @@ abstract public class BrowserApp extends GeckoApp
         if (!mBrowserSearch.getUserVisibleHint()) {
             return;
         }
+
+        // To prevent overdraw, the HomePager is hidden when BrowserSearch is displayed:
+        // reverse that.
+        mHomePager.setVisibility(View.VISIBLE);
 
         mBrowserSearchContainer.setVisibility(View.INVISIBLE);
 
