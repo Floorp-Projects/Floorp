@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+TEST_DIRS += ['test']
+
 EXPORTS.mozilla += [
     'ErrorResult.h',
 ]
@@ -66,6 +68,15 @@ LOCAL_INCLUDES += [
     '/media/mtransport',
     '/media/webrtc/signaling/src/common/time_profiling',
     '/media/webrtc/signaling/src/peerconnection',
+]
+
+SOURCES += [
+    'BindingUtils.cpp',
+    'CallbackInterface.cpp',
+    'CallbackObject.cpp',
+    'Date.cpp',
+    'DOMJSProxyHandler.cpp',
+    'Exceptions.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

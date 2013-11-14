@@ -26,26 +26,6 @@ NEWRESOLVE_HOOK_NAME = '_newResolve'
 ENUMERATE_HOOK_NAME= '_enumerate'
 ENUM_ENTRY_VARIABLE_NAME = 'strings'
 
-def replaceFileIfChanged(filename, newContents):
-    """
-    Read a copy of the old file, so that we don't touch it if it hasn't changed.
-    Returns True if the file was updated, false otherwise.
-    """
-    oldFileContents = ""
-    try:
-        oldFile = open(filename, 'rb')
-        oldFileContents = ''.join(oldFile.readlines())
-        oldFile.close()
-    except:
-        pass
-
-    if newContents == oldFileContents:
-        return False
-
-    f = open(filename, 'wb')
-    f.write(newContents)
-    f.close()
-    return True
 
 def toStringBool(arg):
     return str(not not arg).lower()
