@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIST_FILES = package-name.txt
+DIST_FILES := package-name.txt.in
 
 ifdef MOZ_ANDROID_ANR_REPORTER
 DEFINES += -DMOZ_ANDROID_ANR_REPORTER=1
@@ -76,25 +76,20 @@ ifdef MOZ_LINKER_EXTRACT
 DEFINES += -DMOZ_LINKER_EXTRACT=1
 endif
 
-PP_JAVAFILES = $(filter-out R.java,$(gecko-mozglue_PP_JAVAFILES) $(gecko-browser_PP_JAVAFILES))
-
 GARBAGE += \
   AndroidManifest.xml  \
   classes.dex  \
-  $(PP_JAVAFILES) \
   gecko.ap_  \
   res/values/strings.xml \
-  R.java \
-  package-name.txt \
+  .aapt.deps \
   fennec_ids.txt \
-  Manifest.java \
   javah.out \
   jni-stubs.inc \
   GeneratedJNIWrappers.cpp \
   GeneratedJNIWrappers.h \
   $(NULL)
 
-GARBAGE_DIRS += classes db jars res sync services
+GARBAGE_DIRS += classes db jars res sync services generated
 
 # Bug 567884 - Need a way to find appropriate icons during packaging
 ifeq ($(MOZ_APP_NAME),fennec)
@@ -121,14 +116,7 @@ ifdef MOZ_WEBRTC
 ALL_JARS += webrtc.jar
 endif
 
-# We process ANDROID_RESFILES specially for now; the following flag
-# disables the default processing.
-IGNORE_ANDROID_RESFILES=1
-
-include $(topsrcdir)/config/rules.mk
-
-# Override the Java settings with some specific android settings
-include $(topsrcdir)/config/android-common.mk
+include $(topsrcdir)/config/config.mk
 
 # Note that we're going to set up a dependency directly between embed_android.dex and the java files
 # Instead of on the .class files, since more than one .class file might be produced per .java file
@@ -165,24 +153,44 @@ GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
 	$(JAVA) -classpath $(JAVA_BOOTCLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
-# AndroidManifest.xml includes these files, so they need to be marked as dependencies.
-SERVICES_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/services/manifests/*.in)
+gecko_package_dir = generated/org/mozilla/gecko
+# Like generated/org/mozilla/fennec_$USERID.
+android_package_dir = $(addprefix generated/,$(subst .,/,$(ANDROID_PACKAGE_NAME)))
 
-android-tgts = \
-  AndroidManifest.xml \
-  package-name.txt \
-  $(PP_JAVAFILES) \
+# These _PP_JAVAFILES are specified in moz.build and defined in
+# backend.mk, which is included by config.mk.  Therefore this needs to
+# be defined after config.mk is included.
+PP_JAVAFILES := $(filter-out $(gecko_package_dir)/R.java,$(gecko-mozglue_PP_JAVAFILES) $(gecko-browser_PP_JAVAFILES))
+
+manifest := \
+  AndroidManifest.xml.in \
   $(NULL)
 
-android-preqs = \
-  Makefile.in \
-  widget/GeckoView.java.frag \
-  $(SERVICES_MANIFEST_FRAGMENTS) \
-  $(NULL)
+PP_TARGETS += manifest
 
-$(android-tgts): % : %.in $(android-preqs)
-	$(call py_action,preprocessor, \
-             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< -o $@)
+# Certain source files need to be preprocessed.  This special rule
+# generates these files into generated/org/mozilla/gecko for
+# consumption by the build system and IDEs.
+
+preprocessed := $(addsuffix .in,$(subst $(gecko_package_dir)/,,$(filter $(gecko_package_dir)/%,$(PP_JAVAFILES))))
+
+preprocessed_PATH := $(gecko_package_dir)
+preprocessed_KEEP_PATH := 1
+
+PP_TARGETS += preprocessed
+
+# Certain source files have Java package name @ANDROID_PACKAGE_NAME@.
+# We hate these files but they are necessary for backwards
+# compatibility.  These special rules generate these files into
+# generated/org/mozilla/{firefox,firefox_beta,fennec,fennec_$USER} for
+# consumption by the build system and IDEs.
+
+preprocessed_package := $(addsuffix .in,$(subst $(android_package_dir)/,,$(filter $(android_package_dir)/%,$(PP_JAVAFILES))))
+
+preprocessed_package_PATH := $(android_package_dir)
+preprocessed_package_KEEP_PATH := 1
+
+PP_TARGETS += preprocessed_package
 
 res/drawable-mdpi/icon.png: $(ICON_PATH)
 	$(NSINSTALL) -D res/drawable-mdpi
@@ -224,17 +232,31 @@ all_resources = \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
 
-R.java: $(all_resources)
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res -J . --custom-package org.mozilla.gecko --non-constant-id
+# generated/org/mozilla/gecko/R.java and gecko.ap_ are both produced
+# by aapt; this saves an aapt invocation.
 
-gecko.ap_: $(all_resources)
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar  -S res -F $@
+$(gecko_package_dir)/R.java: .aapt.deps
+gecko.ap_: .aapt.deps
 
-fennec_ids.txt: fennec-ids-generator.py R.java
-	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i R.java -o $@
+.aapt.deps: $(all_resources)
+	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res --custom-package org.mozilla.gecko --non-constant-id \
+		-J $(gecko_package_dir)/ \
+		-F gecko.ap_
+	@$(TOUCH) $@
 
-libs:: classes.dex package-name.txt jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
+fennec_ids.txt: $(gecko_package_dir)/R.java fennec-ids-generator.py
+	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i $< -o $@
+
+# We process ANDROID_RESFILES specially for now; the following flag
+# disables the default processing.
+IGNORE_ANDROID_RESFILES=1
+
+include $(topsrcdir)/config/rules.mk
+
+# Override the Java settings with some specific android settings
+include $(topsrcdir)/config/android-common.mk
+
+libs:: classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
 	$(INSTALL) classes.dex $(FINAL_TARGET)
-	$(INSTALL) package-name.txt $(FINAL_TARGET)
 	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null) || \
 	 (echo "*** Error: The generated JNI code has changed. Please run cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android && cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android and repeat the build." && exit 1)

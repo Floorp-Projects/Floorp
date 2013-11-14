@@ -20,6 +20,7 @@ from __future__ import unicode_literals
 import os
 
 from collections import OrderedDict
+from mozbuild.util import StrictOrderingOnAppendList
 from .sandbox_symbols import compute_final_target
 
 
@@ -425,11 +426,12 @@ class JavaJarData(object):
     """Represents a Java JAR file.
 
     A Java JAR has the following members:
-        * sources - list of input java sources
-        * generated_sources - list of generated input java sources
+        * sources - strictly ordered list of input java sources
+        * generated_sources - strictly ordered list of generated input
+          java sources
         * extra_jars - list of JAR file dependencies to include on the
           javac compiler classpath
-        * javac_flags - string containing extra flags passed to the
+        * javac_flags - list containing extra flags passed to the
           javac compiler
     """
 
@@ -442,12 +444,12 @@ class JavaJarData(object):
     )
 
     def __init__(self, name, sources=[], generated_sources=[],
-            extra_jars=[], javac_flags=None):
+            extra_jars=[], javac_flags=[]):
         self.name = name
-        self.sources = list(sources)
-        self.generated_sources = list(generated_sources)
+        self.sources = StrictOrderingOnAppendList(sources)
+        self.generated_sources = StrictOrderingOnAppendList(generated_sources)
         self.extra_jars = list(extra_jars)
-        self.javac_flags = javac_flags
+        self.javac_flags = list(javac_flags)
 
 
 class InstallationTarget(SandboxDerived):
