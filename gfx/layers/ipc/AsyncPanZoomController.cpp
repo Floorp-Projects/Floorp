@@ -1136,16 +1136,6 @@ void AsyncPanZoomController::RequestContentRepaint() {
 
   SendAsyncScrollEvent();
 
-  // Cache the zoom since we're temporarily changing it for
-  // acceleration-scaled painting.
-  CSSToScreenScale actualZoom = mFrameMetrics.mZoom;
-  // Calculate the factor of acceleration based on the faster of the two axes.
-  float accelerationFactor =
-    clamped(std::max(mX.GetAccelerationFactor(), mY.GetAccelerationFactor()),
-            MIN_ZOOM.scale / 2.0f, MAX_ZOOM.scale);
-  // Scale down the resolution a bit based on acceleration.
-  mFrameMetrics.mZoom.scale /= accelerationFactor;
-
   // This message is compressed, so fire whether or not we already have a paint
   // queued up. We need to know whether or not a paint was requested anyways,
   // for the purposes of content calling window.scrollTo().
@@ -1164,9 +1154,6 @@ void AsyncPanZoomController::RequestContentRepaint() {
   }
   mFrameMetrics.mPresShellId = mLastContentPaintMetrics.mPresShellId;
   mLastPaintRequestMetrics = mFrameMetrics;
-
-  // Set the zoom back to what it was for the purpose of logic control.
-  mFrameMetrics.mZoom = actualZoom;
 }
 
 void
