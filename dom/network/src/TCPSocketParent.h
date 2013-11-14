@@ -51,7 +51,8 @@ public:
   virtual bool RecvSuspend() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;
   virtual bool RecvClose() MOZ_OVERRIDE;
-  virtual bool RecvData(const SendableData& aData) MOZ_OVERRIDE;
+  virtual bool RecvData(const SendableData& aData,
+                        const uint32_t& aTrackingNumber) MOZ_OVERRIDE;
   virtual bool RecvRequestDelete() MOZ_OVERRIDE;
 
 private:

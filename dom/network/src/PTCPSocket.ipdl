@@ -40,7 +40,9 @@ parent:
   // |binaryType| (from TCPOption.binaryType).
   Open(nsString host, uint16_t port, bool useSSL, nsString binaryType);
 
-  Data(SendableData data);
+  // When child's send() is called, this message requrests parent to send
+  // data and update it's trackingNumber.
+  Data(SendableData data, uint32_t trackingNumber);
 
   // Forward calling to child's upgradeToSecure() method to parent.
   StartTLS();
@@ -56,8 +58,12 @@ parent:
 
 child:
   // Forward events that are dispatched by parent.
-  Callback(nsString type, CallbackData data,
-           nsString readyState, uint32_t bufferedAmount);
+  Callback(nsString type, CallbackData data, nsString readyState);
+
+  // Update child's bufferedAmount when parent's bufferedAmount is updated.
+  // trackingNumber is also passed back to child to ensure the bufferedAmount
+  // is corresponding the last call to send().
+  UpdateBufferedAmount(uint32_t bufferedAmount, uint32_t trackingNumber);
 
 both:
   RequestDelete();
