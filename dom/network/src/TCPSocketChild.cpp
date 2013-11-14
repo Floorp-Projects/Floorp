@@ -77,10 +77,11 @@ TCPSocketChild::TCPSocketChild()
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Open(nsITCPSocketInternal* aSocket, const nsAString& aHost,
-                     uint16_t aPort, bool aUseSSL, const nsAString& aBinaryType,
-                     nsIDOMWindow* aWindow, const JS::Value& aWindowObj,
-                     JSContext* aCx)
+TCPSocketChild::SendOpen(nsITCPSocketInternal* aSocket,
+                         const nsAString& aHost, uint16_t aPort,
+                         bool aUseSSL, const nsAString& aBinaryType,
+                         nsIDOMWindow* aWindow, const JS::Value& aWindowObj,
+                         JSContext* aCx)
 {
   mSocket = aSocket;
 
@@ -91,7 +92,8 @@ TCPSocketChild::Open(nsITCPSocketInternal* aSocket, const nsAString& aHost,
   }
   AddIPDLReference();
   gNeckoChild->SendPTCPSocketConstructor(this);
-  SendOpen(nsString(aHost), aPort, aUseSSL, nsString(aBinaryType));
+  PTCPSocketChild::SendOpen(nsString(aHost), aPort,
+                            aUseSSL, nsString(aBinaryType));
   return NS_OK;
 }
 
@@ -159,38 +161,38 @@ TCPSocketChild::RecvCallback(const nsString& aType,
 }
 
 NS_IMETHODIMP
-TCPSocketChild::StartTLS()
+TCPSocketChild::SendStartTLS()
 {
-  SendStartTLS();
+  PTCPSocketChild::SendStartTLS();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Suspend()
+TCPSocketChild::SendSuspend()
 {
-  SendSuspend();
+  PTCPSocketChild::SendSuspend();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Resume()
+TCPSocketChild::SendResume()
 {
-  SendResume();
+  PTCPSocketChild::SendResume();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Close()
+TCPSocketChild::SendClose()
 {
-  SendClose();
+  PTCPSocketChild::SendClose();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Send(const JS::Value& aData,
-                     uint32_t aByteOffset,
-                     uint32_t aByteLength,
-                     JSContext* aCx)
+TCPSocketChild::SendSend(const JS::Value& aData,
+                         uint32_t aByteOffset,
+                         uint32_t aByteLength,
+                         JSContext* aCx)
 {
   if (aData.isString()) {
     JSString* jsstr = aData.toString();
@@ -223,8 +225,8 @@ TCPSocketChild::Send(const JS::Value& aData,
 
 NS_IMETHODIMP
 TCPSocketChild::SetSocketAndWindow(nsITCPSocketInternal *aSocket,
-                          const JS::Value& aWindowObj,
-                          JSContext* aCx)
+                                   const JS::Value& aWindowObj,
+                                   JSContext* aCx)
 {
   mSocket = aSocket;
   MOZ_ASSERT(aWindowObj.isObject());
