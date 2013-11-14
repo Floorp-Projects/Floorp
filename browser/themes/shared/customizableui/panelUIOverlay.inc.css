@@ -5,8 +5,8 @@
 %filter substitution
 %define menuPanelWidth 21em
 %define exitSubviewGutterWidth 38px
-%define buttonStateHover :not(:-moz-any([disabled],[checked],[open],:active)):hover
-%define buttonStateActive :not([disabled]):-moz-any([open],[checked],:hover:active)
+%define buttonStateHover :not(:-moz-any([disabled],[checked="true"],[open],:active)):hover
+%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active)
 
 %include ../browser.inc
 
@@ -516,22 +516,34 @@ toolbarpaletteitem[place="palette"] > #search-container {
   min-height: 28px;
 }
 
+#PanelUI-developerItems > toolbarbutton[checked="true"],
+#PanelUI-bookmarks > toolbarbutton[checked="true"],
 .PanelUI-characterEncodingView-list > toolbarbutton[current] {
-  -moz-padding-start: 2px;
+  -moz-padding-start: 4px;
 }
 
+#PanelUI-developerItems > toolbarbutton[checked="true"] > .toolbarbutton-text,
+#PanelUI-bookmarks > toolbarbutton[checked="true"] > .toolbarbutton-text,
 .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text,
 #customizationui-widget-panel .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text {
   -moz-padding-start: 0px;
 }
 
-#BMB_bookmarksPopup > menuitem[checked]::before,
+#BMB_bookmarksPopup > menuitem[checked="true"]::before,
+#PanelUI-bookmarks > toolbarbutton[checked="true"]::before,
+#PanelUI-developerItems > toolbarbutton[checked="true"]::before,
 .PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
   content: "✓";
   display: -moz-box;
   width: 12px;
 }
 
-#BMB_bookmarksPopup > menuitem[checked] > .menu-iconic-left {
+#PanelUI-bookmarks > toolbarbutton[checked="true"]::before,
+#PanelUI-developerItems > toolbarbutton[checked="true"]::before,
+.PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
+  -moz-margin-end: -2px;
+}
+
+#BMB_bookmarksPopup > menuitem[checked="true"] > .menu-iconic-left {
   display: none;
 }

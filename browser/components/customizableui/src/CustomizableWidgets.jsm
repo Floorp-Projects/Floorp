@@ -211,10 +211,14 @@ const CustomizableWidgets = [{
       let items = doc.getElementById("PanelUI-developerItems");
       let menu = doc.getElementById("menuWebDeveloperPopup");
       let attrs = ["oncommand", "onclick", "label", "key", "disabled",
-                   "command"];
+                   "command", "observes"];
 
       let fragment = doc.createDocumentFragment();
-      for (let node of menu.children) {
+      let itemsToDisplay = [...menu.children];
+      // Hardcode the addition of the "work offline" menuitem at the bottom:
+      itemsToDisplay.push({localName: "menuseparator", getAttribute: () => {}});
+      itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
+      for (let node of itemsToDisplay) {
         if (node.hidden)
           continue;
 
@@ -223,6 +227,7 @@ const CustomizableWidgets = [{
           item = doc.createElementNS(kNSXUL, "menuseparator");
         } else if (node.localName == "menuitem") {
           item = doc.createElementNS(kNSXUL, "toolbarbutton");
+          item.setAttribute("tabindex", "0");
         } else {
           continue;
         }
@@ -231,7 +236,6 @@ const CustomizableWidgets = [{
           if (attrVal)
             item.setAttribute(attr, attrVal);
         }
-        item.setAttribute("tabindex", "0");
         fragment.appendChild(item);
       }
       items.appendChild(fragment);
