@@ -1284,7 +1284,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       aLayerMetrics.mCompositionBounds.height == mFrameMetrics.mCompositionBounds.height) {
     // Remote content has sync'd up to the composition geometry
     // change, so we can accept the viewport it's calculated.
-    if (mFrameMetrics.mViewport.width != aLayerMetrics.mViewport)
+    if (mFrameMetrics.mViewport.width != aLayerMetrics.mViewport.width)
       needContentRepaint = true;
     mFrameMetrics.mViewport = aLayerMetrics.mViewport;
   }
