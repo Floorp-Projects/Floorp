@@ -16,7 +16,6 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.MetaGlobalException.MetaGlobalMalformedSyncIDException;
 import org.mozilla.gecko.sync.MetaGlobalException.MetaGlobalMalformedVersionException;
 import org.mozilla.gecko.sync.delegates.MetaGlobalDelegate;
-import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
@@ -24,6 +23,7 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 public class MetaGlobal implements SyncStorageRequestDelegate {
   private static final String LOG_TAG = "MetaGlobal";
   protected String metaURL;
+  protected String credentials;
 
   // Fields.
   protected ExtendedJSONObject  engines;
@@ -40,11 +40,10 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
 
   // A little hack so we can use the same delegate implementation for upload and download.
   private boolean isUploading;
-  protected final AuthHeaderProvider authHeaderProvider;
 
-  public MetaGlobal(String metaURL, AuthHeaderProvider authHeaderProvider) {
-    this.metaURL = metaURL;
-    this.authHeaderProvider = authHeaderProvider;
+  public MetaGlobal(String metaURL, String credentials) {
+    this.metaURL     = metaURL;
+    this.credentials = credentials;
   }
 
   public void fetch(MetaGlobalDelegate delegate) {
@@ -248,12 +247,7 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
 
   // SyncStorageRequestDelegate methods for fetching.
   public String credentials() {
-    return null;
-  }
-
-  @Override
-  public AuthHeaderProvider getAuthHeaderProvider() {
-    return authHeaderProvider;
+    return this.credentials;
   }
 
   public String ifUnmodifiedSince() {

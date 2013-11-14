@@ -44,11 +44,10 @@ public class AndroidBrowserHistoryServerSyncStage extends ServerSyncStage {
 
   @Override
   protected Repository getRemoteRepository() throws URISyntaxException {
-    String collection = getCollection();
-    return new ConstrainedServer11Repository(
-                                             collection,
-                                             session.config.storageURL(),
-                                             session.getAuthHeaderProvider(),
+    return new ConstrainedServer11Repository(session.config.getClusterURLString(),
+                                             session.config.username,
+                                             getCollection(),
+                                             session,
                                              HISTORY_REQUEST_LIMIT,
                                              HISTORY_SORT);
   }

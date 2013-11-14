@@ -29,13 +29,13 @@ public class TestSyncConfiguration extends AndroidSyncTestCase implements PrefsS
     SyncConfiguration config = null;
     SharedPreferences prefs = getPrefs(TEST_PREFS_NAME, 0);
 
-    config = newSyncConfiguration();
+    config = new SyncConfiguration(TEST_PREFS_NAME, this);
     config.enabledEngineNames = new HashSet<String>();
     config.enabledEngineNames.add("test1");
     config.enabledEngineNames.add("test2");
     config.persistToPrefs();
     assertTrue(prefs.contains(SyncConfiguration.PREF_ENABLED_ENGINE_NAMES));
-    config = newSyncConfiguration();
+    config = new SyncConfiguration(TEST_PREFS_NAME, this);
     Set<String> expected = new HashSet<String>();
     for (String name : new String[] { "test1", "test2" }) {
       expected.add(name);
@@ -45,7 +45,7 @@ public class TestSyncConfiguration extends AndroidSyncTestCase implements PrefsS
     config.enabledEngineNames = null;
     config.persistToPrefs();
     assertFalse(prefs.contains(SyncConfiguration.PREF_ENABLED_ENGINE_NAMES));
-    config = newSyncConfiguration();
+    config = new SyncConfiguration(TEST_PREFS_NAME, this);
     assertNull(config.enabledEngineNames);
   }
 
@@ -53,11 +53,11 @@ public class TestSyncConfiguration extends AndroidSyncTestCase implements PrefsS
     SyncConfiguration config = null;
     SharedPreferences prefs = getPrefs(TEST_PREFS_NAME, 0);
 
-    config = newSyncConfiguration();
+    config = new SyncConfiguration(TEST_PREFS_NAME, this);
     config.syncID = "test1";
     config.persistToPrefs();
     assertTrue(prefs.contains(SyncConfiguration.PREF_SYNC_ID));
-    config = newSyncConfiguration();
+    config = new SyncConfiguration(TEST_PREFS_NAME, this);
     assertEquals("test1", config.syncID);
   }
 
@@ -74,7 +74,7 @@ public class TestSyncConfiguration extends AndroidSyncTestCase implements PrefsS
     // Read values from selectedEngines.
     assertTrue(prefs.contains(SyncConfiguration.PREF_USER_SELECTED_ENGINES_TO_SYNC));
     SyncConfiguration config = null;
-    config = newSyncConfiguration();
+    config = new SyncConfiguration(TEST_PREFS_NAME, this);
     config.loadFromPrefs(prefs);
     assertEquals(expectedEngines, config.userSelectedEngines);
   }
@@ -95,7 +95,7 @@ public class TestSyncConfiguration extends AndroidSyncTestCase implements PrefsS
     // Read values from selectedEngines.
     assertTrue(prefs.contains(SyncConfiguration.PREF_USER_SELECTED_ENGINES_TO_SYNC));
     SyncConfiguration config = null;
-    config = newSyncConfiguration();
+    config = new SyncConfiguration(TEST_PREFS_NAME, this);
     config.loadFromPrefs(prefs);
     assertEquals(storedEngines, config.userSelectedEngines);
   }
@@ -111,13 +111,9 @@ public class TestSyncConfiguration extends AndroidSyncTestCase implements PrefsS
     // Read values from selectedEngines.
     assertTrue(prefs.contains(SyncConfiguration.PREF_USER_SELECTED_ENGINES_TO_SYNC));
     SyncConfiguration config = null;
-    config = newSyncConfiguration();
+    config = new SyncConfiguration(TEST_PREFS_NAME, this);
     config.loadFromPrefs(prefs);
     // Forms should not be selected if history is not present.
     assertTrue(config.userSelectedEngines.isEmpty());
-  }
-
-  protected SyncConfiguration newSyncConfiguration() {
-    return new SyncConfiguration(null, null, TEST_PREFS_NAME, this);
   }
 }

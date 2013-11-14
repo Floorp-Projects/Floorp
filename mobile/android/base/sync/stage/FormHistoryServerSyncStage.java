@@ -39,11 +39,10 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
 
   @Override
   protected Repository getRemoteRepository() throws URISyntaxException {
-    String collection = getCollection();
-    return new ConstrainedServer11Repository(
-                                             collection,
-                                             session.config.storageURL(),
-                                             session.getAuthHeaderProvider(),
+    return new ConstrainedServer11Repository(session.config.getClusterURLString(),
+                                             session.config.username,
+                                             getCollection(),
+                                             session,
                                              FORM_HISTORY_REQUEST_LIMIT,
                                              FORM_HISTORY_SORT);
   }

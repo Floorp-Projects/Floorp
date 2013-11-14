@@ -25,7 +25,6 @@ import org.mozilla.gecko.sync.Server11PreviousPostFailedException;
 import org.mozilla.gecko.sync.Server11RecordPostFailedException;
 import org.mozilla.gecko.sync.UnexpectedJSONException;
 import org.mozilla.gecko.sync.crypto.KeyBundle;
-import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
@@ -136,8 +135,8 @@ public class Server11RepositorySession extends RepositorySession {
     }
 
     @Override
-    public AuthHeaderProvider getAuthHeaderProvider() {
-      return serverRepository.getAuthHeaderProvider();
+    public String credentials() {
+      return serverRepository.credentialsSource.credentials();
     }
 
     @Override
@@ -443,8 +442,8 @@ public class Server11RepositorySession extends RepositorySession {
     }
 
     @Override
-    public AuthHeaderProvider getAuthHeaderProvider() {
-      return serverRepository.getAuthHeaderProvider();
+    public String credentials() {
+      return serverRepository.credentialsSource.credentials();
     }
 
     @Override
