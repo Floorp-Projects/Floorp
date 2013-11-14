@@ -43,7 +43,7 @@
 #define ABORT_UNLESS(condition)                                               \
     do {                                                                      \
         if (!(condition)) {                                                   \
-          NS_RUNTIMEABORT("recursion level error in pldhash");                \
+          NS_RUNTIMEABORT("fatal error in pldhash");                          \
         }                                                                     \
     } while (0)
 
@@ -213,6 +213,7 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
         return false;
     table->hashShift = PL_DHASH_BITS - log2;
     table->entrySize = entrySize;
+    ABORT_UNLESS(uint32_t(table->entrySize) == entrySize);
     table->entryCount = table->removedCount = 0;
     table->generation = 0;
     uint32_t nbytes;
