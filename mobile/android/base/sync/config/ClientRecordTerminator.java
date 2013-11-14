@@ -8,7 +8,6 @@ import java.net.URI;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.GlobalSession;
-import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
@@ -28,9 +27,9 @@ public class ClientRecordTerminator {
   }
 
   public static void deleteClientRecord(final String username,
+      final String password,
       final String clusterURL,
-      final String clientGuid,
-      final AuthHeaderProvider authHeaderProvider)
+      final String clientGuid)
     throws Exception {
 
     // Would prefer to delegate to SyncConfiguration, but that would proliferate static methods.
@@ -41,8 +40,8 @@ public class ClientRecordTerminator {
     final SyncStorageRecordRequest r = new SyncStorageRecordRequest(wboURI);
     r.delegate = new SyncStorageRequestDelegate() {
       @Override
-      public AuthHeaderProvider getAuthHeaderProvider() {
-        return authHeaderProvider;
+      public String credentials() {
+        return username + ":" + password;
       }
 
       @Override
