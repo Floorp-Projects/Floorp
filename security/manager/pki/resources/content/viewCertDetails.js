@@ -156,7 +156,7 @@ function addAttributeFromCert(nodeName, value)
   if (!value) {
     value = bundle.getString('notPresent');
   }
-  node.setAttribute('value',value)
+  node.setAttribute('value', value);
 }
 
 
