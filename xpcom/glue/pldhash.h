@@ -183,8 +183,8 @@ struct PLDHashTable {
     const PLDHashTableOps *ops;         /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
     int16_t             hashShift;      /* multiplicative hash shift */
+    uint16_t            entrySize;      /* number of bytes in an entry */
     mozilla::Atomic<uint32_t> recursionLevel; /* detects unsafe re-entry */
-    uint32_t            entrySize;      /* number of bytes in an entry */
     uint32_t            entryCount;     /* number of entries in table */
     uint32_t            removedCount;   /* removed entry sentinels in table */
     uint32_t            generation;     /* entry storage generation number */
