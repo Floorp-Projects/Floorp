@@ -29,7 +29,6 @@ import org.mozilla.gecko.sync.delegates.JSONRecordFetchDelegate;
 import org.mozilla.gecko.sync.delegates.KeyUploadDelegate;
 import org.mozilla.gecko.sync.delegates.MetaGlobalDelegate;
 import org.mozilla.gecko.sync.delegates.WipeServerDelegate;
-import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.HttpResponseObserver;
 import org.mozilla.gecko.sync.net.SyncResponse;
@@ -59,7 +58,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import ch.boye.httpclientandroidlib.HttpResponse;
 
-public class GlobalSession implements PrefsSource, HttpResponseObserver {
+public class GlobalSession implements CredentialsSource, PrefsSource, HttpResponseObserver {
   private static final String LOG_TAG = "GlobalSession";
 
   public static final String API_VERSION   = "1.1";
@@ -90,17 +89,39 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
   /*
    * Config passthrough for convenience.
    */
-  public AuthHeaderProvider getAuthHeaderProvider() {
-    return config.getAuthHeaderProvider();
+  @Override
+  public String credentials() {
+    return config.credentials();
   }
 
   public URI wboURI(String collection, String id) throws URISyntaxException {
     return config.wboURI(collection, id);
   }
 
-  public GlobalSession(String serverURL,
+  /*
+   * Validators.
+   */
+  private static boolean isInvalidString(String s) {
+    return s == null ||
+           s.trim().length() == 0;
+  }
+
+  private static boolean anyInvalidStrings(String s, String...strings) {
+    if (isInvalidString(s)) {
+      return true;
+    }
+    for (String str : strings) {
+      if (isInvalidString(str)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public GlobalSession(String userAPI,
+                       String serverURL,
                        String username,
-                       AuthHeaderProvider authHeaderProvider,
+                       String password,
                        String prefsPath,
                        KeyBundle syncKeyBundle,
                        GlobalSessionCallback callback,
@@ -108,11 +129,12 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
                        Bundle extras,
                        ClientsDataDelegate clientsDelegate)
                            throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
-    if (username == null) {
-      throw new IllegalArgumentException("username must not be null.");
-    }
     if (callback == null) {
       throw new IllegalArgumentException("Must provide a callback to GlobalSession constructor.");
+    }
+
+    if (anyInvalidStrings(username, password)) {
+      throw new SyncConfigurationException();
     }
 
     Logger.debug(LOG_TAG, "GlobalSession initialized with bundle " + extras);
@@ -133,9 +155,11 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
     this.context         = context;
     this.clientsDelegate = clientsDelegate;
 
-    config = new SyncConfiguration(username, authHeaderProvider, prefsPath, this);
-
+    config = new SyncConfiguration(prefsPath, this);
+    config.userAPI       = userAPI;
     config.serverURL     = serverURI;
+    config.username      = username;
+    config.password      = password;
     config.syncKeyBundle = syncKeyBundle;
 
     registerCommands();
@@ -545,7 +569,7 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
   }
 
   public void fetchInfoCollections(JSONRecordFetchDelegate callback) throws URISyntaxException {
-    final JSONRecordFetcher fetcher = new JSONRecordFetcher(config.infoCollectionsURL(), getAuthHeaderProvider());
+    final JSONRecordFetcher fetcher = new JSONRecordFetcher(config.infoCollectionsURL(), credentials());
     fetcher.fetch(callback);
   }
 
@@ -560,6 +584,7 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
   public void uploadKeys(final CollectionKeys keys,
                          final KeyUploadDelegate keyUploadDelegate) {
     SyncStorageRecordRequest request;
+    final GlobalSession self = this;
     try {
       request = new SyncStorageRecordRequest(this.config.keysURI());
     } catch (URISyntaxException e) {
@@ -584,7 +609,7 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
       @Override
       public void handleRequestFailure(SyncStorageResponse response) {
         Logger.debug(LOG_TAG, "Failed to upload keys.");
-        GlobalSession.this.interpretHTTPFailure(response.httpResponse());
+        self.interpretHTTPFailure(response.httpResponse());
         BaseResource.consumeEntity(response); // The exception thrown should not need the body of the response.
         keyUploadDelegate.onKeyUploadFailed(new HTTPFailureException(response));
       }
@@ -596,8 +621,8 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
       }
 
       @Override
-      public AuthHeaderProvider getAuthHeaderProvider() {
-        return GlobalSession.this.getAuthHeaderProvider();
+      public String credentials() {
+        return self.credentials();
       }
     };
 
@@ -723,7 +748,7 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
 
     final MetaGlobal mg = session.generateNewMetaGlobal();
 
-    session.wipeServer(session.getAuthHeaderProvider(), new WipeServerDelegate() {
+    session.wipeServer(session, new WipeServerDelegate() {
 
       @Override
       public void onWiped(long timestamp) {
@@ -823,12 +848,12 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
   // reset client to prompt reupload.
   // If sync ID mismatch: take that syncID and reset client.
 
-  protected void wipeServer(final AuthHeaderProvider authHeaderProvider, final WipeServerDelegate wipeDelegate) {
+  protected void wipeServer(final CredentialsSource credentials, final WipeServerDelegate wipeDelegate) {
     SyncStorageRequest request;
     final GlobalSession self = this;
 
     try {
-      request = new SyncStorageRequest(config.storageURL());
+      request = new SyncStorageRequest(config.storageURL(false));
     } catch (URISyntaxException ex) {
       Logger.warn(LOG_TAG, "Invalid URI in wipeServer.");
       wipeDelegate.onWipeFailed(ex);
@@ -864,8 +889,8 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
       }
 
       @Override
-      public AuthHeaderProvider getAuthHeaderProvider() {
-        return GlobalSession.this.getAuthHeaderProvider();
+      public String credentials() {
+        return credentials.credentials();
       }
     };
     request.delete();
@@ -957,6 +982,7 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
   public MetaGlobal generateNewMetaGlobal() {
     final String newSyncID   = Utils.generateGuid();
     final String metaURL     = this.config.metaURL();
+    final String credentials = this.credentials();
 
     ExtendedJSONObject engines = new ExtendedJSONObject();
     for (String engineName : enabledEngineNames()) {
@@ -976,7 +1002,7 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
       engines.put(engineName, engineSettings.toJSONObject());
     }
 
-    MetaGlobal metaGlobal = new MetaGlobal(metaURL, this.getAuthHeaderProvider());
+    MetaGlobal metaGlobal = new MetaGlobal(metaURL, credentials);
     metaGlobal.setSyncID(newSyncID);
     metaGlobal.setStorageVersion(STORAGE_VERSION);
     metaGlobal.setEngines(engines);

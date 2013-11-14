@@ -7,9 +7,9 @@ package org.mozilla.gecko.sync.stage;
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.CredentialsSource;
 import org.mozilla.gecko.sync.InfoCounts;
 import org.mozilla.gecko.sync.JSONRecordFetcher;
-import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.ConstrainedServer11Repository;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.Server11RepositorySession;
@@ -32,14 +32,15 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
   // This can be lazily evaluated if we need it.
   private JSONRecordFetcher countFetcher;
 
-  public SafeConstrainedServer11Repository(String collection,
-                                           String storageURL,
-                                           AuthHeaderProvider authHeaderProvider,
+  public SafeConstrainedServer11Repository(String serverURI,
+                                           String username,
+                                           String collection,
+                                           CredentialsSource credentialsSource,
                                            long limit,
                                            String sort,
                                            JSONRecordFetcher countFetcher)
     throws URISyntaxException {
-    super(collection, storageURL, authHeaderProvider, limit, sort);
+    super(serverURI, username, collection, credentialsSource, limit, sort);
     this.countFetcher = countFetcher;
   }
 
