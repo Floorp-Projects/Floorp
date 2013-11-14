@@ -121,6 +121,22 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
         apzc = container->GetAsyncPanZoomController();
 
+        // If the container doesn't have an APZC already, try to find one of our
+        // pre-existing ones that matches. In particular, if we find an APZC whose
+        // ScrollableLayerGuid is the same, then we know what happened is that the
+        // layout of the page changed causing the layer tree to be rebuilt, but the
+        // underlying content for which the APZC was originally created is still
+        // there. So it makes sense to pick up that APZC instance again and use it here.
+        if (apzc == nullptr) {
+          ScrollableLayerGuid target(aLayersId, container->GetFrameMetrics());
+          for (size_t i = 0; i < aApzcsToDestroy->Length(); i++) {
+            if (aApzcsToDestroy->ElementAt(i)->Matches(target)) {
+              apzc = aApzcsToDestroy->ElementAt(i);
+              break;
+            }
+          }
+        }
+
         // The APZC we get off the layer may have been destroyed previously if the layer was inactive
         // or omitted from the layer tree for whatever reason from a layers update. If it later comes
         // back it will have a reference to a destroyed APZC and so we need to throw that out and make
