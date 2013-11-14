@@ -296,6 +296,7 @@ public:
 
 private:
 
+  void FlushUpdateQueue();
   void ProcessTextureUpdates();
 
   class Request
