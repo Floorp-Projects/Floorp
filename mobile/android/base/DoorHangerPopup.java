@@ -268,7 +268,7 @@ public class DoorHangerPopup extends ArrowPopup
      *
      * This method must be called on the UI thread.
      */
-    private void updatePopup() {
+    void updatePopup() {
         // Bail if the selected tab is null, if there are no active doorhangers,
         // if we haven't inflated the layout yet (this can happen if updatePopup()
         // is called before the runnable from addDoorHanger() runs), or if the
@@ -299,7 +299,7 @@ public class DoorHangerPopup extends ArrowPopup
 
         showDividers();
         if (isShowing()) {
-            update();
+            show();
             return;
         }
 
