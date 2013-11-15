@@ -38,6 +38,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "networkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
 
+
+XPCOMUtils.defineLazyServiceGetter(this, "networkService",
+                                   "@mozilla.org/network/service;1",
+                                   "nsINetworkService");
+
 XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
@@ -429,7 +434,7 @@ this.NetworkStatsService = {
     // Request stats to NetworkManager, which will get stats from netd, passing
     // 'networkStatsAvailable' as a callback.
     if (interfaceName) {
-      networkManager.getNetworkInterfaceStats(interfaceName,
+      networkService.getNetworkInterfaceStats(interfaceName,
                 this.networkStatsAvailable.bind(this, aCallback, aNetId));
       return;
     }

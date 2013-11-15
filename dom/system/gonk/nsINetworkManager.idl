@@ -4,6 +4,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIWifiTetheringCallback;
+
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
@@ -76,64 +78,16 @@ interface nsINetworkInterface : nsISupports
   readonly attribute DOMString httpProxyHost;
 
   /*
-   * The port number of the http proxy server. 
+   * The port number of the http proxy server.
    */
   readonly attribute long httpProxyPort;
 
 };
 
-[scriptable, function, uuid(91824160-fb25-11e1-a21f-0800200c9a66)]
-interface nsIWifiTetheringCallback : nsISupports
-{
-  /**
-   * Callback function used to report status to WifiManager.
-   *
-   * @param error
-   *        An error message if the operation wasn't successful,
-   *        or `null` if it was.
-   */
-  void wifiTetheringEnabledChange(in jsval error);
-};
-
-[scriptable, function, uuid(e079aa2a-ec0a-4bbd-b1a4-d81a9faae464)]
-interface nsINetworkStatsCallback : nsISupports
-{
-  void networkStatsAvailable(in boolean success,
-                             in unsigned long rxBytes,
-                             in unsigned long txBytes,
-                             in jsval date);
-};
-
-[scriptable, function, uuid(9ede8720-f8bc-11e2-b778-0800200c9a66)]
-interface nsIWifiOperationModeCallback : nsISupports
-{
-  /**
-   * Callback function used to report result to WifiManager.
-   *
-   * @param error
-   *        An error message if the operation wasn't successful,
-   *        or `null` if it was.
-   */
-  void wifiOperationModeResult(in jsval error);
-};
-
-[scriptable, function, uuid(097878b0-19fc-11e3-8ffd-0800200c9a66)]
-interface nsISetDhcpServerCallback : nsISupports
-{
-  /**
-   * Callback function used to report DHCP server result
-   *
-   * @param error
-   *        An error message if the operation wasn't successful,
-   *        or `null` if it was.
-   */
-  void dhcpServerResult(in jsval error);
-};
-
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(f658c740-26bb-11e3-8224-0800200c9a66)]
+[scriptable, uuid(3ea50550-4b3c-11e3-8f96-0800200c9a66)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -217,64 +171,4 @@ interface nsINetworkManager : nsISupports
                         in nsINetworkInterface networkInterface,
                         in jsval config,
                         in nsIWifiTetheringCallback callback);
-
-  /**
-   * Enable or disable DHCP server
-   *
-   * @param enabled
-   *        Boolean that indicates enabling or disabling DHCP server.
-   *
-   * @param config
-   *        Config used to enable the DHCP server. It contains
-   *        .startIp    start of the ip lease range (string)
-   *        .endIp      end of the ip lease range (string)
-   *        .serverIp   ip of the DHCP server (string)
-   *        .maskLength the length of the subnet mask
-   *        .ifname     the interface name
-   *
-   *        As for disabling the DHCP server, put this value |null|.
-   *
-   * @param callback
-   *        Callback function used to report status.
-   */
-  void setDhcpServer(in boolean enabled,
-                     in jsval config,
-                     in nsISetDhcpServerCallback callback);
-
-
-  /**
-   * Retrieve network interface stats.
-   *
-   * @param networkName
-   *        Select the Network interface to request estats.
-   *
-   * @param callback
-   *        Callback to notify result and provide stats, connectionType
-   *        and the date when stats are retrieved
-   */
-  void getNetworkInterfaceStats(in DOMString networkName, in nsINetworkStatsCallback callback);
-
-  /**
-   * Reload Wifi firmware to specific operation mode.
-   *
-   * @param interfaceName
-   *        Wifi Network interface name.
-   *
-   * @param mode
-   *        AP  - Access pointer mode.
-   *        P2P - Peer to peer connection mode.
-   *        STA - Station mode.
-   *
-   * @param callback
-   *        Callback to notify Wifi firmware reload result.
-   */
-  void setWifiOperationMode(in DOMString interfaceName, in DOMString mode, in nsIWifiOperationModeCallback callback);
-
-  /**
-   * Set http proxy for specific network
-   *
-   * @param network
-   *        Network interface to register.
-   */
-  void setNetworkProxy(in nsINetworkInterface network);
 };
