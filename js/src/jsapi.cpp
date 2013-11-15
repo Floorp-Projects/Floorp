@@ -2067,10 +2067,10 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
         break;
       default:
         JS_ASSERT(key == JSGC_MODE);
-        rt->gcMode = JSGCMode(value);
-        JS_ASSERT(rt->gcMode == JSGC_MODE_GLOBAL ||
-                  rt->gcMode == JSGC_MODE_COMPARTMENT ||
-                  rt->gcMode == JSGC_MODE_INCREMENTAL);
+        rt->setGCMode(JSGCMode(value));
+        JS_ASSERT(rt->gcMode() == JSGC_MODE_GLOBAL ||
+                  rt->gcMode() == JSGC_MODE_COMPARTMENT ||
+                  rt->gcMode() == JSGC_MODE_INCREMENTAL);
         return;
     }
 }
@@ -2086,7 +2086,7 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
       case JSGC_BYTES:
         return uint32_t(rt->gcBytes);
       case JSGC_MODE:
-        return uint32_t(rt->gcMode);
+        return uint32_t(rt->gcMode());
       case JSGC_UNUSED_CHUNKS:
         return uint32_t(rt->gcChunkPool.getEmptyCount());
       case JSGC_TOTAL_CHUNKS:

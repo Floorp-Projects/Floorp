@@ -1301,7 +1301,7 @@ NewObject(ExclusiveContext *cx, const Class *clasp, types::TypeObject *type_, JS
         rt->gcIncrementalEnabled = false;
 
 #ifdef DEBUG
-        if (rt->gcMode == JSGC_MODE_INCREMENTAL) {
+        if (rt->gcMode() == JSGC_MODE_INCREMENTAL) {
             fprintf(stderr,
                     "The class %s has a trace hook but does not declare the\n"
                     "JSCLASS_IMPLEMENTS_BARRIERS flag. Please ensure that it correctly\n"
