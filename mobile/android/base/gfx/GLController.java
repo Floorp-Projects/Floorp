@@ -107,19 +107,19 @@ public class GLController {
 
         mServerSurfaceValid = true;
 
-        createCompositor();
+        updateCompositor();
     }
 
-    void createCompositor() {
+    void updateCompositor() {
         ThreadUtils.assertOnUiThread();
-        Log.w(LOGTAG, "GLController::createCompositor with mCompositorCreated=" + mCompositorCreated);
+        Log.w(LOGTAG, "GLController::updateCompositor with mCompositorCreated=" + mCompositorCreated);
 
         if (mCompositorCreated) {
             // If the compositor has already been created, just resume it instead. We don't need
             // to block here because if the surface is destroyed before the compositor grabs it,
             // we can handle that gracefully (i.e. the compositor will remain paused).
             resumeCompositor(mWidth, mHeight);
-            Log.w(LOGTAG, "done GLController::createCompositor with compositor resume");
+            Log.w(LOGTAG, "done GLController::updateCompositor with compositor resume");
             return;
         }
 
@@ -130,13 +130,13 @@ public class GLController {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorCreateEvent(mWidth, mHeight));
         }
-        Log.w(LOGTAG, "done GLController::createCompositor");
+        Log.w(LOGTAG, "done GLController::updateCompositor");
     }
 
     void compositorCreated() {
         Log.w(LOGTAG, "GLController::compositorCreated");
         // This is invoked on the compositor thread, while the java UI thread
-        // is blocked on the gecko sync event in createCompositor() above
+        // is blocked on the gecko sync event in updateCompositor() above
         mCompositorCreated = true;
     }
 
