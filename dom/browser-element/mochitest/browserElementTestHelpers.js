@@ -29,6 +29,11 @@ const browserElementTestHelpers = {
     }
   },
 
+  _setPrefs: function() {
+    this.lockTestReady();
+    SpecialPowers.pushPrefEnv({'set': Array.slice(arguments)}, this.unlockTestReady.bind(this));
+  },
+
   _testReadyLockCount: 0,
   _firedTestReady: false,
   lockTestReady: function() {
@@ -44,9 +49,11 @@ const browserElementTestHelpers = {
   },
 
   enableProcessPriorityManager: function() {
-    this._setPref('dom.ipc.processPriorityManager.testMode', true);
-    this._setPref('dom.ipc.processPriorityManager.enabled', true);
-    this._setPref('dom.ipc.processPriorityManager.backgroundLRUPoolLevels', 2);
+    this._setPrefs(
+      ['dom.ipc.processPriorityManager.testMode', true],
+      ['dom.ipc.processPriorityManager.enabled', true],
+      ['dom.ipc.processPriorityManager.backgroundLRUPoolLevels', 2]
+    );
   },
 
   setEnabledPref: function(value) {

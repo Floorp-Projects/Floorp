@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIDOMDOMRequest.idl"
+
+interface nsIVariant;
+
+[scriptable, uuid(28c8f240-da8c-11e1-9b23-0800200c9a66)]
+interface nsINfcContentHelper : nsISupports
+{
+  void setSessionToken(in DOMString sessionToken);
+
+  nsIDOMDOMRequest getDetailsNDEF(in nsIDOMWindow window, in DOMString sessionToken);
+  nsIDOMDOMRequest readNDEF(in nsIDOMWindow window, in DOMString sessionToken);
+  nsIDOMDOMRequest writeNDEF(in nsIDOMWindow window, in nsIVariant records, in DOMString sessionToken);
+  nsIDOMDOMRequest makeReadOnlyNDEF(in nsIDOMWindow window, in DOMString sessionToken);
+
+  nsIDOMDOMRequest connect(in nsIDOMWindow window, in unsigned long techType, in DOMString sessionToken);
+  nsIDOMDOMRequest close(in nsIDOMWindow window, in DOMString sessionToken);
+};

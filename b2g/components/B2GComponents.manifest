@@ -71,3 +71,7 @@ contract @mozilla.org/filepicker;1 {436ff8f9-0acc-4b11-8ec7-e293efba3141}
 component {637b0f77-2429-49a0-915f-abf5d0db8b9a} WebappsUpdateTimer.js
 contract @mozilla.org/b2g/webapps-update-timer;1 {637b0f77-2429-49a0-915f-abf5d0db8b9a}
 category update-timer WebappsUpdateTimer @mozilla.org/b2g/webapps-update-timer;1,getService,background-update-timer,webapps.update.interval,86400
+
+# HelperAppDialog.js
+component {710322af-e6ae-4b0c-b2c9-1474a87b077e} HelperAppDialog.js
+contract @mozilla.org/helperapplauncherdialog;1 {710322af-e6ae-4b0c-b2c9-1474a87b077e}

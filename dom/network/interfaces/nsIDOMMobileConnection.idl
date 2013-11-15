@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(095b3720-058c-11e3-8ffd-0800200c9a66)]
+[scriptable, builtinclass, uuid(052550e3-7466-4941-80d7-405c169652f9)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -68,6 +68,12 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * Information about the data connection.
    */
   readonly attribute nsIDOMMozMobileConnectionInfo data;
+
+  /**
+   * Integrated Circuit Card Identifier of the SIM this
+   * mobile connection corresponds to.
+   */
+  readonly attribute DOMString iccId;
 
   /**
    * The selection mode of the voice and data networks.
@@ -383,6 +389,12 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * changes.
    */
   [implicit_jscontext] attribute jsval onotastatuschange;
+
+  /**
+   * The 'oniccchange' event is notified whenever the iccid value
+   * changes.
+   */
+  [implicit_jscontext] attribute jsval oniccchange;
 };
 
 [scriptable, uuid(49706beb-a160-40b7-b745-50f62e389a2c)]
