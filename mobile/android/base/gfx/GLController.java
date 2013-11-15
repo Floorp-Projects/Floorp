@@ -105,42 +105,9 @@ public class GLController {
         mWidth = newWidth;
         mHeight = newHeight;
 
-        if (mServerSurfaceValid) {
-            // We need to make this call even when the compositor isn't currently
-            // paused (e.g. during an orientation change), to make the compositor
-            // aware of the changed surface.
-            resumeCompositor(mWidth, mHeight);
-            Log.w(LOGTAG, "done GLController::serverSurfaceChanged with compositor resume");
-            return;
-        }
         mServerSurfaceValid = true;
 
-        // If we get here, we supposedly have a valid surface where previously we
-        // did not. So we're going to create the window surface and hold on to it
-        // until the compositor comes asking for it. However, we can't call
-        // eglCreateWindowSurface right away because the UI thread isn't *actually*
-        // done setting up - for some reason Android will send us a serverSurfaceChanged
-        // notification before the surface is actually ready. So, we need to do the
-        // call to eglCreateWindowSurface in a runnable posted back to the UI thread
-        // that will run once this call unwinds all the way out and Android finishes
-        // doing its thing.
-
-        mView.post(new Runnable() {
-            @Override
-            public void run() {
-                Log.w(LOGTAG, "GLController::serverSurfaceChanged, creating compositor; mCompositorCreated=" + mCompositorCreated + ", mServerSurfaceValid=" + mServerSurfaceValid);
-                try {
-                    if (mServerSurfaceValid) {
-                        if (mEGL == null) {
-                            initEGL();
-                        }
-                    }
-                } catch (Exception e) {
-                    Log.e(LOGTAG, "Unable to create window surface", e);
-                }
-                createCompositor();
-            }
-        });
+        createCompositor();
     }
 
     void createCompositor() {
@@ -178,11 +145,15 @@ public class GLController {
     }
 
     private void initEGL() {
+        if (mEGL != null) {
+            return;
+        }
         mEGL = (EGL10)EGLContext.getEGL();
 
         mEGLDisplay = mEGL.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
         if (mEGLDisplay == EGL10.EGL_NO_DISPLAY) {
-            throw new GLControllerException("eglGetDisplay() failed");
+            Log.w(LOGTAG, "Can't get EGL display!");
+            return;
         }
 
         mEGLConfig = chooseConfig();
@@ -233,6 +204,7 @@ public class GLController {
 
     @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "ProvideEGLSurfaceWrapper")
     private EGLSurface provideEGLSurface() {
+        initEGL();
         return mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, mView.getNativeWindow(), null);
     }
 
