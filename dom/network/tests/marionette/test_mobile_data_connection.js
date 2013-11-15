@@ -13,7 +13,7 @@ SpecialPowers.addPermission("settings-read", true, document);
 SpecialPowers.addPermission("settings-write", true, document);
 
 let settings = window.navigator.mozSettings;
-let connection = window.navigator.mozMobileConnection;
+let connection = window.navigator.mozMobileConnections[0];
 ok(connection instanceof MozMobileConnection,
    "connection is instanceof " + connection.constructor);
 

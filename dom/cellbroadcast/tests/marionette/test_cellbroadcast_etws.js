@@ -263,6 +263,6 @@ function cleanUp() {
 }
 
 waitFor(testEtwsMessageAttributes, function () {
-  return navigator.mozMobileConnection.voice.connected;
+  return navigator.mozMobileConnections[0].voice.connected;
 });
 

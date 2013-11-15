@@ -43,11 +43,17 @@ public:
                                const FrameMetrics& aMetrics);
 
     /* Get the DOMWindowUtils for the window corresponding to the given document. */
-    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(nsIDocument* doc);
+    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(const nsIDocument* aDoc);
 
     /* Get the DOMWindowUtils for the window corresponding to the givent content
-     * element. This might be an iframe inside the tab, for instance. */
-    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(nsIContent* content);
+       element. This might be an iframe inside the tab, for instance. */
+    static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(const nsIContent* aContent);
+
+    /* Get the presShellId and view ID for the given content element, if they can be
+       found. Returns false if the values could not be found, true if they could. */
+    static bool GetScrollIdentifiers(const nsIContent* aContent,
+                                     uint32_t* aPresShellIdOut,
+                                     FrameMetrics::ViewID* aViewIdOut);
 };
 
 }

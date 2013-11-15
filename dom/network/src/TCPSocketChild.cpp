@@ -77,10 +77,11 @@ TCPSocketChild::TCPSocketChild()
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Open(nsITCPSocketInternal* aSocket, const nsAString& aHost,
-                     uint16_t aPort, bool aUseSSL, const nsAString& aBinaryType,
-                     nsIDOMWindow* aWindow, const JS::Value& aWindowObj,
-                     JSContext* aCx)
+TCPSocketChild::SendOpen(nsITCPSocketInternal* aSocket,
+                         const nsAString& aHost, uint16_t aPort,
+                         bool aUseSSL, const nsAString& aBinaryType,
+                         nsIDOMWindow* aWindow, const JS::Value& aWindowObj,
+                         JSContext* aCx)
 {
   mSocket = aSocket;
 
@@ -91,7 +92,8 @@ TCPSocketChild::Open(nsITCPSocketInternal* aSocket, const nsAString& aHost,
   }
   AddIPDLReference();
   gNeckoChild->SendPTCPSocketConstructor(this);
-  SendOpen(nsString(aHost), aPort, aUseSSL, nsString(aBinaryType));
+  PTCPSocketChild::SendOpen(nsString(aHost), aPort,
+                            aUseSSL, nsString(aBinaryType));
   return NS_OK;
 }
 
@@ -116,12 +118,21 @@ TCPSocketChild::~TCPSocketChild()
 }
 
 bool
+TCPSocketChild::RecvUpdateBufferedAmount(const uint32_t& aBuffered,
+                                         const uint32_t& aTrackingNumber)
+{
+  if (NS_FAILED(mSocket->UpdateBufferedAmount(aBuffered, aTrackingNumber))) {
+    NS_ERROR("Shouldn't fail!");
+  }
+  return true;
+}
+
+bool
 TCPSocketChild::RecvCallback(const nsString& aType,
                              const CallbackData& aData,
-                             const nsString& aReadyState,
-                             const uint32_t& aBuffered)
+                             const nsString& aReadyState)
 {
-  if (NS_FAILED(mSocket->UpdateReadyStateAndBuffered(aReadyState, aBuffered)))
+  if (NS_FAILED(mSocket->UpdateReadyState(aReadyState)))
     NS_ERROR("Shouldn't fail!");
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -159,46 +170,46 @@ TCPSocketChild::RecvCallback(const nsString& aType,
 }
 
 NS_IMETHODIMP
-TCPSocketChild::StartTLS()
+TCPSocketChild::SendStartTLS()
 {
-  SendStartTLS();
+  PTCPSocketChild::SendStartTLS();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Suspend()
+TCPSocketChild::SendSuspend()
 {
-  SendSuspend();
+  PTCPSocketChild::SendSuspend();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Resume()
+TCPSocketChild::SendResume()
 {
-  SendResume();
+  PTCPSocketChild::SendResume();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Close()
+TCPSocketChild::SendClose()
 {
-  SendClose();
+  PTCPSocketChild::SendClose();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TCPSocketChild::Send(const JS::Value& aData,
-                     uint32_t aByteOffset,
-                     uint32_t aByteLength,
-                     JSContext* aCx)
+TCPSocketChild::SendSend(const JS::Value& aData,
+                         uint32_t aByteOffset,
+                         uint32_t aByteLength,
+                         uint32_t aTrackingNumber,
+                         JSContext* aCx)
 {
   if (aData.isString()) {
     JSString* jsstr = aData.toString();
     nsDependentJSString str;
     bool ok = str.init(aCx, jsstr);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-    SendData(str);
-
+    SendData(str, aTrackingNumber);
   } else {
     NS_ENSURE_TRUE(aData.isObject(), NS_ERROR_FAILURE);
     JS::Rooted<JSObject*> obj(aCx, &aData.toObject());
@@ -216,15 +227,15 @@ TCPSocketChild::Send(const JS::Value& aData,
     }
     InfallibleTArray<uint8_t> arr;
     arr.SwapElements(fallibleArr);
-    SendData(arr);
+    SendData(arr, aTrackingNumber);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TCPSocketChild::SetSocketAndWindow(nsITCPSocketInternal *aSocket,
-                          const JS::Value& aWindowObj,
-                          JSContext* aCx)
+                                   const JS::Value& aWindowObj,
+                                   JSContext* aCx)
 {
   mSocket = aSocket;
   MOZ_ASSERT(aWindowObj.isObject());
