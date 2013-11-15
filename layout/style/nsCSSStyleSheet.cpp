@@ -749,14 +749,6 @@ static bool SetStyleSheetReference(css::Rule* aRule, void* aSheet)
   return true;
 }
 
-static bool
-CloneRuleInto(css::Rule* aRule, void* aArray)
-{
-  nsRefPtr<css::Rule> clone = aRule->Clone();
-  static_cast<nsCOMArray<css::Rule>*>(aArray)->AppendObject(clone);
-  return true;
-}
-
 struct ChildSheetListBuilder {
   nsRefPtr<nsCSSStyleSheet>* sheetSlot;
   nsCSSStyleSheet* parent;
@@ -862,7 +854,7 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
 {
   MOZ_COUNT_CTOR(nsCSSStyleSheetInner);
   AddSheet(aPrimarySheet);
-  aCopy.mOrderedRules.EnumerateForwards(CloneRuleInto, &mOrderedRules);
+  aCopy.mOrderedRules.EnumerateForwards(css::GroupRule::CloneRuleInto, &mOrderedRules);
   mOrderedRules.EnumerateForwards(SetStyleSheetReference, aPrimarySheet);
 
   ChildSheetListBuilder builder = { &mFirstChild, aPrimarySheet };
