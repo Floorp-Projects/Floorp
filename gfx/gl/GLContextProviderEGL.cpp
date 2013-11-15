@@ -431,7 +431,7 @@ public:
     }
 #endif
 
-    virtual void SetEGLSurfaceOverride(void* surf) MOZ_OVERRIDE {
+    virtual void SetEGLSurfaceOverride(EGLSurface surf) MOZ_OVERRIDE {
         if (Screen()) {
             /* Blit `draw` to `read` if we need to, before we potentially juggle
              * `read` around. If we don't, we might attach a different `read`,
