@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetworkStatsService.jsm");
 
 const NETWORKSTATSSERVICEPROXY_CONTRACTID = "@mozilla.org/networkstatsServiceProxy;1";
-const NETWORKSTATSSERVICEPROXY_CID = Components.ID("8fbd115d-f590-474c-96dc-e2b6803ca975");
+const NETWORKSTATSSERVICEPROXY_CID = Components.ID("705c01d6-8574-464c-8ec9-ac1522a45546");
 const nsINetworkStatsServiceProxy = Ci.nsINetworkStatsServiceProxy;
 
 function NetworkStatsServiceProxy() {
@@ -30,7 +30,8 @@ NetworkStatsServiceProxy.prototype = {
    * to pass the per-app stats to NetworkStatsService.
    */
   saveAppStats: function saveAppStats(aAppId, aNetwork, aTimeStamp,
-                                      aRxBytes, aTxBytes, aCallback) {
+                                      aRxBytes, aTxBytes, aIsAccumulative,
+                                      aCallback) {
     if (!aNetwork) {
       if (DEBUG) {
         debug("|aNetwork| is not specified. Failed to save stats. Returning.");
@@ -39,12 +40,38 @@ NetworkStatsServiceProxy.prototype = {
     }
 
     if (DEBUG) {
-      debug("saveAppStats: " + aAppId + " connectionType " + aNetwork.type +
-            " " + aTimeStamp + " " + aRxBytes + " " + aTxBytes);
+      debug("saveAppStats: " + aAppId + " " + aNetwork.type + " " + aTimeStamp +
+            " " + aRxBytes + " " + aTxBytes + " " + aIsAccumulative);
     }
 
-    NetworkStatsService.saveAppStats(aAppId, aNetwork, aTimeStamp,
-                                     aRxBytes, aTxBytes, aCallback);
+    NetworkStatsService.saveStats(aAppId, "", aNetwork, aTimeStamp,
+                                  aRxBytes, aTxBytes, aIsAccumulative,
+                                  aCallback);
+  },
+
+  /*
+   * Function called in the points of different system services
+   * to pass the per-serive stats to NetworkStatsService.
+   */
+  saveServiceStats: function saveServiceStats(aServiceType, aNetwork,
+                                              aTimeStamp, aRxBytes, aTxBytes,
+                                              aIsAccumulative, aCallback) {
+    if (!aNetwork) {
+      if (DEBUG) {
+        debug("|aNetwork| is not specified. Failed to save stats. Returning.");
+      }
+      return;
+    }
+
+    if (DEBUG) {
+      debug("saveServiceStats: " + aServiceType + " " + aNetwork.type + " " +
+            aTimeStamp + " " + aRxBytes + " " + aTxBytes + " " +
+            aIsAccumulative);
+    }
+
+    NetworkStatsService.saveStats(0, aServiceType ,aNetwork, aTimeStamp,
+                                  aRxBytes, aTxBytes, aIsAccumulative,
+                                  aCallback);
   },
 
   classID : NETWORKSTATSSERVICEPROXY_CID,
