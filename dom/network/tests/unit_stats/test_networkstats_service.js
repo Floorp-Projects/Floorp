@@ -3,33 +3,51 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+function getNetworks(callback) {
+  NetworkStatsService._db.getAvailableNetworks(function onGetNetworks(aError, aResult) {
+    callback(aError, aResult);
+  });
+}
+
 add_test(function test_clearDB() {
-  var networks = NetworkStatsService.availableNetworks();
-  NetworkStatsService._db.clearStats(networks, function onDBCleared(error, result) {
-    do_check_eq(result, null);
-    run_next_test();
+  getNetworks(function onGetNetworks(error, result) {
+    do_check_eq(error, null);
+    var networks = result;
+    NetworkStatsService._db.clearStats(networks, function onDBCleared(error, result) {
+      do_check_eq(result, null);
+      run_next_test();
+    });
   });
 });
 
-function getNetworkId() {
-  var network = (NetworkStatsService.availableNetworks())[0];
-  return NetworkStatsService.getNetworkId(network.id, network.type);
+function getNetworkId(callback) {
+  getNetworks(function onGetNetworks(error, result) {
+    do_check_eq(error, null);
+    var netId = NetworkStatsService.getNetworkId(result[0].id, result[0].type);
+    callback(null, netId);
+  });
 }
 
 add_test(function test_networkStatsAvailable_ok() {
-  var netId = getNetworkId();
-  NetworkStatsService.networkStatsAvailable(function (success, msg) {
-    do_check_eq(success, true);
-    run_next_test();
-  }, netId, true, 1234, 4321, new Date());
+  getNetworkId(function onGetId(error, result) {
+    do_check_eq(error, null);
+    var netId = result;
+    NetworkStatsService.networkStatsAvailable(function (success, msg) {
+      do_check_eq(success, true);
+      run_next_test();
+    }, netId, true, 1234, 4321, new Date());
+  });
 });
 
 add_test(function test_networkStatsAvailable_failure() {
-  var netId = getNetworkId();
-  NetworkStatsService.networkStatsAvailable(function (success, msg) {
-    do_check_eq(success, false);
-    run_next_test();
-  }, netId, false, 1234, 4321, new Date());
+  getNetworkId(function onGetId(error, result) {
+    do_check_eq(error, null);
+    var netId = result;
+    NetworkStatsService.networkStatsAvailable(function (success, msg) {
+      do_check_eq(success, false);
+      run_next_test();
+    }, netId, false, 1234, 4321, new Date());
+  });
 });
 
 add_test(function test_update_invalidNetwork() {
@@ -41,10 +59,13 @@ add_test(function test_update_invalidNetwork() {
 });
 
 add_test(function test_update() {
-  var netId = getNetworkId();
-  NetworkStatsService.update(netId, function (success, msg) {
-    do_check_eq(success, true);
-    run_next_test();
+  getNetworkId(function onGetId(error, result) {
+    do_check_eq(error, null);
+    var netId = result;
+    NetworkStatsService.update(netId, function (success, msg) {
+      do_check_eq(success, true);
+      run_next_test();
+    });
   });
 });
 
@@ -71,10 +92,13 @@ add_test(function test_updateAllStats() {
 });
 
 add_test(function test_updateStats_ok() {
-  var netId = getNetworkId();
-  NetworkStatsService.updateStats(netId, function(success, msg){
-    do_check_eq(success, true);
-    run_next_test();
+  getNetworkId(function onGetId(error, result) {
+    do_check_eq(error, null);
+    var netId = result;
+    NetworkStatsService.updateStats(netId, function(success, msg){
+      do_check_eq(success, true);
+      run_next_test();
+    });
   });
 });
 
