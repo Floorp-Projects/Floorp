@@ -36,8 +36,7 @@ interface nsIWindowCreator;
  *   This component must be initialized at application startup by calling
  * setWindowCreator.
  */
-[scriptable, uuid(002286a8-494b-43b3-8ddd-49e3fc50622b)]
-
+[scriptable, uuid(67bc1691-fbaf-484a-a15b-c96212b45034)]
 interface nsIWindowWatcher : nsISupports {
 
   /** Create a new window. It will automatically be added to our list
@@ -162,10 +161,6 @@ interface nsIWindowWatcher : nsISupports {
   attribute nsIDOMWindow activeWindow;
 
 };
-
-%{C++
-#define NS_WINDOWWATCHER_IID \
- {0x965c032f, 0xdede, 0x4ec8, {0x81, 0xc1, 0x4d, 0x39, 0xaa, 0x8a, 0xa8, 0xfb}}
 
 #define NS_WINDOWWATCHER_CONTRACTID "@mozilla.org/embedcomp/window-watcher;1"
 %}
