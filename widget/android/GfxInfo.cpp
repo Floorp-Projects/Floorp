@@ -12,6 +12,8 @@
 #include "nsVersionComparator.h"
 #include "mozilla/Monitor.h"
 #include "AndroidBridge.h"
+#include "nsIWindowWatcher.h"
+#include "nsServiceManagerUtils.h"
 
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
@@ -22,7 +24,26 @@
 namespace mozilla {
 namespace widget {
 
-class GfxInfo::GLStrings {
+static bool ExpectGLStringsToEverGetInitialized()
+{
+  // In XPCShell, we don't have a compositor, so our GL strings will never get
+  // properly initialized.
+  // We need to know about that in GLStrings::EnsureInitialized to avoid waiting forever.
+  // The way we detect that we won't ever have a compositor, is that the nsWindowWatcher
+  // doesn't have a WindowCreator i.e. we won't create any windows. That is actually
+  // the root difference between xpcshell and real browsers, that causes the former
+  // not to create a window and a compositor.
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  if (!wwatch) {
+    return false;
+  }
+  bool hasWindowCreator = false;
+  nsresult rv = wwatch->HasWindowCreator(&hasWindowCreator);
+  return NS_SUCCEEDED(rv) && hasWindowCreator;
+}
+
+class GfxInfo::GLStrings
+{
   nsCString mVendor;
   nsCString mRenderer;
   nsCString mVersion;
@@ -70,7 +91,13 @@ public:
       MonitorAutoLock autoLock(mMonitor);
       // re-check mReady, as it could have changed before we locked.
       if (!mReady) {
-        mMonitor.Wait();
+        if (ExpectGLStringsToEverGetInitialized()) {
+          mMonitor.Wait();
+        } else {
+          // we'll never get notified, so don't wait. Just go on
+          // with empty GL strings.
+          mReady = true;
+        }
       }
     }
   }
