@@ -32,9 +32,6 @@ public:
 
 protected:
   virtual bool
-  RecvHasSupport(bool* aHasSupport) MOZ_OVERRIDE;
-
-  virtual bool
   RecvAddSilentNumber(const nsString& aNumber) MOZ_OVERRIDE;
 
   virtual bool

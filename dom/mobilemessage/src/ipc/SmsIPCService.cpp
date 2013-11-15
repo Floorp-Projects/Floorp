@@ -148,17 +148,6 @@ SmsIPCService::GetSmsDefaultServiceId(uint32_t* aServiceId)
 }
 
 NS_IMETHODIMP
-SmsIPCService::HasSupport(bool* aHasSupport)
-{
-  PSmsChild* smsChild = GetSmsChild();
-  NS_ENSURE_TRUE(smsChild, NS_ERROR_FAILURE);
-
-  smsChild->SendHasSupport(aHasSupport);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 SmsIPCService::GetSegmentInfoForText(const nsAString& aText,
                                      nsIMobileMessageCallback* aRequest)
 {
