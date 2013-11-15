@@ -232,7 +232,7 @@ public:
         : GLContext(caps, shareContext, isOffscreen)
         , mConfig(config)
         , mSurface(surface)
-        , mCurSurface(surface)
+        , mSurfaceOverride(EGL_NO_SURFACE)
         , mContext(context)
         , mThebesSurface(nullptr)
         , mBound(false)
@@ -405,15 +405,7 @@ public:
     }
 #endif
 
-    virtual void MakeCurrent_EGLSurface(void* surf) {
-        EGLSurface eglSurface = (EGLSurface)surf;
-        if (!eglSurface)
-            eglSurface = mSurface;
-
-        if (eglSurface == mCurSurface)
-            return;
-
-        // Else, surface changed...
+    virtual void SetEGLSurfaceOverride(void* surf) MOZ_OVERRIDE {
         if (Screen()) {
             /* Blit `draw` to `read` if we need to, before we potentially juggle
              * `read` around. If we don't, we might attach a different `read`,
@@ -423,7 +415,7 @@ public:
             Screen()->AssureBlitted();
         }
 
-        mCurSurface = eglSurface;
+        mSurfaceOverride = surf ? (EGLSurface) surf : mSurface;
         MakeCurrent(true);
     }
 
@@ -434,10 +426,12 @@ public:
         // where MakeCurrent with an already-current context is
         // still expensive.
         if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
+            EGLSurface surface = mSurfaceOverride != EGL_NO_SURFACE
+                                 ? mSurfaceOverride
+                                 : mSurface;
             succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
-                                                 mCurSurface, mCurSurface,
+                                                 surface, surface,
                                                  mContext);
-            
             int eglError = sEGLLibrary.fGetError();
             if (!succeeded) {
                 if (eglError == LOCAL_EGL_CONTEXT_LOST) {
@@ -577,7 +571,7 @@ protected:
 
     EGLConfig  mConfig;
     EGLSurface mSurface;
-    EGLSurface mCurSurface;
+    EGLSurface mSurfaceOverride;
     EGLContext mContext;
     nsRefPtr<gfxASurface> mThebesSurface;
     bool mBound;
