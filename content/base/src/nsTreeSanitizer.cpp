@@ -1359,8 +1359,7 @@ nsTreeSanitizer::Sanitize(nsIDocument* aDocument)
   // here that notifies / does not notify or that fires mutation events if
   // in tree.
 #ifdef DEBUG
-  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
-  NS_PRECONDITION(!container, "The document is in a shell.");
+  NS_PRECONDITION(!aDocument->GetContainer(), "The document is in a shell.");
   nsRefPtr<mozilla::dom::Element> root = aDocument->GetRootElement();
   NS_PRECONDITION(root->IsHTML(nsGkAtoms::html), "Not HTML root.");
 #endif

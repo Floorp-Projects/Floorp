@@ -1166,6 +1166,11 @@ public:
   nsILoadContext* GetLoadContext() const;
 
   /**
+   * Get docshell the for this document.
+   */
+  nsIDocShell* GetDocShell() const;
+
+  /**
    * Set and get XML declaration. If aVersion is null there is no declaration.
    * aStandalone takes values -1, 0 and 1 indicating respectively that there
    * was no standalone parameter in the declaration, that it was given as no,
@@ -1525,7 +1530,7 @@ public:
   void SetDisplayDocument(nsIDocument* aDisplayDocument)
   {
     NS_PRECONDITION(!GetShell() &&
-                    !nsCOMPtr<nsISupports>(GetContainer()) &&
+                    !GetContainer() &&
                     !GetWindow(),
                     "Shouldn't set mDisplayDocument on documents that already "
                     "have a presentation or a docshell or a window");

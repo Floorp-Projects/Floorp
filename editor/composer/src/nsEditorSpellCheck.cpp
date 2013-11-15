@@ -97,8 +97,7 @@ GetLoadContext(nsIEditor* aEditor)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   NS_ENSURE_TRUE(doc, nullptr);
 
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
-  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
+  nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
   return loadContext.forget();
 }
 

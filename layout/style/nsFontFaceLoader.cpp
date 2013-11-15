@@ -876,15 +876,13 @@ nsUserFontSet::CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
   }
 
   *aBypassCache = false;
-  nsCOMPtr<nsISupports> container = ps->GetDocument()->GetContainer();
-  if (container) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-    if (docShell) {
-      uint32_t loadType;
-      if (NS_SUCCEEDED(docShell->GetLoadType(&loadType))) {
-        if ((loadType >> 16) & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE) {
-          *aBypassCache = true;
-        }
+
+  nsCOMPtr<nsIDocShell> docShell = ps->GetDocument()->GetDocShell();
+  if (docShell) {
+    uint32_t loadType;
+    if (NS_SUCCEEDED(docShell->GetLoadType(&loadType))) {
+      if ((loadType >> 16) & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE) {
+        *aBypassCache = true;
       }
     }
   }
@@ -982,11 +980,6 @@ nsUserFontSet::GetPrivateBrowsing()
     return false;
   }
 
-  nsCOMPtr<nsISupports> container = ps->GetDocument()->GetContainer();
-  if (!container) {
-    return false;
-  }
-
-  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
+  nsCOMPtr<nsILoadContext> loadContext = ps->GetDocument()->GetLoadContext();
   return loadContext && loadContext->UsePrivateBrowsing();
 }

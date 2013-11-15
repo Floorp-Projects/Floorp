@@ -8862,12 +8862,11 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
   mCreatingStaticClone = true;
 
   // Make document use different container during cloning.
-  nsCOMPtr<nsISupports> originalContainer = GetContainer();
-  nsCOMPtr<nsIDocShell> originalShell = do_QueryInterface(originalContainer);
+  nsRefPtr<nsDocShell> originalShell = mDocumentContainer.get();
   SetContainer(static_cast<nsDocShell*>(aCloneContainer));
   nsCOMPtr<nsIDOMNode> clonedNode;
   nsresult rv = domDoc->CloneNode(true, 1, getter_AddRefs(clonedNode));
-  SetContainer(static_cast<nsDocShell*>(originalShell.get()));
+  SetContainer(originalShell);
 
   nsCOMPtr<nsIDocument> clonedDoc;
   if (NS_SUCCEEDED(rv)) {
@@ -10173,8 +10172,7 @@ nsDocument::FullScreenStackTop()
 static bool
 IsInActiveTab(nsIDocument* aDoc)
 {
-  nsCOMPtr<nsISupports> container = aDoc->GetContainer();
-  nsCOMPtr<nsIDocShell> docshell = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShell> docshell = aDoc->GetDocShell();
   if (!docshell) {
     return false;
   }
@@ -10185,12 +10183,8 @@ IsInActiveTab(nsIDocument* aDoc)
     return false;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(container);
-  if (!dsti) {
-    return false;
-  }
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  dsti->GetRootTreeItem(getter_AddRefs(rootItem));
+  docshell->GetRootTreeItem(getter_AddRefs(rootItem));
   if (!rootItem) {
     return false;
   }
@@ -10849,7 +10843,7 @@ nsDocument::ShouldLockPointer(Element* aElement, Element* aCurrentLock,
 
   // Check if the element is in a document with a docshell.
   nsCOMPtr<nsIDocument> ownerDoc = aElement->OwnerDoc();
-  if (!nsCOMPtr<nsISupports>(ownerDoc->GetContainer())) {
+  if (!ownerDoc->GetContainer()) {
     return false;
   }
   nsCOMPtr<nsPIDOMWindow> ownerWindow = ownerDoc->GetWindow();
@@ -11420,12 +11414,13 @@ nsIDocument::SetContentTypeInternal(const nsACString& aType)
 nsILoadContext*
 nsIDocument::GetLoadContext() const
 {
-  nsCOMPtr<nsISupports> container = GetContainer();
-  if (container) {
-    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
-    return loadContext;
-  }
-  return nullptr;
+  return mDocumentContainer;
+}
+
+nsIDocShell*
+nsIDocument::GetDocShell() const
+{
+  return mDocumentContainer;
 }
 
 void

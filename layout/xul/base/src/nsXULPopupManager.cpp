@@ -1061,8 +1061,7 @@ nsXULPopupManager::HidePopupsInList(const nsTArray<nsMenuPopupFrame *> &aFrames,
 bool
 nsXULPopupManager::IsChildOfDocShell(nsIDocument* aDoc, nsIDocShellTreeItem* aExpected)
 {
-  nsCOMPtr<nsISupports> doc = aDoc->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(doc));
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem(aDoc->GetDocShell());
   while(docShellItem) {
     if (docShellItem == aExpected)
       return true;
