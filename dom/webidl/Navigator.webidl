@@ -255,11 +255,9 @@ partial interface Navigator {
 };
 
 #ifdef MOZ_B2G_RIL
-// nsIMozNavigatorMobileConnection
-interface MozMobileConnection;
 partial interface Navigator {
   [Throws, Func="Navigator::HasMobileConnectionSupport"]
-  readonly attribute MozMobileConnection mozMobileConnection;
+  readonly attribute MozMobileConnectionArray mozMobileConnections;
 };
 
 partial interface Navigator {

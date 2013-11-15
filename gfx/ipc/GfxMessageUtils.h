@@ -660,6 +660,26 @@ struct ParamTraits<mozilla::gfx::SurfaceFormat>
                           mozilla::gfx::FORMAT_UNKNOWN>
 {};
 
+template <>
+struct ParamTraits<mozilla::layers::ScrollableLayerGuid>
+{
+  typedef mozilla::layers::ScrollableLayerGuid paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mLayersId);
+    WriteParam(aMsg, aParam.mPresShellId);
+    WriteParam(aMsg, aParam.mScrollId);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mLayersId) &&
+            ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollId));
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __GFXMESSAGEUTILS_H__ */
