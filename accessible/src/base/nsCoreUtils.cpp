@@ -394,17 +394,14 @@ nsCoreUtils::GetDocShellFor(nsINode *aNode)
   if (!aNode)
     return nullptr;
 
-  nsCOMPtr<nsISupports> container = aNode->OwnerDoc()->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShell> docShell = aNode->OwnerDoc()->GetDocShell();
   return docShell.forget();
 }
 
 bool
 nsCoreUtils::IsRootDocument(nsIDocument *aDocument)
 {
-  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aDocument->GetDocShell();
   NS_ASSERTION(docShellTreeItem, "No document shell for document!");
 
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
@@ -416,9 +413,7 @@ nsCoreUtils::IsRootDocument(nsIDocument *aDocument)
 bool
 nsCoreUtils::IsContentDocument(nsIDocument *aDocument)
 {
-  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aDocument->GetDocShell();
   NS_ASSERTION(docShellTreeItem, "No document shell tree item for document!");
 
   int32_t contentType;
@@ -429,8 +424,7 @@ nsCoreUtils::IsContentDocument(nsIDocument *aDocument)
 bool
 nsCoreUtils::IsTabDocument(nsIDocument* aDocumentNode)
 {
-  nsCOMPtr<nsISupports> container = aDocumentNode->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocumentNode->GetDocShell());
 
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
   treeItem->GetParent(getter_AddRefs(parentTreeItem));

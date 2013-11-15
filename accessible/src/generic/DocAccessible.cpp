@@ -688,8 +688,7 @@ DocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
 nsresult
 DocAccessible::AddEventListeners()
 {
-  nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(mDocumentNode->GetDocShell());
 
   // We want to add a command observer only if the document is content and has
   // an editor.
@@ -721,8 +720,7 @@ DocAccessible::RemoveEventListeners()
   if (mDocumentNode) {
     mDocumentNode->RemoveObserver(this);
 
-    nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(mDocumentNode->GetDocShell());
     NS_ASSERTION(docShellTreeItem, "doc should support nsIDocShellTreeItem.");
 
     if (docShellTreeItem) {
@@ -1994,8 +1992,7 @@ DocAccessible::ShutdownChildrenInSubtree(Accessible* aAccessible)
 bool
 DocAccessible::IsLoadEventTarget() const
 {
-  nsCOMPtr<nsISupports> container = mDocumentNode->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = mDocumentNode->GetDocShell();
   NS_ASSERTION(treeItem, "No document shell for document!");
 
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;

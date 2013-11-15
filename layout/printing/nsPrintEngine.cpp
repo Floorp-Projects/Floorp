@@ -1335,8 +1335,7 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aPO,
   nsIDocument* subDoc = doc->GetSubDocumentFor(aContent);
 
   if (subDoc) {
-    nsCOMPtr<nsISupports> container = subDoc->GetContainer();
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+    nsCOMPtr<nsIDocShell> docShell(subDoc->GetDocShell());
 
     if (docShell) {
       nsPrintObject * po = nullptr;
