@@ -869,6 +869,9 @@ abstract public class BrowserApp extends GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             public void run() {
                 toolbarLayout.scrollTo(0, toolbarLayout.getHeight() - marginTop);
+                if (mDoorHangerPopup.isShowing()) {
+                    mDoorHangerPopup.updatePopup();
+                }
             }
         });
 
