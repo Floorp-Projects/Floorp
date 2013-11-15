@@ -79,9 +79,9 @@ public class GLController {
         return sInstance;
     }
 
-    synchronized void surfaceDestroyed() {
+    synchronized void serverSurfaceDestroyed() {
         ThreadUtils.assertOnUiThread();
-        Log.w(LOGTAG, "GLController::surfaceDestroyed() with mCompositorCreated=" + mCompositorCreated);
+        Log.w(LOGTAG, "GLController::serverSurfaceDestroyed() with mCompositorCreated=" + mCompositorCreated);
 
         mServerSurfaceValid = false;
         mClientSurface = null;
@@ -90,19 +90,19 @@ public class GLController {
         // that Gecko never executes a draw event while the compositor is paused.
         // This is sent synchronously to make sure that we don't attempt to use
         // any outstanding Surfaces after we call this (such as from a
-        // surfaceDestroyed notification), and to make sure that any in-flight
+        // serverSurfaceDestroyed notification), and to make sure that any in-flight
         // Gecko draw events have been processed.  When this returns, composition is
         // definitely paused -- it'll synchronize with the Gecko event loop, which
         // in turn will synchronize with the compositor thread.
         if (mCompositorCreated) {
             GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorPauseEvent());
         }
-        Log.w(LOGTAG, "done GLController::surfaceDestroyed()");
+        Log.w(LOGTAG, "done GLController::serverSurfaceDestroyed()");
     }
 
-    synchronized void surfaceChanged(int newWidth, int newHeight) {
+    synchronized void serverSurfaceChanged(int newWidth, int newHeight) {
         ThreadUtils.assertOnUiThread();
-        Log.w(LOGTAG, "GLController::surfaceChanged(" + newWidth + ", " + newHeight + ") with mServerSurfaceValid=" + mServerSurfaceValid);
+        Log.w(LOGTAG, "GLController::serverSurfaceChanged(" + newWidth + ", " + newHeight + ") with mServerSurfaceValid=" + mServerSurfaceValid);
 
         mWidth = newWidth;
         mHeight = newHeight;
@@ -112,7 +112,7 @@ public class GLController {
             // paused (e.g. during an orientation change), to make the compositor
             // aware of the changed surface.
             resumeCompositor(mWidth, mHeight);
-            Log.w(LOGTAG, "done GLController::surfaceChanged with compositor resume");
+            Log.w(LOGTAG, "done GLController::serverSurfaceChanged with compositor resume");
             return;
         }
         mServerSurfaceValid = true;
@@ -121,7 +121,7 @@ public class GLController {
         // did not. So we're going to create the window surface and hold on to it
         // until the compositor comes asking for it. However, we can't call
         // eglCreateWindowSurface right away because the UI thread isn't *actually*
-        // done setting up - for some reason Android will send us a surfaceChanged
+        // done setting up - for some reason Android will send us a serverSurfaceChanged
         // notification before the surface is actually ready. So, we need to do the
         // call to eglCreateWindowSurface in a runnable posted back to the UI thread
         // that will run once this call unwinds all the way out and Android finishes
@@ -130,7 +130,7 @@ public class GLController {
         mView.post(new Runnable() {
             @Override
             public void run() {
-                Log.w(LOGTAG, "GLController::surfaceChanged, creating compositor; mCompositorCreated=" + mCompositorCreated + ", mServerSurfaceValid=" + mServerSurfaceValid);
+                Log.w(LOGTAG, "GLController::serverSurfaceChanged, creating compositor; mCompositorCreated=" + mCompositorCreated + ", mServerSurfaceValid=" + mServerSurfaceValid);
                 try {
                     // Re-check mServerSurfaceValid in case the surface was destroyed between
                     // where we set it to true above and this runnable getting run.
@@ -191,7 +191,7 @@ public class GLController {
         mCompositorCreated = true;
     }
 
-    public boolean hasValidSurface() {
+    public boolean isServerSurfaceValid() {
         return mServerSurfaceValid;
     }
 
