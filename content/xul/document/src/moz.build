@@ -28,6 +28,7 @@ LOCAL_INCLUDES += [
     '/content/xml/document/src',
     '/content/xul/content/src',
     '/content/xul/templates/src',
+    '/docshell/base',
     '/dom/base',
     '/layout/base',
     '/layout/generic',

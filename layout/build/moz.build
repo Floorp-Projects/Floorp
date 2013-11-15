@@ -29,4 +29,7 @@ LIBRARY_NAME = 'gklayout'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/docshell/base',
+]
 FINAL_LIBRARY = 'xul'
