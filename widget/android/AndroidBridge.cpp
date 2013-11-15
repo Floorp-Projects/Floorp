@@ -1651,25 +1651,6 @@ AndroidBridge::ScheduleComposite()
     nsWindow::ScheduleComposite();
 }
 
-void
-AndroidBridge::GetGfxInfoData(nsACString& aRet)
-{
-    ALOG_BRIDGE("AndroidBridge::GetGfxInfoData");
-
-    JNIEnv* env = GetJNIEnv();
-    if (!env)
-        return;
-
-    AutoLocalJNIFrame jniFrame(env);
-    jstring jstrRet = GetGfxInfoDataWrapper();
-
-    if (!jstrRet)
-        return;
-
-    nsJNIString jniStr(jstrRet, env);
-    CopyUTF16toUTF8(jniStr, aRet);
-}
-
 nsresult
 AndroidBridge::GetProxyForURI(const nsACString & aSpec,
                               const nsACString & aScheme,

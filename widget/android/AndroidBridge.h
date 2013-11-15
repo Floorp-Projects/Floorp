@@ -307,7 +307,6 @@ public:
 
     void ScheduleComposite();
 
-    void GetGfxInfoData(nsACString& aRet);
     nsresult GetProxyForURI(const nsACString & aSpec,
                             const nsACString & aScheme,
                             const nsACString & aHost,

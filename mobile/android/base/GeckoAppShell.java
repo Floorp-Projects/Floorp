@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
-import org.mozilla.gecko.gfx.GfxInfoThread;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.prompts.PromptService;
@@ -2599,11 +2598,6 @@ public class GeckoAppShell
     public static void notifyWakeLockChanged(String topic, String state) {
         if (getGeckoInterface() != null)
             getGeckoInterface().notifyWakeLockChanged(topic, state);
-    }
-
-    @GeneratableAndroidBridgeTarget(stubName = "GetGfxInfoDataWrapper")
-    public static String getGfxInfoData() {
-        return GfxInfoThread.getData();
     }
 
     @GeneratableAndroidBridgeTarget

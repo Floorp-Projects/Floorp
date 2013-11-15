@@ -12,8 +12,14 @@
 #include "GfxDriverInfo.h"
 
 #include "nsString.h"
+#include "mozilla/Scoped.h"
 
 namespace mozilla {
+
+namespace gl {
+class GLContext;
+}
+
 namespace widget {
 
 class GfxInfo : public GfxInfoBase
@@ -46,7 +52,7 @@ public:
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
 
-  void EnsureInitializedFromGfxInfoData();
+  void EnsureInitialized();
 
   virtual nsString Model();
   virtual nsString Hardware();
@@ -59,6 +65,8 @@ public:
 #endif
 
   virtual uint32_t OperatingSystemVersion();
+
+  virtual void InitializeGLStrings(gl::GLContext* gl);
 
 protected:
 
@@ -73,14 +81,10 @@ private:
 
   void AddCrashReportAnnotations();
 
-  bool mInitializedFromJavaData;
+  bool mInitialized;
 
-  // the GL strings
-  nsCString mVendor;
-  nsCString mRenderer;
-  nsCString mVersion;
-  // a possible error message produced by the data source (e.g. if EGL initialization failed)
-  nsCString mError;
+  class GLStrings;
+  ScopedDeletePtr<GLStrings> mGLStrings;
 
   nsCString mAdapterDescription;
 
