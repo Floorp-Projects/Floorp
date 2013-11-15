@@ -36,7 +36,6 @@ public class GLController {
     private static GLController sInstance;
 
     private LayerView mView;
-    private boolean mServerSurfaceValid;
     private int mWidth, mHeight;
 
     /* This is written by the compositor thread (while the UI thread
@@ -82,8 +81,6 @@ public class GLController {
         ThreadUtils.assertOnUiThread();
         Log.w(LOGTAG, "GLController::serverSurfaceDestroyed() with mCompositorCreated=" + mCompositorCreated);
 
-        mServerSurfaceValid = false;
-
         // We need to coordinate with Gecko when pausing composition, to ensure
         // that Gecko never executes a draw event while the compositor is paused.
         // This is sent synchronously to make sure that we don't attempt to use
@@ -100,12 +97,10 @@ public class GLController {
 
     synchronized void serverSurfaceChanged(int newWidth, int newHeight) {
         ThreadUtils.assertOnUiThread();
-        Log.w(LOGTAG, "GLController::serverSurfaceChanged(" + newWidth + ", " + newHeight + ") with mServerSurfaceValid=" + mServerSurfaceValid);
+        Log.w(LOGTAG, "GLController::serverSurfaceChanged(" + newWidth + ", " + newHeight + ")");
 
         mWidth = newWidth;
         mHeight = newHeight;
-
-        mServerSurfaceValid = true;
 
         updateCompositor();
     }
@@ -138,10 +133,6 @@ public class GLController {
         // This is invoked on the compositor thread, while the java UI thread
         // is blocked on the gecko sync event in updateCompositor() above
         mCompositorCreated = true;
-    }
-
-    public boolean isServerSurfaceValid() {
-        return mServerSurfaceValid;
     }
 
     private void initEGL() {
