@@ -46,7 +46,6 @@ public class GLController {
     private EGL10 mEGL;
     private EGLDisplay mEGLDisplay;
     private EGLConfig mEGLConfig;
-    private EGLSurface mClientSurface;
 
     private static final int LOCAL_EGL_OPENGL_ES2_BIT = 4;
 
@@ -84,7 +83,6 @@ public class GLController {
         Log.w(LOGTAG, "GLController::serverSurfaceDestroyed() with mCompositorCreated=" + mCompositorCreated);
 
         mServerSurfaceValid = false;
-        mClientSurface = null;
 
         // We need to coordinate with Gecko when pausing composition, to ensure
         // that Gecko never executes a draw event while the compositor is paused.
@@ -132,30 +130,14 @@ public class GLController {
             public void run() {
                 Log.w(LOGTAG, "GLController::serverSurfaceChanged, creating compositor; mCompositorCreated=" + mCompositorCreated + ", mServerSurfaceValid=" + mServerSurfaceValid);
                 try {
-                    // Re-check mServerSurfaceValid in case the surface was destroyed between
-                    // where we set it to true above and this runnable getting run.
-                    // If mServerSurfaceValid is still true, try to create mClientSurface. If
-                    // mServerSurfaceValid is false, leave mClientSurface as null. So at the end
-                    // of this block mClientSurface will be null (or EGL_NO_SURFACE) if
-                    // eglCreateWindowSurface failed or if mServerSurfaceValid changed to false.
                     if (mServerSurfaceValid) {
                         if (mEGL == null) {
                             initEGL();
                         }
-
-                        mClientSurface = mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, mView.getNativeWindow(), null);
                     }
                 } catch (Exception e) {
                     Log.e(LOGTAG, "Unable to create window surface", e);
                 }
-                if (mClientSurface == null || mClientSurface == EGL10.EGL_NO_SURFACE) {
-                    mServerSurfaceValid = false;
-                    mClientSurface = null; // normalize EGL_NO_SURFACE to null to simplify later checks
-                    Log.e(LOGTAG, "EGL window surface could not be created: " + getEGLError());
-                    return;
-                }
-                // At this point mServerSurfaceValid is true and mClientSurface is a valid surface. Try
-                // to create the compositor if it hasn't been created already.
                 createCompositor();
             }
         });
@@ -178,7 +160,7 @@ public class GLController {
         // two conditions are satisfied, we can be relatively sure that the compositor creation will
         // happen without needing to block anyhwere. Do it with a sync gecko event so that the
         // android doesn't have a chance to destroy our surface in between.
-        if (mClientSurface != null && GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
+        if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorCreateEvent(mWidth, mHeight));
         }
         Log.w(LOGTAG, "done GLController::createCompositor");
@@ -251,7 +233,7 @@ public class GLController {
 
     @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "ProvideEGLSurfaceWrapper")
     private EGLSurface provideEGLSurface() {
-        return mClientSurface;
+        return mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, mView.getNativeWindow(), null);
     }
 
     private String getEGLError() {
