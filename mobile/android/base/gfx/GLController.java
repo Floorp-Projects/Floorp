@@ -202,8 +202,8 @@ public class GLController {
         throw new GLControllerException("No suitable EGL configuration found");
     }
 
-    @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "ProvideEGLSurfaceWrapper")
-    private EGLSurface provideEGLSurface() {
+    @GeneratableAndroidBridgeTarget(allowMultithread = true, stubName = "CreateEGLSurfaceForCompositorWrapper")
+    private EGLSurface createEGLSurfaceForCompositor() {
         initEGL();
         return mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, mView.getNativeWindow(), null);
     }
