@@ -3387,14 +3387,25 @@ void nsDisplayFixedPosition::SetFixedPositionLayerData(Layer* const aLayer,
   // Work out the anchor point for this fixed position layer. We assume that
   // any positioning set (left/top/right/bottom) indicates that the
   // corresponding side of its container should be the anchor point,
-  // defaulting to top-left.
+  // defaulting to top-left. If both sides of an axis are specified, we align
+  // to the center.
   LayerPoint anchor = anchorRect.TopLeft();
 
   const nsStylePosition* position = mFixedPosFrame->StylePosition();
-  if (position->mOffset.GetRightUnit() != eStyleUnit_Auto)
-    anchor.x = anchorRect.XMost();
-  if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto)
-    anchor.y = anchorRect.YMost();
+  if (position->mOffset.GetRightUnit() != eStyleUnit_Auto) {
+    if (position->mOffset.GetLeftUnit() != eStyleUnit_Auto) {
+      anchor.x = anchorRect.x + anchorRect.width / 2.f;
+    } else {
+      anchor.x = anchorRect.XMost();
+    }
+  }
+  if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto) {
+    if (position->mOffset.GetTopUnit() != eStyleUnit_Auto) {
+      anchor.y = anchorRect.y + anchorRect.height / 2.f;
+    } else {
+      anchor.y = anchorRect.YMost();
+    }
+  }
 
   aLayer->SetFixedPositionAnchor(anchor);
 
