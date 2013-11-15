@@ -910,138 +910,130 @@ typedef HashSet<js::gc::Chunk *, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
 
 template<class T>
 struct MarkStack {
-    T *stack;
-    T *tos;
-    T *limit;
+    T *stack_;
+    T *tos_;
+    T *end_;
 
-    T *ballast;
-    T *ballastLimit;
+    // The capacity we start with and reset() to.
+    size_t baseCapacity_;
+    size_t maxCapacity_;
 
-    size_t sizeLimit;
-
-    MarkStack(size_t sizeLimit)
-      : stack(nullptr),
-        tos(nullptr),
-        limit(nullptr),
-        ballast(nullptr),
-        ballastLimit(nullptr),
-        sizeLimit(sizeLimit) { }
+    MarkStack(size_t maxCapacity)
+      : stack_(nullptr),
+        tos_(nullptr),
+        end_(nullptr),
+        baseCapacity_(0),
+        maxCapacity_(maxCapacity)
+    {}
 
     ~MarkStack() {
-        if (stack != ballast)
-            js_free(stack);
-        js_free(ballast);
+        js_free(stack_);
     }
 
-    bool init(size_t ballastcap) {
-        JS_ASSERT(!stack);
+    size_t capacity() { return end_ - stack_; }
 
-        if (ballastcap == 0)
-            return true;
+    ptrdiff_t position() const { return tos_ - stack_; }
 
-        ballast = js_pod_malloc<T>(ballastcap);
-        if (!ballast)
+    void setStack(T *stack, size_t tosIndex, size_t capacity) {
+        stack_ = stack;
+        tos_ = stack + tosIndex;
+        end_ = stack + capacity;
+    }
+
+    bool init(size_t baseCapacity) {
+        baseCapacity_ = baseCapacity;
+        if (baseCapacity_ > maxCapacity_)
+            baseCapacity_ = maxCapacity_;
+
+        JS_ASSERT(!stack_);
+        T *newStack = js_pod_malloc<T>(baseCapacity_);
+        if (!newStack)
             return false;
-        ballastLimit = ballast + ballastcap;
-        initFromBallast();
+
+        setStack(newStack, 0, baseCapacity_);
         return true;
     }
 
-    void initFromBallast() {
-        stack = ballast;
-        limit = ballastLimit;
-        if (size_t(limit - stack) > sizeLimit)
-            limit = stack + sizeLimit;
-        tos = stack;
-    }
-
-    void setSizeLimit(size_t size) {
+    void setMaxCapacity(size_t maxCapacity) {
         JS_ASSERT(isEmpty());
+        maxCapacity_ = maxCapacity;
+        if (baseCapacity_ > maxCapacity_)
+            baseCapacity_ = maxCapacity_;
 
-        sizeLimit = size;
         reset();
     }
 
     bool push(T item) {
-        if (tos == limit) {
+        if (tos_ == end_) {
             if (!enlarge())
                 return false;
         }
-        JS_ASSERT(tos < limit);
-        *tos++ = item;
+        JS_ASSERT(tos_ < end_);
+        *tos_++ = item;
         return true;
     }
 
     bool push(T item1, T item2, T item3) {
-        T *nextTos = tos + 3;
-        if (nextTos > limit) {
+        T *nextTos = tos_ + 3;
+        if (nextTos > end_) {
             if (!enlarge())
                 return false;
-            nextTos = tos + 3;
+            nextTos = tos_ + 3;
         }
-        JS_ASSERT(nextTos <= limit);
-        tos[0] = item1;
-        tos[1] = item2;
-        tos[2] = item3;
-        tos = nextTos;
+        JS_ASSERT(nextTos <= end_);
+        tos_[0] = item1;
+        tos_[1] = item2;
+        tos_[2] = item3;
+        tos_ = nextTos;
         return true;
     }
 
     bool isEmpty() const {
-        return tos == stack;
+        return tos_ == stack_;
     }
 
     T pop() {
         JS_ASSERT(!isEmpty());
-        return *--tos;
-    }
-
-    ptrdiff_t position() const {
-        return tos - stack;
+        return *--tos_;
     }
 
     void reset() {
-        if (stack != ballast)
-            js_free(stack);
-        initFromBallast();
-        JS_ASSERT(stack == ballast);
+        if (capacity() == baseCapacity_) {
+            // No size change; keep the current stack.
+            setStack(stack_, 0, baseCapacity_);
+            return;
+        }
+
+        T *newStack = (T *)js_realloc(stack_, sizeof(T) * baseCapacity_);
+        if (!newStack) {
+            // If the realloc fails, just keep using the existing stack; it's
+            // not ideal but better than failing.
+            newStack = stack_;
+            baseCapacity_ = capacity();
+        }
+        setStack(newStack, 0, baseCapacity_);
     }
 
     bool enlarge() {
-        size_t tosIndex = tos - stack;
-        size_t cap = limit - stack;
-        if (cap == sizeLimit)
+        if (capacity() == maxCapacity_)
             return false;
-        size_t newcap = cap * 2;
-        if (newcap == 0)
-            newcap = 32;
-        if (newcap > sizeLimit)
-            newcap = sizeLimit;
 
-        T *newStack;
-        if (stack == ballast) {
-            newStack = js_pod_malloc<T>(newcap);
-            if (!newStack)
-                return false;
-            for (T *src = stack, *dst = newStack; src < tos; )
-                *dst++ = *src++;
-        } else {
-            newStack = (T *)js_realloc(stack, sizeof(T) * newcap);
-            if (!newStack)
-                return false;
-        }
-        stack = newStack;
-        tos = stack + tosIndex;
-        limit = newStack + newcap;
+        size_t newCapacity = capacity() * 2;
+        if (newCapacity > maxCapacity_)
+            newCapacity = maxCapacity_;
+
+        size_t tosIndex = position();
+
+        T *newStack = (T *)js_realloc(stack_, sizeof(T) * newCapacity);
+        if (!newStack)
+            return false;
+
+        setStack(newStack, tosIndex, newCapacity);
         return true;
     }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
-        size_t n = 0;
-        if (stack != ballast)
-            n += mallocSizeOf(stack);
-        n += mallocSizeOf(ballast);
-        return n;
+        return mallocSizeOf(stack_);
     }
 };
 
@@ -1129,8 +1121,8 @@ struct GCMarker : public JSTracer {
     explicit GCMarker(JSRuntime *rt);
     bool init();
 
-    void setSizeLimit(size_t size) { stack.setSizeLimit(size); }
-    size_t sizeLimit() const { return stack.sizeLimit; }
+    void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
+    size_t maxCapacity() const { return stack.maxCapacity_; }
 
     void start();
     void stop();
