@@ -144,6 +144,7 @@ using namespace mozilla::dom;
 
 #define DUMP_LAYOUT_LEVEL 9 // this turns on the dumping of each doucment's layout info
 
+#ifndef PR_PL
 static PRLogModuleInfo *
 GetPrintingLog()
 {
@@ -153,6 +154,7 @@ GetPrintingLog()
   return sLog;
 }
 #define PR_PL(_p1)  PR_LOG(GetPrintingLog(), PR_LOG_DEBUG, _p1);
+#endif
 
 #ifdef EXTENDED_DEBUG_PRINTING
 static uint32_t gDumpFileNameCnt   = 0;
