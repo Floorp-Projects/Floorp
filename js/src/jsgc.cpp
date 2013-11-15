@@ -1937,7 +1937,7 @@ void
 js::SetMarkStackLimit(JSRuntime *rt, size_t limit)
 {
     JS_ASSERT(!rt->isHeapBusy());
-    rt->gcMarker.setSizeLimit(limit);
+    rt->gcMarker.setMaxCapacity(limit);
 }
 
 void
