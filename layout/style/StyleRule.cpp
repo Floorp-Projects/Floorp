@@ -35,7 +35,7 @@
 class nsIDOMCSSStyleDeclaration;
 class nsIDOMCSSStyleSheet;
 
-namespace css = mozilla::css;
+using namespace mozilla;
 
 #define NS_IF_CLONE(member_)                                                  \
   PR_BEGIN_MACRO                                                              \

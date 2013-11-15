@@ -15,7 +15,7 @@
 #include "nsStyleAnimation.h"
 #include "gfxMatrix.h"
 
-namespace css = mozilla::css;
+using namespace mozilla;
 
 namespace nsStyleTransformMatrix {
 
