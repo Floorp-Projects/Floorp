@@ -23,7 +23,7 @@
 #include "imgRequestProxy.h"
 #include "nsDeviceContext.h"
 
-namespace css = mozilla::css;
+using namespace mozilla;
 
 nsCSSValue::nsCSSValue(int32_t aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
