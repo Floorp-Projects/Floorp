@@ -3180,8 +3180,7 @@ XULDocument::DoneWalking()
         // Before starting layout, check whether we're a toplevel chrome
         // window.  If we are, set our chrome flags now, so that we don't have
         // to restyle the whole frame tree after StartLayout.
-        nsCOMPtr<nsISupports> container = GetContainer();
-        nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(container);
+        nsCOMPtr<nsIDocShellTreeItem> item = GetDocShell();
         if (item) {
             nsCOMPtr<nsIDocShellTreeOwner> owner;
             item->GetTreeOwner(getter_AddRefs(owner));
@@ -3189,7 +3188,7 @@ XULDocument::DoneWalking()
             if (xulWin) {
                 nsCOMPtr<nsIDocShell> xulWinShell;
                 xulWin->GetDocShell(getter_AddRefs(xulWinShell));
-                if (SameCOMIdentity(xulWinShell, container)) {
+                if (SameCOMIdentity(xulWinShell, item)) {
                     // We're the chrome document!  Apply our chrome flags now.
                     xulWin->ApplyChromeFlags();
                 }

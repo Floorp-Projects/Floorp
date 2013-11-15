@@ -1083,12 +1083,9 @@ nsresult HTMLMediaElement::LoadResource()
   }
 
   // Check if media is allowed for the docshell.
-  nsCOMPtr<nsISupports> container = OwnerDoc()->GetContainer();
-  if (container) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-    if (docShell && !docShell->GetAllowMedia()) {
-      return NS_ERROR_FAILURE;
-    }
+  nsCOMPtr<nsIDocShell> docShell = OwnerDoc()->GetDocShell();
+  if (docShell && !docShell->GetAllowMedia()) {
+    return NS_ERROR_FAILURE;
   }
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;

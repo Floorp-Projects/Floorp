@@ -584,9 +584,8 @@ nsFormFillController::GetInPrivateContext(bool *aInPrivateContext)
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mFocusedInput);
   element->GetOwnerDocument(getter_AddRefs(inputDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(inputDoc);
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+  nsCOMPtr<nsIDocShell> docShell = doc->GetDocShell();
+  nsCOMPtr<nsILoadContext> loadContext = doc->GetLoadContext();
   *aInPrivateContext = loadContext && loadContext->UsePrivateBrowsing();
   return NS_OK;
 }
