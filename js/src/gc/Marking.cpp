@@ -1270,7 +1270,7 @@ struct SlotArrayLayout
 void
 GCMarker::saveValueRanges()
 {
-    for (uintptr_t *p = stack.tos; p > stack.stack; ) {
+    for (uintptr_t *p = stack.tos_; p > stack.stack_; ) {
         uintptr_t tag = *--p & StackTagMask;
         if (tag == ValueArrayTag) {
             *p &= ~StackTagMask;
