@@ -65,9 +65,16 @@ const COLLECT_TIMESTAMP_UNUSED = 0;
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
                                    "@mozilla.org/mobilemessage/mobilemessageservice;1",
                                    "nsIMobileMessageService");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gMMSService",
                                    "@mozilla.org/mms/rilmmsservice;1",
                                    "nsIMmsService");
+
+XPCOMUtils.defineLazyGetter(this, "MMS", function () {
+  let MMS = {};
+  Cu.import("resource://gre/modules/MmsPduHelper.jsm", MMS);
+  return MMS;
+});
 
 /**
  * MobileMessageDatabaseService
@@ -1130,7 +1137,7 @@ MobileMessageDatabaseService.prototype = {
         cursor.update(threadRecord);
 
         cursor.continue();
-	return;
+        return;
       }
 
       messageStore.get(threadRecord.lastMessageId).onsuccess = function(event) {
@@ -1577,6 +1584,46 @@ MobileMessageDatabaseService.prototype = {
     return aMessageRecord.id;
   },
 
+  forEachMatchedMmsDeliveryInfo:
+    function forEachMatchedMmsDeliveryInfo(aDeliveryInfo, aNeedle, aCallback) {
+
+    let typedAddress = MMS.Address.resolveType(aNeedle);
+    let normalizedAddress, parsedAddress;
+    if (typedAddress.type === "PLMN") {
+      normalizedAddress = PhoneNumberUtils.normalize(aNeedle, false);
+      parsedAddress = PhoneNumberUtils.parse(normalizedAddress);
+    }
+
+    for (let element of aDeliveryInfo) {
+      let typedStoredAddress = MMS.Address.resolveType(element.receiver);
+      if (typedAddress.type !== typedStoredAddress.type) {
+        // Not even my type.  Skip.
+        continue;
+      }
+
+      if (typedAddress.address == typedStoredAddress.address) {
+        // Have a direct match.
+        aCallback(element);
+        continue;
+      }
+
+      if (typedAddress.type !== "PLMN") {
+        // Address type other than "PLMN" must have direct match.  Or, skip.
+        continue;
+      }
+
+      // Both are of "PLMN" type.
+      let normalizedStoredAddress =
+        PhoneNumberUtils.normalize(element.receiver, false);
+      let parsedStoredAddress =
+        PhoneNumberUtils.parseWithMCC(normalizedStoredAddress, null);
+      if (this.matchPhoneNumbers(normalizedAddress, parsedAddress,
+                                 normalizedStoredAddress, parsedStoredAddress)) {
+        aCallback(element);
+      }
+    }
+  },
+
   updateMessageDeliveryById: function updateMessageDeliveryById(
       id, type, receiver, delivery, deliveryStatus, envelopeId, callback) {
     if (DEBUG) {
@@ -1634,102 +1681,37 @@ MobileMessageDatabaseService.prototype = {
           isRecordUpdated = true;
         }
 
-        // Update |messageRecord.deliveryStatus| if needed.
+        // Attempt to update |deliveryStatus| and |deliveryTimestamp| of:
+        // - the |messageRecord| for SMS.
+        // - the element(s) in |messageRecord.deliveryInfo| for MMS.
         if (deliveryStatus) {
-          if (messageRecord.type == "sms") {
-            if (messageRecord.deliveryStatus != deliveryStatus) {
-              messageRecord.deliveryStatus = deliveryStatus;
-
-              // Update |deliveryTimestamp| if it's successfully delivered.
-              if (deliveryStatus == DELIVERY_STATUS_SUCCESS) {
-                messageRecord.deliveryTimestamp = Date.now();
-              }
-
-              isRecordUpdated = true;
+          // A callback for updating the deliveyStatus/deliveryTimestamp of
+          // each target.
+          let updateFunc = function(aTarget) {
+            if (aTarget.deliveryStatus == deliveryStatus) {
+              return;
             }
+
+            aTarget.deliveryStatus = deliveryStatus;
+
+            // Update |deliveryTimestamp| if it's successfully delivered.
+            if (deliveryStatus == DELIVERY_STATUS_SUCCESS) {
+              aTarget.deliveryTimestamp = Date.now();
+            }
+
+            isRecordUpdated = true;
+          };
+
+          if (messageRecord.type == "sms") {
+            updateFunc(messageRecord);
           } else if (messageRecord.type == "mms") {
             if (!receiver) {
-              let deliveryInfo = messageRecord.deliveryInfo;
-              for (let i = 0; i < deliveryInfo.length; i++) {
-                if (deliveryInfo[i].deliveryStatus != deliveryStatus) {
-                  deliveryInfo[i].deliveryStatus = deliveryStatus;
-
-                  // Update |deliveryTimestamp| if it's successfully delivered.
-                  if (deliveryStatus == DELIVERY_STATUS_SUCCESS) {
-                    deliveryInfo[i].deliveryTimestamp = Date.now();
-                  }
-
-                  isRecordUpdated = true;
-                }
-              }
+              // If the receiver is specified, we only need to update the
+              // element(s) in deliveryInfo that match the same receiver.
+              messageRecord.deliveryInfo.forEach(updateFunc);
             } else {
-              let normReceiver = PhoneNumberUtils.normalize(receiver, false);
-              if (!normReceiver) {
-                if (DEBUG) {
-                  debug("Normalized receiver is not valid. Fail to update.");
-                }
-                return;
-              }
-
-              let parsedReveiver = PhoneNumberUtils.parseWithMCC(normReceiver, null);
-
-              let found = false;
-              for (let i = 0; i < messageRecord.receivers.length; i++) {
-                let storedReceiver = messageRecord.receivers[i];
-                let normStoreReceiver =
-                  PhoneNumberUtils.normalize(storedReceiver, false);
-                if (!normStoreReceiver) {
-                  if (DEBUG) {
-                    debug("Normalized stored receiver is not valid. Skipping.");
-                  }
-                  continue;
-                }
-
-                let match = (normReceiver === normStoreReceiver);
-                if (!match) {
-                  if (parsedReveiver) {
-                    if (normStoreReceiver.endsWith(parsedReveiver.nationalNumber)) {
-                      match = true;
-                    }
-                  } else {
-                    let parsedStoreReceiver =
-                      PhoneNumberUtils.parseWithMCC(normStoreReceiver, null);
-                    if (parsedStoreReceiver &&
-                        normReceiver.endsWith(parsedStoreReceiver.nationalNumber)) {
-                      match = true;
-                    }
-                  }
-                }
-                if (!match) {
-                  if (DEBUG) debug("Stored receiver is not matched. Skipping.");
-                  continue;
-                }
-
-                found = true;
-                let deliveryInfo = messageRecord.deliveryInfo;
-                for (let j = 0; j < deliveryInfo.length; j++) {
-                  if (deliveryInfo[j].receiver != storedReceiver) {
-                    continue;
-                  }
-                  if (deliveryInfo[j].deliveryStatus != deliveryStatus) {
-                    deliveryInfo[j].deliveryStatus = deliveryStatus;
-
-                    // Update |deliveryTimestamp| if it's successfully delivered.
-                    if (deliveryStatus == DELIVERY_STATUS_SUCCESS) {
-                      deliveryInfo[j].deliveryTimestamp = Date.now();
-                    }
-
-                    isRecordUpdated = true;
-                  }
-                }
-              }
-
-              if (!found) {
-                if (DEBUG) {
-                  debug("Cannot find the receiver. Fail to set delivery status.");
-                }
-                return;
-              }
+              self.forEachMatchedMmsDeliveryInfo(messageRecord.deliveryInfo,
+                                                 receiver, updateFunc);
             }
           }
         }
