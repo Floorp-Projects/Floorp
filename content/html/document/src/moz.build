@@ -32,6 +32,7 @@ LOCAL_INCLUDES += [
     '/caps/include',
     '/content/base/src',
     '/content/events/src',
+    '/docshell/base',
     '/dom/base',
     '/layout/style',
     '/xpcom/ds',

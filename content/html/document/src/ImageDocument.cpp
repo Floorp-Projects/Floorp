@@ -8,6 +8,7 @@
 #include "nsRect.h"
 #include "nsIImageLoadingContent.h"
 #include "nsGenericHTMLElement.h"
+#include "nsDocShell.h"
 #include "nsIDocumentInlines.h"
 #include "nsDOMTokenList.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -724,7 +725,7 @@ ImageDocument::UpdateTitleAndCharset()
 void
 ImageDocument::ResetZoomLevel()
 {
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+  nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
   if (docShell) {
     if (nsContentUtils::IsChildOfSameType(this)) {
       return;
@@ -743,7 +744,7 @@ float
 ImageDocument::GetZoomLevel()
 {
   float zoomLevel = mOriginalZoomLevel;
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocumentContainer);
+  nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
   if (docShell) {
     nsCOMPtr<nsIContentViewer> cv;
     docShell->GetContentViewer(getter_AddRefs(cv));

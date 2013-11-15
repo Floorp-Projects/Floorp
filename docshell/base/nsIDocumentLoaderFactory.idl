@@ -9,6 +9,7 @@
 interface nsIChannel;
 interface nsIContentViewer;
 interface nsIStreamListener;
+interface nsIDocShell;
 interface nsIDocument;
 interface nsILoadGroup;
 interface nsIPrincipal;
@@ -21,13 +22,13 @@ interface nsIPrincipal;
  * The component is a service, so use GetService, not CreateInstance to get it.
  */
 
-[scriptable, uuid(5e7d2967-5a07-444f-95d5-25b533252d38)]
+[scriptable, uuid(70905274-8494-4e39-b011-d559adde3733)]
 interface nsIDocumentLoaderFactory : nsISupports {
     nsIContentViewer createInstance(in string aCommand,
                               in nsIChannel aChannel,
                               in nsILoadGroup aLoadGroup,
                               in string aContentType, 
-                              in nsISupports aContainer,
+                              in nsIDocShell aContainer,
                               in nsISupports aExtraInfo,
                               out nsIStreamListener aDocListenerResult);
 
