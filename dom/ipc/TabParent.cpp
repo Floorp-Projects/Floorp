@@ -842,10 +842,7 @@ TabParent::RecvSetStatus(const uint32_t& aType, const nsString& aStatus)
 {
   nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
   if (frame) {
-    nsCOMPtr<nsISupports> container = frame->OwnerDoc()->GetContainer();
-    if (!container)
-      return true;
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+    nsCOMPtr<nsIDocShell> docShell = frame->OwnerDoc()->GetDocShell();
     if (!docShell)
       return true;
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
