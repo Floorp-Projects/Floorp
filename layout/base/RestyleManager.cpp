@@ -331,21 +331,11 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
 
   // For relative positioning, we can simply update the frame rect
   if (display->IsRelativelyPositionedStyle()) {
-    switch (display->mDisplay) {
-      case NS_STYLE_DISPLAY_TABLE_CAPTION:
-      case NS_STYLE_DISPLAY_TABLE_CELL:
-      case NS_STYLE_DISPLAY_TABLE_ROW:
-      case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
-      case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
-      case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
-      case NS_STYLE_DISPLAY_TABLE_COLUMN:
-      case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
-        // We don't currently support relative positioning of inner
-        // table elements.  If we apply offsets to things we haven't
-        // previously offset, we'll get confused.  So bail.
-        return true;
-      default:
-        break;
+    if (display->IsInnerTableStyle()) {
+      // We don't currently support relative positioning of inner table
+      // elements (bug 35168).  If we apply offsets to things we haven't
+      // previously offset, we'll get confused.  So bail.
+      return true;
     }
 
 

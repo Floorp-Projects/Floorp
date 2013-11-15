@@ -2831,6 +2831,13 @@ LIRGenerator::visitBindNameCache(MBindNameCache *ins)
 }
 
 bool
+LIRGenerator::visitGuardObjectIdentity(MGuardObjectIdentity *ins)
+{
+    LGuardObjectIdentity *guard = new LGuardObjectIdentity(useRegister(ins->obj()));
+    return assignSnapshot(guard) && add(guard, ins) && redefine(ins, ins->obj());
+}
+
+bool
 LIRGenerator::visitGuardClass(MGuardClass *ins)
 {
     LDefinition t = temp();

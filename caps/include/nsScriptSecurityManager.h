@@ -362,6 +362,8 @@ public:
     AppAttributesEqual(nsIPrincipal* aFirst,
                        nsIPrincipal* aSecond);
 
+    void DeactivateDomainPolicy();
+
 private:
 
     // GetScriptSecurityManager is the only call that can make one
@@ -381,7 +383,7 @@ private:
 
     // Returns null if a principal cannot be found; generally callers
     // should error out at that point.
-    static nsIPrincipal* doGetObjectPrincipal(JS::Handle<JSObject*> obj);
+    static nsIPrincipal* doGetObjectPrincipal(JSObject* obj);
 
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
     // when this happens -- this means that there was no JS running.
@@ -462,15 +464,6 @@ private:
                         nsIPrincipal* aSubjectPrincipal,
                         const char* aObjectSecurityLevel);
 
-    /**
-     * Helper for CanExecuteScripts that allows the caller to specify
-     * whether execution should be allowed if cx has no
-     * nsIScriptContext.
-     */
-    nsresult
-    CanExecuteScripts(JSContext* cx, nsIPrincipal *aPrincipal,
-                      bool aAllowIfNoScriptContext, bool *result);
-
     nsresult
     Init();
 
@@ -495,6 +488,10 @@ private:
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;
     bool mPolicyPrefsChanged;
+
+    // This machinery controls new-style domain policies. The old-style
+    // policy machinery will be removed soon.
+    nsCOMPtr<nsIDomainPolicy> mDomainPolicy;
 
     static bool sStrictFileOriginPolicy;
 

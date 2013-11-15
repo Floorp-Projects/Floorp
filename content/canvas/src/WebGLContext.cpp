@@ -794,9 +794,9 @@ WebGLContext::GetInputStream(const char* aMimeType,
     if (!gl)
         return NS_ERROR_FAILURE;
 
-    uint8_t* imageBuffer = nullptr;
+    nsAutoArrayPtr<uint8_t> imageBuffer;
     int32_t format = 0;
-    GetImageBuffer(&imageBuffer, &format);
+    GetImageBuffer(getter_Transfers(imageBuffer), &format);
     if (!imageBuffer) {
         return NS_ERROR_FAILURE;
     }

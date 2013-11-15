@@ -58,11 +58,13 @@ FrameAnimator::GetCurrentImgFrameEndTime() const
 
   if (timeout < 0) {
     // We need to return a sentinel value in this case, because our logic
-    // doesn't work correctly if we have a negative timeout value. The reason
-    // this positive infinity was chosen was because it works with the loop in
-    // RequestRefresh() below.
-    return TimeStamp() +
-           TimeDuration::FromMilliseconds(static_cast<double>(UINT64_MAX));
+    // doesn't work correctly if we have a negative timeout value. We use
+    // one year in the future as the sentinel because it works with the loop
+    // in RequestRefresh() below.
+    // XXX(seth): It'd be preferable to make our logic work correctly with
+    // negative timeouts.
+    return TimeStamp::NowLoRes() +
+           TimeDuration::FromMilliseconds(31536000.0);
   }
 
   TimeDuration durationOfTimeout =

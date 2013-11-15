@@ -1386,41 +1386,19 @@ function escapeAddonURI(aAddon, aUri, aUpdateType, aAppVersion)
   return uri;
 }
 
-function recursiveRemoveAsync(aFile) {
+function removeAsync(aFile) {
   return Task.spawn(function () {
     let info = null;
     try {
       info = yield OS.File.stat(aFile.path);
+      if (info.isDir)
+        yield OS.File.removeDir(aFile.path);
+      else
+        yield OS.File.remove(aFile.path);
     }
     catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
       // The file has already gone away
       return;
-    }
-
-    setFilePermissions(aFile, info.isDir ? FileUtils.PERMS_DIRECTORY
-                                         : FileUtils.PERMS_FILE);
-
-    // OS.File means we have to recurse into directories
-    if (info.isDir) {
-      let iterator = new OS.File.DirectoryIterator(aFile.path);
-      yield iterator.forEach(function(entry) {
-        let nextFile = aFile.clone();
-        nextFile.append(entry.name);
-        return recursiveRemoveAsync(nextFile);
-      });
-      yield iterator.close();
-    }
-
-    try {
-      yield info.isDir ? OS.File.removeEmptyDir(aFile.path)
-                       : OS.File.remove(aFile.path);
-    }
-    catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
-      // The file has already gone away
-    }
-    catch (e) {
-      ERROR("Failed to remove file " + aFile.path, e);
-      throw e;
     }
   });
 }
@@ -5424,7 +5402,7 @@ AddonInstall.prototype = {
         LOG("Addon " + this.addon.id + " will be installed as " +
             "an unpacked directory");
         stagedAddon.append(this.addon.id);
-        yield recursiveRemoveAsync(stagedAddon);
+        yield removeAsync(stagedAddon);
         yield OS.File.makeDir(stagedAddon.path);
         yield extractFilesAsync(this.file, stagedAddon);
         installedUnpacked = 1;
@@ -5433,7 +5411,7 @@ AddonInstall.prototype = {
         LOG("Addon " + this.addon.id + " will be installed as " +
             "a packed xpi");
         stagedAddon.append(this.addon.id + ".xpi");
-        yield recursiveRemoveAsync(stagedAddon);
+        yield removeAsync(stagedAddon);
         yield OS.File.copy(this.file.path, stagedAddon.path);
       }
 

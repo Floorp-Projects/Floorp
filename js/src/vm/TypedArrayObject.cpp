@@ -4035,6 +4035,11 @@ JS_GetArrayBufferData(JSObject *obj)
 JS_FRIEND_API(bool)
 JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
 {
+    if (!obj->is<ArrayBufferObject>()) {
+        JS_ReportError(cx, "ArrayBuffer object required");
+        return false;
+    }
+
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
     if (!buffer->neuterViews(cx))
         return false;

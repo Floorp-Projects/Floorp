@@ -253,8 +253,14 @@ public:
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
-  virtual JSObject* WrapObject(JSContext *cx,
-                               JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+protected:
+  virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
+  {
+    return nsWrapperCache::GetWrapperPreserveColor();
+  }
+public:
 
   // nsIDOMHTMLCollection
   NS_DECL_NSIDOMHTMLCOLLECTION
