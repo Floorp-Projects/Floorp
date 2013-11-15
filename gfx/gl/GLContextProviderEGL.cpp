@@ -234,7 +234,6 @@ public:
         , mSurface(surface)
         , mCurSurface(surface)
         , mContext(context)
-        , mPlatformContext(nullptr)
         , mThebesSurface(nullptr)
         , mBound(false)
         , mIsPBuffer(false)
@@ -273,18 +272,12 @@ public:
 
         MarkDestroyed();
 
-        // If mGLWidget is non-null, then we've been given it by the GL context provider,
-        // and it's managed by the widget implementation. In this case, We can't destroy
-        // our contexts.
-        if (mPlatformContext)
-            return;
-
 #ifdef DEBUG
         printf_stderr("Destroying context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
 
         sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext);
-        if (mSurface && !mPlatformContext) {
+        if (mSurface) {
             sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
         }
     }
@@ -489,7 +482,7 @@ public:
 
     virtual void
     ReleaseSurface() {
-        if (mSurface && !mPlatformContext) {
+        if (mSurface) {
             sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE,
                                      EGL_NO_CONTEXT);
             sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
@@ -516,7 +509,7 @@ public:
 
     bool SwapBuffers()
     {
-        if (mSurface && !mPlatformContext) {
+        if (mSurface) {
 #ifdef MOZ_WIDGET_GONK
             if (!mIsOffscreen) {
                 if (mHwc) {
@@ -549,10 +542,6 @@ public:
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf) {
         mThebesSurface = aSurf;
-    }
-
-    void SetPlatformContext(void *context) {
-        mPlatformContext = context;
     }
 
     EGLContext Context() {
@@ -590,7 +579,6 @@ protected:
     EGLSurface mSurface;
     EGLSurface mCurSurface;
     EGLContext mContext;
-    void *mPlatformContext;
     nsRefPtr<gfxASurface> mThebesSurface;
     bool mBound;
 
@@ -1154,28 +1142,6 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
     }
 
     bool doubleBuffered = true;
-
-    bool hasNativeContext = aWidget->HasGLContext();
-    EGLContext eglContext = sEGLLibrary.fGetCurrentContext();
-    if (hasNativeContext && eglContext) {
-        void* platformContext = eglContext;
-        SurfaceCaps caps = SurfaceCaps::Any();
-        EGLConfig config = EGL_NO_CONFIG;
-        EGLSurface surface = sEGLLibrary.fGetCurrentSurface(LOCAL_EGL_DRAW);
-        nsRefPtr<GLContextEGL> glContext =
-            new GLContextEGL(caps,
-                             nullptr, false,
-                             config, surface, eglContext);
-
-        if (!glContext->Init())
-            return nullptr;
-
-        glContext->MakeCurrent();
-        glContext->SetIsDoubleBuffered(doubleBuffered);
-        glContext->SetPlatformContext(platformContext);
-
-        return glContext.forget();
-    }
 
     EGLConfig config;
     if (!CreateConfig(&config)) {
