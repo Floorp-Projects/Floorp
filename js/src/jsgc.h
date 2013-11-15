@@ -908,6 +908,9 @@ struct GCChunkHasher {
 
 typedef HashSet<js::gc::Chunk *, GCChunkHasher, SystemAllocPolicy> GCChunkSet;
 
+static const size_t NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY = 4096;
+static const size_t INCREMENTAL_MARK_STACK_BASE_CAPACITY = 32768;
+
 template<class T>
 struct MarkStack {
     T *stack_;
@@ -940,10 +943,25 @@ struct MarkStack {
         end_ = stack + capacity;
     }
 
-    bool init(size_t baseCapacity) {
-        baseCapacity_ = baseCapacity;
+    void setBaseCapacity(JSGCMode mode) {
+        switch (mode) {
+          case JSGC_MODE_GLOBAL:
+          case JSGC_MODE_COMPARTMENT:
+            baseCapacity_ = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+            break;
+          case JSGC_MODE_INCREMENTAL:
+            baseCapacity_ = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("bad gc mode");
+        }
+
         if (baseCapacity_ > maxCapacity_)
             baseCapacity_ = maxCapacity_;
+    }
+
+    bool init(JSGCMode gcMode) {
+        setBaseCapacity(gcMode);
 
         JS_ASSERT(!stack_);
         T *newStack = js_pod_malloc<T>(baseCapacity_);
@@ -1032,6 +1050,12 @@ struct MarkStack {
         return true;
     }
 
+    void setGCMode(JSGCMode gcMode) {
+        // The mark stack won't be resized until the next call to reset(), but
+        // that will happen at the end of the next GC.
+        setBaseCapacity(gcMode);
+    }
+
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(stack_);
     }
@@ -1077,8 +1101,6 @@ struct SliceBudget {
     }
 };
 
-static const size_t MARK_STACK_LENGTH = 32768;
-
 struct GrayRoot {
     void *thing;
     JSGCTraceKind kind;
@@ -1119,7 +1141,7 @@ struct GCMarker : public JSTracer {
 
   public:
     explicit GCMarker(JSRuntime *rt);
-    bool init();
+    bool init(JSGCMode gcMode);
 
     void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
     size_t maxCapacity() const { return stack.maxCapacity_; }
@@ -1197,6 +1219,8 @@ struct GCMarker : public JSTracer {
     void markBufferedGrayRoots(JS::Zone *zone);
 
     static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
+
+    void setGCMode(JSGCMode mode) { stack.setGCMode(mode); }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
