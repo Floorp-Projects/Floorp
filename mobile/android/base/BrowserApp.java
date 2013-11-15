@@ -1431,7 +1431,19 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         final String url = mBrowserToolbar.commitEdit();
-        hideHomePager();
+
+        // HACK: We don't know the url that will be loaded when hideHomePager is initially called
+        // in BrowserToolbar's onStopEditing listener so on the awesomescreen, hideHomePager will
+        // use the url "about:home" and return without taking any action. hideBrowserSearch is
+        // then called, but since hideHomePager changes both HomePager and LayerView visibility
+        // and exited without taking an action, no Views are displayed and graphical corruption is
+        // visible instead.
+        //
+        // Here we call hideHomePager for the second time with the URL to be loaded so that
+        // hideHomePager is called with the correct state for the upcoming page load.
+        //
+        // Expected to be fixed by bug 915825.
+        hideHomePager(url);
         hideBrowserSearch();
 
         // Don't do anything if the user entered an empty URL.
@@ -1608,13 +1620,23 @@ abstract public class BrowserApp extends GeckoApp
         mLayerView.setVisibility(View.INVISIBLE);
     }
 
+    /**
+     * Hides the HomePager, using the url of the currently selected tab as the url to be
+     * loaded.
+     */
     private void hideHomePager() {
-        if (!isHomePagerVisible()) {
-            return;
-        }
+        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        final String url = (selectedTab != null) ? selectedTab.getURL() : null;
 
-        final Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab != null && isAboutHome(tab)) {
+        hideHomePager(url);
+    }
+
+    /**
+     * Hides the HomePager. The given url should be the url of the page to be loaded, or null
+     * if a new page is not being loaded.
+     */
+    private void hideHomePager(final String url) {
+        if (!isHomePagerVisible() || TextUtils.equals(url, ABOUT_HOME)) {
             return;
         }
 
