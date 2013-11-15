@@ -852,8 +852,10 @@ void
 DrawTargetCairo::SetPermitSubpixelAA(bool aPermitSubpixelAA)
 {
   DrawTarget::SetPermitSubpixelAA(aPermitSubpixelAA);
+#ifdef MOZ_TREE_CAIRO
   cairo_surface_set_subpixel_antialiasing(mSurface,
     aPermitSubpixelAA ? CAIRO_SUBPIXEL_ANTIALIASING_ENABLED : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
+#endif
 }
 
 void

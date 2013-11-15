@@ -5,7 +5,7 @@
 package org.mozilla.gecko.sync;
 
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.CryptoRecord;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 
 import android.content.SharedPreferences;
 
@@ -32,7 +32,7 @@ public class PersistedMetaGlobal {
    * @return <MetaGlobal> set from previously fetched meta/global record from
    *         server
    */
-  public MetaGlobal metaGlobal(String metaUrl, String credentials) {
+  public MetaGlobal metaGlobal(String metaUrl, AuthHeaderProvider authHeaderProvider) {
     String json = prefs.getString(META_GLOBAL_SERVER_RESPONSE_BODY, null);
     if (json == null) {
       return null;
@@ -40,7 +40,7 @@ public class PersistedMetaGlobal {
     MetaGlobal metaGlobal = null;
     try {
       CryptoRecord cryptoRecord = CryptoRecord.fromJSONRecord(json);
-      MetaGlobal mg = new MetaGlobal(metaUrl, credentials);
+      MetaGlobal mg = new MetaGlobal(metaUrl, authHeaderProvider);
       mg.setFromRecord(cryptoRecord);
       metaGlobal = mg;
     } catch (Exception e) {

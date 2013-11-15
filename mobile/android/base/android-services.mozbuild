@@ -552,7 +552,6 @@ sync_java_files = [
     'sync/config/ClientRecordTerminator.java',
     'sync/config/ConfigurationMigrator.java',
     'sync/CredentialException.java',
-    'sync/CredentialsSource.java',
     'sync/crypto/CryptoException.java',
     'sync/crypto/CryptoInfo.java',
     'sync/crypto/HKDF.java',
@@ -787,8 +786,8 @@ sync_java_files = [
 ]
 
 sync_generated_java_files = [
-    'background/common/GlobalConstants.java',
-    'sync/SyncConstants.java',
-    'background/announcements/AnnouncementsConstants.java',
-    'background/healthreport/HealthReportConstants.java',
+    'org/mozilla/gecko/background/announcements/AnnouncementsConstants.java',
+    'org/mozilla/gecko/background/common/GlobalConstants.java',
+    'org/mozilla/gecko/background/healthreport/HealthReportConstants.java',
+    'org/mozilla/gecko/sync/SyncConstants.java',
 ]

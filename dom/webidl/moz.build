@@ -515,10 +515,19 @@ if CONFIG['MOZ_B2G_RIL']:
         'MozCellBroadcast.webidl',
         'MozCellBroadcastEvent.webidl',
         'MozEmergencyCbModeEvent.webidl',
+        'MozMobileConnectionArray.webidl',
         'MozOtaStatusEvent.webidl',
         'MozVoicemail.webidl',
         'MozVoicemailEvent.webidl',
         'USSDReceivedEvent.webidl',
+    ]
+
+if CONFIG['MOZ_NFC']:
+    WEBIDL_FILES += [
+         'MozNdefRecord.webidl',
+         'MozNfc.webidl',
+         'MozNFCPeer.webidl',
+         'MozNFCTag.webidl',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':

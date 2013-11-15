@@ -1,0 +1,15 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Copyright © 2013 Deutsche Telekom, Inc.
+
+# Nfc.js
+component {2ff24790-5e74-11e1-b86c-0800200c9a66} Nfc.js
+contract @mozilla.org/nfc;1 {2ff24790-5e74-11e1-b86c-0800200c9a66}
+category profile-after-change Nfc @mozilla.org/nfc;1
+
+# NfcContentHelper.js
+component {4d72c120-da5f-11e1-9b23-0800200c9a66} NfcContentHelper.js
+contract @mozilla.org/nfc/content-helper;1 {4d72c120-da5f-11e1-9b23-0800200c9a66}
+category profile-after-change NfcContentHelper @mozilla.org/nfc/content-helper;1
