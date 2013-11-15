@@ -981,8 +981,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
   // Our docshell and view trees have been updated for the new hierarchy.
   // Now also update all nsDeviceContext::mWidget to that of the
   // container view in the new hierarchy.
-  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
-  nsCOMPtr<nsIDocShell> ds = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShell> ds = aDocument->GetDocShell();
   if (ds) {
     nsCOMPtr<nsIContentViewer> cv;
     ds->GetContentViewer(getter_AddRefs(cv));

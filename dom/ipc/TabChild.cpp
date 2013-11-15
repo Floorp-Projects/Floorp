@@ -2483,8 +2483,7 @@ TabChild::GetFrom(nsIPresShell* aPresShell)
   if (!doc) {
       return nullptr;
   }
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShell> docShell(doc->GetDocShell());
   return GetFrom(docShell);
 }
 
