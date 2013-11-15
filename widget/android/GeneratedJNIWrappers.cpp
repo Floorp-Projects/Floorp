@@ -108,7 +108,7 @@ void AndroidBridge::InitStubs(JNIEnv *jEnv) {
     jSendThumbnail = getStaticMethod("notifyThumbnail", "(Ljava/nio/ByteBuffer;IZ)V");
 
     mGLControllerClass = getClassGlobalRef("org/mozilla/gecko/gfx/GLController");
-    jProvideEGLSurfaceWrapper = getMethod("provideEGLSurface", "()Ljavax/microedition/khronos/egl/EGLSurface;");
+    jCreateEGLSurfaceForCompositorWrapper = getMethod("createEGLSurfaceForCompositor", "()Ljavax/microedition/khronos/egl/EGLSurface;");
 
     mLayerViewClass = getClassGlobalRef("org/mozilla/gecko/gfx/LayerView");
     jRegisterCompositorWrapper = getStaticMethod("registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
@@ -2469,7 +2469,7 @@ void AndroidBridge::SendThumbnail(jobject a0, int32_t a1, bool a2) {
     env->PopLocalFrame(NULL);
 }
 
-jobject AndroidBridge::ProvideEGLSurfaceWrapper(jobject aTarget) {
+jobject AndroidBridge::CreateEGLSurfaceForCompositorWrapper(jobject aTarget) {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2483,7 +2483,7 @@ jobject AndroidBridge::ProvideEGLSurfaceWrapper(jobject aTarget) {
         return nullptr;
     }
 
-    jobject temp = env->CallObjectMethod(aTarget, jProvideEGLSurfaceWrapper);
+    jobject temp = env->CallObjectMethod(aTarget, jCreateEGLSurfaceForCompositorWrapper);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);

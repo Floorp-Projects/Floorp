@@ -92,7 +92,7 @@ jclass mThumbnailHelperClass;
 jmethodID jSendThumbnail;
 
 jclass mGLControllerClass;
-jmethodID jProvideEGLSurfaceWrapper;
+jmethodID jCreateEGLSurfaceForCompositorWrapper;
 
 jclass mLayerViewClass;
 jmethodID jRegisterCompositorWrapper;
@@ -196,7 +196,7 @@ void StartJavaProfiling(int32_t a0, int32_t a1);
 void StopJavaProfiling();
 void UnpauseJavaProfiling();
 void SendThumbnail(jobject a0, int32_t a1, bool a2);
-jobject ProvideEGLSurfaceWrapper(jobject aTarget);
+jobject CreateEGLSurfaceForCompositorWrapper(jobject aTarget);
 jobject RegisterCompositorWrapper();
 void PostDelayedCallbackWrapper(jobject aTarget, int64_t a0);
 void RequestContentRepaintWrapper(jobject aTarget, jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4);
