@@ -1617,6 +1617,7 @@ function WifiWorker() {
 
     if ("pin" in net) {
       net.pin = quote(net.pin);
+      net.pcsc = quote("");
     }
 
     if ("phase1" in net)
