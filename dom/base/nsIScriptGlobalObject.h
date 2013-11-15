@@ -27,8 +27,8 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0x214fa2f6, 0xcc0c, 0x42cf, \
-  { 0x98, 0x4b, 0x45, 0xf5, 0x73, 0x9c, 0x6b, 0x73 } }
+{ 0xa6c0bfae, 0x8be4, 0x4747, \
+  { 0xaf, 0x1a, 0xe3, 0xf0, 0x3f, 0xb6, 0x0e, 0xb8 } }
 
 /**
  * The global object which keeps a script context for each supported script
@@ -69,11 +69,6 @@ public:
    * same object the global is using for a global for that language.
    */
   virtual void OnFinalize(JSObject* aObject) = 0;
-
-  /**
-   * Called to enable/disable scripts.
-   */
-  virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts) = 0;
 
   /**
    * Handle a script error.  Generally called by a script context.

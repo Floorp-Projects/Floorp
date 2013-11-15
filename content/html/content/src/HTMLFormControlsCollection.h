@@ -79,8 +79,15 @@ public:
   nsresult GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aControls) const;
 
   // nsWrapperCache
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  using nsWrapperCache::GetWrapperPreserveColor;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+protected:
+  virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
+  {
+    return nsWrapperCache::GetWrapperPreserveColor();
+  }
+public:
 
   static bool ShouldBeInElements(nsIFormControl* aFormControl);
 

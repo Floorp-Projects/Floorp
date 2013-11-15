@@ -27,8 +27,8 @@ class nsIDOMWindow;
 class nsIURI;
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0xf3859ce7, 0x7551, 0x4760, \
-  { 0x84, 0x29, 0x64, 0x4f, 0x26, 0x1e, 0xdb, 0x91 } }
+{ 0x513c2c1a, 0xf4f1, 0x44da, \
+  { 0x8e, 0x38, 0xf4, 0x0c, 0x30, 0x9a, 0x5d, 0xef } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -127,12 +127,6 @@ public:
    * @return NS_OK if the method is successful
    */
   virtual void GC(JS::gcreason::Reason aReason) = 0;
-
-  /**
-   * Called to disable/enable script execution in this context.
-   */
-  virtual bool GetScriptsEnabled() = 0;
-  virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts) = 0;
 
   // SetProperty is suspect and jst believes should not be needed.  Currenly
   // used only for "arguments".

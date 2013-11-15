@@ -7,6 +7,7 @@ MOCHITEST_FILES =	adoption01.dat \
 		adoption02.dat \
 		comments01.dat \
 		doctype01.dat \
+		domjs-unsafe.dat \
 		entities01.dat \
 		entities02.dat \
 		html5test-com.dat \
@@ -17,6 +18,7 @@ MOCHITEST_FILES =	adoption01.dat \
 		plain-text-unsafe.dat \
 		scriptdata01.dat \
 		tables01.dat \
+		template.dat \
 		tests10.dat \
 		tests11.dat \
 		tests12.dat \

@@ -754,6 +754,12 @@ class ICStub
           // pushed during the bailout.
           case GetProp_Fallback:
           case SetProp_Fallback:
+#if JS_HAS_NO_SUCH_METHOD
+          case GetElem_Dense:
+          case GetElem_Arguments:
+          case GetProp_NativePrototype:
+          case GetProp_Native:
+#endif
             return true;
           default:
             return false;
@@ -3110,6 +3116,7 @@ class ICGetElem_NativePrototypeCallScripted : public ICGetElemNativePrototypeCal
 // Compiler for GetElem_NativeSlot and GetElem_NativePrototypeSlot stubs.
 class ICGetElemNativeCompiler : public ICStubCompiler
 {
+    bool isCallElem_;
     ICStub *firstMonitorStub_;
     HandleObject obj_;
     HandleObject holder_;
@@ -3126,16 +3133,24 @@ class ICGetElemNativeCompiler : public ICStubCompiler
 
   protected:
     virtual int32_t getKey() const {
+#if JS_HAS_NO_SUCH_METHOD
+        return static_cast<int32_t>(kind) |
+               (static_cast<int32_t>(isCallElem_) << 16) |
+               (static_cast<int32_t>(needsAtomize_) << 17) |
+               (static_cast<int32_t>(acctype_) << 18);
+#else
         return static_cast<int32_t>(kind) | (static_cast<int32_t>(needsAtomize_) << 16) |
                (static_cast<int32_t>(acctype_) << 17);
+#endif
     }
 
   public:
-    ICGetElemNativeCompiler(JSContext *cx, ICStub::Kind kind, ICStub *firstMonitorStub,
-                            HandleObject obj, HandleObject holder, HandlePropertyName name,
-                            ICGetElemNativeStub::AccessType acctype, bool needsAtomize,
-                            uint32_t offset)
+    ICGetElemNativeCompiler(JSContext *cx, ICStub::Kind kind, bool isCallElem,
+                            ICStub *firstMonitorStub, HandleObject obj, HandleObject holder,
+                            HandlePropertyName name, ICGetElemNativeStub::AccessType acctype,
+                            bool needsAtomize, uint32_t offset)
       : ICStubCompiler(cx, kind),
+        isCallElem_(isCallElem),
         firstMonitorStub_(firstMonitorStub),
         obj_(obj),
         holder_(holder),
@@ -3150,8 +3165,9 @@ class ICGetElemNativeCompiler : public ICStubCompiler
     ICGetElemNativeCompiler(JSContext *cx, ICStub::Kind kind, ICStub *firstMonitorStub,
                             HandleObject obj, HandleObject holder, HandlePropertyName name,
                             ICGetElemNativeStub::AccessType acctype, bool needsAtomize,
-                            HandleFunction getter, uint32_t pcOffset)
+                            HandleFunction getter, uint32_t pcOffset, bool isCallElem)
       : ICStubCompiler(cx, kind),
+        isCallElem_(false),
         firstMonitorStub_(firstMonitorStub),
         obj_(obj),
         holder_(holder),
@@ -3255,15 +3271,25 @@ class ICGetElem_Dense : public ICMonitoredStub
     class Compiler : public ICStubCompiler {
       ICStub *firstMonitorStub_;
       RootedShape shape_;
+      bool isCallElem_;
 
       protected:
         bool generateStubCode(MacroAssembler &masm);
 
+        virtual int32_t getKey() const {
+#if JS_HAS_NO_SUCH_METHOD
+            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isCallElem_) << 16);
+#else
+            return static_cast<int32_t>(kind);
+#endif
+        }
+
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, Shape *shape)
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, Shape *shape, bool isCallElem)
           : ICStubCompiler(cx, ICStub::GetElem_Dense),
             firstMonitorStub_(firstMonitorStub),
-            shape_(cx, shape)
+            shape_(cx, shape),
+            isCallElem_(isCallElem)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
@@ -3351,19 +3377,27 @@ class ICGetElem_Arguments : public ICMonitoredStub
     class Compiler : public ICStubCompiler {
       ICStub *firstMonitorStub_;
       Which which_;
+      bool isCallElem_;
 
       protected:
         bool generateStubCode(MacroAssembler &masm);
 
         virtual int32_t getKey() const {
+#if JS_HAS_NO_SUCH_METHOD
+            return static_cast<int32_t>(kind) |
+                   static_cast<int32_t>(isCallElem_ << 16) |
+                   (static_cast<int32_t>(which_) << 17);
+#else
             return static_cast<int32_t>(kind) | (static_cast<int32_t>(which_) << 16);
+#endif
         }
 
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, Which which)
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, Which which, bool isCallElem)
           : ICStubCompiler(cx, ICStub::GetElem_Arguments),
             firstMonitorStub_(firstMonitorStub),
-            which_(which)
+            which_(which),
+            isCallElem_(isCallElem)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
@@ -4253,9 +4287,11 @@ class ICGetProp_NativePrototype : public ICGetPropNativeStub
 // Compiler for GetProp_Native and GetProp_NativePrototype stubs.
 class ICGetPropNativeCompiler : public ICStubCompiler
 {
+    bool isCallProp_;
     ICStub *firstMonitorStub_;
     HandleObject obj_;
     HandleObject holder_;
+    HandlePropertyName propName_;
     bool isFixedSlot_;
     uint32_t offset_;
 
@@ -4263,17 +4299,25 @@ class ICGetPropNativeCompiler : public ICStubCompiler
 
   protected:
     virtual int32_t getKey() const {
+#if JS_HAS_NO_SUCH_METHOD
+        return static_cast<int32_t>(kind) |
+               (static_cast<int32_t>(isCallProp_) << 16) |
+               (static_cast<int32_t>(isFixedSlot_) << 17);
+#else
         return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
+#endif
     }
 
   public:
-    ICGetPropNativeCompiler(JSContext *cx, ICStub::Kind kind, ICStub *firstMonitorStub,
-                            HandleObject obj, HandleObject holder, bool isFixedSlot,
-                            uint32_t offset)
+    ICGetPropNativeCompiler(JSContext *cx, ICStub::Kind kind, bool isCallProp,
+                            ICStub *firstMonitorStub, HandleObject obj, HandleObject holder,
+                            HandlePropertyName propName, bool isFixedSlot, uint32_t offset)
       : ICStubCompiler(cx, kind),
+        isCallProp_(isCallProp),
         firstMonitorStub_(firstMonitorStub),
         obj_(obj),
         holder_(holder),
+        propName_(propName),
         isFixedSlot_(isFixedSlot),
         offset_(offset)
     {}
@@ -4355,8 +4399,8 @@ class ICGetPropCallGetter : public ICMonitoredStub
         uint32_t pcOffset_;
 
       public:
-        Compiler(JSContext *cx, ICStub::Kind kind, ICStub *firstMonitorStub, HandleObject obj,
-                 HandleObject holder, HandleFunction getter, uint32_t pcOffset)
+        Compiler(JSContext *cx, ICStub::Kind kind, ICStub *firstMonitorStub,
+                 HandleObject obj, HandleObject holder, HandleFunction getter, uint32_t pcOffset)
           : ICStubCompiler(cx, kind),
             firstMonitorStub_(firstMonitorStub),
             obj_(cx, obj),

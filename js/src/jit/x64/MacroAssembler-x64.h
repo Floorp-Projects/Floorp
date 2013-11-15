@@ -356,6 +356,48 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         splitTag(src, ScratchReg);
         return testGCThing(cond, ScratchReg);
     }
+    Condition testPrimitive(Condition cond, const ValueOperand &src) {
+        splitTag(src, ScratchReg);
+        return testPrimitive(cond, ScratchReg);
+    }
+
+
+    Condition testUndefined(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testUndefined(cond, ScratchReg);
+    }
+    Condition testInt32(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testInt32(cond, ScratchReg);
+    }
+    Condition testBoolean(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testBoolean(cond, ScratchReg);
+    }
+    Condition testDouble(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testDouble(cond, ScratchReg);
+    }
+    Condition testNumber(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testNumber(cond, ScratchReg);
+    }
+    Condition testNull(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testNull(cond, ScratchReg);
+    }
+    Condition testString(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testString(cond, ScratchReg);
+    }
+    Condition testObject(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testObject(cond, ScratchReg);
+    }
+    Condition testPrimitive(Condition cond, const Address &src) {
+        splitTag(src, ScratchReg);
+        return testPrimitive(cond, ScratchReg);
+    }
     Condition testGCThing(Condition cond, const Address &src) {
         splitTag(src, ScratchReg);
         return testGCThing(cond, ScratchReg);
@@ -363,10 +405,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Condition testMagic(Condition cond, const Address &src) {
         splitTag(src, ScratchReg);
         return testMagic(cond, ScratchReg);
-    }
-    Condition testPrimitive(Condition cond, const ValueOperand &src) {
-        splitTag(src, ScratchReg);
-        return testPrimitive(cond, ScratchReg);
     }
 
 
@@ -772,6 +810,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         JS_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_UNDEFINED))));
         j(cond, label);
+    }
+    void branchTestUndefined(Condition cond, const Address &address, Label *label) {
+        JS_ASSERT(cond == Equal || cond == NotEqual);
+        branchTestUndefined(cond, Operand(address), label);
     }
     void branchTestInt32(Condition cond, const Operand &operand, Label *label) {
         JS_ASSERT(cond == Equal || cond == NotEqual);

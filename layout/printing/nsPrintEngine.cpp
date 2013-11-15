@@ -121,6 +121,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "mozilla/dom/Element.h"
 #include "nsContentList.h"
 #include "nsIChannel.h"
+#include "xpcpublic.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3446,18 +3447,17 @@ nsPrintEngine::TurnScriptingOn(bool aDoTurnOn)
       continue;
     }
 
-    if (nsCOMPtr<nsPIDOMWindow> window = doc->GetWindow()) {
-      nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObj = do_QueryInterface(window);
-      nsIScriptContext *scx = scriptGlobalObj->GetContext();
-      NS_WARN_IF_FALSE(scx, "Can't get nsIScriptContext");
+    if (nsCOMPtr<nsPIDOMWindow> window = doc->GetInnerWindow()) {
+      nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
+      NS_WARN_IF_FALSE(go && go->GetGlobalJSObject(), "Can't get global");
       nsresult propThere = NS_PROPTABLE_PROP_NOT_THERE;
       doc->GetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
                        &propThere);
       if (aDoTurnOn) {
         if (propThere != NS_PROPTABLE_PROP_NOT_THERE) {
           doc->DeleteProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview);
-          if (scx) {
-            scx->SetScriptsEnabled(true, false);
+          if (go && go->GetGlobalJSObject()) {
+            xpc::Scriptability::Get(go->GetGlobalJSObject()).Unblock();
           }
           window->ResumeTimeouts(false);
         }
@@ -3470,8 +3470,8 @@ nsPrintEngine::TurnScriptingOn(bool aDoTurnOn)
           // that layout code running in print preview doesn't get confused.
           doc->SetProperty(nsGkAtoms::scriptEnabledBeforePrintOrPreview,
                            NS_INT32_TO_PTR(doc->IsScriptEnabled()));
-          if (scx) {
-            scx->SetScriptsEnabled(false, false);
+          if (go && go->GetGlobalJSObject()) {
+            xpc::Scriptability::Get(go->GetGlobalJSObject()).Block();
           }
           window->SuspendTimeouts(1, false);
         }

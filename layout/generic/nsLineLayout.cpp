@@ -1763,8 +1763,12 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     else {
       // For other elements the logical height is the same as the
       // frames height plus its margins.
-      logicalHeight = pfd->mBounds.height + pfd->mMargin.top +
-        pfd->mMargin.bottom;
+      logicalHeight = pfd->mBounds.height + pfd->mMargin.TopBottom();
+      if (logicalHeight < 0 &&
+          mPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
+        pfd->mAscent -= logicalHeight;
+        logicalHeight = 0;
+      }
     }
 
     // Get vertical-align property

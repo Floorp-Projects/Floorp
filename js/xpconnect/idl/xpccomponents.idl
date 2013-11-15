@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(90019271-a0d1-439f-911c-967f8e85cd5b)]
+[scriptable, uuid(12368474-b448-4ac6-ba2c-db1966a7a697)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -447,6 +447,23 @@ interface nsIXPCComponents_Utils : nsISupports
 
     [implicit_jscontext]
     void nukeSandbox(in jsval obj);
+
+    /*
+     * API to dynamically block script for a given global. This takes effect
+     * immediately, unlike other APIs that only affect newly-created globals.
+     *
+     * The machinery here maintains a counter, and allows script only if each
+     * call to blockScriptForGlobal() has been matched with a call to
+     * unblockScriptForGlobal(). The caller _must_ make sure never to call
+     * unblock() more times than it calls block(), since that could potentially
+     * interfere with another consumer's script blocking.
+     */
+
+    [implicit_jscontext]
+    void blockScriptForGlobal(in jsval global);
+
+    [implicit_jscontext]
+    void unblockScriptForGlobal(in jsval global);
 
     /**
      * Check whether the given object is an XrayWrapper.

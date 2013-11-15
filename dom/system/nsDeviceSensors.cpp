@@ -175,7 +175,7 @@ WindowCannotReceiveSensorEvent (nsPIDOMWindow* aWindow)
   // Check to see if this window is in the background.  If
   // it is and it does not have the "background-sensors" permission,
   // don't send any device motion events to it.
-  if (!aWindow || !aWindow->GetOuterWindow()) {
+  if (!aWindow || !aWindow->IsCurrentInnerWindow()) {
     return true;
   }
 

@@ -1514,6 +1514,7 @@ SocialStatus = {
           "class": "social-panel-frame",
           "id": notificationFrameId,
           "tooltip": "aHTMLTooltip",
+          "context": "contentAreaContextMenu",
 
           // work around bug 793057 - by making the panel roughly the final size
           // we are more likely to have the anchor in the correct position.

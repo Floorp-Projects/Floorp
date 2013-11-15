@@ -809,7 +809,7 @@ nsFlexContainerFrame::
   // get from reflowing into our available width.
   // Note: This has to come *after* we construct the FlexItem, since we
   // invoke at least one convenience method (ResolveStretchedCrossSize) which
-  // requires a FlexItem. 
+  // requires a FlexItem.
 
   // Give the item a special reflow with "mIsFlexContainerMeasuringHeight"
   // set.  This tells it to behave as if it had "height: auto", regardless
@@ -1943,7 +1943,7 @@ FlexboxAxisTracker::FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame
   } else {
     mCrossAxis = blockDimension;
   }
-      
+
   // FIXME: Once we support "flex-wrap", check if it's "wrap-reverse"
   // here to determine whether we should reverse mCrossAxis.
   MOZ_ASSERT(IsAxisHorizontal(mMainAxis) != IsAxisHorizontal(mCrossAxis),
