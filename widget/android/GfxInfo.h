@@ -48,17 +48,17 @@ public:
 
   void EnsureInitializedFromGfxInfoData();
 
-  virtual nsString Model() const;
-  virtual nsString Hardware() const;
-  virtual nsString Product() const;
-  virtual nsString Manufacturer() const;
+  virtual nsString Model();
+  virtual nsString Hardware();
+  virtual nsString Product();
+  virtual nsString Manufacturer();
 
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIGFXINFODEBUG
 #endif
 
-  virtual uint32_t OperatingSystemVersion() const;
+  virtual uint32_t OperatingSystemVersion();
 
 protected:
 
