@@ -162,5 +162,6 @@ interface nsIWindowWatcher : nsISupports {
 
 };
 
+%{C++
 #define NS_WINDOWWATCHER_CONTRACTID "@mozilla.org/embedcomp/window-watcher;1"
 %}
