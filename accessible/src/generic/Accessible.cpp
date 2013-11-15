@@ -376,10 +376,8 @@ Accessible::AccessKey() const
   nsIDocument* document = mContent->GetCurrentDoc();
   if (!document)
     return KeyBinding();
-  nsCOMPtr<nsISupports> container = document->GetContainer();
-  if (!container)
-    return KeyBinding();
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(document->GetDocShell());
   if (!treeItem)
     return KeyBinding();
 
@@ -1293,9 +1291,7 @@ Accessible::NativeAttributes()
                                            nsCoreUtils::GetRoleContent(doc));
 
     // Allow ARIA live region markup from outer documents to override
-    nsCOMPtr<nsISupports> container = doc->GetContainer(); 
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-      do_QueryInterface(container);
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = doc->GetDocShell();
     if (!docShellTreeItem)
       break;
 

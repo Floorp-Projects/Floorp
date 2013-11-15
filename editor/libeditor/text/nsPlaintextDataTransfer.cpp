@@ -432,8 +432,7 @@ bool nsPlaintextEditor::IsSafeToInsertData(nsIDOMDocument* aSourceDoc)
 
   nsCOMPtr<nsIDocument> destdoc = GetDocument();
   NS_ASSERTION(destdoc, "Where is our destination doc?");
-  nsCOMPtr<nsISupports> container = destdoc->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> dsti = destdoc->GetDocShell();
   nsCOMPtr<nsIDocShellTreeItem> root;
   if (dsti)
     dsti->GetRootTreeItem(getter_AddRefs(root));
