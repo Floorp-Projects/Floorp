@@ -33,7 +33,6 @@ nsMathMLmoFrame::~nsMathMLmoFrame()
 static const PRUnichar kInvisibleComma = PRUnichar(0x200B); // a.k.a. ZERO WIDTH SPACE
 static const PRUnichar kApplyFunction  = PRUnichar(0x2061);
 static const PRUnichar kInvisibleTimes = PRUnichar(0x2062);
-static const PRUnichar kNullCh         = PRUnichar('\0');
 
 eMathMLFrameType
 nsMathMLmoFrame::GetMathMLFrameType()
@@ -119,7 +118,7 @@ nsMathMLmoFrame::ProcessTextData()
   nsContentUtils::GetNodeTextContent(mContent, false, data);
   data.CompressWhitespace();
   int32_t length = data.Length();
-  PRUnichar ch = (length == 0) ? kNullCh : data[0];
+  PRUnichar ch = (length == 0) ? PRUnichar('\0') : data[0];
 
   if ((length == 1) && 
       (ch == kInvisibleComma || 
