@@ -15,7 +15,7 @@ EXPORTS += [
     'SVGImageContext.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsSVGAFrame.cpp',
     'nsSVGClipPathFrame.cpp',
     'nsSVGContainerFrame.cpp',
