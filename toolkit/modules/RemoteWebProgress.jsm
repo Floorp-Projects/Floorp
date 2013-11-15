@@ -109,6 +109,18 @@ RemoteWebProgressManager.prototype = {
     return [deserialized, aState];
   },
 
+  setCurrentURI: function (aURI) {
+    // This function is simpler than nsDocShell::SetCurrentURI since
+    // it doesn't have to deal with child docshells.
+    let webNavigation = this._browser.webNavigation;
+    webNavigation._currentURI = aURI;
+
+    let webProgress = this.topLevelWebProgress;
+    for (let p of this._progressListeners) {
+      p.onLocationChange(webProgress, null, aURI);
+    }
+  },
+
   _callProgressListeners: function(methodName, ...args) {
     for (let p of this._progressListeners) {
       if (p[methodName]) {

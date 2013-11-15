@@ -15,10 +15,10 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/X11Util.h"
 
 #include "prenv.h"
-#include "prbit.h" // for PR_FLOOR_LOG2
 #include "GLContextProvider.h"
 #include "GLLibraryLoader.h"
 #include "nsDebug.h"
@@ -299,8 +299,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
         return None;
     }
     const XRenderDirectFormat& direct = format->direct;
-    int alphaSize;
-    PR_FLOOR_LOG2(alphaSize, direct.alphaMask + 1);
+    int alphaSize = FloorLog2(direct.alphaMask + 1);
     NS_ASSERTION((1 << alphaSize) - 1 == direct.alphaMask,
                  "Unexpected render format with non-adjacent alpha bits");
 

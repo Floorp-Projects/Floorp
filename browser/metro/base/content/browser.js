@@ -79,6 +79,7 @@ var Browser = {
     // Call InputSourceHelper first so global listeners get called before
     // we start processing input in TouchModule.
     InputSourceHelper.init();
+    ClickEventHandler.init();
 
     TouchModule.init();
     GestureModule.init();
@@ -213,6 +214,7 @@ var Browser = {
   shutdown: function shutdown() {
     APZCObserver.shutdown();
     BrowserUI.uninit();
+    ClickEventHandler.uninit();
     ContentAreaObserver.shutdown();
     Appbar.shutdown();
 
@@ -485,7 +487,7 @@ var Browser = {
     if (aBringFront)
       this.selectedTab = newTab;
 
-    this._announceNewTab(newTab, params, aBringFront);
+    this._announceNewTab(newTab);
     return newTab;
   },
 
@@ -511,7 +513,7 @@ var Browser = {
    * helper for addTab related methods. Fires events related to
    * new tab creation.
    */
-  _announceNewTab: function _announceNewTab(aTab, aParams, aBringFront) {
+  _announceNewTab: function (aTab) {
     let event = document.createEvent("UIEvents");
     event.initUIEvent("TabOpen", true, false, window, 0);
     aTab.chromeTab.dispatchEvent(event);
@@ -1020,9 +1022,6 @@ Browser.MainDragger.prototype = {
 };
 
 
-
-const OPEN_APPTAB = 100; // Hack until we get a real API
-
 function nsBrowserAccess() { }
 
 nsBrowserAccess.prototype = {
@@ -1032,56 +1031,54 @@ nsBrowserAccess.prototype = {
     throw Cr.NS_NOINTERFACE;
   },
 
+  _getOpenAction: function _getOpenAction(aURI, aOpener, aWhere, aContext) {
+    let where = aWhere;
+    /*
+     * aWhere: 
+     * OPEN_DEFAULTWINDOW: default action
+     * OPEN_CURRENTWINDOW: current window/tab
+     * OPEN_NEWWINDOW: not allowed, converted to newtab below
+     * OPEN_NEWTAB: open a new tab
+     * OPEN_SWITCHTAB: open in an existing tab if it matches, otherwise open
+     * a new tab. afaict we always open these in the current tab.
+     */
+    if (where == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
+      // query standard browser prefs indicating what to do for default action
+      switch (aContext) {
+        // indicates this is an open request from a 3rd party app.
+        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
+          where = Services.prefs.getIntPref("browser.link.open_external");
+          break;
+        // internal request
+        default :
+          where = Services.prefs.getIntPref("browser.link.open_newwindow");
+      }
+    }
+    if (where == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW) {
+      Util.dumpLn("Invalid request - we can't open links in new windows.");
+      where = Ci.nsIBrowserDOMWindow.OPEN_NEWTAB;
+    }
+    return where;
+  },
+
   _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aContext) {
     let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    // We don't allow externals apps opening chrome docs
     if (isExternal && aURI && aURI.schemeIs("chrome"))
       return null;
 
+    let location;
+    let browser;
     let loadflags = isExternal ?
                       Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                       Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    let location;
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
-      switch (aContext) {
-        case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
-          aWhere = Services.prefs.getIntPref("browser.link.open_external");
-          break;
-        default : // OPEN_NEW or an illegal value
-          aWhere = Services.prefs.getIntPref("browser.link.open_newwindow");
-      }
-    }
+    let openAction = this._getOpenAction(aURI, aOpener, aWhere, aContext);
 
-    let browser;
-    if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW) {
-      let url = aURI ? aURI.spec : "about:blank";
-      let newWindow = openDialog("chrome://browser/content/browser.xul", "_blank",
-                                 "all,dialog=no", url, null, null, null);
-      // since newWindow.Browser doesn't exist yet, just return null
-      return null;
-    } else if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
+    if (openAction == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       let owner = isExternal ? null : Browser.selectedTab;
-      let tab = Browser.addTab("about:blank", true, owner);
-      if (isExternal)
-        tab.closeOnExit = true;
+      let tab = BrowserUI.openLinkInNewTab("about:blank", true, owner);
       browser = tab.browser;
-    } else if (aWhere == OPEN_APPTAB) {
-      Browser.tabs.forEach(function(aTab) {
-        if ("appURI" in aTab.browser && aTab.browser.appURI.spec == aURI.spec) {
-          Browser.selectedTab = aTab;
-          browser = aTab.browser;
-        }
-      });
-
-      if (!browser) {
-        // Make a new tab to hold the app
-        let tab = Browser.addTab("about:blank", true);
-        browser = tab.browser;
-        browser.appURI = aURI;
-      } else {
-        // Just use the existing browser, but return null to keep the system from trying to load the URI again
-        browser = null;
-      }
-    } else { // OPEN_CURRENTWINDOW and illegal values
+    } else {
       browser = Browser.selectedBrowser;
     }
 
@@ -1096,10 +1093,6 @@ nsBrowserAccess.prototype = {
       }
       browser.focus();
     } catch(e) { }
-
-    // We are loading web content into this window, so make sure content is visible
-    // XXX Can we remove this?  It seems to be reproduced in BrowserUI already.
-    BrowserUI.showContent();
 
     return browser;
   },
@@ -1583,4 +1576,69 @@ function rendererFactory(aBrowser, aCanvas) {
   }
 
   return wrapper;
+};
+
+// Based on ClickEventHandler from /browser/base/content/content.js
+let ClickEventHandler = {
+  init: function () {
+    gEventListenerService.addSystemEventListener(Elements.browsers, "click", this, true);
+  },
+
+  uninit: function () {
+    gEventListenerService.removeSystemEventListener(Elements.browsers, "click", this, true);
+  },
+
+  handleEvent: function (aEvent) {
+    if (!aEvent.isTrusted || aEvent.defaultPrevented) {
+      return;
+    }
+    let [href, node] = this._hrefAndLinkNodeForClickEvent(aEvent);
+    if (href && (aEvent.button == 1 || aEvent.ctrlKey)) {
+      // Open link in a new tab for middle-click or ctrl-click
+      BrowserUI.openLinkInNewTab(href, aEvent.shiftKey, Browser.selectedTab);
+    }
+  },
+
+  /**
+   * Extracts linkNode and href for the current click target.
+   *
+   * @param event
+   *        The click event.
+   * @return [href, linkNode].
+   *
+   * @note linkNode will be null if the click wasn't on an anchor
+   *       element (or XLink).
+   */
+  _hrefAndLinkNodeForClickEvent: function(event) {
+    function isHTMLLink(aNode) {
+      return ((aNode instanceof content.HTMLAnchorElement && aNode.href) ||
+              (aNode instanceof content.HTMLAreaElement && aNode.href) ||
+              aNode instanceof content.HTMLLinkElement);
+    }
+
+    let node = event.target;
+    while (node && !isHTMLLink(node)) {
+      node = node.parentNode;
+    }
+
+    if (node)
+      return [node.href, node];
+
+    // If there is no linkNode, try simple XLink.
+    let href, baseURI;
+    node = event.target;
+    while (node && !href) {
+      if (node.nodeType == content.Node.ELEMENT_NODE) {
+        href = node.getAttributeNS("http://www.w3.org/1999/xlink", "href");
+        if (href)
+          baseURI = node.ownerDocument.baseURIObject;
+      }
+      node = node.parentNode;
+    }
+
+    // In case of XLink, we don't return the node we got href from since
+    // callers expect <a>-like elements.
+    // Note: makeURI() will throw if aUri is not a valid URI.
+    return [href ? Services.io.newURI(href, null, baseURI).spec : null, null];
+  }
 };

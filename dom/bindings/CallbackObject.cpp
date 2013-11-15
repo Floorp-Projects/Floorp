@@ -120,14 +120,12 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
 
   if (mIsMainThread) {
     // Check that it's ok to run this callback at all.
-    // FIXME: Bug 807371: we want a less silly check here.
-    // Make sure to unwrap aCallback before passing it in, because
-    // getting principals from wrappers is silly.
-    nsresult rv = nsContentUtils::GetSecurityManager()->
-      CheckFunctionAccess(cx, js::UncheckedUnwrap(aCallback), nullptr);
+    // Make sure to unwrap aCallback before passing it in to get the global of
+    // the callback object, not the wrapper.
+    bool allowed = nsContentUtils::GetSecurityManager()->
+      ScriptAllowed(js::GetGlobalForObjectCrossCompartment(js::UncheckedUnwrap(aCallback)));
 
-    if (NS_FAILED(rv)) {
-      // Security check failed.  We're done here.
+    if (!allowed) {
       return;
     }
   }

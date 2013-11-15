@@ -165,7 +165,9 @@ public:
     virtual bool RecvZoomToRect(const uint32_t& aPresShellId,
                                 const ViewID& aViewId,
                                 const CSSRect& aRect);
-    virtual bool RecvUpdateZoomConstraints(const bool& aAllowZoom,
+    virtual bool RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
+                                           const ViewID& aViewId,
+                                           const bool& aAllowZoom,
                                            const CSSToScreenScale& aMinZoom,
                                            const CSSToScreenScale& aMaxZoom);
     virtual bool RecvUpdateScrollOffset(const uint32_t& aPresShellId, const ViewID& aViewId, const CSSIntPoint& aScrollOffset);

@@ -3156,10 +3156,16 @@ TryAddTypeBarrierForWrite(types::CompilerConstraintList *constraints,
 }
 
 static MInstruction *
-AddTypeGuard(MBasicBlock *current, MDefinition *obj, types::TypeObject *typeObject,
+AddTypeGuard(MBasicBlock *current, MDefinition *obj, types::TypeObjectKey *type,
              bool bailOnEquality)
 {
-    MGuardObjectType *guard = MGuardObjectType::New(obj, typeObject, bailOnEquality);
+    MInstruction *guard;
+
+    if (type->isTypeObject())
+        guard = MGuardObjectType::New(obj, type->asTypeObject(), bailOnEquality);
+    else
+        guard = MGuardObjectIdentity::New(obj, type->asSingleObject(), bailOnEquality);
+
     current->add(guard);
 
     // For now, never move type object guards.
@@ -3223,7 +3229,7 @@ jit::PropertyWriteNeedsTypeBarrier(types::CompilerConstraintList *constraints,
     if (types->getObjectCount() <= 1)
         return true;
 
-    types::TypeObject *excluded = nullptr;
+    types::TypeObjectKey *excluded = nullptr;
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObjectKey *object = types->getObject(i);
         if (!object || object->unknownProperties())
@@ -3238,7 +3244,7 @@ jit::PropertyWriteNeedsTypeBarrier(types::CompilerConstraintList *constraints,
 
         if ((property.maybeTypes() && !property.maybeTypes()->empty()) || excluded)
             return true;
-        excluded = object->isTypeObject() ? object->asTypeObject() : object->asSingleObject()->getType(GetIonContext()->cx);
+        excluded = object;
     }
 
     JS_ASSERT(excluded);

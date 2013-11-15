@@ -9,8 +9,9 @@
 interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
+interface nsIDomainPolicy;
 
-[scriptable, uuid(d6475e53-9ece-4dc0-940c-095ac3d85363)]
+[scriptable, uuid(2911ae60-1b5f-47e6-941e-1bb7b53a167d)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -103,24 +104,9 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                       in unsigned long flags);
 
     /**
-     * Check that the function 'funObj' is allowed to run on 'targetObj'
-     *
-     * Will return error code NS_ERROR_DOM_SECURITY_ERR if the function
-     * should not run
-     *
-     * @param cx The current active JavaScript context.
-     * @param funObj The function trying to run..
-     * @param targetObj The object the function will run on.
+     * Return true if scripts may be executed in the scope of the given global.
      */
-    [noscript] void checkFunctionAccess(in JSContextPtr cx, in voidPtr funObj,
-                                        in voidPtr targetObj);
-
-    /**
-     * Return true if content from the given principal is allowed to
-     * execute scripts.
-     */
-    [noscript] boolean canExecuteScripts(in JSContextPtr cx,
-                                         in nsIPrincipal principal);
+    [noscript,notxpcom] boolean scriptAllowed(in JSObjectPtr aGlobal);
 
     ///////////////// Principals ///////////////////////
     /**
@@ -216,6 +202,13 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * script to check whether a given principal is system.
      */
     boolean isSystemPrincipal(in nsIPrincipal aPrincipal);
+%{C++
+    bool IsSystemPrincipal(nsIPrincipal* aPrincipal) {
+      bool isSystem = false;
+      IsSystemPrincipal(aPrincipal, &isSystem);
+      return isSystem;
+    }
+%}
 
     /**
      * Same as getSubjectPrincipal(), only faster. cx must *never* be
@@ -236,6 +229,29 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * inMozBrowser has to be true if the app is inside a mozbrowser iframe.
      */
     AUTF8String getJarPrefix(in unsigned long appId, in boolean inMozBrowser);
+
+    /**
+     * Per-domain controls to enable and disable script. This system is designed
+     * to be used by at most one consumer, and enforces this with its semantics.
+     *
+     * Initially, domainPolicyActive is false. When activateDomainPolicy() is
+     * invoked, domainPolicyActive becomes true, and subsequent calls to
+     * activateDomainPolicy() will fail until deactivate() is invoked on the
+     * nsIDomainPolicy returned from activateDomainPolicy(). At this point,
+     * domainPolicyActive becomes false again, and a new consumer may acquire
+     * control of the system by invoking activateDomainPolicy().
+     */
+    nsIDomainPolicy activateDomainPolicy();
+    readonly attribute boolean domainPolicyActive;
+
+    /**
+     * Query mechanism for the above policy.
+     *
+     * If domainPolicyEnabled is false, this simply returns the current value
+     * of javascript.enabled. Otherwise, it returns the same value, but taking
+     * the various blacklist/whitelist exceptions into account.
+     */
+    bool policyAllowsScript(in nsIURI aDomain);
 };
 
 %{C++

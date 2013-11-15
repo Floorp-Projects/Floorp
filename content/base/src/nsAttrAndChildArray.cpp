@@ -10,10 +10,10 @@
 
 #include "nsAttrAndChildArray.h"
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "nsMappedAttributeElement.h"
-#include "prbit.h"
 #include "nsString.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsRuleWalker.h"
@@ -772,7 +772,7 @@ nsAttrAndChildArray::GrowBy(uint32_t aGrowSize)
     } while (size < minSize);
   }
   else {
-    size = 1u << PR_CeilingLog2(minSize);
+    size = 1u << mozilla::CeilingLog2(minSize);
   }
 
   bool needToInitialize = !mImpl;

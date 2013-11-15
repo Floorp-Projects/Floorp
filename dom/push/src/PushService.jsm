@@ -1434,8 +1434,8 @@ this.PushService = {
       return;
     }
 
-    this._udpServer = Cc["@mozilla.org/network/socket-udp;1"]
-                        .createInstance(Ci.nsIUDPServerSocket);
+    this._udpServer = Cc["@mozilla.org/network/udp-socket;1"]
+                        .createInstance(Ci.nsIUDPSocket);
     this._udpServer.init(-1, false);
     this._udpServer.asyncListen(this);
     debug("listenForUDPWakeup listening on " + this._udpPort);

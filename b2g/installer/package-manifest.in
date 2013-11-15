@@ -189,6 +189,9 @@
 @BINPATH@/components/dom_geolocation.xpt
 @BINPATH@/components/dom_media.xpt
 @BINPATH@/components/dom_network.xpt
+#ifdef MOZ_NFC
+@BINPATH@/components/dom_nfc.xpt
+#endif
 @BINPATH@/components/dom_notification.xpt
 @BINPATH@/components/dom_html.xpt
 @BINPATH@/components/dom_indexeddb.xpt
@@ -494,6 +497,13 @@
 @BINPATH@/components/webvtt.xpt
 @BINPATH@/components/WebVTT.manifest
 @BINPATH@/components/WebVTTParserWrapper.js
+#ifdef MOZ_NFC
+@BINPATH@/components/nsNfc.manifest
+@BINPATH@/components/nsNfc.js
+@BINPATH@/components/Nfc.manifest
+@BINPATH@/components/Nfc.js
+@BINPATH@/components/NfcContentHelper.js
+#endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif
