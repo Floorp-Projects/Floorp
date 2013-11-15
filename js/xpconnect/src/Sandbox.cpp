@@ -435,6 +435,9 @@ CloneNonReflectorsWrite(JSContext *cx, JSStructuredCloneWriter *writer,
 static const JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
     CloneNonReflectorsRead,
     CloneNonReflectorsWrite,
+    nullptr,
+    nullptr,
+    nullptr,
     nullptr
 };
 

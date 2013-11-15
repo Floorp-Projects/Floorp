@@ -447,7 +447,10 @@ struct WorkerStructuredCloneCallbacks
 JSStructuredCloneCallbacks gWorkerStructuredCloneCallbacks = {
   WorkerStructuredCloneCallbacks::Read,
   WorkerStructuredCloneCallbacks::Write,
-  WorkerStructuredCloneCallbacks::Error
+  WorkerStructuredCloneCallbacks::Error,
+  nullptr,
+  nullptr,
+  nullptr
 };
 
 struct MainThreadWorkerStructuredCloneCallbacks
@@ -606,7 +609,10 @@ struct MainThreadWorkerStructuredCloneCallbacks
 JSStructuredCloneCallbacks gMainThreadWorkerStructuredCloneCallbacks = {
   MainThreadWorkerStructuredCloneCallbacks::Read,
   MainThreadWorkerStructuredCloneCallbacks::Write,
-  MainThreadWorkerStructuredCloneCallbacks::Error
+  MainThreadWorkerStructuredCloneCallbacks::Error,
+  nullptr,
+  nullptr,
+  nullptr
 };
 
 struct ChromeWorkerStructuredCloneCallbacks
@@ -636,7 +642,10 @@ struct ChromeWorkerStructuredCloneCallbacks
 JSStructuredCloneCallbacks gChromeWorkerStructuredCloneCallbacks = {
   ChromeWorkerStructuredCloneCallbacks::Read,
   ChromeWorkerStructuredCloneCallbacks::Write,
-  ChromeWorkerStructuredCloneCallbacks::Error
+  ChromeWorkerStructuredCloneCallbacks::Error,
+  nullptr,
+  nullptr,
+  nullptr
 };
 
 struct MainThreadChromeWorkerStructuredCloneCallbacks
@@ -694,7 +703,10 @@ struct MainThreadChromeWorkerStructuredCloneCallbacks
 JSStructuredCloneCallbacks gMainThreadChromeWorkerStructuredCloneCallbacks = {
   MainThreadChromeWorkerStructuredCloneCallbacks::Read,
   MainThreadChromeWorkerStructuredCloneCallbacks::Write,
-  MainThreadChromeWorkerStructuredCloneCallbacks::Error
+  MainThreadChromeWorkerStructuredCloneCallbacks::Error,
+  nullptr,
+  nullptr,
+  nullptr
 };
 
 class MainThreadReleaseRunnable MOZ_FINAL : public nsRunnable
