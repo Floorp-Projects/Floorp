@@ -306,5 +306,5 @@ textarea:not([disabled]):active,
 option:active,
 label:active,
 xul|menulist:active {
-  background-color: @color_background_highlight_overlay@ !important;
+  background-color: @color_background_highlight_overlay@;
 }

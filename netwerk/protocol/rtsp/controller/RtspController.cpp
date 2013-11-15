@@ -38,7 +38,6 @@
 #include "plbase64.h"
 #include "prmem.h"
 #include "prnetdb.h"
-#include "prbit.h"
 #include "zlib.h"
 #include <algorithm>
 #include "nsDebug.h"

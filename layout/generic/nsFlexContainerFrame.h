@@ -121,8 +121,8 @@ protected:
     SingleLineCrossAxisPositionTracker& aLineCrossAxisPosnTracker,
     FlexItem& aItem);
 
-  bool    mChildrenHaveBeenReordered; // Have we ever had to reorder our kids
-                                      // to satisfy their 'order' values?
+  bool mChildrenHaveBeenReordered; // Have we ever had to reorder our kids
+                                   // to satisfy their 'order' values?
 };
 
 #endif /* nsFlexContainerFrame_h___ */

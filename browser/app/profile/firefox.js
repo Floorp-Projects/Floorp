@@ -1210,6 +1210,11 @@ pref("devtools.webconsole.fontSize", 0);
 // be cleared each time page navigation happens.
 pref("devtools.webconsole.persistlog", false);
 
+// Web Console timestamp: |true| if you want the logs and instructions
+// in the Web Console to display a timestamp, or |false| to not display
+// any timestamps.
+pref("devtools.webconsole.timestampMessages", false);
+
 // The number of lines that are displayed in the web console for the Net,
 // CSS, JS and Web Developer categories.
 pref("devtools.hud.loglimit.network", 200);

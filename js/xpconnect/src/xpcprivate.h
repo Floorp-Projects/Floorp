@@ -3758,11 +3758,12 @@ public:
         LocationHintAddon
     };
 
-    CompartmentPrivate()
+    CompartmentPrivate(JSCompartment *c)
         : wantXrays(false)
         , universalXPConnectEnabled(false)
         , adoptedNode(false)
         , donatedNode(false)
+        , scriptability(c)
         , scope(nullptr)
     {
         MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
@@ -3781,6 +3782,9 @@ public:
     // for telemetry. See bug 928476.
     bool adoptedNode;
     bool donatedNode;
+
+    // The scriptability of this compartment.
+    Scriptability scriptability;
 
     // Our XPCWrappedNativeScope. This is non-null if and only if this is an
     // XPConnect compartment.

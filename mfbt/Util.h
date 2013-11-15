@@ -19,6 +19,7 @@
 #ifdef __cplusplus
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Array.h"
 
 namespace mozilla {
 
@@ -49,6 +50,13 @@ ArrayLength(T (&arr)[N])
   return N;
 }
 
+template<typename T, size_t N>
+MOZ_CONSTEXPR size_t
+ArrayLength(const Array<T, N>& arr)
+{
+  return N;
+}
+
 /*
  * Compute the address one past the last element of a constant-length array.
  *
@@ -59,6 +67,20 @@ MOZ_CONSTEXPR T*
 ArrayEnd(T (&arr)[N])
 {
   return arr + ArrayLength(arr);
+}
+
+template<typename T, size_t N>
+MOZ_CONSTEXPR T*
+ArrayEnd(Array<T, N>& arr)
+{
+  return &arr[0] + ArrayLength(arr);
+}
+
+template<typename T, size_t N>
+MOZ_CONSTEXPR const T*
+ArrayEnd(const Array<T, N>& arr)
+{
+  return &arr[0] + ArrayLength(arr);
 }
 
 } /* namespace mozilla */

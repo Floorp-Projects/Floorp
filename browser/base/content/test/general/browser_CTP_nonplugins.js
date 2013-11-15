@@ -9,52 +9,6 @@ var gRunNextTestAfterPluginRemoved = false;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-// This listens for the next opened tab and checks it is of the right url.
-// opencallback is called when the new tab is fully loaded
-// closecallback is called when the tab is closed
-function TabOpenListener(url, opencallback, closecallback) {
-  this.url = url;
-  this.opencallback = opencallback;
-  this.closecallback = closecallback;
-
-  gBrowser.tabContainer.addEventListener("TabOpen", this, false);
-}
-
-TabOpenListener.prototype = {
-  url: null,
-  opencallback: null,
-  closecallback: null,
-  tab: null,
-  browser: null,
-
-  handleEvent: function(event) {
-    if (event.type == "TabOpen") {
-      gBrowser.tabContainer.removeEventListener("TabOpen", this, false);
-      this.tab = event.originalTarget;
-      this.browser = this.tab.linkedBrowser;
-      gBrowser.addEventListener("pageshow", this, false);
-    } else if (event.type == "pageshow") {
-      if (event.target.location.href != this.url)
-        return;
-      gBrowser.removeEventListener("pageshow", this, false);
-      this.tab.addEventListener("TabClose", this, false);
-      var url = this.browser.contentDocument.location.href;
-      is(url, this.url, "Should have opened the correct tab");
-      this.opencallback(this.tab, this.browser.contentWindow);
-    } else if (event.type == "TabClose") {
-      if (event.originalTarget != this.tab)
-        return;
-      this.tab.removeEventListener("TabClose", this, false);
-      this.opencallback = null;
-      this.tab = null;
-      this.browser = null;
-      // Let the window close complete
-      executeSoon(this.closecallback);
-      this.closecallback = null;
-    }
-  }
-};
-
 function test() {
   waitForExplicitFinish();
   registerCleanupFunction(function() {

@@ -1418,6 +1418,18 @@ CodeGenerator::visitGuardThreadLocalObject(LGuardThreadLocalObject *lir)
 }
 
 bool
+CodeGenerator::visitGuardObjectIdentity(LGuardObjectIdentity *guard)
+{
+    Register obj = ToRegister(guard->input());
+
+    masm.cmpPtr(obj, ImmGCPtr(guard->mir()->singleObject()));
+
+    Assembler::Condition cond =
+        guard->mir()->bailOnEquality() ? Assembler::Equal : Assembler::NotEqual;
+    return bailoutIf(cond, guard->snapshot());
+}
+
+bool
 CodeGenerator::visitTypeBarrierV(LTypeBarrierV *lir)
 {
     ValueOperand operand = ToValue(lir, LTypeBarrierV::Input);
