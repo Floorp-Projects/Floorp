@@ -45,7 +45,6 @@ void AndroidBridge::InitStubs(JNIEnv *jEnv) {
     jGetDensity = getStaticMethod("getDensity", "()F");
     jGetDpiWrapper = getStaticMethod("getDpi", "()I");
     jGetExtensionFromMimeTypeWrapper = getStaticMethod("getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
-    jGetGfxInfoDataWrapper = getStaticMethod("getGfxInfoData", "()Ljava/lang/String;");
     jGetHandlersForMimeTypeWrapper = getStaticMethod("getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
     jGetHandlersForURLWrapper = getStaticMethod("getHandlersForURL", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
     jGetIconForExtensionWrapper = getStaticMethod("getIconForExtension", "(Ljava/lang/String;I)[B");
@@ -854,33 +853,6 @@ jstring AndroidBridge::GetExtensionFromMimeTypeWrapper(const nsAString& a0) {
     jstring j0 = NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetExtensionFromMimeTypeWrapper, j0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(NULL);
-        return nullptr;
-    }
-    jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
-    return ret;
-}
-
-jstring AndroidBridge::GetGfxInfoDataWrapper() {
-    JNIEnv *env = GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return nullptr;
-    }
-
-    if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return nullptr;
-    }
-
-    jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetGfxInfoDataWrapper);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);

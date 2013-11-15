@@ -69,11 +69,6 @@ public class GLController {
     };
 
     private GLController() {
-        // Here we start the GfxInfo thread, which will query OpenGL
-        // system information for Gecko. This must be done early enough that the data will be
-        // ready by the time it's needed to initialize the compositor (it takes about 100 ms
-        // to obtain).
-        GfxInfoThread.startThread();
     }
 
     static GLController getInstance(LayerView view) {
@@ -136,15 +131,6 @@ public class GLController {
             @Override
             public void run() {
                 Log.w(LOGTAG, "GLController::surfaceChanged, creating compositor; mCompositorCreated=" + mCompositorCreated + ", mSurfaceValid=" + mSurfaceValid);
-                // If we haven't yet created the compositor, and the GfxInfoThread
-                // isn't done it's data gathering activities, then postpone creating
-                // the compositor a little bit more. Don't block though, since this is
-                // the UI thread we're running on.
-                if (!mCompositorCreated && !GfxInfoThread.hasData()) {
-                    mView.postDelayed(this, 1);
-                    return;
-                }
-
                 try {
                     // Re-check mSurfaceValid in case the surface was destroyed between
                     // where we set it to true above and this runnable getting run.
