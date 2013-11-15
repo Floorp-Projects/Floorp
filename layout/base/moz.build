@@ -11,13 +11,13 @@ XPIDL_SOURCES += [
 ]
 
 if CONFIG['IBMBIDI']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsBidi.cpp',
         'nsBidiPresUtils.cpp',
     ]
 
 if CONFIG['MOZ_DEBUG']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsAutoLayoutPhase.cpp',
     ]
 
@@ -66,7 +66,7 @@ EXPORTS.mozilla += [
     'PaintTracker.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ActiveLayerTracker.cpp',
     'DisplayItemClip.cpp',
     'DisplayListClipState.cpp',
@@ -88,11 +88,9 @@ SOURCES += [
     'nsLayoutDebugger.cpp',
     'nsLayoutHistoryState.cpp',
     'nsLayoutUtils.cpp',
-    'nsPresArena.cpp',
     'nsPresContext.cpp',
     'nsPresShell.cpp',
     'nsQuoteList.cpp',
-    'nsRefreshDriver.cpp',
     'nsStyleChangeList.cpp',
     'nsStyleSheetService.cpp',
     'PaintTracker.cpp',
@@ -100,6 +98,13 @@ SOURCES += [
     'RestyleManager.cpp',
     'RestyleTracker.cpp',
     'StackArena.cpp',
+]
+
+# nsPresArena.cpp needs to be built separately because it uses plarena.h.
+# nsRefreshDriver.cpp needs to be built separately because of name clashes in the OS X headers
+SOURCES += [
+    'nsPresArena.cpp',
+    'nsRefreshDriver.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
