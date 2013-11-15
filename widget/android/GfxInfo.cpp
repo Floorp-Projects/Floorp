@@ -169,6 +169,7 @@ GfxInfo::EnsureInitializedFromGfxInfoData()
 NS_IMETHODIMP
 GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
 {
+  EnsureInitialized();
   aAdapterDescription = NS_ConvertASCIItoUTF16(mAdapterDescription);
   return NS_OK;
 }
@@ -177,6 +178,7 @@ GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDescription2(nsAString & aAdapterDescription)
 {
+  EnsureInitialized();
   return NS_ERROR_FAILURE;
 }
 
@@ -184,6 +186,7 @@ GfxInfo::GetAdapterDescription2(nsAString & aAdapterDescription)
 NS_IMETHODIMP
 GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 {
+  EnsureInitialized();
   aAdapterRAM.AssignLiteral("");
   return NS_OK;
 }
@@ -192,6 +195,7 @@ GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 NS_IMETHODIMP
 GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
 {
+  EnsureInitialized();
   return NS_ERROR_FAILURE;
 }
 
@@ -199,6 +203,7 @@ GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 {
+  EnsureInitialized();
   aAdapterDriver.AssignLiteral("");
   return NS_OK;
 }
@@ -207,6 +212,7 @@ GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriver2(nsAString & aAdapterDriver)
 {
+  EnsureInitialized();
   return NS_ERROR_FAILURE;
 }
 
@@ -214,6 +220,7 @@ GfxInfo::GetAdapterDriver2(nsAString & aAdapterDriver)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriverVersion(nsAString & aAdapterDriverVersion)
 {
+  EnsureInitialized();
   aAdapterDriverVersion = NS_ConvertASCIItoUTF16(mVersion);
   return NS_OK;
 }
@@ -222,6 +229,7 @@ GfxInfo::GetAdapterDriverVersion(nsAString & aAdapterDriverVersion)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion)
 {
+  EnsureInitialized();
   return NS_ERROR_FAILURE;
 }
 
@@ -229,6 +237,7 @@ GfxInfo::GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
 {
+  EnsureInitialized();
   aAdapterDriverDate.AssignLiteral("");
   return NS_OK;
 }
@@ -237,6 +246,7 @@ GfxInfo::GetAdapterDriverDate(nsAString & aAdapterDriverDate)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
 {
+  EnsureInitialized();
   return NS_ERROR_FAILURE;
 }
 
@@ -244,6 +254,7 @@ GfxInfo::GetAdapterDriverDate2(nsAString & aAdapterDriverDate)
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID(nsAString & aAdapterVendorID)
 {
+  EnsureInitialized();
   aAdapterVendorID = NS_ConvertASCIItoUTF16(mVendor);
   return NS_OK;
 }
@@ -252,6 +263,7 @@ GfxInfo::GetAdapterVendorID(nsAString & aAdapterVendorID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterVendorID2(nsAString & aAdapterVendorID)
 {
+  EnsureInitialized();
   return NS_ERROR_FAILURE;
 }
 
@@ -259,6 +271,7 @@ GfxInfo::GetAdapterVendorID2(nsAString & aAdapterVendorID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID(nsAString & aAdapterDeviceID)
 {
+  EnsureInitialized();
   aAdapterDeviceID = NS_ConvertASCIItoUTF16(mRenderer);
   return NS_OK;
 }
@@ -267,6 +280,7 @@ GfxInfo::GetAdapterDeviceID(nsAString & aAdapterDeviceID)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDeviceID2(nsAString & aAdapterDeviceID)
 {
+  EnsureInitialized();
   return NS_ERROR_FAILURE;
 }
 
@@ -274,6 +288,7 @@ GfxInfo::GetAdapterDeviceID2(nsAString & aAdapterDeviceID)
 NS_IMETHODIMP
 GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active)
 {
+  EnsureInitialized();
   return NS_ERROR_FAILURE;
 }
 
@@ -533,27 +548,32 @@ NS_IMETHODIMP GfxInfo::SpoofOSVersion(uint32_t aVersion)
 
 #endif
 
-nsString GfxInfo::Model() const
+nsString GfxInfo::Model()
 {
+  EnsureInitialized();
   return mModel;
 }
 
-nsString GfxInfo::Hardware() const
+nsString GfxInfo::Hardware()
 {
+  EnsureInitialized();
   return mHardware;
 }
 
-nsString GfxInfo::Product() const
+nsString GfxInfo::Product()
 {
+  EnsureInitialized();
   return mProduct;
 }
 
-nsString GfxInfo::Manufacturer() const
+nsString GfxInfo::Manufacturer()
 {
+  EnsureInitialized();
   return mManufacturer;
 }
 
-uint32_t GfxInfo::OperatingSystemVersion() const
+uint32_t GfxInfo::OperatingSystemVersion()
 {
+  EnsureInitialized();
   return mOSVersionInteger;
 }
