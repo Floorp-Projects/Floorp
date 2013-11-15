@@ -362,6 +362,7 @@ this.NetworkStatsService = {
       this.updateQueue.push({netId: aNetId, callbacks: [aCallback]});
     } else {
       this.updateQueue[index].callbacks.push(aCallback);
+      return;
     }
 
     // Call the function that process the elements of the queue.

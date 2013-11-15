@@ -10,7 +10,7 @@ SpecialPowers.addPermission("mobileconnection", true, document);
 let ifr = document.createElement("iframe");
 let mobileConnection;
 ifr.onload = function() {
-  mobileConnection = ifr.contentWindow.navigator.mozMobileConnection;
+  mobileConnection = ifr.contentWindow.navigator.mozMobileConnections[0];
 
   // Start the test
   verifyInitialState();

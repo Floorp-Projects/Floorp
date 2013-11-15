@@ -59,7 +59,7 @@ struct IntRectTyped :
     typedef BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, IntMarginTyped<units> > Super;
 
     IntRectTyped() : Super() {}
-    IntRectTyped(IntPointTyped<units> aPos, IntSizeTyped<units> aSize) :
+    IntRectTyped(const IntPointTyped<units>& aPos, const IntSizeTyped<units>& aSize) :
         Super(aPos, aSize) {}
     IntRectTyped(int32_t _x, int32_t _y, int32_t _width, int32_t _height) :
         Super(_x, _y, _width, _height) {}
@@ -89,7 +89,7 @@ struct RectTyped :
     typedef BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, MarginTyped<units> > Super;
 
     RectTyped() : Super() {}
-    RectTyped(PointTyped<units> aPos, SizeTyped<units> aSize) :
+    RectTyped(const PointTyped<units>& aPos, const SizeTyped<units>& aSize) :
         Super(aPos, aSize) {}
     RectTyped(Float _x, Float _y, Float _width, Float _height) :
         Super(_x, _y, _width, _height) {}

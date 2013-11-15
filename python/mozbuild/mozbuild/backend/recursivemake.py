@@ -1054,13 +1054,13 @@ class RecursiveMakeBackend(CommonBackend):
                 (target, ' '.join(jar.sources)))
         if jar.generated_sources:
             backend_file.write('%s_PP_JAVAFILES := %s\n' %
-                (target, ' '.join(jar.generated_sources)))
+                (target, ' '.join(os.path.join('generated', f) for f in jar.generated_sources)))
         if jar.extra_jars:
             backend_file.write('%s_EXTRA_JARS := %s\n' %
                 (target, ' '.join(jar.extra_jars)))
         if jar.javac_flags:
             backend_file.write('%s_JAVAC_FLAGS := %s\n' %
-                (target, jar.javac_flags))
+                (target, ' '.join(jar.javac_flags)))
 
     def _write_manifests(self, dest, manifests):
         man_dir = os.path.join(self.environment.topobjdir, '_build_manifests',

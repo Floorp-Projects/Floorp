@@ -32,72 +32,6 @@ class AsyncPanZoomController;
 class CompositorParent;
 
 /**
- * This class allows us to uniquely identify a scrollable layer. The
- * mLayersId identifies the layer tree (corresponding to a child process
- * and/or tab) that the scrollable layer belongs to. The mPresShellId
- * is a temporal identifier (corresponding to the document loaded that
- * contains the scrollable layer, which may change over time). The
- * mScrollId corresponds to the actual frame that is scrollable.
- */
-struct ScrollableLayerGuid {
-  uint64_t mLayersId;
-  uint32_t mPresShellId;
-  FrameMetrics::ViewID mScrollId;
-
-  ScrollableLayerGuid()
-    : mLayersId(0)
-    , mPresShellId(0)
-    , mScrollId(0)
-  {
-    MOZ_COUNT_CTOR(ScrollableLayerGuid);
-  }
-
-  ScrollableLayerGuid(uint64_t aLayersId, uint32_t aPresShellId,
-                      FrameMetrics::ViewID aScrollId)
-    : mLayersId(aLayersId)
-    , mPresShellId(aPresShellId)
-    , mScrollId(aScrollId)
-  {
-    MOZ_COUNT_CTOR(ScrollableLayerGuid);
-  }
-
-  ScrollableLayerGuid(uint64_t aLayersId, const FrameMetrics& aMetrics)
-    : mLayersId(aLayersId)
-    , mPresShellId(aMetrics.mPresShellId)
-    , mScrollId(aMetrics.mScrollId)
-  {
-    MOZ_COUNT_CTOR(ScrollableLayerGuid);
-  }
-
-  ScrollableLayerGuid(uint64_t aLayersId)
-    : mLayersId(aLayersId)
-    , mPresShellId(0)
-    , mScrollId(FrameMetrics::ROOT_SCROLL_ID)
-  {
-    MOZ_COUNT_CTOR(ScrollableLayerGuid);
-    // TODO: get rid of this constructor once all callers know their
-    // presShellId and scrollId
-  }
-
-  ~ScrollableLayerGuid()
-  {
-    MOZ_COUNT_DTOR(ScrollableLayerGuid);
-  }
-
-  bool operator==(const ScrollableLayerGuid& other) const
-  {
-    return mLayersId == other.mLayersId
-        && mPresShellId == other.mPresShellId
-        && mScrollId == other.mScrollId;
-  }
-
-  bool operator!=(const ScrollableLayerGuid& other) const
-  {
-    return !(*this == other);
-  }
-};
-
-/**
  * This class manages the tree of AsyncPanZoomController instances. There is one
  * instance of this class owned by each CompositorParent, and it contains as
  * many AsyncPanZoomController instances as there are scrollable container layers.
@@ -200,14 +134,15 @@ public:
                                   LayoutDeviceIntPoint* aOutTransformedPoint);
 
   /**
-   * Updates the composition bounds, i.e. the dimensions of the final size of
-   * the frame this is tied to during composition onto, in device pixels. In
-   * general, this will just be:
-   * { x = 0, y = 0, width = surface.width, height = surface.height }, however
-   * there is no hard requirement for this.
+   * Updates the composition bounds on the root APZC for the given layers id.
+   * See FrameMetrics::mCompositionBounds for the definition of what the
+   * composition bounds are. This function is only meant for updating the
+   * composition bounds on the root APZC because that is the one that is
+   * zoomable, and the zoom may need to be adjusted immediately upon a change
+   * in the composition bounds.
    */
-  void UpdateCompositionBounds(const ScrollableLayerGuid& aGuid,
-                               const ScreenIntRect& aCompositionBounds);
+  void UpdateRootCompositionBounds(const uint64_t& aLayersId,
+                                   const ScreenIntRect& aCompositionBounds);
 
   /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
@@ -304,12 +239,17 @@ public:
   */
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint);
+  void GetRootAPZCsFor(const uint64_t& aLayersId,
+                       nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs);
   void GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& aTransformToApzcOut,
                           gfx3DMatrix& aTransformToGeckoOut);
 private:
   /* Helpers */
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint);
+  void FindRootAPZCs(AsyncPanZoomController* aApzc,
+                     const uint64_t& aLayersId,
+                     nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs);
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc);
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent, ScreenPoint aPoint);

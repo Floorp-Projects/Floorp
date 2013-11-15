@@ -80,6 +80,11 @@ function get_platform() {
   return xulRuntime.OS;
 }
 
+function is_content() {
+  return this._inChild = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
+                            .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+}
+
 /**
  * Spin up a listening socket and associate at most one live, accepted socket
  * with ourselves.
@@ -418,9 +423,15 @@ function drainTwice() {
     ['ondrain', 'ondrain2',
     'ondata', 'ondata2',
     'serverclose', 'clientclose']);
+  let ondrainCalled = false,
+      ondataCalled = false;
 
-  function serverSideCallback() {
-    yays.ondata();
+  function maybeSendNextData() {
+    if (!ondrainCalled || !ondataCalled) {
+      // make sure server got data and client got ondrain.
+      return;
+    }
+
     server.ondata = makeExpectData(
       "ondata2", BIG_TYPED_ARRAY_2, false, yays.ondata2);
 
@@ -433,12 +444,24 @@ function drainTwice() {
     sock.close();
   }
 
+  function clientOndrain() {
+    yays.ondrain();
+    ondrainCalled = true;
+    maybeSendNextData();
+  }
+
+  function serverSideCallback() {
+    yays.ondata();
+    ondataCalled = true;
+    maybeSendNextData();
+  }
+
   server.onclose = yays.serverclose;
   server.ondata = makeExpectData(
     "ondata", BIG_TYPED_ARRAY, false, serverSideCallback);
 
   sock.onclose = yays.clientclose;
-  sock.ondrain = yays.ondrain;
+  sock.ondrain = clientOndrain;
 
   if (sock.send(BIG_ARRAY_BUFFER)) {
     throw new Error("sock.send(BIG_TYPED_ARRAY) did not return false to indicate buffering");
@@ -482,6 +505,62 @@ function bufferTwice() {
   }
 }
 
+// Test child behavior when child thinks it's buffering but parent doesn't
+// buffer.
+// 1. set bufferedAmount of content socket to a value that will make next
+//    send() call return false.
+// 2. send a small data to make send() return false, but it won't make
+//    parent buffer.
+// 3. we should get a ondrain.
+function childbuffered() {
+  let yays = makeJointSuccess(['ondrain', 'serverdata',
+                               'clientclose', 'serverclose']);
+  sock.ondrain = function() {
+    yays.ondrain();
+    sock.close();
+  };
+
+  server.ondata = makeExpectData(
+    'ondata', DATA_ARRAY, false, yays.serverdata);
+
+  let internalSocket = sock.QueryInterface(Ci.nsITCPSocketInternal);
+  internalSocket.updateBufferedAmount(65535, // almost reach buffering threshold
+                                      0);
+  if (sock.send(DATA_ARRAY_BUFFER)) {
+    do_throw("expected sock.send to return false.");
+  }
+
+  sock.onclose = yays.clientclose;
+  server.onclose = yays.serverclose;
+}
+
+// Test child's behavior when send() of child return true but parent buffers
+// data.
+// 1. send BIG_ARRAY to make parent buffer. This would make child wait for
+//    drain as well.
+// 2. set child's bufferedAmount to zero, so child will no longer wait for
+//    drain but parent will dispatch a drain event.
+// 3. wait for 1 second, to make sure there's no ondrain event dispatched in
+//    child.
+function childnotbuffered() {
+  let yays = makeJointSuccess(['serverdata', 'clientclose', 'serverclose']);
+  server.ondata = makeExpectData('ondata', BIG_ARRAY, false, yays.serverdata);
+  if (sock.send(BIG_ARRAY_BUFFER)) {
+    do_throw("sock.send(BIG_TYPED_ARRAY) did not return false to indicate buffering");
+  }
+  let internalSocket = sock.QueryInterface(Ci.nsITCPSocketInternal);
+  internalSocket.updateBufferedAmount(0, // setting zero will clear waitForDrain in sock.
+                                      1);
+
+  // shouldn't get ondrain, even after parent have cleared its buffer.
+  sock.ondrain = makeFailureCase('drain');
+  sock.onclose = yays.clientclose;
+  server.onclose = yays.serverclose;
+  do_timeout(1000, function() {
+    sock.close();
+  });
+};
+
 // - connect, data and events work both ways
 add_test(connectSock);
 add_test(sendData);
@@ -512,6 +591,14 @@ add_test(drainTwice);
 // send a buffer, get a drain, send a buffer, get a drain
 add_test(connectSock);
 add_test(bufferTwice);
+
+if (is_content()) {
+  add_test(connectSock);
+  add_test(childnotbuffered);
+
+  add_test(connectSock);
+  add_test(childbuffered);
+}
 
 // clean up
 add_test(cleanup);
