@@ -411,6 +411,8 @@
 @BINPATH@/components/NetworkInterfaceListService.manifest
 @BINPATH@/components/NetworkManager.js
 @BINPATH@/components/NetworkManager.manifest
+@BINPATH@/components/NetworkService.js
+@BINPATH@/components/NetworkService.manifest
 @BINPATH@/components/NetworkStatsManager.js
 @BINPATH@/components/NetworkStatsManager.manifest
 @BINPATH@/components/NetworkStatsServiceProxy.js
