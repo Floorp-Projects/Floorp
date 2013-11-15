@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef ChildIterator_h
+#define ChildIterator_h
+
 /**
  * Iterates over the children on a node. If a child is an insertion point,
  * iterates over the children inserted there instead, or the default content
@@ -104,3 +107,5 @@ private:
 
 } // namespace dom
 } // namespace mozilla
+
+#endif
