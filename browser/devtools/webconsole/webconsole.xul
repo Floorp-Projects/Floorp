@@ -48,8 +48,8 @@ function goUpdateConsoleCommands() {
     <command id="cmd_close" oncommand="goDoCommand('cmd_close');" disabled="true"/>
   </commandset>
   <keyset id="consoleKeys">
-    <key id="key_fullZoomReduce"  key="&fullZoomReduceCmd.commandkey;" command="cmd_fullZoomReduce"  modifiers="accel"/>
-    <key key="&fullZoomReduceCmd.commandkey2;"  command="cmd_fullZoomReduce" modifiers="accel"/>
+    <key id="key_fullZoomReduce" key="&fullZoomReduceCmd.commandkey;" command="cmd_fullZoomReduce" modifiers="accel"/>
+    <key key="&fullZoomReduceCmd.commandkey2;" command="cmd_fullZoomReduce" modifiers="accel"/>
     <key id="key_fullZoomEnlarge" key="&fullZoomEnlargeCmd.commandkey;" command="cmd_fullZoomEnlarge" modifiers="accel"/>
     <key key="&fullZoomEnlargeCmd.commandkey2;" command="cmd_fullZoomEnlarge" modifiers="accel"/>
     <key key="&fullZoomEnlargeCmd.commandkey3;" command="cmd_fullZoomEnlarge" modifiers="accel"/>

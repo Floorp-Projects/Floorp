@@ -205,7 +205,7 @@ EmitUnstowICValues(MacroAssembler &masm, int values)
         masm.popValue(R0);
         break;
       case 2:
-        // Untow R0 and R1
+        // Unstow R0 and R1
         masm.popValue(R1);
         masm.popValue(R0);
         break;

@@ -1,0 +1,25 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Copyright © 2013 Deutsche Telekom, Inc.
+
+if CONFIG['MOZ_NFC']:
+    MODULE = 'dom'
+    EXPORTS.mozilla.dom += [
+        'MozNdefRecord.h',
+    ]
+    SOURCES += [
+        'MozNdefRecord.cpp',
+    ]
+    EXTRA_COMPONENTS += [
+      'nsNfc.js',
+      'nsNfc.manifest',
+    ]
+
+FAIL_ON_WARNINGS = True
+
+LIBRARY_NAME = 'dom_nfc_s'
+
+LIBXUL_LIBRARY = True

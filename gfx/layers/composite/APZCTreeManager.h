@@ -162,12 +162,11 @@ public:
                             bool aPreventDefault);
 
   /**
-   * Updates any zoom constraints on the root APZC for the given layers id.
-   * Generally the zoom constraints come from the <meta name="viewport"> tag.
+   * Updates any zoom constraints contained in the <meta name="viewport"> tag.
    * We try to obey everything it asks us elsewhere, but here we only handle
    * minimum-scale, maximum-scale, and user-scalable.
    */
-  void UpdateZoomConstraints(const uint64_t& aLayersId,
+  void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                              bool aAllowZoom,
                              const CSSToScreenScale& aMinScale,
                              const CSSToScreenScale& aMaxScale);
@@ -240,14 +239,17 @@ public:
   */
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint);
-  already_AddRefed<AsyncPanZoomController> GetRootAPZCFor(const uint64_t& aLayersId);
+  void GetRootAPZCsFor(const uint64_t& aLayersId,
+                       nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs);
   void GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& aTransformToApzcOut,
                           gfx3DMatrix& aTransformToGeckoOut);
 private:
   /* Helpers */
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint);
-  AsyncPanZoomController* FindRootAPZC(AsyncPanZoomController* aApzc, const uint64_t& aLayersId);
+  void FindRootAPZCs(AsyncPanZoomController* aApzc,
+                     const uint64_t& aLayersId,
+                     nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs);
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc);
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent, ScreenPoint aPoint);

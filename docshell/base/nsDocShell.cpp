@@ -762,6 +762,7 @@ nsDocShell::nsDocShell():
     mUseGlobalHistory(false),
     mInPrivateBrowsing(false),
     mDeviceSizeIsPageSize(false),
+    mCanExecuteScripts(false),
     mFiredUnloadEvent(false),
     mEODForCurrentDocument(false),
     mURIResultedInDocument(false),
@@ -2077,12 +2078,6 @@ nsDocShell::GetAllowJavascript(bool * aAllowJavascript)
     NS_ENSURE_ARG_POINTER(aAllowJavascript);
 
     *aAllowJavascript = mAllowJavascript;
-    if (!mAllowJavascript) {
-        return NS_OK;
-    }
-
-    bool unsafe;
-    *aAllowJavascript = NS_SUCCEEDED(GetChannelIsUnsafe(&unsafe)) && !unsafe;
     return NS_OK;
 }
 
@@ -2090,6 +2085,7 @@ NS_IMETHODIMP
 nsDocShell::SetAllowJavascript(bool aAllowJavascript)
 {
     mAllowJavascript = aAllowJavascript;
+    RecomputeCanExecuteScripts();
     return NS_OK;
 }
 
@@ -2823,6 +2819,48 @@ nsDocShell::GetParentDocshell()
     return docshell.forget().downcast<nsDocShell>();
 }
 
+void
+nsDocShell::RecomputeCanExecuteScripts()
+{
+    bool old = mCanExecuteScripts;
+    nsRefPtr<nsDocShell> parent = GetParentDocshell();
+
+    // If we have no tree owner, that means that we've been detached from the
+    // docshell tree (this is distinct from having no parent dochshell, which
+    // is the case for root docshells). In that case, don't allow script.
+    if (!mTreeOwner) {
+        mCanExecuteScripts = false;
+    // If scripting has been explicitly disabled on our docshell, we're done.
+    } else if (!mAllowJavascript) {
+        mCanExecuteScripts = false;
+    // If we have a parent, inherit.
+    } else if (parent) {
+        mCanExecuteScripts = parent->mCanExecuteScripts;
+    // Otherwise, we're the root of the tree, and we haven't explicitly disabled
+    // script. Allow.
+    } else {
+        mCanExecuteScripts = true;
+    }
+
+    // Inform our active DOM window.
+    //
+    // This will pass the outer, which will be in the scope of the active inner.
+    if (mScriptGlobal && mScriptGlobal->GetGlobalJSObject()) {
+        xpc::Scriptability& scriptability =
+          xpc::Scriptability::Get(mScriptGlobal->GetGlobalJSObject());
+        scriptability.SetDocShellAllowsScript(mCanExecuteScripts);
+    }
+
+    // If our value has changed, our children might be affected. Recompute their
+    // value as well.
+    if (old != mCanExecuteScripts) {
+        nsTObserverArray<nsDocLoader*>::ForwardIterator iter(mChildList);
+        while (iter.HasMore()) {
+            static_cast<nsDocShell*>(iter.GetNext())->RecomputeCanExecuteScripts();
+        }
+    }
+}
+
 nsresult
 nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
 {
@@ -2892,6 +2930,10 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
     nsCOMPtr<nsIURIContentListener> parentURIListener(do_GetInterface(parent));
     if (parentURIListener)
         mContentListener->SetParentContentListener(parentURIListener);
+
+    // Our parent has changed. Recompute scriptability.
+    RecomputeCanExecuteScripts();
+
     return NS_OK;
 }
 
@@ -3445,6 +3487,16 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
         if (childType == mItemType)
             child->SetTreeOwner(aTreeOwner);
     }
+
+    // Our tree owner has changed. Recompute scriptability.
+    //
+    // Note that this is near-redundant with the recomputation in
+    // SetDocLoaderParent(), but not so for the root DocShell, where the call to
+    // SetTreeOwner() happens after the initial AddDocLoaderAsChildOfRoot(),
+    // and we never set another parent. Given that this is neither expensive nor
+    // performance-critical, let's be safe and unconditionally recompute this
+    // state whenever dependent state changes.
+    RecomputeCanExecuteScripts();
 
     return NS_OK;
 }
@@ -12657,20 +12709,7 @@ unsigned long nsDocShell::gNumberOfDocShells = 0;
 NS_IMETHODIMP
 nsDocShell::GetCanExecuteScripts(bool *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = false; // disallow by default
-
-  nsRefPtr<nsDocShell> docshell = this;
-  do {
-      nsresult rv = docshell->GetAllowJavascript(aResult);
-      if (NS_FAILED(rv)) return rv;
-      if (!*aResult) {
-          return NS_OK;
-      }
-
-      docshell = docshell->GetParentDocshell();
-  } while (docshell);
-
+  *aResult = mCanExecuteScripts;
   return NS_OK;
 }
 

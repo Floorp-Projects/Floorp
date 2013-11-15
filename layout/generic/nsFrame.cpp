@@ -514,12 +514,15 @@ nsFrame::Init(nsIContent*      aContent,
   }
   if (disp->mPosition == NS_STYLE_POSITION_STICKY &&
       !aPrevInFlow &&
-      !(mState & NS_FRAME_IS_NONDISPLAY)) {
+      !(mState & NS_FRAME_IS_NONDISPLAY) &&
+      !disp->IsInnerTableStyle()) {
     // Note that we only add first continuations, but we really only
     // want to add first continuation-or-special-siblings.  But since we
     // don't yet know if we're a later part of a block-in-inline split,
     // we'll just add later members of a block-in-inline split here, and
     // then StickyScrollContainer will remove them later.
+    // We don't currently support relative positioning of inner table
+    // elements (bug 35168), so exclude them from sticky positioning too.
     StickyScrollContainer* ssc =
       StickyScrollContainer::GetStickyScrollContainerForFrame(this);
     if (ssc) {
@@ -976,10 +979,10 @@ nsIFrame::ApplySkipSides(nsMargin& aMargin,
 nsRect
 nsIFrame::GetPaddingRectRelativeToSelf() const
 {
-  nsMargin bp(GetUsedBorder());
-  ApplySkipSides(bp);
+  nsMargin border(GetUsedBorder());
+  ApplySkipSides(border);
   nsRect r(0, 0, mRect.width, mRect.height);
-  r.Deflate(bp);
+  r.Deflate(border);
   return r;
 }
 

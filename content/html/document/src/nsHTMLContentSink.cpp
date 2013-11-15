@@ -706,24 +706,17 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
   NS_ENSURE_TRUE(aDoc && aContainer, true);
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject =
-    do_QueryInterface(aDoc->GetWindow());
+    do_QueryInterface(aDoc->GetInnerWindow());
 
   // Getting context is tricky if the document hasn't had its
   // GlobalObject set yet
   if (!globalObject) {
     globalObject = aContainer->GetScriptGlobalObject();
-    NS_ENSURE_TRUE(globalObject, true);
   }
 
-  nsIScriptContext *scriptContext = globalObject->GetContext();
-  NS_ENSURE_TRUE(scriptContext, true);
-  JSContext *cx = scriptContext->GetNativeContext();
-  NS_ENSURE_TRUE(cx, true);
-
-  bool enabled = true;
-  nsContentUtils::GetSecurityManager()->
-    CanExecuteScripts(cx, aDoc->NodePrincipal(), &enabled);
-  return enabled;
+  NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject(), true);
+  return nsContentUtils::GetSecurityManager()->
+           ScriptAllowed(globalObject->GetGlobalJSObject());
 }
 
 nsresult

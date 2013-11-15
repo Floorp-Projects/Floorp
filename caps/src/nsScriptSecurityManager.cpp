@@ -21,6 +21,7 @@
 #include "nsSystemPrincipal.h"
 #include "nsPrincipal.h"
 #include "nsNullPrincipal.h"
+#include "DomainPolicy.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
@@ -63,6 +64,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
+#include "nsJSUtils.h"
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"
@@ -181,12 +183,6 @@ GetPrincipalDomainOrigin(nsIPrincipal* aPrincipal,
   NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
   return GetOriginFromURI(uri, aOrigin);
-}
-
-static nsIScriptContext *
-GetScriptContext(JSContext *cx)
-{
-    return GetScriptContextFromJSContext(cx);
 }
 
 inline void SetPendingException(JSContext *cx, const char *aMsg)
@@ -1601,173 +1597,38 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
     return rv;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
-                                             void *aTargetObj)
+bool
+nsScriptSecurityManager::ScriptAllowed(JSObject *aGlobal)
 {
-    // This check is called for event handlers
-    nsresult rv;
-    JS::Rooted<JSObject*> rootedFunObj(aCx, static_cast<JSObject*>(aFunObj));
-    nsIPrincipal* subject = doGetObjectPrincipal(rootedFunObj);
-    if (!subject)
-        return NS_ERROR_FAILURE;
+    MOZ_ASSERT(aGlobal);
+    MOZ_ASSERT(JS_IsGlobalObject(aGlobal) || js::IsOuterObject(aGlobal));
+    AutoJSContext cx;
+    JS::RootedObject global(cx, js::UncheckedUnwrap(aGlobal, /* stopAtOuter = */ false));
 
-    if (subject == mSystemPrincipal)
-        // This is the system principal: just allow access
-        return NS_OK;
-
-    // Check if the principal the function was compiled under is
-    // allowed to execute scripts.
-
-    bool result;
-    rv = CanExecuteScripts(aCx, subject, true, &result);
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (!result)
-      return NS_ERROR_DOM_SECURITY_ERR;
-
-    if (!aTargetObj) {
-        // We're done here
-        return NS_OK;
+    // Check the bits on the compartment private.
+    xpc::Scriptability& scriptability = xpc::Scriptability::Get(aGlobal);
+    if (!scriptability.Allowed()) {
+        return false;
     }
 
-    /*
-    ** Get origin of subject and object and compare.
-    */
-    JS::Rooted<JSObject*> obj(aCx, (JSObject*)aTargetObj);
-    nsIPrincipal* object = doGetObjectPrincipal(obj);
-
-    if (!object)
-        return NS_ERROR_FAILURE;
-
-    bool subsumes;
-    rv = subject->Subsumes(object, &subsumes);
-    if (NS_SUCCEEDED(rv) && !subsumes) {
-        rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
-    }
-    return rv;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
-                                           nsIPrincipal *aPrincipal,
-                                           bool *result)
-{
-    return CanExecuteScripts(cx, aPrincipal, false, result);
-}
-
-nsresult
-nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
-                                           nsIPrincipal *aPrincipal,
-                                           bool aAllowIfNoScriptContext,
-                                           bool *result)
-{
-    *result = false; 
-
-    if (aPrincipal == mSystemPrincipal)
-    {
-        // Even if JavaScript is disabled, we must still execute system scripts
-        *result = true;
-        return NS_OK;
+    // If the compartment is immune to script policy, we're done.
+    if (scriptability.IsImmuneToScriptPolicy()) {
+        return true;
     }
 
-    // Same thing for nsExpandedPrincipal, which is pseudo-privileged.
-    nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
-    if (ep)
-    {
-        *result = true;
-        return NS_OK;
-    }
-
-    //-- See if the current window allows JS execution
-    nsIScriptContext *scriptContext = GetScriptContext(cx);
-    if (!scriptContext) {
-        if (aAllowIfNoScriptContext) {
-            *result = true;
-            return NS_OK;
-        }
-        return NS_ERROR_FAILURE;
-    }
-
-    if (!scriptContext->GetScriptsEnabled()) {
-        // No scripting on this context, folks
-        *result = false;
-        return NS_OK;
-    }
-    
-    nsIScriptGlobalObject *sgo = scriptContext->GetGlobalObject();
-
-    if (!sgo) {
-        return NS_ERROR_FAILURE;
-    }
-
-    // window can be null here if we're running with a non-DOM window
-    // as the script global (i.e. a XUL prototype document).
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
-    nsCOMPtr<nsIDocShell> docshell;
-    nsresult rv;
-
-    if (window) {
-        docshell = window->GetDocShell();
-    }
-
-    if (docshell) {
-      rv = docshell->GetCanExecuteScripts(result);
-      if (NS_FAILED(rv)) return rv;
-      if (!*result) return NS_OK;
-    }
-
-    // OK, the docshell doesn't have script execution explicitly disabled.
-    // Check whether our URI is an "about:" URI that allows scripts.  If it is,
-    // we need to allow JS to run.  In this case, don't apply the JS enabled
-    // pref or policies.  On failures, just press on and don't do this special
-    // case.
-    nsCOMPtr<nsIURI> principalURI;
-    aPrincipal->GetURI(getter_AddRefs(principalURI));
-    if (!principalURI) {
-        // Broken principal of some sort.  Disallow.
-        *result = false;
-        return NS_ERROR_UNEXPECTED;
-    }
-        
-    bool isAbout;
-    rv = principalURI->SchemeIs("about", &isAbout);
-    if (NS_SUCCEEDED(rv) && isAbout) {
-        nsCOMPtr<nsIAboutModule> module;
-        rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
-        if (NS_SUCCEEDED(rv)) {
-            uint32_t flags;
-            rv = module->GetURIFlags(principalURI, &flags);
-            if (NS_SUCCEEDED(rv) &&
-                (flags & nsIAboutModule::ALLOW_SCRIPT)) {
-                *result = true;
-                return NS_OK;              
-            }
-        }
-    }
-
-    *result = mIsJavaScriptEnabled;
-    if (!*result)
-        return NS_OK; // Do not run scripts
-
-    //-- Check for a per-site policy
+    // Check for a per-site policy.
     static const char jsPrefGroupName[] = "javascript";
     ClassInfoData nameData(nullptr, jsPrefGroupName);
-
     SecurityLevel secLevel;
-    rv = LookupPolicy(aPrincipal, nameData, EnabledID(),
-                      nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                      nullptr, &secLevel);
-    if (NS_FAILED(rv) || secLevel.level == SCRIPT_SECURITY_NO_ACCESS)
-    {
-        *result = false;
-        return rv;
+    nsresult rv = LookupPolicy(doGetObjectPrincipal(global), nameData,
+                               EnabledID(),
+                               nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
+                               nullptr, &secLevel);
+    if (NS_FAILED(rv) || secLevel.level == SCRIPT_SECURITY_NO_ACCESS) {
+        return false;
     }
 
-    //-- Nobody vetoed, so allow the JS to run.
-    *result = true;
-    return NS_OK;
+    return true;
 }
 
 ///////////////// Principals ///////////////////////
@@ -1964,7 +1825,7 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 
 // static
 nsIPrincipal*
-nsScriptSecurityManager::doGetObjectPrincipal(JS::Handle<JSObject*> aObj)
+nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj)
 {
     JSCompartment *compartment = js::GetObjectCompartment(aObj);
     JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
@@ -2291,6 +2152,9 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void)
     if(mDefaultPolicy)
         mDefaultPolicy->Drop();
     delete mCapabilities;
+    if (mDomainPolicy)
+        mDomainPolicy->Deactivate();
+    MOZ_ASSERT(!mDomainPolicy);
 }
 
 void
@@ -2715,4 +2579,75 @@ nsScriptSecurityManager::GetJarPrefix(uint32_t aAppId,
 
   mozilla::GetJarPrefix(aAppId, aInMozBrowser, aJarPrefix);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetDomainPolicyActive(bool *aRv)
+{
+    *aRv = !!mDomainPolicy;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::ActivateDomainPolicy(nsIDomainPolicy** aRv)
+{
+    // We only allow one domain policy at a time. The holder of the previous
+    // policy must explicitly deactivate it first.
+    if (mDomainPolicy) {
+        return NS_ERROR_SERVICE_NOT_AVAILABLE;
+    }
+
+    mDomainPolicy = new mozilla::hotness::DomainPolicy();
+    nsCOMPtr<nsIDomainPolicy> ptr = mDomainPolicy;
+    ptr.forget(aRv);
+    return NS_OK;
+}
+
+// Intentionally non-scriptable. Script must have a reference to the
+// nsIDomainPolicy to deactivate it.
+void
+nsScriptSecurityManager::DeactivateDomainPolicy()
+{
+    mDomainPolicy = nullptr;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::PolicyAllowsScript(nsIURI* aURI, bool *aRv)
+{
+    nsresult rv;
+
+    // Compute our rule. If we don't have any domain policy set up that might
+    // provide exceptions to this rule, we're done.
+    *aRv = mIsJavaScriptEnabled;
+    if (!mDomainPolicy) {
+        return NS_OK;
+    }
+
+    // We have a domain policy. Grab the appropriate set of exceptions to the
+    // rule (either the blacklist or the whitelist, depending on whether script
+    // is enabled or disabled by default).
+    nsCOMPtr<nsIDomainSet> exceptions;
+    nsCOMPtr<nsIDomainSet> superExceptions;
+    if (*aRv) {
+        mDomainPolicy->GetBlacklist(getter_AddRefs(exceptions));
+        mDomainPolicy->GetSuperBlacklist(getter_AddRefs(superExceptions));
+    } else {
+        mDomainPolicy->GetWhitelist(getter_AddRefs(exceptions));
+        mDomainPolicy->GetSuperWhitelist(getter_AddRefs(superExceptions));
+    }
+
+    bool contains;
+    rv = exceptions->Contains(aURI, &contains);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (contains) {
+        *aRv = !*aRv;
+        return NS_OK;
+    }
+    rv = superExceptions->ContainsSuperDomain(aURI, &contains);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (contains) {
+        *aRv = !*aRv;
+    }
+
+    return NS_OK;
 }

@@ -287,6 +287,9 @@ public:
 #ifdef MOZ_B2G_FM
   static bool HasFMRadioSupport(JSContext* /* unused */, JSObject* aGlobal);
 #endif // MOZ_B2G_FM
+#ifdef MOZ_NFC
+  static bool HasNfcSupport(JSContext* /* unused */, JSObject* aGlobal);
+#endif // MOZ_NFC
 #ifdef MOZ_TIME_MANAGER
   static bool HasTimeSupport(JSContext* /* unused */, JSObject* aGlobal);
 #endif // MOZ_TIME_MANAGER

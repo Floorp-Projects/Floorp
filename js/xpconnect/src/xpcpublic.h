@@ -34,6 +34,39 @@ class nsIMemoryReporterCallback;
 #endif
 
 namespace xpc {
+
+class Scriptability {
+public:
+    Scriptability(JSCompartment *c);
+    bool Allowed();
+    bool IsImmuneToScriptPolicy();
+
+    void Block();
+    void Unblock();
+    void SetDocShellAllowsScript(bool aAllowed);
+
+    static Scriptability& Get(JSObject *aScope);
+
+private:
+    // Whenever a consumer wishes to prevent script from running on a global,
+    // it increments this value with a call to Block(). When it wishes to
+    // re-enable it (if ever), it decrements this value with a call to Unblock().
+    // Script may not run if this value is non-zero.
+    uint32_t mScriptBlocks;
+
+    // Whether the docshell allows javascript in this scope. If this scope
+    // doesn't have a docshell, this value is always true.
+    bool mDocShellAllowsScript;
+
+    // Whether this scope is immune to user-defined or addon-defined script
+    // policy.
+    bool mImmuneToScriptPolicy;
+
+    // Whether the new-style domain policy when this compartment was created
+    // forbids script execution.
+    bool mScriptBlockedByPolicy;
+};
+
 JSObject *
 TransplantObject(JSContext *cx, JS::HandleObject origobj, JS::HandleObject target);
 

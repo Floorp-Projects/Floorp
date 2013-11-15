@@ -10,6 +10,7 @@
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
 
 #include "prlog.h"
 
@@ -497,6 +498,8 @@ gfxPlatform::Init()
         gPlatform->mMemoryPressureObserver = new MemoryPressureObserver();
         obs->AddObserver(gPlatform->mMemoryPressureObserver, "memory-pressure", false);
     }
+
+    NS_RegisterMemoryReporter(new GfxMemoryImageReporter());
 }
 
 void

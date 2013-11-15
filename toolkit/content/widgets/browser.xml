@@ -206,6 +206,19 @@
                 onget="return this.webNavigation.currentURI;"
                 readonly="true"/>
 
+      <!--
+        Used by session restore to ensure that currentURI is set so
+        that switch-to-tab works before the tab is fully
+        restored. This function also invokes onLocationChanged
+        listeners in tabbrowser.xml.
+      -->
+      <method name="_setCurrentURI">
+        <parameter name="aURI"/>
+        <body><![CDATA[
+          this.docShell.setCurrentURI(aURI);
+        ]]></body>
+      </method>
+
       <property name="documentURI"
                 onget="return this.contentDocument.documentURIObject;"
                 readonly="true"/>
