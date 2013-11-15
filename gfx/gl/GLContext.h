@@ -2460,7 +2460,7 @@ public:
      * If surf is null, this removes any previously set override, and makes the
      * context current again against its primary surface.
      */
-    virtual void SetEGLSurfaceOverride(void* surf) {
+    virtual void SetEGLSurfaceOverride(EGLSurface surf) {
         MOZ_CRASH("Must be called against a GLContextEGL.");
     }
 
