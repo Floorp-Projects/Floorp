@@ -211,11 +211,12 @@ interface nsIDOMTCPSocket : nsISupports
 };
 
 /*
- * Internal interfaces for use in cross-process socket implementation.
+ * This interface is implemented in TCPSocket.js as an internal interfaces
+ * for use in cross-process socket implementation.
  * Needed to account for multiple possible types that can be provided to
  * the socket callbacks as arguments.
  */
-[scriptable, uuid(234c664c-3d6c-4859-b45c-4e9a98cb5bdc)]
+[scriptable, uuid(017f130f-2477-4215-8783-57eada957699)]
 interface nsITCPSocketInternal : nsISupports {
   // Trigger the callback for |type| and provide a DOMError() object with the given data
   void callListenerError(in DOMString type, in DOMString name);
@@ -229,8 +230,20 @@ interface nsITCPSocketInternal : nsISupports {
   // Trigger the callback for |type| with no argument
   void callListenerVoid(in DOMString type);
 
-  // Update the DOM object's readyState and bufferedAmount values with the provided data
-  void updateReadyStateAndBuffered(in DOMString readyState, in uint32_t bufferedAmount);
+  // Update the DOM object's readyState.
+  // @param readyState
+  //        new ready state to be set to TCPSocket.
+  void updateReadyState(in DOMString readyState);
+
+  // Update the DOM object's bufferedAmount value with a tracking number to
+  // ensure the update request is sent after child's send() invocation.
+  // @param bufferedAmount
+  //        TCPSocket parent's bufferedAmount.
+  // @param trackingNumber
+  //        A number to ensure the bufferedAmount is updated after data
+  //        from child are sent to parent.
+  void updateBufferedAmount(in uint32_t bufferedAmount,
+                            in uint32_t trackingNumber);
 
   // Create a socket object on the parent side.
   // This is called in accepting any open request on the parent side.
@@ -259,6 +272,18 @@ interface nsITCPSocketInternal : nsISupports {
 
   // Set App ID.
   void setAppId(in unsigned long appId);
+
+  // Set a callback that handles the request from a TCP socket parent when that
+  // socket parent wants to notify that its bufferedAmount is updated.
+  void setOnUpdateBufferedAmountHandler(in jsval handler);
+
+  // Providing child process with ability to pass more arguments to parent's
+  // send() function.
+  // @param trackingNumber
+  //        To ensure the request to update bufferedAmount in child is after
+  //        lastest send() invocation from child.
+  void onRecvSendFromChild(in jsval data, in unsigned long byteOffset,
+                           in unsigned long byteLength, in unsigned long trackingNumber);
 };
 
 /**

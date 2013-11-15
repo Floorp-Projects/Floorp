@@ -85,6 +85,20 @@ if CONFIG['MOZ_B2G_RIL']:
         'ril_worker.js',
     ]
 
+if CONFIG['MOZ_NFC']:
+    XPIDL_SOURCES += [
+        'nsINfcContentHelper.idl',
+    ]
+    EXTRA_COMPONENTS += [
+        'Nfc.js',
+        'Nfc.manifest',
+        'NfcContentHelper.js',
+    ]
+    EXTRA_JS_MODULES += [
+    'nfc_consts.js',
+    'nfc_worker.js',
+    ]
+
 FAIL_ON_WARNINGS = True
 
 LIBXUL_LIBRARY = True
@@ -97,6 +111,7 @@ LOCAL_INCLUDES += [
     '/content/events/src',
     '/dom/base',
     '/dom/bluetooth',
+    '/dom/nfc',
     '/dom/src/geolocation',
     '/dom/wifi',
 ]

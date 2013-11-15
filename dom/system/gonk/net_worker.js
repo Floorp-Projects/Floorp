@@ -555,16 +555,8 @@ function enableNat(params, callback) {
 }
 
 function disableNat(params, callback) {
-  let command;
-
-  // Don't disable nat because others interface still need it.
-  // Send the dummy command to continue the function chain.
-  if ("interfaceList" in params && params.interfaceList.length > 1) {
-    command = DUMMY_COMMAND;
-  } else {
-    command = "nat disable " + params.internalIfname + " " +
-              params.externalIfname + " " + "0";
-  }
+  let command = "nat disable " + params.internalIfname + " " +
+                 params.externalIfname + " " + "0";
   return doCommand(command, callback);
 }
 

@@ -62,7 +62,7 @@ public class FetchMetaGlobalStage extends AbstractNonRepositorySyncStage {
     if (!infoCollections.updateNeeded(META_COLLECTION, lastModified)) {
       // Try to use our local collection keys for this session.
       Logger.info(LOG_TAG, "Trying to use persisted meta/global for this session.");
-      MetaGlobal global = session.config.persistedMetaGlobal().metaGlobal(session.config.metaURL(), session.credentials());
+      MetaGlobal global = session.config.persistedMetaGlobal().metaGlobal(session.config.metaURL(), session.getAuthHeaderProvider());
       if (global != null) {
         Logger.info(LOG_TAG, "Using persisted meta/global for this session.");
         session.processMetaGlobal(global); // Calls session.advance().
@@ -73,7 +73,7 @@ public class FetchMetaGlobalStage extends AbstractNonRepositorySyncStage {
 
     // We need an update: fetch or upload meta/global as necessary.
     Logger.info(LOG_TAG, "Fetching fresh meta/global for this session.");
-    MetaGlobal global = new MetaGlobal(session.config.metaURL(), session.credentials());
+    MetaGlobal global = new MetaGlobal(session.config.metaURL(), session.getAuthHeaderProvider());
     global.fetch(new StageMetaGlobalDelegate(session));
   }
 }
