@@ -64,7 +64,7 @@ nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
     mSize = 0;
     mVersion = 0;
 
-    JS_ClearStructuredClone(jsBytes, mSize);
+    JS_ClearStructuredClone(jsBytes, mSize, nullptr, nullptr);
     return NS_ERROR_FAILURE;
   }
   else {
@@ -73,7 +73,7 @@ nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
 
   memcpy(mData, jsBytes, mSize);
 
-  JS_ClearStructuredClone(jsBytes, mSize);
+  JS_ClearStructuredClone(jsBytes, mSize, nullptr, nullptr);
   return NS_OK;
 }
 

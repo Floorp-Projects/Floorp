@@ -9,6 +9,7 @@
 #include "mozilla/dom/Event.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMMessageEvent.h"
+#include "mozilla/dom/MessagePortList.h"
 
 namespace mozilla {
 namespace dom {
@@ -56,6 +57,17 @@ public:
   }
 
   void SetPorts(MessagePortList* aPorts);
+
+  // Non WebIDL methods
+  void SetSource(mozilla::dom::MessagePort* aPort)
+  {
+    mPortSource = aPort;
+  }
+
+  void SetSource(nsPIDOMWindow* aWindow)
+  {
+    mWindowSource = aWindow;
+  }
 
   static already_AddRefed<MessageEvent>
   Constructor(const GlobalObject& aGlobal, JSContext* aCx,

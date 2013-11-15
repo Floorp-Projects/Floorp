@@ -1274,7 +1274,7 @@ class CloneBufferObject : public JSObject {
     // Discard an owned clone buffer.
     void discard() {
         if (data())
-            JS_ClearStructuredClone(data(), nbytes());
+            JS_ClearStructuredClone(data(), nbytes(), nullptr, nullptr);
         setReservedSlot(DATA_SLOT, PrivateValue(nullptr));
     }
 
