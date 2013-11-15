@@ -241,12 +241,11 @@
   }
 
   #TabsToolbar:not(:-moz-lwtheme)::before {
-    box-shadow: 0 0 30px 30px rgb(174,189,204);
+    box-shadow: 0 0 30px 30px rgba(174,189,204,0.85);
     content: "";
     display: -moz-box;
     height: 0;
     margin: 0 60px; /* (30px + 30px) from box-shadow */
-    opacity: 0.85;
     position: absolute;
     pointer-events: none;
     top: 50%;
