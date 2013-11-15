@@ -7,8 +7,8 @@ function rect(ele)           ele.getBoundingClientRect();
 function width(ele)          rect(ele).width;
 function left(ele)           rect(ele).left;
 function right(ele)          rect(ele).right;
-function isLeft(ele, msg)    is(left(ele), left(scrollbox), msg);
-function isRight(ele, msg)   is(right(ele), right(scrollbox), msg);
+function isLeft(ele, msg)    is(left(ele) + tabstrip._tabMarginLeft, left(scrollbox), msg);
+function isRight(ele, msg)   is(right(ele) - tabstrip._tabMarginRight, right(scrollbox), msg);
 function elementFromPoint(x) tabstrip._elementFromPoint(x);
 function nextLeftElement()   elementFromPoint(left(scrollbox) - 1);
 function nextRightElement()  elementFromPoint(right(scrollbox) + 1);
@@ -62,7 +62,11 @@ function runOverflowTests(aEvent) {
   EventUtils.synthesizeMouse(upButton, 1, 1, {});
   isLeft(element, "Scrolled one tab to the left with a single click");
 
-  element = elementFromPoint(left(scrollbox) - width(scrollbox));
+  let elementPoint = left(scrollbox) - width(scrollbox);
+  element = elementFromPoint(elementPoint);
+  if (elementPoint == right(element)) {
+    element = element.nextSibling;
+  }
   EventUtils.synthesizeMouse(upButton, 1, 1, {clickCount: 2});
   isLeft(element, "Scrolled one page of tabs with a double click");
 
