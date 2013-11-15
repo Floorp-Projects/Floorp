@@ -38,7 +38,7 @@
 #include "nsIRDFService.h"
 #include "nsIStreamListener.h"
 #include "nsITimer.h"
-#include "nsIDocShell.h"
+#include "nsDocShell.h"
 #include "nsGkAtoms.h"
 #include "nsXMLContentSink.h"
 #include "nsXULContentSink.h"
@@ -4660,7 +4660,7 @@ XULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
 already_AddRefed<nsPIWindowRoot>
 XULDocument::GetWindowRoot()
 {
-    nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryReferent(mDocumentContainer);
+    nsCOMPtr<nsIInterfaceRequestor> ir(mDocumentContainer);
     nsCOMPtr<nsIDOMWindow> window(do_GetInterface(ir));
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(window));
     return piWin ? piWin->GetTopWindowRoot() : nullptr;
