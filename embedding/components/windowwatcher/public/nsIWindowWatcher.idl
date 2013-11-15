@@ -123,6 +123,10 @@ interface nsIWindowWatcher : nsISupports {
   */
   void setWindowCreator(in nsIWindowCreator creator);
 
+  /** Returns true if a window creator callback has been set, false otherwise.
+  */
+  boolean hasWindowCreator();
+
 
   /** Retrieve the chrome window mapped to the given DOM window. Window
       Watcher keeps a list of all top-level DOM windows currently open,
@@ -160,9 +164,8 @@ interface nsIWindowWatcher : nsISupports {
 };
 
 %{C++
-// {002286a8-494b-43b3-8ddd-49e3fc50622b}
 #define NS_WINDOWWATCHER_IID \
- {0x002286a8, 0x494b, 0x43b3, {0x8d, 0xdd, 0x49, 0xe3, 0xfc, 0x50, 0x62, 0x2b}}
+ {0x965c032f, 0xdede, 0x4ec8, {0x81, 0xc1, 0x4d, 0x39, 0xaa, 0x8a, 0xa8, 0xfb}}
 
 #define NS_WINDOWWATCHER_CONTRACTID "@mozilla.org/embedcomp/window-watcher;1"
 %}
