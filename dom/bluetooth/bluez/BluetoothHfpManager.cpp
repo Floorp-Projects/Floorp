@@ -1398,12 +1398,16 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
 
   switch (aCallState) {
     case nsITelephonyProvider::CALL_STATE_HELD:
-      if (!FindFirstCall(nsITelephonyProvider::CALL_STATE_CONNECTED)) {
-        sCINDItems[CINDType::CALLHELD].value = CallHeldState::ONHOLD_NOACTIVE;
-      } else {
-        sCINDItems[CINDType::CALLHELD].value = CallHeldState::ONHOLD_ACTIVE;
+      if (prevCallState == nsITelephonyProvider::CALL_STATE_CONNECTED) {
+        if (mCurrentCallArray.Length() == 1) {
+          // A single active call is put on hold (+CIEV, callheld=2)
+          sCINDItems[CINDType::CALLHELD].value = CallHeldState::ONHOLD_NOACTIVE;
+        } else {
+          // Releases all active calls and accepts the other (+CIEV, callheld=1)
+          sCINDItems[CINDType::CALLHELD].value = CallHeldState::ONHOLD_ACTIVE;
+        }
+        SendCommand("+CIEV: ", CINDType::CALLHELD);
       }
-      SendCommand("+CIEV: ", CINDType::CALLHELD);
       break;
     case nsITelephonyProvider::CALL_STATE_INCOMING:
       if (FindFirstCall(nsITelephonyProvider::CALL_STATE_CONNECTED)) {
@@ -1461,26 +1465,18 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           UpdateCIND(CINDType::CALL, CallState::IN_PROGRESS, aSend);
           UpdateCIND(CINDType::CALLSETUP, CallSetupState::NO_CALLSETUP, aSend);
           break;
+
+        case nsITelephonyProvider::CALL_STATE_HELD:
+          // The held call(s) become connected call(s).
+          if (!FindFirstCall(nsITelephonyProvider::CALL_STATE_HELD)
+              && sCINDItems[CINDType::CALLHELD].value ==
+              CallHeldState::ONHOLD_NOACTIVE) {
+              UpdateCIND(CINDType::CALLHELD, CallHeldState::NO_CALLHELD, aSend);
+          }
+          break;
+
         default:
           BT_WARNING("Not handling state changed");
-      }
-
-      // = Handle callheld separately =
-      // Besides checking if there is still held calls, another thing we
-      // need to consider is the state change when receiving AT+CHLD=2.
-      // Assume that there is one active call(c1) and one call on hold(c2).
-      // We got AT+CHLD=2, which swaps active/held position. The first
-      // action would be c2 -> ACTIVE, then c1 -> HELD. When we get the
-      // CallStateChanged event of c2 becoming ACTIVE, we enter here.
-      // However we can't send callheld=0 at this time because we should
-      // see c2 -> ACTIVE + c1 -> HELD as one operation. That's the reason
-      // why I added the GetNumberOfCalls() condition check.
-      if (GetNumberOfCalls(nsITelephonyProvider::CALL_STATE_CONNECTED) == 1) {
-        if (FindFirstCall(nsITelephonyProvider::CALL_STATE_HELD)) {
-          UpdateCIND(CINDType::CALLHELD, CallHeldState::ONHOLD_ACTIVE, aSend);
-        } else if (prevCallState == nsITelephonyProvider::CALL_STATE_HELD) {
-          UpdateCIND(CINDType::CALLHELD, CallHeldState::NO_CALLHELD, aSend);
-        }
       }
       break;
     case nsITelephonyProvider::CALL_STATE_DISCONNECTED:
