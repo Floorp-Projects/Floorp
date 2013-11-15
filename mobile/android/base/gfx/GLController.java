@@ -36,7 +36,7 @@ public class GLController {
     private static GLController sInstance;
 
     private LayerView mView;
-    private boolean mSurfaceValid;
+    private boolean mServerSurfaceValid;
     private int mWidth, mHeight;
 
     /* This is written by the compositor thread (while the UI thread
@@ -83,7 +83,7 @@ public class GLController {
         ThreadUtils.assertOnUiThread();
         Log.w(LOGTAG, "GLController::surfaceDestroyed() with mCompositorCreated=" + mCompositorCreated);
 
-        mSurfaceValid = false;
+        mServerSurfaceValid = false;
         mEGLSurface = null;
 
         // We need to coordinate with Gecko when pausing composition, to ensure
@@ -102,12 +102,12 @@ public class GLController {
 
     synchronized void surfaceChanged(int newWidth, int newHeight) {
         ThreadUtils.assertOnUiThread();
-        Log.w(LOGTAG, "GLController::surfaceChanged(" + newWidth + ", " + newHeight + ") with mSurfaceValid=" + mSurfaceValid);
+        Log.w(LOGTAG, "GLController::surfaceChanged(" + newWidth + ", " + newHeight + ") with mServerSurfaceValid=" + mServerSurfaceValid);
 
         mWidth = newWidth;
         mHeight = newHeight;
 
-        if (mSurfaceValid) {
+        if (mServerSurfaceValid) {
             // We need to make this call even when the compositor isn't currently
             // paused (e.g. during an orientation change), to make the compositor
             // aware of the changed surface.
@@ -115,7 +115,7 @@ public class GLController {
             Log.w(LOGTAG, "done GLController::surfaceChanged with compositor resume");
             return;
         }
-        mSurfaceValid = true;
+        mServerSurfaceValid = true;
 
         // If we get here, we supposedly have a valid surface where previously we
         // did not. So we're going to create the window surface and hold on to it
@@ -130,15 +130,15 @@ public class GLController {
         mView.post(new Runnable() {
             @Override
             public void run() {
-                Log.w(LOGTAG, "GLController::surfaceChanged, creating compositor; mCompositorCreated=" + mCompositorCreated + ", mSurfaceValid=" + mSurfaceValid);
+                Log.w(LOGTAG, "GLController::surfaceChanged, creating compositor; mCompositorCreated=" + mCompositorCreated + ", mServerSurfaceValid=" + mServerSurfaceValid);
                 try {
-                    // Re-check mSurfaceValid in case the surface was destroyed between
+                    // Re-check mServerSurfaceValid in case the surface was destroyed between
                     // where we set it to true above and this runnable getting run.
-                    // If mSurfaceValid is still true, try to create mEGLSurface. If
-                    // mSurfaceValid is false, leave mEGLSurface as null. So at the end
+                    // If mServerSurfaceValid is still true, try to create mEGLSurface. If
+                    // mServerSurfaceValid is false, leave mEGLSurface as null. So at the end
                     // of this block mEGLSurface will be null (or EGL_NO_SURFACE) if
-                    // eglCreateWindowSurface failed or if mSurfaceValid changed to false.
-                    if (mSurfaceValid) {
+                    // eglCreateWindowSurface failed or if mServerSurfaceValid changed to false.
+                    if (mServerSurfaceValid) {
                         if (mEGL == null) {
                             initEGL();
                         }
@@ -149,12 +149,12 @@ public class GLController {
                     Log.e(LOGTAG, "Unable to create window surface", e);
                 }
                 if (mEGLSurface == null || mEGLSurface == EGL10.EGL_NO_SURFACE) {
-                    mSurfaceValid = false;
+                    mServerSurfaceValid = false;
                     mEGLSurface = null; // normalize EGL_NO_SURFACE to null to simplify later checks
                     Log.e(LOGTAG, "EGL window surface could not be created: " + getEGLError());
                     return;
                 }
-                // At this point mSurfaceValid is true and mEGLSurface is a valid surface. Try
+                // At this point mServerSurfaceValid is true and mEGLSurface is a valid surface. Try
                 // to create the compositor if it hasn't been created already.
                 createCompositor();
             }
@@ -192,7 +192,7 @@ public class GLController {
     }
 
     public boolean hasValidSurface() {
-        return mSurfaceValid;
+        return mServerSurfaceValid;
     }
 
     private void initEGL() {
