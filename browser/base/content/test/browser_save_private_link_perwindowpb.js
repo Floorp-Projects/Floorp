@@ -82,8 +82,12 @@ function test() {
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
     aWindow.gBrowser.addEventListener("pageshow", function pageShown(event) {
-      if (event.target.location == "about:blank")
+      // If data: -url PAC file isn't loaded soon enough, we may get about:privatebrowsing loaded
+      if (event.target.location == "about:blank" ||
+          event.target.location == "about:privatebrowsing") {
+        aWindow.gBrowser.selectedBrowser.loadURI(testURI);
         return;
+      }
       aWindow.gBrowser.removeEventListener("pageshow", pageShown);
 
       executeSoon(function () {
