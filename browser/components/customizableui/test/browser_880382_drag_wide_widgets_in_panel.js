@@ -407,6 +407,40 @@ let gTests = [
       ok(CustomizableUI.inDefaultState, "Should still be in default state.");
     },
   },
+  {
+    desc: "Dragging a small button onto the last big button should work.",
+    setup: startCustomizing,
+    run: function() {
+      let editControls = document.getElementById("edit-controls");
+      let panel = document.getElementById(CustomizableUI.AREA_PANEL);
+      let target = panel.getElementsByClassName("panel-customization-placeholder")[0];
+      let placementsAfterMove = ["zoom-controls",
+                                 "new-window-button",
+                                 "privatebrowsing-button",
+                                 "save-page-button",
+                                 "print-button",
+                                 "history-panelmenu",
+                                 "fullscreen-button",
+                                 "find-button",
+                                 "preferences-button",
+                                 "add-ons-button",
+                                 "edit-controls"];
+      simulateItemDrag(editControls, target);
+      assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
+      let itemToDrag = "sync-button";
+      let button = document.getElementById(itemToDrag);
+      placementsAfterMove.push(itemToDrag);
+      simulateItemDrag(button, editControls);
+      assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
+
+      // Put stuff back:
+      let palette = document.getElementById("customization-palette");
+      let zoomControls = document.getElementById("zoom-controls");
+      simulateItemDrag(button, palette);
+      simulateItemDrag(editControls, zoomControls);
+      ok(CustomizableUI.inDefaultState, "Should be in default state again.");
+    },
+  },
 ];
 
 function asyncCleanup() {

@@ -74,7 +74,25 @@ let PanelWideWidgetTracker = {
   },
   shouldMoveForward: function(aWidgetId, aPosition) {
     let currentWidgetAtPosition = gPanelPlacements[aPosition + 1];
-    return gWideWidgets.has(currentWidgetAtPosition) && !gWideWidgets.has(aWidgetId);
+    let rv = gWideWidgets.has(currentWidgetAtPosition) && !gWideWidgets.has(aWidgetId);
+    // We might now think we can move forward, but for that we need at least 2 more small
+    // widgets to be present:
+    if (rv) {
+      let furtherWidgets = gPanelPlacements.slice(aPosition + 2);
+      let realWidgets = 0;
+      if (furtherWidgets.length >= 2) {
+        while (furtherWidgets.length && realWidgets < 2) {
+          let w = furtherWidgets.shift();
+          if (!gWideWidgets.has(w) && this.checkWidgetStatus(w)) {
+            realWidgets++;
+          }
+        }
+      }
+      if (realWidgets < 2) {
+        rv = false;
+      }
+    }
+    return rv;
   },
   adjustWidgets: function(aWidgetId, aMoveForwards) {
     if (this.adjusting) {
@@ -107,26 +125,12 @@ let PanelWideWidgetTracker = {
       if (gWideWidgets.has(thisWidgetId)) {
         continue;
       }
-      let widgetWrapper = CustomizableUI.getWidget(gPanelPlacements[placementIndex]);
-      // This widget might not actually exist:
-      if (!widgetWrapper) {
+      let widgetStatus = this.checkWidgetStatus(thisWidgetId);
+      if (!widgetStatus) {
         continue;
       }
-      // This widget might still not actually exist:
-      if (widgetWrapper.provider == CustomizableUI.PROVIDER_XUL &&
-          widgetWrapper.instances.length == 0) {
-        continue;
-      }
-
-      // Or it might only be there some of the time:
-      if (widgetWrapper.provider == CustomizableUI.PROVIDER_API &&
-          widgetWrapper.showInPrivateBrowsing === false) {
-        if (!fixedPos) {
-          fixedPos = placementIndex;
-        } else {
-          fixedPos = Math.min(fixedPos, placementIndex);
-        }
-        // We want to position ourselves before this item:
+      if (widgetStatus == "public-only") {
+        fixedPos = !fixedPos ? placementIndex : Math.min(fixedPos, placementIndex);
         prevSiblingCount = 0;
       } else {
         prevSiblingCount++;
@@ -144,6 +148,33 @@ let PanelWideWidgetTracker = {
       CustomizableUI.moveWidgetWithinArea(aWidgetId, desiredPos);
     }
   },
+
+  /*
+   * Check whether a widget id is actually known anywhere.
+   * @returns false if the widget doesn't exist,
+   *          "public-only" if it's not shown in private windows
+   *          "real" if it does exist and is shown even in private windows
+   */
+  checkWidgetStatus: function(aWidgetId) {
+    let widgetWrapper = CustomizableUI.getWidget(aWidgetId);
+    // This widget might not actually exist:
+    if (!widgetWrapper) {
+      return false;
+    }
+    // This widget might still not actually exist:
+    if (widgetWrapper.provider == CustomizableUI.PROVIDER_XUL &&
+        widgetWrapper.instances.length == 0) {
+      return false;
+    }
+
+    // Or it might only be there some of the time:
+    if (widgetWrapper.provider == CustomizableUI.PROVIDER_API &&
+        widgetWrapper.showInPrivateBrowsing === false) {
+      return "public-only";
+    }
+    return "real";
+  },
+
   init: function() {
     // Initialize our local placements copy and register the listener
     gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
