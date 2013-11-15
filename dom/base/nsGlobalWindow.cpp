@@ -139,6 +139,7 @@
 #endif
 #include "nsIDOMCustomEvent.h"
 #include "nsIFrameRequestCallback.h"
+#include "nsIJARChannel.h"
 
 #include "xpcprivate.h"
 
@@ -2061,6 +2062,9 @@ WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
   mInnerWindowHolder = aHolder;
 
   aWindow->SuspendTimeouts();
+
+  // When a global goes into the bfcache, we disable script.
+  xpc::Scriptability::Get(aWindow->mJSObject).SetDocShellAllowsScript(false);
 }
 
 WindowStateHolder::~WindowStateHolder()
@@ -2459,6 +2463,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // Enter the new global's compartment.
     JSAutoCompartment ac(cx, mJSObject);
 
+    // Set scriptability based on the state of the docshell.
+    bool allow = GetDocShell()->GetCanExecuteScripts();
+    xpc::Scriptability::Get(mJSObject).SetDocShellAllowsScript(allow);
+
     // If we created a new inner window above, we need to do the last little bit
     // of initialization now that the dust has settled.
     if (createdInnerWindow) {
@@ -2539,6 +2547,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       JS::Rooted<JSObject*> obj(cx, newInnerWindow->mJSObject);
       rv = mContext->InitClasses(obj);
       NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // If the document comes from a JAR, check if the channel was determined
+    // to be unsafe. If so, permanently disable script on the compartment by
+    // calling Block() and throwing away the key.
+    nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aDocument->GetChannel());
+    if (jarChannel && jarChannel->GetIsUnsafe()) {
+      xpc::Scriptability::Get(newInnerWindow->mJSObject).Block();
     }
 
     if (mArguments) {
@@ -3171,19 +3187,6 @@ nsGlobalWindow::PoisonOuterWindowProxy(JSObject *aObject)
   MOZ_ASSERT(IsOuterWindow());
   if (aObject == mJSObject) {
     mJSObject.setToCrashOnTouch();
-  }
-}
-
-void
-nsGlobalWindow::SetScriptsEnabled(bool aEnabled, bool aFireTimeouts)
-{
-  FORWARD_TO_INNER_VOID(SetScriptsEnabled, (aEnabled, aFireTimeouts));
-
-  if (aEnabled && aFireTimeouts) {
-    // Scripts are enabled (again?) on this context, run timeouts that
-    // fired on this context while scripts were disabled.
-    void (nsGlobalWindow::*run)() = &nsGlobalWindow::RunTimeout;
-    NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, run));
   }
 }
 
@@ -8942,10 +8945,13 @@ NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsGlobalWindow)
 NS_IMETHODIMP
 nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 {
-  MOZ_ASSERT(!IsInnerWindow() || IsCurrentInnerWindow(),
-             "We should only fire events on the current inner window.");
-
   FORWARD_TO_INNER(DispatchEvent, (aEvent, aRetVal), NS_OK);
+
+  if (!IsCurrentInnerWindow()) {
+    NS_WARNING("DispatchEvent called on non-current inner window, dropping. "
+               "Please check the window in the caller instead.");
+    return NS_ERROR_FAILURE;
+  }
 
   if (!mDoc) {
     return NS_ERROR_FAILURE;
@@ -11821,20 +11827,6 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     if (!scx) {
       // No context means this window was closed or never properly
       // initialized for this language.
-      continue;
-    }
-
-    // The "scripts disabled" concept is still a little vague wrt
-    // multiple languages.  Prepare for the day when languages can be
-    // disabled independently of the other languages...
-    if (!scx->GetScriptsEnabled()) {
-      // Scripts were enabled once in this window (unless aTimeout ==
-      // nullptr) but now scripts are disabled (we might be in
-      // print-preview, for instance), this means we shouldn't run any
-      // timeouts at this point.
-      //
-      // If scripts are enabled for this language in this window again
-      // we'll fire the timeouts that are due at that point.
       continue;
     }
 

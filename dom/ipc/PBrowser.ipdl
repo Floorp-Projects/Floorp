@@ -289,11 +289,12 @@ parent:
     ContentReceivedTouch(ScrollableLayerGuid aGuid, bool aPreventDefault);
 
     /**
-     * Updates the parent's zoom constraints for this tab. The zoom controller
-     * code lives on the parent side and so this allows it to have up-to-date
-     * zoom constraints.
+     * Updates the zoom constraints for a scrollable frame in this tab.
+     * The zoom controller code lives on the parent side and so this allows it to
+     * have up-to-date zoom constraints.
      */
-    UpdateZoomConstraints(bool aAllowZoom, CSSToScreenScale aMinZoom, CSSToScreenScale aMaxZoom);
+    UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId,
+                          bool aAllowZoom, CSSToScreenScale aMinZoom, CSSToScreenScale aMaxZoom);
 
     /**
      * Notifies the parent about a scroll event. The pres shell ID and

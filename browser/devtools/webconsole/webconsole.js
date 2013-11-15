@@ -171,6 +171,7 @@ const MAX_LONG_STRING_LENGTH = 200000;
 
 const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
 const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
+const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 
 /**
  * A WebConsoleFrame instance is an interactive console initialized *per target*
@@ -201,6 +202,7 @@ function WebConsoleFrame(aWebConsoleOwner)
   this._toggleFilter = this._toggleFilter.bind(this);
   this._onPanelSelected = this._onPanelSelected.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
+  this._onToolboxPrefChanged = this._onToolboxPrefChanged.bind(this);
 
   this._outputTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this._outputTimerInitialized = false;
@@ -571,6 +573,13 @@ WebConsoleFrame.prototype = {
     if (toolbox) {
       toolbox.on("webconsole-selected", this._onPanelSelected);
     }
+
+    // Toggle the timestamp on preference change
+    gDevTools.on("pref-changed", this._onToolboxPrefChanged);
+    this._onToolboxPrefChanged("pref-changed", {
+      pref: PREF_MESSAGE_TIMESTAMP,
+      newValue: Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP),
+    });
   },
 
   /**
@@ -801,18 +810,26 @@ WebConsoleFrame.prototype = {
           break;
         }
 
+        // Toggle on the targeted filter button, and if the user alt clicked,
+        // toggle off all other filter buttons and their associated filters.
         let state = target.getAttribute("checked") !== "true";
+        if (aEvent.getModifierState("Alt")) {
+          let buttons = this.document
+                        .querySelectorAll(".webconsole-filter-button");
+          Array.forEach(buttons, (button) => {
+            if (button !== target) {
+              button.setAttribute("checked", false);
+              this._setMenuState(button, false);
+            }
+          });
+          state = true;
+        }
         target.setAttribute("checked", state);
 
         // This is a filter button with a drop-down, and the user clicked the
         // main part of the button. Go through all the severities and toggle
         // their associated filters.
-        let menuItems = target.querySelectorAll("menuitem");
-        for (let i = 0; i < menuItems.length; i++) {
-          menuItems[i].setAttribute("checked", state);
-          let prefKey = menuItems[i].getAttribute("prefKey");
-          this.setFilterState(prefKey, state);
-        }
+        this._setMenuState(target, state);
         break;
       }
 
@@ -849,6 +866,25 @@ WebConsoleFrame.prototype = {
         break;
       }
     }
+  },
+
+  /**
+   * Set the menu attributes for a specific toggle button.
+   *
+   * @private
+   * @param XULElement aTarget
+   *        Button with drop down items to be toggled.
+   * @param boolean aState
+   *        True if the menu item is being toggled on, and false otherwise.
+   */
+  _setMenuState: function WCF__setMenuState(aTarget, aState)
+  {
+    let menuItems = aTarget.querySelectorAll("menuitem");
+    Array.forEach(menuItems, (item) => {
+      item.setAttribute("checked", aState);
+      let prefKey = item.getAttribute("prefKey");
+      this.setFilterState(prefKey, aState);
+    });
   },
 
   /**
@@ -2776,6 +2812,29 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Handler for the pref-changed event coming from the toolbox.
+   * Currently this function only handles the timestamps preferences.
+   *
+   * @private
+   * @param object aEvent
+   *        This parameter is a string that holds the event name
+   *        pref-changed in this case.
+   * @param object aData
+   *        This is the pref-changed data object.
+  */
+  _onToolboxPrefChanged: function WCF__onToolboxPrefChanged(aEvent, aData)
+  {
+    if (aData.pref == PREF_MESSAGE_TIMESTAMP) {
+      if (aData.newValue) {
+        this.outputNode.classList.remove("hideTimestamps");
+      }
+      else {
+        this.outputNode.classList.add("hideTimestamps");
+      }
+    }
+  },
+
+  /**
    * Copies the selected items to the system clipboard.
    *
    * @param object aOptions
@@ -2884,6 +2943,8 @@ WebConsoleFrame.prototype = {
     if (toolbox) {
       toolbox.off("webconsole-selected", this._onPanelSelected);
     }
+
+    gDevTools.off("pref-changed", this._onToolboxPrefChanged);
 
     this._repeatNodes = {};
     this._outputQueue = [];

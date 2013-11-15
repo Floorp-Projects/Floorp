@@ -10,6 +10,7 @@
 
 #include "xpcprivate.h"
 #include "xpcpublic.h"
+#include "XPCWrapper.h"
 #include "XPCJSMemoryReporter.h"
 #include "WrapperFactory.h"
 #include "dom_quickstubs.h"
@@ -39,6 +40,7 @@
 #include "mozilla/Attributes.h"
 #include "AccessCheck.h"
 #include "nsGlobalWindow.h"
+#include "nsAboutProtocolUtils.h"
 
 #include "GeckoProfiler.h"
 #include "nsJSPrincipals.h"
@@ -405,9 +407,108 @@ EnsureCompartmentPrivate(JSCompartment *c)
     CompartmentPrivate *priv = GetCompartmentPrivate(c);
     if (priv)
         return priv;
-    priv = new CompartmentPrivate();
+    priv = new CompartmentPrivate(c);
     JS_SetCompartmentPrivate(c, priv);
     return priv;
+}
+
+static bool
+PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal)
+{
+    // System principal gets a free pass.
+    if (XPCWrapper::GetSecurityManager()->IsSystemPrincipal(aPrincipal))
+        return true;
+
+    // nsExpandedPrincipal gets a free pass.
+    nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
+    if (ep)
+        return true;
+
+    // Check whether our URI is an "about:" URI that allows scripts.  If it is,
+    // we need to allow JS to run.
+    nsCOMPtr<nsIURI> principalURI;
+    aPrincipal->GetURI(getter_AddRefs(principalURI));
+    MOZ_ASSERT(principalURI);
+    bool isAbout;
+    nsresult rv = principalURI->SchemeIs("about", &isAbout);
+    if (NS_SUCCEEDED(rv) && isAbout) {
+        nsCOMPtr<nsIAboutModule> module;
+        rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
+        if (NS_SUCCEEDED(rv)) {
+            uint32_t flags;
+            rv = module->GetURIFlags(principalURI, &flags);
+            if (NS_SUCCEEDED(rv) &&
+                (flags & nsIAboutModule::ALLOW_SCRIPT)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+Scriptability::Scriptability(JSCompartment *c) : mScriptBlocks(0)
+                                               , mDocShellAllowsScript(true)
+                                               , mScriptBlockedByPolicy(false)
+{
+    nsIPrincipal *prin = nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
+    mImmuneToScriptPolicy = PrincipalImmuneToScriptPolicy(prin);
+
+    // If we're not immune, we should have a real principal with a codebase URI.
+    // Check the URI against the new-style domain policy.
+    if (!mImmuneToScriptPolicy) {
+        nsIScriptSecurityManager* ssm = XPCWrapper::GetSecurityManager();
+        nsCOMPtr<nsIURI> codebase;
+        nsresult rv = prin->GetURI(getter_AddRefs(codebase));
+        bool policyAllows;
+        if (NS_SUCCEEDED(rv) && codebase &&
+            NS_SUCCEEDED(ssm->PolicyAllowsScript(codebase, &policyAllows)))
+        {
+            mScriptBlockedByPolicy = !policyAllows;
+        } else {
+            // Something went wrong - be safe and block script.
+            mScriptBlockedByPolicy = true;
+        }
+    }
+}
+
+bool
+Scriptability::Allowed()
+{
+    return mDocShellAllowsScript && !mScriptBlockedByPolicy &&
+           mScriptBlocks == 0;
+}
+
+bool
+Scriptability::IsImmuneToScriptPolicy()
+{
+    return mImmuneToScriptPolicy;
+}
+
+void
+Scriptability::Block()
+{
+    ++mScriptBlocks;
+}
+
+void
+Scriptability::Unblock()
+{
+    MOZ_ASSERT(mScriptBlocks > 0);
+    --mScriptBlocks;
+}
+
+void
+Scriptability::SetDocShellAllowsScript(bool aAllowed)
+{
+    mDocShellAllowsScript = aAllowed;
+}
+
+/* static */
+Scriptability&
+Scriptability::Get(JSObject *aScope)
+{
+    return EnsureCompartmentPrivate(aScope)->scriptability;
 }
 
 bool

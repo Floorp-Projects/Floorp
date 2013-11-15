@@ -813,6 +813,12 @@ protected:
     bool                       mInPrivateBrowsing;
     bool                       mDeviceSizeIsPageSize;
 
+    // Because scriptability depends on the mAllowJavascript values of our
+    // ancestors, we cache the effective scriptability and recompute it when
+    // it might have changed;
+    bool                       mCanExecuteScripts;
+    void RecomputeCanExecuteScripts();
+
     // This boolean is set to true right before we fire pagehide and generally
     // unset when we embed a new content viewer.  While it's true no navigation
     // is allowed in this docshell.
