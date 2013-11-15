@@ -79,6 +79,10 @@
 #undef NOISY_TRIM
 #endif
 
+#ifdef DrawText
+#undef DrawText
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
