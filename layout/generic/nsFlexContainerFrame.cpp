@@ -1968,8 +1968,6 @@ nsFlexContainerFrame::GenerateFlexItems(
 {
   MOZ_ASSERT(aFlexItems.IsEmpty(), "Expecting outparam to start out empty");
 
-  // XXXdholbert When we support multi-line, we  might want this to be a linked
-  // list, so we can easily split into multiple lines.
   aFlexItems.SetCapacity(mFrames.GetLength());
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     FlexItem* item = aFlexItems.AppendElement(
@@ -2225,16 +2223,11 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   const FlexboxAxisTracker axisTracker(this);
 
-  // Generate a list of our flex items (already sorted), and get our main
-  // size (which may depend on those items).
+  // Generate a list of our flex items (already sorted).
   nsTArray<FlexItem> items;
   nsresult rv = GenerateFlexItems(aPresContext, aReflowState,
                                   axisTracker, items);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // XXXdholbert FOR MULTI-LINE FLEX CONTAINERS: Do line-breaking here.
-  // This would produce an array of arrays, or a list of arrays,
-  // or something like that. (one list/array per line)
 
   const nscoord contentBoxMainSize =
     ComputeFlexContainerMainSize(aReflowState, axisTracker, items);
