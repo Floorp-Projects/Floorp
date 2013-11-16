@@ -146,15 +146,15 @@ SidebarHost.prototype = {
     this._sidebar.appendChild(this.frame);
 
     let frameLoad = function() {
-      this.frame.removeEventListener("DOMContentLoaded", frameLoad, true);
       this.emit("ready", this.frame);
-
       deferred.resolve(this.frame);
     }.bind(this);
 
-    this.frame.addEventListener("DOMContentLoaded", frameLoad, true);
     this.frame.tooltip = "aHTMLTooltip";
     this.frame.setAttribute("src", "about:blank");
+
+    let domHelper = new DOMHelpers(this.frame.contentWindow);
+    domHelper.onceDOMReady(frameLoad);
 
     focusTab(this.hostTab);
 
