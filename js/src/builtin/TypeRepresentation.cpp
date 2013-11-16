@@ -517,8 +517,7 @@ ArrayTypeRepresentation::appendStringArray(JSContext *cx, StringBuffer &contents
     if (!contents.append(", "))
         return false;
 
-    Value len = NumberValue(length());
-    if (!contents.append(JS_ValueToString(cx, len)))
+    if (!NumberValueToStringBuffer(cx, NumberValue(length()), contents))
         return false;
 
     if (!contents.append(")"))
