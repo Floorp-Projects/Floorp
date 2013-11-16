@@ -337,6 +337,7 @@ static nsresult GetResident(int64_t* aN)
 
 #include <windows.h>
 #include <psapi.h>
+#include <algorithm>
 
 #define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
 static nsresult GetVsize(int64_t* aN)
@@ -368,6 +369,34 @@ static nsresult GetResident(int64_t* aN)
 static nsresult GetResidentFast(int64_t* aN)
 {
     return GetResident(aN);
+}
+
+#define HAVE_LARGEST_CONTIGUOUS_BLOCK_REPORTERS 1
+static nsresult LargestContiguousVMBlock(int64_t* aN)
+{
+    SIZE_T biggestRegion = 0;
+    MEMORY_BASIC_INFORMATION vmemInfo = {0};
+    for (size_t currentAddress = 0; ; ) {
+        if (!VirtualQuery((LPCVOID)currentAddress, &vmemInfo, sizeof(vmemInfo))) {
+            // Something went wrong, just return whatever we've got already.
+            break;
+        }
+
+        if (vmemInfo.State == MEM_FREE) {
+            biggestRegion = std::max(biggestRegion, vmemInfo.RegionSize);
+        }
+
+        SIZE_T lastAddress = currentAddress;
+        currentAddress += vmemInfo.RegionSize;
+
+        // If we overflow, we've examined all of the address space.
+        if (currentAddress < lastAddress) {
+            break;
+        }
+    }
+
+    *aN = biggestRegion;
+    return NS_OK;
 }
 
 #define HAVE_PRIVATE_REPORTER
@@ -1376,6 +1405,17 @@ nsMemoryReporterManager::GetPageFaultsHard(int64_t* aAmount)
 {
 #ifdef HAVE_PAGE_FAULT_REPORTERS
     return PageFaultsHardDistinguishedAmount(aAmount);
+#else
+    *aAmount = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetLargestContiguousVMBlock(int64_t* aAmount)
+{
+#ifdef HAVE_LARGEST_CONTIGUOUS_BLOCK_REPORTERS
+    return LargestContiguousVMBlock(aAmount);
 #else
     *aAmount = 0;
     return NS_ERROR_NOT_AVAILABLE;
