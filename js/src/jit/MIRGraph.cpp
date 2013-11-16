@@ -160,7 +160,7 @@ MBasicBlock::New(MIRGraph &graph, BytecodeAnalysis *analysis, CompileInfo &info,
 {
     JS_ASSERT(entryPc != nullptr);
 
-    MBasicBlock *block = new MBasicBlock(graph, info, entryPc, kind);
+    MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, entryPc, kind);
     if (!block->init())
         return nullptr;
 
@@ -174,7 +174,7 @@ MBasicBlock *
 MBasicBlock::NewPopN(MIRGraph &graph, CompileInfo &info,
                      MBasicBlock *pred, jsbytecode *entryPc, Kind kind, uint32_t popped)
 {
-    MBasicBlock *block = new MBasicBlock(graph, info, entryPc, kind);
+    MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, entryPc, kind);
     if (!block->init())
         return nullptr;
 
@@ -189,7 +189,7 @@ MBasicBlock::NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
                                 MBasicBlock *pred, jsbytecode *entryPc,
                                 MResumePoint *resumePoint)
 {
-    MBasicBlock *block = new MBasicBlock(graph, info, entryPc, NORMAL);
+    MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, entryPc, NORMAL);
 
     resumePoint->block_ = block;
     block->entryResumePoint_ = resumePoint;
@@ -223,7 +223,7 @@ MBasicBlock::NewAbortPar(MIRGraph &graph, CompileInfo &info,
                          MBasicBlock *pred, jsbytecode *entryPc,
                          MResumePoint *resumePoint)
 {
-    MBasicBlock *block = new MBasicBlock(graph, info, entryPc, NORMAL);
+    MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, entryPc, NORMAL);
 
     resumePoint->block_ = block;
     block->entryResumePoint_ = resumePoint;
@@ -241,7 +241,7 @@ MBasicBlock::NewAbortPar(MIRGraph &graph, CompileInfo &info,
 MBasicBlock *
 MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kind kind)
 {
-    MBasicBlock *block = new MBasicBlock(graph, info, /* entryPC = */ nullptr, kind);
+    MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, /* entryPC = */ nullptr, kind);
     if (!block->init())
         return nullptr;
 
