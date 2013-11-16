@@ -81,8 +81,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsScreen, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsScreen, nsDOMEventTargetHelper)
 
-NS_IMPL_EVENT_HANDLER(nsScreen, mozorientationchange)
-
 int32_t
 nsScreen::GetPixelDepth(ErrorResult& aRv)
 {
