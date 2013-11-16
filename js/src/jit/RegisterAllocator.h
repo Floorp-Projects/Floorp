@@ -318,6 +318,10 @@ class RegisterAllocator
 
     bool init();
 
+    TempAllocator &alloc() const {
+        return mir->temp();
+    }
+
     CodePosition outputOf(uint32_t pos) const {
         return CodePosition(pos, CodePosition::OUTPUT);
     }
