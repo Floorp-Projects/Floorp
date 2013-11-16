@@ -40,15 +40,15 @@ SHARED_LIBRARY_LIBS += \
   $(NULL)
 endif
 
+ifdef MOZ_XUL
+SHARED_LIBRARY_LIBS += $(DEPTH)/accessible/src/xul/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
+endif
+endif
+
 ifdef MOZ_CONTENT_SANDBOX
 ifeq ($(OS_ARCH),WINNT)
   LOCAL_INCLUDES += -I$(srcdir)/../sandboxbroker
   SHARED_LIBRARY_LIBS += ../../security/sandbox/win/src/sandboxbroker/$(LIB_PREFIX)sandboxbroker.$(LIB_SUFFIX)
-endif
-endif
-
-ifdef MOZ_XUL
-SHARED_LIBRARY_LIBS += $(DEPTH)/accessible/src/xul/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
 endif
 endif
 
