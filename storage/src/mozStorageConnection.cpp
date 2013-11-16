@@ -990,9 +990,7 @@ Connection::prepareStatement(const nsCString &aSQL,
 #ifdef DEBUG
     NS_WARNING(warnMsg.get());
 #endif
-#ifdef PR_LOGGING
     PR_LOG(gStorageLog, PR_LOG_ERROR, ("%s", warnMsg.get()));
-#endif
   }
 
   (void)::sqlite3_extended_result_codes(mDBConn, 0);
