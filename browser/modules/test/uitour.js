@@ -112,4 +112,10 @@ if (typeof Mozilla == 'undefined') {
 			name: name
 		});
 	};
+
+	Mozilla.UITour.hideMenu = function(name) {
+		_sendEvent('hideMenu', {
+			name: name
+		});
+	};
 })();
