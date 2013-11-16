@@ -388,7 +388,7 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
         if (!JS_IdToValue(cx, idName, jsvalName.address()))
             return NS_ERROR_FAILURE;
 
-        JSString* name = JS_ValueToString(cx, jsvalName);
+        JSString* name = ToString(cx, jsvalName);
         if (!name)
             return NS_ERROR_FAILURE;
 
