@@ -1576,7 +1576,7 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
     JSAutoByteString bytes;
     nsID id;
 
-    if (!(jsstr = JS_ValueToString(cx, args[0])) ||
+    if (!(jsstr = ToString(cx, args[0])) ||
         !bytes.encodeLatin1(cx, jsstr) ||
         !id.Parse(bytes.ptr())) {
         return ThrowAndFail(NS_ERROR_XPC_BAD_ID_STRING, cx, _retval);
@@ -1837,7 +1837,7 @@ struct MOZ_STACK_CLASS ExceptionArgParser
      */
 
     bool parseMessage(HandleValue v) {
-        JSString *str = JS_ValueToString(cx, v);
+        JSString *str = ToString(cx, v);
         if (!str)
            return false;
         eMsg = messageBytes.encodeLatin1(cx, str);
@@ -2450,7 +2450,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 
     if (args.length() >= 3) {
         // args[2] is an initializer function or property name
-        RootedString str(cx, JS_ValueToString(cx, args[2]));
+        RootedString str(cx, ToString(cx, args[2]));
         if (!str || !(cInitializer = cInitializerBytes.encodeLatin1(cx, str)))
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
     }
@@ -2476,7 +2476,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }
 
-        RootedString str(cx, JS_ValueToString(cx, args[1]));
+        RootedString str(cx, ToString(cx, args[1]));
         RootedId id(cx);
         if (!str || !JS_ValueToId(cx, StringValue(str), id.address()))
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
@@ -2525,7 +2525,7 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
             return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
         }
 
-        RootedString str(cx, JS_ValueToString(cx, args[0]));
+        RootedString str(cx, ToString(cx, args[0]));
         RootedId id(cx);
         if (!str || !JS_ValueToId(cx, StringValue(str), id.address()))
             return ThrowAndFail(NS_ERROR_XPC_BAD_CONVERT_JS, cx, _retval);
@@ -2665,7 +2665,7 @@ nsXPCComponents_Utils::ReportError(const Value &errorArg, JSContext *cx)
     }
 
     // It's not a JS Error object, so we synthesize as best we're able.
-    RootedString msgstr(cx, JS_ValueToString(cx, error));
+    RootedString msgstr(cx, ToString(cx, error));
     if (!msgstr)
         return NS_OK;
 
@@ -2698,7 +2698,7 @@ nsXPCComponents_Utils::ReportError(const Value &errorArg, JSContext *cx)
 NS_IMETHODIMP
 nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
                                      const Value& sandboxValArg,
-                                     const Value& version,
+                                     const Value& versionArg,
                                      const Value& filenameVal,
                                      int32_t lineNumber,
                                      JSContext *cx,
@@ -2706,6 +2706,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
                                      Value *retval)
 {
     RootedValue sandboxVal(cx, sandboxValArg);
+    RootedValue version(cx, versionArg);
     RootedObject sandbox(cx);
     if (!JS_ValueToObject(cx, sandboxVal, &sandbox) || !sandbox)
         return NS_ERROR_INVALID_ARG;
@@ -2713,7 +2714,7 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
     // Optional third argument: JS version, as a string.
     JSVersion jsVersion = JSVERSION_DEFAULT;
     if (optionalArgc >= 1) {
-        JSString *jsVersionStr = JS_ValueToString(cx, version);
+        JSString *jsVersionStr = ToString(cx, version);
         if (!jsVersionStr)
             return NS_ERROR_INVALID_ARG;
 
@@ -2737,7 +2738,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
     nsXPIDLCString filename;
     int32_t lineNo = (optionalArgc >= 3) ? lineNumber : 1;
     if (optionalArgc >= 2) {
-        JSString *filenameStr = JS_ValueToString(cx, filenameVal);
+        RootedValue value(cx, filenameVal);
+        JSString *filenameStr = ToString(cx, value);
         if (!filenameStr)
             return NS_ERROR_INVALID_ARG;
 

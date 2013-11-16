@@ -273,7 +273,7 @@ GCParameter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSString *str = JS_ValueToString(cx, args.get(0));
+    JSString *str = ToString(cx, args.get(0));
     if (!str)
         return false;
 
@@ -350,12 +350,13 @@ IsProxy(JSContext *cx, unsigned argc, Value *vp)
 static bool
 InternalConst(JSContext *cx, unsigned argc, jsval *vp)
 {
-    if (argc != 1) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() == 0) {
         JS_ReportError(cx, "the function takes exactly one argument");
         return false;
     }
 
-    JSString *str = JS_ValueToString(cx, vp[2]);
+    JSString *str = ToString(cx, args[0]);
     if (!str)
         return false;
     JSFlatString *flat = JS_FlattenString(cx, str);
@@ -684,6 +685,8 @@ static const struct TraceKindPair {
 static bool
 CountHeap(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     jsval v;
     int32_t traceKind;
     JSString *str;
@@ -692,8 +695,8 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     size_t counter;
 
     RootedValue startValue(cx, UndefinedValue());
-    if (argc > 0) {
-        v = JS_ARGV(cx, vp)[0];
+    if (args.length() > 0) {
+        v = args[0];
         if (JSVAL_IS_TRACEABLE(v)) {
             startValue = v;
         } else if (!JSVAL_IS_NULL(v)) {
@@ -705,8 +708,8 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     traceKind = -1;
-    if (argc > 1) {
-        str = JS_ValueToString(cx, JS_ARGV(cx, vp)[1]);
+    if (args.length() > 1) {
+        str = ToString(cx, args[0]);
         if (!str)
             return false;
         JSFlatString *flatStr = JS_FlattenString(cx, str);
