@@ -17,7 +17,8 @@ class MIRGraph;
 
 typedef Vector<MDefinition *, 4, IonAllocPolicy> InstructionVector;
 
-class LoopAliasInfo : public TempObject {
+class LoopAliasInfo : public TempObject
+{
   private:
     LoopAliasInfo *outer_;
     MBasicBlock *loopHeader_;
