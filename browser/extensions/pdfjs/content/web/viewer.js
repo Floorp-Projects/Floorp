@@ -30,6 +30,7 @@ var CACHE_SIZE = 20;
 var CSS_UNITS = 96.0 / 72.0;
 var SCROLLBAR_PADDING = 40;
 var VERTICAL_PADDING = 5;
+var MAX_AUTO_SCALE = 1.25;
 var MIN_SCALE = 0.25;
 var MAX_SCALE = 4.0;
 var SETTINGS_MEMORY = 20;
@@ -1813,7 +1814,7 @@ var PDFView = {
           scale = Math.min(pageWidthScale, pageHeightScale);
           break;
         case 'auto':
-          scale = Math.min(1.0, pageWidthScale);
+          scale = Math.min(MAX_AUTO_SCALE, pageWidthScale);
           break;
       }
     }
@@ -3253,7 +3254,7 @@ var PageView = function pageView(container, id, scale,
         // since aligning the bottom of the intended page with the
         // top of the window is rarely helpful).
         x = x !== null ? x : 0;
-        y = y !== null ? y : this.height / this.scale;
+        y = y !== null ? y : (this.height / this.scale) / CSS_UNITS;
         break;
       case 'Fit':
       case 'FitB':
@@ -4383,8 +4384,8 @@ function updateViewarea() {
 
   var currentScale = PDFView.currentScale;
   var currentScaleValue = PDFView.currentScaleValue;
-  var normalizedScaleValue = currentScaleValue == currentScale ?
-    currentScale * 100 : currentScaleValue;
+  var normalizedScaleValue = parseFloat(currentScaleValue) === currentScale ?
+    Math.round(currentScale * 10000) / 100 : currentScaleValue;
 
   var pageNumber = firstPage.id;
   var pdfOpenParams = '#page=' + pageNumber;
