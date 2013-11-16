@@ -18,9 +18,9 @@ using namespace jit;
 using mozilla::FloorLog2;
 
 bool
-SafepointWriter::init(uint32_t slotCount)
+SafepointWriter::init(TempAllocator &alloc, uint32_t slotCount)
 {
-    frameSlots_ = BitSet::New(slotCount);
+    frameSlots_ = BitSet::New(alloc, slotCount);
     if (!frameSlots_)
         return false;
 

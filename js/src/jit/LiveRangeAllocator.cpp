@@ -491,7 +491,7 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
         return false;
 
     Vector<MBasicBlock *, 1, SystemAllocPolicy> loopWorkList;
-    BitSet *loopDone = BitSet::New(graph.numBlockIds());
+    BitSet *loopDone = BitSet::New(alloc(), graph.numBlockIds());
     if (!loopDone)
         return false;
 
@@ -502,7 +502,7 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
         LBlock *block = graph.getBlock(i - 1);
         MBasicBlock *mblock = block->mir();
 
-        BitSet *live = BitSet::New(graph.numVirtualRegisters());
+        BitSet *live = BitSet::New(alloc(), graph.numVirtualRegisters());
         if (!live)
             return false;
         liveIn[mblock->id()] = live;
