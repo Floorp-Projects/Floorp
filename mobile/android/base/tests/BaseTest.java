@@ -674,15 +674,22 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }
 
         public void back() {
+            Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+
             if (devType.equals("tablet")) {
                 Element backBtn = mDriver.findElement(getActivity(), "back");
                 backBtn.click();
             } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.BACK);
             }
+
+            pageShowExpecter.blockForEvent();
+            pageShowExpecter.unregisterListener();
         }
 
         public void forward() {
+            Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+
             if (devType.equals("tablet")) {
                 Element fwdBtn = mDriver.findElement(getActivity(), "forward");
                 fwdBtn.click();
@@ -695,7 +702,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 } else {
                     mSolo.clickOnText("^Forward$");
                 }
+                ensureMenuClosed();
             }
+
+            pageShowExpecter.blockForEvent();
+            pageShowExpecter.unregisterListener();
         }
 
         public void reload() {
@@ -711,6 +722,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 } else {
                     mSolo.clickOnText("^Reload$");
                 }
+                ensureMenuClosed();
             }
         }
 
@@ -728,6 +740,15 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                     // We are on Android 4.x so the button is an image button
                     bookmarkBtn.click();
                 }
+            }
+            ensureMenuClosed();
+        }
+
+        // On some devices, the menu may not be dismissed after clicking on an
+        // item. Close it here.
+        private void ensureMenuClosed() {
+            if (mSolo.searchText("^New Tab$")) {
+                mActions.sendSpecialKey(Actions.SpecialKey.BACK);
             }
          }
     }
