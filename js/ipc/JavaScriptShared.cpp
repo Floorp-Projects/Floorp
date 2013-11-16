@@ -129,7 +129,7 @@ JavaScriptShared::convertIdToGeckoString(JSContext *cx, JS::HandleId id, nsStrin
     if (!JS_IdToValue(cx, id, idval.address()))
         return false;
 
-    RootedString str(cx, JS_ValueToString(cx, idval));
+    RootedString str(cx, ToString(cx, idval));
     if (!str)
         return false;
 

@@ -268,7 +268,7 @@ nsDOMMultipartFile::ParseBlobArrayArgument(JSContext* aCx, JS::Value& aValue,
     }
 
     // coerce it to a string
-    JSString* str = JS_ValueToString(aCx, element);
+    JSString* str = JS::ToString(aCx, element);
     NS_ENSURE_TRUE(str, NS_ERROR_TYPE_ERR);
     blobSet.AppendString(str, aNativeEOL, aCx);
   }
@@ -342,7 +342,7 @@ nsDOMMultipartFile::InitChromeFile(JSContext* aCx,
     mIsFromNsiFile = true;
   } else {
     // It's a string
-    JSString* str = JS_ValueToString(aCx, aArgv[0]);
+    JSString* str = JS::ToString(aCx, JS::Handle<JS::Value>::fromMarkedLocation(&aArgv[0]));
     NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
 
     nsDependentJSString xpcomStr;
@@ -397,7 +397,7 @@ nsDOMMultipartFile::InitFile(JSContext* aCx,
   }
 
   // File name
-  JSString* str = JS_ValueToString(aCx, aArgv[1]);
+  JSString* str = JS::ToString(aCx, JS::Handle<JS::Value>::fromMarkedLocation(&aArgv[1]));
   NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
 
   nsDependentJSString xpcomStr;
