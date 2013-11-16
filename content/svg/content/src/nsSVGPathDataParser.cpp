@@ -153,6 +153,8 @@ nsSVGPathDataParser::ParseMoveto()
     return true;
   }
 
+  SkipCommaWsp();
+
   // Per SVG 1.1 Section 8.3.2
   // If a moveto is followed by multiple pairs of coordinates,
   // the subsequent pairs are treated as implicit lineto commands
