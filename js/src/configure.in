@@ -2546,15 +2546,20 @@ fi
 AC_CACHE_CHECK(
     [for res_ninit()],
     ac_cv_func_res_ninit,
-    [AC_TRY_LINK([
-        #ifdef linux
-        #define _BSD_SOURCE 1
-        #endif
-        #include <resolv.h>
-        ],
-        [int foo = res_ninit(&_res);],
-        [ac_cv_func_res_ninit=yes],
-        [ac_cv_func_res_ninit=no])
+    [if test "$OS_TARGET" = NetBSD -o "$OS_TARGET" = OpenBSD; then
+        dnl no need for res_ninit() on NetBSD and OpenBSD
+        ac_cv_func_res_ninit=no
+     else
+       AC_TRY_LINK([
+            #ifdef linux
+            #define _BSD_SOURCE 1
+            #endif
+            #include <resolv.h>
+            ],
+            [int foo = res_ninit(&_res);],
+            [ac_cv_func_res_ninit=yes],
+            [ac_cv_func_res_ninit=no])
+     fi
     ])
 
 if test "$ac_cv_func_res_ninit" = "yes"; then
