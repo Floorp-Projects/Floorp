@@ -12,14 +12,19 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/xpcom/glue \
   $(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon-standalone,../common-standalone)
+else
+LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon,../common)
+endif
+
 LIBS += \
-  ../common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
-  $(DEPTH)/modules/libmar/src/$(LIB_PREFIX)mar.$(LIB_SUFFIX) \
+  $(call EXPAND_LIBNAME_PATH,mar,$(DEPTH)/modules/libmar/src) \
   $(MOZ_BZ2_LIBS) \
   $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-LIBS += $(DEPTH)/modules/libmar/verify/$(LIB_PREFIX)verifymar.$(LIB_SUFFIX)
+LIBS += $(call EXPAND_LIBNAME_PATH,verifymar,$(DEPTH)/modules/libmar/verify)
 USE_STATIC_LIBS = 1
 RCINCLUDE = updater.rc
 OS_LIBS += $(call EXPAND_LIBNAME,delayimp comctl32 ws2_32 shell32 shlwapi)

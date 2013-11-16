@@ -1,0 +1,19 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+sources = []
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    sources += [
+        'pathhash.cpp',
+        'uachelper.cpp',
+        'updatehelper.cpp',
+    ]
+
+sources += [
+    'readstrings.cpp',
+    'updatelogging.cpp',
+]
+
+SOURCES += sorted(['%s/%s' % (srcdir, s) for s in sources])
