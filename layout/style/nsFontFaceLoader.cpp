@@ -29,6 +29,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
+#include "nsISupportsPriority.h"
 #include "nsINetworkSeer.h"
 
 #include "nsIConsoleService.h"
@@ -373,6 +374,11 @@ nsUserFontSet::StartLoad(gfxMixedFontFamily* aFamily,
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel)
     httpChannel->SetReferrer(aFontFaceSrc->mReferrer);
+  nsCOMPtr<nsISupportsPriority> priorityChannel(do_QueryInterface(channel));
+  if (priorityChannel) {
+    priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGH);
+  }
+
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), fontLoader);
   NS_ENSURE_SUCCESS(rv, rv);
 
