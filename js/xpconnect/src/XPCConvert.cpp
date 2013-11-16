@@ -194,18 +194,15 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
 
                 if (!p->IsVoid()) {
                     nsStringBuffer* buf;
-                    jsval str = XPCStringConvert::ReadableToJSVal(cx, *p, &buf);
-                    if (JSVAL_IS_NULL(str))
+                    if (!XPCStringConvert::ReadableToJSVal(cx, *p, &buf, d))
                         return false;
                     if (buf)
                         buf->AddRef();
-
-                    d.set(str);
                 }
 
                 // *d is defaulted to JSVAL_NULL so no need to set it
                 // again if p is a "void" string
-
+                MOZ_ASSERT_IF(p->IsVoid(), d.isNull());
                 break;
             }
 
