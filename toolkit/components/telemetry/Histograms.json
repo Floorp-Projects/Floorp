@@ -2639,6 +2639,12 @@
     "n_buckets": "30",
     "description": "Firefox: Time taken to store the image capture of the page to a canvas, for reuse while swiping through history (ms)."
   },
+  "FX_GESTURE_COMPRESS_SNAPSHOT_OF_PAGE": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": "30",
+    "description": "Firefox: Time taken to kick off image compression of the canvas that will be used during swiping through history (ms)."
+  },
   "FX_TAB_ANIM_OPEN_MS": {
     "kind": "exponential",
     "high": "3000",
