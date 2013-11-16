@@ -204,6 +204,10 @@ enum punycode_status punycode_decode(
   punycode_uint n, out, i, max_out, bias,
                  b, j, in, oldi, w, k, digit, t;
 
+  if (!input_length) {
+    return punycode_bad_input;
+  }
+
   /* Initialize the state: */
 
   n = initial_n;
