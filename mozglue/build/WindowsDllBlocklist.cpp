@@ -130,7 +130,7 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "beid35cardlayer.dll", MAKE_VERSION(3, 5, 6, 6968) },
 
   // bug 925459, bitguard crashes
-  { "bitguard.dll", MAKE_VERSION(2, 6, 1694, 24) },
+  { "bitguard.dll", ALL_VERSIONS },
 
   // bug 812683 - crashes in Windows library when Asus Gamer OSD is installed
   // Software is discontinued/unsupported
