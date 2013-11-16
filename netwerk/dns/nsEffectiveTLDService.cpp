@@ -166,6 +166,7 @@ nsEffectiveTLDService::GetBaseDomain(nsIURI     *aURI,
                                      nsACString &aBaseDomain)
 {
   NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_TRUE( ((int32_t)aAdditionalParts) >= 0, NS_ERROR_INVALID_ARG);
 
   nsCOMPtr<nsIURI> innerURI = NS_GetInnermostURI(aURI);
   NS_ENSURE_ARG_POINTER(innerURI);
@@ -200,6 +201,8 @@ nsEffectiveTLDService::GetBaseDomainFromHost(const nsACString &aHostname,
                                              uint32_t          aAdditionalParts,
                                              nsACString       &aBaseDomain)
 {
+  NS_ENSURE_TRUE( ((int32_t)aAdditionalParts) >= 0, NS_ERROR_INVALID_ARG);
+
   // Create a mutable copy of the hostname and normalize it to ACE.
   // This will fail if the hostname includes invalid characters.
   nsAutoCString normHostname(aHostname);
@@ -300,7 +303,7 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
   const char *begin, *iter;
   if (aAdditionalParts < 0) {
     NS_ASSERTION(aAdditionalParts == -1,
-                 "aAdditionalParts should can't be negative and different from -1");
+                 "aAdditionalParts can't be negative and different from -1");
 
     for (iter = aHostname.get(); iter != eTLD && *iter != '.'; iter++);
 
