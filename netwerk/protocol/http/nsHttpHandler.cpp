@@ -145,6 +145,9 @@ nsHttpHandler::nsHttpHandler()
     , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
+    , mSpoofReferrerSource(false)
+    , mReferrerTrimmingPolicy(0)
+    , mReferrerXOriginPolicy(0)
     , mFastFallbackToIPv4(false)
     , mProxyPipelining(true)
     , mIdleTimeout(PR_SecondsToInterval(10))
@@ -900,6 +903,24 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("sendRefererHeader"), &val);
         if (NS_SUCCEEDED(rv))
             mReferrerLevel = (uint8_t) clamped(val, 0, 0xff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("referer.spoofSource"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("referer.spoofSource"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mSpoofReferrerSource = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("referer.trimmingPolicy"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("referer.trimmingPolicy"), &val);
+        if (NS_SUCCEEDED(rv))
+            mReferrerTrimmingPolicy = (uint8_t) clamped(val, 0, 0xff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("referer.XOriginPolicy"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("referer.XOriginPolicy"), &val);
+        if (NS_SUCCEEDED(rv))
+            mReferrerXOriginPolicy = (uint8_t) clamped(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("redirection-limit"))) {

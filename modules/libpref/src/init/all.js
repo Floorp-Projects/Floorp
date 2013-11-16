@@ -1035,7 +1035,16 @@ pref("network.http.request.max-start-delay", 10);
 
 // Headers
 pref("network.http.accept.default", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
+
+// Prefs allowing granular control of referers
+// 0=don't send any, 1=send only on clicks, 2=send on image requests as well
+pref("network.http.sendRefererHeader",      2); 
+// false=real referer, true=spoof referer (use target URI as referer)                                              
+pref("network.http.referer.spoofSource", false); 
+// 0=full URI, 1=scheme+host+port+path, 2=scheme+host+port
+pref("network.http.referer.trimmingPolicy", 0); 
+// 0=always send, 1=send iff base domains match, 2=send iff hosts match
+pref("network.http.referer.XOriginPolicy", 0); 
 
 // Controls whether we send HTTPS referres to other HTTPS sites.
 // By default this is enabled for compatibility (see bug 141641)
