@@ -586,7 +586,6 @@ let gHistorySwipeAnimation = {
     this._maxSnapshots = this._getMaxSnapshots();
     this._lastSwipeDir = "";
     this._direction = "horizontal";
-    this._scale = window.matchMedia("(resolution: 2dppx)").matches ? 2 : 1;
 
     // We only want to activate history swipe animations if we store snapshots.
     // If we don't store any, we handle horizontal swipes without animations.
@@ -953,10 +952,11 @@ let gHistorySwipeAnimation = {
       canvas = document.createElementNS("http://www.w3.org/1999/xhtml",
                                         "canvas");
       canvas.mozOpaque = true;
-      canvas.width = r.width * this._scale;
-      canvas.height = r.height * this._scale;
+      let scale = window.devicePixelRatio;
+      canvas.width = r.width * scale;
+      canvas.height = r.height * scale;
       let ctx = canvas.getContext("2d");
-      let zoom = browser.markupDocumentViewer.fullZoom * this._scale;
+      let zoom = browser.markupDocumentViewer.fullZoom * scale;
       ctx.scale(zoom, zoom);
       ctx.drawWindow(browser.contentWindow,
                      0, 0, canvas.width / zoom, canvas.height / zoom, "white",
@@ -1008,7 +1008,7 @@ let gHistorySwipeAnimation = {
     // between pages before the compression could complete.
     snapshots[currIndex] = {
       image: aCanvas,
-      scale: this._scale
+      scale: window.devicePixelRatio
     };
 
     // Kick off snapshot compression.
@@ -1141,7 +1141,7 @@ let gHistorySwipeAnimation = {
   _installCurrentPageSnapshot:
   function HSA__installCurrentPageSnapshot(aCanvas) {
     let currSnapshot = aCanvas;
-    let scale = this._scale;
+    let scale = window.devicePixelRatio;
     if (!currSnapshot) {
       let snapshots = gBrowser.selectedBrowser.snapshots || {};
       let currIndex = this._historyIndex;
