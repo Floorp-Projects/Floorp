@@ -1042,18 +1042,23 @@ let gHistorySwipeAnimation = {
       return;
     }
 
-    let browser = gBrowser.selectedBrowser;
-    let snapshots = browser.snapshots;
-    let currIndex = browser.webNavigation.sessionHistory.index;
+    TelemetryStopwatch.start("FX_GESTURE_COMPRESS_SNAPSHOT_OF_PAGE");
+    try {
+      let browser = gBrowser.selectedBrowser;
+      let snapshots = browser.snapshots;
+      let currIndex = browser.webNavigation.sessionHistory.index;
 
-    // Kick off snapshot compression.
-    let canvas = snapshots[currIndex].image;
-    canvas.toBlob(function(aBlob) {
-        if (snapshots[currIndex]) {
-          snapshots[currIndex].image = aBlob;
-        }
-      }, "image/png"
-    );
+      // Kick off snapshot compression.
+      let canvas = snapshots[currIndex].image;
+      canvas.toBlob(function(aBlob) {
+          if (snapshots[currIndex]) {
+            snapshots[currIndex].image = aBlob;
+          }
+        }, "image/png"
+      );
+    } finally {
+      TelemetryStopwatch.finish("FX_GESTURE_COMPRESS_SNAPSHOT_OF_PAGE");
+    }
   },
 
   /**
