@@ -48,7 +48,11 @@ FileBlockCache::~FileBlockCache()
     // block while taking mFileMonitor.
     MonitorAutoLock mon(mFileMonitor);
     if (mFD) {
-      PR_Close(mFD);
+      PRStatus prrc;
+      prrc = PR_Close(mFD);
+      if (prrc != PR_SUCCESS) {
+        NS_WARNING("PR_Close() failed.");
+      }
       mFD = nullptr;
     }
   }
