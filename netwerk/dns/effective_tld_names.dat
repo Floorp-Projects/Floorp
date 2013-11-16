@@ -1099,16 +1099,18 @@ gov.ie
 // il : http://en.wikipedia.org/wiki/.il
 *.il
 
-// im : https://www.nic.im/pdfs/imfaqs.pdf
+// im : https://www.nic.im/
+// Submitted by registry <info@nic.im> 2013-11-15
 im
-co.im
-ltd.co.im
-plc.co.im
-net.im
-gov.im
-org.im
-nic.im
 ac.im
+co.im
+com.im
+ltd.co.im
+net.im
+org.im
+plc.co.im
+tt.im
+tv.im
 
 // in : http://en.wikipedia.org/wiki/.in
 // see also: http://www.inregistry.in/policies/
