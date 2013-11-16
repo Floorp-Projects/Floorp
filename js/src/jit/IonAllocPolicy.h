@@ -8,6 +8,7 @@
 #define jit_IonAllocPolicy_h
 
 #include "mozilla/GuardObjects.h"
+#include "mozilla/TypeTraits.h"
 
 #include "jscntxt.h"
 
@@ -133,9 +134,13 @@ struct TempObject
     inline void *operator new(size_t nbytes) {
         return GetIonContext()->temp->allocateInfallible(nbytes);
     }
-
-  public:
-    inline void *operator new(size_t nbytes, void *pos) {
+    inline void *operator new(size_t nbytes, TempAllocator &alloc) {
+        return alloc.allocateInfallible(nbytes);
+    }
+    template <class T>
+    inline void *operator new(size_t nbytes, T *pos) {
+        static_assert(mozilla::IsConvertible<T*, TempObject*>::value,
+                      "Placement new argument type must inherit from TempObject");
         return pos;
     }
 };

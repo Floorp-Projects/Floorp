@@ -388,13 +388,15 @@ class VirtualRegister
     VirtualRegister(const VirtualRegister &) MOZ_DELETE;
 
   public:
-    bool init(LBlock *block, LInstruction *ins, LDefinition *def, bool isTemp) {
+    bool init(TempAllocator &alloc, LBlock *block, LInstruction *ins, LDefinition *def,
+              bool isTemp)
+    {
         JS_ASSERT(block && !block_);
         block_ = block;
         ins_ = ins;
         def_ = def;
         isTemp_ = isTemp;
-        LiveInterval *initial = new LiveInterval(def->virtualRegister(), 0);
+        LiveInterval *initial = new(alloc) LiveInterval(def->virtualRegister(), 0);
         if (!initial)
             return false;
         return intervals_.append(initial);
