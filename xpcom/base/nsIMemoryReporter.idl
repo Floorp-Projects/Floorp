@@ -185,7 +185,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(a1292276-726b-4ef5-a017-5a455d6664dd)]
+[scriptable, builtinclass, uuid(2596fa26-495a-4827-a5f5-e34e7f4dd7b5)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -300,6 +300,10 @@ interface nsIMemoryReporterManager : nsISupports
    *
    * |pageFaultsHard| (UNITS_COUNT_CUMULATIVE)  The number of hard (a.k.a.
    * major) page faults that have occurred since the process started.
+   *
+   * |largestContiguousVMBlock| (UNITS_BYTES)  The size of the largest
+   * contiguous block of virtual memory.  Only available on Windows; on all
+   * other platforms, reading this value returns 0.
    */
   readonly attribute int64_t explicit;
   readonly attribute int64_t vsize;
@@ -324,6 +328,8 @@ interface nsIMemoryReporterManager : nsISupports
   readonly attribute int64_t ghostWindows;
 
   readonly attribute int64_t pageFaultsHard;
+
+  readonly attribute int64_t largestContiguousVMBlock;
 
   /*
    * This attribute indicates if moz_malloc_usable_size() works.
