@@ -1804,8 +1804,14 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
 
     // if we didn't initiate this detach, then be sure to pass an error
     // condition up to our consumers.  (e.g., STS is shutting down.)
-    if (NS_SUCCEEDED(mCondition))
-        mCondition = NS_ERROR_ABORT;
+    if (NS_SUCCEEDED(mCondition)) {
+        if (gIOService->IsOffline()) {
+          mCondition = NS_ERROR_OFFLINE;
+        }
+        else {
+          mCondition = NS_ERROR_ABORT;
+        }
+    }
 
     if (RecoverFromError())
         mCondition = NS_OK;
