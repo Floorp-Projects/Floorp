@@ -50,6 +50,7 @@ class ValueNumberer
                     IonAllocPolicy> InstructionMap;
 
   protected:
+    TempAllocator &alloc() const;
     uint32_t lookupValue(MDefinition *ins);
     MDefinition *findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t index);
 
