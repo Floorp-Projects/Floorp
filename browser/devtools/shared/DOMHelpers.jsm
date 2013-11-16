@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
+
 this.EXPORTED_SYMBOLS = ["DOMHelpers"];
 
 /**
@@ -13,6 +17,9 @@ this.EXPORTED_SYMBOLS = ["DOMHelpers"];
  *        The content window, owning the document to traverse.
  */
 this.DOMHelpers = function DOMHelpers(aWindow) {
+  if (!aWindow) {
+    throw new Error("window can't be null or undefined");
+  }
   this.window = aWindow;
 };
 
@@ -120,5 +127,30 @@ DOMHelpers.prototype = {
   {
     delete this.window;
     delete this.treeWalker;
+  },
+
+  /**
+   * A simple way to be notified (once) when a window becomes
+   * interactive (DOMContentLoaded).
+   *
+   * It is based on the chromeEventHandler. This is useful when
+   * chrome iframes are loaded in content docshells (in Firefox
+   * tabs for example).
+   */
+  onceDOMReady: function Helpers_onLocationChange(callback) {
+    let window = this.window;
+    let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShell);
+    let onReady = function(event) {
+      if (event.target == window.document) {
+        docShell.chromeEventHandler.removeEventListener("DOMContentLoaded", onReady, false);
+        // If in `callback` the URL of the window is changed and a listener to DOMContentLoaded
+        // is attached, the event we just received will be also be caught by the new listener.
+        // We want to avoid that so we execute the callback in the next queue.
+        Services.tm.mainThread.dispatch(callback, 0);
+      }
+    }
+    docShell.chromeEventHandler.addEventListener("DOMContentLoaded", onReady, false);
   }
 };
