@@ -5700,7 +5700,7 @@ CodeGenerator::generate()
             gen->info().script()->filename(),
             gen->info().script()->lineno);
 
-    if (!safepoints_.init(graph.totalSlotCount()))
+    if (!safepoints_.init(gen->temp(), graph.totalSlotCount()))
         return false;
 
 #if JS_TRACE_LOGGING
