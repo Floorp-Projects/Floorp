@@ -13,9 +13,11 @@ MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
 STL_FLAGS=
 
-LIBS += \
-  ../../mozapps/update/common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
-  $(NULL)
+ifeq ($(OS_ARCH),WINNT)
+LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon-standalone,../../mozapps/update/common-standalone)
+else
+LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon,../../mozapps/update/common)
+endif
 
 USE_STATIC_LIBS = 1
 RCINCLUDE = maintenanceservice.rc

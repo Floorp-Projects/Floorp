@@ -19,18 +19,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'updatehelper.cpp',
         'updatehelper.h',
     ]
-    SOURCES += [
-        'pathhash.cpp',
-        'uachelper.cpp',
-        'updatehelper.cpp',
-    ]
-
-SOURCES += [
-    'readstrings.cpp',
-    'updatelogging.cpp',
-]
 
 LIBRARY_NAME = 'updatecommon'
 
 LIBXUL_LIBRARY = True
 
+srcdir = '.'
+
+include('sources.mozbuild')
