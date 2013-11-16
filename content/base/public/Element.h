@@ -1471,28 +1471,6 @@ NS_IMETHOD MozRemove() MOZ_FINAL                                              \
   nsINode::Remove();                                                          \
   return NS_OK;                                                               \
 }                                                                             \
-using nsINode::GetOnmouseenter;                                               \
-using nsINode::SetOnmouseenter;                                               \
-NS_IMETHOD GetOnmouseenter(JSContext* cx, JS::Value* aOnmouseenter) MOZ_FINAL \
-{                                                                             \
-  return Element::GetOnmouseenter(cx, aOnmouseenter);                         \
-}                                                                             \
-NS_IMETHOD SetOnmouseenter(JSContext* cx,                                     \
-                           const JS::Value& aOnmouseenter) MOZ_FINAL          \
-{                                                                             \
-  return Element::SetOnmouseenter(cx, aOnmouseenter);                         \
-}                                                                             \
-using nsINode::GetOnmouseleave;                                               \
-using nsINode::SetOnmouseleave;                                               \
-NS_IMETHOD GetOnmouseleave(JSContext* cx, JS::Value* aOnmouseleave) MOZ_FINAL \
-{                                                                             \
-  return Element::GetOnmouseleave(cx, aOnmouseleave);                         \
-}                                                                             \
-NS_IMETHOD SetOnmouseleave(JSContext* cx,                                     \
-                           const JS::Value& aOnmouseleave) MOZ_FINAL          \
-{                                                                             \
-  return Element::SetOnmouseleave(cx, aOnmouseleave);                         \
-}                                                                             \
 NS_IMETHOD GetClientRects(nsIDOMClientRectList** _retval) MOZ_FINAL           \
 {                                                                             \
   *_retval = Element::GetClientRects().get();                                 \
