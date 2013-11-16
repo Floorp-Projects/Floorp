@@ -559,6 +559,10 @@ class MIRGraph
         hasTryBlock_(false)
     { }
 
+    TempAllocator &alloc() const {
+        return *alloc_;
+    }
+
     template <typename T>
     T * allocate(size_t count = 1) {
         return reinterpret_cast<T *>(alloc_->allocate(sizeof(T) * count));

@@ -105,10 +105,6 @@ class MUse : public TempObject, public InlineListNode<MUse>
       : producer_(nullptr), consumer_(nullptr), index_(0)
     { }
 
-    static inline MUse *New(MDefinition *producer, MNode *consumer, uint32_t index) {
-        return new MUse(producer, consumer, index);
-    }
-
     // Set data inside the MUse.
     void set(MDefinition *producer, MNode *consumer, uint32_t index) {
         producer_ = producer;
