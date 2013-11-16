@@ -13,6 +13,9 @@
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript;version=1.8"
+    src="chrome://browser/content/devtools/theme-switching.js"></script>
+
   <script type="application/javascript" src="shadereditor.js"/>
 
   <vbox id="body" flex="1">
