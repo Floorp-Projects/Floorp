@@ -425,7 +425,7 @@ var DebuggerServer = {
         let file = nsFile(aPortOrPath);
         if (file.exists())
           file.remove(false);
-        socket = new UnixDomainServerSocket(file, parseInt("600", 8), backlog);
+        socket = new UnixDomainServerSocket(file, parseInt("666", 8), backlog);
       }
       socket.asyncListen(this);
       this._listener = socket;
