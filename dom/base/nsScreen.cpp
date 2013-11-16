@@ -241,9 +241,11 @@ nsScreen::GetLockOrientationPermission() const
 }
 
 NS_IMETHODIMP
-nsScreen::MozLockOrientation(const JS::Value& aOrientation, JSContext* aCx,
+nsScreen::MozLockOrientation(const JS::Value& aOrientation_, JSContext* aCx,
                              bool* aReturn)
 {
+  JS::Rooted<JS::Value> aOrientation(aCx, aOrientation_);
+
   if (aOrientation.isObject()) {
     JS::Rooted<JSObject*> seq(aCx, &aOrientation.toObject());
     if (IsArrayLike(aCx, seq)) {
@@ -264,7 +266,7 @@ nsScreen::MozLockOrientation(const JS::Value& aOrientation, JSContext* aCx,
           return NS_ERROR_FAILURE;
         }
 
-        JS::Rooted<JSString*> jsString(aCx, JS_ValueToString(aCx, temp));
+        JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, temp));
         if (!jsString) {
           return NS_ERROR_FAILURE;
         }
@@ -283,7 +285,7 @@ nsScreen::MozLockOrientation(const JS::Value& aOrientation, JSContext* aCx,
     }
   }
 
-  JS::Rooted<JSString*> jsString(aCx, JS_ValueToString(aCx, aOrientation));
+  JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, aOrientation));
   if (!jsString) {
     return NS_ERROR_FAILURE;
   }

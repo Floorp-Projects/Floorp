@@ -3989,6 +3989,12 @@ js::ToStringSlow<CanGC>(ExclusiveContext *cx, HandleValue arg);
 template JSString *
 js::ToStringSlow<NoGC>(ExclusiveContext *cx, Value arg);
 
+JS_PUBLIC_API(JSString *)
+js::ToStringSlow(JSContext *cx, HandleValue v)
+{
+    return ToStringSlow<CanGC>(cx, v);
+}
+
 JSString *
 js::ValueToSource(JSContext *cx, HandleValue v)
 {
