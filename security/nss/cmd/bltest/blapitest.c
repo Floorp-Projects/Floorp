@@ -899,10 +899,8 @@ setupIO(PLArenaPool *arena, bltestIO *input, PRFileDesc *file,
     if (file && (numBytes == 0 || file == PR_STDIN)) {
 	/* grabbing data from a file */
 	rv = SECU_FileToItem(&fileData, file);
-	if (rv != SECSuccess) {
-	    PR_Close(file);
+	if (rv != SECSuccess)
 	    return SECFailure;
-	}
 	in = &fileData;
     } else if (str) {
 	/* grabbing data from command line */
@@ -2876,8 +2874,10 @@ load_file_data(PLArenaPool *arena, bltestIO *data,
     data->pBuf.data = NULL;
     data->pBuf.len = 0;
     file = PR_Open(fn, PR_RDONLY, 00660);
-    if (file)
+    if (file) {
 	setupIO(arena, data, file, NULL, 0);
+	PR_Close(file);
+    }
 }
 
 void

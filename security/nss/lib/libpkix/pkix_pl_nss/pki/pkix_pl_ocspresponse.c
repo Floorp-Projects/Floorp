@@ -341,6 +341,8 @@ pkix_pl_OcspResponse_RegisterSelf(void *plContext)
  * PARAMETERS
  *  "request"
  *      Address of the OcspRequest for which a response is desired.
+ *  "httpMechanism"
+ *      GET or POST
  *  "responder"
  *      Address, if non-NULL, of the SEC_HttpClientFcn to be sent the OCSP
  *      query.
@@ -364,6 +366,7 @@ pkix_pl_OcspResponse_RegisterSelf(void *plContext)
 PKIX_Error *
 pkix_pl_OcspResponse_Create(
         PKIX_PL_OcspRequest *request,
+        const char *httpMechanism,
         void *responder,
         PKIX_PL_VerifyCallback verifyFcn,
         void **pNBIOContext,
@@ -388,6 +391,10 @@ pkix_pl_OcspResponse_Create(
  
         PKIX_ENTER(OCSPRESPONSE, "pkix_pl_OcspResponse_Create");
         PKIX_NULLCHECK_TWO(pNBIOContext, pResponse);
+
+	if (!strcmp(httpMechanism, "GET") && !strcmp(httpMechanism, "POST")) {
+		PKIX_ERROR(PKIX_INVALIDOCSPHTTPMETHOD);
+	}
 
         nbioContext = *pNBIOContext;
         *pNBIOContext = NULL;
@@ -422,6 +429,9 @@ pkix_pl_OcspResponse_Create(
                 }
 
                 if (httpClient && (httpClient->version == 1)) {
+			char *fullGetPath = NULL;
+			const char *sessionPath = NULL;
+			PRBool usePOST = !strcmp(httpMechanism, "POST");
 
                         hcv1 = &(httpClient->fcnTable.ftable1);
 
@@ -441,21 +451,68 @@ pkix_pl_OcspResponse_Create(
                                 PKIX_ERROR(PKIX_OCSPSERVERERROR);
                         }       
 
-                        rv = (*hcv1->createFcn)(serverSession, "http", path,
-                                                "POST",
+			if (usePOST) {
+				sessionPath = path;
+			} else {
+				/* calculate, are we allowed to use GET? */
+				enum { max_get_request_size = 255 }; /* defined by RFC2560 */
+				unsigned char b64ReqBuf[max_get_request_size+1];
+				size_t base64size;
+				size_t slashLengthIfNeeded = 0;
+				size_t pathLength;
+				PRInt32 urlEncodedBufLength;
+				size_t getURLLength;
+				char *walkOutput = NULL;
+
+				pathLength = strlen(path);
+				if (path[pathLength-1] != '/') {
+					slashLengthIfNeeded = 1;
+				}
+				base64size = (((encodedRequest->len +2)/3) * 4);
+				if (base64size > max_get_request_size) {
+					PKIX_ERROR(PKIX_OCSPGETREQUESTTOOBIG);
+				}
+				memset(b64ReqBuf, 0, sizeof(b64ReqBuf));
+				PL_Base64Encode(encodedRequest->data, encodedRequest->len, b64ReqBuf);
+				urlEncodedBufLength = ocsp_UrlEncodeBase64Buf(b64ReqBuf, NULL);
+				getURLLength = pathLength + urlEncodedBufLength + slashLengthIfNeeded;
+				fullGetPath = (char*)PORT_Alloc(getURLLength);
+				if (!fullGetPath) {
+					PKIX_ERROR(PKIX_OUTOFMEMORY);
+				}
+				strcpy(fullGetPath, path);
+				walkOutput = fullGetPath + pathLength;
+				if (walkOutput > fullGetPath && slashLengthIfNeeded) {
+					strcpy(walkOutput, "/");
+					++walkOutput;
+				}
+				ocsp_UrlEncodeBase64Buf(b64ReqBuf, walkOutput);
+				sessionPath = fullGetPath;
+			}
+
+                        rv = (*hcv1->createFcn)(serverSession, "http",
+                                                sessionPath, httpMechanism,
                                                 PR_SecondsToInterval(timeout),
                                                 &sessionRequest);
+			sessionPath = NULL;
+			if (fullGetPath) {
+				PORT_Free(fullGetPath);
+				fullGetPath = NULL;
+			}
+			
                         if (rv != SECSuccess) {
                                 PKIX_ERROR(PKIX_OCSPSERVERERROR);
                         }       
 
-                        rv = (*hcv1->setPostDataFcn)(sessionRequest,
-                                                  (char *)encodedRequest->data,
-                                                  encodedRequest->len,
-                                                  "application/ocsp-request");
-                        if (rv != SECSuccess) {
-                                PKIX_ERROR(PKIX_OCSPSERVERERROR);
-                        }       
+			if (usePOST) {
+				rv = (*hcv1->setPostDataFcn)(sessionRequest,
+							  (char *)encodedRequest->data,
+							  encodedRequest->len,
+							  "application/ocsp-request");
+				if (rv != SECSuccess) {
+					PKIX_ERROR(PKIX_OCSPSERVERERROR);
+				}
+			}
 
                         /* create a PKIX_PL_OcspResponse object */
                         PKIX_CHECK(PKIX_PL_Object_Alloc
@@ -797,10 +854,12 @@ pkix_pl_OcspResponse_VerifySignature(
                                           signature, issuerCert);
             
             if (response->signerCert == NULL) {
-                PORT_SetError(SEC_ERROR_UNKNOWN_SIGNER);
+                if (PORT_GetError() == SEC_ERROR_UNKNOWN_CERT) {
+                    /* Make the error a little more specific. */
+                    PORT_SetError(SEC_ERROR_OCSP_INVALID_SIGNING_CERT);
+                }
                 goto cleanup;
-            }
-            
+            }            
             PKIX_CHECK( 
                 PKIX_PL_Cert_CreateFromCERTCertificate(response->signerCert,
                                                        &(response->pkixSignerCert),
@@ -937,6 +996,7 @@ PKIX_Error *
 pkix_pl_OcspResponse_GetStatusForCert(
         PKIX_PL_OcspCertID *cid,
         PKIX_PL_OcspResponse *response,
+        PKIX_Boolean allowCachingOfFailures,
         PKIX_PL_Date *validity,
         PKIX_Boolean *pPassed,
         SECErrorCodes *pReturnCode,
@@ -944,8 +1004,7 @@ pkix_pl_OcspResponse_GetStatusForCert(
 {
         PRTime time = 0;
         SECStatus rv = SECFailure;
-        SECStatus rvCache;
-        PRBool certIDWasConsumed = PR_FALSE;
+        CERTOCSPSingleResponse *single = NULL;
 
         PKIX_ENTER(OCSPRESPONSE, "pkix_pl_OcspResponse_GetStatusForCert");
         PKIX_NULLCHECK_THREE(response, pPassed, pReturnCode);
@@ -966,15 +1025,34 @@ pkix_pl_OcspResponse_GetStatusForCert(
             time = PR_Now();
         }
 
-        rv = cert_ProcessOCSPResponse(response->handle,
-                                      response->nssOCSPResponse,
-                                      cid->certID,
-                                      response->signerCert,
-                                      time,
-                                      &certIDWasConsumed,
-                                      &rvCache);
-        if (certIDWasConsumed) {
-                cid->certID = NULL;
+        rv = ocsp_GetVerifiedSingleResponseForCertID(response->handle,
+                                                     response->nssOCSPResponse,
+                                                     cid->certID, 
+                                                     response->signerCert,
+                                                     time, &single);
+        if (rv == SECSuccess) {
+                /*
+                 * Check whether the status says revoked, and if so 
+                 * how that compares to the time value passed into this routine.
+                 */
+                rv = ocsp_CertHasGoodStatus(single->certStatus, time);
+        }
+
+        if (rv == SECSuccess || allowCachingOfFailures) {
+                /* allowed to update the cache */
+                PRBool certIDWasConsumed = PR_FALSE;
+
+                if (single) {
+                        ocsp_CacheSingleResponse(cid->certID,single,
+                                                 &certIDWasConsumed);
+                } else {
+                        cert_RememberOCSPProcessingFailure(cid->certID,
+                                                           &certIDWasConsumed);
+                }
+
+                if (certIDWasConsumed) {
+                        cid->certID = NULL;
+                }
         }
 
 	if (rv == SECSuccess) {

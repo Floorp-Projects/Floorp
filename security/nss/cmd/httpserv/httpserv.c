@@ -27,6 +27,16 @@
 #include "prnetdb.h"
 #include "prclist.h"
 #include "plgetopt.h"
+#include "pk11func.h"
+#include "nss.h"
+#include "nssb64.h"
+#include "sechash.h"
+#include "cert.h"
+#include "certt.h"
+#include "ocsp.h"
+#include "ocspt.h"
+#include "ocspti.h"
+#include "ocspi.h"
 
 #ifndef PORT_Sprintf
 #define PORT_Sprintf sprintf
@@ -41,12 +51,6 @@
 #endif
 
 static int handle_connection( PRFileDesc *, PRFileDesc *, int );
-
-static const char inheritableSockName[] = { "SELFSERV_LISTEN_SOCKET" };
-
-#define DEFAULT_BULK_TEST 16384
-#define MAX_BULK_TEST     1048576 /* 1 MB */
-static PRBool testBulk;
 
 /* data and structures for shutdown */
 static int	stopping;
@@ -70,11 +74,23 @@ Usage(const char *progName)
 
 "Usage: %s -p port [-Dbv]\n"
 "         [-t threads] [-i pid_file]\n"
+"         [-A nickname -C crl-filename]... [-O method]\n"
+"         [-d dbdir] [-f password_file] [-w password] [-P dbprefix]\n"
 "-D means disable Nagle delays in TCP\n"
 "-b means try binding to the port and exit\n"
 "-v means verbose output\n"
 "-t threads -- specify the number of threads to use for connections.\n"
-"-i pid_file file to write the process id of selfserve\n"
+"-i pid_file file to write the process id of httpserv\n"
+"Parameters -A, -C and -O are used to provide an OCSP server at /ocsp?\n"
+"-A a nickname of a CA certificate\n"
+"-C a CRL filename corresponding to the preceding CA nickname\n"
+"-O allowed HTTP methods for OCSP requests: get, post, all, random, get-unknown\n"
+"   random means: randomly fail if request method is GET, POST always works\n"
+"   get-unknown means: status unknown for GET, correct status for POST\n"
+"Multiple pairs of parameters -A and -C are allowed.\n"
+"If status for a cert from an unknown CA is requested, the cert from the\n"
+"first -A parameter will be used to sign the unknown status response.\n"
+"NSS database parameters are used only if OCSP parameters are used.\n"
 	,progName);
 }
 
@@ -84,7 +100,7 @@ errWarn(char * funcString)
     PRErrorCode  perr      = PR_GetError();
     const char * errString = SECU_Strerror(perr);
 
-    fprintf(stderr, "selfserv: %s returned error %d:\n%s\n",
+    fprintf(stderr, "httpserv: %s returned error %d:\n%s\n",
             funcString, perr, errString);
     return errString;
 }
@@ -95,7 +111,6 @@ errExit(char * funcString)
     errWarn(funcString);
     exit(3);
 }
-
 
 #define MAX_VIRT_SERVER_NAME_ARRAY_INDEX  10
 
@@ -255,7 +270,7 @@ launch_threads(
                         (PR_TRUE==local)?PR_LOCAL_THREAD:PR_GLOBAL_THREAD,
                         PR_UNJOINABLE_THREAD, 0);
 	if (slot->prThread == NULL) {
-	    printf("selfserv: Failed to launch thread!\n");
+	    printf("httpserv: Failed to launch thread!\n");
 	    slot->state = rs_idle;
 	    rv = SECFailure;
 	    break;
@@ -277,7 +292,7 @@ launch_threads(
 void
 terminateWorkerThreads(void)
 {
-    VLOG(("selfserv: server_thead: waiting on stopping"));
+    VLOG(("httpserv: server_thead: waiting on stopping"));
     PZ_Lock(qLock);
     PZ_NotifyAllCondVar(jobQNotEmptyCv);
     while (threadCount > 0) {
@@ -303,8 +318,25 @@ terminateWorkerThreads(void)
 
 PRBool NoReuse         = PR_FALSE;
 PRBool disableLocking  = PR_FALSE;
-PRBool failedToNegotiateName  = PR_FALSE;
+static secuPWData  pwdata = { PW_NONE, 0 };
 
+struct caRevoInfoStr
+{
+    PRCList link;
+    char *nickname;
+    char *crlFilename;
+    CERTCertificate *cert;
+    CERTOCSPCertID *id;
+    CERTSignedCrl *crl;
+};
+typedef struct caRevoInfoStr caRevoInfo;
+/* Created during app init. No locks necessary, 
+ * because later on, only read access will occur. */
+static caRevoInfo *caRevoInfos = NULL;
+
+static enum { 
+  ocspGetOnly, ocspPostOnly, ocspGetAndPost, ocspRandomGetFailure, ocspGetUnknown
+} ocspMethodsAllowed = ocspGetAndPost;
 
 static const char stopCmd[] = { "GET /stop " };
 static const char getCmd[]  = { "GET " };
@@ -316,12 +348,64 @@ static const char outHeader[] = {
     "Content-type: text/plain\r\n"
     "\r\n"
 };
+static const char outOcspHeader[] = {
+    "HTTP/1.0 200 OK\r\n"
+    "Server: Generic OCSP Server\r\n"
+    "Content-type: application/ocsp-response\r\n"
+    "\r\n"
+};
+static const char outBadRequestHeader[] = {
+    "HTTP/1.0 400 Bad Request\r\n"
+    "Server: Generic OCSP Server\r\n"
+    "\r\n"
+};
 
 void stop_server()
 {
     stopping = 1;
     PR_Interrupt(acceptorThread);
     PZ_TraceFlush();
+}
+
+/* Will only work if the original input to url encoding was
+ * a base64 encoded buffer. Will only decode the sequences used
+ * for encoding the special base64 characters, and fail if any
+ * other encoded chars are found.
+ * Will return SECSuccess if input could be processed.
+ * Coversion is done in place.
+ */
+static SECStatus
+urldecode_base64chars_inplace(char *buf)
+{
+    char *walk;
+    size_t remaining_bytes;
+    
+    if (!buf || !*buf)
+	return SECFailure;
+    
+    walk = buf;
+    remaining_bytes = strlen(buf) + 1; /* include terminator */
+    
+    while (*walk) {
+	if (*walk == '%') {
+	    if (!PL_strncasecmp(walk, "%2B", 3)) {
+		*walk = '+';
+	    } else if (!PL_strncasecmp(walk, "%2F", 3)) {
+		*walk = '/';
+	    } else if (!PL_strncasecmp(walk, "%3D", 3)) {
+		*walk = '=';
+	    } else {
+		return SECFailure;
+	    }
+	    remaining_bytes -= 3;
+	    ++walk;
+	    memmove(walk, walk+2, remaining_bytes);
+	} else {
+	    ++walk;
+	    --remaining_bytes;
+	}
+    }
+    return SECSuccess;
 }
 
 int
@@ -333,7 +417,6 @@ handle_connection(
 {
     PRFileDesc *       ssl_sock = NULL;
     PRFileDesc *       local_file_fd = NULL;
-    char  *            post;
     char  *            pBuf;			/* unused space at end of buf */
     const char *       errString;
     PRStatus           status;
@@ -349,16 +432,23 @@ handle_connection(
     char               msgBuf[160];
     char               buf[10240];
     char               fileName[513];
+    char *getData = NULL; /* inplace conversion */
+    SECItem postData;
+    PRBool isOcspRequest = PR_FALSE;
+    PRBool isPost;
+
+    postData.data = NULL;
+    postData.len = 0;
 
     pBuf   = buf;
     bufRem = sizeof buf;
 
-    VLOG(("selfserv: handle_connection: starting"));
+    VLOG(("httpserv: handle_connection: starting"));
     opt.option             = PR_SockOpt_Nonblocking;
     opt.value.non_blocking = PR_FALSE;
     PR_SetSocketOption(tcp_sock, &opt);
 
-    VLOG(("selfserv: handle_connection: starting\n"));
+    VLOG(("httpserv: handle_connection: starting\n"));
 	ssl_sock = tcp_sock;
 
     if (noDelay) {
@@ -375,8 +465,13 @@ handle_connection(
     }
 
     while (1) {
+	const char *post;
+	const char *foundStr = NULL;
+	const char *tmp = NULL;
+
 	newln = 0;
-	reqLen     = 0;
+	reqLen = 0;
+
 	rv = PR_Read(ssl_sock, pBuf, bufRem - 1);
 	if (rv == 0 || 
 	    (rv < 0 && PR_END_OF_FILE_ERROR == PR_GetError())) {
@@ -426,56 +521,246 @@ handle_connection(
 	if (!post || *post != 'P') 
 	    break;
 
-	/* It's a post, so look for the next and final CR/LF. */
-	/* We should parse content length here, but ... */
-	while (reqLen < bufDat && newln < 3) {
-	    int octet = buf[reqLen++];
-	    if (octet == '\n') {
-		newln++;
+	postData.data = (void*)(buf + reqLen);
+	
+	tmp = "content-length: ";
+	foundStr = PL_strcasestr(buf, tmp);
+	if (foundStr) {
+	    int expectedPostLen;
+	    int havePostLen;
+	    
+	    expectedPostLen = atoi(foundStr+strlen(tmp));
+	    havePostLen = bufDat - reqLen;
+	    if (havePostLen >= expectedPostLen) {
+		postData.len = expectedPostLen;
+		break;
 	    }
+	} else {
+	    /* use legacy hack */
+	    /* It's a post, so look for the next and final CR/LF. */
+	    while (reqLen < bufDat && newln < 3) {
+		int octet = buf[reqLen++];
+		if (octet == '\n') {
+		    newln++;
+		}
+	    }
+	    if (newln == 3)
+		break;
 	}
-	if (newln == 3)
-	    break;
     } /* read loop */
 
     bufDat = pBuf - buf;
     if (bufDat) do {	/* just close if no data */
 	/* Have either (a) a complete get, (b) a complete post, (c) EOF */
-	if (reqLen > 0 && !strncmp(buf, getCmd, sizeof getCmd - 1)) {
-	    char *      fnBegin = buf + 4;
-	    char *      fnEnd;
-	    PRFileInfo  info;
-	    /* try to open the file named.  
-	     * If successful, then write it to the client.
-	     */
-	    fnEnd = strpbrk(fnBegin, " \r\n");
-	    if (fnEnd) {
-		int fnLen = fnEnd - fnBegin;
-		if (fnLen < sizeof fileName) {
-                    char *fnstart;
-                    strncpy(fileName, fnBegin, fnLen);
-                    fileName[fnLen] = 0;	/* null terminate */
-                    fnstart = fileName;
-                    /* strip initial / because our root is the current directory*/
-                    while (*fnstart && *fnstart=='/')
-                        ++fnstart;
-		    status = PR_GetFileInfo(fnstart, &info);
-		    if (status == PR_SUCCESS &&
-			info.type == PR_FILE_FILE &&
-			info.size >= 0 ) {
-			local_file_fd = PR_Open(fnstart, PR_RDONLY, 0);
+	if (reqLen > 0) {
+	    PRBool isGetOrPost = PR_FALSE;
+	    unsigned skipChars = 0;
+	    isPost = PR_FALSE;
+	    
+	    if (!strncmp(buf, getCmd, sizeof getCmd - 1)) {
+		isGetOrPost = PR_TRUE;
+		skipChars = 4;
+	    }
+	    else if (!strncmp(buf, "POST ", 5)) {
+		isGetOrPost = PR_TRUE;
+		isPost = PR_TRUE;
+		skipChars = 5;
+	    }
+	    
+	    if (isGetOrPost) {
+		char *      fnBegin = buf;
+		char *      fnEnd;
+		char *      fnstart = NULL;
+		PRFileInfo  info;
+		
+		fnBegin += skipChars;
+		
+		fnEnd = strpbrk(fnBegin, " \r\n");
+		if (fnEnd) {
+		    int fnLen = fnEnd - fnBegin;
+		    if (fnLen < sizeof fileName) {
+			strncpy(fileName, fnBegin, fnLen);
+			fileName[fnLen] = 0;	/* null terminate */
+			fnstart = fileName;
+			/* strip initial / because our root is the current directory*/
+			while (*fnstart && *fnstart=='/')
+			    ++fnstart;
+		    }
+		}
+		if (fnstart) {
+		    if (!strncmp(fnstart, "ocsp", 4)) {
+			if (isPost) {
+			    if (postData.data) {
+				isOcspRequest = PR_TRUE;
+			    }
+			} else {
+			    if (!strncmp(fnstart, "ocsp/", 5)) {
+				isOcspRequest = PR_TRUE;
+				getData = fnstart + 5;
+			    }
+			}
+		    } else {
+			/* try to open the file named.  
+			* If successful, then write it to the client.
+			*/
+			status = PR_GetFileInfo(fnstart, &info);
+			if (status == PR_SUCCESS &&
+			    info.type == PR_FILE_FILE &&
+			    info.size >= 0 ) {
+			    local_file_fd = PR_Open(fnstart, PR_RDONLY, 0);
+			}
 		    }
 		}
 	    }
 	}
 
 	numIOVs = 0;
-
+	
 	iovs[numIOVs].iov_base = (char *)outHeader;
 	iovs[numIOVs].iov_len  = (sizeof(outHeader)) - 1;
 	numIOVs++;
+	
+	if (isOcspRequest && caRevoInfos) {
+	    CERTOCSPRequest *request = NULL;
+	    PRBool failThisRequest = PR_FALSE;
+	    
+	    if (ocspMethodsAllowed == ocspGetOnly && postData.len) {
+		failThisRequest = PR_TRUE;
+	    } else if (ocspMethodsAllowed == ocspPostOnly && getData) {
+		failThisRequest = PR_TRUE;
+	    } else if (ocspMethodsAllowed == ocspRandomGetFailure && getData) {
+		if (!(rand() % 2)) {
+		    failThisRequest = PR_TRUE;
+		}
+	    }
+	    
+	    if (failThisRequest) {
+		PR_Write(ssl_sock, outBadRequestHeader, strlen(outBadRequestHeader));
+		break;
+	    }
+	    /* get is base64, post is binary.
+	     * If we have base64, convert into the (empty) postData array.
+	     */
+	    if (getData) {
+		if (urldecode_base64chars_inplace(getData) == SECSuccess) {
+		    NSSBase64_DecodeBuffer(NULL, &postData, getData, strlen(getData));
+		}
+	    }
+	    if (postData.len) {
+		request = CERT_DecodeOCSPRequest(&postData);
+	    }
+	    if (!request || !request->tbsRequest || 
+	        !request->tbsRequest->requestList ||
+	        !request->tbsRequest->requestList[0]) {
+		PORT_Sprintf(msgBuf, "Cannot decode OCSP request.\r\n");
 
-	if (local_file_fd) {
+		iovs[numIOVs].iov_base = msgBuf;
+		iovs[numIOVs].iov_len  = PORT_Strlen(msgBuf);
+		numIOVs++;
+	    } else {
+	      /* TODO: support more than one request entry */
+	      CERTOCSPCertID *reqid = request->tbsRequest->requestList[0]->reqCert;
+	      const caRevoInfo *revoInfo = NULL;
+	      PRBool unknown = PR_FALSE;
+	      PRBool revoked = PR_FALSE;
+	      PRTime nextUpdate = 0;
+	      PRTime revoDate = 0;
+	      PRCList *caRevoIter;
+
+	      caRevoIter = &caRevoInfos->link;
+	      do {
+		  CERTOCSPCertID *caid;
+
+		  revoInfo = (caRevoInfo*)caRevoIter;
+		  caid = revoInfo->id;
+		  
+		  if (SECOID_CompareAlgorithmID(&reqid->hashAlgorithm, 
+		                                &caid->hashAlgorithm) == SECEqual
+		      &&
+		      SECITEM_CompareItem(&reqid->issuerNameHash,
+					  &caid->issuerNameHash) == SECEqual
+		      &&
+		      SECITEM_CompareItem(&reqid->issuerKeyHash,
+					  &caid->issuerKeyHash) == SECEqual) {
+		      break;
+		  }
+		  revoInfo = NULL;
+		  caRevoIter = PR_NEXT_LINK(caRevoIter);
+	      } while (caRevoIter != &caRevoInfos->link);
+	      
+	      if (!revoInfo) {
+		  unknown = PR_TRUE;
+		  revoInfo = caRevoInfos;
+	      } else {
+		  CERTCrl *crl = &revoInfo->crl->crl;
+		  CERTCrlEntry *entry = NULL;
+		  DER_DecodeTimeChoice(&nextUpdate, &crl->nextUpdate);
+		  if (crl->entries) {
+		      int iv = 0;
+		      /* assign, not compare */
+		      while ((entry = crl->entries[iv++])) {
+			  if (SECITEM_CompareItem(&reqid->serialNumber,
+						  &entry->serialNumber) == SECEqual) {
+			      break;
+			  }
+		      }
+		  }
+		  if (entry) {
+		      /* revoked status response */
+		      revoked = PR_TRUE;
+		      DER_DecodeTimeChoice(&revoDate, &entry->revocationDate);
+		  } else {
+		      /* else good status response */
+		      if (!isPost && ocspMethodsAllowed == ocspGetUnknown) {
+			  unknown = PR_TRUE;
+			  nextUpdate = PR_Now() + 60*60*24 * PR_USEC_PER_SEC; /*tomorrow*/
+			  revoDate = PR_Now() - 60*60*24 * PR_USEC_PER_SEC; /*yesterday*/
+		      }
+		  }
+	      }
+
+	      {
+		  PRTime now = PR_Now();
+		  PLArenaPool *arena = NULL;
+		  CERTOCSPSingleResponse *sr;
+		  CERTOCSPSingleResponse **singleResponses;
+		  SECItem *ocspResponse;
+		  
+		  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+		  
+		  if (unknown) {
+		      sr = CERT_CreateOCSPSingleResponseUnknown(arena, reqid, now,
+								&nextUpdate);
+		  } else if (revoked) {
+		      sr = CERT_CreateOCSPSingleResponseRevoked(arena, reqid, now,
+			  &nextUpdate, revoDate, NULL);
+		  } else {
+		      sr = CERT_CreateOCSPSingleResponseGood(arena, reqid, now,
+							    &nextUpdate);
+		  }
+		  
+		  /* meaning of value 2: one entry + one end marker */
+		  singleResponses = PORT_ArenaNewArray(arena, CERTOCSPSingleResponse*, 2);
+		  singleResponses[0] = sr;
+		  singleResponses[1] = NULL;
+		  ocspResponse = CERT_CreateEncodedOCSPSuccessResponse(arena, 
+				      revoInfo->cert, ocspResponderID_byName, now,
+				      singleResponses, &pwdata);
+		  
+		  if (!ocspResponse) {
+		      PORT_Sprintf(msgBuf, "Failed to encode response\r\n");
+		      iovs[numIOVs].iov_base = msgBuf;
+		      iovs[numIOVs].iov_len  = PORT_Strlen(msgBuf);
+		      numIOVs++;
+		  } else {
+		      PR_Write(ssl_sock, outOcspHeader, strlen(outOcspHeader));
+		      PR_Write(ssl_sock, ocspResponse->data, ocspResponse->len);
+		      PORT_FreeArena(arena, PR_FALSE);
+		  }
+	      }
+	      break;
+	    }
+	} else if (local_file_fd) {
 	    PRInt32     bytes;
 	    int         errLen;
             bytes = PR_TransmitFile(ssl_sock, local_file_fd, outHeader,
@@ -485,7 +770,7 @@ handle_connection(
             if (bytes >= 0) {
                 bytes -= sizeof outHeader - 1;
                 FPRINTF(stderr, 
-                        "selfserv: PR_TransmitFile wrote %d bytes from %s\n",
+                        "httpserv: PR_TransmitFile wrote %d bytes from %s\n",
                         bytes, fileName);
                 break;
             }
@@ -523,13 +808,6 @@ handle_connection(
 	    numIOVs++;
 	}
 
-        /* Don't add the EOF if we want to test bulk encryption */
-        if (!testBulk) {
-            iovs[numIOVs].iov_base = (char *)EOFmsg;
-            iovs[numIOVs].iov_len  = sizeof EOFmsg - 1;
-            numIOVs++;
-        }
-
 	rv = PR_Writev(ssl_sock, iovs, numIOVs, PR_INTERVAL_NO_TIMEOUT);
 	if (rv < 0) {
 	    errWarn("PR_Writev");
@@ -546,14 +824,14 @@ cleanup:
     }
     if (local_file_fd)
 	PR_Close(local_file_fd);
-    VLOG(("selfserv: handle_connection: exiting\n"));
+    VLOG(("httpserv: handle_connection: exiting\n"));
 
     /* do a nice shutdown if asked. */
     if (!strncmp(buf, stopCmd, sizeof stopCmd - 1)) {
-        VLOG(("selfserv: handle_connection: stop command"));
+        VLOG(("httpserv: handle_connection: stop command"));
         stop_server();
     }
-    VLOG(("selfserv: handle_connection: exiting"));
+    VLOG(("httpserv: handle_connection: exiting"));
     return SECSuccess;	/* success */
 }
 
@@ -561,7 +839,7 @@ cleanup:
 
 void sigusr1_handler(int sig)
 {
-    VLOG(("selfserv: sigusr1_handler: stop server"));
+    VLOG(("httpserv: sigusr1_handler: stop server"));
     stop_server();
 }
 
@@ -580,7 +858,7 @@ do_accepts(
     struct sigaction act;
 #endif
 
-    VLOG(("selfserv: do_accepts: starting"));
+    VLOG(("httpserv: do_accepts: starting"));
     PR_SetThreadPriority( PR_GetCurrentThread(), PR_PRIORITY_HIGH);
 
     acceptorThread = PR_GetCurrentThread();
@@ -598,7 +876,7 @@ do_accepts(
 	PRFileDesc *tcp_sock;
 	PRCList    *myLink;
 
-	FPRINTF(stderr, "\n\n\nselfserv: About to call accept.\n");
+	FPRINTF(stderr, "\n\n\nhttpserv: About to call accept.\n");
 	tcp_sock = PR_Accept(listen_sock, &addr, PR_INTERVAL_NO_TIMEOUT);
 	if (tcp_sock == NULL) {
     	    perr      = PR_GetError();
@@ -615,7 +893,7 @@ do_accepts(
 	    break;
 	}
 
-        VLOG(("selfserv: do_accept: Got connection\n"));
+        VLOG(("httpserv: do_accept: Got connection\n"));
 
 	PZ_Lock(qLock);
 	while (PR_CLIST_IS_EMPTY(&freeJobs) && !stopping) {
@@ -645,8 +923,8 @@ do_accepts(
 	PZ_Unlock(qLock);
     }
 
-    FPRINTF(stderr, "selfserv: Closing listen socket.\n");
-    VLOG(("selfserv: do_accepts: exiting"));
+    FPRINTF(stderr, "httpserv: Closing listen socket.\n");
+    VLOG(("httpserv: do_accepts: exiting"));
     if (listen_sock) {
         PR_Close(listen_sock);
     }
@@ -755,10 +1033,94 @@ haveAChild(int argc, char **argv, PRProcessAttr * attr)
     return newProcess;
 }
 
+/* slightly adjusted version of ocsp_CreateCertID (not using issuer) */
+static CERTOCSPCertID *
+ocsp_CreateSelfCAID(PLArenaPool *arena, CERTCertificate *cert, PRTime time)
+{
+    CERTOCSPCertID *certID;
+    void *mark = PORT_ArenaMark(arena);
+    SECStatus rv;
+
+    PORT_Assert(arena != NULL);
+
+    certID = PORT_ArenaZNew(arena, CERTOCSPCertID);
+    if (certID == NULL) {
+	goto loser;
+    }
+
+    rv = SECOID_SetAlgorithmID(arena, &certID->hashAlgorithm, SEC_OID_SHA1,
+			       NULL);
+    if (rv != SECSuccess) {
+	goto loser; 
+    }
+
+    if (CERT_GetSubjectNameDigest(arena, cert, SEC_OID_SHA1,
+                                  &(certID->issuerNameHash)) == NULL) {
+        goto loser;
+    }
+    certID->issuerSHA1NameHash.data = certID->issuerNameHash.data;
+    certID->issuerSHA1NameHash.len = certID->issuerNameHash.len;
+
+    if (CERT_GetSubjectNameDigest(arena, cert, SEC_OID_MD5,
+                                  &(certID->issuerMD5NameHash)) == NULL) {
+        goto loser;
+    }
+
+    if (CERT_GetSubjectNameDigest(arena, cert, SEC_OID_MD2,
+                                  &(certID->issuerMD2NameHash)) == NULL) {
+        goto loser;
+    }
+
+    if (CERT_GetSPKIDigest(arena, cert, SEC_OID_SHA1,
+				   &(certID->issuerKeyHash)) == NULL) {
+	goto loser;
+    }
+    certID->issuerSHA1KeyHash.data = certID->issuerKeyHash.data;
+    certID->issuerSHA1KeyHash.len = certID->issuerKeyHash.len;
+    /* cache the other two hash algorithms as well */
+    if (CERT_GetSPKIDigest(arena, cert, SEC_OID_MD5,
+				   &(certID->issuerMD5KeyHash)) == NULL) {
+	goto loser;
+    }
+    if (CERT_GetSPKIDigest(arena, cert, SEC_OID_MD2,
+				   &(certID->issuerMD2KeyHash)) == NULL) {
+	goto loser;
+    }
+
+    PORT_ArenaUnmark(arena, mark);
+    return certID;
+
+loser:
+    PORT_ArenaRelease(arena, mark);
+    return NULL;
+}
+
+/* slightly adjusted version of CERT_CreateOCSPCertID */
+CERTOCSPCertID*
+cert_CreateSelfCAID(CERTCertificate *cert, PRTime time)
+{
+    PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    CERTOCSPCertID *certID;
+    PORT_Assert(arena != NULL);
+    if (!arena)
+	return NULL;
+    
+    certID = ocsp_CreateSelfCAID(arena, cert, time);
+    if (!certID) {
+	PORT_FreeArena(arena, PR_FALSE);
+	return NULL;
+    }
+    certID->poolp = arena;
+    return certID;
+}
+
 int
 main(int argc, char **argv)
 {
     char *               progName    = NULL;
+    const char *         dir         = ".";
+    char *               passwd      = NULL;
+    char *               pwfile      = NULL;
     const char *         pidFile     = NULL;
     char *               tmp;
     PRFileDesc *         listen_sock;
@@ -770,6 +1132,11 @@ main(int argc, char **argv)
     PRBool               useLocalThreads = PR_FALSE;
     PLOptState		*optstate;
     PLOptStatus          status;
+    char                 emptyString[] = { "" };
+    char*                certPrefix = emptyString;
+    caRevoInfo		*revoInfo = NULL;
+    PRCList             *caRevoIter = NULL;
+    PRBool               provideOcsp = PR_FALSE;
 
     tmp = strrchr(argv[0], '/');
     tmp = tmp ? tmp + 1 : argv[0];
@@ -782,13 +1149,59 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-        "Dbhi:p:t:v");
+        "A:C:DO:P:bd:f:hi:p:t:vw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
+	/* A first, must be followed by C. Any other order is an error.
+	 * A creates the object. C completes and moves into list.
+	 */
+	case 'A':
+	  provideOcsp = PR_TRUE;
+	  if (revoInfo) { Usage(progName); exit(0); }
+	  revoInfo = PORT_New(caRevoInfo);
+	  revoInfo->nickname = PORT_Strdup(optstate->value);
+	  break;
+	case 'C':
+	  if (!revoInfo) { Usage(progName); exit(0); }
+	  revoInfo->crlFilename = PORT_Strdup(optstate->value);
+	  if (!caRevoInfos) {
+	      PR_INIT_CLIST(&revoInfo->link);
+	      caRevoInfos = revoInfo;
+	  } else {
+	      PR_APPEND_LINK(&revoInfo->link, &caRevoInfos->link);
+	  }
+	  revoInfo = NULL;
+	  break;
+	  
+	case 'O':
+	  if (!PL_strcasecmp(optstate->value, "all")) {
+	      ocspMethodsAllowed = ocspGetAndPost;
+	  } else if (!PL_strcasecmp(optstate->value, "get")) {
+	      ocspMethodsAllowed = ocspGetOnly;
+	  } else if (!PL_strcasecmp(optstate->value, "post")) {
+	      ocspMethodsAllowed = ocspPostOnly;
+	  } else if (!PL_strcasecmp(optstate->value, "random")) {
+	      ocspMethodsAllowed = ocspRandomGetFailure;
+	  } else if (!PL_strcasecmp(optstate->value, "get-unknown")) {
+	      ocspMethodsAllowed = ocspGetUnknown;
+	  } else {
+	      Usage(progName); exit(0);
+	  }
+	  break;
+
 	case 'D': noDelay = PR_TRUE; break;
 
+	case 'P': certPrefix = PORT_Strdup(optstate->value); break;
+
         case 'b': bindOnly = PR_TRUE; break;
+
+	case 'd': dir = optstate->value; break;
+
+	case 'f':
+            pwdata.source = PW_FROMFILE;
+            pwdata.data = pwfile = PORT_Strdup(optstate->value);
+            break;
 
         case 'h': Usage(progName); exit(0); break;
 
@@ -803,6 +1216,11 @@ main(int argc, char **argv)
 	    break;
 
 	case 'v': verbose++; break;
+
+	case 'w':
+            pwdata.source = PW_PLAINTEXT;
+            pwdata.data = passwd = PORT_Strdup(optstate->value);
+            break;
 
 	default:
 	case '?':
@@ -824,7 +1242,7 @@ main(int argc, char **argv)
     } 
 
     /* The -b (bindOnly) option is only used by the ssl.sh test
-     * script on Linux to determine whether a previous selfserv
+     * script on Linux to determine whether a previous httpserv
      * process has fully died and freed the port.  (Bug 129701)
      */
     if (bindOnly) {
@@ -865,6 +1283,62 @@ main(int argc, char **argv)
 
     lm = PR_NewLogModule("TestCase");
 
+    /* set our password function */
+    PK11_SetPasswordFunc(SECU_GetModulePassword);
+
+    if (provideOcsp) {
+	/* Call the NSS initialization routines */
+	rv = NSS_Initialize(dir, certPrefix, certPrefix, SECMOD_DB, NSS_INIT_READONLY);
+	if (rv != SECSuccess) {
+	    fputs("NSS_Init failed.\n", stderr);
+		    exit(8);
+	}
+	
+	if (caRevoInfos) {
+	  caRevoIter = &caRevoInfos->link;
+	  do {
+	      PRFileDesc *inFile;
+	      int rv = SECFailure;
+	      SECItem crlDER;
+	      crlDER.data = NULL;
+
+	      revoInfo = (caRevoInfo*)caRevoIter;
+	      revoInfo->cert = CERT_FindCertByNickname(
+		  CERT_GetDefaultCertDB(), revoInfo->nickname);
+	      if (!revoInfo->cert) {
+		  fprintf(stderr, "cannot find cert with nickname %s\n",
+			  revoInfo->nickname);
+		  exit(1);
+	      }
+	      inFile = PR_Open(revoInfo->crlFilename, PR_RDONLY, 0);
+	      if (inFile) {
+		rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE, PR_FALSE);
+	      }
+	      if (!inFile || rv != SECSuccess) {
+		  fprintf(stderr, "unable to read crl file %s\n",
+			  revoInfo->crlFilename);
+		  exit(1);
+	      }
+	      revoInfo->crl = 
+		  CERT_DecodeDERCrlWithFlags(NULL, &crlDER, SEC_CRL_TYPE,
+					     CRL_DECODE_DEFAULT_OPTIONS);
+	      if (!revoInfo->crl) {
+		  fprintf(stderr, "unable to decode crl file %s\n",
+			  revoInfo->crlFilename);
+		  exit(1);
+	      }
+	      if (CERT_CompareName(&revoInfo->crl->crl.name,
+				   &revoInfo->cert->subject) != SECEqual) {
+		  fprintf(stderr, "CRL %s doesn't match cert identified by preceding nickname %s\n",
+			  revoInfo->crlFilename, revoInfo->nickname);
+		  exit(1);
+	      }
+	      revoInfo->id = cert_CreateSelfCAID(revoInfo->cert, PR_Now());
+	      caRevoIter = PR_NEXT_LINK(caRevoIter);
+	  } while (caRevoIter != &caRevoInfos->link);
+	}
+    }
+
 /* allocate the array of thread slots, and launch the worker threads. */
     rv = launch_threads(&jobLoop, 0, 0, 0, useLocalThreads);
 
@@ -873,15 +1347,47 @@ main(int argc, char **argv)
                     0);
     }
 
-    VLOG(("selfserv: server_thread: exiting"));
+    VLOG(("httpserv: server_thread: exiting"));
 
-    if (failedToNegotiateName) {
-        fprintf(stderr, "selfserv: Failed properly negotiate server name\n");
-        exit(1);
+    if (provideOcsp) {
+	if (caRevoInfos) {
+	    PRCList *caRevoIter;
+
+	    caRevoIter = &caRevoInfos->link;
+	    do {
+		caRevoInfo *revoInfo = (caRevoInfo*)caRevoIter;
+		if (revoInfo->nickname)
+		    PORT_Free(revoInfo->nickname);
+		if (revoInfo->crlFilename)
+		    PORT_Free(revoInfo->crlFilename);
+		if (revoInfo->cert)
+		    CERT_DestroyCertificate(revoInfo->cert);
+		if (revoInfo->id)
+		    CERT_DestroyOCSPCertID(revoInfo->id);
+		if (revoInfo->crl)
+		    CERT_DestroyCrl(revoInfo->crl);
+		
+		caRevoIter = PR_NEXT_LINK(caRevoIter);
+	    } while (caRevoIter != &caRevoInfos->link);
+      
+	}
+	if (NSS_Shutdown() != SECSuccess) {
+	    SECU_PrintError(progName, "NSS_Shutdown");
+	    PR_Cleanup();
+	    exit(1);
+	}
     }
-
+    if (passwd) {
+        PORT_Free(passwd);
+    }
+    if (pwfile) {
+        PORT_Free(pwfile);
+    }
+    if (certPrefix && certPrefix != emptyString) {
+        PORT_Free(certPrefix);
+    }
     PR_Cleanup();
-    printf("selfserv: normal termination\n");
+    printf("httpserv: normal termination\n");
     return 0;
 }
 

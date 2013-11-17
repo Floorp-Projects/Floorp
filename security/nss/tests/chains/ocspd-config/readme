@@ -1,18 +1,3 @@
-This script is used to generate certificates used by ocspd.
+OBSOLETE
 
-Some steps to run (only once - before all OCSP testing):
-1.  Edit security/nss/tests/chains/scenarios/scenarios to have there only ocspd.cfg
-2.  Set environment variable to run only chains tests: export NSS_TESTS=chains.sh
-3.  Set environment variable to have the correct URI in the certificates: export NSS_AIA_OCSP=http://dochinups.us.oracle.com
-4.  Run tests: ./all.sh
-5.  Go to results directory: cd tests_results/security/${HOST}.${ID}/chains
-6.  Copy ocspd-certs.sh and ocspd.conf.template to this directory
-7.  Run: ./ocspd-certs.sh OCSPD ${OCSPD_ETC_DIR} ${LIBPKIX_CERTS_DIR}:
-    Example: ./ocspd-certs.sh OCSPD /export/iopr/openca-ocsp-responder/etc/ocspdPKIX \
-       ~/nss/securitytip/mozilla/security/nss/tests/libpkix/certs
-8.  Commit the new certificates that have been generated under ~/nss/securitytip/mozilla/security/nss/tests/libpkix/certs
-9.  Copy config files and keys/certs/crls to ocspd etc directory:
-    cp *.conf /Volumes/dochinups.red.iplanet.com/openca-ocsp-responder/etc/ocspdPKIX
-    cp *.pem *.key /Volumes/dochinups.red.iplanet.com/openca-ocsp-responder/etc/ocspdPKIX/OCSPD
-10. Start ocsp deamons on dochinups (for all configs).
-
+tests have been changed to use a local ocsp server (using httpserv)

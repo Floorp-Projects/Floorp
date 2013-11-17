@@ -945,7 +945,7 @@ PrintSyntax(char *progName)
 {
 #define FPS fprintf(stderr, 
     FPS "Type %s -H for more detailed descriptions\n", progName);
-    FPS "Usage:  %s -N [-d certdir] [-P dbprefix] [-f pwfile]\n", progName);
+    FPS "Usage:  %s -N [-d certdir] [-P dbprefix] [-f pwfile] [--empty-password]\n", progName);
     FPS "Usage:  %s -T [-d certdir] [-P dbprefix] [-h token-name]\n"
 	"\t\t [-f pwfile] [-0 SSO-password]\n", progName);
     FPS "\t%s -A -n cert-name -t trustargs [-d certdir] [-P dbprefix] [-a] [-i input]\n", 
@@ -1361,6 +1361,8 @@ static void luN(enum usage_level ul, const char *command)
         "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
         "   -P dbprefix");
+    FPS "%-20s use empty password when creating a new database\n",
+        "   --empty-password");
     FPS "\n");
 }
 
@@ -2191,6 +2193,7 @@ enum certutilOpts {
     opt_KeyOpFlagsOn,
     opt_KeyOpFlagsOff,
     opt_KeyAttrFlags,
+    opt_EmptyPassword,
     opt_Help
 };
 
@@ -2298,6 +2301,8 @@ secuCommandFlag options_init[] =
                                                    "keyOpFlagsOff"},
 	{ /* opt_KeyAttrFlags        */  0,   PR_TRUE, 0, PR_FALSE, 
                                                    "keyAttrFlags"},
+	{ /* opt_EmptyPassword       */  0,   PR_FALSE, 0, PR_FALSE, 
+                                                   "empty-password"},
 };
 #define NUM_OPTIONS ((sizeof options_init)  / (sizeof options_init[0]))
 
@@ -2809,7 +2814,10 @@ certutil_main(int argc, char **argv, PRBool initialize)
 
     /*  If creating new database, initialize the password.  */
     if (certutil.commands[cmd_NewDBs].activated) {
-	SECU_ChangePW2(slot, 0, 0, certutil.options[opt_PasswordFile].arg,
+	if(certutil.options[opt_EmptyPassword].activated && (PK11_NeedUserInit(slot)))
+	    PK11_InitPin(slot, (char*)NULL, "");
+	else
+	    SECU_ChangePW2(slot, 0, 0, certutil.options[opt_PasswordFile].arg,
 				certutil.options[opt_NewPasswordFile].arg);
     }
 

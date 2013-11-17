@@ -22,7 +22,7 @@ extern int fprintf(FILE *, char *, ...);
 static void Usage(char *progName)
 {
     fprintf(stderr,
-	    "Usage:  %s -t type [-a] [-i input] [-o output]\n",
+	    "Usage:  %s -t type [-a] [-i input] [-o output] [-w]\n",
 	    progName);
     fprintf(stderr, "%-20s Specify the input type (must be one of %s,\n",
 	    "-t type", SEC_CT_PRIVATE_KEY);
@@ -36,6 +36,8 @@ static void Usage(char *progName)
 	    "-i input");
     fprintf(stderr, "%-20s Define an output file to use (default is stdout)\n",
 	    "-o output");
+    fprintf(stderr, "%-20s Don't wrap long output lines\n",
+	    "-w");
     exit(-1);
 }
 
@@ -48,6 +50,7 @@ int main(int argc, char **argv)
     SECItem der, data;
     char *typeTag;
     PLOptState *optstate;
+    PRBool wrap = PR_TRUE;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
@@ -56,7 +59,7 @@ int main(int argc, char **argv)
     inFile = 0;
     outFile = 0;
     typeTag = 0;
-    optstate = PL_CreateOptState(argc, argv, "at:i:o:");
+    optstate = PL_CreateOptState(argc, argv, "at:i:o:w");
     while ( PL_GetNextOpt(optstate) == PL_OPT_OK ) {
 	switch (optstate->option) {
 	  case '?':
@@ -88,6 +91,10 @@ int main(int argc, char **argv)
 	  case 't':
 	    typeTag = strdup(optstate->value);
 	    break;
+
+	  case 'w':
+	    wrap = PR_FALSE;
+	    break;
 	}
     }
     PL_DestroyOptState(optstate);
@@ -115,16 +122,15 @@ int main(int argc, char **argv)
     data.data = der.data;
     data.len = der.len;
 
+    SECU_EnableWrap(wrap);
+
     /* Pretty print it */
     if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE) == 0) {
 	rv = SECU_PrintSignedData(outFile, &data, "Certificate", 0,
 			     SECU_PrintCertificate);
     } else if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE_ID) == 0) {
-        PRBool saveWrapeState = SECU_GetWrapEnabled();
-        SECU_EnableWrap(PR_FALSE);
         rv = SECU_PrintSignedContent(outFile, &data, 0, 0,
                                      SECU_PrintDumpDerIssuerAndSerial);
-        SECU_EnableWrap(saveWrapeState);
     } else if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE_REQUEST) == 0) {
 	rv = SECU_PrintSignedData(outFile, &data, "Certificate Request", 0,
 			     SECU_PrintCertificateRequest);
