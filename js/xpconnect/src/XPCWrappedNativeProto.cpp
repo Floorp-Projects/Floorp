@@ -101,8 +101,6 @@ XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreat
             success = CallPostCreatePrototype();
     }
 
-    DEBUG_ReportShadowedMembers(mSet, nullptr, this);
-
     return success;
 }
 
