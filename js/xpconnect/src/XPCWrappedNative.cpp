@@ -145,12 +145,6 @@ static bool    DEBUG_DumpedWrapperStats;
 #ifdef DEBUG
 static void DEBUG_TrackNewWrapper(XPCWrappedNative* wrapper)
 {
-#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
-    if (wrapper->GetRuntime())
-        wrapper->GetRuntime()->DEBUG_AddWrappedNative(wrapper);
-    else
-        NS_ERROR("failed to add wrapper");
-#endif
 #ifdef XPC_TRACK_WRAPPER_STATS
     DEBUG_TotalWrappedNativeCount++;
     DEBUG_TotalLiveWrappedNativeCount++;
@@ -173,9 +167,6 @@ static void DEBUG_TrackNewWrapper(XPCWrappedNative* wrapper)
 
 static void DEBUG_TrackDeleteWrapper(XPCWrappedNative* wrapper)
 {
-#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
-    nsXPConnect::GetRuntimeInstance()->DEBUG_RemoveWrappedNative(wrapper);
-#endif
 #ifdef XPC_TRACK_WRAPPER_STATS
     DEBUG_TotalLiveWrappedNativeCount--;
     if (wrapper->HasProto())
