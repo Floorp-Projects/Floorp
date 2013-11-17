@@ -505,10 +505,6 @@ public:
    */
   virtual bool NeedsWidgetInvalidation() { return true; }
 
-  // We always declare the following logging symbols, because it's
-  // extremely tricky to conditionally declare them.  However, for
-  // ifndef MOZ_LAYERS_HAVE_LOG builds, they only have trivial
-  // definitions in Layers.cpp.
   virtual const char* Name() const { return "???"; }
 
   /**

@@ -716,7 +716,6 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
   }
 }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
 void
 ContentHostSingleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
@@ -763,7 +762,6 @@ ContentHostDoubleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
     mBackHost->PrintInfo(aTo, prefix.get());
   }
 }
-#endif
 
 #ifdef MOZ_DUMP_PAINTING
 void
