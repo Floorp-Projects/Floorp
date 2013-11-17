@@ -1,0 +1,29 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+/* UI Tour */
+
+html|div#UITourHighlight {
+  border-radius: 20px;
+  border: 2px #5B9CD9 solid;
+  box-shadow: 0 0 2px #5B9CD9, inset 0 0 1px #5B9CD9;
+  min-height: 32px;
+  min-width: 32px;
+}
+
+#UITourTooltip {
+  max-width: 20em;
+}
+
+#UITourTooltipTitle {
+  font-size: 130%;
+  font-weight: bold;
+  margin: 0 0 5px 0;
+}
+
+#UITourTooltipDescription {
+  max-width: 20em;
+}

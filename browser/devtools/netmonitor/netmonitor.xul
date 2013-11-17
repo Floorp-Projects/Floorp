@@ -14,6 +14,9 @@
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/devtools/theme-switching.js"/>
   <script type="text/javascript" src="netmonitor-controller.js"/>
   <script type="text/javascript" src="netmonitor-view.js"/>
 
@@ -36,7 +39,7 @@
   </popupset>
 
   <box id="body"
-       class="devtools-responsive-container"
+       class="devtools-responsive-container theme-body"
        flex="1">
     <vbox id="network-table" flex="1">
       <toolbar id="requests-menu-toolbar"
