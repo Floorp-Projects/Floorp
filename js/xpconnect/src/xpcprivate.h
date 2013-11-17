@@ -181,7 +181,6 @@
 #if defined(DEBUG_xpc_hacker)
 #define XPC_DUMP_AT_SHUTDOWN
 #define XPC_TRACK_WRAPPER_STATS
-#define XPC_TRACK_SCOPE_STATS
 #endif
 
 /***************************************************************************/
