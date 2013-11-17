@@ -335,10 +335,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
                 goto return_wrapper;
 
             {   // scoped lock
-#if DEBUG_xpc_leaks
-                printf("Created nsXPCWrappedJS %p, JSObject is %p\n",
-                       (void*)wrapper, (void*)jsObj);
-#endif
                 XPCAutoLock lock(rt->GetMapLock());
                 map->Add(cx, root);
             }
@@ -368,10 +364,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
             release_root = true;
 
             {   // scoped lock
-#if DEBUG_xpc_leaks
-                printf("Created nsXPCWrappedJS %p, JSObject is %p\n",
-                       (void*)root, (void*)rootJSObj);
-#endif
                 XPCAutoLock lock(rt->GetMapLock());
                 map->Add(cx, root);
             }
@@ -393,10 +385,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         wrapper = new nsXPCWrappedJS(cx, jsObj, clazz, root, aOuter);
         if (!wrapper)
             goto return_wrapper;
-#if DEBUG_xpc_leaks
-        printf("Created nsXPCWrappedJS %p, JSObject is %p\n",
-               (void*)wrapper, (void*)jsObj);
-#endif
     }
 
     wrapper->mNext = root->mNext;
