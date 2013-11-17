@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/FormHistory.jsm");
 
 var dialog;     // Quick access to document/form elements.
 var gFindInst;   // nsIWebBrowserFind that we're going to use
@@ -100,6 +101,7 @@ function onAccept()
 
   // Transfer dialog contents to the find service.
   saveFindData();
+  updateFormHistory();
 
   // set up the find instance
   gFindInst.searchString  = dialog.findKey.value;
@@ -125,4 +127,23 @@ function onAccept()
 function doEnabling()
 {
   dialog.find.disabled = !dialog.findKey.value;
+}
+
+function updateFormHistory()
+{
+  if (window.opener.PrivateBrowsingUtils &&
+      window.opener.PrivateBrowsingUtils.isWindowPrivate(window.opener) ||
+      !dialog.findKey.value)
+    return;
+
+  FormHistory.update({
+    op: "bump",
+    fieldname: "find-dialog",
+    value: dialog.findKey.value
+  }, {
+    handleError: function(aError) {
+      Components.utils.reportError("Saving find to form history failed: " +
+                                   aError.message);
+    }
+  });
 }
