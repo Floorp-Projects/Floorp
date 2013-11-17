@@ -255,8 +255,9 @@ KeyPath::Parse(JSContext* aCx, const mozilla::dom::Sequence<nsString>& aStrings,
 
 // static
 nsresult
-KeyPath::Parse(JSContext* aCx, const JS::Value& aValue, KeyPath* aKeyPath)
+KeyPath::Parse(JSContext* aCx, const JS::Value& aValue_, KeyPath* aKeyPath)
 {
+  JS::Rooted<JS::Value> aValue(aCx, aValue_);
   KeyPath keyPath(0);
 
   aKeyPath->SetType(NONEXISTENT);
@@ -283,7 +284,7 @@ KeyPath::Parse(JSContext* aCx, const JS::Value& aValue, KeyPath* aKeyPath)
       JSString* jsstr;
       nsDependentJSString str;
       if (!JS_GetElement(aCx, obj, index, &val) ||
-          !(jsstr = JS_ValueToString(aCx, val)) ||
+          !(jsstr = JS::ToString(aCx, val)) ||
           !str.init(aCx, jsstr)) {
         return NS_ERROR_FAILURE;
       }
@@ -297,7 +298,7 @@ KeyPath::Parse(JSContext* aCx, const JS::Value& aValue, KeyPath* aKeyPath)
   else if (!JSVAL_IS_NULL(aValue) && !JSVAL_IS_VOID(aValue)) {
     JSString* jsstr;
     nsDependentJSString str;
-    if (!(jsstr = JS_ValueToString(aCx, aValue)) ||
+    if (!(jsstr = JS::ToString(aCx, aValue)) ||
         !str.init(aCx, jsstr)) {
       return NS_ERROR_FAILURE;
     }
