@@ -3242,11 +3242,6 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
             return;
     SeenSets[nextSeenSet] = set;
 
-#ifdef off_DEBUG_jband
-    static int seenCount = 0;
-    printf("--- adding SeenSets[%d] = 0x%p\n", nextSeenSet, set);
-    DEBUG_PrintShadowObjectInfo(nullptr, set, wrapper, proto);
-#endif
     int localNext = nextSeenSet+1;
     nextSeenSet = localNext < MAX_SEEN_SETS ? localNext : 0;
 
