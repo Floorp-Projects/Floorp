@@ -390,9 +390,6 @@ mozJSComponentLoader::ReallyInit()
     rv = obsSvc->AddObserver(this, "xpcom-shutdown-loaders", false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG_shaver_off
-    fprintf(stderr, "mJCL: ReallyInit success!\n");
-#endif
     mInitialized = true;
 
     return NS_OK;
@@ -450,18 +447,11 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
                          getter_AddRefs(cm_holder));
 
     if (NS_FAILED(rv)) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "WrapNative(%p,%p,nsIComponentManager) failed: %x\n",
-                (void *)(JSContext*)cx, (void *)mCompMgr, rv);
-#endif
         return nullptr;
     }
 
     JSObject* cm_jsobj = cm_holder->GetJSObject();
     if (!cm_jsobj) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "GetJSObject of ComponentManager failed\n");
-#endif
         return nullptr;
     }
 
@@ -1049,9 +1039,6 @@ mozJSComponentLoader::UnloadModules()
     mContext = nullptr;
 
     mRuntimeService = nullptr;
-#ifdef DEBUG_shaver_off
-    fprintf(stderr, "mJCL: UnloadAll(%d)\n", aWhen);
-#endif
 }
 
 NS_IMETHODIMP
