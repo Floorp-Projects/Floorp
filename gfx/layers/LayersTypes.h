@@ -9,10 +9,6 @@
 #include <stdint.h>                     // for uint32_t
 #include "nsPoint.h"                    // for nsIntPoint
 
-// Debugging define.
-// To dump a layer tree call LayerManager::Dump()
-// #define MOZ_LAYERS_HAVE_LOG
-
 #ifdef MOZ_WIDGET_GONK
 #include <ui/GraphicBuffer.h>
 #endif
