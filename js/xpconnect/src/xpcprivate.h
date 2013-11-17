@@ -184,18 +184,6 @@
 #define XPC_TRACK_SCOPE_STATS
 #define XPC_TRACK_PROTO_STATS
 #define XPC_CHECK_WRAPPERS_AT_SHUTDOWN
-#define XPC_REPORT_SHADOWED_WRAPPED_NATIVE_MEMBERS
-#endif
-
-/***************************************************************************/
-// conditional forward declarations....
-
-#ifdef XPC_REPORT_SHADOWED_WRAPPED_NATIVE_MEMBERS
-void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
-                                 XPCWrappedNative* wrapper,
-                                 XPCWrappedNativeProto* proto);
-#else
-#define DEBUG_ReportShadowedMembers(set, wrapper, proto) ((void)0)
 #endif
 
 /***************************************************************************/
