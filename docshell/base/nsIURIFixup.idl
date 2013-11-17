@@ -12,7 +12,7 @@ interface nsIInputStream;
 /**
  * Interface implemented by objects capable of fixing up strings into URIs
  */
-[scriptable, uuid(552a23bb-c1b2-426e-a801-d346c6a98f1d)]
+[scriptable, uuid(731877f8-973b-414c-b772-9ca1f3fffb7e)]
 interface nsIURIFixup : nsISupports
 {
     /** No fixup flags. */
@@ -35,6 +35,11 @@ interface nsIURIFixup : nsISupports
      * Use UTF-8 to encode the URI instead of platform charset.
      */
     const unsigned long FIXUP_FLAG_USE_UTF8 = 4;
+
+    /**
+     * Fix common scheme typos.
+     */
+    const unsigned long FIXUP_FLAG_FIX_SCHEME_TYPOS = 8;
 
     /**
      * Converts an internal URI (e.g. a wyciwyg URI) into one which we can
