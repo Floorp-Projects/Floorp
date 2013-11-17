@@ -123,132 +123,6 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper);
 #define DEBUG_CheckClassInfoClaims(wrapper) ((void)0)
 #endif
 
-#ifdef XPC_TRACK_WRAPPER_STATS
-static int DEBUG_TotalWrappedNativeCount;
-static int DEBUG_TotalLiveWrappedNativeCount;
-static int DEBUG_TotalMaxWrappedNativeCount;
-static int DEBUG_WrappedNativeWithProtoCount;
-static int DEBUG_LiveWrappedNativeWithProtoCount;
-static int DEBUG_MaxWrappedNativeWithProtoCount;
-static int DEBUG_WrappedNativeNoProtoCount;
-static int DEBUG_LiveWrappedNativeNoProtoCount;
-static int DEBUG_MaxWrappedNativeNoProtoCount;
-static int DEBUG_WrappedNativeTotalCalls;
-static int DEBUG_WrappedNativeMethodCalls;
-static int DEBUG_WrappedNativeGetterCalls;
-static int DEBUG_WrappedNativeSetterCalls;
-#define DEBUG_CHUNKS_TO_COUNT 4
-static int DEBUG_WrappedNativeTearOffChunkCounts[DEBUG_CHUNKS_TO_COUNT+1];
-static bool    DEBUG_DumpedWrapperStats;
-#endif
-
-#ifdef DEBUG
-static void DEBUG_TrackNewWrapper(XPCWrappedNative* wrapper)
-{
-#ifdef XPC_TRACK_WRAPPER_STATS
-    DEBUG_TotalWrappedNativeCount++;
-    DEBUG_TotalLiveWrappedNativeCount++;
-    if (DEBUG_TotalMaxWrappedNativeCount < DEBUG_TotalLiveWrappedNativeCount)
-        DEBUG_TotalMaxWrappedNativeCount = DEBUG_TotalLiveWrappedNativeCount;
-
-    if (wrapper->HasProto()) {
-        DEBUG_WrappedNativeWithProtoCount++;
-        DEBUG_LiveWrappedNativeWithProtoCount++;
-        if (DEBUG_MaxWrappedNativeWithProtoCount < DEBUG_LiveWrappedNativeWithProtoCount)
-            DEBUG_MaxWrappedNativeWithProtoCount = DEBUG_LiveWrappedNativeWithProtoCount;
-    } else {
-        DEBUG_WrappedNativeNoProtoCount++;
-        DEBUG_LiveWrappedNativeNoProtoCount++;
-        if (DEBUG_MaxWrappedNativeNoProtoCount < DEBUG_LiveWrappedNativeNoProtoCount)
-            DEBUG_MaxWrappedNativeNoProtoCount = DEBUG_LiveWrappedNativeNoProtoCount;
-    }
-#endif
-}
-
-static void DEBUG_TrackDeleteWrapper(XPCWrappedNative* wrapper)
-{
-#ifdef XPC_TRACK_WRAPPER_STATS
-    DEBUG_TotalLiveWrappedNativeCount--;
-    if (wrapper->HasProto())
-        DEBUG_LiveWrappedNativeWithProtoCount--;
-    else
-        DEBUG_LiveWrappedNativeNoProtoCount--;
-
-    int extraChunkCount = wrapper->DEBUG_CountOfTearoffChunks() - 1;
-    if (extraChunkCount > DEBUG_CHUNKS_TO_COUNT)
-        extraChunkCount = DEBUG_CHUNKS_TO_COUNT;
-    DEBUG_WrappedNativeTearOffChunkCounts[extraChunkCount]++;
-#endif
-}
-static void DEBUG_TrackWrapperCall(XPCWrappedNative* wrapper,
-                                   XPCWrappedNative::CallMode mode)
-{
-#ifdef XPC_TRACK_WRAPPER_STATS
-    DEBUG_WrappedNativeTotalCalls++;
-    switch (mode) {
-        case XPCWrappedNative::CALL_METHOD:
-            DEBUG_WrappedNativeMethodCalls++;
-            break;
-        case XPCWrappedNative::CALL_GETTER:
-            DEBUG_WrappedNativeGetterCalls++;
-            break;
-        case XPCWrappedNative::CALL_SETTER:
-            DEBUG_WrappedNativeSetterCalls++;
-            break;
-        default:
-            NS_ERROR("bad value");
-    }
-#endif
-}
-
-static void DEBUG_TrackShutdownWrapper(XPCWrappedNative* wrapper)
-{
-#ifdef XPC_TRACK_WRAPPER_STATS
-    if (!DEBUG_DumpedWrapperStats) {
-        DEBUG_DumpedWrapperStats = true;
-        printf("%d WrappedNatives were constructed. "
-               "(%d w/ protos, %d w/o)\n",
-               DEBUG_TotalWrappedNativeCount,
-               DEBUG_WrappedNativeWithProtoCount,
-               DEBUG_WrappedNativeNoProtoCount);
-
-        printf("%d WrappedNatives max alive at one time. "
-               "(%d w/ protos, %d w/o)\n",
-               DEBUG_TotalMaxWrappedNativeCount,
-               DEBUG_MaxWrappedNativeWithProtoCount,
-               DEBUG_MaxWrappedNativeNoProtoCount);
-
-        printf("%d WrappedNatives alive now. "
-               "(%d w/ protos, %d w/o)\n",
-               DEBUG_TotalLiveWrappedNativeCount,
-               DEBUG_LiveWrappedNativeWithProtoCount,
-               DEBUG_LiveWrappedNativeNoProtoCount);
-
-        printf("%d calls to WrappedNatives. "
-               "(%d methods, %d getters, %d setters)\n",
-               DEBUG_WrappedNativeTotalCalls,
-               DEBUG_WrappedNativeMethodCalls,
-               DEBUG_WrappedNativeGetterCalls,
-               DEBUG_WrappedNativeSetterCalls);
-
-        printf("(wrappers / tearoffs): (");
-        int i;
-        for (i = 0; i < DEBUG_CHUNKS_TO_COUNT; i++) {
-            printf("%d / %d, ",
-                   DEBUG_WrappedNativeTearOffChunkCounts[i],
-                   (i+1) * XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK);
-        }
-        printf("%d / more)\n", DEBUG_WrappedNativeTearOffChunkCounts[i]);
-    }
-#endif
-}
-#else
-#define DEBUG_TrackNewWrapper(wrapper) ((void)0)
-#define DEBUG_TrackDeleteWrapper(wrapper) ((void)0)
-#define DEBUG_TrackWrapperCall(wrapper, mode) ((void)0)
-#define DEBUG_TrackShutdownWrapper(wrapper) ((void)0)
-#endif
-
 /***************************************************************************/
 static nsresult
 FinishCreate(XPCWrappedNativeScope* Scope,
@@ -760,8 +634,6 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
 
     MOZ_ASSERT(mMaybeProto, "bad ctor param");
     MOZ_ASSERT(mSet, "bad ctor param");
-
-    DEBUG_TrackNewWrapper(this);
 }
 
 // This ctor is used if this object will NOT have a proto.
@@ -778,14 +650,10 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
 
     MOZ_ASSERT(aScope, "bad ctor param");
     MOZ_ASSERT(aSet, "bad ctor param");
-
-    DEBUG_TrackNewWrapper(this);
 }
 
 XPCWrappedNative::~XPCWrappedNative()
 {
-    DEBUG_TrackDeleteWrapper(this);
-
     Destroy();
 }
 
@@ -1210,7 +1078,6 @@ XPCWrappedNative::SystemIsBeingShutDown()
         }
     }
 #endif
-    DEBUG_TrackShutdownWrapper(this);
 
     if (!IsValid())
         return;
@@ -2054,8 +1921,6 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     if (NS_FAILED(rv)) {
         return Throw(rv, ccx);
     }
-
-    DEBUG_TrackWrapperCall(ccx.GetWrapper(), mode);
 
     // set up the method index and do the security check if needed
 
