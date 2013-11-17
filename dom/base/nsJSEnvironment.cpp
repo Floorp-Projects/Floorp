@@ -1557,7 +1557,7 @@ TraceMallocOpenLogFile(JSContext *cx, unsigned argc, JS::Value *vp)
             return false;
         }
     }
-    args.rva().setInt32(fd);
+    args.rval().setInt32(fd);
     return true;
 }
 
