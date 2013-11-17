@@ -6,7 +6,7 @@
 
 PROGRAM = 'TestStreamConv'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Converters.cpp',
     'TestStreamConv.cpp',
 ]

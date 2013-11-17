@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'mozTXTToHTMLConv.cpp',
     'nsDirIndex.cpp',
     'nsDirIndexParser.cpp',
@@ -16,13 +16,13 @@ SOURCES += [
 ]
 
 if 'ftp' in CONFIG['NECKO_PROTOCOLS']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsFTPDirListingConv.cpp',
         'ParseFTPList.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'cocoa':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsBinHexDecoder.cpp',
     ]
 
