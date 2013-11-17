@@ -429,13 +429,6 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
       mMainThread(NS_IsMainThread()),
       mMainThreadOnly(root && root->mMainThreadOnly)
 {
-#ifdef DEBUG_stats_jband
-    static int count = 0;
-    static const int interval = 10;
-    if (0 == (++count % interval))
-        printf("//////// %d instances of nsXPCWrappedJS created\n", count);
-#endif
-
     MOZ_ASSERT_IF(mMainThreadOnly, mMainThread);
 
     InitStub(GetClass()->GetIID());

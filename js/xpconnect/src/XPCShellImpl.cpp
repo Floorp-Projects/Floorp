@@ -1244,9 +1244,6 @@ nsXPCFunctionThisTranslator::nsXPCFunctionThisTranslator()
 nsXPCFunctionThisTranslator::~nsXPCFunctionThisTranslator()
 {
   /* destructor code */
-#ifdef DEBUG_jband
-    printf("destroying nsXPCFunctionThisTranslator\n");
-#endif
 }
 
 /* nsISupports TranslateThis (in nsISupports aInitialThis); */
