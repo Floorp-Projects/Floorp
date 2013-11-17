@@ -3060,10 +3060,6 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper)
                contractID ? contractID : "<unknown>",
                interfaceName);
 
-#ifdef XPC_ASSERT_CLASSINFO_CLAIMS
-        NS_ERROR("Fix this QueryInterface or nsIClassInfo");
-#endif
-
         if (className)
             nsMemory::Free(className);
         if (contractID)
