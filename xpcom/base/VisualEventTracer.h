@@ -20,6 +20,9 @@
  * to record in the log.
  */
 
+#ifndef VisualEventTracer_h___
+#define VisualEventTracer_h___
+
 #include <stdint.h>
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
@@ -223,5 +226,7 @@ class VisualEventTracer : public nsIVisualEventTracer
 
 #endif
 
-} // eventtracer 
+} // eventtracer
 } // mozilla
+
+#endif /* VisualEventTracer_h___ */
