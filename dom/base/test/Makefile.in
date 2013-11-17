@@ -36,6 +36,7 @@ MOCHITEST_FILES = \
   test_messageChannel_pref.html \
   test_url.html \
   test_bug913761.html \
+  test_appname_override.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
