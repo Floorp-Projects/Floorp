@@ -39,7 +39,7 @@ EXPORTS.mozilla.net += [
     'PSpdyPush.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ASpdySession.cpp',
     'ConnectionDiagnostics.cpp',
     'HttpBaseChannel.cpp',
@@ -59,7 +59,6 @@ SOURCES += [
     'nsHttpConnectionInfo.cpp',
     'nsHttpConnectionMgr.cpp',
     'nsHttpDigestAuth.cpp',
-    'nsHttpHandler.cpp',
     'nsHttpHeaderArray.cpp',
     'nsHttpNTLMAuth.cpp',
     'nsHttpPipeline.cpp',
@@ -75,9 +74,15 @@ SOURCES += [
     'SpdyStream31.cpp',
 ]
 
+# These files cannot be built in unified mode because of OS X headers.
+SOURCES += [
+    'nsHttpHandler.cpp',
+]
+
 IPDL_SOURCES += [
     'PHttpChannel.ipdl',
 ]
+
 EXTRA_JS_MODULES += [
     'UserAgentOverrides.jsm',
     'UserAgentUpdates.jsm',
