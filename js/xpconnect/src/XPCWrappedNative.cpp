@@ -1055,19 +1055,6 @@ XPCWrappedNative::FlatJSObjectFinalized()
 void
 XPCWrappedNative::SystemIsBeingShutDown()
 {
-#ifdef DEBUG_xpc_hacker
-    {
-        printf("Removing root for still-live XPCWrappedNative %p wrapping:\n",
-               static_cast<void*>(this));
-        for (uint16_t i = 0, i_end = mSet->GetInterfaceCount(); i < i_end; ++i) {
-            nsXPIDLCString name;
-            mSet->GetInterfaceAt(i)->GetInterfaceInfo()
-                ->GetName(getter_Copies(name));
-            printf("  %s\n", name.get());
-        }
-    }
-#endif
-
     if (!IsValid())
         return;
 
@@ -1644,38 +1631,6 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
                 // JSObject or a matching Interface before proceeding.
                 // I think we can get away with this bit of ugliness.
 
-#ifdef DEBUG_xpc_hacker
-                {
-                    // I want to make sure this only happens in xbl-like cases.
-                    // So, some debug code to verify that there is at least
-                    // *some* object between our JSObject and its inital proto.
-                    // XXX This is a pretty funky test. Someone might hack it
-                    // a bit if false positives start showing up. Note that
-                    // this is only going to run for the few people in the
-                    // DEBUG_xpc_hacker list.
-                    if (HasProto()) {
-                        JSObject* proto  = nullptr;
-                        JSObject* our_proto = GetProto()->GetJSProtoObject();
-
-                        proto = jso->getProto();
-
-                        MOZ_ASSERT(proto && proto != our_proto,
-                                   "!!! xpconnect/xbl check - wrapper has no special proto");
-
-                        bool found_our_proto = false;
-                        while (proto && !found_our_proto) {
-                            proto = proto->getProto();
-
-                            found_our_proto = proto == our_proto;
-                        }
-
-                        MOZ_ASSERT(found_our_proto,
-                                   "!!! xpconnect/xbl check - wrapper has extra proto");
-                    } else {
-                        NS_WARNING("!!! xpconnect/xbl check - wrapper has no proto");
-                    }
-                }
-#endif
                 NS_RELEASE(obj);
                 aTearOff->SetInterface(nullptr);
                 return NS_OK;
