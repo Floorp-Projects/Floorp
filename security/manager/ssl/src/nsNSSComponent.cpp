@@ -2071,7 +2071,6 @@ nsresult InitializeCipherSuite()
     SSL_CipherPrefSetDefault(cipher_id, false);
   }
 
-  bool cipherEnabled;
   // Now only set SSL/TLS ciphers we knew about at compile time
   for (const CipherPref* cp = sCipherPrefs; cp->pref; ++cp) {
     bool cipherEnabled = Preferences::GetBool(cp->pref, cp->enabledByDefault);
