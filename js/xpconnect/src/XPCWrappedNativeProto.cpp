@@ -12,7 +12,7 @@
 
 using namespace mozilla;
 
-#if defined(DEBUG_xpc_hacker) || defined(DEBUG)
+#ifdef DEBUG
 int32_t XPCWrappedNativeProto::gDEBUG_LiveProtoCount = 0;
 #endif
 
