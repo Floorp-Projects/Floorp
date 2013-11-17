@@ -210,7 +210,7 @@ class JSAPITest
             JS::RootedValue v(cx);
             JS_GetPendingException(cx, &v);
             JS_ClearPendingException(cx);
-            JSString *s = JS::ToString(cx, v);
+            JSString *s = JS_ValueToString(cx, v);
             if (s) {
                 JSAutoByteString bytes(cx, s);
                 if (!!bytes)
@@ -237,10 +237,9 @@ class JSAPITest
     static bool
     print(JSContext *cx, unsigned argc, jsval *vp)
     {
-        JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-
-        for (unsigned i = 0; i < args.length(); i++) {
-            JSString *str = JS::ToString(cx, args[i]);
+        jsval *argv = JS_ARGV(cx, vp);
+        for (unsigned i = 0; i < argc; i++) {
+            JSString *str = JS_ValueToString(cx, argv[i]);
             if (!str)
                 return false;
             char *bytes = JS_EncodeString(cx, str);
@@ -252,7 +251,7 @@ class JSAPITest
 
         putchar('\n');
         fflush(stdout);
-        args.rval().setUndefined();
+        JS_SET_RVAL(cx, vp, JSVAL_VOID);
         return true;
     }
 

@@ -227,7 +227,7 @@ protected:
      * when |v| is JSVAL_IS_NULL and JSVAL_IS_VOID respectively.
      */
     template<class traits>
-    JSString* InitOrStringify(JSContext* cx, JS::HandleValue v,
+    JSString* InitOrStringify(JSContext* cx, jsval v,
                               JS::MutableHandleValue pval,
                               bool notpassed,
                               StringificationBehavior nullBehavior,
@@ -255,7 +255,7 @@ protected:
                 return nullptr;
             }
 
-            s = JS::ToString(cx, v);
+            s = JS_ValueToString(cx, v);
             if (!s) {
                 mValid = false;
                 return nullptr;

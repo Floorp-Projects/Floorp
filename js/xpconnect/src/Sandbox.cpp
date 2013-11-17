@@ -80,12 +80,11 @@ xpc::NewSandboxConstructor()
 static bool
 SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0)
+    JSString *str;
+    if (!argc)
         return true;
 
-    RootedString str(cx, ToString(cx, args[0]));
+    str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!str)
         return false;
 
@@ -112,7 +111,7 @@ SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
     fputs(cstr, stdout);
     fflush(stdout);
     NS_Free(cstr);
-    args.rval().setBoolean(true);
+    JS_SET_RVAL(cx, vp, JSVAL_TRUE);
     return true;
 }
 
@@ -139,7 +138,7 @@ SandboxImport(JSContext *cx, unsigned argc, Value *vp)
     RootedString funname(cx);
     if (args.length() > 1) {
         // Use the second parameter as the function name.
-        funname = ToString(cx, args[1]);
+        funname = JS_ValueToString(cx, args[1]);
         if (!funname)
             return false;
     } else {
@@ -1641,7 +1640,7 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
                           PromiseFlatString(source).get(), source.Length(),
                           v.address());
         if (ok && returnStringOnly && !v.isUndefined()) {
-            JSString *str = ToString(sandcx, v);
+            JSString *str = JS_ValueToString(sandcx, v);
             ok = !!str;
             v = ok ? JS::StringValue(str) : JS::UndefinedValue();
         }
@@ -1653,7 +1652,7 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
             if (returnStringOnly) {
                 // The caller asked for strings only, convert the
                 // exception into a string.
-                JSString *str = ToString(sandcx, exn);
+                JSString *str = JS_ValueToString(sandcx, exn);
                 exn = str ? JS::StringValue(str) : JS::UndefinedValue();
             }
         }

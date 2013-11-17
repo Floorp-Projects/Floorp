@@ -213,12 +213,12 @@ CreateGenericEvent(mozilla::dom::EventTarget* aEventOwner,
 }
 
 inline nsresult
-GetInputStreamForJSVal(JS::Handle<JS::Value> aValue, JSContext* aCx,
+GetInputStreamForJSVal(const JS::Value& aValue, JSContext* aCx,
                        nsIInputStream** aInputStream, uint64_t* aInputLength)
 {
   nsresult rv;
 
-  if (aValue.isObject()) {
+  if (!JSVAL_IS_PRIMITIVE(aValue)) {
     JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
     if (JS_IsArrayBufferObject(obj)) {
       char* data = reinterpret_cast<char*>(JS_GetArrayBufferData(obj));
@@ -246,8 +246,14 @@ GetInputStreamForJSVal(JS::Handle<JS::Value> aValue, JSContext* aCx,
     }
   }
 
-  JSString* jsstr = JS::ToString(aCx, aValue);
-  NS_ENSURE_TRUE(jsstr, NS_ERROR_XPC_BAD_CONVERT_JS);
+  JSString* jsstr;
+  if (JSVAL_IS_STRING(aValue)) {
+    jsstr = JSVAL_TO_STRING(aValue);
+  }
+  else {
+    jsstr = JS_ValueToString(aCx, aValue);
+    NS_ENSURE_TRUE(jsstr, NS_ERROR_XPC_BAD_CONVERT_JS);
+  }
 
   nsDependentJSString str;
   if (!str.init(aCx, jsstr)) {
@@ -858,11 +864,10 @@ LockedFile::WriteOrAppend(const JS::Value& aValue,
     return NS_OK;
   }
 
-  JS::Rooted<JS::Value> val(aCx, aValue);
   nsCOMPtr<nsIInputStream> inputStream;
   uint64_t inputLength;
   nsresult rv =
-    GetInputStreamForJSVal(val, aCx, getter_AddRefs(inputStream),
+    GetInputStreamForJSVal(aValue, aCx, getter_AddRefs(inputStream),
                            &inputLength);
   NS_ENSURE_SUCCESS(rv, rv);
 

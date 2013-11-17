@@ -278,8 +278,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
     }
 
     if (ok && aEvaluateOptions.coerceToString && !aRetValue->isUndefined()) {
-      JS::Rooted<JS::Value> value(aCx, *aRetValue);
-      JSString* str = JS::ToString(aCx, value);
+      JSString* str = JS_ValueToString(aCx, *aRetValue);
       ok = !!str;
       *aRetValue = ok ? JS::StringValue(str) : JS::UndefinedValue();
     }
