@@ -25,6 +25,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Preferences.h"
 
 #include <algorithm>
 
@@ -3319,7 +3320,7 @@ static bool ShouldDrawRectsSeparately(gfxContext* aContext, DrawRegionClip aClip
   static bool sPaintRectsSeparately;
   static bool sPaintRectsSeparatelyPrefCached = false;
   if (!sPaintRectsSeparatelyPrefCached) {
-    Preferences::AddBoolVarCache(&sPaintRectsSeparately, "layout.paint_rects_separately", false);
+    mozilla::Preferences::AddBoolVarCache(&sPaintRectsSeparately, "layout.paint_rects_separately", false);
     sPaintRectsSeparatelyPrefCached = true;
   }
 
