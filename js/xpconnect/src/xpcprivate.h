@@ -174,15 +174,6 @@
 #include "nsINode.h"
 
 /***************************************************************************/
-// Compile time switches for instrumentation and stuff....
-
-// Note that one would not normally turn *any* of these on in a non-DEBUG build.
-
-#if defined(DEBUG_xpc_hacker)
-#define XPC_DUMP_AT_SHUTDOWN
-#endif
-
-/***************************************************************************/
 // default initial sizes for maps (hashtables)
 
 #define XPC_CONTEXT_MAP_SIZE                16
@@ -2042,7 +2033,7 @@ protected:
               bool callPostCreatePrototype);
 
 private:
-#if defined(DEBUG_xpc_hacker) || defined(DEBUG)
+#ifdef DEBUG
     static int32_t gDEBUG_LiveProtoCount;
 #endif
 
@@ -2372,10 +2363,6 @@ public:
     void ASSERT_SetsNotMarked() const
         {mSet->ASSERT_NotMarked();
          if (HasProto()){GetProto()->ASSERT_SetNotMarked();}}
-
-    int DEBUG_CountOfTearoffChunks() const
-        {int i = 0; const XPCWrappedNativeTearOffChunk* to;
-         for (to = &mFirstChunk; to; to = to->mNextChunk) {i++;} return i;}
 #endif
 
     inline void SweepTearOffs();
