@@ -2645,7 +2645,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                 invalidEnumValueFatal=True,
                                 defaultValue=None,
                                 treatNullAs="Default",
-                                treatUndefinedAs="Default",
                                 isEnforceRange=False,
                                 isClamp=False,
                                 isNullOrUndefined=False,
@@ -3441,12 +3440,11 @@ for (uint32_t i = 0; i < length; ++i) {
         if type.nullable():
             # For nullable strings null becomes a null string.
             treatNullAs = "Null"
-            # For nullable strings undefined becomes a null string unless
-            # specified otherwise.
-            if treatUndefinedAs == "Default":
-                treatUndefinedAs = "Null"
+            # For nullable strings undefined also becomes a null string.
+            undefinedBehavior = "eNull"
+        else:
+            undefinedBehavior = "eStringify"
         nullBehavior = treatAs[treatNullAs]
-        undefinedBehavior = treatAs[treatUndefinedAs]
 
         def getConversionCode(varName):
             conversionCode = (
@@ -3977,7 +3975,6 @@ class CGArgumentConverter(CGThing):
             invalidEnumValueFatal=self.invalidEnumValueFatal,
             defaultValue=self.argument.defaultValue,
             treatNullAs=self.argument.treatNullAs,
-            treatUndefinedAs=self.argument.treatUndefinedAs,
             isEnforceRange=self.argument.enforceRange,
             isClamp=self.argument.clamp,
             lenientFloatCode=self.lenientFloatCode,
@@ -5466,7 +5463,6 @@ class FakeArgument():
         self.variadic = False
         self.defaultValue = None
         self.treatNullAs = interfaceMember.treatNullAs
-        self.treatUndefinedAs = interfaceMember.treatUndefinedAs
         if isinstance(interfaceMember, IDLAttribute):
             self.enforceRange = interfaceMember.enforceRange
             self.clamp = interfaceMember.clamp
@@ -7314,7 +7310,6 @@ class CGProxySpecialOperation(CGPerSignatureCall):
             info = getJSToNativeConversionInfo(
                 argument.type, descriptor,
                 treatNullAs=argument.treatNullAs,
-                treatUndefinedAs=argument.treatUndefinedAs,
                 sourceDescription=("value being assigned to %s setter" %
                                    descriptor.interface.identifier.name))
             templateValues = {
@@ -10319,7 +10314,7 @@ class CGCallbackInterface(CGCallback):
 
 class FakeMember():
     def __init__(self):
-        self.treatUndefinedAs = self.treatNullAs = "Default"
+        self.treatNullAs = "Default"
     def isStatic(self):
         return False
     def isAttr(self):

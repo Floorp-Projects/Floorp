@@ -113,20 +113,6 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse("""
             dictionary A {
-              [TreatUndefinedAs=EmptyString] DOMString foo;
-            };
-        """)
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Should not allow [TreatUndefinedAs] on dictionary members");
-
-    parser = parser.reset()
-    threw = False
-    try:
-        parser.parse("""
-            dictionary A {
             };
             interface X {
               void doFoo(A arg);
