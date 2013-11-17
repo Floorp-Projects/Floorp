@@ -153,15 +153,6 @@ XPCWrappedNativeProto::SystemIsBeingShutDown()
     // Note that the instance might receive this call multiple times
     // as we walk to here from various places.
 
-#ifdef XPC_TRACK_PROTO_STATS
-    static bool DEBUG_DumpedStats = false;
-    if (!DEBUG_DumpedStats) {
-        printf("%d XPCWrappedNativeProto(s) alive at shutdown\n",
-               gDEBUG_LiveProtoCount);
-        DEBUG_DumpedStats = true;
-    }
-#endif
-
     if (mJSProtoObject) {
         // short circuit future finalization
         JS_SetPrivate(mJSProtoObject, nullptr);
