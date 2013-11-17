@@ -1,0 +1,140 @@
+/* Menu panel and palette styles */
+
+:-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > :-moz-any(@primaryToolbarButtons@) {
+  list-style-image: url(chrome://browser/skin/menuPanel.png);
+}
+
+#home-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #home-button {
+  -moz-image-region: rect(0px, 128px, 32px, 96px);
+}
+
+#bookmarks-menu-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
+  -moz-image-region: rect(0px, 160px, 32px, 128px);
+}
+
+#bookmarks-menu-button[starred][cui-areatype="menu-panel"] {
+  -moz-image-region: rect(0px, 192px, 32px, 160px);
+}
+
+#history-panelmenu[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #history-panelmenu {
+  -moz-image-region: rect(0px, 224px, 32px, 192px);
+}
+
+#downloads-button[cui-areatype="menu-panel"],
+#downloads-indicator[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #downloads-button {
+  -moz-image-region: rect(0px, 256px, 32px, 224px);
+}
+
+#add-ons-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #add-ons-button {
+  -moz-image-region: rect(0px, 288px, 32px, 256px);
+}
+
+#open-file-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #open-file-button {
+  -moz-image-region: rect(0px, 320px, 32px, 288px);
+}
+
+#save-page-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #save-page-button {
+  -moz-image-region: rect(0px, 352px, 32px, 320px);
+}
+
+#sync-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #sync-button {
+  -moz-image-region: rect(0px, 384px, 32px, 352px);
+}
+
+#feed-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #feed-button {
+  -moz-image-region: rect(0px, 416px, 32px, 384px);
+}
+
+#social-share-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #social-share-button {
+  -moz-image-region: rect(0px, 448px, 32px, 416px);
+}
+
+#characterencoding-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #characterencoding-button {
+  -moz-image-region: rect(0px, 480px, 32px, 448px);
+}
+
+#new-window-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #new-window-button {
+  -moz-image-region: rect(0px, 512px, 32px, 480px);
+}
+
+#new-tab-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #new-tab-button {
+  -moz-image-region: rect(0px, 544px, 32px, 512px);
+}
+
+#privatebrowsing-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #privatebrowsing-button {
+  -moz-image-region: rect(0px, 576px, 32px, 544px);
+}
+
+#find-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #find-button {
+  -moz-image-region: rect(0px, 640px, 32px, 608px);
+}
+
+#print-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #print-button {
+  -moz-image-region: rect(0px, 672px, 32px, 640px);
+}
+
+#fullscreen-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #fullscreen-button {
+  -moz-image-region: rect(0px, 704px, 32px, 672px);
+}
+
+#developer-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #developer-button {
+  -moz-image-region: rect(0px, 736px, 32px, 704px);
+}
+
+#preferences-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #preferences-button {
+  -moz-image-region: rect(0px, 768px, 32px, 736px);
+}
+
+/* Wide panel control icons */
+
+#edit-controls@inAnyPanel@ > toolbarbutton,
+#zoom-controls@inAnyPanel@ > toolbarbutton,
+toolbarpaletteitem[place="palette"] > #edit-controls > toolbarbutton,
+toolbarpaletteitem[place="palette"] > #zoom-controls > toolbarbutton {
+  list-style-image: url(chrome://browser/skin/menuPanel-small.png);
+}
+
+#edit-controls@inAnyPanel@ > #cut-button,
+toolbarpaletteitem[place="palette"] > #edit-controls > #cut-button {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#edit-controls@inAnyPanel@ > #copy-button,
+toolbarpaletteitem[place="palette"] > #edit-controls > #copy-button {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+#edit-controls@inAnyPanel@ > #paste-button,
+toolbarpaletteitem[place="palette"] > #edit-controls > #paste-button {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+#zoom-controls@inAnyPanel@ > #zoom-out-button,
+toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
+  -moz-image-region: rect(0px, 80px, 16px, 64px);
+}
+
+#zoom-controls@inAnyPanel@ > #zoom-in-button,
+toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
+  -moz-image-region: rect(0px, 96px, 16px, 80px);
+}

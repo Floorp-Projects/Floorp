@@ -37,49 +37,27 @@ function updateTabContextMenu(tab) {
   menu.hidePopup();
 }
 
-function findToolbarCustomizationWindow(aBrowserWin) {
-  if (!aBrowserWin)
-    aBrowserWin = window;
-
-  let iframe = aBrowserWin.document.getElementById("customizeToolbarSheetIFrame");
-  let win = iframe && iframe.contentWindow;
-  if (win)
-    return win;
-
-  win = findChromeWindowByURI("chrome://global/content/customizeToolbar.xul");
-  if (win && win.opener == aBrowserWin)
-    return win;
-
-  throw Error("Failed to find the customization window");
-}
-
 function openToolbarCustomizationUI(aCallback, aBrowserWin) {
   if (!aBrowserWin)
     aBrowserWin = window;
 
-  aBrowserWin.document.getElementById("cmd_CustomizeToolbars").doCommand();
+  aBrowserWin.gCustomizeMode.enter();
 
-  aBrowserWin.gNavToolbox.addEventListener("beforecustomization", function UI_loaded() {
-    aBrowserWin.gNavToolbox.removeEventListener("beforecustomization", UI_loaded);
-
-    let win = findToolbarCustomizationWindow(aBrowserWin);
-    waitForFocus(function () {
-      aCallback(win);
-    }, win);
+  aBrowserWin.gNavToolbox.addEventListener("customizationready", function UI_loaded() {
+    aBrowserWin.gNavToolbox.removeEventListener("customizationready", UI_loaded);
+    executeSoon(function() {
+      aCallback(aBrowserWin)
+    });
   });
 }
 
 function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
-  let win = findToolbarCustomizationWindow(aBrowserWin);
-
-  win.addEventListener("unload", function unloaded() {
-    win.removeEventListener("unload", unloaded);
+  aBrowserWin.gNavToolbox.addEventListener("aftercustomization", function unloaded() {
+    aBrowserWin.gNavToolbox.removeEventListener("aftercustomization", unloaded);
     executeSoon(aCallback);
   });
 
-  let button = win.document.getElementById("donebutton");
-  button.focus();
-  button.doCommand();
+  aBrowserWin.gCustomizeMode.exit();
 }
 
 function waitForCondition(condition, nextTest, errorMsg) {
