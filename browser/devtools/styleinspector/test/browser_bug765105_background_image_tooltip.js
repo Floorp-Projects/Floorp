@@ -74,21 +74,21 @@ function assertTooltipShownOn(tooltip, element, cb) {
 function testBodyRuleView() {
   info("Testing tooltips in the rule view");
 
-  let panel = ruleView.tooltip.panel;
+  let panel = ruleView.previewTooltip.panel;
 
   // Check that the rule view has a tooltip and that a XUL panel has been created
-  ok(ruleView.tooltip, "Tooltip instance exists");
+  ok(ruleView.previewTooltip, "Tooltip instance exists");
   ok(panel, "XUL panel exists");
 
   // Get the background-image property inside the rule view
   let {nameSpan, valueSpan} = getRuleViewProperty("background-image");
   // And verify that the tooltip gets shown on this property
-  assertTooltipShownOn(ruleView.tooltip, valueSpan, () => {
+  assertTooltipShownOn(ruleView.previewTooltip, valueSpan, () => {
     let images = panel.getElementsByTagName("image");
     is(images.length, 1, "Tooltip contains an image");
     ok(images[0].src.indexOf("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHe") !== -1, "The image URL seems fine");
 
-    ruleView.tooltip.hide();
+    ruleView.previewTooltip.hide();
 
     inspector.selection.setNode(contentDoc.querySelector(".test-element"));
     inspector.once("inspector-updated", testDivRuleView);
@@ -96,19 +96,19 @@ function testBodyRuleView() {
 }
 
 function testDivRuleView() {
-  let panel = ruleView.tooltip.panel;
+  let panel = ruleView.previewTooltip.panel;
 
   // Get the background property inside the rule view
   let {nameSpan, valueSpan} = getRuleViewProperty("background");
   let uriSpan = valueSpan.querySelector(".theme-link");
 
   // And verify that the tooltip gets shown on this property
-  assertTooltipShownOn(ruleView.tooltip, uriSpan, () => {
+  assertTooltipShownOn(ruleView.previewTooltip, uriSpan, () => {
     let images = panel.getElementsByTagName("image");
     is(images.length, 1, "Tooltip contains an image");
     ok(images[0].src === "chrome://global/skin/icons/warning-64.png");
 
-    ruleView.tooltip.hide();
+    ruleView.previewTooltip.hide();
 
     testComputedView();
   });

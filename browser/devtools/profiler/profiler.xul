@@ -16,8 +16,12 @@
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/devtools/theme-switching.js"/>
   <script type="text/javascript" src="sidebar.js"/>
-  <box flex="1" id="profiler-chrome" class="devtools-responsive-container">
+  <box flex="1" id="profiler-chrome"
+    class="devtools-responsive-container theme-body">
     <vbox class="profiler-sidebar">
       <toolbar class="devtools-toolbar">
         <hbox id="profiler-controls">

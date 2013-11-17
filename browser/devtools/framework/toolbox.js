@@ -19,6 +19,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
+Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
 
 loader.lazyGetter(this, "Hosts", () => require("devtools/framework/toolbox-hosts").Hosts);
 
@@ -55,8 +56,10 @@ loader.lazyGetter(this, "Requisition", () => {
  *        Tool to select initially
  * @param {Toolbox.HostType} hostType
  *        Type of host that will host the toolbox (e.g. sidebar, window)
+ * @param {object} hostOptions
+ *        Options for host specifically
  */
-function Toolbox(target, selectedTool, hostType) {
+function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._target = target;
   this._toolPanels = new Map();
   this._telemetry = new Telemetry();
@@ -79,7 +82,7 @@ function Toolbox(target, selectedTool, hostType) {
   }
   this._defaultToolId = selectedTool;
 
-  this._host = this._createHost(hostType);
+  this._host = this._createHost(hostType, hostOptions);
 
   EventEmitter.decorate(this);
 
@@ -99,7 +102,8 @@ exports.Toolbox = Toolbox;
 Toolbox.HostType = {
   BOTTOM: "bottom",
   SIDE: "side",
-  WINDOW: "window"
+  WINDOW: "window",
+  CUSTOM: "custom"
 };
 
 Toolbox.prototype = {
@@ -187,8 +191,6 @@ Toolbox.prototype = {
       let deferred = promise.defer();
 
       let domReady = () => {
-        iframe.removeEventListener("DOMContentLoaded", domReady, true);
-
         this.isReady = true;
 
         let closeButton = this.doc.getElementById("toolbox-close");
@@ -211,8 +213,10 @@ Toolbox.prototype = {
         });
       };
 
-      iframe.addEventListener("DOMContentLoaded", domReady, true);
       iframe.setAttribute("src", this._URL);
+
+      let domHelper = new DOMHelpers(iframe.contentWindow);
+      domHelper.onceDOMReady(domReady);
 
       return deferred.promise;
     });
@@ -387,6 +391,7 @@ Toolbox.prototype = {
     for (let type in Toolbox.HostType) {
       let position = Toolbox.HostType[type];
       if (position == this.hostType ||
+          position == Toolbox.HostType.CUSTOM ||
           (!sideEnabled && position == Toolbox.HostType.SIDE)) {
         continue;
       }
@@ -492,8 +497,11 @@ Toolbox.prototype = {
       radio.setAttribute("flex", "1");
     }
 
+    if (!toolDefinition.bgTheme) {
+      toolDefinition.bgTheme = "theme-toolbar";
+    }
     let vbox = this.doc.createElement("vbox");
-    vbox.className = "toolbox-panel";
+    vbox.className = "toolbox-panel " + toolDefinition.bgTheme;
     vbox.id = "toolbox-panel-" + id;
 
 
@@ -550,12 +558,14 @@ Toolbox.prototype = {
     iframe.setAttribute("flex", 1);
     iframe.setAttribute("forceOwnRefreshDriver", "");
     iframe.tooltip = "aHTMLTooltip";
+    iframe.style.visibility = "hidden";
 
     let vbox = this.doc.getElementById("toolbox-panel-" + id);
     vbox.appendChild(iframe);
 
     let onLoad = () => {
-      iframe.removeEventListener("DOMContentLoaded", onLoad, true);
+      // Prevent flicker while loading by waiting to make visible until now.
+      iframe.style.visibility = "visible";
 
       let built = definition.build(iframe.contentWindow, this);
       promise.resolve(built).then((panel) => {
@@ -566,8 +576,25 @@ Toolbox.prototype = {
       });
     };
 
-    iframe.addEventListener("DOMContentLoaded", onLoad, true);
     iframe.setAttribute("src", definition.url);
+
+    // Depending on the host, iframe.contentWindow is not always
+    // defined at this moment. If it is not defined, we use an
+    // event listener on the iframe DOM node. If it's defined,
+    // we use the chromeEventHandler. We can't use a listener
+    // on the DOM node every time because this won't work
+    // if the (xul chrome) iframe is loaded in a content docshell.
+    if (iframe.contentWindow) {
+      let domHelper = new DOMHelpers(iframe.contentWindow);
+      domHelper.onceDOMReady(onLoad);
+    } else {
+      let callback = () => {
+        iframe.removeEventListener("DOMContentLoaded", callback);
+        onLoad();
+      }
+      iframe.addEventListener("DOMContentLoaded", callback);
+    }
+
     return deferred.promise;
   },
 
@@ -732,13 +759,13 @@ Toolbox.prototype = {
    * @return {Host} host
    *        The created host object
    */
-  _createHost: function(hostType) {
+  _createHost: function(hostType, options) {
     if (!Hosts[hostType]) {
       throw new Error("Unknown hostType: " + hostType);
     }
 
     // clean up the toolbox if its window is closed
-    let newHost = new Hosts[hostType](this.target.tab);
+    let newHost = new Hosts[hostType](this.target.tab, options);
     newHost.on("window-closed", this.destroy);
     return newHost;
   },
@@ -766,7 +793,9 @@ Toolbox.prototype = {
 
       this._host = newHost;
 
-      Services.prefs.setCharPref(this._prefs.LAST_HOST, this._host.type);
+      if (this.hostType != Toolbox.HostType.CUSTOM) {
+        Services.prefs.setCharPref(this._prefs.LAST_HOST, this._host.type);
+      }
 
       this._buildDockButtons();
       this._addKeysToWindow();

@@ -97,6 +97,18 @@ this.TabStateCache = Object.freeze({
   },
 
   /**
+   * Swap cached data for two given browsers.
+   *
+   * @param {xul:browser} browser
+   *        The first of the two browsers that swapped docShells.
+   * @param {xul:browser} otherBrowser
+   *        The second of the two browsers that swapped docShells.
+   */
+  onSwapDocShells: function(browser, otherBrowser) {
+    TabStateCacheInternal.onSwapDocShells(browser, otherBrowser);
+  },
+
+  /**
    * Total number of cache hits during the session.
    */
   get hits() {
@@ -211,6 +223,37 @@ let TabStateCacheInternal = {
       delete data[aField];
     }
     TabStateCacheTelemetry.recordAccess(!!data);
+  },
+
+  /**
+   * Swap cached data for two given browsers.
+   *
+   * @param {xul:browser} browser
+   *        The first of the two browsers that swapped docShells.
+   * @param {xul:browser} otherBrowser
+   *        The second of the two browsers that swapped docShells.
+   */
+  onSwapDocShells: function(browser, otherBrowser) {
+    // Make sure that one or the other of these has cached data,
+    // and let it be |browser|.
+    if (!this._data.has(browser)) {
+      [browser, otherBrowser] = [otherBrowser, browser];
+      if (!this._data.has(browser)) {
+        return;
+      }
+    }
+
+    // At this point, |browser| is guaranteed to have cached data,
+    // although |otherBrowser| may not. Perform the swap.
+    let data = this._data.get(browser);
+    if (this._data.has(otherBrowser)) {
+      let otherData = this._data.get(otherBrowser);
+      this._data.set(browser, otherData);
+      this._data.set(otherBrowser, data);
+    } else {
+      this._data.set(otherBrowser, data);
+      this._data.delete(browser);
+    }
   },
 
   _normalizeToBrowser: function(aKey) {

@@ -15,6 +15,9 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/devtools/theme-switching.js"/>
+
   <script type="application/javascript"
           src="chrome://global/content/viewSourceUtils.js"/>
 
@@ -67,7 +70,7 @@
     </menupopup>
   </popupset>
 
-  <box flex="1" class="devtools-responsive-container">
+  <box flex="1" class="devtools-responsive-container theme-body">
     <vbox flex="1">
       <toolbar id="inspector-toolbar"
         class="devtools-toolbar"
