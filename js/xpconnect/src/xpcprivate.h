@@ -185,7 +185,6 @@
 #define XPC_TRACK_PROTO_STATS
 #define XPC_CHECK_WRAPPERS_AT_SHUTDOWN
 #define XPC_REPORT_SHADOWED_WRAPPED_NATIVE_MEMBERS
-#define XPC_CHECK_CLASSINFO_CLAIMS
 #endif
 
 /***************************************************************************/
