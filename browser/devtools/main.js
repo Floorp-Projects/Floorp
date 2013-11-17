@@ -61,6 +61,7 @@ Tools.options = {
   ordinal: 0,
   url: "chrome://browser/content/devtools/framework/toolbox-options.xul",
   icon: "chrome://browser/skin/devtools/tool-options.png",
+  bgTheme: "theme-body",
   tooltip: l10n("optionsButton.tooltip", toolboxStrings),
   inMenu: false,
   isTargetSupported: function(target) {

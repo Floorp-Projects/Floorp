@@ -507,6 +507,25 @@ var SelectionHelperUI = {
   },
 
   /*
+   * Handy debug routines that work independent of selection. They
+   * make use of the selection overlay for drawing points.
+   */
+
+  debugDisplayDebugPoint: function (aLeft, aTop, aSize, aCssColorStr, aFill) {
+    this.overlay.enabled = true;
+    this.overlay.displayDebugLayer = true;
+    this.overlay.addDebugRect(aLeft, aTop, aLeft + aSize, aTop + aSize,
+                              aCssColorStr, aFill);
+  },
+
+  debugClearDebugPoints: function () {
+    this.overlay.displayDebugLayer = false;
+    if (!this._msgTarget) {
+      this.overlay.enabled = false;
+    }
+  },
+
+  /*
    * Init and shutdown
    */
 
