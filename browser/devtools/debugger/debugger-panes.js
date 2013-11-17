@@ -2377,7 +2377,7 @@ LineResults.prototype = {
         firstMatch = firstMatch || lineChunkNode;
       }
       if (lineLength >= GLOBAL_SEARCH_LINE_MAX_LENGTH) {
-        lineContentsNode.appendChild(this._ellipsis.cloneNode());
+        lineContentsNode.appendChild(this._ellipsis.cloneNode(true));
         break;
       }
     }
