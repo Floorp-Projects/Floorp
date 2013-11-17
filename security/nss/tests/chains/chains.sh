@@ -111,13 +111,22 @@ kill_httpserv()
 ########################################################################
 start_httpserv()
 {
+  HTTP_METHOD=$1
+
   if [ -n "$testname" ] ; then
       echo "$SCRIPTNAME: $testname ----"
   fi
   echo "httpserv starting at `date`"
+  ODDIR="${HOSTDIR}/chains/OCSPD"
   echo "httpserv -D -p ${NSS_AIA_PORT} ${SERVER_OPTIONS} \\"
+  echo "         -A OCSPRoot -C ${ODDIR}/OCSPRoot.crl -A OCSPCA1 -C ${ODDIR}/OCSPCA1.crl \\"
+  echo "         -A OCSPCA2  -C ${ODDIR}/OCSPCA2.crl  -A OCSPCA3 -C ${ODDIR}/OCSPCA3.crl \\"
+  echo "         -O ${HTTP_METHOD} -d ${ODDIR}/ServerDB/ -f ${ODDIR}/ServerDB/dbpasswd \\"
   echo "         -i ${HTTPPID} $verbose &"
   ${PROFTOOL} ${BINDIR}/httpserv -D -p ${NSS_AIA_PORT} ${SERVER_OPTIONS} \
+                 -A OCSPRoot -C ${ODDIR}/OCSPRoot.crl -A OCSPCA1 -C ${ODDIR}/OCSPCA1.crl \
+                 -A OCSPCA2  -C ${ODDIR}/OCSPCA2.crl  -A OCSPCA3 -C ${ODDIR}/OCSPCA3.crl \
+                 -O ${HTTP_METHOD} -d ${ODDIR}/ServerDB/ -f ${ODDIR}/ServerDB/dbpasswd \
                  -i ${HTTPPID} $verbose &
   RET=$?
 
@@ -180,8 +189,19 @@ chains_init()
 
     DEFAULT_AIA_BASE_PORT=$(expr ${PORT:-8631} + 10)
     NSS_AIA_PORT=${NSS_AIA_PORT:-$DEFAULT_AIA_BASE_PORT}
+    DEFAULT_UNUSED_PORT=$(expr ${PORT:-8631} + 11)
+    NSS_UNUSED_PORT=${NSS_UNUSED_PORT:-$DEFAULT_UNUSED_PORT}
     NSS_AIA_HTTP=${NSS_AIA_HTTP:-"http://${HOSTADDR}:${NSS_AIA_PORT}"}
     NSS_AIA_PATH=${NSS_AIA_PATH:-$HOSTDIR/aiahttp}
+    NSS_AIA_OCSP=${NSS_AIA_OCSP:-$NSS_AIA_HTTP/ocsp}
+    NSS_OCSP_UNUSED=${NSS_AIA_OCSP_UNUSED:-"http://${HOSTADDR}:${NSS_UNUSED_PORT}"}
+
+    html_head "Certificate Chains Tests"
+}
+
+chains_run_httpserv()
+{
+    HTTP_METHOD=$1
 
     if [ -n "${NSS_AIA_PATH}" ]; then
         HTTPPID=${NSS_AIA_PATH}/http_pid.$$
@@ -191,11 +211,16 @@ chains_init()
         # Start_httpserv sets environment variables, which are required for
         # correct cleanup. (Running it in a subshell doesn't work, the
         # value of $SHELL_HTTPPID wouldn't arrive in this scope.)
-        start_httpserv
+        start_httpserv ${HTTP_METHOD}
         cd "${SAVEPWD}"
     fi
+}
 
-    html_head "Certificate Chains Tests"
+chains_stop_httpserv()
+{
+    if [ -n "${NSS_AIA_PATH}" ]; then
+        kill_httpserv
+    fi
 }
 
 ############################ chains_cleanup ############################
@@ -204,10 +229,6 @@ chains_init()
 ########################################################################
 chains_cleanup()
 {
-    if [ -n "${NSS_AIA_PATH}" ]; then
-        kill_httpserv
-    fi
-
     html "</TABLE><BR>"
     cd ${QADIR}
     . common/cleanup.sh
@@ -513,10 +534,16 @@ process_ocsp()
 {
     if [ -n "${OCSP}" ]; then
         OPTIONS="${OPTIONS} --extAIA"
+ 
+	if [ "${OCSP}" = "offline" ]; then
+	    MY_OCSP_URL=${NSS_OCSP_UNUSED}
+	else
+	    MY_OCSP_URL=${NSS_AIA_OCSP}
+	fi
 
         DATA="${DATA}2
 7
-${NSS_AIA_OCSP}:${OCSP}
+${MY_OCSP_URL}
 0
 n
 n
@@ -669,12 +696,24 @@ import_key()
     KEY_NAME=$1.p12
     DB=$2
 
-    KEY_FILE=${QADIR}/libpkix/certs/${KEY_NAME}
+    KEY_FILE=../OCSPD/${KEY_NAME}
 
     TESTNAME="Importing p12 key ${KEY_NAME} to ${DB} database"
     echo "${SCRIPTNAME}: ${TESTNAME}"
     echo "${BINDIR}/pk12util -d ${DB} -i ${KEY_FILE} -k ${DB}/dbpasswd -W nssnss"
     ${BINDIR}/pk12util -d ${DB} -i ${KEY_FILE} -k ${DB}/dbpasswd -W nssnss
+    html_msg $? 0 "${SCENARIO}${TESTNAME}"
+}
+
+export_key()
+{
+    KEY_NAME=$1.p12
+    DB=$2
+
+    TESTNAME="Exporting $1 as ${KEY_NAME} from ${DB} database"
+    echo "${SCRIPTNAME}: ${TESTNAME}"
+    echo "${BINDIR}/pk12util -d ${DB} -o ${KEY_NAME} -n $1 -k ${DB}/dbpasswd -W nssnss"
+    ${BINDIR}/pk12util -d ${DB} -o ${KEY_NAME} -n $1 -k ${DB}/dbpasswd -W nssnss
     html_msg $? 0 "${SCENARIO}${TESTNAME}"
 }
 
@@ -694,6 +733,10 @@ import_cert()
         CERT_ISSUER=
         CERT=${CERT_NICK}.cert
         CERT_FILE="${QADIR}/libpkix/certs/${CERT}"
+    elif [ "${CERT_ISSUER}" = "d" ]; then
+        CERT_ISSUER=
+        CERT=${CERT_NICK}.der
+        CERT_FILE="../OCSPD/${CERT}"
     else
         CERT=${CERT_NICK}${CERT_ISSUER}.der
         CERT_FILE=${CERT}
@@ -805,6 +848,8 @@ revoke_cert()
 ########################################################################
 verify_cert()
 {
+    ENGINE=$1
+
     DB_OPT=
     FETCH_OPT=
     POLICY_OPT=
@@ -854,6 +899,10 @@ verify_cert()
             CERT="${QADIR}/libpkix/certs/${CERT_NICK}.cert"
             VFY_CERTS="${VFY_CERTS} ${CERT}"
             VFY_LIST="${VFY_LIST} ${CERT_NICK}.cert"
+        elif [ "${CERT_ISSUER}" = "d" ]; then
+            CERT="../OCSPD/${CERT_NICK}.der"
+            VFY_CERTS="${VFY_CERTS} ${CERT}"
+            VFY_LIST="${VFY_LIST} ${CERT_NICK}.cert"
         else
             CERT=${CERT_NICK}${CERT_ISSUER}.der
             VFY_CERTS="${VFY_CERTS} ${CERT}"
@@ -861,8 +910,8 @@ verify_cert()
         fi
     done
 
-    VFY_OPTS_TNAME="${TRUST_AND_DB_OPT} ${REV_OPTS} ${DB_OPT} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${TRUST_OPT}"
-    VFY_OPTS_ALL="${DB_OPT} -pp -vv ${TRUST_AND_DB_OPT} ${REV_OPTS} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
+    VFY_OPTS_TNAME="${DB_OPT} ${ENGINE} ${TRUST_AND_DB_OPT} ${REV_OPTS} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${TRUST_OPT}"
+    VFY_OPTS_ALL="${DB_OPT} ${ENGINE} -vv ${TRUST_AND_DB_OPT} ${REV_OPTS} ${FETCH_OPT} ${USAGE_OPT} ${POLICY_OPT} ${VFY_CERTS} ${TRUST_OPT}"
 
     TESTNAME="Verifying certificate(s) ${VFY_LIST} with flags ${VFY_OPTS_TNAME}"
     echo "${SCRIPTNAME}: ${TESTNAME}"
@@ -911,6 +960,10 @@ check_ocsp()
         CERT_ISSUER=
         CERT=${CERT_NICK}.cert
         CERT_FILE="${QADIR}/libpkix/certs/${CERT}"
+    elif [ "${CERT_ISSUER}" = "d" ]; then
+        CERT_ISSUER=
+        CERT=${CERT_NICK}.der
+        CERT_FILE="../OCSPD/${CERT}"
     else
         CERT=${CERT_NICK}${CERT_ISSUER}.der
         CERT_FILE=${CERT}
@@ -918,9 +971,10 @@ check_ocsp()
 
     # sample line:
     #   URI: "http://ocsp.server:2601"
-    OCSP_HOST=$(${BINDIR}/pp -t certificate -i ${CERT_FILE} | grep URI | sed "s/.*:\/\///" | sed "s/:.*//")
-    OCSP_PORT=$(${BINDIR}/pp -t certificate -i ${CERT_FILE} | grep URI | sed "s/.*:.*:\([0-9]*\)\"/\1/")
+    OCSP_HOST=$(${BINDIR}/pp -w -t certificate -i ${CERT_FILE} | grep URI | sed "s/.*:\/\///" | sed "s/:.*//")
+    OCSP_PORT=$(${BINDIR}/pp -w -t certificate -i ${CERT_FILE} | grep URI | sed "s/^.*:.*:\/\/.*:\([0-9]*\).*$/\1/")
 
+    echo "tstclnt -h ${OCSP_HOST} -p ${OCSP_PORT} -q -t 20"
     tstclnt -h ${OCSP_HOST} -p ${OCSP_PORT} -q -t 20
     return $?
 }
@@ -983,6 +1037,7 @@ parse_config()
             EXT_NS=
             EXT_EKU=
             SERIAL=
+	    EXPORT_KEY=
             ;;
         "type")
             TYPE="${VALUE}"
@@ -1048,6 +1103,9 @@ parse_config()
         "serial")
             SERIAL="${VALUE}"
             ;;
+	"export_key")
+	    EXPORT_KEY=1
+	    ;;
         "copycrl")
             COPYCRL="${VALUE}"
             copy_crl "${COPYCRL}"
@@ -1148,11 +1206,18 @@ parse_config()
                 if [ "${TYPE}" = "Bridge" ]; then
                     create_pkcs7 "${ENTITY}"
                 fi
+		if [ -n "${EXPORT_KEY}" ]; then
+		    export_key "${ENTITY}" "${DB}"
+		fi
                 ENTITY=
             fi
 
             if [ -n "${VERIFY}" ]; then
-                verify_cert
+                verify_cert "-pp"
+		if [ -n "${VERIFY_CLASSIC_ENGINE_TOO}" ]; then
+		    verify_cert ""
+		    verify_cert "-p"
+		fi
                 VERIFY=
             fi
 
@@ -1176,6 +1241,33 @@ parse_config()
     fi
 }
 
+process_scenario()
+{
+    SCENARIO_FILE=$1
+
+    > ${AIA_FILES}
+
+    parse_config < "${QADIR}/chains/scenarios/${SCENARIO_FILE}"
+
+    while read AIA_FILE
+    do
+	rm ${AIA_FILE} 2> /dev/null
+    done < ${AIA_FILES}
+    rm ${AIA_FILES}
+}
+
+# process ocspd.cfg separately
+chains_ocspd()
+{
+    process_scenario "ocspd.cfg"
+}
+
+# process ocsp.cfg separately
+chains_method()
+{
+    process_scenario "method.cfg"
+}
+
 ############################# chains_main ##############################
 # local shell function to process all testing scenarios
 ########################################################################
@@ -1185,21 +1277,30 @@ chains_main()
     do
         [ `echo ${LINE} | cut -b 1` != "#" ] || continue
 
-        > ${AIA_FILES}
+	[ ${LINE} != 'ocspd.cfg' ] || continue
+	[ ${LINE} != 'method.cfg' ] || continue
 
-        parse_config < "${QADIR}/chains/scenarios/${LINE}"
-
-        while read AIA_FILE
-        do
-            rm ${AIA_FILE} 2> /dev/null
-        done < ${AIA_FILES}
-        rm ${AIA_FILES}
+	process_scenario ${LINE}
     done < "${CHAINS_SCENARIOS}"
 }
 
 ################################ main ##################################
 
 chains_init
+VERIFY_CLASSIC_ENGINE_TOO=
+chains_ocspd
+VERIFY_CLASSIC_ENGINE_TOO=1
+chains_run_httpserv get
+chains_method
+chains_stop_httpserv
+chains_run_httpserv post
+chains_method
+chains_stop_httpserv
+VERIFY_CLASSIC_ENGINE_TOO=
+chains_run_httpserv random
 chains_main
+chains_stop_httpserv
+chains_run_httpserv get-unknown
+chains_main
+chains_stop_httpserv
 chains_cleanup
-

@@ -209,6 +209,11 @@ If this option is not used, the validity check defaults to the current system ti
       </varlistentry>
 
       <varlistentry>
+        <term>--email email-address</term>
+        <listitem><para>Specify the email address of a certificate to list. Used with the -L command option.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>-f password-file</term>
         <listitem><para>Specify a file that will automatically supply the password to include in a certificate 
  or to access a certificate database. This is a plain-text file containing one password. Be sure to prevent 
@@ -644,14 +649,19 @@ of the attribute codes:
       </varlistentry>
 
       <varlistentry>
+        <term>--empty-password</term>
+        <listitem><para>Use empty password when creating new certificate database with -N.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>--keyAttrFlags attrflags</term>
         <listitem><para>
 PKCS #11 key Attributes. Comma separated list of key attribute flags, selected from the following list of choices: {token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}</para></listitem>
       </varlistentry>
 
       <varlistentry>
-        <term>--keyFlagsOn opflags</term>
-        <term>--keyFlagsOff opflags</term>
+        <term>--keyOpFlagsOn opflags</term>
+        <term>--keyOpFlagsOff opflags</term>
         <listitem><para>
 PKCS #11 key Operation Flags.
 Comma separated list of one or more of the following:
