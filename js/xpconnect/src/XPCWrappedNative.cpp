@@ -494,17 +494,6 @@ FinishCreate(XPCWrappedNativeScope* Scope,
     AutoJSContext cx;
     MOZ_ASSERT(inWrapper);
 
-#if DEBUG_xpc_leaks
-    {
-        char* s = wrapper->ToString();
-        MOZ_ASSERT(wrapper->IsValid(), "eh?");
-        printf("Created wrapped native %s, flat JSObject is %p\n",
-               s, (void*)wrapper->GetFlatJSObjectNoMark());
-        if (s)
-            JS_smprintf_free(s);
-    }
-#endif
-
     XPCLock* mapLock = Scope->GetRuntime()->GetMapLock();
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
 
