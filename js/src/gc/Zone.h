@@ -193,7 +193,7 @@ struct Zone : public JS::shadow::Zone,
         // Zones cannot be collected while in use by other threads.
         if (usedByExclusiveThread)
             return false;
-        JSRuntime *rt = runtimeFromMainThread();
+        JSRuntime *rt = runtimeFromAnyThread();
         if (rt->isAtomsZone(this) && rt->exclusiveThreadsPresent())
             return false;
         return true;
@@ -237,6 +237,12 @@ struct Zone : public JS::shadow::Zone,
 
     /* Whether this zone is being used by a thread with an ExclusiveContext. */
     bool usedByExclusiveThread;
+
+    /*
+     * Get a number that is incremented whenever this zone is collected, and
+     * possibly at other times too.
+     */
+    uint64_t gcNumber();
 
     /*
      * These flags help us to discover if a compartment that shouldn't be alive
