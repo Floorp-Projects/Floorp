@@ -5,7 +5,7 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Reference for test that marker orientation is correct at the end of
-    arcs when orient="auto-start-reverse-start-reverse" is used</title>
+    arcs when orient="auto-start-reverse" is used</title>
   <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=769115 -->
 
   <defs>
