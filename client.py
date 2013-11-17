@@ -131,6 +131,8 @@ o.add_option("--cvsroot", dest="cvsroot",
              help="The CVSROOT for libffi (default : %s)" % CVSROOT_LIBFFI)
 o.add_option("--hg", dest="hg", default=os.environ.get('HG', 'hg'),
              help="The location of the hg binary")
+o.add_option("--repo", dest="repo",
+             help="the repo to update from (default: upstream repo)")
 
 try:
     options, args = o.parse_args()
@@ -145,11 +147,15 @@ if action in ('checkout', 'co'):
 elif action in ('update_nspr'):
     tag, = args[1:]
     depfile = "nsprpub/config/prdepend.h"
-    update_nspr_or_nss(tag, depfile, 'nsprpub', 'https://hg.mozilla.org/projects/nspr')
+    if not options.repo:
+        options.repo = 'https://hg.mozilla.org/projects/nspr'
+    update_nspr_or_nss(tag, depfile, 'nsprpub', options.repo)
 elif action in ('update_nss'):
     tag, = args[1:]
     depfile = "security/nss/coreconf/coreconf.dep"
-    update_nspr_or_nss(tag, depfile, 'security/nss', 'https://hg.mozilla.org/projects/nss')
+    if not options.repo:
+	    options.repo = 'https://hg.mozilla.org/projects/nss'
+    update_nspr_or_nss(tag, depfile, 'security/nss', options.repo)
 elif action in ('update_libffi'):
     tag, = args[1:]
     if not options.cvsroot:
