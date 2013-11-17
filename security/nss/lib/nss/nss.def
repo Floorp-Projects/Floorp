@@ -1037,13 +1037,13 @@ CERT_AddCertToListHead;
 ;+    local:
 ;+       *;
 ;+};
-;+NSS_3.15.3 { 	# NSS 3.15.3 release
+;+NSS_3.15.4 { 	# NSS 3.15.4 release
 ;+    global:
 CERT_DestroyCrl;
+CERT_ForcePostMethodForOCSP;
 CERT_GetEncodedOCSPResponseByMechanism;
 CERT_GetSPKIDigest;
 CERT_GetSubjectNameDigest;
-CERT_ForcePostMethodForOCSP;
 ;+    local:
 ;+       *;
 ;+};
