@@ -26,14 +26,6 @@ public:
 
   virtual MediaDecoderStateMachine* CreateStateMachine();
 
-  // Returns true if aType is a MIME type that we render with the
-  // Windows Media Foundation backend. If aCodecList is non null,
-  // it is filled with a (static const) null-terminated list of strings
-  // denoting the codecs we'll playback. Note that playback is strictly
-  // limited to the codecs in this list.
-  static bool GetSupportedCodecs(const nsACString& aType,
-                                 char const *const ** aCodecList);
-
   // Loads the DLLs required by Windows Media Foundation. If this returns
   // failure, you can assume that WMF is not available on the user's system.
   static nsresult LoadDLLs();
@@ -46,6 +38,12 @@ public:
   // Returns true if MP3 decoding is enabled on this system. We block
   // MP3 playback on Windows 7 SP0, since it's crashy on that platform.
   static bool IsMP3Supported();
+
+  // Returns the HTMLMediaElement.canPlayType() result for the mime type
+  // and codecs parameter. aCodecs can be empty.
+  static bool CanPlayType(const nsACString& aType,
+                          const nsAString& aCodecs);
+
 };
 
 } // namespace mozilla
