@@ -827,6 +827,8 @@ typedef struct {
   long id;
 } CipherPref;
 
+// Update the switch statement in HandshakeCallback in nsNSSCallbacks.cpp when
+// you add/remove cipher suites here.
 static CipherPref CipherPrefs[] = {
  /* SSL3/TLS cipher suites*/
  {"security.ssl3.rsa_rc4_128_md5", SSL_RSA_WITH_RC4_128_MD5}, // 128-bit RC4 encryption with RSA and an MD5 MAC
