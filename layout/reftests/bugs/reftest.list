@@ -246,24 +246,24 @@ skip-if(B2G) == 243519-1.html 243519-1-ref.html
 == 243519-2.html 243519-2-ref.html
 == 243519-3.html 243519-3-ref.html
 == 243519-4a.html 243519-4-ref.html
-fails-if(Android) == 243519-4b.html 243519-4-ref.html
+== 243519-4b.html 243519-4-ref.html
 == 243519-4c.html 243519-4-ref.html
-fails-if(Android) == 243519-4d.html 243519-4-ref.html
+== 243519-4d.html 243519-4-ref.html
 == 243519-4e.html 243519-4-ref.html
-fails-if(Android) == 243519-4f.html 243519-4-ref.html
+== 243519-4f.html 243519-4-ref.html
 == 243519-5a.html 243519-5-ref.html
 == 243519-5b.html 243519-5-ref.html
-fails-if(Android) == 243519-5c.html 243519-5-ref.html
-fails-if(Android) == 243519-5d.html 243519-5-ref.html
+== 243519-5c.html 243519-5-ref.html
+== 243519-5d.html 243519-5-ref.html
 == 243519-6.html 243519-6-ref.html
 skip-if(B2G) == 243519-7.html 243519-7-ref.html
 == 243519-8.svg 243519-8-ref.svg
-fails-if(Android) == 243519-9a.html 243519-9-ref.html
-fails-if(Android) == 243519-9b.html 243519-9-ref.html
-fails-if(Android) == 243519-9c.html 243519-9-ref.html
-fails-if(Android) == 243519-9d.html 243519-9-ref.html
-fails-if(Android) == 243519-9e.html 243519-9-ref.html
-fails-if(Android) == 243519-9f.html 243519-9-ref.html
+== 243519-9a.html 243519-9-ref.html
+== 243519-9b.html 243519-9-ref.html
+== 243519-9c.html 243519-9-ref.html
+== 243519-9d.html 243519-9-ref.html
+== 243519-9e.html 243519-9-ref.html
+== 243519-9f.html 243519-9-ref.html
 == 244135-1.html 244135-1-ref.html
 == 244135-2.html 244135-2-ref.html
 == 244932-1.html 244932-1-ref.html
@@ -848,7 +848,7 @@ skip-if(B2G) == 402567-4.html 402567-4-ref.html
 == 402629-1.html 402629-1-ref.html
 == 402629-2.html 402629-2-ref.html
 == 402629-3.html 402629-3-ref.html
-skip-if(B2G) fails-if(Android) == 402807-1.html 402807-1-ref.html
+skip-if(B2G) == 402807-1.html 402807-1-ref.html
 == 402940-1.html 402940-1-ref.html
 == 402940-1b.html 402940-1-ref.html
 != 402940-2.html 402940-2-notref.html
@@ -1127,7 +1127,7 @@ skip-if(B2G) == 430412-1.html 430412-1-ref.html
 == 431520-1.html 431520-1-ref.html
 == 431948-1.html 431948-1-ref.html
 == 433640-1.html 433640-1-ref.html
-fails-if(Android) == 433700.html 433700-ref.html
+== 433700.html 433700-ref.html
 == 436356-1.html 436356-1-ref.html
 == 436356-2.html 436356-2-ref.html
 == 438537-1.html 438537-1-ref.html
@@ -1210,9 +1210,9 @@ skip-if(B2G) == 458296-1d.html 458296-1-ref.html
 == 458487-1h.html 458487-1-ref.html
 == 458487-2.html 458487-2-ref.html
 == 458487-3.html 458487-3-ref.html
-fails-if(Android) == 458487-4a.html 458487-4-ref.html
-fails-if(Android) == 458487-4b.html 458487-4-ref.html
-fails-if(Android) == 458487-4c.html 458487-4-ref.html
+== 458487-4a.html 458487-4-ref.html
+== 458487-4b.html 458487-4-ref.html
+== 458487-4c.html 458487-4-ref.html
 == 458487-5a.html 458487-5-ref.html
 == 458487-5b.html 458487-5-ref.html
 == 459443-1.html 459443-1-ref.html
@@ -1577,7 +1577,7 @@ skip-if(B2G) == 582476-1.svg 582476-1-ref.svg
 == 584699-1.html 584699-1-ref.html
 == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
-skip-if(B2G) fuzzy-if(d2d,52,1051) fails-if(Android) fuzzy-if(OSX==10.8,129,1068) == 586683-1.html 586683-1-ref.html
+skip-if(B2G) fuzzy-if(d2d,52,1051) fuzzy-if(OSX==10.8,129,1068) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
@@ -1601,7 +1601,7 @@ skip-if(B2G) == 600803-1.html 600803-1-ref.html
 == 600974-2.html 600974-1-ref.html
 == 600974-3.html 600974-1-ref.html
 == 602200-1.html 602200-1-ref.html
-fails-if(Android&&AndroidVersion<15) == 602200-2.html 602200-2-ref.html
+== 602200-2.html 602200-2-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,20) == 602200-3.html 602200-3-ref.html
 fails-if(Android) == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
@@ -1644,7 +1644,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,300) == 625409-1.html 625409-1-ref.html
 skip-if(B2G) fails-if(Android) == 632423-1.html 632423-1-ref.html
 skip-if(Android||B2G) random-if(winWidget) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
-fails-if(Android) == 633344-1.html 633344-1-ref.html
+== 633344-1.html 633344-1-ref.html
 == 634232-1.html 634232-1-ref.html
 fails-if(Android) == 635302-1.html 635302-1-ref.html
 skip-if(B2G) random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,1,11) == 635373-1.html 635373-1-ref.html
@@ -1752,7 +1752,7 @@ skip-if(B2G) == 818276-1.html 818276-1-ref.html
 == 827577-1b.html 827577-1-ref.html
 == 827799-1.html about:blank
 == 829958.html 829958-ref.html
-fails-if(Android&&AndroidVersion<15) == 836844-1.html 836844-1-ref.html
+== 836844-1.html 836844-1-ref.html
 == 841192-1.html 841192-1-ref.html
 == 844178.html 844178-ref.html
 == 846144-1.html 846144-1-ref.html

@@ -957,7 +957,8 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
   }
   keySize = JSVAL_TO_INT(argv[0]);
   if (!JSVAL_IS_NULL(argv[1])) {
-    jsString = JS_ValueToString(cx,argv[1]);
+    JS::Rooted<JS::Value> v(cx, argv[1]);
+    jsString = JS::ToString(cx, v);
     NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
     argv[1] = STRING_TO_JSVAL(jsString);
     params.encodeLatin1(cx, jsString);
@@ -969,7 +970,8 @@ cryptojs_ReadArgsAndGenerateKey(JSContext *cx,
              "key generation type not specified");
     return NS_ERROR_FAILURE;
   }
-  jsString = JS_ValueToString(cx, argv[2]);
+  JS::Rooted<JS::Value> v(cx, argv[2]);
+  jsString = JS::ToString(cx, v);
   NS_ENSURE_TRUE(jsString, NS_ERROR_OUT_OF_MEMORY);
   argv[2] = STRING_TO_JSVAL(jsString);
   nsDependentJSString dependentKeyGenAlg;

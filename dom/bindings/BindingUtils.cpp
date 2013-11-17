@@ -2108,7 +2108,7 @@ ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
       return true;
     }
 
-    s = JS_ValueToString(cx, v);
+    s = JS::ToString(cx, v);
     if (!s) {
       return false;
     }
