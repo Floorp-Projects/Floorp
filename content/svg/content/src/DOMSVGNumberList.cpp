@@ -14,8 +14,6 @@
 
 // See the comment in this file's header.
 
-namespace mozilla {
-
 // local helper functions
 namespace {
 
@@ -34,6 +32,8 @@ void UpdateListIndicesFromIndex(FallibleTArray<DOMSVGNumber*>& aItemsArray,
 }
 
 } // namespace
+
+namespace mozilla {
 
 // We could use NS_IMPL_CYCLE_COLLECTION_1, except that in Unlink() we need to
 // clear our DOMSVGAnimatedNumberList's weak ref to us to be safe. (The other
