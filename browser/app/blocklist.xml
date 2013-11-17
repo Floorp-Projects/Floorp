@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1383954148000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1384551293000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -37,6 +37,10 @@
                         <versionRange  minVersion="2.4.6.4" maxVersion="2.4.6.4" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i484" id="plugin@getwebcake.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i433" id="{c95a4e8e-816d-4655-8c79-d736da1adb6d}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -69,8 +73,8 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i440" id="{2d069a16-fca1-4e81-81ea-5d5086dcbd0c}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i486" id="xz123@ya456.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i392" id="{EEE6C361-6118-11DC-9C72-001320C79847}">
@@ -169,8 +173,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i443" id="{B40794A0-7477-4335-95C5-8CB9BBC5C4A5}">
+      <emItem  blockID="i481" id="{B40794A0-7477-4335-95C5-8CB9BBC5C4A5}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                                 <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -215,6 +221,10 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i136" id="Adobe@flash.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i447" id="{B18B1E5C-4D81-11E1-9C00-AFEB4824019B}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -341,8 +351,8 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i447" id="{B18B1E5C-4D81-11E1-9C00-AFEB4824019B}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i479" id="mbrsepone@facebook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i256" id="/^[0-9a-f]+@[0-9a-f]+\.info/">
@@ -350,6 +360,10 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i370" id="happylyrics@hpyproductions.net">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i440" id="{2d069a16-fca1-4e81-81ea-5d5086dcbd0c}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
@@ -367,6 +381,10 @@
                   </emItem>
       <emItem  blockID="i44" id="sigma@labs.mozilla">
                         </emItem>
+      <emItem  blockID="i482" id="brasilescapeeight@facebook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i246" id="support@vide1flash2.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -403,6 +421,10 @@
                   </emItem>
       <emItem  blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
                         </emItem>
+      <emItem  blockID="i485" id="/^brasilescape.*\@facebook\.com$//">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i52" id="ff-ext@youtube">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -411,8 +433,8 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i320" id="torntv@torntv.com">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i483" id="brasilescapefive@facebook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i43" id="supportaccessplugin@gmail.com">
@@ -505,8 +527,10 @@
                         <versionRange  minVersion="0" maxVersion="0.81.43" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i435" id="pluggets@gmail.com">
+      <emItem  blockID="i480" id="pluggets@gmail.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i67" id="youtube2@youtube2.com">
@@ -658,10 +682,8 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i61" id="youtube@youtube3.com">
-                        <versionRange  minVersion="0" maxVersion="*">
-                    </versionRange>
-                                <versionRange  minVersion="0" maxVersion="*">
+      <emItem  blockID="i320" id="torntv@torntv.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i196" id="info@wxdownloadmanager.com">
@@ -698,6 +720,12 @@
                   </emItem>
       <emItem  blockID="i226" id="{462be121-2b54-4218-bf00-b9bf8135b23f}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i61" id="youtube@youtube3.com">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i372" id="5nc3QHFgcb@r06Ws9gvNNVRfH.com">
