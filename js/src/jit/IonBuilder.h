@@ -332,7 +332,13 @@ class IonBuilder : public MIRGenerator
 
     // Add a guard which ensure that the set of type which goes through this
     // generated code correspond to the observed types for the bytecode.
-    bool pushTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *observed, bool needBarrier);
+    bool pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed, bool needBarrier);
+
+    // If definiteType is not known or def already has the right type, just
+    // returns def.  Otherwise, returns an MInstruction that has that definite
+    // type, infallibly unboxing ins as needed.  The new instruction will be
+    // added to |current| in this case.
+    MDefinition *EnsureDefiniteType(MDefinition* def, JSValueType definiteType);
 
     JSObject *getSingletonPrototype(JSFunction *target);
 
