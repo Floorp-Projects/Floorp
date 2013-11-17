@@ -12,7 +12,7 @@ using namespace js;
 using namespace jit;
 
 static void
-AnalyzeLsh(MBasicBlock *block, MLsh *lsh)
+AnalyzeLsh(TempAllocator &alloc, MBasicBlock *block, MLsh *lsh)
 {
     if (lsh->specialization() != MIRType_Int32)
         return;
@@ -84,7 +84,7 @@ AnalyzeLsh(MBasicBlock *block, MLsh *lsh)
         return;
     }
 
-    MEffectiveAddress *eaddr = MEffectiveAddress::New(base, index, scale, displacement);
+    MEffectiveAddress *eaddr = MEffectiveAddress::New(alloc, base, index, scale, displacement);
     last->replaceAllUsesWith(eaddr);
     block->insertAfter(last, eaddr);
 }
@@ -109,7 +109,7 @@ EffectiveAddressAnalysis::analyze()
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
         for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
             if (i->isLsh())
-                AnalyzeLsh(*block, i->toLsh());
+                AnalyzeLsh(graph_.alloc(), *block, i->toLsh());
         }
     }
     return true;

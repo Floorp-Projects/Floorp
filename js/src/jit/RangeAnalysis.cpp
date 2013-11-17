@@ -118,6 +118,12 @@ SpewRange(MDefinition *def)
 #endif
 }
 
+TempAllocator &
+RangeAnalysis::alloc() const
+{
+    return graph_.alloc();
+}
+
 void
 RangeAnalysis::replaceDominatedUsesWith(MDefinition *orig, MDefinition *dom,
                                             MBasicBlock *block)
@@ -185,11 +191,11 @@ RangeAnalysis::addBetaNodes()
             }
             if (smaller && greater) {
                 MBeta *beta;
-                beta = MBeta::New(smaller, Range::NewInt32Range(JSVAL_INT_MIN, JSVAL_INT_MAX-1));
+                beta = MBeta::New(alloc(), smaller, Range::NewInt32Range(JSVAL_INT_MIN, JSVAL_INT_MAX-1));
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(smaller, beta, block);
                 IonSpew(IonSpew_Range, "Adding beta node for smaller %d", smaller->id());
-                beta = MBeta::New(greater, Range::NewInt32Range(JSVAL_INT_MIN+1, JSVAL_INT_MAX));
+                beta = MBeta::New(alloc(), greater, Range::NewInt32Range(JSVAL_INT_MIN+1, JSVAL_INT_MAX));
                 block->insertBefore(*block->begin(), beta);
                 replaceDominatedUsesWith(greater, beta, block);
                 IonSpew(IonSpew_Range, "Adding beta node for greater %d", greater->id());
@@ -243,7 +249,7 @@ RangeAnalysis::addBetaNodes()
             comp.dump(IonSpewFile);
         }
 
-        MBeta *beta = MBeta::New(val, new Range(comp));
+        MBeta *beta = MBeta::New(alloc(), val, new Range(comp));
         block->insertBefore(*block->begin(), beta);
         replaceDominatedUsesWith(val, beta, block);
     }
@@ -1793,7 +1799,7 @@ SymbolicBoundIsValid(MBasicBlock *header, MBoundsCheck *ins, const SymbolicBound
 // Convert all components of a linear sum *except* its constant to a definition,
 // adding any necessary instructions to the end of block.
 static inline MDefinition *
-ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
+ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum)
 {
     MDefinition *def = nullptr;
 
@@ -1802,7 +1808,7 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
         JS_ASSERT(!term.term->isConstant());
         if (term.scale == 1) {
             if (def) {
-                def = MAdd::New(def, term.term);
+                def = MAdd::New(alloc, def, term.term);
                 def->toAdd()->setInt32();
                 block->insertBefore(block->lastIns(), def->toInstruction());
                 def->computeRange();
@@ -1811,24 +1817,24 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
             }
         } else if (term.scale == -1) {
             if (!def) {
-                def = MConstant::New(Int32Value(0));
+                def = MConstant::New(alloc, Int32Value(0));
                 block->insertBefore(block->lastIns(), def->toInstruction());
                 def->computeRange();
             }
-            def = MSub::New(def, term.term);
+            def = MSub::New(alloc, def, term.term);
             def->toSub()->setInt32();
             block->insertBefore(block->lastIns(), def->toInstruction());
             def->computeRange();
         } else {
             JS_ASSERT(term.scale != 0);
-            MConstant *factor = MConstant::New(Int32Value(term.scale));
+            MConstant *factor = MConstant::New(alloc, Int32Value(term.scale));
             block->insertBefore(block->lastIns(), factor);
-            MMul *mul = MMul::New(term.term, factor);
+            MMul *mul = MMul::New(alloc, term.term, factor);
             mul->setInt32();
             block->insertBefore(block->lastIns(), mul);
             mul->computeRange();
             if (def) {
-                def = MAdd::New(def, mul);
+                def = MAdd::New(alloc, def, mul);
                 def->toAdd()->setInt32();
                 block->insertBefore(block->lastIns(), def->toInstruction());
                 def->computeRange();
@@ -1839,7 +1845,7 @@ ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
     }
 
     if (!def) {
-        def = MConstant::New(Int32Value(0));
+        def = MConstant::New(alloc, Int32Value(0));
         block->insertBefore(block->lastIns(), def->toInstruction());
         def->computeRange();
     }
@@ -1875,11 +1881,11 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
     MBasicBlock *preLoop = header->loopPredecessor();
     JS_ASSERT(!preLoop->isMarked());
 
-    MDefinition *lowerTerm = ConvertLinearSum(preLoop, lower->sum);
+    MDefinition *lowerTerm = ConvertLinearSum(alloc(), preLoop, lower->sum);
     if (!lowerTerm)
         return false;
 
-    MDefinition *upperTerm = ConvertLinearSum(preLoop, upper->sum);
+    MDefinition *upperTerm = ConvertLinearSum(alloc(), preLoop, upper->sum);
     if (!upperTerm)
         return false;
 
@@ -1904,10 +1910,10 @@ RangeAnalysis::tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins)
     if (!SafeAdd(upper->sum.constant(), upperConstant, &upperConstant))
         return false;
 
-    MBoundsCheckLower *lowerCheck = MBoundsCheckLower::New(lowerTerm);
+    MBoundsCheckLower *lowerCheck = MBoundsCheckLower::New(alloc(), lowerTerm);
     lowerCheck->setMinimum(lowerConstant);
 
-    MBoundsCheck *upperCheck = MBoundsCheck::New(upperTerm, ins->length());
+    MBoundsCheck *upperCheck = MBoundsCheck::New(alloc(), upperTerm, ins->length());
     upperCheck->setMinimum(upperConstant);
     upperCheck->setMaximum(upperConstant);
 
@@ -1997,7 +2003,7 @@ RangeAnalysis::addRangeAssertions()
             if (ins->isPassArg())
                 continue;
 
-            MAssertRange *guard = MAssertRange::New(ins, new Range(r));
+            MAssertRange *guard = MAssertRange::New(alloc(), ins, new Range(r));
 
             // The code that removes beta nodes assumes that it can find them
             // in a contiguous run at the top of each block. Don't insert
@@ -2289,7 +2295,7 @@ RemoveTruncatesOnOutput(MInstruction *truncated)
 }
 
 static void
-AdjustTruncatedInputs(MInstruction *truncated)
+AdjustTruncatedInputs(TempAllocator &alloc, MInstruction *truncated)
 {
     MBasicBlock *block = truncated->block();
     for (size_t i = 0, e = truncated->numOperands(); i < e; i++) {
@@ -2298,7 +2304,7 @@ AdjustTruncatedInputs(MInstruction *truncated)
         if (truncated->getOperand(i)->type() == MIRType_Int32)
             continue;
 
-        MTruncateToInt32 *op = MTruncateToInt32::New(truncated->getOperand(i));
+        MTruncateToInt32 *op = MTruncateToInt32::New(alloc, truncated->getOperand(i));
         block->insertBefore(truncated, op);
         truncated->replaceOperand(i, op);
     }
@@ -2383,7 +2389,7 @@ RangeAnalysis::truncate()
         MInstruction *ins = worklist.popCopy();
         ins->setNotInWorklist();
         RemoveTruncatesOnOutput(ins);
-        AdjustTruncatedInputs(ins);
+        AdjustTruncatedInputs(alloc(), ins);
     }
 
     // Collect range information as soon as the truncate phased is finished to
