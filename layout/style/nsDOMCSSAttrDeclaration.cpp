@@ -178,7 +178,11 @@ nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
   // Scripted modifications to style.opacity or style.transform
   // could immediately force us into the animated state if heuristics suggest
   // this is scripted animation.
-  if (aPropID == eCSSProperty_opacity || aPropID == eCSSProperty_transform) {
+  if (aPropID == eCSSProperty_opacity || aPropID == eCSSProperty_transform ||
+      aPropID == eCSSProperty_left || aPropID == eCSSProperty_top ||
+      aPropID == eCSSProperty_right || aPropID == eCSSProperty_bottom ||
+      aPropID == eCSSProperty_margin_left || aPropID == eCSSProperty_margin_top ||
+      aPropID == eCSSProperty_margin_right || aPropID == eCSSProperty_margin_bottom) {
     nsIFrame* frame = mElement->GetPrimaryFrame();
     if (frame) {
       ActiveLayerTracker::NotifyInlineStyleRuleModified(frame, aPropID);

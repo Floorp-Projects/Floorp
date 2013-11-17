@@ -19,13 +19,6 @@ interface nsIDOMBlob;
 [scriptable, builtinclass, uuid(ac97e161-9f1d-4163-adc9-e9a59e18682c)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
-  [implicit_jscontext] attribute jsval onabort;
-  [implicit_jscontext] attribute jsval onerror;
-  [implicit_jscontext] attribute jsval onload;
-  [implicit_jscontext] attribute jsval onloadstart;
-  [implicit_jscontext] attribute jsval onprogress;
-  [implicit_jscontext] attribute jsval ontimeout;
-  [implicit_jscontext] attribute jsval onloadend;
 };
 
 [scriptable, builtinclass, uuid(df3796fa-d98a-4185-9dda-d2f2b56a5d38)]

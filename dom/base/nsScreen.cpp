@@ -81,8 +81,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsScreen, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsScreen, nsDOMEventTargetHelper)
 
-NS_IMPL_EVENT_HANDLER(nsScreen, mozorientationchange)
-
 int32_t
 nsScreen::GetPixelDepth(ErrorResult& aRv)
 {
@@ -241,9 +239,11 @@ nsScreen::GetLockOrientationPermission() const
 }
 
 NS_IMETHODIMP
-nsScreen::MozLockOrientation(const JS::Value& aOrientation, JSContext* aCx,
+nsScreen::MozLockOrientation(const JS::Value& aOrientation_, JSContext* aCx,
                              bool* aReturn)
 {
+  JS::Rooted<JS::Value> aOrientation(aCx, aOrientation_);
+
   if (aOrientation.isObject()) {
     JS::Rooted<JSObject*> seq(aCx, &aOrientation.toObject());
     if (IsArrayLike(aCx, seq)) {
@@ -264,7 +264,7 @@ nsScreen::MozLockOrientation(const JS::Value& aOrientation, JSContext* aCx,
           return NS_ERROR_FAILURE;
         }
 
-        JS::Rooted<JSString*> jsString(aCx, JS_ValueToString(aCx, temp));
+        JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, temp));
         if (!jsString) {
           return NS_ERROR_FAILURE;
         }
@@ -283,7 +283,7 @@ nsScreen::MozLockOrientation(const JS::Value& aOrientation, JSContext* aCx,
     }
   }
 
-  JS::Rooted<JSString*> jsString(aCx, JS_ValueToString(aCx, aOrientation));
+  JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, aOrientation));
   if (!jsString) {
     return NS_ERROR_FAILURE;
   }
