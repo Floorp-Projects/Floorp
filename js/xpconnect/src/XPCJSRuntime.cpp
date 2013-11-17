@@ -100,12 +100,6 @@ NativeInterfaceSweeper(PLDHashTable *table, PLDHashEntryHdr *hdr,
     if (arg == UNMARK_ONLY)
         return PL_DHASH_NEXT;
 
-#ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
-    fputs("- Destroying XPCNativeInterface for ", stdout);
-    JS_PutString(JSVAL_TO_STRING(iface->GetName()), stdout);
-    putc('\n', stdout);
-#endif
-
     XPCNativeInterface::DestroyInstance(iface);
     return PL_DHASH_REMOVE;
 }
@@ -138,17 +132,6 @@ NativeSetSweeper(PLDHashTable *table, PLDHashEntryHdr *hdr,
     if (arg == UNMARK_ONLY)
         return PL_DHASH_NEXT;
 
-#ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
-    printf("- Destroying XPCNativeSet for:\n");
-    uint16_t count = set->GetInterfaceCount();
-    for (uint16_t k = 0; k < count; k++) {
-        XPCNativeInterface* iface = set->GetInterfaceAt(k);
-        fputs("    ", stdout);
-        JS_PutString(JSVAL_TO_STRING(iface->GetName()), stdout);
-        putc('\n', stdout);
-    }
-#endif
-
     XPCNativeSet::DestroyInstance(set);
     return PL_DHASH_REMOVE;
 }
@@ -160,23 +143,12 @@ JSClassSweeper(PLDHashTable *table, PLDHashEntryHdr *hdr,
     XPCNativeScriptableShared* shared =
         ((XPCNativeScriptableSharedMap::Entry*) hdr)->key;
     if (shared->IsMarked()) {
-#ifdef off_XPC_REPORT_JSCLASS_FLUSHING
-        printf("+ Marked XPCNativeScriptableShared for: %s @ %x\n",
-               shared->GetJSClass()->name,
-               shared->GetJSClass());
-#endif
         shared->Unmark();
         return PL_DHASH_NEXT;
     }
 
     if (arg == UNMARK_ONLY)
         return PL_DHASH_NEXT;
-
-#ifdef XPC_REPORT_JSCLASS_FLUSHING
-    printf("- Destroying XPCNativeScriptableShared for: %s @ %x\n",
-           shared->GetJSClass()->name,
-           shared->GetJSClass());
-#endif
 
     delete shared;
     return PL_DHASH_REMOVE;
@@ -877,12 +849,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCo
                 self->mThreadRunningGC = PR_GetCurrentThread();
             }
 
-#ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
-            printf("--------------------------------------------------------------\n");
-            int setsBefore = (int) self->mNativeSetMap->Count();
-            int ifacesBefore = (int) self->mIID2NativeInterfaceMap->Count();
-#endif
-
             // We use this occasion to mark and sweep NativeInterfaces,
             // NativeSets, and the WrappedNativeJSClasses...
 
@@ -963,18 +929,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCo
 
 #ifdef DEBUG
             XPCWrappedNativeScope::ASSERT_NoInterfaceSetsAreMarked();
-#endif
-
-#ifdef XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
-            int setsAfter = (int) self->mNativeSetMap->Count();
-            int ifacesAfter = (int) self->mIID2NativeInterfaceMap->Count();
-
-            printf("\n");
-            printf("XPCNativeSets:        before: %d  collected: %d  remaining: %d\n",
-                   setsBefore, setsBefore - setsAfter, setsAfter);
-            printf("XPCNativeInterfaces:  before: %d  collected: %d  remaining: %d\n",
-                   ifacesBefore, ifacesBefore - ifacesAfter, ifacesAfter);
-            printf("--------------------------------------------------------------\n");
 #endif
 
             // Now we are going to recycle any unused WrappedNativeTearoffs.

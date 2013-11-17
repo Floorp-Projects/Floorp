@@ -1238,12 +1238,10 @@ NS_IMPL_ISUPPORTS1(nsXPCFunctionThisTranslator, nsIXPCFunctionThisTranslator)
 
 nsXPCFunctionThisTranslator::nsXPCFunctionThisTranslator()
 {
-  /* member initializers and constructor code */
 }
 
 nsXPCFunctionThisTranslator::~nsXPCFunctionThisTranslator()
 {
-  /* destructor code */
 }
 
 /* nsISupports TranslateThis (in nsISupports aInitialThis); */
