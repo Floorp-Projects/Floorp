@@ -183,7 +183,6 @@
 #define XPC_TRACK_WRAPPER_STATS
 #define XPC_TRACK_SCOPE_STATS
 #define XPC_TRACK_PROTO_STATS
-#define XPC_CHECK_WRAPPERS_AT_SHUTDOWN
 #endif
 
 /***************************************************************************/
@@ -716,23 +715,6 @@ public:
 
     XPCReadableJSStringWrapper *NewStringWrapper(const PRUnichar *str, uint32_t len);
     void DeleteString(nsAString *string);
-
-#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
-   void DEBUG_AddWrappedNative(nsIXPConnectWrappedNative* wrapper)
-        {XPCAutoLock lock(GetMapLock());
-         PLDHashEntryHdr *entry =
-            PL_DHashTableOperate(DEBUG_WrappedNativeHashtable,
-                                 wrapper, PL_DHASH_ADD);
-         if (entry) ((PLDHashEntryStub *)entry)->key = wrapper;}
-
-   void DEBUG_RemoveWrappedNative(nsIXPConnectWrappedNative* wrapper)
-        {XPCAutoLock lock(GetMapLock());
-         PL_DHashTableOperate(DEBUG_WrappedNativeHashtable,
-                              wrapper, PL_DHASH_REMOVE);}
-private:
-   PLDHashTable* DEBUG_WrappedNativeHashtable;
-public:
-#endif
 
     void AddGCCallback(xpcGCCallback cb);
     void RemoveGCCallback(xpcGCCallback cb);
