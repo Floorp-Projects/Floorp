@@ -6114,9 +6114,11 @@ class CGMemberJITInfo(CGThing):
         if not t.isPrimitive():
             raise TypeError("No idea what type " + str(t) + " is.")
         tag = t.tag()
+        if tag == IDLType.Tags.bool:
+            return "JSVAL_TYPE_BOOLEAN"
         if tag in [IDLType.Tags.int8, IDLType.Tags.uint8,
                    IDLType.Tags.int16, IDLType.Tags.uint16,
-                   IDLType.Tags.int32, IDLType.Tags.bool]:
+                   IDLType.Tags.int32]:
             return "JSVAL_TYPE_INT32"
         if tag in [IDLType.Tags.int64, IDLType.Tags.uint64,
                    IDLType.Tags.unrestricted_float, IDLType.Tags.float,
