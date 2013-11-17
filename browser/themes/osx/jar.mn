@@ -363,6 +363,14 @@ browser.jar:
   skin/classic/browser/notification-pluginNormal@2x.png  (../shared/plugins/notification-pluginNormal@2x.png)
   skin/classic/browser/notification-pluginAlert@2x.png   (../shared/plugins/notification-pluginAlert@2x.png)
   skin/classic/browser/notification-pluginBlocked@2x.png (../shared/plugins/notification-pluginBlocked@2x.png)
+  skin/classic/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
+  skin/classic/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
+  skin/classic/browser/devtools/tooltip/arrow-vertical-dark.png   (../shared/devtools/tooltip/arrow-vertical-dark.png)
+  skin/classic/browser/devtools/tooltip/arrow-vertical-dark@2x.png   (../shared/devtools/tooltip/arrow-vertical-dark@2x.png)
+  skin/classic/browser/devtools/tooltip/arrow-horizontal-light.png   (../shared/devtools/tooltip/arrow-horizontal-light.png)
+  skin/classic/browser/devtools/tooltip/arrow-horizontal-light@2x.png   (../shared/devtools/tooltip/arrow-horizontal-light@2x.png)
+  skin/classic/browser/devtools/tooltip/arrow-vertical-light.png   (../shared/devtools/tooltip/arrow-vertical-light.png)
+  skin/classic/browser/devtools/tooltip/arrow-vertical-light@2x.png   (../shared/devtools/tooltip/arrow-vertical-light@2x.png)
 
 % override chrome://browser/skin/keyhole-circle.png                        chrome://browser/skin/lion/keyhole-circle.png                           os=Darwin osversion>=10.7
 % override chrome://browser/skin/Toolbar.png                               chrome://browser/skin/lion/Toolbar.png                                  os=Darwin osversion>=10.7

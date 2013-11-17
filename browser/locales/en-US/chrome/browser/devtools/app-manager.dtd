@@ -72,6 +72,8 @@
 <!ENTITY projects.updateAppTooltip "Execute validation checks and update the app to the connected device">
 <!ENTITY projects.debugApp "Debug">
 <!ENTITY projects.debugAppTooltip "Open Developer Tools connected to this app">
+<!ENTITY projects.saveManifest "Save">
+<!ENTITY projects.saveManifestTooltip "Save the contents of the Manifest Editor below.">
 <!ENTITY projects.hostedManifestPlaceHolder2 "http://example.com/app/manifest.webapp">
 <!ENTITY projects.noProjects "No projects. Add a new packaged app below (local directory) or a hosted app (link to a manifest file).">
 <!ENTITY projects.manifestEditor "Manifest Editor">

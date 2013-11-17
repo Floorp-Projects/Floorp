@@ -25,14 +25,18 @@ import android.util.DisplayMetrics;
 import android.view.inputmethod.InputMethodManager;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -110,6 +114,17 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         String rootPath = FennecInstrumentationTestRunner.getFennecArguments().getString("deviceroot");
         String configFile = FennecNativeDriver.getFile(rootPath + "/robotium.config");
         HashMap config = FennecNativeDriver.convertTextToTable(configFile);
+        mLogFile = (String)config.get("logfile");
+        mBaseUrl = ((String)config.get("host")).replaceAll("(/$)", "");
+        mRawBaseUrl = ((String)config.get("rawhost")).replaceAll("(/$)", "");
+        // Initialize the asserter
+        if (getTestType() == TEST_TALOS) {
+            mAsserter = new FennecTalosAssert();
+        } else {
+            mAsserter = new FennecMochitestAssert();
+        }
+        mAsserter.setLogFile(mLogFile);
+        mAsserter.setTestName(this.getClass().getName());
         // Create the intent to be used with all the important arguments.
         Intent i = new Intent(Intent.ACTION_MAIN);
         mProfile = (String)config.get("profile");
@@ -124,17 +139,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         // Start the activity
         setActivityIntent(i);
         mActivity = getActivity();
-        mLogFile = (String)config.get("logfile");
-        mBaseUrl = ((String)config.get("host")).replaceAll("(/$)", "");
-        mRawBaseUrl = ((String)config.get("rawhost")).replaceAll("(/$)", "");
-        // Initialize the asserter
-        if (getTestType() == TEST_TALOS) {
-            mAsserter = new FennecTalosAssert();
-        } else {
-            mAsserter = new FennecMochitestAssert();
-        }
-        mAsserter.setLogFile(mLogFile);
-        mAsserter.setTestName(this.getClass().getName());
         // Set up Robotium.solo and Driver objects
         mSolo = new Solo(getInstrumentation(), mActivity);
         mDriver = new FennecNativeDriver(mActivity, mSolo, rootPath);
@@ -548,7 +552,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
     }
 
-    public void addTab(String url) {
+    public void addTab() {
         mSolo.clickOnView(mSolo.getView("tabs"));
         // wait for addTab to appear (this is usually immediate)
         boolean success = waitForCondition(new Condition() {
@@ -564,9 +568,90 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
         final View addTabView = mSolo.getView("add_tab");
         mSolo.clickOnView(mSolo.getView("add_tab"));
+    }
+
+    public void addTab(String url) {
+        addTab();
 
         // Adding a new tab opens about:home, so now we just need to load the url in it.
         inputAndLoadUrl(url);
+    }
+
+    /**
+     * Gets the AdapterView of the tabs list.
+     *
+     * @return List view in the tabs tray
+     */
+    private final AdapterView<ListAdapter> getTabsList() {
+        Element tabs = mDriver.findElement(getActivity(), "tabs");
+        tabs.click();
+        Element listElem = mDriver.findElement(getActivity(), "normal_tabs");
+        int listId = listElem.getId();
+        return (AdapterView<ListAdapter>) getActivity().findViewById(listId);
+    }
+
+    /**
+     * Gets the view in the tabs tray at the specified index.
+     *
+     * @return View at index
+     */
+    private View getTabViewAt(final int index) {
+        final View[] childView = { null };
+
+        final AdapterView<ListAdapter> view = getTabsList();
+
+        runOnUiThreadSync(new Runnable() {
+            @Override
+            public void run() {
+                view.setSelection(index);
+
+                // The selection isn't updated synchronously; posting a
+                // runnable to the view's queue guarantees we'll run after the
+                // layout pass.
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        // getChildAt() is relative to the list of visible
+                        // views, but our index is relative to all views in the
+                        // list. Subtract the first visible list position for
+                        // the correct offset.
+                        childView[0] = view.getChildAt(index - view.getFirstVisiblePosition());
+                    }
+                });
+            }
+        });
+
+        boolean result = waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                return childView[0] != null;
+            }
+        }, MAX_WAIT_MS);
+
+        mAsserter.ok(result, "list item at index " + index + " exists", null);
+
+        return childView[0];
+    }
+
+    /**
+     * Selects the tab at the specified index.
+     *
+     * @param index Index of tab to select
+     */
+    public void selectTabAt(final int index) {
+        mSolo.clickOnView(getTabViewAt(index));
+    }
+
+    /**
+     * Closes the tab at the specified index.
+     *
+     * @param index Index of tab to close
+     */
+    public void closeTabAt(final int index) {
+        Element close = mDriver.findElement(getActivity(), "close");
+        View closeButton = getTabViewAt(index).findViewById(close.getId());
+
+        mSolo.clickOnView(closeButton);
     }
 
     public final void runOnUiThreadSync(Runnable runnable) {
@@ -674,15 +759,22 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }
 
         public void back() {
+            Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+
             if (devType.equals("tablet")) {
                 Element backBtn = mDriver.findElement(getActivity(), "back");
                 backBtn.click();
             } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.BACK);
             }
+
+            pageShowExpecter.blockForEvent();
+            pageShowExpecter.unregisterListener();
         }
 
         public void forward() {
+            Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+
             if (devType.equals("tablet")) {
                 Element fwdBtn = mDriver.findElement(getActivity(), "forward");
                 fwdBtn.click();
@@ -695,7 +787,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 } else {
                     mSolo.clickOnText("^Forward$");
                 }
+                ensureMenuClosed();
             }
+
+            pageShowExpecter.blockForEvent();
+            pageShowExpecter.unregisterListener();
         }
 
         public void reload() {
@@ -711,6 +807,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 } else {
                     mSolo.clickOnText("^Reload$");
                 }
+                ensureMenuClosed();
             }
         }
 
@@ -729,6 +826,27 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                     bookmarkBtn.click();
                 }
             }
+            ensureMenuClosed();
+        }
+
+        // On some devices, the menu may not be dismissed after clicking on an
+        // item. Close it here.
+        private void ensureMenuClosed() {
+            if (mSolo.searchText("^New Tab$")) {
+                mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+            }
          }
+    }
+
+    /**
+     * Gets the string representation of a stack trace.
+     *
+     * @param t Throwable to get stack trace for
+     * @return Stack trace as a string
+     */
+    public static String getStackTraceString(Throwable t) {
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
     }
 }
