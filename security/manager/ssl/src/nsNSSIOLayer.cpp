@@ -919,8 +919,9 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
   // be used to conclude server is TLS intolerant.
   // Note this only happens during the initial SSL handshake.
 
-  uint32_t reason;
+  SSLVersionRange range = socketInfo->GetTLSVersionRange();
 
+  uint32_t reason;
   switch (err)
   {
     case SSL_ERROR_BAD_MAC_ALERT: reason = 1; break;
@@ -948,9 +949,13 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
       // to retry without TLS.
 
       // Don't allow STARTTLS connections to fall back on connection resets or
-      // EOF.
+      // EOF. Also, don't fall back from TLS 1.0 to SSL 3.0 on connection,
+      // because connection resets and EOF have too many false positives,
+      // and we want to maximize how often we send TLS 1.0+ with extensions
+      // if at all reasonable.
     conditional:
-      if (socketInfo->GetHasCleartextPhase()) {
+      if (range.max <= SSL_LIBRARY_VERSION_TLS_1_0 ||
+          socketInfo->GetHasCleartextPhase()) {
         return false;
       }
       break;
@@ -961,7 +966,6 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
 
   Telemetry::ID pre;
   Telemetry::ID post;
-  SSLVersionRange range = socketInfo->GetTLSVersionRange();
   switch (range.max) {
     case SSL_LIBRARY_VERSION_TLS_1_2:
       pre = Telemetry::SSL_TLS12_INTOLERANCE_REASON_PRE;
