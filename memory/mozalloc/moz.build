@@ -32,7 +32,7 @@ if CONFIG['WRAP_STL_INCLUDES']:
                 'msvc_throw_wrapper.cpp',
             ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'mozalloc.cpp',
     'mozalloc_abort.cpp',
     'mozalloc_oom.cpp',
