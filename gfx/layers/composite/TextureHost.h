@@ -469,7 +469,7 @@ class ShmemTextureHost : public BufferTextureHost
 {
 public:
   ShmemTextureHost(uint64_t aID,
-                   const ipc::Shmem& aShmem,
+                   const mozilla::ipc::Shmem& aShmem,
                    gfx::SurfaceFormat aFormat,
                    ISurfaceAllocator* aDeallocator,
                    TextureFlags aFlags);
@@ -485,7 +485,7 @@ public:
 #endif
 
 protected:
-  ipc::Shmem* mShmem;
+  mozilla::ipc::Shmem* mShmem;
   ISurfaceAllocator* mDeallocator;
 };
 

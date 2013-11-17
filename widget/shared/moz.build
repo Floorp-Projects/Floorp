@@ -11,8 +11,8 @@ MODULE = 'widget'
 
 SOURCES += [
     'nsShmImage.cpp',
+    'SharedWidgetUtils.cpp',
     'WidgetEventImpl.cpp',
-    'WidgetUtils.cpp',
 ]
 
 LIBXUL_LIBRARY = True
