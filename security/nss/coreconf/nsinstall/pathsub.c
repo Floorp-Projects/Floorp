@@ -240,7 +240,7 @@ diagnosePath(const char * path)
 	if (rv < 0) {
 	    perror(myPath);
 	} else if (S_ISLNK(sb.st_mode)) {
-	    rv = readlink(myPath, buf, sizeof buf);
+	    rv = readlink(myPath, buf, sizeof(buf) - 1);
 	    if (rv < 0) {
 	    	perror("readlink");
 		buf[0] = 0;

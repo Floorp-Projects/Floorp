@@ -171,6 +171,15 @@ CERT_EnableOCSPDefaultResponder(CERTCertDBHandle *handle);
 extern SECStatus
 CERT_DisableOCSPDefaultResponder(CERTCertDBHandle *handle);
 
+/* If forcePost is set, OCSP requests will only be sent using the HTTP POST
+ * method. When forcePost is not set, OCSP requests will be sent using the
+ * HTTP GET method, with a fallback to POST when we fail to receive a response
+ * and/or when we receive an uncacheable response like "Unknown." 
+ *
+ * The default is to use GET and fallback to POST.
+ */
+extern SECStatus CERT_ForcePostMethodForOCSP(PRBool forcePost);
+
 /*
  * -------------------------------------------------------
  * The Functions above are those expected to be used by a client

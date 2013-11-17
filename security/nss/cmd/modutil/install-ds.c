@@ -214,13 +214,14 @@ Pk11Install_File_Generate(Pk11Install_File* _this,
                                      FILE_PERMISSIONS_STRING)) {
 				subiter = Pk11Install_ListIter_new(subpair->list);
 				subval = subiter->current;
-				if(!subval || (subval->type != STRING_VALUE)){
+				if(!subval || (subval->type != STRING_VALUE) ||
+				   !subval->string || !subval->string[0]){
 					errStr = PR_smprintf(errString[BOGUS_FILE_PERMISSIONS],
                                     _this->jarPath);
 					goto loser;
 				}
 				_this->permissions = (int) strtol(subval->string, &endp, 8);
-				if(*endp != '\0' || subval->string == "\0") {
+				if(*endp != '\0') {
 					errStr = PR_smprintf(errString[BOGUS_FILE_PERMISSIONS],
                                     _this->jarPath);
 					goto loser;
