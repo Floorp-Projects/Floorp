@@ -53,7 +53,7 @@ public:
   NS_DECL_NSIGFXINFODEBUG
 #endif
 
-  virtual uint32_t OperatingSystemVersion() const { return mOSXVersion; }
+  virtual uint32_t OperatingSystemVersion() MOZ_OVERRIDE { return mOSXVersion; }
 
 protected:
 
