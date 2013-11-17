@@ -929,7 +929,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,50) == 404553-1.html 404553-1-ref.html  #
 == 409089-3.html 409089-3-ref.html
 == 409659-1a.html 409659-1-ref.html
 != 409659-1b.html 409659-1-ref.html
-fails-if(Android&&AndroidVersion>=15&&smallScreen) != 409659-1c.html 409659-1-ref.html #there is no difference in the visible area of the screen
+fails-if(Android&&AndroidVersion>=15&&smallScreen&&AndroidVersion!=17) != 409659-1c.html 409659-1-ref.html #there is no difference in the visible area of the screen
 == 409659-1d.html 409659-1-ref.html
 == 410621-1.html 410621-1-ref.html
 == 411059-1.html 411059-1-ref.html
@@ -1558,7 +1558,7 @@ random-if(!winWidget) == 574907-2.html 574907-2-ref.html
 random-if(!winWidget) fails-if(winWidget&&!d2d) random-if(winWidget&&d2d) != 574907-3.html 574907-3-notref.html
 == 577838-1.html 577838-1-ref.html
 == 577838-2.html 577838-2-ref.html
-fails-if(Android) == 579323-1.html 579323-1-ref.html
+fails-if(Android&&AndroidVersion!=17) == 579323-1.html 579323-1-ref.html
 == 579349-1.html 579349-1-ref.html
 == 579655-1.html 579655-1-ref.html
 skip-if(B2G) fails-if(Android) == 579808-1.html 579808-1-ref.html
@@ -1603,7 +1603,7 @@ skip-if(B2G) == 600803-1.html 600803-1-ref.html
 == 602200-1.html 602200-1-ref.html
 == 602200-2.html 602200-2-ref.html
 fuzzy-if(Android&&AndroidVersion>=15,8,20) == 602200-3.html 602200-3-ref.html
-fails-if(Android) == 602200-4.html 602200-4-ref.html
+fails-if(Android&&AndroidVersion!=17) == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
 == 605138-1.html 605138-1-ref.html
@@ -1626,7 +1626,7 @@ needs-focus == 613433-3.html 613433-3-ref.html
 == 614272-1.svg  614272-1-ref.svg
 HTTP(..) == 615121-1.html 615121-1-ref.html
 HTTP(..) != 615121-2.html 615121-2-notref.html
-fails-if(Android) == 617242-1.html 617242-1-ref.html
+fails-if(Android&&AndroidVersion!=17) == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
 == 619117-1.html 619117-1-ref.html
 HTTP(..) == 619511-1.html 619511-1-ref.html
@@ -1660,13 +1660,13 @@ skip-if(B2G) == 641770-1.html 641770-1-ref.html
 == 641856-1.html 641856-1-ref.html
 == 645491-1.html 645491-1-ref.html
 == 645768-1.html 645768-1-ref.html
-fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
+fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion!=17) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 needs-focus == 652301-1a.html 652301-1-ref.html
 needs-focus == 652301-1b.html 652301-1-ref.html
 == 652775-1.html 652775-1-ref.html
 == 653930-1.html 653930-1-ref.html
 HTTP(..) == 654057-1.html 654057-1-ref.html
-fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
+fails-if(layersGPUAccelerated&&cocoaWidget) fails-if(Android&&AndroidVersion!=17) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 == 655549-1.html 655549-1-ref.html
 == 655836-1.html 655836-1-ref.html
 != 656875.html about:blank
@@ -1697,7 +1697,7 @@ needs-focus != 703186-1.html 703186-2.html
 == 714519-1-q.html 714519-1-ref.html
 == 714519-2-as.html 714519-2-ref.html
 == 714519-2-q.html 714519-2-ref.html
-skip-if(B2G) fuzzy-if(true,1,21) fuzzy-if(cocoaWidget,1,170) fuzzy-if(Android&&browserIsRemote,7,157) fails-if(Android&&!browserIsRemote) == 718521.html 718521-ref.html # bug 760270 # bug 773482
+skip-if(B2G) fuzzy-if(true,1,21) fuzzy-if(cocoaWidget,1,170) fuzzy-if(Android&&browserIsRemote,7,157) fails-if(Android&&!browserIsRemote&&AndroidVersion!=17) == 718521.html 718521-ref.html # bug 760270 # bug 773482
 == 720987.html 720987-ref.html
 == 722888-1.html 722888-1-ref.html
 == 722923-1.html 722923-1-ref.html
