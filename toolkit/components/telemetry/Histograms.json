@@ -4372,5 +4372,45 @@
     "n_buckets": 50,
     "extended_statistics_ok": true,
     "description": "Time spent to open an existing cache entry"
+  },
+  "SSL_TLS12_INTOLERANCE_REASON_PRE": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.2 intolerance, before considering historical info"
+  },
+  "SSL_TLS12_INTOLERANCE_REASON_POST": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.2 intolerance, after considering historical info"
+  },
+  "SSL_TLS11_INTOLERANCE_REASON_PRE": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.1 intolerance, before considering historical info"
+  },
+  "SSL_TLS11_INTOLERANCE_REASON_POST": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.1 intolerance, after considering historical info"
+  },
+  "SSL_TLS10_INTOLERANCE_REASON_PRE": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.0 intolerance, before considering historical info"
+  },
+  "SSL_TLS10_INTOLERANCE_REASON_POST": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.0 intolerance, after considering historical info"
+  },
+  "SSL_SSL30_INTOLERANCE_REASON_PRE": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of SSL 3.0 intolerance, before considering historical info"
+  },
+  "SSL_SSL30_INTOLERANCE_REASON_POST": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of SSL 3.0 intolerance, after considering historical info"
   }
 }
