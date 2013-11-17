@@ -1474,18 +1474,6 @@ XPCJSRuntime::DeleteString(nsAString *string)
 
 /***************************************************************************/
 
-#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
-static PLDHashOperator
-DEBUG_WrapperChecker(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                     uint32_t number, void *arg)
-{
-    XPCWrappedNative* wrapper = (XPCWrappedNative*)((PLDHashEntryStub*)hdr)->key;
-    MOZ_ASSERT(!wrapper->IsValid(), "found a 'valid' wrapper!");
-    ++ *((int*)arg);
-    return PL_DHASH_NEXT;
-}
-#endif
-
 static PLDHashOperator
 DetachedWrappedNativeProtoShutdownMarker(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                          uint32_t number, void *arg)
@@ -1608,17 +1596,6 @@ XPCJSRuntime::~XPCJSRuntime()
 #endif
         delete mThisTranslatorMap;
     }
-
-#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
-    if (DEBUG_WrappedNativeHashtable) {
-        int LiveWrapperCount = 0;
-        PL_DHashTableEnumerate(DEBUG_WrappedNativeHashtable,
-                               DEBUG_WrapperChecker, &LiveWrapperCount);
-        if (LiveWrapperCount)
-            printf("deleting XPCJSRuntime with %d live XPCWrappedNative (found in wrapper check)\n", (int)LiveWrapperCount);
-        PL_DHashTableDestroy(DEBUG_WrappedNativeHashtable);
-    }
-#endif
 
     if (mNativeScriptableSharedMap) {
 #ifdef XPC_DUMP_AT_SHUTDOWN
@@ -3010,12 +2987,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mJunkScope(nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
 {
-#ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
-    DEBUG_WrappedNativeHashtable =
-        PL_NewDHashTable(PL_DHashGetStubOps(), nullptr,
-                         sizeof(PLDHashEntryStub), 128);
-#endif
-
     DOM_InitInterfaces();
 
     // these jsids filled in later when we have a JSContext to work with.
