@@ -43,13 +43,13 @@ this.TabState = Object.freeze({
     return TabStateInternal.clone(tab);
   },
 
-  dropPendingCollections: function (tab) {
-    TabStateInternal.dropPendingCollections(tab);
+  dropPendingCollections: function (browser) {
+    TabStateInternal.dropPendingCollections(browser);
   }
 });
 
 let TabStateInternal = {
-  // A map (xul:tab -> promise) that keeps track of tabs and
+  // A map (xul:browser -> promise) that keeps track of tabs and
   // their promises when collecting tab data asynchronously.
   _pendingCollections: new WeakMap(),
 
@@ -72,6 +72,12 @@ let TabStateInternal = {
    * be swapped just like the docshell.
    */
   onSwapDocShells: function (browser, otherBrowser) {
+    // Data collected while docShells have been swapped should not go into
+    // the TabStateCache. Collections will most probably time out but we want
+    // to make sure.
+    this.dropPendingCollections(browser);
+    this.dropPendingCollections(otherBrowser);
+
     // Make sure that one or the other of these has a sync handler,
     // and let it be |browser|.
     if (!this._syncHandlers.has(browser)) {
@@ -87,7 +93,7 @@ let TabStateInternal = {
     if (this._syncHandlers.has(otherBrowser)) {
       let otherHandler = this._syncHandlers.get(otherBrowser);
       this._syncHandlers.set(browser, otherHandler);
-      this._syncHandlers.set(otherHandler, handler);
+      this._syncHandlers.set(otherBrowser, handler);
     } else {
       this._syncHandlers.set(otherBrowser, handler);
       this._syncHandlers.delete(browser);
@@ -118,6 +124,8 @@ let TabStateInternal = {
       let tabData = this._collectBaseTabData(tab);
       return Promise.resolve(tabData);
     }
+
+    let browser = tab.linkedBrowser;
 
     let promise = Task.spawn(function task() {
       // Collect session history data asynchronously. Also collects
@@ -156,9 +164,9 @@ let TabStateInternal = {
       // If we're still the latest async collection for the given tab and
       // the cache hasn't been filled by collect() in the meantime, let's
       // fill the cache with the data we received.
-      if (this._pendingCollections.get(tab) == promise) {
+      if (this._pendingCollections.get(browser) == promise) {
         TabStateCache.set(tab, tabData);
-        this._pendingCollections.delete(tab);
+        this._pendingCollections.delete(browser);
       }
 
       throw new Task.Result(tabData);
@@ -167,7 +175,7 @@ let TabStateInternal = {
     // Save the current promise as the latest asynchronous collection that is
     // running. This will be used to check whether the collected data is still
     // valid and will be used to fill the tab state cache.
-    this._pendingCollections.set(tab, promise);
+    this._pendingCollections.set(browser, promise);
 
     return promise;
   },
@@ -201,7 +209,7 @@ let TabStateInternal = {
     // can't expect to retrieve different data than the sync call. That's why
     // we just fill the cache with the data collected from the sync call and
     // discard any data collected asynchronously.
-    this.dropPendingCollections(tab);
+    this.dropPendingCollections(tab.linkedBrowser);
 
     return tabData;
   },
@@ -211,11 +219,11 @@ let TabStateInternal = {
    * continue to run, but they won't store their results in the
    * TabStateCache.
    *
-   * @param tab
-   *        tabbrowser tab
+   * @param browser
+   *        xul:browser
    */
-  dropPendingCollections: function (tab) {
-    this._pendingCollections.delete(tab);
+  dropPendingCollections: function (browser) {
+    this._pendingCollections.delete(browser);
   },
 
   /**

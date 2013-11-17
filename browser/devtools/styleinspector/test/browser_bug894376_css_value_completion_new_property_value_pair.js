@@ -35,9 +35,11 @@ let testData = [
   ["VK_DOWN", {}, "rgba", 2, 5],
   ["VK_DOWN", {}, "rosybrown", 3, 5],
   ["VK_DOWN", {}, "royalblue", 4, 5],
+  ["VK_RIGHT", {}, "royalblue", -1, 0],
+  [" ", {}, "royalblue ", -1, 0],
+  ["!", {}, "royalblue !important", 0, 0],
   ["VK_ESCAPE", {}, null, -1, 0]
 ];
-
 function openRuleView() {
   var target = TargetFactory.forTab(gBrowser.selectedTab);
   gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
@@ -83,8 +85,8 @@ function checkStateAndMoveOn(index) {
       checkState();
     });
   }
-  else if (/(back_space|escape)/ig.test(key)) {
-    info("added event listener for escape|back_space keys");
+  else if (/(right|back_space|escape|return)/ig.test(key)) {
+    info("added event listener for right|escape|back_space|return keys");
     editor.input.addEventListener("keypress", function onKeypress() {
       if (editor.input) {
         editor.input.removeEventListener("keypress", onKeypress);

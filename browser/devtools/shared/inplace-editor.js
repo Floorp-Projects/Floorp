@@ -1016,22 +1016,36 @@ InplaceEditor.prototype = {
       if (!query) {
         return;
       }
-
       let list = [];
       if (this.contentType == CONTENT_TYPES.CSS_PROPERTY) {
         list = CSSPropertyList;
       } else if (this.contentType == CONTENT_TYPES.CSS_VALUE) {
-        list = domUtils.getCSSValuesForProperty(this.property.name);
+        // Get the last query to be completed before the caret.
+        let match = /([^\s,.\/]+$)/.exec(query);
+        if (match) {
+          startCheckQuery = match[0];
+        } else {
+          startCheckQuery = "";
+        }
+
+        list =
+          ["!important", ...domUtils.getCSSValuesForProperty(this.property.name)];
       } else if (this.contentType == CONTENT_TYPES.CSS_MIXED &&
                  /^\s*style\s*=/.test(query)) {
         // Detecting if cursor is at property or value;
-        let match = query.match(/([:;"'=]?)\s*([^"';:= ]+)$/);
+        let match = query.match(/([:;"'=]?)\s*([^"';:=]+)$/);
         if (match && match.length == 3) {
           if (match[1] == ":") { // We are in CSS value completion
             let propertyName =
-              query.match(/[;"'=]\s*([^"';:= ]+)\s*:\s*[^"';:= ]+$/)[1];
-            list = domUtils.getCSSValuesForProperty(propertyName);
-            startCheckQuery = match[2];
+              query.match(/[;"'=]\s*([^"';:= ]+)\s*:\s*[^"';:=]+$/)[1];
+            list =
+              ["!important;", ...domUtils.getCSSValuesForProperty(propertyName)];
+            let matchLastQuery = /([^\s,.\/]+$)/.exec(match[2]);
+            if (matchLastQuery) {
+              startCheckQuery = matchLastQuery[0];
+            } else {
+              startCheckQuery = "";
+            }
           } else if (match[1]) { // We are in CSS property name completion
             list = CSSPropertyList;
             startCheckQuery = match[2];
@@ -1043,9 +1057,8 @@ InplaceEditor.prototype = {
           }
         }
       }
-
       list.some(item => {
-        if (item.startsWith(startCheckQuery)) {
+        if (startCheckQuery && item.startsWith(startCheckQuery)) {
           input.value = query + item.slice(startCheckQuery.length) +
                         input.value.slice(query.length);
           input.setSelectionRange(query.length, query.length + item.length -
@@ -1063,7 +1076,7 @@ InplaceEditor.prototype = {
       let finalList = [];
       let length = list.length;
       for (let i = 0, count = 0; i < length && count < MAX_POPUP_ENTRIES; i++) {
-        if (list[i].startsWith(startCheckQuery)) {
+        if (startCheckQuery && list[i].startsWith(startCheckQuery)) {
           count++;
           finalList.push({
             preLabel: startCheckQuery,

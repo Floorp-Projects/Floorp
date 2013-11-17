@@ -8,6 +8,10 @@ const {Cc, Cu, Ci} = require("chrome");
 const promise = require("sdk/core/promise");
 const IOService = Cc["@mozilla.org/network/io-service;1"]
   .getService(Ci.nsIIOService);
+const {Spectrum} = require("devtools/shared/widgets/Spectrum");
+const EventEmitter = require("devtools/shared/event-emitter");
+const {colorUtils} = require("devtools/css-color");
+const Heritage = require("sdk/core/heritage");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
@@ -16,6 +20,10 @@ const GRADIENT_RE = /\b(repeating-)?(linear|radial)-gradient\(((rgb|hsl)a?\(.+?\
 const BORDERCOLOR_RE = /^border-[-a-z]*color$/ig;
 const BORDER_RE = /^border(-(top|bottom|left|right))?$/ig;
 const BACKGROUND_IMAGE_RE = /url\([\'\"]?(.*?)[\'\"]?\)/;
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
+const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
+const ENTER_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
 
 /**
  * Tooltip widget.
@@ -38,23 +46,58 @@ const BACKGROUND_IMAGE_RE = /url\([\'\"]?(.*?)[\'\"]?\)/;
  */
 
 /**
- * The low level structure of a tooltip is a XUL element (a <panel>, although
- * <tooltip> is supported too, it won't have the nice arrow shape).
+ * Container used for dealing with optional parameters.
+ *
+ * @param {Object} defaults
+ *        An object with all default options {p1: v1, p2: v2, ...}
+ * @param {Object} options
+ *        The actual values.
+ */
+function OptionsStore(defaults, options) {
+  this.defaults = defaults || {};
+  this.options = options || {};
+}
+
+OptionsStore.prototype = {
+  /**
+   * Get the value for a given option name.
+   * @return {Object} Returns the value for that option, coming either for the
+   *         actual values that have been set in the constructor, or from the
+   *         defaults if that options was not specified.
+   */
+  get: function(name) {
+    if (typeof this.options[name] !== "undefined") {
+      return this.options[name];
+    } else {
+      return this.defaults[name];
+    }
+  }
+};
+
+/**
+ * The low level structure of a tooltip is a XUL element (a <panel>).
  */
 let PanelFactory = {
-  get: function(doc, xulTag="panel") {
+  /**
+   * Get a new XUL panel instance.
+   * @param {XULDocument} doc
+   *        The XUL document to put that panel into
+   * @param {OptionsStore} options
+   *        An options store to get some configuration from
+   */
+  get: function(doc, options) {
     // Create the tooltip
-    let panel = doc.createElement(xulTag);
+    let panel = doc.createElement("panel");
     panel.setAttribute("hidden", true);
+    panel.setAttribute("ignorekeys", true);
 
-    if (xulTag === "panel") {
-      // Prevent the click used to close the panel from being consumed
-      panel.setAttribute("consumeoutsideclicks", false);
-      panel.setAttribute("type", "arrow");
-      panel.setAttribute("level", "top");
-    }
+    // Prevent the click used to close the panel from being consumed
+    panel.setAttribute("consumeoutsideclicks", options.get("consumeOutsideClick"));
+    panel.setAttribute("noautofocus", options.get("noAutoFocus"));
+    panel.setAttribute("type", "arrow");
+    panel.setAttribute("level", "top");
 
-    panel.setAttribute("class", "devtools-tooltip devtools-tooltip-" + xulTag);
+    panel.setAttribute("class", "devtools-tooltip theme-tooltip-panel");
     doc.querySelector("window").appendChild(panel);
 
     return panel;
@@ -81,15 +124,57 @@ let PanelFactory = {
  *   });
  *   t.destroy();
  *
- * @param XULDocument doc
+ * @param {XULDocument} doc
  *        The XUL document hosting this tooltip
+ * @param {Object} options
+ *        Optional options that give options to consumers
+ *        - consumeOutsideClick {Boolean} Wether the first click outside of the
+ *        tooltip should close the tooltip and be consumed or not.
+ *        Defaults to false
+ *        - closeOnKeys {Array} An array of key codes that should close the
+ *        tooltip. Defaults to [27] (escape key)
+ *        - noAutoFocus {Boolean} Should the focus automatically go to the panel
+ *        when it opens. Defaults to true
+ *
+ * Fires these events:
+ * - showing : just before the tooltip shows
+ * - shown : when the tooltip is shown
+ * - hiding : just before the tooltip closes
+ * - hidden : when the tooltip gets hidden
+ * - keypress : when any key gets pressed, with keyCode
  */
-function Tooltip(doc) {
+function Tooltip(doc, options) {
+  EventEmitter.decorate(this);
+
   this.doc = doc;
-  this.panel = PanelFactory.get(doc);
+  this.options = new OptionsStore({
+    consumeOutsideClick: false,
+    closeOnKeys: [ESCAPE_KEYCODE],
+    noAutoFocus: true
+  }, options);
+  this.panel = PanelFactory.get(doc, this.options);
 
   // Used for namedTimeouts in the mouseover handling
   this.uid = "tooltip-" + Date.now();
+
+  // Emit show/hide events
+  for (let event of ["shown", "hidden", "showing", "hiding"]) {
+    this["_onPopup" + event] = ((e) => {
+      return () => this.emit(e);
+    })(event);
+    this.panel.addEventListener("popup" + event,
+      this["_onPopup" + event], false);
+  }
+
+  // Listen to keypress events to close the tooltip if configured to do so
+  let win = this.doc.querySelector("window");
+  this._onKeyPress = event => {
+    this.emit("keypress", event.keyCode);
+    if (this.options.get("closeOnKeys").indexOf(event.keyCode) !== -1) {
+      this.hide();
+    }
+  };
+  win.addEventListener("keypress", this._onKeyPress, false);
 }
 
 module.exports.Tooltip = Tooltip;
@@ -102,7 +187,7 @@ Tooltip.prototype = {
   /**
    * Show the tooltip. It might be wise to append some content first if you
    * don't want the tooltip to be empty. You may access the content of the
-   * tooltip by setting a XUL node to t.tooltip.content.
+   * tooltip by setting a XUL node to t.content.
    * @param {node} anchor
    *        Which node should the tooltip be shown on
    * @param {string} position
@@ -125,6 +210,10 @@ Tooltip.prototype = {
     this.panel.hidePopup();
   },
 
+  isShown: function() {
+    return this.panel.state !== "closed" && this.panel.state !== "hiding";
+  },
+
   /**
    * Empty the tooltip's content
    */
@@ -139,6 +228,15 @@ Tooltip.prototype = {
    */
   destroy: function () {
     this.hide();
+
+    for (let event of ["shown", "hidden", "showing", "hiding"]) {
+      this.panel.removeEventListener("popup" + event,
+        this["_onPopup" + event], false);
+    }
+
+    let win = this.doc.querySelector("window");
+    win.removeEventListener("keypress", this._onKeyPress, false);
+
     this.content = null;
 
     this.doc = null;
@@ -307,15 +405,6 @@ Tooltip.prototype = {
     let vbox = this.doc.createElement("vbox");
     vbox.setAttribute("align", "center")
 
-    // Transparency tiles (image will go in there)
-    let tiles = createTransparencyTiles(this.doc, vbox);
-
-    // Temporary label during image load
-    let label = this.doc.createElement("label");
-    label.classList.add("devtools-tooltip-caption");
-    label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
-    vbox.appendChild(label);
-
     // Display the image
     let image = this.doc.createElement("image");
     image.setAttribute("src", imageUrl);
@@ -323,7 +412,14 @@ Tooltip.prototype = {
       image.style.maxWidth = options.maxDim + "px";
       image.style.maxHeight = options.maxDim + "px";
     }
-    tiles.appendChild(image);
+    vbox.appendChild(image);
+
+    // Temporary label during image load
+    let label = this.doc.createElement("label");
+    label.classList.add("devtools-tooltip-caption");
+    label.classList.add("theme-comment");
+    label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
+    vbox.appendChild(label);
 
     this.content = vbox;
 
@@ -353,70 +449,248 @@ Tooltip.prototype = {
     }
   },
 
-  setCssGradientContent: function(cssGradient) {
-    let tiles = createTransparencyTiles(this.doc);
+  /**
+   * Fill the tooltip with a new instance of the spectrum color picker widget
+   * initialized with the given color, and return a promise that resolves to
+   * the instance of spectrum
+   */
+  setColorPickerContent: function(color) {
+    let def = promise.defer();
 
-    let gradientBox = this.doc.createElement("box");
-    gradientBox.width = "100";
-    gradientBox.height = "100";
-    gradientBox.style.background = this.cssGradient;
-    gradientBox.style.borderRadius = "2px";
-    gradientBox.style.boxShadow = "inset 0 0 4px #333";
+    // Create an iframe to contain spectrum
+    let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
+    iframe.setAttribute("transparent", true);
+    iframe.setAttribute("width", "210");
+    iframe.setAttribute("height", "195");
+    iframe.setAttribute("flex", "1");
+    iframe.setAttribute("class", "devtools-tooltip-iframe");
 
-    tiles.appendChild(gradientBox)
+    let panel = this.panel;
+    let xulWin = this.doc.ownerGlobal;
 
-    this.content = tiles;
-  },
+    // Wait for the load to initialize spectrum
+    function onLoad() {
+      iframe.removeEventListener("load", onLoad, true);
+      let win = iframe.contentWindow.wrappedJSObject;
 
-  _setSimpleCssPropertiesContent: function(properties, width, height) {
-    let tiles = createTransparencyTiles(this.doc);
+      let container = win.document.getElementById("spectrum");
+      let spectrum = new Spectrum(container, color);
 
-    let box = this.doc.createElement("box");
-    box.width = width + "";
-    box.height = height + "";
-    properties.forEach(({name, value}) => {
-      box.style[name] = value;
-    });
-    tiles.appendChild(box);
+      // Finalize spectrum's init when the tooltip becomes visible
+      panel.addEventListener("popupshown", function shown() {
+        panel.removeEventListener("popupshown", shown, true);
+        spectrum.show();
+        def.resolve(spectrum);
+      }, true);
+    }
+    iframe.addEventListener("load", onLoad, true);
+    iframe.setAttribute("src", SPECTRUM_FRAME);
 
-    this.content = tiles;
-  },
+    // Put the iframe in the tooltip
+    this.content = iframe;
 
-  setCssColorContent: function(cssColor) {
-    this._setSimpleCssPropertiesContent([
-      {name: "background", value: cssColor},
-      {name: "borderRadius", value: "2px"},
-      {name: "boxShadow", value: "inset 0 0 4px #333"},
-    ], 50, 50);
-  },
-
-  setCssBoxShadowContent: function(cssBoxShadow) {
-    this._setSimpleCssPropertiesContent([
-      {name: "background", value: "white"},
-      {name: "boxShadow", value: cssBoxShadow}
-    ], 80, 80);
-  },
-
-  setCssBorderContent: function(cssBorder) {
-    this._setSimpleCssPropertiesContent([
-      {name: "background", value: "white"},
-      {name: "border", value: cssBorder}
-    ], 80, 80);
+    return def.promise;
   }
 };
 
 /**
- * Internal utility function that creates a tiled background useful for
- * displaying semi-transparent images
+ * Base class for all (color, gradient, ...)-swatch based value editors inside
+ * tooltips
+ *
+ * @param {XULDocument} doc
  */
-function createTransparencyTiles(doc, parentEl) {
-  let tiles = doc.createElement("box");
-  tiles.classList.add("devtools-tooltip-tiles");
-  if (parentEl) {
-    parentEl.appendChild(tiles);
-  }
-  return tiles;
+function SwatchBasedEditorTooltip(doc) {
+  // Creating a tooltip instance
+  // This one will consume outside clicks as it makes more sense to let the user
+  // close the tooltip by clicking out
+  // It will also close on <escape> and <enter>
+  this.tooltip = new Tooltip(doc, {
+    consumeOutsideClick: true,
+    closeOnKeys: [ESCAPE_KEYCODE, ENTER_KEYCODE],
+    noAutoFocus: false
+  });
+
+  // By default, swatch-based editor tooltips revert value change on <esc> and
+  // commit value change on <enter>
+  this._onTooltipKeypress = (event, code) => {
+    if (code === ESCAPE_KEYCODE) {
+      this.revert();
+    } else if (code === ENTER_KEYCODE) {
+      this.commit();
+    }
+  };
+  this.tooltip.on("keypress", this._onTooltipKeypress);
+
+  // All target swatches are kept in a map, indexed by swatch DOM elements
+  this.swatches = new Map();
+
+  // When a swatch is clicked, and for as long as the tooltip is shown, the
+  // activeSwatch property will hold the reference to the swatch DOM element
+  // that was clicked
+  this.activeSwatch = null;
+
+  this._onSwatchClick = this._onSwatchClick.bind(this);
 }
+
+SwatchBasedEditorTooltip.prototype = {
+  show: function() {
+    if (this.activeSwatch) {
+      this.tooltip.show(this.activeSwatch, "topcenter bottomleft");
+    }
+  },
+
+  hide: function() {
+    this.tooltip.hide();
+  },
+
+  /**
+   * Add a new swatch DOM element to the list of swatch elements this editor
+   * tooltip knows about. That means from now on, clicking on that swatch will
+   * toggle the editor.
+   *
+   * @param {node} swatchEl
+   *        The element to add
+   * @param {object} callbacks
+   *        Callbacks that will be executed when the editor wants to preview a
+   *        value change, or revert a change, or commit a change.
+   * @param {object} originalValue
+   *        The original value before the editor in the tooltip makes changes
+   *        This can be of any type, and will be passed, as is, in the revert
+   *        callback
+   */
+  addSwatch: function(swatchEl, callbacks={}, originalValue) {
+    if (!callbacks.onPreview) callbacks.onPreview = function() {};
+    if (!callbacks.onRevert) callbacks.onRevert = function() {};
+    if (!callbacks.onCommit) callbacks.onCommit = function() {};
+
+    this.swatches.set(swatchEl, {
+      callbacks: callbacks,
+      originalValue: originalValue
+    });
+    swatchEl.addEventListener("click", this._onSwatchClick, false);
+  },
+
+  removeSwatch: function(swatchEl) {
+    if (this.swatches.has(swatchEl)) {
+      if (this.activeSwatch === swatchEl) {
+        this.hide();
+        this.activeSwatch = null;
+      }
+      swatchEl.removeEventListener("click", this._onSwatchClick, false);
+      this.swatches.delete(swatchEl);
+    }
+  },
+
+  _onSwatchClick: function(event) {
+    let swatch = this.swatches.get(event.target);
+    if (swatch) {
+      this.activeSwatch = event.target;
+      this.show();
+      event.stopPropagation();
+    }
+  },
+
+  /**
+   * Not called by this parent class, needs to be taken care of by sub-classes
+   */
+  preview: function(value) {
+    if (this.activeSwatch) {
+      let swatch = this.swatches.get(this.activeSwatch);
+      swatch.callbacks.onPreview(value);
+    }
+  },
+
+  /**
+   * This parent class only calls this on <esc> keypress
+   */
+  revert: function() {
+    if (this.activeSwatch) {
+      let swatch = this.swatches.get(this.activeSwatch);
+      swatch.callbacks.onRevert(swatch.originalValue);
+    }
+  },
+
+  /**
+   * This parent class only calls this on <enter> keypress
+   */
+  commit: function() {
+    if (this.activeSwatch) {
+      let swatch = this.swatches.get(this.activeSwatch);
+      swatch.callbacks.onCommit();
+    }
+  },
+
+  destroy: function() {
+    this.swatches.clear();
+    this.activeSwatch = null;
+    this.tooltip.off("keypress", this._onTooltipKeypress);
+    this.tooltip.destroy();
+  }
+};
+
+/**
+ * The swatch color picker tooltip class is a specific class meant to be used
+ * along with output-parser's generated color swatches.
+ * It extends the parent SwatchBasedEditorTooltip class.
+ * It just wraps a standard Tooltip and sets its content with an instance of a
+ * color picker.
+ *
+ * @param {XULDocument} doc
+ */
+function SwatchColorPickerTooltip(doc) {
+  SwatchBasedEditorTooltip.call(this, doc);
+
+  // Creating a spectrum instance. this.spectrum will always be a promise that
+  // resolves to the spectrum instance
+  this.spectrum = this.tooltip.setColorPickerContent([0, 0, 0, 1]);
+  this._onSpectrumColorChange = this._onSpectrumColorChange.bind(this);
+}
+
+module.exports.SwatchColorPickerTooltip = SwatchColorPickerTooltip;
+
+SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototype, {
+  /**
+   * Overriding the SwatchBasedEditorTooltip.show function to set spectrum's
+   * color.
+   */
+  show: function() {
+    // Call then parent class' show function
+    SwatchBasedEditorTooltip.prototype.show.call(this);
+    // Then set spectrum's color and listen to color changes to preview them
+    if (this.activeSwatch) {
+      let swatch = this.swatches.get(this.activeSwatch);
+      let color = this.activeSwatch.style.backgroundColor;
+      this.spectrum.then(spectrum => {
+        spectrum.off("changed", this._onSpectrumColorChange);
+        spectrum.rgb = this._colorToRgba(color);
+        spectrum.on("changed", this._onSpectrumColorChange);
+        spectrum.updateUI();
+      });
+    }
+  },
+
+  _onSpectrumColorChange: function(event, rgba, cssColor) {
+    if (this.activeSwatch) {
+      this.activeSwatch.style.backgroundColor = cssColor;
+      this.activeSwatch.nextSibling.textContent = cssColor;
+      this.preview(cssColor);
+    }
+  },
+
+  _colorToRgba: function(color) {
+    color = new colorUtils.CssColor(color);
+    let rgba = color._getRGBATuple();
+    return [rgba.r, rgba.g, rgba.b, rgba.a];
+  },
+
+  destroy: function() {
+    SwatchBasedEditorTooltip.prototype.destroy.call(this);
+    this.spectrum.then(spectrum => {
+      spectrum.off("changed", this._onSpectrumColorChange);
+      spectrum.destroy();
+    });
+  }
+});
 
 /**
  * Internal util, checks whether a css declaration is a gradient
