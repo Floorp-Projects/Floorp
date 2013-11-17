@@ -4,7 +4,7 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg">
   <title>Test that marker orientation is correct at the end of arcs when
-    orient="auto-start-reverse-start-reverse" is used</title>
+    orient="auto-start-reverse" is used</title>
   <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=769115 -->
 
   <marker id="m1" markerWidth="40" markerHeight="40" refX="20" refY="20"
