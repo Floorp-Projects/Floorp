@@ -375,7 +375,7 @@ struct CompartmentsInZoneIter
     {}
 
   public:
-    CompartmentsInZoneIter(JS::Zone *zone) {
+    explicit CompartmentsInZoneIter(JS::Zone *zone) {
         it = zone->compartments.begin();
         end = zone->compartments.end();
     }
@@ -410,7 +410,7 @@ class CompartmentsIterT
     mozilla::Maybe<CompartmentsInZoneIter> comp;
 
   public:
-    CompartmentsIterT(JSRuntime *rt)
+    explicit CompartmentsIterT(JSRuntime *rt)
       : zone(rt)
     {
         if (zone.done())
