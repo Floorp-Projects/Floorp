@@ -42,7 +42,7 @@ jit::SplitCriticalEdges(MIRGraph &graph)
             MBasicBlock *split = MBasicBlock::NewSplitEdge(graph, block->info(), *block);
             split->setLoopDepth(block->loopDepth());
             graph.insertBlockAfter(*block, split);
-            split->end(MGoto::New(target));
+            split->end(MGoto::New(graph.alloc(), target));
 
             block->replaceSuccessor(i, split);
             target->replacePredecessor(*block, split);
@@ -142,7 +142,7 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
                 // say, a dead property access the interpreter could throw an
                 // exception; we avoid this problem by removing dead operands
                 // before removing dead code.
-                MConstant *constant = MConstant::New(UndefinedValue());
+                MConstant *constant = MConstant::New(graph.alloc(), UndefinedValue());
                 block->insertBefore(*(block->begin()), constant);
                 uses = mrp->replaceOperand(uses, constant);
             }
@@ -389,6 +389,10 @@ class TypeAnalyzer
     MIRGraph &graph;
     Vector<MPhi *, 0, SystemAllocPolicy> phiWorklist_;
 
+    TempAllocator &alloc() const {
+        return graph.alloc();
+    }
+
     bool addPhiToWorklist(MPhi *phi) {
         if (phi->isInWorklist())
             return true;
@@ -585,35 +589,35 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 
                 if (phiType == MIRType_Double && IsFloatType(in->type())) {
                     // Convert int32 operands to double.
-                    replacement = MToDouble::New(in);
+                    replacement = MToDouble::New(alloc(), in);
                 } else if (phiType == MIRType_Float32) {
                     if (in->type() == MIRType_Int32 || in->type() == MIRType_Double) {
-                        replacement = MToFloat32::New(in);
+                        replacement = MToFloat32::New(alloc(), in);
                     } else {
                         // See comment below
                         if (in->type() != MIRType_Value) {
-                            MBox *box = MBox::New(in);
+                            MBox *box = MBox::New(alloc(), in);
                             in->block()->insertBefore(in->block()->lastIns(), box);
                             in = box;
                         }
 
-                        MUnbox *unbox = MUnbox::New(in, MIRType_Double, MUnbox::Fallible);
+                        MUnbox *unbox = MUnbox::New(alloc(), in, MIRType_Double, MUnbox::Fallible);
                         in->block()->insertBefore(in->block()->lastIns(), unbox);
-                        replacement = MToFloat32::New(in);
+                        replacement = MToFloat32::New(alloc(), in);
                     }
                 } else {
                     // If we know this branch will fail to convert to phiType,
                     // insert a box that'll immediately fail in the fallible unbox
                     // below.
                     if (in->type() != MIRType_Value) {
-                        MBox *box = MBox::New(in);
+                        MBox *box = MBox::New(alloc(), in);
                         in->block()->insertBefore(in->block()->lastIns(), box);
                         in = box;
                     }
 
                     // Be optimistic and insert unboxes when the operand is a
                     // value.
-                    replacement = MUnbox::New(in, phiType, MUnbox::Fallible);
+                    replacement = MUnbox::New(alloc(), in, phiType, MUnbox::Fallible);
                 }
 
                 in->block()->insertBefore(in->block()->lastIns(), replacement);
@@ -635,7 +639,7 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
             // the original box.
             phi->replaceOperand(i, in->toUnbox()->input());
         } else {
-            MDefinition *box = BoxInputsPolicy::alwaysBoxAt(in->block()->lastIns(), in);
+            MDefinition *box = BoxInputsPolicy::alwaysBoxAt(alloc(), in->block()->lastIns(), in);
             phi->replaceOperand(i, box);
         }
     }
@@ -645,7 +649,7 @@ bool
 TypeAnalyzer::adjustInputs(MDefinition *def)
 {
     TypePolicy *policy = def->typePolicy();
-    if (policy && !policy->adjustInputs(def->toInstruction()))
+    if (policy && !policy->adjustInputs(alloc(), def->toInstruction()))
         return false;
     return true;
 }
@@ -668,7 +672,7 @@ TypeAnalyzer::replaceRedundantPhi(MPhi *phi)
       default:
         MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
-    MConstant *c = MConstant::New(v);
+    MConstant *c = MConstant::New(alloc(), v);
     // The instruction pass will insert the box
     block->insertBefore(*(block->begin()), c);
     phi->replaceAllUsesWith(c);
@@ -864,7 +868,7 @@ TypeAnalyzer::specializeValidFloatOps()
 
             // This call will try to specialize the instruction iff all uses are consumers and
             // all inputs are producers.
-            ins->trySpecializeFloat32();
+            ins->trySpecializeFloat32(alloc());
         }
     }
     return true;

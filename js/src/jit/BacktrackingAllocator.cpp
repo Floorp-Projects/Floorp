@@ -26,7 +26,7 @@ BacktrackingAllocator::init()
         registers[reg.code()].allocatable = true;
     }
 
-    LifoAlloc *lifoAlloc = mir->temp().lifoAlloc();
+    LifoAlloc *lifoAlloc = mir->alloc().lifoAlloc();
     for (size_t i = 0; i < AnyRegister::Total; i++) {
         registers[i].reg = AnyRegister::FromCode(i);
         registers[i].allocations.setAllocator(lifoAlloc);
