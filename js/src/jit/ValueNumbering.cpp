@@ -23,7 +23,7 @@ ValueNumberer::ValueNumberer(MIRGenerator *mir, MIRGraph &graph, bool optimistic
 TempAllocator &
 ValueNumberer::alloc() const
 {
-    return mir->temp();
+    return graph_.alloc();
 }
 
 uint32_t
@@ -50,7 +50,7 @@ ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
     if (def->isEffectful())
         return def;
 
-    MDefinition *ins = def->foldsTo(useValueNumbers);
+    MDefinition *ins = def->foldsTo(alloc(), useValueNumbers);
 
     if (ins == def || !ins->updateForFolding(def))
         return def;
@@ -83,7 +83,7 @@ ValueNumberer::simplifyControlInstruction(MControlInstruction *def)
     if (def->isEffectful())
         return def;
 
-    MDefinition *repl = def->foldsTo(false);
+    MDefinition *repl = def->foldsTo(alloc(), false);
     if (repl == def || !repl->updateForFolding(def))
         return def;
 
