@@ -1935,6 +1935,7 @@ NS_GetNavigatorAppName(nsAString& aAppName)
 
     if (override) {
       aAppName = override;
+      return;
     }
   }
 
