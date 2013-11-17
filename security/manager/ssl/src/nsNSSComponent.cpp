@@ -831,6 +831,8 @@ typedef struct {
   bool enabledByDefault;
 } CipherPref;
 
+// Update the switch statement in HandshakeCallback in nsNSSCallbacks.cpp when
+// you add/remove cipher suites here.
 static const CipherPref sCipherPrefs[] = {
  { "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256",
    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, true },
