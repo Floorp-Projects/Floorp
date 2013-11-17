@@ -104,7 +104,7 @@ function shuffle() {
   form2.insertBefore(inputD, form2.firstChild)
 
   // Clone an existing input
-  var inputE2 = framedoc.getElementById("e").cloneNode();
+  var inputE2 = framedoc.getElementById("e").cloneNode(true);
   inputE2.setAttribute("id","e2");
   testdiv.appendChild(inputE2);
 }
