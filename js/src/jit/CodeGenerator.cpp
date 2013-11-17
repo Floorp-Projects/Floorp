@@ -499,11 +499,11 @@ CodeGenerator::testObjectEmulatesUndefined(Register objreg,
 }
 
 void
-CodeGenerator::testValueTruthy(const ValueOperand &value,
-                               const LDefinition *scratch1, const LDefinition *scratch2,
-                               FloatRegister fr,
-                               Label *ifTruthy, Label *ifFalsy,
-                               OutOfLineTestObject *ool)
+CodeGenerator::testValueTruthyKernel(const ValueOperand &value,
+                                     const LDefinition *scratch1, const LDefinition *scratch2,
+                                     FloatRegister fr,
+                                     Label *ifTruthy, Label *ifFalsy,
+                                     OutOfLineTestObject *ool)
 {
     Register tag = masm.splitTagForTest(value);
     Assembler::Condition cond;
@@ -553,6 +553,18 @@ CodeGenerator::testValueTruthy(const ValueOperand &value,
     masm.unboxDouble(value, fr);
     cond = masm.testDoubleTruthy(false, fr);
     masm.j(cond, ifFalsy);
+
+    // Fall through for truthy.
+}
+
+void
+CodeGenerator::testValueTruthy(const ValueOperand &value,
+                               const LDefinition *scratch1, const LDefinition *scratch2,
+                               FloatRegister fr,
+                               Label *ifTruthy, Label *ifFalsy,
+                               OutOfLineTestObject *ool)
+{
+    testValueTruthyKernel(value, scratch1, scratch2, fr, ifTruthy, ifFalsy, ool);
     masm.jump(ifTruthy);
 }
 
@@ -4771,19 +4783,21 @@ CodeGenerator::visitNotV(LNotV *lir)
         ifFalsy = ifFalsyLabel.addr();
     }
 
-    testValueTruthy(ToValue(lir, LNotV::Input), lir->temp1(), lir->temp2(),
-                    ToFloatRegister(lir->tempFloat()),
-                    ifTruthy, ifFalsy, ool);
+    testValueTruthyKernel(ToValue(lir, LNotV::Input), lir->temp1(), lir->temp2(),
+                          ToFloatRegister(lir->tempFloat()),
+                          ifTruthy, ifFalsy, ool);
 
     Label join;
     Register output = ToRegister(lir->output());
 
-    masm.bind(ifFalsy);
-    masm.move32(Imm32(1), output);
-    masm.jump(&join);
-
+    // Note that the testValueTruthyKernel call above may choose to fall through
+    // to ifTruthy instead of branching there.
     masm.bind(ifTruthy);
     masm.move32(Imm32(0), output);
+    masm.jump(&join);
+
+    masm.bind(ifFalsy);
+    masm.move32(Imm32(1), output);
 
     // both branches meet here.
     masm.bind(&join);
