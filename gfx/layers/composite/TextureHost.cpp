@@ -162,8 +162,6 @@ TextureHost::~TextureHost()
 {
 }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
-
 void
 TextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
@@ -173,8 +171,6 @@ TextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
   AppendToString(aTo, GetFormat(), " [format=", "]");
   AppendToString(aTo, mFlags, " [flags=", "]");
 }
-
-#endif
 
 void
 TextureSource::SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
@@ -246,8 +242,6 @@ DeprecatedTextureHost::SwapTextures(const SurfaceDescriptor& aImage,
   SetBuffer(mBuffer, mDeAllocator);
 }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
-
 void
 DeprecatedTextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
@@ -257,7 +251,6 @@ DeprecatedTextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
   AppendToString(aTo, GetFormat(), " [format=", "]");
   AppendToString(aTo, mFlags, " [flags=", "]");
 }
-#endif // MOZ_LAYERS_HAVE_LOG
 
 
 

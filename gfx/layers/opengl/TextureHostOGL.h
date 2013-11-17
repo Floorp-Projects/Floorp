@@ -22,7 +22,6 @@
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_HAVE_LOG
 #include "mozilla/layers/TextureHost.h"  // for DeprecatedTextureHost, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -338,9 +337,7 @@ public:
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "SharedTextureHostOGL"; }
-#endif
 
 protected:
   gfx::IntSize mSize;
@@ -442,9 +439,7 @@ public:
                         mSurface->GetDevicePixelHeight());
   }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "MacIOSurfaceTextureHostOGL"; }
-#endif
 
 protected:
   CompositorOGL* mCompositor;
@@ -574,9 +569,7 @@ public:
     return DeprecatedTextureHost::GetFormat();
   }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "TextureImageDeprecatedTextureHostOGL"; }
-#endif
 
 protected:
   nsRefPtr<gl::TextureImage> mTexture;
@@ -686,9 +679,7 @@ public:
 
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "YCbCrDeprecatedTextureHostOGL"; }
-#endif
 
 private:
   RefPtr<Channel> mYTexture;
@@ -778,9 +769,7 @@ public:
 
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "SharedDeprecatedTextureHostOGL"; }
-#endif
 
 protected:
   void DeleteTextures();
@@ -859,9 +848,7 @@ public:
 
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "SurfaceStreamHostOGL"; }
-#endif
 
   SurfaceStreamHostOGL()
     : mGL(nullptr)
@@ -923,9 +910,7 @@ public:
 
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "TiledDeprecatedTextureHostOGL"; }
-#endif
 
 protected:
   void DeleteTextures();
@@ -993,9 +978,7 @@ public:
 
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() { return "GrallocDeprecatedTextureHostOGL"; }
-#endif
 
   void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
   void UnbindTexture() MOZ_OVERRIDE {}

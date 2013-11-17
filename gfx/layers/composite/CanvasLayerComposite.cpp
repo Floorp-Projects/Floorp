@@ -120,7 +120,6 @@ CanvasLayerComposite::CleanupResources()
   mImageHost = nullptr;
 }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
 nsACString&
 CanvasLayerComposite::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
@@ -133,5 +132,4 @@ CanvasLayerComposite::PrintInfo(nsACString& aTo, const char* aPrefix)
   }
   return aTo;
 }
-#endif
 

@@ -54,12 +54,10 @@ public:
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "ImageLayerComposite"; }
 
 protected:
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix) MOZ_OVERRIDE;
-#endif
 
 private:
   RefPtr<CompositableHost> mImageHost;

@@ -42,13 +42,11 @@ const ViewID FrameMetrics::START_SCROLL_ID = 2;
 
 uint8_t gLayerManagerLayerBuilder;
 
-#ifdef MOZ_LAYERS_HAVE_LOG
 FILE*
 FILEOrDefault(FILE* aFile)
 {
   return aFile ? aFile : stderr;
 }
-#endif // MOZ_LAYERS_HAVE_LOG
 
 namespace mozilla {
 namespace layers {
@@ -1131,8 +1129,6 @@ LayerManager::BeginTabSwitch()
   mTabSwitchStart = TimeStamp::Now();
 }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
-
 static nsACString& PrintInfo(nsACString& aTo, LayerComposite* aLayerComposite);
 
 #ifdef MOZ_DUMP_PAINTING
@@ -1509,58 +1505,6 @@ PrintInfo(nsACString& aTo, LayerComposite* aLayerComposite)
   }
   return aTo;
 }
-
-#else  // !MOZ_LAYERS_HAVE_LOG
-
-void Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml) {}
-void Layer::DumpSelf(FILE* aFile, const char* aPrefix) {}
-void Layer::Log(const char* aPrefix) {}
-void Layer::LogSelf(const char* aPrefix) {}
-nsACString&
-Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
-{ return aTo; }
-
-nsACString&
-ThebesLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
-{ return aTo; }
-
-nsACString&
-ContainerLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
-{ return aTo; }
-
-nsACString&
-ColorLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
-{ return aTo; }
-
-nsACString&
-CanvasLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
-{ return aTo; }
-
-nsACString&
-ImageLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
-{ return aTo; }
-
-nsACString&
-RefLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
-{ return aTo; }
-
-nsACString&
-ReadbackLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
-{ return aTo; }
-
-void LayerManager::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml) {}
-void LayerManager::DumpSelf(FILE* aFile, const char* aPrefix) {}
-void LayerManager::Log(const char* aPrefix) {}
-void LayerManager::LogSelf(const char* aPrefix) {}
-
-nsACString&
-LayerManager::PrintInfo(nsACString& aTo, const char* aPrefix)
-{ return aTo; }
-
-/*static*/ void LayerManager::InitLog() {}
-/*static*/ bool LayerManager::IsLogEnabled() { return false; }
-
-#endif // MOZ_LAYERS_HAVE_LOG
 
 PRLogModuleInfo* LayerManager::sLog;
 

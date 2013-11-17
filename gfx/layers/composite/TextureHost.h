@@ -384,10 +384,8 @@ public:
 
   virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData);
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char *Name() { return "TextureHost"; }
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
-#endif
 
 protected:
   uint64_t mID;
@@ -480,9 +478,7 @@ public:
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char *Name() MOZ_OVERRIDE { return "ShmemTextureHost"; }
-#endif
 
 protected:
   mozilla::ipc::Shmem* mShmem;
@@ -509,9 +505,7 @@ public:
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char *Name() MOZ_OVERRIDE { return "MemoryTextureHost"; }
-#endif
 
 protected:
   uint8_t* mBuffer;
@@ -664,10 +658,8 @@ public:
 
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() = 0;
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char *Name() = 0;
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
-#endif
 
   /**
    * TEMPORARY.

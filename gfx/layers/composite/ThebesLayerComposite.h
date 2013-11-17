@@ -79,9 +79,7 @@ public:
 
 protected:
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix) MOZ_OVERRIDE;
-#endif
 
 private:
   gfxSize GetEffectiveResolution();
