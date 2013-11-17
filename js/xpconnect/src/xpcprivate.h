@@ -178,10 +178,6 @@
 
 // Note that one would not normally turn *any* of these on in a non-DEBUG build.
 
-#if defined(DEBUG_jst) || defined(DEBUG_timeless)
-#define DEBUG_xpc_hacker
-#endif
-
 #if defined(DEBUG_xpc_hacker)
 #define XPC_DUMP_AT_SHUTDOWN
 #define XPC_TRACK_WRAPPER_STATS
@@ -193,12 +189,6 @@
 #if defined(DEBUG_jst)
 #define XPC_ASSERT_CLASSINFO_CLAIMS
 #endif
-//#define XPC_REPORT_NATIVE_INTERFACE_AND_SET_FLUSHING
-//#define XPC_REPORT_JSCLASS_FLUSHING
-#endif
-
-#if defined(DEBUG_dbaron) || defined(DEBUG_bzbarsky) // only part of DEBUG_xpc_hacker!
-#define XPC_DUMP_AT_SHUTDOWN
 #endif
 
 /***************************************************************************/
