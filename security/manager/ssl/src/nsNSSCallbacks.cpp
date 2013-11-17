@@ -900,6 +900,55 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     return SECSuccess;
   }
 
+  uint32_t csBucket;
+  switch (channelInfo.cipherSuite) {
+    // ECDHE key exchange
+    case TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256: csBucket = 1; break;
+    case TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256: csBucket = 2; break;
+    case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA: csBucket = 3; break;
+    case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA: csBucket = 4; break;
+    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA: csBucket = 5; break;
+    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA: csBucket = 6; break;
+    case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA: csBucket = 7; break;
+    case TLS_ECDHE_RSA_WITH_RC4_128_SHA: csBucket = 8; break;
+    case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA: csBucket = 9; break;
+    // DHE key exchange
+    case TLS_DHE_RSA_WITH_AES_128_CBC_SHA: csBucket = 21; break;
+    case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA: csBucket = 22; break;
+    case TLS_DHE_RSA_WITH_AES_256_CBC_SHA: csBucket = 23; break;
+    case TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA: csBucket = 24; break;
+    case SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA: csBucket = 25; break;
+    case TLS_DHE_DSS_WITH_AES_128_CBC_SHA: csBucket = 26; break;
+    case TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA: csBucket = 27; break;
+    case TLS_DHE_DSS_WITH_AES_256_CBC_SHA: csBucket = 28; break;
+    case TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA: csBucket = 29; break;
+    // ECDH key exchange
+    case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA: csBucket = 41; break;
+    case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA: csBucket = 42; break;
+    case TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA: csBucket = 43; break;
+    case TLS_ECDH_RSA_WITH_AES_256_CBC_SHA: csBucket = 44; break;
+    case TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA: csBucket = 45; break;
+    case TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA: csBucket = 46; break;
+    case TLS_ECDH_ECDSA_WITH_RC4_128_SHA: csBucket = 47; break;
+    case TLS_ECDH_RSA_WITH_RC4_128_SHA: csBucket = 48; break;
+    // RSA key exchange
+    case TLS_RSA_WITH_AES_128_CBC_SHA: csBucket = 61; break;
+    case TLS_RSA_WITH_CAMELLIA_128_CBC_SHA: csBucket = 62; break;
+    case TLS_RSA_WITH_AES_256_CBC_SHA: csBucket = 63; break;
+    case TLS_RSA_WITH_CAMELLIA_256_CBC_SHA: csBucket = 64; break;
+    case SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA: csBucket = 65; break;
+    case SSL_RSA_WITH_3DES_EDE_CBC_SHA: csBucket = 66; break;
+    case TLS_RSA_WITH_SEED_CBC_SHA: csBucket = 67; break;
+    case SSL_RSA_WITH_RC4_128_SHA: csBucket = 68; break;
+    case SSL_RSA_WITH_RC4_128_MD5: csBucket = 69; break;
+    // unknown
+    default:
+      MOZ_CRASH("impossible cipher suite");
+      csBucket = 0;
+      break;
+  }
+  Telemetry::Accumulate(Telemetry::SSL_CIPHER_SUITE, csBucket);
+
   SSLCipherSuiteInfo cipherInfo;
   if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
                              sizeof (cipherInfo)) != SECSuccess) {
@@ -1019,6 +1068,39 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   *canFalseStart = true;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] ok\n", fd));
   return SECSuccess;
+}
+
+static void
+AccumulateNonECCKeySize(Telemetry::ID probe, uint32_t bits)
+{
+  unsigned int value = bits <   512 ?  1 : bits ==   512 ?  2
+                     : bits <   768 ?  3 : bits ==   768 ?  4
+                     : bits <  1024 ?  5 : bits ==  1024 ?  6
+                     : bits <  1024 ?  7 : bits ==  1024 ?  8
+                     : bits <  1536 ?  9 : bits ==  1536 ? 10
+                     : bits <  2048 ? 11 : bits ==  2048 ? 12
+                     : bits <  3072 ? 13 : bits ==  3072 ? 14
+                     : bits <  4096 ? 15 : bits ==  4096 ? 16
+                     : bits <  8192 ? 17 : bits ==  8192 ? 18
+                     : bits < 16384 ? 19 : bits == 16384 ? 20
+                     : 0;
+  Telemetry::Accumulate(probe, value);
+}
+
+// XXX: This attempts to map a bit count to an ECC named curve identifier. In
+// the vast majority of situations, we only have the Suite B curves available.
+// In that case, this mapping works fine. If we were to have more curves
+// available, the mapping would be ambiguous since there could be multiple
+// named curves for a given size (e.g. secp256k1 vs. secp256r1). We punt on
+// that for now. See also NSS bug 323674.
+static void
+AccummulateECCCurve(Telemetry::ID probe, uint32_t bits)
+{
+  unsigned int value = bits == 256 ? 23 // P-256
+                     : bits == 384 ? 24 // P-384
+                     : bits == 521 ? 25 // P-521
+                     : 0; // Unknown
+  Telemetry::Accumulate(probe, value);
 }
 
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
@@ -1149,6 +1231,50 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
       Telemetry::Accumulate(Telemetry::SSL_KEY_EXCHANGE_ALGORITHM,
                             cipherInfo.keaType);
       infoObject->SetKEAUsed(cipherInfo.keaType);
+
+      switch (cipherInfo.keaType) {
+        case ssl_kea_rsa:
+          AccumulateNonECCKeySize(Telemetry::SSL_KEA_RSA_KEY_SIZE,
+                                  channelInfo.keaKeyBits);
+          break;
+        case ssl_kea_dh:
+          AccumulateNonECCKeySize(Telemetry::SSL_KEA_DHE_KEY_SIZE,
+                                  channelInfo.keaKeyBits);
+          break;
+        case ssl_kea_ecdh:
+          AccummulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE,
+                              channelInfo.keaKeyBits);
+          break;
+        default:
+          MOZ_CRASH("impossible KEA");
+          break;
+      }
+
+      Telemetry::Accumulate(Telemetry::SSL_AUTH_ALGORITHM, cipherInfo.authAlgorithm);
+      // RSA key exchange doesn't use a signature for auth.
+      if (cipherInfo.keaType != ssl_kea_rsa) {
+        switch (cipherInfo.authAlgorithm) {
+          case ssl_auth_rsa:
+            AccumulateNonECCKeySize(Telemetry::SSL_AUTH_RSA_KEY_SIZE,
+                                    channelInfo.authKeyBits);
+            break;
+          case ssl_auth_dsa:
+            AccumulateNonECCKeySize(Telemetry::SSL_AUTH_DSA_KEY_SIZE,
+                                    channelInfo.authKeyBits);
+            break;
+          case ssl_auth_ecdsa:
+            AccummulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE,
+                                channelInfo.authKeyBits);
+            break;
+          default:
+            MOZ_CRASH("impossible auth algorithm");
+            break;
+        }
+      }
+
+      Telemetry::Accumulate(Telemetry::SSL_SYMMETRIC_CIPHER,
+                            cipherInfo.symCipher);
+
       infoObject->SetSymmetricCipherUsed(cipherInfo.symCipher);
     }
   }
