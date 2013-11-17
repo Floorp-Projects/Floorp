@@ -1536,16 +1536,16 @@ TraceMallocEnable(JSContext *cx, unsigned argc, JS::Value *vp)
 static bool
 TraceMallocOpenLogFile(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    int fd;
+    JSString *str;
 
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return false;
 
-    int fd;
     if (argc == 0) {
         fd = -1;
     } else {
-        JSString *str = JS::ToString(cx, args[0]);
+        str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
         if (!str)
             return false;
         JSAutoByteString filename(cx, str);
@@ -1557,7 +1557,7 @@ TraceMallocOpenLogFile(JSContext *cx, unsigned argc, JS::Value *vp)
             return false;
         }
     }
-    args.rva().setInt32(fd);
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(fd));
     return true;
 }
 
@@ -1608,29 +1608,27 @@ TraceMallocCloseLogFD(JSContext *cx, unsigned argc, JS::Value *vp)
 static bool
 TraceMallocLogTimestamp(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return false;
 
-    JSString *str = JS::ToString(cx, args.get(0));
+    JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     if (!str)
         return false;
     JSAutoByteString caption(cx, str);
     if (!caption)
         return false;
     NS_TraceMallocLogTimestamp(caption.ptr());
-    args.rval().setUndefined();
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
 static bool
 TraceMallocDumpAllocations(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return false;
 
-    JSString *str = JS::ToString(cx, args.get(0));
+    JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
     if (!str)
         return false;
     JSAutoByteString pathname(cx, str);
@@ -1640,7 +1638,7 @@ TraceMallocDumpAllocations(JSContext *cx, unsigned argc, JS::Value *vp)
         JS_ReportError(cx, "can't dump to %s: %s", pathname.ptr(), strerror(errno));
         return false;
     }
-    args.rval().setUndefined();
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
@@ -1670,8 +1668,7 @@ namespace dmd {
 static bool
 ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JSString *str = JS::ToString(cx, args.get(0));
+  JSString *str = JS_ValueToString(cx, argc ? JS_ARGV(cx, vp)[0] : JSVAL_VOID);
   if (!str)
     return false;
   JSAutoByteString pathname(cx, str);
@@ -1693,7 +1690,7 @@ ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
 
   fclose(fp);
 
-  args.rval().setUndefined();
+  JS_SET_RVAL(cx, vp, JSVAL_VOID);
   return true;
 }
 

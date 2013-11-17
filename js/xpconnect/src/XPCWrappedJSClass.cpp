@@ -326,6 +326,9 @@ nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
 {
     JSContext* cx = ccx.GetJSContext();
     RootedObject aJSObj(cx, aJSObjArg);
+    bool ok;
+    RootedId id(cx);
+    nsresult rv = NS_ERROR_FAILURE;
 
     AutoScriptEvaluate scriptEval(cx);
     if (!scriptEval.StartEvaluating(aJSObj))
@@ -334,21 +337,16 @@ nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
     // Wrap the string in a jsval after the AutoScriptEvaluate, so that the
     // resulting value ends up in the correct compartment.
     nsStringBuffer* buf;
-    RootedValue value(cx);
-    if (!XPCStringConvert::ReadableToJSVal(ccx, aName, &buf, &value))
+    jsval jsstr = XPCStringConvert::ReadableToJSVal(ccx, aName, &buf);
+    if (JSVAL_IS_NULL(jsstr))
         return NS_ERROR_OUT_OF_MEMORY;
     if (buf)
         buf->AddRef();
 
-    RootedId id(cx);
-    nsresult rv = NS_OK;
-    if (!JS_ValueToId(cx, value, id.address()) ||
-        !GetNamedPropertyAsVariantRaw(ccx, aJSObj, id, aResult, &rv)) {
-        if (NS_FAILED(rv))
-            return rv;
-        return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
+    ok = JS_ValueToId(cx, jsstr, id.address()) &&
+        GetNamedPropertyAsVariantRaw(ccx, aJSObj, id, aResult, &rv);
+
+    return ok ? NS_OK : NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
 }
 
 /***************************************************************************/
@@ -388,7 +386,7 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
         if (!JS_IdToValue(cx, idName, jsvalName.address()))
             return NS_ERROR_FAILURE;
 
-        JSString* name = ToString(cx, jsvalName);
+        JSString* name = JS_ValueToString(cx, jsvalName);
         if (!name)
             return NS_ERROR_FAILURE;
 
