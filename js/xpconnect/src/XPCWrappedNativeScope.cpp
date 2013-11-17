@@ -570,18 +570,6 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
 
     // Now it is safe to kill all the scopes.
     KillDyingScopes();
-
-#ifdef XPC_DUMP_AT_SHUTDOWN
-    if (data.wrapperCount)
-        printf("deleting nsXPConnect  with %d live XPCWrappedNatives\n",
-               data.wrapperCount);
-    if (data.protoCount)
-        printf("deleting nsXPConnect  with %d live XPCWrappedNativeProtos\n",
-               data.protoCount);
-    if (liveScopeCount)
-        printf("deleting nsXPConnect  with %d live XPCWrappedNativeScopes\n",
-               liveScopeCount);
-#endif
 }
 
 

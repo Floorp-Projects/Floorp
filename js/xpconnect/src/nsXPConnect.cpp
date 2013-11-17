@@ -180,19 +180,8 @@ nsXPConnect::ReleaseXPConnectSingleton()
             }
         }
 #endif
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        // NOTE: to see really interesting stuff turn on the prlog stuff.
-        // See the comment at the top of XPCLog.h to see how to do that.
-        xpc->DebugDump(7);
-#endif
         nsrefcnt cnt;
         NS_RELEASE2(xpc, cnt);
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        if (0 != cnt)
-            printf("*** dangling reference to nsXPConnect: refcnt=%d\n", cnt);
-        else
-            printf("+++ XPConnect had no dangling references.\n");
-#endif
     }
 }
 

@@ -1516,18 +1516,6 @@ XPCJSRuntime::~XPCJSRuntime()
     if (mCallContext)
         mCallContext->SystemIsBeingShutDown();
 
-#ifdef XPC_DUMP_AT_SHUTDOWN
-    {
-    // count the total JSContexts in use
-    JSContext* iter = nullptr;
-    int count = 0;
-    while (JS_ContextIterator(Runtime(), &iter))
-        count ++;
-    if (count)
-        printf("deleting XPCJSRuntime with %d live JSContexts\n", count);
-    }
-#endif
-
     auto rtPrivate = static_cast<PerThreadAtomCache*>(JS_GetRuntimePrivate(Runtime()));
     delete rtPrivate;
     JS_SetRuntimePrivate(Runtime(), nullptr);
@@ -1540,89 +1528,36 @@ XPCJSRuntime::~XPCJSRuntime()
 
     // clean up and destroy maps...
     if (mWrappedJSMap) {
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32_t count = mWrappedJSMap->Count();
-        if (count)
-            printf("deleting XPCJSRuntime with %d live wrapped JSObject\n", (int)count);
-#endif
         mWrappedJSMap->ShutdownMarker();
         delete mWrappedJSMap;
     }
 
-    if (mWrappedJSClassMap) {
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32_t count = mWrappedJSClassMap->Count();
-        if (count)
-            printf("deleting XPCJSRuntime with %d live nsXPCWrappedJSClass\n", (int)count);
-#endif
+    if (mWrappedJSClassMap)
         delete mWrappedJSClassMap;
-    }
 
-    if (mIID2NativeInterfaceMap) {
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32_t count = mIID2NativeInterfaceMap->Count();
-        if (count)
-            printf("deleting XPCJSRuntime with %d live XPCNativeInterfaces\n", (int)count);
-#endif
+    if (mIID2NativeInterfaceMap)
         delete mIID2NativeInterfaceMap;
-    }
 
-    if (mClassInfo2NativeSetMap) {
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32_t count = mClassInfo2NativeSetMap->Count();
-        if (count)
-            printf("deleting XPCJSRuntime with %d live XPCNativeSets\n", (int)count);
-#endif
+    if (mClassInfo2NativeSetMap)
         delete mClassInfo2NativeSetMap;
-    }
 
-    if (mNativeSetMap) {
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32_t count = mNativeSetMap->Count();
-        if (count)
-            printf("deleting XPCJSRuntime with %d live XPCNativeSets\n", (int)count);
-#endif
+    if (mNativeSetMap)
         delete mNativeSetMap;
-    }
 
     if (mMapLock)
         XPCAutoLock::DestroyLock(mMapLock);
 
-    if (mThisTranslatorMap) {
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32_t count = mThisTranslatorMap->Count();
-        if (count)
-            printf("deleting XPCJSRuntime with %d live ThisTranslator\n", (int)count);
-#endif
+    if (mThisTranslatorMap)
         delete mThisTranslatorMap;
-    }
 
-    if (mNativeScriptableSharedMap) {
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32_t count = mNativeScriptableSharedMap->Count();
-        if (count)
-            printf("deleting XPCJSRuntime with %d live XPCNativeScriptableShared\n", (int)count);
-#endif
+    if (mNativeScriptableSharedMap)
         delete mNativeScriptableSharedMap;
-    }
 
-    if (mDyingWrappedNativeProtoMap) {
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32_t count = mDyingWrappedNativeProtoMap->Count();
-        if (count)
-            printf("deleting XPCJSRuntime with %d live but dying XPCWrappedNativeProto\n", (int)count);
-#endif
+    if (mDyingWrappedNativeProtoMap)
         delete mDyingWrappedNativeProtoMap;
-    }
 
-    if (mDetachedWrappedNativeProtoMap) {
-#ifdef XPC_DUMP_AT_SHUTDOWN
-        uint32_t count = mDetachedWrappedNativeProtoMap->Count();
-        if (count)
-            printf("deleting XPCJSRuntime with %d live detached XPCWrappedNativeProto\n", (int)count);
-#endif
+    if (mDetachedWrappedNativeProtoMap)
         delete mDetachedWrappedNativeProtoMap;
-    }
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the runtime is gone
