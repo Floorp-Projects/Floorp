@@ -9,14 +9,17 @@
 
 [NoInterfaceObject]
 interface ChildNode {
-  [Pure]
-  readonly attribute Element? previousElementSibling;
-  [Pure]
-  readonly attribute Element? nextElementSibling;
-
 // Not implemented yet:
 //  void before((Node or DOMString)... nodes);
 //  void after((Node or DOMString)... nodes);
 //  void replace((Node or DOMString)... nodes);
   void remove();
+};
+
+[NoInterfaceObject]
+interface NonDocumentTypeChildNode {
+  [Pure]
+  readonly attribute Element? previousElementSibling;
+  [Pure]
+  readonly attribute Element? nextElementSibling;
 };
