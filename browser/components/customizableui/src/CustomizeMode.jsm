@@ -109,7 +109,8 @@ CustomizeMode.prototype = {
 
       // Disable lightweight themes while in customization mode since
       // they don't have large enough images to pad the full browser window.
-      this.document.documentElement._lightweightTheme.disable();
+      if (this.document.documentElement._lightweightTheme)
+        this.document.documentElement._lightweightTheme.disable();
 
       this.dispatchToolboxEvent("beforecustomization");
 
@@ -274,7 +275,8 @@ CustomizeMode.prototype = {
         }
       }
 
-      this.document.documentElement._lightweightTheme.enable();
+      if (this.document.documentElement._lightweightTheme)
+        this.document.documentElement._lightweightTheme.enable();
 
       let customizableToolbars = document.querySelectorAll("toolbar[customizable=true]:not([autohide=true])");
       for (let toolbar of customizableToolbars)
