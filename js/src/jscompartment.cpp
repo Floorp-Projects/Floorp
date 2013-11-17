@@ -123,6 +123,10 @@ JSCompartment::init(JSContext *cx)
 jit::JitRuntime *
 JSRuntime::createJitRuntime(JSContext *cx)
 {
+    // The shared stubs are created in the atoms compartment, which may be
+    // accessed by other threads with an exclusive context.
+    AutoLockForExclusiveAccess atomsLock(cx);
+
     // The runtime will only be created on its owning thread, but reads of a
     // runtime's jitRuntime() can occur when another thread is triggering an
     // operation callback.
@@ -138,8 +142,6 @@ JSRuntime::createJitRuntime(JSContext *cx)
     if (!jitRuntime_->initialize(cx)) {
         js_delete(jitRuntime_);
         jitRuntime_ = nullptr;
-
-        AutoLockForExclusiveAccess atomsLock(cx);
 
         JSCompartment *comp = cx->runtime()->atomsCompartment();
         if (comp->jitCompartment_) {

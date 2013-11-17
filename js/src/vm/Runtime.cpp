@@ -66,7 +66,6 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
     asmJSActivationStack_(nullptr),
     dtoaState(nullptr),
     suppressGC(0),
-    gcKeepAtoms(0),
     activeCompilations(0)
 {}
 
@@ -126,7 +125,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     exclusiveAccessLock(nullptr),
     exclusiveAccessOwner(nullptr),
     mainThreadHasExclusiveAccess(false),
-    exclusiveThreadsPaused(false),
     numExclusiveThreads(0),
 #endif
     systemZone(nullptr),
@@ -249,6 +247,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     haveCreatedContext(false),
     data(nullptr),
     gcLock(nullptr),
+    gcLockOwner(nullptr),
     gcHelperThread(thisFromCtor()),
     signalHandlersInstalled_(false),
     defaultFreeOp_(thisFromCtor(), false),
@@ -265,6 +264,8 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     numGrouping(0),
 #endif
     mathCache_(nullptr),
+    activeCompilations_(0),
+    keepAtoms_(0),
     trustedPrincipals_(nullptr),
     atomsCompartment_(nullptr),
     beingDestroyed_(false),
@@ -332,6 +333,10 @@ JSRuntime::init(uint32_t maxbytes)
 
     operationCallbackLock = PR_NewLock();
     if (!operationCallbackLock)
+        return false;
+
+    gcLock = PR_NewLock();
+    if (!gcLock)
         return false;
 #endif
 
@@ -414,7 +419,7 @@ JSRuntime::~JSRuntime()
 
 #ifdef JS_WORKER_THREADS
     if (workerThreadState)
-        workerThreadState->cleanup(this);
+        workerThreadState->cleanup();
 #endif
 
     /* Poison common names before final GC. */
@@ -457,10 +462,9 @@ JSRuntime::~JSRuntime()
     if (exclusiveAccessLock)
         PR_DestroyLock(exclusiveAccessLock);
 
-    JS_ASSERT(!numExclusiveThreads);
-
     // Avoid bogus asserts during teardown.
-    exclusiveThreadsPaused = true;
+    JS_ASSERT(!numExclusiveThreads);
+    mainThreadHasExclusiveAccess = true;
 #endif
 
 #ifdef JS_THREADSAFE
@@ -835,3 +839,30 @@ js::CurrentThreadCanAccessZone(Zone *zone)
 }
 
 #endif
+
+#ifdef DEBUG
+
+void
+JSRuntime::assertCanLock(RuntimeLock which)
+{
+#ifdef JS_THREADSAFE
+    // In the switch below, each case falls through to the one below it. None
+    // of the runtime locks are reentrant, and when multiple locks are acquired
+    // it must be done in the order below.
+    switch (which) {
+      case ExclusiveAccessLock:
+        JS_ASSERT(exclusiveAccessOwner != PR_GetCurrentThread());
+      case WorkerThreadStateLock:
+        JS_ASSERT_IF(workerThreadState, !workerThreadState->isLocked());
+      case OperationCallbackLock:
+        JS_ASSERT(!currentThreadOwnsOperationCallbackLock());
+      case GCLock:
+        JS_ASSERT(gcLockOwner != PR_GetCurrentThread());
+        break;
+      default:
+        MOZ_CRASH();
+    }
+#endif // JS_THREADSAFE
+}
+
+#endif // DEBUG

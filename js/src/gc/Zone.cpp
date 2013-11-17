@@ -237,6 +237,14 @@ Zone::discardJitCode(FreeOp *fop)
 #endif
 }
 
+uint64_t
+Zone::gcNumber()
+{
+    // Zones in use by exclusive threads are not collected, and threads using
+    // them cannot access the main runtime's gcNumber without racing.
+    return usedByExclusiveThread ? 0 : runtimeFromMainThread()->gcNumber;
+}
+
 JS::Zone *
 js::ZoneOfObject(const JSObject &obj)
 {

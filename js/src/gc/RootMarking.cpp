@@ -707,15 +707,14 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
             MarkScriptRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }
 
-    if (!rt->isBeingDestroyed() &&
-        !trc->runtime->isHeapMinorCollecting() &&
-        (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment()->zone()->isCollecting()))
-    {
-        MarkAtoms(trc);
-        rt->staticStrings.trace(trc);
+    if (!rt->isBeingDestroyed() && !trc->runtime->isHeapMinorCollecting()) {
+        if (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment()->zone()->isCollecting()) {
+            MarkAtoms(trc);
+            rt->staticStrings.trace(trc);
 #ifdef JS_ION
-        jit::JitRuntime::Mark(trc);
+            jit::JitRuntime::Mark(trc);
 #endif
+        }
     }
 
     for (ContextIter acx(rt); !acx.done(); acx.next())

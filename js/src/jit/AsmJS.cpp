@@ -5119,7 +5119,6 @@ static AsmJSParallelTask *
 GetFinishedCompilation(ModuleCompiler &m, ParallelGroupState &group)
 {
     AutoLockWorkerThreadState lock(*m.cx()->workerThreadState());
-    AutoPauseCurrentWorkerThread maybePause(m.cx());
 
     while (!group.state.asmJSWorkerFailed()) {
         if (!group.state.asmJSFinishedList.empty()) {
@@ -5243,8 +5242,6 @@ CancelOutstandingJobs(ModuleCompiler &m, ParallelGroupState &group)
 
     // Eliminate tasks that failed without adding to the finished list.
     group.outstandingJobs -= group.state.harvestFailedAsmJSJobs();
-
-    AutoPauseCurrentWorkerThread maybePause(m.cx());
 
     // Any remaining tasks are therefore undergoing active compilation.
     JS_ASSERT(group.outstandingJobs >= 0);
