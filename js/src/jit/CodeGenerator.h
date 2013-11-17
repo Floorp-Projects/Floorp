@@ -376,11 +376,34 @@ class CodeGenerator : public CodeGeneratorSpecific
                          Label *ifTruthy, Label *ifFalsy,
                          OutOfLineTestObject *ool);
 
-    // Like testValueTruthy but takes an object, and |ool| must be non-null.
-    // (If it's known that an object can never emulate |undefined| it shouldn't
-    // be tested in the first place.)
-    void testObjectTruthy(Register objreg, Label *ifTruthy, Label *ifFalsy, Register scratch,
-                          OutOfLineTestObject *ool);
+    // This function behaves like testObjectEmulatesUndefined with the exception
+    // that it can choose to let control flow fall through when the object
+    // doesn't emulate undefined, as an optimization. Use the regular
+    // testObjectEmulatesUndefined when it's required to branch to one of the
+    // two labels.
+    void testObjectEmulatesUndefinedKernel(Register objreg,
+                                           Label *ifEmulatesUndefined,
+                                           Label *ifDoesntEmulateUndefined,
+                                           Register scratch, OutOfLineTestObject *ool);
+
+    // Test whether an object emulates |undefined|.  If it does, jump to
+    // |ifEmulatesUndefined|; the caller is responsible for binding this label.
+    // If it doesn't, fall through; the label |ifDoesntEmulateUndefined| (which
+    // must be initially unbound) will be bound at this point.
+    void branchTestObjectEmulatesUndefined(Register objreg,
+                                           Label *ifEmulatesUndefined,
+                                           Label *ifDoesntEmulateUndefined,
+                                           Register scratch, OutOfLineTestObject *ool);
+
+    // Test whether an object emulates |undefined|, and jump to the
+    // corresponding label.
+    //
+    // This method should be used when subsequent code can't be laid out in a
+    // straight line; if it can, branchTest* should be used instead.
+    void testObjectEmulatesUndefined(Register objreg,
+                                     Label *ifEmulatesUndefined,
+                                     Label *ifDoesntEmulateUndefined,
+                                     Register scratch, OutOfLineTestObject *ool);
 
     // Get a label for the start of block which can be used for jumping, in
     // place of jumpToBlock.
