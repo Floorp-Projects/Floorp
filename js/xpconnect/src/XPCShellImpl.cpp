@@ -211,20 +211,18 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
 static bool
 ReadLine(JSContext *cx, unsigned argc, jsval *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     // While 4096 might be quite arbitrary, this is something to be fixed in
     // bug 105707. It is also the same limit as in ProcessFile.
     char buf[4096];
-    RootedString str(cx);
+    JSString *str;
 
     /* If a prompt was specified, construct the string */
-    if (args.length() > 0) {
-        str = JS::ToString(cx, args[0]);
+    if (argc > 0) {
+        str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
         if (!str)
             return false;
     } else {
-        str = JS_GetEmptyString(JS_GetRuntime(cx));
+        str = JSVAL_TO_STRING(JS_GetEmptyStringValue(cx));
     }
 
     /* Get a line from the infile */
@@ -255,11 +253,12 @@ ReadLine(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 Print(JSContext *cx, unsigned argc, jsval *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    unsigned i, n;
+    JSString *str;
 
-    RootedString str(cx);
-    for (unsigned i = 0; i < args.length(); i++) {
-        str = ToString(cx, args[i]);
+    jsval *argv = JS_ARGV(cx, vp);
+    for (i = n = 0; i < argc; i++) {
+        str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return false;
         JSAutoByteString strBytes(cx, str);
@@ -268,22 +267,23 @@ Print(JSContext *cx, unsigned argc, jsval *vp)
         fprintf(gOutFile, "%s%s", i ? " " : "", strBytes.ptr());
         fflush(gOutFile);
     }
-    fputc('\n', gOutFile);
-    args.rval().setUndefined();
+    n++;
+    if (n)
+        fputc('\n', gOutFile);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
 static bool
 Dump(JSContext *cx, unsigned argc, jsval *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
-    args.rval().setUndefined();
+    JSString *str;
+    if (!argc)
+        return true;
 
-    if (!args.length())
-         return true;
-
-    RootedString str(cx, ToString(cx, args[0]));
+    str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!str)
         return false;
 
@@ -302,17 +302,16 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 Load(JSContext *cx, unsigned argc, jsval *vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
     JS::Rooted<JSObject*> obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 
-    RootedString str(cx);
-    for (unsigned i = 0; i < args.length(); i++) {
-        str = ToString(cx, args[i]);
+    jsval *argv = JS_ARGV(cx, vp);
+    for (unsigned i = 0; i < argc; i++) {
+        JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return false;
+        argv[i] = STRING_TO_JSVAL(str);
         JSAutoByteString filename(cx, str);
         if (!filename)
             return false;
@@ -336,7 +335,7 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
         if (!compileOnly && !JS_ExecuteScript(cx, obj, script, result.address()))
             return false;
     }
-    args.rval().setUndefined();
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
@@ -431,32 +430,33 @@ GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 #endif
 
 static bool
-SendCommand(JSContext *cx, unsigned argc, Value *vp)
+SendCommand(JSContext* cx,
+            unsigned argc,
+            jsval* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
+    if (argc == 0) {
         JS_ReportError(cx, "Function takes at least one argument!");
         return false;
     }
 
-    JSString* str = ToString(cx, args[0]);
+    jsval *argv = JS_ARGV(cx, vp);
+    JSString* str = JS_ValueToString(cx, argv[0]);
     if (!str) {
         JS_ReportError(cx, "Could not convert argument 1 to string!");
         return false;
     }
 
-    if (args.length() > 1 && JS_TypeOfValue(cx, args[1]) != JSTYPE_FUNCTION) {
+    if (argc > 1 && JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
         JS_ReportError(cx, "Could not convert argument 2 to function!");
         return false;
     }
 
-    if (!XRE_SendTestShellCommand(cx, str, args.length() > 1 ? args[1].address() : nullptr)) {
+    if (!XRE_SendTestShellCommand(cx, str, argc > 1 ? &argv[1] : nullptr)) {
         JS_ReportError(cx, "Couldn't send command!");
         return false;
     }
 
-    args.rval().setUndefined();
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
@@ -467,7 +467,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
     ContextOptions oldOptions = ContextOptionsRef(cx);
 
     for (unsigned i = 0; i < argc; ++i) {
-        JSString *str = ToString(cx, args[i]);
+        JSString *str = JS_ValueToString(cx, args[i]);
         if (!str)
             return false;
 
@@ -731,12 +731,12 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
     JS::Rooted<JSString*> idstr(cx);
     int rv;
 
-    RootedValue idval(cx);
-    if (!JS_IdToValue(cx, id, idval.address()))
+    jsval idval;
+    if (!JS_IdToValue(cx, id, &idval))
         return false;
 
-    idstr = ToString(cx, idval);
-    valstr = ToString(cx, vp);
+    idstr = JS_ValueToString(cx, idval);
+    valstr = JS_ValueToString(cx, vp);
     if (!idstr || !valstr)
         return false;
     JSAutoByteString name(cx, idstr);
@@ -814,11 +814,11 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 {
     JSString *idstr, *valstr;
 
-    RootedValue idval(cx);
-    if (!JS_IdToValue(cx, id, idval.address()))
+    jsval idval;
+    if (!JS_IdToValue(cx, id, &idval))
         return false;
 
-    idstr = ToString(cx, idval);
+    idstr = JS_ValueToString(cx, idval);
     if (!idstr)
         return false;
     JSAutoByteString name(cx, idstr);
@@ -954,9 +954,9 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
             if (!compileOnly) {
                 ok = JS_ExecuteScript(cx, obj, script, result.address());
                 if (ok && result != JSVAL_VOID) {
-                    /* Suppress error reports from JS::ToString(). */
+                    /* Suppress error reports from JS_ValueToString(). */
                     older = JS_SetErrorReporter(cx, nullptr);
-                    str = ToString(cx, result);
+                    str = JS_ValueToString(cx, result);
                     JS_SetErrorReporter(cx, older);
                     JSAutoByteString bytes;
                     if (str && bytes.encodeLatin1(cx, str))

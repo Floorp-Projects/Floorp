@@ -194,15 +194,18 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
 
                 if (!p->IsVoid()) {
                     nsStringBuffer* buf;
-                    if (!XPCStringConvert::ReadableToJSVal(cx, *p, &buf, d))
+                    jsval str = XPCStringConvert::ReadableToJSVal(cx, *p, &buf);
+                    if (JSVAL_IS_NULL(str))
                         return false;
                     if (buf)
                         buf->AddRef();
+
+                    d.set(str);
                 }
 
                 // *d is defaulted to JSVAL_NULL so no need to set it
                 // again if p is a "void" string
-                MOZ_ASSERT_IF(p->IsVoid(), d.isNull());
+
                 break;
             }
 
@@ -410,7 +413,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         return ConvertToPrimitive(cx, s, static_cast<bool*>(d));
     case nsXPTType::T_CHAR   :
     {
-        JSString* str = ToString(cx, s);
+        JSString* str = JS_ValueToString(cx, s);
         if (!str) {
             return false;
         }
@@ -429,7 +432,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     case nsXPTType::T_WCHAR  :
     {
         JSString* str;
-        if (!(str = ToString(cx, s))) {
+        if (!(str = JS_ValueToString(cx, s))) {
             return false;
         }
         size_t length;
@@ -495,7 +498,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
                 length = 0;
             }
         } else if (!JSVAL_IS_NULL(s)) {
-            str = ToString(cx, s);
+            str = JS_ValueToString(cx, s);
             if (!str)
                 return false;
 
@@ -559,7 +562,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             return true;
         }
 
-        JSString* str = ToString(cx, s);
+        JSString* str = JS_ValueToString(cx, s);
         if (!str) {
             return false;
         }
@@ -600,7 +603,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             return true;
         }
 
-        if (!(str = ToString(cx, s))) {
+        if (!(str = JS_ValueToString(cx, s))) {
             return false;
         }
         if (!(chars = JS_GetStringCharsZ(cx, str))) {
@@ -643,7 +646,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
         // The JS val is neither null nor void...
 
-        if (!(str = ToString(cx, s))||
+        if (!(str = JS_ValueToString(cx, s))||
             !(chars = JS_GetStringCharsZ(cx, str))) {
             return false;
         }
@@ -686,7 +689,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         }
 
         // The JS val is neither null nor void...
-        JSString* str = ToString(cx, s);
+        JSString* str = JS_ValueToString(cx, s);
         if (!str) {
             return false;
         }
@@ -1164,7 +1167,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
             if (nullptr != (report = JS_ErrorFromException(cx, s))) {
                 JSAutoByteString message;
                 JSString* str;
-                if (nullptr != (str = ToString(cx, s)))
+                if (nullptr != (str = JS_ValueToString(cx, s)))
                     message.encodeLatin1(cx, str);
                 return JSErrorToXPCException(message.ptr(), ifaceName,
                                              methodName, report, exceptn);
@@ -1201,7 +1204,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
 
             // otherwise we'll just try to convert it to a string
 
-            JSString* str = ToString(cx, s);
+            JSString* str = JS_ValueToString(cx, s);
             if (!str)
                 return NS_ERROR_FAILURE;
 
@@ -1272,7 +1275,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
     // otherwise we'll just try to convert it to a string
     // Note: e.g., bools get converted to JSStrings by this code.
 
-    JSString* str = ToString(cx, s);
+    JSString* str = JS_ValueToString(cx, s);
     if (str) {
         JSAutoByteString strBytes(cx, str);
         if (!!strBytes) {
@@ -1793,7 +1796,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                 return true;
             }
 
-            JSString* str = ToString(cx, s);
+            JSString* str = JS_ValueToString(cx, s);
             if (!str) {
                 return false;
             }
@@ -1848,7 +1851,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                 return true;
             }
 
-            if (!(str = ToString(cx, s))) {
+            if (!(str = JS_ValueToString(cx, s))) {
                 return false;
             }
 

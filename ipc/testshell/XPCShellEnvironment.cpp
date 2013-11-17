@@ -85,12 +85,16 @@ Environment(Handle<JSObject*> global)
 }
 
 static bool
-Print(JSContext *cx, unsigned argc, JS::Value *vp)
+Print(JSContext *cx,
+      unsigned argc,
+      JS::Value *vp)
 {
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    unsigned i, n;
+    JSString *str;
 
-    for (unsigned i = 0; i < args.length(); i++) {
-        JSString *str = JS::ToString(cx, args[i]);
+    JS::Value *argv = JS_ARGV(cx, vp);
+    for (i = n = 0; i < argc; i++) {
+        str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return false;
         JSAutoByteString bytes(cx, str);
@@ -99,8 +103,10 @@ Print(JSContext *cx, unsigned argc, JS::Value *vp)
         fprintf(stdout, "%s%s", i ? " " : "", bytes.ptr());
         fflush(stdout);
     }
-    fputc('\n', stdout);
-    args.rval().setUndefined();
+    n++;
+    if (n)
+        fputc('\n', stdout);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
@@ -119,14 +125,17 @@ GetLine(char *bufp,
 }
 
 static bool
-Dump(JSContext *cx, unsigned argc, JS::Value *vp)
+Dump(JSContext *cx,
+     unsigned argc,
+     JS::Value *vp)
 {
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
 
-    if (!args.length())
+    JSString *str;
+    if (!argc)
         return true;
 
-    JSString *str = JS::ToString(cx, args[0]);
+    str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
     if (!str)
         return false;
     JSAutoByteString bytes(cx, str);
@@ -143,16 +152,18 @@ Load(JSContext *cx,
      unsigned argc,
      JS::Value *vp)
 {
-    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    JS::Rooted<JS::Value> result(cx);
 
     JS::Rooted<JSObject*> obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 
-    for (unsigned i = 0; i < args.length(); i++) {
-        JS::Rooted<JSString*> str(cx, JS::ToString(cx, args[i]));
+    JS::Value *argv = JS_ARGV(cx, vp);
+    for (unsigned i = 0; i < argc; i++) {
+        JSString *str = JS_ValueToString(cx, argv[i]);
         if (!str)
             return false;
+        argv[i] = STRING_TO_JSVAL(str);
         JSAutoByteString filename(cx, str);
         if (!filename)
             return false;
@@ -172,12 +183,11 @@ Load(JSContext *cx,
         if (!script)
             return false;
 
-        JS::Rooted<JS::Value> result(cx);
         if (!JS_ExecuteScript(cx, obj, script, result.address())) {
             return false;
         }
     }
-    args.rval().setUndefined();
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
 }
 
@@ -381,9 +391,9 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
 
             ok = JS_ExecuteScript(cx, obj, script, result.address());
             if (ok && result != JSVAL_VOID) {
-                /* Suppress error reports from JS::ToString(). */
+                /* Suppress error reports from JS_ValueToString(). */
                 older = JS_SetErrorReporter(cx, nullptr);
-                str = JS::ToString(cx, result);
+                str = JS_ValueToString(cx, result);
                 JSAutoByteString bytes;
                 if (str)
                     bytes.encodeLatin1(cx, str);
@@ -599,7 +609,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   bool ok = JS_ExecuteScript(cx, global, script, result.address());
   if (ok && result != JSVAL_VOID) {
       JSErrorReporter old = JS_SetErrorReporter(cx, nullptr);
-      JSString* str = JS::ToString(cx, result);
+      JSString* str = JS_ValueToString(cx, result);
       nsDependentJSString depStr;
       if (str)
           depStr.init(cx, str);

@@ -317,8 +317,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
   case JSTYPE_STRING:
   case JSTYPE_OBJECT:
     {
-      JS::Rooted<JS::Value> arg(cx, argv[0]);
-      JSString *str = JS::ToString(cx, arg);
+      JSString *str = ::JS_ValueToString(cx, argv[0]);
       if (!str)
         return NS_ERROR_OUT_OF_MEMORY;
 

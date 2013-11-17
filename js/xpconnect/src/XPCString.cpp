@@ -24,7 +24,6 @@
 #include "jsapi.h"
 #include "xpcpublic.h"
 
-using namespace JS;
 
 // static
 void
@@ -60,34 +59,35 @@ const JSStringFinalizer XPCStringConvert::sDOMStringFinalizer =
 
 // convert a readable to a JSString, copying string data
 // static
-bool
+jsval
 XPCStringConvert::ReadableToJSVal(JSContext *cx,
                                   const nsAString &readable,
-                                  nsStringBuffer** sharedBuffer,
-                                  MutableHandleValue vp)
+                                  nsStringBuffer** sharedBuffer)
 {
+    JSString *str;
     *sharedBuffer = nullptr;
 
     uint32_t length = readable.Length();
-    if (length == 0) {
-        vp.set(JS_GetEmptyStringValue(cx));
-        return true;
-    }
+
+    if (length == 0)
+        return JS_GetEmptyStringValue(cx);
 
     nsStringBuffer *buf = nsStringBuffer::FromString(readable);
     if (buf) {
+        JS::RootedValue val(cx);
         bool shared;
-        if (!StringBufferToJSVal(cx, buf, length, vp, &shared))
-            return false;
-        if (shared)
+        bool ok = StringBufferToJSVal(cx, buf, length, &val, &shared);
+        if (!ok) {
+            return JS::NullValue();
+        }
+
+        if (shared) {
             *sharedBuffer = buf;
-        return true;
+        }
+        return val;
     }
 
     // blech, have to copy.
-    JSString *str = JS_NewUCStringCopyN(cx, readable.BeginReading(), length);
-    if (!str)
-        return false;
-    vp.setString(str);
-    return true;
+    str = JS_NewUCStringCopyN(cx, readable.BeginReading(), length);
+    return str ? JS::StringValue(str) : JS::NullValue();
 }

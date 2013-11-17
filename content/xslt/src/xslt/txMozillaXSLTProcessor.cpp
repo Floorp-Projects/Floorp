@@ -1444,8 +1444,8 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
                 JS::Rooted<JSObject*> jsobj(cx, holder->GetJSObject());
                 NS_ENSURE_STATE(jsobj);
 
-                JS::Rooted<JS::Value> v(cx, JS::ObjectValue(*jsobj));
-                JS::Rooted<JSString*> str(cx, JS::ToString(cx, v));
+                JS::Rooted<JSString*> str(cx,
+                    JS_ValueToString(cx, OBJECT_TO_JSVAL(jsobj)));
                 NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
 
                 nsDependentJSString value;
