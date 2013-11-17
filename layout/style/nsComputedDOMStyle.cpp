@@ -673,7 +673,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
         topWithPseudoElementData = topWithPseudoElementData->GetParent();
       }
       NS_ASSERTION(nsCSSPseudoElements::PseudoElementContainsElements(
-                     topWithPseudoElementData->GetPseudo()),
+                     topWithPseudoElementData->GetPseudoType()),
                    "we should be in a pseudo-element that is expected to "
                    "contain elements");
     }
