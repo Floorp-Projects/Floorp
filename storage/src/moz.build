@@ -11,16 +11,14 @@ EXPORTS.mozilla.storage += [
     'Variant_inl.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'FileSystemModule.cpp',
     'mozStorageArgValueArray.cpp',
     'mozStorageAsyncStatement.cpp',
     'mozStorageAsyncStatementExecution.cpp',
     'mozStorageAsyncStatementJSHelper.cpp',
     'mozStorageAsyncStatementParams.cpp',
-    'mozStorageBindingParams.cpp',
     'mozStorageBindingParamsArray.cpp',
-    'mozStorageConnection.cpp',
     'mozStorageError.cpp',
     'mozStoragePrivateHelpers.cpp',
     'mozStorageResultSet.cpp',
@@ -35,6 +33,12 @@ SOURCES += [
     'StorageBaseStatementInternal.cpp',
     'TelemetryVFS.cpp',
     'VacuumManager.cpp',
+]
+
+# These files need to be built separately because they #include variantToSQLiteT_impl.h.
+SOURCES += [
+    'mozStorageBindingParams.cpp',
+    'mozStorageConnection.cpp',
 ]
 
 LIBRARY_NAME = 'storage_s'
