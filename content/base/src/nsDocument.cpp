@@ -8949,7 +8949,13 @@ nsDocument::GetStateObject(nsIVariant** aState)
 
   nsCOMPtr<nsIVariant> stateObj;
   if (!mStateObjectCached && mStateObjectContainer) {
-    AutoPushJSContext cx(nsContentUtils::GetContextFromDocument(this));
+    AutoJSContext cx;
+    nsIGlobalObject* sgo = GetScopeObject();
+    NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
+    JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
+    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+    JSAutoCompartment ac(cx, global);
+
     mStateObjectContainer->
       DeserializeToVariant(cx, getter_AddRefs(mStateObjectCached));
   }
