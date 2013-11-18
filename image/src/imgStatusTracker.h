@@ -13,7 +13,6 @@ class imgRequestProxy;
 class imgStatusNotifyRunnable;
 class imgRequestNotifyRunnable;
 class imgStatusTrackerObserver;
-class imgStatusTrackerNotifyingObserver;
 class nsIRunnable;
 
 #include "mozilla/RefPtr.h"
@@ -299,7 +298,6 @@ private:
   friend class imgStatusNotifyRunnable;
   friend class imgRequestNotifyRunnable;
   friend class imgStatusTrackerObserver;
-  friend class imgStatusTrackerNotifyingObserver;
   friend class imgStatusTrackerInit;
   imgStatusTracker(const imgStatusTracker& aOther);
 
