@@ -54,6 +54,9 @@ nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
   SetIsDOMBinding();
   SetOwner(aOwner);
   mIsMainThreadEvent = mOwner || NS_IsMainThread();
+  if (mIsMainThreadEvent) {
+    nsJSContext::LikelyShortLivingObjectCreated();
+  }
 
   mPrivateDataDuplicated = false;
 
@@ -92,7 +95,6 @@ nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
   }
 
   InitPresContextData(aPresContext);
-  nsJSContext::LikelyShortLivingObjectCreated();
 }
 
 void
