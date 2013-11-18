@@ -148,8 +148,6 @@ NS_NewSVGImageFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGPatternFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -4961,28 +4959,6 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
                aTag == nsGkAtoms::textPath) {
       return &sSuppressData;
     }
-  } else {
-    nsIFrame *ancestorFrame =
-      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
-    if (ancestorFrame) {
-      if (aTag == nsGkAtoms::tspan || aTag == nsGkAtoms::altGlyph) {
-        // tspan and altGlyph must be children of another text content element.
-        nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-        if (!metrics) {
-          return &sSuppressData;
-        }
-      } else if (aTag == nsGkAtoms::textPath) {
-        // textPath must be a child of text.
-        return &sSuppressData; // XXXsvgtext - nsSVGTextPathFrame not used in new SVG text world
-      } else if (aTag != nsGkAtoms::a) {
-        // Every other element except 'a' must not be a child of a text content
-        // element.
-        nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-        if (metrics) {
-          return &sSuppressData;
-        }
-      }
-    }
   }
 
   static const FrameConstructionDataByTag sSVGData[] = {
@@ -5012,7 +4988,6 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     SIMPLE_SVG_CREATE(view, NS_NewSVGViewFrame),
     SIMPLE_SVG_CREATE(image, NS_NewSVGImageFrame),
     SIMPLE_SVG_CREATE(clipPath, NS_NewSVGClipPathFrame),
-    SIMPLE_SVG_CREATE(textPath, NS_NewSVGTextPathFrame),
     SIMPLE_SVG_CREATE(filter, NS_NewSVGFilterFrame),
     SIMPLE_SVG_CREATE(pattern, NS_NewSVGPatternFrame),
     SIMPLE_SVG_CREATE(mask, NS_NewSVGMaskFrame),
