@@ -600,8 +600,10 @@ imgStatusTracker::SyncNotifyDifference(const ImageStatusDiff& diff)
   LOG_SCOPE(GetImgLog(), "imgStatusTracker::SyncNotifyDifference");
 
   nsIntRect invalidRect = mInvalidRect.Union(diff.invalidRect);
-  mInvalidRect.SetEmpty();
+
   SyncNotifyState(mConsumers, !!mImage, diff.diffState, invalidRect, mHadLastPart);
+
+  mInvalidRect.SetEmpty();
 
   if (diff.unblockedOnload) {
     nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
