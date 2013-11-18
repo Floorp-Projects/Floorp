@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef gfx_layers_ipc_ImageBridgeParent_h_
+#define gfx_layers_ipc_ImageBridgeParent_h_
+
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include "CompositableTransactionParent.h"
@@ -107,3 +110,4 @@ private:
 } // layers
 } // mozilla
 
+#endif // gfx_layers_ipc_ImageBridgeParent_h_
