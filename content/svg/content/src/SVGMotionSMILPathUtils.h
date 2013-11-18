@@ -10,9 +10,9 @@
 #define MOZILLA_SVGMOTIONSMILPATHUTILS_H_
 
 #include "mozilla/Attributes.h"
-#include "gfxContext.h"
 #include "gfxPlatform.h"
-#include "nsCOMPtr.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsDebug.h"
 #include "nsSMILParserUtils.h"
 #include "nsTArray.h"
@@ -23,7 +23,11 @@ class nsSVGElement;
 
 namespace mozilla {
 
-class SVGMotionSMILPathUtils {
+class SVGMotionSMILPathUtils
+{
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::PathBuilder PathBuilder;
+
 public:
   // Class to assist in generating a gfxPath, based on
   // coordinates in the <animateMotion> from/by/to/values attributes.
@@ -31,9 +35,16 @@ public:
   public:
     PathGenerator(const nsSVGElement* aSVGElement)
       : mSVGElement(aSVGElement),
-        mGfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface()),
         mHaveReceivedCommands(false)
-    {}
+    {
+      RefPtr<DrawTarget> drawTarget =
+        gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+      NS_ASSERTION(gfxPlatform::GetPlatform()->
+                     SupportsAzureContentForDrawTarget(drawTarget),
+                   "Should support Moz2D content drawing");
+      
+      mPathBuilder = drawTarget->CreatePathBuilder();
+    }
 
     // Methods for adding various path commands to output path.
     // Note: aCoordPairStr is expected to be a whitespace and/or
@@ -59,7 +70,7 @@ public:
 
     // Member data
     const nsSVGElement* mSVGElement; // context for converting to user units
-    gfxContext    mGfxContext;
+    RefPtr<PathBuilder> mPathBuilder;
     bool          mHaveReceivedCommands;
   };
 
