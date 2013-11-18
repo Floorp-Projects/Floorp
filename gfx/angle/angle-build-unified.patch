@@ -1,0 +1,61 @@
+From: Ehsan Akhagri <ehsan@mozilla.com>
+Subject: Bug 939588 - Fixes required to make angle compile in unified mode
+
+diff --git a/gfx/angle/src/compiler/ForLoopUnroll.h b/gfx/angle/src/compiler/ForLoopUnroll.h
+index e800e25..7e10d82 100644
+--- a/gfx/angle/src/compiler/ForLoopUnroll.h
++++ b/gfx/angle/src/compiler/ForLoopUnroll.h
+@@ -1,14 +1,17 @@
+ //
+ // Copyright (c) 2011 The ANGLE Project Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
++#ifndef ForLoopUnroll_h
++#define ForLoopUnroll_h
++
+ #include "compiler/intermediate.h"
+ 
+ struct TLoopIndexInfo {
+     int id;
+     int initValue;
+     int stopValue;
+     int incrementValue;
+     TOperator op;
+@@ -41,8 +44,9 @@ public:
+ private:
+     int getLoopIncrement(TIntermLoop* node);
+ 
+     int evaluateIntConstant(TIntermConstantUnion* node);
+ 
+     TVector<TLoopIndexInfo> mLoopIndexStack;
+ };
+ 
++#endif
+diff --git a/gfx/angle/src/compiler/preprocessor/DiagnosticsBase.h b/gfx/angle/src/compiler/preprocessor/DiagnosticsBase.h
+index 07bc411..e1829b0 100644
+--- a/gfx/angle/src/compiler/preprocessor/DiagnosticsBase.h
++++ b/gfx/angle/src/compiler/preprocessor/DiagnosticsBase.h
+@@ -4,16 +4,21 @@
+ // found in the LICENSE file.
+ //
+ 
+ #ifndef COMPILER_PREPROCESSOR_DIAGNOSTICS_H_
+ #define COMPILER_PREPROCESSOR_DIAGNOSTICS_H_
+ 
+ #include <string>
+ 
++// Windows.h #defines ERROR.
++#ifdef ERROR
++#undef ERROR
++#endif
++
+ namespace pp
+ {
+ 
+ struct SourceLocation;
+ 
+ // Base class for reporting diagnostic messages.
+ // Derived classes are responsible for formatting and printing the messages.
+ class Diagnostics
