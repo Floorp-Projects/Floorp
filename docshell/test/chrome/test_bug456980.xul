@@ -20,8 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=456980
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-    SimpleTest.expectAssertions(1);
-
     SimpleTest.waitForExplicitFinish();
 
     addLoadEvent(function() {
