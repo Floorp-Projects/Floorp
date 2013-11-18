@@ -1516,7 +1516,7 @@ var Scratchpad = {
    * Add an observer for Scratchpad events.
    *
    * The observer implements IScratchpadObserver := {
-   *   onReady:      Called when the Scratchpad and its SourceEditor are ready.
+   *   onReady:      Called when the Scratchpad and its Editor are ready.
    *                 Arguments: (Scratchpad aScratchpad)
    * }
    *
