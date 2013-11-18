@@ -332,7 +332,13 @@ class IonBuilder : public MIRGenerator
 
     // Add a guard which ensure that the set of type which goes through this
     // generated code correspond to the observed types for the bytecode.
-    bool pushTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *observed, bool needBarrier);
+    bool pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed, bool needBarrier);
+
+    // If definiteType is not known or def already has the right type, just
+    // returns def.  Otherwise, returns an MInstruction that has that definite
+    // type, infallibly unboxing ins as needed.  The new instruction will be
+    // added to |current| in this case.
+    MDefinition *ensureDefiniteType(MDefinition* def, JSValueType definiteType);
 
     JSObject *getSingletonPrototype(JSFunction *target);
 
@@ -914,10 +920,10 @@ class CallInfo
         setter_ = true;
     }
 
-    void wrapArgs(MBasicBlock *current) {
-        thisArg_ = wrap(current, thisArg_);
+    void wrapArgs(TempAllocator &alloc, MBasicBlock *current) {
+        thisArg_ = wrap(alloc, current, thisArg_);
         for (uint32_t i = 0; i < argc(); i++)
-            args_[i] = wrap(current, args_[i]);
+            args_[i] = wrap(alloc, current, args_[i]);
     }
 
     void unwrapArgs() {
@@ -958,9 +964,9 @@ class CallInfo
         block->discard(passArg);
         return wrapped;
     }
-    static MDefinition *wrap(MBasicBlock *current, MDefinition *arg) {
+    static MDefinition *wrap(TempAllocator &alloc, MBasicBlock *current, MDefinition *arg) {
         JS_ASSERT(!arg->isPassArg());
-        MPassArg *passArg = MPassArg::New(arg);
+        MPassArg *passArg = MPassArg::New(alloc, arg);
         current->add(passArg);
         return passArg;
     }

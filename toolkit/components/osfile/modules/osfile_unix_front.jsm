@@ -337,13 +337,14 @@
       *
       * @param {string} path The name of the directory to remove.
       * @param {*=} options Additional options.
-      *   - {bool} ignoreAbsent If |true|, do not fail if the
-      *     directory does not exist yet.
+      *   - {bool} ignoreAbsent If |false|, throw an error if the directory
+      *     does not exist. |true| by default
       */
      File.removeEmptyDir = function removeEmptyDir(path, options = {}) {
        let result = UnixFile.rmdir(path);
        if (result == -1) {
-         if (options.ignoreAbsent && ctypes.errno == Const.ENOENT) {
+         if ((!("ignoreAbsent" in options) || options.ignoreAbsent) &&
+             ctypes.errno == Const.ENOENT) {
            return;
          }
          throw new File.Error("removeEmptyDir");
@@ -366,17 +367,19 @@
       * as per libc function |mkdir|. If unspecified, dirs are
       * created with a default mode of 0700 (dir is private to
       * the user, the user can read, write and execute).
-      * - {bool} ignoreExisting If |true|, do not fail if the
-      * directory already exists.
+      * - {bool} ignoreExisting If |false|, throw error if the directory
+      * already exists. |true| by default
       */
      File.makeDir = function makeDir(path, options = {}) {
        let omode = options.unixMode !== undefined ? options.unixMode : DEFAULT_UNIX_MODE_DIR;
        let result = UnixFile.mkdir(path, omode);
-       if (result != -1 ||
-           options.ignoreExisting && ctypes.errno == Const.EEXIST) {
-        return;
+       if (result == -1) {
+         if ((!("ignoreExisting" in options) || options.ignoreExisting) &&
+             ctypes.errno == Const.EEXIST) {
+           return;
+         }
+         throw new File.Error("makeDir");
        }
-       throw new File.Error("makeDir");
      };
 
      /**

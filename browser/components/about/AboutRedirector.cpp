@@ -94,6 +94,8 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT },
   { "app-manager", "chrome://browser/content/devtools/app-manager/index.xul",
     nsIAboutModule::ALLOW_SCRIPT },
+  { "customizing", "chrome://browser/content/customizableui/aboutCustomizing.xhtml",
+    nsIAboutModule::ALLOW_SCRIPT },
 };
 static const int kRedirTotal = NS_ARRAY_LENGTH(kRedirMap);
 

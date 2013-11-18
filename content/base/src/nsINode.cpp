@@ -2198,21 +2198,6 @@ nsINode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
     if (elm) {                                                               \
       elm->SetEventHandler(nsGkAtoms::on##name_, EmptyString(), handler);    \
     }                                                                        \
-  }                                                                          \
-  NS_IMETHODIMP nsINode::GetOn##name_(JSContext *cx, JS::Value *vp) {        \
-    EventHandlerNonNull* h = GetOn##name_();                                 \
-    vp->setObjectOrNull(h ? h->Callable().get() : nullptr);                  \
-    return NS_OK;                                                            \
-  }                                                                          \
-  NS_IMETHODIMP nsINode::SetOn##name_(JSContext *cx, const JS::Value &v) {   \
-    nsRefPtr<EventHandlerNonNull> handler;                                   \
-    JSObject *callable;                                                      \
-    if (v.isObject() &&                                                      \
-        JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new EventHandlerNonNull(callable);                           \
-    }                                                                        \
-    SetOn##name_(handler);                                                   \
-    return NS_OK;                                                            \
   }
 #define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT
@@ -2557,6 +2542,17 @@ nsINode::CloneNode(bool aDeep, ErrorResult& aError)
                                       getter_AddRefs(result));
   return result.forget();
 }
+
+already_AddRefed<nsINode>
+nsINode::CloneNode(mozilla::ErrorResult& aError)
+{
+  if (HasChildNodes()) {
+    // Flag it as an error, not a warning, to make people actually notice.
+    OwnerDoc()->WarnOnceAbout(nsIDocument::eUnsafeCloneNode, true);
+  }
+  return CloneNode(true, aError);
+}
+
 
 nsDOMAttributeMap*
 nsINode::GetAttributes()

@@ -10,16 +10,6 @@
 #include "sslproto.h"
 
 /*
- * The ciphers are listed in the following order:
- * - stronger ciphers before weaker ciphers
- * - national ciphers before international ciphers
- * - faster ciphers before slower ciphers
- *
- * National ciphers such as Camellia are listed before international ciphers
- * such as AES and RC4 to allow servers that prefer Camellia to negotiate
- * Camellia without having to disable AES and RC4, which are needed for
- * interoperability with clients that don't yet implement Camellia.
- *
  * The ordering of cipher suites in this table must match the ordering in
  * the cipherSuites table in ssl3con.c.
  *
@@ -27,75 +17,78 @@
  * in ssl3ecc.c.
  *
  * Finally, update the ssl_V3_SUITES_IMPLEMENTED macro in sslimpl.h.
+ *
+ * The ordering is as follows:
+ *    * No-encryption cipher suites last
+ *    * Export/weak/obsolete cipher suites before no-encryption cipher suites
+ *    * Order by key exchange algorithm: ECDHE, then DHE, then ECDH, RSA.
+ *    * Within key agreement sections, order by symmetric encryption algorithm:
+ *      AES-128, then Camellia-128, then AES-256, then Camellia-256, then SEED,
+ *      then FIPS-3DES, then 3DES, then RC4. AES is commonly accepted as a
+ *      strong cipher internationally, and is often hardware-accelerated.
+ *      Camellia also has wide international support across standards
+ *      organizations. SEED is only recommended by the Korean government. 3DES
+ *      only provides 112 bits of security. RC4 is now deprecated or forbidden
+ *      by many standards organizations.
+ *    * Within symmetric algorithm sections, order by message authentication
+ *      algorithm: GCM, then HMAC-SHA1, then HMAC-SHA256, then HMAC-MD5.
+ *    * Within message authentication algorithm sections, order by asymmetric
+ *      signature algorithm: ECDSA, then RSA, then DSS.
  */
 const PRUint16 SSL_ImplementedCiphers[] = {
-    /* AES-GCM */
 #ifdef NSS_ENABLE_ECC
     TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
     TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-#endif /* NSS_ENABLE_ECC */
-    TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
-    TLS_RSA_WITH_AES_128_GCM_SHA256,
-
-    /* 256-bit */
-#ifdef NSS_ENABLE_ECC
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
     TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-#endif /* NSS_ENABLE_ECC */
-    TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
-    TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA,
-    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
-    TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,
-    TLS_DHE_DSS_WITH_AES_256_CBC_SHA,
-#ifdef NSS_ENABLE_ECC
-    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
-    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
-#endif /* NSS_ENABLE_ECC */
-    TLS_RSA_WITH_CAMELLIA_256_CBC_SHA,
-    TLS_RSA_WITH_AES_256_CBC_SHA,
-    TLS_RSA_WITH_AES_256_CBC_SHA256,
-
-    /* 128-bit */
-#ifdef NSS_ENABLE_ECC
-    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
-    TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
-    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
-    TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-#endif /* NSS_ENABLE_ECC */
-    TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
-    TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,
-    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
-    TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
-    TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
-    TLS_DHE_DSS_WITH_RC4_128_SHA,
-#ifdef NSS_ENABLE_ECC
-    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
-    TLS_ECDH_RSA_WITH_RC4_128_SHA,
-    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
-    TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
-#endif /* NSS_ENABLE_ECC */
-    TLS_RSA_WITH_SEED_CBC_SHA,
-    TLS_RSA_WITH_CAMELLIA_128_CBC_SHA,
-    TLS_RSA_WITH_AES_128_CBC_SHA,
-    TLS_RSA_WITH_AES_128_CBC_SHA256,
-    SSL_RSA_WITH_RC4_128_SHA,
-    SSL_RSA_WITH_RC4_128_MD5,
-
-    /* 112-bit 3DES */
-#ifdef NSS_ENABLE_ECC
     TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
     TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+    TLS_ECDHE_RSA_WITH_RC4_128_SHA,
 #endif /* NSS_ENABLE_ECC */
+
+    TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+    TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+    TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
+    TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
+    TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA,
+    TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA,
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
+    TLS_DHE_DSS_WITH_AES_256_CBC_SHA,
+    TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,
+    TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,
+    TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA,
     SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
     SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
+    TLS_DHE_DSS_WITH_RC4_128_SHA,
+
 #ifdef NSS_ENABLE_ECC
-    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
+    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
     TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
+    TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
+    TLS_ECDH_RSA_WITH_RC4_128_SHA,
 #endif /* NSS_ENABLE_ECC */
+
+    TLS_RSA_WITH_AES_128_GCM_SHA256,
+    TLS_RSA_WITH_AES_128_CBC_SHA,
+    TLS_RSA_WITH_AES_128_CBC_SHA256,
+    TLS_RSA_WITH_CAMELLIA_128_CBC_SHA,
+    TLS_RSA_WITH_AES_256_CBC_SHA,
+    TLS_RSA_WITH_AES_256_CBC_SHA256,
+    TLS_RSA_WITH_CAMELLIA_256_CBC_SHA,
+    TLS_RSA_WITH_SEED_CBC_SHA,
     SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,
     SSL_RSA_WITH_3DES_EDE_CBC_SHA,
+    SSL_RSA_WITH_RC4_128_SHA,
+    SSL_RSA_WITH_RC4_128_MD5,
 
     /* 56-bit DES "domestic" cipher suites */
     SSL_DHE_RSA_WITH_DES_CBC_SHA,

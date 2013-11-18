@@ -2639,6 +2639,12 @@
     "n_buckets": "30",
     "description": "Firefox: Time taken to store the image capture of the page to a canvas, for reuse while swiping through history (ms)."
   },
+  "FX_GESTURE_COMPRESS_SNAPSHOT_OF_PAGE": {
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": "30",
+    "description": "Firefox: Time taken to kick off image compression of the canvas that will be used during swiping through history (ms)."
+  },
   "FX_TAB_ANIM_OPEN_MS": {
     "kind": "exponential",
     "high": "3000",
@@ -2708,12 +2714,12 @@
     "n_buckets": 20,
     "description": "Firefox: Time in ms spent on switching tabs in response to a tab click"
   },
-  "FX_APP_MENU_OPEN_MS": {
+  "FX_IDENTITY_POPUP_OPEN_MS": {
     "kind": "exponential",
     "high": "1000",
     "n_buckets": 10,
     "extended_statistics_ok": true,
-    "description": "Firefox: Time taken by the app-menu opening in milliseconds"
+    "description": "Firefox: Time taken by the identity popup to open in milliseconds"
   },
   "FX_BOOKMARKS_TOOLBAR_INIT_MS": {
     "kind": "exponential",
@@ -3485,13 +3491,6 @@
     "n_buckets": 15,
     "extended_statistics_ok": true,
     "description": "Time (ms) spent to initialize Firefox Health Report service."
-  },
-  "HEALTHREPORT_SHUTDOWN_DELAY_MS": {
-    "kind": "exponential",
-    "high": "20000",
-    "n_buckets": 15,
-    "extended_statistics_ok": true,
-    "description": "Time (ms) that Firefox Health Report delays application shutdown by."
   },
   "HEALTHREPORT_GENERATE_JSON_PAYLOAD_MS": {
     "kind": "exponential",
@@ -4496,5 +4495,90 @@
     "n_buckets": 50,
     "extended_statistics_ok": true,
     "description": "Time spent to open an existing cache entry"
+  },
+  "SSL_TLS12_INTOLERANCE_REASON_PRE": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.2 intolerance, before considering historical info"
+  },
+  "SSL_TLS12_INTOLERANCE_REASON_POST": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.2 intolerance, after considering historical info"
+  },
+  "SSL_TLS11_INTOLERANCE_REASON_PRE": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.1 intolerance, before considering historical info"
+  },
+  "SSL_TLS11_INTOLERANCE_REASON_POST": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.1 intolerance, after considering historical info"
+  },
+  "SSL_TLS10_INTOLERANCE_REASON_PRE": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.0 intolerance, before considering historical info"
+  },
+  "SSL_TLS10_INTOLERANCE_REASON_POST": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of TLS 1.0 intolerance, after considering historical info"
+  },
+  "SSL_SSL30_INTOLERANCE_REASON_PRE": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of SSL 3.0 intolerance, before considering historical info"
+  },
+  "SSL_SSL30_INTOLERANCE_REASON_POST": {
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "detected symptom of SSL 3.0 intolerance, after considering historical info"
+  },
+  "SSL_CIPHER_SUITE": {
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "Negotiated cipher suite (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
+  },
+  "SSL_KEA_RSA_KEY_SIZE": {
+    "kind": "enumerated",
+    "n_values": 24,
+    "description": "RSA KEA (TLS_RSA_*) key size"
+  },
+  "SSL_KEA_DHE_KEY_SIZE": {
+    "kind": "enumerated",
+    "n_values": 24,
+    "description": "DHE KEA (TLS_DHE_*) key size"
+  },
+  "SSL_KEA_ECDHE_CURVE": {
+    "kind": "enumerated",
+    "n_values": "36",
+    "description": "ECDHE KEA (TLS_ECDHE_*) curve (1=P-256, 2=P-384, 3=P-521)"
+  },
+  "SSL_AUTH_ALGORITHM": {
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "SSL Authentication Algorithm (null=0, rsa=1, dsa=2, ecdsa=4)"
+  },
+  "SSL_AUTH_RSA_KEY_SIZE": {
+    "kind": "enumerated",
+    "n_values": 24,
+    "description": "RSA signature key size for TLS_*_RSA_*"
+  },
+  "SSL_AUTH_DSA_KEY_SIZE": {
+    "kind": "enumerated",
+    "n_values": 24,
+    "description": "DSA signature key size for TLS_*_DSS_*"
+  },
+  "SSL_AUTH_ECDSA_CURVE": {
+    "kind": "enumerated",
+    "n_values": "36",
+    "description": "ECDSA signature curve for TLS_*_ECDSA_* (1=P-256, 2=P-384, 3=P-521)"
+  },
+  "SSL_SYMMETRIC_CIPHER": {
+    "kind": "enumerated",
+    "n_values": 32,
+    "description": "Symmetric cipher used (null=0, rc4=1, 3des=4, aes-cbc=7, camellia=8, seed=9, aes-gcm=10)"
   }
 }

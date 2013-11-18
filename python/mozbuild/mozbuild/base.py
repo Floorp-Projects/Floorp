@@ -414,6 +414,8 @@ class MozbuildObject(ProcessExecutionMixin):
                 args.append('-j%d' % num_jobs)
             else:
                 args.append('-j%d' % multiprocessing.cpu_count())
+        elif num_jobs > 0:
+            args.append('MOZ_PARALLEL_BUILD=%d' % num_jobs)
 
         if ignore_errors:
             args.append('-k')

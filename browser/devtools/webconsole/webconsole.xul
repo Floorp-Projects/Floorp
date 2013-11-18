@@ -21,6 +21,9 @@
         windowtype="devtools:webconsole"
         width="900" height="350"
         persist="screenX screenY width height sizemode">
+
+  <script type="application/javascript;version=1.8"
+          src="chrome://browser/content/devtools/theme-switching.js"/>
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="text/javascript"><![CDATA[
 function goUpdateConsoleCommands() {
@@ -78,7 +81,7 @@ function goUpdateConsoleCommands() {
 
   <tooltip id="aHTMLTooltip" page="true"/>
 
-  <box class="hud-outer-wrapper devtools-responsive-container" flex="1">
+  <box class="hud-outer-wrapper devtools-responsive-container theme-body" flex="1">
     <vbox class="hud-console-wrapper" flex="1">
       <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
         <toolbarbutton label="&btnPageNet.label;" type="menu-button"

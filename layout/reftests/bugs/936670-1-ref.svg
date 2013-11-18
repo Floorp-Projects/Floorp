@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <path d="M 100,100 l 4,8 h -8 z" fill="red"/>
+  <g transform="translate(100,100)" style="text-anchor: end; font: 16px sans-serif">
+    <text>hello</text>
+  </g>
+</svg>

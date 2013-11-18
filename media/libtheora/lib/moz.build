@@ -8,7 +8,7 @@ MODULE = 'theora'
 
 LIBRARY_NAME = 'theora'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'apiwrapper.c',
     'bitpack.c',
     'decapiwrapper.c',

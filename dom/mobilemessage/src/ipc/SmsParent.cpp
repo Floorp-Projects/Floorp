@@ -301,18 +301,6 @@ SmsParent::GetMobileMessageDataFromMessage(nsISupports *aMsg,
 }
 
 bool
-SmsParent::RecvHasSupport(bool* aHasSupport)
-{
-  *aHasSupport = false;
-
-  nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(smsService, true);
-
-  smsService->HasSupport(aHasSupport);
-  return true;
-}
-
-bool
 SmsParent::RecvAddSilentNumber(const nsString& aNumber)
 {
   if (mSilentNumbers.Contains(aNumber)) {

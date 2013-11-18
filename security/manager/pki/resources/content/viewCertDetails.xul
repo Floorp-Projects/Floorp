@@ -18,7 +18,7 @@
     <grid> 
       <columns>
         <column/>
-        <column/>
+        <column flex="1"/>
       </columns>
       <rows>
         <row>
@@ -27,20 +27,20 @@
           <spacer/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.cn;"/> 
-          <label id="commonname"/>
+          <label value="&certmgr.certdetail.cn;"/>
+          <textbox id="commonname" class="plain" readonly="true"/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.o;"/> 
-          <label id="organization"/>
+          <label value="&certmgr.certdetail.o;"/>
+          <textbox id="organization" class="plain" readonly="true"/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.ou;"/> 
-          <label id="orgunit"/>
+          <label value="&certmgr.certdetail.ou;"/>
+          <textbox id="orgunit" class="plain" readonly="true"/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.serialnumber;"/> 
-          <label id="serialnumber"/>
+          <label value="&certmgr.certdetail.serialnumber;"/>
+          <textbox id="serialnumber" class="plain" readonly="true"/>
         </row>
         <row>
           <separator class="thin"/>
@@ -51,16 +51,16 @@
           <spacer/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.cn;"/> 
-          <label id="issuercommonname"/>
+          <label value="&certmgr.certdetail.cn;"/>
+          <textbox id="issuercommonname" class="plain" readonly="true"/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.o;"/> 
-          <label id="issuerorganization"/>
+          <label value="&certmgr.certdetail.o;"/>
+          <textbox id="issuerorganization" class="plain" readonly="true"/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.ou;"/> 
-          <label id="issuerorgunit"/>
+          <label value="&certmgr.certdetail.ou;"/>
+          <textbox id="issuerorgunit" class="plain" readonly="true"/>
         </row>
         <row>
           <separator class="thin"/>
@@ -72,11 +72,11 @@
         </row>
         <row>
           <label value="&certmgr.issued;"/>
-          <label id="validitystart"/>
+          <textbox id="validitystart" class="plain" readonly="true"/>
         </row>
         <row>
           <label value="&certmgr.expires;"/>
-          <label id="validityend"/>
+          <textbox id="validityend" class="plain" readonly="true"/>
         </row>
         <row>
           <separator class="thin"/>
@@ -87,12 +87,12 @@
           <spacer/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.sha1fingerprint;"/> 
-          <label id="sha1fingerprint"/>
+          <label value="&certmgr.certdetail.sha1fingerprint;"/>
+          <textbox id="sha1fingerprint" class="plain" readonly="true" style="min-width:34em;"/>
         </row>
         <row>
-          <label value="&certmgr.certdetail.md5fingerprint;"/> 
-          <label id="md5fingerprint"/>
+          <label value="&certmgr.certdetail.md5fingerprint;"/>
+          <textbox id="md5fingerprint" class="plain" readonly="true"/>
         </row>
       </rows>
     </grid>

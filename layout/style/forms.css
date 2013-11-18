@@ -460,6 +460,8 @@ input[type="color"]:-moz-system-metric(color-picker-available)::-moz-color-swatc
   min-height: 15px;
   margin-left: auto;
   margin-right: auto;
+  -moz-box-sizing: border-box;
+  border: 1px solid grey;
   display: block;
 }
 

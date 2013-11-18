@@ -135,6 +135,14 @@
   color: black;
 }
 
+.theme-toolbar,
+.devtools-toolbar { /* General toolbar styling */
+  color: hsl(210,30%,85%);
+  background-image: url(background-noise-toolbar.png), linear-gradient(#3e4750, #3e4750);
+  border-color: #060a0d;
+  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset, -1px 0 0 hsla(204,45%,98%,.05) inset, 0 -1px 0 hsla(204,45%,98%,.05) inset;
+}
+
 .ruleview-colorswatch,
 .computedview-colorswatch,
 .markupview-colorswatch {
@@ -191,4 +199,57 @@ div.cm-s-mozilla span.CodeMirror-matchingbracket { /* highlight brackets */
 .cm-s-markup-view pre {
   line-height: 1.4em;
   min-height: 1.4em;
+}
+
+/* XUL panel styling (see browser/devtools/shared/widgets/Tooltip.js) */
+
+.theme-tooltip-panel .panel-arrowcontent {
+  padding: 4px;
+  background: rgba(255, 255, 255, .9);
+  border-radius: 5px;
+  box-shadow: none;
+  border: 3px solid #d9e1e8;
+}
+
+/* Overring panel arrow images to fit with our light and dark themes */
+
+.theme-tooltip-panel .panel-arrow[side="top"] {
+  list-style-image: url("chrome://browser/skin/devtools/tooltip/arrow-vertical-light.png");
+  margin-bottom: -4px;
+}
+
+.theme-tooltip-panel .panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://browser/skin/devtools/tooltip/arrow-vertical-light.png");
+  margin-top: -4px;
+}
+
+.theme-tooltip-panel .panel-arrow[side="left"] {
+  list-style-image: url("chrome://browser/skin/devtools/tooltip/arrow-horizontal-light.png");
+  margin-right: -4px;
+}
+
+.theme-tooltip-panel .panel-arrow[side="right"] {
+  list-style-image: url("chrome://browser/skin/devtools/tooltip/arrow-horizontal-light.png");
+  margin-left: -4px;
+}
+
+@media (min-resolution: 2dppx) {
+  .theme-tooltip-panel .panel-arrow[side="top"],
+  .theme-tooltip-panel .panel-arrow[side="bottom"] {
+    list-style-image: url("chrome://browser/skin/devtools/tooltip/arrow-vertical-light@2x.png");
+  }
+
+  .theme-tooltip-panel .panel-arrow[side="left"],
+  .theme-tooltip-panel .panel-arrow[side="right"] {
+    list-style-image: url("chrome://browser/skin/devtools/tooltip/arrow-horizontal-light@2x.png");
+  }
+}
+
+.theme-tooltip-panel .devtools-tooltip-simple-text {
+  color: black;
+  border-bottom: 1px solid #d9e1e8;
+}
+
+.theme-tooltip-panel .devtools-tooltip-simple-text:last-child {
+  border-bottom: 0;
 }

@@ -25,6 +25,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/Preferences.h"
 
 #include <algorithm>
 
@@ -1458,7 +1459,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
   return layer.forget();
 }
 
-#ifdef MOZ_DUMP_PAINTING
+#if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
 /**
  * Returns the appunits per dev pixel for the item's frame
  */
@@ -3316,9 +3317,19 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
  */
 static bool ShouldDrawRectsSeparately(gfxContext* aContext, DrawRegionClip aClip)
 {
-  if (aContext->IsCairo() || aClip == CLIP_NONE) {
+  static bool sPaintRectsSeparately;
+  static bool sPaintRectsSeparatelyPrefCached = false;
+  if (!sPaintRectsSeparatelyPrefCached) {
+    mozilla::Preferences::AddBoolVarCache(&sPaintRectsSeparately, "layout.paint_rects_separately", false);
+    sPaintRectsSeparatelyPrefCached = true;
+  }
+
+  if (!sPaintRectsSeparately ||
+      aContext->IsCairo() ||
+      aClip == CLIP_NONE) {
     return false;
   }
+
   DrawTarget *dt = aContext->GetDrawTarget();
   return dt->GetType() == BACKEND_DIRECT2D;
 }

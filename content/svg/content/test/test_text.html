@@ -104,15 +104,15 @@ function runTest()
   isPoint(text2.getEndPositionOfChar(1), 100, 125 + 2*charWidth, "text2 char 1 end offset");
   isPoint(text2.getEndPositionOfChar(2), 100, 125 + 3*charWidth, "text2 char 2 end offset");
   is(text2.getExtentOfChar(0).y, 125, "text2 char 0 extent y");
-  is(text2.getExtentOfChar(0).height, charWidth, "text2 char 0 extent height");
+  isfuzzy(text2.getExtentOfChar(0).height, charWidth, 0.000001, "text2 char 0 extent height");
   ok(text2.getExtentOfChar(0).width < 100, "text2 char 0 extent x");
   ok(xmost(text2.getExtentOfChar(0)) > 100, "text2 char 0 extent width");
   is(text2.getExtentOfChar(1).y, 125 + charWidth, "text2 char 1 extent x");
-  is(text2.getExtentOfChar(1).height, text2.getSubStringLength(0, 1), "text2 char 1 extent width");
+  isfuzzy(text2.getExtentOfChar(1).height, text2.getSubStringLength(0, 1), 0.000001, "text2 char 1 extent width");
   is(text2.getExtentOfChar(1).x, text2.getExtentOfChar(0).x, "text2 char 0/1 extent y");
   is(text2.getExtentOfChar(1).width, text2.getExtentOfChar(0).width, "text2 char 0/1 extent height");
   is(text2.getExtentOfChar(2).y, 125 + 2*charWidth, "text2 char 2 extent x");
-  is(text2.getExtentOfChar(2).height, text2.getSubStringLength(0, 1), "text2 char 2 extent width");
+  isfuzzy(text2.getExtentOfChar(2).height, text2.getSubStringLength(0, 1), 0.000001, "text2 char 2 extent width");
   is(text2.getExtentOfChar(2).x, text2.getExtentOfChar(0).x, "text2 char 0/2 extent y");
   is(text2.getExtentOfChar(2).width, text2.getExtentOfChar(0).width, "text2 char 0/2 extent height");
   is(text2.getRotationOfChar(0), 90, "text2 char 0 rotation");

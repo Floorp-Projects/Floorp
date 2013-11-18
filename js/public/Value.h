@@ -1321,6 +1321,22 @@ BooleanValue(bool boo)
 }
 
 static inline Value
+TrueValue()
+{
+    Value v;
+    v.setBoolean(true);
+    return v;
+}
+
+static inline Value
+FalseValue()
+{
+    Value v;
+    v.setBoolean(false);
+    return v;
+}
+
+static inline Value
 ObjectValue(JSObject &obj)
 {
     Value v;

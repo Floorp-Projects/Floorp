@@ -1986,7 +1986,8 @@ XMLHttpRequest::Send(JSObject* aBody, ErrorResult& aRv)
     valToClone.setObject(*aBody);
   }
   else {
-    JSString* bodyStr = JS_ValueToString(cx, OBJECT_TO_JSVAL(aBody));
+    JS::Rooted<JS::Value> obj(cx, JS::ObjectValue(*aBody));
+    JSString* bodyStr = JS::ToString(cx, obj);
     if (!bodyStr) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;

@@ -1,0 +1,139 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Mix-in classes */
+
+.spectrum-checker {
+  background-color: #eee;
+  background-image: linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
+}
+
+.spectrum-slider-control {
+  cursor: pointer;
+  border: 1px solid black;
+  background: white;
+  opacity: .7;
+}
+
+.spectrum-box {
+  border: solid 1px #333;
+}
+
+/* Elements */
+
+.spectrum-container {
+  position: relative;
+  display: none;
+  top: 0;
+  left: 0;
+  border-radius: 0;
+  width: 200px;
+  padding: 5px;
+}
+
+.spectrum-show {
+  display: inline-block;
+}
+
+/* Keep aspect ratio:
+http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
+.spectrum-top {
+  position: relative;
+  width: 100%;
+  display: inline-block;
+}
+
+.spectrum-top-inner {
+  position: absolute;
+  top:0;
+  left:0;
+  bottom:0;
+  right:0;
+}
+
+.spectrum-color {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 20%;
+}
+
+.spectrum-hue {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 83%;
+}
+
+.spectrum-fill {
+  /* Same as spectrum-color width */
+  margin-top: 85%;
+}
+
+.spectrum-sat, .spectrum-val {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.spectrum-dragger, .spectrum-slider {
+  user-select: none;
+}
+
+.spectrum-alpha {
+  position: relative;
+  height: 8px;
+  margin-top: 3px;
+}
+
+.spectrum-alpha-inner {
+  height: 100%;
+}
+
+.spectrum-alpha-handle {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 5px;
+  left: 50%;
+}
+
+.spectrum-sat {
+  background-image: -moz-linear-gradient(left, #FFF, rgba(204, 154, 129, 0));
+}
+
+.spectrum-val {
+  background-image: -moz-linear-gradient(bottom, #000000, rgba(204, 154, 129, 0));
+}
+
+.spectrum-hue {
+  background: -moz-linear-gradient(top, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+}
+
+.spectrum-dragger {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  cursor: pointer;
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+  border: 1px solid white;
+  background: black;
+}
+
+.spectrum-slider {
+  position: absolute;
+  top: 0;
+  height: 5px;
+  left: -3px;
+  right: -3px;
+}

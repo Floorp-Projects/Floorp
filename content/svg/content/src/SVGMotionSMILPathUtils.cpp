@@ -4,10 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGMotionSMILPathUtils.h"
+
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h" // for NS_ENSURE_FINITE2
 #include "SVGContentUtils.h"
 #include "SVGLength.h"
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 
@@ -22,7 +25,7 @@ SVGMotionSMILPathUtils::PathGenerator::
   NS_ABORT_IF_FALSE(!mHaveReceivedCommands,
                     "Not expecting requests for mid-path MoveTo commands");
   mHaveReceivedCommands = true;
-  mGfxContext.MoveTo(gfxPoint(0, 0));
+  mPathBuilder->MoveTo(Point(0, 0));
 }
 
 // For 'from' and the first entry in 'values'.
@@ -38,7 +41,7 @@ SVGMotionSMILPathUtils::PathGenerator::
   if (!ParseCoordinatePair(aCoordPairStr, xVal, yVal)) {
     return false;
   }
-  mGfxContext.MoveTo(gfxPoint(xVal, yVal));
+  mPathBuilder->MoveTo(Point(xVal, yVal));
   return true;
 }
 
@@ -53,9 +56,9 @@ SVGMotionSMILPathUtils::PathGenerator::
   if (!ParseCoordinatePair(aCoordPairStr, xVal, yVal)) {
     return false;
   }
-  gfxPoint initialPoint = mGfxContext.CurrentPoint();
+  Point initialPoint = mPathBuilder->CurrentPoint();
 
-  mGfxContext.LineTo(gfxPoint(xVal, yVal));
+  mPathBuilder->LineTo(Point(xVal, yVal));
   aSegmentDistance = NS_hypot(initialPoint.x - xVal, initialPoint.y -yVal);
   return true;
 }
@@ -71,15 +74,15 @@ SVGMotionSMILPathUtils::PathGenerator::
   if (!ParseCoordinatePair(aCoordPairStr, xVal, yVal)) {
     return false;
   }
-  mGfxContext.LineTo(mGfxContext.CurrentPoint() + gfxPoint(xVal, yVal));
+  mPathBuilder->LineTo(mPathBuilder->CurrentPoint() + Point(xVal, yVal));
   aSegmentDistance = NS_hypot(xVal, yVal);
   return true;
 }
 
-already_AddRefed<gfxPath>
+TemporaryRef<Path>
 SVGMotionSMILPathUtils::PathGenerator::GetResultingPath()
 {
-  return mGfxContext.CopyPath();
+  return mPathBuilder->Finish();
 }
 
 //----------------------------------------------------------------------

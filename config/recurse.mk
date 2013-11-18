@@ -235,3 +235,9 @@ endif
 endif
 
 endif # ifdef MOZ_PSEUDO_DERECURSE
+
+recurse:
+	@$(RECURSED_COMMAND)
+	$(LOOP_OVER_PARALLEL_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)

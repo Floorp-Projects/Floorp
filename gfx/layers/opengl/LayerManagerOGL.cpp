@@ -1171,7 +1171,7 @@ LayerManagerOGL::SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix)
 }
 
 static GLenum
-GetFrameBufferInternalFormat(GLContext* gl,
+LayerManagerOGL_GetFrameBufferInternalFormat(GLContext* gl,
                              GLuint aCurrentFrameBuffer,
                              nsIWidget* aWidget)
 {
@@ -1199,7 +1199,7 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
     // check the format of the framebuffer here and take a slow path
     // if it's incompatible.
     GLenum format =
-      GetFrameBufferInternalFormat(gl(), aCurrentFrameBuffer, mWidget);
+      LayerManagerOGL_GetFrameBufferInternalFormat(gl(), aCurrentFrameBuffer, mWidget);
  
     bool isFormatCompatibleWithRGBA
         = gl()->IsGLES2() ? (format == LOCAL_GL_RGBA)

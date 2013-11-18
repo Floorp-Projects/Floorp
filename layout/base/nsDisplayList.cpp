@@ -2290,14 +2290,20 @@ nsDisplayThemedBackground::nsDisplayThemedBackground(nsDisplayListBuilder* aBuil
   const nsStyleDisplay* disp = mFrame->StyleDisplay();
   mAppearance = disp->mAppearance;
   mFrame->IsThemed(disp, &mThemeTransparency);
+
   // Perform necessary RegisterThemeGeometry
-  if (mAppearance == NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR ||
-      mAppearance == NS_THEME_TOOLBAR ||
-      mAppearance == NS_THEME_WINDOW_TITLEBAR) {
-    RegisterThemeGeometry(aBuilder, aFrame);
-  } else if (mAppearance == NS_THEME_WIN_BORDERLESS_GLASS ||
-             mAppearance == NS_THEME_WIN_GLASS) {
-    aBuilder->SetGlassDisplayItem(this);
+  switch (disp->mAppearance) {
+    case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
+    case NS_THEME_TOOLBAR:
+    case NS_THEME_WINDOW_TITLEBAR:
+    case NS_THEME_WINDOW_BUTTON_BOX:
+    case NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON:
+      RegisterThemeGeometry(aBuilder, aFrame);
+      break;
+    case NS_THEME_WIN_BORDERLESS_GLASS:
+    case NS_THEME_WIN_GLASS:
+      aBuilder->SetGlassDisplayItem(this);
+      break;
   }
 
   mBounds = GetBoundsInternal();
@@ -3169,30 +3175,6 @@ nsRegion nsDisplayMixBlendMode::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   return nsRegion();
 }
 
-static gfxContext::GraphicsOperator GetGFXBlendMode(uint8_t mBlendMode) {
-  switch (mBlendMode) {
-    case NS_STYLE_BLEND_NORMAL:      return gfxContext::OPERATOR_OVER;
-    case NS_STYLE_BLEND_MULTIPLY:    return gfxContext::OPERATOR_MULTIPLY;
-    case NS_STYLE_BLEND_SCREEN:      return gfxContext::OPERATOR_SCREEN;
-    case NS_STYLE_BLEND_OVERLAY:     return gfxContext::OPERATOR_OVERLAY;
-    case NS_STYLE_BLEND_DARKEN:      return gfxContext::OPERATOR_DARKEN;
-    case NS_STYLE_BLEND_LIGHTEN:     return gfxContext::OPERATOR_LIGHTEN;
-    case NS_STYLE_BLEND_COLOR_DODGE: return gfxContext::OPERATOR_COLOR_DODGE;
-    case NS_STYLE_BLEND_COLOR_BURN:  return gfxContext::OPERATOR_COLOR_BURN;
-    case NS_STYLE_BLEND_HARD_LIGHT:  return gfxContext::OPERATOR_HARD_LIGHT;
-    case NS_STYLE_BLEND_SOFT_LIGHT:  return gfxContext::OPERATOR_SOFT_LIGHT;
-    case NS_STYLE_BLEND_DIFFERENCE:  return gfxContext::OPERATOR_DIFFERENCE;
-    case NS_STYLE_BLEND_EXCLUSION:   return gfxContext::OPERATOR_EXCLUSION;
-    case NS_STYLE_BLEND_HUE:         return gfxContext::OPERATOR_HUE;
-    case NS_STYLE_BLEND_SATURATION:  return gfxContext::OPERATOR_SATURATION;
-    case NS_STYLE_BLEND_COLOR:       return gfxContext::OPERATOR_COLOR;
-    case NS_STYLE_BLEND_LUMINOSITY:  return gfxContext::OPERATOR_LUMINOSITY;
-    default:                         MOZ_ASSERT(false); return gfxContext::OPERATOR_OVER;
-  }
-  
-  return gfxContext::OPERATOR_OVER;
-}
-
 // nsDisplayMixBlendMode uses layers for rendering
 already_AddRefed<Layer>
 nsDisplayMixBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -3208,7 +3190,7 @@ nsDisplayMixBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  container->SetMixBlendMode(GetGFXBlendMode(mFrame->StyleDisplay()->mMixBlendMode));
+  container->SetMixBlendMode(nsCSSRendering::GetGFXBlendMode(mFrame->StyleDisplay()->mMixBlendMode));
 
   return container.forget();
 }
@@ -3387,14 +3369,25 @@ void nsDisplayFixedPosition::SetFixedPositionLayerData(Layer* const aLayer,
   // Work out the anchor point for this fixed position layer. We assume that
   // any positioning set (left/top/right/bottom) indicates that the
   // corresponding side of its container should be the anchor point,
-  // defaulting to top-left.
+  // defaulting to top-left. If both sides of an axis are specified, we align
+  // to the center.
   LayerPoint anchor = anchorRect.TopLeft();
 
   const nsStylePosition* position = mFixedPosFrame->StylePosition();
-  if (position->mOffset.GetRightUnit() != eStyleUnit_Auto)
-    anchor.x = anchorRect.XMost();
-  if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto)
-    anchor.y = anchorRect.YMost();
+  if (position->mOffset.GetRightUnit() != eStyleUnit_Auto) {
+    if (position->mOffset.GetLeftUnit() != eStyleUnit_Auto) {
+      anchor.x = anchorRect.x + anchorRect.width / 2.f;
+    } else {
+      anchor.x = anchorRect.XMost();
+    }
+  }
+  if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto) {
+    if (position->mOffset.GetTopUnit() != eStyleUnit_Auto) {
+      anchor.y = anchorRect.y + anchorRect.height / 2.f;
+    } else {
+      anchor.y = anchorRect.YMost();
+    }
+  }
 
   aLayer->SetFixedPositionAnchor(anchor);
 

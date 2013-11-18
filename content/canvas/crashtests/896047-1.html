@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="c" width="200" height="100">
+</canvas>
+<script>
+var ctx = document.getElementById("c").getContext("2d");
+ctx.save();
+ctx.save();
+ctx.rect(0,0, 1,1);
+ctx.restore();
+ctx.fill('evenodd');
+ctx.restore();
+ctx.lineTo(10, 0);
+</script>
+</body>
+</html>

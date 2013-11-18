@@ -41,6 +41,7 @@ tabpanels {
   z-index: 2;
 }
 
+.tab-icon-image:not([src]):not([pinned]),
 .tab-throbber:not([busy]),
 .tab-throbber[busy] + .tab-icon-image {
   display: none;

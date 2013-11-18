@@ -219,11 +219,6 @@ LayerManagerD3D9::CreateReadbackLayer()
   return layer.forget();
 }
 
-void ReleaseTexture(void *texture)
-{
-  static_cast<IDirect3DTexture9*>(texture)->Release();
-}
-
 void
 LayerManagerD3D9::ReportFailure(const nsACString &aMsg, HRESULT aCode)
 {
