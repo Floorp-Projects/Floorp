@@ -5,7 +5,6 @@ import org.mozilla.gecko.*;
 import android.app.Activity;
 import android.hardware.Camera;
 import android.os.Build;
-import java.lang.reflect.Method;
 
 public class testGetUserMedia extends BaseTest {
     @Override
