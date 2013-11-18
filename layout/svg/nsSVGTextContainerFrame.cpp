@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGContainerFrame.h"
+#include "nsSVGTextContainerFrame.h"
+
 #include <algorithm>
 
 // Keep others in (case-insensitive) order:
 #include "nsError.h"
-#include "nsSVGGlyphFrame.h"
-#include "nsSVGTextFrame.h"
+#include "nsISVGGlyphFragmentNode.h"
 #include "nsSVGUtils.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGLengthList.h"
@@ -26,14 +26,6 @@ NS_QUERYFRAME_HEAD(nsSVGTextContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGDisplayContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGTextContainerFrame)
-
-void
-nsSVGTextContainerFrame::NotifyGlyphMetricsChange()
-{
-  nsSVGTextFrame *textFrame = GetTextFrame();
-  if (textFrame)
-    textFrame->NotifyGlyphMetricsChange();
-}
 
 void
 nsSVGTextContainerFrame::GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY)
@@ -78,108 +70,35 @@ nsSVGTextContainerFrame::InsertFrames(ChildListID aListID,
 }
 
 NS_IMETHODIMP
-nsSVGTextContainerFrame::RemoveFrame(ChildListID aListID, nsIFrame *aOldFrame)
-{
-  nsSVGTextFrame *textFrame = GetTextFrame();
-
-  nsresult rv = nsSVGDisplayContainerFrame::RemoveFrame(aListID, aOldFrame);
-
-  if (textFrame)
-    textFrame->NotifyGlyphMetricsChange();
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsSVGTextContainerFrame::GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval)
 {
+  NS_NOTREACHED("Shouldn't get here now that the old SVG text paths are disabled");
   *_retval = nullptr;
-
-  if (charnum >= GetNumberOfChars()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode();
-  if (!node) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t offset;
-  nsSVGGlyphFrame *frame = GetGlyphFrameAtCharNum(node, charnum, &offset);
-  if (!frame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return frame->GetStartPositionOfChar(charnum - offset, _retval);
+  return NS_ERROR_FAILURE; // XXXsvgtext
 }
 
 NS_IMETHODIMP
 nsSVGTextContainerFrame::GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval)
 {
+  NS_NOTREACHED("Shouldn't get here now that the old SVG text paths are disabled");
   *_retval = nullptr;
-
-  if (charnum >= GetNumberOfChars()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode();
-  if (!node) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t offset;
-  nsSVGGlyphFrame *frame = GetGlyphFrameAtCharNum(node, charnum, &offset);
-  if (!frame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return frame->GetEndPositionOfChar(charnum - offset, _retval);
+  return NS_ERROR_FAILURE; // XXXsvgtext
 }
 
 NS_IMETHODIMP
 nsSVGTextContainerFrame::GetExtentOfChar(uint32_t charnum, dom::SVGIRect **_retval)
 {
+  NS_NOTREACHED("Shouldn't get here now that the old SVG text paths are disabled");
   *_retval = nullptr;
-
-  if (charnum >= GetNumberOfChars()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode();
-  if (!node) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t offset;
-  nsSVGGlyphFrame *frame = GetGlyphFrameAtCharNum(node, charnum, &offset);
-  if (!frame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return frame->GetExtentOfChar(charnum - offset, _retval);
+  return NS_ERROR_FAILURE; // XXXsvgtext
 }
 
 NS_IMETHODIMP
 nsSVGTextContainerFrame::GetRotationOfChar(uint32_t charnum, float *_retval)
 {
+  NS_NOTREACHED("Shouldn't get here now that the old SVG text paths are disabled");
   *_retval = 0.0f;
-
-  if (charnum >= GetNumberOfChars()) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  nsISVGGlyphFragmentNode *node = GetFirstGlyphFragmentChildNode();
-  if (!node) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t offset;
-  nsSVGGlyphFrame *frame = GetGlyphFrameAtCharNum(node, charnum, &offset);
-  if (!frame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return frame->GetRotationOfChar(charnum - offset, _retval);
+  return NS_ERROR_FAILURE; // XXXsvgtext
 }
 
 uint32_t
@@ -292,38 +211,6 @@ nsSVGTextContainerFrame::GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode *
 // Private functions
 // -------------------------------------------------------------------------
 
-nsSVGGlyphFrame *
-nsSVGTextContainerFrame::GetGlyphFrameAtCharNum(nsISVGGlyphFragmentNode* node,
-                                                uint32_t charnum,
-                                                uint32_t *offset)
-{
-  nsSVGGlyphFrame *frame = node->GetFirstGlyphFrame();
-  *offset = 0;
-  
-  while (frame) {
-    uint32_t count = frame->GetNumberOfChars();
-    if (count > charnum)
-      return frame;
-    charnum -= count;
-    *offset += count;
-    frame = frame->GetNextGlyphFrame();
-  }
-
-  // not found
-  return nullptr;
-}
-
-nsSVGTextFrame *
-nsSVGTextContainerFrame::GetTextFrame()
-{
-  for (nsIFrame *frame = this; frame != nullptr; frame = frame->GetParent()) {
-    if (frame->GetType() == nsGkAtoms::svgTextFrame) {
-      return static_cast<nsSVGTextFrame*>(frame);
-    }
-  }
-  return nullptr;
-}
-
 void
 nsSVGTextContainerFrame::CopyPositionList(nsTArray<float> *parentList,
                                         SVGUserUnitList *selfList,
@@ -390,6 +277,8 @@ uint32_t
 nsSVGTextContainerFrame::BuildPositionList(uint32_t aOffset,
                                            uint32_t aDepth)
 {
+  NS_NOTREACHED("Shouldn't get here now that the old SVG text paths are disabled");
+
   nsSVGTextContainerFrame *parent = do_QueryFrame(mParent);
   nsTArray<float> *parentX = nullptr, *parentY = nullptr;
   nsTArray<float> *parentDx = nullptr, *parentDy = nullptr;
@@ -421,10 +310,6 @@ nsSVGTextContainerFrame::BuildPositionList(uint32_t aOffset,
     nsSVGTextContainerFrame *text = do_QueryFrame(kid);
     if (text) {
       startIndex += text->BuildPositionList(startIndex, aDepth + 1);
-    } else if (kid->GetType() == nsGkAtoms::svgGlyphFrame) {
-      nsSVGGlyphFrame *leaf = static_cast<nsSVGGlyphFrame*>(kid);
-      leaf->SetStartIndex(startIndex);
-      startIndex += leaf->GetNumberOfChars();
     }
     kid = kid->GetNextSibling();
   }

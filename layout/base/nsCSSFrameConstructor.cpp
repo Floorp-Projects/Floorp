@@ -122,11 +122,7 @@ NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
 NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
-NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGTextFrame2(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
@@ -3160,13 +3156,6 @@ nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
         if (ancestorFrame->IsSVGText()) {
           return &sSVGTextData;
         }
-      } else {
-        static const FrameConstructionData sSVGGlyphData =
-          SIMPLE_FCDATA(NS_NewSVGGlyphFrame);
-        nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-        if (metrics) {
-          return &sSVGGlyphData;
-        }
       }
     }
     return nullptr;
@@ -4984,10 +4973,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
         }
       } else if (aTag == nsGkAtoms::textPath) {
         // textPath must be a child of text.
-        nsIAtom* ancestorFrameType = ancestorFrame->GetType();
-        if (ancestorFrameType != nsGkAtoms::svgTextFrame) {
-          return &sSuppressData;
-        }
+        return &sSuppressData; // XXXsvgtext - nsSVGTextPathFrame not used in new SVG text world
       } else if (aTag != nsGkAtoms::a) {
         // Every other element except 'a' must not be a child of a text content
         // element.
@@ -5018,7 +5004,6 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
                                  nsCSSAnonBoxes::mozSVGForeignContent) },
     SIMPLE_SVG_CREATE(a, NS_NewSVGAFrame),
     SIMPLE_SVG_CREATE(altGlyph, NS_NewSVGTSpanFrame),
-    SIMPLE_SVG_CREATE(text, NS_NewSVGTextFrame),
     SIMPLE_SVG_CREATE(tspan, NS_NewSVGTSpanFrame),
     SIMPLE_SVG_CREATE(linearGradient, NS_NewSVGLinearGradientFrame),
     SIMPLE_SVG_CREATE(radialGradient, NS_NewSVGRadialGradientFrame),

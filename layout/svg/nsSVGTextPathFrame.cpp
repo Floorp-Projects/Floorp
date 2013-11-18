@@ -42,10 +42,6 @@ nsSVGTextPathFrame::Init(nsIContent* aContent,
   nsIFrame* ancestorFrame = nsSVGUtils::GetFirstNonAAncestorFrame(aParent);
   NS_ASSERTION(ancestorFrame, "Must have ancestor");
 
-  NS_ASSERTION(ancestorFrame->GetType() == nsGkAtoms::svgTextFrame,
-               "trying to construct an SVGTextPathFrame for an invalid "
-               "container");
-
   NS_ASSERTION(aContent->IsSVG(nsGkAtoms::textPath),
                "Content is not an SVG textPath");
 

@@ -17,8 +17,8 @@
 #include "nsStubMutationObserver.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGForeignObjectFrame.h"
+#include "nsSVGTextContainerFrame.h"
 #include "mozilla/dom/SVGSVGElement.h"
-#include "nsSVGTextFrame.h"
 #include "mozilla/dom/SVGViewElement.h"
 #include "nsSubDocumentFrame.h"
 
@@ -113,12 +113,7 @@ nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
 {
   nsIFrame* kid = aFrame->GetFirstPrincipalChild();
   while (kid) {
-    if (kid->GetType() == nsGkAtoms::svgTextFrame) {
-      nsSVGTextFrame* textFrame = static_cast<nsSVGTextFrame*>(kid);
-      textFrame->NotifyGlyphMetricsChange();
-    } else {
-      UpdateTextFragmentTrees(kid);
-    }
+    UpdateTextFragmentTrees(kid);
     kid = kid->GetNextSibling();
   }
 }
