@@ -9,6 +9,7 @@
 
 // Keep others in (case-insensitive) order:
 #include "DOMSVGPoint.h"
+#include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxPlatform.h"
@@ -22,6 +23,7 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGPaintServerFrame.h"
 #include "mozilla/dom/SVGRect.h"
+#include "mozilla/gfx/2D.h"
 #include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
 #include "nsTextFragment.h"
@@ -750,13 +752,11 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
     if (!aCharacterPositions->SetLength(strLength))
       return false;
 
-    nsRefPtr<gfxPath> data = new gfxPath(path);
-
     gfxFloat pathScale = textPath->GetOffsetScale();
 
     CharacterPosition *cp = aCharacterPositions->Elements();
 
-    gfxFloat length = data->GetLength();
+    Float length = path->ComputeLength();
 
     for (uint32_t i = 0; i < strLength; i++) {
       gfxFloat halfAdvance =
@@ -777,15 +777,15 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
                     pos.x + halfAdvance <= length);
 
       if (cp[i].draw) {
-
-        // add y (normal)
-        // add rotation
-        // move point back along tangent
-        gfxPoint pt = data->FindPoint(gfxPoint(pos.x + halfAdvance, pos.y),
-                                      &(cp[i].angle));
-        cp[i].pos =
-          pt - gfxPoint(cos(cp[i].angle), sin(cp[i].angle)) * halfAdvance;
-        cp[i].angle += angle;
+        Point tangent; // Unit vector tangent to the point we find.
+        Point pt = path->ComputePointAtLength(Float(pos.x + halfAdvance),
+                                              &tangent);
+        Point normal(-tangent.y, tangent.x); // Unit vector normal to the point.
+        Point offsetFromPath = normal * pos.y;
+        cp[i].pos = ThebesPoint(pt + offsetFromPath) -
+                      ThebesPoint(tangent) * halfAdvance;
+        double glyphRotation = atan2(tangent.y, tangent.x);
+        cp[i].angle = glyphRotation + angle;
       }
       pos.x += 2 * halfAdvance;
     }
