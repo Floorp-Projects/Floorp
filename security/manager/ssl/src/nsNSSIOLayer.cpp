@@ -45,6 +45,8 @@
 #include "secder.h"
 #include "keyhi.h"
 
+#include <algorithm>
+
 using namespace mozilla;
 using namespace mozilla::psm;
 
