@@ -3021,19 +3021,45 @@ IsItemTooSmallForActiveLayer(nsDisplayItem* aItem)
     nsIntSize(MIN_ACTIVE_LAYER_SIZE_DEV_PIXELS, MIN_ACTIVE_LAYER_SIZE_DEV_PIXELS);
 }
 
+bool
+nsDisplayOpacity::NeedsActiveLayer()
+{
+  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_opacity) &&
+      !IsItemTooSmallForActiveLayer(this))
+    return true;
+  if (mFrame->GetContent()) {
+    if (nsLayoutUtils::HasAnimationsForCompositor(mFrame->GetContent(),
+                                                  eCSSProperty_opacity)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
+{
+  if (NeedsActiveLayer())
+    return false;
+
+  nsDisplayItem* child = mList.GetBottom();
+  // Only try folding our opacity down if we have a single
+  // child. We could potentially do this also if we had multiple
+  // children as long as they don't overlap.
+  if (!child || child->GetAbove()) {
+    return false;
+  }
+
+  return child->ApplyOpacity(mFrame->StyleDisplay()->mOpacity);
+}
+
 nsDisplayItem::LayerState
 nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
                                 const ContainerLayerParameters& aParameters) {
-  if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_opacity) &&
-      !IsItemTooSmallForActiveLayer(this))
+  if (NeedsActiveLayer())
     return LAYER_ACTIVE;
-  if (mFrame->GetContent()) {
-    if (nsLayoutUtils::HasAnimationsForCompositor(mFrame->GetContent(),
-                                                  eCSSProperty_opacity)) {
-      return LAYER_ACTIVE;
-    }
-  }
+
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList, mFrame);
 }
 
