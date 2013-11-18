@@ -2579,7 +2579,7 @@ nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
     aCtx->PushState();
     aCtx->IntersectClip(rects[i]);
     nsCSSRendering::PaintBoxShadowOuter(presContext, *aCtx, mFrame,
-                                        borderRect, rects[i]);
+                                        borderRect, rects[i], mOpacity);
     aCtx->PopState();
   }
 }
