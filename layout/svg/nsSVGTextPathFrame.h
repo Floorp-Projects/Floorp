@@ -17,7 +17,6 @@
 #include "nsQueryFrame.h"
 #include "nsSVGTSpanFrame.h"
 
-class gfxPath;
 class nsIAtom;
 class nsIContent;
 class nsIFrame;
