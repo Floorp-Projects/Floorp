@@ -423,6 +423,13 @@ var gChainingTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+// Videos with an aspect ratio. Used for testing that displaying frames
+// on a canvas works correctly in the case of non-standard aspect ratios.
+// See bug 874897 for an example.
+var gAspectRatioTests = [
+  { name:"VID_0001.ogg", type:"video/ogg", duration:19.966 }
+];
+
 // These are files with non-trivial tag sets.
 // Used by test_metadata.html.
 var gMetadataTests = [

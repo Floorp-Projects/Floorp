@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=874897
+-->
+
+<head>
+  <title>Test for Bug 874897</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function loadeddata(e) {
+  var v = e.target;
+  ok(v.readyState >= v.HAVE_CURRENT_DATA,
+     "readyState must be >= HAVE_CURRENT_DATA for " + v._name);
+
+  var canvas = document.createElement("canvas");
+  canvas.width = 210;
+  canvas.height = 120;
+  document.body.appendChild(canvas);
+  var ctx = canvas.getContext("2d");
+  try {
+    ctx.drawImage(v, 0, 0, v.videoWidth, v.videoHeight, 0, 0, canvas.width, canvas.height);
+    ok(true, "Shouldn't throw exception while drawing to canvas from video for " + v._name);
+  } catch (ex) {
+    ok(false, "Shouldn't throw exception while drawing to canvas from video for " + v._name);
+  }
+
+  v._finished = true;
+  v.parentNode.removeChild(v);
+  manager.finished(v.token);
+}
+
+function startTest(test, token) {
+  var type = getMajorMimeType(test.type);
+  if (type != "video")
+    return;
+  
+  var v = document.createElement('video');
+  v.token = token;
+  manager.started(token);
+  v.src = test.name;
+  v._name = test.name;
+  v._finished = false;
+  v.autoplay = true;
+  v.style.display = "none";
+  v.addEventListener("loadeddata", loadeddata, false);
+  document.body.appendChild(v);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
+function beginTest() {
+  manager.runTests(gAspectRatioTests, startTest);
+}
+
+</script>
+</pre>
+
+</body>
+</html>
