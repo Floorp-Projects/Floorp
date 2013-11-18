@@ -309,7 +309,7 @@ fuzzy-if(OSX==10.7,6,2) fuzzy-if(OSX==10.8,46,26) == text-layout-01.svg text-lay
 == text-layout-05.svg text-layout-05-ref.svg
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,3) == text-layout-06.svg text-layout-06-ref.svg
 == text-layout-07.svg text-layout-07-ref.svg
-pref(svg.text.css-frames.enabled,true) == text-layout-08.svg text-layout-08-ref.svg
+== text-layout-08.svg text-layout-08-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg
 HTTP(..) == text-scale-02.svg text-scale-02-ref.svg
 HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
@@ -339,11 +339,11 @@ fails-if(OSX==10.8) == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg # bug
 == tspan-dxdy-06.svg tspan-dxdy-ref.svg
 == tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg
 skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-01.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) pref(svg.text.css-frames.enabled,false) == tspan-rotate-02.svg tspan-rotate-02.svg # Bug 629718 for random failure on WinXP # bug 773482
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) pref(svg.text.css-frames.enabled,true) == tspan-rotate-02.svg tspan-rotate-02-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
+skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02.svg # Bug 629718 for random failure on WinXP # bug 773482
+skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-02-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
 skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-03.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) pref(svg.text.css-frames.enabled,false) == tspan-rotate-04.svg tspan-rotate-04.svg # Bug 629718 for random failure on WinXP # bug 773482
-skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) pref(svg.text.css-frames.enabled,true) == tspan-rotate-04.svg tspan-rotate-04-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
+skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04.svg # Bug 629718 for random failure on WinXP # bug 773482
+skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-04-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-05.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
 skip-if(B2G) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
 == tspan-rotate-07.svg tspan-rotate-07-ref.svg
