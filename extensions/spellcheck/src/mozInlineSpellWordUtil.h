@@ -3,9 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozInlineSpellWordUtil_h
-#define mozInlineSpellWordUtil_h
-
 #include "nsCOMPtr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -162,5 +159,3 @@ private:
   nsresult MakeRange(NodeOffset aBegin, NodeOffset aEnd, nsRange** aRange);
   nsresult MakeRangeForWord(const RealWord& aWord, nsRange** aRange);
 };
-
-#endif
