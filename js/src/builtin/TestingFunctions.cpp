@@ -1329,7 +1329,11 @@ Neuter(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    return JS_NeuterArrayBuffer(cx, obj);
+    if (!JS_NeuterArrayBuffer(cx, obj))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
 }
 
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
