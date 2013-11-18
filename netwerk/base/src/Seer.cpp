@@ -525,7 +525,7 @@ Seer::EnsureInitStorage()
     stmt = nullptr;
 
     rv = mDB->CreateStatement(
-        NS_LITERAL_CSTRING("UPDATE moz_startups SET startups = :startup_count "
+        NS_LITERAL_CSTRING("UPDATE moz_startups SET startups = :startup_count, "
                            "last_startup = :startup_time;\n"),
         getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, rv);
