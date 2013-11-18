@@ -126,36 +126,45 @@ AudioSegment::WriteTo(uint64_t aID, AudioStream* aOutput)
         NS_ERROR("Buffer overflow");
         return;
       }
+
       uint32_t duration = uint32_t(durationTicks);
-      buf.SetLength(outputChannels*duration);
-      if (c.mBuffer) {
-        channelData.SetLength(c.mChannelData.Length());
-        for (uint32_t i = 0; i < channelData.Length(); ++i) {
-          channelData[i] =
-            AddAudioSampleOffset(c.mChannelData[i], c.mBufferFormat, int32_t(offset));
-        }
 
-        if (channelData.Length() < outputChannels) {
-          // Up-mix. Note that this might actually make channelData have more
-          // than outputChannels temporarily.
-          AudioChannelsUpMix(&channelData, outputChannels, gZeroChannel);
-        }
+      // If we have written data in the past, or we have real (non-silent) data
+      // to write, we can proceed. Otherwise, it means we just started the
+      // AudioStream, and we don't have real data to write to it (just silence).
+      // To avoid overbuffering in the AudioStream, we simply drop the silence,
+      // here. The stream will underrun and output silence anyways.
+      if (c.mBuffer || aOutput->GetWritten()) {
+        buf.SetLength(outputChannels*duration);
+        if (c.mBuffer) {
+          channelData.SetLength(c.mChannelData.Length());
+          for (uint32_t i = 0; i < channelData.Length(); ++i) {
+            channelData[i] =
+              AddAudioSampleOffset(c.mChannelData[i], c.mBufferFormat, int32_t(offset));
+          }
 
-        if (channelData.Length() > outputChannels) {
-          // Down-mix.
-          DownmixAndInterleave(channelData, c.mBufferFormat, duration,
-                               c.mVolume, outputChannels, buf.Elements());
+          if (channelData.Length() < outputChannels) {
+            // Up-mix. Note that this might actually make channelData have more
+            // than outputChannels temporarily.
+            AudioChannelsUpMix(&channelData, outputChannels, gZeroChannel);
+          }
+
+          if (channelData.Length() > outputChannels) {
+            // Down-mix.
+            DownmixAndInterleave(channelData, c.mBufferFormat, duration,
+                                 c.mVolume, outputChannels, buf.Elements());
+          } else {
+            InterleaveAndConvertBuffer(channelData.Elements(), c.mBufferFormat,
+                                       duration, c.mVolume,
+                                       outputChannels,
+                                       buf.Elements());
+          }
         } else {
-          InterleaveAndConvertBuffer(channelData.Elements(), c.mBufferFormat,
-                                     duration, c.mVolume,
-                                     outputChannels,
-                                     buf.Elements());
+          // Assumes that a bit pattern of zeroes == 0.0f
+          memset(buf.Elements(), 0, buf.Length()*sizeof(AudioDataValue));
         }
-      } else {
-        // Assumes that a bit pattern of zeroes == 0.0f
-        memset(buf.Elements(), 0, buf.Length()*sizeof(AudioDataValue));
+        aOutput->Write(buf.Elements(), int32_t(duration), &(c.mTimeStamp));
       }
-      aOutput->Write(buf.Elements(), int32_t(duration), &(c.mTimeStamp));
       if(!c.mTimeStamp.IsNull()) {
         TimeStamp now = TimeStamp::Now();
         // would be more efficient to c.mTimeStamp to ms on create time then pass here
