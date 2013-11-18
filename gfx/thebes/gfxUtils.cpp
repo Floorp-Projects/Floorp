@@ -12,6 +12,7 @@
 #include "ycbcr_to_rgb565.h"
 #include "GeckoProfiler.h"
 #include "ImageContainer.h"
+#include "gfx2DGlue.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -246,26 +247,28 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     if (needed.IsEmpty())
         return nullptr;
 
-    nsRefPtr<gfxASurface> temp;
+    nsRefPtr<gfxDrawable> drawable;
     gfxIntSize size(int32_t(needed.Width()), int32_t(needed.Height()));
 
     nsRefPtr<gfxImageSurface> image = aDrawable->GetAsImageSurface();
     if (image && gfxRect(0, 0, image->GetSize().width, image->GetSize().height).Contains(needed)) {
-      temp = image->GetSubimage(needed);
+      nsRefPtr<gfxASurface> temp = image->GetSubimage(needed);
+      drawable = new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
     } else {
-      temp =
-          gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ContentFromFormat(aFormat));
-      if (!temp || temp->CairoStatus())
-          return nullptr;
+      mozilla::RefPtr<mozilla::gfx::DrawTarget> target =
+        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(ToIntSize(size),
+                                                                     ImageFormatToSurfaceFormat(aFormat));
+      if (!target) {
+        return nullptr;
+      }
 
-      nsRefPtr<gfxContext> tmpCtx = new gfxContext(temp);
+      nsRefPtr<gfxContext> tmpCtx = new gfxContext(target);
       tmpCtx->SetOperator(OptimalFillOperator());
       aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
                       GraphicsFilter::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
+      drawable = new gfxSurfaceDrawable(target, size, gfxMatrix().Translate(-needed.TopLeft()));
     }
 
-    nsRefPtr<gfxDrawable> drawable = 
-        new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
     return drawable.forget();
 }
 #endif // !MOZ_GFX_OPTIMIZE_MOBILE

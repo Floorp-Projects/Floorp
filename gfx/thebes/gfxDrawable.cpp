@@ -12,11 +12,23 @@
 #include "gfxXlibSurface.h"
 #endif
 
+using namespace mozilla;
+using namespace mozilla::gfx;
+
 gfxSurfaceDrawable::gfxSurfaceDrawable(gfxASurface* aSurface,
                                        const gfxIntSize aSize,
                                        const gfxMatrix aTransform)
  : gfxDrawable(aSize)
  , mSurface(aSurface)
+ , mTransform(aTransform)
+{
+}
+
+gfxSurfaceDrawable::gfxSurfaceDrawable(DrawTarget* aDrawTarget,
+                                       const gfxIntSize aSize,
+                                       const gfxMatrix aTransform)
+ : gfxDrawable(aSize)
+ , mDrawTarget(aDrawTarget)
  , mTransform(aTransform)
 {
 }
@@ -105,7 +117,19 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
                          const GraphicsFilter& aFilter,
                          const gfxMatrix& aTransform)
 {
-    nsRefPtr<gfxPattern> pattern = new gfxPattern(mSurface);
+    nsRefPtr<gfxPattern> pattern;
+    if (mDrawTarget) {
+      if (aContext->IsCairo()) {
+        nsRefPtr<gfxASurface> source =
+          gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
+        pattern = new gfxPattern(source);
+      } else {
+        RefPtr<SourceSurface> source = mDrawTarget->Snapshot();
+        pattern = new gfxPattern(source, Matrix());
+      }
+    } else {
+      pattern = new gfxPattern(mSurface);
+    }
     if (aRepeat) {
         pattern->SetExtend(gfxPattern::EXTEND_REPEAT);
         pattern->SetFilter(aFilter);
@@ -136,6 +160,13 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
 already_AddRefed<gfxImageSurface>
 gfxSurfaceDrawable::GetAsImageSurface()
 {
+    if (mDrawTarget) {
+      // TODO: Find a way to implement this. The caller really wants a 'sub-image' of
+      // the original, without having to do a copy. GetDataSurface() might just copy,
+      // which isn't useful.
+      return nullptr;
+
+    }
     return mSurface->GetAsImageSurface();
 }
 
