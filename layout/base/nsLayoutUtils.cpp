@@ -1479,7 +1479,6 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                   aEvent->eventStructType != NS_WHEEL_EVENT &&
                   aEvent->eventStructType != NS_DRAG_EVENT &&
                   aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
-                  aEvent->eventStructType != NS_POINTER_EVENT &&
                   aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
                   aEvent->eventStructType != NS_TOUCH_EVENT &&
                   aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))

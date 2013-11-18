@@ -372,11 +372,6 @@ NS_NewDOMAnimationEvent(nsIDOMEvent** aInstancePtrResult,
                         nsPresContext* aPresContext,
                         mozilla::InternalAnimationEvent* aEvent);
 nsresult
-NS_NewDOMPointerEvent(nsIDOMEvent** aInstancePtrResult,
-                      mozilla::dom::EventTarget* aOwner,
-                      nsPresContext* aPresContext,
-                      mozilla::WidgetPointerEvent* aEvent);
-nsresult
 NS_NewDOMTouchEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext,
