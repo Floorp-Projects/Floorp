@@ -113,7 +113,7 @@ public:
    * implement OfflineAudioContext.  They do not support MediaStream inputs.
    */
   explicit MediaStreamGraphImpl(bool aRealtime);
-  ~MediaStreamGraphImpl();
+  virtual ~MediaStreamGraphImpl();
 
   // Main thread only.
   /**
