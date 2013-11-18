@@ -1748,6 +1748,7 @@ fi
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 MOZILLA_UAVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -uaversion`
+MOZILLA_SYMBOLVERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir -symbolversion`
 
 dnl Get version of various core apps from the version files.
 FIREFOX_VERSION=`cat $_topsrcdir/browser/config/version.txt`
