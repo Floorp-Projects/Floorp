@@ -15,7 +15,7 @@ interface nsIDOMMozNamedAttrMap;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#interface-element
  */
 
-[scriptable, uuid(c3646b5d-a07d-470a-8e40-784459833c9f)]
+[scriptable, uuid(989422ef-120d-4d29-8a56-6aa2505a8b02)]
 interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
@@ -79,12 +79,6 @@ interface nsIDOMElement : nsIDOMNode
 
   [binaryname(MozRemove)]
   void remove();
-
-
-  // HTML
-  [implicit_jscontext] attribute jsval onmouseenter;
-  [implicit_jscontext] attribute jsval onmouseleave;
-
 
   // CSSOM View
   /**

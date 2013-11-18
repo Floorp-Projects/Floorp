@@ -25,7 +25,7 @@
 #include "nsAccessibilityService.h"
 #endif
 
-namespace dom = mozilla::dom;
+using namespace mozilla;
 
 class Area {
 public:

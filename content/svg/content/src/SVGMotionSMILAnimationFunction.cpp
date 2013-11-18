@@ -7,6 +7,7 @@
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/SVGPathElement.h" // for nsSVGPathList
 #include "mozilla/dom/SVGMPathElement.h"
+#include "mozilla/gfx/2D.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsSMILParserUtils.h"
@@ -15,9 +16,10 @@
 #include "SVGMotionSMILType.h"
 #include "SVGMotionSMILPathUtils.h"
 
-namespace mozilla {
+using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
-using namespace dom;
+namespace mozilla {
 
 SVGMotionSMILAnimationFunction::SVGMotionSMILAnimationFunction()
   : mRotateType(eRotateType_Explicit),
@@ -227,7 +229,7 @@ SVGMotionSMILAnimationFunction::
       bool ok =
         path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
       if (ok && mPathVertices.Length()) {
-        mPath = pathElem->GetPath(gfxMatrix());
+        mPath = pathElem->GetPathForLengthOrPositionMeasuring();
       }
     }
   }
@@ -239,7 +241,7 @@ SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr()
   const nsAString& pathSpec = GetAttr(nsGkAtoms::path)->GetStringValue();
   mPathSourceType = ePathSourceType_PathAttr;
 
-  // Generate gfxPath from |path| attr
+  // Generate Path from |path| attr
   SVGPathData path;
   nsSVGPathDataParser pathParser(pathSpec, &path);
 
@@ -252,7 +254,7 @@ SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr()
     return;
   }
 
-  mPath = path.ToPath(gfxMatrix());
+  mPath = path.ToPathForLengthOrPositionMeasuring();
   bool ok = path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
   if (!ok || !mPathVertices.Length()) {
     mPath = nullptr;
@@ -292,7 +294,7 @@ SVGMotionSMILAnimationFunction::
 
 bool
 SVGMotionSMILAnimationFunction::
-  GenerateValuesForPathAndPoints(gfxPath* aPath,
+  GenerateValuesForPathAndPoints(Path* aPath,
                                  bool aIsKeyPoints,
                                  nsTArray<double>& aPointDistances,
                                  nsTArray<nsSMILValue>& aResult)
@@ -301,7 +303,7 @@ SVGMotionSMILAnimationFunction::
 
   // If we're using "keyPoints" as our list of input distances, then we need
   // to de-normalize from the [0, 1] scale to the [0, totalPathLen] scale.
-  double distanceMultiplier = aIsKeyPoints ? aPath->GetLength() : 1.0;
+  double distanceMultiplier = aIsKeyPoints ? aPath->ComputeLength() : 1.0;
   const uint32_t numPoints = aPointDistances.Length();
   for (uint32_t i = 0; i < numPoints; ++i) {
     double curDist = aPointDistances[i] * distanceMultiplier;

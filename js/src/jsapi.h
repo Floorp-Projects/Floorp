@@ -1043,9 +1043,6 @@ extern JS_PUBLIC_API(JSFunction *)
 JS_ValueToConstructor(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(JSString *)
-JS_ValueToString(JSContext *cx, jsval v);
-
-extern JS_PUBLIC_API(JSString *)
 JS_ValueToSource(JSContext *cx, jsval v);
 
 namespace js {
@@ -1060,6 +1057,12 @@ ToNumberSlow(JSContext *cx, JS::Value v, double *dp);
  */
 extern JS_PUBLIC_API(bool)
 ToBooleanSlow(JS::HandleValue v);
+
+/*
+ * DO NOT CALL THIS. Use JS::ToString
+ */
+extern JS_PUBLIC_API(JSString*)
+ToStringSlow(JSContext *cx, JS::HandleValue v);
 } /* namespace js */
 
 namespace JS {
@@ -1097,6 +1100,14 @@ ToBoolean(HandleValue v)
 
     /* The slow path handles strings and objects. */
     return js::ToBooleanSlow(v);
+}
+
+JS_ALWAYS_INLINE JSString*
+ToString(JSContext *cx, HandleValue v)
+{
+    if (v.isString())
+        return v.toString();
+    return js::ToStringSlow(cx, v);
 }
 
 } /* namespace JS */

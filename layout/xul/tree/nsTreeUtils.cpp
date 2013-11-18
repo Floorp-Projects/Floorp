@@ -12,7 +12,7 @@
 #include "nsGkAtoms.h"
 #include "nsINodeInfo.h"
 
-namespace dom = mozilla::dom;
+using namespace mozilla;
 
 nsresult
 nsTreeUtils::TokenizeProperties(const nsAString& aProperties, AtomArray & aPropertiesArray)

@@ -327,6 +327,9 @@ typedef uint64_t nsFrameState;
 // <defs> element or an SVG resource element (<mask>, <pattern>, etc.)
 #define NS_FRAME_IS_NONDISPLAY                      NS_FRAME_STATE_BIT(53)
 
+// Frame has a LayerActivityProperty property
+#define NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY        NS_FRAME_STATE_BIT(54)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)

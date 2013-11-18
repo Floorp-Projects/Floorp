@@ -616,10 +616,10 @@ IdToString(JSContext *cx, jsid id)
 {
   if (JSID_IS_STRING(id))
     return JSID_TO_STRING(id);
-  jsval idval;
-  if (!::JS_IdToValue(cx, id, &idval))
+  JS::Rooted<JS::Value> idval(cx);
+  if (!::JS_IdToValue(cx, id, idval.address()))
     return nullptr;
-  return JS_ValueToString(cx, idval);
+  return JS::ToString(cx, idval);
 }
 
 static inline nsresult
@@ -3292,7 +3292,7 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, JS::MutableHandle<JS::Value> vp
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Grab the value we're being set to before we stomp on |vp|
-  JS::Rooted<JSString*> val(cx, ::JS_ValueToString(cx, vp));
+  JS::Rooted<JSString*> val(cx, JS::ToString(cx, vp));
   NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
   // Make sure |val| stays alive below
@@ -4198,9 +4198,10 @@ nsHTMLDocumentSH::ReleaseDocument(JSFreeOp *fop, JSObject *obj)
 bool
 nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   // Handle document.all("foo") style access to document.all.
 
-  if (argc != 1) {
+  if (args.length() != 1) {
     // XXX: Should throw NS_ERROR_XPC_NOT_ENOUGH_ARGS for argc < 1,
     // and create a new NS_ERROR_XPC_TOO_MANY_ARGS for argc > 1? IE
     // accepts nothing other than one arg.
@@ -4210,7 +4211,7 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
   }
 
   // Convert all types to string.
-  JS::Rooted<JSString*> str(cx, ::JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
+  JS::Rooted<JSString*> str(cx, JS::ToString(cx, args[0]));
   if (!str) {
     return false;
   }
@@ -4218,10 +4219,9 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
   // If we are called via document.all(id) instead of document.all.item(i) or
   // another method, use the document.all callee object as self.
   JSObject *self;
-  JS::Value callee = JS_CALLEE(cx, vp);
-  if (callee.isObject() &&
-      JS_GetClass(&callee.toObject()) == &sHTMLDocumentAllClass) {
-    self = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+  if (args.calleev().isObject() &&
+      JS_GetClass(&args.calleev().toObject()) == &sHTMLDocumentAllClass) {
+    self = &args.calleev().toObject();
   } else {
     self = JS_THIS_OBJECT(cx, vp);
     if (!self)
@@ -4235,13 +4235,7 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
     return false;
   }
 
-  JS::Rooted<JS::Value> value(cx);
-  if (!::JS_GetUCProperty(cx, self, chars, length, &value)) {
-    return false;
-  }
-
-  *vp = value;
-  return true;
+  return ::JS_GetUCProperty(cx, self, chars, length, args.rval());
 }
 
 // StringArray helper
@@ -4436,7 +4430,8 @@ nsStorage2SH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   nsDependentJSString keyStr;
   NS_ENSURE_TRUE(keyStr.init(cx, key), NS_ERROR_UNEXPECTED);
 
-  JSString *value = ::JS_ValueToString(cx, *vp);
+  JS::Rooted<JS::Value> val(cx, *vp);
+  JSString *value = JS::ToString(cx, val);
   NS_ENSURE_TRUE(value, NS_ERROR_UNEXPECTED);
 
   nsDependentJSString valueStr;

@@ -48,7 +48,7 @@ const char* const kCSSRawProperties[eCSSProperty_COUNT_with_aliases] = {
 
 using namespace mozilla;
 
-static int32_t gTableRefCount;
+static int32_t gPropertyTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gPropertyTable;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
 
@@ -96,7 +96,7 @@ static nsCSSProperty gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 void
 nsCSSProps::AddRefTable(void)
 {
-  if (0 == gTableRefCount++) {
+  if (0 == gPropertyTableRefCount++) {
     NS_ABORT_IF_FALSE(!gPropertyTable, "pre existing array!");
     NS_ABORT_IF_FALSE(!gFontDescTable, "pre existing array!");
 
@@ -336,7 +336,7 @@ nsCSSProps::BuildShorthandsContainingTable()
 void
 nsCSSProps::ReleaseTable(void)
 {
-  if (0 == --gTableRefCount) {
+  if (0 == --gPropertyTableRefCount) {
     delete gPropertyTable;
     gPropertyTable = nullptr;
 

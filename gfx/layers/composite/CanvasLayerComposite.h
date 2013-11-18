@@ -58,12 +58,10 @@ public:
 
   void SetBounds(nsIntRect aBounds) { mBounds = aBounds; }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const MOZ_OVERRIDE { return "CanvasLayerComposite"; }
 
 protected:
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix) MOZ_OVERRIDE;
-#endif
 
 private:
   RefPtr<CompositableHost> mImageHost;

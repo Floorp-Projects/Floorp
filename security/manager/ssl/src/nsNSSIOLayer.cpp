@@ -40,6 +40,7 @@
 #include "nsContentUtils.h"
 
 #include "ssl.h"
+#include "sslproto.h"
 #include "secerr.h"
 #include "sslerr.h"
 #include "secder.h"
@@ -887,61 +888,6 @@ nsDumpBuffer(unsigned char *buf, int len)
 #define DEBUG_DUMP_BUFFER(buf,len)
 #endif
 
-static bool
-isNonSSLErrorThatWeAllowToRetry(int32_t err, bool withInitialCleartext)
-{
-  switch (err)
-  {
-    case PR_CONNECT_RESET_ERROR:
-      if (!withInitialCleartext)
-        return true;
-      break;
-    
-    case PR_END_OF_FILE_ERROR:
-      return true;
-  }
-
-  return false;
-}
-
-static bool
-isTLSIntoleranceError(int32_t err, bool withInitialCleartext)
-{
-  // This function is supposed to decide, which error codes should
-  // be used to conclude server is TLS intolerant.
-  // Note this only happens during the initial SSL handshake.
-  // 
-  // When not using a proxy we'll see a connection reset error.
-  // When using a proxy, we'll see an end of file error.
-  // In addition check for some error codes where it is reasonable
-  // to retry without TLS.
-
-  if (isNonSSLErrorThatWeAllowToRetry(err, withInitialCleartext))
-    return true;
-
-  switch (err)
-  {
-    case SSL_ERROR_BAD_MAC_ALERT:
-    case SSL_ERROR_BAD_MAC_READ:
-    case SSL_ERROR_HANDSHAKE_FAILURE_ALERT:
-    case SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT:
-    case SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE:
-    case SSL_ERROR_ILLEGAL_PARAMETER_ALERT:
-    case SSL_ERROR_NO_CYPHER_OVERLAP:
-    case SSL_ERROR_BAD_SERVER:
-    case SSL_ERROR_BAD_BLOCK_PADDING:
-    case SSL_ERROR_UNSUPPORTED_VERSION:
-    case SSL_ERROR_PROTOCOL_VERSION_ALERT:
-    case SSL_ERROR_RX_MALFORMED_FINISHED:
-    case SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE:
-    case SSL_ERROR_DECODE_ERROR_ALERT:
-    case SSL_ERROR_RX_UNKNOWN_ALERT:
-      return true;
-  }
-  
-  return false;
-}
-
 class SSLErrorRunnable : public SyncRunnableBase
 {
  public:
@@ -966,10 +912,106 @@ class SSLErrorRunnable : public SyncRunnableBase
 
 namespace {
 
+bool
+retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
+{
+  // This function is supposed to decide which error codes should
+  // be used to conclude server is TLS intolerant.
+  // Note this only happens during the initial SSL handshake.
+
+  SSLVersionRange range = socketInfo->GetTLSVersionRange();
+
+  uint32_t reason;
+  switch (err)
+  {
+    case SSL_ERROR_BAD_MAC_ALERT: reason = 1; break;
+    case SSL_ERROR_BAD_MAC_READ: reason = 2; break;
+    case SSL_ERROR_HANDSHAKE_FAILURE_ALERT: reason = 3; break;
+    case SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT: reason = 4; break;
+    case SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE: reason = 5; break;
+    case SSL_ERROR_ILLEGAL_PARAMETER_ALERT: reason = 6; break;
+    case SSL_ERROR_NO_CYPHER_OVERLAP: reason = 7; break;
+    case SSL_ERROR_BAD_SERVER: reason = 8; break;
+    case SSL_ERROR_BAD_BLOCK_PADDING: reason = 9; break;
+    case SSL_ERROR_UNSUPPORTED_VERSION: reason = 10; break;
+    case SSL_ERROR_PROTOCOL_VERSION_ALERT: reason = 11; break;
+    case SSL_ERROR_RX_MALFORMED_FINISHED: reason = 12; break;
+    case SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE: reason = 13; break;
+    case SSL_ERROR_DECODE_ERROR_ALERT: reason = 14; break;
+    case SSL_ERROR_RX_UNKNOWN_ALERT: reason = 15; break;
+
+    case PR_CONNECT_RESET_ERROR: reason = 16; goto conditional;
+    case PR_END_OF_FILE_ERROR: reason = 17; goto conditional;
+
+      // When not using a proxy we'll see a connection reset error.
+      // When using a proxy, we'll see an end of file error.
+      // In addition check for some error codes where it is reasonable
+      // to retry without TLS.
+
+      // Don't allow STARTTLS connections to fall back on connection resets or
+      // EOF. Also, don't fall back from TLS 1.0 to SSL 3.0 for those errors,
+      // because connection resets and EOF have too many false positives,
+      // and we want to maximize how often we send TLS 1.0+ with extensions
+      // if at all reasonable. Unfortunately, it appears we have to allow
+      // fallback from TLS 1.2 and TLS 1.1 for those errors due to bad
+      // intermediaries.
+    conditional:
+      if (range.max <= SSL_LIBRARY_VERSION_TLS_1_0 ||
+          socketInfo->GetHasCleartextPhase()) {
+        return false;
+      }
+      break;
+
+    default:
+      return false;
+  }
+
+  Telemetry::ID pre;
+  Telemetry::ID post;
+  switch (range.max) {
+    case SSL_LIBRARY_VERSION_TLS_1_2:
+      pre = Telemetry::SSL_TLS12_INTOLERANCE_REASON_PRE;
+      post = Telemetry::SSL_TLS12_INTOLERANCE_REASON_POST;
+      break;
+    case SSL_LIBRARY_VERSION_TLS_1_1:
+      pre = Telemetry::SSL_TLS11_INTOLERANCE_REASON_PRE;
+      post = Telemetry::SSL_TLS11_INTOLERANCE_REASON_POST;
+      break;
+    case SSL_LIBRARY_VERSION_TLS_1_0:
+      pre = Telemetry::SSL_TLS10_INTOLERANCE_REASON_PRE;
+      post = Telemetry::SSL_TLS10_INTOLERANCE_REASON_POST;
+      break;
+    case SSL_LIBRARY_VERSION_3_0:
+      pre = Telemetry::SSL_SSL30_INTOLERANCE_REASON_PRE;
+      post = Telemetry::SSL_SSL30_INTOLERANCE_REASON_POST;
+      break;
+    default:
+      MOZ_CRASH("impossible TLS version");
+      return false;
+  }
+
+  // The difference between _PRE and _POST represents how often we avoided
+  // TLS intolerance fallback due to remembered tolerance.
+  Telemetry::Accumulate(pre, reason);
+
+  if (!socketInfo->SharedState().IOLayerHelpers()
+                 .rememberIntolerantAtVersion(socketInfo->GetHostName(),
+                                              socketInfo->GetPort(),
+                                              range.min, range.max)) {
+    return false;
+  }
+
+  Telemetry::Accumulate(post, reason);
+
+  return true;
+}
+
 int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
                        PRFileDesc* ssl_layer_fd,
                        nsNSSSocketInfo *socketInfo)
 {
+  PRErrorCode err = PR_GetError();
+
   // This is where we work around all of those SSL servers that don't 
   // conform to the SSL spec and shutdown a connection when we request
   // SSL v3.1 (aka TLS).  The spec says the client says what version
@@ -994,22 +1036,13 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
   bool wantRetry = false;
 
   if (0 > bytesTransfered) {
-    int32_t err = PR_GetError();
-
     if (handleHandshakeResultNow) {
       if (PR_WOULD_BLOCK_ERROR == err) {
+        PR_SetError(err, 0);
         return bytesTransfered;
       }
 
-      if (!wantRetry // no decision yet
-          && isTLSIntoleranceError(err, socketInfo->GetHasCleartextPhase()))
-      {
-        SSLVersionRange range = socketInfo->GetTLSVersionRange();
-        wantRetry = socketInfo->SharedState().IOLayerHelpers()
-                      .rememberIntolerantAtVersion(socketInfo->GetHostName(),
-                                                   socketInfo->GetPort(),
-                                                   range.min, range.max);
-      }
+      wantRetry = retryDueToTLSIntolerance(err, socketInfo);
     }
     
     // This is the common place where we trigger non-cert-errors on a SSL
@@ -1033,15 +1066,7 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
   {
     if (handleHandshakeResultNow)
     {
-      if (!wantRetry // no decision yet
-          && !socketInfo->GetHasCleartextPhase()) // mirror PR_CONNECT_RESET_ERROR treament
-      {
-        SSLVersionRange range = socketInfo->GetTLSVersionRange();
-        wantRetry = socketInfo->SharedState().IOLayerHelpers()
-                        .rememberIntolerantAtVersion(socketInfo->GetHostName(),
-                                                     socketInfo->GetPort(),
-                                                     range.min, range.max);
-      }
+      wantRetry = retryDueToTLSIntolerance(PR_END_OF_FILE_ERROR, socketInfo);
     }
   }
 
@@ -1050,7 +1075,7 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
            ("[%p] checkHandshake: will retry with lower max TLS version\n",
             ssl_layer_fd));
     // We want to cause the network layer to retry the connection.
-    PR_SetError(PR_CONNECT_RESET_ERROR, 0);
+    err = PR_CONNECT_RESET_ERROR;
     if (wasReading)
       bytesTransfered = -1;
   }
@@ -1062,6 +1087,10 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
     socketInfo->SetHandshakeNotPending();
   }
   
+  if (bytesTransfered < 0) {
+    PR_SetError(err, 0);
+  }
+
   return bytesTransfered;
 }
 

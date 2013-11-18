@@ -368,6 +368,7 @@ class RemoteReftest(RefTest):
         prefs["extensions.getAddons.search.url"] = "http://127.0.0.1:8888/extensions-dummy/repositorySearchURL"
         # Make sure that opening the plugins check page won't hit the network
         prefs["plugins.update.url"] = "http://127.0.0.1:8888/plugins-dummy/updateCheckURL"
+        prefs["layout.css.devPixelsPerPx"] = "1.0"
 
         # Disable skia-gl: see bug 907351
         prefs["gfx.canvas.azure.accelerated"] = False

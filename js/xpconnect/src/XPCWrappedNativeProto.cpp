@@ -12,7 +12,7 @@
 
 using namespace mozilla;
 
-#if defined(DEBUG_xpc_hacker) || defined(DEBUG)
+#ifdef DEBUG
 int32_t XPCWrappedNativeProto::gDEBUG_LiveProtoCount = 0;
 #endif
 
@@ -101,8 +101,6 @@ XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreat
             success = CallPostCreatePrototype();
     }
 
-    DEBUG_ReportShadowedMembers(mSet, nullptr, this);
-
     return success;
 }
 
@@ -154,15 +152,6 @@ XPCWrappedNativeProto::SystemIsBeingShutDown()
 {
     // Note that the instance might receive this call multiple times
     // as we walk to here from various places.
-
-#ifdef XPC_TRACK_PROTO_STATS
-    static bool DEBUG_DumpedStats = false;
-    if (!DEBUG_DumpedStats) {
-        printf("%d XPCWrappedNativeProto(s) alive at shutdown\n",
-               gDEBUG_LiveProtoCount);
-        DEBUG_DumpedStats = true;
-    }
-#endif
 
     if (mJSProtoObject) {
         // short circuit future finalization

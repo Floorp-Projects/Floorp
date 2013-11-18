@@ -286,7 +286,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         sandboxObj = js::UncheckedUnwrap(sandboxObj);
         JSAutoCompartment ac(cx, sandboxObj);
 
-        // Push our JSContext on the context stack so the JS_ValueToString call (and
+        // Push our JSContext on the context stack so the EvalInSandboxObject call (and
         // JS_ReportPendingException, if relevant) will use the principal of cx.
         nsCxPusher pusher;
         pusher.Push(cx);

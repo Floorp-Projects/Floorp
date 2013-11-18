@@ -9,10 +9,10 @@ if CONFIG['MOZ_X11']:
 
 MODULE = 'widget'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsShmImage.cpp',
+    'SharedWidgetUtils.cpp',
     'WidgetEventImpl.cpp',
-    'WidgetUtils.cpp',
 ]
 
 LIBXUL_LIBRARY = True
