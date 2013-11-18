@@ -143,6 +143,8 @@ EXPORTS.mozilla.layers += [
     'opengl/CompositorOGL.h',
     'opengl/GrallocTextureClient.h',
     'opengl/GrallocTextureHost.h',
+    'opengl/MacIOSurfaceTextureClientOGL.h',
+    'opengl/MacIOSurfaceTextureHostOGL.h',
     'opengl/TextureClientOGL.h',
     'opengl/TextureHostOGL.h',
     'RenderTrace.h',
@@ -266,6 +268,12 @@ SOURCES += [
     'ThebesLayerBuffer.cpp',
     'YCbCrImageDataSerializer.cpp',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    SOURCES += [
+        'opengl/MacIOSurfaceTextureClientOGL.cpp',
+        'opengl/MacIOSurfaceTextureHostOGL.cpp',
+    ]
 
 IPDL_SOURCES = [
     'ipc/LayersMessages.ipdlh',
