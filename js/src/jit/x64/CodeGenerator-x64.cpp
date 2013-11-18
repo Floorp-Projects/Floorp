@@ -281,7 +281,7 @@ CodeGeneratorX64::visitInterruptCheck(LInterruptCheck *lir)
         return false;
 
     masm.branch32(Assembler::NotEqual,
-                  AbsoluteAddress(&GetIonContext()->runtime->interrupt), Imm32(0),
+                  AbsoluteAddress(GetIonContext()->runtime->addressOfInterrupt()), Imm32(0),
                   ool->entry());
     masm.bind(ool->rejoin());
     return true;
