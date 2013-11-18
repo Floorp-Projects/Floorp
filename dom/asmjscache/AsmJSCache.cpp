@@ -1023,12 +1023,22 @@ OpenFile(JS::Handle<JSObject*> aGlobal,
 typedef uint32_t AsmJSCookieType;
 static const uint32_t sAsmJSCookie = 0x600d600d;
 
+// Anything smaller should compile fast enough that caching will just add
+// overhead.
+static const size_t sMinCachedModuleLength = 10000;
+
 bool
 OpenEntryForRead(JS::Handle<JSObject*> aGlobal,
+                 const jschar* aBegin,
+                 const jschar* aLimit,
                  size_t* aSize,
                  const uint8_t** aMemory,
                  intptr_t* aFile)
 {
+  if (size_t(aLimit - aBegin) < sMinCachedModuleLength) {
+    return false;
+  }
+
   File::AutoClose file;
   if (!OpenFile(aGlobal, eOpenForRead, 0, &file)) {
     return false;
@@ -1073,10 +1083,16 @@ CloseEntryForRead(JS::Handle<JSObject*> global,
 
 bool
 OpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
+                  const jschar* aBegin,
+                  const jschar* aEnd,
                   size_t aSize,
                   uint8_t** aMemory,
                   intptr_t* aFile)
 {
+  if (size_t(aEnd - aBegin) < sMinCachedModuleLength) {
+    return false;
+  }
+
   // Add extra space for the AsmJSCookieType (see OpenEntryForRead).
   aSize += sizeof(AsmJSCookieType);
 

@@ -35,17 +35,29 @@ enum OpenMode
 // Implementation of AsmJSCacheOps, installed by nsJSEnvironment:
 
 bool
-OpenEntryForRead(JS::Handle<JSObject*> aGlobal, size_t* aSize,
-                 const uint8_t** aMemory, intptr_t *aHandle);
+OpenEntryForRead(JS::Handle<JSObject*> aGlobal,
+                 const jschar* aBegin,
+                 const jschar* aLimit,
+                 size_t* aSize,
+                 const uint8_t** aMemory,
+                 intptr_t *aHandle);
 void
-CloseEntryForRead(JS::Handle<JSObject*> aGlobal, size_t aSize,
-                  const uint8_t* aMemory, intptr_t aHandle);
+CloseEntryForRead(JS::Handle<JSObject*> aGlobal,
+                  size_t aSize,
+                  const uint8_t* aMemory,
+                  intptr_t aHandle);
 bool
-OpenEntryForWrite(JS::Handle<JSObject*> aGlobal, size_t aSize,
-                  uint8_t** aMemory, intptr_t* aHandle);
+OpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
+                  const jschar* aBegin,
+                  const jschar* aEnd,
+                  size_t aSize,
+                  uint8_t** aMemory,
+                  intptr_t* aHandle);
 void
-CloseEntryForWrite(JS::Handle<JSObject*> aGlobal, size_t aSize,
-                   uint8_t* aMemory, intptr_t aHandle);
+CloseEntryForWrite(JS::Handle<JSObject*> aGlobal,
+                   size_t aSize,
+                   uint8_t* aMemory,
+                   intptr_t aHandle);
 bool
 GetBuildId(js::Vector<char>* aBuildId);
 
