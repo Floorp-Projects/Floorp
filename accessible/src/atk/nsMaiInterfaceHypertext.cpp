@@ -26,7 +26,7 @@ getLinkCB(AtkHypertext *aText, gint aLinkIndex)
   HyperTextAccessible* hyperText = accWrap->AsHyperText();
   NS_ENSURE_TRUE(hyperText, nullptr);
 
-  Accessible* hyperLink = hyperText->GetLinkAt(aLinkIndex);
+  Accessible* hyperLink = hyperText->LinkAt(aLinkIndex);
   if (!hyperLink)
     return nullptr;
 
@@ -49,7 +49,7 @@ getLinkCountCB(AtkHypertext *aText)
   HyperTextAccessible* hyperText = accWrap->AsHyperText();
   NS_ENSURE_TRUE(hyperText, -1);
 
-  return hyperText->GetLinkCount();
+  return hyperText->LinkCount();
 }
 
 static gint
@@ -62,11 +62,7 @@ getLinkIndexCB(AtkHypertext *aText, gint aCharIndex)
   HyperTextAccessible* hyperText = accWrap->AsHyperText();
   NS_ENSURE_TRUE(hyperText, -1);
 
-  int32_t index = -1;
-  nsresult rv = hyperText->GetLinkIndexAtOffset(aCharIndex, &index);
-  NS_ENSURE_SUCCESS(rv, -1);
-
-  return index;
+  return hyperText->LinkIndexAtOffset(aCharIndex);
 }
 }
 
