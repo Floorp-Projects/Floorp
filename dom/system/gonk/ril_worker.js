@@ -11555,9 +11555,15 @@ let ICCRecordHelper = {
         ICCIOHelper.loadNextRecord(options);
       } else {
         if (onsuccess) {
+          RIL.iccInfoPrivate.pbrs = pbrs;
           onsuccess(pbrs);
         }
       }
+    }
+
+    if (RIL.iccInfoPrivate.pbrs) {
+      onsuccess(RIL.iccInfoPrivate.pbrs);
+      return;
     }
 
     let pbrs = [];
