@@ -1228,7 +1228,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // ThreadData::ionTop of the main thread.
     void linkExitFrame() {
         storePtr(StackPointer,
-                 AbsoluteAddress(GetIonContext()->runtime->addressOfIonTop()));
+                 AbsoluteAddress(&GetIonContext()->runtime->mainThread.ionTop));
     }
 
     void callWithExitFrame(IonCode *target, Register dynStack) {
