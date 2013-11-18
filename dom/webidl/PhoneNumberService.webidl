@@ -8,7 +8,8 @@
 interface PhoneNumberService {
 
   [Func="Navigator::HasPhoneNumberSupport"]
-  DOMRequest fuzzyMatch([TreatNullAs=EmptyString, TreatUndefinedAs=EmptyString] DOMString number1, [TreatNullAs=EmptyString, TreatUndefinedAs=EmptyString] DOMString number2);
+  DOMRequest fuzzyMatch([TreatNullAs=EmptyString] optional DOMString number1 = "",
+                        [TreatNullAs=EmptyString] optional DOMString number2= "");
 
   [Func="Navigator::HasPhoneNumberSupport"]
   DOMString normalize(DOMString number);

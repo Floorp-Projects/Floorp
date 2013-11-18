@@ -109,9 +109,6 @@ Element implements ParentNode;
 
 [NoInterfaceObject]
 interface ChildNode {
-  readonly attribute Element? previousElementSibling;
-  readonly attribute Element? nextElementSibling;
-
   void before((Node or DOMString)... nodes);
   void after((Node or DOMString)... nodes);
   void replace((Node or DOMString)... nodes);
@@ -120,6 +117,14 @@ interface ChildNode {
 DocumentType implements ChildNode;
 Element implements ChildNode;
 CharacterData implements ChildNode;
+
+[NoInterfaceObject]
+interface NonDocumentTypeChildNode {
+  readonly attribute Element? previousElementSibling;
+  readonly attribute Element? nextElementSibling;
+};
+Element implements NonDocumentTypeChildNode;
+CharacterData implements NonDocumentTypeChildNode;
 
 [Constructor(MutationCallback callback)]
 interface MutationObserver {

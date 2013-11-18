@@ -249,8 +249,9 @@
 #define NS_THEME_WIN_MEDIA_TOOLBOX                         222
 #define NS_THEME_WIN_BROWSER_TAB_BAR_TOOLBOX               223
 
-// Unified toolbar on the Mac
+// Unified toolbar and titlebar elements on the Mac
 #define NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR                   224
+#define NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON                 226
 
 // Vista glass
 #define NS_THEME_WIN_BORDERLESS_GLASS                      229

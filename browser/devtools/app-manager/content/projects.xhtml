@@ -75,16 +75,19 @@
           <p class="project-description" template='{"type":"textContent","path":"manifest.description"}'></p>
         </div>
       </div>
-      <div class="project-buttons">
+      <div class="project-buttons" template='{"type":"attribute","path":"type","name":"type"}'>
         <button class="project-button-update" onclick="UI.update(this, this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}' title="&projects.updateAppTooltip;">&projects.updateApp;</button>
         <button class="device-action project-button-debug" onclick="UI.debug(this, this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}' title="&projects.debugAppTooltip;">&projects.debugApp;</button>
       </div>
       <div class="project-errors" template='{"type":"textContent","path":"errors"}'></div>
       <div class="project-warnings" template='{"type":"textContent","path":"warnings"}'></div>
     </div>
-    <div class="manifest-editor" template='{"type":"attribute","path":"type","name":"type"}'>
-      <h2 class="editable" title="&projects.manifestEditorTooltip;">&projects.manifestEditor;</h2>
-      <h2 class="viewable" title="&projects.manifestViewerTooltip;">&projects.manifestViewer;</h2>
+    <div class="manifest-editor">
+      <div class="manifest-header" template='{"type":"attribute","path":"type","name":"type"}'>
+        <h2 class="editable" title="&projects.manifestEditorTooltip;">&projects.manifestEditor;</h2>
+        <h2 class="viewable" title="&projects.manifestViewerTooltip;">&projects.manifestViewer;</h2>
+        <button class="editable manifest-button-save" onclick="UI.saveManifest(this, this.dataset.location)" template='{"type":"attribute","path":"location","name":"data-location"}' title="&projects.saveManifestTooltip;">&projects.saveManifest;</button>
+      </div>
     </div>
   </div>
   </template>

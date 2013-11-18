@@ -36,8 +36,7 @@ interface nsIWindowCreator;
  *   This component must be initialized at application startup by calling
  * setWindowCreator.
  */
-[scriptable, uuid(002286a8-494b-43b3-8ddd-49e3fc50622b)]
-
+[scriptable, uuid(67bc1691-fbaf-484a-a15b-c96212b45034)]
 interface nsIWindowWatcher : nsISupports {
 
   /** Create a new window. It will automatically be added to our list
@@ -123,6 +122,10 @@ interface nsIWindowWatcher : nsISupports {
   */
   void setWindowCreator(in nsIWindowCreator creator);
 
+  /** Returns true if a window creator callback has been set, false otherwise.
+  */
+  boolean hasWindowCreator();
+
 
   /** Retrieve the chrome window mapped to the given DOM window. Window
       Watcher keeps a list of all top-level DOM windows currently open,
@@ -160,9 +163,5 @@ interface nsIWindowWatcher : nsISupports {
 };
 
 %{C++
-// {002286a8-494b-43b3-8ddd-49e3fc50622b}
-#define NS_WINDOWWATCHER_IID \
- {0x002286a8, 0x494b, 0x43b3, {0x8d, 0xdd, 0x49, 0xe3, 0xfc, 0x50, 0x62, 0x2b}}
-
 #define NS_WINDOWWATCHER_CONTRACTID "@mozilla.org/embedcomp/window-watcher;1"
 %}

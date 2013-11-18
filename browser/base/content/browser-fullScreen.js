@@ -17,7 +17,7 @@ var FullScreen = {
       enterFS = !enterFS;
 
     // Toggle the View:FullScreen command, which controls elements like the
-    // fullscreen menuitem, menubars, and the appmenu.
+    // fullscreen menuitem, and menubars.
     let fullscreenCommand = document.getElementById("View:FullScreen");
     if (enterFS) {
       fullscreenCommand.setAttribute("checked", enterFS);
@@ -517,15 +517,6 @@ var FullScreen = {
       // XXX don't interfere with previously collapsed toolbars
       if (el.getAttribute("fullscreentoolbar") == "true") {
         if (!aShow) {
-
-          var toolbarMode = el.getAttribute("mode");
-          if (toolbarMode != "text") {
-            el.setAttribute("saved-mode", toolbarMode);
-            el.setAttribute("saved-iconsize", el.getAttribute("iconsize"));
-            el.setAttribute("mode", "icons");
-            el.setAttribute("iconsize", "small");
-          }
-
           // Give the main nav bar and the tab bar the fullscreen context menu,
           // otherwise remove context menu to prevent breakage
           el.setAttribute("saved-context", el.getAttribute("context"));
@@ -539,18 +530,10 @@ var FullScreen = {
           el.setAttribute("inFullscreen", true);
         }
         else {
-          var restoreAttr = function restoreAttr(attrName) {
-            var savedAttr = "saved-" + attrName;
-            if (el.hasAttribute(savedAttr)) {
-              el.setAttribute(attrName, el.getAttribute(savedAttr));
-              el.removeAttribute(savedAttr);
-            }
+          if (el.hasAttribute("saved-context")) {
+            el.setAttribute("context", el.getAttribute("saved-context"));
+            el.removeAttribute("saved-context");
           }
-
-          restoreAttr("mode");
-          restoreAttr("iconsize");
-          restoreAttr("context");
-
           el.removeAttribute("inFullscreen");
         }
       } else {
@@ -571,11 +554,9 @@ var FullScreen = {
       document.documentElement.setAttribute("inFullscreen", true);
     }
 
-    // In tabs-on-top mode, move window controls to the tab bar,
-    // and in tabs-on-bottom mode, move them back to the navigation toolbar.
     var fullscreenctls = document.getElementById("window-controls");
     var navbar = document.getElementById("nav-bar");
-    var ctlsOnTabbar = window.toolbar.visible && (navbar.collapsed || TabsOnTop.enabled);
+    var ctlsOnTabbar = window.toolbar.visible;
     if (fullscreenctls.parentNode == navbar && ctlsOnTabbar) {
       fullscreenctls.removeAttribute("flex");
       document.getElementById("TabsToolbar").appendChild(fullscreenctls);

@@ -83,9 +83,11 @@ LOCAL_INCLUDES += \
 
 MOZ_WINCONSOLE = 1
 
-LIBS += \
-  ../common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
-  $(NULL)
+ifeq ($(OS_ARCH),WINNT)
+LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon-standalone,../common-standalone)
+else
+LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon,../common)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1

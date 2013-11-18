@@ -148,7 +148,7 @@ AliasAnalysis::analyze()
 
         if (block->isLoopHeader()) {
             IonSpew(IonSpew_Alias, "Processing loop header %d", block->id());
-            loop_ = new LoopAliasInfo(loop_, *block);
+            loop_ = new(graph_.alloc()) LoopAliasInfo(loop_, *block);
         }
 
         for (MDefinitionIterator def(*block); def; def++) {

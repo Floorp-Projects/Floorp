@@ -72,10 +72,10 @@ bool
 RtspControllerParent::RecvPlay()
 {
   LOG(("RtspControllerParent::RecvPlay()"));
-  NS_ENSURE_TRUE(mController, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mController, true);
 
   nsresult rv = mController->Play();
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, true);
   return true;
 }
 
@@ -83,10 +83,10 @@ bool
 RtspControllerParent::RecvPause()
 {
   LOG(("RtspControllerParent::RecvPause()"));
-  NS_ENSURE_TRUE(mController, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mController, true);
 
   nsresult rv = mController->Pause();
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, true);
   return true;
 }
 
@@ -94,10 +94,10 @@ bool
 RtspControllerParent::RecvResume()
 {
   LOG(("RtspControllerParent::RecvResume()"));
-  NS_ENSURE_TRUE(mController, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mController, true);
 
   nsresult rv = mController->Resume();
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, true);
   return true;
 }
 
@@ -105,10 +105,10 @@ bool
 RtspControllerParent::RecvSuspend()
 {
   LOG(("RtspControllerParent::RecvSuspend()"));
-  NS_ENSURE_TRUE(mController, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mController, true);
 
   nsresult rv = mController->Suspend();
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, true);
   return true;
 }
 
@@ -116,10 +116,10 @@ bool
 RtspControllerParent::RecvSeek(const uint64_t& offset)
 {
   LOG(("RtspControllerParent::RecvSeek()"));
-  NS_ENSURE_TRUE(mController, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mController, true);
 
   nsresult rv = mController->Seek(offset);
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, true);
   return true;
 }
 
@@ -127,10 +127,10 @@ bool
 RtspControllerParent::RecvStop()
 {
   LOG(("RtspControllerParent::RecvStop()"));
-  NS_ENSURE_TRUE(mController, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mController, true);
 
   nsresult rv = mController->Stop();
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, true);
   return true;
 }
 
@@ -244,9 +244,9 @@ RtspControllerParent::OnConnected(uint8_t index,
 
 NS_IMETHODIMP
 RtspControllerParent::OnDisconnected(uint8_t index,
-                                     uint32_t reason)
+                                     nsresult reason)
 {
-  LOG(("RtspControllerParent::OnDisconnected()"));
+  LOG(("RtspControllerParent::OnDisconnected() for track %d reason = 0x%x", index, reason));
   if (!mIPCOpen || !SendOnDisconnected(index, reason)) {
     return NS_ERROR_FAILURE;
   }

@@ -10,21 +10,20 @@ using namespace js;
 using namespace js::jit;
 
 BitSet *
-BitSet::New(unsigned int max)
+BitSet::New(TempAllocator &alloc, unsigned int max)
 {
-    BitSet *result = new BitSet(max);
-    if (!result->init())
+    BitSet *result = new(alloc) BitSet(max);
+    if (!result->init(alloc))
         return nullptr;
     return result;
 }
 
 bool
-BitSet::init()
+BitSet::init(TempAllocator &alloc)
 {
     size_t sizeRequired = numWords() * sizeof(*bits_);
 
-    TempAllocator *alloc = GetIonContext()->temp;
-    bits_ = (uint32_t *)alloc->allocate(sizeRequired);
+    bits_ = (uint32_t *)alloc.allocate(sizeRequired);
     if (!bits_)
         return false;
 

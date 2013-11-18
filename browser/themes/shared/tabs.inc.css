@@ -1,0 +1,283 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+%define tabHeight 31px
+%define tabCurveWidth 30px
+%define tabCurveHalfWidth 15px
+
+/* image preloading hack */
+#TabsToolbar::before {
+  /* Because of bug 853415, we need to ordinal this to the first position: */
+  -moz-box-ordinal-group: 0;
+  content: '';
+  display: block;
+  background-image:
+    url(chrome://browser/skin/tabbrowser/tab-background-end.png),
+    url(chrome://browser/skin/tabbrowser/tab-background-middle.png),
+    url(chrome://browser/skin/tabbrowser/tab-background-start.png);
+}
+
+.tabbrowser-tab,
+.tabs-newtab-button {
+  -moz-appearance: none;
+  background-color: transparent;
+  border-radius: 0;
+  border-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.tabbrowser-tab {
+  -moz-box-align: stretch;
+}
+
+.tabbrowser-tab[remote] {
+  text-decoration: underline;
+}
+
+/* The selected tab should appear above adjacent tabs, .tabs-newtab-button and the highlight of #nav-bar */
+.tabbrowser-tab[selected=true] {
+  position: relative;
+  z-index: 2;
+}
+
+.tab-background-middle {
+  -moz-box-flex: 1;
+  background-clip: padding-box;
+  border-left: @tabCurveHalfWidth@ solid transparent;
+  border-right: @tabCurveHalfWidth@ solid transparent;
+  margin: 0 -@tabCurveHalfWidth@;
+}
+
+.tab-content {
+  -moz-padding-end: 9px;
+  -moz-padding-start: 9px;
+}
+
+.tab-throbber,
+.tab-icon-image,
+.tab-close-button {
+  margin-top: 1px;
+}
+
+.tab-throbber,
+.tab-icon-image {
+  height: 16px;
+  width: 16px;
+}
+
+.tab-icon-image {
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+.tab-throbber {
+  list-style-image: url("chrome://browser/skin/tabbrowser/connecting.png");
+}
+
+.tab-throbber[progress] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
+}
+
+.tab-throbber:not([pinned]),
+.tab-icon-image:not([pinned]) {
+  -moz-margin-end: 6px;
+}
+
+.tab-label {
+  -moz-margin-end: 0;
+  -moz-margin-start: 0;
+}
+
+.tab-close-button {
+  -moz-margin-start: 4px;
+  -moz-margin-end: -2px;
+  padding: 0;
+}
+
+.tab-background,
+.tabs-newtab-button {
+  /* overlap the tab curves */
+  -moz-margin-end: -@tabCurveHalfWidth@;
+  -moz-margin-start: -@tabCurveHalfWidth@;
+}
+
+.tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
+  -moz-padding-end: @tabCurveHalfWidth@;
+  -moz-padding-start: @tabCurveHalfWidth@;
+}
+
+.tab-background-start[selected=true]::after,
+.tab-background-start[selected=true]::before,
+.tab-background-start,
+.tab-background-end,
+.tab-background-end[selected=true]::after,
+.tab-background-end[selected=true]::before {
+  min-height: @tabHeight@;
+  width: @tabCurveWidth@;
+}
+
+.tabbrowser-tab:-moz-lwtheme {
+  color: inherit;
+}
+
+/* Selected tab */
+
+/*
+ Tab background pseudo-elements which are positioned above .tab-background-start/end:
+   - ::before - provides the fill of the tab curve and is clipped to the tab shape. This is where
+                pointer events go for the curve.
+   - ::after  - provides the border/stroke of the tab curve and is overlayed above ::before.  Pointer
+                events go through to ::before to get the proper shape.
+ */
+
+
+.tab-background-start[selected=true]::after,
+.tab-background-end[selected=true]::after {
+  /* position ::after on top of its parent */
+  -moz-margin-start: -@tabCurveWidth@;
+  background-size: 100% 100%;
+  content: "";
+  display: -moz-box;
+  position: relative;
+}
+
+.tab-background-start[selected=true]::before,
+.tab-background-end[selected=true]::before {
+  /* all ::before pseudo elements */
+  content: "";
+  display: -moz-box;
+}
+
+.tab-background-start[selected=true]:-moz-locale-dir(ltr):not(:-moz-lwtheme)::before,
+.tab-background-end[selected=true]:-moz-locale-dir(rtl):not(:-moz-lwtheme)::before {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-selected-start.svg);
+  background-size: 100% 100%;
+}
+
+.tab-background-end[selected=true]:-moz-locale-dir(ltr):not(:-moz-lwtheme)::before,
+.tab-background-start[selected=true]:-moz-locale-dir(rtl):not(:-moz-lwtheme)::before {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-selected-end.svg);
+  background-size: 100% 100%;
+}
+
+/* For lightweight themes, clip the header image on start, middle, and end. */
+.tab-background-start[selected=true]:-moz-locale-dir(ltr):-moz-lwtheme::before,
+.tab-background-end[selected=true]:-moz-locale-dir(rtl):-moz-lwtheme::before {
+  clip-path: url(chrome://browser/content/browser.xul#tab-curve-clip-path-start);
+}
+
+.tab-background-end[selected=true]:-moz-locale-dir(ltr):-moz-lwtheme::before,
+.tab-background-start[selected=true]:-moz-locale-dir(rtl):-moz-lwtheme::before {
+  clip-path: url(chrome://browser/content/browser.xul#tab-curve-clip-path-end);
+}
+
+.tab-background-start[selected=true]:-moz-locale-dir(ltr)::after,
+.tab-background-end[selected=true]:-moz-locale-dir(rtl)::after {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start.png);
+}
+
+.tab-background-end[selected=true]:-moz-locale-dir(ltr)::after,
+.tab-background-start[selected=true]:-moz-locale-dir(rtl)::after {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end.png);
+}
+
+.tab-background-middle[selected=true] {
+  background-clip: padding-box, padding-box, content-box;
+  background-color: @fgTabBackgroundColor@;
+  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
+                    @fgTabTexture@,
+                    none;
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  /* The padding-top combined with background-clip: content-box (the bottom-most) ensure the
+     background-color doesn't extend above the top border. */
+  padding-top: 2px;
+}
+
+/* Selected tab lightweight theme styles.
+   See browser-lightweightTheme.css for information about run-time changes to LWT styles. */
+.tab-background-middle[selected=true]:-moz-lwtheme {
+  background-color: transparent;
+  background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle.png),
+                    @fgTabTextureLWT@;/*,
+                    lwtHeader;*/
+  /* Don't stretch the LWT header images */
+  background-size: auto 100%, auto 100%, auto auto;
+}
+
+/* These LWT styles are normally overridden by browser-lightweightTheme.css */
+.tab-background-start[selected=true]:-moz-lwtheme::before,
+.tab-background-end[selected=true]:-moz-lwtheme::before {
+  background-image: @fgTabTextureLWT@;
+}
+
+.tab-background-start[selected=true]:-moz-lwtheme::before,
+.tab-background-end[selected=true]:-moz-lwtheme::before,
+.tab-background-middle[selected=true]:-moz-lwtheme {
+  background-color: transparent;
+}
+
+/* End selected tab */
+
+/* new tab button border and gradient on hover */
+.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
+.tabs-newtab-button:hover {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-background-start.png),
+                    url(chrome://browser/skin/tabbrowser/tab-background-middle.png),
+                    url(chrome://browser/skin/tabbrowser/tab-background-end.png);
+  background-position: left bottom, @tabCurveWidth@ bottom, right bottom;
+  background-repeat: no-repeat;
+  background-size: @tabCurveWidth@ 100%, calc(100% - (2 * @tabCurveWidth@)) 100%, @tabCurveWidth@ 100%;
+}
+
+/* Tab pointer-events */
+.tabbrowser-tab {
+  pointer-events: none;
+}
+
+.tab-background-middle,
+.tabs-newtab-button,
+.tab-close-button {
+  pointer-events: auto;
+}
+
+/* Pinned tabs */
+
+/* Pinned tab separators need position: absolute when positioned (during overflow). */
+#tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned]::before {
+  height: 100%;
+  position: absolute;
+}
+
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) > .tab-stack > .tab-content {
+  background-image: radial-gradient(farthest-corner at center bottom, rgb(255,255,255) 3%, rgba(186,221,251,0.75) 20%, rgba(127,179,255,0.25) 40%, rgba(127,179,255,0) 70%);
+  background-position: center bottom 1px;
+  background-repeat: no-repeat;
+  background-size: 85% 100%;
+}
+
+/* Background tab separators (3px wide).
+   Also show separators beside the selected tab when dragging it. */
+#tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
+.tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
+#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
+  -moz-margin-start: -1.5px;
+  -moz-margin-end: -1.5px;
+  background-image: url(chrome://browser/skin/tabbrowser/tab-separator.png);
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  background-size: 3px 100%;
+  content: "";
+  display: -moz-box;
+  margin-bottom: 1px;
+  width: 3px;
+}
+
+/* New tab button */
+
+.tabs-newtab-button {
+  width: 66px;
+}

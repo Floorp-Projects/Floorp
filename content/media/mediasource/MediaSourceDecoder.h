@@ -41,6 +41,7 @@ public:
   virtual MediaDecoder* Clone() MOZ_OVERRIDE;
   virtual MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE;
   virtual nsresult Load(nsIStreamListener**, MediaDecoder*) MOZ_OVERRIDE;
+  virtual nsresult GetSeekable(TimeRanges* aSeekable) MOZ_OVERRIDE;
 
   void AttachMediaSource(MediaSource* aMediaSource);
   void DetachMediaSource();

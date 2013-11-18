@@ -12,7 +12,7 @@ EXPORTS += [
     'nsITableCellLayout.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'BasicTableLayoutStrategy.cpp',
     'FixedTableLayoutStrategy.cpp',
     'nsCellMap.cpp',

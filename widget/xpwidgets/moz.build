@@ -8,10 +8,12 @@ MODULE = 'widget'
 
 EXPORTS += [
     'APZCCallbackHelper.h',
+    'GfxDriverInfo.h',
+    'GfxInfoBase.h',
     'GfxInfoCollector.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'APZCCallbackHelper.cpp',
     'GfxDriverInfo.cpp',
     'GfxInfoBase.cpp',
@@ -21,7 +23,6 @@ SOURCES += [
     'nsBaseAppShell.cpp',
     'nsBaseDragService.cpp',
     'nsBaseScreen.cpp',
-    'nsBaseWidget.cpp',
     'nsClipboardHelper.cpp',
     'nsClipboardPrivacyHandler.cpp',
     'nsFilePickerProxy.cpp',
@@ -38,24 +39,29 @@ SOURCES += [
     'WidgetUtils.cpp',
 ]
 
+# nsBaseWidget.cpp needs to be built separately because of name clashes in the OS X headers
+SOURCES += [
+    'nsBaseWidget.cpp',
+]
+
 if CONFIG['MOZ_X11']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'GfxInfoX11.cpp'
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('os2', 'cocoa', 'windows'):
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsBaseClipboard.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'os2', 'cocoa', 'windows',
                                     'android', 'gonk'):
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsBaseFilePicker.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'windows', 'cocoa'):
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsNativeTheme.cpp',
     ]
 

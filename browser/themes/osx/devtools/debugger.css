@@ -5,10 +5,6 @@
 
 %include ../shared.inc
 
-#body {
-  background: #fff;
-}
-
 /* Sources and breakpoints pane */
 
 #sources-pane {

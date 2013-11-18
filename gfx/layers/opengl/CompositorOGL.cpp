@@ -45,6 +45,9 @@
 #endif
 #include "GeckoProfiler.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "GfxInfo.h"
+#endif
 
 namespace mozilla {
 
@@ -268,6 +271,7 @@ CompositorOGL::CreateContext()
   if (!context) {
     NS_WARNING("Failed to create CompositorOGL context");
   }
+
   return context.forget();
 }
 
@@ -373,6 +377,10 @@ CompositorOGL::Initialize()
 #ifdef MOZ_WIDGET_ANDROID
   if (!mGLContext)
     NS_RUNTIMEABORT("We need a context on Android");
+
+  // on Android, the compositor's GLContext is used to get GL strings for GfxInfo
+  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+  static_cast<widget::GfxInfo*>(gfxInfo.get())->InitializeGLStrings(mGLContext);
 #endif
 
   if (!mGLContext)
@@ -1097,11 +1105,25 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       }
 
       AutoBindTexture bindSource(source->AsSourceOGL(), LOCAL_GL_TEXTURE0);
-  
-      program->SetTextureTransform(source->AsSourceOGL()->GetTextureTransform());
 
+      gfx3DMatrix textureTransform = source->AsSourceOGL()->GetTextureTransform();
+      program->SetTextureTransform(textureTransform);
+
+      GraphicsFilter filter = ThebesFilter(texturedEffect->mFilter);
+      gfxMatrix textureTransform2D;
+#ifdef MOZ_WIDGET_ANDROID
+      if (filter != GraphicsFilter::FILTER_NEAREST &&
+          aTransform.Is2DIntegerTranslation() &&
+          textureTransform.Is2D(&textureTransform2D) &&
+          textureTransform2D.HasOnlyIntegerTranslation()) {
+        // On Android we encounter small resampling errors in what should be
+        // pixel-aligned compositing operations. This works around them. This
+        // code should not be needed!
+        filter = GraphicsFilter::FILTER_NEAREST;
+      }
+#endif
       mGLContext->ApplyFilterToBoundTexture(source->AsSourceOGL()->GetTextureTarget(),
-                                            ThebesFilter(texturedEffect->mFilter));
+                                            filter);
 
       program->SetTextureUnit(0);
       program->SetLayerOpacity(aOpacity);

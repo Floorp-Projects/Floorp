@@ -2851,6 +2851,14 @@ nsGlobalWindow::UpdateParentTarget()
     TryGetTabChildGlobalAsEventTarget(frameElement);
 
   if (!eventTarget) {
+    nsGlobalWindow* topWin = GetScriptableTop();
+    if (topWin) {
+      frameElement = topWin->GetFrameElementInternal();
+      eventTarget = TryGetTabChildGlobalAsEventTarget(frameElement);
+    }
+  }
+
+  if (!eventTarget) {
     eventTarget = TryGetTabChildGlobalAsEventTarget(mChromeEventHandler);
   }
 

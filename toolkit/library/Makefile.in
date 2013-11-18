@@ -15,6 +15,8 @@ endif
 VPATH += $(topsrcdir)/build/
 
 SHARED_LIBRARY_LIBS += \
+  $(DEPTH)/intl/unicharutil/util/internal/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFIX) \
+  $(DEPTH)/rdf/util/src/internal/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
   $(DEPTH)/media/kiss_fft/$(LIB_PREFIX)kiss_fft.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
   $(NULL)
@@ -40,15 +42,15 @@ SHARED_LIBRARY_LIBS += \
   $(NULL)
 endif
 
+ifdef MOZ_XUL
+SHARED_LIBRARY_LIBS += $(DEPTH)/accessible/src/xul/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
+endif
+endif
+
 ifdef MOZ_CONTENT_SANDBOX
 ifeq ($(OS_ARCH),WINNT)
   LOCAL_INCLUDES += -I$(srcdir)/../sandboxbroker
   SHARED_LIBRARY_LIBS += ../../security/sandbox/win/src/sandboxbroker/$(LIB_PREFIX)sandboxbroker.$(LIB_SUFFIX)
-endif
-endif
-
-ifdef MOZ_XUL
-SHARED_LIBRARY_LIBS += $(DEPTH)/accessible/src/xul/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
 endif
 endif
 
@@ -486,9 +488,6 @@ endif
 ifdef MOZ_DIRECTSHOW
 OS_LIBS += $(call EXPAND_LIBNAME,dmoguids wmcodecdspuuid strmiids msdmo)
 endif
-
-LOCAL_INCLUDES += -I$(topsrcdir)/intl/unicharutil/util \
-  -I$(topsrcdir)/intl/unicharutil/src
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)

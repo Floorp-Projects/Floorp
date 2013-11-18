@@ -853,13 +853,32 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
   if (!referrer)
       return NS_OK;
 
+  // 0: never send referer
+  // 1: send referer for direct user action
+  // 2: always send referer
+  uint32_t userReferrerLevel = gHttpHandler->ReferrerLevel();
+
+  // false: use real referrer
+  // true: spoof with URI of the current request
+  bool userSpoofReferrerSource = gHttpHandler->SpoofReferrerSource();
+
+  // 0: full URI
+  // 1: scheme+host+port+path
+  // 2: scheme+host+port
+  int userReferrerTrimmingPolicy = gHttpHandler->ReferrerTrimmingPolicy();
+
+  // 0: send referer no matter what
+  // 1: send referer ONLY when base domains match
+  // 2: send referer ONLY when hosts match
+  int userReferrerXOriginPolicy = gHttpHandler->ReferrerXOriginPolicy();
+
   // check referrer blocking pref
   uint32_t referrerLevel;
   if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI)
     referrerLevel = 1; // user action
   else
     referrerLevel = 2; // inline content
-  if (gHttpHandler->ReferrerLevel() < referrerLevel)
+  if (userReferrerLevel < referrerLevel)
     return NS_OK;
 
   nsCOMPtr<nsIURI> referrerGrip;
@@ -870,9 +889,9 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
   // Strip off "wyciwyg://123/" from wyciwyg referrers.
   //
   // XXX this really belongs elsewhere since wyciwyg URLs aren't part of necko.
-  //     perhaps some sort of generic nsINestedURI could be used.  then, if an URI
-  //     fails the whitelist test, then we could check for an inner URI and try
-  //     that instead.  though, that might be too automatic.
+  //   perhaps some sort of generic nsINestedURI could be used.  then, if an URI
+  //   fails the whitelist test, then we could check for an inner URI and try
+  //   that instead.  though, that might be too automatic.
   //
   rv = referrer->SchemeIs("wyciwyg", &match);
   if (NS_FAILED(rv)) return rv;
@@ -884,13 +903,13 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
     uint32_t pathLength = path.Length();
     if (pathLength <= 2) return NS_ERROR_FAILURE;
 
-    // Path is of the form "//123/http://foo/bar", with a variable number of digits.
-    // To figure out where the "real" URL starts, search path for a '/', starting at
-    // the third character.
+    // Path is of the form "//123/http://foo/bar", with a variable number of
+    // digits. To figure out where the "real" URL starts, search path for a
+    // '/', starting at the third character.
     int32_t slashIndex = path.FindChar('/', 2);
     if (slashIndex == kNotFound) return NS_ERROR_FAILURE;
 
-    // Get the charset of the original URI so we can pass it to our fixed up URI.
+    // Get charset of the original URI so we can pass it to our fixed up URI.
     nsAutoCString charset;
     referrer->GetOriginCharset(charset);
 
@@ -910,7 +929,6 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
     "http",
     "https",
     "ftp",
-    "gopher",
     nullptr
   };
   match = false;
@@ -962,13 +980,86 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
   rv = referrer->CloneIgnoringRef(getter_AddRefs(clone));
   if (NS_FAILED(rv)) return rv;
 
+  nsAutoCString currentHost;
+  nsAutoCString referrerHost;
+
+  rv = mURI->GetAsciiHost(currentHost);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = clone->GetAsciiHost(referrerHost);
+  if (NS_FAILED(rv)) return rv;
+
+  // check policy for sending ref only when hosts match
+  if (userReferrerXOriginPolicy == 2 && !currentHost.Equals(referrerHost))
+    return NS_OK;
+
+  if (userReferrerXOriginPolicy == 1) {
+    nsAutoCString currentDomain = currentHost;
+    nsAutoCString referrerDomain = referrerHost;
+    uint32_t extraDomains = 0;
+    nsCOMPtr<nsIEffectiveTLDService> eTLDService = do_GetService(
+      NS_EFFECTIVETLDSERVICE_CONTRACTID);
+    if (eTLDService) {
+      rv = eTLDService->GetBaseDomain(mURI, extraDomains, currentDomain);
+      if (NS_FAILED(rv)) return rv;
+      rv = eTLDService->GetBaseDomain(clone, extraDomains, referrerDomain); 
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    // check policy for sending only when effective top level domain matches.
+    // this falls back on using host if eTLDService does not work
+    if (!currentDomain.Equals(referrerDomain))
+      return NS_OK;
+  }
+
+  // send spoofed referrer if desired
+  if (userSpoofReferrerSource) {
+    nsCOMPtr<nsIURI> mURIclone;
+    rv = mURI->CloneIgnoringRef(getter_AddRefs(mURIclone));
+    if (NS_FAILED(rv)) return rv;
+    clone = mURIclone;
+    currentHost = referrerHost;
+  }
+
   // strip away any userpass; we don't want to be giving out passwords ;-)
   rv = clone->SetUserPass(EmptyCString());
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString spec;
-  rv = clone->GetAsciiSpec(spec);
-  if (NS_FAILED(rv)) return rv;
+
+  // check how much referer to send
+  switch (userReferrerTrimmingPolicy) {
+
+  case 1: {
+    // scheme+host+port+path
+    nsAutoCString prepath, path;
+    rv = clone->GetPrePath(prepath);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURL> url(do_QueryInterface(clone));
+    if (!url) {
+      // if this isn't a url, play it safe
+      // and just send the prepath
+      spec = prepath;
+      break;
+    }
+    rv = url->GetFilePath(path);
+    if (NS_FAILED(rv)) return rv;
+    spec = prepath + path;
+    break;
+  }
+  case 2:
+    // scheme+host+port
+    rv = clone->GetPrePath(spec);
+    if (NS_FAILED(rv)) return rv;
+    break;
+
+  default:
+    // full URI
+    rv = clone->GetAsciiSpec(spec);
+    if (NS_FAILED(rv)) return rv;
+    break;
+  }
 
   // finally, remember the referrer URI and set the Referer header.
   mReferrer = clone;

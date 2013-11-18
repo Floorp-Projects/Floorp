@@ -96,7 +96,9 @@ def InvokeClWithDependencyGeneration(cmdline):
     ret = p.wait()
 
     if ret != 0 or target == "":
-        return ret
+        # p.wait() returns a long. Somehow sys.exit(long(0)) is like
+        # sys.exit(1). Don't ask why.
+        return int(ret)
 
     depsdir = os.path.normpath(os.path.join(os.curdir, ".deps"))
     depstarget = os.path.join(depsdir, depstarget)

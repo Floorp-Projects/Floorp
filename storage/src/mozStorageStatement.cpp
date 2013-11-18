@@ -144,21 +144,17 @@ Statement::initialize(Connection *aDBConnection,
   int srv = aDBConnection->prepareStatement(PromiseFlatCString(aSQLStatement),
                                             &mDBStatement);
   if (srv != SQLITE_OK) {
-#ifdef PR_LOGGING
       PR_LOG(gStorageLog, PR_LOG_ERROR,
              ("Sqlite statement prepare error: %d '%s'", srv,
               ::sqlite3_errmsg(db)));
       PR_LOG(gStorageLog, PR_LOG_ERROR,
              ("Statement was: '%s'", PromiseFlatCString(aSQLStatement).get()));
-#endif
       return NS_ERROR_FAILURE;
     }
 
-#ifdef PR_LOGGING
   PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Initialized statement '%s' (0x%p)",
                                       PromiseFlatCString(aSQLStatement).get(),
                                       mDBStatement));
-#endif
 
   mDBConnection = aDBConnection;
   mParamCount = ::sqlite3_bind_parameter_count(mDBStatement);
@@ -292,10 +288,8 @@ Statement::getAsyncStatement(sqlite3_stmt **_stmt)
       return rc;
     }
 
-#ifdef PR_LOGGING
     PR_LOG(gStorageLog, PR_LOG_NOTICE,
            ("Cloned statement 0x%p to 0x%p", mDBStatement, mAsyncStatement));
-#endif
   }
 
   *_stmt = mAsyncStatement;
@@ -384,10 +378,8 @@ Statement::internalFinalize(bool aDestructing)
     // In either case, the connection is still valid, hence closing
     // here is safe.
     //
-#ifdef PR_LOGGING
     PR_LOG(gStorageLog, PR_LOG_NOTICE, ("Finalizing statement '%s' during garbage-collection",
                                         ::sqlite3_sql(mDBStatement)));
-#endif
     srv = ::sqlite3_finalize(mDBStatement);
   }
 #ifdef DEBUG
@@ -666,10 +658,8 @@ Statement::ExecuteStep(bool *_moreResults)
     mExecuting = false;
   }
   else if (mExecuting) {
-#ifdef PR_LOGGING
     PR_LOG(gStorageLog, PR_LOG_ERROR,
            ("SQLite error after mExecuting was true!"));
-#endif
     mExecuting = false;
   }
 

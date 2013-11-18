@@ -46,7 +46,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind);
     bool init();
     void copySlots(MBasicBlock *from);
-    bool inherit(BytecodeAnalysis *analysis, MBasicBlock *pred, uint32_t popped);
+    bool inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlock *pred, uint32_t popped);
     bool inheritResumePoint(MBasicBlock *pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
@@ -168,13 +168,13 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Adds a predecessor. Every predecessor must have the same exit stack
     // depth as the entry state to this block. Adding a predecessor
     // automatically creates phi nodes and rewrites uses as needed.
-    bool addPredecessor(MBasicBlock *pred);
-    bool addPredecessorPopN(MBasicBlock *pred, uint32_t popped);
+    bool addPredecessor(TempAllocator &alloc, MBasicBlock *pred);
+    bool addPredecessorPopN(TempAllocator &alloc, MBasicBlock *pred, uint32_t popped);
 
     // Stranger utilities used for inlining.
     bool addPredecessorWithoutPhis(MBasicBlock *pred);
     void inheritSlots(MBasicBlock *parent);
-    bool initEntrySlots();
+    bool initEntrySlots(TempAllocator &alloc);
 
     // Replaces an edge for a given block with a new block. This is
     // used for critical edge splitting and also for inserting
@@ -558,6 +558,10 @@ class MIRGraph
         numBlocks_(0),
         hasTryBlock_(false)
     { }
+
+    TempAllocator &alloc() const {
+        return *alloc_;
+    }
 
     template <typename T>
     T * allocate(size_t count = 1) {

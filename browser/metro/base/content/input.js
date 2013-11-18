@@ -162,8 +162,17 @@ var TouchModule = {
             this._handleKeyDown(aEvent);
             break;
           case "MozMouseHittest":
-            // Used by widget to hit test chrome vs content
-            if (aEvent.target.ownerDocument == document) {
+            // Used by widget to hit test chrome vs content. Make sure the XUl scrollbars
+            // are counted as "chrome". Since the XUL scrollbars have sub-elements we walk
+            // the parent chain to ensure we catch all of those as well.
+            let onScrollbar = false;
+            for (let node = aEvent.originalTarget; node instanceof XULElement; node = node.parentNode) {
+              if (node.tagName == 'scrollbar') {
+                onScrollbar = true;
+                break;
+              }
+            }
+            if (onScrollbar || aEvent.target.ownerDocument == document) {
               aEvent.preventDefault();
             }
             aEvent.stopPropagation();

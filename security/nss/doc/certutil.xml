@@ -660,8 +660,8 @@ PKCS #11 key Attributes. Comma separated list of key attribute flags, selected f
       </varlistentry>
 
       <varlistentry>
-        <term>--keyFlagsOn opflags</term>
-        <term>--keyFlagsOff opflags</term>
+        <term>--keyOpFlagsOn opflags</term>
+        <term>--keyOpFlagsOff opflags</term>
         <listitem><para>
 PKCS #11 key Operation Flags.
 Comma separated list of one or more of the following:

@@ -174,6 +174,19 @@ public:
 
   GFX2D_API void NudgeToIntegers();
 
+  bool IsTranslation() const
+  {
+    return FuzzyEqual(_11, 1.0f) && FuzzyEqual(_12, 0.0f) &&
+           FuzzyEqual(_21, 0.0f) && FuzzyEqual(_22, 1.0f);
+  }
+
+  bool IsIntegerTranslation() const
+  {
+    return IsTranslation() &&
+           FuzzyEqual(_31, floorf(_31 + 0.5f)) &&
+           FuzzyEqual(_32, floorf(_32 + 0.5f));
+  }
+
 private:
   static bool FuzzyEqual(Float aV1, Float aV2) {
     // XXX - Check if fabs does the smart thing and just negates the sign bit.
@@ -215,6 +228,11 @@ public:
     MOZ_ASSERT(Is2D(), "Matrix is not a 2D affine transform");
 
     return Matrix(_11, _12, _21, _22, _41, _42);
+  }
+
+  bool Is2DIntegerTranslation() const
+  {
+    return Is2D() && As2D().IsIntegerTranslation();
   }
 
   // Apply a scale to this matrix. This scale will be applied -before- the
