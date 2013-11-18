@@ -17,6 +17,8 @@
 #include "TabChild.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/asmjscache/AsmJSCache.h"
+#include "mozilla/dom/asmjscache/PAsmJSCacheEntryChild.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/DOMStorageIPC.h"
@@ -864,6 +866,22 @@ bool
 ContentChild::DeallocPIndexedDBChild(PIndexedDBChild* aActor)
 {
   delete aActor;
+  return true;
+}
+
+asmjscache::PAsmJSCacheEntryChild*
+ContentChild::AllocPAsmJSCacheEntryChild(const asmjscache::OpenMode& aOpenMode,
+                                         const int64_t& aSizeToWrite,
+                                         const IPC::Principal& aPrincipal)
+{
+  NS_NOTREACHED("Should never get here!");
+  return nullptr;
+}
+
+bool
+ContentChild::DeallocPAsmJSCacheEntryChild(PAsmJSCacheEntryChild* aActor)
+{
+  asmjscache::DeallocEntryChild(aActor);
   return true;
 }
 
