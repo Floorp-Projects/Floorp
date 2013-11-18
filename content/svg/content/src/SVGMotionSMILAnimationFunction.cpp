@@ -7,6 +7,7 @@
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "mozilla/dom/SVGPathElement.h" // for nsSVGPathList
 #include "mozilla/dom/SVGMPathElement.h"
+#include "mozilla/gfx/2D.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "nsSMILParserUtils.h"
@@ -15,9 +16,10 @@
 #include "SVGMotionSMILType.h"
 #include "SVGMotionSMILPathUtils.h"
 
-namespace mozilla {
+using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
-using namespace dom;
+namespace mozilla {
 
 SVGMotionSMILAnimationFunction::SVGMotionSMILAnimationFunction()
   : mRotateType(eRotateType_Explicit),
@@ -227,7 +229,8 @@ SVGMotionSMILAnimationFunction::
       bool ok =
         path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
       if (ok && mPathVertices.Length()) {
-        mPath = pathElem->GetPath(gfxMatrix());
+        RefPtr<Path> path = pathElem->GetPathForLengthOrPositionMeasuring();
+        mPath = new gfxPath(path);
       }
     }
   }
@@ -252,7 +255,8 @@ SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr()
     return;
   }
 
-  mPath = path.ToPath(gfxMatrix());
+  RefPtr<Path> moz2dpath = path.ToPathForLengthOrPositionMeasuring();
+  mPath = new gfxPath(moz2dpath);
   bool ok = path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
   if (!ok || !mPathVertices.Length()) {
     mPath = nullptr;
