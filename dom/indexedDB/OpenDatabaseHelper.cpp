@@ -1717,8 +1717,8 @@ NS_IMPL_ISUPPORTS1(OpenDatabaseHelper, nsIRunnable)
 nsresult
 OpenDatabaseHelper::Init()
 {
-  QuotaManager::GetStorageId(mPersistenceType, mASCIIOrigin, mName,
-                             mDatabaseId);
+  QuotaManager::GetStorageId(mPersistenceType, mASCIIOrigin, Client::IDB,
+                             mName, mDatabaseId);
   MOZ_ASSERT(!mDatabaseId.IsEmpty());
 
   return NS_OK;
