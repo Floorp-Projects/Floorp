@@ -3729,24 +3729,21 @@ nsLayoutUtils::GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
 }
 
 void
-nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
-                          nsRenderingContext* aContext,
-                          const PRUnichar*     aString,
-                          int32_t              aLength,
-                          nsPoint              aPoint,
-                          uint8_t              aDirection)
+nsLayoutUtils::DrawString(const nsIFrame*       aFrame,
+                          nsRenderingContext*   aContext,
+                          const PRUnichar*      aString,
+                          int32_t               aLength,
+                          nsPoint               aPoint,
+                          nsStyleContext*       aStyleContext)
 {
 #ifdef IBMBIDI
   nsresult rv = NS_ERROR_FAILURE;
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    if (aDirection == NS_STYLE_DIRECTION_INHERIT) {
-      aDirection = aFrame->StyleVisibility()->mDirection;
-    }
-    nsBidiDirection direction =
-      (NS_STYLE_DIRECTION_RTL == aDirection) ?
-      NSBIDI_RTL : NSBIDI_LTR;
-    rv = nsBidiPresUtils::RenderText(aString, aLength, direction,
+    nsBidiLevel level =
+      nsBidiPresUtils::BidiLevelFromStyle(aStyleContext ?
+                                          aStyleContext : aFrame->StyleContext());
+    rv = nsBidiPresUtils::RenderText(aString, aLength, level,
                                      presContext, *aContext, *aContext,
                                      aPoint.x, aPoint.y);
   }
@@ -3767,12 +3764,10 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
 #ifdef IBMBIDI
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    const nsStyleVisibility* vis = aFrame->StyleVisibility();
-    nsBidiDirection direction =
-      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
-      NSBIDI_RTL : NSBIDI_LTR;
+    nsBidiLevel level =
+      nsBidiPresUtils::BidiLevelFromStyle(aFrame->StyleContext());
     return nsBidiPresUtils::MeasureTextWidth(aString, aLength,
-                                             direction, presContext, *aContext);
+                                             level, presContext, *aContext);
   }
 #endif // IBMBIDI
   aContext->SetTextRunRTL(false);
