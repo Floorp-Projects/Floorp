@@ -9,8 +9,6 @@
 
 #include "nsQueryFrame.h"
 
-class nsSVGGlyphFrame;
-
 namespace mozilla {
 class nsISVGPoint;
 }
@@ -24,8 +22,6 @@ public:
   virtual float GetComputedTextLength()=0;
   virtual float GetSubStringLength(uint32_t charnum, uint32_t fragmentChars)=0;
   virtual int32_t GetCharNumAtPosition(mozilla::nsISVGPoint *point)=0;
-  NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame()=0;
-  NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame()=0;
   NS_IMETHOD_(void) SetWhitespaceCompression(bool aCompressWhitespace)=0;
 };
 

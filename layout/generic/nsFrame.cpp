@@ -7347,7 +7347,7 @@ nsIFrame::VerticalAlignEnum() const
     for (const nsIFrame* frame = this; frame; frame = frame->GetParent()) {
       dominantBaseline = frame->StyleSVGReset()->mDominantBaseline;
       if (dominantBaseline != NS_STYLE_DOMINANT_BASELINE_AUTO ||
-          frame->GetType() == nsGkAtoms::svgTextFrame) {
+          frame->GetType() == nsGkAtoms::svgTextFrame2) {
         break;
       }
     }

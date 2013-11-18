@@ -17,8 +17,6 @@
 class nsFrameList;
 class nsISVGGlyphFragmentNode;
 class nsStyleContext;
-class nsSVGGlyphFrame;
-class nsSVGTextFrame;
 
 namespace mozilla {
 class nsISVGPoint;
@@ -35,7 +33,7 @@ protected:
     nsSVGDisplayContainerFrame(aContext) {}
 
 public:
-  void NotifyGlyphMetricsChange();
+  void NotifyGlyphMetricsChange() {} // XXXsvgtext
   virtual void GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY);
   virtual void GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy);
   virtual const SVGNumberList *GetRotate();
@@ -48,7 +46,6 @@ public:
   NS_IMETHOD InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  NS_IMETHOD RemoveFrame(ChildListID aListID, nsIFrame *aOldFrame) MOZ_OVERRIDE;
 
   NS_IMETHOD GetStartPositionOfChar(uint32_t charnum, nsISupports **_retval);
   NS_IMETHOD GetEndPositionOfChar(uint32_t charnum, nsISupports **_retval);
@@ -103,19 +100,6 @@ protected:
 
   void SetWhitespaceCompression();
 private:
-  /*
-   * Returns the glyph frame containing a particular character
-   */
-  static nsSVGGlyphFrame *
-  GetGlyphFrameAtCharNum(nsISVGGlyphFragmentNode* node,
-                         uint32_t charnum,
-                         uint32_t *offset);
-
-  /*
-   * Returns the text frame ancestor of this frame (or the frame itself
-   * if this is a text frame)
-   */
-  nsSVGTextFrame * GetTextFrame();
   nsTArray<float> mX;
   nsTArray<float> mY;
   nsTArray<float> mDx;

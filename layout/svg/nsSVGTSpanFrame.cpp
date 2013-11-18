@@ -131,41 +131,6 @@ nsSVGTSpanFrame::GetCharNumAtPosition(mozilla::nsISVGPoint *point)
   return nsSVGTSpanFrameBase::GetCharNumAtPosition(point);
 }
 
-NS_IMETHODIMP_(nsSVGGlyphFrame *)
-nsSVGTSpanFrame::GetFirstGlyphFrame()
-{
-  // try children first:
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGGlyphFragmentNode *node = do_QueryFrame(kid);
-    if (node)
-      return node->GetFirstGlyphFrame();
-    kid = kid->GetNextSibling();
-  }
-
-  // nope. try siblings:
-  return GetNextGlyphFrame();
-
-}
-
-NS_IMETHODIMP_(nsSVGGlyphFrame *)
-nsSVGTSpanFrame::GetNextGlyphFrame()
-{
-  nsIFrame* sibling = GetNextSibling();
-  while (sibling) {
-    nsISVGGlyphFragmentNode *node = do_QueryFrame(sibling);
-    if (node)
-      return node->GetFirstGlyphFrame();
-    sibling = sibling->GetNextSibling();
-  }
-
-  // no more siblings. go back up the tree.
-  
-  NS_ASSERTION(GetParent(), "null parent");
-  nsISVGGlyphFragmentNode *node = do_QueryFrame(GetParent());
-  return node ? node->GetNextGlyphFrame() : nullptr;
-}
-
 NS_IMETHODIMP_(void)
 nsSVGTSpanFrame::SetWhitespaceCompression(bool)
 {
