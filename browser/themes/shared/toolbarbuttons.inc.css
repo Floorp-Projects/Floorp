@@ -1,0 +1,139 @@
+:-moz-any(@primaryToolbarButtons@),
+#bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
+:-moz-any(@primaryToolbarButtons@):-moz-lwtheme-brighttext,
+#bookmarks-menu-button:-moz-lwtheme-brighttext > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  list-style-image: url(chrome://browser/skin/Toolbar-inverted.png);
+}
+
+#back-button {
+  -moz-image-region: rect(0, 36px, 18px, 18px);
+}
+
+#forward-button {
+  -moz-image-region: rect(0, 72px, 18px, 54px);
+}
+
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
+#home-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 126px, 18px, 108px);
+}
+
+#bookmarks-menu-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 144px, 18px, 126px);
+}
+
+#bookmarks-menu-button[cui-areatype="toolbar"][starred] {
+  -moz-image-region: rect(0, 162px, 18px, 144px);
+}
+
+#bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  -moz-image-region: rect(0, 630px, 18px, 612px);
+}
+
+#history-panelmenu[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 180px, 18px, 162px);
+}
+
+#downloads-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 198px, 18px, 180px);
+}
+
+#add-ons-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 216px, 18px, 198px);
+}
+
+#open-file-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 234px, 18px, 216px);
+}
+
+#save-page-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 252px, 18px, 234px);
+}
+
+#sync-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 270px, 18px, 252px);
+}
+
+#feed-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 288px, 18px, 270px);
+}
+
+#social-share-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0px, 306px, 18px, 288px);
+}
+
+#characterencoding-button[cui-areatype="toolbar"]{
+  -moz-image-region: rect(0, 324px, 18px, 306px);
+}
+
+#new-window-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 342px, 18px, 324px);
+}
+
+#new-tab-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 360px, 18px, 342px);
+}
+
+#privatebrowsing-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 378px, 18px, 360px);
+}
+
+#find-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 396px, 18px, 378px);
+}
+
+#print-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 414px, 18px, 396px);
+}
+
+#fullscreen-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 432px, 18px, 414px);
+}
+
+#developer-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 450px, 18px, 432px);
+}
+
+#preferences-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 468px, 18px, 450px);
+}
+
+#PanelUI-menu-button {
+  -moz-image-region: rect(0, 486px, 18px, 468px);
+}
+
+#edit-controls:not(@inAnyPanel@) > #cut-button {
+  -moz-image-region: rect(0, 504px, 18px, 486px);
+}
+
+#edit-controls:not(@inAnyPanel@) > #copy-button {
+  -moz-image-region: rect(0, 522px, 18px, 504px);
+}
+
+#edit-controls:not(@inAnyPanel@) > #paste-button {
+  -moz-image-region: rect(0, 540px, 18px, 522px);
+}
+
+#zoom-controls:not(@inAnyPanel@) > #zoom-out-button {
+  -moz-image-region: rect(0, 558px, 18px, 540px);
+}
+
+#zoom-controls:not(@inAnyPanel@) > #zoom-in-button {
+  -moz-image-region: rect(0, 576px, 18px, 558px);
+}
+
+#webrtc-status-button:not(@inAnyPanel@) {
+  -moz-image-region: rect(0, 594px, 18px, 576px);
+}
+
+#nav-bar-overflow-button {
+  -moz-image-region: rect(0, 612px, 18px, 594px);
+}
+
