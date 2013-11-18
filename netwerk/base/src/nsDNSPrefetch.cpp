@@ -58,24 +58,21 @@ nsDNSPrefetch::Prefetch(uint16_t flags)
 }
 
 nsresult
-nsDNSPrefetch::PrefetchLow(bool refreshDNS)
+nsDNSPrefetch::PrefetchLow()
 {
-    return Prefetch(nsIDNSService::RESOLVE_PRIORITY_LOW |
-      (refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE : 0));
+    return Prefetch(nsIDNSService::RESOLVE_PRIORITY_LOW);
 }
 
 nsresult
-nsDNSPrefetch::PrefetchMedium(bool refreshDNS)
+nsDNSPrefetch::PrefetchMedium()
 {
-    return Prefetch(nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
-      (refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE : 0));
+    return Prefetch(nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
 }
 
 nsresult
-nsDNSPrefetch::PrefetchHigh(bool refreshDNS)
+nsDNSPrefetch::PrefetchHigh()
 {
-    return Prefetch(refreshDNS ?
-                    nsIDNSService::RESOLVE_BYPASS_CACHE : 0);
+    return Prefetch(0);
 }
 
 
