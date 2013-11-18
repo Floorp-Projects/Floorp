@@ -356,8 +356,12 @@ class Label : public LabelBase
     { }
     ~Label()
     {
-        if (MaybeGetIonContext())
-            JS_ASSERT_IF(!GetIonContext()->runtime->hadOutOfMemory(), !used());
+#ifdef DEBUG
+        // Note: the condition is a hack to silence this assert when OOM testing,
+        // see bug 756614.
+        if (MaybeGetIonContext() && !OffThreadIonCompilationEnabled(GetIonContext()->runtime))
+            JS_ASSERT_IF(!GetIonContext()->runtime->hadOutOfMemory, !used());
+#endif
     }
 };
 

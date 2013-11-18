@@ -37,7 +37,7 @@ using namespace js::jit;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
-IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp, TempAllocator *temp, MIRGraph *graph,
+IonBuilder::IonBuilder(JSContext *analysisContext, JSCompartment *comp, TempAllocator *temp, MIRGraph *graph,
                        types::CompilerConstraintList *constraints,
                        BaselineInspector *inspector, CompileInfo *info, BaselineFrame *baselineFrame,
                        size_t inliningDepth, uint32_t loopDepth)
@@ -4967,7 +4967,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     for (uint32_t i = 0; i < originals.length(); i++) {
         JSFunction *fun = &originals[i]->as<JSFunction>();
         if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite) {
-            if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), fun, script(), pc)) {
+            if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment, fun, script(), pc)) {
                 fun = clone;
                 hasClones = true;
             }
@@ -5028,7 +5028,7 @@ IonBuilder::testShouldDOMCall(types::TypeSet *inTypes,
     // property, we can bake in a call to the bottom half of the DOM
     // accessor
     DOMInstanceClassMatchesProto instanceChecker =
-        compartment->runtime()->DOMcallbacks()->instanceClassMatchesProto;
+        GetDOMCallbacks(compartment->runtimeFromAnyThread())->instanceClassMatchesProto;
 
     const JSJitInfo *jinfo = func->jitInfo();
     if (jinfo->type != opType)
@@ -5940,7 +5940,7 @@ ClassHasEffectlessLookup(const Class *clasp)
 }
 
 static bool
-ClassHasResolveHook(CompileCompartment *comp, const Class *clasp, PropertyName *name)
+ClassHasResolveHook(JSCompartment *comp, const Class *clasp, PropertyName *name)
 {
     if (clasp->resolve == JS_ResolveStub)
         return false;
@@ -5951,7 +5951,7 @@ ClassHasResolveHook(CompileCompartment *comp, const Class *clasp, PropertyName *
     }
 
     if (clasp->resolve == (JSResolveOp)fun_resolve)
-        return FunctionHasResolveHook(comp->runtime()->names(), name);
+        return FunctionHasResolveHook(comp->runtimeFromAnyThread(), name);
 
     return true;
 }
@@ -6200,9 +6200,9 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
         if (name == names().undefined)
             return pushConstant(UndefinedValue());
         if (name == names().NaN)
-            return pushConstant(compartment->runtime()->NaNValue());
+            return pushConstant(compartment->runtimeFromAnyThread()->NaNValue);
         if (name == names().Infinity)
-            return pushConstant(compartment->runtime()->positiveInfinityValue());
+            return pushConstant(compartment->runtimeFromAnyThread()->positiveInfinityValue);
     }
 
     types::TypeObjectKey *staticType = types::TypeObjectKey::get(staticObject);
