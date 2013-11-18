@@ -9,7 +9,6 @@
 #include "mozilla/gfx/2D.h"
 #include "SVGGraphicsElement.h"
 
-class gfxPath;
 struct gfxMatrix;
 template <class E> class nsTArray;
 
