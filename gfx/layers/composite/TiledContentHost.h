@@ -245,9 +245,7 @@ public:
                     bool aDumpHtml=false) MOZ_OVERRIDE;
 #endif
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
-#endif
 
 private:
   void ProcessUploadQueue(nsIntRegion* aNewValidRegion,

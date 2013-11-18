@@ -286,7 +286,7 @@ IsMediaPluginsType(const nsACString& aType)
 static bool
 IsWMFSupportedType(const nsACString& aType)
 {
-  return WMFDecoder::GetSupportedCodecs(aType, nullptr);
+  return WMFDecoder::CanPlayType(aType, NS_LITERAL_STRING(""));
 }
 #endif
 
@@ -397,8 +397,13 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   }
 #endif
 #ifdef MOZ_WMF
-  if (WMFDecoder::GetSupportedCodecs(nsDependentCString(aMIMEType), &codecList)) {
-    result = CANPLAY_MAYBE;
+  if (IsWMFSupportedType(nsDependentCString(aMIMEType))) {
+    if (!aHaveRequestedCodecs) {
+      return CANPLAY_MAYBE;
+    }
+    return WMFDecoder::CanPlayType(nsDependentCString(aMIMEType),
+                                   aRequestedCodecs)
+           ? CANPLAY_YES : CANPLAY_NO;
   }
 #endif
 #ifdef MOZ_DIRECTSHOW

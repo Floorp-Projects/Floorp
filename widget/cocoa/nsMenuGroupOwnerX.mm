@@ -25,7 +25,7 @@
 
 #include "nsINode.h"
 
-namespace dom = mozilla::dom;
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS1(nsMenuGroupOwnerX, nsIMutationObserver)
 

@@ -43,7 +43,7 @@ EXPORTS.mozilla.layout += [
     'FrameChildList.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'FrameChildList.cpp',
     'nsAbsoluteContainingBlock.cpp',
     'nsBlockFrame.cpp',
@@ -72,8 +72,6 @@ SOURCES += [
     'nsIntervalSet.cpp',
     'nsLeafFrame.cpp',
     'nsLineBox.cpp',
-    'nsLineLayout.cpp',
-    'nsObjectFrame.cpp',
     'nsPageContentFrame.cpp',
     'nsPageFrame.cpp',
     'nsPlaceholderFrame.cpp',
@@ -91,8 +89,15 @@ SOURCES += [
     'TextOverflow.cpp',
 ]
 
+# nsLineLayout.cpp needs to be built separately because it uses plarena.h.
+# nsObjectFrame.cpp needs to be built separately because of name clashes in the OS X headers.
+SOURCES += [
+    'nsLineLayout.cpp',
+    'nsObjectFrame.cpp',
+]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsPluginUtilsOSX.mm',
     ]
 

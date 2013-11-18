@@ -139,6 +139,10 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
     // redefine(), but used when creating new LIR.
     inline bool defineAs(LInstruction *outLir, MDefinition *outMir, MDefinition *inMir);
 
+    TempAllocator &alloc() const {
+        return graph.alloc();
+    }
+
     uint32_t getVirtualRegister() {
         return lirGraph_.getVirtualRegister();
     }

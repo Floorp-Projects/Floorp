@@ -122,16 +122,6 @@ class Runner(object):
             traceback.print_exc()
         return crashed
 
-    def check_for_crashes(self, dump_directory, test_name=None):
-        crashed = False
-        try:
-            crashed = mozcrash.check_for_crashes(dump_directory,
-                                                 self.symbols_path,
-                                                 test_name=test_name)
-        except:
-            traceback.print_exc()
-        return crashed
-
     def cleanup(self):
         """
         Cleanup all runner state

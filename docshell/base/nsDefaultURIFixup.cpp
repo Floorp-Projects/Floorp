@@ -29,6 +29,8 @@ using namespace mozilla;
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsDefaultURIFixup, nsIURIFixup)
 
+static bool sFixTypos = true;
+
 nsDefaultURIFixup::nsDefaultURIFixup()
 {
   /* member initializers and constructor code */
@@ -213,6 +215,50 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
                          scheme.LowerCaseEqualsLiteral("https") ||
                          scheme.LowerCaseEqualsLiteral("ftp") ||
                          scheme.LowerCaseEqualsLiteral("file"));
+
+    // Check if we want to fix up common scheme typos.
+    rv = Preferences::AddBoolVarCache(&sFixTypos,
+                                      "browser.fixup.typo.scheme",
+                                      sFixTypos);
+    MOZ_ASSERT(NS_SUCCEEDED(rv),
+              "Failed to observe \"browser.fixup.typo.scheme\"");
+
+    // Fix up common scheme typos.
+    if (sFixTypos && (aFixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS)) {
+
+        // Fast-path for common cases.
+        if (scheme.IsEmpty() ||
+            scheme.LowerCaseEqualsLiteral("http") ||
+            scheme.LowerCaseEqualsLiteral("https") ||
+            scheme.LowerCaseEqualsLiteral("ftp") ||
+            scheme.LowerCaseEqualsLiteral("file")) {
+            // Do nothing.
+        } else if (scheme.LowerCaseEqualsLiteral("ttp")) {
+            // ttp -> http.
+            uriString.Replace(0, 3, "http");
+            scheme.AssignLiteral("http");
+        } else if (scheme.LowerCaseEqualsLiteral("ttps")) {
+            // ttps -> https.
+            uriString.Replace(0, 4, "https");
+            scheme.AssignLiteral("https");
+        } else if (scheme.LowerCaseEqualsLiteral("tps")) {
+            // tps -> https.
+            uriString.Replace(0, 3, "https");
+            scheme.AssignLiteral("https");
+        } else if (scheme.LowerCaseEqualsLiteral("ps")) {
+            // ps -> https.
+            uriString.Replace(0, 2, "https");
+            scheme.AssignLiteral("https");
+        } else if (scheme.LowerCaseEqualsLiteral("ile")) {
+            // ile -> file.
+            uriString.Replace(0, 3, "file");
+            scheme.AssignLiteral("file");
+        } else if (scheme.LowerCaseEqualsLiteral("le")) {
+            // le -> file.
+            uriString.Replace(0, 2, "file");
+            scheme.AssignLiteral("file");
+        }
+    }
 
     // Now we need to check whether "scheme" is something we don't
     // really know about.

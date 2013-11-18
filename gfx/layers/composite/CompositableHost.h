@@ -282,9 +282,7 @@ public:
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() { return nullptr; }
 #endif
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix) { }
-#endif
 
   void AddTextureHost(TextureHost* aTexture);
   virtual void UseTextureHost(TextureHost* aTexture) {}

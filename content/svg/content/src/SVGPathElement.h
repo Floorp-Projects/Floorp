@@ -6,6 +6,8 @@
 #ifndef mozilla_dom_SVGPathElement_h
 #define mozilla_dom_SVGPathElement_h
 
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGPathGeometryElement.h"
 #include "SVGAnimatedPathSegList.h"
@@ -28,6 +30,8 @@ class SVGPathElement MOZ_FINAL : public SVGPathElementBase
 {
 friend class nsSVGPathFrame;
 
+  typedef mozilla::gfx::Path Path;
+
 protected:
   friend nsresult (::NS_NewSVGPathElement(nsIContent **aResult,
                                           already_AddRefed<nsINodeInfo> aNodeInfo));
@@ -49,7 +53,13 @@ public:
   virtual void ConstructPath(gfxContext *aCtx) MOZ_OVERRIDE;
   virtual TemporaryRef<Path> BuildPath() MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxPath> GetPath(const gfxMatrix &aMatrix) MOZ_OVERRIDE;
+  /**
+   * This returns a path without the extra little line segments that
+   * ApproximateZeroLengthSubpathSquareCaps can insert if we have square-caps.
+   * See the comment for that function for more info on that.
+   */
+  virtual TemporaryRef<Path>
+    GetPathForLengthOrPositionMeasuring() MOZ_OVERRIDE;
 
   // nsIContent interface
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;

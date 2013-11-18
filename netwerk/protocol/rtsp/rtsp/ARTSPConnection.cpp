@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-//#define LOG_NDEBUG 0
 #define LOG_TAG "ARTSPConnection"
-#include <utils/Log.h>
+#include "RtspPrlog.h"
 
 #include "ARTSPConnection.h"
 

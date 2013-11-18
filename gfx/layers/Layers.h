@@ -505,10 +505,6 @@ public:
    */
   virtual bool NeedsWidgetInvalidation() { return true; }
 
-  // We always declare the following logging symbols, because it's
-  // extremely tricky to conditionally declare them.  However, for
-  // ifndef MOZ_LAYERS_HAVE_LOG builds, they only have trivial
-  // definitions in Layers.cpp.
   virtual const char* Name() const { return "???"; }
 
   /**
@@ -1957,6 +1953,9 @@ protected:
   // 0 is a special value that means "no ID".
   uint64_t mId;
 };
+
+void
+SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget);
 
 #ifdef MOZ_DUMP_PAINTING
 void WriteSnapshotToDumpFile(Layer* aLayer, gfxASurface* aSurf);

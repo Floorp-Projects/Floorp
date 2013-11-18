@@ -790,6 +790,8 @@ class GCHelperThread {
     PRCondVar         *done;
     volatile State    state;
 
+    void wait(PRCondVar *which);
+
     bool              sweepFlag;
     bool              shrinkFlag;
 

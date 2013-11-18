@@ -693,7 +693,7 @@ BasicLayerManager::SetRoot(Layer* aLayer)
 }
 
 static pixman_transform
-Matrix3DToPixman(const gfx3DMatrix& aMatrix)
+BasicLayerManager_Matrix3DToPixman(const gfx3DMatrix& aMatrix)
 {
   pixman_f_transform transform;
 
@@ -735,7 +735,7 @@ PixmanTransform(const gfxImageSurface *aDest,
 
   NS_ABORT_IF_FALSE(src && dest, "Failed to create pixman images?");
 
-  pixman_transform pixTransform = Matrix3DToPixman(aTransform);
+  pixman_transform pixTransform = BasicLayerManager_Matrix3DToPixman(aTransform);
   pixman_transform pixTransformInverted;
 
   // If the transform is singular then nothing would be drawn anyway, return here
