@@ -207,8 +207,8 @@ GLXLibrary::EnsureInitialized(LibType libType)
         // Not possible to query for extensions.
         return false;
 
-    const char *clientVendor = xGetClientString(display, GLX_VENDOR);
-    const char *serverVendor = xQueryServerString(display, screen, GLX_VENDOR);
+    const char *clientVendor = xGetClientString(display, LOCAL_GLX_VENDOR);
+    const char *serverVendor = xQueryServerString(display, screen, LOCAL_GLX_VENDOR);
     const char *extensionsStr = xQueryExtensionsString(display, screen);
 
     GLLibraryLoader::SymLoadStruct *sym13;
@@ -303,12 +303,12 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
     NS_ASSERTION((1 << alphaSize) - 1 == direct.alphaMask,
                  "Unexpected render format with non-adjacent alpha bits");
 
-    int attribs[] = { GLX_DOUBLEBUFFER, False,
-                      GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT,
-                      GLX_ALPHA_SIZE, alphaSize,
-                      (alphaSize ? GLX_BIND_TO_TEXTURE_RGBA_EXT
-                       : GLX_BIND_TO_TEXTURE_RGB_EXT), True,
-                      GLX_RENDER_TYPE, GLX_RGBA_BIT,
+    int attribs[] = { LOCAL_GLX_DOUBLEBUFFER, False,
+                      LOCAL_GLX_DRAWABLE_TYPE, LOCAL_GLX_PIXMAP_BIT,
+                      LOCAL_GLX_ALPHA_SIZE, alphaSize,
+                      (alphaSize ? LOCAL_GLX_BIND_TO_TEXTURE_RGBA_EXT
+                       : LOCAL_GLX_BIND_TO_TEXTURE_RGB_EXT), True,
+                      LOCAL_GLX_RENDER_TYPE, LOCAL_GLX_RGBA_BIT,
                       None };
 
     int numConfigs = 0;
@@ -334,7 +334,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
 
     for (int i = 0; i < numConfigs; i++) {
         int id = None;
-        sGLXLibrary[mLibType].xGetFBConfigAttrib(display, cfgs[i], GLX_VISUAL_ID, &id);
+        sGLXLibrary[mLibType].xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &id);
         Visual *visual;
         int depth;
         FindVisualAndDepth(display, id, &visual, &depth);
@@ -382,7 +382,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
         // situations (ATI) where there are no fbconfigs without alpha bits.
         //
         // glXChooseFBConfig should prefer configs with smaller
-        // GLX_BUFFER_SIZE, so we should still get zero alpha bits if
+        // LOCAL_GLX_BUFFER_SIZE, so we should still get zero alpha bits if
         // available, except perhaps with NVIDIA drivers where buffer size is
         // not the specified sum of the component sizes.
         if (haveNonColorBits) {
@@ -392,7 +392,7 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
             // matches.
             int size = 0;
             sGLXLibrary[mLibType].xGetFBConfigAttrib(display, cfgs[i],
-                                                     GLX_ALPHA_SIZE, &size);
+                                                     LOCAL_GLX_ALPHA_SIZE, &size);
             if (size != alphaSize) {
                 continue;
             }
@@ -409,10 +409,10 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
         return None;
     }
 
-    int pixmapAttribs[] = { GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
-                            GLX_TEXTURE_FORMAT_EXT,
-                            (alphaSize ? GLX_TEXTURE_FORMAT_RGBA_EXT
-                             : GLX_TEXTURE_FORMAT_RGB_EXT),
+    int pixmapAttribs[] = { LOCAL_GLX_TEXTURE_TARGET_EXT, LOCAL_GLX_TEXTURE_2D_EXT,
+                            LOCAL_GLX_TEXTURE_FORMAT_EXT,
+                            (alphaSize ? LOCAL_GLX_TEXTURE_FORMAT_RGBA_EXT
+                             : LOCAL_GLX_TEXTURE_FORMAT_RGB_EXT),
                             None};
 
     GLXPixmap glxpixmap = xCreatePixmap(display,
@@ -451,7 +451,7 @@ GLXLibrary::BindTexImage(GLXPixmap aPixmap)
     } else {
         xWaitX();
     }
-    xBindTexImage(display, aPixmap, GLX_FRONT_LEFT_EXT, nullptr);
+    xBindTexImage(display, aPixmap, LOCAL_GLX_FRONT_LEFT_EXT, nullptr);
 }
 
 void
@@ -462,7 +462,7 @@ GLXLibrary::ReleaseTexImage(GLXPixmap aPixmap)
     }
 
     Display *display = DefaultXDisplay();
-    xReleaseTexImage(display, aPixmap, GLX_FRONT_LEFT_EXT);
+    xReleaseTexImage(display, aPixmap, LOCAL_GLX_FRONT_LEFT_EXT);
 }
 
 #ifdef DEBUG
@@ -761,8 +761,8 @@ public:
 
         int db = 0;
         int err = glx.xGetFBConfigAttrib(display, cfg,
-                                         GLX_DOUBLEBUFFER, &db);
-        if (GLX_BAD_ATTRIBUTE != err) {
+                                         LOCAL_GLX_DOUBLEBUFFER, &db);
+        if (LOCAL_GLX_BAD_ATTRIBUTE != err) {
 #ifdef DEBUG
             if (DebugMode()) {
                 printf("[GLX] FBConfig is %sdouble-buffered\n", db ? "" : "not ");
@@ -798,7 +798,7 @@ TRY_AGAIN_NO_SHARING:
             context = glx.xCreateNewContext(
                 display,
                 cfg,
-                GLX_RGBA_TYPE,
+                LOCAL_GLX_RGBA_TYPE,
                 glxContext,
                 True);
         }
@@ -1208,7 +1208,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
     if (sDefGLXLib.IsATI() || 
         !sDefGLXLib.GLXVersionCheck(1, 3)) {
         const int attribs[] = {
-            GLX_DOUBLEBUFFER, False,
+            LOCAL_GLX_DOUBLEBUFFER, False,
             0
         };
         cfgs = sDefGLXLib.xChooseFBConfig(display,
@@ -1227,7 +1227,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
     }
     NS_ASSERTION(numConfigs > 0, "No FBConfigs found!");
 
-    // XXX the visual ID is almost certainly the GLX_FBCONFIG_ID, so
+    // XXX the visual ID is almost certainly the LOCAL_GLX_FBCONFIG_ID, so
     // we could probably do this first and replace the glXGetFBConfigs
     // with glXChooseConfigs.  Docs are sparklingly clear as always.
     XWindowAttributes widgetAttrs;
@@ -1244,7 +1244,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
 
     for (int i = 0; i < numConfigs; i++) {
         int visid = None;
-        sDefGLXLib.xGetFBConfigAttrib(display, cfgs[i], GLX_VISUAL_ID, &visid);
+        sDefGLXLib.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
         if (!visid) {
             continue;
         }
@@ -1297,8 +1297,8 @@ CreateOffscreenPixmapContext(const gfxIntSize& size, LibType libToUse)
     int xscreen = DefaultScreen(display);
 
     int attribs[] = {
-        GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT,
-        GLX_X_RENDERABLE, True,
+        LOCAL_GLX_DRAWABLE_TYPE, LOCAL_GLX_PIXMAP_BIT,
+        LOCAL_GLX_X_RENDERABLE, True,
         0
     };
     int numConfigs = 0;
@@ -1321,12 +1321,12 @@ CreateOffscreenPixmapContext(const gfxIntSize& size, LibType libToUse)
     for (int i = 0; i < numConfigs; ++i) {
         int dtype;
 
-        if (glx.xGetFBConfigAttrib(display, cfgs[i], GLX_DRAWABLE_TYPE, &dtype) != Success
-            || !(dtype & GLX_PIXMAP_BIT))
+        if (glx.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_DRAWABLE_TYPE, &dtype) != Success
+            || !(dtype & LOCAL_GLX_PIXMAP_BIT))
         {
             continue;
         }
-        if (glx.xGetFBConfigAttrib(display, cfgs[i], GLX_VISUAL_ID, &visid) != Success
+        if (glx.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid) != Success
             || visid == 0)
         {
             continue;
