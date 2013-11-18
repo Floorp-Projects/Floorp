@@ -238,7 +238,7 @@ ifeq ($(OS_ARCH),WINNT)
     ICU_LIB_SUFFIX=d
   endif
   ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
-                     cp -p intl/icu/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/lib/$(libname).lib;)
+                     cp -p intl/icu/target/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/target/lib/$(libname).lib;)
 endif
 
 ifdef .PYMAKE
@@ -254,11 +254,17 @@ endif
 # - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
 buildicu:
 # ICU's build system is full of races, so force non-parallel build.
-	+$(ICU_MAKE) -j1 -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+ifdef CROSS_COMPILE
+	+$(ICU_MAKE) -j1 -C intl/icu/host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R -C'
+endif
+	+$(ICU_MAKE) -j1 -C intl/icu/target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
 	$(ICU_LIB_RENAME)
 
 distclean clean::
-	$(call SUBMAKE,$@,intl/icu)
+ifdef CROSS_COMPILE
+	$(call SUBMAKE,$@,intl/icu/host)
+endif
+	$(call SUBMAKE,$@,intl/icu/target)
 
 endif
 endif
