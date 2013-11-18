@@ -12,7 +12,7 @@ EXPORTS += [
     'RawStructs.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'RawDecoder.cpp',
     'RawReader.cpp',
 ]

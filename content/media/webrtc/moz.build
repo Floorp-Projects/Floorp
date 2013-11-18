@@ -15,12 +15,15 @@ EXPORTS += [
 
 if CONFIG['MOZ_WEBRTC']:
     EXPORTS += ['LoadMonitor.h', 'MediaEngineWebRTC.h']
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'LoadMonitor.cpp',
         'MediaEngineTabVideoSource.cpp',
-        'MediaEngineWebRTC.cpp',
         'MediaEngineWebRTCAudio.cpp',
         'MediaEngineWebRTCVideo.cpp',
+    ]
+    # MediaEngineWebRTC.cpp needs to be built separately.
+    SOURCES += [
+        'MediaEngineWebRTC.cpp',
     ]
     LOCAL_INCLUDES += [
         '/dom/base',
@@ -34,7 +37,7 @@ XPIDL_SOURCES += [
     'nsITabSource.idl'
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'MediaEngineDefault.cpp',
 ]
 
