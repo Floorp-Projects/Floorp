@@ -34,7 +34,7 @@ nsFtpControlConnection::OnInputStreamReady(nsIAsyncInputStream *stream)
 
     // Consume data whether we have a listener or not.
     uint64_t avail64;
-    uint32_t avail;
+    uint32_t avail = 0;
     nsresult rv = stream->Available(&avail64);
     if (NS_SUCCEEDED(rv)) {
         avail = (uint32_t)std::min(avail64, (uint64_t)sizeof(data));
