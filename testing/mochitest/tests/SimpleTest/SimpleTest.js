@@ -245,6 +245,12 @@ SimpleTest.is = function (a, b, name) {
     SimpleTest.ok(pass, name, diag);
 };
 
+SimpleTest.isfuzzy = function (a, b, epsilon, name) {
+  var pass = (a > b - epsilon) && (a < b + epsilon);
+  var diag = pass ? "" : "got " + repr(a) + ", expected " + repr(b) + " epsilon: +/- " + repr(epsilon)
+  SimpleTest.ok(pass, name, diag);
+};
+
 SimpleTest.isnot = function (a, b, name) {
     var pass = (a != b);
     var diag = pass ? "" : "didn't expect " + repr(a) + ", but got it";
@@ -1136,6 +1142,7 @@ SimpleTest.isa = function (object, clas) {
 // Global symbols:
 var ok = SimpleTest.ok;
 var is = SimpleTest.is;
+var isfuzzy = SimpleTest.isfuzzy;
 var isnot = SimpleTest.isnot;
 var ise = SimpleTest.ise;
 var todo = SimpleTest.todo;
