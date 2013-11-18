@@ -2516,7 +2516,7 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * If we didn't have an explicit default (which could fall in between
          * cases, preventing us from fusing this SetSrcNoteOffset with the call
          * in the loop above), link the last case to the implicit default for
-         * the decompiler.
+         * the benefit of IonBuilder.
          */
         if (!hasDefault &&
             caseNoteIndex >= 0 &&
@@ -2644,7 +2644,7 @@ bool
 frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *body)
 {
     /*
-     * The decompiler has assumptions about what may occur immediately after
+     * IonBuilder has assumptions about what may occur immediately after
      * script->main (e.g., in the case of destructuring params). Thus, put the
      * following ops into the range [script->code, script->main). Note:
      * execution starts from script->code, so this has no semantic effect.
@@ -2994,12 +2994,6 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
     JS_ASSERT(pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT));
 #endif
 
-    if (pn->pn_count == 0) {
-        /* Emit a DUP;POP sequence for the decompiler. */
-        if (Emit1(cx, bce, JSOP_DUP) < 0 || Emit1(cx, bce, JSOP_POP) < 0)
-            return false;
-    }
-
     index = 0;
     for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
         /* Duplicate the value being destructured to use as a reference base. */
@@ -3067,13 +3061,13 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
             if (emitOption == PushInitialValues) {
                 /*
                  * After '[x,y]' in 'let ([[x,y], z] = o)', the stack is
-                 *   | to-be-decompiled-value | x | y |
+                 *   | to-be-destructured-value | x | y |
                  * The goal is:
                  *   | x | y | z |
                  * so emit a pick to produce the intermediate state
-                 *   | x | y | to-be-decompiled-value |
+                 *   | x | y | to-be-destructured-value |
                  * before destructuring z. This gives the loop invariant that
-                 * the to-be-compiled-value is always on top of the stack.
+                 * the to-be-destructured-value is always on top of the stack.
                  */
                 JS_ASSERT((bce->stackDepth - bce->stackDepth) >= -1);
                 unsigned pickDistance = (unsigned)((bce->stackDepth + 1) - depthBefore);
@@ -3093,7 +3087,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
 
     if (emitOption == PushInitialValues) {
         /*
-         * Per the above loop invariant, to-be-decompiled-value is at the top
+         * Per the above loop invariant, to-be-destructured-value is at the top
          * of the stack. To achieve the post-condition, pop it.
          */
         if (Emit1(cx, bce, JSOP_POP) < 0)
@@ -3834,14 +3828,7 @@ EmitCatch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     /* Emit the catch body. */
-    if (!EmitTree(cx, bce, pn->pn_kid3))
-        return false;
-
-    /*
-     * Annotate the JSOP_LEAVEBLOCK that will be emitted as we unwind via
-     * our PNK_LEXICALSCOPE parent, so the decompiler knows to pop.
-     */
-    return NewSrcNote(cx, bce, SRC_CATCH) >= 0;
+    return EmitTree(cx, bce, pn->pn_kid3);
 }
 
 /*
@@ -3946,9 +3933,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
                 /*
                  * Move exception back to cx->exception to prepare for
-                 * the next catch. We hide [throwing] from the decompiler
-                 * since it compensates for the hidden JSOP_DUP at the
-                 * start of the previous guarded catch.
+                 * the next catch.
                  */
                 if (Emit1(cx, bce, JSOP_THROWING) < 0)
                     return false;
@@ -4534,9 +4519,7 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
 
     /*
      * Emit code to get the next enumeration value and assign it to the
-     * left hand side. The JSOP_POP after this assignment is annotated
-     * so that the decompiler can distinguish 'for (x in y)' from
-     * 'for (var x in y)'.
+     * left hand side.
      */
     if (Emit1(cx, bce, JSOP_ITERNEXT) < 0)
         return false;
@@ -4610,7 +4593,8 @@ EmitNormalFor(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff
     JSOp op = JSOP_POP;
     ParseNode *pn3 = forHead->pn_kid1;
     if (!pn3) {
-        /* No initializer: emit an annotated nop for the decompiler. */
+        // No initializer, but emit a nop so that there's somewhere to put the
+        // SRC_FOR annotation that IonBuilder will look for.
         op = JSOP_NOP;
     } else {
         bce->emittingForInit = true;
@@ -4631,7 +4615,7 @@ EmitNormalFor(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff
                  * Check whether a destructuring-initialized var decl
                  * was optimized to a group assignment.  If so, we do
                  * not need to emit a pop below, so switch to a nop,
-                 * just for the decompiler.
+                 * just for IonBuilder.
                  */
                 JS_ASSERT(pn3->isArity(PN_LIST) || pn3->isArity(PN_BINARY));
                 if (pn3->pn_xflags & PNX_GROUPINIT)
@@ -4700,7 +4684,7 @@ EmitNormalFor(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff
         if (op == JSOP_POP && !EmitTree(cx, bce, pn3))
             return false;
 
-        /* Always emit the POP or NOP, to help the decompiler. */
+        /* Always emit the POP or NOP to help IonBuilder. */
         if (Emit1(cx, bce, op) < 0)
             return false;
 
@@ -4905,7 +4889,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 EmitDo(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    /* Emit an annotated nop so we know to decompile a 'do' keyword. */
+    /* Emit an annotated nop so IonBuilder can recognize the 'do' loop. */
     ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_WHILE);
     if (noteIndex < 0 || Emit1(cx, bce, JSOP_NOP) < 0)
         return false;
@@ -4939,11 +4923,6 @@ EmitDo(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!EmitTree(cx, bce, pn->pn_right))
         return false;
 
-    /*
-     * Since we use JSOP_IFNE for other purposes as well as for do-while
-     * loops, we must store 1 + (beq - top) in the SRC_WHILE note offset,
-     * and the decompiler must get that delta and decompile recursively.
-     */
     ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
     if (beq < 0)
         return false;
@@ -4952,6 +4931,9 @@ EmitDo(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     /*
+     * Update the annotations with the update and back edge positions, for
+     * IonBuilder.
+     *
      * Be careful: We must set noteIndex2 before noteIndex in case the noteIndex
      * note gets bigger.
      */
