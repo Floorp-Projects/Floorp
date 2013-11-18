@@ -163,14 +163,14 @@ AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
 }
 
 inline Handle<PropertyName*>
-TypeName(JSType type, JSRuntime *rt)
+TypeName(JSType type, const JSAtomState &names)
 {
     JS_ASSERT(type < JSTYPE_LIMIT);
     JS_STATIC_ASSERT(offsetof(JSAtomState, undefined) +
                      JSTYPE_LIMIT * sizeof(FixedHeapPtr<PropertyName>) <=
                      sizeof(JSAtomState));
     JS_STATIC_ASSERT(JSTYPE_VOID == 0);
-    return (&rt->atomState.undefined)[type];
+    return (&names.undefined)[type];
 }
 
 inline Handle<PropertyName*>
