@@ -373,10 +373,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadJSContext(const Register &dest) {
-        loadPtr(AbsoluteAddress(&GetIonContext()->runtime->mainThread.ionJSContext), dest);
+        loadPtr(AbsoluteAddress(GetIonContext()->runtime->addressOfJSContext()), dest);
     }
     void loadJitActivation(const Register &dest) {
-        loadPtr(AbsoluteAddress(GetIonContext()->runtime->mainThread.addressOfActivation()), dest);
+        loadPtr(AbsoluteAddress(GetIonContext()->runtime->addressOfActivation()), dest);
     }
 
     template<typename T>
@@ -627,8 +627,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchTestNeedsBarrier(Condition cond, const Register &scratch, Label *label) {
         JS_ASSERT(cond == Zero || cond == NonZero);
-        JS::Zone *zone = GetIonContext()->compartment->zone();
-        movePtr(ImmPtr(zone->AddressOfNeedsBarrier()), scratch);
+        CompileZone *zone = GetIonContext()->compartment->zone();
+        movePtr(ImmPtr(zone->addressOfNeedsBarrier()), scratch);
         Address needsBarrierAddr(scratch, 0);
         branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
     }
@@ -647,7 +647,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         Push(PreBarrierReg);
         computeEffectiveAddress(address, PreBarrierReg);
 
-        JitRuntime *rt = GetIonContext()->runtime->jitRuntime();
+        const JitRuntime *rt = GetIonContext()->runtime->jitRuntime();
         IonCode *preBarrier = (type == MIRType_Shape)
                               ? rt->shapePreBarrier()
                               : rt->valuePreBarrier();
