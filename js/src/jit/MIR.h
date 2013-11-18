@@ -3801,9 +3801,9 @@ class MMathFunction
 
   private:
     Function function_;
-    const MathCache *cache_;
+    MathCache *cache_;
 
-    MMathFunction(MDefinition *input, Function function, const MathCache *cache)
+    MMathFunction(MDefinition *input, Function function, MathCache *cache)
       : MUnaryInstruction(input), function_(function), cache_(cache)
     {
         setResultType(MIRType_Double);
@@ -3816,14 +3816,14 @@ class MMathFunction
 
     // A nullptr cache means this function will neither access nor update the cache.
     static MMathFunction *New(TempAllocator &alloc, MDefinition *input, Function function,
-                              const MathCache *cache)
+                              MathCache *cache)
     {
         return new(alloc) MMathFunction(input, function, cache);
     }
     Function function() const {
         return function_;
     }
-    const MathCache *cache() const {
+    MathCache *cache() const {
         return cache_;
     }
     TypePolicy *typePolicy() {
