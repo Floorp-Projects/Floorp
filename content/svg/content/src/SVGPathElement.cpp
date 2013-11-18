@@ -10,7 +10,6 @@
 #include "DOMSVGPathSeg.h"
 #include "DOMSVGPathSegList.h"
 #include "DOMSVGPoint.h"
-#include "gfxPath.h"
 #include "gfx2DGlue.h"
 #include "mozilla/dom/SVGPathElementBinding.h"
 #include "mozilla/gfx/2D.h"
@@ -80,9 +79,7 @@ SVGPathElement::GetPointAtLength(float distance, ErrorResult& rv)
     return nullptr;
   }
 
-  nsRefPtr<gfxPath> flat = new gfxPath(path);
-
-  float totalLength = flat->GetLength();
+  float totalLength = path->ComputeLength();
   if (mPathLength.IsExplicitlySet()) {
     float pathLength = mPathLength.GetAnimValue();
     if (pathLength <= 0) {
@@ -94,7 +91,8 @@ SVGPathElement::GetPointAtLength(float distance, ErrorResult& rv)
   distance = std::max(0.f,         distance);
   distance = std::min(totalLength, distance);
 
-  nsCOMPtr<nsISVGPoint> point = new DOMSVGPoint(flat->FindPoint(gfxPoint(distance, 0)));
+  nsCOMPtr<nsISVGPoint> point =
+    new DOMSVGPoint(path->ComputePointAtLength(distance));
   return point.forget();
 }
 

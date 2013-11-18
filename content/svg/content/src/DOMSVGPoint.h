@@ -8,6 +8,7 @@
 
 #include "DOMSVGPointList.h"
 #include "gfxPoint.h"
+#include "mozilla/gfx/2D.h"
 #include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsISVGPoint.h"
@@ -38,6 +39,8 @@ class SVGMatrix;
  */
 class DOMSVGPoint MOZ_FINAL : public nsISVGPoint
 {
+  typedef mozilla::gfx::Point Point;
+
 public:
   /**
    * Generic ctor for DOMSVGPoint objects that are created for an attribute.
@@ -71,6 +74,15 @@ public:
   {
     mPt.mX = aX;
     mPt.mY = aY;
+  }
+
+  explicit DOMSVGPoint(const Point& aPt)
+    : nsISVGPoint()
+  {
+    mPt.mX = aPt.x;
+    mPt.mY = aPt.y;
+    NS_ASSERTION(NS_finite(mPt.mX) && NS_finite(mPt.mX),
+                 "DOMSVGPoint coords are not finite");
   }
 
   explicit DOMSVGPoint(const gfxPoint &aPt)

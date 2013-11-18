@@ -5,7 +5,6 @@
 
 #include "SVGMotionSMILPathUtils.h"
 
-#include "gfxPath.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h" // for NS_ENSURE_FINITE2
 #include "SVGContentUtils.h"
@@ -80,12 +79,10 @@ SVGMotionSMILPathUtils::PathGenerator::
   return true;
 }
 
-already_AddRefed<gfxPath>
+TemporaryRef<Path>
 SVGMotionSMILPathUtils::PathGenerator::GetResultingPath()
 {
-  RefPtr<Path> path = mPathBuilder->Finish();
-  nsRefPtr<gfxPath> thebesPath = new gfxPath(path);
-  return thebesPath.forget();
+  return mPathBuilder->Finish();
 }
 
 //----------------------------------------------------------------------
