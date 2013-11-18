@@ -162,6 +162,10 @@
 @BINPATH@/components/directory.xpt
 @BINPATH@/components/docshell.xpt
 @BINPATH@/components/dom.xpt
+#ifdef MOZ_ACTIVITIES
+@BINPATH@/components/dom_activities.xpt
+@BINPATH@/components/dom_messages.xpt
+#endif
 @BINPATH@/components/dom_apps.xpt
 @BINPATH@/components/dom_base.xpt
 @BINPATH@/components/dom_system.xpt
