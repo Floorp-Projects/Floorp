@@ -1632,7 +1632,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         module_->exportedFunction(exportIndex).initCodeOffset(masm_.size());
     }
 
-    void buildCompilationTimeReport(ScopedJSFreePtr<char> *out) {
+    void buildCompilationTimeReport(bool storedInCache, ScopedJSFreePtr<char> *out) {
         ScopedJSFreePtr<char> slowFuns;
 #ifndef JS_MORE_DETERMINISTIC
         int64_t usecAfter = PRMJ_Now();
@@ -1653,8 +1653,10 @@ class MOZ_STACK_CLASS ModuleCompiler
                     return;
             }
         }
-        out->reset(JS_smprintf("total compilation time %dms%s",
-                               msTotal, slowFuns ? slowFuns.get() : ""));
+        out->reset(JS_smprintf("total compilation time %dms%s%s",
+                               msTotal,
+                               storedInCache ? "; stored in cache" : "",
+                               slowFuns ? slowFuns.get() : ""));
 #endif
     }
 
@@ -6462,10 +6464,10 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
     if (!FinishModule(m, &module, &linkData))
         return false;
 
-    StoreAsmJSModuleInCache(parser, *module, linkData, cx);
+    bool storedInCache = StoreAsmJSModuleInCache(parser, *module, linkData, cx);
     module->staticallyLink(linkData, cx);
 
-    m.buildCompilationTimeReport(compilationTimeReport);
+    m.buildCompilationTimeReport(storedInCache, compilationTimeReport);
     *moduleOut = module.forget();
     return true;
 }
