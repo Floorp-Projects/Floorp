@@ -5829,7 +5829,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
     // List of possible scripts that this graph may call. Currently this is
     // only tracked when compiling for parallel execution.
-    CallTargetVector callTargets;
+    CallTargetVector callTargets(alloc());
     if (executionMode == ParallelExecution)
         AddPossibleCallees(cx, graph.mir(), callTargets);
 
