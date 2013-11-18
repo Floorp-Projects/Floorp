@@ -757,7 +757,8 @@ nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
       mBoxFlex == aOther.mBoxFlex &&
       mBoxOrient == aOther.mBoxOrient &&
       mBoxPack == aOther.mBoxPack &&
-      mBoxOrdinal == aOther.mBoxOrdinal)
+      mBoxOrdinal == aOther.mBoxOrdinal &&
+      mStretchStack == aOther.mStretchStack)
     return NS_STYLE_HINT_NONE;
   if (mBoxOrdinal != aOther.mBoxOrdinal)
     return NS_STYLE_HINT_FRAMECHANGE;
