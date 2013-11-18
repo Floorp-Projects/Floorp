@@ -4526,6 +4526,7 @@ nsHttpChannel::BeginConnect()
         // be correct, and even when it isn't, the timing still represents _a_
         // valid DNS lookup timing for the site, even if it is not _the_
         // timing we used.
+        LOG(("nsHttpChannel::BeginConnect [this=%p] prefetching\n", this));
         mDNSPrefetch = new nsDNSPrefetch(mURI, mTimingEnabled);
         mDNSPrefetch->PrefetchHigh();
     }
