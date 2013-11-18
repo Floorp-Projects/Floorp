@@ -45,6 +45,3 @@ include color-management/reftest.list
 
 # Lossless encoders
 skip-if(Android||B2G) include encoders-lossless/reftest.list # bug 783621
-
-# Animated image disposal and blending operator tests
-include animated/reftest.list

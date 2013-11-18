@@ -64,6 +64,22 @@ MOCHITEST_FILES =   imgutils.js \
                 test_ImageContentLoaded.html \
                 INT32_MIN.bmp \
                 test_bug865919.html \
+                test_animation_operators.html \
+                bug900200.png \
+                bug900200-ref.png \
+                clear.gif \
+                clear.png \
+                clear2.gif \
+                clear2-results.gif \
+                green.png \
+                green-background.html \
+                grey.png \
+                keep.gif \
+                keep.png \
+                restore-previous.gif \
+                restore-previous.png \
+                source.png \
+                over.png \
                 $(NULL)
 
 # Tests disabled due to intermittent orange
