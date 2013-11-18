@@ -98,6 +98,11 @@ CONFIGS = {
         'non_global_defines': [],
         'substs': [],
     },
+    'test-manifests-duplicate-support-files': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [],
+    },
 }
 
 

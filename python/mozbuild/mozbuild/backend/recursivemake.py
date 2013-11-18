@@ -1017,12 +1017,14 @@ class RecursiveMakeBackend(CommonBackend):
         self.backend_input_files.add(os.path.join(obj.topsrcdir,
             obj.manifest_relpath))
 
-        # Duplicate manifests may define the same file. That's OK.
-        for source, dest in obj.installs.items():
+        # Don't allow files to be defined multiple times unless it is allowed.
+        # We currently allow duplicates for non-test files or test files if
+        # the manifest is listed as a duplicate.
+        for source, (dest, is_test) in obj.installs.items():
             try:
                 self._install_manifests['tests'].add_symlink(source, dest)
             except ValueError:
-                if not obj.dupe_manifest:
+                if not obj.dupe_manifest and is_test:
                     raise
 
         for dest in obj.external_installs:

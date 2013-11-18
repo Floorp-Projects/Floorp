@@ -176,9 +176,6 @@ Files referenced by manifests are automatically installed into the object
 directory into paths defined in
 :py:func:`mozbuild.frontend.emitter.TreeMetadataEmitter._process_test_manifest`.
 
-Referenced files in the manifest not in the same directory tree as the manifest
-file are **not** installed.
-
 .. _reftest_manifests:
 
 Reftest Manifests
