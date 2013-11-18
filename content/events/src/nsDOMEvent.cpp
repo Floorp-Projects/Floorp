@@ -145,6 +145,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
       case NS_MOUSE_SCROLL_EVENT:
       case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
+      case NS_POINTER_EVENT:
         tmp->mEvent->AsMouseEventBase()->relatedTarget = nullptr;
         break;
       case NS_DRAG_EVENT: {
@@ -182,6 +183,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
       case NS_MOUSE_SCROLL_EVENT:
       case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
+      case NS_POINTER_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(tmp->mEvent->AsMouseEventBase()->relatedTarget);
         break;
@@ -738,6 +740,21 @@ nsDOMEvent::DuplicatePrivateData()
       newEvent = touchEvent;
       break;
     }
+    case NS_POINTER_EVENT:
+    {
+      WidgetPointerEvent* oldPointerEvent = mEvent->AsPointerEvent();
+      WidgetPointerEvent* pointerEvent =
+        new WidgetPointerEvent(false, msg, nullptr,
+                               oldPointerEvent->pointerId,
+                               oldPointerEvent->width,
+                               oldPointerEvent->height,
+                               oldPointerEvent->tiltX,
+                               oldPointerEvent->tiltY,
+                               oldPointerEvent->isPrimary);
+      pointerEvent->buttons = oldPointerEvent->buttons;
+      newEvent = pointerEvent;
+      break;
+    }
     default:
     {
       NS_WARNING("Unknown event type!!!");
@@ -1022,6 +1039,7 @@ nsDOMEvent::GetScreenCoords(nsPresContext* aPresContext,
        (aEvent->eventStructType != NS_MOUSE_EVENT &&
         aEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
         aEvent->eventStructType != NS_WHEEL_EVENT &&
+        aEvent->eventStructType != NS_POINTER_EVENT &&
         aEvent->eventStructType != NS_TOUCH_EVENT &&
         aEvent->eventStructType != NS_DRAG_EVENT &&
         aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT)) {
@@ -1081,6 +1099,7 @@ nsDOMEvent::GetClientCoords(nsPresContext* aPresContext,
        aEvent->eventStructType != NS_WHEEL_EVENT &&
        aEvent->eventStructType != NS_TOUCH_EVENT &&
        aEvent->eventStructType != NS_DRAG_EVENT &&
+       aEvent->eventStructType != NS_POINTER_EVENT &&
        aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
       !aPresContext ||
       !aEvent->AsGUIEvent()->widget) {
