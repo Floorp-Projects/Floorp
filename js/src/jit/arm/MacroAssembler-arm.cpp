@@ -3367,7 +3367,7 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, Register base, Register index,
 
 void
 MacroAssemblerARMCompat::linkExitFrame() {
-    uint8_t *dest = (uint8_t*)&GetIonContext()->runtime->mainThread.ionTop;
+    uint8_t *dest = (uint8_t*)GetIonContext()->runtime->addressOfIonTop();
     movePtr(ImmPtr(dest), ScratchRegister);
     ma_str(StackPointer, Operand(ScratchRegister, 0));
 }
