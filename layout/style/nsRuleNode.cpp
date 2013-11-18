@@ -3554,9 +3554,15 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 
   nscoord fontSize = aFont->mSize;
 
-  // enforce the user' specified minimum font-size on the value that we expose
-  // (but don't change font-size:0, since that would unhide hidden text)
-  if (fontSize > 0) {
+  // Enforce the user's specified minimum font-size on the value that we
+  // expose (but don't change font-size:0, since that would unhide hidden
+  // text).
+  //
+  // We don't do this for SVG text, which we can tell from the value of
+  // -x-text-zoom.  It's safe to look at mAllowZoom on this style struct
+  // we're computing, since we know -x-text-zoom is only ever specified
+  // on an <svg:text> element and is inherited otherwise.
+  if (fontSize > 0 && aFont->mAllowZoom) {
     nscoord minFontSize = aPresContext->MinFontSize(aFont->mLanguage);
     if (minFontSize < 0) {
       minFontSize = 0;
