@@ -11,9 +11,7 @@
 #include "AccessibleText_i.c"
 
 #include "HyperTextAccessibleWrap.h"
-
-#include "nsIPersistentProperties2.h"
-#include "nsIAccessibleTypes.h"
+#include "HyperTextAccessible-inl.h"
 
 using namespace mozilla::a11y;
 
@@ -28,8 +26,8 @@ ia2AccessibleText::addSelection(long aStartOffset, long aEndOffset)
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsresult rv = textAcc->AddSelection(aStartOffset, aEndOffset);
-  return GetHRESULT(rv);
+  return textAcc->AddToSelection(aStartOffset, aEndOffset) ?
+    S_OK : E_INVALIDARG;
 
   A11Y_TRYBLOCK_END
 }
@@ -52,13 +50,9 @@ ia2AccessibleText::get_attributes(long aOffset, long *aStartOffset,
     return CO_E_OBJNOTCONNECTED;
 
   int32_t startOffset = 0, endOffset = 0;
-  nsCOMPtr<nsIPersistentProperties> attributes;
-  nsresult rv = textAcc->GetTextAttributes(true, aOffset,
-                                           &startOffset, &endOffset,
-                                           getter_AddRefs(attributes));
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-  
+  nsCOMPtr<nsIPersistentProperties> attributes =
+    textAcc->TextAttributes(true, aOffset, &startOffset, &endOffset);
+
   HRESULT hr = AccessibleWrap::ConvertToIA2Attributes(attributes,
                                                       aTextAttributes);
   if (FAILED(hr))
@@ -86,13 +80,8 @@ ia2AccessibleText::get_caretOffset(long *aOffset)
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  int32_t offset = 0;
-  nsresult rv = textAcc->GetCaretOffset(&offset);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aOffset = offset;
-  return offset != -1 ? S_OK : S_FALSE;
+  *aOffset = textAcc->CaretOffset();
+  return *aOffset != -1 ? S_OK : S_FALSE;
 
   A11Y_TRYBLOCK_END
 }
@@ -100,18 +89,14 @@ ia2AccessibleText::get_caretOffset(long *aOffset)
 STDMETHODIMP
 ia2AccessibleText::get_characterExtents(long aOffset,
                                         enum IA2CoordinateType aCoordType,
-                                        long *aX, long *aY,
-                                        long *aWidth, long *aHeight)
+                                        long* aX, long* aY,
+                                        long* aWidth, long* aHeight)
 {
   A11Y_TRYBLOCK_BEGIN
 
   if (!aX || !aY || !aWidth || !aHeight)
     return E_INVALIDARG;
-
-  *aX = 0;
-  *aY = 0;
-  *aWidth = 0;
-  *aHeight = 0;
+  *aX = *aY = *aWidth = *aHeight = 0;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
@@ -121,41 +106,31 @@ ia2AccessibleText::get_characterExtents(long aOffset,
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  int32_t x = 0, y =0, width = 0, height = 0;
-  nsresult rv = textAcc->GetCharacterExtents (aOffset, &x, &y, &width, &height,
-                                              geckoCoordType);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  nsIntRect rect = textAcc->CharBounds(aOffset, geckoCoordType);
 
-  *aX = x;
-  *aY = y;
-  *aWidth = width;
-  *aHeight = height;
+  *aX = rect.x;
+  *aY = rect.y;
+  *aWidth = rect.width;
+  *aHeight = rect.height;
   return S_OK;
 
   A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
-ia2AccessibleText::get_nSelections(long *aNSelections)
+ia2AccessibleText::get_nSelections(long* aNSelections)
 {
   A11Y_TRYBLOCK_BEGIN
 
   if (!aNSelections)
     return E_INVALIDARG;
-
   *aNSelections = 0;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  int32_t selCount = 0;
-  nsresult rv = textAcc->GetSelectionCount(&selCount);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aNSelections = selCount;
+  *aNSelections = textAcc->SelectionCount();
   return S_OK;
 
   A11Y_TRYBLOCK_END
@@ -164,13 +139,12 @@ ia2AccessibleText::get_nSelections(long *aNSelections)
 STDMETHODIMP
 ia2AccessibleText::get_offsetAtPoint(long aX, long aY,
                                      enum IA2CoordinateType aCoordType,
-                                     long *aOffset)
+                                     long* aOffset)
 {
   A11Y_TRYBLOCK_BEGIN
 
   if (!aOffset)
     return E_INVALIDARG;
-
   *aOffset = 0;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -181,38 +155,29 @@ ia2AccessibleText::get_offsetAtPoint(long aX, long aY,
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  int32_t offset = 0;
-  nsresult rv = textAcc->GetOffsetAtPoint(aX, aY, geckoCoordType, &offset);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aOffset = offset;
-  return S_OK;
+  *aOffset = textAcc->OffsetAtPoint(aX, aY, geckoCoordType);
+  return *aOffset == -1 ? S_FALSE : S_OK;
 
   A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
-ia2AccessibleText::get_selection(long aSelectionIndex, long *aStartOffset,
-                                 long *aEndOffset)
+ia2AccessibleText::get_selection(long aSelectionIndex, long* aStartOffset,
+                                 long* aEndOffset)
 {
   A11Y_TRYBLOCK_BEGIN
 
   if (!aStartOffset || !aEndOffset)
     return E_INVALIDARG;
-
-  *aStartOffset = 0;
-  *aEndOffset = 0;
+  *aStartOffset = *aEndOffset = 0;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
   int32_t startOffset = 0, endOffset = 0;
-  nsresult rv = textAcc->GetSelectionBounds(aSelectionIndex,
-                                            &startOffset, &endOffset);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  if (!textAcc->SelectionBoundsAt(aSelectionIndex, &startOffset, &endOffset))
+    return E_INVALIDARG;
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
@@ -222,7 +187,7 @@ ia2AccessibleText::get_selection(long aSelectionIndex, long *aStartOffset,
 }
 
 STDMETHODIMP
-ia2AccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
+ia2AccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR* aText)
 {
   A11Y_TRYBLOCK_BEGIN
 
@@ -235,11 +200,11 @@ ia2AccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAutoString text;
-  nsresult rv = textAcc->GetText(aStartOffset, aEndOffset, text);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  if (!textAcc->IsValidRange(aStartOffset, aEndOffset))
+    return E_INVALIDARG;
 
+  nsAutoString text;
+  textAcc->TextSubstring(aStartOffset, aEndOffset, text);
   if (text.IsEmpty())
     return S_FALSE;
 
@@ -252,40 +217,38 @@ ia2AccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
 STDMETHODIMP
 ia2AccessibleText::get_textBeforeOffset(long aOffset,
                                         enum IA2TextBoundaryType aBoundaryType,
-                                        long *aStartOffset, long *aEndOffset,
-                                        BSTR *aText)
+                                        long* aStartOffset, long* aEndOffset,
+                                        BSTR* aText)
 {
   A11Y_TRYBLOCK_BEGIN
 
   if (!aStartOffset || !aEndOffset || !aText)
     return E_INVALIDARG;
 
-  *aStartOffset = 0;
-  *aEndOffset = 0;
+  *aStartOffset = *aEndOffset = 0;
   *aText = nullptr;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsresult rv = NS_OK;
+  if (textAcc->IsValidOffset(aOffset))
+    return E_INVALIDARG;
+
   nsAutoString text;
   int32_t startOffset = 0, endOffset = 0;
 
   if (aBoundaryType == IA2_TEXT_BOUNDARY_ALL) {
     startOffset = 0;
     endOffset = textAcc->CharacterCount();
-    rv = textAcc->GetText(startOffset, endOffset, text);
+    textAcc->TextSubstring(startOffset, endOffset, text);
   } else {
     AccessibleTextBoundary boundaryType = GetGeckoTextBoundary(aBoundaryType);
     if (boundaryType == -1)
       return S_FALSE;
-    rv = textAcc->GetTextBeforeOffset(aOffset, boundaryType,
-                                      &startOffset, &endOffset, text);
-  }
 
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+    textAcc->TextBeforeOffset(aOffset, boundaryType, &startOffset, &endOffset, text);
+  }
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
@@ -302,8 +265,8 @@ ia2AccessibleText::get_textBeforeOffset(long aOffset,
 STDMETHODIMP
 ia2AccessibleText::get_textAfterOffset(long aOffset,
                                        enum IA2TextBoundaryType aBoundaryType,
-                                       long *aStartOffset, long *aEndOffset,
-                                       BSTR *aText)
+                                       long* aStartOffset, long* aEndOffset,
+                                       BSTR* aText)
 {
   A11Y_TRYBLOCK_BEGIN
 
@@ -318,24 +281,22 @@ ia2AccessibleText::get_textAfterOffset(long aOffset,
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsresult rv = NS_OK;
+  if (textAcc->IsValidOffset(aOffset))
+    return E_INVALIDARG;
+
   nsAutoString text;
   int32_t startOffset = 0, endOffset = 0;
 
   if (aBoundaryType == IA2_TEXT_BOUNDARY_ALL) {
     startOffset = 0;
     endOffset = textAcc->CharacterCount();
-    rv = textAcc->GetText(startOffset, endOffset, text);
+    textAcc->TextSubstring(startOffset, endOffset, text);
   } else {
     AccessibleTextBoundary boundaryType = GetGeckoTextBoundary(aBoundaryType);
     if (boundaryType == -1)
       return S_FALSE;
-    rv = textAcc->GetTextAfterOffset(aOffset, boundaryType,
-                                     &startOffset, &endOffset, text);
+    textAcc->TextAfterOffset(aOffset, boundaryType, &startOffset, &endOffset, text);
   }
-
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
@@ -352,40 +313,36 @@ ia2AccessibleText::get_textAfterOffset(long aOffset,
 STDMETHODIMP
 ia2AccessibleText::get_textAtOffset(long aOffset,
                                     enum IA2TextBoundaryType aBoundaryType,
-                                    long *aStartOffset, long *aEndOffset,
-                                    BSTR *aText)
+                                    long* aStartOffset, long* aEndOffset,
+                                    BSTR* aText)
 {
   A11Y_TRYBLOCK_BEGIN
 
   if (!aStartOffset || !aEndOffset || !aText)
     return E_INVALIDARG;
 
-  *aStartOffset = 0;
-  *aEndOffset = 0;
+  *aStartOffset = *aEndOffset = 0;
   *aText = nullptr;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsresult rv = NS_OK;
+  if (textAcc->IsValidOffset(aOffset))
+    return E_INVALIDARG;
+
   nsAutoString text;
   int32_t startOffset = 0, endOffset = 0;
-
   if (aBoundaryType == IA2_TEXT_BOUNDARY_ALL) {
     startOffset = 0;
     endOffset = textAcc->CharacterCount();
-    rv = textAcc->GetText(startOffset, endOffset, text);
+    textAcc->TextSubstring(startOffset, endOffset, text);
   } else {
     AccessibleTextBoundary boundaryType = GetGeckoTextBoundary(aBoundaryType);
     if (boundaryType == -1)
       return S_FALSE;
-    rv = textAcc->GetTextAtOffset(aOffset, boundaryType,
-                                  &startOffset, &endOffset, text);
+    textAcc->TextAtOffset(aOffset, boundaryType, &startOffset, &endOffset, text);
   }
-
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
 
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
@@ -408,8 +365,8 @@ ia2AccessibleText::removeSelection(long aSelectionIndex)
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsresult rv = textAcc->RemoveSelection(aSelectionIndex);
-  return GetHRESULT(rv);
+  return textAcc->RemoveFromSelection(aSelectionIndex) ?
+    S_OK : E_INVALIDARG;
 
   A11Y_TRYBLOCK_END
 }
@@ -423,8 +380,11 @@ ia2AccessibleText::setCaretOffset(long aOffset)
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsresult rv = textAcc->SetCaretOffset(aOffset);
-  return GetHRESULT(rv);
+  if (!textAcc->IsValidOffset(aOffset))
+    return E_INVALIDARG;
+
+  textAcc->SetCaretOffset(aOffset);
+  return S_OK;
 
   A11Y_TRYBLOCK_END
 }
@@ -439,21 +399,19 @@ ia2AccessibleText::setSelection(long aSelectionIndex, long aStartOffset,
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsresult rv = textAcc->SetSelectionBounds(aSelectionIndex,
-                                            aStartOffset, aEndOffset);
-  return GetHRESULT(rv);
+  return textAcc->SetSelectionBoundsAt(aSelectionIndex, aStartOffset, aEndOffset) ?
+    S_OK : E_INVALIDARG;
 
   A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
-ia2AccessibleText::get_nCharacters(long *aNCharacters)
+ia2AccessibleText::get_nCharacters(long* aNCharacters)
 {
   A11Y_TRYBLOCK_BEGIN
 
   if (!aNCharacters)
     return E_INVALIDARG;
-
   *aNCharacters = 0;
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -476,8 +434,11 @@ ia2AccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsresult rv = textAcc->ScrollSubstringTo(aStartIndex, aEndIndex, aScrollType);
-  return GetHRESULT(rv);
+  if (!textAcc->IsValidRange(aStartIndex, aEndIndex))
+    return E_INVALIDARG;
+
+  textAcc->ScrollSubstringTo(aStartIndex, aEndIndex, aScrollType);
+  return S_OK;
 
   A11Y_TRYBLOCK_END
 }
@@ -493,13 +454,16 @@ ia2AccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
+  if (!textAcc->IsValidRange(aStartIndex, aEndIndex))
+    return E_INVALIDARG;
+
   uint32_t geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
     nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
     nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  nsresult rv = textAcc->ScrollSubstringToPoint(aStartIndex, aEndIndex,
-                                                geckoCoordType, aX, aY);
-  return GetHRESULT(rv);
+  textAcc->ScrollSubstringToPoint(aStartIndex, aEndIndex,
+                                  geckoCoordType, aX, aY);
+  return S_OK;
 
   A11Y_TRYBLOCK_END
 }
