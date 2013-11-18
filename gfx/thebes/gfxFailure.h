@@ -5,6 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef gfxFailure_h_
+#define gfxFailure_h_
+
 #include "nsString.h"
 #include "nsIGfxInfo.h"
 #include "nsServiceManagerUtils.h"
@@ -18,3 +21,5 @@ namespace mozilla {
         }
     }
 }
+
+#endif // gfxFailure_h_
