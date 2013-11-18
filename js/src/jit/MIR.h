@@ -8246,6 +8246,13 @@ class MPostWriteBarrier
     MDefinition *value() const {
         return getOperand(1);
     }
+#ifdef DEBUG
+    bool isConsistentFloat32Use() const {
+        // During lowering, values that neither have object nor value MIR type
+        // are ignored, thus Float32 can show up at this point without any issue.
+        return true;
+    }
+#endif
 };
 
 class MNewSlots : public MNullaryInstruction
