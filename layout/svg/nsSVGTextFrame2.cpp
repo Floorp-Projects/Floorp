@@ -20,7 +20,6 @@
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGLength.h"
-#include "nsISVGGlyphFragmentNode.h"
 #include "nsISelection.h"
 #include "nsQuickSort.h"
 #include "nsRenderingContext.h"
