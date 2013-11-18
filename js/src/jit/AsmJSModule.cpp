@@ -1009,8 +1009,10 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
     if (!cursor)
         return false;
 
-    if (cursor != entry.memory + entry.serializedSize)
-        MOZ_CRASH("Corrupt serialized module");
+    bool atEnd = cursor == entry.memory + entry.serializedSize;
+    MOZ_ASSERT(atEnd, "Corrupt cache file");
+    if (!atEnd)
+        return true;
 
     module->staticallyLink(linkData, cx);
 
