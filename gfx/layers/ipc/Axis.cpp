@@ -20,8 +20,6 @@
 namespace mozilla {
 namespace layers {
 
-static const float EPSILON = 0.0001f;
-
 /**
  * Maximum acceleration that can happen between two frames. Velocity is
  * throttled if it's above this. This may happen if a time delta is very low,

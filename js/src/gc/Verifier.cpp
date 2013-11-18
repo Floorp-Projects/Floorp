@@ -448,7 +448,6 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
 
     MinorGC(rt, JS::gcreason::API);
 
-    AutoLockForExclusiveAccess lock(rt);
     AutoPrepareForTracing prep(rt, WithAtoms);
 
     if (!IsIncrementalGCSafe(rt))
@@ -814,6 +813,7 @@ MaybeVerifyPreBarriers(JSRuntime *rt, bool always)
 
         EndVerifyPreBarriers(rt);
     }
+
     StartVerifyPreBarriers(rt);
 }
 

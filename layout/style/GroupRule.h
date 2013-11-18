@@ -73,6 +73,14 @@ public:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
 
+  static bool
+  CloneRuleInto(Rule* aRule, void* aArray)
+  {
+    nsRefPtr<Rule> clone = aRule->Clone();
+    static_cast<nsCOMArray<Rule>*>(aArray)->AppendObject(clone);
+    return true;
+  }
+
 protected:
   // to help implement nsIDOMCSSRule
   void AppendRulesToCssText(nsAString& aCssText);

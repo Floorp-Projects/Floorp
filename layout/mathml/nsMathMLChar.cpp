@@ -390,7 +390,7 @@ NS_IMPL_ISUPPORTS1(nsGlyphTableList, nsIObserver)
 // Here is the global list of applicable glyph tables that we will be using
 static nsGlyphTableList* gGlyphTableList = nullptr;
 
-static bool gInitialized = false;
+static bool gGlyphTableInitialized = false;
 
 // XPCOM shutdown observer
 NS_IMETHODIMP
@@ -428,7 +428,7 @@ nsGlyphTableList::Finalize()
   else
     rv = NS_ERROR_FAILURE;
 
-  gInitialized = false;
+  gGlyphTableInitialized = false;
   // our oneself will be destroyed when our |Release| is called by the observer
   return rv;
 }
@@ -554,8 +554,8 @@ MathFontEnumCallback(const nsString& aFamily, bool aGeneric, void *aData)
 static nsresult
 InitGlobals(nsPresContext* aPresContext)
 {
-  NS_ASSERTION(!gInitialized, "Error -- already initialized");
-  gInitialized = true;
+  NS_ASSERTION(!gGlyphTableInitialized, "Error -- already initialized");
+  gGlyphTableInitialized = true;
 
   // Allocate the placeholders for the preferred parts and variants
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
@@ -637,7 +637,7 @@ void
 nsMathMLChar::SetData(nsPresContext* aPresContext,
                       nsString&       aData)
 {
-  if (!gInitialized) {
+  if (!gGlyphTableInitialized) {
     InitGlobals(aPresContext);
   }
   mData = aData;

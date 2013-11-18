@@ -4337,7 +4337,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
         if (!JS_GetProperty(cx, opts, "url", &v))
             return false;
         if (!v.isUndefined()) {
-            RootedString url_str(cx, JS_ValueToString(cx, v));
+            RootedString url_str(cx, ToString<CanGC>(cx, v));
             if (!url_str)
                 return false;
             url = JS_EncodeString(cx, url_str);

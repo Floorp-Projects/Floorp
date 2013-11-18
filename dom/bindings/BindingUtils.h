@@ -900,11 +900,11 @@ EnumValueNotFound<true>(JSContext* cx, const jschar* chars, size_t length,
 
 template<bool InvalidValueFatal>
 inline int
-FindEnumStringIndex(JSContext* cx, JS::Value v, const EnumEntry* values,
+FindEnumStringIndex(JSContext* cx, JS::Handle<JS::Value> v, const EnumEntry* values,
                     const char* type, const char* sourceDescription, bool* ok)
 {
   // JS_StringEqualsAscii is slow as molasses, so don't use it here.
-  JSString* str = JS_ValueToString(cx, v);
+  JSString* str = JS::ToString(cx, v);
   if (!str) {
     *ok = false;
     return 0;
@@ -1550,7 +1550,7 @@ ConvertJSValueToString(JSContext* cx, JS::Handle<JS::Value> v,
       return true;
     }
 
-    s = JS_ValueToString(cx, v);
+    s = JS::ToString(cx, v);
     if (!s) {
       return false;
     }

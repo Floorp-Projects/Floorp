@@ -1105,11 +1105,25 @@ CompositorOGL::DrawQuad(const Rect& aRect,
       }
 
       AutoBindTexture bindSource(source->AsSourceOGL(), LOCAL_GL_TEXTURE0);
-  
-      program->SetTextureTransform(source->AsSourceOGL()->GetTextureTransform());
 
+      gfx3DMatrix textureTransform = source->AsSourceOGL()->GetTextureTransform();
+      program->SetTextureTransform(textureTransform);
+
+      GraphicsFilter filter = ThebesFilter(texturedEffect->mFilter);
+      gfxMatrix textureTransform2D;
+#ifdef MOZ_WIDGET_ANDROID
+      if (filter != GraphicsFilter::FILTER_NEAREST &&
+          aTransform.Is2DIntegerTranslation() &&
+          textureTransform.Is2D(&textureTransform2D) &&
+          textureTransform2D.HasOnlyIntegerTranslation()) {
+        // On Android we encounter small resampling errors in what should be
+        // pixel-aligned compositing operations. This works around them. This
+        // code should not be needed!
+        filter = GraphicsFilter::FILTER_NEAREST;
+      }
+#endif
       mGLContext->ApplyFilterToBoundTexture(source->AsSourceOGL()->GetTextureTarget(),
-                                            ThebesFilter(texturedEffect->mFilter));
+                                            filter);
 
       program->SetTextureUnit(0);
       program->SetLayerOpacity(aOpacity);

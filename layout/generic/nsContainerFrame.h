@@ -366,6 +366,14 @@ public:
     MOZ_ASSERT(false, "The owning frame should destroy its nsFrameList props");
   }
 
+  static void PlaceFrameView(nsIFrame* aFrame)
+  {
+    if (aFrame->HasView())
+      nsContainerFrame::PositionFrameView(aFrame);
+    else
+      nsContainerFrame::PositionChildViews(aFrame);
+  }
+
 #define NS_DECLARE_FRAME_PROPERTY_FRAMELIST(prop)                     \
   NS_DECLARE_FRAME_PROPERTY(prop, nsContainerFrame::DestroyFrameList)
 
