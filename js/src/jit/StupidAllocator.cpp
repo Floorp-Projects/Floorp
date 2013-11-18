@@ -305,7 +305,7 @@ StupidAllocator::syncForBlockEnd(LBlock *block, LInstruction *ins)
                 if (input->numMoves() == 0) {
                     group = input;
                 } else {
-                    group = new LMoveGroup;
+                    group = new LMoveGroup(alloc());
                     block->insertAfter(input, group);
                 }
             }
