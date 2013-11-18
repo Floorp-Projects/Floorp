@@ -18,15 +18,20 @@ MemoryStats._hasMemoryStatistics.vsizeMaxContiguous = MEM_STAT_UNKNOWN;
 MemoryStats._hasMemoryStatistics.residentFast = MEM_STAT_UNKNOWN;
 MemoryStats._hasMemoryStatistics.heapAllocated = MEM_STAT_UNKNOWN;
 
-MemoryStats.dump = function (dumpFn) {
-    var mrm;
+MemoryStats._getService = function (className, interfaceName) {
+    var service;
     try {
-	mrm = Cc["@mozilla.org/memory-reporter-manager;1"]
-	    .getService(Ci.nsIMemoryReporterManager);
+        service = Cc[className].getService(Ci[interfaceName]);
     } catch (e) {
-	mrm = SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"]
-	                   .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
+        service = SpecialPowers.Cc[className]
+                               .getService(SpecialPowers.Ci[interfaceName]);
     }
+    return service;
+}
+
+MemoryStats.dump = function (dumpFn) {
+    var mrm = MemoryStats._getService("@mozilla.org/memory-reporter-manager;1",
+                                      "nsIMemoryReporterManager");
     for (var stat in MemoryStats._hasMemoryStatistics) {
         var supported = MemoryStats._hasMemoryStatistics[stat];
         var firstAccess = false;
