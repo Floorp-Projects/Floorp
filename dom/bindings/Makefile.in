@@ -90,6 +90,8 @@ globalgen_headers_DEST = $(ABS_DIST)/include/mozilla/dom
 globalgen_headers_TARGET := export
 INSTALL_TARGETS += globalgen_headers
 
+PYTHON_UNIT_TESTS += $(srcdir)/mozwebidl/test/test_mozwebidl.py
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_CC
