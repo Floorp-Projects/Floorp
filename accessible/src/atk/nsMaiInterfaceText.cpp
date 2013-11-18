@@ -12,12 +12,87 @@
 
 #include "nsIAccessibleTypes.h"
 #include "nsIPersistentProperties2.h"
+#include "nsISimpleEnumerator.h"
 
 #include "mozilla/Likely.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
-AtkAttributeSet* ConvertToAtkAttributeSet(nsIPersistentProperties* aAttributes);
+static const char* sAtkTextAttrNames[ATK_TEXT_ATTR_LAST_DEFINED];
+
+static AtkAttributeSet*
+ConvertToAtkTextAttributeSet(nsIPersistentProperties* aAttributes)
+{
+  if (!aAttributes)
+    return nullptr;
+
+  AtkAttributeSet* objAttributeSet = nullptr;
+  nsCOMPtr<nsISimpleEnumerator> propEnum;
+  nsresult rv = aAttributes->Enumerate(getter_AddRefs(propEnum));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  bool hasMore = false;
+  while (NS_SUCCEEDED(propEnum->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> sup;
+    rv = propEnum->GetNext(getter_AddRefs(sup));
+    NS_ENSURE_SUCCESS(rv, objAttributeSet);
+
+    nsCOMPtr<nsIPropertyElement> propElem(do_QueryInterface(sup));
+    NS_ENSURE_TRUE(propElem, objAttributeSet);
+
+    nsAutoCString name;
+    rv = propElem->GetKey(name);
+    NS_ENSURE_SUCCESS(rv, objAttributeSet);
+
+    nsAutoString value;
+    rv = propElem->GetValue(value);
+    NS_ENSURE_SUCCESS(rv, objAttributeSet);
+
+    AtkAttribute* objAttr = (AtkAttribute*)g_malloc(sizeof(AtkAttribute));
+    objAttr->name = g_strdup(name.get());
+    objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(value).get());
+    objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
+
+    // Handle attributes where atk has its own name.
+    const char* atkName = nullptr;
+    nsAutoString atkValue;
+    if (name.EqualsLiteral("color")) {
+      // The format of the atk attribute is r,g,b and the gecko one is
+      // rgb(r,g,b).
+      atkValue = Substring(value, 5, value.Length() - 1);
+      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_FG_COLOR];
+    } else if (name.EqualsLiteral("background-color")) {
+      // The format of the atk attribute is r,g,b and the gecko one is
+      // rgb(r,g,b).
+      atkValue = Substring(value, 5, value.Length() - 1);
+      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_BG_COLOR];
+    } else if (name.EqualsLiteral("font-family")) {
+      atkValue = value;
+      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_FAMILY_NAME];
+    } else if (name.Equals("font-size")) {
+      // ATK wants the number of pixels without px at the end.
+      atkValue = StringHead(value, value.Length() - 2);
+      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_SIZE];
+    } else if (name.EqualsLiteral("font-weight")) {
+      atkValue = value;
+      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_WEIGHT];
+    } else if (name.EqualsLiteral("invalid")) {
+      atkValue = value;
+      atkName = sAtkTextAttrNames[ATK_TEXT_ATTR_INVALID];
+    }
+
+    if (atkName) {
+      objAttr = static_cast<AtkAttribute*>(g_malloc(sizeof(AtkAttribute)));
+      objAttr->name = g_strdup(atkName);
+      objAttr->value = g_strdup(NS_ConvertUTF16toUTF8(atkValue).get());
+      objAttributeSet = g_slist_prepend(objAttributeSet, objAttr);
+    }
+  }
+
+  // libatk-adaptor will free it
+  return objAttributeSet;
+}
 
 static void
 ConvertTexttoAsterisks(AccessibleWrap* accWrap, nsAString& aString)
@@ -188,7 +263,7 @@ getRunAttributesCB(AtkText *aText, gint aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  return ConvertToAtkAttributeSet(attributes);
+  return ConvertToAtkTextAttributeSet(attributes);
 }
 
 static AtkAttributeSet*
@@ -203,7 +278,7 @@ getDefaultAttributesCB(AtkText *aText)
     return nullptr;
 
   nsCOMPtr<nsIPersistentProperties> attributes = text->DefaultTextAttributes();
-  return ConvertToAtkAttributeSet(attributes);
+  return ConvertToAtkTextAttributeSet(attributes);
 }
 
 static void
@@ -415,4 +490,9 @@ textInterfaceInitCB(AtkTextIface* aIface)
   aIface->remove_selection = removeTextSelectionCB;
   aIface->set_selection = setTextSelectionCB;
   aIface->set_caret_offset = setCaretOffsetCB;
+
+  // Cache the string values of the atk text attribute names.
+  for (uint32_t i = 0; i < ArrayLength(sAtkTextAttrNames); i++)
+    sAtkTextAttrNames[i] =
+      atk_text_attribute_get_name(static_cast<AtkTextAttribute>(i));
 }
