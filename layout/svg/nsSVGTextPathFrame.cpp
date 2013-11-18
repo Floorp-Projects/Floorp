@@ -8,7 +8,6 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfx2DGlue.h"
-#include "gfxPath.h"
 #include "nsContentUtils.h"
 #include "nsSVGEffects.h"
 #include "nsSVGLength2.h"
