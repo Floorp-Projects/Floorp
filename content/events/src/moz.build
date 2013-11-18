@@ -16,6 +16,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'PointerEvent.h',
     'Touch.h',
 ]
 
@@ -60,6 +61,7 @@ SOURCES += [
     'nsIMEStateManager.cpp',
     'nsPaintRequest.cpp',
     'nsPrivateTextRange.cpp',
+    'PointerEvent.cpp',
     'TextComposition.cpp',
     'Touch.cpp',
 ]

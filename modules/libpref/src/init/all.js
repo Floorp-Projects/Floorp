@@ -4374,6 +4374,9 @@ pref("dom.mozPermissionSettings.enabled", false);
 pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
+// W3C draft pointer events
+pref("dom.w3c_pointer_events.enabled", false);
+
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);
 
