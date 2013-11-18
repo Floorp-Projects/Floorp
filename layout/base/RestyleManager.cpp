@@ -28,7 +28,6 @@
 #include "nsBlockFrame.h"
 #include "nsViewportFrame.h"
 #include "nsSVGTextFrame2.h"
-#include "nsSVGTextPathFrame.h"
 #include "StickyScrollContainer.h"
 #include "nsIRootBox.h"
 #include "nsIDOMMutationEvent.h"
