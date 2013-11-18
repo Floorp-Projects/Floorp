@@ -36,8 +36,8 @@ struct VirtualRegisterGroup : public TempObject
     // Spill location to be shared by registers in the group.
     LAllocation spill;
 
-    VirtualRegisterGroup()
-      : allocation(LUse(0, LUse::ANY)), spill(LUse(0, LUse::ANY))
+    VirtualRegisterGroup(TempAllocator &alloc)
+      : registers(alloc), allocation(LUse(0, LUse::ANY)), spill(LUse(0, LUse::ANY))
     {}
 
     uint32_t canonicalReg() {
@@ -67,6 +67,9 @@ class BacktrackingVirtualRegister : public VirtualRegister
     VirtualRegisterGroup *group_;
 
   public:
+    BacktrackingVirtualRegister(TempAllocator &alloc)
+      : VirtualRegister(alloc)
+    {}
     void setMustCopyInput() {
         mustCopyInput_ = true;
     }

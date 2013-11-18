@@ -26,6 +26,9 @@ class LinearScanVirtualRegister : public VirtualRegister
     bool finished_ : 1;
 
   public:
+    LinearScanVirtualRegister(TempAllocator &alloc)
+      : VirtualRegister(alloc)
+    {}
     void setCanonicalSpill(LAllocation *alloc) {
         canonicalSpill_ = alloc;
     }

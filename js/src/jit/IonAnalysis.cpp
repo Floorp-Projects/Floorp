@@ -1107,7 +1107,7 @@ jit::BuildDominatorTree(MIRGraph &graph)
     // Now, iterate through the dominator tree and annotate every
     // block with its index in the pre-order traversal of the
     // dominator tree.
-    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist;
+    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist(graph.alloc());
 
     // The index of the current block in the CFG traversal.
     size_t index = 0;
@@ -1676,13 +1676,13 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
 bool
 jit::EliminateRedundantChecks(MIRGraph &graph)
 {
-    BoundsCheckMap checks;
+    BoundsCheckMap checks(graph.alloc());
 
     if (!checks.init())
         return false;
 
     // Stack for pre-order CFG traversal.
-    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist;
+    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist(graph.alloc());
 
     // The index of the current block in the CFG traversal.
     size_t index = 0;
@@ -2107,7 +2107,7 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, HandleFunction fun,
 
     AutoTempAllocatorRooter root(cx, &temp);
 
-    types::CompilerConstraintList *constraints = types::NewCompilerConstraintList();
+    types::CompilerConstraintList *constraints = types::NewCompilerConstraintList(temp);
     BaselineInspector inspector(script);
     IonBuilder builder(cx, cx->compartment(), &temp, &graph, constraints,
                        &inspector, &info, /* baselineFrame = */ nullptr);

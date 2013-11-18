@@ -602,8 +602,10 @@ class types::CompilerConstraintList
     bool failed_;
 
   public:
-    CompilerConstraintList()
-      : failed_(false)
+    CompilerConstraintList(jit::TempAllocator &alloc)
+      : constraints(alloc),
+        frozenScripts(alloc),
+        failed_(false)
     {}
 
     void add(CompilerConstraint *constraint) {
@@ -674,9 +676,9 @@ class types::CompilerConstraintList
 };
 
 CompilerConstraintList *
-types::NewCompilerConstraintList()
+types::NewCompilerConstraintList(jit::TempAllocator &alloc)
 {
-    return IonAlloc()->new_<CompilerConstraintList>();
+    return IonAlloc()->new_<CompilerConstraintList>(alloc);
 }
 
 /* static */ bool

@@ -26,6 +26,7 @@ class BaselineCompilerShared
     bool ionOSRCompileable_;
     bool debugMode_;
 
+    TempAllocator &alloc_;
     BytecodeAnalysis analysis_;
     FrameInfo frame;
 
@@ -68,7 +69,7 @@ class BaselineCompilerShared
 
     CodeOffsetLabel spsPushToggleOffset_;
 
-    BaselineCompilerShared(JSContext *cx, HandleScript script);
+    BaselineCompilerShared(JSContext *cx, TempAllocator &alloc, HandleScript script);
 
     ICEntry *allocateICEntry(ICStub *stub, bool isForOp) {
         if (!stub)
