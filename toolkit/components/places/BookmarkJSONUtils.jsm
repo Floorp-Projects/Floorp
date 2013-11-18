@@ -12,7 +12,9 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
@@ -557,16 +559,244 @@ BookmarkExporter.prototype = {
       // Get list of itemIds that must be excluded from the backup.
       let excludeItems = PlacesUtils.annotations.getItemsWithAnnotation(
                            PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
-      let root = PlacesUtils.getFolderContents(PlacesUtils.placesRootId, false,
-                                               false).root;
       // Serialize to JSON and write to stream.
-      let nodeCount = yield BookmarkNode.serializeAsJSONToOutputStream(root,
-                                                                       streamProxy,
-                                                                       false,
-                                                                       false,
-                                                                       excludeItems);
-      root.containerOpen = false;
+      let nodeCount = yield BookmarkRow.serializeJSONToOutputStream(streamProxy,
+                                                                    excludeItems);
+      throw new Task.Result(nodeCount);
+    }.bind(this));
+  }
+}
 
+let BookmarkRow = {
+  /**
+   * Serializes the SQL results as JSON with async SQL call and writes the
+   * serialization to the given output stream.
+   *
+   * @param   aStream
+   *          An nsIOutputStream. NOTE: it only uses the write(str, len)
+   *          method of nsIOutputStream. The caller is responsible for
+   *          closing the stream.
+   * @param   aExcludeItems
+   *          An array of item ids that should not be written to the backup.
+   * @return  {Promise}
+   * @resolves the number of serialized uri nodes.
+   */
+  serializeJSONToOutputStream: function(aStream, aExcludeItems) {
+    return Task.spawn(function() {
+      let nodes = [];
+      let nodeCount = 0;
+
+      let dbFilePath = OS.Path.join(OS.Constants.Path.profileDir,
+                                    "places.sqlite");
+      let conn = yield Sqlite.openConnection({ path: dbFilePath,
+                                               sharedMemoryCache: false });
+      try {
+        let rows = yield conn.execute(
+          "SELECT b.id, h.url, b.position, b.title, b.parent, " +
+            "b.type, b.dateAdded, b.lastModified, b.guid, t.parent AS grandParent " +
+          "FROM moz_bookmarks b " +
+          "LEFT JOIN moz_bookmarks t ON t.id = b.parent " +
+          "LEFT JOIN moz_places h ON h.id = b.fk " +
+          "ORDER BY b.parent, b.position, b.id");
+
+        // Create a Map for lookup.
+        let rowMap = new Map();
+        for (let row of rows) {
+          let parent = row.getResultByName("parent");
+          if (rowMap.has(parent)) {
+            let data = rowMap.get(parent);
+            data.children.push(row);
+          } else {
+            rowMap.set(parent, { children: [row] });
+          }
+        }
+
+        let root = rowMap.get(0);
+        if (!root) {
+          throw new Error("Root does not exist.");
+        }
+        let result = yield BookmarkRow._appendConvertedNode(root.children[0],
+                                                            rowMap,
+                                                            nodes,
+                                                            aExcludeItems);
+        if (result.appendedNode) {
+          nodeCount = result.nodeCount;
+          let json = JSON.stringify(nodes[0]);
+          aStream.write(json, json.length);
+        }
+      } catch(e) {
+        Cu.reportError("serializeJSONToOutputStream error " + e);
+      } finally {
+        yield conn.close();
+      }
+      throw new Task.Result(nodeCount);
+    });
+  },
+
+  _appendConvertedNode: function BR__appendConvertedNode(
+    aRow, aRowMap, aNodes, aExcludeItems) {
+    return Task.spawn(function() {
+      let node = {};
+      let nodeCount = 0;
+
+      this._addGenericProperties(aRow, node);
+
+      let parent = aRow.getResultByName("parent");
+      let grandParent = parent ? aRow.getResultByName("grandParent") : null;
+      let type = aRow.getResultByName("type");
+
+      if (type == Ci.nsINavBookmarksService.TYPE_BOOKMARK) {
+        // Tag root accept only folder nodes
+        if (parent == PlacesUtils.tagsFolderId)
+          throw new Task.Result({ appendedNode: false, nodeCount: nodeCount });
+
+        // Check for url validity, since we can't halt while writing a backup.
+        // This will throw if we try to serialize an invalid url and it does
+        // not make sense saving a wrong or corrupt uri node.
+        try {
+          NetUtil.newURI(aRow.getResultByName("url"));
+        } catch (ex) {
+          throw new Task.Result({ appendedNode: false, nodeCount: nodeCount });
+        }
+        yield this._addURIProperties(aRow, node);
+        nodeCount++;
+      } else if (type == Ci.nsINavBookmarksService.TYPE_FOLDER) {
+        // Tag containers accept only uri nodes
+        if (grandParent && grandParent == PlacesUtils.tagsFolderId) {
+          throw new Task.Result({ appendedNode: false, nodeCount: nodeCount });
+        }
+        this._addContainerProperties(aRow, node);
+      } else if (type == Ci.nsINavBookmarksService.TYPE_SEPARATOR) {
+        // Tag root accept only folder nodes
+        // Tag containers accept only uri nodes
+        if ((parent == PlacesUtils.tagsFolderId) ||
+            (grandParent == PlacesUtils.tagsFolderId)) {
+          throw new Task.Result({ appendedNode: false, nodeCount: nodeCount });
+        }
+        this._addSeparatorProperties(aRow, node);
+      }
+
+      if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER) {
+        nodeCount += yield this._appendConvertedComplexNode(node,
+                                                            aNodes,
+                                                            aRowMap,
+                                                            aExcludeItems);
+        throw new Task.Result({ appendedNode: true, nodeCount: nodeCount });
+      }
+
+      aNodes.push(node);
+      throw new Task.Result({ appendedNode: true, nodeCount: nodeCount });
+    }.bind(this));
+  },
+
+  _addGenericProperties: function BR__addGenericProperties(aRow, aJSNode) {
+    let title = aRow.getResultByName("title")
+    aJSNode.title = title ? title : "";
+    aJSNode.guid = aRow.getResultByName("guid");
+    aJSNode.id = aRow.getResultByName("id");
+    aJSNode.index = aRow.getResultByName("position");
+    if (aJSNode.id != -1) {
+      let parent = aRow.getResultByName("parent");
+      if (parent)
+        aJSNode.parent = parent;
+      let dateAdded = aRow.getResultByName("dateAdded");;
+      if (dateAdded)
+        aJSNode.dateAdded = dateAdded;
+      let lastModified = aRow.getResultByName("lastModified");
+      if (lastModified)
+        aJSNode.lastModified = lastModified;
+
+      // XXX need a hasAnnos api
+      let annos = [];
+      try {
+        annos =
+          PlacesUtils.getAnnotationsForItem(aJSNode.id).filter(function(anno) {
+          // XXX should whitelist this instead, w/ a pref for
+          // backup/restore of non-whitelisted annos
+          // XXX causes JSON encoding errors, so utf-8 encode
+          // anno.value = unescape(encodeURIComponent(anno.value));
+          if (anno.name == PlacesUtils.LMANNO_FEEDURI)
+            aJSNode.livemark = 1;
+          return true;
+        });
+      } catch(ex) {}
+      if (annos.length != 0)
+        aJSNode.annos = annos;
+    }
+    // XXXdietrich - store annos for non-bookmark items
+  },
+
+  _addURIProperties: function BR__addURIProperties(aRow, aJSNode) {
+    return Task.spawn(function() {
+      aJSNode.type = PlacesUtils.TYPE_X_MOZ_PLACE;
+      aJSNode.uri = aRow.getResultByName("url");
+      if (aJSNode.id && aJSNode.id != -1) {
+        // Harvest bookmark-specific properties
+        let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(aJSNode.id);
+        if (keyword)
+          aJSNode.keyword = keyword;
+      }
+
+      // Last character-set
+      let uri = NetUtil.newURI(aRow.getResultByName("url"));
+      let lastCharset = yield PlacesUtils.getCharsetForURI(uri)
+      if (lastCharset)
+        aJSNode.charset = lastCharset;
+    });
+  },
+
+  _addSeparatorProperties: function BR__addSeparatorProperties(aRow, aJSNode) {
+    aJSNode.type = PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR;
+  },
+
+  _addContainerProperties: function BR__addContainerProperties(aRow, aJSNode) {
+    // This is a bookmark or a tag container.
+    // Bookmark folder or a shortcut we should convert to folder.
+    aJSNode.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
+
+    // Mark root folders
+    let itemId = aRow.getResultByName("id");
+    if (itemId == PlacesUtils.placesRootId)
+      aJSNode.root = "placesRoot";
+    else if (itemId == PlacesUtils.bookmarksMenuFolderId)
+      aJSNode.root = "bookmarksMenuFolder";
+    else if (itemId == PlacesUtils.tagsFolderId)
+      aJSNode.root = "tagsFolder";
+    else if (itemId == PlacesUtils.unfiledBookmarksFolderId)
+      aJSNode.root = "unfiledBookmarksFolder";
+    else if (itemId == PlacesUtils.toolbarFolderId)
+      aJSNode.root = "toolbarFolder";
+  },
+
+  _appendConvertedComplexNode: function BR__appendConvertedComplexNode(
+    aNode, aNodes, aRowMap, aExcludeItems) {
+    return Task.spawn(function() {
+      let repr = {};
+      let nodeCount = 0;
+
+      for (let [name, value] in Iterator(aNode))
+        repr[name] = value;
+      repr.children = [];
+
+      let data = aRowMap.get(aNode.id);
+      if (data) {
+        for (let row of data.children) {
+          let id = row.getResultByName("id");
+          // ignore exclude items
+          if (aExcludeItems && aExcludeItems.indexOf(id) != -1) {
+            continue;
+          }
+          let result = yield this._appendConvertedNode(row,
+                                                       aRowMap,
+                                                       repr.children,
+                                                       aExcludeItems);
+          nodeCount += result.nodeCount;
+        }
+      } else {
+        Cu.reportError("_appendConvertedComplexNode error: Unable to find node");
+      }
+
+      aNodes.push(repr);
       throw new Task.Result(nodeCount);
     }.bind(this));
   }
