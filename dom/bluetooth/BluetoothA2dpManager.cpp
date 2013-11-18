@@ -16,7 +16,6 @@
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
-#include "nsIAudioManager.h"
 #include "nsIObserverService.h"
 #include "MainThreadUtils.h"
 
