@@ -212,7 +212,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     }
   }
 
-  RefPtr<SourceSurface> snapshot;
+  RefPtr<gfx::SourceSurface> snapshot;
   if (aSource == BUFFER_BLACK) {
     snapshot = mDTBuffer->Snapshot();
   } else {
@@ -353,7 +353,7 @@ ThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
       clipped = true;
     }
 
-    RefPtr<SourceSurface> mask;
+    RefPtr<gfx::SourceSurface> mask;
     if (aMask) {
       mask = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aMask);
     }

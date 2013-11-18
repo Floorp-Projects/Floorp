@@ -338,7 +338,7 @@ class IonBuilder : public MIRGenerator
     // returns def.  Otherwise, returns an MInstruction that has that definite
     // type, infallibly unboxing ins as needed.  The new instruction will be
     // added to |current| in this case.
-    MDefinition *EnsureDefiniteType(MDefinition* def, JSValueType definiteType);
+    MDefinition *ensureDefiniteType(MDefinition* def, JSValueType definiteType);
 
     JSObject *getSingletonPrototype(JSFunction *target);
 
@@ -920,10 +920,10 @@ class CallInfo
         setter_ = true;
     }
 
-    void wrapArgs(MBasicBlock *current) {
-        thisArg_ = wrap(current, thisArg_);
+    void wrapArgs(TempAllocator &alloc, MBasicBlock *current) {
+        thisArg_ = wrap(alloc, current, thisArg_);
         for (uint32_t i = 0; i < argc(); i++)
-            args_[i] = wrap(current, args_[i]);
+            args_[i] = wrap(alloc, current, args_[i]);
     }
 
     void unwrapArgs() {
@@ -964,9 +964,9 @@ class CallInfo
         block->discard(passArg);
         return wrapped;
     }
-    static MDefinition *wrap(MBasicBlock *current, MDefinition *arg) {
+    static MDefinition *wrap(TempAllocator &alloc, MBasicBlock *current, MDefinition *arg) {
         JS_ASSERT(!arg->isPassArg());
-        MPassArg *passArg = MPassArg::New(arg);
+        MPassArg *passArg = MPassArg::New(alloc, arg);
         current->add(passArg);
         return passArg;
     }

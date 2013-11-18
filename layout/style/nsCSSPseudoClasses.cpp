@@ -21,13 +21,13 @@ using namespace mozilla;
 #undef CSS_PSEUDO_CLASS
 
 #define CSS_PSEUDO_CLASS(name_, value_, pref_)  \
-  NS_STATIC_ATOM_BUFFER(name_##_buffer, value_)
+  NS_STATIC_ATOM_BUFFER(name_##_pseudo_class_buffer, value_)
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 
 static const nsStaticAtom CSSPseudoClasses_info[] = {
 #define CSS_PSEUDO_CLASS(name_, value_, pref_)            \
-  NS_STATIC_ATOM(name_##_buffer, &sPseudoClass_##name_),
+  NS_STATIC_ATOM(name_##_pseudo_class_buffer, &sPseudoClass_##name_),
 #include "nsCSSPseudoClassList.h"
 #undef CSS_PSEUDO_CLASS
 };

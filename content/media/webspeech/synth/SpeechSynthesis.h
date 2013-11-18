@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#pragma once
+#ifndef mozilla_dom_SpeechSynthesis_h
+#define mozilla_dom_SpeechSynthesis_h
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -72,3 +73,5 @@ private:
 
 } // namespace dom
 } // namespace mozilla
+
+#endif

@@ -8,6 +8,8 @@
 
 #include "mozilla/dom/SVGGraphicsElement.h"
 
+class nsSVGSwitchFrame;
+
 nsresult NS_NewSVGSwitchElement(nsIContent **aResult,
                                 already_AddRefed<nsINodeInfo> aNodeInfo);
 

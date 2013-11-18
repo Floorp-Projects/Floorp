@@ -188,22 +188,6 @@ SpdySession31::LogIO(SpdySession31 *self, SpdyStream31 *stream, const char *labe
   }
 }
 
-typedef nsresult  (*Control_FX) (SpdySession31 *self);
-static Control_FX sControlFunctions[] =
-{
-    nullptr,
-    SpdySession31::HandleSynStream,
-    SpdySession31::HandleSynReply,
-    SpdySession31::HandleRstStream,
-    SpdySession31::HandleSettings,
-    SpdySession31::HandleNoop,
-    SpdySession31::HandlePing,
-    SpdySession31::HandleGoAway,
-    SpdySession31::HandleHeaders,
-    SpdySession31::HandleWindowUpdate,
-    SpdySession31::HandleCredential
-};
-
 bool
 SpdySession31::RoomForMoreConcurrent()
 {
@@ -1874,6 +1858,22 @@ SpdySession31::WriteSegments(nsAHttpSegmentWriter *writer,
                              uint32_t count,
                              uint32_t *countWritten)
 {
+  typedef nsresult  (*Control_FX) (SpdySession31 *self);
+  static const Control_FX sControlFunctions[] =
+  {
+      nullptr,
+      SpdySession31::HandleSynStream,
+      SpdySession31::HandleSynReply,
+      SpdySession31::HandleRstStream,
+      SpdySession31::HandleSettings,
+      SpdySession31::HandleNoop,
+      SpdySession31::HandlePing,
+      SpdySession31::HandleGoAway,
+      SpdySession31::HandleHeaders,
+      SpdySession31::HandleWindowUpdate,
+      SpdySession31::HandleCredential
+  };
+
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
   nsresult rv;

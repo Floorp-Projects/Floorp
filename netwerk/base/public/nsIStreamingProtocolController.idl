@@ -108,7 +108,7 @@ interface nsIStreamingProtocolListener : nsISupports
      * @param index Track number of the media stream.
      * @param reason The reason of disconnection.
      */
-    void onDisconnected(in uint8_t index, in uint32_t reason);
+    void onDisconnected(in uint8_t index, in nsresult reason);
 };
 
 /**

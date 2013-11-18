@@ -1383,6 +1383,12 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     // want to update global/session history. However,
                     // this child frame is not an error page.
                     loadType = LOAD_BYPASS_HISTORY;
+                } else if ((parentLoadType == LOAD_RELOAD_BYPASS_CACHE) ||
+                           (parentLoadType == LOAD_RELOAD_BYPASS_PROXY) ||
+                           (parentLoadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE)) {
+                    // the new frame should inherit the parent's load type so that it also
+                    // bypasses the cache and/or proxy
+                    loadType = parentLoadType;
                 }
             } else {
                 // This is a pre-existing subframe. If the load was not originally initiated

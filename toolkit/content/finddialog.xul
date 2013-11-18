@@ -25,7 +25,11 @@
     <vbox>
       <hbox align="center">
         <label value="&findField.label;" accesskey="&findField.accesskey;" control="dialog.findKey"/>
-        <textbox id="dialog.findKey" flex="1" oninput="doEnabling();"/>
+        <textbox id="dialog.findKey" flex="1"
+                 type="autocomplete"
+                 autocompletesearch="form-history"
+                 autocompletesearchparam="find-dialog"
+                 oninput="doEnabling();"/>
       </hbox>
       <hbox align="center">
         <vbox>

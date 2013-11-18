@@ -5,7 +5,7 @@
 
 #include "nsIDOMEventTarget.idl"
 
-[scriptable, builtinclass, uuid(310a1d9a-4271-4d85-9e35-9dae6683b2c1)]
+[scriptable, builtinclass, uuid(bcdf4ce4-9785-4e31-a851-1d51ea16da20)]
 interface nsIDOMScreen : nsIDOMEventTarget
 {
   readonly attribute long             top;
@@ -26,8 +26,6 @@ interface nsIDOMScreen : nsIDOMEventTarget
    */
   [binaryname(SlowMozOrientation)]
   readonly attribute DOMString       mozOrientation;
-
-  [implicit_jscontext] attribute jsval      onmozorientationchange;
 
   /**
    * Lock the screen to the specified orientations(s).  This method returns true

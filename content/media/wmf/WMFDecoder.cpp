@@ -11,6 +11,7 @@
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/Preferences.h"
 #include "WinUtils.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #ifdef MOZ_DIRECTSHOW
 #include "DirectShowDecoder.h"
@@ -54,62 +55,95 @@ WMFDecoder::IsMP3Supported()
   return spMajorVer != 0;
 }
 
+static bool
+IsSupportedH264Codec(const nsAString& aCodec)
+{
+  // According to the WMF documentation:
+  // http://msdn.microsoft.com/en-us/library/windows/desktop/dd797815%28v=vs.85%29.aspx
+  // "The Media Foundation H.264 video decoder is a Media Foundation Transform
+  // that supports decoding of Baseline, Main, and High profiles, up to level
+  // 5.1.". We also report that we can play Extended profile, as there are
+  // bitstreams that are Extended compliant that are also Baseline compliant.
+
+  // H.264 codecs parameters have a type defined as avc1.PPCCLL, where
+  // PP = profile_idc, CC = constraint_set flags, LL = level_idc.
+  // We ignore the constraint_set flags, as it's not clear from the WMF
+  // documentation what constraints the WMF H.264 decoder supports.
+  // See http://blog.pearce.org.nz/2013/11/what-does-h264avc1-codecs-parameters.html
+  // for more details.
+  if (aCodec.Length() != strlen("avc1.PPCCLL")) {
+    return false;
+  }
+
+  // Verify the codec starts with "avc1.".
+  const nsAString& sample = Substring(aCodec, 0, 5);
+  if (!sample.EqualsASCII("avc1.")) {
+    return false;
+  }
+
+  // Extract the profile_idc and level_idc. Note: the constraint_set flags
+  // are ignored, it's not clear from the WMF documentation if they make a
+  // difference.
+  nsresult rv = NS_OK;
+  const int32_t profile = PromiseFlatString(Substring(aCodec, 5, 2)).ToInteger(&rv, 16);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  const int32_t level = PromiseFlatString(Substring(aCodec, 9, 2)).ToInteger(&rv, 16);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return level >= eAVEncH264VLevel1 &&
+         level <= eAVEncH264VLevel5_1 &&
+         (profile == eAVEncH264VProfile_Base ||
+          profile == eAVEncH264VProfile_Main ||
+          profile == eAVEncH264VProfile_Extended ||
+          profile == eAVEncH264VProfile_High);
+}
+
 bool
-WMFDecoder::GetSupportedCodecs(const nsACString& aType,
-                               char const *const ** aCodecList)
+WMFDecoder::CanPlayType(const nsACString& aType,
+                        const nsAString& aCodecs)
 {
   if (!MediaDecoder::IsWMFEnabled() ||
-      NS_FAILED(LoadDLLs()))
+      NS_FAILED(LoadDLLs())) {
     return false;
+  }
 
   // Assume that if LoadDLLs() didn't fail, we can playback the types that
   // we know should be supported by Windows Media Foundation.
-  static char const *const mp3AudioCodecs[] = {
-    "mp3",
-    nullptr
-  };
   if ((aType.EqualsASCII("audio/mpeg") || aType.EqualsASCII("audio/mp3")) &&
       IsMP3Supported()) {
     // Note: We block MP3 playback on Window 7 SP0 since it seems to crash
     // in some circumstances.
-    if (aCodecList) {
-      *aCodecList = mp3AudioCodecs;
-    }
-    return true;
+    return !aCodecs.Length() || aCodecs.EqualsASCII("mp3");
   }
 
-  // AAC in M4A.
-  static char const *const aacAudioCodecs[] = {
-    "mp4a.40.2",    // AAC-LC
-    nullptr
-  };
-  if (aType.EqualsASCII("audio/mp4") ||
-      aType.EqualsASCII("audio/x-m4a")) {
-    if (aCodecList) {
-      *aCodecList = aacAudioCodecs;
-    }
-    return true;
+  // AAC-LC in M4A.
+  if (aType.EqualsASCII("audio/mp4") || aType.EqualsASCII("audio/x-m4a")) {
+    return !aCodecs.Length() || aCodecs.EqualsASCII("mp4a.40.2");
   }
 
-  // H.264 + AAC in MP4.
-  static char const *const H264Codecs[] = {
-    "avc1.42E01E",  // H.264 Constrained Baseline Profile Level 3.0
-    "avc1.42001E",  // H.264 Baseline Profile Level 3.0
-    "avc1.58A01E",  // H.264 Extended Profile Level 3.0
-    "avc1.4D401E",  // H.264 Main Profile Level 3.0
-    "avc1.64001E",  // H.264 High Profile Level 3.0
-    "avc1.64001F",  // H.264 High Profile Level 3.1
-    "mp4a.40.2",    // AAC-LC
-    nullptr
-  };
-  if (aType.EqualsASCII("video/mp4")) {
-    if (aCodecList) {
-      *aCodecList = H264Codecs;
-    }
-    return true;
+  if (!aType.EqualsASCII("video/mp4")) {
+    return false;
   }
 
-  return false;
+  // H.264 + AAC in MP4. Verify that all the codecs specifed are ones that
+  // we expect that we can play.
+  nsCharSeparatedTokenizer tokenizer(aCodecs, ',');
+  bool expectMoreTokens = false;
+  while (tokenizer.hasMoreTokens()) {
+    const nsSubstring& token = tokenizer.nextToken();
+    expectMoreTokens = tokenizer.separatorAfterCurrentToken();
+    if (token.EqualsASCII("mp4a.40.2") || // AAC-LC
+        IsSupportedH264Codec(token)) {
+      continue;
+    }
+    return false;
+  }
+  if (expectMoreTokens) {
+    // Last codec name was empty
+    return false;
+  }
+  return true;
 }
 
 nsresult

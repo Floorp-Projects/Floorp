@@ -20,7 +20,7 @@ EXPORTS.angle += [
 
 # Target: 'preprocessor'
 # src/compiler/preprocessor:
-SOURCES += ['src/compiler/preprocessor/' + src for src in [
+UNIFIED_SOURCES += ['src/compiler/preprocessor/' + src for src in [
     'DiagnosticsBase.cpp',
     'DirectiveHandlerBase.cpp',
     'DirectiveParser.cpp',
@@ -38,7 +38,7 @@ SOURCES += ['src/compiler/preprocessor/' + src for src in [
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
 # src/compiler:
-SOURCES += ['src/compiler/' + src for src in [
+UNIFIED_SOURCES += ['src/compiler/' + src for src in [
     'BuiltInFunctionEmulator.cpp',
     'Compiler.cpp',
     'compiler_debug.cpp',
@@ -47,8 +47,6 @@ SOURCES += ['src/compiler/' + src for src in [
     'Diagnostics.cpp',
     'DirectiveHandler.cpp',
     'ForLoopUnroll.cpp',
-    'glslang_lex.cpp',
-    'glslang_tab.cpp',
     'InfoSink.cpp',
     'Initialize.cpp',
     'InitializeDll.cpp',
@@ -68,9 +66,14 @@ SOURCES += ['src/compiler/' + src for src in [
     'VariableInfo.cpp',
     'VariablePacker.cpp',
 ]]
+# The yacc source files need to be built separately.
+SOURCES += ['src/compiler/' + src for src in [
+    'glslang_lex.cpp',
+    'glslang_tab.cpp',
+]]
 
 # src/compiler/depgraph:
-SOURCES += ['src/compiler/depgraph/' + src for src in [
+UNIFIED_SOURCES += ['src/compiler/depgraph/' + src for src in [
     'DependencyGraph.cpp',
     'DependencyGraphBuilder.cpp',
     'DependencyGraphOutput.cpp',
@@ -78,27 +81,27 @@ SOURCES += ['src/compiler/depgraph/' + src for src in [
 ]]
 
 # src/compiler/timing:
-SOURCES += ['src/compiler/timing/' + src for src in [
+UNIFIED_SOURCES += ['src/compiler/timing/' + src for src in [
     'RestrictFragmentShaderTiming.cpp',
     'RestrictVertexShaderTiming.cpp',
 ]]
 
 # src/third_party/compiler:
-SOURCES += ['src/third_party/compiler/' + src for src in [
+UNIFIED_SOURCES += ['src/third_party/compiler/' + src for src in [
     'ArrayBoundsClamper.cpp',
 ]]
 
 # src/third_party/murmurhash:
-SOURCES += ['src/third_party/murmurhash/' + src for src in [
+UNIFIED_SOURCES += ['src/third_party/murmurhash/' + src for src in [
     'MurmurHash3.cpp',
 ]]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'src/compiler/ossource_win.cpp',
     ]
 else:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'src/compiler/ossource_posix.cpp',
     ]
 
@@ -106,7 +109,7 @@ else:
 # Target: 'translator_glsl'
 #   Requires: 'translator_common'
 # src/compiler:
-SOURCES += ['src/compiler/' + src for src in [
+UNIFIED_SOURCES += ['src/compiler/' + src for src in [
     'CodeGenGLSL.cpp',
     'OutputESSL.cpp',
     'OutputGLSL.cpp',

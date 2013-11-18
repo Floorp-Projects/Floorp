@@ -7,7 +7,7 @@ HTTP(..) == download-2.html download-2-ref.html
 HTTP(..) != download-2.html about:blank
 random-if(winWidget) HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
 HTTP(..) != download-2-big-otf.html about:blank
-HTTP(..) != download-3-notref.html download-3.html
+skip-if(Android&&AndroidVersion==17) HTTP(..) != download-3-notref.html download-3.html
 HTTP(..) == download-3-ref.html download-3.html
 HTTP(..) == fallback-to-system-1.html fallback-to-system-1-ref.html
 HTTP(..) == name-override-simple-1.html name-override-simple-1-ref.html
@@ -148,8 +148,8 @@ skip-if(B2G) HTTP(..) == missing-names.html missing-names-ref.html # bug 773482
 # Tests for bug 670900 - handling of 404 (not found) error in @font-face URL
 # (using Chunkfive font data returned from a .sjs file)
 HTTP(..) == font-error-404-1.html font-error-404-1-ref.html # HTTP status 404, don't load
-skip-if(B2G) HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load # bug 773482
-HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
+skip-if(B2G) fails-if(Android&&AndroidVersion==17) HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load # bug 773482
+fails-if(Android&&AndroidVersion==17) HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
 
 # Font load redirection
 HTTP(..) == font-redirect.html order-1-ref.html
