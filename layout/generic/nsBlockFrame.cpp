@@ -1727,8 +1727,6 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
   }
 }
 
-static void PlaceFrameView(nsIFrame* aFrame);
-
 static bool LineHasClear(nsLineBox* aLine) {
   return aLine->IsBlock()
     ? (aLine->GetBreakTypeBefore() ||
@@ -2143,7 +2141,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
   // Should we really have to do this?
   if (repositionViews)
-    ::PlaceFrameView(this);
+    nsContainerFrame::PlaceFrameView(this);
 
   // We can skip trying to pull up the next line if our height is constrained
   // (so we can report being incomplete) and there is no next in flow or we
@@ -2558,15 +2556,6 @@ nsBlockFrame::PullFrameFrom(nsLineBox*           aLine,
   return frame;
 }
 
-static void
-PlaceFrameView(nsIFrame* aFrame)
-{
-  if (aFrame->HasView())
-    nsContainerFrame::PositionFrameView(aFrame);
-  else
-    nsContainerFrame::PositionChildViews(aFrame);
-}
-
 void
 nsBlockFrame::SlideLine(nsBlockReflowState& aState,
                         nsLineBox* aLine, nscoord aDY)
@@ -2588,7 +2577,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
     }
 
     // Make sure the frame's view and any child views are updated
-    ::PlaceFrameView(kid);
+    nsContainerFrame::PlaceFrameView(kid);
   }
   else {
     // Adjust the Y coordinate of the frames in the line.
@@ -2601,7 +2590,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
         kid->MovePositionBy(nsPoint(0, aDY));
       }
       // Make sure the frame's view and any child views are updated
-      ::PlaceFrameView(kid);
+      nsContainerFrame::PlaceFrameView(kid);
       kid = kid->GetNextSibling();
     }
   }
@@ -5826,7 +5815,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   // XXXldb This seems like the wrong place to be doing this -- shouldn't
   // we be doing this in nsBlockReflowState::FlowAndPlaceFloat after
   // we've positioned the float, and shouldn't we be doing the equivalent
-  // of |::PlaceFrameView| here?
+  // of |PlaceFrameView| here?
   aFloat->SetSize(nsSize(metrics.width, metrics.height));
   if (aFloat->HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(aState.mPresContext, aFloat,

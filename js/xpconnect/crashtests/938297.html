@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    var frame = document.getElementById("f");
+    var frameWin = frame.contentWindow;
+    var frameDoc = frame.contentDocument;
+    frameDoc.write("<body>");
+    frameDoc.close();
+    frameWin.history.pushState(null, 'title', 'pushState47.html');
+    document.body.removeChild(frame);
+    frameWin.history.state;
+}
+
+</script>
+</head>
+<body onload="boom();">
+<iframe id="f" src="data:text/html,1"></iframe>
+</body>
+</html>

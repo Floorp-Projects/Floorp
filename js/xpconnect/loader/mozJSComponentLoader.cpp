@@ -106,13 +106,14 @@ static PRLogModuleInfo *gJSCLLog;
 #define ERROR_SETTING_SYMBOL "%s - Could not set symbol '%s' on target object."
 
 static bool
-Dump(JSContext *cx, unsigned argc, jsval *vp)
+Dump(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSString *str;
-    if (!argc)
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() == 0)
         return true;
 
-    str = JS_ValueToString(cx, JS_ARGV(cx, vp)[0]);
+    JSString *str = JS::ToString(cx, args[0]);
     if (!str)
         return false;
 
@@ -389,9 +390,6 @@ mozJSComponentLoader::ReallyInit()
     rv = obsSvc->AddObserver(this, "xpcom-shutdown-loaders", false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef DEBUG_shaver_off
-    fprintf(stderr, "mJCL: ReallyInit success!\n");
-#endif
     mInitialized = true;
 
     return NS_OK;
@@ -449,18 +447,11 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
                          getter_AddRefs(cm_holder));
 
     if (NS_FAILED(rv)) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "WrapNative(%p,%p,nsIComponentManager) failed: %x\n",
-                (void *)(JSContext*)cx, (void *)mCompMgr, rv);
-#endif
         return nullptr;
     }
 
     JSObject* cm_jsobj = cm_holder->GetJSObject();
     if (!cm_jsobj) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "GetJSObject of ComponentManager failed\n");
-#endif
         return nullptr;
     }
 
@@ -1048,9 +1039,6 @@ mozJSComponentLoader::UnloadModules()
     mContext = nullptr;
 
     mRuntimeService = nullptr;
-#ifdef DEBUG_shaver_off
-    fprintf(stderr, "mJCL: UnloadAll(%d)\n", aWhen);
-#endif
 }
 
 NS_IMETHODIMP

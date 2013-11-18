@@ -68,11 +68,7 @@ uniform vec4 uRenderTargetOffset;
 attribute vec4 aVertexCoord;
 attribute vec2 aTexCoord;
 
-#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range
-varying mediump vec2 vTexCoord;
-#else
 varying vec2 vTexCoord;
-#endif
 @end
 
 @define VERTEX_SHADER_HEADER<Mask>
@@ -137,11 +133,10 @@ $VERTEX_MASK_STUFF<mask>$
 @define FRAGMENT_SHADER_HEADER
 /* Fragment Shader */
 #ifdef GL_ES
-#ifdef MEDIUMP_SHADER
 precision mediump float;
+#define COLOR_PRECISION lowp
 #else
-precision lowp float;
-#endif
+#define COLOR_PRECISION
 #endif
 @end
 
@@ -150,14 +145,10 @@ precision lowp float;
 $FRAGMENT_SHADER_HEADER$
 
 #ifndef NO_LAYER_OPACITY
-uniform float uLayerOpacity;
+uniform COLOR_PRECISION float uLayerOpacity;
 #endif
 
-#ifdef GL_ES // for tiling, texcoord can be greater than the lowfp range
-varying mediump vec2 vTexCoord;
-#else
 varying vec2 vTexCoord;
-#endif
 @end
 
 // fragment shader header for layers with masks
@@ -177,16 +168,16 @@ uniform sampler2D uMaskTexture;
 @end
 
 @define FRAGMENT_CALC_MASK<>
-  float mask = 1.0;
+  COLOR_PRECISION float mask = 1.0;
 @end
 
 @define FRAGMENT_CALC_MASK<Mask>
-  float mask = texture2D(uMaskTexture, vMaskCoord).r;
+  COLOR_PRECISION float mask = texture2D(uMaskTexture, vMaskCoord).r;
 @end
 
 @define FRAGMENT_CALC_MASK<Mask3D>
   vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;
-  float mask = texture2D(uMaskTexture, maskCoords).r;
+  COLOR_PRECISION float mask = texture2D(uMaskTexture, maskCoords).r;
 @end
 
 // Solid color rendering.
@@ -195,7 +186,7 @@ uniform sampler2D uMaskTexture;
 @shader sSolidColorLayer<mask:,Mask>FS
 #define NO_LAYER_OPACITY 1
 $LAYER_FRAGMENT<mask>$
-uniform vec4 uRenderColor;
+uniform COLOR_PRECISION vec4 uRenderColor;
 
 void main()
 {
@@ -353,11 +344,11 @@ uniform sampler2D uCrTexture;
 
 void main()
 {
-  vec4 color;
+  COLOR_PRECISION vec4 color;
 
-  float y = texture2D(uYTexture, vTexCoord).r;
-  float cb = texture2D(uCbTexture, vTexCoord).r;
-  float cr = texture2D(uCrTexture, vTexCoord).r;
+  COLOR_PRECISION float y = texture2D(uYTexture, vTexCoord).r;
+  COLOR_PRECISION float cb = texture2D(uCbTexture, vTexCoord).r;
+  COLOR_PRECISION float cr = texture2D(uCrTexture, vTexCoord).r;
 
   y = (y - 0.0625) * 1.164;
   cb = cb - 0.5;
@@ -381,9 +372,9 @@ uniform sampler2D uWhiteTexture;
 
 void main()
 {
-  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
-  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
-  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+  COLOR_PRECISION vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
+  COLOR_PRECISION vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
+  COLOR_PRECISION vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
 $FRAGMENT_CALC_MASK<mask>$
   gl_FragColor = alphas * uLayerOpacity * mask;
 }
@@ -397,9 +388,9 @@ uniform sampler2D uWhiteTexture;
 
 void main()
 {
-  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).rgb;
-  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).rgb;
-  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+  COLOR_PRECISION vec3 onBlack = texture2D(uBlackTexture, vTexCoord).rgb;
+  COLOR_PRECISION vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).rgb;
+  COLOR_PRECISION vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
 $FRAGMENT_CALC_MASK<mask>$
   gl_FragColor = alphas * uLayerOpacity * mask;
 }
@@ -413,9 +404,9 @@ uniform sampler2D uWhiteTexture;
 
 void main()
 {
-  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
-  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
-  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+  COLOR_PRECISION vec3 onBlack = texture2D(uBlackTexture, vTexCoord).bgr;
+  COLOR_PRECISION vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).bgr;
+  COLOR_PRECISION vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
 $FRAGMENT_CALC_MASK<mask>$
   gl_FragColor = vec4(onBlack, alphas.a) * uLayerOpacity * mask;
 }
@@ -429,9 +420,9 @@ uniform sampler2D uWhiteTexture;
 
 void main()
 {
-  vec3 onBlack = texture2D(uBlackTexture, vTexCoord).rgb;
-  vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).rgb;
-  vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
+  COLOR_PRECISION vec3 onBlack = texture2D(uBlackTexture, vTexCoord).rgb;
+  COLOR_PRECISION vec3 onWhite = texture2D(uWhiteTexture, vTexCoord).rgb;
+  COLOR_PRECISION vec4 alphas = (1.0 - onWhite + onBlack).rgbg;
 $FRAGMENT_CALC_MASK<mask>$
   gl_FragColor = vec4(onBlack, alphas.a) * uLayerOpacity * mask;
 }

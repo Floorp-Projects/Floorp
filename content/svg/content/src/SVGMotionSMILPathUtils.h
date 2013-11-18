@@ -10,30 +10,41 @@
 #define MOZILLA_SVGMOTIONSMILPATHUTILS_H_
 
 #include "mozilla/Attributes.h"
-#include "gfxContext.h"
 #include "gfxPlatform.h"
-#include "nsCOMPtr.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsDebug.h"
 #include "nsSMILParserUtils.h"
 #include "nsTArray.h"
 
-class gfxPath;
 class nsAString;
 class nsSVGElement;
 
 namespace mozilla {
 
-class SVGMotionSMILPathUtils {
+class SVGMotionSMILPathUtils
+{
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::Path Path;
+  typedef mozilla::gfx::PathBuilder PathBuilder;
+
 public:
-  // Class to assist in generating a gfxPath, based on
+  // Class to assist in generating a Path, based on
   // coordinates in the <animateMotion> from/by/to/values attributes.
   class PathGenerator {
   public:
     PathGenerator(const nsSVGElement* aSVGElement)
       : mSVGElement(aSVGElement),
-        mGfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface()),
         mHaveReceivedCommands(false)
-    {}
+    {
+      RefPtr<DrawTarget> drawTarget =
+        gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+      NS_ASSERTION(gfxPlatform::GetPlatform()->
+                     SupportsAzureContentForDrawTarget(drawTarget),
+                   "Should support Moz2D content drawing");
+      
+      mPathBuilder = drawTarget->CreatePathBuilder();
+    }
 
     // Methods for adding various path commands to output path.
     // Note: aCoordPairStr is expected to be a whitespace and/or
@@ -50,7 +61,7 @@ public:
     // Accessor to let clients check if we've received any commands yet.
     inline bool HaveReceivedCommands() { return mHaveReceivedCommands; }
     // Accessor to get the finalized path
-    already_AddRefed<gfxPath> GetResultingPath();
+    mozilla::TemporaryRef<Path> GetResultingPath();
 
   protected:
     // Helper methods
@@ -59,12 +70,12 @@ public:
 
     // Member data
     const nsSVGElement* mSVGElement; // context for converting to user units
-    gfxContext    mGfxContext;
+    RefPtr<PathBuilder> mPathBuilder;
     bool          mHaveReceivedCommands;
   };
 
   // Class to assist in passing each subcomponent of a |values| attribute to
-  // a PathGenerator, for generating a corresponding gfxPath.
+  // a PathGenerator, for generating a corresponding Path.
   class MotionValueParser : public nsSMILParserUtils::GenericValueParser
   {
   public:

@@ -88,7 +88,7 @@ bool
 CodeGeneratorShared::generateOutOfLineCode()
 {
     for (size_t i = 0; i < outOfLineCode_.length(); i++) {
-        if (!gen->temp().ensureBallast())
+        if (!gen->alloc().ensureBallast())
             return false;
         masm.setFramePushed(outOfLineCode_[i]->framePushed());
         lastPC_ = outOfLineCode_[i]->pc();

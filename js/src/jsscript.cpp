@@ -1200,7 +1200,6 @@ SourceCompressionTask::compress()
                 return false;
             }
             cont = cont && !abort_;
-            maybePause();
         }
         compressedLength = comp.outWritten();
         if (abort_ || compressedLength == nbytes)
@@ -1553,10 +1552,8 @@ js::SweepScriptData(JSRuntime *rt)
     JS_ASSERT(rt->gcIsFull);
     ScriptDataTable &table = rt->scriptDataTable();
 
-    for (ThreadDataIter iter(rt); !iter.done(); iter.next()) {
-        if (iter->gcKeepAtoms)
-            return;
-    }
+    if (rt->keepAtoms())
+        return;
 
     for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
         SharedScriptData *entry = e.front();

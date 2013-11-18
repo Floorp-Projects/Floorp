@@ -503,6 +503,7 @@ public:
     static bool GetPrefLayersPreferD3D9();
     static bool CanUseDirect3D9();
     static int  GetPrefLayoutFrameRate();
+    static bool GetPrefLayersDump();
 
     static bool OffMainThreadCompositionRequired();
 

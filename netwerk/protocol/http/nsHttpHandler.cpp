@@ -204,7 +204,7 @@ nsHttpHandler::nsHttpHandler()
     , mRequestTokenBucketMinParallelism(6)
     , mRequestTokenBucketHz(100)
     , mRequestTokenBucketBurst(32)
-    , mCritialRequestPrioritization(true)
+    , mCriticalRequestPrioritization(true)
     , mEthernetBytesRead(0)
     , mEthernetBytesWritten(0)
     , mCellBytesRead(0)
@@ -1259,7 +1259,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("rendering-critical-requests-prioritization"))) {
         rv = prefs->GetBoolPref(HTTP_PREF("rendering-critical-requests-prioritization"), &cVar);
         if (NS_SUCCEEDED(rv))
-            mCritialRequestPrioritization = cVar;
+            mCriticalRequestPrioritization = cVar;
     }
 
     // on transition of network.http.diagnostics to true print
@@ -1909,6 +1909,9 @@ NS_IMETHODIMP
 nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
                                   nsIInterfaceRequestor *aCallbacks)
 {
+    if (!mHandlerActive)
+        return NS_OK;
+
     nsISiteSecurityService* sss = gHttpHandler->GetSSService();
     bool isStsHost = false;
     if (!sss)

@@ -18,7 +18,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-setTimeout(focusing, 0);
+SimpleTest.waitForFocus(function(){setTimeout(focusing, 0)});
 
 function focusing() {
   document.getElementById("editor").focus();
@@ -33,6 +33,7 @@ var sel = window.getSelection();
 var editor = document.getElementById("editor");
 
 function setPrefs(eat_space, stop_at_punctuation, callback) {
+  eatSpace = eat_space;
   SpecialPowers.pushPrefEnv({"set": [["layout.word_select.eat_space_to_next_word", eat_space], ["layout.word_select.stop_at_punctuation", stop_at_punctuation]]}, callback);
 }
 

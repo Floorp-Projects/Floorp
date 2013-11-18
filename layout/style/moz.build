@@ -76,7 +76,7 @@ EXPORTS.mozilla.css += [
     'StyleRule.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AnimationCommon.cpp',
     'CSS.cpp',
     'Declaration.cpp',
@@ -92,7 +92,6 @@ SOURCES += [
     'nsCSSProps.cpp',
     'nsCSSPseudoClasses.cpp',
     'nsCSSPseudoElements.cpp',
-    'nsCSSRuleProcessor.cpp',
     'nsCSSRules.cpp',
     'nsCSSScanner.cpp',
     'nsCSSStyleSheet.cpp',
@@ -121,6 +120,11 @@ SOURCES += [
     'nsStyleUtil.cpp',
     'nsTransitionManager.cpp',
     'StyleRule.cpp',
+]
+
+# nsCSSRuleProcessor.cpp needs to be built separately because it uses plarena.h.
+SOURCES += [
+    'nsCSSRuleProcessor.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
