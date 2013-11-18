@@ -15,7 +15,6 @@ static const unsigned short SVG_LENGTHADJUST_UNKNOWN          = 0;
 static const unsigned short SVG_LENGTHADJUST_SPACING          = 1;
 static const unsigned short SVG_LENGTHADJUST_SPACINGANDGLYPHS = 2;
 
-class nsSVGTextContainerFrame;
 class nsSVGTextFrame2;
 
 namespace mozilla {
@@ -51,9 +50,7 @@ protected:
     : SVGTextContentElementBase(aNodeInfo)
   {}
 
-  nsSVGTextContainerFrame* GetTextContainerFrame();
   nsSVGTextFrame2* GetSVGTextFrame();
-  bool FrameIsSVGText();
 
   enum { LENGTHADJUST };
   virtual nsSVGEnum* EnumAttributes() = 0;
