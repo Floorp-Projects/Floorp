@@ -176,7 +176,7 @@ var CTMUtil =
   /// Helper for isCtmEqual
   isWithinDelta : function(aTestVal, aExpectedVal, aErrMsg, aIsTodo) {
     var testFunc = aIsTodo ? todo : ok;
-    const delta = 0.000001; // allowing margin of error = 10^-6
+    const delta = 0.00001; // allowing margin of error = 10^-5
     ok(aTestVal >= aExpectedVal - delta &&
        aTestVal <= aExpectedVal + delta,
        aErrMsg + " | got: " + aTestVal + ", expected: " + aExpectedVal);
