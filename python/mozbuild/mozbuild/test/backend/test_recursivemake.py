@@ -616,6 +616,15 @@ class TestRecursiveMakeBackend(BackendTester):
 
         self.assertIn('JAR_MANIFEST := %s/jar.mn' % env.topsrcdir, lines)
 
+    def test_test_manifests_duplicate_support_files(self):
+        """Ensure duplicate support-files in test manifests work."""
+        env = self._consume('test-manifests-duplicate-support-files',
+            RecursiveMakeBackend)
+
+        p = os.path.join(env.topobjdir, '_build_manifests', 'install', 'tests')
+        m = InstallManifest(p)
+        self.assertIn('testing/mochitest/tests/support-file.txt', m)
+
     def test_android_eclipse(self):
         env = self._consume('android_eclipse', RecursiveMakeBackend)
 
