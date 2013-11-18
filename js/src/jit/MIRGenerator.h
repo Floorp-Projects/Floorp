@@ -33,7 +33,7 @@ class MStart;
 class MIRGenerator
 {
   public:
-    MIRGenerator(CompileCompartment *compartment, TempAllocator *alloc, MIRGraph *graph, CompileInfo *info);
+    MIRGenerator(JSCompartment *compartment, TempAllocator *alloc, MIRGraph *graph, CompileInfo *info);
 
     TempAllocator &alloc() {
         return *alloc_;
@@ -44,7 +44,10 @@ class MIRGenerator
     bool ensureBallast() {
         return alloc().ensureBallast();
     }
-    const JitRuntime *jitRuntime() const {
+    JitCompartment *jitCompartment() const {
+        return compartment->jitCompartment();
+    }
+    JitRuntime *jitRuntime() const {
         return GetIonContext()->runtime->jitRuntime();
     }
     CompileInfo &info() {
@@ -66,7 +69,7 @@ class MIRGenerator
     }
 
     bool instrumentedProfiling() {
-        return GetIonContext()->runtime->spsProfiler().enabled();
+        return GetIonContext()->runtime->spsProfiler.enabled();
     }
 
     // Whether the main thread is trying to cancel this build.
@@ -123,7 +126,7 @@ class MIRGenerator
     }
 
   public:
-    CompileCompartment *compartment;
+    JSCompartment *compartment;
 
   protected:
     CompileInfo *info_;
