@@ -7,7 +7,7 @@
 #include "gfxMatrix.h"
 #include "mozilla/dom/SVGAElement.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsSVGTSpanFrame.h"
+#include "nsSVGTextContainerFrame.h"
 #include "nsSVGUtils.h"
 #include "SVGLengthList.h"
 
@@ -18,7 +18,7 @@
 
 using namespace mozilla;
 
-typedef nsSVGTSpanFrame nsSVGAFrameBase;
+typedef nsSVGTextContainerFrame nsSVGAFrameBase;
 
 class nsSVGAFrame : public nsSVGAFrameBase
 {
