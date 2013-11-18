@@ -6,24 +6,9 @@
 
 #include "nsISupports.idl"
 
-interface nsIEditor;
-
-[scriptable, uuid(e242d495-5cde-4b1c-8c84-2525b14939f5)]
+[scriptable, uuid(93d0ba57-0d20-49d1-aede-8fde6699855d)]
 interface nsIAccessibleEditableText : nsISupports
 {
-  /**
-   * Sets the attributes for the text between the two given indices. The old
-   * attributes are replaced by the new list of attributes. For example,
-   * sets font styles, such as italic, bold...
-   *
-   * @param startPos - start index of the text whose attributes are modified.
-   * @param endPos - end index of the text whose attributes are modified.
-   * @param attributes - set of attributes that replaces the old list of
-   *                     attributes of the specified text portion.
-   */
-  void setAttributes (in long startPos, in long endPos,
-                      in nsISupports attributes);
-
   /**
    * Replaces the text represented by this object by the given text.
    */
@@ -35,7 +20,8 @@ interface nsIAccessibleEditableText : nsISupports
    * @param text - text that is inserted.
    * @param position - index at which to insert the text.
    */
-  void insertText (in AString text, in long position);
+  [binaryname(ScriptableInsertText)]
+  void insertText(in AString text, in long position);
 
   /**
    * Copies the text range into the clipboard.
@@ -43,7 +29,8 @@ interface nsIAccessibleEditableText : nsISupports
    * @param startPos - start index of the text to moved into the clipboard.
    * @param endPos - end index of the text to moved into the clipboard.
    */
-  void copyText (in long startPos, in long endPos);
+  [binaryname(ScriptableCopyText)]
+  void copyText(in long startPos, in long endPos);
 
   /**
    * Deletes a range of text and copies it to the clipboard.
@@ -51,7 +38,8 @@ interface nsIAccessibleEditableText : nsISupports
    * @param startPos - start index of the text to be deleted.
    * @param endOffset - end index of the text to be deleted.
    */
-  void cutText (in long startPos, in long endPos);
+  [binaryname(ScriptableCutText)]
+  void cutText(in long startPos, in long endPos);
 
   /**
    * Deletes a range of text.
@@ -59,7 +47,8 @@ interface nsIAccessibleEditableText : nsISupports
    * @param startPos - start index of the text to be deleted.
    * @param endPos - end index of the text to be deleted.
    */
-  void deleteText (in long startPos, in long endPos);
+  [binaryname(ScriptableDeleteText)]
+  void deleteText(in long startPos, in long endPos);
 
   /**
    * Pastes text from the clipboard.
@@ -67,5 +56,6 @@ interface nsIAccessibleEditableText : nsISupports
    * @param position - index at which to insert the text from the system
    *                   clipboard into the text represented by this object.
    */
-  void pasteText (in long position);
+  [binaryname(ScriptablePasteText)]
+  void pasteText(in long position);
 };
