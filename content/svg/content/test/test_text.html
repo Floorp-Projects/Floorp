@@ -148,7 +148,7 @@ function runTest()
   is(text3.getEndPositionOfChar(12).y, 253, "text3 char 12 end offset");
   ok(text3.getExtentOfChar(12).y < 253, "text3 char 12 extent y");
   ok(ymost(text3.getExtentOfChar(12)) > 253, "text3 char 12 extent height");
-  is(text3.getRotationOfChar(12), 180, "text3 char 12 rotation");
+  isfuzzy(text3.getRotationOfChar(12), 180, 0.001, "text3 char 12 rotation");
   p.x = text3.getExtentOfChar(12).x + 0.1;
   p.y = ymost(text3.getExtentOfChar(12)) - 0.1;
   is(text3.getCharNumAtPosition(p), 12, "text3 finding char 12");
