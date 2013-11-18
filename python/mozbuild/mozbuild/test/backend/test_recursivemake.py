@@ -527,7 +527,6 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume('final_target', RecursiveMakeBackend)
 
         final_target_rule = "FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)"
-        print([x for x in os.walk(env.topobjdir)])
         expected = dict()
         expected[env.topobjdir] = []
         expected[os.path.join(env.topobjdir, 'both')] = [
@@ -553,6 +552,15 @@ class TestRecursiveMakeBackend(BackendTester):
                 str.startswith('FINAL_TARGET') or str.startswith('XPI_NAME') or
                 str.startswith('DIST_SUBDIR')]
             self.assertEqual(found, expected_rules)
+
+    def test_test_manifests_duplicate_support_files(self):
+        """Ensure duplicate support-files in test manifests work."""
+        env = self._consume('test-manifests-duplicate-support-files',
+            RecursiveMakeBackend)
+
+        p = os.path.join(env.topobjdir, '_build_manifests', 'install', 'tests')
+        m = InstallManifest(p)
+        self.assertIn('testing/mochitest/tests/support-file.txt', m)
 
 
 if __name__ == '__main__':
