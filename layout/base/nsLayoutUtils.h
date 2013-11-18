@@ -1145,12 +1145,12 @@ public:
   static gfxFloat GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
                                       nscoord aY, nscoord aAscent);
 
-  static void DrawString(const nsIFrame*      aFrame,
-                         nsRenderingContext* aContext,
-                         const PRUnichar*     aString,
-                         int32_t              aLength,
-                         nsPoint              aPoint,
-                         uint8_t              aDirection = NS_STYLE_DIRECTION_INHERIT);
+  static void DrawString(const nsIFrame*       aFrame,
+                         nsRenderingContext*   aContext,
+                         const PRUnichar*      aString,
+                         int32_t               aLength,
+                         nsPoint               aPoint,
+                         nsStyleContext*       aStyleContext = nullptr);
 
   static nscoord GetStringWidth(const nsIFrame*      aFrame,
                                 nsRenderingContext* aContext,
