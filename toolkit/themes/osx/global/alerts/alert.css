@@ -92,20 +92,9 @@ label {
   -moz-appearance: none;
   padding: 0;
   margin: 2px;
-  list-style-image: url("chrome://global/skin/icons/close.png");
   border: none;
-  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .alertCloseButton > .toolbarbutton-text {
   display: none;
 }
-
-.alertCloseButton:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.alertCloseButton:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
