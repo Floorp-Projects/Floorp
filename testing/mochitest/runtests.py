@@ -353,7 +353,7 @@ class MochitestUtilsMixin(object):
       manifest = TestManifest(strict=False)
       manifest.read(options.manifestFile)
       # Bug 883858 - return all tests including disabled tests
-      tests = manifest.active_tests(disabled=False, **mozinfo.info)
+      tests = manifest.active_tests(disabled=True, **mozinfo.info)
       paths = []
       for test in tests:
         tp = test['path'].split(self.getTestRoot(options), 1)[1].strip('/')
