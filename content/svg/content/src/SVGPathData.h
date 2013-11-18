@@ -20,7 +20,6 @@
 #include <string.h>
 
 class gfxContext;
-class gfxPath;
 class nsSVGPathDataParser; // IWYU pragma: keep
 
 struct gfxMatrix;
