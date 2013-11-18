@@ -10,7 +10,7 @@ import subprocess
 import runxpcshelltests as xpcshell
 import tempfile
 from automationutils import replaceBackSlashes
-import devicemanagerADB, devicemanagerSUT, devicemanager
+from mozdevice import devicemanagerADB, devicemanagerSUT, devicemanager
 from zipfile import ZipFile
 import shutil
 import mozinfo

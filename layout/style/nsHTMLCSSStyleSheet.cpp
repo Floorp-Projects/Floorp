@@ -18,8 +18,8 @@
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
-namespace css = mozilla::css;
 
 namespace {
 

@@ -454,11 +454,6 @@ argumentUnboxingTemplates = {
         "        return false;\n"
         "    char *${name} = ${name}_bytes.ptr();\n",
 
-    'wstring':
-        "    const PRUnichar *${name};\n"
-        "    if (!xpc_qsJsvalToWcharStr(cx, ${argVal}, ${argPtr}, &${name}))\n"
-        "        return false;\n",
-
     '[cstring]':
         "    xpc_qsACString ${name}(cx, ${argVal}, ${argPtr}, ${notPassed});\n"
         "    if (!${name}.IsValid())\n"

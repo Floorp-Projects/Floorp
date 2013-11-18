@@ -407,16 +407,6 @@ JS_ValueToConstructor(JSContext *cx, HandleValue value)
 }
 
 JS_PUBLIC_API(JSString *)
-JS_ValueToString(JSContext *cx, jsval valueArg)
-{
-    RootedValue value(cx, valueArg);
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, value);
-    return ToString<CanGC>(cx, value);
-}
-
-JS_PUBLIC_API(JSString *)
 JS_ValueToSource(JSContext *cx, jsval valueArg)
 {
     RootedValue value(cx, valueArg);

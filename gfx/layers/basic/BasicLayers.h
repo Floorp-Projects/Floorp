@@ -125,9 +125,7 @@ public:
   void SetTarget(gfxContext* aTarget) { mUsingDefaultTarget = false; mTarget = aTarget; }
   bool IsRetained() { return mWidget != nullptr; }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "Basic"; }
-#endif // MOZ_LAYERS_HAVE_LOG
 
   // Clear the cached contents of this layer tree.
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;

@@ -9,7 +9,6 @@
 #include "mozilla/gfx/2D.h"
 #include "SVGGraphicsElement.h"
 
-class gfxPath;
 struct gfxMatrix;
 template <class E> class nsTArray;
 
@@ -66,7 +65,7 @@ public:
    */
   virtual mozilla::TemporaryRef<Path> BuildPath() = 0;
 
-  virtual already_AddRefed<gfxPath> GetPath(const gfxMatrix &aMatrix);
+  virtual mozilla::TemporaryRef<Path> GetPathForLengthOrPositionMeasuring();
 
   /**
    * Returns a PathBuilder object created using the current computed value of

@@ -345,23 +345,13 @@ nsColumnSetFrame::ReflowColumns(nsHTMLReflowMetrics& aDesiredSize,
   return feasible;
 }
 
-// XXX copied from nsBlockFrame, should this be moved to nsContainerFrame?
-static void
-PlaceFrameView(nsIFrame* aFrame)
-{
-  if (aFrame->HasView())
-    nsContainerFrame::PositionFrameView(aFrame);
-  else
-    nsContainerFrame::PositionChildViews(aFrame);
-}
-
 static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
   if (aChild->GetPosition() == aOrigin) {
     return;
   }
-  
+
   aChild->SetPosition(aOrigin);
-  PlaceFrameView(aChild);
+  nsContainerFrame::PlaceFrameView(aChild);
 }
 
 nscoord

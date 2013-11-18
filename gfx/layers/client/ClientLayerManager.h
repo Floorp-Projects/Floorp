@@ -60,9 +60,7 @@ public:
 
   virtual LayersBackend GetBackendType() { return LAYERS_CLIENT; }
   virtual void GetBackendName(nsAString& name);
-#ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "Client"; }
-#endif // MOZ_LAYERS_HAVE_LOG
 
   virtual void SetRoot(Layer* aLayer);
 

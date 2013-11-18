@@ -189,7 +189,8 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
     {
         JSAutoCompartment ac(cx, scopeObj);
         AutoSaveExceptionState as(cx);
-        string = JS_ValueToString(cx, jsdval->val);
+        JS::RootedValue v(cx, jsdval->val);
+        string = JS::ToString(cx, v);
     }
 
     JSAutoCompartment ac2(cx, jsdc->glob);

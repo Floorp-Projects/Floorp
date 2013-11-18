@@ -188,7 +188,7 @@ UnreachableCodeElimination::prunePointlessBranchesAndMarkReachableBlocks()
         MBasicBlock *succ = optimizableSuccessor(block);
         JS_ASSERT(succ);
 
-        MGoto *gotoIns = MGoto::New(succ);
+        MGoto *gotoIns = MGoto::New(graph_.alloc(), succ);
         block->discardLastIns();
         block->end(gotoIns);
         MBasicBlock *successorWithPhis = block->successorWithPhis();

@@ -831,6 +831,8 @@ typedef struct {
   bool enabledByDefault;
 } CipherPref;
 
+// Update the switch statement in HandshakeCallback in nsNSSCallbacks.cpp when
+// you add/remove cipher suites here.
 static const CipherPref sCipherPrefs[] = {
  { "security.ssl3.ecdhe_rsa_aes_128_gcm_sha256",
    TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, true },
@@ -2069,7 +2071,6 @@ nsresult InitializeCipherSuite()
     SSL_CipherPrefSetDefault(cipher_id, false);
   }
 
-  bool cipherEnabled;
   // Now only set SSL/TLS ciphers we knew about at compile time
   for (const CipherPref* cp = sCipherPrefs; cp->pref; ++cp) {
     bool cipherEnabled = Preferences::GetBool(cp->pref, cp->enabledByDefault);

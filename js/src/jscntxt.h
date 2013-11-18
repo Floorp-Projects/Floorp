@@ -285,11 +285,7 @@ struct ThreadSafeContext : ContextFriendFields,
     size_t helperThreadCount() { return runtime_->helperThreadCount(); }
     void *runtimeAddressForJit() { return runtime_; }
     void *stackLimitAddress(StackKind kind) { return &runtime_->mainThread.nativeStackLimit[kind]; }
-
-    // GCs cannot happen while non-main threads are running.
-    uint64_t gcNumber() { return runtime_->gcNumber; }
     size_t gcSystemPageSize() { return runtime_->gcSystemPageSize; }
-    bool isHeapBusy() { return runtime_->isHeapBusy(); }
     bool signalHandlersInstalled() const { return runtime_->signalHandlersInstalled(); }
     bool jitSupportsFloatingPoint() const { return runtime_->jitSupportsFloatingPoint; }
 
@@ -354,9 +350,6 @@ class ExclusiveContext : public ThreadSafeContext
 
     void setWorkerThread(WorkerThread *workerThread);
     WorkerThread *workerThread() const { return workerThread_; }
-
-    // If required, pause this thread until notified to continue by the main thread.
-    inline void maybePause() const;
 
     // Threads with an ExclusiveContext may freely access any data in their
     // compartment and zone.
@@ -1020,6 +1013,61 @@ bool intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp);
 
 bool intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp);
+
+class AutoLockForExclusiveAccess
+{
+#ifdef JS_WORKER_THREADS
+    JSRuntime *runtime;
+
+    void init(JSRuntime *rt) {
+        runtime = rt;
+        if (runtime->numExclusiveThreads) {
+            runtime->assertCanLock(JSRuntime::ExclusiveAccessLock);
+            PR_Lock(runtime->exclusiveAccessLock);
+            runtime->exclusiveAccessOwner = PR_GetCurrentThread();
+        } else {
+            JS_ASSERT(!runtime->mainThreadHasExclusiveAccess);
+            runtime->mainThreadHasExclusiveAccess = true;
+        }
+    }
+
+  public:
+    AutoLockForExclusiveAccess(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(cx->runtime_);
+    }
+    AutoLockForExclusiveAccess(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(rt);
+    }
+    ~AutoLockForExclusiveAccess() {
+        if (runtime->numExclusiveThreads) {
+            JS_ASSERT(runtime->exclusiveAccessOwner == PR_GetCurrentThread());
+#ifdef DEBUG
+            runtime->exclusiveAccessOwner = nullptr;
+#endif
+            PR_Unlock(runtime->exclusiveAccessLock);
+        } else {
+            JS_ASSERT(runtime->mainThreadHasExclusiveAccess);
+            runtime->mainThreadHasExclusiveAccess = false;
+        }
+    }
+#else // JS_WORKER_THREADS
+  public:
+    AutoLockForExclusiveAccess(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    AutoLockForExclusiveAccess(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoLockForExclusiveAccess() {
+        // An empty destructor is needed to avoid warnings from clang about
+        // unused local variables of this type.
+    }
+#endif // JS_WORKER_THREADS
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 } /* namespace js */
 

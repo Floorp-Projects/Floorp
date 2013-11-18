@@ -16,39 +16,39 @@ XPIDL_MODULE = 'necko_wifi'
 
 MODULE = 'necko'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsWifiAccessPoint.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsWifiMonitorGonk.cpp',
     ]
 else:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsWifiMonitor.cpp',
     ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':
     # osx_corewlan.mm has warnings I don't understand.
     FAIL_ON_WARNINGS = False
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsWifiScannerMac.cpp',
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'osx_corewlan.mm',
     ]
 elif CONFIG['OS_ARCH'] == 'WINNT':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsWifiScannerWin.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'SunOS':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsWifiScannerSolaris.cpp',
     ]
 
 if CONFIG['NECKO_WIFI_DBUS']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsWifiScannerDBus.cpp',
     ]
 
