@@ -21,6 +21,7 @@ use vars qw(
             $opt_debug
             $opt_template
             $opt_uaversion
+            $opt_symbolversion
             $opt_help
             );
 
@@ -30,7 +31,7 @@ push(@INC,$SCRIPTDIR);
 
 require "Moz/Milestone.pm";
 
-&GetOptions('topsrcdir=s' => \$TOPSRCDIR, 'srcdir=s' => \$SRCDIR, 'objdir=s' => \$OBJDIR, 'debug', 'help', 'template', 'uaversion');
+&GetOptions('topsrcdir=s' => \$TOPSRCDIR, 'srcdir=s' => \$SRCDIR, 'objdir=s' => \$OBJDIR, 'debug', 'help', 'template', 'uaversion', 'symbolversion');
 
 if (defined($opt_help)) {
     &usage();
@@ -75,13 +76,19 @@ if (defined(@TEMPLATE_FILE)) {
   # (bugs 572659 and 870868).
   my $uaversion = Moz::Milestone::getMilestoneMajor($milestone) . ".0";
   print "$uaversion\n";
+} elsif(defined($opt_symbolversion)) {
+  # Only expose major milestone and alpha version. Used for symbol versioning
+  # on Linux.
+  my $symbolversion = Moz::Milestone::getMilestoneMajor($milestone) .
+                      Moz::Milestone::getMilestoneABWithNum($milestone);
+  print "$symbolversion\n";
 } else {
   print "$milestone\n";
 }
 
 sub usage() {
   print <<END
-`milestone.pl [--topsrcdir TOPSRCDIR] [--objdir OBJDIR] [--srcdir SRCDIR] --template [file list] --uaversion`  # will build file list from .tmpl files
+`milestone.pl [--topsrcdir TOPSRCDIR] [--objdir OBJDIR] [--srcdir SRCDIR] --template [file list] --uaversion --symbolversion`  # will build file list from .tmpl files
 END
     ;
 }
