@@ -8,7 +8,6 @@
 /*
  * Double hashing, a la Knuth 6.
  */
-#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Types.h"
 #include "nscore.h"
@@ -183,8 +182,14 @@ struct PLDHashTable {
     const PLDHashTableOps *ops;         /* virtual operations, see below */
     void                *data;          /* ops- and instance-specific data */
     int16_t             hashShift;      /* multiplicative hash shift */
-    uint16_t            entrySize;      /* number of bytes in an entry */
-    mozilla::Atomic<uint32_t> recursionLevel; /* detects unsafe re-entry */
+    /*
+     * |recursionLevel| is only used in debug builds, but is present in opt
+     * builds to avoid binary compatibility problems when mixing DEBUG and
+     * non-DEBUG components.  (Actually, even if it were removed,
+     * sizeof(PLDHashTable) wouldn't change, due to struct padding.)
+     */
+    uint16_t            recursionLevel; /* used to detect unsafe re-entry */
+    uint32_t            entrySize;      /* number of bytes in an entry */
     uint32_t            entryCount;     /* number of entries in table */
     uint32_t            removedCount;   /* removed entry sentinels in table */
     uint32_t            generation;     /* entry storage generation number */
@@ -544,22 +549,24 @@ PL_DHashTableSizeOfIncludingThis(const PLDHashTable *table,
                                  mozilla::MallocSizeOf mallocSizeOf,
                                  void *arg = nullptr);
 
+#ifdef DEBUG
 /**
  * Mark a table as immutable for the remainder of its lifetime.  This
- * changes the implementation from checking one set of invariants to
- * checking a different set.
+ * changes the implementation from ASSERTing one set of invariants to
+ * ASSERTing a different set.
  *
  * When a table is NOT marked as immutable, the table implementation
- * checks that the table is not mutated from its own callbacks.  It
+ * asserts that the table is not mutated from its own callbacks.  It
  * assumes the caller protects the table from being accessed on multiple
  * threads simultaneously.
  *
- * When the table is marked as immutable, the re-entry checks will
+ * When the table is marked as immutable, the re-entry assertions will
  * no longer trigger erroneously due to multi-threaded access.  Instead,
- * mutations will cause checks to fail.
+ * mutations will cause assertions.
  */
 NS_COM_GLUE void
 PL_DHashMarkTableImmutable(PLDHashTable *table);
+#endif
 
 #ifdef PL_DHASHMETER
 #include <stdio.h>

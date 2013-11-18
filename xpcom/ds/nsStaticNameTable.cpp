@@ -177,7 +177,9 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[], int32_t Count
         entry->mString = strPtr;      // not owned!
         entry->mIndex = index;
     }
+#ifdef DEBUG
     PL_DHashMarkTableImmutable(&mNameTable);
+#endif
     return true;
 }
 
