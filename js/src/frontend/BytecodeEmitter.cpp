@@ -509,8 +509,6 @@ static bool
 FlushPops(ExclusiveContext *cx, BytecodeEmitter *bce, int *npops)
 {
     JS_ASSERT(*npops != 0);
-    if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-        return false;
     EMIT_UINT16_IMM_OP(JSOP_POPN, *npops);
     *npops = 0;
     return true;
@@ -519,8 +517,6 @@ FlushPops(ExclusiveContext *cx, BytecodeEmitter *bce, int *npops)
 static bool
 PopIterator(ExclusiveContext *cx, BytecodeEmitter *bce)
 {
-    if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-        return false;
     if (Emit1(cx, bce, JSOP_ENDITER) < 0)
         return false;
     return true;
@@ -547,8 +543,6 @@ EmitNonLocalJumpFixup(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *t
         switch (stmt->type) {
           case STMT_FINALLY:
             FLUSH_POPS();
-            if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-                return false;
             if (EmitBackPatchOp(cx, bce, &stmt->gosubs()) < 0)
                 return false;
             break;
@@ -556,8 +550,6 @@ EmitNonLocalJumpFixup(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *t
           case STMT_WITH:
             /* There's a With object on the stack that we need to pop. */
             FLUSH_POPS();
-            if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-                return false;
             if (Emit1(cx, bce, JSOP_LEAVEWITH) < 0)
                 return false;
             break;
@@ -596,8 +588,6 @@ EmitNonLocalJumpFixup(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *t
                 stmt = stmt->down;
                 if (stmt == toStmt)
                     break;
-                if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-                    return false;
                 if (Emit1(cx, bce, JSOP_LEAVEFORLETIN) < 0)
                     return false;
                 if (stmt->type == STMT_FOR_OF_LOOP) {
@@ -607,13 +597,9 @@ EmitNonLocalJumpFixup(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *t
                     if (!PopIterator(cx, bce))
                         return false;
                 }
-                if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-                    return false;
                 EMIT_UINT16_IMM_OP(JSOP_POPN, popCount);
             } else {
                 /* There is a Block object with locals on the stack to pop. */
-                if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-                    return false;
                 EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObjCount);
             }
         }
@@ -3900,8 +3886,6 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     /* GOSUB to finally, if present. */
     if (pn->pn_kid3) {
-        if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-            return false;
         if (EmitBackPatchOp(cx, bce, &stmtInfo.gosubs()) < 0)
             return false;
     }
@@ -3911,8 +3895,6 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     /* Emit (hidden) jump over catch and/or finally. */
-    if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-        return false;
     ptrdiff_t catchJump = -1;
     if (EmitBackPatchOp(cx, bce, &catchJump) < 0)
         return false;
@@ -3968,11 +3950,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                  * since it compensates for the hidden JSOP_DUP at the
                  * start of the previous guarded catch.
                  */
-                if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0 ||
-                    Emit1(cx, bce, JSOP_THROWING) < 0) {
-                    return false;
-                }
-                if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
+                if (Emit1(cx, bce, JSOP_THROWING) < 0)
                     return false;
                 EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, count);
                 JS_ASSERT(bce->stackDepth == depth);
@@ -3999,8 +3977,6 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * Jump over the remaining catch blocks.  This will get fixed
              * up to jump to after catch/finally.
              */
-            if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-                return false;
             if (EmitBackPatchOp(cx, bce, &catchJump) < 0)
                 return false;
 
@@ -4029,7 +4005,7 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * Rethrow the exception, delegating executing of finally if any
          * to the exception handler.
          */
-        if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0 || Emit1(cx, bce, JSOP_THROW) < 0)
+        if (Emit1(cx, bce, JSOP_THROW) < 0)
             return false;
     }
 
@@ -5179,8 +5155,6 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter)
     // Try epilogue.
     if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, bce->offset() - tryStart + JSOP_TRY_LENGTH))
         return false;
-    if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-        return false;
     ptrdiff_t subsequentSend = -1;
     if (EmitBackPatchOp(cx, bce, &subsequentSend) < 0)           // goto subsequentSend
         return false;
@@ -6328,8 +6302,6 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (!EmitFinishIteratorResult(cx, bce, false))
                 return false;
         }
-        if (pn->pn_hidden && NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
-            return false;
         if (Emit1(cx, bce, JSOP_YIELD) < 0)
             return false;
         break;
