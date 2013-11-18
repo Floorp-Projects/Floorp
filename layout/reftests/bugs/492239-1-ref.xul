@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <stack style="background: yellow;">
+    <hbox style="width: 100px; height: 20px; background: blue;" top="0" left="100"/>
+  </stack>
+
+</window>
