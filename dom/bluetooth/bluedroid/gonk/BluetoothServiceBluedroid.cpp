@@ -169,6 +169,18 @@ AdapterStateChangeCallback(bt_state_t aStatus)
   if (aStatus == BT_STATE_ON) {
     sIsBtEnabled = true;
     signalName = NS_LITERAL_STRING("AdapterAdded");
+    // by default bluetooth scan mode is NONE
+    bt_property_t prop;
+    prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
+    bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
+    prop.val = (void*) &mode;
+    prop.len = sizeof(mode);
+    if (sBtInterface) {
+      int ret = sBtInterface->set_adapter_property(&prop);
+      if (ret != BT_STATUS_SUCCESS) {
+        BT_LOGR("Warning! Fail to set property to BT_SCAN_MODE_CONNECTABLE");
+      }
+    }
   } else {
     sIsBtEnabled = false;
     signalName = NS_LITERAL_STRING("Disabled");
