@@ -1954,6 +1954,9 @@ protected:
   uint64_t mId;
 };
 
+void
+SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget);
+
 #ifdef MOZ_DUMP_PAINTING
 void WriteSnapshotToDumpFile(Layer* aLayer, gfxASurface* aSurf);
 void WriteSnapshotToDumpFile(LayerManager* aManager, gfxASurface* aSurf);

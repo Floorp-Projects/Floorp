@@ -74,30 +74,6 @@ CreateClampOrRepeatTextureImage(GLContext *aGl,
   return aGl->CreateTextureImage(aSize, aContentType, WrapMode(aGl, aFlags));
 }
 
-static void
-SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
-{
-  if (aTarget->IsCairo()) {
-    nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
-    if (surface->GetContentType() != GFX_CONTENT_COLOR_ALPHA) {
-      // Destination doesn't have alpha channel; no need to set any special flags
-      return;
-    }
-
-    surface->SetSubpixelAntialiasingEnabled(
-        !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA));
-  } else {
-    RefPtr<DrawTarget> dt = aTarget->GetDrawTarget();
-
-    if (dt->GetFormat() != FORMAT_B8G8R8A8) {
-      return;
-    }
-
-    dt->SetPermitSubpixelAA(
-        !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA));
-  }
-}
-
 class ThebesLayerBufferOGL
 {
   NS_INLINE_DECL_REFCOUNTING(ThebesLayerBufferOGL)
