@@ -17,33 +17,14 @@
   z-index: 5;
 }
 
-toolbar[iconsize="small"] > #downloads-button > #downloads-indicator-anchor {
-  min-width: 16px;
-  min-height: 16px;
-}
-
-toolbar[iconsize="large"] > #downloads-button > #downloads-indicator-anchor {
-  min-width: 24px;
-  min-height: 24px;
-}
-
 /*** Main indicator icon ***/
 
-toolbar[iconsize="small"] > #downloads-button > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background: -moz-image-rect(url("chrome://browser/skin/Toolbar-small.png"),
-                              0, 16, 16, 0) center no-repeat;
-}
-
-toolbar[iconsize="large"] > #downloads-button > #downloads-indicator-anchor > #downloads-indicator-icon {
+#downloads-button[cui-areatype="toolbar"] > #downloads-indicator-anchor > #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
-                              0, 24, 24, 0) center no-repeat;
+                              0, 198, 18, 180) center no-repeat;
 }
 
-toolbar[iconsize="small"] > #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
-  background-image: url("chrome://browser/skin/downloads/download-glow-small.png");
-}
-
-toolbar[iconsize="large"] > #downloads-button[attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
+#downloads-button[cui-areatype="toolbar"][attention] > #downloads-indicator-anchor > #downloads-indicator-icon {
   background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
 
@@ -158,9 +139,4 @@ toolbar[iconsize="large"] > #downloads-button[attention] > #downloads-indicator-
 
 #downloads-button[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {
   background-image: linear-gradient(#4b5000, #515700);
-}
-
-toolbar[mode="full"] > #downloads-button > .toolbarbutton-text {
-  margin: 0;
-  text-align: center;
 }

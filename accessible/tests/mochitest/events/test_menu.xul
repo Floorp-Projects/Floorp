@@ -156,7 +156,7 @@
       // Alt key is used to active menubar and focus menu item on Windows,
       // other platforms requires setting a ui.key.menuAccessKeyFocuses
       // preference.
-      if (WIN) {
+      if (WIN || LINUX) {
         gQueue.push(new focusFileMenu());
         gQueue.push(new focusEditMenu());
         gQueue.push(new leaveMenubar());
