@@ -26,6 +26,8 @@ function message(event) {
 };
 
 function test1() {
+  // ...and once with privileges.
+  SpecialPowers.addPermission("systemXHR", true, document);
   var worker = new Worker("test_xhr_system.js");
   worker.onmessage = message;
   worker.postMessage(true);
@@ -34,6 +36,7 @@ function test1() {
 var tests = [ test1 ];
 function run() {
   if (!tests.length) {
+    SpecialPowers.removePermission("systemXHR", document);
     SimpleTest.finish();
     return;
   }
@@ -43,8 +46,7 @@ function run() {
 }
 
 SimpleTest.waitForExplicitFinish();
-
-SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], run);
+run();
 
 </script>
 </pre>
