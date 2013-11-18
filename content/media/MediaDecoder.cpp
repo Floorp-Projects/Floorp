@@ -570,7 +570,7 @@ nsresult MediaDecoder::Play()
  * (and can be -1 if aValue is before aRanges.Start(0)).
  */
 static bool
-IsInRanges(TimeRanges& aRanges, double aValue, int32_t& aIntervalIndex)
+IsInRanges(dom::TimeRanges& aRanges, double aValue, int32_t& aIntervalIndex)
 {
   uint32_t length;
   aRanges.GetLength(&length);
@@ -598,7 +598,7 @@ nsresult MediaDecoder::Seek(double aTime)
 
   NS_ABORT_IF_FALSE(aTime >= 0.0, "Cannot seek to a negative value.");
 
-  TimeRanges seekable;
+  dom::TimeRanges seekable;
   nsresult res;
   uint32_t length = 0;
   res = GetSeekable(&seekable);
@@ -1326,7 +1326,7 @@ bool MediaDecoder::IsMediaSeekable()
   return mMediaSeekable;
 }
 
-nsresult MediaDecoder::GetSeekable(TimeRanges* aSeekable)
+nsresult MediaDecoder::GetSeekable(dom::TimeRanges* aSeekable)
 {
   double initialTime = 0.0;
 
@@ -1492,7 +1492,7 @@ void MediaDecoder::Invalidate()
 
 // Constructs the time ranges representing what segments of the media
 // are buffered and playable.
-nsresult MediaDecoder::GetBuffered(TimeRanges* aBuffered) {
+nsresult MediaDecoder::GetBuffered(dom::TimeRanges* aBuffered) {
   if (mDecoderStateMachine) {
     return mDecoderStateMachine->GetBuffered(aBuffered);
   }
