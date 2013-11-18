@@ -27,17 +27,22 @@ EXPORTS.mozilla += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla += ['perfprobe.h']
-    SOURCES += [
-        'perfprobe.cpp',
-        'PoisonIOInterposerBase.cpp',
-        'PoisonIOInterposerWin.cpp',
-    ]
-elif CONFIG['OS_ARCH'] == 'Darwin':
+    SOURCES += ['perfprobe.cpp']
+    if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
+        SOURCES += [
+            'PoisonIOInterposerBase.cpp',
+            'PoisonIOInterposerWin.cpp',
+        ]
+    else:
+        SOURCES += ['PoisonIOInterposerStub.cpp']
+elif CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     SOURCES += [
         'mach_override.c',
         'PoisonIOInterposerBase.cpp',
         'PoisonIOInterposerMac.cpp',
     ]
+else:
+    SOURCES += ['PoisonIOInterposerStub.cpp']
 
 include('../glue/objs.mozbuild')
 
