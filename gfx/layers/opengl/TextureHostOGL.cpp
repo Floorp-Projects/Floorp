@@ -1013,7 +1013,7 @@ TiledDeprecatedTextureHostOGL::Lock()
 
 #ifdef MOZ_WIDGET_GONK
 static gfx::SurfaceFormat
-SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
+Deprecated_SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
                                    bool swapRB = false)
 {
   switch (aFormat) {
@@ -1051,7 +1051,7 @@ SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
 }
 
 static GLenum
-TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
+Deprecated_TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
 {
   switch (aFormat) {
   case HAL_PIXEL_FORMAT_YCbCr_422_SP:
@@ -1155,10 +1155,10 @@ GrallocDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImag
   const SurfaceDescriptorGralloc& desc = aImage.get_SurfaceDescriptorGralloc();
   mGraphicBuffer = GrallocBufferActor::GetFrom(desc);
   mIsRBSwapped = desc.isRBSwapped();
-  mFormat = SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat(),
+  mFormat = Deprecated_SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat(),
                                                mIsRBSwapped);
 
-  mTextureTarget = TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
+  mTextureTarget = Deprecated_TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
   GLuint tex = GetGLTexture();
   // delete old EGLImage
   DeleteTextures();
