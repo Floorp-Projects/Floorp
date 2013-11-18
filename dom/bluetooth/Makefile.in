@@ -16,36 +16,28 @@ VPATH += $(srcdir)/ipc
 
 ifneq (,$(MOZ_B2G_BT))
 
-
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-VPATH += \
-  $(srcdir)/linux \
-  $(srcdir)/gonk \
-  $(NULL)
+ifdef MOZ_B2G_BT_BLUEZ
 LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
-DEFINES += -DMOZ_BLUETOOTH_GONK
+DEFINES += -DMOZ_B2G_BT_BLUEZ
+else
+ifdef MOZ_B2G_BT_BLUEDROID
+DEFINES += -DMOZ_B2G_BT_BLUEDROID
+endif #MOZ_B2G_BT_BLUEDROID
+endif #MOZ_B2G_BT_BLUEZ
 else
 ifdef MOZ_ENABLE_DBUS
-VPATH += $(srcdir)/linux
 LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
 CFLAGS += $(MOZ_DBUS_GLIB_CFLAGS)
 CXXFLAGS += $(MOZ_DBUS_GLIB_CFLAGS) -DHAVE_PTHREADS
 DEFINES += -DMOZ_BLUETOOTH_DBUS
-endif
-endif
-
-ifdef MOZ_B2G_BT_BLUEZ
-DEFINES += -DMOZ_B2G_BT_BLUEZ
-endif
-
-ifdef MOZ_B2G_BT_BLUEDROID
-DEFINES += -DMOZ_B2G_BT_BLUEDROID
-endif
+endif #MOZ_ENABLE_DBUS
+endif #MOZ_WIDGET_TOOLKIT
 
 # Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
 # subdirectory.
 LOCAL_INCLUDES += $(VPATH:%=-I%)
 
-endif # MOZ_B2G_BT
+endif #MOZ_B2G_BT
 
 include $(topsrcdir)/config/rules.mk
