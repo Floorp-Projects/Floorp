@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MacIOSurfaceImage.h"
-#include "mozilla/layers/TextureClientOGL.h"
+#include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
 
 using namespace mozilla::layers;
 
