@@ -10,8 +10,6 @@
 #include "mozilla/Types.h"
 #include <stdio.h>
 
-#if defined(MOZ_ENABLE_PROFILER_SPS) && (defined(XP_WIN) || defined(XP_MACOSX))
-
 MOZ_BEGIN_EXTERN_C
 
 /** Register file descriptor to be ignored by poisoning IO interposer */
@@ -27,6 +25,8 @@ void MozillaUnRegisterDebugFD(int fd);
 void MozillaUnRegisterDebugFILE(FILE *f);
 
 MOZ_END_EXTERN_C
+
+#if defined(MOZ_ENABLE_PROFILER_SPS) && (defined(XP_WIN) || defined(XP_MACOSX))
 
 #ifdef __cplusplus
 namespace mozilla {
@@ -64,13 +64,6 @@ void ClearPoisonIOInterposer();
 #endif /* __cplusplus */
 
 #else /* MOZ_ENABLE_PROFILER_SPS && (XP_WIN || XP_MACOSX) */
-
-MOZ_BEGIN_EXTERN_C
-inline void MozillaRegisterDebugFD(int fd){}
-inline void MozillaRegisterDebugFILE(FILE *f){}
-inline void MozillaUnRegisterDebugFD(int fd){}
-inline void MozillaUnRegisterDebugFILE(FILE *f){}
-MOZ_END_EXTERN_C
 
 #ifdef __cplusplus
 namespace mozilla {
