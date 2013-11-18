@@ -29,9 +29,9 @@ namespace layers {
 
 mozilla::Atomic<int32_t> GfxMemoryImageReporter::sAmount(0);
 
-SharedMemory::SharedMemoryType OptimalShmemType()
+mozilla::ipc::SharedMemory::SharedMemoryType OptimalShmemType()
 {
-  return SharedMemory::TYPE_BASIC;
+  return mozilla::ipc::SharedMemory::TYPE_BASIC;
 }
 
 bool
@@ -46,7 +46,7 @@ ISurfaceAllocator::AllocSharedImageSurface(const gfxIntSize& aSize,
                                gfxContentType aContent,
                                gfxSharedImageSurface** aBuffer)
 {
-  SharedMemory::SharedMemoryType shmemType = OptimalShmemType();
+  mozilla::ipc::SharedMemory::SharedMemoryType shmemType = OptimalShmemType();
   gfxImageFormat format = gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
 
   nsRefPtr<gfxSharedImageSurface> back =
