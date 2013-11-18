@@ -86,7 +86,7 @@ this.AccessFu = {
     Cu.import('resource://gre/modules/accessibility/TouchAdapter.jsm');
     Cu.import('resource://gre/modules/accessibility/Presentation.jsm');
 
-    Logger.info('Enabled');
+    Logger.info('enable');
 
     for each (let mm in Utils.AllMessageManagers) {
       this._addMessageListeners(mm);
@@ -145,7 +145,7 @@ this.AccessFu = {
 
     this._enabled = false;
 
-    Logger.info('Disabled');
+    Logger.info('disable');
 
     Utils.win.document.removeChild(this.stylesheet.get());
 
@@ -524,8 +524,9 @@ var Output = {
 
       for (let action of aActions) {
         let window = Utils.win;
-        Logger.debug('tts.' + action.method, '"' + action.data + '"',
-                     JSON.stringify(action.options));
+        Logger.info('tts.' + action.method,
+                    '"' + action.data + '"',
+                    JSON.stringify(action.options));
 
         if (!action.options.enqueue && this.webspeechEnabled) {
           window.speechSynthesis.cancel();
@@ -714,8 +715,8 @@ var Input = {
 
   _handleGesture: function _handleGesture(aGesture) {
     let gestureName = aGesture.type + aGesture.touches.length;
-    Logger.debug('Gesture', aGesture.type,
-                 '(fingers: ' + aGesture.touches.length + ')');
+    Logger.info('Gesture', aGesture.type,
+                '(fingers: ' + aGesture.touches.length + ')');
 
     switch (gestureName) {
       case 'dwell1':
