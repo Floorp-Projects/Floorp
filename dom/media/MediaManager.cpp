@@ -110,7 +110,7 @@ static nsresult CompareDictionaries(JSContext* aCx, JSObject *aA,
       bool success = JS_IdToValue(aCx, props[i], nameval.address());
       NS_ENSURE_TRUE(success, NS_ERROR_UNEXPECTED);
 
-      JS::Rooted<JSString*> namestr(aCx, JS_ValueToString(aCx, nameval));
+      JS::Rooted<JSString*> namestr(aCx, JS::ToString(aCx, nameval));
       NS_ENSURE_TRUE(namestr, NS_ERROR_UNEXPECTED);
       aDifference->Assign(JS_GetStringCharsZ(aCx, namestr));
       return NS_OK;

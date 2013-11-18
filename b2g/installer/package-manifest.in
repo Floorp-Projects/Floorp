@@ -70,22 +70,15 @@
 #endif
 #ifdef XP_WIN32
 #ifndef MOZ_DEBUG
-#if MOZ_MSVC_REDIST == 1400
-@BINPATH@/Microsoft.VC80.CRT.manifest
-@BINPATH@/msvcm80.dll
-@BINPATH@/msvcp80.dll
-@BINPATH@/msvcr80.dll
-#elif MOZ_MSVC_REDIST == 1500
-@BINPATH@/Microsoft.VC90.CRT.manifest
-@BINPATH@/msvcm90.dll
-@BINPATH@/msvcp90.dll
-@BINPATH@/msvcr90.dll
-#elif MOZ_MSVC_REDIST == 1600
+#if MOZ_MSVC_REDIST == 1600
 @BINPATH@/msvcp100.dll
 @BINPATH@/msvcr100.dll
 #elif MOZ_MSVC_REDIST == 1700
 @BINPATH@/msvcp110.dll
 @BINPATH@/msvcr110.dll
+#elif MOZ_MSVC_REDIST == 1800
+@BINPATH@/msvcp120.dll
+@BINPATH@/msvcr120.dll
 #endif
 #endif
 #endif
@@ -411,6 +404,8 @@
 @BINPATH@/components/NetworkInterfaceListService.manifest
 @BINPATH@/components/NetworkManager.js
 @BINPATH@/components/NetworkManager.manifest
+@BINPATH@/components/NetworkService.js
+@BINPATH@/components/NetworkService.manifest
 @BINPATH@/components/NetworkStatsManager.js
 @BINPATH@/components/NetworkStatsManager.manifest
 @BINPATH@/components/NetworkStatsServiceProxy.js

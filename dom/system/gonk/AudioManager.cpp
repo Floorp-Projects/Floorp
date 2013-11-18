@@ -310,7 +310,7 @@ AudioManager::Observe(nsISupports* aSubject,
       return NS_OK;
     }
 
-    JS::Rooted<JSString*> jsKey(cx, JS_ValueToString(cx, key));
+    JS::Rooted<JSString*> jsKey(cx, JS::ToString(cx, key));
     if (!jsKey) {
       return NS_OK;
     }

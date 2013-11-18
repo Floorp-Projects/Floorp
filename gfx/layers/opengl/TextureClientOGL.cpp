@@ -66,21 +66,6 @@ SharedTextureClientOGL::IsAllocated() const
   return mHandle != 0;
 }
 
-#ifdef XP_MACOSX
-bool
-MacIOSurfaceTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
-{
-  MOZ_ASSERT(IsValid());
-  if (!IsAllocated()) {
-    return false;
-  }
-  aOutDescriptor = SurfaceDescriptorMacIOSurface(mSurface->GetIOSurfaceID(),
-                                                 mSurface->GetContentsScaleFactor(),
-                                                 mSurface->HasAlpha());
-  return true;
-}
-#endif
-
 DeprecatedTextureClientSharedOGL::DeprecatedTextureClientSharedOGL(CompositableForwarder* aForwarder,
                                                const TextureInfo& aTextureInfo)
   : DeprecatedTextureClient(aForwarder, aTextureInfo)

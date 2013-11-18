@@ -96,7 +96,7 @@
       gQueue.push(new focusElmWhileSubdocIsFocused("link"));
 
       gQueue.push(new synthTab(editableDoc, new focusChecker(editableDoc)));
-      if (WIN) {
+      if (WIN || LINUX) {
         // Alt key is used to active menubar and focus menu item on Windows,
         // other platforms requires setting a ui.key.menuAccessKeyFocuses
         // preference.

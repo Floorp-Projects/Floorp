@@ -20,7 +20,7 @@ EXPORTS.mozilla.net += [
     'WebSocketChannelParent.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'BaseWebSocketChannel.cpp',
     'WebSocketChannel.cpp',
     'WebSocketChannelChild.cpp',

@@ -83,7 +83,7 @@
     <content>
       <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
         <xul:toolbarbutton ondblclick="event.stopPropagation();"
-                           class="messageCloseButton tabbable"
+                           class="messageCloseButton close-icon tabbable"
                            xbl:inherits="hidden=hideclose"
                            tooltiptext="&closeNotification.tooltip;"
                            oncommand="document.getBindingParent(this).close()"/>

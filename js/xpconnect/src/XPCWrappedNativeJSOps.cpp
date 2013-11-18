@@ -387,14 +387,6 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     if (!member->NewFunctionObject(ccx, iface, obj, funval.address()))
         return false;
 
-#ifdef off_DEBUG_jband
-    {
-        static int cloneCount = 0;
-        if (!(++cloneCount%10))
-            printf("<><><> %d cloned functions created\n", cloneCount);
-    }
-#endif
-
     if (member->IsMethod()) {
         AutoResolveName arn(ccx, id);
         if (resolved)

@@ -406,12 +406,12 @@ LiveRangeAllocator<VREG>::init()
     // Initialize fixed intervals.
     for (size_t i = 0; i < AnyRegister::Total; i++) {
         AnyRegister reg = AnyRegister::FromCode(i);
-        LiveInterval *interval = new LiveInterval(0);
+        LiveInterval *interval = new(alloc()) LiveInterval(0);
         interval->setAllocation(LAllocation(reg));
         fixedIntervals[i] = interval;
     }
 
-    fixedIntervalsUnion = new LiveInterval(0);
+    fixedIntervalsUnion = new(alloc()) LiveInterval(0);
 
     if (!vregs.init(mir, graph.numVirtualRegisters()))
         return false;
@@ -426,7 +426,7 @@ LiveRangeAllocator<VREG>::init()
             for (size_t j = 0; j < ins->numDefs(); j++) {
                 LDefinition *def = ins->getDef(j);
                 if (def->policy() != LDefinition::PASSTHROUGH) {
-                    if (!vregs[def].init(block, *ins, def, /* isTemp */ false))
+                    if (!vregs[def].init(alloc(), block, *ins, def, /* isTemp */ false))
                         return false;
                 }
             }
@@ -435,14 +435,14 @@ LiveRangeAllocator<VREG>::init()
                 LDefinition *def = ins->getTemp(j);
                 if (def->isBogusTemp())
                     continue;
-                if (!vregs[def].init(block, *ins, def, /* isTemp */ true))
+                if (!vregs[def].init(alloc(), block, *ins, def, /* isTemp */ true))
                     return false;
             }
         }
         for (size_t j = 0; j < block->numPhis(); j++) {
             LPhi *phi = block->getPhi(j);
             LDefinition *def = phi->getDef(0);
-            if (!vregs[def].init(block, phi, def, /* isTemp */ false))
+            if (!vregs[def].init(alloc(), block, phi, def, /* isTemp */ false))
                 return false;
         }
     }
@@ -491,7 +491,7 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
         return false;
 
     Vector<MBasicBlock *, 1, SystemAllocPolicy> loopWorkList;
-    BitSet *loopDone = BitSet::New(graph.numBlockIds());
+    BitSet *loopDone = BitSet::New(alloc(), graph.numBlockIds());
     if (!loopDone)
         return false;
 
@@ -502,7 +502,7 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
         LBlock *block = graph.getBlock(i - 1);
         MBasicBlock *mblock = block->mir();
 
-        BitSet *live = BitSet::New(graph.numVirtualRegisters());
+        BitSet *live = BitSet::New(alloc(), graph.numVirtualRegisters());
         if (!live)
             return false;
         liveIn[mblock->id()] = live;
@@ -659,16 +659,16 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
             DebugOnly<bool> hasUseRegister = false;
             DebugOnly<bool> hasUseRegisterAtStart = false;
 
-            for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next()) {
-                if (alloc->isUse()) {
-                    LUse *use = alloc->toUse();
+            for (LInstruction::InputIterator inputAlloc(**ins); inputAlloc.more(); inputAlloc.next()) {
+                if (inputAlloc->isUse()) {
+                    LUse *use = inputAlloc->toUse();
 
                     // The first instruction, LLabel, has no uses.
                     JS_ASSERT(inputOf(*ins) > outputOf(block->firstId()));
 
                     // Call uses should always be at-start or fixed, since the fixed intervals
                     // use all registers.
-                    JS_ASSERT_IF(ins->isCall() && !alloc.isSnapshotInput(),
+                    JS_ASSERT_IF(ins->isCall() && !inputAlloc.isSnapshotInput(),
                                  use->isFixedRegister() || use->usedAtStart());
 
 #ifdef DEBUG
@@ -730,7 +730,7 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                     LiveInterval *interval = vregs[use].getInterval(0);
                     if (!interval->addRangeAtHead(inputOf(block->firstId()), forLSRA ? to : to.next()))
                         return false;
-                    interval->addUse(new UsePosition(use, to));
+                    interval->addUse(new(alloc()) UsePosition(use, to));
 
                     live->insert(use->virtualRegister());
                 }

@@ -2004,8 +2004,12 @@ public:
   already_AddRefed<nsINode>
     ImportNode(nsINode& aNode, bool aDeep, mozilla::ErrorResult& rv) const;
   already_AddRefed<nsINode>
-    ImportNode(nsINode& aNode, mozilla::ErrorResult& rv) const
+    ImportNode(nsINode& aNode, mozilla::ErrorResult& rv)
   {
+    if (aNode.HasChildNodes()) {
+      // Flag it as an error, not a warning, to make people actually notice.
+      WarnOnceAbout(eUnsafeImportNode, true);
+    }
     return ImportNode(aNode, true, rv);
   }
   nsINode* AdoptNode(nsINode& aNode, mozilla::ErrorResult& rv);

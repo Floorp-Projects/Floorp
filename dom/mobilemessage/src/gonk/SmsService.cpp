@@ -84,13 +84,6 @@ SmsService::GetSmsDefaultServiceId(uint32_t* aServiceId)
 }
 
 NS_IMETHODIMP
-SmsService::HasSupport(bool* aHasSupport)
-{
-  *aHasSupport = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 SmsService::GetSegmentInfoForText(const nsAString& aText,
                                   nsIMobileMessageCallback* aRequest)
 {

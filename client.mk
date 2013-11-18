@@ -128,6 +128,11 @@ ifdef AUTOCLOBBER
 export AUTOCLOBBER=1
 endif
 
+ifdef MOZ_PARALLEL_BUILD
+  MOZ_MAKE_FLAGS := $(filter-out -j%,$(MOZ_MAKE_FLAGS))
+  MOZ_MAKE_FLAGS += -j$(MOZ_PARALLEL_BUILD)
+endif
+
 # Automatically add -jN to make flags if not defined. N defaults to number of cores.
 ifeq (,$(findstring -j,$(MOZ_MAKE_FLAGS)))
   cores=$(shell $(PYTHON) -c 'import multiprocessing; print(multiprocessing.cpu_count())')

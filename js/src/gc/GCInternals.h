@@ -7,7 +7,10 @@
 #ifndef gc_GCInternals_h
 #define gc_GCInternals_h
 
+#include "jscntxt.h"
 #include "jsworkers.h"
+
+#include "gc/Zone.h"
 
 #include "vm/Runtime.h"
 
@@ -49,19 +52,19 @@ class AutoTraceSession
     ~AutoTraceSession();
 
   protected:
+    AutoLockForExclusiveAccess lock;
     JSRuntime *runtime;
 
   private:
     AutoTraceSession(const AutoTraceSession&) MOZ_DELETE;
     void operator=(const AutoTraceSession&) MOZ_DELETE;
 
-    js::HeapState prevState;
+    HeapState prevState;
 };
 
 struct AutoPrepareForTracing
 {
     AutoFinishGC finish;
-    AutoPauseWorkersForTracing pause;
     AutoTraceSession session;
     AutoCopyFreeListToArenas copy;
 

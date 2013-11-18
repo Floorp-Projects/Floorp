@@ -247,14 +247,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
 
-NS_IMPL_EVENT_HANDLER(nsXHREventTarget, loadstart)
-NS_IMPL_EVENT_HANDLER(nsXHREventTarget, progress)
-NS_IMPL_EVENT_HANDLER(nsXHREventTarget, abort)
-NS_IMPL_EVENT_HANDLER(nsXHREventTarget, error)
-NS_IMPL_EVENT_HANDLER(nsXHREventTarget, load)
-NS_IMPL_EVENT_HANDLER(nsXHREventTarget, timeout)
-NS_IMPL_EVENT_HANDLER(nsXHREventTarget, loadend)
-
 void
 nsXHREventTarget::DisconnectFromOwner()
 {

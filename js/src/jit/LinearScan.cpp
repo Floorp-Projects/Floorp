@@ -650,7 +650,7 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
     JS_ASSERT(reg);
 
     // Do the split.
-    LiveInterval *newInterval = new LiveInterval(interval->vreg(), interval->index() + 1);
+    LiveInterval *newInterval = new(alloc()) LiveInterval(interval->vreg(), interval->index() + 1);
     if (!interval->splitFrom(pos, newInterval))
         return false;
 

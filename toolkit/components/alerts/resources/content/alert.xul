@@ -36,7 +36,7 @@
     </box>
 
     <vbox class="alertCloseBox">
-      <toolbarbutton class="alertCloseButton"
+      <toolbarbutton class="alertCloseButton close-icon"
                      tooltiptext="&closeAlert.tooltip;"
                      onclick="event.stopPropagation();"
                      oncommand="close();"/>

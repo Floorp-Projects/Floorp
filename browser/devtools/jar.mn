@@ -95,3 +95,5 @@ browser.jar:
     content/browser/devtools/app-manager/index.js                      (app-manager/content/index.js)
     content/browser/devtools/app-manager/help.xhtml                    (app-manager/content/help.xhtml)
     content/browser/devtools/app-manager/manifest-editor.js            (app-manager/content/manifest-editor.js)
+    content/browser/devtools/spectrum-frame.xhtml                      (shared/widgets/spectrum-frame.xhtml)
+    content/browser/devtools/spectrum.css                              (shared/widgets/spectrum.css)

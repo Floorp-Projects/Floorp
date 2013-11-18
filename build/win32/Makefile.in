@@ -17,24 +17,6 @@ include $(topsrcdir)/config/rules.mk
 ifdef WIN32_REDIST_DIR
 ifndef MOZ_DEBUG
 
-ifeq (1400,$(_MSC_VER))
-REDIST_FILES = \
-  Microsoft.VC80.CRT.manifest \
-  msvcm80.dll \
-  msvcp80.dll \
-  msvcr80.dll \
-  $(NULL)
-endif
-
-ifeq (1500,$(_MSC_VER))
-REDIST_FILES = \
-  Microsoft.VC90.CRT.manifest \
-  msvcm90.dll \
-  msvcp90.dll \
-  msvcr90.dll \
-  $(NULL)
-endif
-
 ifeq (1600,$(_MSC_VER))
 REDIST_FILES = \
   msvcp100.dll \

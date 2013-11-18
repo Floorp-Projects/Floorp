@@ -120,7 +120,7 @@ DeprecatedTextureHostD3D9::GetTileRect()
   return nsIntRect(rect.x, rect.y, rect.width, rect.height);
 }
 
-static uint32_t GetRequiredTiles(uint32_t aSize, uint32_t aMaxSize)
+static uint32_t GetRequiredTilesD3D9(uint32_t aSize, uint32_t aMaxSize)
 {
   uint32_t requiredTiles = aSize / aMaxSize;
   if (aSize % aMaxSize) {
@@ -292,8 +292,8 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
     mIsTiled = false;
   } else {
     mIsTiled = true;
-    uint32_t tileCount = GetRequiredTiles(size.width, maxSize) *
-                         GetRequiredTiles(size.height, maxSize);
+    uint32_t tileCount = GetRequiredTilesD3D9(size.width, maxSize) *
+                         GetRequiredTilesD3D9(size.height, maxSize);
     mTileTextures.resize(tileCount);
 
     for (uint32_t i = 0; i < tileCount; i++) {
@@ -315,8 +315,8 @@ IntRect
 DeprecatedTextureHostD3D9::GetTileRect(uint32_t aID) const
 {
   uint32_t maxSize = mCompositor->GetMaxTextureSize();
-  uint32_t horizontalTiles = GetRequiredTiles(mSize.width, maxSize);
-  uint32_t verticalTiles = GetRequiredTiles(mSize.height, maxSize);
+  uint32_t horizontalTiles = GetRequiredTilesD3D9(mSize.width, maxSize);
+  uint32_t verticalTiles = GetRequiredTilesD3D9(mSize.height, maxSize);
 
   uint32_t verticalTile = aID / horizontalTiles;
   uint32_t horizontalTile = aID % horizontalTiles;
@@ -444,8 +444,8 @@ DeprecatedTextureHostSystemMemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
   } else {
     mIsTiled = true;
 
-    uint32_t tileCount = GetRequiredTiles(mSize.width, maxSize) *
-                         GetRequiredTiles(mSize.height, maxSize);
+    uint32_t tileCount = GetRequiredTilesD3D9(mSize.width, maxSize) *
+                         GetRequiredTilesD3D9(mSize.height, maxSize);
     mTileTextures.resize(tileCount);
 
     for (uint32_t i = 0; i < tileCount; i++) {
@@ -557,8 +557,8 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
   } else {
     mIsTiled = true;
 
-    uint32_t tileCount = GetRequiredTiles(mSize.width, maxSize) *
-                         GetRequiredTiles(mSize.height, maxSize);
+    uint32_t tileCount = GetRequiredTilesD3D9(mSize.width, maxSize) *
+                         GetRequiredTilesD3D9(mSize.height, maxSize);
     mTileTextures.resize(tileCount);
 
     for (uint32_t i = 0; i < tileCount; i++) {

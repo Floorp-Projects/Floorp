@@ -25,7 +25,7 @@ ManifestEditor.prototype = {
 
   show: function(containerElement) {
     let deferred = promise.defer();
-    let iframe = document.createElement("iframe");
+    let iframe = this._iframe = document.createElement("iframe");
 
     iframe.addEventListener("load", function onIframeLoad() {
       iframe.removeEventListener("load", onIframeLoad, true);
@@ -111,5 +111,11 @@ ManifestEditor.prototype = {
     }
 
     return promise.resolve();
+  },
+
+  destroy: function() {
+    if (this._iframe) {
+      this._iframe.remove();
+    }
   }
 };

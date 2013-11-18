@@ -15,34 +15,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class DOMSVGNumber MOZ_FINAL : public nsIDOMSVGNumber
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  DOMSVGNumber() 
-    : mVal(0) {}
-    
-  NS_IMETHOD GetValue(float* aResult)
-    { *aResult = mVal; return NS_OK; }
-  NS_IMETHOD SetValue(float aValue)
-    { NS_ENSURE_FINITE(aValue, NS_ERROR_ILLEGAL_VALUE);
-      mVal = aValue;
-      return NS_OK; }
-
-private:
-  float mVal;
-};
-
-NS_IMPL_ADDREF(DOMSVGNumber)
-NS_IMPL_RELEASE(DOMSVGNumber)
-
-NS_INTERFACE_MAP_BEGIN(DOMSVGNumber)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGNumber)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGNumber)
-NS_INTERFACE_MAP_END
-
 /* Implementation */
 
 static nsSVGAttrTearoffTable<nsSVGNumber2, nsSVGNumber2::DOMAnimatedNumber>

@@ -37,7 +37,7 @@
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
-#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_HAVE_LOG, etc
+#include "mozilla/layers/LayersTypes.h"  // for etc
 #include "ipc/ShadowLayerUtils.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -316,6 +316,10 @@ LayerManagerComposite::Render()
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
     return;
+  }
+
+  if (gfxPlatform::GetPrefLayersDump()) {
+    this->Dump();
   }
 
   if (mComposer2D && mComposer2D->TryRender(mRoot, mWorldMatrix)) {

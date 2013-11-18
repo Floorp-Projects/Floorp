@@ -514,7 +514,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
      * TextureView instead of a SurfaceView, the first phase is skipped.
      */
     private void onSizeChanged(int width, int height) {
-        if (!mGLController.hasValidSurface() || mSurfaceView == null) {
+        if (mSurfaceView == null) {
             surfaceChanged(width, height);
             return;
         }
@@ -527,7 +527,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
     }
 
     private void surfaceChanged(int width, int height) {
-        mGLController.surfaceChanged(width, height);
+        mGLController.serverSurfaceChanged(width, height);
 
         if (mListener != null) {
             mListener.surfaceChanged(width, height);
@@ -537,7 +537,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
     }
 
     private void onDestroyed() {
-        mGLController.surfaceDestroyed();
+        mGLController.serverSurfaceDestroyed();
     }
 
     public Object getNativeWindow() {

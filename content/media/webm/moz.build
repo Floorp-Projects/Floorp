@@ -11,7 +11,7 @@ EXPORTS += [
     'WebMReader.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'WebMBufferedParser.cpp',
     'WebMDecoder.cpp',
     'WebMReader.cpp',

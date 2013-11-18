@@ -84,6 +84,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
                                    "@mozilla.org/network/manager;1",
                                    "nsINetworkManager");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gNetworkService",
+                                   "@mozilla.org/network/service;1",
+                                   "nsINetworkService");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
@@ -329,7 +333,7 @@ var WifiManager = (function() {
     if (!network)
       return;
 
-    gNetworkManager.setNetworkProxy(network);
+    gNetworkService.setNetworkProxy(network);
   }
 
   var staticIpConfig = Object.create(null);
@@ -864,7 +868,7 @@ var WifiManager = (function() {
             manager.state = "UNINITIALIZED";
             return;
           }
-          gNetworkManager.setWifiOperationMode(manager.ifname,
+          gNetworkService.setWifiOperationMode(manager.ifname,
                                                WIFI_FIRMWARE_STATION,
                                                function (status) {
             if (status) {
@@ -1613,7 +1617,6 @@ function WifiWorker() {
 
     if ("pin" in net) {
       net.pin = quote(net.pin);
-      net.pcsc = quote("");
     }
 
     if ("phase1" in net)

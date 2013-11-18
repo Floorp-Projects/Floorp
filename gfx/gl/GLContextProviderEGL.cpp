@@ -127,11 +127,6 @@ namespace gl {
     (_array).AppendElement(_k);                 \
 } while (0)
 
-#ifndef MOZ_ANDROID_OMTC
-static EGLSurface
-CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config);
-#endif
-
 static bool
 CreateConfig(EGLConfig* aConfig);
 
@@ -170,6 +165,39 @@ is_power_of_two(int v)
         return true;
 
     return (v & (v-1)) == 0;
+}
+
+static void
+DestroySurface(EGLSurface oldSurface) {
+    if (oldSurface != EGL_NO_SURFACE) {
+        sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
+                                 EGL_NO_SURFACE, EGL_NO_SURFACE,
+                                 EGL_NO_CONTEXT);
+        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), oldSurface);
+    }
+}
+
+static EGLSurface
+CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
+    EGLSurface newSurface = EGL_NO_SURFACE;
+
+    #ifdef MOZ_ANDROID_OMTC
+        mozilla::AndroidBridge::Bridge()->RegisterCompositor();
+        newSurface = mozilla::AndroidBridge::Bridge()->CreateEGLSurfaceForCompositor();
+        if (newSurface == EGL_NO_SURFACE) {
+            return EGL_NO_SURFACE;
+        }
+    #else
+        MOZ_ASSERT(widget != nullptr);
+        newSurface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, GET_NATIVE_WINDOW(widget), 0);
+        #ifdef MOZ_WIDGET_GONK
+            gScreenBounds.x = 0;
+            gScreenBounds.y = 0;
+            sEGLLibrary.fQuerySurface(EGL_DISPLAY(), newSurface, LOCAL_EGL_WIDTH, &gScreenBounds.width);
+            sEGLLibrary.fQuerySurface(EGL_DISPLAY(), newSurface, LOCAL_EGL_HEIGHT, &gScreenBounds.height);
+        #endif
+    #endif
+    return newSurface;
 }
 
 class GLContextEGL : public GLContext
@@ -232,9 +260,8 @@ public:
         : GLContext(caps, shareContext, isOffscreen)
         , mConfig(config)
         , mSurface(surface)
-        , mCurSurface(surface)
+        , mSurfaceOverride(EGL_NO_SURFACE)
         , mContext(context)
-        , mPlatformContext(nullptr)
         , mThebesSurface(nullptr)
         , mBound(false)
         , mIsPBuffer(false)
@@ -273,20 +300,12 @@ public:
 
         MarkDestroyed();
 
-        // If mGLWidget is non-null, then we've been given it by the GL context provider,
-        // and it's managed by the widget implementation. In this case, We can't destroy
-        // our contexts.
-        if (mPlatformContext)
-            return;
-
 #ifdef DEBUG
         printf_stderr("Destroying context %p surface %p on display %p\n", mContext, mSurface, EGL_DISPLAY());
 #endif
 
         sEGLLibrary.fDestroyContext(EGL_DISPLAY(), mContext);
-        if (mSurface && !mPlatformContext) {
-            sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
-        }
+        mozilla::gl::DestroySurface(mSurface);
     }
 
     GLContextType GetContextType() {
@@ -412,15 +431,7 @@ public:
     }
 #endif
 
-    virtual void MakeCurrent_EGLSurface(void* surf) {
-        EGLSurface eglSurface = (EGLSurface)surf;
-        if (!eglSurface)
-            eglSurface = mSurface;
-
-        if (eglSurface == mCurSurface)
-            return;
-
-        // Else, surface changed...
+    virtual void SetEGLSurfaceOverride(EGLSurface surf) MOZ_OVERRIDE {
         if (Screen()) {
             /* Blit `draw` to `read` if we need to, before we potentially juggle
              * `read` around. If we don't, we might attach a different `read`,
@@ -430,7 +441,7 @@ public:
             Screen()->AssureBlitted();
         }
 
-        mCurSurface = eglSurface;
+        mSurfaceOverride = surf ? (EGLSurface) surf : mSurface;
         MakeCurrent(true);
     }
 
@@ -441,10 +452,12 @@ public:
         // where MakeCurrent with an already-current context is
         // still expensive.
         if (aForce || sEGLLibrary.fGetCurrentContext() != mContext) {
+            EGLSurface surface = mSurfaceOverride != EGL_NO_SURFACE
+                                 ? mSurfaceOverride
+                                 : mSurface;
             succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
-                                                 mCurSurface, mCurSurface,
+                                                 surface, surface,
                                                  mContext);
-            
             int eglError = sEGLLibrary.fGetError();
             if (!succeeded) {
                 if (eglError == LOCAL_EGL_CONTEXT_LOST) {
@@ -468,33 +481,28 @@ public:
 
     virtual bool
     RenewSurface() {
-        sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE,
-                                 EGL_NO_CONTEXT);
-        if (!mSurface) {
-#ifdef MOZ_ANDROID_OMTC
-            mSurface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
-            if (!mSurface) {
-                return false;
-            }
-#else
-            EGLConfig config;
-            CreateConfig(&config);
-            mSurface = CreateSurfaceForWindow(nullptr, config);
+#ifndef MOZ_WIDGET_ANDROID
+        MOZ_CRASH("unimplemented");
+        // to support this on non-Android platforms, need to keep track of the nsIWidget that
+        // this GLContext was created for (with CreateForWindow) so that we know what to
+        // pass again to CreateSurfaceForWindow below.
+        // The reason why Android doesn't need this is that it delegates EGLSurface creation to
+        // Java code which is the only thing that knows about our actual widget.
 #endif
+        // unconditionally release the surface and create a new one. Don't try to optimize this away.
+        // If we get here, then by definition we know that we want to get a new surface.
+        ReleaseSurface();
+        mSurface = mozilla::gl::CreateSurfaceForWindow(nullptr, mConfig); // the nullptr here is where we assume Android.
+        if (mSurface == EGL_NO_SURFACE) {
+            return false;
         }
-        return sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
-                                        mSurface, mSurface,
-                                        mContext);
+        return MakeCurrent(true);
     }
 
     virtual void
     ReleaseSurface() {
-        if (mSurface && !mPlatformContext) {
-            sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE,
-                                     EGL_NO_CONTEXT);
-            sEGLLibrary.fDestroySurface(EGL_DISPLAY(), mSurface);
-            mSurface = nullptr;
-        }
+        DestroySurface(mSurface);
+        mSurface = nullptr;
     }
 
     bool SetupLookupFunction()
@@ -516,7 +524,7 @@ public:
 
     bool SwapBuffers()
     {
-        if (mSurface && !mPlatformContext) {
+        if (mSurface) {
 #ifdef MOZ_WIDGET_GONK
             if (!mIsOffscreen) {
                 if (mHwc) {
@@ -549,10 +557,6 @@ public:
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf) {
         mThebesSurface = aSurf;
-    }
-
-    void SetPlatformContext(void *context) {
-        mPlatformContext = context;
     }
 
     EGLContext Context() {
@@ -588,9 +592,8 @@ protected:
 
     EGLConfig  mConfig;
     EGLSurface mSurface;
-    EGLSurface mCurSurface;
+    EGLSurface mSurfaceOverride;
     EGLContext mContext;
-    void *mPlatformContext;
     nsRefPtr<gfxASurface> mThebesSurface;
     bool mBound;
 
@@ -1119,33 +1122,6 @@ CreateConfig(EGLConfig* aConfig)
     }
 }
 
-// When MOZ_ANDROID_OMTC is defined,
-// use mozilla::AndroidBridge::Bridge()->ProvideEGLSurface() instead.
-#ifndef MOZ_ANDROID_OMTC
-static EGLSurface
-CreateSurfaceForWindow(nsIWidget *aWidget, EGLConfig config)
-{
-    EGLSurface surface;
-
-#ifdef DEBUG
-    sEGLLibrary.DumpEGLConfig(config);
-#endif
-
-#if !defined(MOZ_WIDGET_ANDROID)
-    surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, GET_NATIVE_WINDOW(aWidget), 0);
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-    gScreenBounds.x = 0;
-    gScreenBounds.y = 0;
-    sEGLLibrary.fQuerySurface(EGL_DISPLAY(), surface, LOCAL_EGL_WIDTH, &gScreenBounds.width);
-    sEGLLibrary.fQuerySurface(EGL_DISPLAY(), surface, LOCAL_EGL_HEIGHT, &gScreenBounds.height);
-#endif
-
-    return surface;
-}
-#endif
-
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 {
@@ -1155,42 +1131,15 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
     bool doubleBuffered = true;
 
-    bool hasNativeContext = aWidget->HasGLContext();
-    EGLContext eglContext = sEGLLibrary.fGetCurrentContext();
-    if (hasNativeContext && eglContext) {
-        void* platformContext = eglContext;
-        SurfaceCaps caps = SurfaceCaps::Any();
-        EGLConfig config = EGL_NO_CONFIG;
-        EGLSurface surface = sEGLLibrary.fGetCurrentSurface(LOCAL_EGL_DRAW);
-        nsRefPtr<GLContextEGL> glContext =
-            new GLContextEGL(caps,
-                             nullptr, false,
-                             config, surface, eglContext);
-
-        if (!glContext->Init())
-            return nullptr;
-
-        glContext->MakeCurrent();
-        glContext->SetIsDoubleBuffered(doubleBuffered);
-        glContext->SetPlatformContext(platformContext);
-
-        return glContext.forget();
-    }
-
     EGLConfig config;
     if (!CreateConfig(&config)) {
-        printf_stderr("Failed to create EGL config!\n");
+        printf_stderr("Failed to create EGLConfig!\n");
         return nullptr;
     }
 
-#ifdef MOZ_ANDROID_OMTC
-    mozilla::AndroidBridge::Bridge()->RegisterCompositor();
-    EGLSurface surface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
-#else
-    EGLSurface surface = CreateSurfaceForWindow(aWidget, config);
-#endif
+    EGLSurface surface = mozilla::gl::CreateSurfaceForWindow(aWidget, config);
 
-    if (!surface) {
+    if (surface == EGL_NO_SURFACE) {
         printf_stderr("Failed to create EGLSurface!\n");
         return nullptr;
     }
@@ -1202,7 +1151,8 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
                                       config, surface);
 
     if (!glContext) {
-        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), surface);
+        printf_stderr("Failed to create EGLContext!\n");
+        DestroySurface(surface);
         return nullptr;
     }
 

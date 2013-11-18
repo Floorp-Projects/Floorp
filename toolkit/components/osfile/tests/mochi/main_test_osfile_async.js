@@ -157,7 +157,6 @@ let test = maketest("Main", function main(test) {
     yield test_read_write();
     yield test_read_write_all();
     yield test_position();
-    yield test_mkdir();
     yield test_iter();
     yield test_exists();
     yield test_debug_test();
@@ -425,68 +424,6 @@ let test_position = maketest("position", function position(test) {
       }
     } finally {
       yield file.close();
-    }
-  });
-});
-
-/**
- * Test OS.File.{removeEmptyDir, makeDir}
- */
-let test_mkdir = maketest("mkdir", function mkdir(test) {
-  return Task.spawn(function() {
-    const DIRNAME = "test_dir.tmp";
-
-    // Cleanup
-    yield OS.File.removeEmptyDir(DIRNAME, {ignoreAbsent: true});
-
-    // Remove an absent directory with ignoreAbsent
-    yield OS.File.removeEmptyDir(DIRNAME, {ignoreAbsent: true});
-    test.ok(true, "Removing an absent directory with ignoreAbsent succeeds");
-
-    // Remove an absent directory without ignoreAbsent
-    try {
-      yield OS.File.removeEmptyDir(DIRNAME);
-      test.fail("Removing an absent directory without ignoreAbsent should have failed");
-    } catch (err) {
-      test.ok(err, "Removing an absent directory without ignoreAbsent throws the right error");
-      test.ok(err instanceof OS.File.Error, "Error is an OS.File.Error");
-      test.ok(err.becauseNoSuchFile, "Error mentions that the file does not exist");
-    }
-
-    // Creating a directory (should succeed)
-    test.ok(true, "Creating a directory");
-    yield OS.File.makeDir(DIRNAME);
-    let stat = yield OS.File.stat(DIRNAME);
-    test.ok(stat.isDir, "I have effectively created a directory");
-
-    // Creating a directory with ignoreExisting (should succeed)
-    try {
-      yield OS.File.makeDir(DIRNAME, {ignoreExisting: true});
-      test.ok(true, "Creating a directory with ignoreExisting succeeds");
-    } catch(err) {
-      test.ok(false, "Creating a directory with ignoreExisting fails");
-    }
-
-    // Creating a directory (should fail)
-    try {
-      yield OS.File.makeDir(DIRNAME);
-      test.fail("Creating over an existing directory should have failed");
-    } catch (err) {
-      test.ok(err, "Creating over an existing directory throws the right error");
-      test.ok(err instanceof OS.File.Error, "Error is an OS.File.Error");
-      test.ok(err.becauseExists, "Error mentions that the file already exists");
-    }
-
-    // Remove a directory and check the result
-    yield OS.File.removeEmptyDir(DIRNAME);
-    test.ok(true, "Removing empty directory suceeded");
-    try {
-      yield OS.File.stat(DIRNAME);
-      test.fail("Removing directory should have failed");
-    } catch (err) {
-      test.ok(err, "Directory was effectively removed");
-      test.ok(err instanceof OS.File.Error, "Error is an OS.File.Error");
-      test.ok(err.becauseNoSuchFile, "Error mentions that the file does not exist");
     }
   });
 });

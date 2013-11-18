@@ -23,6 +23,7 @@
 #include "nsIUploadChannel2.h"
 #include "nsIProgressEventSink.h"
 #include "nsIURI.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIStringEnumerator.h"
 #include "nsISupportsPriority.h"
 #include "nsIApplicationCache.h"

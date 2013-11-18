@@ -1297,9 +1297,8 @@ js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
                                   nullptr, nullptr,
                                   0))
         return nullptr;
-    global->setReservedSlot(JSProto_TypedObject, moduleValue);
+    global->setConstructor(JSProto_TypedObject, moduleValue);
     global->setArrayType(arrayType);
-    global->markStandardClassInitializedNoProto(&TypedObjectClass);
 
     //  Handle
 

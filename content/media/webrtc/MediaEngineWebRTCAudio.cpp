@@ -14,6 +14,10 @@
 
 namespace mozilla {
 
+#ifdef LOG
+#undef LOG
+#endif
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)

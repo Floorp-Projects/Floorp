@@ -43,6 +43,7 @@ typedef enum {HOST=1, SERVER_REFLEXIVE, PEER_REFLEXIVE, RELAYED, CTYPE_MAX} nr_i
 
 struct nr_ice_candidate_ {
   char *label;
+  char codeword[5];
   int state;
 #define NR_ICE_CAND_STATE_CREATED          1
 #define NR_ICE_CAND_STATE_INITIALIZING     2
@@ -100,6 +101,7 @@ extern char *nr_ice_candidate_type_names[];
 
 int nr_ice_candidate_create(struct nr_ice_ctx_ *ctx,nr_ice_component *component, nr_ice_socket *isock, nr_socket *osock, nr_ice_candidate_type ctype, nr_ice_stun_server *stun_server, UCHAR component_id, nr_ice_candidate **candp);
 int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, void *cb_arg);
+void nr_ice_candidate_compute_codeword(nr_ice_candidate *cand);
 int nr_ice_candidate_process_stun(nr_ice_candidate *cand, UCHAR *msg, int len, nr_transport_addr *faddr);
 int nr_ice_candidate_destroy(nr_ice_candidate **candp);
 void nr_ice_candidate_destroy_cb(NR_SOCKET s, int h, void *cb_arg);

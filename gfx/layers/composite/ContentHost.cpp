@@ -495,6 +495,7 @@ ContentHostIncremental::EnsureDeprecatedTextureHostIncremental(ISurfaceAllocator
   mUpdateList.AppendElement(new TextureCreationRequest(aTextureInfo,
                                                        aBufferRect));
   mDeAllocator = aAllocator;
+  FlushUpdateQueue();
 }
 
 void
@@ -510,6 +511,20 @@ ContentHostIncremental::UpdateIncremental(TextureIdentifier aTextureId,
                                                      aUpdated,
                                                      aBufferRect,
                                                      aBufferRotation));
+  FlushUpdateQueue();
+}
+
+void
+ContentHostIncremental::FlushUpdateQueue()
+{
+  // If we're not compositing for some reason (the window being minimized
+  // is one example), then we never process these updates and it can consume
+  // huge amounts of memory. Instead we forcibly process the updates (during the
+  // transaction) if the list gets too long.
+  static const uint32_t kMaxUpdateCount = 6;
+  if (mUpdateList.Length() >= kMaxUpdateCount) {
+    ProcessTextureUpdates();
+  }
 }
 
 void
@@ -701,7 +716,6 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
   }
 }
 
-#ifdef MOZ_LAYERS_HAVE_LOG
 void
 ContentHostSingleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
@@ -748,7 +762,6 @@ ContentHostDoubleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
     mBackHost->PrintInfo(aTo, prefix.get());
   }
 }
-#endif
 
 #ifdef MOZ_DUMP_PAINTING
 void

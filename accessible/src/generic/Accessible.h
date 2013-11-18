@@ -200,6 +200,7 @@ public:
    * Return true if ARIA role is specified on the element.
    */
   bool HasARIARole() const { return mRoleMapEntry; }
+  bool IsARIARole(nsIAtom* aARIARole) const;
 
   /**
    * Retrun ARIA role map if any.

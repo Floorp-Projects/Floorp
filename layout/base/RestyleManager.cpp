@@ -693,6 +693,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         ApplyRenderingChangeToTree(mPresContext, frame, hint);
       }
       if ((hint & nsChangeHint_RecomputePosition) && !didReflowThisFrame) {
+        ActiveLayerTracker::NotifyOffsetRestyle(frame);
         // It is possible for this to fall back to a reflow
         if (!RecomputePosition(frame)) {
           didReflowThisFrame = true;
@@ -2516,11 +2517,11 @@ ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
       !(mHintsHandled & nsChangeHint_ReconstructFrame)) {
     UndisplayedNode* undisplayed =
       frameConstructor->GetAllUndisplayedContentIn(undisplayedParent);
-    for (TreeMatchContext::AutoAncestorPusher
-           pushAncestor(undisplayed, mTreeMatchContext,
-                        undisplayedParent ? undisplayedParent->AsElement()
-                                          : nullptr);
-         undisplayed; undisplayed = undisplayed->mNext) {
+    TreeMatchContext::AutoAncestorPusher pusher(mTreeMatchContext);
+    if (undisplayed) {
+      pusher.PushAncestorAndStyleScope(undisplayedParent);
+    }
+    for (; undisplayed; undisplayed = undisplayed->mNext) {
       NS_ASSERTION(undisplayedParent ||
                    undisplayed->mContent ==
                      mPresContext->Document()->GetRootElement(),
@@ -2533,11 +2534,10 @@ ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
       // children element. Push the children element as an ancestor here because it does
       // not have a frame and would not otherwise be pushed as an ancestor.
       nsIContent* parent = undisplayed->mContent->GetParent();
-      bool pushInsertionPoint = parent && parent->IsActiveChildrenElement();
-      TreeMatchContext::AutoAncestorPusher
-        insertionPointPusher(pushInsertionPoint,
-                             mTreeMatchContext,
-                             parent && parent->IsElement() ? parent->AsElement() : nullptr);
+      TreeMatchContext::AutoAncestorPusher insertionPointPusher(mTreeMatchContext);
+      if (parent && parent->IsActiveChildrenElement()) {
+        insertionPointPusher.PushAncestorAndStyleScope(parent);
+      }
 
       nsRestyleHint thisChildHint = aChildRestyleHint;
       RestyleTracker::RestyleData undisplayedRestyleData;
@@ -2685,12 +2685,11 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
                                         nsRestyleHint aChildRestyleHint)
 {
   nsIFrame::ChildListIterator lists(aParent);
-  for (TreeMatchContext::AutoAncestorPusher
-         pushAncestor(!lists.IsDone(),
-                      mTreeMatchContext,
-                      mContent && mContent->IsElement()
-                        ? mContent->AsElement() : nullptr);
-       !lists.IsDone(); lists.Next()) {
+  TreeMatchContext::AutoAncestorPusher ancestorPusher(mTreeMatchContext);
+  if (!lists.IsDone()) {
+    ancestorPusher.PushAncestorAndStyleScope(mContent);
+  }
+  for (; !lists.IsDone(); lists.Next()) {
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       nsIFrame* child = childFrames.get();
@@ -2706,10 +2705,10 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
         // Check if the frame has a content because |child| may be a
         // nsPageFrame that does not have a content.
         nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
-        bool pushInsertionPoint = parent && parent->IsActiveChildrenElement();
-        TreeMatchContext::AutoAncestorPusher
-          insertionPointPusher(pushInsertionPoint, mTreeMatchContext,
-                               parent && parent->IsElement() ? parent->AsElement() : nullptr);
+        TreeMatchContext::AutoAncestorPusher insertionPointPusher(mTreeMatchContext);
+        if (parent && parent->IsActiveChildrenElement()) {
+          insertionPointPusher.PushAncestorAndStyleScope(parent);
+        }
 
         // only do frames that are in flow
         if (nsGkAtoms::placeholderFrame == child->GetType()) { // placeholder

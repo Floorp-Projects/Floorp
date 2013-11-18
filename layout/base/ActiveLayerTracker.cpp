@@ -29,6 +29,14 @@ public:
     : mFrame(aFrame)
     , mOpacityRestyleCount(0)
     , mTransformRestyleCount(0)
+    , mLeftRestyleCount(0)
+    , mTopRestyleCount(0)
+    , mRightRestyleCount(0)
+    , mBottomRestyleCount(0)
+    , mMarginLeftRestyleCount(0)
+    , mMarginTopRestyleCount(0)
+    , mMarginRightRestyleCount(0)
+    , mMarginBottomRestyleCount(0)
     , mContentActive(false)
   {}
   ~LayerActivity();
@@ -38,6 +46,14 @@ public:
     switch (aProperty) {
     case eCSSProperty_opacity: return mOpacityRestyleCount;
     case eCSSProperty_transform: return mTransformRestyleCount;
+    case eCSSProperty_left: return mLeftRestyleCount;
+    case eCSSProperty_top: return mTopRestyleCount;
+    case eCSSProperty_right: return mRightRestyleCount;
+    case eCSSProperty_bottom: return mBottomRestyleCount;
+    case eCSSProperty_margin_left: return mMarginLeftRestyleCount;
+    case eCSSProperty_margin_top: return mMarginTopRestyleCount;
+    case eCSSProperty_margin_right: return mMarginRightRestyleCount;
+    case eCSSProperty_margin_bottom: return mMarginBottomRestyleCount;
     default: MOZ_ASSERT(false); return mOpacityRestyleCount;
     }
   }
@@ -47,6 +63,14 @@ public:
   // Number of restyle operations detected
   uint8_t mOpacityRestyleCount;
   uint8_t mTransformRestyleCount;
+  uint8_t mLeftRestyleCount;
+  uint8_t mTopRestyleCount;
+  uint8_t mRightRestyleCount;
+  uint8_t mBottomRestyleCount;
+  uint8_t mMarginLeftRestyleCount;
+  uint8_t mMarginTopRestyleCount;
+  uint8_t mMarginRightRestyleCount;
+  uint8_t mMarginBottomRestyleCount;
   bool mContentActive;
 };
 
@@ -78,6 +102,7 @@ static void DestroyLayerActivity(void* aPropertyValue)
   delete static_cast<LayerActivity*>(aPropertyValue);
 }
 
+// Frames with this property have NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY set
 NS_DECLARE_FRAME_PROPERTY(LayerActivityProperty, DestroyLayerActivity)
 
 void
@@ -89,12 +114,16 @@ LayerActivityTracker::NotifyExpired(LayerActivity* aObject)
   aObject->mFrame = nullptr;
 
   f->SchedulePaint();
+  f->RemoveStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY);
   f->Properties().Delete(LayerActivityProperty());
 }
 
 static LayerActivity*
 GetLayerActivity(nsIFrame* aFrame)
 {
+  if (!aFrame->HasAnyStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY)) {
+    return nullptr;
+  }
   FrameProperties properties = aFrame->Properties();
   return static_cast<LayerActivity*>(properties.Get(LayerActivityProperty()));
 }
@@ -113,9 +142,16 @@ GetLayerActivityForUpdate(nsIFrame* aFrame)
     }
     layerActivity = new LayerActivity(aFrame);
     gLayerActivityTracker->AddObject(layerActivity);
+    aFrame->AddStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY);
     properties.Set(LayerActivityProperty(), layerActivity);
   }
   return layerActivity;
+}
+
+static void
+IncrementMutationCount(uint8_t* aCount)
+{
+  *aCount = uint8_t(std::min(0xFF, *aCount + 1));
 }
 
 /* static */ void
@@ -123,7 +159,17 @@ ActiveLayerTracker::NotifyRestyle(nsIFrame* aFrame, nsCSSProperty aProperty)
 {
   LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
   uint8_t& mutationCount = layerActivity->RestyleCountForProperty(aProperty);
-  mutationCount = uint8_t(std::min(0xFF, mutationCount + 1));
+  IncrementMutationCount(&mutationCount);
+}
+
+/* static */ void
+ActiveLayerTracker::NotifyOffsetRestyle(nsIFrame* aFrame)
+{
+  LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
+  IncrementMutationCount(&layerActivity->mLeftRestyleCount);
+  IncrementMutationCount(&layerActivity->mTopRestyleCount);
+  IncrementMutationCount(&layerActivity->mRightRestyleCount);
+  IncrementMutationCount(&layerActivity->mBottomRestyleCount);
 }
 
 /* static */ void
@@ -168,6 +214,25 @@ ActiveLayerTracker::IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty)
   }
   if (aProperty == eCSSProperty_transform && aFrame->Preserves3D()) {
     return IsStyleAnimated(aFrame->GetParent(), aProperty);
+  }
+  return false;
+}
+
+/* static */ bool
+ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame)
+{
+  LayerActivity* layerActivity = GetLayerActivity(aFrame);
+  if (layerActivity) {
+    if (layerActivity->mLeftRestyleCount >= 2 ||
+        layerActivity->mTopRestyleCount >= 2 ||
+        layerActivity->mRightRestyleCount >= 2 ||
+        layerActivity->mBottomRestyleCount >= 2 ||
+        layerActivity->mMarginLeftRestyleCount >= 2 ||
+        layerActivity->mMarginTopRestyleCount >= 2 ||
+        layerActivity->mMarginRightRestyleCount >= 2 ||
+        layerActivity->mMarginBottomRestyleCount >= 2) {
+      return true;
+    }
   }
   return false;
 }

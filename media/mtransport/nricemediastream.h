@@ -77,6 +77,7 @@ struct NrIceCandidate {
   std::string host;
   uint16_t port;
   Type type;
+  std::string codeword;
 };
 
 struct NrIceCandidatePair {
