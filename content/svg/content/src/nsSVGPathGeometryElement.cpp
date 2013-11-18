@@ -60,8 +60,8 @@ nsSVGPathGeometryElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
 }
 
-already_AddRefed<gfxPath>
-nsSVGPathGeometryElement::GetPath(const gfxMatrix &aMatrix)
+TemporaryRef<Path>
+nsSVGPathGeometryElement::GetPathForLengthOrPositionMeasuring()
 {
   return nullptr;
 }

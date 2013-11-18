@@ -66,7 +66,7 @@ public:
    */
   virtual mozilla::TemporaryRef<Path> BuildPath() = 0;
 
-  virtual already_AddRefed<gfxPath> GetPath(const gfxMatrix &aMatrix);
+  virtual mozilla::TemporaryRef<Path> GetPathForLengthOrPositionMeasuring();
 
   /**
    * Returns a PathBuilder object created using the current computed value of
