@@ -6,7 +6,7 @@
 
 MODULE = 'accessibility'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'HTMLCanvasAccessible.cpp',
     'HTMLElementAccessibles.cpp',
     'HTMLFormControlAccessible.cpp',
