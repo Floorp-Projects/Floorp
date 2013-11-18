@@ -81,7 +81,7 @@ jit::EnableIonDebugLogging()
 void
 jit::IonSpewNewFunction(MIRGraph *graph, HandleScript func)
 {
-    if (!OffThreadIonCompilationEnabled(GetIonContext()->runtime)) {
+    if (GetIonContext()->runtime->onMainThread()) {
         ionspewer.beginFunction(graph, func);
         return;
     }
@@ -102,21 +102,21 @@ jit::IonSpewNewFunction(MIRGraph *graph, HandleScript func)
 void
 jit::IonSpewPass(const char *pass)
 {
-    if (!OffThreadIonCompilationEnabled(GetIonContext()->runtime))
+    if (GetIonContext()->runtime->onMainThread())
         ionspewer.spewPass(pass);
 }
 
 void
 jit::IonSpewPass(const char *pass, LinearScanAllocator *ra)
 {
-    if (!OffThreadIonCompilationEnabled(GetIonContext()->runtime))
+    if (GetIonContext()->runtime->onMainThread())
         ionspewer.spewPass(pass, ra);
 }
 
 void
 jit::IonSpewEndFunction()
 {
-    if (!OffThreadIonCompilationEnabled(GetIonContext()->runtime))
+    if (GetIonContext()->runtime->onMainThread())
         ionspewer.endFunction();
 }
 
