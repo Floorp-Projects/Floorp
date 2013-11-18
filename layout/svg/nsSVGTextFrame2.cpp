@@ -29,7 +29,6 @@
 #include "nsSVGPaintServerFrame.h"
 #include "mozilla/dom/SVGRect.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
 #include "nsTArray.h"
 #include "nsTextFrame.h"
