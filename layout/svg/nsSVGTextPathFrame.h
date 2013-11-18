@@ -7,6 +7,8 @@
 #define NSSVGTEXTPATHFRAME_H
 
 #include "mozilla/Attributes.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "gfxTypes.h"
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
@@ -30,6 +32,7 @@ typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
 
 class nsSVGTextPathFrame : public nsSVGTextPathFrameBase
 {
+  typedef mozilla::gfx::Path Path;
   typedef mozilla::SVGNumberList SVGNumberList;
 
   friend nsIFrame*
@@ -65,7 +68,7 @@ public:
 #endif
 
   // nsSVGTextPathFrame methods:
-  already_AddRefed<gfxPath> GetPath();
+  mozilla::TemporaryRef<Path> GetPath();
   nsIFrame *GetPathFrame();
 
   /**

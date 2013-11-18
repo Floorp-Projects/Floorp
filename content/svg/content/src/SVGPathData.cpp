@@ -806,17 +806,18 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
   MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS;
 }
 
-already_AddRefed<gfxPath>
-SVGPathData::ToPath(const gfxMatrix& aMatrix) const
+TemporaryRef<Path>
+SVGPathData::ToPathForLengthOrPositionMeasuring() const
 {
-  nsRefPtr<gfxContext> tmpCtx =
-    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+  // Since the path that we return will not be used for painting it doesn't
+  // matter what we pass to BuildPath as aFillRule. Hawever, we do want to
+  // pass something other than NS_STYLE_STROKE_LINECAP_SQUARE as aStrokeLineCap
+  // to avoid the insertion of extra little lines (by
+  // ApproximateZeroLengthSubpathSquareCaps), in which case the value that we
+  // pass as aStrokeWidth doesn't matter (since it's only used to determine the
+  // length of those extra little lines).
 
-  tmpCtx->SetMatrix(aMatrix);
-  ConstructPath(tmpCtx);
-  tmpCtx->IdentityMatrix();
-
-  return tmpCtx->CopyPath();
+  return BuildPath(FILL_WINDING, NS_STYLE_STROKE_LINECAP_BUTT, 0);
 }
 
 static double
