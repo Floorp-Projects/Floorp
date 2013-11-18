@@ -1966,7 +1966,8 @@ MTypeOf::foldsTo(TempAllocator &alloc, bool useValueNumbers)
         return this;
     }
 
-    return MConstant::New(alloc, StringValue(TypeName(type, GetIonContext()->runtime->names())));
+    JSRuntime *rt = GetIonContext()->runtime;
+    return MConstant::New(alloc, StringValue(TypeName(type, rt)));
 }
 
 void

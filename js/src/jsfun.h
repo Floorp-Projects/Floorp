@@ -23,8 +23,6 @@ typedef JSParallelNative   ParallelNative;
 typedef JSThreadSafeNative ThreadSafeNative;
 }
 
-struct JSAtomState;
-
 class JSFunction : public JSObject
 {
   public:
@@ -492,7 +490,7 @@ DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
                NewObjectKind newKind = GenericObject);
 
 bool
-FunctionHasResolveHook(const JSAtomState &atomState, PropertyName *name);
+FunctionHasResolveHook(JSRuntime *rt, PropertyName *name);
 
 extern bool
 fun_resolve(JSContext *cx, HandleObject obj, HandleId id,
