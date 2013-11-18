@@ -307,7 +307,7 @@ class CLI(MozProfileCLI):
         parser.add_option('--debugger', dest='debugger',
                           help="run under a debugger, e.g. gdb or valgrind")
         parser.add_option('--debugger-args', dest='debugger_args',
-                          action='append', default=None,
+                          action='store',
                           help="arguments to the debugger")
         parser.add_option('--interactive', dest='interactive',
                           action='store_true',
@@ -363,9 +363,11 @@ class CLI(MozProfileCLI):
         (debugger_arguments, interactive)
         """
         debug_args = self.options.debugger_args
+        if debug_args is not None:
+            debug_args = debug_args.split()
         interactive = self.options.interactive
         if self.options.debugger:
-            debug_args, interactive = debugger_arguments(self.options.debugger)
+            debug_args, interactive = debugger_arguments(self.options.debugger, debug_args, interactive)
         return debug_args, interactive
 
     def start(self, runner):
