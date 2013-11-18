@@ -15,7 +15,6 @@
 #include "jscompartment.h"
 
 #include "jit/CompileInfo.h"
-#include "jit/CompileWrappers.h"
 
 namespace js {
 namespace jit {
@@ -277,22 +276,14 @@ class IonContext
   public:
     IonContext(JSContext *cx, TempAllocator *temp);
     IonContext(ExclusiveContext *cx, TempAllocator *temp);
-    IonContext(CompileRuntime *rt, CompileCompartment *comp, TempAllocator *temp);
-    IonContext(CompileRuntime *rt);
+    IonContext(JSRuntime *rt, JSCompartment *comp, TempAllocator *temp);
+    IonContext(JSRuntime *rt);
     ~IonContext();
 
-    // Running context when executing on the main thread. Not available during
-    // compilation.
+    JSRuntime *runtime;
     JSContext *cx;
-
-    // Allocator for temporary memory during compilation.
+    JSCompartment *compartment;
     TempAllocator *temp;
-
-    // Wrappers with information about the current runtime/compartment for use
-    // during compilation.
-    CompileRuntime *runtime;
-    CompileCompartment *compartment;
-
     int getNextAssemblerId() {
         return assemblerCount_++;
     }

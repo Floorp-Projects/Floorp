@@ -9214,7 +9214,7 @@ DoTypeOfFallback(JSContext *cx, BaselineFrame *frame, ICTypeOf_Fallback *stub, H
 {
     FallbackICSpew(cx, stub, "TypeOf");
     JSType type = js::TypeOfValue(val);
-    RootedString string(cx, TypeName(type, cx->runtime()->atomState));
+    RootedString string(cx, TypeName(type, cx->runtime()));
 
     res.setString(string);
 

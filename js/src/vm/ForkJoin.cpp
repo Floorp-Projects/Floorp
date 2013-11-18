@@ -1482,9 +1482,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread,
 
     // Make a new IonContext for the slice, which is needed if we need to
     // re-enter the VM.
-    IonContext icx(CompileRuntime::get(cx_->runtime()),
-                   CompileCompartment::get(cx_->compartment()),
-                   nullptr);
+    IonContext icx(cx_->runtime(), cx_->compartment(), nullptr);
 
     JS_ASSERT(slice.bailoutRecord->topScript == nullptr);
 

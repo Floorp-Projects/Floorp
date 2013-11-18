@@ -749,9 +749,7 @@ BaselineScript::toggleDebugTraps(JSScript *script, jsbytecode *pc)
     SrcNoteLineScanner scanner(script->notes(), script->lineno);
 
     JSRuntime *rt = script->runtimeFromMainThread();
-    IonContext ictx(CompileRuntime::get(rt),
-                    CompileCompartment::get(script->compartment()),
-                    nullptr);
+    IonContext ictx(rt, script->compartment(), nullptr);
     AutoFlushCache afc("DebugTraps", rt->jitRuntime());
 
     for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
