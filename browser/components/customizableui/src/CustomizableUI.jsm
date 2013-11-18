@@ -1954,9 +1954,6 @@ this.CustomizableUI = {
   get TYPE_MENU_PANEL() "menu-panel",
   get TYPE_TOOLBAR() "toolbar",
 
-  get WIDE_PANEL_CLASS() "panel-wide-item",
-  get PANEL_COLUMN_COUNT() 3,
-
   addListener: function(aListener) {
     CustomizableUIInternal.addListener(aListener);
   },
