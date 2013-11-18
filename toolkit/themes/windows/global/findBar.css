@@ -35,18 +35,9 @@ findbar[hidden] {
   -moz-padding-start: 0;
   -moz-padding-end: 8px;
   border: none;
-  list-style-image: url("chrome://global/skin/icons/close.png");
   -moz-appearance: none;
-  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.findbar-closebutton:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.findbar-closebutton:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
 
 /* Search field */
 
