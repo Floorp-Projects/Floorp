@@ -784,7 +784,7 @@ nsSVGGlyphFrame::GetCharacterPositions(nsTArray<CharacterPosition>* aCharacterPo
         Point offsetFromPath = normal * pos.y;
         cp[i].pos = ThebesPoint(pt + offsetFromPath) -
                       ThebesPoint(tangent) * halfAdvance;
-        double glyphRotation = atan2(tangent.y, tangent.x);
+        Float glyphRotation = atan2f(tangent.y, tangent.x);
         cp[i].angle = glyphRotation + angle;
       }
       pos.x += 2 * halfAdvance;

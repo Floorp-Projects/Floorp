@@ -4809,13 +4809,13 @@ nsSVGTextFrame2::DoTextPathLayout()
       // Position the character on the path at the right angle.
       Point tangent; // Unit vector tangent to the point we find.
       Point pt = path->ComputePointAtLength(Float(midx), &tangent);
-      double glyphRotation = atan2(tangent.y, tangent.x);
+      Float rotation = atan2f(tangent.y, tangent.x);
       Point normal(-tangent.y, tangent.x); // Unit vector normal to the point.
       Point offsetFromPath = normal * mPositions[i].mPosition.y;
       pt += offsetFromPath;
       Point direction = tangent * sign;
       mPositions[i].mPosition = ThebesPoint(pt) - ThebesPoint(direction) * halfAdvance;
-      mPositions[i].mAngle += glyphRotation;
+      mPositions[i].mAngle += rotation;
 
       // Position any characters for a partial ligature.
       for (uint32_t j = i + 1;
