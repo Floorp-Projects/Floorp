@@ -6,13 +6,13 @@
 
 MODULE = 'hunspell'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'mozHunspell.cpp',
     'mozHunspellDirProvider.cpp',
 ]
 
 if not CONFIG['MOZ_NATIVE_HUNSPELL']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'affentry.cpp',
         'affixmgr.cpp',
         'csutil.cpp',
