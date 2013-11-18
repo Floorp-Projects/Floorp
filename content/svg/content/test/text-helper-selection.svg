@@ -1,12 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"
      style="font: 24px monospace">
 
-  <!-- Start with all text elements not displayed, so that we can flip
-       the CSS text frames pref and have the frames reconstructed. -->
-  <style>
-    text { display: none }
-  </style>
-
   <!-- We need these two rects so that getBoundingClientRect of the <svg> does
        not just return the region covered by the <text>, which would result in
        the synthesizeMouse calls using the wrong positions.  We don't use one
