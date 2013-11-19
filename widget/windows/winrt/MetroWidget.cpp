@@ -278,6 +278,7 @@ MetroWidget::Destroy()
     nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       observerService->RemoveObserver(this, "apzc-scroll-offset-changed");
+      observerService->RemoveObserver(this, "Metro:ZoomToRect");
     }
   }
 
@@ -966,6 +967,7 @@ CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfa
     nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       observerService->AddObserver(this, "apzc-scroll-offset-changed", false);
+      observerService->AddObserver(this, "Metro:ZoomToRect", false);
     }
   }
 
@@ -1561,5 +1563,22 @@ MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *d
     mController->UpdateScrollOffset(ScrollableLayerGuid(mRootLayerTreeId, presShellId, scrollId),
                                     scrollOffset);
   }
-  return NS_OK;
+  else if (!strcmp(topic, "Metro:ZoomToRect")) {
+    CSSRect rect = CSSRect();
+    uint64_t viewId = 0;
+    int32_t presShellId = 0;
+
+    int reScan = swscanf(data, L"%f,%f,%f,%f,%d,%llu",
+                 &rect.x, &rect.y, &rect.width, &rect.height,
+                 &presShellId, &viewId);
+    if(reScan != 6) {
+      NS_WARNING("Malformed Metro:ZoomToRect message");
+    }
+
+    ScrollableLayerGuid guid = ScrollableLayerGuid(mRootLayerTreeId, presShellId, viewId);
+    APZController::sAPZC->ZoomToRect(guid, rect);
+  }
+  else {
+    return NS_OK;
+  }
 }
