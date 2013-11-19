@@ -399,6 +399,20 @@ static nsresult GetVsizeMaxContiguous(int64_t* aN)
     return NS_OK;
 }
 
+class VsizeMaxContiguousReporter MOZ_FINAL : public MemoryUniReporter
+{
+public:
+    VsizeMaxContiguousReporter()
+      : MemoryUniReporter("vsize-max-contiguous", KIND_OTHER, UNITS_BYTES,
+"Size of the maximum contiguous block of available virtual memory.")
+    {}
+
+    NS_IMETHOD GetAmount(int64_t* aAmount)
+    {
+        return GetVsizeMaxContiguous(aAmount);
+    }
+};
+
 #define HAVE_PRIVATE_REPORTER
 class PrivateReporter MOZ_FINAL : public MemoryUniReporter
 {
@@ -774,6 +788,10 @@ nsMemoryReporterManager::Init()
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
     RegisterReporter(new VsizeReporter);
     RegisterReporter(new ResidentReporter);
+#endif
+
+#ifdef HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER
+    RegisterReporter(new VsizeMaxContiguousReporter);
 #endif
 
 #ifdef HAVE_RESIDENT_UNIQUE_REPORTER
