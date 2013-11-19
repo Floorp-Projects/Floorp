@@ -1055,7 +1055,7 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
       // Only continue if the document has permission to use offline APIs or
       // when preferences indicate to permit it automatically.
       if (!nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal()) &&
-          !nsContentUtils::MaybeAllowOfflineAppByDefault(mDocument->NodePrincipal()) &&
+          !nsContentUtils::MaybeAllowOfflineAppByDefault(mDocument->NodePrincipal(), mDocument->GetWindow()) &&
           !nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal())) {
         return;
       }

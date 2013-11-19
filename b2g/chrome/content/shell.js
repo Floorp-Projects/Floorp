@@ -510,6 +510,9 @@ var shell = {
           Services.perms.addFromPrincipal(principal, 'offline-app',
                                           Ci.nsIPermissionManager.ALLOW_ACTION);
 
+          let documentURI = Services.io.newURI(contentWindow.document.documentURI,
+                                               null,
+                                               null);
           let manifestURI = Services.io.newURI(manifest, null, documentURI);
           let updateService = Cc['@mozilla.org/offlinecacheupdate-service;1']
                               .getService(Ci.nsIOfflineCacheUpdateService);
