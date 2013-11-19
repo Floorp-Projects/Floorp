@@ -20,7 +20,6 @@ this.EXPORTED_SYMBOLS = ["IndexedDBHelper"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.importGlobalProperties(["indexedDB"]);
 
 this.IndexedDBHelper = function IndexedDBHelper() {}
 

@@ -948,7 +948,8 @@ bool
 xpc::GlobalProperties::Define(JSContext *cx, JS::HandleObject obj)
 {
     if (indexedDB && AccessCheck::isChrome(obj) &&
-        !IndexedDatabaseManager::DefineIndexedDB(cx, obj))
+        (!IndexedDatabaseManager::DefineConstructors(cx, obj) ||
+         !IndexedDatabaseManager::DefineIndexedDBGetter(cx, obj)))
         return false;
 
     if (XMLHttpRequest &&
