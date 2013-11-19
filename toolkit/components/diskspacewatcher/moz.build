@@ -19,8 +19,6 @@ SOURCES = [
     'DiskSpaceWatcher.cpp',
 ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'diskspacewatcher'
 
 include('/ipc/chromium/chromium-config.mozbuild')

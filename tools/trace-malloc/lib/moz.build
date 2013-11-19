@@ -24,6 +24,4 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 LIBRARY_NAME = 'tracemalloc'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xpcom_core'

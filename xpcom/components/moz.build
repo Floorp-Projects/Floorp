@@ -35,8 +35,6 @@ SOURCES += [
 
 LIBRARY_NAME = 'xpcomcomponents_s'
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'xpcom_core'

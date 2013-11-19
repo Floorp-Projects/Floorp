@@ -12,8 +12,6 @@ SOURCES += [
 
 LIBRARY_NAME = 'hyphenation_s'
 
-LIBXUL_LIBRARY = True
-
 SOURCES += [
     'hyphen.c',
 ]

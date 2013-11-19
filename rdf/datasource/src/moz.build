@@ -11,6 +11,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'rdfdatasource_s'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'rdf'

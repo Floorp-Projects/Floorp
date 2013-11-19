@@ -60,8 +60,6 @@ if a11y_log:
 
 LIBRARY_NAME = 'accessibility_base_s'
 
-LIBXUL_LIBRARY = True
-
 LOCAL_INCLUDES += [
     '../../../content/xbl/src',
     '../../../ipc/chromium/src',

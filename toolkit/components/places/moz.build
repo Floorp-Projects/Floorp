@@ -14,7 +14,6 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'places'
 
 if CONFIG['MOZ_PLACES']:
-    LIBXUL_LIBRARY = True
     MSVC_ENABLE_PGO = True
     LIBRARY_NAME = 'places'
 

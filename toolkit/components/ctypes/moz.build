@@ -20,6 +20,4 @@ EXTRA_JS_MODULES += [
     'ctypes.jsm',
 ]
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'

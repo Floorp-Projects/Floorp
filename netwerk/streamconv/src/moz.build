@@ -12,8 +12,6 @@ SOURCES += [
 
 LIBRARY_NAME = 'nkconv_s'
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'necko'

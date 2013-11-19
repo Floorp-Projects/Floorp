@@ -27,6 +27,4 @@ LOCAL_INCLUDES += [
 
 LIBRARY_NAME = 'peerconnection'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'

@@ -23,6 +23,4 @@ else:
 
 LIBRARY_NAME = 'auth'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'

@@ -33,8 +33,6 @@ EXTRA_JS_MODULES += [
     'PluralForm.jsm',
 ]
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'i18n'
