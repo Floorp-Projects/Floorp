@@ -159,7 +159,6 @@ class TestEmitterBasic(unittest.TestCase):
             LIBXUL_LIBRARY=True,
             MSVC_ENABLE_PGO=True,
             NO_DIST_INSTALL=True,
-            MODULE='module_name',
             OS_LIBS=['foo.so', '-l123', 'aaa.a'],
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
             SSRCS=['bans.S', 'fans.S'],

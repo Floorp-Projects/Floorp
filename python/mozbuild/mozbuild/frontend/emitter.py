@@ -133,15 +133,13 @@ class TreeMetadataEmitter(LoggingMixin):
 
         # XPIDL source files get processed and turned into .h and .xpt files.
         # If there are multiple XPIDL files in a directory, they get linked
-        # together into a final .xpt, which has the name defined by either
-        # MODULE or XPIDL_MODULE (if the latter is defined).
-        xpidl_module = sandbox['MODULE']
-        if sandbox['XPIDL_MODULE']:
-            xpidl_module = sandbox['XPIDL_MODULE']
+        # together into a final .xpt, which has the name defined by
+        # XPIDL_MODULE.
+        xpidl_module = sandbox['XPIDL_MODULE']
 
         if sandbox['XPIDL_SOURCES'] and not xpidl_module:
-            raise SandboxValidationError('MODULE or XPIDL_MODULE must be '
-                'defined if XPIDL_SOURCES is defined.')
+            raise SandboxValidationError('XPIDL_MODULE must be defined if '
+                'XPIDL_SOURCES is defined.')
 
         if sandbox['XPIDL_SOURCES'] and sandbox['NO_DIST_INSTALL']:
             self.log(logging.WARN, 'mozbuild_warning', dict(
@@ -184,7 +182,6 @@ class TreeMetadataEmitter(LoggingMixin):
             JS_MODULES_PATH='JS_MODULES_PATH',
             LIBS='LIBS',
             LIBXUL_LIBRARY='LIBXUL_LIBRARY',
-            MODULE='MODULE',
             MSVC_ENABLE_PGO='MSVC_ENABLE_PGO',
             NO_DIST_INSTALL='NO_DIST_INSTALL',
             OS_LIBS='OS_LIBS',
