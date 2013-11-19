@@ -392,6 +392,9 @@ public:
   void
   CycleCollect(JSContext* aCx, bool aDummy);
 
+  void
+  OfflineStatusChangeEvent(JSContext* aCx, bool aIsOffline);
+
   bool
   RegisterSharedWorker(JSContext* aCx, SharedWorker* aSharedWorker);
 
@@ -743,6 +746,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 #endif
 
   bool mPreferences[WORKERPREF_COUNT];
+  bool mOnLine;
 
 protected:
   ~WorkerPrivate();
@@ -902,6 +906,9 @@ public:
   void
   CycleCollectInternal(JSContext* aCx, bool aCollectChildren);
 
+  void
+  OfflineStatusChangeEventInternal(JSContext* aCx, bool aIsOffline);
+
   JSContext*
   GetJSContext() const
   {
@@ -981,6 +988,13 @@ public:
   {
     AssertIsOnWorkerThread();
     return mPreferences[WORKERPREF_PROMISE];
+  }
+
+  bool
+  OnLine() const
+  {
+    AssertIsOnWorkerThread();
+    return mOnLine;
   }
 
   void

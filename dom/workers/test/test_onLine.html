@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 925437: online/offline events tests.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+-->
+<head>
+  <title>Test for Bug 925437 (worker online/offline events)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=925437">Mozilla Bug 925437</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+addLoadEvent(function() {
+  var w = new Worker("onLine_worker.js");
+
+  w.onmessage = function(e) {
+    if (e.data.type === 'ready') {
+      doTest();
+    } else if (e.data.type === 'ok') {
+      ok(e.data.test, e.data.message);
+    } else if (e.data.type === 'finished') {
+      SimpleTest.finish();
+    }
+  }
+
+  function doTest() {
+    var iosvc = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                             .getService(SpecialPowers.Ci.nsIIOService2);
+    iosvc.manageOfflineStatus = false;
+
+    info("setting iosvc.offline = true");
+    iosvc.offline = true;
+
+    info("setting iosvc.offline = false");
+    iosvc.offline = false;
+
+    info("setting iosvc.offline = true");
+    iosvc.offline = true;
+
+    for (var i = 0; i < 10; ++i) {
+        iosvc.offline = !iosvc.offline;
+    }
+
+    info("setting iosvc.offline = false");
+    w.postMessage('lastTest');
+    iosvc.offline = false;
+  }
+});
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>
