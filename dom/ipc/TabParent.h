@@ -237,6 +237,7 @@ public:
             const URIParams& aDocumentURI,
             const bool& stickDocument) MOZ_OVERRIDE;
     virtual bool DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* actor);
+    virtual bool RecvSetOfflinePermission(const IPC::Principal& principal);
 
     bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
