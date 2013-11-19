@@ -37,3 +37,4 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkmathml_s'
 
+FINAL_LIBRARY = 'gklayout'

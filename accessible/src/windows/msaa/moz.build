@@ -59,7 +59,6 @@ LOCAL_INCLUDES += [
 
 LIBRARY_NAME = 'accessibility_toolkit_msaa_s'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

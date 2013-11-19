@@ -27,3 +27,4 @@ LIBRARY_NAME = 'rdfbase_s'
 
 LIBXUL_LIBRARY = True
 
+FINAL_LIBRARY = 'rdf'

@@ -77,10 +77,9 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domipc_s'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../src/base',
     '../src/geolocation',

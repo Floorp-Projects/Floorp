@@ -69,5 +69,4 @@ if CONFIG['TARGET_CPU'] == 'x86_64':
         'ComplexTextInputPanel.mm',
     ]
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

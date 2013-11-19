@@ -27,3 +27,4 @@ LOCAL_INCLUDES += [
     '../xul',
 ]
 
+FINAL_LIBRARY = 'xul'

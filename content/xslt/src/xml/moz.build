@@ -23,3 +23,5 @@ LOCAL_INCLUDES += [
     '../xslt',
     '/content/base/src',
 ]
+
+FINAL_LIBRARY = 'gklayout'

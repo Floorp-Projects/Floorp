@@ -16,3 +16,4 @@ SOURCES += [
 
 LIBXUL_LIBRARY = True
 
+FINAL_LIBRARY = 'xpcom_core'

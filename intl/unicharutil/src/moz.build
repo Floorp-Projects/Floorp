@@ -18,3 +18,4 @@ LIBRARY_NAME = 'ucharucomp_s'
 
 LIBXUL_LIBRARY = True
 
+FINAL_LIBRARY = 'i18n'

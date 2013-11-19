@@ -46,3 +46,4 @@ LOCAL_INCLUDES += [
     '/other-licenses/atk-1.0',
 ]
 
+FINAL_LIBRARY = 'xul'

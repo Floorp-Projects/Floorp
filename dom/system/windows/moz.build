@@ -21,5 +21,4 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domsystemwindows_s'
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'gklayout'

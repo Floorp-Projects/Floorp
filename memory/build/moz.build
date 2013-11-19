@@ -34,3 +34,8 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
 LIBRARY_NAME = 'memory'
 
 FORCE_STATIC_LIB = True
+
+# Keep jemalloc separated when mozglue is statically linked
+if CONFIG['MOZ_MEMORY'] and (CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android') or
+                             CONFIG['MOZ_NATIVE_JEMALLOC']):
+    FINAL_LIBRARY = 'mozglue'

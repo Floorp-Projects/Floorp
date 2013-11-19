@@ -19,11 +19,6 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['MOZ_NFC']:
-    SHARED_LIBRARY_LIBS += [
-        '%s/dom/nfc/%sdom_nfc_s.%s' % (TOPOBJDIR, CONFIG['LIB_PREFIX'], CONFIG['LIB_SUFFIX'])
-    ]
-
-if CONFIG['MOZ_NFC']:
     LOCAL_INCLUDES += [
         '/dom/nfc'
     ]
@@ -36,7 +31,6 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gklayout'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

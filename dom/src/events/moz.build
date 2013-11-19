@@ -22,3 +22,5 @@ LOCAL_INCLUDES += [
     "/content/base/src",
     "/dom/base",
 ]
+
+FINAL_LIBRARY = 'gklayout'

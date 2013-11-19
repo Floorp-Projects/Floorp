@@ -25,24 +25,24 @@
 #endif
 
 #ifdef XP_WIN
-#include "nsCollationWin.h"
-#include "nsDateTimeFormatWin.h"
+#include "windows/nsCollationWin.h"
+#include "windows/nsDateTimeFormatWin.h"
 #endif
 
 #ifdef XP_OS2
-#include "nsOS2Locale.h"
-#include "nsCollationOS2.h"
-#include "nsDateTimeFormatOS2.h"
+#include "os2/nsOS2Locale.h"
+#include "os2/nsCollationOS2.h"
+#include "os2/nsDateTimeFormatOS2.h"
 #endif
 
 #ifdef USE_MAC_LOCALE
-#include "nsCollationMacUC.h"
-#include "nsDateTimeFormatMac.h"
+#include "mac/nsCollationMacUC.h"
+#include "mac/nsDateTimeFormatMac.h"
 #endif
 
 #ifdef USE_UNIX_LOCALE
-#include "nsCollationUnix.h"
-#include "nsDateTimeFormatUnix.h"
+#include "unix/nsCollationUnix.h"
+#include "unix/nsDateTimeFormatUnix.h"
 #endif
 
 #define NSLOCALE_MAKE_CTOR(ctor_, iface_, func_)          \

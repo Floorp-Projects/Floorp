@@ -47,3 +47,5 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/layout/xul/tree/',
 ]
+
+FINAL_LIBRARY = 'gklayout'

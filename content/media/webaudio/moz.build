@@ -92,3 +92,4 @@ LIBRARY_NAME = 'gkconwebaudio_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'

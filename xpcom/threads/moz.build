@@ -58,3 +58,5 @@ MSVC_ENABLE_PGO = True
 LOCAL_INCLUDES += [
     '../build',
 ]
+
+FINAL_LIBRARY = 'xpcom_core'

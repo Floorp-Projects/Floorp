@@ -19,3 +19,5 @@ LIBXUL_LIBRARY = True
 LOCAL_INCLUDES += [
     '/image/src',
 ]
+
+FINAL_LIBRARY = 'imglib2'

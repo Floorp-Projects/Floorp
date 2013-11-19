@@ -23,3 +23,5 @@ MSVC_ENABLE_PGO = True
 
 # We want only the static lib, not the shared lib
 FORCE_STATIC_LIB = True
+
+FINAL_LIBRARY = 'gkmedias'

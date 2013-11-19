@@ -16,3 +16,5 @@ XPI_NAME = 'crashreporter'
 
 # need static lib
 FORCE_STATIC_LIB = True
+
+FINAL_LIBRARY = 'xulapp_s'

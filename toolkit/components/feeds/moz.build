@@ -30,3 +30,4 @@ LIBRARY_NAME = 'feed_s'
 
 LIBXUL_LIBRARY = True
 
+FINAL_LIBRARY = 'toolkitcomps'

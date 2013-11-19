@@ -66,3 +66,4 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'mozlibpixman'
 
+FINAL_LIBRARY = 'gkmedias'

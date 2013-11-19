@@ -26,3 +26,5 @@ LOCAL_INCLUDES += [
     '../xpath',
     '../xslt',
 ]
+
+FINAL_LIBRARY = 'gklayout'

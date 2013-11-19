@@ -25,5 +25,4 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'mediasniffer'
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

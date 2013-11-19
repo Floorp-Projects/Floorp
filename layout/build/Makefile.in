@@ -8,208 +8,23 @@ ifeq ($(OS_ARCH),SunOS)
 SHELL := ksh
 endif
 
-SHARED_LIBRARY_LIBS = \
-	../base/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
-	../forms/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
-	../generic/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
-	../ipc/$(LIB_PREFIX)gkipc_s.$(LIB_SUFFIX) \
-	../style/$(LIB_PREFIX)gkstyle_s.$(LIB_SUFFIX) \
-	../tables/$(LIB_PREFIX)gktable_s.$(LIB_SUFFIX) \
-	../xul/base/src/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
-	../mathml/$(LIB_PREFIX)gkmathml_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/base/src/$(LIB_PREFIX)gkconbase_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/canvas/src/$(LIB_PREFIX)gkconcvs_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/events/src/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/html/content/src/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/html/document/src/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/media/$(LIB_PREFIX)gkconmedia_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/media/encoder/$(LIB_PREFIX)gkconencoder_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/media/webaudio/$(LIB_PREFIX)gkconwebaudio_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/media/webaudio/blink/$(LIB_PREFIX)gkconwebaudio_blink_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/media/webrtc/$(LIB_PREFIX)gkconwebrtc_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/xml/content/src/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/xml/document/src/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/xslt/src/base/$(LIB_PREFIX)txbase_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/xslt/src/xml/$(LIB_PREFIX)txxml_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/xslt/src/xpath/$(LIB_PREFIX)txxpath_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/xslt/src/xslt/$(LIB_PREFIX)txxslt_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/xbl/src/$(LIB_PREFIX)gkconxbl_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/xul/document/src/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
-	$(DEPTH)/view/src/$(LIB_PREFIX)gkview_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/activities/src/$(LIB_PREFIX)dom_activities_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/apps/src/$(LIB_PREFIX)dom_apps_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/base/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/battery/$(LIB_PREFIX)dom_battery_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/alarm/$(LIB_PREFIX)domalarm_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/devicestorage/$(LIB_PREFIX)domdevicestorage_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/encoding/$(LIB_PREFIX)domencoding_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/file/$(LIB_PREFIX)domfile_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/power/$(LIB_PREFIX)dom_power_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/quota/$(LIB_PREFIX)domquota_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/network/src/$(LIB_PREFIX)dom_network_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/media/$(LIB_PREFIX)dom_media_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/mobilemessage/src/$(LIB_PREFIX)dom_mobilemessage_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/src/events/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/src/json/$(LIB_PREFIX)json_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/src/jsurl/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/src/storage/$(LIB_PREFIX)jsdomstorage_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/src/offline/$(LIB_PREFIX)jsdomoffline_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/src/geolocation/$(LIB_PREFIX)jsdomgeolocation_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/audiochannel/$(LIB_PREFIX)domaudiochannel_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/promise/$(LIB_PREFIX)dompromise_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/src/notification/$(LIB_PREFIX)jsdomnotification_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/system/$(LIB_PREFIX)domsystem_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/telephony/$(LIB_PREFIX)domtelephony_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/workers/$(LIB_PREFIX)domworkers_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/indexedDB/$(LIB_PREFIX)dom_indexeddb_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/indexedDB/ipc/$(LIB_PREFIX)dom_indexeddb_ipc_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/browser-element/$(LIB_PREFIX)dom_browserelement_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/time/$(LIB_PREFIX)dom_time_s.$(LIB_SUFFIX) \
-	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
-	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
-	$(DEPTH)/parser/html/$(LIB_PREFIX)html5p_s.$(LIB_SUFFIX) \
-	$(DEPTH)/caps/src/$(LIB_PREFIX)caps_s.$(LIB_SUFFIX) \
-	$(DEPTH)/editor/libeditor/html/$(LIB_PREFIX)htmleditor_s.$(LIB_SUFFIX) \
-	$(DEPTH)/editor/txtsvc/src/$(LIB_PREFIX)txtsvc_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/mathml/content/src/$(LIB_PREFIX)gkcontentmathml_s.$(LIB_SUFFIX) \
-	$(NULL)
-
 ifneq (,$(filter qt gtk2 gtk3,$(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/dom/system/unix/$(LIB_PREFIX)domsystemunix_s.$(LIB_SUFFIX) \
-	$(NULL)
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/unix \
 	$(NULL)
 else ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/dom/system/windows/$(LIB_PREFIX)domsystemwindows_s.$(LIB_SUFFIX) \
-	$(NULL)
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/windows \
 	$(NULL)
 else ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/dom/system/mac/$(LIB_PREFIX)domsystemmac_s.$(LIB_SUFFIX) \
-	$(NULL)
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/mac \
 	$(NULL)
 else ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/dom/system/android/$(LIB_PREFIX)domsystemandroid_s.$(LIB_SUFFIX) \
-	$(DEPTH)/dom/plugins/base/android/$(LIB_PREFIX)gkpluginandroid_s.$(LIB_SUFFIX) \
-	$(NULL)
 LOCAL_INCLUDES	+= \
 	-I$(topsrcdir)/dom/system/android \
 	-I$(topsrcdir)/dom/system \
 	$(NULL)
-endif
-
-ifdef MOZ_OMX_DECODER #{
-# include OMX decoder
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/omx/$(LIB_PREFIX)gkconomx_s.$(LIB_SUFFIX) \
-	$(DEPTH)/content/media/omx/mediaresourcemanager/$(LIB_PREFIX)mediaresourcemanager.$(LIB_SUFFIX) \
-	$(NULL)
-endif #}
-
-ifdef MOZ_B2G_FM #{
-SHARED_LIBRARY_LIBS	+= \
-  $(DEPTH)/dom/fmradio/$(LIB_PREFIX)domfmradio_s.$(LIB_SUFFIX) \
-  $(DEPTH)/dom/fmradio/ipc/$(LIB_PREFIX)domfmradio_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif #}
-
-ifdef MOZ_B2G_BT #{
-SHARED_LIBRARY_LIBS += $(DEPTH)/dom/bluetooth/$(LIB_PREFIX)dombluetooth_s.$(LIB_SUFFIX)
-endif #}
-
-SHARED_LIBRARY_LIBS	+= $(DEPTH)/dom/camera/$(LIB_PREFIX)domcamera_s.$(LIB_SUFFIX)
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-SHARED_LIBRARY_LIBS	+= \
-  $(DEPTH)/dom/system/gonk/$(LIB_PREFIX)domsystemgonk_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif #}
-
-ifdef MOZ_B2G_RIL #{
-SHARED_LIBRARY_LIBS	+= \
-  $(DEPTH)/dom/icc/src/$(LIB_PREFIX)dom_icc_s.$(LIB_SUFFIX) \
-  $(DEPTH)/dom/cellbroadcast/src/$(LIB_PREFIX)dom_cellbroadcast_s.$(LIB_SUFFIX) \
-  $(DEPTH)/dom/voicemail/$(LIB_PREFIX)domvoicemail_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif #}
-
-ifdef MOZ_OGG
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/ogg/$(LIB_PREFIX)gkconogg_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifdef MOZ_RAW
-SHARED_LIBRARY_LIBS     += \
-       $(DEPTH)/content/media/raw/$(LIB_PREFIX)gkconraw_s.$(LIB_SUFFIX)\
-       $(NULL)
-endif
-
-ifdef MOZ_WEBM
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/webm/$(LIB_PREFIX)gkconwebm_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifdef MOZ_WMF
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/wmf/$(LIB_PREFIX)gkconwmf_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifdef MOZ_DIRECTSHOW
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/directshow/$(LIB_PREFIX)gkcondirectshow_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifdef MOZ_APPLEMEDIA
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/apple/$(LIB_PREFIX)gkconapplemedia_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifdef MOZ_WAVE
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/wave/$(LIB_PREFIX)gkconwave_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifdef MOZ_GSTREAMER
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/gstreamer/$(LIB_PREFIX)gkcongstreamer_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-ifdef MOZ_MEDIA_PLUGINS
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/plugins/$(LIB_PREFIX)gkconmediaplugins_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
-SHARED_LIBRARY_LIBS 	+= \
-	$(DEPTH)/content/media/mediasource/$(LIB_PREFIX)gkconmediasource_s.$(LIB_SUFFIX) \
-	$(NULL)
-
-ifdef MOZ_WEBSPEECH
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/content/media/webspeech/recognition/$(LIB_PREFIX)gkconwebspeechrecognition_s.$(LIB_SUFFIX) \
-  $(DEPTH)/content/media/webspeech/synth/$(LIB_PREFIX)gkconwebspeechsynth_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-ifdef MOZ_SYNTH_PICO
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/content/media/webspeech/synth/pico/$(LIB_PREFIX)synthpico.$(LIB_SUFFIX) \
-  $(NULL)
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
@@ -231,45 +46,14 @@ EXTRA_DSO_LDOPTS += \
 		$(NULL)
 endif
 
-ifdef NS_PRINTING
-SHARED_LIBRARY_LIBS += \
-		../printing/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
-ifdef MOZ_XUL
-SHARED_LIBRARY_LIBS += \
-		../xul/tree/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
-		../xul/grid/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
-		$(DEPTH)/content/xul/content/src/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
-		$(DEPTH)/content/xul/templates/src/$(LIB_PREFIX)gkconxultmpl_s.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
 LOCAL_INCLUDES  += \
       -I$(srcdir)/../inspector/src \
       $(NULL)
-SHARED_LIBRARY_LIBS += ../inspector/src/$(LIB_PREFIX)inspector_s.$(LIB_SUFFIX)
-
-SHARED_LIBRARY_LIBS += \
-		../svg/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
-		$(DEPTH)/content/svg/document/src/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
-		$(DEPTH)/content/svg/content/src/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
-		$(DEPTH)/content/smil/$(LIB_PREFIX)gkconsmil_s.$(LIB_SUFFIX) \
-		$(NULL)
-
-SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/js/xpconnect/src/$(LIB_PREFIX)xpconnect_s.$(LIB_SUFFIX)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef MOZ_GSTREAMER
 EXTRA_DSO_LDOPTS += $(GSTREAMER_LIBS)
 endif
-endif
-
-ifdef MOZ_GAMEPAD
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/dom/gamepad/$(LIB_PREFIX)domgamepad_s.$(LIB_SUFFIX)
 endif
 
 include $(topsrcdir)/config/rules.mk

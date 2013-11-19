@@ -15,5 +15,4 @@ LIBRARY_NAME = 'universalchardet'
 
 LIBXUL_LIBRARY = True
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

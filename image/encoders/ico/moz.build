@@ -22,3 +22,5 @@ LOCAL_INCLUDES += [
     '../png',
     '/image/src',
 ]
+
+FINAL_LIBRARY = 'imglib2'

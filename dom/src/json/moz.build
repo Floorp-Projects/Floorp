@@ -25,3 +25,5 @@ LIBXUL_LIBRARY = True
 LOCAL_INCLUDES += [
     '/content/base/src',
 ]
+
+FINAL_LIBRARY = 'gklayout'

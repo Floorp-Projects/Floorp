@@ -305,3 +305,4 @@ LIBRARY_NAME = 'layers'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'thebes'

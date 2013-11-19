@@ -86,3 +86,4 @@ LIBRARY_NAME = 'exception_handler_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xulapp_s'
