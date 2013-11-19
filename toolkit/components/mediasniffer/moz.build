@@ -19,8 +19,6 @@ SOURCES += [
     'mp3sniff.c',
 ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'mediasniffer'
 
 FINAL_LIBRARY = 'xul'

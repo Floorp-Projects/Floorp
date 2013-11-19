@@ -10,6 +10,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'androidproxy'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'

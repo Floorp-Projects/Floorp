@@ -12,6 +12,4 @@ SOURCES += [
     'xpt_xdr.c',
 ]
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xpcom_core'

@@ -23,8 +23,6 @@ GENERATED_SOURCES += [
 
 LIBRARY_NAME = 'accessibility_xpcom_s'
 
-LIBXUL_LIBRARY = True
-
 LOCAL_INCLUDES += [
     '../base',
     '../generic',

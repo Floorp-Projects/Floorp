@@ -20,8 +20,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 LIBRARY_NAME = 'updatecommon'
 
-LIBXUL_LIBRARY = True
-
 srcdir = '.'
 
 include('sources.mozbuild')

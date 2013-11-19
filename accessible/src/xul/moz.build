@@ -21,8 +21,6 @@ UNIFIED_SOURCES += [
 
 LIBRARY_NAME = 'accessibility_xul_s'
 
-LIBXUL_LIBRARY = True
-
 LOCAL_INCLUDES += [
     '../../../layout/generic',
     '../../../layout/xul/base/src',

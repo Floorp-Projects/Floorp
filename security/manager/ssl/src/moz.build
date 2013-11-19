@@ -87,6 +87,4 @@ SOURCES += [
     'md4.c',
 ]
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'

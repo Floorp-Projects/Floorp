@@ -30,6 +30,4 @@ if CONFIG['MOZ_ANDROID_HISTORY']:
 
 LIBRARY_NAME = 'browsercomps'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'

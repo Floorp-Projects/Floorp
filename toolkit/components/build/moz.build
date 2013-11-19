@@ -12,8 +12,6 @@ SOURCES += [
     'nsToolkitCompsModule.cpp',
 ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'toolkitcomps'
 
 FINAL_LIBRARY = 'xul'

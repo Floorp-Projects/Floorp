@@ -19,6 +19,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'snappy_s'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'

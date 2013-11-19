@@ -63,8 +63,6 @@ SOURCES += [
     'mozcontainer.c',
 ]
 
-LIBXUL_LIBRARY = True
-
 if CONFIG['ACCESSIBILITY']:
     SOURCES += [
         'maiRedundantObjectFactory.c',

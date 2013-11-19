@@ -8,8 +8,6 @@ SOURCES += [
     'nsModule.cpp',
 ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'appcomps'
 
 FINAL_LIBRARY = 'xul'

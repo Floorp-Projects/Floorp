@@ -54,8 +54,6 @@ if CONFIG['MOZ_XUL']:
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkxulbase_s'

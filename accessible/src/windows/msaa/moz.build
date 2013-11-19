@@ -40,8 +40,6 @@ if CONFIG['MOZ_XUL']:
         'XULTreeGridAccessibleWrap.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
 LOCAL_INCLUDES += [
     '../../../../content/base/src',
     '../../../../content/events/src',

@@ -11,8 +11,6 @@ if CONFIG['MOZ_NFC']:
         'Nfc.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'moznfc_s'
 
 EXPORT_LIBRARY = True

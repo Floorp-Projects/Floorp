@@ -6,7 +6,6 @@
 
 if CONFIG['MOZ_XUL'] and \
     CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('android', 'qt', 'os2', 'cocoa', 'windows'):
-        LIBXUL_LIBRARY = True
         XPIDL_MODULE = 'filepicker'
         LIBRARY_NAME = 'fileview'
         XPIDL_SOURCES += [

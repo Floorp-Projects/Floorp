@@ -26,6 +26,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'startupcache'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'
