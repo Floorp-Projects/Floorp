@@ -28,7 +28,6 @@ Important Concepts
    mozinfo
    preprocessor
    jar-manifests
-   webidl
 
 mozbuild
 ========

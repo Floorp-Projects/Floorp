@@ -1,3 +1,0 @@
-interface Parent {
-  void MethodFoo();
-};

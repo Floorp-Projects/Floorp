@@ -18,5 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 928195 rewrote WebIDL building from the ground up, hopefully eliminating
-needs for future clobbers
+Bug 938950 needs a clobber.
