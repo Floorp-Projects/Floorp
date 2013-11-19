@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'dom'
-
 EXPORTS.mozilla += [
     'ErrorResult.h',
 ]
@@ -35,13 +33,7 @@ EXPORTS.mozilla.dom += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'dombindings_s'
-
-EXPORT_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '/content/base/src',
@@ -82,3 +74,5 @@ if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:
     LOCAL_INCLUDES += [
         '/dom/system/gonk',
     ]
+
+FINAL_LIBRARY = 'xul'

@@ -11,8 +11,6 @@ DIRS += ['standalone', 'nomozalloc']
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['staticruntime']
 
-MODULE = 'xpcom'
-
 EXPORTS += [
     'MainThreadUtils.h',
     'nsArrayEnumerator.h',

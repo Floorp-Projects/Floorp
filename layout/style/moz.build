@@ -7,8 +7,6 @@
 DIRS += ['xbl-marquee']
 TEST_TOOL_DIRS += ['test']
 
-MODULE = 'layout'
-
 EXPORTS += [
     'AnimationCommon.h',
     'nsAnimationManager.h',
@@ -129,11 +127,8 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'gkstyle_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'

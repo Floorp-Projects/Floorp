@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SHORT_LIBNAME	= nkgnomevfs
-
 LOCAL_INCLUDES	= $(MOZ_GNOMEVFS_CFLAGS)
 
 EXTRA_DSO_LDOPTS = \
@@ -12,8 +10,3 @@ EXTRA_DSO_LDOPTS = \
 		   $(NSPR_LIBS) \
 		   $(MOZ_GNOMEVFS_LIBS) \
 		   $(NULL)
-
-# make sure this component is never statically linked into the main
-# application.  this is necessary since we don't want to force users
-# to install gnome-vfs2 in order to use the rest of mozilla ;-)
-FORCE_SHARED_LIB= 1

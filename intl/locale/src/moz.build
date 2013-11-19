@@ -13,8 +13,6 @@ elif toolkit == 'cocoa':
 else:
     DIRS += ['unix']
 
-MODULE = 'locale'
-
 EXPORTS += [
     'nsCollation.h',
 ]
@@ -29,13 +27,10 @@ SOURCES += [
     'nsUConvPropertySearch.cpp',
 ]
 
-LIBRARY_NAME = 'nslocale_s'
-
 EXTRA_JS_MODULES += [
     'PluralForm.jsm',
 ]
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
+FINAL_LIBRARY = 'i18n'

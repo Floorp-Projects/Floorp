@@ -38,8 +38,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 XPIDL_MODULE = 'xpcom_base'
 
-MODULE = 'xpcom'
-
 EXPORTS += [
     'ErrorList.h',
     'nsAgg.h',
@@ -127,11 +125,9 @@ SOURCES += [
 ]
 
 
-LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'xpcombase_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xpcom_core'

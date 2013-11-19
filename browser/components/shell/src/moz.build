@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'shellservice'
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'nsWindowsShellService.cpp',
@@ -20,11 +18,9 @@ elif CONFIG['MOZ_WIDGET_GTK']:
     ]
 
 if SOURCES:
-    LIBRARY_NAME = 'shellservice_s'
+    FINAL_LIBRARY = 'browsercomps'
 
 EXTRA_COMPONENTS += [
     'nsSetDefaultBrowser.js',
     'nsSetDefaultBrowser.manifest',
 ]
-
-FORCE_STATIC_LIB = True

@@ -9,5 +9,5 @@ XPIDL_SOURCES += [
     'nsIWebBrowserFind.idl',
 ]
 
-MODULE = 'find'
+XPIDL_MODULE = 'find'
 

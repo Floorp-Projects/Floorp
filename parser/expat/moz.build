@@ -6,8 +6,6 @@
 
 DIRS += ['lib']
 
-MODULE = 'expat'
-
 EXPORTS += [
     'expat_config.h',
 ]

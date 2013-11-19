@@ -18,8 +18,6 @@ if not CONFIG['JS_DISABLE_SHELL']:
 
 TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
-MODULE = 'js'
-
 mfbt_root = '../../mfbt'
 LOCAL_INCLUDES += ['%s/double-conversion' % mfbt_root]
 
@@ -372,5 +370,16 @@ HOST_SOURCES += [
 HOST_SIMPLE_PROGRAMS += [
     'host_%s' % f.replace('.cpp', '') for f in HOST_SOURCES
 ]
+
+# JavaScript must be built shared, even for static builds, as it is used by
+# other modules which are always built shared. Failure to do so results in
+# the js code getting copied into xpinstall and jsd as well as mozilla-bin,
+# and then the static data cells used for locking no longer work.
+#
+# In fact, we now build both a static and a shared library, as the
+# JS shell would like to link to the static library.
+
+if CONFIG['JS_SHARED_LIBRARY']:
+    FORCE_SHARED_LIB = True
 
 FORCE_STATIC_LIB = True

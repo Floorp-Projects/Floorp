@@ -10,11 +10,6 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gtk3
 DEFINES += -DMOZ_ENABLE_FREETYPE
 endif
 
-SHARED_LIBRARY_LIBS += \
-	../layers/$(LIB_PREFIX)layers.$(LIB_SUFFIX) \
-	$(NULL)
-
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 
 ifdef MOZ_ENABLE_D3D9_LAYER

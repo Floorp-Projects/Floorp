@@ -8,5 +8,5 @@ XPIDL_SOURCES += [
     'extIApplication.idl',
 ]
 
-MODULE = 'exthelper'
+XPIDL_MODULE = 'exthelper'
 

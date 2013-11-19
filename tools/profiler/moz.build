@@ -7,11 +7,7 @@
 if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
 
-    LIBXUL_LIBRARY = True
-    EXPORT_LIBRARY = True
-
-    MODULE = 'profiler'
-    LIBRARY_NAME = 'profiler'
+    XPIDL_MODULE = 'profiler'
     XPIDL_SOURCES += [
         'nsIProfiler.idl',
         'nsIProfileSaveEvent.idl',
@@ -84,6 +80,8 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
 
     if CONFIG['ANDROID_CPU_ARCH'] == 'armeabi':
         DEFINES['ARCH_ARMV6'] = True
+
+    FINAL_LIBRARY = 'xul'
 
 EXPORTS += [
     'GeckoProfiler.h',

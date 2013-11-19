@@ -6,10 +6,6 @@
 CC_WRAPPER =
 CXX_WRAPPER =
 
-ifdef MOZ_FOLD_LIBS
-FORCE_SHARED_LIB = 1
-endif
-
 default::
 
 include $(topsrcdir)/config/makefiles/functions.mk

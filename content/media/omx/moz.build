@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'content'
-
 EXPORTS += [
     'MediaOmxDecoder.h',
     'MediaOmxReader.h',
@@ -28,12 +26,9 @@ if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
         'RtspOmxReader.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'gkconomx_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/content/src',
