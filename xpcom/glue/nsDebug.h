@@ -375,9 +375,6 @@ inline bool NS_warn_if_impl(bool condition, const char* expr, const char* file,
 #define NS_ENSURE_NO_AGGREGATION(outer)                       \
   NS_ENSURE_FALSE(outer, NS_ERROR_NO_AGGREGATION)
 
-#define NS_ENSURE_PROPER_AGGREGATION(outer, iid)              \
-  NS_ENSURE_FALSE(outer && !iid.Equals(NS_GET_IID(nsISupports)), NS_ERROR_INVALID_ARG)
-
 /*****************************************************************************/
 
 #ifdef XPCOM_GLUE
