@@ -186,7 +186,6 @@ class TreeMetadataEmitter(LoggingMixin):
             NO_DIST_INSTALL='NO_DIST_INSTALL',
             OS_LIBS='OS_LIBS',
             SDK_LIBRARY='SDK_LIBRARY',
-            SHARED_LIBRARY_LIBS='SHARED_LIBRARY_LIBS',
         )
         for mak, moz in varmap.items():
             if sandbox[moz]:

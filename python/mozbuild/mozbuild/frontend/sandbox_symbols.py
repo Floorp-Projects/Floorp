@@ -307,13 +307,6 @@ VARIABLES = {
         (``$DIST/sdk/lib``).
         """, None),
 
-    'SHARED_LIBRARY_LIBS': (StrictOrderingOnAppendList, list, [],
-        """Libraries linked into a shared library.
-
-        A list of static library paths which should be linked into the
-        current shared library.
-        """, None),
-
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Compile a list of executable names.
 
