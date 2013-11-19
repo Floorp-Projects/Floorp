@@ -19,6 +19,7 @@ const DATASTOREDB_REVISION_INDEX = 'revisionIndex';
 
 Cu.import('resource://gre/modules/IndexedDBHelper.jsm');
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.importGlobalProperties(["indexedDB"]);
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
