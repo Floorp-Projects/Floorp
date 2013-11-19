@@ -22,6 +22,6 @@ nsIMEPicker::~nsIMEPicker()
 /* void show (); */
 NS_IMETHODIMP nsIMEPicker::Show()
 {
-    GeckoAppShell::ShowInputMethodPicker();
+    AndroidBridge::Bridge()->ShowInputMethodPicker();
     return NS_OK;
 }

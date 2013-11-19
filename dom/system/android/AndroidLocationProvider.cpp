@@ -26,7 +26,9 @@ AndroidLocationProvider::~AndroidLocationProvider()
 NS_IMETHODIMP
 AndroidLocationProvider::Startup()
 {
-    GeckoAppShell::EnableLocation(true);
+    if (!AndroidBridge::Bridge())
+        return NS_ERROR_NOT_IMPLEMENTED;
+    AndroidBridge::Bridge()->EnableLocation(true);
     return NS_OK;
 }
 
@@ -42,13 +44,17 @@ AndroidLocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 NS_IMETHODIMP
 AndroidLocationProvider::Shutdown()
 {
-    GeckoAppShell::EnableLocation(false);
+    if (!AndroidBridge::Bridge())
+        return NS_ERROR_NOT_IMPLEMENTED;
+    AndroidBridge::Bridge()->EnableLocation(false);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 AndroidLocationProvider::SetHighAccuracy(bool enable)
 {
-    GeckoAppShell::EnableLocationHighAccuracy(enable);
+    if (!AndroidBridge::Bridge())
+        return NS_ERROR_NOT_IMPLEMENTED;
+    AndroidBridge::Bridge()->EnableLocationHighAccuracy(enable);
     return NS_OK;
 }
