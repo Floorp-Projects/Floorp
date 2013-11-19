@@ -10,6 +10,4 @@ PROGRAM = 'mozilla-xremote-client'
 
 LIBRARY_NAME = 'xremote_client_s'
 
-FORCE_STATIC_LIB = True
-
 FINAL_LIBRARY = 'xulapp_s'

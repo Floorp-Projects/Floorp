@@ -27,6 +27,4 @@ EXTRA_COMPONENTS += [
     'nsSetDefaultBrowser.manifest',
 ]
 
-FORCE_STATIC_LIB = True
-
 FINAL_LIBRARY = 'browsercomps'
