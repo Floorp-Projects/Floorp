@@ -23,7 +23,6 @@ HOST_SOURCES += ['fans.c', 'tans.c']
 
 HOST_LIBRARY_NAME = 'host_fans'
 
-LIBRARY_NAME = 'lib_name'
 LIBS += ['fans.lib', 'tans.lib']
 
 OS_LIBS += ['foo.so', '-l123', 'aaa.a']
