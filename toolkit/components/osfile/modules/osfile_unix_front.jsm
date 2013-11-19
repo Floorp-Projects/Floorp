@@ -792,7 +792,7 @@
      File.Info = function Info(stat) {
        let isDir = (stat.st_mode & Const.S_IFMT) == Const.S_IFDIR;
        let isSymLink = (stat.st_mode & Const.S_IFMT) == Const.S_IFLNK;
-       let size = Type.stat_size_t.importFromC(stat.st_size);
+       let size = Type.off_t.importFromC(stat.st_size);
 
        let lastAccessDate = new Date(stat.st_atime * 1000);
        let lastModificationDate = new Date(stat.st_mtime * 1000);
