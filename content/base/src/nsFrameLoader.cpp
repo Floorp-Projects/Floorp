@@ -413,6 +413,37 @@ nsFrameLoader::ReallyStartLoading()
   return rv;
 }
 
+class DelayedStartLoadingRunnable : public nsRunnable
+{
+public:
+  DelayedStartLoadingRunnable(nsFrameLoader* aFrameLoader)
+    : mFrameLoader(aFrameLoader)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    // Retry the request.
+    mFrameLoader->ReallyStartLoading();
+
+    // We delayed nsFrameLoader::ReallyStartLoading() after the child process is
+    // ready and might not be able to notify the remote browser in
+    // UpdatePositionAndSize() when reflow finished. Retrigger reflow.
+    nsIFrame* frame = mFrameLoader->GetPrimaryFrameOfOwningContent();
+    if (!frame) {
+      return NS_OK;
+    }
+    frame->InvalidateFrame();
+    frame->PresContext()->PresShell()->
+      FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsFrameLoader> mFrameLoader;
+};
+
 nsresult
 nsFrameLoader::ReallyStartLoadingInternal()
 {
@@ -427,6 +458,13 @@ nsFrameLoader::ReallyStartLoadingInternal()
 
   if (mRemoteFrame) {
     if (!mRemoteBrowser) {
+      if (Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false) &&
+          !ContentParent::PreallocatedProcessReady()) {
+        ContentParent::RunAfterPreallocatedProcessReady(
+            new DelayedStartLoadingRunnable(this));
+        return NS_ERROR_FAILURE;
+      }
+
       TryRemoteBrowser();
 
       if (!mRemoteBrowser) {
