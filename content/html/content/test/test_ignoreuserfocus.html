@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <script type="application/javascript;version=1.7">
+      "use strict";
+
+      SimpleTest.waitForExplicitFinish();
+
+      // Copied from EventUtils.js, but we want *ToWindow methods.
+      function synthesizeMouseAtPoint(left, top, aEvent, aWindow) {
+        var utils = _getDOMWindowUtils(aWindow);
+        var defaultPrevented = false;
+        if (utils) {
+          var button = aEvent.button || 0;
+          var clickCount = aEvent.clickCount || 1;
+          var modifiers = _parseModifiers(aEvent);
+          var pressure = ("pressure" in aEvent) ? aEvent.pressure : 0;
+          var inputSource = ("inputSource" in aEvent) ? aEvent.inputSource : 0;
+
+          if (("type" in aEvent) && aEvent.type) {
+            defaultPrevented = utils.sendMouseEventToWindow(aEvent.type, left, top, button, clickCount, modifiers, false, pressure, inputSource);
+          }
+          else {
+            utils.sendMouseEventToWindow("mousedown", left, top, button, clickCount, modifiers, false, pressure, inputSource);
+            utils.sendMouseEventToWindow("mouseup", left, top, button, clickCount, modifiers, false, pressure, inputSource);
+          }
+        }
+      }
+
+      function runTest() {
+        var witness = document.createElement("input");
+        witness.setAttribute("type", "text");
+        var witness2 = document.createElement("input");
+        witness2.setAttribute("type", "text");
+
+        var iframe = document.createElement("iframe");
+        iframe.setAttribute("mozbrowser", "true");
+        iframe.setAttribute("ignoreuserfocus", "true");
+        iframe.setAttribute("height", "500px");
+        iframe.setAttribute("src", "file_ignoreuserfocus.html");
+
+        iframe.addEventListener('load', function (e) {
+          // Get privileged iframe because mozbrowser iframe is not same origin
+          // with the parent. We need to access its content through the wrapper.
+          var privilegedIframe = SpecialPowers.wrap(iframe);
+          privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function afterPaint(e) {
+            privilegedIframe.contentWindow.removeEventListener("MozAfterPaint", afterPaint);
+            
+            privilegedIframe.contentWindow.addEventListener("focus",
+              function(e) {
+                ok(!iframe.hasAttribute("ignoreuserfocus"), "Shouldn't get a focus event in ignoreuserfocus iframe!");
+              },
+              true);
+            privilegedIframe.contentWindow.addEventListener("blur",
+              function(e) {
+                ok(!iframe.hasAttribute("ignoreuserfocus"), "Shouldn't get a blur event in ignoreuserfocus iframe!");
+              },
+              true);
+
+            // Sanity check
+            witness.focus();
+            is(document.activeElement, witness, "witness should have the focus");
+
+            iframe.focus();
+            isnot(document.activeElement, iframe, "[explicit iframe.focus()] iframe should not get the focus");
+
+            iframe.removeAttribute("ignoreuserfocus");
+            iframe.focus();
+            is(document.activeElement, iframe, "[explicit iframe.focus()] iframe should get the focus");
+
+            iframe.setAttribute("ignoreuserfocus", "true");
+
+            // Test the case when iframe contains <input> and .focus()
+            // is called and explicit focus using mouse
+            witness.focus();
+
+            var innerInput = privilegedIframe.contentDocument.getElementsByTagName("input")[0];
+            innerInput.focus();
+            isnot(document.activeElement, iframe, "[explicit innerInput.focus()] iframe should not have the focus");
+
+            var iframeWindow = SpecialPowers.unwrap(privilegedIframe.contentWindow);
+            witness.focus();
+            synthesizeMouseAtCenter(innerInput, {}, iframeWindow);
+            is(document.activeElement, witness, "[synthesize mouse click] witness should have the focus");
+
+            // Test the case when iframe contains <iframe> and .focus()
+            // is called and explicit focus using mouse
+            witness.focus();
+
+            var innerIframe = privilegedIframe.contentDocument.getElementsByTagName("iframe")[0];
+            innerIframe.focus();
+            isnot(document.activeElement, iframe, "[explicit innerIframe.focus()] iframe should not have the focus");
+
+            witness.focus();
+            synthesizeMouseAtCenter(innerIframe, {}, iframeWindow);
+            is(document.activeElement, witness, "[synthesize mouse click inner iframe] witness should have the focus");
+
+            // Test the case when iframe contains <area> and .focus()
+            // is called and explicit focus using mouse
+            witness.focus();
+
+            // Wait for paint to setup frame for area. Currently the area frame
+            // map is reset for each paint. If we are in the middle of a paint
+            // then the area will not be focusable.
+            privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function afterPaintArea(e) {
+              privilegedIframe.contentWindow.removeEventListener("MozAfterPaint", afterPaintArea);
+              var innerArea = privilegedIframe.contentDocument.getElementsByTagName("area")[0];
+              innerArea.focus();
+              isnot(document.activeElement, iframe, "[explicit innerArea.focus()] iframe should not have the focus");
+
+              witness.focus();
+              synthesizeMouseAtCenter(innerArea, {}, iframeWindow);
+              is(document.activeElement, witness, "[synthesize mouse click] witness should have the focus");
+
+              // Test tabindex
+              witness.focus();
+              is(document.activeElement, witness, "witness should have the focus");
+              synthesizeKey("VK_TAB", {});
+              isnot(document.activeElement, iframe, "[synthesize tab key] iframe should not have the focus");
+              is(document.activeElement, witness2, "witness2 should have the focus");
+
+              SimpleTest.finish();
+            });
+          });
+        });
+
+        document.body.appendChild(witness);
+        document.body.appendChild(iframe);
+        document.body.appendChild(witness2);
+      }
+      addEventListener("load", function() {
+        SpecialPowers.addPermission("browser", true, document);
+        SpecialPowers.pushPrefEnv({
+          "set": [
+            ["dom.mozBrowserFramesEnabled", true]
+          ]
+        }, runTest);
+      });
+    </script>
+  </body>
+</html>
