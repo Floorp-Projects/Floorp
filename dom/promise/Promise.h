@@ -20,13 +20,15 @@
 namespace mozilla {
 namespace dom {
 
-class PromiseInit;
-class PromiseCallback;
 class AnyCallback;
+class PromiseCallback;
+class PromiseInit;
+class PromiseNativeHandler;
 
 class Promise MOZ_FINAL : public nsISupports,
                           public nsWrapperCache
 {
+  friend class NativePromiseCallback;
   friend class PromiseTask;
   friend class PromiseResolverTask;
   friend class ResolvePromiseCallback;
@@ -77,6 +79,8 @@ public:
 
   already_AddRefed<Promise>
   Catch(const Optional<OwningNonNull<AnyCallback> >& aRejectCallback);
+
+  void AppendNativeHandler(PromiseNativeHandler* aRunnable);
 
 private:
   enum PromiseState {
