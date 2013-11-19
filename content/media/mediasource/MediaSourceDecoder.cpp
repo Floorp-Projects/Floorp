@@ -120,7 +120,7 @@ private:
   }
 };
 
-MediaSourceDecoder::MediaSourceDecoder(dom::HTMLMediaElement* aElement)
+MediaSourceDecoder::MediaSourceDecoder(HTMLMediaElement* aElement)
   : mMediaSource(nullptr)
   , mVideoReader(nullptr),
     mAudioReader(nullptr)
@@ -148,13 +148,13 @@ MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
 }
 
 nsresult
-MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
+MediaSourceDecoder::GetSeekable(TimeRanges* aSeekable)
 {
   double duration = mMediaSource->Duration();
   if (IsNaN(duration)) {
     // Return empty range.
   } else if (duration > 0 && mozilla::IsInfinite(duration)) {
-    nsRefPtr<dom::TimeRanges> bufferedRanges = new dom::TimeRanges();
+    nsRefPtr<TimeRanges> bufferedRanges = new TimeRanges();
     GetBuffered(bufferedRanges);
     aSeekable->Add(0, bufferedRanges->GetFinalEndTime());
   } else {
@@ -164,7 +164,7 @@ MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
 }
 
 void
-MediaSourceDecoder::AttachMediaSource(dom::MediaSource* aMediaSource)
+MediaSourceDecoder::AttachMediaSource(MediaSource* aMediaSource)
 {
   MOZ_ASSERT(!mMediaSource && !mDecoderStateMachine);
   mMediaSource = aMediaSource;

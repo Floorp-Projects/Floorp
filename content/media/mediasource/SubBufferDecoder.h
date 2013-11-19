@@ -48,7 +48,7 @@ public:
     mParentDecoder->NotifyDataArrived(aBuffer, aLength, aOffset);
   }
 
-  nsresult GetBuffered(dom::TimeRanges* aBuffered)
+  nsresult GetBuffered(TimeRanges* aBuffered)
   {
     // XXX: Need mStartTime (from StateMachine) instead of passing 0.
     return mReader->GetBuffered(aBuffered, 0);

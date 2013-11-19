@@ -504,7 +504,7 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
 
   MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
   NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  HTMLMediaElement* element = owner->GetMediaElement();
   NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
 
   element->FinishDecoderSetup(mDecoder, this);
@@ -535,7 +535,7 @@ void RtspMediaResource::Suspend(bool aCloseImmediately)
 
   MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
   NS_ENSURE_TRUE_VOID(owner);
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  HTMLMediaElement* element = owner->GetMediaElement();
   NS_ENSURE_TRUE_VOID(element);
 
   mMediaStreamController->Suspend();
@@ -548,7 +548,7 @@ void RtspMediaResource::Resume()
 
   MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
   NS_ENSURE_TRUE_VOID(owner);
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  HTMLMediaElement* element = owner->GetMediaElement();
   NS_ENSURE_TRUE_VOID(element);
 
   if (mChannel) {
