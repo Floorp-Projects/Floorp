@@ -124,7 +124,7 @@ BrowserDebuggerProcess.prototype = {
     }
 
     // Create a new chrome debugging profile.
-    this._dbgProfile = profileService.createProfile(null, null, profileName);
+    this._dbgProfile = profileService.createProfile(null, profileName);
     profileService.flush();
 
     dumpn("Finished creating the chrome debugger user profile.");
