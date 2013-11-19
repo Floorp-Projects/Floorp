@@ -15,6 +15,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla.dom.workers += [
+    'ServiceWorkerManager.h',
     'Workers.h',
 ]
 
@@ -50,6 +51,7 @@ SOURCES += [
     'ServiceWorker.cpp',
     'ServiceWorkerContainer.cpp',
     'ServiceWorkerEvents.cpp',
+    'ServiceWorkerManager.cpp',
     'SharedWorker.cpp',
     'URL.cpp',
     'WorkerPrivate.cpp',

@@ -6,9 +6,12 @@
 
 #include "ServiceWorkerContainer.h"
 
+#include "nsIDocument.h"
+#include "nsIServiceWorkerManager.h"
 #include "nsPIDOMWindow.h"
 
 #include "nsCycleCollectionParticipant.h"
+#include "nsServiceManagerUtils.h"
 
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerContainerBinding.h"
@@ -37,18 +40,46 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
                                  const RegistrationOptionList& aOptions,
                                  ErrorResult& aRv)
 {
-  // FIXME(nsm): Bug 984048
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  nsCOMPtr<nsISupports> promise;
+
+  nsresult rv;
+  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  aRv = swm->Register(mWindow, aOptions.mScope, aScriptURL, getter_AddRefs(promise));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> ret = static_cast<Promise*>(promise.get());
+  MOZ_ASSERT(ret);
+  return ret.forget();
 }
 
 already_AddRefed<Promise>
 ServiceWorkerContainer::Unregister(const nsAString& aScope,
                                    ErrorResult& aRv)
 {
-  // FIXME(nsm): Bug 984048
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  nsCOMPtr<nsISupports> promise;
+
+  nsresult rv;
+  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  aRv = swm->Unregister(mWindow, aScope, getter_AddRefs(promise));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> ret = static_cast<Promise*>(promise.get());
+  MOZ_ASSERT(ret);
+  return ret.forget();
 }
 
 already_AddRefed<workers::ServiceWorker>
