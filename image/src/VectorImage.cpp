@@ -26,6 +26,9 @@
 #include "nsIDOMEventListener.h"
 #include "SurfaceCache.h"
 
+// undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
+#undef GetCurrentTime
+
 namespace mozilla {
 
 using namespace dom;
