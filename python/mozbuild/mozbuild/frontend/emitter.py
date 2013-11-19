@@ -305,15 +305,15 @@ class TreeMetadataEmitter(LoggingMixin):
             yield InstallationTarget(sandbox)
 
         libname = sandbox.get('LIBRARY_NAME')
+        final_lib = sandbox.get('FINAL_LIBRARY')
+        if not libname and final_lib:
+            # If no LIBRARY_NAME is given, create one.
+            libname = sandbox['RELATIVEDIR'].replace('/', '_')
         if libname:
             self._libs.setdefault(libname, {})[sandbox['RELATIVEDIR']] = \
                 LibraryDefinition(sandbox, libname)
 
-        final_lib = sandbox.get('FINAL_LIBRARY')
         if final_lib:
-            if not libname:
-                # For now, this is true.
-                raise SandboxValidationError('FINAL_LIBRARY requires LIBRARY_NAME')
             if sandbox.get('FORCE_STATIC_LIB'):
                 raise SandboxValidationError('FINAL_LIBRARY implies FORCE_STATIC_LIB')
             self._final_libs.append((sandbox['RELATIVEDIR'], libname, final_lib))
