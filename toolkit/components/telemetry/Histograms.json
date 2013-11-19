@@ -3247,6 +3247,18 @@
     "n_values": 3,
     "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block"
   },
+  "PLUGINS_INFOBAR_SHOWN": {
+    "kind": "boolean",
+    "description": "Count of when the hidden-plugin infobar was displayed."
+  },
+  "PLUGINS_INFOBAR_BLOCK": {
+    "kind": "boolean",
+    "description": "Count the number of times the user clicked 'block' on the hidden-plugin infobar."
+  },
+  "PLUGINS_INFOBAR_ALLOW": {
+    "kind": "boolean",
+    "description": "Count the number of times the user clicked 'allow' on the hidden-plugin infobar."
+  },
   "POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS": {
     "kind": "linear",
     "low": 25,
