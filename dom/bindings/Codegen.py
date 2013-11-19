@@ -1800,7 +1800,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
-                Argument('JS::Heap<JSObject*>*', 'aProtoAndIfaceArray'),
+                Argument('ProtoAndIfaceArray&', 'aProtoAndIfaceArray'),
                 Argument('bool', 'aDefineOnGlobal')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
@@ -2012,7 +2012,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     return JS::NullPtr();
   }
   /* Check to see whether the interface objects are already installed */
-  JS::Heap<JSObject*>* protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
+  ProtoAndIfaceArray& protoAndIfaceArray = *GetProtoAndIfaceArray(aGlobal);
   if (!protoAndIfaceArray[%s]) {
     CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray, aDefineOnGlobal);
   }
@@ -9068,6 +9068,7 @@ class CGForwardDeclarations(CGWrapper):
 
         # We just about always need NativePropertyHooks
         builder.addInMozillaDom("NativePropertyHooks")
+        builder.addInMozillaDom("ProtoAndIfaceArray")
 
         for callback in mainCallbacks:
             forwardDeclareForType(callback)
