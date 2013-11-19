@@ -493,7 +493,7 @@ function TypedArrayRedimension(newArrayType) {
 //
 // FIXME bug 929656 -- label algorithms with steps from the spec
 function HandleCreate(obj, ...path) {
-  if (!ObjectIsTypeObject(this))
+  if (!IsObject(this) || !ObjectIsTypeObject(this))
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Type", "handle", "value");
 
   var handle = NewTypedHandle(this);
@@ -507,14 +507,14 @@ function HandleCreate(obj, ...path) {
 // Handle.move: user exposed!
 // FIXME bug 929656 -- label algorithms with steps from the spec
 function HandleMove(handle, obj, ...path) {
-  if (!ObjectIsTypedHandle(handle))
+  if (!IsObject(handle) || !ObjectIsTypedHandle(handle))
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Handle", "set", typeof value);
 
   HandleMoveInternal(handle, obj, path);
 }
 
 function HandleMoveInternal(handle, obj, path) {
-  assert(ObjectIsTypedHandle(handle),
+  assert(IsObject(handle) && ObjectIsTypedHandle(handle),
          "HandleMoveInternal: not typed handle");
 
   if (!IsObject(obj) || !ObjectIsTypedDatum(obj))
@@ -567,10 +567,12 @@ function HandleTest(obj) {
 // Miscellaneous
 
 function ObjectIsTypedDatum(obj) {
+  assert(IsObject(obj), "ObjectIsTypedDatum invoked with non-object")
   return ObjectIsTypedObject(obj) || ObjectIsTypedHandle(obj);
 }
 
 function ObjectIsAttached(obj) {
+  assert(IsObject(obj), "ObjectIsAttached invoked with non-object")
   assert(ObjectIsTypedDatum(obj),
          "ObjectIsAttached() invoked on invalid obj");
   return DATUM_OWNER(obj) != null;
