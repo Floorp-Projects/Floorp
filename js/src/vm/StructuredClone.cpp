@@ -345,6 +345,8 @@ static void
 Discard(const uint64_t *begin, const uint64_t *end)
 {
     const uint64_t *point = begin;
+    if (begin >= end)
+        return; // Empty buffer
 
     uint64_t u = LittleEndian::readUint64(point++);
     uint32_t tag = uint32_t(u >> 32);

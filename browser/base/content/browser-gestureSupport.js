@@ -659,6 +659,7 @@ let gHistorySwipeAnimation = {
    */
   stopAnimation: function HSA_stopAnimation() {
     gHistorySwipeAnimation._removeBoxes();
+    this._historyIndex = gBrowser.webNavigation.sessionHistory.index;
   },
 
   /**
@@ -724,23 +725,27 @@ let gHistorySwipeAnimation = {
    *        An event to process.
    */
   handleEvent: function HSA_handleEvent(aEvent) {
+    let browser = gBrowser.selectedBrowser;
     switch (aEvent.type) {
       case "TabClose":
-        let browser = gBrowser.getBrowserForTab(aEvent.target);
-        this._removeTrackedSnapshot(-1, browser);
+        let browserForTab = gBrowser.getBrowserForTab(aEvent.target);
+        this._removeTrackedSnapshot(-1, browserForTab);
         break;
       case "DOMModalDialogClosed":
         this.stopAnimation();
         break;
       case "pageshow":
+        if (aEvent.target == browser.contentDocument) {
+          this.stopAnimation();
+        }
+        break;
       case "popstate":
-        if (aEvent.target != gBrowser.selectedBrowser.contentDocument)
-          break;
-        this.stopAnimation();
-        this._historyIndex = gBrowser.webNavigation.sessionHistory.index;
+        if (aEvent.target == browser.contentDocument.defaultView) {
+          this.stopAnimation();
+        }
         break;
       case "pagehide":
-        if (aEvent.target == gBrowser.selectedBrowser.contentDocument) {
+        if (aEvent.target == browser.contentDocument) {
           // Take and compress a snapshot of a page whenever it's about to be
           // navigated away from. We already have a snapshot of the page if an
           // animation is running, so we're left with compressing it.

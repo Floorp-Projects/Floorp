@@ -4,9 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Accessible-inl.h"
-#include "AccessibleWrap.h"
+#include "HyperTextAccessible-inl.h"
 #include "TextLeafAccessible.h"
-#include "nsIAccessibleTypes.h"
 
 #include "nsCocoaUtils.h"
 #include "nsObjCExceptions.h"
@@ -213,10 +212,10 @@ ToNSString(id aValue)
 #endif
       return nil;
     }
-    
+
     int32_t start = range.location;
     int32_t end = start + range.length;
-    nsIntRect bounds = mGeckoTextAccessible->GetTextBounds(start, end);
+    nsIntRect bounds = mGeckoTextAccessible->TextBounds(start, end);
 
     return [NSValue valueWithRect:nsCocoaUtils::GeckoRectToCocoaRect(bounds)];
   }
@@ -263,21 +262,13 @@ ToNSString(id aValue)
     if (!stringValue)
       return;
 
-    int32_t start = 0;
-    int32_t end = 0;
-
-    nsresult rv = mGeckoTextAccessible->GetSelectionBounds(0, &start, &end);
-    NS_ENSURE_SUCCESS(rv,);
-    
-    rv = mGeckoTextAccessible->DeleteText(start, end - start);
-    NS_ENSURE_SUCCESS(rv,);
+    int32_t start = 0, end = 0;
+    mGeckoTextAccessible->SelectionBoundsAt(0, &start, &end);
+    mGeckoTextAccessible->DeleteText(start, end - start);
 
     nsString text;
     nsCocoaUtils::GetStringForNSString(stringValue, text);
-    rv = mGeckoTextAccessible->InsertText(text, start);
-    NS_ENSURE_SUCCESS(rv,);
-
-    return;
+    mGeckoTextAccessible->InsertText(text, start);
   }
 
   if ([attribute isEqualToString:NSAccessibilitySelectedTextRangeAttribute]) {
@@ -285,10 +276,8 @@ ToNSString(id aValue)
     if (!ToNSRange(value, &range))
       return;
 
-    nsresult rv = mGeckoTextAccessible->SetSelectionBounds(0, range.location, 
-                                                           range.location + range.length);
-    NS_ENSURE_SUCCESS(rv,);
-
+    mGeckoTextAccessible->SetSelectionBoundsAt(0, range.location,
+                                               range.location + range.length);
     return;
   }
 
@@ -374,10 +363,9 @@ ToNSString(id aValue)
     return @"";
 
   nsAutoString text;
-  nsresult rv = mGeckoTextAccessible->
-    GetText(0, nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT, text);
-  NS_ENSURE_SUCCESS(rv, @"");
-
+  mGeckoTextAccessible->TextSubstring(0,
+                                      nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT,
+                                      text);
   return nsCocoaUtils::ToNSString(text);
 }
 
@@ -398,11 +386,8 @@ ToNSString(id aValue)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   if (mGeckoTextAccessible) {
-    int32_t start, end;
-    start = end = 0;
-    nsresult rv = mGeckoTextAccessible->GetSelectionBounds(0, &start, &end);
-    NS_ENSURE_SUCCESS(rv, 0);
-
+    int32_t start = 0, end = 0;
+    mGeckoTextAccessible->SelectionBoundsAt(0, &start, &end);
     return (end - start);
   }
   return 0;
@@ -415,12 +400,11 @@ ToNSString(id aValue)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   if (mGeckoTextAccessible) {
-    int32_t start, end;
-    start = end = 0;
-    mGeckoTextAccessible->GetSelectionBounds(0, &start, &end);
+    int32_t start = 0, end = 0;
+    mGeckoTextAccessible->SelectionBoundsAt(0, &start, &end);
     if (start != end) {
       nsAutoString selText;
-      mGeckoTextAccessible->GetText(start, end, selText);
+      mGeckoTextAccessible->TextSubstring(start, end, selText);
       return nsCocoaUtils::ToNSString(selText);
     }
   }
@@ -436,21 +420,14 @@ ToNSString(id aValue)
   if (mGeckoTextAccessible) {
     int32_t start = 0;
     int32_t end = 0;
-    int32_t count = 0;
-
-    nsresult rv = mGeckoTextAccessible->GetSelectionCount(&count);
-    NS_ENSURE_SUCCESS(rv, nil);
+    int32_t count = mGeckoTextAccessible->SelectionCount();
 
     if (count) {
-      rv = mGeckoTextAccessible->GetSelectionBounds(0, &start, &end);
-      NS_ENSURE_SUCCESS(rv, nil);
-
+      mGeckoTextAccessible->SelectionBoundsAt(0, &start, &end);
       return [NSValue valueWithRange:NSMakeRange(start, end - start)];
     }
 
-    rv = mGeckoTextAccessible->GetCaretOffset(&start);
-    NS_ENSURE_SUCCESS(rv, nil);
-    
+    start = mGeckoTextAccessible->CaretOffset();
     return [NSValue valueWithRange:NSMakeRange(start != -1 ? start : 0, 0)]; 
   }
   return [NSValue valueWithRange:NSMakeRange(0, 0)];
@@ -488,8 +465,8 @@ ToNSString(id aValue)
   NS_PRECONDITION(mGeckoTextAccessible && range, "no Gecko text accessible or range");
 
   nsAutoString text;
-  mGeckoTextAccessible->GetText(range->location, 
-                                range->location + range->length, text);
+  mGeckoTextAccessible->TextSubstring(range->location,
+                                      range->location + range->length, text);
   return nsCocoaUtils::ToNSString(text);
 }
 

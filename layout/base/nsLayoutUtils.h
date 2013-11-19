@@ -58,6 +58,7 @@ struct nsOverflowAreas;
 namespace mozilla {
 class SVGImageContext;
 struct IntrinsicSize;
+struct ContainerLayerParameters;
 namespace dom {
 class DOMRectList;
 class Element;
@@ -65,6 +66,9 @@ class HTMLImageElement;
 class HTMLCanvasElement;
 class HTMLVideoElement;
 } // namespace dom
+namespace layers {
+class Layer;
+}
 } // namespace mozilla
 
 /**
@@ -76,6 +80,8 @@ class nsLayoutUtils
 {
   typedef ::GraphicsFilter GraphicsFilter;
   typedef mozilla::dom::DOMRectList DOMRectList;
+  typedef mozilla::layers::Layer Layer;
+  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
 
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -107,12 +113,12 @@ public:
   /**
    * Get display port for the given element.
    */
-  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
+  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
 
   /**
    * Get the critical display port for the given element.
    */
-  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult);
+  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult = nullptr);
 
   /**
    * Use heuristics to figure out the child list that
@@ -361,27 +367,44 @@ public:
   static bool IsAncestorFrameCrossDoc(const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
                                         const nsIFrame* aCommonAncestor = nullptr);
 
-  /**
-   * Finds the nearest ancestor frame that is the root of an "actively
-   * scrolled" frame subtree, or aStopAtAncestor if there is no
-   * such ancestor before we reach aStopAtAncestor in the ancestor chain.
-   * We expect frames with the same "active scrolled root" to be
-   * scrolled together, so we'll place them in the same ThebesLayer.
-   */
-  static nsIFrame* GetActiveScrolledRootFor(nsIFrame* aFrame,
-                                            const nsIFrame* aStopAtAncestor);
-
-  static nsIFrame* GetActiveScrolledRootFor(nsDisplayItem* aItem,
-                                            nsDisplayListBuilder* aBuilder,
-                                            bool* aShouldFixToViewport = nullptr);
+  static void SetFixedPositionLayerData(Layer* aLayer, const nsIFrame* aViewportFrame,
+                                        nsSize aViewportSize,
+                                        const nsIFrame* aFixedPosFrame,
+                                        const nsIFrame* aReferenceFrame,
+                                        nsPresContext* aPresContext,
+                                        const ContainerLayerParameters& aContainerParameters);
 
   /**
-   * Returns true if aActiveScrolledRoot is in a content document,
-   * and its topmost content document ancestor has a root scroll frame with
-   * a displayport set, and aActiveScrolledRoot is scrolled by that scrollframe.
+   * Return true if aFrame is a fixed-pos frame and is a child of a viewport
+   * which has a displayport. These frames get special treatment from the compositor.
+   * aDisplayPort, if non-null, is set to the display port rectangle (relative to
+   * the viewport).
    */
-  static bool IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFrame* aActiveScrolledRoot,
-                                                                  nsDisplayListBuilder* aBuilder);
+  static bool IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame,
+                                           nsRect* aDisplayPort = nullptr);
+
+  /**
+   * Finds the nearest ancestor frame that is considered to have (or will have)
+   * "animated geometry". For example the scrolled frames of scrollframes which
+   * are actively being scrolled fall into this category. Frames with certain
+   * CSS properties that are being animated (e.g. 'left'/'top' etc) are also
+   * placed in this category. Frames with animated CSS transforms are not
+   * put in this category because they can be handled directly by
+   * nsDisplayTransform.
+   * Stop searching at aStopAtAncestor if there is no such ancestor before it
+   * in the ancestor chain.
+   * Frames with different active geometry roots are in different ThebesLayers,
+   * so that we can animate the geometry root by changing its transform (either
+   * on the main thread or in the compositor).
+   * This function is idempotent: a frame returned by GetAnimatedGeometryRootFor
+   * is always returned again if you pass it to GetAnimatedGeometryRootFor.
+   */
+  static nsIFrame* GetAnimatedGeometryRootFor(nsIFrame* aFrame,
+                                              const nsIFrame* aStopAtAncestor = nullptr);
+
+  static nsIFrame* GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
+                                              nsDisplayListBuilder* aBuilder);
+
 
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
@@ -1122,12 +1145,12 @@ public:
   static gfxFloat GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
                                       nscoord aY, nscoord aAscent);
 
-  static void DrawString(const nsIFrame*      aFrame,
-                         nsRenderingContext* aContext,
-                         const PRUnichar*     aString,
-                         int32_t              aLength,
-                         nsPoint              aPoint,
-                         uint8_t              aDirection = NS_STYLE_DIRECTION_INHERIT);
+  static void DrawString(const nsIFrame*       aFrame,
+                         nsRenderingContext*   aContext,
+                         const PRUnichar*      aString,
+                         int32_t               aLength,
+                         nsPoint               aPoint,
+                         nsStyleContext*       aStyleContext = nullptr);
 
   static nscoord GetStringWidth(const nsIFrame*      aFrame,
                                 nsRenderingContext* aContext,

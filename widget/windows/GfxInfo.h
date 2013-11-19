@@ -45,7 +45,7 @@ public:
 
   virtual nsresult Init();
 
-  virtual uint32_t OperatingSystemVersion() const { return mWindowsVersion; }
+  virtual uint32_t OperatingSystemVersion() MOZ_OVERRIDE { return mWindowsVersion; }
 
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED

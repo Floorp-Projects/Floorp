@@ -328,7 +328,6 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_ACRONYM;
     static nsHtml5ElementName* ELT_ADDRESS;
     static nsHtml5ElementName* ELT_BGSOUND;
-    static nsHtml5ElementName* ELT_COMMAND;
     static nsHtml5ElementName* ELT_COMPOSE;
     static nsHtml5ElementName* ELT_CEILING;
     static nsHtml5ElementName* ELT_CSYMBOL;
