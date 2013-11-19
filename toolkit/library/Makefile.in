@@ -69,6 +69,49 @@ endif
 endif
 
 # component libraries
+ifdef MOZ_JSDEBUGGER
+DEFINES += -DMOZ_JSDEBUGGER
+endif
+
+ifdef MOZ_PREF_EXTENSIONS
+DEFINES += -DMOZ_PREF_EXTENSIONS
+endif
+
+ifdef MOZ_AUTH_EXTENSION
+DEFINES += -DMOZ_AUTH_EXTENSION
+endif
+
+ifdef MOZ_PERMISSIONS
+DEFINES += -DMOZ_PERMISSIONS
+endif
+
+ifdef MOZ_UNIVERSALCHARDET
+DEFINES += -DMOZ_UNIVERSALCHARDET
+endif
+
+ifeq (,$(filter android gonk qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifdef MOZ_XUL
+DEFINES += -DMOZ_FILEVIEW
+endif
+endif
+
+# Platform-specific icon channel stuff - supported mostly-everywhere
+ifneq (,$(filter windows os2 mac cocoa gtk2 gtk3 qt android,$(MOZ_WIDGET_TOOLKIT)))
+DEFINES += -DICON_DECODER
+endif
+
+ifdef MOZ_SPELLCHECK
+DEFINES += -DMOZ_SPELLCHECK
+endif
+
+ifdef MOZ_ZIPWRITER
+DEFINES += -DMOZ_ZIPWRITER
+endif
+
+ifdef MOZ_GIO_COMPONENT
+DEFINES += -DMOZ_GIO_COMPONENT
+endif
+
 ifdef MOZ_APP_COMPONENT_LIBS
 COMPONENT_LIBS += $(MOZ_APP_COMPONENT_LIBS)
 endif
@@ -357,6 +400,12 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
 endif
 
+ifdef MOZ_DEBUG
+ifdef ENABLE_TESTS
+DEFINES += -DENABLE_LAYOUTDEBUG
+endif
+endif
+
 ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
 # Wrap linker to measure peak virtual memory usage.
 LD := $(PYTHON) $(topsrcdir)/build/link.py $(CURDIR)/linker-vsize $(LD)
@@ -395,5 +444,3 @@ endif
 
 $(FINAL_TARGET)/dependentlibs.list: dependentlibs.py $(SHARED_LIBRARY) $(wildcard $(if $(wildcard $(FINAL_TARGET)/dependentlibs.list),$(addprefix $(FINAL_TARGET)/,$(shell cat $(FINAL_TARGET)/dependentlibs.list))))
 	$(PYTHON) $< $(SHARED_LIBRARY) -L $(FINAL_TARGET) $(if $(TOOLCHAIN_PREFIX),$(addprefix -p ,$(TOOLCHAIN_PREFIX))) > $@
-
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,StaticXULComponentsEnd,$(CURDIR)/StaticXULComponentsEnd)
