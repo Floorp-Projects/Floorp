@@ -20,6 +20,7 @@ import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -1991,6 +1992,7 @@ public class BrowserProvider extends ContentProvider {
         return dbHelper;
     }
 
+    @RobocopTarget
     public String getDatabasePath(String profile, boolean isTest) {
         trace("Getting database path for profile: " + profile);
 

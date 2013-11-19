@@ -4,12 +4,11 @@
 
 package org.mozilla.gecko;
 
-import android.content.Context;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanningPerfAPI;
 import org.mozilla.gecko.mozglue.GeckoLoader;
-import org.mozilla.gecko.mozglue.RobocopJNITarget;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.util.GeckoEventListener;
 
@@ -38,6 +37,7 @@ import java.util.List;
  * also not prone to vanishing at compile-time, but doing this might substantially complicate your
  * work, ultimately not proving worth the extra effort to avoid making a slight mess here.
  */
+@RobocopTarget
 public class RobocopAPI {
     private final GeckoApp mGeckoApp;
 
