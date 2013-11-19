@@ -2067,6 +2067,7 @@ abstract public class GeckoApp
             mPromptService.destroy();
         if (mTextSelection != null)
             mTextSelection.destroy();
+        NotificationHelper.destroy();
 
         if (SmsManager.getInstance() != null) {
             SmsManager.getInstance().stop();
