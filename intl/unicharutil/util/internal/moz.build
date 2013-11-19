@@ -13,3 +13,5 @@ UNIFIED_SOURCES += intl_unicharutil_util_cppsrcs
 LIBRARY_NAME = 'unicharutil_s'
 
 LIBXUL_LIBRARY = True
+
+FINAL_LIBRARY = 'xul'

@@ -17,10 +17,9 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domsystemandroid_s'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/events/src',
     '/dom/src/geolocation',

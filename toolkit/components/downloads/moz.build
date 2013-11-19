@@ -46,3 +46,4 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'download_s'
 
+FINAL_LIBRARY = 'toolkitcomps'

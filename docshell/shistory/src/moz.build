@@ -28,3 +28,5 @@ MSVC_ENABLE_PGO = True
 LOCAL_INCLUDES += [
     '/docshell/base',
 ]
+
+FINAL_LIBRARY = 'xul'

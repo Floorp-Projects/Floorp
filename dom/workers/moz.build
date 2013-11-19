@@ -65,3 +65,5 @@ LOCAL_INCLUDES += [
     '/content/events/src',
     '/xpcom/build',
 ]
+
+FINAL_LIBRARY = 'gklayout'

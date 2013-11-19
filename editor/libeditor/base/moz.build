@@ -47,3 +47,5 @@ LOCAL_INCLUDES += [
     '/extensions/spellcheck/src',
     '/layout/style',
 ]
+
+FINAL_LIBRARY = 'gklayout'

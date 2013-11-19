@@ -29,5 +29,4 @@ DEFINES['NOMINMAX'] = True
 
 LIBRARY_NAME = 'accessibility_toolkit_sdn_s'
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

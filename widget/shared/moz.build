@@ -21,3 +21,4 @@ LIBRARY_NAME = 'widget_shared'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xpwidgets_s'

@@ -20,3 +20,4 @@ LIBRARY_NAME = 'directory_s'
 
 LIBXUL_LIBRARY = True
 
+FINAL_LIBRARY = 'appcomps'

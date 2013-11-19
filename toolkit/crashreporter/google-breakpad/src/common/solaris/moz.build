@@ -26,3 +26,5 @@ HOST_SOURCES += [
 
 # need static lib
 FORCE_STATIC_LIB = True
+
+FINAL_LIBRARY = 'xulapp_s'

@@ -28,3 +28,5 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/js/xpconnect/src',
 ]
+
+FINAL_LIBRARY = 'gklayout'

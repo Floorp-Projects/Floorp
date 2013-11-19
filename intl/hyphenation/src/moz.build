@@ -22,3 +22,4 @@ SOURCES += [
 
 MSVC_ENABLE_PGO = True
 
+FINAL_LIBRARY = 'i18n'

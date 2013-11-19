@@ -28,3 +28,5 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/editor/txmgr/src',
 ]
+
+FINAL_LIBRARY = 'gklayout'

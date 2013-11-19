@@ -62,3 +62,4 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkxulbase_s'
 
+FINAL_LIBRARY = 'gklayout'

@@ -23,3 +23,5 @@ LIBXUL_LIBRARY = True
 LOCAL_INCLUDES += [
     '/xpcom/ds',
 ]
+
+FINAL_LIBRARY = 'xpcom_core'

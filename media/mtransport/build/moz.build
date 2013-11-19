@@ -76,3 +76,5 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
+
+FINAL_LIBRARY = 'xul'

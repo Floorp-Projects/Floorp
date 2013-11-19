@@ -41,6 +41,8 @@ LOCAL_INCLUDES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
+
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/dom/',

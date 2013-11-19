@@ -21,3 +21,5 @@ LIBXUL_LIBRARY = True
 LIBRARY_NAME = 'mozkeystore_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'

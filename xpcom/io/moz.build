@@ -130,3 +130,4 @@ LIBRARY_NAME = 'xpcomio_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xpcom_core'

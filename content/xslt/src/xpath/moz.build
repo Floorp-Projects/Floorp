@@ -62,3 +62,5 @@ LOCAL_INCLUDES += [
     '../xml',
     '../xslt',
 ]
+
+FINAL_LIBRARY = 'gklayout'

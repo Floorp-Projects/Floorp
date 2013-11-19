@@ -50,6 +50,7 @@ LIBRARY_NAME = 'domquota_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/caps/include',
 ]
