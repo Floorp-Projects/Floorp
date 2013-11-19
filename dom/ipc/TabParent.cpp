@@ -1578,6 +1578,14 @@ TabParent::DeallocPOfflineCacheUpdateParent(mozilla::docshell::POfflineCacheUpda
 }
 
 bool
+TabParent::RecvSetOfflinePermission(const IPC::Principal& aPrincipal)
+{
+  nsIPrincipal* principal = aPrincipal;
+  nsContentUtils::MaybeAllowOfflineAppByDefault(principal, nullptr);
+  return true;
+}
+
+bool
 TabParent::ShouldDelayDialogs()
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();

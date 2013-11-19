@@ -48,10 +48,27 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
 #include "nsIDiskSpaceWatcher.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nullptr;
+
+nsTHashtable<nsCStringHashKey>* nsOfflineCacheUpdateService::mAllowedDomains = nullptr;
+
+nsTHashtable<nsCStringHashKey>* nsOfflineCacheUpdateService::AllowedDomains()
+{
+    if (!mAllowedDomains)
+        mAllowedDomains = new nsTHashtable<nsCStringHashKey>();
+
+    return mAllowedDomains;
+}
+
 
 typedef mozilla::docshell::OfflineCacheUpdateParent OfflineCacheUpdateParent;
 typedef mozilla::docshell::OfflineCacheUpdateChild OfflineCacheUpdateChild;
@@ -681,6 +698,15 @@ OfflineAppPermForURI(nsIURI *aURI,
         }
     }
 
+    nsAutoCString domain;
+    rv = innerURI->GetAsciiHost(domain);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (nsOfflineCacheUpdateService::AllowedDomains()->Contains(domain)) {
+        *aAllowed = true;
+        return NS_OK;
+    }
+
     nsCOMPtr<nsIPermissionManager> permissionManager =
         do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
     if (!permissionManager) {
@@ -716,4 +742,40 @@ nsOfflineCacheUpdateService::OfflineAppPinnedForURI(nsIURI *aDocumentURI,
                                                     bool *aPinned)
 {
     return OfflineAppPermForURI(aDocumentURI, aPrefBranch, true, aPinned);
+}
+
+NS_IMETHODIMP
+nsOfflineCacheUpdateService::AllowOfflineApp(nsIDOMWindow *aWindow,
+                                             nsIPrincipal *aPrincipal)
+{
+    nsresult rv;
+
+    if (GeckoProcessType_Default != XRE_GetProcessType()) {
+        TabChild* child = TabChild::GetFrom(aWindow);
+        NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
+
+        if (!child->SendSetOfflinePermission(IPC::Principal(aPrincipal))) {
+            return NS_ERROR_FAILURE;
+        }
+
+        nsAutoCString domain;
+        rv = aPrincipal->GetBaseDomain(domain);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsOfflineCacheUpdateService::AllowedDomains()->PutEntry(domain);
+    }
+    else {
+        nsCOMPtr<nsIPermissionManager> permissionManager =
+            do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+        if (!permissionManager)
+            return NS_ERROR_NOT_AVAILABLE;
+
+        rv = permissionManager->AddFromPrincipal(
+            aPrincipal, "offline-app", nsIPermissionManager::ALLOW_ACTION,
+            nsIPermissionManager::EXPIRE_NEVER, 0);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+
+    return NS_OK;
 }

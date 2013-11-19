@@ -197,7 +197,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   readonly attribute uint64_t byteProgress;
 };
 
-[scriptable, uuid(cf362a31-4166-4994-8443-b68704ecdcc0)]
+[scriptable, uuid(6ee353ba-11ea-4008-a78a-55b343fb2a49)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
      * Constants for the offline-app permission.
@@ -296,4 +296,11 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      */
     boolean offlineAppAllowedForURI(in nsIURI aURI,
                                     in nsIPrefBranch aPrefBranch);
+
+    /**
+     * Sets the "offline-app" permission for the principal.
+     * In the single process model calls directly on permission manager.
+     * In the multi process model dispatches to the parent process.
+     */
+    void allowOfflineApp(in nsIDOMWindow aWindow, in nsIPrincipal aPrincipal);
 };
