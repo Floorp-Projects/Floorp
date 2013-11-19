@@ -963,6 +963,9 @@ var gPluginHandler = {
         return;
       }
 
+      Services.telemetry.getHistogramById("PLUGINS_INFOBAR_SHOWN").
+        add(true);
+
       let message;
       // Icons set directly cannot be manipulated using moz-image-region, so
       // we use CSS classes instead.
@@ -1007,6 +1010,9 @@ var gPluginHandler = {
           label: gNavigatorBundle.getString("pluginBlockNow.label"),
           accessKey: gNavigatorBundle.getString("pluginBlockNow.accesskey"),
           callback: function() {
+            Services.telemetry.getHistogramById("PLUGINS_INFOBAR_BLOCK").
+              add(true);
+
             Services.perms.addFromPrincipal(aBrowser.contentDocument.nodePrincipal,
                                             "plugin-hidden-notification",
                                             Services.perms.DENY_ACTION);
@@ -1016,6 +1022,9 @@ var gPluginHandler = {
           label: gNavigatorBundle.getString("offlineApps.allow"),
           accessKey: gNavigatorBundle.getString("offlineApps.allowAccessKey"),
           callback: function() {
+            Services.telemetry.getHistogramById("PLUGINS_INFOBAR_ALLOW").
+              add(true);
+
             let curNotification =
               PopupNotifications.getNotification("click-to-play-plugins",
                                                  aBrowser);
