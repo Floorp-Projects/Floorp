@@ -40,8 +40,7 @@ NS_StringContainerInit2(nsStringContainer &aContainer,
   {
     if (aDataLength == UINT32_MAX)
     {
-      if (NS_WARN_IF(aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING))
-	return NS_ERROR_INVALID_ARG;
+      NS_ENSURE_ARG(!(aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING));
       aDataLength = nsCharTraits<PRUnichar>::length(aData);
     }
 
@@ -201,8 +200,7 @@ NS_CStringContainerInit2(nsCStringContainer &aContainer,
   {
     if (aDataLength == UINT32_MAX)
     {
-      if (NS_WARN_IF(aFlags & NS_CSTRING_CONTAINER_INIT_SUBSTRING))
-	return NS_ERROR_INVALID_ARG;
+      NS_ENSURE_ARG(!(aFlags & NS_CSTRING_CONTAINER_INIT_SUBSTRING));
       aDataLength = nsCharTraits<char>::length(aData);
     }
 

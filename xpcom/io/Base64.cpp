@@ -163,8 +163,7 @@ EncodeInputStream(nsIInputStream *aInputStream,
 
   if (!aCount) {
     rv = aInputStream->Available(&count64);
-    if (NS_WARN_IF(NS_FAILED(rv)))
-      return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
     // if count64 is over 4GB, it will be failed at the below condition,
     // then will return NS_ERROR_OUT_OF_MEMORY
     aCount = (uint32_t)count64;

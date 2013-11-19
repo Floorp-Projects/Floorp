@@ -725,8 +725,7 @@ struct nsDir
 static nsresult
 OpenDir(const nsAFlatString &name, nsDir * *dir)
 {
-    if (NS_WARN_IF(!dir))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG_POINTER(dir);
 
     *dir = nullptr;
     if (name.Length() + 3 >= MAX_PATH)
@@ -766,8 +765,7 @@ static nsresult
 ReadDir(nsDir *dir, PRDirFlags flags, nsString& name)
 {
     name.Truncate();
-    if (NS_WARN_IF(!dir))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(dir);
 
     while (1) {
         BOOL rv;
@@ -811,8 +809,7 @@ ReadDir(nsDir *dir, PRDirFlags flags, nsString& name)
 static nsresult
 CloseDir(nsDir *&d)
 {
-    if (NS_WARN_IF(!d))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(d);
 
     BOOL isOk = FindClose(d->handle);
     // PR_DELETE also nulls out the passed in pointer.
@@ -965,10 +962,8 @@ nsLocalFile::nsLocalFile()
 nsresult
 nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-    if (NS_WARN_IF(!aInstancePtr))
-        return NS_ERROR_INVALID_ARG;
-    if (NS_WARN_IF(outer))
-        return NS_ERROR_NO_AGGREGATION;
+    NS_ENSURE_ARG_POINTER(aInstancePtr);
+    NS_ENSURE_NO_AGGREGATION(outer);
 
     nsLocalFile* inst = new nsLocalFile();
     if (inst == nullptr)
@@ -1154,8 +1149,7 @@ nsLocalFile::Clone(nsIFile **file)
 NS_IMETHODIMP
 nsLocalFile::InitWithFile(nsIFile *aFile)
 {
-    if (NS_WARN_IF(!aFile))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(aFile);
     
     nsAutoString path;
     aFile->GetPath(path);
@@ -2078,8 +2072,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
                         return NS_ERROR_FAILURE;
 
                     rv = file->MoveTo(target, EmptyString());
-                    if (NS_FAILED(rv))
-                        return rv;
+                    NS_ENSURE_SUCCESS(rv,rv);
                 }
                 else
                 {
@@ -2087,8 +2080,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
                         rv = file->CopyToFollowingLinks(target, EmptyString());
                     else
                         rv = file->CopyTo(target, EmptyString());
-                    if (NS_FAILED(rv))
-                        return rv;
+                    NS_ENSURE_SUCCESS(rv,rv);
                 }
             }
         }
@@ -2101,8 +2093,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
         if (move)
         {
           rv = Remove(false /* recursive */);
-          if (NS_FAILED(rv))
-              return rv;
+          NS_ENSURE_SUCCESS(rv,rv);
         }
     }
 
@@ -2267,8 +2258,7 @@ nsLocalFile::GetLastModifiedTime(PRTime *aLastModifiedTime)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!aLastModifiedTime))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(aLastModifiedTime);
  
     // get the modified time of the target as determined by mFollowSymlinks
     // If true, then this will be for the target of the shortcut file, 
@@ -2291,8 +2281,7 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRTime *aLastModifiedTime)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!aLastModifiedTime))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(aLastModifiedTime);
  
     // The caller is assumed to have already called IsSymlink 
     // and to have found that this file is a link. 
@@ -2392,8 +2381,7 @@ nsLocalFile::SetModDate(PRTime aLastModifiedTime, const PRUnichar *filePath)
 NS_IMETHODIMP
 nsLocalFile::GetPermissions(uint32_t *aPermissions)
 {
-    if (NS_WARN_IF(!aPermissions))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(aPermissions);
 
     // get the permissions of the target as determined by mFollowSymlinks
     // If true, then this will be for the target of the shortcut file, 
@@ -2422,8 +2410,7 @@ nsLocalFile::GetPermissionsOfLink(uint32_t *aPermissions)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!aPermissions))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(aPermissions);
 
     // The caller is assumed to have already called IsSymlink 
     // and to have found that this file is a link. It is not 
@@ -2492,8 +2479,7 @@ nsLocalFile::SetPermissionsOfLink(uint32_t aPermissions)
 NS_IMETHODIMP
 nsLocalFile::GetFileSize(int64_t *aFileSize)
 {
-    if (NS_WARN_IF(!aFileSize))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(aFileSize);
 
     nsresult rv = ResolveAndStat();
     if (NS_FAILED(rv))
@@ -2510,8 +2496,7 @@ nsLocalFile::GetFileSizeOfLink(int64_t *aFileSize)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!aFileSize))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(aFileSize);
 
     // The caller is assumed to have already called IsSymlink 
     // and to have found that this file is a link. 
@@ -2566,8 +2551,7 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!aDiskSpaceAvailable))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(aDiskSpaceAvailable);
 
     ResolveAndStat();
 
@@ -2596,8 +2580,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!aParent))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG_POINTER(aParent);
 
     // A two-character path must be a drive such as C:, so it has no parent
     if (mWorkingPath.Length() == 2) {
@@ -2641,8 +2624,7 @@ nsLocalFile::Exists(bool *_retval)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(_retval);
     *_retval = false;
 
     MakeDirty();
@@ -2712,8 +2694,7 @@ nsLocalFile::IsReadable(bool *_retval)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(_retval);
     *_retval = false;
 
     nsresult rv = ResolveAndStat();
@@ -2731,8 +2712,7 @@ nsLocalFile::IsExecutable(bool *_retval)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(_retval);
     *_retval = false;
     
     nsresult rv;
@@ -2887,8 +2867,7 @@ nsLocalFile::IsHidden(bool *_retval)
 nsresult
 nsLocalFile::HasFileAttribute(DWORD fileAttrib, bool *_retval)
 {
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(_retval);
 
     nsresult rv = Resolve();
     if (NS_FAILED(rv)) {
@@ -2910,8 +2889,7 @@ nsLocalFile::IsSymlink(bool *_retval)
     // Check we are correctly initialized.
     CHECK_mWorkingPath();
 
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(_retval);
 
     // unless it is a valid shortcut path it's not a symlink
     if (!IsShortcutPath(mWorkingPath)) {
@@ -2942,10 +2920,8 @@ nsLocalFile::IsSpecial(bool *_retval)
 NS_IMETHODIMP
 nsLocalFile::Equals(nsIFile *inFile, bool *_retval)
 {
-    if (NS_WARN_IF(!inFile))
-        return NS_ERROR_INVALID_ARG;
-    if (NS_WARN_IF(!_retval))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(inFile);
+    NS_ENSURE_ARG(_retval);
 
     EnsureShortPath();
 
