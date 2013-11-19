@@ -213,7 +213,8 @@ nsresult ProbeManager::StartSession(nsTArray<nsRefPtr<Probe>> &aProbes)
                       used only for unregistration*/
                      );
   delete[] probes;
-  NS_ENSURE_TRUE(result == ERROR_SUCCESS, NS_ERROR_UNEXPECTED);
+  if (NS_WARN_IF(result != ERROR_SUCCESS))
+    return NS_ERROR_UNEXPECTED;
   return NS_OK;
 }
 

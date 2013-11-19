@@ -102,7 +102,8 @@ private:
     *aAmount = 0;
 
     FILE *f = fopen("/proc/self/smaps", "r");
-    NS_ENSURE_STATE(f);
+    if (NS_WARN_IF(!f))
+        return NS_ERROR_UNEXPECTED;
 
     int64_t total = 0;
     char line[256];
@@ -752,7 +753,8 @@ public:
                                    nsIMemoryReporter::KIND_HEAP,              \
                                    nsIMemoryReporter::UNITS_BYTES, _amount,   \
                                    NS_LITERAL_CSTRING(_desc), aData);         \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
+      if (NS_WARN_IF(NS_FAILED(rv)))                                          \
+          return rv;                                                          \
     } while (0)
 
     REPORT("explicit/dmd/stack-traces/used",
@@ -1284,7 +1286,8 @@ NS_IMPL_ISUPPORTS1(ExplicitCallback, nsIHandleReportCallback)
 NS_IMETHODIMP
 nsMemoryReporterManager::GetExplicit(int64_t* aAmount)
 {
-    NS_ENSURE_ARG_POINTER(aAmount);
+    if (NS_WARN_IF(!aAmount))
+        return NS_ERROR_INVALID_ARG;
     *aAmount = 0;
 #ifndef HAVE_JEMALLOC_STATS
     return NS_ERROR_NOT_AVAILABLE;
@@ -1550,7 +1553,8 @@ NS_IMETHODIMP
 nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback,
                                              nsICancelableRunnable** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
+  if (NS_WARN_IF(!aResult))
+    return NS_ERROR_INVALID_ARG;
 
   nsRefPtr<nsICancelableRunnable> runnable =
     new MinimizeMemoryUsageRunnable(aCallback);
@@ -1573,7 +1577,8 @@ nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
 {
     nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aTopWindow);
     nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aTopWindow);
-    NS_ENSURE_TRUE(!!global && !!piWindow, NS_ERROR_FAILURE);
+    if (NS_WARN_IF(!global) || NS_WARN_IF(!piWindow))
+      return NS_ERROR_FAILURE;
 
     TimeStamp t1 = TimeStamp::Now();
 
@@ -1583,7 +1588,8 @@ nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
     nsresult rv = mSizeOfTabFns.mJS(global->GetGlobalJSObject(),
                                     &jsObjectsSize, &jsStringsSize,
                                     &jsPrivateSize, &jsOtherSize);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+      return rv;
 
     TimeStamp t2 = TimeStamp::Now();
 

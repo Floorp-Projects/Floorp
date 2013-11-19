@@ -65,7 +65,8 @@ nsINIParser::Init(nsIFile* aFile)
 #ifdef XP_WIN
     nsAutoString path;
     nsresult rv = aFile->GetPath(path);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+      return rv;
 
     fd = _wfopen(path.get(), READ_BINARYMODE);
 #else

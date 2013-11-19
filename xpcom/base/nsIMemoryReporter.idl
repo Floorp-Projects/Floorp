@@ -535,7 +535,8 @@ public:
   {
     int64_t amount;
     nsresult rv = GetAmount(&amount);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+      return rv;
 
     return aCallback->Callback(EmptyCString(), mNameAndPath, mKind, mUnits,
                                amount, mDescription, aData);

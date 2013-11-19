@@ -46,7 +46,8 @@ nsresult
 CallGetService(const nsCID &aCID, const nsIID &aIID, void **aResult)
 {
     nsComponentManagerImpl *compMgr = nsComponentManagerImpl::gComponentManager;
-    NS_ENSURE_TRUE(compMgr, NS_ERROR_NOT_INITIALIZED);
+    if (NS_WARN_IF(!compMgr))
+        return NS_ERROR_NOT_INITIALIZED;
 
     return compMgr->nsComponentManagerImpl::GetService(aCID, aIID, aResult);
 }
@@ -55,7 +56,8 @@ nsresult
 CallGetService(const char *aContractID, const nsIID &aIID, void **aResult)
 {
     nsComponentManagerImpl *compMgr = nsComponentManagerImpl::gComponentManager;
-    NS_ENSURE_TRUE(compMgr, NS_ERROR_NOT_INITIALIZED);
+    if (NS_WARN_IF(!compMgr))
+        return NS_ERROR_NOT_INITIALIZED;
 
     return compMgr->
         nsComponentManagerImpl::GetServiceByContractID(aContractID,
@@ -119,7 +121,8 @@ CallCreateInstance(const nsCID &aCID, nsISupports *aDelegate,
                    const nsIID &aIID, void **aResult)
 {
     nsComponentManagerImpl *compMgr = nsComponentManagerImpl::gComponentManager;
-    NS_ENSURE_TRUE(compMgr, NS_ERROR_NOT_INITIALIZED);
+    if (NS_WARN_IF(!compMgr))
+        return NS_ERROR_NOT_INITIALIZED;
 
     return compMgr->
         nsComponentManagerImpl::CreateInstance(aCID, aDelegate, aIID, aResult);
@@ -130,7 +133,8 @@ CallCreateInstance(const char *aContractID, nsISupports *aDelegate,
                    const nsIID &aIID, void **aResult)
 {
     nsComponentManagerImpl *compMgr = nsComponentManagerImpl::gComponentManager;
-    NS_ENSURE_TRUE(compMgr, NS_ERROR_NOT_INITIALIZED);
+    if (NS_WARN_IF(!compMgr))
+        return NS_ERROR_NOT_INITIALIZED;
 
     return compMgr->
         nsComponentManagerImpl::CreateInstanceByContractID(aContractID,
@@ -142,7 +146,8 @@ nsresult
 CallGetClassObject(const nsCID &aCID, const nsIID &aIID, void **aResult)
 {
     nsComponentManagerImpl *compMgr = nsComponentManagerImpl::gComponentManager;
-    NS_ENSURE_TRUE(compMgr, NS_ERROR_NOT_INITIALIZED);
+    if (NS_WARN_IF(!compMgr))
+        return NS_ERROR_NOT_INITIALIZED;
 
     return compMgr->
         nsComponentManagerImpl::GetClassObject(aCID, aIID, aResult);
@@ -152,7 +157,8 @@ nsresult
 CallGetClassObject(const char *aContractID, const nsIID &aIID, void **aResult)
 {
     nsComponentManagerImpl *compMgr = nsComponentManagerImpl::gComponentManager;
-    NS_ENSURE_TRUE(compMgr, NS_ERROR_NOT_INITIALIZED);
+    if (NS_WARN_IF(!compMgr))
+        return NS_ERROR_NOT_INITIALIZED;
 
     return compMgr->
         nsComponentManagerImpl::GetClassObjectByContractID(aContractID, aIID,
