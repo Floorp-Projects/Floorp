@@ -216,6 +216,10 @@ public:
    */
   void MarkInvalid() { mValid = false; }
 
+  // If a texture client holds a reference to shmem, it should override this
+  // method to forget about the shmem _without_ releasing it.
+  virtual void OnActorDestroy() {}
+
 protected:
   void AddFlags(TextureFlags  aFlags)
   {
@@ -315,6 +319,11 @@ public:
   ISurfaceAllocator* GetAllocator() const;
 
   ipc::Shmem& GetShmem() { return mShmem; }
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE
+  {
+    mShmem = ipc::Shmem();
+  }
 
 protected:
   ipc::Shmem mShmem;
@@ -491,6 +500,8 @@ public:
   }
 
   virtual gfxContentType GetContentType() = 0;
+
+  void OnActorDestroy();
 
 protected:
   DeprecatedTextureClient(CompositableForwarder* aForwarder,
