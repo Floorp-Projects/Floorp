@@ -610,14 +610,238 @@ Promise::Catch(const Optional<nsRefPtr<AnyCallback>>& aRejectCallback)
   return Then(resolveCb, aRejectCallback);
 }
 
+/**
+ * The CountdownHolder class encapsulates Promise.all countdown functions and
+ * the countdown holder parts of the Promises spec. It maintains the result
+ * array and AllResolveHandlers use SetValue() to set the array indices.
+ */
+class CountdownHolder MOZ_FINAL : public nsISupports
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CountdownHolder)
+
+  CountdownHolder(const GlobalObject& aGlobal, Promise* aPromise, uint32_t aCountdown)
+    : mPromise(aPromise), mCountdown(aCountdown)
+  {
+    MOZ_ASSERT(aCountdown != 0);
+    JSContext* cx = aGlobal.GetContext();
+    JSAutoCompartment ac(cx, aGlobal.Get());
+    mValues = JS_NewArrayObject(cx, aCountdown, nullptr);
+    mozilla::HoldJSObjects(this);
+  }
+
+  ~CountdownHolder()
+  {
+    mozilla::DropJSObjects(this);
+  }
+
+  void SetValue(uint32_t index, const JS::Handle<JS::Value> aValue)
+  {
+    MOZ_ASSERT(mCountdown > 0);
+
+    JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
+    JSAutoCompartment ac(cx, mValues);
+
+    {
+      AutoDontReportUncaught silenceReporting(cx);
+      if (!JS_DefineElement(cx, mValues, index, aValue, nullptr, nullptr, JSPROP_ENUMERATE)) {
+        MOZ_ASSERT(JS_IsExceptionPending(cx));
+        JS::Rooted<JS::Value> exn(cx);
+        JS_GetPendingException(cx, &exn);
+
+        mPromise->MaybeReject(cx, exn);
+      }
+    }
+
+    --mCountdown;
+    if (mCountdown == 0) {
+      JS::Rooted<JS::Value> result(cx, JS::ObjectValue(*mValues));
+      mPromise->MaybeResolve(cx, result);
+    }
+  }
+
+private:
+  nsRefPtr<Promise> mPromise;
+  uint32_t mCountdown;
+  JS::Heap<JSObject*> mValues;
+};
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(CountdownHolder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(CountdownHolder)
+NS_IMPL_CYCLE_COLLECTION_CLASS(CountdownHolder)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CountdownHolder)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CountdownHolder)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mValues)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CountdownHolder)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromise)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CountdownHolder)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromise)
+  tmp->mValues = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+/**
+ * An AllResolveHandler is the per-promise part of the Promise.all() algorithm.
+ * Every Promise in the handler is handed an instance of this as a resolution
+ * handler and it sets the relevant index in the CountdownHolder.
+ */
+class AllResolveHandler MOZ_FINAL : public PromiseNativeHandler
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(AllResolveHandler)
+
+  AllResolveHandler(CountdownHolder* aHolder, uint32_t aIndex)
+    : mCountdownHolder(aHolder), mIndex(aIndex)
+  {
+    MOZ_ASSERT(aHolder);
+  }
+
+  ~AllResolveHandler()
+  {
+  }
+
+  void
+  ResolvedCallback(JS::Handle<JS::Value> aValue)
+  {
+    mCountdownHolder->SetValue(mIndex, aValue);
+  }
+
+  void
+  RejectedCallback(JS::Handle<JS::Value> aValue)
+  {
+    // Should never be attached to Promise as a reject handler.
+    MOZ_ASSERT(false, "AllResolveHandler should never be attached to a Promise's reject handler!");
+  }
+
+private:
+  nsRefPtr<CountdownHolder> mCountdownHolder;
+  uint32_t mIndex;
+};
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AllResolveHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AllResolveHandler)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AllResolveHandler)
+NS_INTERFACE_MAP_END_INHERITING(PromiseNativeHandler)
+
+NS_IMPL_CYCLE_COLLECTION_1(AllResolveHandler, mCountdownHolder)
+
+/* static */ already_AddRefed<Promise>
+Promise::All(const GlobalObject& aGlobal, JSContext* aCx,
+             const Sequence<JS::Value>& aIterable, ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> window;
+  if (MOZ_LIKELY(NS_IsMainThread())) {
+    window = do_QueryInterface(aGlobal.GetAsSupports());
+    if (!window) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+  }
+
+  if (aIterable.Length() == 0) {
+    JS::Rooted<JSObject*> empty(aCx, JS_NewArrayObject(aCx, 0, nullptr));
+    if (!empty) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+    Optional<JS::Handle<JS::Value>> optValue(aCx, JS::ObjectValue(*empty));
+    return Promise::Resolve(aGlobal, aCx, optValue, aRv);
+  }
+
+  nsRefPtr<Promise> promise = new Promise(window);
+  nsRefPtr<CountdownHolder> holder =
+    new CountdownHolder(aGlobal, promise, aIterable.Length());
+
+  nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise);
+
+  for (uint32_t i = 0; i < aIterable.Length(); ++i) {
+    Optional<JS::Handle<JS::Value>> optValue(aCx, aIterable.ElementAt(i));
+    nsRefPtr<Promise> nextPromise = Promise::Cast(aGlobal, aCx, optValue, aRv);
+
+    MOZ_ASSERT(!aRv.Failed());
+
+    nsRefPtr<PromiseNativeHandler> resolveHandler =
+      new AllResolveHandler(holder, i);
+
+    nsRefPtr<PromiseCallback> resolveCb =
+      new NativePromiseCallback(resolveHandler, Resolved);
+    // Every promise gets its own resolve callback, which will set the right
+    // index in the array to the resolution value.
+    nextPromise->AppendCallbacks(resolveCb, rejectCb);
+  }
+
+  return promise.forget();
+}
+
+/* static */ already_AddRefed<Promise>
+Promise::Cast(const GlobalObject& aGlobal, JSContext* aCx,
+              const Optional<JS::Handle<JS::Value>>& aValue, ErrorResult& aRv)
+{
+  // If a Promise was passed, just return it.
+  JS::Rooted<JS::Value> value(aCx, aValue.WasPassed() ? aValue.Value() :
+                                                        JS::UndefinedValue());
+  if (value.isObject()) {
+    JS::Rooted<JSObject*> valueObj(aCx, &value.toObject());
+    Promise* nextPromise;
+    nsresult rv = UNWRAP_OBJECT(Promise, valueObj, nextPromise);
+
+    if (NS_SUCCEEDED(rv)) {
+      nsRefPtr<Promise> addRefed = nextPromise;
+      return addRefed.forget();
+    }
+  }
+
+  return Promise::Resolve(aGlobal, aCx, aValue, aRv);
+}
+
+/* static */ already_AddRefed<Promise>
+Promise::Race(const GlobalObject& aGlobal, JSContext* aCx,
+              const Sequence<JS::Value>& aIterable, ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> window;
+  if (MOZ_LIKELY(NS_IsMainThread())) {
+    window = do_QueryInterface(aGlobal.GetAsSupports());
+    if (!window) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+  }
+
+  nsRefPtr<Promise> promise = new Promise(window);
+  nsRefPtr<PromiseCallback> resolveCb = new ResolvePromiseCallback(promise);
+  nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise);
+
+  for (uint32_t i = 0; i < aIterable.Length(); ++i) {
+    Optional<JS::Handle<JS::Value>> optValue(aCx, aIterable.ElementAt(i));
+    nsRefPtr<Promise> nextPromise = Promise::Cast(aGlobal, aCx, optValue, aRv);
+    // According to spec, Cast can throw, but our implementation never does.
+    // Remove this when subclassing is supported.
+    MOZ_ASSERT(!aRv.Failed());
+    nextPromise->AppendCallbacks(resolveCb, rejectCb);
+  }
+
+  return promise.forget();
+}
+
 void
 Promise::AppendNativeHandler(PromiseNativeHandler* aRunnable)
 {
   nsRefPtr<PromiseCallback> resolveCb =
-  new NativePromiseCallback(aRunnable, Resolved);
+    new NativePromiseCallback(aRunnable, Resolved);
 
   nsRefPtr<PromiseCallback> rejectCb =
-  new NativePromiseCallback(aRunnable, Rejected);
+    new NativePromiseCallback(aRunnable, Rejected);
 
   AppendCallbacks(resolveCb, rejectCb);
 }
@@ -657,7 +881,7 @@ Promise::RunTask()
 {
   MOZ_ASSERT(mState != Pending);
 
-  nsTArray<nsRefPtr<PromiseCallback> > callbacks;
+  nsTArray<nsRefPtr<PromiseCallback>> callbacks;
   callbacks.SwapElements(mState == Resolved ? mResolveCallbacks
                                             : mRejectCallbacks);
   mResolveCallbacks.Clear();
@@ -756,6 +980,7 @@ Promise::ResolveInternal(JSContext* aCx,
   mResolvePending = true;
 
   if (aValue.isObject()) {
+    AutoDontReportUncaught silenceReporting(aCx);
     JS::Rooted<JSObject*> valueObj(aCx, &aValue.toObject());
 
     // Thenables.
@@ -853,6 +1078,13 @@ Promise::RunResolveTask(JS::Handle<JS::Value> aValue,
         new WorkerPromiseResolverTask(worker, this, aValue, aState);
       worker->Dispatch(task);
     }
+    return;
+  }
+
+  // Promise.all() or Promise.race() implementations will repeatedly call
+  // Resolve/RejectInternal rather than using the Maybe... forms. Stop SetState
+  // from asserting.
+  if (mState != Pending) {
     return;
   }
 
