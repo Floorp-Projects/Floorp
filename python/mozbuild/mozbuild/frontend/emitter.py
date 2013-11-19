@@ -444,8 +444,12 @@ class TreeMetadataEmitter(LoggingMixin):
                         else:
                             full = mozpath.normpath(mozpath.join(manifest_dir,
                                 pattern))
-                            obj.installs[full] = mozpath.normpath(
-                                mozpath.join(out_dir, pattern))
+                            # Only install paths in our directory. This
+                            # rule is somewhat arbitrary and could be lifted.
+                            if not full.startswith(manifest_dir):
+                                continue
+
+                            obj.installs[full] = mozpath.join(out_dir, pattern)
 
             # We also copy the manifest into the output directory.
             out_path = mozpath.join(out_dir, os.path.basename(manifest_path))
