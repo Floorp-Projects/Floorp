@@ -23,6 +23,8 @@ import android.view.SurfaceView;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
+import org.mozilla.gecko.mozglue.WebRTCJNITarget;
+
 class CodecState {
     private static final String TAG = "CodecState";
 
@@ -41,6 +43,7 @@ class CodecState {
 
     private long mLastMediaTimeUs;
 
+    @WebRTCJNITarget
     public CodecState(
             ViEMediaCodecDecoder view,
             MediaFormat format,
@@ -245,6 +248,7 @@ class ViEMediaCodecDecoder {
 
     private Thread mLooperThread;
 
+    @WebRTCJNITarget
     public void configure(SurfaceView surfaceView, int width, int height) {
         mSurfaceView = surfaceView;
         Log.d(TAG, "configure " + "width" + width + "height" + height + mSurfaceView.toString());
@@ -267,6 +271,7 @@ class ViEMediaCodecDecoder {
         initMediaCodecView();
     }
 
+    @WebRTCJNITarget
     public void setEncodedImage(ByteBuffer buffer, long renderTimeMs) {
         // TODO(dwkang): figure out why exceptions just make this thread finish.
         try {
@@ -354,6 +359,7 @@ class ViEMediaCodecDecoder {
         Log.d(TAG, "initMediaCodecView end");
     }
 
+    @WebRTCJNITarget
     public void start() {
         Log.d(TAG, "start");
 
