@@ -536,12 +536,13 @@ BondStateChangedCallback(bt_status_t aStatus, bt_bdaddr_t* aRemoteBdAddress,
 
   nsAutoString remoteAddress;
   BdAddressTypeToString(aRemoteBdAddress, remoteAddress);
-  bool bonded;
 
-  if (aState == BT_BOND_STATE_BONDING) {
-    // We don't need to handle bonding state
-    return;
-  } else if (aState == BT_BOND_STATE_NONE) {
+  // We don't need to handle bonding state
+  NS_ENSURE_TRUE_VOID(aState != BT_BOND_STATE_BONDING);
+  NS_ENSURE_FALSE_VOID(aState == BT_BOND_STATE_BONDED &&
+                       sAdapterBondedAddressArray.Contains(remoteAddress));
+  bool bonded;
+  if (aState == BT_BOND_STATE_NONE) {
     bonded = false;
     sAdapterBondedAddressArray.RemoveElement(remoteAddress);
   } else if (aState == BT_BOND_STATE_BONDED) {
