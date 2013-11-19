@@ -565,7 +565,8 @@ static const nsDebugImpl kImpl;
 nsresult
 nsDebugImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-  NS_ENSURE_NO_AGGREGATION(outer);
+  if (NS_WARN_IF(outer))
+    return NS_ERROR_NO_AGGREGATION;
 
   return const_cast<nsDebugImpl*>(&kImpl)->
     QueryInterface(aIID, aInstancePtr);
