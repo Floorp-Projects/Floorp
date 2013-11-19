@@ -10,6 +10,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'i18n'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'

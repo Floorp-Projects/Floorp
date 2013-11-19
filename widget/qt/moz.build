@@ -56,8 +56,6 @@ if CONFIG[' MOZ_ENABLE_QTMOBILITY']:
         'moc_mozqorientationsensorfilter.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'widget_qt'
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -32,8 +32,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'WifiUtils.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'domwifi_s'
 
 FINAL_LIBRARY = 'xul'

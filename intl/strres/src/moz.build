@@ -11,8 +11,6 @@ SOURCES += [
 
 LIBRARY_NAME = 'strres_s'
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'i18n'

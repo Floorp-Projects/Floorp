@@ -10,6 +10,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'windowsproxy'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'

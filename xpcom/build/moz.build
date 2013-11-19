@@ -57,8 +57,6 @@ SOURCES += [
     'Services.cpp',
 ]
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'xpcom_core'

@@ -12,6 +12,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'platlocale_s'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'i18n'

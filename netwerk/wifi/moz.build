@@ -52,6 +52,4 @@ if CONFIG['NECKO_WIFI_DBUS']:
 
 LIBRARY_NAME = 'neckowifi_s'
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'necko'

@@ -14,8 +14,6 @@ SOURCES += [
 
 LIBRARY_NAME = 'docshell'
 
-LIBXUL_LIBRARY = True
-
 LOCAL_INCLUDES += [
     '../base',
     '../shistory/src/',

@@ -13,8 +13,6 @@ UNIFIED_SOURCES += [
     'WidgetEventImpl.cpp',
 ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'widget_shared'
 
 include('/ipc/chromium/chromium-config.mozbuild')

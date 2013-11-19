@@ -22,6 +22,4 @@ EXTRA_JS_MODULES += [
     'jsdebugger.jsm',
 ]
 
-LIBXUL_LIBRARY = True
-
 FINAL_LIBRARY = 'xul'
