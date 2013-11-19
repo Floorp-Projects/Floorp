@@ -1,5 +1,7 @@
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.db.BrowserContract.Passwords;
+
 import android.content.ContentValues;
 import android.content.ContentResolver;
 import android.database.Cursor;
@@ -30,34 +32,19 @@ public class testPasswordProvider extends BaseTest {
   
         blockForGeckoReady();
   
-        Uri passwordUri;
-        try {
-            ClassLoader classLoader = getActivity().getClassLoader();
-            Class pwds = classLoader.loadClass("org.mozilla.gecko.db.BrowserContract$Passwords");
-      
-            cvs[0].put("hostname", "http://www.example.com");
-            cvs[0].put("httpRealm", "http://www.example.com");
-            cvs[0].put("formSubmitURL", "http://www.example.com");
-            cvs[0].put("usernameField", "usernameField");
-            cvs[0].put("passwordField", "passwordField");
-            cvs[0].put("encryptedUsername", "username");
-            cvs[0].put("encryptedPassword", "password");
-            cvs[0].put("encType", "1");
-    
-            // Attempt to insert into the db
-            passwordUri = (Uri)pwds.getField("CONTENT_URI").get(null);
-            Uri.Builder builder = passwordUri.buildUpon();
-            passwordUri = builder.appendQueryParameter("profilePath", mProfile).build();
-        } catch(ClassNotFoundException ex) {
-            mAsserter.is(false, true, "Error getting class");
-            return;
-        } catch(NoSuchFieldException ex) {
-            mAsserter.is(false, true, "Error getting field");
-            return;
-        } catch(IllegalAccessException ex) {
-            mAsserter.is(false, true, "Error using field");
-            return;
-        }
+        cvs[0].put("hostname", "http://www.example.com");
+        cvs[0].put("httpRealm", "http://www.example.com");
+        cvs[0].put("formSubmitURL", "http://www.example.com");
+        cvs[0].put("usernameField", "usernameField");
+        cvs[0].put("passwordField", "passwordField");
+        cvs[0].put("encryptedUsername", "username");
+        cvs[0].put("encryptedPassword", "password");
+        cvs[0].put("encType", "1");
+
+        // Attempt to insert into the db
+        Uri passwordUri = Passwords.CONTENT_URI;
+        Uri.Builder builder = passwordUri.buildUpon();
+        passwordUri = builder.appendQueryParameter("profilePath", mProfile).build();
 
         Uri uri = cr.insert(passwordUri, cvs[0]);
         Uri expectedUri = passwordUri.buildUpon().appendPath("1").build();
