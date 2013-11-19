@@ -399,14 +399,6 @@ VARIABLES = {
         into account the values of ``AC_DEFINE`` instead of ``AC_SUBST``.
         """, None),
 
-    'MODULE': (unicode, unicode, "",
-        """Module name.
-
-        Historically, this variable was used to describe where to install header
-        files, but that feature is now handled by ``EXPORTS_NAMESPACES``.
-        ``MODULE`` will likely be removed in the future.
-        """, None),
-
     'EXPORTS': (HierarchicalStringList, list, HierarchicalStringList(),
         """List of files to be exported, and in which subdirectories.
 
