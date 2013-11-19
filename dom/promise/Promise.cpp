@@ -11,6 +11,7 @@
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/Preferences.h"
 #include "PromiseCallback.h"
+#include "PromiseNativeHandler.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "WorkerPrivate.h"
@@ -21,6 +22,8 @@
 
 namespace mozilla {
 namespace dom {
+
+NS_IMPL_ISUPPORTS0(PromiseNativeHandler)
 
 // PromiseTask
 
@@ -377,6 +380,18 @@ Promise::Catch(const Optional<OwningNonNull<AnyCallback> >& aRejectCallback)
 {
   Optional<OwningNonNull<AnyCallback> > resolveCb;
   return Then(resolveCb, aRejectCallback);
+}
+
+void
+Promise::AppendNativeHandler(PromiseNativeHandler* aRunnable)
+{
+  nsRefPtr<PromiseCallback> resolveCb =
+  new NativePromiseCallback(aRunnable, Resolved);
+
+  nsRefPtr<PromiseCallback> rejectCb =
+  new NativePromiseCallback(aRunnable, Rejected);
+
+  AppendCallbacks(resolveCb, rejectCb);
 }
 
 void
