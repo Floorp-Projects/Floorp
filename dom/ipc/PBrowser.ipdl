@@ -255,6 +255,13 @@ parent:
     POfflineCacheUpdate(URIParams manifestURI, URIParams documentURI,
                         bool stickDocument);
 
+    /**
+     * Sets "offline-app" permission for the principal.  Called when we hit
+     * a web app with the manifest attribute in <html> and
+     * offline-apps.allow_by_default is set to true.
+     */
+    SetOfflinePermission(Principal principal);
+
     sync PIndexedDB(nsCString group, nsCString asciiOrigin)
         returns (bool allowed);
 
