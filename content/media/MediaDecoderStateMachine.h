@@ -394,9 +394,8 @@ private:
   // The decoder monitor must be held.
   bool HasLowUndecodedData() const;
 
-  // Returns the number of microseconds of undecoded data available for
-  // decoding. The decoder monitor must be held.
-  int64_t GetUndecodedData() const;
+  // Returns true if we have less than aUsecs of undecoded data available.
+  bool HasLowUndecodedData(double aUsecs) const;
 
   // Returns the number of unplayed usecs of audio we've got decoded and/or
   // pushed to the hardware waiting to play. This is how much audio we can
