@@ -210,8 +210,7 @@ StyleSheetEditor.prototype = {
       mode: Editor.modes.css,
       readOnly: this._state.readOnly,
       autoCloseBrackets: "{}()[]",
-      extraKeys: this._getKeyBindings(),
-      contextMenu: "sourceEditorContextMenu"
+      extraKeys: this._getKeyBindings()
     };
     let sourceEditor = new Editor(config);
 
@@ -381,8 +380,8 @@ StyleSheetEditor.prototype = {
   },
 
   /**
-    * Retrieve custom key bindings objects as expected by Editor.
-    * Editor action names are not displayed to the user.
+    * Retrieve custom key bindings objects as expected by SourceEditor.
+    * SourceEditor action names are not displayed to the user.
     *
     * @return {array} key binding objects for the source editor
     */
