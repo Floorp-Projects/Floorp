@@ -250,7 +250,7 @@ protected:
   virtual void CacheChildren();
 
   // HyperTextAccessible
-  virtual already_AddRefed<nsFrameSelection> FrameSelection();
+  virtual already_AddRefed<nsFrameSelection> FrameSelection() const;
 
   // nsXULTextFieldAccessible
   already_AddRefed<nsIContent> GetInputField() const;

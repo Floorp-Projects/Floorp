@@ -14,7 +14,6 @@
 class nsIAtom;
 class nsIContent;
 class nsINodeInfo;
-class nsSVGTextPathFrame;
 
 nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
                                   already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -35,7 +34,6 @@ typedef SVGTextContentElement SVGTextPathElementBase;
 
 class SVGTextPathElement MOZ_FINAL : public SVGTextPathElementBase
 {
-friend class ::nsSVGTextPathFrame;
 friend class ::nsSVGTextFrame2;
 
 protected:

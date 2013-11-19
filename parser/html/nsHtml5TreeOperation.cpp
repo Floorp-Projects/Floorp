@@ -226,6 +226,24 @@ nsHtml5TreeOperation::AppendToDocument(nsIContent* aNode,
   return rv;
 }
 
+static bool
+IsElementOrTemplateContent(nsINode* aNode) {
+  if (aNode) {
+    if (aNode->IsElement()) {
+      return true;
+    } else if (aNode->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+      // Check if the node is a template content.
+      mozilla::dom::DocumentFragment* frag =
+        static_cast<mozilla::dom::DocumentFragment*>(aNode);
+      nsIContent* fragHost = frag->GetHost();
+      if (fragHost && nsNodeUtils::IsTemplateElement(fragHost)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 nsresult
 nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                               nsIContent** aScriptElement)
@@ -279,7 +297,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* table = *(mThree.node);
       nsIContent* foster = table->GetParent();
 
-      if (foster && foster->IsElement()) {
+      if (IsElementOrTemplateContent(foster)) {
         aBuilder->FlushPendingAppendNotifications();
 
         nsHtml5OtherDocUpdate update(foster->OwnerDoc(),
@@ -487,10 +505,9 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       PRUnichar* buffer = mTwo.unicharPtr;
       uint32_t length = mFour.integer;
       nsIContent* table = *mThree.node;
-      
       nsIContent* foster = table->GetParent();
 
-      if (foster && foster->IsElement()) {
+      if (IsElementOrTemplateContent(foster)) {
         aBuilder->FlushPendingAppendNotifications();
 
         nsHtml5OtherDocUpdate update(foster->OwnerDoc(),

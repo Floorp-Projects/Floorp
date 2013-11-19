@@ -2171,19 +2171,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   NS_ASSERTION(!isStackingContext || pseudoStackingContext,
                "Stacking contexts must also be pseudo-stacking-contexts");
 
-  // This controls later whether we build an nsDisplayWrapList or an
-  // nsDisplayFixedPosition. We check if we're already building a fixed-pos
-  // item and disallow nesting, to prevent the situation of bug #769541
-  // occurring.
-  // Don't build an nsDisplayFixedPosition if our root scroll frame is not
-  // active, that's pointless and the extra layer(s) created may be wasteful.
-  bool buildFixedPositionItem = disp->mPosition == NS_STYLE_POSITION_FIXED &&
-    !child->GetParent()->GetParent() && !aBuilder->IsInFixedPosition() &&
-    IsScrollFrameActive(PresContext()->PresShell()->GetRootScrollFrameAsScrollable()) &&
-    !isSVG;
-
   nsDisplayListBuilder::AutoBuildingDisplayList
-    buildingForChild(aBuilder, child, pseudoStackingContext, buildFixedPositionItem);
+    buildingForChild(aBuilder, child, pseudoStackingContext);
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
 
   if (savedOutOfFlowData) {
@@ -2265,31 +2254,11 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.
     if (!list.IsEmpty()) {
-      // Make sure the root of a fixed position frame sub-tree gets the
-      // correct displaylist item type.
-      nsDisplayItem* item;
-      if (buildFixedPositionItem) {
-        item = new (aBuilder) nsDisplayFixedPosition(aBuilder, child, child, &list);
-      } else {
-        item = WrapInWrapList(aBuilder, child, &list);
-      }
+      nsDisplayItem* item = WrapInWrapList(aBuilder, child, &list);
       if (isSVG) {
         aLists.Content()->AppendNewToTop(item);
       } else {
         aLists.PositionedDescendants()->AppendNewToTop(item);
-      }
-
-      // Make sure that extra positioned descendants don't escape having
-      // their fixed-position metadata applied to them.
-      if (buildFixedPositionItem) {
-        while (!extraPositionedDescendants.IsEmpty()) {
-          item = extraPositionedDescendants.RemoveBottom();
-          nsDisplayList fixedPosDescendantList;
-          fixedPosDescendantList.AppendToTop(item);
-          aLists.PositionedDescendants()->AppendNewToTop(
-              new (aBuilder) nsDisplayFixedPosition(aBuilder, item->Frame(),
-                                                    child, &fixedPosDescendantList));
-        }
       }
     }
   } else if (!isSVG && disp->IsFloating(child)) {
@@ -7378,7 +7347,7 @@ nsIFrame::VerticalAlignEnum() const
     for (const nsIFrame* frame = this; frame; frame = frame->GetParent()) {
       dominantBaseline = frame->StyleSVGReset()->mDominantBaseline;
       if (dominantBaseline != NS_STYLE_DOMINANT_BASELINE_AUTO ||
-          frame->GetType() == nsGkAtoms::svgTextFrame) {
+          frame->GetType() == nsGkAtoms::svgTextFrame2) {
         break;
       }
     }

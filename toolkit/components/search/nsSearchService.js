@@ -1472,14 +1472,19 @@ Engine.prototype = {
       return;
     }
 
-    // Check to see if this is a duplicate engine. If we're confirming the
-    // engine load, then we display a "this is a duplicate engine" prompt,
-    // otherwise we fail silently.
+    // Check that when adding a new engine (e.g., not updating an
+    // existing one), a duplicate engine does not already exist.
     if (!engineToUpdate) {
       if (Services.search.getEngineByName(aEngine.name)) {
-        promptError({ error: "error_duplicate_engine_msg",
-                      title: "error_invalid_engine_title"
-                    }, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
+        // If we're confirming the engine load, then display a "this is a
+        // duplicate engine" prompt; otherwise, fail silently.
+        if (aEngine._confirm) {
+          promptError({ error: "error_duplicate_engine_msg",
+                        title: "error_invalid_engine_title"
+                      }, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
+        } else {
+          onError(Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
+        }
         LOG("_onLoad: duplicate engine found, bailing");
         return;
       }

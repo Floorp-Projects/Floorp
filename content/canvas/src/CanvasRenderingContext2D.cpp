@@ -3107,6 +3107,15 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
 
     imgSize = res.mSize;
 
+    // Scale sw/sh based on aspect ratio
+    if (image.IsHTMLVideoElement()) {
+      HTMLVideoElement* video = &image.GetAsHTMLVideoElement();
+      int32_t displayWidth = video->VideoWidth();
+      int32_t displayHeight = video->VideoHeight();
+      sw *= (double)imgSize.width / (double)displayWidth;
+      sh *= (double)imgSize.height / (double)displayHeight;
+    }
+
     if (mCanvasElement) {
       CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
                                             res.mPrincipal, res.mIsWriteOnly,

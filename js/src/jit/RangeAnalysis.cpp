@@ -1466,7 +1466,7 @@ MRandom::computeRange()
 bool
 RangeAnalysis::markBlocksInLoopBody(MBasicBlock *header, MBasicBlock *backedge)
 {
-    Vector<MBasicBlock *, 16, IonAllocPolicy> worklist;
+    Vector<MBasicBlock *, 16, IonAllocPolicy> worklist(alloc());
 
     // Mark the header as being in the loop. This terminates the walk.
     header->mark();
@@ -1559,7 +1559,7 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
     if (!mir->compilingAsmJS()) {
         // Try to hoist any bounds checks from the loop using symbolic bounds.
 
-        Vector<MBoundsCheck *, 0, IonAllocPolicy> hoistedChecks;
+        Vector<MBoundsCheck *, 0, IonAllocPolicy> hoistedChecks(alloc());
 
         for (ReversePostorderIterator iter(graph_.rpoBegin(header)); iter != graph_.rpoEnd(); iter++) {
             MBasicBlock *block = *iter;
@@ -1662,7 +1662,7 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
     if (lhsModified.term != lhs.term)
         return nullptr;
 
-    LinearSum bound;
+    LinearSum bound(alloc());
 
     if (lhsModified.constant == 1 && !lessEqual) {
         // The value of lhs is 'initial(lhs) + iterCount' and this will end
@@ -1736,7 +1736,7 @@ RangeAnalysis::analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound
     if (!phi->range())
         phi->setRange(new Range());
 
-    LinearSum initialSum;
+    LinearSum initialSum(alloc());
     if (!initialSum.add(initial, 1))
         return;
 

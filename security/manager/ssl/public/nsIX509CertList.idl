@@ -13,6 +13,9 @@ interface nsIX509CertList : nsISupports {
    void deleteCert(in nsIX509Cert cert);
    nsISimpleEnumerator getEnumerator();
 
+   /* getRawCertList MUST be called only from functions where
+    * the nssShutdownPreventionLock has been adquired.
+    */
    [notxpcom, noscript] voidPtr getRawCertList();
 
 };

@@ -24,6 +24,7 @@ which makes Windows Media Foundation unavailable.
 #include <mfidl.h>
 #include <mfreadwrite.h>
 #include <mfobjects.h>
+#include <ks.h>
 #include <stdio.h>
 #include <mferror.h>
 #include <propvarutil.h>

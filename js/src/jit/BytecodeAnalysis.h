@@ -45,9 +45,9 @@ class BytecodeAnalysis
     bool hasSetArg_;
 
   public:
-    explicit BytecodeAnalysis(JSScript *script);
+    explicit BytecodeAnalysis(TempAllocator &alloc, JSScript *script);
 
-    bool init(GSNCache &gsn);
+    bool init(TempAllocator &alloc, GSNCache &gsn);
 
     BytecodeInfo &info(jsbytecode *pc) {
         JS_ASSERT(infos_[pc - script_->code].initialized);

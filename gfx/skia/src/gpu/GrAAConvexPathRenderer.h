@@ -6,6 +6,9 @@
  * found in the LICENSE file.
  */
 
+#ifndef GrAAConvexPathRenderer_DEFINED
+#define GrAAConvexPathRenderer_DEFINED
+
 #include "GrPathRenderer.h"
 
 
@@ -24,3 +27,5 @@ protected:
                             GrDrawTarget* target,
                             bool antiAlias) SK_OVERRIDE;
 };
+
+#endif

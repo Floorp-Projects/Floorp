@@ -6,7 +6,7 @@
 
 MODULE = 'accessibility'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'XULAlertAccessible.cpp',
     'XULColorPickerAccessible.cpp',
     'XULComboboxAccessible.cpp',

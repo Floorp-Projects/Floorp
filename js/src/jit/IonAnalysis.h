@@ -97,13 +97,15 @@ struct LinearTerm
 class LinearSum
 {
   public:
-    LinearSum()
-      : constant_(0)
+    LinearSum(TempAllocator &alloc)
+      : terms_(alloc),
+        constant_(0)
     {
     }
 
     LinearSum(const LinearSum &other)
-      : constant_(other.constant_)
+      : terms_(other.terms_.allocPolicy()),
+        constant_(other.constant_)
     {
         terms_.appendAll(other.terms_);
     }
