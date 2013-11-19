@@ -13,7 +13,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
-Cu.importGlobalProperties(["indexedDB"]);
 
 const DB_NAME = "net_stats";
 const DB_VERSION = 3;
