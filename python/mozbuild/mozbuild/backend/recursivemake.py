@@ -1070,7 +1070,7 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_library_definition(self, libdef, backend_file):
         backend_file.write('LIBRARY_NAME = %s\n' % libdef.basename)
         thisobjdir = libdef.objdir
-        topobjdir = libdef.topobjdir
+        topobjdir = libdef.topobjdir.replace(os.sep, '/')
         for objdir, basename in libdef.static_libraries:
             # If this is an external objdir (i.e., comm-central), use the other
             # directory instead of $(DEPTH).
