@@ -40,10 +40,6 @@ public:
 
   static bool IsCSS2PseudoElement(nsIAtom *aAtom);
 
-  static bool PseudoElementContainsElements(nsIAtom *aAtom) {
-    return PseudoElementHasFlags(aAtom, CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS);
-  }
-
 #define CSS_PSEUDO_ELEMENT(_name, _value, _flags) \
   static nsICSSPseudoElement* _name;
 #include "nsCSSPseudoElementList.h"
@@ -70,22 +66,26 @@ public:
   // Get the atom for a given Type.  aType must be < ePseudo_PseudoElementCount
   static nsIAtom* GetPseudoAtom(Type aType);
 
+  static bool PseudoElementContainsElements(const Type aType) {
+    return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS);
+  }
+
   static bool PseudoElementSupportsStyleAttribute(nsIAtom *aAtom) {
-    return PseudoElementHasFlags(aAtom, CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
+    return PseudoElementHasFlags(GetPseudoType(aAtom), CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
   }
 
   static bool PseudoElementSupportsStyleAttribute(const Type aType) {
     MOZ_ASSERT(aType < ePseudo_PseudoElementCount);
-    return PseudoElementHasFlags(GetPseudoAtom(aType), CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
+    return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
   }
 
 private:
-  static uint32_t FlagsForPseudoElement(nsIAtom *aAtom);
+  static uint32_t FlagsForPseudoElement(const Type aType);
 
   // Does the given pseudo-element have all of the flags given?
-  static bool PseudoElementHasFlags(nsIAtom *aAtom, uint32_t aFlags)
+  static bool PseudoElementHasFlags(const Type aType, uint32_t aFlags)
   {
-    return (FlagsForPseudoElement(aAtom) & aFlags) == aFlags;
+    return (FlagsForPseudoElement(aType) & aFlags) == aFlags;
   }
 };
 

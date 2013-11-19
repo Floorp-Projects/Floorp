@@ -18,7 +18,6 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGForeignObjectFrame.h"
 #include "mozilla/dom/SVGSVGElement.h"
-#include "nsSVGTextFrame.h"
 #include "mozilla/dom/SVGViewElement.h"
 #include "nsSubDocumentFrame.h"
 
@@ -68,12 +67,6 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument* aDocument,
     return;
   }
 
-  // is the content a child of a text element
-  nsSVGTextContainerFrame* containerFrame = do_QueryFrame(frame);
-  if (containerFrame) {
-    containerFrame->NotifyGlyphMetricsChange();
-    return;
-  }
   // if not, are there text elements amongst its descendents
   UpdateTextFragmentTrees(frame);
 }
@@ -113,12 +106,7 @@ nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
 {
   nsIFrame* kid = aFrame->GetFirstPrincipalChild();
   while (kid) {
-    if (kid->GetType() == nsGkAtoms::svgTextFrame) {
-      nsSVGTextFrame* textFrame = static_cast<nsSVGTextFrame*>(kid);
-      textFrame->NotifyGlyphMetricsChange();
-    } else {
-      UpdateTextFragmentTrees(kid);
-    }
+    UpdateTextFragmentTrees(kid);
     kid = kid->GetNextSibling();
   }
 }

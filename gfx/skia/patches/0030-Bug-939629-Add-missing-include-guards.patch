@@ -1,0 +1,94 @@
+# HG changeset patch
+# Parent 979e60d9c09f22eb139643da6de7568b603e1aa1
+
+diff --git a/gfx/skia/include/images/SkImages.h b/gfx/skia/include/images/SkImages.h
+--- a/gfx/skia/include/images/SkImages.h
++++ b/gfx/skia/include/images/SkImages.h
+@@ -1,14 +1,19 @@
+ /*
+  * Copyright 2012 Google Inc.
+  *
+  * Use of this source code is governed by a BSD-style license that can be
+  * found in the LICENSE file.
+  */
+ 
++#ifndef SkImages_DEFINED
++#define SkImages_DEFINED
++
+ class SkImages {
+ public:
+     /**
+      * Initializes flattenables in the images project.
+      */
+     static void InitializeFlattenables();
+ };
++
++#endif
+diff --git a/gfx/skia/src/gpu/GrAAConvexPathRenderer.h b/gfx/skia/src/gpu/GrAAConvexPathRenderer.h
+--- a/gfx/skia/src/gpu/GrAAConvexPathRenderer.h
++++ b/gfx/skia/src/gpu/GrAAConvexPathRenderer.h
+@@ -1,16 +1,19 @@
+ 
+ /*
+  * Copyright 2012 Google Inc.
+  *
+  * Use of this source code is governed by a BSD-style license that can be
+  * found in the LICENSE file.
+  */
+ 
++#ifndef GrAAConvexPathRenderer_DEFINED
++#define GrAAConvexPathRenderer_DEFINED
++
+ #include "GrPathRenderer.h"
+ 
+ 
+ class GrAAConvexPathRenderer : public GrPathRenderer {
+ public:
+     GrAAConvexPathRenderer();
+ 
+     virtual bool canDrawPath(const SkPath& path,
+@@ -19,8 +22,10 @@ public:
+                              bool antiAlias) const SK_OVERRIDE;
+ 
+ protected:
+     virtual bool onDrawPath(const SkPath& path,
+                             const SkStrokeRec& stroke,
+                             GrDrawTarget* target,
+                             bool antiAlias) SK_OVERRIDE;
+ };
++
++#endif
+diff --git a/gfx/skia/src/gpu/GrReducedClip.h b/gfx/skia/src/gpu/GrReducedClip.h
+--- a/gfx/skia/src/gpu/GrReducedClip.h
++++ b/gfx/skia/src/gpu/GrReducedClip.h
+@@ -1,16 +1,19 @@
+ 
+ /*
+  * Copyright 2012 Google Inc.
+  *
+  * Use of this source code is governed by a BSD-style license that can be
+  * found in the LICENSE file.
+  */
+ 
++#ifndef GrReducedClip_DEFINED
++#define GrReducedClip_DEFINED
++
+ #include "SkClipStack.h"
+ #include "SkTLList.h"
+ 
+ namespace GrReducedClip {
+ 
+ typedef SkTLList<SkClipStack::Element> ElementList;
+ 
+ enum InitialState {
+@@ -33,8 +36,10 @@ enum InitialState {
+ void ReduceClipStack(const SkClipStack& stack,
+                      const SkIRect& queryBounds,
+                      ElementList* result,
+                      InitialState* initialState,
+                      SkIRect* tighterBounds = NULL,
+                      bool* requiresAA = NULL);
+ 
+ } // namespace GrReducedClip
++
++#endif

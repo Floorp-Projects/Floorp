@@ -7,11 +7,13 @@
 MODULE = 'accessibility'
 
 EXPORTS += [
+    'xpcAccessibleHyperText.h',
     'xpcAccessibleSelectable.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsAccessibleRelation.cpp',
+    'xpcAccessibleHyperText.cpp',
     'xpcAccessibleSelectable.cpp',
     'xpcAccessibleTable.cpp',
     'xpcAccessibleTableCell.cpp',

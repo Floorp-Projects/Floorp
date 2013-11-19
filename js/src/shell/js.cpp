@@ -1709,8 +1709,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           case SRC_BREAK2LABEL:
           case SRC_SWITCHBREAK:
           case SRC_ASSIGNOP:
-          case SRC_HIDDEN:
-          case SRC_CATCH:
           case SRC_XDELTA:
             break;
 

@@ -15,10 +15,6 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-// Defines the number of selection add/remove events in the queue when they
-// aren't packed into single selection within event.
-const unsigned int kSelChangeCountToPack = 5;
-
 ////////////////////////////////////////////////////////////////////////////////
 // NotificationCollector
 ////////////////////////////////////////////////////////////////////////////////
