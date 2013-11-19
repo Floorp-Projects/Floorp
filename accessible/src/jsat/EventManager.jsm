@@ -46,7 +46,7 @@ this.EventManager.prototype = {
   start: function start() {
     try {
       if (!this._started) {
-        Logger.info('EventManager.start', Utils.MozBuildApp);
+        Logger.debug('EventManager.start');
 
         this._started = true;
 
@@ -73,7 +73,7 @@ this.EventManager.prototype = {
     if (!this._started) {
       return;
     }
-    Logger.info('EventManager.stop', Utils.MozBuildApp);
+    Logger.debug('EventManager.stop');
     AccessibilityEventObserver.removeListener(this);
     try {
       this.webProgress.removeProgressListener(this);
