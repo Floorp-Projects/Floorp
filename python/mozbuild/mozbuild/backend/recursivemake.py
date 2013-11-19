@@ -1077,7 +1077,7 @@ class RecursiveMakeBackend(CommonBackend):
             if objdir.startswith(topobjdir + '/'):
                 relpath = '$(DEPTH)/%s' % mozpath.relpath(objdir, topobjdir)
             else:
-                relpath = os.path.relpath(objdir, thisobjdir)
+                relpath = mozpath.relpath(objdir, thisobjdir)
             backend_file.write('SHARED_LIBRARY_LIBS += %s/$(LIB_PREFIX)%s.$(LIB_SUFFIX)\n'
                                % (relpath, basename))
 
