@@ -2460,6 +2460,48 @@ function BrowserFullScreen()
   window.fullScreen = !window.fullScreen;
 }
 
+function _checkDefaultAndSwitchToMetro() {
+#ifdef HAVE_SHELL_SERVICE
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  let shell = Components.classes["@mozilla.org/browser/shell-service;1"].
+    getService(Components.interfaces.nsIShellService);
+  let isDefault = shell.isDefaultBrowser(false, false);
+
+  if (isDefault) {
+    let appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
+    getService(Components.interfaces.nsIAppStartup);
+
+    appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
+                    Components.interfaces.nsIAppStartup.eRestartTouchEnvironment);
+    return true;
+  }
+  return false;
+#endif
+#endif
+#endif
+}
+
+function SwitchToMetro() {
+#ifdef HAVE_SHELL_SERVICE
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  if (this._checkDefaultAndSwitchToMetro()) {
+    return;
+  }
+
+  let shell = Components.classes["@mozilla.org/browser/shell-service;1"].
+    getService(Components.interfaces.nsIShellService);
+
+  shell.setDefaultBrowser(false, false);
+
+  let intervalID = window.setInterval(this._checkDefaultAndSwitchToMetro, 1000);
+  window.setTimeout(function() { window.clearInterval(intervalID); }, 10000);
+#endif
+#endif
+#endif
+}
+
 function onFullScreen(event) {
   FullScreen.toggle(event);
 }
