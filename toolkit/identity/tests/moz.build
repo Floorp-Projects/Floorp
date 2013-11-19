@@ -6,6 +6,4 @@
 
 DIRS += ['chrome', 'mochitest']
 
-MODULE = 'test_identity'
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

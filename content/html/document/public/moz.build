@@ -10,5 +10,3 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'content_htmldoc'
 
-MODULE = 'content'
-

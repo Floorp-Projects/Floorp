@@ -9,8 +9,6 @@ if CONFIG['MOZ_B2G_FM']:
         'ipc',
     ]
 
-    MODULE = 'dom'
-
     EXPORTS.mozilla.dom += [
         'FMRadio.h',
         'FMRadioCommon.h',

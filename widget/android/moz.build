@@ -10,8 +10,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'widget_android'
 
-MODULE = 'widget'
-
 EXPORTS += [
     'AndroidBridge.h',
     'AndroidJavaWrappers.h',

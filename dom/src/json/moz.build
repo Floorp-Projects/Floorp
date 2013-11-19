@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['test']
 
-MODULE = 'dom'
-
 EXPORTS += [
     'nsJSON.h',
 ]

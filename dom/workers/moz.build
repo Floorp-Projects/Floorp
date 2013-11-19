@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['test']
 
-MODULE = 'dom'
-
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'WorkerPrivate.h',

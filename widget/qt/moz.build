@@ -6,8 +6,6 @@
 
 DIRS += ['faststartupqt']
 
-MODULE = 'widget'
-
 EXPORTS += [
     'nsQtKeyUtils.h',
 ]

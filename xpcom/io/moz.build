@@ -65,8 +65,6 @@ else:
 
 XPIDL_MODULE = 'xpcom_io'
 
-MODULE = 'xpcom'
-
 EXPORTS += [
     'nsAnonymousTemporaryFile.h',
     'nsAppDirectoryServiceDefs.h',

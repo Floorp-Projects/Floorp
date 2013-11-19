@@ -48,8 +48,6 @@ PARALLEL_DIRS += ['webspeech']
 
 TEST_DIRS += ['test']
 
-MODULE = 'content'
-
 EXPORTS += [
     'AbstractMediaDecoder.h',
     'AudioAvailableEventManager.h',

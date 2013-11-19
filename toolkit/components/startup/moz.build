@@ -8,8 +8,6 @@ DIRS += ['public']
 
 TEST_DIRS += ['tests/browser']
 
-MODULE = 'toolkitcomps'
-
 EXPORTS.mozilla += [
     'StartupTimeline.h',
 ]

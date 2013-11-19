@@ -57,8 +57,6 @@ if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
 
 TEST_TOOL_DIRS += ['test']
 
-MODULE = 'crashreporter'
-
 EXPORTS += [
     'nsExceptionHandler.h',
 ]

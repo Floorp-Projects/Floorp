@@ -14,8 +14,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_socket'
 
-MODULE = 'necko'
-
 UNIFIED_SOURCES += [
     'nsSocketProviderService.cpp',
     'nsSOCKSIOLayer.cpp',

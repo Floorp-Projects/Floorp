@@ -8,8 +8,6 @@ PARALLEL_DIRS += ['blink', 'test']
 
 TEST_TOOL_DIRS += ['compiledtest']
 
-MODULE = 'content'
-
 EXPORTS += [
     'AudioParamTimeline.h',
     'MediaBufferDecoder.h',

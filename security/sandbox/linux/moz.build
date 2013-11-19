@@ -6,8 +6,6 @@
 
 FAIL_ON_WARNINGS = True
 
-MODULE = 'sandbox'
-
 EXPORTS.mozilla += [
     'Sandbox.h',
 ]

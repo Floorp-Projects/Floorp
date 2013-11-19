@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['tests']
 
-MODULE = 'editor'
-
 UNIFIED_SOURCES += [
     'nsEditProperty.cpp',
     'nsHTMLAbsPosition.cpp',

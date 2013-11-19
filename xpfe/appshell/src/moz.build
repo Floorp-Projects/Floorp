@@ -6,8 +6,6 @@
 
 PARALLEL_DIRS += ['test']
 
-MODULE = 'appshell'
-
 SOURCES += [
     'nsAppShellFactory.cpp',
     'nsAppShellService.cpp',

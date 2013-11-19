@@ -6,7 +6,6 @@
 # Copyright © 2013 Deutsche Telekom, Inc.
 
 if CONFIG['MOZ_NFC']:
-    MODULE = 'dom'
     EXPORTS.mozilla.dom += [
         'MozNdefRecord.h',
     ]

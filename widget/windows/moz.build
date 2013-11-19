@@ -9,8 +9,6 @@ if CONFIG['MOZ_METRO']:
 
 TEST_DIRS += ['tests']
 
-MODULE = 'widget'
-
 EXPORTS += [
     'nsdefs.h',
     'WindowHook.h',

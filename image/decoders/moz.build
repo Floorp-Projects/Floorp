@@ -23,8 +23,6 @@ if toolkit == 'cocoa':
 elif toolkit == 'android':
     DIRS += ['icon/android', 'icon']
 
-MODULE = 'imgdecoders'
-
 SOURCES += [
     'EXIF.cpp',
     'nsBMPDecoder.cpp',

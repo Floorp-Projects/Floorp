@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['tests']
 
-MODULE = 'jsctypes'
-
 SOURCES += [
     'ctypes.cpp',
 ]

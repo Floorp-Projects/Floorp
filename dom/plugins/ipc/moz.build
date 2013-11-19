@@ -7,8 +7,6 @@
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     DIRS += ['interpose']
 
-MODULE = 'dom'
-
 EXPORTS.mozilla += [
     'PluginLibrary.h',
 ]
