@@ -1679,6 +1679,10 @@ let CustomizableUIInternal = {
       return null;
     }
 
+    if (aData.id == "switch-to-metro-button") {
+      widget.showInPrivateBrowsing = false;
+    }
+
     delete widget.implementation.currentArea;
     widget.implementation.__defineGetter__("currentArea", function() widget.currentArea);
 
