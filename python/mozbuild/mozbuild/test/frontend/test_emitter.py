@@ -346,22 +346,6 @@ class TestEmitterBasic(unittest.TestCase):
         basenames = set(os.path.basename(k) for k in o.installs.keys())
         self.assertEqual(basenames, {'mochitest.ini', 'test_active.html'})
 
-    def test_test_manifest_parent_support_files_dir(self):
-        """support-files referencing a file in a parent directory works."""
-        reader = self.reader('test-manifest-parent-support-files-dir')
-
-        objs = [o for o in self.read_topsrcdir(reader)
-                if isinstance(o, TestManifest)]
-
-        self.assertEqual(len(objs), 1)
-
-        o = objs[0]
-
-        expected = os.path.join(o.srcdir, 'support-file.txt')
-        self.assertIn(expected, o.installs)
-        self.assertEqual(o.installs[expected],
-            'testing/mochitest/tests/support-file.txt')
-
     def test_ipdl_sources(self):
         reader = self.reader('ipdl_sources')
         objs = self.read_topsrcdir(reader)
