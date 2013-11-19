@@ -932,8 +932,9 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
                                                    const nsIID &aIID,
                                                    void **aResult)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_ARG_POINTER(contractID);
+    if (NS_WARN_IF(!aResult) ||
+        NS_WARN_IF(!contractID))
+        return NS_ERROR_INVALID_ARG;
 
     nsresult rv;
 
@@ -1052,7 +1053,8 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
                                                    const nsIID &aIID,
                                                    void **aResult)
 {
-    NS_ENSURE_ARG_POINTER(aContractID);
+    if (NS_WARN_IF(!aContractID))
+        return NS_ERROR_INVALID_ARG;
 
     // test this first, since there's no point in creating a component during
     // shutdown -- whether it's available or not would depend on the order it
@@ -1607,7 +1609,9 @@ NS_IMETHODIMP
 nsComponentManagerImpl::IsContractIDRegistered(const char *aClass,
                                                bool *_retval)
 {
-    NS_ENSURE_ARG_POINTER(aClass);
+    if (NS_WARN_IF(!aClass))
+        return NS_ERROR_INVALID_ARG;
+
     nsFactoryEntry *entry = GetFactoryEntry(aClass, strlen(aClass));
 
     if (entry)

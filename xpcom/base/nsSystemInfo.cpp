@@ -165,7 +165,8 @@ nsSystemInfo::Init()
       if (PR_GetSystemInfo(items[i].cmd, buf, sizeof(buf)) == PR_SUCCESS) {
         rv = SetPropertyAsACString(NS_ConvertASCIItoUTF16(items[i].name),
                                    nsDependentCString(buf));
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv)))
+          return rv;
       }
       else {
         NS_WARNING("PR_GetSystemInfo failed");
@@ -182,7 +183,8 @@ nsSystemInfo::Init()
     for (uint32_t i = 0; i < ArrayLength(cpuPropItems); i++) {
         rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16(cpuPropItems[i].name),
                                cpuPropItems[i].propfun());
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv)))
+          return rv;
     }
 
 #ifdef XP_WIN
@@ -191,7 +193,8 @@ nsSystemInfo::Init()
     NS_WARN_IF_FALSE(gotWow64Value, "IsWow64Process failed");
     if (gotWow64Value) {
       rv = SetPropertyAsBool(NS_LITERAL_STRING("isWow64"), !!isWow64);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
     }
     nsAutoCString hddModel, hddRevision;
     if (NS_SUCCEEDED(GetProfileHDDInfo(hddModel, hddRevision))) {
@@ -210,7 +213,8 @@ nsSystemInfo::Init()
       rv = SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
                                  nsDependentCString(gtkver));
       PR_smprintf_free(gtkver);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
     }
 #endif
 
