@@ -11,5 +11,3 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_permissionsettings'
 
-MODULE = 'dom'
-

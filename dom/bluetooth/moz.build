@@ -8,7 +8,6 @@ if CONFIG['MOZ_B2G_BT']:
     PARALLEL_DIRS += ['interfaces']
 
     LIBXUL_LIBRARY = True
-    MODULE = 'dom'
     LIBRARY_NAME = 'dombluetooth_s'
 
     SOURCES += [

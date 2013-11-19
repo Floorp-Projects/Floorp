@@ -10,8 +10,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'toolkitremote'
 
-MODULE = 'toolkitcomps'
-
 SOURCES += [
     'nsXRemoteService.cpp',
 ]

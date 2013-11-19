@@ -7,8 +7,6 @@
 if CONFIG['MOZ_METRO'] and CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['winvccorlib']
 
-MODULE = 'libxul'
-
 LIBRARY_NAME = 'xul'
 
 SOURCES += [

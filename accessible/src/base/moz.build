@@ -6,8 +6,6 @@
 
 include('../shared.mozbuild')
 
-MODULE = 'accessibility'
-
 EXPORTS += [
     'AccEvent.h',
     'nsAccessibilityService.h'

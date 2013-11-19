@@ -38,8 +38,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 XPIDL_MODULE = 'xpcom_base'
 
-MODULE = 'xpcom'
-
 EXPORTS += [
     'ErrorList.h',
     'nsAgg.h',

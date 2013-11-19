@@ -6,8 +6,6 @@
 
 XPIDL_MODULE = 'content_webrtc'
 
-MODULE = 'content'
-
 EXPORTS += [
     'MediaEngine.h',
     'MediaEngineDefault.h',

@@ -10,8 +10,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_ipc'
 
-MODULE = 'necko'
-
 EXPORTS.mozilla.net += [
     'ChannelEventQueue.h',
     'NeckoChild.h',

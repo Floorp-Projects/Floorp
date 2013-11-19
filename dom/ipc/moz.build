@@ -7,8 +7,6 @@
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'cocoa':
     TEST_DIRS += ['tests']
 
-MODULE = 'dom'
-
 EXPORTS += [
     'nsICachedFileDescriptorListener.h',
     'PCOMContentPermissionRequestChild.h',

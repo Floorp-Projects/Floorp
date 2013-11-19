@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['tests']
 
-MODULE = 'mozglue'
-
 LIBRARY_NAME = 'mfbt'
 
 mfbt_root = '.'

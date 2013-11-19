@@ -8,8 +8,6 @@ TEST_DIRS += ['tests']
 
 XPIDL_MODULE = 'dom_promise'
 
-MODULE = 'dom'
-
 EXPORTS.mozilla.dom += [
     'Promise.h',
 ]
