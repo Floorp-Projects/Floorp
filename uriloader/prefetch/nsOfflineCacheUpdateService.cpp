@@ -23,7 +23,6 @@
 #include "nsICacheSession.h"
 #include "nsICachingChannel.h"
 #include "nsIContent.h"
-#include "nsIDocShell.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
@@ -379,7 +378,8 @@ nsOfflineCacheUpdateService::ScheduleOnDocumentStop(nsIURI *aManifestURI,
          this, aManifestURI, aDocumentURI, aDocument));
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
-    nsCOMPtr<nsIWebProgress> progress = do_QueryInterface(doc->GetContainer());
+    nsCOMPtr<nsISupports> container = doc->GetContainer();
+    nsCOMPtr<nsIWebProgress> progress = do_QueryInterface(container);
     NS_ENSURE_TRUE(progress, NS_ERROR_INVALID_ARG);
 
     // Proceed with cache update

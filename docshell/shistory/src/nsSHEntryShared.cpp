@@ -10,7 +10,6 @@
 #include "nsIDocument.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
-#include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsDocShellEditorData.h"
 #include "nsThreadUtils.h"
@@ -168,7 +167,7 @@ nsSHEntryShared::Expire()
   if (!mContentViewer) {
     return;
   }
-  nsCOMPtr<nsIDocShell> container;
+  nsCOMPtr<nsISupports> container;
   mContentViewer->GetContainer(getter_AddRefs(container));
   nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
   if (!treeItem) {

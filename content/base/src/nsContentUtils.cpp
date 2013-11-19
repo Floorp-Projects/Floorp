@@ -2622,7 +2622,10 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
   uint32_t appType = nsIDocShell::APP_TYPE_UNKNOWN;
 
   {
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aLoadingDocument->GetDocShell();
+    nsCOMPtr<nsISupports> container = aLoadingDocument->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+      do_QueryInterface(container);
+
     if (docShellTreeItem) {
       nsCOMPtr<nsIDocShellTreeItem> root;
       docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
@@ -3150,7 +3153,8 @@ nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
 bool
 nsContentUtils::IsChildOfSameType(nsIDocument* aDoc)
 {
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(aDoc->GetDocShell());
+  nsCOMPtr<nsISupports> container = aDoc->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(container));
   nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
   if (docShellAsItem) {
     docShellAsItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
@@ -3231,7 +3235,8 @@ nsContentUtils::IsInChromeDocshell(nsIDocument *aDocument)
     return IsInChromeDocshell(aDocument->GetDisplayDocument());
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> docShell(aDocument->GetDocShell());
+  nsCOMPtr<nsISupports> docContainer = aDocument->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(docContainer));
   int32_t itemType = nsIDocShellTreeItem::typeContent;
   if (docShell) {
     docShell->GetItemType(&itemType);
@@ -4971,7 +4976,8 @@ nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
 #ifdef MOZ_XUL
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && aDocument) {
-    nsCOMPtr<nsIDocShellTreeItem> docShellToHide = aDocument->GetDocShell();
+    nsCOMPtr<nsISupports> container = aDocument->GetContainer();
+    nsCOMPtr<nsIDocShellTreeItem> docShellToHide = do_QueryInterface(container);
     if (docShellToHide)
       pm->HidePopupsInDocShell(docShellToHide);
   }
@@ -5871,7 +5877,8 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
     return false;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = subDoc->GetDocShell();
+  nsCOMPtr<nsISupports> container = subDoc->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
   if (!docShell) {
     return false;
   }
@@ -5981,7 +5988,8 @@ nsContentUtils::FindPresShellForDocument(const nsIDocument* aDoc)
     return shell;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = doc->GetDocShell();
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
   while (docShellTreeItem) {
     // We may be in a display:none subdocument, or we may not have a presshell
     // created yet.
