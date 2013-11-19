@@ -317,14 +317,16 @@ nsresult nsTimerImpl::InitCommon(uint32_t aType, uint32_t aDelay)
 {
   nsresult rv;
 
-  NS_ENSURE_TRUE(gThread, NS_ERROR_NOT_INITIALIZED);
+  if (NS_WARN_IF(!gThread))
+    return NS_ERROR_NOT_INITIALIZED;
   if (!mEventTarget) {
     NS_ERROR("mEventTarget is NULL");
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   rv = gThread->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv)))
+    return rv;
 
   /**
    * In case of re-Init, both with and without a preceding Cancel, clear the
@@ -357,7 +359,8 @@ NS_IMETHODIMP nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
                                                 uint32_t aDelay,
                                                 uint32_t aType)
 {
-  NS_ENSURE_ARG_POINTER(aFunc);
+  if (NS_WARN_IF(!aFunc))
+    return NS_ERROR_INVALID_ARG;
   
   ReleaseCallback();
   mCallbackType = CALLBACK_TYPE_FUNC;
@@ -371,7 +374,8 @@ NS_IMETHODIMP nsTimerImpl::InitWithCallback(nsITimerCallback *aCallback,
                                             uint32_t aDelay,
                                             uint32_t aType)
 {
-  NS_ENSURE_ARG_POINTER(aCallback);
+  if (NS_WARN_IF(!aCallback))
+    return NS_ERROR_INVALID_ARG;
 
   ReleaseCallback();
   mCallbackType = CALLBACK_TYPE_INTERFACE;
@@ -385,7 +389,8 @@ NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
                                 uint32_t aDelay,
                                 uint32_t aType)
 {
-  NS_ENSURE_ARG_POINTER(aObserver);
+  if (NS_WARN_IF(!aObserver))
+    return NS_ERROR_INVALID_ARG;
 
   ReleaseCallback();
   mCallbackType = CALLBACK_TYPE_OBSERVER;
@@ -481,8 +486,8 @@ NS_IMETHODIMP nsTimerImpl::GetTarget(nsIEventTarget** aTarget)
 
 NS_IMETHODIMP nsTimerImpl::SetTarget(nsIEventTarget* aTarget)
 {
-  NS_ENSURE_TRUE(mCallbackType == CALLBACK_TYPE_UNKNOWN,
-                 NS_ERROR_ALREADY_INITIALIZED);
+  if (NS_WARN_IF(mCallbackType != CALLBACK_TYPE_UNKNOWN))
+    return NS_ERROR_ALREADY_INITIALIZED;
 
   if (aTarget)
     mEventTarget = aTarget;

@@ -1221,12 +1221,14 @@ public:
         // want scripts which poll the filesystem looking for gc/cc dumps to
         // grab a file before we're finished writing to it.)
         nsCOMPtr<nsIFile> gcLogFile = CreateTempFile("incomplete-gc-edges");
-        NS_ENSURE_STATE(gcLogFile);
+        if (NS_WARN_IF(!gcLogFile))
+            return NS_ERROR_UNEXPECTED;
 
         // Dump the JS heap.
         FILE* gcLogANSIFile = nullptr;
         gcLogFile->OpenANSIFileDesc("w", &gcLogANSIFile);
-        NS_ENSURE_STATE(gcLogANSIFile);
+        if (NS_WARN_IF(!gcLogANSIFile))
+            return NS_ERROR_UNEXPECTED;
         MozillaRegisterDebugFILE(gcLogANSIFile);
         CollectorData *data = sCollectorData.get();
         if (data && data->mRuntime)
@@ -1237,11 +1239,13 @@ public:
         // Strip off "incomplete-".
         nsCOMPtr<nsIFile> gcLogFileFinalDestination =
             CreateTempFile("gc-edges");
-        NS_ENSURE_STATE(gcLogFileFinalDestination);
+        if (NS_WARN_IF(!gcLogFileFinalDestination))
+            return NS_ERROR_UNEXPECTED;
 
         nsAutoString gcLogFileFinalDestinationName;
         gcLogFileFinalDestination->GetLeafName(gcLogFileFinalDestinationName);
-        NS_ENSURE_STATE(!gcLogFileFinalDestinationName.IsEmpty());
+        if (NS_WARN_IF(gcLogFileFinalDestinationName.IsEmpty()))
+            return NS_ERROR_UNEXPECTED;
 
         gcLogFile->MoveTo(/* directory */ nullptr, gcLogFileFinalDestinationName);
 
@@ -1260,10 +1264,12 @@ public:
         // Open a file for dumping the CC graph.  We again prefix with
         // "incomplete-".
         mOutFile = CreateTempFile("incomplete-cc-edges");
-        NS_ENSURE_STATE(mOutFile);
+        if (NS_WARN_IF(!mOutFile))
+            return NS_ERROR_UNEXPECTED;
         MOZ_ASSERT(!mStream);
         mOutFile->OpenANSIFileDesc("w", &mStream);
-        NS_ENSURE_STATE(mStream);
+        if (NS_WARN_IF(!mStream))
+            return NS_ERROR_UNEXPECTED;
         MozillaRegisterDebugFILE(mStream);
 
         fprintf(mStream, "# WantAllTraces=%s\n", mWantAllTraces ? "true" : "false");
@@ -1388,11 +1394,13 @@ public:
             // Strip off "incomplete-" from the log file's name.
             nsCOMPtr<nsIFile> logFileFinalDestination =
                 CreateTempFile("cc-edges");
-            NS_ENSURE_STATE(logFileFinalDestination);
+            if (NS_WARN_IF(!logFileFinalDestination))
+                return NS_ERROR_UNEXPECTED;
 
             nsAutoString logFileFinalDestinationName;
             logFileFinalDestination->GetLeafName(logFileFinalDestinationName);
-            NS_ENSURE_STATE(!logFileFinalDestinationName.IsEmpty());
+            if (NS_WARN_IF(logFileFinalDestinationName.IsEmpty()))
+                return NS_ERROR_UNEXPECTED;
 
             mOutFile->MoveTo(/* directory = */ nullptr,
                              logFileFinalDestinationName);
@@ -1415,7 +1423,8 @@ public:
     NS_IMETHOD ProcessNext(nsICycleCollectorHandler* aHandler,
                            bool* aCanContinue)
     {
-        NS_ENSURE_STATE(aHandler && mWantAfterProcessing);
+        if (NS_WARN_IF(!aHandler) || NS_WARN_IF(!mWantAfterProcessing))
+            return NS_ERROR_UNEXPECTED;
         CCGraphDescriber* d = mDescribers.popFirst();
         if (d) {
             switch (d->mType) {
@@ -1515,7 +1524,8 @@ nsCycleCollectorLoggerConstructor(nsISupports* aOuter,
                                   const nsIID& aIID,
                                   void* *aInstancePtr)
 {
-    NS_ENSURE_TRUE(!aOuter, NS_ERROR_NO_AGGREGATION);
+    if (NS_WARN_IF(aOuter))
+        return NS_ERROR_NO_AGGREGATION;
 
     nsISupports *logger = new nsCycleCollectorLogger();
 
@@ -2438,7 +2448,8 @@ class CycleCollectorReporter MOZ_FINAL : public MemoryMultiReporter
                                    nsIMemoryReporter::KIND_HEAP,              \
                                    nsIMemoryReporter::UNITS_BYTES, _amount,   \
                                    NS_LITERAL_CSTRING(_desc), aClosure);      \
-                NS_ENSURE_SUCCESS(rv, rv);                                    \
+                if (NS_WARN_IF(NS_FAILED(rv)))                                \
+                    return rv;                                                \
             }                                                                 \
         } while (0)
 
