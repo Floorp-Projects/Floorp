@@ -191,25 +191,25 @@ Promise::EnabledForScope(JSContext* aCx, JSObject* /* unused */)
 
 void
 Promise::MaybeResolve(JSContext* aCx,
-                      const Optional<JS::Handle<JS::Value> >& aValue)
+                      JS::Handle<JS::Value> aValue)
 {
   MaybeResolveInternal(aCx, aValue);
 }
 
 void
 Promise::MaybeReject(JSContext* aCx,
-                     const Optional<JS::Handle<JS::Value> >& aValue)
+                     JS::Handle<JS::Value> aValue)
 {
   MaybeRejectInternal(aCx, aValue);
 }
 
 static void
 EnterCompartment(Maybe<JSAutoCompartment>& aAc, JSContext* aCx,
-                 const Optional<JS::Handle<JS::Value> >& aValue)
+                 JS::Handle<JS::Value> aValue)
 {
   // FIXME Bug 878849
-  if (aValue.WasPassed() && aValue.Value().isObject()) {
-    JS::Rooted<JSObject*> rooted(aCx, &aValue.Value().toObject());
+  if (aValue.isObject()) {
+    JS::Rooted<JSObject*> rooted(aCx, &aValue.toObject());
     aAc.construct(aCx, rooted);
   }
 }
@@ -234,18 +234,13 @@ Promise::JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp)
     return Throw(aCx, NS_ERROR_UNEXPECTED);
   }
 
-  Optional<JS::Handle<JS::Value> > value(aCx);
-  if (aArgc) {
-    value.Value() = args[0];
-  }
-
   v = js::GetFunctionNativeReserved(&args.callee(), SLOT_TASK);
   PromiseCallback::Task task = static_cast<PromiseCallback::Task>(v.toInt32());
 
   if (task == PromiseCallback::Resolve) {
-    promise->MaybeResolveInternal(aCx, value);
+    promise->MaybeResolveInternal(aCx, args.get(0));
   } else {
-    promise->MaybeRejectInternal(aCx, value);
+    promise->MaybeRejectInternal(aCx, args.get(0));
   }
 
   return true;
@@ -309,8 +304,8 @@ Promise::Constructor(const GlobalObject& aGlobal,
   aRv.WouldReportJSException();
 
   if (aRv.IsJSException()) {
-    Optional<JS::Handle<JS::Value> > value(cx);
-    aRv.StealJSException(cx, &value.Value());
+    JS::Rooted<JS::Value> value(cx);
+    aRv.StealJSException(cx, &value);
 
     Maybe<JSAutoCompartment> ac;
     EnterCompartment(ac, cx, value);
@@ -332,8 +327,7 @@ Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
 
   nsRefPtr<Promise> promise = new Promise(window);
 
-  Optional<JS::Handle<JS::Value> > value(aCx, aValue);
-  promise->MaybeResolveInternal(aCx, value);
+  promise->MaybeResolveInternal(aCx, aValue);
   return promise.forget();
 }
 
@@ -349,8 +343,7 @@ Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
 
   nsRefPtr<Promise> promise = new Promise(window);
 
-  Optional<JS::Handle<JS::Value> > value(aCx, aValue);
-  promise->MaybeRejectInternal(aCx, value);
+  promise->MaybeRejectInternal(aCx, aValue);
   return promise.forget();
 }
 
@@ -420,8 +413,9 @@ Promise::RunTask()
   mResolveCallbacks.Clear();
   mRejectCallbacks.Clear();
 
-  JSAutoRequest ar(nsContentUtils::GetSafeJSContext());
-  Optional<JS::Handle<JS::Value> > value(nsContentUtils::GetSafeJSContext(), mResult);
+  JSContext* cx = nsContentUtils::GetSafeJSContext();
+  JSAutoRequest ar(cx);
+  JS::Rooted<JS::Value> value(cx, mResult);
 
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
     callbacks[i]->Call(value);
@@ -457,7 +451,7 @@ Promise::MaybeReportRejected()
 
 void
 Promise::MaybeResolveInternal(JSContext* aCx,
-                              const Optional<JS::Handle<JS::Value> >& aValue,
+                              JS::Handle<JS::Value> aValue,
                               PromiseTaskSync aAsynchronous)
 {
   if (mResolvePending) {
@@ -469,7 +463,7 @@ Promise::MaybeResolveInternal(JSContext* aCx,
 
 void
 Promise::MaybeRejectInternal(JSContext* aCx,
-                             const Optional<JS::Handle<JS::Value> >& aValue,
+                             JS::Handle<JS::Value> aValue,
                              PromiseTaskSync aAsynchronous)
 {
   if (mResolvePending) {
@@ -481,14 +475,14 @@ Promise::MaybeRejectInternal(JSContext* aCx,
 
 void
 Promise::ResolveInternal(JSContext* aCx,
-                         const Optional<JS::Handle<JS::Value> >& aValue,
+                         JS::Handle<JS::Value> aValue,
                          PromiseTaskSync aAsynchronous)
 {
   mResolvePending = true;
 
   // TODO: Bug 879245 - Then-able objects
-  if (aValue.WasPassed() && aValue.Value().isObject()) {
-    JS::Rooted<JSObject*> valueObj(aCx, &aValue.Value().toObject());
+  if (aValue.isObject()) {
+    JS::Rooted<JSObject*> valueObj(aCx, &aValue.toObject());
     Promise* nextPromise;
     nsresult rv = UNWRAP_OBJECT(Promise, aCx, valueObj, nextPromise);
 
@@ -504,13 +498,12 @@ Promise::ResolveInternal(JSContext* aCx,
   // value. Otherwise, the synchronous flag is unset, queue a task to process
   // own resolve callbacks with value. Otherwise, the synchronous flag is
   // unset, queue a task to process our resolve callbacks with value.
-  RunResolveTask(aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue,
-                 Resolved, aAsynchronous);
+  RunResolveTask(aValue, Resolved, aAsynchronous);
 }
 
 void
 Promise::RejectInternal(JSContext* aCx,
-                        const Optional<JS::Handle<JS::Value> >& aValue,
+                        JS::Handle<JS::Value> aValue,
                         PromiseTaskSync aAsynchronous)
 {
   mResolvePending = true;
@@ -518,8 +511,7 @@ Promise::RejectInternal(JSContext* aCx,
   // If the synchronous flag is set, process our reject callbacks with
   // value. Otherwise, the synchronous flag is unset, queue a task to process
   // promise's reject callbacks with value.
-  RunResolveTask(aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue,
-                 Rejected, aAsynchronous);
+  RunResolveTask(aValue, Rejected, aAsynchronous);
 }
 
 void

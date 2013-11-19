@@ -44,9 +44,9 @@ public:
   static bool EnabledForScope(JSContext* aCx, JSObject* /* unused */);
 
   void MaybeResolve(JSContext* aCx,
-                    const Optional<JS::Handle<JS::Value> >& aValue);
+                    JS::Handle<JS::Value> aValue);
   void MaybeReject(JSContext* aCx,
-                   const Optional<JS::Handle<JS::Value> >& aValue);
+                   JS::Handle<JS::Value> aValue);
 
   // WebIDL
 
@@ -120,18 +120,18 @@ private:
   void MaybeReportRejected();
 
   void MaybeResolveInternal(JSContext* aCx,
-                            const Optional<JS::Handle<JS::Value> >& aValue,
+                            JS::Handle<JS::Value> aValue,
                             PromiseTaskSync aSync = AsyncTask);
   void MaybeRejectInternal(JSContext* aCx,
-                           const Optional<JS::Handle<JS::Value> >& aValue,
+                           JS::Handle<JS::Value> aValue,
                            PromiseTaskSync aSync = AsyncTask);
 
   void ResolveInternal(JSContext* aCx,
-                       const Optional<JS::Handle<JS::Value> >& aValue,
+                       JS::Handle<JS::Value> aValue,
                        PromiseTaskSync aSync = AsyncTask);
 
   void RejectInternal(JSContext* aCx,
-                      const Optional<JS::Handle<JS::Value> >& aValue,
+                      JS::Handle<JS::Value> aValue,
                       PromiseTaskSync aSync = AsyncTask);
 
   // Static methods for the PromiseInit functions.
