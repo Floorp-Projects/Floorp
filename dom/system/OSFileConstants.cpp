@@ -13,6 +13,9 @@
 #include "unistd.h"
 #include "dirent.h"
 #include "sys/stat.h"
+#if !defined(ANDROID)
+#include <spawn.h>
+#endif // !defined(ANDROID)
 #endif // defined(XP_UNIX)
 
 #if defined(XP_LINUX)
@@ -503,6 +506,11 @@ static const dom::ConstantSpec gLibcProperties[] =
 
   // The size of |time_t|.
   { "OSFILE_SIZEOF_TIME_T", INT_TO_JSVAL(sizeof (time_t)) },
+
+#if !defined(ANDROID)
+  // The size of |posix_spawn_file_actions_t|.
+  { "OSFILE_SIZEOF_POSIX_SPAWN_FILE_ACTIONS_T", INT_TO_JSVAL(sizeof (posix_spawn_file_actions_t)) },
+#endif // !defined(ANDROID)
 
   // Defining |dirent|.
   // Size
