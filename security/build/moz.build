@@ -7,3 +7,5 @@
 if CONFIG['MOZ_FOLD_LIBS']:
     # TODO: The library name can be changed when bug 845217 is fixed.
     LIBRARY_NAME = 'nss3'
+
+    FORCE_SHARED_LIB = True

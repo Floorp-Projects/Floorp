@@ -6,5 +6,8 @@
 
 LIBRARY_NAME = 'gkmedias'
 
+if CONFIG['OS_TARGET'] == 'WINNT':
+    FORCE_SHARED_LIB = True
+
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['webrtc']

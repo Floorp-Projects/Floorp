@@ -10,3 +10,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'omxplugingb'
 
+FORCE_SHARED_LIB = True

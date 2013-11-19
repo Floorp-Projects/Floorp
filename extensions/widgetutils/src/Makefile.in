@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SHORT_LIBNAME = widgetutils
-FORCE_SHARED_LIB = 1
 
 EXTRA_DSO_LDOPTS = \
   $(XPCOM_GLUE_LDOPTS) \

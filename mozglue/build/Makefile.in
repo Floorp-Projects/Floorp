@@ -5,11 +5,8 @@
 
 DIST_INSTALL = 1
 
-# Build mozglue as a shared lib on Windows, OSX and Android.
-# If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
-ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
-FORCE_SHARED_LIB = 1
-endif
+# For FORCE_SHARED_LIB
+include $(topsrcdir)/config/config.mk
 
 ifneq (1_1,$(MOZ_MEMORY)_$(or $(MOZ_NATIVE_JEMALLOC),$(FORCE_SHARED_LIB)))
 

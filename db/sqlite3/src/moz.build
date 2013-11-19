@@ -17,3 +17,5 @@ SOURCES += [
 
 if CONFIG['MOZ_FOLD_LIBS']:
     FORCE_STATIC_LIB = True
+else:
+    FORCE_SHARED_LIB = True
