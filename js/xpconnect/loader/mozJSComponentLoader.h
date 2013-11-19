@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozJSComponentLoader_h
-#define mozJSComponentLoader_h
-
 #include "mozilla/ModuleLoader.h"
 #include "nsISupports.h"
 #include "nsIObserver.h"
@@ -146,5 +143,3 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     bool mInitialized;
     bool mReuseLoaderGlobal;
 };
-
-#endif /* mozJSComponentLoader_h */
