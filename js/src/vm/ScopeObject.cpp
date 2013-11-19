@@ -35,7 +35,7 @@ typedef Rooted<ArgumentsObject *> RootedArgumentsObject;
 static JSObject *
 InnermostStaticScope(JSScript *script, jsbytecode *pc)
 {
-    JS_ASSERT(pc >= script->code && pc < script->code + script->length);
+    JS_ASSERT(pc >= script->getCode() && pc < script->getCode() + script->getLength());
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
 
     uint32_t blockIndex = GET_UINT32_INDEX(pc + 2 * sizeof(uint16_t));
@@ -68,7 +68,7 @@ js::ScopeCoordinateName(JSScript *script, jsbytecode *pc)
     ScopeCoordinate sc(pc);
     while (r.front().slot() != sc.slot)
         r.popFront();
-    jsid id = r.front().propid();
+    jsid id = r.front().propidRaw();
 
     /* Beware nameless destructuring formal. */
     if (!JSID_IS_ATOM(id))

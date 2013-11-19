@@ -874,8 +874,18 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     /* Class shared by objects using this type. */
     const Class *clasp;
 
+    const Class *getClass() {
+        AutoUnprotectCell unprotect(this);
+        return clasp;
+    }
+
     /* Prototype shared by objects using this type. */
     HeapPtrObject proto;
+
+    JSObject *getProto() {
+        AutoUnprotectCellUnderCompilationLock unprotect(this);
+        return proto;
+    }
 
     /*
      * Whether there is a singleton JS object with this type. That JS object
@@ -884,12 +894,20 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
      */
     HeapPtrObject singleton;
 
+    JSObject *getSingleton() {
+        AutoUnprotectCell unprotect(this);
+        return singleton;
+    }
+
     /*
      * Value held by singleton if this is a standin type for a singleton JS
      * object whose type has not been constructed yet.
      */
     static const size_t LAZY_SINGLETON = 1;
-    bool lazy() const { return singleton == (JSObject *) LAZY_SINGLETON; }
+    bool lazy() const {
+        AutoUnprotectCellUnderCompilationLock unprotect(this);
+        return singleton == (JSObject *) LAZY_SINGLETON;
+    }
 
     /* Flags for this object. */
     TypeObjectFlags flags;
@@ -907,18 +925,22 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     HeapPtr<TypeObjectAddendum> addendum;
 
     bool hasNewScript() const {
+        AutoUnprotectCellUnderCompilationLock unprotect(this);
         return addendum && addendum->isNewScript();
     }
 
     TypeNewScript *newScript() {
+        AutoUnprotectCellUnderCompilationLock unprotect(this);
         return addendum->asNewScript();
     }
 
     bool hasTypedObject() {
+        AutoUnprotectCellUnderCompilationLock unprotect(this);
         return addendum && addendum->isTypedObject();
     }
 
     TypeTypedObject *typedObject() {
+        AutoUnprotectCellUnderCompilationLock unprotect(this);
         return addendum->asTypedObject();
     }
 
@@ -966,6 +988,11 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     /* If this is an interpreted function, the function object. */
     HeapPtrFunction interpretedFunction;
 
+    JSFunction *getInterpretedFunction() {
+        AutoUnprotectCell unprotect(this);
+        return interpretedFunction;
+    }
+
 #if JS_BITS_PER_WORD == 32
     uint32_t padding;
 #endif
@@ -973,15 +1000,18 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     inline TypeObject(const Class *clasp, TaggedProto proto, bool unknown);
 
     bool hasAnyFlags(TypeObjectFlags flags) {
+        AutoUnprotectCellUnderCompilationLock unprotect(this);
         JS_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
         return !!(this->flags & flags);
     }
     bool hasAllFlags(TypeObjectFlags flags) {
+        AutoUnprotectCellUnderCompilationLock unprotect(this);
         JS_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
         return (this->flags & flags) == flags;
     }
 
     bool unknownProperties() {
+        AutoUnprotectCellUnderCompilationLock unprotect(this);
         JS_ASSERT_IF(flags & OBJECT_FLAG_UNKNOWN_PROPERTIES,
                      hasAllFlags(OBJECT_FLAG_DYNAMIC_MASK));
         return !!(flags & OBJECT_FLAG_UNKNOWN_PROPERTIES);
@@ -1016,7 +1046,10 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
 
     /* Returns true if the allocating script should be recompiled. */
     bool incrementTenureCount();
+
     uint32_t tenureCount() const {
+        // Note: We ignore races when reading the tenure count of a type off thread.
+        AutoUnprotectCell unprotect(this);
         return (flags & OBJECT_FLAG_TENURE_COUNT_MASK) >> OBJECT_FLAG_TENURE_COUNT_SHIFT;
     }
 
