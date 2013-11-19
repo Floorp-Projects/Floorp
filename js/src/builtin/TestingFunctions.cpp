@@ -285,7 +285,7 @@ GCParameter(JSContext *cx, unsigned argc, Value *vp)
     for (;; paramIndex++) {
         if (paramIndex == ArrayLength(paramMap)) {
             JS_ReportError(cx,
-                           "the first argument argument must be maxBytes, "
+                           "the first argument must be maxBytes, "
                            "maxMallocBytes, gcStackpoolLifespan, gcBytes or "
                            "gcNumber");
             return false;
