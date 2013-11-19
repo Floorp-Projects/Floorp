@@ -1761,9 +1761,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     @Override
-    public boolean addActionItem(View actionItem) {
+    public void addActionItem(View actionItem) {
         mActionItemBar.addView(actionItem);
-        return true;
     }
 
     @Override

@@ -66,7 +66,7 @@ public class GeckoMenu extends ListView
      */
     public static interface ActionItemBarPresenter {
         // Add an action-item.
-        public boolean addActionItem(View actionItem);
+        public void addActionItem(View actionItem);
 
         // Remove an action-item.
         public void removeActionItem(View actionItem);
@@ -151,7 +151,7 @@ public class GeckoMenu extends ListView
         mItems.add(menuItem);
     }
 
-    private boolean addActionItem(final GeckoMenuItem menuItem) {
+    private void addActionItem(final GeckoMenuItem menuItem) {
         menuItem.setOnShowAsActionChangedListener(this);
 
         if (mActionItems.size() == 0 && 
@@ -173,8 +173,6 @@ public class GeckoMenu extends ListView
         mActionItems.put(menuItem, actionView);
         mActionItemBarPresenter.addActionItem(actionView);
         mItems.add(menuItem);
-
-        return true;
     }
 
     @Override
@@ -226,12 +224,6 @@ public class GeckoMenu extends ListView
         mAdapter.clear();
 
         mItems.clear();
-
-        if (mActionItemBarPresenter != null) {
-            for (View item : mActionItems.values()) {
-                mActionItemBarPresenter.removeActionItem(item);
-            }
-        }
         mActionItems.clear();
     }
 
@@ -274,7 +266,7 @@ public class GeckoMenu extends ListView
     @Override
     public boolean hasVisibleItems() {
         for (GeckoMenuItem menuItem : mItems) {
-            if (menuItem.isVisible() && !mActionItems.containsKey(menuItem))
+            if (menuItem.isVisible())
                 return true;
         }
 
@@ -370,11 +362,10 @@ public class GeckoMenu extends ListView
     public void onShowAsActionChanged(GeckoMenuItem item, boolean isActionItem) {
         removeItem(item.getItemId());
 
-        if (isActionItem && addActionItem(item)) {
-            return;
-        }
-
-        addItem(item);
+        if (isActionItem)
+            addActionItem(item);
+        else
+            addItem(item);
     }
 
     public void onItemChanged(GeckoMenuItem item) {
@@ -485,12 +476,11 @@ public class GeckoMenu extends ListView
         }
 
         @Override
-        public boolean addActionItem(View actionItem) {
+        public void addActionItem(View actionItem) {
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(actionItem.getLayoutParams());
             params.weight = 1.0f;
             actionItem.setLayoutParams(params);
             addView(actionItem);
-            return true;
         }
 
         @Override

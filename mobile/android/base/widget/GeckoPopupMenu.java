@@ -65,9 +65,6 @@ public class GeckoPopupMenu implements GeckoMenu.Callback,
         mMenuPopup = new MenuPopup(context);
         mMenuPanel = new MenuPanel(context, null);
 
-        mMenuPanel.addView(mMenu);
-        mMenuPopup.setPanelView(mMenuPanel);
-
         setAnchor(anchor);
     }
 
@@ -98,6 +95,8 @@ public class GeckoPopupMenu implements GeckoMenu.Callback,
         if (menuRes > 0) {
             mMenuInflater.inflate(menuRes, mMenu);
         }
+        mMenuPanel.addView(mMenu);
+        mMenuPopup.setPanelView(mMenuPanel);
     }
 
     /**
