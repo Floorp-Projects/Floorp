@@ -148,7 +148,6 @@ class TestEmitterBasic(unittest.TestCase):
             EXTRA_PP_JS_MODULES=['bar.pp.jsm', 'foo.pp.jsm'],
             FAIL_ON_WARNINGS=True,
             FORCE_SHARED_LIB=True,
-            FORCE_STATIC_LIB=True,
             GTEST_CSRCS=['test1.c', 'test2.c'],
             GTEST_CMMSRCS=['test1.mm', 'test2.mm'],
             GTEST_CPPSRCS=['test1.cpp', 'test2.cpp'],
