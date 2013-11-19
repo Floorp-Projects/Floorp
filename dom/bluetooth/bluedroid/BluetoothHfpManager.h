@@ -7,11 +7,12 @@
 #ifndef mozilla_dom_bluetooth_bluetoothhfpmanager_h__
 #define mozilla_dom_bluetooth_bluetoothhfpmanager_h__
 
+#include <hardware/bluetooth.h>
+#include <hardware/bt_hf.h>
+
 #include "BluetoothCommon.h"
 #include "BluetoothProfileManagerBase.h"
-#ifdef MOZ_B2G_RIL
 #include "BluetoothRilListener.h"
-#endif
 #include "BluetoothSocketObserver.h"
 #include "mozilla/ipc/UnixSocket.h"
 #include "mozilla/Hal.h"
@@ -20,8 +21,6 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothReplyRunnable;
 class BluetoothSocket;
-
-#ifdef MOZ_B2G_RIL
 class Call;
 
 /**
@@ -67,14 +66,12 @@ public:
   bool IsActive();
 
   uint16_t mState;
-  bool mDirection; // true: incoming call; false: outgoing call
   nsString mNumber;
-  int mType;
+  bthf_call_direction_t mDirection; // 0: outgoing call; 1: incoming call
+  bthf_call_addrtype_t mType;
 };
-#endif // MOZ_B2G_RIL
 
-class BluetoothHfpManager : public BluetoothSocketObserver
-                          , public BluetoothProfileManagerBase
+class BluetoothHfpManager : public BluetoothProfileManagerBase
                           , public BatteryObserver
 {
 public:
@@ -89,21 +86,10 @@ public:
   static BluetoothHfpManager* Get();
   ~BluetoothHfpManager();
 
-  // The following functions are inherited from BluetoothSocketObserver
-  virtual void ReceiveSocketData(
-    BluetoothSocket* aSocket,
-    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
-  virtual void OnSocketConnectSuccess(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-  virtual void OnSocketConnectError(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-  virtual void OnSocketDisconnect(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-
-  bool Listen();
-  bool ConnectSco(BluetoothReplyRunnable* aRunnable = nullptr);
+  bool ConnectSco();
   bool DisconnectSco();
-  bool ListenSco();
   bool IsScoConnected();
 
-#ifdef MOZ_B2G_RIL
   /**
    * @param aSend A boolean indicates whether we need to notify headset or not
    */
@@ -113,106 +99,89 @@ public:
   void HandleIccInfoChanged();
   void HandleVoiceConnectionChanged();
 
+  // Bluedroid hfp callback handlers
+  void ProcessConnectionState(bthf_connection_state_t aState, bt_bdaddr_t* aBdAddress);
+  void ProcessAudioState(bthf_audio_state_t aState, bt_bdaddr_t* aBdAddress);
+  void ProcessAnswerCall();
+  void ProcessHangupCall();
+  void ProcessVolumeControl(bthf_volume_type_t aType, int aVolume);
+  void ProcessDialCall(char *aNumber);
+  void ProcessDtmfCmd(char aDtmf);
+  void ProcessAtChld(bthf_chld_type_t aChld);
+  void ProcessAtCnum();
+  void ProcessAtCind();
+  void ProcessAtCops();
+  void ProcessAtClcc();
+  void ProcessUnknownAt(char *aAtString);
+
   // CDMA-specific functions
   void UpdateSecondNumber(const nsAString& aNumber);
   void AnswerWaitingCall();
   void IgnoreWaitingCall();
   void ToggleCalls();
-#endif
 
 private:
-  class CloseScoTask;
   class GetVolumeTask;
-#ifdef MOZ_B2G_RIL
+  class CloseScoTask;
   class RespondToBLDNTask;
-  class SendRingIndicatorTask;
-#endif
+  class MainThreadTask;
 
-  friend class CloseScoTask;
-  friend class GetVolumeTask;
-#ifdef MOZ_B2G_RIL
-  friend class RespondToBLDNTask;
-  friend class SendRingIndicatorTask;
-#endif
   friend class BluetoothHfpManagerObserver;
+  friend class GetVolumeTask;
+  friend class CloseScoTask;
+  friend class RespondToBLDNTask;
+  friend class MainThreadTask;
 
   BluetoothHfpManager();
+  bool Init();
+  bool InitHfpInterface();
+  void DeinitHfpInterface();
+  void Reset();
+
   void HandleShutdown();
   void HandleVolumeChanged(const nsAString& aData);
-
-  bool Init();
   void Notify(const hal::BatteryInformation& aBatteryInfo);
-  void Reset();
-#ifdef MOZ_B2G_RIL
+
+  void NotifyConnectionStateChanged(const nsAString& aType);
+  void NotifyDialer(const nsAString& aCommand);
+
+  PhoneType GetPhoneType(const nsAString& aType);
   void ResetCallArray();
   uint32_t FindFirstCall(uint16_t aState);
   uint32_t GetNumberOfCalls(uint16_t aState);
-  PhoneType GetPhoneType(const nsAString& aType);
-#endif
+  bthf_call_state_t ConvertToBthfCallState(int aCallState);
 
-  void NotifyConnectionStatusChanged(const nsAString& aType);
-  void NotifyDialer(const nsAString& aCommand);
+  void UpdatePhoneCIND(uint32_t aCallIndex, bool aSend = true);
+  void UpdateDeviceCIND();
+  void SendCLCC(Call& aCall, int aIndex);
+  void SendLine(const char* aMessage);
+  void SendResponse(bthf_at_response_t aResponseCode);
 
-#ifdef MOZ_B2G_RIL
-  void SendCCWA(const nsAString& aNumber, int aType);
-  bool SendCLCC(const Call& aCall, int aIndex);
-#endif
-  bool SendCommand(const char* aCommand, uint32_t aValue = 0);
-  bool SendLine(const char* aMessage);
-#ifdef MOZ_B2G_RIL
-  void UpdateCIND(uint8_t aType, uint8_t aValue, bool aSend = true);
-#endif
-  void OnScoConnectSuccess();
-  void OnScoConnectError();
-  void OnScoDisconnect();
+  int mConnectionState;
+  int mAudioState;
+  // Phone CIND
+  int mCallSetupState;
+  // Device CIND
+  int mBattChg;
+  int mService;
+  int mRoam;
+  int mSignal;
 
   int mCurrentVgs;
   int mCurrentVgm;
-#ifdef MOZ_B2G_RIL
-  bool mBSIR;
-  bool mCCWA;
-  bool mCLIP;
-#endif
-  bool mCMEE;
-  bool mCMER;
-#ifdef MOZ_B2G_RIL
-  bool mFirstCKPD;
-  int mNetworkSelectionMode;
-  PhoneType mPhoneType;
-#endif
   bool mReceiveVgsFlag;
-#ifdef MOZ_B2G_RIL
   bool mDialingRequestProcessed;
-#endif
+  PhoneType mPhoneType;
   nsString mDeviceAddress;
-#ifdef MOZ_B2G_RIL
   nsString mMsisdn;
   nsString mOperatorName;
 
   nsTArray<Call> mCurrentCallArray;
   nsAutoPtr<BluetoothRilListener> mListener;
-#endif
   nsRefPtr<BluetoothProfileController> mController;
-  nsRefPtr<BluetoothReplyRunnable> mScoRunnable;
 
-  // If a connection has been established, mSocket will be the socket
-  // communicating with the remote socket. We maintain the invariant that if
-  // mSocket is non-null, mHandsfreeSocket and mHeadsetSocket must be null (and
-  // vice versa).
-  nsRefPtr<BluetoothSocket> mSocket;
-
-  // Server sockets. Once an inbound connection is established, it will hand
-  // over the ownership to mSocket, and get a new server socket while Listen()
-  // is called.
-  nsRefPtr<BluetoothSocket> mHandsfreeSocket;
-  nsRefPtr<BluetoothSocket> mHeadsetSocket;
-  nsRefPtr<BluetoothSocket> mScoSocket;
-  SocketConnectionStatus mScoSocketStatus;
-
-#ifdef MOZ_B2G_RIL
   // CDMA-specific variable
   Call mCdmaSecondCall;
-#endif
 };
 
 END_BLUETOOTH_NAMESPACE

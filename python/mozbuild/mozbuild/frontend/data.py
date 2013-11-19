@@ -345,8 +345,8 @@ class LibraryDefinition(SandboxDerived):
         self.refcount = 0
         self.static_libraries = []
 
-    def link_static_lib(self, reldir, basename):
-        self.static_libraries.append((reldir, basename))
+    def link_static_lib(self, objdir, basename):
+        self.static_libraries.append((objdir, basename))
 
 
 class TestManifest(SandboxDerived):
