@@ -112,6 +112,7 @@ var Downloads = {
     }
     if (aOptions && aOptions.ongoing) {
       msg.ongoing = aOptions.ongoing;
+      msg.persistent = true;
     }
     this._bridge.handleGeckoMessage(JSON.stringify(msg));
   },
