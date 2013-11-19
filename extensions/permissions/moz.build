@@ -9,6 +9,4 @@ SOURCES += [
     'nsModuleFactory.cpp',
 ]
 
-LIBRARY_NAME = 'permissions'
-
 FINAL_LIBRARY = 'xul'

@@ -120,8 +120,6 @@ FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'jsdombase_s'
-
 LOCAL_INCLUDES += [
     '../battery',
     '../bluetooth',

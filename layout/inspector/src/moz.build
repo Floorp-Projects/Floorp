@@ -25,8 +25,6 @@ if CONFIG['MOZ_XUL']:
         'inDOMView.cpp',
     ]
 
-LIBRARY_NAME = 'inspector_s'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'

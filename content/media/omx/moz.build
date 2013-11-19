@@ -26,8 +26,6 @@ if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
         'RtspOmxReader.cpp',
     ]
 
-LIBRARY_NAME = 'gkconomx_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'gklayout'

@@ -111,8 +111,6 @@ EXTRA_COMPONENTS += [
     'nsINIProcessor.manifest',
 ]
 
-LIBRARY_NAME = 'xpcomds_s'
-
 MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [

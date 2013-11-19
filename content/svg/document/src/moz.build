@@ -12,8 +12,6 @@ SOURCES += [
     'SVGDocument.cpp',
 ]
 
-LIBRARY_NAME = 'gkconsvgdoc_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

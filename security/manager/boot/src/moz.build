@@ -13,8 +13,6 @@ SOURCES += [
     'nsSiteSecurityService.cpp',
 ]
 
-LIBRARY_NAME = 'pipboot'
-
 FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True

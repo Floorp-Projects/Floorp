@@ -320,6 +320,4 @@ if CONFIG['OS_ARCH'] == 'Linux':
             'xptcstubs_linux_s390x.cpp',
         ]
 
-LIBRARY_NAME = 'xptcmd'
-
 FINAL_LIBRARY = 'xpcom_core'

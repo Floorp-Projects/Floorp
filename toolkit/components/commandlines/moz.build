@@ -19,6 +19,4 @@ SOURCES += [
     'nsCommandLine.cpp',
 ]
 
-LIBRARY_NAME = 'commandlines'
-
 FINAL_LIBRARY = 'xul'

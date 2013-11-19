@@ -34,8 +34,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'SafariProfileMigrator.js',
     ]
 
-LIBRARY_NAME = 'migration_s'
-
 EXTRA_PP_JS_MODULES += [
     'MigrationUtils.jsm',
 ]

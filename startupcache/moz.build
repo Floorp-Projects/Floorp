@@ -24,6 +24,4 @@ SOURCES += [
     'StartupCacheUtils.cpp',
 ]
 
-LIBRARY_NAME = 'startupcache'
-
 FINAL_LIBRARY = 'xul'

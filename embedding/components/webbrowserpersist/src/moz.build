@@ -8,8 +8,6 @@ SOURCES += [
     'nsWebBrowserPersist.cpp',
 ]
 
-LIBRARY_NAME = 'webbrowserpersist_s'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'embedcomponents'

@@ -22,6 +22,4 @@ LOCAL_INCLUDES += [
     '/js/xpconnect/loader',
 ]
 
-LIBRARY_NAME = 'finalizationwitness_s'
-
 FINAL_LIBRARY = 'toolkitcomps'

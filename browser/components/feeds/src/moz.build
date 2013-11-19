@@ -18,6 +18,4 @@ EXTRA_PP_COMPONENTS += [
     'FeedWriter.js',
 ]
 
-LIBRARY_NAME = 'browser_feeds_s'
-
 FINAL_LIBRARY = 'browsercomps'

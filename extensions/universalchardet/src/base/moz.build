@@ -32,6 +32,4 @@ SOURCES += [
     'nsUTF8Prober.cpp',
 ]
 
-LIBRARY_NAME = 'universalchardet_s'
-
 FINAL_LIBRARY = 'universalchardet'

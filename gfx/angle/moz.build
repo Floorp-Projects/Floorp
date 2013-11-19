@@ -117,8 +117,6 @@ UNIFIED_SOURCES += ['src/compiler/' + src for src in [
     'TranslatorGLSL.cpp',
     'VersionGLSL.cpp',
 ]]
-
-LIBRARY_NAME = 'angle'
 MSVC_ENABLE_PGO = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':

@@ -11,8 +11,6 @@ SOURCES += [
     'xptiWorkingSet.cpp',
 ]
 
-LIBRARY_NAME = 'xptinfo'
-
 MSVC_ENABLE_PGO = True
 
 # For nsManifestLineReader class.

@@ -9,8 +9,6 @@ EXPORTS += [
     'expat_external.h',
 ]
 
-LIBRARY_NAME = 'mozexpat_s'
-
 SOURCES += [
     'xmlparse.c',
     'xmlrole.c',

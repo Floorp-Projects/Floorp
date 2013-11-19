@@ -8,8 +8,6 @@ SOURCES += [
     'nsICOEncoder.cpp',
 ]
 
-LIBRARY_NAME = 'imgicoe_s'
-
 FAIL_ON_WARNINGS = True
 
 # Decoders need RasterImage.h

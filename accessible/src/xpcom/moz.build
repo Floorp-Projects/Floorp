@@ -21,8 +21,6 @@ GENERATED_SOURCES += [
     'xpcAccEvents.cpp',
 ]
 
-LIBRARY_NAME = 'accessibility_xpcom_s'
-
 LOCAL_INCLUDES += [
     '../base',
     '../generic',

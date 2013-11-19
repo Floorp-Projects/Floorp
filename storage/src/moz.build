@@ -39,6 +39,4 @@ SOURCES += [
     'mozStorageConnection.cpp',
 ]
 
-LIBRARY_NAME = 'storage_s'
-
 FINAL_LIBRARY = 'storagecomps'

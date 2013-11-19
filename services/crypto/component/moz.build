@@ -16,8 +16,6 @@ SOURCES += [
     'nsSyncJPAKE.cpp',
 ]
 
-LIBRARY_NAME = 'services-crypto'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'

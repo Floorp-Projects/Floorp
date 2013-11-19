@@ -19,8 +19,6 @@ SOURCES += [
     'MediaResourceServer.cpp',
 ]
 
-LIBRARY_NAME = 'gkconmediaplugins_s'
-
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/content/src',

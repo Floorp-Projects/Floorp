@@ -14,8 +14,6 @@ SOURCES += [
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'pref'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

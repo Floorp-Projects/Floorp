@@ -9,8 +9,6 @@ UNIFIED_SOURCES += [
     'nestegg.c',
 ]
 
-LIBRARY_NAME = 'nestegg'
-
 MSVC_ENABLE_PGO = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':

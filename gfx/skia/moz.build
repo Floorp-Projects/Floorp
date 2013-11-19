@@ -583,8 +583,6 @@ if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['
         'src/opts/memset.arm.S',
     ]
 
-LIBRARY_NAME = 'skia'
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'

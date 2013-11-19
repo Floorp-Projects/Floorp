@@ -13,8 +13,6 @@ SOURCES += [
     'nsPKIParamBlock.cpp',
 ]
 
-LIBRARY_NAME = 'pippki'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'

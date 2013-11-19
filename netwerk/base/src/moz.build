@@ -108,8 +108,6 @@ FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'neckobase_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'

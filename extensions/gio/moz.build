@@ -8,8 +8,6 @@ SOURCES += [
     'nsGIOProtocolHandler.cpp',
 ]
 
-LIBRARY_NAME = 'nkgio'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'

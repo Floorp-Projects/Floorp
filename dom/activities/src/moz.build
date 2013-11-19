@@ -28,8 +28,6 @@ EXTRA_JS_MODULES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'dom_activities_s'
-
 LOCAL_INCLUDES += [
     '/dom/base',
 ]

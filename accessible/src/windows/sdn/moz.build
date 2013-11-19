@@ -23,6 +23,4 @@ LOCAL_INCLUDES += [
 # macros which conflicts with std::min/max.  Suppress the macros:
 DEFINES['NOMINMAX'] = True
 
-LIBRARY_NAME = 'accessibility_toolkit_sdn_s'
-
 FINAL_LIBRARY = 'xul'

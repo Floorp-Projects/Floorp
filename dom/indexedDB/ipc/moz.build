@@ -30,8 +30,6 @@ IPDL_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'dom_indexeddb_ipc_s'
-
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
 include('/ipc/chromium/chromium-config.mozbuild')
