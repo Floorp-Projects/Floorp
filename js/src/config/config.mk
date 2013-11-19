@@ -44,6 +44,7 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   EXTRA_PP_JS_MODULES \
   FORCE_SHARED_LIB \
   FORCE_STATIC_LIB \
+  FINAL_LIBRARY \
   GTEST_CMMSRCS \
   GTEST_CPPSRCS \
   GTEST_CSRCS \
@@ -332,6 +333,13 @@ _ENABLE_PIC=1
 
 # Determine if module being compiled is destined
 # to be merged into libxul
+
+ifeq ($(FINAL_LIBRARY),xul)
+  ifdef LIBXUL_LIBRARY
+    $(error FINAL_LIBRARY is "xul", LIBXUL_LIBRARY is implied)
+  endif
+  LIBXUL_LIBRARY := 1
+endif
 
 ifdef LIBXUL_LIBRARY
 ifdef IS_COMPONENT
