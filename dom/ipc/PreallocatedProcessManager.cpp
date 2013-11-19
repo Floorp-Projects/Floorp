@@ -55,7 +55,9 @@ public:
   void PublishSpareProcess(ContentParent* aContent);
   void MaybeForgetSpare(ContentParent* aContent);
   void OnNuwaReady();
+  bool PreallocatedProcessReady();
   already_AddRefed<ContentParent> GetSpareProcess();
+  void RunAfterPreallocatedProcessReady(nsIRunnable* aRunnable);
 
 private:
   void OnNuwaForkTimeout();
@@ -68,6 +70,8 @@ private:
   // should be enough so we don't need to grow the nsAutoTArray.
   nsAutoTArray<nsRefPtr<ContentParent>, 4> mSpareProcesses;
   nsTArray<CancelableTask*> mNuwaForkWaitTasks;
+
+  nsTArray<nsCOMPtr<nsIRunnable> > mDelayedContentParentRequests;
 
   // Nuwa process is ready for creating new process.
   bool mIsNuwaReady;
@@ -221,6 +225,18 @@ PreallocatedProcessManagerImpl::AllocateNow()
 #ifdef MOZ_NUWA_PROCESS
 
 void
+PreallocatedProcessManagerImpl::RunAfterPreallocatedProcessReady(nsIRunnable* aRequest)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mDelayedContentParentRequests.AppendElement(aRequest);
+
+  if (!mPreallocateAppProcessTask) {
+    // This is an urgent NuwaFork() request.
+    DelayedNuwaFork();
+  }
+}
+
+void
 PreallocatedProcessManagerImpl::ScheduleDelayedNuwaFork()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -302,12 +318,25 @@ PreallocatedProcessManagerImpl::PublishSpareProcess(ContentParent* aContent)
   }
 
   mSpareProcesses.AppendElement(aContent);
+
+  if (!mDelayedContentParentRequests.IsEmpty()) {
+    nsCOMPtr<nsIRunnable> runnable = mDelayedContentParentRequests[0];
+    mDelayedContentParentRequests.RemoveElementAt(0);
+    NS_DispatchToMainThread(runnable);
+  }
 }
 
 void
 PreallocatedProcessManagerImpl::MaybeForgetSpare(ContentParent* aContent)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mDelayedContentParentRequests.IsEmpty()) {
+    if (!mPreallocateAppProcessTask) {
+      // This NuwaFork request is urgent. Don't delay it.
+      DelayedNuwaFork();
+    }
+  }
 
   if (mSpareProcesses.RemoveElement(aContent)) {
     return;
@@ -337,6 +366,13 @@ PreallocatedProcessManagerImpl::OnNuwaReady()
   }
   NuwaFork();
 }
+
+bool
+PreallocatedProcessManagerImpl::PreallocatedProcessReady()
+{
+  return !mSpareProcesses.IsEmpty();
+}
+
 
 void
 PreallocatedProcessManagerImpl::OnNuwaForkTimeout()
@@ -473,6 +509,19 @@ PreallocatedProcessManager::OnNuwaReady()
 {
   GetPPMImpl()->OnNuwaReady();
 }
+
+/*static */ bool
+PreallocatedProcessManager::PreallocatedProcessReady()
+{
+  return GetPPMImpl()->PreallocatedProcessReady();
+}
+
+/* static */ void
+PreallocatedProcessManager::RunAfterPreallocatedProcessReady(nsIRunnable* aRequest)
+{
+  GetPPMImpl()->RunAfterPreallocatedProcessReady(aRequest);
+}
+
 #endif
 
 } // namespace mozilla
