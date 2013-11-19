@@ -966,8 +966,18 @@ class MConstant : public MNullaryInstruction
         return &value_;
     }
     const bool valueToBoolean() const {
-        // A hack to avoid this wordy pattern everywhere in the JIT.
-        return ToBoolean(HandleValue::fromMarkedLocation(&value_));
+        if (value_.isString()) {
+            AutoUnprotectCell unprotect(&value_.toString()->asAtom());
+            return ToBoolean(value_);
+        }
+        if (value_.isObject()) {
+            // Note: ToBoolean can't be called off thread as it will try to
+            // unwrap wrappers. IsWrapper goes through public API methods which
+            // don't unprotect the right pointers. Since wrappers don't have
+            // singleton type just ignore this case.
+            return !value_.toObject().getClass()->emulatesUndefined();
+        }
+        return ToBoolean(value_);
     }
 
     void printOpcode(FILE *fp) const;
@@ -4816,13 +4826,14 @@ struct LambdaFunctionInfo
     // the script, and are immutable except for delazification. Record this
     // information while still on the main thread to avoid races.
     CompilerRootFunction fun;
+    uint16_t nargs;
     uint16_t flags;
     gc::Cell *scriptOrLazyScript;
     bool singletonType;
     bool useNewTypeForClone;
 
     LambdaFunctionInfo(JSFunction *fun)
-      : fun(fun), flags(fun->flags),
+      : fun(fun), nargs(fun->getNargs()), flags(fun->getFlags()),
         scriptOrLazyScript(fun->hasScript()
                            ? (gc::Cell *) fun->nonLazyScript()
                            : (gc::Cell *) fun->lazyScript()),
@@ -4831,7 +4842,7 @@ struct LambdaFunctionInfo
     {}
 
     LambdaFunctionInfo(const LambdaFunctionInfo &info)
-      : fun((JSFunction *) info.fun), flags(info.flags),
+      : fun((JSFunction *) info.fun), nargs(info.nargs), flags(info.flags),
         scriptOrLazyScript(info.scriptOrLazyScript),
         singletonType(info.singletonType),
         useNewTypeForClone(info.useNewTypeForClone)
@@ -5959,7 +5970,9 @@ class MLoadTypedArrayElementStatic
         return new(alloc) MLoadTypedArrayElementStatic(typedArray, ptr);
     }
 
-    ArrayBufferView::ViewType viewType() const { return JS_GetArrayBufferViewType(typedArray_); }
+    ArrayBufferView::ViewType viewType() const {
+        return (ArrayBufferView::ViewType) typedArray_->type();
+    }
     void *base() const;
     size_t length() const;
 
@@ -6141,7 +6154,9 @@ class MStoreTypedArrayElementStatic :
         return this;
     }
 
-    ArrayBufferView::ViewType viewType() const { return JS_GetArrayBufferViewType(typedArray_); }
+    ArrayBufferView::ViewType viewType() const {
+        return (ArrayBufferView::ViewType) typedArray_->type();
+    }
     bool isFloatArray() const {
         return (viewType() == ArrayBufferView::TYPE_FLOAT32 ||
                 viewType() == ArrayBufferView::TYPE_FLOAT64);

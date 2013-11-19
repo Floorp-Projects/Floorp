@@ -279,6 +279,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
 
 #ifdef DEBUG
         if (GetIonContext()->cx) {
+            AutoUnprotectCell unprotect(script);
             uint32_t stackDepth;
             if (ReconstructStackDepth(GetIonContext()->cx, script, bailPC, &stackDepth)) {
                 if (JSOp(*bailPC) == JSOP_FUNCALL) {

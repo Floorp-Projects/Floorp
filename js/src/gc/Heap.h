@@ -993,12 +993,6 @@ Cell::shadowRuntimeFromAnyThread() const
     return reinterpret_cast<JS::shadow::Runtime*>(runtimeFromAnyThread());
 }
 
-AllocKind
-Cell::tenuredGetAllocKind() const
-{
-    return arenaHeader()->getAllocKind();
-}
-
 bool
 Cell::isMarked(uint32_t color /* = BLACK */) const
 {
@@ -1114,6 +1108,42 @@ InFreeList(ArenaHeader *aheader, void *thing)
 }
 
 } /* namespace gc */
+
+// Ion compilation mainly occurs off the main thread, and may run while the
+// main thread is performing arbitrary VM operations, excepting GC activity.
+// The below class is used to mark functions and other operations which can
+// safely be performed off thread without racing. When running with thread
+// safety checking on, any access to a GC thing outside of an AutoUnprotectCell
+// will cause an access violation.
+class AutoUnprotectCell
+{
+public:
+#if defined(DEBUG) && !defined(XP_WIN)
+    JSRuntime *runtime;
+    gc::ArenaHeader *arena;
+
+    AutoUnprotectCell(const gc::Cell *cell MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoUnprotectCell();
+#else
+    AutoUnprotectCell(const gc::Cell *cell MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoUnprotectCell() {}
+#endif
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+typedef AutoUnprotectCell AutoUnprotectCellUnderCompilationLock;
+typedef AutoUnprotectCell AutoUnprotectCellForWrite;
+
+gc::AllocKind
+gc::Cell::tenuredGetAllocKind() const
+{
+    AutoUnprotectCell unprotect(this);
+    return arenaHeader()->getAllocKind();
+}
+
 } /* namespace js */
 
 #endif /* gc_Heap_h */

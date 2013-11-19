@@ -432,6 +432,12 @@ js::IsBuiltinEvalForScope(JSObject *scopeChain, const Value &v)
 }
 
 bool
+js::IsBuiltinEvalForScope(GlobalObject *global, const Value &v)
+{
+    return global->getOriginalEval() == v;
+}
+
+bool
 js::IsAnyBuiltinEval(JSFunction *fun)
 {
     return fun->maybeNative() == IndirectEval;

@@ -468,7 +468,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     }
 
     bool strict() const {
-        return info_.script()->strict;
+        return info_.script()->getStrict();
     }
 
     void dumpStack(FILE *fp);

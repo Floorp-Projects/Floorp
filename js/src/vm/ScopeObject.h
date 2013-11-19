@@ -181,7 +181,8 @@ class ScopeObject : public JSObject
      * enclosing scope of a ScopeObject is necessarily non-null.
      */
     inline JSObject &enclosingScope() const {
-        return getReservedSlot(SCOPE_CHAIN_SLOT).toObject();
+        AutoUnprotectCell unprotect(this);
+        return getFixedSlot(SCOPE_CHAIN_SLOT).toObject();
     }
 
     void setEnclosingScope(HandleObject obj);
@@ -232,10 +233,11 @@ class CallObject : public ScopeObject
 
     /* True if this is for a strict mode eval frame. */
     bool isForEval() const {
-        JS_ASSERT(getReservedSlot(CALLEE_SLOT).isObjectOrNull());
-        JS_ASSERT_IF(getReservedSlot(CALLEE_SLOT).isObject(),
-                     getReservedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
-        return getReservedSlot(CALLEE_SLOT).isNull();
+        AutoUnprotectCell unprotect(this);
+        JS_ASSERT(getFixedSlot(CALLEE_SLOT).isObjectOrNull());
+        JS_ASSERT_IF(getFixedSlot(CALLEE_SLOT).isObject(),
+                     getFixedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
+        return getFixedSlot(CALLEE_SLOT).isNull();
     }
 
     /*
@@ -243,7 +245,8 @@ class CallObject : public ScopeObject
      * only be called if !isForEval.)
      */
     JSFunction &callee() const {
-        return getReservedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
+        AutoUnprotectCell unprotect(this);
+        return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
     }
 
     /* Get/set the aliased variable referred to by 'bi'. */
@@ -333,7 +336,7 @@ class BlockObject : public NestedScopeObject
 
     /* Return the number of variables associated with this block. */
     uint32_t slotCount() const {
-        return propertyCount();
+        return propertyCountForCompilation();
     }
 
     /*
@@ -368,7 +371,8 @@ class StaticBlockObject : public BlockObject
 
     /* See StaticScopeIter comment. */
     JSObject *enclosingStaticScope() const {
-        return getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
+        AutoUnprotectCell unprotect(this);
+        return getFixedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
     }
 
     /*
@@ -398,7 +402,10 @@ class StaticBlockObject : public BlockObject
      * variable of the block isAliased.
      */
     bool needsClone() {
-        return !slotValue(0).isFalse();
+        // The first variable slot will always indicate whether the object has
+        // any aliased vars. Bypass slotValue() to allow testing this off thread.
+        AutoUnprotectCell unprotect(this);
+        return !getFixedSlot(RESERVED_SLOTS).isFalse();
     }
 
     /* Frontend-only functions ***********************************************/
