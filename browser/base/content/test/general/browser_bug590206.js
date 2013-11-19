@@ -64,13 +64,13 @@ function test_chrome() {
   // Since users aren't likely to type in full chrome URLs, we won't show
   // the positive security indicator on it, but we will show it on about:addons.
   loadNewTab("chrome://mozapps/content/extensions/extensions.xul", function(aNewTab) {
-    is(getIdentityMode(), "unknownIdentity", "Identity should be chrome");
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
     gBrowser.selectedTab = oldTab;
     is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
     gBrowser.selectedTab = aNewTab;
-    is(getIdentityMode(), "unknownIdentity", "Identity should be chrome");
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
     gBrowser.removeTab(aNewTab);
 
