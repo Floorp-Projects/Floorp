@@ -145,8 +145,7 @@ Omnijar::GetURIString(Type aType, nsACString &result)
     nsAutoCString omniJarSpec;
     if (sPath[aType]) {
         nsresult rv = NS_GetURLSpecFromActualFile(sPath[aType], omniJarSpec);
-        if (NS_WARN_IF(NS_FAILED(rv)))
-            return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
 
         result = "jar:";
         if (sIsNested[aType])
@@ -159,8 +158,7 @@ Omnijar::GetURIString(Type aType, nsACString &result)
         nsCOMPtr<nsIFile> dir;
         nsDirectoryService::gService->Get(SPROP(aType), NS_GET_IID(nsIFile), getter_AddRefs(dir));
         nsresult rv = NS_GetURLSpecFromActualFile(dir, result);
-        if (NS_WARN_IF(NS_FAILED(rv)))
-            return rv;
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     result += "/";
     return NS_OK;

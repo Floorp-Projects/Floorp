@@ -88,8 +88,7 @@ nsProcess::Init(nsIFile* executable)
     if (mExecutable)
         return NS_ERROR_ALREADY_INITIALIZED;
 
-    if (NS_WARN_IF(!executable))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG_POINTER(executable);
     bool isFile;
 
     //First make sure the file exists
@@ -409,10 +408,8 @@ nsresult
 nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
                       bool holdWeak, bool argsUTF8)
 {
-    if (NS_WARN_IF(!mExecutable))
-        return NS_ERROR_NOT_INITIALIZED;
-    if (NS_WARN_IF(mThread))
-        return NS_ERROR_ALREADY_INITIALIZED;
+    NS_ENSURE_TRUE(mExecutable, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_FALSE(mThread, NS_ERROR_ALREADY_INITIALIZED);
 
     if (observer) {
         if (holdWeak) {

@@ -87,8 +87,7 @@ nsresult
 MessageLoopIdleTask::Init(uint32_t aEnsureRunsAfterMS)
 {
   mTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (NS_WARN_IF(!mTimer))
-    return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_STATE(mTimer);
 
   nsRefPtr<MessageLoopTimerCallback> callback =
     new MessageLoopTimerCallback(this);
@@ -154,8 +153,7 @@ nsMessageLoopConstructor(nsISupports* aOuter,
                          const nsIID& aIID,
                          void** aInstancePtr)
 {
-  if (NS_WARN_IF(aOuter))
-    return NS_ERROR_NO_AGGREGATION;
+  NS_ENSURE_FALSE(aOuter, NS_ERROR_NO_AGGREGATION);
   nsISupports* messageLoop = new nsMessageLoop();
   return messageLoop->QueryInterface(aIID, aInstancePtr);
 }

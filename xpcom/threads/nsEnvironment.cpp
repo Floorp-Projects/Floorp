@@ -48,8 +48,7 @@ nsEnvironment::Exists(const nsAString& aName, bool *aOutValue)
 {
     nsAutoCString nativeName;
     nsresult rv = NS_CopyUnicodeToNative(aName, nativeName);
-    if (NS_WARN_IF(NS_FAILED(rv)))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString nativeVal;
 #if defined(XP_UNIX)
@@ -79,8 +78,7 @@ nsEnvironment::Get(const nsAString& aName, nsAString& aOutValue)
 {
     nsAutoCString nativeName;
     nsresult rv = NS_CopyUnicodeToNative(aName, nativeName);
-    if (NS_WARN_IF(NS_FAILED(rv)))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString nativeVal;
     const char *value = PR_GetEnv(nativeName.get());
@@ -124,12 +122,10 @@ nsEnvironment::Set(const nsAString& aName, const nsAString& aValue)
     nsAutoCString nativeVal;
 
     nsresult rv = NS_CopyUnicodeToNative(aName, nativeName);
-    if (NS_WARN_IF(NS_FAILED(rv)))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = NS_CopyUnicodeToNative(aValue, nativeVal);
-    if (NS_WARN_IF(NS_FAILED(rv)))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     MutexAutoLock lock(mLock);
 

@@ -164,6 +164,7 @@ nsInputStreamTee::TeeSegment(const char *buf, uint32_t count)
         }
         nsRefPtr<nsIRunnable> event =
             new nsInputStreamTeeWriteEvent(buf, count, mSink, this);
+        NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
         LOG(("nsInputStreamTee::TeeSegment [%p] dispatching write %u bytes\n",
               this, count));
         return mEventTarget->Dispatch(event, NS_DISPATCH_NORMAL);
@@ -213,8 +214,7 @@ NS_IMPL_ISUPPORTS2(nsInputStreamTee,
 NS_IMETHODIMP
 nsInputStreamTee::Close()
 {
-    if (NS_WARN_IF(!mSource))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
     nsresult rv = mSource->Close();
     mSource = 0;
     mSink = 0;
@@ -224,16 +224,14 @@ nsInputStreamTee::Close()
 NS_IMETHODIMP
 nsInputStreamTee::Available(uint64_t *avail)
 {
-    if (NS_WARN_IF(!mSource))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
     return mSource->Available(avail);
 }
 
 NS_IMETHODIMP
 nsInputStreamTee::Read(char *buf, uint32_t count, uint32_t *bytesRead)
 {
-    if (NS_WARN_IF(!mSource))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
 
     nsresult rv = mSource->Read(buf, count, bytesRead);
     if (NS_FAILED(rv) || (*bytesRead == 0))
@@ -248,8 +246,7 @@ nsInputStreamTee::ReadSegments(nsWriteSegmentFun writer,
                                uint32_t count,
                                uint32_t *bytesRead)
 {
-    if (NS_WARN_IF(!mSource))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
 
     mWriter = writer;
     mClosure = closure;
@@ -260,8 +257,7 @@ nsInputStreamTee::ReadSegments(nsWriteSegmentFun writer,
 NS_IMETHODIMP
 nsInputStreamTee::IsNonBlocking(bool *result)
 {
-    if (NS_WARN_IF(!mSource))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
     return mSource->IsNonBlocking(result);
 }
 
