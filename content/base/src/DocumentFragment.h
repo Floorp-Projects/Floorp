@@ -40,6 +40,8 @@ public:
   using FragmentOrElement::GetFirstChild;
   using nsINode::QuerySelector;
   using nsINode::QuerySelectorAll;
+  // Make sure bindings can see our superclass' protected GetElementById method.
+  using nsINode::GetElementById;
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
