@@ -16,3 +16,4 @@ LIBRARY_NAME = 'jprof'
 
 EXPORT_LIBRARY = True
 
+FORCE_SHARED_LIB = True

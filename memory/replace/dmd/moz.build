@@ -20,3 +20,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'dmd'
 
+FORCE_SHARED_LIB = True

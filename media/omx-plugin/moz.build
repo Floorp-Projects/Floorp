@@ -20,3 +20,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'omxplugin'
 
+FORCE_SHARED_LIB = True

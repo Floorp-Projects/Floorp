@@ -40,3 +40,5 @@ elif toolkit == 'windows':
     SOURCES += [
         relative_path + '/nptest_windows.cpp',
     ]
+
+FORCE_SHARED_LIB = True
