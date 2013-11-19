@@ -59,19 +59,22 @@ static nsresult GetProcSelfStatmField(int aField, int64_t* aN)
 }
 
 #define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
-static nsresult GetVsize(int64_t* aN)
+static nsresult
+VsizeDistinguishedAmount(int64_t* aN)
 {
     return GetProcSelfStatmField(0, aN);
 }
 
-static nsresult GetResident(int64_t* aN)
+static nsresult
+ResidentDistinguishedAmount(int64_t* aN)
 {
     return GetProcSelfStatmField(1, aN);
 }
 
-static nsresult GetResidentFast(int64_t* aN)
+static nsresult
+ResidentFastDistinguishedAmount(int64_t* aN)
 {
-    return GetResident(aN);
+    return ResidentDistinguishedAmount(aN);
 }
 
 #define HAVE_RESIDENT_UNIQUE_REPORTER
@@ -172,7 +175,8 @@ static nsresult GetKinfoProcSelf(KINFO_PROC* aProc)
 }
 
 #define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
-static nsresult GetVsize(int64_t* aN)
+static nsresult
+VsizeDistinguishedAmount(int64_t* aN)
 {
     KINFO_PROC proc;
     nsresult rv = GetKinfoProcSelf(&proc);
@@ -182,7 +186,8 @@ static nsresult GetVsize(int64_t* aN)
     return rv;
 }
 
-static nsresult GetResident(int64_t* aN)
+static nsresult
+ResidentDistinguishedAmount(int64_t* aN)
 {
     KINFO_PROC proc;
     nsresult rv = GetKinfoProcSelf(&proc);
@@ -192,9 +197,10 @@ static nsresult GetResident(int64_t* aN)
     return rv;
 }
 
-static nsresult GetResidentFast(int64_t* aN)
+static nsresult
+ResidentFastDistinguishedAmount(int64_t* aN)
 {
-    return GetResident(aN);
+    return ResidentDistinguishedAmount(aN);
 }
 
 #elif defined(SOLARIS)
@@ -245,7 +251,8 @@ static void XMappingIter(int64_t& vsize, int64_t& resident)
 }
 
 #define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
-static nsresult GetVsize(int64_t* aN)
+static nsresult
+VsizeDistinguishedAmount(int64_t* aN)
 {
     int64_t vsize, resident;
     XMappingIter(vsize, resident);
@@ -256,7 +263,8 @@ static nsresult GetVsize(int64_t* aN)
     return NS_OK;
 }
 
-static nsresult GetResident(int64_t* aN)
+static nsresult
+ResidentDistinguishedAmount(int64_t* aN)
 {
     int64_t vsize, resident;
     XMappingIter(vsize, resident);
@@ -267,9 +275,10 @@ static nsresult GetResident(int64_t* aN)
     return NS_OK;
 }
 
-static nsresult GetResidentFast(int64_t* aN)
+static nsresult
+ResidentFastDistinguishedAmount(int64_t* aN)
 {
-    return GetResident(aN);
+    return ResidentDistinguishedAmount(aN);
 }
 
 #elif defined(XP_MACOSX)
@@ -289,7 +298,8 @@ static bool GetTaskBasicInfo(struct task_basic_info* aTi)
 // absurdly high, eg. 2GB+ even at start-up.  But both 'top' and 'ps' report
 // it, so we might as well too.
 #define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
-static nsresult GetVsize(int64_t* aN)
+static nsresult
+VsizeDistinguishedAmount(int64_t* aN)
 {
     task_basic_info ti;
     if (!GetTaskBasicInfo(&ti))
@@ -306,7 +316,7 @@ static nsresult GetVsize(int64_t* aN)
 //
 // Purging these pages can take a long time for some users (see bug 789975),
 // so we provide the option to get the RSS without purging first.
-static nsresult GetResident(int64_t* aN, bool aDoPurge)
+static nsresult ResidentDistinguishedAmountHelper(int64_t* aN, bool aDoPurge)
 {
 #ifdef HAVE_JEMALLOC_STATS
     if (aDoPurge) {
@@ -323,14 +333,16 @@ static nsresult GetResident(int64_t* aN, bool aDoPurge)
     return NS_OK;
 }
 
-static nsresult GetResidentFast(int64_t* aN)
+static nsresult
+ResidentFastDistinguishedAmount(int64_t* aN)
 {
-    return GetResident(aN, /* doPurge = */ false);
+    return ResidentDistinguishedAmountHelper(aN, /* doPurge = */ false);
 }
 
-static nsresult GetResident(int64_t* aN)
+static nsresult
+ResidentDistinguishedAmount(int64_t* aN)
 {
-    return GetResident(aN, /* doPurge = */ true);
+    return ResidentDistinguishedAmountHelper(aN, /* doPurge = */ true);
 }
 
 #elif defined(XP_WIN)
@@ -340,7 +352,8 @@ static nsresult GetResident(int64_t* aN)
 #include <algorithm>
 
 #define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
-static nsresult GetVsize(int64_t* aN)
+static nsresult
+VsizeDistinguishedAmount(int64_t* aN)
 {
     MEMORYSTATUSEX s;
     s.dwLength = sizeof(s);
@@ -353,7 +366,8 @@ static nsresult GetVsize(int64_t* aN)
     return NS_OK;
 }
 
-static nsresult GetResident(int64_t* aN)
+static nsresult
+ResidentDistinguishedAmount(int64_t* aN)
 {
     PROCESS_MEMORY_COUNTERS pmc;
     pmc.cb = sizeof(PROCESS_MEMORY_COUNTERS);
@@ -366,13 +380,15 @@ static nsresult GetResident(int64_t* aN)
     return NS_OK;
 }
 
-static nsresult GetResidentFast(int64_t* aN)
+static nsresult
+ResidentFastDistinguishedAmount(int64_t* aN)
 {
-    return GetResident(aN);
+    return ResidentDistinguishedAmount(aN);
 }
 
 #define HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER 1
-static nsresult GetVsizeMaxContiguous(int64_t* aN)
+static nsresult
+VsizeMaxContiguousDistinguishedAmount(int64_t* aN)
 {
     SIZE_T biggestRegion = 0;
     MEMORY_BASIC_INFORMATION vmemInfo = {0};
@@ -409,7 +425,7 @@ public:
 
     NS_IMETHOD GetAmount(int64_t* aAmount)
     {
-        return GetVsizeMaxContiguous(aAmount);
+        return VsizeMaxContiguousDistinguishedAmount(aAmount);
     }
 };
 
@@ -457,7 +473,10 @@ public:
 "resources used by the process.")
     {}
 
-    NS_IMETHOD GetAmount(int64_t* aAmount) { return GetVsize(aAmount); }
+    NS_IMETHOD GetAmount(int64_t* aAmount)
+    {
+        return VsizeDistinguishedAmount(aAmount);
+    }
 };
 
 class ResidentReporter MOZ_FINAL : public MemoryUniReporter
@@ -473,7 +492,10 @@ public:
 "time.")
     {}
 
-    NS_IMETHOD GetAmount(int64_t* aAmount) { return GetResident(aAmount); }
+    NS_IMETHOD GetAmount(int64_t* aAmount)
+    {
+        return ResidentDistinguishedAmount(aAmount);
+    }
 };
 #endif  // HAVE_VSIZE_AND_RESIDENT_REPORTERS
 
@@ -1296,7 +1318,7 @@ NS_IMETHODIMP
 nsMemoryReporterManager::GetVsize(int64_t* aVsize)
 {
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-    return ::GetVsize(aVsize);
+    return VsizeDistinguishedAmount(aVsize);
 #else
     *aResident = 0;
     return NS_ERROR_NOT_AVAILABLE;
@@ -1307,7 +1329,7 @@ NS_IMETHODIMP
 nsMemoryReporterManager::GetVsizeMaxContiguous(int64_t* aAmount)
 {
 #ifdef HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER
-    return ::GetVsizeMaxContiguous(aAmount);
+    return VsizeMaxContiguousDistinguishedAmount(aAmount);
 #else
     *aAmount = 0;
     return NS_ERROR_NOT_AVAILABLE;
@@ -1318,7 +1340,7 @@ NS_IMETHODIMP
 nsMemoryReporterManager::GetResident(int64_t* aAmount)
 {
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-    return ::GetResident(aAmount);
+    return ResidentDistinguishedAmount(aAmount);
 #else
     *aAmount = 0;
     return NS_ERROR_NOT_AVAILABLE;
@@ -1329,7 +1351,7 @@ NS_IMETHODIMP
 nsMemoryReporterManager::GetResidentFast(int64_t* aAmount)
 {
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-    return ::GetResidentFast(aAmount);
+    return ResidentFastDistinguishedAmount(aAmount);
 #else
     *aAmount = 0;
     return NS_ERROR_NOT_AVAILABLE;
