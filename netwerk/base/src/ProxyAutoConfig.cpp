@@ -346,7 +346,9 @@ ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
 
   nsRefPtr<PACResolver> helper = new PACResolver();
 
-  if (NS_FAILED(dns->AsyncResolve(aHostName, 0, helper,
+  if (NS_FAILED(dns->AsyncResolve(aHostName,
+                                  nsIDNSService::RESOLVE_PRIORITY_MEDIUM,
+                                  helper,
                                   NS_GetCurrentThread(),
                                   getter_AddRefs(helper->mRequest))))
     return false;
