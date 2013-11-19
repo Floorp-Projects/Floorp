@@ -337,6 +337,12 @@ gTests.push({
 
     EventUtils.synthesizeKey("VK_DOWN", {}, window);
     is(gEdit.popup._searches.selectedIndex, 0, "key select search: first search selected");
+
+    EventUtils.synthesizeKey("VK_TAB", {}, window);
+    is(gEdit.popup._searches.selectedIndex, 1, "tab key: second search selected");
+
+    EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, window);
+    is(gEdit.popup._searches.selectedIndex, 0, "shift-tab: first search selected");
   }
 });
 
