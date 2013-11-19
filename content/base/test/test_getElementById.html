@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=933193
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 933193</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=933193">Mozilla Bug 933193</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 933193 **/
+    var kid = document.createElement("span");
+    kid.id = "test";
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.appendChild(kid);
+    is(svg.getElementById("test"), kid,
+       "Should find the right node when not in the DOM");
+
+    var newKid = document.createElement("span");
+    newKid.id = "test";
+    var newKidParent = document.createElement("span");
+    newKidParent.appendChild(newKid);
+    svg.insertBefore(newKidParent, kid);
+    is(svg.getElementById("test"), newKid,
+       "Should find the first right node when not in the DOM");
+    newKid.remove();
+    is(svg.getElementById("test"), kid,
+       "Should find the right node again when not in the DOM");
+
+    document.body.appendChild(svg);
+    is(svg.getElementById("test"), kid,
+       "Should find the right node when in the DOM");
+
+    is(document.getElementById("test").localName, "pre",
+       "document.getElementById should find the first element in the " +
+       "document with that id");
+
+    var frag = document.createDocumentFragment();
+    is(frag.getElementById("test"), null, "Shouldn't find what does not exist");
+    frag.appendChild(kid);
+    is(frag.getElementById("test"), kid,
+       "Should find the right node in the document fragment");
+    is(svg.getElementById("test"), null,
+       "Shouldn't find the kid since it's gone now");
+  </script>
+</body>
+</html>
