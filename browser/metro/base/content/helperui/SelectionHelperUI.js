@@ -253,7 +253,6 @@ var SelectionHelperUI = {
   _endMark: null,
   _caretMark: null,
   _target: null,
-  _showAfterUpdate: false,
   _movement: { active: false, x:0, y: 0 },
   _activeSelectionRect: null,
   _selectionMarkIds: [],
@@ -351,29 +350,13 @@ var SelectionHelperUI = {
    */
 
   observe: function (aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "attach_edit_session_to_content":
-        let event = aSubject;
-        this.attachEditSession(Browser.selectedTab.browser,
-                               event.clientX, event.clientY);
-        break;
-
-      case "apzc-handle-pan-begin":
-        if (this.isActive && this.layerMode == kContentLayer) {
-          this._hideMonocles();
-        }
-        break;
-
-      case "apzc-handle-pan-end":
-        // The selection range callback will check to see if the new
-        // position is off the screen, in which case it shuts down and
-        // clears the selection.
-        if (this.isActive && this.layerMode == kContentLayer) {
-          this._showAfterUpdate = true;
-          this._sendAsyncMessage("Browser:SelectionUpdate", {});
-        }
-        break;
-      }
+  switch (aTopic) {
+    case "attach_edit_session_to_content":
+      let event = aSubject;
+      SelectionHelperUI.attachEditSession(Browser.selectedTab.browser,
+                                          event.clientX, event.clientY);
+      break;
+    }
   },
 
   /*
@@ -547,10 +530,7 @@ var SelectionHelperUI = {
    */
 
   init: function () {
-    let os = Services.obs;
-    os.addObserver(this, "attach_edit_session_to_content", false);
-    os.addObserver(this, "apzc-handle-pan-begin", false);
-    os.addObserver(this, "apzc-handle-pan-end", false);
+    Services.obs.addObserver(this, "attach_edit_session_to_content", false);
   },
 
   _init: function _init(aMsgTarget) {
@@ -928,16 +908,6 @@ var SelectionHelperUI = {
     this._shutdown();
   },
 
-  _checkMonocleVisibility: function(aX, aY) {
-    if (aX < 0 || aY < 0 ||
-        aX > ContentAreaObserver.viewableWidth ||
-        aY > ContentAreaObserver.viewableHeight) {
-      this.closeEditSession(true);
-      return false;
-    }
-    return true;
-  },
-
   /*
    * Message handlers
    */
@@ -950,41 +920,24 @@ var SelectionHelperUI = {
     let haveSelectionRect = true;
 
     if (json.updateStart) {
-      let x = this._msgTarget.btocx(json.start.xPos, true);
-      let y = this._msgTarget.btocx(json.start.yPos, true);
-      if (!this._checkMonocleVisibility(x, y)) {
-        return;
-      }
-      this.startMark.position(x, y);
+      this.startMark.position(this._msgTarget.btocx(json.start.xPos, true),
+                              this._msgTarget.btocy(json.start.yPos, true));
     }
     if (json.updateEnd) {
-      let x = this._msgTarget.btocx(json.end.xPos, true);
-      let y = this._msgTarget.btocx(json.end.yPos, true);
-      if (!this._checkMonocleVisibility(x, y)) {
-        return;
-      }
-      this.endMark.position(x, y);
+      this.endMark.position(this._msgTarget.btocx(json.end.xPos, true),
+                            this._msgTarget.btocy(json.end.yPos, true));
     }
 
     if (json.updateCaret) {
-      let x = this._msgTarget.btocx(json.caret.xPos, true);
-      let y = this._msgTarget.btocx(json.caret.yPos, true);
-      if (!this._checkMonocleVisibility(x, y)) {
-        return;
-      }
       // If selectionRangeFound is set SelectionHelper found a range we can
       // attach to. If not, there's no text in the control, and hence no caret
       // position information we can use.
       haveSelectionRect = json.selectionRangeFound;
       if (json.selectionRangeFound) {
-        this.caretMark.position(x, y);
+        this.caretMark.position(this._msgTarget.btocx(json.caret.xPos, true),
+                                this._msgTarget.btocy(json.caret.yPos, true));
         this.caretMark.show();
       }
-    }
-
-    if (this._showAfterUpdate) {
-      this._showAfterUpdate = false;
-      this._showMonocles(!json.updateCaret);
     }
 
     this._targetIsEditable = json.targetIsEditable;
