@@ -248,8 +248,10 @@ IonBuilder::inlineArray(CallInfo &callInfo)
 
     types::TemporaryTypeSet::DoubleConversion conversion =
         getInlineReturnTypeSet()->convertDoubleElements(constraints());
-    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
+    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles) {
+        AutoUnprotectCell unprotect(templateObject);
         templateObject->setShouldConvertDoubleElements();
+    }
 
     MNewArray *ins = MNewArray::New(alloc(), initLength, templateObject, allocating);
     current->add(ins);
@@ -457,11 +459,8 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
     if (!baseThisType)
         return InliningStatus_NotInlined;
     types::TypeObjectKey *thisType = types::TypeObjectKey::get(baseThisType);
-    if (thisType->unknownProperties() ||
-        &thisType->proto().toObject()->global() != &script()->global())
-    {
+    if (thisType->unknownProperties())
         return InliningStatus_NotInlined;
-    }
 
     // Don't inline if 'this' is packed and the argument may not be packed
     // (the result array will reuse the 'this' type).
@@ -1265,7 +1264,7 @@ IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
     JSFunction *target = nullptr;
     if (targetObj && targetObj->is<JSFunction>())
         target = &targetObj->as<JSFunction>();
-    if (target && target->isInterpreted() && target->nonLazyScript()->shouldCloneAtCallsite) {
+    if (target && target->isInterpreted() && target->nonLazyScript()->getShouldCloneAtCallsite()) {
         if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
             target = clone;
     }
@@ -1290,7 +1289,7 @@ IonBuilder::inlineParallelArray(CallInfo &callInfo)
     if (!target)
         return InliningStatus_NotInlined;
 
-    JS_ASSERT(target->nonLazyScript()->shouldCloneAtCallsite);
+    JS_ASSERT(target->nonLazyScript()->getShouldCloneAtCallsite());
     if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
         target = clone;
 
@@ -1324,7 +1323,7 @@ IonBuilder::inlineParallelArrayTail(CallInfo &callInfo,
     if (returnTypes->unknownObject() || returnTypes->getObjectCount() != 1)
         return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
-    if (!typeObject || typeObject->clasp != &ParallelArrayObject::class_)
+    if (!typeObject || typeObject->getClass() != &ParallelArrayObject::class_)
         return InliningStatus_NotInlined;
 
     JSObject *templateObject = inspector->getTemplateObjectForNative(pc, native);
@@ -1334,7 +1333,7 @@ IonBuilder::inlineParallelArrayTail(CallInfo &callInfo,
     // Create the call and add in the non-this arguments.
     uint32_t targetArgs = argc;
     if (target && !target->isNative())
-        targetArgs = Max<uint32_t>(target->nargs, argc);
+        targetArgs = Max<uint32_t>(target->getNargs(), argc);
 
     MCall *call = MCall::New(alloc(), target, targetArgs + 1, argc, false);
     if (!call)

@@ -22,7 +22,7 @@ JSCompartment::initGlobal(js::GlobalObject &global)
 js::GlobalObject *
 JSCompartment::maybeGlobal() const
 {
-    JS_ASSERT_IF(global_, global_->compartment() == this);
+    JS_ASSERT_IF(global_ && !runtime_->heapProtected(), global_->compartment() == this);
     return global_;
 }
 

@@ -88,6 +88,7 @@ class IonCode : public gc::BarrieredCell<IonCode>
 
   public:
     uint8_t *raw() const {
+        AutoUnprotectCell unprotect(this);
         return code_;
     }
     size_t instructionsSize() const {

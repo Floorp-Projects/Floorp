@@ -182,7 +182,7 @@ js_BooleanToString(ExclusiveContext *cx, bool b)
 }
 
 JS_PUBLIC_API(bool)
-js::ToBooleanSlow(HandleValue v)
+js::ToBooleanSlow(const Value &v)
 {
     if (v.isString())
         return v.toString()->length() != 0;

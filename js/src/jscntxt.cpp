@@ -113,7 +113,7 @@ JSFunction *
 js::ExistingCloneFunctionAtCallsite(const CallsiteCloneTable &table, JSFunction *fun,
                                     JSScript *script, jsbytecode *pc)
 {
-    JS_ASSERT(fun->nonLazyScript()->shouldCloneAtCallsite);
+    JS_ASSERT(fun->nonLazyScript()->getShouldCloneAtCallsite());
     JS_ASSERT(!fun->nonLazyScript()->enclosingStaticScope());
     JS_ASSERT(types::UseNewTypeForClone(fun));
 
@@ -126,7 +126,7 @@ js::ExistingCloneFunctionAtCallsite(const CallsiteCloneTable &table, JSFunction 
     if (!table.initialized())
         return nullptr;
 
-    CallsiteCloneTable::Ptr p = table.lookup(CallsiteCloneKey(fun, script, pc - script->code));
+    CallsiteCloneTable::Ptr p = table.lookup(CallsiteCloneKey(fun, script, pc - script->getCode()));
     if (p)
         return p->value;
 
