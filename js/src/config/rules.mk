@@ -510,7 +510,7 @@ endif
 
 ifeq ($(OS_ARCH),NetBSD)
 ifneq (,$(filter arc cobalt hpcmips mipsco newsmips pmax sgimips,$(OS_TEST)))
-ifeq ($(MODULE),layout)
+ifneq (,$(filter layout/%,$(relativesrcdir)))
 OS_CFLAGS += -Wa,-xgot
 OS_CXXFLAGS += -Wa,-xgot
 endif
