@@ -13,7 +13,7 @@
 
 using namespace mozilla;
 
-PLDHashTableOps nsCommandParams::sHashOps =
+const PLDHashTableOps nsCommandParams::sHashOps =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
