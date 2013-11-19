@@ -147,7 +147,7 @@ protected:
   int32_t         mCurEntry;
   int32_t         mNumEntries;      // number of entries at start of enumeration (-1 indicates not known)
     
-  static PLDHashTableOps    sHashOps;
+  static const PLDHashTableOps    sHashOps;
 };
 
 

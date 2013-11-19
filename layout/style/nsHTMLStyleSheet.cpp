@@ -158,7 +158,7 @@ MappedAttrTable_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
   return attributes->Equals(entry->mAttributes);
 }
 
-static PLDHashTableOps MappedAttrTable_Ops = {
+static const PLDHashTableOps MappedAttrTable_Ops = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
   MappedAttrTable_HashKey,
@@ -215,7 +215,7 @@ LangRuleTable_InitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return true;
 }
 
-static PLDHashTableOps LangRuleTable_Ops = {
+static const PLDHashTableOps LangRuleTable_Ops = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
   LangRuleTable_HashKey,

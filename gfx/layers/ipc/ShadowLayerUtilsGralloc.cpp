@@ -386,9 +386,6 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
     if (strcmp("crespo",propValue) == 0) {
       NS_WARNING("Nexus S has issues with gralloc, falling back to shmem");
       disableGralloc = true;
-    } else if (strcmp("peak", propValue) == 0) {
-      NS_WARNING("Geeksphone Peak has issues with gralloc, falling back to shmem");
-      disableGralloc = true;
     }
 
     checkedDevice = true;

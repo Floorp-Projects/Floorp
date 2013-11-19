@@ -60,6 +60,10 @@ namespace storage {
 ////////////////////////////////////////////////////////////////////////////////
 //// Memory Reporting
 
+#ifdef MOZ_DMD
+static mozilla::Atomic<size_t> gSqliteMemoryUsed;
+#endif
+
 static int64_t
 StorageSQLiteDistinguishedAmount()
 {
@@ -138,6 +142,13 @@ public:
                         SQLITE_DBSTATUS_SCHEMA_USED, &totalConnSize);
         NS_ENSURE_SUCCESS(rv, rv);
       }
+
+#ifdef MOZ_DMD
+      if (::sqlite3_memory_used() != int64_t(gSqliteMemoryUsed)) {
+        NS_WARNING("memory consumption reported by SQLite doesn't match "
+                   "our measurements");
+      }
+#endif
     }
 
     int64_t other = ::sqlite3_memory_used() - totalConnSize;
@@ -387,7 +398,10 @@ namespace {
 // In other words, we are marking all sqlite heap blocks as reported even
 // though we're not reporting them ourselves.  Instead we're trusting that
 // sqlite is fully and correctly accounting for all of its heap blocks via its
-// own memory accounting.
+// own memory accounting.  Well, we don't have to trust it entirely, because
+// it's easy to keep track (while doing this DMD-specific marking) of exactly
+// how much memory SQLite is using.  And we can compare that against what
+// SQLite reports it is using.
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(SqliteMallocSizeOfOnAlloc)
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(SqliteMallocSizeOfOnFree)
@@ -398,7 +412,7 @@ static void *sqliteMemMalloc(int n)
 {
   void* p = ::moz_malloc(n);
 #ifdef MOZ_DMD
-  SqliteMallocSizeOfOnAlloc(p);
+  gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(p);
 #endif
   return p;
 }
@@ -406,7 +420,7 @@ static void *sqliteMemMalloc(int n)
 static void sqliteMemFree(void *p)
 {
 #ifdef MOZ_DMD
-  SqliteMallocSizeOfOnFree(p);
+  gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
 #endif
   ::moz_free(p);
 }
@@ -414,13 +428,13 @@ static void sqliteMemFree(void *p)
 static void *sqliteMemRealloc(void *p, int n)
 {
 #ifdef MOZ_DMD
-  SqliteMallocSizeOfOnFree(p);
+  gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
   void *pnew = ::moz_realloc(p, n);
   if (pnew) {
-    SqliteMallocSizeOfOnAlloc(pnew);
+    gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(pnew);
   } else {
     // realloc failed;  undo the SqliteMallocSizeOfOnFree from above
-    SqliteMallocSizeOfOnAlloc(p);
+    gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(p);
   }
   return pnew;
 #else
