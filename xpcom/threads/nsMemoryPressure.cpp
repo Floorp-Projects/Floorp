@@ -49,5 +49,6 @@ NS_DispatchMemoryPressure(MemoryPressureState state)
 {
   NS_DispatchEventualMemoryPressure(state);
   nsCOMPtr<nsIRunnable> event = new nsRunnable;
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
   return NS_DispatchToMainThread(event);
 }

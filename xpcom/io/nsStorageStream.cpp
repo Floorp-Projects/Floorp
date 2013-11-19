@@ -88,10 +88,8 @@ NS_IMETHODIMP
 nsStorageStream::GetOutputStream(int32_t aStartingOffset, 
                                  nsIOutputStream * *aOutputStream)
 {
-    if (NS_WARN_IF(!aOutputStream))
-        return NS_ERROR_INVALID_ARG;
-    if (NS_WARN_IF(!mSegmentedBuffer))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_ARG(aOutputStream);
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
     
     if (mWriteInProgress)
         return NS_ERROR_NOT_AVAILABLE;
@@ -118,8 +116,7 @@ nsStorageStream::GetOutputStream(int32_t aStartingOffset,
 NS_IMETHODIMP
 nsStorageStream::Close()
 {
-    if (NS_WARN_IF(!mSegmentedBuffer))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
     
     mWriteInProgress = false;
     
@@ -148,14 +145,14 @@ nsStorageStream::Flush()
 NS_IMETHODIMP
 nsStorageStream::Write(const char *aBuffer, uint32_t aCount, uint32_t *aNumWritten)
 {
-    if (NS_WARN_IF(!aNumWritten) || NS_WARN_IF(!aBuffer))
-        return NS_ERROR_INVALID_ARG;
-    if (NS_WARN_IF(!mSegmentedBuffer))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
     
     const char* readCursor;
     uint32_t count, availableInSegment, remaining;
     nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(aNumWritten);
+    NS_ENSURE_ARG(aBuffer);
 
     LOG(("nsStorageStream [%p] Write mWriteCursor=%x mSegmentEnd=%x aCount=%d\n",
         this, mWriteCursor, mSegmentEnd, aCount));
@@ -226,6 +223,7 @@ nsStorageStream::IsNonBlocking(bool *aNonBlocking)
 NS_IMETHODIMP
 nsStorageStream::GetLength(uint32_t *aLength)
 {
+    NS_ENSURE_ARG(aLength);
     *aLength = mLogicalLength;
     return NS_OK;
 }
@@ -234,8 +232,7 @@ nsStorageStream::GetLength(uint32_t *aLength)
 NS_IMETHODIMP
 nsStorageStream::SetLength(uint32_t aLength)
 {
-    if (NS_WARN_IF(!mSegmentedBuffer))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
     
     if (mWriteInProgress)
         return NS_ERROR_NOT_AVAILABLE;
@@ -260,6 +257,8 @@ nsStorageStream::SetLength(uint32_t aLength)
 NS_IMETHODIMP
 nsStorageStream::GetWriteInProgress(bool *aWriteInProgress)
 {
+    NS_ENSURE_ARG(aWriteInProgress);
+
     *aWriteInProgress = mWriteInProgress;
     return NS_OK;
 }
@@ -267,8 +266,7 @@ nsStorageStream::GetWriteInProgress(bool *aWriteInProgress)
 NS_METHOD
 nsStorageStream::Seek(int32_t aPosition)
 {
-    if (NS_WARN_IF(!mSegmentedBuffer))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
     
     // An argument of -1 means "seek to end of stream"
     if (aPosition == -1)
@@ -360,8 +358,7 @@ NS_IMPL_ISUPPORTS2(nsStorageInputStream,
 NS_IMETHODIMP
 nsStorageStream::NewInputStream(int32_t aStartingOffset, nsIInputStream* *aInputStream)
 {
-    if (NS_WARN_IF(!mSegmentedBuffer))
-        return NS_ERROR_NOT_INITIALIZED;
+    NS_ENSURE_TRUE(mSegmentedBuffer, NS_ERROR_NOT_INITIALIZED);
 
     nsStorageInputStream *inputStream = new nsStorageInputStream(this, mSegmentSize);
     if (!inputStream)
@@ -527,6 +524,8 @@ nsStorageInputStream::Seek(uint32_t aPosition)
 nsresult
 NS_NewStorageStream(uint32_t segmentSize, uint32_t maxSize, nsIStorageStream **result)
 {
+    NS_ENSURE_ARG(result);
+
     nsStorageStream* storageStream = new nsStorageStream();
     if (!storageStream) return NS_ERROR_OUT_OF_MEMORY;
     

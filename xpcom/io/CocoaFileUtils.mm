@@ -16,8 +16,7 @@ nsresult RevealFileInFinder(CFURLRef url)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (NS_WARN_IF(!url))
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG_POINTER(url);
 
   NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   BOOL success = [[NSWorkspace sharedWorkspace] selectFile:[(NSURL*)url path] inFileViewerRootedAtPath:@""];
@@ -32,8 +31,7 @@ nsresult OpenURL(CFURLRef url)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (NS_WARN_IF(!url))
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG_POINTER(url);
 
   NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   BOOL success = [[NSWorkspace sharedWorkspace] openURL:(NSURL*)url];
@@ -48,8 +46,8 @@ nsresult GetFileCreatorCode(CFURLRef url, OSType *creatorCode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (NS_WARN_IF(!url) || NS_WARN_IF(!creatorCode))
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG_POINTER(url);
+  NS_ENSURE_ARG_POINTER(creatorCode);
 
   nsAutoreleasePool localPool;
 
@@ -78,8 +76,7 @@ nsresult SetFileCreatorCode(CFURLRef url, OSType creatorCode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (NS_WARN_IF(!url))
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG_POINTER(url);
 
   NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   NSDictionary* dict = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:creatorCode] forKey:NSFileHFSCreatorCode];
@@ -94,8 +91,8 @@ nsresult GetFileTypeCode(CFURLRef url, OSType *typeCode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (NS_WARN_IF(!url) || NS_WARN_IF(!typeCode))
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG_POINTER(url);
+  NS_ENSURE_ARG_POINTER(typeCode);
 
   nsAutoreleasePool localPool;
 
@@ -124,8 +121,7 @@ nsresult SetFileTypeCode(CFURLRef url, OSType typeCode)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (NS_WARN_IF(!url))
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_ARG_POINTER(url);
 
   NSAutoreleasePool* ap = [[NSAutoreleasePool alloc] init];
   NSDictionary* dict = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:typeCode] forKey:NSFileHFSTypeCode];

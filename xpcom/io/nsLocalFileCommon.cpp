@@ -33,8 +33,7 @@ void NS_ShutdownLocalFile()
 NS_IMETHODIMP
 nsLocalFile::InitWithFile(nsIFile *aFile)
 {
-    if (NS_WARN_IF(!aFile))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG(aFile);
     
     nsAutoCString path;
     aFile->GetNativePath(path);
@@ -190,8 +189,7 @@ static int32_t SplitPath(PRUnichar *path, PRUnichar **nodeArray, int32_t arrayLe
 NS_IMETHODIMP
 nsLocalFile::GetRelativeDescriptor(nsIFile *fromFile, nsACString& _retval)
 {
-    if (NS_WARN_IF(!fromFile))
-        return NS_ERROR_INVALID_ARG;
+    NS_ENSURE_ARG_POINTER(fromFile);
     const int32_t kMaxNodesInPath = 32;
 
     //

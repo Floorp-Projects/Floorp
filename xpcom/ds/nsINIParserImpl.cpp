@@ -51,8 +51,7 @@ nsINIParserFactory::CreateInstance(nsISupports* aOuter,
                                    REFNSIID aIID,
                                    void **aResult)
 {
-  if (NS_WARN_IF(aOuter))
-    return NS_ERROR_NO_AGGREGATION;
+  NS_ENSURE_NO_AGGREGATION(aOuter);
 
   // We are our own singleton.
   return QueryInterface(aIID, aResult);

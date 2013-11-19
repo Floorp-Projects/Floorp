@@ -33,25 +33,21 @@ nsGZFileWriter::~nsGZFileWriter()
 NS_IMETHODIMP
 nsGZFileWriter::Init(nsIFile* aFile)
 {
-  if (NS_WARN_IF(mInitialized) ||
-      NS_WARN_IF(mFinished))
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_FALSE(mInitialized, NS_ERROR_FAILURE);
+  NS_ENSURE_FALSE(mFinished, NS_ERROR_FAILURE);
 
   // Get a FILE out of our nsIFile.  Convert that into a file descriptor which
   // gzip can own.  Then close our FILE, leaving only gzip's fd open.
 
   FILE* file;
   nsresult rv = aFile->OpenANSIFileDesc("wb", &file);
-  if (NS_WARN_IF(NS_FAILED(rv)))
-    return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   mGZFile = gzdopen(dup(fileno(file)), "wb");
   fclose(file);
 
   // gzdopen returns nullptr on error.
-  if (NS_WARN_IF(!mGZFile))
-    return NS_ERROR_FAILURE;
-
+  NS_ENSURE_TRUE(mGZFile, NS_ERROR_FAILURE);
   mInitialized = true;
 
   return NS_OK;
@@ -60,9 +56,8 @@ nsGZFileWriter::Init(nsIFile* aFile)
 NS_IMETHODIMP
 nsGZFileWriter::Write(const nsACString& aStr)
 {
-  if (NS_WARN_IF(!mInitialized) ||
-      NS_WARN_IF(mFinished))
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_FALSE(mFinished, NS_ERROR_FAILURE);
 
   // gzwrite uses a return value of 0 to indicate failure.  Otherwise, it
   // returns the number of uncompressed bytes written.  To ensure we can
@@ -76,8 +71,7 @@ nsGZFileWriter::Write(const nsACString& aStr)
   // always be either 0 or aStr.Length(), and we shouldn't have to call it
   // multiple times in order to get it to read the whole buffer.
   int rv = gzwrite(mGZFile, aStr.BeginReading(), aStr.Length());
-  if (NS_WARN_IF(rv != static_cast<int>(aStr.Length())))
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(rv == static_cast<int>(aStr.Length()), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -85,9 +79,8 @@ nsGZFileWriter::Write(const nsACString& aStr)
 NS_IMETHODIMP
 nsGZFileWriter::Finish()
 {
-  if (NS_WARN_IF(!mInitialized) ||
-      NS_WARN_IF(mFinished))
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_FALSE(mFinished, NS_ERROR_FAILURE);
 
   mFinished = true;
   gzclose(mGZFile);

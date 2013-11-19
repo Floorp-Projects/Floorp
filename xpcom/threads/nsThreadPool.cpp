@@ -92,8 +92,7 @@ nsThreadPool::PutEvent(nsIRunnable *event)
   nsThreadManager::get()->NewThread(0,
                                     nsIThreadManager::DEFAULT_STACK_SIZE,
                                     getter_AddRefs(thread));
-  if (NS_WARN_IF(!thread))
-    return NS_ERROR_UNEXPECTED;
+  NS_ENSURE_STATE(thread);
 
   bool killThread = false;
   {
@@ -226,14 +225,12 @@ nsThreadPool::Dispatch(nsIRunnable *event, uint32_t flags)
 {
   LOG(("THRD-P(%p) dispatch [%p %x]\n", this, event, flags));
 
-  if (NS_WARN_IF(mShutdown))
-    return NS_ERROR_NOT_AVAILABLE;
+  NS_ENSURE_STATE(!mShutdown);
 
   if (flags & DISPATCH_SYNC) {
     nsCOMPtr<nsIThread> thread;
     nsThreadManager::get()->GetCurrentThread(getter_AddRefs(thread));
-    if (NS_WARN_IF(!thread))
-      return NS_ERROR_NOT_AVAILABLE;
+    NS_ENSURE_STATE(thread);
 
     nsRefPtr<nsThreadSyncDispatch> wrapper =
         new nsThreadSyncDispatch(thread, event);
