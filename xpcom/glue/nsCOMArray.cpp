@@ -57,7 +57,8 @@ int32_t
 nsCOMArray_base::IndexOfObject(nsISupports* aObject) const
 {
     nsCOMPtr<nsISupports> supports = do_QueryInterface(aObject);
-    NS_ENSURE_TRUE(supports, -1);
+    if (NS_WARN_IF(!supports))
+        return -1;
 
     uint32_t i, count;
     int32_t retval = -1;

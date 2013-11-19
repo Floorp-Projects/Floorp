@@ -71,7 +71,8 @@ NS_NewNamedThread(const char (&name)[LEN],
                   uint32_t stackSize = nsIThreadManager::DEFAULT_STACK_SIZE)
 {
   nsresult rv = NS_NewThread(result, nullptr, stackSize);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv)))
+    return rv;
   NS_SetThreadName<LEN>(*result, name);
   if (initialEvent) {
     rv = (*result)->Dispatch(initialEvent, NS_DISPATCH_NORMAL);

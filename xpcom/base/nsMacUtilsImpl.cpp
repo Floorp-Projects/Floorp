@@ -89,7 +89,8 @@ nsresult nsMacUtilsImpl::GetArchString(nsAString& archString)
 
 NS_IMETHODIMP nsMacUtilsImpl::GetIsUniversalBinary(bool *aIsUniversalBinary)
 {
-  NS_ENSURE_ARG_POINTER(aIsUniversalBinary);
+  if (NS_WARN_IF(!aIsUniversalBinary))
+    return NS_ERROR_INVALID_ARG;
   *aIsUniversalBinary = false;
 
   nsAutoString archString;
