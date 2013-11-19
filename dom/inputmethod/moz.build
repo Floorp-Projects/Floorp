@@ -20,7 +20,3 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'Keyboard.jsm',
 ]
-
-FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
