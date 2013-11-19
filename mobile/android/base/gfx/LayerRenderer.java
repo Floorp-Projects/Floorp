@@ -82,7 +82,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private boolean mProfileRender;
     private long mProfileOutputTime;
 
-    /* Used by robocop for testing purposes */
     private IntBuffer mPixelBuffer;
 
     // Used by GLES 2.0
