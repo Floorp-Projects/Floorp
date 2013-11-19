@@ -80,8 +80,13 @@ NS_IMETHODIMP nsContainerBoxObject::GetDocShell(nsIDocShell** aResult)
     return NS_OK;
   }
 
-  NS_IF_ADDREF(*aResult = sub_doc->GetDocShell());
-  return NS_OK;
+  nsCOMPtr<nsISupports> container = sub_doc->GetContainer();
+
+  if (!container) {
+    return NS_OK;
+  }
+
+  return CallQueryInterface(container, aResult);
 }
 
 nsresult
