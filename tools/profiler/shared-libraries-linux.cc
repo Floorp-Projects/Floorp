@@ -104,6 +104,13 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     // no associated phdrs
     if (strcmp(name, "/dev/ashmem/dalvik-jit-code-cache") != 0)
       continue;
+#else
+    if (strcmp(perm, "r-xp") != 0) {
+      // Ignore entries that are writable and/or shared.
+      // At least one graphics driver uses short-lived "rwxs" mappings
+      // (see bug 926734 comment 5), so just checking for 'x' isn't enough.
+      continue;
+    }
 #endif
     SharedLibrary shlib(start, end, offset, "", name);
     info.AddSharedLibrary(shlib);
