@@ -1455,30 +1455,26 @@ MobileMessageDatabaseService.prototype = {
   },
 
   saveRecord: function saveRecord(aMessageRecord, aAddresses, aCallback) {
-    let isOverriding = (aMessageRecord.id !== undefined);
-    if (!isOverriding) {
-      // Assign a new id.
-      this.lastMessageId += 1;
-      aMessageRecord.id = this.lastMessageId;
-    }
     if (DEBUG) debug("Going to store " + JSON.stringify(aMessageRecord));
 
     let self = this;
-    function notifyResult(rv) {
-      if (!aCallback) {
-        return;
-      }
-      let domMessage = self.createDomMessageFromRecord(aMessageRecord);
-      aCallback.notify(rv, domMessage);
-    }
-
     this.newTxn(READ_WRITE, function(error, txn, stores) {
+      let notifyResult = function(rv) {
+        if (aCallback) {
+          aCallback.notify(rv, self.createDomMessageFromRecord(aMessageRecord));
+        }
+      };
+
       if (error) {
         // TODO bug 832140 check event.target.errorCode
         notifyResult(Cr.NS_ERROR_FAILURE);
         return;
       }
+
       txn.oncomplete = function oncomplete(event) {
+        if (aMessageRecord.id > self.lastMessageId) {
+          self.lastMessageId = aMessageRecord.id;
+        }
         notifyResult(Cr.NS_OK);
       };
       txn.onabort = function onabort(event) {
@@ -1495,8 +1491,14 @@ MobileMessageDatabaseService.prototype = {
                                           function (threadRecord,
                                                     participantIds) {
         if (!participantIds) {
-          notifyResult(Cr.NS_ERROR_FAILURE);
+          txn.abort();
           return;
+        }
+
+        let isOverriding = (aMessageRecord.id !== undefined);
+        if (!isOverriding) {
+          // |self.lastMessageId| is only updated in |txn.oncomplete|.
+          aMessageRecord.id = self.lastMessageId + 1;
         }
 
         let insertMessageRecord = function (threadId) {
@@ -1580,8 +1582,6 @@ MobileMessageDatabaseService.prototype = {
         };
       });
     }, [MESSAGE_STORE_NAME, PARTICIPANT_STORE_NAME, THREAD_STORE_NAME]);
-    // We return the key that we expect to store in the db
-    return aMessageRecord.id;
   },
 
   forEachMatchedMmsDeliveryInfo:
@@ -1889,7 +1889,7 @@ MobileMessageDatabaseService.prototype = {
     }
     aMessage.deliveryIndex = [aMessage.delivery, timestamp];
 
-    return this.saveRecord(aMessage, threadParticipants, aCallback);
+    this.saveRecord(aMessage, threadParticipants, aCallback);
   },
 
   saveSendingMessage: function saveSendingMessage(aMessage, aCallback) {
@@ -1951,7 +1951,7 @@ MobileMessageDatabaseService.prototype = {
     } else if (aMessage.type == "mms") {
       addresses = aMessage.receivers;
     }
-    return this.saveRecord(aMessage, addresses, aCallback);
+    this.saveRecord(aMessage, addresses, aCallback);
   },
 
   setMessageDeliveryByMessageId: function setMessageDeliveryByMessageId(
