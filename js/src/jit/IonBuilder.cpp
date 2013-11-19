@@ -5934,8 +5934,14 @@ IonBuilder::maybeInsertResume()
 }
 
 static bool
-ClassHasEffectlessLookup(const Class *clasp)
+ClassHasEffectlessLookup(const Class *clasp, PropertyName *name)
 {
+    if (IsTypedArrayClass(clasp)) {
+        // Typed arrays have a lookupGeneric hook, but it only handles
+        // integers, not names.
+        JS_ASSERT(name);
+        return true;
+    }
     return clasp->isNative() && !clasp->ops.lookupGeneric;
 }
 
@@ -5974,7 +5980,7 @@ IonBuilder::testSingletonProperty(JSObject *obj, PropertyName *name)
     // property will change and trigger invalidation.
 
     while (obj) {
-        if (!ClassHasEffectlessLookup(obj->getClass()))
+        if (!ClassHasEffectlessLookup(obj->getClass(), name))
             return nullptr;
 
         types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
@@ -7785,12 +7791,13 @@ IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyN
                 return false;
 
             const Class *clasp = type->clasp();
-            if (!ClassHasEffectlessLookup(clasp) || ClassHasResolveHook(compartment, clasp, name))
+            if (!ClassHasEffectlessLookup(clasp, name) || ClassHasResolveHook(compartment, clasp, name))
                 return false;
 
             // Look for a getter/setter on the class itself which may need
-            // to be called.
-            if (isGetter && clasp->ops.getGeneric)
+            // to be called. Ignore the getGeneric hook for typed arrays, it
+            // only handles integers and forwards names to the prototype.
+            if (isGetter && clasp->ops.getGeneric && !IsTypedArrayClass(clasp))
                 return false;
             if (!isGetter && clasp->ops.setGeneric)
                 return false;
