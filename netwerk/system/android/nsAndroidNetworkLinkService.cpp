@@ -49,13 +49,7 @@ nsAndroidNetworkLinkService::GetLinkType(uint32_t *aLinkType)
 {
   NS_ENSURE_ARG_POINTER(aLinkType);
 
-  if (!mozilla::AndroidBridge::Bridge()) {
-    // Fail soft here and assume a connection exists
-    NS_WARNING("GetLinkType is not supported without a bridge connection");
-    *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
-    return NS_OK;
-  }
-
-  *aLinkType = mozilla::AndroidBridge::Bridge()->NetworkLinkType();
+  // XXX This function has not yet been implemented for this platform
+  *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
   return NS_OK;
 }
