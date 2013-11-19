@@ -425,8 +425,7 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
       !IDBOpenDBRequestBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBRequestBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBTransactionBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBVersionChangeEventBinding::GetConstructorObject(aCx, aGlobal))
-  {
+      !IDBVersionChangeEventBinding::GetConstructorObject(aCx, aGlobal)) {
     return false;
   }
 
