@@ -172,6 +172,25 @@ nsXULTemplateBuilder::InitGlobals()
 }
 
 void
+nsXULTemplateBuilder::StartObserving(nsIDocument* aDocument)
+{
+    aDocument->AddObserver(this);
+    mObservedDocument = aDocument;
+    gObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    gObserverService->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, false);
+}
+
+void
+nsXULTemplateBuilder::StopObserving()
+{
+    MOZ_ASSERT(mObservedDocument);
+    mObservedDocument->RemoveObserver(this);
+    mObservedDocument = nullptr;
+    gObserverService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
+}
+
+void
 nsXULTemplateBuilder::CleanUp(bool aIsFinal)
 {
     for (int32_t q = mQuerySets.Length() - 1; q >= 0; q--) {
@@ -193,10 +212,7 @@ void
 nsXULTemplateBuilder::Uninit(bool aIsFinal)
 {
     if (mObservedDocument && aIsFinal) {
-        gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
-        gObserverService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-        mObservedDocument->RemoveObserver(this);
-        mObservedDocument = nullptr;
+        StopObserving();
     }
 
     if (mQueryProcessor)
@@ -428,14 +444,7 @@ nsXULTemplateBuilder::Init(nsIContent* aElement)
     nsresult rv = LoadDataSources(doc, &shouldDelay);
 
     if (NS_SUCCEEDED(rv)) {
-        // Add ourselves as a document observer
-        doc->AddObserver(this);
-
-        mObservedDocument = doc;
-        gObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                      false);
-        gObserverService->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC,
-                                      false);
+        StartObserving(doc);
     }
 
     return rv;
@@ -1124,7 +1133,8 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
         nsContentUtils::AddScriptRunner(
             NS_NewRunnableMethod(this, &nsXULTemplateBuilder::UninitFalse));
 
-        aDocument->RemoveObserver(this);
+        MOZ_ASSERT(aDocument == mObservedDocument);
+        StopObserving();
 
         nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(aDocument);
         if (xuldoc)
