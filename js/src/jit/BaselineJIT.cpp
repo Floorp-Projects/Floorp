@@ -746,6 +746,10 @@ BaselineScript::toggleDebugTraps(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(script->baselineScript() == this);
 
+    // Only scripts compiled for debug mode have toggled calls.
+    if (!debugMode())
+        return;
+
     SrcNoteLineScanner scanner(script->notes(), script->lineno);
 
     JSRuntime *rt = script->runtimeFromMainThread();
