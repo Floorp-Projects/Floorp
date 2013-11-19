@@ -13,6 +13,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.text.TextUtils;
 import android.util.Log;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -56,6 +57,7 @@ class SuggestClient {
     /**
      * This constructor is used exclusively by Robocop.
      */
+    @RobocopTarget
     public SuggestClient(Context context, String suggestTemplate, int timeout) {
         this(context, suggestTemplate, timeout, Integer.MAX_VALUE);
         mCheckNetwork = false;
