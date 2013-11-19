@@ -13,12 +13,12 @@ namespace hal_impl {
 
 void
 EnableSensorNotifications(SensorType aSensor) {
-  GeckoAppShell::EnableSensor(aSensor);
+  AndroidBridge::Bridge()->EnableSensor(aSensor);
 }
 
 void
 DisableSensorNotifications(SensorType aSensor) {
-  GeckoAppShell::DisableSensor(aSensor);
+  AndroidBridge::Bridge()->DisableSensor(aSensor);
 }
 
 } // hal_impl
