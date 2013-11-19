@@ -163,7 +163,6 @@ class TestEmitterBasic(unittest.TestCase):
             MODULE='module_name',
             OS_LIBS=['foo.so', '-l123', 'aaa.a'],
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
-            SHARED_LIBRARY_LIBS=['fans.sll', 'tans.sll'],
             SSRCS=['bans.S', 'fans.S'],
             VISIBILITY_FLAGS='',
         )
