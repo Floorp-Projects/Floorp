@@ -74,6 +74,7 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
 _DEPRECATED_VARIABLES := \
   MOCHITEST_FILES_PARTS \
   MOCHITEST_BROWSER_FILES_PARTS \
+  SHORT_LIBNAME \
   $(NULL)
 
 ifndef EXTERNALLY_MANAGED_MAKE_FILE
@@ -134,7 +135,6 @@ CHECK_VARS := \
  LIBRARY_NAME \
  MODULE \
  DEPTH \
- SHORT_LIBNAME \
  XPI_PKGNAME \
  INSTALL_EXTENSION_ID \
  SHARED_LIBRARY_NAME \
@@ -341,9 +341,6 @@ ifdef MODULE_NAME
 $(error MODULE_NAME is $(MODULE_NAME) but MODULE_NAME and LIBXUL_LIBRARY are not compatible)
 endif
 FORCE_STATIC_LIB=1
-ifneq ($(SHORT_LIBNAME),)
-$(error SHORT_LIBNAME is $(SHORT_LIBNAME) but SHORT_LIBNAME is not compatable with LIBXUL_LIBRARY)
-endif
 endif
 
 # If we are building this component into an extension/xulapp, it cannot be
