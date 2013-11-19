@@ -11,5 +11,5 @@ XPIDL_SOURCES += [
     'xpctest_params.idl',
 ]
 
-MODULE = 'xpctest'
+XPIDL_MODULE = 'xpctest'
 

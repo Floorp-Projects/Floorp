@@ -7,9 +7,6 @@
 if CONFIG['MOZ_B2G_BT']:
     PARALLEL_DIRS += ['interfaces']
 
-    LIBXUL_LIBRARY = True
-    MODULE = 'dom'
-    LIBRARY_NAME = 'dombluetooth_s'
 
     SOURCES += [
         'BluetoothA2dpManager.cpp',
@@ -67,6 +64,8 @@ if CONFIG['MOZ_B2G_BT']:
             'bluez',
             'bluez/linux',
         ]
+
+    FINAL_LIBRARY = 'gklayout'
 
 EXPORTS.mozilla.dom.bluetooth.ipc += [
     'ipc/BluetoothMessageUtils.h',

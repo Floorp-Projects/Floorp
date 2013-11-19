@@ -7,8 +7,6 @@
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     DIRS += ['interpose']
 
-MODULE = 'dom'
-
 EXPORTS.mozilla += [
     'PluginLibrary.h',
 ]
@@ -114,14 +112,9 @@ IPDL_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'domplugins_s'
-
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../base',
     '/xpcom/base/',

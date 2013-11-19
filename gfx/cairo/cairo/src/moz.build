@@ -6,8 +6,6 @@
 
 CONFIGURE_SUBST_FILES += ['cairo-features.h']
 
-MODULE = 'cairo'
-
 EXPORTS.cairo += [
     'cairo-deprecated.h',
     'cairo-platform.h',
@@ -114,10 +112,6 @@ if CONFIG['MOZ_ENABLE_CAIRO_FT']:
         'cairo-type1-subset.c',
     ]
 
-LIBRARY_NAME = 'mozcairo'
-
-LIBXUL_LIBRARY = True
-
 SOURCES += [
     'cairo-analysis-surface.c',
     'cairo-arc.c',
@@ -193,3 +187,4 @@ SOURCES += [
 
 MSVC_ENABLE_PGO = True
 
+FINAL_LIBRARY = 'gkmedias'

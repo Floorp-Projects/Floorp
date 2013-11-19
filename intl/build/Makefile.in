@@ -2,17 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# see also intl/locale/src/Makefile.in
-ifneq (,$(filter os2 windows, $(MOZ_WIDGET_TOOLKIT)))
-LOCALE_DIR		= $(MOZ_WIDGET_TOOLKIT)
-else
-ifeq ($(OS_ARCH), Darwin)
-LOCALE_DIR		= mac
-else
-LOCALE_DIR		= unix
-endif
-endif
-
 LOCAL_INCLUDES = \
 			-I$(srcdir)/../lwbrk/src \
 			-I$(srcdir)/../unicharutil/src \
@@ -20,13 +9,4 @@ LOCAL_INCLUDES = \
 			-I$(srcdir)/../locale/src \
 			-I$(srcdir)/../locale/src/$(LOCALE_DIR) \
 			-I$(srcdir)/../uconv/src \
-			$(NULL)
-
-SHARED_LIBRARY_LIBS = \
-			../lwbrk/src/$(LIB_PREFIX)lwbrk_s.$(LIB_SUFFIX) \
-			../unicharutil/src/$(LIB_PREFIX)ucharucomp_s.$(LIB_SUFFIX) \
-			../strres/src/$(LIB_PREFIX)strres_s.$(LIB_SUFFIX) \
-			../locale/src/$(LIB_PREFIX)nslocale_s.$(LIB_SUFFIX) \
-			../locale/src/$(LOCALE_DIR)/$(LIB_PREFIX)platlocale_s.$(LIB_SUFFIX) \
-			../hyphenation/src/$(HYPHENATION_DIR)/$(LIB_PREFIX)hyphenation_s.$(LIB_SUFFIX) \
 			$(NULL)

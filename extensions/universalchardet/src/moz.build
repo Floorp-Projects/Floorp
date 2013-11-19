@@ -6,5 +6,3 @@
 
 DIRS += ['base', 'xpcom']
 
-MODULE = 'universalchardet'
-

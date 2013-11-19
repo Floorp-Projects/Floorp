@@ -4,17 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'handler'
-
 SOURCES += [
     '../log/log.cc',
     'exception_handler.cc',
     'minidump_descriptor.cc',
 ]
 
-LIBRARY_NAME = 'exception_handler_s'
-
 XPI_NAME = 'crashreporter'
 
-# need static lib
-FORCE_STATIC_LIB = True
+FINAL_LIBRARY = 'xulapp_s'

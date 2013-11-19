@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'content'
-
 EXPORTS += [
     'AudioSinkFilter.h',
     'AudioSinkInputPin.h',
@@ -36,10 +34,7 @@ if not CONFIG['MOZ_WEBRTC']:
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'gkcondirectshow_s'
-
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/media/webrtc/trunk/webrtc/modules/video_capture/windows',
 ]

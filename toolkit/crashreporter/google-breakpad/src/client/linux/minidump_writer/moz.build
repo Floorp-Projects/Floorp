@@ -4,17 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'writer'
-
 SOURCES += [
     'linux_dumper.cc',
     'linux_ptrace_dumper.cc',
     'minidump_writer.cc',
 ]
 
-LIBRARY_NAME = 'minidump_writer_s'
-
 XPI_NAME = 'crashreporter'
 
-# need static lib
-FORCE_STATIC_LIB = True
+FINAL_LIBRARY = 'xulapp_s'

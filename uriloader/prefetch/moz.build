@@ -9,7 +9,7 @@ XPIDL_SOURCES += [
     'nsIPrefetchService.idl',
 ]
 
-MODULE = 'prefetch'
+XPIDL_MODULE = 'prefetch'
 
 EXPORTS += [
     'nsCPrefetchService.h',
@@ -35,9 +35,6 @@ IPDL_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'prefetch_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

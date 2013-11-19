@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['tests']
 
-MODULE = 'editor'
-
 UNIFIED_SOURCES += [
     'nsEditProperty.cpp',
     'nsHTMLAbsPosition.cpp',
@@ -28,11 +26,7 @@ UNIFIED_SOURCES += [
     'TypeInState.cpp',
 ]
 
-LIBRARY_NAME = 'htmleditor_s'
-
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '../base',
@@ -44,3 +38,5 @@ LOCAL_INCLUDES += [
     '/layout/tables',
     '/layout/xul/base/src',
 ]
+
+FINAL_LIBRARY = 'gklayout'

@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['test']
 
-MODULE = 'mediasniffer'
-
 EXPORTS += [
     'nsMediaSniffer.h',
 ]
@@ -21,9 +19,4 @@ SOURCES += [
     'mp3sniff.c',
 ]
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'mediasniffer'
-
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

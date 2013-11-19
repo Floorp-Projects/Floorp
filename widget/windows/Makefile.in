@@ -14,10 +14,6 @@ ifdef MOZ_ENABLE_D3D10_LAYER
 DEFINES		+= -DMOZ_ENABLE_D3D10_LAYER
 endif
 
-SHARED_LIBRARY_LIBS = \
-  ../xpwidgets/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
-  $(NULL)
-
 LOCAL_INCLUDES	= \
 		-I. \
 		-I$(srcdir)/../xpwidgets \

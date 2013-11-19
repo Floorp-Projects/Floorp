@@ -6,8 +6,6 @@
 
 DIRS += ['internal']
 
-MODULE = 'rdfutil'
-
 include('objs.mozbuild')
 
 SOURCES += rdf_util_src_cppsrcs

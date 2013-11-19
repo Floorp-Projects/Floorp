@@ -4,15 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'jsdownloads'
-
 SOURCES += [
     'DownloadPlatform.cpp',
 ]
-
-LIBRARY_NAME = 'jsdownloads_s'
-
-LIBXUL_LIBRARY = True
 
 EXTRA_COMPONENTS += [
     'DownloadLegacy.js',
@@ -31,3 +25,5 @@ EXTRA_PP_JS_MODULES += [
     'DownloadIntegration.jsm',
     'DownloadUIHelper.jsm',
 ]
+
+FINAL_LIBRARY = 'toolkitcomps'

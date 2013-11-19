@@ -10,8 +10,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'widget_android'
 
-MODULE = 'widget'
-
 EXPORTS += [
     'AndroidBridge.h',
     'AndroidJavaWrappers.h',
@@ -43,11 +41,8 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'widget_android'
-
-EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

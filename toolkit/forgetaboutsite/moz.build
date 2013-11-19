@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['test']
 
-MODULE = 'forgetaboutsite'
-
 EXTRA_JS_MODULES += [
     'ForgetAboutSite.jsm',
 ]

@@ -9,5 +9,5 @@ if CONFIG['MOZ_XUL']:
         'nsIXULContextMenuBuilder.idl',
     ]
 
-MODULE = 'xul'
+XPIDL_MODULE = 'xul'
 

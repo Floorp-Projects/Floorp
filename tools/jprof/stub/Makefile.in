@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FORCE_SHARED_LIB = 1
-
 # override optimization
 MOZ_OPTIMIZE_FLAGS = -fno-omit-frame-pointer
 

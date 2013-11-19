@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['tests']
 
-MODULE = 'editor'
-
 UNIFIED_SOURCES += [
     'ChangeAttributeTxn.cpp',
     'ChangeCSSInlineStyleTxn.cpp',
@@ -33,11 +31,7 @@ UNIFIED_SOURCES += [
     'SplitElementTxn.cpp',
 ]
 
-LIBRARY_NAME = 'editorbase_s'
-
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '../text',
@@ -47,3 +41,5 @@ LOCAL_INCLUDES += [
     '/extensions/spellcheck/src',
     '/layout/style',
 ]
+
+FINAL_LIBRARY = 'gklayout'
