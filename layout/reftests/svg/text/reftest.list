@@ -1,5 +1,3 @@
-default-preferences pref(svg.text.css-frames.enabled,true)
-
 == simple.svg simple-ref.html
 == simple-2.svg simple.svg
 == simple-underline.svg simple-underline-ref.html

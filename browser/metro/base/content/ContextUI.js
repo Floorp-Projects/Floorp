@@ -25,6 +25,9 @@ var ContextUI = {
     Elements.panelUI.addEventListener('ToolPanelShown', this, false);
     Elements.panelUI.addEventListener('ToolPanelHidden', this, false);
 
+    Elements.tray.addEventListener("mousemove", this, false);
+    Elements.tray.addEventListener("mouseleave", this, false);
+
     window.addEventListener("touchstart", this, true);
     window.addEventListener("mousedown", this, true);
     window.addEventListener("MozEdgeUIStarted", this, true);
@@ -163,6 +166,7 @@ var ContextUI = {
   dismissTabsWithDelay: function (aDelay) {
     aDelay = aDelay || kForegroundTabAnimationDelay;
     this._clearDelayedTimeout();
+    this._lastTimeoutDelay = aDelay;
     this._hidingId = setTimeout(function () {
         ContextUI.dismissTabs();
       }, aDelay);
@@ -223,7 +227,14 @@ var ContextUI = {
     if (this._hidingId) {
       clearTimeout(this._hidingId);
       this._hidingId = 0;
+      this._delayedHide = false;
     }
+  },
+
+  _resetDelayedTimeout: function () {
+    this._hidingId = setTimeout(function () {
+        ContextUI.dismissTabs();
+      }, this._lastTimeoutDelay);
   },
 
   /*******************************************
@@ -288,6 +299,20 @@ var ContextUI = {
     this.dismissContextAppbar();
   },
 
+  onMouseMove: function (aEvent) {
+    if (this._hidingId) {
+      this._clearDelayedTimeout();
+      this._delayedHide = true;
+    }
+  },
+
+  onMouseLeave: function (aEvent) {
+    if (this._delayedHide) {
+      this._delayedHide = false;
+      this._resetDelayedTimeout();
+    }
+  },
+
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "URLChanged":
@@ -323,6 +348,12 @@ var ContextUI = {
         }
         this.onDownInput(aEvent);
         break;
+      case "mousemove":
+        this.onMouseMove(aEvent);
+        break;
+      case "mouseleave":
+        this.onMouseLeave(aEvent);
+        break;
       case "touchstart":
         this.onDownInput(aEvent);
         break;
@@ -333,11 +364,6 @@ var ContextUI = {
       case "AlertActive":
       case "AlertClose":
         ContentAreaObserver.updateContentArea();
-        break;
-      case "touchstart":
-        if (!BrowserUI.isStartTabVisible) {
-          this.dismiss();
-        }
         break;
       case "MozFlyoutPanelShowing":
         if (BrowserUI.isStartTabVisible) {

@@ -157,6 +157,7 @@ static const gchar*        getNameCB (AtkObject *aAtkObj);
        const gchar*        getDescriptionCB (AtkObject *aAtkObj);
 static AtkRole             getRoleCB(AtkObject *aAtkObj);
 static AtkAttributeSet*    getAttributesCB(AtkObject *aAtkObj);
+static const gchar* GetLocaleCB(AtkObject*);
 static AtkObject*          getParentCB(AtkObject *aAtkObj);
 static gint                getChildCountCB(AtkObject *aAtkObj);
 static AtkObject*          refChildCB(AtkObject *aAtkObj, gint aChildIndex);
@@ -489,6 +490,7 @@ classInitCB(AtkObjectClass *aClass)
     aClass->get_index_in_parent = getIndexInParentCB;
     aClass->get_role = getRoleCB;
     aClass->get_attributes = getAttributesCB;
+    aClass->get_object_locale = GetLocaleCB;
     aClass->ref_state_set = refStateSetCB;
     aClass->ref_relation_set = refRelationSetCB;
 
@@ -754,6 +756,18 @@ getAttributesCB(AtkObject *aAtkObj)
   return accWrap ? GetAttributeSet(accWrap) : nullptr;
 }
 
+const gchar*
+GetLocaleCB(AtkObject* aAtkObj)
+{
+  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  if (!accWrap)
+    return nullptr;
+
+  nsAutoString locale;
+  accWrap->Language(locale);
+  return AccessibleWrap::ReturnString(locale);
+}
+
 AtkObject *
 getParentCB(AtkObject *aAtkObj)
 {
@@ -982,6 +996,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
       {
         a11y::RootAccessible* rootAccWrap = accWrap->RootAccessible();
         if (rootAccWrap && rootAccWrap->mActivated) {
+            atk_focus_tracker_notify(atkObj);
             // Fire state change event for focus
             atk_object_notify_state_change(atkObj, ATK_STATE_FOCUSED, true);
             return NS_OK;
@@ -1167,6 +1182,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
       break;
 
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
+        atk_focus_tracker_notify(atkObj); // fire extra focus event
         atk_object_notify_state_change(atkObj, ATK_STATE_VISIBLE, true);
         atk_object_notify_state_change(atkObj, ATK_STATE_SHOWING, true);
         break;

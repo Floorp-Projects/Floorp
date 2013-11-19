@@ -4,7 +4,6 @@ import org.mozilla.gecko.*;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import java.lang.reflect.Method;
 
 import org.json.JSONArray;
 import org.json.JSONException;

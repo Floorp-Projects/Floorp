@@ -65,6 +65,7 @@ class ObjectIdCache
 
   public:
     ObjectIdCache();
+    ~ObjectIdCache();
 
     bool init();
     void trace(JSTracer *trc);
@@ -76,7 +77,7 @@ class ObjectIdCache
   private:
     static void keyMarkCallback(JSTracer *trc, void *key, void *data);
 
-    ObjectIdTable table_;
+    ObjectIdTable *table_;
 };
 
 class JavaScriptShared

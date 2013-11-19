@@ -1475,16 +1475,35 @@ char* nsNSSCertificate::defaultServerNickname(CERTCertificate* cert)
 
 NS_IMPL_ISUPPORTS1(nsNSSCertList, nsIX509CertList)
 
-nsNSSCertList::nsNSSCertList(CERTCertList *certList, bool adopt)
+nsNSSCertList::nsNSSCertList(CERTCertList *certList,
+                             const nsNSSShutDownPreventionLock &proofOfLock)
 {
   if (certList) {
-    if (adopt) {
-      mCertList = certList;
-    } else {
-      mCertList = DupCertList(certList);
-    }
+    mCertList = certList;
   } else {
     mCertList = CERT_NewCertList();
+  }
+}
+
+nsNSSCertList::~nsNSSCertList()
+{
+  nsNSSShutDownPreventionLock locker;
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsNSSCertList::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsNSSCertList::destructorSafeDestroyNSSReference()
+{
+  if (isAlreadyShutDown()) {
+    return;
+  }
+  if (mCertList) {
+    mCertList = nullptr;
   }
 }
 
@@ -1492,6 +1511,10 @@ nsNSSCertList::nsNSSCertList(CERTCertList *certList, bool adopt)
 NS_IMETHODIMP
 nsNSSCertList::AddCert(nsIX509Cert *aCert) 
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   /* This should be a query interface, but currently this his how the
    * rest of PSM is working */
   nsCOMPtr<nsIX509Cert2> nssCert = do_QueryInterface(aCert);
@@ -1515,6 +1538,10 @@ nsNSSCertList::AddCert(nsIX509Cert *aCert)
 NS_IMETHODIMP
 nsNSSCertList::DeleteCert(nsIX509Cert *aCert)
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   /* This should be a query interface, but currently this his how the
    * rest of PSM is working */
   nsCOMPtr<nsIX509Cert2> nssCert = do_QueryInterface(aCert);
@@ -1542,7 +1569,8 @@ nsNSSCertList::DeleteCert(nsIX509Cert *aCert)
 }
 
 CERTCertList *
-nsNSSCertList::DupCertList(CERTCertList *aCertList)
+nsNSSCertList::DupCertList(CERTCertList *aCertList,
+                           const nsNSSShutDownPreventionLock &/*proofOfLock*/)
 {
   if (!aCertList)
     return nullptr;
@@ -1565,6 +1593,8 @@ nsNSSCertList::DupCertList(CERTCertList *aCertList)
 void *
 nsNSSCertList::GetRawCertList()
 {
+  // This function should only be called after adquiring a
+  // nsNSSShutDownPreventionLock
   return mCertList;
 }
 
@@ -1572,7 +1602,12 @@ nsNSSCertList::GetRawCertList()
 NS_IMETHODIMP
 nsNSSCertList::GetEnumerator(nsISimpleEnumerator **_retval) 
 {
-  nsCOMPtr<nsISimpleEnumerator> enumerator = new nsNSSCertListEnumerator(mCertList);
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  nsCOMPtr<nsISimpleEnumerator> enumerator =
+    new nsNSSCertListEnumerator(mCertList, locker);
 
   *_retval = enumerator;
   NS_ADDREF(*_retval);
@@ -1581,15 +1616,43 @@ nsNSSCertList::GetEnumerator(nsISimpleEnumerator **_retval)
 
 NS_IMPL_ISUPPORTS1(nsNSSCertListEnumerator, nsISimpleEnumerator)
 
-nsNSSCertListEnumerator::nsNSSCertListEnumerator(CERTCertList *certList)
+nsNSSCertListEnumerator::nsNSSCertListEnumerator(CERTCertList *certList,
+                                                 const nsNSSShutDownPreventionLock &proofOfLock)
 {
-  mCertList = nsNSSCertList::DupCertList(certList);
+  mCertList = nsNSSCertList::DupCertList(certList, proofOfLock);
+}
+
+nsNSSCertListEnumerator::~nsNSSCertListEnumerator()
+{
+  nsNSSShutDownPreventionLock locker;
+  destructorSafeDestroyNSSReference();
+  shutdown(calledFromObject);
+}
+
+void nsNSSCertListEnumerator::virtualDestroyNSSReference()
+{
+  destructorSafeDestroyNSSReference();
+}
+
+void nsNSSCertListEnumerator::destructorSafeDestroyNSSReference()
+{
+  if (isAlreadyShutDown()) {
+    return;
+  }
+  if (mCertList) {
+    mCertList = nullptr;
+  }
 }
 
 /* boolean hasMoreElements (); */
 NS_IMETHODIMP
 nsNSSCertListEnumerator::HasMoreElements(bool *_retval)
 { 
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   NS_ENSURE_TRUE(mCertList, NS_ERROR_FAILURE);
 
   *_retval = !CERT_LIST_EMPTY(mCertList);
@@ -1600,6 +1663,11 @@ nsNSSCertListEnumerator::HasMoreElements(bool *_retval)
 NS_IMETHODIMP
 nsNSSCertListEnumerator::GetNext(nsISupports **_retval) 
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   NS_ENSURE_TRUE(mCertList, NS_ERROR_FAILURE);
 
   CERTCertListNode *node = CERT_LIST_HEAD(mCertList);

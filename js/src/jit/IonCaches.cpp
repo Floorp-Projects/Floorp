@@ -3418,10 +3418,9 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     RootedScript script(cx);
     jsbytecode *pc;
     cache.getScriptedLocation(&script, &pc);
-    RootedValue lval(cx, ObjectValue(*obj));
 
     if (cache.isDisabled()) {
-        if (!GetElementOperation(cx, JSOp(*pc), &lval, idval, res))
+        if (!GetObjectElementOperation(cx, JSOp(*pc), obj, /* wasObject = */true, idval, res))
             return false;
         types::TypeScript::Monitor(cx, script, pc, res);
         return true;
@@ -3467,7 +3466,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
         }
     }
 
-    if (!GetElementOperation(cx, JSOp(*pc), &lval, idval, res))
+    if (!GetObjectElementOperation(cx, JSOp(*pc), obj, /* wasObject = */true, idval, res))
         return false;
 
     // Disable cache when we reach max stubs or update failed too much.

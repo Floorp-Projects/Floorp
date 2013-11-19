@@ -834,45 +834,16 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
     return Show(svgDrawable, aParams);
 
   // Try to create an offscreen surface.
-  mozilla::RefPtr<mozilla::gfx::DrawTarget> target;
-  nsRefPtr<gfxContext> ctx;
-  nsRefPtr<gfxASurface> surface;
-
-  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-    target = gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(aParams.imageRect.Size(), gfx::FORMAT_B8G8R8A8);
-
-    // XXX(seth): All of this ugliness (the backend check, |surface|, the
-    // GetThebesSurfaceForDrawTarget call) is needed because we can't use Moz2D
-    // for drawing in all cases yet. See bug 923341.
-    if (target) {
-      switch (target->GetType()) {
-        case mozilla::gfx::BACKEND_DIRECT2D:
-        case mozilla::gfx::BACKEND_DIRECT2D1_1:
-        case mozilla::gfx::BACKEND_SKIA:
-          // Can't cache on this backend.
-          return Show(svgDrawable, aParams);
-
-        default:
-          surface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(target);
-          ctx = new gfxContext(target);
-      }
-    }
-  } else {
-    target = gfxPlatform::GetPlatform()->
-      CreateOffscreenCanvasDrawTarget(aParams.imageRect.Size(), gfx::FORMAT_B8G8R8A8);
-    surface = target ? gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(target)
-                     : nullptr;
-    ctx = surface ? new gfxContext(surface) : nullptr;
-  }
+  mozilla::RefPtr<mozilla::gfx::DrawTarget> target =
+   gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(aParams.imageRect.Size(), gfx::FORMAT_B8G8R8A8);
 
   // If we couldn't create the draw target, it was probably because it would end
   // up way too big. Generally it also wouldn't fit in the cache, but the prefs
-  // could be set such that the cache isn't the limiting factor. If we couldn't
-  // create the surface, we are on a platform that does not support
-  // GetThebesSurfaceForDrawTarget. This will be fixed in bug 923341.
-  if (!target || !surface)
+  // could be set such that the cache isn't the limiting factor.
+  if (!target)
     return Show(svgDrawable, aParams);
+
+  nsRefPtr<gfxContext> ctx = new gfxContext(target);
 
   // Actually draw. (We use FILTER_NEAREST since we never scale here.)
   gfxUtils::DrawPixelSnapped(ctx, svgDrawable, gfxMatrix(),
@@ -891,7 +862,7 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
   // Draw. Note that if SurfaceCache::Insert failed for whatever reason,
   // then |target| is all that is keeping the pixel data alive, so we have
   // to draw before returning from this function.
-  nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, aParams.imageRect.Size());
+  nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(target, aParams.imageRect.Size());
   Show(drawable, aParams);
 }
 
