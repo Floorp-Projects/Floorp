@@ -20,6 +20,4 @@ XPCSHELL_TESTS_MANIFESTS += [
     'tests/unit/xpcshell.ini',
 ]
 
-FORCE_STATIC_LIB = True
-
 FINAL_LIBRARY = 'browsercomps'

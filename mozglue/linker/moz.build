@@ -23,6 +23,4 @@ HOST_SOURCES += [
 
 HOST_PROGRAM = 'szip'
 
-FORCE_STATIC_LIB = True
-
 FINAL_LIBRARY = 'mozglue'
