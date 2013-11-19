@@ -95,7 +95,6 @@ private:
   friend class DrawTargetCG;
 
   CGMutablePathRef mPath;
-  bool mEndedActive;
   Point mEndPoint;
   FillRule mFillRule;
 };

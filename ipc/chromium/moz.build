@@ -35,7 +35,7 @@ else:
     else:
         os_linux = 1
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'src/base/at_exit.cc',
     'src/base/base_paths.cc',
     'src/base/base_switches.cc',
@@ -179,7 +179,7 @@ if os_posix:
         ]
 
 if os_macosx:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'src/base/debug_util_mac.cc',
         'src/base/hmac_mac.cc',
         'src/base/idle_timer.cc',
@@ -204,7 +204,7 @@ if os_macosx:
         'src/chrome/common/mach_ipc_mac.mm',
     ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'src/third_party/libevent/kqueue.c',
         ]
 
