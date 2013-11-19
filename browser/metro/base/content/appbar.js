@@ -147,6 +147,7 @@ var Appbar = {
     let appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
       getService(Components.interfaces.nsIAppStartup);
 
+    Services.prefs.setBoolPref('browser.sessionstore.resume_session_once', true);
     appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
                     Components.interfaces.nsIAppStartup.eRestart);
   },
