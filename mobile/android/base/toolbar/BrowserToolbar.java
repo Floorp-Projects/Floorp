@@ -3,8 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.toolbar;
 
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.CustomEditText;
+import org.mozilla.gecko.InputMethods;
+import org.mozilla.gecko.GeckoApplication;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.LightweightTheme;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.SiteIdentityPopup;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
@@ -12,7 +23,6 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
-import org.mozilla.gecko.PageActionLayout;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.StringUtils;

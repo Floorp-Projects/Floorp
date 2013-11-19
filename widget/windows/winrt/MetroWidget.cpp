@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,6 +26,7 @@
 #include "BasicLayers.h"
 #include "FrameMetrics.h"
 #include "Windows.Graphics.Display.h"
+#include "nsNativeDragTarget.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
@@ -331,6 +332,28 @@ MetroWidget::IsVisible() const
   if (!mView)
     return false;
   return mView->IsVisible();
+}
+
+NS_IMETHODIMP
+MetroWidget::EnableDragDrop(bool aEnable) {
+  if (aEnable) {
+    if (nullptr == mNativeDragTarget) {
+      mNativeDragTarget = new nsNativeDragTarget(this);
+      if (!mNativeDragTarget) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    HRESULT hr = ::RegisterDragDrop(mWnd, static_cast<LPDROPTARGET>(mNativeDragTarget));
+    return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
+  } else {
+    if (nullptr == mNativeDragTarget) {
+      return NS_OK;
+    }
+
+    HRESULT hr = ::RevokeDragDrop(mWnd);
+    return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
+  }
 }
 
 NS_IMETHODIMP
