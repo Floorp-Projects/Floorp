@@ -17,7 +17,7 @@ XPIDL_SOURCES += [
     'nsIHelperAppLauncherDialog.idl',
 ]
 
-MODULE = 'exthandler'
+XPIDL_MODULE = 'exthandler'
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     osdir = 'os2'

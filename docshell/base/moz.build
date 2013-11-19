@@ -33,7 +33,7 @@ XPIDL_SOURCES += [
     'nsIWebPageDescriptor.idl',
 ]
 
-MODULE = 'docshell'
+XPIDL_MODULE = 'docshell'
 
 EXPORTS += [
     'nsDocShellLoadTypes.h',

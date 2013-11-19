@@ -14,7 +14,7 @@ XPIDL_SOURCES += [
     'nsIDownloadProgressListener.idl',
 ]
 
-MODULE = 'downloads'
+XPIDL_MODULE = 'downloads'
 
 SOURCES += [
     'nsDownloadManager.cpp',

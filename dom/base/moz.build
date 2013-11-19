@@ -14,7 +14,7 @@ XPIDL_SOURCES += [
     'nsISiteSpecificUserAgent.idl',
 ]
 
-MODULE = 'dom'
+XPIDL_MODULE = 'dom'
 
 EXPORTS += [
     'Crypto.h',

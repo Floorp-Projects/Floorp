@@ -13,7 +13,7 @@ XPIDL_SOURCES += [
     'nsIInputListAutoComplete.idl',
 ]
 
-MODULE = 'satchel'
+XPIDL_MODULE = 'satchel'
 
 SOURCES += [
     'nsFormFillController.cpp',

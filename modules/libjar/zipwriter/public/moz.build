@@ -8,5 +8,5 @@ XPIDL_SOURCES += [
     'nsIZipWriter.idl',
 ]
 
-MODULE = 'zipwriter'
+XPIDL_MODULE = 'zipwriter'
 

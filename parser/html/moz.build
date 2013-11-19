@@ -9,7 +9,7 @@ XPIDL_SOURCES += [
     'nsIScriptableUnescapeHTML.idl',
 ]
 
-MODULE = 'html5'
+XPIDL_MODULE = 'html5'
 
 EXPORTS += [
     'jArray.h',

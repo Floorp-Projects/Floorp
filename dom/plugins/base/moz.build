@@ -18,7 +18,7 @@ XPIDL_SOURCES += [
     'nspluginroot.idl',
 ]
 
-MODULE = 'plugin'
+XPIDL_MODULE = 'plugin'
 
 EXPORTS += [
     'npapi.h',

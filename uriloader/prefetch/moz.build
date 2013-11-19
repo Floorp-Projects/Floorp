@@ -9,7 +9,7 @@ XPIDL_SOURCES += [
     'nsIPrefetchService.idl',
 ]
 
-MODULE = 'prefetch'
+XPIDL_MODULE = 'prefetch'
 
 EXPORTS += [
     'nsCPrefetchService.h',

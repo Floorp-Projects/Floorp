@@ -10,7 +10,7 @@ XPIDL_SOURCES += [
     'nsIMIMEService.idl',
 ]
 
-MODULE = 'mimetype'
+XPIDL_MODULE = 'mimetype'
 
 EXPORTS += [
     'nsMimeTypes.h',

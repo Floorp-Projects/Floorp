@@ -11,5 +11,5 @@ XPIDL_SOURCES += [
     'nsISecurityCheckedComponent.idl',
 ]
 
-MODULE = 'caps'
+XPIDL_MODULE = 'caps'
 

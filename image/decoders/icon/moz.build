@@ -8,7 +8,7 @@ XPIDL_SOURCES += [
     'nsIIconURI.idl',
 ]
 
-MODULE = 'imgicon'
+XPIDL_MODULE = 'imgicon'
 
 SOURCES += [
     'nsIconModule.cpp',

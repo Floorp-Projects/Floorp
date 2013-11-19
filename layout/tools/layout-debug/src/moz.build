@@ -9,7 +9,7 @@ XPIDL_SOURCES += [
     'nsILayoutRegressionTester.idl',
 ]
 
-MODULE = 'layout_debug'
+XPIDL_MODULE = 'layout_debug'
 
 EXPORTS += [
     'nsLayoutDebugCIID.h',
