@@ -38,7 +38,7 @@
   background-color: -moz-Dialog;
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
   padding-top: 1px;
   padding-bottom: 1px;
 }

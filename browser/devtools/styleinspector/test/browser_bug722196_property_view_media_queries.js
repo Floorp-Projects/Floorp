@@ -47,7 +47,7 @@ function checkCssLogic()
   cssLogic.processMatchedSelectors();
 
   let _strings = Services.strings
-    .createBundle("chrome://browser/locale/devtools/styleinspector.properties");
+    .createBundle("chrome://global/locale/devtools/styleinspector.properties");
 
   let inline = _strings.GetStringFromName("rule.sourceInline");
 

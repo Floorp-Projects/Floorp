@@ -730,7 +730,7 @@ CssLogic.getSelectors = function CssLogic_getSelectors(aDOMRule)
 CssLogic.l10n = function(aName) CssLogic._strings.GetStringFromName(aName);
 
 XPCOMUtils.defineLazyGetter(CssLogic, "_strings", function() Services.strings
-        .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
+        .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
 
 /**
  * Is the given property sheet a content stylesheet?

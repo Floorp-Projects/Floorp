@@ -257,18 +257,12 @@ private:
 
 // These members are used for network per-app metering (bug 855949)
 // Currently, they are only available on gonk.
-public:
-  const static uint64_t NETWORK_STATS_THRESHOLD = 65536;
-
-private:
   uint64_t                        mCountRecv;
   uint64_t                        mCountSent;
   uint32_t                        mAppId;
-  bool                            mIsInBrowser;
 #ifdef MOZ_WIDGET_GONK
   nsCOMPtr<nsINetworkInterface>   mActiveNetwork;
 #endif
-  nsresult                        GetActiveNetwork();
   nsresult                        SaveNetworkStats(bool);
   void                            CountRecvBytes(uint64_t recvBytes)
   {

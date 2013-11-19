@@ -963,6 +963,9 @@ var gPluginHandler = {
         return;
       }
 
+      Services.telemetry.getHistogramById("PLUGINS_INFOBAR_SHOWN").
+        add(true);
+
       let message;
       // Icons set directly cannot be manipulated using moz-image-region, so
       // we use CSS classes instead.
@@ -1001,21 +1004,26 @@ var gPluginHandler = {
         }
       }
 
-      // These strings are temporary no-string-change for branch uplift
       let buttons = [
         {
-          label: gNavigatorBundle.getString("pluginBlockNow.label"),
-          accessKey: gNavigatorBundle.getString("pluginBlockNow.accesskey"),
+          label: gNavigatorBundle.getString("pluginContinueBlocking.label"),
+          accessKey: gNavigatorBundle.getString("pluginContinueBlocking.accesskey"),
           callback: function() {
+            Services.telemetry.getHistogramById("PLUGINS_INFOBAR_BLOCK").
+              add(true);
+
             Services.perms.addFromPrincipal(aBrowser.contentDocument.nodePrincipal,
                                             "plugin-hidden-notification",
                                             Services.perms.DENY_ACTION);
           }
         },
         {
-          label: gNavigatorBundle.getString("offlineApps.allow"),
-          accessKey: gNavigatorBundle.getString("offlineApps.allowAccessKey"),
+          label: gNavigatorBundle.getString("pluginActivateTrigger.label"),
+          accessKey: gNavigatorBundle.getString("pluginActivateTrigger.accesskey"),
           callback: function() {
+            Services.telemetry.getHistogramById("PLUGINS_INFOBAR_ALLOW").
+              add(true);
+
             let curNotification =
               PopupNotifications.getNotification("click-to-play-plugins",
                                                  aBrowser);

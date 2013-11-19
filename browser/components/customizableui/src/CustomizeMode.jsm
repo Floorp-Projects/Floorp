@@ -111,6 +111,7 @@ CustomizeMode.prototype = {
         this.document.documentElement._lightweightTheme.disable();
 
       this.dispatchToolboxEvent("beforecustomization");
+      CustomizableUI.notifyStartCustomizing(this.window);
 
       let window = this.window;
       let document = this.document;
@@ -285,6 +286,7 @@ CustomizeMode.prototype = {
       this._changed = false;
       this._transitioning = false;
       this.dispatchToolboxEvent("aftercustomization");
+      CustomizableUI.notifyEndCustomizing(this.window);
     }.bind(this)).then(null, ERROR);
   },
 
