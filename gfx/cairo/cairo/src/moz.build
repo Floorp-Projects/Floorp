@@ -114,8 +114,6 @@ if CONFIG['MOZ_ENABLE_CAIRO_FT']:
 
 LIBRARY_NAME = 'mozcairo'
 
-LIBXUL_LIBRARY = True
-
 SOURCES += [
     'cairo-analysis-surface.c',
     'cairo-arc.c',

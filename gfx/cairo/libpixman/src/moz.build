@@ -25,8 +25,6 @@ if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['GNU_CC']:
             'pixman-arm-simd-asm.S',
         ]
 
-LIBXUL_LIBRARY = True
-
 SOURCES += [
     'pixman-access-accessors.c',
     'pixman-access.c',
