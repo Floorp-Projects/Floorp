@@ -18,7 +18,7 @@ SOURCES += [
     'FallbackEncoding.cpp',
 ]
 
-UNIFIED_SOURCES += {
+UNIFIED_SOURCES += [
     'TextDecoder.cpp',
     'TextEncoder.cpp',
 ]
