@@ -11,5 +11,5 @@ XPIDL_SOURCES += [
     'nsISSLStatusProvider.idl',
 ]
 
-MODULE = 'pipboot'
+XPIDL_MODULE = 'pipboot'
 

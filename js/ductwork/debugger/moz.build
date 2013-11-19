@@ -8,7 +8,7 @@ XPIDL_SOURCES += [
     'IJSDebugger.idl',
 ]
 
-MODULE = 'jsdebugger'
+XPIDL_MODULE = 'jsdebugger'
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 

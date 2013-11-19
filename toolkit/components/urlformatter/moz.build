@@ -10,7 +10,7 @@ XPIDL_SOURCES += [
     'nsIURLFormatter.idl',
 ]
 
-MODULE = 'urlformatter'
+XPIDL_MODULE = 'urlformatter'
 
 EXTRA_COMPONENTS += [
     'nsURLFormatter.manifest',

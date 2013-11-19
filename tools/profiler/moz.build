@@ -9,7 +9,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
 
     LIBXUL_LIBRARY = True
 
-    MODULE = 'profiler'
+    XPIDL_MODULE = 'profiler'
     LIBRARY_NAME = 'profiler'
     XPIDL_SOURCES += [
         'nsIProfiler.idl',

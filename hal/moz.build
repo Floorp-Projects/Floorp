@@ -8,7 +8,7 @@ XPIDL_SOURCES += [
     'gonk/nsIRecoveryService.idl',
 ]
 
-MODULE = 'hal'
+XPIDL_MODULE = 'hal'
 
 EXPORTS.mozilla += [
     'Hal.h',

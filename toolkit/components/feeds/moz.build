@@ -19,7 +19,7 @@ XPIDL_SOURCES += [
     'nsIFeedTextConstruct.idl',
 ]
 
-MODULE = 'feeds'
+XPIDL_MODULE = 'feeds'
 
 EXTRA_COMPONENTS += [
     'FeedProcessor.js',

@@ -10,5 +10,5 @@ XPIDL_SOURCES += [
     'nsIUnicodeNormalizer.idl',
 ]
 
-MODULE = 'unicharutil'
+XPIDL_MODULE = 'unicharutil'
 

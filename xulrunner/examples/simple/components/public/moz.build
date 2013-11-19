@@ -8,6 +8,6 @@ XPIDL_SOURCES += [
     'nsISimpleTest.idl',
 ]
 
-MODULE = 'simple'
+XPIDL_MODULE = 'simple'
 
 XPI_NAME = 'simple'
