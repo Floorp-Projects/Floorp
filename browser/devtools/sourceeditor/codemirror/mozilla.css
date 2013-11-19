@@ -18,21 +18,21 @@
 }
 
 .error {
-  background-image: url("chrome://browser/skin/devtools/editor-error.png");
+  background-image: url("chrome://browser/skin/devtools/orion-error.png");
   opacity: 0.75;
 }
 
 .breakpoint {
-  background-image: url("chrome://browser/skin/devtools/editor-breakpoint.png");
+  background-image: url("chrome://browser/skin/devtools/orion-breakpoint.png");
 }
 
 .debugLocation {
-  background-image: url("chrome://browser/skin/devtools/editor-debug-location.png");
+  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png");
 }
 
 .breakpoint.debugLocation {
-  background-image: url("chrome://browser/skin/devtools/editor-debug-location.png"),
-    url("chrome://browser/skin/devtools/editor-breakpoint.png");
+  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png"),
+    url("chrome://browser/skin/devtools/orion-breakpoint.png");
 }
 
 .error-line {
